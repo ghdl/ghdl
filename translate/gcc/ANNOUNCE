@@ -1,0 +1,21 @@
+I am happy to introduce GHDL.
+
+GHDL is a GCC front-end for the VHDL (IEEE 1076) language, an hardware design
+language.
+
+Currently, GHDL implements most of VHDL-1987 and some features of
+VHDL-1993.  It is mature enough to compile and run some complex design (such
+as a DLX processor and leon1, a SPARCv7 processor)
+
+GHDL has been developped on a GNU/Linux x86 system, and only this configuration
+has been tested (porting to other processor or system should not be an hard
+task, but there are system dependent files in the run time).
+
+GHDL is written in Ada95 (using GNAT) and relies on agcc, an Ada
+binding for GCC.  It also includes a run-time library (written in Ada), named
+grt.  The front-end and the library are both distributed under the GPL licence.
+
+For sources, binary tarballs, or for more information, go to
+http://ghdl.free.fr
+
+Tristan Gingold.

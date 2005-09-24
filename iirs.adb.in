@@ -1,0 +1,316 @@
+--  Tree node definitions.
+--  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+with Ada.Unchecked_Deallocation;
+with Ada.Unchecked_Conversion;
+with Ada.Text_IO;
+with Errorout; use Errorout;
+with Nodes; use Nodes;
+with Lists; use Lists;
+
+package body Iirs is
+   function Is_Null (Node : Iir) return Boolean is
+   begin
+      return Node = Null_Iir;
+   end Is_Null;
+
+   function Is_Null_List (Node : Iir_List) return Boolean is
+   begin
+      return Node = Null_Iir_List;
+   end Is_Null_List;
+
+   ---------------------------------------------------
+   -- General subprograms that operate on every iir --
+   ---------------------------------------------------
+
+   -- This is the procedure to call when an internal consistancy test has
+   -- failed.
+   -- The main idea is the consistancy test *MUST* have no side effect,
+   -- except calling this procedure.  To speed up, this procedure could
+   -- be a no-op.
+   procedure Failed (Func: String := ""; Node : Iir := Null_Iir)
+   is
+   begin
+      if Func /= "" then
+         Error_Kind (Func, Node);
+      end if;
+      raise Internal_Error;
+   end Failed;
+
+   function Get_Format (Kind : Iir_Kind) return Format_Type;
+
+   --  Statistics.
+   procedure Disp_Stats
+   is
+      use Ada.Text_IO;
+      type Num_Array is array (Iir_Kind) of Natural;
+      Num : Num_Array := (others => 0);
+      type Format_Array is array (Format_Type) of Natural;
+      Formats : Format_Array := (others => 0);
+      Kind : Iir_Kind;
+      I : Iir;
+      Last_I : Iir;
+      Format : Format_Type;
+   begin
+      I := Error_Node + 1;
+      Last_I := Get_Last_Node;
+      while I < Last_I loop
+         Kind := Get_Kind (I);
+         Num (Kind) := Num (Kind) + 1;
+         Format := Get_Format (Kind);
+         Formats (Format) := Formats (Format) + 1;
+         case Format is
+            when Format_Medium =>
+               I := I + 2;
+            when Format_Short
+              | Format_Fp
+              | Format_Int =>
+               I := I + 1;
+         end case;
+      end loop;
+
+      Put_Line ("Stats per iir_kind:");
+      for J in Iir_Kind loop
+         if Num (J) /= 0 then
+            Put_Line (' ' & Iir_Kind'Image (J) & ':'
+                      & Natural'Image (Num (J)));
+         end if;
+      end loop;
+      Put_Line ("Stats per formats:");
+      for J in Format_Type loop
+         Put_Line (' ' & Format_Type'Image (J) & ':'
+                   & Natural'Image (Formats (J)));
+      end loop;
+   end Disp_Stats;
+
+   function Iir_Predefined_Shortcut_P (Func : Iir_Predefined_Functions)
+     return Boolean is
+   begin
+      case Func is
+         when Iir_Predefined_Bit_And
+           | Iir_Predefined_Bit_Or
+           | Iir_Predefined_Bit_Nand
+           | Iir_Predefined_Bit_Nor
+           | Iir_Predefined_Boolean_And
+           | Iir_Predefined_Boolean_Or
+           | Iir_Predefined_Boolean_Nand
+           | Iir_Predefined_Boolean_Nor =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Iir_Predefined_Shortcut_P;
+
+   function Create_Proxy (Proxy: Iir) return Iir_Proxy is
+      Res : Iir_Proxy;
+   begin
+      Res := Create_Iir (Iir_Kind_Proxy);
+      Set_Proxy (Res, Proxy);
+      return Res;
+   end Create_Proxy;
+
+   --
+
+   function Create_Iir_Error return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Node (Format_Short);
+      Set_Nkind (Res, Iir_Kind'Pos (Iir_Kind_Error));
+      Set_Base_Type (Res, Res);
+      return Res;
+   end Create_Iir_Error;
+
+   procedure Location_Copy (Target: Iir; Src: Iir) is
+   begin
+      Set_Location (Target, Get_Location (Src));
+   end Location_Copy;
+
+   -- Get kind
+   function Get_Kind (An_Iir: Iir) return Iir_Kind
+   is
+      --  Speed up: avoid to check that nkind is in the bounds of Iir_Kind.
+      pragma Suppress (Range_Check);
+   begin
+      return Iir_Kind'Val (Get_Nkind (An_Iir));
+   end Get_Kind;
+
+--    function Clone_Iir (Src : Iir; New_Kind : Iir_Kind) return Iir
+--    is
+--       Res : Iir;
+--    begin
+--       Res := new Iir_Node (New_Kind);
+--       Res.Flag1 := Src.Flag1;
+--       Res.Flag2 := Src.Flag2;
+--       Res.Flag3 := Src.Flag3;
+--       Res.Flag4 := Src.Flag4;
+--       Res.Flag5 := Src.Flag5;
+--       Res.Flag6 := Src.Flag6;
+--       Res.Flag7 := Src.Flag7;
+--       Res.Flag8 := Src.Flag8;
+--       Res.State1 := Src.State1;
+--       Res.State2 := Src.State2;
+--       Res.State3 := Src.State3;
+--       Res.Staticness1 := Src.Staticness1;
+--       Res.Staticness2 := Src.Staticness2;
+--       Res.Odigit1 := Src.Odigit1;
+--       Res.Odigit2 := Src.Odigit2;
+--       Res.Location := Src.Location;
+--       Res.Back_End_Info := Src.Back_End_Info;
+--       Res.Identifier := Src.Identifier;
+--       Res.Field1 := Src.Field1;
+--       Res.Field2 := Src.Field2;
+--       Res.Field3 := Src.Field3;
+--       Res.Field4 := Src.Field4;
+--       Res.Field5 := Src.Field5;
+--       Res.Nbr2 := Src.Nbr2;
+--       Res.Nbr3 := Src.Nbr3;
+
+--       Src.Identifier := Null_Identifier;
+--       Src.Field1 := null;
+--       Src.Field2 := null;
+--       Src.Field3 := null;
+--       Src.Field4 := null;
+--       Src.Field5 := null;
+--       return Res;
+--    end Clone_Iir;
+
+
+   -----------------
+   -- design file --
+   -----------------
+
+   -- Iir_Design_File
+
+--   type Int_Access_Type is new Integer;
+--   for Int_Access_Type'Size use System.Word_Size; --Iir_Identifier_Acc'Size;
+
+   --  Safe conversions.
+--    function Iir_To_Int_Access_Type is
+--       new Ada.Unchecked_Conversion (Source => Iir,
+--                                     Target => Int_Access_Type);
+--    function Int_Access_Type_To_Iir is
+--       new Ada.Unchecked_Conversion (Source => Int_Access_Type,
+--                                     Target => Iir);
+
+--    function To_Iir (V : Integer) return Iir is
+--    begin
+--       return Int_Access_Type_To_Iir (Int_Access_Type (V));
+--    end To_Iir;
+
+--    function To_Integer (N : Iir) return Integer is
+--    begin
+--       return Integer (Iir_To_Int_Access_Type (N));
+--    end To_Integer;
+
+   procedure Set_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
+                               Pos : Source_Ptr; Line, Off: Natural) is
+   begin
+      Set_Field1 (Design_Unit, Node_Type (Pos));
+      Set_Field11 (Design_Unit, Node_Type (Off));
+      Set_Field12 (Design_Unit, Node_Type (Line));
+   end Set_Pos_Line_Off;
+
+   procedure Get_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
+                               Pos : out Source_Ptr; Line, Off: out Natural) is
+   begin
+      Pos := Source_Ptr (Get_Field1 (Design_Unit));
+      Off := Natural (Get_Field11 (Design_Unit));
+      Line := Natural (Get_Field12 (Design_Unit));
+   end Get_Pos_Line_Off;
+
+   -----------
+   -- Lists --
+   -----------
+   --  Layout of lists:
+   --  A list is stored into an IIR.
+   --  There are two bounds for a list:
+   --    the current number of elements
+   --    the maximum number of elements.
+   --  Using a maximum number of element bound (which can be increased) avoid
+   --  to reallocating memory at each insertion.
+
+   function Time_Stamp_Id_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Time_Stamp_Id, Target => Iir);
+
+   function Iir_To_Time_Stamp_Id is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Time_Stamp_Id);
+
+   function Iir_To_Iir_List is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Iir_List);
+   function Iir_List_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Iir_List, Target => Iir);
+
+   function Iir_To_Token_Type (N : Iir) return Token_Type is
+   begin
+      return Token_Type'Val (N);
+   end Iir_To_Token_Type;
+
+   function Token_Type_To_Iir (T : Token_Type) return Iir is
+   begin
+      return Token_Type'Pos (T);
+   end Token_Type_To_Iir;
+
+   function Iir_To_Iir_Index32 (N : Iir) return Iir_Index32 is
+   begin
+      return Iir_Index32 (N);
+   end Iir_To_Iir_Index32;
+
+   function Iir_Index32_To_Iir (V : Iir_Index32) return Iir is
+   begin
+      return Iir_Index32'Pos (V);
+   end Iir_Index32_To_Iir;
+
+   function Iir_To_Name_Id (N : Iir) return Name_Id is
+   begin
+      return Iir'Pos (N);
+   end Iir_To_Name_Id;
+   pragma Inline (Iir_To_Name_Id);
+
+   function Name_Id_To_Iir (V : Name_Id) return Iir is
+   begin
+      return Name_Id'Pos (V);
+   end Name_Id_To_Iir;
+
+   function Iir_To_Iir_Int32 is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Iir_Int32);
+
+   function Iir_Int32_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Iir_Int32, Target => Iir);
+
+   function Iir_To_Location_Type (N : Iir) return Location_Type is
+   begin
+      return Location_Type (N);
+   end Iir_To_Location_Type;
+
+   function Location_Type_To_Iir (L : Location_Type) return Iir is
+   begin
+      return Iir (L);
+   end Location_Type_To_Iir;
+
+   function Iir_To_String_Id is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => String_Id);
+   function String_Id_To_Iir is new Ada.Unchecked_Conversion
+     (Source => String_Id, Target => Iir);
+
+   function Iir_To_Int32 is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Int32);
+   function Int32_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Int32, Target => Iir);
+
+   --  Subprograms
+end Iirs;

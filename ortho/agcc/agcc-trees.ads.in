@@ -1,0 +1,514 @@
+--  Ada bindings for GCC internals. -*- Ada -*-
+--  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
+-- This file is preprocessed by gen_tree to create agcc-trees.ads
+-- gen_tree adds enumerations from GCC C files.
+
+with System; use System;
+with Agcc.Hwint; use Agcc.Hwint;
+with Agcc.Real; use Agcc.Real;
+with Agcc.Machmode; use Agcc.Machmode;
+
+package Agcc.Trees is
+   --pragma No_Elaboration_Code (Agcc.Trees);
+
+   type Tree is new System.Address;
+
+   NULL_TREE : constant Tree;
+
+   type Tree_Code is
+     (
+@tree_code
+     );
+   pragma Convention (C, Tree_Code);
+
+   type Built_In_Class is
+     (NOT_BUILT_IN, BUILT_IN_FRONTEND, BUILT_IN_MD, BUILT_IN_NORMAL);
+   pragma Convention (C, Built_In_Class);
+
+   type Built_In_Function is
+     (
+@built_in_function
+     );
+   pragma Convention (C, Built_In_Function);
+
+   type Tree_Index is
+     (
+@tree_index
+     );
+
+   type Type_Qual_Type is new Integer;
+@type_qual
+
+   type Global_Trees_Array is array (Tree_Index) of Tree;
+   pragma Convention (C, Global_Trees_Array);
+   Global_Trees : Global_Trees_Array;
+   pragma Import (C, Global_Trees);
+
+   Error_Mark_Node : Tree renames Global_Trees (TI_ERROR_MARK);
+   Void_Type_Node : Tree renames Global_Trees (TI_VOID_TYPE);
+   Ptr_Type_Node : Tree renames Global_Trees (TI_PTR_TYPE);
+   Const_Ptr_Type_Node : Tree renames Global_Trees (TI_CONST_PTR_TYPE);
+   Integer_Zero_Node : Tree renames Global_Trees (TI_INTEGER_ZERO);
+   Integer_One_Node : Tree renames Global_Trees (TI_INTEGER_ONE);
+   Size_Zero_Node : Tree renames Global_Trees (TI_SIZE_ZERO);
+
+   type Size_Type_Kind is
+     (
+@size_type_kind
+      );
+
+   type Sizetype_Tab_Array is array (Size_Type_Kind) of Tree;
+   pragma Convention (C, Sizetype_Tab_Array);
+   Sizetype_Tab : Sizetype_Tab_Array;
+   pragma Import (C, Sizetype_Tab);
+
+   Bitsizetype : Tree renames Sizetype_Tab (TK_BITSIZETYPE);
+   Sizetype : Tree renames Sizetype_Tab (TK_SIZETYPE);
+
+   type Integer_Types_Kind is
+     (
+@integer_types
+      );
+
+   type Integer_Types_Array is array (Integer_Types_Kind) of Tree;
+   pragma Convention (C, Integer_Types_Array);
+   Integer_Types : Integer_Types_Array;
+   pragma Import (C, Integer_Types);
+
+   Integer_Type_Node : Tree renames Integer_Types (itk_int);
+   Unsigned_Type_Node : Tree renames Integer_Types (itk_unsigned_int);
+   Char_Type_Node : Tree renames Integer_Types (itk_char);
+
+   function Build (Code: Tree_Code; T: Tree; O0, O1: Tree) return Tree;
+   function Build (Code: Tree_Code; T: Tree; O0, O1, O2: Tree) return Tree;
+   function Build1 (Code: Tree_Code; T: Tree; O: Tree) return Tree;
+   function Build_Constructor (T : Tree; V : Tree) return Tree;
+   function Build_Block (Vars : Tree;
+                         Tags : Tree;
+                         Subblocks : Tree;
+                         Supercontext : Tree;
+                         Chain : Tree)
+     return Tree;
+   function Build_Decl (Code : Tree_Code; T1 : Tree; T2: Tree) return Tree;
+   function Build_Int_2 (Low, Hi: HOST_WIDE_INT) return Tree;
+   function Build_Int_2_Wide (Low, Hi: HOST_WIDE_INT) return Tree;
+   function Build_Real (Rtype : Tree; D : REAL_VALUE_TYPE) return Tree;
+   function Build_Function_Type (Value_Type : Tree; Arg_Type : Tree)
+     return Tree;
+   function Build_Pointer_Type (Atype : Tree) return Tree;
+   function Get_Identifier (Str : System.Address) return Tree;
+   function Build_String (Len : Integer; Str : System.Address) return Tree;
+   function Build_Index_Type (Max : Tree) return Tree;
+   function Build_Range_Type (Basetype : Tree; Low : Tree; High : Tree)
+     return Tree;
+   function Build_Array_Type (El_Type : Tree; Domain : Tree) return Tree;
+   function Make_Node (Code : Tree_Code) return Tree;
+   function Build_Qualified_Type (Atype : Tree; Qual : Type_Qual_Type)
+     return Tree;
+
+   function Build_Save_Expr (Expr : Tree) return Tree;
+
+   function Make_Signed_Type (Precision : Natural) return Tree;
+   function Make_Unsigned_Type (Precision : Natural) return Tree;
+   procedure Initialize_Sizetypes;
+   procedure Set_Sizetype (Atype : Tree);
+
+   function Host_Integerp (T : Tree; Pos : Integer) return Integer;
+
+   function Chainon (Op1, Op2 : Tree) return Tree;
+   function Listify (Node : Tree) return Tree;
+   function Tree_Cons (Purpose : Tree; Value : Tree; Chain : Tree)
+     return Tree;
+   function Nreverse (Chain : Tree) return Tree;
+   function Build_Tree_List (Purpose : Tree; Value : Tree) return Tree;
+
+   function Size_In_Bytes (Decl : Tree) return Tree;
+   procedure Set_Identifier_Size (Size : Natural);
+
+   function Get_Inner_Reference
+     (Exp : Tree;
+      Pbitsize : Address; --  HOST_WIDE_INT pointer
+      Pbitpos : Address; -- HOST_WIDE_INT pointer
+      Poffset : Address; -- Tree pointer
+      Pmode : Address; -- MACHINE_MODE pointer
+      Punsignedp : Address; -- int pointer
+      Pvolatilep : Address) -- int pointer
+     return Tree;
+
+   Current_Function_Decl : Tree;
+
+   function Integer_Zerop (Expr : Tree) return C_Bool;
+   function Integer_Onep (Expr : Tree) return C_Bool;
+   function Real_Zerop (Expr : Tree) return C_Bool;
+
+   procedure Layout_Type (Atype : Tree);
+   procedure Layout_Decl (Decl : Tree; Align : Natural);
+
+   procedure Expand_Start_Bindings_And_Block (Flags : Integer; Block : Tree);
+   procedure Expand_Start_Bindings (Flags : Integer);
+   procedure Expand_End_Bindings
+     (Vars : Tree; Mark_Ends: C_Bool; Dont_Jump_In : C_Bool);
+
+   procedure Init_Function_Start
+     (Subr : Tree; Filename : Chars; Line : Integer);
+   procedure Expand_Function_Start
+     (Subr : Tree; Parms_Have_Cleanups : C_Bool);
+   procedure Expand_Function_End
+     (Filename : Chars; Line : Integer; End_Bindings : C_Bool);
+   procedure Push_Function_Context;
+   procedure Pop_Function_Context;
+   procedure Put_Var_Into_Stack (Expr : Tree; Rescan : C_Bool);
+   procedure Expand_Null_Return;
+   procedure Expand_Return (Expr : Tree);
+   procedure Expand_Expr_Stmt (Expr : Tree);
+   procedure Expand_Decl (Decl : Tree);
+   procedure Expand_Decl_Init (Decl : Tree);
+
+   function Expand_Exit_Something return Integer;
+
+   --  Conditions (IF).
+   procedure Expand_Start_Cond (Cond : Tree; Has_Exit : C_Bool);
+   procedure Expand_Start_Elseif (Cond : Tree);
+   procedure Expand_Start_Else;
+   procedure Expand_End_Cond;
+
+   --  Loops (FOR, WHILE, DO-WHILE, CONTINUE, EXIT ...)
+   type Nesting is private;
+   Nesting_Null : constant Nesting;
+   function Expand_Start_Loop (Exit_Flag : C_Bool) return Nesting;
+   procedure Expand_Continue_Loop (Which_Loop: Nesting);
+   procedure Expand_End_Loop;
+   function Expand_Start_Loop_Continue_Elsewhere (Exit_Flag : C_Bool)
+     return Nesting;
+   procedure Expand_Loop_Continue_Here;
+   procedure Expand_Exit_Loop (Which_Loop : Nesting);
+   function Expand_Exit_Loop_If_False (Which_Loop : Nesting; Cond : Tree)
+     return Integer;
+
+   --  multibranch (SWITCH).
+   procedure Expand_Start_Case
+     (Exit_Flag : C_Bool; Expr : Tree; Etype : Tree; Printname : Chars);
+   function Pushcase
+     (Value : Tree; Converter : Address; Label : Tree; Duplicate : Address)
+     return Integer;
+   function Pushcase_Range
+     (Low, High : Tree; Converter : Address; Label : Tree; Duplicate : Address)
+     return Integer;
+   function Add_Case_Node (Low, High : Tree; Label : Tree; Duplicate : Address)
+     return Integer;
+   procedure Expand_End_Case_Type (Orig_Index : Tree; Orig_Type : Tree);
+
+   procedure Debug_Tree (T: Tree);
+
+   function Fold (Atree : Tree) return Tree;
+   function Size_Binop (Code : Tree_Code; arg0, Arg1 : Tree) return Tree;
+   function Size_Int (Number : HOST_WIDE_INT) return Tree;
+
+   function Convert (Atype : Tree; Expr : Tree) return Tree;
+
+   --  Create an INTEGER_CST whose value is LOW signed extended to
+   --  2 HOST_WIDE_INT.
+   function Build_Int (Low : HOST_WIDE_INT) return Tree;
+
+   function Get_TREE_CODE (T : Tree) return Tree_Code;
+   procedure Set_TREE_CONSTANT (T : Tree; Val : C_Bool);
+   function Get_TREE_CONSTANT (T : Tree) return C_Bool;
+   procedure Set_TREE_PUBLIC (Decl: Tree; Val : C_Bool);
+   procedure Set_TREE_STATIC (Decl : Tree; Val : C_Bool);
+   procedure Set_TREE_TYPE (Decl : Tree; T : Tree);
+   function Get_TREE_TYPE (Decl : Tree) return Tree;
+   procedure Set_TREE_CHAIN (Decl : Tree; Chain : Tree);
+   function Get_TREE_CHAIN (Decl : Tree) return Tree;
+   procedure Set_TREE_UNSIGNED (Decl : Tree; Val: C_Bool);
+   function Get_TREE_UNSIGNED (Decl : Tree) return C_Bool;
+   procedure Set_TREE_ADDRESSABLE (Decl : Tree; Val: C_Bool);
+   function Get_TREE_ADDRESSABLE (Decl : Tree) return C_Bool;
+   procedure Set_TREE_SIDE_EFFECTS (Decl : Tree; Val: C_Bool);
+   procedure Set_TREE_READONLY (Decl : Tree; Val: C_Bool);
+   procedure Set_TREE_OPERAND (T : Tree; N : Natural; Val : Tree);
+   function Get_TREE_OPERAND (T : Tree; N : Natural) return Tree;
+   procedure Set_TREE_THIS_VOLATILE (T : Tree; Val : C_Bool);
+   function Get_TREE_THIS_VOLATILE (T : Tree) return C_Bool;
+   function Get_TREE_VALUE (Decl : Tree) return Tree;
+   function Get_TREE_PURPOSE (Decl : Tree) return Tree;
+   function Get_TREE_USED (Decl : Tree) return C_Bool;
+   procedure Set_TREE_USED (Decl : Tree; Flag : C_Bool);
+
+   function Get_TREE_INT_CST_LOW (Node : Tree) return HOST_WIDE_INT;
+   function Get_TREE_INT_CST_HIGH (Node : Tree) return HOST_WIDE_INT;
+
+   function Get_CONSTRUCTOR_ELTS (Cons : Tree) return Tree;
+
+   procedure Set_DECL_ARG_TYPE (Decl : Tree; Val : Tree);
+   procedure Set_DECL_EXTERNAL (Decl : Tree; Val : C_Bool);
+   function Get_DECL_EXTERNAL (Decl : Tree) return C_Bool;
+   procedure Set_DECL_ARGUMENTS (Decl : Tree; Args : Tree);
+   function Get_DECL_ARGUMENTS (Decl : Tree) return Tree;
+   procedure Set_DECL_RESULT (Decl : Tree; Res : Tree);
+   function Get_DECL_RESULT (Decl : Tree) return Tree;
+   procedure Set_DECL_CONTEXT (Decl : Tree; Context : Tree);
+   function Get_DECL_CONTEXT (Decl : Tree) return Tree;
+   function Get_DECL_INITIAL (Decl : Tree) return Tree;
+   procedure Set_DECL_INITIAL (Decl : Tree; Init : Tree);
+   function Get_DECL_NAME (Decl : Tree) return Tree;
+   function Get_DECL_ASSEMBLER_NAME (Decl : Tree) return Tree;
+   procedure Set_DECL_ASSEMBLER_NAME (Decl : Tree; Name : Tree);
+   procedure Set_DECL_BUILT_IN_CLASS (Decl : Tree; Class : Built_In_Class);
+   procedure Set_DECL_FUNCTION_CODE (Decl : Tree; Code : Built_In_Function);
+   function Get_DECL_FIELD_OFFSET (Decl : Tree) return Tree;
+   function Get_DECL_FIELD_BIT_OFFSET (Decl : Tree) return Tree;
+
+   procedure Set_TYPE_VALUES (Atype : Tree; Values: Tree);
+   procedure Set_TYPE_NAME (Atype : Tree; Name: Tree);
+   function Get_TYPE_NAME (Atype : Tree) return Tree;
+   procedure Set_TYPE_MIN_VALUE (Atype : Tree; Val: Tree);
+   function Get_TYPE_MIN_VALUE (Atype : Tree) return Tree;
+   procedure Set_TYPE_MAX_VALUE (Atype : Tree; Val: Tree);
+   function Get_TYPE_MAX_VALUE (Atype : Tree) return Tree;
+   procedure Set_TYPE_SIZE (Atype : Tree; Size: Tree);
+   function Get_TYPE_SIZE (Atype : Tree) return Tree;
+   procedure Set_TYPE_PRECISION (Atype : Tree; Precision : Integer);
+   function Get_TYPE_PRECISION (Atype : Tree) return Integer;
+   procedure Set_TYPE_FIELDS (Atype : Tree; Fields : Tree);
+   function Get_TYPE_FIELDS (Atype : Tree) return Tree;
+   procedure Set_TYPE_STUB_DECL (Atype : Tree; Decl : Tree);
+   procedure Set_TYPE_LANG_SPECIFIC (Atype : Tree; Val : System.Address);
+   function Get_TYPE_LANG_SPECIFIC (Atype : Tree) return System.Address;
+   function Get_TYPE_IS_SIZETYPE (Atype : Tree) return C_Bool;
+   function Get_TYPE_DOMAIN (Atype : Tree) return Tree;
+   procedure Set_TYPE_DOMAIN (Atype : Tree; Domain : Tree);
+   function Get_TYPE_SIZE_UNIT (Atype : Tree) return Tree;
+   function Get_TYPE_POINTER_TO (Atype : Tree) return Tree;
+   procedure Set_TYPE_POINTER_TO (Atype : Tree; Dtype : Tree);
+   function INTEGRAL_TYPE_P (Atype : Tree) return C_Bool;
+   procedure Set_TYPE_MODE (Atype : Tree; Mode : Machine_Mode);
+   function Get_TYPE_MODE (Atype : Tree) return Machine_Mode;
+
+   function Get_BLOCK_SUPERCONTEXT (Ablock : Tree) return Tree;
+   procedure Set_BLOCK_SUPERCONTEXT (Ablock : Tree; Sc : Tree);
+   procedure Set_BLOCK_VARS (Ablock : Tree; Vars : Tree);
+
+   function Get_IDENTIFIER_LENGTH (N : Tree) return Integer;
+   function Get_IDENTIFIER_POINTER (N : Tree) return Chars;
+
+   procedure Build_Common_Tree_Nodes (Signed_Char : C_Bool);
+   procedure Build_Common_Tree_Nodes_2 (Short_Double : C_Bool);
+
+   --  Points to the name of the input file from which the current input
+   --  being parsed originally came (before it went into cpp).
+   Input_Filename : Chars;
+
+   Main_Input_Filename : Chars;
+
+   -- Current line number in input file.
+   Lineno : Integer;
+
+   --  sizeof (struct tree_identifier).
+   Tree_Identifier_Size : Natural;
+
+   --  Create DECL_RTL for a declaration for a static or external variable or
+   --  static or external function.
+   procedure Make_Decl_Rtl (Decl : Tree; Asmspec : Chars; Top_Level : C_Bool);
+
+private
+   NULL_TREE : constant Tree := Tree (System.Null_Address);
+
+   type Nesting is new System.Address;
+   Nesting_Null : constant Nesting := Nesting (Null_Address);
+
+   pragma Import (C, Current_Function_Decl);
+   pragma Import (C, Set_Identifier_Size);
+
+   pragma Import (C, Build);
+   pragma Import (C, Build1);
+   pragma Import (C, Build_Constructor);
+   pragma Import (C, Build_Block);
+   pragma Import (C, Build_Decl);
+   pragma Import (C, Build_Int_2);
+   pragma Import (C, Build_Int_2_Wide);
+   pragma Import (C, Build_Real);
+   pragma Import (C, Build_Function_Type);
+   pragma Import (C, Build_Pointer_Type);
+   pragma Import (C, Get_Identifier);
+   pragma Import (C, Build_String);
+   pragma Import (C, Make_Node);
+   pragma Import (C, Build_Index_Type);
+   pragma Import (C, Build_Range_Type);
+   pragma Import (C, Build_Array_Type);
+   pragma Import (C, Build_Qualified_Type);
+   pragma Import (C, Build_Save_Expr, "save_expr");
+
+   pragma Import (C, Make_Signed_Type);
+   pragma Import (C, Make_Unsigned_Type);
+   pragma Import (C, Initialize_Sizetypes);
+   pragma Import (C, Set_Sizetype);
+   pragma Import (C, Host_Integerp);
+
+   pragma Import (C, Chainon);
+   pragma Import (C, Listify);
+   pragma Import (C, Tree_Cons);
+   pragma Import (C, Nreverse);
+   pragma Import (C, Build_Tree_List);
+
+   pragma Import (C, Size_In_Bytes);
+   pragma Import (C, Get_Inner_Reference);
+
+   pragma Import (C, Integer_Zerop);
+   pragma Import (C, Integer_Onep);
+   pragma Import (C, Real_Zerop);
+
+   pragma Import (C, Layout_Type);
+   pragma Import (C, Layout_Decl);
+
+   pragma Import (C, Expand_Start_Bindings_And_Block);
+   pragma Import (C, Expand_End_Bindings);
+
+   pragma Import (C, Init_Function_Start);
+   pragma Import (C, Expand_Function_Start);
+   pragma Import (C, Expand_Function_End);
+   pragma Import (C, Push_Function_Context);
+   pragma Import (C, Pop_Function_Context);
+   pragma Import (C, Put_Var_Into_Stack);
+
+   pragma Import (C, Expand_Null_Return);
+   pragma Import (C, Expand_Return);
+   pragma Import (C, Expand_Expr_Stmt);
+   pragma Import (C, Expand_Decl);
+   pragma Import (C, Expand_Decl_Init);
+
+   pragma Import (C, Expand_Exit_Something);
+
+   pragma Import (C, Expand_Start_Cond);
+   pragma Import (C, Expand_Start_Elseif);
+   pragma Import (C, Expand_Start_Else);
+   pragma Import (C, Expand_End_Cond);
+
+   pragma Import (C, Expand_Start_Loop);
+   pragma Import (C, Expand_Continue_Loop);
+   pragma Import (C, Expand_End_Loop);
+   pragma Import (C, Expand_Start_Loop_Continue_Elsewhere);
+   pragma Import (C, Expand_Loop_Continue_Here);
+   pragma Import (C, Expand_Exit_Loop);
+   pragma Import (C, Expand_Exit_Loop_If_False);
+
+   pragma Import (C, Expand_Start_Case);
+   pragma Import (C, Pushcase);
+   pragma Import (C, Pushcase_Range);
+   pragma Import (C, Add_Case_Node);
+   pragma Import (C, Expand_End_Case_Type);
+
+   pragma Import (C, Debug_Tree);
+
+   pragma Import (C, Fold);
+   pragma Import (C, Size_Binop);
+   pragma Import (C, Size_Int);
+   pragma Import (C, Convert);
+
+   -- Import pragma clauses for C MACROs.
+   pragma Import (C, Get_TREE_CODE);
+   pragma Import (C, Set_TREE_CONSTANT);
+   pragma Import (C, Get_TREE_CONSTANT);
+   pragma Import (C, Set_TREE_PUBLIC);
+   pragma Import (C, Set_TREE_STATIC);
+   pragma Import (C, Set_TREE_TYPE);
+   pragma Import (C, Get_TREE_TYPE);
+   pragma Import (C, Set_TREE_CHAIN);
+   pragma Import (C, Get_TREE_CHAIN);
+   pragma Import (C, Set_TREE_UNSIGNED);
+   pragma Import (C, Get_TREE_UNSIGNED);
+   pragma Import (C, Set_TREE_ADDRESSABLE);
+   pragma Import (C, Get_TREE_ADDRESSABLE);
+   pragma Import (C, Set_TREE_SIDE_EFFECTS);
+   pragma Import (C, Set_TREE_READONLY);
+   pragma Import (C, Get_TREE_OPERAND);
+   pragma Import (C, Set_TREE_OPERAND);
+   pragma Import (C, Get_TREE_THIS_VOLATILE);
+   pragma Import (C, Set_TREE_THIS_VOLATILE);
+   pragma Import (C, Get_TREE_PURPOSE);
+   pragma Import (C, Get_TREE_VALUE);
+   pragma Import (C, Get_TREE_USED);
+   pragma Import (C, Set_TREE_USED);
+
+   pragma Import (C, Get_TREE_INT_CST_LOW);
+   pragma Import (C, Get_TREE_INT_CST_HIGH);
+
+   pragma Import (C, Get_CONSTRUCTOR_ELTS);
+   pragma Import (C, Set_TYPE_VALUES);
+   pragma Import (C, Set_TYPE_NAME);
+   pragma Import (C, Get_TYPE_NAME);
+   pragma Import (C, Set_TYPE_MIN_VALUE);
+   pragma Import (C, Get_TYPE_MIN_VALUE);
+   pragma Import (C, Set_TYPE_MAX_VALUE);
+   pragma Import (C, Get_TYPE_MAX_VALUE);
+   pragma Import (C, Set_TYPE_SIZE);
+   pragma Import (C, Get_TYPE_SIZE);
+   pragma Import (C, Set_TYPE_PRECISION);
+   pragma Import (C, Get_TYPE_PRECISION);
+   pragma Import (C, Set_TYPE_FIELDS);
+   pragma Import (C, Get_TYPE_FIELDS);
+   pragma Import (C, Set_TYPE_STUB_DECL);
+   pragma Import (C, Set_TYPE_LANG_SPECIFIC);
+   pragma Import (C, Get_TYPE_LANG_SPECIFIC);
+   pragma Import (C, Get_TYPE_IS_SIZETYPE);
+   pragma Import (C, Get_TYPE_DOMAIN);
+   pragma Import (C, Set_TYPE_DOMAIN);
+   pragma Import (C, Get_TYPE_POINTER_TO);
+   pragma Import (C, Set_TYPE_POINTER_TO);
+   pragma Import (C, Get_TYPE_SIZE_UNIT);
+   pragma Import (C, INTEGRAL_TYPE_P);
+   pragma Import (C, Set_TYPE_MODE);
+   pragma Import (C, Get_TYPE_MODE);
+
+   pragma Import (C, Set_DECL_ARG_TYPE);
+   pragma Import (C, Set_DECL_EXTERNAL);
+   pragma Import (C, Get_DECL_EXTERNAL);
+   pragma Import (C, Set_DECL_ARGUMENTS);
+   pragma Import (C, Get_DECL_ARGUMENTS);
+   pragma Import (C, Set_DECL_RESULT);
+   pragma Import (C, Get_DECL_RESULT);
+   pragma Import (C, Set_DECL_CONTEXT);
+   pragma Import (C, Get_DECL_CONTEXT);
+   pragma Import (C, Get_DECL_INITIAL);
+   pragma Import (C, Set_DECL_INITIAL);
+   pragma Import (C, Get_DECL_NAME);
+   pragma Import (C, Set_DECL_ASSEMBLER_NAME, "set_DECL_ASSEMBLER_NAME");
+   pragma Import (C, Get_DECL_ASSEMBLER_NAME);
+   pragma Import (C, Set_DECL_BUILT_IN_CLASS);
+   pragma Import (C, Set_DECL_FUNCTION_CODE);
+   pragma Import (C, Get_DECL_FIELD_OFFSET);
+   pragma Import (C, Get_DECL_FIELD_BIT_OFFSET);
+
+   pragma Import (C, Get_BLOCK_SUPERCONTEXT);
+   pragma Import (C, Set_BLOCK_SUPERCONTEXT);
+   pragma Import (C, Set_BLOCK_VARS);
+
+   pragma Import (C, Get_IDENTIFIER_LENGTH);
+   pragma Import (C, Get_IDENTIFIER_POINTER);
+
+   pragma Import (C, Build_Common_Tree_Nodes);
+   pragma Import (C, Build_Common_Tree_Nodes_2);
+
+   pragma Import (C, Input_Filename);
+   pragma Import (C, Main_Input_Filename);
+   pragma Import (C, Lineno);
+
+   pragma Import (C, Tree_Identifier_Size);
+
+   pragma Import (C, Make_Decl_Rtl);
+end Agcc.Trees;

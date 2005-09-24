@@ -1,0 +1,100 @@
+--  GHDL Run Time (GRT) - variable strings.
+--  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+with Grt.Stdio; use Grt.Stdio;
+with Grt.Types; use Grt.Types;
+with System; use System;
+
+package Grt.Vstrings is
+   --  A Vstring (Variable string) is an object which contains an unbounded
+   --  string.
+   type Vstring is limited private;
+
+   --  Deallocate all storage internally allocated.
+   procedure Free (Vstr : in out Vstring);
+
+   --  Append a character.
+   procedure Append (Vstr : in out Vstring; C : Character);
+
+   --  Append a string.
+   procedure Append (Vstr : in out Vstring; Str : String);
+
+   --  Append a C string.
+   procedure Append (Vstr : in out Vstring; Str : Ghdl_C_String);
+
+   --  Get length of VSTR.
+   function Length (Vstr : Vstring) return Natural;
+
+   --  Truncate VSTR to LEN.
+   --  It is an error if LEN is greater than the current length.
+   procedure Truncate (Vstr : in out Vstring; Len : Natural);
+
+   --  Display VSTR.
+   procedure Put (Stream : FILEs; Vstr : Vstring);
+
+
+   --  A Rstring is link a Vstring but characters can only be prepended.
+   type Rstring is limited private;
+
+   --  Deallocate storage associated with Rstr.
+   procedure Free (Rstr : in out Rstring);
+
+   --  Prepend characters or strings.
+   procedure Prepend (Rstr : in out Rstring; C : Character);
+   procedure Prepend (Rstr : in out Rstring; Str : String);
+   procedure Prepend (Rstr : in out Rstring; Str : Ghdl_C_String);
+
+   --  Get the length of RSTR.
+   function Length (Rstr : Rstring) return Natural;
+
+   --  Return the address of the first character of RSTR.
+   function Get_Address (Rstr : Rstring) return Address;
+
+   --  Display RSTR.
+   procedure Put (Stream : FILEs; Rstr : Rstring);
+
+   --  Copy RSTR to STR, and return length of the string to LEN.
+   procedure Copy (Rstr : Rstring; Str : in out String; Len : out Natural);
+
+   --  FIRST is the index of the first character.
+   --  Requires at least 11 characters.
+   procedure To_String (Str : out String; First : out Natural; N : Ghdl_I32);
+
+   --  Requires at least 21 characters.
+   procedure To_String (Str : out String; First : out Natural; N : Ghdl_I64);
+
+private
+   subtype Fat_String is String (Positive);
+   type Fat_String_Acc is access Fat_String;
+
+   type Vstring is record
+      Str : Fat_String_Acc := null;
+      Max : Natural := 0;
+      Len : Natural := 0;
+   end record;
+
+   type Rstring is record
+      --  String whose bounds is (1 .. Max).
+      Str : Fat_String_Acc := null;
+
+      --  Last index in STR.
+      Max : Natural := 0;
+
+      --  Index of the first character.
+      First : Natural := 1;
+   end record;
+end Grt.Vstrings;

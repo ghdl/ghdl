@@ -1,0 +1,36 @@
+--  GHDL Run Time (GRT) - Configuration pragmas.
+--  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
+--  The GRT library is built with a lot of restrictions.
+--  The purpose of these restrictions (mainly No_Run_Time) is not to link with
+--  the GNAT run time library.  The user does not need to download or compile
+--  it.
+--
+--  However, GRT works without these restrictions.  If you want to use GRT
+--  in Ada, you may compile GRT without these restrictions (remove the -gnatec
+--  flag).
+--
+--  This files is *not* names gnat.adc, in order to ease the possibility of
+--  not using it.
+pragma Restrictions (No_Exception_Handlers);
+pragma restrictions (No_Exceptions);
+pragma Restrictions (No_Secondary_Stack);
+--pragma Restrictions (No_Elaboration_Code);
+pragma Restrictions (No_Io);
+pragma Restrictions (No_Tasking);
+pragma No_Run_Time;

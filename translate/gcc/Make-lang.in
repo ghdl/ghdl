@@ -1,0 +1,182 @@
+# Top level -*- makefile -*- fragment for vhdl (GHDL).
+#   Copyright (C) 2002
+#   Free Software Foundation, Inc.
+
+#This file is part of GNU CC.
+
+#GNU CC is free software; you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation; either version 2, or (at your option)
+#any later version.
+
+#GNU CC is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with GNU CC; see the file COPYING.  If not, write to
+#the Free Software Foundation, 59 Temple Place - Suite 330,
+#Boston, MA 02111-1307, USA.
+
+# This file provides the language dependent support in the main Makefile.
+# Each language makefile fragment must provide the following targets:
+#
+# foo.all.build, foo.all.cross, foo.start.encap, foo.rest.encap,
+# foo.info, foo.dvi,
+# foo.install-normal, foo.install-common, foo.install-info, foo.install-man,
+# foo.uninstall, foo.mostlyclean, foo.clean, foo.distclean, foo.extraclean,
+# foo.maintainer-clean, foo.stage1, foo.stage2, foo.stage3, foo.stage4
+#
+# where `foo' is the name of the language.
+#
+# It should also provide rules for:
+#
+# - making any compiler driver (eg: g++)
+# - the compiler proper (eg: cc1plus)
+# - define the names for selecting the language in LANGUAGES.
+# tool definitions
+MV = mv
+RM = rm -f
+
+# Extra flags to pass to recursive makes.
+GHDL_ADAFLAGS= -Wall -gnata
+VHDL_LIB_DIR=$(libsubdir)/vhdl
+GNATBIND = gnatbind
+GNATMAKE = gnatmake
+VHDL_FLAGS_TO_PASS = \
+	"GHDL_ADAFLAGS=$(GHDL_ADAFLAGS)" \
+	"GNATMAKE=$(GNATMAKE)" \
+	"GNATBIND=$(GNATBIND)" \
+	"CFLAGS=$(CFLAGS)" \
+	"VHDL_LIB_DIR=$(VHDL_LIB_DIR)" \
+	"INSTALL_DATA=$(INSTALL_DATA)" \
+	"INSTALL_PROGRAM=$(INSTALL_PROGRAM)" \
+        "libexecsubdir=$(libexecsubdir)"
+
+MAKE_IN_VHDL=$(MAKE) -C vhdl $(FLAGS_TO_PASS) $(VHDL_FLAGS_TO_PASS)
+
+# Define the names for selecting vhdl in LANGUAGES.
+vhdl VHDL: ghdl1$(exeext) ghdl$(exeext) ghdllib
+
+# Tell GNU Make to ignore these, if they exist.
+.PHONY: vhdl VHDL ghdllib
+
+agcc_srcdir=$(srcdir)/vhdl
+agcc_objdir=.
+
+AGCC_GCCSRC_DIR=$(srcdir)/..
+AGCC_GCCOBJ_DIR=..
+
+####agcc Makefile.inc
+
+# The compiler proper.
+# It is compiled into the vhdl/ subdirectory to avoid file name clashes but
+# linked in in gcc directory to be able to access to gcc object files.
+ghdl1$(exeext): $(AGCC_OBJS) $(AGCC_DEPS) force
+	CURDIR=`pwd`; cd $(srcdir)/vhdl; VHDLSRCDIR=`pwd`; cd $$CURDIR/vhdl; \
+	$(GNATMAKE) -c -aI$$VHDLSRCDIR ortho_gcc-main \
+	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS)
+	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aOvhdl ortho_gcc-main \
+	 -bargs -E -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
+	 -largs $(AGCC_OBJS) $(LIBS)
+
+# The driver for ghdl.
+ghdl$(exeext): force
+	$(MAKE_IN_VHDL) ../ghdl$(exeext)
+
+# Ghdl libraries.
+ghdllib: ghdl$(exeext) $(GCC_PASSES) force
+	$(MAKE_IN_VHDL) GRT_FLAGS="-O -g" ghdllib
+
+# Build hooks:
+
+vhdl.all.build: 
+
+vhdl.all.cross:
+	@echo "No support for building vhdl cross-compiler"
+	exit 1
+
+vhdl.start.encap: 
+vhdl.rest.encap: 
+
+# Documentation hooks
+doc/ghdl.info: vhdl/ghdl.texi
+	-rm -f doc/ghdl.info*
+	$(MAKEINFO) $(MAKEINFOFLAGS) -o $@ $<
+
+doc/ghdl.dvi: vhdl/ghdl.texi
+	$(TEXI2DVI) -o $@ $<
+
+vhdl.info: doc/ghdl.info
+
+vhdl.man:
+
+vhdl.dvi: doc/ghdl.dvi
+
+vhdl.generated-manpages:
+
+# Install hooks:
+# ghdl1 is installed elsewhere as part of $(COMPILERS).
+
+vhdl.install-normal:
+
+# Install the driver program as ghdl.
+vhdl.install-common: ghdl$(exeext)
+	-mkdir $(DESTDIR)$(bindir)
+	-$(RM) $(DESTDIR)$(bindir)/ghdl$(exeext)
+	$(INSTALL_PROGRAM) ghdl$(exeext) $(DESTDIR)$(bindir)/ghdl$(exeext)
+# Install the library
+	$(MAKE_IN_VHDL) install-ghdllib
+
+install-info:: $(DESTDIR)$(infodir)/ghdl.info
+
+vhdl.install-info: ghdl.info
+	-rm -rf $(infodir)/ghdl.info*
+	$(INSTALL_DATA) ghdl.info* $(DESTDIR)$(infodir)
+	-chmod a-x $(DESTDIR)$(infodir)/ghdl.info*
+
+install-ghdllib:
+	$(MAKE) -f vhdl/Makefile $(FLAGS_TO_PASS) $(VHDL_FLAGS_TO_PASS) install-ghdllib
+
+vhdl.install-man:
+
+vhdl.uninstall:
+	-$(RM) $(DESTDIR)$(bindir)/ghdl$(exeext)
+
+
+# Clean hooks:
+# A lot of the ancillary files are deleted by the main makefile.
+# We just have to delete files specific to us.
+
+vhdl.mostlyclean:
+	-$(RM) vhdl/*$(objext) vhdl/*.ali vhdl/b_*.c
+vhdl.clean: agcc-clean
+vhdl.distclean:
+	-$(RM) vhdl/Makefile
+	-$(RM) ghdl$(exeext)
+vhdl.extraclean:
+
+vhdl.maintainer-clean:
+	$(RM) $(agcc_srcdir)/agcc-trees.ads $(agcc_srcdir)/agcc-hwint.ads
+	$(RM) $(agcc_srcdir)/agcc-hwint.ads $(agcc_srcdir)/agcc-gconfig.ads
+	$(RM) $(agcc_srcdir)/agcc-real.ads $(agcc_srcdir)/agcc-machmode.ads
+	$(RM) $(agcc_srcdir)/agcc-tm.ads
+	$(RM) $(agcc_exedir)/gen_tree.o $(agcc_exedir)/gen_tree
+
+
+# Stage hooks:
+# The main makefile has already created stage?/vhdl
+
+vhdl.stage1:
+	-$(MV) vhdl/*$(objext) vhdl/*.ali vhdl/b_*.c stage1/vhdl
+	-$(MV) vhdl/stamp-* stage1/vhdl
+vhdl.stage2:
+	-$(MV) vhdl/*$(objext) vhdl/*.ali vhdl/b_*.c stage2/vhdl
+	-$(MV) vhdl/stamp-* stage2/vhdl
+vhdl.stage3:
+	-$(MV) vhdl/*$(objext) vhdl/*.ali vhdl/b_*.c stage3/vhdl
+	-$(MV) vhdl/stamp-* stage3/vhdl
+vhdl.stage4:
+	-$(MV) vhdl/*$(objext) vhdl/*.ali vhdl/b_*.c stage4/vhdl
+	-$(MV) vhdl/stamp-* stage4/vhdl

@@ -1,0 +1,37 @@
+--  Ada bindings for GCC internals. -*- Ada -*-
+--  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
+--  Definitions about target machine.
+
+package Agcc.Tm is
+   pragma Preelaborate (Agcc.Tm);
+
+   function DOUBLE_TYPE_SIZE return Natural;
+   function LONG_DOUBLE_TYPE_SIZE return Natural;
+   function BITS_PER_UNIT return Natural;
+   function BITS_PER_WORD return Natural;
+   function PROMOTE_PROTOTYPES return C_Bool;
+@tm
+private
+   pragma Import (C, DOUBLE_TYPE_SIZE);
+   pragma Import (C, LONG_DOUBLE_TYPE_SIZE);
+   pragma Import (C, BITS_PER_UNIT);
+   pragma Import (C, BITS_PER_WORD);
+   pragma Import (C, PROMOTE_PROTOTYPES, "get_PROMOTE_PROTOTYPES");
+end Agcc.Tm;
+

@@ -1,0 +1,275 @@
+# Makefile for GNU vhdl Compiler (GHDL).
+#   Copyright (C) 2002 Free Software Foundation, Inc.
+
+#This file is part of GNU CC.
+
+#GNU CC is free software; you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation; either version 2, or (at your option)
+#any later version.
+
+#GNU CC is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+
+#You should have received a copy of the GNU General Public License
+#along with GNU CC; see the file COPYING.  If not, write to
+#the Free Software Foundation, 59 Temple Place - Suite 330,
+#Boston, MA 02111-1307, USA.
+
+# The makefile built from this file lives in the language subdirectory.
+# It's purpose is to provide support for:
+#
+# 1) recursion where necessary, and only then (building .o's), and
+# 2) building and debugging cc1 from the language subdirectory, and
+# 3) nothing else.
+#
+# The parent makefile handles all other chores, with help from the
+# language makefile fragment, of course.
+#
+# The targets for external use are:
+# all, TAGS, ???mostlyclean, ???clean.
+
+# This makefile will only work with Gnu make.
+# The rules are written assuming a minimum subset of tools are available:
+#
+# Required:
+#      MAKE:    Only Gnu make will work.
+#      MV:      Must accept (at least) one, maybe wildcard, source argument,
+#               a file or directory destination, and support creation/
+#               modification date preservation.  Gnu mv -f works.
+#      RM:      Must accept an arbitrary number of space separated file
+#               arguments, or one wildcard argument. Gnu rm works.
+#      RMDIR:   Must delete a directory and all its contents. Gnu rm -rf works.
+#      ECHO:    Must support command line redirection. Any Unix-like
+#               shell will typically provide this, otherwise a custom version
+#               is trivial to write.
+#      LN:      ln -s works, cp should work bu was not tested.
+#      CP:      GNU cp -p works.
+#      AR:      Gnu ar works.
+#      MKDIR:   Gnu mkdir works.
+#      CHMOD:   Gnu chmod works.
+#      true:    Does nothing and returns a normal successful return code.
+#      pwd:     Prints the current directory on stdout.
+#      cd:      Change directory.
+
+# Tell GNU make 3.79 not to run this directory in parallel.
+# Not all of the required dependencies are present.
+.NOTPARALLEL:
+
+# Variables that exist for you to override.
+# See below for how to change them for certain systems.
+
+ALLOCA = 
+# Various ways of specifying flags for compilations:  
+# CFLAGS is for the user to override to, e.g., do a bootstrap with -O2.
+# BOOT_CFLAGS is the value of CFLAGS to pass
+# to the stage2 and stage3 compilations
+# XCFLAGS is used for most compilations but not when using the GCC just built.
+XCFLAGS =
+CFLAGS = -g
+BOOT_CFLAGS = -O $(CFLAGS)
+# These exists to be overridden by the x-* and t-* files, respectively.
+X_CFLAGS =
+T_CFLAGS =
+
+X_CPPFLAGS =
+T_CPPFLAGS =
+
+X_ADAFLAGS =
+T_ADAFLAGS =
+
+CC = cc
+ADAC = $(CC)
+
+ECHO = echo
+CHMOD = chmod
+CP = cp -p
+MV = mv -f
+RM = rm -f
+RMDIR = rm -rf
+MKDIR = mkdir -p
+LN = ln -s
+AR = ar
+# How to invoke ranlib.
+RANLIB = ranlib
+# Test to use to see whether ranlib exists on the system.
+RANLIB_TEST = [ -f /usr/bin/ranlib -o -f /bin/ranlib ]
+SHELL = /bin/sh
+INSTALL_DATA = install -m 644
+MAKEINFO = makeinfo
+TEXI2DVI = texi2dvi
+GNATBIND = gnatbind
+GNATMAKE = gnatmake
+ADA_CFLAGS = $(CFLAGS)
+GHDL_ADAFLAGS = -Wall -gnata
+
+objext = .o
+exeext =
+arext  = .a
+soext  = .so
+shext  =
+
+HOST_CC=$(CC)
+HOST_CFLAGS=$(ALL_CFLAGS)
+HOST_CLIB=$(CLIB)
+HOST_LDFLAGS=$(LDFLAGS)
+HOST_CPPFLAGS=$(ALL_CPPFLAGS)
+HOST_ALLOCA=$(ALLOCA)
+HOST_MALLOC=$(MALLOC)
+HOST_OBSTACK=$(OBSTACK)
+
+# We don't use cross-make.  Instead we use the tools from the build tree,
+# if they are available.
+# program_transform_name and objdir are set by configure.in.
+program_transform_name =
+objdir = .
+
+target=@target@
+target_alias=@target_alias@
+xmake_file=@dep_host_xmake_file@
+tmake_file=@dep_tmake_file@
+#version=`sed -e 's/.*\"\([^ \"]*\)[ \"].*/\1/' < $(srcdir)/version.c`
+#mainversion=`sed -e 's/.*\"\([0-9]*\.[0-9]*\).*/\1/' < $(srcdir)/version.c`
+
+# Directory where sources are, from where we are.
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+# Top build directory, relative to here.
+top_builddir = ..
+
+# End of variables for you to override.
+
+# Definition of `all' is here so that new rules inserted by sed
+# do not specify the default target.
+all: all.indirect
+
+# This tells GNU Make version 3 not to put all variables in the environment.
+.NOEXPORT:
+
+# Now figure out from those variables how to compile and link.
+
+all.indirect: Makefile
+
+# This tells GNU make version 3 not to export all the variables
+# defined in this file into the environment.
+.NOEXPORT:
+
+Makefile: $(srcdir)/Makefile.in $(srcdir)/../configure
+	cd ..; $(SHELL) config.status
+
+force:
+
+SED=sed
+
+drvdir/default_pathes.ads: drvdir Makefile
+	echo "--  DO NOT EDIT" > tmp-dpathes.ads
+	echo "--  This file is created by Makefile" >> tmp-dpathes.ads
+	echo "package Default_Pathes is" >> tmp-dpathes.ads
+	echo "   Compiler_Gcc : constant String :=" >> tmp-dpathes.ads
+	echo "     \"$(libexecsubdir)/ghdl1$(exeext)\";" >> tmp-dpathes.ads
+	echo "   Compiler_Debug : constant String :=\"\";" >> tmp-dpathes.ads
+	echo "   Compiler_Mcode : constant String :=\"\";" >> tmp-dpathes.ads
+	echo "   Post_Processor : constant String :=\"\";" >> tmp-dpathes.ads
+	echo "   Prefix : constant String :=">> tmp-dpathes.ads
+	echo "     \"$(libsubdir)/vhdl/lib/\";" >> tmp-dpathes.ads
+	echo "end Default_Pathes;" >> tmp-dpathes.ads
+	$(srcdir)/../move-if-change tmp-dpathes.ads $@
+
+../ghdl$(exeext): drvdir drvdir/default_pathes.ads force
+	CURDIR=`pwd`; cd $(srcdir); SRCDIR=`pwd`; cd $$CURDIR/drvdir; \
+	$(GNATMAKE) -o ../$@ -aI$$SRCDIR/ghdldrv -aI$$SRCDIR -aO.. ghdl_gcc \
+	 -bargs -E -cargs $(ADA_CFLAGS) $(GHDL_ADAFLAGS) -largs $(LIBS)
+
+drvdir:
+	mkdir $@
+
+clean: grt-clean ghdllibs-clean force
+	$(RM) *.o *.ali
+	$(RM) default_pathes.ads
+
+# Additionnal rules
+
+LIB93_DIR:=./lib/v93
+LIB87_DIR:=./lib/v87
+LIBSRC_DIR:=$(srcdir)/libraries
+ANALYZE=../ghdl -a --GHDL1=../ghdl1 --ieee=none
+
+$(LIB93_DIR) $(LIB87_DIR):
+	$(srcdir)/../../mkinstalldirs $@
+
+####libraries Makefile.inc
+
+std87_standard.o: $(GHDL1)
+	$(GHDL1) --std=87 -quiet -o std_standard.s --compile-standard
+	../xgcc -c -o std_standard.o std_standard.s
+	$(MV) std_standard.o $@
+
+std93_standard.o: $(GHDL1)
+	$(GHDL1) --std=93 -quiet -o std_standard.s --compile-standard
+	../xgcc -c -o std_standard.o std_standard.s
+	$(MV) std_standard.o $@
+
+ghdllib: std87_standard.o std93_standard.o libgrt.a
+
+ghdllibs-clean: force
+	$(RM) -rf $(LIB87_DIR) $(LIB93_DIR)
+
+PHONY: ghdllib ghdllibs-clean
+
+GHDL1=../ghdl1
+GRTSRCDIR=$(srcdir)/grt
+GRT_RANLIB=$(RANLIB)
+
+####grt Makefile.inc
+
+install-ghdllib: ghdllib grt.lst $(STD93_SRCS) $(STD87_SRCS) \
+  $(IEEE93_SRCS) $(IEEE87_SRCS) $(SYNOPSYS_SRCS)
+	$(RM) -rf $(DESTDIR)$(VHDL_LIB_DIR)
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)
+# Install libgrt
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/lib
+	$(INSTALL_DATA) libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/lib/libgrt.a
+	$(INSTALL_DATA) grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/lib/grt.lst
+# Install VHDL sources.
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/std
+	for i in $(STD93_SRCS) $(STD87_SRCS); do \
+	  $(INSTALL_DATA) $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/std; \
+	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/ieee
+	for i in $(IEEE93_SRCS) $(IEEE87_SRCS); do \
+	  $(INSTALL_DATA) $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/ieee; \
+	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/vital95
+	for i in $(VITAL95_SRCS); do \
+	  $(INSTALL_DATA) $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/vital95; \
+	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/vital2000
+	for i in $(VITAL2000_SRCS); do \
+	  $(INSTALL_DATA) $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/vital2000; \
+	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/synopsys
+	for i in $(SYNOPSYS_SRCS); do \
+	  $(INSTALL_DATA) $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/synopsys; \
+	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/mentor
+	for i in $(MENTOR93_SRCS); do \
+	  $(INSTALL_DATA) $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/mentor; \
+	done
+# Create library dirs
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/lib/v93
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/lib/v87
+# Compile in place.
+	PDIR=`pwd` && cd $(DESTDIR)$(VHDL_LIB_DIR) && \
+	$(MAKE) -f $$PDIR/Makefile REL_DIR=../../.. \
+	 LIBSRC_DIR="src" LIB93_DIR=lib/v93 LIB87_DIR=lib/v87 \
+	 ANALYZE="$$PDIR/../ghdl -a --GHDL1=$$PDIR/../ghdl1 --ieee=none" \
+	 std.v93 std.v87 ieee.v93 ieee.v87 synopsys.v93 synopsys.v87 mentor.v93
+# Copy std_standard (this is done after libraries, since they remove dirs).
+	$(INSTALL_DATA) std87_standard.o \
+	  $(DESTDIR)$(VHDL_LIB_DIR)/lib/v87/std/std_standard.o
+	$(INSTALL_DATA) std93_standard.o \
+	  $(DESTDIR)$(VHDL_LIB_DIR)/lib/v93/std/std_standard.o

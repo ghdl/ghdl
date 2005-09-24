@@ -1,0 +1,42 @@
+--  Ada bindings for GCC internals. -*- Ada -*-
+--  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+with Agcc.Hwint; use Agcc.Hwint;
+with Agcc.Machmode; use Agcc.Machmode;
+
+package Agcc.Real is
+   pragma Preelaborate (Agcc.Real);
+
+   type REAL_VALUE_TYPE is private;
+
+   function REAL_VALUE_ATOF (S : System.Address; M : Machine_Mode)
+     return REAL_VALUE_TYPE;
+
+   function REAL_VALUE_LDEXP (X : REAL_VALUE_TYPE; N : Integer)
+     return REAL_VALUE_TYPE;
+
+   procedure REAL_VALUE_FROM_INT (D : System.Address;
+                                  Lo, Hi : HOST_WIDE_INT;
+                                  Mode : Machine_Mode);
+private
+@real
+   --  FIXME: check about the convention on other machines.
+   pragma Convention (C_Pass_By_Copy, REAL_VALUE_TYPE);
+   pragma Import (C, REAL_VALUE_ATOF, "get_REAL_VALUE_ATOF");
+   pragma Import (C, REAL_VALUE_LDEXP, "get_REAL_VALUE_LDEXP");
+   pragma Import (C, REAL_VALUE_FROM_INT, "get_REAL_VALUE_FROM_INT");
+end Agcc.Real;

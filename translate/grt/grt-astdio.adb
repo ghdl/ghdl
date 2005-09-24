@@ -1,0 +1,193 @@
+--  GHDL Run Time (GRT) stdio subprograms for GRT types.
+--  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+package body Grt.Astdio is
+   procedure Put (Stream : FILEs; Str : String)
+   is
+      S : size_t;
+   begin
+      S := fwrite (Str'Address, Str'Length, 1, Stream);
+   end Put;
+
+   procedure Put (Stream : FILEs; C : Character)
+   is
+      R : int;
+   begin
+      R := fputc (Character'Pos (C), Stream);
+   end Put;
+
+   procedure Put (Stream : FILEs; Str : Ghdl_C_String)
+   is
+      Len : Natural;
+      S : size_t;
+   begin
+      Len := strlen (Str);
+      S := fwrite (Str (1)'Address, size_t (Len), 1, Stream);
+   end Put;
+
+   procedure New_Line (Stream : FILEs) is
+   begin
+      Put (Stream, Nl);
+   end New_Line;
+
+   procedure Put (Str : String)
+   is
+      S : size_t;
+   begin
+      S := fwrite (Str'Address, Str'Length, 1, stdout);
+   end Put;
+
+   procedure Put (C : Character)
+   is
+      R : int;
+   begin
+      R := fputc (Character'Pos (C), stdout);
+   end Put;
+
+   procedure Put (Str : Ghdl_C_String)
+   is
+      Len : Natural;
+      S : size_t;
+   begin
+      Len := strlen (Str);
+      S := fwrite (Str (1)'Address, size_t (Len), 1, stdout);
+   end Put;
+
+   procedure New_Line is
+   begin
+      Put (Nl);
+   end New_Line;
+
+   procedure Put_Line (Str : String)
+   is
+   begin
+      Put (Str);
+      New_Line;
+   end Put_Line;
+
+   procedure Put_Str_Len (Stream : FILEs; Str : Ghdl_Str_Len_Type)
+   is
+      S : String (1 .. 3);
+   begin
+      if Str.Str = null then
+         S (1) := ''';
+         S (2) := Character'Val (Str.Len);
+         S (3) := ''';
+         Put (Stream, S);
+      else
+         Put (Stream, Str.Str (1 .. Str.Len));
+      end if;
+   end Put_Str_Len;
+
+      generic
+      type Ntype is range <>;
+      Max_Len : Natural;
+   procedure Put_Ntype (Stream : FILEs; N : Ntype);
+
+   procedure Put_Ntype (Stream : FILEs; N : Ntype)
+   is
+      Str : String (1 .. Max_Len);
+      P : Natural := Str'Last;
+      V : Ntype;
+   begin
+      if N > 0 then
+         V := -N;
+      else
+         V := N;
+      end if;
+      loop
+         Str (P) := Character'Val (48 - (V rem 10));
+         V := V / 10;
+         exit when V = 0;
+         P := P - 1;
+      end loop;
+      if N < 0 then
+         P := P - 1;
+         Str (P) := '-';
+      end if;
+      Put (Stream, Str (P .. Max_Len));
+   end Put_Ntype;
+
+   procedure Put_I32_1 is new Put_Ntype (Ntype => Ghdl_I32, Max_Len => 11);
+
+   procedure Put_I32 (Stream : FILEs; I32 : Ghdl_I32) renames Put_I32_1;
+
+   procedure Put_I64_1 is new Put_Ntype (Ntype => Ghdl_I64, Max_Len => 20);
+   procedure Put_I64 (Stream : FILEs; I64 : Ghdl_I64) renames Put_I64_1;
+
+   procedure Put_F64 (Stream : FILEs; F64 : Ghdl_F64)
+   is
+      procedure fprintf (Stream : FILEs;
+                         Template : System.Address;
+                         Arg : Ghdl_F64);
+      pragma Import (C, fprintf);
+
+      Str : constant String := "%g" & Character'Val (0);
+   begin
+      fprintf (Stream, Str'Address, F64);
+   end Put_F64;
+
+   Hex_Map : constant array (0 .. 15) of Character := "0123456789ABCDEF";
+
+   procedure Put (Stream : FILEs; Addr : System.Address)
+   is
+      Res : String (1 .. System.Word_Size / 4);
+      Val : Integer_Address := To_Integer (Addr);
+   begin
+      for I in reverse Res'Range loop
+         Res (I) := Hex_Map (Natural (Val and 15));
+         Val := Val / 16;
+      end loop;
+      Put (Stream, Res);
+   end Put;
+
+   procedure Put_Dir (Stream : FILEs; Dir : Ghdl_Dir_Type) is
+   begin
+      case Dir is
+         when Dir_To =>
+            Put (Stream, " to ");
+         when Dir_Downto =>
+            Put (Stream, " downto ");
+      end case;
+   end Put_Dir;
+
+   procedure Put_Time (Stream : FILEs; Time : Std_Time) is
+   begin
+      if Time = Std_Time'First then
+         Put (Stream, "-Inf");
+      else
+         --  Do not bother with sec, min, and hr.
+         if (Time mod 1_000_000_000_000) = 0 then
+            Put_I64 (Stream, Ghdl_I64 (Time / 1_000_000_000_000));
+            Put (Stream, "ms");
+         elsif (Time mod 1_000_000_000) = 0 then
+            Put_I64 (Stream, Ghdl_I64 (Time / 1_000_000_000));
+            Put (Stream, "us");
+         elsif (Time mod 1_000_000) = 0 then
+            Put_I64 (Stream, Ghdl_I64 (Time / 1_000_000));
+            Put (Stream, "ns");
+         elsif (Time mod 1_000) = 0 then
+            Put_I64 (Stream, Ghdl_I64 (Time / 1_000));
+            Put (Stream, "ps");
+         else
+            Put_I64 (Stream, Ghdl_I64 (Time));
+            Put (Stream, "fs");
+         end if;
+      end if;
+   end Put_Time;
+
+end Grt.Astdio;

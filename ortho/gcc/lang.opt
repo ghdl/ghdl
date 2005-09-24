@@ -1,0 +1,88 @@
+;  Options for the VHDL front-end.
+;  Copyright (C) 2003, 2004, 2005 Tristan Gingold
+;
+;  GHDL is free software; you can redistribute it and/or modify it under
+;  the terms of the GNU General Public License as published by the Free
+;  Software Foundation; either version 2, or (at your option) any later
+;  version.
+;
+;  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+;  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+;  for more details.
+;
+;  You should have received a copy of the GNU General Public License
+;  along with GCC; see the file COPYING.  If not, write to the Free
+;  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+;  02111-1307, USA.
+
+Language
+vhdl
+
+-std=
+vhdl Joined
+Select the vhdl standard
+
+-compile-standard
+vhdl
+Used during compiler build to compile the std.standard package
+
+-bootstrap
+vhdl
+Used during compiler build to compile std packages
+
+-work=
+vhdl Joined
+Set the name of the work library
+
+-workdir=
+vhdl Joined
+Set the directory of the work library
+
+P
+vhdl Joined
+-P<dir>	Add <dir> to the end of the vhdl library path
+
+-elab
+vhdl Separate
+--elab <name>	Used internally during elaboration of <name>
+
+-anaelab
+vhdl Separate
+--anaelab <name>	Used internally during elaboration of <name>
+
+c
+vhdl Separate
+-c <filename>	Analyze <filename> for --anaelab
+
+v
+vhdl
+Verbose
+
+-warn-
+vhdl Joined
+--warn-<name>	Warn about <name>
+
+-ghdl
+vhdl Joined
+--ghdl-<option>	Pass <option> to vhdl front-end
+
+-expect-failure
+vhdl
+Expect a compiler error (used for testsuite)
+
+-no-vital-checks
+vhdl
+Disable VITAL checks
+
+-vital-checks
+vhdl
+Enable VITAL checks
+
+fexplicit
+vhdl
+Explicit functions override implicit functions
+
+l
+vhdl Joined Separate
+-l<filename>	Put list of files for link in <filename>

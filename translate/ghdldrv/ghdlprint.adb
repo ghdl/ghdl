@@ -1,0 +1,1561 @@
+--  GHDL driver - print commands.
+--  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+with Ada.Characters.Latin_1;
+with Ada.Text_IO; use Ada.Text_IO;
+with GNAT.Directory_Operations;
+with GNAT.OS_Lib; use GNAT.OS_Lib;
+with Types; use Types;
+with Flags;
+with Name_Table; use Name_Table;
+with Files_Map;
+with Libraries;
+with Errorout; use Errorout;
+with Iirs; use Iirs;
+with Tokens;
+with Scan;
+with Version;
+with Xrefs;
+with Ghdlmain; use Ghdlmain;
+with Ghdllocal; use Ghdllocal;
+
+package body Ghdlprint is
+   type Html_Format_Type is (Html_2, Html_Css);
+   Html_Format : Html_Format_Type := Html_2;
+
+   procedure Put_Html (C : Character) is
+   begin
+      case C is
+         when '>' =>
+            Put ("&gt;");
+         when '<' =>
+            Put ("&lt;");
+         when '&' =>
+            Put ("&amp;");
+         when others =>
+            Put (C);
+      end case;
+   end Put_Html;
+
+   procedure Put_Html (S : String) is
+   begin
+      for I in S'Range loop
+         Put_Html (S (I));
+      end loop;
+   end Put_Html;
+
+   package Nat_IO is new Ada.Text_IO.Integer_IO (Num => Natural);
+   procedure Put_Nat (N : Natural) is
+   begin
+      Nat_IO.Put (N, Width => 0);
+   end Put_Nat;
+
+   type Filexref_Info_Type is record
+      Output : String_Acc;
+      Referenced : Boolean;
+   end record;
+   type Filexref_Info_Arr is array (Source_File_Entry range <>)
+     of Filexref_Info_Type;
+   type Filexref_Info_Arr_Acc is access Filexref_Info_Arr;
+   Filexref_Info : Filexref_Info_Arr_Acc := null;
+
+   procedure PP_Html_File (File : Source_File_Entry)
+   is
+      use Scan;
+      use Tokens;
+      use Files_Map;
+      use Ada.Characters.Latin_1;
+
+      Line : Natural;
+      Buf : File_Buffer_Acc;
+      Prev_Tok : Token_Type;
+
+      --  True if tokens are between 'end' and ';'
+      In_End : Boolean := False;
+
+      --  Current logical column number.  Used to expand TABs.
+      Col : Natural;
+
+      --  Position just after the last token.
+      Last_Tok : Source_Ptr;
+
+      --  Position just before the current token.
+      Bef_Tok : Source_Ptr;
+
+      --  Position just after the current token.
+      Aft_Tok : Source_Ptr;
+
+      procedure Disp_Ln
+      is
+         N : Natural;
+         Str : String (1 .. 5);
+      begin
+         case Html_Format is
+            when Html_2 =>
+               Put ("<font size=-1>");
+            when Html_Css =>
+               Put ("<i>");
+         end case;
+         N := Line;
+         for I in reverse Str'Range loop
+            if N = 0 then
+               Str (I) := ' ';
+            else
+               Str (I) := Character'Val (48 + N mod 10);
+               N := N / 10;
+            end if;
+         end loop;
+         Put (Str);
+         case Html_Format is
+            when Html_2 =>
+               Put ("</font>");
+            when Html_Css =>
+               Put ("</i>");
+         end case;
+         Put (" ");
+         Col := 0;
+      end Disp_Ln;
+
+      procedure Disp_Spaces
+      is
+         C : Character;
+         P : Source_Ptr;
+         N_Col : Natural;
+      begin
+         P := Last_Tok;
+         while P < Bef_Tok loop
+            C := Buf (P);
+            if C = HT then
+               --  Expand TABS.
+               N_Col := Col + 8;
+               N_Col := N_Col - N_Col mod 8;
+               while Col < N_Col loop
+                  Put (' ');
+                  Col := Col + 1;
+               end loop;
+            else
+               Put (' ');
+               Col := Col + 1;
+            end if;
+            P := P + 1;
+         end loop;
+      end Disp_Spaces;
+
+      procedure Disp_Text
+      is
+         P : Source_Ptr;
+      begin
+         P := Bef_Tok;
+         while P < Aft_Tok loop
+            Put_Html (Buf (P));
+            Col := Col + 1;
+            P := P + 1;
+         end loop;
+      end Disp_Text;
+
+      procedure Disp_Reserved is
+      begin
+         Disp_Spaces;
+         case Html_Format is
+            when Html_2 =>
+               Put ("<font color=red>");
+               Disp_Text;
+               Put ("</font>");
+            when Html_Css =>
+               Put ("<em>");
+               Disp_Text;
+               Put ("</em>");
+         end case;
+      end Disp_Reserved;
+
+      procedure Disp_Href (Loc : Location_Type)
+      is
+         L_File : Source_File_Entry;
+         L_Pos : Source_Ptr;
+      begin
+         Location_To_File_Pos (Loc, L_File, L_Pos);
+         Put (" href=""");
+         if L_File /= File then
+            --  External reference.
+            if Filexref_Info (L_File).Output /= null then
+               Put (Filexref_Info (L_File).Output.all);
+               Put ("#");
+               Put_Nat (Natural (L_Pos));
+            else
+               --  Reference to an unused file.
+               Put ("index.html#f");
+               Put_Nat (Natural (L_File));
+               Filexref_Info (L_File).Referenced := True;
+            end if;
+         else
+            --  Local reference.
+            Put ("#");
+            Put_Nat (Natural (L_Pos));
+         end if;
+         Put ("""");
+      end Disp_Href;
+
+      procedure Disp_Anchor (Loc : Location_Type)
+      is
+         L_File : Source_File_Entry;
+         L_Pos : Source_Ptr;
+      begin
+         Put (" name=""");
+         Location_To_File_Pos (Loc, L_File, L_Pos);
+         Put_Nat (Natural (L_Pos));
+         Put ("""");
+      end Disp_Anchor;
+
+      procedure Disp_Identifier
+      is
+         use Xrefs;
+         Ref : Xref;
+         Decl : Iir;
+         Bod : Iir;
+         Loc : Location_Type;
+      begin
+         Disp_Spaces;
+         if Flags.Flag_Xref then
+            Loc := File_Pos_To_Location (File, Bef_Tok);
+            Ref := Find (Loc);
+            if Ref = Bad_Xref then
+               Disp_Text;
+               Warning_Msg_Sem ("cannot find xref", Loc);
+               return;
+            end if;
+         else
+            Disp_Text;
+            return;
+         end if;
+         case Get_Xref_Kind (Ref) is
+            when Xref_Decl =>
+               Put ("<a");
+               Disp_Anchor (Loc);
+               Decl := Get_Xref_Node (Ref);
+               case Get_Kind (Decl) is
+                  when Iir_Kind_Function_Declaration
+                    | Iir_Kind_Procedure_Declaration =>
+                     Bod := Get_Subprogram_Body (Decl);
+                  when Iir_Kind_Package_Declaration =>
+                     Bod := Get_Package_Body (Decl);
+                  when Iir_Kind_Type_Declaration =>
+                     Decl := Get_Type (Decl);
+                     case Get_Kind (Decl) is
+                        when Iir_Kind_Protected_Type_Declaration =>
+                           Bod := Get_Protected_Type_Body (Decl);
+                        when Iir_Kind_Incomplete_Type_Definition =>
+                           Bod := Get_Type_Declarator (Decl);
+                        when others =>
+                           Bod := Null_Iir;
+                     end case;
+                  when others =>
+                     Bod := Null_Iir;
+               end case;
+               if Bod /= Null_Iir then
+                  Disp_Href (Get_Location (Bod));
+               end if;
+               Put (">");
+               Disp_Text;
+               Put ("</a>");
+            when Xref_Ref
+              | Xref_End =>
+               Decl := Get_Xref_Node (Ref);
+               Loc := Get_Location (Decl);
+               if Loc /= Location_Nil then
+                  Put ("<a");
+                  Disp_Href (Loc);
+                  Put (">");
+                  Disp_Text;
+                  Put ("</a>");
+               else
+                  --  This may happen for overload list, in use clauses.
+                  Disp_Text;
+               end if;
+            when Xref_Body =>
+               Put ("<a");
+               Disp_Anchor (Loc);
+               Disp_Href (Get_Location (Get_Xref_Node (Ref)));
+               Put (">");
+               Disp_Text;
+               Put ("</a>");
+         end case;
+      end Disp_Identifier;
+
+      procedure Disp_Attribute
+      is
+         use Xrefs;
+         Ref : Xref;
+         Decl : Iir;
+         Loc : Location_Type;
+      begin
+         Disp_Spaces;
+         if Flags.Flag_Xref then
+            Loc := File_Pos_To_Location (File, Bef_Tok);
+            Ref := Find (Loc);
+         else
+            Ref := Bad_Xref;
+         end if;
+         if Ref = Bad_Xref then
+            case Html_Format is
+               when Html_2 =>
+                  Put ("<font color=orange>");
+                  Disp_Text;
+                  Put ("</font>");
+               when Html_Css =>
+                  Put ("<var>");
+                  Disp_Text;
+                  Put ("</var>");
+            end case;
+         else
+            Decl := Get_Xref_Node (Ref);
+            Loc := Get_Location (Decl);
+            Put ("<a");
+            Disp_Href (Loc);
+            Put (">");
+            Disp_Text;
+            Put ("</a>");
+         end if;
+      end Disp_Attribute;
+   begin
+      Scan.Flag_Comment := True;
+      Scan.Flag_Newline := True;
+
+      Set_File (File);
+      Buf := Get_File_Source (File);
+
+      Put_Line ("<pre>");
+      Line := 1;
+      Disp_Ln;
+      Last_Tok := Source_Ptr_Org;
+      Prev_Tok := Tok_Invalid;
+      loop
+         Scan.Scan;
+         Bef_Tok := Get_Token_Position;
+         Aft_Tok := Get_Position;
+         case Current_Token is
+            when Tok_Eof =>
+               exit;
+            when Tok_Newline =>
+               New_Line;
+               Line := Line + 1;
+               Disp_Ln;
+            when Tok_Comment =>
+               Disp_Spaces;
+               case Html_Format is
+                  when Html_2 =>
+                     Put ("<font color=green>");
+                     Disp_Text;
+                     Put ("</font>");
+                  when Html_Css =>
+                     Put ("<tt>");
+                     Disp_Text;
+                     Put ("</tt>");
+               end case;
+            when Tok_Access .. Tok_Elsif
+              | Tok_Entity .. Tok_With
+              | Tok_Mod .. Tok_Rem
+              | Tok_And .. Tok_Not =>
+               Disp_Reserved;
+            when Tok_End =>
+               Disp_Reserved;
+               In_End := True;
+            when Tok_Semi_Colon =>
+               In_End := False;
+               Disp_Spaces;
+               Disp_Text;
+            when Tok_Xnor .. Tok_Ror =>
+               if Flags.Vhdl_Std > Vhdl_87 then
+                  Disp_Reserved;
+               else
+                  Disp_Identifier;
+               end if;
+            when Tok_Protected =>
+               if Flags.Vhdl_Std >= Vhdl_00 then
+                  Disp_Reserved;
+               else
+                  Disp_Identifier;
+               end if;
+            when Tok_String
+              | Tok_Bit_String
+              | Tok_Character =>
+               Disp_Spaces;
+               case Html_Format is
+                  when Html_2 =>
+                     Put ("<font color=blue>");
+                     Disp_Text;
+                     Put ("</font>");
+                  when Html_Css =>
+                     Put ("<kbd>");
+                     Disp_Text;
+                     Put ("</kbd>");
+               end case;
+            when Tok_Identifier =>
+               if Prev_Tok = Tok_Tick then
+                  Disp_Attribute;
+               else
+                  Disp_Identifier;
+               end if;
+            when Tok_Left_Paren .. Tok_Colon
+              | Tok_Comma .. Tok_Dot
+              | Tok_Integer
+              | Tok_Real
+              | Tok_Equal .. Tok_Slash
+              | Tok_Invalid =>
+               Disp_Spaces;
+               Disp_Text;
+         end case;
+         Last_Tok := Aft_Tok;
+         Prev_Tok := Current_Token;
+      end loop;
+      Close_File;
+      New_Line;
+      Put_Line ("</pre>");
+      Put_Line ("<hr/>");
+   end PP_Html_File;
+
+   procedure Put_Html_Header
+   is
+   begin
+      Put ("<html>");
+      Put_Line (" <head>");
+      case Html_Format is
+         when Html_2 =>
+            null;
+         when Html_Css =>
+            Put_Line (" <link rel=stylesheet type=""text/css""");
+            Put_Line ("  href=""ghdl.css"" title=""default""/>");
+      end case;
+      --Put_Line ("<?xml version=""1.0"" encoding=""utf-8"" ?>");
+      --Put_Line("<!DOCTYPE html PUBLIC ""-//W3C//DTD XHTML 1.0 Strict//EN""");
+      --Put_Line ("""http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"">");
+      --Put_Line ("<html xmlns=""http://www.w3.org/1999/xhtml"""
+      --         & " xml:lang=""en"">");
+      --Put_Line ("<head>");
+   end Put_Html_Header;
+
+   procedure Put_Css is
+   begin
+      Put_Line ("/* EM is used for reserved words */");
+      Put_Line ("EM { color : red; font-style: normal }");
+      New_Line;
+      Put_Line ("/* TT is used for comments */");
+      Put_Line ("TT { color : green; font-style: normal }");
+      New_Line;
+      Put_Line ("/* KBD is used for literals and strings */");
+      Put_Line ("KBD { color : blue; font-style: normal }");
+      New_Line;
+      Put_Line ("/* I is used for line numbers */");
+      Put_Line ("I { color : gray; font-size: 50% }");
+      New_Line;
+      Put_Line ("/* VAR is used for attributes name */");
+      Put_Line ("VAR { color : orange; font-style: normal }");
+      New_Line;
+      Put_Line ("/* A is used for identifiers.  */");
+      Put_Line ("A { color: blue; font-style: normal;");
+      Put_Line ("    text-decoration: none }");
+   end Put_Css;
+
+   procedure Put_Html_Foot
+   is
+   begin
+      Put_Line ("<p>");
+      Put ("<small>This page was generated using ");
+      Put ("<a href=""http://ghdl.free.fr"">");
+      Put (Version.Ghdl_Version);
+      Put ("</a>, a program written by");
+      Put (" Tristan Gingold");
+      New_Line;
+      Put_Line ("</p>");
+      Put_Line ("</body>");
+      Put_Line ("</html>");
+   end Put_Html_Foot;
+
+   function Create_Output_Filename (Name : String; Num : Natural)
+                                   return String_Acc
+   is
+      --  Position of the extension.  0 if none.
+      Ext_Pos : Natural;
+
+      Num_Str : String := Natural'Image (Num);
+   begin
+      --  Search for the extension.
+      Ext_Pos := 0;
+      for I in reverse Name'Range loop
+         exit when Name (I) = Directory_Separator;
+         if Name (I) = '.' then
+            Ext_Pos := I - 1;
+            exit;
+         end if;
+      end loop;
+      if Ext_Pos = 0 then
+         Ext_Pos := Name'Last;
+      end if;
+      Num_Str (1) := '.';
+      return new String'(Name (Name'First .. Ext_Pos) & Num_Str & ".html");
+   end Create_Output_Filename;
+
+   --  Command --chop.
+   type Command_Chop is new Command_Lib with null record;
+   function Decode_Command (Cmd : Command_Chop; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Chop) return String;
+   procedure Perform_Action (Cmd : in out Command_Chop;
+                             Args : Argument_List);
+
+   function Decode_Command (Cmd : Command_Chop; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--chop";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Chop) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--chop [OPTS] FILEs  Chop FILEs";
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : in out Command_Chop; Args : Argument_List)
+   is
+      pragma Unreferenced (Cmd);
+      use Ada.Characters.Latin_1;
+
+      function Build_File_Name_Length (Lib : Iir) return Natural
+      is
+         Len : Natural;
+         Id : Name_Id;
+         Id1 : Name_Id;
+      begin
+         Id := Get_Identifier (Lib);
+         Len := Get_Name_Length (Id);
+         case Get_Kind (Lib) is
+            when Iir_Kind_Configuration_Declaration
+              | Iir_Kind_Entity_Declaration
+              | Iir_Kind_Package_Declaration =>
+               null;
+            when Iir_Kind_Package_Body =>
+               Len := Len + 1 + 4; -- add -body
+            when Iir_Kind_Architecture_Declaration =>
+               Id1 := Get_Identifier (Get_Entity (Lib));
+               Len := Len + 1 + Get_Name_Length (Id1);
+            when others =>
+               Error_Kind ("build_file_name", Lib);
+         end case;
+         Len := Len + 1 + 4; --  add .vhdl
+         return Len;
+      end Build_File_Name_Length;
+
+      procedure Build_File_Name (Lib : Iir; Res : out String)
+      is
+         Id : Name_Id;
+         P : Natural;
+
+         procedure Append (Str : String) is
+         begin
+            Res (P + 1 .. P + Str'Length) := Str;
+            P := P + Str'Length;
+         end Append;
+      begin
+         Id := Get_Identifier (Lib);
+         P := Res'First - 1;
+         case Get_Kind (Lib) is
+            when Iir_Kind_Configuration_Declaration
+              | Iir_Kind_Entity_Declaration
+              | Iir_Kind_Package_Declaration =>
+               Image (Id);
+               Append (Name_Buffer (1 .. Name_Length));
+            when Iir_Kind_Package_Body =>
+               Image (Id);
+               Append (Name_Buffer (1 .. Name_Length));
+               Append ("-body");
+            when Iir_Kind_Architecture_Declaration =>
+               Image (Get_Identifier (Get_Entity (Lib)));
+               Append (Name_Buffer (1 .. Name_Length));
+               Append ("-");
+               Image (Id);
+               Append (Name_Buffer (1 .. Name_Length));
+            when others =>
+               null;
+         end case;
+         Append (".vhdl");
+      end Build_File_Name;
+
+      --  Scan source file BUF+START until end of line.
+      --  Return line kind to KIND and position of next line to NEXT.
+      type Line_Type is (Line_Blank, Line_Comment, Line_Text);
+      procedure Find_Eol (Buf : File_Buffer_Acc;
+                          Start : Source_Ptr;
+                          Next : out Source_Ptr;
+                          Kind : out Line_Type)
+      is
+         P : Source_Ptr;
+      begin
+         P := Start;
+
+         Kind := Line_Blank;
+
+         --  Skip blanks.
+         while Buf (P) = ' ' or Buf (P) = HT loop
+            P := P + 1;
+         end loop;
+
+         --  Skip comment if any.
+         if Buf (P) = '-' and Buf (P + 1) = '-' then
+            Kind := Line_Comment;
+            P := P + 2;
+         elsif Buf (P) /= CR and Buf (P) /= LF and Buf (P) /= EOT then
+            Kind := Line_Text;
+         end if;
+
+         --  Skip until end of line.
+         while Buf (P) /= CR and Buf (P) /= LF and Buf (P) /= EOT loop
+            P := P + 1;
+         end loop;
+
+         if Buf (P) = CR then
+            P := P + 1;
+            if Buf (P) = LF then
+               P := P + 1;
+            end if;
+         elsif Buf (P) = LF then
+            P := P + 1;
+            if Buf (P) = CR then
+               P := P + 1;
+            end if;
+         end if;
+
+         Next := P;
+      end Find_Eol;
+
+      Id : Name_Id;
+      Design_File : Iir_Design_File;
+      Unit : Iir;
+      Lib : Iir;
+      Len : Natural;
+   begin
+      Flags.Bootstrap := True;
+      --  Load word library.
+      Libraries.Load_Std_Library;
+      Libraries.Load_Work_Library;
+
+      --  First loop: parse source file, check destination file does not
+      --  exist.
+      for I in Args'Range loop
+         Id := Get_Identifier (Args (I).all);
+         Design_File := Libraries.Load_File (Id);
+         if Design_File = Null_Iir then
+            raise Compile_Error;
+         end if;
+         Unit := Get_First_Design_Unit (Design_File);
+         while Unit /= Null_Iir loop
+            Lib := Get_Library_Unit (Unit);
+            Len := Build_File_Name_Length (Lib);
+            declare
+               Filename : String (1 .. Len + 1);
+            begin
+               Build_File_Name (Lib, Filename);
+               Filename (Len + 1) := Ghdllocal.Nul;
+               if Is_Regular_File (Filename) then
+                  Error ("file '" & Filename (1 .. Len) & "' already exists");
+                  raise Compile_Error;
+               end if;
+               Put (Filename (1 .. Len));
+               Put ("  (for ");
+               Disp_Library_Unit (Lib);
+               Put (")");
+               New_Line;
+            end;
+            Unit := Get_Chain (Unit);
+         end loop;
+      end loop;
+
+      --  Second loop: do the real work.
+      for I in Args'Range loop
+         Id := Get_Identifier (Args (I).all);
+         Design_File := Libraries.Load_File (Id);
+         Unit := Get_First_Design_Unit (Design_File);
+         declare
+            use Files_Map;
+
+            File_Entry : Source_File_Entry;
+            Buffer : File_Buffer_Acc;
+
+            Start : Source_Ptr;
+            Lend : Source_Ptr;
+            First : Source_Ptr;
+            Next : Source_Ptr;
+            Kind : Line_Type;
+         begin
+            --  A design_file must have at least one design unit.
+            if Unit = Null_Iir then
+               raise Compile_Error;
+            end if;
+
+            Location_To_File_Pos
+              (Get_Location (Unit), File_Entry, Start);
+            Buffer := Get_File_Source (File_Entry);
+
+            First := Source_Ptr_Org;
+            if Get_Chain (Unit) /= Null_Iir then
+               --  If there is only one unit, then the whole file is written.
+               --  First last blank line.
+               Next := Source_Ptr_Org;
+               loop
+                  Start := Next;
+                  Find_Eol (Buffer, Start, Next, Kind);
+                  exit when Kind = Line_Text;
+                  if Kind = Line_Blank then
+                     First := Next;
+                  end if;
+               end loop;
+
+               --  FIXME: write header.
+            end if;
+
+            while Unit /= Null_Iir loop
+               Lib := Get_Library_Unit (Unit);
+
+               Location_To_File_Pos
+                 (Get_End_Location (Unit), File_Entry, Lend);
+               if Lend < First then
+                  raise Internal_Error;
+               end if;
+
+               Location_To_File_Pos
+                 (Get_End_Location (Unit), File_Entry, Lend);
+               --  Find the ';'.
+               while Buffer (Lend) /= ';' loop
+                  Lend := Lend + 1;
+               end loop;
+               Lend := Lend + 1;
+               --  Find end of line.
+               Find_Eol (Buffer, Lend, Next, Kind);
+               if Kind = Line_Text then
+                  --  There is another unit on the same line.
+                  Next := Lend;
+                  --  Skip blanks.
+                  while Buffer (Next) = ' ' or Buffer (Next) = HT loop
+                     Next := Next + 1;
+                  end loop;
+               else
+                  --  Find first blank line.
+                  loop
+                     Start := Next;
+                     Find_Eol (Buffer, Start, Next, Kind);
+                     exit when Kind /= Line_Comment;
+                  end loop;
+                  if Kind = Line_Text then
+                     --  There is not blank lines.
+                     --  All the comments are supposed to belong to the next
+                     --  unit.
+                     Find_Eol (Buffer, Lend, Next, Kind);
+                     Lend := Next;
+                  else
+                     Lend := Start;
+                  end if;
+               end if;
+
+               if Get_Chain (Unit) = Null_Iir then
+                  --  Last unit.
+                  --  Put the end of the file in it.
+                  Lend := Get_File_Length (File_Entry);
+               end if;
+
+               --  FIXME: file with only one unit.
+               --  FIXME: set extension.
+               Len := Build_File_Name_Length (Lib);
+               declare
+                  Filename : String (1 .. Len + 1);
+                  Fd : File_Descriptor;
+
+                  Wlen : Integer;
+               begin
+                  Build_File_Name (Lib, Filename);
+                  Filename (Len + 1) := Character'Val (0);
+                  Fd := Create_File (Filename, Binary);
+                  if Fd = Invalid_FD then
+                     Error
+                       ("cannot create file '" & Filename (1 .. Len) & "'");
+                     raise Compile_Error;
+                  end if;
+                  Wlen := Integer (Lend - First);
+                  if Write (Fd, Buffer (First)'Address, Wlen) /= Wlen then
+                     Error ("cannot write to '" & Filename (1 .. Len) & "'");
+                     raise Compile_Error;
+                  end if;
+                  Close (Fd);
+               end;
+               First := Next;
+
+               Unit := Get_Chain (Unit);
+            end loop;
+         end;
+      end loop;
+   end Perform_Action;
+
+   --  Command --lines.
+   type Command_Lines is new Command_Lib with null record;
+   function Decode_Command (Cmd : Command_Lines; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Lines) return String;
+   procedure Perform_Action (Cmd : in out Command_Lines;
+                             Args : Argument_List);
+
+   function Decode_Command (Cmd : Command_Lines; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--lines";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Lines) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--lines FILEs      Precede line with its number";
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : in out Command_Lines; Args : Argument_List)
+   is
+      pragma Unreferenced (Cmd);
+      use Scan;
+      use Tokens;
+      use Files_Map;
+      use Ada.Characters.Latin_1;
+
+      Id : Name_Id;
+      Fe : Source_File_Entry;
+      Local_Id : Name_Id;
+      Line : Natural;
+      File : Source_File_Entry;
+      Buf : File_Buffer_Acc;
+      Ptr : Source_Ptr;
+      Eptr : Source_Ptr;
+      C : Character;
+      N : Natural;
+      Log : Natural;
+      Str : String (1 .. 10);
+   begin
+      Local_Id := Get_Identifier ("");
+      for I in Args'Range loop
+         Id := Get_Identifier (Args (I).all);
+         Fe := Files_Map.Load_Source_File (Local_Id, Id);
+         if Fe = No_Source_File_Entry then
+            Error ("cannot open file " & Args (I).all);
+            raise Compile_Error;
+         end if;
+         Set_File (Fe);
+         loop
+            Scan.Scan;
+            exit when Current_Token = Tok_Eof;
+         end loop;
+         File := Get_Current_Source_File;
+         Line := Get_Current_Line;
+         Close_File;
+
+         --  Compute log10 of line.
+         N := Line;
+         Log := 0;
+         loop
+            N := N / 10;
+            Log := Log + 1;
+            exit when N = 0;
+         end loop;
+
+         --  Disp file name.
+         Put (Args (I).all);
+         Put (':');
+         New_Line;
+
+         Buf := Get_File_Source (File);
+         for J in 1 .. Line loop
+            Ptr := Line_To_Position (File, J);
+            exit when Ptr = Source_Ptr_Bad;
+            exit when Buf (Ptr) = Files_Map.EOT;
+
+            --  Disp line number.
+            N := J;
+            for K in reverse 1 .. Log loop
+               if N = 0 then
+                  Str (K) := ' ';
+               else
+                  Str (K) := Character'Val (48 + N mod 10);
+                  N := N / 10;
+               end if;
+            end loop;
+            Put (Str (1 .. Log));
+            Put (": ");
+
+            --  Search for end of line (or end of file).
+            Eptr := Ptr;
+            loop
+               C := Buf (Eptr);
+               exit when C = Files_Map.EOT or C = LF or C = CR;
+               Eptr := Eptr + 1;
+            end loop;
+
+            --  Disp line.
+            Put (String (Buf (Ptr .. Eptr - 1)));
+            New_Line;
+         end loop;
+      end loop;
+   end Perform_Action;
+
+   type Command_Html is abstract new Command_Lib with null record;
+
+   procedure Decode_Option (Cmd : in out Command_Html;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res);
+
+   procedure Disp_Long_Help (Cmd : Command_Html);
+
+   procedure Decode_Option (Cmd : in out Command_Html;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res)
+   is
+   begin
+      if Option = "--format=css" then
+         Html_Format := Html_Css;
+         Res := Option_Ok;
+      elsif Option = "--format=html2" then
+         Html_Format := Html_2;
+         Res := Option_Ok;
+      else
+         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
+      end if;
+   end Decode_Option;
+
+   procedure Disp_Long_Help (Cmd : Command_Html)
+   is
+      use Ada.Text_IO;
+   begin
+      Disp_Long_Help (Command_Lib (Cmd));
+      Put_Line ("--format=html2  Use FONT attributes");
+      Put_Line ("--format=css    Use ghdl.css file");
+   end Disp_Long_Help;
+
+   --  Command --pp_html.
+   type Command_PP_Html is new Command_Html with null record;
+   function Decode_Command (Cmd : Command_PP_Html; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_PP_Html) return String;
+   procedure Perform_Action (Cmd : in out Command_PP_Html;
+                             Files : Argument_List);
+
+   function Decode_Command (Cmd : Command_PP_Html; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--pp-html";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_PP_Html) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--pp-html FILEs    Pretty-print FILEs in HTML";
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : in out Command_PP_Html;
+                             Files : Argument_List)
+   is
+      pragma Unreferenced (Cmd);
+      use Scan;
+      use Tokens;
+      use Files_Map;
+      use Ada.Characters.Latin_1;
+
+      Id : Name_Id;
+      Fe : Source_File_Entry;
+      Local_Id : Name_Id;
+   begin
+      Local_Id := Get_Identifier ("");
+      Put_Html_Header;
+      Put_Line ("  <title>");
+      for I in Files'Range loop
+         Put ("    ");
+         Put_Line (Files (I).all);
+      end loop;
+      Put_Line ("  </title>");
+      Put_Line ("</head>");
+      New_Line;
+      Put_Line ("<body>");
+
+      for I in Files'Range loop
+         Id := Get_Identifier (Files (I).all);
+         Fe := Files_Map.Load_Source_File (Local_Id, Id);
+         if Fe = No_Source_File_Entry then
+            Error ("cannot open file " & Files (I).all);
+            raise Compile_Error;
+         end if;
+         Put ("  <h1>");
+         Put (Files (I).all);
+         Put ("</h1>");
+         New_Line;
+
+         PP_Html_File (Fe);
+      end loop;
+      Put_Html_Foot;
+   end Perform_Action;
+
+   --  Command --xref-html.
+   type Command_Xref_Html is new Command_Html with record
+      Output_Dir : String_Access := null;
+   end record;
+
+   function Decode_Command (Cmd : Command_Xref_Html; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Xref_Html) return String;
+   procedure Decode_Option (Cmd : in out Command_Xref_Html;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res);
+   procedure Disp_Long_Help (Cmd : Command_Xref_Html);
+
+   procedure Perform_Action (Cmd : in out Command_Xref_Html;
+                             Files_Name : Argument_List);
+
+   function Decode_Command (Cmd : Command_Xref_Html; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--xref-html";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Xref_Html) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--xref-html FILEs  Display FILEs in HTML with xrefs";
+   end Get_Short_Help;
+
+   procedure Decode_Option (Cmd : in out Command_Xref_Html;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res)
+   is
+   begin
+      if Option = "-o" then
+         if Arg = "" then
+            Res := Option_Arg_Req;
+         else
+            Cmd.Output_Dir := new String'(Arg);
+            Res := Option_Arg;
+         end if;
+      else
+         Decode_Option (Command_Html (Cmd), Option, Arg, Res);
+      end if;
+   end Decode_Option;
+
+   procedure Disp_Long_Help (Cmd : Command_Xref_Html)
+   is
+      use Ada.Text_IO;
+   begin
+      Disp_Long_Help (Command_Html (Cmd));
+      Put_Line ("-o DIR          Put generated files into DIR (def: html/)");
+      New_Line;
+      Put_Line ("When format is css, the CSS file 'ghdl.css' "
+                & "is never overwritten.");
+   end Disp_Long_Help;
+
+   procedure Analyze_Design_File_Units (File : Iir_Design_File)
+   is
+      Unit : Iir_Design_Unit;
+   begin
+      Unit := Get_First_Design_Unit (File);
+      while Unit /= Null_Iir loop
+         case Get_Date_State (Unit) is
+            when Date_Extern
+              | Date_Disk =>
+               raise Internal_Error;
+            when Date_Parse =>
+               Libraries.Load_Design_Unit (Unit, Null_Iir);
+            when Date_Analyze =>
+               null;
+         end case;
+         Unit := Get_Chain (Unit);
+      end loop;
+   end Analyze_Design_File_Units;
+
+   procedure Perform_Action
+     (Cmd : in out Command_Xref_Html; Files_Name : Argument_List)
+   is
+      use GNAT.Directory_Operations;
+
+      Id : Name_Id;
+      File : Source_File_Entry;
+
+      type File_Data is record
+         Fe : Source_File_Entry;
+         Design_File : Iir;
+         Output : String_Acc;
+      end record;
+      type File_Data_Array is array (Files_Name'Range) of File_Data;
+
+      Files : File_Data_Array;
+      Output : File_Type;
+      Prev_Output : File_Access;
+   begin
+      Xrefs.Init;
+      Flags.Flag_Xref := True;
+
+      --  Load work library.
+      Setup_Libraries (True);
+
+      if Cmd.Output_Dir = null then
+         Cmd.Output_Dir := new String'("html");
+      elsif Cmd.Output_Dir.all = "-" then
+         Cmd.Output_Dir := null;
+      end if;
+
+      --  Try to create the directory.
+      if Cmd.Output_Dir /= null
+        and then not Is_Directory (Cmd.Output_Dir.all)
+      then
+         declare
+         begin
+            Make_Dir (Cmd.Output_Dir.all);
+         exception
+            when Directory_Error =>
+               Error ("cannot create directory " & Cmd.Output_Dir.all);
+               return;
+         end;
+      end if;
+
+      --  Parse all files.
+      for I in Files'Range loop
+         Id := Get_Identifier (Files_Name (I).all);
+         File := Files_Map.Load_Source_File (Libraries.Local_Directory, Id);
+         if File = No_Source_File_Entry then
+            Error ("cannot open " & Image (Id));
+            return;
+         end if;
+         Files (I).Fe := File;
+         Files (I).Design_File := Libraries.Load_File (File);
+         if Files (I).Design_File = Null_Iir then
+            return;
+         end if;
+         Files (I).Output := Create_Output_Filename
+           (Base_Name (Files_Name (I).all), I);
+         if Is_Regular_File (Files (I).Output.all) then
+            --  Prevent overwrite.
+            null;
+         end if;
+         --  Put units in library.
+         Libraries.Add_Design_File_Into_Library (Files (I).Design_File);
+      end loop;
+
+      --  Analyze all files.
+      for I in Files'Range loop
+         Analyze_Design_File_Units (Files (I).Design_File);
+      end loop;
+
+      Xrefs.Sort_By_Location;
+
+      if False then
+         for I in 1 .. Xrefs.Get_Last_Xref loop
+            declare
+               use Xrefs;
+
+               procedure Put_Loc (L : Location_Type)
+               is
+                  use Files_Map;
+
+                  L_File : Source_File_Entry;
+                  L_Pos : Source_Ptr;
+               begin
+                  Files_Map.Location_To_File_Pos (L, L_File, L_Pos);
+                  Put_Nat (Natural (L_File));
+                  --Image (Get_File_Name (L_File));
+                  --Put (Name_Buffer (1 .. Name_Length));
+                  Put (":");
+                  Put_Nat (Natural (L_Pos));
+               end Put_Loc;
+            begin
+               Put_Loc (Get_Xref_Location (I));
+               case Get_Xref_Kind (I) is
+                  when Xref_Decl =>
+                     Put (" decl ");
+                     Put (Image (Get_Identifier (Get_Xref_Node (I))));
+                  when Xref_Ref =>
+                     Put (" use ");
+                     Put_Loc (Get_Location (Get_Xref_Node (I)));
+                  when Xref_End =>
+                     Put (" end ");
+                  when Xref_Body =>
+                     Put (" body ");
+               end case;
+               New_Line;
+            end;
+         end loop;
+      end if;
+
+      --  Create filexref_info.
+      Filexref_Info := new Filexref_Info_Arr
+        (No_Source_File_Entry .. Files_Map.Get_Last_Source_File_Entry);
+      Filexref_Info.all := (others => (Output => null,
+                                       Referenced => False));
+      for I in Files'Range loop
+         Filexref_Info (Files (I).Fe).Output := Files (I).Output;
+      end loop;
+
+      Prev_Output := Current_Input;
+
+      for I in Files'Range loop
+         if Cmd.Output_Dir /= null then
+            Create (Output, Out_File,
+                    Cmd.Output_Dir.all & Directory_Separator
+                    & Files (I).Output.all);
+
+            Set_Output (Output);
+         end if;
+
+         Put_Html_Header;
+         Put_Line ("  <title>");
+         Put_Html (Files_Name (I).all);
+         Put ("</title>");
+         Put_Line ("</head>");
+         New_Line;
+         Put_Line ("<body>");
+
+         Put ("<h1>");
+         Put_Html (Files_Name (I).all);
+         Put ("</h1>");
+         New_Line;
+
+         PP_Html_File (Files (I).Fe);
+         Put_Html_Foot;
+
+         if Cmd.Output_Dir /= null then
+            Close (Output);
+         end if;
+      end loop;
+
+      --  Create indexes.
+      if Cmd.Output_Dir /= null then
+         Create (Output, Out_File,
+                 Cmd.Output_Dir.all & Directory_Separator & "index.html");
+         Set_Output (Output);
+
+         Put_Html_Header;
+         Put_Line ("  <title>Xrefs indexes</title>");
+         Put_Line ("</head>");
+         New_Line;
+         Put_Line ("<body>");
+         Put_Line ("<p>list of files:");
+         Put_Line ("<ul>");
+         for I in Files'Range loop
+            Put ("<li>");
+            Put ("<a href=""");
+            Put (Files (I).Output.all);
+            Put (""">");
+            Put_Html (Files_Name (I).all);
+            Put ("</a>");
+            Put ("</li>");
+            New_Line;
+         end loop;
+         Put_Line ("</ul></p>");
+         Put_Line ("<hr>");
+
+         --  TODO: list of design units.
+
+         Put_Line ("<p>list of files referenced but not available:");
+         Put_Line ("<ul>");
+         for I in No_Source_File_Entry + 1 .. Filexref_Info'Last loop
+            if Filexref_Info (I).Output = null
+              and then Filexref_Info (I).Referenced
+            then
+               Put ("<li><a name=""f");
+               Put_Nat (Natural (I));
+               Put (""">");
+               Put_Html (Image (Files_Map.Get_File_Name (I)));
+               Put ("</a></li>");
+               New_Line;
+            end if;
+         end loop;
+         Put_Line ("</ul></p><hr>");
+         Put_Html_Foot;
+
+         Close (Output);
+      end if;
+
+      if Html_Format = Html_Css
+        and then Cmd.Output_Dir /= null
+      then
+         declare
+            Css_Filename : String :=
+              Cmd.Output_Dir.all & Directory_Separator & "ghdl.css";
+         begin
+            if not Is_Regular_File (Css_Filename & Nul) then
+               Create (Output, Out_File, Css_Filename);
+               Set_Output (Output);
+               Put_Css;
+               Close (Output);
+            end if;
+         end;
+      end if;
+   exception
+      when Compilation_Error =>
+         Error ("xrefs has failed due to compilation error");
+   end Perform_Action;
+
+
+   --  Command --xref
+   type Command_Xref is new Command_Lib with null record;
+
+   function Decode_Command (Cmd : Command_Xref; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Xref) return String;
+
+   procedure Perform_Action (Cmd : in out Command_Xref;
+                             Files_Name : Argument_List);
+
+   function Decode_Command (Cmd : Command_Xref; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--xref";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Xref) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--xref FILEs  Generate xrefs";
+   end Get_Short_Help;
+
+   procedure Perform_Action
+     (Cmd : in out Command_Xref; Files_Name : Argument_List)
+   is
+      pragma Unreferenced (Cmd);
+
+      use Files_Map;
+
+      Id : Name_Id;
+      File : Source_File_Entry;
+
+      type File_Data is record
+         Fe : Source_File_Entry;
+         Design_File : Iir;
+      end record;
+      type File_Data_Array is array (Files_Name'Range) of File_Data;
+
+      Files : File_Data_Array;
+   begin
+      --  Load work library.
+      Setup_Libraries (True);
+
+      Xrefs.Init;
+      Flags.Flag_Xref := True;
+
+      --  Parse all files.
+      for I in Files'Range loop
+         Id := Get_Identifier (Files_Name (I).all);
+         File := Load_Source_File (Libraries.Local_Directory, Id);
+         if File = No_Source_File_Entry then
+            Error ("cannot open " & Image (Id));
+            return;
+         end if;
+         Files (I).Fe := File;
+         Files (I).Design_File := Libraries.Load_File (File);
+         if Files (I).Design_File = Null_Iir then
+            return;
+         end if;
+         --  Put units in library.
+         --  Note: design_units stay while design_file get empty.
+         Libraries.Add_Design_File_Into_Library (Files (I).Design_File);
+      end loop;
+
+      --  Analyze all files.
+      for I in Files'Range loop
+         Analyze_Design_File_Units (Files (I).Design_File);
+      end loop;
+
+      Xrefs.Fix_End_Xrefs;
+      Xrefs.Sort_By_Node_Location;
+
+      for F in Files'Range loop
+
+         Put ("GHDL-XREF V0");
+
+         declare
+            use Xrefs;
+
+            Cur_Decl : Iir;
+            Cur_File : Source_File_Entry;
+
+            procedure Emit_Loc (Loc : Location_Type; C : Character)
+            is
+               L_File : Source_File_Entry;
+               L_Pos : Source_Ptr;
+               L_Line : Natural;
+               L_Off : Natural;
+            begin
+               Location_To_Coord (Loc, L_File, L_Pos, L_Line, L_Off);
+               --Put_Nat (Natural (L_File));
+               --Put (':');
+               Put_Nat (L_Line);
+               Put (C);
+               Put_Nat (L_Off);
+            end Emit_Loc;
+
+            procedure Emit_Decl (N : Iir)
+            is
+               Loc : Location_Type;
+               Loc_File : Source_File_Entry;
+               Loc_Pos : Source_Ptr;
+               C : Character;
+            begin
+               New_Line;
+               Cur_Decl := N;
+               Loc := Get_Location (N);
+               Location_To_File_Pos (Loc, Loc_File, Loc_Pos);
+               if Loc_File /= Cur_File then
+                  Cur_File := Loc_File;
+                  Put ("XFILE: ");
+                  Image (Get_Source_File_Directory (Cur_File));
+                  Put (Name_Buffer (1 .. Name_Length));
+                  Image (Get_File_Name (Cur_File));
+                  Put (Name_Buffer (1 .. Name_Length));
+                  New_Line;
+               end if;
+
+               --  Letters:
+               --   b d fgh jk  no qr  uvwxyz
+               --     D   H JK MNO QR  U WXYZ
+               case Get_Kind (N) is
+                  when Iir_Kind_Type_Declaration =>
+                     C := 'T';
+                  when Iir_Kind_Subtype_Declaration =>
+                     C := 't';
+                  when Iir_Kind_Entity_Declaration =>
+                     C := 'E';
+                  when Iir_Kind_Architecture_Declaration =>
+                     C := 'A';
+                  when Iir_Kind_Library_Declaration =>
+                     C := 'L';
+                  when Iir_Kind_Package_Declaration =>
+                     C := 'P';
+                  when Iir_Kind_Package_Body =>
+                     C := 'B';
+                  when Iir_Kind_Function_Declaration =>
+                     C := 'F';
+                  when Iir_Kind_Procedure_Declaration =>
+                     C := 'p';
+                  when Iir_Kind_Signal_Interface_Declaration =>
+                     C := 's';
+                  when Iir_Kind_Signal_Declaration =>
+                     C := 'S';
+                  when Iir_Kind_Constant_Interface_Declaration =>
+                     C := 'c';
+                  when Iir_Kind_Constant_Declaration =>
+                     C := 'C';
+                  when Iir_Kind_Variable_Declaration =>
+                     C := 'V';
+                  when Iir_Kind_Element_Declaration =>
+                     C := 'e';
+                  when Iir_Kind_Iterator_Declaration =>
+                     C := 'i';
+                  when Iir_Kind_Attribute_Declaration =>
+                     C := 'a';
+                  when Iir_Kind_Enumeration_Literal =>
+                     C := 'l';
+                  when Iir_Kind_Component_Declaration =>
+                     C := 'm';
+                  when Iir_Kind_Component_Instantiation_Statement =>
+                     C := 'I';
+                  when Iir_Kind_Generate_Statement =>
+                     C := 'G';
+                  when others =>
+                     C := '?';
+               end case;
+               Emit_Loc (Loc, C);
+               --Disp_Tree.Disp_Iir_Address (N);
+               Put (' ');
+               case Get_Kind (N) is
+                  when Iir_Kind_Function_Body
+                    | Iir_Kind_Procedure_Body =>
+                     null;
+                  when others =>
+                     Image (Get_Identifier (N));
+                     Put (Name_Buffer (1 .. Name_Length));
+               end case;
+            end Emit_Decl;
+
+            procedure Emit_Ref (R : Xref; T : Character)
+            is
+               N : Iir;
+            begin
+               N := Get_Xref_Node (R);
+               if N /= Cur_Decl then
+                  Emit_Decl (N);
+               end if;
+               Put (' ');
+               Emit_Loc (Get_Xref_Location (R), T);
+            end Emit_Ref;
+
+            Loc : Location_Type;
+            Loc_File : Source_File_Entry;
+            Loc_Pos : Source_Ptr;
+         begin
+            Cur_Decl := Null_Iir;
+            Cur_File := No_Source_File_Entry;
+
+            for I in First_Xref .. Get_Last_Xref loop
+               Loc := Get_Xref_Location (I);
+               Location_To_File_Pos (Loc, Loc_File, Loc_Pos);
+               if Loc_File = Files (F).Fe then
+                  --  This is a local location.
+                  case Get_Xref_Kind (I) is
+                     when Xref_Decl =>
+                        Emit_Decl (Get_Xref_Node (I));
+                     when Xref_End =>
+                        Emit_Ref (I, 'e');
+                     when Xref_Ref =>
+                        Emit_Ref (I, 'r');
+                     when Xref_Body =>
+                        Emit_Ref (I, 'b');
+                     when others =>
+                        null;
+                  end case;
+               end if;
+            end loop;
+            New_Line;
+         end;
+      end loop;
+   exception
+      when Compilation_Error =>
+         Error ("xrefs has failed due to compilation error");
+   end Perform_Action;
+
+   procedure Register_Commands is
+   begin
+      Register_Command (new Command_Chop);
+      Register_Command (new Command_Lines);
+      Register_Command (new Command_PP_Html);
+      Register_Command (new Command_Xref_Html);
+      Register_Command (new Command_Xref);
+   end Register_Commands;
+end Ghdlprint;
