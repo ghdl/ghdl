@@ -8359,7 +8359,7 @@ package body Translation is
          If_Blk : O_If_Block;
       begin
          if not Need_Range_Check (Atype)
-           or else Get_Type (Expr) = Atype
+           or else (Expr /= Null_Iir and then Get_Type (Expr) = Atype)
          then
             return;
          end if;
