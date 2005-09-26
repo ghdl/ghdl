@@ -1116,7 +1116,7 @@ package body Libraries is
          Unit := Next_Unit;
       end loop;
       if First_Unit /= Null_Iir then
-         File := Get_Design_File (Unit);
+         File := Get_Design_File (First_Unit);
       end if;
    end Add_Design_File_Into_Library;
 
