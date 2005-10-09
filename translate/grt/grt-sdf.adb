@@ -15,8 +15,10 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with System.Storage_Elements; --  Work around GNAT bug.
 with Grt.Types; use Grt.Types;
 with Grt.Stdio; use Grt.Stdio;
+with Grt.C; use Grt.C;
 with Grt.Errors; use Grt.Errors;
 with Ada.Characters.Latin_1;
 with Ada.Unchecked_Deallocation;

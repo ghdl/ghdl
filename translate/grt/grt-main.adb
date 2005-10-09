@@ -15,9 +15,11 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with System.Storage_Elements; --  Work around GNAT bug.
 with Grt.Types; use Grt.Types;
 with Grt.Errors;
 with Grt.Vcd;
+with Grt.Vcdz;
 with Grt.Vpi;
 with Grt.Waves;
 with Grt.Stacks;
@@ -83,6 +85,7 @@ package body Grt.Main is
    begin
       --  List of modules to be registered.
       Grt.Vcd.Register;
+      Grt.Vcdz.Register;
       Grt.Waves.Register;
       Grt.Vpi.Register;
       Grt.Vital_Annotate.Register;

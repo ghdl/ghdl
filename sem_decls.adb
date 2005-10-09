@@ -338,7 +338,7 @@ package body Sem_Decls is
       Type_Mark: Iir;
       Proc: Iir_Implicit_Procedure_Declaration;
       Func: Iir_Implicit_Function_Declaration;
-      Interface: Iir;
+      Inter: Iir;
       Loc : Location_Type;
       File_Interface_Kind : Iir_Kind;
       Last_Interface : Iir;
@@ -365,42 +365,42 @@ package body Sem_Decls is
                   Set_Implicit_Definition (Proc,
                                            Iir_Predefined_File_Open_Status);
                   --  status : out file_open_status.
-                  Interface :=
+                  Inter :=
                     Create_Iir (Iir_Kind_Variable_Interface_Declaration);
-                  Set_Location (Interface, Loc);
-                  Set_Identifier (Interface, Std_Names.Name_Status);
-                  Set_Type (Interface,
+                  Set_Location (Inter, Loc);
+                  Set_Identifier (Inter, Std_Names.Name_Status);
+                  Set_Type (Inter,
                             Std_Package.File_Open_Status_Type_Definition);
-                  Set_Mode (Interface, Iir_Out_Mode);
-                  Set_Base_Name (Interface, Interface);
-                  Append (Last_Interface, Proc, Interface);
+                  Set_Mode (Inter, Iir_Out_Mode);
+                  Set_Base_Name (Inter, Inter);
+                  Append (Last_Interface, Proc, Inter);
             end case;
             --  File F : FT
-            Interface := Create_Iir (Iir_Kind_File_Interface_Declaration);
-            Set_Location (Interface, Loc);
-            Set_Identifier (Interface, Std_Names.Name_F);
-            Set_Type (Interface, Type_Definition);
-            Set_Mode (Interface, Iir_Inout_Mode);
-            Set_Base_Name (Interface, Interface);
-            Append (Last_Interface, Proc, Interface);
+            Inter := Create_Iir (Iir_Kind_File_Interface_Declaration);
+            Set_Location (Inter, Loc);
+            Set_Identifier (Inter, Std_Names.Name_F);
+            Set_Type (Inter, Type_Definition);
+            Set_Mode (Inter, Iir_Inout_Mode);
+            Set_Base_Name (Inter, Inter);
+            Append (Last_Interface, Proc, Inter);
             --  External_Name : in STRING
-            Interface := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
-            Set_Location (Interface, Loc);
-            Set_Identifier (Interface, Std_Names.Name_External_Name);
-            Set_Type (Interface, Std_Package.String_Type_Definition);
-            Set_Mode (Interface, Iir_In_Mode);
-            Set_Base_Name (Interface, Interface);
-            Append (Last_Interface, Proc, Interface);
+            Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+            Set_Location (Inter, Loc);
+            Set_Identifier (Inter, Std_Names.Name_External_Name);
+            Set_Type (Inter, Std_Package.String_Type_Definition);
+            Set_Mode (Inter, Iir_In_Mode);
+            Set_Base_Name (Inter, Inter);
+            Append (Last_Interface, Proc, Inter);
             --  Open_Kind : in File_Open_Kind := Read_Mode.
-            Interface := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
-            Set_Location (Interface, Loc);
-            Set_Identifier (Interface, Std_Names.Name_Open_Kind);
-            Set_Type (Interface, Std_Package.File_Open_Kind_Type_Definition);
-            Set_Mode (Interface, Iir_In_Mode);
-            Set_Base_Name (Interface, Interface);
-            Set_Default_Value (Interface,
+            Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+            Set_Location (Inter, Loc);
+            Set_Identifier (Inter, Std_Names.Name_Open_Kind);
+            Set_Type (Inter, Std_Package.File_Open_Kind_Type_Definition);
+            Set_Mode (Inter, Iir_In_Mode);
+            Set_Base_Name (Inter, Inter);
+            Set_Default_Value (Inter,
                                Std_Package.File_Open_Kind_Read_Mode);
-            Append (Last_Interface, Proc, Interface);
+            Append (Last_Interface, Proc, Inter);
             Compute_Subprogram_Hash (Proc);
             -- Add it to the list.
             Insert_Incr (Last, Proc);
@@ -414,13 +414,13 @@ package body Sem_Decls is
          Set_Implicit_Definition (Proc, Iir_Predefined_File_Close);
          Set_Type_Reference (Proc, Decl);
          Build_Init (Last_Interface);
-         Interface := Create_Iir (Iir_Kind_File_Interface_Declaration);
-         Set_Identifier (Interface, Std_Names.Name_F);
-         Set_Location (Interface, Loc);
-         Set_Type (Interface, Type_Definition);
-         Set_Mode (Interface, Iir_Inout_Mode);
-         Set_Base_Name (Interface, Interface);
-         Append (Last_Interface, Proc, Interface);
+         Inter := Create_Iir (Iir_Kind_File_Interface_Declaration);
+         Set_Identifier (Inter, Std_Names.Name_F);
+         Set_Location (Inter, Loc);
+         Set_Type (Inter, Type_Definition);
+         Set_Mode (Inter, Iir_Inout_Mode);
+         Set_Base_Name (Inter, Inter);
+         Append (Last_Interface, Proc, Inter);
          Compute_Subprogram_Hash (Proc);
          -- Add it to the list.
          Insert_Incr (Last, Proc);
@@ -439,30 +439,30 @@ package body Sem_Decls is
       Set_Parent (Proc, Get_Parent (Decl));
       Set_Type_Reference (Proc, Decl);
       Build_Init (Last_Interface);
-      Interface := Create_Iir (File_Interface_Kind);
-      Set_Identifier (Interface, Std_Names.Name_F);
-      Set_Location (Interface, Loc);
-      Set_Type (Interface, Type_Definition);
-      Set_Mode (Interface, Iir_In_Mode);
-      Set_Base_Name (Interface, Interface);
-      Append (Last_Interface, Proc, Interface);
-      Interface := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
-      Set_Identifier (Interface, Std_Names.Name_Value);
-      Set_Location (Interface, Loc);
-      Set_Type (Interface, Type_Mark);
-      Set_Mode (Interface, Iir_Out_Mode);
-      Set_Base_Name (Interface, Interface);
-      Append (Last_Interface, Proc, Interface);
+      Inter := Create_Iir (File_Interface_Kind);
+      Set_Identifier (Inter, Std_Names.Name_F);
+      Set_Location (Inter, Loc);
+      Set_Type (Inter, Type_Definition);
+      Set_Mode (Inter, Iir_In_Mode);
+      Set_Base_Name (Inter, Inter);
+      Append (Last_Interface, Proc, Inter);
+      Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
+      Set_Identifier (Inter, Std_Names.Name_Value);
+      Set_Location (Inter, Loc);
+      Set_Type (Inter, Type_Mark);
+      Set_Mode (Inter, Iir_Out_Mode);
+      Set_Base_Name (Inter, Inter);
+      Append (Last_Interface, Proc, Inter);
       case Get_Kind (Type_Mark) is
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
-            Interface := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
-            Set_Identifier (Interface, Std_Names.Name_Length);
-            Set_Location (Interface, Loc);
-            Set_Type (Interface, Std_Package.Natural_Subtype_Definition);
-            Set_Mode (Interface, Iir_Out_Mode);
-            Set_Base_Name (Interface, Interface);
-            Append (Last_Interface, Proc, Interface);
+            Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
+            Set_Identifier (Inter, Std_Names.Name_Length);
+            Set_Location (Inter, Loc);
+            Set_Type (Inter, Std_Package.Natural_Subtype_Definition);
+            Set_Mode (Inter, Iir_Out_Mode);
+            Set_Base_Name (Inter, Inter);
+            Append (Last_Interface, Proc, Inter);
             Set_Implicit_Definition (Proc, Iir_Predefined_Read_Length);
          when others =>
             Set_Implicit_Definition (Proc, Iir_Predefined_Read);
@@ -478,22 +478,22 @@ package body Sem_Decls is
       Set_Parent (Proc, Get_Parent (Decl));
       Set_Type_Reference (Proc, Decl);
       Build_Init (Last_Interface);
-      Interface := Create_Iir (File_Interface_Kind);
-      Set_Identifier (Interface, Std_Names.Name_F);
-      Set_Location (Interface, Loc);
-      Set_Type (Interface, Type_Definition);
-      Set_Mode (Interface, Iir_Out_Mode);
-      Set_Base_Name (Interface, Interface);
-      Set_Name_Staticness (Interface, Locally);
-      Set_Expr_Staticness (Interface, None);
-      Append (Last_Interface, Proc, Interface);
-      Interface := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
-      Set_Identifier (Interface, Std_Names.Name_Value);
-      Set_Location (Interface, Loc);
-      Set_Type (Interface, Type_Mark);
-      Set_Mode (Interface, Iir_In_Mode);
-      Set_Base_Name (Interface, Interface);
-      Append (Last_Interface, Proc, Interface);
+      Inter := Create_Iir (File_Interface_Kind);
+      Set_Identifier (Inter, Std_Names.Name_F);
+      Set_Location (Inter, Loc);
+      Set_Type (Inter, Type_Definition);
+      Set_Mode (Inter, Iir_Out_Mode);
+      Set_Base_Name (Inter, Inter);
+      Set_Name_Staticness (Inter, Locally);
+      Set_Expr_Staticness (Inter, None);
+      Append (Last_Interface, Proc, Inter);
+      Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+      Set_Identifier (Inter, Std_Names.Name_Value);
+      Set_Location (Inter, Loc);
+      Set_Type (Inter, Type_Mark);
+      Set_Mode (Inter, Iir_In_Mode);
+      Set_Base_Name (Inter, Inter);
+      Append (Last_Interface, Proc, Inter);
       Set_Implicit_Definition (Proc, Iir_Predefined_Write);
       Compute_Subprogram_Hash (Proc);
       -- Add it to the list.
@@ -506,13 +506,13 @@ package body Sem_Decls is
       Set_Parent (Proc, Get_Parent (Decl));
       Set_Type_Reference (Proc, Decl);
       Build_Init (Last_Interface);
-      Interface := Create_Iir (File_Interface_Kind);
-      Set_Identifier (Interface, Std_Names.Name_F);
-      Set_Location (Interface, Loc);
-      Set_Type (Interface, Type_Definition);
-      Set_Mode (Interface, Iir_In_Mode);
-      Set_Base_Name (Interface, Interface);
-      Append (Last_Interface, Func, Interface);
+      Inter := Create_Iir (File_Interface_Kind);
+      Set_Identifier (Inter, Std_Names.Name_F);
+      Set_Location (Inter, Loc);
+      Set_Type (Inter, Type_Definition);
+      Set_Mode (Inter, Iir_In_Mode);
+      Set_Base_Name (Inter, Inter);
+      Append (Last_Interface, Func, Inter);
       Set_Return_Type (Func, Std_Package.Boolean_Type_Definition);
       Set_Implicit_Definition (Func, Iir_Predefined_Endfile);
       Compute_Subprogram_Hash (Func);
@@ -523,15 +523,15 @@ package body Sem_Decls is
    function Create_Anonymous_Interface (Atype : Iir)
      return Iir_Constant_Interface_Declaration
    is
-      Interface : Iir_Constant_Interface_Declaration;
+      Inter : Iir_Constant_Interface_Declaration;
    begin
-      Interface := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
-      Location_Copy (Interface, Atype);
-      Set_Identifier (Interface, Null_Identifier);
-      Set_Mode (Interface, Iir_In_Mode);
-      Set_Type (Interface, Atype);
-      Set_Base_Name (Interface, Interface);
-      return Interface;
+      Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+      Location_Copy (Inter, Atype);
+      Set_Identifier (Inter, Null_Identifier);
+      Set_Mode (Inter, Iir_In_Mode);
+      Set_Type (Inter, Atype);
+      Set_Base_Name (Inter, Inter);
+      return Inter;
    end Create_Anonymous_Interface;
 
    procedure Create_Implicit_Operations

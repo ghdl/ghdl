@@ -149,7 +149,7 @@ package body Sem_Expr is
       return Are_Types_Compatible (Get_Type (Left), Get_Type (Right));
    end Are_Nodes_Compatible;
 
-   function Check_Is_Expression (Expr : Iir) return Iir
+   function Check_Is_Expression (Expr : Iir; Loc : Iir) return Iir
    is
    begin
       if Expr = Null_Iir then
@@ -169,7 +169,7 @@ package body Sem_Expr is
            | Iir_Kind_Component_Declaration
            | Iir_Kinds_Procedure_Declaration =>
             Error_Msg_Sem (Disp_Node (Expr)
-                           & " not allowed in an expression", Expr);
+                           & " not allowed in an expression", Loc);
             return Null_Iir;
          when Iir_Kinds_Function_Declaration =>
             return Expr;
@@ -3713,7 +3713,7 @@ package body Sem_Expr is
       Res: Iir;
       Expr_Type : Iir;
    begin
-      if Check_Is_Expression (Expr) = Null_Iir then
+      if Check_Is_Expression (Expr, Expr) = Null_Iir then
          return Null_Iir;
       end if;
 

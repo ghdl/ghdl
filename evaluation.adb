@@ -1171,6 +1171,34 @@ package body Evaluation is
                               Natural (Get_Value (Get_Parameter (Attr)) - 1));
    end Eval_Array_Attribute;
 
+   function Eval_Integer_Image (Val : Iir_Int64; Orig : Iir) return Iir
+   is
+      use Str_Table;
+      Img : String (1 .. 24); --  23 is enough, 24 is rounded.
+      L : Natural;
+      V : Iir_Int64;
+      Id : String_Id;
+   begin
+      V := Val;
+      L := Img'Last;
+      loop
+         Img (L) := Character'Val (Character'Pos ('0') + abs (V rem 10));
+         V := V / 10;
+         L := L - 1;
+         exit when V = 0;
+      end loop;
+      if Val < 0 then
+         Img (L) := '-';
+         L := L - 1;
+      end if;
+      Id := Start;
+      for I in L + 1 .. Img'Last loop
+         Append (Img (I));
+      end loop;
+      Finish;
+      return Build_String (Id, Int32 (Img'Last - L), Orig);
+   end Eval_Integer_Image;
+
    function Eval_Incdec (Expr : Iir; N : Iir_Int64) return Iir
    is
       P : Iir_Int64;
@@ -1429,6 +1457,22 @@ package body Evaluation is
                else
                   return Build_Discrete (Val, Expr);
                end if;
+            end;
+         when Iir_Kind_Image_Attribute =>
+            declare
+               Param : Iir;
+               Param_Type : Iir;
+            begin
+               Param := Get_Parameter (Expr);
+               Param := Eval_Static_Expr (Param);
+               Set_Parameter (Expr, Param);
+               Param_Type := Get_Base_Type (Get_Type (Param));
+               case Get_Kind (Param_Type) is
+                  when Iir_Kind_Integer_Type_Definition =>
+                     return Eval_Integer_Image (Get_Value (Param), Expr);
+                  when others =>
+                     Error_Kind ("eval_static_expr('image)", Param_Type);
+               end case;
             end;
 
          when Iir_Kind_Left_Type_Attribute =>

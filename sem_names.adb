@@ -489,7 +489,7 @@ package body Sem_Names is
          exit when Index_Subtype = Null_Iir;
          Index := Get_Nth_Element (Index_List, I);
          -- The index_subtype can be an unconstrained index type.
-         Index := Check_Is_Expression (Index);
+         Index := Check_Is_Expression (Index, Index);
          if Index /= Null_Iir then
             Index := Sem_Expression (Index, Get_Base_Type (Index_Subtype));
          end if;
@@ -3053,7 +3053,7 @@ package body Sem_Names is
       if Get_Kind (Expr) = Iir_Kind_Error then
          return Null_Iir;
       end if;
-      if Check_Is_Expression (Expr) = Null_Iir then
+      if Check_Is_Expression (Expr, Name) = Null_Iir then
          return Null_Iir;
       end if;
 

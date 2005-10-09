@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 --with Grt.Errors; use Grt.Errors;
 with Ada.Unchecked_Conversion;
+with System.Storage_Elements; --  Work around GNAT bug.
 with Grt.Processes; use Grt.Processes;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;

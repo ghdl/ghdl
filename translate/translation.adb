@@ -13961,7 +13961,7 @@ package body Translation is
          Right_Type : Iir;
          Res_Otype : O_Tnode;
          Op : ON_Op_Kind;
-         Interface : Iir;
+         Inter : Iir;
          Res : O_Enode;
       begin
          Kind := Get_Implicit_Definition (Imp);
@@ -13970,18 +13970,18 @@ package body Translation is
          end if;
 
          Res_Otype := Get_Ortho_Type (Res_Type, Mode_Value);
-         Interface := Get_Interface_Declaration_Chain (Imp);
+         Inter := Get_Interface_Declaration_Chain (Imp);
          if Left = Null_Iir then
             Left_Tree := O_Enode_Null;
          else
-            Left_Type := Get_Type (Interface);
+            Left_Type := Get_Type (Inter);
             Left_Tree := Translate_Expression (Left, Left_Type);
          end if;
 
          if Right = Null_Iir then
             Right_Tree := O_Enode_Null;
          else
-            Right_Type := Get_Type (Get_Chain (Interface));
+            Right_Type := Get_Type (Get_Chain (Inter));
             Right_Tree := Translate_Expression (Right, Right_Type);
          end if;
 

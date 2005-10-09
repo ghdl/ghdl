@@ -669,10 +669,11 @@ package body Disp_Vhdl is
       end case;
    end Disp_Signal_Kind;
 
-   procedure Disp_Interface_Declaration (Interface: Iir) is
+   procedure Disp_Interface_Declaration (Inter: Iir)
+   is
       Default: Iir;
    begin
-      case Get_Kind (Interface) is
+      case Get_Kind (Inter) is
          when Iir_Kind_Signal_Interface_Declaration =>
             Put ("signal ");
          when Iir_Kind_Variable_Interface_Declaration =>
@@ -680,16 +681,16 @@ package body Disp_Vhdl is
          when Iir_Kind_Constant_Interface_Declaration =>
             Put ("constant ");
          when others =>
-            Error_Kind ("disp_interface_declaration", Interface);
+            Error_Kind ("disp_interface_declaration", Inter);
       end case;
-      Disp_Name_Of (Interface);
+      Disp_Name_Of (Inter);
       Put (": ");
-      Disp_Mode (Get_Mode (Interface));
-      Disp_Type (Get_Type (Interface));
-      if Get_Kind (Interface) = Iir_Kind_Signal_Interface_Declaration then
-         Disp_Signal_Kind (Get_Signal_Kind (Interface));
+      Disp_Mode (Get_Mode (Inter));
+      Disp_Type (Get_Type (Inter));
+      if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration then
+         Disp_Signal_Kind (Get_Signal_Kind (Inter));
       end if;
-      Default := Get_Default_Value (Interface);
+      Default := Get_Default_Value (Inter);
       if Default /= Null_Iir then
          Put (" := ");
          Disp_Expression (Default);
@@ -698,7 +699,7 @@ package body Disp_Vhdl is
 
    procedure Disp_Interface_Chain (Chain: Iir; Str: String)
    is
-      Interface: Iir;
+      Inter: Iir;
       Start: Count;
    begin
       if Chain = Null_Iir then
@@ -706,17 +707,17 @@ package body Disp_Vhdl is
       end if;
       Put (" (");
       Start := Col;
-      Interface := Chain;
-      while Interface /= Null_Iir loop
+      Inter := Chain;
+      while Inter /= Null_Iir loop
          Set_Col (Start);
-         Disp_Interface_Declaration (Interface);
-         if Get_Chain (Interface) /= Null_Iir then
+         Disp_Interface_Declaration (Inter);
+         if Get_Chain (Inter) /= Null_Iir then
             Put ("; ");
          else
             Put (')');
             Put (Str);
          end if;
-         Interface := Get_Chain (Interface);
+         Inter := Get_Chain (Inter);
       end loop;
    end Disp_Interface_Chain;
 

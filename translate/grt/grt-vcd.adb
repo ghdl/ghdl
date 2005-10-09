@@ -18,22 +18,52 @@
 with Interfaces;
 with Grt.Stdio; use Grt.Stdio;
 with System; use System;
+with System.Storage_Elements; --  Work around GNAT bug.
 with Grt.Errors; use Grt.Errors;
 with Grt.Types; use Grt.Types;
 with Grt.Signals; use Grt.Signals;
 with GNAT.Table;
 with Grt.Astdio; use Grt.Astdio;
+with Grt.C; use Grt.C;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Avhpi; use Grt.Avhpi;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Types; use Grt.Rtis_Types;
+with Grt.Vstrings;
 
 package body Grt.Vcd is
+   type Vcd_IO_Simple is new Vcd_IO_Handler with record
+      Stream : FILEs;
+   end record;
+   type IO_Simple_Acc is access Vcd_IO_Simple;
+   procedure Vcd_Put (Handler : access Vcd_IO_Simple; Str : String);
+   procedure Vcd_Putc (Handler : access Vcd_IO_Simple; C : Character);
+   procedure Vcd_Close (Handler : access Vcd_IO_Simple);
+
+   procedure Vcd_Put (Handler : access Vcd_IO_Simple; Str : String)
+   is
+      R : size_t;
+   begin
+      R := fwrite (Str'Address, Str'Length, 1, Handler.Stream);
+   end Vcd_Put;
+
+   procedure Vcd_Putc (Handler : access Vcd_IO_Simple; C : Character)
+   is
+      R : int;
+   begin
+      R := fputc (Character'Pos (C), Handler.Stream);
+   end Vcd_Putc;
+
+   procedure Vcd_Close (Handler : access Vcd_IO_Simple) is
+   begin
+      fclose (Handler.Stream);
+      Handler.Stream := NULL_Stream;
+   end Vcd_Close;
+
    --  VCD filename.
-   Vcd_Filename : String_Access := null;
    --  Stream corresponding to the VCD filename.
-   Vcd_Stream : FILEs;
+   --Vcd_Stream : FILEs;
 
    --  Index type of the table of vcd variables to dump.
    type Vcd_Index_Type is new Integer;
@@ -42,15 +72,37 @@ package body Grt.Vcd is
    function Vcd_Option (Opt : String) return Boolean
    is
       F : Natural := Opt'First;
+      Mode : constant String := "wt" & NUL;
+      Handler : IO_Simple_Acc;
+      Vcd_Filename : String_Access;
    begin
       if Opt'Length < 5 or else Opt (F .. F + 4) /= "--vcd" then
          return False;
       end if;
       if Opt'Length > 6 and then Opt (F + 5) = '=' then
+         if H /= null then
+            Error ("--vcd: file already set");
+            return True;
+         end if;
+
          --  Add an extra NUL character.
          Vcd_Filename := new String (1 .. Opt'Length - 6 + 1);
          Vcd_Filename (1 .. Opt'Length - 6) := Opt (F + 6 .. Opt'Last);
          Vcd_Filename (Vcd_Filename'Last) := NUL;
+
+         Handler := new Vcd_IO_Simple;
+         if Vcd_Filename.all = "-" & NUL then
+            Handler.Stream := stdout;
+         else
+            Handler.Stream := fopen (Vcd_Filename.all'Address, Mode'Address);
+            if Handler.Stream = NULL_Stream then
+               Error_C ("cannot open ");
+               Error_E (Vcd_Filename (Vcd_Filename'First
+                                      .. Vcd_Filename'Last - 1));
+               return True;
+            end if;
+         end if;
+         H := Handler_Acc (Handler);
          return True;
       else
          return False;
@@ -62,28 +114,24 @@ package body Grt.Vcd is
       Put_Line (" --vcd=FILENAME     dump signal values into a VCD file");
    end Vcd_Help;
 
-   procedure Vcd_Put (Str : String)
-   is
-      R : size_t;
+   procedure Vcd_Put (Str : String) is
    begin
-      R := fwrite (Str'Address, Str'Length, 1, Vcd_Stream);
+      Vcd_Put (H, Str);
    end Vcd_Put;
 
-   procedure Vcd_Putc (C : Character)
-   is
-      R : int;
+   procedure Vcd_Putc (C : Character) is
    begin
-      R := fputc (Character'Pos (C), Vcd_Stream);
+      Vcd_Putc (H, C);
    end Vcd_Putc;
 
    procedure Vcd_Newline is
    begin
-      Vcd_Putc (Nl);
+      Vcd_Putc (H, Nl);
    end Vcd_Newline;
 
    procedure Vcd_Putline (Str : String) is
    begin
-      Vcd_Put (Str);
+      Vcd_Put (H, Str);
       Vcd_Newline;
    end Vcd_Putline;
 
@@ -95,8 +143,11 @@ package body Grt.Vcd is
 
    procedure Vcd_Put_I32 (V : Ghdl_I32)
    is
+      Str : String (1 .. 11);
+      First : Natural;
    begin
-      Put_I32 (Vcd_Stream, V);
+      Vstrings.To_String (Str, First, V);
+      Vcd_Put (Str (First .. Str'Last));
    end Vcd_Put_I32;
 
    procedure Vcd_Put_Idcode (N : Vcd_Index_Type)
@@ -139,22 +190,9 @@ package body Grt.Vcd is
    --  Called before elaboration.
    procedure Vcd_Init
    is
-      Mode : constant String := "wt" & NUL;
    begin
-      if Vcd_Filename = null then
-         Vcd_Stream := NULL_Stream;
+      if H = null then
          return;
-      end if;
-      if Vcd_Filename.all = "-" & NUL then
-         Vcd_Stream := stdout;
-      else
-         Vcd_Stream := fopen (Vcd_Filename.all'Address, Mode'Address);
-         if Vcd_Stream = NULL_Stream then
-            Error_C ("cannot open ");
-            Error_E (Vcd_Filename (Vcd_Filename'First
-                                   .. Vcd_Filename'Last - 1));
-            return;
-         end if;
       end if;
       Vcd_Putline ("$date");
       Vcd_Put ("  ");
@@ -165,13 +203,17 @@ package body Grt.Vcd is
          function time (Addr : Address) return time_t;
          pragma Import (C, time);
 
-         function ctime (Timep: Address) return chars;
+         function ctime (Timep: Address) return Ghdl_C_String;
          pragma Import (C, ctime);
 
-         R : int;
+         Ct : Ghdl_C_String;
       begin
          Cur_Time := time (Null_Address);
-         R := fputs (ctime (Cur_Time'Address), Vcd_Stream);
+         Ct := ctime (Cur_Time'Address);
+         for I in Positive loop
+            exit when Ct (I) = NUL;
+            Vcd_Putc (Ct (I));
+         end loop;
          -- Note: ctime already append a LF.
       end;
       Vcd_Put_End;
@@ -639,9 +681,12 @@ package body Grt.Vcd is
 
    procedure Vcd_Put_Time
    is
+      Str : String (1 .. 21);
+      First : Natural;
    begin
       Vcd_Putc ('#');
-      Put_I64 (Vcd_Stream, Ghdl_I64 (Cycle_Time));
+      Vstrings.To_String (Str, First, Ghdl_I64 (Cycle_Time));
+      Vcd_Put (Str (First .. Str'Last));
       Vcd_Newline;
    end Vcd_Put_Time;
 
@@ -653,7 +698,7 @@ package body Grt.Vcd is
       Root : VhpiHandleT;
    begin
       --  Do nothing if there is no VCD file to generate.
-      if Vcd_Stream = NULL_Stream then
+      if H = null then
          return;
       end if;
 
@@ -674,11 +719,6 @@ package body Grt.Vcd is
    --  Called before each non delta cycle.
    procedure Vcd_Cycle is
    begin
-      --  Do nothing if there is no VCD file to generate.
-      if Vcd_Stream = NULL_Stream then
-         return;
-      end if;
-
       --  Disp values.
       Vcd_Put_Time;
       if Cycle_Time = 0 then
@@ -699,7 +739,9 @@ package body Grt.Vcd is
    --  Called at the end of the simulation.
    procedure Vcd_End is
    begin
-      null;
+      if H /= null then
+         Vcd_Close (H);
+      end if;
    end Vcd_End;
 
    Vcd_Hooks : aliased constant Hooks_Type :=

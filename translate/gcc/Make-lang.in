@@ -68,7 +68,7 @@ agcc_objdir=.
 AGCC_GCCSRC_DIR=$(srcdir)/..
 AGCC_GCCOBJ_DIR=..
 
-####agcc Makefile.inc
+####gcc Makefile.inc
 
 # The compiler proper.
 # It is compiled into the vhdl/ subdirectory to avoid file name clashes but

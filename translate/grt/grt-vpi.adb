@@ -39,7 +39,9 @@
 -------------------------------------------------------------------------------
 
 with Ada.Unchecked_Deallocation;
+with System.Storage_Elements; --  Work around GNAT bug.
 with Grt.Stdio; use Grt.Stdio;
+with Grt.C; use Grt.C;
 with Grt.Signals; use Grt.Signals;
 with GNAT.Table;
 with Grt.Astdio; use Grt.Astdio;

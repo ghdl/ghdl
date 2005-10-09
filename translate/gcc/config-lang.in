@@ -35,4 +35,4 @@ stagestuff="ghdl\$(exeext) ghdl1\$(exeext)"
 
 outputs=vhdl/Makefile
 
-gtfiles="\$(srcdir)/vhdl/agcc-bindings.c"
+gtfiles="\$(srcdir)/vhdl/ortho-lang.c"

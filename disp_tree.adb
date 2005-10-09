@@ -16,8 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO; use Ada.Text_IO;
-with System.Storage_Elements;
-with Ada.Unchecked_Conversion;
 with Types; use Types;
 with Name_Table;
 with Iirs_Utils; use Iirs_Utils;
@@ -32,27 +30,20 @@ package body Disp_Tree is
       Put (Blanks);
    end Disp_Tab;
 
-   function Addr_Image (A : System.Address) return String is
-      Res : String (1 .. System.Address'Size / 4);
-      Hex_Digits : constant array (Integer range 0 .. 15) of Character
-        := "0123456789abcdef";
-      use System;
-      use System.Storage_Elements;
-      Addr_Num : Integer_Address := To_Integer (A);
-   begin
-      for I in reverse Res'Range loop
-         Res (I) := Hex_Digits (Integer (Addr_Num mod 16));
-         Addr_Num := Addr_Num / 16;
-      end loop;
-      return Res;
-   end Addr_Image;
-
    procedure Disp_Iir_Address (Node: Iir)
    is
-      function To_Addr is new Ada.Unchecked_Conversion
-        (Source => Iir, Target => System.Address);
+      Res : String (1 .. 10);
+      Hex_Digits : constant array (Int32 range 0 .. 15) of Character
+        := "0123456789abcdef";
+      N : Int32 := Int32 (Node);
    begin
-      Put ('[' & Addr_Image (To_Addr (Node)) & ']');
+      for I in reverse 2 .. 9 loop
+         Res (I) := Hex_Digits (N mod 16);
+         N := N / 16;
+      end loop;
+      Res (1) := '[';
+      Res (10) := ']';
+      Put (Res);
    end Disp_Iir_Address;
 
    function Inc_Tab (Tab: Natural) return Natural is

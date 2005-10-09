@@ -38,14 +38,14 @@
 
 set -e
 
-VERSION=`sed -n -e 's/.*GHDL \([0-9.]*\) (.*/\1/p' ../../version.ads`
+VERSION=`sed -n -e 's/.*GHDL \([0-9.a-z]*\) (.*/\1/p' ../../version.ads`
 
 CWD=`pwd`
 
 distdir=ghdl-$VERSION
 tarfile=$distdir.tar
 
-GCCVERSION=3.4.3
+GCCVERSION=4.0.2
 DISTDIR=/home/gingold/dist
 GCCDIST=$DISTDIR/gcc-$GCCVERSION
 GCCDISTOBJ=$GCCDIST-objs
@@ -80,7 +80,7 @@ do_Makefile ()
   sed -e "/^####libraries Makefile.inc/r ../../libraries/Makefile.inc" \
       -e "/^####grt Makefile.inc/r ../grt/Makefile.inc" \
      < Makefile.in > $VHDLDIR/Makefile.in
-  sed -e "/^####agcc Makefile.inc/r ../../ortho/agcc/Makefile.inc" \
+  sed -e "/^####gcc Makefile.inc/r ../../ortho/gcc/Makefile.inc" \
      < Make-lang.in > $VHDLDIR/Make-lang.in
 }
 
@@ -194,53 +194,20 @@ ortho_front.ads"
 for i in $ortho_files; do ln -sf $CWD/../../ortho/$i $VHDLDIR/$i; done
 
 ortho_gcc_files="
-agcc-fe.adb
 lang.opt
-ortho_ident.adb
-ortho_ident.ads
-ortho_gcc_front.ads
-ortho_nodes.ads
+ortho-lang.c
 ortho_gcc-main.adb
 ortho_gcc-main.ads
+ortho_gcc.adb
 ortho_gcc.ads
-ortho_gcc.adb"
+ortho_gcc_front.ads
+ortho_ident.adb
+ortho_ident.ads
+ortho_nodes.ads
+"
 
 for i in $ortho_gcc_files; do
   ln -sf $CWD/../../ortho/gcc/$i $VHDLDIR/$i
-done
-
-agcc_files="
-agcc-autils.adb
-agcc-autils.ads
-agcc-convert.ads
-agcc-fe.ads
-agcc-ggc.ads
-agcc-output.ads
-agcc-rtl.ads
-agcc-stor_layout.ads
-agcc-toplev.ads
-agcc-trees.adb
-agcc-diagnostic.ads
-agcc-libiberty.ads
-agcc.ads
-agcc.adb
-c.adb
-c.ads
-agcc-hconfig.ads.in
-agcc-hwint.ads.in
-agcc-machmode.ads.in
-agcc-real.ads.in
-agcc-tm.ads.in
-agcc-trees.ads.in
-agcc-options.ads.in
-agcc-input.ads
-agcc-bindings.c
-agcc-ghdl.c
-gen_tree.c"
-
-
-for i in $agcc_files; do
-  ln -sf $CWD/../../ortho/agcc/$i $VHDLDIR/$i
 done
 
 ghdl_files="
@@ -347,12 +314,16 @@ grt-stack2.adb
 grt-stack2.ads
 grt-stacks.adb
 grt-stacks.ads
+grt-c.ads
+grt-zlib.ads
 grt-stdio.ads
 grt-astdio.ads
 grt-astdio.adb
 grt-types.ads
 grt-vcd.adb
 grt-vcd.ads
+grt-vcdz.adb
+grt-vcdz.ads
 grt-vital_annotate.adb
 grt-vital_annotate.ads
 grt-vpi.adb
@@ -497,7 +468,7 @@ do_tar_dist ()
   rm -rf $bindirname
   mkdir $bindirname
   sed -e "s/@TARFILE@/$dir.tar/" < INSTALL > $bindirname/INSTALL
-  ln COPYING $bindirname
+  ln ../../COPYING $bindirname
   ln $TARINSTALL $bindirname
   tar cvf $bindirname.tar $bindirname
 }

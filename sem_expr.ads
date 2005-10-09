@@ -77,9 +77,10 @@ package Sem_Expr is
      return Iir;
 
    --  If EXPR is a node for an expression, then return EXPR.
-   --  Otherwise, emit an error message and return NULL_IIR.
+   --  Otherwise, emit an error message using LOC as location
+   --   and return NULL_IIR.
    --  If EXPR is NULL_IIR, NULL_IIR is silently returned.
-   function Check_Is_Expression (Expr : Iir) return Iir;
+   function Check_Is_Expression (Expr : Iir; Loc : Iir) return Iir;
 
    -- LEFT are RIGHT must be really a type (not a subtype).
    function Are_Basetypes_Compatible (Left: Iir; Right: Iir)

@@ -900,7 +900,7 @@ package body Parse is
    is
       Res, Last : Iir;
       First, Prev_First : Iir;
-      Interface: Iir;
+      Inter: Iir;
       Is_Default : Boolean;
       Interface_Mode: Iir_Mode;
       Interface_Type: Iir;
@@ -918,20 +918,18 @@ package body Parse is
          Scan.Scan;
          case Current_Token is
             when Tok_Identifier =>
-               Interface := Create_Iir (Default);
+               Inter := Create_Iir (Default);
             when Tok_Signal =>
-               Interface := Create_Iir (Iir_Kind_Signal_Interface_Declaration);
+               Inter := Create_Iir (Iir_Kind_Signal_Interface_Declaration);
             when Tok_Variable =>
-               Interface :=
-                 Create_Iir (Iir_Kind_Variable_Interface_Declaration);
+               Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
             when Tok_Constant =>
-               Interface :=
-                 Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+               Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
             when Tok_File =>
                if Flags.Vhdl_Std = Vhdl_87 then
                   Error_Msg_Parse ("file interface not allowed in vhdl 87");
                end if;
-               Interface := Create_Iir (Iir_Kind_File_Interface_Declaration);
+               Inter := Create_Iir (Iir_Kind_File_Interface_Declaration);
             when Tok_Right_Paren =>
                Error_Msg_Parse
                  ("extra ';' at end of interface list", Prev_Loc);
@@ -941,8 +939,7 @@ package body Parse is
                  ("'signal', 'constant', 'variable', 'file' "
                   & "or identifier expected");
                --  Use a variable interface as a fall-back.
-               Interface :=
-                 Create_Iir (Iir_Kind_Variable_Interface_Declaration);
+               Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
          end case;
          if Current_Token = Tok_Identifier then
             Is_Default := True;
@@ -954,26 +951,26 @@ package body Parse is
          end if;
 
          Prev_First := Last;
-         First := Interface;
+         First := Inter;
          loop
             if Current_Token /= Tok_Identifier then
                Expect (Tok_Identifier);
             end if;
-            Set_Identifier (Interface, Current_Identifier);
-            Set_Location (Interface);
+            Set_Identifier (Inter, Current_Identifier);
+            Set_Location (Inter);
 
             if Res = Null_Iir then
-               Res := Interface;
+               Res := Inter;
             else
-               Set_Chain (Last, Interface);
+               Set_Chain (Last, Inter);
             end if;
-            Last := Interface;
+            Last := Inter;
 
             Scan.Scan;
             exit when Current_Token = Tok_Colon;
             Expect (Tok_Comma, "',' or ':' after an identifier");
             Scan.Scan;
-            Interface := Create_Iir (Get_Kind (Interface));
+            Inter := Create_Iir (Get_Kind (Inter));
          end loop;
 
          Expect (Tok_Colon,
@@ -1009,11 +1006,11 @@ package body Parse is
                      First := N_Interface;
                   end if;
                   Last := N_Interface;
-                  Interface := Get_Chain (O_Interface);
+                  Inter := Get_Chain (O_Interface);
                   Free_Iir (O_Interface);
-                  O_Interface := Interface;
+                  O_Interface := Inter;
                end loop;
-               Interface := First;
+               Inter := First;
             end;
          end if;
 
@@ -1028,7 +1025,7 @@ package body Parse is
                null;
          end case;
 
-         case Get_Kind (Interface) is
+         case Get_Kind (Inter) is
             when Iir_Kind_File_Interface_Declaration =>
                if Parse_Mode (Iir_Unknown_Mode) /= Iir_Unknown_Mode then
                   Error_Msg_Parse
@@ -1052,14 +1049,14 @@ package body Parse is
          end case;
 
          Interface_Type := Parse_Subtype_Indication;
-         if Get_Kind (Interface) = Iir_Kind_Signal_Interface_Declaration then
+         if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration then
             Signal_Kind := Parse_Signal_Kind;
          else
             Signal_Kind := Iir_No_Signal_Kind;
          end if;
 
          if Current_Token = Tok_Assign then
-            if Get_Kind (Interface) = Iir_Kind_File_Interface_Declaration then
+            if Get_Kind (Inter) = Iir_Kind_File_Interface_Declaration then
                Error_Msg_Parse
                  ("default expression not allowed for an interface file");
             end if;
@@ -1069,32 +1066,30 @@ package body Parse is
             Default_Value := Null_Iir;
          end if;
 
-         Interface := First;
-         while Interface /= Null_Iir loop
-            Set_Mode (Interface, Interface_Mode);
-            Set_Parent (Interface, Parent);
-            if Interface = Last then
-               Set_Lexical_Layout (Interface,
+         Inter := First;
+         while Inter /= Null_Iir loop
+            Set_Mode (Inter, Interface_Mode);
+            Set_Parent (Inter, Parent);
+            if Inter = Last then
+               Set_Lexical_Layout (Inter,
                                    Lexical_Layout or Iir_Lexical_Has_Type);
             else
-               Set_Lexical_Layout (Interface, Lexical_Layout);
+               Set_Lexical_Layout (Inter, Lexical_Layout);
             end if;
-            if Interface = First then
-               Set_Type (Interface, Interface_Type);
-               if Get_Kind (Interface) /= Iir_Kind_File_Interface_Declaration
-               then
-                  Set_Default_Value (Interface, Default_Value);
+            if Inter = First then
+               Set_Type (Inter, Interface_Type);
+               if Get_Kind (Inter) /= Iir_Kind_File_Interface_Declaration then
+                  Set_Default_Value (Inter, Default_Value);
                end if;
             else
                Proxy := Create_Iir (Iir_Kind_Proxy);
                Set_Proxy (Proxy, First);
-               Set_Type (Interface, Proxy);
+               Set_Type (Inter, Proxy);
             end if;
-            if Get_Kind (Interface) = Iir_Kind_Signal_Interface_Declaration
-            then
-               Set_Signal_Kind (Interface, Signal_Kind);
+            if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration then
+               Set_Signal_Kind (Inter, Signal_Kind);
             end if;
-            Interface := Get_Chain (Interface);
+            Inter := Get_Chain (Inter);
          end loop;
          exit when Current_Token /= Tok_Semi_Colon;
       end loop;

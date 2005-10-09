@@ -18,6 +18,7 @@
 with GNAT.Table;
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
+with System.Storage_Elements; --  Work around GNAT bug.
 with Grt.Stack2; use Grt.Stack2;
 with Grt.Disp;
 with Grt.Astdio;

@@ -1,0 +1,70 @@
+Language
+vhdl
+
+-std=
+vhdl Joined
+Select the vhdl standard
+
+-compile-standard
+vhdl
+Used during compiler build to compile the std.standard package
+
+-bootstrap
+vhdl
+Used during compiler build to compile std packages
+
+-work=
+vhdl Joined
+Set the name of the work library
+
+-workdir=
+vhdl Joined
+Set the directory of the work library
+
+P
+vhdl Joined
+-P<dir>	Add <dir> to the end of the vhdl library path
+
+-elab
+vhdl Separate
+--elab <name>	Used internally during elaboration of <name>
+
+-anaelab
+vhdl Separate
+--anaelab <name>	Used internally during elaboration of <name>
+
+c
+vhdl Separate
+-c <filename>	Analyze <filename> for --anaelab
+
+v
+vhdl
+Verbose
+
+-warn-
+vhdl Joined
+--warn-<name>	Warn about <name>
+
+-ghdl
+vhdl Joined
+--ghdl-<option>	Pass <option> to vhdl front-end
+
+-expect-failure
+vhdl
+Expect a compiler error (used for testsuite)
+
+-no-vital-checks
+vhdl
+Disable VITAL checks
+
+-vital-checks
+vhdl
+Enable VITAL checks
+
+fexplicit
+vhdl
+Explicit function declarations override implicit one in use
+
+l
+vhdl Joined Separate
+-l<filename>	Put list of files for link in <filename>

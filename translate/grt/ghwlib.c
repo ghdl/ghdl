@@ -1147,10 +1147,10 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
   list_p = list;
   while (1)
     {
-      int32_t d;
+      uint32_t d;
       
       /* Read delta to next signal.  */
-      if (ghw_read_sleb128 (h, &d) < 0)
+      if (ghw_read_uleb128 (h, &d) < 0)
 	return -1;
       if (d == 0)
 	{

@@ -1522,13 +1522,21 @@ Do not simulate, only elaborate.  This may be used with
 design.
 
 @item --vcd=@var{FILENAME}
+@item --vcdgz=@var{FILENAME}
 @cindex @option{--vcd} option
+@cindex @option{--vcdgz} option
 @cindex vcd
 @cindex value change dump
 @cindex dump of signals
-Dump into the VCD file @var{FILENAME} the signal values before each
-non-delta cycle.  If @var{FILENAME} is @samp{-}, then the standard output is
-used, otherwise a file is created or overwritten.
+@option{--vcd} dumps into the VCD file @var{FILENAME} the signal
+values before each non-delta cycle.  If @var{FILENAME} is @samp{-},
+then the standard output is used, otherwise a file is created or
+overwritten.
+
+The @option{--vcdgz} option is the same as the @option{--vcd} option,
+but the output is compressed using the @code{zlib} (@code{gzip}
+compression).  However, you can't use the @samp{-} filename.
+Furthermore, only one VCD file can be written.
 
 @dfn{VCD} (value change dump) is a file format defined
 by the @code{verilog} standard and used by virtually any wave viewer.

@@ -21,7 +21,6 @@ with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Types; use Grt.Types;
 with Grt.Errors; use Grt.Errors;
---with Grt.Typedesc; use Grt.Typedesc;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Options; use Grt.Options;
 
@@ -649,7 +648,8 @@ package body Grt.Disp_Rti is
       Put (" := ");
 
       --  FIXME: put this into a function.
-      if Obj_Type.Kind = Ghdl_Rtik_Subtype_Array
+      if (Obj_Type.Kind = Ghdl_Rtik_Subtype_Array
+          or Obj_Type.Kind = Ghdl_Rtik_Type_Record)
         and then Obj_Type.Mode = 1
       then
          Addr := To_Addr_Acc (Addr).all;

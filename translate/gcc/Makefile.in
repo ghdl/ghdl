@@ -176,7 +176,7 @@ drvdir/default_pathes.ads: drvdir Makefile
 	echo "   Prefix : constant String :=">> tmp-dpathes.ads
 	echo "     \"$(libsubdir)/vhdl/lib/\";" >> tmp-dpathes.ads
 	echo "end Default_Pathes;" >> tmp-dpathes.ads
-	$(srcdir)/../move-if-change tmp-dpathes.ads $@
+	$(srcdir)/../../move-if-change tmp-dpathes.ads $@
 
 ../ghdl$(exeext): drvdir drvdir/default_pathes.ads force
 	CURDIR=`pwd`; cd $(srcdir); SRCDIR=`pwd`; cd $$CURDIR/drvdir; \

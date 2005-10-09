@@ -119,7 +119,7 @@ package body Sem_Assocs is
    is
       Assoc : Iir;
       Formal : Iir;
-      Interface : Iir;
+      Formal_Inter : Iir;
       Actual : Iir;
       Prefix : Iir;
       Object : Iir;
@@ -131,18 +131,18 @@ package body Sem_Assocs is
          Formal := Get_Formal (Assoc);
          if Formal = Null_Iir then
             --  Association by position.
-            Interface := Inter;
+            Formal_Inter := Inter;
             Inter := Get_Chain (Inter);
          else
             --  Association by name.
-            Interface := Get_Base_Name (Formal);
+            Formal_Inter := Get_Base_Name (Formal);
             Inter := Null_Iir;
          end if;
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_Open =>
-               if Get_Default_Value (Interface) = Null_Iir then
+               if Get_Default_Value (Formal_Inter) = Null_Iir then
                   Error_Msg_Sem
-                    ("no parameter for " & Disp_Node (Interface), Assoc);
+                    ("no parameter for " & Disp_Node (Formal_Inter), Assoc);
                end if;
             when Iir_Kind_Association_Element_By_Expression =>
                Actual := Get_Actual (Assoc);
@@ -153,7 +153,7 @@ package body Sem_Assocs is
                   Prefix := Actual;
                end if;
 
-               case Get_Kind (Interface) is
+               case Get_Kind (Formal_Inter) is
                   when Iir_Kind_Signal_Interface_Declaration =>
                      --  LRM93 2.1.1
                      --  In a subprogram call, the actual designator
@@ -175,7 +175,7 @@ package body Sem_Assocs is
                            else
                               --  Inherit has_active_flag.
                               Set_Has_Active_Flag
-                                (Prefix, Get_Has_Active_Flag (Interface));
+                                (Prefix, Get_Has_Active_Flag (Formal_Inter));
                            end if;
                         when others =>
                            Error_Msg_Sem
@@ -186,20 +186,20 @@ package body Sem_Assocs is
                      case Get_Kind (Prefix) is
                         when Iir_Kind_Signal_Interface_Declaration =>
                            Check_Parameter_Association_Restriction
-                             (Interface, Prefix, Assoc);
+                             (Formal_Inter, Prefix, Assoc);
                         when Iir_Kind_Guard_Signal_Declaration =>
-                           if Get_Mode (Interface) /= Iir_In_Mode then
+                           if Get_Mode (Formal_Inter) /= Iir_In_Mode then
                               Error_Msg_Sem
                                 ("cannot associate a guard signal with "
-                                 & Get_Mode_Name (Get_Mode (Interface)) & " "
-                                 & Disp_Node (Interface), Assoc);
+                                 & Get_Mode_Name (Get_Mode (Formal_Inter))
+                                 & " " & Disp_Node (Formal_Inter), Assoc);
                            end if;
                         when Iir_Kinds_Signal_Attribute =>
-                           if Get_Mode (Interface) /= Iir_In_Mode then
+                           if Get_Mode (Formal_Inter) /= Iir_In_Mode then
                               Error_Msg_Sem
                                 ("cannot associate a signal attribute with "
-                                 & Get_Mode_Name (Get_Mode (Interface)) & " "
-                                 & Disp_Node (Interface), Assoc);
+                                 & Get_Mode_Name (Get_Mode (Formal_Inter))
+                                 & " " & Disp_Node (Formal_Inter), Assoc);
                            end if;
                         when others =>
                            null;
@@ -223,7 +223,7 @@ package body Sem_Assocs is
                      case Get_Kind (Prefix) is
                         when Iir_Kind_Variable_Interface_Declaration =>
                            Check_Parameter_Association_Restriction
-                             (Interface, Prefix, Assoc);
+                             (Formal_Inter, Prefix, Assoc);
                         when Iir_Kind_Variable_Declaration
                           | Iir_Kind_Dereference
                           | Iir_Kind_Implicit_Dereference =>
@@ -277,7 +277,8 @@ package body Sem_Assocs is
                      --  class constant must be an expression.
                      Check_Read (Actual);
                   when others =>
-                     Error_Kind ("check_subprogram_association(3)", Interface);
+                     Error_Kind
+                       ("check_subprogram_association(3)", Formal_Inter);
                end case;
             when Iir_Kind_Association_Element_By_Individual =>
                null;
@@ -928,7 +929,7 @@ package body Sem_Assocs is
    --  to the type of NAME.
    --  In case of failure, set NAME_TYPE to NULL_IIR.
    procedure Sem_Formal_Name (Name : Iir;
-                              Interface : Iir;
+                              Inter : Iir;
                               Prefix : out Iir;
                               Name_Type : out Iir)
    is
@@ -937,16 +938,15 @@ package body Sem_Assocs is
    begin
       case Get_Kind (Name) is
          when Iir_Kind_Simple_Name =>
-            if Get_Identifier (Name) = Get_Identifier (Interface) then
+            if Get_Identifier (Name) = Get_Identifier (Inter) then
                Prefix := Name;
-               Name_Type := Get_Type (Interface);
+               Name_Type := Get_Type (Inter);
             else
                Name_Type := Null_Iir;
             end if;
             return;
          when Iir_Kind_Selected_Name =>
-            Sem_Formal_Name
-              (Get_Prefix (Name), Interface, Prefix, Name_Type);
+            Sem_Formal_Name (Get_Prefix (Name), Inter, Prefix, Name_Type);
             if Name_Type = Null_Iir then
                return;
             end if;
@@ -966,8 +966,7 @@ package body Sem_Assocs is
             return;
          when Iir_Kind_Parenthesis_Name =>
             --  More difficult: slice or indexed array.
-            Sem_Formal_Name
-              (Get_Prefix (Name), Interface, Prefix, Name_Type);
+            Sem_Formal_Name (Get_Prefix (Name), Inter, Prefix, Name_Type);
             if Name_Type = Null_Iir then
                return;
             end if;
@@ -1033,7 +1032,7 @@ package body Sem_Assocs is
 
    type Param_Assoc_Type is (None, Open, Individual, Whole);
 
-   function Sem_Formal (Formal : Iir; Interface : Iir) return Param_Assoc_Type
+   function Sem_Formal (Formal : Iir; Inter : Iir) return Param_Assoc_Type
    is
       Prefix : Iir;
       Formal_Type : Iir;
@@ -1042,9 +1041,9 @@ package body Sem_Assocs is
          when Iir_Kind_Simple_Name =>
             --  Certainly the most common case: FORMAL_NAME => VAL.
             --  It is also the easiest.  So, handle it completly now.
-            if Get_Identifier (Formal) = Get_Identifier (Interface) then
-               Formal_Type := Get_Type (Interface);
-               Set_Named_Entity (Formal, Interface);
+            if Get_Identifier (Formal) = Get_Identifier (Inter) then
+               Formal_Type := Get_Type (Inter);
+               Set_Named_Entity (Formal, Inter);
                Set_Type (Formal, Formal_Type);
                --Xrefs.Xref_Name (Formal);
                return Whole;
@@ -1059,10 +1058,10 @@ package body Sem_Assocs is
             Error_Kind ("sem_formal", Formal);
       end case;
       --  Check for a sub-element.
-      Sem_Formal_Name (Formal, Interface, Prefix, Formal_Type);
+      Sem_Formal_Name (Formal, Inter, Prefix, Formal_Type);
       if Formal_Type /= Null_Iir then
          Set_Type (Formal, Formal_Type);
-         Set_Named_Entity (Prefix, Interface);
+         Set_Named_Entity (Prefix, Inter);
          return Individual;
       else
          return None;
@@ -1214,7 +1213,7 @@ package body Sem_Assocs is
    --  This sets RES.
    procedure Sem_Association
      (Assoc : Iir;
-      Interface : Iir;
+      Inter : Iir;
       Finish : Boolean;
       Match : out Boolean)
    is
@@ -1232,7 +1231,7 @@ package body Sem_Assocs is
 
       if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
          if Formal /= Null_Iir then
-            Assoc_Kind := Sem_Formal (Formal, Interface);
+            Assoc_Kind := Sem_Formal (Formal, Inter);
             if Assoc_Kind = None then
                Match := False;
                return;
@@ -1257,7 +1256,7 @@ package body Sem_Assocs is
       end if;
 
       if Formal /= Null_Iir then
-         Assoc_Kind := Sem_Formal (Formal, Interface);
+         Assoc_Kind := Sem_Formal (Formal, Inter);
          if Assoc_Kind = None then
             Match := False;
             return;
@@ -1269,7 +1268,7 @@ package body Sem_Assocs is
       else
          Set_Whole_Association_Flag (Assoc, True);
          Out_Conv := Null_Iir;
-         Formal := Interface;
+         Formal := Inter;
       end if;
       Formal_Type := Get_Type (Formal);
 
@@ -1281,7 +1280,7 @@ package body Sem_Assocs is
          Match := False;
          return;
       end if;
-      if Get_Kind (Interface) /= Iir_Kind_Constant_Interface_Declaration then
+      if Get_Kind (Inter) /= Iir_Kind_Constant_Interface_Declaration then
          case Get_Kind (Actual) is
             when Iir_Kind_Function_Call =>
                Expr := Get_Parameter_Association_Chain (Actual);
@@ -1325,13 +1324,13 @@ package body Sem_Assocs is
          if Finish then
             Error_Msg_Sem
               ("can't associate " & Disp_Node (Actual) & " with "
-               & Disp_Node (Interface), Assoc);
+               & Disp_Node (Inter), Assoc);
             Error_Msg_Sem
               ("(type of " & Disp_Node (Actual) & " is "
                & Disp_Type_Of (Actual) & ")", Assoc);
             Error_Msg_Sem
-              ("(type of " & Disp_Node (Interface) & " is "
-               & Disp_Type_Of (Interface) & ")", Interface);
+              ("(type of " & Disp_Node (Inter) & " is "
+               & Disp_Type_Of (Inter) & ")", Inter);
          end if;
          return;
       end if;
@@ -1404,28 +1403,28 @@ package body Sem_Assocs is
    is
       --  Set POS and INTERFACE to *the* matching interface if any of ASSOC.
       procedure Search_Interface (Assoc : Iir;
-                                  Interface : out Iir;
+                                  Inter : out Iir;
                                   Pos : out Integer)
       is
          I_Match : Boolean;
       begin
-         Interface := Interface_Chain;
+         Inter := Interface_Chain;
          Pos := 0;
-         while Interface /= Null_Iir loop
+         while Inter /= Null_Iir loop
             -- Formal assoc is not necessarily a simple name, it may
             -- be a conversion function, or even an indexed or
             -- selected name.
-            Sem_Association (Assoc, Interface, False, I_Match);
+            Sem_Association (Assoc, Inter, False, I_Match);
             if I_Match then
                return;
             end if;
-            Interface := Get_Chain (Interface);
+            Inter := Get_Chain (Inter);
             Pos := Pos + 1;
          end loop;
       end Search_Interface;
 
       Assoc: Iir;
-      Interface: Iir;
+      Inter: Iir;
 
       type Bool_Array is array (Natural range <>) of Param_Assoc_Type;
       Nbr_Arg: constant Natural := Get_Chain_Length (Interface_Chain);
@@ -1444,7 +1443,7 @@ package body Sem_Assocs is
       Has_Individual := False;
 
       -- Loop on every assoc element, try to match it.
-      Interface := Interface_Chain;
+      Inter := Interface_Chain;
       Last_Individual := Null_Iir;
       Pos := 0;
 
@@ -1462,7 +1461,7 @@ package body Sem_Assocs is
                return;
             end if;
             -- Try to match actual of ASSOC with the interface.
-            if Interface = Null_Iir then
+            if Inter = Null_Iir then
                if Finish then
                   Error_Msg_Sem
                     ("too many arguments for " & Disp_Node (Loc), Assoc);
@@ -1470,7 +1469,7 @@ package body Sem_Assocs is
                Match := False;
                return;
             end if;
-            Sem_Association (Assoc, Interface, Finish, Match);
+            Sem_Association (Assoc, Inter, Finish, Match);
             if not Match then
                return;
             end if;
@@ -1480,7 +1479,7 @@ package body Sem_Assocs is
                Arg_Matched (Pos) := Whole;
             end if;
             Set_Whole_Association_Flag (Assoc, True);
-            Interface := Get_Chain (Interface);
+            Inter := Get_Chain (Inter);
             Pos := Pos + 1;
          else
             -- FIXME: directly search the formal if finish is true.
@@ -1503,10 +1502,10 @@ package body Sem_Assocs is
                         Assoc_1 := Null_Iir;
                      end if;
                   end if;
-                  Search_Interface (Assoc, Interface, Pos);
-                  if Interface = Null_Iir then
+                  Search_Interface (Assoc, Inter, Pos);
+                  if Inter = Null_Iir then
                      if Assoc_1 /= Null_Iir then
-                        Interface := Interface_1;
+                        Inter := Interface_1;
                         Pos := Pos_1;
                         Set_Formal (Assoc, Get_Formal (Assoc_1));
                         Set_Out_Conversion
@@ -1521,10 +1520,10 @@ package body Sem_Assocs is
                      end if;
                   end if;
                when others =>
-                  Search_Interface (Assoc, Interface, Pos);
+                  Search_Interface (Assoc, Inter, Pos);
             end case;
 
-            if Interface /= Null_Iir then
+            if Inter /= Null_Iir then
                if Get_Whole_Association_Flag (Assoc) then
                   --  Whole association.
                   Last_Individual := Null_Iir;
@@ -1538,8 +1537,7 @@ package body Sem_Assocs is
                   else
                      if Finish then
                         Error_Msg_Sem
-                          (Disp_Node (Interface) & " already associated",
-                           Assoc);
+                          (Disp_Node (Inter) & " already associated", Assoc);
                         Match := False;
                         return;
                      end if;
@@ -1550,29 +1548,27 @@ package body Sem_Assocs is
                   if Arg_Matched (Pos) /= Whole then
                      if Finish
                        and then Arg_Matched (Pos) = Individual
-                       and then Last_Individual /= Interface
+                       and then Last_Individual /= Inter
                      then
                         Error_Msg_Sem
                           ("non consecutive individual association for "
-                           & Disp_Node (Interface),
-                           Assoc);
+                           & Disp_Node (Inter), Assoc);
                         Match := False;
                         return;
                      end if;
-                     Last_Individual := Interface;
+                     Last_Individual := Inter;
                      Arg_Matched (Pos) := Individual;
                   else
                      if Finish then
                         Error_Msg_Sem
-                          (Disp_Node (Interface) & " already associated",
-                           Assoc);
+                          (Disp_Node (Inter) & " already associated", Assoc);
                         Match := False;
                         return;
                      end if;
                   end if;
                end if;
                if Finish then
-                  Sem_Association (Assoc, Interface, True, Match);
+                  Sem_Association (Assoc, Inter, True, Match);
                   if not Match then
                      raise Internal_Error;
                   end if;
@@ -1623,28 +1619,27 @@ package body Sem_Assocs is
       --  It is an error if a port of any mode other than IN is unconnected
       --  or unassociated and its type is an unconstrained array type.
 
-      Interface := Interface_Chain;
+      Inter := Interface_Chain;
       Pos := 0;
-      while Interface /= Null_Iir loop
+      while Inter /= Null_Iir loop
          if Arg_Matched (Pos) <= Open
-           and then Get_Default_Value (Interface) = Null_Iir
+           and then Get_Default_Value (Inter) = Null_Iir
          then
             case Missing is
                when Missing_Parameter
                  | Missing_Generic =>
                   if Finish then
-                     Error_Msg_Sem
-                       ("no actual for " & Disp_Node (Interface), Loc);
+                     Error_Msg_Sem ("no actual for " & Disp_Node (Inter), Loc);
                   end if;
                   Match := False;
                   return;
                when Missing_Port =>
-                  case Get_Mode (Interface) is
+                  case Get_Mode (Inter) is
                      when Iir_In_Mode =>
                         if not Finish then
                            raise Internal_Error;
                         end if;
-                        Error_Msg_Sem (Disp_Node (Interface)
+                        Error_Msg_Sem (Disp_Node (Inter)
                                        & " of mode IN must be connected", Loc);
                         Match := False;
                         return;
@@ -1655,11 +1650,10 @@ package body Sem_Assocs is
                         if not Finish then
                            raise Internal_Error;
                         end if;
-                        if Is_Unconstrained_Type_Definition
-                          (Get_Type (Interface))
+                        if Is_Unconstrained_Type_Definition (Get_Type (Inter))
                         then
                            Error_Msg_Sem
-                             ("unconstrained " & Disp_Node (Interface)
+                             ("unconstrained " & Disp_Node (Inter)
                               & " must be connected", Loc);
                            Match := False;
                            return;
@@ -1671,7 +1665,7 @@ package body Sem_Assocs is
                   null;
             end case;
          end if;
-         Interface := Get_Chain (Interface);
+         Inter := Get_Chain (Inter);
          Pos := Pos + 1;
       end loop;
       return;

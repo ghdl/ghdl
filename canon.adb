@@ -534,7 +534,7 @@ package body Canon is
    is
       -- The canon list of association.
       N_Chain, Last : Iir;
-      Interface : Iir;
+      Inter : Iir;
       Assoc_El, Prev_Assoc_El, Next_Assoc_El : Iir;
       Assoc_Chain : Iir;
 
@@ -553,8 +553,8 @@ package body Canon is
 
       -- Reorder the list of association in the interface order.
       -- Add missing associations.
-      Interface := Interface_Chain;
-      while Interface /= Null_Iir loop
+      Inter := Interface_Chain;
+      while Inter /= Null_Iir loop
          --  Search associations with INTERFACE.
          Found := False;
          Assoc_El := Assoc_Chain;
@@ -562,9 +562,9 @@ package body Canon is
          while Assoc_El /= Null_Iir loop
             Next_Assoc_El := Get_Chain (Assoc_El);
             if Get_Formal (Assoc_El) = Null_Iir then
-               Set_Formal (Assoc_El, Interface);
+               Set_Formal (Assoc_El, Inter);
             end if;
-            if Get_Associated_Formal (Assoc_El) = Interface then
+            if Get_Associated_Formal (Assoc_El) = Inter then
 
                --  Remove ASSOC_EL from ASSOC_CHAIN
                if Prev_Assoc_El /= Null_Iir then
@@ -606,11 +606,11 @@ package body Canon is
          Set_Artificial_Flag (Assoc_El, True);
          --  FIXME: association_list can be null_iir_list!
          --Location_Copy (Assoc_El, Association_List);
-         Set_Formal (Assoc_El, Interface);
+         Set_Formal (Assoc_El, Inter);
          Sub_Chain_Append (N_Chain, Last, Assoc_El);
 
          << Done >> null;
-         Interface := Get_Chain (Interface);
+         Inter := Get_Chain (Inter);
       end loop;
       pragma Assert (Assoc_Chain = Null_Iir);
 
@@ -982,7 +982,7 @@ package body Canon is
       Assoc : Iir;
       Imp : Iir;
       Driver_List : Iir_Driver_List;
-      Interface : Iir;
+      Inter : Iir;
       Sensitivity_List : Iir_List;
       Is_Sensitized : Boolean;
    begin
@@ -1043,14 +1043,14 @@ package body Canon is
       while Assoc /= Null_Iir loop
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Expression =>
-               Interface := Get_Associated_Formal (Assoc);
-               if Get_Mode (Interface) in Iir_In_Modes then
+               Inter := Get_Associated_Formal (Assoc);
+               if Get_Mode (Inter) in Iir_In_Modes then
                   Canon_Extract_Sensitivity
                     (Get_Actual (Assoc), Sensitivity_List, False);
                end if;
                --  LRM 2.1.1.2 Signal Parameters
-               if Get_Kind (Interface) = Iir_Kind_Signal_Interface_Declaration
-                 and then Get_Mode (Interface) in Iir_Out_Modes
+               if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration
+                 and then Get_Mode (Inter) in Iir_Out_Modes
                then
                   if Driver_List = Null_Iir_List then
                      Driver_List := Create_Iir_List;

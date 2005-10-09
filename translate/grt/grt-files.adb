@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with Grt.Errors; use Grt.Errors;
 with Grt.Stdio; use Grt.Stdio;
+with Grt.C; use Grt.C;
 with GNAT.Table;
 with System; use System;
 

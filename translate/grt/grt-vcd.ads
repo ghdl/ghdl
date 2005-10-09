@@ -20,6 +20,18 @@ with Grt.Types; use Grt.Types;
 with Grt.Avhpi; use Grt.Avhpi;
 
 package Grt.Vcd is
+   --  Abstract type for IO.
+   type Vcd_IO_Handler is abstract tagged null record;
+   procedure Vcd_Put (Handler : access Vcd_IO_Handler; Str : String)
+      is abstract;
+   procedure Vcd_Putc (Handler : access Vcd_IO_Handler; C : Character)
+      is abstract;
+   procedure Vcd_Close (Handler : access Vcd_IO_Handler)
+      is abstract;
+
+   type Handler_Acc is access all Vcd_IO_Handler'Class;
+   H : Handler_Acc := null;
+
    type Vcd_Var_Kind is (Vcd_Bad,
                          Vcd_Bool,
                          Vcd_Integer32,

@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with System;
+with Grt.C; use Grt.C;
 
 --  This package provides a thin binding to the stdio.h of the C library.
 --  It mimics GNAT package Interfaces.C_Streams.
@@ -34,17 +35,6 @@ package Grt.Stdio is
    function stdout return FILEs;
    function stderr return FILEs;
    function stdin return FILEs;
-
-   --  Type void * and char *.
-   subtype voids is System.Address;
-   subtype chars is System.Address;
-   subtype long is Long_Integer;
-
-   --  Type size_t.
-   type size_t is mod 2 ** Standard'Address_Size;
-
-   --  Type int.  It is an alias on Integer for simplicity.
-   subtype int is Integer;
 
    --  The following subprograms are translation of the C prototypes.
 
