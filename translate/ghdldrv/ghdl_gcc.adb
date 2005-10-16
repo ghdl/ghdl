@@ -24,7 +24,7 @@ procedure Ghdl_Gcc is
 begin
    --  Manual elaboration so that the order is known (because it is the order
    --  used to display help).
-   Ghdlmain.Version_String := new String'("(Use the GCC back-end.)");
+   Ghdlmain.Version_String := new String'("GCC back-end code generator");
    Ghdldrv.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;

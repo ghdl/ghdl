@@ -47,6 +47,10 @@ tarfile=$distdir.tar
 
 GCCVERSION=4.0.2
 DISTDIR=/home/gingold/dist
+GTKWAVE_VERSION=1.3.72
+
+GTKWAVE_BASE=$HOME/devel/gtkwave-$GTKWAVE_VERSION
+
 GCCDIST=$DISTDIR/gcc-$GCCVERSION
 GCCDISTOBJ=$GCCDIST-objs
 PREFIX=/usr/local
@@ -530,6 +534,20 @@ do_dist_phase2 ()
   echo "dist_phase2 success"
 }
 
+# Create gtkwave patch
+do_gtkwave_patch ()
+{
+#  rm -rf gtkwave-patch
+  mkdir gtkwave-patch
+  diff -rc -x Makefile.in $GTKWAVE_BASE.orig $GTKWAVE_BASE | \
+    sed -e "/^Only in/d" \
+    > gtkwave-patch/gtkwave-$GTKWAVE_VERSION.diffs
+  cp ../grt/ghwlib.c ../grt/ghwlib.h $GTKWAVE_BASE/src/ghw.c gtkwave-patch
+  sed -e "s/VERSION/$GTKWAVE_VERSION/g" < README.gtkwave > gtkwave-patch/README
+  tar zcvf ../../website/gtkwave-patch.tgz gtkwave-patch
+  rm -rf gtkwave-patch
+}
+
 # Update the index.html
 # Update the doc
 do_website ()
@@ -633,6 +651,8 @@ else
         do_dist_phase1;;
       dist_phase2)
         do_dist_phase2;;
+      gtkwave_patch)
+        do_gtkwave_patch;;
       *)
 	echo "usage: $0 clean|Makefile|files|all"
 	exit 1 ;;

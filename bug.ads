@@ -18,5 +18,9 @@
 with Ada.Exceptions; use Ada.Exceptions;
 
 package Bug is
+   --  Display a bug box for EXCEPT.
    procedure Disp_Bug_Box (Except : Exception_Occurrence);
+
+   --  Get the gnat version used to bind the unit.
+   function Get_Gnat_Version return String;
 end Bug;

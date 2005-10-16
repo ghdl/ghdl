@@ -33,6 +33,10 @@ with Grt.Rtis_Types; use Grt.Rtis_Types;
 with Grt.Vstrings;
 
 package body Grt.Vcd is
+   --  If TRUE, put $date in vcd file.
+   --  Can be set to FALSE to make vcd comparaison easier.
+   Flag_Vcd_Date : Boolean := True;
+
    type Vcd_IO_Simple is new Vcd_IO_Handler with record
       Stream : FILEs;
    end record;
@@ -79,6 +83,10 @@ package body Grt.Vcd is
       if Opt'Length < 5 or else Opt (F .. F + 4) /= "--vcd" then
          return False;
       end if;
+      if Opt'Length = 12 and then Opt (F + 5 .. F + 11) = "-nodate" then
+         Flag_Vcd_Date := False;
+         return True;
+      end if;
       if Opt'Length > 6 and then Opt (F + 5) = '=' then
          if H /= null then
             Error ("--vcd: file already set");
@@ -112,6 +120,7 @@ package body Grt.Vcd is
    procedure Vcd_Help is
    begin
       Put_Line (" --vcd=FILENAME     dump signal values into a VCD file");
+      Put_Line (" --vcd-nodate       do not write date in VCD file");
    end Vcd_Help;
 
    procedure Vcd_Put (Str : String) is
@@ -194,29 +203,31 @@ package body Grt.Vcd is
       if H = null then
          return;
       end if;
-      Vcd_Putline ("$date");
-      Vcd_Put ("  ");
-      declare
-         type time_t is new Interfaces.Integer_64;
-         Cur_Time : time_t;
+      if Flag_Vcd_Date then
+         Vcd_Putline ("$date");
+         Vcd_Put ("  ");
+         declare
+            type time_t is new Interfaces.Integer_64;
+            Cur_Time : time_t;
 
-         function time (Addr : Address) return time_t;
-         pragma Import (C, time);
+            function time (Addr : Address) return time_t;
+            pragma Import (C, time);
 
-         function ctime (Timep: Address) return Ghdl_C_String;
-         pragma Import (C, ctime);
+            function ctime (Timep: Address) return Ghdl_C_String;
+            pragma Import (C, ctime);
 
-         Ct : Ghdl_C_String;
-      begin
-         Cur_Time := time (Null_Address);
-         Ct := ctime (Cur_Time'Address);
-         for I in Positive loop
-            exit when Ct (I) = NUL;
-            Vcd_Putc (Ct (I));
-         end loop;
-         -- Note: ctime already append a LF.
-      end;
-      Vcd_Put_End;
+            Ct : Ghdl_C_String;
+         begin
+            Cur_Time := time (Null_Address);
+            Ct := ctime (Cur_Time'Address);
+            for I in Positive loop
+               exit when Ct (I) = NUL;
+               Vcd_Putc (Ct (I));
+            end loop;
+            -- Note: ctime already append a LF.
+         end;
+         Vcd_Put_End;
+      end if;
       Vcd_Putline ("$version");
       Vcd_Putline ("  GHDL v0");
       Vcd_Put_End;

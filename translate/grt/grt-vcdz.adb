@@ -68,7 +68,7 @@ package body Grt.Vcdz is
       end if;
       if Opt'Length > 7 and then Opt (F + 7) = '=' then
          if H /= null then
-            Error ("--vcdz: file already set");
+            Error ("--vcdgz: file already set");
             return True;
          end if;
 

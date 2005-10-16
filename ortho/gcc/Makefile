@@ -2,7 +2,7 @@ ortho_srcdir=..
 orthobe_srcdir=$(ortho_srcdir)/gcc
 agcc_objdir=.
 agcc_srcdir=$(ortho_srcdir)/gcc
-AGCC_GCCSRC_DIR:=$(HOME)/dist/gcc-4.0.1
+AGCC_GCCSRC_DIR:=$(HOME)/dist/gcc-4.0.2
 AGCC_GCCOBJ_DIR:=$(AGCC_GCCSRC_DIR)-objs
 SED=sed
 

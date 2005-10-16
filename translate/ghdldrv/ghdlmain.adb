@@ -216,16 +216,20 @@ package body Ghdlmain is
       use Ada.Text_IO;
    begin
       Put_Line (Version.Ghdl_Version);
+      Put_Line (" Compiled with " & Bug.Get_Gnat_Version);
       if Version_String /= null then
-         Put_Line (Version_String.all);
+         Put (" ");
+         Put (Version_String.all);
       end if;
+      New_Line;
       Put_Line ("Written by Tristan Gingold.");
       New_Line;
+      --  Display copyright.  Assume 80 cols terminal.
       Put_Line ("Copyright (C) 2003, 2004, 2005 Tristan Gingold.");
-      Put_Line ("This is free software; see the source for copying conditions."
-                & " There is NO");
-      Put_Line ("warranty; not even for MERCHANTABILITY or FITNESS FOR A "
-                & "PARTICULAR PURPOSE.");
+      Put_Line ("GHDL is free software, covered by the "
+                & "GNU General Public License.  There is NO");
+      Put_Line ("warranty; not even for MERCHANTABILITY or"
+                & " FITNESS FOR A PARTICULAR PURPOSE.");
       if Args'Length /= 0 then
          Error ("warning: command '--version' does not accept any argument");
       end if;

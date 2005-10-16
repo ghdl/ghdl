@@ -24,7 +24,7 @@ procedure Ghdl_Mcode is
 begin
    --  Manual elaboration so that the order is known (because it is the order
    --  used to display help).
-   Ghdlmain.Version_String := new String'("(Use the mcode code generator.)");
+   Ghdlmain.Version_String := new String'("mcode code generator");
    Ghdlrun.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;

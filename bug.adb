@@ -25,8 +25,20 @@ package body Bug is
    --  Note: since the string is exported with C convension, there is no way
    --  to know the length (gnat1 crashes if the string is unconstrained).
    --  Hopefully, the format of the string seems to be fixed.
-   GNAT_Version : constant String (1 .. 31);
+   --  We don't use GNAT.Compiler_Version because it doesn't exist
+   --   in gnat 3.15p
+   GNAT_Version : constant String (1 .. 31 + 15);
    pragma Import (C, GNAT_Version, "__gnat_version");
+
+   function Get_Gnat_Version return String is
+   begin
+      for I in GNAT_Version'Range loop
+         if GNAT_Version (I) = ')' then
+            return GNAT_Version (1 .. I);
+         end if;
+      end loop;
+      return GNAT_Version;
+   end Get_Gnat_Version;
 
    procedure Disp_Bug_Box (Except : Exception_Occurrence)
    is
@@ -40,7 +52,7 @@ package body Bug is
         (Standard_Error,
          "Please, report this bug to ghdl@free.fr, with all the output.");
       Put_Line (Standard_Error, "GHDL version: " & Ghdl_Version);
-      Put_Line (Standard_Error, "Compiled with " & GNAT_Version);
+      Put_Line (Standard_Error, "Compiled with " & Get_Gnat_Version);
       Put_Line (Standard_Error, "In directory: " &
                 GNAT.Directory_Operations.Get_Current_Dir);
       --Put_Line

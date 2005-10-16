@@ -968,7 +968,7 @@ package body Parse is
 
             Scan.Scan;
             exit when Current_Token = Tok_Colon;
-            Expect (Tok_Comma, "',' or ':' after an identifier");
+            Expect (Tok_Comma, "',' or ':' expected after identifier");
             Scan.Scan;
             Inter := Create_Iir (Get_Kind (Inter));
          end loop;

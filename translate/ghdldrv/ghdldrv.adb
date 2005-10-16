@@ -637,12 +637,6 @@ package body Ghdldrv is
          Add_Argument (Compiler_Args, Str);
          Add_Argument (Linker_Args, Str);
          Res := Option_Ok;
-      elsif Option'Length >= 2
-        and then (Option (2) = 'O' or Option (2) = 'f')
-      then
-         --  Optimization option.
-         Add_Argument (Compiler_Args, new String'(Option));
-         Res := Option_Ok;
       elsif Option = "-Q" then
          Flag_Not_Quiet := True;
          Res := Option_Ok;
@@ -651,6 +645,14 @@ package body Ghdldrv is
          Flag_Expect_Failure := True;
          Res := Option_Ok;
       elsif Flags.Parse_Option (Option) then
+         Add_Argument (Compiler_Args, new String'(Option));
+         Res := Option_Ok;
+      elsif Option'Length >= 2
+        and then (Option (2) = 'O' or Option (2) = 'f')
+      then
+         --  Optimization option.
+         --  This is put after Flags.Parse_Option, since it may catch -fxxx
+         --  options.
          Add_Argument (Compiler_Args, new String'(Option));
          Res := Option_Ok;
       else

@@ -53,34 +53,14 @@ ifndef GRT_TARGET_OBJS
   GRT_EXTRA_LIB=-lpthread
 endif
 
+# Additionnal object files (C or asm files).
 GRT_ADD_OBJS=$(GRT_TARGET_OBJS) grt-cbinding.o grt-cvpi.o
 
+# Configuration pragmas.
 GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc
 
-GRT_OBJS_FILES=\
-grt.o \
-grt-disp.o \
-grt-main.o \
-grt-stacks.o \
-grt-errors.o \
-grt-options.o \
-grt-stdio.o \
-grt-files.o \
-grt-processes.o \
-grt-typedesc.o \
-grt-hierarchy.o \
-grt-shadow_ieee.o \
-grt-types.o \
-grt-images.o \
-grt-signals.o \
-grt-vcd.o \
-grt-vpi.o \
-grt-lib.o \
-grt-sdf.o \
-grt-stack2.o \
-grt-names.o
-
-GRT_ADACOMPILE=$(ADAC) -c $(GRT_FLAGS) -o $@ $<
+# Rule to compile an Ada file.
+GRT_ADACOMPILE=$(ADAC) -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG) -o $@ $<
 
 grt-all: libgrt.a grt.lst
 
@@ -137,9 +117,12 @@ grt-files: run-bind.adb
 
 # Remove local files (they are now in the libgrt library).
 # Also, remove the -shared option, in order not to build a shared library
-# instead of an executable.
+#  instead of an executable.
+# Also remove -lgnat and its associated -L flags.  This appears to be required
+#  with GNAT GPL 2005.
 grt-files.in: grt-files
-	sed -e "\!^./!d" -e "/-shared/d" < $< > $@
+	sed -e "\!^./!d" -e "/-shared/d" -e "/-static/d" -e "/-lgnat/d" \
+	  -e "\X-L/Xd" < $< > $@
 
 grt.lst: grt-files.in
 	echo "@/libgrt.a" > $@
