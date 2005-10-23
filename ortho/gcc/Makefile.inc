@@ -41,7 +41,7 @@ gcc-version.c: $(AGCC_GCCSRC_DIR)/gcc/version.c
 	-$(RM) -f $@
 	echo '#include "version.h"' > $@
 	sed  -n -e '/version_string/ s/";/ (ghdl)";/p' < $< >> $@
-	echo 'const char bug_report_url[] = "<URL:mailto:ghdl@free.fr>";' >> $@
+	echo 'const char bug_report_url[] = "<URL:http://gna.org/projects/ghdl>";' >> $@
 
 gcc-version.o: gcc-version.c
 	$(CC) -c -o $@ $< $(AGCC_CFLAGS)

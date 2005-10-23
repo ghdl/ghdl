@@ -84,6 +84,8 @@ package body Translation is
    Char_Ptr_Array_Ptr_Type : O_Tnode;
 
    Ghdl_Index_Type : O_Tnode;
+   Ghdl_Index_0 : O_Cnode;
+   Ghdl_Index_1 : O_Cnode;
 
    --  Type for a file (this is in fact a index in a private table).
    Ghdl_File_Index_Type : O_Tnode;
@@ -2062,7 +2064,8 @@ package body Translation is
         (Expr : O_Enode;
          Expr_Type : Iir;
          Atype : Iir;
-         Is_Sig : Object_Kind_Type)
+         Is_Sig : Object_Kind_Type;
+         Loc : Iir)
         return O_Enode;
 
       function Translate_Type_Conversion
@@ -3032,11 +3035,10 @@ package body Translation is
 
       procedure Inc_Var (V : O_Dnode) is
       begin
-         New_Assign_Stmt
-           (New_Obj (V), New_Dyadic_Op
-            (ON_Add_Ov,
-             New_Value (New_Obj (V)),
-             New_Lit (New_Unsigned_Literal (Ghdl_Index_Type, 1))));
+         New_Assign_Stmt (New_Obj (V),
+                          New_Dyadic_Op (ON_Add_Ov,
+                                         New_Value (New_Obj (V)),
+                                         New_Lit (Ghdl_Index_1)));
       end Inc_Var;
 
 --       procedure Dec_Var (V : O_Lnode) is
@@ -3049,8 +3051,7 @@ package body Translation is
 
       procedure Init_Var (V : O_Dnode) is
       begin
-         New_Assign_Stmt
-           (New_Obj (V), New_Lit (New_Unsigned_Literal (Ghdl_Index_Type, 0)));
+         New_Assign_Stmt (New_Obj (V), New_Lit (Ghdl_Index_0));
       end Init_Var;
 
       procedure Gen_Exit_When (Label : O_Snode; Cond : O_Enode)
@@ -5977,7 +5978,7 @@ package body Translation is
                New_Record_Aggr_El
                  (Constr1, Chap7.Translate_Static_Range_Dir (Irange));
                New_Record_Aggr_El
-                 (Constr1, New_Unsigned_Literal (Ghdl_Index_Type, 1));
+                 (Constr1, Ghdl_Index_1);
                Finish_Record_Aggr (Constr1, Res1);
                New_Record_Aggr_El (Constr, Res1);
                Finish_Record_Aggr (Constr, Res);
@@ -6036,7 +6037,7 @@ package body Translation is
       --  Get the length of DEF, ie the number of elements.
       --  If the length is not statically defined, returns -1.
       function Get_Array_Subtype_Length (Def : Iir_Array_Subtype_Definition)
-        return Iir_Int64
+                                        return Iir_Int64
       is
          Index_List : Iir_List;
          Index : Iir;
@@ -6048,6 +6049,7 @@ package body Translation is
          for I in Natural loop
             Index := Get_Nth_Element (Index_List, I);
             exit when Index = Null_Iir;
+
             if Get_Type_Staticness (Index) /= Locally then
                return -1;
             end if;
@@ -6056,16 +6058,22 @@ package body Translation is
          return Len;
       end Get_Array_Subtype_Length;
 
+
       procedure Translate_Array_Subtype (Def : Iir_Array_Subtype_Definition)
       is
          Info : Type_Info_Acc;
          Binfo : Type_Info_Acc;
+
          Len : Iir_Int64;
+
          Ptr : O_Tnode;
          Id : O_Ident;
       begin
          Info := Get_Info (Def);
          Binfo := Get_Info (Get_Base_Type (Def));
+
+         --  Note: info of indexes subtype are not created!
+
          Len := Get_Array_Subtype_Length (Def);
          if Len < 0 then
             --  Length of the array is not known at compile time.
@@ -7939,8 +7947,7 @@ package body Translation is
                return New_Value (Ptr);
             when Type_Mode_Array =>
                return Get_Memory_Complex_1
-                 (New_Indexed_Element
-                  (Ptr, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type, 0))),
+                 (New_Indexed_Element (Ptr, New_Lit (Ghdl_Index_0)),
                   Get_Element_Subtype (Obj_Type),
                   Kind);
             when Type_Mode_Record =>
@@ -8504,8 +8511,7 @@ package body Translation is
            (If_Blk,
             New_Compare_Op (ON_Eq,
                             New_Obj_Value (Length),
-                            New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                           0)),
+                            New_Lit (Ghdl_Index_0),
                             Ghdl_Bool_Type));
          --  Null range.
          case Attr_Kind is
@@ -8543,8 +8549,7 @@ package body Translation is
             New_Convert_Ov
             (New_Dyadic_Op (ON_Sub_Ov,
                             New_Obj_Value (Length),
-                            New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                           1))),
+                            New_Lit (Ghdl_Index_1)),
              Iinfo.Ortho_Type (Mode_Value)));
 
          Start_If_Stmt (If_Blk1, New_Compare_Op (ON_Eq,
@@ -8609,8 +8614,7 @@ package body Translation is
            (If_Blk,
             New_Compare_Op (ON_Eq,
                             New_Obj_Value (Length),
-                            New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                           0)),
+                            New_Lit (Ghdl_Index_0),
                             Ghdl_Bool_Type));
          --  Null range.
          New_Assign_Stmt
@@ -8629,8 +8633,7 @@ package body Translation is
          Diff := New_Convert_Ov
            (New_Dyadic_Op (ON_Sub_Ov,
                            New_Obj_Value (Length),
-                           New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                          1))),
+                           New_Lit (Ghdl_Index_1)),
             Iinfo.Ortho_Type (Mode_Value));
          New_Assign_Stmt (New_Obj (Var_Right),
                           New_Dyadic_Op (Op, Left_Bound, Diff));
@@ -9219,7 +9222,7 @@ package body Translation is
          Info := Get_Info (Sig_Type);
          case Info.Type_Mode is
             when Type_Mode_Scalar =>
-               return New_Lit (New_Unsigned_Literal (Ghdl_Index_Type, 1));
+               return New_Lit (Ghdl_Index_1);
             when Type_Mode_Arrays =>
                return New_Dyadic_Op
                  (ON_Mul_Ov,
@@ -9245,8 +9248,7 @@ package body Translation is
                      El := Get_Chain (El);
                   end loop;
                   if Res = O_Enode_Null then
-                     return New_Lit (New_Unsigned_Literal
-                                     (Ghdl_Index_Type, 0));
+                     return New_Lit (Ghdl_Index_0);
                   else
                      return Res;
                   end if;
@@ -9282,7 +9284,7 @@ package body Translation is
                when Type_Mode_Arrays =>
                   Res := Chap3.Index_Base
                     (Chap3.Get_Array_Base (Res), Res_Type,
-                     New_Lit (New_Unsigned_Literal (Ghdl_Index_Type, 0)));
+                     New_Lit (Ghdl_Index_0));
                   Res_Type := Get_Element_Subtype (Res_Type);
                when Type_Mode_Record =>
                   declare
@@ -10005,6 +10007,8 @@ package body Translation is
          Tinfo : Type_Info_Acc;
          Kind : Object_Kind_Type;
       begin
+         New_Debug_Line_Stmt (Get_Line_Number (Decl));
+
          Decl_Type := Get_Type (Decl);
          Tinfo := Get_Info (Decl_Type);
 
@@ -10954,7 +10958,7 @@ package body Translation is
                Imp := Get_Implementation (Imp);
                R := Chap7.Translate_Implicit_Conv
                  (R, In_Type, Get_Type (Get_Interface_Declaration_Chain (Imp)),
-                  Mode_Value);
+                  Mode_Value, Assoc);
 
                --  Create result value.
                Subprg_Info := Get_Info (Imp);
@@ -12123,23 +12127,24 @@ package body Translation is
       --  offset.
       --  This checks bounds.
       function Translate_Thin_Index_Offset (Index_Type : Iir;
-                                            Index_Range : Iir;
                                             Dim : Natural;
                                             Expr : Iir)
         return O_Enode
       is
          Obound : O_Cnode;
          Res : O_Dnode;
-         Off : O_Dnode;
          Cond2: O_Enode;
          Index : O_Enode;
+         Index_Base_Type : Iir;
+         Index_Range : Iir;
          Index_Info : Type_Info_Acc;
          V : Iir_Int64;
          B : Iir_Int64;
       begin
+         Index_Range := Get_Range_Constraint (Index_Type);
+         B := Eval_Pos (Get_Left_Limit (Index_Range));
          if Get_Expr_Staticness (Expr) = Locally then
             V := Eval_Pos (Expr);
-            B := Eval_Pos (Get_Left_Limit (Index_Range));
             if Get_Direction (Index_Range) = Iir_To then
                B := V - B;
             else
@@ -12148,39 +12153,42 @@ package body Translation is
             return New_Lit
               (New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (B)));
          else
-            Index_Info := Get_Info (Get_Base_Type (Index_Type));
-            Res := Create_Temp (Ghdl_Index_Type);
-            Off := Create_Temp (Index_Info.Ortho_Type (Mode_Value));
+            Index_Base_Type := Get_Base_Type (Index_Type);
+            Index_Info := Get_Info (Index_Base_Type);
 
-            Index := Chap7.Translate_Expression (Expr, Index_Type);
-
-            Obound := Chap7.Translate_Static_Range_Left
-                 (Index_Range, Index_Type);
+            Index := Chap7.Translate_Expression (Expr, Index_Base_Type);
 
             if Get_Direction (Index_Range) = Iir_To then
                --  Direction TO:  INDEX - LEFT.
-               Index := New_Dyadic_Op (ON_Sub_Ov, Index, New_Lit (Obound));
+               if B /= 0 then
+                  Obound := Chap7.Translate_Static_Range_Left
+                    (Index_Range, Index_Base_Type);
+                  Index := New_Dyadic_Op (ON_Sub_Ov, Index, New_Lit (Obound));
+               end if;
             else
                --  Direction DOWNTO:  LEFT - INDEX.
+               Obound := Chap7.Translate_Static_Range_Left
+                 (Index_Range, Index_Base_Type);
                Index := New_Dyadic_Op (ON_Sub_Ov, New_Lit (Obound), Index);
             end if;
 
-            New_Assign_Stmt (New_Obj (Off), Index);
-
             --  Get the offset.
-            New_Assign_Stmt
-              (New_Obj (Res),
-               New_Convert_Ov (New_Obj_Value (Off), Ghdl_Index_Type));
+            Index := New_Convert_Ov (Index, Ghdl_Index_Type);
 
             --  Since the value is unsigned, both left and right bounds are
             --  checked in the same time.
-            Cond2 := New_Compare_Op
-              (ON_Ge, New_Obj_Value (Res),
-               New_Lit (Chap7.Translate_Static_Range_Length (Index_Range)),
-               Ghdl_Bool_Type);
-            Check_Bound_Error (Cond2, Expr, Dim);
+            if Get_Type (Expr) /= Index_Type then
+               Res := Create_Temp_Init (Ghdl_Index_Type, Index);
 
-            return New_Obj_Value (Res);
+               Cond2 := New_Compare_Op
+                 (ON_Ge, New_Obj_Value (Res),
+                  New_Lit (Chap7.Translate_Static_Range_Length (Index_Range)),
+                  Ghdl_Bool_Type);
+               Check_Bound_Error (Cond2, Expr, Dim);
+               Index := New_Obj_Value (Res);
+            end if;
+
+            return Index;
          end if;
       end Translate_Thin_Index_Offset;
 
@@ -12251,8 +12259,7 @@ package body Translation is
                      Index);
                when Type_Mode_Array =>
                   --  BASE is a thin array.
-                  R := Translate_Thin_Index_Offset
-                    (Ibasetype, Get_Range_Constraint (Itype), Dim, Index);
+                  R := Translate_Thin_Index_Offset (Itype, Dim, Index);
                when others =>
                   raise Internal_Error;
             end case;
@@ -12283,8 +12290,9 @@ package body Translation is
             Close_Temp;
          end loop;
 
-         return Chap3.Index_Base (Chap3.Get_Array_Base (Prefix), Prefix_Type,
-                                  New_Obj_Value (Offset));
+         R := New_Obj_Value (Offset);
+         return Chap3.Index_Base
+           (Chap3.Get_Array_Base (Prefix), Prefix_Type, R);
       end Translate_Indexed_Name;
 
       function Translate_Slice_Name (Prefix : Mnode; Expr : Iir_Slice_Name)
@@ -13349,9 +13357,7 @@ package body Translation is
          Init_Var (Res);
          New_Else_Stmt (If_Blk);
          Val := New_Convert_Ov (New_Obj_Value (Tmp), Ghdl_Index_Type);
-         Val := New_Dyadic_Op
-           (ON_Add_Ov, Val,
-            New_Lit (New_Unsigned_Literal (Ghdl_Index_Type, 1)));
+         Val := New_Dyadic_Op (ON_Add_Ov, Val, New_Lit (Ghdl_Index_1));
          New_Assign_Stmt (New_Obj (Res), Val);
          Finish_If_Stmt (If_Blk);
          Close_Temp;
@@ -13409,7 +13415,7 @@ package body Translation is
                  (M2E (Chap6.Translate_Name (Actual)),
                   Get_Type (Actual),
                   Get_Type (Formal_Base),
-                  Mode_Signal);
+                  Mode_Signal, Assoc);
             when others =>
                Error_Kind ("translate_association", Formal);
          end case;
@@ -13524,7 +13530,7 @@ package body Translation is
          end if;
 
          return Translate_Implicit_Conv
-           (Res, Get_Return_Type (Imp), Res_Type, Mode_Value);
+           (Res, Get_Return_Type (Imp), Res_Type, Mode_Value, Left);
       end Translate_Operator_Function_Call;
 
       function Convert_Constrained_To_Unconstrained
@@ -13559,7 +13565,8 @@ package body Translation is
         (Expr : O_Enode;
          Expr_Type : Iir;
          Atype : Iir;
-         Is_Sig : Object_Kind_Type)
+         Is_Sig : Object_Kind_Type;
+         Loc : Iir)
         return O_Enode
       is
          Ptr : O_Dnode;
@@ -13588,7 +13595,7 @@ package body Translation is
          end loop;
          New_Exit_Stmt (Success_Label);
          Finish_Loop_Stmt (Failure_Label);
-         Chap6.Gen_Bound_Error (Expr_Type);   --  FIXME: location.
+         Chap6.Gen_Bound_Error (Loc);
          Finish_Loop_Stmt (Success_Label);
          Close_Temp;
 
@@ -13600,7 +13607,8 @@ package body Translation is
       function Translate_Implicit_Conv (Expr : O_Enode;
                                         Expr_Type : Iir;
                                         Atype : Iir;
-                                        Is_Sig : Object_Kind_Type)
+                                        Is_Sig : Object_Kind_Type;
+                                        Loc : Iir)
         return O_Enode
       is
          Ainfo : Type_Info_Acc;
@@ -13637,8 +13645,8 @@ package body Translation is
                      when Type_Mode_Fat_Array
                        | Type_Mode_Ptr_Array =>
                         --  unconstrained to constrained.
-                        return Convert_Array_To_Thin_Array (Expr, Expr_Type,
-                                                            Atype, Is_Sig);
+                        return Convert_Array_To_Thin_Array
+                          (Expr, Expr_Type, Atype, Is_Sig, Loc);
                      when Type_Mode_Array =>
                         --  constrained to constrained.
                         declare
@@ -13658,7 +13666,7 @@ package body Translation is
                                  --  FIXME: generate a bound error ?
                                  --  Even if this is caught at compile-time,
                                  --  the code is not required to run.
-                                 raise Internal_Error;
+                                 Chap6.Gen_Bound_Error (Loc);
                               end if;
                            end loop;
                         end;
@@ -13672,7 +13680,7 @@ package body Translation is
                        | Type_Mode_Array
                        | Type_Mode_Ptr_Array =>
                         return Convert_Array_To_Thin_Array
-                          (Expr, Expr_Type, Atype, Is_Sig);
+                          (Expr, Expr_Type, Atype, Is_Sig, Loc);
                      when others =>
                         raise Internal_Error;
                   end case;
@@ -13879,7 +13887,8 @@ package body Translation is
       begin
          Ret_Type := Get_Return_Type (Func);
          Res := Translate_Predefined_Array_Operator (Left, Right, Func);
-         return Translate_Implicit_Conv (Res, Ret_Type, Res_Type, Mode_Value);
+         return Translate_Implicit_Conv
+           (Res, Ret_Type, Res_Type, Mode_Value, Func);
       end Translate_Predefined_Array_Operator_Convert;
 
       --  Create an array aggregate containing one element, EL.
@@ -13919,7 +13928,8 @@ package body Translation is
       function Translate_Concat_Operator
         (Left_Tree, Right_Tree : O_Enode;
          Imp : Iir_Implicit_Function_Declaration;
-         Res_Type : Iir)
+         Res_Type : Iir;
+         Loc : Iir)
         return O_Enode
       is
          Arr_El1 : O_Enode;
@@ -13945,13 +13955,15 @@ package body Translation is
                Arr_El2 := Right_Tree;
          end case;
          Res := Translate_Predefined_Array_Operator (Arr_El1, Arr_El2, Imp);
-         return Translate_Implicit_Conv (Res, Ret_Type, Res_Type, Mode_Value);
+         return Translate_Implicit_Conv
+           (Res, Ret_Type, Res_Type, Mode_Value, Loc);
       end Translate_Concat_Operator;
 
       function Translate_Predefined_Operator
         (Imp : Iir_Implicit_Function_Declaration;
          Left, Right : Iir;
-         Res_Type : Iir)
+         Res_Type : Iir;
+         Loc : Iir)
         return O_Enode
       is
          Left_Tree : O_Enode;
@@ -14015,7 +14027,7 @@ package body Translation is
                   raise Internal_Error;
             end case;
             Res := Translate_Implicit_Conv
-              (Res, Get_Return_Type (Imp), Res_Type, Mode_Value);
+              (Res, Get_Return_Type (Imp), Res_Type, Mode_Value, Loc);
             return Res;
          end if;
 
@@ -14029,7 +14041,7 @@ package body Translation is
               | Iir_Predefined_Floating_Identity
               | Iir_Predefined_Physical_Identity =>
                return Translate_Implicit_Conv
-                 (Left_Tree, Left_Type, Res_Type, Mode_Value);
+                 (Left_Tree, Left_Type, Res_Type, Mode_Value, Loc);
 
             when Iir_Predefined_Access_Equality
               | Iir_Predefined_Access_Inequality =>
@@ -14229,7 +14241,7 @@ package body Translation is
               | Iir_Predefined_Array_Element_Concat
               | Iir_Predefined_Element_Element_Concat =>
                return Translate_Concat_Operator
-                 (Left_Tree, Right_Tree, Imp, Res_Type);
+                 (Left_Tree, Right_Tree, Imp, Res_Type, Loc);
 
             when Iir_Predefined_Endfile =>
                return Translate_Lib_Operator
@@ -14625,8 +14637,7 @@ package body Translation is
               (Label,
                New_Compare_Op (ON_Eq,
                                New_Obj_Value (Var_Len),
-                               New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                              0)),
+                               New_Lit (Ghdl_Index_0),
                                Ghdl_Bool_Type));
 
             --  convert aggr into a case statement.
@@ -14661,8 +14672,7 @@ package body Translation is
               (New_Obj (Var_Len),
                New_Dyadic_Op (ON_Sub_Ov,
                               New_Obj_Value (Var_Len),
-                              New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                             1))));
+                              New_Lit (Ghdl_Index_1)));
             Finish_Loop_Stmt (Label);
             Close_Temp;
          end;
@@ -14912,8 +14922,7 @@ package body Translation is
          end loop;
 
          Var_Index := Create_Temp_Init
-           (Ghdl_Index_Type,
-            New_Lit (New_Unsigned_Literal (Ghdl_Index_Type, 0)));
+           (Ghdl_Index_Type, New_Lit (Ghdl_Index_0));
          Translate_Array_Aggregate_Gen
            (Base, Bounds, Aggr, Aggr_Type, 1, Var_Index);
          Close_Temp;
@@ -15475,7 +15484,7 @@ package body Translation is
               | Iir_Kind_Simple_Name_Attribute =>
                Res := Translate_String_Literal (Expr);
                Res := Translate_Implicit_Conv
-                 (Res, Expr_Type, Res_Type, Mode_Value);
+                 (Res, Expr_Type, Res_Type, Mode_Value, Expr);
                return Res;
 
             when Iir_Kind_Aggregate =>
@@ -15519,7 +15528,7 @@ package body Translation is
 
                   if Aggr_Type /= Rtype then
                      Res := Translate_Implicit_Conv
-                       (Res, Aggr_Type, Rtype, Mode_Value);
+                       (Res, Aggr_Type, Rtype, Mode_Value, Expr);
                   end if;
                   return Res;
                end;
@@ -15563,7 +15572,7 @@ package body Translation is
                --  FIXME: check type.
                Res := Translate_Expression (Get_Expression (Expr), Expr_Type);
                return Translate_Implicit_Conv
-                 (Res, Expr_Type, Rtype, Mode_Value);
+                 (Res, Expr_Type, Rtype, Mode_Value, Expr);
 
             when Iir_Kind_Constant_Declaration
               | Iir_Kind_Variable_Declaration
@@ -15599,7 +15608,7 @@ package body Translation is
                end;
                if Rtype /= Null_Iir then
                   Res := Translate_Implicit_Conv
-                    (Res, Expr_Type, Rtype, Mode_Value);
+                    (Res, Expr_Type, Rtype, Mode_Value, Expr);
                end if;
                return Res;
 
@@ -15620,7 +15629,7 @@ package body Translation is
                Imp := Get_Implementation (Expr);
                if Get_Kind (Imp) = Iir_Kind_Implicit_Function_Declaration then
                   return Translate_Predefined_Operator
-                    (Imp, Get_Left (Expr), Get_Right (Expr), Res_Type);
+                    (Imp, Get_Left (Expr), Get_Right (Expr), Res_Type, Expr);
                else
                   return Translate_Operator_Function_Call
                     (Imp, Get_Left (Expr), Get_Right (Expr), Res_Type);
@@ -15629,7 +15638,7 @@ package body Translation is
                Imp := Get_Implementation (Expr);
                if Get_Kind (Imp) = Iir_Kind_Implicit_Function_Declaration then
                   return Translate_Predefined_Operator
-                    (Imp, Get_Operand (Expr), Null_Iir, Res_Type);
+                    (Imp, Get_Operand (Expr), Null_Iir, Res_Type, Expr);
                else
                   return Translate_Operator_Function_Call
                     (Imp, Get_Operand (Expr), Null_Iir, Res_Type);
@@ -15658,14 +15667,15 @@ package body Translation is
                            end if;
                         end if;
                         return Translate_Predefined_Operator
-                          (Imp, Left, Right, Res_Type);
+                          (Imp, Left, Right, Res_Type, Expr);
                      end;
                   else
                      Assoc_Chain := Canon.Canon_Subprogram_Call (Expr);
                      Res := Translate_Function_Call
                        (Imp, Assoc_Chain, Get_Method_Object (Expr));
                      return Translate_Implicit_Conv
-                       (Res, Get_Return_Type (Imp), Res_Type, Mode_Value);
+                       (Res, Get_Return_Type (Imp),
+                        Res_Type, Mode_Value, Expr);
                   end if;
                end;
 
@@ -15678,7 +15688,7 @@ package body Translation is
                     (Translate_Expression (Conv_Expr), Get_Type (Conv_Expr),
                      Expr_Type, Expr);
                   return Translate_Implicit_Conv
-                    (Res, Expr_Type, Res_Type, Mode_Value);
+                    (Res, Expr_Type, Res_Type, Mode_Value, Expr);
                end;
 
             when Iir_Kind_Length_Array_Attribute =>
@@ -15707,7 +15717,7 @@ package body Translation is
             when Iir_Kind_Image_Attribute =>
                return Translate_Implicit_Conv
                  (Chap14.Translate_Image_Attribute (Expr),
-                  String_Type_Definition, Res_Type, Mode_Value);
+                  String_Type_Definition, Res_Type, Mode_Value, Expr);
             when Iir_Kind_Value_Attribute =>
                return Chap14.Translate_Value_Attribute (Expr);
 
@@ -16203,9 +16213,9 @@ package body Translation is
                begin
                   Base_Type := Get_Base_Type (Etype);
                   Lc := Translate_Implicit_Conv
-                    (M2E (L), Etype, Base_Type, Mode_Value);
+                    (M2E (L), Etype, Base_Type, Mode_Value, Null_Iir);
                   Rc := Translate_Implicit_Conv
-                    (M2E (R), Etype, Base_Type, Mode_Value);
+                    (M2E (R), Etype, Base_Type, Mode_Value, Null_Iir);
                   Func := Find_Predefined_Function
                     (Base_Type, Iir_Predefined_Array_Equality);
                   return Translate_Predefined_Lib_Operator (Lc, Rc, Func);
@@ -16486,8 +16496,7 @@ package body Translation is
               (If_Blk,
                New_Compare_Op (ON_Eq,
                                Len,
-                               New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                              0)),
+                               New_Lit (Ghdl_Index_0),
                                Ghdl_Bool_Type));
             Copy_Fat_Pointer (Res, R);
             New_Return_Stmt;
@@ -16550,8 +16559,7 @@ package body Translation is
                  (New_Obj (Var_Length1),
                   New_Dyadic_Op (ON_Sub_Ov,
                                  New_Obj_Value (Var_Length),
-                                 New_Lit (New_Unsigned_Literal
-                                          (Ghdl_Index_Type, 1))));
+                                 New_Lit (Ghdl_Index_1)));
                New_Assign_Stmt
                  (M2Lv (Chap3.Range_To_Left
                         (Chap3.Bounds_To_Range (V_Bounds, Arr_Type, 1))),
@@ -16915,12 +16923,12 @@ package body Translation is
             end if;
             if Shift = Sh_Arith then
                if To_Right then
-                  Tmp := New_Lit (New_Unsigned_Literal (Ghdl_Index_Type, 0));
+                  Tmp := New_Lit (Ghdl_Index_0);
                else
                   Tmp := New_Dyadic_Op
                     (ON_Sub_Ov,
                      New_Obj_Value (Var_Length),
-                     New_Lit (New_Unsigned_Literal (Ghdl_Index_Type, 1)));
+                     New_Lit (Ghdl_Index_1));
                end if;
                New_Assign_Stmt
                  (New_Obj (Var_E),
@@ -17054,8 +17062,7 @@ package body Translation is
                              Ghdl_Bool_Type),
              New_Compare_Op (ON_Eq,
                              New_Obj_Value (Var_Length),
-                             New_Lit (New_Unsigned_Literal
-                                      (Ghdl_Index_Type, 0)),
+                             New_Lit (Ghdl_Index_0),
                              Ghdl_Bool_Type)));
          New_Assign_Stmt
            (M2Lp (Chap3.Get_Array_Base (Res)),
@@ -17750,8 +17757,6 @@ package body Translation is
          Iter_Base_Type : Iir;
          Var_Iter : Var_Acc;
          Constraint : Iir;
-         Cond_To, Cond_Downto : O_Enode;
-         Cond_Dir : O_Enode;
          Cond : O_Enode;
          Dir : Iir_Direction;
          Iter_Type_Info : Ortho_Info_Acc;
@@ -17785,13 +17790,13 @@ package body Translation is
                when Iir_Downto =>
                   Op := ON_Ge;
             end case;
+            --  Check for at least one iteration.
             Cond := New_Compare_Op
               (Op, New_Value (Get_Var (Var_Iter)),
                New_Obj_Value (Data.O_Right),
                Ghdl_Bool_Type);
          else
             Data.O_Range := Create_Temp (Iter_Type_Info.T.Range_Ptr_Type);
-            Open_Temp;
             New_Assign_Stmt (New_Obj (Data.O_Range),
                              New_Address (Chap7.Translate_Range
                                           (Constraint, Iter_Base_Type),
@@ -17799,34 +17804,16 @@ package body Translation is
             New_Assign_Stmt
               (Get_Var (Var_Iter), Get_Range_Ptr_Field_Value
                (New_Obj (Data.O_Range), Iter_Type_Info.T.Range_Left));
-            Close_Temp;
             --  Before starting the loop, check wether there will be at least
             --  one iteration.
-            Cond_To := New_Compare_Op
-              (ON_Le, New_Value (Get_Var (Var_Iter)),
+            Cond := New_Compare_Op
+              (ON_Gt,
                Get_Range_Ptr_Field_Value (New_Obj (Data.O_Range),
-                                          Iter_Type_Info.T.Range_Right),
+                                          Iter_Type_Info.T.Range_Length),
+               New_Lit (Ghdl_Index_0),
+--                 New_Lit (New_Signed_Literal
+--                          (Iter_Type_Info.Ortho_Type (Mode_Value), 0)),
                Ghdl_Bool_Type);
-            Cond_Dir := New_Compare_Op
-              (ON_Eq,
-               Get_Range_Ptr_Field_Value (New_Obj (Data.O_Range),
-                                          Iter_Type_Info.T.Range_Dir),
-               New_Lit (Ghdl_Dir_To_Node),
-               Ghdl_Bool_Type);
-            Cond_To := New_Dyadic_Op (ON_And, Cond_Dir, Cond_To);
-            Cond_Downto := New_Compare_Op
-              (ON_Ge, New_Value (Get_Var (Var_Iter)),
-               Get_Range_Ptr_Field_Value (New_Obj (Data.O_Range),
-                                          Iter_Type_Info.T.Range_Right),
-               Ghdl_Bool_Type);
-            Cond_Dir := New_Compare_Op
-              (ON_Eq,
-               Get_Range_Ptr_Field_Value (New_Obj (Data.O_Range),
-                                          Iter_Type_Info.T.Range_Dir),
-               New_Lit (Ghdl_Dir_Downto_Node),
-               Ghdl_Bool_Type);
-            Cond_Downto := New_Dyadic_Op (ON_And, Cond_Dir, Cond_Downto);
-            Cond := New_Dyadic_Op (ON_Or, Cond_To, Cond_Downto);
          end if;
 
          Start_If_Stmt (Data.If_Blk, Cond);
@@ -17909,28 +17896,17 @@ package body Translation is
          end if;
       end Finish_For_Loop;
 
-      pragma Unreferenced (Start_For_Loop, Finish_For_Loop);
-
       Current_Loop : Iir := Null_Iir;
 
       procedure Translate_For_Loop_Statement (Stmt : Iir_For_Loop_Statement)
       is
          Iterator : Iir;
+         Data : For_Loop_Data;
          Iter_Type : Iir;
          Iter_Base_Type : Iir;
          Iter_Type_Info : Type_Info_Acc;
-         Loop_Info : Loop_Info_Acc;
          It_Info : Ortho_Info_Acc;
-         O_Range : O_Dnode;
-         O_Right : O_Dnode;
-         Cond_To, Cond_Downto : O_Enode;
-         Cond_Dir : O_Enode;
-         Cond : O_Enode;
-         Dir : Iir_Direction;
-         Op : ON_Op_Kind;
-         If_Blk, If_Blk1 : O_If_Block;
          Var_Iter : Var_Acc;
-         Constraint : Iir;
          Prev_Loop : Iir;
       begin
          Prev_Loop := Current_Loop;
@@ -17951,115 +17927,15 @@ package body Translation is
             O_Storage_Local);
          It_Info.Iterator_Var := Var_Iter;
 
-         Open_Temp;
-
-         Constraint := Get_Range_Constraint (Iter_Type);
-         if Get_Kind (Constraint) = Iir_Kind_Range_Expression then
-            New_Assign_Stmt
-              (Get_Var (Var_Iter), Chap7.Translate_Range_Expression_Left
-               (Constraint, Iter_Base_Type));
-            Dir := Get_Direction (Constraint);
-            O_Right := Create_Temp (Iter_Type_Info.Ortho_Type (Mode_Value));
-            New_Assign_Stmt
-              (New_Obj (O_Right), Chap7.Translate_Range_Expression_Right
-               (Constraint, Iter_Base_Type));
-            case Dir is
-               when Iir_To =>
-                  Op := ON_Le;
-               when Iir_Downto =>
-                  Op := ON_Ge;
-            end case;
-            Cond := New_Compare_Op
-              (Op, New_Value (Get_Var (Var_Iter)), New_Obj_Value (O_Right),
-               Ghdl_Bool_Type);
-         else
-            O_Range := Create_Temp (Iter_Type_Info.T.Range_Ptr_Type);
-            New_Assign_Stmt (New_Obj (O_Range),
-                             New_Address (Chap7.Translate_Range
-                                          (Constraint, Iter_Base_Type),
-                                          Iter_Type_Info.T.Range_Ptr_Type));
-            New_Assign_Stmt (Get_Var (Var_Iter), Get_Range_Ptr_Field_Value
-                             (New_Obj (O_Range), Iter_Type_Info.T.Range_Left));
-            --  Before starting the loop, check wether there will be at least
-            --  one iteration.
-            Cond_To := New_Compare_Op
-              (ON_Le, New_Value (Get_Var (Var_Iter)),
-               Get_Range_Ptr_Field_Value (New_Obj (O_Range),
-                                          Iter_Type_Info.T.Range_Right),
-               Ghdl_Bool_Type);
-            Cond_Dir := New_Compare_Op
-              (ON_Eq,
-               Get_Range_Ptr_Field_Value (New_Obj (O_Range),
-                                          Iter_Type_Info.T.Range_Dir),
-               New_Lit (Ghdl_Dir_To_Node),
-               Ghdl_Bool_Type);
-            Cond_To := New_Dyadic_Op (ON_And, Cond_Dir, Cond_To);
-            Cond_Downto := New_Compare_Op
-              (ON_Ge, New_Value (Get_Var (Var_Iter)),
-               Get_Range_Ptr_Field_Value (New_Obj (O_Range),
-                                          Iter_Type_Info.T.Range_Right),
-               Ghdl_Bool_Type);
-            Cond_Dir := New_Compare_Op
-              (ON_Eq,
-               Get_Range_Ptr_Field_Value (New_Obj (O_Range),
-                                          Iter_Type_Info.T.Range_Dir),
-               New_Lit (Ghdl_Dir_Downto_Node),
-               Ghdl_Bool_Type);
-            Cond_Downto := New_Dyadic_Op (ON_And, Cond_Dir, Cond_Downto);
-            Cond := New_Dyadic_Op (ON_Or, Cond_To, Cond_Downto);
-         end if;
-
-         Start_If_Stmt (If_Blk, Cond);
-
-         --  Start loop.
-         --  There are two blocks: one for the exit, one for the next.
-         Loop_Info := Add_Info (Stmt, Kind_Loop);
-         Start_Loop_Stmt (Loop_Info.Label_Exit);
-         Start_Loop_Stmt (Loop_Info.Label_Next);
+         Start_For_Loop (Iterator, Stmt, Data);
 
          Translate_Statements_Chain (Get_Sequential_Statement_Chain (Stmt));
 
-         New_Exit_Stmt (Loop_Info.Label_Next);
-         Finish_Loop_Stmt (Loop_Info.Label_Next);
+         Finish_For_Loop (Data);
 
-         --  Check end of loop.
-         --  Equality is necessary and enough.
-         if Get_Kind (Constraint) = Iir_Kind_Range_Expression then
-            Cond := New_Obj_Value (O_Right);
-         else
-            Cond := Get_Range_Ptr_Field_Value
-              (New_Obj (O_Range), Iter_Type_Info.T.Range_Right);
-         end if;
-         Gen_Exit_When (Loop_Info.Label_Exit,
-                        New_Compare_Op (ON_Eq, New_Value (Get_Var (Var_Iter)),
-                                        Cond, Ghdl_Bool_Type));
-
-         --  Update the iterator.
-         if Get_Kind (Constraint) = Iir_Kind_Range_Expression then
-            Gen_Update_Iterator
-              (Get_Var_Label (Var_Iter), Dir, 1, Iter_Base_Type);
-         else
-            Start_If_Stmt
-              (If_Blk1, New_Compare_Op
-               (ON_Eq,
-                Get_Range_Ptr_Field_Value (New_Obj (O_Range),
-                                           Iter_Type_Info.T.Range_Dir),
-                New_Lit (Ghdl_Dir_To_Node),
-                Ghdl_Bool_Type));
-            Gen_Update_Iterator
-              (Get_Var_Label (Var_Iter), Iir_To, 1, Iter_Base_Type);
-            New_Else_Stmt (If_Blk1);
-            Gen_Update_Iterator
-              (Get_Var_Label (Var_Iter), Iir_Downto, 1, Iter_Base_Type);
-            Finish_If_Stmt (If_Blk1);
-         end if;
-
-         Finish_Loop_Stmt (Loop_Info.Label_Exit);
-         Finish_If_Stmt (If_Blk);
-         Close_Temp;
          Finish_Declare_Stmt;
 
-         Free_Info (Stmt);
+         Free_Info (Iterator);
          Current_Loop := Prev_Loop;
       end Translate_For_Loop_Statement;
 
@@ -19024,7 +18900,7 @@ package body Translation is
                         --  Implicit array conversion or subtype check.
                         E_Params (Pos) := Chap7.Translate_Implicit_Conv
                           (E_Params (Pos), Actual_Type, Formal_Type,
-                           Get_Object_Kind (Param));
+                           Get_Object_Kind (Param), Stmt);
                      end if;
                   when others =>
                      Error_Kind ("translate_procedure_call(2)", Formal);
@@ -24612,7 +24488,7 @@ package body Translation is
                      Val := New_Offsetof (Field_Info.Field_Node (I),
                                           Ghdl_Index_Type);
                   else
-                     Val := New_Unsigned_Literal (Ghdl_Index_Type, 0);
+                     Val := Ghdl_Index_0;
                   end if;
                   New_Record_Aggr_El (Aggr, Val);
                end loop;
@@ -25274,7 +25150,7 @@ package body Translation is
          end if;
          New_Record_Aggr_El (List, Res);
          if Inst = O_Tnode_Null then
-            Res := New_Unsigned_Literal (Ghdl_Index_Type, 0);
+            Res := Ghdl_Index_0;
          else
             Res := New_Sizeof (Inst, Ghdl_Index_Type);
          end if;
@@ -25477,7 +25353,7 @@ package body Translation is
          New_Record_Aggr_El (Aggr, Get_Null_Loc);
          New_Record_Aggr_El
            (Aggr, New_Rti_Address (Get_Info (Arch).Block_Rti_Const));
-         New_Record_Aggr_El (Aggr, New_Unsigned_Literal (Ghdl_Index_Type, 0));
+         New_Record_Aggr_El (Aggr, Ghdl_Index_0);
          New_Record_Aggr_El
            (Aggr, New_Unsigned_Literal (Ghdl_Index_Type,
                                         Unsigned_64 (Cur_Block.Nbr)));
@@ -25750,6 +25626,9 @@ package body Translation is
       --  Create __ghdl_index_type, which is the type for *all* array index.
       Ghdl_Index_Type := New_Unsigned_Type (32);
       New_Type_Decl (Get_Identifier ("__ghdl_index_type"), Ghdl_Index_Type);
+
+      Ghdl_Index_0 := New_Unsigned_Literal (Ghdl_Index_Type, 0);
+      Ghdl_Index_1 := New_Unsigned_Literal (Ghdl_Index_Type, 1);
 
       Ghdl_I32_Type := New_Signed_Type (32);
       New_Type_Decl (Get_Identifier ("__ghdl_i32"), Ghdl_I32_Type);

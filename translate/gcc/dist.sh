@@ -46,7 +46,7 @@ distdir=ghdl-$VERSION
 tarfile=$distdir.tar
 
 GCCVERSION=4.0.2
-DISTDIR=/home/gingold/dist
+DISTDIR=$HOME/dist
 GTKWAVE_VERSION=1.3.72
 
 GTKWAVE_BASE=$HOME/devel/gtkwave-$GTKWAVE_VERSION

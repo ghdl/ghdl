@@ -251,14 +251,10 @@ package body Ghdlcomp is
    end Perform_Action;
 
    --  Command -a
-   type Command_Analyze is new Command_Lib with null record;
+   type Command_Analyze is new Command_Comp with null record;
    function Decode_Command (Cmd : Command_Analyze; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Analyze) return String;
-   procedure Decode_Option (Cmd : in out Command_Analyze;
-                            Option : String;
-                            Arg : String;
-                            Res : out Option_Res);
 
    procedure Perform_Action (Cmd : in out Command_Analyze;
                              Args : Argument_List);
@@ -277,20 +273,6 @@ package body Ghdlcomp is
    begin
       return "-a [OPTS] FILEs    Analyze FILEs";
    end Get_Short_Help;
-
-   procedure Decode_Option (Cmd : in out Command_Analyze;
-                            Option : String;
-                            Arg : String;
-                            Res : out Option_Res)
-   is
-   begin
-      if Option = "--expect-failure" then
-         Flag_Expect_Failure := True;
-         Res := Option_Ok;
-      else
-         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
-      end if;
-   end Decode_Option;
 
    procedure Perform_Action (Cmd : in out Command_Analyze;
                              Args : Argument_List)

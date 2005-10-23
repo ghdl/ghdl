@@ -50,7 +50,7 @@ package body Bug is
          "******************** GHDL Bug occured ****************************");
       Put_Line
         (Standard_Error,
-         "Please, report this bug to ghdl@free.fr, with all the output.");
+         "Please report this bug on http://gna.org/projects/ghdl");
       Put_Line (Standard_Error, "GHDL version: " & Ghdl_Version);
       Put_Line (Standard_Error, "Compiled with " & Get_Gnat_Version);
       Put_Line (Standard_Error, "In directory: " &

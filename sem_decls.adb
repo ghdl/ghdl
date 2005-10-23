@@ -15,22 +15,22 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Sem_Scopes; use Sem_Scopes;
-with Sem_Names; use Sem_Names;
 with Errorout; use Errorout;
 with Types; use Types;
-with Sem_Expr; use Sem_Expr;
 with Std_Names;
 with Tokens;
-with Sem_Specs; use Sem_Specs;
 with Flags;
 with Std_Package; use Std_Package;
 with Iir_Chains;
 with Evaluation; use Evaluation;
 with Name_Table;
 with Iirs_Utils; use Iirs_Utils;
-with Sem_Types; use Sem_Types;
 with Sem; use Sem;
+with Sem_Expr; use Sem_Expr;
+with Sem_Scopes; use Sem_Scopes;
+with Sem_Names; use Sem_Names;
+with Sem_Specs; use Sem_Specs;
+with Sem_Types; use Sem_Types;
 with Iir_Chains; use Iir_Chains;
 with Xrefs; use Xrefs;
 

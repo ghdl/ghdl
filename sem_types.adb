@@ -15,19 +15,19 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Libraries;
+with Flags;
+with Types; use Types;
 with Errorout; use Errorout;
 with Evaluation; use Evaluation;
 with Sem;
 with Sem_Expr; use Sem_Expr;
 with Sem_Scopes; use Sem_Scopes;
+with Sem_Names; use Sem_Names;
 with Sem_Decls;
-with Libraries;
-with Flags;
-with Types; use Types;
 with Std_Names;
 with Iirs_Utils; use Iirs_Utils;
 with Std_Package; use Std_Package;
-with Sem_Names; use Sem_Names;
 with Xrefs; use Xrefs;
 
 package body Sem_Types is

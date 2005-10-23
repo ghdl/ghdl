@@ -1586,7 +1586,7 @@ of signals to be dumped.
 The format of this file was defined by myself and is not yet completly fixed.
 It may change slightly.
 
-There is a patch against @code{gtkwave 1.3.56} on the ghdl website at
+There is a patch against @code{gtkwave 1.3.72} on the ghdl website at
 @uref{ghdl.free.fr}, so that it can read such files.
 
 Contrary to VCD files, any VHDL type can be dumped into a GHW file.
@@ -2239,8 +2239,10 @@ This list is not exhaustive.
 @node Reporting bugs, Future improvements, Deficiencies, Flaws and bugs report
 @comment  node-name,  next,  previous,  up
 @section Reporting bugs
-In order to improve GHDL, we welcome bugs report and suggestions for any
-aspect of GHDL.  Please email them to @email{ghdl@@free.fr}.
+In order to improve GHDL, we welcome bugs report and suggestions for
+any aspect of GHDL.  Please use the bug tracker on
+@indicateurl{http://gna.org/projects/ghdl}.  You may also send an
+email to @email{ghdl@@free.fr}.
 
 If the compiler crashes, this is a bug.  Reliable tools never crash.
   
