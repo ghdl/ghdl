@@ -28,29 +28,45 @@
 # target: GCC target
 # GRT_FLAGS: compilation flags.
 
+# Convert the target variable into a space separated list of architecture,
+# manufacturer, and operating system and assign each of those to its own
+# variable.
+
+targ:=$(subst -, ,$(target))
+arch:=$(word 1,$(targ))
+ifeq ($(words $(targ)),2)
+  osys:=$(word 2,$(targ))
+else
+  osys:=$(word 3,$(targ))
+endif
+
 # Set target files.
-ifeq ($(filter-out i%86-pc-linux-gnu,$(target)),)
+ifeq ($(filter-out i%86 linux,$(arch) $(osys)),)
   GRT_TARGET_OBJS=i386.o linux.o times.o
   GRT_EXTRA_LIB=-ldl
 endif
-ifeq ($(filter-out sparc-sun-solaris%,$(target)),)
+ifeq ($(filter-out sparc solaris%,$(arch) $(osys)),)
   GRT_TARGET_OBJS=sparc.o linux.o times.o
   GRT_EXTRA_LIB=-ldl
 endif
-ifeq ($(filter-out powerpc-linux%,$(target)),)
+ifeq ($(filter-out powerpc linux%,$(arch) $(osys)),)
   GRT_TARGET_OBJS=ppc.o linux.o times.o
   GRT_EXTRA_LIB=-ldl
 endif
-ifeq ($(filter-out i%86-pc-mingw32,$(target)),)
+ifeq ($(filter-out ia64 linux,$(arch) $(osys)),)
+  GRT_TARGET_OBJS=ia64.o linux.o times.o
+  GRT_EXTRA_LIB=-ldl
+endif
+ifeq ($(filter-out i%86 mingw32,$(arch) $(osys)),)
   GRT_TARGET_OBJS=win32.o clock.o
 endif
-ifeq ($(filter-out i%86-pc-cygwin,$(target)),)
+ifeq ($(filter-out i%86 cygwin,$(arch) $(osys)),)
   GRT_TARGET_OBJS=win32.o clock.o
 endif
 # Fall-back: use a generic implementation based on pthreads.
 ifndef GRT_TARGET_OBJS
   GRT_TARGET_OBJS=pthread.o times.o
-  GRT_EXTRA_LIB=-lpthread
+  GRT_EXTRA_LIB=-lpthread -ldl
 endif
 
 # Additionnal object files (C or asm files).
@@ -90,6 +106,9 @@ sparc.o: $(GRTSRCDIR)/config/sparc.S
 ppc.o: $(GRTSRCDIR)/config/ppc.S
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
+ia64.o: $(GRTSRCDIR)/config/ia64.S
+	$(CC) -c $(GRT_FLAGS) -o $@ $<
+
 linux.o: $(GRTSRCDIR)/config/linux.c
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
@@ -127,7 +146,7 @@ grt-files.in: grt-files
 grt.lst: grt-files.in
 	echo "@/libgrt.a" > $@
 ifdef GRT_EXTRA_LIB
-	echo $(GRT_EXTRA_LIB) >> $@
+	for i in $(GRT_EXTRA_LIB); do echo $$i >> $@; done
 endif
 	cat $< >> $@
 

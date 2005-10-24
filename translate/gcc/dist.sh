@@ -38,6 +38,16 @@
 
 set -e
 
+# GCC version
+GCCVERSION=4.0.2
+# Machine name used by GCC
+MACHINE=i686-pc-linux-gnu
+# Directory where GCC sources (and objects) stay.
+DISTDIR=$HOME/dist
+# GTKWave version.
+GTKWAVE_VERSION=1.3.72
+
+# GHDL version (extracted from version.ads)
 VERSION=`sed -n -e 's/.*GHDL \([0-9.a-z]*\) (.*/\1/p' ../../version.ads`
 
 CWD=`pwd`
@@ -45,17 +55,13 @@ CWD=`pwd`
 distdir=ghdl-$VERSION
 tarfile=$distdir.tar
 
-GCCVERSION=4.0.2
-DISTDIR=$HOME/dist
-GTKWAVE_VERSION=1.3.72
-
 GTKWAVE_BASE=$HOME/devel/gtkwave-$GTKWAVE_VERSION
 
 GCCDIST=$DISTDIR/gcc-$GCCVERSION
 GCCDISTOBJ=$GCCDIST-objs
 PREFIX=/usr/local
-GCCLIBDIR=$PREFIX/lib/gcc/i686-pc-linux-gnu/$GCCVERSION
-GCCLIBEXECDIR=$PREFIX/libexec/gcc/i686-pc-linux-gnu/$GCCVERSION
+GCCLIBDIR=$PREFIX/lib/gcc/$MACHINE/$GCCVERSION
+GCCLIBEXECDIR=$PREFIX/libexec/gcc/$MACHINE/$GCCVERSION
 bindirname=ghdl-$VERSION-i686-pc-linux
 TARINSTALL=$DISTDIR/$bindirname.tar.bz2
 VHDLDIR=$distdir/vhdl
@@ -359,6 +365,7 @@ grt_config_files="
 i386.S
 sparc.S
 ppc.S
+ia64.S
 times.c
 clock.c
 linux.c
@@ -426,8 +433,6 @@ check_root ()
 #  Do a make install
 do_compile2 ()
 {
-#  check_root;
-  PATH=/usr/gnat/bin:$PATH
   set -x
   cd $GCCDISTOBJ
   # Check the info file is not empty.
@@ -483,7 +488,7 @@ do_distclean_gcc ()
   set -x
   rm -f ${DESTDIR}${PREFIX}/bin/cpp ${DESTDIR}${PREFIX}/bin/gcc
   rm -f ${DESTDIR}${PREFIX}/bin/gccbug ${DESTDIR}${PREFIX}/bin/gcov
-  rm -f ${DESTDIR}${PREFIX}/bin/i686-pc-linux-gnu-gcc*
+  rm -f ${DESTDIR}${PREFIX}/bin/${MACHINE}-gcc*
   rm -f ${DESTDIR}${PREFIX}/info/cpp.info*
   rm -f ${DESTDIR}${PREFIX}/info/cppinternals.info*
   rm -f ${DESTDIR}${PREFIX}/info/gcc.info*

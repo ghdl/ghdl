@@ -519,6 +519,10 @@ builtin_function (const char *name,
   return decl;
 }
 
+#ifndef MAX_BITS_PER_WORD
+#define MAX_BITS_PER_WORD BITS_PER_WORD
+#endif
+
 /*  This variable keeps a table for types for each precision so that we only
     allocate each of them once. Signed and unsigned types are kept separate. 
  */

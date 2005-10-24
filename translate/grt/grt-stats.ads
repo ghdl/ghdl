@@ -34,6 +34,11 @@ package Grt.Stats is
    procedure Start_Update;
    procedure End_Update;
 
+   --  Time in process resume
+   procedure Start_Resume;
+   procedure End_Resume;
+
+
    procedure End_Simulation;
 
    --  Disp all statistics.

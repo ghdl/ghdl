@@ -22,6 +22,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <sys/ucontext.h>
+#include <stdlib.h>
 //#include <stdint.h>
 
 /* On x86, the stack growns downward.  */
@@ -260,6 +261,13 @@ grt_stack_allocate (void)
     (base + stack_max_size - sizeof (struct stack_context));
 #else
   res = (struct stack_context *)(base + sizeof (struct stack_context));
+#endif
+
+#ifdef __ia64__
+  /* Also allocate BSP.  */
+  if (mmap (base, page_size, PROT_READ | PROT_WRITE,
+	    MAP_FIXED | MAP_PRIVATE | MAP_ANONYMOUS, MMAP_FILEDES, 0) != base)
+    return NULL;
 #endif
 
   res->cur_sp = (void *)res;

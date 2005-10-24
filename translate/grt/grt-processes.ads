@@ -47,9 +47,10 @@ package Grt.Processes is
    function Get_Current_Process_Id return Process_Id;
    pragma Inline (Get_Current_Process_Id);
 
-   --  Return the number of processes.
+   --  Return the total number of processes and number of sensitized processes.
    --  Used for statistics.
    function Get_Nbr_Processes return Natural;
+   function Get_Nbr_Sensitized_Processes return Natural;
 
    --  Disp the name of process PROC.
    procedure Disp_Process_Name (Stream : Grt.Stdio.FILEs; Proc : Process_Id);

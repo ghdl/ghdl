@@ -134,6 +134,18 @@ package body Grt.Processes is
       return Natural (Process_Table.Last);
    end Get_Nbr_Processes;
 
+   function Get_Nbr_Sensitized_Processes return Natural
+   is
+      Res : Natural := 0;
+   begin
+      for I in Process_Table.First .. Process_Table.Last loop
+         if Process_Table.Table (I).State = State_Sensitized then
+            Res := Res + 1;
+         end if;
+      end loop;
+      return Res;
+   end Get_Nbr_Sensitized_Processes;
+
    procedure Process_Register (This : System.Address;
                                Proc : System.Address;
                                Ctxt : Rti_Context;
@@ -616,6 +628,7 @@ package body Grt.Processes is
       Update_Signals;
       if Options.Flag_Stats then
          Stats.End_Update;
+         Stats.Start_Resume;
       end if;
 
       --  d) For each process P, if P is currently sensitive to a signal S and
@@ -658,6 +671,10 @@ package body Grt.Processes is
             end case;
          end;
       end loop;
+
+      if Options.Flag_Stats then
+         Stats.End_Resume;
+      end if;
 
       --  e) Each nonpostponed that has resumed in the current simulation cycle
       --     is executed until it suspends.

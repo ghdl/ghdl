@@ -9951,10 +9951,6 @@ package body Translation is
          Atype : O_Tnode;
       begin
          Decl_Type := Get_Type (Decl);
-         if Decl_Type = Null_Iir then
-            --  FIXME : todo.
-            raise Internal_Error;
-         end if;
 
          Chap3.Translate_Named_Type_Definition
            (Decl_Type, Get_Identifier (Decl));
@@ -10020,7 +10016,6 @@ package body Translation is
          Name_Node := Chap6.Translate_Name (Name);
          Kind := Get_Object_Kind (Name_Node);
          N_Info := Get_Info (Name_Type);
-         --Chap6.Translate_Name (Decl, Decl_Node, Sig);
 
          case Tinfo.Type_Mode is
             when Type_Mode_Fat_Array =>

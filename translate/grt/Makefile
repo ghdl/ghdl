@@ -31,12 +31,15 @@ exec_prefix=$(prefix)
 libdir=$(exec_prefix)/lib
 grt_libdir=$(libdir)
 
-target=i686-pc-linux-gnu
+target:=$(shell $(CC) -dumpmachine)
 
 all: grt-all
 install: grt-install
 clean: grt-clean
 	$(RM) *~
+
+show_target:
+	echo "Target is $(target)"
 
 include Makefile.inc
 

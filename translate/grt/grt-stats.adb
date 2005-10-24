@@ -110,6 +110,10 @@ package body Grt.Stats is
    Start_Next_Time_Time : Time_Stats;
    Next_Time_Times : Time_Stats;
 
+   Start_Resume_Time : Time_Stats;
+   Resume_Times : Time_Stats;
+
+   Running_Time : Time_Stats;
    Simu_Time : Time_Stats;
 
    procedure Start_Elaboration is
@@ -169,12 +173,26 @@ package body Grt.Stats is
       Next_Time_Times := Next_Time_Times + (Now - Start_Next_Time_Time);
    end End_Next_Time;
 
+   procedure Start_Resume is
+   begin
+      Get_Stats (Start_Resume_Time);
+   end Start_Resume;
+
+   procedure End_Resume
+   is
+      Now : Time_Stats;
+   begin
+      Get_Stats (Now);
+      Resume_Times := Resume_Times + (Now - Start_Resume_Time);
+   end End_Resume;
+
    procedure End_Simulation
    is
       Now : Time_Stats;
    begin
       Get_Stats (Now);
       Simu_Time := Now - Start_Time;
+      Running_Time := Now - End_Order_Time;
    end End_Simulation;
 
    procedure Disp_Signals_Stats
@@ -290,11 +308,17 @@ package body Grt.Stats is
       Put (stdout, " internal elab: ");
       Put (stdout, End_Order_Time - End_Elab_Time);
       New_Line (stdout);
+      Put (stdout, " running time:  ");
+      Put (stdout, Running_Time);
+      New_Line (stdout);
       Put (stdout, " cycle (sum):   ");
-      Put (stdout, Proc_Times + Update_Times + Next_Time_Times);
+      Put (stdout, Proc_Times + Update_Times + Next_Time_Times + Resume_Times);
       New_Line (stdout);
       Put (stdout, "  processes:    ");
       Put (stdout, Proc_Times);
+      New_Line (stdout);
+      Put (stdout, "  resume:       ");
+      Put (stdout, Resume_Times);
       New_Line (stdout);
       Put (stdout, "  update:       ");
       Put (stdout, Update_Times);
@@ -322,6 +346,8 @@ package body Grt.Stats is
       Put (stdout, "Number of processes: ");
       Put_I32 (stdout, Ghdl_I32 (Grt.Processes.Get_Nbr_Processes));
       New_Line;
-
+      Put (stdout, "Number of sensitized processes: ");
+      Put_I32 (stdout, Ghdl_I32 (Grt.Processes.Get_Nbr_Sensitized_Processes));
+      New_Line;
    end Disp_Stats;
 end Grt.Stats;

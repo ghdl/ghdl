@@ -102,6 +102,9 @@ install.v87: std.v87 ieee.v87 synopsys.v87
 install.standard: $(LIB93_DIR)/std/std_standard.o \
  $(LIB87_DIR)/std/std_standard.o
 
+make-lib-links:
+	cd ../lib; ln -sf ../grt/grt.lst .; ln -sf ../grt/libgrt.a .
+
 install.all: install.v87 install.v93 install.standard
 install.mcode: install.v87 install.v93
 

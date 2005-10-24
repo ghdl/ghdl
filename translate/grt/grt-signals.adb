@@ -235,7 +235,7 @@ package body Grt.Signals is
 
    procedure Ghdl_Process_Add_Driver (Sign : Ghdl_Signal_Ptr)
    is
-      type Size_T is new Integer;
+      type Size_T is mod 2**Standard'Address_Size;
 
       function Malloc (Size : Size_T) return Driver_Arr_Ptr;
       pragma Import (C, Malloc);
@@ -246,7 +246,8 @@ package body Grt.Signals is
 
       function Size (N : Ghdl_Index_Type) return Size_T is
       begin
-         return Size_T (N * Driver_Type'Size / System.Storage_Unit);
+         return Size_T (N * Driver_Fat_Array'Component_Size
+                        / System.Storage_Unit);
       end Size;
 
       Trans : Transaction_Acc;

@@ -33,7 +33,7 @@ package Grt.Types is
    type Ghdl_F64 is new IEEE_Float_64;
 
    type Ghdl_Ptr is new Address;
-   type Ghdl_Index_Type is mod 2 ** Word_Size;
+   type Ghdl_Index_Type is mod 2 ** 32;
    subtype Ghdl_Real is Ghdl_F64;
 
    type Ghdl_Dir_Type is (Dir_To, Dir_Downto);
