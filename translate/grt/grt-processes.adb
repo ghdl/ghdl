@@ -108,12 +108,37 @@ package body Grt.Processes is
    --  The secondary stack for the thread.
    Stack2 : Stack2_Ptr;
 
+   --  Table of processes.
    package Process_Table is new GNAT.Table
      (Table_Component_Type => Process_Type,
       Table_Index_Type => Process_Id,
       Table_Low_Bound => 1,
-      Table_Initial => 1,
+      Table_Initial => 16,
       Table_Increment => 100);
+
+   --  List of non_sensitized processes.
+   package Non_Sensitized_Process_Table is new GNAT.Table
+     (Table_Component_Type => Process_Id,
+      Table_Index_Type => Natural,
+      Table_Low_Bound => 1,
+      Table_Initial => 2,
+      Table_Increment => 100);
+
+   --  List of processes to be resume at next cycle.
+   type Process_Id_Array is array (Natural range <>) of Process_Id;
+   type Process_Id_Array_Acc is access Process_Id_Array;
+
+   Resume_Process_Table : Process_Id_Array_Acc;
+   Last_Resume_Process : Natural := 0;
+   Postponed_Resume_Process_Table : Process_Id_Array_Acc;
+   Last_Postponed_Resume_Process : Natural := 0;
+
+   --  Number of postponed processes.
+   Nbr_Postponed_Processes : Natural := 0;
+   Nbr_Non_Postponed_Processes : Natural := 0;
+
+   --  Number of resumed processes.
+   Nbr_Resumed_Processes : Natural := 0;
 
    procedure Free is new Ada.Unchecked_Deallocation
      (Name => Sensitivity_Acc, Object => Sensitivity_El);
@@ -146,6 +171,11 @@ package body Grt.Processes is
       return Res;
    end Get_Nbr_Sensitized_Processes;
 
+   function Get_Nbr_Resumed_Processes return Natural is
+   begin
+      return Nbr_Resumed_Processes;
+   end Get_Nbr_Resumed_Processes;
+
    procedure Process_Register (This : System.Address;
                                Proc : System.Address;
                                Ctxt : Rti_Context;
@@ -167,13 +197,22 @@ package body Grt.Processes is
          This => This,
          Rti => Ctxt,
          Sensitivity => null,
-         Resumed => True,
+         Resumed => False,
          Postponed => Postponed,
          State => State,
          Timeout => Bad_Time,
          Stack => Stack);
       --  Used to create drivers.
       Cur_Proc_Id := Process_Table.Last;
+
+      if State /= State_Sensitized then
+         Non_Sensitized_Process_Table.Append (Cur_Proc_Id);
+      end if;
+      if Postponed then
+         Nbr_Postponed_Processes := Nbr_Postponed_Processes + 1;
+      else
+         Nbr_Non_Postponed_Processes := Nbr_Non_Postponed_Processes + 1;
+      end if;
    end Process_Register;
 
    procedure Ghdl_Process_Register
@@ -227,7 +266,7 @@ package body Grt.Processes is
       Process_Table.Table (Process_Table.Last) :=
         (Rti => Ctxt,
          Sensitivity => null,
-         Resumed => True,
+         Resumed => False,
          Postponed => False,
          State => State_Sensitized,
          Timeout => Bad_Time,
@@ -258,9 +297,21 @@ package body Grt.Processes is
       Resume_Process_If_Event (Sig, Process_Table.Last);
    end Ghdl_Process_Add_Sensitivity;
 
-   procedure Resume_Process (Proc : Process_Id) is
+   procedure Resume_Process (Proc : Process_Id)
+   is
+      P : Process_Type renames Process_Table.Table (Proc);
    begin
-      Process_Table.Table (Proc).Resumed := True;
+      if not P.Resumed then
+         P.Resumed := True;
+         if P.Postponed then
+            Last_Postponed_Resume_Process := Last_Postponed_Resume_Process + 1;
+            Postponed_Resume_Process_Table (Last_Postponed_Resume_Process)
+              := Proc;
+         else
+            Last_Resume_Process := Last_Resume_Process + 1;
+            Resume_Process_Table (Last_Resume_Process) := Proc;
+         end if;
+      end if;
    end Resume_Process;
 
    function Ghdl_Stack2_Allocate (Size : Ghdl_Index_Type)
@@ -461,9 +512,12 @@ package body Grt.Processes is
       end if;
 
       --     3) The next time at which a process resumes.
-      for I in Process_Table.First .. Process_Table.Last loop
+      for I in Non_Sensitized_Process_Table.First ..
+        Non_Sensitized_Process_Table.Last
+      loop
          declare
-            Proc : Process_Type renames Process_Table.Table (I);
+            Pid : Process_Id := Non_Sensitized_Process_Table.Table (I);
+            Proc : Process_Type renames Process_Table.Table (Pid);
          begin
             if Proc.State = State_Wait
               and then Proc.Timeout < Res
@@ -512,6 +566,8 @@ package body Grt.Processes is
 
    function Run_Processes (Postponed : Boolean) return Integer
    is
+      Table : Process_Id_Array_Acc;
+      Last : Natural;
       Status : Integer;
    begin
       Status := Run_None;
@@ -520,22 +576,34 @@ package body Grt.Processes is
          Stats.Start_Processes;
       end if;
 
-      for I in Process_Table.First .. Process_Table.Last loop
-         if Process_Table.Table (I).Postponed = Postponed
-           and Process_Table.Table (I).Resumed
-         then
+      if Postponed then
+         Table := Postponed_Resume_Process_Table;
+         Last := Last_Postponed_Resume_Process;
+      else
+         Table := Resume_Process_Table;
+         Last := Last_Resume_Process;
+      end if;
+      for I in 1 .. Last loop
+         declare
+            Pid : constant Process_Id := Table (I);
+            Proc : Process_Type renames Process_Table.Table (Pid);
+         begin
+            if not Proc.Resumed then
+               Internal_Error ("run non-resumed process");
+            end if;
             if Grt.Options.Trace_Processes then
                Grt.Astdio.Put ("run process ");
-               Disp_Process_Name (Stdio.stdout, I);
+               Disp_Process_Name (Stdio.stdout, Pid);
                Grt.Astdio.Put (" [");
-               Grt.Astdio.Put (Stdio.stdout, Process_Table.Table (I).This);
+               Grt.Astdio.Put (Stdio.stdout, Proc.This);
                Grt.Astdio.Put ("]");
                Grt.Astdio.New_Line;
             end if;
-            Process_Table.Table (I).Resumed := False;
+            Nbr_Resumed_Processes := Nbr_Resumed_Processes + 1;
+            Proc.Resumed := False;
             Status := Run_Resumed;
-            Cur_Proc_Id := I;
-            Cur_Proc := To_Acc (Process_Table.Table (I)'Address);
+            Cur_Proc_Id := Pid;
+            Cur_Proc := To_Acc (Process_Table.Table (Pid)'Address);
             if Cur_Proc.State = State_Sensitized then
                Cur_Proc.Subprg.all (Cur_Proc.This);
             else
@@ -545,8 +613,14 @@ package body Grt.Processes is
                Ghdl_Signal_Internal_Checks;
                Grt.Stack2.Check_Empty (Stack2);
             end if;
-         end if;
+         end;
       end loop;
+
+      if Postponed then
+         Last_Postponed_Resume_Process := 0;
+      else
+         Last_Resume_Process := 0;
+      end if;
 
       if Options.Flag_Stats then
          Stats.End_Processes;
@@ -580,6 +654,10 @@ package body Grt.Processes is
       --  - The value of each implicit GUARD signal is set to the result of
       --    evaluating the corresponding guard expression.
       null;
+
+      for I in Process_Table.First .. Process_Table.Last loop
+         Resume_Process (I);
+      end loop;
 
       --  - Each nonpostponed process in the model is executed until it
       --    suspends.
@@ -634,9 +712,12 @@ package body Grt.Processes is
       --  d) For each process P, if P is currently sensitive to a signal S and
       --     if an event has occured on S in this simulation cycle, then P
       --     resumes.
-      for I in Process_Table.First .. Process_Table.Last loop
+      for I in Non_Sensitized_Process_Table.First ..
+        Non_Sensitized_Process_Table.Last
+      loop
          declare
-            Proc : Process_Type renames Process_Table.Table (I);
+            Pid : Process_Id := Non_Sensitized_Process_Table.Table (I);
+            Proc : Process_Type renames Process_Table.Table (Pid);
             El : Sensitivity_Acc;
          begin
             case Proc.State is
@@ -645,19 +726,19 @@ package body Grt.Processes is
                when State_Delayed =>
                   if Proc.Timeout = Current_Time then
                      Proc.Timeout := Bad_Time;
-                     Proc.Resumed := True;
+                     Resume_Process (Pid);
                      Proc.State := State_Sensitized;
                   end if;
                when State_Wait =>
                   if Proc.Timeout = Current_Time then
                      Proc.Timeout := Bad_Time;
-                     Proc.Resumed := True;
+                     Resume_Process (Pid);
                      Proc.State := State_Timeout;
                   else
                      El := Proc.Sensitivity;
                      while El /= null loop
                         if El.Sig.Event then
-                           Proc.Resumed := True;
+                           Resume_Process (Pid);
                            exit;
                         else
                            El := El.Next;
@@ -715,7 +796,9 @@ package body Grt.Processes is
          end if;
       else
          Current_Delta := 0;
-         Status := Run_Processes (Postponed => True);
+         if Nbr_Postponed_Processes /= 0 then
+            Status := Run_Processes (Postponed => True);
+         end if;
          if Status = Run_Resumed then
             Flush_Active_List;
             if Options.Flag_Stats then
@@ -748,6 +831,11 @@ package body Grt.Processes is
 --          Grt.Disp.Disp_Signals_Type;
 --       end if;
 
+      --  Allocate processes arrays.
+      Resume_Process_Table :=
+        new Process_Id_Array (1 .. Nbr_Non_Postponed_Processes);
+      Postponed_Resume_Process_Table :=
+        new Process_Id_Array (1 .. Nbr_Postponed_Processes);
       Grt.Hooks.Call_Start_Hooks;
 
       Status := Run_Through_Longjump (Initialization_Phase'Access);

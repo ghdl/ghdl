@@ -52,6 +52,9 @@ package Grt.Processes is
    function Get_Nbr_Processes return Natural;
    function Get_Nbr_Sensitized_Processes return Natural;
 
+   --  Total number of resumed processes.
+   function Get_Nbr_Resumed_Processes return Natural;
+
    --  Disp the name of process PROC.
    procedure Disp_Process_Name (Stream : Grt.Stdio.FILEs; Proc : Process_Id);
 

@@ -297,7 +297,9 @@ package body Grt.Stats is
    end Disp_Signals_Stats;
 
    --  Disp all statistics.
-   procedure Disp_Stats is
+   procedure Disp_Stats
+   is
+      N : Natural;
    begin
       Put (stdout, "total:          ");
       Put (stdout, Simu_Time);
@@ -348,6 +350,17 @@ package body Grt.Stats is
       New_Line;
       Put (stdout, "Number of sensitized processes: ");
       Put_I32 (stdout, Ghdl_I32 (Grt.Processes.Get_Nbr_Sensitized_Processes));
+      New_Line;
+      Put (stdout, "Number of resumed processes: ");
+      Put_I32 (stdout, Ghdl_I32 (Grt.Processes.Get_Nbr_Resumed_Processes));
+      New_Line;
+      Put (stdout, "Average number of resumed processes per cycle: ");
+      N := Processes.Nbr_Delta_Cycles + Processes.Nbr_Cycles;
+      if N = 0 then
+         Put (stdout, "-");
+      else
+         Put_I32 (stdout, Ghdl_I32 (Processes.Get_Nbr_Resumed_Processes / N));
+      end if;
       New_Line;
    end Disp_Stats;
 end Grt.Stats;
