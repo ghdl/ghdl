@@ -8787,10 +8787,12 @@ package body Translation is
                   --  Deferred constant are never considered as locally static.
                   --  FIXME: to be improved ?
 
-                  --  Only required for transient types.
+                  --  open_temp/close_temp only required for transient types.
+                  Open_Temp;
                   Define_Global_Const
                     (Info.Object_Var,
                      Chap7.Translate_Static_Expression (Val, Def));
+                  Close_Temp;
                end if;
             when others =>
                Error_Kind ("create_objet", El);
@@ -12052,6 +12054,11 @@ package body Translation is
          end if;
 
          --  No check for 'Range or 'Reverse_Range.
+         if Get_Kind (Expr_Type) not in Iir_Kinds_Discrete_Subtype_Definition
+         then
+            return True;
+         end if;
+
          Rng := Get_Range_Constraint (Expr_Type);
          if (Get_Kind (Rng) = Iir_Kind_Range_Array_Attribute
              or Get_Kind (Rng) = Iir_Kind_Reverse_Range_Array_Attribute)

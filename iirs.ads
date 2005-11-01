@@ -3054,6 +3054,10 @@ package Iirs is
    --Iir_Kind_Integer_Type_Definition
      Iir_Kind_Enumeration_Type_Definition;
 
+   subtype Iir_Kinds_Discrete_Subtype_Definition is Iir_Kind range
+     Iir_Kind_Integer_Subtype_Definition ..
+     Iir_Kind_Enumeration_Subtype_Definition;
+
    subtype Iir_Kinds_Composite_Type_Definition is Iir_Kind range
      Iir_Kind_Record_Type_Definition ..
    --Iir_Kind_Array_Type_Definition

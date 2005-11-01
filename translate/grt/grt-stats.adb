@@ -19,6 +19,7 @@ with System; use System;
 with System.Storage_Elements; --  Work around GNAT bug.
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio; use Grt.Astdio;
+with Grt.Vstrings;
 with Grt.Signals;
 with Grt.Processes;
 with Grt.Types; use Grt.Types;
@@ -70,20 +71,29 @@ package body Grt.Stats is
 
    procedure Put (Stream : FILEs; Val : Clock_T)
    is
-      Fmt : constant String := "%3d.%03d" & Character'Val (0);
+      use Grt.Vstrings;
 
-      procedure fprintf (Stream : FILEs; Fmt : Address; A, B : Clock_T);
-      pragma Import (C, fprintf);
-
-      Sec : Clock_T;
-      Ms : Clock_T;
+      Ms : Ghdl_I32;
+      Buf : String (1 .. 11);
+      First : Natural;
+      C : Character;
    begin
-      Sec := Val / One_Second;
+      To_String (Buf, First, Ghdl_I32 (Val / One_Second));
+      if First > 8 then
+         Buf (8 .. First - 1) := (others => ' ');
+         First := 8;
+      end if;
+      Put (Stream, Buf (First .. Buf'Last));
+      Put (Stream, '.');
 
       --  Avoid overflow.
-      Ms := ((Val mod One_Second) * 1000) / One_Second;
+      Ms := Ghdl_I32 (((Val mod One_Second) * 1000) / One_Second);
 
-      fprintf (Stream, Fmt'Address, Sec, Ms);
+      for I in 1 .. 3 loop
+         C := Character'Val (Character'Pos ('0') + (Ms / 100));
+         Put (Stream, C);
+         Ms := (Ms * 10) mod 1000;
+      end loop;
    end Put;
 
    procedure Put (Stream : FILEs; T : Time_Stats) is
