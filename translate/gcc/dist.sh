@@ -366,6 +366,7 @@ i386.S
 sparc.S
 ppc.S
 ia64.S
+amd64.S
 times.c
 clock.c
 linux.c

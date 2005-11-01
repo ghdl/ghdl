@@ -31,6 +31,66 @@ with Std_Package; use Std_Package;
 with Xrefs; use Xrefs;
 
 package body Sem_Types is
+   procedure Set_Type_Has_Signal (Atype : Iir)
+   is
+   begin
+      --  Sanity check.
+      if not Get_Signal_Type_Flag (Atype) then
+         --  Do not crash since this may be called on an erroneous design.
+         return;
+      end if;
+
+      --  If the type is already marked, nothing to do.
+      if Get_Has_Signal_Flag (Atype) then
+         return;
+      end if;
+
+      Set_Has_Signal_Flag (Atype, True);
+
+      case Get_Kind (Atype) is
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Floating_Type_Definition =>
+            null;
+         when Iir_Kinds_Subtype_Definition =>
+            declare
+               Func : Iir_Function_Declaration;
+               Mark : Iir;
+            begin
+               Set_Type_Has_Signal (Get_Base_Type (Atype));
+               Func := Get_Resolution_Function (Atype);
+               if Func /= Null_Iir then
+                  Func := Get_Named_Entity (Func);
+                  Set_Resolution_Function_Flag (Func, True);
+               end if;
+               Mark := Get_Type_Mark (Atype);
+               if Mark /= Null_Iir then
+                  Set_Type_Has_Signal (Mark);
+               end if;
+            end;
+         when Iir_Kind_Array_Type_Definition =>
+            Set_Type_Has_Signal (Get_Element_Subtype (Atype));
+         when Iir_Kind_Record_Type_Definition =>
+            declare
+               El : Iir;
+            begin
+               El := Get_Element_Declaration_Chain (Atype);
+               while El /= Null_Iir loop
+                  Set_Type_Has_Signal (Get_Type (El));
+                  El := Get_Chain (El);
+               end loop;
+            end;
+         when Iir_Kind_Error =>
+            null;
+         when Iir_Kind_Incomplete_Type_Definition =>
+            --  No need to copy the flag.
+            null;
+         when others =>
+            Error_Kind ("set_type_has_signal(2)", Atype);
+      end case;
+   end Set_Type_Has_Signal;
+
    --  Sem a range expression.
    --  Both left and right bounds must be of the same type kind, ie
    --  integer types, or if INT_ONLY is false, real types.
@@ -419,7 +479,7 @@ package body Sem_Types is
       --     body.
       Open_Declarative_Region;
 
-      Sem_Decls.Sem_Declaration_Chain (Decl);
+      Sem_Decls.Sem_Declaration_Chain (Decl, False);
       El := Get_Declaration_Chain (Decl);
       while El /= Null_Iir loop
          case Get_Kind (El) is
@@ -540,7 +600,7 @@ package body Sem_Types is
          Add_Protected_Type_Declarations (Decl);
       end if;
 
-      Sem_Decls.Sem_Declaration_Chain (Bod);
+      Sem_Decls.Sem_Declaration_Chain (Bod, False);
 
       El := Get_Declaration_Chain (Bod);
       while El /= Null_Iir loop

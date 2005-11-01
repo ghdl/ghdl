@@ -3313,7 +3313,7 @@ package body Sem_Expr is
 
    --  Emit an error if the constant EXPR is deferred and cannot be used in
    --  the current context.
-   procedure Check_Constant_Restriction (Expr : Iir)
+   procedure Check_Constant_Restriction (Expr : Iir; Loc : Iir)
    is
       Lib : Iir;
       Cur_Lib : Iir;
@@ -3346,7 +3346,7 @@ package body Sem_Expr is
         or else (Get_Kind (Cur_Lib) = Iir_Kind_Package_Body
                  and then Get_Package (Cur_Lib) = Lib)
       then
-         Error_Msg_Sem ("invalid use of a deferred constant", Expr);
+         Error_Msg_Sem ("invalid use of a deferred constant", Loc);
       end if;
    end Check_Constant_Restriction;
 
@@ -3459,7 +3459,7 @@ package body Sem_Expr is
                if Get_Kind (E) = Iir_Kind_Constant_Declaration
                  and then not Deferred_Constant_Allowed
                then
-                  Check_Constant_Restriction (E);
+                  Check_Constant_Restriction (E, Expr);
                end if;
                E := Name_To_Expression (Expr, A_Type);
                return E;

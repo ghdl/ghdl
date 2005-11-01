@@ -56,24 +56,6 @@ package body Canon is
    procedure Canon_Block_Configuration (Top : Iir_Design_Unit;
                                         Conf : Iir_Block_Configuration);
 
-   function Is_Signal_Object (Decl: Iir) return Boolean is
-      Adecl: Iir;
-   begin
-      Adecl := Get_Base_Name (Decl);
-      case Get_Kind (Adecl) is
-         when Iir_Kind_Variable_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
-           | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Constant_Interface_Declaration =>
-            return False;
-         when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Signal_Interface_Declaration =>
-            return True;
-         when others =>
-            Error_Kind ("is_signal_object", Adecl);
-      end case;
-   end Is_Signal_Object;
-
    procedure Canon_Extract_Sensitivity_Aggregate
      (Aggr : Iir;
       Sensitivity_List : Iir_List;

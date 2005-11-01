@@ -1223,6 +1223,7 @@ package body Ghdldrv is
       if Elab_Index < 0 then
          Analyze_Files (Args, True);
       else
+         Flags.Flag_Whole_Analyze := True;
          Set_Elab_Units ("-c", Args (Elab_Index + 1 .. Args'Last));
          Setup_Compiler (False);
 

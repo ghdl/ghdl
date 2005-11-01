@@ -858,7 +858,7 @@ package Iirs is
    --   Get/Set_Name_Staticness (State2)
    --
    -- Only for Iir_Kind_Signal_Interface_Declaration:
-   --   Get/Set_Signal_Kind (State4)
+   --   Get/Set_Signal_Kind (State3)
 
    -- Iir_Kind_Function_Declaration (Medium)
    -- Iir_Kind_Procedure_Declaration (Medium)
@@ -913,8 +913,11 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
+   -- Only for Iir_Kind_Function_Declaration:
+   --   Get/Set_Resolution_Function_Flag (Flag7)
+   --
    -- Only for Iir_Kind_Procedure_Declaration:
-   --   Get/Set_Purity_State (State3)
+   --   Get/Set_Purity_State (State2)
    --
    --   Get/Set_Wait_State (State1)
 
@@ -1018,7 +1021,7 @@ package Iirs is
    --
    --   Get/Set_Name_Staticness (State2)
    --
-   --   Get/Set_Signal_Kind (State4)
+   --   Get/Set_Signal_Kind (State3)
 
    -- Iir_Kind_Guard_Signal_Declaration (Medium)
    --
@@ -1048,7 +1051,7 @@ package Iirs is
    --
    --   Get/Set_Name_Staticness (State2)
    --
-   --   Get/Set_Signal_Kind (State4)
+   --   Get/Set_Signal_Kind (State3)
 
    -- Iir_Kind_Constant_Declaration (Medium)
    -- Iir_Kind_Iterator_Declaration (Medium)
@@ -1260,6 +1263,8 @@ package Iirs is
    -- Get/Set the signal_type flag of a type definition.
    -- It is true when the type can be used for a signal.
    --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_Has_Signal_Flag (Flag3)
 
    -- Iir_Kind_Enumeration_Type_Definition (Short)
    --
@@ -1278,6 +1283,8 @@ package Iirs is
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_Has_Signal_Flag (Flag3)
    --
    --   Get/Set_Type_Staticness (State1)
 
@@ -1329,6 +1336,8 @@ package Iirs is
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
    --
+   --   Get/Set_Has_Signal_Flag (Flag3)
+   --
    --   Get/Set_Type_Staticness (State1)
 
    -- Iir_Kind_Unit_Declaration (Medium)
@@ -1363,6 +1372,8 @@ package Iirs is
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_Has_Signal_Flag (Flag3)
 
    -- Iir_Kind_Array_Type_Definition (Medium)
    -- This defines an unconstrained array type.
@@ -1380,6 +1391,8 @@ package Iirs is
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_Has_Signal_Flag (Flag3)
 
    -- Iir_Kind_Record_Type_Definition (Short)
    --
@@ -1396,6 +1409,8 @@ package Iirs is
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_Has_Signal_Flag (Flag3)
 
    -- Iir_Kind_Access_Type_Definition (Short)
    --
@@ -1416,10 +1431,6 @@ package Iirs is
 
    -- Iir_Kind_File_Type_Definition (Short)
    --
-   -- True if this is the std.textio.text file type, which may require special
-   -- handling.
-   --   Get/Set_Text_File_Flag (Flag3)
-   --
    --   Get/Set_Type_Mark (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
@@ -1429,6 +1440,10 @@ package Iirs is
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   -- True if this is the std.textio.text file type, which may require special
+   -- handling.
+   --   Get/Set_Text_File_Flag (Flag4)
    --
    --   Get/Set_Type_Staticness (State1)
 
@@ -1449,6 +1464,8 @@ package Iirs is
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_Has_Signal_Flag (Flag3)
 
    -- Iir_Kind_Protected_Type_Declaration (Short)
    --
@@ -1501,6 +1518,8 @@ package Iirs is
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
    --
+   --   Get/Set_Has_Signal_Flag (Flag3)
+   --
    --   Get/Set_Type_Staticness (State1)
 
    -- Iir_Kind_Access_Subtype_Definition (Short)
@@ -1533,6 +1552,8 @@ package Iirs is
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
    --
+   --   Get/Set_Has_Signal_Flag (Flag3)
+   --
    --   Get/Set_Type_Staticness (State1)
 
    -- Iir_Kind_Array_Subtype_Definition (Medium)
@@ -1564,6 +1585,8 @@ package Iirs is
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_Has_Signal_Flag (Flag3)
 
    -- Iir_Kind_Range_Expression (Short)
    --
@@ -1629,7 +1652,7 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    -- True if the target of the assignment is guarded
-   --   Get_Guarded_Target_State (State4)
+   --   Get_Guarded_Target_State (State3)
 
    -- Iir_Kind_Sensitized_Process_Statement (Medium)
    -- Iir_Kind_Process_Statement (Medium)
@@ -1892,7 +1915,7 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    -- True if the target of the assignment is guarded
-   --   Get_Guarded_Target_State (State4)
+   --   Get_Guarded_Target_State (State3)
 
    -- Iir_Kind_Variable_Assignment_Statement (Short)
    --
@@ -2405,6 +2428,8 @@ package Iirs is
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_Has_Signal_Flag (Flag3)
 
 
    -- End of Iir_Kind.
@@ -3833,7 +3858,7 @@ package Iirs is
    --  target).
    --  If UNKNOWN, this is not determined at compile time but at run-time.
    --  This is the case for formal signal interfaces of subprograms.
-   --  Field: State4 (pos)
+   --  Field: State3 (pos)
    function Get_Guarded_Target_State (Stmt : Iir) return Tri_State_Type;
    procedure Set_Guarded_Target_State (Stmt : Iir; State : Tri_State_Type);
 
@@ -4116,7 +4141,7 @@ package Iirs is
    function Get_Mode (Target : Iir) return Iir_Mode;
    procedure Set_Mode (Target : Iir; Mode : Iir_Mode);
 
-   --  Field: State4 (pos)
+   --  Field: State3 (pos)
    function Get_Signal_Kind (Target : Iir) return Iir_Signal_Kind;
    procedure Set_Signal_Kind (Target : Iir; Signal_Kind : Iir_Signal_Kind);
 
@@ -4356,13 +4381,14 @@ package Iirs is
    function Get_Resolution_Function (Decl : Iir) return Iir;
    procedure Set_Resolution_Function (Decl : Iir; Func : Iir);
 
-   --  Field: Flag3
-   function Get_Text_File_Flag (Target : Iir) return Boolean;
-   procedure Set_Text_File_Flag (Target : Iir; Flag : Boolean);
+   --  True if ATYPE defines std.textio.text file type.
+   --  Field: Flag4
+   function Get_Text_File_Flag (Atype : Iir) return Boolean;
+   procedure Set_Text_File_Flag (Atype : Iir; Flag : Boolean);
 
    --  Field: State1 (pos)
-   function Get_Type_Staticness (Target : Iir) return Iir_Staticness;
-   procedure Set_Type_Staticness (Target : Iir; Static : Iir_Staticness);
+   function Get_Type_Staticness (Atype : Iir) return Iir_Staticness;
+   procedure Set_Type_Staticness (Atype : Iir; Static : Iir_Staticness);
 
    --  Field: Field6 (uc)
    function Get_Index_Subtype_List (Decl : Iir) return Iir_List;
@@ -4451,6 +4477,11 @@ package Iirs is
    function Get_Passive_Flag (Proc : Iir) return Boolean;
    procedure Set_Passive_Flag (Proc : Iir; Flag : Boolean);
 
+   --  True if the function is used as a resolution function.
+   --  Field: Flag7
+   function Get_Resolution_Function_Flag (Func : Iir) return Boolean;
+   procedure Set_Resolution_Function_Flag (Func : Iir; Flag : Boolean);
+
    --  Get/Set the wait state of the current subprogram or process.
    --  TRUE if it contains a wait statement, either directly or
    --   indirectly.
@@ -4496,8 +4527,14 @@ package Iirs is
    function Get_Signal_Type_Flag (Atype : Iir) return Boolean;
    procedure Set_Signal_Type_Flag (Atype : Iir; Flag : Boolean);
 
+   --  True if ATYPE is used to declare a signal or to handle a signal
+   --   (such as slice or aliases).
+   --  Field: Flag3
+   function Get_Has_Signal_Flag (Atype : Iir) return Boolean;
+   procedure Set_Has_Signal_Flag (Atype : Iir; Flag : Boolean);
+
    --  Get/Set the purity status of a subprogram.
-   --  Field: State3 (pos)
+   --  Field: State2 (pos)
    function Get_Purity_State (Proc : Iir) return Iir_Pure_State;
    procedure Set_Purity_State (Proc : Iir; State : Iir_Pure_State);
 

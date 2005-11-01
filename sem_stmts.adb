@@ -19,12 +19,13 @@ with Errorout; use Errorout;
 with Types; use Types;
 with Flags;
 with Sem_Specs; use Sem_Specs;
+with Std_Package; use Std_Package;
 with Sem; use Sem;
 with Sem_Decls; use Sem_Decls;
 with Sem_Expr; use Sem_Expr;
-with Std_Package; use Std_Package;
 with Sem_Names; use Sem_Names;
 with Sem_Scopes; use Sem_Scopes;
+with Sem_Types;
 with Std_Names;
 with Evaluation; use Evaluation;
 with Iirs_Utils; use Iirs_Utils;
@@ -465,6 +466,7 @@ package body Sem_Stmts is
       if Target /= Null_Iir then
          Set_Target (Stmt, Target);
          Check_Target (Stmt, Target);
+         Sem_Types.Set_Type_Has_Signal (Get_Type (Target));
       else
          Ok := False;
       end if;
@@ -1214,7 +1216,7 @@ package body Sem_Stmts is
 
       -- Sem declarations
       Sem_Sequential_Labels (Get_Sequential_Statement_Chain (Body_Parent));
-      Sem_Declaration_Chain (Body_Parent);
+      Sem_Declaration_Chain (Body_Parent, False);
       Sem_Specification_Chain (Body_Parent, Null_Iir);
 
       -- Sem statements.
@@ -1807,7 +1809,7 @@ package body Sem_Stmts is
 
       if Sem_Decls then
          Sem_Labels_Chain (Blk);
-         Sem_Declaration_Chain (Blk);
+         Sem_Declaration_Chain (Blk, False);
       end if;
 
       Sem_Concurrent_Statement_Chain (Blk, False);

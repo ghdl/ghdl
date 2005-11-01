@@ -187,6 +187,7 @@ package body Std_Package is
          Set_Base_Type (Type_Definition, Type_Definition);
          Set_Type_Staticness (Type_Definition, Locally);
          Set_Signal_Type_Flag (Type_Definition, True);
+         Set_Has_Signal_Flag (Type_Definition, not Flags.Flag_Whole_Analyze);
 
          Type_Decl := Create_Std_Iir (Iir_Kind_Anonymous_Type_Declaration);
          Set_Identifier (Type_Decl, Type_Name);
@@ -213,6 +214,8 @@ package body Std_Package is
          Set_Range_Constraint (Subtype_Definition, Constraint);
          Set_Type_Staticness (Subtype_Definition, Locally);
          Set_Signal_Type_Flag (Subtype_Definition, True);
+         Set_Has_Signal_Flag (Subtype_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          --  type is
          Subtype_Decl := Create_Std_Iir (Iir_Kind_Subtype_Declaration);
@@ -272,6 +275,8 @@ package body Std_Package is
            (Name_True, Boolean_Type_Definition);
          Set_Type_Staticness (Boolean_Type_Definition, Locally);
          Set_Signal_Type_Flag (Boolean_Type_Definition, True);
+         Set_Has_Signal_Flag (Boolean_Type_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          -- type boolean is
          Boolean_Type := Create_Std_Iir (Iir_Kind_Type_Declaration);
@@ -299,6 +304,8 @@ package body Std_Package is
            (Get_Std_Character ('1'), Bit_Type_Definition);
          Set_Type_Staticness (Bit_Type_Definition, Locally);
          Set_Signal_Type_Flag (Bit_Type_Definition, True);
+         Set_Has_Signal_Flag (Bit_Type_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          -- type bit is
          Bit_Type := Create_Std_Iir (Iir_Kind_Type_Declaration);
@@ -341,6 +348,8 @@ package body Std_Package is
          end if;
          Set_Type_Staticness (Character_Type_Definition, Locally);
          Set_Signal_Type_Flag (Character_Type_Definition, True);
+         Set_Has_Signal_Flag (Character_Type_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          -- type character is
          Character_Type := Create_Std_Iir (Iir_Kind_Type_Declaration);
@@ -375,6 +384,8 @@ package body Std_Package is
            (Name_Failure, Severity_Level_Type_Definition);
          Set_Type_Staticness (Severity_Level_Type_Definition, Locally);
          Set_Signal_Type_Flag (Severity_Level_Type_Definition, True);
+         Set_Has_Signal_Flag (Severity_Level_Type_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          -- type severity_level is
          Severity_Level_Type := Create_Std_Iir (Iir_Kind_Type_Declaration);
@@ -421,6 +432,7 @@ package body Std_Package is
                         Universal_Real_Type_Definition);
          Set_Type_Staticness (Universal_Real_Type_Definition, Locally);
          Set_Signal_Type_Flag (Universal_Real_Type_Definition, True);
+         Set_Has_Signal_Flag (Universal_Real_Type_Definition, False);
 
          Universal_Real_Type :=
            Create_Std_Iir (Iir_Kind_Anonymous_Type_Declaration);
@@ -441,6 +453,7 @@ package body Std_Package is
          Set_Range_Constraint (Universal_Real_Subtype_Definition, Constraint);
          Set_Type_Staticness (Universal_Real_Subtype_Definition, Locally);
          Set_Signal_Type_Flag (Universal_Real_Subtype_Definition, True);
+         Set_Has_Signal_Flag (Universal_Real_Subtype_Definition, False);
 
          --  type is
          Universal_Real_Subtype :=
@@ -476,6 +489,7 @@ package body Std_Package is
                         Convertible_Real_Type_Definition);
          Set_Type_Staticness (Convertible_Real_Type_Definition, Locally);
          Set_Signal_Type_Flag (Convertible_Real_Type_Definition, True);
+         Set_Has_Signal_Flag (Convertible_Real_Type_Definition, False);
 
          Convertible_Real_Type :=
            Create_Std_Iir (Iir_Kind_Anonymous_Type_Declaration);
@@ -514,6 +528,8 @@ package body Std_Package is
          Set_Base_Type (Real_Type_Definition, Real_Type_Definition);
          Set_Type_Staticness (Real_Type_Definition, Locally);
          Set_Signal_Type_Flag (Real_Type_Definition, True);
+         Set_Has_Signal_Flag (Real_Type_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          Real_Type := Create_Std_Iir (Iir_Kind_Anonymous_Type_Declaration);
          Set_Identifier (Real_Type, Name_Real);
@@ -533,6 +549,8 @@ package body Std_Package is
          Set_Range_Constraint (Real_Subtype_Definition, Constraint);
          Set_Type_Staticness (Real_Subtype_Definition, Locally);
          Set_Signal_Type_Flag (Real_Subtype_Definition, True);
+         Set_Has_Signal_Flag (Real_Subtype_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          Real_Subtype := Create_Std_Iir (Iir_Kind_Subtype_Declaration);
          Set_Std_Identifier (Real_Subtype, Name_Real);
@@ -558,6 +576,8 @@ package body Std_Package is
          Set_Range_Constraint (Natural_Subtype_Definition, Constraint);
          Set_Type_Staticness (Natural_Subtype_Definition, Locally);
          Set_Signal_Type_Flag (Natural_Subtype_Definition, True);
+         Set_Has_Signal_Flag (Natural_Subtype_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          Natural_Subtype := Create_Std_Iir (Iir_Kind_Subtype_Declaration);
          Set_Std_Identifier (Natural_Subtype, Name_Natural);
@@ -582,6 +602,8 @@ package body Std_Package is
          Set_Range_Constraint (Positive_Subtype_Definition, Constraint);
          Set_Type_Staticness (Positive_Subtype_Definition, Locally);
          Set_Signal_Type_Flag (Positive_Subtype_Definition, True);
+         Set_Has_Signal_Flag (Positive_Subtype_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          Positive_Subtype := Create_Std_Iir (Iir_Kind_Subtype_Declaration);
          Set_Std_Identifier (Positive_Subtype, Name_Positive);
@@ -603,6 +625,8 @@ package body Std_Package is
                               Character_Type_Definition);
          Set_Type_Staticness (String_Type_Definition, None);
          Set_Signal_Type_Flag (String_Type_Definition, True);
+         Set_Has_Signal_Flag (String_Type_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          String_Type := Create_Std_Iir (Iir_Kind_Type_Declaration);
          Set_Std_Identifier (String_Type, Name_String);
@@ -626,6 +650,8 @@ package body Std_Package is
          Set_Element_Subtype (Bit_Vector_Type_Definition, Bit_Type_Definition);
          Set_Type_Staticness (Bit_Vector_Type_Definition, None);
          Set_Signal_Type_Flag (Bit_Vector_Type_Definition, True);
+         Set_Has_Signal_Flag (Bit_Vector_Type_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          Bit_Vector_Type := Create_Std_Iir (Iir_Kind_Type_Declaration);
          Set_Std_Identifier (Bit_Vector_Type, Name_Bit_Vector);
@@ -700,6 +726,8 @@ package body Std_Package is
          Set_Base_Type (Time_Type_Definition, Time_Type_Definition);
          Set_Type_Staticness (Time_Type_Definition, Locally);--Time_Staticness
          Set_Signal_Type_Flag (Time_Type_Definition, True);
+         Set_Has_Signal_Flag (Time_Type_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          Build_Init (Last_Unit);
 
@@ -741,6 +769,8 @@ package body Std_Package is
          --Set_Type_Mark (Time_Subtype_Definition, Time_Type_Definition);
          Set_Type_Staticness (Time_Subtype_Definition, Time_Staticness);
          Set_Signal_Type_Flag (Time_Subtype_Definition, True);
+         Set_Has_Signal_Flag (Time_Subtype_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          --  subtype
          Time_Subtype := Create_Std_Iir (Iir_Kind_Subtype_Declaration);
@@ -790,6 +820,8 @@ package body Std_Package is
             Set_Type_Staticness
               (Delay_Length_Subtype_Definition, Time_Staticness);
             Set_Signal_Type_Flag (Delay_Length_Subtype_Definition, True);
+            Set_Has_Signal_Flag (Delay_Length_Subtype_Definition,
+                                 not Flags.Flag_Whole_Analyze);
 
             Delay_Length_Subtype :=
               Create_Std_Iir (Iir_Kind_Subtype_Declaration);
@@ -847,6 +879,8 @@ package body Std_Package is
            (Name_Append_Mode, File_Open_Kind_Type_Definition);
          Set_Type_Staticness (File_Open_Kind_Type_Definition, Locally);
          Set_Signal_Type_Flag (File_Open_Kind_Type_Definition, True);
+         Set_Has_Signal_Flag (File_Open_Kind_Type_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          --  type file_open_kind is
          File_Open_Kind_Type := Create_Std_Iir (Iir_Kind_Type_Declaration);
@@ -887,6 +921,8 @@ package body Std_Package is
            (Name_Mode_Error, File_Open_Status_Type_Definition);
          Set_Type_Staticness (File_Open_Status_Type_Definition, Locally);
          Set_Signal_Type_Flag (File_Open_Status_Type_Definition, True);
+         Set_Has_Signal_Flag (File_Open_Status_Type_Definition,
+                              not Flags.Flag_Whole_Analyze);
 
          --  type file_open_kind is
          File_Open_Status_Type := Create_Std_Iir (Iir_Kind_Type_Declaration);

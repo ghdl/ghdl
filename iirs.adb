@@ -937,13 +937,13 @@ package body Iirs is
    function Get_Guarded_Target_State (Stmt : Iir) return Tri_State_Type is
    begin
       Check_Kind_For_Guarded_Target_State (Stmt);
-      return Tri_State_Type'Val (Get_State4 (Stmt));
+      return Tri_State_Type'Val (Get_State3 (Stmt));
    end Get_Guarded_Target_State;
 
    procedure Set_Guarded_Target_State (Stmt : Iir; State : Tri_State_Type) is
    begin
       Check_Kind_For_Guarded_Target_State (Stmt);
-      Set_State4 (Stmt, Tri_State_Type'Pos (State));
+      Set_State3 (Stmt, Tri_State_Type'Pos (State));
    end Set_Guarded_Target_State;
 
    procedure Check_Kind_For_Library_Unit (Target : Iir) is
@@ -2380,13 +2380,13 @@ package body Iirs is
    function Get_Signal_Kind (Target : Iir) return Iir_Signal_Kind is
    begin
       Check_Kind_For_Signal_Kind (Target);
-      return Iir_Signal_Kind'Val (Get_State4 (Target));
+      return Iir_Signal_Kind'Val (Get_State3 (Target));
    end Get_Signal_Kind;
 
    procedure Set_Signal_Kind (Target : Iir; Signal_Kind : Iir_Signal_Kind) is
    begin
       Check_Kind_For_Signal_Kind (Target);
-      Set_State4 (Target, Iir_Signal_Kind'Pos (Signal_Kind));
+      Set_State3 (Target, Iir_Signal_Kind'Pos (Signal_Kind));
    end Set_Signal_Kind;
 
    procedure Check_Kind_For_Base_Name (Target : Iir) is
@@ -3623,16 +3623,16 @@ package body Iirs is
       end case;
    end Check_Kind_For_Text_File_Flag;
 
-   function Get_Text_File_Flag (Target : Iir) return Boolean is
+   function Get_Text_File_Flag (Atype : Iir) return Boolean is
    begin
-      Check_Kind_For_Text_File_Flag (Target);
-      return Get_Flag3 (Target);
+      Check_Kind_For_Text_File_Flag (Atype);
+      return Get_Flag4 (Atype);
    end Get_Text_File_Flag;
 
-   procedure Set_Text_File_Flag (Target : Iir; Flag : Boolean) is
+   procedure Set_Text_File_Flag (Atype : Iir; Flag : Boolean) is
    begin
-      Check_Kind_For_Text_File_Flag (Target);
-      Set_Flag3 (Target, Flag);
+      Check_Kind_For_Text_File_Flag (Atype);
+      Set_Flag4 (Atype, Flag);
    end Set_Text_File_Flag;
 
    procedure Check_Kind_For_Type_Staticness (Target : Iir) is
@@ -3663,16 +3663,16 @@ package body Iirs is
       end case;
    end Check_Kind_For_Type_Staticness;
 
-   function Get_Type_Staticness (Target : Iir) return Iir_Staticness is
+   function Get_Type_Staticness (Atype : Iir) return Iir_Staticness is
    begin
-      Check_Kind_For_Type_Staticness (Target);
-      return Iir_Staticness'Val (Get_State1 (Target));
+      Check_Kind_For_Type_Staticness (Atype);
+      return Iir_Staticness'Val (Get_State1 (Atype));
    end Get_Type_Staticness;
 
-   procedure Set_Type_Staticness (Target : Iir; Static : Iir_Staticness) is
+   procedure Set_Type_Staticness (Atype : Iir; Static : Iir_Staticness) is
    begin
-      Check_Kind_For_Type_Staticness (Target);
-      Set_State1 (Target, Iir_Staticness'Pos (Static));
+      Check_Kind_For_Type_Staticness (Atype);
+      Set_State1 (Atype, Iir_Staticness'Pos (Static));
    end Set_Type_Staticness;
 
    procedure Check_Kind_For_Index_Subtype_List (Target : Iir) is
@@ -4101,6 +4101,28 @@ package body Iirs is
       Set_Flag2 (Proc, Flag);
    end Set_Passive_Flag;
 
+   procedure Check_Kind_For_Resolution_Function_Flag (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Function_Declaration =>
+            null;
+         when others =>
+            Failed ("Resolution_Function_Flag", Target);
+      end case;
+   end Check_Kind_For_Resolution_Function_Flag;
+
+   function Get_Resolution_Function_Flag (Func : Iir) return Boolean is
+   begin
+      Check_Kind_For_Resolution_Function_Flag (Func);
+      return Get_Flag7 (Func);
+   end Get_Resolution_Function_Flag;
+
+   procedure Set_Resolution_Function_Flag (Func : Iir; Flag : Boolean) is
+   begin
+      Check_Kind_For_Resolution_Function_Flag (Func);
+      Set_Flag7 (Func, Flag);
+   end Set_Resolution_Function_Flag;
+
    procedure Check_Kind_For_Wait_State (Target : Iir) is
    begin
       case Get_Kind (Target) is
@@ -4283,6 +4305,42 @@ package body Iirs is
       Set_Flag2 (Atype, Flag);
    end Set_Signal_Type_Flag;
 
+   procedure Check_Kind_For_Has_Signal_Flag (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Error
+           | Iir_Kind_Incomplete_Type_Definition
+           | Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Unconstrained_Array_Subtype_Definition
+           | Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Record_Subtype_Definition
+           | Iir_Kind_Physical_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition
+           | Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Physical_Type_Definition =>
+            null;
+         when others =>
+            Failed ("Has_Signal_Flag", Target);
+      end case;
+   end Check_Kind_For_Has_Signal_Flag;
+
+   function Get_Has_Signal_Flag (Atype : Iir) return Boolean is
+   begin
+      Check_Kind_For_Has_Signal_Flag (Atype);
+      return Get_Flag3 (Atype);
+   end Get_Has_Signal_Flag;
+
+   procedure Set_Has_Signal_Flag (Atype : Iir; Flag : Boolean) is
+   begin
+      Check_Kind_For_Has_Signal_Flag (Atype);
+      Set_Flag3 (Atype, Flag);
+   end Set_Has_Signal_Flag;
+
    procedure Check_Kind_For_Purity_State (Target : Iir) is
    begin
       case Get_Kind (Target) is
@@ -4296,13 +4354,13 @@ package body Iirs is
    function Get_Purity_State (Proc : Iir) return Iir_Pure_State is
    begin
       Check_Kind_For_Purity_State (Proc);
-      return Iir_Pure_State'Val (Get_State3 (Proc));
+      return Iir_Pure_State'Val (Get_State2 (Proc));
    end Get_Purity_State;
 
    procedure Set_Purity_State (Proc : Iir; State : Iir_Pure_State) is
    begin
       Check_Kind_For_Purity_State (Proc);
-      Set_State3 (Proc, Iir_Pure_State'Pos (State));
+      Set_State2 (Proc, Iir_Pure_State'Pos (State));
    end Set_Purity_State;
 
    procedure Check_Kind_For_Elab_Flag (Target : Iir) is

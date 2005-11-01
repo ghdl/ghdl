@@ -152,5 +152,9 @@ package Iirs_Utils is
    --  a unit_declaration.
    --  See also Evaluation.Get_Physical_Value.
    function Get_Physical_Literal_Value (Lit : Iir) return Iir_Int64;
+
+   --  Return TRUE if the base name of NAME is a signal object.
+   function Is_Signal_Object (Name: Iir) return Boolean;
+
 end Iirs_Utils;
 

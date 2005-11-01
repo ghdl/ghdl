@@ -61,6 +61,7 @@ package Nodes is
    --   Flag4 : Boolean
    --   Flag5 : Boolean
    --   Flag6 : Boolean
+   --   Flag7 : Boolean
    --   Nkind : Kind_Type
    --   State1 : Bit2_Type
    --   State2 : Bit2_Type
@@ -204,6 +205,11 @@ package Nodes is
    pragma Inline (Get_Flag6);
    procedure Set_Flag6 (N : Node_Type; V : Boolean);
    pragma Inline (Set_Flag6);
+
+   function Get_Flag7 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag7);
+   procedure Set_Flag7 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag7);
 
 
    function Get_State1 (N : Node_Type) return Bit2_Type;
@@ -364,30 +370,12 @@ private
       --  purity_state for iir_kind_sensitized_process_statement
       --  purity_state for iir_kinds_procedure_specification
       --  purity_state for iir_kinds_function_specification
-      State3 : Bit2_Type := 0;
+      Unused_State3 : Bit2_Type := 0;
 
-      --  Usages of State4:
-      --  wait_state for iir_kind_process_statement
-      --  wait_state for iir_kind_sensitized_process_statement
-      --  wait_state for iir_kinds_procedure_specification
-      --  wait_state for iir_kinds_function_specification
-      State4 : Bit2_Type := 0;
-
-      --  2bits fields (4 -> 8 bits)
-      --  Usages of State5:
-      --  passive_state for iir_kind_process_statement
-      --  passive_state for iir_kind_sensitized_process_statement
-      --  passive_state for iir_kinds_procedure_specification
-      --  passive_state for iir_kinds_function_specification
-      --  signal_kind for iir_kind_signal_declaration
-      --  signal_kind for iir_kind_guard_signal_declaration
-      --  signal_kind for iir_kind_signal_interface_declaration
-      --  direction for iir_kind_range_expression
-      --  direction for iir_kind_file_declaration
-      --  guarded_target_flag for iir_kind_concurrent_conditional_signal_assign
-      --  guarded_target_flag for iir_kind_selected_conditional_signal_assign
-      --  guarded_target_flag for iir_kind_signal_assignment_statement
-      Unused_State5 : Bit2_Type := 0;
+      Flag7 : Boolean := False;
+      Flag8 : Boolean := False;
+      Flag9 : Boolean := False;
+      Flag10 : Boolean := False;
 
       -- 3bits fields (1 -> 3 bits)
       --  Usages of odigit1:

@@ -133,6 +133,9 @@ package Flags is
    --  If set, generate cross-references during sem.
    Flag_Xref : Boolean := False;
 
+   --  If set, all the design units are analyzed in whole to do the simulation.
+   Flag_Whole_Analyze : Boolean := False;
+
    -- --warn-undriven
    --Warn_Undriven : Boolean := False;
 

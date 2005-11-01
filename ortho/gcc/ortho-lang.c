@@ -72,6 +72,8 @@ push_binding (void)
   res->first_block = NULL_TREE;
   res->last_block = NULL_TREE;
 
+  res->save_stack = 0;
+
   res->bind = make_node (BIND_EXPR);
   res->block = make_node (BLOCK);
   BIND_EXPR_BLOCK (res->bind) = res->block;
@@ -906,8 +908,10 @@ new_alloca (tree rtype, tree size)
   tree res;
   tree args;
 
-  /* Must save stack.  */
-  cur_binding_level->save_stack = 1;
+  /* Must save stack except when at function level.  */
+  if (cur_binding_level->prev != NULL
+      && cur_binding_level->prev->prev != NULL)
+    cur_binding_level->save_stack = 1;
 
   args = tree_cons (NULL_TREE, fold_convert (size_type_node, size), NULL_TREE);
   res = build3 (CALL_EXPR, ptr_type_node, stack_alloc_function_ptr,
@@ -919,9 +923,16 @@ tree
 new_signed_literal (tree ltype, long long value)
 {
   tree res;
+  HOST_WIDE_INT lo;
+  HOST_WIDE_INT hi;
 
-  res = build_int_cst_wide (ltype,
-			    value, value >> (8 * sizeof (HOST_WIDE_INT)));
+  lo = value;
+  if (sizeof (HOST_WIDE_INT) == sizeof (long long))
+    hi = value >> (8 * sizeof (HOST_WIDE_INT) - 1);
+  else
+    hi = value >> (8 * sizeof (HOST_WIDE_INT));
+
+  res = build_int_cst_wide (ltype, lo, hi);
   return res;
 }
 
@@ -929,9 +940,16 @@ tree
 new_unsigned_literal (tree ltype, unsigned long long value)
 {
   tree res;
+  unsigned HOST_WIDE_INT lo;
+  unsigned HOST_WIDE_INT hi;
 
-  res = build_int_cst_wide (ltype,
-			    value, value >> (8 * sizeof (HOST_WIDE_INT)));
+  lo = value;
+  if (sizeof (HOST_WIDE_INT) == sizeof (long long))
+    hi = 0;
+  else
+    hi = value >> (8 * sizeof (HOST_WIDE_INT));
+
+  res = build_int_cst_wide (ltype, lo, hi);
   return res;
 }
 
@@ -954,14 +972,20 @@ new_float_literal (tree ltype, double value)
   REAL_VALUE_TYPE r_exp;
   REAL_VALUE_TYPE r;
   tree res;
+  HOST_WIDE_INT lo;
+  HOST_WIDE_INT hi;
 
   frac = frexp (value, &ex);
   
   s = ldexp (frac, 60);
-  REAL_VALUE_FROM_INT (r_sign,
-		       (HOST_WIDE_INT) s,
-		       (HOST_WIDE_INT) (s >> (8 * sizeof (HOST_WIDE_INT))),
-		       DFmode);
+  lo = s;
+  if (sizeof (HOST_WIDE_INT) == sizeof (long long))
+    hi = s >> (8 * sizeof (HOST_WIDE_INT) - 1);
+  else
+    hi = s >> (8 * sizeof (HOST_WIDE_INT));
+
+  res = build_int_cst_wide (ltype, lo, hi);
+  REAL_VALUE_FROM_INT (r_sign, lo, hi, DFmode);
   real_2expN (&r_exp, ex - 60);
   real_arithmetic (&r, MULT_EXPR, &r_sign, &r_exp);
   res = build_real (ltype, r);
@@ -1617,6 +1641,8 @@ new_interface_decl (struct o_inter_list *interfaces,
       DECL_ARG_TYPE (r) = atype;
     }
 
+  layout_decl (r, 0);
+
   chain_append (&interfaces->param_chain, r);
   ortho_list_append (&interfaces->param_list, atype);
   *res = r;
@@ -1633,6 +1659,10 @@ finish_subprogram_decl (struct o_inter_list *interfaces, tree *res)
   tree result;
   tree parm;
   int is_global;
+
+  /* Append a void type in the parameter types chain, so that the function
+     is known not be have variables arguments.  */
+  ortho_list_append (&interfaces->param_list, void_type_node);
 
   decl = build_decl (FUNCTION_DECL, interfaces->ident,
 		     build_function_type (interfaces->rtype,

@@ -1120,6 +1120,8 @@ package body Disp_Tree is
                Disp_Type_Resolved_Flag (Tree);
                Header ("signal_type_flag: ", False);
                Disp_Flag (Get_Signal_Type_Flag (Tree));
+               Header ("has_signal_flag: ", False);
+               Disp_Flag (Get_Has_Signal_Flag (Tree));
                Header ("type declarator:");
                Disp_Tree (Get_Type_Declarator (Tree), Ntab, True);
                Header ("base type:");
@@ -1152,6 +1154,8 @@ package body Disp_Tree is
             Disp_Type_Resolved_Flag (Tree);
             Header ("signal_type_flag: ", False);
             Disp_Flag (Get_Signal_Type_Flag (Tree));
+            Header ("has_signal_flag: ", False);
+            Disp_Flag (Get_Has_Signal_Flag (Tree));
             Header ("type declarator:");
             Disp_Tree_Flat (Get_Type_Declarator (Tree), Ntab);
             Header ("base type:");
@@ -1187,6 +1191,8 @@ package body Disp_Tree is
             Disp_Type_Resolved_Flag (Tree);
             Header ("signal_type_flag: ", False);
             Disp_Flag (Get_Signal_Type_Flag (Tree));
+            Header ("has_signal_flag: ", False);
+            Disp_Flag (Get_Has_Signal_Flag (Tree));
             Header ("base type:");
             Disp_Tree (Get_Base_Type (Tree), Ntab, True);
             Header ("type mark:");
@@ -1205,6 +1211,8 @@ package body Disp_Tree is
             Disp_Type_Resolved_Flag (Tree);
             Header ("signal_type_flag: ", False);
             Disp_Flag (Get_Signal_Type_Flag (Tree));
+            Header ("has_signal_flag: ", False);
+            Disp_Flag (Get_Has_Signal_Flag (Tree));
             Header ("index_subtype_list:");
             Disp_Tree_List (Get_Index_Subtype_List (Tree), Ntab, True);
             Header ("element_subtype:");
@@ -1219,6 +1227,8 @@ package body Disp_Tree is
             Disp_Type_Resolved_Flag (Tree);
             Header ("signal_type_flag: ", False);
             Disp_Flag (Get_Signal_Type_Flag (Tree));
+            Header ("has_signal_flag: ", False);
+            Disp_Flag (Get_Has_Signal_Flag (Tree));
             Header ("elements:");
             Disp_Tree_Chain (Get_Element_Declaration_Chain (Tree), Ntab, True);
          when Iir_Kind_Record_Subtype_Definition =>

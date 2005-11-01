@@ -38,4 +38,11 @@ package Sem_Types is
    --  A_RANGE.
    --  This function extract the type of the range expression.
    function Range_To_Subtype_Definition (A_Range: Iir) return Iir;
+
+   --  ATYPE is used to declare a signal.
+   --  Set (recursively) the Has_Signal_Flag on ATYPE and all types used by
+   --   ATYPE (basetype, elements...)
+   --  If ATYPE can have signal (eg: access or file type), then this procedure
+   --   returns silently.
+   procedure Set_Type_Has_Signal (Atype : Iir);
 end Sem_Types;

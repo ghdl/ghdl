@@ -75,7 +75,7 @@ package body Sem is
 
       -- entity declarative part.
       Push_Signals_Declarative_Part (Implicit, Entity);
-      Sem_Declaration_Chain (Entity);
+      Sem_Declaration_Chain (Entity, not Flags.Flag_Whole_Analyze);
       Sem_Specification_Chain (Entity, Null_Iir);
 
       --  Check for missing subprogram bodies.
@@ -557,7 +557,7 @@ package body Sem is
       Add_Context_Clauses (Entity_Design);
       Sem_Scopes.Add_Entity_Declarations (Get_Library_Unit (Entity_Design));
 
-      Sem_Declaration_Chain (Decl);
+      Sem_Declaration_Chain (Decl, False);
       --  GHDL: no need to check for missing subprogram bodies, since they are
       --  not allowed in configuration declarations.
 
@@ -2002,7 +2002,7 @@ package body Sem is
 
       Push_Signals_Declarative_Part (Implicit, Decl);
 
-      Sem_Declaration_Chain (Decl);
+      Sem_Declaration_Chain (Decl, not Flags.Flag_Whole_Analyze);
       --  GHDL: subprogram bodies appear in package body.
 
       Pop_Signals_Declarative_Part (Implicit);
@@ -2059,7 +2059,7 @@ package body Sem is
 
       Sem_Scopes.Add_Package_Declarations (Package_Decl);
 
-      Sem_Declaration_Chain (Decl);
+      Sem_Declaration_Chain (Decl, False);
       Check_Full_Declaration (Decl, Decl);
       Check_Full_Declaration (Package_Decl, Decl);
 

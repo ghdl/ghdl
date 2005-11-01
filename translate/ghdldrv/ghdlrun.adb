@@ -84,6 +84,9 @@ package body Ghdlrun is
       -- Initialize.
       Back_End.Finish_Compilation := Trans_Be.Finish_Compilation'Access;
 
+      --  The design is always analyzed in whole.
+      Flags.Flag_Whole_Analyze := True;
+
       Setup_Libraries (False);
       Libraries.Load_Std_Library;
 
@@ -458,8 +461,11 @@ package body Ghdlrun is
       Std_Standard_Bit_RTI_Ptr :=
         Get_Address (Trans_Decls.Std_Standard_Bit_Rti);
       if Ieee.Std_Logic_1164.Resolved /= Null_Iir then
-         Ieee_Std_Logic_1164_Resolved_Resolv_Ptr := Get_Address
-           (Translation.Get_Resolv_Ortho_Decl (Ieee.Std_Logic_1164.Resolved));
+         Decl := Translation.Get_Resolv_Ortho_Decl
+           (Ieee.Std_Logic_1164.Resolved);
+         if Decl /= O_Dnode_Null then
+            Ieee_Std_Logic_1164_Resolved_Resolv_Ptr := Get_Address (Decl);
+         end if;
       end if;
 
       Def (Trans_Decls.Ghdl_Protected_Enter,

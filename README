@@ -33,8 +33,9 @@ the GHDL back-end (ghdl1) in ./translate:
  $ make BE=gcc
 the GHDL driver in ./translate/ghdldrv:
  $ make ghdl_gcc
-the VHDL libraries:
- $ cd translate/ghdldrv
+the VHDL libraries (in ./translate/ghdldrv; you may need to slighly edit
+ Makefile to change the compiler):
+ $ ln -sf ghdl_gcc ghdl
  $ make install.all
 and the GHDL run-time (GRT) in ./translate/grt:
  $ make

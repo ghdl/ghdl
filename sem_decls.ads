@@ -32,7 +32,10 @@ package Sem_Decls is
      (Decl : Iir; Is_Std_Standard : Boolean := False);
 
    --  Semantize declarations of PARENT.
-   procedure Sem_Declaration_Chain (Parent : Iir);
+   --  If IS_GLOBAL is set, then declarations may be seen outside of the units.
+   --  This must be set for entities and packages (except when
+   --   Flags.Flag_Whole_Analyze is set).
+   procedure Sem_Declaration_Chain (Parent : Iir; Is_Global : Boolean);
 
    --  Check all declarations of DECLS_PARENT are complete
    --  This checks subprograms, deferred constants, incomplete types and

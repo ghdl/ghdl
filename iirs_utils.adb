@@ -810,4 +810,28 @@ package body Iirs_Utils is
       end case;
    end Get_Physical_Literal_Value;
 
+   function Is_Signal_Object (Name : Iir) return Boolean
+   is
+      Adecl: Iir;
+   begin
+      Adecl := Get_Base_Name (Name);
+      case Get_Kind (Adecl) is
+         when Iir_Kind_Variable_Declaration
+           | Iir_Kind_Variable_Interface_Declaration
+           | Iir_Kind_Constant_Declaration
+           | Iir_Kind_Constant_Interface_Declaration
+           | Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Dereference
+           | Iir_Kind_Attribute_Value
+           | Iir_Kind_Function_Call =>
+            return False;
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Signal_Interface_Declaration =>
+            return True;
+         when others =>
+            Error_Kind ("is_signal_object", Adecl);
+      end case;
+   end Is_Signal_Object;
+
+
 end Iirs_Utils;

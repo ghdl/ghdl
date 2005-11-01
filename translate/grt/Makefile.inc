@@ -45,6 +45,10 @@ ifeq ($(filter-out i%86 linux,$(arch) $(osys)),)
   GRT_TARGET_OBJS=i386.o linux.o times.o
   GRT_EXTRA_LIB=-ldl
 endif
+ifeq ($(filter-out x86_64 linux,$(arch) $(osys)),)
+  GRT_TARGET_OBJS=amd64.o linux.o times.o
+  GRT_EXTRA_LIB=-ldl
+endif
 ifeq ($(filter-out sparc solaris%,$(arch) $(osys)),)
   GRT_TARGET_OBJS=sparc.o linux.o times.o
   GRT_EXTRA_LIB=-ldl
@@ -107,6 +111,9 @@ ppc.o: $(GRTSRCDIR)/config/ppc.S
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
 ia64.o: $(GRTSRCDIR)/config/ia64.S
+	$(CC) -c $(GRT_FLAGS) -o $@ $<
+
+amd64.o: $(GRTSRCDIR)/config/amd64.S
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
 linux.o: $(GRTSRCDIR)/config/linux.c

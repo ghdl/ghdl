@@ -131,6 +131,7 @@ package body Sem_Decls is
                      Error_Msg_Sem
                        ("interface signal can't be of kind register", El);
                end case;
+               Set_Type_Has_Signal (A_Type);
             end if;
 
             case Get_Kind (El) is
@@ -950,7 +951,7 @@ package body Sem_Decls is
       end if;
    end Create_Implicit_Operations;
 
-   procedure Sem_Type_Declaration (Decl: Iir)
+   procedure Sem_Type_Declaration (Decl: Iir; Is_Global : Boolean)
    is
       Def: Iir;
       Inter : Name_Interpretation_Type;
@@ -1092,11 +1093,15 @@ package body Sem_Decls is
                   end if;
                end;
             end if;
+
+            if Is_Global then
+               Set_Type_Has_Signal (Def);
+            end if;
          end if;
       end if;
    end Sem_Type_Declaration;
 
-   procedure Sem_Subtype_Declaration (Decl: Iir)
+   procedure Sem_Subtype_Declaration (Decl: Iir; Is_Global : Boolean)
    is
       Def: Iir;
       Res: Iir;
@@ -1176,6 +1181,9 @@ package body Sem_Decls is
       Set_Type (Decl, Def);
       Set_Type_Declarator (Def, Decl);
       Name_Visible (Decl);
+      if Is_Global then
+         Set_Type_Has_Signal (Def);
+      end if;
    end Sem_Subtype_Declaration;
 
    --  If DECL is a constant declaration, and there is already a constant
@@ -1372,6 +1380,7 @@ package body Sem_Decls is
             end if;
             Set_Expr_Staticness (Decl, None);
             Set_Has_Disconnect_Flag (Decl, False);
+            Set_Type_Has_Signal (Atype);
 
          when Iir_Kind_Variable_Declaration =>
             --  LRM93 4.3.1.3  Variable declarations
@@ -1740,6 +1749,9 @@ package body Sem_Decls is
 
       Set_Name_Staticness (Alias, Get_Name_Staticness (N_Name));
       Set_Expr_Staticness (Alias, Get_Expr_Staticness (N_Name));
+      if Is_Signal_Object (N_Name) then
+         Set_Type_Has_Signal (N_Type);
+      end if;
    end Sem_Object_Alias_Declaration;
 
    function Signature_Match (N_Entity : Iir; Sig : Iir_Signature)
@@ -2144,28 +2156,61 @@ package body Sem_Decls is
       Set_Visible_Flag (Group, True);
    end Sem_Group_Declaration;
 
+   --  Return TRUE if FUNC can be a resolution function.
+   function Can_Be_Resolution_Function (Func : Iir_Function_Declaration)
+     return Boolean
+   is
+      Param : Iir;
+      Param_Type : Iir;
+      Res_Type : Iir;
+   begin
+      Param := Get_Interface_Declaration_Chain (Func);
+
+      --  Return now if the number of parameters is not 1.
+      if Param = Null_Iir or else Get_Chain (Param) /= Null_Iir then
+         return False;
+      end if;
+      Param_Type := Get_Type (Param);
+      case Get_Kind (Param_Type) is
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
+            null;
+         when others =>
+            return False;
+      end case;
+      Res_Type := Get_Return_Type (Func);
+      if Get_Base_Type (Get_Element_Subtype (Param_Type))
+        /= Get_Base_Type (Res_Type)
+      then
+         return False;
+      end if;
+      return True;
+   end Can_Be_Resolution_Function;
+
    --  Semantize every declaration of DECLS_PARENT.
    --  STMTS is the concurrent statement list associated with DECLS_PARENT
    --  if any, or null_iir.  This is used for specification.
-   procedure Sem_Declaration_Chain (Parent : Iir)
+   procedure Sem_Declaration_Chain (Parent : Iir; Is_Global : Boolean)
    is
       Decl: Iir;
       Last_Decl : Iir;
       Attr_Spec_Chain : Iir;
+      Kind : Iir_Kind;
    begin
       --  Due to implicit declarations, the list can grow during sem.
       Decl := Get_Declaration_Chain (Parent);
       Last_Decl := Null_Iir;
       Attr_Spec_Chain := Null_Iir;
+
       loop
          << Again >> exit when Decl = Null_Iir;
-         case Get_Kind (Decl) is
-            when Iir_Kind_Type_Declaration =>
-               Sem_Type_Declaration (Decl);
-            when Iir_Kind_Anonymous_Type_Declaration =>
-               Sem_Type_Declaration (Decl);
+         Kind := Get_Kind (Decl);
+         case Kind is
+            when Iir_Kind_Type_Declaration
+              | Iir_Kind_Anonymous_Type_Declaration =>
+               Sem_Type_Declaration (Decl, Is_Global);
             when Iir_Kind_Subtype_Declaration =>
-               Sem_Subtype_Declaration (Decl);
+               Sem_Subtype_Declaration (Decl, Is_Global);
             when Iir_Kind_Signal_Declaration =>
                Sem_Object_Declaration (Decl, Parent);
             when Iir_Kind_Constant_Declaration =>
@@ -2199,6 +2244,12 @@ package body Sem_Decls is
                      --  Since RES is a body, no need to check for post
                      --  attribute specification.
                      goto Again;
+                  end if;
+                  if Is_Global
+                    and then Kind = Iir_Kind_Function_Declaration
+                    and then Can_Be_Resolution_Function (Res)
+                  then
+                     Set_Resolution_Function_Flag (Res, True);
                   end if;
                end;
             when Iir_Kind_Function_Body
