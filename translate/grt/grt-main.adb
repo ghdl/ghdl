@@ -159,10 +159,6 @@ package body Grt.Main is
             Grt.Disp.Disp_Signals_Order;
          end if;
 
-         if Flag_Stats then
-            Stats.Start_Cycles;
-         end if;
-
          --  Do the simulation.
          Status := Grt.Processes.Simulation;
       end if;

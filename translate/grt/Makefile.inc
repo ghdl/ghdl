@@ -26,7 +26,8 @@
 # grt_libdir: the place to put grt.
 # GRTSRCDIR: the source directory of grt.
 # target: GCC target
-# GRT_FLAGS: compilation flags.
+# GRT_FLAGS: common (Ada + C + asm) compilation flags.
+# GRT_ADAFLAGS: compilation flags for Ada
 
 # Convert the target variable into a space separated list of architecture,
 # manufacturer, and operating system and assign each of those to its own
@@ -92,7 +93,7 @@ libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files
 
 run-bind.adb: grt-force
 	gnatmake -c $(GNATFLAGS) -aI$(GRTSRCDIR) $(GRT_PRAGMA_FLAG) ghdl_main \
-	  -cargs $(GRT_FLAGS)
+	  $(GRT_ADAFLAGS) -cargs $(GRT_FLAGS)
 	gnatbind -Lgrt_ -o run-bind.adb -n ghdl_main.ali
 
 run-bind.o: run-bind.adb
@@ -135,6 +136,9 @@ grt-cbinding.o: $(GRTSRCDIR)/grt-cbinding.c
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
 grt-cvpi.o: $(GRTSRCDIR)/grt-cvpi.c
+	$(CC) -c $(GRT_FLAGS) -o $@ $<
+
+grt-cthreads.o: $(GRTSRCDIR)/grt-cthreads.c
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
 grt-files: run-bind.adb

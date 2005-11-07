@@ -2323,6 +2323,8 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
+   --   Get/Set_Index_Subtype (Field2)
+   --
    --   Get/Set_Prefix (Field3)
    --
    --   Get/Set_Parameter (Field4)
@@ -2887,7 +2889,6 @@ package Iirs is
        Iir_Predefined_Attribute_Rightof,
        Iir_Predefined_Attribute_Left,
        Iir_Predefined_Attribute_Right,
-       Iir_Predefined_Attribute_Low,
        Iir_Predefined_Attribute_Event,
        Iir_Predefined_Attribute_Active,
        Iir_Predefined_Attribute_Last_Event,
@@ -4764,6 +4765,11 @@ package Iirs is
    --  Field: Field2
    function Get_Suffix (Target : Iir) return Iir;
    procedure Set_Suffix (Target : Iir; Suffix : Iir);
+
+   --  Set the designated index subtype of an array attribute.
+   --  Field: Field2
+   function Get_Index_Subtype (Attr : Iir) return Iir;
+   procedure Set_Index_Subtype (Attr : Iir; St : Iir);
 
    --  Parameter of an attribute.
    --  Field: Field4

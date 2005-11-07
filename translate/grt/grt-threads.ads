@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) - statistics.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  GHDL Run Time (GRT) - threading.
+--  Copyright (C) 2005 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -15,33 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Grt.Unithread;
 
-package Grt.Stats is
-   --  Entry points to gather statistics.
-   procedure Start_Elaboration;
-   procedure Start_Order;
-
-   --  Time in user processes.
-   procedure Start_Processes;
-
-
-   --  Time in next time computation.
-   procedure Start_Next_Time;
-
-
-   --  Time in signals update.
-   procedure Start_Update;
-
-
-   --  Time in process resume
-   procedure Start_Resume;
-
-
-   procedure End_Simulation;
-
-   --  Disp all statistics.
-   procedure Disp_Stats;
-end Grt.Stats;
-
-
-
+package Grt.Threads renames Grt.Unithread;

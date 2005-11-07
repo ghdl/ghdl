@@ -1995,12 +1995,12 @@ package body Translation is
       --  Get the offset in the range pointed by RANGE_PTR of INDEX.
       --  This checks INDEX belongs to the range.
       --  INDEX_TYPE is the subtype of the array index.
-      function Translate_Index_To_Offset (Range_Ptr : O_Dnode;
+      function Translate_Index_To_Offset (Rng : Mnode;
                                           Index : O_Enode;
                                           Index_Expr : Iir;
                                           Index_Type : Iir;
                                           Loc : Iir)
-        return O_Enode;
+                                         return O_Enode;
    end Chap6;
 
    package Chap7 is
@@ -4277,15 +4277,13 @@ package body Translation is
                   end;
                when Iir_Kind_Indexed_Name =>
                   declare
-                     Range_Ptr : O_Dnode;
+                     Rng : Mnode;
                   begin
                      Open_Temp;
-                     Range_Ptr := Create_Temp_Ptr
-                       (Type_Info.T.Range_Ptr_Type,
-                        Get_Var (Get_Info (Iter_Type).T.Range_Var));
+                     Rng := Stabilize (Chap3.Type_To_Range (Iter_Type));
                      Gen_Subblock_Call
                        (Chap6.Translate_Index_To_Offset
-                        (Range_Ptr,
+                        (Rng,
                          Chap7.Translate_Expression
                          (Get_Nth_Element (Get_Index_List (Spec), 0),
                           Iter_Type),
@@ -4295,7 +4293,7 @@ package body Translation is
                   end;
                when Iir_Kind_Slice_Name =>
                   declare
-                     Range_Ptr : O_Dnode;
+                     Rng : Mnode;
                      Slice : O_Dnode;
                      Slice_Ptr : O_Dnode;
                      Left, Right : O_Dnode;
@@ -4305,9 +4303,7 @@ package body Translation is
                      Label : O_Snode;
                   begin
                      Open_Temp;
-                     Range_Ptr := Create_Temp_Ptr
-                       (Type_Info.T.Range_Ptr_Type,
-                        Get_Var (Get_Info (Iter_Type).T.Range_Var));
+                     Rng := Stabilize (Chap3.Type_To_Range (Iter_Type));
                      Slice := Create_Temp (Type_Info.T.Range_Type);
                      Slice_Ptr := Create_Temp_Ptr
                        (Type_Info.T.Range_Ptr_Type, New_Obj (Slice));
@@ -4316,14 +4312,14 @@ package body Translation is
                      Left := Create_Temp_Init
                        (Ghdl_Index_Type,
                         Chap6.Translate_Index_To_Offset
-                        (Range_Ptr,
+                        (Rng,
                          New_Value (New_Selected_Element
                                     (New_Obj (Slice), Type_Info.T.Range_Left)),
                          Spec, Iter_Type, Spec));
                      Right := Create_Temp_Init
                        (Ghdl_Index_Type,
                         Chap6.Translate_Index_To_Offset
-                        (Range_Ptr,
+                        (Rng,
                          New_Value (New_Selected_Element
                                     (New_Obj (Slice),
                                      Type_Info.T.Range_Right)),
@@ -4333,9 +4329,7 @@ package body Translation is
                      Start_If_Stmt
                        (If_Blk,
                         New_Compare_Op (ON_Eq,
-                                        New_Value_Selected_Acc_Value
-                                        (New_Obj (Range_Ptr),
-                                         Type_Info.T.Range_Dir),
+                                        M2E (Chap3.Range_To_Dir (Rng)),
                                         New_Value
                                         (New_Selected_Element
                                          (New_Obj (Slice),
@@ -12048,17 +12042,20 @@ package body Translation is
       is
          Rng : Iir;
       begin
+         --  Do checks if type of the expression is not a subtype.
+         if Expr_Type = Null_Iir --  FIXME: to be removed (generate stmt)
+           or else
+           Get_Kind (Expr_Type) not in Iir_Kinds_Discrete_Subtype_Definition
+         then
+            return True;
+         end if;
+
          --  No check if the expression has the type of the index.
          if Expr_Type = Rng_Type then
             return False;
          end if;
 
          --  No check for 'Range or 'Reverse_Range.
-         if Get_Kind (Expr_Type) not in Iir_Kinds_Discrete_Subtype_Definition
-         then
-            return True;
-         end if;
-
          Rng := Get_Range_Constraint (Expr_Type);
          if (Get_Kind (Rng) = Iir_Kind_Range_Array_Attribute
              or Get_Kind (Rng) = Iir_Kind_Reverse_Range_Array_Attribute)
@@ -12070,18 +12067,149 @@ package body Translation is
          return True;
       end Need_Index_Check;
 
+      procedure Get_Deep_Range_Expression
+        (Atype : Iir; Rng : out Iir; Is_Reverse : out Boolean)
+      is
+         T : Iir;
+         R : Iir;
+      begin
+         Is_Reverse := False;
 
-      function Translate_Index_To_Offset (Range_Ptr : O_Dnode;
+         --  T is an integer/enumeration subtype.
+         T := Atype;
+         loop
+            if Get_Kind (T) not in Iir_Kinds_Discrete_Subtype_Definition then
+               Error_Kind ("get_deep_range_expression(1)", T);
+            end if;
+
+            R := Get_Range_Constraint (T);
+            case Get_Kind (R) is
+               when Iir_Kind_Range_Expression =>
+                  Rng := R;
+                  return;
+               when Iir_Kind_Range_Array_Attribute =>
+                  null;
+               when Iir_Kind_Reverse_Range_Array_Attribute =>
+                  Is_Reverse := not Is_Reverse;
+               when others =>
+                  Error_Kind ("get_deep_range_expression(2)", R);
+            end case;
+            T := Get_Index_Subtype (R);
+            if T = Null_Iir then
+               Rng := Null_Iir;
+               return;
+            end if;
+         end loop;
+      end Get_Deep_Range_Expression;
+
+      function Translate_Index_To_Offset (Rng : Mnode;
                                           Index : O_Enode;
                                           Index_Expr : Iir;
                                           Index_Type : Iir;
                                           Loc : Iir)
-        return O_Enode
+                                         return O_Enode
+      is
+         Need_Check : Boolean;
+         Dir : O_Enode;
+         If_Blk : O_If_Block;
+         Res : O_Dnode;
+         Off : O_Dnode;
+         Bound : O_Enode;
+         Cond1, Cond2: O_Enode;
+         Index_Node : O_Dnode;
+         Bound_Node : O_Dnode;
+         Index_Info : Type_Info_Acc;
+         Deep_Rng : Iir;
+         Deep_Reverse : Boolean;
+      begin
+         Index_Info := Get_Info (Get_Base_Type (Index_Type));
+         Need_Check := Need_Index_Check (Get_Type (Index_Expr), Index_Type);
+         Get_Deep_Range_Expression (Index_Type, Deep_Rng, Deep_Reverse);
+
+         Res := Create_Temp (Ghdl_Index_Type);
+
+         Open_Temp;
+
+         Off := Create_Temp (Index_Info.Ortho_Type (Mode_Value));
+
+         Bound := M2E (Chap3.Range_To_Left (Rng));
+
+         if Deep_Rng /= Null_Iir then
+            if Get_Direction (Deep_Rng) = Iir_To xor Deep_Reverse then
+               --  Direction TO:  INDEX - LEFT.
+               New_Assign_Stmt (New_Obj (Off),
+                                New_Dyadic_Op (ON_Sub_Ov,
+                                               Index, Bound));
+            else
+               --  Direction DOWNTO: LEFT - INDEX.
+               New_Assign_Stmt (New_Obj (Off),
+                                New_Dyadic_Op (ON_Sub_Ov,
+                                               Bound, Index));
+            end if;
+         else
+            Index_Node := Create_Temp_Init
+              (Index_Info.Ortho_Type (Mode_Value), Index);
+            Bound_Node := Create_Temp_Init
+              (Index_Info.Ortho_Type (Mode_Value), Bound);
+            Dir := M2E (Chap3.Range_To_Dir (Rng));
+
+            --  Non-static direction.
+            Start_If_Stmt (If_Blk,
+                           New_Compare_Op (ON_Eq, Dir,
+                                           New_Lit (Ghdl_Dir_To_Node),
+                                           Ghdl_Bool_Type));
+            --  Direction TO:  INDEX - LEFT.
+            New_Assign_Stmt (New_Obj (Off),
+                             New_Dyadic_Op (ON_Sub_Ov,
+                                            New_Obj_Value (Index_Node),
+                                            New_Obj_Value (Bound_Node)));
+            New_Else_Stmt (If_Blk);
+            --  Direction DOWNTO: LEFT - INDEX.
+            New_Assign_Stmt (New_Obj (Off),
+                             New_Dyadic_Op (ON_Sub_Ov,
+                                            New_Obj_Value (Bound_Node),
+                                            New_Obj_Value (Index_Node)));
+            Finish_If_Stmt (If_Blk);
+         end if;
+
+         --  Get the offset.
+         New_Assign_Stmt
+           (New_Obj (Res), New_Convert_Ov (New_Obj_Value (Off),
+                                           Ghdl_Index_Type));
+
+         --  Check bounds.
+         if Need_Check then
+            Cond1 := New_Compare_Op
+              (ON_Lt,
+               New_Obj_Value (Off),
+               New_Lit (New_Signed_Literal (Index_Info.Ortho_Type (Mode_Value),
+                                            0)),
+               Ghdl_Bool_Type);
+
+            Cond2 := New_Compare_Op
+              (ON_Ge,
+               New_Obj_Value (Res),
+               M2E (Chap3.Range_To_Length (Rng)),
+               Ghdl_Bool_Type);
+            Check_Bound_Error (New_Dyadic_Op (ON_Or, Cond1, Cond2), Loc, 0);
+         end if;
+
+         Close_Temp;
+
+         return New_Obj_Value (Res);
+      end Translate_Index_To_Offset;
+
+      function Translate_Fat_Index_To_Offset (Rng : Mnode;
+                                              Index : O_Enode;
+                                              Index_Type : Iir;
+                                              Loc : Iir)
+                                             return O_Enode
       is
          Dir : O_Enode;
          If_Blk : O_If_Block;
          Res : O_Dnode;
          Off : O_Dnode;
+         Bound : O_Enode;
          Cond1, Cond2: O_Enode;
          Index_Node : O_Dnode;
          Bound_Node : O_Dnode;
@@ -12093,19 +12221,20 @@ package body Translation is
 
          Open_Temp;
 
+         Off := Create_Temp (Index_Info.Ortho_Type (Mode_Value));
+
+         Bound := M2E (Chap3.Range_To_Left (Rng));
+
          Index_Node := Create_Temp_Init
            (Index_Info.Ortho_Type (Mode_Value), Index);
          Bound_Node := Create_Temp_Init
-           (Index_Info.Ortho_Type (Mode_Value),
-            New_Value_Selected_Acc_Value (New_Obj (Range_Ptr),
-                                          Index_Info.T.Range_Left));
-         Off := Create_Temp (Index_Info.Ortho_Type (Mode_Value));
+           (Index_Info.Ortho_Type (Mode_Value), Bound);
+         Dir := M2E (Chap3.Range_To_Dir (Rng));
 
-         Dir := New_Value_Selected_Acc_Value (New_Obj (Range_Ptr),
-                                              Index_Info.T.Range_Dir);
-
+         --  Non-static direction.
          Start_If_Stmt (If_Blk,
-                        New_Compare_Op (ON_Eq, Dir, New_Lit (Ghdl_Dir_To_Node),
+                        New_Compare_Op (ON_Eq, Dir,
+                                        New_Lit (Ghdl_Dir_To_Node),
                                         Ghdl_Bool_Type));
          --  Direction TO:  INDEX - LEFT.
          New_Assign_Stmt (New_Obj (Off),
@@ -12126,27 +12255,24 @@ package body Translation is
                                            Ghdl_Index_Type));
 
          --  Check bounds.
-         if Need_Index_Check (Get_Type (Index_Expr), Index_Type) then
-            Cond1 := New_Compare_Op
-              (ON_Lt,
-               New_Obj_Value (Off),
-               New_Lit (New_Signed_Literal (Index_Info.Ortho_Type (Mode_Value),
-                                            0)),
-               Ghdl_Bool_Type);
+         Cond1 := New_Compare_Op
+           (ON_Lt,
+            New_Obj_Value (Off),
+            New_Lit (New_Signed_Literal (Index_Info.Ortho_Type (Mode_Value),
+                                         0)),
+            Ghdl_Bool_Type);
 
-            Cond2 := New_Compare_Op
-              (ON_Ge,
-               New_Obj_Value (Res),
-               New_Value_Selected_Acc_Value (New_Obj (Range_Ptr),
-                                             Index_Info.T.Range_Length),
-               Ghdl_Bool_Type);
-            Check_Bound_Error (New_Dyadic_Op (ON_Or, Cond1, Cond2), Loc, 0);
-         end if;
+         Cond2 := New_Compare_Op
+           (ON_Ge,
+            New_Obj_Value (Res),
+            M2E (Chap3.Range_To_Length (Rng)),
+            Ghdl_Bool_Type);
+         Check_Bound_Error (New_Dyadic_Op (ON_Or, Cond1, Cond2), Loc, 0);
 
          Close_Temp;
 
          return New_Obj_Value (Res);
-      end Translate_Index_To_Offset;
+      end Translate_Fat_Index_To_Offset;
 
       --  Translate index EXPR in dimension DIM of thin array into an
       --  offset.
@@ -12262,23 +12388,21 @@ package body Translation is
             --  Compute index for the current dimension.
             case Prefix_Info.Type_Mode is
                when Type_Mode_Fat_Array =>
-                  Range_Ptr := Chap3.Get_Array_Range
-                    (Prefix, Prefix_Type, Dim);
+                  Range_Ptr := Stabilize
+                    (Chap3.Get_Array_Range (Prefix, Prefix_Type, Dim));
+                  R := Translate_Fat_Index_To_Offset
+                    (Range_Ptr,
+                     Chap7.Translate_Expression (Index, Ibasetype),
+                     Itype, Index);
                when Type_Mode_Ptr_Array =>
+                  --  Manually extract range since there is no infos for
+                  --   index subtype.
                   Range_Ptr := Chap3.Bounds_To_Range
                     (Chap3.Get_Array_Type_Bounds (Prefix_Type),
                      Prefix_Type, Dim);
-               when Type_Mode_Array =>
-                  null;
-               when others =>
-                  raise Internal_Error;
-            end case;
-            case Prefix_Info.Type_Mode is
-               when Type_Mode_Fat_Array
-                 | Type_Mode_Ptr_Array =>
-                  Range_Ptr := Stabilize (Range_Ptr);
+                  Stabilize (Range_Ptr);
                   R := Translate_Index_To_Offset
-                    (M2Dp (Range_Ptr),
+                    (Range_Ptr,
                      Chap7.Translate_Expression (Index, Ibasetype),
                      Index, Itype, Index);
                when Type_Mode_Array =>

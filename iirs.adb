@@ -5717,6 +5717,35 @@ package body Iirs is
       Set_Field2 (Target, Suffix);
    end Set_Suffix;
 
+   procedure Check_Kind_For_Index_Subtype (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Left_Array_Attribute
+           | Iir_Kind_Right_Array_Attribute
+           | Iir_Kind_High_Array_Attribute
+           | Iir_Kind_Low_Array_Attribute
+           | Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute
+           | Iir_Kind_Length_Array_Attribute
+           | Iir_Kind_Ascending_Array_Attribute =>
+            null;
+         when others =>
+            Failed ("Index_Subtype", Target);
+      end case;
+   end Check_Kind_For_Index_Subtype;
+
+   function Get_Index_Subtype (Attr : Iir) return Iir is
+   begin
+      Check_Kind_For_Index_Subtype (Attr);
+      return Get_Field2 (Attr);
+   end Get_Index_Subtype;
+
+   procedure Set_Index_Subtype (Attr : Iir; St : Iir) is
+   begin
+      Check_Kind_For_Index_Subtype (Attr);
+      Set_Field2 (Attr, St);
+   end Set_Index_Subtype;
+
    procedure Check_Kind_For_Parameter (Target : Iir) is
    begin
       case Get_Kind (Target) is

@@ -19,7 +19,6 @@ with System; use System;
 with System.Storage_Elements; --  Work around GNAT bug.
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio; use Grt.Astdio;
-with Grt.Vstrings;
 with Grt.Signals;
 with Grt.Processes;
 with Grt.Types; use Grt.Types;
@@ -71,29 +70,20 @@ package body Grt.Stats is
 
    procedure Put (Stream : FILEs; Val : Clock_T)
    is
-      use Grt.Vstrings;
+      Fmt : constant String := "%3d.%03d" & Character'Val (0);
 
-      Ms : Ghdl_I32;
-      Buf : String (1 .. 11);
-      First : Natural;
-      C : Character;
+      procedure fprintf (Stream : FILEs; Fmt : Address; A, B : Clock_T);
+      pragma Import (C, fprintf);
+
+      Sec : Clock_T;
+      Ms : Clock_T;
    begin
-      To_String (Buf, First, Ghdl_I32 (Val / One_Second));
-      if First > 8 then
-         Buf (8 .. First - 1) := (others => ' ');
-         First := 8;
-      end if;
-      Put (Stream, Buf (First .. Buf'Last));
-      Put (Stream, '.');
+      Sec := Val / One_Second;
 
       --  Avoid overflow.
-      Ms := Ghdl_I32 (((Val mod One_Second) * 1000) / One_Second);
+      Ms := ((Val mod One_Second) * 1000) / One_Second;
 
-      for I in 1 .. 3 loop
-         C := Character'Val (Character'Pos ('0') + (Ms / 100));
-         Put (Stream, C);
-         Ms := (Ms * 10) mod 1000;
-      end loop;
+      fprintf (Stream, Fmt'Address, Sec, Ms);
    end Put;
 
    procedure Put (Stream : FILEs; T : Time_Stats) is
@@ -106,103 +96,85 @@ package body Grt.Stats is
       Put (Stream, T.Sys);
    end Put;
 
-   --  Stats at origin.
-   Start_Time : Time_Stats;
-   End_Elab_Time : Time_Stats;
-   End_Order_Time : Time_Stats;
+   type Counter_Kind is (Counter_Elab, Counter_Order,
+                         Counter_Process, Counter_Update,
+                         Counter_Next, Counter_Resume);
 
-   Start_Proc_Time : Time_Stats;
-   Proc_Times : Time_Stats;
+   type Counter_Array is array (Counter_Kind) of Time_Stats;
+   Counters : Counter_Array := (others => (0, 0, 0));
 
-   Start_Update_Time : Time_Stats;
-   Update_Times : Time_Stats;
+   Init_Time : Time_Stats;
+   Last_Counter : Counter_Kind;
+   Last_Time : Time_Stats;
 
-   Start_Next_Time_Time : Time_Stats;
-   Next_Time_Times : Time_Stats;
+--     --  Stats at origin.
+--     Start_Time : Time_Stats;
+--     End_Elab_Time : Time_Stats;
+--     End_Order_Time : Time_Stats;
 
-   Start_Resume_Time : Time_Stats;
-   Resume_Times : Time_Stats;
+--     Start_Proc_Time : Time_Stats;
+--     Proc_Times : Time_Stats;
 
-   Running_Time : Time_Stats;
-   Simu_Time : Time_Stats;
+--     Start_Update_Time : Time_Stats;
+--     Update_Times : Time_Stats;
+
+--     Start_Next_Time_Time : Time_Stats;
+--     Next_Time_Times : Time_Stats;
+
+--     Start_Resume_Time : Time_Stats;
+--     Resume_Times : Time_Stats;
+
+--     Running_Time : Time_Stats;
+--     Simu_Time : Time_Stats;
 
    procedure Start_Elaboration is
    begin
       One_Second := Get_Clk_Tck;
-      Proc_Times := (0, 0, 0);
 
-      Get_Stats (Start_Time);
+      Get_Stats (Init_Time);
+      Last_Time := Init_Time;
+      Last_Counter := Counter_Elab;
    end Start_Elaboration;
+
+   procedure Change_Counter (Cnt : Counter_Kind)
+   is
+      New_Time : Time_Stats;
+   begin
+      Get_Stats (New_Time);
+      Counters (Last_Counter) := Counters (Last_Counter)
+        + (New_Time - Last_Time);
+      Last_Time := New_Time;
+      Last_Counter := Cnt;
+   end Change_Counter;
 
    procedure Start_Order is
    begin
-      Get_Stats (End_Elab_Time);
+      Change_Counter (Counter_Order);
    end Start_Order;
-
-   procedure Start_Cycles is
-   begin
-      Get_Stats (End_Order_Time);
-   end Start_Cycles;
 
    procedure Start_Processes is
    begin
-      Get_Stats (Start_Proc_Time);
+      Change_Counter (Counter_Process);
    end Start_Processes;
-
-   procedure End_Processes
-   is
-      Now : Time_Stats;
-   begin
-      Get_Stats (Now);
-      Proc_Times := Proc_Times + (Now - Start_Proc_Time);
-   end End_Processes;
 
    procedure Start_Update is
    begin
-      Get_Stats (Start_Update_Time);
+      Change_Counter (Counter_Update);
    end Start_Update;
-
-   procedure End_Update
-   is
-      Now : Time_Stats;
-   begin
-      Get_Stats (Now);
-      Update_Times := Update_Times + (Now - Start_Update_Time);
-   end End_Update;
 
    procedure Start_Next_Time is
    begin
-      Get_Stats (Start_Next_Time_Time);
+      Change_Counter (Counter_Next);
    end Start_Next_Time;
-
-   procedure End_Next_Time
-   is
-      Now : Time_Stats;
-   begin
-      Get_Stats (Now);
-      Next_Time_Times := Next_Time_Times + (Now - Start_Next_Time_Time);
-   end End_Next_Time;
 
    procedure Start_Resume is
    begin
-      Get_Stats (Start_Resume_Time);
+      Change_Counter (Counter_Resume);
    end Start_Resume;
 
-   procedure End_Resume
-   is
-      Now : Time_Stats;
+   procedure End_Simulation is
    begin
-      Get_Stats (Now);
-      Resume_Times := Resume_Times + (Now - Start_Resume_Time);
-   end End_Resume;
-
-   procedure End_Simulation
-   is
-      Now : Time_Stats;
-   begin
-      Get_Stats (Now);
-      Simu_Time := Now - Start_Time;
-      Running_Time := Now - End_Order_Time;
+      Change_Counter (Last_Counter);
    end End_Simulation;
 
    procedure Disp_Signals_Stats
@@ -312,31 +284,29 @@ package body Grt.Stats is
       N : Natural;
    begin
       Put (stdout, "total:          ");
-      Put (stdout, Simu_Time);
+      Put (stdout, Last_Time - Init_Time);
       New_Line (stdout);
       Put (stdout, " elab:          ");
-      Put (stdout, End_Elab_Time - Start_Time);
+      Put (stdout, Counters (Counter_Elab));
       New_Line (stdout);
       Put (stdout, " internal elab: ");
-      Put (stdout, End_Order_Time - End_Elab_Time);
-      New_Line (stdout);
-      Put (stdout, " running time:  ");
-      Put (stdout, Running_Time);
+      Put (stdout, Counters (Counter_Order));
       New_Line (stdout);
       Put (stdout, " cycle (sum):   ");
-      Put (stdout, Proc_Times + Update_Times + Next_Time_Times + Resume_Times);
+      Put (stdout, Counters (Counter_Process) + Counters (Counter_Resume)
+           + Counters (Counter_Update) + Counters (Counter_Next));
       New_Line (stdout);
       Put (stdout, "  processes:    ");
-      Put (stdout, Proc_Times);
+      Put (stdout, Counters (Counter_Process));
       New_Line (stdout);
       Put (stdout, "  resume:       ");
-      Put (stdout, Resume_Times);
+      Put (stdout, Counters (Counter_Resume));
       New_Line (stdout);
       Put (stdout, "  update:       ");
-      Put (stdout, Update_Times);
+      Put (stdout, Counters (Counter_Update));
       New_Line (stdout);
       Put (stdout, "  next compute: ");
-      Put (stdout, Next_Time_Times);
+      Put (stdout, Counters (Counter_Next));
       New_Line (stdout);
 
       Disp_Signals_Stats;

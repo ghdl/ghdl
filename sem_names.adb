@@ -746,6 +746,9 @@ package body Sem_Names is
       end case;
 
       Set_Parameter (Attr, Parameter);
+      if Get_Kind (Prefix_Type) = Iir_Kind_Array_Subtype_Definition then
+         Set_Index_Subtype (Attr, Index_Type);
+      end if;
 
       --  LRM 7.4.1
       --  A locally static range is either [...], or a range of the first form

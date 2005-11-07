@@ -65,7 +65,7 @@ struct stack_context
 /* Context for the main stack.  */
 static struct stack_context main_stack_context;
 
-extern struct stack_context *grt_stack_main_stack;
+extern void grt_stack_set_main_stack (struct stack_context *stack);
 
 /* If MAP_ANONYMOUS is not defined, use /dev/zero. */
 #ifndef MAP_ANONYMOUS
@@ -78,10 +78,8 @@ static int dev_zero_fd;
 #endif
 
 #if EXTEND_STACK
-/* Defined in Grt.Processes (body).
-   This is the current process being run.
-   FIXME: this won't work with pthread!  */
-extern void **grt_cur_proc;
+/* This is the current process being run.  */
+extern struct stack_context *grt_get_current_process (void);
 
 /* Stack used for signals.
    The stack must be different from the running stack, because we want to be
@@ -124,7 +122,7 @@ static void grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
     }
 #endif
 
-  if (info == NULL || grt_cur_proc == NULL || in_handler > 1)
+  if (info == NULL || grt_get_current_process () == NULL || in_handler > 1)
     {
       /* We loose.  */
       sigaction (SIGSEGV, &prev_sigsegv_act, NULL);
@@ -134,7 +132,7 @@ static void grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
   addr = info->si_addr;
   
   /* Check ADDR belong to the stack.  */
-  ctxt = *grt_cur_proc;
+  ctxt = grt_get_current_process ()->cur_sp;
   stack_high = (void *)(ctxt + 1);
   stack_low = stack_high - stack_max_size;
   if (addr > stack_high || addr < stack_low)
@@ -216,7 +214,7 @@ grt_stack_init (void)
   /* Initialize the main stack context.  */
   main_stack_context.cur_sp = NULL;
   main_stack_context.cur_length = 0;
-  grt_stack_main_stack = &main_stack_context;
+  grt_stack_set_main_stack (&main_stack_context);
 
 #ifdef USE_DEV_ZERO
   dev_zero_fd = open ("/dev/zero", O_RDWR);

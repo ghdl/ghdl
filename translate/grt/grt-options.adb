@@ -156,6 +156,7 @@ package body Grt.Options is
       P (" --stack-size=X    set the stack size of non-sensitized processes");
       P (" --stack-max-size=X  set the maximum stack size");
       P (" --no-run          do not simulate, only elaborate");
+      --  P (" --threads=N       use N threads for simulation");
       Grt.Hooks.Call_Help_Hooks;
       P ("trace options:");
       P (" --disp-time       disp time as simulation advances");
@@ -457,6 +458,21 @@ package body Grt.Options is
                else
                   Error ("bad argument for --activity, try --help");
                end if;
+            elsif Len > 10 and then Argument (1 .. 10) = "--threads=" then
+               declare
+                  Ok : Boolean;
+                  Pos : Natural;
+                  Val : Integer_64;
+               begin
+                  Extract_Integer (Argument (11 .. Len), Ok, Val, Pos);
+                  if not Ok or else Pos <= Len then
+                     Error_C ("bad value in '");
+                     Error_C (Argument);
+                     Error_E ("'");
+                  else
+                     Nbr_Threads := Integer (Val);
+                  end if;
+               end;
             elsif not Grt.Hooks.Call_Option_Hooks (Argument) then
                Error_C ("unknown option '");
                Error_C (Argument);

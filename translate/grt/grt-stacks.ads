@@ -21,10 +21,6 @@ package Grt.Stacks is
    type Stack_Type is new Address;
    Null_Stack : constant Stack_Type := Stack_Type (Null_Address);
 
-   --  The main stack.  This is initialized by STACK_INIT.
-   --  The return point.
-   Main_Stack : Stack_Type;
-
    --  Initialize the stacks package.
    --  This may adjust stack sizes.
    --  Must be called after grt.options.decode.
@@ -54,8 +50,6 @@ package Grt.Stacks is
    procedure Error_Null_Access;
    pragma No_Return (Error_Null_Access);
 private
-   pragma Export (C, Main_Stack, "grt_stack_main_stack");
-
    pragma Import (C, Stack_Init, "grt_stack_init");
    pragma Import (C, Stack_Create, "grt_stack_create");
    pragma Import (C, Stack_Switch, "grt_stack_switch");

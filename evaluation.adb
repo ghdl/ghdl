@@ -672,8 +672,6 @@ package body Evaluation is
             if not Dir_Left then
                Cnt := Len - Cnt;
             end if;
-         when others =>
-            raise Internal_Error;
       end case;
 
       Res_List := Create_Iir_List;
@@ -1070,6 +1068,9 @@ package body Evaluation is
          when Iir_Predefined_Universal_I_R_Mul =>
             return Build_Floating
               (Iir_Fp64 (Get_Value (Left)) * Get_Fp_Value (Right), Orig);
+         when Iir_Predefined_Universal_R_I_Div =>
+            return Build_Floating
+              (Get_Fp_Value (Left) / Iir_Fp64 (Get_Value (Right)), Orig);
 
          when Iir_Predefined_Array_Equality =>
             declare
@@ -1110,6 +1111,21 @@ package body Evaluation is
             return Eval_Shift_Operator
               (Eval_String_Literal (Left), Right, Orig, Func);
 
+         when Iir_Predefined_Array_Inequality
+           | Iir_Predefined_Array_Less
+           | Iir_Predefined_Array_Less_Equal
+           | Iir_Predefined_Array_Greater
+           | Iir_Predefined_Array_Greater_Equal
+           | Iir_Predefined_Boolean_Array_And
+           | Iir_Predefined_Boolean_Array_Nand
+           | Iir_Predefined_Boolean_Array_Or
+           | Iir_Predefined_Boolean_Array_Nor
+           | Iir_Predefined_Boolean_Array_Xor
+           | Iir_Predefined_Boolean_Array_Xnor =>
+            --  FIXME: todo.
+            Error_Internal (Orig, "eval_dyadic_operator: " &
+                            Iir_Predefined_Functions'Image (Func));
+
          when Iir_Predefined_Boolean_Not
            | Iir_Predefined_Bit_Not
            | Iir_Predefined_Integer_Absolute
@@ -1125,11 +1141,36 @@ package body Evaluation is
            | Iir_Predefined_Record_Equality
            | Iir_Predefined_Record_Inequality
            | Iir_Predefined_Access_Equality
-           | Iir_Predefined_Access_Inequality =>
+           | Iir_Predefined_Access_Inequality
+           | Iir_Predefined_Bit_Array_Not
+           | Iir_Predefined_Boolean_Array_Not
+           | Iir_Predefined_Now_Function
+           | Iir_Predefined_Deallocate
+           | Iir_Predefined_Write
+           | Iir_Predefined_Read
+           | Iir_Predefined_Read_Length
+           | Iir_Predefined_File_Open
+           | Iir_Predefined_File_Open_Status
+           | Iir_Predefined_File_Close
+           | Iir_Predefined_Endfile
+           | Iir_Predefined_Attribute_Image
+           | Iir_Predefined_Attribute_Value
+           | Iir_Predefined_Attribute_Pos
+           | Iir_Predefined_Attribute_Val
+           | Iir_Predefined_Attribute_Succ
+           | Iir_Predefined_Attribute_Pred
+           | Iir_Predefined_Attribute_Rightof
+           | Iir_Predefined_Attribute_Leftof
+           | Iir_Predefined_Attribute_Left
+           | Iir_Predefined_Attribute_Right
+           | Iir_Predefined_Attribute_Event
+           | Iir_Predefined_Attribute_Active
+           | Iir_Predefined_Attribute_Last_Value
+           | Iir_Predefined_Attribute_Last_Event
+           | Iir_Predefined_Attribute_Last_Active
+           | Iir_Predefined_Attribute_Driving
+           | Iir_Predefined_Attribute_Driving_Value =>
             --  Not binary or never locally static.
-            Error_Internal (Orig, "eval_dyadic_operator: " &
-                            Iir_Predefined_Functions'Image (Func));
-         when others =>
             Error_Internal (Orig, "eval_dyadic_operator: " &
                             Iir_Predefined_Functions'Image (Func));
       end case;

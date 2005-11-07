@@ -19,7 +19,9 @@ with System;
 with Grt.Stack2; use Grt.Stack2;
 with Grt.Types; use Grt.Types;
 with Grt.Signals; use Grt.Signals;
+with Grt.Stacks;
 with Grt.Rtis; use Grt.Rtis;
+with Grt.Rtis_Addr;
 with Grt.Stdio;
 
 package Grt.Processes is
@@ -44,8 +46,6 @@ package Grt.Processes is
    --  During the elaboration, this is the identifier of the last process
    --  being elaborated.  So, this function can be used to create signal
    --  drivers.
-   function Get_Current_Process_Id return Process_Id;
-   pragma Inline (Get_Current_Process_Id);
 
    --  Return the total number of processes and number of sensitized processes.
    --  Used for statistics.
@@ -118,7 +118,70 @@ package Grt.Processes is
    procedure Ghdl_Protected_Init (Obj : System.Address);
    procedure Ghdl_Protected_Fini (Obj : System.Address);
 
+   type Process_Type is private;
+   type Process_Acc is access all Process_Type;
 private
+      --  Access to a process subprogram.
+   type Proc_Acc is access procedure (Self : System.Address);
+
+   --  Simply linked list for sensitivity.
+   type Sensitivity_El;
+   type Sensitivity_Acc is access Sensitivity_El;
+   type Sensitivity_El is record
+      Sig : Ghdl_Signal_Ptr;
+      Next : Sensitivity_Acc;
+   end record;
+
+   --  State of a process.
+   type Process_State is
+     (
+      --  Sensitized process.  Its state cannot change.
+      State_Sensitized,
+
+      --  Verilog process, being suspended.
+      State_Delayed,
+
+      --  Non-sensitized process being suspended.
+      State_Wait,
+
+      --  Non-sensitized process being awaked by a wait timeout.  This state
+      --  is transcient.
+      State_Timeout,
+
+      --  Non-sensitized process waiting until end.
+      State_Dead);
+
+   type Process_Type is record
+      --  Stack for the process.
+      --  This must be the first field of the record (and this is the only
+      --  part visible).
+      --  Must be NULL_STACK for sensitized processes.
+      Stack : Stacks.Stack_Type;
+
+      --  Subprogram containing process code.
+      Subprg : Proc_Acc;
+
+      --  Instance (THIS parameter) for the subprogram.
+      This : System.Address;
+
+      --  Name of the process.
+      Rti : Rtis_Addr.Rti_Context;
+
+      --  True if the process is resumed and will be run at next cycle.
+      Resumed : Boolean;
+
+      --  True if the process is postponed.
+      Postponed : Boolean;
+
+      State : Process_State;
+
+      --  Timeout value for wait.
+      Timeout : Std_Time;
+
+      --  Sensitivity list.
+      Sensitivity : Sensitivity_Acc;
+   end record;
+
    pragma Export (C, Ghdl_Process_Register,
                   "__ghdl_process_register");
    pragma Export (C, Ghdl_Sensitized_Process_Register,

@@ -32,81 +32,10 @@ with Grt.Hooks;
 with Grt.Disp_Signals;
 with Grt.Stdio;
 with Grt.Stats;
+with Grt.Threads; use Grt.Threads;
 
 package body Grt.Processes is
-   --  Access to a process subprogram.
-   type Proc_Acc is access procedure (Self : System.Address);
-
-   --  Simply linked list for sensitivity.
-   type Sensitivity_El;
-   type Sensitivity_Acc is access Sensitivity_El;
-   type Sensitivity_El is record
-      Sig : Ghdl_Signal_Ptr;
-      Next : Sensitivity_Acc;
-   end record;
-
-   Last_Time : Std_Time := Std_Time'Last;
-
-   --  State of a process.
-   type Process_State is
-     (
-      --  Sensitized process.  Its state cannot change.
-      State_Sensitized,
-
-      --  Verilog process, being suspended.
-      State_Delayed,
-
-      --  Non-sensitized process being suspended.
-      State_Wait,
-
-      --  Non-sensitized process being awaked by a wait timeout.  This state
-      --  is transcient.
-      State_Timeout,
-
-      --  Non-sensitized process waiting until end.
-      State_Dead);
-
-   type Process_Type is record
-      --  Stack for the process.
-      --  This must be the first field of the record (and this is the only
-      --  part visible).
-      --  Must be NULL_STACK for sensitized processes.
-      Stack : Stack_Type;
-
-      --  Subprogram containing process code.
-      Subprg : Proc_Acc;
-
-      --  Instance (THIS parameter) for the subprogram.
-      This : System.Address;
-
-      --  Name of the process.
-      Rti : Rti_Context;
-
-      --  True if the process is resumed and will be run at next cycle.
-      Resumed : Boolean;
-
-      --  True if the process is postponed.
-      Postponed : Boolean;
-
-      State : Process_State;
-
-      --  Timeout value for wait.
-      Timeout : Std_Time;
-
-      --  Sensitivity list.
-      Sensitivity : Sensitivity_Acc;
-   end record;
-   type Process_Acc is access all Process_Type;
-
-   --  Per 'thread' data.
-   --  The process being executed.
-   Cur_Proc_Id : Process_Id;
-
-   Cur_Proc : Process_Acc;
-   pragma Export (C, Cur_Proc, "grt_cur_proc");
-
-   --  The secondary stack for the thread.
-   Stack2 : Stack2_Ptr;
+   Last_Time : constant Std_Time := Std_Time'Last;
 
    --  Table of processes.
    package Process_Table is new GNAT.Table
@@ -147,12 +76,6 @@ package body Grt.Processes is
    begin
       Process_Table.Init;
    end Init;
-
-   function Get_Current_Process_Id return Process_Id
-   is
-   begin
-      return Cur_Proc_Id;
-   end Get_Current_Process_Id;
 
    function Get_Nbr_Processes return Natural is
    begin
@@ -203,10 +126,10 @@ package body Grt.Processes is
          Timeout => Bad_Time,
          Stack => Stack);
       --  Used to create drivers.
-      Cur_Proc_Id := Process_Table.Last;
+      Set_Current_Process (Process_Table.Last, null);
 
       if State /= State_Sensitized then
-         Non_Sensitized_Process_Table.Append (Cur_Proc_Id);
+         Non_Sensitized_Process_Table.Append (Process_Table.Last);
       end if;
       if Postponed then
          Nbr_Postponed_Processes := Nbr_Postponed_Processes + 1;
@@ -274,7 +197,7 @@ package body Grt.Processes is
          This => This,
          Stack => Null_Stack);
       --  Used to create drivers.
-      Cur_Proc_Id := Process_Table.Last;
+      Set_Current_Process (Process_Table.Last, null);
    end Verilog_Process_Register;
 
    procedure Ghdl_Initial_Register (Instance : System.Address;
@@ -318,20 +241,23 @@ package body Grt.Processes is
      return System.Address
    is
    begin
-      return Grt.Stack2.Allocate (Stack2, Size);
+      return Grt.Stack2.Allocate (Get_Stack2, Size);
    end Ghdl_Stack2_Allocate;
 
-   function Ghdl_Stack2_Mark return Mark_Id is
+   function Ghdl_Stack2_Mark return Mark_Id
+   is
+      St2 : Stack2_Ptr := Get_Stack2;
    begin
-      if Stack2 = Null_Stack2_Ptr then
-         Stack2 := Grt.Stack2.Create;
+      if St2 = Null_Stack2_Ptr then
+         St2 := Grt.Stack2.Create;
+         Set_Stack2 (St2);
       end if;
-      return Grt.Stack2.Mark (Stack2);
+      return Grt.Stack2.Mark (St2);
    end Ghdl_Stack2_Mark;
 
    procedure Ghdl_Stack2_Release (Mark : Mark_Id) is
    begin
-      Grt.Stack2.Release (Stack2, Mark);
+      Grt.Stack2.Release (Get_Stack2, Mark);
    end Ghdl_Stack2_Release;
 
    function To_Acc is new Ada.Unchecked_Conversion
@@ -342,8 +268,8 @@ package body Grt.Processes is
       El : Sensitivity_Acc;
    begin
       El := new Sensitivity_El'(Sig => Sig,
-                                Next => Cur_Proc.Sensitivity);
-      Cur_Proc.Sensitivity := El;
+                                Next => Get_Current_Process.Sensitivity);
+      Get_Current_Process.Sensitivity := El;
    end Ghdl_Process_Wait_Add_Sensitivity;
 
    procedure Ghdl_Process_Wait_Set_Timeout (Time : Std_Time)
@@ -353,31 +279,33 @@ package body Grt.Processes is
          --  LRM93 8.1
          Error ("negative timeout clause");
       end if;
-      Cur_Proc.Timeout := Current_Time + Time;
+      Get_Current_Process.Timeout := Current_Time + Time;
    end Ghdl_Process_Wait_Set_Timeout;
 
    function Ghdl_Process_Wait_Suspend return Boolean
    is
+      Proc : constant Process_Acc := Get_Current_Process;
    begin
-      if Cur_Proc.State = State_Sensitized then
+      if Proc.State = State_Sensitized then
          Error ("wait statement in a sensitized process");
       end if;
       --  Suspend this process.
-      Cur_Proc.State := State_Wait;
+      Proc.State := State_Wait;
 --       if Cur_Proc.Timeout = Bad_Time then
 --          Cur_Proc.Timeout := Std_Time'Last;
 --       end if;
-      Stack_Switch (Main_Stack, Cur_Proc.Stack);
-      return Cur_Proc.State = State_Timeout;
+      Stack_Switch (Get_Main_Stack, Proc.Stack);
+      return Proc.State = State_Timeout;
    end Ghdl_Process_Wait_Suspend;
 
    procedure Ghdl_Process_Wait_Close
    is
+      Proc : constant Process_Acc := Get_Current_Process;
       El : Sensitivity_Acc;
       N_El : Sensitivity_Acc;
    begin
-      El := Cur_Proc.Sensitivity;
-      Cur_Proc.Sensitivity := null;
+      El := Proc.Sensitivity;
+      Proc.Sensitivity := null;
       while El /= null loop
          N_El := El.Next;
          Free (El);
@@ -387,39 +315,42 @@ package body Grt.Processes is
 
    procedure Ghdl_Process_Wait_Exit
    is
+      Proc : constant Process_Acc := Get_Current_Process;
    begin
-      if Cur_Proc.State = State_Sensitized then
+      if Proc.State = State_Sensitized then
          Error ("wait statement in a sensitized process");
       end if;
       --  Mark this process as dead, in order to kill it.
       --  It cannot be killed now, since this code is still in the process.
-      Cur_Proc.State := State_Dead;
+      Proc.State := State_Dead;
       --  Suspend this process.
-      Stack_Switch (Main_Stack, Cur_Proc.Stack);
+      Stack_Switch (Get_Main_Stack, Proc.Stack);
    end Ghdl_Process_Wait_Exit;
 
    procedure Ghdl_Process_Wait_Timeout (Time : Std_Time)
    is
+      Proc : constant Process_Acc := Get_Current_Process;
    begin
-      if Cur_Proc.State = State_Sensitized then
+      if Proc.State = State_Sensitized then
          Error ("wait statement in a sensitized process");
       end if;
       if Time < 0 then
          --  LRM93 8.1
          Error ("negative timeout clause");
       end if;
-      Cur_Proc.Timeout := Current_Time + Time;
-      Cur_Proc.State := State_Wait;
+      Proc.Timeout := Current_Time + Time;
+      Proc.State := State_Wait;
       --  Suspend this process.
-      Stack_Switch (Main_Stack, Cur_Proc.Stack);
+      Stack_Switch (Get_Main_Stack, Proc.Stack);
    end Ghdl_Process_Wait_Timeout;
 
    --  Verilog.
    procedure Ghdl_Process_Delay (Del : Ghdl_U32)
    is
+      Proc : constant Process_Acc := Get_Current_Process;
    begin
-      Cur_Proc.Timeout := Current_Time + Std_Time (Del);
-      Cur_Proc.State := State_Delayed;
+      Proc.Timeout := Current_Time + Std_Time (Del);
+      Proc.State := State_Delayed;
    end Ghdl_Process_Delay;
 
    --  Protected object lock.
@@ -564,33 +495,26 @@ package body Grt.Processes is
    --  Failure, simulation should stop.
    Run_Failure : constant Integer := -1;
 
-   function Run_Processes (Postponed : Boolean) return Integer
+   Mt_Last : Natural;
+   Mt_Table : Process_Id_Array_Acc;
+   Mt_Index : aliased Natural;
+
+   procedure Run_Processes_Threads
    is
-      Table : Process_Id_Array_Acc;
-      Last : Natural;
-      Status : Integer;
+      Pid : Process_Id;
+      Idx : Natural;
    begin
-      Status := Run_None;
+      loop
+         --  Atomically get a process to be executed
+         Idx := Grt.Threads.Atomic_Inc (Mt_Index'Access);
+         if Idx > Mt_Last then
+            return;
+         end if;
+         Pid := Mt_Table (Idx);
 
-      if Options.Flag_Stats then
-         Stats.Start_Processes;
-      end if;
-
-      if Postponed then
-         Table := Postponed_Resume_Process_Table;
-         Last := Last_Postponed_Resume_Process;
-      else
-         Table := Resume_Process_Table;
-         Last := Last_Resume_Process;
-      end if;
-      for I in 1 .. Last loop
          declare
-            Pid : constant Process_Id := Table (I);
             Proc : Process_Type renames Process_Table.Table (Pid);
          begin
-            if not Proc.Resumed then
-               Internal_Error ("run non-resumed process");
-            end if;
             if Grt.Options.Trace_Processes then
                Grt.Astdio.Put ("run process ");
                Disp_Process_Name (Stdio.stdout, Pid);
@@ -599,33 +523,89 @@ package body Grt.Processes is
                Grt.Astdio.Put ("]");
                Grt.Astdio.New_Line;
             end if;
-            Nbr_Resumed_Processes := Nbr_Resumed_Processes + 1;
+            if not Proc.Resumed then
+               Internal_Error ("run non-resumed process");
+            end if;
             Proc.Resumed := False;
-            Status := Run_Resumed;
-            Cur_Proc_Id := Pid;
-            Cur_Proc := To_Acc (Process_Table.Table (Pid)'Address);
-            if Cur_Proc.State = State_Sensitized then
-               Cur_Proc.Subprg.all (Cur_Proc.This);
+            Set_Current_Process
+              (Pid, To_Acc (Process_Table.Table (Pid)'Address));
+            if Proc.State = State_Sensitized then
+               Proc.Subprg.all (Proc.This);
             else
-               Stack_Switch (Cur_Proc.Stack, Main_Stack);
+               Stack_Switch (Proc.Stack, Get_Main_Stack);
             end if;
             if Grt.Options.Checks then
                Ghdl_Signal_Internal_Checks;
-               Grt.Stack2.Check_Empty (Stack2);
+               Grt.Stack2.Check_Empty (Get_Stack2);
             end if;
          end;
       end loop;
+   end Run_Processes_Threads;
+
+   function Run_Processes (Postponed : Boolean) return Integer
+   is
+      Table : Process_Id_Array_Acc;
+      Last : Natural;
+   begin
+      if Options.Flag_Stats then
+         Stats.Start_Processes;
+      end if;
 
       if Postponed then
+         Table := Postponed_Resume_Process_Table;
+         Last := Last_Postponed_Resume_Process;
          Last_Postponed_Resume_Process := 0;
       else
+         Table := Resume_Process_Table;
+         Last := Last_Resume_Process;
          Last_Resume_Process := 0;
       end if;
+      Nbr_Resumed_Processes := Nbr_Resumed_Processes + Last;
 
-      if Options.Flag_Stats then
-         Stats.End_Processes;
+      if Options.Nbr_Threads = 1 then
+         for I in 1 .. Last loop
+            declare
+               Pid : constant Process_Id := Table (I);
+               Proc : Process_Type renames Process_Table.Table (Pid);
+            begin
+               if not Proc.Resumed then
+                  Internal_Error ("run non-resumed process");
+               end if;
+               if Grt.Options.Trace_Processes then
+                  Grt.Astdio.Put ("run process ");
+                  Disp_Process_Name (Stdio.stdout, Pid);
+                  Grt.Astdio.Put (" [");
+                  Grt.Astdio.Put (Stdio.stdout, Proc.This);
+                  Grt.Astdio.Put ("]");
+                  Grt.Astdio.New_Line;
+               end if;
+
+               Proc.Resumed := False;
+               Set_Current_Process
+                 (Pid, To_Acc (Process_Table.Table (Pid)'Address));
+               if Proc.State = State_Sensitized then
+                  Proc.Subprg.all (Proc.This);
+               else
+                  Stack_Switch (Proc.Stack, Get_Main_Stack);
+               end if;
+               if Grt.Options.Checks then
+                  Ghdl_Signal_Internal_Checks;
+                  Grt.Stack2.Check_Empty (Get_Stack2);
+               end if;
+            end;
+         end loop;
+      else
+         Mt_Last := Last;
+         Mt_Table := Table;
+         Mt_Index := 1;
+         Threads.Run_Parallel (Run_Processes_Threads'Access);
       end if;
-      return Status;
+
+      if Last >= 1 then
+         return Run_Resumed;
+      else
+         return Run_None;
+      end if;
    end Run_Processes;
 
    function Initialization_Phase return Integer
@@ -705,7 +685,6 @@ package body Grt.Processes is
       end if;
       Update_Signals;
       if Options.Flag_Stats then
-         Stats.End_Update;
          Stats.Start_Resume;
       end if;
 
@@ -753,10 +732,6 @@ package body Grt.Processes is
          end;
       end loop;
 
-      if Options.Flag_Stats then
-         Stats.End_Resume;
-      end if;
-
       --  e) Each nonpostponed that has resumed in the current simulation cycle
       --     is executed until it suspends.
       Status := Run_Processes (Postponed => False);
@@ -775,9 +750,6 @@ package body Grt.Processes is
          Stats.Start_Next_Time;
       end if;
       Tn := Compute_Next_Time;
-      if Options.Flag_Stats then
-         Stats.End_Next_Time;
-      end if;
 
       --  g) If the next simulation cycle will be a delta cycle, the remainder
       --     of the step is skipped.
@@ -805,9 +777,6 @@ package body Grt.Processes is
                Stats.Start_Next_Time;
             end if;
             Tn := Compute_Next_Time;
-            if Options.Flag_Stats then
-               Stats.End_Next_Time;
-            end if;
             if Tn = Current_Time then
                Error ("postponed process causes a delta cycle");
             end if;
@@ -824,8 +793,9 @@ package body Grt.Processes is
       use Options;
       Status : Integer;
    begin
-      --Put_Line ("grt.processes:" & Process_Id'Image (Process_Table.Last)
-      --          & " process(es)");
+      if Nbr_Threads /= 1 then
+         Threads.Init;
+      end if;
 
 --       if Disp_Sig_Types then
 --          Grt.Disp.Disp_Signals_Type;
@@ -888,6 +858,10 @@ package body Grt.Processes is
             exit;
          end if;
       end loop;
+
+      if Nbr_Threads /= 1 then
+         Threads.Finish;
+      end if;
 
       Grt.Hooks.Call_Finish_Hooks;
 

@@ -346,6 +346,9 @@ grt-waves.ads
 grt-waves.adb
 grt-avls.ads
 grt-avls.adb
+grt-unithread.ads
+grt-unithread.adb
+grt-threads.ads
 grt.ads
 main.adb
 main.ads
@@ -610,7 +613,7 @@ put manual.html
 put more.html
 put links.html
 put bug.html
-put waveform.html
+put waveviewer.html
 put gtkwave-patch.tgz
 put favicon.ico
 lcd ghdl

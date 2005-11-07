@@ -118,10 +118,17 @@ package Grt.Options is
    type Activity_Mode is (Activity_All, Activity_Minimal, Activity_None);
    Flag_Activity : Activity_Mode := Activity_Minimal;
 
+   --  Set by --thread=
+   --  Number of threads used to do the simulation.
+   --  1 mean no additionnal threads, 0 means as many threads as number of
+   --  CPUs.
+   Nbr_Threads : Natural := 1;
+
    --  Set the time resolution.
    --  Only call this subprogram if you are allowed to set the time resolution.
    procedure Set_Time_Resolution (Res : Character);
 private
    pragma Export (C, Stack_Size);
    pragma Export (C, Stack_Max_Size);
+   pragma Export (C, Nbr_Threads, "grt_nbr_threads");
 end Grt.Options;

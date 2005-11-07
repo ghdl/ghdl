@@ -26,6 +26,7 @@ with Grt.Rtis_Types; use Grt.Rtis_Types;
 with Grt.Disp_Signals;
 with Grt.Astdio;
 with Grt.Stdio;
+with Grt.Threads; use Grt.Threads;
 
 package body Grt.Signals is
    function Is_Signal_Guarded (Sig : Ghdl_Signal_Ptr) return Boolean
@@ -403,11 +404,11 @@ package body Grt.Signals is
    Signal_End : Ghdl_Signal_Ptr;
 
    --  List of active signals.
-   Active_List : Ghdl_Signal_Ptr;
+   Active_List : aliased Ghdl_Signal_Ptr;
 
    --  List of signals which have projected waveforms in the future (beyond
    --  the next delta cycle).
-   Future_List : Ghdl_Signal_Ptr;
+   Future_List : aliased Ghdl_Signal_Ptr;
 
    procedure Ghdl_Signal_Start_Assign (Sign : Ghdl_Signal_Ptr;
                                        Reject : Std_Time;
@@ -430,15 +431,13 @@ package body Grt.Signals is
          --  Put SIGN on the active list if the transaction is scheduled
          --   for the next delta cycle.
          if Sign.Link = null then
-            Sign.Link := Active_List;
-            Active_List := Sign;
+            Sign.Link := Grt.Threads.Atomic_Insert (Active_List'access, Sign);
          end if;
       else
          --  AFTER > 0.
          --  Put SIGN on the future list.
          if Sign.Flink = null then
-            Sign.Flink := Future_List;
-            Future_List := Sign;
+            Sign.Flink := Grt.Threads.Atomic_Insert (Future_List'access, Sign);
          end if;
       end if;
 
