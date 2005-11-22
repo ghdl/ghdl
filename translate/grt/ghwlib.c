@@ -225,6 +225,18 @@ ghw_read_range (struct ghw_handler *h)
     return NULL;
   switch (t & 0x7f)
     {
+    case ghdl_rtik_type_b2:
+      {
+	struct ghw_range_b2 *r;
+	r = malloc (sizeof (struct ghw_range_b2));
+	r->kind = t & 0x7f;
+	r->dir = (t & 0x80) != 0;
+	if (ghw_read_byte (h, &r->left) != 0)
+	  return NULL;
+	if (ghw_read_byte (h, &r->right) != 0)
+	  return NULL;
+	return (union ghw_range *)r;
+      }
     case ghdl_rtik_type_e8:
       {
 	struct ghw_range_e8 *r;

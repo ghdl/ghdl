@@ -32,7 +32,7 @@ grt_stack_switch:
 	{
 	alloc r31=ar.pfs, 2, 0, 0, 0
 	mov r14 = ar.rsc
-	adds r12 = -(frame_size + 16), r12
+	adds r12 = -frame_size, r12
 	.body
 	;;
 	}
@@ -227,7 +227,7 @@ grt_stack_switch:
 	ldf.fill f30 = [r20], 32	// sp + 448 (f30)
 	;;
 	ldf.fill f31 = [r21], 32	// sp + 464 (f31)
-	adds r12 = 16, r20
+	mov r12 = r20
 	br.ret.sptk.many b0
 	;;
 	.endp grt_stack_switch#

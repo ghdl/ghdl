@@ -1084,6 +1084,11 @@ package body Grt.Waves is
          Kind := To_Ghdl_Rtin_Subtype_Scalar_Acc (Rti).Basetype.Kind;
       end if;
       case Kind is
+         when Ghdl_Rtik_Type_B2 =>
+            Wave_Put_Byte (Ghdl_Rtik'Pos (Kind)
+                           + Ghdl_Dir_Type'Pos (Rng.B2.Dir) * 16#80#);
+            Wave_Put_Byte (Ghdl_B2'Pos (Rng.B2.Left));
+            Wave_Put_Byte (Ghdl_B2'Pos (Rng.B2.Right));
          when Ghdl_Rtik_Type_E8 =>
             Wave_Put_Byte (Ghdl_Rtik'Pos (Kind)
                            + Ghdl_Dir_Type'Pos (Rng.E8.Dir) * 16#80#);

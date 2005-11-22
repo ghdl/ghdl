@@ -75,7 +75,15 @@ ifndef GRT_TARGET_OBJS
 endif
 
 # Additionnal object files (C or asm files).
-GRT_ADD_OBJS=$(GRT_TARGET_OBJS) grt-cbinding.o grt-cvpi.o
+GRT_ADD_OBJS:=$(GRT_TARGET_OBJS) grt-cbinding.o grt-cvpi.o
+
+#GRT_USE_PTHREADS=y
+ifeq ($(GRT_USE_PTHREADS),y)
+ GRT_ADD_OBJS+=grt-cthreads.o
+ GRT_EXTRA_LIB+=-lpthread
+endif
+
+GRT_ARCH?=None
 
 # Configuration pragmas.
 GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc
@@ -85,7 +93,7 @@ GRT_ADACOMPILE=$(ADAC) -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG) -o $@ $<
 
 grt-all: libgrt.a grt.lst
 
-libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files
+libgrt.a: grt-arch.ads $(GRT_ADD_OBJS) run-bind.o main.o grt-files
 	$(RM) -f $@
 	$(AR) rcv $@ `sed -e "/^-/d" < grt-files` $(GRT_ADD_OBJS) \
 	 run-bind.o main.o
@@ -144,6 +152,10 @@ grt-cthreads.o: $(GRTSRCDIR)/grt-cthreads.c
 grt-files: run-bind.adb
 	sed -e "1,/-- *BEGIN/d" -e "/-- *END/,\$$d" \
 	  -e "s/   --   //" < $< > $@
+
+grt-arch.ads:
+	echo "With Grt.Arch_$(GRT_ARCH);" > $@
+	echo "Package Grt.Arch renames Grt.Arch_$(GRT_ARCH);" >> $@
 
 # Remove local files (they are now in the libgrt library).
 # Also, remove the -shared option, in order not to build a shared library

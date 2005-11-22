@@ -358,8 +358,8 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Range_Expression
@@ -3128,8 +3128,8 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Physical_Type_Definition =>
             null;
@@ -3562,8 +3562,8 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Physical_Type_Definition =>
             null;
@@ -3653,8 +3653,8 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Physical_Type_Definition =>
             null;
@@ -4243,8 +4243,8 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Physical_Type_Definition =>
             null;
@@ -4283,8 +4283,8 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Physical_Type_Definition =>
             null;
@@ -4319,8 +4319,8 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Physical_Type_Definition =>
             null;

@@ -62,11 +62,6 @@ struct stack_context
   size_t cur_length;
 };
 
-/* Context for the main stack.  */
-static struct stack_context main_stack_context;
-
-extern void grt_stack_set_main_stack (struct stack_context *stack);
-
 /* If MAP_ANONYMOUS is not defined, use /dev/zero. */
 #ifndef MAP_ANONYMOUS
 #define USE_DEV_ZERO
@@ -193,6 +188,19 @@ static void grt_signal_setup (void)
 }
 #endif
 
+/* Context for the main stack.  */
+static __thread struct stack_context main_stack_context;
+
+extern void grt_set_main_stack (struct stack_context *stack);
+
+void
+grt_stack_new_thread (void)
+{
+  main_stack_context.cur_sp = NULL;
+  main_stack_context.cur_length = 0;
+  grt_set_main_stack (&main_stack_context);
+}
+
 void
 grt_stack_init (void)
 {
@@ -214,7 +222,7 @@ grt_stack_init (void)
   /* Initialize the main stack context.  */
   main_stack_context.cur_sp = NULL;
   main_stack_context.cur_length = 0;
-  grt_stack_set_main_stack (&main_stack_context);
+  grt_set_main_stack (&main_stack_context);
 
 #ifdef USE_DEV_ZERO
   dev_zero_fd = open ("/dev/zero", O_RDWR);

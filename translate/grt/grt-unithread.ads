@@ -57,7 +57,7 @@ private
    pragma Inline (Set_Stack2);
 
    pragma Inline (Get_Main_Stack);
-   pragma Export (C, Set_Main_Stack, "grt_stack_set_main_stack");
+   pragma Export (C, Set_Main_Stack, "grt_set_main_stack");
 
    pragma Inline (Set_Current_Process);
    pragma Inline (Get_Current_Process);

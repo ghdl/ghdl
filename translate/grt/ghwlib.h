@@ -83,6 +83,14 @@ enum ghw_wkt_type {
   ghw_wkt_std_ulogic
 };
 
+struct ghw_range_b2
+{
+  enum ghdl_rtik kind : 8;
+  int dir : 8; /* 0: to, !0: downto.  */
+  unsigned char left;
+  unsigned char right;
+};
+
 struct ghw_range_e8
 {
   enum ghdl_rtik kind : 8;

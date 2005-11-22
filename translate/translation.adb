@@ -237,13 +237,6 @@ package body Translation is
       --  Scopes must be poped in the reverse order they are pushed.
       procedure Pop_Scope (Scope_Type : O_Tnode);
 
-      --  Same as Push_Scope/Pop_Scope, but act only if SCOPE_TYPE is not
-      --  null.
-      procedure Push_Scope_Soft (Scope_Type : O_Tnode; Scope_Param : O_Dnode);
-      procedure Pop_Scope_Soft (Scope_Type : O_Tnode);
-      pragma Inline (Push_Scope_Soft);
-      pragma Inline (Pop_Scope_Soft);
-
       --  Reset the identifier.
       type Id_Mark_Type is limited private;
       type Local_Identifier_Type is limited private;
@@ -1793,7 +1786,7 @@ package body Translation is
 
       --  Return TRUE if base type of ATYPE is larger than its bounds, ie
       --  if a value of type ATYPE may be out of range.
-      function Need_Range_Check (Atype : Iir) return Boolean;
+      function Need_Range_Check (Expr : Iir; Atype : Iir) return Boolean;
 
       --  Generate an error if VALUE (computed from EXPR which may be NULL_IIR
       --  if not from a tree) is not in range specified by ATYPE.
@@ -1992,13 +1985,21 @@ package body Translation is
       --  its location.
       procedure Check_Bound_Error (Cond : O_Enode; Loc : Iir; Dim : Natural);
 
-      --  Get the offset in the range pointed by RANGE_PTR of INDEX.
+      --  Get the deepest range_expression of ATYPE.
+      --   This follows 'range and 'reverse_range.
+      --  Set IS_REVERSE to true if the range must be reversed.
+      procedure Get_Deep_Range_Expression
+        (Atype : Iir; Rng : out Iir; Is_Reverse : out Boolean);
+
+      --  Get the offset of INDEX in the range RNG.
       --  This checks INDEX belongs to the range.
-      --  INDEX_TYPE is the subtype of the array index.
+      --  RANGE_TYPE is the subtype of the array index (or the subtype of RNG).
+      --  For unconstrained ranges, INDEX_EXPR must be NULL_IIR and RANGE_TYPE
+      --   must be set.
       function Translate_Index_To_Offset (Rng : Mnode;
                                           Index : O_Enode;
                                           Index_Expr : Iir;
-                                          Index_Type : Iir;
+                                          Range_Type : Iir;
                                           Loc : Iir)
                                          return O_Enode;
    end Chap6;
@@ -2257,6 +2258,12 @@ package body Translation is
       procedure Add_Transient_Type_In_Temp (Atype : Iir);
       --  Close the temporary region.
       procedure Close_Temp;
+
+      --  Return TRUE if stack2 will be released.  Used for fine-tuning only
+      --  (return statement).
+      function Has_Stack2_Mark return Boolean;
+      --  Manually release stack2.  Used for fine-tuning only.
+      procedure Stack2_Release;
 
       --  Check there is no temporary region.
       procedure Check_No_Temp;
@@ -3149,10 +3156,27 @@ package body Translation is
          Temp_Level.Transient_Types := Atype;
       end Add_Transient_Type_In_Temp;
 
+      function Has_Stack2_Mark return Boolean is
+      begin
+         return Temp_Level.Stack2_Mark /= O_Dnode_Null;
+      end Has_Stack2_Mark;
+
+      procedure Stack2_Release
+      is
+         Constr : O_Assoc_List;
+      begin
+         if Temp_Level.Stack2_Mark /= O_Dnode_Null then
+            Start_Association (Constr, Ghdl_Stack2_Release);
+            New_Association (Constr,
+                             New_Value (New_Obj (Temp_Level.Stack2_Mark)));
+            New_Procedure_Call (Constr);
+            Temp_Level.Stack2_Mark := O_Dnode_Null;
+         end if;
+      end Stack2_Release;
+
       procedure Close_Temp
       is
          L : Temp_Level_Acc;
-         Constr : O_Assoc_List;
       begin
          if Temp_Level = null then
             --  OPEN_TEMP was not called.
@@ -3164,10 +3188,7 @@ package body Translation is
          end if;
 
          if Temp_Level.Stack2_Mark /= O_Dnode_Null then
-            Start_Association (Constr, Ghdl_Stack2_Release);
-            New_Association (Constr,
-                             New_Value (New_Obj (Temp_Level.Stack2_Mark)));
-            New_Procedure_Call (Constr);
+            Stack2_Release;
          end if;
          if Temp_Level.Emitted then
             Finish_Declare_Stmt;
@@ -8373,25 +8394,25 @@ package body Translation is
          return New_Obj_Value (Var_Res);
       end Not_In_Range;
 
-      function Need_Range_Check (Atype : Iir) return Boolean
+      function Need_Range_Check (Expr : Iir; Atype : Iir) return Boolean
       is
          Info : Type_Info_Acc;
       begin
          Info := Get_Info (Atype);
          if Info.T.Nocheck_Low and Info.T.Nocheck_Hi then
             return False;
-         else
-            return True;
          end if;
+         if Expr /= Null_Iir and then Get_Type (Expr) = Atype then
+            return False;
+         end if;
+         return True;
       end Need_Range_Check;
 
       procedure Check_Range (Value : O_Dnode; Expr : Iir; Atype : Iir)
       is
          If_Blk : O_If_Block;
       begin
-         if not Need_Range_Check (Atype)
-           or else (Expr /= Null_Iir and then Get_Type (Expr) = Atype)
-         then
+         if not Need_Range_Check (Expr, Atype) then
             return;
          end if;
 
@@ -12043,12 +12064,18 @@ package body Translation is
          Rng : Iir;
       begin
          --  Do checks if type of the expression is not a subtype.
-         if Expr_Type = Null_Iir --  FIXME: to be removed (generate stmt)
-           or else
-           Get_Kind (Expr_Type) not in Iir_Kinds_Discrete_Subtype_Definition
-         then
+         --  FIXME: EXPR_TYPE shound not be NULL_IIR (generate stmt)
+         if Expr_Type = Null_Iir then
             return True;
          end if;
+         case Get_Kind (Expr_Type) is
+            when Iir_Kind_Integer_Subtype_Definition
+              | Iir_Kind_Enumeration_Subtype_Definition
+              | Iir_Kind_Enumeration_Type_Definition =>
+               null;
+            when others =>
+               return True;
+         end case;
 
          --  No check if the expression has the type of the index.
          if Expr_Type = Rng_Type then
@@ -12078,9 +12105,15 @@ package body Translation is
          --  T is an integer/enumeration subtype.
          T := Atype;
          loop
-            if Get_Kind (T) not in Iir_Kinds_Discrete_Subtype_Definition then
-               Error_Kind ("get_deep_range_expression(1)", T);
-            end if;
+            case Get_Kind (T) is
+               when Iir_Kind_Integer_Subtype_Definition
+                 | Iir_Kind_Enumeration_Subtype_Definition
+                 | Iir_Kind_Enumeration_Type_Definition =>
+                  --  These types have a range.
+                  null;
+               when others =>
+                  Error_Kind ("get_deep_range_expression(1)", T);
+            end case;
 
             R := Get_Range_Constraint (T);
             case Get_Kind (R) is
@@ -12105,7 +12138,7 @@ package body Translation is
       function Translate_Index_To_Offset (Rng : Mnode;
                                           Index : O_Enode;
                                           Index_Expr : Iir;
-                                          Index_Type : Iir;
+                                          Range_Type : Iir;
                                           Loc : Iir)
                                          return O_Enode
       is
@@ -12122,9 +12155,15 @@ package body Translation is
          Deep_Rng : Iir;
          Deep_Reverse : Boolean;
       begin
-         Index_Info := Get_Info (Get_Base_Type (Index_Type));
-         Need_Check := Need_Index_Check (Get_Type (Index_Expr), Index_Type);
-         Get_Deep_Range_Expression (Index_Type, Deep_Rng, Deep_Reverse);
+         Index_Info := Get_Info (Get_Base_Type (Range_Type));
+         if Index_Expr = Null_Iir then
+            Need_Check := True;
+            Deep_Rng := Null_Iir;
+            Deep_Reverse := False;
+         else
+            Need_Check := Need_Index_Check (Get_Type (Index_Expr), Range_Type);
+            Get_Deep_Range_Expression (Range_Type, Deep_Rng, Deep_Reverse);
+         end if;
 
          Res := Create_Temp (Ghdl_Index_Type);
 
@@ -12198,81 +12237,6 @@ package body Translation is
 
          return New_Obj_Value (Res);
       end Translate_Index_To_Offset;
-
-      function Translate_Fat_Index_To_Offset (Rng : Mnode;
-                                              Index : O_Enode;
-                                              Index_Type : Iir;
-                                              Loc : Iir)
-                                             return O_Enode
-      is
-         Dir : O_Enode;
-         If_Blk : O_If_Block;
-         Res : O_Dnode;
-         Off : O_Dnode;
-         Bound : O_Enode;
-         Cond1, Cond2: O_Enode;
-         Index_Node : O_Dnode;
-         Bound_Node : O_Dnode;
-         Index_Info : Type_Info_Acc;
-      begin
-         Index_Info := Get_Info (Get_Base_Type (Index_Type));
-
-         Res := Create_Temp (Ghdl_Index_Type);
-
-         Open_Temp;
-
-         Off := Create_Temp (Index_Info.Ortho_Type (Mode_Value));
-
-         Bound := M2E (Chap3.Range_To_Left (Rng));
-
-         Index_Node := Create_Temp_Init
-           (Index_Info.Ortho_Type (Mode_Value), Index);
-         Bound_Node := Create_Temp_Init
-           (Index_Info.Ortho_Type (Mode_Value), Bound);
-         Dir := M2E (Chap3.Range_To_Dir (Rng));
-
-         --  Non-static direction.
-         Start_If_Stmt (If_Blk,
-                        New_Compare_Op (ON_Eq, Dir,
-                                        New_Lit (Ghdl_Dir_To_Node),
-                                        Ghdl_Bool_Type));
-         --  Direction TO:  INDEX - LEFT.
-         New_Assign_Stmt (New_Obj (Off),
-                          New_Dyadic_Op (ON_Sub_Ov,
-                                         New_Obj_Value (Index_Node),
-                                         New_Obj_Value (Bound_Node)));
-         New_Else_Stmt (If_Blk);
-         --  Direction DOWNTO: LEFT - INDEX.
-         New_Assign_Stmt (New_Obj (Off),
-                          New_Dyadic_Op (ON_Sub_Ov,
-                                         New_Obj_Value (Bound_Node),
-                                         New_Obj_Value (Index_Node)));
-         Finish_If_Stmt (If_Blk);
-
-         --  Get the offset.
-         New_Assign_Stmt
-           (New_Obj (Res), New_Convert_Ov (New_Obj_Value (Off),
-                                           Ghdl_Index_Type));
-
-         --  Check bounds.
-         Cond1 := New_Compare_Op
-           (ON_Lt,
-            New_Obj_Value (Off),
-            New_Lit (New_Signed_Literal (Index_Info.Ortho_Type (Mode_Value),
-                                         0)),
-            Ghdl_Bool_Type);
-
-         Cond2 := New_Compare_Op
-           (ON_Ge,
-            New_Obj_Value (Res),
-            M2E (Chap3.Range_To_Length (Rng)),
-            Ghdl_Bool_Type);
-         Check_Bound_Error (New_Dyadic_Op (ON_Or, Cond1, Cond2), Loc, 0);
-
-         Close_Temp;
-
-         return New_Obj_Value (Res);
-      end Translate_Fat_Index_To_Offset;
 
       --  Translate index EXPR in dimension DIM of thin array into an
       --  offset.
@@ -12390,10 +12354,10 @@ package body Translation is
                when Type_Mode_Fat_Array =>
                   Range_Ptr := Stabilize
                     (Chap3.Get_Array_Range (Prefix, Prefix_Type, Dim));
-                  R := Translate_Fat_Index_To_Offset
+                  R := Translate_Index_To_Offset
                     (Range_Ptr,
                      Chap7.Translate_Expression (Index, Ibasetype),
-                     Itype, Index);
+                     Null_Iir, Itype, Index);
                when Type_Mode_Ptr_Array =>
                   --  Manually extract range since there is no infos for
                   --   index subtype.
@@ -14416,7 +14380,7 @@ package body Translation is
          T_Info := Get_Info (Target_Type);
          case T_Info.Type_Mode is
             when Type_Mode_Scalar =>
-               if not Chap3.Need_Range_Check (Target_Type) then
+               if not Chap3.Need_Range_Check (Expr, Target_Type) then
                   New_Assign_Stmt (M2Lv (Target), Val);
                else
                   declare
@@ -17815,14 +17779,23 @@ package body Translation is
                --  * if the return type is scalar, simply returns.
                declare
                   V : O_Dnode;
+                  R : O_Enode;
                begin
-                  V := Create_Temp (Ret_Info.Ortho_Type (Mode_Value));
-                  Open_Temp;
-                  New_Assign_Stmt
-                    (New_Obj (V), Chap7.Translate_Expression (Expr, Ret_Type));
-                  Close_Temp;
-                  Chap3.Check_Range (V, Expr, Ret_Type);
-                  Gen_Return_Value (New_Obj_Value (V));
+                  --  Always uses a temporary in case of the return expression
+                  --  uses secondary stack.
+                  --  FIXME: don't use the temp if not required.
+                  R := Chap7.Translate_Expression (Expr, Ret_Type);
+                  if Has_Stack2_Mark
+                    or else Chap3.Need_Range_Check (Expr, Ret_Type)
+                  then
+                     V := Create_Temp (Ret_Info.Ortho_Type (Mode_Value));
+                     New_Assign_Stmt (New_Obj (V), R);
+                     Stack2_Release;
+                     Chap3.Check_Range (V, Expr, Ret_Type);
+                     Gen_Return_Value (New_Obj_Value (V));
+                  else
+                     Gen_Return_Value (R);
+                  end if;
                end;
             when Type_Mode_Acc =>
                --  * access: thin and no range.
@@ -18027,8 +18000,6 @@ package body Translation is
                Get_Range_Ptr_Field_Value (New_Obj (Data.O_Range),
                                           Iter_Type_Info.T.Range_Length),
                New_Lit (Ghdl_Index_0),
---                 New_Lit (New_Signed_Literal
---                          (Iter_Type_Info.Ortho_Type (Mode_Value), 0)),
                Ghdl_Bool_Type);
          end if;
 
@@ -18059,6 +18030,8 @@ package body Translation is
          Iter_Type_Info : Type_Info_Acc;
          Var_Iter : Var_Acc;
          Constraint : Iir;
+         Deep_Rng : Iir;
+         Deep_Reverse : Boolean;
       begin
          New_Exit_Stmt (Data.Label_Next);
          Finish_Loop_Stmt (Data.Label_Next);
@@ -18083,10 +18056,15 @@ package body Translation is
                                         Cond, Ghdl_Bool_Type));
 
          --  Update the iterator.
-         if Get_Kind (Constraint) = Iir_Kind_Range_Expression then
-            Gen_Update_Iterator
-              (Get_Var_Label (Var_Iter), Get_Direction (Constraint),
-               1, Iter_Base_Type);
+         Chap6.Get_Deep_Range_Expression (Iter_Type, Deep_Rng, Deep_Reverse);
+         if Deep_Rng /= Null_Iir then
+            if Get_Direction (Deep_Rng) = Iir_To xor Deep_Reverse then
+               Gen_Update_Iterator
+                 (Get_Var_Label (Var_Iter), Iir_To, 1, Iter_Base_Type);
+            else
+               Gen_Update_Iterator
+                 (Get_Var_Label (Var_Iter), Iir_Downto, 1, Iter_Base_Type);
+            end if;
          else
             Start_If_Stmt
               (If_Blk1, New_Compare_Op
@@ -18637,7 +18615,8 @@ package body Translation is
                Value := Create_Temp (Tinfo.Ortho_Type (Mode_Value));
                New_Assign_Stmt
                  (New_Obj (Value),
-                  Chap7.Translate_Expression (Get_Actual (Value_Assoc)));
+                  Chap7.Translate_Expression (Get_Actual (Value_Assoc),
+                                              Formal_Type));
                New_Association
                  (Assocs,
                   New_Unchecked_Address (New_Obj (Value), Ghdl_Ptr_Type));
@@ -19431,7 +19410,7 @@ package body Translation is
             when others =>
                Error_Kind ("gen_signal_assign_non_composite", Targ_Type);
          end case;
-         if Chap3.Need_Range_Check (Targ_Type) then
+         if Chap3.Need_Range_Check (Null_Iir, Targ_Type) then
             declare
                If_Blk : O_If_Block;
                Val2 : O_Dnode;
@@ -19554,7 +19533,7 @@ package body Translation is
                Error_Kind ("gen_signal_assign_non_composite", Targ_Type);
          end case;
          --  Check range.
-         if Chap3.Need_Range_Check (Targ_Type) then
+         if Chap3.Need_Range_Check (Null_Iir, Targ_Type) then
             declare
                If_Blk : O_If_Block;
                V : Mnode;
@@ -21539,22 +21518,6 @@ package body Translation is
          end if;
       end Pop_Scope;
 
-      procedure Push_Scope_Soft (Scope_Type : O_Tnode; Scope_Param : O_Dnode)
-      is
-      begin
-         if Scope_Type /= O_Tnode_Null then
-            Push_Scope (Scope_Type, Scope_Param);
-         end if;
-      end Push_Scope_Soft;
-
-      procedure Pop_Scope_Soft (Scope_Type : O_Tnode)
-      is
-      begin
-         if Scope_Type /= O_Tnode_Null then
-            Pop_Scope (Scope_Type);
-         end if;
-      end Pop_Scope_Soft;
-
       function Create_Global_Var
         (Name : O_Ident; Vtype : O_Tnode; Storage : O_Storage)
         return Var_Acc
@@ -22915,26 +22878,20 @@ package body Translation is
          Pinfo : Type_Info_Acc;
          Subprg : O_Dnode;
          Assoc : O_Assoc_List;
-         Conv : O_Tnode;
       begin
          Prefix_Type := Get_Base_Type (Get_Type (Get_Prefix (Attr)));
          Pinfo := Get_Info (Prefix_Type);
          case Pinfo.Type_Mode is
             when Type_Mode_B2 =>
                Subprg := Ghdl_Value_B2;
-               Conv := Ghdl_Bool_Type;
             when Type_Mode_E8 =>
                Subprg := Ghdl_Value_E8;
-               Conv := Ghdl_I32_Type;
             when Type_Mode_I32 =>
                Subprg := Ghdl_Value_I32;
-               Conv := Ghdl_I32_Type;
             when Type_Mode_P64 =>
                Subprg := Ghdl_Value_P64;
-               Conv := Ghdl_I64_Type;
             when Type_Mode_F64 =>
                Subprg := Ghdl_Value_F64;
-               Conv := Ghdl_Real_Type;
             when others =>
                raise Internal_Error;
          end case;
@@ -22955,7 +22912,8 @@ package body Translation is
             when others =>
                raise Internal_Error;
          end case;
-         return New_Convert_Ov (New_Function_Call (Assoc), Conv);
+         return New_Convert_Ov (New_Function_Call (Assoc),
+                                Pinfo.Ortho_Type (Mode_Value));
       end Translate_Value_Attribute;
 
       --  Current path for name attributes.
@@ -27023,6 +26981,8 @@ package body Translation is
                                 Rtis.Ghdl_Rti_Access);
             New_Interface_Decl (Interfaces, Param, Get_Identifier ("addr"),
                                 Ghdl_Ptr_Type);
+            New_Interface_Decl (Interfaces, Param, Get_Identifier ("name"),
+                                Ghdl_Str_Len_Ptr_Node);
             Finish_Subprogram_Decl (Interfaces, Res);
          end Create_Get_Name;
       begin

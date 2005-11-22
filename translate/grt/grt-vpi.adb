@@ -48,6 +48,7 @@ with Grt.Astdio; use Grt.Astdio;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Vcd; use Grt.Vcd;
 with Grt.Errors; use Grt.Errors;
+with Grt.Rtis_Types;
 
 package body Grt.Vpi is
    --  The VPI interface requires libdl (dlopen, dlsym) to be linked in.
@@ -57,7 +58,7 @@ package body Grt.Vpi is
    --errAnyString:     constant String := "grt-vcd.adb: any string" & NUL;
    --errNoString:      constant String := "grt-vcd.adb: no string" & NUL;
 
-   type Vpi_Index_Type is new Natural;
+   type Vpi_Index_Type is new Integer;
 
 -------------------------------------------------------------------------------
 -- * * *   h e l p e r s   * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -745,11 +746,14 @@ package body Grt.Vpi is
    is
       Res : Integer;
    begin
+      if Vpi_Filename = null then
+         return;
+      end if;
+
+      Grt.Rtis_Types.Search_Types_RTI;
+      Register_Cycle_Hook (Vpi_Cycle'Access);
       if g_cbEndOfCompile /= null then
          Res := g_cbEndOfCompile.Cb_Rtn.all (g_cbEndOfCompile);
-      end if;
-      if Vpi_Filename /= null then
-         Register_Cycle_Hook (Vpi_Cycle'Access);
       end if;
    end Vpi_Start;
 

@@ -590,6 +590,7 @@ package body Grt.Vcd is
                when Vcd_Integer32 =>
                   Vcd_Putc ('b');
                   Vcd_Put_Integer32 (To_Signal_Arr_Ptr (Addr)(0).Value.E32);
+                  Vcd_Putc (' ');
                when Vcd_Bitvector =>
                   Vcd_Putc ('b');
                   for J in 0 .. Len - 1 loop
@@ -618,6 +619,7 @@ package body Grt.Vcd is
                   Vcd_Putc ('b');
                   Vcd_Put_Integer32
                     (To_Signal_Arr_Ptr (Addr)(0).Driving_Value.E32);
+                  Vcd_Putc (' ');
                when Vcd_Bitvector =>
                   Vcd_Putc ('b');
                   for J in 0 .. Len - 1 loop

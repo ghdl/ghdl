@@ -30,12 +30,31 @@ package body Bug is
    GNAT_Version : constant String (1 .. 31 + 15);
    pragma Import (C, GNAT_Version, "__gnat_version");
 
-   function Get_Gnat_Version return String is
+   function Get_Gnat_Version return String
+   is
+      C : Character;
    begin
       for I in GNAT_Version'Range loop
-         if GNAT_Version (I) = ')' then
-            return GNAT_Version (1 .. I);
-         end if;
+         C := GNAT_Version (I);
+         case C is
+            when ' '
+              | 'A' .. 'Z'
+              | 'a' .. 'z'
+              | '0' .. '9'
+              | ':'
+              | '-'
+              | '.'
+              | '(' =>
+               --  Accept only a few printable characters.
+               --  Underscore is excluded since the next bytes after
+               --  GNAT_Version is Ada_Main_Program_Name, which often starts
+               --  with _ada_.
+               null;
+            when ')' =>
+               return GNAT_Version (1 .. I);
+            when others =>
+               return GNAT_Version (1 .. I - 1);
+         end case;
       end loop;
       return GNAT_Version;
    end Get_Gnat_Version;

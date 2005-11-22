@@ -36,7 +36,7 @@ GRTSRCDIR=../grt
 include $(GRTSRCDIR)/Makefile.inc
 
 ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) mmap_binding.o force 
-	gnatmake -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs mmap_binding.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(GRT_EXTRA_LIB) 
+	gnatmake -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs mmap_binding.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(GRT_EXTRA_LIB) -Wl,--version-script=$(GRTSRCDIR)/grt.ver -Wl,--export-dynamic
 
 mmap_binding.o: ../../ortho/mcode/mmap_binding.c
 	$(CC) -c -g -o $@ $<

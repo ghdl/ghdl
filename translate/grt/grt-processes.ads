@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with System;
+with GNAT.Table;
 with Grt.Stack2; use Grt.Stack2;
 with Grt.Types; use Grt.Types;
 with Grt.Signals; use Grt.Signals;
@@ -118,10 +119,7 @@ package Grt.Processes is
    procedure Ghdl_Protected_Init (Obj : System.Address);
    procedure Ghdl_Protected_Fini (Obj : System.Address);
 
-   type Process_Type is private;
-   type Process_Acc is access all Process_Type;
-private
-      --  Access to a process subprogram.
+   --  Access to a process subprogram.
    type Proc_Acc is access procedure (Self : System.Address);
 
    --  Simply linked list for sensitivity.
@@ -180,7 +178,21 @@ private
 
       --  Sensitivity list.
       Sensitivity : Sensitivity_Acc;
+
+      Stats_Time : Ghdl_U64;
+      Stats_Run : Ghdl_U32;
    end record;
+
+   type Process_Acc is access all Process_Type;
+
+   --  Table of processes.
+   package Process_Table is new GNAT.Table
+     (Table_Component_Type => Process_Type,
+      Table_Index_Type => Process_Id,
+      Table_Low_Bound => 1,
+      Table_Initial => 16,
+      Table_Increment => 100);
+private
 
    pragma Export (C, Ghdl_Process_Register,
                   "__ghdl_process_register");

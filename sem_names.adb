@@ -823,6 +823,8 @@ package body Sem_Names is
             raise Internal_Error;
       end case;
       if Parameter = Null_Iir then
+         Set_Parameter (Attr, Param);
+         Set_Expr_Staticness (Attr, None);
          return;
       end if;
       Set_Parameter (Attr, Parameter);

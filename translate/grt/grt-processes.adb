@@ -15,7 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with GNAT.Table;
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with System.Storage_Elements; --  Work around GNAT bug.
@@ -33,17 +32,10 @@ with Grt.Disp_Signals;
 with Grt.Stdio;
 with Grt.Stats;
 with Grt.Threads; use Grt.Threads;
+with Grt.Arch;
 
 package body Grt.Processes is
    Last_Time : constant Std_Time := Std_Time'Last;
-
-   --  Table of processes.
-   package Process_Table is new GNAT.Table
-     (Table_Component_Type => Process_Type,
-      Table_Index_Type => Process_Id,
-      Table_Low_Bound => 1,
-      Table_Initial => 16,
-      Table_Increment => 100);
 
    --  List of non_sensitized processes.
    package Non_Sensitized_Process_Table is new GNAT.Table
@@ -124,7 +116,9 @@ package body Grt.Processes is
          Postponed => Postponed,
          State => State,
          Timeout => Bad_Time,
-         Stack => Stack);
+         Stack => Stack,
+         Stats_Time => 0,
+         Stats_Run => 0);
       --  Used to create drivers.
       Set_Current_Process (Process_Table.Last, null);
 
@@ -195,7 +189,9 @@ package body Grt.Processes is
          Timeout => Bad_Time,
          Subprg => To_Proc_Acc (Proc),
          This => This,
-         Stack => Null_Stack);
+         Stack => Null_Stack,
+         Stats_Time => 0,
+         Stats_Run => 0);
       --  Used to create drivers.
       Set_Current_Process (Process_Table.Last, null);
    end Verilog_Process_Register;
@@ -507,13 +503,12 @@ package body Grt.Processes is
       loop
          --  Atomically get a process to be executed
          Idx := Grt.Threads.Atomic_Inc (Mt_Index'Access);
-         if Idx > Mt_Last then
-            return;
-         end if;
+         exit when Idx > Mt_Last;
          Pid := Mt_Table (Idx);
 
          declare
             Proc : Process_Type renames Process_Table.Table (Pid);
+            Ts_Start, Ts_End : Ghdl_U64;
          begin
             if Grt.Options.Trace_Processes then
                Grt.Astdio.Put ("run process ");
@@ -527,6 +522,7 @@ package body Grt.Processes is
                Internal_Error ("run non-resumed process");
             end if;
             Proc.Resumed := False;
+            Ts_Start := Grt.Arch.Get_Time_Stamp;
             Set_Current_Process
               (Pid, To_Acc (Process_Table.Table (Pid)'Address));
             if Proc.State = State_Sensitized then
@@ -534,6 +530,9 @@ package body Grt.Processes is
             else
                Stack_Switch (Proc.Stack, Get_Main_Stack);
             end if;
+            Ts_End := Grt.Arch.Get_Time_Stamp;
+            Proc.Stats_Time := Proc.Stats_Time + (Ts_End - Ts_Start);
+            Proc.Stats_Run := Proc.Stats_Run + 1;
             if Grt.Options.Checks then
                Ghdl_Signal_Internal_Checks;
                Grt.Stack2.Check_Empty (Get_Stack2);
@@ -544,60 +543,28 @@ package body Grt.Processes is
 
    function Run_Processes (Postponed : Boolean) return Integer
    is
-      Table : Process_Id_Array_Acc;
       Last : Natural;
    begin
       if Options.Flag_Stats then
          Stats.Start_Processes;
       end if;
 
+      Mt_Index := 1;
       if Postponed then
-         Table := Postponed_Resume_Process_Table;
+         Mt_Table := Postponed_Resume_Process_Table;
          Last := Last_Postponed_Resume_Process;
          Last_Postponed_Resume_Process := 0;
       else
-         Table := Resume_Process_Table;
+         Mt_Table := Resume_Process_Table;
          Last := Last_Resume_Process;
          Last_Resume_Process := 0;
       end if;
       Nbr_Resumed_Processes := Nbr_Resumed_Processes + Last;
+      Mt_Last := Last;
 
       if Options.Nbr_Threads = 1 then
-         for I in 1 .. Last loop
-            declare
-               Pid : constant Process_Id := Table (I);
-               Proc : Process_Type renames Process_Table.Table (Pid);
-            begin
-               if not Proc.Resumed then
-                  Internal_Error ("run non-resumed process");
-               end if;
-               if Grt.Options.Trace_Processes then
-                  Grt.Astdio.Put ("run process ");
-                  Disp_Process_Name (Stdio.stdout, Pid);
-                  Grt.Astdio.Put (" [");
-                  Grt.Astdio.Put (Stdio.stdout, Proc.This);
-                  Grt.Astdio.Put ("]");
-                  Grt.Astdio.New_Line;
-               end if;
-
-               Proc.Resumed := False;
-               Set_Current_Process
-                 (Pid, To_Acc (Process_Table.Table (Pid)'Address));
-               if Proc.State = State_Sensitized then
-                  Proc.Subprg.all (Proc.This);
-               else
-                  Stack_Switch (Proc.Stack, Get_Main_Stack);
-               end if;
-               if Grt.Options.Checks then
-                  Ghdl_Signal_Internal_Checks;
-                  Grt.Stack2.Check_Empty (Get_Stack2);
-               end if;
-            end;
-         end loop;
+         Run_Processes_Threads;
       else
-         Mt_Last := Last;
-         Mt_Table := Table;
-         Mt_Index := 1;
          Threads.Run_Parallel (Run_Processes_Threads'Access);
       end if;
 

@@ -2505,8 +2505,8 @@ package Iirs is
        Iir_Kind_Floating_Subtype_Definition,            -- scalar, st
        Iir_Kind_Integer_Subtype_Definition,             -- scalar, disc, st
        Iir_Kind_Enumeration_Subtype_Definition,         -- scalar, disc, st
-       Iir_Kind_Integer_Type_Definition,                -- scalar, disc
        Iir_Kind_Enumeration_Type_Definition,            -- scalar, disc
+       Iir_Kind_Integer_Type_Definition,                -- scalar, disc
        Iir_Kind_Floating_Type_Definition,               -- scalar
        Iir_Kind_Physical_Type_Definition,               -- scalar
        Iir_Kind_Range_Expression,
@@ -3024,8 +3024,8 @@ package Iirs is
    --Iir_Kind_Floating_Subtype_Definition
    --Iir_Kind_Integer_Subtype_Definition
    --Iir_Kind_Enumeration_Subtype_Definition
-   --Iir_Kind_Integer_Type_Definition
    --Iir_Kind_Enumeration_Type_Definition
+   --Iir_Kind_Integer_Type_Definition
    --Iir_Kind_Floating_Type_Definition
      Iir_Kind_Physical_Type_Definition;
 
@@ -3044,20 +3044,21 @@ package Iirs is
    --Iir_Kind_Floating_Subtype_Definition
    --Iir_Kind_Integer_Subtype_Definition
    --Iir_Kind_Enumeration_Subtype_Definition
-   --Iir_Kind_Integer_Type_Definition
    --Iir_Kind_Enumeration_Type_Definition
+   --Iir_Kind_Integer_Type_Definition
    --Iir_Kind_Floating_Type_Definition
      Iir_Kind_Physical_Type_Definition;
 
    subtype Iir_Kinds_Discrete_Type_Definition is Iir_Kind range
      Iir_Kind_Integer_Subtype_Definition ..
    --Iir_Kind_Enumeration_Subtype_Definition
-   --Iir_Kind_Integer_Type_Definition
-     Iir_Kind_Enumeration_Type_Definition;
+   --Iir_Kind_Enumeration_Type_Definition
+     Iir_Kind_Integer_Type_Definition;
 
-   subtype Iir_Kinds_Discrete_Subtype_Definition is Iir_Kind range
-     Iir_Kind_Integer_Subtype_Definition ..
-     Iir_Kind_Enumeration_Subtype_Definition;
+
+--     subtype Iir_Kinds_Discrete_Subtype_Definition is Iir_Kind range
+--       Iir_Kind_Integer_Subtype_Definition ..
+--       Iir_Kind_Enumeration_Subtype_Definition;
 
    subtype Iir_Kinds_Composite_Type_Definition is Iir_Kind range
      Iir_Kind_Record_Type_Definition ..

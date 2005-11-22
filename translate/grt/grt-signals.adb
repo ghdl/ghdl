@@ -1023,24 +1023,29 @@ package body Grt.Signals is
          Sig := Sig_Table.Table (I);
 
          --  Check drivers.
-         for J in 1 .. Sig.S.Nbr_Drivers loop
-            declare
-               Trans : Transaction_Acc;
-            begin
-               Trans := Sig.S.Drivers (J - 1).First_Trans;
-               while Trans.Next /= null loop
-                  if Trans.Next.Time < Trans.Time then
-                     Internal_Error ("ghdl_signal_internal_checks: "
-                                     & "bad transaction order");
-                  end if;
-                  Trans := Trans.Next;
+         case Sig.S.Mode_Sig is
+            when Mode_Signal_User =>
+               for J in 1 .. Sig.S.Nbr_Drivers loop
+                  declare
+                     Trans : Transaction_Acc;
+                  begin
+                     Trans := Sig.S.Drivers (J - 1).First_Trans;
+                     while Trans.Next /= null loop
+                        if Trans.Next.Time < Trans.Time then
+                           Internal_Error ("ghdl_signal_internal_checks: "
+                                           & "bad transaction order");
+                        end if;
+                        Trans := Trans.Next;
+                     end loop;
+                     if Trans /= Sig.S.Drivers (J - 1).Last_Trans then
+                        Internal_Error ("ghdl_signal_internal_checks: "
+                                        & "last transaction mismatch");
+                     end if;
+                  end;
                end loop;
-               if Trans /= Sig.S.Drivers (J - 1).Last_Trans then
-                  Internal_Error ("ghdl_signal_internal_checks: "
-                                  & "last transaction mismatch");
-               end if;
-            end;
-         end loop;
+            when others =>
+               null;
+         end case;
       end loop;
    end Ghdl_Signal_Internal_Checks;
 
