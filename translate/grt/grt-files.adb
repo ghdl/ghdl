@@ -396,7 +396,7 @@ package body Grt.Files is
             exit;
          end if;
       end loop;
-      Res.Len :=  Std_Integer (Idx);
+      Res.Len := Std_Integer (Idx);
    end Ghdl_Untruncated_Text_Read;
 
    procedure File_Close (File : Ghdl_File_Index; Is_Text : Boolean)
