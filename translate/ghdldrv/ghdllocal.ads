@@ -72,6 +72,9 @@ package Ghdllocal is
    --  Used to search Std and IEEE libraries.
    function Get_Version_Path return String;
 
+   -- Get Prefix_Path, but with 32 added if -m32 is requested
+   function Get_Machine_Path_Prefix return String;
+
    --  Setup standard libaries path.  If LOAD is true, then load them now.
    procedure Setup_Libraries (Load : Boolean);
 

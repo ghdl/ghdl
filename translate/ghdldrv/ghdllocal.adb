@@ -42,6 +42,9 @@ package body Ghdllocal is
 
    Flag_Create_Default_Config : Boolean := True;
 
+   --  If TRUE, generate 32bits code on 64bits machines.
+   Flag_32bit : Boolean := False;
+
    procedure Finish_Compilation
      (Unit : Iir_Design_Unit; Main : Boolean := False)
    is
@@ -125,6 +128,9 @@ package body Ghdllocal is
       elsif Option = "--ieee=standard" then
          Flag_Ieee := Lib_Standard;
          Res := Option_Ok;
+      elsif Option = "-m32" then
+         Flag_32bit := True;
+         Res := Option_Ok;
       elsif Option'Length >= 2
         and then (Option (2) = 'g' or Option (2) = 'O')
       then
@@ -169,11 +175,20 @@ package body Ghdllocal is
       end case;
    end Get_Version_Path;
 
+   function Get_Machine_Path_Prefix return String is
+   begin
+      if Flag_32bit then
+         return Prefix_Path.all & "32" & Directory_Separator;
+      else
+         return Prefix_Path.all;
+      end if;
+   end Get_Machine_Path_Prefix;
+
    procedure Add_Library_Path (Name : String)
    is
    begin
       Libraries.Add_Library_Path
-        (Prefix_Path.all & Get_Version_Path & Directory_Separator
+        (Get_Machine_Path_Prefix & Get_Version_Path & Directory_Separator
          & Name & Directory_Separator);
    end Add_Library_Path;
 
@@ -182,6 +197,9 @@ package body Ghdllocal is
    begin
       if Prefix_Path = null then
          Prefix_Path := new String'(Default_Pathes.Prefix);
+      else
+         -- assume the user has set the correct path, so do not insert 32
+         Flag_32bit := False;
       end if;
 
       --  Add pathes for predefined libraries.

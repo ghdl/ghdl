@@ -272,6 +272,20 @@ package body Ghdldrv is
       use System;
       use Ada.Characters.Latin_1;
 
+      --  Replace the first '@' with the machine path.
+      function Substitute (Str : String) return String
+      is
+      begin
+         for I in Str'Range loop
+            if Str (I) = '@' then
+               return Str (Str'First .. I - 1)
+                 & Get_Machine_Path_Prefix
+                 & Str (I + 1 .. Str'Last);
+            end if;
+         end loop;
+         return Str;
+      end Substitute;
+
       Dir : String (1 .. max_path_len);
       Dir_Len : Natural;
       Line : String (1 .. max_path_len);
@@ -306,16 +320,12 @@ package body Ghdldrv is
                Dir_Len := L - 1;
                Dir (1 .. Dir_Len) := Line (2 .. L);
             else
-               if Line (1) = '@' then
-                  File := new String'(Prefix_Path.all & Line (2 .. L));
+               if To_Obj then
+                  File := new String'(Dir (1 .. Dir_Len)
+                                      & Get_Base_Name (Line (1 .. L))
+                                      & Get_Object_Suffix.all);
                else
-                  if To_Obj then
-                     File := new String'(Dir (1 .. Dir_Len)
-                                         & Get_Base_Name (Line (1 .. L))
-                                         & Get_Object_Suffix.all);
-                  else
-                     File := new String'(Line (1 .. L));
-                  end if;
+                  File := new String'(Substitute (Line (1 .. L)));
                end if;
 
                Filelist.Increment_Last;
@@ -614,6 +624,11 @@ package body Ghdldrv is
             Output_File := new String'(Arg);
             Res := Option_Arg;
          end if;
+      elsif Option = "-m32" then
+         Add_Argument (Compiler_Args, new String'("-m32"));
+         Add_Argument (Assembler_Args, new String'("--32"));
+         Add_Argument (Linker_Args, new String'("-m32"));
+         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       elsif Option'Length > 4
         and then Option (2) = 'W' and then Option (4) = ','
       then
@@ -669,6 +684,7 @@ package body Ghdldrv is
       Put_Line (" --GHDL1=PATH   Set the path of the ghdl1 compiler");
       Put_Line (" -S             Do not assemble");
       Put_Line (" -o FILE        Set the name of the output file");
+   -- Put_Line (" -m32           Generate 32bit code on 64bit machines");
       Put_Line (" -WX,OPTION     Pass OPTION to X, where X is one of");
       Put_Line ("                 c: compiler, a: assembler, l: linker");
       Put_Line (" -g[XX]         Pass debugging option to the compiler");
@@ -727,7 +743,7 @@ package body Ghdldrv is
       Put_Line (Linker_Cmd);
       Setup_Libraries (False);
       Put ("library directory: ");
-      Put_Line (Prefix_Path.all);
+      Put_Line (Get_Machine_Path_Prefix);
       Locate_Tools;
       Put ("compiler path: ");
       Put_Line (Compiler_Path.all);
@@ -873,7 +889,7 @@ package body Ghdldrv is
          Add_File_List (Filelist_Name.all, True);
       end if;
       Last_File := Filelist.Last;
-      Add_File_List (Prefix_Path.all & "grt" & List_Suffix, False);
+      Add_File_List (Get_Machine_Path_Prefix & "grt" & List_Suffix, False);
 
       --  call the linker
       declare
@@ -892,7 +908,7 @@ package body Ghdldrv is
          P := P + 3;
          if Add_Std then
             Std_File := new
-              String'(Prefix_Path.all
+              String'(Get_Machine_Path_Prefix
                       & Get_Version_Path & Directory_Separator
                       & "std" & Directory_Separator
                       & "std_standard" & Get_Object_Suffix.all);

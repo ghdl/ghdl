@@ -36,7 +36,7 @@ GRTSRCDIR=../grt
 include $(GRTSRCDIR)/Makefile.inc
 
 ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) mmap_binding.o force 
-	gnatmake -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs mmap_binding.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(GRT_EXTRA_LIB) -Wl,--version-script=$(GRTSRCDIR)/grt.ver -Wl,--export-dynamic
+	gnatmake -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs mmap_binding.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 mmap_binding.o: ../../ortho/mcode/mmap_binding.c
 	$(CC) -c -g -o $@ $<
@@ -103,7 +103,7 @@ install.standard: $(LIB93_DIR)/std/std_standard.o \
  $(LIB87_DIR)/std/std_standard.o
 
 make-lib-links:
-	cd ../lib; ln -sf ../grt/grt.lst .; ln -sf ../grt/libgrt.a .
+	cd ../lib; ln -sf $(GRTSRCDIR)/grt.lst .; ln -sf $(GRTSRCDIR)/libgrt.a .; ln -sf $(GRTSRCDIR)/grt.ver .
 
 install.all: install.v87 install.v93 install.standard
 install.mcode: install.v87 install.v93

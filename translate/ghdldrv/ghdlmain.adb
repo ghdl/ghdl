@@ -136,7 +136,7 @@ package body Ghdlmain is
            ("To display the options of a GHDL program, run your program");
          Put_Line ("  with the --help option.");
          Put_Line ("Please, refer to the GHDL manual for more information.");
-         Put_Line ("Report bugs to <ghdl@free.fr>.");
+         Put_Line ("Report bugs on http://gna.org/projects/ghdl");
       elsif Args'Length = 1 then
          C := Find_Command (Args (1).all);
          if C = null then
