@@ -38,6 +38,12 @@ __ghdl_get_stderr (void)
   return stderr;
 }
 
+void
+__ghdl_snprintf_g (char *buf, int len, double val)
+{
+  snprintf (buf, len, "%g", val);
+}
+
 static int run_env_en;
 static jmp_buf run_env;
 

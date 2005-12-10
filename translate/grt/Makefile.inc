@@ -41,26 +41,28 @@ else
   osys:=$(word 3,$(targ))
 endif
 
+GRT_ELF_OPTS:=-Wl,--version-script=@/grt.ver -Wl,--export-dynamic
+
 # Set target files.
 ifeq ($(filter-out i%86 linux,$(arch) $(osys)),)
   GRT_TARGET_OBJS=i386.o linux.o times.o
-  GRT_EXTRA_LIB=-ldl
+  GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
 endif
 ifeq ($(filter-out x86_64 linux,$(arch) $(osys)),)
   GRT_TARGET_OBJS=amd64.o linux.o times.o
-  GRT_EXTRA_LIB=-ldl
+  GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
 endif
 ifeq ($(filter-out sparc solaris%,$(arch) $(osys)),)
   GRT_TARGET_OBJS=sparc.o linux.o times.o
-  GRT_EXTRA_LIB=-ldl
+  GRT_EXTRA_LIB=-ldl -lm
 endif
 ifeq ($(filter-out powerpc linux%,$(arch) $(osys)),)
   GRT_TARGET_OBJS=ppc.o linux.o times.o
-  GRT_EXTRA_LIB=-ldl
+  GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
 endif
 ifeq ($(filter-out ia64 linux,$(arch) $(osys)),)
   GRT_TARGET_OBJS=ia64.o linux.o times.o
-  GRT_EXTRA_LIB=-ldl
+  GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
 endif
 ifeq ($(filter-out i%86 mingw32,$(arch) $(osys)),)
   GRT_TARGET_OBJS=win32.o clock.o
@@ -71,7 +73,7 @@ endif
 # Fall-back: use a generic implementation based on pthreads.
 ifndef GRT_TARGET_OBJS
   GRT_TARGET_OBJS=pthread.o times.o
-  GRT_EXTRA_LIB=-lpthread -ldl
+  GRT_EXTRA_LIB=-lpthread -ldl -lm
 endif
 
 # Additionnal object files (C or asm files).
@@ -93,7 +95,7 @@ GRT_ADACOMPILE=$(ADAC) -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG) -o $@ $<
 
 grt-all: libgrt.a grt.lst
 
-libgrt.a: grt-arch.ads $(GRT_ADD_OBJS) run-bind.o main.o grt-files
+libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files # grt-arch.ads
 	$(RM) -f $@
 	$(AR) rcv $@ `sed -e "/^-/d" < grt-files` $(GRT_ADD_OBJS) \
 	 run-bind.o main.o
