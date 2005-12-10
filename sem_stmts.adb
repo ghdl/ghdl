@@ -756,6 +756,7 @@ package body Sem_Stmts is
       if Expr /= Null_Iir then
          Expr := Sem_Expression (Expr, String_Type_Definition);
          Check_Read (Expr);
+         --  Expr := Eval_Expr_If_Static (Expr);
          Set_Report_Expression (Stmt, Expr);
       end if;
 

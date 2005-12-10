@@ -2782,6 +2782,14 @@ package body Parse is
             return A_Choice;
          else
             Expr1 := Parse_Expression;
+
+            if Expr1 = Null_Iir then
+               --  Handle parse error now.
+               --  FIXME: skip until '=>'.
+               A_Choice := Create_Iir (Iir_Kind_Choice_By_Expression);
+               Set_Location (A_Choice);
+               return A_Choice;
+            end if;
          end if;
       else
          Expr1 := Expr;

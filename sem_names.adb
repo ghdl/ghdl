@@ -55,7 +55,17 @@ package body Sem_Names is
       for I in Natural loop
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
-         Error_Msg_Sem (Disp_Subprg (El), El);
+         case Get_Kind (El) is
+            when Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Implicit_Function_Declaration
+              | Iir_Kind_Implicit_Procedure_Declaration =>
+               Error_Msg_Sem (Disp_Subprg (El), El);
+            when Iir_Kind_Function_Call =>
+               Error_Msg_Sem (Disp_Subprg (Get_Implementation (El)), El);
+            when others =>
+               Error_Msg_Sem (Disp_Node (El), El);
+         end case;
       end loop;
    end Disp_Overload_List;
 
@@ -3114,6 +3124,7 @@ package body Sem_Names is
                return Null_Iir;
             elsif Is_Overload_List (Res) then
                Error_Overload (Name);
+               Disp_Overload_List (Get_Overload_List (Res), Name);
                return Null_Iir;
             else
                Sem_Name_Free_Result (Expr, Res);

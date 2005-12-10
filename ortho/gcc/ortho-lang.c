@@ -1556,6 +1556,7 @@ finish_const_value (tree *cst, tree val)
 {
   DECL_INITIAL (*cst) = val;
   TREE_CONSTANT (val) = 1;
+  TREE_STATIC (*cst) = 1;
   rest_of_decl_compilation
         (*cst, current_function_decl == NULL_TREE, 0);
 }

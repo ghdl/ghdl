@@ -24,6 +24,7 @@
 # ANALYZE
 # LN
 # CP
+# VHDLLIBS_COPY_OBJS
 #
 # Note: the source files are analyzed in the LIBxx_DIR.  So LIBSRC_DIR must be
 # relative to the target directory.
@@ -110,6 +111,7 @@ synopsys.v93: $(LIB93_DIR) $(SYNOPSYS_SRCS) force
 	mkdir $(SYN93_DIR)
 	prev=`pwd`; cd $(SYN93_DIR); \
 	$(CP) ../ieee/ieee-obj93.cf .; \
+	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(VITAL2000_SRCS); do \
 	  b=`basename $$i .vhdl`; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
 	done; \
@@ -124,6 +126,7 @@ mentor.v93: $(LIB93_DIR) $(MENTOR93_SRCS) force
 	mkdir $(MENTOR93_DIR)
 	prev=`pwd`; cd $(MENTOR93_DIR); \
 	$(CP) ../ieee/ieee-obj93.cf . ;\
+	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(VITAL2000_SRCS); do \
 	  b=`basename $$i .vhdl`; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
 	done ; \
@@ -159,6 +162,7 @@ synopsys.v87: $(LIB87_DIR) $(SYNOPSYS_SRCS) force
 	mkdir $(SYN87_DIR)
 	prev=`pwd`; cd $(SYN87_DIR); \
 	$(CP) ../ieee/ieee-obj87.cf . ; \
+	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(VITAL95_SRCS); do \
 	  b=`basename $$i .vhdl`; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
 	done; \

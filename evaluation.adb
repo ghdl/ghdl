@@ -1240,6 +1240,99 @@ package body Evaluation is
       return Build_String (Id, Int32 (Img'Last - L), Orig);
    end Eval_Integer_Image;
 
+   function Eval_Floating_Image (Val : Iir_Fp64; Orig : Iir) return Iir
+   is
+      use Str_Table;
+      Id : String_Id;
+
+      --  Sign (1) + digit (1) + dot (1) + digits (15) + exp (1) + sign (1)
+      --  + exp_digits (4) -> 24.
+      Str : String (1 .. 25);
+      P : Natural;
+      V : Iir_Fp64;
+      Vd : Iir_Fp64;
+      Exp : Integer;
+      D : Integer;
+      B : Boolean;
+   begin
+      --  Handle sign.
+      if Val < 0.0 then
+         Str (1) := '-';
+         P := 1;
+         V := -Val;
+      else
+         P := 0;
+         V := Val;
+      end if;
+
+      --  Compute the mantissa.
+      --  FIXME: should do a dichotomy.
+      if V  = 0.0 then
+         Exp := 0;
+      elsif V < 1.0 then
+         Exp := -1;
+         while V * (10.0 ** (-Exp)) < 1.0 loop
+            Exp := Exp - 1;
+         end loop;
+      else
+         Exp := 0;
+         while V / (10.0 ** Exp) >= 10.0 loop
+            Exp := Exp + 1;
+         end loop;
+      end if;
+
+      --  Normalize VAL: in [0; 10[
+      if Exp >= 0 then
+         V := V / (10.0 ** Exp);
+      else
+         V := V * 10.0 ** (-Exp);
+      end if;
+
+      for I in 0 .. 15 loop
+         Vd := Iir_Fp64'Truncation (V);
+         P := P + 1;
+         Str (P) := Character'Val (48 + Integer (Vd));
+         V := (V - Vd) * 10.0;
+
+         if I = 0 then
+            P := P + 1;
+            Str (P) := '.';
+         end if;
+         exit when I > 0 and V < 10.0 ** (I + 1 - 15);
+      end loop;
+
+      if Exp /= 0 then
+         --  LRM93 14.3
+         --  if the exponent is present, the `e' is written as a lower case
+         --  character.
+         P := P + 1;
+         Str (P) := 'e';
+
+         if Exp < 0 then
+            P := P + 1;
+            Str (P) := '-';
+            Exp := -Exp;
+         end if;
+         B := False;
+         for I in 0 .. 4 loop
+            D := (Exp / 10000) mod 10;
+            if D /= 0 or B or I = 4 then
+               P := P + 1;
+               Str (P) := Character'Val (48 + D);
+               B := True;
+            end if;
+            Exp := (Exp - D * 10000) * 10;
+         end loop;
+      end if;
+
+      Id := Start;
+      for I in 1 .. P loop
+         Append (Str (I));
+      end loop;
+      Finish;
+      return Build_String (Id, Int32 (P), Orig);
+   end Eval_Floating_Image;
+
    function Eval_Incdec (Expr : Iir; N : Iir_Int64) return Iir
    is
       P : Iir_Int64;
@@ -1511,6 +1604,8 @@ package body Evaluation is
                case Get_Kind (Param_Type) is
                   when Iir_Kind_Integer_Type_Definition =>
                      return Eval_Integer_Image (Get_Value (Param), Expr);
+                  when Iir_Kind_Floating_Type_Definition =>
+                     return Eval_Floating_Image (Get_Fp_Value (Param), Expr);
                   when others =>
                      Error_Kind ("eval_static_expr('image)", Param_Type);
                end case;
