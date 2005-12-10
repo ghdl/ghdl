@@ -715,6 +715,9 @@ package body Translation is
       --  Generate a constant declaration for SIG; but do not set its value.
       procedure Generate_Signal_Rti (Sig : Iir);
 
+      --  Generate RTIs for subprogram body BOD.
+      procedure Generate_Subprogram_Body (Bod : Iir);
+
       --  Generate RTI for LIB.  If PUBLIC is FALSE, only generate the
       --  declaration as external.
       procedure Generate_Library (Lib : Iir_Library_Declaration;
@@ -4825,6 +4828,7 @@ package body Translation is
          Chap2.Save_Subprg_Instance (Subprg_Instances);
 
          Chap4.Translate_Declaration_Chain (Subprg);
+         Rtis.Generate_Subprogram_Body (Subprg);
          Chap4.Translate_Declaration_Chain_Subprograms (Subprg, Null_Iir);
 
          Chap4.Elab_Declaration_Chain (Subprg, Final);
@@ -25032,6 +25036,88 @@ package body Translation is
          Add_Rti_Node (Info.Comp_Rti_Const);
       end Generate_Component_Declaration;
 
+      --  Generate RTIs only for types.
+      procedure Generate_Declaration_Chain_Depleted (Chain : Iir)
+      is
+         Decl : Iir;
+      begin
+         Decl := Chain;
+         while Decl /= Null_Iir loop
+            case Get_Kind (Decl) is
+               when Iir_Kind_Use_Clause =>
+                  null;
+               when Iir_Kind_Type_Declaration =>
+                  --  FIXME: physicals ?
+                  if Get_Kind (Get_Type (Decl))
+                    = Iir_Kind_Enumeration_Type_Definition
+                  then
+                     Add_Rti_Node (Generate_Type_Decl (Decl));
+                  end if;
+               when Iir_Kind_Subtype_Declaration =>
+                  --  In a subprogram, a subtype may depends on parameters.
+                  --  Eg: array subtypes.
+                  null;
+               when Iir_Kind_Signal_Declaration
+                 | Iir_Kind_Signal_Interface_Declaration
+                 | Iir_Kind_Constant_Declaration
+                 | Iir_Kind_Constant_Interface_Declaration
+                 | Iir_Kind_Variable_Declaration
+                 | Iir_Kind_File_Declaration
+                 | Iir_Kind_Transaction_Attribute
+                 | Iir_Kind_Quiet_Attribute
+                 | Iir_Kind_Stable_Attribute =>
+                  null;
+               when Iir_Kind_Delayed_Attribute =>
+                  --  FIXME: to be added.
+                  null;
+               when Iir_Kind_Object_Alias_Declaration
+                 | Iir_Kind_Attribute_Declaration =>
+                  null;
+               when Iir_Kind_Component_Declaration =>
+                  null;
+               when Iir_Kind_Implicit_Function_Declaration
+                 | Iir_Kind_Implicit_Procedure_Declaration
+                 | Iir_Kind_Function_Declaration
+                 | Iir_Kind_Procedure_Declaration =>
+                  --  FIXME: to be added (for foreign).
+                  null;
+               when Iir_Kind_Function_Body
+                 | Iir_Kind_Procedure_Body =>
+                  null;
+               when Iir_Kind_Anonymous_Type_Declaration =>
+                  --  Handled in subtype declaration.
+                  null;
+               when Iir_Kind_Configuration_Specification
+                 | Iir_Kind_Attribute_Specification
+                 | Iir_Kind_Disconnection_Specification =>
+                  null;
+               when Iir_Kind_Protected_Type_Body =>
+                  null;
+               when Iir_Kind_Non_Object_Alias_Declaration =>
+                  null;
+               when Iir_Kind_Group_Template_Declaration
+                 | Iir_Kind_Group_Declaration =>
+                  null;
+               when others =>
+                  Error_Kind ("rti.generate_declaration_chain_depleted", Decl);
+            end case;
+            Decl := Get_Chain (Decl);
+         end loop;
+      end Generate_Declaration_Chain_Depleted;
+
+      procedure Generate_Subprogram_Body (Bod : Iir)
+      is
+         --Decl : Iir;
+         --Mark : Id_Mark_Type;
+      begin
+         --Decl := Get_Subprogram_Specification (Bod);
+
+         --Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+         --  Generate RTI only for types.
+         Generate_Declaration_Chain_Depleted (Get_Declaration_Chain (Bod));
+         --Pop_Identifier_Prefix (Mark);
+      end Generate_Subprogram_Body;
+
       procedure Generate_Instance (Stmt : Iir; Parent : O_Dnode)
       is
          Name : O_Dnode;
@@ -25129,10 +25215,12 @@ package body Translation is
                when Iir_Kind_Implicit_Function_Declaration
                  | Iir_Kind_Implicit_Procedure_Declaration
                  | Iir_Kind_Function_Declaration
-                 | Iir_Kind_Function_Body
-                 | Iir_Kind_Procedure_Declaration
-                 | Iir_Kind_Procedure_Body =>
+                 | Iir_Kind_Procedure_Declaration =>
                   --  FIXME: to be added (for foreign).
+                  null;
+               when Iir_Kind_Function_Body
+                 | Iir_Kind_Procedure_Body =>
+                  --  Already handled by Translate_Subprogram_Body.
                   null;
                when Iir_Kind_Anonymous_Type_Declaration =>
                   --  Handled in subtype declaration.
