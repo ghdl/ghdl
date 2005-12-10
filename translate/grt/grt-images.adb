@@ -125,110 +125,112 @@ package body Grt.Images is
       end;
    end Ghdl_Image_P32;
 
---    procedure Ghdl_Image_F64 (Res : Std_String_Ptr; Val : Ghdl_F64)
---    is
---       --  Sign (1) + digit (1) + dot (1) + digits (15) + exp (1) + sign (1)
---       --  + exp_digits (4) -> 24.
---       Str : String (1 .. 25);
---       P : Natural;
---       V : Ghdl_F64;
---       Vd : Ghdl_F64;
---       Exp : Integer;
---       D : Integer;
---       B : Boolean;
---    begin
---       --  Handle sign.
---       if Val < 0.0 then
---          Str (1) := '-';
---          P := 1;
---          V := -Val;
---       else
---          P := 0;
---          V := Val;
---       end if;
-
---       --  Compute the mantissa.
---       --  FIXME: should do a dichotomy.
---       if V  = 0.0 then
---          Exp := 0;
---       elsif V < 1.0 then
---          Exp := -1;
---          while V * (10.0 ** (-Exp)) < 1.0 loop
---             Exp := Exp - 1;
---          end loop;
---       else
---          Exp := 0;
---          while V / (10.0 ** Exp) >= 10.0 loop
---             Exp := Exp + 1;
---          end loop;
---       end if;
-
---       --  Normalize VAL: in [0; 10[
---       if Exp >= 0 then
---          V := V / (10.0 ** Exp);
---       else
---          V := V * 10.0 ** (-Exp);
---       end if;
-
---       for I in 0 .. 15 loop
---          Vd := Ghdl_F64'Floor (V);
---          P := P + 1;
---          Str (P) := Character'Val (48 + Integer (Vd));
---          V := (V - Vd) * 10.0;
-
---          if I = 0 then
---             P := P + 1;
---             Str (P) := '.';
---          end if;
---          exit when I > 0 and V < 10.0 ** (I + 1 - 15);
---       end loop;
-
---       if Exp /= 0 then
---          --  LRM93 14.3
---          --  if the exponent is present, the `e' is written as a lower case
---          --  character.
---          P := P + 1;
---          Str (P) := 'e';
-
---          if Exp < 0 then
---             P := P + 1;
---             Str (P) := '-';
---             Exp := -Exp;
---          end if;
---          B := False;
---          for I in 0 .. 4 loop
---             D := (Exp / 10000) mod 10;
---             if D /= 0 or B or I = 4 then
---                P := P + 1;
---                Str (P) := Character'Val (48 + D);
---                B := True;
---             end if;
---             Exp := (Exp - D * 10000) * 10;
---          end loop;
---       end if;
-
---       Return_String (Res, Str (1 .. P));
---    end Ghdl_Image_F64;
-
    procedure Ghdl_Image_F64 (Res : Std_String_Ptr; Val : Ghdl_F64)
    is
+      function Trunc (V : Ghdl_F64) return Ghdl_F64;
+      pragma Import (C, Trunc);
+
       --  Sign (1) + digit (1) + dot (1) + digits (15) + exp (1) + sign (1)
       --  + exp_digits (4) -> 24.
       Str : String (1 .. 25);
-
-      procedure snprintf (Str : System.Address;
-                          Size : Integer;
-                          Template : System.Address;
-                          Arg : Ghdl_F64);
-      pragma Import (C, snprintf);
-
-      function strlen (Str : System.Address) return Integer;
-      pragma Import (C, strlen);
-
-      Format : constant String := "%g" & Character'Val (0);
+      P : Natural;
+      V : Ghdl_F64;
+      Vmax : Ghdl_F64;
+      Vd : Ghdl_F64;
+      Exp : Integer;
+      D : Integer;
+      B : Boolean;
    begin
-      snprintf (Str'Address, Str'Length, Format'Address, Val);
-      Return_String (Res, Str (1 .. strlen (Str'Address)));
+      --  Handle sign.
+      if Val < 0.0 then
+         Str (1) := '-';
+         P := 1;
+         V := -Val;
+      else
+         P := 0;
+         V := Val;
+      end if;
+
+      --  Compute the mantissa.
+      --  and normalize V in [0 .. 10.0[
+      --  FIXME: should do a dichotomy.
+      if V  = 0.0 then
+         Exp := 0;
+      elsif V < 1.0 then
+         Exp := -1;
+         loop
+            exit when V >= 1.0;
+            Exp := Exp - 1;
+            V := V / 10.0;
+         end loop;
+      else
+         Exp := 0;
+         loop
+            exit when V < 10.0;
+            Exp := Exp + 1;
+            V := V * 10.0;
+         end loop;
+      end if;
+
+      Vmax := 10.0 ** (1 - 15);
+      for I in 0 .. 15 loop
+         --  Vd := Ghdl_F64'Truncation (V);
+         Vd := Trunc (V);
+         P := P + 1;
+         Str (P) := Character'Val (48 + Integer (Vd));
+         V := (V - Vd) * 10.0;
+
+         if I = 0 then
+            P := P + 1;
+            Str (P) := '.';
+         end if;
+         exit when I > 0 and V < Vmax;
+         Vmax := Vmax * 10.0;
+      end loop;
+
+      if Exp /= 0 then
+         --  LRM93 14.3
+         --  if the exponent is present, the `e' is written as a lower case
+         --  character.
+         P := P + 1;
+         Str (P) := 'e';
+
+         if Exp < 0 then
+            P := P + 1;
+            Str (P) := '-';
+            Exp := -Exp;
+         end if;
+         B := False;
+         for I in 0 .. 4 loop
+            D := (Exp / 10000) mod 10;
+            if D /= 0 or B or I = 4 then
+               P := P + 1;
+               Str (P) := Character'Val (48 + D);
+               B := True;
+            end if;
+            Exp := (Exp - D * 10000) * 10;
+         end loop;
+      end if;
+
+      Return_String (Res, Str (1 .. P));
    end Ghdl_Image_F64;
+
+--     procedure Ghdl_Image_F64 (Res : Std_String_Ptr; Val : Ghdl_F64)
+--     is
+--        --  Sign (1) + digit (1) + dot (1) + digits (15) + exp (1) + sign (1)
+--        --  + exp_digits (4) -> 24.
+--        Str : String (1 .. 25);
+
+--        procedure Snprintf_G (Str : System.Address;
+--                              Size : Integer;
+--                              Arg : Ghdl_F64);
+--        pragma Import (C, Snprintf_G, "__ghdl_snprintf_g");
+
+--        function strlen (Str : System.Address) return Integer;
+--        pragma Import (C, strlen);
+--     begin
+--        Snprintf_G (Str'Address, Str'Length, Val);
+--        Return_String (Res, Str (1 .. strlen (Str'Address)));
+--     end Ghdl_Image_F64;
 
 end Grt.Images;
