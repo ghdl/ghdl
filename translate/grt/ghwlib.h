@@ -22,8 +22,11 @@
 #define _GHWLIB_H_
 
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
+
+#ifdef __GNUC__
+#include <stdint.h>
+#endif
 
 enum ghdl_rtik {
   ghdl_rtik_top,		/* 0  */
@@ -252,6 +255,7 @@ enum ghw_hie_kind {
   ghw_hie_generate_if  = 4,
   ghw_hie_generate_for = 5,
   ghw_hie_instance     = 6,
+  ghw_hie_package      = 7,
   ghw_hie_process      = 13,
   ghw_hie_generic      = 14,
   ghw_hie_eos          = 15,

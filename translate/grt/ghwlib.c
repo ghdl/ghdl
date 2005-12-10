@@ -18,7 +18,6 @@
 */
 
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -169,6 +168,7 @@ ghw_read_sleb128 (struct ghw_handler *h, int32_t *res)
 int
 ghw_read_lsleb128 (struct ghw_handler *h, int64_t *res)
 {
+  static const int64_t r_mask = -1;
   int64_t r = 0;
   unsigned int off = 0;
 
@@ -182,7 +182,7 @@ ghw_read_lsleb128 (struct ghw_handler *h, int64_t *res)
       if ((v & 0x80) == 0)
 	{
 	  if ((v & 0x40) && off < 64)
-	    r |= __INT64_C (-1) << off;
+	    r |= r_mask << off;
 	  break;
 	}
     }
@@ -346,7 +346,7 @@ ghw_read_str (struct ghw_handler *h)
       *p++ = 0;
 
       if (h->flag_verbose > 1)
-	printf ("string %d (pl=%d): %s\n", i, prev_len, h->str_table[i]);
+	printf (" string %d (pl=%d): %s\n", i, prev_len, h->str_table[i]);
 
       prev_len = c & 0x1f;
       sh = 5;
@@ -795,6 +795,10 @@ ghw_read_hie (struct ghw_handler *h)
   /* Number of basic signals.  */
   h->nbr_sigs = ghw_get_i32 (h, &hdr[12]);
 
+  if (h->flag_verbose)
+    printf ("%d scopes, %d signals, %d signal elements\n",
+	    nbr_scopes, nbr_sigs, h->nbr_sigs);
+
   blk = (struct ghw_hie *)malloc (sizeof (struct ghw_hie));
   blk->kind = ghw_hie_design;
   blk->name = NULL;
@@ -865,6 +869,7 @@ ghw_read_hie (struct ghw_handler *h)
 	case ghw_hie_generate_for:
 	case ghw_hie_instance:
 	case ghw_hie_generic:
+	case ghw_hie_package:
 	  /* Create a block.  */
 	  el->u.blk.child = NULL;
 
@@ -899,26 +904,16 @@ ghw_read_hie (struct ghw_handler *h)
 	    sigs[nbr_el] = 0;
 
 	    if (h->flag_verbose > 1)
-	      printf ("signal %s: %d el\n", el->name, nbr_el);
+	      printf ("signal %s: %d el [", el->name, nbr_el);
 	    if (ghw_read_signal (h, sigs, el->u.sig.type) < 0)
 	      return -1;
-#if 0
-	    for (i = 0; i < nbr_el; i++)
+	    if (h->flag_verbose > 1)
 	      {
-		unsigned int sig_el;
-
-		if (ghw_read_uleb128 (h, &sig_el) < 0)
-		  return -1;
-		sigs[i] = sig_el;
-		if (sig_el >= h->nbr_sigs)
-		  abort ();
-		if (h->sigs[sig_el].type == NULL)
-		  {
-		    h->sigs[sig_el].type = ghw_get_base_type (el->u.sig.type);
-		  }
+		int i;
+		for (i = 0; i < nbr_el; i++)
+		  printf (" #%u", sigs[i]);
+		printf ("]\n");
 	      }
-	    sigs[i] = 0;
-#endif
 	  }
 	  break;
 	default:
@@ -951,6 +946,8 @@ ghw_get_hie_name (struct ghw_hie *h)
       return "generate-for";
     case ghw_hie_instance:
       return "instance";
+    case ghw_hie_package:
+      return "package";
     case ghw_hie_process:
       return "process";
     case ghw_hie_generic:
@@ -1002,6 +999,7 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 	case ghw_hie_generate_for:
 	case ghw_hie_instance:
 	case ghw_hie_process:
+	case ghw_hie_package:
 	  if (hie->name)
 	    printf (" %s", hie->name);
 	  if (hie->kind == ghw_hie_generate_for)

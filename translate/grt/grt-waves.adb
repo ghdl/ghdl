@@ -51,6 +51,7 @@ package body Grt.Waves is
    Ghw_Hie_Generate_If  : constant Unsigned_8 := 4;
    Ghw_Hie_Generate_For : constant Unsigned_8 := 5;
    Ghw_Hie_Instance     : constant Unsigned_8 := 6;
+   Ghw_Hie_Package      : constant Unsigned_8 := 7;
    Ghw_Hie_Process      : constant Unsigned_8 := 13;
    Ghw_Hie_Generic      : constant Unsigned_8 := 14;
    Ghw_Hie_Eos          : constant Unsigned_8 := 15; --  End of scope.
@@ -342,7 +343,7 @@ package body Grt.Waves is
    is
       pragma Unreferenced (Err);
    begin
-      Put_Line ("Wave.Avhpi_Error!");
+      Put_Line ("Waves.Avhpi_Error!");
       null;
    end Avhpi_Error;
 
@@ -793,12 +794,16 @@ package body Grt.Waves is
 
       function To_Integer_Address is new Ada.Unchecked_Conversion
         (Ghdl_Signal_Ptr, Integer_Address);
+      function To_Ghdl_Signal_Ptr is new Ada.Unchecked_Conversion
+        (Source => Integer_Address, Target => Ghdl_Signal_Ptr);
       Sig : Ghdl_Signal_Ptr;
    begin
       Sig := To_Ghdl_Signal_Ptr (To_Addr_Acc (Val_Addr).all);
       if not Sig.Flags.Is_Dumped then
          Sig.Flags.Is_Dumped := True;
          Nbr_Dumped_Signals := Nbr_Dumped_Signals + 1;
+         Sig.Flink := To_Ghdl_Signal_Ptr
+           (Integer_Address (Nbr_Dumped_Signals));
       end if;
       Wave_Put_ULEB128 (Ghdl_E32 (To_Integer_Address (Sig.Flink)));
    end Write_Signal_Number;
@@ -844,6 +849,10 @@ package body Grt.Waves is
             V := Ghw_Hie_Instance;
          when VhpiProcessStmtK =>
             V := Ghw_Hie_Process;
+         when VhpiPackInstK =>
+            V := Ghw_Hie_Package;
+         when VhpiRootInstK =>
+            V := Ghw_Hie_Instance;
          when others =>
             --raise Program_Error;
             Internal_Error ("write_hierarchy_el");
@@ -862,7 +871,10 @@ package body Grt.Waves is
       end case;
    end Write_Hierarchy_El;
 
-   procedure Wave_Put_Hierarchy (Inst : VhpiHandleT; Step : Step_Type)
+   --  Create a hierarchy block.
+   procedure Wave_Put_Hierarchy_Block (Inst : VhpiHandleT; Step : Step_Type);
+
+   procedure Wave_Put_Hierarchy_1 (Inst : VhpiHandleT; Step : Step_Type)
    is
       Decl_It : VhpiHandleT;
       Decl : VhpiHandleT;
@@ -901,6 +913,11 @@ package body Grt.Waves is
          end case;
       end loop;
 
+      --  No sub-scopes for packages.
+      if Vhpi_Get_Kind (Inst) = VhpiPackInstK then
+         return;
+      end if;
+
       --  Extract sub-scopes.
       Vhpi_Iterator (VhpiInternalRegions, Inst, Decl_It, Error);
       if Error /= AvhpiErrorOk then
@@ -923,19 +940,7 @@ package body Grt.Waves is
               | VhpiForGenerateK
               | VhpiBlockStmtK
               | VhpiCompInstStmtK =>
-               case Step is
-                  when Step_Name =>
-                     Create_String_Id (Avhpi_Get_Base_Name (Decl));
-                     if Vhpi_Get_Kind (Decl) = VhpiForGenerateK then
-                        Create_Generate_Type (Decl);
-                     end if;
-                  when Step_Hierarchy =>
-                     Write_Hierarchy_El (Decl);
-               end case;
-               Wave_Put_Hierarchy (Decl, Step);
-               if Step = Step_Hierarchy then
-                  Wave_Put_Byte (Ghw_Hie_Eos);
-               end if;
+               Wave_Put_Hierarchy_Block (Decl, Step);
             when VhpiProcessStmtK =>
                case Step is
                   when Step_Name =>
@@ -944,12 +949,55 @@ package body Grt.Waves is
                      Write_Hierarchy_El (Decl);
                end case;
             when others =>
-               Internal_Error ("wave_put_hierarchy");
+               Internal_Error ("wave_put_hierarchy_1");
 --                 Wave_Put ("unknown ");
 --                 Wave_Put (VhpiClassKindT'Image (Vhpi_Get_Kind (Decl)));
 --                 Wave_Newline;
          end case;
       end loop;
+   end Wave_Put_Hierarchy_1;
+
+   procedure Wave_Put_Hierarchy_Block (Inst : VhpiHandleT; Step : Step_Type)
+   is
+   begin
+      case Step is
+         when Step_Name =>
+            Create_String_Id (Avhpi_Get_Base_Name (Inst));
+            if Vhpi_Get_Kind (Inst) = VhpiForGenerateK then
+               Create_Generate_Type (Inst);
+            end if;
+         when Step_Hierarchy =>
+            Write_Hierarchy_El (Inst);
+      end case;
+
+      Wave_Put_Hierarchy_1 (Inst, Step);
+
+      if Step = Step_Hierarchy then
+         Wave_Put_Byte (Ghw_Hie_Eos);
+      end if;
+   end Wave_Put_Hierarchy_Block;
+
+   procedure Wave_Put_Hierarchy (Root : VhpiHandleT; Step : Step_Type)
+   is
+      Pack_It : VhpiHandleT;
+      Pack : VhpiHandleT;
+      Error : AvhpiErrorT;
+   begin
+      --  First packages.
+      Get_Package_Inst (Pack_It);
+      loop
+         Vhpi_Scan (Pack_It, Pack, Error);
+         exit when Error = AvhpiErrorIteratorEnd;
+         if Error /= AvhpiErrorOk then
+            Avhpi_Error (Error);
+            return;
+         end if;
+
+         Wave_Put_Hierarchy_Block (Pack, Step);
+      end loop;
+
+      --  Then top entity.
+      Wave_Put_Hierarchy_Block (Root, Step);
    end Wave_Put_Hierarchy;
 
    procedure Disp_Str_AVL (Str : AVL_Nid; Indent : Natural)
@@ -1324,17 +1372,13 @@ package body Grt.Waves is
 
    procedure Write_Hierarchy (Root : VhpiHandleT)
    is
-      function To_Ghdl_Signal_Ptr is new Ada.Unchecked_Conversion
-        (Source => Integer_Address, Target => Ghdl_Signal_Ptr);
       N : Natural;
    begin
-      --  Number signals.
+      --  Check Flink is 0.
       for I in Sig_Table.First .. Sig_Table.Last loop
          if Sig_Table.Table (I).Flink /= null then
             Internal_Error ("wave.write_hierarchy");
          end if;
-         Sig_Table.Table (I).Flink :=
-           To_Ghdl_Signal_Ptr (Integer_Address (I - Sig_Table.First + 1));
       end loop;
 
       Wave_Section ("HIE" & NUL);
