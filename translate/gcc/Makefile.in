@@ -233,6 +233,7 @@ install-ghdllib: ghdllib grt.lst $(STD93_SRCS) $(STD87_SRCS) \
 	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/lib
 	$(INSTALL_DATA) libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/lib/libgrt.a
 	$(INSTALL_DATA) grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/lib/grt.lst
+	$(INSTALL_DATA) grt.ver $(DESTDIR)$(VHDL_LIB_DIR)/lib/grt.ver
 # Install VHDL sources.
 	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src
 	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/std

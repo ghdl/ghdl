@@ -29,7 +29,8 @@ Building GHDL from sources:
 Required:
 * the sources of @GCCVERSION@ (at least the core part).
   Note: other versions of gcc sources have not been tested.
-* the Ada95 GNAT compiler (GNAT v3.15p and GNAT GPL 2005 are known to work).
+* the Ada95 GNAT compiler (GNAT v3.15p and GNAT GPL 2005 are known to work;
+  Ada compilers in most Linux distributions are more or less buggy)
 * GNU/Linux for ix86 (pc systems) (porting is necessary for other systems)
 
 Procedure:
