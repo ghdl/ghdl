@@ -39,9 +39,9 @@ __ghdl_get_stderr (void)
 }
 
 void
-__ghdl_snprintf_g (char *buf, int len, double val)
+__ghdl_fprintf_g (FILE *stream, double val)
 {
-  snprintf (buf, len, "%g", val);
+  fprintf (stream, "%g", val);
 }
 
 static int run_env_en;

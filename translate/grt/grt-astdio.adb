@@ -159,14 +159,11 @@ package body Grt.Astdio is
 
    procedure Put_F64 (Stream : FILEs; F64 : Ghdl_F64)
    is
-      procedure fprintf (Stream : FILEs;
-                         Template : System.Address;
-                         Arg : Ghdl_F64);
-      pragma Import (C, fprintf);
-
-      Str : constant String := "%g" & Character'Val (0);
+      procedure Fprintf_G (Stream : FILEs;
+                           Arg : Ghdl_F64);
+      pragma Import (C, Fprintf_G, "__ghdl_fprintf_g");
    begin
-      fprintf (Stream, Str'Address, F64);
+      Fprintf_G (Stream, F64);
    end Put_F64;
 
    Hex_Map : constant array (0 .. 15) of Character := "0123456789ABCDEF";
