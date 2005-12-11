@@ -62,7 +62,8 @@ package body Sem_Names is
               | Iir_Kind_Implicit_Procedure_Declaration =>
                Error_Msg_Sem (Disp_Subprg (El), El);
             when Iir_Kind_Function_Call =>
-               Error_Msg_Sem (Disp_Subprg (Get_Implementation (El)), El);
+               El := Get_Implementation (El);
+               Error_Msg_Sem (Disp_Subprg (El), El);
             when others =>
                Error_Msg_Sem (Disp_Node (El), El);
          end case;
