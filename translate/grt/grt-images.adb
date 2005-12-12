@@ -157,18 +157,18 @@ package body Grt.Images is
       if V  = 0.0 then
          Exp := 0;
       elsif V < 1.0 then
-         Exp := -1;
+         Exp := 0;
          loop
             exit when V >= 1.0;
             Exp := Exp - 1;
-            V := V / 10.0;
+            V := V * 10.0;
          end loop;
       else
          Exp := 0;
          loop
             exit when V < 10.0;
             Exp := Exp + 1;
-            V := V * 10.0;
+            V := V / 10.0;
          end loop;
       end if;
 
