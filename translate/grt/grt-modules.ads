@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) -  entry point.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  GHDL Run Time (GRT) -  Modules.
+--  Copyright (C) 2005 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-package Grt.Main is
-   --  Elaborate and simulate the design.
-   procedure Run;
-end Grt.Main;
+package Grt.Modules is
+   --  Register optional modules.
+   procedure Register_Modules;
+end Grt.Modules;

@@ -7,7 +7,7 @@
 @titlepage
 @title GHDL guide
 @subtitle GHDL, a VHDL compiler
-@subtitle For GHDL version 0.20 (Sokcho edition)
+@subtitle For GHDL version 0.21 (Sokcho edition)
 @author Tristan Gingold
 @c The following two commands start the copyright page.
 @page
@@ -845,6 +845,21 @@ declared in the @samp{ieee.VITAL_Timing} package.
 
 Currently, VITAL checks are only partially implemented.  @xref{VHDL
 restrictions for VITAL}, for more details.
+
+@item --syn-binding
+@cindex @option{--syn-binding} switch
+Use synthetizer rules for component binding.  During elaboration, if a
+component is not bound to an entity using VHDL LRM rules, try to find
+in any known library an entity whose name is the same as the component
+name.
+
+This rule is known as synthetizer rule.
+
+There are two key points: normal VHDL LRM rules are tried first and
+entities are search only in known library.  A known library is a
+library which has been named in your design.
+
+This option is only useful during elaboration.
 
 @item --GHDL1=@var{COMMAND}
 @cindex @option{--GHLD1} switch

@@ -806,7 +806,6 @@ package body Grt.Processes is
         new Process_Id_Array (1 .. Nbr_Non_Postponed_Processes);
       Postponed_Resume_Process_Table :=
         new Process_Id_Array (1 .. Nbr_Postponed_Processes);
-      Grt.Hooks.Call_Start_Hooks;
 
       Status := Run_Through_Longjump (Initialization_Phase'Access);
       if Status /= Run_Resumed then

@@ -18,21 +18,18 @@
 with System.Storage_Elements; --  Work around GNAT bug.
 with Grt.Types; use Grt.Types;
 with Grt.Errors;
-with Grt.Vcd;
-with Grt.Vcdz;
-with Grt.Vpi;
-with Grt.Waves;
 with Grt.Stacks;
 with Grt.Processes;
 with Grt.Signals;
 with Grt.Options; use Grt.Options;
-with Grt.Disp_Rti;
 with Grt.Stats;
 with Grt.Hooks;
 with Grt.Disp_Signals;
 with Grt.Disp;
+with Grt.Modules;
 
 --  The following packages are not referenced in this package.
+--  These are subprograms called only from GHDL generated code.
 --  They are with'ed in order to be present in the binary.
 pragma Warnings (Off);
 with Grt.Files;
@@ -42,7 +39,6 @@ with Grt.Shadow_Ieee;
 with Grt.Images;
 with Grt.Values;
 with Grt.Names;
-with Grt.Vital_Annotate;
 pragma Warnings (On);
 
 package body Grt.Main is
@@ -81,23 +77,15 @@ package body Grt.Main is
       end if;
    end Check_Flag_String;
 
-   procedure Register_Modules is
-   begin
-      --  List of modules to be registered.
-      Grt.Vcd.Register;
-      Grt.Vcdz.Register;
-      Grt.Waves.Register;
-      Grt.Vpi.Register;
-      Grt.Vital_Annotate.Register;
-   end Register_Modules;
-
    procedure Run
    is
       use Grt.Errors;
       Stop : Boolean;
       Status : Integer;
    begin
-      Register_Modules;
+      --  Register modules.
+      --  They may insert hooks.
+      Grt.Modules.Register_Modules;
 
       --  If the time resolution is to be set by the user, select a default
       --  resolution.  Options may override it.
@@ -105,8 +93,10 @@ package body Grt.Main is
          Set_Time_Resolution ('n');
       end if;
 
+      --  Decode options.
       Grt.Options.Decode (Stop);
 
+      --  Check coherency between GRT and GHDL generated code.
       Check_Flag_String;
 
       --  Early stop (for options such as --help).
@@ -138,15 +128,9 @@ package body Grt.Main is
          Stats.Start_Order;
       end if;
 
-      if Disp_Tree /= Disp_Tree_None then
-         Grt.Disp_Rti.Disp_Hierarchy;
-      end if;
+      Grt.Hooks.Call_Start_Hooks;
 
       if not Flag_No_Run then
-         if Grt.Options.Flag_Dump_Rti then
-            Grt.Disp_Rti.Disp_All;
-         end if;
-
          Grt.Signals.Order_All_Signals;
 
          if Grt.Options.Disp_Signals_Map then

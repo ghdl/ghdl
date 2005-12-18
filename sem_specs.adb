@@ -1563,6 +1563,15 @@ package body Sem_Specs is
          end if;
       end if;
 
+      --  --syn-binding
+      --  Search for any entity.
+      if Flags.Flag_Syn_Binding then
+         Decl := Libraries.Find_Entity_For_Component (Name);
+         if Decl /= Null_Iir then
+            return Decl;
+         end if;
+      end if;
+
       return Null_Iir;
    end Get_Visible_Entity_Declaration;
 
@@ -1607,7 +1616,9 @@ package body Sem_Specs is
       --     The target library is the library logical name of the library
       --     containing the design unit in which the component C is
       --     declared.
-      if Flags.Vhdl_Std >= Vhdl_02 then
+      if Flags.Vhdl_Std >= Vhdl_02
+        or else Flags.Vhdl_Std = Vhdl_93c
+      then
          Decl := Comp;
          while Get_Kind (Decl) /= Iir_Kind_Library_Declaration loop
             Decl := Get_Parent (Decl);

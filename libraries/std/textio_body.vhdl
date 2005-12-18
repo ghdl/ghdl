@@ -463,6 +463,8 @@ package body textio is
         if len > 0 and (str (len) = LF or str (len) = CR) then
           len := len - 1;
         end if;
+      elsif endfile (f) then
+        is_eol := true;
       else
         is_eol := false;
       end if;        

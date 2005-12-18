@@ -94,7 +94,9 @@ package body Grt.Rtis_Utils is
                         Obj := To_Ghdl_Rtin_Instance_Acc (Child);
 
                         Get_Instance_Context (Obj, Ctxt, Nctxt);
-                        Res := Traverse_Instance (Nctxt);
+                        if Nctxt /= Null_Context then
+                           Res := Traverse_Instance (Nctxt);
+                        end if;
                      end;
                   end if;
                when Ghdl_Rtik_Package

@@ -169,7 +169,6 @@ package body Grt.Options is
       P (" --disp-sig-types  disp signal types");
       P (" --disp-signals-map    disp map bw declared sigs and internal sigs");
       P (" --disp-signals-table  disp internal signals");
-      P (" --dump-rti        dump Run Time Information");
       P (" --checks          do internal checks after each process run");
       P (" --activity=LEVEL  watch activity of LEVEL signals");
       P ("       LEVEL is all, min (default) or none (unsafe)");
@@ -260,20 +259,6 @@ package body Grt.Options is
             elsif Argument = "--help" or else Argument = "-h" then
                Help;
                Stop := True;
-            elsif Len >= 11 and then Argument (1 .. 11) = "--disp-tree" then
-               if Len = 11 then
-                  Disp_Tree := Disp_Tree_Port;
-               elsif Argument (12 .. Len) = "=port" then
-                  Disp_Tree := Disp_Tree_Port;
-               elsif Argument (12 .. Len) = "=proc" then
-                  Disp_Tree := Disp_Tree_Proc;
-               elsif Argument (12 .. Len) = "=inst" then
-                  Disp_Tree := Disp_Tree_Inst;
-               elsif Argument (12 .. Len) = "=none" then
-                  Disp_Tree := Disp_Tree_None;
-               else
-                  Error ("bad argument for --disp-tree option, try --help");
-               end if;
             elsif Argument = "--disp-time" then
                Disp_Time := True;
             elsif Argument = "--trace-signals" then
@@ -294,8 +279,6 @@ package body Grt.Options is
                Disp_Signals_Map := True;
             elsif Argument = "--disp-signals-table" then
                Disp_Signals_Table := True;
-            elsif Argument = "--dump-rti" then
-               Flag_Dump_Rti := True;
             elsif Argument = "--stats" then
                Flag_Stats := True;
             elsif Argument = "--no-run" then

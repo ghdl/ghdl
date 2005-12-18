@@ -1270,6 +1270,10 @@ package body Parse is
 
          -- scan a literal.
          Scan.Scan;
+         if Current_Token = Tok_Right_Paren then
+            Error_Msg_Parse ("extra ',' ignored");
+            exit;
+         end if;
       end loop;
       Scan.Scan;
       return Enum_Type;

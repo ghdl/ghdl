@@ -57,6 +57,7 @@ with Files_Map;
 with Name_Table;
 
 with Grt.Main;
+with Grt.Modules;
 with Grt.Lib;
 with Grt.Processes;
 with Grt.Rtis;
@@ -643,7 +644,7 @@ package body Ghdlrun is
       end if;
       Put_Line ("These options can only be placed at [RUNOPTS]");
       --  Register modules, since they add commands.
-      Grt.Main.Register_Modules;
+      Grt.Modules.Register_Modules;
       --  Bypass usual help header.
       Grt.Options.Argc := 0;
       Grt.Options.Help;

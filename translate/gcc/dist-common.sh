@@ -160,6 +160,8 @@ grt-disp.adb
 grt-disp.ads
 grt-disp_rti.adb
 grt-disp_rti.ads
+grt-disp_tree.adb
+grt-disp_tree.ads
 grt-disp_signals.adb
 grt-disp_signals.ads
 grt-errors.adb
@@ -176,6 +178,8 @@ grt-lib.adb
 grt-lib.ads
 grt-main.adb
 grt-main.ads
+grt-modules.ads
+grt-modules.adb
 grt-names.adb
 grt-names.ads
 grt-options.adb

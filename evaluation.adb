@@ -1254,6 +1254,8 @@ package body Evaluation is
       Exp : Integer;
       D : Integer;
       B : Boolean;
+
+      Res : Iir;
    begin
       --  Handle sign.
       if Val < 0.0 then
@@ -1330,7 +1332,11 @@ package body Evaluation is
          Append (Str (I));
       end loop;
       Finish;
-      return Build_String (Id, Int32 (P), Orig);
+      Res := Build_String (Id, Int32 (P), Orig);
+      --  FIXME: this is not correct since the type is *not* constrained.
+      Set_Type (Res, Create_Unidim_Array_By_Length
+                (Get_Type (Orig), Iir_Int64 (P), Orig));
+      return Res;
    end Eval_Floating_Image;
 
    function Eval_Incdec (Expr : Iir; N : Iir_Int64) return Iir

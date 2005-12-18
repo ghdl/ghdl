@@ -42,9 +42,9 @@ typedef struct
 } Stack_Type_t, *Stack_Type;
 
 Stack_Type_t      main_stack_context;
-extern Stack_Type grt_stack_main_stack;
+extern void grt_set_main_stack (Stack_Type_t *stack);
 
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void grt_stack_init(void)
 // Initialize the stacks package.
 // This may adjust stack sizes.
@@ -58,10 +58,10 @@ void grt_stack_init(void)
 	// lock the mutex, as we are currently running
 	pthread_mutex_lock(&(main_stack_context.mutex));
 	
-	grt_stack_main_stack= &main_stack_context;
+	grt_set_main_stack (&main_stack_context);
 }
 
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 static void* grt_stack_loop(void* pv_myStack)
 {
 	Stack_Type myStack= (Stack_Type)pv_myStack;
@@ -84,7 +84,7 @@ static void* grt_stack_loop(void* pv_myStack)
 	return 0;
 }
 
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 Stack_Type grt_stack_create(void* Func, void* Arg) 
 // Create a new stack, which on first execution will call FUNC with
 // an argument ARG.
@@ -115,7 +115,7 @@ Stack_Type grt_stack_create(void* Func, void* Arg)
 	return newStack;
 }
 
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void grt_stack_switch(Stack_Type To, Stack_Type From)
 // Resume stack TO and save the current context to the stack pointed by
 // CUR.
@@ -134,14 +134,16 @@ void grt_stack_switch(Stack_Type To, Stack_Type From)
 	pthread_mutex_lock(&(From->mutex));
 }
 
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 void grt_stack_delete(Stack_Type Stack)
 // Delete stack STACK, which must not be currently executed.
 // => procedure Stack_Delete (Stack : Stack_Type);
 {	INFO("grt_stack_delete\n");
 }
 
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
+#ifndef WITH_GNAT_RUN_TIME
 void __gnat_raise_storage_error(void)
 {
    abort ();
@@ -151,7 +153,8 @@ void __gnat_raise_program_error(void)
 {
    abort ();
 }
+#endif /* WITH_GNAT_RUN_TIME */
 
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 // end of file
 

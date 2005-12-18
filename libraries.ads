@@ -164,4 +164,10 @@ package Libraries is
    --     or an entity_aspect_entity to designate an architectrure.
    --  Return null_iir if the design unit is not found.
    function Find_Design_Unit (Unit : Iir) return Iir_Design_Unit;
+
+   --  Find an entity whose name is NAME in any library.
+   --  If there is no such entity, return NULL_IIR.
+   --  If there are severals entities, return NULL_IIR;
+   function Find_Entity_For_Component (Name: Name_Id) return Iir_Design_Unit;
+
 end Libraries;

@@ -1,4 +1,4 @@
---  GHDL Run Time (GRT) -  entry point.
+--  GHDL Run Time (GRT) - RTI dumper.
 --  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
@@ -15,8 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-
-package Grt.Main is
-   --  Elaborate and simulate the design.
-   procedure Run;
-end Grt.Main;
+package Grt.Disp_Tree is
+   procedure Register;
+end Grt.Disp_Tree;

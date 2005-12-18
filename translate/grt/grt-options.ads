@@ -56,16 +56,6 @@ package Grt.Options is
    --  If STOP is true, there nothing must happen (set by --help).
    procedure Decode (Stop : out Boolean);
 
-   --  Set by --disp-tree, to display the design hierarchy.
-   type Disp_Tree_Kind is
-     (
-      Disp_Tree_None,  --  Do not disp tree.
-      Disp_Tree_Inst,  --  Disp entities, arch, package, blocks, components.
-      Disp_Tree_Proc,  --  As above plus processes
-      Disp_Tree_Port   --  As above plus ports and signals.
-     );
-   Disp_Tree : Disp_Tree_Kind := Disp_Tree_None;
-
    --  Set by --disp-time (and --trace-signals, --trace-processes) to display
    --  time and deltas.
    Disp_Time : Boolean := False;
@@ -107,9 +97,6 @@ package Grt.Options is
 
    --  The maximum stack size for non-sensitized processes.
    Stack_Max_Size : Natural := 128 * 1024;
-
-   --  If set, dump rtis.
-   Flag_Dump_Rti : Boolean := False;
 
    --  Set by --no-run
    --  If set, do not simulate, only elaborate.

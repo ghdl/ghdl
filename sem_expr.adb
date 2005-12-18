@@ -1036,6 +1036,7 @@ package body Sem_Expr is
                   -- Cannot find a single interpretation for a given
                   -- type.
                   Error_Overload (Expr);
+                  Disp_Overload_List (Imp_List, Expr);
                   return Null_Iir;
                end if;
                Res_Type := Create_Iir_List;
@@ -1047,6 +1048,7 @@ package body Sem_Expr is
                if Get_Nbr_Elements (Res_Type) = 1 then
                   -- several implementations but one profile.
                   Error_Overload (Expr);
+                  Disp_Overload_List (Imp_List, Expr);
                   return Null_Iir;
                end if;
                Set_Type (Expr, Create_Overload_List (Res_Type));
@@ -1154,6 +1156,7 @@ package body Sem_Expr is
                then
                   if Res /= Null_Iir then
                      Error_Overload (Expr);
+                     Disp_Overload_List (Get_Overload_List (Inter_List), Expr);
                      return Null_Iir;
                   else
                      Res := Inter;
@@ -1180,6 +1183,7 @@ package body Sem_Expr is
          -- a procedure call.
          if Is_Overload_List (Inter_List) then
             Error_Overload (Expr);
+            Disp_Overload_List (Get_Overload_List (Inter_List), Expr);
             return Null_Iir;
          else
             Res := Inter_List;
@@ -2299,7 +2303,7 @@ package body Sem_Expr is
                      Arr (I));
                else
                   Error_Msg_Sem
-                    ("duplicate choices for" & Disp_Discrete (Bt, E_Pos)
+                    ("duplicate choices for " & Disp_Discrete (Bt, E_Pos)
                      & " to " & Disp_Discrete (Bt, Pos), Arr (I));
                end if;
             end if;
@@ -3762,6 +3766,7 @@ package body Sem_Expr is
 
       if Res /= Null_Iir and then Is_Overloaded (Res) then
          Error_Overload (Expr);
+         Disp_Overload_List (Get_Overload_List (Res), Expr);
          return Null_Iir;
       end if;
       return Res;
@@ -3798,12 +3803,14 @@ package body Sem_Expr is
                Res := El;
             else
                Error_Overload (Expr1);
+               Disp_Overload_List (List, Expr1);
                return Null_Iir;
             end if;
          end if;
       end loop;
       if Res = Null_Iir then
          Error_Overload (Expr1);
+         Disp_Overload_List (List, Expr1);
          return Null_Iir;
       end if;
       return Sem_Expression_Ov (Expr1, Res);

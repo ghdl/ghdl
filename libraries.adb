@@ -1631,4 +1631,28 @@ package body Libraries is
       return Design_Unit;
    end Load_Secondary_Unit;
 
+   function Find_Entity_For_Component (Name: Name_Id) return Iir_Design_Unit
+   is
+      Res : Iir_Design_Unit := Null_Iir;
+      Unit : Iir_Design_Unit;
+   begin
+      Unit := Unit_Hash_Table (Name mod Unit_Hash_Length);
+      while Unit /= Null_Iir loop
+         if Get_Identifier (Unit) = Name
+           and then (Get_Kind (Get_Library_Unit (Unit))
+                     = Iir_Kind_Entity_Declaration)
+         then
+            if Res = Null_Iir then
+               Res := Unit;
+            else
+               --  Many entities.
+               return Null_Iir;
+            end if;
+         end if;
+         Unit := Get_Hash_Chain (Unit);
+      end loop;
+
+      return Res;
+   end Find_Entity_For_Component;
+
 end Libraries;
