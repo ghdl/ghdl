@@ -1,4 +1,4 @@
 package Version is
    Ghdl_Version : constant String :=
-      "GHDL 0.21 (20051218) [Sokcho edition]";
+      "GHDL 0.22dev (20051220) [Sokcho edition]";
 end Version;

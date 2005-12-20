@@ -785,6 +785,15 @@ package body Grt.Waves is
    Nbr_Scope_Signals : Natural := 0;
    Nbr_Dumped_Signals : Natural := 0;
 
+   --  This is only valid during write_hierarchy.
+   function Get_Signal_Number (Sig : Ghdl_Signal_Ptr) return Natural
+   is
+      function To_Integer_Address is new Ada.Unchecked_Conversion
+        (Ghdl_Signal_Ptr, Integer_Address);
+   begin
+      return Natural (To_Integer_Address (Sig.Alink));
+   end Get_Signal_Number;
+
    procedure Write_Signal_Number (Val_Addr : Address;
                                   Val_Name : Vstring;
                                   Val_Type : Ghdl_Rti_Access)
@@ -792,20 +801,28 @@ package body Grt.Waves is
       pragma Unreferenced (Val_Name);
       pragma Unreferenced (Val_Type);
 
-      function To_Integer_Address is new Ada.Unchecked_Conversion
-        (Ghdl_Signal_Ptr, Integer_Address);
+      Num : Natural;
+
       function To_Ghdl_Signal_Ptr is new Ada.Unchecked_Conversion
         (Source => Integer_Address, Target => Ghdl_Signal_Ptr);
       Sig : Ghdl_Signal_Ptr;
    begin
+      --  Convert to signal.
       Sig := To_Ghdl_Signal_Ptr (To_Addr_Acc (Val_Addr).all);
-      if not Sig.Flags.Is_Dumped then
-         Sig.Flags.Is_Dumped := True;
+
+      --  Get signal number.
+      Num := Get_Signal_Number (Sig);
+
+      --  If the signal number is 0, then assign a valid signal number.
+      if Num = 0 then
          Nbr_Dumped_Signals := Nbr_Dumped_Signals + 1;
-         Sig.Flink := To_Ghdl_Signal_Ptr
+         Sig.Alink := To_Ghdl_Signal_Ptr
            (Integer_Address (Nbr_Dumped_Signals));
+         Num := Nbr_Dumped_Signals;
       end if;
-      Wave_Put_ULEB128 (Ghdl_E32 (To_Integer_Address (Sig.Flink)));
+
+      --  Do the real job: write the signal number.
+      Wave_Put_ULEB128 (Ghdl_E32 (Num));
    end Write_Signal_Number;
 
    procedure Foreach_Scalar_Signal_Number is new
@@ -1370,13 +1387,18 @@ package body Grt.Waves is
       Table_Initial => 32,
       Table_Increment => 100);
 
+   function Get_Dump_Entry (N : Natural) return Ghdl_Signal_Ptr is
+   begin
+      return Dump_Table.Table (N);
+   end Get_Dump_Entry;
+
    procedure Write_Hierarchy (Root : VhpiHandleT)
    is
       N : Natural;
    begin
-      --  Check Flink is 0.
+      --  Check Alink is 0.
       for I in Sig_Table.First .. Sig_Table.Last loop
-         if Sig_Table.Table (I).Flink /= null then
+         if Sig_Table.Table (I).Alink /= null then
             Internal_Error ("wave.write_hierarchy");
          end if;
       end loop;
@@ -1393,15 +1415,20 @@ package body Grt.Waves is
       Wave_Put_Byte (0);
 
       Dump_Table.Set_Last (Nbr_Dumped_Signals);
+      for I in Dump_Table.First .. Dump_Table.Last loop
+         Dump_Table.Table (I) := null;
+      end loop;
 
       --  Save and clear.
-      N := 0;
       for I in Sig_Table.First .. Sig_Table.Last loop
-         if Sig_Table.Table (I).Flags.Is_Dumped then
-            N := N + 1;
+         N := Get_Signal_Number (Sig_Table.Table (I));
+         if N /= 0 then
+            if Dump_Table.Table (N) /= null then
+               Internal_Error ("wave.write_hierarchy(2)");
+            end if;
             Dump_Table.Table (N) := Sig_Table.Table (I);
+            Sig_Table.Table (I).Alink := null;
          end if;
-         Sig_Table.Table (I).Flink := null;
       end loop;
    end Write_Hierarchy;
 

@@ -32,7 +32,7 @@ $(ortho_exec): force
 
 clean:
 	$(MAKE) -f $(BACK_END)/Makefile clean
-	$(RM) -f oread *.o *~
+	$(RM) -f oread-gcc oread-mcode *.o *~
 
 distclean: clean
 	$(MAKE) -f $(BACK_END)/Makefile distclean

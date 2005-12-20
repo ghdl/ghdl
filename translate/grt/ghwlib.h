@@ -390,7 +390,8 @@ void ghw_close (struct ghw_handler *h);
 
 const char *ghw_get_dir (int is_downto);
 
-void ghw_disp_range (union ghw_range *rng);
+/* Note: TYPE must be a base type (used only to display literals).  */
+void ghw_disp_range (union ghw_type *type, union ghw_range *rng);
 
 void ghw_disp_type (struct ghw_handler *h, union ghw_type *t);
 

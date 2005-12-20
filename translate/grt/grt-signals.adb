@@ -1095,15 +1095,6 @@ package body Grt.Signals is
          when others =>
             Internal_Error ("ghdl_create_signal_attribute");
       end case;
---       Sig_Instance_Name := new Ghdl_Instance_Name_Type'
---         (Kind => Ghdl_Name_Signal,
---          Name => null,
---          Parent => null,
---          Brother => null,
---          Sig_Mode => Mode,
---          Sig_Kind => Kind_Signal_No,
---        Sig_Indexes => (First => Sig_Table.Last + 1, Last => Sig_Table.Last),
---          Sig_Type_Desc => Sig_Type);
       --  Note: bit and boolean are both mode_b2.
       Res := Create_Signal
         (Mode_B2, Value_Union'(Mode => Mode_B2, B2 => True),

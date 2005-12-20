@@ -1214,16 +1214,31 @@ ghw_read_cycle_end (struct ghw_handler *h)
   return 0;
 }
 
+static const char *
+ghw_get_lit (union ghw_type *type, int e)
+{
+  if (e >= type->en.nbr || e < 0)
+    return "??";
+  else
+    return type->en.lits[e];
+}
+
+static void
+ghw_disp_lit (union ghw_type *type, int e)
+{
+  printf ("%s (%d)", ghw_get_lit (type, e), e);
+}
+
 void
 ghw_disp_value (union ghw_val *val, union ghw_type *type)
 {
   switch (ghw_get_base_type (type)->kind)
     {
     case ghdl_rtik_type_b2:
-      printf ("%s (%d)", type->en.lits[val->b2], val->b2);
+      ghw_disp_lit (type, val->b2);
       break;
     case ghdl_rtik_type_e8:
-      printf ("%s (%d)", type->en.lits[val->e8], val->e8);
+      ghw_disp_lit (type, val->e8);
       break;
     case ghdl_rtik_type_i32:
       printf ("%d", val->i32);
@@ -1582,10 +1597,14 @@ ghw_get_dir (int is_downto)
 }
 
 void
-ghw_disp_range (union ghw_range *rng)
+ghw_disp_range (union ghw_type *type, union ghw_range *rng)
 {
   switch (rng->kind)
     {
+    case ghdl_rtik_type_e8:
+      printf ("%s %s %s", ghw_get_lit (type, rng->e8.left),
+	      ghw_get_dir (rng->e8.dir), ghw_get_lit (type, rng->e8.right));
+      break;
     case ghdl_rtik_type_i32:
     case ghdl_rtik_type_p32:
       printf ("%d %s %d",
@@ -1657,7 +1676,7 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	printf ("subtype %s is ", s->name);
 	ghw_disp_typename (h, s->base);
 	printf (" range ");
-	ghw_disp_range (s->rng);
+	ghw_disp_range (s->base, s->rng);
 	printf (";\n");
       }
       break;
@@ -1692,7 +1711,7 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	  {
 	    if (i != 0)
 	      printf (", ");
-	    ghw_disp_range (a->rngs[i]);
+	    ghw_disp_range ((union ghw_type *)a->base, a->rngs[i]);
 	  }
 	printf (");\n");
       }
