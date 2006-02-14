@@ -1797,15 +1797,13 @@ package body Translation is
 
       --  Check bounds length of L match bounds length of R.
       --  If L_TYPE (resp. R_TYPE) is not a thin array, then L_NODE
-      --    (resp. R_NODE) are not used (and may be o_lnode_null).
+      --    (resp. R_NODE) are not used (and may be Mnode_Null).
       --  If L_TYPE (resp. T_TYPE) is a fat array, then L_NODE (resp. R_NODE)
-      --    must be a variable pointing to the array.
+      --    must designate the array.
       procedure Check_Array_Match (L_Type : Iir;
-                                   L_Node : O_Lnode;
-                                   L_Mode : Object_Kind_Type;
+                                   L_Node : Mnode;
                                    R_Type : Iir;
-                                   R_Node : O_Lnode;
-                                   R_Mode : Object_Kind_Type;
+                                   R_Node : Mnode;
                                    Loc : Iir);
 
       --  Create a subtype range to be stored into the location pointed by
@@ -8412,9 +8410,18 @@ package body Translation is
          return True;
       end Need_Range_Check;
 
-      procedure Check_Range (Value : O_Dnode; Expr : Iir; Atype : Iir)
+      procedure Check_Range_Low (Value : O_Dnode; Atype : Iir)
       is
          If_Blk : O_If_Block;
+      begin
+         Open_Temp;
+         Start_If_Stmt (If_Blk, Not_In_Range (Value, Atype));
+         Chap6.Gen_Bound_Error (Null_Iir);
+         Finish_If_Stmt (If_Blk);
+         Close_Temp;
+      end Check_Range_Low;
+
+      procedure Check_Range (Value : O_Dnode; Expr : Iir; Atype : Iir) is
       begin
          if not Need_Range_Check (Expr, Atype) then
             return;
@@ -8428,20 +8435,14 @@ package body Translation is
                Chap6.Gen_Bound_Error (Expr);
             end if;
          else
-            Open_Temp;
-            Start_If_Stmt (If_Blk, Not_In_Range (Value, Atype));
-            Chap6.Gen_Bound_Error (Null_Iir);
-            Finish_If_Stmt (If_Blk);
-            Close_Temp;
+            Check_Range_Low (Value, Atype);
          end if;
       end Check_Range;
 
       procedure Check_Array_Match (L_Type : Iir;
-                                   L_Node : O_Lnode;
-                                   L_Mode : Object_Kind_Type;
+                                   L_Node : Mnode;
                                    R_Type : Iir;
-                                   R_Node : O_Lnode;
-                                   R_Mode : Object_Kind_Type;
+                                   R_Node : Mnode;
                                    Loc : Iir)
       is
          L_Tinfo, R_Tinfo : Type_Info_Acc;
@@ -8491,10 +8492,10 @@ package body Translation is
                   exit when Index = Null_Iir;
                   Sub_Cond := New_Compare_Op
                     (ON_Neq,
-                     Chap6.Get_Array_Ptr_Bound_Length (L_Node, L_Type,
-                                                       I + 1, L_Mode),
-                     Chap6.Get_Array_Ptr_Bound_Length (R_Node, R_Type,
-                                                       I + 1, R_Mode),
+                     M2E (Range_To_Length
+                          (Get_Array_Range (L_Node, L_Type, I + 1))),
+                     M2E (Range_To_Length
+                          (Get_Array_Range (R_Node, R_Type, I + 1))),
                      Ghdl_Bool_Type);
                   if I = 0 then
                      Cond := Sub_Cond;
@@ -10081,8 +10082,8 @@ package body Translation is
                New_Assign_Stmt
                  (Get_Var (Alias_Info.Alias_Var),
                   New_Value (M2Lp (Chap3.Get_Array_Base (Name_Node))));
-               Chap3.Check_Array_Match (Decl_Type, O_Lnode_Null, Kind,
-                                        Name_Type, M2Lp (Name_Node), Kind,
+               Chap3.Check_Array_Match (Decl_Type, T2M (Decl_Type, Kind),
+                                        Name_Type, Name_Node,
                                         Decl);
                Close_Temp;
             when Type_Mode_Scalar =>
@@ -11689,6 +11690,16 @@ package body Translation is
                        (Actual_Val, Get_Info (Formal_Type), Mode_Value);
                      Mode := Connect_Value;
                   end;
+               end if;
+
+               if Get_Kind (Formal_Type) in Iir_Kinds_Array_Type_Definition
+               then
+                  --  Check length matches.
+                  Stabilize (Formal_Node);
+                  Stabilize (Actual_Node);
+                  Chap3.Check_Array_Match (Formal_Type, Formal_Node,
+                                           Actual_Type, Actual_Node,
+                                           Assoc);
                end if;
 
                Data := (Actual_Node => Actual_Node,
@@ -14420,8 +14431,8 @@ package body Translation is
                   E := Create_Temp_Init
                     (T_Info.Ortho_Ptr_Type (Mode_Value), Val);
                   Chap3.Check_Array_Match
-                    (Target_Type, M2Lp (T), Mode_Value,
-                     Get_Type (Expr), New_Obj (E), Mode_Value,
+                    (Target_Type, T,
+                     Get_Type (Expr), Dp2M (E, T_Info, Mode_Value),
                      Null_Iir);
                   Chap3.Translate_Object_Copy
                     (T, New_Obj_Value (E), Target_Type);
@@ -15169,9 +15180,10 @@ package body Translation is
                begin
                   E := Create_Temp_Init (Expr_Info.Ortho_Ptr_Type (Mode_Value),
                                          Expr);
-                  Chap3.Check_Array_Match (Res_Type, O_Lnode_Null, Mode_Value,
-                                           Expr_Type, New_Obj (E), Mode_Value,
-                                           Loc);
+                  Chap3.Check_Array_Match
+                    (Res_Type, Mnode_Null,
+                     Expr_Type, Dp2M (E, Expr_Info, Mode_Value),
+                     Loc);
                   return New_Convert_Ov
                     (New_Value (Chap3.Get_Array_Ptr_Base_Ptr
                                 (New_Obj (E), Expr_Type, Mode_Value)),
@@ -15199,9 +15211,10 @@ package body Translation is
                      Chap3.Get_Array_Bounds_Ptr (O_Lnode_Null, Expr_Type,
                                                  Mode_Value));
                   --  Check array match.
-                  Chap3.Check_Array_Match (Res_Type, New_Obj (Res), Mode_Value,
-                                           Expr_Type, New_Obj (E), Mode_Value,
-                                           Loc);
+                  Chap3.Check_Array_Match
+                    (Res_Type, Dv2M (Res, Res_Info, Mode_Value),
+                     Expr_Type, Dp2M (E, Expr_Info, Mode_Value),
+                     Loc);
                   Close_Temp;
                   return New_Address
                     (New_Obj (Res), Res_Info.Ortho_Ptr_Type (Mode_Value));
@@ -22283,19 +22296,58 @@ package body Translation is
 
       function Translate_Val_Attribute (Attr : Iir) return O_Enode
       is
-         T : O_Dnode;
-         Prefix : Iir;
-         Ttype : O_Tnode;
+         Val : O_Enode;
+         Attr_Type : Iir;
+         Res_Var : O_Dnode;
+         Res_Type : O_Tnode;
       begin
-         Prefix := Get_Type (Attr);
-         Ttype := Get_Ortho_Type (Prefix, Mode_Value);
-         T := Create_Temp (Ttype);
-         New_Assign_Stmt
-           (New_Obj (T),
-            New_Convert_Ov (Chap7.Translate_Expression (Get_Parameter (Attr)),
-                            Ttype));
-         Chap3.Check_Range (T, Attr, Get_Type (Get_Prefix (Attr)));
-         return New_Obj_Value (T);
+         Attr_Type := Get_Type (Attr);
+         Res_Type := Get_Ortho_Type (Attr_Type, Mode_Value);
+         Res_Var := Create_Temp (Res_Type);
+         Val := Chap7.Translate_Expression (Get_Parameter (Attr));
+
+         case Get_Kind (Attr_Type) is
+            when Iir_Kind_Enumeration_Type_Definition
+              | Iir_Kind_Enumeration_Subtype_Definition =>
+               --  For enumeration, always check the value is in the enum
+               --  range.
+               declare
+                  Val_Type : O_Tnode;
+                  Val_Var : O_Dnode;
+                  If_Blk : O_If_Block;
+               begin
+                  Val_Type := Get_Ortho_Type (Get_Type (Get_Parameter (Attr)),
+                                              Mode_Value);
+                  Val_Var := Create_Temp_Init (Val_Type, Val);
+                  Start_If_Stmt
+                    (If_Blk,
+                     New_Dyadic_Op
+                     (ON_Or,
+                      New_Compare_Op (ON_Lt,
+                                      New_Obj_Value (Val_Var),
+                                      New_Lit (New_Signed_Literal
+                                               (Val_Type, 0)),
+                                      Ghdl_Bool_Type),
+                      New_Compare_Op (ON_Ge,
+                                      New_Obj_Value (Val_Var),
+                                      New_Lit (New_Signed_Literal
+                                               (Val_Type,
+                                                Integer_64
+                                                (Get_Nbr_Elements
+                                                 (Get_Enumeration_Literal_List
+                                                  (Attr_Type))))),
+                                      Ghdl_Bool_Type)));
+                  Chap6.Gen_Bound_Error (Attr);
+                  Finish_If_Stmt (If_Blk);
+                  Val := New_Obj_Value (Val_Var);
+               end;
+            when others =>
+               null;
+         end case;
+
+         New_Assign_Stmt (New_Obj (Res_Var), New_Convert_Ov (Val, Res_Type));
+         Chap3.Check_Range (Res_Var, Attr, Get_Type (Get_Prefix (Attr)));
+         return New_Obj_Value (Res_Var);
       end Translate_Val_Attribute;
 
       function Translate_Pos_Attribute (Attr : Iir; Res_Type : Iir)

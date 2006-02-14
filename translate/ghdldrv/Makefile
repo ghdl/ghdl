@@ -36,10 +36,10 @@ GRTSRCDIR=../grt
 include $(GRTSRCDIR)/Makefile.inc
 
 ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) mmap_binding.o force 
-	gnatmake -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs mmap_binding.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) memsegs_c.o force 
+	gnatmake -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
-mmap_binding.o: ../../ortho/mcode/mmap_binding.c
+memsegs_c.o: ../../ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
 
 ghdl_gcc: default_pathes.ads force 

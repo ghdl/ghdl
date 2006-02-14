@@ -836,6 +836,28 @@ package body Evaluation is
       return Build_Simple_Aggregate (Res_List, Orig, Res_Type);
    end Eval_Concatenation;
 
+   function Eval_Array_Equality (Left, Right : Iir) return Boolean
+   is
+      L_List : Iir_List;
+      R_List : Iir_List;
+      N : Natural;
+   begin
+      --  FIXME: the simple aggregates are lost.
+      L_List := Get_Simple_Aggregate_List (Eval_String_Literal (Left));
+      R_List := Get_Simple_Aggregate_List (Eval_String_Literal (Right));
+      N := Get_Nbr_Elements (L_List);
+      if N /= Get_Nbr_Elements (R_List) then
+         return False;
+      end if;
+      for I in 0 .. N - 1 loop
+         --  FIXME: this is wrong: (eg: evaluated lit)
+         if Get_Nth_Element (L_List, I) /= Get_Nth_Element (R_List, I) then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Eval_Array_Equality;
+
    --  ORIG is either a dyadic operator or a function call.
    function Eval_Dyadic_Operator (Orig : Iir; Left, Right : Iir)
      return Iir
@@ -1073,34 +1095,10 @@ package body Evaluation is
               (Get_Fp_Value (Left) / Iir_Fp64 (Get_Value (Right)), Orig);
 
          when Iir_Predefined_Array_Equality =>
-            declare
-               L_List : Iir_List;
-               R_List : Iir_List;
-               R : Boolean;
-               N : Natural;
-            begin
-               --  FIXME: the simple aggregates are lost.
-               L_List :=
-                 Get_Simple_Aggregate_List (Eval_String_Literal (Left));
-               R_List :=
-                 Get_Simple_Aggregate_List (Eval_String_Literal (Right));
-               N := Get_Nbr_Elements (L_List);
-               if N /= Get_Nbr_Elements (R_List) then
-                  R := False;
-               else
-                  R := True;
-                  for I in 0 .. N - 1 loop
-                     --  FIXME: this is wrong: (eg: evaluated lit)
-                     if Get_Nth_Element (L_List, I)
-                       /= Get_Nth_Element (R_List, I)
-                     then
-                        R := False;
-                        exit;
-                     end if;
-                  end loop;
-               end if;
-               return Build_Boolean (R, Orig);
-            end;
+            return Build_Boolean (Eval_Array_Equality (Left, Right), Orig);
+
+         when Iir_Predefined_Array_Inequality =>
+            return Build_Boolean (not Eval_Array_Equality (Left, Right), Orig);
 
          when Iir_Predefined_Array_Sll
            | Iir_Predefined_Array_Srl
@@ -1111,8 +1109,7 @@ package body Evaluation is
             return Eval_Shift_Operator
               (Eval_String_Literal (Left), Right, Orig, Func);
 
-         when Iir_Predefined_Array_Inequality
-           | Iir_Predefined_Array_Less
+         when Iir_Predefined_Array_Less
            | Iir_Predefined_Array_Less_Equal
            | Iir_Predefined_Array_Greater
            | Iir_Predefined_Array_Greater_Equal

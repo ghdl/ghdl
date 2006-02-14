@@ -35,7 +35,7 @@ with System; use System;
 with Trans_Decls;
 with Ortho_Code.Binary;
 with Ortho_Code.Debug;
-with Ortho_Code.X86.Emits;
+with Ortho_Code.Abi;
 with Types;
 with Iirs; use Iirs;
 with Flags;
@@ -177,13 +177,6 @@ package body Ghdlrun is
    pragma Export (C, Ieee_Std_Logic_1164_Resolved_Resolv_Ptr,
                   "ieee__std_logic_1164__resolved_RESOLV_ptr");
 
-   --  From GCC.
-   function Divdi3 (A, B : Long_Integer) return Long_Integer;
-   pragma Import (C, Divdi3, "__divdi3");
-
-   function Muldi3 (A, B : Long_Integer) return Long_Integer;
-   pragma Import (C, Muldi3, "__muldi3");
-
    function Find_Untruncated_Text_Read return O_Dnode
    is
       use Types;
@@ -265,6 +258,8 @@ package body Ghdlrun is
       end if;
 
       Binary_File.Memory.Write_Memory_Init;
+
+      Ortho_Code.Abi.Link_Intrinsics;
 
       Def (Trans_Decls.Ghdl_Memcpy,
            Grt.Lib.Ghdl_Memcpy'Address);
@@ -524,15 +519,6 @@ package body Ghdlrun is
            Grt.Names.Ghdl_Get_Path_Name'Address);
       Def (Trans_Decls.Ghdl_Get_Instance_Name,
            Grt.Names.Ghdl_Get_Instance_Name'Address);
-
-      Binary_File.Memory.Set_Symbol_Address
-        (Ortho_Code.X86.Emits.Intrinsics_Symbol
-         (Ortho_Code.X86.Intrinsic_Mul_Ov_I64),
-         Muldi3'Address);
-      Binary_File.Memory.Set_Symbol_Address
-        (Ortho_Code.X86.Emits.Intrinsics_Symbol
-         (Ortho_Code.X86.Intrinsic_Div_Ov_I64),
-         Divdi3'Address);
 
       --  Find untruncated_text_read, if any.
       Decl := Find_Untruncated_Text_Read;

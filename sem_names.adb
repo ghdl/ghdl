@@ -1974,7 +1974,8 @@ package body Sem_Names is
                Error_Msg_Sem ("function name is a procedure", Name);
 
             when Iir_Kind_Process_Statement
-              | Iir_Kind_Component_Declaration =>
+              | Iir_Kind_Component_Declaration
+              | Iir_Kind_Type_Conversion =>
                Error_Msg_Sem
                  (Disp_Node (Prefix) & " cannot be indexed or sliced", Name);
                Res := Null_Iir;

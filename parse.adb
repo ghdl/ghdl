@@ -3540,7 +3540,7 @@ package body Parse is
       Set_Location (Res);
       Set_Expression (Res, Parse_Expression);
 
-      Expect (Tok_Select, "after expression");
+      Expect (Tok_Select, "'select' expected after expression");
       Scan.Scan;
       if Current_Token = Tok_Left_Paren then
          Target := Parse_Aggregate;
@@ -3556,13 +3556,13 @@ package body Parse is
       Build_Init (Last);
       loop
          Wf_Chain := Parse_Waveform;
-         Expect (Tok_When, "after waveform");
+         Expect (Tok_When, "'when' expected after waveform");
          Scan.Scan;
          Assoc := Parse_Choices (Null_Iir);
          Set_Associated (Assoc, Wf_Chain);
          Append_Subchain (Last, Res, Assoc);
          exit when Current_Token = Tok_Semi_Colon;
-         Expect (Tok_Comma, "after choice");
+         Expect (Tok_Comma, "',' (comma) expected after choice");
          Scan.Scan;
       end loop;
       return Res;

@@ -2278,6 +2278,7 @@ package body Sem_Expr is
             Lb := Low;
             Hb := High;
          end if;
+         --  Checks all values between POS and POS_MAX are handled.
          Pos := Eval_Pos (Lb);
          Pos_Max := Eval_Pos (Hb);
          if Pos > Pos_Max then

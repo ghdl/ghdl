@@ -189,7 +189,12 @@ static void grt_signal_setup (void)
 #endif
 
 /* Context for the main stack.  */
-static __thread struct stack_context main_stack_context;
+#ifdef USE_THREADS
+#define THREAD __thread
+#else
+#define THREAD
+#endif
+static THREAD struct stack_context main_stack_context;
 
 extern void grt_set_main_stack (struct stack_context *stack);
 

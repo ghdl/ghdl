@@ -81,6 +81,7 @@ GRT_ADD_OBJS:=$(GRT_TARGET_OBJS) grt-cbinding.o grt-cvpi.o
 
 #GRT_USE_PTHREADS=y
 ifeq ($(GRT_USE_PTHREADS),y)
+ GRT_CFLAGS+=-DUSE_THREADS
  GRT_ADD_OBJS+=grt-cthreads.o
  GRT_EXTRA_LIB+=-lpthread
 endif
@@ -128,7 +129,7 @@ amd64.o: $(GRTSRCDIR)/config/amd64.S
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
 linux.o: $(GRTSRCDIR)/config/linux.c
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
+	$(CC) -c $(GRT_FLAGS) $(GRT_CFLAGS) -o $@ $<
 
 win32.o: $(GRTSRCDIR)/config/win32.c
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
