@@ -15181,7 +15181,7 @@ package body Translation is
                   E := Create_Temp_Init (Expr_Info.Ortho_Ptr_Type (Mode_Value),
                                          Expr);
                   Chap3.Check_Array_Match
-                    (Res_Type, Mnode_Null,
+                    (Res_Type, T2M (Res_Type, Mode_Value),
                      Expr_Type, Dp2M (E, Expr_Info, Mode_Value),
                      Loc);
                   return New_Convert_Ov
