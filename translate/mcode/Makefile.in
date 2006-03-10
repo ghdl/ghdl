@@ -1,0 +1,54 @@
+PREFIX=/usr/local
+target=i686-pc-linux-gnu
+
+CFLAGS=-O
+GNATFLAGS=$(CFLAGS) -gnatn
+
+GRT_FLAGS=$(CFLAGS)
+
+all: ghdl_mcode std.v93 std.v87 ieee.v93 ieee.v87 synopsys.v93 synopsys.v87 mentor.v93
+
+
+GRTSRCDIR=grt
+
+####grt Makefile.inc
+
+ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) mmap_binding.o force 
+	gnatmake -aIghdldrv -aIghdl -aIortho -aIgrt $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs mmap_binding.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(GRT_EXTRA_LIB) -Wl,--version-script=$(GRTSRCDIR)/grt.ver -Wl,--export-dynamic
+
+mmap_binding.o: ortho/mmap_binding.c
+	$(CC) -c -g -o $@ $<
+
+default_pathes.ads: Makefile
+	echo "--  DO NOT EDIT" > tmp-dpathes.ads
+	echo "--  This file is created by Makefile" >> tmp-dpathes.ads
+	echo "package Default_Pathes is" >> tmp-dpathes.ads
+	echo "   Prefix : constant String :=">> tmp-dpathes.ads
+	echo "     \"$(PREFIX)/lib/ghdl/\";" >> tmp-dpathes.ads
+	echo "end Default_Pathes;" >> tmp-dpathes.ads
+	if test -r $@ && cmp tmp-dpathes.ads $@; then \
+	  echo "$@ unchanged"; \
+        else \
+	  mv tmp-dpathes.ads $@; \
+        fi
+	$(RM) tmp-dpathes.ads
+
+force:
+
+LIB93_DIR:=./lib/v93
+LIB87_DIR:=./lib/v87
+LIBSRC_DIR:=./libraries
+ANALYZE=../../../ghdl_mcode -a --ieee=none
+REL_DIR=../../..
+VHDLLIBS_COPY_OBJS:=no
+CP=cp
+LN=ln -s
+
+./lib:
+	mkdir $@
+
+$(LIB93_DIR) $(LIB87_DIR): ./lib
+	mkdir $@
+
+
+####libraries Makefile.inc

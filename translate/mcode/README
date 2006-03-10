@@ -1,0 +1,47 @@
+This is the README from the source distribution of GHDL.
+
+To get the binary distribution or more information, go to http://ghdl.free.fr
+
+Copyright:
+**********
+GHDL is copyright (c) 2002, 2003, 2004, 2005 Tristan Gingold.
+See the GHDL manual for more details.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330,
+Boston, MA 02111-1307, USA.
+
+
+Building GHDL from sources for Windows:
+***************************************
+
+Note: this was tested with Windows XP SP2 familly edition.
+
+Note: If you want to create the installer, GHDL should be built on a
+FAT partition.  NSIS rounds files date to be FAT compliant (seconds are always
+even) and because GHDL stores dates, the files date must not be modified.
+
+Required:
+* the Ada95 GNAT compiler (GNAT GPL 2005 is known to work).
+* NSIS to create the installer.
+
+Unzip,
+edit winbuild to use correct path for makensis,
+run winbuild.
+
+The installer is in the windows directory.
+
+Send bugs and comments on http://gna.org/project/ghdl
+
+Tristan Gingold.
