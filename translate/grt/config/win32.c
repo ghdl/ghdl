@@ -19,6 +19,8 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include <setjmp.h>
+#include <assert.h>
 
 struct stack_type
 {
@@ -27,7 +29,8 @@ struct stack_type
   void *arg; //  Function argument.
 };
 
-static struct stack_type  main_stack_context;
+static struct stack_type main_stack_context;
+static struct stack_type *current;
 extern void grt_set_main_stack (struct stack_type *stack);
 
 void grt_stack_init(void)
@@ -40,6 +43,7 @@ void grt_stack_init(void)
       abort ();
     }
   grt_set_main_stack (&main_stack_context);
+  current = &main_stack_context;
 }
 
 static VOID __stdcall
@@ -71,10 +75,22 @@ grt_stack_create (void (*func)(void *), void *arg)
   return res;
 }
 
+static int run_env_en;
+static jmp_buf run_env;
+static int need_longjmp;
+
 void
 grt_stack_switch (struct stack_type *to, struct stack_type *from)
 {
+  assert (current == from);
+  current = to;
   SwitchToFiber (to->fiber);
+  if (from == &main_stack_context && need_longjmp)
+    {
+      /* We returned to do the longjump.  */
+      current = &main_stack_context;
+      longjmp (run_env, need_longjmp);
+    }
 }
 
 void
@@ -82,6 +98,36 @@ grt_stack_delete (struct stack_type *stack)
 {
   DeleteFiber (stack->fiber);
   stack->fiber = NULL;
+}
+
+void
+__ghdl_maybe_return_via_longjump (int val)
+{
+  if (!run_env_en)
+    return;
+
+  if (current != &main_stack_context)
+    {
+      /* We are allowed to jump only in the same stack.
+	 First switch back to the main thread.  */
+      need_longjmp = val;
+      SwitchToFiber (main_stack_context.fiber);
+    }
+  else
+    longjmp (run_env, val);
+}
+
+int
+__ghdl_run_through_longjump (int (*func)(void))
+{
+  int res;
+
+  run_env_en = 1;
+  res = setjmp (run_env);
+  if (res == 0)
+    res = (*func)();
+  run_env_en = 0;
+  return res;
 }
 
 #ifndef WITH_GNAT_RUN_TIME

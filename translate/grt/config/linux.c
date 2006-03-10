@@ -285,3 +285,28 @@ grt_stack_allocate (void)
   res->cur_length = stack_size;
   return res;
 }
+
+#include <setjmp.h>
+static int run_env_en;
+static jmp_buf run_env;
+
+void
+__ghdl_maybe_return_via_longjump (int val)
+{
+  if (run_env_en)
+    longjmp (run_env, val);
+}
+
+int
+__ghdl_run_through_longjump (int (*func)(void))
+{
+  int res;
+
+  run_env_en = 1;
+  res = setjmp (run_env);
+  if (res == 0)
+    res = (*func)();
+  run_env_en = 0;
+  return res;
+}
+

@@ -27,7 +27,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <setjmp.h>
 
 //#define INFO printf
 #define INFO (void)
@@ -41,7 +41,8 @@ typedef struct
 	void*               Arg;            // ARG passed to FUNC
 } Stack_Type_t, *Stack_Type;
 
-Stack_Type_t      main_stack_context;
+static Stack_Type_t      main_stack_context;
+static Stack_Type_t	 *current;
 extern void grt_set_main_stack (Stack_Type_t *stack);
 
 //----------------------------------------------------------------------------
@@ -58,6 +59,8 @@ void grt_stack_init(void)
 	// lock the mutex, as we are currently running
 	pthread_mutex_lock(&(main_stack_context.mutex));
 	
+	current = &main_stack_context;
+
 	grt_set_main_stack (&main_stack_context);
 }
 
@@ -115,6 +118,10 @@ Stack_Type grt_stack_create(void* Func, void* Arg)
 	return newStack;
 }
 
+static int need_longjmp;
+static int run_env_en;
+static jmp_buf run_env;
+
 //----------------------------------------------------------------------------
 void grt_stack_switch(Stack_Type To, Stack_Type From)
 // Resume stack TO and save the current context to the stack pointed by
@@ -122,7 +129,9 @@ void grt_stack_switch(Stack_Type To, Stack_Type From)
 // => procedure Stack_Switch (To : Stack_Type; From : Stack_Type);
 {	INFO("grt_stack_switch\n");
 	INFO("  from 0x%08x to 0x%08x\n", From, To);
-	
+
+	current = To;
+
 	// unlock 'To' mutex. this will make the other thread either
 	// - starts for first time in grt_stack_loop
 	// - resumes at lock below
@@ -132,6 +141,9 @@ void grt_stack_switch(Stack_Type To, Stack_Type From)
 	// as we are running, our mutex is locked and we block here
 	// when stacks are switched, with above unlock, we may proceed
 	pthread_mutex_lock(&(From->mutex));
+
+	if (From == &main_stack_context && need_longjmp != 0)
+	  longjmp (run_env, need_longjmp);
 }
 
 //----------------------------------------------------------------------------
@@ -140,6 +152,35 @@ void grt_stack_delete(Stack_Type Stack)
 // => procedure Stack_Delete (Stack : Stack_Type);
 {	INFO("grt_stack_delete\n");
 }
+
+void
+__ghdl_maybe_return_via_longjump (int val)
+{
+  if (!run_env_en)
+    return;
+
+  if (current != &main_stack_context)
+    {
+      need_longjmp = val;
+      grt_stack_switch (&main_stack_context, current);
+    }
+  else
+    longjmp (run_env, val);
+}
+
+int
+__ghdl_run_through_longjump (int (*func)(void))
+{
+  int res;
+
+  run_env_en = 1;
+  res = setjmp (run_env);
+  if (res == 0)
+    res = (*func)();
+  run_env_en = 0;
+  return res;
+}
+
 
 //----------------------------------------------------------------------------
 
