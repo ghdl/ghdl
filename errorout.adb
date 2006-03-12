@@ -501,7 +501,7 @@ package body Errorout is
               & Name_Table.Name_Buffer (1 .. Name_Table.Name_Length)
               & ''';
          when Iir_Kind_Entity_Aspect_Entity =>
-            return Disp_Node (Get_Entity (Node))
+            return "aspect " & Disp_Node (Get_Entity (Node))
               & '(' & Iirs_Utils.Image_Identifier (Get_Architecture (Node))
               & ')';
          when Iir_Kind_Entity_Aspect_Configuration =>

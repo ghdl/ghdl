@@ -25,7 +25,7 @@ with Flags;
 package body Configuration is
    procedure Add_Design_Concurrent_Stmts (Parent : Iir);
    procedure Add_Design_Block_Configuration (Blk : Iir_Block_Configuration);
-   procedure Add_Design_Aspect (Aspect : Iir);
+   procedure Add_Design_Aspect (Aspect : Iir; Add_Default : Boolean);
 
    Current_File_Dependence : Iir_List := Null_Iir_List;
    Current_Configuration : Iir_Configuration_Declaration := Null_Iir;
@@ -51,6 +51,16 @@ package body Configuration is
       --  If already in the table, then nothing to do.
       if Get_Elab_Flag (Unit) then
          return;
+      end if;
+
+      --  May be enabled to debug dependency construction.
+      if False then
+         if From = Null_Iir then
+            Warning_Msg_Elab (Disp_Node (Unit) & " added", Unit);
+         else
+            Warning_Msg_Elab
+              (Disp_Node (Unit) & " added by " & Disp_Node (From), From);
+         end if;
       end if;
 
       Set_Elab_Flag (Unit, True);
@@ -200,7 +210,7 @@ package body Configuration is
                begin
                   Unit := Get_Instantiated_Unit (Stmt);
                   if Get_Kind (Unit) /= Iir_Kind_Component_Declaration then
-                     Add_Design_Aspect (Unit);
+                     Add_Design_Aspect (Unit, True);
                   end if;
                end;
             when Iir_Kind_Generate_Statement
@@ -216,7 +226,7 @@ package body Configuration is
       end loop;
    end Add_Design_Concurrent_Stmts;
 
-   procedure Add_Design_Aspect (Aspect : Iir)
+   procedure Add_Design_Aspect (Aspect : Iir; Add_Default : Boolean)
    is
       use Libraries;
 
@@ -231,10 +241,13 @@ package body Configuration is
       end if;
       case Get_Kind (Aspect) is
          when Iir_Kind_Entity_Aspect_Entity =>
+            --  Add the entity.
             Entity := Get_Entity (Aspect);
-            Entity_Lib := Get_Library_Unit (Entity);
             Add_Design_Unit (Entity, Aspect);
+
+            --  Extract and add the architecture.
             Arch := Get_Architecture (Aspect);
+            Entity_Lib := Get_Library_Unit (Entity);
             if Arch /= Null_Iir then
                case Get_Kind (Arch) is
                   when Iir_Kind_Simple_Name =>
@@ -263,10 +276,15 @@ package body Configuration is
                Arch := Get_Design_Unit (Arch);
             end if;
             Load_Design_Unit (Arch, Aspect);
-            Config := Get_Default_Configuration_Declaration
-              (Get_Library_Unit (Arch));
-            if Config /= Null_Iir then
-               Add_Design_Unit (Config, Aspect);
+            Add_Design_Unit (Arch, Aspect);
+
+            --  Add the default configuration if required.
+            if Add_Default then
+               Config := Get_Default_Configuration_Declaration
+                 (Get_Library_Unit (Arch));
+               if Config /= Null_Iir then
+                  Add_Design_Unit (Config, Aspect);
+               end if;
             end if;
          when Iir_Kind_Entity_Aspect_Configuration =>
             Add_Design_Unit (Get_Configuration (Aspect), Aspect);
@@ -424,7 +442,9 @@ package body Configuration is
 
    --  CONF is either a configuration specification or a component
    --   configuration.
-   procedure Add_Design_Binding_Indication (Conf : Iir)
+   --  If ADD_DEFAULT is true, then the default configuration for the design
+   --  binding must be added if required.
+   procedure Add_Design_Binding_Indication (Conf : Iir; Add_Default : Boolean)
    is
       Bind : Iir_Binding_Indication;
       Inst : Iir;
@@ -442,12 +462,13 @@ package body Configuration is
          return;
       end if;
       Check_Binding_Indication (Conf);
-      Add_Design_Aspect (Get_Entity_Aspect (Bind));
+      Add_Design_Aspect (Get_Entity_Aspect (Bind), Add_Default);
    end Add_Design_Binding_Indication;
 
    procedure Add_Design_Block_Configuration (Blk : Iir_Block_Configuration)
    is
       Item : Iir;
+      Sub_Config : Iir;
    begin
       if Blk = Null_Iir then
          return;
@@ -456,10 +477,11 @@ package body Configuration is
       while Item /= Null_Iir loop
          case Get_Kind (Item) is
             when Iir_Kind_Configuration_Specification =>
-               Add_Design_Binding_Indication (Item);
+               Add_Design_Binding_Indication (Item, True);
             when Iir_Kind_Component_Configuration =>
-               Add_Design_Binding_Indication (Item);
-               Add_Design_Block_Configuration (Get_Block_Configuration (Item));
+               Sub_Config := Get_Block_Configuration (Item);
+               Add_Design_Binding_Indication (Item, Sub_Config = Null_Iir);
+               Add_Design_Block_Configuration (Sub_Config);
             when Iir_Kind_Block_Configuration =>
                Add_Design_Block_Configuration (Item);
             when others =>
