@@ -34,6 +34,20 @@ Required:
 * GNU/Linux for ix86 (pc systems) (porting is necessary for other systems)
 
 Procedure:
+* Check your Ada compiler.  On some systems (or with some distribution), the
+  GNAT compiler seems broken.  Try this very simple example, using file
+  example.adb
+<<<<<<<<<<<<<<<<<<
+procedure Example is
+begin
+   null;
+end Example;
+<<<<<<<<<<<<<<<<<<
+  Compile with
+  $ gnatmake example
+  It should create an executable, 'example'.
+  If this doesn't work, your GNAT installation is broken.  It may be a PATH
+  problem or something else.
 * untar the gcc tarball
 * untar the ghdl tarball (this sould have been done, since you are reading a
   file from it).
