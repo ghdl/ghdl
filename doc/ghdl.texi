@@ -74,11 +74,11 @@ Internal overview
 @contents
 
 @ifnottex
-@node Top
+@node Top, Introduction, (dir), (dir)
 @top GHDL guide
 GHDL, a VHDL compiler.
 
-Copyright @copyright{} 2002, 2003, 2004 Tristan Gingold.
+Copyright @copyright{} 2002, 2003, 2004, 2005, 2006 Tristan Gingold.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1
@@ -94,7 +94,6 @@ or any later version published by the Free Software Foundation.
 * Flaws and bugs report::       
 * Copyrights::                  
 * Index::                       
-
 @end menu
 
 @end ifnottex
@@ -906,6 +905,9 @@ Some contructions are not erroneous but dubious.  Warnings are diagnostic
 messages that report such constructions.  Some warnings are reported only
 during analysis, others during elaboration.
 
+You could disable a warning by using the @option{--warn-no-XXX}
+instead of @option{--warn-XXX}.
+
 @table @code
 @item --warn-reserved
 @cindex @option{--warn-reserved} switch
@@ -1692,6 +1694,7 @@ This chapter describes several implementation defined aspect of VHDL in GHDL.
 * Library database::            
 * VHDL files format::           
 * Top entity::                  
+* Using vendor libraries::      
 * Interfacing to other languages::  
 @end menu
 
@@ -1869,7 +1872,7 @@ to read file written by a non-@code{GHDL} program.
 If the type mark is a composite type (record or array), the file is composed
 of a 2 lines signature, followed by a raw stream.
 
-@node Top entity, Interfacing to other languages, VHDL files format, GHDL implementation of VHDL
+@node Top entity, Using vendor libraries, VHDL files format, GHDL implementation of VHDL
 @comment  node-name,  next,  previous,  up
 @section Top entity
 There are some restrictions on the entity being at the apex of a design
@@ -1883,8 +1886,38 @@ default value;
 The ports type must be constrained.
 @end itemize
 
-@node Interfacing to other languages,  , Top entity, GHDL implementation of VHDL
-@comment  node-name,  next,  previous,  up@section Interfacing with other languages
+@node Using vendor libraries, Interfacing to other languages, Top entity, GHDL implementation of VHDL
+@comment  node-name,  next,  previous,  up
+@section Using vendor libraries
+Many vendors libraries have been analyzed with GHDL.  There are
+usually no problems.  Be sure to use the @option{--work=} option.
+However, some problems have been encountered.
+
+GHDL follows the VHDL LRM (the manual which defines VHDL) more
+strictly than other VHDL tools.  You could try to relax the
+restrictions by using the @option{--std=93c}, @option{-fexplicit} and
+@option{--warn-no-vital-generic}.
+
+Even with these relaxations, some broken libraries may fail.
+
+For example, @code{unisim_VITAL.vhd} from @code{Xilinx} can't be
+compiled because lines such as:
+@smallexample
+ variable Write_A_Write_B : memory_collision_type := Write_A_Write_B;
+ variable Read_A_Write_B  : memory_collision_type := Read_A_Write_B;
+@end smallexample
+(there are 6 such lines).
+According to VHDL visibility rules, @samp{Write_A_Write_B} cannot be used
+while it is defined.  This is very logical because it prevents from silly
+declarations such as
+@smallexample
+  constant k : natural := 2 * k;
+@end smallexample
+This files must be modified.  Fortunatly, in the example the variables
+are never written.  So it is enough to remove them.
+
+@node Interfacing to other languages,  , Using vendor libraries, GHDL implementation of VHDL
+@comment  node-name,  next,  previous,  up
 @section Interfacing to other languages
 @cindex interfacing
 @cindex other languages
@@ -1935,7 +1968,7 @@ subprogram follows.
 * Linking with foreign object files::  
 * Starting a simulation from a foreign program::  
 * Linking with Ada::            
-* Using GRT from Ada::
+* Using GRT from Ada::          
 @end menu
 
 @node Restrictions on foreign declarations, Linking with foreign object files, Interfacing to other languages, Interfacing to other languages
@@ -2040,7 +2073,7 @@ design:
 $ gnatmake my_prog -largs `ghdl --list-link design`
 @end smallexample
 
-@node Using GRT from Ada, , Linking with Ada, Interfacing to other languages
+@node Using GRT from Ada,  , Linking with Ada, Interfacing to other languages
 @comment  node-name,  next,  previous,  up
 @subsection Using GRT from Ada
 @quotation Warning
