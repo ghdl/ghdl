@@ -18,6 +18,8 @@
 #include "tree-gimple.h"
 #include "function.h"
 #include "cgraph.h"
+#include "target.h"
+#include "convert.h"
 
 const int tree_identifier_size = sizeof (struct tree_identifier);
 
@@ -494,6 +496,89 @@ ortho_truthvalue_conversion (tree expr)
     }
 }
 
+/* The following function has been copied and modified from c-convert.c.  */
+
+/* Change of width--truncation and extension of integers or reals--
+   is represented with NOP_EXPR.  Proper functioning of many things
+   assumes that no other conversions can be NOP_EXPRs.
+
+   Conversion between integer and pointer is represented with CONVERT_EXPR.
+   Converting integer to real uses FLOAT_EXPR
+   and real to integer uses FIX_TRUNC_EXPR.
+
+   Here is a list of all the functions that assume that widening and
+   narrowing is always done with a NOP_EXPR:
+     In convert.c, convert_to_integer.
+     In c-typeck.c, build_binary_op (boolean ops), and
+	c_common_truthvalue_conversion.
+     In expr.c: expand_expr, for operands of a MULT_EXPR.
+     In fold-const.c: fold.
+     In tree.c: get_narrower and get_unwidened.  */
+
+/* Subroutines of `convert'.  */
+
+
+
+/* Create an expression whose value is that of EXPR,
+   converted to type TYPE.  The TREE_TYPE of the value
+   is always TYPE.  This function implements all reasonable
+   conversions; callers should filter out those that are
+   not permitted by the language being compiled.  */
+
+tree
+convert (tree type, tree expr)
+{
+  tree e = expr;
+  enum tree_code code = TREE_CODE (type);
+  const char *invalid_conv_diag;
+
+  if (type == error_mark_node
+      || expr == error_mark_node
+      || TREE_TYPE (expr) == error_mark_node)
+    return error_mark_node;
+
+  if ((invalid_conv_diag
+       = targetm.invalid_conversion (TREE_TYPE (expr), type)))
+    {
+      error (invalid_conv_diag);
+      return error_mark_node;
+    }
+
+  if (type == TREE_TYPE (expr))
+    return expr;
+
+  if (TYPE_MAIN_VARIANT (type) == TYPE_MAIN_VARIANT (TREE_TYPE (expr)))
+    return fold_build1 (NOP_EXPR, type, expr);
+  if (TREE_CODE (TREE_TYPE (expr)) == ERROR_MARK)
+    return error_mark_node;
+  if (TREE_CODE (TREE_TYPE (expr)) == VOID_TYPE || code == VOID_TYPE)
+    {
+      abort ();
+      return error_mark_node;
+    }
+  if (code == INTEGER_TYPE || code == ENUMERAL_TYPE)
+    return fold (convert_to_integer (type, e));
+  if (code == BOOLEAN_TYPE)
+    {
+      tree t = ortho_truthvalue_conversion (expr);
+      if (TREE_CODE (t) == ERROR_MARK)
+	return t;
+
+      /* If it returns a NOP_EXPR, we must fold it here to avoid
+	 infinite recursion between fold () and convert ().  */
+      if (TREE_CODE (t) == NOP_EXPR)
+	return fold_build1 (NOP_EXPR, type, TREE_OPERAND (t, 0));
+      else
+	return fold_build1 (NOP_EXPR, type, t);
+    }
+  if (code == POINTER_TYPE || code == REFERENCE_TYPE)
+    return fold (convert_to_pointer (type, e));
+  if (code == REAL_TYPE)
+    return fold (convert_to_real (type, e));
+
+  abort ();
+}
+
 /* Return a definition for a builtin function named NAME and whose data type
    is TYPE.  TYPE should be a function type with argument types.
    FUNCTION_CODE tells later passes how to compile calls to this function.
@@ -603,8 +688,6 @@ signed_or_unsigned_type (int unsignedp, tree type)
 #define LANG_HOOKS_POST_OPTIONS ortho_post_options
 #undef LANG_HOOKS_HONOR_READONLY
 #define LANG_HOOKS_HONOR_READONLY true
-#undef LANG_HOOKS_TRUTHVALUE_CONVERSION
-#define LANG_HOOKS_TRUTHVALUE_CONVERSION ortho_truthvalue_conversion
 #undef LANG_HOOKS_MARK_ADDRESSABLE
 #define LANG_HOOKS_MARK_ADDRESSABLE ortho_mark_addressable
 #undef LANG_HOOKS_CALLGRAPH_EXPAND_FUNCTION
@@ -1234,7 +1317,7 @@ new_record_aggr_el (struct o_record_aggr_list *list, tree value)
 void
 finish_record_aggr (struct o_record_aggr_list *list, tree *res)
 {
-  *res = build_constructor (list->atype, list->chain.first);
+  *res = build_constructor_from_list (list->atype, list->chain.first);
 }
  
 
@@ -1260,18 +1343,16 @@ new_array_aggr_el (struct o_array_aggr_list *list, tree value)
 void
 finish_array_aggr (struct o_array_aggr_list *list, tree *res)
 {
-  *res = build_constructor (list->atype, list->chain.first);
+  *res = build_constructor_from_list (list->atype, list->chain.first);
 }
 
 
 tree
 new_union_aggr (tree atype, tree field, tree value)
 {
-  tree el;
   tree res;
 
-  el = build_tree_list (field, value);
-  res = build_constructor (atype, el);
+  res = build_constructor_single (atype, field, value);
   TREE_CONSTANT (res) = 1;
   return res;
 }

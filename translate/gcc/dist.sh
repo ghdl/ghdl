@@ -39,7 +39,7 @@
 set -e
 
 # GCC version
-GCCVERSION=4.0.2
+GCCVERSION=4.1.0
 # Machine name used by GCC
 MACHINE=i686-pc-linux-gnu
 # Directory where GCC sources (and objects) stay.
