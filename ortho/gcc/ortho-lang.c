@@ -20,6 +20,8 @@
 #include "cgraph.h"
 #include "target.h"
 #include "convert.h"
+#include "tree-pass.h"
+#include "tree-dump.h"
 
 const int tree_identifier_size = sizeof (struct tree_identifier);
 
@@ -433,6 +435,7 @@ ortho_mark_addressable (tree exp)
 
       case COMPONENT_REF:
       case ARRAY_REF:
+      case ARRAY_RANGE_REF:
 	n = TREE_OPERAND (n, 0);
 	break;
 
@@ -1379,6 +1382,7 @@ new_slice (tree arr, tree res_type, tree index)
     abort ();
 
   ortho_mark_addressable (arr);
+  return build4 (ARRAY_RANGE_REF, res_type, arr, index, NULL_TREE, NULL_TREE);
   el_type = TREE_TYPE (TREE_TYPE (arr));
   el_ptr_type = build_pointer_type (el_type);
 
@@ -1452,78 +1456,117 @@ new_sizeof (tree atype, tree rtype)
  return fold (build1 (NOP_EXPR, rtype, size));
 }
 
-#if 0
+/* Convert the array expression EXP to a pointer.  */
+static tree array_to_pointer_conversion (tree exp);
+
 static tree
-ortho_build_addr (tree operand, tree atype)
-{
-  tree base = exp;
-
-  while (handled_component_p (base))
-    base = TREE_OPERAND (base, 0);
-
-  if (DECL_P (base))
-    TREE_ADDRESSABLE (base) = 1;
-
-  return build1 (ADDR_EXPR, atype, exp);
-}
-#endif
-
-tree
-new_unchecked_address (tree lvalue, tree atype)
+ortho_build_addr (tree lvalue, tree atype)
 {
   tree res;
 
   if (TREE_CODE (lvalue) == INDIRECT_REF)
     {
+      /* ADDR_REF(INDIRECT_REF(x)) -> x.  */
       res = TREE_OPERAND (lvalue, 0);
     }
   else
     {
-      ortho_mark_addressable (lvalue);
-
-      if (TREE_TYPE (lvalue) != TREE_TYPE (atype))
+      /* &base[off] -> base+off.  */
+      if (TREE_CODE (lvalue) == ARRAY_REF
+	  || TREE_CODE (lvalue) == ARRAY_RANGE_REF)
 	{
-	  tree ptr;
-	  ptr = build_pointer_type (TREE_TYPE (lvalue));
-	  res = build1 (ADDR_EXPR, ptr, lvalue);
+	  tree base = TREE_OPERAND (lvalue, 0);
+	  tree idx = TREE_OPERAND (lvalue, 1);
+	  tree offset;
+	  tree base_type;
+
+	  ortho_mark_addressable (base);
+
+	  offset = fold_build2 (MULT_EXPR, TREE_TYPE (idx), idx,
+				array_ref_element_size (lvalue)); 
+
+	  base = array_to_pointer_conversion (base);
+	  base_type = TREE_TYPE (base);
+
+	  res = build2 (PLUS_EXPR, base_type,
+			base, convert (base_type, offset));
 	}
       else
-	res = build1 (ADDR_EXPR, atype, lvalue);
+	{
+	  ortho_mark_addressable (lvalue);
+
+	  if (TREE_TYPE (lvalue) != TREE_TYPE (atype))
+	    {
+	      tree ptr;
+	      ptr = build_pointer_type (TREE_TYPE (lvalue));
+	      res = build1 (ADDR_EXPR, ptr, lvalue);
+	    }
+	  else
+	    res = build1 (ADDR_EXPR, atype, lvalue);
+	}
+      res = fold (res);
     }
 
   if (TREE_TYPE (res) != atype)
-    res = fold (build1 (NOP_EXPR, atype, res));
+    res = fold_build1 (NOP_EXPR, atype, res);
 
   return res;
+}
 
-#if 0
-  /* res = build_addr (lvalue, atype); */
-  if (TREE_TYPE (res) != atype)
+/* Convert the array expression EXP to a pointer.  */
+static tree
+array_to_pointer_conversion (tree exp)
+{
+  tree type = TREE_TYPE (exp);
+  tree adr;
+  tree restype = TREE_TYPE (type);
+  tree ptrtype;
+
+  gcc_assert (TREE_CODE (type) == ARRAY_TYPE);
+
+  /* Create a pointer to elements.  */
+  ptrtype = build_pointer_type (restype);
+
+  switch (TREE_CODE (exp))
     {
-      if (TREE_CODE (TREE_TYPE (res)) != POINTER_TYPE)
-	abort ();
-      res = build1 (NOP_EXPR, atype, res);
+    case INDIRECT_REF:
+      return convert (ptrtype, TREE_OPERAND (exp, 0));
+
+    case VAR_DECL:
+      /* Convert array to pointer to elements.  */
+      adr = build1 (ADDR_EXPR, ptrtype, exp);
+      ortho_mark_addressable (exp);
+      TREE_SIDE_EFFECTS (adr) = 0;   /* Default would be, same as EXP.  */
+      return adr;
+
+    default:
+      /* Get address.  */
+      return ortho_build_addr (exp, ptrtype);
     }
-  return res;
-#endif
+}
+
+tree
+new_unchecked_address (tree lvalue, tree atype)
+{
+  return ortho_build_addr (lvalue, atype);
 }
 
 tree
 new_address (tree lvalue, tree atype)
 {
-  return new_unchecked_address (lvalue, atype);
+  return ortho_build_addr (lvalue, atype);
 }
 
 tree
 new_global_address (tree lvalue, tree atype)
 {
-  return new_unchecked_address (lvalue, atype);
+  return ortho_build_addr (lvalue, atype);
 }
 
 tree
 new_global_unchecked_address (tree lvalue, tree atype)
 {
-  return new_unchecked_address (lvalue, atype);
+  return ortho_build_addr (lvalue, atype);
 }
 
 /*  Return a pointer to function FUNC. */
@@ -1828,6 +1871,10 @@ finish_subprogram_body (void)
   /* cfun->x_whole_function_mode_p = 1; */
 
   gimplify_function_tree (func);
+
+  /* Dump the genericized tree IR.
+     Enabled by -fdump-tree-gimple.  */
+  dump_function (TDI_generic, func);
 
   parent = DECL_CONTEXT (func);
 
