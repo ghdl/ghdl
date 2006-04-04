@@ -43,11 +43,17 @@
 -- GHDL history
 --  2005-04-07  Initial version.
 --  2005-09-01  Some PI constants added.
+--  2005-12-20  I. Curtis : significant overhaul to bring closer in line
+--                          with ieee standard
+
 -------------------------------------------------------------
 Library IEEE;
 
 Package MATH_REAL is
-
+  -- IAC: should have a string with copyright notice
+  -- constant CopyRightNotice: STRING
+  --    := "GPL";
+  
     -- 
     -- commonly used constants
     --
@@ -95,6 +101,10 @@ Package MATH_REAL is
     attribute foreign of round : function is "VHPIDIRECT round"; 
     	-- returns integer FLOOR(X + 0.5) if X > 0;
     	-- return integer CEIL(X - 0.5) if X < 0
+
+    -- IAC: we are missing the function TRUNC
+    -- IAC: we are missing the function MOD
+    -- IAC: functions FMAX and FMIN should be renamed REALMAX and REALMIN
     
     function FMAX (X, Y : real ) return real;
     attribute foreign of fmax : function is "VHPIDIRECT fmax"; 
@@ -118,6 +128,8 @@ Package MATH_REAL is
 	-- initialize their values (INIT_SEED) will be provided, and the UNIFORM
 	-- procedure call will be modified accordingly.  
 
+    -- IAC: functions SRAND, RAND and GET_RAND_MAX should not be visible
+    
     function SRAND (seed: in integer ) return integer;
     attribute foreign of srand : function is "VHPIDIRECT srand"; 
     	--
@@ -169,8 +181,14 @@ Package MATH_REAL is
     function LOG (X : real ) return real;
     	-- returns natural logarithm of X; X > 0
 
-    function LOG (BASE: positive; X : real) return real;
+    function LOG (X: in real; BASE: in real) return real;
     	-- returns logarithm base BASE of X; X > 0
+
+    function LOG2 (X : in real ) return real;
+        -- returns logarithm base 2 of X; X > 0
+
+    function LOG10 (X : in real ) return real;
+        -- returns logarithm base 10 of X; X > 0
 
     function  SIN (X : real ) return real;
     attribute foreign of sin : function is "VHPIDIRECT sin"; 
@@ -185,16 +203,24 @@ Package MATH_REAL is
     	-- returns tan X; X in radians
     	-- X /= ((2k+1) * PI/2), where k is an integer
 
+    -- IAC: function should be called ARCSIN
+    
     function  ASIN (X : real ) return real; 
     	-- returns  -PI/2 < asin X < PI/2; | X | <= 1
 
+    -- IAC: function should be called ARCCOS
+    
     function  ACOS (X : real ) return real;
     	-- returns  0 < acos X < PI; | X | <= 1
 
+    
+    -- IAC: function should be called ARCTAN
+    
     function  ATAN (X : real) return real;
     attribute foreign of atan : function is "VHPIDIRECT atan"; 
     	-- returns  -PI/2 < atan X < PI/2
 
+    -- IAC: function ATAN2 should not exist
     function  ATAN2 (X : real; Y : real) return real;
     	-- returns  atan (X/Y); -PI < atan2(X,Y) < PI; Y /= 0.0
 
@@ -209,14 +235,20 @@ Package MATH_REAL is
     function  TANH (X : real) return real;
     attribute foreign of tanh : function is "VHPIDIRECT tanh"; 
     	-- hyperbolic tangent; -- returns (e**X - e**(-X))/(e**X + e**(-X))
+
+    -- IAC: function should be called ARCSINH
     
     function ASINH (X : real) return real;
     attribute foreign of asinh : function is "VHPIDIRECT asinh"; 
     	-- returns ln( X + sqrt( X**2 + 1))
 
+    -- IAC: function should be called ARCCOSH
+
     function ACOSH (X : real) return real;
     	-- returns ln( X + sqrt( X**2 - 1));   X >= 1
 
+    -- IAC: function should be called ARCTANH
+    
     function ATANH (X : real) return real;
     	-- returns (ln( (1 + X)/(1 - X)))/2 ; | X | < 1
 

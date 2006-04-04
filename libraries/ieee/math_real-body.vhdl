@@ -43,6 +43,8 @@
 --
 -- GHDL history
 --  2005-04-07  Initial version.
+--  2005-12-23  I. Curtis : overhaul of log functions to bring in line
+--                          with ieee standard
 -------------------------------------------------------------
 Library IEEE;
 
@@ -246,19 +248,31 @@ Package body MATH_REAL is
     	return c_log(x); 
     end LOG;
 
-    function LOG (BASE: positive; X : real) return real is
-    	-- returns logarithm base BASE of X; X > 0
+    function LOG (X : in real; BASE: in real) return real is
+      -- returns logarithm base BASE of X; X > 0
     begin
-    	-- check validity of argument
-    	if ( BASE <= 0 ) or ( x <= 0.0 ) then
-       	  assert false report "BASE <= 0 or X <= 0.0 in LOG(BASE, X)" 
-				severity ERROR;
-            return(REAL'LOW);
-    	end if; 
-        -- compute the value
-        return (LOG(X)/LOG(REAL(BASE)));
+      -- check validity of argument
+      if ( BASE <= 0.0 ) or ( x <= 0.0 ) then
+        assert false report "BASE <= 0.0 or X <= 0.0 in LOG(BASE, X)" 
+          severity ERROR;
+        return(REAL'LOW);
+      end if; 
+      -- compute the value
+      return (LOG(X)/LOG(BASE));
     end LOG;
 
+    function LOG2 (X : in real) return real is
+      -- returns logarithm BASE 2 of X; X > 0
+    begin
+      return LOG(X) / MATH_LOG_OF_2;
+    end LOG2;
+
+    function LOG10 (X : in real) return real is
+      -- returns logarithm BASE 10 of X; X > 0
+    begin
+      return LOG(X) / MATH_LOG_OF_10;
+    end LOG10;
+    
     function  SIN (X : real ) return real is
     begin 
         assert false severity failure;
