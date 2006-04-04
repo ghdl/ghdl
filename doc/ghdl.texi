@@ -1695,6 +1695,7 @@ This chapter describes several implementation defined aspect of VHDL in GHDL.
 * VHDL files format::           
 * Top entity::                  
 * Using vendor libraries::      
+* Using ieee.math_real or ieee.math_complex::  
 * Interfacing to other languages::  
 @end menu
 
@@ -1886,7 +1887,7 @@ default value;
 The ports type must be constrained.
 @end itemize
 
-@node Using vendor libraries, Interfacing to other languages, Top entity, GHDL implementation of VHDL
+@node Using vendor libraries, Using ieee.math_real or ieee.math_complex, Top entity, GHDL implementation of VHDL
 @comment  node-name,  next,  previous,  up
 @section Using vendor libraries
 Many vendors libraries have been analyzed with GHDL.  There are
@@ -1916,7 +1917,26 @@ declarations such as
 This files must be modified.  Fortunatly, in the example the variables
 are never written.  So it is enough to remove them.
 
-@node Interfacing to other languages,  , Using vendor libraries, GHDL implementation of VHDL
+@node Using ieee.math_real or ieee.math_complex, Interfacing to other languages, Using vendor libraries, GHDL implementation of VHDL
+@comment  node-name,  next,  previous,  up
+@section Using ieee.math_real or ieee.math_complex
+@cindex math_real
+@cindex math_complex
+Contrary to other @samp{ieee} libraries, the math packages sources are not
+freely available.  The sources provided with GHDL are based on an early draft
+and use the C libraries.  As a consequence, you should link your design
+with the @samp{libm.a} library using the @option{-Wl,} option like:
+@smallexample
+$ ghdl -e -Wl,-lm my_design
+@end smallexample
+Please, refer to your system manual for more details.
+
+Please also note that the @samp{ieee} libraries are not the same as the drafts.
+
+If you really need the @samp{ieee} math libraries, they are available on the
+web, but they cannot be included in GHDL.
+
+@node Interfacing to other languages,  , Using ieee.math_real or ieee.math_complex, GHDL implementation of VHDL
 @comment  node-name,  next,  previous,  up
 @section Interfacing to other languages
 @cindex interfacing
