@@ -76,10 +76,10 @@ package body Flags is
          Libraries.Add_Library_Path (Opt (Beg + 2 .. Opt'Last));
       elsif Opt'Length > 10 and then Opt (Beg .. Beg + 9) = "--workdir=" then
          Libraries.Set_Work_Library_Path (Opt (Beg + 10 .. Opt'Last));
-      elsif Opt'Length > 7 and then Opt (Beg .. Beg + 6) = "--warn-" then
-         return Option_Warning (Opt (Beg + 7 .. Opt'Last), True);
       elsif Opt'Length > 10 and then Opt (Beg .. Beg + 9) = "--warn-no-" then
          return Option_Warning (Opt (Beg + 10 .. Opt'Last), False);
+      elsif Opt'Length > 7 and then Opt (Beg .. Beg + 6) = "--warn-" then
+         return Option_Warning (Opt (Beg + 7 .. Opt'Last), True);
       elsif Opt'Length > 7 and then Opt (Beg .. Beg + 6) = "--work=" then
          declare
             use Name_Table;
