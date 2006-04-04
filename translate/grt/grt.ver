@@ -1,4 +1,4 @@
-VERSION {
+{
   global:
 vpi_free_object;
 vpi_get;
