@@ -23,6 +23,8 @@ package Grt.Images is
      (Res : Std_String_Ptr; Val : Ghdl_B2; Rti : Ghdl_Rti_Access);
    procedure Ghdl_Image_E8
      (Res : Std_String_Ptr; Val : Ghdl_E8; Rti : Ghdl_Rti_Access);
+   procedure Ghdl_Image_E32
+     (Res : Std_String_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access);
    procedure Ghdl_Image_I32 (Res : Std_String_Ptr; Val : Ghdl_I32);
    procedure Ghdl_Image_F64 (Res : Std_String_Ptr; Val : Ghdl_F64);
    procedure Ghdl_Image_P64
@@ -32,6 +34,7 @@ package Grt.Images is
 private
    pragma Export (C, Ghdl_Image_B2, "__ghdl_image_b2");
    pragma Export (C, Ghdl_Image_E8, "__ghdl_image_e8");
+   pragma Export (C, Ghdl_Image_E32, "__ghdl_image_e32");
    pragma Export (C, Ghdl_Image_I32, "__ghdl_image_i32");
    pragma Export (C, Ghdl_Image_F64, "__ghdl_image_f64");
    pragma Export (C, Ghdl_Image_P64, "__ghdl_image_p64");

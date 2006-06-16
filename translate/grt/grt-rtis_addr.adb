@@ -231,6 +231,10 @@ package body Grt.Rtis_Addr is
                   Align (Ghdl_Range_E8'Alignment);
                   Res (I) := To_Ghdl_Range_Ptr (Bounds);
                   Update (Ghdl_Range_E8'Size);
+               when Ghdl_Rtik_Type_E32 =>
+                  Align (Ghdl_Range_E32'Alignment);
+                  Res (I) := To_Ghdl_Range_Ptr (Bounds);
+                  Update (Ghdl_Range_E32'Size);
                when others =>
                   --  Bounds are not known anymore.
                   Bounds := Null_Address;
@@ -249,6 +253,7 @@ package body Grt.Rtis_Addr is
             return To_Ghdl_Rti_Access
               (To_Ghdl_Rtin_Subtype_Array_Acc (Atype).Basetype);
          when Ghdl_Rtik_Type_E8
+	   | Ghdl_Rtik_Type_E32
            | Ghdl_Rtik_Type_B2 =>
             return Atype;
          when others =>

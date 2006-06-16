@@ -376,11 +376,12 @@ the ones of the previous examples.
 
 Let's see how to analyze and run a bigger design, such as the DLX model
 suite written by Peter Ashenden which is distributed under the terms of the
-GNU General Public License.
+GNU General Public License.  A copy is kept on
+@indicateurl{http://ghdl.free.fr/dlx.tar.gz}
 
 First, untar the sources:
 @smallexample
-$ tar zxvf dlx.tar.Z
+$ tar zxvf dlx.tar.gz
 @end smallexample
 
 In order not to pollute the sources with the library, it is a good idea

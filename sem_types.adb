@@ -997,6 +997,7 @@ package body Sem_Types is
    is
       Decl: Iir;
       Decl_Type : Iir;
+      Ret_Type : Iir;
    begin
       -- LRM93 2.4
       --  A resolution function must be a [pure] function;
@@ -1023,22 +1024,26 @@ package body Sem_Types is
       end if;
       -- LRM93 2.4
       --  whose element type is that of the resolved signal.
+      --  The type of the return value of the function must also be that of
+      --  the signal.
+      Ret_Type := Get_Return_Type (Func);
       if Get_Base_Type (Get_Element_Subtype (Decl_Type))
-        /= Get_Base_Type (Atype)
+        /= Get_Base_Type (Ret_Type)
       then
          return False;
       end if;
-      -- LRM93 2.4
-      --  The type of the return value of the function must also be that of
-      --  the signal.
-      if Get_Base_Type (Get_Return_Type (Func)) /= Get_Base_Type (Atype) then
+      if Atype /= Null_Iir
+        and then Get_Base_Type (Ret_Type) /= Get_Base_Type (Atype)
+      then
          return False;
       end if;
       -- LRM93 2.4
       --  A resolution function must be a [pure] function;
       if Flags.Vhdl_Std >= Vhdl_93 and then Get_Pure_Flag (Func) = False then
-         Error_Msg_Sem
-           ("resolution " & Disp_Node (Func) & " must be pure", Atype);
+         if Atype /= Null_Iir then
+            Error_Msg_Sem
+              ("resolution " & Disp_Node (Func) & " must be pure", Atype);
+         end if;
          return False;
       end if;
       return True;

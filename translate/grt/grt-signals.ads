@@ -453,6 +453,25 @@ package Grt.Signals is
    function Ghdl_Signal_Driving_Value_E8 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_E8;
 
+   function Ghdl_Create_Signal_E32
+     (Init_Val : Ghdl_E32;
+      Resolv_Func : System.Address;
+      Resolv_Inst : System.Address)
+     return Ghdl_Signal_Ptr;
+   procedure Ghdl_Signal_Init_E32 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_E32);
+   procedure Ghdl_Signal_Associate_E32 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_E32);
+   procedure Ghdl_Signal_Simple_Assign_E32 (Sign : Ghdl_Signal_Ptr;
+                                           Val : Ghdl_E32);
+   procedure Ghdl_Signal_Start_Assign_E32 (Sign : Ghdl_Signal_Ptr;
+                                          Rej : Std_Time;
+                                          Val : Ghdl_E32;
+                                          After : Std_Time);
+   procedure Ghdl_Signal_Next_Assign_E32 (Sign : Ghdl_Signal_Ptr;
+                                         Val : Ghdl_E32;
+                                         After : Std_Time);
+   function Ghdl_Signal_Driving_Value_E32 (Sig : Ghdl_Signal_Ptr)
+                                         return Ghdl_E32;
+
    function Ghdl_Create_Signal_I32
      (Init_Val : Ghdl_I32;
       Resolv_Func : System.Address;
@@ -633,6 +652,21 @@ private
                   "__ghdl_signal_next_assign_e8");
    pragma Export (C, Ghdl_Signal_Driving_Value_E8,
                   "__ghdl_signal_driving_value_e8");
+
+   pragma Export (C, Ghdl_Create_Signal_E32,
+                  "__ghdl_create_signal_e32");
+   pragma Export (C, Ghdl_Signal_Init_E32,
+                  "__ghdl_signal_init_e32");
+   pragma Export (C, Ghdl_Signal_Associate_E32,
+                  "__ghdl_signal_associate_e32");
+   pragma Export (C, Ghdl_Signal_Simple_Assign_E32,
+                  "__ghdl_signal_simple_assign_e32");
+   pragma Export (C, Ghdl_Signal_Start_Assign_E32,
+                  "__ghdl_signal_start_assign_e32");
+   pragma Export (C, Ghdl_Signal_Next_Assign_E32,
+                  "__ghdl_signal_next_assign_e32");
+   pragma Export (C, Ghdl_Signal_Driving_Value_E32,
+                  "__ghdl_signal_driving_value_e32");
 
    pragma Export (C, Ghdl_Create_Signal_I32,
                   "__ghdl_create_signal_i32");

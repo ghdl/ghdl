@@ -153,8 +153,8 @@ package body Grt.Files is
       end if;
 
       --  Copy file name and convert it to a C string (NUL terminated).
-      for I in 0 .. Str.Bounds.Dim_1.Length - 1 loop
-         Name (1 + Natural (I)) := Str.Base (I);
+      for I in 1 .. Str.Bounds.Dim_1.Length loop
+         Name (Natural (I)) := Str.Base (I - 1);
       end loop;
       Name (Name'Last) := NUL;
 

@@ -980,9 +980,12 @@ package body Errorout is
       Decl := Get_Type_Declarator (Def);
       if Decl /= Null_Iir then
          return Image_Identifier (Decl);
-      else
-         Decl := Get_Type_Declarator (Get_Base_Type (Def));
+      end if;
+      Decl := Get_Type_Declarator (Get_Base_Type (Def));
+      if Decl /= Null_Iir then
          return "a subtype of " & Image_Identifier (Decl);
+      else
+         return "an unknown type";
       end if;
    end Disp_Type_Name;
 

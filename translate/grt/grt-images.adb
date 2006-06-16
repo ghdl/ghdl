@@ -68,6 +68,13 @@ package body Grt.Images is
       Return_Enum (Res, Rti, Ghdl_E8'Pos (Val));
    end Ghdl_Image_E8;
 
+   procedure Ghdl_Image_E32
+     (Res : Std_String_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access)
+   is
+   begin
+      Return_Enum (Res, Rti, Ghdl_E32'Pos (Val));
+   end Ghdl_Image_E32;
+
    procedure Ghdl_Image_I32 (Res : Std_String_Ptr; Val : Ghdl_I32)
    is
       Str : String (1 .. 11);

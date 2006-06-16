@@ -2156,37 +2156,6 @@ package body Sem_Decls is
       Set_Visible_Flag (Group, True);
    end Sem_Group_Declaration;
 
-   --  Return TRUE if FUNC can be a resolution function.
-   function Can_Be_Resolution_Function (Func : Iir_Function_Declaration)
-     return Boolean
-   is
-      Param : Iir;
-      Param_Type : Iir;
-      Res_Type : Iir;
-   begin
-      Param := Get_Interface_Declaration_Chain (Func);
-
-      --  Return now if the number of parameters is not 1.
-      if Param = Null_Iir or else Get_Chain (Param) /= Null_Iir then
-         return False;
-      end if;
-      Param_Type := Get_Type (Param);
-      case Get_Kind (Param_Type) is
-         when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
-            null;
-         when others =>
-            return False;
-      end case;
-      Res_Type := Get_Return_Type (Func);
-      if Get_Base_Type (Get_Element_Subtype (Param_Type))
-        /= Get_Base_Type (Res_Type)
-      then
-         return False;
-      end if;
-      return True;
-   end Can_Be_Resolution_Function;
-
    --  Semantize every declaration of DECLS_PARENT.
    --  STMTS is the concurrent statement list associated with DECLS_PARENT
    --  if any, or null_iir.  This is used for specification.
@@ -2247,7 +2216,7 @@ package body Sem_Decls is
                   end if;
                   if Is_Global
                     and then Kind = Iir_Kind_Function_Declaration
-                    and then Can_Be_Resolution_Function (Res)
+                    and then Is_A_Resolution_Function (Res, Null_Iir)
                   then
                      Set_Resolution_Function_Flag (Res, True);
                   end if;

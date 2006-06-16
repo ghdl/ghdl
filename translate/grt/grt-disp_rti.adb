@@ -73,6 +73,11 @@ package body Grt.Disp_Rti is
             if not Is_Sig then
                Update (8);
             end if;
+         when Ghdl_Rtik_Type_E32 =>
+            Disp_Enum_Value (Stream, Rti, Ghdl_Index_Type (Vptr.E32));
+            if not Is_Sig then
+               Update (32);
+            end if;
          when Ghdl_Rtik_Type_B2 =>
             Disp_Enum_Value (Stream, Rti,
                              Ghdl_Index_Type (Ghdl_B2'Pos (Vptr.B2)));
@@ -201,6 +206,7 @@ package body Grt.Disp_Rti is
                Obj, Is_Sig);
          when Ghdl_Rtik_Type_I32
            | Ghdl_Rtik_Type_E8
+           | Ghdl_Rtik_Type_E32
            | Ghdl_Rtik_Type_B2 =>
             Disp_Scalar_Value (Stream, Rti, Obj, Is_Sig);
          when Ghdl_Rtik_Type_Array =>
@@ -310,6 +316,8 @@ package body Grt.Disp_Rti is
             Put ("ghdl_rtik_type_b2");
          when Ghdl_Rtik_Type_E8 =>
             Put ("ghdl_rtik_type_e8");
+         when Ghdl_Rtik_Type_E32 =>
+            Put ("ghdl_rtik_type_e32");
          when Ghdl_Rtik_Type_P64 =>
             Put ("ghdl_rtik_type_p64");
          when Ghdl_Rtik_Type_I32 =>

@@ -77,6 +77,14 @@ package Trans_Decls is
    Ghdl_Signal_Associate_E8 : O_Dnode;
    Ghdl_Signal_Driving_Value_E8 : O_Dnode;
 
+   Ghdl_Create_Signal_E32 : O_Dnode;
+   Ghdl_Signal_Init_E32 : O_Dnode;
+   Ghdl_Signal_Simple_Assign_E32 : O_Dnode;
+   Ghdl_Signal_Start_Assign_E32 : O_Dnode;
+   Ghdl_Signal_Next_Assign_E32 : O_Dnode;
+   Ghdl_Signal_Associate_E32 : O_Dnode;
+   Ghdl_Signal_Driving_Value_E32 : O_Dnode;
+
    Ghdl_Create_Signal_B2 : O_Dnode;
    Ghdl_Signal_Init_B2 : O_Dnode;
    Ghdl_Signal_Simple_Assign_B2 : O_Dnode;
@@ -190,6 +198,7 @@ package Trans_Decls is
    --  'Image attributes.
    Ghdl_Image_B2 : O_Dnode;
    Ghdl_Image_E8 : O_Dnode;
+   Ghdl_Image_E32 : O_Dnode;
    Ghdl_Image_I32 : O_Dnode;
    Ghdl_Image_P32 : O_Dnode;
    Ghdl_Image_P64 : O_Dnode;
@@ -198,6 +207,7 @@ package Trans_Decls is
    --  'Value attributes
    Ghdl_Value_B2 : O_Dnode;
    Ghdl_Value_E8 : O_Dnode;
+   Ghdl_Value_E32 : O_Dnode;
    Ghdl_Value_I32 : O_Dnode;
    Ghdl_Value_P32 : O_Dnode;
    Ghdl_Value_P64 : O_Dnode;

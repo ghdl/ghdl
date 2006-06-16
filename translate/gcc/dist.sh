@@ -230,7 +230,7 @@ do_tar_dist ()
 {
   rm -rf $bindirname
   mkdir $bindirname
-  sed -e "s/@TARFILE@/$dir.tar/" < INSTALL > $bindirname/INSTALL
+  sed -e "s/@TARFILE@/$bindirname/" < INSTALL > $bindirname/INSTALL
   ln ../../COPYING $bindirname
   ln $TARINSTALL $bindirname
   tar cvf $bindirname.tar $bindirname

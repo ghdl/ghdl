@@ -802,6 +802,77 @@ package body Grt.Signals is
         (Sign, Value_Union'(Mode => Mode_E8, E8 => Val), After);
    end Ghdl_Signal_Next_Assign_E8;
 
+   function Ghdl_Create_Signal_E32
+     (Init_Val : Ghdl_E32;
+      Resolv_Func : System.Address;
+      Resolv_Inst : System.Address)
+     return Ghdl_Signal_Ptr
+   is
+   begin
+      return Create_Signal
+        (Mode_E32, Value_Union'(Mode => Mode_E32, E32 => Init_Val),
+         Get_Current_Mode_Signal,
+         Resolv_Func, Resolv_Inst);
+   end Ghdl_Create_Signal_E32;
+
+   procedure Ghdl_Signal_Init_E32 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_E32)
+   is
+   begin
+      Ghdl_Signal_Init (Sig, Value_Union'(Mode => Mode_E32, E32 => Init_Val));
+   end Ghdl_Signal_Init_E32;
+
+   procedure Ghdl_Signal_Associate_E32 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_E32)
+   is
+   begin
+      Ghdl_Signal_Associate (Sig, Value_Union'(Mode => Mode_E32, E32 => Val));
+   end Ghdl_Signal_Associate_E32;
+
+   procedure Ghdl_Signal_Simple_Assign_E32 (Sign : Ghdl_Signal_Ptr;
+                                            Val : Ghdl_E32)
+   is
+      Trans : Transaction_Acc;
+   begin
+      if not Sign.Flags.Has_Active
+        and then Sign.Net = Net_One_Driver
+        and then Val = Sign.Value.E32
+        and then Sign.S.Drivers (0).First_Trans.Next = null
+      then
+         return;
+      end if;
+
+      Trans := new Transaction'
+        (Kind => Trans_Value,
+         Time => 0,
+         Next => null,
+         Val => Value_Union'(Mode => Mode_E32, E32 => Val));
+
+      Ghdl_Signal_Start_Assign (Sign, 0, Trans, 0);
+   end Ghdl_Signal_Simple_Assign_E32;
+
+   procedure Ghdl_Signal_Start_Assign_E32 (Sign : Ghdl_Signal_Ptr;
+                                           Rej : Std_Time;
+                                           Val : Ghdl_E32;
+                                           After : Std_Time)
+   is
+      Trans : Transaction_Acc;
+   begin
+      Trans := new Transaction'
+        (Kind => Trans_Value,
+         Time => 0,
+         Next => null,
+         Val => Value_Union'(Mode => Mode_E32, E32 => Val));
+      Ghdl_Signal_Start_Assign (Sign, Rej, Trans, After);
+   end Ghdl_Signal_Start_Assign_E32;
+
+   procedure Ghdl_Signal_Next_Assign_E32 (Sign : Ghdl_Signal_Ptr;
+                                          Val : Ghdl_E32;
+                                          After : Std_Time)
+   is
+   begin
+      Ghdl_Signal_Next_Assign
+        (Sign, Value_Union'(Mode => Mode_E32, E32 => Val), After);
+   end Ghdl_Signal_Next_Assign_E32;
+
    function Ghdl_Create_Signal_I32
      (Init_Val : Ghdl_I32;
       Resolv_Func : System.Address;
@@ -1357,6 +1428,19 @@ package body Grt.Signals is
          return Drv.First_Trans.Val.E8;
       end if;
    end Ghdl_Signal_Driving_Value_E8;
+
+   function Ghdl_Signal_Driving_Value_E32 (Sig : Ghdl_Signal_Ptr)
+                                         return Ghdl_E32
+   is
+      Drv : Driver_Acc;
+   begin
+      Drv := Get_Driver (Sig);
+      if Drv = null or else Drv.First_Trans.Kind /= Trans_Value then
+         Error ("'driving_value: no active driver in process for signal");
+      else
+         return Drv.First_Trans.Val.E32;
+      end if;
+   end Ghdl_Signal_Driving_Value_E32;
 
    function Ghdl_Signal_Driving_Value_I32 (Sig : Ghdl_Signal_Ptr)
                                           return Ghdl_I32

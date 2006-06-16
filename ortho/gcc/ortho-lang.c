@@ -23,6 +23,8 @@
 #include "tree-pass.h"
 #include "tree-dump.h"
 
+static tree type_for_size (unsigned int precision, int unsignedp);
+
 const int tree_identifier_size = sizeof (struct tree_identifier);
 
 struct binding_level GTY(())
@@ -250,13 +252,14 @@ ortho_init (void)
   push_binding ();
 
   build_common_tree_nodes (0, 0);
+  size_type_node = type_for_size (GET_MODE_BITSIZE (Pmode), 1);
+  set_sizetype (size_type_node);
+  build_common_tree_nodes_2 (0);
+
   n = build_decl (TYPE_DECL, get_identifier ("int"), integer_type_node);
   push_decl (n);
   n = build_decl (TYPE_DECL, get_identifier ("char"), char_type_node);
   push_decl (n);
-  size_type_node = unsigned_type_node;
-  set_sizetype (unsigned_type_node);
-  build_common_tree_nodes_2 (0);
 
   /* Create alloca builtin.  */
   {

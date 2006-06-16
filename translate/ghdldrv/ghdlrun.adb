@@ -352,6 +352,8 @@ package body Ghdlrun is
            Grt.Signals.Ghdl_Signal_Driving_Value_B2'Address);
       Def (Trans_Decls.Ghdl_Signal_Driving_Value_E8,
            Grt.Signals.Ghdl_Signal_Driving_Value_E8'Address);
+      Def (Trans_Decls.Ghdl_Signal_Driving_Value_E32,
+           Grt.Signals.Ghdl_Signal_Driving_Value_E32'Address);
       Def (Trans_Decls.Ghdl_Signal_Driving_Value_I32,
            Grt.Signals.Ghdl_Signal_Driving_Value_I32'Address);
       Def (Trans_Decls.Ghdl_Signal_Driving_Value_I64,
@@ -397,6 +399,19 @@ package body Ghdlrun is
            Grt.Signals.Ghdl_Signal_Next_Assign_E8'Address);
       Def (Trans_Decls.Ghdl_Signal_Associate_E8,
            Grt.Signals.Ghdl_Signal_Associate_E8'Address);
+
+      Def (Trans_Decls.Ghdl_Create_Signal_E32,
+           Grt.Signals.Ghdl_Create_Signal_E32'Address);
+      Def (Trans_Decls.Ghdl_Signal_Init_E32,
+           Grt.Signals.Ghdl_Signal_Init_E32'Address);
+      Def (Trans_Decls.Ghdl_Signal_Simple_Assign_E32,
+           Grt.Signals.Ghdl_Signal_Simple_Assign_E32'Address);
+      Def (Trans_Decls.Ghdl_Signal_Start_Assign_E32,
+           Grt.Signals.Ghdl_Signal_Start_Assign_E32'Address);
+      Def (Trans_Decls.Ghdl_Signal_Next_Assign_E32,
+           Grt.Signals.Ghdl_Signal_Next_Assign_E32'Address);
+      Def (Trans_Decls.Ghdl_Signal_Associate_E32,
+           Grt.Signals.Ghdl_Signal_Associate_E32'Address);
 
       Def (Trans_Decls.Ghdl_Create_Signal_I32,
            Grt.Signals.Ghdl_Create_Signal_I32'Address);
@@ -479,18 +494,25 @@ package body Ghdlrun is
            Grt.Files.Ghdl_Text_File_Finalize'Address);
       Def (Trans_Decls.Ghdl_Text_File_Open,
            Grt.Files.Ghdl_Text_File_Open'Address);
+      Def (Trans_Decls.Ghdl_Text_File_Open_Status,
+           Grt.Files.Ghdl_Text_File_Open_Status'Address);
       Def (Trans_Decls.Ghdl_Text_Write,
            Grt.Files.Ghdl_Text_Write'Address);
       Def (Trans_Decls.Ghdl_Text_Read_Length,
            Grt.Files.Ghdl_Text_Read_Length'Address);
       Def (Trans_Decls.Ghdl_Text_File_Close,
            Grt.Files.Ghdl_Text_File_Close'Address);
-      Def (Trans_Decls.Ghdl_File_Close,
-           Grt.Files.Ghdl_File_Close'Address);
+
       Def (Trans_Decls.Ghdl_File_Elaborate,
            Grt.Files.Ghdl_File_Elaborate'Address);
+      Def (Trans_Decls.Ghdl_File_Finalize,
+           Grt.Files.Ghdl_File_Finalize'Address);
       Def (Trans_Decls.Ghdl_File_Open,
            Grt.Files.Ghdl_File_Open'Address);
+      Def (Trans_Decls.Ghdl_File_Open_Status,
+           Grt.Files.Ghdl_File_Open_Status'Address);
+      Def (Trans_Decls.Ghdl_File_Close,
+           Grt.Files.Ghdl_File_Close'Address);
       Def (Trans_Decls.Ghdl_Write_Scalar,
            Grt.Files.Ghdl_Write_Scalar'Address);
       Def (Trans_Decls.Ghdl_Read_Scalar,
@@ -503,6 +525,8 @@ package body Ghdlrun is
            Grt.Images.Ghdl_Image_B2'Address);
       Def (Trans_Decls.Ghdl_Image_E8,
            Grt.Images.Ghdl_Image_E8'Address);
+      Def (Trans_Decls.Ghdl_Image_E32,
+           Grt.Images.Ghdl_Image_E32'Address);
       Def (Trans_Decls.Ghdl_Image_I32,
            Grt.Images.Ghdl_Image_I32'Address);
       Def (Trans_Decls.Ghdl_Image_F64,

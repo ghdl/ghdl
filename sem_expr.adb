@@ -3767,7 +3767,7 @@ package body Sem_Expr is
 
       if Res /= Null_Iir and then Is_Overloaded (Res) then
          Error_Overload (Expr);
-         Disp_Overload_List (Get_Overload_List (Res), Expr);
+         Disp_Overload_List (Get_Overload_List (Get_Type (Res)), Expr);
          return Null_Iir;
       end if;
       return Res;

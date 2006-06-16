@@ -45,4 +45,9 @@ package Sem_Types is
    --  If ATYPE can have signal (eg: access or file type), then this procedure
    --   returns silently.
    procedure Set_Type_Has_Signal (Atype : Iir);
+
+   --  Return TRUE iff FUNC is a resolution function.
+   --  If ATYPE is not NULL_IIR, type must match.
+   function Is_A_Resolution_Function (Func: Iir; Atype: Iir) return Boolean;
+
 end Sem_Types;

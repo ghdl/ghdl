@@ -1754,7 +1754,7 @@ package body Sem is
          when Iir_Kind_Sensitized_Process_Statement =>
             Kind := K_Process;
             Subprg_Bod := Null_Iir;
-            Subprg_Depth := 0;
+            Subprg_Depth := Iir_Depth_Top;
             Depth := Iir_Depth_Impure;
          when others =>
             Error_Kind ("update_and_check_pure_wait(1)", Subprg);
@@ -1768,9 +1768,11 @@ package body Sem is
          for I in Natural loop
             Callee := Get_Nth_Element (Callees_List, I);
             exit when Callee = Null_Iir;
+
+            --  Only procedures should appear in the list:
+            --  Pure functions should not be in the list.
+            --  Impure functions must have directly set Purity_State.
             if Get_Kind (Callee) /= Iir_Kind_Procedure_Declaration then
-               --  Pure functions should not be in the list.
-               --  Impure functions must have directly set Purity_State.
                Error_Kind ("update_and_check_pure_wait(3)", Callee);
             end if;
 
@@ -1778,7 +1780,8 @@ package body Sem is
             Callee_Bod := Get_Subprogram_Body (Callee);
             if Callee_Bod = Null_Iir then
                --  No body yet for the subprogram called.
-               --  Nothing can be extracted from it, postpone the checks.
+               --  Nothing can be extracted from it, postpone the checks until
+               --  elaboration.
                Has_Unknown := True;
             else
                --  Second loop: recurse if a state is not known.
@@ -1788,14 +1791,14 @@ package body Sem is
                   Update_And_Check_Pure_Wait (Callee);
                end if;
 
-
                --  Check purity only if the subprogram is not impure.
                if Depth /= Iir_Depth_Impure then
                   Depth_Callee := Get_Impure_Depth (Callee_Bod);
 
                   --  Check purity depth.
                   if Depth_Callee < Subprg_Depth then
-                     --  The call is an impure call.
+                     --  The call is an impure call because it calls an outer
+                     --   subprogram (or an impure subprogram).
                      --  FIXME: check the compare.
                      Depth_Callee := Iir_Depth_Impure;
                      if Kind = K_Function then

@@ -1973,7 +1973,7 @@ package body Sem_Names is
             when Iir_Kinds_Procedure_Declaration =>
                Error_Msg_Sem ("function name is a procedure", Name);
 
-            when Iir_Kind_Process_Statement
+            when Iir_Kinds_Process_Statement
               | Iir_Kind_Component_Declaration
               | Iir_Kind_Type_Conversion =>
                Error_Msg_Sem

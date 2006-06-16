@@ -978,8 +978,12 @@ package body Translation is
       Resolv_Block : Iir;
       --  Parameter nodes.
       Var_Instance : O_Dnode;
+
+      --  Signals
       Var_Vals : O_Dnode;
+      --  Driving vector.
       Var_Vec : O_Dnode;
+      --  Length of Vector.
       Var_Vlen : O_Dnode;
       Var_Nbr_Drv : O_Dnode;
       Var_Nbr_Ports : O_Dnode;
@@ -6659,7 +6663,10 @@ package body Translation is
             case Get_Kind (El) is
                when Iir_Kind_Function_Declaration
                  | Iir_Kind_Procedure_Declaration =>
-                  Chap2.Translate_Subprogram_Declaration (El);
+                  --  Translate only if used.
+                  if Get_Info (El) /= null then
+                     Chap2.Translate_Subprogram_Declaration (El);
+                  end if;
                when others =>
                   Error_Kind ("translate_protected_type_subprograms", El);
             end case;
@@ -8128,10 +8135,11 @@ package body Translation is
                   end;
                when Type_Mode_Fat_Array =>
                   --  a fat array.
+                  D := Stabilize (Dest);
                   Gen_Memcpy
-                    (M2Addr (Get_Array_Base (Dest)),
+                    (M2Addr (Get_Array_Base (D)),
                      M2Addr (Get_Array_Base (E2M (Src, Info, Kind))),
-                     Get_Object_Size (Dest, Obj_Type));
+                     Get_Object_Size (D, Obj_Type));
                when Type_Mode_Record
                  | Type_Mode_Ptr_Array =>
                   Gen_Memcpy
@@ -9427,6 +9435,9 @@ package body Translation is
             when Type_Mode_E8 =>
                Create_Subprg := Ghdl_Create_Signal_E8;
                Conv := Ghdl_I32_Type;
+            when Type_Mode_E32 =>
+               Create_Subprg := Ghdl_Create_Signal_E32;
+               Conv := Ghdl_I32_Type;
             when Type_Mode_I32
               | Type_Mode_P32 =>
                Create_Subprg := Ghdl_Create_Signal_I32;
@@ -10254,7 +10265,8 @@ package body Translation is
            (Interface_List, Rinfo.Var_Instance, Wki_Instance, Itype);
 
          --  The signal.
-         El_Type := Get_Return_Type (Func);
+         El_Type := Get_Type (Get_Interface_Declaration_Chain (Func));
+         El_Type := Get_Element_Subtype (El_Type);
          El_Info := Get_Info (El_Type);
          case El_Info.Type_Mode is
             when Type_Mode_Thin =>
@@ -10383,9 +10395,16 @@ package body Translation is
       is
          --  Type of the resolution function parameter.
          Arr_Type : Iir;
-         Base_Type, El_Type : Iir;
-         El_Info : Type_Info_Acc;
+         Base_Type : Iir;
          Base_Info : Type_Info_Acc;
+
+         --  Type of parameter element.
+         El_Type : Iir;
+         El_Info : Type_Info_Acc;
+
+         --  Type of the function return value.
+         Ret_Type : Iir;
+         Ret_Info : Type_Info_Acc;
 
          --  Type and info of the array index.
          Index_Type : Iir;
@@ -10421,12 +10440,15 @@ package body Translation is
             return;
          end if;
 
-         El_Type := Get_Return_Type (Func);
-         El_Info := Get_Info (El_Type);
+         Ret_Type := Get_Return_Type (Func);
+         Ret_Info := Get_Info (Ret_Type);
 
          Arr_Type := Get_Type (Get_Interface_Declaration_Chain (Func));
          Base_Type := Get_Base_Type (Arr_Type);
          Base_Info := Get_Info (Base_Type);
+
+         El_Type := Get_Element_Subtype (Arr_Type);
+         El_Info := Get_Info (El_Type);
 
          Index_Type := Get_First_Element (Get_Index_Subtype_List (Arr_Type));
          Index_Tinfo := Get_Info (Index_Type);
@@ -10441,7 +10463,7 @@ package body Translation is
          --  A signal.
 
          New_Var_Decl (Var_Res, Get_Identifier ("res"),
-                       O_Storage_Local, El_Info.Ortho_Type (Mode_Value));
+                       O_Storage_Local, Ret_Info.Ortho_Type (Mode_Value));
 
          --  I, J.
          New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
@@ -10559,8 +10581,10 @@ package body Translation is
          Finish_Loop_Stmt (Label);
 
          if Finfo.Res_Interface /= O_Dnode_Null then
-            Res := Lo2M (Var_Res, El_Info, Mode_Value);
-            Allocate_Complex_Object (El_Type, Alloc_Stack, Res);
+            Res := Lo2M (Var_Res, Ret_Info, Mode_Value);
+            if Ret_Info.Type_Mode /= Type_Mode_Fat_Array then
+               Allocate_Complex_Object (Ret_Type, Alloc_Stack, Res);
+            end if;
          end if;
 
          --  Call the resolution function.
@@ -10574,11 +10598,17 @@ package body Translation is
                                 Base_Info.Ortho_Ptr_Type (Mode_Value)));
 
          if Finfo.Res_Interface = O_Dnode_Null then
-            Res := E2M (New_Function_Call (Assoc), El_Info, Mode_Value);
+            Res := E2M (New_Function_Call (Assoc), Ret_Info, Mode_Value);
          else
             New_Procedure_Call (Assoc);
          end if;
 
+         if El_Type /= Ret_Type then
+            Res := E2M
+              (Chap7.Translate_Implicit_Conv (M2E (Res), Ret_Type, El_Type,
+                                              Mode_Value, Func),
+               El_Info, Mode_Value);
+         end if;
          Chap7.Set_Driving_Value (Vals, El_Type, Res);
 
          Close_Temp;
@@ -10600,11 +10630,7 @@ package body Translation is
                when Iir_Kind_Procedure_Declaration
                  | Iir_Kind_Function_Declaration =>
                   --  Translate interfaces.
-                  if Flag_Discard_Unused
-                    and then not Get_Use_Flag (El)
-                  then
-                     null;
-                  else
+                  if not Flag_Discard_Unused or else Get_Use_Flag (El) then
                      Info := Add_Info (El, Kind_Subprg);
                      Chap2.Translate_Subprogram_Interfaces (El);
                      if Get_Kind (El) = Iir_Kind_Function_Declaration
@@ -10637,18 +10663,16 @@ package body Translation is
             case Get_Kind (El) is
                when Iir_Kind_Procedure_Declaration
                  | Iir_Kind_Function_Declaration =>
+                  --  Translate only if used.
                   if Get_Info (El) /= null then
                      Chap2.Translate_Subprogram_Declaration (El);
                      Translate_Resolution_Function (El, Block);
                   end if;
                when Iir_Kind_Function_Body
                  | Iir_Kind_Procedure_Body =>
-                  if Flag_Discard_Unused
-                    and then
-                    not Get_Use_Flag (Get_Subprogram_Specification (El))
+                  if not Flag_Discard_Unused
+                    or else Get_Use_Flag (Get_Subprogram_Specification (El))
                   then
-                     null;
-                  else
                      Chap2.Translate_Subprogram_Body (El);
                      Translate_Resolution_Function_Body
                        (Get_Subprogram_Specification (El), Block);
@@ -11454,6 +11478,9 @@ package body Translation is
                      Conv := Ghdl_Bool_Type;
                   when Type_Mode_E8 =>
                      Subprg := Ghdl_Signal_Associate_E8;
+                     Conv := Ghdl_I32_Type;
+                  when Type_Mode_E32 =>
+                     Subprg := Ghdl_Signal_Associate_E32;
                      Conv := Ghdl_I32_Type;
                   when Type_Mode_I32 =>
                      Subprg := Ghdl_Signal_Associate_I32;
@@ -14918,8 +14945,6 @@ package body Translation is
       begin
          Tinfo := Get_Info (Target_Type);
          Open_Temp;
-         --  FIXME: to be removed ?
-         --Chap3.Translate_Type_Definition (Aggr_Type);
          Targ := Stabilize (Target);
          Base := Stabilize (Chap3.Get_Array_Base (Targ));
          Bounds := Stabilize (Chap3.Get_Array_Bounds (Targ));
@@ -15053,6 +15078,10 @@ package body Translation is
          Translate_Array_Aggregate_Gen
            (Base, Bounds, Aggr, Aggr_Type, 1, Var_Index);
          Close_Temp;
+
+         --  FIXME: creating aggregate subtype is expensive and rarely used.
+         --  (one of the current use - only ? - is check_array_match).
+         Chap3.Translate_Type_Definition (Aggr_Type, False);
       end Translate_Array_Aggregate;
 
       procedure Translate_Aggregate
@@ -15174,7 +15203,8 @@ package body Translation is
          Res_Info := Get_Info (Res_Type);
          Expr_Info := Get_Info (Expr_Type);
          case Res_Info.Type_Mode is
-            when Type_Mode_Array =>
+            when Type_Mode_Array
+              | Type_Mode_Ptr_Array =>
                declare
                   E : O_Dnode;
                begin
@@ -15612,9 +15642,6 @@ package body Translation is
               | Iir_Kind_Simple_Aggregate
               | Iir_Kind_Simple_Name_Attribute =>
                Res := Translate_String_Literal (Expr);
-               Res := Translate_Implicit_Conv
-                 (Res, Expr_Type, Res_Type, Mode_Value, Expr);
-               return Res;
 
             when Iir_Kind_Aggregate =>
                declare
@@ -15700,8 +15727,6 @@ package body Translation is
             when Iir_Kind_Qualified_Expression =>
                --  FIXME: check type.
                Res := Translate_Expression (Get_Expression (Expr), Expr_Type);
-               return Translate_Implicit_Conv
-                 (Res, Expr_Type, Rtype, Mode_Value, Expr);
 
             when Iir_Kind_Constant_Declaration
               | Iir_Kind_Variable_Declaration
@@ -15735,11 +15760,6 @@ package body Translation is
                      Res := Translate_Signal (Res, Expr_Type);
                   end if;
                end;
-               if Rtype /= Null_Iir then
-                  Res := Translate_Implicit_Conv
-                    (Res, Expr_Type, Rtype, Mode_Value, Expr);
-               end if;
-               return Res;
 
             when Iir_Kind_Iterator_Declaration =>
                declare
@@ -15802,9 +15822,7 @@ package body Translation is
                      Assoc_Chain := Canon.Canon_Subprogram_Call (Expr);
                      Res := Translate_Function_Call
                        (Imp, Assoc_Chain, Get_Method_Object (Expr));
-                     return Translate_Implicit_Conv
-                       (Res, Get_Return_Type (Imp),
-                        Res_Type, Mode_Value, Expr);
+                     Expr_Type := Get_Return_Type (Imp);
                   end if;
                end;
 
@@ -15816,8 +15834,6 @@ package body Translation is
                   Res := Translate_Type_Conversion
                     (Translate_Expression (Conv_Expr), Get_Type (Conv_Expr),
                      Expr_Type, Expr);
-                  return Translate_Implicit_Conv
-                    (Res, Expr_Type, Res_Type, Mode_Value, Expr);
                end;
 
             when Iir_Kind_Length_Array_Attribute =>
@@ -15844,9 +15860,8 @@ package body Translation is
                return Chap14.Translate_Succ_Pred_Attribute (Expr);
 
             when Iir_Kind_Image_Attribute =>
-               return Translate_Implicit_Conv
-                 (Chap14.Translate_Image_Attribute (Expr),
-                  String_Type_Definition, Res_Type, Mode_Value, Expr);
+               Res := Chap14.Translate_Image_Attribute (Expr);
+
             when Iir_Kind_Value_Attribute =>
                return Chap14.Translate_Value_Attribute (Expr);
 
@@ -15855,7 +15870,7 @@ package body Translation is
             when Iir_Kind_Active_Attribute =>
                return Chap14.Translate_Active_Attribute (Expr);
             when Iir_Kind_Last_Value_Attribute =>
-               return Chap14.Translate_Last_Value_Attribute (Expr);
+               Res := Chap14.Translate_Last_Value_Attribute (Expr);
 
             when Iir_Kind_High_Type_Attribute =>
                return Chap14.Translate_High_Type_Attribute (Get_Type (Expr));
@@ -15874,13 +15889,13 @@ package body Translation is
                  (Get_Prefix (Expr), Ghdl_Signal_Last_Active_Node);
 
             when Iir_Kind_Driving_Value_Attribute =>
-               return Chap14.Translate_Driving_Value_Attribute (Expr);
+               Res := Chap14.Translate_Driving_Value_Attribute (Expr);
             when Iir_Kind_Driving_Attribute =>
-               return Chap14.Translate_Driving_Attribute (Expr);
+               Res := Chap14.Translate_Driving_Attribute (Expr);
 
             when Iir_Kind_Path_Name_Attribute
               | Iir_Kind_Instance_Name_Attribute =>
-               return Chap14.Translate_Path_Instance_Name_Attribute (Expr);
+               Res := Chap14.Translate_Path_Instance_Name_Attribute (Expr);
 
             when Iir_Kind_Simple_Name
               | Iir_Kind_Selected_Name =>
@@ -15889,6 +15904,14 @@ package body Translation is
             when others =>
                Error_Kind ("translate_expression", Expr);
          end case;
+
+         --  Quick test to avoid useless calls.
+         if Expr_Type /= Res_Type then
+            Res := Translate_Implicit_Conv
+              (Res, Expr_Type, Res_Type, Mode_Value, Expr);
+         end if;
+
+         return Res;
       end Translate_Expression;
 
       --  Check if RNG is of the form:
@@ -19411,6 +19434,9 @@ package body Translation is
             when Type_Mode_E8 =>
                Subprg := Ghdl_Signal_Simple_Assign_E8;
                Conv := Ghdl_I32_Type;
+            when Type_Mode_E32 =>
+               Subprg := Ghdl_Signal_Simple_Assign_E32;
+               Conv := Ghdl_I32_Type;
             when Type_Mode_I32
               | Type_Mode_P32 =>
                Subprg := Ghdl_Signal_Simple_Assign_I32;
@@ -19532,6 +19558,9 @@ package body Translation is
                Conv := Ghdl_Bool_Type;
             when Type_Mode_E8 =>
                Subprg := Ghdl_Signal_Start_Assign_E8;
+               Conv := Ghdl_I32_Type;
+            when Type_Mode_E32 =>
+               Subprg := Ghdl_Signal_Start_Assign_E32;
                Conv := Ghdl_I32_Type;
             when Type_Mode_I32
               | Type_Mode_P32 =>
@@ -19698,6 +19727,9 @@ package body Translation is
                Conv := Ghdl_Bool_Type;
             when Type_Mode_E8 =>
                Subprg := Ghdl_Signal_Next_Assign_E8;
+               Conv := Ghdl_I32_Type;
+            when Type_Mode_E32 =>
+               Subprg := Ghdl_Signal_Next_Assign_E32;
                Conv := Ghdl_I32_Type;
             when Type_Mode_I32
               | Type_Mode_P32 =>
@@ -21013,6 +21045,9 @@ package body Translation is
                   Conv := Ghdl_Bool_Type;
                when Type_Mode_E8 =>
                   Init_Subprg := Ghdl_Signal_Init_E8;
+                  Conv := Ghdl_I32_Type;
+               when Type_Mode_E32 =>
+                  Init_Subprg := Ghdl_Signal_Init_E32;
                   Conv := Ghdl_I32_Type;
                when Type_Mode_I32
                  | Type_Mode_P32 =>
@@ -22832,6 +22867,8 @@ package body Translation is
                Subprg := Ghdl_Signal_Driving_Value_B2;
             when Type_Mode_E8 =>
                Subprg := Ghdl_Signal_Driving_Value_E8;
+            when Type_Mode_E32 =>
+               Subprg := Ghdl_Signal_Driving_Value_E32;
             when Type_Mode_I32
               | Type_Mode_P32 =>
                Subprg := Ghdl_Signal_Driving_Value_I32;
@@ -22888,6 +22925,9 @@ package body Translation is
             when Type_Mode_E8 =>
                Subprg := Ghdl_Image_E8;
                Conv := Ghdl_I32_Type;
+            when Type_Mode_E32 =>
+               Subprg := Ghdl_Image_E32;
+               Conv := Ghdl_I32_Type;
             when Type_Mode_I32 =>
                Subprg := Ghdl_Image_I32;
                Conv := Ghdl_I32_Type;
@@ -22942,6 +22982,8 @@ package body Translation is
                Subprg := Ghdl_Value_B2;
             when Type_Mode_E8 =>
                Subprg := Ghdl_Value_E8;
+            when Type_Mode_E32 =>
+               Subprg := Ghdl_Value_E32;
             when Type_Mode_I32 =>
                Subprg := Ghdl_Value_I32;
             when Type_Mode_P64 =>
@@ -26569,6 +26611,12 @@ package body Translation is
       Create_Image_Value_Subprograms
         ("e8", Ghdl_I32_Type, True, Ghdl_Image_E8, Ghdl_Value_E8);
 
+      --  procedure __ghdl_image_e32 (res : std_string_ptr_node;
+      --                             val : ghdl_i32_type;
+      --                             rti : ghdl_rti_access);
+      Create_Image_Value_Subprograms
+        ("e32", Ghdl_I32_Type, True, Ghdl_Image_E32, Ghdl_Value_E32);
+
       --  procedure __ghdl_image_i32 (res : std_string_ptr_node;
       --                              val : ghdl_i32_type);
       Create_Image_Value_Subprograms
@@ -26902,6 +26950,19 @@ package body Translation is
                                  Ghdl_Signal_Next_Assign_E8,
                                  Ghdl_Signal_Associate_E8,
                                  Ghdl_Signal_Driving_Value_E8);
+
+      --  function __ghdl_create_signal_enum8 (init_val : ghdl_i32_type)
+      --                                       return __ghdl_signal_ptr;
+      --  procedure __ghdl_signal_simple_assign_e8 (sign : __ghdl_signal_ptr;
+      --                                            val : __ghdl_integer);
+      Create_Signal_Subprograms ("e32", Ghdl_I32_Type,
+                                 Ghdl_Create_Signal_E32,
+                                 Ghdl_Signal_Init_E32,
+                                 Ghdl_Signal_Simple_Assign_E32,
+                                 Ghdl_Signal_Start_Assign_E32,
+                                 Ghdl_Signal_Next_Assign_E32,
+                                 Ghdl_Signal_Associate_E32,
+                                 Ghdl_Signal_Driving_Value_E32);
 
       --  function __ghdl_create_signal_b2 (init_val : ghdl_bool_type)
       --                                    return __ghdl_signal_ptr;
@@ -27683,6 +27744,7 @@ package body Translation is
          begin
             --  Load the unit in memory to compute the dependence list.
             Libraries.Load_Design_Unit (Unit, Null_Iir);
+            Update_Node_Infos;
 
             Set_Elab_Flag (Unit, True);
             Design_Units.Append (Unit);
