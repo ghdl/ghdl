@@ -43,11 +43,11 @@ package body Canon is
    --    if INTERFACE_LIST is null then returns null.
    --    if INTERFACE_LIST is not null, a default list is created.
    function Canon_Association_Chain
-     (Interface_Chain: Iir; Association_Chain: Iir)
+     (Interface_Chain: Iir; Association_Chain: Iir; Loc : Iir)
      return Iir;
 
    function Canon_Association_Chain_And_Actuals
-     (Interface_Chain : Iir; Association_Chain : Iir)
+     (Interface_Chain : Iir; Association_Chain : Iir; Loc : Iir)
      return Iir;
 
    --  Canonicalize block configuration CONF.
@@ -391,7 +391,8 @@ package body Canon is
                if Get_Kind (Imp) /= Iir_Kind_Implicit_Function_Declaration then
                   Assoc_Chain := Canon_Association_Chain_And_Actuals
                     (Get_Interface_Declaration_Chain (Imp),
-                     Get_Parameter_Association_Chain (Expr));
+                     Get_Parameter_Association_Chain (Expr),
+                     Expr);
                   Set_Parameter_Association_Chain (Expr, Assoc_Chain);
                else
                   -- FIXME:
@@ -511,7 +512,7 @@ package body Canon is
    -- reorder associations by name,
    -- create omitted association,
    function Canon_Association_Chain
-     (Interface_Chain : Iir; Association_Chain : Iir)
+     (Interface_Chain : Iir; Association_Chain : Iir; Loc : Iir)
      return Iir
    is
       -- The canon list of association.
@@ -586,8 +587,7 @@ package body Canon is
          -- No association, use default expr.
          Assoc_El := Create_Iir (Iir_Kind_Association_Element_Open);
          Set_Artificial_Flag (Assoc_El, True);
-         --  FIXME: association_list can be null_iir_list!
-         --Location_Copy (Assoc_El, Association_List);
+         Location_Copy (Assoc_El, Loc);
          Set_Formal (Assoc_El, Inter);
          Sub_Chain_Append (N_Chain, Last, Assoc_El);
 
@@ -615,12 +615,13 @@ package body Canon is
    end Canon_Association_Chain_Actuals;
 
    function Canon_Association_Chain_And_Actuals
-     (Interface_Chain : Iir; Association_Chain : Iir)
+     (Interface_Chain : Iir; Association_Chain : Iir; Loc : Iir)
      return Iir
    is
       Res : Iir;
    begin
-      Res := Canon_Association_Chain (Interface_Chain, Association_Chain);
+      Res := Canon_Association_Chain
+        (Interface_Chain, Association_Chain, Loc);
       Canon_Association_Chain_Actuals (Res);
       return Res;
    end Canon_Association_Chain_And_Actuals;
@@ -634,7 +635,7 @@ package body Canon is
       Imp := Get_Implementation (Call);
       Inter_Chain := Get_Interface_Declaration_Chain (Imp);
       Assoc_Chain := Get_Parameter_Association_Chain (Call);
-      Assoc_Chain := Canon_Association_Chain (Inter_Chain, Assoc_Chain);
+      Assoc_Chain := Canon_Association_Chain (Inter_Chain, Assoc_Chain, Call);
       Set_Parameter_Association_Chain (Call, Assoc_Chain);
       return Assoc_Chain;
    end Canon_Subprogram_Call;
@@ -714,7 +715,8 @@ package body Canon is
    begin
       Assoc_Chain := Canon_Association_Chain_And_Actuals
         (Get_Interface_Declaration_Chain (Get_Implementation (Call)),
-         Get_Parameter_Association_Chain (Call));
+         Get_Parameter_Association_Chain (Call),
+         Call);
       Set_Parameter_Association_Chain (Call, Assoc_Chain);
    end Canon_Procedure_Call;
 
@@ -1008,7 +1010,8 @@ package body Canon is
       Set_Procedure_Call (Call_Stmt, Call);
       Assoc_Chain := Canon_Association_Chain
         (Get_Interface_Declaration_Chain (Imp),
-         Get_Parameter_Association_Chain (Call));
+         Get_Parameter_Association_Chain (Call),
+         Call);
       Set_Parameter_Association_Chain (Call, Assoc_Chain);
       Driver_List := Null_Iir_List;
       Assoc := Assoc_Chain;
@@ -1319,12 +1322,14 @@ package body Canon is
                   Inst := Get_Entity_From_Entity_Aspect (Inst);
                   Assoc_Chain := Canon_Association_Chain
                     (Get_Generic_Chain (Inst),
-                     Get_Generic_Map_Aspect_Chain (El));
+                     Get_Generic_Map_Aspect_Chain (El),
+                     El);
                   Set_Generic_Map_Aspect_Chain (El, Assoc_Chain);
 
                   Assoc_Chain := Canon_Association_Chain
                     (Get_Port_Chain (Inst),
-                     Get_Port_Map_Aspect_Chain (El));
+                     Get_Port_Map_Aspect_Chain (El),
+                     El);
                   Set_Port_Map_Aspect_Chain (El, Assoc_Chain);
                end;
 
@@ -1350,7 +1355,7 @@ package body Canon is
                      Chain := Get_Generic_Map_Aspect_Chain (Header);
                      if Chain /= Null_Iir then
                         Chain := Canon_Association_Chain
-                          (Get_Generic_Chain (Header), Chain);
+                          (Get_Generic_Chain (Header), Chain, Chain);
                      else
                         Chain := Canon_Default_Association_Chain
                           (Get_Generic_Chain (Header));
@@ -1361,7 +1366,7 @@ package body Canon is
                      Chain := Get_Port_Map_Aspect_Chain (Header);
                      if Chain /= Null_Iir then
                         Chain := Canon_Association_Chain
-                          (Get_Port_Chain (Header), Chain);
+                          (Get_Port_Chain (Header), Chain, Chain);
                      else
                         Chain := Canon_Default_Association_Chain
                           (Get_Port_Chain (Header));
@@ -1485,7 +1490,7 @@ package body Canon is
                Map_Chain := Get_Default_Generic_Map_Aspect_Chain (Bind);
             else
                Map_Chain := Canon_Association_Chain
-                 (Get_Generic_Chain (Entity), Map_Chain);
+                 (Get_Generic_Chain (Entity), Map_Chain, Map_Chain);
             end if;
             Set_Generic_Map_Aspect_Chain (Bind, Map_Chain);
 
@@ -1494,7 +1499,7 @@ package body Canon is
                Map_Chain := Get_Default_Port_Map_Aspect_Chain (Bind);
             else
                Map_Chain := Canon_Association_Chain
-                 (Get_Port_Chain (Entity), Map_Chain);
+                 (Get_Port_Chain (Entity), Map_Chain, Map_Chain);
             end if;
             Set_Port_Map_Aspect_Chain (Bind, Map_Chain);
 

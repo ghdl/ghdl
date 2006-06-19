@@ -1691,7 +1691,18 @@ package body Sem is
       end case;
    end Sem_Subprogram_Body;
 
-   procedure Update_And_Check_Pure_Wait (Subprg : Iir)
+   --  Status of Update_And_Check_Pure_Wait.
+   type Update_Pure_Status is
+     (
+      --  The purity is computed and known.
+      Update_Pure_Done,
+      --  A missing body prevents from computing the purity.
+      Update_Pure_Missing,
+      --  Purity is unknown (recursion).
+      Update_Pure_Unknown
+     );
+   function Update_And_Check_Pure_Wait (Subprg : Iir)
+                                       return Update_Pure_Status
    is
       procedure Error_Wait (Caller : Iir; Callee : Iir) is
       begin
@@ -1715,20 +1726,11 @@ package body Sem is
       --  Current purity depth of SUBPRG.
       Depth : Iir_Int32;
       Depth_Callee : Iir_Int32;
-      Has_Unknown : Boolean;
       Has_Pure_Errors : Boolean := False;
       Has_Wait_Errors : Boolean := False;
       Npos : Natural;
+      Res, Res1 : Update_Pure_Status;
    begin
-      --  If the subprogram has no callee list, there is nothing to do.
-      if Callees_List = Null_Iir_List then
-         return;
-      end if;
-
-      --  This subprogram is being considered.
-      --  To avoid infinite loop, suppress its callees list.
-      Set_Callees_List (Subprg, Null_Iir_List);
-
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration =>
             Kind := K_Function;
@@ -1746,7 +1748,8 @@ package body Sem is
             then
                --  No need to go further.
                Destroy_Iir_List (Callees_List);
-               return;
+               Set_Callees_List (Subprg, Null_Iir_List);
+               return Update_Pure_Done;
             end if;
             Subprg_Bod := Get_Subprogram_Body (Subprg);
             Subprg_Depth := Get_Subprogram_Depth (Subprg);
@@ -1760,9 +1763,26 @@ package body Sem is
             Error_Kind ("update_and_check_pure_wait(1)", Subprg);
       end case;
 
+      --  If the subprogram has no callee list, there is nothing to do.
+      if Callees_List = Null_Iir_List then
+         --  There are two reasons why a callees_list is null:
+         --  * either because SUBPRG does not call any procedure
+         --    in this case, the status are already known and we should have
+         --    returned in the above case.
+         --  * or because of a recursion
+         --    in this case the status are still unknown here.
+         return Update_Pure_Unknown;
+      end if;
+
+      --  By default we don't know the status.
+      Res := Update_Pure_Unknown;
+
+      --  This subprogram is being considered.
+      --  To avoid infinite loop, suppress its callees list.
+      Set_Callees_List (Subprg, Null_Iir_List);
+
       --  First loop: check without recursion.
       --  Second loop: recurse if necessary.
-      Has_Unknown := False;
       for J in 0 .. 1 loop
          Npos := 0;
          for I in Natural loop
@@ -1782,13 +1802,16 @@ package body Sem is
                --  No body yet for the subprogram called.
                --  Nothing can be extracted from it, postpone the checks until
                --  elaboration.
-               Has_Unknown := True;
+               Res := Update_Pure_Missing;
             else
                --  Second loop: recurse if a state is not known.
                if J = 1 and then (Get_Purity_State (Callee) = Unknown
                                   or else Get_Wait_State (Callee) = Unknown)
                then
-                  Update_And_Check_Pure_Wait (Callee);
+                  Res1 := Update_And_Check_Pure_Wait (Callee);
+                  if Res1 = Update_Pure_Missing then
+                     Res := Update_Pure_Missing;
+                  end if;
                end if;
 
                --  Check purity only if the subprogram is not impure.
@@ -1857,6 +1880,7 @@ package body Sem is
                   Set_Wait_State (Subprg, False);
                end if;
             end if;
+            Res := Update_Pure_Done;
             exit;
          else
             Set_Nbr_Elements (Callees_List, Npos);
@@ -1864,7 +1888,34 @@ package body Sem is
       end loop;
 
       Set_Callees_List (Subprg, Callees_List);
+
+      return Res;
    end Update_And_Check_Pure_Wait;
+
+   function Root_Update_And_Check_Pure_Wait (Subprg : Iir) return Boolean
+   is
+      Res : Update_Pure_Status;
+   begin
+      Res := Update_And_Check_Pure_Wait (Subprg);
+      case Res is
+         when Update_Pure_Done =>
+            return True;
+         when Update_Pure_Missing =>
+            return False;
+         when Update_Pure_Unknown =>
+            --  The purity/wait is unknown, but all callee were walked.
+            --  This means there are recursive calls but without violations.
+            if Get_Kind (Subprg) = Iir_Kind_Procedure_Declaration then
+               if Get_Purity_State (Subprg) = Unknown then
+                  Set_Purity_State (Subprg, Maybe_Impure);
+               end if;
+               if Get_Wait_State (Subprg) = Unknown then
+                  Set_Wait_State (Subprg, False);
+               end if;
+            end if;
+            return True;
+      end case;
+   end Root_Update_And_Check_Pure_Wait;
 
    procedure Sem_Analysis_Checks_List (Unit : Iir_Design_Unit;
                                        Emit_Warnings : Boolean)
@@ -1887,10 +1938,13 @@ package body Sem is
          case Get_Kind (El) is
             when Iir_Kind_Function_Declaration =>
                --  FIXME: remove from list if fully tested ?
-               Update_And_Check_Pure_Wait (El);
-               Callees := Get_Callees_List (El);
-               if Callees /= Null_Iir_List then
+               if not Root_Update_And_Check_Pure_Wait (El) then
+                  Keep := True;
                   if Emit_Warnings then
+                     Callees := Get_Callees_List (El);
+                     if Callees = Null_Iir_List then
+                        raise Internal_Error;
+                     end if;
                      Warning_Msg_Sem
                        ("can't assert that all calls in " & Disp_Node (El)
                         & " are pure or have not wait; "
@@ -1903,17 +1957,15 @@ package body Sem is
                        ("(first such call is to " & Disp_Node (Callee) & ")",
                         Callee);
                   end if;
-                  Keep := True;
                end if;
             when Iir_Kind_Sensitized_Process_Statement =>
-               Update_And_Check_Pure_Wait (El);
-               if Get_Callees_List (El) /= Null_Iir_List then
+               if not Root_Update_And_Check_Pure_Wait (El) then
+                  Keep := True;
                   if Emit_Warnings then
                      Warning_Msg_Sem
                        ("can't assert that " & Disp_Node (El)
                         & " has not wait; will be checked at elaboration", El);
                   end if;
-                  Keep := True;
                end if;
             when others =>
                Error_Kind ("sem_analysis_checks_list", El);

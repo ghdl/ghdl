@@ -1463,7 +1463,7 @@ package body Ortho_Code.X86.Insns is
                      end if;
                      Set_Expr_Reg (Stmt, Alloc_Reg (Reg_Res, Stmt, Pnum));
                      Link_Stmt (Stmt);
-                     return Stmt;
+                     return Reload (Stmt, Reg, Pnum);
                   when Mode_U64
                     | Mode_I64 =>
                      Insert_Arg (Gen_Insn (Right, R_Irm, Num));
@@ -1519,8 +1519,8 @@ package body Ortho_Code.X86.Insns is
             return Stmt;
          when OE_Conv =>
             declare
-               O_Mode : Mode_Type;
-               R_Mode : Mode_Type;
+               O_Mode : Mode_Type;      --  Operand mode
+               R_Mode : Mode_Type;      --  Result mode
             begin
                Left := Get_Expr_Operand (Stmt);
                O_Mode := Get_Expr_Mode (Left);

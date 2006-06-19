@@ -11877,6 +11877,24 @@ package body Translation is
                      if Get_Whole_Association_Flag (Assoc) then
                         Elab_Unconstrained_Port (Formal, Get_Actual (Assoc));
                      end if;
+                  when Iir_Kind_Association_Element_Open =>
+                     Open_Temp;
+                     declare
+                        Actual_Type : Iir;
+                        Tinfo : Type_Info_Acc;
+                        Bounds : Mnode;
+                        Formal_Node : Mnode;
+                     begin
+                        Actual_Type := Get_Type (Get_Default_Value (Formal));
+                        Chap3.Create_Array_Subtype (Actual_Type, True);
+                        Tinfo := Get_Info (Actual_Type);
+                        Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
+                        Formal_Node := Chap6.Translate_Name (Formal);
+                        New_Assign_Stmt
+                          (M2Lp (Chap3.Get_Array_Bounds (Formal_Node)),
+                           M2Addr (Bounds));
+                     end;
+                     Close_Temp;
                   when Iir_Kind_Association_Element_By_Individual =>
                      Open_Temp;
                      declare

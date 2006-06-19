@@ -164,7 +164,7 @@ package Flags is
    --  --warn-delayed-checks
    --  Emit warnings about delayed checks (checks performed at elaboration
    --   time).
-   Warn_Delayed_Checks : Boolean := True;
+   Warn_Delayed_Checks : Boolean := False;
 
    --  --warn-body
    --  Emit a warning when a package body is not required but is analyzed.

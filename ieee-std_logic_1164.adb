@@ -18,6 +18,7 @@
 with Types; use Types;
 with Std_Names; use Std_Names;
 with Errorout; use Errorout;
+with Std_Package;
 
 package body Ieee.Std_Logic_1164 is
    function Skip_Implicit (Decl : Iir) return Iir
@@ -43,6 +44,15 @@ package body Ieee.Std_Logic_1164 is
       Std_Logic_1164_Pkg := Pkg;
 
       Decl := Get_Declaration_Chain (Pkg);
+
+      --  Skip a potential copyright constant.
+      if Decl /= Null_Iir
+        and then Get_Kind (Decl) = Iir_Kind_Constant_Declaration
+        and then (Get_Base_Type (Get_Type (Decl))
+                  = Std_Package.String_Type_Definition)
+      then
+         Decl := Get_Chain (Decl);
+      end if;
 
       --  The first declaration should be type std_ulogic.
       if Decl = Null_Iir

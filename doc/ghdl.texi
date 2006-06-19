@@ -947,10 +947,14 @@ is set by default.
 
 @item --warn-delayed-checks
 @cindex @option{--warn-delayed-checks} switch
-Warns for checks that cannot be done during analysis time and are postponed to
-elaboration time.  These checks are checks for no wait statement in a procedure
-called in a sensitized process.  If the body of the procedure is not known
-at analysis time, the check will be performed during elaboration.
+Warns for checks that cannot be done during analysis time and are
+postponed to elaboration time.  This is because not all procedure
+bodies are available during analysis (either because a package body
+has not yet been analysed or because @code{GHDL} doesn't read not required
+package bodies).
+
+These are checks for no wait statement in a procedure called in a
+sensitized process and checks for pure rules of a function.
 
 @item --warn-body
 @cindex @option{--warn-body} switch

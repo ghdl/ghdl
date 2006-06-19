@@ -1248,7 +1248,7 @@ package body Ieee.Vital_Timing is
       end if;
 
       if Flags.Warn_Vital_Generic then
-         Warning_Vital ("generic is not a VITAL generic", Decl);
+         Warning_Vital (Disp_Node (Decl) & " is not a VITAL generic", Decl);
       end if;
    end Check_Entity_Generic_Declaration;
 
