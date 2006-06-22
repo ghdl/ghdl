@@ -412,11 +412,11 @@ package body Ortho_Code.X86.Insns is
       Mode : Mode_Type;
       Reg_Orig : O_Reg;
    begin
-      Orig := Regs (Reg).Stmt;
-      if Orig = O_Enode_Null then
+      if Regs (Reg).Num = O_Free then
          --  This register was not allocated.
          raise Program_Error;
       end if;
+      Orig := Regs (Reg).Stmt;
 
       --  Add a spill statement.
       Mode := Get_Expr_Mode (Orig);
@@ -638,7 +638,9 @@ package body Ortho_Code.X86.Insns is
                      return Expr;
                   end if;
                   Free_R32 (Reg);
-                  return Insert_Move (Expr, Alloc_Reg (Dest, Expr, Num));
+                  Spill := Insert_Move (Expr, Dest);
+                  Alloc_R32 (Dest, Spill, Num);
+                  return Spill;
                when others =>
                   Error_Reg ("reload: unhandled dest in R32", Expr, Dest);
             end case;
@@ -850,6 +852,7 @@ package body Ortho_Code.X86.Insns is
       return N;
    end Insert_Intrinsic;
 
+   --  REG is mandatory: the result of STMT must satisfy the REG constraint.
    function Gen_Insn (Stmt : O_Enode; Reg : O_Reg; Pnum : O_Inum)
                      return O_Enode;
 

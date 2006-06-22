@@ -85,6 +85,8 @@ package body Ortho_Code.Debug is
             Flag_Debug_Stat := True;
          when 'k' =>
             Flag_Debug_Keep := True;
+         when 't' =>
+            Flags.Flag_Type_Name := True;
          when others =>
             Put_Line (Standard_Error, "unknown debug be flag '" & C & "'");
       end case;

@@ -4598,30 +4598,30 @@ package body Translation is
          Tinfo : Type_Info_Acc;
       begin
          Info := Get_Info (Inter);
-         if Info.Interface_Field = O_Fnode_Null then
-            case Get_Kind (Inter) is
-               when Iir_Kind_Constant_Interface_Declaration
-                 | Iir_Kind_Variable_Interface_Declaration
-                 | Iir_Kind_File_Interface_Declaration =>
-                  Mode := Mode_Value;
-               when Iir_Kind_Signal_Interface_Declaration =>
-                  Mode := Mode_Signal;
-               when others =>
-                  Error_Kind ("translate_interface_type", Inter);
-            end case;
-            Tinfo := Get_Info (Get_Type (Inter));
-            case Tinfo.Type_Mode is
-               when Type_Mode_Unknown =>
-                  raise Internal_Error;
-               when Type_Mode_By_Value =>
-                  return Tinfo.Ortho_Type (Mode);
-               when Type_Mode_By_Copy
-                 | Type_Mode_By_Ref =>
-                  return Tinfo.Ortho_Ptr_Type (Mode);
-            end case;
-         else
+         if Info.Interface_Field /= O_Fnode_Null then
             return O_Tnode_Null;
          end if;
+
+         case Get_Kind (Inter) is
+            when Iir_Kind_Constant_Interface_Declaration
+              | Iir_Kind_Variable_Interface_Declaration
+              | Iir_Kind_File_Interface_Declaration =>
+               Mode := Mode_Value;
+            when Iir_Kind_Signal_Interface_Declaration =>
+               Mode := Mode_Signal;
+            when others =>
+               Error_Kind ("translate_interface_type", Inter);
+         end case;
+         Tinfo := Get_Info (Get_Type (Inter));
+         case Tinfo.Type_Mode is
+            when Type_Mode_Unknown =>
+               raise Internal_Error;
+            when Type_Mode_By_Value =>
+               return Tinfo.Ortho_Type (Mode);
+            when Type_Mode_By_Copy
+              | Type_Mode_By_Ref =>
+               return Tinfo.Ortho_Ptr_Type (Mode);
+         end case;
       end Translate_Interface_Type;
 
       procedure Translate_Subprogram_Declaration (Spec : Iir)
@@ -4709,8 +4709,12 @@ package body Translation is
                if Get_Kind (Inter) = Iir_Kind_Variable_Interface_Declaration
                  and then Get_Mode (Inter) in Iir_Out_Modes
                  and then Tinfo.Type_Mode not in Type_Mode_By_Ref
+                 and then Tinfo.Type_Mode /= Type_Mode_File
                then
                   --  This interface is done via the result record.
+                  --  Note: file passed through variables are vhdl87 files,
+                  --        which are initialized at elaboration and thus
+                  --        behave like an IN parameter.
                   if not Has_Result_Record then
                      --  Create the record.
                      Start_Record_Type (El_List);
@@ -19117,7 +19121,10 @@ package body Translation is
                   raise Internal_Error;
                end if;
                Params (Pos) := Stabilize (Param);
-               if In_Conv /= Null_Iir or else Out_Conv = Null_Iir then
+               if In_Conv /= Null_Iir
+                 or else Get_Mode (Formal) = Iir_Inout_Mode
+                 -- or else Out_Conv = Null_Iir
+               then
                   --  Arguments may be assigned if there is an in conversion,
                   --  or no out conversion.
                   --  We try to assign even OUT argument, to avoid

@@ -2517,7 +2517,6 @@ package Iirs is
        Iir_Kind_Overload_List,  -- used internally by sem_expr.
 
    -- Declarations.
-   --  iir_kinds_nonoverloadable_declaration
        Iir_Kind_Type_Declaration,
        Iir_Kind_Anonymous_Type_Declaration,
        Iir_Kind_Subtype_Declaration,

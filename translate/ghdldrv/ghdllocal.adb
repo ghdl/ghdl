@@ -149,16 +149,15 @@ package body Ghdllocal is
       use Ada.Text_IO;
       procedure P (Str : String) renames Put_Line;
    begin
-      P ("Options:");
+      P ("Main options (try --options-help for details):");
       P (" --std=XX       Use XX as VHDL standard (87,93c,93,00 or 02)");
       P (" --work=NAME    Set the name of the WORK library");
       P (" -PDIR          Add DIR in the library search path");
       P (" --workdir=DIR  Specify the directory of the WORK library");
       P (" --PREFIX=DIR   Specify installation prefix");
-
       P (" --ieee=NAME    Use NAME as ieee library, where name is:");
       P ("    standard: standard version (default)");
-      P ("    synopsys, mentor: vendor version (bad)");
+      P ("    synopsys, mentor: vendor version (not advised)");
       P ("    none: do not use a predefined ieee library");
    end Disp_Long_Help;
 

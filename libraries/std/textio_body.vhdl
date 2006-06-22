@@ -541,7 +541,7 @@ package body textio is
   is
     variable nl : line;
   begin
-    if l'length = 0 then
+    if l = null or l'length = 0 then
       good := false;
     else
       value := l (l'left);
@@ -1169,10 +1169,10 @@ package body textio is
 	    when digits =>
 	      state := decimals;
 	    when others =>
-	      return;
+	      exit;
 	  end case;
 	when others =>
-	  return;
+          exit;
       end case;
     end loop;
 

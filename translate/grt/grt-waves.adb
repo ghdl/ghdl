@@ -305,7 +305,7 @@ package body Grt.Waves is
    --  Called before elaboration.
    procedure Wave_Init
    is
-      Mode : constant String := "wt" & NUL;
+      Mode : constant String := "wb" & NUL;
    begin
       if Wave_Filename = null then
          Wave_Stream := NULL_Stream;

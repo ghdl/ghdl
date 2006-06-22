@@ -132,9 +132,10 @@ package body Ghdlmain is
             C := C.Next;
          end loop;
          New_Line;
-         Put_Line
-           ("To display the options of a GHDL program, run your program");
-         Put_Line ("  with the --help option.");
+         Put_Line ("To display the options of a GHDL program,");
+         Put_Line ("  run your programm with the --help option.");
+         Put_Line ("Also see --options-help for analyzer options.");
+         New_Line;
          Put_Line ("Please, refer to the GHDL manual for more information.");
          Put_Line ("Report bugs on http://gna.org/projects/ghdl");
       elsif Args'Length = 1 then
@@ -171,7 +172,7 @@ package body Ghdlmain is
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--options-help     Disp help for compiler options";
+      return "--options-help     Disp help for analyzer options";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Option_Help;
@@ -352,8 +353,8 @@ package body Ghdlmain is
    procedure Register_Commands is
    begin
       Register_Command (new Command_Help);
-      Register_Command (new Command_Option_Help);
       Register_Command (new Command_Version);
+      Register_Command (new Command_Option_Help);
    end Register_Commands;
 end Ghdlmain;
 

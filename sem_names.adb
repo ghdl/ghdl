@@ -703,6 +703,7 @@ package body Sem_Names is
       Prefix_Type : Iir;
       Index_Type : Iir;
       Prefix : Iir;
+      Staticness : Iir_Staticness;
    begin
       --  LRM93 14.1
       --  Parameter: A locally static expression of type universal_integer, the
@@ -777,7 +778,19 @@ package body Sem_Names is
       --  A globally static array subtype is a constrained array subtype
       --  formed by imposing on an unconstrained array type a globally static
       --  index constraint.
-      Set_Expr_Staticness (Attr, Get_Type_Staticness (Prefix_Type));
+      Staticness := Get_Type_Staticness (Prefix_Type);
+      if Flags.Vhdl_Std = Vhdl_93c
+        and then Get_Kind (Prefix) not in Iir_Kinds_Type_Declaration
+      then
+         --  For 93c:
+         --  if the prefix is a static expression, the staticness of the
+         --   expression may be higher than the staticness of the type
+         --   (eg: generic whose type is an unconstrained array).
+         --   Also consider expression staticness.
+         Staticness := Iir_Staticness'Max (Staticness,
+                                           Get_Expr_Staticness (Prefix));
+      end if;
+      Set_Expr_Staticness (Attr, Staticness);
    end Finish_Sem_Array_Attribute;
 
    procedure Finish_Sem_Scalar_Type_Attribute (Attr : Iir; Param : Iir)
@@ -2102,7 +2115,11 @@ package body Sem_Names is
            | Iir_Kind_Slice_Name =>
             Error_Msg_Sem ("prefix of user defined attribute cannot be an "
                            & "object subelement", Attr);
-            return Null_Iir;
+            return Error_Mark;
+         when Iir_Kind_Dereference =>
+            Error_Msg_Sem ("prefix of user defined attribute cannot be an "
+                           & "anonymous object", Attr);
+            return Error_Mark;
          when Iir_Kinds_Object_Declaration
            | Iir_Kind_Design_Unit
            | Iir_Kind_Type_Declaration
