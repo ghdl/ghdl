@@ -680,6 +680,8 @@ package body Disp_Vhdl is
             Put ("variable ");
          when Iir_Kind_Constant_Interface_Declaration =>
             Put ("constant ");
+         when Iir_Kind_File_Interface_Declaration =>
+            Put ("file ");
          when others =>
             Error_Kind ("disp_interface_declaration", Inter);
       end case;

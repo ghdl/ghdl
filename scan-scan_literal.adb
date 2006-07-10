@@ -228,6 +228,8 @@ procedure Scan_Literal is
       Dividend : Uint16_Array (0 .. Nbr_Digits);
       A_F : constant Sint16 := First_Digit (A);
       B_F : constant Sint16 := First_Digit (B);
+
+      --  Digit corresponding to the first digit of B.
       Doff : constant Sint16 := Dividend'Last - B_F;
       Q : Uint16;
       C, N_C : Uint16;
@@ -238,6 +240,9 @@ procedure Scan_Literal is
       end if;
 
       --  Copy and shift dividend.
+      --  Bit 15 of the most significant digit of A becomes bit 0 of the
+      --  most significant digit of DIVIDEND.  Therefore we are sure
+      --  DIVIDEND < B (after realignment).
       C := 0;
       for K in 0 .. A_F loop
          N_C := Shift_Right (A.S (K), 15);
@@ -249,6 +254,7 @@ procedure Scan_Literal is
       Dividend (0 .. Dividend'last - 2 - A_F) := (others => 0);
 
       --  Algorithm is the same as division by hand.
+      C := 0;
       for I in reverse Digit_Range loop
          Q := 0;
          for J in 0 .. 15 loop
@@ -271,7 +277,13 @@ procedure Scan_Literal is
                   Tmp (K) := Dividend (Doff + K) - V16;
                end loop;
 
+               --  If the last shift creates a carry, we are sure Dividend > B
+               if C /= 0 then
+                  Borrow := 0;
+               end if;
+
                Q := Q * 2;
+               --  Begin of : Dividend = Dividend * 2
                C := 0;
                for K in 0 .. Doff - 1 loop
                   N_C := Shift_Right (Dividend (K), 15);
@@ -280,13 +292,17 @@ procedure Scan_Literal is
                end loop;
 
                if Borrow = 0 then
+                  --  Dividend > B
                   Q := Q + 1;
+                  --  Dividend = Tmp * 2
+                  --           = (Dividend - B) * 2
                   for K in Doff .. Nbr_Digits loop
                      N_C := Shift_Right (Tmp (K - Doff), 15);
                      Dividend (K) := Shift_Left (Tmp (K - Doff), 1) or C;
                      C := N_C;
                   end loop;
                else
+                  --  Dividend = Dividend * 2
                   for K in Doff .. Nbr_Digits loop
                      N_C := Shift_Right (Dividend (K), 15);
                      Dividend (K) := Shift_Left (Dividend (K), 1) or C;

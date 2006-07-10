@@ -192,6 +192,8 @@ done
 for i in $windows_files; do
     ln -sf $CWD/windows/$i $distdir/windows/$i
 done
+    echo "!define VERSION \"$VERSION\"" > $distdir/windows/version.nsi
+
 
     ln -sf $CWD/winbuild.bat $distdir/winbuild.bat
 
@@ -439,7 +441,7 @@ EOF
 }
 
 if [ $# -eq 0 ]; then
-  do_Makefile;
+  do_zip;
 else
   for i ; do
     case $i in

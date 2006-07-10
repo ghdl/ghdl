@@ -39,7 +39,7 @@
 set -e
 
 # GCC version
-GCCVERSION=4.1.0
+GCCVERSION=4.1.1
 # Machine name used by GCC
 MACHINE=i686-pc-linux-gnu
 # Directory where GCC sources (and objects) stay.
@@ -105,7 +105,7 @@ for i in $lfiles; do ln -sf $CWD/$i $VHDLDIR/$i; done
 
 for i in $cfiles; do ln -sf $CWD/../../$i $VHDLDIR/$i; done
 
-ln -sf $CWD/../../doc/ghdl.texi $VHDLDIR/ghdl.texi
+for i in ghdl.texi ghdl.1; do ln -sf $CWD/../../doc/$i $VHDLDIR/$i; done
 
 for i in $tfiles; do ln -sf $CWD/../$i $VHDLDIR/$i; done
 
@@ -212,7 +212,7 @@ do_compile2 ()
 do_tar_install ()
 {
   tar -C $DESTDIR -jcvf $TARINSTALL \
-    ./$PREFIX/bin/ghdl ./$PREFIX/info/ghdl.info \
+    ./$PREFIX/bin/ghdl ./$PREFIX/info/ghdl.info ./$PREFIX/man/man1/ghdl.1 \
     ./$GCCLIBDIR/vhdl \
     ./$GCCLIBEXECDIR/ghdl1
 }
@@ -248,9 +248,12 @@ do_distclean_gcc ()
   rm -f ${DESTDIR}${PREFIX}/info/gcc.info*
   rm -f ${DESTDIR}${PREFIX}/info/gccinstall.info*
   rm -f ${DESTDIR}${PREFIX}/info/gccint.info*
-  rm -f ${DESTDIR}${PREFIX}/lib/*.a ${DESTDIR}${PREFIX}/lib/*.so*
+  rm -f ${DESTDIR}${PREFIX}/lib/*.a
+  rm -f ${DESTDIR}${PREFIX}/lib/*.so*
+  rm -f ${DESTDIR}${PREFIX}/lib/*.la
   rm -rf ${DESTDIR}${PREFIX}/share
-  rm -rf ${DESTDIR}${PREFIX}/man
+  rm -rf ${DESTDIR}${PREFIX}/man/man7
+  rm -rf ${DESTDIR}${PREFIX}/man/man1/{cpp,gcc,gcov}.1
   rm -rf ${DESTDIR}${PREFIX}/include
   rm -f ${DESTDIR}${GCCLIBEXECDIR}/cc1 ${DESTDIR}${GCCLIBEXECDIR}/collect2
   rm -f ${DESTDIR}${GCCLIBEXECDIR}/cpp0 ${DESTDIR}${GCCLIBEXECDIR}/tradcpp0

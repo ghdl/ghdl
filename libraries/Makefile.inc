@@ -112,7 +112,7 @@ synopsys.v93: $(LIB93_DIR) $(SYNOPSYS_SRCS) force
 	prev=`pwd`; cd $(SYN93_DIR); \
 	$(CP) ../ieee/ieee-obj93.cf .; \
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
-	for i in $(IEEE_SRCS) $(VITAL2000_SRCS); do \
+	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
 	  b=`basename $$i .vhdl`; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
 	done; \
 	for i in $(SYNOPSYS93_BSRCS); do \
@@ -127,7 +127,7 @@ mentor.v93: $(LIB93_DIR) $(MENTOR93_SRCS) force
 	prev=`pwd`; cd $(MENTOR93_DIR); \
 	$(CP) ../ieee/ieee-obj93.cf . ;\
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
-	for i in $(IEEE_SRCS) $(VITAL2000_SRCS); do \
+	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
 	  b=`basename $$i .vhdl`; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
 	done ; \
 	for i in $(MENTOR93_BSRCS); do \

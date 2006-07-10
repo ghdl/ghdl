@@ -6,11 +6,9 @@ procedure Ortho_Gcc.Main
 is
    gnat_argc : Integer;
    gnat_argv : System.Address;
-   gnat_envp : System.Address;
 
    pragma Import (C, gnat_argc);
    pragma Import (C, gnat_argv);
-   pragma Import (C, gnat_envp);
 
    function Toplev_Main (Argc : Integer; Argv : System.Address)
                         return Integer;

@@ -961,8 +961,8 @@ package body Translation is
      range Type_Mode_B2 .. Type_Mode_Acc;
 
    --  These parameters are passed by copy, ie a copy of the object is created
-   --  and the reference of the copy is passed.  If the object will not be
-   --  modified by the subprogram, the object can be passed by reference.
+   --  and the reference of the copy is passed.  If the object is not
+   --  modified by the subprogram, the object could be passed by reference.
    subtype Type_Mode_By_Copy is Type_Mode_Type
      range Type_Mode_Fat_Acc .. Type_Mode_Fat_Acc;
 
@@ -4833,6 +4833,31 @@ package body Translation is
          Push_Local_Factory;
          Chap2.Save_Subprg_Instance (Subprg_Instances);
 
+         --  Init out parameter passed by value/copy.
+         declare
+            Inter : Iir;
+            Inter_Type : Iir;
+            Type_Info : Type_Info_Acc;
+         begin
+            Inter := Get_Interface_Declaration_Chain (Spec);
+            while Inter /= Null_Iir loop
+               if Get_Kind (Inter) = Iir_Kind_Variable_Interface_Declaration
+                 and then Get_Mode (Inter) = Iir_Out_Mode
+               then
+                  Inter_Type := Get_Type (Inter);
+                  Type_Info := Get_Info (Inter_Type);
+                  if (Type_Info.Type_Mode in Type_Mode_By_Value
+                      or Type_Info.Type_Mode in Type_Mode_By_Copy)
+                    and then Type_Info.Type_Mode /= Type_Mode_File
+                  then
+                     Chap4.Init_Object
+                       (Chap6.Translate_Name (Inter), Inter_Type);
+                  end if;
+               end if;
+               Inter := Get_Chain (Inter);
+            end loop;
+         end;
+
          Chap4.Translate_Declaration_Chain (Subprg);
          Rtis.Generate_Subprogram_Body (Subprg);
          Chap4.Translate_Declaration_Chain_Subprograms (Subprg, Null_Iir);
@@ -5057,14 +5082,16 @@ package body Translation is
             return;
          end if;
 
+         Pkg := Get_Package (Decl);
+         Restore_Local_Identifier (Get_Info (Pkg).Package_Local_Id);
+         Chap4.Translate_Declaration_Chain (Decl);
+
          if Flag_Rti then
             Rtis.Generate_Unit (Decl);
          end if;
 
-         Pkg := Get_Package (Decl);
-         Restore_Local_Identifier (Get_Info (Pkg).Package_Local_Id);
-         Chap4.Translate_Declaration_Chain (Decl);
          Chap4.Translate_Declaration_Chain_Subprograms (Decl, Null_Iir);
+
          Elab_Package_Body (Pkg, Decl);
       end Translate_Package_Body;
 
@@ -19123,12 +19150,8 @@ package body Translation is
                Params (Pos) := Stabilize (Param);
                if In_Conv /= Null_Iir
                  or else Get_Mode (Formal) = Iir_Inout_Mode
-                 -- or else Out_Conv = Null_Iir
                then
-                  --  Arguments may be assigned if there is an in conversion,
-                  --  or no out conversion.
-                  --  We try to assign even OUT argument, to avoid
-                  --  uninitialized values.
+                  --  Arguments may be assigned if there is an in conversion.
                   Ptr := New_Selected_Element
                     (New_Obj (Res), Formal_Info.Interface_Field);
                   Param := Lv2M (Ptr, Ftype_Info, Mode_Value);
@@ -25442,8 +25465,8 @@ package body Translation is
                Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
             when Iir_Kind_Package_Body =>
                Kind := Ghdl_Rtik_Package_Body;
-               -- FIXME: yes or not ?
-               --Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
+               --  Required at least for 'image
+               Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
             when Iir_Kind_Architecture_Declaration =>
                Kind := Ghdl_Rtik_Architecture;
                Generate_Declaration_Chain (Get_Declaration_Chain (Blk));

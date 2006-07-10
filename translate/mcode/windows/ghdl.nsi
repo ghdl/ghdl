@@ -5,19 +5,20 @@
 ;  Check if administrator
 ;  uninstall support
 ; TODO:
-;  * Add in PATH
 ;  * Add version
 ;  * Check if GHDL is already installed (and uninstall before)
-;  * Check Windows version
+;  * Doc
 ;  * Allow user install
 
+;--------------------------------
+!include version.nsi
 ;--------------------------------
 
 ; The name of the installer
 Name "Ghdl"
 
 ; The file to write
-OutFile "ghdl-install.exe"
+OutFile "ghdl-installer-${VERSION}.exe"
 
 SetDateSave on
 
@@ -34,6 +35,7 @@ LicenseData ..\COPYING
 ;--------------------------------
 
 ; Pages
+
 Page license
 Page components
 Page directory
@@ -58,6 +60,48 @@ nt_ok:
   Quit
 
 Admin:
+
+  ;;;  Check if already installed.
+  ReadRegStr $0 HKLM "Software\Ghdl" "Install_Dir"
+  IfErrors not_installed
+  ReadRegStr $0 HKLM "Software\Ghdl" "Version"
+  IfErrors unknown_prev_version
+  Goto known_version
+unknown_prev_version:
+  StrCpy $0 "(unknown)"
+known_version:
+  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "You already have GHDL version $0 installed.  Deinstall ?" IDCANCEL install_abort IDOK deinstall
+install_abort:
+  Abort "Installation aborted"
+deinstall:
+  ReadRegStr $0 HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ghdl" "UninstallString"
+  IfErrors deinstall_failed
+
+  ; First version of the GHDL installer adds quotes
+  StrCpy $1 $0 1
+  StrCmp $1 '"' 0 str_ok
+  StrCpy $1 $0 "" 1
+  StrCpy $0 $1 -1
+str_ok:
+
+  ; Read install dir
+  ReadRegStr $1 HKLM "Software\Ghdl" "Install_Dir"
+  IfErrors deinstall_failed
+
+;  MessageBox MB_OK 'copy $0 to $TEMP'
+
+  ClearErrors
+;  MessageBox MB_OK 'copy $0 to $TEMP'
+  CopyFiles $0 $TEMP
+  IfErrors deinstall_failed
+  ExecWait '"$TEMP\uninst-ghdl.exe" /S _?=$1'
+  IfErrors deinstall_failed
+  Delete "$TEMP\uninst-ghdl.exe"
+  Return
+deinstall_failed:
+  Delete $TEMP\uninst-ghdl.exe
+  MessageBox MB_YESNO|MB_ICONSTOP "Can't deinstall GHDL: de-installer not found or failed.  Continue installation ?" IDNO install_abort
+not_installed:
   Return
 FunctionEnd
 
@@ -76,11 +120,13 @@ Section "Ghdl Compiler (required)"
   File /oname=COPYING.txt ..\COPYING
 
   ; Write the installation path into the registry
-  WriteRegStr HKLM "Software\Ghdl" "Install_Dir" "$INSTDIR"
+  WriteRegStr HKLM "Software\Ghdl" "Install_Dir" $INSTDIR
+  ; Write te version
+  WriteRegStr HKLM "Software\Ghdl" "Version" ${VERSION}
   
   ; Write the uninstall keys for Windows
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ghdl" "DisplayName" "Ghdl"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ghdl" "UninstallString" '"$INSTDIR\uninst-ghdl.exe"'
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ghdl" "UninstallString" $INSTDIR\uninst-ghdl.exe
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ghdl" "NoModify" 1
   WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ghdl" "NoRepair" 1
   WriteUninstaller $INSTDIR\uninst-ghdl.exe"
@@ -100,6 +146,10 @@ Section "Synopsys libraries (Recommanded)"
   File /r ..\lib\v87\synopsys
   SetOutPath $INSTDIR\lib\v93
   File /r ..\lib\v93\synopsys
+SectionEnd
+
+Section "Documentation (Recommanded)"
+  File ghdl.htm
 SectionEnd
 
 Section "Add in PATH (Recommanded)"

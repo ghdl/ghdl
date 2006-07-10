@@ -22,7 +22,7 @@ Boston, MA 02111-1307, USA.  */
 /* This is the contribution to the `default_compilers' array in gcc.c for
    GHDL.  */
 
-  {".vhd", "@vhdl", 0},
-  {".vhdl", "@vhdl", 0},
+  {".vhd", "@vhdl", 0, 0, 0},
+  {".vhdl", "@vhdl", 0, 0, 0},
   {"@vhdl",
-   "ghdl1 %i %(cc1_options) %{!fsyntax-only:%(invoke_as)}", 0},
+   "ghdl1 %i %(cc1_options) %{!fsyntax-only:%(invoke_as)}", 0, 0, 0},

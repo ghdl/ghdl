@@ -139,7 +139,12 @@ vhdl.install-info: ghdl.info
 install-ghdllib:
 	$(MAKE) -f vhdl/Makefile $(FLAGS_TO_PASS) $(VHDL_FLAGS_TO_PASS) install-ghdllib
 
-vhdl.install-man:
+vhdl.install-man: $(DESTDIR)$(man1dir)/ghdl$(man1ext)
+
+$(DESTDIR)$(man1dir)/ghdl$(man1ext): $(srcdir)/vhdl/ghdl.1
+	-rm -f $@
+	-$(INSTALL_DATA) $< $@
+	-chmod a-x $@
 
 vhdl.uninstall:
 	-$(RM) $(DESTDIR)$(bindir)/ghdl$(exeext)
