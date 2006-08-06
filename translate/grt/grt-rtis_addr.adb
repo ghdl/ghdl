@@ -253,7 +253,7 @@ package body Grt.Rtis_Addr is
             return To_Ghdl_Rti_Access
               (To_Ghdl_Rtin_Subtype_Array_Acc (Atype).Basetype);
          when Ghdl_Rtik_Type_E8
-	   | Ghdl_Rtik_Type_E32
+           | Ghdl_Rtik_Type_E32
            | Ghdl_Rtik_Type_B2 =>
             return Atype;
          when others =>

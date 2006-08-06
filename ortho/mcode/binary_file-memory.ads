@@ -16,7 +16,10 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 package Binary_File.Memory is
+
+   --  Must be called before set_symbol_address.
    procedure Write_Memory_Init;
    procedure Set_Symbol_Address (Sym : Symbol; Addr : System.Address);
+
    procedure Write_Memory_Relocate (Error : out Boolean);
 end Binary_File.Memory;

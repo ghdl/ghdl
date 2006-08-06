@@ -226,7 +226,8 @@ package body Canon is
            | Iir_Kind_Constant_Interface_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Variable_Interface_Declaration =>
+           | Iir_Kind_Variable_Interface_Declaration
+           | Iir_Kind_File_Declaration =>
             null;
 
          when Iir_Kind_Left_Array_Attribute

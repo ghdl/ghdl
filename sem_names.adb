@@ -2376,9 +2376,13 @@ package body Sem_Names is
                --  At least, this type is valid; and even if the array was
                --  constrained, the base type would be the same.
             end if;
-         when Iir_Kind_Process_Statement =>
+         when Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute
+           | Iir_Kind_Process_Statement =>
             Error_Msg_Sem
-              (Disp_Node (Prefix) & " is not an appropriate attribute prefix",
+              (Disp_Node (Prefix) & " is not an appropriate prefix for '"
+               & Name_Table.Image (Get_Attribute_Identifier (Attr))
+               & " attribute",
                Attr);
             return Error_Mark;
          when others =>

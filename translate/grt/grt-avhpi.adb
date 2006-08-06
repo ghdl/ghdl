@@ -330,7 +330,7 @@ package body Grt.Avhpi is
             end;
          when Ghdl_Rtik_Type_B2
            | Ghdl_Rtik_Type_E8
-	   | Ghdl_Rtik_Type_E32 =>
+           | Ghdl_Rtik_Type_E32 =>
             Res := (Kind => VhpiEnumTypeDeclK,
                     Ctxt => Ctxt,
                     Atype => Rti);

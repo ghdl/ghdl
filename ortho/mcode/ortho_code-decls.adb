@@ -322,6 +322,7 @@ package body Ortho_Code.Decls is
    procedure New_Const_Value (Cst : O_Dnode; Val : O_Cnode) is
    begin
       if Dnodes.Table (Cst).Info2 /= 0 then
+         --  Value was already set.
          raise Syntax_Error;
       end if;
       Dnodes.Table (Cst).Info2 := Int32 (Val);

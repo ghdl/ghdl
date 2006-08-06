@@ -2646,14 +2646,6 @@ package Iirs is
        Iir_Kind_Pred_Attribute,                 --  scalar_type_attribute
        Iir_Kind_Leftof_Attribute,               --  scalar_type_attribute
        Iir_Kind_Rightof_Attribute,              --  scalar_type_attribute
-       Iir_Kind_Left_Array_Attribute,           --  array_attribute
-       Iir_Kind_Right_Array_Attribute,          --  array_attribute
-       Iir_Kind_High_Array_Attribute,           --  array_attribute
-       Iir_Kind_Low_Array_Attribute,            --  array_attribute
-       Iir_Kind_Range_Array_Attribute,          --  array_attribute
-       Iir_Kind_Reverse_Range_Array_Attribute,  --  array_attribute
-       Iir_Kind_Length_Array_Attribute,         --  array_attribute
-       Iir_Kind_Ascending_Array_Attribute,      --  array_attribute
        Iir_Kind_Delayed_Attribute,              --  signal_attribute
        Iir_Kind_Stable_Attribute,               --  signal_attribute
        Iir_Kind_Quiet_Attribute,                --  signal_attribute
@@ -2670,6 +2662,14 @@ package Iirs is
        Iir_Kind_Simple_Name_Attribute,
        Iir_Kind_Instance_Name_Attribute,
        Iir_Kind_Path_Name_Attribute,
+       Iir_Kind_Left_Array_Attribute,           --  array_attribute
+       Iir_Kind_Right_Array_Attribute,          --  array_attribute
+       Iir_Kind_High_Array_Attribute,           --  array_attribute
+       Iir_Kind_Low_Array_Attribute,            --  array_attribute
+       Iir_Kind_Length_Array_Attribute,         --  array_attribute
+       Iir_Kind_Ascending_Array_Attribute,      --  array_attribute
+       Iir_Kind_Range_Array_Attribute,          --  array_attribute
+       Iir_Kind_Reverse_Range_Array_Attribute,  --  array_attribute
 
        Iir_Kind_Attribute_Name
       );
@@ -3205,14 +3205,6 @@ package Iirs is
    --Iir_Kind_Pred_Attribute
    --Iir_Kind_Leftof_Attribute
    --Iir_Kind_Rightof_Attribute
-   --Iir_Kind_Left_Array_Attribute
-   --Iir_Kind_Right_Array_Attribute
-   --Iir_Kind_High_Array_Attribute
-   --Iir_Kind_Low_Array_Attribute
-   --Iir_Kind_Range_Array_Attribute
-   --Iir_Kind_Reverse_Range_Array_Attribute
-   --Iir_Kind_Length_Array_Attribute
-   --Iir_Kind_Ascending_Array_Attribute
    --Iir_Kind_Delayed_Attribute
    --Iir_Kind_Stable_Attribute
    --Iir_Kind_Quiet_Attribute
@@ -3228,7 +3220,14 @@ package Iirs is
    --Iir_Kind_Structure_Attribute
    --Iir_Kind_Simple_Name_Attribute
    --Iir_Kind_Instance_Name_Attribute
-     Iir_Kind_Path_Name_Attribute;
+   --Iir_Kind_Path_Name_Attribute
+   --Iir_Kind_Left_Array_Attribute
+   --Iir_Kind_Right_Array_Attribute
+   --Iir_Kind_High_Array_Attribute
+   --Iir_Kind_Low_Array_Attribute
+   --Iir_Kind_Length_Array_Attribute
+     Iir_Kind_Ascending_Array_Attribute;
+
 
    subtype Iir_Kinds_Attribute is Iir_Kind range
      Iir_Kind_Base_Attribute ..
@@ -3254,10 +3253,10 @@ package Iirs is
    --Iir_Kind_Right_Array_Attribute
    --Iir_Kind_High_Array_Attribute
    --Iir_Kind_Low_Array_Attribute
-   --Iir_Kind_Range_Array_Attribute
-   --Iir_Kind_Reverse_Range_Array_Attribute
    --Iir_Kind_Length_Array_Attribute
-     Iir_Kind_Ascending_Array_Attribute;
+   --Iir_Kind_Ascending_Array_Attribute
+   --Iir_Kind_Range_Array_Attribute
+     Iir_Kind_Reverse_Range_Array_Attribute;
 
    subtype Iir_Kinds_Signal_Attribute is Iir_Kind range
      Iir_Kind_Delayed_Attribute ..

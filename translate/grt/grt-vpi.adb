@@ -507,6 +507,189 @@ package body Grt.Vpi is
    end vpi_get_value;
 
    ------------------------------------------------------------------------
+   -- void  vpiHandle vpi_put_value(vpiHandle obj, p_vpi_value value,
+   --                               p_vpi_time when, int flags)
+   -- Alter the simulation value of an object.
+   -- see IEEE 1364-2001, chapter 27.14, page 675
+   -- FIXME
+
+   procedure ii_vpi_put_value_bin_str_B2 (SigPtr : Ghdl_Signal_Ptr;
+                                          Value : Character)
+   is
+      Tempval : Value_Union;
+   begin
+      -- use the Set_Effective_Value procedure to update the signal
+      case Value is
+         when '0' =>
+            Tempval.B2 := false;
+         when '1' =>
+            Tempval.B2 := true;
+         when others =>
+            dbgPut_Line("ii_vpi_put_value_bin_str_B2: "
+                        & "wrong character - signal wont be set");
+            return;
+      end case;
+      SigPtr.Driving_Value := Tempval;
+      Set_Effective_Value (SigPtr, Tempval);
+   end ii_vpi_put_value_bin_str_B2;
+
+   procedure ii_vpi_put_value_bin_str_E8 (SigPtr : Ghdl_Signal_Ptr;
+                                          Value : Character)
+   is
+      Tempval : Value_Union;
+   begin
+      case Value is
+         when 'U' =>
+            Tempval.E8 := 0;
+         when 'X' =>
+            Tempval.E8 := 1;
+         when '0' =>
+            Tempval.E8 := 2;
+         when '1' =>
+            Tempval.E8 := 3;
+         when 'Z' =>
+            Tempval.E8 := 4;
+         when 'W' =>
+            Tempval.E8 := 5;
+         when 'L' =>
+            Tempval.E8 := 6;
+         when 'H' =>
+            Tempval.E8 := 7;
+         when '-' =>
+            Tempval.E8 := 8;
+         when others =>
+            dbgPut_Line("ii_vpi_put_value_bin_str_B8: "
+                        & "wrong character - signal wont be set");
+            return;
+      end case;
+      SigPtr.Driving_Value := Tempval;
+      Set_Effective_Value (SigPtr, Tempval);
+   end ii_vpi_put_value_bin_str_E8;
+
+
+   procedure ii_vpi_put_value_bin_str(Obj : VhpiHandleT;
+                                      ValueStr : Ghdl_C_String)
+   is
+      Info : Verilog_Wire_Info;
+      Len  : Ghdl_Index_Type;
+   begin
+      -- Check the Obj type.
+      -- * The vpiHandle has a reference (field Ref) to a VhpiHandleT
+      --   when it doesnt come from a callback.
+      case Vhpi_Get_Kind(Obj) is
+         when VhpiPortDeclK
+           | VhpiSigDeclK =>
+            null;
+         when others =>
+            return;
+      end case;
+
+      -- The following code segment was copied from the
+      -- ii_vpi_get_value function.
+      --  Get verilog compat info.
+      Get_Verilog_Wire (Obj, Info);
+      if Info.Kind = Vcd_Bad then
+         return;
+      end if;
+
+      if Info.Irange = null then
+         Len := 1;
+      else
+         Len := Info.Irange.I32.Len;
+      end if;
+
+      -- Step 1: convert vpi object to internal format.
+      --         p_vpi_handle -> Ghdl_Signal_Ptr
+      --         To_Signal_Arr_Ptr (Info.Addr) does part of the magic
+
+      -- Step 2: convert datum to appropriate type.
+      --         Ghdl_C_String -> Value_Union
+
+      -- Step 3: assigns value to object using Set_Effective_Value
+      --         call (from grt-signals)
+      -- Set_Effective_Value(sig_ptr, conv_value);
+
+
+      -- Took the skeleton from ii_vpi_get_value function
+      -- This point of the function must convert the string value to the
+      -- native ghdl format.
+      case Info.Kind is
+         when Vcd_Bad =>
+            return;
+         when Vcd_Bit
+           | Vcd_Bool
+           | Vcd_Bitvector =>
+            for J in 0 .. Len - 1 loop
+               ii_vpi_put_value_bin_str_B2(
+                  To_Signal_Arr_Ptr(Info.Addr)(J), ValueStr(Integer(J+1)));
+            end loop;
+         when Vcd_Stdlogic
+           | Vcd_Stdlogic_Vector =>
+            for J in 0 .. Len - 1 loop
+               ii_vpi_put_value_bin_str_E8(
+                  To_Signal_Arr_Ptr(Info.Addr)(J), ValueStr(Integer(J+1)));
+            end loop;
+         when Vcd_Integer32 =>
+            null;
+      end case;
+
+      -- Always return null, because this simulation kernel cannot send
+      -- a handle to the event back.
+      return;
+   end ii_vpi_put_value_bin_str;
+
+
+   -- vpiHandle vpi_put_value(vpiHandle obj, p_vpi_value value,
+   --                         p_vpi_time when, int flags)
+   function vpi_put_value (aObj: vpiHandle;
+                           aValue: p_vpi_value;
+                           aWhen: p_vpi_time;
+                           aFlags: integer)
+                         return vpiHandle
+   is
+      pragma Unreferenced (aWhen);
+      pragma Unreferenced (aFlags);
+   begin
+      -- A very simple write procedure for VPI.
+      -- Basically, it accepts bin_str values and converts to appropriate
+      -- types (only std_logic and bit values and vectors).
+
+      -- It'll use Set_Effective_Value procedure to update signals
+
+      -- Ignoring aWhen and aFlags, for now.
+
+      -- Checks the format of aValue. Only vpiBinStrVal will be accepted
+      --  for now.
+      case aValue.Format is
+         when vpiObjTypeVal=>
+            dbgPut_Line ("vpi_put_value: vpiObjTypeVal");
+         when vpiBinStrVal=>
+            ii_vpi_put_value_bin_str(aObj.Ref, aValue.Str);
+            dbgPut_Line ("vpi_put_value: vpiBinStrVal");
+         when vpiOctStrVal=>
+            dbgPut_Line ("vpi_put_value: vpiNet, vpiOctStrVal");
+         when vpiDecStrVal=>
+            dbgPut_Line ("vpi_put_value: vpiNet, vpiDecStrVal");
+         when vpiHexStrVal=>
+            dbgPut_Line ("vpi_put_value: vpiNet, vpiHexStrVal");
+         when vpiScalarVal=>
+            dbgPut_Line ("vpi_put_value: vpiNet, vpiScalarVal");
+         when vpiIntVal=>
+            dbgPut_Line ("vpi_put_value: vpiIntVal");
+         when vpiRealVal=>     dbgPut_Line("vpi_put_value: vpiRealVal");
+         when vpiStringVal=>   dbgPut_Line("vpi_put_value: vpiStringVal");
+         when vpiTimeVal=>     dbgPut_Line("vpi_put_value: vpiTimeVal");
+         when vpiVectorVal=>   dbgPut_Line("vpi_put_value: vpiVectorVal");
+         when vpiStrengthVal=> dbgPut_Line("vpi_put_value: vpiStrengthVal");
+         when others=>         dbgPut_Line("vpi_put_value: unknown mFormat");
+      end case;
+
+      -- Must return a scheduled event caused by vpi_put_value()
+      -- Still dont know how to do it.
+      return null;
+   end vpi_put_value;
+
+   ------------------------------------------------------------------------
    -- void  vpi_get_time(vpiHandle obj, s_vpi_time*t);
    -- see IEEE 1364-2001, page xxx
    Sim_Time : Std_Time;
@@ -630,22 +813,6 @@ package body Grt.Vpi is
    begin
       return 0;
    end vpi_mcd_open;
-
-   -- vpiHandle vpi_put_value(vpiHandle obj, p_vpi_value value,
-   --                         p_vpi_time when, int flags)
-   function vpi_put_value (aObj: vpiHandle;
-                           aValue: p_vpi_value;
-                           aWhen: p_vpi_time;
-                           aFlags: integer)
-                         return vpiHandle
-   is
-      pragma Unreferenced (aObj);
-      pragma Unreferenced (aValue);
-      pragma Unreferenced (aWhen);
-      pragma Unreferenced (aFlags);
-   begin
-      return null;
-   end vpi_put_value;
 
    -- void vpi_register_systf(const struct t_vpi_systf_data*ss)
    procedure vpi_register_systf(aSs: System.Address)

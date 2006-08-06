@@ -144,6 +144,6 @@ package body Trans_Be is
             Error_Kind ("sem_foreign", Decl);
       end case;
       --  Let is generate error messages.
-      Fi := Translate_Foreign_Id (Decl, False);
+      Fi := Translate_Foreign_Id (Decl);
    end Sem_Foreign;
 end Trans_Be;

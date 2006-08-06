@@ -1264,15 +1264,20 @@ package body Sem_Specs is
      (Parent_Stmts : Iir; Conf : Iir_Configuration_Specification)
    is
       Primary_Entity_Aspect : Iir;
+      Component : Iir;
    begin
       Sem_Component_Specification (Parent_Stmts, Conf, Primary_Entity_Aspect);
+      Component := Get_Component_Name (Conf);
+
+      --  Return now in case of error.
+      if Get_Kind (Component) /= Iir_Kind_Component_Declaration then
+         return;
+      end if;
       --  Extend scope of component interface declaration.
       Sem_Scopes.Open_Scope_Extension;
-      Sem_Scopes.Add_Component_Declarations (Get_Component_Name (Conf));
+      Sem_Scopes.Add_Component_Declarations (Component);
       Sem_Binding_Indication (Get_Binding_Indication (Conf),
-                              Get_Component_Name (Conf),
-                              Conf,
-                              Primary_Entity_Aspect);
+                              Component, Conf, Primary_Entity_Aspect);
       --  FIXME: check default port and generic association.
       Sem_Scopes.Close_Scope_Extension;
    end Sem_Configuration_Specification;

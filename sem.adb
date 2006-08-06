@@ -487,6 +487,21 @@ package body Sem is
                when others =>
                   --  Expression.
                   Set_Collapse_Signal_Flag (El, False);
+
+                  --  If there is an IN conversion, re-integrate it into
+                  --  the actual.
+                  declare
+                     In_Conv : Iir;
+                  begin
+                     In_Conv := Get_In_Conversion (El);
+                     if In_Conv /= Null_Iir then
+                        Set_In_Conversion (El, Null_Iir);
+                        Set_Expr_Staticness
+                          (In_Conv, Get_Expr_Staticness (Actual));
+                        Actual := In_Conv;
+                        Set_Actual (El, Actual);
+                     end if;
+                  end;
                   if Flags.Vhdl_Std >= Vhdl_93c then
                      --  LRM93 1.1.1.2 Ports
                      --  Moreover, the ports of a block may be associated
@@ -1079,6 +1094,9 @@ package body Sem is
            | Iir_Kind_Variable_Interface_Declaration
            | Iir_Kind_Signal_Interface_Declaration
            | Iir_Kind_File_Interface_Declaration =>
+            if Get_Identifier (Left) /= Get_Identifier (Right) then
+               return False;
+            end if;
             if Get_Lexical_Layout (Left) /= Get_Lexical_Layout (Right)
               or else Get_Mode (Left) /= Get_Mode (Right)
             then

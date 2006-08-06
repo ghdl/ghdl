@@ -1118,6 +1118,10 @@ package body Sem_Assocs is
       Res : Iir;
    begin
       Res_Base_Type := Get_Base_Type (Res_Type);
+      if Param_Type = Null_Iir then
+         --  In case of error.
+         return Null_Iir;
+      end if;
       Param_Base_Type := Get_Base_Type (Param_Type);
       if Is_Overload_List (Conv) then
          List := Get_Overload_List (Conv);
@@ -1359,7 +1363,9 @@ package body Sem_Assocs is
       end if;
 
       if Res_Type = Null_Iir then
-         raise Internal_Error;
+         --  In case of error, do not go farther.
+         Match := False;
+         return;
       end if;
 
       if Get_Formal (Assoc) /= Null_Iir then
@@ -1569,9 +1575,7 @@ package body Sem_Assocs is
                end if;
                if Finish then
                   Sem_Association (Assoc, Inter, True, Match);
-                  if not Match then
-                     raise Internal_Error;
-                  end if;
+                  --  MATCH can be false du to errors.
                end if;
             else
                -- Not found.

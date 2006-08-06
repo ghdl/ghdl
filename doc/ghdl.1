@@ -1,0 +1,108 @@
+.\" Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.\" Please adjust this date whenever revising the manpage.
+.\" 
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.TH "GHDL" "1" "Jun 24, 2006" "" ""
+.SH "NAME"
+ghdl \- VHDL compiler/simulator
+.SH "SYNOPSIS"
+.B ghdl
+.RI [ command ] " " [ options ] " files" ...
+.br 
+.SH "DESCRIPTION"
+This manual page documents briefly the
+.B ghdl
+command.
+This manual page was written for user of man, but is not as complete as the
+reference documentation.
+.PP 
+Instead, users should read the GHDL texinfo manual
+.SH "OPTIONS"
+This program follows the usual GNU command line syntax, with long
+options starting with two dashes (`\-').
+A summary of the main modes and options is included below.
+For a complete description, refer to the GHDL texinfo manual.
+.PP 
+Basic commands:
+.TP 
+.B \-a
+Analysis, i.e. \fIghdl \-a file.vhdl\fP
+.TP 
+.B \-e
+Elabortation, i.e. \fIghdl \-e unit_name\fP
+.TP 
+.B \-r
+Run: run the simulation, i.e. \fIghdl \-r unit_name\fP
+.TP 
+.B \-s
+Syntax\-check, i.e. \fIghdl \-s file.vhdl\fP
+.TP 
+.B \-\-clean
+Clean: remove generated files, i.e. \fIghdl \-\-clean\fP
+.TP 
+.B \-h, \-\-help
+Help, i.e. \fIghdl \-\-help\fP
+.TP 
+.B \-\-version
+Version, i.e. \fIghdl \-\-version\fP
+.PP 
+Basic options:
+.TP 
+.B \-\-work=NAME
+Name of the WORK library, i.e. \fI ghdl \-a \-\-work=foo foo.vhdl\fP
+.TP 
+.B \-\-std=STD
+Which VHDL standard (87|93|93c|00|02), i.e. \fIghdl \-a \-\-std=87 old.vhdl\fP
+.TP 
+.B \-\-ieee=VER
+Which IEEE library (none|standard|synopsys|mentor), i.e. \fIghdl \-a \-\-ieee=synopsys broken.vhdl\fP
+.TP 
+.B \-\-no\-vital\-checks
+Disable VITAL restriction checking, i.e. \fIghdl \-a \-\-no\-vital\-checks unsupported_vital.vhdl\fP
+.PP 
+There are many more modes and options;
+please consult the documentation.
+.PP 
+Executables created by GHDL have addition simulation options. The
+most important ones are listed below:
+.TP 
+.B \-\-help
+Show options for simulation and execution.
+.TP 
+.B \-\-assert\-level=LEVEL
+Assert level at which to stop simulation (none|note|warning|error|failure), i.e. \fI./touchy_design \-\-assert\-level=note\fB
+.TP 
+.B \-\-stop\-time=TIME
+Stop simuation after TIME, i.e. \fI./design \-\-stop\-time=50ns
+.TP 
+.B \-\-vcd=FILENAME
+Dump VCD to FILENAME (a waveform dump, viewable with\-\-for instance\-\-\fBgtkwave\fP), i.e. \fI./design \-\-vcd=design.vcd
+.TP
+.B \-\-sdf=[TYPE=]PATH=FILENAME
+Back annotate SDF onto design using TYPE (min|typ|max), instance PATH, and SDF file FILENAME, i.e. \fI./sdf_design \-\-sdf=typ=top/inst=inst.sdf\fP
+
+.SH "SEE ALSO"
+.TP
+.B gtkwave (1)
+.PP
+.br 
+The texinfo manual fully documents GHDL. You may also browse it at
+\fB<http://ghdl.free.fr/ghdl/index.html>\fP.
+.SH "AUTHOR"
+This manual page was written by Wesley J. Landaker
+<wjl@icecavern.net>, for the Debian project (but may be used by
+others). It is released under the same terms as GHDL, i.e. the GNU
+General Public License. It was modified by Tristan Gingold to include
+it in the GHDL sources.

@@ -32,10 +32,18 @@ package body Binary_File.Memory is
       Set_Section (Sym, Sect_Abs);
    end Set_Symbol_Address;
 
-   procedure Write_Memory_Init
+   procedure Write_Memory_Init is
+   begin
+      Create_Section (Sect_Abs, "*ABS*", Section_Exec);
+      Sect_Abs.Vaddr := 0;
+   end Write_Memory_Init;
+
+   procedure Write_Memory_Relocate (Error : out Boolean)
    is
       use SSE;
       Sect : Section_Acc;
+      Rel : Reloc_Acc;
+      N_Rel : Reloc_Acc;
    begin
       --  Relocate section in memory.
       Sect := Section_Chain;
@@ -49,23 +57,12 @@ package body Binary_File.Memory is
                --Sect.Data := new Byte_Array (1 .. 0);
             end if;
          end if;
-         if Sect.Data_Max > 0 then
+         if Sect.Data_Max > 0 and Sect /= Sect_Abs then
             Sect.Vaddr := To_Integer (Sect.Data (0)'Address);
          end if;
          Sect := Sect.Next;
       end loop;
 
-      Create_Section (Sect_Abs, "*ABS*", Section_Exec);
-      Sect_Abs.Vaddr := 0;
-   end Write_Memory_Init;
-
-   procedure Write_Memory_Relocate (Error : out Boolean)
-   is
-      use SSE;
-      Sect : Section_Acc;
-      Rel : Reloc_Acc;
-      N_Rel : Reloc_Acc;
-   begin
       --  Do all relocations.
       Sect := Section_Chain;
       Error := False;

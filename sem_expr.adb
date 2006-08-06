@@ -167,7 +167,8 @@ package body Sem_Expr is
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Library_Clause
            | Iir_Kind_Component_Declaration
-           | Iir_Kinds_Procedure_Declaration =>
+           | Iir_Kinds_Procedure_Declaration
+           | Iir_Kind_Range_Array_Attribute =>
             Error_Msg_Sem (Disp_Node (Expr)
                            & " not allowed in an expression", Loc);
             return Null_Iir;
@@ -1801,7 +1802,7 @@ package body Sem_Expr is
             return;
          end if;
          Set_Expression (Choice, Expr);
-         if Get_Expr_Staticness (Expr) > Locally then
+         if Get_Expr_Staticness (Expr) < Locally then
             Error_Msg_Sem ("choice must be locally static expression", Expr);
             return;
          end if;

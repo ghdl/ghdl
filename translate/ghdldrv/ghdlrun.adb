@@ -47,6 +47,7 @@ with Trans_Be;
 with Translation;
 with Std_Names;
 with Ieee.Std_Logic_1164;
+with Interfaces.C;
 
 with Binary_File.Elf;
 
@@ -70,9 +71,14 @@ with Grt.Values;
 with Grt.Names;
 
 with Ghdlcomp;
+with Foreigns;
 
 package body Ghdlrun is
-   Snap_Filename : String_Access := null;
+   Snap_Filename : GNAT.OS_Lib.String_Access := null;
+
+   procedure Foreign_Hook (Decl : Iir;
+                           Info : Translation.Foreign_Info_Type;
+                           Ortho : O_Dnode);
 
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
@@ -81,6 +87,8 @@ package body Ghdlrun is
       if Analyze_Only then
          return;
       end if;
+
+      Translation.Foreign_Hook := Foreign_Hook'Access;
 
       -- Initialize.
       Back_End.Finish_Compilation := Trans_Be.Finish_Compilation'Access;
@@ -92,6 +100,7 @@ package body Ghdlrun is
       Libraries.Load_Std_Library;
 
       Ortho_Mcode.Init;
+      Binary_File.Memory.Write_Memory_Init;
 
       Translation.Initialize;
       Canon.Canon_Flag_Add_Labels := True;
@@ -237,6 +246,34 @@ package body Ghdlrun is
       return Conv (Get_Symbol_Vaddr (Get_Decl_Symbol (Decl)));
    end Get_Address;
 
+   procedure Foreign_Hook (Decl : Iir;
+                           Info : Translation.Foreign_Info_Type;
+                           Ortho : O_Dnode)
+   is
+      use Translation;
+      Res : Address;
+   begin
+      case Info.Kind is
+         when Foreign_Vhpidirect =>
+            declare
+               Name : String := Name_Table.Name_Buffer (Info.Subprg_First
+                                                        .. Info.Subprg_Last);
+            begin
+               Res := Foreigns.Find_Foreign (Name);
+               if Res /= Null_Address then
+                  Def (Ortho, Res);
+               else
+                  Error_Msg_Sem ("unknown foreign VHPIDIRECT '" & Name & "'",
+                                 Decl);
+               end if;
+            end;
+         when Foreign_Intrinsic =>
+            null;
+         when Foreign_Unknown =>
+            null;
+      end case;
+   end Foreign_Hook;
+
    procedure Run
    is
       use Binary_File;
@@ -256,8 +293,6 @@ package body Ghdlrun is
          --  Can't generate code in HLI.
          raise Compile_Error;
       end if;
-
-      Binary_File.Memory.Write_Memory_Init;
 
       Ortho_Code.Abi.Link_Intrinsics;
 
@@ -467,17 +502,6 @@ package body Ghdlrun is
            Grt.Rtis.Ghdl_Rti_Top_Instance'Address);
       Def (Trans_Decls.Ghdl_Rti_Top_Ptr,
            Grt.Rtis.Ghdl_Rti_Top_Ptr'Address);
-      Std_Standard_Boolean_RTI_Ptr :=
-        Get_Address (Trans_Decls.Std_Standard_Boolean_Rti);
-      Std_Standard_Bit_RTI_Ptr :=
-        Get_Address (Trans_Decls.Std_Standard_Bit_Rti);
-      if Ieee.Std_Logic_1164.Resolved /= Null_Iir then
-         Decl := Translation.Get_Resolv_Ortho_Decl
-           (Ieee.Std_Logic_1164.Resolved);
-         if Decl /= O_Dnode_Null then
-            Ieee_Std_Logic_1164_Resolved_Resolv_Ptr := Get_Address (Decl);
-         end if;
-      end if;
 
       Def (Trans_Decls.Ghdl_Protected_Enter,
            Grt.Processes.Ghdl_Protected_Enter'Address);
@@ -553,6 +577,18 @@ package body Ghdlrun is
       Binary_File.Memory.Write_Memory_Relocate (Err);
       if Err then
          raise Compile_Error;
+      end if;
+
+      Std_Standard_Boolean_RTI_Ptr :=
+        Get_Address (Trans_Decls.Std_Standard_Boolean_Rti);
+      Std_Standard_Bit_RTI_Ptr :=
+        Get_Address (Trans_Decls.Std_Standard_Bit_Rti);
+      if Ieee.Std_Logic_1164.Resolved /= Null_Iir then
+         Decl := Translation.Get_Resolv_Ortho_Decl
+           (Ieee.Std_Logic_1164.Resolved);
+         if Decl /= O_Dnode_Null then
+            Ieee_Std_Logic_1164_Resolved_Resolv_Ptr := Get_Address (Decl);
+         end if;
       end if;
 
       Flag_String := Flags.Flag_String;

@@ -2897,15 +2897,13 @@ package body Translation is
       end if;
    end Create_Temp;
 
-   function Translate_Foreign_Id (Decl : Iir; Extract_Name : Boolean)
-                                 return Foreign_Info_Type
+   function Translate_Foreign_Id (Decl : Iir) return Foreign_Info_Type
    is
       use Name_Table;
       Attr : Iir_Attribute_Value;
       Spec : Iir_Attribute_Specification;
       Attr_Decl : Iir;
       Expr : Iir;
-      P : Natural;
    begin
       --  Look for 'FOREIGN.
       Attr := Get_Attribute_Value_Chain (Decl);
@@ -2972,27 +2970,60 @@ package body Translation is
       if Name_Length >= 10
         and then Name_Buffer (1 .. 10) = "VHPIDIRECT"
       then
-         P := 11;
+         declare
+            P : Natural;
+            Sf, Sl : Natural;
+            Lf, Ll : Natural;
+         begin
+            P := 11;
 
-         --  Skip spaces.
-         while P <= Name_Length and then Name_Buffer (P) = ' ' loop
+            --  Skip spaces.
+            while P <= Name_Length and then Name_Buffer (P) = ' ' loop
+               P := P + 1;
+            end loop;
+            if P > Name_Length then
+               Error_Msg_Sem
+                 ("missing subprogram/library name after VHPIDIRECT", Spec);
+            end if;
+            --  Extract library.
+            Lf := P;
+            while P < Name_Length and then Name_Buffer (P) /= ' ' loop
+               P := P + 1;
+            end loop;
+            Ll := P;
+            --  Extract subprogram.
             P := P + 1;
-         end loop;
-         if Extract_Name then
+            while P <= Name_Length and then Name_Buffer (P) = ' ' loop
+               P := P + 1;
+            end loop;
+            Sf := P;
+            while P < Name_Length and then Name_Buffer (P) /= ' ' loop
+               P := P + 1;
+            end loop;
+            Sl := P;
+            if P < Name_Length then
+               Error_Msg_Sem ("garbage at end of VHPIDIRECT", Spec);
+            end if;
+
+            --  Accept empty library.
+            if Sf > Name_Length then
+               Sf := Lf;
+               Sl := Ll;
+               Lf := 0;
+               Ll := 0;
+            end if;
+
             return Foreign_Info_Type'
               (Kind => Foreign_Vhpidirect,
-               Subprg => Get_Identifier (Name_Buffer (P .. Name_Length)),
-               Lib => Null_Identifier);
-         else
-            return Foreign_Info_Type'(Kind => Foreign_Vhpidirect,
-                                      Subprg => O_Ident_Nul,
-                                      Lib => Null_Identifier);
-         end if;
+               Lib_First => Lf,
+               Lib_Last => Ll,
+               Subprg_First => Sf,
+               Subprg_Last => Sl);
+         end;
       elsif Name_Length = 14
         and then Name_Buffer (1 .. 14) = "GHDL intrinsic"
       then
-         return Foreign_Info_Type'(Kind => Foreign_Intrinsic,
-                                   Subprg => Create_Identifier);
+         return Foreign_Info_Type'(Kind => Foreign_Intrinsic);
       else
          Error_Msg_Sem
            ("value of 'FOREIGN attribute does not begin with VHPIDIRECT",
@@ -4640,6 +4671,7 @@ package body Translation is
          Rtype : Iir;
          Id : O_Ident;
          Storage : O_Storage;
+         Foreign : Foreign_Info_Type := Foreign_Bad;
       begin
          Info := Get_Info (Spec);
          Info.Res_Interface := O_Dnode_Null;
@@ -4650,20 +4682,18 @@ package body Translation is
          Push_Subprg_Identifier (Spec, Mark);
 
          if Get_Foreign_Flag (Spec) then
-            declare
-               Fi : Foreign_Info_Type;
-            begin
-               Fi := Translate_Foreign_Id (Spec, True);
-               case Fi.Kind is
-                  when Foreign_Unknown =>
-                     Id := Create_Identifier;
-                  when Foreign_Intrinsic =>
-                     Id := Fi.Subprg;
-                  when Foreign_Vhpidirect =>
-                     Id := Fi.Subprg;
-               end case;
-               Storage := O_Storage_External;
-            end;
+            Foreign := Translate_Foreign_Id (Spec);
+            case Foreign.Kind is
+               when Foreign_Unknown =>
+                  Id := Create_Identifier;
+               when Foreign_Intrinsic =>
+                  Id := Create_Identifier;
+               when Foreign_Vhpidirect =>
+                  Id := Get_Identifier
+                    (Name_Table.Name_Buffer (Foreign.Subprg_First
+                                             .. Foreign.Subprg_Last));
+            end case;
+            Storage := O_Storage_External;
          else
             Id := Create_Identifier;
             Storage := Global_Storage;
@@ -4778,6 +4808,10 @@ package body Translation is
          end loop;
          Finish_Subprogram_Decl (Interface_List, Info.Ortho_Func);
 
+         if Get_Foreign_Flag (Spec) and then Foreign_Hook /= null then
+            Foreign_Hook.all (Spec, Foreign, Info.Ortho_Func);
+         end if;
+
          Save_Local_Identifier (Info.Subprg_Local_Id);
          Pop_Identifier_Prefix (Mark);
       end Translate_Subprogram_Declaration;
@@ -4804,7 +4838,7 @@ package body Translation is
          Old_Subprogram : Iir;
          Mark : Id_Mark_Type;
          Final : Boolean;
-         Is_Func : Boolean;
+         Is_Ortho_Func : Boolean;
 
          --  Set for a public method.  In this case, the lock must be acquired
          --  and retained.
@@ -4877,8 +4911,8 @@ package body Translation is
                Chap3.Call_Ghdl_Protected_Procedure (Get_Method_Type (Spec),
                                                     Ghdl_Protected_Enter);
             end if;
-            Is_Func := Is_Subprogram_Ortho_Function (Spec);
-            if Is_Func then
+            Is_Ortho_Func := Is_Subprogram_Ortho_Function (Spec);
+            if Is_Ortho_Func then
                New_Var_Decl
                  (Info.Subprg_Result, Get_Identifier ("RESULT"),
                   O_Storage_Local,
@@ -4906,7 +4940,7 @@ package body Translation is
                Chap3.Call_Ghdl_Protected_Procedure (Get_Method_Type (Spec),
                                                     Ghdl_Protected_Leave);
             end if;
-            if Is_Func then
+            if Is_Ortho_Func then
                New_Return_Stmt (New_Obj_Value (Info.Subprg_Result));
             end if;
          end if;
@@ -13218,6 +13252,7 @@ package body Translation is
          Res : O_Cnode;
       begin
          Lit_Type := Get_Type (Str);
+
          Chap3.Translate_Anonymous_Type_Definition (Lit_Type, True);
 
          Start_Array_Aggr (List, Get_Ortho_Type (Lit_Type, Mode_Value));
@@ -13229,6 +13264,86 @@ package body Translation is
          Finish_Array_Aggr (List, Res);
          return Res;
       end Translate_Static_String_Literal;
+
+      --  Some strings literal have an unconstrained array type,
+      --  eg: 'image of constant.  Its type is not constrained
+      --  because it is not so in VHDL!
+      function Translate_Static_Unconstrained_String_Literal (Str : Iir)
+        return O_Cnode
+      is
+         use Name_Table;
+
+         Lit_Type : Iir;
+         Element_Type : Iir;
+         Index_Type : Iir;
+         Val_Aggr : O_Array_Aggr_List;
+         Bound_Aggr : O_Record_Aggr_List;
+         Index_Aggr : O_Record_Aggr_List;
+         Res_Aggr : O_Record_Aggr_List;
+         Res : O_Cnode;
+         Str_Type : O_Tnode;
+         Type_Info : Type_Info_Acc;
+         Index_Type_Info : Type_Info_Acc;
+         Len : Int32;
+         Val : Var_Acc;
+         Bound : Var_Acc;
+      begin
+         Lit_Type := Get_Type (Str);
+         Type_Info := Get_Info (Get_Base_Type (Lit_Type));
+
+         --  Create the string value.
+         Len := Get_String_Length (Str);
+         Str_Type := New_Constrained_Array_Type
+           (Type_Info.T.Base_Type (Mode_Value),
+            New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Len)));
+
+         Start_Array_Aggr (Val_Aggr, Str_Type);
+         Element_Type := Get_Element_Subtype (Lit_Type);
+         Translate_Static_String_Literal_Inner (Val_Aggr, Str, Element_Type);
+         Finish_Array_Aggr (Val_Aggr, Res);
+
+         Val := Create_Global_Const
+           (Create_Uniq_Identifier, Str_Type, O_Storage_Private, Res);
+
+         --  Create the string bound.
+         Index_Type := Get_First_Element (Get_Index_Subtype_List (Lit_Type));
+         Index_Type_Info := Get_Info (Index_Type);
+         Start_Record_Aggr (Bound_Aggr, Type_Info.T.Bounds_Type);
+         Start_Record_Aggr (Index_Aggr, Index_Type_Info.T.Range_Type);
+         New_Record_Aggr_El
+           (Index_Aggr,
+            New_Signed_Literal (Index_Type_Info.Ortho_Type (Mode_Value), 0));
+         New_Record_Aggr_El
+           (Index_Aggr,
+            New_Signed_Literal (Index_Type_Info.Ortho_Type (Mode_Value),
+                                Integer_64 (Len - 1)));
+         New_Record_Aggr_El
+           (Index_Aggr, Ghdl_Dir_To_Node);
+         New_Record_Aggr_El
+           (Index_Aggr,
+            New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Len)));
+         Finish_Record_Aggr (Index_Aggr, Res);
+         New_Record_Aggr_El (Bound_Aggr, Res);
+         Finish_Record_Aggr (Bound_Aggr, Res);
+         Bound := Create_Global_Const
+           (Create_Uniq_Identifier, Type_Info.T.Bounds_Type,
+            O_Storage_Private, Res);
+
+         --  The descriptor.
+         Start_Record_Aggr (Res_Aggr, Type_Info.Ortho_Type (Mode_Value));
+         New_Record_Aggr_El
+           (Res_Aggr,
+            New_Global_Address (Get_Var_Label (Val),
+                                Type_Info.T.Base_Ptr_Type (Mode_Value)));
+         New_Record_Aggr_El
+           (Res_Aggr,
+            New_Global_Address (Get_Var_Label (Bound),
+                                Type_Info.T.Bounds_Ptr_Type));
+         Finish_Record_Aggr (Res_Aggr, Res);
+         Free_Var (Val);
+         Free_Var (Bound);
+         return Res;
+      end Translate_Static_Unconstrained_String_Literal;
 
       --  Only for Strings of STD.Character.
       function Translate_Static_String (Str_Type : Iir; Str_Ident : Name_Id)
@@ -13284,7 +13399,13 @@ package body Translation is
       begin
          case Get_Kind (Str) is
             when Iir_Kind_String_Literal =>
-               Res := Translate_Static_String_Literal (Str);
+               if Get_Kind (Get_Type (Str))
+                 = Iir_Kind_Array_Subtype_Definition
+               then
+                  Res := Translate_Static_String_Literal (Str);
+               else
+                  Res := Translate_Static_Unconstrained_String_Literal (Str);
+               end if;
             when Iir_Kind_Bit_String_Literal =>
                Res := Translate_Static_Bit_String_Literal (Str);
             when Iir_Kind_Simple_Aggregate =>
@@ -25325,9 +25446,22 @@ package body Translation is
                when Iir_Kind_Type_Declaration
                  | Iir_Kind_Subtype_Declaration =>
                   Add_Rti_Node (Generate_Type_Decl (Decl));
+               when Iir_Kind_Constant_Declaration =>
+                  --  Do not generate RTIs for full declarations.
+                  --  (RTI will be generated for the deferred declaration).
+                  if Get_Deferred_Declaration (Decl) = Null_Iir
+                    or else Get_Deferred_Declaration_Flag (Decl)
+                  then
+                     declare
+                        Info : Object_Info_Acc;
+                     begin
+                        Info := Get_Info (Decl);
+                        Generate_Object (Decl, Info.Object_Rti);
+                        Add_Rti_Node (Info.Object_Rti);
+                     end;
+                  end if;
                when Iir_Kind_Signal_Declaration
                  | Iir_Kind_Signal_Interface_Declaration
-                 | Iir_Kind_Constant_Declaration
                  | Iir_Kind_Constant_Interface_Declaration
                  | Iir_Kind_Variable_Declaration
                  | Iir_Kind_File_Declaration

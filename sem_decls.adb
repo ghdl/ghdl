@@ -995,6 +995,7 @@ package body Sem_Decls is
          Def := Create_Iir (Iir_Kind_Incomplete_Type_Definition);
          Location_Copy (Def, Decl);
          Set_Type (Decl, Def);
+         Set_Base_Type (Def, Def);
          Set_Signal_Type_Flag (Def, True);
          Set_Type_Declarator (Def, Decl);
          Set_Visible_Flag (Decl, True);

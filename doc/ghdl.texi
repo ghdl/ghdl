@@ -11,7 +11,7 @@
 @titlepage
 @title GHDL guide
 @subtitle GHDL, a VHDL compiler
-@subtitle For GHDL version 0.22 (Sokcho edition)
+@subtitle For GHDL version 0.25 (Sokcho edition)
 @author Tristan Gingold
 @c The following two commands start the copyright page.
 @page
@@ -163,10 +163,14 @@ or @code{C++}.  Therefore, the compiled code should be faster and
 the analysis time should be shorter than with a compiler using an
 intermediary language.
 
+The Windows(TM) version of @code{GHDL} is not based on @code{GCC} but on
+an internal code generator.
+
 The current version of @code{GHDL} does not contain any graphical
 viewer: you cannot see signal waves.  You can still check with a test
 bench.  The current version can produce a @code{VCD} file which can be
-viewed with a wave viewer.
+viewed with a wave viewer, as well as @code{ghw} files to be viewed by
+@samp{gtkwave}.
 
 @code{GHDL} aims at implementing @code{VHDL} as defined by IEEE 1076.
 It supports most of the 1987 standard and most features added by the
@@ -217,9 +221,10 @@ file in VHDL terms.
 @smallexample
 $ ghdl -a hello.vhdl
 @end smallexample
-This command generates a file @file{hello.o}, which is the object file
-corresponding to your VHDL program.  This command also creates or updates
-a file @file{work-obj93.cf}, which describes the library @samp{work}.
+This command creates or updates a file @file{work-obj93.cf}, which
+describes the library @samp{work}.  On GNU/Linux, this command generates a
+file @file{hello.o}, which is the object file corresponding to your
+VHDL program.  The object file is not created on Windows.
 
 Then, you have to build an executable file.
 @smallexample
@@ -229,7 +234,8 @@ The @samp{-e} option means @dfn{elaborate}.  With this option, @code{GHDL}
 creates code in order to elaborate a design, with the @samp{hello}
 entity at the top of the hierarchy.
 
-The result is an executable program called @file{hello} which can be run:
+On GNU/Linux, the result is an executable program called @file{hello}
+which can be run:
 @smallexample
 $ ghdl -r hello_world
 @end smallexample
@@ -238,7 +244,12 @@ or directly:
 $ ./hello_world
 @end smallexample
 
-and which should display:
+On Windows, no file is created.  The simulation is launched using this command:
+@smallexample
+> ghdl -r hello_world
+@end smallexample
+
+The result of the simulation appears on the screen:
 @smallexample
 Hello world!
 @end smallexample
@@ -558,10 +569,13 @@ $ ghdl -a -g my_design.vhdl
 $ ghdl -e [@var{options}] @var{primary_unit} [@var{secondary_unit}]
 @end smallexample
 
-The @dfn{elaboration} command creates an executable containing the
-code of the @code{VHDL} sources, the elaboration code and simulation
-code to execute a design hiearachy.  The elaboration command is selected
-with @var{-e} switch, and must be followed by either:
+On GNU/Linux the @dfn{elaboration} command creates an executable
+containing the code of the @code{VHDL} sources, the elaboration code
+and simulation code to execute a design hiearachy. On Windows this
+command elaborates the design but does not generate anything.
+
+The elaboration command is selected with @var{-e} switch, and must be
+followed by either:
 
 @itemize @bullet
 @item a name of a configuration unit
@@ -576,9 +590,10 @@ option, as described in @ref{GHDL options}.
 @xref{Top entity}, for the restrictions on the root design of a
 hierarchy.
 
-The file name of the executable is the name of the primary unit, or for
-the later case, the concatenation of the name of the primary unit, a
-dash, and the name of the secondary unit (or architecture).
+On GNU/Linux the file name of the executable is the name of the
+primary unit, or for the later case, the concatenation of the name of
+the primary unit, a dash, and the name of the secondary unit (or
+architecture).  On Windows there is no executable generated.
 
 The @option{-o} followed by a file name can override the default
 executable file name.
@@ -603,9 +618,10 @@ Run (or simulate) an elaborated design hierarchy.
 $ ghdl -r @var{primary_unit} [@var{secondary_unit}] [@var{simulation_options}]
 @end smallexample
 
-The arguments are the same as the @xref{Elaboration command}.  This command
-simply build the filename of the executable and execute it.  You may also
-directly execute the program.
+The arguments are the same as the @xref{Elaboration command}.
+
+On GNU/Linux this command simply build the filename of the executable
+and execute it.  You may also directly execute the program.
 
 This command exists for three reasons:
 @itemize @bullet{}
@@ -614,9 +630,11 @@ You don't have to create the executable program name.
 @item
 It is coherent with the @samp{-a} and @samp{-e} commands.
 @item
-It will work with future implementations, where the code is generated in
+It works with the Windows implementation, where the code is generated in
 memory.
 @end itemize
+
+On Windows this command elaborate and launch the simulation.
 
 @xref{Simulation and run time}, for details on options.
 
@@ -643,6 +661,8 @@ Bind a design unit and prepare the link step.
 @smallexample
 $ ghdl --bind [@var{options}] @var{primary_unit} [@var{secondary_unit}]
 @end smallexample
+
+This command is only available on GNU/Linux.
 
 This performs only the first stage of the elaboration command; the list
 of objects files is created but the executable is not built.  This
@@ -672,6 +692,8 @@ Disp files which will be linked.
 $ ghdl --list-link @var{primary_unit} [@var{secondary_unit}]
 @end smallexample
 
+This command is only available on GNU/Linux.
+
 This command may be used only after a bind command.  GHDL displays all
 the files which will be linked to create an executable.  This command is
 intended to add object files in a link of an foreign program.
@@ -683,7 +705,7 @@ intended to add object files in a link of an foreign program.
 Analyze files but do not generate code.
 
 @smallexample
-$ ghdl -a [@var{options}] @var{files}
+$ ghdl -s [@var{options}] @var{files}
 @end smallexample
 
 This command may be used to check the syntax of files.  It does not update
@@ -695,13 +717,19 @@ the library.
 @cindex @option{-c} command
 Analyze files and elaborate in the same time.
 
+On GNU/Linux:
 @smallexample
 $ ghdl -c [@var{options}] @var{file}@dots{} -e @var{primary_unit} [@var{secondary_unit}]
 @end smallexample
 
+On Windows:
+@smallexample
+$ ghdl -c [@var{options}] @var{file}@dots{} -r @var{primary_unit} [@var{secondary_unit}]
+@end smallexample
+
 This command combines analyze and elaboration: @var{file}s are analyzed and
 the unit is then elaborated.  However, code is only generated during the
-elaboration.
+elaboration.  On Windows the simulation is launched.
 
 To be more precise, the files are first parsed, and then the elaboration
 drives the analysis.  Therefore, there is no analysis order, and you don't
@@ -878,6 +906,9 @@ displays the commands executed.
 @node Passing options to other programs, GHDL warnings, GHDL options, Invoking GHDL
 @comment  node-name,  next,  previous,  up
 @section Passing options to other programs
+
+These options are only available on GNU/Linux.
+
 For many commands, @code{GHDL} acts as a driver: it invokes programs to perform
 the command.  You can pass arbritrary options to these programs.
 
@@ -1671,6 +1702,8 @@ Display a short description of the options accepted by the run time library.
 @section Debugging VHDL programs
 @cindex debugging
 @cindex @code{__ghdl_fatal}
+Debugging VHDL programs usign @code{GDB} is possible only on GNU/Linux systems.
+
 @code{GDB} is a general purpose debugger for programs compiled by @code{GCC}.
 Currently, there is no VHDL support for @code{GDB}.  It may be difficult
 to inspect variables or signals in @code{GDB}, however, @code{GDB} is
@@ -1949,6 +1982,8 @@ web, but they cannot be included in GHDL.
 @cindex foreign
 @cindex VHPI
 @cindex VHPIDIRECT
+Interfacing with foreign languages is possible only on GNU/Linux systems.
+
 You can define a subprogram in a foreign language (such as @code{C} or
 @code{Ada}) and import it in a VHDL design.
 
