@@ -130,6 +130,23 @@ __ghdl_run_through_longjump (int (*func)(void))
   return res;
 }
 
+#include <math.h>
+
+double acosh (double x)
+{
+  return log (x + sqrt (x*x - 1));
+}
+
+double asinh (double x)
+{
+  return log (x + sqrt (x*x + 1));
+}
+
+double atanh (double x)
+{
+  return log ((1 + x) / (1 - x)) / 2;
+}
+
 #ifndef WITH_GNAT_RUN_TIME
 void __gnat_raise_storage_error(void)
 {

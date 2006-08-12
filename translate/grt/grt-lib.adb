@@ -84,9 +84,31 @@ package body Grt.Lib is
       Do_Report ("report", Str, Severity, Loc);
    end Ghdl_Report;
 
-   procedure Ghdl_Program_Error is
+   procedure Ghdl_Program_Error (Filename : Ghdl_C_String;
+                                 Line : Ghdl_I32;
+                                 Code : Ghdl_Index_Type)
+   is
    begin
-      Error ("program error");
+      case Code is
+         when 1 =>
+            Error_C ("missing return in function");
+         when 2 =>
+            Error_C ("block already configured");
+         when 3 =>
+            Error_C ("bad configuration");
+         when others =>
+            Error_C ("unknown error code ");
+            Error_C (Integer (Code));
+      end case;
+      Error_C (" at ");
+      if Filename = null then
+         Error_C ("*unknown*");
+      else
+         Error_C (Filename);
+      end if;
+      Error_C (":");
+      Error_C (Integer(Line));
+      Error_E ("");
    end Ghdl_Program_Error;
 
    procedure Ghdl_Bound_Check_Failed_L0 (Number : Ghdl_Index_Type) is

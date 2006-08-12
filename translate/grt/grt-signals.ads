@@ -38,8 +38,9 @@ package Grt.Signals is
    type Transaction;
    type Transaction_Acc is access Transaction;
    type Transaction (Kind : Transaction_Kind) is record
-      Time : Std_Time;
+      Line : Ghdl_I32;
       Next : Transaction_Acc;
+      Time : Std_Time;
       case Kind is
          when Trans_Value =>
             Val : Value_Union;
@@ -48,7 +49,7 @@ package Grt.Signals is
          when Trans_Error =>
             --  FIXME: should have a location field, to be able to display
             --  a message.
-            null;
+            File : Ghdl_C_String;
       end case;
    end record;
 
@@ -403,10 +404,18 @@ package Grt.Signals is
    procedure Ghdl_Signal_Internal_Checks;
 
    --  Subprograms to be called by generated code.
-   procedure Ghdl_Signal_Simple_Assign_Error (Sign : Ghdl_Signal_Ptr);
+   procedure Ghdl_Signal_Simple_Assign_Error (Sign : Ghdl_Signal_Ptr;
+                                              File : Ghdl_C_String;
+                                              Line : Ghdl_I32);
    procedure Ghdl_Signal_Start_Assign_Error (Sign : Ghdl_Signal_Ptr;
                                              Rej : Std_Time;
-                                             After : Std_Time);
+                                             After : Std_Time;
+                                             File : Ghdl_C_String;
+                                             Line : Ghdl_I32);
+   procedure Ghdl_Signal_Next_Assign_Error (Sign : Ghdl_Signal_Ptr;
+                                            After : Std_Time;
+                                            File : Ghdl_C_String;
+                                            Line : Ghdl_I32);
 
    procedure Ghdl_Signal_Set_Disconnect (Sign : Ghdl_Signal_Ptr;
                                          Time : Std_Time);
@@ -615,6 +624,8 @@ private
                   "__ghdl_signal_simple_assign_error");
    pragma Export (C, Ghdl_Signal_Start_Assign_Error,
                   "__ghdl_signal_start_assign_error");
+   pragma Export (C, Ghdl_Signal_Next_Assign_Error,
+                  "__ghdl_signal_next_assign_error");
 
    pragma Export (C, Ghdl_Signal_Start_Assign_Null,
                   "__ghdl_signal_start_assign_null");

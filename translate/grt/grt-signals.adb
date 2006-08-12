@@ -271,6 +271,7 @@ package body Grt.Signals is
          Sign.S.Drivers := Realloc (Sign.S.Drivers, Size (Sign.S.Nbr_Drivers));
       end if;
       Trans := new Transaction'(Kind => Trans_Value,
+                                Line => 0,
                                 Time => 0,
                                 Next => null,
                                 Val => Sign.Value);
@@ -595,6 +596,7 @@ package body Grt.Signals is
       end if;
 
       Trans := new Transaction'(Kind => Trans_Value,
+                                Line => 0,
                                 Time => Current_Time + After,
                                 Next => null,
                                 Val => Val);
@@ -605,27 +607,63 @@ package body Grt.Signals is
       Driver.Last_Trans := Trans;
    end Ghdl_Signal_Next_Assign;
 
-   procedure Ghdl_Signal_Simple_Assign_Error (Sign : Ghdl_Signal_Ptr)
+   procedure Ghdl_Signal_Simple_Assign_Error (Sign : Ghdl_Signal_Ptr;
+                                              File : Ghdl_C_String;
+                                              Line : Ghdl_I32)
    is
       Trans : Transaction_Acc;
    begin
       Trans := new Transaction'(Kind => Trans_Error,
+                                Line => Line,
                                 Time => 0,
-                                Next => null);
+                                Next => null,
+                                File => File);
       Ghdl_Signal_Start_Assign (Sign, 0, Trans, 0);
    end Ghdl_Signal_Simple_Assign_Error;
 
    procedure Ghdl_Signal_Start_Assign_Error (Sign : Ghdl_Signal_Ptr;
                                              Rej : Std_Time;
-                                             After : Std_Time)
+                                             After : Std_Time;
+                                             File : Ghdl_C_String;
+                                             Line : Ghdl_I32)
    is
       Trans : Transaction_Acc;
    begin
       Trans := new Transaction'(Kind => Trans_Error,
+                                Line => Line,
                                 Time => 0,
-                                Next => null);
+                                Next => null,
+                                File => File);
       Ghdl_Signal_Start_Assign (Sign, Rej, Trans, After);
    end Ghdl_Signal_Start_Assign_Error;
+
+   procedure Ghdl_Signal_Next_Assign_Error (Sign : Ghdl_Signal_Ptr;
+                                            After : Std_Time;
+                                            File : Ghdl_C_String;
+                                            Line : Ghdl_I32)
+   is
+      Drv_Ptr : constant Driver_Arr_Ptr := Sign.S.Drivers;
+      Driver : Driver_Type renames Drv_Ptr (Find_Driver (Sign));
+
+      Trans : Transaction_Acc;
+   begin
+      if After > 0 and then Sign.Flink = null then
+         --  Put SIGN on the future list.
+         Sign.Flink := Future_List;
+         Future_List := Sign;
+      end if;
+
+      Trans := new Transaction'(Kind => Trans_Error,
+                                Line => Line,
+                                Time => Current_Time + After,
+                                Next => null,
+                                File => File);
+      if Trans.Time <= Driver.Last_Trans.Time then
+         Error ("transactions not in ascending order");
+      end if;
+      Driver.Last_Trans.Next := Trans;
+      Driver.Last_Trans := Trans;
+   end Ghdl_Signal_Next_Assign_Error;
 
    procedure Ghdl_Signal_Start_Assign_Null (Sign : Ghdl_Signal_Ptr;
                                             Rej : Std_Time;
@@ -637,6 +675,7 @@ package body Grt.Signals is
          Error ("null transaction for a non-guarded target");
       end if;
       Trans := new Transaction'(Kind => Trans_Null,
+                                Line => 0,
                                 Time => 0,
                                 Next => null);
       Ghdl_Signal_Start_Assign (Sign, Rej, Trans, After);
@@ -651,6 +690,7 @@ package body Grt.Signals is
          Error ("null transaction for a non-guarded target");
       end if;
       Trans := new Transaction'(Kind => Trans_Null,
+                                Line => 0,
                                 Time => 0,
                                 Next => null);
       Time := Sign.S.Resolv.Disconnect_Time;
@@ -702,6 +742,7 @@ package body Grt.Signals is
 
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_B2, B2 => Val));
@@ -718,6 +759,7 @@ package body Grt.Signals is
    begin
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_B2, B2 => Val));
@@ -771,6 +813,7 @@ package body Grt.Signals is
 
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_E8, E8 => Val));
@@ -787,6 +830,7 @@ package body Grt.Signals is
    begin
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_E8, E8 => Val));
@@ -842,6 +886,7 @@ package body Grt.Signals is
 
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_E32, E32 => Val));
@@ -858,6 +903,7 @@ package body Grt.Signals is
    begin
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_E32, E32 => Val));
@@ -913,6 +959,7 @@ package body Grt.Signals is
 
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_I32, I32 => Val));
@@ -929,6 +976,7 @@ package body Grt.Signals is
    begin
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_I32, I32 => Val));
@@ -984,6 +1032,7 @@ package body Grt.Signals is
 
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_I64, I64 => Val));
@@ -1000,6 +1049,7 @@ package body Grt.Signals is
    begin
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_I64, I64 => Val));
@@ -1055,6 +1105,7 @@ package body Grt.Signals is
 
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_F64, F64 => Val));
@@ -1071,6 +1122,7 @@ package body Grt.Signals is
    begin
       Trans := new Transaction'
         (Kind => Trans_Value,
+         Line => 0,
          Time => 0,
          Next => null,
          Val => Value_Union'(Mode => Mode_F64, F64 => Val));
@@ -1176,6 +1228,7 @@ package body Grt.Signals is
       if Mode /= Mode_Transaction then
          Res.S.Time := Time;
          Res.S.Attr_Trans := new Transaction'(Kind => Trans_Value,
+                                              Line => 0,
                                               Time => 0,
                                               Next => null,
                                               Val => Res.Value);
@@ -1264,6 +1317,7 @@ package body Grt.Signals is
          Future_List := Res;
       end if;
       Res.S.Attr_Trans := new Transaction'(Kind => Trans_Value,
+                                           Line => 0,
                                            Time => 0,
                                            Next => null,
                                            Val => Res.Value);
@@ -1307,6 +1361,16 @@ package body Grt.Signals is
       return To_Ghdl_Value_Ptr (Sig.Ports (Index).Driving_Value'Address);
    end Ghdl_Signal_Read_Port;
 
+   procedure Error_Trans_Error (Trans : Transaction_Acc) is
+   begin
+      Error_C ("range check error on signal at ");
+      Error_C (Trans.File);
+      Error_C (":");
+      Error_C (Natural (Trans.Line));
+      Error_E ("");
+   end Error_Trans_Error;
+   pragma No_Return (Error_Trans_Error);
+
    function Ghdl_Signal_Read_Driver
      (Sig : Ghdl_Signal_Ptr; Index : Ghdl_Index_Type)
      return Ghdl_Value_Ptr
@@ -1323,7 +1387,7 @@ package body Grt.Signals is
          when Trans_Null =>
             return null;
          when Trans_Error =>
-            Error ("range check error on signal");
+            Error_Trans_Error (Trans);
       end case;
    end Ghdl_Signal_Read_Driver;
 
@@ -2472,6 +2536,7 @@ package body Grt.Signals is
          --     R <= transport S after T;
          --  end process;
          Trans := new Transaction'(Kind => Trans_Value,
+                                   Line => 0,
                                    Time => Current_Time + Sig.S.Time,
                                    Next => null,
                                    Val => Pfx.Value);
@@ -2551,7 +2616,7 @@ package body Grt.Signals is
                      when Trans_Null =>
                         Error ("null transaction");
                      when Trans_Error =>
-                        Error ("range check error on signal");
+                        Error_Trans_Error (Trans);
                   end case;
                end if;
             when Drv_One_Resolved
@@ -2671,6 +2736,7 @@ package body Grt.Signals is
                   --  Set driver.
                   Trans := new Transaction'
                     (Kind => Trans_Value,
+                     Line => 0,
                      Time => Current_Time + Sig.S.Time,
                      Next => null,
                      Val => Value_Union'(Mode => Mode_B2, B2 => True));
@@ -2789,7 +2855,7 @@ package body Grt.Signals is
                   when Trans_Null =>
                      Error ("null transaction");
                   when Trans_Error =>
-                     Error ("range check error on signal");
+                     Error_Trans_Error (Trans);
                end case;
                Set_Effective_Value (Sig, Sig.Driving_Value);
 

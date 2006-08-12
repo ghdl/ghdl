@@ -150,7 +150,7 @@ package body Translation is
       Wkie_This, Wkie_Size, Wkie_Res, Wkie_Dir_To, Wkie_Dir_Downto,
       Wkie_Left, Wkie_Right, Wkie_Dir, Wkie_Length, Wkie_Kind, Wkie_Dim,
       Wkie_I, Wkie_Instance, Wkie_Arch_Instance, Wkie_Name, Wkie_Sig,
-      Wkie_Obj, Wkie_Rti, Wkie_Parent
+      Wkie_Obj, Wkie_Rti, Wkie_Parent, Wkie_Filename, Wkie_Line
       );
    type Wk_Ident_Tree_Array is array (Wk_Ident_Type) of O_Ident;
    Wk_Idents : Wk_Ident_Tree_Array;
@@ -173,6 +173,8 @@ package body Translation is
    Wki_Obj : O_Ident renames Wk_Idents (Wkie_Obj);
    Wki_Rti : O_Ident renames Wk_Idents (Wkie_Rti);
    Wki_Parent : O_Ident renames Wk_Idents (Wkie_Parent);
+   Wki_Filename : O_Ident renames Wk_Idents (Wkie_Filename);
+   Wki_Line : O_Ident renames Wk_Idents (Wkie_Line);
 
    --  ALLOCATION_KIND defines the type of memory storage.
    --  ALLOC_STACK means the object is allocated on the local stack and
@@ -581,6 +583,10 @@ package body Translation is
 
    package Chap8 is
       procedure Translate_Statements_Chain (First : Iir);
+
+      --  Return true if there is a return statement in the chain.
+      function Translate_Statements_Chain_Has_Return (First : Iir)
+                                                     return Boolean;
 
       --  Create a case branch for CHOICE.
       --  Used by case statement and aggregates.
@@ -1982,7 +1988,10 @@ package body Translation is
       procedure Gen_Bound_Error (Loc : Iir);
 
       --  Generate code to emit a program error.
-      procedure Gen_Program_Error (Loc : Iir);
+      Prg_Err_Missing_Return : constant Natural := 1;
+      Prg_Err_Block_Configured : constant Natural := 2;
+      Prg_Err_Dummy_Config : constant Natural := 3;
+      procedure Gen_Program_Error (Loc : Iir; Code : Natural);
 
       --  Generate code to emit a failure if COND is TRUE, indicating an
       --  index violation for dimension DIM of an array.  LOC is usually
@@ -2371,6 +2380,9 @@ package body Translation is
       N2hex : constant Hexstr_Type := "0123456789abcdef";
 
       function Get_Line_Number (Target: Iir) return Natural;
+
+      procedure Assoc_Filename_Line (Assoc : in out O_Assoc_List;
+                                     Line : Natural);
    private
    end Helpers;
    use Helpers;
@@ -3763,6 +3775,16 @@ package body Translation is
            (Get_Location (Target), Name, Line, Col);
          return Line;
       end Get_Line_Number;
+
+      procedure Assoc_Filename_Line (Assoc : in out O_Assoc_List;
+                                     Line : Natural) is
+      begin
+         New_Association (Assoc,
+                          New_Lit (New_Global_Address (Current_Filename_Node,
+                                                       Char_Ptr_Type)));
+         New_Association (Assoc, New_Lit (New_Signed_Literal
+                                          (Ghdl_I32_Type, Integer_64 (Line))));
+      end Assoc_Filename_Line;
    end Helpers;
 
    package body Chap1 is
@@ -4282,7 +4304,8 @@ package body Translation is
             if Fails then
                New_Else_Stmt (If_Blk);
                --  Already configured.
-               Chap6.Gen_Program_Error (Block_Config);
+               Chap6.Gen_Program_Error
+                 (Block_Config, Chap6.Prg_Err_Block_Configured);
             end if;
 
             Finish_If_Stmt (If_Blk);
@@ -4844,6 +4867,8 @@ package body Translation is
          --  and retained.
          Is_Prot : Boolean := False;
 
+         Has_Return : Boolean;
+
          Subprg_Instances : Chap2.Subprg_Instance_Stack;
       begin
          Spec := Get_Subprogram_Specification (Subprg);
@@ -4923,7 +4948,7 @@ package body Translation is
 
          Old_Subprogram := Current_Subprogram;
          Current_Subprogram := Spec;
-         Chap8.Translate_Statements_Chain
+         Has_Return := Chap8.Translate_Statements_Chain_Has_Return
            (Get_Sequential_Statement_Chain (Subprg));
          Current_Subprogram := Old_Subprogram;
 
@@ -4931,6 +4956,12 @@ package body Translation is
             --  FIXME: create a barrier to catch missing return statement.
             if Get_Kind (Spec) = Iir_Kind_Procedure_Declaration then
                New_Exit_Stmt (Info.Subprg_Exit);
+            else
+               if not Has_Return then
+                  --  Missing return
+                  Chap6.Gen_Program_Error
+                    (Subprg, Chap6.Prg_Err_Missing_Return);
+               end if;
             end if;
             Finish_Loop_Stmt (Info.Subprg_Exit);
             Chap4.Final_Declaration_Chain (Subprg, False);
@@ -4942,6 +4973,14 @@ package body Translation is
             end if;
             if Is_Ortho_Func then
                New_Return_Stmt (New_Obj_Value (Info.Subprg_Result));
+            end if;
+         else
+            if Get_Kind (Spec) = Iir_Kind_Function_Declaration
+              and then not Has_Return
+            then
+               --  Missing return
+               Chap6.Gen_Program_Error
+                 (Subprg, Chap6.Prg_Err_Missing_Return);
             end if;
          end if;
 
@@ -12141,12 +12180,7 @@ package body Translation is
               (Get_Location (Loc), Name, Line, Col);
 
             Start_Association (Constr, Ghdl_Bound_Check_Failed_L1);
-            New_Association
-              (Constr, New_Lit (New_Global_Address (Current_Filename_Node,
-                                                    Char_Ptr_Type)));
-            New_Association
-              (Constr, New_Lit (New_Signed_Literal (Ghdl_I32_Type,
-                                                    Integer_64 (Line))));
+            Assoc_Filename_Line (Constr, Line);
             New_Procedure_Call (Constr);
          else
             Start_Association (Constr, Ghdl_Bound_Check_Failed_L0);
@@ -12158,13 +12192,23 @@ package body Translation is
          end if;
       end Gen_Bound_Error;
 
-      procedure Gen_Program_Error (Loc : Iir)
+      procedure Gen_Program_Error (Loc : Iir; Code : Natural)
       is
-         pragma Unreferenced (Loc);
-         Constr : O_Assoc_List;
+         Assoc : O_Assoc_List;
       begin
-         Start_Association (Constr, Ghdl_Program_Error);
-         New_Procedure_Call (Constr);
+         Start_Association (Assoc, Ghdl_Program_Error);
+
+         if Current_Filename_Node = O_Dnode_Null then
+            New_Association (Assoc, New_Lit (New_Null_Access (Char_Ptr_Type)));
+            New_Association (Assoc,
+                             New_Lit (New_Signed_Literal (Ghdl_I32_Type, 0)));
+         else
+            Assoc_Filename_Line (Assoc, Get_Line_Number (Loc));
+         end if;
+         New_Association
+           (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
+                                                  Unsigned_64 (Code))));
+         New_Procedure_Call (Assoc);
       end Gen_Program_Error;
 
       --  Generate code to emit a failure if COND is TRUE, indicating an
@@ -19586,6 +19630,7 @@ package body Translation is
       end Translate_Wait_Statement;
 
       --  Signal assignment.
+      Signal_Assign_Line : Natural;
       procedure Gen_Simple_Signal_Assign_Non_Composite (Targ : Mnode;
                                                         Targ_Type : Iir;
                                                         Val : O_Enode)
@@ -19637,6 +19682,7 @@ package body Translation is
                Start_If_Stmt (If_Blk, Chap3.Not_In_Range (Val2, Targ_Type));
                Start_Association (Assoc, Ghdl_Signal_Simple_Assign_Error);
                New_Association (Assoc, New_Obj_Value (Targ2));
+               Assoc_Filename_Line (Assoc, Signal_Assign_Line);
                New_Procedure_Call (Assoc);
                New_Else_Stmt (If_Blk);
                Start_Association (Assoc, Subprg);
@@ -19765,6 +19811,7 @@ package body Translation is
                New_Association (Assoc, New_Obj_Value (Starg));
                New_Association (Assoc, New_Obj_Value (Data.Reject));
                New_Association (Assoc, New_Obj_Value (Data.After));
+               Assoc_Filename_Line (Assoc, Signal_Assign_Line);
                New_Procedure_Call (Assoc);
                New_Else_Stmt (If_Blk);
                Start_Association (Assoc, Subprg);
@@ -19916,13 +19963,45 @@ package body Translation is
             when others =>
                Error_Kind ("gen_signal_next_assign_non_composite", Targ_Type);
          end case;
-         -- FIXME: check in range.
-         Start_Association (Assoc, Subprg);
-         New_Association (Assoc, New_Convert_Ov (New_Value (M2Lv (Targ)),
-                                                 Ghdl_Signal_Ptr));
-         New_Association (Assoc, New_Convert_Ov (M2E (Data.Expr), Conv));
-         New_Association (Assoc, New_Obj_Value (Data.After));
-         New_Procedure_Call (Assoc);
+         if Chap3.Need_Range_Check (Null_Iir, Targ_Type) then
+            declare
+               If_Blk : O_If_Block;
+               V : Mnode;
+               Starg : O_Dnode;
+            begin
+               Open_Temp;
+               V := Stabilize_Value (Data.Expr);
+               Starg := Create_Temp_Init
+                 (Ghdl_Signal_Ptr,
+                  New_Convert_Ov (New_Value (M2Lv (Targ)), Ghdl_Signal_Ptr));
+               Start_If_Stmt
+                 (If_Blk, Chap3.Not_In_Range (M2Dv (V), Targ_Type));
+
+               Start_Association (Assoc, Ghdl_Signal_Next_Assign_Error);
+               New_Association (Assoc, New_Obj_Value (Starg));
+               New_Association (Assoc, New_Obj_Value (Data.After));
+               Assoc_Filename_Line (Assoc, Signal_Assign_Line);
+               New_Procedure_Call (Assoc);
+
+               New_Else_Stmt (If_Blk);
+
+               Start_Association (Assoc, Subprg);
+               New_Association (Assoc, New_Obj_Value (Starg));
+               New_Association (Assoc, New_Convert_Ov (M2E (V), Conv));
+               New_Association (Assoc, New_Obj_Value (Data.After));
+               New_Procedure_Call (Assoc);
+
+               Finish_If_Stmt (If_Blk);
+               Close_Temp;
+            end;
+         else
+            Start_Association (Assoc, Subprg);
+            New_Association (Assoc, New_Convert_Ov (New_Value (M2Lv (Targ)),
+                                                    Ghdl_Signal_Ptr));
+            New_Association (Assoc, New_Convert_Ov (M2E (Data.Expr), Conv));
+            New_Association (Assoc, New_Obj_Value (Data.After));
+            New_Procedure_Call (Assoc);
+         end if;
       end Gen_Next_Signal_Assign_Non_Composite;
 
       procedure Gen_Next_Signal_Assign is new Foreach_Non_Composite
@@ -20074,6 +20153,7 @@ package body Translation is
          --  Handle a simple and common case: only one waveform, inertial,
          --  and no time (eg: sig <= expr).
          Value := Get_We_Value (We);
+         Signal_Assign_Line := Get_Line_Number (Value);
          if Get_Chain (We) = Null_Iir
            and then Get_Time (We) = Null_Iir
            and then Get_Delay_Mechanism (Stmt) = Iir_Inertial_Delay
@@ -20161,6 +20241,7 @@ package body Translation is
                      Chap7.Translate_Expression (Get_Time (We),
                                                  Time_Type_Definition));
                   Value := Get_We_Value (We);
+                  Signal_Assign_Line := Get_Line_Number (Value);
                   if Get_Kind (Value) = Iir_Kind_Null_Literal then
                      Val := Mnode_Null;
                   else
@@ -20255,6 +20336,23 @@ package body Translation is
             Stmt := Get_Chain (Stmt);
          end loop;
       end Translate_Statements_Chain;
+
+      function Translate_Statements_Chain_Has_Return (First : Iir)
+                                                     return Boolean
+      is
+         Stmt : Iir;
+         Has_Return : Boolean := False;
+      begin
+         Stmt := First;
+         while Stmt /= Null_Iir loop
+            Translate_Statement (Stmt);
+            if Get_Kind (Stmt) = Iir_Kind_Return_Statement then
+               Has_Return := True;
+            end if;
+            Stmt := Get_Chain (Stmt);
+         end loop;
+         return Has_Return;
+      end Translate_Statements_Chain_Has_Return;
    end Chap8;
 
    package body Chap9 is
@@ -26161,6 +26259,8 @@ package body Translation is
       Wki_Obj := Get_Identifier ("OBJ");
       Wki_Rti := Get_Identifier ("RTI");
       Wki_Parent := Get_Identifier ("parent");
+      Wki_Filename := Get_Identifier ("filename");
+      Wki_Line := Get_Identifier ("line");
 
       Sizetype := New_Unsigned_Type (32);
       New_Type_Decl (Get_Identifier ("__ghdl_size_type"), Sizetype);
@@ -26277,20 +26377,18 @@ package body Translation is
 
       --  Create:
       --  type __ghdl_location is record
-      --     file : __ghdl_str_len_ptr;
-      --     line : integer;
-      --     col : Integer;
+      --     file : char_ptr_type;
+      --     line : ghdl_i32;
+      --     col : ghdl_i32;
       --  end record;
       declare
          Constr : O_Element_List;
       begin
          Start_Record_Type (Constr);
-         New_Record_Field (Constr, Ghdl_Location_Filename_Node,
-                           Get_Identifier ("filename"),
-                           Char_Ptr_Type);
-         New_Record_Field (Constr, Ghdl_Location_Line_Node,
-                           Get_Identifier ("line"),
-                           Ghdl_I32_Type);
+         New_Record_Field
+           (Constr, Ghdl_Location_Filename_Node, Wki_Filename, Char_Ptr_Type);
+         New_Record_Field
+           (Constr, Ghdl_Location_Line_Node, Wki_Line, Ghdl_I32_Type);
          New_Record_Field (Constr, Ghdl_Location_Col_Node,
                            Get_Identifier ("col"),
                            Ghdl_I32_Type);
@@ -26321,13 +26419,18 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Wki_Size, Sizetype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Alloc_Ptr);
 
-      --  procedure __ghdl_program_error -- (loc : __ghdl_location_acc);
+      --  procedure __ghdl_program_error (filename : char_ptr_type;
+      --                                  line : ghdl_i32;
+      --                                  code : ghdl_index_type);
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_program_error"),
          O_Storage_External);
-      --New_Interface_Decl (Interfaces, Param,
-      --                    Get_Identifier ("location"),
-      --                    Ghdl_Location_Ptr_Node);
+      New_Interface_Decl
+        (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl
+        (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
+      New_Interface_Decl
+        (Interfaces, Param, Get_Identifier ("code"), Ghdl_Index_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Program_Error);
 
       --  procedure __ghdl_bound_check_failed_l0;
@@ -26343,10 +26446,8 @@ package body Translation is
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_bound_check_failed_l1"),
          O_Storage_External);
-      New_Interface_Decl
-        (Interfaces, Param, Get_Identifier ("filename"), Char_Ptr_Type);
-      New_Interface_Decl
-        (Interfaces, Param, Get_Identifier ("line"), Ghdl_I32_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Bound_Check_Failed_L1);
 
       --  Secondary stack subprograms.
@@ -26546,8 +26647,7 @@ package body Translation is
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_init_" & Suffix),
          O_Storage_External);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("signal"),
-                          Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("val"), Val_Type);
       Finish_Subprogram_Decl (Interfaces, Init_Signal);
 
@@ -26556,8 +26656,7 @@ package body Translation is
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_simple_assign_" & Suffix),
          O_Storage_External);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("signal"),
-                          Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("val"), Val_Type);
       Finish_Subprogram_Decl (Interfaces, Simple_Assign);
 
@@ -26568,8 +26667,7 @@ package body Translation is
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_start_assign_" & Suffix),
          O_Storage_External);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("signal"),
-                          Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("reject"),
                           Std_Time_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("val"),
@@ -26584,8 +26682,7 @@ package body Translation is
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_next_assign_" & Suffix),
          O_Storage_External);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("signal"),
-                          Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("val"),
                           Val_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
@@ -26597,8 +26694,7 @@ package body Translation is
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_associate_" & Suffix),
          O_Storage_External);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("signal"),
-                          Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("val"),
                           Val_Type);
       Finish_Subprogram_Decl (Interfaces, Associate_Value);
@@ -26608,8 +26704,7 @@ package body Translation is
       Start_Function_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_driving_value_" & Suffix),
          O_Storage_External, Val_Type);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("signal"),
-                          Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       Finish_Subprogram_Decl (Interfaces, Driving_Value);
    end Create_Signal_Subprograms;
 
@@ -27063,46 +27158,55 @@ package body Translation is
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Driving);
 
       --  procedure __ghdl_signal_simple_assign_error
-      --              (sig : __ghdl_signal_ptr);
+      --              (sig : __ghdl_signal_ptr;
+      --               filename : char_ptr_type;
+      --               line : ghdl_i32);
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_simple_assign_error"),
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Simple_Assign_Error);
 
       --  procedure __ghdl_signal_start_assign_error (sign : __ghdl_signal_ptr;
       --                                              reject : std_time;
-      --                                              after : std_time);
+      --                                              after : std_time;
+      --                                              filename : char_ptr_type;
+      --                                              line : ghdl_i32);
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_start_assign_error"),
          O_Storage_External);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("signal"),
-                          Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("reject"),
                           Std_Time_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
                           Std_Time_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Start_Assign_Error);
 
       --  procedure __ghdl_signal_next_assign_error (sig : __ghdl_signal_ptr;
-      --                                             after : std_time);
+      --                                             after : std_time;
+      --                                             filename : char_ptr_type;
+      --                                             line : ghdl_i32);
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_next_assign_error"),
          O_Storage_External);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("signal"),
-                          Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
                           Std_Time_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Next_Assign_Error);
 
-      --  procedure __ghdl_signal_start_assign_null (sign : __ghdl_signal_ptr;
+      --  procedure __ghdl_signal_start_assign_null (sig : __ghdl_signal_ptr;
       --                                             reject : std_time;
       --                                             after : std_time);
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_start_assign_null"),
          O_Storage_External);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("signal"),
-                          Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("reject"),
                           Std_Time_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
@@ -27114,8 +27218,7 @@ package body Translation is
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_next_assign_null"),
          O_Storage_External);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("signal"),
-                          Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
                           Std_Time_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Next_Assign_Null);
@@ -27839,7 +27942,7 @@ package body Translation is
          Finish_Subprogram_Decl (Inter_List, Subprg);
 
          Start_Subprogram_Body (Subprg);
-         Chap6.Gen_Program_Error (Arch);
+         Chap6.Gen_Program_Error (Arch, Chap6.Prg_Err_Dummy_Config);
          Finish_Subprogram_Body;
 
          Pop_Identifier_Prefix (Arch_Mark);

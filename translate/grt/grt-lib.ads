@@ -40,7 +40,9 @@ package Grt.Lib is
 
    --  Program error has occured:
    --  * configuration of an already configured block.
-   procedure Ghdl_Program_Error;
+   procedure Ghdl_Program_Error (Filename : Ghdl_C_String;
+                                 Line : Ghdl_I32;
+                                 Code : Ghdl_Index_Type);
 
    function Ghdl_Integer_Exp (V : Ghdl_I32; E : Ghdl_I32)
      return Ghdl_I32;

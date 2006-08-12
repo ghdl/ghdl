@@ -405,6 +405,8 @@ package body Ghdlrun is
            Grt.Signals.Ghdl_Signal_Simple_Assign_Error'Address);
       Def (Trans_Decls.Ghdl_Signal_Start_Assign_Error,
            Grt.Signals.Ghdl_Signal_Start_Assign_Error'Address);
+      Def (Trans_Decls.Ghdl_Signal_Next_Assign_Error,
+           Grt.Signals.Ghdl_Signal_Next_Assign_Error'Address);
 
       Def (Trans_Decls.Ghdl_Signal_Start_Assign_Null,
            Grt.Signals.Ghdl_Signal_Start_Assign_Null'Address);

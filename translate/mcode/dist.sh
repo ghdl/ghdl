@@ -161,6 +161,16 @@ ghdlfilter.adb
 grt-modules.adb
 "
 
+drv_files="
+ghdlcomp.ads
+ghdlcomp.adb
+foreigns.ads
+foreigns.adb
+ghdlrun.adb
+ghdlrun.ads
+ghdl_mcode.adb
+"
+
 for i in $cfiles; do ln -sf $CWD/../../$i $distdir/ghdl/$i; done
 for i in $tfiles; do ln -sf $CWD/../$i $distdir/ghdl/$i; done
 
@@ -172,8 +182,7 @@ for i in $ortho_mcode_files; do
   ln -sf $CWD/../../ortho/mcode/$i $distdir/ortho/$i
 done
 
-for i in $ghdl_files ghdlcomp.ads ghdlcomp.adb \
-  ghdlrun.adb ghdlrun.ads ghdl_mcode.adb; do
+for i in $ghdl_files $drv_files; do
   ln -sf $CWD/../ghdldrv/$i $distdir/ghdldrv/$i
 done
 
