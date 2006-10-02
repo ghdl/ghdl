@@ -184,6 +184,8 @@ package body Grt.Stats is
       Nbr_Resolv : Ghdl_I32;
       Nbr_Multi_Src : Ghdl_I32;
       Nbr_Active : Ghdl_I32;
+      Nbr_Drivers : Ghdl_I32;
+      Nbr_Direct_Drivers : Ghdl_I32;
 
       type Propagation_Kind_Array is array (Propagation_Kind_Type) of Ghdl_I32;
       Propag_Count : Propagation_Kind_Array;
@@ -210,10 +212,13 @@ package body Grt.Stats is
       Nbr_Resolv := 0;
       Nbr_Multi_Src := 0;
       Nbr_Active := 0;
+      Nbr_Drivers := 0;
+      Nbr_Direct_Drivers := 0;
       Mode_Counts := (others => 0);
       for I in Sig_Table.First .. Sig_Table.Last loop
          declare
             Sig : Ghdl_Signal_Ptr;
+            Trans : Transaction_Acc;
          begin
             Sig := Sig_Table.Table (I);
             if Sig.S.Mode_Sig in Mode_Signal_User then
@@ -226,9 +231,16 @@ package body Grt.Stats is
                if Sig.S.Resolv /= null then
                   Nbr_Resolv := Nbr_Resolv + 1;
                end if;
+               Nbr_Drivers := Nbr_Drivers + Ghdl_I32 (Sig.S.Nbr_Drivers);
+               for J in 1 .. Sig.S.Nbr_Drivers loop
+                  Trans := Sig.S.Drivers (J - 1).Last_Trans;
+                  if Trans /= null and then Trans.Kind = Trans_Direct then
+                     Nbr_Direct_Drivers := Nbr_Direct_Drivers + 1;
+                  end if;
+               end loop;
             end if;
             Mode_Counts (Sig.Mode) := Mode_Counts (Sig.Mode) + 1;
-            if Sig.Flags.Has_Active then
+            if Sig.Has_Active then
                Nbr_Active := Nbr_Active + 1;
             end if;
          end;
@@ -244,6 +256,12 @@ package body Grt.Stats is
       New_Line;
       Put (stdout, "Number of signals whose activity is managed: ");
       Put_I32 (stdout, Nbr_Active);
+      New_Line;
+      Put (stdout, "Number of drivers: ");
+      Put_I32 (stdout, Nbr_Drivers);
+      New_Line;
+      Put (stdout, "Number of direct drivers: ");
+      Put_I32 (stdout, Nbr_Direct_Drivers);
       New_Line;
       Put (stdout, "Number of signals per mode:");
       New_Line;

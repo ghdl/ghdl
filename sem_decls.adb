@@ -1691,7 +1691,7 @@ package body Sem_Decls is
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Selected_Element =>
-            Set_Base_Name (Alias, Get_Base_Name (N_Name));
+            Set_Base_Name (Alias, Alias); -- Get_Base_Name (N_Name));
             Xref_Name (Name);
             Set_Name (Alias, N_Name);
          when others =>

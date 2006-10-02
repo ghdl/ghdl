@@ -40,6 +40,7 @@ with Nodes;
 with GNAT.Table;
 with Canon;
 with Trans_Decls; use Trans_Decls;
+with Trans_Analyzes;
 
 package body Translation is
 
@@ -132,13 +133,16 @@ package body Translation is
    --  Signals.
    Ghdl_Scalar_Bytes : O_Tnode;
    Ghdl_Signal_Type : O_Tnode;
-   Ghdl_Signal_Value_Node : O_Fnode;
-   Ghdl_Signal_Driving_Value_Node : O_Fnode;
-   Ghdl_Signal_Last_Value_Node : O_Fnode;
-   Ghdl_Signal_Last_Event_Node : O_Fnode;
-   Ghdl_Signal_Last_Active_Node : O_Fnode;
-   Ghdl_Signal_Event_Node : O_Fnode;
-   Ghdl_Signal_Active_Node : O_Fnode;
+   Ghdl_Signal_Value_Field : O_Fnode;
+   Ghdl_Signal_Driving_Value_Field : O_Fnode;
+   Ghdl_Signal_Last_Value_Field : O_Fnode;
+   Ghdl_Signal_Last_Event_Field : O_Fnode;
+   Ghdl_Signal_Last_Active_Field : O_Fnode;
+   Ghdl_Signal_Active_Chain_Field : O_Fnode;
+   Ghdl_Signal_Event_Field : O_Fnode;
+   Ghdl_Signal_Active_Field : O_Fnode;
+   Ghdl_Signal_Has_Active_Field : O_Fnode;
+
    Ghdl_Signal_Ptr : O_Tnode;
    Ghdl_Signal_Ptr_Ptr : O_Tnode;
 
@@ -286,10 +290,10 @@ package body Translation is
       type Var_Ident_Type is private;
       --function Create_Var_Identifier (Id : Name_Id; Str : String)
       --  return Var_Ident_Type;
-      function Create_Var_Identifier (Id : Iir)
-        return Var_Ident_Type;
-      function Create_Var_Identifier (Id : String)
-        return Var_Ident_Type;
+      function Create_Var_Identifier (Id : Iir) return Var_Ident_Type;
+      function Create_Var_Identifier (Id : String) return Var_Ident_Type;
+      function Create_Var_Identifier (Id : Iir; Str : String; Val : Natural)
+                                     return Var_Ident_Type;
       function Create_Uniq_Identifier return Var_Ident_Type;
 
       type Var_Type (<>) is limited private;
@@ -1033,6 +1037,13 @@ package body Translation is
       Record_Ptr_Type : O_Tnode;
    end record;
 
+   type Direct_Driver_Type is record
+      Sig : Iir;
+      Var : Var_Acc;
+   end record;
+   type Direct_Driver_Arr is array (Natural range <>) of Direct_Driver_Type;
+   type Direct_Drivers_Acc is access Direct_Driver_Arr;
+
    type Ortho_Info_Type;
    type Ortho_Info_Acc is access Ortho_Info_Type;
 
@@ -1117,6 +1128,8 @@ package body Translation is
             Object_Static : Boolean;
             --  The object itself.
             Object_Var : Var_Acc;
+            --  Direct driver for signal (if any).
+            Object_Driver : Var_Acc := null;
             --  RTI constant for the object.
             Object_Rti : O_Dnode := O_Dnode_Null;
             --  Function to compute the value of object (used for implicit
@@ -1134,14 +1147,12 @@ package body Translation is
             Interface_Field : O_Fnode;
             --  Type of the interface.
             Interface_Type : O_Tnode;
-            --  Ortho node for the interface of the protected subprogram.
-            Interface_Protected : O_Dnode;
          when Kind_Disconnect =>
             --  Variable which contains the time_expression of the
             --  disconnection specification
             Disconnect_Var : Var_Acc;
          when Kind_Process =>
-            --  Type of process declarations.
+            --  Type of process declarations record.
             Process_Decls_Type : O_Tnode;
 
             --  Field in the parent block for the declarations in the process.
@@ -1149,6 +1160,9 @@ package body Translation is
 
             --  Subprogram for the process.
             Process_Subprg : O_Dnode;
+
+            --  List of drivers if Flag_Direct_Drivers.
+            Process_Drivers : Direct_Drivers_Acc := null;
 
             --  RTI for the process.
             Process_Rti_Const : O_Dnode := O_Dnode_Null;
@@ -1888,6 +1902,12 @@ package body Translation is
       procedure Elab_Signal_Declaration_Object
         (Decl : Iir; Parent : Iir; Check_Null : Boolean);
 
+      --  True of SIG has a direct driver.
+      function Has_Direct_Driver (Sig : Iir) return Boolean;
+
+      --  Allocate memory for direct driver if necessary.
+      procedure Elab_Direct_Driver_Declaration_Storage (Decl : Iir);
+
       --  Generate code to create object OBJ and initialize it with value VAL.
       procedure Elab_Object_Value (Obj : Iir; Value : Iir);
 
@@ -1929,6 +1949,11 @@ package body Translation is
       --    RES can be a tree, so it may be referenced only once.
       --  SIG is true if RES is a signal object.
       function Translate_Name (Name : Iir) return Mnode;
+
+      --  Translate signal NAME into its node (SIG) and its direct driver
+      --  node (DRV).
+      procedure Translate_Direct_Driver
+        (Name : Iir; Sig : out Mnode; Drv : out Mnode);
 
       --  Same as Translate_Name, but only for formal names.
       --  If SCOPE_TYPE and SCOPE_PARAM are not null, use them for the scope
@@ -2166,6 +2191,8 @@ package body Translation is
       function Get_Signal_Value_Field
         (Sig : O_Enode; Sig_Type : Iir; Field : O_Fnode)
         return O_Lnode;
+
+      function Get_Signal_Field (Sig : Mnode; Field : O_Fnode) return O_Lnode;
 
       function Translate_Length_Array_Attribute (Expr : Iir; Rtype : Iir)
         return O_Enode;
@@ -3693,11 +3720,7 @@ package body Translation is
       procedure Register_Signal (Targ : Mnode;
                                  Targ_Type : Iir;
                                  Proc : O_Dnode)
-      is
-         Proc_1 : O_Dnode := Proc;
-      begin
-         Register_Signal_1 (Targ, Targ_Type, Proc_1);
-      end Register_Signal;
+        renames Register_Signal_1;
 
       procedure Register_Signal_List (List : Iir_List; Proc : O_Dnode)
       is
@@ -9722,6 +9745,42 @@ package body Translation is
          Close_Temp;
       end Elab_Signal_Declaration_Storage;
 
+      function Has_Direct_Driver (Sig : Iir) return Boolean
+      is
+         Info : Ortho_Info_Acc;
+      begin
+         Info := Get_Info (Get_Base_Name (Sig));
+         return Info.Kind = Kind_Object
+           and then Info.Object_Driver /= null;
+      end Has_Direct_Driver;
+
+      procedure Elab_Direct_Driver_Declaration_Storage (Decl : Iir)
+      is
+         Sig_Type : Iir;
+         Type_Info : Type_Info_Acc;
+         Sig_Info : Ortho_Info_Acc;
+         Name_Node : Mnode;
+      begin
+         Open_Temp;
+
+         Sig_Type := Get_Type (Decl);
+         Sig_Info := Get_Info (Decl);
+         Type_Info := Get_Info (Sig_Type);
+
+         if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+            Name_Node := Get_Var (Sig_Info.Object_Driver,
+                                  Type_Info, Mode_Value);
+            Name_Node := Stabilize (Name_Node);
+            Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Node, Sig_Type);
+         elsif Type_Info.C /= null then
+            Name_Node := Get_Var (Sig_Info.Object_Driver,
+                                  Type_Info, Mode_Value);
+            Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Node);
+         end if;
+
+         Close_Temp;
+      end Elab_Direct_Driver_Declaration_Storage;
+
       --  Create signal object.
       --  Note: DECL can be a signal sub-element (used when signals are
       --   collapsed).
@@ -10120,7 +10179,7 @@ package body Translation is
            (Decl_Type, Get_Identifier (Decl));
 
          Info := Add_Info (Decl, Kind_Alias);
-         case Get_Kind (Get_Base_Name (Decl)) is
+         case Get_Kind (Get_Object_Prefix (Decl)) is
             when Iir_Kind_Signal_Declaration
               | Iir_Kind_Signal_Interface_Declaration
               | Iir_Kind_Guard_Signal_Declaration =>
@@ -10176,7 +10235,6 @@ package body Translation is
          Chap3.Elab_Object_Subtype (Decl_Type);
          Name := Get_Name (Decl);
          Name_Type := Get_Type (Name);
-         --  Evaluate names.
          Name_Node := Chap6.Translate_Name (Name);
          Kind := Get_Object_Kind (Name_Node);
          N_Info := Get_Info (Name_Type);
@@ -11758,110 +11816,109 @@ package body Translation is
          Data : Connect_Data;
          Mode : Connect_Mode;
       begin
-         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
-           and then Get_Collapse_Signal_Flag (Assoc) = By_Copy
+         if Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Expression then
+            raise Internal_Error;
+         end if;
+
+         Open_Temp;
+         Formal := Get_Formal (Assoc);
+         Actual := Get_Actual (Assoc);
+         Formal_Type := Get_Type (Formal);
+         Actual_Type := Get_Type (Actual);
+         if Get_In_Conversion (Assoc) = Null_Iir
+           and then Get_Out_Conversion (Assoc) = Null_Iir
          then
-            Open_Temp;
-            Formal := Get_Formal (Assoc);
-            Actual := Get_Actual (Assoc);
-            Formal_Type := Get_Type (Formal);
-            Actual_Type := Get_Type (Actual);
-            if Get_In_Conversion (Assoc) = Null_Iir
-              and then Get_Out_Conversion (Assoc) = Null_Iir
-            then
-               Formal_Node := Chap6.Translate_Name (Formal);
-               if Get_Object_Kind (Formal_Node) /= Mode_Signal then
+            Formal_Node := Chap6.Translate_Name (Formal);
+            if Get_Object_Kind (Formal_Node) /= Mode_Signal then
+               raise Internal_Error;
+            end if;
+            if Is_Signal (Actual) then
+               --  LRM93 4.3.1.2
+               --  For a signal of a scalar type, each source is either
+               --  a driver or an OUT, INOUT, BUFFER or LINKAGE port of
+               --  a component instance or of a block statement with
+               --  which the signalis associated.
+
+               --  LRM93 12.6.2
+               --  For a scalar signal S, the effective value of S is
+               --  determined in the following manner:
+               --  *  If S is [...] a port of mode BUFFER or [...],
+               --     then the effective value of S is the same as
+               --     the driving value of S.
+               --  *  If S is a connected port of mode IN or INOUT,
+               --     then the effective value of S is the same as
+               --     the effective value of the actual part of the
+               --     association element that associates an actual
+               --     with S.
+               --  *  [...]
+               case Get_Mode (Get_Base_Name (Formal)) is
+                  when Iir_In_Mode =>
+                     Mode := Connect_Effective;
+                  when Iir_Inout_Mode =>
+                     Mode := Connect_Both;
+                  when Iir_Out_Mode
+                    | Iir_Buffer_Mode
+                    | Iir_Linkage_Mode =>
+                     Mode := Connect_Source;
+                  when Iir_Unknown_Mode =>
+                     raise Internal_Error;
+               end case;
+
+               --  translate actual (abort if not a signal).
+               Actual_Node := Chap6.Translate_Name (Actual);
+               if Get_Object_Kind (Actual_Node) /= Mode_Signal then
                   raise Internal_Error;
                end if;
-               if Is_Signal (Actual) then
-                  --  LRM93 4.3.1.2
-                  --  For a signal of a scalar type, each source
-                  -- is either a driver or an OUT, INOUT, BUFFER
-                  -- or LINKAGE port of a component instance or
-                  -- of a block statement with which the signal
-                  -- is associated.
-
-                  --  LRM93 12.6.2
-                  --  For a scalar signal S, the effective value of S is
-                  --  determined in the following manner:
-                  --  *  If S is [...] a port of mode BUFFER or [...],
-                  --     then the effective value of S is the same as
-                  --     the driving value of S.
-                  --  *  If S is a connected port of mode IN or INOUT,
-                  --     then the effective value of S is the same as
-                  --     the effective value of the actual part of the
-                  --     association element that associates an actual
-                  --     with S.
-                  --  *  [...]
-                  case Get_Mode (Get_Base_Name (Formal)) is
-                     when Iir_In_Mode =>
-                        Mode := Connect_Effective;
-                     when Iir_Inout_Mode =>
-                        Mode := Connect_Both;
-                     when Iir_Out_Mode
-                       | Iir_Buffer_Mode
-                       | Iir_Linkage_Mode =>
-                        Mode := Connect_Source;
-                     when Iir_Unknown_Mode =>
-                        raise Internal_Error;
-                  end case;
-
-                  --  translate actual (abort if not a signal).
-                  Actual_Node := Chap6.Translate_Name (Actual);
-                  if Get_Object_Kind (Actual_Node) /= Mode_Signal then
-                     raise Internal_Error;
-                  end if;
-               else
-                  declare
-                     Actual_Val : O_Enode;
-                  begin
-                     Actual_Val := Chap7.Translate_Expression
-                       (Actual, Formal_Type);
-                     Actual_Node := E2M
-                       (Actual_Val, Get_Info (Formal_Type), Mode_Value);
-                     Mode := Connect_Value;
-                  end;
-               end if;
-
-               if Get_Kind (Formal_Type) in Iir_Kinds_Array_Type_Definition
-               then
-                  --  Check length matches.
-                  Stabilize (Formal_Node);
-                  Stabilize (Actual_Node);
-                  Chap3.Check_Array_Match (Formal_Type, Formal_Node,
-                                           Actual_Type, Actual_Node,
-                                           Assoc);
-               end if;
-
-               Data := (Actual_Node => Actual_Node,
-                        Actual_Type => Actual_Type,
-                        Mode => Mode,
-                        By_Copy => By_Copy);
-               Connect (Formal_Node, Formal_Type, Data);
             else
-               if Get_In_Conversion (Assoc) /= Null_Iir then
-                  Chap4.Elab_In_Conversion (Assoc, Actual_Node);
-                  Formal_Node := Chap6.Translate_Name (Formal);
-                  Data := (Actual_Node => Actual_Node,
-                           Actual_Type => Formal_Type,
-                           Mode => Connect_Effective,
-                           By_Copy => False);
-                  Connect (Formal_Node, Formal_Type, Data);
-               end if;
-               if Get_Out_Conversion (Assoc) /= Null_Iir then
-                  --  flow: FORMAL to ACTUAL
-                  Chap4.Elab_Out_Conversion (Assoc, Formal_Node);
-                  Actual_Node := Chap6.Translate_Name (Actual);
-                  Data := (Actual_Node => Actual_Node,
-                           Actual_Type => Actual_Type,
-                           Mode => Connect_Source,
-                           By_Copy => False);
-                  Connect (Formal_Node, Actual_Type, Data);
-               end if;
+               declare
+                  Actual_Val : O_Enode;
+               begin
+                  Actual_Val := Chap7.Translate_Expression
+                    (Actual, Formal_Type);
+                  Actual_Node := E2M
+                    (Actual_Val, Get_Info (Formal_Type), Mode_Value);
+                  Mode := Connect_Value;
+               end;
             end if;
 
-            Close_Temp;
+            if Get_Kind (Formal_Type) in Iir_Kinds_Array_Type_Definition
+            then
+               --  Check length matches.
+               Stabilize (Formal_Node);
+               Stabilize (Actual_Node);
+               Chap3.Check_Array_Match (Formal_Type, Formal_Node,
+                                        Actual_Type, Actual_Node,
+                                        Assoc);
+            end if;
+
+            Data := (Actual_Node => Actual_Node,
+                     Actual_Type => Actual_Type,
+                     Mode => Mode,
+                     By_Copy => By_Copy);
+            Connect (Formal_Node, Formal_Type, Data);
+         else
+            if Get_In_Conversion (Assoc) /= Null_Iir then
+               Chap4.Elab_In_Conversion (Assoc, Actual_Node);
+               Formal_Node := Chap6.Translate_Name (Formal);
+               Data := (Actual_Node => Actual_Node,
+                        Actual_Type => Formal_Type,
+                        Mode => Connect_Effective,
+                        By_Copy => False);
+               Connect (Formal_Node, Formal_Type, Data);
+            end if;
+            if Get_Out_Conversion (Assoc) /= Null_Iir then
+               --  flow: FORMAL to ACTUAL
+               Chap4.Elab_Out_Conversion (Assoc, Formal_Node);
+               Actual_Node := Chap6.Translate_Name (Actual);
+               Data := (Actual_Node => Actual_Node,
+                        Actual_Type => Actual_Type,
+                        Mode => Connect_Source,
+                        By_Copy => False);
+               Connect (Formal_Node, Actual_Type, Data);
+            end if;
          end if;
+
+         Close_Temp;
       end Elab_Port_Map_Aspect_Assoc;
 
       --  Return TRUE if the collapse_signal_flag is set for each individual
@@ -12477,8 +12534,13 @@ package body Translation is
       end Translate_Thin_Index_Offset;
 
       --  Translate an indexed name.
-      function Translate_Indexed_Name (Prefix_Orig : Mnode; Expr : Iir)
-                                      return Mnode
+      type Indexed_Name_Data is record
+         Offset : O_Dnode;
+         Res : Mnode;
+      end record;
+
+      function Translate_Indexed_Name_Init (Prefix_Orig : Mnode; Expr : Iir)
+                                           return Indexed_Name_Data
       is
          Prefix : Mnode;
          Prefix_Type : Iir;
@@ -12571,13 +12633,44 @@ package body Translation is
             Close_Temp;
          end loop;
 
-         R := New_Obj_Value (Offset);
-         return Chap3.Index_Base
-           (Chap3.Get_Array_Base (Prefix), Prefix_Type, R);
+         return (Offset => Offset,
+                 Res => Chap3.Index_Base
+                   (Chap3.Get_Array_Base (Prefix), Prefix_Type,
+                    New_Obj_Value (Offset)));
+      end Translate_Indexed_Name_Init;
+
+      function Translate_Indexed_Name_Finish
+        (Prefix : Mnode; Expr : Iir; Data : Indexed_Name_Data)
+        return Mnode
+      is
+      begin
+         return Chap3.Index_Base (Chap3.Get_Array_Base (Prefix),
+                                  Get_Type (Get_Prefix (Expr)),
+                                  New_Obj_Value (Data.Offset));
+      end Translate_Indexed_Name_Finish;
+
+      function Translate_Indexed_Name (Prefix : Mnode; Expr : Iir)
+                                      return Mnode
+      is
+      begin
+         return Translate_Indexed_Name_Init (Prefix, Expr).Res;
       end Translate_Indexed_Name;
 
-      function Translate_Slice_Name (Prefix : Mnode; Expr : Iir_Slice_Name)
-                                    return Mnode
+      type Slice_Name_Data is record
+         Off : Unsigned_64;
+         Is_Off : Boolean;
+
+         Unsigned_Diff : O_Dnode;
+
+         --  Variable pointing to the prefix.
+         Prefix_Var : Mnode;
+
+         --  Variable pointing to slice.
+         Slice_Range : Mnode;
+      end record;
+
+      procedure Translate_Slice_Name_Init
+        (Prefix : Mnode; Expr : Iir_Slice_Name; Data : out Slice_Name_Data)
       is
          --  Type of the prefix.
          Prefix_Type : Iir;
@@ -12599,9 +12692,6 @@ package body Translation is
          --  Suffix of the slice (discrete range).
          Expr_Range : Iir;
 
-         --  Object kind of the prefix.
-         Kind : Object_Kind_Type;
-
          --  Variable pointing to the prefix.
          Prefix_Var : Mnode;
 
@@ -12611,9 +12701,6 @@ package body Translation is
          --  Variables pointing to slice and prefix ranges.
          Slice_Range : Mnode;
          Prefix_Range : Mnode;
-
-         Res_L : O_Lnode;
-         Res_D : O_Dnode;
 
          Diff : O_Dnode;
          Unsigned_Diff : O_Dnode;
@@ -12626,8 +12713,6 @@ package body Translation is
          Index_Type := Get_Nth_Element
            (Get_Index_Subtype_List (Prefix_Type), 0);
 
-         Kind := Get_Object_Kind (Prefix);
-
          --  Evaluate slice bounds.
          Chap3.Create_Array_Subtype (Slice_Type, True);
 
@@ -12637,6 +12722,9 @@ package body Translation is
          if Slice_Info.Type_Mode = Type_Mode_Array
            and then Prefix_Info.Type_Mode = Type_Mode_Array
          then
+            Data.Is_Off := True;
+            Data.Prefix_Var := Prefix;
+
             --  Both prefix and result are constrained array.
             declare
                Prefix_Left, Slice_Left : Iir_Int64;
@@ -12655,7 +12743,8 @@ package body Translation is
                Slice_Length := Eval_Discrete_Range_Length (Slice_Range);
                if Slice_Length = 0 then
                   --  Null slice.
-                  return Prefix;
+                  Data.Off := 0;
+                  return;
                end if;
                if Get_Direction (Index_Range) /= Get_Direction (Slice_Range)
                then
@@ -12681,16 +12770,13 @@ package body Translation is
                      raise Internal_Error;
                   end if;
                end if;
-               return Lv2M
-                 (New_Slice (M2Lv (Prefix),
-                             Slice_Info.Ortho_Type (Kind),
-                             New_Lit (New_Unsigned_Literal
-                                      (Ghdl_Index_Type,
-                                       Unsigned_64 (Off)))),
-                  Slice_Info,
-                  Kind);
+               Data.Off := Unsigned_64 (Off);
+
+               return;
             end;
          end if;
+
+         Data.Is_Off := False;
 
          Slice_Binfo := Get_Info (Get_Base_Type (Slice_Type));
 
@@ -12798,39 +12884,92 @@ package body Translation is
             Check_Bound_Error (New_Dyadic_Op (ON_Or, Err_1, Err_2), Expr, 1);
          end;
 
-         --  Create the result (fat array) and assign the bounds field.
-         case Slice_Info.Type_Mode is
-            when Type_Mode_Fat_Array =>
-               Res_D := Create_Temp (Slice_Info.Ortho_Type (Kind));
-               New_Assign_Stmt
-                 (New_Selected_Element (New_Obj (Res_D),
-                                        Slice_Info.T.Bounds_Field (Kind)),
-                  New_Value (M2Lp (Slice_Range)));
-               New_Assign_Stmt
-                 (New_Selected_Element (New_Obj (Res_D),
-                                        Slice_Info.T.Base_Field (Kind)),
-                  New_Address
-                  (New_Slice (M2Lv (Chap3.Get_Array_Base (Prefix_Var)),
-                              Slice_Info.T.Base_Type (Kind),
-                              New_Obj_Value (Unsigned_Diff)),
-                   Slice_Info.T.Base_Ptr_Type (Kind)));
-               return Dv2M (Res_D, Slice_Info, Kind);
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
-               Res_L := New_Slice
-                 (M2Lv (Chap3.Get_Array_Base (Prefix_Var)),
-                  Slice_Info.T.Base_Type (Kind),
-                  New_Obj_Value (Unsigned_Diff));
-               return Lv2M (Res_L,
-                            True,
-                            Slice_Info.T.Base_Type (Kind),
-                            Slice_Info.T.Base_Ptr_Type (Kind),
-                            Slice_Info, Kind);
-            when others =>
-               raise Internal_Error;
-         end case;
+         Data.Slice_Range := Slice_Range;
+         Data.Prefix_Var := Prefix_Var;
+         Data.Unsigned_Diff := Unsigned_Diff;
+         Data.Is_Off := False;
+      end Translate_Slice_Name_Init;
 
-         --Finish_If_Stmt (If_Blk);
+      function Translate_Slice_Name_Finish
+        (Prefix : Mnode; Expr : Iir_Slice_Name; Data : Slice_Name_Data)
+        return Mnode
+      is
+         --  Type of the prefix.
+         Prefix_Type : Iir;
+
+         --  Type info of the prefix.
+         Prefix_Info : Type_Info_Acc;
+
+         --  Type of the slice.
+         Slice_Type : Iir;
+         Slice_Info : Type_Info_Acc;
+
+         --  Object kind of the prefix.
+         Kind : Object_Kind_Type;
+
+         Res_L : O_Lnode;
+         Res_D : O_Dnode;
+      begin
+         --  Evaluate the prefix.
+         Slice_Type := Get_Type (Expr);
+         Prefix_Type := Get_Type (Get_Prefix (Expr));
+
+         Kind := Get_Object_Kind (Prefix);
+
+         Prefix_Info := Get_Info (Prefix_Type);
+         Slice_Info := Get_Info (Slice_Type);
+
+         if Data.Is_Off then
+            return Lv2M
+              (New_Slice (M2Lv (Prefix),
+                          Slice_Info.Ortho_Type (Kind),
+                          New_Lit (New_Unsigned_Literal
+                                   (Ghdl_Index_Type, Data.Off))),
+               Slice_Info,
+               Kind);
+         else
+            --  Create the result (fat array) and assign the bounds field.
+            case Slice_Info.Type_Mode is
+               when Type_Mode_Fat_Array =>
+                  Res_D := Create_Temp (Slice_Info.Ortho_Type (Kind));
+                  New_Assign_Stmt
+                    (New_Selected_Element (New_Obj (Res_D),
+                                           Slice_Info.T.Bounds_Field (Kind)),
+                     New_Value (M2Lp (Data.Slice_Range)));
+                  New_Assign_Stmt
+                    (New_Selected_Element (New_Obj (Res_D),
+                                           Slice_Info.T.Base_Field (Kind)),
+                     New_Address
+                     (New_Slice (M2Lv (Chap3.Get_Array_Base (Prefix)),
+                                 Slice_Info.T.Base_Type (Kind),
+                                 New_Obj_Value (Data.Unsigned_Diff)),
+                      Slice_Info.T.Base_Ptr_Type (Kind)));
+                  return Dv2M (Res_D, Slice_Info, Kind);
+               when Type_Mode_Array
+                 | Type_Mode_Ptr_Array =>
+                  Res_L := New_Slice
+                    (M2Lv (Chap3.Get_Array_Base (Prefix)),
+                     Slice_Info.T.Base_Type (Kind),
+                     New_Obj_Value (Data.Unsigned_Diff));
+                  return Lv2M (Res_L,
+                               True,
+                               Slice_Info.T.Base_Type (Kind),
+                               Slice_Info.T.Base_Ptr_Type (Kind),
+                               Slice_Info, Kind);
+               when others =>
+                  raise Internal_Error;
+            end case;
+         end if;
+      end Translate_Slice_Name_Finish;
+
+      function Translate_Slice_Name
+        (Prefix : Mnode; Expr : Iir_Slice_Name)
+        return Mnode
+      is
+         Data : Slice_Name_Data;
+      begin
+         Translate_Slice_Name_Init (Prefix, Expr, Data);
+         return Translate_Slice_Name_Finish (Data.Prefix_Var, Expr, Data);
       end Translate_Slice_Name;
 
       function Translate_Interface_Name
@@ -13079,6 +13218,66 @@ package body Translation is
                Error_Kind ("translate_name", Name);
          end case;
       end Translate_Name;
+
+      procedure Translate_Direct_Driver
+        (Name : Iir; Sig : out Mnode; Drv : out Mnode)
+      is
+         Name_Type : Iir;
+         Name_Info : Ortho_Info_Acc;
+         Type_Info : Type_Info_Acc;
+      begin
+         Name_Type := Get_Type (Name);
+         Name_Info := Get_Info (Name);
+         Type_Info := Get_Info (Name_Type);
+         case Get_Kind (Name) is
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Signal_Interface_Declaration =>
+               Sig := Get_Var (Name_Info.Object_Var, Type_Info, Mode_Signal);
+               Drv := Get_Var (Name_Info.Object_Driver, Type_Info, Mode_Value);
+            when Iir_Kind_Simple_Name
+              | Iir_Kind_Selected_Name =>
+               Translate_Direct_Driver (Get_Named_Entity (Name), Sig, Drv);
+            when Iir_Kind_Slice_Name =>
+               declare
+                  Data : Slice_Name_Data;
+                  Pfx_Sig : Mnode;
+                  Pfx_Drv : Mnode;
+               begin
+                  Translate_Direct_Driver
+                    (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
+                  Translate_Slice_Name_Init (Pfx_Sig, Name, Data);
+                  Sig := Translate_Slice_Name_Finish
+                    (Data.Prefix_Var, Name, Data);
+                  Drv := Translate_Slice_Name_Finish (Pfx_Drv, Name, Data);
+               end;
+            when Iir_Kind_Indexed_Name =>
+               declare
+                  Data : Indexed_Name_Data;
+                  Pfx_Sig : Mnode;
+                  Pfx_Drv : Mnode;
+               begin
+                  Translate_Direct_Driver
+                    (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
+                  Data := Translate_Indexed_Name_Init (Pfx_Sig, Name);
+                  Sig := Data.Res;
+                  Drv := Translate_Indexed_Name_Finish (Pfx_Drv, Name, Data);
+               end;
+            when Iir_Kind_Selected_Element =>
+               declare
+                  El : Iir;
+                  Pfx_Sig : Mnode;
+                  Pfx_Drv : Mnode;
+               begin
+                  Translate_Direct_Driver
+                    (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
+                  El := Get_Selected_Element (Name);
+                  Sig := Translate_Selected_Element (Pfx_Sig, El);
+                  Drv := Translate_Selected_Element (Pfx_Drv, El);
+               end;
+            when others =>
+               Error_Kind ("translate_direct_driver", Name);
+         end case;
+      end Translate_Direct_Driver;
    end Chap6;
 
    package body Chap7 is
@@ -15647,7 +15846,7 @@ package body Translation is
       begin
          New_Assign_Stmt
            (Chap14.Get_Signal_Value_Field (M2E (Targ), Targ_Type,
-                                           Ghdl_Signal_Driving_Value_Node),
+                                           Ghdl_Signal_Driving_Value_Field),
             M2E (Data));
       end Translate_Signal_Assign_Driving_Non_Composite;
 
@@ -15750,7 +15949,7 @@ package body Translation is
         return O_Enode is
       begin
          return New_Value (Chap14.Get_Signal_Value_Field
-                           (Sig, Sig_Type, Ghdl_Signal_Driving_Value_Node));
+                           (Sig, Sig_Type, Ghdl_Signal_Driving_Value_Field));
       end Read_Signal_Driving_Value;
 
       function Translate_Signal_Driving_Value_1 is new Translate_Signal_Value
@@ -16097,10 +16296,10 @@ package body Translation is
 
             when Iir_Kind_Last_Event_Attribute =>
                return Chap14.Translate_Last_Time_Attribute
-                 (Get_Prefix (Expr), Ghdl_Signal_Last_Event_Node);
+                 (Get_Prefix (Expr), Ghdl_Signal_Last_Event_Field);
             when Iir_Kind_Last_Active_Attribute =>
                return Chap14.Translate_Last_Time_Attribute
-                 (Get_Prefix (Expr), Ghdl_Signal_Last_Active_Node);
+                 (Get_Prefix (Expr), Ghdl_Signal_Last_Active_Field);
 
             when Iir_Kind_Driving_Value_Attribute =>
                Res := Chap14.Translate_Driving_Value_Attribute (Expr);
@@ -19702,34 +19901,6 @@ package body Translation is
          end if;
       end Gen_Simple_Signal_Assign_Non_Composite;
 
---       procedure Gen_Simple_Signal_Prepare_Data_Composite (Val : O_Enode;
---                                                          Targ_Type : Iir) is
---       begin
---          null;
---       end Gen_Simple_Signal_Prepare_Data_Composite;
-
---       function Gen_Simple_Signal_Update_Data_Array (Val : O_Enode;
---                                                     Targ_Type : Iir;
---                                                     Index : O_Lnode)
---         return O_Enode
---       is
---          Base : O_Lnode;
---       begin
---          Base := Chap3.Get_Array_Base
---            (New_Access_Element (Val), Targ_Type, Mode_Value);
---          return New_Value (New_Indexed_Element (Base, New_Value (Index)));
---       end Gen_Simple_Signal_Update_Data_Array;
-
---       function Gen_Simple_Signal_Update_Data_Record
---         (Val : O_Enode; Targ_Type : Iir; El : Iir_Element_Declaration)
---         return O_Enode
---       is
---       begin
---          return New_Value (New_Selected_Element
---                            (New_Access_Element (Val),
---                             Get_Info (El).Field_Node (Mode_Value)));
---       end Gen_Simple_Signal_Update_Data_Record;
-
       procedure Gen_Simple_Signal_Assign is new Foreach_Non_Composite
         (Data_Type => O_Enode,
          Composite_Data_Type => Mnode,
@@ -20120,6 +20291,152 @@ package body Translation is
          end if;
       end Translate_Signal_Target_Aggr;
 
+      type Signal_Direct_Assign_Data is record
+         Drv : Mnode;
+         Expr : Mnode;
+      end record;
+
+      procedure Gen_Signal_Direct_Assign_Non_Composite
+        (Targ : Mnode; Targ_Type : Iir; Data : Signal_Direct_Assign_Data)
+      is
+         Targ_Sig : Mnode;
+         If_Blk : O_If_Block;
+         Cond : O_Dnode;
+         Drv : Mnode;
+      begin
+         Open_Temp;
+         Targ_Sig := Stabilize (Targ, True);
+         Cond := Create_Temp (Ghdl_Bool_Type);
+         Drv := Stabilize (Data.Drv, False);
+
+         --  Set driver.
+         Chap7.Translate_Assign
+           (Drv, M2E (Data.Expr), Null_Iir, Targ_Type);
+
+         --  Test if the signal is active.
+         Start_If_Stmt
+           (If_Blk,
+            New_Value (Chap14.Get_Signal_Field
+                       (Targ_Sig, Ghdl_Signal_Has_Active_Field)));
+         --  Either because has_active is true.
+         New_Assign_Stmt (New_Obj (Cond),
+                          New_Lit (Ghdl_Bool_True_Node));
+         New_Else_Stmt (If_Blk);
+         --  Or because the value. is different from the current value.
+         New_Assign_Stmt
+           (New_Obj (Cond),
+            New_Compare_Op (ON_Neq,
+                            New_Value (New_Access_Element (M2E (Targ_Sig))),
+                            M2E (Drv),
+                            Ghdl_Bool_Type));
+         Finish_If_Stmt (If_Blk);
+
+         --  Put signal into active list.
+         Start_If_Stmt
+           (If_Blk,
+            New_Dyadic_Op
+            (ON_And,
+             New_Obj_Value (Cond),
+             New_Compare_Op
+             (ON_Eq,
+              New_Value (Chap14.Get_Signal_Field
+                         (Targ_Sig, Ghdl_Signal_Active_Chain_Field)),
+              New_Lit (New_Null_Access (Ghdl_Signal_Ptr)),
+              Ghdl_Bool_Type)));
+         New_Assign_Stmt
+           (Chap14.Get_Signal_Field (Targ_Sig, Ghdl_Signal_Active_Chain_Field),
+            New_Obj_Value (Ghdl_Signal_Active_Chain));
+         New_Assign_Stmt
+           (New_Obj (Ghdl_Signal_Active_Chain),
+            New_Convert_Ov (New_Value (M2Lv (Targ_Sig)),
+                            Ghdl_Signal_Ptr));
+         Finish_If_Stmt (If_Blk);
+         Close_Temp;
+      end Gen_Signal_Direct_Assign_Non_Composite;
+
+      function Gen_Signal_Direct_Prepare_Data_Composite
+        (Targ : Mnode; Targ_Type : Iir; Val : Signal_Direct_Assign_Data)
+        return Signal_Direct_Assign_Data
+      is
+         pragma Unreferenced (Targ, Targ_Type);
+      begin
+         return Val;
+      end Gen_Signal_Direct_Prepare_Data_Composite;
+
+      function Gen_Signal_Direct_Prepare_Data_Record
+        (Targ : Mnode; Targ_Type : Iir; Val : Signal_Direct_Assign_Data)
+        return Signal_Direct_Assign_Data
+      is
+         pragma Unreferenced (Targ, Targ_Type);
+      begin
+         return Signal_Direct_Assign_Data'
+           (Drv => Stabilize (Val.Drv),
+            Expr => Stabilize (Val.Expr));
+      end Gen_Signal_Direct_Prepare_Data_Record;
+
+      function Gen_Signal_Direct_Update_Data_Array
+        (Val : Signal_Direct_Assign_Data;
+         Targ_Type : Iir;
+         Index : O_Dnode)
+        return Signal_Direct_Assign_Data
+      is
+      begin
+         return Signal_Direct_Assign_Data'
+           (Drv => Chap3.Index_Base (Chap3.Get_Array_Base (Val.Drv),
+                                     Targ_Type, New_Obj_Value (Index)),
+            Expr => Chap3.Index_Base (Chap3.Get_Array_Base (Val.Expr),
+                                      Targ_Type, New_Obj_Value (Index)));
+      end Gen_Signal_Direct_Update_Data_Array;
+
+      function Gen_Signal_Direct_Update_Data_Record
+        (Val : Signal_Direct_Assign_Data;
+         Targ_Type : Iir;
+         El : Iir_Element_Declaration)
+        return Signal_Direct_Assign_Data
+      is
+         pragma Unreferenced (Targ_Type);
+      begin
+         return Signal_Direct_Assign_Data'
+           (Drv => Chap6.Translate_Selected_Element (Val.Drv, El),
+            Expr => Chap6.Translate_Selected_Element (Val.Expr, El));
+      end Gen_Signal_Direct_Update_Data_Record;
+
+      procedure Gen_Signal_Direct_Finish_Data_Composite
+        (Data : in out Signal_Direct_Assign_Data)
+      is
+         pragma Unreferenced (Data);
+      begin
+         null;
+      end Gen_Signal_Direct_Finish_Data_Composite;
+
+      procedure Gen_Signal_Direct_Assign is new Foreach_Non_Composite
+        (Data_Type => Signal_Direct_Assign_Data,
+         Composite_Data_Type => Signal_Direct_Assign_Data,
+         Do_Non_Composite => Gen_Signal_Direct_Assign_Non_Composite,
+         Prepare_Data_Array => Gen_Signal_Direct_Prepare_Data_Composite,
+         Update_Data_Array => Gen_Signal_Direct_Update_Data_Array,
+         Finish_Data_Array => Gen_Signal_Direct_Finish_Data_Composite,
+         Prepare_Data_Record => Gen_Signal_Direct_Prepare_Data_Record,
+         Update_Data_Record => Gen_Signal_Direct_Update_Data_Record,
+         Finish_Data_Record => Gen_Signal_Direct_Finish_Data_Composite);
+
+      procedure Translate_Direct_Signal_Assignment (Stmt : Iir; We : Iir)
+      is
+         Target : Iir;
+         Target_Type : Iir;
+         Arg : Signal_Direct_Assign_Data;
+         Targ_Sig : Mnode;
+      begin
+         Target := Get_Target (Stmt);
+         Target_Type := Get_Type (Target);
+         Chap6.Translate_Direct_Driver (Target, Targ_Sig, Arg.Drv);
+
+         Arg.Expr := E2M (Chap7.Translate_Expression (We, Target_Type),
+                          Get_Info (Target_Type), Mode_Value);
+         Gen_Signal_Direct_Assign (Targ_Sig, Target_Type, Arg);
+         return;
+      end Translate_Direct_Signal_Assignment;
+
       procedure Translate_Signal_Assignment_Statement (Stmt : Iir)
       is
          Target : Iir;
@@ -20128,22 +20445,44 @@ package body Translation is
          Targ : Mnode;
          Val : O_Enode;
          Value : Iir;
+         Is_Simple : Boolean;
       begin
          Target := Get_Target (Stmt);
          Target_Type := Get_Type (Target);
+         We := Get_Waveform_Chain (Stmt);
+
+         if We /= Null_Iir
+           and then Get_Chain (We) = Null_Iir
+           and then Get_Time (We) = Null_Iir
+           and then Get_Delay_Mechanism (Stmt) = Iir_Inertial_Delay
+           and then Get_Reject_Time_Expression (Stmt) = Null_Iir
+         then
+            --  Simple signal assignment ?
+            Value := Get_We_Value (We);
+            Is_Simple := Get_Kind (Value) /= Iir_Kind_Null_Literal;
+         else
+            Is_Simple := False;
+         end if;
+
          if Get_Kind (Target) = Iir_Kind_Aggregate then
             Chap3.Translate_Anonymous_Type_Definition (Target_Type, True);
             Targ := Create_Temp (Get_Info (Target_Type), Mode_Signal);
             Chap4.Allocate_Complex_Object (Target_Type, Alloc_Stack, Targ);
             Translate_Signal_Target_Aggr (Targ, Target, Target_Type);
          else
+            if Is_Simple
+              and then Flag_Direct_Drivers
+              and then Chap4.Has_Direct_Driver (Target)
+            then
+               Translate_Direct_Signal_Assignment (Stmt, Value);
+               return;
+            end if;
             Targ := Chap6.Translate_Name (Target);
             if Get_Object_Kind (Targ) /= Mode_Signal then
                raise Internal_Error;
             end if;
          end if;
 
-         We := Get_Waveform_Chain (Stmt);
          if We = Null_Iir then
             --  Implicit disconnect statment.
             Register_Signal (Targ, Target_Type, Ghdl_Signal_Disconnect);
@@ -20356,6 +20695,56 @@ package body Translation is
    end Chap8;
 
    package body Chap9 is
+      procedure Set_Direct_Drivers (Proc : Iir)
+      is
+         Proc_Info : Proc_Info_Acc := Get_Info (Proc);
+         Drivers : Direct_Drivers_Acc := Proc_Info.Process_Drivers;
+         Info : Ortho_Info_Acc;
+         Var : Var_Acc;
+         Sig : Iir;
+      begin
+         for I in Drivers.all'Range loop
+            Var := Drivers (I).Var;
+            Sig := Get_Base_Name (Drivers (I).Sig);
+            if Var /= null then
+               Info := Get_Info (Sig);
+               case Info.Kind is
+                  when Kind_Object =>
+                     Info.Object_Driver := Var;
+                  when Kind_Alias =>
+                     null;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end if;
+         end loop;
+      end Set_Direct_Drivers;
+
+      procedure Reset_Direct_Drivers (Proc : Iir)
+      is
+         Proc_Info : Proc_Info_Acc := Get_Info (Proc);
+         Drivers : Direct_Drivers_Acc := Proc_Info.Process_Drivers;
+         Info : Ortho_Info_Acc;
+         Var : Var_Acc;
+         Sig : Iir;
+      begin
+         for I in Drivers.all'Range loop
+            Var := Drivers (I).Var;
+            Sig := Get_Base_Name (Drivers (I).Sig);
+            if Var /= null then
+               Info := Get_Info (Sig);
+               case Info.Kind is
+                  when Kind_Object =>
+                     Info.Object_Driver := null;
+                  when Kind_Alias =>
+                     null;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end if;
+         end loop;
+      end Reset_Direct_Drivers;
+
       procedure Translate_Process_Statement (Proc : Iir; Base : Block_Info_Acc)
       is
          Inter_List : O_Inter_List;
@@ -20373,8 +20762,10 @@ package body Translation is
          Push_Local_Factory;
          --  Push scope for architecture declarations.
          Push_Scope (Base.Block_Decls_Type, Instance);
+
          Chap8.Translate_Statements_Chain
            (Get_Sequential_Statement_Chain (Proc));
+
          Pop_Scope (Base.Block_Decls_Type);
          Pop_Local_Factory;
          Finish_Subprogram_Body;
@@ -20435,6 +20826,62 @@ package body Translation is
          end if;
       end Translate_Component_Instantiation_Statement;
 
+      procedure Translate_Process_Declarations (Proc : Iir)
+      is
+         Mark : Id_Mark_Type;
+         Info : Ortho_Info_Acc;
+         Itype : O_Tnode;
+         Field : O_Fnode;
+
+         Drivers : Iir_List;
+         Nbr_Drivers : Natural;
+         Sig : Iir;
+      begin
+         --  Create process record.
+         Push_Identifier_Prefix (Mark, Get_Identifier (Proc));
+         Push_Instance_Factory (O_Tnode_Null);
+         Info := Add_Info (Proc, Kind_Process);
+         Chap4.Translate_Declaration_Chain (Proc);
+
+         if Flag_Direct_Drivers then
+            Drivers := Trans_Analyzes.Extract_Drivers (Proc);
+            if Flag_Dump_Drivers then
+               Trans_Analyzes.Dump_Drivers (Proc, Drivers);
+            end if;
+
+            Nbr_Drivers := Get_Nbr_Elements (Drivers);
+            Info.Process_Drivers := new Direct_Driver_Arr (1 .. Nbr_Drivers);
+            for I in 1 .. Nbr_Drivers loop
+               Sig := Get_Nth_Element (Drivers, I - 1);
+               Info.Process_Drivers (I) := (Sig => Sig, Var => null);
+               Sig := Get_Base_Name (Sig);
+               if Get_Kind (Sig) /= Iir_Kind_Object_Alias_Declaration
+                 and then not Get_After_Drivers_Flag (Sig)
+               then
+                  Info.Process_Drivers (I).Var :=
+                    Create_Var (Create_Var_Identifier (Sig, "_DDRV", I),
+                                Chap4.Get_Object_Type
+                                (Get_Info (Get_Type (Sig)), Mode_Value));
+
+                  --  Do not create driver severals times.
+                  Set_After_Drivers_Flag (Sig, True);
+               end if;
+            end loop;
+            Trans_Analyzes.Free_Drivers_List (Drivers);
+         end if;
+         Pop_Instance_Factory (Itype);
+         New_Type_Decl (Create_Identifier ("INSTTYPE"), Itype);
+         Pop_Identifier_Prefix (Mark);
+
+         --  Create a field in the parent record.
+         Field := Add_Instance_Factory_Field
+           (Create_Identifier_Without_Prefix (Proc), Itype);
+
+         --  Set info in child record.
+         Info.Process_Decls_Type := Itype;
+         Info.Process_Parent_Field := Field;
+      end Translate_Process_Declarations;
+
       --  Create the instance for block BLOCK.
       --  BLOCK can be either an entity, an architecture or a block statement.
       procedure Translate_Block_Declarations (Block : Iir; Origin : Iir)
@@ -20448,27 +20895,7 @@ package body Translation is
             case Get_Kind (El) is
                when Iir_Kind_Process_Statement
                  | Iir_Kind_Sensitized_Process_Statement =>
-                  declare
-                     Mark : Id_Mark_Type;
-                     Info : Ortho_Info_Acc;
-                     Itype : O_Tnode;
-                     Field : O_Fnode;
-                  begin
-                     Push_Identifier_Prefix (Mark, Get_Identifier (El));
-                     --  Start child record.
-                     Push_Instance_Factory (O_Tnode_Null);
-                     Info := Add_Info (El, Kind_Process);
-                     Chap4.Translate_Declaration_Chain (El);
-                     Pop_Instance_Factory (Itype);
-                     New_Type_Decl (Create_Identifier ("INSTTYPE"), Itype);
-                     Pop_Identifier_Prefix (Mark);
-                     --  Create a field in the parent record.
-                     Field := Add_Instance_Factory_Field
-                       (Create_Identifier_Without_Prefix (El), Itype);
-                     --  Set info in child record.
-                     Info.Process_Decls_Type := Itype;
-                     Info.Process_Parent_Field := Field;
-                  end;
+                  Translate_Process_Declarations (El);
                when Iir_Kind_Component_Instantiation_Statement =>
                   Translate_Component_Instantiation_Statement (El);
                when Iir_Kind_Block_Statement =>
@@ -20668,9 +21095,17 @@ package body Translation is
                      Push_Scope (Info.Process_Decls_Type,
                                  Info.Process_Parent_Field,
                                  Block_Info.Block_Decls_Type);
+                     if Flag_Direct_Drivers then
+                        Chap9.Set_Direct_Drivers (Stmt);
+                     end if;
+
                      Chap4.Translate_Declaration_Chain_Subprograms
                        (Stmt, Base_Block);
                      Translate_Process_Statement (Stmt, Base_Info);
+
+                     if Flag_Direct_Drivers then
+                        Chap9.Reset_Direct_Drivers (Stmt);
+                     end if;
                      Pop_Scope (Info.Process_Decls_Type);
                   end;
                when Iir_Kind_Component_Instantiation_Statement =>
@@ -20736,11 +21171,51 @@ package body Translation is
       --  If the type is referenced again, the variables must be reachable.
       --  This is not the case for elaborator subprogram (which may references
       --  slices in the sensitivity or driver list) and the process subprg.
-      procedure Destroy_Types_In_List (List : Iir_List)
+      procedure Destroy_Types_In_Name (Name : Iir)
       is
          El : Iir;
          Atype : Iir;
          Info : Type_Info_Acc;
+      begin
+         El := Name;
+         loop
+            Atype := Null_Iir;
+            case Get_Kind (El) is
+               when Iir_Kind_Selected_Element
+                 | Iir_Kind_Indexed_Name =>
+                  El := Get_Prefix (El);
+               when Iir_Kind_Slice_Name =>
+                  Atype := Get_Type (El);
+                  El := Get_Prefix (El);
+               when Iir_Kind_Object_Alias_Declaration =>
+                  El := Get_Name (El);
+               when Iir_Kind_Stable_Attribute
+                 | Iir_Kind_Quiet_Attribute
+                 | Iir_Kind_Delayed_Attribute
+                 | Iir_Kind_Transaction_Attribute =>
+                  El := Get_Prefix (El);
+               when Iir_Kind_Signal_Declaration
+                 | Iir_Kind_Signal_Interface_Declaration
+                 | Iir_Kind_Guard_Signal_Declaration =>
+                  exit;
+               when others =>
+                  Error_Kind ("destroy_types_in_name", El);
+            end case;
+            if Atype /= Null_Iir
+              and then Is_Anonymous_Type_Definition (Atype)
+            then
+               Info := Get_Info (Atype);
+               if Info /= null then
+                  Free_Type_Info (Info, False);
+                  Clear_Info (Atype);
+               end if;
+            end if;
+         end loop;
+      end Destroy_Types_In_Name;
+
+      procedure Destroy_Types_In_List (List : Iir_List)
+      is
+         El : Iir;
       begin
          if List = Null_Iir_List then
             return;
@@ -20748,41 +21223,96 @@ package body Translation is
          for I in Natural loop
             El := Get_Nth_Element (List, I);
             exit when El = Null_Iir;
-            loop
-               Atype := Null_Iir;
-               case Get_Kind (El) is
-                  when Iir_Kind_Selected_Element
-                    | Iir_Kind_Indexed_Name =>
-                     El := Get_Prefix (El);
-                  when Iir_Kind_Slice_Name =>
-                     Atype := Get_Type (El);
-                     El := Get_Prefix (El);
-                  when Iir_Kind_Object_Alias_Declaration =>
-                     El := Get_Name (El);
-                  when Iir_Kind_Stable_Attribute
-                    | Iir_Kind_Quiet_Attribute
-                    | Iir_Kind_Delayed_Attribute
-                    | Iir_Kind_Transaction_Attribute =>
-                     El := Get_Prefix (El);
-                  when Iir_Kind_Signal_Declaration
-                    | Iir_Kind_Signal_Interface_Declaration
-                    | Iir_Kind_Guard_Signal_Declaration =>
-                     exit;
-                  when others =>
-                     Error_Kind ("destroy_types_in_list", El);
-               end case;
-               if Atype /= Null_Iir
-                 and then Is_Anonymous_Type_Definition (Atype)
-               then
-                  Info := Get_Info (Atype);
-                  if Info /= null then
-                     Free_Type_Info (Info, False);
-                     Clear_Info (Atype);
-                  end if;
-               end if;
-            end loop;
+            Destroy_Types_In_Name (El);
          end loop;
       end Destroy_Types_In_List;
+
+      procedure Gen_Register_Direct_Driver_Non_Composite
+        (Targ : Mnode; Targ_Type : Iir; Drv : Mnode)
+      is
+         pragma Unreferenced (Targ_Type);
+         Constr : O_Assoc_List;
+      begin
+         Start_Association (Constr, Ghdl_Signal_Direct_Driver);
+         New_Association
+           (Constr, New_Convert_Ov (New_Value (M2Lv (Targ)), Ghdl_Signal_Ptr));
+         New_Association
+           (Constr, New_Unchecked_Address (M2Lv (Drv), Ghdl_Ptr_Type));
+         New_Procedure_Call (Constr);
+      end Gen_Register_Direct_Driver_Non_Composite;
+
+      function Gen_Register_Direct_Driver_Prepare_Data_Composite
+        (Targ : Mnode; Targ_Type : Iir; Val : Mnode)
+        return Mnode
+      is
+         pragma Unreferenced (Targ, Targ_Type);
+      begin
+         return Val;
+      end Gen_Register_Direct_Driver_Prepare_Data_Composite;
+
+      function Gen_Register_Direct_Driver_Prepare_Data_Record
+        (Targ : Mnode; Targ_Type : Iir; Val : Mnode)
+        return Mnode
+      is
+         pragma Unreferenced (Targ, Targ_Type);
+      begin
+         return Stabilize (Val);
+      end Gen_Register_Direct_Driver_Prepare_Data_Record;
+
+      function Gen_Register_Direct_Driver_Update_Data_Array
+        (Val : Mnode; Targ_Type : Iir; Index : O_Dnode)
+        return Mnode
+      is
+      begin
+         return Chap3.Index_Base (Chap3.Get_Array_Base (Val),
+                                  Targ_Type, New_Obj_Value (Index));
+      end Gen_Register_Direct_Driver_Update_Data_Array;
+
+      function Gen_Register_Direct_Driver_Update_Data_Record
+        (Val : Mnode; Targ_Type : Iir; El : Iir_Element_Declaration)
+        return Mnode
+      is
+         pragma Unreferenced (Targ_Type);
+      begin
+         return Chap6.Translate_Selected_Element (Val, El);
+      end Gen_Register_Direct_Driver_Update_Data_Record;
+
+      procedure Gen_Register_Direct_Driver_Finish_Data_Composite
+        (Data : in out Mnode)
+      is
+         pragma Unreferenced (Data);
+      begin
+         null;
+      end Gen_Register_Direct_Driver_Finish_Data_Composite;
+
+      procedure Gen_Register_Direct_Driver is new Foreach_Non_Composite
+        (Data_Type => Mnode,
+         Composite_Data_Type => Mnode,
+         Do_Non_Composite => Gen_Register_Direct_Driver_Non_Composite,
+         Prepare_Data_Array =>
+           Gen_Register_Direct_Driver_Prepare_Data_Composite,
+         Update_Data_Array => Gen_Register_Direct_Driver_Update_Data_Array,
+         Finish_Data_Array => Gen_Register_Direct_Driver_Finish_Data_Composite,
+         Prepare_Data_Record => Gen_Register_Direct_Driver_Prepare_Data_Record,
+         Update_Data_Record => Gen_Register_Direct_Driver_Update_Data_Record,
+         Finish_Data_Record =>
+           Gen_Register_Direct_Driver_Finish_Data_Composite);
+
+--        procedure Register_Scalar_Direct_Driver (Sig : Mnode;
+--                                                 Sig_Type : Iir;
+--                                                 Drv : Mnode)
+--        is
+--           pragma Unreferenced (Sig_Type);
+--           Constr : O_Assoc_List;
+--        begin
+--           Start_Association (Constr, Ghdl_Signal_Direct_Driver);
+--           New_Association
+--          (Constr, New_Convert_Ov (New_Value (M2Lv (Sig)), Ghdl_Signal_Ptr));
+--           New_Association
+--             (Constr, New_Unchecked_Address (M2Lv (Drv), Ghdl_Ptr_Type));
+--           New_Procedure_Call (Constr);
+--        end Register_Scalar_Direct_Driver;
+
 
       --  PROC: the process to be elaborated
       --  BLOCK_INFO: info for the block containing the process
@@ -20845,9 +21375,47 @@ package body Translation is
          --  an alias declaration.
          Chap4.Elab_Declaration_Chain (Proc, Final);
 
-         List := Get_Driver_List (Proc);
-         Destroy_Types_In_List (List);
-         Register_Signal_List (List, Ghdl_Process_Add_Driver);
+         --  Register drivers.
+         if Flag_Direct_Drivers then
+            Chap9.Set_Direct_Drivers (Proc);
+
+            declare
+               Sig : Iir;
+               Base : Iir;
+               Sig_Node, Drv_Node : Mnode;
+            begin
+               for I in Info.Process_Drivers.all'Range loop
+                  Sig := Info.Process_Drivers (I).Sig;
+                  Open_Temp;
+                  Base := Get_Base_Name (Sig);
+                  if Info.Process_Drivers (I).Var /= null then
+                     --  Elaborate direct driver.  Done only once.
+                     Chap4.Elab_Direct_Driver_Declaration_Storage (Base);
+                  end if;
+                  if Chap4.Has_Direct_Driver (Base) then
+                     --  Signal has a direct driver.
+                     Chap6.Translate_Direct_Driver (Sig, Sig_Node, Drv_Node);
+                     Gen_Register_Direct_Driver
+                       (Sig_Node, Get_Type (Sig), Drv_Node);
+                  else
+                     Register_Signal (Chap6.Translate_Name (Sig),
+                                      Get_Type (Sig),
+                                      Ghdl_Process_Add_Driver);
+                  end if;
+                  Close_Temp;
+               end loop;
+            end;
+
+            Chap9.Reset_Direct_Drivers (Proc);
+         else
+            List := Trans_Analyzes.Extract_Drivers (Proc);
+            Destroy_Types_In_List (List);
+            Register_Signal_List (List, Ghdl_Process_Add_Driver);
+            if Flag_Dump_Drivers then
+               Trans_Analyzes.Dump_Drivers (Proc, List);
+            end if;
+            Trans_Analyzes.Free_Drivers_List (List);
+         end if;
 
          if Is_Sensitized then
             List := Get_Sensitivity_List (Proc);
@@ -22349,22 +22917,49 @@ package body Translation is
          return Get_Identifier (Identifier_Buffer (1 .. Identifier_Len - 2));
       end Create_Identifier;
 
+      function Create_Var_Identifier_From_Buffer (L : Natural)
+        return Var_Ident_Type
+      is
+         Start : Natural;
+      begin
+         if Is_Local_Scope then
+            Start := Identifier_Start;
+         else
+            Start := 1;
+         end if;
+         return (Id => Get_Identifier (Identifier_Buffer (Start .. L)));
+      end Create_Var_Identifier_From_Buffer;
+
       function Create_Var_Identifier (Id : Iir)
         return Var_Ident_Type
       is
-         Res : Var_Ident_Type;
+         L : Natural := Identifier_Len;
       begin
-         Res.Id := Create_Id (Get_Identifier (Id), "", Is_Local_Scope);
-         return Res;
+         Add_Identifier (L, Get_Identifier (Id));
+         return Create_Var_Identifier_From_Buffer (L);
       end Create_Var_Identifier;
 
       function Create_Var_Identifier (Id : String)
         return Var_Ident_Type
       is
-         Res : Var_Ident_Type;
+         L : Natural := Identifier_Len;
       begin
-         Res.Id := Create_Id (Null_Identifier, Id, Is_Local_Scope);
-         return Res;
+         Add_String (L, Id);
+         return Create_Var_Identifier_From_Buffer (L);
+      end Create_Var_Identifier;
+
+      function Create_Var_Identifier (Id : Iir; Str : String; Val : Natural)
+        return Var_Ident_Type
+      is
+         L : Natural := Identifier_Len;
+      begin
+         Add_Identifier (L, Get_Identifier (Id));
+         Add_String (L, Str);
+         if Val > 0 then
+            Add_String (L, "O");
+            Add_Nat (L, Val);
+         end if;
+         return Create_Var_Identifier_From_Buffer (L);
       end Create_Var_Identifier;
 
       function Create_Uniq_Identifier return Var_Ident_Type
@@ -22728,19 +23323,6 @@ package body Translation is
          end case;
       end Translate_Succ_Pred_Attribute;
 
-      --  Read the boolean attribute (active or event) FIELD of simple signal
-      --  SIG.
-      function Read_Bool_Signal_Attribute (Sig : O_Enode; Field : O_Fnode)
-                                          return O_Enode
-      is
-         S : O_Enode;
-      begin
-         S := New_Convert_Ov (Sig, Ghdl_Signal_Ptr);
-         return New_Value
-           (New_Selected_Element (New_Access_Element (S), Field));
-         --Ghdl_Signal_Event_Node));
-      end Read_Bool_Signal_Attribute;
-
       type Bool_Sigattr_Data_Type is record
          Label : O_Snode;
          Field : O_Fnode;
@@ -22752,8 +23334,7 @@ package body Translation is
          pragma Unreferenced (Targ_Type);
       begin
          Gen_Exit_When (Data.Label,
-                        Read_Bool_Signal_Attribute (New_Value (M2Lv (Targ)),
-                                                    Data.Field));
+                        New_Value (Get_Signal_Field (Targ, Data.Field)));
       end Bool_Sigattr_Non_Composite_Signal;
 
       function Bool_Sigattr_Prepare_Data_Composite
@@ -22819,7 +23400,7 @@ package body Translation is
          if Get_Kind (Prefix_Type) in Iir_Kinds_Scalar_Type_Definition then
             --  Effecient handling for a scalar signal.
             Name := Chap6.Translate_Name (Prefix);
-            return Read_Bool_Signal_Attribute (New_Value (M2Lv (Name)), Field);
+            return New_Value (Get_Signal_Field (Name, Field));
          else
             --  Element per element handling for composite signals.
             Res := Create_Temp (Std_Boolean_Type_Node);
@@ -22839,13 +23420,14 @@ package body Translation is
 
       function Translate_Event_Attribute (Attr : Iir) return O_Enode is
       begin
-         return Translate_Bool_Signal_Attribute (Attr, Ghdl_Signal_Event_Node);
+         return Translate_Bool_Signal_Attribute
+           (Attr, Ghdl_Signal_Event_Field);
       end Translate_Event_Attribute;
 
       function Translate_Active_Attribute (Attr : Iir) return O_Enode is
       begin
          return Translate_Bool_Signal_Attribute
-           (Attr, Ghdl_Signal_Active_Node);
+           (Attr, Ghdl_Signal_Active_Field);
       end Translate_Active_Attribute;
 
       --  Read signal value FIELD of signal SIG.
@@ -22862,11 +23444,20 @@ package body Translation is
            (New_Unchecked_Address (New_Selected_Element (T, Field), S_Type));
       end Get_Signal_Value_Field;
 
+      function Get_Signal_Field (Sig : Mnode; Field : O_Fnode)
+                                return O_Lnode
+      is
+         S : O_Enode;
+      begin
+         S := New_Convert_Ov (New_Value (M2Lv (Sig)), Ghdl_Signal_Ptr);
+         return New_Selected_Element (New_Access_Element (S), Field);
+      end Get_Signal_Field;
+
       function Read_Last_Value (Sig : O_Enode; Sig_Type : Iir) return O_Enode
       is
       begin
          return New_Value (Get_Signal_Value_Field
-                           (Sig, Sig_Type, Ghdl_Signal_Last_Value_Node));
+                           (Sig, Sig_Type, Ghdl_Signal_Last_Value_Field));
       end Read_Last_Value;
 
       function Translate_Last_Value is new Chap7.Translate_Signal_Value
@@ -27031,38 +27622,52 @@ package body Translation is
         (Chararray_Type, New_Unsigned_Literal (Ghdl_Index_Type, 8));
       New_Type_Decl (Get_Identifier ("__ghdl_scalar_bytes"),
                      Ghdl_Scalar_Bytes);
+
+      Ghdl_Signal_Ptr := New_Access_Type (O_Tnode_Null);
+      New_Type_Decl (Get_Identifier ("__ghdl_signal_ptr"), Ghdl_Signal_Ptr);
+
       --  Type __signal_signal is record
       Start_Record_Type (Rec);
-      New_Record_Field (Rec, Ghdl_Signal_Value_Node,
+      New_Record_Field (Rec, Ghdl_Signal_Value_Field,
                         Get_Identifier ("value"),
                         Ghdl_Scalar_Bytes);
-      New_Record_Field (Rec, Ghdl_Signal_Driving_Value_Node,
+      New_Record_Field (Rec, Ghdl_Signal_Driving_Value_Field,
                         Get_Identifier ("driving_value"),
                         Ghdl_Scalar_Bytes);
-      New_Record_Field (Rec, Ghdl_Signal_Last_Value_Node,
+      New_Record_Field (Rec, Ghdl_Signal_Last_Value_Field,
                         Get_Identifier ("last_value"),
                         Ghdl_Scalar_Bytes);
-      New_Record_Field (Rec, Ghdl_Signal_Last_Event_Node,
+      New_Record_Field (Rec, Ghdl_Signal_Last_Event_Field,
                         Get_Identifier ("last_event"),
                         Time_Otype);
-      New_Record_Field (Rec, Ghdl_Signal_Last_Active_Node,
+      New_Record_Field (Rec, Ghdl_Signal_Last_Active_Field,
                         Get_Identifier ("last_active"),
                         Time_Otype);
-      New_Record_Field (Rec, Ghdl_Signal_Event_Node,
+      New_Record_Field (Rec, Ghdl_Signal_Active_Chain_Field,
+                        Get_Identifier ("active_chain"),
+                        Ghdl_Signal_Ptr);
+      New_Record_Field (Rec, Ghdl_Signal_Event_Field,
                         Get_Identifier ("event"),
                         Std_Boolean_Type_Node);
-      New_Record_Field (Rec, Ghdl_Signal_Active_Node,
+      New_Record_Field (Rec, Ghdl_Signal_Active_Field,
                         Get_Identifier ("active"),
                         Std_Boolean_Type_Node);
+      New_Record_Field (Rec, Ghdl_Signal_Has_Active_Field,
+                        Get_Identifier ("has_active"),
+                        Ghdl_Bool_Type);
       Finish_Record_Type (Rec, Ghdl_Signal_Type);
       New_Type_Decl (Get_Identifier ("__ghdl_signal"), Ghdl_Signal_Type);
 
-      Ghdl_Signal_Ptr := New_Access_Type (Ghdl_Signal_Type);
-      New_Type_Decl (Get_Identifier ("__ghdl_signal_ptr"), Ghdl_Signal_Ptr);
+      Finish_Access_Type (Ghdl_Signal_Ptr, Ghdl_Signal_Type);
 
       Ghdl_Signal_Ptr_Ptr := New_Access_Type (Ghdl_Signal_Ptr);
       New_Type_Decl (Get_Identifier ("__ghdl_signal_ptr_ptr"),
                      Ghdl_Signal_Ptr_Ptr);
+
+      New_Var_Decl (Ghdl_Signal_Active_Chain,
+                    Get_Identifier ("__ghdl_signal_active_chain"),
+                    O_Storage_External,
+                    Ghdl_Signal_Ptr);
 
       --  procedure __ghdl_signal_merge_rti
       --       (sig : ghdl_signal_ptr; rti : ghdl_rti_access)
@@ -27304,6 +27909,17 @@ package body Translation is
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Add_Driver);
+
+      --  procedure __ghdl_signal_direct_driver (sig : __ghdl_signal_ptr;
+      --                                         Drv : Ghdl_Ptr_type);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_signal_direct_driver"),
+         O_Storage_External);
+      New_Interface_Decl
+        (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
+      New_Interface_Decl
+        (Interfaces, Param, Get_Identifier ("drv"), Ghdl_Ptr_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Direct_Driver);
 
       declare
          procedure Create_Signal_Conversion (Name : String; Res : out O_Dnode)

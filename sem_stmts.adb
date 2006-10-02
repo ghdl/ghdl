@@ -335,7 +335,7 @@ package body Sem_Stmts is
          return;
       end if;
 
-      Target_Prefix := Get_Base_Name (Target_Object);
+      Target_Prefix := Get_Object_Prefix (Target_Object);
       Targ_Obj_Kind := Get_Kind (Target_Prefix);
       case Targ_Obj_Kind is
          when Iir_Kind_Signal_Interface_Declaration =>
@@ -405,7 +405,7 @@ package body Sem_Stmts is
          Error_Msg_Sem ("target is not a variable name", Stmt);
          return;
       end if;
-      Target_Prefix := Get_Base_Name (Target_Object);
+      Target_Prefix := Get_Object_Prefix (Target_Object);
       case Get_Kind (Target_Prefix) is
          when Iir_Kind_Variable_Interface_Declaration =>
             if not Iir_Mode_Writable (Get_Mode (Target_Prefix)) then
@@ -966,7 +966,7 @@ package body Sem_Stmts is
          elsif Is_Overload_List (Res) or else not Is_Object_Name (Res) then
             Error_Msg_Sem ("a sensitivity element must be a signal name", El);
          else
-            Prefix := Get_Base_Name (Res);
+            Prefix := Get_Object_Prefix (Res);
             case Get_Kind (Prefix) is
                when Iir_Kind_Signal_Declaration
                  | Iir_Kind_Guard_Signal_Declaration
@@ -1835,9 +1835,6 @@ package body Sem_Stmts is
    is
       Sig_Object : Iir;
       Sig_Object_Type : Iir;
-      Parent : Iir;
-      Driver_List : Iir_List;
-      Driver : Iir;
    begin
       if Sig = Null_Iir then
          return;
@@ -1889,57 +1886,19 @@ package body Sem_Stmts is
                  not in Iir_Kinds_Process_Statement)
       then
          --  Not within a process statement.
-         if Current_Subprogram /= Null_Iir then
-            --  Within a procedure.
-            if Get_Kind (Sig_Object) = Iir_Kind_Signal_Declaration
-              or else (Get_Kind (Get_Parent (Sig_Object))
-                       /= Iir_Kind_Procedure_Declaration)
-            then
-               Error_Msg_Sem
-                 (Disp_Node (Sig_Object) & " is not a formal parameter", Stmt);
-               return;
-            end if;
+         if Current_Subprogram = Null_Iir then
+            --  not within a subprogram: concurrent statement.
+            return;
+         end if;
+
+         --  Within a subprogram.
+         if Get_Kind (Sig_Object) = Iir_Kind_Signal_Declaration
+           or else (Get_Kind (Get_Parent (Sig_Object))
+                    /= Iir_Kind_Procedure_Declaration)
+         then
+            Error_Msg_Sem
+              (Disp_Node (Sig_Object) & " is not a formal parameter", Stmt);
          end if;
       end if;
-
-      --  The driver is attached to the current process (if any), or to
-      --  the current subprogram (if any) or to nothing.
-      if Current_Concurrent_Statement /= Null_Iir
-        and then (Get_Kind (Current_Concurrent_Statement)
-                  in Iir_Kinds_Process_Statement)
-      then
-         Driver := Current_Concurrent_Statement;
-      elsif Current_Subprogram /= Null_Iir then
-         Driver := Current_Subprogram;
-      else
-         return;
-      end if;
-
-      case Get_Kind (Sig_Object) is
-         when Iir_Kind_Signal_Interface_Declaration =>
-            Parent := Get_Parent (Sig_Object);
-            case Get_Kind (Parent) is
-               when Iir_Kind_Block_Statement
-                 | Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Block_Header =>
-                  null;
-               when Iir_Kind_Procedure_Declaration =>
-                  return;
-               when others =>
-                  Error_Kind ("sem_add_driver", Parent);
-            end case;
-         when Iir_Kind_Signal_Declaration =>
-            null;
-         when others =>
-            Error_Kind ("sem_add_driver(2)", Sig_Object);
-      end case;
-
-      Driver_List := Get_Driver_List (Driver);
-      if Driver_List = Null_Iir_List then
-         Driver_List := Create_Iir_List;
-         Set_Driver_List (Driver, Driver_List);
-      end if;
-
-      Add_Element (Driver_List, Get_Longuest_Static_Prefix (Sig));
    end Sem_Add_Driver;
 end Sem_Stmts;

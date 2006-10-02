@@ -17,6 +17,7 @@
 #  02111-1307, USA.
 GNATFLAGS=-gnaty3befhkmr -gnata -gnatwu -gnatwl -aI../..  -aI.. -aI../grt -aO.. -g -gnatf
 GRT_FLAGS=-g
+LIB_CFLAGS=-g -O2
 
 # Optimize, do not forget to use MODE=--genfast for iirs.adb.
 #GNATFLAGS+=-O -gnatn
@@ -36,8 +37,8 @@ GRTSRCDIR=../grt
 include $(GRTSRCDIR)/Makefile.inc
 
 ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) memsegs_c.o force 
-	gnatmake -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) memsegs_c.o chkstk.o force 
+	gnatmake -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: ../../ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
@@ -63,8 +64,6 @@ bootstrap.old: force
 	$(RM) ../../libraries/std-obj93.cf
 	$(MAKE) -C ../../libraries EXT=obj \
 	  ANALYSE="$(PWD)/ghdl -a -g" std-obj93.cf
-
-LIB_CFLAGS=-g -O2
 
 LIB93_DIR:=../lib/v93
 LIB87_DIR:=../lib/v87

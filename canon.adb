@@ -847,22 +847,6 @@ package body Canon is
       end loop;
    end Canon_Sequential_Stmts;
 
-   procedure Add_Driver_For_Signal (Driver_List : Iir_List;
-                                    Signal : Iir)
-   is
-      Choice : Iir;
-   begin
-      if Get_Kind (Signal) = Iir_Kind_Aggregate then
-         Choice := Get_Association_Choices_Chain (Signal);
-         while Choice /= Null_Iir loop
-            Add_Driver_For_Signal (Driver_List, Get_Associated (Choice));
-            Choice := Get_Chain (Choice);
-         end loop;
-      else
-         Add_Element (Driver_List, Get_Longuest_Static_Prefix (Signal));
-      end if;
-   end Add_Driver_For_Signal;
-
    -- Create a statement transform from concurrent_signal_assignment
    -- statement STMT (either selected or conditional).
    -- waveform transformation is not done.
@@ -894,9 +878,6 @@ package body Canon is
       --      only if the current signal assignment statement includes the
       --      reserved word POSTPONED.
       Set_Postponed_Flag (Proc, Get_Postponed_Flag (Proc));
-
-      Set_Driver_List (Proc, Create_Iir_List);
-      Add_Driver_For_Signal (Get_Driver_List (Proc), Get_Target (Stmt));
 
       Canon_Extract_Sensitivity (Get_Target (Stmt), Sensitivity_List, True);
 
@@ -966,7 +947,6 @@ package body Canon is
       Assoc_Chain : Iir;
       Assoc : Iir;
       Imp : Iir;
-      Driver_List : Iir_Driver_List;
       Inter : Iir;
       Sensitivity_List : Iir_List;
       Is_Sensitized : Boolean;
@@ -1014,7 +994,6 @@ package body Canon is
          Get_Parameter_Association_Chain (Call),
          Call);
       Set_Parameter_Association_Chain (Call, Assoc_Chain);
-      Driver_List := Null_Iir_List;
       Assoc := Assoc_Chain;
 
       --  LRM93 9.3
@@ -1033,18 +1012,6 @@ package body Canon is
                if Get_Mode (Inter) in Iir_In_Modes then
                   Canon_Extract_Sensitivity
                     (Get_Actual (Assoc), Sensitivity_List, False);
-               end if;
-               --  LRM 2.1.1.2 Signal Parameters
-               if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration
-                 and then Get_Mode (Inter) in Iir_Out_Modes
-               then
-                  if Driver_List = Null_Iir_List then
-                     Driver_List := Create_Iir_List;
-                     Set_Driver_List (Proc, Driver_List);
-                  end if;
-                  Add_Element
-                    (Driver_List,
-                     Get_Longuest_Static_Prefix (Get_Actual (Assoc)));
                end if;
             when Iir_Kind_Association_Element_Open
               | Iir_Kind_Association_Element_By_Individual =>

@@ -41,7 +41,7 @@ package body Ortho_Front is
    is
       pragma Unreferenced (Arg);
    begin
-      if Opt.all = "-r" then
+      if Opt.all = "-r" or Opt.all = "--ghdl-r" then
          Flag_Renumber := True;
          return 1;
       else

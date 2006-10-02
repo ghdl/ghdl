@@ -19,6 +19,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Name_Table;
 with Libraries;
 with Scan;
+with Back_End; use Back_End;
 
 package body Flags is
    function Option_Warning (Opt: String; Val : Boolean) return Boolean is
@@ -152,6 +153,10 @@ package body Flags is
 --          else
 --             return False;
 --          end if;
+      elsif Back_End.Parse_Option /= null
+        and then Back_End.Parse_Option.all (Opt)
+      then
+         null;
       else
          return False;
       end if;
@@ -193,11 +198,6 @@ package body Flags is
       P ("  -C  --mb-comments  allow multi-bytes chars in a comment");
       P ("  --bootstrap        allow --work=std");
       P ("  --syn-binding      use synthesis default binding rule");
-      P ("Compilation dump:");
-      P ("  -dp                dump tree after parsing");
-      P ("  -ds                dump tree after semantics");
-      P ("  -da                dump tree after annotate");
-      P ("  --dall             -dX options apply to all files");
       P ("Compilation list:");
       P ("  -ls                after semantics");
       P ("  -lc                after canon");
@@ -205,6 +205,14 @@ package body Flags is
       P ("  --lall             -lX options apply to all files");
       P ("  -lv                verbose list");
       P ("  -v                 disp compilation stages");
+      P ("Compilation dump:");
+      P ("  -dp                dump tree after parsing");
+      P ("  -ds                dump tree after semantics");
+      P ("  -da                dump tree after annotate");
+      P ("  --dall             -dX options apply to all files");
+      if Back_End.Disp_Option /= null then
+         Back_End.Disp_Option.all;
+      end if;
    end Disp_Options_Help;
 
    procedure Create_Flag_String is

@@ -29,6 +29,14 @@ package Back_End is
    Library_To_File_Name : Library_To_File_Name_Acc :=
      Default_Library_To_File_Name'Access;
 
+   --  Back-end options.
+   type Parse_Option_Acc is access function (Opt : String) return Boolean;
+   Parse_Option : Parse_Option_Acc := null;
+
+   --  Disp back-end option help.
+   type Disp_Option_Acc is access procedure;
+   Disp_Option : Disp_Option_Acc := null;
+
    --  UNIT is a design unit from parse.
    --  According to the current back-end, do what is necessary.
    --
@@ -46,8 +54,5 @@ package Back_End is
    --  May be NULL for no additionnal checks.
    type Sem_Foreign_Acc is access procedure (Decl : Iir);
    Sem_Foreign : Sem_Foreign_Acc := null;
-
-   --procedure Finish_Compilation
-   --  (Unit : Iir_Design_Unit; Main : Boolean := False);
 end Back_End;
 

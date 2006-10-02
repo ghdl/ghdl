@@ -175,7 +175,7 @@ package body Iirs_Utils is
               | Iir_Kind_Slice_Name
               | Iir_Kind_Selected_Element
               | Iir_Kind_Selected_By_All_Name =>
-               Adecl := Get_Prefix (Adecl);
+               Adecl := Get_Base_Name (Adecl);
             when Iir_Kinds_Literal
               | Iir_Kind_Enumeration_Literal
               | Iir_Kinds_Monadic_Operator
@@ -815,22 +815,26 @@ package body Iirs_Utils is
       Adecl: Iir;
    begin
       Adecl := Get_Base_Name (Name);
-      case Get_Kind (Adecl) is
-         when Iir_Kind_Variable_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
-           | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Constant_Interface_Declaration
-           | Iir_Kind_Implicit_Dereference
-           | Iir_Kind_Dereference
-           | Iir_Kind_Attribute_Value
-           | Iir_Kind_Function_Call =>
-            return False;
-         when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Signal_Interface_Declaration =>
-            return True;
-         when others =>
-            Error_Kind ("is_signal_object", Adecl);
-      end case;
+      loop
+         case Get_Kind (Adecl) is
+            when Iir_Kind_Variable_Declaration
+              | Iir_Kind_Variable_Interface_Declaration
+              | Iir_Kind_Constant_Declaration
+              | Iir_Kind_Constant_Interface_Declaration
+              | Iir_Kind_Implicit_Dereference
+              | Iir_Kind_Dereference
+              | Iir_Kind_Attribute_Value
+              | Iir_Kind_Function_Call =>
+               return False;
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Signal_Interface_Declaration =>
+               return True;
+            when Iir_Kind_Object_Alias_Declaration =>
+               Adecl := Get_Base_Name (Get_Name (Adecl));
+            when others =>
+               Error_Kind ("is_signal_object", Adecl);
+         end case;
+      end loop;
    end Is_Signal_Object;
 
 

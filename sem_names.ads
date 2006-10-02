@@ -40,6 +40,25 @@ package Sem_Names is
    --  To be used only for names (weakly) semantized by sem_name_soft.
    procedure Sem_Name_Clean (Name : Iir);
 
+   --  Return TRUE if NAME is a name that designate an object.
+   --  Only in this case, base_name is defined.
+   function Is_Object_Name (Name : Iir) return Boolean;
+
+   --  Return an object node if NAME designates an object (ie either is an
+   --  object or a name for an object).
+   --  Otherwise, returns NULL_IIR.
+   function Name_To_Object (Name : Iir) return Iir;
+
+   --  If NAME is a selected name whose prefix is a protected variable, set
+   --  method_object of CALL.
+   procedure Name_To_Method_Object (Call : Iir; Name : Iir);
+
+   --  Convert name EXPR to an expression (ie, can create function call).
+   --  A_TYPE is the expected type of the expression.
+   --  FIXME: it is unclear wether the result must be an expression or not
+   --  (ie, it *must* have a type, but may be a range).
+   function Name_To_Expression (Name : Iir; A_Type : Iir) return Iir;
+
    -- Return true if AN_IIR is an overload list.
    function Is_Overload_List (An_Iir: Iir) return Boolean;
    pragma Inline (Is_Overload_List);
@@ -61,16 +80,6 @@ package Sem_Names is
    --  Return TRUE iff TYPE1 and TYPE2 are closely related.
    function Are_Types_Closely_Related (Type1, Type2 : Iir) return Boolean;
 
-   --  If NAME is a selected name whose prefix is a protected variable, set
-   --  method_object of CALL.
-   procedure Name_To_Method_Object (Call : Iir; Name : Iir);
-
-   --  Convert name EXPR to an expression (ie, can create function call).
-   --  A_TYPE is the expected type of the expression.
-   --  FIXME: it is unclear wether the result must be an expression or not
-   --  (ie, it *must* have a type, but may be a range).
-   function Name_To_Expression (Name : Iir; A_Type : Iir) return Iir;
-
    --  From the list LIST of function or enumeration literal, extract the
    --  list of (return) types.
    --  If there is only one type, return it.
@@ -80,15 +89,6 @@ package Sem_Names is
 
    function Sem_Index_Specification (Name : Iir_Parenthesis_Name; Itype : Iir)
                                     return Iir;
-
-   --  Return TRUE if NAME is a name that designate an object.
-   --  Only in this case, base_name is defined.
-   function Is_Object_Name (Name : Iir) return Boolean;
-
-   --  Return an object node if NAME designates an object (ie either is an
-   --  object or a name for an object).
-   --  Otherwise, returns NULL_IIR.
-   function Name_To_Object (Name : Iir) return Iir;
 
    --  Kind of declaration to find.
    --  Decl_entity: an entity declaration (used for binding_indication).

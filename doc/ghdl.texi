@@ -516,6 +516,7 @@ no options are allowed after a filename or a unit name.
 * Cross-reference command::     
 * File commands::               
 * Misc commands::               
+* Installation Directory::      
 * IEEE library pitfalls::       
 @end menu
 
@@ -892,6 +893,11 @@ entities are search only in known library.  A known library is a
 library which has been named in your design.
 
 This option is only useful during elaboration.
+
+@item --PREFIX=@var{PATH}
+@cindex @option{--PREFIX} switch
+Use @var{PATH} as the prefix path to find commands and pre-installed (std and
+ieee) libraries.
 
 @item --GHDL1=@var{COMMAND}
 @cindex @option{--GHLD1} switch
@@ -1291,7 +1297,7 @@ Display on the standard output lines of files preceded by line number.
 $ ghdl --lines @var{files}
 @end smallexample
 
-@node Misc commands, IEEE library pitfalls, File commands, Invoking GHDL
+@node Misc commands, Installation Directory, File commands, Invoking GHDL
 @comment  node-name,  next,  previous,  up
 @section Misc commands
 There are a few GHDL commands which are seldom useful.
@@ -1352,7 +1358,28 @@ Display the @code{GHDL} version and exit.
 $ ghdl --version
 @end smallexample
 
-@node IEEE library pitfalls,  , Misc commands, Invoking GHDL
+@node Installation Directory, IEEE library pitfalls, Misc commands, Invoking GHDL
+@comment  node-name,  next,  previous,  up
+@section Installation Directory
+@c @code{GHDL} is installed with the @code{std} and @code{ieee} libraries.  
+During analysis and elaboration @code{GHDL} may read the @code{std}
+and @code{ieee} files.  The location of these files is based on the prefix,
+which is (in priority order):
+@enumerate
+@item
+the @option{--PREFIX=} command line option
+
+@item
+the @var{GHDL_PREFIX} environment variable
+
+@item
+a built-in default path.  It is an hard-coded path on GNU/Linux and the
+value of the @samp{HKLM\Software\Ghdl\Install_Dir} registry entry on Windows.
+@end enumerate
+
+You should use the @option{--dispconfig} command (@pxref{Dispconfig command} for details) to disp and debug installation problems.
+
+@node IEEE library pitfalls,  , Installation Directory, Invoking GHDL
 @comment  node-name,  next,  previous,  up
 @section IEEE library pitfalls
 When you use options @option{--ieee=synopsys} or @option{--ieee=mentor},

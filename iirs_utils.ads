@@ -146,7 +146,6 @@ package Iirs_Utils is
    --        if ASPECT is open, return Null_Iir;
    function Get_Entity_From_Entity_Aspect (Aspect : Iir) return Iir;
 
-
    --  Get the value of any physical literals.
    --  A physical literal can be either an int_literal, and fp_literal or
    --  a unit_declaration.

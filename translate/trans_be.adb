@@ -15,6 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Iirs; use Iirs;
 with Disp_Tree;
 with Disp_Vhdl;
 with Sem;
@@ -24,6 +25,7 @@ with Errorout; use Errorout;
 with Post_Sems;
 with Flags;
 with Ada.Text_IO;
+with Back_End;
 
 package body Trans_Be is
    procedure Finish_Compilation
@@ -146,4 +148,37 @@ package body Trans_Be is
       --  Let is generate error messages.
       Fi := Translate_Foreign_Id (Decl);
    end Sem_Foreign;
+
+   function Parse_Option (Opt : String) return Boolean is
+   begin
+      if Opt = "--dump-drivers" then
+         Translation.Flag_Dump_Drivers := True;
+      elsif Opt = "--no-direct-drivers" then
+         Translation.Flag_Direct_Drivers := False;
+      elsif Opt = "--no-range-checks" then
+         Translation.Flag_Range_Checks := False;
+      elsif Opt = "--no-index-checks" then
+         Translation.Flag_Index_Checks := False;
+      elsif Opt = "--no-identifiers" then
+         Translation.Flag_Discard_Identifiers := True;
+      else
+         return False;
+      end if;
+      return True;
+   end Parse_Option;
+
+   procedure Disp_Option
+   is
+      procedure P (Str : String) renames Ada.Text_IO.Put_Line;
+   begin
+      P ("  --dump-drivers     dump processes drivers");
+   end Disp_Option;
+
+   procedure Register_Translation_Back_End is
+   begin
+      Back_End.Finish_Compilation := Finish_Compilation'Access;
+      Back_End.Sem_Foreign := Sem_Foreign'Access;
+      Back_End.Parse_Option := Parse_Option'Access;
+      Back_End.Disp_Option := Disp_Option'Access;
+   end Register_Translation_Back_End;
 end Trans_Be;

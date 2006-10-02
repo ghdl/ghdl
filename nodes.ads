@@ -365,29 +365,20 @@ private
       -- choice_staticness for iir_kind_choice_by_expression
       State2 : Bit2_Type := 0;
 
-      --  Usages of State3:
-      --  purity_state for iir_kind_process_statement
-      --  purity_state for iir_kind_sensitized_process_statement
-      --  purity_state for iir_kinds_procedure_specification
-      --  purity_state for iir_kinds_function_specification
-      Unused_State3 : Bit2_Type := 0;
-
       Flag7 : Boolean := False;
       Flag8 : Boolean := False;
       Flag9 : Boolean := False;
       Flag10 : Boolean := False;
+      Flag11 : Boolean := False;
+      Flag12 : Boolean := False;
 
       -- 3bits fields (1 -> 3 bits)
       --  Usages of odigit1:
       --  lexical_layout for iir_kinds_interface_declaration
+      --  iir_mode
       Odigit1 : Bit3_Type := 0;
 
-      --  Usage of odigit2:
-      -- iir_mode for iir_kind_signal_interface_declaration
-      -- iir_mode for iir_kind_constant_interface_declaration
-      -- iir_mode for iir_kind_variable_interface_declaration
-      -- iir_mode for iir_kind_file_interface_declaration
-      Odigit2 : Bit3_Type := 0;
+      Unused_Odigit2 : Bit3_Type := 0;
 
       -- Location.
       Location: Location_Type := Location_Nil;

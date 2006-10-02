@@ -29,6 +29,8 @@ package Grt.Signals is
      (
       --  Normal transaction, with a value.
       Trans_Value,
+      --  Normal transaction, with a pointer to a value (direct assignment).
+      Trans_Direct,
       --  Null transaction.
       Trans_Null,
       --  Like a normal transaction, but without a value due to check error.
@@ -38,17 +40,20 @@ package Grt.Signals is
    type Transaction;
    type Transaction_Acc is access Transaction;
    type Transaction (Kind : Transaction_Kind) is record
+      --  Line for error.  Put here to compact the record.
       Line : Ghdl_I32;
+
       Next : Transaction_Acc;
       Time : Std_Time;
       case Kind is
          when Trans_Value =>
             Val : Value_Union;
+         when Trans_Direct =>
+            Val_Ptr : Ghdl_Value_Ptr;
          when Trans_Null =>
             null;
          when Trans_Error =>
-            --  FIXME: should have a location field, to be able to display
-            --  a message.
+            --  Filename for error.
             File : Ghdl_C_String;
       end case;
    end record;
@@ -118,6 +123,12 @@ package Grt.Signals is
    end record;
    type Sig_Conversion_Acc is access Sig_Conversion_Type;
 
+   type Forward_Build_Type is record
+      Src : Ghdl_Signal_Ptr;
+      Targ : Ghdl_Signal_Ptr;
+   end record;
+   type Forward_Build_Acc is access Forward_Build_Type;
+
    --  Used to order the signals for the propagation of signals values.
    type Propag_Order_Flag is
      (
@@ -141,7 +152,8 @@ package Grt.Signals is
    type Signal_Net_Type is new Integer;
    No_Signal_Net : constant Signal_Net_Type := 0;
    Net_One_Driver : constant Signal_Net_Type := -1;
-   Net_One_Resolved : constant Signal_Net_Type := -2;
+   Net_One_Direct : constant Signal_Net_Type := -2;
+   Net_One_Resolved : constant Signal_Net_Type := -3;
 
    --  Flush the list of active signals.
    procedure Flush_Active_List;
@@ -189,9 +201,6 @@ package Grt.Signals is
       --  Status of the ordering.
       Propag : Propag_Order_Flag;
 
-      --  If set, the activity of the signal is required by the user.
-      Has_Active : Boolean;
-
       --  If set, the signal is dumped in a GHW file.
       Is_Dumped : Boolean;
 
@@ -208,8 +217,16 @@ package Grt.Signals is
       Last_Value : Value_Union;
       Last_Event : Std_Time;
       Last_Active : Std_Time;
+
+      --  Chain of signals.
+      --  Used to build nets.
+      --  This is also the simply linked list of future active signals.
+      Link : Ghdl_Signal_Ptr;
+
       Event : Boolean;
       Active : Boolean;
+      --  If set, the activity of the signal is required by the user.
+      Has_Active : Boolean;
 
       --  Internal fields.
       --  Values mode of this signal.
@@ -220,11 +237,6 @@ package Grt.Signals is
 
       --  Net of the signal.
       Net : Signal_Net_Type;
-
-      --  Chain of signals.
-      --  Used to build nets.
-      --  This is also the simply linked list of future active signals.
-      Link : Ghdl_Signal_Ptr;
 
       --  Chain of signals whose active flag was set.  Used to clear it.
       Alink : Ghdl_Signal_Ptr;
@@ -299,6 +311,10 @@ package Grt.Signals is
       --  The effective value is the actual associated.
       Eff_Actual,
 
+      --  Sig must be updated but does not belong to the same net.
+      Imp_Forward,
+      Imp_Forward_Build,
+
       --  Implicit guard signal.
       --  Its value must be evaluated after the effective value of its
       --  dependences.
@@ -341,6 +357,7 @@ package Grt.Signals is
            | Eff_One_Driver
            | Drv_One_Port
            | Eff_One_Port
+           | Imp_Forward
            | Imp_Guard
            | Imp_Quiet
            | Imp_Transaction
@@ -356,6 +373,8 @@ package Grt.Signals is
          when In_Conversion
            | Out_Conversion =>
             Conv : Sig_Conversion_Acc;
+         when Imp_Forward_Build =>
+            Forward : Forward_Build_Acc;
          when Prop_End =>
             Updated : Boolean;
       end case;
@@ -545,6 +564,10 @@ package Grt.Signals is
    --  Add a driver to SIGN for the current process.
    procedure Ghdl_Process_Add_Driver (Sign : Ghdl_Signal_Ptr);
 
+   --  Add a direct driver for the current process.
+   procedure Ghdl_Signal_Direct_Driver (Sign : Ghdl_Signal_Ptr;
+                                        Drv : Ghdl_Value_Ptr);
+
    --  Used for connexions:
    --  SRC is a source for TARG.
    procedure Ghdl_Signal_Add_Source (Targ : Ghdl_Signal_Ptr;
@@ -609,6 +632,8 @@ package Grt.Signals is
    function Ghdl_Signal_Read_Driver
      (Sig : Ghdl_Signal_Ptr; Index : Ghdl_Index_Type)
      return Ghdl_Value_Ptr;
+
+   Ghdl_Signal_Active_Chain : aliased Ghdl_Signal_Ptr;
 
    --  Statistics.
    Nbr_Active : Ghdl_I32;
@@ -730,6 +755,9 @@ private
 
    pragma Export (C, Ghdl_Process_Add_Driver,
                   "__ghdl_process_add_driver");
+   pragma Export (C, Ghdl_Signal_Direct_Driver,
+                  "__ghdl_signal_direct_driver");
+
    pragma Export (C, Ghdl_Signal_Add_Source,
                   "__ghdl_signal_add_source");
    pragma Export (C, Ghdl_Signal_Effective_Value,
@@ -766,4 +794,8 @@ private
                   "__ghdl_signal_read_port");
    pragma Export (C, Ghdl_Signal_Read_Driver,
                   "__ghdl_signal_read_driver");
+
+   pragma Export (C, Ghdl_Signal_Active_Chain,
+                  "__ghdl_signal_active_chain");
+
 end Grt.Signals;

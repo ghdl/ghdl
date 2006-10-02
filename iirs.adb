@@ -1602,6 +1602,33 @@ package body Iirs is
       Set_Flag3 (Target, Flag);
    end Set_Open_Flag;
 
+   procedure Check_Kind_For_After_Drivers_Flag (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Constant_Interface_Declaration
+           | Iir_Kind_Variable_Interface_Declaration
+           | Iir_Kind_Signal_Interface_Declaration
+           | Iir_Kind_File_Interface_Declaration =>
+            null;
+         when others =>
+            Failed ("After_Drivers_Flag", Target);
+      end case;
+   end Check_Kind_For_After_Drivers_Flag;
+
+   function Get_After_Drivers_Flag (Target : Iir) return Boolean is
+   begin
+      Check_Kind_For_After_Drivers_Flag (Target);
+      return Get_Flag5 (Target);
+   end Get_After_Drivers_Flag;
+
+   procedure Set_After_Drivers_Flag (Target : Iir; Flag : Boolean) is
+   begin
+      Check_Kind_For_After_Drivers_Flag (Target);
+      Set_Flag5 (Target, Flag);
+   end Set_After_Drivers_Flag;
+
    procedure Check_Kind_For_We_Value (Target : Iir) is
    begin
       case Get_Kind (Target) is
@@ -2356,13 +2383,13 @@ package body Iirs is
    function Get_Mode (Target : Iir) return Iir_Mode is
    begin
       Check_Kind_For_Mode (Target);
-      return Iir_Mode'Val (Get_Odigit2 (Target));
+      return Iir_Mode'Val (Get_Odigit1 (Target));
    end Get_Mode;
 
    procedure Set_Mode (Target : Iir; Mode : Iir_Mode) is
    begin
       Check_Kind_For_Mode (Target);
-      Set_Odigit2 (Target, Iir_Mode'Pos (Mode));
+      Set_Odigit1 (Target, Iir_Mode'Pos (Mode));
    end Set_Mode;
 
    procedure Check_Kind_For_Signal_Kind (Target : Iir) is
@@ -2409,8 +2436,10 @@ package body Iirs is
            | Iir_Kind_Selected_Element
            | Iir_Kind_Dereference
            | Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Simple_Name
            | Iir_Kind_Slice_Name
            | Iir_Kind_Indexed_Name
+           | Iir_Kind_Selected_Name
            | Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
@@ -2615,6 +2644,8 @@ package body Iirs is
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Signal_Interface_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement =>
             null;
@@ -2626,13 +2657,13 @@ package body Iirs is
    function Get_Extra_Info (Target : Iir) return Iir_Int32 is
    begin
       Check_Kind_For_Extra_Info (Target);
-      return Iir_Int32'Val (Get_Field12 (Target));
+      return Iir_Int32'Val (Get_Field8 (Target));
    end Get_Extra_Info;
 
    procedure Set_Extra_Info (Target : Iir; Info : Iir_Int32) is
    begin
       Check_Kind_For_Extra_Info (Target);
-      Set_Field12 (Target, Iir_Int32'Pos (Info));
+      Set_Field8 (Target, Iir_Int32'Pos (Info));
    end Set_Extra_Info;
 
    procedure Check_Kind_For_Impure_Depth (Target : Iir) is
@@ -2722,13 +2753,13 @@ package body Iirs is
    function Get_Type_Reference (Target : Iir) return Iir is
    begin
       Check_Kind_For_Type_Reference (Target);
-      return Get_Field8 (Target);
+      return Get_Field10 (Target);
    end Get_Type_Reference;
 
    procedure Set_Type_Reference (Target : Iir; Decl : Iir) is
    begin
       Check_Kind_For_Type_Reference (Target);
-      Set_Field8 (Target, Decl);
+      Set_Field10 (Target, Decl);
    end Set_Type_Reference;
 
    procedure Check_Kind_For_Default_Value (Target : Iir) is
@@ -4024,31 +4055,6 @@ package body Iirs is
       Check_Kind_For_Postponed_Flag (Target);
       Set_Flag3 (Target, Value);
    end Set_Postponed_Flag;
-
-   procedure Check_Kind_For_Driver_List (Target : Iir) is
-   begin
-      case Get_Kind (Target) is
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Sensitized_Process_Statement
-           | Iir_Kind_Process_Statement =>
-            null;
-         when others =>
-            Failed ("Driver_List", Target);
-      end case;
-   end Check_Kind_For_Driver_List;
-
-   function Get_Driver_List (Stmt : Iir) return Iir_List is
-   begin
-      Check_Kind_For_Driver_List (Stmt);
-      return Iir_To_Iir_List (Get_Field8 (Stmt));
-   end Get_Driver_List;
-
-   procedure Set_Driver_List (Stmt : Iir; List : Iir_List) is
-   begin
-      Check_Kind_For_Driver_List (Stmt);
-      Set_Field8 (Stmt, Iir_List_To_Iir (List));
-   end Set_Driver_List;
 
    procedure Check_Kind_For_Callees_List (Target : Iir) is
    begin
@@ -6299,13 +6305,13 @@ package body Iirs is
    function Get_Lexical_Layout (Decl : Iir) return Iir_Lexical_Layout_Type is
    begin
       Check_Kind_For_Lexical_Layout (Decl);
-      return Iir_Lexical_Layout_Type'Val (Get_Odigit1 (Decl));
+      return Iir_Lexical_Layout_Type'Val (Get_Odigit2 (Decl));
    end Get_Lexical_Layout;
 
    procedure Set_Lexical_Layout (Decl : Iir; Lay : Iir_Lexical_Layout_Type) is
    begin
       Check_Kind_For_Lexical_Layout (Decl);
-      Set_Odigit1 (Decl, Iir_Lexical_Layout_Type'Pos (Lay));
+      Set_Odigit2 (Decl, Iir_Lexical_Layout_Type'Pos (Lay));
    end Set_Lexical_Layout;
 
    procedure Check_Kind_For_Incomplete_Type_List (Target : Iir) is

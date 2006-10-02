@@ -65,6 +65,10 @@ fexplicit
 vhdl
 Explicit function declarations override implicit one in use
 
+-no-direct-drivers
+vhdl
+Disable direct drivers optimization
+
 -syn-binding
 vhdl
 Use synthetizer rules for default bindings

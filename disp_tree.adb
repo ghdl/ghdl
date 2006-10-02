@@ -1023,8 +1023,6 @@ package body Disp_Tree is
             Disp_Depth (Get_Subprogram_Depth (Tree));
             Header ("subprogram_body:");
             Disp_Tree_Flat (Get_Subprogram_Body (Tree), Ntab);
-            Header ("driver list:");
-            Disp_Tree_List (Get_Driver_List (Tree), Ntab, True);
             Header ("attribute_value_chain:");
             Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
          when Iir_Kind_Procedure_Body
@@ -1423,8 +1421,6 @@ package body Disp_Tree is
                Header ("sensivity list:");
                Disp_Tree_List (Get_Sensitivity_List (Tree), Ntab, True);
             end if;
-            Header ("driver list:");
-            Disp_Tree_List (Get_Driver_List (Tree), Ntab, True);
             Header ("declaration_chain:");
             Disp_Tree_Chain (Get_Declaration_Chain (Tree), Ntab);
             Header ("process statements:");

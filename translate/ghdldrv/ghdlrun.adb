@@ -39,7 +39,6 @@ with Ortho_Code.Abi;
 with Types;
 with Iirs; use Iirs;
 with Flags;
-with Back_End;
 with Errorout; use Errorout;
 with Libraries;
 with Canon;
@@ -82,16 +81,11 @@ package body Ghdlrun is
 
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
-      Back_End.Sem_Foreign := Trans_Be.Sem_Foreign'Access;
-
       if Analyze_Only then
          return;
       end if;
 
       Translation.Foreign_Hook := Foreign_Hook'Access;
-
-      -- Initialize.
-      Back_End.Finish_Compilation := Trans_Be.Finish_Compilation'Access;
 
       --  The design is always analyzed in whole.
       Flags.Flag_Whole_Analyze := True;
@@ -355,8 +349,14 @@ package body Ghdlrun is
       Def (Trans_Decls.Ghdl_Now,
            Grt.Types.Current_Time'Address);
 
+      Def (Trans_Decls.Ghdl_Signal_Active_Chain,
+           Grt.Signals.Ghdl_Signal_Active_Chain'Address);
+
       Def (Trans_Decls.Ghdl_Process_Add_Driver,
            Grt.Signals.Ghdl_Process_Add_Driver'Address);
+      Def (Trans_Decls.Ghdl_Signal_Direct_Driver,
+           Grt.Signals.Ghdl_Signal_Direct_Driver'Address);
+
       Def (Trans_Decls.Ghdl_Signal_Add_Source,
            Grt.Signals.Ghdl_Signal_Add_Source'Address);
       Def (Trans_Decls.Ghdl_Signal_In_Conversion,
@@ -709,5 +709,6 @@ package body Ghdlrun is
                          Disp_Long_Help'Access);
       Ghdlcomp.Register_Commands;
       Register_Command (new Command_Run_Help);
+      Trans_Be.Register_Translation_Back_End;
    end Register_Commands;
 end Ghdlrun;

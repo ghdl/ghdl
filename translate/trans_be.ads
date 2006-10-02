@@ -15,12 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Iirs; use Iirs;
-
 package Trans_Be is
-   procedure Finish_Compilation
-     (Unit : Iir_Design_Unit; Main : Boolean := False);
-
-   procedure Sem_Foreign (Decl : Iir);
+   procedure Register_Translation_Back_End;
 end Trans_Be;
 

@@ -92,16 +92,8 @@ package Iirs is
    --   procedure Set_Location (Target: in out Iir; Location: Location_Type);
    --   function Get_Location (Target: in out Iir) return Location_Type;
    --
-   --   function Get_Line_Number (Target: Iir) return Natural;
-   --   function Get_Column_Number (Target: Iir) return natural;
-   --   function Get_File_Name (Target: in Iir) return name_id;
-   --
    -- Copy a location from a node to another one.
    --   procedure Location_Copy (Target: in out Iir; Src: in Iir);
-
-   -- Get or Set info for a back-end.
-   --   function  Get_Back_End_Info (Target: in Iir) return System.Address;
-   --   procedure Set_Back_End_Info (Target: in out Iir; Addr: System.Address);
 
 
    -- The next line marks the start of the node description.
@@ -731,6 +723,7 @@ package Iirs is
    --
    --   Get/Set_Name (Field4)
    --
+   -- Note: base name is the alias itself.
    --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
@@ -738,6 +731,8 @@ package Iirs is
    --   Get/Set_Name_Staticness (State2)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Use_Flag (Flag6)
 
@@ -836,9 +831,12 @@ package Iirs is
    -- Must always be null_iir for iir_kind_file_interface_declaration.
    --   Get/Set_Default_Value (Field6)
    --
-   --   Get/Set_Lexical_Layout (Odigit1)
+   -- Only for Iir_Kind_Signal_Interface_Declaration:
+   --   Get/Set_Extra_Info (Field8)
    --
-   --   Get/Set_Mode (Odigit2)
+   --   Get/Set_Mode (Odigit1)
+   --
+   --   Get/Set_Lexical_Layout (Odigit2)
    --
    -- Only for Iir_Kind_Signal_Interface_Declaration:
    --   Get/Set_Has_Disconnect_Flag (Flag1)
@@ -850,6 +848,8 @@ package Iirs is
    --   Get/Set_Open_Flag (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Use_Flag (Flag6)
    --
@@ -886,16 +886,13 @@ package Iirs is
    --
    --   Get/Set_Callees_List (Field7)
    --
-   -- FIXME: to be removed.
-   --   Get/Set_Driver_List (Field8)
+   --   Get/Set_Extra_Info (Field8)
    --
    --   Get/Set_Overload_Number (Field9)
    --
    --   Get/Set_Subprogram_Depth (Field10)
    --
    --   Get/Set_Subprogram_Hash (Field11)
-   --
-   --   Get/Set_Extra_Info (Field12)
    --
    --   Get/Set_Seen_Flag (Flag1)
    --
@@ -966,13 +963,13 @@ package Iirs is
    --
    --   Get/Set_Callees_List (Field7)
    --
-   --   Get/Set_Type_Reference (Field8)
+   --   Get/Set_Extra_Info (Field8)
    --
    --   Get/Set_Overload_Number (Field9)
    --
-   --   Get/Set_Subprogram_Hash (Field11)
+   --   Get/Set_Type_Reference (Field10)
    --
-   --   Get/Set_Extra_Info (Field12)
+   --   Get/Set_Subprogram_Hash (Field11)
    --
    --   Get/Set_Wait_State (State1)
    --
@@ -1009,11 +1006,15 @@ package Iirs is
    -- several drivers.
    --   Get/Set_Signal_Driver (Field7)
    --
+   --   Get/Set_Extra_Info (Field8)
+   --
    --   Get/Set_Has_Disconnect_Flag (Flag1)
    --
    --   Get/Set_Has_Active_Flag (Flag2)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Use_Flag (Flag6)
    --
@@ -1144,7 +1145,7 @@ package Iirs is
    --   Get/Set_File_Open_Kind (Field7)
    --
    -- This is used only in vhdl 87.
-   --   Get/Set_Mode (Odigit2)
+   --   Get/Set_Mode (Odigit1)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -1675,9 +1676,7 @@ package Iirs is
    --
    --   Get/Set_Callees_List (Field7)
    --
-   --   Get/Set_Driver_List (Field8)
-   --
-   --   Get/Set_Extra_Info (Field12)
+   --   Get/Set_Extra_Info (Field8)
    --
    --   Get/Set_Wait_State (State1)
    --
@@ -2011,6 +2010,7 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
+   -- Chain is compose of Iir_Kind_Choice_By_XXX.
    --   Get/Set_Case_Statement_Alternative_Chain (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -2201,6 +2201,8 @@ package Iirs is
    --
    --   Get/Set_Named_Entity (Field4)
    --
+   --   Get/Set_Base_Name (Field5)
+   --
    --   Get/Set_Expr_Staticness (State1)
 
    -- Iir_Kind_Selected_Name (Short)
@@ -2212,6 +2214,8 @@ package Iirs is
    --   Get/Set_Prefix (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
+   --
+   --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
 
@@ -3590,8 +3594,6 @@ package Iirs is
 
    subtype Iir_Designator_List is Iir_List;
 
-   subtype Iir_Driver_List is Iir_List;
-
    subtype Iir_Attribute_Value_Chain is Iir_List;
 
    subtype Iir_Overload_List is Iir;
@@ -4029,6 +4031,12 @@ package Iirs is
    function Get_Open_Flag (Target : Iir) return Boolean;
    procedure Set_Open_Flag (Target : Iir; Flag : Boolean);
 
+   --  This flag is set by trans_analyze if there is a projected waveform
+   --  assignment in the process.
+   --  Field: Flag5
+   function Get_After_Drivers_Flag (Target : Iir) return Boolean;
+   procedure Set_After_Drivers_Flag (Target : Iir; Flag : Boolean);
+
    --  Field: Field1
    function Get_We_Value (We : Iir_Waveform_Element) return Iir;
    procedure Set_We_Value (We : Iir_Waveform_Element; An_Iir : Iir);
@@ -4141,7 +4149,7 @@ package Iirs is
    procedure Set_Subtype_Definition (Target : Iir; Def : Iir);
 
    --  Mode of interfaces or file (v87).
-   --  Field: Odigit2 (pos)
+   --  Field: Odigit1 (pos)
    function Get_Mode (Target : Iir) return Iir_Mode;
    procedure Set_Mode (Target : Iir; Mode : Iir_Mode);
 
@@ -4205,7 +4213,7 @@ package Iirs is
    --  Unfortunatly, the size of the nodes is limited and these infos are
    --  only used for optimization.
    --  This is an index into a separate table.
-   --  Field: Field12 (pos)
+   --  Field: Field8 (pos)
    function Get_Extra_Info (Target : Iir) return Iir_Int32;
    procedure Set_Extra_Info (Target : Iir; Info : Iir_Int32);
 
@@ -4226,7 +4234,7 @@ package Iirs is
 
    --  For an implicit subprogram, the type_reference is the type declaration
    --  for which the implicit subprogram was defined.
-   --  Field: Field8
+   --  Field: Field10
    function Get_Type_Reference (Target : Iir) return Iir;
    procedure Set_Type_Reference (Target : Iir; Decl : Iir);
 
@@ -4456,13 +4464,6 @@ package Iirs is
    --  Field: Flag3
    function Get_Postponed_Flag (Target : Iir) return Boolean;
    procedure Set_Postponed_Flag (Target : Iir; Value : Boolean);
-
-   --  Returns a list of signal or ports which are assigned in the current
-   --  subprogram or process.
-   --  Can return null_iir if there is no such assignment.
-   --  Field: Field8 (uc)
-   function Get_Driver_List (Stmt : Iir) return Iir_List;
-   procedure Set_Driver_List (Stmt : Iir; List : Iir_List);
 
    --  Returns the list of subprogram called in this subprogram or process.
    --  Note: implicit function (such as implicit operators) are omitted
@@ -4886,7 +4887,7 @@ package Iirs is
    procedure Set_Type_Mark (Target : Iir; Mark : Iir);
 
    --  Get/set the lexical layout of an interface.
-   --  Field: Odigit1 (pos)
+   --  Field: Odigit2 (pos)
    function Get_Lexical_Layout (Decl : Iir) return Iir_Lexical_Layout_Type;
    procedure Set_Lexical_Layout (Decl : Iir; Lay : Iir_Lexical_Layout_Type);
 

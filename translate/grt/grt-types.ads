@@ -252,7 +252,7 @@ package Grt.Types is
    type Mode_Signal_Type is
      (Mode_Signal,
       Mode_Linkage, Mode_Buffer, Mode_Out, Mode_Inout, Mode_In,
-      Mode_Stable, Mode_Quiet, Mode_Transaction, Mode_Delayed, Mode_Guard,
+      Mode_Stable, Mode_Quiet, Mode_Delayed, Mode_Transaction, Mode_Guard,
       Mode_Conv_In, Mode_Conv_Out,
       Mode_End);
 
@@ -266,6 +266,9 @@ package Grt.Types is
    --  Implicit signals.
    subtype Mode_Signal_Implicit is
      Mode_Signal_Type range Mode_Stable .. Mode_Guard;
+
+   subtype Mode_Signal_Forward is
+     Mode_Signal_Type range Mode_Stable .. Mode_Delayed;
 
    --  Kind of a signal.
    type Kind_Signal_Type is

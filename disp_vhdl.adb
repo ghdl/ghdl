@@ -893,25 +893,6 @@ package body Disp_Vhdl is
       Put_Line (";");
    end Disp_Object_Declaration;
 
-   procedure Disp_Driver_List (List: Iir_Driver_List; Indent : Count)
-   is
-      El: Iir;
-   begin
-      if List = Null_Iir_List or else Get_Nbr_Elements (List) = 0 then
-         return;
-      end if;
-      Set_Col (Indent);
-      Put_Line ("-- drivers needed for signals:");
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
-         Set_Col (Indent);
-         Put ("--   ");
-         Disp_Expression (El);
-         New_Line;
-      end loop;
-   end Disp_Driver_List;
-
    procedure Disp_Subprogram_Declaration (Subprg: Iir)
    is
       Indent: Count;
@@ -943,10 +924,6 @@ package body Disp_Vhdl is
          when others =>
             raise Internal_Error;
       end case;
-
-      if Get_Kind (Subprg) = Iir_Kind_Procedure_Declaration then
-         Disp_Driver_List (Get_Driver_List (Subprg), Indent);
-      end if;
    end Disp_Subprogram_Declaration;
 
    procedure Disp_Subprogram_Body (Subprg : Iir)
@@ -1517,7 +1494,6 @@ package body Disp_Vhdl is
       else
          New_Line;
       end if;
-      Disp_Driver_List (Get_Driver_List (Process), Start + Indentation);
       Disp_Declaration_Chain (Process, Start + Indentation);
       Set_Col (Start);
       Put_Line ("begin");
@@ -2312,10 +2288,10 @@ package body Disp_Vhdl is
             Disp_Concurrent_Conditional_Signal_Assignment (An_Iir);
          when Iir_Kinds_Dyadic_Operator =>
             Disp_Dyadic_Operator (An_Iir);
-         when Iir_Kind_Signal_Interface_Declaration =>
+         when Iir_Kind_Signal_Interface_Declaration
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Object_Alias_Declaration =>
             Disp_Name_Of (An_Iir);
-         when Iir_Kind_Signal_Declaration =>
-            Disp_Identifier (An_Iir);
          when Iir_Kind_Enumeration_Literal =>
             Disp_Identifier (An_Iir);
          when Iir_Kind_Component_Instantiation_Statement =>
@@ -2330,8 +2306,11 @@ package body Disp_Vhdl is
             Disp_Package_Declaration (An_Iir);
          when Iir_Kind_Wait_Statement =>
             Disp_Wait_Statement (An_Iir);
-         when Iir_Kind_Selected_Name =>
-            Disp_Name (An_Iir);
+         when Iir_Kind_Selected_Name
+           | Iir_Kind_Selected_Element
+           | Iir_Kind_Indexed_Name
+           | Iir_Kind_Slice_Name =>
+            Disp_Expression (An_Iir);
          when others =>
             Error_Kind ("disp", An_Iir);
       end case;

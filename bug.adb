@@ -70,7 +70,7 @@ package body Bug is
       Put_Line
         (Standard_Error,
          "Please report this bug on http://gna.org/projects/ghdl");
-      Put_Line (Standard_Error, "GHDL version: " & Ghdl_Version);
+      Put_Line (Standard_Error, "GHDL release: " & Ghdl_Release);
       Put_Line (Standard_Error, "Compiled with " & Get_Gnat_Version);
       Put_Line (Standard_Error, "In directory: " &
                 GNAT.Directory_Operations.Get_Current_Dir);

@@ -61,6 +61,21 @@ package Translation is
    --  If set, do not generate code for unused implicit subprograms.
    Flag_Discard_Unused_Implicit : Boolean := False;
 
+   --  If set, dump drivers per process during compilation.
+   Flag_Dump_Drivers : Boolean := False;
+
+   --  If set, try to create direct drivers.
+   Flag_Direct_Drivers : Boolean := True;
+
+   --  If set, checks ranges (subtype ranges).
+   Flag_Range_Checks : Boolean := True;
+
+   --  If set, checks indexes (arrays index and slice).
+   Flag_Index_Checks : Boolean := True;
+
+   --  If set, do not create identifiers (for in memory compilation).
+   Flag_Discard_Identifiers : Boolean := False;
+
    type Foreign_Kind_Type is (Foreign_Unknown,
                               Foreign_Vhpidirect,
                               Foreign_Intrinsic);

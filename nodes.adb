@@ -384,12 +384,12 @@ package body Nodes is
 
    function Get_Odigit2 (N : Node_Type) return Bit3_Type is
    begin
-      return Nodet.Table (N).Odigit2;
+      return Nodet.Table (N + 1).Odigit1;
    end Get_Odigit2;
 
    procedure Set_Odigit2 (N : Node_Type; V : Bit3_Type) is
    begin
-      Nodet.Table (N).Odigit2 := V;
+      Nodet.Table (N + 1).Odigit1 := V;
    end Set_Odigit2;
 
 

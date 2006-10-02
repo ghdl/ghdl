@@ -121,6 +121,9 @@ main.o: $(GRTSRCDIR)/main.adb
 i386.o: $(GRTSRCDIR)/config/i386.S
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
+chkstk.o: $(GRTSRCDIR)/config/chkstk.S
+	$(CC) -c $(GRT_FLAGS) -o $@ $<
+
 sparc.o: $(GRTSRCDIR)/config/sparc.S
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 

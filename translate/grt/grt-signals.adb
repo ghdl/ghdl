@@ -29,6 +29,18 @@ with Grt.Stdio;
 with Grt.Threads; use Grt.Threads;
 
 package body Grt.Signals is
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Object => Transaction, Name => Transaction_Acc);
+
+   procedure Free_In (Trans : Transaction_Acc)
+   is
+      Ntrans : Transaction_Acc;
+   begin
+      Ntrans := Trans;
+      Free (Ntrans);
+   end Free_In;
+   pragma Inline (Free_In);
+
    function Is_Signal_Guarded (Sig : Ghdl_Signal_Ptr) return Boolean
    is
    begin
@@ -128,10 +140,10 @@ package body Grt.Signals is
                               Last_Active => -Std_Time'Last,
                               Event => False,
                               Active => False,
+                              Has_Active => False,
 
                               Mode => Mode,
                               Flags => (Propag => Propag_None,
-                                        Has_Active => False,
                                         Is_Dumped => False,
                                         Cyc_Event => False),
 
@@ -154,13 +166,13 @@ package body Grt.Signals is
 
       case Flag_Activity is
          when Activity_All =>
-            Res.Flags.Has_Active := True;
+            Res.Has_Active := True;
          when Activity_Minimal =>
             if (Sig_Rti.Common.Mode and Ghdl_Rti_Signal_Has_Active) /= 0 then
-               Res.Flags.Has_Active := True;
+               Res.Has_Active := True;
             end if;
          when Activity_None =>
-            Res.Flags.Has_Active := False;
+            Res.Has_Active := False;
       end case;
 
       --  Put the signal in the table.
@@ -184,7 +196,7 @@ package body Grt.Signals is
       S_Rti := To_Ghdl_Rtin_Object_Acc (Rti);
       if Flag_Activity = Activity_Minimal then
          if (S_Rti.Common.Mode and Ghdl_Rti_Signal_Has_Active) /= 0 then
-            Sig.Flags.Has_Active := True;
+            Sig.Has_Active := True;
          end if;
       end if;
    end Ghdl_Signal_Merge_Rti;
@@ -234,7 +246,10 @@ package body Grt.Signals is
       end if;
    end Check_New_Source;
 
-   procedure Ghdl_Process_Add_Driver (Sign : Ghdl_Signal_Ptr)
+   --  Return TRUE if already present.
+   function Ghdl_Signal_Add_Driver (Sign : Ghdl_Signal_Ptr;
+                                    Trans : Transaction_Acc)
+                                   return Boolean
    is
       type Size_T is mod 2**Standard'Address_Size;
 
@@ -251,7 +266,6 @@ package body Grt.Signals is
                         / System.Storage_Unit);
       end Size;
 
-      Trans : Transaction_Acc;
       Id : Process_Id;
    begin
       Id := Get_Current_Process_Id;
@@ -263,23 +277,59 @@ package body Grt.Signals is
          -- Do not create a driver twice.
          for I in 0 .. Sign.S.Nbr_Drivers - 1 loop
             if Sign.S.Drivers (I).Proc = Id then
-               return;
+               return True;
             end if;
          end loop;
          Check_New_Source (Sign);
          Sign.S.Nbr_Drivers := Sign.S.Nbr_Drivers + 1;
          Sign.S.Drivers := Realloc (Sign.S.Drivers, Size (Sign.S.Nbr_Drivers));
       end if;
+      Sign.S.Drivers (Sign.S.Nbr_Drivers - 1) :=
+        (First_Trans => Trans,
+         Last_Trans => Trans,
+         Proc => Id);
+      return False;
+   end Ghdl_Signal_Add_Driver;
+
+   procedure Ghdl_Process_Add_Driver (Sign : Ghdl_Signal_Ptr)
+   is
+      Trans : Transaction_Acc;
+   begin
       Trans := new Transaction'(Kind => Trans_Value,
                                 Line => 0,
                                 Time => 0,
                                 Next => null,
                                 Val => Sign.Value);
-      Sign.S.Drivers (Sign.S.Nbr_Drivers - 1) :=
-        (First_Trans => Trans,
-         Last_Trans => Trans,
-         Proc => Id);
+      if Ghdl_Signal_Add_Driver (Sign, Trans) then
+         Free (Trans);
+      end if;
    end Ghdl_Process_Add_Driver;
+
+   procedure Ghdl_Signal_Direct_Driver (Sign : Ghdl_Signal_Ptr;
+                                        Drv : Ghdl_Value_Ptr)
+   is
+      Trans : Transaction_Acc;
+      Trans1 : Transaction_Acc;
+   begin
+      --  Create transaction for current driving value.
+      Trans := new Transaction'(Kind => Trans_Value,
+                                Line => 0,
+                                Time => 0,
+                                Next => null,
+                                Val => Sign.Value);
+      if Ghdl_Signal_Add_Driver (Sign, Trans) then
+         Free (Trans);
+         return;
+      end if;
+      --  Create transaction for the next driving value.
+      Trans1 := new Transaction'(Kind => Trans_Direct,
+                                 Line => 0,
+                                 Time => 0,
+                                 Next => null,
+                                 Val_Ptr => Drv);
+      Sign.S.Drivers (Sign.S.Nbr_Drivers - 1).Last_Trans := Trans1;
+      Trans.Next := Trans1;
+   end Ghdl_Signal_Direct_Driver;
 
    procedure Append_Port (Targ : Ghdl_Signal_Ptr; Src : Ghdl_Signal_Ptr)
    is
@@ -342,8 +392,25 @@ package body Grt.Signals is
       Sign.S.Resolv.Disconnect_Time := Time;
    end Ghdl_Signal_Set_Disconnect;
 
-   procedure Free is new Ada.Unchecked_Deallocation
-     (Object => Transaction, Name => Transaction_Acc);
+   procedure Direct_Assign
+     (Targ : out Value_Union; Val : Ghdl_Value_Ptr; Mode : Mode_Type)
+   is
+   begin
+      case Mode is
+         when Mode_B2 =>
+            Targ.B2 := Val.B2;
+         when Mode_E8 =>
+            Targ.E8 := Val.E8;
+         when Mode_E32 =>
+            Targ.E32 := Val.E32;
+         when Mode_I32 =>
+            Targ.I32 := Val.I32;
+         when Mode_I64 =>
+            Targ.I64 := Val.I64;
+         when Mode_F64 =>
+            Targ.F64 := Val.F64;
+      end case;
+   end Direct_Assign;
 
    function Value_Equal (Left, Right : Value_Union; Mode : Mode_Type)
      return Boolean
@@ -364,6 +431,16 @@ package body Grt.Signals is
             return Left.F64 = Right.F64;
       end case;
    end Value_Equal;
+
+   procedure Error_Trans_Error (Trans : Transaction_Acc) is
+   begin
+      Error_C ("range check error on signal at ");
+      Error_C (Trans.File);
+      Error_C (":");
+      Error_C (Natural (Trans.Line));
+      Error_E ("");
+   end Error_Trans_Error;
+   pragma No_Return (Error_Trans_Error);
 
    function Find_Driver (Sig : Ghdl_Signal_Ptr) return Ghdl_Index_Type
    is
@@ -397,15 +474,13 @@ package body Grt.Signals is
       return null;
    end Get_Driver;
 
-   --  Unused but well-known signal which always terminate ACTIVE_LIST.
-   --  As a consequence, every element of ACTIVE_LIST has a link field set to
+   --  Unused but well-known signal which always terminate
+   --    ghdl_signal_active_chain.
+   --  As a consequence, every element of the chain has a link field set to
    --  a non-null value (this is of course not true for SIGNAL_END).  This may
    --  be used to quickly check if a signal is in the list.
    --  This signal is not in the signal table.
    Signal_End : Ghdl_Signal_Ptr;
-
-   --  List of active signals.
-   Active_List : aliased Ghdl_Signal_Ptr;
 
    --  List of signals which have projected waveforms in the future (beyond
    --  the next delta cycle).
@@ -432,7 +507,8 @@ package body Grt.Signals is
          --  Put SIGN on the active list if the transaction is scheduled
          --   for the next delta cycle.
          if Sign.Link = null then
-            Sign.Link := Grt.Threads.Atomic_Insert (Active_List'access, Sign);
+            Sign.Link := Grt.Threads.Atomic_Insert
+              (Ghdl_Signal_Active_Chain'access, Sign);
          end if;
       else
          --  AFTER > 0.
@@ -445,13 +521,38 @@ package body Grt.Signals is
       Assign_Time := Current_Time + After;
       if Assign_Time < 0 then
          --  Beyond the future
-         declare
-            Ntrans : Transaction_Acc;
-         begin
-            Ntrans := Trans;
-            Free (Ntrans);
-            return;
-         end;
+         Free_In (Trans);
+         return;
+      end if;
+
+      --  Handle sign as direct driver.
+      if Driver.Last_Trans.Kind = Trans_Direct then
+         if After /= 0 then
+            Internal_Error ("direct assign with non-0 after");
+         end if;
+         --  FIXME: can be a bound-error too!
+         if Trans.Kind = Trans_Value then
+            case Sign.Mode is
+               when Mode_B2 =>
+                  Driver.Last_Trans.Val_Ptr.B2 := Trans.Val.B2;
+               when Mode_E8 =>
+                  Driver.Last_Trans.Val_Ptr.E8 := Trans.Val.E8;
+               when Mode_E32 =>
+                  Driver.Last_Trans.Val_Ptr.E32 := Trans.Val.E32;
+               when Mode_I32 =>
+                  Driver.Last_Trans.Val_Ptr.I32 := Trans.Val.I32;
+               when Mode_I64 =>
+                  Driver.Last_Trans.Val_Ptr.I64 := Trans.Val.I64;
+               when Mode_F64 =>
+                  Driver.Last_Trans.Val_Ptr.F64 := Trans.Val.F64;
+            end case;
+            Free_In (Trans);
+         elsif Trans.Kind = Trans_Error then
+            Error_Trans_Error (Trans);
+         else
+            Internal_Error ("direct assign with non-value");
+         end if;
+         return;
       end if;
 
       --  LRM93 8.4.1
@@ -732,7 +833,7 @@ package body Grt.Signals is
    is
       Trans : Transaction_Acc;
    begin
-      if not Sign.Flags.Has_Active
+      if not Sign.Has_Active
         and then Sign.Net = Net_One_Driver
         and then Val = Sign.Value.B2
         and then Sign.S.Drivers (0).First_Trans.Next = null
@@ -803,7 +904,7 @@ package body Grt.Signals is
    is
       Trans : Transaction_Acc;
    begin
-      if not Sign.Flags.Has_Active
+      if not Sign.Has_Active
         and then Sign.Net = Net_One_Driver
         and then Val = Sign.Value.E8
         and then Sign.S.Drivers (0).First_Trans.Next = null
@@ -876,7 +977,7 @@ package body Grt.Signals is
    is
       Trans : Transaction_Acc;
    begin
-      if not Sign.Flags.Has_Active
+      if not Sign.Has_Active
         and then Sign.Net = Net_One_Driver
         and then Val = Sign.Value.E32
         and then Sign.S.Drivers (0).First_Trans.Next = null
@@ -949,7 +1050,7 @@ package body Grt.Signals is
    is
       Trans : Transaction_Acc;
    begin
-      if not Sign.Flags.Has_Active
+      if not Sign.Has_Active
         and then Sign.Net = Net_One_Driver
         and then Val = Sign.Value.I32
         and then Sign.S.Drivers (0).First_Trans.Next = null
@@ -1022,7 +1123,7 @@ package body Grt.Signals is
    is
       Trans : Transaction_Acc;
    begin
-      if not Sign.Flags.Has_Active
+      if not Sign.Has_Active
         and then Sign.Net = Net_One_Driver
         and then Val = Sign.Value.I64
         and then Sign.S.Drivers (0).First_Trans.Next = null
@@ -1095,7 +1196,7 @@ package body Grt.Signals is
    is
       Trans : Transaction_Acc;
    begin
-      if not Sign.Flags.Has_Active
+      if not Sign.Has_Active
         and then Sign.Net = Net_One_Driver
         and then Val = Sign.Value.F64
         and then Sign.S.Drivers (0).First_Trans.Next = null
@@ -1302,6 +1403,7 @@ package body Grt.Signals is
    is
    begin
       Add_Port (Last_Implicit_Signal, Sig);
+      Sig.Has_Active := True;
    end Ghdl_Signal_Guard_Dependence;
 
    function Ghdl_Create_Delayed_Signal (Sig : Ghdl_Signal_Ptr; Val : Std_Time)
@@ -1361,16 +1463,6 @@ package body Grt.Signals is
       return To_Ghdl_Value_Ptr (Sig.Ports (Index).Driving_Value'Address);
    end Ghdl_Signal_Read_Port;
 
-   procedure Error_Trans_Error (Trans : Transaction_Acc) is
-   begin
-      Error_C ("range check error on signal at ");
-      Error_C (Trans.File);
-      Error_C (":");
-      Error_C (Natural (Trans.Line));
-      Error_E ("");
-   end Error_Trans_Error;
-   pragma No_Return (Error_Trans_Error);
-
    function Ghdl_Signal_Read_Driver
      (Sig : Ghdl_Signal_Ptr; Index : Ghdl_Index_Type)
      return Ghdl_Value_Ptr
@@ -1384,6 +1476,8 @@ package body Grt.Signals is
       case Trans.Kind is
          when Trans_Value =>
             return To_Ghdl_Value_Ptr (Trans.Val'Address);
+         when Trans_Direct =>
+            Internal_Error ("ghdl_signal_read_driver: trans_direct");
          when Trans_Null =>
             return null;
          when Trans_Error =>
@@ -1545,34 +1639,23 @@ package body Grt.Signals is
       end if;
    end Ghdl_Signal_Driving_Value_F64;
 
+   Ghdl_Implicit_Signal_Active_Chain : Ghdl_Signal_Ptr;
+
    procedure Flush_Active_List
    is
       Sig : Ghdl_Signal_Ptr;
       Next_Sig : Ghdl_Signal_Ptr;
    begin
-      --  Free active_list.
-      Sig := Active_List;
+      --  Free active_chain.
+      Sig := Ghdl_Signal_Active_Chain;
       loop
          Next_Sig := Sig.Link;
          exit when Next_Sig = null;
          Sig.Link := null;
          Sig := Next_Sig;
       end loop;
-      Active_List := Sig;
+      Ghdl_Signal_Active_Chain := Sig;
    end Flush_Active_List;
-
-   --  Add SIG in active_list.
-   procedure Add_Active_List (Sig : Ghdl_Signal_Ptr);
-   pragma Inline (Add_Active_List);
-
-   procedure Add_Active_List (Sig : Ghdl_Signal_Ptr)
-   is
-   begin
-      if Sig.Link = null then
-         Sig.Link := Active_List;
-         Active_List := Sig;
-      end if;
-   end Add_Active_List;
 
    function Find_Next_Time return Std_Time
    is
@@ -1582,32 +1665,37 @@ package body Grt.Signals is
       procedure Check_Transaction (Trans : Transaction_Acc)
       is
       begin
-         if Trans /= null then
-            if Trans.Time = Res and Sig.Link = null then
-               Sig.Link := Active_List;
-               Active_List := Sig;
-            elsif Trans.Time < Res then
-               Flush_Active_List;
+         if Trans = null or else Trans.Kind = Trans_Direct then
+            --  Activity of direct drivers is done through link.
+            return;
+         end if;
 
-               --  Put sig on the list.
-               Sig.Link := Active_List;
-               Active_List := Sig;
+         if Trans.Time = Res and Sig.Link = null then
+            Sig.Link := Ghdl_Signal_Active_Chain;
+            Ghdl_Signal_Active_Chain := Sig;
+         elsif Trans.Time < Res then
+            Flush_Active_List;
 
-               Res := Trans.Time;
-            end if;
-            if Res = Current_Time then
-               --  Must have been in the active list.
-               Internal_Error ("find_next_time(2)");
-            end if;
+            --  Put sig on the list.
+            Sig.Link := Ghdl_Signal_Active_Chain;
+            Ghdl_Signal_Active_Chain := Sig;
+
+            Res := Trans.Time;
+         end if;
+         if Res = Current_Time then
+            --  Must have been in the active list.
+            Internal_Error ("find_next_time(2)");
          end if;
       end Check_Transaction;
    begin
       --  If there is signals in the active list, then next cycle is a delta
       --  cycle, so next time is current_time.
-      if Active_List.Link /= null then
+      if Ghdl_Signal_Active_Chain.Link /= null then
          return Current_Time;
       end if;
-
+      if Ghdl_Implicit_Signal_Active_Chain.Link /= null then
+         return Current_Time;
+      end if;
       Res := Std_Time'Last;
 
       Sig := Future_List;
@@ -1648,22 +1736,6 @@ package body Grt.Signals is
 --       return Length;
 --    end Get_Nbr_Non_Null_Source;
 
-   Clear_List : Ghdl_Signal_Ptr := null;
-
-   procedure Mark_Active (Sig : Ghdl_Signal_Ptr);
-   pragma Inline (Mark_Active);
-
-   procedure Mark_Active (Sig : Ghdl_Signal_Ptr)
-   is
-   begin
-      if Sig.Active then
-         Internal_Error ("mark_active");
-      end if;
-      Sig.Active := True;
-      Sig.Last_Active := Current_Time;
-      Sig.Alink := Clear_List;
-      Clear_List := Sig;
-   end Mark_Active;
 
    type Resolver_Acc is access procedure
      (Instance : System.Address;
@@ -1694,6 +1766,8 @@ package body Grt.Signals is
                Vec (I) := False;
             when Trans_Error =>
                Error ("range check error");
+            when Trans_Direct =>
+               Internal_Error ("compute_resolved_signal: trans_direct");
          end case;
       end loop;
 
@@ -1761,6 +1835,17 @@ package body Grt.Signals is
       Propagation.Increment_Last;
       Propagation.Table (Propagation.Last) := P;
    end Add_Propagation;
+
+   procedure Add_Forward_Propagation (Sig : Ghdl_Signal_Ptr)
+   is
+   begin
+      for I in 1 .. Sig.Nbr_Ports loop
+         Add_Propagation
+           ((Kind => Imp_Forward_Build,
+             Forward => new Forward_Build_Type'(Src => Sig.Ports (I - 1),
+                                                Targ => Sig)));
+      end loop;
+   end Add_Forward_Propagation;
 
    --  Put SIG in PROPAGATION table until ORDER level.
    procedure Order_Signal (Sig : Ghdl_Signal_Ptr; Order : Propag_Order_Flag);
@@ -1919,6 +2004,9 @@ package body Grt.Signals is
                Sig.Flags.Propag := Propag_Being_Driving;
                Order_Signal_List (Sig, Propag_Done);
                Sig.Flags.Propag := Propag_Done;
+               if Sig.S.Mode_Sig in Mode_Signal_Forward then
+                  Add_Forward_Propagation (Sig);
+               end if;
                case Mode_Signal_Implicit (Sig.S.Mode_Sig) is
                   when Mode_Guard =>
                      Add_Propagation ((Kind => Imp_Guard, Sig => Sig));
@@ -2100,7 +2188,10 @@ package body Grt.Signals is
                   Set_Net (Sig_Table.Table (I), Net, Link);
                end loop;
             end if;
-         when Mode_Signal_Implicit =>
+         when Mode_Signal_Forward =>
+            null;
+         when Mode_Transaction
+           | Mode_Guard =>
             for I in 1 .. Sig.Nbr_Ports loop
                Set_Net (Sig.Ports (I - 1), Net, Link);
             end loop;
@@ -2138,6 +2229,8 @@ package body Grt.Signals is
            | Out_Conversion =>
             return Sig_Table.Table
               (Propagation.Table (P).Conv.Src.First).Net;
+         when Imp_Forward_Build =>
+            return Propagation.Table (P).Forward.Src.Net;
          when others =>
             return Propagation.Table (P).Sig.Net;
       end case;
@@ -2155,7 +2248,7 @@ package body Grt.Signals is
            and then Sig.Nbr_Ports = 0
            and then Sig.S.Effective = null
          then
-            Internal_Error ("create_nets(1)");
+            Internal_Error ("merge_net(1)");
          end if;
 
          if Sig.S.Effective /= null
@@ -2205,15 +2298,32 @@ package body Grt.Signals is
             when Drv_One_Port
               | Eff_One_Port
               | Imp_Guard
-              | Imp_Quiet
               | Imp_Transaction
-              | Imp_Stable
-              | Imp_Delayed
               | Eff_Actual
               | Drv_One_Resolved =>
                Sig := Propagation.Table (I).Sig;
                if Sig.Net = No_Signal_Net then
                   Merge_Net (Sig);
+               end if;
+            when Imp_Forward =>
+               --  Should not yet appear.
+               Internal_Error ("create_nets - forward");
+            when Imp_Forward_Build =>
+               Sig := Propagation.Table (I).Forward.Src;
+               if Sig.Net = No_Signal_Net then
+                  --  Create a new net with only sig.
+                  Last_Signal_Net := Last_Signal_Net + 1;
+                  Set_Net (Sig, Last_Signal_Net, Sig);
+               end if;
+            when Imp_Quiet
+              | Imp_Stable
+              | Imp_Delayed =>
+               Sig := Propagation.Table (I).Sig;
+               if Sig.Net = No_Signal_Net then
+                  --  Create a new net with only sig.
+                  Last_Signal_Net := Last_Signal_Net + 1;
+                  Sig.Net := Last_Signal_Net;
+                  Sig.Link := Sig;
                end if;
             when Drv_Multiple
               | Eff_Multiple =>
@@ -2277,6 +2387,9 @@ package body Grt.Signals is
          procedure Free is new Ada.Unchecked_Deallocation
            (Name => Propag_Array_Acc, Object => Propag_Array);
 
+         procedure Deallocate is new Ada.Unchecked_Deallocation
+           (Object => Forward_Build_Type, Name => Forward_Build_Acc);
+
          Net : Signal_Net_Type;
       begin
          --  1) Count number of propagation cell per net.
@@ -2286,7 +2399,8 @@ package body Grt.Signals is
             Net := Get_Propagation_Net (I);
             Offs (Net) := Offs (Net) + 1;
          end loop;
-         --  2) Convert this table into offsets.
+
+         --  2) Convert numbers to offsets.
          Last_Off := 1;
          for I in 1 .. Last_Signal_Net loop
             Num := Offs (I);
@@ -2296,11 +2410,9 @@ package body Grt.Signals is
                Last_Off := Last_Off + 1 + Num;
             end if;
          end loop;
-         Num := Offs (0);
          Offs (0) := Last_Off + 1;
-         --Last_Off := Last_Off + 1 + Num - 1;
 
-         --  3) Re-order the table (by a copy).
+         --  3) Gather entries by net (copy)
          Propag := new Propag_Array (1 .. Last_Off);
          for I in Propagation.First .. Propagation.Last loop
             Net := Get_Propagation_Net (I);
@@ -2312,7 +2424,13 @@ package body Grt.Signals is
          Propagation.Set_Last (Last_Off);
          Propagation.Release;
          for I in Propagation.First .. Propagation.Last loop
-            Propagation.Table (I) := Propag (I);
+            if Propag (I).Kind = Imp_Forward_Build then
+               Propagation.Table (I) := (Kind => Imp_Forward,
+                                         Sig => Propag (I).Forward.Targ);
+               Deallocate (Propag (I).Forward);
+            else
+               Propagation.Table (I) := Propag (I);
+            end if;
          end loop;
          Free (Propag);
          for I in 1 .. Last_Signal_Net loop
@@ -2343,7 +2461,11 @@ package body Grt.Signals is
                if Sig.S.Resolv /= null then
                   Sig.Net := Net_One_Resolved;
                elsif Sig.S.Nbr_Drivers = 1 then
-                  Sig.Net := Net_One_Driver;
+                  if Sig.S.Drivers (0).Last_Trans.Kind = Trans_Direct then
+                     Sig.Net := Net_One_Direct;
+                  else
+                     Sig.Net := Net_One_Driver;
+                  end if;
                end if;
             else
                Sig.Net := Signal_Net_Type (Offs (Sig.Net));
@@ -2448,6 +2570,35 @@ package body Grt.Signals is
       Create_Nets;
    end Order_All_Signals;
 
+   --  Add SIG in active_chain.
+   procedure Add_Active_Chain (Sig : Ghdl_Signal_Ptr);
+   pragma Inline (Add_Active_Chain);
+
+   procedure Add_Active_Chain (Sig : Ghdl_Signal_Ptr)
+   is
+   begin
+      if Sig.Link = null then
+         Sig.Link := Ghdl_Signal_Active_Chain;
+         Ghdl_Signal_Active_Chain := Sig;
+      end if;
+   end Add_Active_Chain;
+
+   Clear_List : Ghdl_Signal_Ptr := null;
+
+   procedure Mark_Active (Sig : Ghdl_Signal_Ptr);
+   pragma Inline (Mark_Active);
+
+   procedure Mark_Active (Sig : Ghdl_Signal_Ptr)
+   is
+   begin
+      if not Sig.Active then
+         Sig.Active := True;
+         Sig.Last_Active := Current_Time;
+         Sig.Alink := Clear_List;
+         Clear_List := Sig;
+      end if;
+   end Mark_Active;
+
    procedure Set_Guard_Activity (Sig : Ghdl_Signal_Ptr) is
    begin
       for I in 1 .. Sig.Nbr_Ports loop
@@ -2489,10 +2640,17 @@ package body Grt.Signals is
    begin
       for J in 1 .. Sig.S.Nbr_Drivers loop
          Trans := Sig.S.Drivers (J - 1).First_Trans.Next;
-         if Trans /= null and then Trans.Time = Current_Time then
-            Free (Sig.S.Drivers (J - 1).First_Trans);
-            Sig.S.Drivers (J - 1).First_Trans := Trans;
-            Res := True;
+         if Trans /= null then
+            if Trans.Kind = Trans_Direct then
+               Direct_Assign (Sig.S.Drivers (J - 1).First_Trans.Val,
+                              Trans.Val_Ptr, Sig.Mode);
+               --  In fact we knew the signal was active!
+               Res := True;
+            elsif Trans.Time = Current_Time then
+               Free (Sig.S.Drivers (J - 1).First_Trans);
+               Sig.S.Drivers (J - 1).First_Trans := Trans;
+               Res := True;
+            end if;
          end if;
       end loop;
       if Res then
@@ -2561,7 +2719,7 @@ package body Grt.Signals is
          --  Append the transaction.
          Prev.Next := Trans;
          if Sig.S.Time = 0 then
-            Add_Active_List (Sig);
+            Add_Active_Chain (Sig);
          end if;
       end if;
    end Delayed_Implicit_Process;
@@ -2597,6 +2755,7 @@ package body Grt.Signals is
       I : Signal_Net_Type;
       Sig : Ghdl_Signal_Ptr;
       Trans : Transaction_Acc;
+      First_Trans : Transaction_Acc;
    begin
       I := Start;
       loop
@@ -2605,19 +2764,31 @@ package body Grt.Signals is
             when Drv_One_Driver
               | Eff_One_Driver =>
                Sig := Propagation.Table (I).Sig;
-               Trans := Sig.S.Drivers (0).First_Trans.Next;
-               if Trans /= null and then Trans.Time = Current_Time then
-                  Mark_Active (Sig);
-                  Free (Sig.S.Drivers (0).First_Trans);
-                  Sig.S.Drivers (0).First_Trans := Trans;
-                  case Trans.Kind is
-                     when Trans_Value =>
-                        Sig.Driving_Value := Trans.Val;
-                     when Trans_Null =>
-                        Error ("null transaction");
-                     when Trans_Error =>
-                        Error_Trans_Error (Trans);
-                  end case;
+               First_Trans := Sig.S.Drivers (0).First_Trans;
+               Trans := First_Trans.Next;
+               if Trans /= null then
+                  if Trans.Kind = Trans_Direct then
+                     --  Note: already or will be marked as active in
+                     --    update_signals.
+                     Mark_Active (Sig);
+                     Direct_Assign (First_Trans.Val,
+                                    Trans.Val_Ptr, Sig.Mode);
+                     Sig.Driving_Value := First_Trans.Val;
+                  elsif Trans.Time = Current_Time then
+                     Mark_Active (Sig);
+                     Free (First_Trans);
+                     Sig.S.Drivers (0).First_Trans := Trans;
+                     case Trans.Kind is
+                        when Trans_Value =>
+                           Sig.Driving_Value := Trans.Val;
+                        when Trans_Direct =>
+                           Internal_Error ("run_propagation: trans_direct");
+                        when Trans_Null =>
+                           Error ("null transaction");
+                        when Trans_Error =>
+                           Error_Trans_Error (Trans);
+                     end case;
+                  end if;
                end if;
             when Drv_One_Resolved
               | Eff_One_Resolved =>
@@ -2663,8 +2834,15 @@ package body Grt.Signals is
             when Imp_Guard
               | Imp_Stable
               | Imp_Quiet
-              | Imp_Transaction =>
+              | Imp_Transaction
+              | Imp_Forward_Build =>
                null;
+            when Imp_Forward =>
+               Sig := Propagation.Table (I).Sig;
+               if Sig.Link = null then
+                  Sig.Link := Ghdl_Implicit_Signal_Active_Chain;
+                  Ghdl_Implicit_Signal_Active_Chain := Sig;
+               end if;
             when Imp_Delayed =>
                Sig := Propagation.Table (I).Sig;
                Trans := Sig.S.Attr_Trans.Next;
@@ -2717,6 +2895,9 @@ package body Grt.Signals is
                if Sig.Active then
                   Set_Effective_Value (Sig, Sig.S.Effective.Value);
                end if;
+            when Imp_Forward
+              | Imp_Forward_Build =>
+               null;
             when Imp_Guard =>
                --  Guard signal is active iff one of its dependence is active.
                Sig := Propagation.Table (I).Sig;
@@ -2746,7 +2927,7 @@ package body Grt.Signals is
                   Sig.S.Attr_Trans.Next := Trans;
                   Set_Effective_Value (Sig, Sig.Driving_Value);
                   if Sig.S.Time = 0 then
-                     Add_Active_List (Sig);
+                     Add_Active_Chain (Sig);
                   end if;
                else
                   Trans := Sig.S.Attr_Trans.Next;
@@ -2835,8 +3016,8 @@ package body Grt.Signals is
       --  1) Reset active flag.
       Reset_Active_Flag;
 
-      Sig := Active_List;
-      Active_List := Signal_End;
+      Sig := Ghdl_Signal_Active_Chain;
+      Ghdl_Signal_Active_Chain := Signal_End;
       while Sig.S.Mode_Sig /= Mode_End loop
          Next_Sig := Sig.Link;
          Sig.Link := null;
@@ -2852,11 +3033,21 @@ package body Grt.Signals is
                case Trans.Kind is
                   when Trans_Value =>
                      Sig.Driving_Value := Trans.Val;
+                  when Trans_Direct =>
+                     Internal_Error ("update_signals: trans_direct");
                   when Trans_Null =>
                      Error ("null transaction");
                   when Trans_Error =>
                      Error_Trans_Error (Trans);
                end case;
+               Set_Effective_Value (Sig, Sig.Driving_Value);
+
+            when Net_One_Direct =>
+               Mark_Active (Sig);
+
+               Trans := Sig.S.Drivers (0).Last_Trans;
+               Sig.Driving_Value := Trans.Val_Ptr.all;
+               Sig.S.Drivers (0).First_Trans.Val := Trans.Val_Ptr.all;
                Set_Effective_Value (Sig, Sig.Driving_Value);
 
             when Net_One_Resolved =>
@@ -2865,9 +3056,14 @@ package body Grt.Signals is
 
                for J in 1 .. Sig.S.Nbr_Drivers loop
                   Trans := Sig.S.Drivers (J - 1).First_Trans.Next;
-                  if Trans /= null and then Trans.Time = Current_Time then
-                     Free (Sig.S.Drivers (J - 1).First_Trans);
-                     Sig.S.Drivers (J - 1).First_Trans := Trans;
+                  if Trans /= null then
+                     if Trans.Kind = Trans_Direct then
+                        Direct_Assign (Sig.S.Drivers (J - 1).First_Trans.Val,
+                                       Trans.Val_Ptr, Sig.Mode);
+                     elsif Trans.Time = Current_Time then
+                        Free (Sig.S.Drivers (J - 1).First_Trans);
+                        Sig.S.Drivers (J - 1).First_Trans := Trans;
+                     end if;
                   end if;
                end loop;
                Compute_Resolved_Signal (Sig.S.Resolv);
@@ -2881,17 +3077,33 @@ package body Grt.Signals is
                   Propagation.Table (Sig.Net).Updated := True;
                   Run_Propagation (Sig.Net + 1);
 
-                  --  Put it on the list.
-                  Add_Active_List (Sig);
+                  --  Put it on the list, so that updated flag will be cleared.
+                  Add_Active_Chain (Sig);
                end if;
          end case;
 
          Sig := Next_Sig;
       end loop;
 
+      --  Implicit signals (forwarded).
+      loop
+         Sig := Ghdl_Implicit_Signal_Active_Chain;
+         exit when Sig.Link = null;
+         Ghdl_Implicit_Signal_Active_Chain := Sig.Link;
+         Sig.Link := null;
+
+         if not Propagation.Table (Sig.Net).Updated then
+            Propagation.Table (Sig.Net).Updated := True;
+            Run_Propagation (Sig.Net + 1);
+
+            --  Put it on the list, so that updated flag will be cleared.
+            Add_Active_Chain (Sig);
+         end if;
+      end loop;
+
       --  Un-mark updated.
-      Sig := Active_List;
-      Active_List := Signal_End;
+      Sig := Ghdl_Signal_Active_Chain;
+      Ghdl_Signal_Active_Chain := Signal_End;
       while Sig.Link /= null loop
          Propagation.Table (Sig.Net).Updated := False;
          Next_Sig := Sig.Link;
@@ -2909,8 +3121,8 @@ package body Grt.Signals is
                begin
                   Trans := Sig.S.Attr_Trans.Next;
                   if Trans /= null and then Trans.Time = Current_Time then
-                     Sig.Link := Active_List;
-                     Active_List := Sig;
+                     Sig.Link := Ghdl_Implicit_Signal_Active_Chain;
+                     Ghdl_Implicit_Signal_Active_Chain := Sig;
                   end if;
                end;
             when others =>
@@ -2954,7 +3166,9 @@ package body Grt.Signals is
             when Imp_Guard
               | Imp_Stable
               | Imp_Quiet
-              | Imp_Transaction =>
+              | Imp_Transaction
+              | Imp_Forward
+              | Imp_Forward_Build =>
                null;
             when Imp_Delayed =>
                --  LRM 14.1
@@ -3006,7 +3220,9 @@ package body Grt.Signals is
                Sig.Value := Sig.Driving_Value;
             when Imp_Stable
               | Imp_Quiet
-              | Imp_Transaction =>
+              | Imp_Transaction
+              | Imp_Forward
+              | Imp_Forward_Build =>
                --  Already initialized during creation.
                null;
             when In_Conversion =>
@@ -3031,11 +3247,13 @@ package body Grt.Signals is
          Sig := Sig_Table.Table (I);
 
          case Sig.Net is
-            when Net_One_Driver =>
+            when Net_One_Driver
+              | Net_One_Direct =>
                --  Nothing to do: drivers were already created.
                null;
 
             when Net_One_Resolved =>
+               Sig.Has_Active := True;
                if Sig.Nbr_Ports > 0 then
                   Compute_Resolved_Signal (Sig.S.Resolv);
                   Sig.Value := Sig.Driving_Value;
@@ -3066,10 +3284,10 @@ package body Grt.Signals is
                                      Last_Active => 0,
                                      Event => False,
                                      Active => False,
+                                     Has_Active => False,
                                      Mode => Mode_B2,
 
                                      Flags => (Propag => Propag_None,
-                                               Has_Active => False,
                                                Is_Dumped => False,
                                                Cyc_Event => False),
 
@@ -3086,7 +3304,8 @@ package body Grt.Signals is
 
                                      S => (Mode_Sig => Mode_End));
 
-      Active_List := Signal_End;
+      Ghdl_Signal_Active_Chain := Signal_End;
+      Ghdl_Implicit_Signal_Active_Chain := Signal_End;
       Future_List := Signal_End;
 
       Boolean_Signal_Rti.Obj_Type := Std_Standard_Boolean_RTI_Ptr;

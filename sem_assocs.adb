@@ -148,7 +148,7 @@ package body Sem_Assocs is
                Actual := Get_Actual (Assoc);
                Object := Name_To_Object (Actual);
                if Object /= Null_Iir then
-                  Prefix := Get_Base_Name (Object);
+                  Prefix := Get_Object_Prefix (Object);
                else
                   Prefix := Actual;
                end if;
@@ -1230,9 +1230,9 @@ package body Sem_Assocs is
       Res_Type : Iir;
       Assoc_Kind : Param_Assoc_Type;
    begin
-      --  Sem formal.
       Formal := Get_Formal (Assoc);
 
+      --  Handle open association.
       if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
          if Formal /= Null_Iir then
             Assoc_Kind := Sem_Formal (Formal, Inter);
@@ -1259,6 +1259,7 @@ package body Sem_Assocs is
          return;
       end if;
 
+      --  Pre-semantize formal and extract out conversion.
       if Formal /= Null_Iir then
          Assoc_Kind := Sem_Formal (Formal, Inter);
          if Assoc_Kind = None then
@@ -1368,6 +1369,7 @@ package body Sem_Assocs is
          return;
       end if;
 
+      --  Semantize formal.
       if Get_Formal (Assoc) /= Null_Iir then
          Set_Type (Formal, Null_Iir);
          Sem_Name (Formal, False);
@@ -1379,6 +1381,9 @@ package body Sem_Assocs is
          Free_Name (Formal);
          Set_Formal (Assoc, Expr);
          Formal_Type := Get_Type (Expr);
+         if Out_Conv = Null_Iir and In_Conv = Null_Iir then
+            Res_Type := Formal_Type;
+         end if;
       end if;
 
       Set_Out_Conversion (Assoc, Out_Conv);

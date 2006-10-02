@@ -277,7 +277,7 @@ package body Sem is
       end if;
 
       Formal_Base := Get_Base_Name (Formal);
-      Actual_Base := Get_Base_Name (Actual);
+      Actual_Base := Get_Object_Prefix (Actual);
 
       --  If the formal is of mode IN, then it has no driving value, and its
       --  effective value is the effective value of the actual.
@@ -461,7 +461,7 @@ package body Sem is
             if Object = Null_Iir then
                Prefix := Actual;
             else
-               Prefix := Get_Base_Name (Object);
+               Prefix := Get_Object_Prefix (Object);
             end if;
             case Get_Kind (Prefix) is
                when Iir_Kind_Signal_Declaration

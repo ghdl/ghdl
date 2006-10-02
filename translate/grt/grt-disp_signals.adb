@@ -77,6 +77,12 @@ package body Grt.Disp_Signals is
                else
                   Disp_Value (T.Val, Mode);
                end if;
+            when Trans_Direct =>
+               if Sig_Type /= null then
+                  Disp_Value (stdout, T.Val_Ptr.all, Sig_Type);
+               else
+                  Disp_Value (T.Val_Ptr.all, Mode);
+               end if;
             when Trans_Null =>
                Put ("NULL");
             when Trans_Error =>
@@ -106,6 +112,11 @@ package body Grt.Disp_Signals is
       end if;
       if Sig.Event then
          Put ('E');
+      else
+         Put ('-');
+      end if;
+      if Sig.Has_Active then
+         Put ('a');
       else
          Put ('-');
       end if;
@@ -258,7 +269,7 @@ package body Grt.Disp_Signals is
       Put (stdout, S.all'Address);
       Put (" net: ");
       Put_I32 (stdout, Ghdl_I32 (S.Net));
-      if S.Flags.Has_Active then
+      if S.Has_Active then
          Put (" +A");
       end if;
       New_Line;
@@ -348,7 +359,7 @@ package body Grt.Disp_Signals is
          Put_Sig_Index (I);
          Put (": ");
          Put (stdout, Sig.all'Address);
-         if Sig.Flags.Has_Active then
+         if Sig.Has_Active then
             Put (" +A");
          end if;
          Put (" net: ");

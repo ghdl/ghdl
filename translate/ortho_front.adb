@@ -71,8 +71,7 @@ package body Ortho_Front is
    procedure Init is
    begin
       -- Initialize.
-      Back_End.Finish_Compilation := Trans_Be.Finish_Compilation'Access;
-      Back_End.Sem_Foreign := Trans_Be.Sem_Foreign'Access;
+      Trans_Be.Register_Translation_Back_End;
       Std_Names.Std_Names_Initialize;
       Libraries.Init_Pathes;
       Elab_Filelist := null;

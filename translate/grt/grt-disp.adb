@@ -86,16 +86,20 @@ package body Grt.Disp is
             Put ("Drv (1 prt) ");
          when Eff_One_Port =>
             Put ("Eff (1 prt) ");
+         when Imp_Forward =>
+            Put ("Forward ");
+         when Imp_Forward_Build =>
+            Put ("Forward_Build ");
          when Imp_Guard =>
             Put ("Guard ");
          when Imp_Stable =>
             Put ("Stable ");
          when Imp_Quiet =>
-            Put ("imp quiet ");
+            Put ("Quiet ");
          when Imp_Transaction =>
-            Put ("imp transaction ");
+            Put ("Transaction ");
          when Imp_Delayed =>
-            Put ("imp delayed ");
+            Put ("Delayed ");
          when Eff_Actual =>
             Put ("Eff Actual ");
          when Eff_Multiple =>
@@ -132,9 +136,25 @@ package body Grt.Disp is
               | Eff_One_Resolved
               | Imp_Guard
               | Imp_Stable
+              | Imp_Quiet
+              | Imp_Transaction
+              | Imp_Delayed
               | Eff_Actual =>
                Put_Sig_Index (Signal_Ptr_To_Index (Propagation.Table (I).Sig));
                New_Line;
+            when Imp_Forward =>
+               Put_I32 (stdout, Ghdl_I32 (Propagation.Table (I).Sig.Net));
+               New_Line;
+            when Imp_Forward_Build =>
+               declare
+                  Forward : Forward_Build_Acc;
+               begin
+                  Forward := Propagation.Table (I).Forward;
+                  Put_Sig_Index (Signal_Ptr_To_Index (Forward.Src));
+                  Put (" -> ");
+                  Put_Sig_Index (Signal_Ptr_To_Index (Forward.Targ));
+                  New_Line;
+               end;
             when Eff_Multiple
               | Drv_Multiple =>
                Put_Sig_Range (Propagation.Table (I).Resolv.Sig_Range);
@@ -150,10 +170,7 @@ package body Grt.Disp is
                   Put_Sig_Range (Conv.Dest);
                   New_Line;
                end;
-            when Imp_Quiet
-              | Imp_Transaction
-              | Imp_Delayed
-              | Prop_End =>
+            when Prop_End =>
                New_Line;
             when Drv_Error =>
                null;

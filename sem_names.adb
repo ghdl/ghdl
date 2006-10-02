@@ -1198,6 +1198,7 @@ package body Sem_Names is
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration =>
+            Set_Base_Name (Name, Res);
             return;
          when Iir_Kind_Type_Conversion =>
             Finish_Sem_Type_Conversion (Res);
@@ -1389,6 +1390,7 @@ package body Sem_Names is
          Set_Type (Se, Get_Type (Rec_El));
          Set_Selected_Element (Se, Rec_El);
          Set_Base_Name (Se, Get_Base_Name (R));
+         Set_Base_Name (Name, Get_Base_Name (R));
          Add_Result (Res, Se);
       end Sem_As_Selected_Element;
 
@@ -2909,6 +2911,7 @@ package body Sem_Names is
          when Iir_Kind_Error =>
             null;
          when Iir_Kinds_Object_Declaration =>
+            Set_Base_Name (Name, Expr);
             Sem_Check_Pure (Name, Expr);
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name
