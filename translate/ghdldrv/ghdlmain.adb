@@ -216,7 +216,7 @@ package body Ghdlmain is
       pragma Unreferenced (Cmd);
       use Ada.Text_IO;
    begin
-      Put_Line (Version.Ghdl_Version);
+      Put_Line (Version.Ghdl_Release);
       Put_Line (" Compiled with " & Bug.Get_Gnat_Version);
       if Version_String /= null then
          Put (" ");

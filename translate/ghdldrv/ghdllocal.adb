@@ -177,7 +177,7 @@ package body Ghdllocal is
    function Get_Machine_Path_Prefix return String is
    begin
       if Flag_32bit then
-         return Prefix_Path.all & "32" & Directory_Separator;
+         return Prefix_Path.all & "32";
       else
          return Prefix_Path.all;
       end if;
@@ -187,13 +187,26 @@ package body Ghdllocal is
    is
    begin
       Libraries.Add_Library_Path
-        (Get_Machine_Path_Prefix & Get_Version_Path & Directory_Separator
+        (Get_Machine_Path_Prefix & Directory_Separator
+         & Get_Version_Path & Directory_Separator
          & Name & Directory_Separator);
    end Add_Library_Path;
 
    procedure Setup_Libraries (Load : Boolean)
    is
    begin
+      --  Get environment variable.
+      Prefix_Env := GNAT.OS_Lib.Getenv ("GHDL_PREFIX");
+      if Prefix_Env = null or else Prefix_Env.all = "" then
+         Prefix_Env := null;
+      end if;
+
+      --  Set prefix path.
+      --  If not set by command line, try environment variable.
+      if Prefix_Path = null then
+         Prefix_Path := Prefix_Env;
+      end if;
+      --  Else try default path.
       if Prefix_Path = null then
          Prefix_Path := new String'(Default_Pathes.Prefix);
       else

@@ -53,6 +53,9 @@ package Ghdllocal is
    --  Path prefix for libraries.
    Prefix_Path : String_Access := null;
 
+   --  getenv ("GHDL_PREFIX").  Set by Setup_Libraries.
+   Prefix_Env : String_Access := null;
+
    Nul : constant Character := Character'Val (0);
 
    --  Return FILENAME without the extension.
