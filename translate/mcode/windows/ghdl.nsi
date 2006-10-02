@@ -5,9 +5,8 @@
 ;  Check if administrator
 ;  uninstall support
 ; TODO:
-;  * Add version
-;  * Check if GHDL is already installed (and uninstall before)
-;  * Doc
+;  * allow multiple version
+;  * command line installation
 ;  * Allow user install
 
 ;--------------------------------
@@ -29,7 +28,7 @@ InstallDir $PROGRAMFILES\Ghdl
 ; overwrite the old one automatically)
 InstallDirRegKey HKLM "Software\Ghdl" "Install_Dir"
 
-LicenseData ..\COPYING
+LicenseData ..\..\..\COPYING
 ; LicenseForceSelection
 
 ;--------------------------------
@@ -117,7 +116,7 @@ Section "Ghdl Compiler (required)"
   File /oname=ghdl.exe ..\build\ghdl.exe
   
   SetOutPath $INSTDIR
-  File /oname=COPYING.txt ..\COPYING
+  File /oname=COPYING.txt ..\..\..\COPYING
 
   ; Write the installation path into the registry
   WriteRegStr HKLM "Software\Ghdl" "Install_Dir" $INSTDIR
@@ -141,18 +140,19 @@ Section "VHDL standard and ieee libraries"
   File /r ..\lib\v93\std ..\lib\v93\ieee
 SectionEnd
 
-Section "Synopsys libraries (Recommanded)"
+Section "Synopsys libraries (Recommended)"
   SetOutPath $INSTDIR\lib\v87
   File /r ..\lib\v87\synopsys
   SetOutPath $INSTDIR\lib\v93
   File /r ..\lib\v93\synopsys
 SectionEnd
 
-Section "Documentation (Recommanded)"
+Section "Documentation (Recommended)"
+  SetOutPath $INSTDIR
   File ghdl.htm
 SectionEnd
 
-Section "Add in PATH (Recommanded)"
+Section "Add in PATH (Recommended)"
   WriteRegDWORD HKLM "Software\Ghdl" "PathSet" 1
   Push $INSTDIR\Bin
   Call AddToPath

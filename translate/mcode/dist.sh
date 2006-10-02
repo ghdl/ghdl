@@ -133,12 +133,15 @@ ortho_code-opts.adb
 ortho_code-opts.ads
 ortho_code-types.adb
 ortho_code-types.ads
+ortho_code-sysdeps.adb
+ortho_code-sysdeps.ads
 ortho_code-x86-emits.adb
 ortho_code-x86-emits.ads
 ortho_code-x86-insns.adb
 ortho_code-x86-insns.ads
 ortho_code-x86-abi.adb
 ortho_code-x86-abi.ads
+ortho_code-x86-flags.ads
 ortho_code-x86.adb
 ortho_code-x86.ads
 ortho_code.ads
@@ -158,6 +161,7 @@ ghdl.nsi
 windows_default_path.adb
 windows_default_path.ads
 ghdlfilter.adb
+ortho_code-sysdeps.adb
 grt-modules.adb
 "
 
@@ -206,7 +210,7 @@ done
 
     ln -sf $CWD/winbuild.bat $distdir/winbuild.bat
 
-makeinfo --no-split -o $distdir/windows/ghdl.htm $CWD/../../doc/ghdl.texi 
+makeinfo --html --no-split -o $distdir/windows/ghdl.htm $CWD/../../doc/ghdl.texi 
 }
 
 do_sources_dir ()
@@ -460,6 +464,8 @@ else
 	do_Makefile ;;
       files)
         do_files ;;
+      sources)
+        do_sources_dir ;;
       tar)
         do_tar ;;
       zip)
