@@ -21,6 +21,7 @@ with Ortho_Code.Types;
 with Ortho_Code.Consts;
 with Ortho_Code.Debug;
 with Ortho_Code.X86.Insns;
+with Ortho_Code.X86.Flags;
 with Ortho_Code.Flags;
 with Ortho_Code.Dwarf;
 with Ortho_Code.Binary; use Ortho_Code.Binary;
@@ -148,32 +149,43 @@ package body Ortho_Code.X86.Emits is
             Gen_X86_32 (Get_Decl_Symbol (Get_Addr_Object (N)), 0);
          when OE_Add =>
             declare
+               P : O_Enode;
                L, R : O_Enode;
                S, C : O_Enode;
+               Off : Int32;
             begin
-               L := Get_Expr_Left (N);
-               R := Get_Expr_Right (N);
+               Off := 0;
+               P := N;
                if Sz /= Sz_32l then
                   raise Program_Error;
                end if;
-               if Get_Expr_Kind (L) = OE_Addrg
-                 and then Get_Expr_Kind (R) = OE_Const
-               then
-                  S := L;
-                  C := R;
-               elsif Get_Expr_Kind (R) = OE_Addrg
-                 and then Get_Expr_Kind (L) = OE_Const
-               then
-                  S := R;
-                  C := L;
-               else
-                  raise Program_Error;
-               end if;
-               if Get_Expr_Mode (C) /= Mode_U32 then
-                  raise Program_Error;
-               end if;
+               loop
+                  L := Get_Expr_Left (P);
+                  R := Get_Expr_Right (P);
+
+                  --  Extract the const node.
+                  if Get_Expr_Kind (R) = OE_Const then
+                     S := L;
+                     C := R;
+                  elsif Get_Expr_Kind (L) = OE_Const then
+                     S := R;
+                     C := L;
+                  else
+                     raise Program_Error;
+                  end if;
+                  if Get_Expr_Mode (C) /= Mode_U32 then
+                     raise Program_Error;
+                  end if;
+                  Off := Off + To_Int32 (Get_Expr_Low (C));
+
+                  exit when Get_Expr_Kind (S) = OE_Addrg;
+                  P := S;
+                  if Get_Expr_Kind (P) /= OE_Add then
+                     raise Program_Error;
+                  end if;
+               end loop;
                Gen_X86_32 (Get_Decl_Symbol (Get_Addr_Object (S)),
-                           Integer_32 (To_Int32 (Get_Expr_Low (C))));
+                           Integer_32 (Off));
             end;
          when others =>
             raise Program_Error;
@@ -1016,23 +1028,27 @@ package body Ortho_Code.X86.Emits is
          raise Program_Error;
       end if;
       --  Align stack on word.
-      --  Add reg, 3
+      --  Add reg, (stack_boundary - 1)
       Start_Insn;
       Gen_B8 (2#1000_0011#);
       Gen_B8 (2#11_000_000# + To_Reg32 (Reg));
-      Gen_B8 (3);
+      Gen_B8 (Byte (X86.Flags.Stack_Boundary - 1));
       End_Insn;
-      --  and reg, ~3
+      --  and reg, ~(stack_boundary - 1)
       Start_Insn;
       Gen_B8 (2#1000_0001#);
       Gen_B8 (2#11_100_000# + To_Reg32 (Reg));
-      Gen_Le32 (not 3);
+      Gen_Le32 (not (X86.Flags.Stack_Boundary - 1));
       End_Insn;
-      --  subl esp, reg
-      Start_Insn;
-      Gen_B8 (2#0001_1011#);
-      Gen_B8 (2#11_100_000# + To_Reg32 (Reg));
-      End_Insn;
+      if X86.Flags.Flag_Alloca_Call then
+         Gen_Call (Chkstk_Symbol);
+      else
+         --  subl esp, reg
+         Start_Insn;
+         Gen_B8 (2#0001_1011#);
+         Gen_B8 (2#11_100_000# + To_Reg32 (Reg));
+         End_Insn;
+      end if;
       --  movl reg, esp
       Start_Insn;
       Gen_B8 (2#1000_1001#);
@@ -1945,10 +1961,11 @@ package body Ortho_Code.X86.Emits is
       use Ortho_Code.Decls;
       use Binary_File;
       use Interfaces;
-      use Flags;
+      use Ortho_Code.Flags;
       Sym : Symbol;
       Subprg_Decl : O_Dnode;
       Is_Global : Boolean;
+      Frame_Size : Unsigned_32;
    begin
       Set_Current_Section (Sect_Text);
       Subprg_Decl := Subprg.D_Decl;
@@ -1964,10 +1981,14 @@ package body Ortho_Code.X86.Emits is
       Set_Symbol_Pc (Sym, Is_Global);
       Subprg_Pc := Get_Current_Pc;
 
---        if Flag_Debug = Debug_Dwarf then
---           Dwarf.Emit_Prolog (Subprg);
---           Set_Current_Section (Sect_Text);
---        end if;
+      --  Compute frame size.
+      --  8 bytes are used by return address and saved frame pointer.
+      Frame_Size := Unsigned_32 (Subprg.Stack_Max) + 8;
+      --  Align.
+      Frame_Size := (Frame_Size + X86.Flags.Stack_Boundary - 1)
+        and not (X86.Flags.Stack_Boundary - 1);
+      --  The 8 bytes are already allocated.
+      Frame_Size := Frame_Size - 8;
 
       --  Emit prolog.
       --  push %ebp
@@ -1980,18 +2001,29 @@ package body Ortho_Code.X86.Emits is
       Gen_B8 (2#11_100_101#);
       End_Insn;
       --  subl XXX, %esp
-      if Subprg.Stack_Max /= 0 then
-         Start_Insn;
-         if Subprg.Stack_Max < 128 then
-            Gen_B8 (2#100000_11#);
-            Gen_B8 (2#11_101_100#);
-            Gen_B8 (Byte (Subprg.Stack_Max));
+      if Frame_Size /= 0 then
+         if not X86.Flags.Flag_Alloca_Call
+            or else Frame_Size <= 4096
+         then
+            Start_Insn;
+            if Frame_Size < 128 then
+               Gen_B8 (2#100000_11#);
+               Gen_B8 (2#11_101_100#);
+               Gen_B8 (Byte (Frame_Size));
+            else
+               Gen_B8 (2#100000_01#);
+               Gen_B8 (2#11_101_100#);
+               Gen_Le32 (Frame_Size);
+            end if;
+            End_Insn;
          else
-            Gen_B8 (2#100000_01#);
-            Gen_B8 (2#11_101_100#);
-            Gen_Le32 (Unsigned_32 (Subprg.Stack_Max));
+            --  mov stack_size,%eax
+            Start_Insn;
+            Gen_B8 (2#1011_1_000#);
+            Gen_Le32 (Frame_Size);
+            End_Insn;
+            Gen_Call (Chkstk_Symbol);
          end if;
-         End_Insn;
       end if;
 
       if Flag_Profile then
@@ -2009,7 +2041,7 @@ package body Ortho_Code.X86.Emits is
       use Binary_File;
       use Ortho_Code.Decls;
       use Ortho_Code.Types;
-      use Flags;
+      use Ortho_Code.Flags;
       Decl : O_Dnode;
    begin
       --  Restore registers.
@@ -2208,6 +2240,10 @@ package body Ortho_Code.X86.Emits is
 
       if Flag_Profile then
          Mcount_Symbol := Create_Symbol (Get_Identifier ("mcount"));
+      end if;
+
+      if X86.Flags.Flag_Alloca_Call then
+         Chkstk_Symbol := Create_Symbol (Get_Identifier ("__chkstk"));
       end if;
 
       Intrinsics_Symbol (Intrinsic_Mul_Ov_U64) :=

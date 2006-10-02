@@ -515,7 +515,12 @@ package body Ortho_Code.Disps is
             Put ("var ");
             Disp_Decl_Name (Decl);
             Put (" : ");
-            Disp_Type (Get_Decl_Type (Decl));
+            Dtype := Get_Decl_Type (Decl);
+            Disp_Type (Dtype);
+            if True then
+               Put (" {size="
+                    & Uns32'Image (Types.Get_Type_Size (Dtype)) & "}");
+            end if;
             Put_Line (";");
          when OD_Const =>
             Disp_Decl_Storage (Decl);
@@ -542,6 +547,8 @@ package body Ortho_Code.Disps is
             -- Disp_Decl_Name (Get_Body_Decl (Decl));
             New_Line;
             Disp_Subprg (Indent, Get_Body_Stmt (Decl));
+         when OD_Block =>
+            null;
          when others =>
             Put_Line (Standard_Error, "debug.disp_decl: unknown decl "
                       & OD_Kind'Image (Kind));

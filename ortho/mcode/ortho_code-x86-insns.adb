@@ -20,6 +20,7 @@ with Ortho_Code.Abi;
 with Ortho_Code.Decls; use Ortho_Code.Decls;
 with Ortho_Code.Types; use Ortho_Code.Types;
 with Ortho_Code.Debug;
+with Ortho_Code.X86.Flags;
 
 package body Ortho_Code.X86.Insns is
    procedure Link_Stmt (Stmt : O_Enode)
@@ -1104,11 +1105,16 @@ package body Ortho_Code.X86.Insns is
                  | R_Irm
                  | R_Any32 =>
                   Num := Get_Insn_Num;
-                  Left := Gen_Insn (Left, R_Any32, Num);
+                  if X86.Flags.Flag_Alloca_Call then
+                     Reg_L := R_Ax;
+                  else
+                     Reg_L := R_Any32;
+                  end if;
+                  Left := Gen_Insn (Left, Reg_L, Num);
                   Set_Expr_Operand (Stmt, Left);
                   Link_Stmt (Left);
                   Free_Insn_Regs (Left);
-                  Set_Expr_Reg (Stmt, Alloc_Reg (R_Any32, Stmt, Pnum));
+                  Set_Expr_Reg (Stmt, Alloc_Reg (Reg_L, Stmt, Pnum));
                   Link_Stmt (Stmt);
                when others =>
                   Error_Gen_Insn (Stmt, Reg);
