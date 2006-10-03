@@ -43,6 +43,8 @@ iir_chains.ads
 iir_chains.adb
 iir_chain_handling.ads
 iir_chain_handling.adb
+iirs_walk.ads
+iirs_walk.adb
 std_names.adb
 std_names.ads
 disp_tree.adb
@@ -87,7 +89,9 @@ ortho_front.adb
 translation.ads
 trans_decls.ads
 trans_be.ads
-trans_be.adb"
+trans_be.adb
+trans_analyze.ads
+trans_analyze.adb"
 
 ortho_files="
 ortho_front.ads"
