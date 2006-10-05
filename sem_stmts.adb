@@ -1839,7 +1839,7 @@ package body Sem_Stmts is
       if Sig = Null_Iir then
          return;
       end if;
-      Sig_Object := Get_Base_Name (Sig);
+      Sig_Object := Get_Object_Prefix (Sig);
       Sig_Object_Type := Get_Type (Sig_Object);
 
       --  LRM 4.3.1.2 Signal Declaration
