@@ -90,8 +90,8 @@ translation.ads
 trans_decls.ads
 trans_be.ads
 trans_be.adb
-trans_analyze.ads
-trans_analyze.adb"
+trans_analyzes.ads
+trans_analyzes.adb"
 
 ortho_files="
 ortho_front.ads"
