@@ -5,16 +5,16 @@
 
 	/* Function called to loop on the process.  */	
 	.align 4
-	.type	_chkstk,@function
-	.global _chkstk
-_chkstk:
+	.type	__chkstk,@function
+	.global __chkstk
+__chkstk:
 	testl	%eax,%eax
-	je	_chkstk_zero
+	je	0f
 	subl	$4,%eax		/* 4 bytes already used by call.  */
 	subl	%eax,%esp
 	jmp	*(%esp,%eax)
-_chkstk_zero:
+0:
 	ret
-	.size	_chkstk, . - _chkstk
+	.size	__chkstk, . - __chkstk
 
 	.ident	"Written by T.Gingold"

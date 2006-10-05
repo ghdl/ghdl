@@ -717,7 +717,7 @@ package body Ortho_Code.X86.Abi is
    pragma Import (C, Muldi3, "__muldi3");
 
    procedure Chkstk (Sz : Integer);
-   pragma Import (C, Chkstk, "_chkstk");
+   pragma Import (C, Chkstk, "__chkstk");
 
    procedure Link_Intrinsics
    is

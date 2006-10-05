@@ -2243,7 +2243,7 @@ package body Ortho_Code.X86.Emits is
       end if;
 
       if X86.Flags.Flag_Alloca_Call then
-         Chkstk_Symbol := Create_Symbol (Get_Identifier ("__chkstk"));
+         Chkstk_Symbol := Create_Symbol (Get_Identifier ("___chkstk"));
       end if;
 
       Intrinsics_Symbol (Intrinsic_Mul_Ov_U64) :=
