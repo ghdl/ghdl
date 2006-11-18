@@ -21,6 +21,19 @@
 #include <stdio.h>
 #include <setjmp.h>
 #include <assert.h>
+#include <excpt.h>
+
+static EXCEPTION_DISPOSITION
+ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
+		  void *EstablisherFrame,
+		  struct _CONTEXT* ContextRecord,
+		  void *DispatcherContext);
+
+struct exception_registration
+{
+  struct exception_registration *prev;
+  void *handler;
+};
 
 struct stack_type
 {
@@ -50,6 +63,19 @@ static VOID __stdcall
 grt_stack_loop (void *v_stack)
 {
   struct stack_type *stack = (struct stack_type *)v_stack;
+  struct exception_registration er;
+  struct exception_registration *prev;
+
+  /* Get current handler.  */
+  asm ("mov %%fs:(0),%0" : "=r" (prev));
+
+  /* Build regisration.  */
+  er.prev = prev;
+  er.handler = ghdl_SEH_handler;
+
+  /* Register.  */
+  asm ("mov %0,%%fs:(0)" : : "r" (&er));
+
   while (1)
     {
       (*stack->func)(stack->arg);
@@ -117,16 +143,87 @@ __ghdl_maybe_return_via_longjump (int val)
     longjmp (run_env, val);
 }
 
+extern void grt_stack_error_grow_failed (void);
+extern void grt_stack_error_null_access (void);
+extern void grt_stack_error_memory_access (void);
+extern void grt_overflow_error (void);
+
+static EXCEPTION_DISPOSITION
+ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
+		  void *EstablisherFrame,
+		  struct _CONTEXT* ContextRecord,
+		  void *DispatcherContext)
+{
+  const char *msg = "";
+
+  switch (ExceptionRecord->ExceptionCode)
+    {
+    case EXCEPTION_ACCESS_VIOLATION:
+      if (ExceptionRecord->ExceptionInformation[1] == 0)
+	grt_stack_error_null_access ();
+      else
+	grt_stack_error_memory_access ();
+      break;
+          
+    case EXCEPTION_FLT_DENORMAL_OPERAND:
+    case EXCEPTION_FLT_DIVIDE_BY_ZERO:
+    case EXCEPTION_FLT_INVALID_OPERATION:
+    case EXCEPTION_FLT_OVERFLOW:
+    case EXCEPTION_FLT_STACK_CHECK:
+    case EXCEPTION_FLT_UNDERFLOW:
+      msg = "floating point error";
+      break;
+     
+    case EXCEPTION_INT_DIVIDE_BY_ZERO:
+      msg = "division by 0";
+      break;
+     
+    case EXCEPTION_INT_OVERFLOW:
+      grt_overflow_error ();
+      break;
+           
+    case EXCEPTION_STACK_OVERFLOW:
+      msg = "stack overflow";
+      break;
+     
+    default:
+      msg = "unknown reason";
+      break;
+    }
+
+  /* FIXME: is it correct?  */
+  fprintf (stderr, "exception raised: %s\n", msg);
+
+  __ghdl_maybe_return_via_longjump (1);
+  return 0; /* This is never reached, avoid compiler warning  */
+}
+
 int
 __ghdl_run_through_longjump (int (*func)(void))
 {
   int res;
+  struct exception_registration er;
+  struct exception_registration *prev;
+
+  /* Get current handler.  */
+  asm ("mov %%fs:(0),%0" : "=r" (prev));
+
+  /* Build regisration.  */
+  er.prev = prev;
+  er.handler = ghdl_SEH_handler;
+
+  /* Register.  */
+  asm ("mov %0,%%fs:(0)" : : "r" (&er));
 
   run_env_en = 1;
   res = setjmp (run_env);
   if (res == 0)
     res = (*func)();
   run_env_en = 0;
+
+  /* Restore.  */
+  asm ("mov %0,%%fs:(0)" : : "r" (prev));
+
   return res;
 }
 

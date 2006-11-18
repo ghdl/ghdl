@@ -2484,7 +2484,7 @@ package body Sem_Names is
       Base : Iir;
    begin
       Prefix := Get_Named_Entity (Get_Prefix (Attr));
-      Base := Get_Base_Name (Prefix);
+      Base := Get_Object_Prefix (Prefix);
       case Get_Kind (Base) is
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Signal_Interface_Declaration

@@ -608,21 +608,25 @@ run time library.
 
 The actual elaboration is performed at run-time.
 
+On Windows this command can be skipped because it is also done by the
+run command.
+
 @node Run command, Elaborate and run command, Elaboration command, Building commands
 @comment  node-name,  next,  previous,  up
 @subsection Run command
 @cindex run
 @cindex @option{-r} command
-Run (or simulate) an elaborated design hierarchy.
+Run (or simulate) a design.
 
 @smallexample
-$ ghdl -r @var{primary_unit} [@var{secondary_unit}] [@var{simulation_options}]
+$ ghdl -r [@var{options}] @var{primary_unit} [@var{secondary_unit}] [@var{simulation_options}]
 @end smallexample
 
-The arguments are the same as the @xref{Elaboration command}.
+The options and arguments are the same as the @xref{Elaboration command}.
 
 On GNU/Linux this command simply build the filename of the executable
-and execute it.  You may also directly execute the program.
+and execute it.  Options are ignored. You may also directly execute
+the program.
 
 This command exists for three reasons:
 @itemize @bullet{}
@@ -635,7 +639,8 @@ It works with the Windows implementation, where the code is generated in
 memory.
 @end itemize
 
-On Windows this command elaborate and launch the simulation.
+On Windows this command elaborate and launch the simulation.  As a consequence
+you must use the same options used during analysis.
 
 @xref{Simulation and run time}, for details on options.
 

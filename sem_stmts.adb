@@ -351,7 +351,8 @@ package body Sem_Stmts is
             Error_Msg_Sem ("implicit GUARD signal cannot be assigned", Stmt);
             return;
          when others =>
-            Error_Msg_Sem ("target is not a signal", Stmt);
+            Error_Msg_Sem ("target (" & Disp_Node (Get_Base_Name (Target))
+                           & ") is not a signal", Stmt);
             return;
       end case;
       if Get_Name_Staticness (Target_Object) < Staticness then
@@ -461,14 +462,18 @@ package body Sem_Stmts is
    begin
       Ok := True;
       -- Find the signal.
-      Target := Get_Target (Stmt);
-      Target := Sem_Expression (Target, Sig_Type);
-      if Target /= Null_Iir then
-         Set_Target (Stmt, Target);
-         Check_Target (Stmt, Target);
-         Sem_Types.Set_Type_Has_Signal (Get_Type (Target));
-      else
+      if Sig_Type = Null_Iir then
          Ok := False;
+      else
+         Target := Get_Target (Stmt);
+         Target := Sem_Expression (Target, Sig_Type);
+         if Target /= Null_Iir then
+            Set_Target (Stmt, Target);
+            Check_Target (Stmt, Target);
+            Sem_Types.Set_Type_Has_Signal (Get_Type (Target));
+         else
+            Ok := False;
+         end if;
       end if;
 
       Expr := Get_Reject_Time_Expression (Stmt);

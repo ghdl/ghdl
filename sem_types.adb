@@ -62,7 +62,9 @@ package body Sem_Types is
                Func := Get_Resolution_Function (Atype);
                if Func /= Null_Iir then
                   Func := Get_Named_Entity (Func);
-                  Set_Resolution_Function_Flag (Func, True);
+                  if Func /= Error_Mark then
+                     Set_Resolution_Function_Flag (Func, True);
+                  end if;
                end if;
                Mark := Get_Type_Mark (Atype);
                if Mark /= Null_Iir then

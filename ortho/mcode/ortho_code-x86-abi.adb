@@ -26,6 +26,7 @@ with Ortho_Code.Dwarf;
 with Ortho_Code.X86; use Ortho_Code.X86;
 with Ortho_Code.X86.Insns;
 with Ortho_Code.X86.Emits;
+with Ortho_Code.X86.Flags;
 with Binary_File;
 with Binary_File.Memory;
 with Ada.Text_IO;
@@ -730,7 +731,9 @@ package body Ortho_Code.X86.Abi is
         (Ortho_Code.X86.Emits.Intrinsics_Symbol
          (Ortho_Code.X86.Intrinsic_Div_Ov_I64),
          Divdi3'Address);
-      Binary_File.Memory.Set_Symbol_Address
-        (Ortho_Code.X86.Emits.Chkstk_Symbol, Chkstk'Address);
+      if X86.Flags.Flag_Alloca_Call then
+         Binary_File.Memory.Set_Symbol_Address
+           (Ortho_Code.X86.Emits.Chkstk_Symbol, Chkstk'Address);
+      end if;
    end Link_Intrinsics;
 end Ortho_Code.X86.Abi;
