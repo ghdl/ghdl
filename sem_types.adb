@@ -59,10 +59,13 @@ package body Sem_Types is
                Mark : Iir;
             begin
                Set_Type_Has_Signal (Get_Base_Type (Atype));
-               Func := Get_Resolution_Function (Atype);
-               if Func /= Null_Iir then
-                  Func := Get_Named_Entity (Func);
-                  if Func /= Error_Mark then
+               --  Mark the resolution function (this may be required by the
+               --  back-end to generate resolver).
+               if Get_Resolved_Flag (Atype) then
+                  Func := Get_Resolution_Function (Atype);
+                  --  Maybe the type is resolved through its elements.
+                  if Func /= Null_Iir then
+                     Func := Get_Named_Entity (Func);
                      Set_Resolution_Function_Flag (Func, True);
                   end if;
                end if;
@@ -704,7 +707,7 @@ package body Sem_Types is
             declare
                Res : Iir;
             begin
-               Res := Sem_Discrete_Range_Expression (Def, Null_Iir);
+               Res := Sem_Discrete_Range_Expression (Def, Null_Iir, True);
                if Res = Null_Iir then
                   return Null_Iir;
                end if;
@@ -1051,6 +1054,7 @@ package body Sem_Types is
       return True;
    end Is_A_Resolution_Function;
 
+   --  Note: this sets resolved_flag.
    procedure Sem_Resolution_Function (Decl: Iir)
    is
       Func: Iir;
@@ -1112,7 +1116,7 @@ package body Sem_Types is
       end if;
    end Sem_Resolution_Function;
 
-   --  Semantize array_subtype_definition DEF using BASE_TYPE as the base type
+   --  Semantize array_subtype_definition DEF using TYPE_MARK as the base type
    --  of DEF.
    --  DEF must have an index list and may have a resolution function.
    --  Return DEF.
@@ -1172,7 +1176,7 @@ package body Sem_Types is
             Staticness := None;
          else
             Subtype_Index := Sem_Discrete_Range_Expression
-              (Subtype_Index, Type_Index);
+              (Subtype_Index, Type_Index, True);
             if Subtype_Index /= Null_Iir then
                Subtype_Index := Range_To_Subtype_Definition (Subtype_Index);
                Staticness := Min (Staticness,
@@ -1190,9 +1194,7 @@ package body Sem_Types is
       Set_Type_Staticness (Def, Staticness);
       Set_Element_Subtype (Def, El_Type);
       Sem_Resolution_Function (Def);
-      if Get_Resolution_Function (Def) /= Null_Iir
-        or else Get_Resolved_Flag (El_Type)
-      then
+      if Get_Resolved_Flag (Def) or else Get_Resolved_Flag (El_Type) then
          Set_Resolved_Flag (Def, True);
       else
          Set_Resolved_Flag (Def, False);
@@ -1341,7 +1343,7 @@ package body Sem_Types is
                Set_Type_Staticness (Res, Get_Type_Staticness (Type_Mark));
                Sem_Resolution_Function (Res);
                Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
-               if Get_Resolution_Function (Res) /= Null_Iir
+               if Get_Resolved_Flag (Res)
                  or else Get_Resolved_Flag (Get_Element_Subtype (Type_Mark))
                then
                   Set_Resolved_Flag (Res, True);
@@ -1385,7 +1387,7 @@ package body Sem_Types is
                   A_Range := Get_Range_Constraint (Type_Mark);
                else
                   A_Range := Sem_Discrete_Range_Expression
-                    (A_Range, Type_Mark);
+                    (A_Range, Type_Mark, True);
                   if A_Range = Null_Iir then
                      --  Avoid error propagation.
                      A_Range := Get_Range_Constraint (Type_Mark);
@@ -1395,8 +1397,6 @@ package body Sem_Types is
                Set_Type_Staticness (Res, Get_Expr_Staticness (A_Range));
                Free_Name (Def);
                Sem_Resolution_Function (Res);
-               Set_Resolved_Flag
-                 (Res, Get_Resolution_Function (Res) /= Null_Iir);
                Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
                return Res;
             end;
@@ -1422,7 +1422,7 @@ package body Sem_Types is
                   Constraint := Get_Range_Constraint (Type_Mark);
                else
                   Constraint := Sem_Discrete_Range_Expression
-                    (Constraint, Type_Mark);
+                    (Constraint, Type_Mark, True);
                   -- FIXME: check bounds, check static
                end if;
                Set_Range_Constraint (Res, Constraint);
@@ -1430,8 +1430,6 @@ package body Sem_Types is
             end;
             Free_Name (Def);
             Sem_Resolution_Function (Res);
-            Set_Resolved_Flag
-              (Res, Get_Resolution_Function (Res) /= Null_Iir);
             Set_Signal_Type_Flag (Res, True);
             return Res;
 
@@ -1455,7 +1453,6 @@ package body Sem_Types is
                Set_Type_Mark (Res, Type_Mark);
                Set_Resolution_Function (Res, Func);
                Sem_Resolution_Function (Res);
-               Set_Resolved_Flag (Res, Func /= Null_Iir);
                Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
                Free_Name (Def);
                return Res;

@@ -2225,9 +2225,9 @@ package Iirs is
    --
    --   Get/Set_Prefix (Field3)
    --
-   --   Get/Set_Base_Name (Field5)
-   --
    --   Get/Set_Named_Entity (Field4)
+   --
+   --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
 
@@ -2236,6 +2236,8 @@ package Iirs is
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
+   --
+   --   Get/Set_Base_Name (Field5)
 
    -- Iir_Kind_Indexed_Name (Short)
    -- Select the element designed with the INDEX_LIST from array PREFIX.

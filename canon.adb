@@ -930,7 +930,7 @@ package body Canon is
          -- LRM93 9.1
          -- Finally, if the concurrent signal assignment statement is not a
          -- guarded assignment, and the traget of the concurrent signal
-         -- assignment is not a guarded target,t hen the statement transform
+         -- assignment is not a guarded target, then the statement transform
          -- is as follows:
          --    signal_transform
          Chain := Proc;

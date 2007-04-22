@@ -1249,6 +1249,14 @@ package body Sem_Assocs is
                   Match := False;
                   return;
                end if;
+               --  LRM 4.3.3.2  Associations lists
+               --  It is an error if an actual of open is associated with a
+               --  formal that is associated individually.
+               if Assoc_Kind = Individual then
+                  Error_Msg_Sem ("cannot associate individually with open",
+                                 Assoc);
+               end if;
+
                Xrefs.Xref_Name (Formal);
                Set_Formal (Assoc, Expr);
             end if;

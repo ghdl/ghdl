@@ -451,7 +451,8 @@ package body Sem_Expr is
    -- LRM93 3.2.1.1
    -- FIXME: avoid to run it on an already semantized node, be careful
    --  with range_type_expr.
-   function Sem_Range_Expression (Expr: Iir_Range_Expression; A_Type: Iir)
+   function Sem_Range_Expression
+     (Expr: Iir_Range_Expression; A_Type: Iir; Any_Dir : Boolean)
       return Iir_Range_Expression
    is
       Base_Type: Iir;
@@ -523,7 +524,7 @@ package body Sem_Expr is
            and then Get_Type_Staticness (Expr_Type) = Locally
            and then Get_Kind (Expr_Type) in Iir_Kinds_Subtype_Definition
          then
-            Eval_Check_Range (Expr, Expr_Type);
+            Eval_Check_Range (Expr, Expr_Type, Any_Dir);
          end if;
       else
          Base_Type := Get_Common_Basetype (Get_Base_Type (Get_Type (Left)),
@@ -546,14 +547,15 @@ package body Sem_Expr is
    -- LRM93 3.2.1.1
    -- FIXME: avoid to run it on an already semantized node, be careful
    --  with range_type_expr.
-   function Sem_Discrete_Range_Expression (Expr: Iir; A_Type: Iir)
+   function Sem_Discrete_Range_Expression
+     (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
      return Iir
    is
       Res : Iir;
       Res_Type : Iir;
    begin
       if Get_Kind (Expr) = Iir_Kind_Range_Expression then
-         Res := Sem_Range_Expression (Expr, A_Type);
+         Res := Sem_Range_Expression (Expr, A_Type, Any_Dir);
          if Res = Null_Iir then
             return Null_Iir;
          end if;
@@ -607,11 +609,12 @@ package body Sem_Expr is
          case Get_Kind (Res) is
             when Iir_Kinds_Type_And_Subtype_Definition =>
                if Get_Type_Staticness (Res) = Locally then
-                  Eval_Check_Range (Get_Range_Constraint (Res), A_Type);
+                  Eval_Check_Range
+                    (Get_Range_Constraint (Res), A_Type, Any_Dir);
                end if;
             when others =>
                if Get_Expr_Staticness (Res) = Locally then
-                  Eval_Check_Range (Res, A_Type);
+                  Eval_Check_Range (Res, A_Type, Any_Dir);
                end if;
          end case;
       end if;
@@ -622,7 +625,7 @@ package body Sem_Expr is
    is
       Range_Type : Iir;
    begin
-      Range_Type := Sem_Discrete_Range_Expression (Expr, Null_Iir);
+      Range_Type := Sem_Discrete_Range_Expression (Expr, Null_Iir, True);
       if Range_Type = Null_Iir then
          return Null_Iir;
       end if;
@@ -1917,7 +1920,7 @@ package body Sem_Expr is
       begin
          Expr := Get_Expression (El);
          if Get_Kind (El) = Iir_Kind_Choice_By_Range then
-            Expr := Sem_Discrete_Range_Expression (Expr, Sub_Type);
+            Expr := Sem_Discrete_Range_Expression (Expr, Sub_Type, True);
          elsif Is_Name (Expr) then
             declare
                Name : Iir;
@@ -2192,7 +2195,7 @@ package body Sem_Expr is
               and then Get_Type_Staticness (A_Type) = Locally
             then
                if Get_Kind (Choice) = Iir_Kind_Choice_By_Range then
-                  Ok := Eval_Is_Range_In_Bound (Expr, A_Type);
+                  Ok := Eval_Is_Range_In_Bound (Expr, A_Type, True);
                else
                   Ok := Eval_Is_In_Bound (Expr, A_Type);
                end if;
@@ -2478,6 +2481,7 @@ package body Sem_Expr is
       Expr: Iir;
       Has_Named : Boolean;
       Rec_El : Iir_Element_Declaration;
+      Value_Staticness : Iir_Staticness;
    begin
       Ok := True;
       Assoc_Chain := Get_Association_Choices_Chain (Aggr);
@@ -2485,6 +2489,7 @@ package body Sem_Expr is
       Matches := new Iir_Array
         (0 .. Natural (Get_Number_Element_Declaration (Base_Type)) - 1);
       Matches.all := (others => Null_Iir);
+      Value_Staticness := Locally;
 
       El_Type := Null_Iir;
       Has_Named := False;
@@ -2556,6 +2561,8 @@ package body Sem_Expr is
                Expr := Sem_Expression (Expr, El_Type);
                if Expr /= Null_Iir then
                   Set_Associated (El, Eval_Expr_If_Static (Expr));
+                  Value_Staticness := Min (Value_Staticness,
+                                           Get_Expr_Staticness (Expr));
                else
                   Ok := False;
                end if;
@@ -2581,6 +2588,8 @@ package body Sem_Expr is
          El := Get_Chain (El);
       end loop;
       Free (Matches);
+      Set_Value_Staticness (Aggr, Value_Staticness);
+      Set_Expr_Staticness (Aggr, Min (Globally, Value_Staticness));
       return Ok;
    end Sem_Record_Aggregate;
 

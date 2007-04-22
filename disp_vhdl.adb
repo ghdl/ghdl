@@ -1952,10 +1952,7 @@ package body Disp_Vhdl is
             Put ("");
             return;
          when Iir_Kind_Selected_Name =>
-            Disp_Expression (Get_Prefix (Expr));
-            Put ('.');
-            Disp_Expression (Get_Suffix (Expr));
-            return;
+            Disp_Name (Expr);
 
          when Iir_Kinds_Type_And_Subtype_Definition =>
             Disp_Type (Expr);

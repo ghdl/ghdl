@@ -93,8 +93,10 @@ package Sem_Expr is
    --  Semantize a procedure_call or a concurrent_procedure_call_statement.
    procedure Sem_Procedure_Call (Call : Iir_Procedure_Call; Stmt : Iir);
 
-   function Sem_Discrete_Range_Expression (Expr: Iir; A_Type: Iir)
-                                          return Iir;
+   --  Semantize a discrete range.  If ANY_DIR is true, the range can't be a
+   --  null range (slice vs subtype -- used in static evaluation).
+   function Sem_Discrete_Range_Expression
+     (Expr: Iir; A_Type: Iir; Any_Dir: Boolean) return Iir;
    function Get_Discrete_Range_Staticness (Expr : Iir) return Iir_Staticness;
 
    --  Semantize a discrete range and convert to integer if both bounds are

@@ -47,11 +47,13 @@ package Evaluation is
    procedure Eval_Check_Bound (Expr : Iir; Sub_Type : Iir);
 
    --  Return TRUE if range expression A_RANGE is not included in SUB_TYPE.
-   function Eval_Is_Range_In_Bound (A_Range : Iir; Sub_Type : Iir)
+   function Eval_Is_Range_In_Bound
+     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean)
      return Boolean;
 
    --  Emit an error if A_RANGE is not included in SUB_TYPE.
-   procedure Eval_Check_Range (A_Range : Iir; Sub_Type : Iir);
+   procedure Eval_Check_Range (A_Range : Iir; Sub_Type : Iir;
+                               Any_Dir : Boolean);
 
    --  Same as Eval_Expr, but a range check with SUB_TYPE is performed after
    --  computation.

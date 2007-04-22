@@ -853,7 +853,9 @@ package body Grt.Processes is
             exit;
          end if;
          if Current_Time > Stop_Time then
-            Info ("simulation stopped by --stop-time");
+            if Current_Time /= Last_Time then
+               Info ("simulation stopped by --stop-time");
+            end if;
             exit;
          end if;
       end loop;

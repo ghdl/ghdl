@@ -606,7 +606,7 @@ package body Sem_Names is
       -- The bounds of the discrete range [...] must be of the
       -- type of the index of the array.
       Suffix := Sem_Discrete_Range_Expression
-        (Get_Suffix (Name), Index_Type);
+        (Get_Suffix (Name), Index_Type, False);
       if Suffix = Null_Iir then
          return;
       end if;
@@ -1319,6 +1319,7 @@ package body Sem_Names is
          end loop;
          Res := Create_Overload_List (Res_List);
       end if;
+      Set_Base_Name (Name, Res);
       Set_Named_Entity (Name, Res);
    end Sem_Simple_Name;
 
@@ -1585,7 +1586,8 @@ package body Sem_Names is
             end if;
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
-           | Iir_Kind_Concurrent_Procedure_Call_Statement =>
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
+           | Iir_Kind_Component_Instantiation_Statement =>
             Error_Msg_Sem
               (Disp_Node (Prefix) & " cannot be selected by name", Prefix_Loc);
 
@@ -1679,7 +1681,7 @@ package body Sem_Names is
             Set_Index_List (Res, Create_Iir_List);
             Append_Element (Get_Index_List (Res), Actual);
          when Iir_Kind_Slice_Name =>
-            Actual := Sem_Discrete_Range_Expression (Actual, Itype);
+            Actual := Sem_Discrete_Range_Expression (Actual, Itype, False);
             if Actual = Null_Iir then
                return Null_Iir;
             end if;
@@ -2388,7 +2390,8 @@ package body Sem_Names is
                Attr);
             return Error_Mark;
          when others =>
-            Error_Kind ("sem_array_attribute", Prefix);
+            Error_Msg_Sem ("prefix must denote an array object or type", Attr);
+            return Error_Mark;
       end case;
 
       case Get_Kind (Prefix_Type) is

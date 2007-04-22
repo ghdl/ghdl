@@ -1956,13 +1956,16 @@ package body Evaluation is
       end if;
    end Eval_Check_Bound;
 
-   function Eval_Is_Range_In_Bound (A_Range : Iir; Sub_Type : Iir)
+   function Eval_Is_Range_In_Bound
+     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean)
      return Boolean
    is
       Type_Range : Iir;
    begin
       Type_Range := Get_Range_Constraint (Sub_Type);
-      if Get_Direction (Type_Range) /= Get_Direction (A_Range) then
+      if not Any_Dir
+        and then Get_Direction (Type_Range) /= Get_Direction (A_Range)
+      then
          return True;
       end if;
 
@@ -2019,10 +2022,11 @@ package body Evaluation is
       --  and then Eval_Is_In_Bound (Get_Right_Limit (A_Range), Sub_Type);
    end Eval_Is_Range_In_Bound;
 
-   procedure Eval_Check_Range (A_Range : Iir; Sub_Type : Iir)
+   procedure Eval_Check_Range
+     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean)
    is
    begin
-      if not Eval_Is_Range_In_Bound (A_Range, Sub_Type) then
+      if not Eval_Is_Range_In_Bound (A_Range, Sub_Type, Any_Dir) then
          Error_Msg_Sem ("static range violates bounds", A_Range);
       end if;
    end Eval_Check_Range;

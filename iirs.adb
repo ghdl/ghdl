@@ -2420,6 +2420,7 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Attribute_Value
+           | Iir_Kind_Operator_Symbol
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_File_Declaration

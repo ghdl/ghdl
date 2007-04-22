@@ -1,5 +1,5 @@
 --  GHDL driver - main part.
---  Copyright (C) 2002, 2003, 2004, 2005, 2006 Tristan Gingold
+--  Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -226,7 +226,7 @@ package body Ghdlmain is
       Put_Line ("Written by Tristan Gingold.");
       New_Line;
       --  Display copyright.  Assume 80 cols terminal.
-      Put_Line ("Copyright (C) 2003, 2004, 2005, 2006 Tristan Gingold.");
+      Put_Line ("Copyright (C) 2003, 2004, 2005, 2006, 2007 Tristan Gingold.");
       Put_Line ("GHDL is free software, covered by the "
                 & "GNU General Public License.  There is NO");
       Put_Line ("warranty; not even for MERCHANTABILITY or"

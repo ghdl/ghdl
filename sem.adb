@@ -1224,7 +1224,14 @@ package body Sem is
            | Iir_Kind_Ascending_Type_Attribute =>
             return Are_Trees_Equal (Get_Prefix (Left), Get_Prefix (Right));
 
-         when Iir_Kind_String_Literal =>
+         when Iir_Kind_String_Literal
+           | Iir_Kind_Bit_String_Literal =>
+            if Get_Kind (Left) = Iir_Kind_Bit_String_Literal
+              and then Get_Bit_String_Base (Left)
+              /= Get_Bit_String_Base (Right)
+            then
+               return False;
+            end if;
             declare
                use Str_Table;
                Len : Nat32;
@@ -1265,7 +1272,8 @@ package body Sem is
                return True;
             end;
 
-         when Iir_Kind_Choice_By_None =>
+         when Iir_Kind_Choice_By_None
+              | Iir_Kind_Choice_By_Others =>
             return Are_Trees_Equal (Get_Associated (Left),
                                     Get_Associated (Right));
          when Iir_Kind_Choice_By_Name =>

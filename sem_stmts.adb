@@ -462,18 +462,14 @@ package body Sem_Stmts is
    begin
       Ok := True;
       -- Find the signal.
-      if Sig_Type = Null_Iir then
-         Ok := False;
+      Target := Get_Target (Stmt);
+      Target := Sem_Expression (Target, Sig_Type);
+      if Target /= Null_Iir then
+         Set_Target (Stmt, Target);
+         Check_Target (Stmt, Target);
+         Sem_Types.Set_Type_Has_Signal (Get_Type (Target));
       else
-         Target := Get_Target (Stmt);
-         Target := Sem_Expression (Target, Sig_Type);
-         if Target /= Null_Iir then
-            Set_Target (Stmt, Target);
-            Check_Target (Stmt, Target);
-            Sem_Types.Set_Type_Has_Signal (Get_Type (Target));
-         else
-            Ok := False;
-         end if;
+         Ok := False;
       end if;
 
       Expr := Get_Reject_Time_Expression (Stmt);
