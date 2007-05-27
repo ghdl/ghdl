@@ -288,7 +288,7 @@ package body Parse is
             end if;
             Scan.Scan;
             if Current_Token = Tok_Box then
-               Unexpected ("<> not allowed here");
+               Unexpected ("range expression expected");
                Scan.Scan;
                return Null_Iir;
             end if;
@@ -385,6 +385,12 @@ package body Parse is
       end if;
       Scan.Scan;
 
+      if Current_Token = Tok_Box then
+         Error_Msg_Parse ("range constraint required");
+         Scan.Scan;
+         return Null_Iir;
+      end if;
+
       return Parse_Range;
    end Parse_Range_Constraint;
 
@@ -407,6 +413,9 @@ package body Parse is
          when Tok_Range =>
             --  FIXME: create a subtype indication.
             Rng := Parse_Range_Constraint;
+            if Rng = Null_Iir then
+               return Left;
+            end if;
             Set_Type (Rng, Left);
             return Rng;
          when others =>

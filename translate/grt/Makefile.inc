@@ -72,9 +72,10 @@ endif
 ifeq ($(filter-out i%86 mingw32,$(arch) $(osys)),)
   GRT_TARGET_OBJS=win32.o clock.o
 endif
-ifeq ($(filter-out i%86 cygwin,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=win32.o clock.o
-endif
+# Doesn't work for unknown reasons.
+#ifeq ($(filter-out i%86 cygwin,$(arch) $(osys)),)
+#  GRT_TARGET_OBJS=win32.o clock.o
+#endif
 # Fall-back: use a generic implementation based on pthreads.
 ifndef GRT_TARGET_OBJS
   GRT_TARGET_OBJS=pthread.o times.o
@@ -140,6 +141,9 @@ linux.o: $(GRTSRCDIR)/config/linux.c
 	$(CC) -c $(GRT_FLAGS) $(GRT_CFLAGS) -o $@ $<
 
 win32.o: $(GRTSRCDIR)/config/win32.c
+	$(CC) -c $(GRT_FLAGS) -o $@ $<
+
+win32thr.o: $(GRTSRCDIR)/config/win32thr.c
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
 pthread.o: $(GRTSRCDIR)/config/pthread.c

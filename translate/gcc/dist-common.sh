@@ -256,4 +256,5 @@ times.c
 clock.c
 linux.c
 pthread.c
-win32.c"
+win32.c
+win32thr.c"

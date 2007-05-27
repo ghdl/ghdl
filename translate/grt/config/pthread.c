@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <setjmp.h>
+#include <assert.h>
 
 //#define INFO printf
 #define INFO (void)
@@ -35,10 +36,14 @@
 // GHDL names an endless loop calling FUNC with ARG a 'stack'
 // at a given time, only one stack may be 'executed'
 typedef struct 
-{	pthread_t           thread;         // stack's thread
-	pthread_mutex_t     mutex;          // mutex to suspend/resume thread
-	void                (*Func)(void*); // stack's FUNC
-	void*               Arg;            // ARG passed to FUNC
+{	
+  pthread_t           thread;         // stack's thread
+  pthread_mutex_t     mutex;          // mutex to suspend/resume thread
+#if defined(__CYGWIN__)
+  pthread_mutexattr_t mxAttr;
+#endif
+  void                (*Func)(void*); // stack's FUNC
+  void*               Arg;            // ARG passed to FUNC
 } Stack_Type_t, *Stack_Type;
 
 static Stack_Type_t      main_stack_context;
@@ -51,40 +56,56 @@ void grt_stack_init(void)
 // This may adjust stack sizes.
 // Must be called after grt.options.decode.
 // => procedure Stack_Init;
-{	INFO("grt_stack_init\n");
-	INFO("  main_stack_context=0x%08x\n", &main_stack_context);
+{
+  int res;
+  INFO("grt_stack_init\n");
+  INFO("  main_stack_context=0x%08x\n", &main_stack_context);
 	
-	pthread_mutex_init(&(main_stack_context.mutex), NULL);
 
-	// lock the mutex, as we are currently running
-	pthread_mutex_lock(&(main_stack_context.mutex));
+#if defined(__CYGWIN__)
+  res = pthread_mutexattr_init (&main_stack_context.mxAttr);
+  assert (res == 0);
+  res = pthread_mutexattr_settype (&main_stack_context.mxAttr,
+				   PTHREAD_MUTEX_DEFAULT);
+  assert (res == 0);
+  res = pthread_mutex_init (&main_stack_context.mutex,
+			    &main_stack_context.mxAttr);
+  assert (res == 0);
+#else
+  res = pthread_mutex_init (&main_stack_context.mutex, NULL);
+  assert (res == 0);
+#endif
+  // lock the mutex, as we are currently running
+  res = pthread_mutex_lock (&main_stack_context.mutex);
+  assert (res == 0);
 	
-	current = &main_stack_context;
+  current = &main_stack_context;
 
-	grt_set_main_stack (&main_stack_context);
+  grt_set_main_stack (&main_stack_context);
 }
 
 //----------------------------------------------------------------------------
 static void* grt_stack_loop(void* pv_myStack)
 {
-	Stack_Type myStack= (Stack_Type)pv_myStack;
+  Stack_Type myStack= (Stack_Type)pv_myStack;
 
-	INFO("grt_stack_loop\n");
+  INFO("grt_stack_loop\n");
 	
-	INFO("  myStack=0x%08x\n", myStack);
+  INFO("  myStack=0x%08x\n", myStack);
 
-	// block until mutex becomes available again.
-	// this happens when this stack is enabled for the first time
-	pthread_mutex_lock(&(myStack->mutex));
+  // block until mutex becomes available again.
+  // this happens when this stack is enabled for the first time
+  pthread_mutex_lock(&(myStack->mutex));
 	
-	// run stack's function in endless loop
-	while(1)
-	{	INFO("  call 0x%08x with 0x%08x\n", myStack->Func, myStack->Arg);
-		myStack->Func(myStack->Arg);
-	}
+  // run stack's function in endless loop
+  while(1)
+    {
+      INFO("  call 0x%08x with 0x%08x\n", myStack->Func, myStack->Arg);
+      myStack->Func(myStack->Arg);
+    }
 	
-	// we never get here...
-	return 0;
+  // we never get here...
+  return 0;
 }
 
 //----------------------------------------------------------------------------
@@ -93,29 +114,41 @@ Stack_Type grt_stack_create(void* Func, void* Arg)
 // an argument ARG.
 // => function Stack_Create (Func : Address; Arg : Address) return Stack_Type;
 {
-  	Stack_Type newStack;
+  Stack_Type newStack;
+  int res;
 
-	INFO("grt_stack_create\n");
-	INFO("  call 0x%08x with 0x%08x\n", Func, Arg);
+  INFO("grt_stack_create\n");
+  INFO("  call 0x%08x with 0x%08x\n", Func, Arg);
 			
-	newStack= malloc(sizeof(Stack_Type_t));
+  newStack = malloc (sizeof(Stack_Type_t));
 	
-	// init function and argument
-	newStack->Func= Func;
-	newStack->Arg=  Arg;
+  // init function and argument
+  newStack->Func = Func;
+  newStack->Arg = Arg;
 	
-	// create mutex
-	pthread_mutex_init(&(newStack->mutex), NULL);
+  // create mutex
+#if defined(__CYGWIN__)
+  res = pthread_mutexattr_init (&newStack->mxAttr);
+  assert (res == 0);
+  res = pthread_mutexattr_settype (&newStack->mxAttr, PTHREAD_MUTEX_DEFAULT);
+  assert (res == 0);
+  res = pthread_mutex_init (&newStack->mutex, &newStack->mxAttr);
+  assert (res == 0);
+#else
+  res = pthread_mutex_init (&newStack->mutex, NULL);
+  assert (res == 0);
+#endif
 	
-	// block the mutex, so that thread will blocked in grt_stack_loop
-	pthread_mutex_lock(&(newStack->mutex));
+  // block the mutex, so that thread will blocked in grt_stack_loop
+  res = pthread_mutex_lock (&newStack->mutex);
+  assert (res == 0);
+  
+  INFO("  newStack=0x%08x\n", newStack);
 	
-	INFO("  newStack=0x%08x\n", newStack);
+  // create thread, which executes grt_stack_loop
+  pthread_create (&newStack->thread, NULL, grt_stack_loop, newStack); 
 	
-	// create thread, which executes grt_stack_loop
-	pthread_create(&(newStack->thread), NULL, grt_stack_loop, newStack); 
-	
-	return newStack;
+  return newStack;
 }
 
 static int need_longjmp;
@@ -127,30 +160,35 @@ void grt_stack_switch(Stack_Type To, Stack_Type From)
 // Resume stack TO and save the current context to the stack pointed by
 // CUR.
 // => procedure Stack_Switch (To : Stack_Type; From : Stack_Type);
-{	INFO("grt_stack_switch\n");
-	INFO("  from 0x%08x to 0x%08x\n", From, To);
+{	
+  int res;
+  INFO("grt_stack_switch\n");
+  INFO("  from 0x%08x to 0x%08x\n", From, To);
 
-	current = To;
+  current = To;
 
-	// unlock 'To' mutex. this will make the other thread either
-	// - starts for first time in grt_stack_loop
-	// - resumes at lock below
-	pthread_mutex_unlock(&(To->mutex));
+  // unlock 'To' mutex. this will make the other thread either
+  // - starts for first time in grt_stack_loop
+  // - resumes at lock below
+  res = pthread_mutex_unlock (&To->mutex);
+  assert (res == 0);
 		
-	// block until 'From' mutex becomes available again
-	// as we are running, our mutex is locked and we block here
-	// when stacks are switched, with above unlock, we may proceed
-	pthread_mutex_lock(&(From->mutex));
+  // block until 'From' mutex becomes available again
+  // as we are running, our mutex is locked and we block here
+  // when stacks are switched, with above unlock, we may proceed
+  res = pthread_mutex_lock (&From->mutex);
+  assert (res == 0);
 
-	if (From == &main_stack_context && need_longjmp != 0)
-	  longjmp (run_env, need_longjmp);
+  if (From == &main_stack_context && need_longjmp != 0)
+    longjmp (run_env, need_longjmp);
 }
 
 //----------------------------------------------------------------------------
 void grt_stack_delete(Stack_Type Stack)
 // Delete stack STACK, which must not be currently executed.
 // => procedure Stack_Delete (Stack : Stack_Type);
-{	INFO("grt_stack_delete\n");
+{	
+  INFO("grt_stack_delete\n");
 }
 
 void

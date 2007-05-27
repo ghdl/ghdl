@@ -315,7 +315,21 @@ package body Grt.Sdf is
                Pos := Pos + 1;
             when '/' =>
                Pos := Pos + 1;
-               return Tok_Div;
+               if Buf (Pos) = '/' then
+                  Pos := Pos + 1;
+                  --  Skip line comment.
+                  loop
+                     exit when Buf (Pos) = CR;
+                     exit when Buf (Pos) = LF;
+                     exit when Buf (Pos) = EOT;
+                     Pos := Pos + 1;
+                     if Pos >= Buf_Len then
+                        Refill_Buf;
+                     end if;
+                  end loop;
+               else
+                  return Tok_Div;
+               end if;
             when '.' =>
                Pos := Pos + 1;
                return Tok_Dot;
