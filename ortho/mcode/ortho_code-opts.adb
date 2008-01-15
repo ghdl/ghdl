@@ -120,6 +120,7 @@ package body Ortho_Code.Opts is
          end case;
       end loop;
    end Get_Fall_Stmt;
+   pragma Unreferenced (Get_Fall_Stmt);
 
    procedure Thread_Jump (Subprg : Subprogram_Data_Acc)
    is

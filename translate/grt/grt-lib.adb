@@ -63,7 +63,7 @@ package body Grt.Lib is
             Report_C ("???");
       end case;
       Report_C ("): ");
-      Report_E (String (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1)));
+      Report_E (Str);
       if Level >= Grt.Options.Severity_Level then
          Error_C (Msg);
          Error_E (" failed");

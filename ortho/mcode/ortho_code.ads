@@ -28,6 +28,9 @@ package Ortho_Code is
    function Shift_Right (L : Uns32; R : Natural) return Uns32;
    pragma Import (Intrinsic, Shift_Right);
 
+   function Shift_Right_Arithmetic (L : Uns32; R : Natural) return Uns32;
+   pragma Import (Intrinsic, Shift_Right_Arithmetic);
+
    function Shift_Left (L : Uns32; R : Natural) return Uns32;
    pragma Import (Intrinsic, Shift_Left);
 

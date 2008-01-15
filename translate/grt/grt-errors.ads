@@ -27,6 +27,7 @@ package Grt.Errors is
    procedure Error_C (Str : Ghdl_C_String);
    --procedure Error_C (Inst : Ghdl_Instance_Name_Acc);
    procedure Error_E (Str : String);
+   procedure Error_E_Std (Str : Std_String_Uncons);
    pragma No_Return (Error_E);
 
    --  Multi-call report procedure.  Do not exit at end.
@@ -36,6 +37,7 @@ package Grt.Errors is
    procedure Report_C (N : Integer);
    procedure Report_Now_C;
    procedure Report_E (Str : String);
+   procedure Report_E (Str : Std_String_Ptr);
 
    --  Complete error message.
    procedure Error (Str : String);

@@ -57,6 +57,10 @@ ifeq ($(filter-out i%86 freebsd%,$(arch) $(osys)),)
   GRT_EXTRA_LIB=-lm $(GRT_ELF_OPTS)
   ADAC=gnatgcc
 endif
+ifeq ($(filter-out i%86 darwin%,$(arch) $(osys)),)
+  GRT_TARGET_OBJS=i386.o linux.o times.o
+  GRT_EXTRA_LIB=-lm
+endif
 ifeq ($(filter-out sparc solaris%,$(arch) $(osys)),)
   GRT_TARGET_OBJS=sparc.o linux.o times.o
   GRT_EXTRA_LIB=-ldl -lm
@@ -163,6 +167,12 @@ grt-cvpi.o: $(GRTSRCDIR)/grt-cvpi.c
 
 grt-cthreads.o: $(GRTSRCDIR)/grt-cthreads.c
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
+
+grt-disp-config:
+	@echo "target: $(target)"
+	@echo "targ: $(targ)"
+	@echo "arch: $(arch)"
+	@echo "osys: $(osys)"
 
 grt-files: run-bind.adb
 	sed -e "1,/-- *BEGIN/d" -e "/-- *END/,\$$d" \

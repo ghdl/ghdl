@@ -911,6 +911,59 @@ package body Ortho_Code.X86.Insns is
 --                             end;
    end Gen_Conv_From_Fp_Insn;
 
+   function Gen_Call (Stmt : O_Enode; Reg : O_Reg; Pnum : O_Inum)
+                     return O_Enode
+   is
+      Left : O_Enode;
+      Reg_Res : O_Reg;
+   begin
+      Link_Stmt
+        (New_Enode (OE_Setup_Frame, Mode_Nil, O_Tnode_Null,
+                    O_Enode (Get_Call_Subprg (Stmt)), O_Enode_Null));
+      Left := Get_Arg_Link (Stmt);
+      if Left /= O_Enode_Null then
+         --  Generate code for arguments.
+         Left := Gen_Insn (Left, R_None, Pnum);
+      end if;
+
+      --  Clobber registers.
+      Clobber_R32 (R_Ax);
+      Clobber_R32 (R_Dx);
+      Clobber_R32 (R_Cx);
+      --  FIXME: fp regs.
+
+      Reg_Res := Get_Call_Register (Get_Expr_Mode (Stmt));
+      Set_Expr_Reg (Stmt, Reg_Res);
+      Link_Stmt (Stmt);
+
+      case Reg is
+         when R_Any32
+           | R_Any64
+           | R_Any8
+           | R_Irm
+           | R_Rm
+           | R_Ir
+           | R_Sib
+           | R_Ax
+           | R_St0
+           | R_Edx_Eax =>
+            Reg_Res := Alloc_Reg (Reg_Res, Stmt, Pnum);
+            return Stmt;
+         when R_Any_Cc =>
+            --  Move to register.
+            --  (use the 'test' instruction).
+            Alloc_Cc (Stmt, Pnum);
+            return Insert_Move (Stmt, R_Ne);
+         when R_None =>
+            if Reg_Res /= R_None then
+               raise Program_Error;
+            end if;
+            return Stmt;
+         when others =>
+            Error_Gen_Insn (Stmt, Reg);
+      end case;
+   end Gen_Call;
+
    function Gen_Insn (Stmt : O_Enode; Reg : O_Reg; Pnum : O_Inum)
                      return O_Enode
    is
@@ -1692,48 +1745,7 @@ package body Ortho_Code.X86.Insns is
             Free_Insn_Regs (Left);
             return Stmt;
          when OE_Call =>
-            Left := Get_Arg_Link (Stmt);
-            if Left /= O_Enode_Null then
-               --  Generate code for arguments.
-               Left := Gen_Insn (Left, R_None, Pnum);
-            end if;
-
-            --  Clobber registers.
-            Clobber_R32 (R_Ax);
-            Clobber_R32 (R_Dx);
-            Clobber_R32 (R_Cx);
-            --  FIXME: fp regs.
-
-            Reg_Res := Get_Call_Register (Get_Expr_Mode (Stmt));
-            Set_Expr_Reg (Stmt, Reg_Res);
-            Link_Stmt (Stmt);
-
-            case Reg is
-               when R_Any32
-                 | R_Any64
-                 | R_Any8
-                 | R_Irm
-                 | R_Rm
-                 | R_Ir
-                 | R_Sib
-                 | R_Ax
-                 | R_St0
-                 | R_Edx_Eax =>
-                  Reg_Res := Alloc_Reg (Reg_Res, Stmt, Pnum);
-                  return Stmt;
-               when R_Any_Cc =>
-                  --  Move to register.
-                  --  (use the 'test' instruction).
-                  Alloc_Cc (Stmt, Pnum);
-                  return Insert_Move (Stmt, R_Ne);
-               when R_None =>
-                  if Reg_Res /= R_None then
-                     raise Program_Error;
-                  end if;
-                  return Stmt;
-               when others =>
-                  Error_Gen_Insn (Stmt, Reg);
-            end case;
+            return Gen_Call (Stmt, Reg, Pnum);
          when OE_Case_Expr =>
             Left := Get_Expr_Operand (Stmt);
             Set_Expr_Reg (Stmt, Alloc_Reg (Get_Expr_Reg (Left), Stmt, Pnum));
@@ -1823,13 +1835,7 @@ package body Ortho_Code.X86.Insns is
          when OE_Leave =>
             Link_Stmt (Stmt);
          when OE_Call =>
-            Left := Get_Arg_Link (Stmt);
-            if Left /= O_Enode_Null then
-               --  Generate code for arguments.
-               Left := Gen_Insn (Left, R_None, Num);
-            end if;
-            Set_Expr_Reg (Stmt, R_None);
-            Link_Stmt (Stmt);
+            Link_Stmt (Gen_Call (Stmt, R_None, Num));
          when OE_Ret =>
             Left := Get_Expr_Operand (Stmt);
             P_Reg := Get_Call_Register (Get_Expr_Mode (Stmt));

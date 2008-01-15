@@ -21,21 +21,30 @@
 	
 	.text
 
-	/* Function called to loop on the process.  */	
-	.align 4
-	.type	grt_stack_loop,@function
-grt_stack_loop:	
+#ifdef __ELF__
+#define ENTRY(func) .align 4; .globl func; .type func,@function; func:
+#define END(func) .size func, . - func
+#define NAME(name) name
+#elif __APPLE__
+#define ENTRY(func) .align 4; .globl _##func; _##func:
+#define END(func)
+#define NAME(name) _##name
+#else
+#define ENTRY(func) .align 4; func:
+#define END(func)
+#define NAME(name) name
+#endif
+	
+	/* Function called to loop on the process.  */
+ENTRY(grt_stack_loop)
 	call	*4(%esp)
-	jmp	grt_stack_loop
-	.size	grt_stack_loop, . - grt_stack_loop
+	jmp	NAME(grt_stack_loop)
+END(grt_stack_loop)
 
 	/* function Stack_Create (Func : Address; Arg : Address)
  	                          return Stack_Type;
 	*/
-	.align	4
-	.globl grt_stack_create
-	.type	 grt_stack_create,@function
-grt_stack_create:
+ENTRY(grt_stack_create)
 	/* Standard prologue.  */
 	pushl	%ebp
 	movl	%esp,%ebp
@@ -43,7 +52,7 @@ grt_stack_create:
 	subl	$8,%esp
 	
 	/* Allocate the stack, and exit in case of failure  */
-	call	grt_stack_allocate
+	call	NAME(grt_stack_allocate)
 	testl	%eax,%eax
 	je	.Ldone
 
@@ -58,7 +67,7 @@ grt_stack_create:
 	movl	12(%ebp), %ecx
 	movl	%ecx, -8(%eax)
 	/* The return function.  */
-	movl	$grt_stack_loop, -12(%eax)
+	movl	$NAME(grt_stack_loop), -12(%eax)
 	/* The context.  */
 	movl	%ebx, -16(%eax)
 	movl	%esi, -20(%eax)
@@ -72,16 +81,12 @@ grt_stack_create:
 .Ldone:
 	leave
 	ret
-	.size	 grt_stack_create,. - grt_stack_create
+END(grt_stack_create)
 
 
-
-	.align 4
-	.globl grt_stack_switch
 	/* Arguments:	TO, FROM
 	   Both are pointers to a stack_context.  */
-	.type	 grt_stack_switch,@function
-grt_stack_switch:
+ENTRY(grt_stack_switch)
 	/* TO -> ECX.  */
 	movl	4(%esp), %ecx
 	/* FROM -> EDX.  */
@@ -102,7 +107,7 @@ grt_stack_switch:
 	popl	%ebx
 	/* Run.  */
 	ret
-	.size	 grt_stack_switch, . - grt_stack_switch
+END(grt_stack_switch)
 
 	
 	.ident	"Written by T.Gingold"

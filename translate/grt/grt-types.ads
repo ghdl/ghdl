@@ -58,7 +58,8 @@ package Grt.Types is
    end record;
 
    subtype Std_Character is Character;
-   type Std_String_Base is array (Ghdl_Index_Type) of Std_Character;
+   type Std_String_Uncons is array (Ghdl_Index_Type range <>) of Std_Character;
+   subtype Std_String_Base is Std_String_Uncons (Ghdl_Index_Type);
    type Std_String_Basep is access Std_String_Base;
 
    type Std_String_Bound is record

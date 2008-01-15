@@ -11794,15 +11794,16 @@ package body Translation is
       begin
          Obj := Sem_Names.Name_To_Object (Expr);
          if Obj /= Null_Iir then
-            case Get_Kind (Get_Base_Name (Obj)) is
-               when Iir_Kind_Signal_Declaration
-                 | Iir_Kind_Signal_Interface_Declaration
-                 | Iir_Kind_Guard_Signal_Declaration
-                 | Iir_Kinds_Signal_Attribute =>
-                  return True;
-               when others =>
-                  return False;
-            end case;
+            return Is_Signal_Object (Obj);
+--              case Get_Kind (Get_Base_Name (Obj)) is
+--                 when Iir_Kind_Signal_Declaration
+--                   | Iir_Kind_Signal_Interface_Declaration
+--                   | Iir_Kind_Guard_Signal_Declaration
+--                   | Iir_Kinds_Signal_Attribute =>
+--                    return True;
+--                 when others =>
+--                    return False;
+--              end case;
          else
             return False;
          end if;
@@ -26794,9 +26795,9 @@ package body Translation is
                     (Mark, Name_Table.Get_Identifier ("DEFAULT_CONFIG"));
                   Chap1.Translate_Configuration_Declaration (El);
                   Pop_Identifier_Prefix (Mark);
-                  Pop_Identifier_Prefix (Mark_Entity);
-                  Pop_Identifier_Prefix (Mark_Sep);
                   Pop_Identifier_Prefix (Mark_Arch);
+                  Pop_Identifier_Prefix (Mark_Sep);
+                  Pop_Identifier_Prefix (Mark_Entity);
                end;
             else
                Chap1.Translate_Configuration_Declaration (El);
@@ -28308,6 +28309,7 @@ package body Translation is
          Assoc : O_Assoc_List;
          Instance : O_Dnode;
          Arch_Instance : O_Dnode;
+         Mark : Id_Mark_Type;
       begin
          Arch_Info := Get_Info (Arch);
          Entity_Info := Get_Info (Entity);
@@ -28376,6 +28378,7 @@ package body Translation is
 
          --  init instance
          Push_Scope (Entity_Info.Block_Decls_Type, Instance);
+         Push_Identifier_Prefix (Mark, "");
          Chap1.Translate_Entity_Init (Entity);
 
          --  elab instance
@@ -28390,6 +28393,7 @@ package body Translation is
          New_Association (Assoc, New_Obj_Value (Arch_Instance));
          New_Procedure_Call (Assoc);
 
+         Pop_Identifier_Prefix (Mark);
          Pop_Scope (Entity_Info.Block_Decls_Type);
          Finish_Subprogram_Body;
 

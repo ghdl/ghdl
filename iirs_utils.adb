@@ -827,7 +827,9 @@ package body Iirs_Utils is
               | Iir_Kind_Function_Call =>
                return False;
             when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Signal_Interface_Declaration =>
+              | Iir_Kind_Signal_Interface_Declaration
+              | Iir_Kind_Guard_Signal_Declaration
+              | Iir_Kinds_Signal_Attribute =>
                return True;
             when Iir_Kind_Object_Alias_Declaration =>
                Adecl := Get_Base_Name (Get_Name (Adecl));

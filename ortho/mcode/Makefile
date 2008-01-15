@@ -11,7 +11,7 @@ memsegs_c.o: $(ortho_srcdir)/mcode/memsegs_c.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 oread: force
-	gnatmake -m -o $@ -g $(GNAT_FLAGS) -aI../oread ortho_code_main -aI..
+	gnatmake -m -o $@ -g $(GNAT_FLAGS) -aI../oread ortho_code_main -aI.. -largs memsegs_c.o
 
 elfdump: force
 	gnatmake -m -g $(GNAT_FLAGS) $@

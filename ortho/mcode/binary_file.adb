@@ -111,6 +111,7 @@ package body Binary_File is
    begin
       return Get_Scope (Sym) /= Sym_Undef;
    end S_Defined;
+   pragma Unreferenced (S_Defined);
 
    function S_Local (Sym : Symbol) return Boolean is
    begin

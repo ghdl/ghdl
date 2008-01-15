@@ -661,27 +661,33 @@ package body Grt.Vpi is
       -- Checks the format of aValue. Only vpiBinStrVal will be accepted
       --  for now.
       case aValue.Format is
-         when vpiObjTypeVal=>
+         when vpiObjTypeVal =>
             dbgPut_Line ("vpi_put_value: vpiObjTypeVal");
-         when vpiBinStrVal=>
+         when vpiBinStrVal =>
             ii_vpi_put_value_bin_str(aObj.Ref, aValue.Str);
-            dbgPut_Line ("vpi_put_value: vpiBinStrVal");
-         when vpiOctStrVal=>
+            -- dbgPut_Line ("vpi_put_value: vpiBinStrVal");
+         when vpiOctStrVal =>
             dbgPut_Line ("vpi_put_value: vpiNet, vpiOctStrVal");
-         when vpiDecStrVal=>
+         when vpiDecStrVal =>
             dbgPut_Line ("vpi_put_value: vpiNet, vpiDecStrVal");
-         when vpiHexStrVal=>
+         when vpiHexStrVal =>
             dbgPut_Line ("vpi_put_value: vpiNet, vpiHexStrVal");
-         when vpiScalarVal=>
+         when vpiScalarVal =>
             dbgPut_Line ("vpi_put_value: vpiNet, vpiScalarVal");
-         when vpiIntVal=>
+         when vpiIntVal =>
             dbgPut_Line ("vpi_put_value: vpiIntVal");
-         when vpiRealVal=>     dbgPut_Line("vpi_put_value: vpiRealVal");
-         when vpiStringVal=>   dbgPut_Line("vpi_put_value: vpiStringVal");
-         when vpiTimeVal=>     dbgPut_Line("vpi_put_value: vpiTimeVal");
-         when vpiVectorVal=>   dbgPut_Line("vpi_put_value: vpiVectorVal");
-         when vpiStrengthVal=> dbgPut_Line("vpi_put_value: vpiStrengthVal");
-         when others=>         dbgPut_Line("vpi_put_value: unknown mFormat");
+         when vpiRealVal =>
+            dbgPut_Line("vpi_put_value: vpiRealVal");
+         when vpiStringVal =>
+            dbgPut_Line("vpi_put_value: vpiStringVal");
+         when vpiTimeVal =>
+            dbgPut_Line("vpi_put_value: vpiTimeVal");
+         when vpiVectorVal =>
+            dbgPut_Line("vpi_put_value: vpiVectorVal");
+         when vpiStrengthVal =>
+            dbgPut_Line("vpi_put_value: vpiStrengthVal");
+         when others =>
+            dbgPut_Line("vpi_put_value: unknown mFormat");
       end case;
 
       -- Must return a scheduled event caused by vpi_put_value()

@@ -645,6 +645,7 @@ package body Ortho_Code.Types is
             null;
       end case;
    end Disp_Type;
+   pragma Unreferenced (Disp_Type);
 
    procedure Mark (M : out Mark_Type) is
    begin

@@ -767,17 +767,39 @@ package body Ortho_Code.X86.Emits is
       End_Insn;
    end Gen_Call;
 
+   procedure Emit_Setup_Frame (Stmt : O_Enode)
+   is
+      use Ortho_Code.Decls;
+      Subprg : O_Dnode;
+      Val : Unsigned_32;
+   begin
+      Subprg := Get_Call_Subprg (Stmt);
+      Val := Unsigned_32 (Get_Subprg_Stack (Subprg));
+      --  Pad the stack if necessary.
+      Val := Val and (Flags.Stack_Boundary - 1);
+      if Val /= 0 then
+         Start_Insn;
+         --  subl esp, val
+         Gen_B8 (2#100000_11#);
+         Gen_B8 (2#11_101_100#);
+         Gen_B8 (Byte (Flags.Stack_Boundary - Val));
+         End_Insn;
+      end if;
+   end Emit_Setup_Frame;
+
    procedure Emit_Call (Stmt : O_Enode)
    is
       use Ortho_Code.Decls;
       Subprg : O_Dnode;
       Sym : Symbol;
-      Val : Int32;
+      Val : Unsigned_32;
    begin
       Subprg := Get_Call_Subprg (Stmt);
       Sym := Get_Decl_Symbol (Subprg);
       Gen_Call (Sym);
-      Val := Get_Subprg_Stack (Subprg);
+      Val := Unsigned_32 (Get_Subprg_Stack (Subprg));
+      Val := (Val + Flags.Stack_Boundary - 1)
+        and not (Flags.Stack_Boundary - 1);
       if Val /= 0 then
          Start_Insn;
          if Val <= 127 then
@@ -1819,6 +1841,10 @@ package body Ortho_Code.X86.Emits is
                when others =>
                   Error_Emit ("emit_insn: oe_arg", Stmt);
             end case;
+         when OE_Setup_Frame =>
+            if Flags.Stack_Boundary > 4 then
+               Emit_Setup_Frame (Stmt);
+            end if;
          when OE_Call =>
             Emit_Call (Stmt);
          when OE_Intrinsic =>

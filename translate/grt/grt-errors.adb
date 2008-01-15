@@ -125,6 +125,16 @@ package body Grt.Errors is
       Newline_Err;
    end Report_E;
 
+   procedure Report_E (Str : Std_String_Ptr)
+   is
+      subtype Ada_Str is String (1 .. Natural (Str.Bounds.Dim_1.Length));
+   begin
+      if Ada_Str'Length > 0 then
+         Put_Err (Ada_Str (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1)));
+      end if;
+      Newline_Err;
+   end Report_E;
+
    procedure Error_H is
    begin
       Put_Err (Progname);
@@ -192,6 +202,13 @@ package body Grt.Errors is
       Cont := False;
       Fatal_Error;
    end Error_E;
+
+   procedure Error_E_Std (Str : Std_String_Uncons)
+   is
+      subtype Str_Subtype is String (1 .. Str'Length);
+   begin
+      Error_E (Str_Subtype (Str));
+   end Error_E_Std;
 
    procedure Error (Str : String) is
    begin

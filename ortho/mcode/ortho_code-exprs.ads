@@ -111,6 +111,8 @@ package Ortho_Code.Exprs is
       --  ARG1 is subprogram
       --  ARG2 is arguments.
       OE_Call,
+      --  ARG1 is the subprogram.
+      OE_Setup_Frame,
       --  ARG1 is intrinsic operation.
       OE_Intrinsic,
 

@@ -111,6 +111,7 @@ install.mcode: install.v87 install.v93
 clean: force
 	$(RM) -f *.o *.ali ghdl_gcc ghdl_mcode 
 	$(RM) -f b~*.ad? *~ default_pathes.ads
+	$(RM) -rf ../lib
 
 force:
 

@@ -3,10 +3,16 @@
 	
 	.text
 
-	/* Function called to loop on the process.  */	
+#ifdef __APPLE__
+#define __chkstk ___chkstk
+#endif
+	
+	/* Function called to loop on the process.  */
 	.align 4
+#ifdef __ELF__
 	.type	__chkstk,@function
-	.global __chkstk
+#endif
+	.globl __chkstk
 __chkstk:
 	testl	%eax,%eax
 	je	0f
@@ -15,6 +21,8 @@ __chkstk:
 	jmp	*(%esp,%eax)
 0:
 	ret
+#ifdef __ELF__
 	.size	__chkstk, . - __chkstk
+#endif
 
 	.ident	"Written by T.Gingold"

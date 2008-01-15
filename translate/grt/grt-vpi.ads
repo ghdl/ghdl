@@ -79,10 +79,10 @@ package Grt.Vpi is
    --   double real;
    -- } s_vpi_time, *p_vpi_time;
    type s_vpi_time is record
-      mType : integer;
-      mHigh : integer; -- this should be unsigned
-      mLow :  integer; -- this should be unsigned
-      mReal : float;   -- this should be double
+      mType : Integer;
+      mHigh : Integer; -- this should be unsigned
+      mLow :  Integer; -- this should be unsigned
+      mReal : Float;   -- this should be double
    end record;
    type p_vpi_time is access s_vpi_time;
 

@@ -36,6 +36,7 @@ package body Ortho_Code.X86.Abi is
    is
       pragma Unreferenced (Subprg);
    begin
+      --  First argument is at %ebp + 8
       Abi.Offset := 8;
    end Start_Subprogram;
 
@@ -59,6 +60,7 @@ package body Ortho_Code.X86.Abi is
    begin
       Set_Decl_Info (Subprg,
                      To_Int32 (Create_Symbol (Get_Decl_Ident (Subprg))));
+      --  Offset is 8 biased.
       Set_Subprg_Stack (Subprg, Abi.Offset - 8);
    end Finish_Subprogram;
 

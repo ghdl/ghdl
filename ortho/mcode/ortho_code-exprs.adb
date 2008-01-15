@@ -251,6 +251,7 @@ package body Ortho_Code.Exprs is
    begin
       return Enodes.Table (Stmt).Arg1;
    end Get_BB_Next;
+   pragma Unreferenced (Get_BB_Next);
 
    procedure Set_BB_Next (Stmt : O_Enode; Next : O_Enode) is
    begin

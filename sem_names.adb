@@ -1573,7 +1573,8 @@ package body Sem_Names is
            | Iir_Kind_Selected_Element
            | Iir_Kind_Dereference
            | Iir_Kind_Implicit_Dereference
-           | Iir_Kind_Attribute_Value =>
+           | Iir_Kind_Attribute_Value
+           | Iir_Kind_Function_Call =>
             if Get_Kind (Get_Type (Prefix))
               = Iir_Kind_Protected_Type_Declaration
             then

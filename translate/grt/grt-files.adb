@@ -1,5 +1,5 @@
 --  GHDL Run Time (GRT) -  VHDL files subprograms.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -247,7 +247,7 @@ package body Grt.Files is
 
       if Res /= Open_Ok then
          Error_C ("open: cannot open text file ");
-         Error_E (String (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1)));
+         Error_E_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
       end if;
    end Ghdl_Text_File_Open;
 
@@ -262,7 +262,7 @@ package body Grt.Files is
 
       if Res /= Open_Ok then
          Error_C ("open: cannot open file ");
-         Error_E (String (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1)));
+         Error_E_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
       end if;
    end Ghdl_File_Open;
 

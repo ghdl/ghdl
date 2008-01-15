@@ -28,17 +28,21 @@
    set rights.
 */
 
+#ifdef __APPLE__
+#define MAP_ANONYMOUS MAP_ANON
+#else
+#define HAVE_MREMAP
+#endif
+
 void *
 mmap_malloc (int size)
 {
   void *res;
   res = mmap (NULL, size, PROT_READ | PROT_WRITE,
-	      MAP_PRIVATE | MAP_ANONYMOUS, 0, 0);
+	      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
   /* printf ("mmap (%d) = %p\n", size, res); */
-#if 0
   if (res == MAP_FAILED)
     return NULL;
-#endif
   return res;
 }
 
@@ -46,7 +50,16 @@ void *
 mmap_realloc (void *ptr, int old_size, int size)
 {
   void *res;
+#ifdef HAVE_MREMAP
   res = mremap (ptr, old_size, size, MREMAP_MAYMOVE);
+#else
+  res = mmap (NULL, size, PROT_READ | PROT_WRITE,
+	      MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+  if (res == MAP_FAILED)
+    return NULL;
+  memcpy (res, ptr, old_size);
+  munmap (ptr, old_size);
+#endif
   /* printf ("mremap (%p, %d, %d) = %p\n", ptr, old_size, size, res); */
 #if 0
   if (res == MAP_FAILED)

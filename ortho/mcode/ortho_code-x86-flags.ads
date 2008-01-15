@@ -24,5 +24,5 @@ package Ortho_Code.X86.Flags is
 
    --  Prefered stack alignment.
    --  Must be a power of 2.
-   Stack_Boundary : Unsigned_32 := 2 ** 3;
+   Stack_Boundary : Unsigned_32 := 2 ** 3; -- 4 for MacOSX, 3 for Linux
 end Ortho_Code.X86.Flags;
