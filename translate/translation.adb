@@ -11047,6 +11047,10 @@ package body Translation is
          Push_Identifier_Prefix
            (Mark3, Get_Identifier (Get_Base_Name (Formal)));
 
+         if Is_Anonymous_Type_Definition (In_Type) then
+            In_Type := Get_Base_Type (In_Type);
+         end if;
+
          Out_Info := Get_Info (Out_Type);
          In_Info := Get_Info (In_Type);
 

@@ -2020,6 +2020,10 @@ package body Evaluation is
       --  Should check L <= R or L >= R according to direction.
       --return Eval_Is_In_Bound (Get_Left_Limit (A_Range), Sub_Type)
       --  and then Eval_Is_In_Bound (Get_Right_Limit (A_Range), Sub_Type);
+   exception
+      when Node_Error =>
+         --  Avoid error storms.
+         return True;
    end Eval_Is_Range_In_Bound;
 
    procedure Eval_Check_Range
@@ -2091,6 +2095,8 @@ package body Evaluation is
             return Get_Physical_Value (Expr);
          when Iir_Kind_Unit_Declaration =>
             return Get_Value (Get_Physical_Unit_Value (Expr));
+         when Iir_Kind_Error =>
+            raise Node_Error;
          when others =>
             Error_Kind ("eval_pos", Expr);
       end case;

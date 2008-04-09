@@ -168,7 +168,8 @@ package body Sem_Expr is
            | Iir_Kind_Library_Clause
            | Iir_Kind_Component_Declaration
            | Iir_Kinds_Procedure_Declaration
-           | Iir_Kind_Range_Array_Attribute =>
+           | Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Element_Declaration =>
             Error_Msg_Sem (Disp_Node (Expr)
                            & " not allowed in an expression", Loc);
             return Null_Iir;
@@ -2739,7 +2740,8 @@ package body Sem_Expr is
 
          when Iir_Kind_String_Literal
            | Iir_Kind_Bit_String_Literal =>
-            Len := Sem_String_Literal (Aggr, Get_Element_Subtype (A_Type));
+            Len := Sem_String_Literal
+              (Aggr, Get_Base_Type (Get_Element_Subtype (A_Type)));
             Assoc_Chain := Null_Iir;
             Info.Min_Length := Integer'Max (Info.Min_Length, Len);
             Is_Positional := True;

@@ -1988,10 +1988,12 @@ package body Ortho_Code.X86.Emits is
       use Binary_File;
       use Interfaces;
       use Ortho_Code.Flags;
+      use Ortho_Code.X86.Insns;
       Sym : Symbol;
       Subprg_Decl : O_Dnode;
       Is_Global : Boolean;
       Frame_Size : Unsigned_32;
+      Saved_Regs_Size : Unsigned_32;
    begin
       Set_Current_Section (Sect_Text);
       Subprg_Decl := Subprg.D_Decl;
@@ -2007,14 +2009,18 @@ package body Ortho_Code.X86.Emits is
       Set_Symbol_Pc (Sym, Is_Global);
       Subprg_Pc := Get_Current_Pc;
 
+      Saved_Regs_Size := Boolean'Pos(Reg_Used (R_Di)) * 4
+        + Boolean'Pos(Reg_Used (R_Si)) * 4
+        + Boolean'Pos(Reg_Used (R_Bx)) * 4;
+
       --  Compute frame size.
       --  8 bytes are used by return address and saved frame pointer.
-      Frame_Size := Unsigned_32 (Subprg.Stack_Max) + 8;
+      Frame_Size := Unsigned_32 (Subprg.Stack_Max) + 8 + Saved_Regs_Size;
       --  Align.
       Frame_Size := (Frame_Size + X86.Flags.Stack_Boundary - 1)
         and not (X86.Flags.Stack_Boundary - 1);
       --  The 8 bytes are already allocated.
-      Frame_Size := Frame_Size - 8;
+      Frame_Size := Frame_Size - 8 - Saved_Regs_Size;
 
       --  Emit prolog.
       --  push %ebp

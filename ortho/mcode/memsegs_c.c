@@ -34,6 +34,10 @@
 #define HAVE_MREMAP
 #endif
 
+#ifndef HAVE_MREMAP
+#include <string.h>
+#endif
+
 void *
 mmap_malloc (int size)
 {

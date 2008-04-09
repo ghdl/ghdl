@@ -25,6 +25,10 @@
 #include <stdlib.h>
 //#include <stdint.h>
 
+#ifdef __APPLE__
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+
 /* On x86, the stack growns downward.  */
 #define STACK_GROWNS_DOWNWARD 1
 

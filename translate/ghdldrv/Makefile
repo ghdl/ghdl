@@ -36,8 +36,22 @@ target=i686-pc-linux-gnu
 GRTSRCDIR=../grt
 include $(GRTSRCDIR)/Makefile.inc
 
+ifeq ($(filter-out i%86 linux,$(arch) $(osys)),)
+  ORTHO_X86_FLAGS=Flags_Linux
+endif
+ifeq ($(filter-out i%86 darwin%,$(arch) $(osys)),)
+  ORTHO_X86_FLAGS=Flags_Macosx
+endif
+ifdef ORTHO_X86_FLAGS
+  ORTHO_DEPS=ortho_code-x86-flags.ads
+endif
+
+ortho_code-x86-flags.ads:
+	echo "with Ortho_Code.X86.$(ORTHO_X86_FLAGS);" > $@
+	echo "package Ortho_Code.X86.Flags renames Ortho_Code.X86.$(ORTHO_X86_FLAGS);" >> $@
+
 ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) memsegs_c.o chkstk.o force 
+ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force 
 	gnatmake -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: ../../ortho/mcode/memsegs_c.c

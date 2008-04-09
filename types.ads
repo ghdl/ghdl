@@ -121,4 +121,9 @@ package Types is
    --  Self-explaining: raised when an internal error (such as consistency)
    --  is detected.
    Internal_Error: exception;
+
+   --  In some case, a low level subprogram can't handle error
+   --  (e.g eval_pos).  In this case it is easier to raise an exception and
+   --  let upper level subprograms handle the case.
+   Node_Error : exception;
 end Types;

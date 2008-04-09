@@ -17,12 +17,12 @@
 --  02111-1307, USA.
 with Interfaces; use Interfaces;
 
-package Ortho_Code.X86.Flags is
+package Ortho_Code.X86.Flags_Linux is
    --  If true, OE_Alloca calls __chkstk (Windows), otherwise OE_Alloc
    --  modifies ESP directly.
-   Flag_Alloca_Call : Boolean := False;
+   Flag_Alloca_Call : constant Boolean := False;
 
    --  Prefered stack alignment.
    --  Must be a power of 2.
-   Stack_Boundary : Unsigned_32 := 2 ** 3; -- 4 for MacOSX, 3 for Linux
-end Ortho_Code.X86.Flags;
+   Stack_Boundary : constant Unsigned_32 := 2 ** 3;
+end Ortho_Code.X86.Flags_Linux;

@@ -111,6 +111,9 @@ package body Grt.Processes is
    begin
       if State /= State_Sensitized then
          Stack := Stack_Create (Proc, This);
+         if Stack = Null_Stack then
+            Internal_Error ("cannot allocate stack: memory exhausted");
+         end if;
       else
          Stack := Null_Stack;
       end if;
