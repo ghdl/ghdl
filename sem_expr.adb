@@ -2827,14 +2827,21 @@ package body Sem_Expr is
             --  index subtype of the aggregate and the smallest and largest
             --  choice given.
             if Choice_Staticness = Locally then
-               case Get_Direction (Index_Constraint) is
-                  when Iir_To =>
-                     Set_Left_Limit (Index_Subtype_Constraint, Low);
-                     Set_Right_Limit (Index_Subtype_Constraint, High);
-                  when Iir_Downto =>
-                     Set_Left_Limit (Index_Subtype_Constraint, High);
-                     Set_Right_Limit (Index_Subtype_Constraint, Low);
-               end case;
+               if Low = Null_Iir or High = Null_Iir then
+                  --  Avoid error propagation.
+                  Set_Range_Constraint (Info.Index_Subtype,
+                                        Get_Range_Constraint (Index_Type));
+                  Free_Iir (Index_Subtype_Constraint);
+               else
+                  case Get_Direction (Index_Constraint) is
+                     when Iir_To =>
+                        Set_Left_Limit (Index_Subtype_Constraint, Low);
+                        Set_Right_Limit (Index_Subtype_Constraint, High);
+                     when Iir_Downto =>
+                        Set_Left_Limit (Index_Subtype_Constraint, High);
+                        Set_Right_Limit (Index_Subtype_Constraint, Low);
+                  end case;
+               end if;
             else
                --  Dynamic aggregate.
                declare
