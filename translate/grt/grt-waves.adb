@@ -62,7 +62,7 @@ package body Grt.Waves is
    Ghw_Hie_Port_Buffer  : constant Unsigned_8 := 20; --  Port
    Ghw_Hie_Port_Linkage : constant Unsigned_8 := 21; --  Port
 
-   --  Return TRUE if OPT is an option for VCD.
+   --  Return TRUE if OPT is an option for wave.
    function Wave_Option (Opt : String) return Boolean
    is
       F : Natural := Opt'First;
@@ -842,7 +842,7 @@ package body Grt.Waves is
 
    procedure Write_Hierarchy_El (Decl : VhpiHandleT)
    is
-      Mode2hie : constant array (VhpiModeP) of Unsigned_8 :=
+      Mode2hie : constant array (VhpiModeT) of Unsigned_8 :=
         (VhpiErrorMode => Ghw_Hie_Signal,
          VhpiInMode => Ghw_Hie_Port_In,
          VhpiOutMode => Ghw_Hie_Port_Out,

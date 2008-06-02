@@ -78,27 +78,66 @@ package body Grt.Vital_Annotate is
 --       New_Line;
    end Find_Instance;
 
-   procedure Find_Generic
-     (Name : String; Res : out VhpiHandleT; Ok : out Boolean)
+   procedure Find_Generic (Gen_Name : String;
+                           Gen_Handle : out VhpiHandleT;
+                           Port1_Name : String;
+                           Port1_Handle : out VhpiHandleT;
+                           Port2_Name : String;
+                           Port2_Handle : out VhpiHandleT)
    is
       Error : AvhpiErrorT;
       It : VhpiHandleT;
+      Decl : VhpiHandleT;
    begin
-      Ok := False;
+      Gen_Handle := Null_Handle;
+      Port1_Handle := Null_Handle;
+      Port2_Handle := Null_Handle;
+
       Vhpi_Iterator (VhpiDecls, Sdf_Inst, It, Error);
       if Error /= AvhpiErrorOk then
          return;
       end if;
+
+      --  Look for the generic.
       loop
-         Vhpi_Scan (It, Res, Error);
-         exit when Error /= AvhpiErrorOk;
-         exit when Vhpi_Get_Kind (Res) /= VhpiGenericDeclK;
-         if Name_Compare (Res, Name) then
-            Ok := True;
+         Vhpi_Scan (It, Decl, Error);
+         if Error /= AvhpiErrorOk then
+            return;
+         end if;
+         exit when Vhpi_Get_Kind (Decl) /= VhpiGenericDeclK;
+         if Name_Compare (Decl, Gen_Name) then
+            Gen_Handle := Decl;
+            exit;
+         end if;
+      end loop;
+
+      --  Skip generics.
+      while Vhpi_Get_Kind (Decl) = VhpiGenericDeclK loop
+         Vhpi_Scan (It, Decl, Error);
+         if Error /= AvhpiErrorOk then
             return;
          end if;
       end loop;
-      return;
+
+      --  Look for ports.
+      loop
+         exit when Vhpi_Get_Kind (Decl) /= VhpiPortDeclK;
+         if Name_Compare (Decl, Port1_Name) then
+            Port1_Handle := Decl;
+            exit when Port2_Name'Length = 0;
+         end if;
+         if Port2_Name'Length > 0
+           and then Name_Compare (Decl, Port2_Name)
+         then
+            Port2_Handle := Decl;
+            exit when Vhpi_Get_Kind (Port1_Handle) /= VhpiUndefined;
+         end if;
+         Vhpi_Scan (It, Decl, Error);
+         if Error /= AvhpiErrorOk then
+            return;
+         end if;
+      end loop;
+
    end Find_Generic;
 
    procedure Sdf_Header (Context : in out Sdf_Context_Type)
@@ -191,6 +230,9 @@ package body Grt.Vital_Annotate is
    end Sdf_Instance_End;
 
    VitalDelayType01 : VhpiHandleT;
+   VitalDelayArrayType01 : VhpiHandleT;
+   VitalDelayType : VhpiHandleT;
+   VitalDelayArrayType : VhpiHandleT;
 
    type Map_Type is array (1 .. 12) of Natural;
    Map_1 : constant Map_Type := (1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0);
@@ -233,12 +275,88 @@ package body Grt.Vital_Annotate is
       return True;
    end Write_Td_Delay_Generic;
 
+   function Write_Td_Delay_Generic (Context : Sdf_Context_Type;
+                                    Gen : VhpiHandleT)
+                                   return Boolean
+   is
+      Gen_Basetype : VhpiHandleT;
+      Error : AvhpiErrorT;
+   begin
+      Vhpi_Handle (VhpiBaseType, Gen, Gen_Basetype, Error);
+      if Error /= AvhpiErrorOk then
+         Internal_Error ("write_td_delay_generic: vhpiBaseType");
+         return False;
+      end if;
+      if Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01) then
+         case Context.Timing_Nbr is
+            when 1 =>
+               return Write_Td_Delay_Generic (Context, Gen, 2, Map_1);
+            when 2 =>
+               return Write_Td_Delay_Generic (Context, Gen, 2, Map_2);
+            when others =>
+               Errors.Error
+                 ("timing generic type mismatch SDF timing specification");
+         end case;
+      elsif Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType) then
+         if Vhpi_Put_Value (Gen, Context.Timing (1) * 1000) /= AvhpiErrorOk
+         then
+            Internal_Error ("vhpi_put_value (vitaldelaytype)");
+         else
+            return True;
+         end if;
+      else
+         Internal_Error ("write_td_delay_generic: unhandled generic type");
+      end if;
+   end Write_Td_Delay_Generic;
+
+   procedure Generic_Get_Bounds (Port : VhpiHandleT;
+                                 Left : out Ghdl_I32;
+                                 Len : out Ghdl_Index_Type;
+                                 Up : out Boolean)
+   is
+      Port_Type, Port_Range : VhpiHandleT;
+      Error : AvhpiErrorT;
+      Right : VhpiIntT;
+   begin
+      Vhpi_Handle (VhpiSubtype, Port, Port_Type, Error);
+      if Error /= AvhpiErrorOk then
+         Internal_Error ("vhpiSubtype - port");
+         return;
+      end if;
+      Vhpi_Handle_By_Index (VhpiConstraints, Port_Type, 1, Port_Range, Error);
+      if Error /= AvhpiErrorOk then
+         Internal_Error ("vhpiIndexConstraints - port");
+         return;
+      end if;
+      Vhpi_Get (VhpiLeftBoundP, Port_Range, Left, Error);
+      if Error /= AvhpiErrorOk then
+         Internal_Error ("vhpiLeftBoundP - port");
+         return;
+      end if;
+      Vhpi_Get (VhpiRightBoundP, Port_Range, Right, Error);
+      if Error /= AvhpiErrorOk then
+         Internal_Error ("vhpiRightBoundP - port");
+         return;
+      end if;
+      Vhpi_Get (VhpiIsUpP, Port_Range, Up, Error);
+      if Error /= AvhpiErrorOk then
+         Internal_Error ("vhpiIsUpP - port");
+         return;
+      end if;
+      if Up then
+         Len := Ghdl_Index_Type (Right - Left) + 1;
+      else
+         Len := Ghdl_Index_Type (Left - Right) + 1;
+      end if;
+   end Generic_Get_Bounds;
+
    procedure Sdf_Generic (Context : in out Sdf_Context_Type;
                           Name : String;
                           Ok : out Boolean)
    is
       Gen : VhpiHandleT;
-      Gen_Type : VhpiHandleT;
+      Gen_Basetype : VhpiHandleT;
+      Port1, Port2 : VhpiHandleT;
       Error : AvhpiErrorT;
    begin
       if Flag_Dump then
@@ -263,36 +381,75 @@ package body Grt.Vital_Annotate is
          return;
       end if;
 
-      Find_Generic (Name, Gen, Ok);
-      if not Ok then
-         return;
-      end if;
-
       Ok := False;
 
+      if Context.Port_Num = 1 then
+         Context.Ports (2).Name_Len := 0;
+      end if;
+      Find_Generic
+        (Name, Gen,
+         Context.Ports (1).Name (1 .. Context.Ports (1).Name_Len), Port1,
+         Context.Ports (2).Name (1 .. Context.Ports (2).Name_Len), Port2);
+      if Vhpi_Get_Kind (Gen) = VhpiUndefined
+        or else Vhpi_Get_Kind (Port1) = VhpiUndefined
+        or else (Context.Port_Num = 2
+                 and then Vhpi_Get_Kind (Port2) = VhpiUndefined)
+      then
+         return;
+      end if;
+
       --  Extract subtype.
-      Vhpi_Handle (VhpiSubtype, Gen, Gen_Type, Error);
+      Vhpi_Handle (VhpiBaseType, Gen, Gen_Basetype, Error);
       if Error /= AvhpiErrorOk then
-         Internal_Error ("vhpiSubtype");
+         Internal_Error ("vhpiBaseType");
          return;
       end if;
-      Vhpi_Handle (VhpiTypeMark, Gen_Type, Gen_Type, Error);
-      if Error /= AvhpiErrorOk then
-         Internal_Error ("vhpiTypeMark");
-         return;
-      end if;
-      if Vhpi_Compare_Handles (Gen_Type, VitalDelayType01) then
-         case Context.Timing_Nbr is
-            when 1 =>
-               Ok := Write_Td_Delay_Generic (Context, Gen, 2, Map_1);
-            when 2 =>
-               Ok := Write_Td_Delay_Generic (Context, Gen, 2, Map_2);
-            when others =>
-               Errors.Error
-                 ("timing generic type mismatch SDF timing specification");
-         end case;
+      if Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01) then
+         Ok := Write_Td_Delay_Generic (Context, Gen);
+      elsif Vhpi_Compare_Handles (Gen_Basetype, VitalDelayArrayType01)
+        or else Vhpi_Compare_Handles (Gen_Basetype, VitalDelayArrayType)
+      then
+         declare
+            Left_Gen, Left1, Left2 : Ghdl_I32;
+            Len_Gen, Len1, Len2 : Ghdl_Index_Type;
+            Up_Gen, Up1, Up2 : Boolean;
+            Pos : Ghdl_Index_Type;
+            Gen_El : VhpiHandleT;
+         begin
+            Generic_Get_Bounds (Gen, Left_Gen, Len_Gen, Up_Gen);
+            if Context.Port_Num >= 1
+              and then Context.Ports (1).L /= Invalid_Dnumber
+            then
+               Generic_Get_Bounds (Port1, Left1, Len1, Up1);
+               if Up1 then
+                  Pos := Ghdl_Index_Type (Context.Ports (1).L - Left1);
+               else
+                  Pos := Ghdl_Index_Type (Left1 - Context.Ports (1).L);
+               end if;
+            else
+               Pos := 0;
+            end if;
+            if Context.Port_Num >= 2
+              and then Context.Ports (2).L /= Invalid_Dnumber
+            then
+               Generic_Get_Bounds (Port2, Left2, Len2, Up2);
+               Pos := Pos * Len2;
+               if Up1 then
+                  Pos := Pos + Ghdl_Index_Type (Context.Ports (2).L - Left2);
+               else
+                  Pos := Pos + Ghdl_Index_Type (Left1 - Context.Ports (2).L);
+               end if;
+            end if;
+            Vhpi_Handle_By_Index
+              (VhpiIndexedNames, Gen, Integer (Pos), Gen_El, Error);
+            if Error /= AvhpiErrorOk then
+               Internal_Error ("vhpiIndexedNames - gen_el");
+               return;
+            end if;
+            Ok := Write_Td_Delay_Generic (Context, Gen_El);
+         end;
       else
-         Errors.Error ("bad generic type");
+         Errors.Error ("vital: unhandled generic type");
       end if;
    end Sdf_Generic;
 
@@ -357,6 +514,7 @@ package body Grt.Vital_Annotate is
       It : VhpiHandleT;
       Pkg : VhpiHandleT;
       Decl : VhpiHandleT;
+      Basetype : VhpiHandleT;
       Status : AvhpiErrorT;
    begin
       Get_Package_Inst (It);
@@ -378,12 +536,33 @@ package body Grt.Vital_Annotate is
       loop
          Vhpi_Scan (It, Decl, Status);
          exit when Status /= AvhpiErrorOk;
-         if Name_Compare (Decl, "vitaldelaytype01") then
-            VitalDelayType01 := Decl;
+         if Vhpi_Get_Kind (Decl) = VhpiSubtypeDeclK
+           or else Vhpi_Get_Kind (Decl) = VhpiArrayTypeDeclK
+         then
+            Vhpi_Handle (VhpiBaseType, Decl, Basetype, Status);
+            if Status = AvhpiErrorOk then
+               if Name_Compare (Decl, "vitaldelaytype01") then
+                  VitalDelayType01 := Basetype;
+               elsif Name_Compare (Decl, "vitaldelayarraytype01") then
+                  VitalDelayArrayType01 := Basetype;
+               elsif Name_Compare (Decl, "vitaldelaytype") then
+                  VitalDelayType := Basetype;
+               elsif Name_Compare (Decl, "vitaldelayarraytype") then
+                  VitalDelayArrayType := Basetype;
+               end if;
+            end if;
          end if;
       end loop;
       if Vhpi_Get_Kind (VitalDelayType01) = VhpiUndefined then
-         Error ("cannot found VitalDelayType01 in ieee.vital_timing");
+         Error ("cannot find VitalDelayType01 in ieee.vital_timing");
+         return;
+      end if;
+      if Vhpi_Get_Kind (VitalDelayArrayType01) = VhpiUndefined then
+         Error ("cannot find VitalDelayArrayType01 in ieee.vital_timing");
+         return;
+      end if;
+      if Vhpi_Get_Kind (VitalDelayType) = VhpiUndefined then
+         Error ("cannot find VitalDelayType in ieee.vital_timing");
          return;
       end if;
    end Extract_Vital_Delay_Type;

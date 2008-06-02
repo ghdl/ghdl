@@ -294,6 +294,80 @@ package Grt.Avhpi is
       VhpiLibraryDecls
      );
 
+   type VhpiIntPropertyT is
+     (
+      VhpiAccessP,
+      VhpiArgcP,
+      VhpiAttrKindP,
+      VhpiBaseIndexP,
+      VhpiBeginLineNoP,
+      VhpiEndLineNoP,
+      VhpiEntityClassP,
+      VhpiForeignKindP,
+      VhpiFrameLevelP,
+      VhpiGenerateIndexP,
+      VhpiIntValP,
+      VhpiIsAnonymousP,
+      VhpiIsBasicP,
+      VhpiIsCompositeP,
+      VhpiIsDefaultP,
+      VhpiIsDeferredP,
+      VhpiIsDiscreteP,
+      VhpiIsForcedP,
+      VhpiIsForeignP,
+      VhpiIsGuardedP,
+      VhpiIsImplicitDeclP,
+      VhpiIsInvalidP_DEPRECATED,
+      VhpiIsLocalP,
+      VhpiIsNamedP,
+      VhpiIsNullP,
+      VhpiIsOpenP,
+      VhpiIsPLIP,
+      VhpiIsPassiveP,
+      VhpiIsPostponedP,
+      VhpiIsProtectedTypeP,
+      VhpiIsPureP,
+      VhpiIsResolvedP,
+      VhpiIsScalarP,
+      VhpiIsSeqStmtP,
+      VhpiIsSharedP,
+      VhpiIsTransportP,
+      VhpiIsUnaffectedP,
+      VhpiIsUnconstrainedP,
+      VhpiIsUninstantiatedP,
+      VhpiIsUpP,
+      VhpiIsVitalP,
+      VhpiIteratorTypeP,
+      VhpiKindP,
+      VhpiLeftBoundP,
+      VhpiLevelP_DEPRECATED,
+      VhpiLineNoP,
+      VhpiLineOffsetP,
+      VhpiLoopIndexP,
+      VhpiModeP,
+      VhpiNumDimensionsP,
+      VhpiNumFieldsP_DEPRECATED,
+      VhpiNumGensP,
+      VhpiNumLiteralsP,
+      VhpiNumMembersP,
+      VhpiNumParamsP,
+      VhpiNumPortsP,
+      VhpiOpenModeP,
+      VhpiPhaseP,
+      VhpiPositionP,
+      VhpiPredefAttrP,
+      VhpiReasonP,
+      VhpiRightBoundP,
+      VhpiSigKindP,
+      VhpiSizeP,
+      VhpiStartLineNoP,
+      VhpiStateP,
+      VhpiStaticnessP,
+      VhpiVHDLversionP,
+      VhpiIdP,
+      VhpiCapabilitiesP
+     );
+
    --  String properties.
    type VhpiStrPropertyT is
      (
@@ -323,7 +397,8 @@ package Grt.Avhpi is
       AvhpiErrorBadRel,
       AvhpiErrorHandle,
       AvhpiErrorNotImplemented,
-      AvhpiErrorIteratorEnd
+      AvhpiErrorIteratorEnd,
+      AvhpiErrorBadIndex
      );
 
    type VhpiHandleT is private;
@@ -342,6 +417,12 @@ package Grt.Avhpi is
                           Res : out VhpiHandleT;
                           Error : out AvhpiErrorT);
 
+   procedure Vhpi_Handle_By_Index (Rel : VhpiOneToManyT;
+                                   Ref : VhpiHandleT;
+                                   Index : Natural;
+                                   Res : out VhpiHandleT;
+                                   Error : out AvhpiErrorT);
+
    procedure Vhpi_Iterator (Rel : VhpiOneToManyT;
                             Ref : VhpiHandleT;
                             Res : out VhpiHandleT;
@@ -354,6 +435,17 @@ package Grt.Avhpi is
                            Obj : VhpiHandleT;
                            Res : out String;
                            Len : out Natural);
+
+   subtype VhpiIntT is Ghdl_I32;
+
+   procedure Vhpi_Get (Property : VhpiIntPropertyT;
+                       Obj : VhpiHandleT;
+                       Res : out VhpiIntT;
+                       Error : out AvhpiErrorT);
+   procedure Vhpi_Get (Property : VhpiIntPropertyT;
+                       Obj : VhpiHandleT;
+                       Res : out Boolean;
+                       Error : out AvhpiErrorT);
 
    --  Almost the same as Vhpi_Get_Str (VhpiName, OBJ), but there is not
    --  indexes for generate stmt.
@@ -392,7 +484,7 @@ package Grt.Avhpi is
    function Vhpi_Get_EntityClass (Obj : VhpiHandleT)
                                  return VhpiEntityClassT;
 
-   type VhpiModeP is
+   type VhpiModeT is
      (
       VhpiErrorMode,
       VhpiInMode,
@@ -401,7 +493,7 @@ package Grt.Avhpi is
       VhpiBufferMode,
       VhpiLinkageMode
      );
-   function Vhpi_Get_Mode (Obj : VhpiHandleT) return VhpiModeP;
+   function Vhpi_Get_Mode (Obj : VhpiHandleT) return VhpiModeT;
 
    function Avhpi_Get_Rti (Obj : VhpiHandleT) return Ghdl_Rti_Access;
 
@@ -438,10 +530,17 @@ private
          when VhpiSubtypeIndicK
            | VhpiSubtypeDeclK
            | VhpiArrayTypeDeclK
-           | VhpiEnumTypeDeclK =>
+           | VhpiEnumTypeDeclK
+           | VhpiPhysTypeDeclK =>
             Atype : Ghdl_Rti_Access;
          when VhpiCompInstStmtK =>
             Inst : Ghdl_Rtin_Instance_Acc;
+         when VhpiIntRangeK
+           | VhpiEnumRangeK
+           | VhpiFloatRangeK
+           | VhpiPhysRangeK =>
+            Rng_Type : Ghdl_Rti_Access;
+            Rng_Addr : Ghdl_Range_Ptr;
          when others =>
             null;
       end case;

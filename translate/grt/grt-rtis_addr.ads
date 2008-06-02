@@ -43,6 +43,10 @@ package Grt.Rtis_Addr is
    function To_Addr_Acc is new Ada.Unchecked_Conversion
      (Source => Address, Target => Addr_Acc);
 
+   type Ghdl_Index_Acc is access Ghdl_Index_Type;
+   function To_Ghdl_Index_Acc is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Ghdl_Index_Acc);
+
    --  Get the parent context of CTXT.
    --  The parent of an architecture is its entity.
    function Get_Parent_Context (Ctxt : Rti_Context) return Rti_Context;

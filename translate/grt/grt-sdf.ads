@@ -68,11 +68,22 @@ package Grt.Sdf is
    Read_Size : constant Natural := 4096;
    Buf_Size : constant Natural := Read_Size + 1024 + 1;
 
+   Invalid_Dnumber : constant Ghdl_I32 := -1;
+
    type Port_Spec_Type is record
-      Name : String (1 .. 1024);
+      --  Port identifier.
+      Name : String (1 .. 128);
       Name_Len : Natural;
+
+      --  Left and Right range.
+      --  If L = R = Invalid_Dnumber, this is a simple scalar port.
+      --  If R = Invalid_Dnumber, this is a scalar port (from a vector)
+      --  Otherwise, this is a bus port.
+      L, R : Ghdl_I32;
+
    -- Cond : String (1 .. 1024);
    -- Cond_Len : Natural;
+
       Edge : Edge_Type;
    end record;
 

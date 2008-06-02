@@ -267,7 +267,7 @@ package body Grt.Sdf is
       Pos := 1;
    end Refill_Buf;
 
-   function Get_Token return Sdf_Token_Type
+   procedure Skip_Spaces
    is
       use Ada.Characters.Latin_1;
    begin
@@ -277,21 +277,20 @@ package body Grt.Sdf is
       end loop;
 
       loop
-         --  Be sure there is at least 4 characters.
-         if Pos + 4 >= Buf_Len then
+         --  Be sure there is at least 1 character.
+         if Pos + 1 >= Buf_Len then
             Refill_Buf;
          end if;
 
          case Buf (Pos) is
             when EOT =>
                if Pos /= Buf_Len then
-                  Error_Bad_Character;
-                  return Tok_Error;
+                  return;
                end if;
                Pos := 1;
                Read_Sdf;
                if Buf_Len = 1 then
-                  return Tok_Eof;
+                  return;
                end if;
             when LF =>
                Pos := Pos + 1;
@@ -307,16 +306,12 @@ package body Grt.Sdf is
                end if;
                Line_Start := Pos;
                Sdf_Line := Sdf_Line + 1;
-            when '"' => -- "
-               Scan_Qstring;
-               return Tok_Qstring;
             when ' '
               | HT =>
                Pos := Pos + 1;
             when '/' =>
-               Pos := Pos + 1;
-               if Buf (Pos) = '/' then
-                  Pos := Pos + 1;
+               if Buf (Pos + 1) = '/' then
+                  Pos := Pos + 2;
                   --  Skip line comment.
                   loop
                      exit when Buf (Pos) = CR;
@@ -328,31 +323,62 @@ package body Grt.Sdf is
                      end if;
                   end loop;
                else
-                  return Tok_Div;
+                  return;
                end if;
-            when '.' =>
-               Pos := Pos + 1;
-               return Tok_Dot;
-            when ':' =>
-               Pos := Pos + 1;
-               return Tok_Cln;
-            when '(' =>
-               Pos := Pos + 1;
-               return Tok_Oparen;
-            when ')' =>
-               Pos := Pos + 1;
-               return Tok_Cparen;
-            when 'a' .. 'z'
-              | 'A' .. 'Z' =>
-               Scan_Identifier;
-               return Tok_Identifier;
-            when '0' .. '9' =>
-               return Scan_Number;
             when others =>
-               Error_Bad_Character;
-               return Tok_Error;
+               return;
          end case;
       end loop;
+   end Skip_Spaces;
+
+   function Get_Token return Sdf_Token_Type
+   is
+      use Ada.Characters.Latin_1;
+   begin
+      Skip_Spaces;
+
+      --  Be sure there is at least 4 characters.
+      if Pos + 4 >= Buf_Len then
+         Refill_Buf;
+      end if;
+
+      case Buf (Pos) is
+         when EOT =>
+            if Buf_Len = 1 then
+               return Tok_Eof;
+            else
+               Error_Bad_Character;
+               return Tok_Error;
+            end if;
+         when '"' => -- "
+            Scan_Qstring;
+            return Tok_Qstring;
+         when '/' =>
+            --  Skip_Spaces has already handled line comments.
+            Pos := Pos + 1;
+            return Tok_Div;
+         when '.' =>
+            Pos := Pos + 1;
+            return Tok_Dot;
+         when ':' =>
+            Pos := Pos + 1;
+            return Tok_Cln;
+         when '(' =>
+            Pos := Pos + 1;
+            return Tok_Oparen;
+         when ')' =>
+            Pos := Pos + 1;
+            return Tok_Cparen;
+         when 'a' .. 'z'
+           | 'A' .. 'Z' =>
+            Scan_Identifier;
+            return Tok_Identifier;
+         when '0' .. '9' =>
+            return Scan_Number;
+         when others =>
+            Error_Bad_Character;
+            return Tok_Error;
+      end case;
    end Get_Token;
 
    function Is_White_Space (C : Character) return Boolean
@@ -374,90 +400,57 @@ package body Grt.Sdf is
    is
       use Ada.Characters.Latin_1;
    begin
-      loop
-         --  Be sure there is at least 4 characters.
-         if Pos + 4 >= Buf_Len then
-            Refill_Buf;
-         end if;
+      Skip_Spaces;
 
-         case Buf (Pos) is
-            when EOT =>
-               if Pos /= Buf_Len then
-                  exit;
+      --  Be sure there is at least 4 characters.
+      if Pos + 4 >= Buf_Len then
+         Refill_Buf;
+      end if;
+
+      case Buf (Pos) is
+         when '0' =>
+            if Is_White_Space (Buf (Pos + 2)) then
+               if Buf (Pos + 1) = 'z' then
+                  Pos := Pos + 2;
+                  return Edge_0z;
+               elsif Buf (Pos + 1) = '1' then
+                  Pos := Pos + 2;
+                  return Edge_01;
                end if;
-               Pos := 1;
-               Read_Sdf;
-               if Buf_Len = 1 then
-                  exit;
+            end if;
+         when '1' =>
+            if Is_White_Space (Buf (Pos + 2)) then
+               if Buf (Pos + 1) = 'z' then
+                  Pos := Pos + 2;
+                  return Edge_1z;
+               elsif Buf (Pos + 1) = '0' then
+                  Pos := Pos + 2;
+                  return Edge_10;
                end if;
-            when LF =>
-               Pos := Pos + 1;
-               if Buf (Pos) = CR then
-                  Pos := Pos + 1;
+            end if;
+         when 'z' =>
+            if Is_White_Space (Buf (Pos + 2)) then
+               if Buf (Pos + 1) = '0' then
+                  Pos := Pos + 2;
+                  return Edge_Z0;
+               elsif Buf (Pos + 1) = '1' then
+                  Pos := Pos + 2;
+                  return Edge_Z1;
                end if;
-               Line_Start := Pos;
-               Sdf_Line := Sdf_Line + 1;
-            when CR =>
-               Pos := Pos + 1;
-               if Buf (Pos) = LF then
-                  Pos := Pos + 1;
-               end if;
-               Line_Start := Pos;
-               Sdf_Line := Sdf_Line + 1;
-            when ' '
-              | HT =>
-               Pos := Pos + 1;
-            when '0' =>
-               if Is_White_Space (Buf (Pos + 2)) then
-                  if Buf (Pos + 1) = 'z' then
-                     Pos := Pos + 2;
-                     return Edge_0z;
-                  elsif Buf (Pos + 1) = '1' then
-                     Pos := Pos + 2;
-                     return Edge_01;
-                  end if;
-               end if;
-               exit;
-            when '1' =>
-               if Is_White_Space (Buf (Pos + 2)) then
-                  if Buf (Pos + 1) = 'z' then
-                     Pos := Pos + 2;
-                     return Edge_1z;
-                  elsif Buf (Pos + 1) = '0' then
-                     Pos := Pos + 2;
-                     return Edge_10;
-                  end if;
-               end if;
-               exit;
-            when 'z' =>
-               if Is_White_Space (Buf (Pos + 2)) then
-                  if Buf (Pos + 1) = '0' then
-                     Pos := Pos + 2;
-                     return Edge_Z0;
-                  elsif Buf (Pos + 1) = '1' then
-                     Pos := Pos + 2;
-                     return Edge_Z1;
-                  end if;
-               end if;
-               exit;
-            when 'p' =>
-               Scan_Identifier;
-               if Is_Ident ("posedge") then
-                  return Edge_Posedge;
-               else
-                  exit;
-               end if;
-            when 'n' =>
-               Scan_Identifier;
-               if Is_Ident ("negedge") then
-                  return Edge_Negedge;
-               else
-                  exit;
-               end if;
-            when others =>
-               exit;
-         end case;
-      end loop;
+            end if;
+         when 'p' =>
+            Scan_Identifier;
+            if Is_Ident ("posedge") then
+               return Edge_Posedge;
+            end if;
+         when 'n' =>
+            Scan_Identifier;
+            if Is_Ident ("negedge") then
+               return Edge_Negedge;
+            end if;
+         when others =>
+            null;
+      end case;
       Error_Sdf ("edge_identifier expected");
       return Edge_Error;
    end Get_Edge_Token;
@@ -524,6 +517,8 @@ package body Grt.Sdf is
    begin
       Sdf_Context.Kind := Kind;
       Sdf_Context.Port_Num := 0;
+      Sdf_Context.Ports (1).L := Invalid_Dnumber;
+      Sdf_Context.Ports (2).L := Invalid_Dnumber;
       Sdf_Context.Ports (1).Edge := Edge_None;
       Sdf_Context.Ports (2).Edge := Edge_None;
    end Start_Generic_Name;
@@ -665,6 +660,35 @@ package body Grt.Sdf is
          Port_Spec.Name (Len) := To_Lower (Buf (I));
       end loop;
       Port_Spec.Name_Len := Len;
+
+      --  Parse   [ DNUMBER ]
+      --        | [ DNUMBER : DNUMBER ]
+      Skip_Spaces;
+      if Buf (Pos) = '[' then
+         Port_Spec.R := Invalid_Dnumber;
+         Pos := Pos + 1;
+         if Get_Token /= Tok_Dnumber then
+            Error_Sdf (Tok);
+         else
+            Port_Spec.L := Ghdl_I32 (Scan_Int);
+         end if;
+         Skip_Spaces;
+         if Buf (Pos) = ':' then
+            Pos := Pos + 1;
+            if Get_Token /= Tok_Dnumber then
+               Error_Sdf (Tok);
+            else
+               Port_Spec.R := Ghdl_I32 (Scan_Int);
+            end if;
+            Skip_Spaces;
+         end if;
+         if Buf (Pos) /= ']' then
+            Error_Sdf ("']' expected");
+         else
+            Pos := Pos + 1;
+         end if;
+      end if;
+
       return True;
    end Parse_Port_Path1;
 
@@ -1115,20 +1139,24 @@ package body Grt.Sdf is
             exit when not Is_Ident ("INSTANCE");
             Tok := Get_Token;
             if Tok /= Tok_Cparen then
-               if Tok /= Tok_Identifier then
-                  Error_Sdf ("instance identifier expected");
-                  return False;
-               end if;
-               for I in Ident_Start .. Ident_End loop
-                  Buf (I) := To_Lower (Buf (I));
+               loop
+                  if Tok /= Tok_Identifier then
+                     Error_Sdf ("instance identifier expected");
+                     return False;
+                  end if;
+                  for I in Ident_Start .. Ident_End loop
+                     Buf (I) := To_Lower (Buf (I));
+                  end loop;
+                  Vital_Annotate.Sdf_Instance
+                    (Sdf_Context.all, Buf (Ident_Start .. Ident_End), Ok);
+                  if not Ok then
+                     Error_Sdf ("cannot find instance");
+                     return False;
+                  end if;
+                  Tok := Get_Token;
+                  exit when Tok /= Tok_Dot;
+                  Tok := Get_Token;
                end loop;
-               Vital_Annotate.Sdf_Instance
-                 (Sdf_Context.all, Buf (Ident_Start .. Ident_End), Ok);
-               if not Ok then
-                  Error_Sdf ("cannot find instance");
-                  return False;
-               end if;
-               Tok := Get_Token;
             end if;
             if Tok /= Tok_Cparen
               or else Get_Token /= Tok_Oparen
