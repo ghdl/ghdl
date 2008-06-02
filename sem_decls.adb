@@ -654,8 +654,7 @@ package body Sem_Decls is
                     (Name_Op_Less_Equal, Iir_Predefined_Array_Less_Equal);
                end if;
 
-               Element_Type :=
-                 Get_Base_Type (Get_Element_Subtype (Type_Definition));
+               Element_Type := Get_Element_Subtype (Type_Definition);
 
                Add_Operation (Name_Op_Concatenation,
                               Iir_Predefined_Array_Array_Concat,
