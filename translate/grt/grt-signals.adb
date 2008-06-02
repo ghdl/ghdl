@@ -2709,10 +2709,15 @@ package body Grt.Signals is
          if Last.Time > Trans.Time then
             Internal_Error ("delayed time");
          elsif Last.Time = Trans.Time then
-            if Prev = Last then
-               Internal_Error ("delayed");
+            if Prev /= Last then
+               Free (Last);
+            else
+               --  No transaction.
+               if Last.Time /= 0 then
+                  --  This can happen only at time = 0.
+                  Internal_Error ("delayed");
+               end if;
             end if;
-            Free (Last);
          else
             Prev := Last;
          end if;
