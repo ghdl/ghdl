@@ -11,12 +11,12 @@
 @titlepage
 @title GHDL guide
 @subtitle GHDL, a VHDL compiler
-@subtitle For GHDL version 0.26 (Sokcho edition)
+@subtitle For GHDL version 0.27 (Sokcho edition)
 @author Tristan Gingold
 @c The following two commands start the copyright page.
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2002, 2003, 2004, 2005, 2006, 2007 Tristan Gingold.
+Copyright @copyright{} 2002, 2003, 2004, 2005, 2006, 2007, 2008 Tristan Gingold.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -796,12 +796,15 @@ working (due to case sensitivity or forbidden characters in filenames).
 @code{VHDL} rules forbides you to add units in the @samp{std} library.
 Furthermode, you should not put units in the @samp{ieee} library.
 
-@item --workdir=@var{PATH}
+@item --workdir=@var{DIR}
 @cindex @option{--workdir} switch
 Specify the directory where the @samp{WORK} library is.  When this
 option is not present, the @samp{WORK} library is in the current
 directory.  The object files created by the compiler are always placed
 in the same directory as the @samp{WORK} library.
+
+Use option @option{-P} to specify where libraries other than @samp{WORK}
+are placed.
 
 @item --std=@var{STD}
 @cindex @option{--std} switch
@@ -850,9 +853,9 @@ not standard but widely mis-used package.
 To avoid errors, you must use the same @code{IEEE} library for all units of
 your design, and during elaboration.
 
-@item -P@var{PATH}
+@item -P@var{DIRECTORY}
 @cindex @option{-P} switch
-Add @var{PATH} to the end of the list of directories to be searched for
+Add @var{DIRECTORY} to the end of the list of directories to be searched for
 library files.
 
 The @code{WORK} library is always searched in the path specified by the
@@ -1561,6 +1564,16 @@ level would only display a message.
 
 @samp{--assert-level=none} prevents any assertion violation to stop
 simulation.
+
+@item --ieee-asserts=@var{POLICY}
+@cindex @option{--ieee-asserts} option
+Select how the assertions from @samp{ieee} units are
+handled. @var{POLICY} can be @samp{enable} (the default),
+@samp{disable} which disables all assertion from @samp{ieee} packages
+and @samp{disable-at-0} which disables only at start of simulation.
+
+This option can be useful to avoid assertion message from
+@samp{ieee.numeric_std} (and other @samp{ieee} packages).
 
 @item --stop-time=@var{TIME}
 @cindex @option{--stop-time} option

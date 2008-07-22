@@ -66,7 +66,7 @@ agcc_srcdir=$(srcdir)/vhdl
 agcc_objdir=.
 
 AGCC_GCCSRC_DIR=$(srcdir)/..
-AGCC_GCCOBJ_DIR=..
+AGCC_GCCOBJ_DIR=../
 
 ####gcc Makefile.inc
 
@@ -131,9 +131,9 @@ vhdl.install-common: ghdl$(exeext)
 
 install-info:: $(DESTDIR)$(infodir)/ghdl.info
 
-vhdl.install-info: ghdl.info
+vhdl.install-info: doc/ghdl.info
 	-rm -rf $(infodir)/ghdl.info*
-	$(INSTALL_DATA) ghdl.info* $(DESTDIR)$(infodir)
+	$(INSTALL_DATA) doc/ghdl.info* $(DESTDIR)$(infodir)
 	-chmod a-x $(DESTDIR)$(infodir)/ghdl.info*
 
 install-ghdllib:

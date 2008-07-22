@@ -39,7 +39,7 @@
 set -e
 
 # GCC version
-GCCVERSION=4.1.2
+GCCVERSION=4.2.4
 # Machine name used by GCC
 MACHINE=i686-pc-linux-gnu
 # Directory where GCC sources (and objects) stay.
@@ -170,7 +170,7 @@ do_compile ()
   rm -rf $GCCDISTOBJ
   mkdir $GCCDISTOBJ
   cd $GCCDISTOBJ
-  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX
+  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX --disable-bootstrap
   make CFLAGS="-O -g"
   make -C gcc vhdl.info
   cd $CWD
@@ -314,6 +314,7 @@ do_gtkwave_patch ()
 # Update the doc
 do_website ()
 {
+  cp "$DOWNLOAD_HTML" "$DOWNLOAD_HTML".old
   sed -e "
 /SRC-HREF/ s/href=\".*\"/href=\"$tarfile.bz2\"/
 /BIN-HREF/ s/href=\".*\"/href=\"$bindirname.tar\"/
@@ -326,7 +327,7 @@ do_website ()
 	<td><a href=\"$bindirname.tar\">\\
 	    $bindirname.tar</a></td>\\
       </tr>
-" < $DOWNLOAD_HTML > "$DOWNLOAD_HTML".new
+" < "$DOWNLOAD_HTML".old > "$DOWNLOAD_HTML"
   dir=../../website/ghdl
   echo "Updating $dir"
   rm -rf $dir
