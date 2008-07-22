@@ -239,6 +239,10 @@ package body Canon is
             --Canon_Extract_Sensitivity
             --  (Get_Prefix (Expr), Sensitivity_List, Is_Target);
 
+         when Iir_Kinds_Scalar_Type_Attribute =>
+            Canon_Extract_Sensitivity
+              (Get_Parameter (Expr), Sensitivity_List, Is_Target);
+
          when Iir_Kind_Aggregate =>
             declare
                Aggr_Type : Iir;
