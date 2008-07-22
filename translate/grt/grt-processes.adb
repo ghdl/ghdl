@@ -298,6 +298,8 @@ package body Grt.Processes is
 --          Cur_Proc.Timeout := Std_Time'Last;
 --       end if;
       Stack_Switch (Get_Main_Stack, Proc.Stack);
+      -- Note: in case of timeout, the timeout is removed when processis is
+      -- woken up.
       return Proc.State = State_Timeout;
    end Ghdl_Process_Wait_Suspend;
 
@@ -307,6 +309,7 @@ package body Grt.Processes is
       El : Sensitivity_Acc;
       N_El : Sensitivity_Acc;
    begin
+      --  Remove the sensitivity.
       El := Proc.Sensitivity;
       Proc.Sensitivity := null;
       while El /= null loop
@@ -314,6 +317,8 @@ package body Grt.Processes is
          Free (El);
          El := N_El;
       end loop;
+      --  Remove the timeout.
+      Proc.Timeout := Bad_Time;
    end Ghdl_Process_Wait_Close;
 
    procedure Ghdl_Process_Wait_Exit
