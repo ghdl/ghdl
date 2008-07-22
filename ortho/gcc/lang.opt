@@ -76,3 +76,11 @@ Use synthetizer rules for default bindings
 l
 vhdl Joined Separate
 -l<filename>	Put list of files for link in <filename>
+
+C
+vhdl
+Allow any character in comments
+
+-mb-comments
+vhdl
+Allow any character in comments
