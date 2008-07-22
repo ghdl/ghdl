@@ -83,9 +83,9 @@ push_binding (void)
   res->bind = make_node (BIND_EXPR);
   res->block = make_node (BLOCK);
   BIND_EXPR_BLOCK (res->bind) = res->block;
-  TREE_SIDE_EFFECTS (res->bind) = 1;
+  TREE_SIDE_EFFECTS (res->bind) = true;
   TREE_TYPE (res->bind) = void_type_node;
-  TREE_USED (res->block) = 1;
+  TREE_USED (res->block) = true;
 
   if (cur_binding_level != NULL)
     {
@@ -134,15 +134,16 @@ pop_binding (void)
 
       /* Create an artificial var to save the stack pointer.  */
       tmp_var = build_decl (VAR_DECL, NULL, ptr_type_node);
-      DECL_ARTIFICIAL (tmp_var) = 1;
-      DECL_IGNORED_P (tmp_var) = 1;
-      TREE_USED (tmp_var) = 1;
+      DECL_ARTIFICIAL (tmp_var) = true;
+      DECL_IGNORED_P (tmp_var) = true;
+      TREE_USED (tmp_var) = true;
       push_decl (tmp_var);
 
       /* Create the save stmt.  */
       save_call = build_function_call_expr
 	(implicit_built_in_decls[BUILT_IN_STACK_SAVE], NULL_TREE);
-      save = build (MODIFY_EXPR, ptr_type_node, tmp_var, save_call);
+      save = build2 (MODIFY_EXPR, ptr_type_node, tmp_var, save_call);
+      TREE_SIDE_EFFECTS (save) = true;
 
       /* Create the restore stmt.  */
       restore = build_function_call_expr
@@ -151,8 +152,8 @@ pop_binding (void)
 
       /* Build a try-finally block.
 	 The statement list is the block of current statements.  */
-      t = build (TRY_FINALLY_EXPR, void_type_node, cur_stmts, NULL_TREE);
-      TREE_SIDE_EFFECTS (t) = 1;
+      t = build2 (TRY_FINALLY_EXPR, void_type_node, cur_stmts, NULL_TREE);
+      TREE_SIDE_EFFECTS (t) = true;
 
       /* The finally block is the restore stmt.  */
       append_to_statement_list (restore, &TREE_OPERAND (t, 1));
@@ -185,7 +186,7 @@ append_stmt (tree stmt)
 {
   if (!EXPR_HAS_LOCATION (stmt))
     SET_EXPR_LOCATION (stmt, input_location);
-  TREE_SIDE_EFFECTS (stmt) = 1;
+  TREE_SIDE_EFFECTS (stmt) = true;
   append_to_statement_list (stmt, &cur_stmts);
 }
 
@@ -433,7 +434,7 @@ ortho_mark_addressable (tree exp)
       case CONST_DECL:
       case PARM_DECL:
       case RESULT_DECL:
-	TREE_ADDRESSABLE (n) = 1;
+	TREE_ADDRESSABLE (n) = true;
 	return true;
 
       case COMPONENT_REF:
@@ -444,7 +445,7 @@ ortho_mark_addressable (tree exp)
 
       case FUNCTION_DECL:
       case CONSTRUCTOR:
-	TREE_ADDRESSABLE (n) = 1;
+	TREE_ADDRESSABLE (n) = true;
 	return true;
 
       case INDIRECT_REF:
@@ -1234,6 +1235,7 @@ new_constrained_array_type (tree atype, tree length)
   tree index_type;
   tree len;
   tree one;
+  tree res;
 
   index_type = TYPE_DOMAIN (atype);
   if (integer_zerop (length))
@@ -1249,7 +1251,12 @@ new_constrained_array_type (tree atype, tree length)
     }
 
   range_type = build_range_type (index_type, size_zero_node, len);
-  return build_array_type (TREE_TYPE (atype), range_type);
+  res = build_array_type (TREE_TYPE (atype), range_type);
+
+  /* Constrained arrays are *always* a subtype of its array type.
+     Just copy alias set.  */
+  TYPE_ALIAS_SET (res) = get_alias_set (atype);
+  return res;
 }
 
 void
@@ -1374,10 +1381,12 @@ new_indexed_element (tree arr, tree index)
 tree
 new_slice (tree arr, tree res_type, tree index)
 {
+#if 0
   tree res;
   tree el_ptr_type;
   tree el_type;
   tree res_ptr_type;
+#endif
 
   /*  *((RES_TYPE *)(&ARR[INDEX]))
       convert ARR to a pointer, add index, and reconvert to array ?  */
@@ -1386,6 +1395,7 @@ new_slice (tree arr, tree res_type, tree index)
 
   ortho_mark_addressable (arr);
   return build4 (ARRAY_RANGE_REF, res_type, arr, index, NULL_TREE, NULL_TREE);
+#if 0
   el_type = TREE_TYPE (TREE_TYPE (arr));
   el_ptr_type = build_pointer_type (el_type);
 
@@ -1395,6 +1405,7 @@ new_slice (tree arr, tree res_type, tree index)
   res = build1 (NOP_EXPR, res_ptr_type, res);
   res = build1 (INDIRECT_REF, res_type, res);
   return res;
+#endif
 }
 
 tree

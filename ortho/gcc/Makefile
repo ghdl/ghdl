@@ -2,8 +2,8 @@ ortho_srcdir=..
 orthobe_srcdir=$(ortho_srcdir)/gcc
 agcc_objdir=.
 agcc_srcdir=$(ortho_srcdir)/gcc
-AGCC_GCCSRC_DIR:=$(HOME)/dist/gcc-4.1.1
-AGCC_GCCOBJ_DIR:=$(AGCC_GCCSRC_DIR)-objs
+AGCC_GCCSRC_DIR:=$(HOME)/dist/gcc-4.2.4
+AGCC_GCCOBJ_DIR:=$(AGCC_GCCSRC_DIR)-objs/
 SED=sed
 
 all: $(ortho_exec)
@@ -17,7 +17,10 @@ ORTHO_PACKAGE=Ortho_Gcc
 $(ortho_exec): $(AGCC_DEPS) $(ORTHO_BASENAME).ads force
 	gnatmake -m -o $@ -g -aI$(ortho_srcdir) \
 	 -aI$(ortho_srcdir)/gcc $(GNAT_FLAGS) ortho_gcc-main \
-	 -bargs -E -largs $(AGCC_OBJS) #-static
+	 -bargs -E -largs $(AGCC_OBJS) 	\
+	  $(AGCC_GCCOBJ_DIR)libcpp/libcpp.a \
+	  $(AGCC_GCCOBJ_DIR)libiberty/libiberty.a \
+	  $(AGCC_GCCOBJ_DIR)libdecnumber/libdecnumber.a #-static
 
 clean: agcc-clean
 	$(RM) -f *.o *.ali ortho_nodes-main

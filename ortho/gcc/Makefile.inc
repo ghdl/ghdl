@@ -31,10 +31,10 @@ AGCC_LOCAL_OBJS=ortho-lang.o gcc-version.o
 
 AGCC_DEPS := $(AGCC_LOCAL_OBJS)
 AGCC_OBJS := $(AGCC_LOCAL_OBJS) \
-	$(AGCC_GCCOBJ_DIR)/gcc/toplev.o \
-	$(AGCC_GCCOBJ_DIR)/gcc/libbackend.a \
-	$(AGCC_GCCOBJ_DIR)/libcpp/libcpp.a \
-	$(AGCC_GCCOBJ_DIR)/libiberty/libiberty.a
+	$(AGCC_GCCOBJ_DIR)gcc/toplev.o \
+	$(AGCC_GCCOBJ_DIR)gcc/libbackend.a \
+	$(AGCC_GCCOBJ_DIR)libcpp/libcpp.a \
+	$(AGCC_GCCOBJ_DIR)libiberty/libiberty.a
 
 gcc-version.c: $(AGCC_GCCSRC_DIR)/gcc/BASE-VER
 	-$(RM) -f $@
@@ -46,8 +46,8 @@ gcc-version.o: gcc-version.c
 	$(CC) -c -o $@ $< $(AGCC_CFLAGS)
 
 ortho-lang.o: $(agcc_srcdir)/ortho-lang.c \
- $(AGCC_GCCOBJ_DIR)/gcc/gtype-vhdl.h \
- $(AGCC_GCCOBJ_DIR)/gcc/gt-vhdl-ortho-lang.h
+ $(AGCC_GCCOBJ_DIR)gcc/gtype-vhdl.h \
+ $(AGCC_GCCOBJ_DIR)gcc/gt-vhdl-ortho-lang.h
 	$(CC) -c -o $@ $< $(AGCC_CFLAGS)
 
 agcc-clean: force
