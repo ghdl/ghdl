@@ -75,8 +75,12 @@ package body Libraries is
       if Path'Length = 0 then
          return;
       end if;
-      Pathes.Increment_Last;
-      Pathes.Table (Pathes.Last) := Path_To_Id (Path);
+      --  Nice message instead of constraint_error.
+      if Path'Length + 2 >= Name_Buffer'Length then
+         Error_Msg ("argument of -P is too long");
+         return;
+      end if;
+      Pathes.Append (Path_To_Id (Path));
    end Add_Library_Path;
 
    function Get_Nbr_Pathes return Natural is
