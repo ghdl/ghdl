@@ -24,7 +24,7 @@ package Grt.Rtis is
 
    type Ghdl_Rtik is
      (Ghdl_Rtik_Top,
-      Ghdl_Rtik_Library,
+      Ghdl_Rtik_Library,        -- use scalar
       Ghdl_Rtik_Package,
       Ghdl_Rtik_Package_Body,
       Ghdl_Rtik_Entity,

@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Grt.Types; use Grt.Types;
+with Grt.Rtis; use Grt.Rtis;
 
 package Grt.Lib is
    pragma Preelaborate (Grt.Lib);
@@ -24,10 +25,16 @@ package Grt.Lib is
      (Dest : Ghdl_Ptr; Src : Ghdl_Ptr; Size : Ghdl_Index_Type);
 
    procedure Ghdl_Assert_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
+     (Str : Std_String_Ptr;
+      Severity : Integer;
+      Loc : Ghdl_Location_Ptr;
+      Unit : Ghdl_Rti_Access);
 
    procedure Ghdl_Report
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
+     (Str : Std_String_Ptr;
+      Severity : Integer;
+      Loc : Ghdl_Location_Ptr;
+      Unit : Ghdl_Rti_Access);
 
    Note_Severity    : constant Integer := 0;
    Warning_Severity : constant Integer := 1;

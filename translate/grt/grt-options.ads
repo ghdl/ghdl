@@ -85,6 +85,15 @@ package Grt.Options is
    --  Level at which an assert stop the simulation.
    Severity_Level : Integer := Failure_Severity;
 
+   --  How assertions are handled.
+   type Assert_Handling is
+     (Enable_Asserts,
+      Disable_Asserts_At_Time_0,
+      Disable_Asserts);
+
+   --  Handling of assertions from IEEE library.
+   Ieee_Asserts : Assert_Handling := Enable_Asserts;
+
    --  Set by --stop-time=XXX to stop the simulation at or just after XXX.
    --  (unit is fs in fact).
    Stop_Time : Std_Time := Std_Time'Last;

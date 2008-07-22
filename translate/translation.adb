@@ -66,6 +66,7 @@ package body Translation is
 
    --  Node for the variable containing the current filename.
    Current_Filename_Node : O_Dnode := O_Dnode_Null;
+   Current_Library_Unit : Iir := Null_Iir;
 
    --  Global declarations.
    Ghdl_Ptr_Type : O_Tnode;
@@ -1180,6 +1181,7 @@ package body Translation is
 
             --  For Entity: field in the instance type containing link to
             --              parent.
+            --  For an instantiation: link in the parent block to the instance.
             Block_Link_Field : O_Fnode;
 
             --  For an entity: must be o_fnode_null.
@@ -1187,7 +1189,6 @@ package body Translation is
             --  For a block, a component or a generate block: field in the
             --    parent instance which contains the declarations for this
             --    block.
-            --  For a direct instantiation: link to the instance.
             Block_Parent_Field : O_Fnode;
 
             --  For a generate block: field in the block providing a chain to
@@ -1220,6 +1221,7 @@ package body Translation is
             --  RTI for the component.
             Comp_Rti_Const : O_Dnode;
          when Kind_Config =>
+            --  Subprogram that configure the block.
             Config_Subprg : O_Dnode;
          when Kind_Field =>
             --  Node for a record element declaration.
@@ -1241,6 +1243,7 @@ package body Translation is
             --  body.
             Package_Local_Id : Local_Identifier_Type;
          when Kind_Assoc =>
+            --  Association informations.
             Assoc_In : Assoc_Conv_Info;
             Assoc_Out : Assoc_Conv_Info;
          when Kind_Design_File =>
@@ -1869,8 +1872,10 @@ package body Translation is
       --   an entity_declaration (for component configuration or direct
       --   component instantiation), a component declaration (for a component
       --   instantiation) or Null_Iir (for a block header).
+      --  BLOCK is the block/architecture containing the instantiation stmt.
+      --  STMT is either the instantiation stmt or the block header.
       procedure Translate_Association_Subprograms
-        (Assoc_Chain : Iir; Base_Block : Iir; Entity : Iir);
+        (Stmt : Iir; Block : Iir; Base_Block : Iir; Entity : Iir);
 
       --  Elaborate In/Out_Conversion for ASSOC (signals only).
       --  NDEST is the data structure to be registered.
@@ -4082,6 +4087,7 @@ package body Translation is
 
       procedure Translate_Component_Configuration_Decl
         (Cfg : Iir;
+         Blk : Iir;
          Arch : Iir_Architecture_Declaration;
          Num : in out Iir_Int32)
       is
@@ -4145,8 +4151,7 @@ package body Translation is
          Arch_Info := Get_Info (Arch);
 
          Chap4.Translate_Association_Subprograms
-           (Get_Port_Map_Aspect_Chain (Binding), Arch,
-            Get_Entity_From_Entity_Aspect (Entity_Aspect));
+           (Binding, Blk, Arch, Get_Entity_From_Entity_Aspect (Entity_Aspect));
 
          Start_Procedure_Decl
            (Inter_List, Create_Identifier, O_Storage_Private);
@@ -4189,6 +4194,7 @@ package body Translation is
       --  NUM is an integer used to generate uniq names.
       procedure Translate_Block_Configuration_Decls
         (Block_Config : Iir_Block_Configuration;
+         Block : Iir;
          Arch : Iir_Architecture_Declaration;
          Num : in out Iir_Int32)
       is
@@ -4201,12 +4207,13 @@ package body Translation is
             case Get_Kind (El) is
                when Iir_Kind_Component_Configuration
                  | Iir_Kind_Configuration_Specification =>
-                  Translate_Component_Configuration_Decl (El, Arch, Num);
+                  Translate_Component_Configuration_Decl
+                    (El, Block, Arch, Num);
                when Iir_Kind_Block_Configuration =>
                   Blk := Get_Block_From_Block_Specification
                     (Get_Block_Specification (El));
                   Push_Identifier_Prefix (Mark, Get_Identifier (Blk));
-                  Translate_Block_Configuration_Decls (El, Arch, Num);
+                  Translate_Block_Configuration_Decls (El, Blk, Arch, Num);
                   Pop_Identifier_Prefix (Mark);
                when others =>
                   Error_Kind ("translate_block_configuration_decls(1)", El);
@@ -4245,14 +4252,18 @@ package body Translation is
                      declare
                         Assoc : O_Assoc_List;
                         Info : Block_Info_Acc;
+                        Comp_Info : Comp_Info_Acc;
                         V : O_Lnode;
                      begin
+                        --  The component is really a component and not a
+                        --  direct instance.
                         Info := Get_Info (El);
+                        Comp_Info := Get_Info (Get_Instantiated_Unit (El));
                         Start_Association (Assoc, Cfg_Info.Config_Subprg);
                         V := Get_Instance_Ref (Block_Info.Block_Decls_Type);
-                        V := New_Selected_Element (V, Info.Block_Parent_Field);
+                        V := New_Selected_Element (V, Info.Block_Link_Field);
                         New_Association
-                          (Assoc, New_Address (V, Info.Block_Decls_Ptr_Type));
+                          (Assoc, New_Address (V, Comp_Info.Comp_Ptr_Type));
                         V := Get_Instance_Ref (Arch_Info.Block_Decls_Type);
                         New_Association
                           (Assoc,
@@ -4574,7 +4585,7 @@ package body Translation is
 
          --  Declare subprograms for configuration.
          Num := 0;
-         Translate_Block_Configuration_Decls (Block_Config, Arch, Num);
+         Translate_Block_Configuration_Decls (Block_Config, Arch, Arch, Num);
 
          --  Body.
          Start_Subprogram_Body (Config_Info.Config_Subprg);
@@ -10994,8 +11005,17 @@ package body Translation is
 
       type Conv_Mode is (Conv_Mode_In, Conv_Mode_Out);
 
+      --  Create subprogram for an association conversion.
+      --  STMT is the statement/block_header containing the association.
+      --  BLOCK is the architecture/block containing the instance.
+      --  ASSOC is the association and MODE the conversion to work on.
+      --  CONV_INFO is the result place holder.
+      --  BASE_BLOCK is the base architecture/block containing the instance.
+      --  ENTITY is the entity/component instantiated (null for block_stmt)
       procedure Translate_Association_Subprogram
-        (Assoc : Iir;
+        (Stmt : Iir;
+         Block : Iir;
+         Assoc : Iir;
          Mode : Conv_Mode;
          Conv_Info : in out Assoc_Conv_Info;
          Base_Block : Iir;
@@ -11009,6 +11029,7 @@ package body Translation is
          Itype : O_Tnode;
          El_List : O_Element_List;
          Block_Info : Block_Info_Acc;
+         Stmt_Info : Block_Info_Acc;
          Entity_Info : Ortho_Info_Acc;
          Var_Data : O_Dnode;
 
@@ -11046,10 +11067,6 @@ package body Translation is
          --  FIXME: individual assoc -> overload.
          Push_Identifier_Prefix
            (Mark3, Get_Identifier (Get_Base_Name (Formal)));
-
-         if Is_Anonymous_Type_Definition (In_Type) then
-            In_Type := Get_Base_Type (In_Type);
-         end if;
 
          Out_Info := Get_Info (Out_Type);
          In_Info := Get_Info (In_Type);
@@ -11105,6 +11122,7 @@ package body Translation is
          Conv_Info.Record_Ptr_Type := New_Access_Type (Conv_Info.Record_Type);
          New_Type_Decl (Create_Identifier ("DPTR"), Conv_Info.Record_Ptr_Type);
 
+         --  Declare the subprogram.
          Start_Procedure_Decl
            (Inter_List, Create_Identifier, O_Storage_Private);
          New_Interface_Decl
@@ -11143,6 +11161,18 @@ package body Translation is
                                                 Conv_Info.Instantiated_Field));
                Push_Scope (Decl_Type, V);
             end;
+         end if;
+
+         --  Add access to the instantiation-specific data.
+         --  This is used only for anonymous subtype variables.
+         --  FIXME: what if STMT is a binding_indication ?
+         Stmt_Info := Get_Info (Stmt);
+         if Stmt_Info /= null
+           and then Stmt_Info.Block_Decls_Type /= O_Tnode_Null
+         then
+            Push_Scope (Stmt_Info.Block_Decls_Type,
+                        Stmt_Info.Block_Parent_Field,
+                        Get_Info (Block).Block_Decls_Type);
          end if;
 
          --  Read signal value.
@@ -11235,6 +11265,11 @@ package body Translation is
          end case;
 
          Close_Temp;
+         if Stmt_Info /= null
+           and then Stmt_Info.Block_Decls_Type /= O_Tnode_Null
+         then
+            Pop_Scope (Stmt_Info.Block_Decls_Type);
+         end if;
          if Conv_Info.Instantiated_Entity /= Null_Iir then
             if Entity_Info.Kind = Kind_Component then
                Pop_Scope (Entity_Info.Comp_Type);
@@ -11243,6 +11278,7 @@ package body Translation is
             end if;
          end if;
          Pop_Scope (Block_Info.Block_Decls_Type);
+
          Pop_Local_Factory;
          Finish_Subprogram_Body;
 
@@ -11250,13 +11286,14 @@ package body Translation is
          Pop_Identifier_Prefix (Mark2);
       end Translate_Association_Subprogram;
 
+      --  ENTITY is null for block_statement.
       procedure Translate_Association_Subprograms
-        (Assoc_Chain : Iir; Base_Block : Iir; Entity : Iir)
+        (Stmt : Iir; Block : Iir; Base_Block : Iir; Entity : Iir)
       is
          Assoc : Iir;
          Info : Assoc_Info_Acc;
       begin
-         Assoc := Assoc_Chain;
+         Assoc := Get_Port_Map_Aspect_Chain (Stmt);
          while Assoc /= Null_Iir loop
             if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
             then
@@ -11264,14 +11301,16 @@ package body Translation is
                if Get_In_Conversion (Assoc) /= Null_Iir then
                   Info := Add_Info (Assoc, Kind_Assoc);
                   Translate_Association_Subprogram
-                    (Assoc, Conv_Mode_In, Info.Assoc_In, Base_Block, Entity);
+                    (Stmt, Block, Assoc, Conv_Mode_In, Info.Assoc_In,
+                     Base_Block, Entity);
                end if;
                if Get_Out_Conversion (Assoc) /= Null_Iir then
                   if Info = null then
                      Info := Add_Info (Assoc, Kind_Assoc);
                   end if;
                   Translate_Association_Subprogram
-                    (Assoc, Conv_Mode_Out, Info.Assoc_Out, Base_Block, Entity);
+                    (Stmt, Block, Assoc, Conv_Mode_Out, Info.Assoc_Out,
+                     Base_Block, Entity);
                end if;
             end if;
             Assoc := Get_Chain (Assoc);
@@ -18803,6 +18842,7 @@ package body Translation is
          Severity : O_Enode;
          Assocs : O_Assoc_List;
          Loc : O_Dnode;
+         Rti : O_Cnode;
       begin
          Loc := Chap4.Get_Location (Stmt);
          Expr := Get_Report_Expression (Stmt);
@@ -18824,6 +18864,16 @@ package body Translation is
          New_Association (Assocs, Severity);
          New_Association (Assocs, New_Address (New_Obj (Loc),
                                                Ghdl_Location_Ptr_Node));
+         if Current_Library_Unit /= Null_Iir
+           and then Get_Kind (Current_Library_Unit) = Iir_Kind_Package_Body
+         then
+            Rti := Rtis.New_Rti_Address
+              (Get_Info
+                 (Get_Package (Current_Library_Unit)).Package_Rti_Const);
+         else
+            Rti := New_Null_Access (Rtis.Ghdl_Rti_Access);
+         end if;
+         New_Association (Assocs, New_Lit (Rti));
          New_Procedure_Call (Assocs);
       end Translate_Report;
 
@@ -20807,27 +20857,69 @@ package body Translation is
       procedure Translate_Component_Instantiation_Statement (Inst : Iir)
       is
          Comp : Iir;
-         Field : O_Fnode;
          Info : Block_Info_Acc;
          Comp_Info : Comp_Info_Acc;
+
+         Mark2 : Id_Mark_Type;
+         Assoc, Conv, In_Type : Iir;
+         Has_Conv_Record : Boolean := False;
       begin
          Comp := Get_Instantiated_Unit (Inst);
          Info := Add_Info (Inst, Kind_Block);
+         Info.Block_Decls_Type := O_Tnode_Null;
          if Get_Kind (Comp) = Iir_Kind_Component_Declaration then
             --  Via a component declaration.
             Comp_Info := Get_Info (Comp);
-            Field := Add_Instance_Factory_Field
+            Info.Block_Link_Field := Add_Instance_Factory_Field
               (Create_Identifier_Without_Prefix (Inst),
                Comp_Info.Comp_Type);
-            Info.Block_Decls_Type := Comp_Info.Comp_Type;
-            Info.Block_Decls_Ptr_Type := Comp_Info.Comp_Ptr_Type;
-            Info.Block_Parent_Field := Field;
          else
             --  Direct instantiation.
-            Info.Block_Parent_Field := Add_Instance_Factory_Field
+            Info.Block_Link_Field := Add_Instance_Factory_Field
               (Create_Identifier_Without_Prefix (Inst),
                Rtis.Ghdl_Component_Link_Type);
-            Info.Block_Decls_Type := O_Tnode_Null;
+         end if;
+
+         --  When conversions are used, the subtype of the actual (or of the
+         --  formal for out conversions) may not be yet translated.  This
+         --  can happen if the name is a slice.
+         --  We need to translate it and create variables in the instance
+         --  because it will be referenced by the conversion subprogram.
+         Assoc := Get_Port_Map_Aspect_Chain (Inst);
+         while Assoc /= Null_Iir loop
+            if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
+            then
+               Conv := Get_In_Conversion (Assoc);
+               In_Type := Get_Type (Get_Actual (Assoc));
+               if Conv /= Null_Iir
+                 and then Is_Anonymous_Type_Definition (In_Type)
+               then
+                  --  Lazy creation of the record.
+                  if not Has_Conv_Record then
+                     Has_Conv_Record := True;
+                     Push_Instance_Factory (O_Tnode_Null);
+                  end if;
+
+                  --  FIXME: handle with overload multiple case on the same
+                  --  formal.
+                  Push_Identifier_Prefix
+                    (Mark2,
+                     Get_Identifier (Get_Base_Name (Get_Formal (Assoc))));
+                  Chap3.Translate_Type_Definition (In_Type, True);
+                  Pop_Identifier_Prefix (Mark2);
+               end if;
+            end if;
+            Assoc := Get_Chain (Assoc);
+         end loop;
+         if Has_Conv_Record then
+            Pop_Instance_Factory (Info.Block_Decls_Type);
+            New_Type_Decl
+              (Create_Identifier (Get_Identifier (Inst), "__CONVS"),
+               Info.Block_Decls_Type);
+            Info.Block_Parent_Field := Add_Instance_Factory_Field
+              (Create_Identifier_Without_Prefix (Get_Identifier (Inst),
+                                                 "__CONVS"),
+               Info.Block_Decls_Type);
          end if;
       end Translate_Component_Instantiation_Statement;
 
@@ -21036,6 +21128,7 @@ package body Translation is
          Inter_List : O_Inter_List;
          Instance : O_Dnode;
       begin
+         --  Create the elaborator for the instantiation.
          Info := Get_Info (Stmt);
          Start_Procedure_Decl (Inter_List, Create_Identifier ("ELAB"),
                                O_Storage_Private);
@@ -21050,15 +21143,24 @@ package body Translation is
          New_Debug_Line_Stmt (Get_Line_Number (Stmt));
 
          Parent_Info := Get_Info (Get_Parent (Stmt));
+
+         --  Add access to the instantiation-specific data.
+         --  This is used only for anonymous subtype variables.
+         if Info.Block_Decls_Type /= O_Tnode_Null then
+            Push_Scope (Info.Block_Decls_Type,
+                        Info.Block_Parent_Field,
+                        Parent_Info.Block_Decls_Type);
+         end if;
+
          Comp := Get_Instantiated_Unit (Stmt);
          if Get_Kind (Comp) /= Iir_Kind_Component_Declaration then
             --  This is a direct instantiation.
             Set_Component_Link (Parent_Info.Block_Decls_Type,
-                                Info.Block_Parent_Field);
+                                Info.Block_Link_Field);
             Translate_Entity_Instantiation (Comp, Stmt, Stmt, Null_Iir);
          else
             Comp_Info := Get_Info (Comp);
-            Push_Scope (Comp_Info.Comp_Type, Info.Block_Parent_Field,
+            Push_Scope (Comp_Info.Comp_Type, Info.Block_Link_Field,
                         Parent_Info.Block_Decls_Type);
 
             --  Set the link from component declaration to component
@@ -21069,6 +21171,11 @@ package body Translation is
 
             Pop_Scope (Comp_Info.Comp_Type);
          end if;
+
+         if Info.Block_Decls_Type /= O_Tnode_Null then
+            Pop_Scope (Info.Block_Decls_Type);
+         end if;
+
          Pop_Scope (Base.Block_Decls_Type);
          Pop_Local_Factory;
          Finish_Subprogram_Body;
@@ -21115,8 +21222,7 @@ package body Translation is
                   end;
                when Iir_Kind_Component_Instantiation_Statement =>
                   Chap4.Translate_Association_Subprograms
-                    (Get_Port_Map_Aspect_Chain (Stmt),
-                     Base_Block,
+                    (Stmt, Block, Base_Block,
                      Get_Entity_From_Entity_Aspect
                      (Get_Instantiated_Unit (Stmt)));
                   Translate_Component_Instantiation_Subprogram
@@ -21138,8 +21244,7 @@ package body Translation is
                      Hdr := Get_Block_Header (Stmt);
                      if Hdr /= Null_Iir then
                         Chap4.Translate_Association_Subprograms
-                          (Get_Port_Map_Aspect_Chain (Hdr),
-                           Base_Block, Null_Iir);
+                          (Hdr, Block, Base_Block, Null_Iir);
                      end if;
                      Translate_Block_Subprograms (Stmt, Base_Block);
                      Pop_Scope (Info.Block_Decls_Type);
@@ -21635,7 +21740,7 @@ package body Translation is
                   begin
                      Parent_Info := Get_Info (Get_Parent (Parent));
                      Set_Links (Parent_Info.Block_Decls_Type,
-                                Get_Info (Parent).Block_Parent_Field);
+                                Get_Info (Parent).Block_Link_Field);
                   end;
                when others =>
                   Error_Kind ("translate_entity_instantiation(1)", Parent);
@@ -26096,7 +26201,7 @@ package body Translation is
          New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
          New_Record_Aggr_El
            (List, New_Union_Aggr (Ghdl_Rti_Loc, Ghdl_Rti_Loc_Offset,
-                                  New_Offsetof (Info.Block_Parent_Field,
+                                  New_Offsetof (Info.Block_Link_Field,
                                                 Ghdl_Index_Type)));
          New_Record_Aggr_El (List, New_Rti_Address (Parent));
          case Get_Kind (Inst) is
@@ -26758,6 +26863,8 @@ package body Translation is
       New_Debug_Filename_Decl
         (Name_Table.Image (Get_Design_File_Filename (Design_File)));
 
+      Current_Library_Unit := El;
+
       case Get_Kind (El) is
          when Iir_Kind_Package_Declaration =>
             New_Debug_Comment_Decl
@@ -26811,6 +26918,7 @@ package body Translation is
       end case;
 
       Current_Filename_Node := O_Dnode_Null;
+      Current_Library_Unit := Null_Iir;
 
       --Pop_Global_Factory;
       if Id /= Null_Identifier then
@@ -27371,11 +27479,13 @@ package body Translation is
 
       --  procedure __ghdl_assert_failed (str : __ghdl_array_template;
       --                                  severity : ghdl_int);
-      --                                  loc : __ghdl_location_acc);
+      --                                  loc : __ghdl_location_acc;
+      --                                  unit : ghdl_rti_access);
 
       --  procedure __ghdl_report (str : __ghdl_array_template;
       --                                  severity : ghdl_int);
-      --                                  loc : __ghdl_location_acc);
+      --                                  loc : __ghdl_location_acc;
+      --                                  unit : ghdl_rti_access);
       declare
          procedure Create_Report_Subprg (Name : String; Subprg : out O_Dnode)
          is
@@ -27389,6 +27499,8 @@ package body Translation is
                Get_Ortho_Type (Severity_Level_Type_Definition, Mode_Value));
             New_Interface_Decl (Interfaces, Param, Get_Identifier ("location"),
                                 Ghdl_Location_Ptr_Node);
+            New_Interface_Decl (Interfaces, Param, Get_Identifier ("unit"),
+                                Rtis.Ghdl_Rti_Access);
             Finish_Subprogram_Decl (Interfaces, Subprg);
          end Create_Report_Subprg;
       begin
@@ -28138,7 +28250,6 @@ package body Translation is
 
    procedure Translate_Standard (Main : Boolean)
    is
-      use Std_Package;
       Lib_Mark, Unit_Mark : Id_Mark_Type;
       Info : Ortho_Info_Acc;
    begin

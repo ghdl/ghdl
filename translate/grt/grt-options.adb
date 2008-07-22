@@ -147,6 +147,8 @@ package body Grt.Options is
       P (" --help, -h        disp this help");
       P (" --assert-level=LEVEL   stop simulation if assert at LEVEL");
       P ("       LEVEL is note,warning,error,failure,none");
+      P (" --ieee-asserts=POLICY  enable or disable asserts from IEEE");
+      P ("       POLICY is enable,disable,disable-at-0");
       P (" --stop-time=X     stop the simulation at time X");
       P ("       X is expressed as a time value, without spaces: 1ns, ps...");
       P (" --stop-delta=X    stop the simulation cycle after X delta");
@@ -414,6 +416,16 @@ package body Grt.Options is
                   Severity_Level := 4;
                else
                   Error ("bad argument for --assert-level option, try --help");
+               end if;
+            elsif Len > 15 and then Argument (1 .. 15) = "--ieee-asserts=" then
+               if Argument (16 .. Len) = "disable" then
+                  Ieee_Asserts := Disable_Asserts;
+               elsif Argument (16 .. Len) = "enable" then
+                  Ieee_Asserts := Enable_Asserts;
+               elsif Argument (16 .. Len) = "disable-at-0" then
+                  Ieee_Asserts := Disable_Asserts_At_Time_0;
+               else
+                  Error ("bad argument for --ieee-asserts option, try --help");
                end if;
             elsif Argument = "--expect-failure" then
                Expect_Failure := True;

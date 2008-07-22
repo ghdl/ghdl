@@ -32,13 +32,37 @@ package body Grt.Lib is
       Memmove (Dest, Src, Size);
    end Ghdl_Memcpy;
 
+   Ieee_Name : constant String := "ieee" & NUL;
+
    procedure Do_Report (Msg : String;
                         Str : Std_String_Ptr;
                         Severity : Integer;
-                        Loc : Ghdl_Location_Ptr)
+                        Loc : Ghdl_Location_Ptr;
+                        Unit : Ghdl_Rti_Access)
    is
+      use Grt.Options;
       Level : Integer := Severity mod 256;
    begin
+      --  Assertions from ieee library can be disabled.
+      if Unit /= null
+        and then Unit.Kind = Ghdl_Rtik_Package_Body
+        and then (Ieee_Asserts = Disable_Asserts
+                    or (Ieee_Asserts = Disable_Asserts_At_Time_0
+                          and Current_Time = 0))
+      then
+         declare
+            Blk : Ghdl_Rtin_Block_Acc := To_Ghdl_Rtin_Block_Acc (Unit);
+            Pkg : Ghdl_Rtin_Block_Acc := To_Ghdl_Rtin_Block_Acc (Blk.Parent);
+            Lib : Ghdl_Rtin_Type_Scalar_Acc :=
+              To_Ghdl_Rtin_Type_Scalar_Acc (Pkg.Parent);
+         begin
+            --  Return now if this assert comes from the ieee library.
+            if Strcmp (Lib.Name, To_Ghdl_C_String (Ieee_Name'Address)) = 0 then
+               return;
+            end if;
+         end;
+      end if;
+
       Report_H;
       Report_C (Loc.Filename);
       Report_C (":");
@@ -71,17 +95,23 @@ package body Grt.Lib is
    end Do_Report;
 
    procedure Ghdl_Assert_Failed
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr)
+     (Str : Std_String_Ptr;
+      Severity : Integer;
+      Loc : Ghdl_Location_Ptr;
+      Unit : Ghdl_Rti_Access)
    is
    begin
-      Do_Report ("assertion", Str, Severity, Loc);
+      Do_Report ("assertion", Str, Severity, Loc, Unit);
    end Ghdl_Assert_Failed;
 
    procedure Ghdl_Report
-     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr)
+     (Str : Std_String_Ptr;
+      Severity : Integer;
+      Loc : Ghdl_Location_Ptr;
+      Unit : Ghdl_Rti_Access)
    is
    begin
-      Do_Report ("report", Str, Severity, Loc);
+      Do_Report ("report", Str, Severity, Loc, Unit);
    end Ghdl_Report;
 
    procedure Ghdl_Program_Error (Filename : Ghdl_C_String;
