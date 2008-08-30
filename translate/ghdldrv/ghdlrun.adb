@@ -29,7 +29,6 @@ with Binary_File; use Binary_File;
 with Binary_File.Memory;
 with Ortho_Mcode; use Ortho_Mcode;
 with Ortho_Code.Flags; use Ortho_Code.Flags;
-with Binary_File;
 with Interfaces;
 with System; use System;
 with Trans_Decls;
@@ -46,7 +45,6 @@ with Trans_Be;
 with Translation;
 with Std_Names;
 with Ieee.Std_Logic_1164;
-with Interfaces.C;
 
 with Binary_File.Elf;
 
@@ -250,8 +248,9 @@ package body Ghdlrun is
       case Info.Kind is
          when Foreign_Vhpidirect =>
             declare
-               Name : String := Name_Table.Name_Buffer (Info.Subprg_First
-                                                        .. Info.Subprg_Last);
+               Name : constant String :=
+                 Name_Table.Name_Buffer (Info.Subprg_First
+                                           .. Info.Subprg_Last);
             begin
                Res := Foreigns.Find_Foreign (Name);
                if Res /= Null_Address then
@@ -270,7 +269,6 @@ package body Ghdlrun is
 
    procedure Run
    is
-      use Binary_File;
       use Interfaces;
       use Ortho_Code.Binary;
 
@@ -632,15 +630,16 @@ package body Ghdlrun is
 
    function Decode_Option (Option : String) return Boolean
    is
+      Opt : constant String (1 .. Option'Length) := Option;
    begin
-      if Option = "-g" then
+      if Opt = "-g" then
          Flag_Debug := Debug_Dwarf;
          return True;
-      elsif Option'Length > 5 and then Option (1 .. 5) = "--be-" then
-         Ortho_Code.Debug.Set_Be_Flag (Option);
+      elsif Opt'Length > 5 and then Opt (1 .. 5) = "--be-" then
+         Ortho_Code.Debug.Set_Be_Flag (Opt);
          return True;
-      elsif Option'Length > 7 and then Option (1 .. 7) = "--snap=" then
-         Snap_Filename := new String'(Option (8 .. Option'Last));
+      elsif Opt'Length > 7 and then Opt (1 .. 7) = "--snap=" then
+         Snap_Filename := new String'(Opt (8 .. Opt'Last));
          return True;
       else
          return False;

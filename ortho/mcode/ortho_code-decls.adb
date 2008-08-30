@@ -231,7 +231,7 @@ package body Ortho_Code.Decls is
 
    function Get_Subprg_Interfaces (Decl : O_Dnode) return O_Dnode
    is
-      Res : O_Dnode := Decl + 1;
+      Res : constant O_Dnode := Decl + 1;
    begin
       if Get_Decl_Kind (Res) = OD_Interface then
          return Res;
@@ -242,7 +242,7 @@ package body Ortho_Code.Decls is
 
    function Get_Interface_Chain (Decl : O_Dnode) return O_Dnode
    is
-      Res : O_Dnode := Decl + 1;
+      Res : constant O_Dnode := Decl + 1;
    begin
       if Get_Decl_Kind (Res) = OD_Interface then
          return Res;

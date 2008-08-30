@@ -29,7 +29,6 @@ with Sem_Scopes;
 with Tokens;
 with Files_Map;
 with Flags;
-with Std_Names;
 with Std_Package;
 
 package body Libraries is
@@ -114,7 +113,7 @@ package body Libraries is
                                    Library: Iir_Library_Declaration)
      return Boolean
    is
-      File_Name : String := Back_End.Library_To_File_Name (Library);
+      File_Name : constant String := Back_End.Library_To_File_Name (Library);
       Fe : Source_File_Entry;
    begin
       Fe := Files_Map.Load_Source_File (Dir, Get_Identifier (File_Name));
@@ -362,7 +361,8 @@ package body Libraries is
       if Dir = Null_Identifier then
          --  Search in the library path.
          declare
-            File_Name : String := Back_End.Library_To_File_Name (Library);
+            File_Name : constant String :=
+              Back_End.Library_To_File_Name (Library);
             L : Natural;
          begin
             for I in Pathes.First .. Pathes.Last loop
@@ -580,7 +580,6 @@ package body Libraries is
    procedure Create_Virtual_Locations
    is
       use Files_Map;
-      use Name_Table;
       Implicit_Source_File : Source_File_Entry;
       Command_Source_File : Source_File_Entry;
    begin
@@ -1038,6 +1037,7 @@ package body Libraries is
             end if;
             Design_File := Get_Chain (Design_File);
          end loop;
+         Last_Design_File := Design_File;
       end if;
 
       if Design_File /= Null_Iir
@@ -1140,7 +1140,7 @@ package body Libraries is
       -- FIXME: directory
       declare
          use Files_Map;
-         File_Name: String := Image (Work_Directory)
+         File_Name: constant String := Image (Work_Directory)
            & Back_End.Library_To_File_Name (Library);
       begin
          Create (File, Out_File, File_Name);
@@ -1415,7 +1415,6 @@ package body Libraries is
       Line, Off: Natural;
       Pos: Source_Ptr;
       Res: Iir;
-      Library : Iir_Library_Declaration;
       Design_File : Iir_Design_File;
       Fe : Source_File_Entry;
    begin
@@ -1425,7 +1424,6 @@ package body Libraries is
 
       --  Load and parse the unit.
       Design_File := Get_Design_File (Design_Unit);
-      Library := Get_Library (Design_File);
       Fe := Files_Map.Load_Source_File
         (Get_Design_File_Directory (Design_File),
          Get_Design_File_Filename (Design_File));

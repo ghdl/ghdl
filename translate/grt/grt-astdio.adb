@@ -21,6 +21,7 @@ package body Grt.Astdio is
    procedure Put (Stream : FILEs; Str : String)
    is
       S : size_t;
+      pragma Unreferenced (S);
    begin
       S := fwrite (Str'Address, Str'Length, 1, Stream);
    end Put;
@@ -28,6 +29,7 @@ package body Grt.Astdio is
    procedure Put (Stream : FILEs; C : Character)
    is
       R : int;
+      pragma Unreferenced (R);
    begin
       R := fputc (Character'Pos (C), Stream);
    end Put;
@@ -36,6 +38,7 @@ package body Grt.Astdio is
    is
       Len : Natural;
       S : size_t;
+      pragma Unreferenced (S);
    begin
       Len := strlen (Str);
       S := fwrite (Str (1)'Address, size_t (Len), 1, Stream);
@@ -49,6 +52,7 @@ package body Grt.Astdio is
    procedure Put (Str : String)
    is
       S : size_t;
+      pragma Unreferenced (S);
    begin
       S := fwrite (Str'Address, Str'Length, 1, stdout);
    end Put;
@@ -56,6 +60,7 @@ package body Grt.Astdio is
    procedure Put (C : Character)
    is
       R : int;
+      pragma Unreferenced (R);
    begin
       R := fputc (Character'Pos (C), stdout);
    end Put;
@@ -64,6 +69,7 @@ package body Grt.Astdio is
    is
       Len : Natural;
       S : size_t;
+      pragma Unreferenced (S);
    begin
       Len := strlen (Str);
       S := fwrite (Str (1)'Address, size_t (Len), 1, stdout);

@@ -83,7 +83,7 @@ package Grt.Files is
    procedure Ghdl_Text_File_Close (File : Ghdl_File_Index);
    procedure Ghdl_File_Close (File : Ghdl_File_Index);
 private
-   pragma Export (C, Ghdl_File_Endfile, "__ghdl_file_endfile");
+   pragma Export (Ada, Ghdl_File_Endfile, "__ghdl_file_endfile");
 
    pragma Export (C, Ghdl_Text_File_Elaborate, "__ghdl_text_file_elaborate");
    pragma Export (C, Ghdl_File_Elaborate, "__ghdl_file_elaborate");

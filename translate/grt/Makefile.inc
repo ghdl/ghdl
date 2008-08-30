@@ -33,7 +33,8 @@
 # manufacturer, and operating system and assign each of those to its own
 # variable.
 
-targ:=$(subst -, ,$(target))
+target1:=$(subst -gnu,,$(target))
+targ:=$(subst -, ,$(target1))
 arch:=$(word 1,$(targ))
 ifeq ($(words $(targ)),2)
   osys:=$(word 2,$(targ))
@@ -113,9 +114,14 @@ libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files # grt-arch.ads
 	$(GRT_RANLIB) $@
 
 run-bind.adb: grt-force
-	gnatmake -c $(GNATFLAGS) -aI$(GRTSRCDIR) $(GRT_PRAGMA_FLAG) ghdl_main \
-	  $(GRT_ADAFLAGS) -cargs $(GRT_FLAGS)
+	gnatmake -c $(GNATFLAGS) -aI$(GRTSRCDIR) $(GRT_PRAGMA_FLAG) \
+	  ghdl_main $(GRT_ADAFLAGS) -cargs $(GRT_FLAGS)
 	gnatbind -Lgrt_ -o run-bind.adb -n ghdl_main.ali
+
+#system.ads:
+#	sed -e "/Configurable_Run_Time/s/False/True/" \
+#	 -e "/Suppress_Standard_Library/s/False/True/" \
+#	  < `$(ADAC) -print-file-name=adainclude/system.ads` > $@
 
 run-bind.o: run-bind.adb
 	$(GRT_ADACOMPILE)

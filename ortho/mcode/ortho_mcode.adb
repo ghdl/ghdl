@@ -15,7 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ortho_Code.Abi;
 with Ada.Text_IO;
 with Ortho_Code.Debug;
 with Ortho_Code.Sysdeps;
@@ -61,7 +60,9 @@ package body Ortho_Mcode is
       null;
    end Start_Const_Value;
 
-   procedure Finish_Const_Value (Const : in out O_Dnode; Val : O_Cnode) is
+   procedure Finish_Const_Value (Const : in out O_Dnode; Val : O_Cnode)
+   is
+      pragma Warnings (Off, Const);
    begin
       New_Const_Value (Const, Val);
    end Finish_Const_Value;

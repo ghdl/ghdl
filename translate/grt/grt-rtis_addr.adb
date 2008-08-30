@@ -15,7 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Unchecked_Conversion;
 with Grt.Errors; use Grt.Errors;
 
 package body Grt.Rtis_Addr is

@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with System.Storage_Elements; --  Work around GNAT bug.
+pragma Unreferenced (System.Storage_Elements);
 with Grt.Errors; use Grt.Errors;
 with Grt.C; use Grt.C;
 
@@ -41,7 +42,7 @@ package body Grt.Vstrings is
 
    procedure Grow (Vstr : in out Vstring; Sum : Natural)
    is
-      Nlen : Natural := Vstr.Len + Sum;
+      Nlen : constant Natural := Vstr.Len + Sum;
       Nmax : Natural;
    begin
       Vstr.Len := Nlen;
@@ -72,7 +73,7 @@ package body Grt.Vstrings is
 
    procedure Append (Vstr : in out Vstring; Str : String)
    is
-      S : Natural := Vstr.Len;
+      S : constant Natural := Vstr.Len;
    begin
       Grow (Vstr, Str'Length);
       Vstr.Str (S + 1 .. S + Str'Length) := Str;
@@ -80,8 +81,8 @@ package body Grt.Vstrings is
 
    procedure Append (Vstr : in out Vstring; Str : Ghdl_C_String)
    is
-      S : Natural := Vstr.Len;
-      L : Natural := strlen (Str);
+      S : constant Natural := Vstr.Len;
+      L : constant Natural := strlen (Str);
    begin
       Grow (Vstr, L);
       Vstr.Str (S + 1 .. S + L) := Str (1 .. L);
@@ -125,8 +126,8 @@ package body Grt.Vstrings is
 
    procedure Grow (Rstr : in out Rstring; Min : Natural)
    is
-      Len : Natural := Length (Rstr);
-      Nlen : Natural := Len + Min;
+      Len : constant Natural := Length (Rstr);
+      Nlen : constant Natural := Len + Min;
       Nstr : Fat_String_Acc;
       Nfirst : Natural;
       Nmax : Natural;
@@ -171,7 +172,7 @@ package body Grt.Vstrings is
 
    procedure Prepend (Rstr : in out Rstring; Str : Ghdl_C_String)
    is
-      L : Natural := strlen (Str);
+      L : constant Natural := strlen (Str);
    begin
       Grow (Rstr, L);
       Rstr.First := Rstr.First - L;
@@ -199,6 +200,7 @@ package body Grt.Vstrings is
    procedure Put (Stream : FILEs; Rstr : Rstring)
    is
       S : size_t;
+      pragma Unreferenced (S);
    begin
       S := fwrite (Get_Address (Rstr), size_t (Length (Rstr)), 1, Stream);
    end Put;

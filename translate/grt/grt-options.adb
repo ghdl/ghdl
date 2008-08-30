@@ -253,7 +253,7 @@ package body Grt.Options is
          Arg := Argv (I);
          Len := strlen (Arg);
          declare
-            Argument : String := Arg (1 .. Len);
+            Argument : constant String := Arg (1 .. Len);
          begin
             if Argument = "--" then
                Last_Opt := I;

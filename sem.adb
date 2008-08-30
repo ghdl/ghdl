@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Unchecked_Conversion;
-with Types; use Types;
 with Errorout; use Errorout;
 with Std_Package; use Std_Package;
 with Libraries;
@@ -479,6 +478,7 @@ package body Sem is
                   then
                      declare
                         P : Boolean;
+                        pragma Unreferenced (P);
                      begin
                         P := Check_Port_Association_Restriction
                           (Get_Base_Name (Formal), Prefix, El);
@@ -827,7 +827,6 @@ package body Sem is
       begin
          El := Get_Declaration_Chain (Block_Conf);
          while El /= Null_Iir loop
-            exit when El = Null_Iir;
             case Get_Kind (El) is
                when Iir_Kind_Use_Clause =>
                   Sem_Use_Clause (El);
@@ -1107,7 +1106,7 @@ package body Sem is
             end if;
             El_Left := Get_Default_Value (Left);
             El_Right := Get_Default_Value (Right);
-            if ((El_Left = Null_Iir) xor (El_Right = Null_Iir)) = True then
+            if (El_Left = Null_Iir) xor (El_Right = Null_Iir)  then
                return False;
             end if;
             if El_Left /= Null_Iir
@@ -1513,7 +1512,7 @@ package body Sem is
    begin
       --  Set depth.
       declare
-         Parent : Iir := Get_Parent (Subprg);
+         Parent : constant Iir := Get_Parent (Subprg);
       begin
          case Get_Kind (Parent) is
             when Iir_Kind_Function_Declaration
@@ -1605,7 +1604,7 @@ package body Sem is
 
    procedure Add_Analysis_Checks_List (El : Iir)
    is
-      Design : Iir := Get_Current_Design_Unit;
+      Design : constant Iir := Get_Current_Design_Unit;
       List : Iir_List;
    begin
       List := Get_Analysis_Checks_List (Design);
@@ -1752,7 +1751,6 @@ package body Sem is
       --  Current purity depth of SUBPRG.
       Depth : Iir_Int32;
       Depth_Callee : Iir_Int32;
-      Has_Pure_Errors : Boolean := False;
       Has_Wait_Errors : Boolean := False;
       Npos : Natural;
       Res, Res1 : Update_Pure_Status;
@@ -1852,7 +1850,6 @@ package body Sem is
                      Depth_Callee := Iir_Depth_Impure;
                      if Kind = K_Function then
                         Error_Pure (Subprg, Callee, Null_Iir);
-                        Has_Pure_Errors := True;
                      end if;
                   end if;
 

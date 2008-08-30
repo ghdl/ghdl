@@ -41,7 +41,7 @@ package body Grt.Lib is
                         Unit : Ghdl_Rti_Access)
    is
       use Grt.Options;
-      Level : Integer := Severity mod 256;
+      Level : constant Integer := Severity mod 256;
    begin
       --  Assertions from ieee library can be disabled.
       if Unit /= null
@@ -51,9 +51,11 @@ package body Grt.Lib is
                           and Current_Time = 0))
       then
          declare
-            Blk : Ghdl_Rtin_Block_Acc := To_Ghdl_Rtin_Block_Acc (Unit);
-            Pkg : Ghdl_Rtin_Block_Acc := To_Ghdl_Rtin_Block_Acc (Blk.Parent);
-            Lib : Ghdl_Rtin_Type_Scalar_Acc :=
+            Blk : constant Ghdl_Rtin_Block_Acc :=
+              To_Ghdl_Rtin_Block_Acc (Unit);
+            Pkg : constant Ghdl_Rtin_Block_Acc :=
+              To_Ghdl_Rtin_Block_Acc (Blk.Parent);
+            Lib : constant Ghdl_Rtin_Type_Scalar_Acc :=
               To_Ghdl_Rtin_Type_Scalar_Acc (Pkg.Parent);
          begin
             --  Return now if this assert comes from the ieee library.

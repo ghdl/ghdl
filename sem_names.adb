@@ -168,10 +168,10 @@ package body Sem_Names is
 
    --  Move elements of result list LIST to result list RES.
    --  Destroy LIST if necessary.
-   procedure Add_Result_List (Res : in out Iir; List : in out Iir);
+   procedure Add_Result_List (Res : in out Iir; List : Iir);
    pragma Unreferenced (Add_Result_List);
 
-   procedure Add_Result_List (Res : in out Iir; List : in out Iir)
+   procedure Add_Result_List (Res : in out Iir; List : Iir)
    is
       El : Iir;
       List_List : Iir_List;
@@ -201,9 +201,9 @@ package body Sem_Names is
    end Add_Result_List;
 
    --  Free interpretations of LIST except KEEP.
-   procedure Sem_Name_Free_Result (List : in out Iir; Keep : Iir)
+   procedure Sem_Name_Free_Result (List : Iir; Keep : Iir)
    is
-      procedure Sem_Name_Free (El : in out Iir) is
+      procedure Sem_Name_Free (El : Iir) is
       begin
          case Get_Kind (El) is
             when Iir_Kind_Function_Call
@@ -560,7 +560,6 @@ package body Sem_Names is
       Prefix_Bt : Iir;
       Index_List: Iir_List;
       Index_Type: Iir;
-      Index_Range : Iir;
       Suffix: Iir;
       Slice_Type : Iir;
       Expr_Type : Iir;
@@ -591,7 +590,6 @@ package body Sem_Names is
       end if;
 
       Index_Type := Get_First_Element (Index_List);
-      Index_Range := Get_Range_Constraint (Index_Type);
       Prefix_Rng := Eval_Range (Index_Type);
 
       --  LRM93 6.5
@@ -1085,7 +1083,7 @@ package body Sem_Names is
             & Disp_Node (Subprg), Loc);
       end Error_Pure;
 
-      Subprg : Iir := Sem_Stmts.Get_Current_Subprogram;
+      Subprg : constant Iir := Sem_Stmts.Get_Current_Subprogram;
       Subprg_Body : Iir;
       Parent : Iir;
    begin
@@ -1336,7 +1334,7 @@ package body Sem_Names is
       is
          Sub_Res : Iir;
       begin
-         if Get_Is_Within_Flag (Sub_Name) = True then
+         if Get_Is_Within_Flag (Sub_Name) then
             Sub_Res := Find_Declarations_In_List (Sub_Name, Name, Keep_Alias);
             if Sub_Res /= Null_Iir then
                Add_Result (Res, Sub_Res);

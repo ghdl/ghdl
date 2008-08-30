@@ -72,8 +72,6 @@ package body Ortho_Code.X86.Insns is
    --  Swap Stack_Offset with Max_Stack of STMT.
    procedure Swap_Stack_Offset (Blk : O_Dnode)
    is
-      use Ortho_Code.Decls;
-
       Prev_Offset : Uns32;
    begin
       Prev_Offset := Get_Block_Max_Stack (Blk);
@@ -227,16 +225,16 @@ package body Ortho_Code.X86.Insns is
       return N;
    end Insert_Move;
 
-   function Insert_Spill (Expr : O_Enode) return O_Enode
-   is
-      N : O_Enode;
-   begin
-      N := New_Enode (OE_Spill, Get_Expr_Mode (Expr), O_Tnode_Null,
-                      Expr, O_Enode_Null);
-      Set_Expr_Reg (N, R_Spill);
-      Link_Stmt (N);
-      return N;
-   end Insert_Spill;
+--     function Insert_Spill (Expr : O_Enode) return O_Enode
+--     is
+--        N : O_Enode;
+--     begin
+--        N := New_Enode (OE_Spill, Get_Expr_Mode (Expr), O_Tnode_Null,
+--                        Expr, O_Enode_Null);
+--        Set_Expr_Reg (N, R_Spill);
+--        Link_Stmt (N);
+--        return N;
+--     end Insert_Spill;
 
    procedure Error_Gen_Insn (Stmt : O_Enode; Reg : O_Reg)
    is
@@ -290,9 +288,9 @@ package body Ortho_Code.X86.Insns is
       Used : Boolean;
    end record;
 
-   Init_Reg_Info : Reg_Info_Type := (Num => O_Free,
-                                     Stmt => O_Enode_Null,
-                                     Used => False);
+   Init_Reg_Info : constant Reg_Info_Type := (Num => O_Free,
+                                              Stmt => O_Enode_Null,
+                                              Used => False);
    type Reg32_Info_Array is array (Regs_R32) of Reg_Info_Type;
    Regs : Reg32_Info_Array := (others => Init_Reg_Info);
    Reg_Cc : Reg_Info_Type := Init_Reg_Info;
@@ -348,6 +346,8 @@ package body Ortho_Code.X86.Insns is
          New_Line;
       end loop;
    end Dump_Regs;
+
+   pragma Unreferenced (Dump_Regs);
 
    procedure Error_Reg (Msg : String; Stmt : O_Enode; Reg : O_Reg)
    is
@@ -1881,7 +1881,6 @@ package body Ortho_Code.X86.Insns is
    procedure Gen_Subprg_Insns (Subprg : Subprogram_Data_Acc)
    is
       First : O_Enode;
-      Last : O_Enode;
       Stmt : O_Enode;
       N_Stmt : O_Enode;
    begin
@@ -1906,7 +1905,6 @@ package body Ortho_Code.X86.Insns is
       Stack_Offset := 0;
       First := Subprg.E_Entry;
       Expand_Decls (Subprg.D_Body + 1);
-      Last := Get_Entry_Leave (First);
       Abi.Last_Link := First;
 
       --  Generate instructions.

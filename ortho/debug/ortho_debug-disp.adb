@@ -109,6 +109,7 @@ package body Ortho_Debug.Disp is
       is
          Status : size_t;
          Res : int;
+         pragma Unreferenced (Status, Res);
       begin
          if Ctx.Line_Len > 0 then
             Status := fwrite (Ctx.Line'Address, size_t (Ctx.Line_Len), 1,
@@ -176,6 +177,7 @@ package body Ortho_Debug.Disp is
       procedure New_Line
       is
          Status : int;
+         pragma Unreferenced (Status);
       begin
          if Ctx.Line_Len > 0 then
             Flush;
@@ -185,8 +187,9 @@ package body Ortho_Debug.Disp is
          Ctx.Next_Tab := Ctx.Tab;
       end New_Line;
 
-      procedure Put (C : Character) is
-         S : String (1 .. 1) := (1 => C);
+      procedure Put (C : Character)
+      is
+         S : constant String (1 .. 1) := (1 => C);
       begin
          Put (S);
       end Put;
@@ -364,6 +367,8 @@ package body Ortho_Debug.Disp is
       end case;
    end Get_Lnode_Name;
 
+   pragma Unreferenced (Get_Lnode_Name);
+
    procedure Disp_Enode_Name (Kind : OE_Kind) is
    begin
       Put (Get_Enode_Name (Kind));
@@ -388,7 +393,7 @@ package body Ortho_Debug.Disp is
 
    function Image (Lit : Integer) return String
    is
-      S : String := Integer'Image (Lit);
+      S : constant String := Integer'Image (Lit);
    begin
       if S (1) = ' ' then
          return S (2 .. S'Length);
@@ -997,4 +1002,7 @@ package body Ortho_Debug.Disp is
       Disp_Snode (N, null);
       Pop_Context (Ctx);
    end Debug_Snode;
+
+   pragma Unreferenced (Debug_Tnode, Debug_Enode, Debug_Fnode,
+                        Debug_Dnode, Debug_Lnode, Debug_Snode);
 end Ortho_Debug.Disp;

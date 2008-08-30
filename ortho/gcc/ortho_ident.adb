@@ -7,6 +7,7 @@ package body Ortho_Ident is
      (Id : O_Ident; Str : Address; Size : Integer)
      return Boolean;
    pragma Import (C, Compare_Identifier_String);
+   pragma Warnings (Off, Compare_Identifier_String);
 
    function Get_Identifier (Str : String) return O_Ident is
    begin

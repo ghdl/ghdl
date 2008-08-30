@@ -57,9 +57,6 @@ package body Ghdldrv is
    --  "-o" string.
    Dash_O : String_Access;
 
-   --  "-S" string.
-   Dash_S : String_Access;
-
    --  "-quiet" option.
    Dash_Quiet : String_Access;
 
@@ -155,7 +152,8 @@ package body Ghdldrv is
       --  Compile.
       declare
          P : Natural;
-         Nbr_Args : Natural := Last (Compiler_Args) + Options'Length + 4;
+         Nbr_Args : constant Natural :=
+           Last (Compiler_Args) + Options'Length + 4;
          Args : Argument_List (1 .. Nbr_Args);
       begin
          P := 0;
@@ -199,7 +197,7 @@ package body Ghdldrv is
       if Compile_Kind = Compile_Debug then
          declare
             P : Natural;
-            Nbr_Args : Natural := Last (Postproc_Args) + 4;
+            Nbr_Args : constant Natural := Last (Postproc_Args) + 4;
             Args : Argument_List (1 .. Nbr_Args);
          begin
             P := 0;
@@ -229,7 +227,7 @@ package body Ghdldrv is
          elsif not Flag_Asm then
             declare
                P : Natural;
-               Nbr_Args : Natural := Last (Assembler_Args) + 4;
+               Nbr_Args : constant Natural := Last (Assembler_Args) + 4;
                Args : Argument_List (1 .. Nbr_Args);
                Success : Boolean;
             begin
@@ -358,7 +356,6 @@ package body Ghdldrv is
    is
       use Files_Map;
 
-      Dir : Name_Id;
       Name : Name_Id;
 
       File : Source_File_Entry;
@@ -368,7 +365,6 @@ package body Ghdldrv is
          return False;
       end if;
 
-      Dir := Get_Library_Directory (Get_Library (Design_File));
       Name := Get_Design_File_Filename (Design_File);
       declare
          Obj_Pathname : String := Get_Object_Filename (Design_File) & Nul;
@@ -539,7 +535,6 @@ package body Ghdldrv is
          Tool_Not_Found (Linker_Cmd);
       end if;
       Dash_O := new String'("-o");
-      Dash_S := new String'("-S");
       Dash_Quiet := new String'("-quiet");
    end Locate_Tools;
 
@@ -596,88 +591,87 @@ package body Ghdldrv is
                             Res : out Option_Res)
    is
       Str : String_Access;
+      Opt : constant String (1 .. Option'Length) := Option;
    begin
       Res := Option_Bad;
-      if Option = "-v" and then Flag_Verbose = False then
+      if Opt = "-v" and then Flag_Verbose = False then
          --  Note: this is also decoded for command_lib, but we set
          --  Flag_Disp_Commands too.
          Flag_Verbose := True;
          --Flags.Verbose := True;
          Flag_Disp_Commands := True;
          Res := Option_Ok;
-      elsif Option'Length > 8 and then Option (1 .. 8) = "--GHDL1=" then
-         Compiler_Cmd := new String'(Option (9 .. Option'Last));
+      elsif Opt'Length > 8 and then Opt (1 .. 8) = "--GHDL1=" then
+         Compiler_Cmd := new String'(Opt (9 .. Opt'Last));
          Res := Option_Ok;
-      elsif Option = "-S" then
+      elsif Opt = "-S" then
          Flag_Asm := True;
          Res := Option_Ok;
-      elsif Option = "--post" then
+      elsif Opt = "--post" then
          Compile_Kind := Compile_Debug;
          Res := Option_Ok;
-      elsif Option = "--mcode" then
+      elsif Opt = "--mcode" then
          Compile_Kind := Compile_Mcode;
          Res := Option_Ok;
-      elsif Option = "-o" then
+      elsif Opt = "-o" then
          if Arg'Length = 0 then
             Res := Option_Arg_Req;
          else
             Output_File := new String'(Arg);
             Res := Option_Arg;
          end if;
-      elsif Option = "-m32" then
+      elsif Opt = "-m32" then
          Add_Argument (Compiler_Args, new String'("-m32"));
          Add_Argument (Assembler_Args, new String'("--32"));
          Add_Argument (Linker_Args, new String'("-m32"));
-         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
-      elsif Option'Length > 4
-        and then Option (2) = 'W' and then Option (4) = ','
+         Decode_Option (Command_Lib (Cmd), Opt, Arg, Res);
+      elsif Opt'Length > 4
+        and then Opt (2) = 'W' and then Opt (4) = ','
       then
-         if Option (3) = 'c' then
-            Add_Arguments (Compiler_Args, Option);
-         elsif Option (3) = 'a' then
-            Add_Arguments (Assembler_Args, Option);
-         elsif Option (3) = 'p' then
-            Add_Arguments (Postproc_Args, Option);
-         elsif Option (3) = 'l' then
-            Add_Arguments (Linker_Args, Option);
+         if Opt (3) = 'c' then
+            Add_Arguments (Compiler_Args, Opt);
+         elsif Opt (3) = 'a' then
+            Add_Arguments (Assembler_Args, Opt);
+         elsif Opt (3) = 'p' then
+            Add_Arguments (Postproc_Args, Opt);
+         elsif Opt (3) = 'l' then
+            Add_Arguments (Linker_Args, Opt);
          else
             Error
-              ("unknown tool name in '-W" & Option (3) & ",' option");
+              ("unknown tool name in '-W" & Opt (3) & ",' option");
             raise Option_Error;
          end if;
          Res := Option_Ok;
-      elsif Option'Length >= 2 and then Option (2) = 'g' then
+      elsif Opt'Length >= 2 and then Opt (2) = 'g' then
          --  Debugging option.
-         Str := new String'(Option);
+         Str := new String'(Opt);
          Add_Argument (Compiler_Args, Str);
          Add_Argument (Linker_Args, Str);
          Res := Option_Ok;
-      elsif Option = "-Q" then
+      elsif Opt = "-Q" then
          Flag_Not_Quiet := True;
          Res := Option_Ok;
-      elsif Option = "--expect-failure" then
-         Add_Argument (Compiler_Args, new String'(Option));
+      elsif Opt = "--expect-failure" then
+         Add_Argument (Compiler_Args, new String'(Opt));
          Flag_Expect_Failure := True;
          Res := Option_Ok;
-      elsif Flags.Parse_Option (Option) then
-         Add_Argument (Compiler_Args, new String'(Option));
+      elsif Flags.Parse_Option (Opt) then
+         Add_Argument (Compiler_Args, new String'(Opt));
          Res := Option_Ok;
-      elsif Option'Length >= 2
-        and then (Option (2) = 'O' or Option (2) = 'f')
+      elsif Opt'Length >= 2
+        and then (Opt (2) = 'O' or Opt (2) = 'f')
       then
          --  Optimization option.
          --  This is put after Flags.Parse_Option, since it may catch -fxxx
          --  options.
-         Add_Argument (Compiler_Args, new String'(Option));
+         Add_Argument (Compiler_Args, new String'(Opt));
          Res := Option_Ok;
       else
-         Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
+         Decode_Option (Command_Lib (Cmd), Opt, Arg, Res);
       end if;
    end Decode_Option;
 
-   procedure Disp_Long_Help (Cmd : Command_Comp)
-   is
-      use Ada.Text_IO;
+   procedure Disp_Long_Help (Cmd : Command_Comp) is
    begin
       Disp_Long_Help (Command_Lib (Cmd));
       Put_Line (" -v             Be verbose");
@@ -719,7 +713,6 @@ package body Ghdldrv is
    procedure Perform_Action (Cmd : in out Command_Dispconfig;
                              Args : Argument_List)
    is
-      use Ada.Text_IO;
       use Libraries;
       pragma Unreferenced (Cmd);
    begin
@@ -912,7 +905,7 @@ package body Ghdldrv is
       --  call the linker
       declare
          P : Natural;
-         Nbr_Args : Natural := Last (Linker_Args) + Filelist.Last + 4;
+         Nbr_Args : constant Natural := Last (Linker_Args) + Filelist.Last + 4;
          Args : Argument_List (1 .. Nbr_Args);
          Obj_File : String_Access;
          Std_File : String_Access;
@@ -997,6 +990,7 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
       Success : Boolean;
+      pragma Unreferenced (Success);
    begin
       Set_Elab_Units ("-e", Args);
       Setup_Compiler (False);
@@ -1614,7 +1608,7 @@ package body Ghdldrv is
       Put ("GHDLFLAGS=");
       for I in 2 .. Argument_Count loop
          declare
-            Arg : String := Argument (I);
+            Arg : constant String := Argument (I);
          begin
             if Arg (1) = '-' then
                if (Arg'Length > 10 and then Arg (1 .. 10) = "--workdir=")

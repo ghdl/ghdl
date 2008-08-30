@@ -27,7 +27,6 @@ with Ortho_Code.Consts;
 with Ortho_Code.Flags;
 with Ortho_Ident;
 with Ortho_Code.Binary;
-with Binary_File; use Binary_File;
 
 package body Ortho_Code.Dwarf is
    --  Dwarf debugging format.
@@ -336,11 +335,7 @@ package body Ortho_Code.Dwarf is
       Gen_Ua_32 (Orig_Sym, 0);
       Gen_Ua_32 (End_Sym, 0);
       Gen_String_Nul ("T.Gingold ortho_mcode (2004)");
-      declare
-         Dir : String := GNAT.Directory_Operations.Get_Current_Dir;
-      begin
-         Gen_String_Nul (Dir);
-      end;
+      Gen_String_Nul (GNAT.Directory_Operations.Get_Current_Dir);
    end Init;
 
    procedure Emit_Decl (Decl : O_Dnode);

@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with System; use System;
 with System.Storage_Elements; --  Work around GNAT bug.
+pragma Unreferenced (System.Storage_Elements);
 with Ada.Unchecked_Conversion;
 with Grt.Processes; use Grt.Processes;
 with Grt.Vstrings; use Grt.Vstrings;
@@ -98,7 +99,7 @@ package body Grt.Images is
       Unit := To_Ghdl_Rtin_Unit_Acc (Phys.Units (0)).Name;
       Unit_Len := strlen (Unit);
       declare
-         L : Natural := Str'Last + 1 - First;
+         L : constant Natural := Str'Last + 1 - First;
          Str2 : String (1 .. L + 1 + Unit_Len);
       begin
          Str2 (1 .. L) := Str (First .. Str'Last);
@@ -122,7 +123,7 @@ package body Grt.Images is
       Unit := To_Ghdl_Rtin_Unit_Acc (Phys.Units (0)).Name;
       Unit_Len := strlen (Unit);
       declare
-         L : Natural := Str'Last + 1 - First;
+         L : constant Natural := Str'Last + 1 - First;
          Str2 : String (1 .. L + 1 + Unit_Len);
       begin
          Str2 (1 .. L) := Str (First .. Str'Last);

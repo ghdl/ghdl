@@ -36,11 +36,11 @@ package body Lists is
       Table_Initial => 128,
       Table_Increment => 100);
 
-   function Get_Max_Nbr_Elements (List : List_Type) return Natural;
-   pragma Inline (Get_Max_Nbr_Elements);
+   --function Get_Max_Nbr_Elements (List : List_Type) return Natural;
+   --pragma Inline (Get_Max_Nbr_Elements);
 
-   procedure Set_Max_Nbr_Elements (List : List_Type; Max : Natural);
-   pragma Inline (Set_Max_Nbr_Elements);
+   --procedure Set_Max_Nbr_Elements (List : List_Type; Max : Natural);
+   --pragma Inline (Set_Max_Nbr_Elements);
 
    procedure List_Set_Nbr_Elements (List : List_Type; Nbr : Natural);
    pragma Inline (List_Set_Nbr_Elements);
@@ -55,15 +55,15 @@ package body Lists is
       Listt.Table (List).Nbr := Nbr;
    end List_Set_Nbr_Elements;
 
-   function Get_Max_Nbr_Elements (List : List_Type) return Natural is
-   begin
-      return Listt.Table (List).Max;
-   end Get_Max_Nbr_Elements;
+   --function Get_Max_Nbr_Elements (List : List_Type) return Natural is
+   --begin
+   --   return Listt.Table (List).Max;
+   --end Get_Max_Nbr_Elements;
 
-   procedure Set_Max_Nbr_Elements (List : List_Type; Max : Natural) is
-   begin
-      Listt.Table (List).Max := Max;
-   end Set_Max_Nbr_Elements;
+   --procedure Set_Max_Nbr_Elements (List : List_Type; Max : Natural) is
+   --begin
+   --   Listt.Table (List).Max := Max;
+   --end Set_Max_Nbr_Elements;
 
    function Get_Nth_Element (List: List_Type; N: Natural)
      return Node_Type
@@ -152,7 +152,7 @@ package body Lists is
    -- Add (append) an element only if it was not already present in the list.
    procedure Add_Element (List: List_Type; El: Node_Type)
    is
-      Nbr : Natural := Get_Nbr_Elements (List);
+      Nbr : constant Natural := Get_Nbr_Elements (List);
    begin
       for I in 0 .. Nbr - 1 loop
          if Listt.Table (List).Els (I) = El then
@@ -165,7 +165,7 @@ package body Lists is
 
    procedure Remove_Nth_Element (List: List_Type; N: Natural)
    is
-      Nbr : Natural := Get_Nbr_Elements (List);
+      Nbr : constant Natural := Get_Nbr_Elements (List);
    begin
       if N >= Nbr then
          raise Program_Error;

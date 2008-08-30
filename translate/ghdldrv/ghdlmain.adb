@@ -20,7 +20,6 @@ with Ada.Command_Line;
 with Version;
 with Flags;
 with Bug;
-with Errorout;
 
 package body Ghdlmain is
    procedure Init (Cmd : in out Command_Type)
@@ -275,7 +274,7 @@ package body Ghdlmain is
       Arg_Index := 2;
       while Arg_Index <= Argument_Count loop
          declare
-            Arg : String := Argument (Arg_Index);
+            Arg : constant String := Argument (Arg_Index);
             Res : Option_Res;
          begin
             if Arg (1) = '-' then

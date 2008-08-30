@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with System; use System;
 with System.Storage_Elements; --  Work around GNAT bug.
+pragma Unreferenced (System.Storage_Elements);
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Signals;

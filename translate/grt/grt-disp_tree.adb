@@ -83,7 +83,8 @@ package body Grt.Disp_Tree is
            | Ghdl_Rtik_Block
            | Ghdl_Rtik_If_Generate =>
             declare
-               Blk : Ghdl_Rtin_Block_Acc := To_Ghdl_Rtin_Block_Acc (Rti);
+               Blk : constant Ghdl_Rtin_Block_Acc :=
+                 To_Ghdl_Rtin_Block_Acc (Rti);
             begin
                Disp_Name (Blk.Name);
             end;
@@ -104,7 +105,8 @@ package body Grt.Disp_Tree is
             end;
          when Ghdl_Rtik_For_Generate =>
             declare
-               Blk : Ghdl_Rtin_Block_Acc := To_Ghdl_Rtin_Block_Acc (Rti);
+               Blk : constant Ghdl_Rtin_Block_Acc :=
+                 To_Ghdl_Rtin_Block_Acc (Rti);
                Iter : Ghdl_Rtin_Object_Acc;
                Addr : Address;
             begin
@@ -231,7 +233,8 @@ package body Grt.Disp_Tree is
             when Ghdl_Rtik_Process
               | Ghdl_Rtik_Block =>
                declare
-                  Nblk : Ghdl_Rtin_Block_Acc := To_Ghdl_Rtin_Block_Acc (Child);
+                  Nblk : constant Ghdl_Rtin_Block_Acc :=
+                    To_Ghdl_Rtin_Block_Acc (Child);
                   Nctxt : Rti_Context;
                begin
                   Nctxt := (Base => Ctxt.Base + Nblk.Loc.Off,
@@ -241,7 +244,8 @@ package body Grt.Disp_Tree is
                end;
             when Ghdl_Rtik_For_Generate =>
                declare
-                  Nblk : Ghdl_Rtin_Block_Acc := To_Ghdl_Rtin_Block_Acc (Child);
+                  Nblk : constant Ghdl_Rtin_Block_Acc :=
+                    To_Ghdl_Rtin_Block_Acc (Child);
                   Nctxt : Rti_Context;
                   Length : Ghdl_Index_Type;
                   Old_Child2 : Ghdl_Rti_Access;
@@ -268,7 +272,8 @@ package body Grt.Disp_Tree is
                end;
             when Ghdl_Rtik_If_Generate =>
                declare
-                  Nblk : Ghdl_Rtin_Block_Acc := To_Ghdl_Rtin_Block_Acc (Child);
+                  Nblk : constant Ghdl_Rtin_Block_Acc :=
+                    To_Ghdl_Rtin_Block_Acc (Child);
                   Nctxt : Rti_Context;
                begin
                   Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc.Off).all,
@@ -402,8 +407,9 @@ package body Grt.Disp_Tree is
       end loop;
    end Disp_Hierarchy;
 
-   function Disp_Tree_Option (Opt : String) return Boolean
+   function Disp_Tree_Option (Option : String) return Boolean
    is
+      Opt : constant String (1 .. Option'Length) := Option;
    begin
       if Opt'Length >= 11 and then Opt (1 .. 11) = "--disp-tree" then
          if Opt'Length = 11 then

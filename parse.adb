@@ -15,6 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Iir_Chains; use Iir_Chains;
 with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
 with Tokens; use Tokens;
@@ -25,7 +26,6 @@ with Std_Names; use Std_Names;
 with Flags;
 with Name_Table;
 with Str_Table;
-with Iir_Chains; use Iir_Chains;
 with Xrefs;
 
 --  Recursive descendant parser.
@@ -97,7 +97,6 @@ package body Parse is
    --  Otherwise, accept the current_token (ie set it to tok_invalid, unless
    --  TOKEN is Tok_Identifier).
    procedure Expect (Token: Token_Type; Msg: String := "") is
-      use Errorout;
    begin
       if Current_Token /= Token then
          if Msg'Length > 0 then
@@ -857,6 +856,7 @@ package body Parse is
    is
       Res : Iir;
       Old : Iir;
+      pragma Unreferenced (Old);
    begin
       Res := Parse_Name (Allow_Indexes => False);
       if Check_Paren and then Current_Token = Tok_Left_Paren then
@@ -3459,7 +3459,7 @@ package body Parse is
    --
    --  [ §9.5 ]
    --  options ::= [ GUARDED ] [ delay_mechanism ]
-   procedure Parse_Options (Stmt : in out Iir) is
+   procedure Parse_Options (Stmt : Iir) is
    begin
       if Current_Token = Tok_Guarded then
          Set_Guard (Stmt, Stmt);
@@ -4191,6 +4191,7 @@ package body Parse is
       Subprg: Iir;
       Subprg_Body : Iir;
       Old : Iir;
+      pragma Unreferenced (Old);
    begin
       -- Create the node.
       case Current_Token is

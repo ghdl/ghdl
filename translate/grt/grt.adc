@@ -28,10 +28,12 @@
 --  This files is *not* names gnat.adc, in order to ease the possibility of
 --  not using it.
 pragma Restrictions (No_Exception_Handlers);
-pragma restrictions (No_Exceptions);
+--pragma restrictions (No_Exceptions);
 pragma Restrictions (No_Secondary_Stack);
 --pragma Restrictions (No_Elaboration_Code);
 pragma Restrictions (No_Io);
+pragma restrictions (no_dependence => Ada.Tags);
+pragma restrictions (no_dependence => GNAT);
 pragma Restrictions (Max_Tasks => 0);
 pragma Restrictions (No_Implicit_Heap_Allocations);
 pragma No_Run_Time;

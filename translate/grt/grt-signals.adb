@@ -17,8 +17,8 @@
 --  02111-1307, USA.
 with System; use System;
 with System.Storage_Elements; --  Work around GNAT bug.
+pragma Unreferenced (System.Storage_Elements);
 with Ada.Unchecked_Deallocation;
-with Ada.Unchecked_Conversion;
 with Grt.Errors; use Grt.Errors;
 with Grt.Processes; use Grt.Processes;
 with Grt.Options; use Grt.Options;
@@ -1750,7 +1750,8 @@ package body Grt.Signals is
 
    procedure Compute_Resolved_Signal (Resolv : Resolved_Signal_Acc)
    is
-      Sig : Ghdl_Signal_Ptr := Sig_Table.Table (Resolv.Sig_Range.First);
+      Sig : constant Ghdl_Signal_Ptr :=
+        Sig_Table.Table (Resolv.Sig_Range.First);
       Length : Ghdl_Index_Type;
       type Bool_Array_Type is array (1 .. Sig.S.Nbr_Drivers) of Boolean;
       Vec : Bool_Array_Type;
@@ -2135,7 +2136,7 @@ package body Grt.Signals is
 
             declare
                S : Ghdl_Signal_Ptr;
-               Old : Signal_Net_Type := Sig.Net;
+               Old : constant Signal_Net_Type := Sig.Net;
             begin
                --  Merge the old net into NET.
                S := Sig;

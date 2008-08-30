@@ -70,7 +70,6 @@ package body Translation is
 
    --  Global declarations.
    Ghdl_Ptr_Type : O_Tnode;
-   Const_Ptr_Type_Node : O_Tnode;
    Sizetype : O_Tnode;
    Ghdl_I32_Type : O_Tnode;
    Ghdl_I64_Type : O_Tnode;
@@ -3114,7 +3113,7 @@ package body Translation is
       procedure Copy_Fat_Pointer
         (D : O_Dnode; S : O_Dnode; Ftype : Iir; Is_Sig : Object_Kind_Type)
       is
-         Info : Type_Info_Acc := Get_Info (Ftype);
+         Info : constant Type_Info_Acc := Get_Info (Ftype);
       begin
          New_Assign_Stmt
            (New_Selected_Acc_Value (New_Obj (D), Info.T.Base_Field (Is_Sig)),
@@ -3830,12 +3829,9 @@ package body Translation is
 
       procedure Translate_Entity_Init (Entity : Iir)
       is
-         Info : Block_Info_Acc;
          El : Iir;
          El_Type : Iir;
       begin
-         Info := Get_Info (Entity);
-
          Push_Local_Factory;
 
          --  Generics.
@@ -4716,7 +4712,6 @@ package body Translation is
       is
          Inter : Iir;
          Inter_Type : Iir;
-         Inter_Kind : Iir_Kind;
          Info : Subprg_Info_Acc;
          Arg_Info : Ortho_Info_Acc;
          Tinfo : Type_Info_Acc;
@@ -4791,7 +4786,6 @@ package body Translation is
             while Inter /= Null_Iir loop
                Arg_Info := Add_Info (Inter, Kind_Interface);
                Inter_Type := Get_Type (Inter);
-               Inter_Kind := Get_Kind (Inter_Type);
                Tinfo := Get_Info (Inter_Type);
                if Get_Kind (Inter) = Iir_Kind_Variable_Interface_Declaration
                  and then Get_Mode (Inter) in Iir_Out_Modes
@@ -5206,6 +5200,7 @@ package body Translation is
       is
          Info : Ortho_Info_Acc;
          Final : Boolean;
+         pragma Unreferenced (Final);
       begin
          Info := Get_Info (Spec);
          Start_Subprogram_Body (Info.Package_Elab_Spec_Subprg);
@@ -5963,7 +5958,7 @@ package body Translation is
             return;
          end if;
          declare
-            Len : Natural := Get_File_Signature_Length (Type_Name);
+            Len : constant Natural := Get_File_Signature_Length (Type_Name);
             Sig : String (1 .. Len + 2);
             Off : Natural := 1;
          begin
@@ -6822,6 +6817,7 @@ package body Translation is
          Mark : Id_Mark_Type;
          Info : Type_Info_Acc;
          Lock_Field : O_Fnode;
+         pragma Unreferenced (Lock_Field);
       begin
          Decl := Get_Protected_Type_Declaration (Bod);
          Info := Get_Info (Decl);
@@ -7308,7 +7304,6 @@ package body Translation is
                                                Subtype_Info : Type_Info_Acc;
                                                Base_Info : Type_Info_Acc)
       is
-         Base_Type : Iir;
          Rng : Iir;
          Lo, Hi : Iir;
       begin
@@ -7325,7 +7320,6 @@ package body Translation is
             Subtype_Info.T.Nocheck_Low := False;
          else
             --  Bounds are locally static.
-            Base_Type := Get_Base_Type (Def);
             Get_Low_High_Limit (Rng, Lo, Hi);
             Subtype_Info.T.Nocheck_Hi :=
               Is_Equal_Limit (Hi, True, Def, Base_Info.Type_Mode);
@@ -7456,7 +7450,7 @@ package body Translation is
 
             when Iir_Kind_Access_Type_Definition =>
                declare
-                  Dtype : Iir := Get_Designated_Type (Def);
+                  Dtype : constant Iir := Get_Designated_Type (Def);
                begin
                   --  Translate the subtype
                   if Is_Anonymous_Type_Definition (Dtype) then
@@ -7487,10 +7481,7 @@ package body Translation is
 
       procedure Translate_Bool_Type_Definition (Def : Iir)
       is
-         Decl : Iir;
-         Id : Name_Id;
          Info : Type_Info_Acc;
-         Base_Type : Iir;
       begin
          --  If the definition is already translated, return now.
          Info := Get_Info (Def);
@@ -7499,10 +7490,6 @@ package body Translation is
          end if;
 
          Info := Add_Info (Def, Kind_Type);
-         Base_Type := Get_Base_Type (Def);
-         Decl := Get_Type_Declarator (Def);
-
-         Id := Get_Identifier (Decl);
 
          if Get_Kind (Def) /= Iir_Kind_Enumeration_Type_Definition then
             raise Internal_Error;
@@ -7577,9 +7564,7 @@ package body Translation is
       procedure Elab_Type_Definition (Def : Iir);
       procedure Elab_Type_Definition_Depend is new Handle_Anonymous_Subtypes
         (Handle_A_Subtype => Elab_Type_Definition);
-      procedure Elab_Type_Definition (Def : Iir)
-      is
-         Info : Type_Info_Acc;
+      procedure Elab_Type_Definition (Def : Iir) is
       begin
          case Get_Kind (Def) is
             when Iir_Kind_Incomplete_Type_Definition =>
@@ -7603,8 +7588,6 @@ package body Translation is
          if Get_Type_Staticness (Def) = Locally then
             return;
          end if;
-
-         Info := Get_Info (Def);
 
          Elab_Type_Definition_Depend (Def);
 
@@ -7865,13 +7848,10 @@ package body Translation is
       function Get_Array_Type_Length (Atype : Iir) return O_Enode
       is
          Index_List : Iir_List;
-         Index_Type : Iir;
          Nbr_Dim : Natural;
          Dim_Length : O_Enode;
          Res : O_Enode;
          Type_Info : Type_Info_Acc;
-         Binfo : Type_Info_Acc;
-         Index_Info : Type_Info_Acc;
          Bounds : Mnode;
       begin
          Index_List := Get_Index_Subtype_List (Atype);
@@ -7891,10 +7871,7 @@ package body Translation is
                raise Internal_Error;
          end case;
 
-         Binfo := Get_Info (Get_Base_Type (Atype));
          for Dim in 1 .. Nbr_Dim loop
-            Index_Type := Get_Nth_Element (Index_List, Dim - 1);
-            Index_Info := Get_Info (Get_Base_Type (Index_Type));
             Dim_Length :=
               M2E (Range_To_Length (Bounds_To_Range (Bounds, Atype, Dim)));
             if Dim = 1 then
@@ -7909,13 +7886,10 @@ package body Translation is
       function Get_Array_Length (Arr : Mnode; Atype : Iir) return O_Enode
       is
          Index_List : Iir_List;
-         Index_Type : Iir;
          Nbr_Dim : Natural;
          Dim_Length : O_Enode;
          Res : O_Enode;
          Type_Info : Type_Info_Acc;
-         Binfo : Type_Info_Acc;
-         Index_Info : Type_Info_Acc;
          B : Mnode;
       begin
          Index_List := Get_Index_Subtype_List (Atype);
@@ -7933,10 +7907,7 @@ package body Translation is
                raise Internal_Error;
          end case;
 
-         Binfo := Get_Info (Get_Base_Type (Atype));
          for Dim in 1 .. Nbr_Dim loop
-            Index_Type := Get_Nth_Element (Index_List, Dim - 1);
-            Index_Info := Get_Info (Get_Base_Type (Index_Type));
             B := Get_Array_Bounds (Arr);
             Dim_Length :=
               M2E (Range_To_Length (Bounds_To_Range (B, Atype, Dim)));
@@ -7958,11 +7929,9 @@ package body Translation is
             when Type_Mode_Fat_Array
               | Type_Mode_Fat_Acc =>
                declare
-                  F : O_Fnode;
                   Kind : Object_Kind_Type;
                begin
                   Kind := Get_Object_Kind (Arr);
-                  F := Info.T.Base_Field (Get_Object_Kind (Arr));
                   return Lp2M
                     (New_Selected_Element (M2Lv (Arr),
                                            Info.T.Base_Field (Kind)),
@@ -9364,7 +9333,7 @@ package body Translation is
             if Get_Info (Obj).Object_Static then
                return;
             end if;
-            if Get_Deferred_Declaration_Flag (Obj) = True then
+            if Get_Deferred_Declaration_Flag (Obj) then
                --  No code generation for a deferred constant.
                return;
             end if;
@@ -9801,7 +9770,6 @@ package body Translation is
         (Decl : Iir; Parent : Iir; Check_Null : Boolean)
       is
          Sig_Type : Iir;
-         Type_Info : Type_Info_Acc;
          Name_Node : Mnode;
          Val : Iir;
          Data : Elab_Signal_Data;
@@ -9812,7 +9780,6 @@ package body Translation is
          Open_Temp;
 
          Sig_Type := Get_Type (Decl);
-         Type_Info := Get_Info (Sig_Type);
          Base_Decl := Get_Base_Name (Decl);
 
          --  Set the name of the signal.
@@ -10231,7 +10198,6 @@ package body Translation is
          Name : Iir;
          Name_Node : Mnode;
          Alias_Node : Mnode;
-         N_Info : Type_Info_Acc;
          Alias_Info : Alias_Info_Acc;
          Name_Type : Iir;
          Tinfo : Type_Info_Acc;
@@ -10248,7 +10214,6 @@ package body Translation is
          Name_Type := Get_Type (Name);
          Name_Node := Chap6.Translate_Name (Name);
          Kind := Get_Object_Kind (Name_Node);
-         N_Info := Get_Info (Name_Type);
 
          case Tinfo.Type_Mode is
             when Type_Mode_Fat_Array =>
@@ -12086,13 +12051,11 @@ package body Translation is
                      Open_Temp;
                      declare
                         Actual_Type : Iir;
-                        Tinfo : Type_Info_Acc;
                         Bounds : Mnode;
                         Formal_Node : Mnode;
                      begin
                         Actual_Type := Get_Type (Get_Default_Value (Formal));
                         Chap3.Create_Array_Subtype (Actual_Type, True);
-                        Tinfo := Get_Info (Actual_Type);
                         Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
                         Formal_Node := Chap6.Translate_Name (Formal);
                         New_Assign_Stmt
@@ -12104,13 +12067,11 @@ package body Translation is
                      Open_Temp;
                      declare
                         Actual_Type : Iir;
-                        Tinfo : Type_Info_Acc;
                         Bounds : Mnode;
                         Formal_Node : Mnode;
                      begin
                         Actual_Type := Get_Actual_Type (Assoc);
                         Chap3.Create_Array_Subtype (Actual_Type, False);
-                        Tinfo := Get_Info (Actual_Type);
                         Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
                         Formal_Node := Chap6.Translate_Name (Formal);
                         New_Assign_Stmt
@@ -12522,7 +12483,6 @@ package body Translation is
          Index : O_Enode;
          Index_Base_Type : Iir;
          Index_Range : Iir;
-         Index_Info : Type_Info_Acc;
          V : Iir_Int64;
          B : Iir_Int64;
       begin
@@ -12539,8 +12499,6 @@ package body Translation is
               (New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (B)));
          else
             Index_Base_Type := Get_Base_Type (Index_Type);
-            Index_Info := Get_Info (Index_Base_Type);
-
             Index := Chap7.Translate_Expression (Expr, Index_Base_Type);
 
             if Get_Direction (Index_Range) = Iir_To then
@@ -12598,7 +12556,6 @@ package body Translation is
          Ibasetype : Iir;
          Prefix_Info : Type_Info_Acc;
          Nbr_Dim : Natural;
-         Fat_Ptr : O_Lnode;
          Range_Ptr : Mnode;
       begin
          Prefix_Type := Get_Type (Get_Prefix (Expr));
@@ -12610,7 +12567,6 @@ package body Translation is
                Prefix := Prefix_Orig;
             when Type_Mode_Ptr_Array =>
                --  FIXME: should save the bounds address ?
-               Fat_Ptr := O_Lnode_Null;
                Prefix := Prefix_Orig;
             when others =>
                raise Internal_Error;
@@ -12725,7 +12681,6 @@ package body Translation is
          --  Type of the slice.
          Slice_Type : Iir;
          Slice_Info : Type_Info_Acc;
-         Slice_Binfo : Type_Info_Acc;
 
          --  Type of the first (and only) index of the prefix array type.
          Index_Type : Iir;
@@ -12821,8 +12776,6 @@ package body Translation is
          end if;
 
          Data.Is_Off := False;
-
-         Slice_Binfo := Get_Info (Get_Base_Type (Slice_Type));
 
          --  Save prefix.
          Prefix_Var := Stabilize (Prefix);
@@ -12938,12 +12891,6 @@ package body Translation is
         (Prefix : Mnode; Expr : Iir_Slice_Name; Data : Slice_Name_Data)
         return Mnode
       is
-         --  Type of the prefix.
-         Prefix_Type : Iir;
-
-         --  Type info of the prefix.
-         Prefix_Info : Type_Info_Acc;
-
          --  Type of the slice.
          Slice_Type : Iir;
          Slice_Info : Type_Info_Acc;
@@ -12956,11 +12903,9 @@ package body Translation is
       begin
          --  Evaluate the prefix.
          Slice_Type := Get_Type (Expr);
-         Prefix_Type := Get_Type (Get_Prefix (Expr));
 
          Kind := Get_Object_Kind (Prefix);
 
-         Prefix_Info := Get_Info (Prefix_Type);
          Slice_Info := Get_Info (Slice_Type);
 
          if Data.Is_Off then
@@ -14150,14 +14095,12 @@ package body Translation is
       is
          Res : O_Dnode;
          Type_Info : Type_Info_Acc;
-         Expr_Type_Info : Type_Info_Acc;
       begin
          -- FIXME: to do.
          --  Be sure the bounds variable was created.
          --  This may be necessary for on-the-fly types, such as strings.
          Chap3.Create_Array_Subtype (Expr_Type, True);
 
-         Expr_Type_Info := Get_Info (Expr_Type);
          Type_Info := Get_Info (Atype);
          Res := Create_Temp (Type_Info.Ortho_Type (Kind));
          New_Assign_Stmt
@@ -14372,7 +14315,6 @@ package body Translation is
          Res : O_Dnode;
          Res_Type : O_Tnode;
          If_Blk : O_If_Block;
-         Op : ON_Op_Kind;
          Val : Integer;
          V : O_Cnode;
          Kind : Iir_Predefined_Functions;
@@ -14391,22 +14333,18 @@ package body Translation is
          case Kind is
             when Iir_Predefined_Bit_And
               | Iir_Predefined_Boolean_And =>
-               Op := ON_And;
                Invert := False;
                Val := 1;
             when Iir_Predefined_Bit_Nand
               | Iir_Predefined_Boolean_Nand =>
-               Op := ON_And;
                Invert := True;
                Val := 1;
             when Iir_Predefined_Bit_Or
               | Iir_Predefined_Boolean_Or =>
-               Op := ON_Or;
                Invert := False;
                Val := 0;
             when Iir_Predefined_Bit_Nor
               | Iir_Predefined_Boolean_Nor =>
-               Op := ON_Or;
                Invert := True;
                Val := 0;
             when others =>
@@ -15292,10 +15230,10 @@ package body Translation is
       procedure Translate_Record_Aggregate (Target : Mnode; Aggr : Iir)
       is
          Targ : Mnode;
-         Aggr_Type : Iir := Get_Type (Aggr);
-         Aggr_Base_Type : Iir_Record_Type_Definition :=
+         Aggr_Type : constant Iir := Get_Type (Aggr);
+         Aggr_Base_Type : constant Iir_Record_Type_Definition :=
            Get_Base_Type (Aggr_Type);
-         Nbr_El : Iir_Index32 :=
+         Nbr_El : constant Iir_Index32 :=
            Get_Number_Element_Declaration (Aggr_Base_Type);
 
          --  Record which elements of the record have been set.  The 'others'
@@ -15360,7 +15298,6 @@ package body Translation is
          Bounds : Mnode;
          Var_Index : O_Dnode;
          Targ : Mnode;
-         Tinfo : Type_Info_Acc;
 
          Range_Ptr : Mnode;
          Rinfo : Type_Info_Acc;
@@ -15400,7 +15337,6 @@ package body Translation is
          If_Blk : O_If_Block;
          Op : ON_Op_Kind;
       begin
-         Tinfo := Get_Info (Target_Type);
          Open_Temp;
          Targ := Stabilize (Target);
          Base := Stabilize (Chap3.Get_Array_Base (Targ));
@@ -16034,7 +15970,6 @@ package body Translation is
                declare
                   Unit : Iir;
                   Unit_Info : Object_Info_Acc;
-                  Unit_Type : Type_Info_Acc;
                begin
                   Unit := Get_Unit_Name (Expr);
                   Unit_Info := Get_Info (Unit);
@@ -16043,7 +15978,6 @@ package body Translation is
                        (Translate_Static_Expression (Expr, Rtype));
                   else
                      --  Time units might be not locally static.
-                     Unit_Type := Get_Info (Expr_Type);
                      return New_Dyadic_Op
                        (ON_Mul_Ov,
                         New_Lit (New_Signed_Literal
@@ -16057,7 +15991,6 @@ package body Translation is
                declare
                   Unit : Iir;
                   Unit_Info : Object_Info_Acc;
-                  Unit_Type : Type_Info_Acc;
                   L, R : O_Enode;
                begin
                   Unit := Get_Unit_Name (Expr);
@@ -16067,7 +16000,6 @@ package body Translation is
                        (Translate_Static_Expression (Expr, Rtype));
                   else
                      --  Time units might be not locally static.
-                     Unit_Type := Get_Info (Expr_Type);
                      L := New_Lit
                        (New_Float_Literal
                         (Ghdl_Real_Type, IEEE_Float_64 (Get_Fp_Value (Expr))));
@@ -16207,11 +16139,9 @@ package body Translation is
               | Iir_Kind_Attribute_Value =>
                declare
                   L : Mnode;
-                  Expr_Type_Info : Type_Info_Acc;
                begin
                   L := Chap6.Translate_Name (Expr);
 
-                  Expr_Type_Info := Get_Info (Expr_Type);
                   Res := M2E (L);
                   if Get_Object_Kind (L) = Mode_Signal then
                      Res := Translate_Signal (Res, Expr_Type);
@@ -19406,7 +19336,6 @@ package body Translation is
       is
          Constr : O_Assoc_List;
          Conv_Info : Subprg_Info_Acc;
-         Res_Info : Type_Info_Acc;
          Res : O_Dnode;
          Imp : Iir;
       begin
@@ -19441,7 +19370,6 @@ package body Translation is
 
                   New_Association (Constr, M2E (Src));
 
-                  Res_Info := Get_Info (Get_Return_Type (Imp));
                   if Conv_Info.Res_Interface /= O_Dnode_Null then
                      --  Composite result.
                      New_Procedure_Call (Constr);
@@ -19464,8 +19392,9 @@ package body Translation is
       is
          type Mnode_Array is array (Natural range <>) of Mnode;
          type O_Enode_Array is array (Natural range <>) of O_Enode;
-         Assoc_Chain : Iir := Get_Parameter_Association_Chain (Stmt);
-         Nbr_Assoc : Natural := Iir_Chains.Get_Chain_Length (Assoc_Chain);
+         Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Stmt);
+         Nbr_Assoc : constant Natural :=
+           Iir_Chains.Get_Chain_Length (Assoc_Chain);
          Params : Mnode_Array (0 .. Nbr_Assoc - 1);
          E_Params : O_Enode_Array (0 .. Nbr_Assoc - 1);
          Imp : Iir;
@@ -19480,7 +19409,6 @@ package body Translation is
          Base_Formal : Iir;
          Formal_Type : Iir;
          Ftype_Info : Type_Info_Acc;
-         Atype_Info : Type_Info_Acc;
          Formal_Info : Ortho_Info_Acc;
          Val : O_Enode;
          Param : Mnode;
@@ -19592,7 +19520,6 @@ package body Translation is
                     | Iir_Kind_Signal_Interface_Declaration =>
                      Param := Chap6.Translate_Name (Act);
                      --  Atype may not have been set (eg: slice).
-                     Atype_Info := Get_Info (Actual_Type);
                      if Base_Formal /= Formal then
                         Stabilize (Param);
                         Params (Pos) := Param;
@@ -20697,6 +20624,7 @@ package body Translation is
             when Iir_Kind_Procedure_Call_Statement =>
                declare
                   Assocs : Iir;
+                  pragma Unreferenced (Assocs); -- FIXME
                   Call : Iir_Procedure_Call;
                   Imp : Iir;
                begin
@@ -20752,8 +20680,8 @@ package body Translation is
    package body Chap9 is
       procedure Set_Direct_Drivers (Proc : Iir)
       is
-         Proc_Info : Proc_Info_Acc := Get_Info (Proc);
-         Drivers : Direct_Drivers_Acc := Proc_Info.Process_Drivers;
+         Proc_Info : constant Proc_Info_Acc := Get_Info (Proc);
+         Drivers : constant Direct_Drivers_Acc := Proc_Info.Process_Drivers;
          Info : Ortho_Info_Acc;
          Var : Var_Acc;
          Sig : Iir;
@@ -20777,8 +20705,8 @@ package body Translation is
 
       procedure Reset_Direct_Drivers (Proc : Iir)
       is
-         Proc_Info : Proc_Info_Acc := Get_Info (Proc);
-         Drivers : Direct_Drivers_Acc := Proc_Info.Process_Drivers;
+         Proc_Info : constant Proc_Info_Acc := Get_Info (Proc);
+         Drivers : constant Direct_Drivers_Acc := Proc_Info.Process_Drivers;
          Info : Ortho_Info_Acc;
          Var : Var_Acc;
          Sig : Iir;
@@ -21640,7 +21568,7 @@ package body Translation is
                   end if;
                end Get_Arch_Name;
 
-               Str : String :=
+               Str : constant String :=
                  Image_Identifier (Get_Library (Get_Design_File (Entity_Unit)))
                  & "__" & Image_Identifier (Entity) & "__"
                  & Get_Arch_Name & "__";
@@ -23260,28 +23188,22 @@ package body Translation is
          return Translate_Low_High_Type_Attribute (Atype, True);
       end Translate_Low_Type_Attribute;
 
-      function Translate_Left_Type_Attribute (Atype : Iir) return O_Enode
-      is
-         Info : Type_Info_Acc;
+      function Translate_Left_Type_Attribute (Atype : Iir) return O_Enode is
       begin
          if Get_Type_Staticness (Atype) = Locally then
             return New_Lit (Chap7.Translate_Static_Range_Left
                             (Get_Range_Constraint (Atype), Atype));
          else
-            Info := Get_Info (Atype);
             return M2E (Chap3.Range_To_Left (Chap3.Type_To_Range (Atype)));
          end if;
       end Translate_Left_Type_Attribute;
 
-      function Translate_Right_Type_Attribute (Atype : Iir) return O_Enode
-      is
-         Info : Type_Info_Acc;
+      function Translate_Right_Type_Attribute (Atype : Iir) return O_Enode is
       begin
          if Get_Type_Staticness (Atype) = Locally then
             return New_Lit (Chap7.Translate_Static_Range_Right
                             (Get_Range_Constraint (Atype), Atype));
          else
-            Info := Get_Info (Atype);
             return M2E (Chap3.Range_To_Right (Chap3.Type_To_Range (Atype)));
          end if;
       end Translate_Right_Type_Attribute;
@@ -25149,8 +25071,9 @@ package body Translation is
          end if;
 
          declare
-            Lit_List : Iir_List := Get_Enumeration_Literal_List (Atype);
-            Nbr_Lit : Integer := Get_Nbr_Elements (Lit_List);
+            Lit_List : constant Iir_List :=
+              Get_Enumeration_Literal_List (Atype);
+            Nbr_Lit : constant Integer := Get_Nbr_Elements (Lit_List);
             Lit : Iir;
 
             type Dnode_Array is array (Natural range <>) of O_Dnode;
@@ -25491,6 +25414,7 @@ package body Translation is
          Nbr_Indexes : Integer;
          Index : Iir;
          Tmp : O_Dnode;
+         pragma Unreferenced (Tmp);
          Arr_Type : O_Tnode;
          Arr_Aggr : O_Array_Aggr_List;
          Val : O_Cnode;
@@ -25563,6 +25487,7 @@ package body Translation is
             declare
                Mark : Id_Mark_Type;
                El_Rti : O_Dnode;
+               pragma Unreferenced (El_Rti);
             begin
                Push_Identifier_Prefix (Mark, "EL");
                El_Rti := Generate_Type_Definition (Element);
@@ -25603,6 +25528,7 @@ package body Translation is
          Aggr : O_Record_Aggr_List;
          Val : O_Cnode;
          Base_Rti : O_Dnode;
+         pragma Unreferenced (Base_Rti);
          Bounds : Var_Acc;
          Name : O_Dnode;
          Kind : O_Cnode;
@@ -25950,6 +25876,7 @@ package body Translation is
                declare
                   Mark : Id_Mark_Type;
                   Tmp : O_Dnode;
+                  pragma Unreferenced (Tmp);
                begin
                   Push_Identifier_Prefix (Mark, "OT");
                   Tmp := Generate_Type_Definition (Decl_Type);
@@ -27015,7 +26942,6 @@ package body Translation is
 
       --  Generic pointer.
       Ghdl_Ptr_Type := New_Access_Type (Char_Type_Node);
-      Const_Ptr_Type_Node := Ghdl_Ptr_Type;
       New_Type_Decl (Get_Identifier ("__ghdl_ptr"), Ghdl_Ptr_Type);
 
       --  Create record
@@ -28252,6 +28178,7 @@ package body Translation is
    is
       Lib_Mark, Unit_Mark : Id_Mark_Type;
       Info : Ortho_Info_Acc;
+      pragma Unreferenced (Info);
    begin
       Update_Node_Infos;
 
@@ -28518,6 +28445,7 @@ package body Translation is
       procedure Gen_Setup_Info
       is
          Cst : O_Dnode;
+         pragma Unreferenced (Cst);
       begin
          Cst := Create_String (Flags.Flag_String,
                                Get_Identifier ("__ghdl_flag_string"),
@@ -28831,6 +28759,7 @@ package body Translation is
          F : FILEs;
          R : int;
          S : size_t;
+         pragma Unreferenced (R, S); -- FIXME
          Id : Name_Id;
          Lib : Iir_Library_Declaration;
          File : Iir_Design_File;

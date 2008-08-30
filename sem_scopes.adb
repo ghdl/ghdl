@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 with Ada.Text_IO;
 with GNAT.Table;
-with Types; use Types;
 with Name_Table; -- use Name_Table;
 with Errorout; use Errorout;
 with Iirs_Utils;

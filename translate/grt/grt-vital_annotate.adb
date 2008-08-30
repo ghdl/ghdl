@@ -15,7 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Grt.Sdf;
 with Grt.Types; use Grt.Types;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Astdio; use Grt.Astdio;
@@ -32,7 +31,7 @@ package body Grt.Vital_Annotate is
    Sdf_Inst : VhpiHandleT;
 
    Flag_Dump : Boolean := False;
-   Flag_Verbose : Boolean := False;
+   Flag_Verbose : constant Boolean := False;
 
    function Name_Compare (Handle : VhpiHandleT;
                           Name : String;
@@ -140,7 +139,7 @@ package body Grt.Vital_Annotate is
 
    end Find_Generic;
 
-   procedure Sdf_Header (Context : in out Sdf_Context_Type)
+   procedure Sdf_Header (Context : Sdf_Context_Type)
    is
    begin
       if Flag_Dump then
@@ -156,7 +155,7 @@ package body Grt.Vital_Annotate is
       end if;
    end Sdf_Header;
 
-   procedure Sdf_Celltype (Context : in out Sdf_Context_Type)
+   procedure Sdf_Celltype (Context : Sdf_Context_Type)
    is
    begin
       if Flag_Dump then
@@ -185,7 +184,7 @@ package body Grt.Vital_Annotate is
       Find_Instance (Sdf_Inst, Sdf_Inst, Instance, Status);
    end Sdf_Instance;
 
-   procedure Sdf_Instance_End (Context : in out Sdf_Context_Type;
+   procedure Sdf_Instance_End (Context : Sdf_Context_Type;
                                Status : out Boolean)
    is
    begin
@@ -319,6 +318,9 @@ package body Grt.Vital_Annotate is
       Right : VhpiIntT;
    begin
       Vhpi_Handle (VhpiSubtype, Port, Port_Type, Error);
+      Left := 0;
+      Len := 0;
+      Up := True;
       if Error /= AvhpiErrorOk then
          Internal_Error ("vhpiSubtype - port");
          return;
@@ -434,10 +436,10 @@ package body Grt.Vital_Annotate is
             then
                Generic_Get_Bounds (Port2, Left2, Len2, Up2);
                Pos := Pos * Len2;
-               if Up1 then
+               if Up2 then
                   Pos := Pos + Ghdl_Index_Type (Context.Ports (2).L - Left2);
                else
-                  Pos := Pos + Ghdl_Index_Type (Left1 - Context.Ports (2).L);
+                  Pos := Pos + Ghdl_Index_Type (Left2 - Context.Ports (2).L);
                end if;
             end if;
             Vhpi_Handle_By_Index
@@ -608,8 +610,9 @@ package body Grt.Vital_Annotate is
       end loop;
    end Sdf_Start;
 
-   function Sdf_Option (Opt : String) return Boolean
+   function Sdf_Option (Option : String) return Boolean
    is
+      Opt : constant String (1 .. Option'Length) := Option;
    begin
       if Opt'Length > 11 and then Opt (1 .. 11) = "--sdf-dump=" then
          Flag_Dump := True;

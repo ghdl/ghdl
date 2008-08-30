@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO;
-with Ghdlmain;
 with Types; use Types;
 with Libraries;
 with Std_Package;
@@ -40,7 +39,7 @@ package body Ghdllocal is
    type Ieee_Lib_Kind is (Lib_Standard, Lib_None, Lib_Synopsys, Lib_Mentor);
    Flag_Ieee : Ieee_Lib_Kind;
 
-   Flag_Create_Default_Config : Boolean := True;
+   Flag_Create_Default_Config : constant Boolean := True;
 
    --  If TRUE, generate 32bits code on 64bits machines.
    Flag_32bit : Boolean := False;
@@ -108,36 +107,37 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
       pragma Unreferenced (Arg);
+      Opt : constant String (1 .. Option'Length) := Option;
    begin
       Res := Option_Bad;
-      if Option = "-v" and then Flag_Verbose = False then
+      if Opt = "-v" and then Flag_Verbose = False then
          Flag_Verbose := True;
          Res := Option_Ok;
-      elsif Option'Length > 9 and then Option (1 .. 9) = "--PREFIX=" then
-         Prefix_Path := new String'(Option (10 .. Option'Last));
+      elsif Opt'Length > 9 and then Opt (1 .. 9) = "--PREFIX=" then
+         Prefix_Path := new String'(Opt (10 .. Opt'Last));
          Res := Option_Ok;
-      elsif Option = "--ieee=synopsys" then
+      elsif Opt = "--ieee=synopsys" then
          Flag_Ieee := Lib_Synopsys;
          Res := Option_Ok;
-      elsif Option = "--ieee=mentor" then
+      elsif Opt = "--ieee=mentor" then
          Flag_Ieee := Lib_Mentor;
          Res := Option_Ok;
-      elsif Option = "--ieee=none" then
+      elsif Opt = "--ieee=none" then
          Flag_Ieee := Lib_None;
          Res := Option_Ok;
-      elsif Option = "--ieee=standard" then
+      elsif Opt = "--ieee=standard" then
          Flag_Ieee := Lib_Standard;
          Res := Option_Ok;
-      elsif Option = "-m32" then
+      elsif Opt = "-m32" then
          Flag_32bit := True;
          Res := Option_Ok;
-      elsif Option'Length >= 2
-        and then (Option (2) = 'g' or Option (2) = 'O')
+      elsif Opt'Length >= 2
+        and then (Opt (2) = 'g' or Opt (2) = 'O')
       then
          --  Silently accept -g and -O.
          Res := Option_Ok;
       else
-         if Flags.Parse_Option (Option) then
+         if Flags.Parse_Option (Opt) then
             Res := Option_Ok;
          end if;
       end if;
@@ -326,7 +326,7 @@ package body Ghdllocal is
    function Append_Suffix (File : String; Suffix : String) return String_Access
    is
       use Name_Table;
-      Basename : String := Get_Base_Name (File);
+      Basename : constant String := Get_Base_Name (File);
    begin
       Image (Libraries.Work_Directory);
       Name_Buffer (Name_Length + 1 .. Name_Length + Basename'Length) :=
@@ -429,7 +429,7 @@ package body Ghdllocal is
       Design_File : Iir_Design_File;
       Unit : Iir;
       Lib : Iir;
-      Flag_Add : Boolean := False;
+      Flag_Add : constant Boolean := False;
    begin
       Flags.Bootstrap := True;
       Libraries.Load_Std_Library;
@@ -646,7 +646,6 @@ package body Ghdllocal is
 
    procedure Delete (Str : String)
    is
-      use GNAT.OS_Lib;
       use Ada.Text_IO;
       Status : Boolean;
    begin
@@ -659,7 +658,6 @@ package body Ghdllocal is
    procedure Perform_Action (Cmd : in out Command_Clean; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use GNAT.OS_Lib;
       use Name_Table;
 
       procedure Delete_Asm_Obj (Str : String) is
@@ -805,6 +803,7 @@ package body Ghdllocal is
       procedure Extract_Library_Clauses (Unit : Iir_Design_Unit)
       is
          Lib1 : Iir_Library_Declaration;
+         pragma Unreferenced (Lib1);
          Ctxt_Item : Iir;
       begin
          --  Extract library clauses.
@@ -1059,7 +1058,7 @@ package body Ghdllocal is
 
       if Args'Length >= 2 then
          declare
-            Sec : String_Access := Args (Next_Arg);
+            Sec : constant String_Access := Args (Next_Arg);
          begin
             if Sec (Sec'First) /= '-' then
                Sec_Name := Convert_Name (Sec);

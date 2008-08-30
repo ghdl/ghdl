@@ -16,8 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with System.Storage_Elements; --  Work around GNAT bug.
-with Grt.Types; use Grt.Types;
-with Grt.Signals; use Grt.Signals;
+pragma Unreferenced (System.Storage_Elements);
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Stdio; use Grt.Stdio;
 --with Grt.Errors; use Grt.Errors;

@@ -157,7 +157,7 @@ package body Ortho_Code.Opts is
                   N_Stmt := Next;
                   P_Stmt := Stmt;
                   Label := Get_Jump_Label (Stmt);
-                  Flag_Discard := Kind = OE_Jump;
+                  Flag_Discard := True;
                   loop
                      if N_Stmt = Label then
                         --  Remove STMT.

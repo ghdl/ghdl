@@ -59,7 +59,7 @@ package Binary_File is
                                Align : Natural;
                                Esize : Natural);
 
-   procedure Merge_Section (Dest : Section_Acc; Src : in out Section_Acc);
+   procedure Merge_Section (Dest : Section_Acc; Src : Section_Acc);
 
    --  Set the current section.
    procedure Set_Current_Section (Sect : Section_Acc);

@@ -1062,6 +1062,7 @@ package body Sem_Types is
       Res: Iir;
       El : Iir;
       List : Iir_List;
+      Has_Error : Boolean;
    begin
       Name := Get_Resolution_Function (Decl);
       if Name = Null_Iir then
@@ -1086,19 +1087,29 @@ package body Sem_Types is
 
       if Is_Overload_List (Func) then
          List := Get_Overload_List (Func);
+         Has_Error := False;
          for I in Natural loop
             El := Get_Nth_Element (List, I);
             exit when El = Null_Iir;
             if Is_A_Resolution_Function (El, Decl) then
-               if Func /= Null_Iir then
-                  Error_Msg_Sem
-                    ("can't resolve overload for resolution function", Decl);
-                  return;
+               if Res /= Null_Iir then
+                  if not Has_Error then
+                     Has_Error := True;
+                     Error_Msg_Sem
+                       ("can't resolve overload for resolution function",
+                        Decl);
+                     Error_Msg_Sem ("candidate functions are:", Decl);
+                     Error_Msg_Sem (" " & Disp_Subprg (Func), Func);
+                  end if;
+                  Error_Msg_Sem (" " & Disp_Subprg (El), El);
                else
-                  Func := El;
+                  Res := El;
                end if;
             end if;
          end loop;
+         if Has_Error then
+            return;
+         end if;
       else
          if Is_A_Resolution_Function (Func, Decl) then
             Res := Func;
@@ -1478,6 +1489,7 @@ package body Sem_Types is
                   --  constraint.
                   declare
                      Sub_Type : Iir;
+                     pragma Unreferenced (Sub_Type);
                      Base_Type : Iir;
                   begin
                      Base_Type := Get_Designated_Type (Type_Mark);

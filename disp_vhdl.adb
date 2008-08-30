@@ -21,7 +21,6 @@
 -- Try to be as pretty as possible, and to keep line numbers and positions
 -- of the identifiers.
 with Ada.Text_IO; use Ada.Text_IO;
-with Types; use Types;
 with Std_Package;
 with Flags; use Flags;
 with Errorout; use Errorout;
@@ -372,9 +371,7 @@ package body Disp_Vhdl is
    procedure Disp_Enumeration_Subtype_Definition
      (Def: Iir_Enumeration_Subtype_Definition)
    is
-      Base_Type: Iir;
    begin
-      Base_Type := Get_Base_Type (Def);
       Disp_Resolution_Function (Def);
       Put ("range ");
       Disp_Range (Def);
@@ -385,11 +382,9 @@ package body Disp_Vhdl is
      (Def: Iir_Array_Subtype_Definition)
    is
       Index: Iir;
-      A_Type: Iir_Array_Type_Definition;
    begin
       Disp_Resolution_Function (Def);
 
-      A_Type := Get_Base_Type (Def);
       Put ("array (");
       for I in Natural loop
          Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
@@ -893,11 +888,8 @@ package body Disp_Vhdl is
       Put_Line (";");
    end Disp_Object_Declaration;
 
-   procedure Disp_Subprogram_Declaration (Subprg: Iir)
-   is
-      Indent: Count;
+   procedure Disp_Subprogram_Declaration (Subprg: Iir) is
    begin
-      Indent := Col;
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration =>
@@ -1507,7 +1499,6 @@ package body Disp_Vhdl is
    is
       El: Iir;
       Formal: Iir;
-      Indent: Count;
       Need_Comma : Boolean;
       Conv : Iir;
    begin
@@ -1515,7 +1506,6 @@ package body Disp_Vhdl is
          return;
       end if;
       Put ("(");
-      Indent := Col;
       Need_Comma := False;
 
       El := Chain;
@@ -2315,7 +2305,7 @@ package body Disp_Vhdl is
 
    procedure Disp_Int64 (Val: Iir_Int64)
    is
-      Str: String := Iir_Int64'Image (Val);
+      Str: constant String := Iir_Int64'Image (Val);
    begin
       if Str(Str'First) = ' ' then
          Put (Str (Str'First + 1 .. Str'Last));
@@ -2326,7 +2316,7 @@ package body Disp_Vhdl is
 
    procedure Disp_Int32 (Val: Iir_Int32)
    is
-      Str: String := Iir_Int32'Image (Val);
+      Str: constant String := Iir_Int32'Image (Val);
    begin
       if Str(Str'First) = ' ' then
          Put (Str (Str'First + 1 .. Str'Last));
@@ -2337,7 +2327,7 @@ package body Disp_Vhdl is
 
    procedure Disp_Fp64 (Val: Iir_Fp64)
    is
-      Str: String := Iir_Fp64'Image (Val);
+      Str: constant String := Iir_Fp64'Image (Val);
    begin
       if Str(Str'First) = ' ' then
          Put (Str (Str'First + 1 .. Str'Last));

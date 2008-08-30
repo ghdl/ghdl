@@ -21,7 +21,6 @@ with Sem_Expr; use Sem_Expr;
 with Sem_Names; use Sem_Names;
 with Evaluation; use Evaluation;
 with Std_Package; use Std_Package;
-with Tokens;
 with Errorout; use Errorout;
 with Sem; use Sem;
 with Sem_Scopes; use Sem_Scopes;

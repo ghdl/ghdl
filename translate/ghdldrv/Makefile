@@ -15,9 +15,11 @@
 #  along with GCC; see the file COPYING.  If not, write to the Free
 #  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #  02111-1307, USA.
-GNATFLAGS=-gnaty3befhkmr -gnata -gnatwu -gnatwl -aI../..  -aI.. -aI../grt -aO.. -g -gnatf
+GNATFLAGS=-gnaty3befhkmr -gnata -gnatwae -aI../..  -aI.. -aI../grt -aO.. -g -gnatf
 GRT_FLAGS=-g
 LIB_CFLAGS=-g -O2
+GNATMAKE=gnatmake
+CC=gcc
 
 # Optimize, do not forget to use MODE=--genfast for iirs.adb.
 #GNATFLAGS+=-O -gnatn
@@ -52,13 +54,13 @@ ortho_code-x86-flags.ads:
 
 ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force 
-	gnatmake -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+	$(GNATMAKE) -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) -largs -L/usr/lib32
 
 memsegs_c.o: ../../ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
 
 ghdl_gcc: default_pathes.ads force 
-	gnatmake $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
+	$(GNATMAKE) $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
 ghdl_simul: default_pathes.ads force
 	gnatmake -aI../../simulate $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS)
@@ -116,7 +118,7 @@ install.v87: std.v87 ieee.v87 synopsys.v87
 install.standard: $(LIB93_DIR)/std/std_standard.o \
  $(LIB87_DIR)/std/std_standard.o
 
-make-lib-links:
+grt.links:
 	cd ../lib; ln -sf $(GRTSRCDIR)/grt.lst .; ln -sf $(GRTSRCDIR)/libgrt.a .; ln -sf $(GRTSRCDIR)/grt.ver .
 
 install.all: install.v87 install.v93 install.standard

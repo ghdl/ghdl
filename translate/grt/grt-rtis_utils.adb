@@ -15,9 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with System; use System;
-with Grt.Rtis; use Grt.Rtis;
-with Grt.Types; use Grt.Types;
 --with Grt.Disp; use Grt.Disp;
 with Grt.Errors; use Grt.Errors;
 
@@ -318,7 +315,7 @@ package body Grt.Rtis_Utils is
       procedure Handle_Array (Rti : Ghdl_Rtin_Type_Array_Acc;
                               Vals : Ghdl_Uc_Array_Acc)
       is
-         Nbr_Dim : Ghdl_Index_Type := Rti.Nbr_Dim;
+         Nbr_Dim : constant Ghdl_Index_Type := Rti.Nbr_Dim;
          Rngs : Ghdl_Range_Array (0 .. Nbr_Dim - 1);
       begin
          Bound_To_Range (Vals.Bounds, Rti, Rngs);
@@ -367,9 +364,9 @@ package body Grt.Rtis_Utils is
                              To_Ghdl_Uc_Array_Acc (Addr));
             when Ghdl_Rtik_Subtype_Array =>
                declare
-                  St : Ghdl_Rtin_Subtype_Array_Acc :=
+                  St : constant Ghdl_Rtin_Subtype_Array_Acc :=
                     To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
-                  Bt : Ghdl_Rtin_Type_Array_Acc := St.Basetype;
+                  Bt : constant Ghdl_Rtin_Type_Array_Acc := St.Basetype;
                   Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
                begin
                   Bound_To_Range
@@ -385,9 +382,9 @@ package body Grt.Rtis_Utils is
                end;
             when Ghdl_Rtik_Subtype_Array_Ptr =>
                declare
-                  St : Ghdl_Rtin_Subtype_Array_Acc :=
+                  St : constant Ghdl_Rtin_Subtype_Array_Acc :=
                     To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
-                  Bt : Ghdl_Rtin_Type_Array_Acc := St.Basetype;
+                  Bt : constant Ghdl_Rtin_Type_Array_Acc := St.Basetype;
                   Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
                begin
                   Bound_To_Range
@@ -521,7 +518,7 @@ package body Grt.Rtis_Utils is
                         Addr : Address;
                         Type_Rti : Ghdl_Rti_Access)
    is
-      Value : Ghdl_Value_Ptr := To_Ghdl_Value_Ptr (Addr);
+      Value : constant Ghdl_Value_Ptr := To_Ghdl_Value_Ptr (Addr);
    begin
       case Type_Rti.Kind is
          when Ghdl_Rtik_Type_I32 =>

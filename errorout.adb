@@ -17,8 +17,6 @@
 --  02111-1307, USA.
 with Ada.Text_IO;
 with Ada.Command_Line;
-with Types; use Types;
-with Iirs; use Iirs;
 with Scan;
 with Tokens; use Tokens;
 with Name_Table;
@@ -50,8 +48,9 @@ package body Errorout is
       Put_Line (Standard_Error, Str);
    end Put_Line;
 
-   procedure Disp_Natural (Val: Natural) is
-      Str: String := Natural'Image (Val);
+   procedure Disp_Natural (Val: Natural)
+   is
+      Str: constant String := Natural'Image (Val);
    begin
       Put (Str(Str'First + 1 .. Str'Last));
    end Disp_Natural;
@@ -810,8 +809,8 @@ package body Errorout is
      (Name : Name_Id; Line, Col : Natural; Filename : Boolean)
      return String
    is
-      Line_Str : String := Natural'Image (Line);
-      Col_Str : String := Natural'Image (Col);
+      Line_Str : constant String := Natural'Image (Line);
+      Col_Str : constant String := Natural'Image (Col);
    begin
       if Filename then
          return Name_Table.Image (Name)
@@ -861,7 +860,7 @@ package body Errorout is
 
    function Image (N : Iir_Int64) return String
    is
-      Res : String := Iir_Int64'Image (N);
+      Res : constant String := Iir_Int64'Image (N);
    begin
       if Res (1) = ' ' then
          return Res (2 .. Res'Last);
@@ -917,7 +916,7 @@ package body Errorout is
       declare
          use Name_Table;
 
-         Id : Name_Id := Get_Identifier (Subprg);
+         Id : constant Name_Id := Get_Identifier (Subprg);
       begin
          Image (Id);
          case Id is

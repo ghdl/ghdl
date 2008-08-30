@@ -136,6 +136,7 @@ begin
       if Output /= NULL_Stream then
          declare
             Status : int;
+            pragma Unreferenced (Status);
          begin
             Status := fclose (Output);
          end;

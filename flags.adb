@@ -53,7 +53,7 @@ package body Flags is
    end Option_Warning;
 
    function Parse_Option (Opt: String) return Boolean is
-      Beg: Integer := Opt'First;
+      Beg: constant Integer := Opt'First;
    begin
       if Opt'Length > 5 and then Opt (Beg .. Beg + 5) = "--std=" then
          if Opt'Length = 8 then

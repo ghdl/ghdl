@@ -19,16 +19,15 @@ with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with Interfaces; use Interfaces;
 with System.Storage_Elements; --  Work around GNAT bug.
+pragma Unreferenced (System.Storage_Elements);
 with Grt.Types; use Grt.Types;
 with Grt.Avhpi; use Grt.Avhpi;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Errors; use Grt.Errors;
-with Grt.Types; use Grt.Types;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Hooks; use Grt.Hooks;
-with Grt.Avhpi; use Grt.Avhpi;
-with GNAT.Table;
+with Grt.Table;
 with Grt.Avls; use Grt.Avls;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
@@ -39,6 +38,7 @@ with System; use System;
 with Grt.Vstrings; use Grt.Vstrings;
 
 pragma Elaborate_All (Grt.Rtis_Utils);
+pragma Elaborate_All (Grt.Table);
 
 package body Grt.Waves is
    --  Waves filename.
@@ -62,10 +62,13 @@ package body Grt.Waves is
    Ghw_Hie_Port_Buffer  : constant Unsigned_8 := 20; --  Port
    Ghw_Hie_Port_Linkage : constant Unsigned_8 := 21; --  Port
 
+   pragma Unreferenced (Ghw_Hie_Design);
+   pragma Unreferenced (Ghw_Hie_Generic);
+
    --  Return TRUE if OPT is an option for wave.
    function Wave_Option (Opt : String) return Boolean
    is
-      F : Natural := Opt'First;
+      F : constant Natural := Opt'First;
    begin
       if Opt'Length < 6 or else Opt (F .. F + 5) /= "--wave" then
          return False;
@@ -89,6 +92,7 @@ package body Grt.Waves is
    procedure Wave_Put (Str : String)
    is
       R : size_t;
+      pragma Unreferenced (R);
    begin
       R := fwrite (Str'Address, Str'Length, 1, Wave_Stream);
    end Wave_Put;
@@ -96,6 +100,7 @@ package body Grt.Waves is
    procedure Wave_Putc (C : Character)
    is
       R : int;
+      pragma Unreferenced (R);
    begin
       R := fputc (Character'Pos (C), Wave_Stream);
    end Wave_Putc;
@@ -109,6 +114,7 @@ package body Grt.Waves is
    is
       V : Unsigned_8 := B;
       R : size_t;
+      pragma Unreferenced (R);
    begin
       R := fwrite (V'Address, 1, 1, Wave_Stream);
    end Wave_Put_Byte;
@@ -180,6 +186,7 @@ package body Grt.Waves is
    is
       V : Ghdl_I32 := Val;
       R : size_t;
+      pragma Unreferenced (R);
    begin
       R := fwrite (V'Address, 4, 1, Wave_Stream);
    end Wave_Put_I32;
@@ -188,6 +195,7 @@ package body Grt.Waves is
    is
       V : Ghdl_I64 := Val;
       R : size_t;
+      pragma Unreferenced (R);
    begin
       R := fwrite (V'Address, 8, 1, Wave_Stream);
    end Wave_Put_I64;
@@ -196,6 +204,7 @@ package body Grt.Waves is
    is
       V : Ghdl_F64 := F64;
       R : size_t;
+      pragma Unreferenced (R);
    begin
       R := fwrite (V'Address, Ghdl_F64'Size / Storage_Unit, 1, Wave_Stream);
    end Wave_Put_F64;
@@ -229,12 +238,11 @@ package body Grt.Waves is
       Pos : long;
    end record;
 
-   package Section_Table is new GNAT.Table
+   package Section_Table is new Grt.Table
      (Table_Component_Type => Header_Type,
       Table_Index_Type => Natural,
       Table_Low_Bound => 1,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
    --  Create a new section.
    --  Write the header in the file.
@@ -270,13 +278,7 @@ package body Grt.Waves is
          Wave_Put_Byte (V);
       end;
       --  Word size, 1 byte.
-      if Integer'Size = 32 then
-         Wave_Put_Byte (4);
-      elsif Integer'Size = 64 then
-         Wave_Put_Byte (8);
-      else
-         Wave_Put_Byte (0);
-      end if;
+      Wave_Put_Byte (Integer'Size / 8);
       --  File offset size, 1 byte
       Wave_Put_Byte (1);
       --  Unused, must be zero (MBZ).
@@ -347,19 +349,17 @@ package body Grt.Waves is
       null;
    end Avhpi_Error;
 
-   package Str_Table is new GNAT.Table
+   package Str_Table is new Grt.Table
      (Table_Component_Type => Ghdl_C_String,
       Table_Index_Type => AVL_Value,
       Table_Low_Bound => 1,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
-   package Str_AVL is new GNAT.Table
+   package Str_AVL is new Grt.Table
      (Table_Component_Type => AVL_Node,
       Table_Index_Type => AVL_Nid,
       Table_Low_Bound => AVL_Root,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
    Strings_Len : Natural := 0;
 
@@ -394,6 +394,8 @@ package body Grt.Waves is
       New_Line (stdout);
    end Disp_Str_Avl;
 
+   pragma Unreferenced (Disp_Str_Avl);
+
    function Create_Str_Index (Str : Ghdl_C_String) return AVL_Value
    is
       Res : AVL_Nid;
@@ -413,6 +415,8 @@ package body Grt.Waves is
       end if;
       return Str_AVL.Table (Res).Val;
    end Create_Str_Index;
+
+   pragma Unreferenced (Create_Str_Index);
 
    procedure Create_String_Id (Str : Ghdl_C_String)
    is
@@ -472,23 +476,20 @@ package body Grt.Waves is
       Context : Rti_Context;
    end record;
 
-   package Types_Table is new GNAT.Table
+   package Types_Table is new Grt.Table
      (Table_Component_Type => Type_Node,
       Table_Index_Type => AVL_Value,
       Table_Low_Bound => 1,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
-   package Types_AVL is new GNAT.Table
+   package Types_AVL is new Grt.Table
      (Table_Component_Type => AVL_Node,
       Table_Index_Type => AVL_Nid,
       Table_Low_Bound => AVL_Root,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
    function Type_Compare (L, R : AVL_Value) return Integer
    is
-      use System;
       function To_Ia is new
         Ada.Unchecked_Conversion (Ghdl_Rti_Access, Integer_Address);
 
@@ -1049,6 +1050,8 @@ package body Grt.Waves is
       fflush (Wave_Stream);
    end Write_Strings;
 
+   pragma Unreferenced (Write_Strings);
+
    procedure Freeze_Strings
    is
       type Str_Table1_Type is array (1 .. Str_Table.Last) of Ghdl_C_String;
@@ -1380,17 +1383,18 @@ package body Grt.Waves is
    end Write_Known_Types;
 
    --  Table of signals to be dumped.
-   package Dump_Table is new GNAT.Table
+   package Dump_Table is new Grt.Table
      (Table_Component_Type => Ghdl_Signal_Ptr,
       Table_Index_Type => Natural,
       Table_Low_Bound => 1,
-      Table_Initial => 32,
-      Table_Increment => 100);
+      Table_Initial => 32);
 
    function Get_Dump_Entry (N : Natural) return Ghdl_Signal_Ptr is
    begin
       return Dump_Table.Table (N);
    end Get_Dump_Entry;
+
+   pragma Unreferenced (Get_Dump_Entry);
 
    procedure Write_Hierarchy (Root : VhpiHandleT)
    is

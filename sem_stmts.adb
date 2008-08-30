@@ -791,7 +791,7 @@ package body Sem_Stmts is
       --  Return FALSE in case of violation.
       function Check_Odcat_Expression (Expr : Iir) return Boolean
       is
-         Expr_Type : Iir := Get_Type (Expr);
+         Expr_Type : constant Iir := Get_Type (Expr);
       begin
          --  LRM 8.8 Case Statement
          --  If the expression is of a one-dimensional character array type,
@@ -927,10 +927,8 @@ package body Sem_Stmts is
       Expr: Iir;
       Chain : Iir;
       El: Iir;
-      Loc : Location_Type;
    begin
       Expr := Get_Expression (Stmt);
-      Loc := Get_Location (Expr);
       -- FIXME: overload.
       Expr := Sem_Expression (Expr, Null_Iir);
       if Expr = Null_Iir then
@@ -994,7 +992,7 @@ package body Sem_Stmts is
             --  signal name, and each name must denote a signal for which
             --  reading is permitted.
             if Get_Name_Staticness (Res) < Globally then
-               Error_Msg_Sem ("sensitivity element " & Disp_Node (El)
+               Error_Msg_Sem ("sensitivity element " & Disp_Node (Res)
                               & " must be a static name", El);
             end if;
 

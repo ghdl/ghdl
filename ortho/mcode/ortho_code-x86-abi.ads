@@ -15,7 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ortho_Code.Exprs; use Ortho_Code.Exprs;
 with Ortho_Code.Types; use Ortho_Code.Types;
 
 package Ortho_Code.X86.Abi is

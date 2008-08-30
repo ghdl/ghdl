@@ -25,7 +25,7 @@ with Files_Map;
 
 package body Disp_Tree is
    procedure Disp_Tab (Tab: Natural) is
-      Blanks : String (1 .. Tab) := (others => ' ');
+      Blanks : constant String (1 .. Tab) := (others => ' ');
    begin
       Put (Blanks);
    end Disp_Tab;
@@ -549,7 +549,7 @@ package body Disp_Tree is
    procedure Disp_Tree (Tree: Iir;
                         Tab: Natural := 0;
                         Flat_Decl: Boolean := false) is
-      Ntab: Natural := Inc_Tab (Tab);
+      Ntab: constant Natural := Inc_Tab (Tab);
       Kind : Iir_Kind;
 
       procedure Header (Str: String; Nl: Boolean := true) is
@@ -1158,7 +1158,7 @@ package body Disp_Tree is
             Disp_Tree_Flat (Get_Type_Declarator (Tree), Ntab);
             Header ("base type:");
             declare
-               Base : Iir := Get_Base_Type (Tree);
+               Base : constant Iir := Get_Base_Type (Tree);
                Fl : Boolean;
             begin
                if Base /= Null_Iir
@@ -1742,6 +1742,10 @@ package body Disp_Tree is
             Disp_Tree_Flat (Get_Prefix (Tree), Ntab);
             Header ("type:");
             Disp_Tree_Flat (Get_Type (Tree), Ntab);
+            if Kind /= Iir_Kind_Transaction_Attribute then
+               Header ("parameter:");
+               Disp_Tree (Get_Parameter (Tree), Ntab);
+            end if;
             Header ("has_active_flag: ", False);
             Disp_Flag (Get_Has_Active_Flag (Tree));
          when Iir_Kind_Event_Attribute

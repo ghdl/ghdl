@@ -247,7 +247,7 @@ ortho_init (void)
 {
   tree n;
 
-  input_location.line = 0;
+  input_location = BUILTINS_LOCATION;
 
   /* Create a global binding.  */
   push_binding ();
@@ -372,13 +372,6 @@ ortho_handle_option (size_t code, const char *arg, int value)
     }
 }
 
-#if 0
-void
-linemap_init (void *s)
-{
-}
-#endif
-
 extern int lang_parse_file (const char *filename);
 
 static void
@@ -391,6 +384,9 @@ ortho_parse_file (int debug)
   else
     filename = in_fnames[0];
 
+  linemap_add (line_table, LC_ENTER, 0, filename ? filename :"*no-file*", 1);
+  input_location = linemap_line_start (line_table, 0, 252);
+
   if (!lang_parse_file (filename))
     errorcount++;
   else
@@ -398,19 +394,7 @@ ortho_parse_file (int debug)
       cgraph_finalize_compilation_unit ();
       cgraph_optimize ();
     }
-}
-
-static void
-ortho_expand_function (tree fndecl)
-{
-  if (DECL_CONTEXT (fndecl) != NULL_TREE)
-    {
-      push_function_context ();
-      tree_rest_of_compilation (fndecl);
-      pop_function_context ();
-    }
-  else
-      tree_rest_of_compilation (fndecl);
+  linemap_add (line_table, LC_LEAVE, 0, NULL, 1);
 }
 
 /*  Called by the back-end or by the front-end when the address of EXP
@@ -610,6 +594,7 @@ builtin_function (const char *name,
   make_decl_rtl (decl);
   DECL_BUILT_IN_CLASS (decl) = class;
   DECL_FUNCTION_CODE (decl) = function_code;
+  DECL_SOURCE_LOCATION (decl) = input_location;
   return decl;
 }
 
@@ -651,32 +636,6 @@ static tree
 type_for_mode (enum machine_mode mode, int unsignedp)
 {
   return type_for_size (GET_MODE_BITSIZE (mode), unsignedp);
-}
-
-/*  Return the unsigned version of a TYPE_NODE, a scalar type.  */
-static tree
-unsigned_type (tree type)
-{
-  return type_for_size (TYPE_PRECISION (type), 1);
-}
-
-/*  Return the signed version of a TYPE_NODE, a scalar type.  */
-static tree
-signed_type (tree type)
-{
-  return type_for_size (TYPE_PRECISION (type), 0);
-}
-
-/*  Return a type the same as TYPE except unsigned or signed according to
-    UNSIGNEDP.  */
-static tree
-signed_or_unsigned_type (int unsignedp, tree type)
-{
-  if (!INTEGRAL_TYPE_P (type)
-      || TYPE_UNSIGNED (type) == unsignedp)
-    return type;
-  else
-    return type_for_size (TYPE_PRECISION (type), unsignedp);
 }
 
 #undef LANG_HOOKS_NAME
@@ -752,23 +711,24 @@ const char * const tree_code_name[] = {
 
 union lang_tree_node 
   GTY((desc ("0"),
-       chain_next ("(union lang_tree_node *)TREE_CHAIN (&%h.generic)")))
+       chain_next ("(union lang_tree_node *) GENERIC_NEXT (&%h.generic)")))
 {
-  union tree_node GTY ((tag ("0"), 
-			desc ("tree_node_structure (&%h)"))) 
-    generic;
+  union tree_node GTY ((tag ("0"))) generic;
 };
 
 struct lang_decl GTY(())
 {
+  char dummy;
 };
 
 struct lang_type GTY (())
 {
+  char dummy;
 };
 
 struct language_function GTY (())
 {
+  char dummy;
 };
 
 struct chain_constr_type
@@ -1004,8 +964,7 @@ new_alloca (tree rtype, tree size)
     cur_binding_level->save_stack = 1;
 
   args = tree_cons (NULL_TREE, fold_convert (size_type_node, size), NULL_TREE);
-  res = build3 (CALL_EXPR, ptr_type_node, stack_alloc_function_ptr,
-		 args, NULL_TREE);
+  res = build_call_list (ptr_type_node, stack_alloc_function_ptr, args);
   return fold_convert (rtype, res);
 }
 
@@ -1074,9 +1033,9 @@ new_float_literal (tree ltype, double value)
   else
     hi = s >> (8 * sizeof (HOST_WIDE_INT));
 
-  res = build_int_cst_wide (ltype, lo, hi);
+  res = build_int_cst_wide (long_integer_type_node, lo, hi);
   REAL_VALUE_FROM_INT (r_sign, lo, hi, DFmode);
-  real_2expN (&r_exp, ex - 60);
+  real_2expN (&r_exp, ex - 60, DFmode);
   real_arithmetic (&r, MULT_EXPR, &r_sign, &r_exp);
   res = build_real (ltype, r);
   return res;
@@ -1496,14 +1455,14 @@ ortho_build_addr (tree lvalue, tree atype)
 
 	  ortho_mark_addressable (base);
 
-	  offset = fold_build2 (MULT_EXPR, TREE_TYPE (idx), idx,
+	  idx = fold_convert (sizetype, idx);
+	  offset = fold_build2 (MULT_EXPR, sizetype, idx,
 				array_ref_element_size (lvalue)); 
 
 	  base = array_to_pointer_conversion (base);
 	  base_type = TREE_TYPE (base);
 
-	  res = build2 (PLUS_EXPR, base_type,
-			base, convert (base_type, offset));
+	  res = build2 (POINTER_PLUS_EXPR, base_type, base, offset);
 	}
       else
 	{
@@ -1606,7 +1565,7 @@ new_value (tree lvalue)
 void
 new_debug_line_decl (int line)
 {
-  input_location.line = line;
+  input_location = linemap_line_start (line_table, line, 252);
 }
 
 void
@@ -1806,6 +1765,8 @@ finish_subprogram_decl (struct o_inter_list *interfaces, tree *res)
   decl = build_decl (FUNCTION_DECL, interfaces->ident,
 		     build_function_type (interfaces->rtype,
 					  interfaces->param_list.first));
+  DECL_SOURCE_LOCATION (decl) = input_location;
+
   is_global = current_function_decl == NULL_TREE
     || interfaces->storage == o_storage_external;
   if (is_global)
@@ -1876,7 +1837,7 @@ finish_subprogram_body (void)
   DECL_SAVED_TREE (func) = bind;
 
   /* Initialize the RTL code for the function.  */
-  allocate_struct_function (func);
+  allocate_struct_function (func, false);
 
   /* Store the end of the function.  */
   cfun->function_end_locus = input_location;
@@ -1898,14 +1859,14 @@ finish_subprogram_body (void)
     cgraph_finalize_function (func, false);
 
   current_function_decl = parent;
-  cfun = NULL;
+  set_cfun (NULL);
 }
 
 
 void
 new_debug_line_stmt (int line)
 {
-  input_location.line = line;
+  input_location = linemap_line_start (line_table, line, 252);
 }
 
 void
@@ -1948,10 +1909,9 @@ new_association (struct o_assoc_list *assocs, tree val)
 tree
 new_function_call (struct o_assoc_list *assocs)
 {
-  return build3 (CALL_EXPR,
-		 TREE_TYPE (TREE_TYPE (assocs->subprg)),
-		 build_function_ptr (assocs->subprg),
-		 assocs->list.first, NULL_TREE);
+  return build_call_list (TREE_TYPE (TREE_TYPE (assocs->subprg)),
+			  build_function_ptr (assocs->subprg),
+			  assocs->list.first);
 }
 
 void
@@ -1959,10 +1919,9 @@ new_procedure_call (struct o_assoc_list *assocs)
 {
   tree res;
 
-  res = build3 (CALL_EXPR,
-		TREE_TYPE (TREE_TYPE (assocs->subprg)),
-		build_function_ptr (assocs->subprg),
-		assocs->list.first, NULL_TREE);
+  res = build_call_list (TREE_TYPE (TREE_TYPE (assocs->subprg)),
+			 build_function_ptr (assocs->subprg),
+			 assocs->list.first);
   TREE_SIDE_EFFECTS (res) = 1;
   append_stmt (res);
 }
@@ -1987,7 +1946,8 @@ new_func_return_stmt (tree value)
   res = DECL_RESULT (current_function_decl);
   assign = build2 (MODIFY_EXPR, TREE_TYPE (value), res, value);
   TREE_SIDE_EFFECTS (assign) = 1;
-  stmt = build1 (RETURN_EXPR, TREE_TYPE (value), assign);
+  stmt = build1 (RETURN_EXPR, void_type_node, assign);
+  TREE_SIDE_EFFECTS (stmt) = 1;
   append_stmt (stmt);
 }
 

@@ -45,10 +45,13 @@ package body Nodes is
 
    Free_Chain : Node_Type := Null_Node;
 
+   --  Just to have the default value.
+   pragma Warnings (Off);
    Init_Short  : Node_Record (Format_Short);
    Init_Medium : Node_Record (Format_Medium);
    Init_Fp     : Node_Record (Format_Fp);
    Init_Int    : Node_Record (Format_Int);
+   pragma Warnings (On);
 
    function Create_Node (Format : Format_Type) return Node_Type
    is

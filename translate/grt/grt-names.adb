@@ -18,6 +18,7 @@
 --with Grt.Errors; use Grt.Errors;
 with Ada.Unchecked_Conversion;
 with System.Storage_Elements; --  Work around GNAT bug.
+pragma Unreferenced (System.Storage_Elements);
 with Grt.Processes; use Grt.Processes;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;

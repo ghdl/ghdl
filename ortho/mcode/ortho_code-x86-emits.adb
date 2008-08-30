@@ -28,7 +28,6 @@ with Ortho_Code.Binary; use Ortho_Code.Binary;
 with Ortho_Ident;
 with Ada.Text_IO;
 with Interfaces; use Interfaces;
-with Binary_File; use Binary_File;
 
 package body Ortho_Code.X86.Emits is
    type Insn_Size is (Sz_8, Sz_16, Sz_32l, Sz_32h);
@@ -126,9 +125,7 @@ package body Ortho_Code.X86.Emits is
 --        end case;
 --     end Gen_Imm32;
 
-   procedure Gen_Imm (N : O_Enode; Sz : Insn_Size)
-   is
-      use Interfaces;
+   procedure Gen_Imm (N : O_Enode; Sz : Insn_Size) is
    begin
       case Get_Expr_Kind (N) is
          when OE_Const =>
@@ -811,7 +808,7 @@ package body Ortho_Code.X86.Emits is
             --  addl esp, val
             Gen_B8 (2#100000_01#);
             Gen_B8 (2#11_000_100#);
-            Gen_Le32 (Unsigned_32 (Val));
+            Gen_Le32 (Val);
          end if;
          End_Insn;
       end if;
@@ -1199,11 +1196,9 @@ package body Ortho_Code.X86.Emits is
    procedure Gen_Conv_U8 (Stmt : O_Enode)
    is
       Op : O_Enode;
-      Reg_Op : O_Reg;
       Reg_Res : O_Reg;
    begin
       Op := Get_Expr_Operand (Stmt);
-      Reg_Op := Get_Expr_Reg (Op);
       Reg_Res := Get_Expr_Reg (Stmt);
       case Get_Expr_Mode (Stmt) is
          when Mode_U32
@@ -1223,11 +1218,9 @@ package body Ortho_Code.X86.Emits is
    procedure Gen_Conv_B2 (Stmt : O_Enode)
    is
       Op : O_Enode;
-      Reg_Op : O_Reg;
       Reg_Res : O_Reg;
    begin
       Op := Get_Expr_Operand (Stmt);
-      Reg_Op := Get_Expr_Reg (Op);
       Reg_Res := Get_Expr_Reg (Stmt);
       case Get_Expr_Mode (Stmt) is
          when Mode_U32
@@ -1244,12 +1237,8 @@ package body Ortho_Code.X86.Emits is
    procedure Gen_Conv_I64 (Stmt : O_Enode)
    is
       Op : O_Enode;
-      Reg_Op : O_Reg;
-      Reg_Res : O_Reg;
    begin
       Op := Get_Expr_Operand (Stmt);
-      Reg_Op := Get_Expr_Reg (Op);
-      Reg_Res := Get_Expr_Reg (Stmt);
       case Get_Expr_Mode (Stmt) is
          when Mode_I32 =>
             --  move dx to reg_helper
@@ -1285,11 +1274,8 @@ package body Ortho_Code.X86.Emits is
    end Gen_Conv_I64;
 
    --  Convert FP to xxx.
-   procedure Gen_Conv_Fp (Stmt : O_Enode)
-   is
-      Op : O_Enode;
+   procedure Gen_Conv_Fp (Stmt : O_Enode) is
    begin
-      Op := Get_Expr_Operand (Stmt);
       case Get_Expr_Mode (Stmt) is
          when Mode_I32 =>
             --  subl %esp, 4
@@ -1842,9 +1828,11 @@ package body Ortho_Code.X86.Emits is
                   Error_Emit ("emit_insn: oe_arg", Stmt);
             end case;
          when OE_Setup_Frame =>
+            pragma Warnings (Off);
             if Flags.Stack_Boundary > 4 then
                Emit_Setup_Frame (Stmt);
             end if;
+            pragma Warnings (On);
          when OE_Call =>
             Emit_Call (Stmt);
          when OE_Intrinsic =>
@@ -1985,8 +1973,6 @@ package body Ortho_Code.X86.Emits is
    procedure Emit_Prologue (Subprg : Subprogram_Data_Acc)
    is
       use Ortho_Code.Decls;
-      use Binary_File;
-      use Interfaces;
       use Ortho_Code.Flags;
       use Ortho_Code.X86.Insns;
       Sym : Symbol;
@@ -2070,7 +2056,6 @@ package body Ortho_Code.X86.Emits is
 
    procedure Emit_Epilogue (Subprg : Subprogram_Data_Acc)
    is
-      use Binary_File;
       use Ortho_Code.Decls;
       use Ortho_Code.Types;
       use Ortho_Code.Flags;

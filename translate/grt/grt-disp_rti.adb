@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Errors; use Grt.Errors;
-with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Hooks; use Grt.Hooks;
 
 package body Grt.Disp_Rti is
@@ -153,7 +152,7 @@ package body Grt.Disp_Rti is
                                Vals : Ghdl_Uc_Array_Acc;
                                Is_Sig : Boolean)
    is
-      Nbr_Dim : Ghdl_Index_Type := Rti.Nbr_Dim;
+      Nbr_Dim : constant Ghdl_Index_Type := Rti.Nbr_Dim;
       Rngs : Ghdl_Range_Array (0 .. Nbr_Dim - 1);
       Obj : Address;
    begin
@@ -166,7 +165,7 @@ package body Grt.Disp_Rti is
    procedure Disp_Record_Value (Stream : FILEs;
                                 Rti : Ghdl_Rtin_Type_Record_Acc;
                                 Ctxt : Rti_Context;
-                                Obj : in out Address;
+                                Obj : Address;
                                 Is_Sig : Boolean)
    is
       El : Ghdl_Rtin_Element_Acc;
@@ -214,9 +213,9 @@ package body Grt.Disp_Rti is
                               To_Ghdl_Uc_Array_Acc (Obj), Is_Sig);
          when Ghdl_Rtik_Subtype_Array =>
             declare
-               St : Ghdl_Rtin_Subtype_Array_Acc :=
+               St : constant Ghdl_Rtin_Subtype_Array_Acc :=
                  To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
-               Bt : Ghdl_Rtin_Type_Array_Acc := St.Basetype;
+               Bt : constant Ghdl_Rtin_Type_Array_Acc := St.Basetype;
                Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
                B : Address;
             begin
@@ -228,9 +227,9 @@ package body Grt.Disp_Rti is
             end;
          when Ghdl_Rtik_Subtype_Array_Ptr =>
             declare
-               St : Ghdl_Rtin_Subtype_Array_Acc :=
+               St : constant Ghdl_Rtin_Subtype_Array_Acc :=
                  To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
-               Bt : Ghdl_Rtin_Type_Array_Acc := St.Basetype;
+               Bt : constant Ghdl_Rtin_Type_Array_Acc := St.Basetype;
                Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
                B : Address;
             begin

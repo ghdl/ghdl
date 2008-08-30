@@ -16,12 +16,9 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with System;
-with System.Storage_Elements;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
 with Ada.Unchecked_Conversion;
-with Ada.Unchecked_Deallocation;
-with GNAT.Table;
 with Hex_Images; use Hex_Images;
 with Disassemble;
 
@@ -169,7 +166,7 @@ package body Binary_File is
       Resize (Sect, New_Max);
    end Sect_Prealloc;
 
-   procedure Merge_Section (Dest : Section_Acc; Src : in out Section_Acc)
+   procedure Merge_Section (Dest : Section_Acc; Src : Section_Acc)
    is
       Rel : Reloc_Acc;
    begin
@@ -309,7 +306,7 @@ package body Binary_File is
       while Reloc /= null loop
          if Reloc.Addr = Off then
             declare
-               Str : String := Get_Symbol_Name (Reloc.Sym);
+               Str : constant String := Get_Symbol_Name (Reloc.Sym);
             begin
                Line (Line'First .. Line'First + Str'Length - 1) := Str;
                Line_Len := Line_Len + Str'Length;
@@ -671,9 +668,7 @@ package body Binary_File is
       Cur_Sect.Pc := Cur_Sect.Pc + Pc_Type (Length);
    end Gen_Space;
 
-   procedure Set_Symbol_Pc (Sym : Symbol; Export : Boolean)
-   is
-      use Ada.Text_IO;
+   procedure Set_Symbol_Pc (Sym : Symbol; Export : Boolean) is
    begin
       case Get_Scope (Sym) is
          when Sym_Local =>
@@ -953,9 +948,8 @@ package body Binary_File is
 --       Tmp := Val + N - 1;
 --       return Tmp - (Tmp mod N);
 --    end Align_Pow;
-   procedure Disp_Stats
-   is
-      use Ada.Text_IO;
+
+   procedure Disp_Stats is
    begin
       Put_Line ("Number of Symbols: " & Symbol'Image (Symbols.Last));
    end Disp_Stats;
@@ -964,7 +958,6 @@ package body Binary_File is
    is
       Sect : Section_Acc;
       Rel, N_Rel : Reloc_Acc;
-      Old_Rel : Reloc_Acc;
    begin
       Symbols.Free;
       Sect := Section_Chain;
@@ -973,7 +966,6 @@ package body Binary_File is
          Rel := Sect.First_Reloc;
          while Rel /= null loop
             N_Rel := Rel.Sect_Next;
-            Old_Rel := Rel;
             Free (Rel);
             Rel := N_Rel;
          end loop;

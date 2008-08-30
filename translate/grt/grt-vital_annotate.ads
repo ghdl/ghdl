@@ -20,12 +20,12 @@ with Grt.Sdf; use Grt.Sdf;
 package Grt.Vital_Annotate is
    pragma Elaborate_Body (Grt.Vital_Annotate);
 
-   procedure Sdf_Header (Context : in out Sdf_Context_Type);
-   procedure Sdf_Celltype (Context : in out Sdf_Context_Type);
+   procedure Sdf_Header (Context : Sdf_Context_Type);
+   procedure Sdf_Celltype (Context : Sdf_Context_Type);
    procedure Sdf_Instance (Context : in out Sdf_Context_Type;
                            Instance : String;
                            Status : out Boolean);
-   procedure Sdf_Instance_End (Context : in out Sdf_Context_Type;
+   procedure Sdf_Instance_End (Context : Sdf_Context_Type;
                                Status : out Boolean);
    procedure Sdf_Generic (Context : in out Sdf_Context_Type;
                           Name : String;

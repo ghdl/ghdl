@@ -18,7 +18,6 @@
 with Ada.Text_IO;
 with Ada.Unchecked_Conversion;
 with GNAT.Table;
-with Ada.Text_IO;
 with Ortho_Code.Consts; use Ortho_Code.Consts;
 with Ortho_Code.Debug;
 with Ortho_Code.Abi; use Ortho_Code.Abi;

@@ -15,7 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Types; use Types;
 with Std_Package; use Std_Package;
 with Errorout; use Errorout;
 with Flags;
@@ -904,7 +903,7 @@ package body Sem_Expr is
    --  update states.
    procedure Sem_Subprogram_Call_Finish (Expr : Iir; Imp : Iir)
    is
-      Subprg : Iir := Get_Current_Subprogram;
+      Subprg : constant Iir := Get_Current_Subprogram;
    begin
       Set_Implementation (Expr, Imp);
       Set_Function_Call_Staticness (Expr, Imp);
@@ -1225,8 +1224,6 @@ package body Sem_Expr is
 
    procedure Sem_Procedure_Call (Call : Iir_Procedure_Call; Stmt : Iir)
    is
-      use Iirs_Utils;
-
       Imp: Iir;
       Name : Iir;
       Parameters_Chain : Iir;
@@ -1645,7 +1642,7 @@ package body Sem_Expr is
    function Check_Type_For_String_Literal (A_Type : Iir; Expr : Iir)
                                           return Boolean
    is
-      Base_Type : Iir := Get_Base_Type (A_Type);
+      Base_Type : constant Iir := Get_Base_Type (A_Type);
       El_Bt : Iir;
    begin
       --  LRM 7.3.1
@@ -1711,6 +1708,7 @@ package body Sem_Expr is
 
       Ptr : String_Fat_Acc;
       El : Iir;
+      pragma Unreferenced (El);
       Len : Natural;
    begin
       Len := Get_String_Length (Lit);
@@ -2420,7 +2418,7 @@ package body Sem_Expr is
       procedure Add_Match (El : Iir; Rec_El : Iir_Element_Declaration)
       is
          Ass_Type : Iir;
-         Pos : Natural := Natural (Get_Element_Position (Rec_El));
+         Pos : constant Natural := Natural (Get_Element_Position (Rec_El));
       begin
          if Matches (Pos) /= Null_Iir then
             Error_Msg_Sem
@@ -2634,7 +2632,6 @@ package body Sem_Expr is
                                          Constrained : Boolean;
                                          Dim: Natural)
    is
-      Res: Boolean;
       Assoc_Chain : Iir;
       Choice: Iir;
       Is_Positional: Tri_State_Type;
@@ -2655,7 +2652,6 @@ package body Sem_Expr is
 
       Info : Array_Aggr_Info renames Infos (Dim);
    begin
-      Res := True;
       Index_List := Get_Index_Subtype_List (A_Type);
       Index_Type := Get_Nth_Element (Index_List, Dim - 1);
 
@@ -2995,8 +2991,8 @@ package body Sem_Expr is
    is
       A_Subtype: Iir;
       Base_Type : Iir;
-      Index_List : Iir_List := Get_Index_Subtype_List (Aggr_Type);
-      Nbr_Dim : Natural := Get_Nbr_Elements (Index_List);
+      Index_List : constant Iir_List := Get_Index_Subtype_List (Aggr_Type);
+      Nbr_Dim : constant Natural := Get_Nbr_Elements (Index_List);
       Infos : Array_Aggr_Info_Arr (1 .. Nbr_Dim);
       Aggr_Constrained : Boolean;
       Info, Prev_Info : Iir_Aggregate_Info;

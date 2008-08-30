@@ -15,7 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Types; use Types;
 with Scan; use Scan;
 with Tokens; use Tokens;
 with Errorout; use Errorout;
@@ -653,7 +652,7 @@ package body Iirs_Utils is
 
    function Is_Unidim_Array_Type (A_Type : Iir) return Boolean
    is
-      Base_Type : Iir := Get_Base_Type (A_Type);
+      Base_Type : constant Iir := Get_Base_Type (A_Type);
    begin
       if Get_Kind (Base_Type) = Iir_Kind_Array_Type_Definition
         and then Get_Nbr_Elements (Get_Index_Subtype_List (Base_Type)) = 1

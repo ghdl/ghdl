@@ -417,7 +417,7 @@ package body Ieee.Vital_Timing is
       use Name_Table;
 
       Len : Natural;
-      P : Natural := Gen_Name_Pos;
+      P : constant Natural := Gen_Name_Pos;
       C : Character;
    begin
       Len := 0;
@@ -969,8 +969,10 @@ package body Ieee.Vital_Timing is
      (Decl : Iir_Constant_Interface_Declaration)
    is
       Oport : Iir;
+      pragma Unreferenced (Oport);
       Pos : Natural;
       Kind : Timing_Generic_Type_Kind;
+      pragma Unreferenced (Kind);
    begin
       if not Check_Timing_Generic_Prefix (Decl, 8) then
          return;
@@ -1012,6 +1014,7 @@ package body Ieee.Vital_Timing is
       Iport : Iir;
       Oport : Iir;
       Cport : Iir;
+      pragma Unreferenced (Cport);
       Clock_Start : Natural;
       Clock_End : Natural;
    begin

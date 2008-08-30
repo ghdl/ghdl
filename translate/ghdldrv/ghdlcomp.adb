@@ -122,9 +122,6 @@ package body Ghdlcomp is
       end;
       Hooks.Set_Run_Options (Args (Opt_Arg .. Args'Last));
       Hooks.Run.all;
-   exception
-      when Errorout.Option_Error =>
-         raise;
    end Perform_Action;
 
 
@@ -197,7 +194,7 @@ package body Ghdlcomp is
             Elab_Arg := Natural'Last;
             for I in Args'Range loop
                declare
-                  Arg : String := Args (I).all;
+                  Arg : constant String := Args (I).all;
                   Res : Iir_Design_File;
                   Design : Iir;
                   Next_Design : Iir;
@@ -246,9 +243,6 @@ package body Ghdlcomp is
             Error_Msg_Option ("options after unit are ignored");
          end if;
       end if;
-   exception
-      when Errorout.Option_Error =>
-         raise;
    end Perform_Action;
 
    --  Command -a
@@ -346,8 +340,6 @@ package body Ghdlcomp is
          else
             raise;
          end if;
-      when Errorout.Option_Error =>
-         raise;
    end Perform_Action;
 
    --  Command -e
@@ -427,8 +419,6 @@ package body Ghdlcomp is
          else
             raise;
          end if;
-      when Errorout.Option_Error =>
-         raise;
    end Perform_Action;
 
    --  Command dispconfig.
@@ -636,7 +626,7 @@ package body Ghdlcomp is
       Put ("GHDLFLAGS=");
       for I in 2 .. Argument_Count loop
          declare
-            Arg : String := Argument (I);
+            Arg : constant String := Argument (I);
          begin
             if Arg (1) = '-' then
                if (Arg'Length > 10 and then Arg (1 .. 10) = "--workdir=")

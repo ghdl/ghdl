@@ -22,7 +22,6 @@ with Ada.Unchecked_Deallocation;
 with GNAT.Table;
 with GNAT.OS_Lib;
 with GNAT.Directory_Operations;
-with System;
 with Name_Table; use Name_Table;
 with Str_Table;
 with Ada.Calendar;
@@ -859,8 +858,8 @@ package body Files_Map is
    function Is_Eq (L : Time_Stamp_Id; R : Time_Stamp_Id) return Boolean
    is
       use Str_Table;
-      L_Str : String_Fat_Acc := Get_String_Fat_Acc (String_Id (L));
-      R_Str : String_Fat_Acc := Get_String_Fat_Acc (String_Id (R));
+      L_Str : constant String_Fat_Acc := Get_String_Fat_Acc (String_Id (L));
+      R_Str : constant String_Fat_Acc := Get_String_Fat_Acc (String_Id (R));
    begin
       return L_Str (1 .. Time_Stamp_String'Length)
         = R_Str (1 .. Time_Stamp_String'Length);
@@ -869,8 +868,8 @@ package body Files_Map is
    function Is_Gt (L : Time_Stamp_Id; R : Time_Stamp_Id) return Boolean
    is
       use Str_Table;
-      L_Str : String_Fat_Acc := Get_String_Fat_Acc (String_Id (L));
-      R_Str : String_Fat_Acc := Get_String_Fat_Acc (String_Id (R));
+      L_Str : constant String_Fat_Acc := Get_String_Fat_Acc (String_Id (L));
+      R_Str : constant String_Fat_Acc := Get_String_Fat_Acc (String_Id (R));
    begin
       return L_Str (1 .. Time_Stamp_String'Length)
         > R_Str (1 .. Time_Stamp_String'Length);

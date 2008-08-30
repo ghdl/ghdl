@@ -638,7 +638,7 @@ package body Ortho_Code.Exprs is
    is
       Res : O_Enode := O_Enode_Null;
       Blk : O_Enode;
-      Last_Blk : O_Enode := Get_Label_Block (Label);
+      Last_Blk : constant O_Enode := Get_Label_Block (Label);
    begin
       Blk := Cur_Block;
       while Blk /= Last_Blk loop
@@ -1546,7 +1546,6 @@ package body Ortho_Code.Exprs is
    procedure Disp_Enode (Indent : Natural; N : O_Enode)
    is
       use Ada.Text_IO;
-      use Ortho_Code.Debug;
       use Ortho_Code.Debug.Int32_IO;
    begin
       Set_Col (Count (Indent));

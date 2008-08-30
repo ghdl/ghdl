@@ -33,4 +33,15 @@ package Grt.C is
 
    --  Type int.  It is an alias on Integer for simplicity.
    subtype int is Integer;
+
+   --  Low level memory management.
+   procedure Free (Addr : System.Address);
+   function Malloc (Size : size_t) return System.Address;
+   function Realloc (Ptr : System.Address; Size : size_t)
+                    return System.Address;
+
+private
+   pragma Import (C, Free);
+   pragma Import (C, Malloc);
+   pragma Import (C, Realloc);
 end Grt.C;

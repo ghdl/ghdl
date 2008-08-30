@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
 with Ada.Characters.Handling;
-with Tokens; use Tokens;
 with Errorout; use Errorout;
 with Name_Table;
 with Files_Map; use Files_Map;

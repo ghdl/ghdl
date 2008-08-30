@@ -972,16 +972,7 @@ package body Ortho_Debug is
    is
       subtype O_Lnode_Indexed is O_Lnode_Type (OL_Indexed_Element);
       Res : O_Lnode;
-      Rtype : O_Tnode;
    begin
-      case Arr.Rtype.Kind is
-         when ON_Array_Type =>
-            Rtype := Arr.Rtype.El_Type;
-         when ON_Array_Sub_Type =>
-            Rtype := Arr.Rtype.Base_Type.El_Type;
-         when others =>
-            raise Type_Error;
-      end case;
       Check_Ref (Arr);
       Res := new O_Lnode_Indexed'(Kind => OL_Indexed_Element,
                                   Rtype => Get_Base_Type (Arr.Rtype).El_Type,
@@ -1231,20 +1222,20 @@ package body Ortho_Debug is
 
    procedure New_Debug_Line_Decl (Line : Natural)
    is
-      subtype O_Dnode_Line_Decl is O_Dnode (ON_Debug_Line_Decl);
-      N : O_Dnode_Line_Decl;
+      subtype O_Dnode_Line_Decl is O_Dnode_Type (ON_Debug_Line_Decl);
+      N : O_Dnode;
    begin
-      N := new O_Dnode_Type (ON_Debug_Line_Decl);
+      N := new O_Dnode_Line_Decl;
       N.Line := Line;
       Add_Decl (N, False);
    end New_Debug_Line_Decl;
 
    procedure New_Debug_Comment_Decl (Comment : String)
    is
-      subtype O_Dnode_Comment_Decl is O_Dnode (ON_Debug_Comment_Decl);
-      N : O_Dnode_Comment_Decl;
+      subtype O_Dnode_Comment_Decl is O_Dnode_Type (ON_Debug_Comment_Decl);
+      N : O_Dnode;
    begin
-      N := new O_Dnode_Type (ON_Debug_Comment_Decl);
+      N := new O_Dnode_Comment_Decl;
       N.Comment := new String'(Comment);
       Add_Decl (N, False);
    end New_Debug_Comment_Decl;
@@ -1321,6 +1312,8 @@ package body Ortho_Debug is
       subtype O_Dnode_Const_Value is O_Dnode_Type (ON_Const_Value);
       N : O_Dnode;
    begin
+      Const := Const;
+
       if Const.Const_Value /= O_Dnode_Null then
          --  Constant already has a value.
          raise Syntax_Error;
@@ -1349,6 +1342,8 @@ package body Ortho_Debug is
    procedure Finish_Const_Value (Const : in out O_Dnode; Val : O_Cnode)
    is
    begin
+      Const := Const;
+
       if Const.Const_Value = O_Dnode_Null then
          --  Start_Const_Value not called.
          raise Syntax_Error;

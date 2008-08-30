@@ -27,23 +27,15 @@ AGCC_INC_FLAGS=-I$(AGCC_GCCOBJ_DIR)/gcc -I$(AGCC_GCCSRC_DIR)/include \
  -I$(AGCC_GCCSRC_DIR)/libcpp/include
 AGCC_CFLAGS=-g -Wall -DIN_GCC $(AGCC_INC_FLAGS)
 
-AGCC_LOCAL_OBJS=ortho-lang.o gcc-version.o
+AGCC_LOCAL_OBJS=ortho-lang.o
 
 AGCC_DEPS := $(AGCC_LOCAL_OBJS)
 AGCC_OBJS := $(AGCC_LOCAL_OBJS) \
 	$(AGCC_GCCOBJ_DIR)gcc/toplev.o \
+	$(AGCC_GCCOBJ_DIR)gcc/attribs.o \
 	$(AGCC_GCCOBJ_DIR)gcc/libbackend.a \
 	$(AGCC_GCCOBJ_DIR)libcpp/libcpp.a \
 	$(AGCC_GCCOBJ_DIR)libiberty/libiberty.a
-
-gcc-version.c: $(AGCC_GCCSRC_DIR)/gcc/BASE-VER
-	-$(RM) -f $@
-	echo '#include "version.h"' > $@
-	echo "const char version_string[] = \""`cat $<` "(ghdl)\";" >> $@
-	echo 'const char bug_report_url[] = "<URL:http://gna.org/projects/ghdl>";' >> $@
-
-gcc-version.o: gcc-version.c
-	$(CC) -c -o $@ $< $(AGCC_CFLAGS)
 
 ortho-lang.o: $(agcc_srcdir)/ortho-lang.c \
  $(AGCC_GCCOBJ_DIR)gcc/gtype-vhdl.h \

@@ -66,7 +66,7 @@ package body Ortho_Ident is
    function Get_String (Id : O_Ident) return String
    is
       Res : String (1 .. Get_String_Length (Id));
-      Start : Natural := Ids.Table (Id);
+      Start : constant Natural := Ids.Table (Id);
    begin
       for I in Res'Range loop
          Res (I) := Strs.Table (Start + I - 1);
@@ -76,8 +76,8 @@ package body Ortho_Ident is
 
    function Is_Equal (Id : O_Ident; Str : String) return Boolean
    is
-      Start : Natural := Ids.Table (Id);
-      Len : Natural := Get_String_Length (Id);
+      Start : constant Natural := Ids.Table (Id);
+      Len : constant Natural := Get_String_Length (Id);
    begin
       if Len /= Str'Length then
          return False;

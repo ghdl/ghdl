@@ -79,7 +79,7 @@ ghdl1$(exeext): $(AGCC_OBJS) $(AGCC_DEPS) force
 	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS)
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aOvhdl ortho_gcc-main \
 	 -bargs -E -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
-	 -largs $(AGCC_OBJS) $(LIBS)
+	 -largs $(AGCC_OBJS) $(LIBS) $(GMPLIBS)
 
 # The driver for ghdl.
 ghdl$(exeext): force

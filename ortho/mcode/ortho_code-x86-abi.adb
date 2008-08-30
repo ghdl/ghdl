@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ortho_Code.Decls; use Ortho_Code.Decls;
-with Ortho_Code.Types; use Ortho_Code.Types;
 with Ortho_Code.Exprs; use Ortho_Code.Exprs;
 with Ortho_Code.Consts;
 with Ortho_Code.Debug;
@@ -177,8 +176,8 @@ package body Ortho_Code.X86.Abi is
    is
       use Ada.Text_IO;
       use Ortho_Code.Debug.Int32_IO;
-      Obj : O_Dnode := Get_Addr_Object (Stmt);
-      Frame : O_Enode := Get_Addrl_Frame (Stmt);
+      Obj : constant O_Dnode := Get_Addr_Object (Stmt);
+      Frame : constant O_Enode := Get_Addrl_Frame (Stmt);
    begin
       if Frame = O_Enode_Null then
          Put ("fp");
@@ -550,13 +549,11 @@ package body Ortho_Code.X86.Abi is
    is
       use Ada.Text_IO;
 
-      Last : O_Enode;
       Stmt : O_Enode;
    begin
       Disp_Subprg_Decl (Get_Body_Decl (Subprg));
 
       Stmt := Get_Body_Stmt (Subprg);
-      Last := Get_Entry_Leave (Stmt);
       loop
          exit when Stmt = O_Enode_Null;
          Disp_Stmt (Stmt);

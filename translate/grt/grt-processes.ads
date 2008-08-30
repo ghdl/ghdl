@@ -205,7 +205,7 @@ private
                   "__ghdl_process_wait_add_sensitivity");
    pragma Export (C, Ghdl_Process_Wait_Set_Timeout,
                   "__ghdl_process_wait_set_timeout");
-   pragma Export (C, Ghdl_Process_Wait_Suspend,
+   pragma Export (Ada, Ghdl_Process_Wait_Suspend,
                   "__ghdl_process_wait_suspend");
    pragma Export (C, Ghdl_Process_Wait_Close,
                   "__ghdl_process_wait_close");

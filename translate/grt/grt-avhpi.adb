@@ -126,9 +126,9 @@ package body Grt.Avhpi is
             case Res.N_Type.Kind is
                when Ghdl_Rtik_Subtype_Array =>
                   declare
-                     St : Ghdl_Rtin_Subtype_Array_Acc :=
+                     St : constant Ghdl_Rtin_Subtype_Array_Acc :=
                        To_Ghdl_Rtin_Subtype_Array_Acc (Res.N_Type);
-                     Bt : Ghdl_Rtin_Type_Array_Acc := St.Basetype;
+                     Bt : constant Ghdl_Rtin_Type_Array_Acc := St.Basetype;
                      Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
                   begin
                      Bound_To_Range
@@ -155,6 +155,7 @@ package body Grt.Avhpi is
                        El_Type : Ghdl_Rti_Access;
                        Off : Ghdl_Index_Type) return Address
    is
+      pragma Unreferenced (Ctxt);
       Is_Sig : Boolean;
       El_Size : Ghdl_Index_Type;
       El_Type1 : Ghdl_Rti_Access;
@@ -389,7 +390,6 @@ package body Grt.Avhpi is
    is
       Blk : Ghdl_Rtin_Block_Acc;
       Ch : Ghdl_Rti_Access;
-      Obj : Ghdl_Rtin_Object_Acc;
    begin
       Blk := To_Ghdl_Rtin_Block_Acc (Iterator.Ctxt.Block);
 
@@ -420,7 +420,6 @@ package body Grt.Avhpi is
             exit when Iterator.It_Cur >= Blk.Nbr_Child;
 
             Ch := Blk.Children (Iterator.It_Cur);
-            Obj := To_Ghdl_Rtin_Object_Acc (Ch);
 
             Iterator.It_Cur := Iterator.It_Cur + 1;
 
@@ -874,11 +873,12 @@ package body Grt.Avhpi is
                when VhpiSubtypeIndicK =>
                   if Ref.Atype.Kind = Ghdl_Rtik_Subtype_Array then
                      declare
-                        Arr_Subtype : Ghdl_Rtin_Subtype_Array_Acc :=
+                        Arr_Subtype : constant Ghdl_Rtin_Subtype_Array_Acc :=
                           To_Ghdl_Rtin_Subtype_Array_Acc (Ref.Atype);
-                        Basetype : Ghdl_Rtin_Type_Array_Acc :=
+                        Basetype : constant Ghdl_Rtin_Type_Array_Acc :=
                           Arr_Subtype.Basetype;
-                        Idx : Ghdl_Index_Type := Ghdl_Index_Type (Index);
+                        Idx : constant Ghdl_Index_Type :=
+                          Ghdl_Index_Type (Index);
                         Bounds : Ghdl_Range_Array (0 .. Basetype.Nbr_Dim - 1);
                         Range_Basetype : Ghdl_Rti_Access;
                      begin
@@ -961,6 +961,7 @@ package body Grt.Avhpi is
       case Property is
          when VhpiLeftBoundP =>
             if Obj.Kind /= VhpiIntRangeK then
+               Res := 0;
                Error := AvhpiErrorBadRel;
                return;
             end if;
@@ -999,6 +1000,7 @@ package body Grt.Avhpi is
       case Property is
          when VhpiIsUpP =>
             if Obj.Kind /= VhpiIntRangeK then
+               Res := False;
                Error := AvhpiErrorBadRel;
                return;
             end if;

@@ -432,9 +432,6 @@ package body Ortho_Code.Disps is
                end loop;
                Put ('}');
             end;
-         when others =>
-            Put_Line (Standard_Error, "disps.disp_type: unknown type "
-                      & OT_Kind'Image (Kind));
       end case;
    end Disp_Type;
 
@@ -549,9 +546,6 @@ package body Ortho_Code.Disps is
             Disp_Subprg (Indent, Get_Body_Stmt (Decl));
          when OD_Block =>
             null;
-         when others =>
-            Put_Line (Standard_Error, "debug.disp_decl: unknown decl "
-                      & OD_Kind'Image (Kind));
       end case;
       if Nl then
          New_Line;
@@ -743,12 +737,10 @@ package body Ortho_Code.Disps is
    is
       Stmt : O_Enode;
       N_Ident : Natural := Ident;
-      Kind : OE_Kind;
    begin
       Stmt := S_Entry;
       loop
          Stmt := Get_Stmt_Link (Stmt);
-         Kind := Get_Expr_Kind (Stmt);
          Disp_Stmt (N_Ident, Stmt);
          exit when Get_Expr_Kind (Stmt) = OE_Leave;
       end loop;

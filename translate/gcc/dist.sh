@@ -39,7 +39,7 @@
 set -e
 
 # GCC version
-GCCVERSION=4.2.4
+GCCVERSION=4.3.1
 # Machine name used by GCC
 MACHINE=i686-pc-linux-gnu
 # Directory where GCC sources (and objects) stay.
@@ -170,7 +170,7 @@ do_compile ()
   rm -rf $GCCDISTOBJ
   mkdir $GCCDISTOBJ
   cd $GCCDISTOBJ
-  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX --disable-bootstrap
+  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX --disable-bootstrap --with-bugurl="<URL:http://gna.org/projects/ghdl>"
   make CFLAGS="-O -g"
   make -C gcc vhdl.info
   cd $CWD

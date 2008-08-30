@@ -135,6 +135,7 @@ package body Trans_Be is
    is
       use Translation;
       Fi : Foreign_Info_Type;
+      pragma Unreferenced (Fi);
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Design_Unit =>

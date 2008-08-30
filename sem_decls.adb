@@ -31,8 +31,8 @@ with Sem_Scopes; use Sem_Scopes;
 with Sem_Names; use Sem_Names;
 with Sem_Specs; use Sem_Specs;
 with Sem_Types; use Sem_Types;
-with Iir_Chains; use Iir_Chains;
 with Xrefs; use Xrefs;
+use Iir_Chains;
 
 package body Sem_Decls is
    --  Emit an error if the type of DECL is a file type, access type,

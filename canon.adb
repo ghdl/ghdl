@@ -21,7 +21,6 @@ with Types; use Types;
 with Name_Table;
 with Sem;
 with Std_Names;
-with Types; use Types;
 with Iir_Chains; use Iir_Chains;
 with Flags;
 
@@ -859,7 +858,7 @@ package body Canon is
    --  be PROC, or an 'if' statement if the assignment is guarded.
    -- See LRM93 9.5
    procedure Canon_Concurrent_Signal_Assignment
-     (Stmt: in out Iir;
+     (Stmt: Iir;
       Proc: out Iir_Sensitized_Process_Statement;
       Chain : out Iir)
    is

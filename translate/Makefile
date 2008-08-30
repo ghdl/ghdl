@@ -18,7 +18,7 @@
 
 BE=gcc
 ortho_srcdir=../ortho
-GNAT_FLAGS=-aI.. -gnaty3befhkmr -gnata -gnatf -gnatwlcru
+GNAT_FLAGS=-aI.. -gnaty3befhkmr -gnata -gnatf -gnatwa -gnatwe
 #GNAT_FLAGS+=-O -gnatn
 LN=ln -s
 

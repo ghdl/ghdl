@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with System.Storage_Elements; --  Work around GNAT bug.
+pragma Unreferenced (System.Storage_Elements);
 with Grt.Vcd; use Grt.Vcd;
 with Grt.Errors; use Grt.Errors;
 with Grt.Types; use Grt.Types;
@@ -25,49 +26,44 @@ with Grt.Zlib; use Grt.Zlib;
 with Grt.C; use Grt.C;
 
 package body Grt.Vcdz is
-   type Vcd_IO_Gzip is new Vcd_IO_Handler with record
-      Stream : gzFile;
-   end record;
-   type IO_Gzip_Acc is access Vcd_IO_Gzip;
-   procedure Vcd_Put (Handler : access Vcd_IO_Gzip; Str : String);
-   procedure Vcd_Putc (Handler : access Vcd_IO_Gzip; C : Character);
-   procedure Vcd_Close (Handler : access Vcd_IO_Gzip);
+   Stream : gzFile;
 
-   procedure Vcd_Put (Handler : access Vcd_IO_Gzip; Str : String)
+   procedure My_Vcd_Put (Str : String)
    is
       R : int;
+      pragma Unreferenced (R);
    begin
-      R := gzwrite (Handler.Stream, Str'Address, Str'Length);
-   end Vcd_Put;
+      R := gzwrite (Stream, Str'Address, Str'Length);
+   end My_Vcd_Put;
 
-   procedure Vcd_Putc (Handler : access Vcd_IO_Gzip; C : Character)
+   procedure My_Vcd_Putc (C : Character)
    is
       R : int;
+      pragma Unreferenced (R);
    begin
-      R := gzputc (Handler.Stream, Character'Pos (C));
-   end Vcd_Putc;
+      R := gzputc (Stream, Character'Pos (C));
+   end My_Vcd_Putc;
 
-   procedure Vcd_Close (Handler : access Vcd_IO_Gzip) is
+   procedure My_Vcd_Close is
    begin
-      gzclose (Handler.Stream);
-      Handler.Stream := NULL_gzFile;
-   end Vcd_Close;
+      gzclose (Stream);
+      Stream := NULL_gzFile;
+   end My_Vcd_Close;
 
    --  VCD filename.
 
    --  Return TRUE if OPT is an option for VCD.
    function Vcdz_Option (Opt : String) return Boolean
    is
-      F : Natural := Opt'First;
+      F : constant Natural := Opt'First;
       Vcd_Filename : String_Access := null;
-      Handler : IO_Gzip_Acc;
       Mode : constant String := "wb" & NUL;
    begin
       if Opt'Length < 7 or else Opt (F .. F + 6) /= "--vcdgz" then
          return False;
       end if;
       if Opt'Length > 7 and then Opt (F + 7) = '=' then
-         if H /= null then
+         if Vcd_Close /= null then
             Error ("--vcdgz: file already set");
             return True;
          end if;
@@ -77,15 +73,16 @@ package body Grt.Vcdz is
          Vcd_Filename (1 .. Opt'Length - 8) := Opt (F + 8 .. Opt'Last);
          Vcd_Filename (Vcd_Filename'Last) := NUL;
 
-         Handler := new Vcd_IO_Gzip;
-         Handler.Stream := gzopen (Vcd_Filename.all'Address, Mode'Address);
-         if Handler.Stream = NULL_gzFile then
+         Stream := gzopen (Vcd_Filename.all'Address, Mode'Address);
+         if Stream = NULL_gzFile then
             Error_C ("cannot open ");
             Error_E (Vcd_Filename (Vcd_Filename'First
                                    .. Vcd_Filename'Last - 1));
             return True;
          end if;
-         H := Handler_Acc (Handler);
+         Vcd_Putc := My_Vcd_Putc'Access;
+         Vcd_Put := My_Vcd_Put'Access;
+         Vcd_Close := My_Vcd_Close'Access;
          return True;
       else
          return False;

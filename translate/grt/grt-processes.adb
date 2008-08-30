@@ -15,14 +15,13 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with GNAT.Table;
+with Grt.Table;
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with System.Storage_Elements; --  Work around GNAT bug.
-with Grt.Stack2; use Grt.Stack2;
+pragma Unreferenced (System.Storage_Elements);
 with Grt.Disp;
 with Grt.Astdio;
-with Grt.Signals; use Grt.Signals;
 with Grt.Errors; use Grt.Errors;
 with Grt.Stacks; use Grt.Stacks;
 with Grt.Options;
@@ -30,28 +29,26 @@ with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Utils;
 with Grt.Hooks;
 with Grt.Disp_Signals;
-with Grt.Stdio;
 with Grt.Stats;
 with Grt.Threads; use Grt.Threads;
+pragma Elaborate_All (Grt.Table);
 
 package body Grt.Processes is
    Last_Time : constant Std_Time := Std_Time'Last;
 
    --  Table of processes.
-   package Process_Table is new GNAT.Table
+   package Process_Table is new Grt.Table
      (Table_Component_Type => Process_Type,
       Table_Index_Type => Process_Id,
       Table_Low_Bound => 1,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
    --  List of non_sensitized processes.
-   package Non_Sensitized_Process_Table is new GNAT.Table
+   package Non_Sensitized_Process_Table is new Grt.Table
      (Table_Component_Type => Process_Id,
       Table_Index_Type => Natural,
       Table_Low_Bound => 1,
-      Table_Initial => 2,
-      Table_Increment => 100);
+      Table_Initial => 2);
 
    --  List of processes to be resume at next cycle.
    type Process_Id_Array is array (Natural range <>) of Process_Id;
@@ -74,7 +71,7 @@ package body Grt.Processes is
 
    procedure Init is
    begin
-      Process_Table.Init;
+      null;
    end Init;
 
    function Get_Nbr_Processes return Natural is
@@ -380,7 +377,7 @@ package body Grt.Processes is
 
    procedure Ghdl_Protected_Enter (Obj : System.Address)
    is
-      Lock : Object_Lock_Acc := To_Lock_Acc_Acc (Obj).all;
+      Lock : constant Object_Lock_Acc := To_Lock_Acc_Acc (Obj).all;
    begin
       if Lock.Process = Nul_Process_Id then
          if Lock.Count /= 0 then
@@ -398,13 +395,13 @@ package body Grt.Processes is
 
    procedure Ghdl_Protected_Leave (Obj : System.Address)
    is
-      Lock : Object_Lock_Acc := To_Lock_Acc_Acc (Obj).all;
+      Lock : constant Object_Lock_Acc := To_Lock_Acc_Acc (Obj).all;
    begin
       if Lock.Process /= Get_Current_Process_Id then
          Internal_Error ("protected_leave(1)");
       end if;
 
-      if Lock.Count <= 0 then
+      if Lock.Count = 0 then
          Internal_Error ("protected_leave(2)");
       end if;
       Lock.Count := Lock.Count - 1;
@@ -415,7 +412,7 @@ package body Grt.Processes is
 
    procedure Ghdl_Protected_Init (Obj : System.Address)
    is
-      Lock : Object_Lock_Acc_Acc := To_Lock_Acc_Acc (Obj);
+      Lock : constant Object_Lock_Acc_Acc := To_Lock_Acc_Acc (Obj);
    begin
       Lock.all := new Object_Lock'(Process => Nul_Process_Id,
                                    Count => 0);
@@ -426,7 +423,7 @@ package body Grt.Processes is
       procedure Deallocate is new Ada.Unchecked_Deallocation
         (Object => Object_Lock, Name => Object_Lock_Acc);
 
-      Lock : Object_Lock_Acc_Acc := To_Lock_Acc_Acc (Obj);
+      Lock : constant Object_Lock_Acc_Acc := To_Lock_Acc_Acc (Obj);
    begin
       if Lock.all.Count /= 0 or Lock.all.Process /= Nul_Process_Id then
          Internal_Error ("protected_fini");
@@ -455,7 +452,8 @@ package body Grt.Processes is
         Non_Sensitized_Process_Table.Last
       loop
          declare
-            Pid : Process_Id := Non_Sensitized_Process_Table.Table (I);
+            Pid : constant Process_Id :=
+              Non_Sensitized_Process_Table.Table (I);
             Proc : Process_Type renames Process_Table.Table (Pid);
          begin
             if Proc.State = State_Wait
@@ -488,7 +486,7 @@ package body Grt.Processes is
    --  pragma Convention (C, Run_Handler);
 
    function Run_Through_Longjump (Hand : Run_Handler) return Integer;
-   pragma Import (C, Run_Through_Longjump, "__ghdl_run_through_longjump");
+   pragma Import (Ada, Run_Through_Longjump, "__ghdl_run_through_longjump");
 
    --  Run resumed processes.
    --  If POSTPONED is true, resume postponed processes, else resume
@@ -703,7 +701,8 @@ package body Grt.Processes is
         Non_Sensitized_Process_Table.Last
       loop
          declare
-            Pid : Process_Id := Non_Sensitized_Process_Table.Table (I);
+            Pid : constant Process_Id :=
+              Non_Sensitized_Process_Table.Table (I);
             Proc : Process_Type renames Process_Table.Table (Pid);
             El : Sensitivity_Acc;
          begin

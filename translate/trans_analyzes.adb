@@ -33,6 +33,7 @@ package body Trans_Analyzes is
    function Extract_Driver_Stmt (Stmt : Iir) return Walk_Status
    is
       Status : Walk_Status;
+      pragma Unreferenced (Status);
       We : Iir;
    begin
       case Get_Kind (Stmt) is
@@ -91,6 +92,7 @@ package body Trans_Analyzes is
    procedure Extract_Drivers_Sequential_Stmt_Chain (Chain : Iir)
    is
       Status : Walk_Status;
+      pragma Unreferenced (Status);
    begin
       Status := Walk_Sequential_Stmt_Chain (Chain, Extract_Driver_Stmt'Access);
    end Extract_Drivers_Sequential_Stmt_Chain;

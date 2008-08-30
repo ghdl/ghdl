@@ -84,9 +84,6 @@ package body Ghdlprint is
       Buf : File_Buffer_Acc;
       Prev_Tok : Token_Type;
 
-      --  True if tokens are between 'end' and ';'
-      In_End : Boolean := False;
-
       --  Current logical column number.  Used to expand TABs.
       Col : Natural;
 
@@ -372,9 +369,7 @@ package body Ghdlprint is
                Disp_Reserved;
             when Tok_End =>
                Disp_Reserved;
-               In_End := True;
             when Tok_Semi_Colon =>
-               In_End := False;
                Disp_Spaces;
                Disp_Text;
             when Tok_Xnor .. Tok_Ror =>
@@ -944,9 +939,7 @@ package body Ghdlprint is
       end if;
    end Decode_Option;
 
-   procedure Disp_Long_Help (Cmd : Command_Html)
-   is
-      use Ada.Text_IO;
+   procedure Disp_Long_Help (Cmd : Command_Html) is
    begin
       Disp_Long_Help (Command_Lib (Cmd));
       Put_Line ("--format=html2  Use FONT attributes");
@@ -1068,9 +1061,7 @@ package body Ghdlprint is
       end if;
    end Decode_Option;
 
-   procedure Disp_Long_Help (Cmd : Command_Xref_Html)
-   is
-      use Ada.Text_IO;
+   procedure Disp_Long_Help (Cmd : Command_Xref_Html) is
    begin
       Disp_Long_Help (Command_Html (Cmd));
       Put_Line ("-o DIR          Put generated files into DIR (def: html/)");
@@ -1115,7 +1106,6 @@ package body Ghdlprint is
 
       Files : File_Data_Array;
       Output : File_Type;
-      Prev_Output : File_Access;
    begin
       Xrefs.Init;
       Flags.Flag_Xref := True;
@@ -1220,8 +1210,6 @@ package body Ghdlprint is
          Filexref_Info (Files (I).Fe).Output := Files (I).Output;
       end loop;
 
-      Prev_Output := Current_Input;
-
       for I in Files'Range loop
          if Cmd.Output_Dir /= null then
             Create (Output, Out_File,
@@ -1304,7 +1292,7 @@ package body Ghdlprint is
         and then Cmd.Output_Dir /= null
       then
          declare
-            Css_Filename : String :=
+            Css_Filename : constant String :=
               Cmd.Output_Dir.all & Directory_Separator & "ghdl.css";
          begin
             if not Is_Regular_File (Css_Filename & Nul) then
@@ -1427,6 +1415,7 @@ package body Ghdlprint is
                Loc_File : Source_File_Entry;
                Loc_Pos : Source_Ptr;
                C : Character;
+               Dir : Name_Id;
             begin
                New_Line;
                Cur_Decl := N;
@@ -1435,8 +1424,11 @@ package body Ghdlprint is
                if Loc_File /= Cur_File then
                   Cur_File := Loc_File;
                   Put ("XFILE: ");
-                  Image (Get_Source_File_Directory (Cur_File));
-                  Put (Name_Buffer (1 .. Name_Length));
+                  Dir := Get_Source_File_Directory (Cur_File);
+                  if Dir /= Null_Identifier then
+                     Image (Dir);
+                     Put (Name_Buffer (1 .. Name_Length));
+                  end if;
                   Image (Get_File_Name (Cur_File));
                   Put (Name_Buffer (1 .. Name_Length));
                   New_Line;
@@ -1537,8 +1529,6 @@ package body Ghdlprint is
                         Emit_Ref (I, 'r');
                      when Xref_Body =>
                         Emit_Ref (I, 'b');
-                     when others =>
-                        null;
                   end case;
                end if;
             end loop;

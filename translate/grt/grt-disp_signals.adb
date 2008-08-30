@@ -17,18 +17,15 @@
 --  02111-1307, USA.
 with System; use System;
 with System.Storage_Elements; --  Work around GNAT bug.
+pragma Unreferenced (System.Storage_Elements);
 with Ada.Unchecked_Conversion;
-with Grt.Types; use Grt.Types;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
-with Grt.Rtis; use Grt.Rtis;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Errors; use Grt.Errors;
 pragma Elaborate_All (Grt.Rtis_Utils);
 with Grt.Vstrings; use Grt.Vstrings;
-with Grt.Stdio; use Grt.Stdio;
-with Grt.Signals; use Grt.Signals;
 with Grt.Options;
 with Grt.Disp; use Grt.Disp;
 
@@ -231,6 +228,7 @@ package body Grt.Disp_Signals is
    procedure Disp_All_Signals
    is
       Res : Traverse_Result;
+      pragma Unreferenced (Res);
    begin
       if Boolean'(False) then
          for I in Sig_Table.First .. Sig_Table.Last loop
@@ -308,6 +306,7 @@ package body Grt.Disp_Signals is
    procedure Disp_Signals_Map
    is
       Res : Traverse_Result;
+      pragma Unreferenced (Res);
    begin
       Res := Disp_Signals_Map_Blocks (Get_Top_Context);
       Grt.Stdio.fflush (stdout);
@@ -351,7 +350,6 @@ package body Grt.Disp_Signals is
 
    procedure Disp_Signals_Table
    is
-      use Grt.Disp;
       Sig : Ghdl_Signal_Ptr;
    begin
       for I in Sig_Table.First .. Sig_Table.Last loop
@@ -458,6 +456,7 @@ package body Grt.Disp_Signals is
         (Process_Block);
 
       Res_Status : Traverse_Result;
+      pragma Unreferenced (Res_Status);
    begin
       Res_Status := Foreach_Block (Get_Top_Context);
       if not Found then

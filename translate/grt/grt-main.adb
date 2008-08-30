@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with System.Storage_Elements; --  Work around GNAT bug.
+pragma Unreferenced (System.Storage_Elements);
 with Grt.Types; use Grt.Types;
 with Grt.Errors;
 with Grt.Stacks;
@@ -60,6 +61,9 @@ package body Grt.Main is
    is
       Err : Boolean;
    begin
+      --  The conditions may be statically known.
+      pragma Warnings (Off);
+
       Err := False;
       if (Std_Integer'Size = 32 and Flag_String (3) /= 'i')
         or else (Std_Integer'Size = 64 and Flag_String (3) /= 'I')
@@ -71,6 +75,9 @@ package body Grt.Main is
       then
          Err := True;
       end if;
+
+      pragma Warnings (On);
+
       if Err then
          Grt.Errors.Error
            ("GRT is not consistent with the flags used for your design");

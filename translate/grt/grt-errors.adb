@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio; use Grt.Astdio;
-with Grt.Types; use Grt.Types;
 with Grt.Options; use Grt.Options;
 
 package body Grt.Errors is
@@ -106,7 +105,7 @@ package body Grt.Errors is
 
    procedure Report_C (Str : Ghdl_C_String)
    is
-      Len : Natural := strlen (Str);
+      Len : constant Natural := strlen (Str);
    begin
       Put_Err (Str (1 .. Len));
    end Report_C;
@@ -154,7 +153,7 @@ package body Grt.Errors is
 
    procedure Error_C (Str : Ghdl_C_String)
    is
-      Len : Natural := strlen (Str);
+      Len : constant Natural := strlen (Str);
    begin
       if not Cont then
          Error_H;

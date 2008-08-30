@@ -17,9 +17,10 @@
 --  02111-1307, USA.
 with System;
 with Ada.Unchecked_Conversion;
-with GNAT.Table;
+with Grt.Table;
 with Grt.Types; use Grt.Types;
 with Grt.Rtis; use Grt.Rtis;
+pragma Elaborate_All (Grt.Table);
 
 package Grt.Signals is
    pragma Suppress (All_Checks);
@@ -264,12 +265,11 @@ package Grt.Signals is
    end record;
 
    --  Each simple signal declared can be accessed by SIG_TABLE.
-   package Sig_Table is new GNAT.Table
+   package Sig_Table is new Grt.Table
      (Table_Component_Type => Ghdl_Signal_Ptr,
       Table_Index_Type => Sig_Table_Index,
       Table_Low_Bound => 0,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    --  Return the next time at which a driver becomes active.
    function Find_Next_Time return Std_Time;
@@ -380,12 +380,11 @@ package Grt.Signals is
       end case;
    end record;
 
-   package Propagation is new GNAT.Table
+   package Propagation is new Grt.Table
      (Table_Component_Type => Propagation_Type,
       Table_Index_Type => Signal_Net_Type,
       Table_Low_Bound => 1,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    --  Get the signal index of PTR.
    function Signal_Ptr_To_Index (Ptr : Ghdl_Signal_Ptr) return Sig_Table_Index;
@@ -660,22 +659,22 @@ private
    pragma Export (C, Ghdl_Signal_Disconnect,
                   "__ghdl_signal_disconnect");
 
-   pragma Export (C, Ghdl_Signal_Driving,
+   pragma Export (Ada, Ghdl_Signal_Driving,
                   "__ghdl_signal_driving");
 
-   pragma Export (C, Ghdl_Create_Signal_B2,
+   pragma Export (Ada, Ghdl_Create_Signal_B2,
                   "__ghdl_create_signal_b2");
-   pragma Export (C, Ghdl_Signal_Init_B2,
+   pragma Export (Ada, Ghdl_Signal_Init_B2,
                   "__ghdl_signal_init_b2");
-   pragma Export (C, Ghdl_Signal_Associate_B2,
+   pragma Export (Ada, Ghdl_Signal_Associate_B2,
                   "__ghdl_signal_associate_b2");
-   pragma Export (C, Ghdl_Signal_Simple_Assign_B2,
+   pragma Export (Ada, Ghdl_Signal_Simple_Assign_B2,
                   "__ghdl_signal_simple_assign_b2");
-   pragma Export (C, Ghdl_Signal_Start_Assign_B2,
+   pragma Export (Ada, Ghdl_Signal_Start_Assign_B2,
                   "__ghdl_signal_start_assign_b2");
-   pragma Export (C, Ghdl_Signal_Next_Assign_B2,
+   pragma Export (Ada, Ghdl_Signal_Next_Assign_B2,
                   "__ghdl_signal_next_assign_b2");
-   pragma Export (C, Ghdl_Signal_Driving_Value_B2,
+   pragma Export (Ada, Ghdl_Signal_Driving_Value_B2,
                   "__ghdl_signal_driving_value_b2");
 
    pragma Export (C, Ghdl_Create_Signal_E8,
@@ -781,7 +780,7 @@ private
    pragma Export (C, Ghdl_Create_Delayed_Signal,
                   "__ghdl_create_delayed_signal");
 
-   pragma Export (C, Ghdl_Signal_Create_Guard,
+   pragma Export (Ada, Ghdl_Signal_Create_Guard,
                   "__ghdl_signal_create_guard");
    pragma Export (C, Ghdl_Signal_Guard_Dependence,
                   "__ghdl_signal_guard_dependence");

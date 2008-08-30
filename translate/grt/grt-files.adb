@@ -18,8 +18,9 @@
 with Grt.Errors; use Grt.Errors;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
-with GNAT.Table;
+with Grt.Table;
 with System; use System;
+pragma Elaborate_All (Grt.Table);
 
 package body Grt.Files is
    subtype C_Files is Grt.Stdio.FILEs;
@@ -31,12 +32,11 @@ package body Grt.Files is
       Is_Alive : Boolean;
    end record;
 
-   package Files_Table is new GNAT.Table
+   package Files_Table is new Grt.Table
      (Table_Component_Type => File_Entry_Type,
       Table_Index_Type => Ghdl_File_Index,
       Table_Low_Bound => 1,
-      Table_Initial => 2,
-      Table_Increment => 100);
+      Table_Initial => 2);
 
    function Get_File (Index : Ghdl_File_Index) return C_Files
    is
@@ -56,17 +56,13 @@ package body Grt.Files is
    end Check_File_Mode;
 
    function Create_File (Is_Text : Boolean; Sig : Ghdl_C_String)
-                        return Ghdl_File_Index
-   is
-      Res : Ghdl_File_Index;
+                        return Ghdl_File_Index is
    begin
-      Files_Table.Increment_Last;
-      Res := Files_Table.Last;
-      Files_Table.Table (Res) := (Stream => NULL_Stream,
-                                  Signature => Sig,
-                                  Is_Text => Is_Text,
-                                  Is_Alive => True);
-      return Res;
+      Files_Table.Append ((Stream => NULL_Stream,
+                           Signature => Sig,
+                           Is_Text => Is_Text,
+                           Is_Alive => True));
+      return Files_Table.Last;
    end Create_File;
 
    procedure Destroy_File (Is_Text : Boolean; Index : Ghdl_File_Index) is
@@ -289,6 +285,7 @@ package body Grt.Files is
       Res : C_Files;
       R : size_t;
       R1 : int;
+      pragma Unreferenced (R, R1);
    begin
       Res := Get_File (File);
       Check_File_Mode (File, True);
@@ -311,6 +308,7 @@ package body Grt.Files is
       Res : C_Files;
       R : size_t;
       R1 : int;
+      pragma Unreferenced (R1);
    begin
       Res := Get_File (File);
       Check_File_Mode (File, False);

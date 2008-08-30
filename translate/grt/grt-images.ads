@@ -32,7 +32,7 @@ package Grt.Images is
    procedure Ghdl_Image_P32
      (Res : Std_String_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access);
 private
-   pragma Export (C, Ghdl_Image_B2, "__ghdl_image_b2");
+   pragma Export (Ada, Ghdl_Image_B2, "__ghdl_image_b2");
    pragma Export (C, Ghdl_Image_E8, "__ghdl_image_e8");
    pragma Export (C, Ghdl_Image_E32, "__ghdl_image_e32");
    pragma Export (C, Ghdl_Image_I32, "__ghdl_image_i32");

@@ -40,15 +40,17 @@
 
 with Ada.Unchecked_Deallocation;
 with System.Storage_Elements; --  Work around GNAT bug.
+pragma Unreferenced (System.Storage_Elements);
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Signals; use Grt.Signals;
-with GNAT.Table;
+with Grt.Table;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Vcd; use Grt.Vcd;
 with Grt.Errors; use Grt.Errors;
 with Grt.Rtis_Types;
+pragma Elaborate_All (Grt.Table);
 
 package body Grt.Vpi is
    --  The VPI interface requires libdl (dlopen, dlsym) to be linked in.
@@ -69,6 +71,7 @@ package body Grt.Vpi is
    procedure dbgPut (Str : String)
    is
       S : size_t;
+      pragma Unreferenced (S);
    begin
       S := fwrite (Str'Address, Str'Length, 1, stderr);
    end dbgPut;
@@ -76,6 +79,7 @@ package body Grt.Vpi is
    procedure dbgPut (C : Character)
    is
       R : int;
+      pragma Unreferenced (R);
    begin
       R := fputc (Character'Pos (C), stderr);
    end dbgPut;
@@ -722,12 +726,11 @@ package body Grt.Vpi is
       Cb   : s_cb_data;
    end record;
 
-   package Vpi_Table is new GNAT.Table
+   package Vpi_Table is new Grt.Table
      (Table_Component_Type => Vpi_Var_Type,
       Table_Index_Type     => Vpi_Index_Type,
       Table_Low_Bound      => 0,
-      Table_Initial        => 32,
-      Table_Increment      => 100);
+      Table_Initial        => 32);
 
    function vpi_register_cb (Data : p_cb_data) return vpiHandle
    is
@@ -865,7 +868,7 @@ package body Grt.Vpi is
    --  Return TRUE if OPT is an option for VPI.
    function Vpi_Option (Opt : String) return Boolean
    is
-      F : Natural := Opt'First;
+      F : constant Natural := Opt'First;
    begin
       if Opt'Length < 5 or else Opt (F .. F + 4) /= "--vpi" then
          return False;
@@ -918,6 +921,7 @@ package body Grt.Vpi is
    procedure Vpi_Start
    is
       Res : Integer;
+      pragma Unreferenced (Res);
    begin
       if Vpi_Filename = null then
          return;
@@ -935,6 +939,7 @@ package body Grt.Vpi is
    procedure Vpi_Cycle
    is
       Res : Integer;
+      pragma Unreferenced (Res);
    begin
       if g_cbReadOnlySync /= null
         and then g_cbReadOnlySync.Time.mLow < Integer (Sim_Time / 1_000_000)
@@ -959,6 +964,7 @@ package body Grt.Vpi is
    procedure Vpi_End
    is
       Res : Integer;
+      pragma Unreferenced (Res);
    begin
       if g_cbEndOfSimulation /= null then
          Res := g_cbEndOfSimulation.Cb_Rtn.all (g_cbEndOfSimulation);
