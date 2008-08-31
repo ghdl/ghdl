@@ -9751,6 +9751,11 @@ package body Translation is
             Name_Node := Get_Var (Sig_Info.Object_Driver,
                                   Type_Info, Mode_Value);
             Name_Node := Stabilize (Name_Node);
+            --  Copy bounds from signal.
+            New_Assign_Stmt
+              (M2Lp (Chap3.Get_Array_Bounds (Name_Node)),
+               M2Addr (Chap3.Get_Array_Bounds (Chap6.Translate_Name (Decl))));
+            --  Allocate base.
             Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Node, Sig_Type);
          elsif Type_Info.C /= null then
             Name_Node := Get_Var (Sig_Info.Object_Driver,
@@ -20869,6 +20874,7 @@ package body Translation is
          Chap4.Translate_Declaration_Chain (Proc);
 
          if Flag_Direct_Drivers then
+            --  Create direct drivers.
             Drivers := Trans_Analyzes.Extract_Drivers (Proc);
             if Flag_Dump_Drivers then
                Trans_Analyzes.Dump_Drivers (Proc, Drivers);
