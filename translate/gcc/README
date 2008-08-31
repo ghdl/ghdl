@@ -4,7 +4,7 @@ To get the binary distribution or more information, go to http://ghdl.free.fr
 
 Copyright:
 **********
-GHDL is copyright (c) 2002, 2003, 2004, 2005, 2006, 2007 Tristan Gingold.
+GHDL is copyright (c) 2002 - 2008 Tristan Gingold.
 See the GHDL manual for more details.
 
 This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@ Building GHDL from sources:
 Required:
 * the sources of @GCCVERSION@ (at least the core part).
   Note: other versions of gcc sources have not been tested.
-* the Ada95 GNAT compiler (GNAT GPL 2005 are known to work;
+* the Ada95 GNAT compiler (GNAT GPL 2008 are known to work;
   Ada compilers in most Linux distributions are more or less buggy)
 * GNU/Linux for ix86 (pc systems) (porting is necessary for other systems)
 
@@ -58,7 +58,7 @@ end Example;
   add other languages.
   Refer to the gcc installation documentation.
 * compile gcc.
-  'make CFLAGS="-O"' is OK (gcc 2.8.1 bugs with -O2 on some files).
+  'make CFLAGS="-O"' is OK
 * install gcc.  This installs the ghdl driver too.
   'make install' is OK.
 
