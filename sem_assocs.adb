@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Evaluation; use Evaluation;
 with Errorout; use Errorout;
-with Flags;
+with Flags; use Flags;
 with Types; use Types;
 with Iirs_Utils; use Iirs_Utils;
 with Sem_Names; use Sem_Names;

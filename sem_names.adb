@@ -19,7 +19,7 @@ with Evaluation; use Evaluation;
 with Iirs_Utils; use Iirs_Utils;
 with Libraries;
 with Errorout; use Errorout;
-with Flags;
+with Flags; use Flags;
 with Name_Table;
 with Std_Package; use Std_Package;
 with Types; use Types;

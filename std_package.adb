@@ -20,7 +20,7 @@ with Files_Map;
 with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
-with Flags;
+with Flags; use Flags;
 with Iirs_Utils;
 with Sem;
 with Sem_Decls;
@@ -346,7 +346,7 @@ package body Std_Package is
               (Get_Std_Character (I), Character_Type_Definition);
          end loop;
          El := Create_Std_Literal (Name_Del, Character_Type_Definition);
-         if Flags.Vhdl_Std /= Vhdl_87 then
+         if Vhdl_Std /= Vhdl_87 then
             for I in Name_C128 .. Name_C159 loop
                El := Create_Std_Literal (I, Character_Type_Definition);
             end loop;
@@ -724,7 +724,7 @@ package body Std_Package is
          Time_Hr_Unit: Iir_Unit_Declaration;
          Constraint : Iir_Range_Expression;
       begin
-         if Flags.Vhdl_Std >= Vhdl_93c then
+         if Vhdl_Std >= Vhdl_93c then
             Time_Staticness := Globally;
          else
             Time_Staticness := Locally;
@@ -813,7 +813,7 @@ package body Std_Package is
 
          --  VHDL93
          --  subtype DELAY_LENGTH is TIME range 0 to TIME'HIGH
-         if Flags.Vhdl_Std >= Vhdl_93c then
+         if Vhdl_Std >= Vhdl_93c then
             Delay_Length_Subtype_Definition :=
               Create_Std_Iir (Iir_Kind_Physical_Subtype_Definition);
             Set_Type_Mark (Delay_Length_Subtype_Definition,
@@ -855,12 +855,12 @@ package body Std_Package is
          Function_Now :=
            Create_Std_Decl (Iir_Kind_Implicit_Function_Declaration);
          Set_Std_Identifier (Function_Now, Std_Names.Name_Now);
-         if Flags.Vhdl_Std = Vhdl_87 then
+         if Vhdl_Std = Vhdl_87 then
             Set_Return_Type (Function_Now, Time_Subtype_Definition);
          else
             Set_Return_Type (Function_Now, Delay_Length_Subtype_Definition);
          end if;
-         if Flags.Vhdl_Std = Vhdl_02 then
+         if Vhdl_Std = Vhdl_02 then
             Set_Pure_Flag (Function_Now, True);
          else
             Set_Pure_Flag (Function_Now, False);
@@ -872,7 +872,7 @@ package body Std_Package is
 
       --  VHDL93:
       --  type file_open_kind is (read_mode, write_mode, append_mode);
-      if Flags.Vhdl_Std >= Vhdl_93c then
+      if Vhdl_Std >= Vhdl_93c then
          File_Open_Kind_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
          Set_Base_Type (File_Open_Kind_Type_Definition,
@@ -912,7 +912,7 @@ package body Std_Package is
       --  VHDL93:
       --  type file_open_status is
       --      (open_ok, status_error, name_error, mode_error);
-      if Flags.Vhdl_Std >= Vhdl_93c then
+      if Vhdl_Std >= Vhdl_93c then
          File_Open_Status_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
          Set_Base_Type (File_Open_Status_Type_Definition,
@@ -954,7 +954,7 @@ package body Std_Package is
 
       --  VHDL93:
       --  attribute FOREIGN: string;
-      if Flags.Vhdl_Std >= Vhdl_93c then
+      if Vhdl_Std >= Vhdl_93c then
          Foreign_Attribute := Create_Std_Decl (Iir_Kind_Attribute_Declaration);
          Set_Std_Identifier (Foreign_Attribute, Name_Foreign);
          Set_Type (Foreign_Attribute, String_Type_Definition);

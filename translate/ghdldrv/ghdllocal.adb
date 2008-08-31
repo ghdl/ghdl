@@ -33,6 +33,7 @@ with Configuration;
 with Files_Map;
 with Post_Sems;
 with Disp_Tree;
+with Options;
 
 package body Ghdllocal is
    --  Version of the IEEE library to use.  This just change pathes.
@@ -137,7 +138,7 @@ package body Ghdllocal is
          --  Silently accept -g and -O.
          Res := Option_Ok;
       else
-         if Flags.Parse_Option (Opt) then
+         if Options.Parse_Option (Opt) then
             Res := Option_Ok;
          end if;
       end if;
@@ -161,9 +162,11 @@ package body Ghdllocal is
       P ("    none: do not use a predefined ieee library");
    end Disp_Long_Help;
 
-   function Get_Version_Path return String is
+   function Get_Version_Path return String
+   is
+      use Flags;
    begin
-      case Flags.Vhdl_Std is
+      case Vhdl_Std is
          when Vhdl_87 =>
             return "v87";
          when Vhdl_93c

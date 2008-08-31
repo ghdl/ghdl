@@ -31,6 +31,7 @@ with Canon;
 with Disp_Vhdl;
 with Bug;
 with Trans_Be;
+with Options;
 
 package body Ortho_Front is
    --  The action to be performed by the compiler.
@@ -197,18 +198,18 @@ package body Ortho_Front is
          end if;
          return 2;
       elsif Opt.all = "--help" then
-         Flags.Disp_Options_Help;
+         Options.Disp_Options_Help;
          return 1;
       elsif Opt.all = "--expect-failure" then
          Flag_Expect_Failure := True;
          return 1;
       elsif Opt'Length > 7 and then Opt (1 .. 7) = "--ghdl-" then
-         if Flags.Parse_Option (Opt (7 .. Opt'Last)) then
+         if Options.Parse_Option (Opt (7 .. Opt'Last)) then
             return 1;
          else
             return 0;
          end if;
-      elsif Flags.Parse_Option (Opt.all) then
+      elsif Options.Parse_Option (Opt.all) then
          return 1;
       else
          return 0;

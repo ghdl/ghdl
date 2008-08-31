@@ -17,9 +17,7 @@
 --  02111-1307, USA.
 with Iirs; use Iirs;
 with Iir_Chain_Handling;
-pragma Warnings (Off);
-pragma Elaborate (Iir_Chain_Handling);
-pragma Warnings (On);
+pragma Elaborate_All (Iir_Chain_Handling);
 
 package Iir_Chains is
    --  Chains are simply linked list of iirs.

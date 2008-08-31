@@ -18,8 +18,8 @@
 with Ada.Text_IO;
 with Ada.Command_Line;
 with Version;
-with Flags;
 with Bug;
+with Options;
 
 package body Ghdlmain is
    procedure Init (Cmd : in out Command_Type)
@@ -183,7 +183,7 @@ package body Ghdlmain is
          Error
            ("warning: command '--option-help' does not accept any argument");
       end if;
-      Flags.Disp_Options_Help;
+      Options.Disp_Options_Help;
    end Perform_Action;
 
    --  Command Version

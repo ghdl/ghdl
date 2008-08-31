@@ -27,7 +27,7 @@ with Sem_Specs; use Sem_Specs;
 with Sem_Decls; use Sem_Decls;
 with Sem_Assocs; use Sem_Assocs;
 with Iirs_Utils; use Iirs_Utils;
-with Flags;
+with Flags; use Flags;
 with Name_Table;
 with Str_Table;
 with Sem_Stmts; use Sem_Stmts;
@@ -197,11 +197,11 @@ package body Sem is
       --  considered to occur immediatly within the declarative region
       --  associated with the entity declaration corresponding to the given
       --  architecture body.
-      if Flags.Vhdl_Std >= Vhdl_02 then
+      if Vhdl_Std >= Vhdl_02 then
          Open_Declarative_Region;
       end if;
       Sem_Block (Arch, True);
-      if Flags.Vhdl_Std >= Vhdl_02 then
+      if Vhdl_Std >= Vhdl_02 then
          Close_Declarative_Region;
       end if;
 

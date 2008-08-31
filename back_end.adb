@@ -15,8 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Flags;
-with Types; use Types;
+with Flags; use Flags;
 with Iirs_Utils; use Iirs_Utils;
 
 package body Back_End is
@@ -27,7 +26,7 @@ package body Back_End is
      return String
    is
    begin
-      case Flags.Vhdl_Std is
+      case Vhdl_Std is
          when Vhdl_87 =>
             return Image_Identifier (Library) & "-obj87.cf";
          when Vhdl_93c | Vhdl_93 | Vhdl_00 | Vhdl_02 =>

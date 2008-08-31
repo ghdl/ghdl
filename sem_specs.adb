@@ -28,7 +28,7 @@ with Sem_Assocs; use Sem_Assocs;
 with Libraries;
 with Iir_Chains; use Iir_Chains;
 with Sem_Types;
-with Flags;
+with Flags; use Flags;
 with Name_Table;
 with Std_Names;
 with Sem_Decls;

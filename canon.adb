@@ -22,7 +22,7 @@ with Name_Table;
 with Sem;
 with Std_Names;
 with Iir_Chains; use Iir_Chains;
-with Flags;
+with Flags; use Flags;
 
 package body Canon is
    --  Canonicalize a list of declarations.  LIST can be null.
@@ -1712,7 +1712,7 @@ package body Canon is
                end if;
             when Iir_Kind_Generate_Statement =>
                if False
-                 and then Flags.Vhdl_Std = Vhdl_87
+                 and then Vhdl_Std = Vhdl_87
                  and then
                  Get_Kind (Conf) = Iir_Kind_Configuration_Specification
                then

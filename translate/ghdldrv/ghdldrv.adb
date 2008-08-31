@@ -36,6 +36,7 @@ with System;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Version;
+with Options;
 
 package body Ghdldrv is
    --  Name of the tools used.
@@ -655,7 +656,7 @@ package body Ghdldrv is
          Add_Argument (Compiler_Args, new String'(Opt));
          Flag_Expect_Failure := True;
          Res := Option_Ok;
-      elsif Flags.Parse_Option (Opt) then
+      elsif Options.Parse_Option (Opt) then
          Add_Argument (Compiler_Args, new String'(Opt));
          Res := Option_Ok;
       elsif Opt'Length >= 2

@@ -21,7 +21,7 @@ with Interfaces; use Interfaces;
 with Ortho_Nodes; use Ortho_Nodes;
 with Ortho_Ident; use Ortho_Ident;
 with Evaluation; use Evaluation;
-with Flags;
+with Flags; use Flags;
 with Ada.Text_IO;
 with Types; use Types;
 with Errorout; use Errorout;

@@ -35,6 +35,8 @@ configuration.adb
 configuration.ads
 nodes.ads
 nodes.adb
+options.ads
+options.adb
 lists.ads
 lists.adb
 iirs.adb

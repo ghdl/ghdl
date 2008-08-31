@@ -20,10 +20,6 @@ with Interfaces;
 package Types is
    pragma Preelaborate (Types);
 
-   --  List of vhdl standards.
-   --  VHDL_93c is vhdl_93 with backward compatibility with 87 (file).
-   type Vhdl_Std_Type is (Vhdl_87, Vhdl_93c, Vhdl_93, Vhdl_00, Vhdl_02);
-
    -- A tri state type.
    type Tri_State_Type is (Unknown, False, True);
 

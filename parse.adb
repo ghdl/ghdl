@@ -23,7 +23,7 @@ with Scan; use Scan;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Std_Names; use Std_Names;
-with Flags;
+with Flags; use Flags;
 with Name_Table;
 with Str_Table;
 with Xrefs;

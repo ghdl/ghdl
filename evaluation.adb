@@ -20,7 +20,7 @@ with Name_Table; use Name_Table;
 with Str_Table;
 with Iirs_Utils; use Iirs_Utils;
 with Std_Package; use Std_Package;
-with Flags;
+with Flags; use Flags;
 with Std_Names;
 
 package body Evaluation is

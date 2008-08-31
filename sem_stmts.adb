@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Errorout; use Errorout;
 with Types; use Types;
-with Flags;
+with Flags; use Flags;
 with Sem_Specs; use Sem_Specs;
 with Std_Package; use Std_Package;
 with Sem; use Sem;

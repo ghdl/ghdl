@@ -21,7 +21,7 @@ with Errorout; use Errorout;
 with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
-with Flags;
+with Flags; use Flags;
 
 package body Iirs_Utils is
    -- Transform the current token into an iir literal.

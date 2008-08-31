@@ -75,6 +75,7 @@ package body Ghdlprint is
 
    procedure PP_Html_File (File : Source_File_Entry)
    is
+      use Flags;
       use Scan;
       use Tokens;
       use Files_Map;

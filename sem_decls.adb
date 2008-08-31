@@ -19,7 +19,7 @@ with Errorout; use Errorout;
 with Types; use Types;
 with Std_Names;
 with Tokens;
-with Flags;
+with Flags; use Flags;
 with Std_Package; use Std_Package;
 with Iir_Chains;
 with Evaluation; use Evaluation;

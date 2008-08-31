@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Libraries;
-with Flags;
+with Flags; use Flags;
 with Types; use Types;
 with Errorout; use Errorout;
 with Evaluation; use Evaluation;

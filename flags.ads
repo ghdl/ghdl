@@ -1,5 +1,5 @@
---  Command line flags.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Global flags.
+--  Copyright (C) 2002, 2003, 2004, 2005, 2008 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -22,19 +22,13 @@
 --  Since the names are not prefixed, this package is expected to be with'ed
 --  but not to be use'd.
 
-with Types; use Types;
-
 package Flags is
+   --  List of vhdl standards.
+   --  VHDL_93c is vhdl_93 with backward compatibility with 87 (file).
+   type Vhdl_Std_Type is (Vhdl_87, Vhdl_93c, Vhdl_93, Vhdl_00, Vhdl_02);
+
    -- Standard accepted.
    Vhdl_Std: Vhdl_Std_Type := Vhdl_93c;
-
-   -- Return true if opt is recognize by flags.
-   --  Note: std_names.std_names_initialize and files_map.init_pathes must have
-   --  been called before this subprogram.
-   function Parse_Option (Opt: String) return Boolean;
-
-   -- Disp help about these options.
-   procedure Disp_Options_Help;
 
    --  Some flags (such as vhdl version) must be the same for every design
    --  units of a hierarchy.
