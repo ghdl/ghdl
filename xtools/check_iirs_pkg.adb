@@ -232,7 +232,7 @@ package body Check_Iirs_Pkg is
 
    type Func_Info is record
       --  Name of the function.
-      Name : Vstring;
+      Name : String_Access;
       --  Field get/set by the function.
       Field : Field_Type;
       --  If true, the iir use this function.
@@ -583,7 +583,7 @@ package body Check_Iirs_Pkg is
                Set (Function2pos, Ident, Integer (Function_Pos));
                Func_Table.Set_Last (Function_Pos);
                Func_Table.Table (Function_Pos) :=
-                 (Name => Ident,
+                 (Name => new String'(To_String (Ident)),
                   Field => Field_Type (Field_Pos),
                   Uses => (others => False),
                   Target_Name => new String'(To_String (Ident_2)),
@@ -1032,10 +1032,10 @@ package body Check_Iirs_Pkg is
          begin
             --  Avoid bug get_parent.
             if Is_Used (I) then
-               Same_Name := F.Name = Field_Table.Table (F.Field).Name.all;
+               Same_Name := F.Name.all = Field_Table.Table (F.Field).Name.all;
                if Flag_Checks then
                   Put ("   procedure Check_Kind_For_");
-                  Put (F.Name);
+                  Put (F.Name.all);
                   Put (" (Target : Iir) is");
                   New_Line;
                   Put_Line ("   begin");
@@ -1057,17 +1057,17 @@ package body Check_Iirs_Pkg is
                   Put_Line ("            null;");
                   Put_Line ("         when others =>");
                   Put ("            Failed (""");
-                  Put (F.Name);
+                  Put (F.Name.all);
                   Put_Line (""", Target);");
                   Put_Line ("      end case;");
                   Put ("   end Check_Kind_For_");
-                  Put (F.Name);
+                  Put (F.Name.all);
                   Put_Line (";");
                   New_Line;
                end if;
 
                Put ("   function Get_");
-               Put (F.Name);
+               Put (F.Name.all);
                Put (" (");
                Put (F.Target_Name.all);
                Put (" : ");
@@ -1083,7 +1083,7 @@ package body Check_Iirs_Pkg is
                Put_Line ("   begin");
                if Flag_Checks then
                   Put ("      Check_Kind_For_");
-                  Put (F.Name);
+                  Put (F.Name.all);
                   Put (" (");
                   Put (F.Target_Name.all);
                   Put (");");
@@ -1120,14 +1120,14 @@ package body Check_Iirs_Pkg is
                Put (";");
                New_Line;
                Put ("   end Get_");
-               Put (F.Name);
+               Put (F.Name.all);
                Put (";");
                New_Line;
                New_Line;
 
                if F.Value_Name /= null then
                   Put ("   procedure Set_");
-                  Put (F.Name);
+                  Put (F.Name.all);
                   Put (" (");
                   Put (F.Target_Name.all);
                   Put (" : ");
@@ -1146,7 +1146,7 @@ package body Check_Iirs_Pkg is
                   Put_Line ("   begin");
                   if Flag_Checks then
                      Put ("      Check_Kind_For_");
-                     Put (F.Name);
+                     Put (F.Name.all);
                      Put (" (");
                      Put (F.Target_Name.all);
                      Put (");");
@@ -1184,7 +1184,7 @@ package body Check_Iirs_Pkg is
                   Put (");");
                   New_Line;
                   Put ("   end Set_");
-                  Put (F.Name);
+                  Put (F.Name.all);
                   Put (";");
                   New_Line;
                   New_Line;

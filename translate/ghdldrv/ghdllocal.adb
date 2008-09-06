@@ -174,6 +174,8 @@ package body Ghdllocal is
            | Vhdl_00
            | Vhdl_02 =>
             return "v93";
+         when Vhdl_08 =>
+            return "v08";
       end case;
    end Get_Version_Path;
 

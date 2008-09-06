@@ -41,7 +41,7 @@ package Grt.Options is
 
    --  Consistent flags used for analysis.
    --  Format is "VVitr", where:
-   --    'VV' is the version (87 or 93).
+   --    'VV' is the version (87, 93 or 08).
    --    'i' is the integer size ('i' for 32 bits, 'I' for 64 bits).
    --    't' is the time size ('t' for 32 bits, 'T' for 64 bits).
    --    'r' is the resolution ('?' for to be set by the user, '-' for any).

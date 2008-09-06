@@ -12,7 +12,7 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Errorout; use Errorout;
@@ -819,7 +819,7 @@ package body Sem_Stmts is
                if not Check_Odcat_Expression (Get_Prefix (Expr)) then
                   return False;
                end if;
-               --  GHDL: I don't understand why the indexsing expressions
+               --  GHDL: I don't understand why the indexing expressions
                --  must be locally static.  So I don't check this in 93c.
                if Flags.Vhdl_Std /= Vhdl_93c
                  and then
@@ -954,6 +954,10 @@ package body Sem_Stmts is
       Res: Iir;
       Prefix : Iir;
    begin
+      if List = Iir_List_All then
+         return;
+      end if;
+
       for I in Natural loop
          -- El is an iir_identifier.
          El := Get_Nth_Element (List, I);
@@ -1511,6 +1515,9 @@ package body Sem_Stmts is
       if Get_Kind (Proc) = Iir_Kind_Sensitized_Process_Statement
         and then Get_Callees_List (Proc) /= Null_Iir_List
       then
+         --  Check there is no wait statement in subprograms called.
+         --  Also in the case of all-sensitized process, check that package
+         --  subprograms don't read signals.
          Sem.Add_Analysis_Checks_List (Proc);
       end if;
    end Sem_Process_Statement;

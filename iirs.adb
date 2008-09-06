@@ -12,7 +12,7 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Unchecked_Conversion;
@@ -4155,6 +4155,30 @@ package body Iirs is
       Check_Kind_For_Wait_State (Proc);
       Set_State1 (Proc, Tri_State_Type'Pos (State));
    end Set_Wait_State;
+
+   procedure Check_Kind_For_All_Sensitized_State (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration =>
+            null;
+         when others =>
+            Failed ("All_Sensitized_State", Target);
+      end case;
+   end Check_Kind_For_All_Sensitized_State;
+
+   function Get_All_Sensitized_State (Proc : Iir) return Iir_All_Sensitized is
+   begin
+      Check_Kind_For_All_Sensitized_State (Proc);
+      return Iir_All_Sensitized'Val (Get_State3 (Proc));
+   end Get_All_Sensitized_State;
+
+   procedure Set_All_Sensitized_State (Proc : Iir; State : Iir_All_Sensitized)
+      is
+   begin
+      Check_Kind_For_All_Sensitized_State (Proc);
+      Set_State3 (Proc, Iir_All_Sensitized'Pos (State));
+   end Set_All_Sensitized_State;
 
    procedure Check_Kind_For_Seen_Flag (Target : Iir) is
    begin

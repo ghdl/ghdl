@@ -21370,6 +21370,7 @@ package body Translation is
          Constr : O_Assoc_List;
          Info : Proc_Info_Acc;
          List : Iir_List;
+         List_Orig : Iir_List;
          Final : Boolean;
       begin
          New_Debug_Line_Stmt (Get_Line_Number (Proc));
@@ -21407,16 +21408,11 @@ package body Translation is
             New_Lit (New_Subprogram_Address (Info.Process_Subprg,
                                              Ghdl_Ptr_Type)));
          Rtis.Associate_Rti_Context (Constr, Proc);
---          New_Association
---            (Constr,
---             New_Address (New_Selected_Element
---                          (Get_Instance_Ref (Info.Process_Decls_Type),
---                           Info.Process_Name),
---                          Ghdl_Instance_Name_Acc));
          New_Procedure_Call (Constr);
 
          --  First elaborate declarations since a driver may depend on
          --  an alias declaration.
+         --  Also, with vhdl 08 a sensitivity element may depend on an alias.
          Chap4.Elab_Declaration_Chain (Proc, Final);
 
          --  Register drivers.
@@ -21462,9 +21458,17 @@ package body Translation is
          end if;
 
          if Is_Sensitized then
-            List := Get_Sensitivity_List (Proc);
+            List_Orig := Get_Sensitivity_List (Proc);
+            if List_Orig = Iir_List_All then
+               List := Canon.Canon_Extract_Process_Sensitivity (Proc);
+            else
+               List := List_Orig;
+            end if;
             Destroy_Types_In_List (List);
             Register_Signal_List (List, Ghdl_Process_Add_Sensitivity);
+            if List_Orig = Iir_List_All then
+               Destroy_Iir_List (List);
+            end if;
          end if;
 
          Pop_Scope (Info.Process_Decls_Type);

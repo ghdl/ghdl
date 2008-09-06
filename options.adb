@@ -12,7 +12,7 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO; use Ada.Text_IO;
@@ -53,7 +53,8 @@ package body Options is
       return True;
    end Option_Warning;
 
-   function Parse_Option (Opt: String) return Boolean is
+   function Parse_Option (Opt: String) return Boolean
+   is
       Beg: constant Integer := Opt'First;
    begin
       if Opt'Length > 5 and then Opt (Beg .. Beg + 5) = "--std=" then
@@ -66,6 +67,8 @@ package body Options is
                Vhdl_Std := Vhdl_00;
             elsif Opt (Beg + 6 .. Beg + 7) = "02" then
                Vhdl_Std := Vhdl_02;
+            elsif Opt (Beg + 6 .. Beg + 7) = "08" then
+               Vhdl_Std := Vhdl_08;
             else
                return False;
             end if;
@@ -173,8 +176,7 @@ package body Options is
       P ("  --work=LIB         use LIB as work library");
       P ("  --workdir=DIR      use DIR for the file library");
       P ("  -PPATH             add PATH in the library path list");
-      P ("  --std=87           select vhdl 87 standard");
-      P ("  --std=93           select vhdl 93 standard");
+      P ("  --std=87/93/00/02/08  select vhdl 87/93/00/02/08 standard");
       P ("  --std=93c          select vhdl 93 standard and allow 87 syntax");
       P ("  --[no-]vital-checks  do [not] check VITAL restrictions");
       P ("Warnings:");

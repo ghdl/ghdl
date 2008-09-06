@@ -12,7 +12,7 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Unchecked_Deallocation;
@@ -865,7 +865,7 @@ package Iirs is
    --
    -- Subprogram declaration.
    --
-   -- The declaration containing this type declaration.
+   -- The declaration containing this subrogram declaration.
    --   Get/Set_Parent (Field0)
    --
    -- Only for Iir_Kind_Function_Declaration:
@@ -913,10 +913,12 @@ package Iirs is
    -- Only for Iir_Kind_Function_Declaration:
    --   Get/Set_Resolution_Function_Flag (Flag7)
    --
+   --   Get/Set_Wait_State (State1)
+   --
    -- Only for Iir_Kind_Procedure_Declaration:
    --   Get/Set_Purity_State (State2)
    --
-   --   Get/Set_Wait_State (State1)
+   --   Get/Set_All_Sensitized_State (State3)
 
    -- Iir_Kind_Function_Body (Short)
    -- Iir_Kind_Procedure_Body (Short)
@@ -2973,6 +2975,23 @@ package Iirs is
    --    PURE.
    type Iir_Pure_State is (Unknown, Pure, Maybe_Impure, Impure);
 
+   --  State of subprograms for validity of use in all-sensitized process.
+   --  INVALID_SIGNAL means that the subprogram is in a package and
+   --    reads a signal or that the subprogram calls (indirectly) such
+   --    a subprogram.  In this case, the subprogram cannot be called from
+   --    an all-sensitized process.
+   --  READ_SIGNAL means that the subprogram reads a signal and is defined
+   --    in an entity or an architecture or that the subprogram calls
+   --    (indirectly) such a subprogram.  In this case, the subprogram can
+   --    be called from an all-sensitized process and the reference will be
+   --    part of the sensitivity list.
+   --  NO_SIGNAL means that the subprogram doesn't read any signal and don't
+   --    call such a subprogram.  The subprogram can be called from an
+   --    all-sensitized process but there is no need to track this call.
+   --  UNKNOWN means that the state is not yet defined.
+   type Iir_All_Sensitized is
+     (Unknown, No_Signal, Read_Signal, Invalid_Signal);
+
    ---------------
    -- subranges --
    ---------------
@@ -4497,6 +4516,18 @@ package Iirs is
    --  Field: State1 (pos)
    function Get_Wait_State (Proc : Iir) return Tri_State_Type;
    procedure Set_Wait_State (Proc : Iir; State : Tri_State_Type);
+
+   --  Get/Set wether the subprogram may be called by a sensitized process
+   --  whose sensitivity list is ALL.
+   --  FALSE if declared in a package unit and reads a signal that is not
+   --    one of its interface, or if it calls such a subprogram.
+   --  TRUE if it doesn't call a subprogram whose state is False and
+   --    either doesn't read a signal or declared within an entity or
+   --    architecture.
+   --  UNKNOWN if the status is not yet known.
+   --  Field: State3 (pos)
+   function Get_All_Sensitized_State (Proc : Iir) return Iir_All_Sensitized;
+   procedure Set_All_Sensitized_State (Proc : Iir; State : Iir_All_Sensitized);
 
    --  Get/Set the seen flag.
    --  Used when the graph of callees is walked, to avoid infinite loops, since

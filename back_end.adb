@@ -12,7 +12,7 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Flags; use Flags;
@@ -31,6 +31,8 @@ package body Back_End is
             return Image_Identifier (Library) & "-obj87.cf";
          when Vhdl_93c | Vhdl_93 | Vhdl_00 | Vhdl_02 =>
             return Image_Identifier (Library) & "-obj93.cf";
+         when Vhdl_08 =>
+            return Image_Identifier (Library) & "-obj08.cf";
       end case;
    end Default_Library_To_File_Name;
 end Back_End;

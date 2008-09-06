@@ -48,35 +48,44 @@ MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
 
 STD87_BSRCS := $(STD_SRCS:.vhdl=.v87)
 STD93_BSRCS := $(STD_SRCS:.vhdl=.v93)
+STD08_BSRCS := $(STD_SRCS:.vhdl=.v08)
 IEEE87_BSRCS := $(IEEE_SRCS:.vhdl=.v87)
 IEEE93_BSRCS := $(IEEE_SRCS:.vhdl=.v93) $(MATH_SRCS)
 SYNOPSYS87_BSRCS := $(SYNOPSYS_BSRCS)
 SYNOPSYS93_BSRCS := $(SYNOPSYS_BSRCS)
 MENTOR93_BSRCS := $(MENTOR_BSRCS)
 
-.PREFIXES: .vhdl .v93 .v87
+.PREFIXES: .vhdl .v93 .v87 .v08
 
 %.v93: %.vhdl
+	sed -e '/--V87/s/^/  --/' < $< > $@
+
+%.v08: %.vhdl
 	sed -e '/--V87/s/^/  --/' < $< > $@
 
 %.v87: %.vhdl
 	sed -e '/--V93/s/^/  --/' -e '/--START-V93/,/--END-V93/s/^/--/' \
 	  < $< > $@
 
+STD87_DIR:=$(LIB87_DIR)/std
+IEEE87_DIR:=$(LIB87_DIR)/ieee
+SYN87_DIR:=$(LIB87_DIR)/synopsys
+
 STD93_DIR:=$(LIB93_DIR)/std
 IEEE93_DIR:=$(LIB93_DIR)/ieee
 SYN93_DIR:=$(LIB93_DIR)/synopsys
 MENTOR93_DIR:=$(LIB93_DIR)/mentor
 
-STD87_DIR:=$(LIB87_DIR)/std
-IEEE87_DIR:=$(LIB87_DIR)/ieee
-SYN87_DIR:=$(LIB87_DIR)/synopsys
+STD08_DIR:=$(LIB08_DIR)/std
 
-ANALYZE93:=$(ANALYZE) --std=93
 ANALYZE87:=$(ANALYZE) --std=87
+ANALYZE93:=$(ANALYZE) --std=93
+ANALYZE08:=$(ANALYZE) --std=08
 
 STD87_SRCS=$(addprefix $(LIBSRC_DIR)/,$(STD87_BSRCS))
 STD93_SRCS=$(addprefix $(LIBSRC_DIR)/,$(STD93_BSRCS))
+STD08_SRCS=$(addprefix $(LIBSRC_DIR)/,$(STD08_BSRCS))
+
 IEEE93_SRCS=$(addprefix $(LIBSRC_DIR)/,$(IEEE93_BSRCS))
 IEEE87_SRCS=$(addprefix $(LIBSRC_DIR)/,$(IEEE87_BSRCS))
 SYNOPSYS_SRCS=$(addprefix $(LIBSRC_DIR)/,$(SYNOPSYS_BSRCS))
@@ -169,5 +178,15 @@ synopsys.v87: $(LIB87_DIR) $(SYNOPSYS_SRCS) force
 	for i in $(SYNOPSYS87_BSRCS); do \
           cmd="$(ANALYZE_IEEE87) $(REL_DIR)/$(LIBSRC_DIR)/$$i";\
 	  echo $$cmd; eval $$cmd || exit 1; \
+	done; \
+	cd $$prev
+
+std.v08: $(LIB08_DIR) $(STD08_SRCS) force
+	$(RM) -rf $(STD08_DIR)
+	mkdir $(STD08_DIR)
+	prev=`pwd`; cd $(STD08_DIR); \
+	for i in $(STD08_SRCS); do \
+	  echo $$i; \
+	  $(ANALYZE08) --bootstrap --work=std $(REL_DIR)/$$i || exit 1; \
 	done; \
 	cd $$prev

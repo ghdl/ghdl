@@ -12,7 +12,7 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Iir_Chains; use Iir_Chains;
@@ -4342,16 +4342,16 @@ package body Parse is
    --  precond:  PROCESS
    --  postcond: null
    --
-   --  [ §9.2 ]
+   --  [ LRM87 9.2 / LRM08 11.3 ]
    --  process_statement ::=
    --    [ PROCESS_label : ]
-   --       [ POSTPONED ] PROCESS [ ( sensitivity_list ) ] [ IS ]
+   --       [ POSTPONED ] PROCESS [ ( process_sensitivity_list ) ] [ IS ]
    --           process_declarative_part
    --       BEGIN
    --           process_statement_part
    --       END [ POSTPONED ] PROCESS [ PROCESS_label ] ;
    --
-   --  FIXME: POSTPONED
+   --  process_sensitivity_list ::= ALL | sensitivity_list
    function Parse_Process_Statement
      (Label: Name_Id; Loc : Location_Type; Is_Postponed : Boolean)
      return Iir
@@ -4365,9 +4365,18 @@ package body Parse is
       if Current_Token = Tok_Left_Paren then
          Res := Create_Iir (Iir_Kind_Sensitized_Process_Statement);
          Scan.Scan;
-         Sensitivity_List := Create_Iir_List;
+         if Current_Token = Tok_All then
+            if Vhdl_Std < Vhdl_08 then
+               Error_Msg_Parse
+                 ("all sensitized process allowed only in vhdl 08");
+            end if;
+            Sensitivity_List := Iir_List_All;
+            Scan.Scan;
+         else
+            Sensitivity_List := Create_Iir_List;
+            Parse_Sensitivity_List (Sensitivity_List);
+         end if;
          Set_Sensitivity_List (Res, Sensitivity_List);
-         Parse_Sensitivity_List (Sensitivity_List);
          Expect (Tok_Right_Paren);
          Scan.Scan;
       else

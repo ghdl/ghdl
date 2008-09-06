@@ -12,7 +12,7 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Evaluation; use Evaluation;
@@ -1178,6 +1178,32 @@ package body Sem_Names is
             Error_Kind ("sem_check_pure(2)", Parent);
       end case;
    end Sem_Check_Pure;
+
+   --  Set All_Sensitized_State to False iff OBJ is a signal declaration
+   --  and the current subprogram is in a package body.
+   procedure Sem_Check_All_Sensitized (Obj : Iir)
+   is
+      Subprg : Iir;
+   begin
+      --  We cares only of signals.
+      if Get_Kind (Obj) /= Iir_Kind_Signal_Declaration then
+         return;
+      end if;
+      --  We cares only of subprograms.  Give up if we are in a process.
+      Subprg := Sem_Stmts.Get_Current_Subprogram;
+      if Subprg = Null_Iir
+        or else Get_Kind (Subprg) not in Iir_Kinds_Subprogram_Declaration
+      then
+         return;
+      end if;
+      if Get_Kind (Get_Library_Unit (Sem.Get_Current_Design_Unit))
+        = Iir_Kind_Package_Body
+      then
+         Set_All_Sensitized_State (Subprg, Invalid_Signal);
+      else
+         Set_All_Sensitized_State (Subprg, Read_Signal);
+      end if;
+   end Sem_Check_All_Sensitized;
 
    procedure Finish_Sem_Name (Name : Iir; Res : Iir)
    is
@@ -2463,7 +2489,13 @@ package body Sem_Names is
 --             Set_Parameter (Res, Param);
 --          end if;
 --       end if;
+
       if Get_Kind (Prefix) = Iir_Kind_Signal_Interface_Declaration then
+         --  LRM93 2.1.1.2 / LRM08 4.2.2.3
+         --
+         --  It is an error if signal-valued attributes 'STABLE , 'QUIET,
+         --  'TRANSACTION, and 'DELAYED of formal signal paramaters of any
+         --  mode are read within a subprogram.
          case Get_Kind (Get_Parent (Prefix)) is
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
@@ -2915,6 +2947,7 @@ package body Sem_Names is
          when Iir_Kinds_Object_Declaration =>
             Set_Base_Name (Name, Expr);
             Sem_Check_Pure (Name, Expr);
+            Sem_Check_All_Sensitized (Expr);
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name
            | Iir_Kind_Selected_Element
@@ -2933,6 +2966,7 @@ package body Sem_Names is
                   end if;
                end loop;
                Sem_Check_Pure (Name, E);
+               Sem_Check_All_Sensitized (E);
             end;
          when Iir_Kind_Enumeration_Literal
            | Iir_Kind_Unit_Declaration =>

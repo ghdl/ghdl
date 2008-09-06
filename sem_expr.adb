@@ -12,7 +12,7 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Std_Package; use Std_Package;
@@ -730,8 +730,8 @@ package body Sem_Expr is
       Set_Expr_Staticness (Expr, Staticness);
    end Set_Function_Call_Staticness;
 
-   --  Add CALLEE in the calle list of SUBPRG (which must be a subprg decl).
-   procedure Add_In_Callee_List (Subprg : Iir; Callee : Iir)
+   --  Add CALLEE in the callees list of SUBPRG (which must be a subprg decl).
+   procedure Add_In_Callees_List (Subprg : Iir; Callee : Iir)
    is
       List : Iir_List;
    begin
@@ -743,7 +743,7 @@ package body Sem_Expr is
       --  FIXME: May use a flag in IMP to speed up the
       --  add operation.
       Add_Element (List, Callee);
-   end Add_In_Callee_List;
+   end Add_In_Callees_List;
 
    --  Check purity rules when SUBPRG calls CALLEE.
    --  Both SUBPRG and CALLEE are subprogram declarations.
@@ -808,7 +808,7 @@ package body Sem_Expr is
                      Depth := Get_Impure_Depth (Callee_Body);
                   when Unknown =>
                      --  Add in list.
-                     Add_In_Callee_List (Subprg, Callee);
+                     Add_In_Callees_List (Subprg, Callee);
 
                      if Callee_Body /= Null_Iir then
                         Depth := Get_Impure_Depth (Callee_Body);
@@ -867,7 +867,7 @@ package body Sem_Expr is
          when True =>
             null;
          when Unknown =>
-            Add_In_Callee_List (Subprg, Callee);
+            Add_In_Callees_List (Subprg, Callee);
             return;
       end case;
 
@@ -896,6 +896,81 @@ package body Sem_Expr is
             Error_Kind ("sem_call_wait_check", Subprg);
       end case;
    end Sem_Call_Wait_Check;
+
+   procedure Sem_Call_All_Sensitized_Check
+     (Subprg : Iir; Callee : Iir; Loc : Iir)
+   is
+   begin
+      --  No need to deal with 'process (all)' if standard predates it.
+      if Vhdl_Std < Vhdl_08 then
+         return;
+      end if;
+
+      --  If subprogram called is pure, then there is no signals reference.
+      case Get_Kind (Callee) is
+         when Iir_Kind_Function_Declaration =>
+            if Get_Pure_Flag (Callee) then
+               return;
+            end if;
+         when Iir_Kind_Procedure_Declaration =>
+            if Get_Purity_State (Callee) = Pure then
+               return;
+            end if;
+         when others =>
+            Error_Kind ("sem_call_all_sensitized_check", Callee);
+      end case;
+
+      case Get_All_Sensitized_State (Callee) is
+         when Invalid_Signal =>
+            case Get_Kind (Subprg) is
+               when Iir_Kind_Sensitized_Process_Statement =>
+                  if Get_Sensitivity_List (Subprg) = Iir_List_All then
+                     --  LRM08 11.3
+                     --
+                     --  It is an error if a process statement with the
+                     --  reserved word ALL as its process sensitivity list
+                     --  is the parent of a subprogram declared in a design
+                     --  unit other than that containing the process statement
+                     --  and the subprogram reads an explicitly declared
+                     --  signal that is not a formal signal parameter or
+                     --  member of a formal signal parameter of the
+                     --  subprogram or of any of its parents.  Similarly,
+                     --  it is an error if such subprogram reads an implicit
+                     --  signal whose explicit ancestor is not a formal signal
+                     --  parameter or member of a formal parameter of
+                     --  the subprogram or of any of its parents.
+                     Error_Msg_Sem
+                       ("all-sensitized " & Disp_Node (Subprg)
+                          & " can't call " & Disp_Node (Callee), Loc);
+                     Error_Msg_Sem
+                       (" (as this subprogram reads (indirectly) a signal)",
+                        Loc);
+                  end if;
+               when Iir_Kind_Process_Statement =>
+                  return;
+               when Iir_Kind_Function_Declaration
+                 | Iir_Kind_Procedure_Declaration =>
+                  Set_All_Sensitized_State (Subprg, Invalid_Signal);
+               when others =>
+                  Error_Kind ("sem_call_all_sensitized_check", Subprg);
+            end case;
+         when Read_Signal =>
+            --  Put this subprogram in callees list as it may read a signal.
+            --  Used by canon to build the sensitivity list.
+            Add_In_Callees_List (Subprg, Callee);
+            if Get_Kind (Subprg) in Iir_Kinds_Subprogram_Declaration then
+               if Get_All_Sensitized_State (Subprg) < Read_Signal then
+                  Set_All_Sensitized_State (Subprg, Read_Signal);
+               end if;
+            end if;
+         when Unknown =>
+            --  Put this subprogram in callees list as it may read a signal.
+            --  Used by canon to build the sensitivity list.
+            Add_In_Callees_List (Subprg, Callee);
+         when No_Signal =>
+            null;
+      end case;
+   end Sem_Call_All_Sensitized_Check;
 
    --  Set IMP as the implementation to being called by EXPR.
    --  If the context is a subprogram or a process (ie, if current_subprogram
@@ -929,9 +1004,11 @@ package body Sem_Expr is
             end if;
          when Iir_Kind_Function_Declaration =>
             Sem_Call_Purity_Check (Subprg, Imp, Expr);
+            Sem_Call_All_Sensitized_Check (Subprg, Imp, Expr);
          when Iir_Kind_Procedure_Declaration =>
             Sem_Call_Purity_Check (Subprg, Imp, Expr);
             Sem_Call_Wait_Check (Subprg, Imp, Expr);
+            Sem_Call_All_Sensitized_Check (Subprg, Imp, Expr);
             --  Check passive.
             if Get_Passive_Flag (Imp) = False then
                case Get_Kind (Subprg) is

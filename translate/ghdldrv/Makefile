@@ -81,39 +81,38 @@ bootstrap.old: force
 	$(MAKE) -C ../../libraries EXT=obj \
 	  ANALYSE="$(PWD)/ghdl -a -g" std-obj93.cf
 
-LIB93_DIR:=../lib/v93
 LIB87_DIR:=../lib/v87
+LIB93_DIR:=../lib/v93
+LIB08_DIR:=../lib/v08
+
 LIBSRC_DIR:=../../libraries
 REL_DIR:=../..
 ANALYZE:=../../../ghdldrv/ghdl -a $(LIB_CFLAGS)
 LN=ln -s
 CP=cp
 
-$(LIB87_DIR):
+$(LIB87_DIR) $(LIB93_DIR) $(LIB08_DIR):
 	[ -d ../lib ] || mkdir ../lib
-	[ -d $(LIB87_DIR) ] || mkdir $(LIB87_DIR)
-
-$(LIB93_DIR):
-	[ -d ../lib ] || mkdir ../lib
-	[ -d $(LIB93_DIR) ] || mkdir $(LIB93_DIR)
+	[ -d $@ ] || mkdir $@
 
 include ../../libraries/Makefile.inc
 
 GHDL1=../ghdl1-gcc
-$(LIB87_DIR)/std/std_standard.o: $(GHDL1)
-	$(GHDL1) --std=87 -quiet $(LIB_CFLAGS) -o std_standard.s \
-	 --compile-standard
-	$(CC) -c -o $@ std_standard.s
-	$(RM) std_standard.s
-
 $(LIB93_DIR)/std/std_standard.o: $(GHDL1)
 	$(GHDL1) --std=93 -quiet $(LIB_CFLAGS)  -o std_standard.s \
 	 --compile-standard
 	$(CC) -c -o $@ std_standard.s
 	$(RM) std_standard.s
 
+$(LIB87_DIR)/std/std_standard.o: $(GHDL1)
+	$(GHDL1) --std=87 -quiet $(LIB_CFLAGS) -o std_standard.s \
+	 --compile-standard
+	$(CC) -c -o $@ std_standard.s
+	$(RM) std_standard.s
+
 install.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
 install.v87: std.v87 ieee.v87 synopsys.v87
+install.v08: std.v08
 
 install.standard: $(LIB93_DIR)/std/std_standard.o \
  $(LIB87_DIR)/std/std_standard.o
@@ -122,7 +121,7 @@ grt.links:
 	cd ../lib; ln -sf $(GRTSRCDIR)/grt.lst .; ln -sf $(GRTSRCDIR)/libgrt.a .; ln -sf $(GRTSRCDIR)/grt.ver .
 
 install.all: install.v87 install.v93 install.standard
-install.mcode: install.v87 install.v93
+install.mcode: install.v87 install.v93 install.v08
 
 clean: force
 	$(RM) -f *.o *.ali ghdl_gcc ghdl_mcode 

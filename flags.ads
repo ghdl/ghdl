@@ -12,7 +12,7 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
@@ -25,7 +25,8 @@
 package Flags is
    --  List of vhdl standards.
    --  VHDL_93c is vhdl_93 with backward compatibility with 87 (file).
-   type Vhdl_Std_Type is (Vhdl_87, Vhdl_93c, Vhdl_93, Vhdl_00, Vhdl_02);
+   type Vhdl_Std_Type is
+     (Vhdl_87, Vhdl_93c, Vhdl_93, Vhdl_00, Vhdl_02, Vhdl_08);
 
    -- Standard accepted.
    Vhdl_Std: Vhdl_Std_Type := Vhdl_93c;

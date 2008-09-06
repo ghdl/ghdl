@@ -12,7 +12,7 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Unchecked_Conversion;
@@ -1541,12 +1541,14 @@ package body Sem is
             Sem_Interface_Chain (Interface_Chain, Interface_Function);
             Set_Return_Type
               (Subprg, Sem_Subtype_Indication (Get_Return_Type (Subprg)));
+            Set_All_Sensitized_State (Subprg, Unknown);
          when Iir_Kind_Procedure_Declaration =>
             Sem_Interface_Chain (Interface_Chain, Interface_Procedure);
             --  Unless the body is analyzed, the procedure purity is unknown.
             Set_Purity_State (Subprg, Unknown);
             --  Check if the procedure is passive.
             Set_Passive_Flag (Subprg, True);
+            Set_All_Sensitized_State (Subprg, Unknown);
             declare
                Inter : Iir;
             begin
@@ -1624,7 +1626,7 @@ package body Sem is
       Set_Impure_Depth (Subprg, Iir_Depth_Pure);
 
       --  LRM 10.1  Declarative regions
-      --  3.  A subprogram declaration, together with thr corresponding
+      --  3.  A subprogram declaration, together with the corresponding
       --     subprogram body.
       Open_Declarative_Region;
       Set_Is_Within_Flag (Spec, True);
@@ -1646,7 +1648,7 @@ package body Sem is
 
       case Get_Kind (Spec) is
          when Iir_Kind_Procedure_Declaration =>
-            --  Update purity state of procedure.
+            --  Update purity state of procedure if there are no callees.
             case Get_Purity_State (Spec) is
                when Pure
                  | Maybe_Impure =>
@@ -1665,7 +1667,8 @@ package body Sem is
                      end if;
                   end if;
             end case;
-            --  Update wait state if necessary.
+
+            --  Update wait state if the state of all callees is known.
             if Get_Wait_State (Spec) = Unknown then
                declare
                   Callees : Iir_List;
@@ -1705,6 +1708,17 @@ package body Sem is
                   end if;
                end;
             end if;
+
+            --  Set All_Sensitized_State in trivial cases.
+            if Get_All_Sensitized_State (Spec) = Unknown
+              and then Get_Callees_List (Spec) = Null_Iir_List
+            then
+               Set_All_Sensitized_State (Spec, No_Signal);
+            end if;
+
+            --  Do not add to Analysis_Check_List as procedures can't
+            --  generate purity/wait/all-sensitized errors by themselves.
+
          when Iir_Kind_Function_Declaration =>
             if Get_Callees_List (Spec) /= Null_Iir_List then
                --  Purity calls to be checked later.
@@ -1719,11 +1733,11 @@ package body Sem is
    --  Status of Update_And_Check_Pure_Wait.
    type Update_Pure_Status is
      (
-      --  The purity is computed and known.
+      --  The purity/wait/all-sensitized are computed and known.
       Update_Pure_Done,
-      --  A missing body prevents from computing the purity.
+      --  A missing body prevents from computing the purity/wait/all-sensitized
       Update_Pure_Missing,
-      --  Purity is unknown (recursion).
+      --  Purity/wait/all-sensitized is unknown (recursion).
       Update_Pure_Unknown
      );
    function Update_And_Check_Pure_Wait (Subprg : Iir)
@@ -1765,24 +1779,32 @@ package body Sem is
             else
                Depth := Iir_Depth_Impure;
             end if;
+
          when Iir_Kind_Procedure_Declaration =>
             Kind := K_Procedure;
             if Get_Purity_State (Subprg) = Impure
               and then Get_Wait_State (Subprg) /= Unknown
+              and then Get_All_Sensitized_State (Subprg) /= Unknown
             then
                --  No need to go further.
-               Destroy_Iir_List (Callees_List);
-               Set_Callees_List (Subprg, Null_Iir_List);
+               if Get_All_Sensitized_State (Subprg) = No_Signal
+                 or else Vhdl_Std < Vhdl_08
+               then
+                  Destroy_Iir_List (Callees_List);
+                  Set_Callees_List (Subprg, Null_Iir_List);
+               end if;
                return Update_Pure_Done;
             end if;
             Subprg_Bod := Get_Subprogram_Body (Subprg);
             Subprg_Depth := Get_Subprogram_Depth (Subprg);
             Depth := Get_Impure_Depth (Subprg_Bod);
+
          when Iir_Kind_Sensitized_Process_Statement =>
             Kind := K_Process;
             Subprg_Bod := Null_Iir;
             Subprg_Depth := Iir_Depth_Top;
             Depth := Iir_Depth_Impure;
+
          when others =>
             Error_Kind ("update_and_check_pure_wait(1)", Subprg);
       end case;
@@ -1813,12 +1835,9 @@ package body Sem is
             Callee := Get_Nth_Element (Callees_List, I);
             exit when Callee = Null_Iir;
 
-            --  Only procedures should appear in the list:
+            --  Note:
             --  Pure functions should not be in the list.
             --  Impure functions must have directly set Purity_State.
-            if Get_Kind (Callee) /= Iir_Kind_Procedure_Declaration then
-               Error_Kind ("update_and_check_pure_wait(3)", Callee);
-            end if;
 
             --  Check pure.
             Callee_Bod := Get_Subprogram_Body (Callee);
@@ -1829,8 +1848,11 @@ package body Sem is
                Res := Update_Pure_Missing;
             else
                --  Second loop: recurse if a state is not known.
-               if J = 1 and then (Get_Purity_State (Callee) = Unknown
-                                  or else Get_Wait_State (Callee) = Unknown)
+               if J = 1
+                 and then
+                 (Get_Purity_State (Callee) = Unknown
+                    or else Get_Wait_State (Callee) = Unknown
+                    or else Get_All_Sensitized_State (Callee) = Unknown)
                then
                   Res1 := Update_And_Check_Pure_Wait (Callee);
                   if Res1 = Update_Pure_Missing then
@@ -1879,19 +1901,55 @@ package body Sem is
                end if;
             end if;
 
+            if Get_All_Sensitized_State (Callee) = Invalid_Signal then
+               case Kind is
+                  when K_Function | K_Procedure =>
+                     Set_All_Sensitized_State (Subprg, Invalid_Signal);
+                  when K_Process =>
+                     --  LRM08 11.3
+                     --
+                     --  It is an error if a process statement with the
+                     --  reserved word ALL as its process sensitivity list
+                     --  is the parent of a subprogram declared in a design
+                     --  unit other than that containing the process statement
+                     --  and the subprogram reads an explicitly declared
+                     --  signal that is not a formal signal parameter or
+                     --  member of a formal signal parameter of the
+                     --  subprogram or of any of its parents.  Similarly,
+                     --  it is an error if such subprogram reads an implicit
+                     --  signal whose explicit ancestor is not a formal signal
+                     --  parameter or member of a formal parameter of
+                     --  the subprogram or of any of its parents.
+                     Error_Msg_Sem
+                       ("all-sensitized " & Disp_Node (Subprg)
+                          & " can't call " & Disp_Node (Callee), Subprg);
+                     Error_Msg_Sem
+                       (" (as this subprogram reads (indirectly) a signal)",
+                        Subprg);
+               end case;
+            end if;
+
             --  Keep in list.
             if Callee_Bod = Null_Iir
-              or else (Get_Purity_State (Callee) = Unknown
-                       and then Depth /= Iir_Depth_Impure)
-              or else (Get_Wait_State (Callee) = Unknown
-                       and then (Kind /= K_Procedure
-                                 or else Get_Wait_State (Subprg) = Unknown))
+              or else
+              (Get_Purity_State (Callee) = Unknown
+                 and then Depth /= Iir_Depth_Impure)
+              or else
+              (Get_Wait_State (Callee) = Unknown
+                 and then (Kind /= K_Procedure
+                             or else Get_Wait_State (Subprg) = Unknown))
+              or else
+              (Vhdl_Std >= Vhdl_08
+                 and then
+                 (Get_All_Sensitized_State (Callee) = Unknown
+                    or else Get_All_Sensitized_State (Callee) = Read_Signal))
             then
                Replace_Nth_Element (Callees_List, Npos, Callee);
                Npos := Npos + 1;
             end if;
          end loop;
 
+         --  End of callee loop.
          if Npos = 0 then
             Destroy_Iir_List (Callees_List);
             Callees_List := Null_Iir_List;
@@ -1901,6 +1959,11 @@ package body Sem is
                end if;
                if Get_Wait_State (Subprg) = Unknown then
                   Set_Wait_State (Subprg, False);
+               end if;
+            end if;
+            if Kind = K_Procedure or Kind = K_Function then
+               if Get_All_Sensitized_State (Subprg) = Unknown then
+                  Set_All_Sensitized_State (Subprg, No_Signal);
                end if;
             end if;
             Res := Update_Pure_Done;
@@ -1915,6 +1978,9 @@ package body Sem is
       return Res;
    end Update_And_Check_Pure_Wait;
 
+   --  Check pure/wait/all-sensitized issues for SUBPRG (subprogram or
+   --  process).  Return False if the analysis is incomplete (and must
+   --  be deferred).
    function Root_Update_And_Check_Pure_Wait (Subprg : Iir) return Boolean
    is
       Res : Update_Pure_Status;
@@ -1934,6 +2000,11 @@ package body Sem is
                end if;
                if Get_Wait_State (Subprg) = Unknown then
                   Set_Wait_State (Subprg, False);
+               end if;
+            end if;
+            if Get_Kind (Subprg) in Iir_Kinds_Subprogram_Declaration then
+               if Get_All_Sensitized_State (Subprg) = Unknown then
+                  Set_All_Sensitized_State (Subprg, No_Signal);
                end if;
             end if;
             return True;
