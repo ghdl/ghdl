@@ -1305,9 +1305,17 @@ package body textio is
       return;
     end if;
     if l'left < l'right then
+      --  Ascending (expected common case).
       value := l (l'left to l'left + len - 1);
       trim (l, l'left + len);
+    elsif l'left = l'right then
+      --  String of 1 character.  We don't know the direction and therefore
+      --  can't use the code below which does a slice.
+      value := l.all;
+      deallocate (l);
+      l := new string'("");
     else
+      --  Descending.
       value := l (l'left downto l'left - len + 1);
       trim (l, l'left - len);
     end if;
