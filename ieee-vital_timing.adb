@@ -1030,7 +1030,7 @@ package body Ieee.Vital_Timing is
       Check_Vital_Delay_Type (Iport, Oport);
 
       --  IEEE 1076.4  4.3.2.1.3.14  Biased propagation delay
-      --  There shall exit, in the same entity generic clause, a corresponding
+      --  There shall exist, in the same entity generic clause, a corresponding
       --  propagation delay generic denoting the same ports, condition name,
       --  and edge.
       declare
