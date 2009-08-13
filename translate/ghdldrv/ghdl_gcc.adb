@@ -25,6 +25,7 @@ begin
    --  Manual elaboration so that the order is known (because it is the order
    --  used to display help).
    Ghdlmain.Version_String := new String'("GCC back-end code generator");
+   Ghdldrv.Compile_Kind := Ghdldrv.Compile_Gcc;
    Ghdldrv.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;

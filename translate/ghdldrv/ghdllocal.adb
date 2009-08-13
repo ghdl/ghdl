@@ -53,6 +53,10 @@ package body Ghdllocal is
       Config : Iir_Design_Unit;
       Lib : Iir;
    begin
+      if (Main or Flags.Dump_All) and then Flags.Dump_Parse then
+         Disp_Tree.Disp_Tree (Unit);
+      end if;
+
       if Flags.Verbose then
          Put_Line ("semantize " & Disp_Node (Get_Library_Unit (Unit)));
       end if;
@@ -65,6 +69,10 @@ package body Ghdllocal is
 
       if Errorout.Nbr_Errors > 0 then
          raise Compilation_Error;
+      end if;
+
+      if (Main or Flags.List_All) and then Flags.List_Sem then
+         Disp_Vhdl.Disp_Vhdl (Unit);
       end if;
 
       Post_Sems.Post_Sem_Checks (Unit);

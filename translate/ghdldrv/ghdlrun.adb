@@ -25,16 +25,11 @@ with Ada.Unchecked_Conversion;
 with Ada.Command_Line;
 with Ada.Text_IO;
 
-with Binary_File; use Binary_File;
-with Binary_File.Memory;
-with Ortho_Mcode; use Ortho_Mcode;
-with Ortho_Code.Flags; use Ortho_Code.Flags;
+with Ortho_Jit;
+with Ortho_Nodes; use Ortho_Nodes;
 with Interfaces;
 with System; use System;
 with Trans_Decls;
-with Ortho_Code.Binary;
-with Ortho_Code.Debug;
-with Ortho_Code.Abi;
 with Types;
 with Iirs; use Iirs;
 with Flags;
@@ -45,8 +40,6 @@ with Trans_Be;
 with Translation;
 with Std_Names;
 with Ieee.Std_Logic_1164;
-
-with Binary_File.Elf;
 
 with Lists;
 with Str_Table;
@@ -71,8 +64,6 @@ with Ghdlcomp;
 with Foreigns;
 
 package body Ghdlrun is
-   Snap_Filename : GNAT.OS_Lib.String_Access := null;
-
    procedure Foreign_Hook (Decl : Iir;
                            Info : Translation.Foreign_Info_Type;
                            Ortho : O_Dnode);
@@ -91,8 +82,7 @@ package body Ghdlrun is
       Setup_Libraries (False);
       Libraries.Load_Std_Library;
 
-      Ortho_Mcode.Init;
-      Binary_File.Memory.Write_Memory_Init;
+      Ortho_Jit.Init;
 
       Translation.Initialize;
       Canon.Canon_Flag_Add_Labels := True;
@@ -114,8 +104,6 @@ package body Ghdlrun is
          --  This may happen (bad entity for example).
          raise Compilation_Error;
       end if;
-
-      Ortho_Mcode.Finish;
    end Compile_Elab;
 
    --  Set options.
@@ -221,22 +209,7 @@ package body Ghdlrun is
    end Find_Untruncated_Text_Read;
 
    procedure Def (Decl : O_Dnode; Addr : Address)
-   is
-      use Ortho_Code.Binary;
-   begin
-      Binary_File.Memory.Set_Symbol_Address (Get_Decl_Symbol (Decl), Addr);
-   end Def;
-
-   function Get_Address (Decl : O_Dnode) return Address
-   is
-      use Interfaces;
-      use Ortho_Code.Binary;
-
-      function Conv is new Ada.Unchecked_Conversion
-        (Source => Unsigned_32, Target => Address);
-   begin
-      return Conv (Get_Symbol_Vaddr (Get_Decl_Symbol (Decl)));
-   end Get_Address;
+     renames Ortho_Jit.Set_Address;
 
    procedure Foreign_Hook (Decl : Iir;
                            Info : Translation.Foreign_Info_Type;
@@ -270,7 +243,7 @@ package body Ghdlrun is
    procedure Run
    is
       use Interfaces;
-      use Ortho_Code.Binary;
+      --use Ortho_Code.Binary;
 
       function Conv is new Ada.Unchecked_Conversion
         (Source => Address, Target => Elaborate_Acc);
@@ -280,13 +253,6 @@ package body Ghdlrun is
       if Flag_Verbose then
          Ada.Text_IO.Put_Line ("Linking in memory");
       end if;
-
-      if Ortho_Code.Debug.Flag_Debug_Hli then
-         --  Can't generate code in HLI.
-         raise Compile_Error;
-      end if;
-
-      Ortho_Code.Abi.Link_Intrinsics;
 
       Def (Trans_Decls.Ghdl_Memcpy,
            Grt.Lib.Ghdl_Memcpy'Address);
@@ -574,43 +540,30 @@ package body Ghdlrun is
          Def (Decl, Grt.Files.Ghdl_Untruncated_Text_Read'Address);
       end if;
 
-      Binary_File.Memory.Write_Memory_Relocate (Err);
+      Ortho_Jit.Link (Err);
       if Err then
          raise Compile_Error;
       end if;
 
       Std_Standard_Boolean_RTI_Ptr :=
-        Get_Address (Trans_Decls.Std_Standard_Boolean_Rti);
+        Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Boolean_Rti);
       Std_Standard_Bit_RTI_Ptr :=
-        Get_Address (Trans_Decls.Std_Standard_Bit_Rti);
+        Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Bit_Rti);
       if Ieee.Std_Logic_1164.Resolved /= Null_Iir then
          Decl := Translation.Get_Resolv_Ortho_Decl
            (Ieee.Std_Logic_1164.Resolved);
          if Decl /= O_Dnode_Null then
-            Ieee_Std_Logic_1164_Resolved_Resolv_Ptr := Get_Address (Decl);
+            Ieee_Std_Logic_1164_Resolved_Resolv_Ptr :=
+              Ortho_Jit.Get_Address (Decl);
          end if;
       end if;
 
       Flag_String := Flags.Flag_String;
 
-      Elaborate_Proc := Conv (Get_Address (Trans_Decls.Ghdl_Elaborate));
+      Elaborate_Proc :=
+        Conv (Ortho_Jit.Get_Address (Trans_Decls.Ghdl_Elaborate));
 
-      if Snap_Filename /= null then
-         declare
-            Fd : File_Descriptor;
-         begin
-            Fd := Create_File (Snap_Filename.all, Binary);
-            if Fd = Invalid_FD then
-               Error_Msg_Option ("can't open '" & Snap_Filename.all & "'");
-            else
-               Binary_File.Elf.Write_Elf (Fd);
-               Close (Fd);
-            end if;
-         end;
-      end if;
-
-      --  Free all the memory.
-      Ortho_Mcode.Free_All;
+      Ortho_Jit.Finish;
 
       Translation.Finalize;
       Lists.Initialize;
@@ -618,7 +571,6 @@ package body Ghdlrun is
       Nodes.Initialize;
       Files_Map.Initialize;
       Name_Table.Initialize;
-      Binary_File.Finish;
 
       if Flag_Verbose then
          Ada.Text_IO.Put_Line ("Starting simulation");
@@ -627,33 +579,6 @@ package body Ghdlrun is
       Grt.Main.Run;
       --V := Ghdl_Main (1, Gnat_Argv);
    end Run;
-
-   function Decode_Option (Option : String) return Boolean
-   is
-      Opt : constant String (1 .. Option'Length) := Option;
-   begin
-      if Opt = "-g" then
-         Flag_Debug := Debug_Dwarf;
-         return True;
-      elsif Opt'Length > 5 and then Opt (1 .. 5) = "--be-" then
-         Ortho_Code.Debug.Set_Be_Flag (Opt);
-         return True;
-      elsif Opt'Length > 7 and then Opt (1 .. 7) = "--snap=" then
-         Snap_Filename := new String'(Opt (8 .. Opt'Last));
-         return True;
-      else
-         return False;
-      end if;
-   end Decode_Option;
-
-   procedure Disp_Long_Help
-   is
-      use Ada.Text_IO;
-   begin
-      Put_Line (" -g             Generate debugging informations");
-      Put_Line (" --debug-be=X   Set X internal debugging flags");
-      Put_Line (" --snap=FILE    Write memory snapshot to FILE");
-   end Disp_Long_Help;
 
 
    --  Command run help.
@@ -704,8 +629,8 @@ package body Ghdlrun is
                          Compile_Elab'Access,
                          Set_Run_Options'Access,
                          Run'Access,
-                         Decode_Option'Access,
-                         Disp_Long_Help'Access);
+                         Ortho_Jit.Decode_Option'Access,
+                         Ortho_Jit.Disp_Help'Access);
       Ghdlcomp.Register_Commands;
       Register_Command (new Command_Run_Help);
       Trans_Be.Register_Translation_Back_End;

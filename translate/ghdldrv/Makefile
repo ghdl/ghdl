@@ -29,12 +29,18 @@ CC=gcc
 #GNATFLAGS+=-pg -gnatn -O
 #GRT_FLAGS+=-pg -O
 
+# Coverage
+#GNATFLAGS+=-fprofile-arcs -ftest-coverage
+
 GNAT_BARGS=-bargs -E
+
+LLVM_CONFIG=llvm-config
 
 #GNAT_LARGS= -static
 all: ghdl_mcode
 
 target=i686-pc-linux-gnu
+#target=x86_64-pc-linux-gnu
 GRTSRCDIR=../grt
 include $(GRTSRCDIR)/Makefile.inc
 
@@ -54,13 +60,23 @@ ortho_code-x86-flags.ads:
 
 ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force 
-	$(GNATMAKE) -aI../../ortho/mcode $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) -largs -L/usr/lib32
+	$(GNATMAKE) -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) -largs -L/usr/lib32
+
+ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
+ghdl_llvm_jit: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) bindings.o force 
+	$(GNATMAKE) -o $@ -aI../../ortho/llvm -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs -m64 bindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) --LINK=g++
 
 memsegs_c.o: ../../ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
 
+bindings.o: ../../ortho/llvm/bindings.cpp
+	$(CXX) -c -m64 `$(LLVM_CONFIG) --cxxflags` -g -o $@ $<
+
 ghdl_gcc: default_pathes.ads force 
 	$(GNATMAKE) $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
+
+ghdl_llvm: default_pathes.ads force 
+	$(GNATMAKE) $(GNATFLAGS) ghdl_llvm $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
 ghdl_simul: default_pathes.ads force
 	gnatmake -aI../../simulate $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS)
@@ -70,6 +86,7 @@ default_pathes.ads: default_pathes.ads.in Makefile
 	sed -e "s%@COMPILER_GCC@%$$curdir/ghdl1-gcc%" \
 	 -e "s%@COMPILER_DEBUG@%$$curdir/ghdl1-debug%" \
 	 -e "s%@COMPILER_MCODE@%$$curdir/ghdl1-mcode%" \
+	 -e "s%@COMPILER_LLVM@%$$curdir/ghdl1-llvm%" \
 	 -e "s%@POST_PROCESSOR@%$$curdir/../ortho/oread/oread-gcc%" \
 	 -e "s%@PREFIX@%$$curdir/lib/%" < $< > $@
 
@@ -110,6 +127,13 @@ $(LIB87_DIR)/std/std_standard.o: $(GHDL1)
 	$(CC) -c -o $@ std_standard.s
 	$(RM) std_standard.s
 
+GHDL1LLVM=../ghdl1-llvm
+$(LIB93_DIR)/std/std_standard.bc: $(GHDL1LLVM)
+	$(GHDL1LLVM) --std=93 -o $@ --compile-standard
+
+$(LIB87_DIR)/std/std_standard.bc: $(GHDL1LLVM)
+	$(GHDL1LLVM) --std=87 -o $@ --compile-standard
+
 install.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
 install.v87: std.v87 ieee.v87 synopsys.v87
 install.v08: std.v08
@@ -117,11 +141,15 @@ install.v08: std.v08
 install.standard: $(LIB93_DIR)/std/std_standard.o \
  $(LIB87_DIR)/std/std_standard.o
 
+install.standard-llvm: $(LIB93_DIR)/std/std_standard.bc \
+ $(LIB87_DIR)/std/std_standard.bc
+
 grt.links:
 	cd ../lib; ln -sf $(GRTSRCDIR)/grt.lst .; ln -sf $(GRTSRCDIR)/libgrt.a .; ln -sf $(GRTSRCDIR)/grt.ver .
 
 install.all: install.v87 install.v93 install.standard
 install.mcode: install.v87 install.v93 install.v08
+install.llvm: install.standard-llvm
 
 clean: force
 	$(RM) -f *.o *.ali ghdl_gcc ghdl_mcode 

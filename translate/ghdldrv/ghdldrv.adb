@@ -44,6 +44,7 @@ package body Ghdldrv is
    Post_Processor_Cmd : String_Access := null;
    Assembler_Cmd : constant String := "as";
    Linker_Cmd : constant String := "gcc";
+   Llvm_Linker_Cmd : constant String := "llvm-ld";
 
    --  Path of the tools.
    Compiler_Path : String_Access;
@@ -61,8 +62,6 @@ package body Ghdldrv is
    --  "-quiet" option.
    Dash_Quiet : String_Access;
 
-   type Compile_Kind_Type is (Compile_Mcode, Compile_Gcc, Compile_Debug);
-   Compile_Kind : Compile_Kind_Type := Compile_Gcc;
 
    --  If set, do not assmble
    Flag_Asm : Boolean;
@@ -140,6 +139,8 @@ package body Ghdldrv is
          when Compile_Gcc
            | Compile_Debug =>
             Asm_File := Append_Suffix (File, Asm_Suffix);
+         when Compile_Llvm =>
+            Asm_File := Append_Suffix (File, Llvm_Suffix);
          when Compile_Mcode =>
             null;
       end case;
@@ -177,7 +178,8 @@ package body Ghdldrv is
          case Compile_Kind is
             when Compile_Debug =>
                Args (P + 2) := Post_File;
-            when Compile_Gcc =>
+            when Compile_Gcc
+              | Compile_Llvm =>
                Args (P + 2) := Asm_File;
             when Compile_Mcode =>
                Args (P + 2) := Obj_File;
@@ -258,6 +260,8 @@ package body Ghdldrv is
       Table_Initial => 16,
       Table_Increment => 100);
 
+   Link_Obj_Suffix : String_Access;
+
    --  Read a list of files from file FILENAME.
    --  Lines starting with a '#' are ignored (comments)
    --  Lines starting with a '>' are directory lines
@@ -298,7 +302,7 @@ package body Ghdldrv is
       Stream := fopen (Line'Address, Mode'Address);
       if Stream = NULL_Stream then
          Error ("cannot open " & Filename);
-         return;
+         raise Compile_Error;
       end if;
       Dir_Len := 0;
       loop
@@ -322,7 +326,7 @@ package body Ghdldrv is
                if To_Obj then
                   File := new String'(Dir (1 .. Dir_Len)
                                       & Get_Base_Name (Line (1 .. L))
-                                      & Get_Object_Suffix.all);
+                                      & Link_Obj_Suffix.all);
                else
                   File := new String'(Substitute (Line (1 .. L)));
                end if;
@@ -505,6 +509,8 @@ package body Ghdldrv is
                Compiler_Cmd := new String'(Default_Pathes.Compiler_Gcc);
             when Compile_Mcode =>
                Compiler_Cmd := new String'(Default_Pathes.Compiler_Mcode);
+            when Compile_Llvm =>
+               Compiler_Cmd := new String'(Default_Pathes.Compiler_Llvm);
          end case;
       end if;
       if Post_Processor_Cmd = null then
@@ -531,9 +537,16 @@ package body Ghdldrv is
             Tool_Not_Found (Assembler_Cmd);
          end if;
       end if;
-      Linker_Path := Locate_Exec_On_Path (Linker_Cmd);
-      if Linker_Path = null then
-         Tool_Not_Found (Linker_Cmd);
+      if Compile_Kind = Compile_Llvm then
+         Linker_Path := Locate_Exec_On_Path (Llvm_Linker_Cmd);
+         if Linker_Path = null then
+            Tool_Not_Found (Llvm_Linker_Cmd);
+         end if;
+      else
+         Linker_Path := Locate_Exec_On_Path (Linker_Cmd);
+         if Linker_Path = null then
+            Tool_Not_Found (Linker_Cmd);
+         end if;
       end if;
       Dash_O := new String'("-o");
       Dash_Quiet := new String'("-quiet");
@@ -574,7 +587,6 @@ package body Ghdldrv is
       Flag_Not_Quiet := False;
       Flag_Disp_Commands := False;
       Flag_Asm := False;
-      Compile_Kind := Compile_Gcc;
       Flag_Expect_Failure := False;
       Output_File := null;
 
@@ -613,6 +625,9 @@ package body Ghdldrv is
          Res := Option_Ok;
       elsif Opt = "--mcode" then
          Compile_Kind := Compile_Mcode;
+         Res := Option_Ok;
+      elsif Opt = "--llvm" then
+         Compile_Kind := Compile_Llvm;
          Res := Option_Ok;
       elsif Opt = "-o" then
          if Arg'Length = 0 then
@@ -895,7 +910,21 @@ package body Ghdldrv is
                    Disp_Only : Boolean)
    is
       Last_File : Natural;
+      Final_Output_File : String_Access;
    begin
+      case Compile_Kind is
+         when Compile_Llvm =>
+            Link_Obj_Suffix := new String'(Llvm_Suffix);
+            --  Hacks for llvm:
+            --  1. Generate a native executable.
+            Add_Argument (Linker_Args, new String'("-native"));
+            --  2. Use an intermediate file.
+            Final_Output_File := Output_File;
+            Output_File := new String'(Output_File.all & "~e");
+         when others =>
+            Link_Obj_Suffix := Get_Object_Suffix;
+      end case;
+
       --  read files list
       if Filelist_Name /= null then
          Add_File_List (Filelist_Name.all, True);
@@ -910,9 +939,9 @@ package body Ghdldrv is
          Args : Argument_List (1 .. Nbr_Args);
          Obj_File : String_Access;
          Std_File : String_Access;
+         Status : Boolean;
       begin
-         Obj_File := Append_Suffix
-           (Elab_Name.all, Get_Object_Suffix.all);
+         Obj_File := Append_Suffix (Elab_Name.all, Link_Obj_Suffix.all);
          P := 0;
          Args (P + 1) := Dash_O;
          Args (P + 2) := Output_File;
@@ -923,7 +952,7 @@ package body Ghdldrv is
               String'(Get_Machine_Path_Prefix
                       & Get_Version_Path & Directory_Separator
                       & "std" & Directory_Separator
-                      & "std_standard" & Get_Object_Suffix.all);
+                      & "std_standard" & Link_Obj_Suffix.all);
             P := P + 1;
             Args (P) := Std_File;
          else
@@ -953,6 +982,14 @@ package body Ghdldrv is
             end loop;
          else
             My_Spawn (Linker_Path.all, Args (1 .. P));
+            if Compile_Kind = Compile_Llvm then
+               Rename_File (Output_File.all, Final_Output_File.all, Status);
+               if not Status then
+                  raise Compile_Error;
+               end if;
+               Free (Output_File);
+               Output_File := Final_Output_File;
+            end if;
          end if;
 
          Free (Obj_File);

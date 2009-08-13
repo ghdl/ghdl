@@ -41,6 +41,9 @@ package Ghdllocal is
    --  Suffix for asm files.
    Asm_Suffix : constant String := ".s";
 
+   --  Suffix for llvm byte-code files.
+   Llvm_Suffix : constant String := ".bc";
+
    --  Suffix for post files.
    Post_Suffix : constant String := ".on";
 

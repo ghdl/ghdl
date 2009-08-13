@@ -947,7 +947,7 @@ package body Ghdlprint is
       Put_Line ("--format=css    Use ghdl.css file");
    end Disp_Long_Help;
 
-   --  Command --pp_html.
+   --  Command --pp-html.
    type Command_PP_Html is new Command_Html with null record;
    function Decode_Command (Cmd : Command_PP_Html; Name : String)
                            return Boolean;

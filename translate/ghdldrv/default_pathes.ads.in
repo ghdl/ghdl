@@ -19,6 +19,8 @@
 package Default_Pathes is
    Compiler_Mcode : constant String :=
      "@COMPILER_MCODE@";
+   Compiler_Llvm : constant String :=
+     "@COMPILER_LLVM@";
    Compiler_Gcc : constant String :=
      "@COMPILER_GCC@";
    Compiler_Debug : constant String :=

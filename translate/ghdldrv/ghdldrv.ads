@@ -16,5 +16,10 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 package Ghdldrv is
+   --  Compiler to use.
+   type Compile_Kind_Type is
+     (Compile_Mcode, Compile_Llvm, Compile_Gcc, Compile_Debug);
+   Compile_Kind : Compile_Kind_Type := Compile_Gcc;
+
    procedure Register_Commands;
 end Ghdldrv;
