@@ -566,6 +566,12 @@ package body Grt.Rtis_Utils is
                   Link := To_Ghdl_Entity_Link_Acc (Ctxt.Base);
                   Ctxt := (Base => Ctxt.Base,
                            Block => Link.Rti);
+                  if Ctxt.Block = null then
+                     --  Process in an entity.
+                     --  FIXME: check.
+                     Prepend (Rstr, Blk.Name);
+                     return;
+                  end if;
                end;
             when Ghdl_Rtik_Architecture =>
                declare
