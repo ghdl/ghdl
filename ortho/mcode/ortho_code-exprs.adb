@@ -22,7 +22,7 @@ with Ortho_Code.Types; use Ortho_Code.Types;
 with Ortho_Code.Consts; use Ortho_Code.Consts;
 with Ortho_Code.Decls; use Ortho_Code.Decls;
 with Ortho_Code.Debug; use Ortho_Code.Debug;
-with Ortho_Code.Abi;
+with Ortho_Code.Abi; use Ortho_Code.Abi;
 with Ortho_Code.Disps;
 with Ortho_Code.Opts;
 with Ortho_Code.Flags;
@@ -262,6 +262,16 @@ package body Ortho_Code.Exprs is
    begin
       return Int32 (Enodes.Table (Stmt).Arg2);
    end Get_BB_Number;
+
+   function Get_Loop_Level (Stmt : O_Enode) return Int32 is
+   begin
+      return Int32 (Enodes.Table (Stmt).Arg1);
+   end Get_Loop_Level;
+
+   procedure Set_Loop_Level (Stmt : O_Enode; Level : Int32) is
+   begin
+      Enodes.Table (Stmt).Arg1 := O_Enode (Level);
+   end Set_Loop_Level;
 
    procedure Set_Case_Branch (C : O_Enode; Branch : O_Enode) is
    begin
@@ -698,6 +708,7 @@ package body Ortho_Code.Exprs is
                                  O_Enode (Get_Const_Decl (Lit)), O_Enode_Null);
             when OC_Array
               | OC_Record
+              | OC_Union
               | OC_Sizeof =>
                raise Syntax_Error;
          end case;
@@ -717,8 +728,10 @@ package body Ortho_Code.Exprs is
          Subprg := Cur_Subprg;
          Res := O_Enode_Null;
          loop
+            --  The static chain is the first interface of the subprogram.
             Res := New_Enode (OE_Addrl, Abi.Mode_Ptr, O_Tnode_Ptr,
-                              O_Enode (Subprg.D_Decl + 1), Res);
+                              O_Enode (Get_Subprg_Interfaces (Subprg.D_Decl)),
+                              Res);
             Res := New_Enode (OE_Indir, O_Tnode_Ptr, Res, O_Enode_Null);
             Cur_Depth := Cur_Depth - 1;
             if Cur_Depth = Depth then
@@ -1047,6 +1060,7 @@ package body Ortho_Code.Exprs is
    is
       Save_Var : O_Dnode;
       Stmt : O_Enode;
+      St_Type : O_Tnode;
    begin
       if Flag_Debug_Assert then
          Check_Ref (Size);
@@ -1060,11 +1074,16 @@ package body Ortho_Code.Exprs is
 
       if not Get_Block_Has_Alloca (Cur_Block) then
          Set_Block_Has_Alloca (Cur_Block, True);
+         if Stack_Ptr_Type /= O_Tnode_Null then
+            St_Type := Stack_Ptr_Type;
+         else
+            St_Type := Rtype;
+         end if;
          --  Add a decl.
-         New_Var_Decl (Save_Var, O_Ident_Nul, O_Storage_Local, Rtype);
+         New_Var_Decl (Save_Var, O_Ident_Nul, O_Storage_Local, St_Type);
          --  Add insn to save stack ptr.
-         Stmt := New_Enode (OE_Asgn, Rtype,
-                            New_Stack (Rtype),
+         Stmt := New_Enode (OE_Asgn, St_Type,
+                            New_Stack (St_Type),
                             O_Enode (New_Obj (Save_Var)));
          if Cur_Block = Last_Stmt then
             Set_Stmt_Link (Last_Stmt, Stmt);
@@ -1212,7 +1231,7 @@ package body Ortho_Code.Exprs is
 
       New_Enode_Stmt (OE_Ret, Get_Type_Mode (V_Type), Value, O_Enode_Null);
       if not Flag_Debug_Hli then
-         New_Allocb_Jump (Cur_Subprg.Exit_Label);
+         Emit_Jmp (OE_Jump, O_Enode_Null, Cur_Subprg.Exit_Label);
       end if;
    end New_Return_Stmt;
 
@@ -1225,7 +1244,7 @@ package body Ortho_Code.Exprs is
       end if;
 
       if not Flag_Debug_Hli then
-         New_Allocb_Jump (Cur_Subprg.Exit_Label);
+         Emit_Jmp (OE_Jump, O_Enode_Null, Cur_Subprg.Exit_Label);
       else
          New_Enode_Stmt (OE_Ret, Mode_Nil, O_Enode_Null, O_Enode_Null);
       end if;
@@ -1242,7 +1261,7 @@ package body Ortho_Code.Exprs is
          Check_Ref (Cond);
       end if;
 
-      if Flag_Debug_Hli then
+      if not Flag_Lower_Stmt then
          New_Enode_Stmt (OE_If, Cond, O_Enode_Null);
          Block := (Label_End => O_Enode_Null,
                    Label_Next => Last_Stmt);
@@ -1254,36 +1273,10 @@ package body Ortho_Code.Exprs is
       end if;
    end Start_If_Stmt;
 
-   procedure New_Elsif_Stmt (Block : in out O_If_Block; Cond : O_Enode) is
-   begin
-      if Flag_Debug_Assert then
-         if Get_Expr_Mode (Cond) /= Mode_B2 then
-            --  COND must be a boolean.
-            raise Syntax_Error;
-         end if;
-         Check_Ref (Cond);
-      end if;
-
-      if Flag_Debug_Hli then
-         New_Enode_Stmt (OE_Elsif, Cond, O_Enode_Null);
-         Block.Label_Next := Last_Stmt;
-      else
-         if Block.Label_End = O_Enode_Null then
-            Block.Label_End := New_Label;
-         end if;
-         Emit_Jmp (OE_Jump, O_Enode_Null, Block.Label_End);
-         Start_BB;
-         Link_Stmt (Block.Label_Next);
-         Block.Label_Next := New_Label;
-         Emit_Jmp (OE_Jump_F, Cond, Block.Label_Next);
-         Start_BB;
-      end if;
-   end New_Elsif_Stmt;
-
    procedure New_Else_Stmt (Block : in out O_If_Block) is
    begin
-      if Flag_Debug_Hli then
-         New_Enode_Stmt (OE_Elsif, O_Enode_Null, O_Enode_Null);
+      if not Flag_Lower_Stmt then
+         New_Enode_Stmt (OE_Else, O_Enode_Null, O_Enode_Null);
       else
          if Block.Label_End = O_Enode_Null then
             Block.Label_End := New_Label;
@@ -1297,7 +1290,7 @@ package body Ortho_Code.Exprs is
 
    procedure Finish_If_Stmt (Block : in out O_If_Block) is
    begin
-      if Flag_Debug_Hli then
+      if not Flag_Lower_Stmt then
          New_Enode_Stmt (OE_Endif, O_Enode_Null, O_Enode_Null);
       else
          --  Create a badic-block after the IF.
@@ -1313,7 +1306,7 @@ package body Ortho_Code.Exprs is
 
    procedure Start_Loop_Stmt (Label : out O_Snode) is
    begin
-      if Flag_Debug_Hli then
+      if not Flag_Lower_Stmt then
          New_Enode_Stmt (OE_Loop, O_Enode_Null, O_Enode_Null);
          Label := (Label_Start => Last_Stmt,
                    Label_End => O_Enode_Null);
@@ -1329,7 +1322,7 @@ package body Ortho_Code.Exprs is
    procedure Finish_Loop_Stmt (Label : in out O_Snode)
    is
    begin
-      if Flag_Debug_Hli then
+      if not Flag_Lower_Stmt then
          New_Enode_Stmt (OE_Eloop, Label.Label_Start, O_Enode_Null);
       else
          Emit_Jmp (OE_Jump, O_Enode_Null, Label.Label_Start);
@@ -1338,11 +1331,10 @@ package body Ortho_Code.Exprs is
       end if;
    end Finish_Loop_Stmt;
 
-
    procedure New_Exit_Stmt (L : O_Snode)
    is
    begin
-      if Flag_Debug_Hli then
+      if not Flag_Lower_Stmt then
          New_Enode_Stmt (OE_Exit, O_Enode_Null, L.Label_Start);
       else
          New_Allocb_Jump (L.Label_End);
@@ -1352,7 +1344,7 @@ package body Ortho_Code.Exprs is
    procedure New_Next_Stmt (L : O_Snode)
    is
    begin
-      if Flag_Debug_Hli then
+      if not Flag_Lower_Stmt then
          New_Enode_Stmt (OE_Next, O_Enode_Null, L.Label_Start);
       else
          New_Allocb_Jump (L.Label_Start);
@@ -1543,18 +1535,18 @@ package body Ortho_Code.Exprs is
       New_Enode_Stmt (OE_Line, O_Enode (Line), O_Enode_Null);
    end New_Debug_Line_Stmt;
 
-   procedure Disp_Enode (Indent : Natural; N : O_Enode)
+   procedure Debug_Expr (N : O_Enode)
    is
       use Ada.Text_IO;
       use Ortho_Code.Debug.Int32_IO;
+      Indent : constant Count := Col;
    begin
-      Set_Col (Count (Indent));
       Put (Int32 (N), 0);
-      Set_Col (Count (Indent + 7));
+      Set_Col (Indent + 7);
       Disp_Mode (Get_Expr_Mode (N));
       Put ("  ");
       Put (OE_Kind'Image (Get_Expr_Kind (N)));
-      Set_Col (Count (Indent + 25));
+      Set_Col (Indent + 26);
 --       Put (Abi.Image_Insn (Get_Expr_Insn (N)));
 --       Put ("  ");
       Put (Abi.Image_Reg (Get_Expr_Reg (N)));
@@ -1563,10 +1555,11 @@ package body Ortho_Code.Exprs is
       Put (Int32 (Enodes.Table (N).Arg2), 7);
       Put (Enodes.Table (N).Info, 7);
       New_Line;
-   end Disp_Enode;
+   end Debug_Expr;
 
    procedure Disp_Subprg_Body (Indent : Natural; Subprg : O_Enode)
    is
+      use Ada.Text_IO;
       N : O_Enode;
       N_Indent : Natural;
    begin
@@ -1575,7 +1568,8 @@ package body Ortho_Code.Exprs is
          raise Program_Error;
       end if;
       --  Display the entry.
-      Disp_Enode (Indent, N);
+      Set_Col (Count (Indent));
+      Debug_Expr (N);
       --  Display the subprogram, binding.
       N_Indent := Indent;-- + 1;
       N := N + 1;
@@ -1584,10 +1578,12 @@ package body Ortho_Code.Exprs is
             when OE_Entry =>
                N := Get_Entry_Leave (N) + 1;
             when OE_Leave =>
-               Disp_Enode (Indent, N);
+               Set_Col (Count (Indent));
+               Debug_Expr (N);
                exit;
             when others =>
-               Disp_Enode (N_Indent, N);
+               Set_Col (Count (N_Indent));
+               Debug_Expr (N);
                case Get_Expr_Kind (N) is
                   when OE_Beg =>
                      Disp_Block (N_Indent + 2,
@@ -1606,7 +1602,7 @@ package body Ortho_Code.Exprs is
    procedure Disp_All_Enode is
    begin
       for I in Enodes.First .. Enodes.Last loop
-         Disp_Enode (1, I);
+         Debug_Expr (I);
       end loop;
    end Disp_All_Enode;
 

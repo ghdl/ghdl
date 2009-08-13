@@ -37,10 +37,11 @@ package body Ortho_Ident is
    is
       Start : Natural;
    begin
-      Start := Strs.Allocate (Str'Length);
+      Start := Strs.Allocate (Str'Length + 1);
       for I in Str'Range loop
          Strs.Table (Start + I - Str'First) := Str (I);
       end loop;
+      Strs.Table (Start + Str'Length) := ASCII.Nul;
       Ids.Append (Start);
       return Ids.Last;
    end Get_Identifier;
@@ -57,9 +58,9 @@ package body Ortho_Ident is
    begin
       Start := Ids.Table (Id);
       if Id = Ids.Last then
-         return Strs.Last - Start + 1;
+         return Strs.Last - Start + 1 - 1;
       else
-         return Ids.Table (Id + 1) - Start;
+         return Ids.Table (Id + 1) - 1 - Start;
       end if;
    end Get_String_Length;
 
@@ -69,10 +70,15 @@ package body Ortho_Ident is
       Start : constant Natural := Ids.Table (Id);
    begin
       for I in Res'Range loop
-         Res (I) := Strs.Table (Start + I - 1);
+         Res (I) := Strs.Table (Start + I - Res'First);
       end loop;
       return Res;
    end Get_String;
+
+   function Get_Cstring (Id : O_Ident) return System.Address is
+   begin
+      return Strs.Table (Ids.Table (Id))'Address;
+   end Get_Cstring;
 
    function Is_Equal (Id : O_Ident; Str : String) return Boolean
    is

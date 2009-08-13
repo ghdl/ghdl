@@ -21,6 +21,7 @@ with GNAT.Table;
 with Ortho_Code.Consts; use Ortho_Code.Consts;
 with Ortho_Code.Debug;
 with Ortho_Code.Abi; use Ortho_Code.Abi;
+with Ortho_Ident;
 
 package body Ortho_Code.Types is
    type Bool_Array is array (Natural range <>) of Boolean;
@@ -30,10 +31,13 @@ package body Ortho_Code.Types is
       Kind : OT_Kind; -- 4 bits.
       Mode : Mode_Type; -- 4 bits.
       Align : Small_Natural; -- 2 bits.
-      Pad0 : Bool_Array (0 .. 21);
+      Deferred : Boolean; -- 1 bit (True if the type was incomplete at first)
+      Flag1 : Boolean;
+      Pad0 : Bool_Array (0 .. 19);
       Size : Uns32;
    end record;
    pragma Pack (Tnode_Common);
+   for Tnode_Common'Size use 64;
 
    type Tnode_Access is record
       Dtype : O_Tnode;
@@ -110,6 +114,21 @@ package body Ortho_Code.Types is
    begin
       return Tnodes.Table (Atype).Mode;
    end Get_Type_Mode;
+
+   function Get_Type_Deferred (Atype : O_Tnode) return Boolean is
+   begin
+      return Tnodes.Table (Atype).Deferred;
+   end Get_Type_Deferred;
+
+   function Get_Type_Flag1 (Atype : O_Tnode) return Boolean is
+   begin
+      return Tnodes.Table (Atype).Flag1;
+   end Get_Type_Flag1;
+
+   procedure Set_Type_Flag1 (Atype : O_Tnode; Flag : Boolean) is
+   begin
+      Tnodes.Table (Atype).Flag1 := Flag;
+   end Set_Type_Flag1;
 
    function To_Tnode_Access is new Ada.Unchecked_Conversion
         (Source => Tnode_Common, Target => Tnode_Access);
@@ -202,6 +221,11 @@ package body Ortho_Code.Types is
       return Fnodes.Table (Field).Offset;
    end Get_Field_Offset;
 
+   procedure Set_Field_Offset (Field : O_Fnode; Offset : Uns32) is
+   begin
+      Fnodes.Table (Field).Offset := Offset;
+   end Set_Field_Offset;
+
    function Get_Field_Type (Field : O_Fnode) return O_Tnode is
    begin
       return Fnodes.Table (Field).Ftype;
@@ -214,7 +238,7 @@ package body Ortho_Code.Types is
 
    function Get_Field_Chain (Field : O_Fnode) return O_Fnode is
    begin
-      return Field + 1;
+      return Fnodes.Table (Field).Next;
    end Get_Field_Chain;
 
    function New_Unsigned_Type (Size : Natural) return O_Tnode
@@ -239,10 +263,12 @@ package body Ortho_Code.Types is
             raise Program_Error;
       end case;
       Tnodes.Append (Tnode_Common'(Kind => OT_Unsigned,
-                                  Mode => Mode,
-                                  Align => Mode_Align (Mode),
-                                  Pad0 => (others => False),
-                                  Size => Sz));
+                                   Mode => Mode,
+                                   Align => Mode_Align (Mode),
+                                   Deferred => False,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => Sz));
       return Tnodes.Last;
    end New_Unsigned_Type;
 
@@ -268,20 +294,24 @@ package body Ortho_Code.Types is
             raise Program_Error;
       end case;
       Tnodes.Append (Tnode_Common'(Kind => OT_Signed,
-                                  Mode => Mode,
-                                  Align => Mode_Align (Mode),
-                                  Pad0 => (others => False),
-                                  Size => Sz));
+                                   Mode => Mode,
+                                   Align => Mode_Align (Mode),
+                                   Deferred => False,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => Sz));
       return Tnodes.Last;
    end New_Signed_Type;
 
    function New_Float_Type return O_Tnode is
    begin
       Tnodes.Append (Tnode_Common'(Kind => OT_Float,
-                                  Mode => Mode_F64,
-                                  Align => Mode_Align (Mode_F64),
-                                  Pad0 => (others => False),
-                                  Size => 8));
+                                   Mode => Mode_F64,
+                                   Align => Mode_Align (Mode_F64),
+                                   Deferred => False,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => 8));
       return Tnodes.Last;
    end New_Float_Type;
 
@@ -310,10 +340,12 @@ package body Ortho_Code.Types is
             raise Program_Error;
       end case;
       Tnodes.Append (Tnode_Common'(Kind => OT_Enum,
-                                  Mode => Mode,
-                                  Align => Mode_Align (Mode),
-                                  Pad0 => (others => False),
-                                  Size => Sz));
+                                   Mode => Mode,
+                                   Align => Mode_Align (Mode),
+                                   Deferred => False,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => Sz));
       List := (Res => Tnodes.Last,
                First => O_Cnode_Null,
                Last => O_Cnode_Null,
@@ -353,10 +385,12 @@ package body Ortho_Code.Types is
    is
    begin
       Tnodes.Append (Tnode_Common'(Kind => OT_Boolean,
-                                  Mode => Mode_B2,
-                                  Align => 0,
-                                  Pad0 => (others => False),
-                                  Size => 1));
+                                   Mode => Mode_B2,
+                                   Align => 0,
+                                   Deferred => False,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => 1));
       Res := Tnodes.Last;
       False_E := New_Named_Literal (Res, False_Id, 0, O_Cnode_Null);
       True_E := New_Named_Literal (Res, True_Id, 1, False_E);
@@ -373,13 +407,15 @@ package body Ortho_Code.Types is
       Res : O_Tnode;
    begin
       Tnodes.Append (Tnode_Common'(Kind => OT_Ucarray,
-                                  Mode => Mode_Blk,
-                                  Align => Get_Type_Align (El_Type),
-                                  Pad0 => (others => False),
-                                  Size => 0));
+                                   Mode => Mode_Blk,
+                                   Align => Get_Type_Align (El_Type),
+                                   Deferred => False,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => 0));
       Res := Tnodes.Last;
       Tnodes.Append (To_Tnode_Common (Tnode_Array'(Element_Type => El_Type,
-                                                  Index_Type => Index_Type)));
+                                                   Index_Type => Index_Type)));
       return Res;
    end New_Array_Type;
 
@@ -394,15 +430,33 @@ package body Ortho_Code.Types is
    begin
       Size := Get_Type_Size (Get_Type_Array_Element (Atype));
       Tnodes.Append (Tnode_Common'(Kind => OT_Subarray,
-                                  Mode => Mode_Blk,
-                                  Align => Get_Type_Align (Atype),
-                                  Pad0 => (others => False),
-                                  Size => Size * Length));
+                                   Mode => Mode_Blk,
+                                   Align => Get_Type_Align (Atype),
+                                   Deferred => False,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => Size * Length));
       Res := Tnodes.Last;
       Tnodes.Append (To_Tnode_Common (Tnode_Subarray'(Base_Type => Atype,
-                                                     Length => Length)));
+                                                      Length => Length)));
       return Res;
    end New_Constrained_Array_Type;
+
+   procedure Create_Completer (Atype : O_Tnode) is
+   begin
+      Tnodes.Append (Tnode_Common'(Kind => OT_Complete,
+                                   Mode => Mode_Nil,
+                                   Align => 0,
+                                   Deferred => False,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => To_Uns32 (Int32 (Atype))));
+   end Create_Completer;
+
+   function Get_Type_Complete_Type (Atype : O_Tnode) return O_Tnode is
+   begin
+      return O_Tnode (To_Int32 (Tnodes.Table (Atype).Size));
+   end Get_Type_Complete_Type;
 
    function To_Tnode_Common is new Ada.Unchecked_Conversion
      (Source => Tnode_Access, Target => Tnode_Common);
@@ -412,13 +466,15 @@ package body Ortho_Code.Types is
       Res : O_Tnode;
    begin
       Tnodes.Append (Tnode_Common'(Kind => OT_Access,
-                                  Mode => Mode_P32,
-                                  Align => Mode_Align (Mode_P32),
-                                  Pad0 => (others => False),
-                                  Size => 4));
+                                   Mode => Mode_P32,
+                                   Align => Mode_Align (Mode_P32),
+                                   Deferred => Dtype = O_Tnode_Null,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => 4));
       Res := Tnodes.Last;
       Tnodes.Append (To_Tnode_Common (Tnode_Access'(Dtype => Dtype,
-                                                   Pad => 0)));
+                                                    Pad => 0)));
       return Res;
    end New_Access_Type;
 
@@ -430,31 +486,36 @@ package body Ortho_Code.Types is
       Tnodes.Table (Atype + 1) :=
         To_Tnode_Common (Tnode_Access'(Dtype => Dtype,
                                        Pad => 0));
+      if Flag_Type_Completer then
+         Create_Completer (Atype);
+      end if;
    end Finish_Access_Type;
 
 
    function To_Tnode_Common is new Ada.Unchecked_Conversion
      (Source => Tnode_Record, Target => Tnode_Common);
 
-   function Create_Record_Type return O_Tnode
+   function Create_Record_Type (Deferred : Boolean) return O_Tnode
    is
       Res : O_Tnode;
    begin
       Tnodes.Append (Tnode_Common'(Kind => OT_Record,
-                                  Mode => Mode_Blk,
-                                  Align => 0,
-                                  Pad0 => (others => False),
-                                  Size => 0));
+                                   Mode => Mode_Blk,
+                                   Align => 0,
+                                   Deferred => Deferred,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => 0));
       Res := Tnodes.Last;
       Tnodes.Append (To_Tnode_Common (Tnode_Record'(Fields => O_Fnode_Null,
-                                                   Nbr_Fields => 0)));
+                                                    Nbr_Fields => 0)));
       return Res;
    end Create_Record_Type;
 
    procedure Start_Record_Type (Elements : out O_Element_List)
    is
    begin
-      Elements := (Res => Create_Record_Type,
+      Elements := (Res => Create_Record_Type (False),
                    First_Field => O_Fnode_Null,
                    Last_Field => O_Fnode_Null,
                    Off => 0,
@@ -464,7 +525,7 @@ package body Ortho_Code.Types is
 
    procedure New_Uncomplete_Record_Type (Res : out O_Tnode) is
    begin
-      Res := Create_Record_Type;
+      Res := Create_Record_Type (True);
    end New_Uncomplete_Record_Type;
 
    procedure Start_Uncomplete_Record_Type (Res : O_Tnode;
@@ -562,16 +623,23 @@ package body Ortho_Code.Types is
         (Tnode_Record'(Fields => Elements.First_Field,
                        Nbr_Fields => Elements.Nbr));
       Res := Elements.Res;
+      if Flag_Type_Completer
+        and then Tnodes.Table (Elements.Res).Deferred
+      then
+         Create_Completer (Elements.Res);
+      end if;
    end Finish_Record_Type;
 
    procedure Start_Union_Type (Elements : out O_Element_List)
    is
    begin
       Tnodes.Append (Tnode_Common'(Kind => OT_Union,
-                                  Mode => Mode_Blk,
-                                  Align => 0,
-                                  Pad0 => (others => False),
-                                  Size => 0));
+                                   Mode => Mode_Blk,
+                                   Align => 0,
+                                   Deferred => False,
+                                   Flag1 => False,
+                                   Pad0 => (others => False),
+                                   Size => 0));
       Elements := (Res => Tnodes.Last,
                    First_Field => O_Fnode_Null,
                    Last_Field => O_Fnode_Null,
@@ -620,7 +688,7 @@ package body Ortho_Code.Types is
       return Get_Type_Ucarray_Element (Base);
    end Get_Type_Array_Element;
 
-   procedure Disp_Type (Atype : O_Tnode)
+   procedure Debug_Type (Atype : O_Tnode)
    is
       use Ortho_Code.Debug.Int32_IO;
       use Ada.Text_IO;
@@ -632,6 +700,10 @@ package body Ortho_Code.Types is
       Put (OT_Kind'Image (Get_Type_Kind (Atype)));
       Put ("  ");
       Put (Mode_Type'Image (Get_Type_Mode (Atype)));
+      Put (" D=");
+      Put (Boolean'Image (Get_Type_Deferred (Atype)));
+      Put (" F1=");
+      Put (Boolean'Image (Get_Type_Flag1 (Atype)));
       New_Line;
       case Kind is
          when OT_Boolean =>
@@ -640,11 +712,63 @@ package body Ortho_Code.Types is
             Put (", true: ");
             Put (Int32 (Get_Type_Bool_True (Atype)));
             New_Line;
+         when OT_Access =>
+            Put (" acc_type: ");
+            Put (Int32 (Get_Type_Access_Type (Atype)));
+            New_Line;
+         when OT_Record =>
+            Put ("  fields: ");
+            Put (Int32 (Get_Type_Record_Fields (Atype)));
+            Put (", nbr_fields: ");
+            Put (To_Int32 (Get_Type_Record_Nbr_Fields (Atype)));
+            New_Line;
          when others =>
             null;
       end case;
-   end Disp_Type;
-   pragma Unreferenced (Disp_Type);
+   end Debug_Type;
+
+   procedure Debug_Field (Field : O_Fnode)
+   is
+      use Ortho_Code.Debug.Int32_IO;
+      use Ada.Text_IO;
+   begin
+      Put (Int32 (Field), 3);
+      Put (" ");
+      Put (" Offset=");
+      Put (To_Int32 (Get_Field_Offset (Field)), 0);
+      Put (", Ident=");
+      Put (Ortho_Ident.Get_String (Get_Field_Ident (Field)));
+      Put (", Type=");
+      Put (Int32 (Get_Field_Type (Field)), 0);
+      Put (", Chain=");
+      Put (Int32 (Get_Field_Chain (Field)), 0);
+      New_Line;
+   end Debug_Field;
+
+   function Get_Type_Limit return O_Tnode is
+   begin
+      return Tnodes.Last;
+   end Get_Type_Limit;
+
+   function Get_Type_Next (Atype : O_Tnode) return O_Tnode is
+   begin
+      case Tnodes.Table (Atype).Kind is
+         when OT_Unsigned
+           | OT_Signed
+           | OT_Float =>
+            return Atype + 1;
+         when OT_Boolean
+           | OT_Enum
+           | OT_Ucarray
+           | OT_Subarray
+           | OT_Access
+           | OT_Record
+           | OT_Union =>
+            return Atype + 2;
+         when OT_Complete =>
+            return Atype + 1;
+      end case;
+   end Get_Type_Next;
 
    procedure Mark (M : out Mark_Type) is
    begin

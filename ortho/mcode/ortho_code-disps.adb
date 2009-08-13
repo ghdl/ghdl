@@ -27,7 +27,6 @@ with Interfaces;
 package body Ortho_Code.Disps is
    procedure Disp_Subprg (Ident : Natural; S_Entry : O_Enode);
    procedure Disp_Expr (Expr : O_Enode);
-   procedure Disp_Type (Atype : O_Tnode; Force : Boolean := False);
 
    procedure Disp_Indent (Indent : Natural)
    is
@@ -180,6 +179,13 @@ package body Ortho_Code.Disps is
                end loop;
                Put ('}');
             end;
+         when OC_Union =>
+            Put ('{');
+            Put ('.');
+            Disp_Ident (Types.Get_Field_Ident (Get_Const_Union_Field (Lit)));
+            Put ('=');
+            Disp_Lit (Get_Const_Union_Value (Lit));
+            Put ('}');
          when others =>
             Put ("*lit " & OC_Kind'Image (Get_Const_Kind (Lit)) & '*');
       end case;
@@ -432,6 +438,9 @@ package body Ortho_Code.Disps is
                end loop;
                Put ('}');
             end;
+         when OT_Complete =>
+            Put ("-- complete: ");
+            Disp_Type (Get_Type_Complete_Type (Atype));
       end case;
    end Disp_Type;
 
@@ -544,7 +553,7 @@ package body Ortho_Code.Disps is
             -- Disp_Decl_Name (Get_Body_Decl (Decl));
             New_Line;
             Disp_Subprg (Indent, Get_Body_Stmt (Decl));
-         when OD_Block =>
+         when OD_Block | OD_Subprg_Ext =>
             null;
       end case;
       if Nl then
@@ -587,7 +596,7 @@ package body Ortho_Code.Disps is
             Put_Line ("end;");
          when OE_Line =>
             Disp_Indent (Indent);
-            Put_Line ("#line" & Int32'Image (Get_Expr_Line_Number (Stmt)));
+            Put_Line ("--#" & Int32'Image (Get_Expr_Line_Number (Stmt)));
          when OE_BB =>
             Disp_Indent (Indent);
             Put_Line ("# BB" & Int32'Image (Get_BB_Number (Stmt)));
@@ -648,16 +657,9 @@ package body Ortho_Code.Disps is
             Put (" then");
             New_Line;
             Indent := Indent + 1;
-         when OE_Elsif =>
+         when OE_Else =>
             Disp_Indent (Indent - 1);
-            Expr := Get_Expr_Operand (Stmt);
-            if Expr /= O_Enode_Null then
-               Put ("elsif ");
-               Disp_Expr (Expr);
-               Put (" then");
-            else
-               Put ("else");
-            end if;
+            Put ("else");
             New_Line;
          when OE_Endif =>
             Indent := Indent - 1;

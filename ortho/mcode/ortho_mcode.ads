@@ -443,8 +443,10 @@ package Ortho_Mcode is
    procedure New_Debug_Comment_Stmt (Comment : String);
 
    --  Start a declarative region.
-   procedure Start_Declare_Stmt;
-   procedure Finish_Declare_Stmt;
+   procedure Start_Declare_Stmt renames
+     Ortho_Code.Exprs.Start_Declare_Stmt;
+   procedure Finish_Declare_Stmt renames
+     Ortho_Code.Exprs.Finish_Declare_Stmt;
 
    --  Create a function call or a procedure call.
    procedure Start_Association (Assocs : out O_Assoc_List; Subprg : O_Dnode)
@@ -471,9 +473,6 @@ package Ortho_Mcode is
    --  Build an IF statement.
    procedure Start_If_Stmt (Block : out O_If_Block; Cond : O_Enode)
      renames Ortho_Code.Exprs.Start_If_Stmt;
-   --  COND is NULL for the final else statement.
-   procedure New_Elsif_Stmt (Block : in out O_If_Block; Cond : O_Enode)
-     renames Ortho_Code.Exprs.New_Elsif_Stmt;
    procedure New_Else_Stmt (Block : in out O_If_Block)
      renames Ortho_Code.Exprs.New_Else_Stmt;
    procedure Finish_If_Stmt (Block : in out O_If_Block)

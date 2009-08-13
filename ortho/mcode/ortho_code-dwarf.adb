@@ -1012,6 +1012,8 @@ package body Ortho_Code.Dwarf is
                   Nbr := Nbr - 1;
                end loop;
             end;
+         when OT_Complete =>
+            null;
       end case;
 
       Set_Current_Section (Info_Sect);
@@ -1039,6 +1041,8 @@ package body Ortho_Code.Dwarf is
          when OT_Enum
            | OT_Boolean =>
             Emit_Enum_Type (Atype, Decl);
+         when OT_Complete =>
+            null;
       end case;
    end Emit_Type;
 

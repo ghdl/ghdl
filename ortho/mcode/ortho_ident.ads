@@ -15,6 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with System;
 with Ortho_Code; use Ortho_Code;
 
 package Ortho_Ident is
@@ -26,6 +27,9 @@ package Ortho_Ident is
    function Is_Nul (Id : O_Ident) return Boolean;
    function Get_String (Id : O_Ident) return String;
    function Get_String_Length (Id : O_Ident) return Natural;
+
+   --  Note: the address is valid until the next call to get_identifier.
+   function Get_Cstring (Id : O_Ident) return System.Address;
 
    O_Ident_Nul : constant O_Ident := Ortho_Code.O_Ident_Nul;
 

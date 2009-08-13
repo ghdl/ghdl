@@ -27,68 +27,83 @@ package body Disa_X86 is
    use Bv_Addr2acc;
 
    type Cstring_Acc is access constant String;
-   type Index_Type is new Natural;
-   type Names_Type is array (Index_Type range <>) of Cstring_Acc;
-   N_None : constant Index_Type := 0;
-   N_Push : constant Index_Type := 1;
-   N_Pop : constant Index_Type := 2;
-   N_Ret : constant Index_Type := 3;
-   N_Mov : constant Index_Type := 4;
-   N_Add : constant Index_Type := 5;
-   N_Or : constant Index_Type := 6;
-   N_Adc : constant Index_Type := 7;
-   N_Sbb : constant Index_Type := 8;
-   N_And : constant Index_Type := 9;
-   N_Sub : constant Index_Type := 10;
-   N_Xor : constant Index_Type := 11;
-   N_Cmp : constant Index_Type := 12;
-   N_Into : constant Index_Type := 13;
-   N_Jmp : constant Index_Type := 14;
-   N_Jcc : constant Index_Type := 15;
-   N_Setcc : constant Index_Type := 16;
-   N_Call : constant Index_Type := 17;
-   N_Int : constant Index_Type := 18;
-   N_Cdq : constant Index_Type := 19;
-   N_Imul : constant Index_Type := 20;
-   N_Mul : constant Index_Type := 21;
-   N_Leave : constant Index_Type := 22;
-   N_Test : constant Index_Type := 23;
-   N_Lea : constant Index_Type := 24;
-   N_O : constant Index_Type := 25;
-   N_No : constant Index_Type := 26;
-   N_B : constant Index_Type := 27;
-   N_AE : constant Index_Type := 28;
-   N_E : constant Index_Type := 29;
-   N_Ne : constant Index_Type := 30;
-   N_Be : constant Index_Type := 31;
-   N_A : constant Index_Type := 32;
-   N_S : constant Index_Type := 33;
-   N_Ns : constant Index_Type := 34;
-   N_P : constant Index_Type := 35;
-   N_Np : constant Index_Type := 36;
-   N_L : constant Index_Type := 37;
-   N_Ge : constant Index_Type := 38;
-   N_Le : constant Index_Type := 39;
-   N_G : constant Index_Type := 40;
-   N_Not : constant Index_Type := 41;
-   N_Neg : constant Index_Type := 42;
-   N_Cbw : constant Index_Type := 43;
-   N_Div : constant Index_Type := 44;
-   N_Idiv : constant Index_Type := 45;
-   N_Movsx : constant Index_Type := 46;
-   N_Movzx : constant Index_Type := 47;
-   N_Nop : constant Index_Type := 48;
-   N_Hlt : constant Index_Type := 49;
-   N_Inc : constant Index_Type := 50;
-   N_Dec : constant Index_Type := 51;
-   N_Rol : constant Index_Type := 52;
-   N_Ror : constant Index_Type := 53;
-   N_Rcl : constant Index_Type := 54;
-   N_Rcr : constant Index_Type := 55;
-   N_Shl : constant Index_Type := 56;
-   N_Shr : constant Index_Type := 57;
-   N_Sar : constant Index_Type := 58;
+   type Index_Type is
+     (
+      N_None,
+      N_Push,
+      N_Pop,
+      N_Ret,
+      N_Mov,
+      N_Add,
+      N_Or,
+      N_Adc,
+      N_Sbb,
+      N_And,
+      N_Sub,
+      N_Xor,
+      N_Cmp,
+      N_Into,
+      N_Jmp,
+      N_Jcc,
+      N_Setcc,
+      N_Call,
+      N_Int,
+      N_Cdq,
+      N_Imul,
+      N_Mul,
+      N_Leave,
+      N_Test,
+      N_Lea,
+      N_O,
+      N_No,
+      N_B,
+      N_AE,
+      N_E,
+      N_Ne,
+      N_Be,
+      N_A,
+      N_S,
+      N_Ns,
+      N_P,
+      N_Np,
+      N_L,
+      N_Ge,
+      N_Le,
+      N_G,
+      N_Not,
+      N_Neg,
+      N_Cbw,
+      N_Div,
+      N_Idiv,
+      N_Movsx,
+      N_Movzx,
+      N_Nop,
+      N_Hlt,
+      N_Inc,
+      N_Dec,
+      N_Rol,
+      N_Ror,
+      N_Rcl,
+      N_Rcr,
+      N_Shl,
+      N_Shr,
+      N_Sar,
+      N_Fadd,
+      N_Fmul,
+      N_Fcom,
+      N_Fcomp,
+      N_Fsub,
+      N_Fsubr,
+      N_Fdiv,
+      N_Fdivr,
 
+      G_1,
+      G_2,
+      G_3,
+      G_5
+     );
+
+   type Names_Type is array (Index_Type range <>) of Cstring_Acc;
    subtype S is String;
    Names : constant Names_Type :=
      (N_None => new S'("none"),
@@ -149,14 +164,18 @@ package body Disa_X86 is
       N_Rcr => new S'("rcr"),
       N_Shl => new S'("shl"),
       N_Shr => new S'("shr"),
-      N_Sar => new S'("sar")
+      N_Sar => new S'("sar"),
+      N_Fadd => new S'("fadd"),
+      N_Fmul => new S'("fmul"),
+      N_Fcom => new S'("fcom"),
+      N_Fcomp => new S'("fcomp"),
+      N_Fsub => new S'("fsub"),
+      N_Fsubr => new S'("fsubr"),
+      N_Fdiv => new S'("fdiv"),
+      N_Fdivr => new S'("fdivr")
      );
 
 
-   G_1 : constant Index_Type := 128;
-   G_2 : constant Index_Type := 129;
-   G_3 : constant Index_Type := 130;
-   G_5 : constant Index_Type := 131;
 
    --  Format of an instruction.
    --  MODRM_SRC_8 : modrm byte follow, and modrm is source, witdh = 8bits
@@ -545,7 +564,8 @@ package body Disa_X86 is
          L : constant Natural := Lo;
       begin
          Add_Name (Name);
-         Add_Name (N_O + Byte'Pos (B and 16#0f#));
+         Add_Name (Index_Type'Val (Index_Type'Pos (N_O)
+                                     + Byte'Pos (B and 16#0f#)));
          Name_Align (L);
       end Add_Cond_Opcode;
 

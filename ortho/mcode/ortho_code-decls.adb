@@ -70,6 +70,10 @@ package body Ortho_Code.Decls is
             --  For const: the value.
             --  For subprg: size of pushed arguments.
             Info2 : Int32;
+         when OD_Subprg_Ext =>
+            --  Chain of interfaces.
+            Subprg_Inter : O_Dnode;
+
          when OD_Block =>
             --  Last declaration of this block.
             Last : O_Dnode;
@@ -93,6 +97,8 @@ package body Ortho_Code.Decls is
             Val_Val : O_Cnode;
       end case;
    end record;
+
+   Use_Subprg_Ext : constant Boolean := False;
 
    pragma Pack (Dnode_Common);
 
@@ -154,6 +160,13 @@ package body Ortho_Code.Decls is
             return Get_Block_Last (Decl) + 1;
          when OD_Body =>
             return Get_Block_Last (Decl + 1) + 1;
+         when OD_Function
+           | OD_Procedure =>
+            if Use_Subprg_Ext then
+               return Decl + 2;
+            else
+               return Decl + 1;
+            end if;
          when others =>
             return Decl + 1;
       end case;
@@ -231,8 +244,14 @@ package body Ortho_Code.Decls is
 
    function Get_Subprg_Interfaces (Decl : O_Dnode) return O_Dnode
    is
-      Res : constant O_Dnode := Decl + 1;
+      Res : O_Dnode;
    begin
+      if Use_Subprg_Ext then
+         Res := Decl + 2;
+      else
+         Res := Decl + 1;
+      end if;
+
       if Get_Decl_Kind (Res) = OD_Interface then
          return Res;
       else
@@ -384,24 +403,15 @@ package body Ortho_Code.Decls is
          Static_Chain_Id := Ortho_Ident.Get_Identifier ("STATIC_CHAIN");
       end if;
 
-      Dnodes.Append (Dnode_Common'(Kind => OD_Interface,
-                                   Storage => O_Storage_Local,
-                                   Depth => Cur_Depth + 1,
-                                   Reg => R_Nil,
-                                   Id => Static_Chain_Id,
-                                   Dtype => O_Tnode_Ptr,
-                                   Ref => 0,
-                                   Info2 => 0,
-                                   others => False));
-      Res := Dnodes.Last;
-      New_Interface (Res, Interfaces.Abi);
+      New_Interface_Decl (Interfaces, Res, Static_Chain_Id, O_Tnode_Ptr);
    end Add_Static_Chain;
 
    procedure Start_Subprogram_Decl (Interfaces : out O_Inter_List)
    is
       Storage : O_Storage;
+      Decl : constant O_Dnode := Dnodes.Last;
    begin
-      Storage := Get_Decl_Storage (Dnodes.Last);
+      Storage := Get_Decl_Storage (Decl);
       if Cur_Depth /= O_Toplevel then
          case Storage is
             when O_Storage_External
@@ -411,11 +421,20 @@ package body Ortho_Code.Decls is
                raise Syntax_Error;
             when O_Storage_Private =>
                Storage := O_Storage_Local;
-               Set_Decl_Storage (Dnodes.Last, Storage);
+               Set_Decl_Storage (Decl, Storage);
          end case;
       end if;
-      Start_Subprogram (Dnodes.Last, Interfaces.Abi);
-      Interfaces.Decl := Dnodes.Last;
+      if Use_Subprg_Ext then
+         Dnodes.Append (Dnode_Common'(Kind => OD_Subprg_Ext,
+                                      Storage => Storage,
+                                      Depth => Cur_Depth,
+                                      Reg => R_Nil,
+                                      Subprg_Inter => O_Dnode_Null,
+                                      others => False));
+      end if;
+
+      Start_Subprogram (Decl, Interfaces.Abi);
+      Interfaces.Decl := Decl;
       if Storage = O_Storage_Local then
          Add_Static_Chain (Interfaces);
       end if;
@@ -674,6 +693,8 @@ package body Ortho_Code.Decls is
          when OD_Block =>
             Put ("block until ");
             Put (Int32 (Get_Block_Last (Decl)), 0);
+         when OD_Subprg_Ext =>
+            Put ("Subprg_Ext");
 --           when others =>
 --              Put (OD_Kind'Image (Get_Decl_Kind (Decl)));
       end case;
@@ -726,6 +747,13 @@ package body Ortho_Code.Decls is
 
       Disp_Decls (1, Dnodes.First, Dnodes.Last);
    end Disp_All_Decls;
+
+   procedure Debug_Decl (Decl : O_Dnode) is
+   begin
+      Disp_Decl (1, Decl);
+   end Debug_Decl;
+
+   pragma Unreferenced (Debug_Decl);
 
    procedure Disp_Stats
    is

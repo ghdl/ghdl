@@ -25,11 +25,9 @@ with Ortho_Code.Debug;
 with Ortho_Mcode; use Ortho_Mcode;
 with Ortho_Front; use Ortho_Front;
 with Ortho_Code.Flags; use Ortho_Code.Flags;
-with Binary_File;
 with Binary_File.Elf;
 with Binary_File.Coff;
 with Binary_File.Memory;
-with Interfaces;
 
 procedure Ortho_Code_Main
 is
@@ -165,14 +163,11 @@ begin
       end if;
    elsif Exec_Func /= null then
       declare
-         use Binary_File;
-         use Interfaces;
-         use Ada.Text_IO;
          Sym : Symbol;
 
          type Func_Acc is access function return Integer;
          function Conv is new Ada.Unchecked_Conversion
-           (Source => Unsigned_32, Target => Func_Acc);
+           (Source => Pc_Type, Target => Func_Acc);
          F : Func_Acc;
          V : Integer;
          Err : Boolean;

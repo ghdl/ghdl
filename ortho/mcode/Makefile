@@ -1,5 +1,6 @@
 ortho_srcdir=..
 GNAT_FLAGS=-gnaty3befhkmr -gnata -gnatf -gnatwlcru
+CC=gcc
 
 all: $(ortho_exec)
 

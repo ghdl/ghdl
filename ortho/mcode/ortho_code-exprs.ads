@@ -149,12 +149,14 @@ package Ortho_Code.Exprs is
       OE_Case_End,
 
       --  ARG1: the condition
-      --  ARG2: the elsif/endif chain
+      --  ARG2: the else/endif
       OE_If,
-      OE_Elsif,
+      OE_Else,
       OE_Endif,
 
+      --  ARG1: loop level.
       OE_Loop,
+      --  ARG1: loop.
       OE_Eloop,
       --  ARG2: loop.
       OE_Next,
@@ -258,6 +260,10 @@ package Ortho_Code.Exprs is
    First_Subprg : Subprogram_Data_Acc := null;
    Last_Subprg : Subprogram_Data_Acc := null;
 
+   --  Type of the stack pointer - for OE_Get_Stack and OE_Set_Stack.
+   --  Can be set by back-ends.
+   Stack_Ptr_Type : O_Tnode := O_Tnode_Null;
+
    --  Create a new node.
    --  Should be used only by back-end to add internal nodes.
    function New_Enode (Kind : OE_Kind;
@@ -301,7 +307,7 @@ package Ortho_Code.Exprs is
    --  For OE_Lit: get the literal.
    function Get_Expr_Lit (Lit : O_Enode) return O_Cnode;
 
-   --  Type of a OE_Conv/OE_Nop/OE_Typed
+   --  Type of a OE_Conv/OE_Nop/OE_Typed/OE_Alloca
    --  Used only for display/debugging purposes.
    function Get_Conv_Type (Enode : O_Enode) return O_Tnode;
 
@@ -379,6 +385,11 @@ package Ortho_Code.Exprs is
 
    --  Get the basic block label (uniq number).
    function Get_BB_Number (Stmt : O_Enode) return Int32;
+
+   --  For OE_Loop, set loop level (an integer).
+   --  Reserved for back-end in HLI mode only.
+   function Get_Loop_Level (Stmt : O_Enode) return Int32;
+   procedure Set_Loop_Level (Stmt : O_Enode; Level : Int32);
 
    --  Start a subprogram body.
    --  Note: the declaration may have an external storage, in this case it
@@ -488,8 +499,6 @@ package Ortho_Code.Exprs is
 
    --  Build an IF statement.
    procedure Start_If_Stmt (Block : out O_If_Block; Cond : O_Enode);
-   --  COND is NULL for the final else statement.
-   procedure New_Elsif_Stmt (Block : in out O_If_Block; Cond : O_Enode);
    procedure New_Else_Stmt (Block : in out O_If_Block);
    procedure Finish_If_Stmt (Block : in out O_If_Block);
 

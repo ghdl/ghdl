@@ -19,7 +19,7 @@ with Ada.Text_IO;
 with Ortho_Code.Debug;
 with Ortho_Code.Sysdeps;
 with Ortho_Ident;
-with Binary_File;
+-- with Binary_File;
 
 package body Ortho_Mcode is
    procedure New_Debug_Line_Decl (Line : Natural)
@@ -42,16 +42,6 @@ package body Ortho_Mcode is
    begin
       null;
    end New_Debug_Comment_Stmt;
-
-   procedure Start_Declare_Stmt is
-   begin
-      Ortho_Code.Exprs.Start_Declare_Stmt;
-   end Start_Declare_Stmt;
-
-   procedure Finish_Declare_Stmt is
-   begin
-      Ortho_Code.Exprs.Finish_Declare_Stmt;
-   end Finish_Declare_Stmt;
 
    procedure Start_Const_Value (Const : in out O_Dnode)
    is
@@ -111,7 +101,7 @@ package body Ortho_Mcode is
          Ortho_Code.Types.Disp_Stats;
          Ortho_Code.Consts.Disp_Stats;
          Ortho_Ident.Disp_Stats;
-         Binary_File.Disp_Stats;
+         -- Binary_File.Disp_Stats;
       end if;
    end Finish;
 

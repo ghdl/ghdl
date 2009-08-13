@@ -263,7 +263,8 @@ package body Ortho_Code.X86.Abi is
            | Regs_R64
            | R_Any64
            | Regs_Cc
-           | Regs_Fp =>
+           | Regs_Fp
+           | Regs_Xmm =>
             Disp_Reg (Stmt);
          when R_Spill =>
             Disp_Reg (Stmt);
@@ -703,6 +704,14 @@ package body Ortho_Code.X86.Abi is
             return "ult?";
          when R_Slt =>
             return "slt?";
+         when R_Xmm0 =>
+            return "xmm0";
+         when R_Xmm1 =>
+            return "xmm1";
+         when R_Xmm2 =>
+            return "xmm2";
+         when R_Xmm3 =>
+            return "xmm3";
          when others =>
             return "????";
       end case;

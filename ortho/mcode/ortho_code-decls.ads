@@ -21,8 +21,16 @@ package Ortho_Code.Decls is
    --  Kind of a declaration.
    type OD_Kind is (OD_Type,
                     OD_Const, OD_Const_Val,
+
+                    --  Global and local variables.
                     OD_Var, OD_Local,
+
+                    --  Subprograms.
                     OD_Function, OD_Procedure,
+
+                    --  Additional node for a subprogram.  Internal use only.
+                    OD_Subprg_Ext,
+
                     OD_Interface,
                     OD_Body,
                     OD_Block);

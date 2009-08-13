@@ -59,6 +59,11 @@ package body Ortho_Code.Consts is
       Pad : Int32;
    end record;
 
+   type Cnode_Union is record
+      El : O_Cnode;
+      Field : O_Fnode;
+   end record;
+
    package Cnodes is new GNAT.Table
      (Table_Component_Type => Cnode_Common,
       Table_Index_Type => O_Cnode,
@@ -91,6 +96,14 @@ package body Ortho_Code.Consts is
    begin
       return To_Cnode_Signed (Cnodes.Table (Cst  + 1)).Val;
    end Get_Const_I64;
+
+   function Get_Const_F64 (Cst : O_Cnode) return IEEE_Float_64
+   is
+      function To_Cnode_Float is new Ada.Unchecked_Conversion
+        (Cnode_Common, Cnode_Float);
+   begin
+      return To_Cnode_Float (Cnodes.Table (Cst  + 1)).Val;
+   end Get_Const_F64;
 
    function To_Cnode_Common is new Ada.Unchecked_Conversion
      (Source => Cnode_Signed, Target => Cnode_Common);
@@ -172,13 +185,13 @@ package body Ortho_Code.Consts is
       return To_Int32 (Uns32 (Shift_Right (V, 32) and 16#Ffff_Ffff#));
    end Get_Const_High;
 
-   function To_Cnode_Common is new Ada.Unchecked_Conversion
-      (Source => Cnode_Float, Target => Cnode_Common);
-
    function New_Float_Literal (Ltype : O_Tnode; Value : IEEE_Float_64)
                               return O_Cnode
    is
       Res : O_Cnode;
+
+      function To_Cnode_Common is new Ada.Unchecked_Conversion
+        (Source => Cnode_Float, Target => Cnode_Common);
    begin
       Cnodes.Append (Cnode_Common'(Kind => OC_Float,
                                    Lit_Type => Ltype));
@@ -384,11 +397,35 @@ package body Ortho_Code.Consts is
    function New_Union_Aggr (Atype : O_Tnode; Field : O_Fnode; Value : O_Cnode)
                            return O_Cnode
    is
-      pragma Unreferenced (Atype);
-      pragma Unreferenced (Field);
+      function To_Cnode_Common is new Ada.Unchecked_Conversion
+        (Source => Cnode_Union, Target => Cnode_Common);
+
+      Res : O_Cnode;
    begin
-      return Value;
+      if Debug.Flag_Debug_Hli then
+         Cnodes.Append (Cnode_Common'(Kind => OC_Union,
+                                      Lit_Type => Atype));
+         Res := Cnodes.Last;
+         Cnodes.Append (To_Cnode_Common (Cnode_Union'(El => Value,
+                                                      Field => Field)));
+         return Res;
+      else
+         return Value;
+      end if;
    end New_Union_Aggr;
+
+   function To_Cnode_Union is new Ada.Unchecked_Conversion
+        (Source => Cnode_Common, Target => Cnode_Union);
+
+   function Get_Const_Union_Field (Cst : O_Cnode) return O_Fnode is
+   begin
+      return To_Cnode_Union (Cnodes.Table (Cst + 1)).Field;
+   end Get_Const_Union_Field;
+
+   function Get_Const_Union_Value (Cst : O_Cnode) return O_Cnode is
+   begin
+      return To_Cnode_Union (Cnodes.Table (Cst + 1)).El;
+   end Get_Const_Union_Value;
 
    function New_Sizeof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode
    is
@@ -440,6 +477,7 @@ package body Ortho_Code.Consts is
             L := To_Cnode_Enum (Cnodes.Table (Cst + 1)).Val;
          when OC_Array
            | OC_Record
+           | OC_Union
            | OC_Sizeof
            | OC_Address
            | OC_Subprg_Address =>

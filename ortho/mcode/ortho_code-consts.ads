@@ -19,7 +19,8 @@ with Interfaces; use Interfaces;
 
 package Ortho_Code.Consts is
    type OC_Kind is (OC_Signed, OC_Unsigned, OC_Float, OC_Lit, OC_Null,
-                    OC_Array, OC_Record, OC_Subprg_Address, OC_Address,
+                    OC_Array, OC_Record, OC_Union,
+                    OC_Subprg_Address, OC_Address,
                     OC_Sizeof);
 
    function Get_Const_Kind (Cst : O_Cnode) return OC_Kind;
@@ -36,6 +37,8 @@ package Ortho_Code.Consts is
    function Get_Const_U64 (Cst : O_Cnode) return Unsigned_64;
    function Get_Const_I64 (Cst : O_Cnode) return Integer_64;
 
+   function Get_Const_F64 (Cst : O_Cnode) return IEEE_Float_64;
+
    --  Get the low and high part of a constant.
    function Get_Const_Low (Cst : O_Cnode) return Uns32;
    function Get_Const_High (Cst : O_Cnode) return Uns32;
@@ -45,6 +48,10 @@ package Ortho_Code.Consts is
 
    function Get_Const_Aggr_Length (Cst : O_Cnode) return Int32;
    function Get_Const_Aggr_Element (Cst : O_Cnode; N : Int32) return O_Cnode;
+
+   --  Only available in HLI.
+   function Get_Const_Union_Field (Cst : O_Cnode) return O_Fnode;
+   function Get_Const_Union_Value (Cst : O_Cnode) return O_Cnode;
 
    --  Declaration for an address.
    function Get_Const_Decl (Cst : O_Cnode) return O_Dnode;

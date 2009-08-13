@@ -253,6 +253,12 @@ package body Ortho_Code.X86.Emits is
    end To_Reg32;
    pragma Inline (To_Reg32);
 
+   function To_Reg_Xmm (R : O_Reg) return Byte is
+   begin
+      return O_Reg'Pos (R) - O_Reg'Pos (R_Xmm0);
+   end To_Reg_Xmm;
+   pragma Inline (To_Reg_Xmm);
+
    function To_Reg32 (R : O_Reg; Sz : Insn_Size) return Byte is
    begin
       case Sz is
@@ -509,6 +515,7 @@ package body Ortho_Code.X86.Emits is
    procedure Emit_Load_Fp (Stmt : O_Enode; Sz : Fp_Size)
    is
       Sym : Symbol;
+      R : O_Reg;
    begin
       Set_Current_Section (Sect_Rodata);
       Gen_Pow_Align (3);
@@ -521,11 +528,30 @@ package body Ortho_Code.X86.Emits is
       end if;
       Set_Current_Section (Sect_Text);
 
-      Start_Insn;
-      Gen_B8 (2#11011_001# + Fp_Size_To_Mf (Sz));
-      Gen_B8 (2#00_000_101#);
-      Gen_X86_32 (Sym, 0);
-      End_Insn;
+      R := Get_Expr_Reg (Stmt);
+      case R is
+         when R_St0 =>
+            Start_Insn;
+            Gen_B8 (2#11011_001# + Fp_Size_To_Mf (Sz));
+            Gen_B8 (2#00_000_101#);
+            Gen_X86_32 (Sym, 0);
+            End_Insn;
+         when Regs_Xmm =>
+            Start_Insn;
+            case Sz is
+               when Fp_32 =>
+                  Gen_B8 (16#F3#);
+               when Fp_64 =>
+                  Gen_B8 (16#F2#);
+            end case;
+            Gen_B8 (16#0f#);
+            Gen_B8 (16#10#);
+            Gen_B8 (2#00_000_101# + To_Reg_Xmm (R) * 2#1_000#);
+            Gen_X86_32 (Sym, 0);
+            End_Insn;
+         when others =>
+            raise Program_Error;
+      end case;
    end Emit_Load_Fp;
 
    procedure Emit_Load_Fp_Mem (Stmt : O_Enode; Sz : Fp_Size)
@@ -2217,7 +2243,8 @@ package body Ortho_Code.X86.Emits is
                   Emit_Const (E);
                end loop;
             end;
-         when OC_Sizeof =>
+         when OC_Sizeof
+           | OC_Union =>
             raise Program_Error;
       end case;
    end Emit_Const;

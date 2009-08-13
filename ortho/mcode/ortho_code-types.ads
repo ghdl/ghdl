@@ -18,7 +18,11 @@
 package Ortho_Code.Types is
    type OT_Kind is (OT_Unsigned, OT_Signed, OT_Boolean, OT_Enum, OT_Float,
                     OT_Ucarray, OT_Subarray, OT_Access,
-                    OT_Record, OT_Union);
+                    OT_Record, OT_Union,
+
+                    --  Type completion.  Mark the completion of a type.
+                    --  Optionnal.
+                    OT_Complete);
 
    --  Kind of ATYPE.
    function Get_Type_Kind (Atype : O_Tnode) return OT_Kind;
@@ -34,6 +38,15 @@ package Ortho_Code.Types is
    subtype Small_Natural is Natural range 0 .. 3;
    type Mode_Align_Array is array (Mode_Type) of Small_Natural;
    function Get_Type_Align (Atype : O_Tnode) return Small_Natural;
+
+   --  Return true is the type was incomplete at creation.
+   --  (it may - or not - have been completed later).
+   function Get_Type_Deferred (Atype : O_Tnode) return Boolean;
+
+   --  A back-end reserved flag.
+   --  Initialized to False.
+   function Get_Type_Flag1 (Atype : O_Tnode) return Boolean;
+   procedure Set_Type_Flag1 (Atype : O_Tnode; Flag : Boolean);
 
    --  Align OFF on ATYPE.
    function Do_Align (Off : Uns32; Atype : O_Tnode) return Uns32;
@@ -79,6 +92,7 @@ package Ortho_Code.Types is
 
    --  Get the offset of FIELD in its record/union.
    function Get_Field_Offset (Field : O_Fnode) return Uns32;
+   procedure Set_Field_Offset (Field : O_Fnode; Offset : Uns32);
 
    --  Get the type of FIELD.
    function Get_Field_Type (Field : O_Fnode) return O_Tnode;
@@ -88,6 +102,9 @@ package Ortho_Code.Types is
 
    --  Get the next field.
    function Get_Field_Chain (Field : O_Fnode) return O_Fnode;
+
+   --  Get the type that was completed.
+   function Get_Type_Complete_Type (Atype : O_Tnode) return O_Tnode;
 
    --  Build a scalar type; size may be 8, 16, 32 or 64.
    function New_Unsigned_Type (Size : Natural) return O_Tnode;
@@ -168,6 +185,15 @@ package Ortho_Code.Types is
    --  Type of an element of a ucarray or constrained array.
    function Get_Type_Array_Element (Atype : O_Tnode) return O_Tnode;
 
+   --  Get a type number limit (an O_Tnode is a number).
+   --  There is no type whose number is beyond this limit.
+   --  Note: the limit may not be a type!
+   function Get_Type_Limit return O_Tnode;
+
+   --  Get the type which follows ATYPE.
+   --  User has to check that the result is valid (ie not beyond limit).
+   function Get_Type_Next (Atype : O_Tnode) return O_Tnode;
+
    procedure Disp_Stats;
 
    --  Free all the memory used.
@@ -177,6 +203,8 @@ package Ortho_Code.Types is
    procedure Mark (M : out Mark_Type);
    procedure Release (M : Mark_Type);
 
+   procedure Debug_Type (Atype : O_Tnode);
+   procedure Debug_Field (Field : O_Fnode);
 private
    type O_Enum_List is record
       Res : O_Tnode;

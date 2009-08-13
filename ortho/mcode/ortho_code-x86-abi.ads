@@ -34,6 +34,11 @@ package Ortho_Code.X86.Abi is
 
    Mode_Ptr : constant Mode_Type := Mode_P32;
 
+   Flag_Type_Completer : constant Boolean := False;
+   Flag_Lower_Stmt : constant Boolean := True;
+
+   Flag_Sse2 : Boolean := False;
+
    --  Procedures to layout a subprogram declaration.
    procedure Start_Subprogram (Subprg : O_Dnode; Abi : out O_Abi_Subprg);
    procedure New_Interface (Inter : O_Dnode; Abi : in out O_Abi_Subprg);

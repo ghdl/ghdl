@@ -50,7 +50,11 @@ package body Ortho_Code.X86.Insns is
             return R_Any64;
          when Mode_F32
            | Mode_F64 =>
-            return R_St0;
+            if Abi.Flag_Sse2 then
+               return R_Any_Xmm;
+            else
+               return R_St0;
+            end if;
          when Mode_P64
            | Mode_X1
            | Mode_Nil
@@ -107,7 +111,8 @@ package body Ortho_Code.X86.Insns is
               | OD_Function
               | OD_Procedure
               | OD_Interface
-              | OD_Body =>
+              | OD_Body
+              | OD_Subprg_Ext =>
                null;
             when OD_Block =>
                Decl := Get_Block_Last (Decl);
@@ -165,6 +170,7 @@ package body Ortho_Code.X86.Insns is
       end case;
    end Reverse_Cc;
 
+   --  Get the register in which a result of MODE is returned.
    function Get_Call_Register (Mode : Mode_Type) return O_Reg is
    begin
       case Mode is
@@ -178,7 +184,13 @@ package body Ortho_Code.X86.Insns is
             return R_Edx_Eax;
          when Mode_F32
            | Mode_F64 =>
-            return R_St0;
+            if Abi.Flag_Sse2 and True then
+               --  Note: this shouldn't be enabled as the svr4 ABI specifies
+               --  ST0.
+               return R_Xmm0;
+            else
+               return R_St0;
+            end if;
          when Mode_Nil =>
             return R_None;
          when Mode_X1
@@ -293,6 +305,7 @@ package body Ortho_Code.X86.Insns is
                                               Used => False);
    type Reg32_Info_Array is array (Regs_R32) of Reg_Info_Type;
    Regs : Reg32_Info_Array := (others => Init_Reg_Info);
+
    Reg_Cc : Reg_Info_Type := Init_Reg_Info;
 
    type Fp_Stack_Type is mod 8;
@@ -300,14 +313,15 @@ package body Ortho_Code.X86.Insns is
    Fp_Top : Fp_Stack_Type := 0;
    Fp_Regs : RegFp_Info_Array;
 
+   type Reg_Xmm_Info_Array is array (Regs_Xmm) of Reg_Info_Type;
+   Info_Regs_Xmm : Reg_Xmm_Info_Array := (others => Init_Reg_Info);
 
    function Reg_Used (Reg : Regs_R32) return Boolean is
    begin
       return Regs (Reg).Used;
    end Reg_Used;
 
-
-   procedure Dump_Reg_Info (Reg : Regs_R32)
+   procedure Dump_Reg32_Info (Reg : Regs_R32)
    is
       use Ada.Text_IO;
       use Ortho_Code.Debug.Int32_IO;
@@ -323,7 +337,7 @@ package body Ortho_Code.X86.Insns is
       --Put (", link: ");
       --Put (Image_Reg (Regs (Reg).Link));
       New_Line;
-   end Dump_Reg_Info;
+   end Dump_Reg32_Info;
 
    procedure Dump_Regs
    is
@@ -337,7 +351,7 @@ package body Ortho_Code.X86.Insns is
 --        New_Line;
 
       for I in Regs_R32 loop
-         Dump_Reg_Info (I);
+         Dump_Reg32_Info (I);
       end loop;
       for I in Fp_Stack_Type loop
          Put ("fp" & Fp_Stack_Type'Image (I));
@@ -367,6 +381,8 @@ package body Ortho_Code.X86.Insns is
    end Error_Reg;
    pragma No_Return (Error_Reg);
 
+   --  Free_XX
+   --  Mark a register as unused.
    procedure Free_R32 (Reg : O_Reg) is
    begin
       if Regs (Reg).Num = O_Free then
@@ -392,6 +408,15 @@ package body Ortho_Code.X86.Insns is
       Reg_Cc.Num := O_Free;
    end Free_Cc;
 
+   procedure Free_Xmm (Reg : O_Reg) is
+   begin
+      if Info_Regs_Xmm (Reg).Num = O_Free then
+         raise Program_Error;
+      end if;
+      Info_Regs_Xmm (Reg).Num := O_Free;
+   end Free_Xmm;
+
+   --  Allocate a stack slot for spilling.
    procedure Alloc_Spill (N : O_Enode)
    is
       Mode : Mode_Type;
@@ -406,19 +431,16 @@ package body Ortho_Code.X86.Insns is
       Set_Spill_Info (N, -Int32 (Stack_Offset));
    end Alloc_Spill;
 
-   procedure Spill_R32 (Reg : Regs_R32)
+   --  Insert a spill statement after ORIG: will save register(s) allocated by
+   --  ORIG.
+   --  Return the register(s) spilt (There might be several registers if
+   --   ORIG uses a R64 register).
+   function Insert_Spill (Orig : O_Enode) return O_Reg
    is
       N : O_Enode;
-      Orig : O_Enode;
       Mode : Mode_Type;
       Reg_Orig : O_Reg;
    begin
-      if Regs (Reg).Num = O_Free then
-         --  This register was not allocated.
-         raise Program_Error;
-      end if;
-      Orig := Regs (Reg).Stmt;
-
       --  Add a spill statement.
       Mode := Get_Expr_Mode (Orig);
       N := New_Enode (OE_Spill, Mode, O_Tnode_Null, Orig, O_Enode_Null);
@@ -437,6 +459,19 @@ package body Ortho_Code.X86.Insns is
       Reg_Orig := Get_Expr_Reg (Orig);
       Set_Expr_Reg (N, Reg_Orig);
       Set_Expr_Reg (Orig, R_Spill);
+      return Reg_Orig;
+   end Insert_Spill;
+
+   procedure Spill_R32 (Reg : Regs_R32)
+   is
+      Reg_Orig : O_Reg;
+   begin
+      if Regs (Reg).Num = O_Free then
+         --  This register was not allocated.
+         raise Program_Error;
+      end if;
+
+      Reg_Orig := Insert_Spill (Regs (Reg).Stmt);
 
       --  Free the register.
       case Reg_Orig is
@@ -503,6 +538,40 @@ package body Ortho_Code.X86.Insns is
       Reg_Cc := (Num => Num, Stmt => Stmt, Used => True);
    end Alloc_Cc;
 
+   procedure Spill_Xmm (Reg : Regs_Xmm)
+   is
+      Reg_Orig : O_Reg;
+   begin
+      if Info_Regs_Xmm (Reg).Num = O_Free then
+         --  This register was not allocated.
+         raise Program_Error;
+      end if;
+
+      Reg_Orig := Insert_Spill (Info_Regs_Xmm (Reg).Stmt);
+
+      --  Free the register.
+      if Reg_Orig /= Reg then
+         raise Program_Error;
+      end if;
+      Free_Xmm (Reg);
+   end Spill_Xmm;
+
+   procedure Alloc_Xmm (Reg : Regs_Xmm; Stmt : O_Enode; Num : O_Inum) is
+   begin
+      if Info_Regs_Xmm (Reg).Num /= O_Free then
+         Spill_Xmm (Reg);
+      end if;
+      Info_Regs_Xmm (Reg) := (Num => Num, Stmt => Stmt, Used => True);
+   end Alloc_Xmm;
+
+   procedure Clobber_Xmm (Reg : Regs_Xmm) is
+   begin
+      if Info_Regs_Xmm (Reg).Num /= O_Free then
+         Spill_Xmm (Reg);
+      end if;
+   end Clobber_Xmm;
+   pragma Unreferenced (Clobber_Xmm);
+
    function Alloc_Reg (Reg : O_Reg; Stmt : O_Enode; Num : O_Inum) return O_Reg
    is
       Best_Reg : O_Reg;
@@ -517,6 +586,9 @@ package body Ortho_Code.X86.Insns is
             return Reg;
          when R_St0 =>
             Alloc_Fp (Stmt);
+            return Reg;
+         when Regs_Xmm =>
+            Alloc_Xmm (Reg, Stmt, Num);
             return Reg;
          when R_Any32 =>
             Best_Num := O_Inum'Last;
@@ -573,6 +645,20 @@ package body Ortho_Code.X86.Insns is
                Alloc_R64 (Best_Reg, Stmt, Num);
                return Best_Reg;
             end;
+         when R_Any_Xmm =>
+            Best_Num := O_Inum'Last;
+            Best_Reg := R_None;
+            for I in Regs_X86_Xmm loop
+               if Info_Regs_Xmm (I).Num = O_Free then
+                  Alloc_Xmm (I, Stmt, Num);
+                  return I;
+               elsif Info_Regs_Xmm (I).Num <= Best_Num then
+                  Best_Reg := I;
+                  Best_Num := Info_Regs_Xmm (I).Num;
+               end if;
+            end loop;
+            Alloc_Xmm (Best_Reg, Stmt, Num);
+            return Best_Reg;
          when others =>
             Error_Reg ("alloc_reg: unknown reg", O_Enode_Null, Reg);
             raise Program_Error;
@@ -648,6 +734,8 @@ package body Ortho_Code.X86.Insns is
          when Regs_R64 =>
             return Expr;
          when R_St0 =>
+            return Expr;
+         when Regs_Xmm =>
             return Expr;
          when R_Mem =>
             if Get_Expr_Kind (Expr) = OE_Indir then
@@ -732,6 +820,8 @@ package body Ortho_Code.X86.Insns is
             null;
          when R_St0 =>
             Free_Fp;
+         when Regs_Xmm =>
+            Free_Xmm (R);
          when Regs_R64 =>
             Free_R32 (Get_R64_High (R));
             Free_R32 (Get_R64_Low (R));
@@ -1103,8 +1193,7 @@ package body Ortho_Code.X86.Insns is
                         Link_Stmt (Stmt);
                      when R_Any_Cc =>
                         Num := Get_Insn_Num;
-                        Set_Expr_Reg
-                          (Stmt, Alloc_Reg (R_Any8, Stmt, Num));
+                        Set_Expr_Reg (Stmt, Alloc_Reg (R_Any8, Stmt, Num));
                         Link_Stmt (Stmt);
                         Free_Insn_Regs (Stmt);
                         Right := Insert_Move (Stmt, R_Ne);
@@ -1121,8 +1210,12 @@ package body Ortho_Code.X86.Insns is
                        | R_Rm
                        | R_St0 =>
                         Num := Get_Insn_Num;
-                        Set_Expr_Reg
-                          (Stmt, Alloc_Reg (R_St0, Stmt, Num));
+                        if Reg = R_St0 or not Abi.Flag_Sse2 then
+                           Reg1 := R_St0;
+                        else
+                           Reg1 := R_Any_Xmm;
+                        end if;
+                        Set_Expr_Reg (Stmt, Alloc_Reg (Reg1, Stmt, Num));
                         Link_Stmt (Stmt);
                      when others =>
                         raise Program_Error;

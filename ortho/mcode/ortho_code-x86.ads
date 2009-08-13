@@ -113,6 +113,29 @@ package Ortho_Code.X86 is
 
    subtype Regs_R64 is O_Reg range R_Edx_Eax .. R_Esi_Edi;
 
+   R_Any_Xmm : constant O_Reg := 79;
+
+   R_Xmm0  : constant O_Reg := 80;
+   R_Xmm1  : constant O_Reg := R_Xmm0 + 1;
+   R_Xmm2  : constant O_Reg := R_Xmm0 + 2;
+   R_Xmm3  : constant O_Reg := R_Xmm0 + 3;
+   R_Xmm4  : constant O_Reg := R_Xmm0 + 4;
+   R_Xmm5  : constant O_Reg := R_Xmm0 + 5;
+   R_Xmm6  : constant O_Reg := R_Xmm0 + 6;
+   R_Xmm7  : constant O_Reg := R_Xmm0 + 7;
+   R_Xmm8  : constant O_Reg := R_Xmm0 + 8;
+   R_Xmm9  : constant O_Reg := R_Xmm0 + 9;
+   R_Xmm10 : constant O_Reg := R_Xmm0 + 10;
+   R_Xmm11 : constant O_Reg := R_Xmm0 + 11;
+   R_Xmm12 : constant O_Reg := R_Xmm0 + 12;
+   R_Xmm13 : constant O_Reg := R_Xmm0 + 13;
+   R_Xmm14 : constant O_Reg := R_Xmm0 + 14;
+   R_Xmm15 : constant O_Reg := R_Xmm0 + 15;
+
+   subtype Regs_X86_64_Xmm is O_Reg range R_Xmm0 .. R_Xmm15;
+   subtype Regs_X86_Xmm is O_Reg range R_Xmm0 .. R_Xmm7;
+   subtype Regs_Xmm is O_Reg range R_Xmm0 .. R_Xmm15;
+
    function Get_R64_High (Reg : Regs_R64) return Regs_R32;
    function Get_R64_Low (Reg : Regs_R64) return Regs_R32;
 

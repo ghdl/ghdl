@@ -19,6 +19,7 @@ with Ortho_Code.Exprs; use Ortho_Code.Exprs;
 
 package Ortho_Code.Disps is
    procedure Disp_Subprg (Subprg : Subprogram_Data_Acc);
+   procedure Disp_Type (Atype : O_Tnode; Force : Boolean := False);
    procedure Init;
    procedure Finish;
 end Ortho_Code.Disps;
