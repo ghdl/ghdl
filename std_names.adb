@@ -55,6 +55,7 @@ package body Std_Names is
         or GI ("/") /= Name_Op_Div
         or GI ("**") /= Name_Op_Exp
         or GI ("&") /= Name_Op_Concatenation
+        or GI ("??") /= Name_Op_Condition
       then
          raise Program_Error;
       end if;
@@ -226,6 +227,7 @@ package body Std_Names is
         or GI ("file_close") /= Name_File_Close
         or GI ("read") /= Name_Read
         or GI ("write") /= Name_Write
+        or GI ("flush") /= Name_Flush
         or GI ("endfile") /= Name_Endfile
         or GI ("p") /= Name_P
         or GI ("f") /= Name_F
@@ -237,6 +239,7 @@ package body Std_Names is
         or GI ("textio") /= Name_Textio
         or GI ("work") /= Name_Work
         or GI ("text") /= Name_Text
+        or GI ("to_string") /= Name_To_String
         or GI ("untruncated_text_read") /= Name_Untruncated_Text_Read
       then
          raise Program_Error;
@@ -257,6 +260,7 @@ package body Std_Names is
          raise Program_Error;
       end if;
 
+      --  Verilog keywords
       if GI ("always") /= Name_Always
         or GI ("assign") /= Name_Assign
         or GI ("buf") /= Name_Buf
@@ -348,5 +352,53 @@ package body Std_Names is
          raise Program_Error;
       end if;
 
+      --  PSL keywords
+      if GI ("a") /= Name_A
+        or GI ("af") /= Name_Af
+        or GI ("ag") /= Name_Ag
+        or GI ("ax") /= Name_Ax
+        or GI ("abort") /= Name_Abort
+        or GI ("assume") /= Name_Assume
+        or GI ("assume_guarantee") /= Name_Assume_Guarantee
+        or GI ("before") /= Name_Before
+        or GI ("clock") /= Name_Clock
+        or GI ("const") /= Name_Const
+        or GI ("cover") /= Name_Cover
+        or GI ("e") /= Name_E
+        or GI ("ef") /= Name_Ef
+        or GI ("eg") /= Name_Eg
+        or GI ("ex") /= Name_Ex
+        or GI ("endpoint") /= Name_Endpoint
+        or GI ("eventually") /= Name_Eventually
+        or GI ("fairness") /= Name_Fairness
+        or GI ("fell ") /= Name_Fell
+        or GI ("forall") /= Name_forall
+        or GI ("g") /= Name_G
+        or GI ("inf") /= Name_Inf
+        or GI ("inherit") /= Name_Inherit
+        or GI ("never") /= Name_Never
+        or GI ("next_a") /= Name_Next_A
+        or GI ("next_e") /= Name_Next_E
+        or GI ("next_event") /= Name_Next_Event
+        or GI ("next_event_a") /= Name_Next_Event_A
+        or GI ("next_event_e") /= Name_Next_Event_E
+        or GI ("property") /= Name_Property
+        or GI ("prev") /= Name_Prev
+        or GI ("restrict") /= Name_Restrict
+        or GI ("restrict_guarantee") /= Name_Restrict_Guarantee
+        or GI ("rose") /= Name_Rose
+        or GI ("sequence") /= Name_Sequence
+        or GI ("strong") /= Name_Strong
+        or GI ("union") /= Name_Union
+        or GI ("vmode") /= Name_Vmode
+        or GI ("vprop") /= Name_Vprop
+        or GI ("vunit") /= Name_Vunit
+        or GI ("w") /= Name_W
+        or GI ("whilenot") /= Name_Whilenot
+        or GI ("within") /= Name_Within
+        or GI ("x") /= Name_X
+      then
+         raise Program_Error;
+      end if;
    end Std_Names_Initialize;
 end Std_Names;
