@@ -19,6 +19,7 @@ BE = gcc
 ortho_srcdir=..
 BACK_END=$(ortho_srcdir)/$(BE)
 ortho_exec=oread-$(BE)
+
 all: $(ortho_exec)
 
 test: test.s

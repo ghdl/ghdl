@@ -175,7 +175,7 @@ package body Ortho_Front is
        Tok_Array, Tok_Subarray,
        Tok_Access, Tok_Record, Tok_Union,
        Tok_Boolean, Tok_Enum,
-       Tok_If, Tok_Then, Tok_Else,
+       Tok_If, Tok_Then, Tok_Else, Tok_Elsif,
        Tok_Loop, Tok_Exit, Tok_Next,
        Tok_Is, Tok_Of, Tok_All,
        Tok_Return,
@@ -1805,6 +1805,20 @@ package body Ortho_Front is
 
    Current_Subprg : Node_Acc := null;
 
+   procedure Parse_Statement;
+
+   --  Expect : next token
+   --  Let: next token
+   procedure Parse_Statements is
+   begin
+      loop
+         exit when Tok = Tok_End;
+         exit when Tok = Tok_Else;
+         exit when Tok = Tok_When;
+         Parse_Statement;
+      end loop;
+   end Parse_Statements;
+
    --  Expect : next token
    --  Let: next token
    procedure Parse_Statement is
@@ -1839,21 +1853,11 @@ package body Ortho_Front is
                Start_If_Stmt (If_Blk, Parse_Expression (null));
                Expect (Tok_Then);
                Next_Token;
-               loop
-                  exit when Tok = Tok_Else or Tok = Tok_End;
-                  pragma Warnings (Off);
-                  Parse_Statement;
-                  pragma Warnings (On);
-               end loop;
+               Parse_Statements;
                if Tok = Tok_Else then
                   Next_Token;
                   New_Else_Stmt (If_Blk);
-                  loop
-                     exit when Tok = Tok_End;
-                     pragma Warnings (Off);
-                     Parse_Statement;
-                     pragma Warnings (On);
-                  end loop;
+                  Parse_Statements;
                end if;
                Finish_If_Stmt (If_Blk);
                Expect (Tok_End);
@@ -1879,11 +1883,7 @@ package body Ortho_Front is
                Start_Loop_Stmt (Info.Blk);
                Next_Expect (Tok_Colon);
                Next_Token;
-               while Tok /= Tok_End loop
-                  pragma Warnings (Off);
-                  Parse_Statement;
-                  pragma Warnings (On);
-               end loop;
+               Parse_Statements;
                Finish_Loop_Stmt (Info.Blk);
                Next_Expect (Tok_Loop);
                Next_Expect (Tok_Semicolon);
@@ -1997,12 +1997,7 @@ package body Ortho_Front is
                   Finish_Choice (Case_Blk);
                   Expect (Tok_Arrow);
                   Next_Token;
-                  loop
-                     exit when Tok = Tok_End or Tok = Tok_When;
-                     pragma Warnings (Off);
-                     Parse_Statement;
-                     pragma Warnings (On);
-                  end loop;
+                  Parse_Statements;
                end loop;
                Finish_Case_Stmt (Case_Blk);
                Expect (Tok_End);
@@ -2031,9 +2026,8 @@ package body Ortho_Front is
       Next_Token;
 
       --  Parse statements.
-      while Tok /= Tok_End loop
-         Parse_Statement;
-      end loop;
+      Parse_Statements;
+      Expect (Tok_End);
       Next_Token;
 
       Pop_Scope;
@@ -2574,6 +2568,7 @@ package body Ortho_Front is
       Add_Keyword ("if", Tok_If);
       Add_Keyword ("then", Tok_Then);
       Add_Keyword ("else", Tok_Else);
+      Add_Keyword ("elsif", Tok_Elsif);
       Add_Keyword ("loop", Tok_Loop);
       Add_Keyword ("exit", Tok_Exit);
       Add_Keyword ("next", Tok_Next);
