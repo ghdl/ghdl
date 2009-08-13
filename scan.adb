@@ -78,8 +78,9 @@ package body Scan is
       '0' .. '9' => Digit,
 
       -- 3. special characters
-      Quotation | '#' | '&' | ''' | '(' | ')' | '+' | ',' | '-' | '.' | '/' |
-      ':' | ';' | '<' | '=' | '>' | '_' | '|' | '*' => Special_Character,
+      Quotation | '#' | '&' | ''' | '(' | ')' | '+' | ',' | '-' | '.' | '/'
+        | ':' | ';' | '<' | '=' | '>' | '[' | ']'
+        | '_' | '|' | '*' => Special_Character,
 
       -- 4. the space characters
       ' ' | No_Break_Space => Space_Character,
@@ -89,9 +90,43 @@ package body Scan is
       LC_O_Oblique_Stroke .. LC_Y_Diaeresis => Lower_Case_Letter,
 
       -- 6. other special characters
-      '!' | '$' | '%' | '@' | '?' | '[' | '\' | ']' | '^' | '{' | '}' | '~' |
-      '`' | Inverted_Exclamation .. Inverted_Question | Multiplication_Sign |
-      Division_Sign => Other_Special_Character,
+      '!' | '$' | '%' | '@' | '?' | '\' | '^' | '`' | '{' | '}' | '~'
+        | Inverted_Exclamation .. Inverted_Question | Multiplication_Sign |
+        Division_Sign => Other_Special_Character,
+
+      --  '¡'    -- INVERTED EXCLAMATION MARK
+      --  '¢'    -- CENT SIGN
+      --  '£'    -- POUND SIGN
+      --  '¤'    -- CURRENCY SIGN
+      --  '¥'    -- YEN SIGN
+      --  '¦'    -- BROKEN BAR
+      --  '§'    -- SECTION SIGN
+      --  '¨'    -- DIAERESIS
+      --  '©'    -- COPYRIGHT SIGN
+      --  'ª'    -- FEMININE ORDINAL INDICATOR
+      --  '«'    -- LEFT-POINTING DOUBLE ANGLE QUOTATION MARK
+      --  '¬'    -- NOT SIGN
+      --  '­'    -- SOFT HYPHEN
+      --  '®'    -- REGISTERED SIGN
+      --  '¯'    -- MACRON
+      --  '°'    -- DEGREE SIGN
+      --  '±'    -- PLUS-MINUS SIGN
+      --  '²'    -- SUPERSCRIPT TWO
+      --  '³'    -- SUPERSCRIPT THREE
+      --  '´'    -- ACUTE ACCENT
+      --  'µ'    -- MICRO SIGN
+      --  '¶'    -- PILCROW SIGN
+      --  '·'    -- MIDDLE DOT
+      --  '¸'    -- CEDILLA
+      --  '¹'    -- SUPERSCRIPT ONE
+      --  'º'    -- MASCULINE ORDINAL INDICATOR
+      --  '»'    -- RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK
+      --  '¼'    -- VULGAR FRACTION ONE QUARTER
+      --  '½'    -- VULGAR FRACTION ONE HALF
+      --  '¾'    -- VULGAR FRACTION THREE QUARTERS
+      --  '¿'    -- INVERTED QUESTION MARK
+      --  '×'    -- MULTIPLICATION SIGN
+      --  '÷'    -- DIVISION SIGN
 
       DEL .. APC => Invalid);
 
