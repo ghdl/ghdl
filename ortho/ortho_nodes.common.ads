@@ -423,8 +423,6 @@ package ORTHO_NODES is
 
    --  Build an IF statement.
    procedure Start_If_Stmt (Block : in out O_If_Block; Cond : O_Enode);
-   --  COND is NULL for the final else statement.
-   procedure New_Elsif_Stmt (Block : in out O_If_Block; Cond : O_Enode);
    procedure New_Else_Stmt (Block : in out O_If_Block);
    procedure Finish_If_Stmt (Block : in out O_If_Block);
 

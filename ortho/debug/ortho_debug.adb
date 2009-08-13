@@ -1671,6 +1671,8 @@ package body Ortho_Debug is
       Add_Stmt (N);
    end New_Procedure_Call;
 
+   procedure New_Elsif_Stmt (Block : in out O_If_Block; Cond : O_Enode);
+
    procedure Start_If_Stmt (Block : in out O_If_Block; Cond : O_Enode)
    is
       subtype O_Snode_If is O_Snode_Type (ON_If_Stmt);
