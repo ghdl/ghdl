@@ -22,12 +22,13 @@ package body Binary_File.Memory is
    --  Absolute section.
    Sect_Abs : Section_Acc;
 
+   function To_Pc_Type is new Ada.Unchecked_Conversion
+     (Source => System.Address, Target => Pc_Type);
+
    procedure Set_Symbol_Address (Sym : Symbol; Addr : System.Address)
    is
-      function Conv is new Ada.Unchecked_Conversion
-        (Source => System.Address, Target => Pc_Type);
    begin
-      Set_Symbol_Value (Sym, Conv (Addr));
+      Set_Symbol_Value (Sym, To_Pc_Type (Addr));
       Set_Scope (Sym, Sym_Global);
       Set_Section (Sym, Sect_Abs);
    end Set_Symbol_Address;
@@ -40,7 +41,6 @@ package body Binary_File.Memory is
 
    procedure Write_Memory_Relocate (Error : out Boolean)
    is
-      use SSE;
       Sect : Section_Acc;
       Rel : Reloc_Acc;
       N_Rel : Reloc_Acc;
@@ -58,7 +58,7 @@ package body Binary_File.Memory is
             end if;
          end if;
          if Sect.Data_Max > 0 and Sect /= Sect_Abs then
-            Sect.Vaddr := To_Integer (Sect.Data (0)'Address);
+            Sect.Vaddr := To_Pc_Type (Sect.Data (0)'Address);
          end if;
          Sect := Sect.Next;
       end loop;

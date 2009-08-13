@@ -15,11 +15,11 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with System;
 with Interfaces; use Interfaces;
 with Ada.Unchecked_Deallocation;
 with Ortho_Ident; use Ortho_Ident;
 with GNAT.Table;
-with System.Storage_Elements;
 with Memsegs;
 
 package Binary_File is
@@ -73,7 +73,7 @@ package Binary_File is
    function Get_Symbol (Name : String) return Symbol;
 
    --  Get the virtual address of a symbol.
-   function Get_Symbol_Vaddr (Sym : Symbol) return Unsigned_32;
+   function Get_Symbol_Vaddr (Sym : Symbol) return Pc_Type;
    pragma Inline (Get_Symbol_Vaddr);
 
    --  Set the value of a symbol.
@@ -150,8 +150,6 @@ package Binary_File is
    procedure Disp_Stats;
    procedure Finish;
 private
-   package SSE renames System.Storage_Elements;
-
    type Byte_Array_Base is array (Pc_Type range <>) of Byte;
    subtype Byte_Array is Byte_Array_Base (Pc_Type);
    type Byte_Array_Acc is access Byte_Array;
@@ -210,7 +208,7 @@ private
       --  Section number (set and used by binary writer).
       Number : Natural;
       --  Virtual address, if set.
-      Vaddr : SSE.Integer_Address;
+      Vaddr : Pc_Type; -- SSE.Integer_Address;
       --  Memory for this segment.
       Seg : Memsegs.Memseg_Type;
    end record;

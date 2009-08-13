@@ -15,7 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with System;
+with System.Storage_Elements;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
 with Ada.Unchecked_Conversion;
@@ -805,10 +805,10 @@ package body Binary_File is
       Gen_32 (V);
    end Gen_Ppc_24;
 
-   function Get_Symbol_Vaddr (Sym : Symbol) return Unsigned_32 is
+   function Get_Symbol_Vaddr (Sym : Symbol) return Pc_Type is
    begin
-      return Unsigned_32 (Get_Section (Sym).Vaddr)
-        + Unsigned_32 (Get_Symbol_Value (Sym));
+      return Pc_Type (Get_Section (Sym).Vaddr)
+        + Pc_Type (Get_Symbol_Value (Sym));
    end Get_Symbol_Vaddr;
 
    procedure Write_Left_Be32 (Sect : Section_Acc;
@@ -833,8 +833,7 @@ package body Binary_File is
       D : Unsigned_32;
       Mask : Unsigned_32;
    begin
-      D := Get_Symbol_Vaddr (Sym) -
-        (Unsigned_32 (Sect.Vaddr) + Unsigned_32 (Addr));
+      D := Unsigned_32 (Get_Symbol_Vaddr (Sym) - (Sect.Vaddr + Addr));
       --  Check overflow.
       Mask := Shift_Left (1, Size + 2) - 1;
       if (D and Shift_Left (1, Size + 1)) = 0 then
@@ -860,23 +859,24 @@ package body Binary_File is
 
       case Kind is
          when Reloc_32 =>
-            Add_Le32 (Sect, Addr, Get_Symbol_Vaddr (Sym));
+            Add_Le32 (Sect, Addr, Unsigned_32 (Get_Symbol_Vaddr (Sym)));
 
          when Reloc_Pc32 =>
             Add_Le32 (Sect, Addr,
-                      Get_Symbol_Vaddr (Sym) -
-                      (Unsigned_32 (Sect.Vaddr) + Unsigned_32 (Addr)));
-
+                      Unsigned_32 (Get_Symbol_Vaddr (Sym)
+                                     - (Sect.Vaddr + Addr)));
          when Reloc_Disp22 =>
             Set_Wdisp (Sect, Addr, Sym, 22);
          when Reloc_Disp30 =>
             Set_Wdisp (Sect, Addr, Sym, 30);
          when Reloc_Hi22 =>
-            Write_Left_Be32 (Sect, Addr, 22, Get_Symbol_Vaddr (Sym) / 1024);
+            Write_Left_Be32 (Sect, Addr, 22,
+                             Unsigned_32 (Get_Symbol_Vaddr (Sym) / 1024));
          when Reloc_Lo10 =>
-            Write_Left_Be32 (Sect, Addr, 10, Get_Symbol_Vaddr (Sym));
+            Write_Left_Be32 (Sect, Addr, 10,
+                             Unsigned_32 (Get_Symbol_Vaddr (Sym)));
          when Reloc_Ua_32 =>
-            Write_Be32 (Sect, Addr, Get_Symbol_Vaddr (Sym));
+            Write_Be32 (Sect, Addr, Unsigned_32 (Get_Symbol_Vaddr (Sym)));
          when Reloc_Ppc_Addr24 =>
             raise Program_Error;
       end case;
