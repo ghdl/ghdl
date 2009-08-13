@@ -80,22 +80,31 @@ procedure Scan_Literal is
 
    procedure Bmul (Res : out E_Num; E : E_Num; V : Uint16; B : Uint16)
    is
-      T : Uint32;
+      --  The carry.
+      C : Uint32;
    begin
-      T := Uint32 (V);
+      --  Only consider V if E is not scaled (otherwise V is not significant).
+      if E.E = 0 then
+         C := Uint32 (V);
+      else
+         C := 0;
+      end if;
+
+      --  Multiply and propagate the carry.
       for I in Digit_Range loop
-         T := Uint32 (E.S (I)) * Uint32 (B) + T;
-         Res.S (I) := Uint16 (T mod Uint16'Modulus);
-         T := T / Uint16'Modulus;
+         C := Uint32 (E.S (I)) * Uint32 (B) + C;
+         Res.S (I) := Uint16 (C mod Uint16'Modulus);
+         C := C / Uint16'Modulus;
       end loop;
 
       --  There is a carry, shift.
-      if T /= 0 then
+      if C /= 0 then
          --  ERR: Possible overflow.
          Res.E := E.E + 1;
          for I in 0 .. Nbr_Digits - 2 loop
             Res.S (I) := Res.S (I + 1);
          end loop;
+         Res.S (Nbr_Digits - 1) := Uint16 (C);
       else
          Res.E := E.E;
       end if;
@@ -197,11 +206,11 @@ procedure Scan_Literal is
          end if;
       end loop;
       if Max > Nbr_Digits - 1 then
-         --  Lost of precision.
+         --  Loss of precision.
          --  Round.
          if T (Max - Nbr_Digits) >= Uint16 (Uint16'Modulus / 2) then
             V := 1;
-            for I in reverse Max - (Nbr_Digits - 1) .. Max loop
+            for I in Max - (Nbr_Digits - 1) .. Max loop
                V := V + Uint32 (T (I));
                T (I) := Uint16 (V mod Uint16'Modulus);
                V := V / Uint16'Modulus;
