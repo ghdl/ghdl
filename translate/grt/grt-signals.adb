@@ -3052,8 +3052,8 @@ package body Grt.Signals is
                Mark_Active (Sig);
 
                Trans := Sig.S.Drivers (0).Last_Trans;
-               Sig.Driving_Value := Trans.Val_Ptr.all;
-               Sig.S.Drivers (0).First_Trans.Val := Trans.Val_Ptr.all;
+               Direct_Assign (Sig.Driving_Value, Trans.Val_Ptr, Sig.Mode);
+               Sig.S.Drivers (0).First_Trans.Val := Sig.Driving_Value;
                Set_Effective_Value (Sig, Sig.Driving_Value);
 
             when Net_One_Resolved =>
