@@ -87,8 +87,8 @@ package Iirs_Utils is
    function Is_Anonymous_Type_Definition (Def : Iir) return Boolean;
    pragma Inline (Is_Anonymous_Type_Definition);
 
-   --  Return TRUE iff DEF is an unconstrained type (or subtype) definition.
-   function Is_Unconstrained_Type_Definition (Def : Iir) return Boolean;
+   --  Return TRUE iff DEF is a fully constrained type (or subtype) definition.
+   function Is_Fully_Constrained_Type (Def : Iir) return Boolean;
 
    --  Return true iff L and R have the same profile.
    --  L and R must be subprograms specification (or spec_body).

@@ -89,9 +89,10 @@ package body Name_Table is
       if Names_Table.Allocate /= Null_Identifier then
          raise Program_Error;
       end if;
+      Strings_Table.Set_Last (1);
       Names_Table.Table (Null_Identifier) := (Length => 0,
                                               Hash => 0,
-                                              Name => 0,
+                                              Name => 1,
                                               Next => Null_Identifier,
                                               Info => 0);
       -- Store characters.

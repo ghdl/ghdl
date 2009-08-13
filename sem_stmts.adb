@@ -897,8 +897,7 @@ package body Sem_Stmts is
          when Iir_Kinds_Discrete_Type_Definition =>
             Sem_Choices_Range (Chain, Choice_Type, False, Loc, Low, High);
          when Iir_Kind_Array_Subtype_Definition
-           | Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
+           | Iir_Kind_Array_Type_Definition =>
             if not Is_Unidim_Array_Type (Choice_Type) then
                Error_Msg_Sem
                  ("expression must be of a one-dimensional array type",
@@ -930,7 +929,7 @@ package body Sem_Stmts is
    begin
       Expr := Get_Expression (Stmt);
       -- FIXME: overload.
-      Expr := Sem_Expression (Expr, Null_Iir);
+      Expr := Sem_Case_Expression (Expr);
       if Expr = Null_Iir then
          return;
       end if;
@@ -1689,7 +1688,7 @@ package body Sem_Stmts is
       end if;
 
       --  The choices.
-      Expr := Sem_Expression (Get_Expression (Stmt), Null_Iir);
+      Expr := Sem_Case_Expression (Get_Expression (Stmt));
       if Expr = Null_Iir then
          return;
       end if;

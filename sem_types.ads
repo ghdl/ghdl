@@ -28,7 +28,7 @@ package Sem_Types is
      return Iir;
 
    -- Return FALSE if A_TYPE is an unconstrained array type or subtype.
-   function Sem_Is_Constrained (A_Type: Iir) return Boolean;
+   --function Sem_Is_Constrained (A_Type: Iir) return Boolean;
 
    procedure Sem_Protected_Type_Body (Bod : Iir);
 
@@ -49,5 +49,9 @@ package Sem_Types is
    --  Return TRUE iff FUNC is a resolution function.
    --  If ATYPE is not NULL_IIR, type must match.
    function Is_A_Resolution_Function (Func: Iir; Atype: Iir) return Boolean;
+
+   --  Return a subtype definition copy of DEF.
+   --  This is used when an alias of DEF is required (eg: subtype a is b).
+   function Copy_Subtype_Indication (Def : Iir) return Iir;
 
 end Sem_Types;

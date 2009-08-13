@@ -638,16 +638,14 @@ package body Sem_Assocs is
 
    procedure Finish_Individual_Assoc_Record (Assoc : Iir; Atype : Iir)
    is
-      Base_Type : Iir_Record_Type_Definition;
-      Matches : Iir_Array_Acc;
+      Base_Type : constant Iir_Record_Type_Definition := Get_Base_Type (Atype);
+      El_List : constant Iir_List := Get_Elements_Declaration_List (Base_Type);
+      Matches : Iir_Array (0 .. Get_Nbr_Elements (El_List) - 1);
       Ch : Iir;
       Pos : Natural;
       Rec_El : Iir;
    begin
-      Base_Type := Get_Base_Type (Atype);
-      Matches := new Iir_Array
-        (0 .. Natural (Get_Number_Element_Declaration (Base_Type)) - 1);
-      Matches.all := (others => Null_Iir);
+      Matches := (others => Null_Iir);
       Ch := Get_Individual_Association_Chain (Assoc);
       while Ch /= Null_Iir loop
          Rec_El := Get_Name (Ch);
@@ -661,12 +659,11 @@ package body Sem_Assocs is
          end if;
          Ch := Get_Chain (Ch);
       end loop;
-      Rec_El := Get_Element_Declaration_Chain (Base_Type);
       for I in Matches'Range loop
+         Rec_El := Get_Nth_Element (El_List, I);
          if Matches (I) = Null_Iir then
             Error_Msg_Sem (Disp_Node (Rec_El) & " not associated", Assoc);
          end if;
-         Rec_El := Get_Chain (Rec_El);
       end loop;
       Set_Actual_Type (Assoc, Atype);
    end Finish_Individual_Assoc_Record;
@@ -689,10 +686,11 @@ package body Sem_Assocs is
       case Get_Kind (Atype) is
          when Iir_Kind_Array_Subtype_Definition =>
             Finish_Individual_Assoc_Array_Subtype (Assoc, Atype);
-         when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
-            Set_Actual_Type
-              (Assoc, Create_Array_Subtype (Atype, Get_Location (Assoc)));
+         when Iir_Kind_Array_Type_Definition =>
+            Atype := Create_Array_Subtype (Atype, Get_Location (Assoc));
+            Set_Index_Constraint_Flag (Atype, True);
+            Set_Constraint_State (Atype, Fully_Constrained);
+            Set_Actual_Type (Assoc, Atype);
             Finish_Individual_Assoc_Array (Assoc, Assoc, 1);
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
@@ -755,36 +753,6 @@ package body Sem_Assocs is
       --  There is maybe a remaining iassoc.
       Finish_Individual_Association (Iassoc);
    end Sem_Individual_Association;
-
-
-   --  EXPR is a formal or actual expression.
-   --  Extract conversion function CONV from EXPR, if:
-   --  * argument of the function is of type ARG_TYPE.
-   --  * return type of the function is RES_TYPE if RES_TYPE /= Null_Iir
-   --    or any type if RES_TYPE = Null_Iir.
---    procedure Sem_Conversion (Expr : in out Iir; Conv : out Iir)
---    is
---       Assoc : Iir;
---    begin
---       Conv := Null_Iir;
---       case Get_Kind (Expr) is
---          when Iir_Kind_Parenthesis_Name =>
---             raise Internal_Error;
---          when Iir_Kind_Function_Call =>
---             Conv := Get_Implementation (Expr);
---             Assoc := Get_Parameter_Association_Chain (Expr);
---             Expr := Get_Actual (Assoc);
---             Free_Iir (Assoc);
---             Set_Use_Flag (Conv, True);
---          when Iir_Kind_Type_Conversion =>
---             Assoc := Get_Expression (Expr);
---             Conv := Expr;
---             Expr := Assoc;
---             --Set_Expression (Conv, Null_Iir);
---          when others =>
---             return;
---       end case;
---    end Sem_Conversion;
 
    function Is_Conversion_Function (Assoc_Chain : Iir) return Boolean
    is
@@ -955,8 +923,8 @@ package body Sem_Assocs is
                Name_Type := Null_Iir;
                return;
             end if;
-            Rec_El := Find_Name_In_Chain
-              (Get_Element_Declaration_Chain (Base_Type),
+            Rec_El := Find_Name_In_List
+              (Get_Elements_Declaration_List (Base_Type),
                Get_Suffix_Identifier (Name));
             if Rec_El = Null_Iir then
                Name_Type := Null_Iir;
@@ -1394,14 +1362,48 @@ package body Sem_Assocs is
          end if;
       end if;
 
+      --  LRM08 6.5.7 Association lists
+      --  The formal part of a named association element may be in the form of
+      --  a function call [...] if and only if the formal is an interface
+      --  object, the mode of the formal is OUT, INOUT, BUFFER or LINKAGE [...]
       Set_Out_Conversion (Assoc, Out_Conv);
+      if Out_Conv /= Null_Iir
+        and then Get_Mode (Inter) = Iir_In_Mode
+      then
+         Error_Msg_Sem
+           ("can't use an out conversion for an in interface", Assoc);
+      end if;
+
+      --  LRM08 6.5.7 Association lists
+      --  The actual part of an association element may be in the form of a
+      --  function call [...] if and only if the mode of the format is IN,
+      --  INOUT or LINKAGE [...]
       Set_In_Conversion (Assoc, In_Conv);
+      if In_Conv /= Null_Iir
+        and then Get_Mode (Inter) in Iir_Buffer_Mode .. Iir_Out_Mode
+      then
+         Error_Msg_Sem
+           ("can't use an in conversion for an out/buffer interface", Assoc);
+      end if;
+
+      --  FIXME: LRM refs
+      --  This is somewhat wrong.  A missing conversion is not an error but
+      --  may result in a type mismatch.
+      if Get_Mode (Inter) = Iir_Inout_Mode then
+         if In_Conv = Null_Iir and then Out_Conv /= Null_Iir then
+            Error_Msg_Sem
+              ("out conversion without corresponding in conversion", Assoc);
+         elsif In_Conv /= Null_Iir and then Out_Conv = Null_Iir then
+            Error_Msg_Sem
+              ("in conversion without corresponding out conversion", Assoc);
+         end if;
+      end if;
       Set_Actual (Assoc, Actual);
 
       --  Semantize actual.
       Expr := Sem_Expression (Actual, Res_Type);
       if Expr /= Null_Iir then
-         Expr := Eval_Expr_If_Static (Expr);
+         Expr := Eval_Expr_Check_If_Static (Expr, Res_Type);
          Set_Actual (Assoc, Expr);
          if In_Conv = Null_Iir and then Out_Conv = Null_Iir then
             if not Check_Implicit_Conversion (Formal_Type, Expr) then
@@ -1667,7 +1669,7 @@ package body Sem_Assocs is
                         if not Finish then
                            raise Internal_Error;
                         end if;
-                        if Is_Unconstrained_Type_Definition (Get_Type (Inter))
+                        if not Is_Fully_Constrained_Type (Get_Type (Inter))
                         then
                            Error_Msg_Sem
                              ("unconstrained " & Disp_Node (Inter)

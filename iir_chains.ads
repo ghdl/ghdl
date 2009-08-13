@@ -60,10 +60,6 @@ package Iir_Chains is
      (Get_Chain_Start => Get_Unit_Chain,
       Set_Chain_Start => Set_Unit_Chain);
 
-   package Element_Declaration_Chain_Handling is new Iir_Chain_Handling
-     (Get_Chain_Start => Get_Element_Declaration_Chain,
-      Set_Chain_Start => Set_Element_Declaration_Chain);
-
    package Configuration_Item_Chain_Handling is new Iir_Chain_Handling
      (Get_Chain_Start => Get_Configuration_Item_Chain,
       Set_Chain_Start => Set_Configuration_Item_Chain);

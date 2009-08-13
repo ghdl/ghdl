@@ -88,6 +88,8 @@ package body Sem_Decls is
             if Default_Value /= Null_Iir and then A_Type /= Null_Iir then
                Deferred_Constant_Allowed := True;
                Default_Value := Sem_Expression (Default_Value, A_Type);
+               Default_Value :=
+                 Eval_Expr_Check_If_Static (Default_Value, A_Type);
                Deferred_Constant_Allowed := False;
                Check_Read (Default_Value);
             end if;
@@ -307,6 +309,12 @@ package body Sem_Decls is
       end loop;
    end Sem_Interface_Chain;
 
+   function Is_One_Dimensional (Array_Def : Iir) return Boolean
+   is
+   begin
+      return Get_Nbr_Elements (Get_Index_Subtype_List (Array_Def)) = 1;
+   end Is_One_Dimensional;
+
    --  LRM93 7.2.2
    --  A discrete array is a one-dimensional array whose elements are of a
    --  discrete type.
@@ -321,7 +329,7 @@ package body Sem_Decls is
             raise Internal_Error;
             -- return False;
       end case;
-      if Get_Nbr_Elements (Get_Index_Subtype_List (Def)) /= 1 then
+      if not Is_One_Dimensional (Def) then
          return False;
       end if;
       if Get_Kind (Get_Element_Subtype (Def))
@@ -454,20 +462,20 @@ package body Sem_Decls is
       Set_Mode (Inter, Iir_Out_Mode);
       Set_Base_Name (Inter, Inter);
       Append (Last_Interface, Proc, Inter);
-      case Get_Kind (Type_Mark) is
-         when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
-            Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
-            Set_Identifier (Inter, Std_Names.Name_Length);
-            Set_Location (Inter, Loc);
-            Set_Type (Inter, Std_Package.Natural_Subtype_Definition);
-            Set_Mode (Inter, Iir_Out_Mode);
-            Set_Base_Name (Inter, Inter);
-            Append (Last_Interface, Proc, Inter);
-            Set_Implicit_Definition (Proc, Iir_Predefined_Read_Length);
-         when others =>
-            Set_Implicit_Definition (Proc, Iir_Predefined_Read);
-      end case;
+      if Get_Kind (Type_Mark) in Iir_Kinds_Array_Type_Definition
+        and then Get_Constraint_State (Type_Mark) /= Fully_Constrained
+      then
+         Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
+         Set_Identifier (Inter, Std_Names.Name_Length);
+         Set_Location (Inter, Loc);
+         Set_Type (Inter, Std_Package.Natural_Subtype_Definition);
+         Set_Mode (Inter, Iir_Out_Mode);
+         Set_Base_Name (Inter, Inter);
+         Append (Last_Interface, Proc, Inter);
+         Set_Implicit_Definition (Proc, Iir_Predefined_Read_Length);
+      else
+         Set_Implicit_Definition (Proc, Iir_Predefined_Read);
+      end if;
       Compute_Subprogram_Hash (Proc);
       -- Add it to the list.
       Insert_Incr (Last, Proc);
@@ -656,33 +664,54 @@ package body Sem_Decls is
 
                Element_Type := Get_Element_Subtype (Type_Definition);
 
-               Add_Operation (Name_Op_Concatenation,
-                              Iir_Predefined_Array_Array_Concat,
-                              Binary_Chain,
-                              Type_Definition);
+               if Is_One_Dimensional (Type_Definition) then
+                  Add_Operation (Name_Op_Concatenation,
+                                 Iir_Predefined_Array_Array_Concat,
+                                 Binary_Chain,
+                                 Type_Definition);
 
-               Inter_Chain := Create_Anonymous_Interface (Element_Type);
-               Set_Chain (Inter_Chain, Unary_Chain);
-               Add_Operation (Name_Op_Concatenation,
-                              Iir_Predefined_Element_Array_Concat,
+                  Inter_Chain := Create_Anonymous_Interface (Element_Type);
+                  Set_Chain (Inter_Chain, Unary_Chain);
+                  Add_Operation (Name_Op_Concatenation,
+                                 Iir_Predefined_Element_Array_Concat,
                               Inter_Chain,
                               Type_Definition);
 
-               Inter_Chain := Create_Anonymous_Interface (Type_Definition);
-               Set_Chain (Inter_Chain,
-                          Create_Anonymous_Interface (Element_Type));
-               Add_Operation (Name_Op_Concatenation,
-                              Iir_Predefined_Array_Element_Concat,
-                              Inter_Chain,
-                              Type_Definition);
+                  Inter_Chain := Create_Anonymous_Interface (Type_Definition);
+                  Set_Chain (Inter_Chain,
+                             Create_Anonymous_Interface (Element_Type));
+                  Add_Operation (Name_Op_Concatenation,
+                                 Iir_Predefined_Array_Element_Concat,
+                                 Inter_Chain,
+                                 Type_Definition);
 
-               Inter_Chain := Create_Anonymous_Interface (Element_Type);
-               Set_Chain (Inter_Chain,
-                          Create_Anonymous_Interface (Element_Type));
-               Add_Operation (Name_Op_Concatenation,
-                              Iir_Predefined_Element_Element_Concat,
-                              Inter_Chain,
-                              Type_Definition);
+                  Inter_Chain := Create_Anonymous_Interface (Element_Type);
+                  Set_Chain (Inter_Chain,
+                             Create_Anonymous_Interface (Element_Type));
+                  Add_Operation (Name_Op_Concatenation,
+                                 Iir_Predefined_Element_Element_Concat,
+                                 Inter_Chain,
+                                 Type_Definition);
+
+                  --  LRM08 5.3.2.4  Predefined operations on array type
+                  --
+                  --  Given a type declaration that declares a one-dimensional
+                  --  array type T whose element type is a character type that
+                  --  contains only character literals, the following operation
+                  --  is implicitely declared immediately following the type
+                  --  declaration
+                  if Vhdl_Std >= Vhdl_08
+                    and then String_Type_Definition /= Null_Iir
+                    and then Get_Kind (Get_Base_Type (Element_Type))
+                    = Iir_Kind_Enumeration_Type_Definition
+                    and then Get_Only_Characters_Flag (Element_Type)
+                  then
+                     Add_Operation (Name_To_String,
+                                    Iir_Predefined_Array_To_String,
+                                    Unary_Chain,
+                                    String_Type_Definition);
+                  end if;
+               end if;
 
                if Is_Discrete_Array (Type_Definition) then
                   if Element_Type = Std_Package.Boolean_Type_Definition then
@@ -1104,7 +1133,6 @@ package body Sem_Decls is
    procedure Sem_Subtype_Declaration (Decl: Iir; Is_Global : Boolean)
    is
       Def: Iir;
-      Res: Iir;
    begin
       --  Real hack to skip subtype declarations of anonymous type decls.
       if Get_Visible_Flag (Decl) then
@@ -1121,63 +1149,12 @@ package body Sem_Decls is
       end if;
 
       if not Is_Anonymous_Type_Definition (Def) then
-         case Get_Kind (Def) is
-            when Iir_Kind_Integer_Subtype_Definition
-              | Iir_Kind_Floating_Subtype_Definition
-              | Iir_Kind_Enumeration_Subtype_Definition
-              | Iir_Kind_Physical_Subtype_Definition =>
-               -- no limits, makes an alias.
-               Res := Create_Iir (Get_Kind (Def));
-               Set_Range_Constraint (Res, Get_Range_Constraint (Def));
-               Set_Resolution_Function (Res, Get_Resolution_Function (Def));
-            when Iir_Kind_Enumeration_Type_Definition =>
-               --  makes an alias.
-               Res := Create_Iir (Iir_Kind_Enumeration_Subtype_Definition);
-               Set_Type_Mark (Res, Def);
-               Set_Range_Constraint (Res, Get_Range_Constraint (Def));
-            when Iir_Kind_Access_Subtype_Definition
-              | Iir_Kind_Access_Type_Definition =>
-               --  Make an alias.
-               Res := Create_Iir (Iir_Kind_Access_Subtype_Definition);
-            when Iir_Kind_Array_Type_Definition
-              | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
-               Res :=
-                 Create_Iir (Iir_Kind_Unconstrained_Array_Subtype_Definition);
-               Set_Type_Staticness (Res, Get_Type_Staticness (Def));
-               if Get_Kind (Def) /= Iir_Kind_Array_Type_Definition then
-                  Set_Resolution_Function
-                    (Res, Get_Resolution_Function (Def));
-               end if;
-               Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
-               Set_Type_Mark (Res, Def);
-               Set_Index_Subtype_List (Res, Get_Index_Subtype_List (Def));
-               Set_Element_Subtype (Res, Get_Element_Subtype (Def));
-            when Iir_Kind_Array_Subtype_Definition =>
-               Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
-               Set_Resolution_Function (Res, Get_Resolution_Function (Def));
-               Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
-               Set_Type_Mark (Res, Def);
-               Set_Index_Subtype_List (Res, Get_Index_Subtype_List (Def));
-               Set_Element_Subtype (Res, Get_Element_Subtype (Def));
-            when Iir_Kind_Record_Type_Definition
-              | Iir_Kind_Record_Subtype_Definition =>
-               Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
-               Set_Type_Staticness (Res, Get_Type_Staticness (Def));
-               if Get_Kind (Def) /= Iir_Kind_Record_Type_Definition then
-                  Set_Resolution_Function
-                    (Res, Get_Resolution_Function (Def));
-               end if;
-               Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
-            when others =>
-               --  FIXME: todo
-               Error_Kind ("sem_subtype_declaration", Def);
-         end case;
-         Location_Copy (Res, Decl);
-         Set_Base_Type (Res, Get_Base_Type (Def));
-         Set_Type_Staticness (Res, Get_Type_Staticness (Def));
-         Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Def));
-         Def := Res;
+         -- There is no added constraints and therefore the subtype
+         -- declaration is in fact an alias of the type.
+         Def := Copy_Subtype_Indication (Def);
+         Location_Copy (Def, Decl);
       end if;
+
       Set_Type (Decl, Def);
       Set_Type_Declarator (Def, Decl);
       Name_Visible (Decl);
@@ -1267,7 +1244,7 @@ package body Sem_Decls is
          end if;
       end if;
       Set_Type (Decl, Atype);
-      Default_Value := Eval_Expr_If_Static (Default_Value);
+      Default_Value := Eval_Expr_Check_If_Static (Default_Value, Atype);
       Set_Default_Value (Decl, Default_Value);
       Set_Base_Name (Decl, Decl);
       Set_Name_Staticness (Decl, Locally);
@@ -1360,11 +1337,6 @@ package body Sem_Decls is
                   end if;
                end if;
                Set_Expr_Staticness (Decl, Staticness);
-
-               if Staticness = Locally then
-                  Set_Default_Value
-                    (Decl, Eval_Expr_Check (Default_Value, Atype));
-               end if;
             end if;
 
          when Iir_Kind_Signal_Declaration =>
@@ -1489,7 +1461,7 @@ package body Sem_Decls is
             --  For a variable or signal declared by an object declaration, the
             --  subtype indication of the corressponding object declaration
             --  must define a constrained array subtype.
-            if not Sem_Is_Constrained (Atype) then
+            if not Is_Fully_Constrained_Type (Atype) then
                Error_Msg_Sem
                  ("declaration of " & Disp_Node (Decl)
                   & " with unconstrained " & Disp_Node (Atype)

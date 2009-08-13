@@ -80,7 +80,6 @@ T_CPPFLAGS =
 X_ADAFLAGS =
 T_ADAFLAGS =
 
-CC = cc
 ADAC = $(CC)
 
 ECHO = echo

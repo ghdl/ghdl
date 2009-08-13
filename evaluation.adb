@@ -335,6 +335,8 @@ package body Evaluation is
       Append_Element (Get_Index_Subtype_List (Res), Index_Type);
       Set_Type_Staticness (Res, Min (Get_Type_Staticness (Res),
                                      Get_Type_Staticness (Index_Type)));
+      Set_Constraint_State (Res, Fully_Constrained);
+      Set_Index_Constraint_Flag (Res, True);
       return Res;
    end Create_Unidim_Array_From_Index;
 
@@ -1144,6 +1146,7 @@ package body Evaluation is
            | Iir_Predefined_Write
            | Iir_Predefined_Read
            | Iir_Predefined_Read_Length
+           | Iir_Predefined_Flush
            | Iir_Predefined_File_Open
            | Iir_Predefined_File_Open_Status
            | Iir_Predefined_File_Close
@@ -1164,7 +1167,8 @@ package body Evaluation is
            | Iir_Predefined_Attribute_Last_Event
            | Iir_Predefined_Attribute_Last_Active
            | Iir_Predefined_Attribute_Driving
-           | Iir_Predefined_Attribute_Driving_Value =>
+           | Iir_Predefined_Attribute_Driving_Value
+           | Iir_Predefined_Array_To_String =>
             --  Not binary or never locally static.
             Error_Internal (Orig, "eval_dyadic_operator: " &
                             Iir_Predefined_Functions'Image (Func));
@@ -1413,8 +1417,7 @@ package body Evaluation is
                Error_Msg_Sem ("non matching length in type convertion", Conv);
             end if;
             return Res;
-         when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
+         when Iir_Kind_Array_Type_Definition =>
             if Get_Base_Type (Conv_Index_Type) = Get_Base_Type (Val_Index_Type)
             then
                Index_Type := Val_Index_Type;
@@ -1510,7 +1513,14 @@ package body Evaluation is
          when Iir_Kind_Constant_Declaration =>
             Val := Get_Default_Value (Expr);
             Res := Build_Constant (Val, Expr);
-            Set_Type (Res, Get_Type (Val));
+            --  Type of the expression should be type of the constant
+            --  declaration at least in case of array subtype.
+            --  If the constant is declared as an unconstrained array, get type
+            --  from the default value.
+            --  FIXME: handle this during semantisation of the declaration.
+            if Get_Kind (Get_Type (Res)) = Iir_Kind_Array_Type_Definition then
+               Set_Type (Res, Get_Type (Val));
+            end if;
             return Res;
          when Iir_Kind_Object_Alias_Declaration =>
             return Build_Constant (Eval_Static_Expr (Get_Name (Expr)), Expr);
@@ -1813,6 +1823,15 @@ package body Evaluation is
          return Expr;
       end if;
    end Eval_Expr_If_Static;
+
+   function Eval_Expr_Check_If_Static (Expr : Iir; Atype : Iir) return Iir is
+   begin
+      if Expr /= Null_Iir and then Get_Expr_Staticness (Expr) = Locally then
+         return Eval_Expr_Check (Expr, Atype);
+      else
+         return Expr;
+      end if;
+   end Eval_Expr_Check_If_Static;
 
    function Eval_Int_In_Range (Val : Iir_Int64; Bound : Iir) return Boolean is
    begin

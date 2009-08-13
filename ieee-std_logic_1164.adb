@@ -113,15 +113,16 @@ package body Ieee.Std_Logic_1164 is
       Decl := Get_Chain (Decl);
       Decl := Skip_Implicit (Decl);
       if Decl = Null_Iir
-        or else Get_Kind (Decl) /= Iir_Kind_Type_Declaration
+        or else (Get_Kind (Decl) /= Iir_Kind_Type_Declaration
+                   and then Get_Kind (Decl) /= Iir_Kind_Subtype_Declaration)
         or else Get_Identifier (Decl) /= Name_Std_Logic_Vector
       then
          raise Error;
       end if;
       Def := Get_Type (Decl);
-      if Get_Kind (Def) /= Iir_Kind_Array_Type_Definition then
-         raise Error;
-      end if;
+--      if Get_Kind (Def) /= Iir_Kind_Array_Type_Definition then
+--         raise Error;
+--      end if;
       Std_Logic_Vector_Type := Def;
 
       --  Skip any declarations but functions.

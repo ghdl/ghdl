@@ -59,6 +59,9 @@ package Evaluation is
    --  computation.
    function Eval_Expr_Check (Expr : Iir; Sub_Type : Iir) return Iir;
 
+   --  Call Eval_Expr_Check only if EXPR is static.
+   function Eval_Expr_Check_If_Static (Expr : Iir; Atype : Iir) return Iir;
+
    --  Return TRUE iff VAL belongs to BOUND.
    function Eval_Int_In_Range (Val : Iir_Int64; Bound : Iir) return Boolean;
 

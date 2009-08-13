@@ -413,7 +413,9 @@ package body Sem_Names is
          then
             if Get_Kind (Get_Type (Obj)) /= Iir_Kind_Protected_Type_Declaration
             then
-               raise Internal_Error;
+               Error_Msg_Sem ("type of the prefix should be a protected type",
+                              Prefix);
+               return;
             end if;
             Set_Method_Object (Call, Obj);
          end if;
@@ -618,6 +620,7 @@ package body Sem_Names is
       -- Check this only if the type is a constrained type.
       Suffix_Rng := Eval_Range (Suffix);
       if Get_Kind (Prefix_Type) = Iir_Kind_Array_Subtype_Definition
+        and then Get_Index_Constraint_Flag (Prefix_Type)
         and then Prefix_Rng /= Null_Iir
         and then Suffix_Rng /= Null_Iir
         and then Get_Direction (Suffix_Rng) /= Get_Direction (Prefix_Rng)
@@ -677,6 +680,8 @@ package body Sem_Names is
         (Expr_Type, Min (Get_Type_Staticness (Prefix_Type),
                          Get_Type_Staticness (Slice_Type)));
       Set_Type (Name, Expr_Type);
+      Set_Index_Constraint_Flag (Expr_Type, True);
+      Set_Constraint_State (Expr_Type, Fully_Constrained);
       if Is_Signal_Object (Prefix) then
          Sem_Types.Set_Type_Has_Signal (Expr_Type);
       end if;
@@ -1396,8 +1401,8 @@ package body Sem_Names is
             return;
          end if;
 
-         Rec_El := Find_Name_In_Chain
-           (Get_Element_Declaration_Chain (Base_Type), Suffix);
+         Rec_El := Find_Name_In_List
+           (Get_Elements_Declaration_List (Base_Type), Suffix);
          if Rec_El = Null_Iir then
             return;
          end if;
@@ -2397,9 +2402,7 @@ package body Sem_Names is
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Base_Attribute =>
             Prefix_Type := Get_Type (Prefix);
-            if Get_Kind (Prefix_Type)
-              in Iir_Kinds_Unconstrained_Array_Type_Definition
-            then
+            if not Is_Fully_Constrained_Type (Prefix_Type) then
                Error_Msg_Sem ("prefix type is not constrained", Attr);
                --  We continue using the unconstrained array type.
                --  At least, this type is valid; and even if the array was

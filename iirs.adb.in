@@ -264,15 +264,15 @@ package body Iirs is
       return Token_Type'Pos (T);
    end Token_Type_To_Iir;
 
-   function Iir_To_Iir_Index32 (N : Iir) return Iir_Index32 is
-   begin
-      return Iir_Index32 (N);
-   end Iir_To_Iir_Index32;
+--     function Iir_To_Iir_Index32 (N : Iir) return Iir_Index32 is
+--     begin
+--        return Iir_Index32 (N);
+--     end Iir_To_Iir_Index32;
 
-   function Iir_Index32_To_Iir (V : Iir_Index32) return Iir is
-   begin
-      return Iir_Index32'Pos (V);
-   end Iir_Index32_To_Iir;
+--     function Iir_Index32_To_Iir (V : Iir_Index32) return Iir is
+--     begin
+--        return Iir_Index32'Pos (V);
+--     end Iir_Index32_To_Iir;
 
    function Iir_To_Name_Id (N : Iir) return Name_Id is
    begin

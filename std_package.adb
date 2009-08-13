@@ -314,6 +314,7 @@ package body Std_Package is
          Set_Signal_Type_Flag (Bit_Type_Definition, True);
          Set_Has_Signal_Flag (Bit_Type_Definition,
                               not Flags.Flag_Whole_Analyze);
+         Set_Only_Characters_Flag (Bit_Type_Definition, True);
 
          -- type bit is
          Bit_Type := Create_Std_Decl (Iir_Kind_Type_Declaration);

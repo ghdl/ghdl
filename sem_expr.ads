@@ -59,6 +59,10 @@ package Sem_Expr is
    --  if overloaded.
    function Sem_Expression_Universal (Expr : Iir) return Iir;
 
+   --  Same as Sem_Expression but specialized for a case expression.
+   --  (Handle specific overloading rules).
+   function Sem_Case_Expression (Expr : Iir) return Iir;
+
    --  Check EXPR can be read.
    procedure Check_Read (Expr : Iir);
 

@@ -264,15 +264,15 @@ package body Iirs is
       return Token_Type'Pos (T);
    end Token_Type_To_Iir;
 
-   function Iir_To_Iir_Index32 (N : Iir) return Iir_Index32 is
-   begin
-      return Iir_Index32 (N);
-   end Iir_To_Iir_Index32;
+--     function Iir_To_Iir_Index32 (N : Iir) return Iir_Index32 is
+--     begin
+--        return Iir_Index32 (N);
+--     end Iir_To_Iir_Index32;
 
-   function Iir_Index32_To_Iir (V : Iir_Index32) return Iir is
-   begin
-      return Iir_Index32'Pos (V);
-   end Iir_Index32_To_Iir;
+--     function Iir_Index32_To_Iir (V : Iir_Index32) return Iir is
+--     begin
+--        return Iir_Index32'Pos (V);
+--     end Iir_Index32_To_Iir;
 
    function Iir_To_Name_Id (N : Iir) return Name_Id is
    begin
@@ -344,6 +344,7 @@ package body Iirs is
            | Iir_Kind_Aggregate_Info
            | Iir_Kind_Procedure_Call
            | Iir_Kind_Operator_Symbol
+           | Iir_Kind_Record_Element_Constraint
            | Iir_Kind_Disconnection_Specification
            | Iir_Kind_Configuration_Specification
            | Iir_Kind_Access_Type_Definition
@@ -481,7 +482,6 @@ package body Iirs is
            | Iir_Kind_Binding_Indication
            | Iir_Kind_Attribute_Specification
            | Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Declaration
@@ -2095,7 +2095,6 @@ package body Iirs is
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
-           | Iir_Kind_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Function_Declaration
@@ -2220,6 +2219,7 @@ package body Iirs is
            | Iir_Kind_Bit_String_Literal
            | Iir_Kind_Simple_Aggregate
            | Iir_Kind_Attribute_Value
+           | Iir_Kind_Record_Element_Constraint
            | Iir_Kind_Disconnection_Specification
            | Iir_Kind_Range_Expression
            | Iir_Kind_Type_Declaration
@@ -3012,7 +3012,8 @@ package body Iirs is
    procedure Check_Kind_For_Element_Position (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Element_Declaration =>
+         when Iir_Kind_Record_Element_Constraint
+           | Iir_Kind_Element_Declaration =>
             null;
          when others =>
             Failed ("Element_Position", Target);
@@ -3030,6 +3031,28 @@ package body Iirs is
       Check_Kind_For_Element_Position (Target);
       Set_Field4 (Target, Iir_Index32'Pos (Pos));
    end Set_Element_Position;
+
+   procedure Check_Kind_For_Element_Declaration (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Record_Element_Constraint =>
+            null;
+         when others =>
+            Failed ("Element_Declaration", Target);
+      end case;
+   end Check_Kind_For_Element_Declaration;
+
+   function Get_Element_Declaration (Target : Iir) return Iir is
+   begin
+      Check_Kind_For_Element_Declaration (Target);
+      return Get_Field2 (Target);
+   end Get_Element_Declaration;
+
+   procedure Set_Element_Declaration (Target : Iir; El : Iir) is
+   begin
+      Check_Kind_For_Element_Declaration (Target);
+      Set_Field2 (Target, El);
+   end Set_Element_Declaration;
 
    procedure Check_Kind_For_Selected_Element (Target : Iir) is
    begin
@@ -3151,7 +3174,6 @@ package body Iirs is
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Record_Subtype_Definition
            | Iir_Kind_Access_Subtype_Definition
@@ -3292,6 +3314,7 @@ package body Iirs is
            | Iir_Kind_Library_Clause
            | Iir_Kind_Character_Literal
            | Iir_Kind_Operator_Symbol
+           | Iir_Kind_Record_Element_Constraint
            | Iir_Kind_Protected_Type_Body
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
@@ -3415,6 +3438,7 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Design_Unit
+           | Iir_Kind_Record_Element_Constraint
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Unit_Declaration
@@ -3585,7 +3609,6 @@ package body Iirs is
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Record_Subtype_Definition
            | Iir_Kind_Access_Subtype_Definition
@@ -3618,8 +3641,7 @@ package body Iirs is
    procedure Check_Kind_For_Resolution_Function (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Unconstrained_Array_Subtype_Definition
-           | Iir_Kind_Array_Subtype_Definition
+         when Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Record_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition
            | Iir_Kind_Floating_Subtype_Definition
@@ -3666,6 +3688,28 @@ package body Iirs is
       Set_Flag4 (Atype, Flag);
    end Set_Text_File_Flag;
 
+   procedure Check_Kind_For_Only_Characters_Flag (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Enumeration_Type_Definition =>
+            null;
+         when others =>
+            Failed ("Only_Characters_Flag", Target);
+      end case;
+   end Check_Kind_For_Only_Characters_Flag;
+
+   function Get_Only_Characters_Flag (Atype : Iir) return Boolean is
+   begin
+      Check_Kind_For_Only_Characters_Flag (Atype);
+      return Get_Flag4 (Atype);
+   end Get_Only_Characters_Flag;
+
+   procedure Set_Only_Characters_Flag (Atype : Iir; Flag : Boolean) is
+   begin
+      Check_Kind_For_Only_Characters_Flag (Atype);
+      Set_Flag4 (Atype, Flag);
+   end Set_Only_Characters_Flag;
+
    procedure Check_Kind_For_Type_Staticness (Target : Iir) is
    begin
       case Get_Kind (Target) is
@@ -3676,7 +3720,6 @@ package body Iirs is
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Record_Subtype_Definition
            | Iir_Kind_Access_Subtype_Definition
@@ -3706,11 +3749,35 @@ package body Iirs is
       Set_State1 (Atype, Iir_Staticness'Pos (Static));
    end Set_Type_Staticness;
 
+   procedure Check_Kind_For_Constraint_State (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            null;
+         when others =>
+            Failed ("Constraint_State", Target);
+      end case;
+   end Check_Kind_For_Constraint_State;
+
+   function Get_Constraint_State (Atype : Iir) return Iir_Constraint is
+   begin
+      Check_Kind_For_Constraint_State (Atype);
+      return Iir_Constraint'Val (Get_State2 (Atype));
+   end Get_Constraint_State;
+
+   procedure Set_Constraint_State (Atype : Iir; State : Iir_Constraint) is
+   begin
+      Check_Kind_For_Constraint_State (Atype);
+      Set_State2 (Atype, Iir_Constraint'Pos (State));
+   end Set_Constraint_State;
+
    procedure Check_Kind_For_Index_Subtype_List (Target : Iir) is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition =>
             null;
          when others =>
@@ -3756,7 +3823,6 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition =>
             null;
          when others =>
@@ -3776,49 +3842,28 @@ package body Iirs is
       Set_Field1 (Decl, Sub_Type);
    end Set_Element_Subtype;
 
-   procedure Check_Kind_For_Element_Declaration_Chain (Target : Iir) is
+   procedure Check_Kind_For_Elements_Declaration_List (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Record_Type_Definition =>
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
             null;
          when others =>
-            Failed ("Element_Declaration_Chain", Target);
+            Failed ("Elements_Declaration_List", Target);
       end case;
-   end Check_Kind_For_Element_Declaration_Chain;
+   end Check_Kind_For_Elements_Declaration_List;
 
-   function Get_Element_Declaration_Chain (Decl : Iir) return Iir is
+   function Get_Elements_Declaration_List (Decl : Iir) return Iir_List is
    begin
-      Check_Kind_For_Element_Declaration_Chain (Decl);
-      return Get_Field2 (Decl);
-   end Get_Element_Declaration_Chain;
+      Check_Kind_For_Elements_Declaration_List (Decl);
+      return Iir_To_Iir_List (Get_Field1 (Decl));
+   end Get_Elements_Declaration_List;
 
-   procedure Set_Element_Declaration_Chain (Decl : Iir; Chain : Iir) is
+   procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_List) is
    begin
-      Check_Kind_For_Element_Declaration_Chain (Decl);
-      Set_Field2 (Decl, Chain);
-   end Set_Element_Declaration_Chain;
-
-   procedure Check_Kind_For_Number_Element_Declaration (Target : Iir) is
-   begin
-      case Get_Kind (Target) is
-         when Iir_Kind_Record_Type_Definition =>
-            null;
-         when others =>
-            Failed ("Number_Element_Declaration", Target);
-      end case;
-   end Check_Kind_For_Number_Element_Declaration;
-
-   function Get_Number_Element_Declaration (Decl : Iir) return Iir_Index32 is
-   begin
-      Check_Kind_For_Number_Element_Declaration (Decl);
-      return Iir_To_Iir_Index32 (Get_Field1 (Decl));
-   end Get_Number_Element_Declaration;
-
-   procedure Set_Number_Element_Declaration (Decl : Iir; Val : Iir_Index32) is
-   begin
-      Check_Kind_For_Number_Element_Declaration (Decl);
-      Set_Field1 (Decl, Iir_Index32_To_Iir (Val));
-   end Set_Number_Element_Declaration;
+      Check_Kind_For_Elements_Declaration_List (Decl);
+      Set_Field1 (Decl, Iir_List_To_Iir (List));
+   end Set_Elements_Declaration_List;
 
    procedure Check_Kind_For_Designated_Type (Target : Iir) is
    begin
@@ -4265,7 +4310,6 @@ package body Iirs is
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Record_Subtype_Definition
            | Iir_Kind_Access_Subtype_Definition
@@ -4305,7 +4349,6 @@ package body Iirs is
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Record_Subtype_Definition
            | Iir_Kind_Access_Subtype_Definition
@@ -4342,7 +4385,6 @@ package body Iirs is
            | Iir_Kind_Incomplete_Type_Definition
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Record_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition
@@ -4415,6 +4457,29 @@ package body Iirs is
       Check_Kind_For_Elab_Flag (Design);
       Set_Flag3 (Design, Flag);
    end Set_Elab_Flag;
+
+   procedure Check_Kind_For_Index_Constraint_Flag (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Array_Subtype_Definition =>
+            null;
+         when others =>
+            Failed ("Index_Constraint_Flag", Target);
+      end case;
+   end Check_Kind_For_Index_Constraint_Flag;
+
+   function Get_Index_Constraint_Flag (Atype : Iir) return Boolean is
+   begin
+      Check_Kind_For_Index_Constraint_Flag (Atype);
+      return Get_Flag4 (Atype);
+   end Get_Index_Constraint_Flag;
+
+   procedure Set_Index_Constraint_Flag (Atype : Iir; Flag : Boolean) is
+   begin
+      Check_Kind_For_Index_Constraint_Flag (Atype);
+      Set_Flag4 (Atype, Flag);
+   end Set_Index_Constraint_Flag;
 
    procedure Check_Kind_For_Assertion_Condition (Target : Iir) is
    begin
@@ -4986,6 +5051,7 @@ package body Iirs is
            | Iir_Kind_Block_Configuration
            | Iir_Kind_Component_Configuration
            | Iir_Kind_Procedure_Call
+           | Iir_Kind_Record_Element_Constraint
            | Iir_Kind_Attribute_Specification
            | Iir_Kind_Disconnection_Specification
            | Iir_Kind_Configuration_Specification
@@ -6284,7 +6350,6 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_File_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition
            | Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Record_Subtype_Definition
            | Iir_Kind_Access_Subtype_Definition

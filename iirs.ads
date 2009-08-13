@@ -1161,7 +1161,22 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Chain (Field2)
+   --   Get/Set_Identifier (Field3)
+   --
+   -- Return the position of the element in the record, starting from 0 for the
+   -- first record element, increasing by one for each successive element.
+   --   Get/Set_Element_Position (Field4)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+
+   -- Iir_Kind_Record_Element_Constraint (Short)
+   --
+   -- Record subtype definition which defines this constraint.
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Element_Declaration (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
@@ -1289,6 +1304,8 @@ package Iirs is
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
+   --   Get/Set_Only_Characters_Flag (Flag4)
+   --
    --   Get/Set_Type_Staticness (State1)
 
    -- Iir_Kind_Enumeration_Literal (Medium)
@@ -1391,23 +1408,27 @@ package Iirs is
    --
    --   Get/Set_Type_Staticness (State1)
    --
+   --   Get/Set_Constraint_State (State2)
+   --
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
+   --
+   --   Get/Set_Index_Constraint_Flag (Flag4)
 
    -- Iir_Kind_Record_Type_Definition (Short)
    --
-   --   Get/Set_Number_Element_Declaration (Field1)
-   --
-   --   Get/Set_Element_Declaration_Chain (Field2)
+   --   Get/Set_Elements_Declaration_List (Field1)
    --
    --   Get/Set_Type_Declarator (Field3)
    --
    --   Get/Set_Base_Type (Field4)
    --
    --   Get/Set_Type_Staticness (State1)
+   --
+   --   Get/Set_Constraint_State (State2)
    --
    --   Get/Set_Resolved_Flag (Flag1)
    --
@@ -1543,6 +1564,8 @@ package Iirs is
 
    -- Iir_Kind_Record_Subtype_Definition (Short)
    --
+   --   Get/Set_Elements_Declaration_List (Field1)
+   --
    --   Get/Set_Type_Mark (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
@@ -1558,18 +1581,10 @@ package Iirs is
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
    --   Get/Set_Type_Staticness (State1)
+   --
+   --   Get/Set_Constraint_State (State2)
 
    -- Iir_Kind_Array_Subtype_Definition (Medium)
-   -- Iir_Kind_Unconstrained_Array_Subtype_Definition (Medium)
-   --
-   -- Iir_Kind_Array_Subtype_definition defines a constrained array
-   -- subtype, which *must* be a subtype of an iir_array_type_definition.
-   --
-   -- Iir_Kind_Unconstrained_Array_Subtype_Definition defines a
-   -- unconstrained array subtype, which *must* be a subtype of an
-   -- iir_array_type_definition.  The only way to create such a
-   -- subtype is via a subtype declaration, without adding
-   -- constraints.
    --
    --   Get/Set_Element_Subtype (Field1)
    --
@@ -1585,11 +1600,15 @@ package Iirs is
    --
    --   Get/Set_Type_Staticness (State1)
    --
+   --   Get/Set_Constraint_State (State2)
+   --
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
+   --
+   --   Get/Set_Index_Constraint_Flag (Flag4)
 
    -- Iir_Kind_Range_Expression (Short)
    --
@@ -2491,6 +2510,7 @@ package Iirs is
        Iir_Kind_Aggregate_Info,
        Iir_Kind_Procedure_Call,
        Iir_Kind_Operator_Symbol,
+       Iir_Kind_Record_Element_Constraint,
 
        Iir_Kind_Attribute_Specification,
        Iir_Kind_Disconnection_Specification,
@@ -2505,7 +2525,6 @@ package Iirs is
        Iir_Kind_Protected_Type_Declaration,
        Iir_Kind_Record_Type_Definition,                 -- composite
        Iir_Kind_Array_Type_Definition,                  -- composite, array
-       Iir_Kind_Unconstrained_Array_Subtype_Definition, -- composite, array, st
        Iir_Kind_Array_Subtype_Definition,               -- composite, array, st
        Iir_Kind_Record_Subtype_Definition,              -- composite, st
        Iir_Kind_Access_Subtype_Definition,              -- st
@@ -2913,8 +2932,12 @@ package Iirs is
        Iir_Predefined_File_Close,
        Iir_Predefined_Read,
        Iir_Predefined_Read_Length,
+       Iir_Predefined_Flush,
        Iir_Predefined_Write,
        Iir_Predefined_Endfile,
+
+   --  To_String
+       Iir_Predefined_Array_To_String,
 
    --  Predefined function.
        Iir_Predefined_Now_Function
@@ -2992,6 +3015,11 @@ package Iirs is
    type Iir_All_Sensitized is
      (Unknown, No_Signal, Read_Signal, Invalid_Signal);
 
+   --  Constraint state of a type.
+   --  See LRM08 5.1 for definition.
+   type Iir_Constraint is
+     (Unconstrained, Partially_Constrained, Fully_Constrained);
+
    ---------------
    -- subranges --
    ---------------
@@ -3030,7 +3058,6 @@ package Iirs is
 
    subtype Iir_Kinds_Array_Type_Definition is Iir_Kind range
      Iir_Kind_Array_Type_Definition ..
-   --Iir_Kind_Unconstrained_Array_Subtype_Definition
      Iir_Kind_Array_Subtype_Definition;
 
    subtype Iir_Kinds_Type_And_Subtype_Definition is Iir_Kind range
@@ -3040,7 +3067,6 @@ package Iirs is
    --Iir_Kind_Protected_Type_Declaration
    --Iir_Kind_Record_Type_Definition
    --Iir_Kind_Array_Type_Definition
-   --Iir_Kind_Unconstrained_Array_Subtype_Definition
    --Iir_Kind_Array_Subtype_Definition
    --Iir_Kind_Record_Subtype_Definition
    --Iir_Kind_Access_Subtype_Definition
@@ -3054,8 +3080,7 @@ package Iirs is
      Iir_Kind_Physical_Type_Definition;
 
    subtype Iir_Kinds_Subtype_Definition is Iir_Kind range
-     Iir_Kind_Unconstrained_Array_Subtype_Definition ..
-   --Iir_Kind_Array_Subtype_Definition
+     Iir_Kind_Array_Subtype_Definition ..
    --Iir_Kind_Record_Subtype_Definition
    --Iir_Kind_Access_Subtype_Definition
    --Iir_Kind_Physical_Subtype_Definition
@@ -3087,17 +3112,8 @@ package Iirs is
    subtype Iir_Kinds_Composite_Type_Definition is Iir_Kind range
      Iir_Kind_Record_Type_Definition ..
    --Iir_Kind_Array_Type_Definition
-   --Iir_Kind_Unconstrained_Array_Subtype_Definition
    --Iir_Kind_Array_Subtype_Definition
      Iir_Kind_Record_Subtype_Definition;
-
-   subtype Iir_Kinds_Unconstrained_Array_Type_Definition is Iir_Kind range
-     Iir_Kind_Array_Type_Definition ..
-     Iir_Kind_Unconstrained_Array_Subtype_Definition;
-
-   subtype Iir_Kinds_Array_Subtype_Definition is Iir_Kind range
-     Iir_Kind_Unconstrained_Array_Subtype_Definition ..
-     Iir_Kind_Array_Subtype_Definition;
 
    subtype Iir_Kinds_Type_Declaration is Iir_Kind range
      Iir_Kind_Type_Declaration ..
@@ -3545,8 +3561,6 @@ package Iirs is
    subtype Iir_Subtype_Definition is Iir;
 
    subtype Iir_Array_Subtype_Definition is Iir;
-
-   subtype Iir_Unconstrained_Array_Subtype_Definition is Iir;
 
    subtype Iir_Physical_Type_Definition is Iir;
 
@@ -4320,6 +4334,10 @@ package Iirs is
    procedure Set_Element_Position (Target : Iir; Pos : Iir_Index32);
 
    --  Field: Field2
+   function Get_Element_Declaration (Target : Iir) return Iir;
+   procedure Set_Element_Declaration (Target : Iir; El : Iir);
+
+   --  Field: Field2
    function Get_Selected_Element (Target : Iir) return Iir;
    procedure Set_Selected_Element (Target : Iir; El : Iir);
 
@@ -4419,9 +4437,18 @@ package Iirs is
    function Get_Text_File_Flag (Atype : Iir) return Boolean;
    procedure Set_Text_File_Flag (Atype : Iir; Flag : Boolean);
 
+   --  True if enumeration type ATYPE has only character literals.
+   --  Field: Flag4
+   function Get_Only_Characters_Flag (Atype : Iir) return Boolean;
+   procedure Set_Only_Characters_Flag (Atype : Iir; Flag : Boolean);
+
    --  Field: State1 (pos)
    function Get_Type_Staticness (Atype : Iir) return Iir_Staticness;
    procedure Set_Type_Staticness (Atype : Iir; Static : Iir_Staticness);
+
+   --  Field: State2 (pos)
+   function Get_Constraint_State (Atype : Iir) return Iir_Constraint;
+   procedure Set_Constraint_State (Atype : Iir; State : Iir_Constraint);
 
    --  Field: Field6 (uc)
    function Get_Index_Subtype_List (Decl : Iir) return Iir_List;
@@ -4436,14 +4463,9 @@ package Iirs is
    procedure Set_Element_Subtype (Decl : Iir; Sub_Type : Iir);
 
    --  Chains of elements of a record.
-   --  Field: Field2
-   function Get_Element_Declaration_Chain (Decl : Iir) return Iir;
-   procedure Set_Element_Declaration_Chain (Decl : Iir; Chain : Iir);
-
-   --  Number of elements in the record.
    --  Field: Field1 (uc)
-   function Get_Number_Element_Declaration (Decl : Iir) return Iir_Index32;
-   procedure Set_Number_Element_Declaration (Decl : Iir; Val : Iir_Index32);
+   function Get_Elements_Declaration_List (Decl : Iir) return Iir_List;
+   procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_List);
 
    --  Field: Field2
    function Get_Designated_Type (Target : Iir) return Iir;
@@ -4580,6 +4602,12 @@ package Iirs is
    --  Field: Flag3
    function Get_Elab_Flag (Design : Iir) return Boolean;
    procedure Set_Elab_Flag (Design : Iir; Flag : Boolean);
+
+   --  Set on an array_subtype if there is an index constraint.
+   --  If not set, the subtype is unconstrained.
+   --  Field: Flag4
+   function Get_Index_Constraint_Flag (Atype : Iir) return Boolean;
+   procedure Set_Index_Constraint_Flag (Atype : Iir; Flag : Boolean);
 
    --  Condition of an assertion.
    --  Field: Field1

@@ -403,6 +403,8 @@ package body Errorout is
             return "enumeration literal " & Iirs_Utils.Image_Identifier (Node);
          when Iir_Kind_Element_Declaration =>
             return Disp_Identifier (Node, "element");
+         when Iir_Kind_Record_Element_Constraint =>
+            return "record element constraint";
          when Iir_Kind_Null_Literal =>
             return "null literal";
          when Iir_Kind_Aggregate =>
@@ -436,8 +438,7 @@ package body Errorout is
 
          when Iir_Kind_Array_Type_Definition =>
             return Disp_Type (Node, "array type");
-         when Iir_Kind_Array_Subtype_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
+         when Iir_Kind_Array_Subtype_Definition =>
             return Disp_Type (Node, "array subtype");
          when Iir_Kind_Record_Type_Definition =>
             return Disp_Type (Node, "record type");

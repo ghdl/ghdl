@@ -83,7 +83,7 @@ package Nodes is
 
    -- Fields of Format_Medium:
    --   Odigit1 : Bit3_Type
-   --   Odigit2 : Bit3_Type
+   --   Odigit2 : Bit3_Type (odigit1)
    --   State3 : Bit2_Type
    --   State4 : Bit2_Type
    --   Field4 : Iir

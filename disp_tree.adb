@@ -276,6 +276,9 @@ package body Disp_Tree is
          when Iir_Kind_Element_Declaration =>
             Put ("element_declaration");
             Disp_Identifier (Tree);
+         when Iir_Kind_Record_Element_Constraint =>
+            Put ("record_element_constraint");
+            Disp_Identifier (Tree);
          when Iir_Kind_Attribute_Declaration =>
             Put ("attribute_declaration");
             Disp_Identifier (Tree);
@@ -994,6 +997,11 @@ package body Disp_Tree is
          when Iir_Kind_Element_Declaration =>
             Header ("type:");
             Disp_Tree (Get_Type (Tree), Ntab, True);
+         when Iir_Kind_Record_Element_Constraint =>
+            Header ("type:");
+            Disp_Tree (Get_Type (Tree), Ntab, True);
+            Header ("element_declaration:");
+            Disp_Tree (Get_Element_Declaration (Tree), Ntab);
          when Iir_Kind_Attribute_Declaration =>
             if Flat_Decl then
                return;
@@ -1163,7 +1171,7 @@ package body Disp_Tree is
                Fl : Boolean;
             begin
                if Base /= Null_Iir
-                 and then Kind = Iir_Kind_Array_Type_Definition
+                 and then Get_Kind (Base) = Iir_Kind_Array_Type_Definition
                then
                   Fl := Get_Type_Declarator (Base)
                     /= Get_Type_Declarator (Tree);
@@ -1177,29 +1185,13 @@ package body Disp_Tree is
             Header ("index_subtype_list:");
             Disp_Tree_List (Get_Index_Subtype_List (Tree), Ntab, True);
             Header ("element_subtype:");
-            Disp_Tree_Flat (Get_Element_Subtype (Tree), Ntab);
+            Disp_Tree (Get_Element_Subtype (Tree), Ntab, True);
             Header ("resolution function:");
             Disp_Tree_Flat (Get_Resolution_Function (Tree), Ntab);
-         when Iir_Kind_Unconstrained_Array_Subtype_Definition =>
-            if Flat_Decl and then Get_Type_Declarator (Tree) /= Null_Iir then
-               return;
-            end if;
-            Header ("type declarator:");
-            Disp_Tree_Flat (Get_Type_Declarator (Tree), Ntab);
-            Header ("resolved flag: ", False);
-            Disp_Type_Resolved_Flag (Tree);
-            Header ("signal_type_flag: ", False);
-            Disp_Flag (Get_Signal_Type_Flag (Tree));
-            Header ("has_signal_flag: ", False);
-            Disp_Flag (Get_Has_Signal_Flag (Tree));
-            Header ("base type:");
-            Disp_Tree (Get_Base_Type (Tree), Ntab, True);
-            Header ("type mark:");
-            Disp_Tree (Get_Type_Mark (Tree), Ntab, True);
-            Header ("resolution function:");
-            Disp_Tree_Flat (Get_Resolution_Function (Tree), Ntab);
-            Header ("index_subtype_list:");
-            Disp_Tree_List (Get_Index_Subtype_List (Tree), Ntab, True);
+            Header ("index_constraint: ", False);
+            Disp_Flag (Get_Index_Constraint_Flag (Tree));
+            Header ("constraint_state: "
+                      & Iir_Constraint'Image (Get_Constraint_State (Tree)));
          when Iir_Kind_Array_Type_Definition  =>
             if Flat_Decl and then Get_Type_Declarator (Tree) /= Null_Iir then
                return;
@@ -1228,8 +1220,10 @@ package body Disp_Tree is
             Disp_Flag (Get_Signal_Type_Flag (Tree));
             Header ("has_signal_flag: ", False);
             Disp_Flag (Get_Has_Signal_Flag (Tree));
+            Header ("constraint_state: "
+                      & Iir_Constraint'Image (Get_Constraint_State (Tree)));
             Header ("elements:");
-            Disp_Tree_Chain (Get_Element_Declaration_Chain (Tree), Ntab, True);
+            Disp_Tree_List (Get_Elements_Declaration_List (Tree), Ntab, True);
          when Iir_Kind_Record_Subtype_Definition =>
             if Flat_Decl and then not Is_Anonymous_Type_Definition (Tree) then
                return;
@@ -1246,6 +1240,10 @@ package body Disp_Tree is
             Disp_Tree (Get_Type_Mark (Tree), Ntab, True);
             Header ("resolution function:");
             Disp_Tree_Flat (Get_Resolution_Function (Tree), Ntab);
+            Header ("constraint_state: "
+                      & Iir_Constraint'Image (Get_Constraint_State (Tree)));
+            Header ("elements:");
+            Disp_Tree_List (Get_Elements_Declaration_List (Tree), Ntab, True);
          when Iir_Kind_Physical_Type_Definition =>
             if Flat_Decl and then Get_Type_Declarator (Tree) /= Null_Iir then
                return;

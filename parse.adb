@@ -509,6 +509,13 @@ package body Parse is
                   if C2 /= '*' then
                      Bad_Operator_Symbol;
                   end if;
+               when '?' =>
+                  if Vhdl_Std < Vhdl_08 then
+                     Bad_Operator_Symbol;
+                  elsif C2 /= '?' then
+                     Bad_Operator_Symbol;
+                  end if;
+                  Id := Name_Op_Condition;
                when others =>
                   Bad_Operator_Symbol;
                   Id := Name_Op_Equality;
@@ -1291,7 +1298,7 @@ package body Parse is
    --  precond : ARRAY
    --  postcond: ??
    --
-   --  [ §3.2.1 ]
+   --  [ LRM93 3.2.1 ]
    --  array_type_definition ::= unconstrained_array_definition
    --                          | constrained_array_definition
    --
@@ -1307,6 +1314,14 @@ package body Parse is
    --   index_constraint ::= ( discrete_range { , discrete_range } )
    --
    --   discrete_range ::= discrete_subtype_indication | range
+   --
+   --  [ LRM08 5.3.2.1 ]
+   --  array_type_definition ::= unbounded_array_definition
+   --                          | constrained_array_definition
+   --
+   --   unbounded_array_definition ::=
+   --      ARRAY ( index_subtype_definition { , index_subtype_definition } )
+   --      OF element_subtype_indication
    function Parse_Array_Definition return Iir
    is
       Index_Constrained : Boolean;
@@ -1472,9 +1487,8 @@ package body Parse is
    --  element_subtype_definition ::= subtype_indication
    function Parse_Record_Definition return Iir_Record_Type_Definition
    is
-      use Iir_Chains.Element_Declaration_Chain_Handling;
       Res: Iir_Record_Type_Definition;
-      Last : Iir_Element_Declaration;
+      El_List : Iir_List;
       El: Iir_Element_Declaration;
       First : Iir;
       Pos: Iir_Index32;
@@ -1482,9 +1496,10 @@ package body Parse is
    begin
       Res := Create_Iir (Iir_Kind_Record_Type_Definition);
       Set_Location (Res);
+      El_List := Create_Iir_List;
+      Set_Elements_Declaration_List (Res, El_List);
       Scan.Scan;
       Pos := 0;
-      Build_Init (Last);
       First := Null_Iir;
       loop
          pragma Assert (First = Null_Iir);
@@ -1492,9 +1507,12 @@ package body Parse is
          loop
             El := Create_Iir (Iir_Kind_Element_Declaration);
             Set_Location (El);
+            if First = Null_Iir then
+               First := El;
+            end if;
             Expect (Tok_Identifier);
             Set_Identifier (El, Current_Identifier);
-            Append (Last, Res, El);
+            Append_Element (El_List, El);
             Set_Element_Position (El, Pos);
             Pos := Pos + 1;
             if First = Null_Iir then
@@ -1507,15 +1525,12 @@ package body Parse is
          Expect (Tok_Colon);
          Scan.Scan;
          Subtype_Indication := Parse_Subtype_Indication;
-         while First /= Null_Iir loop
-            Set_Type (First, Subtype_Indication);
-            First := Get_Chain (First);
-         end loop;
+         Set_Type (First, Subtype_Indication);
+         First := Null_Iir;
          Expect (Tok_Semi_Colon);
          Scan.Scan;
          exit when Current_Token = Tok_End;
       end loop;
-      Set_Number_Element_Declaration (Res, Pos);
       Scan_Expect (Tok_Record);
       Scan.Scan;
       return Res;
@@ -1792,32 +1807,174 @@ package body Parse is
       return Decl;
    end Parse_Type_Declaration;
 
-   --  precond : identifier
+   --  precond: '(' or identifier
    --  postcond: next token
    --
-   --  [ §4.2 ]
+   --  [ LRM08 6.3 ]
+   --
+   --  resolution_indication ::=
+   --      resolution_function_name | ( element_resolution )
+   --
+   --  element_resolution ::=
+   --      array_element_resolution | record_resolution
+   --
+   --  array_element_resolution ::= resolution_indication
+   --
+   --  record_resolution ::=
+   --      record_element_resolution { , record_element_resolution }
+   --
+   --  record_element_resolution ::=
+   --      record_element_simple_name resolution_indication
+   function Parse_Resolution_Indication return Iir
+   is
+      Res : Iir;
+      Def : Iir;
+      Loc : Location_Type;
+      El_List : Iir_List;
+      El : Iir;
+      Id : Name_Id;
+   begin
+      if Current_Token = Tok_Identifier then
+         --  Resolution function name.
+         return Parse_Name (Allow_Indexes => False);
+      elsif Current_Token = Tok_Left_Paren then
+         --  Element resolution.
+         Loc := Get_Token_Location;
+
+         Scan.Scan; -- Eat '('
+         Res := Parse_Resolution_Indication;
+         if Current_Token = Tok_Identifier
+           or else Current_Token = Tok_Left_Paren
+         then
+            --  This was in fact a record_resolution.
+            if Get_Kind (Res) /= Iir_Kind_Simple_Name then
+               Error_Msg_Parse ("element name expected", Res);
+               return Null_Iir;
+            end if;
+            Id := Get_Identifier (Res);
+            Free_Iir (Res);
+            Def := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+            Set_Location (Def, Loc);
+            El_List := Create_Iir_List;
+            Set_Elements_Declaration_List (Def, El_List);
+            loop
+               El := Create_Iir (Iir_Kind_Record_Element_Constraint);
+               Set_Location (El, Loc);
+               Set_Identifier (El, Id);
+               Set_Element_Declaration (El, Parse_Resolution_Indication);
+               Append_Element (El_List, El);
+               exit when Current_Token = Tok_Right_Paren;
+               Expect (Tok_Comma);
+               Scan.Scan;
+               if Current_Token /= Tok_Identifier then
+                  Error_Msg_Parse ("record element identifier expected");
+                  exit;
+               end if;
+               Id := Current_Identifier;
+               Loc := Get_Token_Location;
+               Scan.Scan;
+            end loop;
+         else
+            Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+            Set_Location (Def, Loc);
+            Set_Element_Subtype (Def, Res);
+         end if;
+         Expect (Tok_Right_Paren);
+         Scan.Scan;
+         return Def;
+      else
+         Error_Msg_Parse ("resolution indication expected");
+         raise Parse_Error;
+      end if;
+   end Parse_Resolution_Indication;
+
+   --  precond : '('
+   --  postcond: next token
+   --
+   --  [ LRM08 6.3 Subtype declarations ]
+   --  element_constraint ::=
+   --      array_constraint | record_constraint
+   --
+   --  [ LRM08 5.3.2.1 Array types ]
+   --  array_constraint ::=
+   --      index_constraint [ array_element_constraint ]
+   --      | ( open ) [ array_element_constraint ]
+   --
+   --  array_element_constraint ::= element_constraint
+   --
+   --  RES is the resolution_indication of the subtype indication.
+   function Parse_Element_Constraint return Iir
+   is
+      Def : Iir;
+      El : Iir;
+   begin
+      --  Index_constraint.
+      Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+      Set_Location (Def);
+
+      --  Eat '('.
+      Scan.Scan;
+
+      if Current_Token = Tok_Open then
+         --  Eat 'open'.
+         Scan.Scan;
+      else
+         Set_Index_Subtype_List (Def, Create_Iir_List);
+         -- index_constraint ::= (discrete_range {, discrete_range} )
+         loop
+            -- accept parenthesis or comma.
+            El := Parse_Discrete_Range;
+            Append_Element (Get_Index_Subtype_List (Def), El);
+            exit when Current_Token = Tok_Right_Paren;
+            Expect (Tok_Comma);
+            Scan.Scan;
+         end loop;
+      end if;
+      Expect (Tok_Right_Paren);
+      Scan.Scan;
+
+      if Current_Token = Tok_Left_Paren then
+         Set_Element_Subtype (Def, Parse_Element_Constraint);
+      end if;
+      return Def;
+   end Parse_Element_Constraint;
+
+   --  precond : identifier or '('
+   --  postcond: next token
+   --
+   --  [ LRM93 4.2 ]
    --  subtype_indication ::=
    --      [ RESOLUTION_FUNCTION_name ] type_mark [ constraint ]
    --
-   --  [ §4.2 ]
    --  constraint ::= range_constraint | index_constraint
    --
-   --  [ §3.2.1]
-   --  index_constraint ::= ( discrete_range { , discrete_range } )
+   --  [ LRM08 6.3 ]
+   --  subtype_indication ::=
+   --      [ resolution_indication ] type_mark [ constraint ]
+   --
+   --  constraint ::=
+   --      range_constraint | array_constraint | record_constraint
    function Parse_Subtype_Indication (Name : Iir := Null_Iir)
      return Iir
    is
       Type_Mark : Iir;
       Def: Iir;
-      El: Iir;
       Resolution_Function: Iir;
    begin
       -- FIXME: location.
       Resolution_Function := Null_Iir;
+      Def := Null_Iir;
 
       if Name /= Null_Iir then
          Type_Mark := Name;
       else
+         if Current_Token = Tok_Left_Paren then
+            if Vhdl_Std < Vhdl_08 then
+               Error_Msg_Parse
+                 ("resolution_indication not allowed before vhdl08");
+            end if;
+            Resolution_Function := Parse_Resolution_Indication;
+         end if;
          if Current_Token /= Tok_Identifier then
             Error_Msg_Parse ("type mark expected in a subtype indication");
             raise Parse_Error;
@@ -1826,28 +1983,19 @@ package body Parse is
       end if;
 
       if Current_Token = Tok_Identifier then
+         if Resolution_Function /= Null_Iir then
+            Error_Msg_Parse ("resolution function already indicated");
+         end if;
          Resolution_Function := Type_Mark;
          Type_Mark := Parse_Type_Mark (Check_Paren => False);
       end if;
 
       case Current_Token is
          when Tok_Left_Paren =>
-            --  Index_constraint.
-            Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
-            Set_Location (Def);
+            --  element_constraint.
+            Def := Parse_Element_Constraint;
             Set_Type_Mark (Def, Type_Mark);
             Set_Resolution_Function (Def, Resolution_Function);
-            Set_Index_Subtype_List (Def, Create_Iir_List);
-            -- index_constraint ::= (discrete_range {, discrete_range} )
-            loop
-               -- accept parenthesis or comma.
-               Scan.Scan;
-               El := Parse_Discrete_Range;
-               Append_Element (Get_Index_Subtype_List (Def), El);
-               exit when Current_Token = Tok_Right_Paren;
-               Expect (Tok_Comma);
-            end loop;
-            Scan.Scan;
 
          when Tok_Range =>
             --  range_constraint.
@@ -1858,13 +2006,13 @@ package body Parse is
             Set_Resolution_Function (Def, Resolution_Function);
 
          when others =>
-            if Resolution_Function = Null_Iir then
-               Def := Type_Mark;
-            else
+            if Resolution_Function /= Null_Iir then
                Def := Create_Iir (Iir_Kind_Subtype_Definition);
                Location_Copy (Def, Type_Mark);
                Set_Type_Mark (Def, Type_Mark);
                Set_Resolution_Function (Def, Resolution_Function);
+            else
+               Def := Type_Mark;
             end if;
       end case;
       return Def;
@@ -4484,7 +4632,13 @@ package body Parse is
             case Current_Token is
                when Tok_To
                  | Tok_Downto =>
-                  Actual := Parse_Range_Expression (Actual);
+                  if Actual = Null_Iir then
+                     --  Left expression is missing ie: (downto x).
+                     Scan.Scan;
+                     Actual := Parse_Expression;
+                  else
+                     Actual := Parse_Range_Expression (Actual);
+                  end if;
                   if Nbr_Assocs /= 1 then
                      Error_Msg_Parse ("multi-dimensional slice is forbidden");
                   end if;

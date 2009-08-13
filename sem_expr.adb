@@ -168,6 +168,7 @@ package body Sem_Expr is
            | Iir_Kind_Component_Declaration
            | Iir_Kinds_Procedure_Declaration
            | Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute
            | Iir_Kind_Element_Declaration =>
             Error_Msg_Sem (Disp_Node (Expr)
                            & " not allowed in an expression", Loc);
@@ -228,12 +229,15 @@ package body Sem_Expr is
       if Targ_Type = Null_Iir or else Expr = Null_Iir then
          return True;
       end if;
-      if Get_Kind (Targ_Type) /= Iir_Kind_Array_Subtype_Definition then
+      if Get_Kind (Targ_Type) /= Iir_Kind_Array_Subtype_Definition
+        or else Get_Constraint_State (Targ_Type) /= Fully_Constrained
+      then
          return True;
       end if;
       Expr_Type := Get_Type (Expr);
       if Expr_Type = Null_Iir
         or else Get_Kind (Expr_Type) /= Iir_Kind_Array_Subtype_Definition
+        or else Get_Constraint_State (Expr_Type) /= Fully_Constrained
       then
          return True;
       end if;
@@ -645,10 +649,18 @@ package body Sem_Expr is
          --  FIXME: catch phys/phys.
          Set_Type (Expr, Integer_Type_Definition);
       elsif Range_Type = Universal_Integer_Type_Definition then
-         --  GHDL: this is not allowed, however often used:
-         --  eg: for i in 0 to v'length + 1 loop
-         --  eg: for i in -1 to 1 loop
-         if Flags.Vhdl_Std = Vhdl_93c then
+         if Vhdl_Std >= Vhdl_08 then
+            --  LRM08 5.3.2.2
+            --  For a discrete range used in a constrained array definition
+            --  and defined by a range, an implicit conversion to the
+            --  predefined type INTEGER is assumed if the type of both bounds
+            --  (prior the implicit conversion) is the type universal_integer.
+            null;
+         elsif Vhdl_Std = Vhdl_93c then
+            --  GHDL: this is not allowed, however often used:
+            --  eg: for i in 0 to v'length + 1 loop
+            --  eg: for i in -1 to 1 loop
+
             --  Be tolerant.
             Warning_Msg_Sem ("universal integer bound must be numeric literal "
                              & "or attribute", Expr);
@@ -1826,47 +1838,230 @@ package body Sem_Expr is
       El_Type := Get_Base_Type (Get_Element_Subtype (Lit_Base_Type));
       Len := Sem_String_Literal (Lit, El_Type);
 
-      case Get_Kind (Lit_Type) is
-         when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
-            -- Set type of the string literal,
-            -- according to LRM93 7.3.2.2.
-            N_Type := Create_Unidim_Array_By_Length
-              (Lit_Base_Type, Iir_Int64 (Len), Lit);
-            Set_Type (Lit, N_Type);
-         when Iir_Kind_Array_Subtype_Definition =>
-            Index_Type := Get_First_Element
-              (Get_Index_Subtype_List (Lit_Type));
-            if Get_Type_Staticness (Index_Type) = Locally then
-               if Eval_Discrete_Type_Length (Index_Type) /= Iir_Int64 (Len)
-               then
-                  Error_Msg_Sem ("string length does not match that of "
-                                 & Disp_Node (Index_Type), Lit);
-               end if;
-            else
-               --  FIXME: It this right ?
-               --  We really need a locally static type.
-               N_Type := Create_Unidim_Array_By_Length
-                 (Lit_Base_Type, Iir_Int64 (Len), Lit);
-               Set_Type (Lit, N_Type);
+      if Get_Constraint_State (Lit_Type) = Fully_Constrained then
+         Index_Type := Get_First_Element
+           (Get_Index_Subtype_List (Lit_Type));
+         if Get_Type_Staticness (Index_Type) = Locally then
+            if Eval_Discrete_Type_Length (Index_Type) /= Iir_Int64 (Len)
+            then
+               Error_Msg_Sem ("string length does not match that of "
+                                & Disp_Node (Index_Type), Lit);
             end if;
-         when others =>
-            Error_Kind ("sem_string_literal_type", Lit_Type);
-      end case;
+            return;
+         end if;
+      end if;
+
+      -- Set type of the string literal,
+      -- according to LRM93 7.3.2.2.
+      N_Type := Create_Unidim_Array_By_Length
+        (Lit_Base_Type, Iir_Int64 (Len), Lit);
+      Set_Type (Lit, N_Type);
    end Sem_String_Literal;
+
+   generic
+      --  Compare two elements, return true iff OP1 < OP2.
+      with function Lt (Op1, Op2 : Natural) return Boolean;
+
+      --  Swap two elements.
+      with procedure Swap (From : Natural; To : Natural);
+   package Heap_Sort is
+      --  Heap sort the N elements.
+      procedure Sort (N : Natural);
+   end Heap_Sort;
+
+   package body Heap_Sort is
+      --  An heap is an almost complete binary tree whose each edge is less
+      --  than or equal as its decendent.
+
+      --  Bubble down element I of a partially ordered heap of length N in
+      --  array ARR.
+      procedure Bubble_Down (I, N : Natural)
+      is
+         Child : Natural;
+         Parent : Natural := I;
+      begin
+         loop
+            Child := 2 * Parent;
+            if Child < N and then Lt (Child, Child + 1) then
+               Child := Child + 1;
+            end if;
+            exit when Child > N;
+            exit when not Lt (Parent, Child);
+            Swap (Parent, Child);
+            Parent := Child;
+         end loop;
+      end Bubble_Down;
+
+      --  Heap sort of ARR.
+      procedure Sort (N : Natural)
+      is
+      begin
+         --  Heapify
+         for I in reverse 1 .. N / 2 loop
+            Bubble_Down (I, N);
+         end loop;
+
+         --  Sort
+         for I in reverse 2 .. N loop
+            Swap (1, I);
+            Bubble_Down (1, I - 1);
+         end loop;
+      end Sort;
+   end Heap_Sort;
 
    procedure Sem_String_Choices_Range (Choice_Chain : Iir; Sel : Iir)
    is
       --  True if others choice is present.
       Has_Others : Boolean;
 
+      --  Number of simple choices.
+      Nbr_Choices : Natural;
+
       --  Type of SEL.
       Sel_Type : Iir;
+
+      --  Type of the element of SEL.
+      Sel_El_Type : Iir;
+      --  Number of literals in the element type.
+      Sel_El_Length : Iir_Int64;
+      --  List of literals.
+      Sel_El_Literal_List : Iir_List;
 
       --  Length of SEL (number of characters in SEL).
       Sel_Length : Iir_Int64;
 
+      --  Array of choices.
+      Arr : Iir_Array_Acc;
+      Index : Natural;
+
+      --  True if length of a choice mismatches
+      Has_Length_Error : Boolean := False;
+
       El : Iir;
+
+      type Str_Info is record
+         El : Iir;
+         Ptr : String_Fat_Acc;
+         Len : Natural;
+         Lit_0 : Iir;
+         Lit_1 : Iir;
+         List : Iir_List;
+      end record;
+
+      --  Fill Res from EL.  This is used to speed up Lt and Eq operations.
+      procedure Get_Info (El : Iir; Res : out Str_Info)
+      is
+         Expr : constant Iir := Get_Expression (El);
+      begin
+         case Get_Kind (Expr) is
+            when Iir_Kind_Simple_Aggregate =>
+               Res := Str_Info'(El => Expr,
+                                Ptr => null,
+                                Len => 0,
+                                Lit_0 | Lit_1 => Null_Iir,
+                                List => Get_Simple_Aggregate_List (Expr));
+               Res.Len := Get_Nbr_Elements (Res.List);
+            when Iir_Kind_Bit_String_Literal =>
+               Res := Str_Info'(El => Expr,
+                                Ptr => Get_String_Fat_Acc (Expr),
+                                Len => Get_String_Length (Expr),
+                                Lit_0 => Get_Bit_String_0 (Expr),
+                                Lit_1 => Get_Bit_String_1 (Expr),
+                                List => Null_Iir_List);
+            when Iir_Kind_String_Literal =>
+               Res := Str_Info'(El => Expr,
+                                Ptr => Get_String_Fat_Acc (Expr),
+                                Len => Get_String_Length (Expr),
+                                Lit_0 | Lit_1 => Null_Iir,
+                                List => Null_Iir_List);
+            when others =>
+               Error_Kind ("sem_string_choice_range.get_info", Expr);
+         end case;
+      end Get_Info;
+
+      --  Return the position of element IDX of STR.
+      function Get_Pos (Str : Str_Info; Idx : Natural) return Iir_Int32
+      is
+         S : Iir;
+         C : Character;
+      begin
+         case Get_Kind (Str.El) is
+            when Iir_Kind_Simple_Aggregate =>
+               S := Get_Nth_Element (Str.List, Idx);
+            when Iir_Kind_String_Literal =>
+               C := Str.Ptr (Idx + 1);
+               --  FIXME: build a table from character to position.
+               --  This linear search is O(n)!
+               S := Find_Name_In_List (Sel_El_Literal_List,
+                                       Name_Table.Get_Identifier (C));
+            when Iir_Kind_Bit_String_Literal =>
+               C := Str.Ptr (Idx + 1);
+               case C is
+                  when '0' =>
+                     S := Str.Lit_0;
+                  when '1' =>
+                     S := Str.Lit_1;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            when others =>
+               Error_Kind ("sem_string_choice_range.get_pos", Str.El);
+         end case;
+         return Get_Enum_Pos (S);
+      end Get_Pos;
+
+      --  Compare two elements of ARR.
+      --  Return true iff OP1 < OP2.
+      function Lt (Op1, Op2 : Natural) return Boolean
+      is
+         Str1, Str2 : Str_Info;
+         P1, P2 : Iir_Int32;
+      begin
+         Get_Info (Arr (Op1), Str1);
+         Get_Info (Arr (Op2), Str2);
+         if Str1.Len /= Str2.Len then
+            raise Internal_Error;
+         end if;
+
+         for I in 0 .. Natural (Sel_Length - 1) loop
+            P1 := Get_Pos (Str1, I);
+            P2 := Get_Pos (Str2, I);
+            if P1 /= P2 then
+               if P1 < P2 then
+                  return True;
+               else
+                  return False;
+               end if;
+            end if;
+         end loop;
+         return False;
+      end Lt;
+
+      function Eq (Op1, Op2 : Natural) return Boolean
+      is
+         Str1, Str2 : Str_Info;
+      begin
+         Get_Info (Arr (Op1), Str1);
+         Get_Info (Arr (Op2), Str2);
+
+         for I in 0 .. Natural (Sel_Length - 1) loop
+            if Get_Pos (Str1, I) /= Get_Pos (Str2, I) then
+               return False;
+            end if;
+         end loop;
+         return True;
+      end Eq;
+
+      procedure Swap (From : Natural; To : Natural)
+      is
+         Tmp : Iir;
+      begin
+         Tmp := Arr (To);
+         Arr (To) := Arr (From);
+         Arr (From) := Tmp;
+      end Swap;
+
+      package Str_Heap_Sort is new Heap_Sort (Lt => Lt, Swap => Swap);
 
       procedure Sem_Simple_Choice (Choice : Iir)
       is
@@ -1878,11 +2073,13 @@ package body Sem_Expr is
          --  the same length as that of the case expression.
          Expr := Sem_Expression (Get_Expression (Choice), Sel_Type);
          if Expr = Null_Iir then
+            Has_Length_Error := True;
             return;
          end if;
          Set_Expression (Choice, Expr);
          if Get_Expr_Staticness (Expr) < Locally then
             Error_Msg_Sem ("choice must be locally static expression", Expr);
+            Has_Length_Error := True;
             return;
          end if;
          Expr := Eval_Expr (Expr);
@@ -1890,6 +2087,7 @@ package body Sem_Expr is
          if Eval_Discrete_Type_Length
            (Get_String_Type_Bound_Type (Get_Type (Expr))) /= Sel_Length
          then
+            Has_Length_Error := True;
             Error_Msg_Sem
               ("value not of the same length of the case expression", Expr);
             return;
@@ -1912,8 +2110,13 @@ package body Sem_Expr is
       end if;
       Sel_Length := Eval_Discrete_Type_Length
         (Get_String_Type_Bound_Type (Sel_Type));
+      Sel_El_Type := Get_Element_Subtype (Sel_Type);
+      Sel_El_Length := Eval_Discrete_Type_Length (Sel_El_Type);
+      Sel_El_Literal_List := Get_Enumeration_Literal_List
+        (Get_Base_Type (Sel_El_Type));
 
       Has_Others := False;
+      Nbr_Choices := 0;
       El := Choice_Chain;
       while El /= Null_Iir loop
          case Get_Kind (El) is
@@ -1923,6 +2126,7 @@ package body Sem_Expr is
                Error_Msg_Sem
                  ("range choice are not allowed for non-discrete type", El);
             when Iir_Kind_Choice_By_Expression =>
+               Nbr_Choices := Nbr_Choices + 1;
                Sem_Simple_Choice (El);
             when Iir_Kind_Choice_By_Others =>
                if Has_Others then
@@ -1938,10 +2142,65 @@ package body Sem_Expr is
          El := Get_Chain (El);
       end loop;
 
-      -- FIXME:
-      -- * check for duplicate choices.
-      -- * check for leaking choices.
-      -- (should eval strings and bit-strings).
+      --  Null choices.
+      if Sel_Length = 0 then
+         return;
+      end if;
+      if Has_Length_Error then
+         return;
+      end if;
+
+      --  LRM 8.8
+      --
+      --  If the expression is the name of an object whose subtype is locally
+      --  static, wether a scalar type or an array type, then each value of the
+      --  subtype must be represented once and only once in the set of choices
+      --  of the case statement and no other value is allowed; [...]
+
+      -- 1. Allocate Arr and fill it
+      Arr := new Iir_Array (1 .. Nbr_Choices);
+      Index := 0;
+      El := Choice_Chain;
+      while El /= Null_Iir loop
+         if Get_Kind (El) = Iir_Kind_Choice_By_Expression then
+            Index := Index + 1;
+            Arr (Index) := El;
+         end if;
+         El := Get_Chain (El);
+      end loop;
+
+      -- 2. Sort Arr
+      Str_Heap_Sort.Sort (Nbr_Choices);
+
+      -- 3. Check for duplicate choices
+      for I in 1 .. Nbr_Choices - 1 loop
+         if Eq (I, I + 1) then
+            Error_Msg_Sem ("duplicate choice with choice at " &
+                             Disp_Location (Arr (I + 1)),
+                           Arr (I));
+            exit;
+         end if;
+      end loop;
+
+      -- 4. Free Arr
+      Free (Arr);
+
+      --  Check for missing choice.
+      --  Do not try to compute the expected number of choices as this can
+      --  easily overflow.
+      if not Has_Others then
+         declare
+            Nbr : Iir_Int64 := Iir_Int64 (Nbr_Choices);
+         begin
+            for I in 1 .. Sel_Length loop
+               Nbr := Nbr / Sel_El_Length;
+               if Nbr = 0 then
+                  Error_Msg_Sem ("missing choice(s)", Choice_Chain);
+                  exit;
+               end if;
+            end loop;
+         end;
+      end if;
    end Sem_String_Choices_Range;
 
    function Is_Name (Name : Iir) return Boolean
@@ -2115,37 +2374,7 @@ package body Sem_Expr is
          Arr (From) := Tmp;
       end Swap;
 
-      --  Bubble down element I of a partially ordered heap of length N in
-      --  array ARR.
-      procedure Bubble_Down (I, N : Natural)
-      is
-         Child : Natural;
-      begin
-         Child := 2 * I;
-         if Child < N and then Lt (Child, Child + 1) then
-            Child := Child + 1;
-         end if;
-         if Child <= N and then Lt (I, Child) then
-            Swap (I, Child);
-            Bubble_Down (Child, N);
-         end if;
-      end Bubble_Down;
-
-      --  Heap sort of ARR.
-      procedure Heap_Sort (N : Natural)
-      is
-      begin
-         --  Heapify
-         for I in reverse 1 .. N / 2 loop
-            Bubble_Down (I, N);
-         end loop;
-
-         --  Sort
-         for I in reverse 2 .. N loop
-            Swap (1, I);
-            Bubble_Down (1, I - 1);
-         end loop;
-      end Heap_Sort;
+      package Disc_Heap_Sort is new Heap_Sort (Lt => Lt, Swap => Swap);
    begin
       Low := Null_Iir;
       High := Null_Iir;
@@ -2309,7 +2538,7 @@ package body Sem_Expr is
 
       --  Third:
       --  Sort the list
-      Heap_Sort (Index);
+      Disc_Heap_Sort.Sort (Index);
 
       --  Set low and high bounds.
       if Index > 0 then
@@ -2481,12 +2710,13 @@ package body Sem_Expr is
    function Sem_Record_Aggregate (Aggr: Iir_Aggregate; A_Type: Iir)
      return boolean
    is
-      Base_Type : Iir;
+      Base_Type : constant Iir := Get_Base_Type (A_Type);
+      El_List : constant Iir_List := Get_Elements_Declaration_List (Base_Type);
 
       --  Type of the element.
       El_Type : Iir;
 
-      Matches: Iir_Array_Acc;
+      Matches: Iir_Array (0 .. Get_Nbr_Elements (El_List) - 1);
       Ok : Boolean;
 
       --  Add a choice for element REC_EL.
@@ -2532,8 +2762,8 @@ package body Sem_Expr is
             Ok := False;
             return Ass;
          end if;
-         Aggr_El := Find_Name_In_Chain
-           (Get_Element_Declaration_Chain (Base_Type), Get_Identifier (Expr));
+         Aggr_El := Find_Name_In_List
+           (Get_Elements_Declaration_List (Base_Type), Get_Identifier (Expr));
          if Aggr_El = Null_Iir then
             Error_Msg_Sem
               ("record has no such element " & Disp_Node (Ass), Ass);
@@ -2556,20 +2786,17 @@ package body Sem_Expr is
       El, Prev_El : Iir;
       Expr: Iir;
       Has_Named : Boolean;
-      Rec_El : Iir_Element_Declaration;
+      Rec_El_Index : Natural;
       Value_Staticness : Iir_Staticness;
    begin
       Ok := True;
       Assoc_Chain := Get_Association_Choices_Chain (Aggr);
-      Base_Type := Get_Base_Type (A_Type);
-      Matches := new Iir_Array
-        (0 .. Natural (Get_Number_Element_Declaration (Base_Type)) - 1);
-      Matches.all := (others => Null_Iir);
+      Matches := (others => Null_Iir);
       Value_Staticness := Locally;
 
       El_Type := Null_Iir;
       Has_Named := False;
-      Rec_El := Get_Element_Declaration_Chain (Base_Type);
+      Rec_El_Index := 0;
       Prev_El := Null_Iir;
       El := Assoc_Chain;
       while El /= Null_Iir loop
@@ -2586,12 +2813,12 @@ package body Sem_Expr is
                if Has_Named then
                   Error_Msg_Sem ("positional association after named one", El);
                   Ok := False;
-               elsif Rec_El = Null_Iir then
+               elsif Rec_El_Index > Matches'Last then
                   Error_Msg_Sem ("too many elements", El);
                   exit;
                else
-                  Add_Match (El, Rec_El);
-                  Rec_El := Get_Chain (Rec_El);
+                  Add_Match (El, Get_Nth_Element (El_List, Rec_El_Index));
+                  Rec_El_Index := Rec_El_Index + 1;
                end if;
             when Iir_Kind_Choice_By_Expression =>
                Has_Named := True;
@@ -2611,17 +2838,13 @@ package body Sem_Expr is
                end if;
                declare
                   Found : Boolean := False;
-                  Rec_El : Iir_Element_Declaration;
                begin
-                  Rec_El := Get_Element_Declaration_Chain (Base_Type);
-                  for I in Matches.all'Range loop
+                  for I in Matches'Range loop
                      if Matches (I) = Null_Iir then
-                        Add_Match (El, Rec_El);
+                        Add_Match (El, Get_Nth_Element (El_List, I));
                         Found := True;
                      end if;
-                     Rec_El := Get_Chain (Rec_El);
                   end loop;
-                  pragma Assert (Rec_El = Null_Iir);
                   if not Found then
                      Error_Msg_Sem ("no element for choice others", El);
                      Ok := False;
@@ -2655,15 +2878,14 @@ package body Sem_Expr is
       end loop;
 
       --  Check for missing associations.
-      El := Get_Element_Declaration_Chain (Base_Type);
-      for I in Matches.all'Range loop
+      for I in Matches'Range loop
          if Matches (I) = Null_Iir then
-            Error_Msg_Sem ("no value for " & Disp_Node (El), Aggr);
+            Error_Msg_Sem
+              ("no value for " & Disp_Node (Get_Nth_Element (El_List, I)),
+               Aggr);
             Ok := False;
          end if;
-         El := Get_Chain (El);
       end loop;
-      Free (Matches);
       Set_Value_Staticness (Aggr, Value_Staticness);
       Set_Expr_Staticness (Aggr, Min (Globally, Value_Staticness));
       return Ok;
@@ -2886,13 +3108,15 @@ package body Sem_Expr is
             Set_Base_Type (Info.Index_Subtype, Get_Base_Type (Index_Type));
             Index_Constraint := Get_Range_Constraint (Index_Type);
 
+            --  LRM93 7.3.2.2
+            --  If the aggregate appears in one of the above contexts, then the
+            --  direction of the index subtype of the aggregate is that of the
+            --  corresponding constrained array subtype; [...]
             Index_Subtype_Constraint := Create_Iir (Iir_Kind_Range_Expression);
             Location_Copy (Index_Subtype_Constraint, Aggr);
             Set_Range_Constraint
               (Info.Index_Subtype, Index_Subtype_Constraint);
             Set_Type_Staticness (Info.Index_Subtype, Choice_Staticness);
-            Set_Direction (Index_Subtype_Constraint,
-                           Get_Direction (Index_Constraint));
 
             --  LRM93 7.3.2.2
             --  For an aggregate that has named associations, the leftmost and
@@ -2906,6 +3130,8 @@ package body Sem_Expr is
                                         Get_Range_Constraint (Index_Type));
                   Free_Iir (Index_Subtype_Constraint);
                else
+                  Set_Direction (Index_Subtype_Constraint,
+                                 Get_Direction (Index_Constraint));
                   case Get_Direction (Index_Constraint) is
                      when Iir_To =>
                         Set_Left_Limit (Index_Subtype_Constraint, Low);
@@ -2925,6 +3151,8 @@ package body Sem_Expr is
                   Expr := Get_Expression (Choice);
                   case Get_Kind (Choice) is
                      when Iir_Kind_Choice_By_Expression =>
+                        Set_Direction (Index_Subtype_Constraint,
+                                       Get_Direction (Index_Constraint));
                         Set_Left_Limit (Index_Subtype_Constraint, Expr);
                         Set_Right_Limit (Index_Subtype_Constraint, Expr);
                      when Iir_Kind_Choice_By_Range =>
@@ -3098,6 +3326,8 @@ package body Sem_Expr is
                Iirs.Min (Get_Type_Staticness (A_Subtype),
                          Get_Type_Staticness (Infos (I).Index_Subtype)));
          end loop;
+         Set_Index_Constraint_Flag (A_Subtype, True);
+         Set_Constraint_State (A_Subtype, Fully_Constrained);
          Set_Type (Aggr, A_Subtype);
       else
          Set_Type (Aggr, Base_Type);
@@ -3141,7 +3371,8 @@ package body Sem_Expr is
       Set_Type (Expr, A_Type); -- FIXME: should free old type
       case Get_Kind (A_Type) is
          when Iir_Kind_Array_Subtype_Definition =>
-            return Sem_Array_Aggregate_Type (Expr, A_Type, True);
+            return Sem_Array_Aggregate_Type
+              (Expr, A_Type, Get_Index_Constraint_Flag (A_Type));
          when Iir_Kind_Array_Type_Definition =>
             return Sem_Array_Aggregate_Type (Expr, A_Type, False);
          when Iir_Kind_Record_Type_Definition
@@ -3229,7 +3460,7 @@ package body Sem_Expr is
             --  type of the object created is an array type, then the
             --  subtype indication must either denote a constrained
             --  subtype or include an explicit index constraint.
-            if not Sem_Types.Sem_Is_Constrained (Arg) then
+            if not Is_Fully_Constrained_Type (Arg) then
                Error_Msg_Sem ("allocator of unconstrained " &
                               Disp_Node (Arg) & " is not allowed", Expr);
             end if;
@@ -3908,4 +4139,54 @@ package body Sem_Expr is
       end if;
       return Sem_Expression_Ov (Expr1, Res);
    end Sem_Expression_Universal;
+
+   function Sem_Case_Expression (Expr : Iir) return Iir
+   is
+      Expr1 : Iir;
+      Expr_Type : Iir;
+      El : Iir;
+      Res : Iir;
+      List : Iir_List;
+   begin
+      Expr1 := Sem_Expression_Ov (Expr, Null_Iir);
+      if Expr1 = Null_Iir then
+         return Null_Iir;
+      end if;
+      Expr_Type := Get_Type (Expr1);
+      if not Is_Overload_List (Expr_Type) then
+         return Expr1;
+      end if;
+
+      --  In case of overload, try to find one match.
+      --  FIXME: match only character types.
+
+      --  LRM93 8.8  Case statement
+      --  This type must be determinable independently of the context in which
+      --  the expression occurs, but using the fact that the expression must be
+      --  of a discrete type or a one-dimensional character array type.
+      List := Get_Overload_List (Expr_Type);
+      Res := Null_Iir;
+      for I in Natural loop
+         El := Get_Nth_Element (List, I);
+         exit when El = Null_Iir;
+         if Get_Kind (El) in Iir_Kinds_Discrete_Type_Definition
+           or else Is_Unidim_Array_Type (El)
+         then
+            if Res = Null_Iir then
+               Res := El;
+            else
+               Error_Overload (Expr1);
+               Disp_Overload_List (List, Expr1);
+               return Null_Iir;
+            end if;
+         end if;
+      end loop;
+      if Res = Null_Iir then
+         Error_Overload (Expr1);
+         Disp_Overload_List (List, Expr1);
+         return Null_Iir;
+      end if;
+      return Sem_Expression_Ov (Expr1, Res);
+   end Sem_Case_Expression;
+
 end Sem_Expr;

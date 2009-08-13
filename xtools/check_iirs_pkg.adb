@@ -888,7 +888,9 @@ package body Check_Iirs_Pkg is
                            Func_Table.Table (Func).Field := Field;
                         else
                            --  Field redefined for the function.
-                           Put_Line ("**  field redefined for the function");
+                           Put_Line (Standard_Error,
+                                     "**  field redefined for function "
+                                    & Func_Table.Table (Func).Name.all);
                            raise Err;
                         end if;
                      end if;

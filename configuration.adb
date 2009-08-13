@@ -319,8 +319,9 @@ package body Configuration is
             --  A port of any mode other than IN may be unconnected or
             --  unassociated as long as its type is not an unconstrained array
             --  type.
-            if Get_Kind (Get_Type (Port))
-              in Iir_Kinds_Unconstrained_Array_Type_Definition
+            if Get_Kind (Get_Type (Port)) in Iir_Kinds_Array_Type_Definition
+              and then (Get_Constraint_State (Get_Type (Port))
+                          /= Fully_Constrained)
             then
                if Loc /= Null_Iir then
                   Error_Msg_Elab ("unconstrained " & Disp_Node (Port)

@@ -25,6 +25,7 @@ with Sem_Expr; use Sem_Expr;
 with Sem_Scopes; use Sem_Scopes;
 with Sem_Names; use Sem_Names;
 with Sem_Decls;
+with Name_Table;
 with Std_Names;
 with Iirs_Utils; use Iirs_Utils;
 with Std_Package; use Std_Package;
@@ -78,12 +79,14 @@ package body Sem_Types is
             Set_Type_Has_Signal (Get_Element_Subtype (Atype));
          when Iir_Kind_Record_Type_Definition =>
             declare
+               El_List : constant Iir_List :=
+                 Get_Elements_Declaration_List (Atype);
                El : Iir;
             begin
-               El := Get_Element_Declaration_Chain (Atype);
-               while El /= Null_Iir loop
+               for I in Natural loop
+                  El := Get_Nth_Element (El_List, I);
+                  exit when El = Null_Iir;
                   Set_Type_Has_Signal (Get_Type (El));
-                  El := Get_Chain (El);
                end loop;
             end;
          when Iir_Kind_Error =>
@@ -452,7 +455,9 @@ package body Sem_Types is
       --  array subtype] [...] for the element subtype indication
       --  of an array type definition, if the type of the array
       --  element is itself an array type.
-      if not Sem_Is_Constrained (El_Type) then
+      if Vhdl_Std < Vhdl_08
+        and then not Is_Fully_Constrained_Type (El_Type)
+      then
          Error_Msg_Sem ("array element of unconstrained "
                         & Disp_Node (El_Type) & " is not allowed", Def);
       end if;
@@ -655,6 +660,62 @@ package body Sem_Types is
       Close_Declarative_Region;
    end Sem_Protected_Type_Body;
 
+
+   --  Return the constraint state from CONST (the initial state) and ATYPE,
+   --  as if ATYPE was a new element of a record.
+   function Update_Record_Constraint (Const : Iir_Constraint; Atype : Iir)
+                                     return Iir_Constraint is
+   begin
+      if Get_Kind (Atype) not in Iir_Kinds_Composite_Type_Definition then
+         return Const;
+      end if;
+
+      case Const is
+         when Fully_Constrained
+           | Unconstrained =>
+            if Get_Constraint_State (Atype) = Const then
+               return Const;
+            else
+               return Partially_Constrained;
+            end if;
+         when Partially_Constrained =>
+            return Partially_Constrained;
+      end case;
+   end Update_Record_Constraint;
+
+   function Get_Array_Constraint (Def : Iir) return Iir_Constraint
+   is
+      El_Type : constant Iir := Get_Element_Subtype (Def);
+      Index : constant Boolean :=
+        Get_Kind (Def) = Iir_Kind_Array_Subtype_Definition
+        and then Get_Index_Constraint_Flag (Def);
+   begin
+      if Get_Kind (El_Type) in Iir_Kinds_Composite_Type_Definition then
+         case Get_Constraint_State (El_Type) is
+            when Fully_Constrained =>
+               if Index then
+                  return Fully_Constrained;
+               else
+                  return Partially_Constrained;
+               end if;
+            when Partially_Constrained =>
+               return Partially_Constrained;
+            when Unconstrained =>
+               if not Index then
+                  return Unconstrained;
+               else
+                  return Partially_Constrained;
+               end if;
+         end case;
+      else
+         if Index then
+            return Fully_Constrained;
+         else
+            return Unconstrained;
+         end if;
+      end if;
+   end Get_Array_Constraint;
+
    function Sem_Type_Definition (Def: Iir; Decl: Iir) return Iir
    is
    begin
@@ -670,6 +731,7 @@ package body Sem_Types is
             declare
                El: Iir;
                Literal_List: Iir_List;
+               Only_Characters : Boolean := True;
             begin
                Literal_List := Get_Enumeration_Literal_List (Def);
                for I in Natural loop
@@ -684,7 +746,13 @@ package body Sem_Types is
                   Sem_Scopes.Add_Name (El);
                   Name_Visible (El);
                   Xref_Decl (El);
+                  if Only_Characters
+                    and then not Name_Table.Is_Character (Get_Identifier (El))
+                  then
+                     Only_Characters := False;
+                  end if;
                end loop;
+               Set_Only_Characters_Flag (Def, Only_Characters);
             end;
             Set_Resolved_Flag (Def, False);
             return Def;
@@ -716,6 +784,25 @@ package body Sem_Types is
             end;
 
          when Iir_Kind_Array_Subtype_Definition =>
+            --  LRM08 5.3.2.1  Array types
+            --  A constrained array definition similarly defines both an array
+            --  type and a subtype of this type.
+            --  - The array type is an implicitely declared anonymous type,
+            --    this type is defined by an (implicit) unbounded array
+            --    definition in which the element subtype indication either
+            --    denotes the base type of the subtype denoted by the element
+            --    subtype indication of the constrained array definition, if
+            --    that subtype is a composite type, or otherwise is the
+            --    element subtype indication of the constrained array
+            --    definition, and in which the type mark of each index subtype
+            --    definition denotes the subtype defined by the corresponding
+            --    discrete range.
+            --  - The array subtype is the subtype obtained by imposition of
+            --    the index constraint on the array type and if the element
+            --    subtype indication of the constrained array definition
+            --    denotes a fully or partially constrained composite subtype,
+            --    imposition of the constraint of that subtype as an array
+            --    element constraint on the array type.
             declare
                Index_Type : Iir;
                Index_List : Iir_List;
@@ -773,7 +860,10 @@ package body Sem_Types is
                Set_Type_Staticness (Base_Type, None);
                Set_Type_Declarator (Base_Type, Decl);
                Set_Resolved_Flag (Base_Type, Get_Resolved_Flag (Def));
-
+               Set_Index_Constraint_Flag (Def, True);
+               Set_Constraint_State (Def, Get_Array_Constraint (Def));
+               Set_Constraint_State
+                 (Base_Type, Get_Array_Constraint (Base_Type));
                Set_Base_Type (Def, Base_Type);
                Set_Type_Mark (Def, Base_Type);
                return Def;
@@ -811,38 +901,39 @@ package body Sem_Types is
                --  According to LRM93 §7.4.1, an unconstrained array type
                --  is not static.
                Set_Type_Staticness (Def, None);
-
                Sem_Array_Element (Def);
+               Set_Constraint_State (Def, Get_Array_Constraint (Def));
                return Def;
             end;
 
          when Iir_Kind_Record_Type_Definition =>
             declare
-               --  Non semantized type of previous element.
-               Last_El_Type : Iir;
                --  Semantized type of previous element
                Last_Type : Iir;
 
+               El_List : Iir_List;
                El: Iir;
                El_Type : Iir;
                Resolved_Flag : Boolean;
                Staticness : Iir_Staticness;
+               Constraint : Iir_Constraint;
             begin
                --  LRM 10.1
                --  5. A record type declaration,
                Open_Declarative_Region;
 
                Resolved_Flag := True;
-               Last_El_Type := Null_Iir;
                Last_Type := Null_Iir;
                Staticness := Locally;
+               Constraint := Fully_Constrained;
                Set_Signal_Type_Flag (Def, True);
-               El := Get_Element_Declaration_Chain (Def);
-               while El /= Null_Iir loop
+               El_List := Get_Elements_Declaration_List (Def);
+               for I in Natural loop
+                  El := Get_Nth_Element (El_List, I);
+                  exit when El = Null_Iir;
                   El_Type := Get_Type (El);
-                  if El_Type /= Last_El_Type then
+                  if El_Type /= Null_Iir then
                      --  Be careful for a declaration list (r,g,b: integer).
-                     Last_El_Type := El_Type;
                      El_Type := Sem_Subtype_Indication (El_Type);
                      Last_Type := El_Type;
                   else
@@ -860,7 +951,9 @@ package body Sem_Types is
                      --  subtype] exits for the subtype indication of an
                      --  element declaration, if the type of the record
                      --  element is an array type.
-                     if not Sem_Is_Constrained (El_Type) then
+                     if Vhdl_Std < Vhdl_08
+                       and then not Is_Fully_Constrained_Type (El_Type)
+                     then
                         Error_Msg_Sem
                           ("element declaration of unconstrained "
                            & Disp_Node (El_Type) & " is not allowed", El);
@@ -869,18 +962,20 @@ package body Sem_Types is
                        Resolved_Flag and Get_Resolved_Flag (El_Type);
                      Staticness := Min (Staticness,
                                         Get_Type_Staticness (El_Type));
+                     Constraint := Update_Record_Constraint
+                       (Constraint, El_Type);
                   else
                      Staticness := None;
                   end if;
                   Sem_Scopes.Add_Name (El);
                   Name_Visible (El);
                   Xref_Decl (El);
-                  El := Get_Chain (El);
                end loop;
                Close_Declarative_Region;
                Set_Base_Type (Def, Def);
                Set_Resolved_Flag (Def, Resolved_Flag);
                Set_Type_Staticness (Def, Staticness);
+               Set_Constraint_State (Def, Constraint);
                return Def;
             end;
 
@@ -1055,28 +1150,14 @@ package body Sem_Types is
    end Is_A_Resolution_Function;
 
    --  Note: this sets resolved_flag.
-   procedure Sem_Resolution_Function (Decl: Iir)
+   procedure Sem_Resolution_Function (Name : Iir; Atype : Iir)
    is
-      Func: Iir;
-      Name : Iir;
+      Func : Iir;
       Res: Iir;
       El : Iir;
       List : Iir_List;
       Has_Error : Boolean;
    begin
-      Name := Get_Resolution_Function (Decl);
-      if Name = Null_Iir then
-         -- This is not a resolved type.
-         return;
-      end if;
-
-      -- FIXME: add this check (maybe based on resolved_flag ?)
-      --if Get_Kind (Name) in Iir_Kinds_Function_Declaration then
-      --   --  The resolution function was already semantized.
-      --   --  This can happen if comes from an unconstrained array subtype.
-      --   return;
-      --end if;
-
       Sem_Name (Name, False);
       Func := Get_Named_Entity (Name);
       if Func = Error_Mark then
@@ -1091,14 +1172,14 @@ package body Sem_Types is
          for I in Natural loop
             El := Get_Nth_Element (List, I);
             exit when El = Null_Iir;
-            if Is_A_Resolution_Function (El, Decl) then
+            if Is_A_Resolution_Function (El, Atype) then
                if Res /= Null_Iir then
                   if not Has_Error then
                      Has_Error := True;
                      Error_Msg_Sem
                        ("can't resolve overload for resolution function",
-                        Decl);
-                     Error_Msg_Sem ("candidate functions are:", Decl);
+                        Atype);
+                     Error_Msg_Sem ("candidate functions are:", Atype);
                      Error_Msg_Sem (" " & Disp_Subprg (Func), Func);
                   end if;
                   Error_Msg_Sem (" " & Disp_Subprg (El), El);
@@ -1111,109 +1192,705 @@ package body Sem_Types is
             return;
          end if;
       else
-         if Is_A_Resolution_Function (Func, Decl) then
+         if Is_A_Resolution_Function (Func, Atype) then
             Res := Func;
          end if;
       end if;
 
       if Res = Null_Iir then
          Error_Msg_Sem ("no matching resolution function for "
-                        & Disp_Node (Name), Decl);
+                        & Disp_Node (Name), Atype);
       else
          Set_Named_Entity (Name, Res);
          Set_Use_Flag (Res, True);
-         Set_Resolved_Flag (Decl, True);
+         Set_Resolved_Flag (Atype, True);
+         Set_Resolution_Function (Atype, Name);
          Xref_Name (Name);
       end if;
    end Sem_Resolution_Function;
 
-   --  Semantize array_subtype_definition DEF using TYPE_MARK as the base type
-   --  of DEF.
-   --  DEF must have an index list and may have a resolution function.
-   --  Return DEF.
-   function Sem_Array_Subtype_Indication (Type_Mark : Iir; Def : Iir)
-     return Iir
+   function Sem_Subtype_Constraint
+     (Def : Iir; Type_Mark : Iir; Resolution : Iir)
+     return Iir;
+
+   -- DEF is an incomplete subtype_indication or array_constraint,
+   -- BASE_TYPE is the base type of the subtype_indication.
+   function Sem_Array_Constraint (Def : Iir; Type_Mark : Iir; Resolution : Iir)
+                                 return Iir
    is
+      Res : Iir;
       Type_Index, Subtype_Index: Iir;
       Base_Type : Iir;
+      Mark_El_Type : Iir;
       El_Type : Iir;
       Staticness : Iir_Staticness;
       Error_Seen : Boolean;
       Type_Index_List : Iir_List;
       Subtype_Index_List : Iir_List;
+      Resolv_Func : Iir := Null_Iir;
+      Resolv_El : Iir := Null_Iir;
    begin
-      case Get_Kind (Type_Mark) is
-         when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
-            null;
+      if Resolution /= Null_Iir then
+         case Get_Kind (Resolution) is
+            when Iir_Kinds_Name =>
+               Resolv_Func := Resolution;
+            when Iir_Kind_Array_Subtype_Definition =>
+               Resolv_El := Get_Element_Subtype (Resolution);
+               Free_Iir (Resolution);
+            when Iir_Kind_Record_Subtype_Definition =>
+               Error_Msg_Sem
+                 ("record element resolution not allowed for array subtype",
+                  Resolution);
+            when others =>
+               Error_Kind ("sem_array_constraint(resolution)", Resolution);
+         end case;
+      end if;
+
+      Mark_El_Type := Get_Element_Subtype (Type_Mark);
+
+      if Def = Null_Iir then
+         Res := Copy_Subtype_Indication (Type_Mark);
+      else
+         case Get_Kind (Def) is
+            when Iir_Kind_Subtype_Definition =>
+               -- This is the case of "subtype new_array is [func] old_array".
+               -- def must be a constrained array.
+               if Get_Range_Constraint (Def) /= Null_Iir then
+                  Error_Msg_Sem
+                    ("cannot use a range constraint for array types", Def);
+                  return Type_Mark;
+               end if;
+
+               -- LRM08 6.3 Subtype declarations
+               --
+               -- If the subtype indication does not include a constraint, the
+               -- subtype is the same as that denoted by the type mark.
+               if Resolution = Null_Iir then
+                  Free_Name (Def);
+                  return Type_Mark;
+               end if;
+
+               Res := Copy_Subtype_Indication (Type_Mark);
+               Location_Copy (Res, Def);
+               Free_Name (Def);
+
+            when Iir_Kind_Array_Subtype_Definition =>
+               -- Case of a constraint for an array.
+               -- Check each index constraint against array type.
+
+               Base_Type := Get_Base_Type (Type_Mark);
+               Set_Base_Type (Def, Base_Type);
+
+               Staticness := Get_Type_Staticness (Mark_El_Type);
+               Error_Seen := False;
+               Type_Index_List := Get_Index_Subtype_List (Base_Type);
+               Subtype_Index_List := Get_Index_Subtype_List (Def);
+
+               --  LRM08 5.3.2.2
+               --  If an array constraint of the first form (including an index
+               --  constraint) applies to a type or subtype, then the type or
+               --  subtype shall be an unconstrained or partially constrained
+               --  array type with no index constraint applying to the index
+               --  subtypes, or an access type whose designated type is such
+               --  a type.
+               if Get_Kind (Type_Mark) = Iir_Kind_Array_Subtype_Definition
+                 and then Get_Index_Constraint_Flag (Type_Mark)
+               then
+                  Error_Msg_Sem ("constrained array cannot be re-constrained",
+                                 Def);
+               end if;
+               for I in Natural loop
+                  Type_Index := Get_Nth_Element (Type_Index_List, I);
+                  Subtype_Index := Get_Nth_Element (Subtype_Index_List, I);
+                  exit when Type_Index = Null_Iir and Subtype_Index = Null_Iir;
+
+                  if Type_Index = Null_Iir then
+                     Error_Msg_Sem
+                       ("subtype has more indexes than "
+                          & Disp_Node (Type_Mark)
+                          & " defined at " & Disp_Location (Type_Mark),
+                        Subtype_Index);
+                     --  Forget extra indexes.
+                     Set_Nbr_Elements (Subtype_Index_List, I);
+                     exit;
+                  end if;
+                  if Subtype_Index = Null_Iir then
+                     if not Error_Seen then
+                        Error_Msg_Sem
+                          ("subtype has less indexes than "
+                             & Disp_Node (Type_Mark)
+                             & " defined at "
+                             & Disp_Location (Type_Mark), Def);
+                        Error_Seen := True;
+                     end if;
+                     --  Use type_index as a fake subtype
+                     --  FIXME: it is too fake.
+                     Append_Element (Subtype_Index_List, Type_Index);
+                     Staticness := None;
+                  else
+                     Subtype_Index := Sem_Discrete_Range_Expression
+                       (Subtype_Index, Type_Index, True);
+                     if Subtype_Index /= Null_Iir then
+                        Subtype_Index :=
+                          Range_To_Subtype_Definition (Subtype_Index);
+                        Staticness := Min
+                          (Staticness, Get_Type_Staticness (Subtype_Index));
+                     end if;
+                     if Subtype_Index = Null_Iir then
+                        --  Create a fake subtype from type_index.
+                        --  FIXME: It is too fake.
+                        Subtype_Index := Type_Index;
+                        Staticness := None;
+                     end if;
+                     Replace_Nth_Element
+                       (Subtype_Index_List, I, Subtype_Index);
+                  end if;
+               end loop;
+               Set_Index_Constraint_Flag (Def, True);
+               Set_Type_Staticness (Def, Staticness);
+               Set_Type_Mark (Def, Type_Mark);
+               Set_Signal_Type_Flag (Def, Get_Signal_Type_Flag (Type_Mark));
+               Res := Def;
+
+            when others =>
+               --  LRM93 3.2.1.1 / LRM08 5.3.2.2
+               --  Index Constraints and Discrete Ranges
+               --
+               --  If an index constraint appears after a type mark [...]
+               --  The type mark must denote either an unconstrained array
+               --  type, or an access type whose designated type is such
+               --  an array type.
+               Error_Msg_Sem
+                 ("only unconstrained array type may be contrained "
+                    &"by index", Def);
+               Error_Msg_Sem
+                 (" (type mark is " & Disp_Node (Type_Mark) & ")",
+                  Type_Mark);
+               return Type_Mark;
+         end case;
+      end if;
+
+      --  Element subtype.
+      if Resolv_El /= Null_Iir then
+         El_Type := Sem_Subtype_Constraint (Null_Iir, Mark_El_Type, Resolv_El);
+         if El_Type = Null_Iir then
+            El_Type := Mark_El_Type;
+         end if;
+      else
+         El_Type := Mark_El_Type;
+      end if;
+      Set_Element_Subtype (Res, El_Type);
+
+      Set_Constraint_State (Res, Get_Array_Constraint (Res));
+
+      if Resolv_Func /= Null_Iir then
+         Sem_Resolution_Function (Resolv_Func, Res);
+      elsif Get_Kind (Type_Mark) = Iir_Kind_Array_Subtype_Definition then
+         Set_Resolution_Function (Res, Get_Resolution_Function (Type_Mark));
+      end if;
+      if Get_Resolved_Flag (Res)
+        or else Get_Resolved_Flag (Get_Element_Subtype (Type_Mark))
+      then
+         Set_Resolved_Flag (Res, True);
+      else
+         Set_Resolved_Flag (Res, False);
+      end if;
+
+      return Res;
+   end Sem_Array_Constraint;
+
+   function Reparse_As_Record_Element_Constraint (Name : Iir) return Iir
+   is
+      Prefix : Iir;
+      Parent : Iir;
+      El : Iir;
+   begin
+      if Get_Kind (Name) /= Iir_Kind_Parenthesis_Name then
+         Error_Msg_Sem ("record element constraint expected", Name);
+         return Null_Iir;
+      else
+         Prefix := Get_Prefix (Name);
+         Parent := Name;
+         while Get_Kind (Prefix) = Iir_Kind_Parenthesis_Name loop
+            Parent := Prefix;
+            Prefix := Get_Prefix (Prefix);
+         end loop;
+         if Get_Kind (Prefix) /= Iir_Kind_Simple_Name then
+            Error_Msg_Sem ("record element name must be a simple name",
+                           Prefix);
+            return Null_Iir;
+         else
+            El := Create_Iir (Iir_Kind_Record_Element_Constraint);
+            Location_Copy (El, Prefix);
+            Set_Identifier (El, Get_Identifier (Prefix));
+            Set_Type (El, Name);
+            Set_Prefix (Parent, Null_Iir);
+            Free_Name (Prefix);
+            return El;
+         end if;
+      end if;
+   end Reparse_As_Record_Element_Constraint;
+
+   function Reparse_As_Record_Constraint (Def : Iir) return Iir
+   is
+      Res : Iir;
+      Chain : Iir;
+      El_List : Iir_List;
+      El : Iir;
+   begin
+      if Get_Prefix (Def) /= Null_Iir then
+         raise Internal_Error;
+      end if;
+      Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+      Location_Copy (Res, Def);
+      El_List := Create_Iir_List;
+      Set_Elements_Declaration_List (Res, El_List);
+      Chain := Get_Association_Chain (Def);
+      while Chain /= Null_Iir loop
+         if Get_Kind (Chain) /= Iir_Kind_Association_Element_By_Expression
+           or else Get_Formal (Chain) /= Null_Iir
+         then
+            Error_Msg_Sem ("badly formed record constraint", Chain);
+         else
+            El := Reparse_As_Record_Element_Constraint (Get_Actual (Chain));
+            if El /= Null_Iir then
+               Append_Element (El_List, El);
+            end if;
+         end if;
+         Chain := Get_Chain (Chain);
+      end loop;
+      return Res;
+   end Reparse_As_Record_Constraint;
+
+   function Reparse_As_Array_Constraint (Def : Iir; Def_Type : Iir) return Iir
+   is
+      Parent : Iir;
+      Name : Iir;
+      Prefix : Iir;
+      Res : Iir;
+      Chain : Iir;
+      El_List : Iir_List;
+      Def_El_Type : Iir;
+   begin
+      Name := Def;
+      Prefix := Get_Prefix (Name);
+      Parent := Null_Iir;
+      while Prefix /= Null_Iir
+        and then Get_Kind (Prefix) = Iir_Kind_Parenthesis_Name
+      loop
+         Parent := Name;
+         Name := Prefix;
+         Prefix := Get_Prefix (Name);
+      end loop;
+      --  Detach prefix.
+      if Parent /= Null_Iir then
+         Set_Prefix (Parent, Null_Iir);
+      end if;
+      Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+      Location_Copy (Res, Name);
+      Chain := Get_Association_Chain (Name);
+      if Get_Kind (Chain) = Iir_Kind_Association_Element_Open then
+         if Get_Chain (Chain) /= Null_Iir then
+            Error_Msg_Sem ("'open' must be alone", Chain);
+         end if;
+      else
+         El_List := Create_Iir_List;
+         Set_Index_Subtype_List (Res, El_List);
+         while Chain /= Null_Iir loop
+            if Get_Kind (Chain) /= Iir_Kind_Association_Element_By_Expression
+              or else Get_Formal (Chain) /= Null_Iir
+            then
+               Error_Msg_Sem ("bad form of array constraint", Chain);
+            else
+               Append_Element (El_List, Get_Actual (Chain));
+            end if;
+            Chain := Get_Chain (Chain);
+         end loop;
+      end if;
+
+      Def_El_Type := Get_Element_Subtype (Def_Type);
+      if Parent /= Null_Iir then
+         case Get_Kind (Def_El_Type) is
+            when Iir_Kinds_Array_Type_Definition =>
+               Set_Element_Subtype
+                 (Res, Reparse_As_Array_Constraint (Def, Def_El_Type));
+            when others =>
+               Error_Kind ("reparse_as_array_constraint", Def_El_Type);
+         end case;
+      end if;
+      return Res;
+   end Reparse_As_Array_Constraint;
+
+   function Sem_Record_Constraint
+     (Def : Iir; Type_Mark : Iir; Resolution : Iir)
+     return Iir
+   is
+      Res : Iir;
+      El_List, Tm_El_List : Iir_List;
+      El : Iir;
+      Tm_El : Iir;
+      Tm_El_Type : Iir;
+      El_Type : Iir;
+      Res_List : Iir_List;
+
+      Index_List : Iir_List;
+      Index_El : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+      Location_Copy (Res, Def);
+      Set_Base_Type (Res, Type_Mark);
+      Set_Type_Staticness (Res, Get_Type_Staticness (Type_Mark));
+      Set_Type_Mark (Res, Type_Mark);
+      if Get_Kind (Type_Mark) = Iir_Kind_Record_Subtype_Definition then
+         Set_Resolution_Function (Res, Get_Resolution_Function (Type_Mark));
+      end if;
+
+      case Get_Kind (Def) is
+         when Iir_Kind_Subtype_Definition =>
+            Free_Name (Def);
+            Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
+            Set_Constraint_State (Res, Get_Constraint_State (Type_Mark));
+            El_List := Null_Iir_List;
+
+         when Iir_Kind_Array_Subtype_Definition =>
+            --  Record constraints are parsed as array constraints.
+            if Get_Kind (Def) /= Iir_Kind_Array_Subtype_Definition then
+               raise Internal_Error;
+            end if;
+            Index_List := Get_Index_Subtype_List (Def);
+            El_List := Create_Iir_List;
+            Set_Elements_Declaration_List (Res, El_List);
+            for I in Natural loop
+               Index_El := Get_Nth_Element (Index_List, I);
+               exit when Index_El = Null_Iir;
+               El := Reparse_As_Record_Element_Constraint (Index_El);
+               if El /= Null_Iir then
+                  Append_Element (El_List, El);
+               end if;
+            end loop;
+
+         when Iir_Kind_Record_Subtype_Definition =>
+            El_List := Get_Elements_Declaration_List (Def);
+            Set_Elements_Declaration_List (Res, El_List);
+
          when others =>
-            Error_Msg_Sem
-              (Disp_Node (Type_Mark) & " cannot be constrained", Def);
-            --  Continue as if BASE_TYPE is really a base type, it is safe.
+            Error_Kind ("sem_record_constraint", Def);
       end case;
 
-      Base_Type := Get_Base_Type (Type_Mark);
-      Set_Base_Type (Def, Base_Type);
-      El_Type := Get_Element_Subtype (Base_Type);
-      Staticness := Get_Type_Staticness (El_Type);
-      Error_Seen := False;
-      Type_Index_List := Get_Index_Subtype_List (Base_Type);
-      Subtype_Index_List := Get_Index_Subtype_List (Def);
-      for I in Natural loop
-         Type_Index := Get_Nth_Element (Type_Index_List, I);
-         Subtype_Index := Get_Nth_Element (Subtype_Index_List, I);
-         exit when Type_Index = Null_Iir and Subtype_Index = Null_Iir;
-
-         if Type_Index = Null_Iir then
-            Error_Msg_Sem ("subtype has more indexes than "
-                           & Disp_Node (Type_Mark)
-                           & " defined at " & Disp_Location (Type_Mark),
-                           Subtype_Index);
-            --  Forget extra indexes.
-            Set_Nbr_Elements (Subtype_Index_List, I);
-            exit;
-         end if;
-         if Subtype_Index = Null_Iir then
-            if not Error_Seen then
-               Error_Msg_Sem ("subtype has less indexes than "
-                              & Disp_Node (Type_Mark)
-                              & " defined at " & Disp_Location (Type_Mark),
-                              Def);
-               Error_Seen := True;
-            end if;
-            --  Use type_index as a fake subtype
-            --  FIXME: it is too fake.
-            Append_Element (Subtype_Index_List, Type_Index);
-            Staticness := None;
-         else
-            Subtype_Index := Sem_Discrete_Range_Expression
-              (Subtype_Index, Type_Index, True);
-            if Subtype_Index /= Null_Iir then
-               Subtype_Index := Range_To_Subtype_Definition (Subtype_Index);
-               Staticness := Min (Staticness,
-                                  Get_Type_Staticness (Subtype_Index));
-            end if;
-            if Subtype_Index = Null_Iir then
-               --  Create a fake subtype from type_index.
-               --  FIXME: It is too fake.
-               Subtype_Index := Type_Index;
-               Staticness := None;
-            end if;
-            Replace_Nth_Element (Subtype_Index_List, I, Subtype_Index);
-         end if;
-      end loop;
-      Set_Type_Staticness (Def, Staticness);
-      Set_Element_Subtype (Def, El_Type);
-      Sem_Resolution_Function (Def);
-      if Get_Resolved_Flag (Def) or else Get_Resolved_Flag (El_Type) then
-         Set_Resolved_Flag (Def, True);
-      else
-         Set_Resolved_Flag (Def, False);
+      Res_List := Null_Iir_List;
+      if Resolution /= Null_Iir then
+         case Get_Kind (Resolution) is
+            when Iir_Kinds_Name =>
+               null;
+            when Iir_Kind_Record_Subtype_Definition =>
+               Res_List := Get_Elements_Declaration_List (Resolution);
+            when Iir_Kind_Array_Subtype_Definition =>
+               Error_Msg_Sem
+                 ("resolution indication must be an array element resolution",
+                  Resolution);
+            when others =>
+               Error_Kind ("sem_record_constraint(resolution)", Resolution);
+         end case;
       end if;
-      Set_Type_Mark (Def, Type_Mark);
-      Set_Signal_Type_Flag (Def, Get_Signal_Type_Flag (Type_Mark));
-      return Def;
-   end Sem_Array_Subtype_Indication;
+
+      Tm_El_List := Get_Elements_Declaration_List (Type_Mark);
+      if El_List /= Null_Iir_List or Res_List /= Null_Iir_List then
+         declare
+            Nbr_Els : constant Natural := Get_Nbr_Elements (Tm_El_List);
+            Els : Iir_Array (0 .. Nbr_Els - 1) := (others => Null_Iir);
+            Res_Els : Iir_Array (0 .. Nbr_Els - 1) := (others => Null_Iir);
+            Pos : Natural;
+            Constraint : Iir_Constraint;
+         begin
+            --  Fill ELS.
+            if El_List /= Null_Iir_List then
+               for I in Natural loop
+                  El := Get_Nth_Element (El_List, I);
+                  exit when El = Null_Iir;
+                  Tm_El := Find_Name_In_List (Tm_El_List, Get_Identifier (El));
+                  if Tm_El = Null_Iir then
+                     Error_Msg_Sem (Disp_Node (Type_Mark)
+                                      & "has no " & Disp_Node (El), El);
+                  else
+                     Set_Element_Declaration (El, Tm_El);
+                     Pos := Natural (Get_Element_Position (Tm_El));
+                     if Els (Pos) /= Null_Iir then
+                        Error_Msg_Sem
+                          (Disp_Node (El) & " was already constrained", El);
+                        Error_Msg_Sem
+                          (" (location of previous constrained)", Els (Pos));
+                     else
+                        Els (Pos) := El;
+                        Set_Parent (El, Res);
+                     end if;
+                     El_Type := Get_Type (El);
+                     Tm_El_Type := Get_Type (Tm_El);
+                     if Get_Kind (El_Type) = Iir_Kind_Parenthesis_Name then
+                        case Get_Kind (Tm_El_Type) is
+                           when Iir_Kinds_Array_Type_Definition =>
+                              El_Type := Reparse_As_Array_Constraint
+                                (El_Type, Tm_El_Type);
+                           when Iir_Kind_Record_Type_Definition
+                             | Iir_Kind_Record_Subtype_Definition =>
+                              El_Type := Reparse_As_Record_Constraint
+                                (El_Type);
+                           when others =>
+                              Error_Msg_Sem
+                                ("only composite types may be constrained",
+                                 El_Type);
+                        end case;
+                     end if;
+                     Set_Type (El, El_Type);
+                  end if;
+               end loop;
+               Destroy_Iir_List (El_List);
+            end if;
+
+            --  Fill Res_Els.
+            if Res_List /= Null_Iir_List then
+               for I in Natural loop
+                  El := Get_Nth_Element (Res_List, I);
+                  exit when El = Null_Iir;
+                  Tm_El := Find_Name_In_List (Tm_El_List, Get_Identifier (El));
+                  if Tm_El = Null_Iir then
+                     Error_Msg_Sem (Disp_Node (Type_Mark)
+                                      & "has no " & Disp_Node (El), El);
+                  else
+                     Pos := Natural (Get_Element_Position (Tm_El));
+                     if Res_Els (Pos) /= Null_Iir then
+                        Error_Msg_Sem
+                          (Disp_Node (El) & " was already resolved", El);
+                        Error_Msg_Sem
+                          (" (location of previous constrained)", Els (Pos));
+                     else
+                        Res_Els (Pos) := Get_Element_Declaration (El);
+                     end if;
+                  end if;
+                  --Free_Iir (El);
+               end loop;
+               Destroy_Iir_List (Res_List);
+            end if;
+
+            --  Build elements list.
+            El_List := Create_Iir_List;
+            Set_Elements_Declaration_List (Res, El_List);
+            Constraint := Fully_Constrained;
+            for I in Els'Range loop
+               Tm_El := Get_Nth_Element (Tm_El_List, I);
+               if Els (I) = Null_Iir and Res_Els (I) = Null_Iir then
+                  El := Tm_El;
+               else
+                  if Els (I) = Null_Iir then
+                     El := Create_Iir (Iir_Kind_Record_Element_Constraint);
+                     Location_Copy (El, Tm_El);
+                     Set_Element_Declaration (El, Tm_El);
+                     Set_Element_Position (El, Get_Element_Position (Tm_El));
+                     El_Type := Null_Iir;
+                  else
+                     El := Els (I);
+                     El_Type := Get_Type (El);
+                  end if;
+                  El_Type := Sem_Subtype_Constraint (El_Type,
+                                                     Get_Type (Tm_El),
+                                                     Res_Els (I));
+                  Set_Type (El, El_Type);
+               end if;
+               Append_Element (El_List, El);
+               Constraint := Update_Record_Constraint
+                 (Constraint, Get_Type (El));
+            end loop;
+            Set_Constraint_State (Res, Constraint);
+         end;
+      else
+         Set_Elements_Declaration_List (Res, Tm_El_List);
+         Set_Constraint_State (Res, Get_Constraint_State (Type_Mark));
+      end if;
+
+      Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
+
+      if Resolution /= Null_Iir
+        and then Get_Kind (Resolution) in Iir_Kinds_Name
+      then
+         Sem_Resolution_Function (Resolution, Res);
+      end if;
+
+      return Res;
+   end Sem_Record_Constraint;
+
+   function Sem_Range_Constraint (Def : Iir; Type_Mark : Iir; Resolution : Iir)
+                                 return Iir
+   is
+      Res : Iir;
+      A_Range : Iir;
+   begin
+      if Def = Null_Iir then
+         Res := Copy_Subtype_Indication (Type_Mark);
+      else
+         if Get_Kind (Def) /= Iir_Kind_Subtype_Definition then
+            --  FIXME: find the correct sentence from LRM
+            --  GHDL: subtype_definition may also be used just to add
+            --    a resolution function.
+            Error_Msg_Sem
+              ("only scalar types may be constrained by range", Def);
+            Error_Msg_Sem
+              (" (type mark is " & Disp_Node (Type_Mark) & ")",
+               Type_Mark);
+            return Type_Mark;
+         end if;
+
+         if Get_Range_Constraint (Def) = Null_Iir
+           and then Resolution = Null_Iir
+         then
+            --  This defines an alias, and must have been handled just
+            --  before the case statment.
+            raise Internal_Error;
+         end if;
+
+         -- There are limits.  Create a new subtype.
+         if Get_Kind (Type_Mark) = Iir_Kind_Enumeration_Type_Definition then
+            Res := Create_Iir (Iir_Kind_Enumeration_Subtype_Definition);
+         else
+            Res := Create_Iir (Get_Kind (Type_Mark));
+         end if;
+         Location_Copy (Res, Def);
+         Set_Base_Type (Res, Get_Base_Type (Type_Mark));
+         Set_Type_Mark (Res, Type_Mark);
+         Set_Resolution_Function (Res, Get_Resolution_Function (Def));
+         A_Range := Get_Range_Constraint (Def);
+         if A_Range = Null_Iir then
+            A_Range := Get_Range_Constraint (Type_Mark);
+         else
+            A_Range := Sem_Discrete_Range_Expression
+              (A_Range, Type_Mark, True);
+            if A_Range = Null_Iir then
+               --  Avoid error propagation.
+               A_Range := Get_Range_Constraint (Type_Mark);
+            end if;
+         end if;
+         Set_Range_Constraint (Res, A_Range);
+         Set_Type_Staticness (Res, Get_Expr_Staticness (A_Range));
+         Free_Name (Def);
+         Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
+      end if;
+
+      if Resolution /= Null_Iir then
+         --  LRM08 6.3  Subtype declarations.
+         if Get_Kind (Resolution) not in Iir_Kinds_Name then
+            Error_Msg_Sem ("resolution indication must be a function name",
+                           Resolution);
+         else
+            Sem_Resolution_Function (Resolution, Res);
+         end if;
+      end if;
+      return Res;
+   end Sem_Range_Constraint;
+
+   function Sem_Subtype_Constraint
+     (Def : Iir; Type_Mark : Iir; Resolution : Iir)
+     return Iir
+   is
+   begin
+      case Get_Kind (Type_Mark) is
+         when Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Array_Type_Definition =>
+            return Sem_Array_Constraint (Def, Type_Mark, Resolution);
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition
+           | Iir_Kind_Physical_Subtype_Definition
+           | Iir_Kind_Enumeration_Type_Definition=>
+            return Sem_Range_Constraint (Def, Type_Mark, Resolution);
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            return Sem_Record_Constraint (Def, Type_Mark, Resolution);
+         when Iir_Kind_Access_Type_Definition
+           | Iir_Kind_Access_Subtype_Definition =>
+            --  LRM93 4.2
+            --  A subtype indication denoting an access type [or a file type]
+            --  may not contain a resolution function.
+            if Resolution /= Null_Iir then
+               Error_Msg_Sem
+                 ("resolution function not allowed for an access type", Def);
+            end if;
+
+            case Get_Kind (Def) is
+               when Iir_Kind_Subtype_Definition =>
+                  Free_Name (Def);
+                  return Type_Mark;
+               when Iir_Kind_Array_Subtype_Definition =>
+                  --  LRM93 §3.3
+                  --  The only form of constraint that is allowed after a name
+                  --  of an access type in a subtype indication is an index
+                  --  constraint.
+                  declare
+                     Sub_Type : Iir;
+                     pragma Unreferenced (Sub_Type);
+                     Base_Type : Iir;
+                     Res : Iir;
+                  begin
+                     Base_Type := Get_Designated_Type (Type_Mark);
+                     Sub_Type := Sem_Array_Constraint
+                       (Def, Base_Type, Null_Iir);
+                     Res := Create_Iir (Iir_Kind_Access_Subtype_Definition);
+                     Location_Copy (Res, Def);
+                     Set_Base_Type (Res, Type_Mark);
+                     Set_Signal_Type_Flag (Res, False);
+                     Free_Old_Iir (Def);
+                     return Res;
+                  end;
+               when others =>
+                  raise Internal_Error;
+            end case;
+
+         when Iir_Kind_File_Type_Definition =>
+            --  LRM08 6.3 Subtype declarations
+            --  A subtype indication denoting a subtype of [...] a file
+            --  type [...] shall not contain a constraint.
+            if Get_Kind (Def) /= Iir_Kind_Subtype_Definition
+              or else Get_Range_Constraint (Def) /= Null_Iir
+            then
+               Error_Msg_Sem ("file types can't be constrained", Def);
+               return Type_Mark;
+            end if;
+
+            --  LRM93 4.2
+            --  A subtype indication denoting [an access type or] a file type
+            --  may not contain a resolution function.
+            if Resolution /= Null_Iir then
+               Error_Msg_Sem
+                 ("resolution function not allowed for file types", Def);
+               return Type_Mark;
+            end if;
+            Free_Name (Def);
+            return Type_Mark;
+
+         when Iir_Kind_Protected_Type_Declaration =>
+            --  LRM08 6.3 Subtype declarations
+            --  A subtype indication denoting a subtype of [...] a protected
+            --  type [...] shall not contain a constraint.
+            if Get_Kind (Def) /= Iir_Kind_Subtype_Definition
+              or else Get_Range_Constraint (Def) /= Null_Iir
+            then
+               Error_Msg_Sem ("protected types can't be constrained", Def);
+               return Type_Mark;
+            end if;
+
+            --  LRM08 6.3 Subtype declarations
+            --  A subtype indication denoting [...] a protected type shall
+            --  not contain a resolution function.
+            if Resolution /= Null_Iir then
+               Error_Msg_Sem
+                 ("resolution function not allowed for file types", Def);
+               return Type_Mark;
+            end if;
+            Free_Name (Def);
+            return Type_Mark;
+
+         when others =>
+            Error_Kind ("sem_subtype_indication", Type_Mark);
+            return Type_Mark;
+      end case;
+   end Sem_Subtype_Constraint;
 
    --  Semantize a subtype indication.
    --  DEF can be either a name or an iir_subtype_definition.
@@ -1223,7 +1900,6 @@ package body Sem_Types is
      return Iir
    is
       Type_Mark: Iir;
-      Res: Iir;
       Decl_Kind : Decl_Kind_Type;
    begin
       if Incomplete then
@@ -1232,8 +1908,10 @@ package body Sem_Types is
          Decl_Kind := Decl_Type;
       end if;
 
-      -- Simple case that correspond to no indication except a subtype
-      -- identifier
+      -- LRM08 6.3 Subtype declarations
+      --
+      -- If the subtype indication does not include a constraint, the subtype
+      -- is the same as that denoted by the type mark.
       if Get_Kind (Def) in Iir_Kinds_Name then
          Type_Mark := Find_Declaration (Def, Decl_Kind);
          if Type_Mark = Null_Iir then
@@ -1252,304 +1930,70 @@ package body Sem_Types is
       end if;
       Set_Type_Mark (Def, Type_Mark);
 
-      --  Check constraint.
+      return Sem_Subtype_Constraint
+        (Def, Type_Mark, Get_Resolution_Function (Def));
+   end Sem_Subtype_Indication;
+
+   function Copy_Subtype_Indication (Def : Iir) return Iir
+   is
+      Res : Iir;
+   begin
       case Get_Kind (Def) is
-         when Iir_Kind_Array_Subtype_Definition =>
-            case Get_Kind (Type_Mark) is
-               when Iir_Kind_Unconstrained_Array_Subtype_Definition
-                 | Iir_Kind_Array_Type_Definition
-                 | Iir_Kind_Access_Type_Definition =>
-                  null;
-               when others =>
-                  --  LRM 3.2.1.1  Index Constraints and Discrete Ranges
-                  --  If an index constraint appears after a type mark [...]
-                  --  The type mark must denote either an unconstrained array
-                  --  type, or an access type whose designated type is such
-                  --  an array type.
-                  Error_Msg_Sem
-                    ("only unconstrained array type may be contrained "
-                     &"by index", Def);
-                  Error_Msg_Sem
-                    (" (type mark is " & Disp_Node (Type_Mark) & ")",
-                     Type_Mark);
-                  return Type_Mark;
-            end case;
-         when Iir_Kind_Subtype_Definition =>
-            case Get_Kind (Type_Mark) is
-               when Iir_Kind_Integer_Subtype_Definition
-                 | Iir_Kind_Floating_Subtype_Definition
-                 | Iir_Kind_Enumeration_Subtype_Definition
-                 | Iir_Kind_Physical_Subtype_Definition =>
-                  null;
-               when Iir_Kind_Enumeration_Type_Definition =>
-                  null;
-               when others =>
-                  --  FIXME: find the correct sentence from LRM
-                  --  GHDL: subtype_definition may also be used just to add
-                  --    a resolution function.
-                  if Get_Range_Constraint (Def) /= Null_Iir then
-                     Error_Msg_Sem
-                       ("only scalar types may be constrained by range", Def);
-                     Error_Msg_Sem
-                       (" (type mark is " & Disp_Node (Type_Mark) & ")",
-                        Type_Mark);
-                     return Type_Mark;
-                  end if;
-            end case;
-         when others =>
-            Error_Kind ("sem_subtype_indication", Def);
-      end case;
-
-      case Get_Kind (Type_Mark) is
-         when Iir_Kind_Array_Subtype_Definition
-           | Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
---             --  If the base type is an unconstrained array subtype, then get
---            --  the *real* base type, and copy the resolution function (since
---             --  a base type has no resolution function).
---             if Get_Kind (Type_Mark) =
---               Iir_Kind_Unconstrained_Array_Subtype_Definition
---               and then Get_Kind (Def) = Iir_Kind_Subtype_Definition
---             then
---                if Get_Resolution_Function (Def) = Null_Iir then
---                   if Get_Range_Constraint (Def) = Null_Iir then
---                      --  In this case, DEF must simply be a name.  There is
---                      --  a parser internal error.
---                      raise Internal_Error;
---                   end if;
---                   Set_Resolution_Function
---                     (Def, Get_Resolution_Function (Type_Mark));
---                end if;
---             end if;
-
-            if Get_Kind (Def) = Iir_Kind_Subtype_Definition then
-               -- This is the case of "subtype new_array is [func] old_array".
-               -- def must be a constrained array.
-               if Get_Range_Constraint (Def) /= Null_Iir then
-                  Error_Msg_Sem
-                    ("cannot use a range constraint for an array", Def);
-                  return Type_Mark;
-               end if;
-               if Get_Resolution_Function (Def) = Null_Iir then
-                  --  In this case, DEF must simply be a name.  There is
-                  --  a parser internal error.
-                  raise Internal_Error;
-               end if;
-               case Get_Kind (Type_Mark) is
-                  when Iir_Kind_Array_Type_Definition =>
-                     Res := Create_Iir
-                       (Iir_Kind_Unconstrained_Array_Subtype_Definition);
-                  when Iir_Kind_Array_Subtype_Definition =>
-                     Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
-                     Set_Element_Subtype
-                       (Res, Get_Element_Subtype (Type_Mark));
-                     Set_Index_Subtype_List
-                       (Res, Get_Index_Subtype_List (Type_Mark));
-                  when others =>
-                     Error_Kind ("sem_subtype_indication(array)", Type_Mark);
-               end case;
-               Location_Copy (Res, Def);
-               Set_Base_Type (Res, Get_Base_Type (Type_Mark));
-               Set_Resolution_Function (Res, Get_Resolution_Function (Def));
-               Set_Type_Staticness (Res, Get_Type_Staticness (Type_Mark));
-               Sem_Resolution_Function (Res);
-               Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
-               if Get_Resolved_Flag (Res)
-                 or else Get_Resolved_Flag (Get_Element_Subtype (Type_Mark))
-               then
-                  Set_Resolved_Flag (Res, True);
-               else
-                  Set_Resolved_Flag (Res, False);
-               end if;
-               Set_Type_Mark (Res, Type_Mark);
-               Free_Name (Def);
-               return Res;
-            elsif Get_Kind (Def) = Iir_Kind_Array_Subtype_Definition then
-               -- Case of a constraint for an array.
-               -- Check each index constraint against array type.
-               return Sem_Array_Subtype_Indication (Type_Mark, Def);
-            else
-               Error_Kind ("sem_subtype_indication(1)", Def);
-               return Type_Mark;
-            end if;
-
          when Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition =>
-            if Get_Range_Constraint (Def) = Null_Iir
-              and then Get_Resolution_Function (Def) = Null_Iir
-            then
-               --  This defines an alias, and must have been handled just
-               --  before the case statment.
-               raise Internal_Error;
-            end if;
-            declare
-               A_Range : Iir;
-            begin
-               -- There are limits.  Create a new subtype.
-               Res := Create_Iir (Get_Kind (Type_Mark));
-               Location_Copy (Res, Def);
-               Set_Base_Type (Res, Get_Base_Type (Type_Mark));
-               Set_Type_Mark (Res, Type_Mark);
-               Set_Resolution_Function (Res, Get_Resolution_Function (Def));
-               A_Range := Get_Range_Constraint (Def);
-               if A_Range = Null_Iir then
-                  A_Range := Get_Range_Constraint (Type_Mark);
-               else
-                  A_Range := Sem_Discrete_Range_Expression
-                    (A_Range, Type_Mark, True);
-                  if A_Range = Null_Iir then
-                     --  Avoid error propagation.
-                     A_Range := Get_Range_Constraint (Type_Mark);
-                  end if;
-               end if;
-               Set_Range_Constraint (Res, A_Range);
-               Set_Type_Staticness (Res, Get_Expr_Staticness (A_Range));
-               Free_Name (Def);
-               Sem_Resolution_Function (Res);
-               Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
-               return Res;
-            end;
-
+            Res := Create_Iir (Get_Kind (Def));
+            Set_Range_Constraint (Res, Get_Range_Constraint (Def));
+            Set_Resolution_Function (Res, Get_Resolution_Function (Def));
          when Iir_Kind_Enumeration_Type_Definition =>
-            if Get_Range_Constraint (Def) = Null_Iir and then
-              Get_Resolution_Function (Def) = Null_Iir
-            then
-               raise Internal_Error;
-            end if;
+            Res := Create_Iir (Iir_Kind_Enumeration_Subtype_Definition);
+            Set_Type_Mark (Res, Def);
+            Set_Range_Constraint (Res, Get_Range_Constraint (Def));
 
-            declare
-               Constraint : Iir_Range_Expression;
-            begin
-               -- There are limits.  Create a new subtype.
-               Res := Create_Iir (Iir_Kind_Enumeration_Subtype_Definition);
-               Location_Copy (Res, Def);
-               Set_Base_Type (Res, Type_Mark);
-               Set_Type_Mark (Res, Type_Mark);
-               Set_Resolution_Function (Res, Get_Resolution_Function (Def));
-               Constraint := Get_Range_Constraint (Def);
-               if Constraint = Null_Iir then
-                  Constraint := Get_Range_Constraint (Type_Mark);
-               else
-                  Constraint := Sem_Discrete_Range_Expression
-                    (Constraint, Type_Mark, True);
-                  -- FIXME: check bounds, check static
-               end if;
-               Set_Range_Constraint (Res, Constraint);
-               Set_Type_Staticness (Res, Get_Expr_Staticness (Constraint));
-            end;
-            Free_Name (Def);
-            Sem_Resolution_Function (Res);
-            Set_Signal_Type_Flag (Res, True);
-            return Res;
+         when Iir_Kind_Access_Subtype_Definition
+           | Iir_Kind_Access_Type_Definition =>
+            Res := Create_Iir (Iir_Kind_Access_Subtype_Definition);
 
-         when Iir_Kind_Record_Type_Definition =>
-            declare
-               Func: Iir;
-            begin
-               if Get_Kind (Def) /= Iir_Kind_Subtype_Definition then
-                  Error_Kind ("sem_subtype_indication1", Def);
-                  return Null_Iir;
-               end if;
-               Func := Get_Resolution_Function (Def);
-               if Func = Null_Iir then
-                  --  This is an alias.
-                  raise Internal_Error;
-               end if;
-               Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
-               Location_Copy (Res, Def);
-               Set_Base_Type (Res, Type_Mark);
-               Set_Type_Staticness (Res, Get_Type_Staticness (Type_Mark));
-               Set_Type_Mark (Res, Type_Mark);
-               Set_Resolution_Function (Res, Func);
-               Sem_Resolution_Function (Res);
-               Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
-               Free_Name (Def);
-               return Res;
-            end;
-
-         when Iir_Kind_Access_Type_Definition =>
-            --  LRM93 4.2
-            --  A subtype indication denoting an access type [or a file type]
-            --  may not contain a resolution function.
-            if Get_Resolution_Function (Def) /= Null_Iir then
-               Error_Msg_Sem
-                 ("resolution function not allowed for an access type", Def);
-            end if;
-
-            case Get_Kind (Def) is
-               when Iir_Kind_Subtype_Definition =>
-                  Free_Name (Def);
-                  return Type_Mark;
-               when Iir_Kind_Array_Subtype_Definition =>
-                  --  LRM93 §3.3
-                  --  The only form of constraint that is allowed after a name
-                  --  of an access type in a subtype indication is an index
-                  --  constraint.
-                  declare
-                     Sub_Type : Iir;
-                     pragma Unreferenced (Sub_Type);
-                     Base_Type : Iir;
-                  begin
-                     Base_Type := Get_Designated_Type (Type_Mark);
-                     Sub_Type := Sem_Array_Subtype_Indication (Base_Type, Def);
-                     Res := Create_Iir (Iir_Kind_Access_Subtype_Definition);
-                     Location_Copy (Res, Def);
-                     Set_Base_Type (Res, Type_Mark);
-                     Set_Signal_Type_Flag (Res, False);
-                     Free_Old_Iir (Def);
-                     return Res;
-                  end;
-               when others =>
-                  raise Internal_Error;
-            end case;
-
-         when Iir_Kind_File_Type_Definition =>
-            if Get_Kind (Def) = Iir_Kind_Subtype_Definition then
-               Free_Name (Def);
-               return Type_Mark;
-            else
-               raise Internal_Error;
-            end if;
-
-         when others =>
-            Error_Kind ("sem_subtype_indication", Type_Mark);
-            return Def;
-      end case;
-   end Sem_Subtype_Indication;
-
-   function Sem_Is_Constrained (A_Type: Iir) return Boolean is
-   begin
-      case Get_Kind (A_Type) is
+         when Iir_Kind_Array_Type_Definition =>
+            Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+            Set_Type_Staticness (Res, Get_Type_Staticness (Def));
+            Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
+            Set_Type_Mark (Res, Def);
+            Set_Index_Subtype_List (Res, Get_Index_Subtype_List (Def));
+            Set_Element_Subtype (Res, Get_Element_Subtype (Def));
+            Set_Index_Constraint_Flag (Res, False);
+            Set_Constraint_State (Res, Get_Constraint_State (Def));
          when Iir_Kind_Array_Subtype_Definition =>
-            return True;
-         when Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Integer_Subtype_Definition
-           | Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Floating_Subtype_Definition
-           | Iir_Kind_Floating_Type_Definition
-           | Iir_Kind_Access_Type_Definition
-           | Iir_Kind_Access_Subtype_Definition
-           | Iir_Kind_Physical_Subtype_Definition
-           | Iir_Kind_Record_Type_Definition
-           | Iir_Kind_Record_Subtype_Definition
-           | Iir_Kind_File_Type_Definition =>
-            --| Iir_Kind_File_Subtype_Definition =>
-            return True;
-         when Iir_Kind_Protected_Type_Declaration =>
-            return True;
-         when Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Unconstrained_Array_Subtype_Definition =>
-            return False;
-         when Iir_Kind_Incomplete_Type_Definition =>
-            return False;
-         when Iir_Kind_Error =>
-            return True;
-         when others =>
-            Error_Kind ("sem_is_constrained", A_Type);
-      end case;
-   end Sem_Is_Constrained;
+            Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+            Set_Resolution_Function (Res, Get_Resolution_Function (Def));
+            Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
+            Set_Type_Mark (Res, Def);
+            Set_Index_Subtype_List (Res, Get_Index_Subtype_List (Def));
+            Set_Element_Subtype (Res, Get_Element_Subtype (Def));
+            Set_Index_Constraint_Flag
+              (Res, Get_Index_Constraint_Flag (Def));
+            Set_Constraint_State (Res, Get_Constraint_State (Def));
 
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+            Set_Type_Staticness (Res, Get_Type_Staticness (Def));
+            if Get_Kind (Def) /= Iir_Kind_Record_Type_Definition then
+               Set_Resolution_Function
+                 (Res, Get_Resolution_Function (Def));
+            end if;
+            Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
+            Set_Constraint_State (Res, Get_Constraint_State (Def));
+
+         when others =>
+            --  FIXME: todo
+            Error_Kind ("copy_subtype_indication", Def);
+      end case;
+      Location_Copy (Res, Def);
+      Set_Base_Type (Res, Get_Base_Type (Def));
+      Set_Type_Staticness (Res, Get_Type_Staticness (Def));
+      Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Def));
+      return Res;
+   end Copy_Subtype_Indication;
 end Sem_Types;

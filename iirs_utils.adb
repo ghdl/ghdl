@@ -513,10 +513,11 @@ package body Iirs_Utils is
       return Get_Type_Declarator (Def) = Null_Iir;
    end Is_Anonymous_Type_Definition;
 
-   function Is_Unconstrained_Type_Definition (Def : Iir) return Boolean is
+   function Is_Fully_Constrained_Type (Def : Iir) return Boolean is
    begin
-      return Get_Kind (Def) in Iir_Kinds_Unconstrained_Array_Type_Definition;
-   end Is_Unconstrained_Type_Definition;
+      return Get_Kind (Def) not in Iir_Kinds_Composite_Type_Definition
+        or else Get_Constraint_State (Def) = Fully_Constrained;
+   end Is_Fully_Constrained_Type;
 
    function Is_Same_Profile (L, R: Iir) return Boolean
    is

@@ -1350,9 +1350,9 @@ package body Sem is
       Num : Iir_Int32;
    begin
       Inter := Get_Interpretation (Get_Identifier (Decl));
-      if Valid_Interpretation (Inter)
+      while Valid_Interpretation (Inter)
         and then Is_In_Current_Declarative_Region (Inter)
-      then
+      loop
          --  There is a previous declaration with the same name in the
          --  current declarative region.
          Prev := Get_Declaration (Inter);
@@ -1372,15 +1372,21 @@ package body Sem is
                   Set_Overload_Number (Prev, 1);
                   Num := 2;
                end if;
+               Set_Overload_Number (Decl, Num);
+               return;
+            when Iir_Kind_Implicit_Function_Declaration
+              | Iir_Kind_Implicit_Procedure_Declaration =>
+               --  Implicit declarations aren't taken into account (as they
+               --  are mangled differently).
+               Inter := Get_Next_Interpretation (Inter);
             when others =>
                --  Can be an enumeration literal or an error.
-               Num := 0;
+               Set_Overload_Number (Decl, 0);
+               return;
          end case;
-      else
-         --  No previous declaration in the current declarative region.
-         Num := 0;
-      end if;
-      Set_Overload_Number (Decl, Num);
+      end loop;
+      --  No previous declaration in the current declarative region.
+      Set_Overload_Number (Decl, 0);
    end Set_Subprogram_Overload_Number;
 
    --  Check requirements on number of interfaces for subprogram specification
@@ -1421,9 +1427,7 @@ package body Sem is
             end if;
             Error_Msg_Sem ("unary operator must have a single parameter",
                            Subprg);
-         when Name_Logical_Operators
-           | Name_Xnor
-           | Name_Mod
+         when Name_Mod
            | Name_Rem
            | Name_Op_Mul
            | Name_Op_Div
@@ -1442,7 +1446,28 @@ package body Sem is
             if Nbr_Interfaces = 2 then
                return;
             end if;
-            Error_Msg_Sem ("binary operator must have two parameters", Subprg);
+            Error_Msg_Sem
+              ("binary operators must have two parameters", Subprg);
+         when Name_Logical_Operators
+           | Name_Xnor =>
+            --  LRM08 4.5.2 Operator overloading
+            --  For each of the "+", "-", "and", "or", "xor", "nand", "nor"
+            --  and "xnor", overloading is allowed both as a unary operator
+            --  and as a binary operator.
+            if Nbr_Interfaces = 2 then
+               return;
+            end if;
+            if Nbr_Interfaces = 1 then
+               if Vhdl_Std >= Vhdl_08 then
+                  return;
+               end if;
+               Error_Msg_Sem
+                 ("logical operators must have two parameters before vhdl08",
+                  Subprg);
+            else
+               Error_Msg_Sem
+                 ("logical operators must have two parameters", Subprg);
+            end if;
          when Name_Op_Plus
            | Name_Op_Minus =>
             --  LRM93 2.3.1

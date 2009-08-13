@@ -135,6 +135,7 @@ package body Disp_Vhdl is
            | Iir_Kind_File_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Element_Declaration
+           | Iir_Kind_Record_Element_Constraint
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
@@ -221,12 +222,30 @@ package body Disp_Vhdl is
    end Disp_Use_Clause;
 
    -- Disp the resolution function (if any) of type definition DEF.
-   procedure Disp_Resolution_Function (Def: Iir) is
-      Decl: Iir;
+   procedure Disp_Resolution_Function (Subtype_Def: Iir)
+   is
+      procedure Inner (Def : Iir)
+      is
+         Decl: Iir;
+      begin
+         Decl := Get_Resolution_Function (Def);
+         if Decl /= Null_Iir then
+            Disp_Name (Decl);
+         else
+            case Get_Kind (Def) is
+               when Iir_Kind_Array_Subtype_Definition =>
+                  Put ('(');
+                  Inner (Get_Element_Subtype (Def));
+                  Put (')');
+               when others =>
+                  Error_Kind ("disp_resolution_function", Def);
+            end case;
+         end if;
+      end Inner;
+
    begin
-      Decl := Get_Resolution_Function (Def);
-      if Decl /= Null_Iir then
-         Disp_Name (Decl);
+      if Get_Resolved_Flag (Subtype_Def) then
+         Inner (Subtype_Def);
          Put (' ');
       end if;
    end Disp_Resolution_Function;
@@ -275,12 +294,93 @@ package body Disp_Vhdl is
       Put (";");
    end Disp_Floating_Subtype_Definition;
 
-   procedure Disp_Subtype_Indication (Def: Iir; Full_Decl: Boolean := False)
+   procedure Disp_Element_Constraint (Def : Iir; Type_Mark : Iir);
+
+   procedure Disp_Array_Element_Constraint (Def : Iir; Type_Mark : Iir)
    is
-      Type_Mark: Iir;
+      Index : Iir;
+      Def_El : Iir;
+      Tm_El : Iir;
+      Has_Index : Boolean;
+      Has_Own_Element_Subtype : Boolean;
+   begin
+      Has_Index := Get_Index_Constraint_Flag (Def);
+      Def_El := Get_Element_Subtype (Def);
+      Tm_El := Get_Element_Subtype (Type_Mark);
+      Has_Own_Element_Subtype := Def_El /= Tm_El;
+
+      if not Has_Index and not Has_Own_Element_Subtype then
+         return;
+      end if;
+
+      Put (" (");
+      if Has_Index then
+         for I in Natural loop
+            Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
+            exit when Index = Null_Iir;
+            if I /= 0 then
+               Put (", ");
+            end if;
+            --Disp_Expression (Get_Range_Constraint (Index));
+            Disp_Range (Index);
+         end loop;
+      else
+         Put ("open");
+      end if;
+      Put (")");
+
+      if Has_Own_Element_Subtype
+        and then Get_Kind (Def_El) in Iir_Kinds_Composite_Type_Definition
+      then
+         Disp_Element_Constraint (Def_El, Tm_El);
+      end if;
+   end Disp_Array_Element_Constraint;
+
+   procedure Disp_Record_Element_Constraint (Def : Iir)
+   is
+      El_List : constant Iir_List := Get_Elements_Declaration_List (Def);
+      El : Iir;
+      Has_El : Boolean := False;
+   begin
+      for I in Natural loop
+         El := Get_Nth_Element (El_List, I);
+         exit when El = Null_Iir;
+         if Get_Kind (El) = Iir_Kind_Record_Element_Constraint
+           and then Get_Parent (El) = Def
+         then
+            if Has_El then
+               Put (", ");
+            else
+               Put ("(");
+               Has_El := True;
+            end if;
+            Disp_Name_Of (El);
+            Disp_Element_Constraint (Get_Type (El),
+                                     Get_Base_Type (Get_Type (El)));
+         end if;
+      end loop;
+      if Has_El then
+         Put (")");
+      end if;
+   end Disp_Record_Element_Constraint;
+
+   procedure Disp_Element_Constraint (Def : Iir; Type_Mark : Iir) is
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Record_Subtype_Definition =>
+            Disp_Record_Element_Constraint (Def);
+         when Iir_Kind_Array_Subtype_Definition =>
+            Disp_Array_Element_Constraint (Def, Type_Mark);
+         when others =>
+            Error_Kind ("disp_element_constraint", Def);
+      end case;
+   end Disp_Element_Constraint;
+
+   procedure Disp_Subtype_Indication (Def : Iir; Full_Decl : Boolean := False)
+   is
+      Type_Mark : Iir;
       Base_Type : Iir;
-      Index: Iir;
-      Decl: Iir;
+      Decl : Iir;
    begin
       Decl := Get_Type_Declarator (Def);
       if not Full_Decl and then Decl /= Null_Iir then
@@ -296,10 +396,6 @@ package body Disp_Vhdl is
       if Type_Mark /= Null_Iir then
          Decl := Get_Type_Declarator (Type_Mark);
          Disp_Name_Of (Decl);
-      end if;
-
-      if Get_Kind (Def) = Iir_Kind_Unconstrained_Array_Subtype_Definition then
-         return;
       end if;
 
       Base_Type := Get_Base_Type (Def);
@@ -318,19 +414,9 @@ package body Disp_Vhdl is
                Disp_Expression (Get_Range_Constraint (Def));
             end if;
          when Iir_Kind_Array_Type_Definition =>
-            Put (" (");
-            for I in Natural loop
-               Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
-               exit when Index = Null_Iir;
-               if I /= 0 then
-                  Put (", ");
-               end if;
-               Disp_Expression (Get_Range_Constraint (Index));
-               --Disp_Range (Get_Range_Constraint (Index);
-            end loop;
-            Put (")");
+            Disp_Array_Element_Constraint (Def, Type_Mark);
          when Iir_Kind_Record_Type_Definition =>
-            null;
+            Disp_Record_Element_Constraint (Def);
          when others =>
             Error_Kind ("disp_subtype_indication", Base_Type);
       end case;
@@ -463,19 +549,21 @@ package body Disp_Vhdl is
    procedure Disp_Record_Type_Definition
      (Def: Iir_Record_Type_Definition; Indent: Count)
    is
+      List : Iir_List;
       El: Iir_Element_Declaration;
    begin
       Put_Line ("record");
       Set_Col (Indent);
       Put_Line ("begin");
-      El := Get_Element_Declaration_Chain (Def);
-      while El /= Null_Iir loop
+      List := Get_Elements_Declaration_List (Def);
+      for I in Natural loop
+         El := Get_Nth_Element (List, I);
+         exit when El = Null_Iir;
          Set_Col (Indent + Indentation);
          Disp_Identifier (El);
          Put (" : ");
          Disp_Subtype_Indication (Get_Type (El));
          Put_Line (";");
-         El := Get_Chain (El);
       end loop;
       Set_Col (Indent);
       Put ("end record;");
