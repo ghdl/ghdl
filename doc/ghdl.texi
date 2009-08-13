@@ -16,7 +16,7 @@
 @c The following two commands start the copyright page.
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2002, 2003, 2004, 2005, 2006, 2007, 2008 Tristan Gingold.
+Copyright @copyright{} 2002-2009 Tristan Gingold.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -518,6 +518,7 @@ no options are allowed after a filename or a unit name.
 * Misc commands::               
 * Installation Directory::      
 * IEEE library pitfalls::       
+* IEEE math packages::          
 @end menu
 
 @node Building commands, GHDL options, Invoking GHDL, Invoking GHDL
@@ -1387,7 +1388,7 @@ value of the @samp{HKLM\Software\Ghdl\Install_Dir} registry entry on Windows.
 
 You should use the @option{--dispconfig} command (@pxref{Dispconfig command} for details) to disp and debug installation problems.
 
-@node IEEE library pitfalls,  , Installation Directory, Invoking GHDL
+@node IEEE library pitfalls, IEEE math packages, Installation Directory, Invoking GHDL
 @comment  node-name,  next,  previous,  up
 @section IEEE library pitfalls
 When you use options @option{--ieee=synopsys} or @option{--ieee=mentor},
@@ -1514,6 +1515,46 @@ begin
    val <= std_logic_vector (v);
 end good;
 @end example
+
+@node IEEE math packages,  , IEEE library pitfalls, Invoking GHDL
+@comment  node-name,  next,  previous,  up
+@section IEEE math packages
+@cindex Math_Real
+@cindex Math_Complex
+
+The @samp{ieee} math packages (@samp{math_real} and
+@samp{math_complex}) provided with @code{GHDL} are not fully compliant with
+the @code{IEEE} standard.  They are based on an early draft which can be
+redistributed contrary to the final version of the package.
+
+This is unfortunate and may generate errors as some declarations are missing
+or have slightly changed.
+
+If you have bought the standard from @samp{ieee} then you can download
+the sources of the packages from
+@url{http://standards.ieee.org/downloads/1076/1076.2-1996}
+(unrestricted access).  You'd better to just download
+@file{math_real.vhdl}, @file{math_real-body.vhdl},
+@file{math_complex.vhdl} and @file{math_complex-body.vhdl}.  The other files
+are not necessary: the @samp{std_logic_1164} package has to be updated for
+@code{VHDL} 1993 (the @code{xnor} functions are commented out).
+
+If you want to replace math packages for the standard version of the
+@code{ieee} library, do:
+@smallexample
+$ cp math_real.vhdl math_real-body.vhdl @file{ieee_install_dir}
+$ cp math_complex.vhdl math_complex-body.vhdl @file{ieee_install_dir}
+$ cd @file{ieee_install_dir}
+$ ghdl -a --work=ieee math_real.vhdl math_real-body.vhdl
+$ ghdl -a --work=ieee math_complex.vhdl math_complex-body.vhdl
+@end smallexample
+(Replace @file{ieee_install_dir} by the location of the @code{ieee} library as
+displayed by @samp{ghdl -dispconfig}).
+
+You can repeat this for the @samp{synopsys} version of the @code{ieee} library.
+
+Don't forget that the math packages are only defined for the 1993 standard.
+
 
 @node Simulation and run time, GHDL implementation of VHDL, Invoking GHDL, Top
 @comment  node-name,  next,  previous,  up
