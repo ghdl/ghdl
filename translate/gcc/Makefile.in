@@ -167,10 +167,11 @@ drvdir/default_pathes.ads: drvdir Makefile
 	echo "--  DO NOT EDIT" > tmp-dpathes.ads
 	echo "--  This file is created by Makefile" >> tmp-dpathes.ads
 	echo "package Default_Pathes is" >> tmp-dpathes.ads
-	echo "   Compiler_Gcc : constant String :=" >> tmp-dpathes.ads
+	echo "   Compiler_Gcc   : constant String :=" >> tmp-dpathes.ads
 	echo "     \"$(libexecsubdir)/ghdl1$(exeext)\";" >> tmp-dpathes.ads
 	echo "   Compiler_Debug : constant String :=\"\";" >> tmp-dpathes.ads
 	echo "   Compiler_Mcode : constant String :=\"\";" >> tmp-dpathes.ads
+	echo "   Compiler_Llvm  : constant String :=\"\";" >> tmp-dpathes.ads
 	echo "   Post_Processor : constant String :=\"\";" >> tmp-dpathes.ads
 	echo "   Prefix : constant String :=">> tmp-dpathes.ads
 	echo "     \"$(libsubdir)/vhdl/lib/\";" >> tmp-dpathes.ads

@@ -19,6 +19,7 @@ GRT_FLAGS=-g -O
 GRT_ADAFLAGS=-gnatn
 
 ADAC=gcc
+CC=gcc
 GNATFLAGS=$(CFLAGS) -gnatf -gnaty3befhkmr -gnatwlu
 GHDL1=../ghdl1-gcc
 GRTSRCDIR=.

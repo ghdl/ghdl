@@ -3229,7 +3229,7 @@ package body Sem_Names is
            | Iir_Kind_Attribute_Name
            | Iir_Kind_Selected_By_All_Name =>
             Free_Iir (Name);
-            return Expr;
+            return Eval_Expr_If_Static (Expr);
          when others =>
             Error_Kind ("name_to_expression", Name);
       end case;

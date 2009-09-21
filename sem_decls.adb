@@ -2359,7 +2359,7 @@ package body Sem_Decls is
                  | Iir_Kind_Procedure_Declaration =>
                   if not Get_Use_Flag (El) then
                      Warning_Msg_Sem
-                       (Disp_Node (El) & " is never used", El);
+                       (Disp_Node (El) & " is never referenced", El);
                   end if;
                when others =>
                   null;

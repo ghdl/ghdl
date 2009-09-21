@@ -18187,6 +18187,10 @@ package body Translation is
             when Iir_Predefined_Now_Function =>
                null;
 
+            when Iir_Predefined_Array_To_String =>
+               --  Not yet supported!
+               null;
+
             when others =>
                Error_Kind ("translate_implicit_subprogram ("
                            & Iir_Predefined_Functions'Image (Kind) & ")",

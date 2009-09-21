@@ -60,7 +60,7 @@ ortho_code-x86-flags.ads:
 
 ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force 
-	$(GNATMAKE) -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) -largs -L/usr/lib32
+	$(GNATMAKE) -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_llvm_jit: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) bindings.o force 

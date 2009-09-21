@@ -28,8 +28,8 @@
 # * Create source tar and build binaries: ./dist.sh dist_phase1
 # * su root
 # * Build binary tar: ./dist.sh dist_phase2
-# * Run the testsuites: GHDL=ghdl ./testsuite.sh
-# * Update website/index.html (./dist.sh website helps, rename .new)
+# * Run the testsuites: GHDL=ghdl ./testsuite.sh gcc
+# * Update website/index.html (./dist.sh website helps)
 # * upload (./dist upload)
 # * CVS commit, tag + cd image.
 # * remove previous version in /usr/local
@@ -39,7 +39,7 @@
 set -e
 
 # GCC version
-GCCVERSION=4.3.1
+GCCVERSION=4.3.4
 # Machine name used by GCC
 MACHINE=i686-pc-linux-gnu
 # Directory where GCC sources (and objects) stay.
@@ -167,11 +167,21 @@ do_compile ()
 
   do_update_gcc_sources;
 
+# gmp build with:
+# CFLAGS="-O -m32" ./configure --prefix=$HOME/dist/build \
+#   --disable-shared --build=i686-pc-linux-gnu
+# make
+# make install
+# make check
+
+  # usegnat32!
+
   rm -rf $GCCDISTOBJ
   mkdir $GCCDISTOBJ
   cd $GCCDISTOBJ
-  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX --disable-bootstrap --with-bugurl="<URL:http://gna.org/projects/ghdl>"
-  make CFLAGS="-O -g"
+  export CFLAGS="-O -g"
+  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX --disable-bootstrap --with-bugurl="<URL:http://gna.org/projects/ghdl>" --build=i686-pc-linux-gnu --with-gmp=$PWD/../build --with-mpfr=$PWD/../build --disable-shared --disable-libmudflap --disable-libssp --disable-libgomp
+  make
   make -C gcc vhdl.info
   cd $CWD
 }

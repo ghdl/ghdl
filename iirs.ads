@@ -2523,19 +2523,19 @@ package Iirs is
        Iir_Kind_Incomplete_Type_Definition,
        Iir_Kind_File_Type_Definition,
        Iir_Kind_Protected_Type_Declaration,
-       Iir_Kind_Record_Type_Definition,                 -- composite
-       Iir_Kind_Array_Type_Definition,                  -- composite, array
-       Iir_Kind_Array_Subtype_Definition,               -- composite, array, st
-       Iir_Kind_Record_Subtype_Definition,              -- composite, st
-       Iir_Kind_Access_Subtype_Definition,              -- st
-       Iir_Kind_Physical_Subtype_Definition,            -- scalar, st
-       Iir_Kind_Floating_Subtype_Definition,            -- scalar, st
-       Iir_Kind_Integer_Subtype_Definition,             -- scalar, disc, st
-       Iir_Kind_Enumeration_Subtype_Definition,         -- scalar, disc, st
-       Iir_Kind_Enumeration_Type_Definition,            -- scalar, disc
-       Iir_Kind_Integer_Type_Definition,                -- scalar, disc
-       Iir_Kind_Floating_Type_Definition,               -- scalar
-       Iir_Kind_Physical_Type_Definition,               -- scalar
+       Iir_Kind_Record_Type_Definition,           -- composite
+       Iir_Kind_Array_Type_Definition,            -- composite, array
+       Iir_Kind_Array_Subtype_Definition,         -- composite, array, st
+       Iir_Kind_Record_Subtype_Definition,        -- composite, st
+       Iir_Kind_Access_Subtype_Definition,        -- st
+       Iir_Kind_Physical_Subtype_Definition,      -- scalar, st, rng
+       Iir_Kind_Floating_Subtype_Definition,      -- scalar, st, rng
+       Iir_Kind_Integer_Subtype_Definition,       -- scalar, disc, st, rng
+       Iir_Kind_Enumeration_Subtype_Definition,   -- scalar, disc, st, rng
+       Iir_Kind_Enumeration_Type_Definition,      -- scalar, disc, rng
+       Iir_Kind_Integer_Type_Definition,          -- scalar, disc
+       Iir_Kind_Floating_Type_Definition,         -- scalar
+       Iir_Kind_Physical_Type_Definition,         -- scalar
        Iir_Kind_Range_Expression,
        Iir_Kind_Protected_Type_Body,
        Iir_Kind_Subtype_Definition,  -- temporary (must not appear after sem).
@@ -3097,6 +3097,13 @@ package Iirs is
    --Iir_Kind_Integer_Type_Definition
    --Iir_Kind_Floating_Type_Definition
      Iir_Kind_Physical_Type_Definition;
+
+   subtype Iir_Kinds_Range_Type_Definition is Iir_Kind range
+     Iir_Kind_Physical_Subtype_Definition ..
+   --Iir_Kind_Floating_Subtype_Definition
+   --Iir_Kind_Integer_Subtype_Definition
+   --Iir_Kind_Enumeration_Subtype_Definition
+     Iir_Kind_Enumeration_Type_Definition;
 
    subtype Iir_Kinds_Discrete_Type_Definition is Iir_Kind range
      Iir_Kind_Integer_Subtype_Definition ..

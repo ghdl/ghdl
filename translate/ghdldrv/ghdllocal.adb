@@ -555,6 +555,7 @@ package body Ghdllocal is
    exception
       when Errorout.Compilation_Error =>
          Error ("importation has failed due to compilation error");
+         raise;
    end Perform_Action;
 
    --  Command Check_Syntax.

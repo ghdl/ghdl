@@ -1273,6 +1273,7 @@ package body Sem_Types is
                Res := Copy_Subtype_Indication (Type_Mark);
                Location_Copy (Res, Def);
                Free_Name (Def);
+               El_Type := Null_Iir;
 
             when Iir_Kind_Array_Subtype_Definition =>
                -- Case of a constraint for an array.
@@ -1285,6 +1286,7 @@ package body Sem_Types is
                Error_Seen := False;
                Type_Index_List := Get_Index_Subtype_List (Base_Type);
                Subtype_Index_List := Get_Index_Subtype_List (Def);
+               El_Type := Get_Element_Subtype (Def);
 
                --  LRM08 5.3.2.2
                --  If an array constraint of the first form (including an index
@@ -1299,54 +1301,61 @@ package body Sem_Types is
                   Error_Msg_Sem ("constrained array cannot be re-constrained",
                                  Def);
                end if;
-               for I in Natural loop
-                  Type_Index := Get_Nth_Element (Type_Index_List, I);
-                  Subtype_Index := Get_Nth_Element (Subtype_Index_List, I);
-                  exit when Type_Index = Null_Iir and Subtype_Index = Null_Iir;
+               if Subtype_Index_List = Null_Iir_List then
+                  --  Array is not constrained.
+                  Set_Index_Constraint_Flag (Def, False);
+                  Set_Index_Subtype_List (Def, Type_Index_List);
+               else
+                  for I in Natural loop
+                     Type_Index := Get_Nth_Element (Type_Index_List, I);
+                     Subtype_Index := Get_Nth_Element (Subtype_Index_List, I);
+                     exit when Type_Index = Null_Iir
+                       and Subtype_Index = Null_Iir;
 
-                  if Type_Index = Null_Iir then
-                     Error_Msg_Sem
-                       ("subtype has more indexes than "
-                          & Disp_Node (Type_Mark)
-                          & " defined at " & Disp_Location (Type_Mark),
-                        Subtype_Index);
-                     --  Forget extra indexes.
-                     Set_Nbr_Elements (Subtype_Index_List, I);
-                     exit;
-                  end if;
-                  if Subtype_Index = Null_Iir then
-                     if not Error_Seen then
+                     if Type_Index = Null_Iir then
                         Error_Msg_Sem
-                          ("subtype has less indexes than "
+                          ("subtype has more indexes than "
                              & Disp_Node (Type_Mark)
-                             & " defined at "
-                             & Disp_Location (Type_Mark), Def);
-                        Error_Seen := True;
-                     end if;
-                     --  Use type_index as a fake subtype
-                     --  FIXME: it is too fake.
-                     Append_Element (Subtype_Index_List, Type_Index);
-                     Staticness := None;
-                  else
-                     Subtype_Index := Sem_Discrete_Range_Expression
-                       (Subtype_Index, Type_Index, True);
-                     if Subtype_Index /= Null_Iir then
-                        Subtype_Index :=
-                          Range_To_Subtype_Definition (Subtype_Index);
-                        Staticness := Min
-                          (Staticness, Get_Type_Staticness (Subtype_Index));
+                             & " defined at " & Disp_Location (Type_Mark),
+                           Subtype_Index);
+                        --  Forget extra indexes.
+                        Set_Nbr_Elements (Subtype_Index_List, I);
+                        exit;
                      end if;
                      if Subtype_Index = Null_Iir then
-                        --  Create a fake subtype from type_index.
-                        --  FIXME: It is too fake.
-                        Subtype_Index := Type_Index;
+                        if not Error_Seen then
+                           Error_Msg_Sem
+                             ("subtype has less indexes than "
+                                & Disp_Node (Type_Mark)
+                                & " defined at "
+                                & Disp_Location (Type_Mark), Def);
+                           Error_Seen := True;
+                        end if;
+                        --  Use type_index as a fake subtype
+                        --  FIXME: it is too fake.
+                        Append_Element (Subtype_Index_List, Type_Index);
                         Staticness := None;
+                     else
+                        Subtype_Index := Sem_Discrete_Range_Expression
+                          (Subtype_Index, Type_Index, True);
+                        if Subtype_Index /= Null_Iir then
+                           Subtype_Index :=
+                             Range_To_Subtype_Definition (Subtype_Index);
+                           Staticness := Min
+                             (Staticness, Get_Type_Staticness (Subtype_Index));
+                        end if;
+                        if Subtype_Index = Null_Iir then
+                           --  Create a fake subtype from type_index.
+                           --  FIXME: It is too fake.
+                           Subtype_Index := Type_Index;
+                           Staticness := None;
+                        end if;
+                        Replace_Nth_Element
+                          (Subtype_Index_List, I, Subtype_Index);
                      end if;
-                     Replace_Nth_Element
-                       (Subtype_Index_List, I, Subtype_Index);
-                  end if;
-               end loop;
-               Set_Index_Constraint_Flag (Def, True);
+                  end loop;
+                  Set_Index_Constraint_Flag (Def, True);
+               end if;
                Set_Type_Staticness (Def, Staticness);
                Set_Type_Mark (Def, Type_Mark);
                Set_Signal_Type_Flag (Def, Get_Signal_Type_Flag (Type_Mark));
@@ -1373,10 +1382,10 @@ package body Sem_Types is
       --  Element subtype.
       if Resolv_El /= Null_Iir then
          El_Type := Sem_Subtype_Constraint (Null_Iir, Mark_El_Type, Resolv_El);
-         if El_Type = Null_Iir then
-            El_Type := Mark_El_Type;
-         end if;
-      else
+      elsif El_Type /= Null_Iir then
+         El_Type := Sem_Subtype_Constraint (El_Type, Mark_El_Type, Null_Iir);
+      end if;
+      if El_Type = Null_Iir then
          El_Type := Mark_El_Type;
       end if;
       Set_Element_Subtype (Res, El_Type);

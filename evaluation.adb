@@ -868,7 +868,7 @@ package body Evaluation is
       if Get_Kind (Left) = Iir_Kind_Error
         or else Get_Kind (Right) = Iir_Kind_Error
       then
-         return Null_Iir;
+         return Create_Error_Expr (Orig, Get_Type (Orig));
       end if;
 
       Func := Get_Implicit_Definition (Get_Implementation (Orig));
@@ -1824,10 +1824,19 @@ package body Evaluation is
       end if;
    end Eval_Expr_If_Static;
 
-   function Eval_Expr_Check_If_Static (Expr : Iir; Atype : Iir) return Iir is
+   function Eval_Expr_Check_If_Static (Expr : Iir; Atype : Iir) return Iir
+   is
+      Res : Iir;
    begin
       if Expr /= Null_Iir and then Get_Expr_Staticness (Expr) = Locally then
-         return Eval_Expr_Check (Expr, Atype);
+         Res := Eval_Expr (Expr);
+         if Res /= Null_Iir
+           and then Get_Type_Staticness (Atype) = Locally
+           and then Get_Kind (Atype) in Iir_Kinds_Range_Type_Definition
+         then
+            Eval_Check_Bound (Res, Atype);
+         end if;
+         return Res;
       else
          return Expr;
       end if;

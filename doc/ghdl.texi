@@ -11,7 +11,7 @@
 @titlepage
 @title GHDL guide
 @subtitle GHDL, a VHDL compiler
-@subtitle For GHDL version 0.27 (Sokcho edition)
+@subtitle For GHDL version 0.28 (Sokcho edition)
 @author Tristan Gingold
 @c The following two commands start the copyright page.
 @page
@@ -42,7 +42,7 @@ Part II: Reference guide
 3) library organization
 4) built-in libraries and pathes.
 5) debugging your program.
-6) report messages (run time errors, boundary errors, assertion)
+6) report messages (runtime errors, boundary errors, assertion)
 7) Error message, improve it.
 8) current bugs, how to report a bug.
 9) Copyright
@@ -88,7 +88,7 @@ or any later version published by the Free Software Foundation.
 * Introduction::                What is GHDL, what is VHDL
 * Starting with GHDL::          Build a VHDL program with GHDL
 * Invoking GHDL::               
-* Simulation and run time::     
+* Simulation and runtime::     
 * GHDL implementation of VHDL::  
 * GHDL implementation of VITAL::  
 * Flaws and bugs report::       
@@ -377,7 +377,7 @@ $ gtkwave adder.vcd
 @end smallexample
 
 @xref{Simulation options}, for more details on the @option{--vcd} option and
-other run time options.
+other runtime options.
 
 @node Starting with a design,  , A full adder, Starting with GHDL
 @comment  node-name,  next,  previous,  up
@@ -491,7 +491,7 @@ this VHDL dialect through some options:
 @end smallexample
 @xref{IEEE library pitfalls}, for more details.
 
-@node Invoking GHDL, Simulation and run time, Starting with GHDL, Top
+@node Invoking GHDL, Simulation and runtime, Starting with GHDL, Top
 @comment  node-name,  next,  previous,  up
 @chapter Invoking GHDL
 The form of the @code{ghdl} command is
@@ -501,7 +501,7 @@ $ ghdl @var{command} [@var{options@dots{}}]
 @end smallexample
 
 The GHDL program has several commands.  The first argument selects
-the commands.  The options are used to slighly modify the action.
+the commands.  The options are used to slightly modify the action.
 
 No options are allowed before the command.  Except for the run commands,
 no options are allowed after a filename or a unit name.
@@ -549,7 +549,7 @@ $ ghdl -a [@var{options}] @var{files}
 
 The @dfn{analysis} command compiles one or more files, and creates an
 object file for each source file.  The analysis command is selected with
-@var{-a} switch.  Any argument starting with a dash is a option, the
+@var{-a} switch.  Any argument starting with a dash is an option, the
 others are filenames.  No options are allowed after a filename
 argument. GHDL analyzes each filename in the given order, and stops the
 analysis in case of error (the following files are not analyzed).
@@ -573,7 +573,7 @@ $ ghdl -e [@var{options}] @var{primary_unit} [@var{secondary_unit}]
 
 On GNU/Linux the @dfn{elaboration} command creates an executable
 containing the code of the @code{VHDL} sources, the elaboration code
-and simulation code to execute a design hiearachy. On Windows this
+and simulation code to execute a design hierarchy. On Windows this
 command elaborates the design but does not generate anything.
 
 The elaboration command is selected with @var{-e} switch, and must be
@@ -592,22 +592,22 @@ option, as described in @ref{GHDL options}.
 @xref{Top entity}, for the restrictions on the root design of a
 hierarchy.
 
-On GNU/Linux the file name of the executable is the name of the
+On GNU/Linux the filename of the executable is the name of the
 primary unit, or for the later case, the concatenation of the name of
 the primary unit, a dash, and the name of the secondary unit (or
 architecture).  On Windows there is no executable generated.
 
-The @option{-o} followed by a file name can override the default
-executable file name.
+The @option{-o} followed by a filename can override the default
+executable filename.
 
 For the elaboration command, @code{GHDL} re-analyzes all the
 configurations, entities, architectures and package declarations, and
 creates the default configurations and the default binding indications
 according to the LRM rules.  It also generates the list of objects files
 required for the executable.  Then, it links all these files with the
-run time library.
+runtime library.
 
-The actual elaboration is performed at run-time.
+The actual elaboration is performed at runtime.
 
 On Windows this command can be skipped because it is also done by the
 run command.
@@ -623,10 +623,10 @@ Run (or simulate) a design.
 $ ghdl -r [@var{options}] @var{primary_unit} [@var{secondary_unit}] [@var{simulation_options}]
 @end smallexample
 
-The options and arguments are the same as the @xref{Elaboration command}.
+The options and arguments are the same as for the elaboration command, @pxref{Elaboration command}.
 
-On GNU/Linux this command simply build the filename of the executable
-and execute it.  Options are ignored. You may also directly execute
+On GNU/Linux this command simply determines the filename of the executable
+and executes it.  Options are ignored. You may also directly execute
 the program.
 
 This command exists for three reasons:
@@ -640,10 +640,10 @@ It works with the Windows implementation, where the code is generated in
 memory.
 @end itemize
 
-On Windows this command elaborate and launch the simulation.  As a consequence
+On Windows this command elaborates and launches the simulation.  As a consequence
 you must use the same options used during analysis.
 
-@xref{Simulation and run time}, for details on options.
+@xref{Simulation and runtime}, for details on options.
 
 @node Elaborate and run command, Bind command, Run command, Building commands
 @comment  node-name,  next,  previous,  up
@@ -687,13 +687,13 @@ $ ghdl --link [@var{options}] @var{primary_unit} [@var{secondary_unit}]
 
 This performs only the second stage of the elaboration command: the
 executable is created by linking the files of the object files list.
-This command is available only for completness.  The elaboration command is
+This command is available only for completeness.  The elaboration command is
 equivalent to the bind command followed by the link command.
 
 @node List link command, Check syntax command, Link command, Building commands
 @subsection List link command
 @cindex @option{--list-link} command
-Disp files which will be linked.
+Display files which will be linked.
 
 @smallexample
 $ ghdl --list-link @var{primary_unit} [@var{secondary_unit}]
@@ -703,7 +703,7 @@ This command is only available on GNU/Linux.
 
 This command may be used only after a bind command.  GHDL displays all
 the files which will be linked to create an executable.  This command is
-intended to add object files in a link of an foreign program.
+intended to add object files in a link of a foreign program.
 
 @node Check syntax command, Analyze and elaborate command, List link command, Building commands
 @subsection Check syntax command
@@ -722,7 +722,7 @@ the library.
 @subsection Analyze and elaborate command
 @cindex Analyze and elaborate command
 @cindex @option{-c} command
-Analyze files and elaborate in the same time.
+Analyze files and elaborate them at the same time.
 
 On GNU/Linux:
 @smallexample
@@ -734,7 +734,7 @@ On Windows:
 $ ghdl -c [@var{options}] @var{file}@dots{} -r @var{primary_unit} [@var{secondary_unit}]
 @end smallexample
 
-This command combines analyze and elaboration: @var{file}s are analyzed and
+This command combines analysis and elaboration: @var{file}s are analyzed and
 the unit is then elaborated.  However, code is only generated during the
 elaboration.  On Windows the simulation is launched.
 
@@ -746,7 +746,7 @@ All the units of the files are put into the @samp{work} library.  But, the
 work library is neither read from disk nor saved.  Therefore, you must give
 all the files of the @samp{work} library your design needs.
 
-The advantages over the traditionnal approach (analyze and then elaborate) are:
+The advantages over the traditional approach (analyze and then elaborate) are:
 @itemize
 @item
 The compilation cycle is achieved in one command.
@@ -765,7 +765,7 @@ according to the design, the time for this command may be higher than the time
 for the analyze command followed by the elaborate command.
 
 This command is still experimental.  In case of problems, you should go back
-to the traditionnal way.
+to the traditional way.
 
 @comment  node-name,  next,  previous,  up
 @node GHDL options, Passing options to other programs, Building commands, Invoking GHDL
@@ -789,17 +789,17 @@ Specify the name of the @samp{WORK} library.  Analyzed units are always
 placed in the library logically named @samp{WORK}.  With this option,
 you can set its name.  By default, the name is @var{work}.
 
-@code{GHDL} checks @samp{WORK} is a valid identifier.  Although being
+@code{GHDL} checks whether @samp{WORK} is a valid identifier.  Although being
 more or less supported, the @samp{WORK} identifier should not be an
 extended identifier, since the filesystem may prevent it from correctly
 working (due to case sensitivity or forbidden characters in filenames).
 
-@code{VHDL} rules forbides you to add units in the @samp{std} library.
-Furthermode, you should not put units in the @samp{ieee} library.
+@code{VHDL} rules forbid you to add units to the @samp{std} library.
+Furthermore, you should not put units in the @samp{ieee} library.
 
 @item --workdir=@var{DIR}
 @cindex @option{--workdir} switch
-Specify the directory where the @samp{WORK} library is.  When this
+Specify the directory where the @samp{WORK} library is located.  When this
 option is not present, the @samp{WORK} library is in the current
 directory.  The object files created by the compiler are always placed
 in the same directory as the @samp{WORK} library.
@@ -837,17 +837,17 @@ packages is defined by the VHDL standard used.  @xref{VITAL packages},
 for more details.
 
 @item synopsys
-Supply the former packages and the following additionnal packages:
+Supply the former packages and the following additional packages:
 @samp{std_logic_arith}, @samp{std_logic_signed},
 @samp{std_logic_unsigned}, @samp{std_logic_textio}.
 @c @samp{std_logic_misc}.
 These packages were created by some companies, and are popular.  However
 they are not standard packages, and have been placed in the @code{IEEE}
-library without the @sc{ieee} permission.
+library without the permission from the @sc{ieee}.
 
 @item mentor
-Supply the standardr packages and the following additionnal package:
-@samp{std_logic_arith}.  The package is a slight variation on a definitly
+Supply the standard packages and the following additional package:
+@samp{std_logic_arith}.  The package is a slight variation of a definitely
 not standard but widely mis-used package.
 @end table
 
@@ -860,7 +860,7 @@ Add @var{DIRECTORY} to the end of the list of directories to be searched for
 library files.
 
 The @code{WORK} library is always searched in the path specified by the
-@option{--workdir=} option, or in the current directory if the later
+@option{--workdir=} option, or in the current directory if the latter
 option is not specified.
 
 @item -fexplicit
@@ -871,7 +871,7 @@ package.  @xref{IEEE library pitfalls}, for an example.
 
 This option is not set by default.  I don't think this option is a
 good feature, because it breaks the encapsulation rule.  When set, an
-operator can be silently overriden in another package.  You'd better to fix
+operator can be silently overridden in another package.  You'd better to fix
 your design and use the @samp{numeric_std} package.
 
 @item --no-vital-checks
@@ -890,15 +890,15 @@ restrictions for VITAL}, for more details.
 
 @item --syn-binding
 @cindex @option{--syn-binding} switch
-Use synthetizer rules for component binding.  During elaboration, if a
+Use synthesizer rules for component binding.  During elaboration, if a
 component is not bound to an entity using VHDL LRM rules, try to find
 in any known library an entity whose name is the same as the component
 name.
 
-This rule is known as synthetizer rule.
+This rule is known as synthesizer rule.
 
 There are two key points: normal VHDL LRM rules are tried first and
-entities are search only in known library.  A known library is a
+entities are searched only in known library.  A known library is a
 library which has been named in your design.
 
 This option is only useful during elaboration.
@@ -925,7 +925,7 @@ displays the commands executed.
 These options are only available on GNU/Linux.
 
 For many commands, @code{GHDL} acts as a driver: it invokes programs to perform
-the command.  You can pass arbritrary options to these programs.
+the command.  You can pass arbitrary options to these programs.
 
 Both the compiler and the linker are in fact GCC programs.  @xref{Invoking GCC,
 GCC options, GCC Command Options, gcc, GCC manual}, for details on GCC
@@ -948,7 +948,7 @@ Pass @var{OPTION} as an option to the linker.
 @node GHDL warnings, Rebuilding commands, Passing options to other programs, Invoking GHDL
 @comment  node-name,  next,  previous,  up
 @section GHDL warnings
-Some contructions are not erroneous but dubious.  Warnings are diagnostic
+Some constructions are not erroneous but dubious.  Warnings are diagnostic
 messages that report such constructions.  Some warnings are reported only
 during analysis, others during elaboration.
 
@@ -958,12 +958,12 @@ instead of @option{--warn-XXX}.
 @table @code
 @item --warn-reserved
 @cindex @option{--warn-reserved} switch
-Emit a warning if an identifier is a reserved word in a latter VHDL standard.
+Emit a warning if an identifier is a reserved word in a later VHDL standard.
 
 @item --warn-default-binding
 @cindex @option{--warn-default-binding} switch
 During analyze, warns if a component instantiation has neither
-configuration specification nor default binding.  This may be usefull if you
+configuration specification nor default binding.  This may be useful if you
 want to detect during analyze possibly unbound component if you don't use
 configuration.  @xref{VHDL standards}, for more details about default binding
 rules.
@@ -978,7 +978,7 @@ binding rules are somewhat complex and an unbound component is most
 often unexpected.
 
 However, warnings are even emitted if a component instantiation is
-inside a generate statement.  As a consequence, if you use conditionnal
+inside a generate statement.  As a consequence, if you use the conditional
 generate statement to select a component according to the implementation,
 you will certainly get warnings.
 
@@ -1025,8 +1025,8 @@ When this option is set, warnings are considered as errors.
 @node Rebuilding commands, Library commands, GHDL warnings, Invoking GHDL
 @comment  node-name,  next,  previous,  up
 @section Rebuilding commands
-Analyzing and elaborating a design consisting in severals files can be tricky,
-due to dependences.  GHDL has a few commands to rebuild a design.
+Analyzing and elaborating a design consisting in several files can be tricky,
+due to dependencies.  GHDL has a few commands to rebuild a design.
 
 @menu
 * Import command::              
@@ -1038,7 +1038,7 @@ due to dependences.  GHDL has a few commands to rebuild a design.
 @comment  node-name,  next,  previous,  up
 @subsection Import command
 @cindex importing files
-@cindex @option{-i} coomand
+@cindex @option{-i} command
 Add files in the work design library.
 
 @smallexample
@@ -1055,7 +1055,7 @@ an entity name or a configuration name.
 Since the files are parsed, there must be correct files.  However, since they
 are not analyzed, many errors are tolerated by this command.
 
-Note that all the files are added in the work library.  If you have many
+Note that all the files are added to the work library.  If you have many
 libraries, you must use the command for each library.
 
 @c Due to the LRM rules, there may be many analysis orders, producing
@@ -1086,7 +1086,7 @@ recursive.
 
 With the @option{-f} (force) option, GHDL analyzes all the units of the
 work library needed to create the design hierarchy.  Not outdated units
-are recompiled.  This is useful if you want to compile a design hierarch
+are recompiled.  This is useful if you want to compile a design hierarchy
 with new compilation flags (for example, to add the @option{-g}
 debugging option).
 
@@ -1106,10 +1106,10 @@ that GHDL knows in which file these units are.
 
 The make command imports files which have been modified.  Then, a design
 hierarchy is internally built as if no units are outdated.  Then, all outdated
-design units, using the dependences of the design hierarchy, are analyzed.
+design units, using the dependencies of the design hierarchy, are analyzed.
 If necessary, the design hierarchy is elaborated.
 
-This is not perfect, since defaults architecture (the most recently
+This is not perfect, since the default architecture (the most recently
 analyzed one) may change while outdated design files are analyzed. In
 such a case, re-run the make command of GHDL.
 
@@ -1199,7 +1199,7 @@ This command generates an html file for each @var{file} given in the command
 line, with syntax highlighting and full cross-reference: every identifier is
 a link to its declaration.  Besides, an index of the files is created too.
 
-The set of @var{file} are analyzed, and then, if the analyze is
+The set of @var{file} are analyzed, and then, if the analysis is
 successful, html files are generated in the directory specified by the
 @option{-o @var{dir}} option, or @file{html/} directory by default.
 
@@ -1211,12 +1211,12 @@ If the @option{--format=css} is specified, then the generated html files
 follow the HTML 4.0 standard, and use the CSS-1 file @file{ghdl.css} to
 specify colours.  This file is generated only if it does not already exist (it
 is never overwritten) and can be customized by the user to change colours or
-appearance.  Refer to a generated file and its comments for more informations.
+appearance.  Refer to a generated file and its comments for more information.
 
 @node File commands, Misc commands, Cross-reference command, Invoking GHDL
 @comment  node-name,  next,  previous,  up
 @section File commands
-The following commands act on one or severals files.  They do not analysis
+The following commands act on one or several files.  They do not analyze
 files, therefore, they work even if a file has semantic errors.
 
 @menu
@@ -1242,12 +1242,12 @@ $ ghdl --pp-html [@var{options}] @var{file}@dots{}
 The files are just scanned and an html file, with syntax highlighting is
 generated on standard output.
 
-Since the files are not even parsed, erroneous files or uncomplete designs
+Since the files are not even parsed, erroneous files or incomplete designs
 can be pretty printed.
 
 The style of the html file can be modified with the @option{--format=} option.
 By default or when the @option{--format=html2} option is specified, the output
-is an HTML 2.0 file, with colours set throught @samp{<FONT>} tags.  When the
+is an HTML 2.0 file, with colours set through @samp{<FONT>} tags.  When the
 @option{--format=css} option is specified, the output is an HTML 4.0 file,
 with colours set through a CSS file, whose name is @samp{ghdl.css}.
 @xref{Cross-reference command}, for more details about this CSS file.
@@ -1280,12 +1280,12 @@ $ ghdl --chop @var{files}
 @code{GHDL} reads files, and writes a file in the current directory for
 every design unit.
 
-The file name of a design unit is build according to the unit.  For an
+The filename of a design unit is build according to the unit.  For an
 entity declaration, a package declaration or a configuration the file
 name is @file{NAME.vhdl}, where @var{NAME} is the name of the design
-unit.  For a package body, the file name is @file{NAME-body.vhdl}.
+unit.  For a package body, the filename is @file{NAME-body.vhdl}.
 Finally, for an architecture @var{ARCH} of an entity @var{ENTITY}, the
-file name is @file{ENTITY-ARCH.vhdl}.
+filename is @file{ENTITY-ARCH.vhdl}.
 
 Since the input files are parsed, this command aborts in case of syntax
 error.  The command aborts too if a file to be written already exists.
@@ -1323,7 +1323,7 @@ There are a few GHDL commands which are seldom useful.
 @cindex @option{-h} command
 @cindex @option{--help} command
 Display (on the standard output) a short description of the all the commands
-available.  If the help switch is followed by an command switch, then options
+available.  If the help switch is followed by a command switch, then options
 for this later command are displayed.
 
 @smallexample
@@ -1337,7 +1337,7 @@ $ ghdl -h @var{command}
 @subsection Dispconfig command
 @cindex @option{--dispconfig} command
 @cindex display configuration
-Display the program pathes and options used by GHDL.
+Display the program paths and options used by GHDL.
 
 @smallexample
 $ ghdl --dispconfig [@var{options}]
@@ -1382,7 +1382,7 @@ the @option{--PREFIX=} command line option
 the @var{GHDL_PREFIX} environment variable
 
 @item
-a built-in default path.  It is an hard-coded path on GNU/Linux and the
+a built-in default path.  It is a hard-coded path on GNU/Linux and the
 value of the @samp{HKLM\Software\Ghdl\Install_Dir} registry entry on Windows.
 @end enumerate
 
@@ -1397,10 +1397,10 @@ the @code{IEEE} library contains non standard packages such as
 
 These packages are not standard because there are not described by an IEEE
 standard, even if they have been put in the @code{IEEE} library.  Furthermore,
-they are not really de-facto standard, because there a slight differences
+they are not really de-facto standard, because there are slight differences
 between the packages of Mentor and those of Synopsys.
 
-Furthermore, since they are not well-thought, their use have pitfalls.  For
+Furthermore, since they are not well-thought, their use has pitfalls.  For
 example, this description has error during compilation:
 @example
 library ieee;
@@ -1452,10 +1452,10 @@ bad_counter.vhdl:13:14: possible interpretations are:
 Indeed, the @code{"="} operator is defined in both packages, and both
 are visible at the place it is used.  The first declaration is an
 implicit one, which occurs when the @code{std_logic_vector} type is
-declared and is a element to element comparaison, the second one is an
-explicit declared function, with the semantic of an unsigned comparaison.
+declared and is an element to element comparison, the second one is an
+explicit declared function, with the semantic of an unsigned comparison.
 
-With some analyser, the explicit declaration has priority on the implicit
+With some analyser, the explicit declaration has priority over the implicit
 declaration, and this design can be analyzed without error.  However, this
 is not the rule given by the VHDL LRM, and since GHDL follows these rules,
 it emits an error.
@@ -1490,7 +1490,7 @@ end fixed_bad;
 @end example
 
 It is better to only use the standard packages defined by IEEE, which
-provides the same functionnalities:
+provides the same functionalities:
 @example
 library ieee;
 use ieee.numeric_std.all;
@@ -1556,27 +1556,27 @@ You can repeat this for the @samp{synopsys} version of the @code{ieee} library.
 Don't forget that the math packages are only defined for the 1993 standard.
 
 
-@node Simulation and run time, GHDL implementation of VHDL, Invoking GHDL, Top
+@node Simulation and runtime, GHDL implementation of VHDL, Invoking GHDL, Top
 @comment  node-name,  next,  previous,  up
-@chapter Simulation and run time
+@chapter Simulation and runtime
 
 @menu
 * Simulation options::          
 * Debugging VHDL programs::     
 @end menu
 
-@node Simulation options, Debugging VHDL programs, Simulation and run time, Simulation and run time
+@node Simulation options, Debugging VHDL programs, Simulation and runtime, Simulation and runtime
 @comment  node-name,  next,  previous,  up
 @section Simulation options
 In most system environments, it is possible to pass options while
-invoking a program.  Contrary to most programming language, there is no
+invoking a program.  Contrary to most programming languages, there is no
 standard method in VHDL to obtain the arguments or to set the exit
 status.
 
 In GHDL, it is impossible to pass parameters to your design.  A later version
 could do it through the generics interfaces of the top entity.
 
-However, the GHDL run time behaviour can be modified with some options; for
+However, the GHDL runtime behaviour can be modified with some options; for
 example, it is possible to stop simulation after a certain time.
 
 The exit status of the simulation is @samp{EXIT_SUCCESS} (0) if the
@@ -1726,7 +1726,7 @@ Write the waveforms into a @code{ghw} (GHdl Waveform) file.  Currently, all
 the signals are dumped into the waveform file, you cannot select a hierarchy
 of signals to be dumped.
 
-The format of this file was defined by myself and is not yet completly fixed.
+The format of this file was defined by myself and is not yet completely fixed.
 It may change slightly.
 
 There is a patch against @code{gtkwave 1.3.72} on the ghdl website at
@@ -1780,15 +1780,15 @@ The stack of the non-sensitized processes grows until reaching the
 maximum size limit.
 
 @item --help
-Display a short description of the options accepted by the run time library.
+Display a short description of the options accepted by the runtime library.
 @end table
 
-@node Debugging VHDL programs,  , Simulation options, Simulation and run time
+@node Debugging VHDL programs,  , Simulation options, Simulation and runtime
 @comment  node-name,  next,  previous,  up
 @section Debugging VHDL programs
 @cindex debugging
 @cindex @code{__ghdl_fatal}
-Debugging VHDL programs usign @code{GDB} is possible only on GNU/Linux systems.
+Debugging VHDL programs using @code{GDB} is possible only on GNU/Linux systems.
 
 @code{GDB} is a general purpose debugger for programs compiled by @code{GCC}.
 Currently, there is no VHDL support for @code{GDB}.  It may be difficult
@@ -1796,9 +1796,9 @@ to inspect variables or signals in @code{GDB}, however, @code{GDB} is
 still able to display the stack frame in case of error or to set a breakpoint
 at a specified line.
 
-@code{GDB} can be useful to precisely catch a run-time error, such as indexing
+@code{GDB} can be useful to precisely catch a runtime error, such as indexing
 an array beyond its bounds.  All error check subprograms call the
-@code{__ghdl_fatal} procedure.  Therefore, to catch run-time error, set
+@code{__ghdl_fatal} procedure.  Therefore, to catch runtime error, set
 a breakpoint like this:
 @smallexample
 (gdb) break __ghdl_fatal
@@ -1806,7 +1806,7 @@ a breakpoint like this:
 When the breakpoint is hit, use the @code{where} or @code{bt} command to
 display the stack frames.
 
-@node GHDL implementation of VHDL, GHDL implementation of VITAL, Simulation and run time, Top
+@node GHDL implementation of VHDL, GHDL implementation of VITAL, Simulation and runtime, Top
 @comment  node-name,  next,  previous,  up
 @chapter GHDL implementation of VHDL
 
@@ -1848,7 +1848,7 @@ to give reasonable ways of interpreting the unclear portions of the standard.
 VHDL was revised in 1993 by IEEE as IEEE 1076-1993.  This revision is still
 well-known.
 
-Unfortunatly, VHDL-93 is not fully compatible with VHDL-87, ie some perfectly
+Unfortunately, VHDL-93 is not fully compatible with VHDL-87, i.e. some perfectly
 valid VHDL-87 programs are invalid VHDL-93 programs.  Here are some of the
 reasons:
 
@@ -1874,7 +1874,7 @@ before).
 
 Minors corrections were added by the 2002 revision of the VHDL standard.  This
 revision is not fully backward compatible with VHDL-00 since, for example,
-the value of the @code{'instance_name} attribute has slighly changed.
+the value of the @code{'instance_name} attribute has slightly changed.
 
 You can select the VHDL standard expected by GHDL with the
 @samp{--std=VER} option, where @var{VER} is one of the left column of the
@@ -1893,7 +1893,7 @@ Select VHDL-93 standard with relaxed rules:
 VHDL-87 file declarations are accepted;
 @item
 default binding indication rules of VHDL-02 are used.  Default binding rules
-are often used, but they are particulary obscure before VHDL-02.
+are often used, but they are particularly obscure before VHDL-02.
 @end itemize
 @item 00
 Select VHDL-2000 standard, which adds protected types.
@@ -1902,7 +1902,7 @@ Select VHDL-2002 standard (partially implemented).
 @end table
 
 You cannot mix VHDL-87 and VHDL-93 units.  A design hierarchy must have been
-completly analyzed using either the 87 or the 93 version of the VHDL standard.
+completely analyzed using either the 87 or the 93 version of the VHDL standard.
 
 @node Source representation, Library database, VHDL standards, GHDL implementation of VHDL
 @comment  node-name,  next,  previous,  up
@@ -1919,7 +1919,7 @@ GHDL may contain one or more design units.
 It is common to have several design units in a design file.
 
 GHDL does not impose any restriction on the name of a design file
-(except that the file name may not contain any control character or
+(except that the filename may not contain any control character or
 spaces).
 
 GHDL do not keep a binary representation of the design units analyzed like
@@ -1941,7 +1941,7 @@ or 93) used to analyze the design units.
 
 You don't have to know how to read a library file.  You can display it
 using the @option{-d} of @code{ghdl}.  The file contains the name of the
-design units, as well as the location and the dependences.
+design units, as well as the location and the dependencies.
 
 The format may change with the next version of GHDL.
 
@@ -1952,12 +1952,12 @@ The format may change with the next version of GHDL.
 @cindex logical name
 VHDL has features to handle files.
 
-GHDL associates a file logical name (the VHDL file name) to an operating
-system file name.  The logical name @samp{STD_INPUT} is associated to
+GHDL associates a file logical name (the VHDL filename) to an operating
+system filename.  The logical name @samp{STD_INPUT} is associated to
 the standard input as defined by @samp{stdin} stream of the C library,
 while the logical name @samp{STD_OUTPUT} is associated to the standard
 output, as defined by the @samp{stdout} stream of the C library.  Other
-logical name are directly mapped to a file name as defined by the first
+logical name are directly mapped to a filename as defined by the first
 (@samp{path}) argument of the @samp{fopen} function of the C library.
 For a binary file, the @samp{b} character is appended to the mode argument
 (binary mode).
@@ -2038,7 +2038,7 @@ declarations such as
 @smallexample
   constant k : natural := 2 * k;
 @end smallexample
-This files must be modified.  Fortunatly, in the example the variables
+This files must be modified.  Fortunately, in the example the variables
 are never written.  So it is enough to remove them.
 
 @node Using ieee.math_real or ieee.math_complex, Interfacing to other languages, Using vendor libraries, GHDL implementation of VHDL
@@ -2096,7 +2096,7 @@ it.  This attribute is declared in the 1993 revision of the
 @samp{std.standard} package.  Therefore, you cannot use this feature in
 VHDL 1987.
 
-The decoration is achived through an attribute specification.  The
+The decoration is achieved through an attribute specification.  The
 attribute specification must be in the same declarative part as the
 subprogram and must be after it.  This is a general rule for specifications.
 The value of the specification must be a locally static string.
@@ -2122,7 +2122,7 @@ subprogram follows.
 
 Any subprogram can be imported.  GHDL puts no restrictions on foreign
 subprograms.  However, the representation of a type or of an interface in a
-foreign language may be obscur.  Most of non-composite types are easily imported:
+foreign language may be obscure.  Most of non-composite types are easily imported:
 @table @samp
 @item integer types
 They are represented on a 32 bits word.  This generally corresponds to
@@ -2155,14 +2155,14 @@ length is the number of elements, and are passed by reference to subprograms.
 Unconstrained array are represented by a fat pointer.  Do not use unconstrained
 arrays in foreign subprograms.
 
-Accesses to an unconstrained array is a fat pointer.  Other accesses corresponds a an address and are passed to a subprogram like other non-composite types.
+Accesses to an unconstrained array is a fat pointer.  Other accesses correspond to an address and are passed to a subprogram like other non-composite types.
 
 Files are represented by a 32 bits word, which corresponds to an index
 in a table.
 
 @node Linking with foreign object files, Starting a simulation from a foreign program, Restrictions on foreign declarations, Interfacing to other languages
 @subsection Linking with foreign object files
-You may add additionnal files or options during the link using the
+You may add additional files or options during the link using the
 @option{-Wl,} of @code{GHDL}, as described in @ref{Elaboration command}.
 For example:
 
@@ -2176,7 +2176,7 @@ Note the @file{c} library is always linked with an executable.
 
 @node Starting a simulation from a foreign program, Linking with Ada, Linking with foreign object files, Interfacing to other languages
 @subsection Starting a simulation from a foreign program
-You main run your design from an external program.  You just have to call
+You may run your design from an external program.  You just have to call
 the @samp{ghdl_main} function which can be defined:
 
 in C:
@@ -2230,15 +2230,15 @@ each release.
 @end quotation
 
 The simulator kernel of @code{GHDL} named @dfn{GRT} is written in
-@code{Ada95} and contains a very light and slighly adapted version
+@code{Ada95} and contains a very light and slightly adapted version
 of @code{VHPI}.  Since it is an @code{Ada} implementation it is
 called @dfn{AVHPI}. Although being tough, you may interface to @code{AVHPI}.
 
 For using @code{AVHPI}, you need the sources of @code{GHDL} and to recompile
 them (at least the @code{GRT} library).  This library is usually compiled with
 a @code{No_Run_Time} pragma, so that the user does not need to install the
-@code{GNAT} run time library.  However, you certainly want to use the usual
-run time library and want to avoid this pragma.  For this, reset the
+@code{GNAT} runtime library.  However, you certainly want to use the usual
+runtime library and want to avoid this pragma.  For this, reset the
 @var{GRT_PRAGMA_FLAG} variable.
 @smallexample
 $ make GRT_PRAGMA_FLAG= grt-all
@@ -2337,7 +2337,7 @@ packages are used with other standards.  This choice is based on the
 requirements of VITAL: VITAL 1995 requires the models follow the VHDL
 1987 standard, while VITAL 2000 requires the models follow VHDL 1993.
 
-The VITAL 2000 packages were slighly modified so that they conform to
+The VITAL 2000 packages were slightly modified so that they conform to
 the VHDL 1993 standard (a few functions are made pure and a few one
 impure).
 
@@ -2376,11 +2376,11 @@ used, provided no features added by the next version are used.
 Hierarchical instance names are not supported. However you can use a list of
 instances.  If there is no instance, the top entity will be annotated and
 the celltype must be the name of the top entity.  If there is at least one
-instance, the last instance name must be a component instantiation labe, and
+instance, the last instance name must be a component instantiation label, and
 the celltype must be the name of the component declaration instantiated.
 
 Instances being annotated are not required to be VITAL compliant.  However
-generics being annotated must follow rules of VITAL (eg, type must be a
+generics being annotated must follow rules of VITAL (e.g., type must be a
 suitable vital delay type).
 
 Currently, only timing constraints applying on a timing generic of type
@@ -2391,9 +2391,9 @@ release.
 @node  Negative constraint calculation,  , Backannotation, GHDL implementation of VITAL
 @comment  node-name,  next,  previous,  up
 @section Negative constraint calculation
-Negative constraint delay adjustement are necessary to handle negative
+Negative constraint delay adjustment are necessary to handle negative
 constraint such as a negative setup time.  This step is defined in the VITAL
-standard and should occurs after backannotation.
+standard and should occur after backannotation.
 
 GHDL does not do negative constraint calculation.  It fails to handle models
 with negative constraint.  I hope to be able to add this phase soon.
@@ -2423,9 +2423,9 @@ So far, @code{GHDL} has been compiled and tested only on @samp{i386-linux} syste
 @item
 Overflow detection is not yet implemented.
 @item
-Some contraint checks are missing.
+Some constraint checks are missing.
 @item
-VHDL-93 is not completly implemented.
+VHDL-93 is not completely implemented.
 @item
 There are no checks for elaboration order.
 @item
@@ -2445,7 +2445,7 @@ email to @email{ghdl@@free.fr}.
 If the compiler crashes, this is a bug.  Reliable tools never crash.
   
 If your compiled VHDL executable crashes, this may be a bug at
-run time or the code produced may be wrong.  However, since VHDL
+runtime or the code produced may be wrong.  However, since VHDL
 has a notion of pointers, an erroneous VHDL program (using invalid
 pointers for example) may crash.
 
@@ -2469,7 +2469,7 @@ Again, rewriting part of it is a good way to improve it.
 
 If you send a @code{VHDL} file producing a bug, it is a good idea to try
 to make it as short as possible.  It is also a good idea to make it
-looking like a test: write a comment which explains wether the file
+looking like a test: write a comment which explains whether the file
 should compile, and if yes, whether or not it should run successfully.
 In the latter case, an assert statement should finish the test; the
 severity level note indicates success, while a severity level failure
@@ -2527,7 +2527,7 @@ VITAL acceleration
 @comment  node-name,  next,  previous,  up
 @chapter Copyrights
 
-The GHDL front-end, the @samp{std.textio} package and the run-time
+The GHDL front-end, the @samp{std.textio} package and the runtime
 library (grt) are copyrighted Tristan Gingold, come with @emph{absolutely
 no warranty}, and are distributed under the conditions of the General
 Public License.
@@ -2566,7 +2566,7 @@ distributed in whole without restriction provided that the copyright
 statement is not removed from the file and that any derivative work
 contains this copyright notice.  See the source files for more information.
 
-As a consequence of the run-time copyright, you may not be allowed to
+As a consequence of the runtime copyright, you may not be allowed to
 distribute an executable produced by @code{GHDL} without the VHDL
 sources.  To my mind, this is not a real restriction, since there is no
 points in distributing VHDL executable.  Please, send a comment
