@@ -223,7 +223,7 @@ package body Ghdllocal is
       if Prefix_Path = null then
          Prefix_Path := new String'(Default_Pathes.Prefix);
       else
-         -- assume the user has set the correct path, so do not insert 32
+         -- Assume the user has set the correct path, so do not insert 32.
          Flag_32bit := False;
       end if;
 

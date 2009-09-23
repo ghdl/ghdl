@@ -139,10 +139,6 @@ package Grt.Types is
    end record;
    type Ghdl_Location_Ptr is access Ghdl_Location;
 
-   --  Identifier for a process.
-   type Process_Id is new Integer;
-   Nul_Process_Id : constant Process_Id := 0;
-
    --  Signal index.
    type Sig_Table_Index is new Integer;
 

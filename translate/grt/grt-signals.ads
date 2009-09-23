@@ -20,6 +20,7 @@ with Ada.Unchecked_Conversion;
 with Grt.Table;
 with Grt.Types; use Grt.Types;
 with Grt.Rtis; use Grt.Rtis;
+limited with Grt.Processes;
 pragma Elaborate_All (Grt.Table);
 
 package Grt.Signals is
@@ -59,12 +60,14 @@ package Grt.Signals is
       end case;
    end record;
 
+   type Process_Acc is access Grt.Processes.Process_Type;
+
    --  A driver is bound to a process (PROC) and contains a list of
    --  transactions.
    type Driver_Type is record
       First_Trans : Transaction_Acc;
       Last_Trans : Transaction_Acc;
-      Proc : Process_Id;
+      Proc : Process_Acc;
    end record;
 
    type Driver_Acc is access all Driver_Type;
@@ -89,18 +92,32 @@ package Grt.Signals is
    function To_Signal_Arr_Ptr is new Ada.Unchecked_Conversion
      (Source => System.Address, Target => Signal_Arr_Ptr);
 
+   --  List of processes to wake-up in case of event on the signal.
    type Action_List;
    type Action_List_Acc is access Action_List;
-   type Action_Kind is (Action_Signal, Action_Process);
-   type Action_List (Kind : Action_Kind) is record
+
+   type Action_List (Dynamic : Boolean) is record
+      --  Next action for the current signal.
       Next : Action_List_Acc;
-      case Kind is
-         when Action_Signal =>
+
+      --  Process to wake-up.
+      Proc : Process_Acc;
+
+      case Dynamic is
+         when True =>
+            --  For a non-sensitized process.
+            --  Previous action (to speed-up remove from the chain).
+            Prev : Action_List_Acc;
+
             Sig : Ghdl_Signal_Ptr;
-         when Action_Process =>
-            Proc : Process_Id;
+
+            --  Chain of signals for the process.
+            Chain : Action_List_Acc;
+         when False =>
+            null;
       end case;
    end record;
+
 
    --  How to compute resolved signal.
    type Resolved_Signal_Type is record
@@ -408,7 +425,7 @@ package Grt.Signals is
    --  Add PROC in the list of processes to be resumed in case of event on
    --  SIG.
    procedure Resume_Process_If_Event
-     (Sig : Ghdl_Signal_Ptr; Proc : Process_Id);
+     (Sig : Ghdl_Signal_Ptr; Proc : Process_Acc);
 
    procedure Ghdl_Signal_Name_Rti (Sig : Ghdl_Rti_Access;
                                    Ctxt : Ghdl_Rti_Access;

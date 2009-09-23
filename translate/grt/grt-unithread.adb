@@ -52,7 +52,6 @@ package body Grt.Unithread is
    end Atomic_Inc;
 
    Current_Process : Process_Acc;
-   Current_Process_Id : Process_Id;
 
    --  Called by linux.c
    function Grt_Get_Current_Process return Process_Acc;
@@ -64,21 +63,15 @@ package body Grt.Unithread is
    end Grt_Get_Current_Process;
 
 
-   procedure Set_Current_Process (Id : Process_Id; Proc : Process_Acc) is
+   procedure Set_Current_Process (Proc : Process_Acc) is
    begin
       Current_Process := Proc;
-      Current_Process_Id := Id;
    end Set_Current_Process;
 
    function Get_Current_Process return Process_Acc is
    begin
       return Current_Process;
    end Get_Current_Process;
-
-   function Get_Current_Process_Id return Process_Id is
-   begin
-      return Current_Process_Id;
-   end Get_Current_Process_Id;
 
    Stack2 : Stack2_Ptr;
 

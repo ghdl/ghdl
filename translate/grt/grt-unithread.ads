@@ -20,8 +20,6 @@ pragma Unreferenced (System.Storage_Elements);
 with Grt.Signals; use Grt.Signals;
 with Grt.Stack2; use Grt.Stack2;
 with Grt.Stacks; use Grt.Stacks;
-with Grt.Types; use Grt.Types;
-with Grt.Processes; use Grt.Processes;
 
 package Grt.Unithread is
    procedure Init;
@@ -38,9 +36,8 @@ package Grt.Unithread is
    function Atomic_Inc (Val : access Natural) return Natural;
 
    --  Set and get the current process being executed by the thread.
-   procedure Set_Current_Process (Id : Process_Id; Proc : Process_Acc);
+   procedure Set_Current_Process (Proc : Process_Acc);
    function Get_Current_Process return Process_Acc;
-   function Get_Current_Process_Id return Process_Id;
 
    --  The secondary stack for the thread.
    function Get_Stack2 return Stack2_Ptr;
@@ -62,6 +59,5 @@ private
 
    pragma Inline (Set_Current_Process);
    pragma Inline (Get_Current_Process);
-   pragma Inline (Get_Current_Process_Id);
 
 end Grt.Unithread;

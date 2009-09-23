@@ -42,6 +42,9 @@ package Grt.Processes is
    --  If true, the simulation should be stopped.
    Break_Simulation : Boolean;
 
+   type Process_Type is private;
+   --  type Process_Acc is access all Process_Type;
+
    --  Return the identifier of the current process.
    --  During the elaboration, this is the identifier of the last process
    --  being elaborated.  So, this function can be used to create signal
@@ -56,7 +59,7 @@ package Grt.Processes is
    function Get_Nbr_Resumed_Processes return Natural;
 
    --  Disp the name of process PROC.
-   procedure Disp_Process_Name (Stream : Grt.Stdio.FILEs; Proc : Process_Id);
+   procedure Disp_Process_Name (Stream : Grt.Stdio.FILEs; Proc : Process_Acc);
 
    --  Register a process during elaboration.
    --  This procedure is called by vhdl elaboration code.
@@ -88,7 +91,7 @@ package Grt.Processes is
    procedure Ghdl_Process_Add_Sensitivity (Sig : Ghdl_Signal_Ptr);
 
    --  Resume a process.
-   procedure Resume_Process (Proc : Process_Id);
+   procedure Resume_Process (Proc : Process_Acc);
 
    --  Wait without timeout or sensitivity.
    procedure Ghdl_Process_Wait_Exit;
@@ -118,25 +121,18 @@ package Grt.Processes is
    procedure Ghdl_Protected_Init (Obj : System.Address);
    procedure Ghdl_Protected_Fini (Obj : System.Address);
 
-   type Process_Type is private;
-   type Process_Acc is access all Process_Type;
 private
-      --  Access to a process subprogram.
+   --  Access to a process subprogram.
    type Proc_Acc is access procedure (Self : System.Address);
-
-   --  Simply linked list for sensitivity.
-   type Sensitivity_El;
-   type Sensitivity_Acc is access Sensitivity_El;
-   type Sensitivity_El is record
-      Sig : Ghdl_Signal_Ptr;
-      Next : Sensitivity_Acc;
-   end record;
 
    --  State of a process.
    type Process_State is
      (
       --  Sensitized process.  Its state cannot change.
       State_Sensitized,
+
+      --  Non-sensitized process, ready to run.
+      State_Ready,
 
       --  Verilog process, being suspended.
       State_Delayed,
@@ -178,8 +174,11 @@ private
       --  Timeout value for wait.
       Timeout : Std_Time;
 
-      --  Sensitivity list.
-      Sensitivity : Sensitivity_Acc;
+      --  Sensitivity list while the (non-sensitized) process is waiting.
+      Sensitivity : Action_List_Acc;
+
+      Timeout_Chain_Next : Process_Acc;
+      Timeout_Chain_Prev : Process_Acc;
    end record;
 
    pragma Export (C, Ghdl_Process_Register,

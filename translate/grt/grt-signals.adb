@@ -266,9 +266,9 @@ package body Grt.Signals is
                         / System.Storage_Unit);
       end Size;
 
-      Id : Process_Id;
+      Proc : Process_Acc;
    begin
-      Id := Get_Current_Process_Id;
+      Proc := Get_Current_Process;
       if Sign.S.Nbr_Drivers = 0 then
          Check_New_Source (Sign);
          Sign.S.Drivers := Malloc (Size (1));
@@ -276,7 +276,7 @@ package body Grt.Signals is
       else
          -- Do not create a driver twice.
          for I in 0 .. Sign.S.Nbr_Drivers - 1 loop
-            if Sign.S.Drivers (I).Proc = Id then
+            if Sign.S.Drivers (I).Proc = Proc then
                return True;
             end if;
          end loop;
@@ -287,7 +287,7 @@ package body Grt.Signals is
       Sign.S.Drivers (Sign.S.Nbr_Drivers - 1) :=
         (First_Trans => Trans,
          Last_Trans => Trans,
-         Proc => Id);
+         Proc => Proc);
       return False;
    end Ghdl_Signal_Add_Driver;
 
@@ -444,14 +444,14 @@ package body Grt.Signals is
 
    function Find_Driver (Sig : Ghdl_Signal_Ptr) return Ghdl_Index_Type
    is
-      Id : Process_Id;
+      Proc : Process_Acc;
    begin
       if Sig.S.Drivers = null then
          Error ("assignment to a signal without any driver");
       end if;
-      Id := Get_Current_Process_Id;
+      Proc := Get_Current_Process;
       for I in 0 .. Sig.S.Nbr_Drivers - 1 loop
-         if Sig.S.Drivers (I).Proc = Id then
+         if Sig.S.Drivers (I).Proc = Proc then
             return I;
          end if;
       end loop;
@@ -460,14 +460,14 @@ package body Grt.Signals is
 
    function Get_Driver (Sig : Ghdl_Signal_Ptr) return Driver_Acc
    is
-      Id : Process_Id;
+      Proc : Process_Acc;
    begin
       if Sig.S.Drivers = null then
          return null;
       end if;
-      Id := Get_Current_Process_Id;
+      Proc := Get_Current_Process;
       for I in 0 .. Sig.S.Nbr_Drivers - 1 loop
-         if Sig.S.Drivers (I).Proc = Id then
+         if Sig.S.Drivers (I).Proc = Proc then
             return Sig.S.Drivers (I)'Access;
          end if;
       end loop;
@@ -1815,11 +1815,11 @@ package body Grt.Signals is
    end Call_Conversion_Function;
 
    procedure Resume_Process_If_Event
-     (Sig : Ghdl_Signal_Ptr; Proc : Process_Id)
+     (Sig : Ghdl_Signal_Ptr; Proc : Process_Acc)
    is
       El : Action_List_Acc;
    begin
-      El := new Action_List'(Kind => Action_Process,
+      El := new Action_List'(Dynamic => False,
                              Proc => Proc,
                              Next => Sig.Event_List);
       Sig.Event_List := El;
@@ -2745,12 +2745,7 @@ package body Grt.Signals is
 
          El := Sig.Event_List;
          while El /= null loop
-            case El.Kind is
-               when Action_Process =>
-                  Resume_Process (El.Proc);
-               when Action_Signal =>
-                  Internal_Error ("set_effective_value");
-            end case;
+            Resume_Process (El.Proc);
             El := El.Next;
          end loop;
       end if;
