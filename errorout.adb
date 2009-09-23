@@ -893,8 +893,12 @@ package body Errorout is
       procedure Append_Type (Def : Iir)
       is
          use Name_Table;
+         Decl : Iir := Get_Type_Declarator (Def);
       begin
-         Image (Get_Identifier (Get_Type_Declarator (Def)));
+         if Decl = Null_Iir then
+            Decl := Get_Type_Declarator (Get_Base_Type (Def));
+         end if;
+         Image (Get_Identifier (Decl));
          Append (Res, Name_Buffer (1 .. Name_Length));
       end Append_Type;
 
