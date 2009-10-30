@@ -385,7 +385,7 @@ ortho_parse_file (int debug)
     filename = in_fnames[0];
 
   linemap_add (line_table, LC_ENTER, 0, filename ? filename :"*no-file*", 1);
-  input_location = linemap_line_start (line_table, 0, 252);
+  input_location = linemap_line_start (line_table, 1, 252);
 
   if (!lang_parse_file (filename))
     errorcount++;
