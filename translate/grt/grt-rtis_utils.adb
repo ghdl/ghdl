@@ -502,6 +502,7 @@ package body Grt.Rtis_Utils is
    begin
       Rtis_Utils.Get_Value (Name, Value, Type_Rti);
       Put (Stream, Name);
+      Free (Name);
    end Disp_Value;
 
    procedure Get_Enum_Value
