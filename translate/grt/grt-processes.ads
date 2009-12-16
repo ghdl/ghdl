@@ -142,6 +142,8 @@ private
 
       --  Non-sensitized process being awaked by a wait timeout.  This state
       --  is transcient.
+      --  This is necessary so that the process will exit immediately from the
+      --  wait statements without checking if the wait condition is true.
       State_Timeout,
 
       --  Non-sensitized process waiting until end.

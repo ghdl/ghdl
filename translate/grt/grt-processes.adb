@@ -54,12 +54,12 @@ package body Grt.Processes is
       Table_Initial => 2);
 
    --  List of processes to be resume at next cycle.
-   type Process_Id_Array is array (Natural range <>) of Process_Acc;
-   type Process_Id_Array_Acc is access Process_Id_Array;
+   type Process_Acc_Array is array (Natural range <>) of Process_Acc;
+   type Process_Acc_Array_Acc is access Process_Acc_Array;
 
-   Resume_Process_Table : Process_Id_Array_Acc;
+   Resume_Process_Table : Process_Acc_Array_Acc;
    Last_Resume_Process : Natural := 0;
-   Postponed_Resume_Process_Table : Process_Id_Array_Acc;
+   Postponed_Resume_Process_Table : Process_Acc_Array_Acc;
    Last_Postponed_Resume_Process : Natural := 0;
 
    --  Number of postponed processes.
@@ -69,7 +69,7 @@ package body Grt.Processes is
    --  Number of resumed processes.
    Nbr_Resumed_Processes : Natural := 0;
 
-   --  Earliest time out within processes.
+   --  Earliest time out within non-sensitized processes.
    Process_First_Timeout : Std_Time := Last_Time;
    Process_Timeout_Chain : Process_Acc := null;
 
@@ -304,6 +304,8 @@ package body Grt.Processes is
       if Proc.Timeout_Chain_Prev /= null then
          Proc.Timeout_Chain_Prev.Timeout_Chain_Next :=
            Proc.Timeout_Chain_Next;
+         --  Be sure a second call won't corrupt the chain.
+         Proc.Timeout_Chain_Prev := null;
       elsif Process_Timeout_Chain = Proc then
          --  Only if Proc is in the chain.
          Process_Timeout_Chain := Proc.Timeout_Chain_Next;
@@ -311,6 +313,7 @@ package body Grt.Processes is
       if Proc.Timeout_Chain_Next /= null then
          Proc.Timeout_Chain_Next.Timeout_Chain_Prev :=
            Proc.Timeout_Chain_Prev;
+         Proc.Timeout_Chain_Next := null;
       end if;
    end Remove_Process_From_Timeout_Chain;
 
@@ -622,7 +625,7 @@ package body Grt.Processes is
    Run_Failure : constant Integer := -1;
 
    Mt_Last : Natural;
-   Mt_Table : Process_Id_Array_Acc;
+   Mt_Table : Process_Acc_Array_Acc;
    Mt_Index : aliased Natural;
 
    procedure Run_Processes_Threads
@@ -665,7 +668,7 @@ package body Grt.Processes is
 
    function Run_Processes (Postponed : Boolean) return Integer
    is
-      Table : Process_Id_Array_Acc;
+      Table : Process_Acc_Array_Acc;
       Last : Natural;
    begin
       if Options.Flag_Stats then
@@ -919,9 +922,9 @@ package body Grt.Processes is
 
       --  Allocate processes arrays.
       Resume_Process_Table :=
-        new Process_Id_Array (1 .. Nbr_Non_Postponed_Processes);
+        new Process_Acc_Array (1 .. Nbr_Non_Postponed_Processes);
       Postponed_Resume_Process_Table :=
-        new Process_Id_Array (1 .. Nbr_Postponed_Processes);
+        new Process_Acc_Array (1 .. Nbr_Postponed_Processes);
 
       Status := Run_Through_Longjump (Initialization_Phase'Access);
       if Status /= Run_Resumed then
