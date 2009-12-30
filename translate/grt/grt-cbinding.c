@@ -43,6 +43,12 @@ __ghdl_fprintf_g (FILE *stream, double val)
   fprintf (stream, "%g", val);
 }
 
+void
+__ghdl_fprintf_clock (FILE *stream, int a, int b)
+{
+  fprintf (stream, "%3d.%03d", a, b);
+}
+
 #if 1
 void
 __gnat_last_chance_handler (void)

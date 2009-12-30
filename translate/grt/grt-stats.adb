@@ -71,10 +71,8 @@ package body Grt.Stats is
 
    procedure Put (Stream : FILEs; Val : Clock_T)
    is
-      Fmt : constant String := "%3d.%03d" & Character'Val (0);
-
-      procedure fprintf (Stream : FILEs; Fmt : Address; A, B : Clock_T);
-      pragma Import (C, fprintf);
+      procedure Fprintf_Clock (Stream : FILEs; A, B : Clock_T);
+      pragma Import (C, Fprintf_Clock, "__ghdl_fprintf_clock");
 
       Sec : Clock_T;
       Ms : Clock_T;
@@ -84,7 +82,7 @@ package body Grt.Stats is
       --  Avoid overflow.
       Ms := ((Val mod One_Second) * 1000) / One_Second;
 
-      fprintf (Stream, Fmt'Address, Sec, Ms);
+      Fprintf_Clock (Stream, Sec, Ms);
    end Put;
 
    procedure Put (Stream : FILEs; T : Time_Stats) is
