@@ -304,8 +304,6 @@ package body Grt.Processes is
       if Proc.Timeout_Chain_Prev /= null then
          Proc.Timeout_Chain_Prev.Timeout_Chain_Next :=
            Proc.Timeout_Chain_Next;
-         --  Be sure a second call won't corrupt the chain.
-         Proc.Timeout_Chain_Prev := null;
       elsif Process_Timeout_Chain = Proc then
          --  Only if Proc is in the chain.
          Process_Timeout_Chain := Proc.Timeout_Chain_Next;
@@ -315,6 +313,8 @@ package body Grt.Processes is
            Proc.Timeout_Chain_Prev;
          Proc.Timeout_Chain_Next := null;
       end if;
+      --  Be sure a second call won't corrupt the chain.
+      Proc.Timeout_Chain_Prev := null;
    end Remove_Process_From_Timeout_Chain;
 
    procedure Ghdl_Process_Wait_Set_Timeout (Time : Std_Time)
