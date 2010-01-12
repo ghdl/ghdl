@@ -63,6 +63,10 @@ package Sem_Stmts is
    function Get_Current_Concurrent_Statement return Iir;
    pragma Inline (Get_Current_Concurrent_Statement);
 
+   --  Current PSL default_clock declaration.
+   --  Automatically saved and restore while analyzing concurrent statements.
+   Current_Psl_Default_Clock : Iir;
+
    --  Add a driver for SIG.
    --  STMT is used in case of error (it is the statement that creates the
    --   driver).

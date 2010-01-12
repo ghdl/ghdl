@@ -4,7 +4,7 @@ To get the binary distribution or more information, go to http://ghdl.free.fr
 
 Copyright:
 **********
-GHDL is copyright (c) 2002 - 2009 Tristan Gingold.
+GHDL is copyright (c) 2002 - 2010 Tristan Gingold.
 See the GHDL manual for more details.
 
 This program is free software; you can redistribute it and/or modify
@@ -55,14 +55,18 @@ end Example;
   the gcc distribution.
   You should have a @GCCVERSION@/gcc/vhdl directory.
 * configure gcc with the --enable-languages=vhdl option.  You may of course
-  add other languages.
+  add other languages.  Also you'd better to disable bootstraping using
+  --disable-bootstrap.
   Refer to the gcc installation documentation.
 * compile gcc.
   'make CFLAGS="-O"' is OK
 * install gcc.  This installs the ghdl driver too.
   'make install' is OK.
 
-Send bugs and comments to ghdl@free.fr.
+There is a mailing list for any questions.  You can subscribe via:
+  https://mail.gna.org/listinfo/ghdl-discuss/
+Please report bugs on https://gna.org/bugs/?group=ghdl
+
 If you cannot compile, please report the gcc version, GNAT version and gcc
 source version.
 

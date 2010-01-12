@@ -271,6 +271,8 @@ package body Evaluation is
       Index_Constraint : Iir;
       Constraint : Iir;
    begin
+      --  The left limit must be locally static in order to compute the right
+      --  limit.
       if Get_Type_Staticness (A_Type) /= Locally then
          raise Internal_Error;
       end if;
@@ -356,7 +358,7 @@ package body Evaluation is
    function Eval_String_Literal (Str : Iir) return Iir
    is
       Ptr : String_Fat_Acc;
-      Len : Natural;
+      Len : Nat32;
    begin
       case Get_Kind (Str) is
          when Iir_Kind_String_Literal =>
@@ -497,7 +499,7 @@ package body Evaluation is
       use Str_Table;
       L_Str : constant String_Fat_Acc := Get_String_Fat_Acc (Left);
       R_Str : constant String_Fat_Acc := Get_String_Fat_Acc (Right);
-      Len : Natural;
+      Len : Nat32;
       Id : String_Id;
    begin
       Len := Get_String_Length (Left);
@@ -595,7 +597,7 @@ package body Evaluation is
                                Iir_Predefined_Functions'Image (Func));
          end case;
          Finish;
-         return Build_String (Id, Nat32 (Len), Left);
+         return Build_String (Id, Len, Left);
       end if;
    end Eval_Dyadic_Bit_Array_Operator;
 
@@ -2246,4 +2248,106 @@ package body Evaluation is
 --          end;
 --       end if;
    end Eval_Simple_Name;
+
+
+   function Compare_String_Literals (L, R : Iir) return Compare_Type
+   is
+      type Str_Info is record
+         El : Iir;
+         Ptr : String_Fat_Acc;
+         Len : Nat32;
+         Lit_0 : Iir;
+         Lit_1 : Iir;
+         List : Iir_List;
+      end record;
+
+      Literal_List : Iir_List;
+
+      --  Fill Res from EL.  This is used to speed up Lt and Eq operations.
+      procedure Get_Info (Expr : Iir; Res : out Str_Info) is
+      begin
+         case Get_Kind (Expr) is
+            when Iir_Kind_Simple_Aggregate =>
+               Res := Str_Info'(El => Expr,
+                                Ptr => null,
+                                Len => 0,
+                                Lit_0 | Lit_1 => Null_Iir,
+                                List => Get_Simple_Aggregate_List (Expr));
+               Res.Len := Nat32 (Get_Nbr_Elements (Res.List));
+            when Iir_Kind_Bit_String_Literal =>
+               Res := Str_Info'(El => Expr,
+                                Ptr => Get_String_Fat_Acc (Expr),
+                                Len => Get_String_Length (Expr),
+                                Lit_0 => Get_Bit_String_0 (Expr),
+                                Lit_1 => Get_Bit_String_1 (Expr),
+                                List => Null_Iir_List);
+            when Iir_Kind_String_Literal =>
+               Res := Str_Info'(El => Expr,
+                                Ptr => Get_String_Fat_Acc (Expr),
+                                Len => Get_String_Length (Expr),
+                                Lit_0 | Lit_1 => Null_Iir,
+                                List => Null_Iir_List);
+            when others =>
+               Error_Kind ("sem_string_choice_range.get_info", Expr);
+         end case;
+      end Get_Info;
+
+      --  Return the position of element IDX of STR.
+      function Get_Pos (Str : Str_Info; Idx : Nat32) return Iir_Int32
+      is
+         S : Iir;
+         C : Character;
+      begin
+         case Get_Kind (Str.El) is
+            when Iir_Kind_Simple_Aggregate =>
+               S := Get_Nth_Element (Str.List, Natural (Idx));
+            when Iir_Kind_String_Literal =>
+               C := Str.Ptr (Idx + 1);
+               --  FIXME: build a table from character to position.
+               --  This linear search is O(n)!
+               S := Find_Name_In_List (Literal_List,
+                                       Name_Table.Get_Identifier (C));
+            when Iir_Kind_Bit_String_Literal =>
+               C := Str.Ptr (Idx + 1);
+               case C is
+                  when '0' =>
+                     S := Str.Lit_0;
+                  when '1' =>
+                     S := Str.Lit_1;
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            when others =>
+               Error_Kind ("sem_string_choice_range.get_pos", Str.El);
+         end case;
+         return Get_Enum_Pos (S);
+      end Get_Pos;
+
+      L_Info, R_Info : Str_Info;
+      L_Pos, R_Pos : Iir_Int32;
+   begin
+      Get_Info (L, L_Info);
+      Get_Info (R, R_Info);
+
+      if L_Info.Len /= R_Info.Len then
+         raise Internal_Error;
+      end if;
+
+      Literal_List := Get_Enumeration_Literal_List
+        (Get_Base_Type (Get_Element_Subtype (Get_Type (L))));
+
+      for I in 0 .. L_Info.Len - 1 loop
+         L_Pos := Get_Pos (L_Info, I);
+         R_Pos := Get_Pos (R_Info, I);
+         if L_Pos /= R_Pos then
+            if L_Pos < R_Pos then
+               return Compare_Lt;
+            else
+               return Compare_Gt;
+            end if;
+         end if;
+      end loop;
+      return Compare_Eq;
+   end Compare_String_Literals;
+
 end Evaluation;

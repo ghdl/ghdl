@@ -57,7 +57,9 @@ package body Binary_File.Memory is
                --Sect.Data := new Byte_Array (1 .. 0);
             end if;
          end if;
-         if Sect.Data_Max > 0 and Sect /= Sect_Abs then
+         if Sect.Data_Max > 0
+           and (Sect /= Sect_Abs and Sect.Flags /= Section_Debug)
+         then
             Sect.Vaddr := To_Pc_Type (Sect.Data (0)'Address);
          end if;
          Sect := Sect.Next;

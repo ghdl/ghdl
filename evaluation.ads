@@ -100,4 +100,8 @@ package Evaluation is
    --  or operator sumbol of ID, using the same format as SIMPLE_NAME
    --  attribute.
    procedure Eval_Simple_Name (Id : Name_Id);
+
+   --  Compare two string literals (of same length).
+   type Compare_Type is (Compare_Lt, Compare_Eq, Compare_Gt);
+   function Compare_String_Literals (L, R : Iir) return Compare_Type;
 end Evaluation;

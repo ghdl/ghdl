@@ -352,6 +352,12 @@ package body Std_Names is
          raise Program_Error;
       end if;
 
+      if GI ("psl") /= Name_Psl
+        or GI ("pragma") /= Name_Pragma
+      then
+         raise Program_Error;
+      end if;
+
       --  PSL keywords
       if GI ("a") /= Name_A
         or GI ("af") /= Name_Af

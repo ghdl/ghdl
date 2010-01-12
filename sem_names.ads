@@ -26,6 +26,7 @@ package Sem_Names is
    procedure Sem_Name (Name : Iir; Keep_Alias : Boolean);
 
    --  Finish semantisation of NAME, if necessary.
+   --  This make remaining checks, transforms function names into calls...
    procedure Maybe_Finish_Sem_Name (Name : Iir);
 
    --  Same as Sem_Name but without any side-effect:

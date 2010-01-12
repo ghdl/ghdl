@@ -311,6 +311,18 @@ package body Iirs is
    function Int32_To_Iir is new Ada.Unchecked_Conversion
      (Source => Int32, Target => Iir);
 
+   function Iir_To_PSL_Node is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => PSL_Node);
+
+   function PSL_Node_To_Iir is new Ada.Unchecked_Conversion
+     (Source => PSL_Node, Target => Iir);
+
+   function Iir_To_PSL_NFA is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => PSL_NFA);
+
+   function PSL_NFA_To_Iir is new Ada.Unchecked_Conversion
+     (Source => PSL_NFA, Target => Iir);
+
    --  Subprograms
    function Get_Format (Kind : Iir_Kind) return Format_Type is
    begin
@@ -419,6 +431,8 @@ package body Iirs is
            | Iir_Kind_Selected_Element
            | Iir_Kind_Dereference
            | Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Psl_Expression
+           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Variable_Assignment_Statement
@@ -488,6 +502,7 @@ package body Iirs is
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
+           | Iir_Kind_Psl_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
@@ -508,6 +523,7 @@ package body Iirs is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
@@ -1842,6 +1858,7 @@ package body Iirs is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -2096,6 +2113,7 @@ package body Iirs is
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
+           | Iir_Kind_Psl_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
@@ -2117,6 +2135,8 @@ package body Iirs is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -2281,6 +2301,7 @@ package body Iirs is
            | Iir_Kind_Selected_Element
            | Iir_Kind_Dereference
            | Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Psl_Expression
            | Iir_Kind_Return_Statement
            | Iir_Kind_Simple_Name
            | Iir_Kind_Slice_Name
@@ -3332,6 +3353,7 @@ package body Iirs is
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
+           | Iir_Kind_Psl_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
@@ -3353,6 +3375,8 @@ package body Iirs is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -3398,6 +3422,8 @@ package body Iirs is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -3449,6 +3475,7 @@ package body Iirs is
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
+           | Iir_Kind_Psl_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
@@ -3470,6 +3497,7 @@ package body Iirs is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -4508,6 +4536,7 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement =>
             null;
@@ -4532,6 +4561,7 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement =>
             null;
@@ -5069,6 +5099,7 @@ package body Iirs is
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
+           | Iir_Kind_Psl_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
@@ -5092,6 +5123,8 @@ package body Iirs is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -6718,6 +6751,7 @@ package body Iirs is
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
+           | Iir_Kind_Psl_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
@@ -6750,5 +6784,139 @@ package body Iirs is
       Check_Kind_For_Use_Flag (Decl);
       Set_Flag6 (Decl, Val);
    end Set_Use_Flag;
+
+   procedure Check_Kind_For_Psl_Property (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Psl_Assert_Statement =>
+            null;
+         when others =>
+            Failed ("Psl_Property", Target);
+      end case;
+   end Check_Kind_For_Psl_Property;
+
+   function Get_Psl_Property (Decl : Iir) return PSL_Node is
+   begin
+      Check_Kind_For_Psl_Property (Decl);
+      return Iir_To_PSL_Node (Get_Field1 (Decl));
+   end Get_Psl_Property;
+
+   procedure Set_Psl_Property (Decl : Iir; Prop : PSL_Node) is
+   begin
+      Check_Kind_For_Psl_Property (Decl);
+      Set_Field1 (Decl, PSL_Node_To_Iir (Prop));
+   end Set_Psl_Property;
+
+   procedure Check_Kind_For_Psl_Declaration (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Psl_Declaration =>
+            null;
+         when others =>
+            Failed ("Psl_Declaration", Target);
+      end case;
+   end Check_Kind_For_Psl_Declaration;
+
+   function Get_Psl_Declaration (Decl : Iir) return PSL_Node is
+   begin
+      Check_Kind_For_Psl_Declaration (Decl);
+      return Iir_To_PSL_Node (Get_Field1 (Decl));
+   end Get_Psl_Declaration;
+
+   procedure Set_Psl_Declaration (Decl : Iir; Prop : PSL_Node) is
+   begin
+      Check_Kind_For_Psl_Declaration (Decl);
+      Set_Field1 (Decl, PSL_Node_To_Iir (Prop));
+   end Set_Psl_Declaration;
+
+   procedure Check_Kind_For_Psl_Expression (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Psl_Expression =>
+            null;
+         when others =>
+            Failed ("Psl_Expression", Target);
+      end case;
+   end Check_Kind_For_Psl_Expression;
+
+   function Get_Psl_Expression (Decl : Iir) return PSL_Node is
+   begin
+      Check_Kind_For_Psl_Expression (Decl);
+      return Iir_To_PSL_Node (Get_Field3 (Decl));
+   end Get_Psl_Expression;
+
+   procedure Set_Psl_Expression (Decl : Iir; Prop : PSL_Node) is
+   begin
+      Check_Kind_For_Psl_Expression (Decl);
+      Set_Field3 (Decl, PSL_Node_To_Iir (Prop));
+   end Set_Psl_Expression;
+
+   procedure Check_Kind_For_Psl_Boolean (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Psl_Default_Clock =>
+            null;
+         when others =>
+            Failed ("Psl_Boolean", Target);
+      end case;
+   end Check_Kind_For_Psl_Boolean;
+
+   function Get_Psl_Boolean (N : Iir) return PSL_Node is
+   begin
+      Check_Kind_For_Psl_Boolean (N);
+      return Iir_To_PSL_Node (Get_Field1 (N));
+   end Get_Psl_Boolean;
+
+   procedure Set_Psl_Boolean (N : Iir; Bool : PSL_Node) is
+   begin
+      Check_Kind_For_Psl_Boolean (N);
+      Set_Field1 (N, PSL_Node_To_Iir (Bool));
+   end Set_Psl_Boolean;
+
+   procedure Check_Kind_For_PSL_Clock (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Psl_Declaration
+           | Iir_Kind_Psl_Assert_Statement =>
+            null;
+         when others =>
+            Failed ("PSL_Clock", Target);
+      end case;
+   end Check_Kind_For_PSL_Clock;
+
+   function Get_PSL_Clock (N : Iir) return PSL_Node is
+   begin
+      Check_Kind_For_PSL_Clock (N);
+      return Iir_To_PSL_Node (Get_Field7 (N));
+   end Get_PSL_Clock;
+
+   procedure Set_PSL_Clock (N : Iir; Clock : PSL_Node) is
+   begin
+      Check_Kind_For_PSL_Clock (N);
+      Set_Field7 (N, PSL_Node_To_Iir (Clock));
+   end Set_PSL_Clock;
+
+   procedure Check_Kind_For_PSL_NFA (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Psl_Declaration
+           | Iir_Kind_Psl_Assert_Statement =>
+            null;
+         when others =>
+            Failed ("PSL_NFA", Target);
+      end case;
+   end Check_Kind_For_PSL_NFA;
+
+   function Get_PSL_NFA (N : Iir) return PSL_NFA is
+   begin
+      Check_Kind_For_PSL_NFA (N);
+      return Iir_To_PSL_NFA (Get_Field8 (N));
+   end Get_PSL_NFA;
+
+   procedure Set_PSL_NFA (N : Iir; Fa : PSL_NFA) is
+   begin
+      Check_Kind_For_PSL_NFA (N);
+      Set_Field8 (N, PSL_NFA_To_Iir (Fa));
+   end Set_PSL_NFA;
 
 end Iirs;

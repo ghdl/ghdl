@@ -1,5 +1,5 @@
 --  Node displaying (for debugging).
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Copyright (C) 2002, 2003, 2004, 2005, 2009 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -15,6 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Types; use Types;
 with Iirs; use Iirs;
 
 package Disp_Tree is
@@ -27,4 +28,5 @@ package Disp_Tree is
                         Tab: Natural := 0;
                         Flat_Decl: Boolean := false);
 
+   procedure Disp_Tree_For_Psl (N : Int32);
 end Disp_Tree;

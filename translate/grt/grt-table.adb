@@ -22,7 +22,7 @@ with Grt.C; use Grt.C;
 package body Grt.Table is
 
    --  Maximum index of table before resizing.
-   Max : Table_Index_Type := Table_Low_Bound - 1;
+   Max : Table_Index_Type := Table_Index_Type'Pred (Table_Low_Bound);
 
    --  Current value of Last
    Last_Val : Table_Index_Type;
@@ -62,7 +62,7 @@ package body Grt.Table is
 
    procedure Decrement_Last is
    begin
-      Last_Val := Last_Val - 1;
+      Last_Val := Table_Index_Type'Pred (Last_Val);
    end Decrement_Last;
 
    procedure Free is
@@ -73,7 +73,7 @@ package body Grt.Table is
 
    procedure Increment_Last is
    begin
-      Last_Val := Last_Val + 1;
+      Last_Val := Table_Index_Type'Succ (Last_Val);
 
       if Last_Val > Max then
          Resize;
@@ -105,7 +105,7 @@ package body Grt.Table is
    end Set_Last;
 
 begin
-   Last_Val := Table_Low_Bound - 1;
+   Last_Val := Table_Index_Type'Pred (Table_Low_Bound);
    Max := Table_Low_Bound + Table_Index_Type (Table_Initial) - 1;
 
    Table := Malloc (size_t (Table_Initial *

@@ -33,6 +33,7 @@ package Binary_File is
    Section_Write  : constant Section_Flags;
    Section_Zero   : constant Section_Flags;
    Section_Strtab : constant Section_Flags;
+   Section_Debug  : constant Section_Flags;
 
    type Byte is new Unsigned_8;
 
@@ -218,6 +219,7 @@ private
    Section_Write  : constant Section_Flags := 2#0000_0100#;
    Section_Zero   : constant Section_Flags := 2#0000_1000#;
    Section_Strtab : constant Section_Flags := 2#0001_0000#;
+   Section_Debug  : constant Section_Flags := 2#0010_0000#;
    Section_None   : constant Section_Flags := 2#0000_0000#;
 
    --  Scope of a symbol:

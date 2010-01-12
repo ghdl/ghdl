@@ -229,6 +229,8 @@ package body Grt.Vital_Annotate is
    end Sdf_Instance_End;
 
    VitalDelayType01 : VhpiHandleT;
+   VitalDelayType01Z : VhpiHandleT;
+   VitalDelayType01ZX : VhpiHandleT;
    VitalDelayArrayType01 : VhpiHandleT;
    VitalDelayType : VhpiHandleT;
    VitalDelayArrayType : VhpiHandleT;
@@ -236,8 +238,8 @@ package body Grt.Vital_Annotate is
    type Map_Type is array (1 .. 12) of Natural;
    Map_1 : constant Map_Type := (1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0);
    Map_2 : constant Map_Type := (1, 2, 1, 1, 2, 2, 0, 0, 0, 0, 0, 0);
-   --Map_3 : constant Map_Type := (1, 2, 3, 1, 3, 2, 0, 0, 0, 0, 0, 0);
-   --Map_6 : constant Map_Type := (1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0);
+   Map_3 : constant Map_Type := (1, 2, 3, 1, 3, 2, 0, 0, 0, 0, 0, 0);
+   Map_6 : constant Map_Type := (1, 2, 3, 4, 5, 6, 0, 0, 0, 0, 0, 0);
    --Map_12 : constant Map_Type := (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
 
    function Write_Td_Delay_Generic (Context : Sdf_Context_Type;
@@ -292,6 +294,20 @@ package body Grt.Vital_Annotate is
                return Write_Td_Delay_Generic (Context, Gen, 2, Map_1);
             when 2 =>
                return Write_Td_Delay_Generic (Context, Gen, 2, Map_2);
+            when others =>
+               Errors.Error
+                 ("timing generic type mismatch SDF timing specification");
+         end case;
+      elsif Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01Z) then
+         case Context.Timing_Nbr is
+            when 1 =>
+               return Write_Td_Delay_Generic (Context, Gen, 6, Map_1);
+            when 2 =>
+               return Write_Td_Delay_Generic (Context, Gen, 6, Map_2);
+            when 3 =>
+               return Write_Td_Delay_Generic (Context, Gen, 6, Map_3);
+            when 6 =>
+               return Write_Td_Delay_Generic (Context, Gen, 6, Map_6);
             when others =>
                Errors.Error
                  ("timing generic type mismatch SDF timing specification");
@@ -406,7 +422,10 @@ package body Grt.Vital_Annotate is
          Internal_Error ("vhpiBaseType");
          return;
       end if;
-      if Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01) then
+      if Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01)
+        or else Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01Z)
+        or else Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01ZX)
+      then
          Ok := Write_Td_Delay_Generic (Context, Gen);
       elsif Vhpi_Compare_Handles (Gen_Basetype, VitalDelayArrayType01)
         or else Vhpi_Compare_Handles (Gen_Basetype, VitalDelayArrayType)
@@ -451,7 +470,8 @@ package body Grt.Vital_Annotate is
             Ok := Write_Td_Delay_Generic (Context, Gen_El);
          end;
       else
-         Errors.Error ("vital: unhandled generic type");
+         Errors.Error_C ("vital: unhandled generic type for generic ");
+         Errors.Error_E (Name);
       end if;
    end Sdf_Generic;
 
@@ -483,8 +503,8 @@ package body Grt.Vital_Annotate is
          --  Instance element.
          S := E;
          while Arg (E) /= '=' and Arg (E) /= '.' and Arg (E) /= '/' loop
-            exit L1 when E > Arg'Last;
             E := E + 1;
+            exit L1 when E > Arg'Last;
          end loop;
 
          --  Path element.
@@ -545,6 +565,10 @@ package body Grt.Vital_Annotate is
             if Status = AvhpiErrorOk then
                if Name_Compare (Decl, "vitaldelaytype01") then
                   VitalDelayType01 := Basetype;
+               elsif Name_Compare (Decl, "vitaldelaytype01z") then
+                  VitalDelayType01Z := Basetype;
+               elsif Name_Compare (Decl, "vitaldelaytype01zx") then
+                  VitalDelayType01ZX := Basetype;
                elsif Name_Compare (Decl, "vitaldelayarraytype01") then
                   VitalDelayArrayType01 := Basetype;
                elsif Name_Compare (Decl, "vitaldelaytype") then
@@ -557,6 +581,14 @@ package body Grt.Vital_Annotate is
       end loop;
       if Vhpi_Get_Kind (VitalDelayType01) = VhpiUndefined then
          Error ("cannot find VitalDelayType01 in ieee.vital_timing");
+         return;
+      end if;
+      if Vhpi_Get_Kind (VitalDelayType01Z) = VhpiUndefined then
+         Error ("cannot find VitalDelayType01Z in ieee.vital_timing");
+         return;
+      end if;
+      if Vhpi_Get_Kind (VitalDelayType01ZX) = VhpiUndefined then
+         Error ("cannot find VitalDelayType01ZX in ieee.vital_timing");
          return;
       end if;
       if Vhpi_Get_Kind (VitalDelayArrayType01) = VhpiUndefined then

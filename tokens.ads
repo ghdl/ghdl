@@ -29,7 +29,7 @@ package Tokens is
        Tok_Colon,               -- :
        Tok_Semi_Colon,          -- ;
        Tok_Comma,               -- ,
-       Tok_Arrow,               -- =>
+       Tok_Double_Arrow,        -- =>
        Tok_Tick,                -- '
        Tok_Double_Star,         -- **
        Tok_Assign,              -- :=
@@ -60,6 +60,21 @@ package Tokens is
        Tok_Minus,               -- -
    -- and adding_operator
        Tok_Ampersand,           -- &
+
+   --  PSL
+       Tok_And_And,             -- &&
+       Tok_Bar_Bar,             -- ||
+       Tok_Left_Curly,          -- {
+       Tok_Right_Curly,         -- }
+       Tok_Exclam_Mark,         -- !
+       Tok_Brack_Star,          -- [*
+       Tok_Brack_Plus_Brack,    -- [+]
+       Tok_Brack_Arrow,         -- [->
+       Tok_Brack_Equal,         -- [=
+       Tok_Bar_Arrow,           -- |->
+       Tok_Bar_Double_Arrow,    -- |=>
+       Tok_Minus_Greater,       -- ->
+       Tok_Arobase,             -- @
 
    -- multiplying operator
        Tok_Star,                -- *
@@ -191,7 +206,32 @@ package Tokens is
        Tok_Ror,
 
    -- Added by Vhdl 2000:
-       Tok_Protected);
+       Tok_Protected,
+
+   -- PSL words
+       Tok_Psl_Default,
+       Tok_Psl_Clock,
+       Tok_Psl_Property,
+       Tok_Psl_Sequence,
+       Tok_Psl_Endpoint,
+       Tok_Psl_Assert,
+
+       Tok_Psl_Const,
+       Tok_Psl_Boolean,
+       Tok_Inf,
+
+       Tok_Within,
+       Tok_Abort,
+       Tok_Before,
+       Tok_Always,
+       Tok_Never,
+       Tok_Eventually,
+       Tok_Next_A,
+       Tok_Next_E,
+       Tok_Next_Event,
+       Tok_Next_Event_A,
+       Tok_Next_Event_E
+      );
 
    -- subtype Token_Relation_Type is Token_Type range Tok_And .. Tok_Xnor;
    subtype Token_Relational_Operator_Type is Token_Type range

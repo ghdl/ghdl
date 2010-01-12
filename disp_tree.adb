@@ -16,12 +16,12 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO; use Ada.Text_IO;
-with Types; use Types;
 with Name_Table;
 with Iirs_Utils; use Iirs_Utils;
 with Tokens;
 with Errorout;
 with Files_Map;
+with PSL.Dump_Tree;
 
 package body Disp_Tree is
    procedure Disp_Tab (Tab: Natural) is
@@ -288,6 +288,11 @@ package body Disp_Tree is
          when Iir_Kind_Group_Declaration =>
             Put ("group_declaration");
             Disp_Identifier (Tree);
+         when Iir_Kind_Psl_Declaration =>
+            Put ("psl declaration");
+            Disp_Identifier (Tree);
+         when Iir_Kind_Psl_Expression =>
+            Put ("psl expression");
 
          when Iir_Kind_Enumeration_Type_Definition =>
             Put ("enumeration_type_definition");
@@ -1008,6 +1013,12 @@ package body Disp_Tree is
             end if;
             Header ("type:");
             Disp_Tree (Get_Type (Tree), Ntab, True);
+         when Iir_Kind_Psl_Declaration =>
+            if Flat_Decl then
+               return;
+            end if;
+         when Iir_Kind_Psl_Expression =>
+            return;
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
             if Flat_Decl then
@@ -1411,6 +1422,12 @@ package body Disp_Tree is
             Disp_Tree (Get_Severity_Expression (Tree), Ntab);
             Header ("attribute_value_chain:");
             Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
+         when Iir_Kind_Psl_Assert_Statement =>
+            Header ("attribute_value_chain:");
+            Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
+            PSL.Dump_Tree.Dump_Tree (Get_Psl_Property (Tree), True);
+         when Iir_Kind_Psl_Default_Clock =>
+            null;
 
          when Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement =>
@@ -1802,8 +1819,9 @@ package body Disp_Tree is
             Header ("origin:");
             Disp_Tree (Get_Literal_Origin (Tree), Ntab, True);
          when Iir_Kind_Bit_String_Literal =>
-            Header ("base:" & Base_Type'Image (Get_Bit_String_Base (Tree)));
+            Header ("base: " & Base_Type'Image (Get_Bit_String_Base (Tree)));
             Header ("value: """ & Iirs_Utils.Image_String_Lit (Tree) & """");
+            Header ("len:" & Int32'Image (Get_String_Length (Tree)));
             Header ("type:");
             Disp_Tree_Flat (Get_Type (Tree), Ntab);
          when Iir_Kind_Character_Literal =>
@@ -1850,4 +1868,9 @@ package body Disp_Tree is
             null;
       end case;
    end Disp_Tree;
+
+   procedure Disp_Tree_For_Psl (N : Int32) is
+   begin
+      Disp_Tree_Flat (Iir (N), 1);
+   end Disp_Tree_For_Psl;
 end Disp_Tree;

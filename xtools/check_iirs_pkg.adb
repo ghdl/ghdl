@@ -505,6 +505,7 @@ package body Check_Iirs_Pkg is
                Line := Get_Line (In_Iirs);
                if not Match (Line, Start_Range_Pat) then
                   --  Bad pattern for left bound.
+                  Put_Line (Standard_Error, "bad pattern");
                   raise Err;
                end if;
                Start := Get_Iir_Pos (Ident);
@@ -520,7 +521,7 @@ package body Check_Iirs_Pkg is
                   if Match (Line, End_Range_Pat) then
                      P := Get_Iir_Pos (Ident);
                      if P /= Pos + 1 and then Flag_Disp_Subtype Then
-                        Put_Line ("** missing comments");
+                        Put_Line (Standard_Error, "** missing comments");
                         for I in Pos + 1 .. P - 1 loop
                            Put_Line ("   --" & Iir_Table.Table (I).Name.all);
                         end loop;
@@ -534,6 +535,7 @@ package body Check_Iirs_Pkg is
                      P := Get_Iir_Pos (Ident);
                      if P /= Pos + 1 then
                         --  Bad order.
+                        Put_Line (Standard_Error, "** missing node in range");
                         raise Err;
                      else
                         Pos := Pos + 1;
@@ -552,7 +554,8 @@ package body Check_Iirs_Pkg is
             begin
                Field_Pos := Get (Field2pos, Ident);
                if Field_Pos < 0 then
-                  Put_Line ("*** field not found: '" & S (Ident) & "'");
+                  Put_Line (Standard_Error,
+                            "*** field not found: '" & S (Ident) & "'");
                   raise Err;
                end if;
 
@@ -562,7 +565,7 @@ package body Check_Iirs_Pkg is
                   elsif Ident_2 = "uc" then
                      Conv := Via_Unchecked;
                   else
-                     Put_Line ("*** bad conversion");
+                     Put_Line (Standard_Error, "*** bad conversion");
                      raise Err;
                   end if;
                else
@@ -571,7 +574,7 @@ package body Check_Iirs_Pkg is
 
                Line := Get_Line (In_Iirs);
                if not Match (Line, Function_Get_Pat) then
-                  Put_Line ("*** function expected");
+                  Put_Line (Standard_Error, "*** function expected");
                   raise Err;
                end if;
 
@@ -595,24 +598,28 @@ package body Check_Iirs_Pkg is
                Line := Get_Line (In_Iirs);
                if Match (Line, Procedure_Set_Pat) then
                   if Func_Table.Table (F).Target_Name.all /= Ident_2 then
-                     Put_Line ("*** procedure target name mismatch ("
+                     Put_Line (Standard_Error,
+                               "*** procedure target name mismatch ("
                                & Func_Table.Table (F).Target_Name.all
                                & " vs " & S (Ident_2) &")");
                      raise Err;
                   end if;
                   if Func_Table.Table (F).Target_Type.all /= Ident_3 then
-                     Put_Line ("*** procedure target type name mismatch");
+                     Put_Line (Standard_Error,
+                               "*** procedure target type name mismatch");
                      raise Err;
                   end if;
                   if Func_Table.Table (F).Value_Type.all /= Ident_5 then
-                     Put_Line ("*** procedure target type name mismatch");
+                     Put_Line (Standard_Error,
+                               "*** procedure target type name mismatch");
                      raise Err;
                   end if;
                   Func_Table.Table (F).Value_Name :=
                     new String'(To_String (Ident_4));
                else
                   if not Match (Line, Rpos (0)) then
-                     Put_Line ("*** procedure or empty line expected");
+                     Put_Line (Standard_Error,
+                               "*** procedure or empty line expected");
                      raise Err;
                   end if;
                end if;
@@ -623,7 +630,8 @@ package body Check_Iirs_Pkg is
       Set_Exit_Status (Success);
    exception
       when Err =>
-         Put_Line ("*** Fatal error at line"
+         Put_Line (Standard_Error,
+                   "*** Fatal error at line"
                    & Positive_Count'Image (Ada.Text_IO.Line (In_Iirs)));
          Set_Exit_Status (Failure);
          raise;
@@ -778,12 +786,13 @@ package body Check_Iirs_Pkg is
 
                   --  Check format.
                   if Ident_2 = Nul then
-                     Put_Line ("*** no format for " & S (Ident));
+                     Put_Line (Standard_Error,
+                               "*** no format for " & S (Ident));
                      raise Err;
                   end if;
                   P_Num := Get (Format2pos, Ident_2);
                   if P_Num < 0 then
-                     Put_Line ("*** unknown format");
+                     Put_Line (Standard_Error, "*** unknown format");
                      raise Err;
                   end if;
                   Format := Format_Type (P_Num);
@@ -795,7 +804,7 @@ package body Check_Iirs_Pkg is
                   else
                      Rng := Get (Iir_Kinds2pos, Ident);
                      if Rng = Null_Range then
-                        Put_Line ("*** " & S (Ident));
+                        Put_Line (Standard_Error, "*** " & S (Ident));
                         raise Err;
                      end if;
                      for I in Rng.L .. Rng.H loop
@@ -834,13 +843,14 @@ package body Check_Iirs_Pkg is
                      if not Field_Table.Table (Field).
                        Formats (Iir_Table.Table (N).Format)
                      then
-                        Put_Line ("** no field for format");
+                        Put_Line (Standard_Error, "** no field for format");
                         raise Err;
                      end if;
                      if Is_Alias then
                         if Iir_Table.Table (N).Func (Field) = No_Func
                         then
-                           Put_Line ("**  aliased field not yet used");
+                           Put_Line (Standard_Error,
+                                     "**  aliased field not yet used");
                            raise Err;
                         end if;
                      else
@@ -848,7 +858,8 @@ package body Check_Iirs_Pkg is
                           --and then
                           --Iir_Table.Table (N).Func (Field) /= Func
                         then
-                           Put_Line ("**  Field already used");
+                           Put_Line (Standard_Error,
+                                     "**  Field already used");
                            raise Err;
                         end if;
                         Iir_Table.Table (N).Func (Field) := Func;
@@ -879,7 +890,8 @@ package body Check_Iirs_Pkg is
                      end if;
                      Field_Num := Get (Field2pos, Ident);
                      if Field_Num < 0 then
-                        Put_Line ("*** unknown field: " & S (Ident));
+                        Put_Line (Standard_Error,
+                                  "*** unknown field: " & S (Ident));
                         raise Err;
                      end if;
                      Field := Field_Type (Field_Num);
@@ -920,7 +932,8 @@ package body Check_Iirs_Pkg is
                                  return;
                               end if;
                            end loop;
-                           Put_Line ("**  not currently described");
+                           Put_Line (Standard_Error,
+                                     "**  not currently described");
                            raise Err;
                         end Add_Only_For;
                      begin
@@ -930,7 +943,7 @@ package body Check_Iirs_Pkg is
                         else
                            Rng := Get (Iir_Kinds2pos, Ident);
                            if Rng = Null_Range then
-                              Put_Line ("*** " & S (Ident));
+                              Put_Line (Standard_Error, "*** " & S (Ident));
                               raise Err;
                            end if;
                            for I in Rng.L .. Rng.H loop
@@ -939,7 +952,7 @@ package body Check_Iirs_Pkg is
                         end if;
                      end;
                   elsif Match (Line, "   -- Only") then
-                     Put_Line ("**  bad only for line");
+                     Put_Line (Standard_Error, "**  bad 'Only' for line");
                      raise Err;
                   elsif Match (Line, Desc_Comment_Pat) then
                      null;
@@ -959,7 +972,8 @@ package body Check_Iirs_Pkg is
       --  Check each Iir was described.
       for I in Iir_Table.First .. Iir_Table.Last loop
          if not Iir_Table.Table (I).Described then
-            Put_Line ("*** not described: " & Iir_Table.Table (I).Name.all);
+            Put_Line (Standard_Error,
+                      "*** not described: " & Iir_Table.Table (I).Name.all);
             raise Err;
          end if;
       end loop;
@@ -967,9 +981,10 @@ package body Check_Iirs_Pkg is
       Close (In_Iirs);
    exception
       when Err =>
-         Put_Line ("*** Fatal error at line"
+         Put_Line (Standard_Error,
+                   "*** Fatal error (2) at line"
                    & Positive_Count'Image (Ada.Text_IO.Line (In_Iirs) - 1));
-         Put_Line ("*** Line is " & S (Line));
+         Put_Line (Standard_Error, "*** Line is " & S (Line));
          Set_Exit_Status (Failure);
          raise;
    end Read_Desc;

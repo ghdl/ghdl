@@ -27,9 +27,63 @@ with Grt.Errors; use Grt.Errors;
 pragma Elaborate_All (Grt.Rtis_Utils);
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Options;
+with Grt.Processes;
 with Grt.Disp; use Grt.Disp;
 
 package body Grt.Disp_Signals is
+   procedure Foreach_Scalar_Signal
+     (Process : access procedure (Val_Addr : Address;
+                                  Val_Name : Vstring;
+                                  Val_Type : Ghdl_Rti_Access;
+                                  Param : Rti_Object))
+   is
+      procedure Call_Process (Val_Addr : Address;
+                              Val_Name : Vstring;
+                              Val_Type : Ghdl_Rti_Access;
+                              Param : Rti_Object) is
+      begin
+         Process.all (Val_Addr, Val_Name, Val_Type, Param);
+      end Call_Process;
+
+      pragma Inline (Call_Process);
+
+      procedure Foreach_Scalar_Signal_Signal is new
+        Foreach_Scalar (Param_Type => Rti_Object,
+                        Process => Call_Process);
+
+      function Foreach_Scalar_Signal_Object
+        (Ctxt : Rti_Context; Obj : Ghdl_Rti_Access)
+        return Traverse_Result
+      is
+         Sig : Ghdl_Rtin_Object_Acc;
+      begin
+         case Obj.Kind is
+            when Ghdl_Rtik_Signal
+              | Ghdl_Rtik_Port
+              | Ghdl_Rtik_Guard
+              | Ghdl_Rtik_Attribute_Quiet
+              | Ghdl_Rtik_Attribute_Stable
+              | Ghdl_Rtik_Attribute_Transaction =>
+               Sig := To_Ghdl_Rtin_Object_Acc (Obj);
+               Foreach_Scalar_Signal_Signal
+                 (Ctxt, Sig.Obj_Type,
+                  Loc_To_Addr (Sig.Common.Depth, Sig.Loc, Ctxt), True,
+                  Rti_Object'(Obj, Ctxt));
+            when others =>
+               null;
+         end case;
+         return Traverse_Ok;
+      end Foreach_Scalar_Signal_Object;
+
+      function Foreach_Scalar_Signal_Traverse is
+         new Traverse_Blocks (Process => Foreach_Scalar_Signal_Object);
+
+      Res : Traverse_Result;
+      pragma Unreferenced (Res);
+   begin
+      Res := Foreach_Scalar_Signal_Traverse (Get_Top_Context);
+   end Foreach_Scalar_Signal;
+
    procedure Disp_Context (Ctxt : Rti_Context)
    is
       Blk : Ghdl_Rtin_Block_Acc;
@@ -166,90 +220,106 @@ package body Grt.Disp_Signals is
       New_Line;
    end Disp_Simple_Signal;
 
-   procedure Disp_Scalar_Signal (Val_Addr : Address;
-                                 Val_Name : Vstring;
-                                 Val_Type : Ghdl_Rti_Access)
-   is
-   begin
-      Put (stdout, Val_Name);
-      Disp_Simple_Signal (To_Ghdl_Signal_Ptr (To_Addr_Acc (Val_Addr).all),
-                          Val_Type, Options.Disp_Sources);
-   end Disp_Scalar_Signal;
-
-   procedure Foreach_Scalar_Signal is new
-     Foreach_Scalar (Process => Disp_Scalar_Signal);
-
-   procedure Disp_Signal_Name (Stream : FILEs; Sig : Ghdl_Rtin_Object_Acc) is
+   procedure Disp_Signal_Name (Stream : FILEs;
+                               Ctxt : Rti_Context;
+                               Sig : Ghdl_Rtin_Object_Acc) is
    begin
       case Sig.Common.Kind is
          when Ghdl_Rtik_Signal
            | Ghdl_Rtik_Port
            | Ghdl_Rtik_Guard =>
+            Put (stdout, Ctxt);
+            Put (".");
             Put (Stream, Sig.Name);
          when Ghdl_Rtik_Attribute_Quiet =>
+            Put (stdout, Ctxt);
+            Put (".");
             Put (Stream, " 'quiet");
          when Ghdl_Rtik_Attribute_Stable =>
+            Put (stdout, Ctxt);
+            Put (".");
             Put (Stream, " 'stable");
          when Ghdl_Rtik_Attribute_Transaction =>
+            Put (stdout, Ctxt);
+            Put (".");
             Put (Stream, " 'quiet");
          when others =>
             null;
       end case;
    end Disp_Signal_Name;
 
-   function Disp_Signal (Ctxt : Rti_Context;
-                         Obj : Ghdl_Rti_Access)
-                        return Traverse_Result
+   procedure Disp_Scalar_Signal (Val_Addr : Address;
+                                 Val_Name : Vstring;
+                                 Val_Type : Ghdl_Rti_Access;
+                                 Parent : Rti_Object)
    is
-      Sig : Ghdl_Rtin_Object_Acc;
    begin
-      case Obj.Kind is
-         when Ghdl_Rtik_Signal
-           | Ghdl_Rtik_Port
-           | Ghdl_Rtik_Guard
-           | Ghdl_Rtik_Attribute_Quiet
-           | Ghdl_Rtik_Attribute_Stable
-           | Ghdl_Rtik_Attribute_Transaction =>
-            Sig := To_Ghdl_Rtin_Object_Acc (Obj);
-            Put (stdout, Ctxt);
-            Put (".");
-            Disp_Signal_Name (stdout, Sig);
-            Foreach_Scalar_Signal
-              (Ctxt, Sig.Obj_Type,
-               Loc_To_Addr (Sig.Common.Depth, Sig.Loc, Ctxt), True);
-         when others =>
-            null;
-      end case;
-      return Traverse_Ok;
-   end Disp_Signal;
+      Disp_Signal_Name (stdout, Parent.Ctxt,
+                        To_Ghdl_Rtin_Object_Acc (Parent.Obj));
+      Put (stdout, Val_Name);
+      Disp_Simple_Signal (To_Ghdl_Signal_Ptr (To_Addr_Acc (Val_Addr).all),
+                          Val_Type, Options.Disp_Sources);
+   end Disp_Scalar_Signal;
 
-   function Disp_All_Signals is new Traverse_Blocks (Process => Disp_Signal);
 
-   procedure Disp_All_Signals
-   is
-      Res : Traverse_Result;
-      pragma Unreferenced (Res);
+   procedure Disp_All_Signals is
    begin
-      if Boolean'(False) then
-         for I in Sig_Table.First .. Sig_Table.Last loop
-            Disp_Simple_Signal
-              (Sig_Table.Table (I), null, Options.Disp_Sources);
-         end loop;
-      else
-         Res := Disp_All_Signals (Get_Top_Context);
-      end if;
+      Foreach_Scalar_Signal (Disp_Scalar_Signal'access);
    end Disp_All_Signals;
 
+   --  Option disp-sensitivity
+
+   procedure Disp_Scalar_Sensitivity (Val_Addr : Address;
+                                      Val_Name : Vstring;
+                                      Val_Type : Ghdl_Rti_Access;
+                                      Parent : Rti_Object)
+   is
+      pragma Unreferenced (Val_Type);
+      Sig : Ghdl_Signal_Ptr;
+
+      Action : Action_List_Acc;
+   begin
+      Sig := To_Ghdl_Signal_Ptr (To_Addr_Acc (Val_Addr).all);
+      if Sig.Flags.Seen then
+         return;
+      else
+         Sig.Flags.Seen := True;
+      end if;
+      Disp_Signal_Name (stdout, Parent.Ctxt,
+                        To_Ghdl_Rtin_Object_Acc (Parent.Obj));
+      Put (stdout, Val_Name);
+      New_Line (stdout);
+
+      Action := Sig.Event_List;
+      while Action /= null loop
+         Put (stdout, "  wakeup ");
+         Grt.Processes.Disp_Process_Name (stdout, Action.Proc);
+         New_Line (stdout);
+         Action := Action.Next;
+      end loop;
+
+      if Sig.S.Mode_Sig in Mode_Signal_User then
+         for I in 1 .. Sig.S.Nbr_Drivers loop
+            Put (stdout, "  driven ");
+            Grt.Processes.Disp_Process_Name
+              (stdout, Sig.S.Drivers (I - 1).Proc);
+            New_Line (stdout);
+         end loop;
+      end if;
+   end Disp_Scalar_Sensitivity;
+
+   procedure Disp_All_Sensitivity is
+   begin
+      Foreach_Scalar_Signal (Disp_Scalar_Sensitivity'access);
+   end Disp_All_Sensitivity;
 
 
    --  Option disp-signals-map
 
-   Cur_Signals_Map_Ctxt : Rti_Context;
-   Cur_Signals_Map_Obj : Ghdl_Rtin_Object_Acc;
-
    procedure Disp_Signals_Map_Scalar (Val_Addr : Address;
                                       Val_Name : Vstring;
-                                      Val_Type : Ghdl_Rti_Access)
+                                      Val_Type : Ghdl_Rti_Access;
+                                      Parent : Rti_Object)
    is
       pragma Unreferenced (Val_Type);
 
@@ -258,9 +328,8 @@ package body Grt.Disp_Signals is
 
       S : Ghdl_Signal_Ptr;
    begin
-      Put (stdout, Cur_Signals_Map_Ctxt);
-      Put (".");
-      Disp_Signal_Name (stdout, Cur_Signals_Map_Obj);
+      Disp_Signal_Name (stdout,
+                        Parent.Ctxt, To_Ghdl_Rtin_Object_Acc (Parent.Obj));
       Put (stdout, Val_Name);
       Put (": ");
       S := To_Ghdl_Signal_Ptr (To_Addr_Acc (Val_Addr).all);
@@ -273,43 +342,9 @@ package body Grt.Disp_Signals is
       New_Line;
    end Disp_Signals_Map_Scalar;
 
-   procedure Foreach_Disp_Signals_Map_Scalar is new
-     Foreach_Scalar (Process => Disp_Signals_Map_Scalar);
-
-   function Disp_Signals_Map_Signal (Ctxt : Rti_Context;
-                                     Obj : Ghdl_Rti_Access)
-                                    return Traverse_Result
-   is
-      Sig : Ghdl_Rtin_Object_Acc renames Cur_Signals_Map_Obj;
+   procedure Disp_Signals_Map is
    begin
-      case Obj.Kind is
-         when Ghdl_Rtik_Signal
-           | Ghdl_Rtik_Port
-           | Ghdl_Rtik_Guard
-           | Ghdl_Rtik_Attribute_Stable
-           | Ghdl_Rtik_Attribute_Quiet
-           | Ghdl_Rtik_Attribute_Transaction =>
-            Cur_Signals_Map_Ctxt := Ctxt;
-            Cur_Signals_Map_Obj := To_Ghdl_Rtin_Object_Acc (Obj);
-            Foreach_Disp_Signals_Map_Scalar
-              (Ctxt, Sig.Obj_Type,
-               Loc_To_Addr (Sig.Common.Depth, Sig.Loc, Ctxt), True);
-         when others =>
-            null;
-      end case;
-      return Traverse_Ok;
-   end Disp_Signals_Map_Signal;
-
-   function Disp_Signals_Map_Blocks is new Traverse_Blocks
-     (Process => Disp_Signals_Map_Signal);
-
-   procedure Disp_Signals_Map
-   is
-      Res : Traverse_Result;
-      pragma Unreferenced (Res);
-   begin
-      Res := Disp_Signals_Map_Blocks (Get_Top_Context);
-      Grt.Stdio.fflush (stdout);
+      Foreach_Scalar_Signal (Disp_Signals_Map_Scalar'access);
    end Disp_Signals_Map;
 
    --  Option --disp-signals-table
@@ -407,24 +442,24 @@ package body Grt.Disp_Signals is
 
       procedure Process_Scalar  (Val_Addr : Address;
                                  Val_Name : Vstring;
-                                 Val_Type : Ghdl_Rti_Access)
+                                 Val_Type : Ghdl_Rti_Access;
+                                 Param : Boolean)
       is
          pragma Unreferenced (Val_Type);
+         pragma Unreferenced (Param);
          Sig1 : Ghdl_Signal_Ptr;
       begin
          --  Read the signal.
          Sig1 := To_Ghdl_Signal_Ptr (To_Addr_Acc (Val_Addr).all);
          if Sig1 = Sig and not Found then
-            Put (Stream, Cur_Ctxt);
-            Put (Stream, ".");
-            Disp_Signal_Name (Stream, Cur_Sig);
+            Disp_Signal_Name (Stream, Cur_Ctxt, Cur_Sig);
             Put (Stream, Val_Name);
             Found := True;
          end if;
       end Process_Scalar;
 
       procedure Foreach_Scalar is new Grt.Rtis_Utils.Foreach_Scalar
-        (Process_Scalar);
+        (Param_Type => Boolean, Process => Process_Scalar);
 
       function Process_Block (Ctxt : Rti_Context;
                               Obj : Ghdl_Rti_Access)
@@ -442,7 +477,8 @@ package body Grt.Disp_Signals is
                Cur_Sig := To_Ghdl_Rtin_Object_Acc (Obj);
                Foreach_Scalar
                  (Ctxt, Cur_Sig.Obj_Type,
-                  Loc_To_Addr (Cur_Sig.Common.Depth, Cur_Sig.Loc, Ctxt), True);
+                  Loc_To_Addr (Cur_Sig.Common.Depth, Cur_Sig.Loc, Ctxt),
+                  True, True);
                if Found then
                   return Traverse_Stop;
                end if;

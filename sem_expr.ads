@@ -143,6 +143,7 @@ package Sem_Expr is
      (Choice_Chain : in out Iir;
       Sub_Type : Iir;
       Is_Sub_Range : Boolean;
+      Is_Case_Stmt : Boolean;
       Loc : Location_Type;
       Low : out Iir;
       High : out Iir);

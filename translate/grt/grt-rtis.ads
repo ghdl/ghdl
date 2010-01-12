@@ -151,10 +151,10 @@ package Grt.Rtis is
    Ghdl_Rti_Signal_Mode_Inout   : constant Ghdl_Rti_U8 := 4;
    Ghdl_Rti_Signal_Mode_In      : constant Ghdl_Rti_U8 := 5;
 
-   Ghdl_Rti_Signal_Kind_Mask     : constant Ghdl_Rti_U8 := 48;
-   Ghdl_Rti_Signal_Kind_No       : constant Ghdl_Rti_U8 := 0;
-   Ghdl_Rti_Signal_Kind_Register : constant Ghdl_Rti_U8 := 16;
-   Ghdl_Rti_Signal_Kind_Bus      : constant Ghdl_Rti_U8 := 32;
+   Ghdl_Rti_Signal_Kind_Mask     : constant Ghdl_Rti_U8 := 3 * 16;
+   Ghdl_Rti_Signal_Kind_No       : constant Ghdl_Rti_U8 := 0 * 16;
+   Ghdl_Rti_Signal_Kind_Register : constant Ghdl_Rti_U8 := 1 * 16;
+   Ghdl_Rti_Signal_Kind_Bus      : constant Ghdl_Rti_U8 := 2 * 16;
 
    Ghdl_Rti_Signal_Has_Active    : constant Ghdl_Rti_U8 := 64;
 
@@ -198,7 +198,7 @@ package Grt.Rtis is
    function To_Ghdl_Rti_Access is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rtin_Subtype_Scalar_Acc, Target => Ghdl_Rti_Access);
 
-   --  True if the type is complex.
+   --  True if the type is complex, set in Mode field.
    Ghdl_Rti_Type_Complex_Mask : constant Ghdl_Rti_U8 := 1;
    Ghdl_Rti_Type_Complex      : constant Ghdl_Rti_U8 := 1;
 

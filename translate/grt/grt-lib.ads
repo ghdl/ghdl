@@ -30,6 +30,12 @@ package Grt.Lib is
       Loc : Ghdl_Location_Ptr;
       Unit : Ghdl_Rti_Access);
 
+   procedure Ghdl_Psl_Assert_Failed
+     (Str : Std_String_Ptr;
+      Severity : Integer;
+      Loc : Ghdl_Location_Ptr;
+      Unit : Ghdl_Rti_Access);
+
    procedure Ghdl_Report
      (Str : Std_String_Ptr;
       Severity : Integer;
@@ -79,10 +85,26 @@ package Grt.Lib is
    --  the export pragma.
    pragma Export (C, Ghdl_Assert_Default_Report,
                   "__ghdl_assert_default_report");
+
+   type Ghdl_Std_Ulogic_Boolean_Array_Type is array (Ghdl_E8 range 0 .. 8)
+     of Ghdl_B2;
+
+   Ghdl_Std_Ulogic_To_Boolean_Array :
+     constant Ghdl_Std_Ulogic_Boolean_Array_Type := (False, --  U
+                                                     False, --  X
+                                                     False, --  0
+                                                     True,  --  1
+                                                     False, --  Z
+                                                     False, --  W
+                                                     False, --  L
+                                                     True,  --  H
+                                                     False  --  -
+                                                    );
 private
    pragma Export (C, Ghdl_Memcpy, "__ghdl_memcpy");
 
    pragma Export (C, Ghdl_Assert_Failed, "__ghdl_assert_failed");
+   pragma Export (C, Ghdl_Psl_Assert_Failed, "__ghdl_psl_assert_failed");
    pragma Export (C, Ghdl_Report, "__ghdl_report");
 
    pragma Export (C, Ghdl_Bound_Check_Failed_L0,
@@ -97,6 +119,9 @@ private
 
    pragma Export (C, Ghdl_Integer_Exp, "__ghdl_integer_exp");
    pragma Export (C, Ghdl_Real_Exp, "__ghdl_real_exp");
+
+   pragma Export (C, Ghdl_Std_Ulogic_To_Boolean_Array,
+                  "__ghdl_std_ulogic_to_boolean_array");
 end Grt.Lib;
 
 

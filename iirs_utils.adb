@@ -22,6 +22,7 @@ with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
 with Flags; use Flags;
+with PSL.Nodes;
 
 package body Iirs_Utils is
    -- Transform the current token into an iir literal.
@@ -322,11 +323,6 @@ package body Iirs_Utils is
       return Str_Table.Get_String_Fat_Acc (Get_String_Id (Str));
    end Get_String_Fat_Acc;
 
-   function Get_String_Length (Str : Iir) return Natural is
-   begin
-      return Natural (Nat32'(Get_String_Length (Str)));
-   end Get_String_Length;
-
    --  Get identifier of NODE as a string.
    function Image_Identifier (Node : Iir) return String is
    begin
@@ -336,11 +332,11 @@ package body Iirs_Utils is
    function Image_String_Lit (Str : Iir) return String
    is
       Ptr : String_Fat_Acc;
-      Len : Natural;
+      Len : Nat32;
    begin
       Ptr := Get_String_Fat_Acc (Str);
       Len := Get_String_Length (Str);
-      return Ptr (1 .. Len);
+      return String (Ptr (1 .. Len));
    end Image_String_Lit;
 
    procedure Create_Range_Constraint_For_Enumeration_Type
@@ -838,4 +834,9 @@ package body Iirs_Utils is
          end case;
       end loop;
    end Is_Signal_Object;
+
+   function Get_HDL_Node (N : PSL_Node) return Iir is
+   begin
+      return Iir (PSL.Nodes.Get_HDL_Node (N));
+   end Get_HDL_Node;
 end Iirs_Utils;

@@ -18,11 +18,23 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Name_Table;
 with Libraries;
+with Std_Names;
+with PSL.Nodes;
+with PSL.Dump_Tree;
+with Disp_Tree;
 with Scan;
 with Back_End; use Back_End;
 with Flags; use Flags;
 
 package body Options is
+   procedure Initialize is
+   begin
+      Std_Names.Std_Names_Initialize;
+      Libraries.Init_Pathes;
+      PSL.Nodes.Init;
+      PSL.Dump_Tree.Dump_Hdl_Node := Disp_Tree.Disp_Tree_For_Psl'Access;
+   end Initialize;
+
    function Option_Warning (Opt: String; Val : Boolean) return Boolean is
    begin
 --      if Opt = "undriven" then
@@ -106,6 +118,9 @@ package body Options is
          Flag_Vital_Checks := False;
       elsif Opt = "--vital-checks" then
          Flag_Vital_Checks := True;
+      elsif Opt = "-fpsl" then
+         Scan.Flag_Psl_Comment := True;
+         Scan.Flag_Comment_Keyword := True;
       elsif Opt = "-dp" then
          Dump_Parse := True;
       elsif Opt = "-ds" then
@@ -196,11 +211,12 @@ package body Options is
 --    P ("  --assert-level=LEVEL     set the level which stop the");
 --    P ("           simulation.  LEVEL is note, warning, error,");
 --    P ("           failure or none");
-      P ("Illegal extensions:");
+      P ("Extensions:");
       P ("  -fexplicit         give priority to explicitly declared operator");
       P ("  -C  --mb-comments  allow multi-bytes chars in a comment");
       P ("  --bootstrap        allow --work=std");
       P ("  --syn-binding      use synthesis default binding rule");
+      P ("  -fpsl              parse psl in comments");
       P ("Compilation list:");
       P ("  -ls                after semantics");
       P ("  -lc                after canon");

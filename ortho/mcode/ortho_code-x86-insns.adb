@@ -1799,6 +1799,7 @@ package body Ortho_Code.X86.Insns is
                   when R_Irm
                     | R_Rm
                     | R_Ir
+                    | R_Sib
                     | R_Any32
                     | Regs_R32
                     | R_Any64

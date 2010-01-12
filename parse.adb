@@ -24,6 +24,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Std_Names; use Std_Names;
 with Flags; use Flags;
+with Parse_Psl;
 with Name_Table;
 with Str_Table;
 with Xrefs;
@@ -60,8 +61,7 @@ package body Parse is
    function Parse_Configuration_Item return Iir;
    function Parse_Block_Configuration return Iir_Block_Configuration;
    procedure Parse_Concurrent_Statements (Parent : Iir);
-   function Parse_Expression return Iir_Expression;
-   function Parse_Subprogram_Declaration return Iir;
+   function Parse_Subprogram_Declaration (Parent : Iir) return Iir;
    function Parse_Subtype_Indication (Name : Iir := Null_Iir) return Iir;
    procedure Parse_Component_Specification (Res : Iir);
    function Parse_Binding_Indication return Iir_Binding_Indication;
@@ -440,14 +440,14 @@ package body Parse is
 
       procedure Bad_Operator_Symbol is
       begin
-         Error_Msg_Parse ("""" & Str (1 .. Natural (Len))
+         Error_Msg_Parse ("""" & String (Str (1 .. Len))
                           & """ is not an operator symbol", Loc);
       end Bad_Operator_Symbol;
 
       procedure Check_Vhdl93 is
       begin
          if Flags.Vhdl_Std = Vhdl_87 then
-            Error_Msg_Parse ("""" & Str (1 .. Natural (Len))
+            Error_Msg_Parse ("""" & String (Str (1 .. Len))
                              & """ is not a vhdl87 operator symbol", Loc);
          end if;
       end Check_Vhdl93;
@@ -2803,7 +2803,7 @@ package body Parse is
               | Tok_Procedure
               | Tok_Pure
               | Tok_Impure =>
-               Decl := Parse_Subprogram_Declaration;
+               Decl := Parse_Subprogram_Declaration (Parent);
             when Tok_Alias =>
                Decl := Parse_Alias_Declaration;
             when Tok_Component =>
@@ -2981,7 +2981,7 @@ package body Parse is
    --  [ §7.3.2 ]
    --  choices ::= choice { | choice }
    --
-   -- Leave tok_arrow as current token.
+   -- Leave tok_double_arrow as current token.
    function Parse_Choices (Expr: Iir) return Iir
    is
       First, Last : Iir;
@@ -3032,7 +3032,7 @@ package body Parse is
          Expr := Parse_Expression;
          case Current_Token is
             when Tok_Comma
-              | Tok_Arrow
+              | Tok_Double_Arrow
               | Tok_Bar =>
                --  This is really an aggregate
                null;
@@ -3065,7 +3065,7 @@ package body Parse is
       loop
          if Current_Token = Tok_Others then
             Assoc := Parse_A_Choice (Null_Iir);
-            Expect (Tok_Arrow);
+            Expect (Tok_Double_Arrow);
             Scan.Scan;
             Expr := Parse_Expression;
          else
@@ -3082,7 +3082,7 @@ package body Parse is
                   Location_Copy (Assoc, Expr);
                when others =>
                   Assoc := Parse_Choices (Expr);
-                  Expect (Tok_Arrow);
+                  Expect (Tok_Double_Arrow);
                   Scan.Scan;
                   Expr := Parse_Expression;
             end case;
@@ -3409,21 +3409,16 @@ package body Parse is
       return Res;
    end Parse_Shift_Expression;
 
-   --  precond : next token
+   --  precond : next token (relational_operator)
    --  postcond: next token
    --
    --  [ §7.1 ]
-   --  relation ::= shift_expression [ relational_operator shift_expression ]
-   --
-   --  [ §7.2 ]
-   --  relational_operator ::= = | /= | < | <= | > | >=
-   function Parse_Relation return Iir_Expression is
+   --     relational_operator shift_expression
+   function Parse_Relation_Rhs (Left : Iir) return Iir
+   is
       Res, Tmp: Iir_Expression;
    begin
-      Tmp := Parse_Shift_Expression;
-      if Current_Token not in Token_Relational_Operator_Type then
-         return Tmp;
-      end if;
+      Tmp := Left;
 
       --  This loop is just to handle errors such as a = b = c.
       loop
@@ -3453,6 +3448,26 @@ package body Parse is
          Tmp := Res;
       end loop;
       return Res;
+   end Parse_Relation_Rhs;
+
+   --  precond : next token
+   --  postcond: next token
+   --
+   --  [ §7.1 ]
+   --  relation ::= shift_expression [ relational_operator shift_expression ]
+   --
+   --  [ §7.2 ]
+   --  relational_operator ::= = | /= | < | <= | > | >=
+   function Parse_Relation return Iir
+   is
+      Tmp: Iir;
+   begin
+      Tmp := Parse_Shift_Expression;
+      if Current_Token not in Token_Relational_Operator_Type then
+         return Tmp;
+      end if;
+
+      return Parse_Relation_Rhs (Tmp);
    end Parse_Relation;
 
    --  precond : next token
@@ -3465,13 +3480,14 @@ package body Parse is
    --               | relation [ NAND relation }
    --               | relation [ NOR relation }
    --               | relation { XNOR relation }
-   function Parse_Expression return Iir_Expression is
-      Res, Tmp: Iir_Expression;
+   function Parse_Expression_Rhs (Left : Iir) return Iir
+   is
+      Res, Tmp: Iir;
 
       --  OP_TOKEN contains the operator combinaison.
       Op_Token: Token_Type;
    begin
-      Tmp := Parse_Relation;
+      Tmp := Left;
       Op_Token := Tok_Invalid;
       loop
          case Current_Token is
@@ -3528,6 +3544,13 @@ package body Parse is
          Set_Right (Res, Parse_Relation);
          Tmp := Res;
       end loop;
+   end Parse_Expression_Rhs;
+
+   --  precond : next token
+   --  postcond: next token
+   function Parse_Expression return Iir_Expression is
+   begin
+      return Parse_Expression_Rhs (Parse_Relation);
    end Parse_Expression;
 
    --  precond : next token
@@ -4263,12 +4286,12 @@ package body Parse is
                   while Current_Token /= Tok_End loop
                      Expect (Tok_When);
                      Scan.Scan;
-                     if Current_Token = Tok_Arrow then
+                     if Current_Token = Tok_Double_Arrow then
                         Error_Msg_Parse ("missing expression in alternative");
                      else
                         Assoc := Parse_Choices (Null_Iir);
                      end if;
-                     Expect (Tok_Arrow);
+                     Expect (Tok_Double_Arrow);
                      Scan.Scan;
                      Set_Associated
                        (Assoc, Parse_Sequential_Statements (Stmt));
@@ -4334,7 +4357,7 @@ package body Parse is
    --
    --  [ §2.1 ]
    --  operator_symbol ::= string_literal
-   function Parse_Subprogram_Declaration return Iir
+   function Parse_Subprogram_Declaration (Parent : Iir) return Iir
    is
       Subprg: Iir;
       Subprg_Body : Iir;
@@ -4438,6 +4461,9 @@ package body Parse is
       Set_Subprogram_Specification (Subprg_Body, Subprg);
       Set_Chain (Subprg, Subprg_Body);
 
+      if Get_Kind (Parent) = Iir_Kind_Package_Declaration then
+         Error_Msg_Parse ("subprogram body not allowed in package spec");
+      end if;
       Expect (Tok_Is);
       Scan.Scan;
       Parse_Declarative_Part (Subprg_Body);
@@ -4642,7 +4668,7 @@ package body Parse is
                   if Nbr_Assocs /= 1 then
                      Error_Msg_Parse ("multi-dimensional slice is forbidden");
                   end if;
-               when Tok_Arrow =>
+               when Tok_Double_Arrow =>
                   Formal := Actual;
                   Scan.Scan;
                   if Current_Token /= Tok_Open then
@@ -5014,6 +5040,56 @@ package body Parse is
       end case;
    end Parse_Concurrent_Assignment;
 
+   function Parse_Psl_Default_Clock return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Psl_Default_Clock);
+      Scan.Flag_Psl := True;
+      Scan_Expect (Tok_Psl_Clock);
+      Scan_Expect (Tok_Is);
+      Scan.Scan;
+      Set_Psl_Boolean (Res, Parse_Psl.Parse_Psl_Boolean);
+      Expect (Tok_Semi_Colon);
+      Scan.Flag_Scan_In_Comment := False;
+      Scan.Flag_Psl := False;
+      return Res;
+   end Parse_Psl_Default_Clock;
+
+   function Parse_Psl_Declaration return Iir
+   is
+      Tok : constant Token_Type := Current_Token;
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Psl_Declaration);
+      Scan.Scan;
+      if Current_Token /= Tok_Identifier then
+         Error_Msg_Parse ("property name expected here");
+      else
+         Set_Identifier (Res, Current_Identifier);
+      end if;
+      Scan.Flag_Psl := True;
+      Set_Psl_Declaration (Res, Parse_Psl.Parse_Psl_Declaration (Tok));
+      Expect (Tok_Semi_Colon);
+      Scan.Flag_Scan_In_Comment := False;
+      Scan.Flag_Psl := False;
+      return Res;
+   end Parse_Psl_Declaration;
+
+   function Parse_Psl_Assert_Statement return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Psl_Assert_Statement);
+      Scan.Flag_Psl := True;
+      Scan.Scan;
+      Set_Psl_Property (Res, Parse_Psl.Parse_Psl_Property);
+      Expect (Tok_Semi_Colon);
+      Scan.Flag_Scan_In_Comment := False;
+      Scan.Flag_Psl := False;
+      return Res;
+   end Parse_Psl_Assert_Statement;
+
    procedure Parse_Concurrent_Statements (Parent : Iir)
    is
       Last_Stmt : Iir;
@@ -5023,6 +5099,14 @@ package body Parse is
       Postponed : Boolean;
       Loc : Location_Type;
       Target : Iir;
+
+      procedure Postponed_Not_Allowed is
+      begin
+         if Postponed then
+            Error_Msg_Parse ("'postponed' not allowed here");
+            Postponed := False;
+         end if;
+      end Postponed_Not_Allowed;
    begin
       -- begin was just parsed.
       Last_Stmt := Null_Iir;
@@ -5062,6 +5146,7 @@ package body Parse is
 
          case Current_Token is
             when Tok_End =>
+               Postponed_Not_Allowed;
                if Label /= Null_Identifier then
                   Error_Msg_Parse
                     ("no label is allowed before the 'end' keyword");
@@ -5095,11 +5180,7 @@ package body Parse is
             when Tok_With =>
                Stmt := Parse_Selected_Signal_Assignment;
             when Tok_Block =>
-               if Postponed then
-                  Error_Msg_Parse
-                    ("'postponed' is not allowed before 'block'");
-                  Postponed := False;
-               end if;
+               Postponed_Not_Allowed;
                Stmt := Parse_Block_Statement (Label, Loc);
             when Tok_If
               | Tok_For =>
@@ -5115,17 +5196,24 @@ package body Parse is
             when Tok_Component
               | Tok_Entity
               | Tok_Configuration =>
-               if Postponed then
-                  Error_Msg_Parse ("'postponed' not allowed before " &
-                                   "an instantiation statement");
-                  Postponed := False;
-               end if;
+               Postponed_Not_Allowed;
                declare
                   Unit : Iir;
                begin
                   Unit := Parse_Instantiated_Unit;
                   Stmt := Parse_Component_Instantiation (Unit);
                end;
+            when Tok_Psl_Default =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_Psl_Default_Clock;
+            when Tok_Psl_Property
+              | Tok_Psl_Sequence
+              | Tok_Psl_Endpoint =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_Psl_Declaration;
+            when Tok_Psl_Assert =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_Psl_Assert_Statement;
             when others =>
                --  FIXME: improve message:
                --  instead of 'unexpected token 'signal' in conc stmt list'
@@ -5139,7 +5227,9 @@ package body Parse is
          -- stmt can be null in case of error.
          if Stmt /= Null_Iir then
             Set_Location (Stmt, Loc);
-            Set_Label (Stmt, Label);
+            if Label /= Null_Identifier then
+               Set_Label (Stmt, Label);
+            end if;
             Set_Parent (Stmt, Parent);
             if Postponed then
                Set_Postponed_Flag (Stmt, True);

@@ -11,12 +11,12 @@
 @titlepage
 @title GHDL guide
 @subtitle GHDL, a VHDL compiler
-@subtitle For GHDL version 0.28 (Sokcho edition)
+@subtitle For GHDL version 0.29 (Sokcho edition)
 @author Tristan Gingold
 @c The following two commands start the copyright page.
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 2002-2009 Tristan Gingold.
+Copyright @copyright{} 2002-2010 Tristan Gingold.
 
 Permission is granted to copy, distribute and/or modify this document
 under the terms of the GNU Free Documentation License, Version 1.1 or
@@ -88,7 +88,7 @@ or any later version published by the Free Software Foundation.
 * Introduction::                What is GHDL, what is VHDL
 * Starting with GHDL::          Build a VHDL program with GHDL
 * Invoking GHDL::               
-* Simulation and runtime::     
+* Simulation and runtime::      
 * GHDL implementation of VHDL::  
 * GHDL implementation of VITAL::  
 * Flaws and bugs report::       
@@ -874,6 +874,11 @@ good feature, because it breaks the encapsulation rule.  When set, an
 operator can be silently overridden in another package.  You'd better to fix
 your design and use the @samp{numeric_std} package.
 
+@item -fpsl
+@cindex @option{-fpsl} switch
+Enable parsing of PSL assertions within comments.  @xref{PSL implementation},
+for more details.
+
 @item --no-vital-checks
 @item --vital-checks
 @cindex @option{--no-vital-checks} switch
@@ -1138,6 +1143,7 @@ GHDL has a few commands which act on a library.
 * Directory command::           
 * Clean command::               
 * Remove command::              
+* Copy command::                
 @end menu
 
 @node Directory command, Clean command, Library commands, Library commands
@@ -1172,7 +1178,7 @@ have created.  Source files are not removed.
 There is no short command line form for this option to prevent accidental
 clean up.
 
-@node Remove command,  , Clean command, Library commands
+@node Remove command, Copy command, Clean command, Library commands
 @subsection Remove command
 @cindex cleaning all
 @cindex @option{--remove} command
@@ -1185,6 +1191,23 @@ $ ghdl --remove [@var{options}]
 There is no short command line form for this option to prevent accidental
 clean up.  Note that after removing a design library, the files are not
 known anymore by GHDL.
+
+@node Copy command,  , Remove command, Library commands
+@subsection Copy command
+@cindex copying library
+@cindex @option{--copy} command
+Make a local copy of an existing library.
+
+@smallexample
+$ ghdl --copy --work=@var{name} [@var{options}]
+@end smallexample
+
+Make a local copy of an existing library.  This is very useful if you want to
+add unit to the @samp{ieee} library:
+@example
+$ ghdl --copy --work=ieee --ieee=synopsys
+$ ghdl -a --work=ieee numeric_unsigned.vhd
+@end example
 
 @node Cross-reference command, File commands, Library commands, Invoking GHDL
 @comment  node-name,  next,  previous,  up
@@ -1814,6 +1837,7 @@ This chapter describes several implementation defined aspect of VHDL in GHDL.
 
 @menu
 * VHDL standards::              
+* PSL implementation::          
 * Source representation::       
 * Library database::            
 * VHDL files format::           
@@ -1823,7 +1847,7 @@ This chapter describes several implementation defined aspect of VHDL in GHDL.
 * Interfacing to other languages::  
 @end menu
 
-@node VHDL standards, Source representation, GHDL implementation of VHDL, GHDL implementation of VHDL
+@node VHDL standards, PSL implementation, GHDL implementation of VHDL, GHDL implementation of VHDL
 @comment  node-name,  next,  previous,  up
 @section VHDL standards
 @cindex VHDL standards
@@ -1904,7 +1928,41 @@ Select VHDL-2002 standard (partially implemented).
 You cannot mix VHDL-87 and VHDL-93 units.  A design hierarchy must have been
 completely analyzed using either the 87 or the 93 version of the VHDL standard.
 
-@node Source representation, Library database, VHDL standards, GHDL implementation of VHDL
+@node PSL implementation, Source representation, VHDL standards, GHDL implementation of VHDL
+@comment  node-name,  next,  previous,  up
+@section PSL implementation
+GHDL understands embedded PSL annotations in VHDL files, but in separate files.
+
+As PSL annotations are embedded within comments, you must analyze and elaborate
+your design with option @option{-fpsl} to enable PSL annotations.
+
+A PSL assertion statement must appear within a comment that starts
+with the @code{psl} keyword.  The keyword must be followed (on the
+same line) by a PSL keyword such as @code{assert} or @code{default}.
+To continue a PSL statement on the next line, just start a new comment.
+
+A PSL statement is considered as a concurrent statement, and therefore is
+allowed only where processes are.
+
+All PSL assertions must be clocked (GHDL doesn't support unclocked assertion).
+Furthermore only one clock per assertion is allowed.
+
+You can either use a default clock like this:
+@example
+  -- psl default clock is rising_edge (CLK);
+  -- psl assert always
+  --   a -> eventually! b;
+@end example
+or use a clocked expression (note the use of parenthesis):
+@example
+  -- psl assert (always a -> next[3](b)) @@rising_edge (clk);
+@end example
+
+Of course only the simple subset of PSL is allowed.
+
+Currently the built-in functions are not implemented.
+
+@node Source representation, Library database, PSL implementation, GHDL implementation of VHDL
 @comment  node-name,  next,  previous,  up
 @section Source representation
 According to the VHDL standard, design units (i.e. entities,

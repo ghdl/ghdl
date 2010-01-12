@@ -27,7 +27,7 @@
 # * Check lists of exported files in this file.
 # * Create source tar and build binaries: ./dist.sh dist_phase1
 # * su root
-# * Build binary tar: ./dist.sh dist_phase2
+# * Build binary tar: HOME=~user ./dist.sh dist_phase2
 # * Run the testsuites: GHDL=ghdl ./testsuite.sh gcc
 # * Update website/index.html (./dist.sh website helps)
 # * upload (./dist upload)
@@ -131,6 +131,9 @@ for i in $grt_config_files; do
     ln -sf $CWD/../grt/config/$i $VHDLDIR/grt/config/$i
 done
 
+for i in $psl_files; do
+    ln -sf $CWD/../../psl/$i $VHDLDIR/$i
+done
 }
 
 # Create the tar of sources.
@@ -180,10 +183,37 @@ do_compile ()
   mkdir $GCCDISTOBJ
   cd $GCCDISTOBJ
   export CFLAGS="-O -g"
-  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX --disable-bootstrap --with-bugurl="<URL:http://gna.org/projects/ghdl>" --build=i686-pc-linux-gnu --with-gmp=$PWD/../build --with-mpfr=$PWD/../build --disable-shared --disable-libmudflap --disable-libssp --disable-libgomp
+
+  case x86 in
+  x86)
+	  BUILD=i686-pc-linux-gnu
+	  CONFIG_LIBS="--with-gmp=$PWD/../build --with-mpfr=$PWD/../build"
+	  ;;
+  x86-64)
+	  BUILD=x86_64-pc-linux-gnu
+	  CONFIG_LIBS=""
+	  ;;
+  *)
+	  exit 1
+	  ;;
+  esac
+  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX --disable-bootstrap --with-bugurl="<URL:http://gna.org/projects/ghdl>" --build=$BUILD $CONFIG_LIBS --disable-shared --disable-libmudflap --disable-libssp --disable-libgomp
+
   make
   make -C gcc vhdl.info
   cd $CWD
+}
+
+# Re-package sources, update gcc sources and recompile without reconfiguring.
+do_recompile ()
+{
+  set -x
+ 
+  do_sources
+  do_update_gcc_sources;
+  cd $GCCDISTOBJ
+  export CFLAGS="-O -g"
+  make
 }
 
 check_root ()
@@ -400,6 +430,8 @@ else
         do_sources ;;
       compile)
         do_compile;;
+      recompile)
+        do_recompile;;
       update_gcc)
         do_update_gcc_sources;;
       compile2)

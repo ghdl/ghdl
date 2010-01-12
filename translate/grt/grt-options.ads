@@ -72,6 +72,7 @@ package Grt.Options is
    Disp_Sources : Boolean := False;
    Disp_Signals_Map : Boolean := False;
    Disp_Signals_Table : Boolean := False;
+   Disp_Sensitivity : Boolean := False;
 
    --  Set by --disp-order to diplay evaluation order of signals.
    Disp_Signals_Order : Boolean := False;

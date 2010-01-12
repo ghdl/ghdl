@@ -25,6 +25,7 @@ with Files_Map; use Files_Map;
 with Ada.Strings.Unbounded;
 with Std_Names;
 with Flags;
+with PSL.Nodes;
 
 package body Errorout is
    procedure Put (Str : String)
@@ -64,7 +65,7 @@ package body Errorout is
 
    procedure Error_Kind (Msg : String; An_Iir : Iir) is
    begin
-      Put_Line (Msg & ": can't handle "
+      Put_Line (Msg & ": cannot handle "
                 & Iir_Kind'Image (Get_Kind (An_Iir))
                 & " (" & Disp_Location (An_Iir) & ')');
       raise Internal_Error;
@@ -72,8 +73,16 @@ package body Errorout is
 
    procedure Error_Kind (Msg : String; Def : Iir_Predefined_Functions) is
    begin
-      Put_Line (Msg & ": can't handle "
+      Put_Line (Msg & ": cannot handle "
                 & Iir_Predefined_Functions'Image (Def));
+      raise Internal_Error;
+   end Error_Kind;
+
+   procedure Error_Kind (Msg : String; N : PSL_Node) is
+   begin
+      Put (Msg);
+      Put (": cannot handle ");
+      Put_Line (PSL.Nodes.Nkind'Image (PSL.Nodes.Get_Kind (N)));
       raise Internal_Error;
    end Error_Kind;
 
@@ -141,6 +150,11 @@ package body Errorout is
    begin
       Disp_Location (Get_Location_Safe (An_Iir));
    end Disp_Iir_Location;
+
+   procedure Disp_PSL_Location (N : PSL_Node) is
+   begin
+      Disp_Location (PSL.Nodes.Get_Location (N));
+   end Disp_PSL_Location;
 
    procedure Warning_Msg (Msg: String) is
    begin
@@ -263,6 +277,17 @@ package body Errorout is
       Nbr_Errors := Nbr_Errors + 1;
       if Loc /= Null_Iir then
          Disp_Iir_Location (Loc);
+         Put (' ');
+      end if;
+      Put_Line (Msg);
+   end Error_Msg_Sem;
+
+   procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node) is
+      use PSL.Nodes;
+   begin
+      Nbr_Errors := Nbr_Errors + 1;
+      if Loc /= Null_Node then
+         Disp_PSL_Location (Loc);
          Put (' ');
       end if;
       Put_Line (Msg);
@@ -533,6 +558,8 @@ package body Errorout is
             return "selected element";
          when Iir_Kind_Selected_By_All_Name =>
             return ".all name";
+         when Iir_Kind_Psl_Expression =>
+            return "PSL instantiation";
 
          when Iir_Kind_Constant_Interface_Declaration =>
             case Get_Kind (Get_Parent (Node)) is
@@ -660,6 +687,9 @@ package body Errorout is
          when Iir_Kind_Generate_Statement =>
             return "generate statement";
 
+         when Iir_Kind_Psl_Declaration =>
+            return Disp_Identifier (Node, "PSL declaration");
+
          when Iir_Kind_Attribute_Declaration =>
             return Disp_Identifier (Node, "attribute");
          when Iir_Kind_Attribute_Specification =>
@@ -762,6 +792,10 @@ package body Errorout is
               (Node, "concurrent selected signal assignment");
          when Iir_Kind_Concurrent_Assertion_Statement =>
             return Disp_Label (Node, "concurrent assertion");
+         when Iir_Kind_Psl_Assert_Statement =>
+            return Disp_Label (Node, "PSL assertion");
+         when Iir_Kind_Psl_Default_Clock =>
+            return "PSL default clock";
 
          when Iir_Kind_If_Statement =>
             return Disp_Label (Node, "if statement");

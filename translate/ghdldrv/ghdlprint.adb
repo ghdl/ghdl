@@ -385,6 +385,28 @@ package body Ghdlprint is
                else
                   Disp_Identifier;
                end if;
+            when Tok_Psl_Default
+              | Tok_Psl_Clock
+              | Tok_Psl_Property
+              | Tok_Psl_Sequence
+              | Tok_Psl_Endpoint
+              | Tok_Psl_Assert
+              | Tok_Psl_Boolean
+              | Tok_Psl_Const
+              | Tok_Inf
+              | Tok_Within
+              | Tok_Abort
+              | Tok_Before
+              | Tok_Always
+              | Tok_Never
+              | Tok_Eventually
+              | Tok_Next_A
+              | Tok_Next_E
+              | Tok_Next_Event
+              | Tok_Next_Event_A
+              | Tok_Next_Event_E =>
+               Disp_Spaces;
+               Disp_Text;
             when Tok_String
               | Tok_Bit_String
               | Tok_Character =>

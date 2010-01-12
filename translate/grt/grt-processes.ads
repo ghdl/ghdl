@@ -81,6 +81,9 @@ package Grt.Processes is
       Ctxt : Ghdl_Rti_Access;
       Addr : System.Address);
 
+   procedure Ghdl_Finalize_Register (Instance : System.Address;
+                                     Proc : System.Address);
+
    procedure Ghdl_Initial_Register (Instance : System.Address;
                                     Proc : System.Address);
    procedure Ghdl_Always_Register (Instance : System.Address;
@@ -191,6 +194,8 @@ private
                   "__ghdl_postponed_process_register");
    pragma Export (C, Ghdl_Postponed_Sensitized_Process_Register,
                   "__ghdl_postponed_sensitized_process_register");
+
+   pragma Export (C, Ghdl_Finalize_Register, "__ghdl_finalize_register");
 
    pragma Export (C, Ghdl_Always_Register, "__ghdl_always_register");
    pragma Export (C, Ghdl_Initial_Register, "__ghdl_initial_register");

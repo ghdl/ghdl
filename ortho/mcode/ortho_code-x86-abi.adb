@@ -87,7 +87,6 @@ package body Ortho_Code.X86.Abi is
          Mark (Decls_Mark);
          Consts.Mark (Consts_Mark);
          Mark (Types_Mark);
-         Dwarf.Mark (Dwarf_Mark);
       end if;
    end Start_Body;
 
@@ -113,6 +112,15 @@ package body Ortho_Code.X86.Abi is
       end if;
 
       Emits.Emit_Subprg (Subprg);
+
+      if Get_Decl_Depth (Subprg.D_Decl) = O_Toplevel
+        and then Flag_Debug = Debug_Dwarf
+      then
+         Dwarf.Emit_Decls_Until (Subprg.D_Body);
+         if not Debug.Flag_Debug_Keep then
+            Dwarf.Mark (Dwarf_Mark);
+         end if;
+      end if;
 
       --  Recurse on nested subprograms.
       Child := Subprg.First_Child;

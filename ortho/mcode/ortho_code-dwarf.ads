@@ -22,6 +22,9 @@ package Ortho_Code.Dwarf is
    --  For a body.
    procedure Emit_Subprg (Bod : O_Dnode);
 
+   --  Emit all debug info until but not including LAST.
+   procedure Emit_Decls_Until (Last : O_Dnode);
+
    --  For a line in a subprogram.
    procedure Set_Line_Stmt (Line : Int32);
    procedure Set_Filename (Dir : String; File : String);

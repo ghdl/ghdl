@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 -- Title        : Standard VITAL_Primitives Package
---              : $Revision: 600 $
+--              : $Revision$
 --              :
 -- Library      : VITAL
 --              :

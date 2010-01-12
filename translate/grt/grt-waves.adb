@@ -633,13 +633,16 @@ package body Grt.Waves is
            | Ghdl_Rtik_Subtype_Array_Ptr =>
             declare
                Arr : Ghdl_Rtin_Subtype_Array_Acc;
+               B_Ctxt : Rti_Context;
             begin
                Arr := To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
                Create_String_Id (Arr.Name);
-               if Rti.Mode = 1 then
-                  N_Ctxt := Ctxt;
+               if Rti.Mode = Ghdl_Rti_Type_Complex then
+                  B_Ctxt := Ctxt;
+               else
+                  B_Ctxt := N_Ctxt;
                end if;
-               Create_Type (To_Ghdl_Rti_Access (Arr.Basetype), N_Ctxt);
+               Create_Type (To_Ghdl_Rti_Access (Arr.Basetype), B_Ctxt);
             end;
          when Ghdl_Rtik_Type_Array =>
             declare
@@ -823,10 +826,12 @@ package body Grt.Waves is
 
    procedure Write_Signal_Number (Val_Addr : Address;
                                   Val_Name : Vstring;
-                                  Val_Type : Ghdl_Rti_Access)
+                                  Val_Type : Ghdl_Rti_Access;
+                                  Param_Type : Natural)
    is
       pragma Unreferenced (Val_Name);
       pragma Unreferenced (Val_Type);
+      pragma Unreferenced (Param_Type);
 
       Num : Natural;
 
@@ -853,7 +858,8 @@ package body Grt.Waves is
    end Write_Signal_Number;
 
    procedure Foreach_Scalar_Signal_Number is new
-     Grt.Rtis_Utils.Foreach_Scalar (Process => Write_Signal_Number);
+     Grt.Rtis_Utils.Foreach_Scalar (Param_Type => Natural,
+                                    Process => Write_Signal_Number);
 
    procedure Write_Signal_Numbers (Decl : VhpiHandleT)
    is
@@ -864,7 +870,7 @@ package body Grt.Waves is
       Sig := To_Ghdl_Rtin_Object_Acc (Avhpi_Get_Rti (Decl));
       Foreach_Scalar_Signal_Number
         (Ctxt, Sig.Obj_Type,
-         Loc_To_Addr (Sig.Common.Depth, Sig.Loc, Ctxt), True);
+         Loc_To_Addr (Sig.Common.Depth, Sig.Loc, Ctxt), True, 0);
    end Write_Signal_Numbers;
 
    procedure Write_Hierarchy_El (Decl : VhpiHandleT)

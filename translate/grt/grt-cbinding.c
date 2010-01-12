@@ -37,6 +37,13 @@ __ghdl_get_stderr (void)
   return stderr;
 }
 
+int
+__ghdl_snprintf_g (char *buf, unsigned int len, double val)
+{
+  snprintf (buf, len, "%g", val);
+  return strlen (buf);
+}
+
 void
 __ghdl_fprintf_g (FILE *stream, double val)
 {

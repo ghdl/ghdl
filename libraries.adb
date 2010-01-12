@@ -49,7 +49,6 @@ package body Libraries is
 
    --  Initialize pathes table.
    --  Set the local path.
-   Name_Nil : Name_Id;
    procedure Init_Pathes
    is
    begin
@@ -298,15 +297,15 @@ package body Libraries is
 
       function String_To_Name_Id return Name_Id
       is
-         Len : Natural;
+         Len : Int32;
          Ptr : String_Fat_Acc;
       begin
-         Len := Natural (Current_String_Length);
+         Len := Current_String_Length;
          Ptr := Str_Table.Get_String_Fat_Acc (Current_String_Id);
          for I in 1 .. Len loop
-            Name_Table.Name_Buffer (I) := Ptr (I);
+            Name_Table.Name_Buffer (Natural (I)) := Ptr (I);
          end loop;
-         Name_Table.Name_Length := Len;
+         Name_Table.Name_Length := Natural (Len);
          --  FIXME: should remove last string.
          return Get_Identifier;
       end String_To_Name_Id;

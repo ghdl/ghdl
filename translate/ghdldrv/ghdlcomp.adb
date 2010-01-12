@@ -482,7 +482,7 @@ package body Ghdlcomp is
    end Perform_Action;
 
    --  Command Make.
-   type Command_Make is new Command_Lib with null record;
+   type Command_Make is new Command_Comp with null record;
    function Decode_Command (Cmd : Command_Make; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Make) return String;
@@ -545,6 +545,13 @@ package body Ghdlcomp is
       end loop;
       Set_Date (Libraries.Work_Library, Date);
       Libraries.Save_Work_Library;
+   exception
+      when Compilation_Error =>
+         if Flag_Expect_Failure then
+            return;
+         else
+            raise;
+         end if;
    end Perform_Action;
 
       --  Command Gen_Makefile.

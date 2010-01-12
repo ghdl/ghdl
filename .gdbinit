@@ -3,7 +3,7 @@
 break __gnat_raise_nodefer_with_msg
 
 define pt
-call disp_tree ($arg0, 0, 0)
+call disp_tree.disp_tree ($arg0, 0, 0)
 end
 
 document pt

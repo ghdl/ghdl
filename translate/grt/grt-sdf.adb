@@ -132,7 +132,7 @@ package body Grt.Sdf is
       Read_Sdf;
    end Read_Append;
 
-   procedure Error_Sdf (Msg : String) is
+   procedure Error_Sdf_C is
    begin
       Error_C (Sdf_Filename.all);
       Error_C (":");
@@ -140,6 +140,11 @@ package body Grt.Sdf is
       Error_C (":");
       Error_C (Pos - Line_Start);
       Error_C (": ");
+   end Error_Sdf_C;
+
+   procedure Error_Sdf (Msg : String) is
+   begin
+      Error_Sdf_C;
       Error_E (Msg);
    end Error_Sdf;
 
@@ -525,6 +530,7 @@ package body Grt.Sdf is
 
    --  Status of a parsing.
    --  ERROR: parse error (syntax is not correct)
+   --  ALTERN: alternate construct parsed (ie simple RNUMBER for tc_rvalue).
    --  OPTIONAL: the construct is absent.
    --  FOUND: the construct is present.
    --  SET: the construct is present and a value was extracted from.
@@ -737,6 +743,7 @@ package body Grt.Sdf is
       Tok : Sdf_Token_Type;
       Res : Parse_Status_Type;
    begin
+      --  '('
       if Get_Token /= Tok_Oparen then
          Error_Sdf (Tok_Oparen);
          return Status_Error;
@@ -748,12 +755,7 @@ package body Grt.Sdf is
          Tok := Get_Token;
          if Tok = Tok_Cparen then
             --  This is a simple RNUMBER.
-            if Get_Token = Tok_Cparen then
-               return Status_Altern;
-            else
-               Error_Sdf (Tok_Cparen);
-               return Status_Error;
-            end if;
+            return Status_Altern;
          end if;
          if Sdf_Mtm = Minimum then
             Res := Status_Set;
@@ -825,6 +827,10 @@ package body Grt.Sdf is
          when Status_Error =>
             return False;
          when Status_Altern =>
+            Sdf_Context.Timing_Nbr := 1;
+            if Get_Token /= Tok_Cparen then
+               Error_Sdf (Tok_Cparen);
+            end if;
             return True;
          when Status_Found
            | Status_Optional =>
@@ -980,7 +986,9 @@ package body Grt.Sdf is
       end if;
       Vital_Annotate.Sdf_Generic (Sdf_Context.all, Name (1 .. Len), Ok);
       if not Ok then
-         Error_Sdf ("could not annotate generic");
+         Error_Sdf_C;
+         Error_C ("could not annotate generic ");
+         Error_E (Name (1 .. Len));
          return False;
       end if;
       return True;

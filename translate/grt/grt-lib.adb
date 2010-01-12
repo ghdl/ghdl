@@ -106,6 +106,16 @@ package body Grt.Lib is
       Do_Report ("assertion", Str, Severity, Loc, Unit);
    end Ghdl_Assert_Failed;
 
+   procedure Ghdl_Psl_Assert_Failed
+     (Str : Std_String_Ptr;
+      Severity : Integer;
+      Loc : Ghdl_Location_Ptr;
+      Unit : Ghdl_Rti_Access)
+   is
+   begin
+      Do_Report ("psl assertion", Str, Severity, Loc, Unit);
+   end Ghdl_Psl_Assert_Failed;
+
    procedure Ghdl_Report
      (Str : Std_String_Ptr;
       Severity : Integer;
@@ -257,7 +267,6 @@ package body Grt.Lib is
          return 1.0 / Res;
       end if;
    end Ghdl_Real_Exp;
-
 end Grt.Lib;
 
 

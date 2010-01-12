@@ -38,7 +38,12 @@ with Sem;
 with Iir_Chains; use Iir_Chains;
 with Nodes;
 with GNAT.Table;
+with Ieee.Std_Logic_1164;
 with Canon;
+with Canon_PSL;
+with PSL.Nodes;
+with PSL.NFAs;
+with PSL.NFAs.Utils;
 with Trans_Decls; use Trans_Decls;
 with Trans_Analyzes;
 
@@ -48,6 +53,10 @@ package body Translation is
    Std_Boolean_Type_Node : O_Tnode;
    Std_Boolean_True_Node : O_Cnode;
    Std_Boolean_False_Node : O_Cnode;
+   --  Array of STD.BOOLEAN.
+   Std_Boolean_Array_Type : O_Tnode;
+   --  Std_ulogic indexed array of STD.Boolean.
+   Std_Ulogic_Boolean_Array_Type : O_Tnode;
    --  Ortho type node for string template pointer.
    Std_String_Ptr_Node : O_Tnode;
    Std_String_Node : O_Tnode;
@@ -149,36 +158,29 @@ package body Translation is
    type Object_Kind_Type is (Mode_Value, Mode_Signal);
 
    --  Well known identifiers.
-   type Wk_Ident_Type is
-     (
-      Wkie_This, Wkie_Size, Wkie_Res, Wkie_Dir_To, Wkie_Dir_Downto,
-      Wkie_Left, Wkie_Right, Wkie_Dir, Wkie_Length, Wkie_Kind, Wkie_Dim,
-      Wkie_I, Wkie_Instance, Wkie_Arch_Instance, Wkie_Name, Wkie_Sig,
-      Wkie_Obj, Wkie_Rti, Wkie_Parent, Wkie_Filename, Wkie_Line
-      );
-   type Wk_Ident_Tree_Array is array (Wk_Ident_Type) of O_Ident;
-   Wk_Idents : Wk_Ident_Tree_Array;
-   Wki_This : O_Ident renames Wk_Idents (Wkie_This);
-   Wki_Size : O_Ident renames Wk_Idents (Wkie_Size);
-   Wki_Res : O_Ident renames Wk_Idents (Wkie_Res);
-   Wki_Dir_To : O_Ident renames Wk_Idents (Wkie_Dir_To);
-   Wki_Dir_Downto : O_Ident renames Wk_Idents (Wkie_Dir_Downto);
-   Wki_Left : O_Ident renames Wk_Idents (Wkie_Left);
-   Wki_Right : O_Ident renames Wk_Idents (Wkie_Right);
-   Wki_Dir : O_Ident renames Wk_Idents (Wkie_Dir);
-   Wki_Length : O_Ident renames Wk_Idents (Wkie_Length);
-   Wki_Kind : O_Ident renames Wk_Idents (Wkie_Kind);
-   Wki_Dim : O_Ident renames Wk_Idents (Wkie_Dim);
-   Wki_I : O_Ident renames Wk_Idents (Wkie_I);
-   Wki_Instance : O_Ident renames Wk_Idents (Wkie_Instance);
-   Wki_Arch_Instance : O_Ident renames Wk_Idents (Wkie_Arch_Instance);
-   Wki_Name : O_Ident renames Wk_Idents (Wkie_Name);
-   Wki_Sig : O_Ident renames Wk_Idents (Wkie_Sig);
-   Wki_Obj : O_Ident renames Wk_Idents (Wkie_Obj);
-   Wki_Rti : O_Ident renames Wk_Idents (Wkie_Rti);
-   Wki_Parent : O_Ident renames Wk_Idents (Wkie_Parent);
-   Wki_Filename : O_Ident renames Wk_Idents (Wkie_Filename);
-   Wki_Line : O_Ident renames Wk_Idents (Wkie_Line);
+   Wki_This : O_Ident;
+   Wki_Size : O_Ident;
+   Wki_Res : O_Ident;
+   Wki_Dir_To : O_Ident;
+   Wki_Dir_Downto : O_Ident;
+   Wki_Left : O_Ident;
+   Wki_Right : O_Ident;
+   Wki_Dir : O_Ident;
+   Wki_Length : O_Ident;
+   Wki_I : O_Ident;
+   Wki_Instance : O_Ident;
+   Wki_Arch_Instance : O_Ident;
+   Wki_Name : O_Ident;
+   Wki_Sig : O_Ident;
+   Wki_Obj : O_Ident;
+   Wki_Rti : O_Ident;
+   Wki_Parent : O_Ident;
+   Wki_Filename : O_Ident;
+   Wki_Line : O_Ident;
+   Wki_Lo : O_Ident;
+   Wki_Hi : O_Ident;
+   Wki_Mid : O_Ident;
+   Wki_Cmp : O_Ident;
 
    --  ALLOCATION_KIND defines the type of memory storage.
    --  ALLOC_STACK means the object is allocated on the local stack and
@@ -603,6 +605,8 @@ package body Translation is
                                      Dir : Iir_Direction;
                                      Val : Unsigned_64;
                                      Itype : Iir);
+
+      procedure Translate_Report (Stmt : Iir; Subprg : O_Dnode; Level : Iir);
    end Chap8;
 
    package Chap9 is
@@ -670,6 +674,7 @@ package body Translation is
       Ghdl_Rtik_Attribute_Transaction : O_Cnode;
       Ghdl_Rtik_Attribute_Quiet : O_Cnode;
       Ghdl_Rtik_Attribute_Stable : O_Cnode;
+      Ghdl_Rtik_Psl_Assert : O_Cnode;
       Ghdl_Rtik_Error : O_Cnode;
 
       --  RTI types.
@@ -757,6 +762,7 @@ package body Translation is
       Kind_Interface,
       Kind_Disconnect,
       Kind_Process,
+      Kind_Psl_Assert,
       Kind_Loop,
       Kind_Block,
       Kind_Component,
@@ -764,6 +770,7 @@ package body Translation is
       Kind_Package,
       Kind_Config,
       Kind_Assoc,
+      Kind_Str_Choice,
       Kind_Design_File,
       Kind_Library
       );
@@ -1166,6 +1173,29 @@ package body Translation is
 
             --  RTI for the process.
             Process_Rti_Const : O_Dnode := O_Dnode_Null;
+         when Kind_Psl_Assert =>
+            --  Type of assert declarations record.
+            Psl_Decls_Type : O_Tnode;
+
+            --  Field in the parent block for the declarations in the assert.
+            Psl_Parent_Field : O_Fnode;
+
+            --  Procedure for the state machine.
+            Psl_Proc_Subprg : O_Dnode;
+            --  Procedure for finalization.  Handles EOS.
+            Psl_Proc_Final_Subprg : O_Dnode;
+
+            --  Length of the state vector.
+            Psl_Vect_Len : Natural;
+
+            --  Type of the state vector.
+            Psl_Vect_Type : O_Tnode;
+
+            --  State vector variable.
+            Psl_Vect_Var : Var_Acc;
+
+            --  RTI for the process.
+            Psl_Rti_Const : O_Dnode := O_Dnode_Null;
          when Kind_Loop =>
             --  Labels for the loop.
             --  Used for exit/next from while-loop, and to exit from for-loop.
@@ -1245,6 +1275,15 @@ package body Translation is
             --  Association informations.
             Assoc_In : Assoc_Conv_Info;
             Assoc_Out : Assoc_Conv_Info;
+         when Kind_Str_Choice =>
+            --  List of choices, used to sort them.
+            Choice_Chain : Ortho_Info_Acc;
+            --  Association index.
+            Choice_Assoc : Natural;
+            --  Corresponding choice simple expression.
+            Choice_Expr : Iir;
+            --  Corresponding choice.
+            Choice_Parent : Iir;
          when Kind_Design_File =>
             Design_Filename : O_Dnode;
          when Kind_Library =>
@@ -1261,6 +1300,7 @@ package body Translation is
    subtype Object_Info_Acc is Ortho_Info_Acc (Kind_Object);
    subtype Alias_Info_Acc is Ortho_Info_Acc (Kind_Alias);
    subtype Proc_Info_Acc is Ortho_Info_Acc (Kind_Process);
+   subtype Psl_Info_Acc is Ortho_Info_Acc (Kind_Psl_Assert);
    subtype Loop_Info_Acc is Ortho_Info_Acc (Kind_Loop);
    subtype Block_Info_Acc is Ortho_Info_Acc (Kind_Block);
    subtype Comp_Info_Acc is Ortho_Info_Acc (Kind_Component);
@@ -2020,6 +2060,8 @@ package body Translation is
       Prg_Err_Missing_Return : constant Natural := 1;
       Prg_Err_Block_Configured : constant Natural := 2;
       Prg_Err_Dummy_Config : constant Natural := 3;
+      Prg_Err_No_Choice : constant Natural := 4;
+      Prg_Err_Bad_Choice : constant Natural := 5;
       procedure Gen_Program_Error (Loc : Iir; Code : Natural);
 
       --  Generate code to emit a failure if COND is TRUE, indicating an
@@ -2276,6 +2318,8 @@ package body Translation is
       procedure Gen_Exit_When (Label : O_Snode; Cond : O_Enode);
 
       --  Create a uniq identifier.
+      subtype Uniq_Identifier_String is String (1 .. 11);
+      function Create_Uniq_Identifier return Uniq_Identifier_String;
       function Create_Uniq_Identifier return O_Ident;
 
       --  Create a region for temporary variables.
@@ -2316,6 +2360,9 @@ package body Translation is
       --  Free all old temp.
       --  Used only to free memory.
       procedure Free_Old_Temp;
+
+      --  Return a ghdl_index_type literal for NUM.
+      function New_Index_Lit (Num : Unsigned_64) return O_Cnode;
 
       --  Create a constant (of name ID) for string STR.
       --  Append a NUL terminator (to make interfaces with C easier).
@@ -2968,9 +3015,9 @@ package body Translation is
                Ptr : String_Fat_Acc;
             begin
                Ptr := Get_String_Fat_Acc (Expr);
-               Name_Length := Get_String_Length (Expr);
+               Name_Length := Natural (Get_String_Length (Expr));
                for I in 1 .. Name_Length loop
-                  Name_Buffer (I) := Ptr (I);
+                  Name_Buffer (I) := Ptr (Nat32 (I));
                end loop;
             end;
          when Iir_Kind_Simple_Aggregate =>
@@ -3163,9 +3210,9 @@ package body Translation is
 
       Uniq_Id : Natural := 0;
 
-      function Create_Uniq_Identifier return O_Ident
+      function Create_Uniq_Identifier return Uniq_Identifier_String
       is
-         Str : String (1 .. 12);
+         Str : Uniq_Identifier_String;
          Val : Natural;
       begin
          Str (1 .. 3) := "_UI";
@@ -3175,8 +3222,12 @@ package body Translation is
             Str (I) := N2hex (Val mod 16);
             Val := Val / 16;
          end loop;
-         --Str (12) := Nul;
-         return Get_Identifier (Str (1 .. 11));
+         return Str;
+      end Create_Uniq_Identifier;
+
+      function Create_Uniq_Identifier return O_Ident is
+      begin
+         return Get_Identifier (Create_Uniq_Identifier);
       end Create_Uniq_Identifier;
 
       --  Create a temporary variable.
@@ -3406,6 +3457,12 @@ package body Translation is
          Temp_Type := Get_Info (Atype).Ortho_Ptr_Type (Is_Sig);
          return Create_Temp_Init (Temp_Type, New_Address (Name, Temp_Type));
       end Create_Temp_Ptr;
+
+      --  Return a ghdl_index_type literal for NUM.
+      function New_Index_Lit (Num : Unsigned_64) return O_Cnode is
+      begin
+         return New_Unsigned_Literal (Ghdl_Index_Type, Num);
+      end New_Index_Lit;
 
       --  Convert NAME into a STRING_CST.
       --  Append a NUL terminator (to make interfaces with C easier).
@@ -10853,6 +10910,7 @@ package body Translation is
                   then
                      case Get_Implicit_Definition (El) is
                         when Iir_Predefined_Array_Equality
+                          | Iir_Predefined_Array_Greater
                           | Iir_Predefined_Record_Equality =>
                            --  Used implicitly in case statement or other
                            --  predefined equality.
@@ -13365,7 +13423,7 @@ package body Translation is
 
          Literal_List : Iir_List;
          Lit : Iir;
-         Len : Natural;
+         Len : Nat32;
          Ptr : String_Fat_Acc;
       begin
          Literal_List :=
@@ -13387,7 +13445,7 @@ package body Translation is
          L_0 : O_Cnode;
          L_1 : O_Cnode;
          Ptr : String_Fat_Acc;
-         Len : Natural;
+         Len : Nat32;
          V : O_Cnode;
       begin
          L_0 := Get_Ortho_Expr (Get_Bit_String_0 (Lit));
@@ -13506,14 +13564,16 @@ package body Translation is
 
          Lit_Type : Iir;
          Element_Type : Iir;
+         Arr_Type : O_Tnode;
          List : O_Array_Aggr_List;
          Res : O_Cnode;
       begin
          Lit_Type := Get_Type (Str);
 
          Chap3.Translate_Anonymous_Type_Definition (Lit_Type, True);
+         Arr_Type := Get_Ortho_Type (Lit_Type, Mode_Value);
 
-         Start_Array_Aggr (List, Get_Ortho_Type (Lit_Type, Mode_Value));
+         Start_Array_Aggr (List, Arr_Type);
 
          Element_Type := Get_Element_Subtype (Lit_Type);
 
@@ -13526,8 +13586,8 @@ package body Translation is
       --  Some strings literal have an unconstrained array type,
       --  eg: 'image of constant.  Its type is not constrained
       --  because it is not so in VHDL!
-      function Translate_Static_Unconstrained_String_Literal (Str : Iir)
-        return O_Cnode
+      function Translate_Non_Static_String_Literal (Str : Iir)
+        return O_Enode
       is
          use Name_Table;
 
@@ -13545,9 +13605,10 @@ package body Translation is
          Len : Int32;
          Val : Var_Acc;
          Bound : Var_Acc;
+         R : O_Enode;
       begin
          Lit_Type := Get_Type (Str);
-         Type_Info := Get_Info (Get_Base_Type (Lit_Type));
+         Type_Info := Get_Info (Lit_Type);
 
          --  Create the string value.
          Len := Get_String_Length (Str);
@@ -13557,51 +13618,76 @@ package body Translation is
 
          Start_Array_Aggr (Val_Aggr, Str_Type);
          Element_Type := Get_Element_Subtype (Lit_Type);
-         Translate_Static_String_Literal_Inner (Val_Aggr, Str, Element_Type);
+         case Get_Kind (Str) is
+            when Iir_Kind_String_Literal =>
+               Translate_Static_String_Literal_Inner
+                 (Val_Aggr, Str, Element_Type);
+            when Iir_Kind_Bit_String_Literal =>
+               Translate_Static_Bit_String_Literal_Inner
+                 (Val_Aggr, Str, Element_Type);
+            when others =>
+               raise Internal_Error;
+         end case;
          Finish_Array_Aggr (Val_Aggr, Res);
 
          Val := Create_Global_Const
            (Create_Uniq_Identifier, Str_Type, O_Storage_Private, Res);
 
-         --  Create the string bound.
-         Index_Type := Get_First_Element (Get_Index_Subtype_List (Lit_Type));
-         Index_Type_Info := Get_Info (Index_Type);
-         Start_Record_Aggr (Bound_Aggr, Type_Info.T.Bounds_Type);
-         Start_Record_Aggr (Index_Aggr, Index_Type_Info.T.Range_Type);
-         New_Record_Aggr_El
-           (Index_Aggr,
-            New_Signed_Literal (Index_Type_Info.Ortho_Type (Mode_Value), 0));
-         New_Record_Aggr_El
-           (Index_Aggr,
-            New_Signed_Literal (Index_Type_Info.Ortho_Type (Mode_Value),
+         if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+            --  Create the string bound.
+            Index_Type :=
+              Get_First_Element (Get_Index_Subtype_List (Lit_Type));
+            Index_Type_Info := Get_Info (Index_Type);
+            Start_Record_Aggr (Bound_Aggr, Type_Info.T.Bounds_Type);
+            Start_Record_Aggr (Index_Aggr, Index_Type_Info.T.Range_Type);
+            New_Record_Aggr_El
+              (Index_Aggr,
+               New_Signed_Literal
+                 (Index_Type_Info.Ortho_Type (Mode_Value), 0));
+            New_Record_Aggr_El
+              (Index_Aggr,
+               New_Signed_Literal (Index_Type_Info.Ortho_Type (Mode_Value),
                                 Integer_64 (Len - 1)));
-         New_Record_Aggr_El
-           (Index_Aggr, Ghdl_Dir_To_Node);
-         New_Record_Aggr_El
-           (Index_Aggr,
-            New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Len)));
-         Finish_Record_Aggr (Index_Aggr, Res);
-         New_Record_Aggr_El (Bound_Aggr, Res);
-         Finish_Record_Aggr (Bound_Aggr, Res);
-         Bound := Create_Global_Const
-           (Create_Uniq_Identifier, Type_Info.T.Bounds_Type,
-            O_Storage_Private, Res);
+            New_Record_Aggr_El
+              (Index_Aggr, Ghdl_Dir_To_Node);
+            New_Record_Aggr_El
+              (Index_Aggr,
+               New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Len)));
+            Finish_Record_Aggr (Index_Aggr, Res);
+            New_Record_Aggr_El (Bound_Aggr, Res);
+            Finish_Record_Aggr (Bound_Aggr, Res);
+            Bound := Create_Global_Const
+              (Create_Uniq_Identifier, Type_Info.T.Bounds_Type,
+               O_Storage_Private, Res);
 
-         --  The descriptor.
-         Start_Record_Aggr (Res_Aggr, Type_Info.Ortho_Type (Mode_Value));
-         New_Record_Aggr_El
-           (Res_Aggr,
-            New_Global_Address (Get_Var_Label (Val),
-                                Type_Info.T.Base_Ptr_Type (Mode_Value)));
-         New_Record_Aggr_El
-           (Res_Aggr,
-            New_Global_Address (Get_Var_Label (Bound),
-                                Type_Info.T.Bounds_Ptr_Type));
-         Finish_Record_Aggr (Res_Aggr, Res);
+            --  The descriptor.
+            Start_Record_Aggr (Res_Aggr, Type_Info.Ortho_Type (Mode_Value));
+            New_Record_Aggr_El
+              (Res_Aggr,
+               New_Global_Address (Get_Var_Label (Val),
+                                   Type_Info.T.Base_Ptr_Type (Mode_Value)));
+            New_Record_Aggr_El
+              (Res_Aggr,
+               New_Global_Address (Get_Var_Label (Bound),
+                                   Type_Info.T.Bounds_Ptr_Type));
+            Finish_Record_Aggr (Res_Aggr, Res);
+            Free_Var (Val);
+            Free_Var (Bound);
+
+            Val := Create_Global_Const
+              (Create_Uniq_Identifier, Type_Info.Ortho_Type (Mode_Value),
+               O_Storage_Private, Res);
+         elsif Type_Info.Type_Mode = Type_Mode_Ptr_Array then
+            null;
+         else
+            raise Internal_Error;
+         end if;
+
+         R := New_Address (Get_Var (Val),
+                           Type_Info.Ortho_Ptr_Type (Mode_Value));
          Free_Var (Val);
-         Free_Var (Bound);
-         return Res;
-      end Translate_Static_Unconstrained_String_Literal;
+         return R;
+      end Translate_Non_Static_String_Literal;
 
       --  Only for Strings of STD.Character.
       function Translate_Static_String (Str_Type : Iir; Str_Ident : Name_Id)
@@ -13655,33 +13741,36 @@ package body Translation is
          Res : O_Cnode;
          R : O_Enode;
       begin
-         case Get_Kind (Str) is
-            when Iir_Kind_String_Literal =>
-               if Get_Kind (Get_Type (Str))
-                 = Iir_Kind_Array_Subtype_Definition
-               then
-                  Res := Translate_Static_String_Literal (Str);
-               else
-                  Res := Translate_Static_Unconstrained_String_Literal (Str);
-               end if;
-            when Iir_Kind_Bit_String_Literal =>
-               Res := Translate_Static_Bit_String_Literal (Str);
-            when Iir_Kind_Simple_Aggregate =>
-               Res := Translate_Static_Simple_Aggregate (Str);
-            when Iir_Kind_Simple_Name_Attribute =>
-               Res := Translate_Static_String
-                 (Get_Type (Str), Get_Simple_Name_Identifier (Str));
-            when others =>
-               raise Internal_Error;
-         end case;
          Str_Type := Get_Type (Str);
-         Info := Get_Info (Str_Type);
-         Var := Create_Global_Const
-           (Create_Uniq_Identifier, Info.Ortho_Type (Mode_Value),
-            O_Storage_Private, Res);
-         R := New_Address (Get_Var (Var), Info.Ortho_Ptr_Type (Mode_Value));
-         Free_Var (Var);
-         return R;
+         if Get_Constraint_State (Str_Type) = Fully_Constrained
+           and then Get_Type_Staticness
+           (Get_First_Element (Get_Index_Subtype_List (Str_Type)))
+           = Locally
+         then
+            case Get_Kind (Str) is
+               when Iir_Kind_String_Literal =>
+                  Res := Translate_Static_String_Literal (Str);
+               when Iir_Kind_Bit_String_Literal =>
+                  Res := Translate_Static_Bit_String_Literal (Str);
+               when Iir_Kind_Simple_Aggregate =>
+                  Res := Translate_Static_Simple_Aggregate (Str);
+               when Iir_Kind_Simple_Name_Attribute =>
+                  Res := Translate_Static_String
+                    (Get_Type (Str), Get_Simple_Name_Identifier (Str));
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Str_Type := Get_Type (Str);
+            Info := Get_Info (Str_Type);
+            Var := Create_Global_Const
+              (Create_Uniq_Identifier, Info.Ortho_Type (Mode_Value),
+               O_Storage_Private, Res);
+            R := New_Address (Get_Var (Var), Info.Ortho_Ptr_Type (Mode_Value));
+            Free_Var (Var);
+            return R;
+         else
+            return Translate_Non_Static_String_Literal (Str);
+         end if;
       end Translate_String_Literal;
 
       function Translate_Static_Implicit_Conv
@@ -15067,7 +15156,7 @@ package body Translation is
                   Lit : Iir;
                   Pos : O_Enode;
                   Ptr : String_Fat_Acc;
-                  Len : Natural;
+                  Len : Nat32;
                begin
                   Ptr := Get_String_Fat_Acc (Aggr);
                   Len := Get_String_Length (Aggr);
@@ -15083,7 +15172,7 @@ package body Translation is
                           (ON_Add_Ov,
                            New_Obj_Value (Var_Index),
                            New_Lit (New_Unsigned_Literal
-                                    (Ghdl_Index_Type, Natural'Pos (I - 1))));
+                                      (Ghdl_Index_Type, Nat32'Pos (I - 1))));
                      end if;
                      New_Assign_Stmt
                        (M2Lv (Chap3.Index_Base (Base_Ptr, Aggr_Type, Pos)),
@@ -15095,7 +15184,7 @@ package body Translation is
                      (ON_Add_Ov,
                       New_Obj_Value (Var_Index),
                       New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                     Natural'Pos (Len)))));
+                                                     Nat32'Pos (Len)))));
                end;
                return;
             when Iir_Kind_Bit_String_Literal =>
@@ -15504,7 +15593,7 @@ package body Translation is
 
          --  FIXME: creating aggregate subtype is expensive and rarely used.
          --  (one of the current use - only ? - is check_array_match).
-         Chap3.Translate_Type_Definition (Aggr_Type, False);
+         Chap3.Translate_Anonymous_Type_Definition (Aggr_Type, False);
       end Translate_Array_Aggregate;
 
       procedure Translate_Aggregate
@@ -18879,9 +18968,10 @@ package body Translation is
          Translate_Report (Stmt, Ghdl_Report, Severity_Level_Note);
       end Translate_Report_Statement;
 
+      --  Helper to compare a string choice with the selector.
       function Translate_Simple_String_Choice
         (Expr : O_Dnode;
-         Val : Iir;
+         Val : O_Enode;
          Val_Node : O_Dnode;
          Tinfo : Type_Info_Acc;
          Func : Iir)
@@ -18893,7 +18983,7 @@ package body Translation is
          New_Assign_Stmt
            (New_Selected_Element (New_Obj (Val_Node),
                                   Tinfo.T.Base_Field (Mode_Value)),
-            Chap7.Translate_Expression (Val, Get_Type (Val)));
+            Val);
          Func_Info := Get_Info (Func);
          Start_Association (Assoc, Func_Info.Ortho_Func);
          Chap2.Add_Subprg_Instance_Assoc (Assoc, Func_Info.Subprg_Instance);
@@ -18904,78 +18994,16 @@ package body Translation is
          return New_Function_Call (Assoc);
       end Translate_Simple_String_Choice;
 
-      procedure Translate_String_Choice
-        (Expr : O_Dnode;
-         Val_Node : O_Dnode;
-         Tinfo : Type_Info_Acc;
-         Func : Iir;
-         Cond_Var : O_Dnode;
-         Choice : Iir)
-      is
-         Cond : O_Enode;
-         If_Blk : O_If_Block;
-         Stmt_Chain : Iir;
-         First : Boolean;
-         Ch : Iir;
-      begin
-         if Choice = Null_Iir then
-            return;
-         end if;
-
-         First := True;
-         Stmt_Chain := Get_Associated (Choice);
-         Ch := Choice;
-         loop
-            case Get_Kind (Ch) is
-               when Iir_Kind_Choice_By_Expression =>
-                  Cond := Translate_Simple_String_Choice
-                    (Expr, Get_Expression (Ch), Val_Node, Tinfo, Func);
-               when Iir_Kind_Choice_By_Others =>
-                  Translate_Statements_Chain (Stmt_Chain);
-                  return;
-               when others =>
-                  Error_Kind ("translate_string_choice", Ch);
-            end case;
-            if not First then
-               New_Assign_Stmt
-                 (New_Obj (Cond_Var),
-                  New_Dyadic_Op (ON_Or, New_Obj_Value (Cond_Var), Cond));
-            end if;
-            Ch := Get_Chain (Ch);
-            exit when Ch = Null_Iir;
-            exit when not Get_Same_Alternative_Flag (Ch);
-            exit when Get_Associated (Ch) /= Null_Iir;
-            if First then
-               New_Assign_Stmt (New_Obj (Cond_Var), Cond);
-               First := False;
-            end if;
-         end loop;
-         if not First then
-            Cond := New_Obj_Value (Cond_Var);
-         end if;
-         Start_If_Stmt (If_Blk, Cond);
-         Translate_Statements_Chain (Stmt_Chain);
-         New_Else_Stmt (If_Blk);
-         Translate_String_Choice
-           (Expr, Val_Node, Tinfo, Func, Cond_Var, Ch);
-         Finish_If_Stmt (If_Blk);
-      end Translate_String_Choice;
-
-      --  Case statement whose expression is an unidim array.
-      procedure Translate_String_Case_Statement (Stmt : Iir_Case_Statement)
+      --  Helper to evaluate the selector and preparing a choice variable.
+      procedure Translate_String_Case_Statement_Common
+        (Stmt : Iir_Case_Statement;
+         Expr_Type : out Iir;
+         Tinfo : out Type_Info_Acc;
+         Expr_Node : out O_Dnode;
+         C_Node : out O_Dnode)
       is
          Expr : Iir;
-         Expr_Type : Iir;
          Base_Type : Iir;
-         --  Node containing the address of the selector.
-         Expr_Node : O_Dnode;
-         --  Node containing the current choice.
-         C_Node : O_Dnode;
-         Tinfo : Type_Info_Acc;
-
-         Choices_Chain : Iir;
-         Func : Iir;
-         Cond_Var : O_Dnode;
       begin
          --  Translate into if/elsif statements.
          --  FIXME: if the number of literals ** length of the array < 256,
@@ -18985,26 +19013,443 @@ package body Translation is
          Base_Type := Get_Base_Type (Expr_Type);
          Tinfo := Get_Info (Base_Type);
 
+         --  Translate selector.
          Expr_Node := Create_Temp_Init
            (Tinfo.Ortho_Ptr_Type (Mode_Value),
             Chap7.Translate_Expression (Expr, Base_Type));
+
+         --  Copy the bounds for the choices.
          C_Node := Create_Temp (Tinfo.Ortho_Type (Mode_Value));
          New_Assign_Stmt
            (New_Selected_Element (New_Obj (C_Node),
                                   Tinfo.T.Bounds_Field (Mode_Value)),
             New_Value_Selected_Acc_Value
-            (New_Obj (Expr_Node), Tinfo.T.Bounds_Field (Mode_Value)));
+              (New_Obj (Expr_Node), Tinfo.T.Bounds_Field (Mode_Value)));
+      end Translate_String_Case_Statement_Common;
+
+      --  Translate a string case statement using a dichotomy.
+      procedure Translate_String_Case_Statement_Dichotomy
+        (Stmt : Iir_Case_Statement)
+      is
+         --  Selector.
+         Expr_Type : Iir;
+         Tinfo : Type_Info_Acc;
+         Expr_Node : O_Dnode;
+         C_Node : O_Dnode;
+
+         Choices_Chain : Iir;
+         Choice : Iir;
+         Has_Others : Boolean;
+         Func : Iir;
+
+         --  Number of non-others choices.
+         Nbr_Choices : Natural;
+         --  Number of associations.
+         Nbr_Assocs : Natural;
+
+         Info : Ortho_Info_Acc;
+         First, Last : Ortho_Info_Acc;
+         Sel_Length : Iir_Int64;
+
+         --  Dichotomy table (table of choices).
+         String_Type : O_Tnode;
+         Table_Base_Type : O_Tnode;
+         Table_Type : O_Tnode;
+         Table : O_Dnode;
+         List : O_Array_Aggr_List;
+         Table_Cst : O_Cnode;
+
+         --  Association table.
+         --  Indexed by the choice, returns an index to the associated
+         --   statement list.
+         --  Could be replaced by jump table.
+         Assoc_Table_Base_Type : O_Tnode;
+         Assoc_Table_Type : O_Tnode;
+         Assoc_Table : O_Dnode;
+      begin
+         Choices_Chain := Get_Case_Statement_Alternative_Chain (Stmt);
+
+         --  Count number of choices and number of associations.
+         Nbr_Choices := 0;
+         Nbr_Assocs := 0;
+         Choice := Choices_Chain;
+         First := null;
+         Last := null;
+         Has_Others := False;
+         while Choice /= Null_Iir loop
+            case Get_Kind (Choice) is
+               when Iir_Kind_Choice_By_Others =>
+                  Has_Others := True;
+                  exit;
+               when Iir_Kind_Choice_By_Expression =>
+                  null;
+               when others =>
+                  raise Internal_Error;
+            end case;
+            if not Get_Same_Alternative_Flag (Choice) then
+               Nbr_Assocs := Nbr_Assocs + 1;
+            end if;
+            Info := Add_Info (Choice, Kind_Str_Choice);
+            if First = null then
+               First := Info;
+            else
+               Last.Choice_Chain := Info;
+            end if;
+            Last := Info;
+            Info.Choice_Chain := null;
+            Info.Choice_Assoc := Nbr_Assocs - 1;
+            Info.Choice_Parent := Choice;
+            Info.Choice_Expr := Get_Expression (Choice);
+
+            Nbr_Choices := Nbr_Choices + 1;
+            Choice := Get_Chain (Choice);
+         end loop;
+
+         --  Sort choices.
+         declare
+            procedure Merge_Sort (Head : Ortho_Info_Acc;
+                                  Nbr : Natural;
+                                  Res : out Ortho_Info_Acc;
+                                  Next : out Ortho_Info_Acc)
+            is
+               L, R, L_End, R_End : Ortho_Info_Acc;
+               E, Last : Ortho_Info_Acc;
+               Half : constant Natural := Nbr / 2;
+            begin
+               --  Sorting less than 2 elements is easy!
+               if Nbr < 2 then
+                  Res := Head;
+                  if Nbr = 0 then
+                     Next := Head;
+                  else
+                     Next := Head.Choice_Chain;
+                  end if;
+                  return;
+               end if;
+
+               Merge_Sort (Head, Half, L, L_End);
+               Merge_Sort (L_End, Nbr - Half, R, R_End);
+               Next := R_End;
+
+               --  Merge
+               Last := null;
+               loop
+                  if L /= L_End
+                    and then
+                    (R = R_End
+                       or else
+                       Compare_String_Literals (L.Choice_Expr, R.Choice_Expr)
+                       = Compare_Lt)
+                  then
+                     E := L;
+                     L := L.Choice_Chain;
+                  elsif R /= R_End then
+                     E := R;
+                     R := R.Choice_Chain;
+                  else
+                     exit;
+                  end if;
+                  if Last = null then
+                     Res := E;
+                  else
+                     Last.Choice_Chain := E;
+                  end if;
+                  Last := E;
+               end loop;
+               Last.Choice_Chain := R_End;
+            end Merge_Sort;
+            Next : Ortho_Info_Acc;
+         begin
+            Merge_Sort (First, Nbr_Choices, First, Next);
+            if Next /= null then
+               raise Internal_Error;
+            end if;
+         end;
+
+         Translate_String_Case_Statement_Common
+           (Stmt, Expr_Type, Tinfo, Expr_Node, C_Node);
+
+         --  Generate choices table.
+         Sel_Length := Eval_Discrete_Type_Length
+           (Get_String_Type_Bound_Type (Expr_Type));
+         String_Type := New_Constrained_Array_Type
+           (Tinfo.T.Base_Type (Mode_Value),
+            New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Sel_Length)));
+         Table_Base_Type := New_Array_Type (String_Type, Ghdl_Index_Type);
+         New_Type_Decl (Create_Uniq_Identifier, Table_Base_Type);
+         Table_Type := New_Constrained_Array_Type
+           (Table_Base_Type,
+            New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Choices)));
+         New_Type_Decl (Create_Uniq_Identifier, Table_Type);
+         New_Const_Decl (Table, Create_Uniq_Identifier, O_Storage_Private,
+                         Table_Type);
+         Start_Const_Value (Table);
+         Start_Array_Aggr (List, Table_Type);
+         Info := First;
+         while Info /= null loop
+            New_Array_Aggr_El (List, Chap7.Translate_Static_Expression
+                                 (Info.Choice_Expr, Expr_Type));
+            Info := Info.Choice_Chain;
+         end loop;
+         Finish_Array_Aggr (List, Table_Cst);
+         Finish_Const_Value (Table, Table_Cst);
+
+         --  Generate assoc table.
+         Assoc_Table_Base_Type :=
+           New_Array_Type (Ghdl_Index_Type, Ghdl_Index_Type);
+         New_Type_Decl (Create_Uniq_Identifier, Assoc_Table_Base_Type);
+         Assoc_Table_Type := New_Constrained_Array_Type
+           (Assoc_Table_Base_Type,
+            New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Choices)));
+         New_Type_Decl (Create_Uniq_Identifier, Assoc_Table_Type);
+         New_Const_Decl (Assoc_Table, Create_Uniq_Identifier,
+                         O_Storage_Private, Assoc_Table_Type);
+         Start_Const_Value (Assoc_Table);
+         Start_Array_Aggr (List, Assoc_Table_Type);
+         Info := First;
+         while Info /= null loop
+            New_Array_Aggr_El
+              (List, New_Unsigned_Literal (Ghdl_Index_Type,
+                                           Unsigned_64 (Info.Choice_Assoc)));
+            Info := Info.Choice_Chain;
+         end loop;
+         Finish_Array_Aggr (List, Table_Cst);
+         Finish_Const_Value (Assoc_Table, Table_Cst);
+
+         --  Generate dichotomy code.
+         declare
+            Var_Lo, Var_Hi, Var_Mid : O_Dnode;
+            Var_Cmp : O_Dnode;
+            Var_Idx : O_Dnode;
+            Label : O_Snode;
+            Others_Lit : O_Cnode;
+            If_Blk1, If_Blk2 : O_If_Block;
+            Case_Blk : O_Case_Block;
+         begin
+            Var_Idx := Create_Temp (Ghdl_Index_Type);
+
+            Start_Declare_Stmt;
+
+            New_Var_Decl (Var_Lo, Wki_Lo, O_Storage_Local, Ghdl_Index_Type);
+            New_Var_Decl (Var_Hi, Wki_Hi, O_Storage_Local, Ghdl_Index_Type);
+            New_Var_Decl (Var_Mid, Wki_Mid, O_Storage_Local, Ghdl_Index_Type);
+            New_Var_Decl (Var_Cmp, Wki_Cmp,
+                          O_Storage_Local, Ghdl_Compare_Type);
+
+            New_Assign_Stmt (New_Obj (Var_Lo), New_Lit (Ghdl_Index_0));
+            New_Assign_Stmt
+              (New_Obj (Var_Hi),
+               New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
+                                              Unsigned_64 (Nbr_Choices))));
+
+            Func := Chap7.Find_Predefined_Function
+              (Get_Base_Type (Expr_Type), Iir_Predefined_Array_Greater);
+
+            if Has_Others then
+               Others_Lit := New_Unsigned_Literal
+                 (Ghdl_Index_Type, Unsigned_64 (Nbr_Assocs));
+            end if;
+
+            Start_Loop_Stmt (Label);
+            New_Assign_Stmt
+              (New_Obj (Var_Mid),
+               New_Dyadic_Op (ON_Div_Ov,
+                              New_Dyadic_Op (ON_Add_Ov,
+                                             New_Obj_Value (Var_Lo),
+                                             New_Obj_Value (Var_Hi)),
+                              New_Lit (New_Unsigned_Literal
+                                         (Ghdl_Index_Type, 2))));
+            New_Assign_Stmt
+              (New_Obj (Var_Cmp),
+               Translate_Simple_String_Choice
+                 (Expr_Node,
+                  New_Address (New_Indexed_Element (New_Obj (Table),
+                                                    New_Obj_Value (Var_Mid)),
+                               Tinfo.T.Base_Ptr_Type (Mode_Value)),
+                  C_Node, Tinfo, Func));
+            Start_If_Stmt
+              (If_Blk1,
+               New_Compare_Op (ON_Eq,
+                               New_Obj_Value (Var_Cmp),
+                               New_Lit (Ghdl_Compare_Eq),
+                               Ghdl_Bool_Type));
+            New_Assign_Stmt
+              (New_Obj (Var_Idx),
+               New_Value (New_Indexed_Element (New_Obj (Assoc_Table),
+                                               New_Obj_Value (Var_Mid))));
+            New_Exit_Stmt (Label);
+            Finish_If_Stmt (If_Blk1);
+
+            Start_If_Stmt
+              (If_Blk1,
+               New_Compare_Op (ON_Eq,
+                               New_Obj_Value (Var_Cmp),
+                               New_Lit (Ghdl_Compare_Lt),
+                               Ghdl_Bool_Type));
+            Start_If_Stmt
+              (If_Blk2,
+               New_Compare_Op (ON_Le,
+                               New_Obj_Value (Var_Mid),
+                               New_Obj_Value (Var_Lo),
+                               Ghdl_Bool_Type));
+            if not Has_Others then
+               Chap6.Gen_Program_Error (Stmt, Chap6.Prg_Err_Bad_Choice);
+            else
+               New_Assign_Stmt (New_Obj (Var_Idx), New_Lit (Others_Lit));
+               New_Exit_Stmt (Label);
+            end if;
+            New_Else_Stmt (If_Blk2);
+            New_Assign_Stmt (New_Obj (Var_Hi),
+                             New_Dyadic_Op (ON_Sub_Ov,
+                                            New_Obj_Value (Var_Mid),
+                                            New_Lit (Ghdl_Index_1)));
+            Finish_If_Stmt (If_Blk2);
+
+            New_Else_Stmt (If_Blk1);
+
+            Start_If_Stmt
+              (If_Blk2,
+               New_Compare_Op (ON_Ge,
+                               New_Obj_Value (Var_Mid),
+                               New_Obj_Value (Var_Hi),
+                               Ghdl_Bool_Type));
+            if not Has_Others then
+               Chap6.Gen_Program_Error (Stmt, Chap6.Prg_Err_No_Choice);
+            else
+               New_Assign_Stmt (New_Obj (Var_Idx), New_Lit (Others_Lit));
+               New_Exit_Stmt (Label);
+            end if;
+            New_Else_Stmt (If_Blk2);
+            New_Assign_Stmt (New_Obj (Var_Lo),
+                             New_Dyadic_Op (ON_Add_Ov,
+                                            New_Obj_Value (Var_Mid),
+                                            New_Lit (Ghdl_Index_1)));
+            Finish_If_Stmt (If_Blk2);
+
+            Finish_If_Stmt (If_Blk1);
+
+            Finish_Loop_Stmt (Label);
+
+            Finish_Declare_Stmt;
+
+            Start_Case_Stmt (Case_Blk, New_Obj_Value (Var_Idx));
+
+            Choice := Choices_Chain;
+            while Choice /= Null_Iir loop
+               case Get_Kind (Choice) is
+                  when Iir_Kind_Choice_By_Others =>
+                     Start_Choice (Case_Blk);
+                     New_Expr_Choice (Case_Blk, Others_Lit);
+                     Finish_Choice (Case_Blk);
+                     Translate_Statements_Chain (Get_Associated (Choice));
+                  when Iir_Kind_Choice_By_Expression =>
+                     if not Get_Same_Alternative_Flag (Choice) then
+                        Start_Choice (Case_Blk);
+                        New_Expr_Choice
+                          (Case_Blk,
+                           New_Unsigned_Literal
+                             (Ghdl_Index_Type,
+                              Unsigned_64 (Get_Info (Choice).Choice_Assoc)));
+                        Finish_Choice (Case_Blk);
+                        Translate_Statements_Chain (Get_Associated (Choice));
+                     end if;
+                     Free_Info (Choice);
+                  when others =>
+                     raise Internal_Error;
+               end case;
+               Choice := Get_Chain (Choice);
+            end loop;
+
+            Start_Choice (Case_Blk);
+            New_Default_Choice (Case_Blk);
+            Finish_Choice (Case_Blk);
+            Chap6.Gen_Program_Error (Stmt, Chap6.Prg_Err_No_Choice);
+
+            Finish_Case_Stmt (Case_Blk);
+         end;
+      end Translate_String_Case_Statement_Dichotomy;
+
+      --  Case statement whose expression is an unidim array.
+      --  Translate into if/elsif statements (linear search).
+      procedure Translate_String_Case_Statement_Linear
+        (Stmt : Iir_Case_Statement)
+      is
+         Expr_Type : Iir;
+         --  Node containing the address of the selector.
+         Expr_Node : O_Dnode;
+         --  Node containing the current choice.
+         Val_Node : O_Dnode;
+         Tinfo : Type_Info_Acc;
+
+         Cond_Var : O_Dnode;
+
+         Func : Iir;
+
+         procedure Translate_String_Choice (Choice : Iir)
+         is
+            Cond : O_Enode;
+            If_Blk : O_If_Block;
+            Stmt_Chain : Iir;
+            First : Boolean;
+            Ch : Iir;
+            Ch_Expr : Iir;
+         begin
+            if Choice = Null_Iir then
+               return;
+            end if;
+
+            First := True;
+            Stmt_Chain := Get_Associated (Choice);
+            Ch := Choice;
+            loop
+               case Get_Kind (Ch) is
+                  when Iir_Kind_Choice_By_Expression =>
+                     Ch_Expr := Get_Expression (Ch);
+                     Cond := Translate_Simple_String_Choice
+                       (Expr_Node,
+                        Chap7.Translate_Expression (Ch_Expr,
+                                                    Get_Type (Ch_Expr)),
+                        Val_Node, Tinfo, Func);
+                  when Iir_Kind_Choice_By_Others =>
+                     Translate_Statements_Chain (Stmt_Chain);
+                     return;
+                  when others =>
+                     Error_Kind ("translate_string_choice", Ch);
+               end case;
+               if not First then
+                  New_Assign_Stmt
+                    (New_Obj (Cond_Var),
+                     New_Dyadic_Op (ON_Or, New_Obj_Value (Cond_Var), Cond));
+               end if;
+               Ch := Get_Chain (Ch);
+               exit when Ch = Null_Iir;
+               exit when not Get_Same_Alternative_Flag (Ch);
+               exit when Get_Associated (Ch) /= Null_Iir;
+               if First then
+                  New_Assign_Stmt (New_Obj (Cond_Var), Cond);
+                  First := False;
+               end if;
+            end loop;
+            if not First then
+               Cond := New_Obj_Value (Cond_Var);
+            end if;
+            Start_If_Stmt (If_Blk, Cond);
+            Translate_Statements_Chain (Stmt_Chain);
+            New_Else_Stmt (If_Blk);
+            Translate_String_Choice (Ch);
+            Finish_If_Stmt (If_Blk);
+         end Translate_String_Choice;
+      begin
+         Translate_String_Case_Statement_Common
+           (Stmt, Expr_Type, Tinfo, Expr_Node, Val_Node);
+
+         Func := Chap7.Find_Predefined_Function
+           (Get_Base_Type (Expr_Type), Iir_Predefined_Array_Equality);
 
          Cond_Var := Create_Temp (Std_Boolean_Type_Node);
 
-         Func := Chap7.Find_Predefined_Function
-           (Base_Type, Iir_Predefined_Array_Equality);
-
-         Choices_Chain := Get_Case_Statement_Alternative_Chain (Stmt);
-         Translate_String_Choice
-           (Expr_Node, C_Node,
-            Tinfo, Func, Cond_Var, Choices_Chain);
-      end Translate_String_Case_Statement;
+         Translate_String_Choice (Get_Case_Statement_Alternative_Chain (Stmt));
+      end Translate_String_Case_Statement_Linear;
 
       procedure Translate_Case_Choice
         (Choice : Iir; Choice_Type : Iir; Blk : in out O_Case_Block)
@@ -19045,7 +19490,30 @@ package body Translation is
          Expr := Get_Expression (Stmt);
          Expr_Type := Get_Type (Expr);
          if Get_Kind (Expr_Type) = Iir_Kind_Array_Subtype_Definition then
-            Translate_String_Case_Statement (Stmt);
+            declare
+               Nbr_Choices : Natural := 0;
+               Choice : Iir;
+            begin
+               Choice := Get_Case_Statement_Alternative_Chain (Stmt);
+               while Choice /= Null_Iir loop
+                  case Get_Kind (Choice) is
+                     when Iir_Kind_Choice_By_Others =>
+                        exit;
+                     when Iir_Kind_Choice_By_Expression =>
+                        null;
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+                  Nbr_Choices := Nbr_Choices + 1;
+                  Choice := Get_Chain (Choice);
+               end loop;
+
+               if Nbr_Choices < 3 then
+                  Translate_String_Case_Statement_Linear (Stmt);
+               else
+                  Translate_String_Case_Statement_Dichotomy (Stmt);
+               end if;
+            end;
             return;
          end if;
          Start_Case_Stmt (Case_Blk, Chap7.Translate_Expression (Expr));
@@ -20950,6 +21418,313 @@ package body Translation is
          Info.Process_Parent_Field := Field;
       end Translate_Process_Declarations;
 
+      procedure Translate_Psl_Assert_Declarations (Stmt : Iir)
+      is
+         use PSL.Nodes;
+         use PSL.NFAs;
+
+         Mark : Id_Mark_Type;
+         Info : Ortho_Info_Acc;
+         Itype : O_Tnode;
+         Field : O_Fnode;
+
+         N : NFA;
+      begin
+         --  Create process record.
+         Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+         Push_Instance_Factory (O_Tnode_Null);
+         Info := Add_Info (Stmt, Kind_Psl_Assert);
+
+         N := Get_PSL_NFA (Stmt);
+         Labelize_States (N, Info.Psl_Vect_Len);
+         Info.Psl_Vect_Type := New_Constrained_Array_Type
+           (Std_Boolean_Array_Type,
+            New_Unsigned_Literal (Ghdl_Index_Type,
+                                  Unsigned_64 (Info.Psl_Vect_Len)));
+         New_Type_Decl (Create_Identifier ("VECTTYPE"), Info.Psl_Vect_Type);
+         Info.Psl_Vect_Var :=
+           Create_Var (Create_Var_Identifier ("VECT"), Info.Psl_Vect_Type);
+
+         Pop_Instance_Factory (Itype);
+         New_Type_Decl (Create_Identifier ("INSTTYPE"), Itype);
+         Pop_Identifier_Prefix (Mark);
+
+         --  Create a field in the parent record.
+         Field := Add_Instance_Factory_Field
+           (Create_Identifier_Without_Prefix (Stmt), Itype);
+
+         --  Set info in child record.
+         Info.Psl_Decls_Type := Itype;
+         Info.Psl_Parent_Field := Field;
+      end Translate_Psl_Assert_Declarations;
+
+      function Translate_Psl_Expr (Expr : PSL_Node; Eos : Boolean)
+                                  return O_Enode
+      is
+         use PSL.Nodes;
+      begin
+         case Get_Kind (Expr) is
+            when N_HDL_Expr =>
+               declare
+                  E : Iir;
+                  Rtype : Iir;
+                  Res : O_Enode;
+               begin
+                  E := Get_HDL_Node (Expr);
+                  Rtype := Get_Base_Type (Get_Type (E));
+                  Res := Chap7.Translate_Expression (E);
+                  if Rtype = Boolean_Type_Definition then
+                     return Res;
+                  elsif Rtype = Ieee.Std_Logic_1164.Std_Ulogic_Type then
+                     return New_Value
+                       (New_Indexed_Element
+                          (New_Obj (Ghdl_Std_Ulogic_To_Boolean_Array),
+                           New_Convert_Ov (Res, Ghdl_Index_Type)));
+                  else
+                     Error_Kind ("translate_psl_expr/hdl_expr", Expr);
+                  end if;
+               end;
+            when N_True =>
+               return New_Lit (Std_Boolean_True_Node);
+            when N_EOS =>
+               if Eos then
+                  return New_Lit (Std_Boolean_True_Node);
+               else
+                  return New_Lit (Std_Boolean_False_Node);
+               end if;
+            when N_Not_Bool =>
+               return New_Monadic_Op
+                 (ON_Not,
+                  Translate_Psl_Expr (Get_Boolean (Expr), Eos));
+            when N_And_Bool =>
+               return New_Dyadic_Op
+                 (ON_And,
+                  Translate_Psl_Expr (Get_Left (Expr), Eos),
+                  Translate_Psl_Expr (Get_Right (Expr), Eos));
+            when N_Or_Bool =>
+               return New_Dyadic_Op
+                 (ON_Or,
+                  Translate_Psl_Expr (Get_Left (Expr), Eos),
+                  Translate_Psl_Expr (Get_Right (Expr), Eos));
+            when others =>
+               Error_Kind ("translate_psl_expr", Expr);
+         end case;
+      end Translate_Psl_Expr;
+
+      --  Return TRUE iff NFA has an edge with an EOS.
+      --  If so, we need to create a finalizer.
+      function Psl_Need_Finalizer (Nfa : PSL_NFA) return Boolean
+      is
+         use PSL.NFAs;
+         S : NFA_State;
+         E : NFA_Edge;
+      begin
+         S := Get_Final_State (Nfa);
+         E := Get_First_Dest_Edge (S);
+         while E /= No_Edge loop
+            if PSL.NFAs.Utils.Has_EOS (Get_Edge_Expr (E)) then
+               return True;
+            end if;
+            E := Get_Next_Dest_Edge (E);
+         end loop;
+         return False;
+      end Psl_Need_Finalizer;
+
+      procedure Translate_Psl_Assert_Statement
+        (Stmt : Iir; Base : Block_Info_Acc)
+      is
+         use PSL.NFAs;
+         Inter_List : O_Inter_List;
+         Instance : O_Dnode;
+         Info : Psl_Info_Acc;
+         Var_I : O_Dnode;
+         Var_Nvec : O_Dnode;
+         Label : O_Snode;
+         Clk_Blk : O_If_Block;
+         S_Blk : O_If_Block;
+         E_Blk : O_If_Block;
+         S : NFA_State;
+         S_Num : Int32;
+         E : NFA_Edge;
+         Sd : NFA_State;
+         Cond : O_Enode;
+         NFA : PSL_NFA;
+         D_Lit : O_Cnode;
+      begin
+         Info := Get_Info (Stmt);
+         Start_Procedure_Decl (Inter_List, Create_Identifier ("PROC"),
+                               O_Storage_Private);
+         New_Interface_Decl (Inter_List, Instance, Wki_Instance,
+                             Base.Block_Decls_Ptr_Type);
+         Finish_Subprogram_Decl (Inter_List, Info.Psl_Proc_Subprg);
+
+         Start_Subprogram_Body (Info.Psl_Proc_Subprg);
+         Push_Local_Factory;
+         --  Push scope for architecture declarations.
+         Push_Scope (Base.Block_Decls_Type, Instance);
+
+         --  New state vector.
+         New_Var_Decl (Var_Nvec, Wki_Res, O_Storage_Local, Info.Psl_Vect_Type);
+
+         --  Initialize the new state vector.
+         Start_Declare_Stmt;
+         New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
+         Init_Var (Var_I);
+         Start_Loop_Stmt (Label);
+         Gen_Exit_When
+           (Label,
+            New_Compare_Op (ON_Ge,
+                            New_Obj_Value (Var_I),
+                            New_Lit (New_Unsigned_Literal
+                                       (Ghdl_Index_Type,
+                                        Unsigned_64 (Info.Psl_Vect_Len))),
+                            Ghdl_Bool_Type));
+         New_Assign_Stmt (New_Indexed_Element (New_Obj (Var_Nvec),
+                                               New_Obj_Value (Var_I)),
+                          New_Lit (Std_Boolean_False_Node));
+         Inc_Var (Var_I);
+         Finish_Loop_Stmt (Label);
+         Finish_Declare_Stmt;
+
+         --  Global if statement for the clock.
+         Open_Temp;
+         Start_If_Stmt (Clk_Blk,
+                        Translate_Psl_Expr (Get_PSL_Clock (Stmt), False));
+
+         --  For each state: if set, evaluate all outgoing edges.
+         NFA := Get_PSL_NFA (Stmt);
+         S := Get_First_State (NFA);
+         while S /= No_State loop
+            S_Num := Get_State_Label (S);
+            Open_Temp;
+
+            Start_If_Stmt
+              (S_Blk,
+               New_Value
+                 (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
+                                       New_Lit (New_Index_Lit
+                                                  (Unsigned_64 (S_Num))))));
+
+            E := Get_First_Src_Edge (S);
+            while E /= No_Edge loop
+               Sd := Get_Edge_Dest (E);
+               Open_Temp;
+
+               D_Lit := New_Index_Lit (Unsigned_64 (Get_State_Label (Sd)));
+               Cond := New_Monadic_Op
+                 (ON_Not,
+                  New_Value (New_Indexed_Element (New_Obj (Var_Nvec),
+                                                  New_Lit (D_Lit))));
+               Cond := New_Dyadic_Op
+                 (ON_And, Cond, Translate_Psl_Expr (Get_Edge_Expr (E), False));
+               Start_If_Stmt (E_Blk, Cond);
+               New_Assign_Stmt
+                 (New_Indexed_Element (New_Obj (Var_Nvec), New_Lit (D_Lit)),
+                  New_Lit (Std_Boolean_True_Node));
+               Finish_If_Stmt (E_Blk);
+
+               Close_Temp;
+               E := Get_Next_Src_Edge (E);
+            end loop;
+
+            Finish_If_Stmt (S_Blk);
+            Close_Temp;
+            S := Get_Next_State (S);
+         end loop;
+
+         --  Check fail state.
+         S := Get_Final_State (NFA);
+         S_Num := Get_State_Label (S);
+         pragma Assert (Integer (S_Num) = Info.Psl_Vect_Len - 1);
+         Start_If_Stmt
+           (S_Blk,
+            New_Value
+              (New_Indexed_Element (New_Obj (Var_Nvec),
+                                    New_Lit (New_Index_Lit
+                                               (Unsigned_64 (S_Num))))));
+         Chap8.Translate_Report
+           (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
+         Finish_If_Stmt (S_Blk);
+
+         --  Assign state vector.
+         Start_Declare_Stmt;
+         New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
+         Init_Var (Var_I);
+         Start_Loop_Stmt (Label);
+         Gen_Exit_When
+           (Label,
+            New_Compare_Op (ON_Ge,
+                            New_Obj_Value (Var_I),
+                            New_Lit (New_Unsigned_Literal
+                                       (Ghdl_Index_Type,
+                                        Unsigned_64 (Info.Psl_Vect_Len))),
+                            Ghdl_Bool_Type));
+         New_Assign_Stmt
+           (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
+                                 New_Obj_Value (Var_I)),
+            New_Value (New_Indexed_Element (New_Obj (Var_Nvec),
+                                            New_Obj_Value (Var_I))));
+         Inc_Var (Var_I);
+         Finish_Loop_Stmt (Label);
+         Finish_Declare_Stmt;
+
+         Close_Temp;
+         Finish_If_Stmt (Clk_Blk);
+
+         Pop_Scope (Base.Block_Decls_Type);
+         Pop_Local_Factory;
+         Finish_Subprogram_Body;
+
+         --  The finalizer.
+         if Psl_Need_Finalizer (NFA) then
+            Start_Procedure_Decl (Inter_List, Create_Identifier ("FINALPROC"),
+                                  O_Storage_Private);
+            New_Interface_Decl (Inter_List, Instance, Wki_Instance,
+                                Base.Block_Decls_Ptr_Type);
+            Finish_Subprogram_Decl (Inter_List, Info.Psl_Proc_Final_Subprg);
+
+            Start_Subprogram_Body (Info.Psl_Proc_Final_Subprg);
+            Push_Local_Factory;
+            --  Push scope for architecture declarations.
+            Push_Scope (Base.Block_Decls_Type, Instance);
+
+            S := Get_Final_State (NFA);
+            E := Get_First_Dest_Edge (S);
+            while E /= No_Edge loop
+               Sd := Get_Edge_Src (E);
+
+               if PSL.NFAs.Utils.Has_EOS (Get_Edge_Expr (E)) then
+
+                  S_Num := Get_State_Label (Sd);
+                  Open_Temp;
+
+                  Cond := New_Value
+                    (New_Indexed_Element
+                       (Get_Var (Info.Psl_Vect_Var),
+                        New_Lit (New_Index_Lit (Unsigned_64 (S_Num)))));
+                  Cond := New_Dyadic_Op
+                    (ON_And, Cond,
+                     Translate_Psl_Expr (Get_Edge_Expr (E), True));
+                  Start_If_Stmt (E_Blk, Cond);
+                  Chap8.Translate_Report
+                    (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
+                  New_Return_Stmt;
+                  Finish_If_Stmt (E_Blk);
+
+                  Close_Temp;
+               end if;
+
+               E := Get_Next_Dest_Edge (E);
+            end loop;
+
+            Pop_Scope (Base.Block_Decls_Type);
+            Pop_Local_Factory;
+            Finish_Subprogram_Body;
+         else
+            Info.Psl_Proc_Final_Subprg := O_Dnode_Null;
+         end if;
+      end Translate_Psl_Assert_Statement;
+
       --  Create the instance for block BLOCK.
       --  BLOCK can be either an entity, an architecture or a block statement.
       procedure Translate_Block_Declarations (Block : Iir; Origin : Iir)
@@ -20964,6 +21739,12 @@ package body Translation is
                when Iir_Kind_Process_Statement
                  | Iir_Kind_Sensitized_Process_Statement =>
                   Translate_Process_Declarations (El);
+               when Iir_Kind_Psl_Default_Clock =>
+                  null;
+               when Iir_Kind_Psl_Declaration =>
+                  null;
+               when Iir_Kind_Psl_Assert_Statement =>
+                  Translate_Psl_Assert_Declarations (El);
                when Iir_Kind_Component_Instantiation_Statement =>
                   Translate_Component_Instantiation_Statement (El);
                when Iir_Kind_Block_Statement =>
@@ -21190,6 +21971,21 @@ package body Translation is
                         Chap9.Reset_Direct_Drivers (Stmt);
                      end if;
                      Pop_Scope (Info.Process_Decls_Type);
+                  end;
+               when Iir_Kind_Psl_Default_Clock =>
+                  null;
+               when Iir_Kind_Psl_Declaration =>
+                  null;
+               when Iir_Kind_Psl_Assert_Statement =>
+                  declare
+                     Info : Psl_Info_Acc;
+                  begin
+                     Info := Get_Info (Stmt);
+                     Push_Scope (Info.Psl_Decls_Type,
+                                 Info.Psl_Parent_Field,
+                                 Block_Info.Block_Decls_Type);
+                     Translate_Psl_Assert_Statement (Stmt, Base_Info);
+                     Pop_Scope (Info.Psl_Decls_Type);
                   end;
                when Iir_Kind_Component_Instantiation_Statement =>
                   Chap4.Translate_Association_Subprograms
@@ -21510,6 +22306,89 @@ package body Translation is
 
          Pop_Scope (Info.Process_Decls_Type);
       end Elab_Process;
+
+      --  PROC: the process to be elaborated
+      --  BLOCK_INFO: info for the block containing the process
+      --  BASE_INFO: info for the global block
+      procedure Elab_Psl_Assert (Stmt : Iir;
+                                 Block_Info : Block_Info_Acc;
+                                 Base_Info : Block_Info_Acc)
+      is
+         Constr : O_Assoc_List;
+         Info : Psl_Info_Acc;
+         List : Iir_List;
+         Clk : PSL_Node;
+         Var_I : O_Dnode;
+         Label : O_Snode;
+      begin
+         New_Debug_Line_Stmt (Get_Line_Number (Stmt));
+
+         Info := Get_Info (Stmt);
+
+         --  Set instance name.
+         Push_Scope (Info.Psl_Decls_Type,
+                     Info.Psl_Parent_Field,
+                     Block_Info.Block_Decls_Type);
+
+         --  Register process.
+         Start_Association (Constr, Ghdl_Sensitized_Process_Register);
+         New_Association
+           (Constr, New_Unchecked_Address
+            (Get_Instance_Ref (Base_Info.Block_Decls_Type), Ghdl_Ptr_Type));
+         New_Association
+           (Constr,
+            New_Lit (New_Subprogram_Address (Info.Psl_Proc_Subprg,
+                                             Ghdl_Ptr_Type)));
+         Rtis.Associate_Rti_Context (Constr, Stmt);
+         New_Procedure_Call (Constr);
+
+         --  Register clock sensitivity.
+         Clk := Get_PSL_Clock (Stmt);
+         List := Create_Iir_List;
+         Canon_PSL.Canon_Extract_Sensitivity (Clk, List);
+         Destroy_Types_In_List (List);
+         Register_Signal_List (List, Ghdl_Process_Add_Sensitivity);
+         Destroy_Iir_List (List);
+
+         --  Register finalizer (if any).
+         if Info.Psl_Proc_Final_Subprg /= O_Dnode_Null then
+            Start_Association (Constr, Ghdl_Finalize_Register);
+            New_Association
+              (Constr, New_Unchecked_Address
+                 (Get_Instance_Ref (Base_Info.Block_Decls_Type),
+                  Ghdl_Ptr_Type));
+            New_Association
+              (Constr,
+               New_Lit (New_Subprogram_Address (Info.Psl_Proc_Final_Subprg,
+                                                Ghdl_Ptr_Type)));
+            New_Procedure_Call (Constr);
+         end if;
+
+         --  Initialize state vector.
+         Start_Declare_Stmt;
+         New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
+         New_Assign_Stmt (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
+                                               New_Lit (Ghdl_Index_0)),
+                          New_Lit (Std_Boolean_True_Node));
+         New_Assign_Stmt (New_Obj (Var_I), New_Lit (Ghdl_Index_1));
+         Start_Loop_Stmt (Label);
+         Gen_Exit_When
+           (Label,
+            New_Compare_Op (ON_Ge,
+                            New_Obj_Value (Var_I),
+                            New_Lit (New_Unsigned_Literal
+                                       (Ghdl_Index_Type,
+                                        Unsigned_64 (Info.Psl_Vect_Len))),
+                            Ghdl_Bool_Type));
+         New_Assign_Stmt (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
+                                               New_Obj_Value (Var_I)),
+                          New_Lit (Std_Boolean_False_Node));
+         Inc_Var (Var_I);
+         Finish_Loop_Stmt (Label);
+         Finish_Declare_Stmt;
+
+         Pop_Scope (Info.Psl_Decls_Type);
+      end Elab_Psl_Assert;
 
       procedure Elab_Implicit_Guard_Signal
         (Block : Iir_Block_Statement; Block_Info : Block_Info_Acc)
@@ -22178,6 +23057,12 @@ package body Translation is
                when Iir_Kind_Process_Statement
                  | Iir_Kind_Sensitized_Process_Statement =>
                   Elab_Process (Stmt, Block_Info, Base_Info);
+               when Iir_Kind_Psl_Default_Clock =>
+                  null;
+               when Iir_Kind_Psl_Declaration =>
+                  null;
+               when Iir_Kind_Psl_Assert_Statement =>
+                  Elab_Psl_Assert (Stmt, Block_Info, Base_Info);
                when Iir_Kind_Component_Instantiation_Statement =>
                   declare
                      Info : Block_Info_Acc;
@@ -24455,6 +25340,10 @@ package body Translation is
               (Constr, Get_Identifier ("__ghdl_rtik_attribute_stable"),
                Ghdl_Rtik_Attribute_Stable);
 
+            New_Enum_Literal
+              (Constr, Get_Identifier ("__ghdl_rtik_psl_assert"),
+               Ghdl_Rtik_Psl_Assert);
+
             New_Enum_Literal (Constr, Get_Identifier ("__ghdl_rtik_error"),
                               Ghdl_Rtik_Error);
             Finish_Enum_Type (Constr, Ghdl_Rtik);
@@ -25205,6 +26094,8 @@ package body Translation is
          case Info.Type_Mode is
             when Type_Mode_I32 =>
                Kind := Ghdl_Rtik_Type_I32;
+            when Type_Mode_I64 =>
+               Kind := Ghdl_Rtik_Type_I64;
             when Type_Mode_F64 =>
                Kind := Ghdl_Rtik_Type_F64;
             when Type_Mode_P64 =>
@@ -26320,6 +27211,37 @@ package body Translation is
                   Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
                   Generate_Instance (Stmt, Parent_Rti);
                   Pop_Identifier_Prefix (Mark);
+               when Iir_Kind_Psl_Default_Clock =>
+                  null;
+               when Iir_Kind_Psl_Declaration =>
+                  null;
+               when Iir_Kind_Psl_Assert_Statement =>
+                  declare
+                     Name : O_Dnode;
+                     List : O_Record_Aggr_List;
+
+                     Rti : O_Dnode;
+                     Res : O_Cnode;
+                     Info : Psl_Info_Acc;
+                  begin
+                     Info := Get_Info (Stmt);
+                     Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+                     Name := Generate_Name (Stmt);
+
+                     New_Const_Decl (Rti, Create_Identifier ("RTI"),
+                                     O_Storage_Public, Ghdl_Rtin_Type_Scalar);
+
+                     Start_Const_Value (Rti);
+                     Start_Record_Aggr (List, Ghdl_Rtin_Type_Scalar);
+                     New_Record_Aggr_El
+                       (List, Generate_Common (Ghdl_Rtik_Psl_Assert));
+                     New_Record_Aggr_El
+                       (List, New_Global_Address (Name, Char_Ptr_Type));
+                     Finish_Record_Aggr (List, Res);
+                     Finish_Const_Value (Rti, Res);
+                     Info.Psl_Rti_Const := Rti;
+                     Pop_Identifier_Prefix (Mark);
+                  end;
                when others =>
                   Error_Kind ("rti.generate_concurrent_statement_chain", Stmt);
             end case;
@@ -26710,6 +27632,8 @@ package body Translation is
             when Iir_Kind_Process_Statement
               | Iir_Kind_Sensitized_Process_Statement =>
                Rti_Const := Node_Info.Process_Rti_Const;
+            when Iir_Kind_Psl_Assert_Statement =>
+               Rti_Const := Node_Info.Psl_Rti_Const;
             when others =>
                Error_Kind ("get_context_rti", Node);
          end case;
@@ -26738,6 +27662,8 @@ package body Translation is
             when Iir_Kind_Process_Statement
               | Iir_Kind_Sensitized_Process_Statement =>
                Block_Type := Node_Info.Process_Decls_Type;
+            when Iir_Kind_Psl_Assert_Statement =>
+               Block_Type := Node_Info.Psl_Decls_Type;
             when others =>
                Error_Kind ("get_context_addr", Node);
          end case;
@@ -26935,8 +27861,6 @@ package body Translation is
       Wki_Right := Get_Identifier ("right");
       Wki_Dir := Get_Identifier ("dir");
       Wki_Length := Get_Identifier ("length");
-      Wki_Kind := Get_Identifier ("kind");
-      Wki_Dim := Get_Identifier ("dim");
       Wki_I := Get_Identifier ("I");
       Wki_Instance := Get_Identifier ("INSTANCE");
       Wki_Arch_Instance := Get_Identifier ("ARCH_INSTANCE");
@@ -26947,6 +27871,10 @@ package body Translation is
       Wki_Parent := Get_Identifier ("parent");
       Wki_Filename := Get_Identifier ("filename");
       Wki_Line := Get_Identifier ("line");
+      Wki_Lo := Get_Identifier ("lo");
+      Wki_Hi := Get_Identifier ("hi");
+      Wki_Mid := Get_Identifier ("mid");
+      Wki_Cmp := Get_Identifier ("cmp");
 
       Sizetype := New_Unsigned_Type (32);
       New_Type_Decl (Get_Identifier ("__ghdl_size_type"), Sizetype);
@@ -27296,6 +28224,15 @@ package body Translation is
            ("__ghdl_postponed_sensitized_process_register",
             Ghdl_Postponed_Sensitized_Process_Register);
       end;
+
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_finalize_register"),
+         O_Storage_External);
+      New_Interface_Decl
+        (Interfaces, Param, Wki_This, Ghdl_Ptr_Type);
+      New_Interface_Decl
+        (Interfaces, Param, Get_Identifier ("proc"), Ghdl_Ptr_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Finalize_Register);
    end Initialize;
 
    procedure Create_Signal_Subprograms
@@ -27486,6 +28423,8 @@ package body Translation is
          end Create_Report_Subprg;
       begin
          Create_Report_Subprg ("__ghdl_assert_failed", Ghdl_Assert_Failed);
+         Create_Report_Subprg ("__ghdl_psl_assert_failed",
+                               Ghdl_Psl_Assert_Failed);
          Create_Report_Subprg ("__ghdl_report", Ghdl_Report);
       end;
 
@@ -28260,6 +29199,10 @@ package body Translation is
       Std_Boolean_True_Node := Get_Ortho_Expr (Boolean_True);
       Std_Boolean_False_Node := Get_Ortho_Expr (Boolean_False);
 
+      Std_Boolean_Array_Type :=
+        New_Array_Type (Std_Boolean_Type_Node, Ghdl_Index_Type);
+      New_Type_Decl (Create_Identifier ("BOOLEAN_ARRAY"),
+                     Std_Boolean_Array_Type);
       Chap4.Translate_Bool_Type_Declaration (Bit_Type);
 
       Chap4.Translate_Type_Declaration (Character_Type);
@@ -28336,6 +29279,16 @@ package body Translation is
          Std_Standard_Bit_Rti
            := Get_Info (Bit_Type_Definition).Type_Rti;
       end if;
+
+      --  Std_Ulogic indexed array of STD.Boolean.
+      --  Used by PSL to convert Std_Ulogic to boolean.
+      Std_Ulogic_Boolean_Array_Type :=
+        New_Constrained_Array_Type (Std_Boolean_Array_Type, New_Index_Lit (9));
+      New_Type_Decl (Get_Identifier ("__ghdl_std_ulogic_boolean_array_type"),
+                     Std_Ulogic_Boolean_Array_Type);
+      New_Const_Decl (Ghdl_Std_Ulogic_To_Boolean_Array,
+                      Get_Identifier ("__ghdl_std_ulogic_to_boolean_array"),
+                      O_Storage_External, Std_Ulogic_Boolean_Array_Type);
 
       Pop_Identifier_Prefix (Unit_Mark);
       Pop_Identifier_Prefix (Lib_Mark);

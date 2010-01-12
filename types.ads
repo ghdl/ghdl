@@ -28,6 +28,7 @@ package Types is
    for Int32'Size use 32;
 
    subtype Nat32 is Int32 range 0 .. Int32'Last;
+   subtype Pos32 is Nat32 range 1 .. Nat32'Last;
 
    type Uns32 is new Interfaces.Unsigned_32;
 
@@ -53,7 +54,7 @@ package Types is
    type String_Cst is access constant String;
    type String_Acc_Array is array (Natural range <>) of String_Acc;
 
-   subtype String_Fat is String (Positive);
+   type String_Fat is array (Pos32) of Character;
    type String_Fat_Acc is access String_Fat;
 
    -- Array of iir_int32.
@@ -104,6 +105,12 @@ package Types is
    -- Type of a file buffer.
    type File_Buffer is array (Source_Ptr range <>) of Character;
    type File_Buffer_Acc is access File_Buffer;
+
+   --  PSL Node.
+   type PSL_Node is new Int32;
+
+   --  PSL NFA
+   type PSL_NFA is new Int32;
 
    -- Indentation.
    -- This is used by all packages that display vhdl code or informations.

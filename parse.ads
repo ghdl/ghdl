@@ -18,6 +18,14 @@
 with Iirs; use Iirs;
 
 package Parse is
+   -- Parse an expression.
+   -- (Used by PSL).
+   function Parse_Expression return Iir;
+   function Parse_Expression_Rhs (Left : Iir) return Iir;
+
+   -- Parse an relationnal operator and its rhs.
+   function Parse_Relation_Rhs (Left : Iir) return Iir;
+
    -- Parse a single design unit.
    -- The scanner must have been initialized, however, the current_token
    -- shouldn't have been set.

@@ -880,8 +880,8 @@ package body Files_Map is
       if Ts = Null_Time_Stamp then
          return "NULL_TS";
       else
-         return Str_Table.Get_String_Fat_Acc (String_Id (Ts))
-           (1 .. Time_Stamp_String'Length);
+         return String (Str_Table.Get_String_Fat_Acc (String_Id (Ts))
+                          (1 .. Time_Stamp_String'Length));
       end if;
    end Get_Time_Stamp_String;
 

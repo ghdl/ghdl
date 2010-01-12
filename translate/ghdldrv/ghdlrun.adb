@@ -264,11 +264,15 @@ package body Ghdlrun is
            Grt.Lib.Ghdl_Malloc0'Address);
       Def (Trans_Decls.Ghdl_Assert_Default_Report,
            Grt.Lib.Ghdl_Assert_Default_Report'Address);
+      Def (Trans_Decls.Ghdl_Std_Ulogic_To_Boolean_Array,
+           Grt.Lib.Ghdl_Std_Ulogic_To_Boolean_Array'Address);
 
       Def (Trans_Decls.Ghdl_Report,
            Grt.Lib.Ghdl_Report'Address);
       Def (Trans_Decls.Ghdl_Assert_Failed,
            Grt.Lib.Ghdl_Assert_Failed'Address);
+      Def (Trans_Decls.Ghdl_Psl_Assert_Failed,
+           Grt.Lib.Ghdl_Psl_Assert_Failed'Address);
       Def (Trans_Decls.Ghdl_Program_Error,
            Grt.Lib.Ghdl_Program_Error'Address);
       Def (Trans_Decls.Ghdl_Malloc,
@@ -288,6 +292,9 @@ package body Ghdlrun is
            Grt.Processes.Ghdl_Postponed_Sensitized_Process_Register'Address);
       Def (Trans_Decls.Ghdl_Postponed_Process_Register,
            Grt.Processes.Ghdl_Postponed_Process_Register'Address);
+      Def (Trans_Decls.Ghdl_Finalize_Register,
+           Grt.Processes.Ghdl_Finalize_Register'Address);
+
       Def (Trans_Decls.Ghdl_Stack2_Allocate,
            Grt.Processes.Ghdl_Stack2_Allocate'Address);
       Def (Trans_Decls.Ghdl_Stack2_Mark,

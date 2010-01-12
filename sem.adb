@@ -1243,7 +1243,7 @@ package body Sem is
                end if;
                L_Ptr := Get_String_Fat_Acc (Get_String_Id (Left));
                R_Ptr := Get_String_Fat_Acc (Get_String_Id (Right));
-               for I in 1 .. Natural (Len) loop
+               for I in 1 .. Len loop
                   if L_Ptr (I) /= R_Ptr (I) then
                      return False;
                   end if;

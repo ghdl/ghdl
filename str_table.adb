@@ -62,13 +62,13 @@ package body Str_Table is
    function Get_Length (Id : String_Id) return Natural
    is
       Ptr : String_Fat_Acc;
-      Len : Natural;
+      Len : Nat32;
    begin
       Ptr := Get_String_Fat_Acc (Id);
       Len := 1;
       loop
          if Ptr (Len) = Nul then
-            return Len - 1;
+            return Natural (Len - 1);
          end if;
          Len := Len + 1;
       end loop;
@@ -77,11 +77,11 @@ package body Str_Table is
    function Image (Id : String_Id) return String
    is
       Ptr : String_Fat_Acc;
-      Len : Natural;
+      Len : Nat32;
    begin
-      Len := Get_Length (Id);
+      Len := Nat32 (Get_Length (Id));
       Ptr := Get_String_Fat_Acc (Id);
-      return Ptr (1 .. Len);
+      return String (Ptr (1 .. Len));
    end Image;
 
    procedure Initialize is

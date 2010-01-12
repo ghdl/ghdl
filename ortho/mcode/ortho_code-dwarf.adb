@@ -280,7 +280,7 @@ package body Ortho_Code.Dwarf is
       Set_Symbol_Pc (Orig_Sym, False);
       End_Sym := Create_Local_Symbol;
 
-      Create_Section (Line1_Sect, ".debug_line-1", Section_None);
+      Create_Section (Line1_Sect, ".debug_line-1", Section_Debug);
       Set_Current_Section (Line1_Sect);
 
       --  Write Address.
@@ -291,14 +291,14 @@ package body Ortho_Code.Dwarf is
 
       Line_Last := 1;
 
-      Create_Section (Line_Sect, ".debug_line", Section_None);
+      Create_Section (Line_Sect, ".debug_line", Section_Debug);
       Set_Section_Info (Line_Sect, null, 0, 0);
       Set_Current_Section (Line_Sect);
       Line_Sym := Create_Local_Symbol;
       Set_Symbol_Pc (Line_Sym, False);
 
       --  Abbrevs.
-      Create_Section (Abbrev_Sect, ".debug_abbrev", Section_None);
+      Create_Section (Abbrev_Sect, ".debug_abbrev", Section_Debug);
       Set_Section_Info (Abbrev_Sect, null, 0, 0);
       Set_Current_Section (Abbrev_Sect);
 
@@ -318,7 +318,7 @@ package body Ortho_Code.Dwarf is
       Abbrev_Last := 1;
 
       --  Info.
-      Create_Section (Info_Sect, ".debug_info", Section_None);
+      Create_Section (Info_Sect, ".debug_info", Section_Debug);
       Set_Section_Info (Info_Sect, null, 0, 0);
       Set_Current_Section (Info_Sect);
       Info_Sym := Create_Local_Symbol;
@@ -340,13 +340,14 @@ package body Ortho_Code.Dwarf is
 
    procedure Emit_Decl (Decl : O_Dnode);
 
+   --  Next node to be emitted.
    Last_Decl : O_Dnode := O_Dnode_First;
 
    procedure Emit_Decls_Until (Last : O_Dnode)
    is
       use Ortho_Code.Decls;
    begin
-      while Last_Decl <= Last loop
+      while Last_Decl < Last loop
          Emit_Decl (Last_Decl);
          Last_Decl := Get_Decl_Chain (Last_Decl);
       end loop;
@@ -355,11 +356,16 @@ package body Ortho_Code.Dwarf is
    procedure Finish
    is
       Length : Pc_Type;
+      Last : O_Dnode;
    begin
       Set_Symbol_Pc (End_Sym, False);
       Length := Get_Current_Pc;
 
-      Emit_Decls_Until (Decls.Get_Decl_Last);
+      Last := Decls.Get_Decl_Last;
+      Emit_Decls_Until (Last);
+      if Last_Decl <= Last then
+         Emit_Decl (Last);
+      end if;
 
       --  Finish abbrevs.
       Set_Current_Section (Abbrev_Sect);
@@ -449,7 +455,7 @@ package body Ortho_Code.Dwarf is
       Patch_32 (0, Unsigned_32 (Get_Current_Pc - 4));
 
       --  Aranges
-      Create_Section (Aranges_Sect, ".debug_aranges", Section_None);
+      Create_Section (Aranges_Sect, ".debug_aranges", Section_Debug);
       Set_Section_Info (Aranges_Sect, null, 0, 0);
       Set_Current_Section (Aranges_Sect);
 
@@ -1325,6 +1331,8 @@ package body Ortho_Code.Dwarf is
    procedure Emit_Subprg (Bod : O_Dnode) is
    begin
       Emit_Decls_Until (Bod);
+      Emit_Decl (Bod);
+      Last_Decl := Decls.Get_Decl_Chain (Bod);
    end Emit_Subprg;
 
    procedure Mark (M : out Mark_Type) is

@@ -28,6 +28,9 @@ with Iirs_Utils; use Iirs_Utils;
 with Name_Table;
 with Std_Names;
 with Tokens;
+with PSL.Nodes;
+with PSL.Prints;
+with PSL.NFAs;
 
 package body Disp_Vhdl is
 
@@ -62,6 +65,7 @@ package body Disp_Vhdl is
      (Block: Iir_Block_Configuration; Indent: Count);
    procedure Disp_Subprogram_Declaration (Subprg: Iir);
    procedure Disp_Binding_Indication (Bind : Iir; Indent : Count);
+   procedure Disp_Subtype_Indication (Def : Iir; Full_Decl : Boolean := False);
 
    procedure Disp_Ident (Id: Name_Id) is
    begin
@@ -182,7 +186,8 @@ package body Disp_Vhdl is
          end if;
          Disp_Expression (Get_Right_Limit (Decl));
       else
-         Disp_Name_Of (Get_Type_Declarator (Decl));
+         Disp_Subtype_Indication (Decl);
+         --  Disp_Name_Of (Get_Type_Declarator (Decl));
       end if;
    end Disp_Range;
 
@@ -228,18 +233,20 @@ package body Disp_Vhdl is
       is
          Decl: Iir;
       begin
-         Decl := Get_Resolution_Function (Def);
-         if Decl /= Null_Iir then
-            Disp_Name (Decl);
-         else
-            case Get_Kind (Def) is
-               when Iir_Kind_Array_Subtype_Definition =>
-                  Put ('(');
-                  Inner (Get_Element_Subtype (Def));
-                  Put (')');
-               when others =>
-                  Error_Kind ("disp_resolution_function", Def);
-            end case;
+         if Get_Kind (Def) in Iir_Kinds_Subtype_Definition then
+            Decl := Get_Resolution_Function (Def);
+            if Decl /= Null_Iir then
+               Disp_Name (Decl);
+            else
+               case Get_Kind (Def) is
+                  when Iir_Kind_Array_Subtype_Definition =>
+                     Put ('(');
+                     Inner (Get_Element_Subtype (Def));
+                     Put (')');
+                  when others =>
+                     Error_Kind ("disp_resolution_function", Def);
+               end case;
+            end if;
          end if;
       end Inner;
 
@@ -1025,6 +1032,7 @@ package body Disp_Vhdl is
       Disp_Sequential_Statements (Get_Sequential_Statement_Chain (Subprg));
       Set_Col (Indent);
       Put_Line ("end;");
+      New_Line;
    end Disp_Subprogram_Body;
 
    procedure Disp_Instantiation_List (Insts: Iir_List) is
@@ -1825,11 +1833,11 @@ package body Disp_Vhdl is
    procedure Disp_String_Literal (Str : Iir)
    is
       Ptr : String_Fat_Acc;
-      Len : Natural;
+      Len : Int32;
    begin
       Ptr := Get_String_Fat_Acc (Str);
       Len := Get_String_Length (Str);
-      Put (Ptr (1 .. Len));
+      Put (String (Ptr (1 .. Len)));
    end Disp_String_Literal;
 
    procedure Disp_Expression (Expr: Iir)
@@ -2030,7 +2038,7 @@ package body Disp_Vhdl is
             Put ("");
             return;
          when Iir_Kind_Selected_Name =>
-            Disp_Name (Expr);
+            Disp_Expression (Get_Named_Entity (Expr));
 
          when Iir_Kinds_Type_And_Subtype_Definition =>
             Disp_Type (Expr);
@@ -2047,6 +2055,17 @@ package body Disp_Vhdl is
             Error_Kind ("disp_expression", Expr);
       end case;
    end Disp_Expression;
+
+   procedure Disp_PSL_HDL_Expr (N : PSL.Nodes.HDL_Node) is
+   begin
+      Disp_Expression (Iir (N));
+   end Disp_PSL_HDL_Expr;
+
+   procedure Disp_Psl_Expression (Expr : PSL_Node) is
+   begin
+      PSL.Prints.HDL_Expr_Printer := Disp_PSL_HDL_Expr'Access;
+      PSL.Prints.Print_Property (Expr);
+   end Disp_Psl_Expression;
 
    procedure Disp_Block_Header (Header : Iir_Block_Header; Indent: Count)
    is
@@ -2137,6 +2156,51 @@ package body Disp_Vhdl is
       Put_Line ("end generate;");
    end Disp_Generate_Statement;
 
+   procedure Disp_Psl_Default_Clock (Stmt : Iir) is
+   begin
+      Put ("--psl default clock is ");
+      Disp_Psl_Expression (Get_Psl_Boolean (Stmt));
+      Put_Line (";");
+   end Disp_Psl_Default_Clock;
+
+   procedure Disp_Psl_Assert_Statement (Stmt : Iir)
+   is
+      use PSL.NFAs;
+      use PSL.Nodes;
+
+      procedure Disp_State (S : NFA_State) is
+         Str : constant String := Int32'Image (Get_State_Label (S));
+      begin
+         Put (Str (2 .. Str'Last));
+      end Disp_State;
+
+      N : NFA;
+      S : NFA_State;
+      E : NFA_Edge;
+   begin
+      Put ("--psl assert ");
+      Disp_Psl_Expression (Get_Psl_Property (Stmt));
+      Put_Line (";");
+      N := Get_PSL_NFA (Stmt);
+      if True and then N /= No_NFA then
+         S := Get_First_State (N);
+         while S /= No_State loop
+            E := Get_First_Src_Edge (S);
+            while E /= No_Edge loop
+               Put ("-- ");
+               Disp_State (S);
+               Put (" -> ");
+               Disp_State (Get_Edge_Dest (E));
+               Put (": ");
+               Disp_Psl_Expression (Get_Edge_Expr (E));
+               New_Line;
+               E := Get_Next_Src_Edge (E);
+            end loop;
+            S := Get_Next_State (S);
+         end loop;
+      end if;
+   end Disp_Psl_Assert_Statement;
+
    procedure Disp_Concurrent_Statement (Stmt: Iir) is
    begin
       case Get_Kind (Stmt) is
@@ -2157,6 +2221,10 @@ package body Disp_Vhdl is
             Disp_Block_Statement (Stmt);
          when Iir_Kind_Generate_Statement =>
             Disp_Generate_Statement (Stmt);
+         when Iir_Kind_Psl_Default_Clock =>
+            Disp_Psl_Default_Clock (Stmt);
+         when Iir_Kind_Psl_Assert_Statement =>
+            Disp_Psl_Assert_Statement (Stmt);
          when others =>
             Error_Kind ("disp_concurrent_statement", Stmt);
       end case;

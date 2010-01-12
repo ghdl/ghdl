@@ -1,6 +1,6 @@
 -- -----------------------------------------------------------------------------
 -- Title        : Standard VITAL_Primitives Package
---              : $Revision: 597 $
+--              : $Revision$
 --              :
 -- Library      : This package shall be compiled into a library
 --              : symbolically named IEEE.

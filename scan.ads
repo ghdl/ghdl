@@ -67,11 +67,34 @@ package Scan is
    -- Finalize the scanner.
    procedure Close_File;
 
-   --  If true, comments are reported as a token.
+   --  If true comments are reported as a token.
    Flag_Comment : Boolean := False;
 
-   --  If true, newlines are reported as a token.
+   --  If true newlines are reported as a token.
    Flag_Newline : Boolean := False;
+
+   --  If true also scan PSL tokens.
+   Flag_Psl : Boolean := False;
+
+   --  If true handle PSL embedded in comments: '--  psl' is ignored.
+   Flag_Psl_Comment : Boolean := False;
+
+   --  If true, ignore '--'.  This is automatically set when Flag_Psl_Comment
+   --  is true and a starting PSL keyword has been identified.
+   --  Must be reset to false by the parser.
+   Flag_Scan_In_Comment : Boolean := False;
+
+   --  If true scan for keywords in comments.  Must be enabled if
+   --  Flag_Psl_Comment is true.
+   Flag_Comment_Keyword : Boolean := False;
+
+   --  If the next character is '!', eat it and return True, otherwise return
+   --  False (used by PSL).
+   function Scan_Exclam_Mark return Boolean;
+
+   --  If the next character is '_', eat it and return True, otherwise return
+   --  False (used by PSL).
+   function Scan_Underscore return Boolean;
 
    -- Get the current location, or the location of the current token.
    -- Since a token cannot spread over lines, file and line of the current

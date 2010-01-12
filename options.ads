@@ -24,4 +24,7 @@ package Options is
 
    -- Disp help about these options.
    procedure Disp_Options_Help;
+
+   --  Front-end intialization.
+   procedure Initialize;
 end Options;

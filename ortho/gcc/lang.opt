@@ -65,6 +65,10 @@ fexplicit
 vhdl
 Explicit function declarations override implicit one in use
 
+fpsl
+vhdl
+Allow PSL asserts in comments
+
 -no-direct-drivers
 vhdl
 Disable direct drivers optimization

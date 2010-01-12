@@ -217,7 +217,10 @@ package body Configuration is
               | Iir_Kind_Block_Statement =>
                Add_Design_Concurrent_Stmts (Stmt);
             when Iir_Kind_Process_Statement
-              | Iir_Kind_Sensitized_Process_Statement =>
+              | Iir_Kind_Sensitized_Process_Statement
+              | Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Default_Clock
+              | Iir_Kind_Psl_Declaration =>
                null;
             when others =>
                Error_Kind ("add_design_concurrent_stmts(2)", Stmt);

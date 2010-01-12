@@ -311,5 +311,17 @@ package body Iirs is
    function Int32_To_Iir is new Ada.Unchecked_Conversion
      (Source => Int32, Target => Iir);
 
+   function Iir_To_PSL_Node is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => PSL_Node);
+
+   function PSL_Node_To_Iir is new Ada.Unchecked_Conversion
+     (Source => PSL_Node, Target => Iir);
+
+   function Iir_To_PSL_NFA is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => PSL_NFA);
+
+   function PSL_NFA_To_Iir is new Ada.Unchecked_Conversion
+     (Source => PSL_NFA, Target => Iir);
+
    --  Subprograms
 end Iirs;

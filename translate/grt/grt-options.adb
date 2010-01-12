@@ -281,6 +281,8 @@ package body Grt.Options is
                Disp_Signals_Map := True;
             elsif Argument = "--disp-signals-table" then
                Disp_Signals_Table := True;
+            elsif Argument = "--disp-sensitivity" then
+               Disp_Sensitivity := True;
             elsif Argument = "--stats" then
                Flag_Stats := True;
             elsif Argument = "--no-run" then

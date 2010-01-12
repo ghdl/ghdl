@@ -102,8 +102,7 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      Std_Names.Std_Names_Initialize;
-      Libraries.Init_Pathes;
+      Options.Initialize;
       Flag_Ieee := Lib_Standard;
       Back_End.Finish_Compilation := Finish_Compilation'Access;
       Flag_Verbose := False;
@@ -638,7 +637,7 @@ package body Ghdllocal is
       Analyze_Files (Args, False);
    end Perform_Action;
 
-   --  Command --clean.
+   --  Command --clean: remove object files.
    type Command_Clean is new Command_Lib with null record;
    function Decode_Command (Cmd : Command_Clean; Name : String) return Boolean;
    function Get_Short_Help (Cmd : Command_Clean) return String;
@@ -736,6 +735,7 @@ package body Ghdllocal is
       end loop;
    end Perform_Action;
 
+   --  Command --remove: remove object file and library file.
    type Command_Remove is new Command_Clean with null record;
    function Decode_Command (Cmd : Command_Remove; Name : String)
                            return Boolean;
@@ -769,6 +769,81 @@ package body Ghdllocal is
       Delete (Image (Libraries.Work_Directory)
               & Back_End.Library_To_File_Name (Libraries.Work_Library)
               & Nul);
+   end Perform_Action;
+
+   --  Command --copy: copy work library to current directory.
+   type Command_Copy is new Command_Lib with null record;
+   function Decode_Command (Cmd : Command_Copy; Name : String) return Boolean;
+   function Get_Short_Help (Cmd : Command_Copy) return String;
+   procedure Perform_Action (Cmd : in out Command_Copy; Args : Argument_List);
+
+   function Decode_Command (Cmd : Command_Copy; Name : String) return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--copy";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Copy) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--copy             Copy work library to current directory";
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : in out Command_Copy; Args : Argument_List)
+   is
+      pragma Unreferenced (Cmd);
+      use Name_Table;
+      use Libraries;
+
+      File : Iir_Design_File;
+      Dir : Name_Id;
+   begin
+      if Args'Length /= 0 then
+         Error ("command '--copy' does not accept any argument");
+         raise Option_Error;
+      end if;
+
+      Setup_Libraries (False);
+      Libraries.Load_Std_Library;
+      Dir := Work_Directory;
+      Work_Directory := Null_Identifier;
+      Libraries.Load_Work_Library;
+      Work_Directory := Dir;
+
+      Dir := Get_Library_Directory (Libraries.Work_Library);
+      if Dir = Name_Nil or else Dir = Files_Map.Get_Home_Directory then
+         Error ("cannot copy library on itself (use --remove first)");
+         raise Option_Error;
+      end if;
+
+      File := Get_Design_File_Chain (Libraries.Work_Library);
+      while File /= Null_Iir loop
+         --  Copy object files (if any).
+         declare
+            Basename : constant String :=
+              Get_Base_Name (Image (Get_Design_File_Filename (File)));
+            Src : String_Access;
+            Dst : String_Access;
+            Success : Boolean;
+            pragma Unreferenced (Success);
+         begin
+            Src := new String'(Image (Dir) & Basename & Get_Object_Suffix.all);
+            Dst := new String'(Basename & Get_Object_Suffix.all);
+            Copy_File (Src.all, Dst.all, Success, Overwrite, Full);
+            --  Be silent in case of error.
+            Free (Src);
+            Free (Dst);
+         end;
+         if Get_Design_File_Directory (File) = Name_Nil then
+            Set_Design_File_Directory (File, Dir);
+         end if;
+
+         File := Get_Chain (File);
+      end loop;
+      Libraries.Work_Directory := Name_Nil;
+      Libraries.Save_Work_Library;
    end Perform_Action;
 
    --  Command --disp-standard.
@@ -1090,6 +1165,7 @@ package body Ghdllocal is
       Register_Command (new Command_Find);
       Register_Command (new Command_Clean);
       Register_Command (new Command_Remove);
+      Register_Command (new Command_Copy);
       Register_Command (new Command_Disp_Standard);
    end Register_Commands;
 end Ghdllocal;

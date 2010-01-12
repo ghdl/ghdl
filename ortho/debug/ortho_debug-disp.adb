@@ -125,10 +125,18 @@ package body Ortho_Debug.Disp is
          return Ctx.Tab = 0;
       end Is_Top;
 
-      procedure Put_Tab is
+      procedure Put_Tab
+      is
+         Tab : Natural := Ctx.Next_Tab;
+         Max_Tab : constant Natural := 40;
       begin
-         Ctx.Line (1 .. Ctx.Next_Tab) := (others => ' ');
-         Ctx.Line_Len := Ctx.Next_Tab;
+         if Tab > Max_Tab then
+            --  Limit indentation length, to limit line length.
+            Tab := Max_Tab;
+         end if;
+
+         Ctx.Line (1 .. Tab) := (others => ' ');
+         Ctx.Line_Len := Tab;
          Ctx.Next_Tab := Ctx.Tab + 2;
       end Put_Tab;
 

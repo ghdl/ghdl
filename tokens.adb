@@ -40,7 +40,7 @@ package body Tokens is
             return "'";
          when Tok_Double_Star =>
             return "**";
-         when Tok_Arrow =>
+         when Tok_Double_Arrow =>
             return "=>";
          when Tok_Assign =>
             return ":=";
@@ -319,6 +319,74 @@ package body Tokens is
 
          when Tok_Protected =>
             return "protected";
+
+         when Tok_And_And =>
+            return "&&";
+         when Tok_Bar_Bar =>
+            return "||";
+         when Tok_Left_Curly =>
+            return "{";
+         when Tok_Right_Curly =>
+            return "}";
+         when Tok_Exclam_Mark =>
+            return "!";
+         when Tok_Brack_Star =>
+            return "[*";
+         when Tok_Brack_Plus_Brack =>
+            return "[+]";
+         when Tok_Brack_Arrow =>
+            return "[->";
+         when Tok_Brack_Equal =>
+            return "[=";
+         when Tok_Bar_Arrow =>
+            return "|->";
+         when Tok_Bar_Double_Arrow =>
+            return "|=>";
+         when Tok_Minus_Greater =>
+            return "->";
+         when Tok_Arobase =>
+            return "@";
+
+         when Tok_Psl_Default =>
+            return "default";
+         when Tok_Psl_Clock =>
+            return "clock";
+         when Tok_Psl_Property =>
+            return "property";
+         when Tok_Psl_Sequence =>
+            return "sequence";
+         when Tok_Psl_Endpoint =>
+            return "endpoint";
+         when Tok_Psl_Assert =>
+            return "assert";
+         when Tok_Psl_Const =>
+            return "const";
+         when Tok_Psl_Boolean =>
+            return "boolean";
+         when Tok_Inf =>
+            return "inf";
+         when Tok_Within =>
+            return "within";
+         when Tok_Abort =>
+            return "abort";
+         when Tok_Before =>
+            return "before";
+         when Tok_Always =>
+            return "always";
+         when Tok_Never =>
+            return "never";
+         when Tok_Eventually =>
+            return "eventually";
+         when Tok_Next_A =>
+            return "next_a";
+         when Tok_Next_E =>
+            return "next_e";
+         when Tok_Next_Event =>
+            return "next_event";
+         when Tok_Next_Event_A =>
+            return "next_event_a";
+         when Tok_Next_Event_E =>
+            return "next_event_e";
       end case;
    end Image;
 

@@ -145,7 +145,8 @@ package body Grt.Signals is
                               Mode => Mode,
                               Flags => (Propag => Propag_None,
                                         Is_Dumped => False,
-                                        Cyc_Event => False),
+                                        Cyc_Event => False,
+                                        Seen => False),
 
                               Net => No_Signal_Net,
                               Link => null,
@@ -3290,7 +3291,8 @@ package body Grt.Signals is
 
                                      Flags => (Propag => Propag_None,
                                                Is_Dumped => False,
-                                               Cyc_Event => False),
+                                               Cyc_Event => False,
+                                               Seen => False),
 
                                      Net => No_Signal_Net,
                                      Link => null,

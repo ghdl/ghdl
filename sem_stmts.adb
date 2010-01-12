@@ -26,6 +26,7 @@ with Sem_Expr; use Sem_Expr;
 with Sem_Names; use Sem_Names;
 with Sem_Scopes; use Sem_Scopes;
 with Sem_Types;
+with Sem_Psl;
 with Std_Names;
 with Evaluation; use Evaluation;
 with Iirs_Utils; use Iirs_Utils;
@@ -895,7 +896,8 @@ package body Sem_Stmts is
       Choice_Type := Get_Type (Choice);
       case Get_Kind (Choice_Type) is
          when Iir_Kinds_Discrete_Type_Definition =>
-            Sem_Choices_Range (Chain, Choice_Type, False, Loc, Low, High);
+            Sem_Choices_Range
+              (Chain, Choice_Type, False, True, Loc, Low, High);
          when Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Array_Type_Definition =>
             if not Is_Unidim_Array_Type (Choice_Type) then
@@ -1706,8 +1708,10 @@ package body Sem_Stmts is
       El: Iir;
       Prev_El : Iir;
       Prev_Concurrent_Statement : Iir;
+      Prev_Psl_Default_Clock : Iir;
    begin
       Prev_Concurrent_Statement := Current_Concurrent_Statement;
+      Prev_Psl_Default_Clock := Current_Psl_Default_Clock;
 
       El := Get_Concurrent_Statement_Chain (Parent);
       Prev_El := Null_Iir;
@@ -1766,13 +1770,21 @@ package body Sem_Stmts is
                      Set_Chain (El, Next_El);
                   end if;
                end;
+            when Iir_Kind_Psl_Declaration =>
+               Sem_Psl.Sem_Psl_Declaration (El);
+            when Iir_Kind_Psl_Assert_Statement =>
+               Sem_Psl.Sem_Psl_Assert_Statement (El);
+            when Iir_Kind_Psl_Default_Clock =>
+               Sem_Psl.Sem_Psl_Default_Clock (El);
             when others =>
-               Error_Kind ("sem_concurrent_statement", El);
+               Error_Kind ("sem_concurrent_statement_chain", El);
          end case;
          Prev_El := El;
          El := Get_Chain (El);
       end loop;
+
       Current_Concurrent_Statement := Prev_Concurrent_Statement;
+      Current_Psl_Default_Clock := Prev_Psl_Default_Clock;
    end Sem_Concurrent_Statement_Chain;
 
    --  Put labels in declarative region.
@@ -1783,13 +1795,20 @@ package body Sem_Stmts is
    begin
       Stmt := Get_Concurrent_Statement_Chain (Parent);
       while Stmt /= Null_Iir loop
-         Label := Get_Label (Stmt);
 
-         if Label /= Null_Identifier then
-            Sem_Scopes.Add_Name (Stmt);
-            Name_Visible (Stmt);
-            Xref_Decl (Stmt);
-         end if;
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Psl_Declaration =>
+               --  Special case for in-lined PSL declarations.
+               null;
+            when others =>
+               Label := Get_Label (Stmt);
+
+               if Label /= Null_Identifier then
+                  Sem_Scopes.Add_Name (Stmt);
+                  Name_Visible (Stmt);
+                  Xref_Decl (Stmt);
+               end if;
+         end case;
 
          --  INT-1991/issue report 27
          --  Generate statements represent declarative region and have

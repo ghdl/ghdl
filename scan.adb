@@ -604,6 +604,17 @@ package body Scan is
          Pos := Pos + 1;
       end loop;
 
+      if Source (Pos - 1) = '_' then
+         if not Flag_Psl then
+            --  Some PSL reserved words finish with '_'.  This case is handled
+            --  later.
+            Error_Msg_Scan ("identifier cannot finish with '_'");
+         end if;
+         Pos := Pos - 1;
+         Len := Len - 1;
+         C := '_';
+      end if;
+
       -- LRM93 13.2
       -- At least one separator is required between an identifier or an
       -- abstract literal and an adjacent identifier or abstract literal.
@@ -656,6 +667,50 @@ package body Scan is
               (Token_Type'Pos (Tok_First_Keyword)
                + Current_Identifier - Std_Names.Name_First_Keyword);
          end if;
+      elsif Flag_Psl then
+         case Current_Identifier is
+            when Std_Names.Name_Clock =>
+               Current_Token := Tok_Psl_Clock;
+            when Std_Names.Name_Const =>
+               Current_Token := Tok_Psl_Const;
+            when Std_Names.Name_Boolean =>
+               Current_Token := Tok_Psl_Boolean;
+            when Std_Names.Name_Sequence =>
+               Current_Token := Tok_Psl_Sequence;
+            when Std_Names.Name_Property =>
+               Current_Token := Tok_Psl_Property;
+            when Std_Names.Name_Inf =>
+               Current_Token := Tok_Inf;
+            when Std_Names.Name_Within =>
+               Current_Token := Tok_Within;
+            when Std_Names.Name_Abort =>
+               Current_Token := Tok_Abort;
+            when Std_Names.Name_Before =>
+               Current_Token := Tok_Before;
+            when Std_Names.Name_Always =>
+               Current_Token := Tok_Always;
+            when Std_Names.Name_Never =>
+               Current_Token := Tok_Never;
+            when Std_Names.Name_Eventually =>
+               Current_Token := Tok_Eventually;
+            when Std_Names.Name_Next_A =>
+               Current_Token := Tok_Next_A;
+            when Std_Names.Name_Next_E =>
+               Current_Token := Tok_Next_E;
+            when Std_Names.Name_Next_Event =>
+               Current_Token := Tok_Next_Event;
+            when Std_Names.Name_Next_Event_A =>
+               Current_Token := Tok_Next_Event_A;
+            when Std_Names.Name_Next_Event_E =>
+               Current_Token := Tok_Next_Event_E;
+            when Std_Names.Name_Until =>
+               Current_Token := Tok_Until;
+            when others =>
+               Current_Token := Tok_Identifier;
+               if C = '_' then
+                  Error_Msg_Scan ("identifiers cannot finish with '_'");
+               end if;
+         end case;
       else
          Current_Token := Tok_Identifier;
       end if;
@@ -834,6 +889,104 @@ package body Scan is
       end if;
    end Convert_Identifier;
 
+   --  Scan an identifier within a comment.  Only lower case letters are
+   --  allowed.
+   function Scan_Comment_Identifier return Boolean
+   is
+      use Name_Table;
+      Len : Natural;
+      C : Character;
+   begin
+      --  Skip spaces.
+      while Source (Pos) = ' ' or Source (Pos) = HT loop
+         Pos := Pos + 1;
+      end loop;
+
+      --  The identifier shall start with a lower case letter.
+      if Source (Pos) not in 'a' .. 'z' then
+         return False;
+      end if;
+
+      --  Scan the identifier (in lower cases).
+      Len := 0;
+      loop
+         C := Source (Pos);
+         exit when C not in 'a' .. 'z' and C /= '_';
+         Len := Len + 1;
+         Name_Buffer (Len) := C;
+         Pos := Pos + 1;
+      end loop;
+
+      --  Shall be followed by a space or a new line.
+      case C is
+         when ' ' | HT | LF | CR =>
+            null;
+         when others =>
+            return False;
+      end case;
+
+      Name_Length := Len;
+      return True;
+   end Scan_Comment_Identifier;
+
+   function Scan_Comment return Boolean
+   is
+      use Std_Names;
+      Id : Name_Id;
+   begin
+      if not Scan_Comment_Identifier then
+         return False;
+      end if;
+
+      -- Hash it.
+      Id := Name_Table.Get_Identifier;
+
+      case Id is
+         when Name_Psl =>
+            if not Scan_Comment_Identifier then
+               return False;
+            end if;
+            case Name_Table.Get_Identifier is
+               when Name_Property =>
+                  Current_Token := Tok_Psl_Property;
+               when Name_Sequence =>
+                  Current_Token := Tok_Psl_Sequence;
+               when Name_Endpoint =>
+                  Current_Token := Tok_Psl_Endpoint;
+               when Name_Assert =>
+                  Current_Token := Tok_Psl_Assert;
+               when Name_Default =>
+                  Current_Token := Tok_Psl_Default;
+               when others =>
+                  return False;
+            end case;
+            Flag_Scan_In_Comment := True;
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Scan_Comment;
+
+   function Scan_Exclam_Mark return Boolean is
+   begin
+      if Source (Pos) = '!' then
+         Pos := Pos + 1;
+         return True;
+      else
+         return False;
+      end if;
+   end Scan_Exclam_Mark;
+
+   function Scan_Underscore return Boolean is
+   begin
+      if Source (Pos) = '_' then
+         Pos := Pos + 1;
+         return True;
+      else
+         return False;
+      end if;
+   end Scan_Underscore;
+
    -- Get a new token.
    procedure Scan is
    begin
@@ -899,10 +1052,22 @@ package body Scan is
                --  is out of purpose, and a warning could be reported :-)
                Pos := Pos + 2;
 
-               -- LRM93 13.2
-               -- In any case, a sequence of one or more format effectors other
-               -- than horizontal tabulation must cause at least one end of
-               -- line.
+               --  Scan inside a comment.  So we just ignore the two dashes.
+               if Flag_Scan_In_Comment then
+                  goto Again;
+               end if;
+
+               --  Handle keywords in comment (PSL).
+               if Flag_Comment_Keyword
+                 and then Scan_Comment
+               then
+                  return;
+               end if;
+
+               --  LRM93 13.2
+               --  In any case, a sequence of one or more format
+               --  effectors other than horizontal tabulation must
+               --  cause at least one end of line.
                while Source (Pos) /= CR and Source (Pos) /= LF and
                  Source (Pos) /= VT and Source (Pos) /= FF and
                  Source (Pos) /= Files_Map.EOT
@@ -919,6 +1084,10 @@ package body Scan is
                   return;
                end if;
                goto Again;
+            elsif Flag_Psl and then Source (Pos + 1) = '>' then
+               Current_Token := Tok_Minus_Greater;
+               Pos := Pos + 2;
+               return;
             else
                Current_Token := Tok_Minus;
                Pos := Pos + 1;
@@ -954,11 +1123,39 @@ package body Scan is
             Current_Token := Tok_Right_Paren;
             Pos := Pos + 1;
             return;
-         when '|' | '!' =>
-            -- LRM93 13.10
-            -- A vertical line (|) can be replaced by an exclamation mark (!)
-            -- where used as a delimiter.
-            Current_Token := Tok_Bar;
+         when '|' =>
+            if Flag_Psl then
+               if Source (Pos + 1) = '|' then
+                  Current_Token := Tok_Bar_Bar;
+                  Pos := Pos + 2;
+               elsif Source (Pos + 1) = '-'
+                 and then Source (Pos + 2) = '>'
+               then
+                  Current_Token := Tok_Bar_Arrow;
+                  Pos := Pos + 3;
+               elsif Source (Pos + 1) = '='
+                 and then Source (Pos + 2) = '>'
+               then
+                  Current_Token := Tok_Bar_Double_Arrow;
+                  Pos := Pos + 3;
+               else
+                  Current_Token := Tok_Bar;
+                  Pos := Pos + 1;
+               end if;
+            else
+               Current_Token := Tok_Bar;
+               Pos := Pos + 1;
+            end if;
+            return;
+         when '!' =>
+            if Flag_Psl then
+               Current_Token := Tok_Exclam_Mark;
+            else
+               --  LRM93 13.10
+               --  A vertical line (|) can be replaced by an exclamation
+               --  mark (!)  where used as a delimiter.
+               Current_Token := Tok_Bar;
+            end if;
             Pos := Pos + 1;
             return;
          when ':' =>
@@ -990,8 +1187,13 @@ package body Scan is
             Pos := Pos + 1;
             return;
          when '&' =>
-            Current_Token := Tok_Ampersand;
-            Pos := Pos + 1;
+            if Flag_Psl and then Source (Pos + 1) = '&' then
+               Current_Token := Tok_And_And;
+               Pos := Pos + 2;
+            else
+               Current_Token := Tok_Ampersand;
+               Pos := Pos + 1;
+            end if;
             return;
          when '<' =>
             if Source (Pos + 1) = '=' then
@@ -1016,7 +1218,7 @@ package body Scan is
             return;
          when '=' =>
             if Source (Pos + 1) = '>' then
-               Current_Token := Tok_Arrow;
+               Current_Token := Tok_Double_Arrow;
                Pos := Pos + 2;
             else
                Current_Token := Tok_Equal;
@@ -1092,17 +1294,40 @@ package body Scan is
             Scan_String;
             return;
          when '[' =>
-            if Vhdl_Std = Vhdl_87 then
-               Error_Msg_Scan
-                 ("'[' is an invalid character in vhdl87, replaced by '('");
-               Current_Token := Tok_Left_Paren;
+            if Flag_Psl then
+               if Source (Pos + 1) = '*' then
+                  Current_Token := Tok_Brack_Star;
+                  Pos := Pos + 2;
+               elsif Source (Pos + 1) = '+'
+                 and then Source (Pos + 2) = ']'
+               then
+                  Current_Token := Tok_Brack_Plus_Brack;
+                  Pos := Pos + 3;
+               elsif Source (Pos + 1) = '-'
+                 and then Source (Pos + 2) = '>'
+               then
+                  Current_Token := Tok_Brack_Arrow;
+                  Pos := Pos + 3;
+               elsif Source (Pos + 1) = '=' then
+                  Current_Token := Tok_Brack_Equal;
+                  Pos := Pos + 2;
+               else
+                  Current_Token := Tok_Left_Bracket;
+                  Pos := Pos + 1;
+               end if;
             else
-               Current_Token := Tok_Left_Bracket;
+               if Vhdl_Std = Vhdl_87 then
+                  Error_Msg_Scan
+                    ("'[' is an invalid character in vhdl87, replaced by '('");
+                  Current_Token := Tok_Left_Paren;
+               else
+                  Current_Token := Tok_Left_Bracket;
+               end if;
+               Pos := Pos + 1;
             end if;
-            Pos := Pos + 1;
             return;
          when ']' =>
-            if Vhdl_Std = Vhdl_87 then
+            if Vhdl_Std = Vhdl_87 and not Flag_Psl then
                Error_Msg_Scan
                  ("']' is an invalid character in vhdl87, replaced by ')'");
                Current_Token := Tok_Right_Paren;
@@ -1112,14 +1337,22 @@ package body Scan is
             Pos := Pos + 1;
             return;
          when '{' =>
-            Error_Msg_Scan ("'{' is an invalid character, replaced by '('");
+            if Flag_Psl then
+               Current_Token := Tok_Left_Curly;
+            else
+               Error_Msg_Scan ("'{' is an invalid character, replaced by '('");
+               Current_Token := Tok_Left_Paren;
+            end if;
             Pos := Pos + 1;
-            Current_Token := Tok_Left_Paren;
             return;
          when '}' =>
-            Error_Msg_Scan ("'}' is an invalid character, replaced by ')'");
+            if Flag_Psl then
+               Current_Token := Tok_Right_Curly;
+            else
+               Error_Msg_Scan ("'}' is an invalid character, replaced by ')'");
+               Current_Token := Tok_Right_Paren;
+            end if;
             Pos := Pos + 1;
-            Current_Token := Tok_Right_Paren;
             return;
          when '\' =>
             if Vhdl_Std = Vhdl_87 then
@@ -1138,13 +1371,25 @@ package body Scan is
             Pos := Pos + 1;
             Current_Token := Tok_Not;
             return;
-         when '$' | '@' | '?' | '`'
+         when '$' | '?' | '`'
            | Inverted_Exclamation .. Inverted_Question
            | Multiplication_Sign | Division_Sign =>
             Error_Msg_Scan ("character """ & Source (Pos)
                             & """ can only be used in strings or comments");
             Pos := Pos + 1;
             goto Again;
+         when '@' =>
+            if Flag_Psl then
+               Current_Token := Tok_Arobase;
+               Pos := Pos + 1;
+               return;
+            else
+               Error_Msg_Scan
+                 ("character """ & Source (Pos)
+                    & """ can only be used in strings or comments");
+               Pos := Pos + 1;
+               goto Again;
+            end if;
          when '_' =>
             Error_Msg_Scan ("an identifier can't start with '_'");
             Pos := Pos + 1;

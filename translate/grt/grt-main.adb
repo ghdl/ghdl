@@ -149,6 +149,9 @@ package body Grt.Main is
          if Disp_Signals_Order then
             Grt.Disp.Disp_Signals_Order;
          end if;
+         if Disp_Sensitivity then
+            Grt.Disp_Signals.Disp_All_Sensitivity;
+         end if;
 
          --  Do the simulation.
          Status := Grt.Processes.Simulation;

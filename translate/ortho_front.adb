@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
-with Std_Names;
 with Name_Table;
 with Std_Package;
 with Back_End;
@@ -73,8 +72,9 @@ package body Ortho_Front is
    begin
       -- Initialize.
       Trans_Be.Register_Translation_Back_End;
-      Std_Names.Std_Names_Initialize;
-      Libraries.Init_Pathes;
+
+      Options.Initialize;
+
       Elab_Filelist := null;
       Elab_Entity := null;
       Elab_Architecture := null;

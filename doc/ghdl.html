@@ -3,7 +3,7 @@
 <title>GHDL guide</title>
 <meta http-equiv="Content-Type" content="text/html">
 <meta name="description" content="GHDL guide">
-<meta name="generator" content="makeinfo 4.8">
+<meta name="generator" content="makeinfo 4.11">
 <link title="Top" rel="top" href="#Top">
 <link href="http://www.gnu.org/software/texinfo/" rel="generator-home" title="Texinfo Homepage">
 <meta http-equiv="Content-Style-Type" content="text/css">
@@ -65,6 +65,7 @@
 <li><a href="#Directory-command">3.6.1 Directory command</a>
 <li><a href="#Clean-command">3.6.2 Clean command</a>
 <li><a href="#Remove-command">3.6.3 Remove command</a>
+<li><a href="#Copy-command">3.6.4 Copy command</a>
 </li></ul>
 <li><a href="#Cross_002dreference-command">3.7 Cross-reference command</a>
 <li><a href="#File-commands">3.8 File commands</a>
@@ -83,8 +84,9 @@
 </li></ul>
 <li><a href="#Installation-Directory">3.10 Installation Directory</a>
 <li><a href="#IEEE-library-pitfalls">3.11 IEEE library pitfalls</a>
+<li><a href="#IEEE-math-packages">3.12 IEEE math packages</a>
 </li></ul>
-<li><a name="toc_Simulation-and-run-time" href="#Simulation-and-run-time">4 Simulation and run time</a>
+<li><a name="toc_Simulation-and-runtime" href="#Simulation-and-runtime">4 Simulation and runtime</a>
 <ul>
 <li><a href="#Simulation-options">4.1 Simulation options</a>
 <li><a href="#Debugging-VHDL-programs">4.2 Debugging VHDL programs</a>
@@ -151,7 +153,7 @@ or any later version published by the Free Software Foundation.
 <li><a accesskey="1" href="#Introduction">Introduction</a>:                 What is GHDL, what is VHDL
 <li><a accesskey="2" href="#Starting-with-GHDL">Starting with GHDL</a>:           Build a VHDL program with GHDL
 <li><a accesskey="3" href="#Invoking-GHDL">Invoking GHDL</a>
-<li><a accesskey="4" href="#Simulation-and-run-time">Simulation and run time</a>
+<li><a accesskey="4" href="#Simulation-and-runtime">Simulation and runtime</a>
 <li><a accesskey="5" href="#GHDL-implementation-of-VHDL">GHDL implementation of VHDL</a>
 <li><a accesskey="6" href="#GHDL-implementation-of-VITAL">GHDL implementation of VITAL</a>
 <li><a accesskey="7" href="#Flaws-and-bugs-report">Flaws and bugs report</a>
@@ -256,7 +258,7 @@ an internal code generator.
 viewer: you cannot see signal waves.  You can still check with a test
 bench.  The current version can produce a <code>VCD</code> file which can be
 viewed with a wave viewer, as well as <code>ghw</code> files to be viewed by
-`<samp><span class="samp">gtkwave</span></samp>'.
+&lsquo;<samp><span class="samp">gtkwave</span></samp>&rsquo;.
 
    <p><code>GHDL</code> aims at implementing <code>VHDL</code> as defined by IEEE 1076. 
 It supports most of the 1987 standard and most features added by the
@@ -322,15 +324,15 @@ file in VHDL terms.
 <pre class="smallexample">     $ ghdl -a hello.vhdl
 </pre>
    <p>This command creates or updates a file <samp><span class="file">work-obj93.cf</span></samp>, which
-describes the library `<samp><span class="samp">work</span></samp>'.  On GNU/Linux, this command generates a
+describes the library &lsquo;<samp><span class="samp">work</span></samp>&rsquo;.  On GNU/Linux, this command generates a
 file <samp><span class="file">hello.o</span></samp>, which is the object file corresponding to your
 VHDL program.  The object file is not created on Windows.
 
    <p>Then, you have to build an executable file.
 <pre class="smallexample">     $ ghdl -e hello_world
 </pre>
-   <p>The `<samp><span class="samp">-e</span></samp>' option means <dfn>elaborate</dfn>.  With this option, <code>GHDL</code>
-creates code in order to elaborate a design, with the `<samp><span class="samp">hello</span></samp>'
+   <p>The &lsquo;<samp><span class="samp">-e</span></samp>&rsquo; option means <dfn>elaborate</dfn>.  With this option, <code>GHDL</code>
+creates code in order to elaborate a design, with the &lsquo;<samp><span class="samp">hello</span></samp>&rsquo;
 entity at the top of the hierarchy.
 
    <p>On GNU/Linux, the result is an executable program called <samp><span class="file">hello</span></samp>
@@ -379,7 +381,7 @@ a full adder described in the <samp><span class="file">adder.vhdl</span></samp> 
    <p>You can analyze this design file:
 <pre class="smallexample">     $ ghdl -a adder.vhdl
 </pre>
-   <p>You can try to execute the `<samp><span class="samp">adder</span></samp>' design, but this is useless,
+   <p>You can try to execute the &lsquo;<samp><span class="samp">adder</span></samp>&rsquo; design, but this is useless,
 since nothing externally visible will happen.  In order to
 check this full adder, a testbench has to be run.  This testbench is
 very simple, since the adder is also simple: it checks exhaustively all
@@ -465,7 +467,7 @@ design and dump a waveform file:
 <pre class="smallexample">     $ gtkwave adder.vcd
 </pre>
    <p>See <a href="#Simulation-options">Simulation options</a>, for more details on the <samp><span class="option">--vcd</span></samp> option and
-other run time options.
+other runtime options.
 
 <div class="node">
 <p><hr>
@@ -490,14 +492,14 @@ GNU General Public License.  A copy is kept on
 <pre class="smallexample">     $ tar zxvf dlx.tar.gz
 </pre>
    <p>In order not to pollute the sources with the library, it is a good idea
-to create a <samp><span class="file">work/</span></samp> subdirectory for the `<samp><span class="samp">WORK</span></samp>' library.  To
+to create a <samp><span class="file">work/</span></samp> subdirectory for the &lsquo;<samp><span class="samp">WORK</span></samp>&rsquo; library.  To
 any GHDL commands, we will add the <samp><span class="option">--workdir=work</span></samp> option, so
 that all files generated by the compiler (except the executable) will be
 placed in this directory.
 <pre class="smallexample">     $ cd dlx
      $ mkdir work
 </pre>
-   <p>We will run the `<samp><span class="samp">dlx_test_behaviour</span></samp>' design.  We need to analyze
+   <p>We will run the &lsquo;<samp><span class="samp">dlx_test_behaviour</span></samp>&rsquo; design.  We need to analyze
 all the design units for the design hierarchy, in the correct order. 
 GHDL provides an easy way to do this, by importing the sources:
 <pre class="smallexample">     $ ghdl -i --workdir=work *.vhdl
@@ -539,24 +541,24 @@ stop when an assertion above or equal a certain severity level occurs:
      <ul>
 <li>clean the design library with the GHDL command:
      <pre class="smallexample">          $ ghdl --clean --workdir=work
-     </pre>
+</pre>
      <p>This removes the executable and all the object files.  If you want to
 rebuild the design at this point, just do the make command as shown above. 
 <li>remove the design library with the GHDL command:
      <pre class="smallexample">          $ ghdl --remove --workdir=work
-     </pre>
+</pre>
      <p>This removes the executable, all the object files and the library file. 
 If you want to rebuild the design, you have to import the sources again,
 and to make the design. 
 <li>remove the <samp><span class="file">work/</span></samp> directory:
      <pre class="smallexample">          $ rm -rf work
-     </pre>
+</pre>
      <p>Only the executable is kept.  If you want to rebuild the design, create
 the <samp><span class="file">work/</span></samp> directory, import the sources, and make the design. 
 </ul>
 
    <p>Sometimes, a design does not fully follow the VHDL standards.  For example it
-uses the badly engineered `<samp><span class="samp">std_logic_unsigned</span></samp>' package.  GHDL supports
+uses the badly engineered &lsquo;<samp><span class="samp">std_logic_unsigned</span></samp>&rsquo; package.  GHDL supports
 this VHDL dialect through some options:
 <pre class="smallexample">     --ieee=synopsys -fexplicit
 </pre>
@@ -565,7 +567,7 @@ this VHDL dialect through some options:
 <div class="node">
 <p><hr>
 <a name="Invoking-GHDL"></a>
-Next:&nbsp;<a rel="next" accesskey="n" href="#Simulation-and-run-time">Simulation and run time</a>,
+Next:&nbsp;<a rel="next" accesskey="n" href="#Simulation-and-runtime">Simulation and runtime</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Starting-with-GHDL">Starting with GHDL</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 
@@ -579,7 +581,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <pre class="smallexample">     $ ghdl <var>command</var> [<var>options<small class="dots">...</small></var>]
 </pre>
    <p>The GHDL program has several commands.  The first argument selects
-the commands.  The options are used to slighly modify the action.
+the commands.  The options are used to slightly modify the action.
 
    <p>No options are allowed before the command.  Except for the run commands,
 no options are allowed after a filename or a unit name.
@@ -596,6 +598,7 @@ no options are allowed after a filename or a unit name.
 <li><a accesskey="9" href="#Misc-commands">Misc commands</a>
 <li><a href="#Installation-Directory">Installation Directory</a>
 <li><a href="#IEEE-library-pitfalls">IEEE library pitfalls</a>
+<li><a href="#IEEE-math-packages">IEEE math packages</a>
 </ul>
 
 <div class="node">
@@ -641,7 +644,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Building-commands">Building commands</
 </pre>
    <p>The <dfn>analysis</dfn> command compiles one or more files, and creates an
 object file for each source file.  The analysis command is selected with
-<var>-a</var> switch.  Any argument starting with a dash is a option, the
+<var>-a</var> switch.  Any argument starting with a dash is an option, the
 others are filenames.  No options are allowed after a filename
 argument. GHDL analyzes each filename in the given order, and stops the
 analysis in case of error (the following files are not analyzed). 
@@ -669,7 +672,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Building-commands">Building commands</
 </pre>
    <p>On GNU/Linux the <dfn>elaboration</dfn> command creates an executable
 containing the code of the <code>VHDL</code> sources, the elaboration code
-and simulation code to execute a design hiearachy. On Windows this
+and simulation code to execute a design hierarchy. On Windows this
 command elaborates the design but does not generate anything.
 
    <p>The elaboration command is selected with <var>-e</var> switch, and must be
@@ -682,28 +685,28 @@ followed by either:
 </ul>
 
    <p>Name of the units must be a simple name, without any dot.  You can
-select the name of the `<samp><span class="samp">WORK</span></samp>' library with the <samp><span class="option">--work=NAME</span></samp>
+select the name of the &lsquo;<samp><span class="samp">WORK</span></samp>&rsquo; library with the <samp><span class="option">--work=NAME</span></samp>
 option, as described in <a href="#GHDL-options">GHDL options</a>.
 
    <p>See <a href="#Top-entity">Top entity</a>, for the restrictions on the root design of a
 hierarchy.
 
-   <p>On GNU/Linux the file name of the executable is the name of the
+   <p>On GNU/Linux the filename of the executable is the name of the
 primary unit, or for the later case, the concatenation of the name of
 the primary unit, a dash, and the name of the secondary unit (or
 architecture).  On Windows there is no executable generated.
 
-   <p>The <samp><span class="option">-o</span></samp> followed by a file name can override the default
-executable file name.
+   <p>The <samp><span class="option">-o</span></samp> followed by a filename can override the default
+executable filename.
 
    <p>For the elaboration command, <code>GHDL</code> re-analyzes all the
 configurations, entities, architectures and package declarations, and
 creates the default configurations and the default binding indications
 according to the LRM rules.  It also generates the list of objects files
 required for the executable.  Then, it links all these files with the
-run time library.
+runtime library.
 
-   <p>The actual elaboration is performed at run-time.
+   <p>The actual elaboration is performed at runtime.
 
    <p>On Windows this command can be skipped because it is also done by the
 run command.
@@ -724,24 +727,24 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Building-commands">Building commands</
 
 <pre class="smallexample">     $ ghdl -r [<var>options</var>] <var>primary_unit</var> [<var>secondary_unit</var>] [<var>simulation_options</var>]
 </pre>
-   <p>The options and arguments are the same as the See <a href="#Elaboration-command">Elaboration command</a>.
+   <p>The options and arguments are the same as for the elaboration command, see <a href="#Elaboration-command">Elaboration command</a>.
 
-   <p>On GNU/Linux this command simply build the filename of the executable
-and execute it.  Options are ignored. You may also directly execute
+   <p>On GNU/Linux this command simply determines the filename of the executable
+and executes it.  Options are ignored. You may also directly execute
 the program.
 
    <p>This command exists for three reasons:
      <ul>
 <li>You don't have to create the executable program name. 
-<li>It is coherent with the `<samp><span class="samp">-a</span></samp>' and `<samp><span class="samp">-e</span></samp>' commands. 
+<li>It is coherent with the &lsquo;<samp><span class="samp">-a</span></samp>&rsquo; and &lsquo;<samp><span class="samp">-e</span></samp>&rsquo; commands. 
 <li>It works with the Windows implementation, where the code is generated in
 memory. 
 </ul>
 
-   <p>On Windows this command elaborate and launch the simulation.  As a consequence
+   <p>On Windows this command elaborates and launches the simulation.  As a consequence
 you must use the same options used during analysis.
 
-   <p>See <a href="#Simulation-and-run-time">Simulation and run time</a>, for details on options.
+   <p>See <a href="#Simulation-and-runtime">Simulation and runtime</a>, for details on options.
 
 <div class="node">
 <p><hr>
@@ -800,7 +803,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Building-commands">Building commands</
 </pre>
    <p>This performs only the second stage of the elaboration command: the
 executable is created by linking the files of the object files list. 
-This command is available only for completness.  The elaboration command is
+This command is available only for completeness.  The elaboration command is
 equivalent to the bind command followed by the link command.
 
 <div class="node">
@@ -814,7 +817,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Building-commands">Building commands</
 
 <h4 class="subsection">3.1.7 List link command</h4>
 
-<p><a name="index-g_t_0040option_007b_002d_002dlist_002dlink_007d-command-13"></a>Disp files which will be linked.
+<p><a name="index-g_t_0040option_007b_002d_002dlist_002dlink_007d-command-13"></a>Display files which will be linked.
 
 <pre class="smallexample">     $ ghdl --list-link <var>primary_unit</var> [<var>secondary_unit</var>]
 </pre>
@@ -822,7 +825,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Building-commands">Building commands</
 
    <p>This command may be used only after a bind command.  GHDL displays all
 the files which will be linked to create an executable.  This command is
-intended to add object files in a link of an foreign program.
+intended to add object files in a link of a foreign program.
 
 <div class="node">
 <p><hr>
@@ -852,7 +855,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Building-commands">Building commands</
 
 <h4 class="subsection">3.1.9 Analyze and elaborate command</h4>
 
-<p><a name="index-Analyze-and-elaborate-command-16"></a><a name="index-g_t_0040option_007b_002dc_007d-command-17"></a>Analyze files and elaborate in the same time.
+<p><a name="index-Analyze-and-elaborate-command-16"></a><a name="index-g_t_0040option_007b_002dc_007d-command-17"></a>Analyze files and elaborate them at the same time.
 
    <p>On GNU/Linux:
 <pre class="smallexample">     $ ghdl -c [<var>options</var>] <var>file</var>... -e <var>primary_unit</var> [<var>secondary_unit</var>]
@@ -860,7 +863,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Building-commands">Building commands</
    <p>On Windows:
 <pre class="smallexample">     $ ghdl -c [<var>options</var>] <var>file</var>... -r <var>primary_unit</var> [<var>secondary_unit</var>]
 </pre>
-   <p>This command combines analyze and elaboration: <var>file</var>s are analyzed and
+   <p>This command combines analysis and elaboration: <var>file</var>s are analyzed and
 the unit is then elaborated.  However, code is only generated during the
 elaboration.  On Windows the simulation is launched.
 
@@ -868,11 +871,11 @@ elaboration.  On Windows the simulation is launched.
 drives the analysis.  Therefore, there is no analysis order, and you don't
 need to care about it.
 
-   <p>All the units of the files are put into the `<samp><span class="samp">work</span></samp>' library.  But, the
+   <p>All the units of the files are put into the &lsquo;<samp><span class="samp">work</span></samp>&rsquo; library.  But, the
 work library is neither read from disk nor saved.  Therefore, you must give
-all the files of the `<samp><span class="samp">work</span></samp>' library your design needs.
+all the files of the &lsquo;<samp><span class="samp">work</span></samp>&rsquo; library your design needs.
 
-   <p>The advantages over the traditionnal approach (analyze and then elaborate) are:
+   <p>The advantages over the traditional approach (analyze and then elaborate) are:
      <ul>
 <li>The compilation cycle is achieved in one command. 
 <li>Since the files are only parsed once, the compilation cycle may be faster. 
@@ -882,12 +885,12 @@ do not generate code.
 </ul>
    However, you should know that currently most of the time is spent in code
 generation and the analyze and elaborate command generate code for all units
-needed, even units of `<samp><span class="samp">std</span></samp>' and `<samp><span class="samp">ieee</span></samp>' libraries.  Therefore,
+needed, even units of &lsquo;<samp><span class="samp">std</span></samp>&rsquo; and &lsquo;<samp><span class="samp">ieee</span></samp>&rsquo; libraries.  Therefore,
 according to the design, the time for this command may be higher than the time
 for the analyze command followed by the elaborate command.
 
    <p>This command is still experimental.  In case of problems, you should go back
-to the traditionnal way.
+to the traditional way.
 
 <!-- node-name,  next,  previous,  up -->
 <div class="node">
@@ -909,93 +912,96 @@ begin with <samp><span class="option">-O</span></samp> or <samp><span class="opt
 manual for details.
 
      <dl>
-<dt><code>--work=</code><var>NAME</var><dd><a name="index-g_t_0040option_007b_002d_002dwork_007d-switch-22"></a><a name="index-WORK-library-23"></a>Specify the name of the `<samp><span class="samp">WORK</span></samp>' library.  Analyzed units are always
-placed in the library logically named `<samp><span class="samp">WORK</span></samp>'.  With this option,
+<dt><code>--work=</code><var>NAME</var><dd><a name="index-g_t_0040option_007b_002d_002dwork_007d-switch-22"></a><a name="index-WORK-library-23"></a>Specify the name of the &lsquo;<samp><span class="samp">WORK</span></samp>&rsquo; library.  Analyzed units are always
+placed in the library logically named &lsquo;<samp><span class="samp">WORK</span></samp>&rsquo;.  With this option,
 you can set its name.  By default, the name is <var>work</var>.
 
-     <p><code>GHDL</code> checks `<samp><span class="samp">WORK</span></samp>' is a valid identifier.  Although being
-more or less supported, the `<samp><span class="samp">WORK</span></samp>' identifier should not be an
+     <p><code>GHDL</code> checks whether &lsquo;<samp><span class="samp">WORK</span></samp>&rsquo; is a valid identifier.  Although being
+more or less supported, the &lsquo;<samp><span class="samp">WORK</span></samp>&rsquo; identifier should not be an
 extended identifier, since the filesystem may prevent it from correctly
 working (due to case sensitivity or forbidden characters in filenames).
 
-     <p><code>VHDL</code> rules forbides you to add units in the `<samp><span class="samp">std</span></samp>' library. 
-Furthermode, you should not put units in the `<samp><span class="samp">ieee</span></samp>' library.
+     <p><code>VHDL</code> rules forbid you to add units to the &lsquo;<samp><span class="samp">std</span></samp>&rsquo; library. 
+Furthermore, you should not put units in the &lsquo;<samp><span class="samp">ieee</span></samp>&rsquo; library.
 
-     <br><dt><code>--workdir=</code><var>PATH</var><dd><a name="index-g_t_0040option_007b_002d_002dworkdir_007d-switch-24"></a>Specify the directory where the `<samp><span class="samp">WORK</span></samp>' library is.  When this
-option is not present, the `<samp><span class="samp">WORK</span></samp>' library is in the current
+     <br><dt><code>--workdir=</code><var>DIR</var><dd><a name="index-g_t_0040option_007b_002d_002dworkdir_007d-switch-24"></a>Specify the directory where the &lsquo;<samp><span class="samp">WORK</span></samp>&rsquo; library is located.  When this
+option is not present, the &lsquo;<samp><span class="samp">WORK</span></samp>&rsquo; library is in the current
 directory.  The object files created by the compiler are always placed
-in the same directory as the `<samp><span class="samp">WORK</span></samp>' library.
+in the same directory as the &lsquo;<samp><span class="samp">WORK</span></samp>&rsquo; library.
 
-     <br><dt><code>--std=</code><var>STD</var><dd><a name="index-g_t_0040option_007b_002d_002dstd_007d-switch-25"></a>Specify the standard to use.  By default, the standard is `<samp><span class="samp">93c</span></samp>', which
+     <p>Use option <samp><span class="option">-P</span></samp> to specify where libraries other than &lsquo;<samp><span class="samp">WORK</span></samp>&rsquo;
+are placed.
+
+     <br><dt><code>--std=</code><var>STD</var><dd><a name="index-g_t_0040option_007b_002d_002dstd_007d-switch-25"></a>Specify the standard to use.  By default, the standard is &lsquo;<samp><span class="samp">93c</span></samp>&rsquo;, which
 means VHDL-93 accepting VHDL-87 syntax.  For details on <var>STD</var> values see
 <a href="#VHDL-standards">VHDL standards</a>.
 
      <br><dt><code>--ieee=</code><var>VER</var><dd><a name="index-g_t_0040option_007b_002d_002dieee_007d-switch-26"></a><a name="index-ieee-library-27"></a><a name="index-synopsys-library-28"></a><a name="index-mentor-library-29"></a>Select the <code>IEEE</code> library to use. <var>VER</var> must be one of:
 
           <dl>
-<dt>`<samp><span class="samp">none</span></samp>'<dd>Do not supply an <code>IEEE</code> library.  Any library clause with the `<samp><span class="samp">IEEE</span></samp>'
+<dt>&lsquo;<samp><span class="samp">none</span></samp>&rsquo;<dd>Do not supply an <code>IEEE</code> library.  Any library clause with the &lsquo;<samp><span class="samp">IEEE</span></samp>&rsquo;
 identifier will fail, unless you have created by your own a library with
 the <code>IEEE</code> name.
 
-          <br><dt>`<samp><span class="samp">standard</span></samp>'<dd>Supply an <code>IEEE</code> library containing only packages defined by
+          <br><dt>&lsquo;<samp><span class="samp">standard</span></samp>&rsquo;<dd>Supply an <code>IEEE</code> library containing only packages defined by
 <span class="sc">ieee</span> standards.  Currently, there are the multivalue logic system
-packages `<samp><span class="samp">std_logic_1164</span></samp>' defined by IEEE 1164, the synthesis
-packages , `<samp><span class="samp">numeric_bit</span></samp>' and `<samp><span class="samp">numeric_std</span></samp>' defined by IEEE
-1076.3, and the <span class="sc">vital</span> packages `<samp><span class="samp">vital_timing</span></samp>' and
-`<samp><span class="samp">vital_primitives</span></samp>', defined by IEEE 1076.4.  The version of these
+packages &lsquo;<samp><span class="samp">std_logic_1164</span></samp>&rsquo; defined by IEEE 1164, the synthesis
+packages , &lsquo;<samp><span class="samp">numeric_bit</span></samp>&rsquo; and &lsquo;<samp><span class="samp">numeric_std</span></samp>&rsquo; defined by IEEE
+1076.3, and the <span class="sc">vital</span> packages &lsquo;<samp><span class="samp">vital_timing</span></samp>&rsquo; and
+&lsquo;<samp><span class="samp">vital_primitives</span></samp>&rsquo;, defined by IEEE 1076.4.  The version of these
 packages is defined by the VHDL standard used.  See <a href="#VITAL-packages">VITAL packages</a>,
 for more details.
 
-          <br><dt>`<samp><span class="samp">synopsys</span></samp>'<dd>Supply the former packages and the following additionnal packages:
-`<samp><span class="samp">std_logic_arith</span></samp>', `<samp><span class="samp">std_logic_signed</span></samp>',
-`<samp><span class="samp">std_logic_unsigned</span></samp>', `<samp><span class="samp">std_logic_textio</span></samp>'. 
+          <br><dt>&lsquo;<samp><span class="samp">synopsys</span></samp>&rsquo;<dd>Supply the former packages and the following additional packages:
+&lsquo;<samp><span class="samp">std_logic_arith</span></samp>&rsquo;, &lsquo;<samp><span class="samp">std_logic_signed</span></samp>&rsquo;,
+&lsquo;<samp><span class="samp">std_logic_unsigned</span></samp>&rsquo;, &lsquo;<samp><span class="samp">std_logic_textio</span></samp>&rsquo;. 
 <!-- @samp{std_logic_misc}. -->
 These packages were created by some companies, and are popular.  However
 they are not standard packages, and have been placed in the <code>IEEE</code>
-library without the <span class="sc">ieee</span> permission.
+library without the permission from the <span class="sc">ieee</span>.
 
-          <br><dt>`<samp><span class="samp">mentor</span></samp>'<dd>Supply the standardr packages and the following additionnal package:
-`<samp><span class="samp">std_logic_arith</span></samp>'.  The package is a slight variation on a definitly
+          <br><dt>&lsquo;<samp><span class="samp">mentor</span></samp>&rsquo;<dd>Supply the standard packages and the following additional package:
+&lsquo;<samp><span class="samp">std_logic_arith</span></samp>&rsquo;.  The package is a slight variation of a definitely
 not standard but widely mis-used package. 
 </dl>
 
      <p>To avoid errors, you must use the same <code>IEEE</code> library for all units of
 your design, and during elaboration.
 
-     <br><dt><code>-P</code><var>PATH</var><dd><a name="index-g_t_0040option_007b_002dP_007d-switch-30"></a>Add <var>PATH</var> to the end of the list of directories to be searched for
+     <br><dt><code>-P</code><var>DIRECTORY</var><dd><a name="index-g_t_0040option_007b_002dP_007d-switch-30"></a>Add <var>DIRECTORY</var> to the end of the list of directories to be searched for
 library files.
 
      <p>The <code>WORK</code> library is always searched in the path specified by the
-<samp><span class="option">--workdir=</span></samp> option, or in the current directory if the later
+<samp><span class="option">--workdir=</span></samp> option, or in the current directory if the latter
 option is not specified.
 
      <br><dt><code>-fexplicit</code><dd><a name="index-g_t_0040option_007b_002dfexplicit_007d-switch-31"></a>When two operators are overloaded, give preference to the explicit declaration. 
-This may be used to avoid the most common pitfall of the `<samp><span class="samp">std_logic_arith</span></samp>'
+This may be used to avoid the most common pitfall of the &lsquo;<samp><span class="samp">std_logic_arith</span></samp>&rsquo;
 package.  See <a href="#IEEE-library-pitfalls">IEEE library pitfalls</a>, for an example.
 
      <p>This option is not set by default.  I don't think this option is a
 good feature, because it breaks the encapsulation rule.  When set, an
-operator can be silently overriden in another package.  You'd better to fix
-your design and use the `<samp><span class="samp">numeric_std</span></samp>' package.
+operator can be silently overridden in another package.  You'd better to fix
+your design and use the &lsquo;<samp><span class="samp">numeric_std</span></samp>&rsquo; package.
 
      <br><dt><code>--no-vital-checks</code><br><dt><code>--vital-checks</code><dd><a name="index-g_t_0040option_007b_002d_002dno_002dvital_002dchecks_007d-switch-32"></a><a name="index-g_t_0040option_007b_002d_002dvital_002dchecks_007d-switch-33"></a>Disable or enable checks of restriction on VITAL units.  Checks are enabled
 by default.
 
      <p>Checks are performed only when a design unit is decorated by a VITAL attribute. 
-The VITAL attributes are `<samp><span class="samp">VITAL_Level0</span></samp>' and `<samp><span class="samp">VITAL_Level1</span></samp>', both
-declared in the `<samp><span class="samp">ieee.VITAL_Timing</span></samp>' package.
+The VITAL attributes are &lsquo;<samp><span class="samp">VITAL_Level0</span></samp>&rsquo; and &lsquo;<samp><span class="samp">VITAL_Level1</span></samp>&rsquo;, both
+declared in the &lsquo;<samp><span class="samp">ieee.VITAL_Timing</span></samp>&rsquo; package.
 
      <p>Currently, VITAL checks are only partially implemented.  See <a href="#VHDL-restrictions-for-VITAL">VHDL restrictions for VITAL</a>, for more details.
 
-     <br><dt><code>--syn-binding</code><dd><a name="index-g_t_0040option_007b_002d_002dsyn_002dbinding_007d-switch-34"></a>Use synthetizer rules for component binding.  During elaboration, if a
+     <br><dt><code>--syn-binding</code><dd><a name="index-g_t_0040option_007b_002d_002dsyn_002dbinding_007d-switch-34"></a>Use synthesizer rules for component binding.  During elaboration, if a
 component is not bound to an entity using VHDL LRM rules, try to find
 in any known library an entity whose name is the same as the component
 name.
 
-     <p>This rule is known as synthetizer rule.
+     <p>This rule is known as synthesizer rule.
 
      <p>There are two key points: normal VHDL LRM rules are tried first and
-entities are search only in known library.  A known library is a
+entities are searched only in known library.  A known library is a
 library which has been named in your design.
 
      <p>This option is only useful during elaboration.
@@ -1025,7 +1031,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Invoking-GHDL">Invoking GHDL</a>
 <p>These options are only available on GNU/Linux.
 
    <p>For many commands, <code>GHDL</code> acts as a driver: it invokes programs to perform
-the command.  You can pass arbritrary options to these programs.
+the command.  You can pass arbitrary options to these programs.
 
    <p>Both the compiler and the linker are in fact GCC programs.  See <a href="gcc.html#Invoking-GCC">GCC options</a>, for details on GCC
 options.
@@ -1050,7 +1056,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Invoking-GHDL">Invoking GHDL</a>
 <!-- node-name,  next,  previous,  up -->
 <h3 class="section">3.4 GHDL warnings</h3>
 
-<p>Some contructions are not erroneous but dubious.  Warnings are diagnostic
+<p>Some constructions are not erroneous but dubious.  Warnings are diagnostic
 messages that report such constructions.  Some warnings are reported only
 during analysis, others during elaboration.
 
@@ -1058,10 +1064,10 @@ during analysis, others during elaboration.
 instead of <samp><span class="option">--warn-XXX</span></samp>.
 
      <dl>
-<dt><code>--warn-reserved</code><dd><a name="index-g_t_0040option_007b_002d_002dwarn_002dreserved_007d-switch-40"></a>Emit a warning if an identifier is a reserved word in a latter VHDL standard.
+<dt><code>--warn-reserved</code><dd><a name="index-g_t_0040option_007b_002d_002dwarn_002dreserved_007d-switch-40"></a>Emit a warning if an identifier is a reserved word in a later VHDL standard.
 
      <br><dt><code>--warn-default-binding</code><dd><a name="index-g_t_0040option_007b_002d_002dwarn_002ddefault_002dbinding_007d-switch-41"></a>During analyze, warns if a component instantiation has neither
-configuration specification nor default binding.  This may be usefull if you
+configuration specification nor default binding.  This may be useful if you
 want to detect during analyze possibly unbound component if you don't use
 configuration.  See <a href="#VHDL-standards">VHDL standards</a>, for more details about default binding
 rules.
@@ -1074,7 +1080,7 @@ binding rules are somewhat complex and an unbound component is most
 often unexpected.
 
      <p>However, warnings are even emitted if a component instantiation is
-inside a generate statement.  As a consequence, if you use conditionnal
+inside a generate statement.  As a consequence, if you use the conditional
 generate statement to select a component according to the implementation,
 you will certainly get warnings.
 
@@ -1116,8 +1122,8 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Invoking-GHDL">Invoking GHDL</a>
 <!-- node-name,  next,  previous,  up -->
 <h3 class="section">3.5 Rebuilding commands</h3>
 
-<p>Analyzing and elaborating a design consisting in severals files can be tricky,
-due to dependences.  GHDL has a few commands to rebuild a design.
+<p>Analyzing and elaborating a design consisting in several files can be tricky,
+due to dependencies.  GHDL has a few commands to rebuild a design.
 
 <ul class="menu">
 <li><a accesskey="1" href="#Import-command">Import command</a>
@@ -1137,7 +1143,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Rebuilding-commands">Rebuilding comman
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">3.5.1 Import command</h4>
 
-<p><a name="index-importing-files-50"></a><a name="index-g_t_0040option_007b_002di_007d-coomand-51"></a>Add files in the work design library.
+<p><a name="index-importing-files-50"></a><a name="index-g_t_0040option_007b_002di_007d-command-51"></a>Add files in the work design library.
 
 <pre class="smallexample">     $ ghdl -i [<var>options</var>] <var>file</var>...
 </pre>
@@ -1151,14 +1157,14 @@ an entity name or a configuration name.
    <p>Since the files are parsed, there must be correct files.  However, since they
 are not analyzed, many errors are tolerated by this command.
 
-   <p>Note that all the files are added in the work library.  If you have many
+   <p>Note that all the files are added to the work library.  If you have many
 libraries, you must use the command for each library.
 
 <!-- Due to the LRM rules, there may be many analysis orders, producing -->
 <!-- different results.  For example, if an entity has several architectures, -->
 <!-- the last architecture analyzed is the default one in default binding -->
 <!-- indications. -->
-<p>See <a href="#Make-command">Make command</a>, to actually build the design.
+   <p>See <a href="#Make-command">Make command</a>, to actually build the design.
 
 <div class="node">
 <p><hr>
@@ -1187,7 +1193,7 @@ recursive.
 
    <p>With the <samp><span class="option">-f</span></samp> (force) option, GHDL analyzes all the units of the
 work library needed to create the design hierarchy.  Not outdated units
-are recompiled.  This is useful if you want to compile a design hierarch
+are recompiled.  This is useful if you want to compile a design hierarchy
 with new compilation flags (for example, to add the <samp><span class="option">-g</span></samp>
 debugging option).
 
@@ -1207,10 +1213,10 @@ that GHDL knows in which file these units are.
 
    <p>The make command imports files which have been modified.  Then, a design
 hierarchy is internally built as if no units are outdated.  Then, all outdated
-design units, using the dependences of the design hierarchy, are analyzed. 
+design units, using the dependencies of the design hierarchy, are analyzed. 
 If necessary, the design hierarchy is elaborated.
 
-   <p>This is not perfect, since defaults architecture (the most recently
+   <p>This is not perfect, since the default architecture (the most recently
 analyzed one) may change while outdated design files are analyzed. In
 such a case, re-run the make command of GHDL.
 
@@ -1252,6 +1258,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Invoking-GHDL">Invoking GHDL</a>
 <li><a accesskey="1" href="#Directory-command">Directory command</a>
 <li><a accesskey="2" href="#Clean-command">Clean command</a>
 <li><a accesskey="3" href="#Remove-command">Remove command</a>
+<li><a accesskey="4" href="#Copy-command">Copy command</a>
 </ul>
 
 <div class="node">
@@ -1299,6 +1306,7 @@ clean up.
 <div class="node">
 <p><hr>
 <a name="Remove-command"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#Copy-command">Copy command</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Clean-command">Clean command</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Library-commands">Library commands</a>
 
@@ -1315,6 +1323,25 @@ clean up.  Note that after removing a design library, the files are not
 known anymore by GHDL.
 
 <div class="node">
+<p><hr>
+<a name="Copy-command"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Remove-command">Remove command</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Library-commands">Library commands</a>
+
+</div>
+
+<h4 class="subsection">3.6.4 Copy command</h4>
+
+<p><a name="index-copying-library-61"></a><a name="index-g_t_0040option_007b_002d_002dcopy_007d-command-62"></a>Make a local copy of an existing library.
+
+<pre class="smallexample">     $ ghdl --copy --work=<var>name</var> [<var>options</var>]
+</pre>
+   <p>Make a local copy of an existing library.  This is very useful if you want to
+add unit to the &lsquo;<samp><span class="samp">ieee</span></samp>&rsquo; library:
+<pre class="example">     $ ghdl --copy --work=ieee --ieee=synopsys
+     $ ghdl -a --work=ieee numeric_unsigned.vhd
+</pre>
+   <div class="node">
 <p><hr>
 <a name="Cross-reference-command"></a>
 <a name="Cross_002dreference-command"></a>
@@ -1335,19 +1362,19 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Invoking-GHDL">Invoking GHDL</a>
 line, with syntax highlighting and full cross-reference: every identifier is
 a link to its declaration.  Besides, an index of the files is created too.
 
-   <p>The set of <var>file</var> are analyzed, and then, if the analyze is
+   <p>The set of <var>file</var> are analyzed, and then, if the analysis is
 successful, html files are generated in the directory specified by the
 <samp><span class="option">-o </span><var>dir</var></samp> option, or <samp><span class="file">html/</span></samp> directory by default.
 
    <p>If the <samp><span class="option">--format=html2</span></samp> is specified, then the generated html
 files follow the HTML 2.0 standard, and colours are specified with
-`<samp><span class="samp">&lt;FONT&gt;</span></samp>' tags.  However, colours are hard-coded.
+&lsquo;<samp><span class="samp">&lt;FONT&gt;</span></samp>&rsquo; tags.  However, colours are hard-coded.
 
    <p>If the <samp><span class="option">--format=css</span></samp> is specified, then the generated html files
 follow the HTML 4.0 standard, and use the CSS-1 file <samp><span class="file">ghdl.css</span></samp> to
 specify colours.  This file is generated only if it does not already exist (it
 is never overwritten) and can be customized by the user to change colours or
-appearance.  Refer to a generated file and its comments for more informations.
+appearance.  Refer to a generated file and its comments for more information.
 
 <div class="node">
 <p><hr>
@@ -1361,7 +1388,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Invoking-GHDL">Invoking GHDL</a>
 <!-- node-name,  next,  previous,  up -->
 <h3 class="section">3.8 File commands</h3>
 
-<p>The following commands act on one or severals files.  They do not analysis
+<p>The following commands act on one or several files.  They do not analyze
 files, therefore, they work even if a file has semantic errors.
 
 <ul class="menu">
@@ -1383,7 +1410,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#File-commands">File commands</a>
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">3.8.1 Pretty print command</h4>
 
-<p><a name="index-g_t_0040option_007b_002d_002dpp_002dhtml_007d-command-61"></a><a name="index-pretty-printing-62"></a><a name="index-vhdl-to-html-63"></a>
+<p><a name="index-g_t_0040option_007b_002d_002dpp_002dhtml_007d-command-63"></a><a name="index-pretty-printing-64"></a><a name="index-vhdl-to-html-65"></a>
 Generate HTML on standard output from VHDL.
 
 <pre class="smallexample">     $ ghdl --pp-html [<var>options</var>] <var>file</var>...
@@ -1391,14 +1418,14 @@ Generate HTML on standard output from VHDL.
    <p>The files are just scanned and an html file, with syntax highlighting is
 generated on standard output.
 
-   <p>Since the files are not even parsed, erroneous files or uncomplete designs
+   <p>Since the files are not even parsed, erroneous files or incomplete designs
 can be pretty printed.
 
    <p>The style of the html file can be modified with the <samp><span class="option">--format=</span></samp> option. 
 By default or when the <samp><span class="option">--format=html2</span></samp> option is specified, the output
-is an HTML 2.0 file, with colours set throught `<samp><span class="samp">&lt;FONT&gt;</span></samp>' tags.  When the
+is an HTML 2.0 file, with colours set through &lsquo;<samp><span class="samp">&lt;FONT&gt;</span></samp>&rsquo; tags.  When the
 <samp><span class="option">--format=css</span></samp> option is specified, the output is an HTML 4.0 file,
-with colours set through a CSS file, whose name is `<samp><span class="samp">ghdl.css</span></samp>'. 
+with colours set through a CSS file, whose name is &lsquo;<samp><span class="samp">ghdl.css</span></samp>&rsquo;. 
 See <a href="#Cross_002dreference-command">Cross-reference command</a>, for more details about this CSS file.
 
 <div class="node">
@@ -1413,7 +1440,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#File-commands">File commands</a>
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">3.8.2 Find command</h4>
 
-<p><a name="index-g_t_0040option_007b_002df_007d-command-64"></a>Display the name of the design units in files.
+<p><a name="index-g_t_0040option_007b_002df_007d-command-66"></a>Display the name of the design units in files.
 
 <pre class="smallexample">     $ ghdl -f <var>file</var>...
 </pre>
@@ -1433,19 +1460,19 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#File-commands">File commands</a>
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">3.8.3 Chop command</h4>
 
-<p><a name="index-g_t_0040option_007b_002d_002dchop_007d-command-65"></a>Chop (or split) files at design unit.
+<p><a name="index-g_t_0040option_007b_002d_002dchop_007d-command-67"></a>Chop (or split) files at design unit.
 
 <pre class="smallexample">     $ ghdl --chop <var>files</var>
 </pre>
    <p><code>GHDL</code> reads files, and writes a file in the current directory for
 every design unit.
 
-   <p>The file name of a design unit is build according to the unit.  For an
+   <p>The filename of a design unit is build according to the unit.  For an
 entity declaration, a package declaration or a configuration the file
 name is <samp><span class="file">NAME.vhdl</span></samp>, where <var>NAME</var> is the name of the design
-unit.  For a package body, the file name is <samp><span class="file">NAME-body.vhdl</span></samp>. 
+unit.  For a package body, the filename is <samp><span class="file">NAME-body.vhdl</span></samp>. 
 Finally, for an architecture <var>ARCH</var> of an entity <var>ENTITY</var>, the
-file name is <samp><span class="file">ENTITY-ARCH.vhdl</span></samp>.
+filename is <samp><span class="file">ENTITY-ARCH.vhdl</span></samp>.
 
    <p>Since the input files are parsed, this command aborts in case of syntax
 error.  The command aborts too if a file to be written already exists.
@@ -1467,7 +1494,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#File-commands">File commands</a>
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">3.8.4 Lines command</h4>
 
-<p><a name="index-g_t_0040option_007b_002d_002dlines_007d-command-66"></a>Display on the standard output lines of files preceded by line number.
+<p><a name="index-g_t_0040option_007b_002d_002dlines_007d-command-68"></a>Display on the standard output lines of files preceded by line number.
 
 <pre class="smallexample">     $ ghdl --lines <var>files</var>
 </pre>
@@ -1503,8 +1530,8 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Misc-commands">Misc commands</a>
 
 <h4 class="subsection">3.9.1 Help command</h4>
 
-<p><a name="index-g_t_0040option_007b_002dh_007d-command-67"></a><a name="index-g_t_0040option_007b_002d_002dhelp_007d-command-68"></a>Display (on the standard output) a short description of the all the commands
-available.  If the help switch is followed by an command switch, then options
+<p><a name="index-g_t_0040option_007b_002dh_007d-command-69"></a><a name="index-g_t_0040option_007b_002d_002dhelp_007d-command-70"></a>Display (on the standard output) a short description of the all the commands
+available.  If the help switch is followed by a command switch, then options
 for this later command are displayed.
 
 <pre class="smallexample">     $ ghdl --help
@@ -1523,7 +1550,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Misc-commands">Misc commands</a>
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">3.9.2 Dispconfig command</h4>
 
-<p><a name="index-g_t_0040option_007b_002d_002ddispconfig_007d-command-69"></a><a name="index-display-configuration-70"></a>Display the program pathes and options used by GHDL.
+<p><a name="index-g_t_0040option_007b_002d_002ddispconfig_007d-command-71"></a><a name="index-display-configuration-72"></a>Display the program paths and options used by GHDL.
 
 <pre class="smallexample">     $ ghdl --dispconfig [<var>options</var>]
 </pre>
@@ -1541,7 +1568,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Misc-commands">Misc commands</a>
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">3.9.3 Disp standard command</h4>
 
-<p><a name="index-g_t_0040option_007b_002d_002ddisp_002dstandard_007d-command-71"></a><a name="index-display-_0040samp_007bstd_002estandard_007d-72"></a>Display the `<samp><span class="samp">std.standard</span></samp>' package:
+<p><a name="index-g_t_0040option_007b_002d_002ddisp_002dstandard_007d-command-73"></a><a name="index-display-_0040samp_007bstd_002estandard_007d-74"></a>Display the &lsquo;<samp><span class="samp">std.standard</span></samp>&rsquo; package:
 
 <pre class="smallexample">     $ ghdl --disp-standard [<var>options</var>]
 </pre>
@@ -1556,7 +1583,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Misc-commands">Misc commands</a>
 <!-- node-name,  next,  previous,  up -->
 <h4 class="subsection">3.9.4 Version command</h4>
 
-<p><a name="index-g_t_0040option_007b_002d_002dversion_007d-command-73"></a><a name="index-version-74"></a>Display the <code>GHDL</code> version and exit.
+<p><a name="index-g_t_0040option_007b_002d_002dversion_007d-command-75"></a><a name="index-version-76"></a>Display the <code>GHDL</code> version and exit.
 
 <pre class="smallexample">     $ ghdl --version
 </pre>
@@ -1581,8 +1608,8 @@ which is (in priority order):
 
      <li>the <var>GHDL_PREFIX</var> environment variable
 
-     <li>a built-in default path.  It is an hard-coded path on GNU/Linux and the
-value of the `<samp><span class="samp">HKLM\Software\Ghdl\Install_Dir</span></samp>' registry entry on Windows.
+     <li>a built-in default path.  It is a hard-coded path on GNU/Linux and the
+value of the &lsquo;<samp><span class="samp">HKLM\Software\Ghdl\Install_Dir</span></samp>&rsquo; registry entry on Windows.
         </ol>
 
    <p>You should use the <samp><span class="option">--dispconfig</span></samp> command (see <a href="#Dispconfig-command">Dispconfig command</a> for details) to disp and debug installation problems.
@@ -1590,6 +1617,7 @@ value of the `<samp><span class="samp">HKLM\Software\Ghdl\Install_Dir</span></sa
 <div class="node">
 <p><hr>
 <a name="IEEE-library-pitfalls"></a>
+Next:&nbsp;<a rel="next" accesskey="n" href="#IEEE-math-packages">IEEE math packages</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Installation-Directory">Installation Directory</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Invoking-GHDL">Invoking GHDL</a>
 
@@ -1600,14 +1628,14 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Invoking-GHDL">Invoking GHDL</a>
 
 <p>When you use options <samp><span class="option">--ieee=synopsys</span></samp> or <samp><span class="option">--ieee=mentor</span></samp>,
 the <code>IEEE</code> library contains non standard packages such as
-`<samp><span class="samp">std_logic_arith</span></samp>'. <!-- FIXME: ref -->
+&lsquo;<samp><span class="samp">std_logic_arith</span></samp>&rsquo;. <!-- FIXME: ref -->
 
    <p>These packages are not standard because there are not described by an IEEE
 standard, even if they have been put in the <code>IEEE</code> library.  Furthermore,
-they are not really de-facto standard, because there a slight differences
+they are not really de-facto standard, because there are slight differences
 between the packages of Mentor and those of Synopsys.
 
-   <p>Furthermore, since they are not well-thought, their use have pitfalls.  For
+   <p>Furthermore, since they are not well-thought, their use has pitfalls.  For
 example, this description has error during compilation:
 <pre class="example">     library ieee;
      use ieee.std_logic_1164.all;
@@ -1656,10 +1684,10 @@ have been split for readability):
    <p>Indeed, the <code>"="</code> operator is defined in both packages, and both
 are visible at the place it is used.  The first declaration is an
 implicit one, which occurs when the <code>std_logic_vector</code> type is
-declared and is a element to element comparaison, the second one is an
-explicit declared function, with the semantic of an unsigned comparaison.
+declared and is an element to element comparison, the second one is an
+explicit declared function, with the semantic of an unsigned comparison.
 
-   <p>With some analyser, the explicit declaration has priority on the implicit
+   <p>With some analyser, the explicit declaration has priority over the implicit
 declaration, and this design can be analyzed without error.  However, this
 is not the rule given by the VHDL LRM, and since GHDL follows these rules,
 it emits an error.
@@ -1692,7 +1720,7 @@ See <a href="#GHDL-options">GHDL options</a>, for more details.
      end fixed_bad;
 </pre>
    <p>It is better to only use the standard packages defined by IEEE, which
-provides the same functionnalities:
+provides the same functionalities:
 <pre class="example">     library ieee;
      use ieee.numeric_std.all;
      
@@ -1718,7 +1746,51 @@ provides the same functionnalities:
 </pre>
    <div class="node">
 <p><hr>
-<a name="Simulation-and-run-time"></a>
+<a name="IEEE-math-packages"></a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#IEEE-library-pitfalls">IEEE library pitfalls</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Invoking-GHDL">Invoking GHDL</a>
+
+</div>
+
+<!-- node-name,  next,  previous,  up -->
+<h3 class="section">3.12 IEEE math packages</h3>
+
+<p><a name="index-Math_005fReal-77"></a><a name="index-Math_005fComplex-78"></a>
+The &lsquo;<samp><span class="samp">ieee</span></samp>&rsquo; math packages (&lsquo;<samp><span class="samp">math_real</span></samp>&rsquo; and
+&lsquo;<samp><span class="samp">math_complex</span></samp>&rsquo;) provided with <code>GHDL</code> are not fully compliant with
+the <code>IEEE</code> standard.  They are based on an early draft which can be
+redistributed contrary to the final version of the package.
+
+   <p>This is unfortunate and may generate errors as some declarations are missing
+or have slightly changed.
+
+   <p>If you have bought the standard from &lsquo;<samp><span class="samp">ieee</span></samp>&rsquo; then you can download
+the sources of the packages from
+<a href="http://standards.ieee.org/downloads/1076/1076.2-1996">http://standards.ieee.org/downloads/1076/1076.2-1996</a>
+(unrestricted access).  You'd better to just download
+<samp><span class="file">math_real.vhdl</span></samp>, <samp><span class="file">math_real-body.vhdl</span></samp>,
+<samp><span class="file">math_complex.vhdl</span></samp> and <samp><span class="file">math_complex-body.vhdl</span></samp>.  The other files
+are not necessary: the &lsquo;<samp><span class="samp">std_logic_1164</span></samp>&rsquo; package has to be updated for
+<code>VHDL</code> 1993 (the <code>xnor</code> functions are commented out).
+
+   <p>If you want to replace math packages for the standard version of the
+<code>ieee</code> library, do:
+<pre class="smallexample">     $ cp math_real.vhdl math_real-body.vhdl <samp><span class="file">ieee_install_dir</span></samp>
+     $ cp math_complex.vhdl math_complex-body.vhdl <samp><span class="file">ieee_install_dir</span></samp>
+     $ cd <samp><span class="file">ieee_install_dir</span></samp>
+     $ ghdl -a --work=ieee math_real.vhdl math_real-body.vhdl
+     $ ghdl -a --work=ieee math_complex.vhdl math_complex-body.vhdl
+</pre>
+   <p>(Replace <samp><span class="file">ieee_install_dir</span></samp> by the location of the <code>ieee</code> library as
+displayed by &lsquo;<samp><span class="samp">ghdl -dispconfig</span></samp>&rsquo;).
+
+   <p>You can repeat this for the &lsquo;<samp><span class="samp">synopsys</span></samp>&rsquo; version of the <code>ieee</code> library.
+
+   <p>Don't forget that the math packages are only defined for the 1993 standard.
+
+<div class="node">
+<p><hr>
+<a name="Simulation-and-runtime"></a>
 Next:&nbsp;<a rel="next" accesskey="n" href="#GHDL-implementation-of-VHDL">GHDL implementation of VHDL</a>,
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Invoking-GHDL">Invoking GHDL</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
@@ -1726,7 +1798,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 </div>
 
 <!-- node-name,  next,  previous,  up -->
-<h2 class="chapter">4 Simulation and run time</h2>
+<h2 class="chapter">4 Simulation and runtime</h2>
 
 <ul class="menu">
 <li><a accesskey="1" href="#Simulation-options">Simulation options</a>
@@ -1737,8 +1809,8 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <p><hr>
 <a name="Simulation-options"></a>
 Next:&nbsp;<a rel="next" accesskey="n" href="#Debugging-VHDL-programs">Debugging VHDL programs</a>,
-Previous:&nbsp;<a rel="previous" accesskey="p" href="#Simulation-and-run-time">Simulation and run time</a>,
-Up:&nbsp;<a rel="up" accesskey="u" href="#Simulation-and-run-time">Simulation and run time</a>
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Simulation-and-runtime">Simulation and runtime</a>,
+Up:&nbsp;<a rel="up" accesskey="u" href="#Simulation-and-runtime">Simulation and runtime</a>
 
 </div>
 
@@ -1746,42 +1818,50 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Simulation-and-run-time">Simulation an
 <h3 class="section">4.1 Simulation options</h3>
 
 <p>In most system environments, it is possible to pass options while
-invoking a program.  Contrary to most programming language, there is no
+invoking a program.  Contrary to most programming languages, there is no
 standard method in VHDL to obtain the arguments or to set the exit
 status.
 
    <p>In GHDL, it is impossible to pass parameters to your design.  A later version
 could do it through the generics interfaces of the top entity.
 
-   <p>However, the GHDL run time behaviour can be modified with some options; for
+   <p>However, the GHDL runtime behaviour can be modified with some options; for
 example, it is possible to stop simulation after a certain time.
 
-   <p>The exit status of the simulation is `<samp><span class="samp">EXIT_SUCCESS</span></samp>' (0) if the
-simulation completes, or `<samp><span class="samp">EXIT_FAILURE</span></samp>' (1) in case of error
+   <p>The exit status of the simulation is &lsquo;<samp><span class="samp">EXIT_SUCCESS</span></samp>&rsquo; (0) if the
+simulation completes, or &lsquo;<samp><span class="samp">EXIT_FAILURE</span></samp>&rsquo; (1) in case of error
 (assertion failure, overflow or any constraint error).
 
    <p>Here is the list of the most useful options.  Some debugging options are
-also available, but not described here.  The `<samp><span class="samp">--help</span></samp>' options lists
+also available, but not described here.  The &lsquo;<samp><span class="samp">--help</span></samp>&rsquo; options lists
 all options available, including the debugging one.
 
      <dl>
-<dt><code>--assert-level=</code><var>LEVEL</var><dd><a name="index-g_t_0040option_007b_002d_002dassert_002dlevel_007d-option-75"></a>Select the assertion level at which an assertion violation stops the
+<dt><code>--assert-level=</code><var>LEVEL</var><dd><a name="index-g_t_0040option_007b_002d_002dassert_002dlevel_007d-option-79"></a>Select the assertion level at which an assertion violation stops the
 simulation.  <var>LEVEL</var> is the name from the <code>severity_level</code>
 enumerated type defined in the <code>standard</code> package or the
-`<samp><span class="samp">none</span></samp>' name.
+&lsquo;<samp><span class="samp">none</span></samp>&rsquo; name.
 
-     <p>By default, only assertion violation of severity level `<samp><span class="samp">failure</span></samp>'
+     <p>By default, only assertion violation of severity level &lsquo;<samp><span class="samp">failure</span></samp>&rsquo;
 stops the simulation.
 
-     <p>For example, if <var>LEVEL</var> was `<samp><span class="samp">warning</span></samp>', any assertion violation
-with severity level `<samp><span class="samp">warning</span></samp>', `<samp><span class="samp">error</span></samp>' or `<samp><span class="samp">failure</span></samp>' would
-stop simulation, but the assertion violation at the `<samp><span class="samp">note</span></samp>' severity
+     <p>For example, if <var>LEVEL</var> was &lsquo;<samp><span class="samp">warning</span></samp>&rsquo;, any assertion violation
+with severity level &lsquo;<samp><span class="samp">warning</span></samp>&rsquo;, &lsquo;<samp><span class="samp">error</span></samp>&rsquo; or &lsquo;<samp><span class="samp">failure</span></samp>&rsquo; would
+stop simulation, but the assertion violation at the &lsquo;<samp><span class="samp">note</span></samp>&rsquo; severity
 level would only display a message.
 
-     <p>`<samp><span class="samp">--assert-level=none</span></samp>' prevents any assertion violation to stop
+     <p>&lsquo;<samp><span class="samp">--assert-level=none</span></samp>&rsquo; prevents any assertion violation to stop
 simulation.
 
-     <br><dt><code>--stop-time=</code><var>TIME</var><dd><a name="index-g_t_0040option_007b_002d_002dstop_002dtime_007d-option-76"></a>Stop the simulation after <var>TIME</var>.  <var>TIME</var> is expressed as a time
+     <br><dt><code>--ieee-asserts=</code><var>POLICY</var><dd><a name="index-g_t_0040option_007b_002d_002dieee_002dasserts_007d-option-80"></a>Select how the assertions from &lsquo;<samp><span class="samp">ieee</span></samp>&rsquo; units are
+handled. <var>POLICY</var> can be &lsquo;<samp><span class="samp">enable</span></samp>&rsquo; (the default),
+&lsquo;<samp><span class="samp">disable</span></samp>&rsquo; which disables all assertion from &lsquo;<samp><span class="samp">ieee</span></samp>&rsquo; packages
+and &lsquo;<samp><span class="samp">disable-at-0</span></samp>&rsquo; which disables only at start of simulation.
+
+     <p>This option can be useful to avoid assertion message from
+&lsquo;<samp><span class="samp">ieee.numeric_std</span></samp>&rsquo; (and other &lsquo;<samp><span class="samp">ieee</span></samp>&rsquo; packages).
+
+     <br><dt><code>--stop-time=</code><var>TIME</var><dd><a name="index-g_t_0040option_007b_002d_002dstop_002dtime_007d-option-81"></a>Stop the simulation after <var>TIME</var>.  <var>TIME</var> is expressed as a time
 value, <em>without</em> any space.  The time is the simulation time, not
 the real clock time.
 
@@ -1789,36 +1869,36 @@ the real clock time.
 
      <pre class="smallexample">          $ ./my_design --stop-time=10ns
           $ ./my_design --stop-time=ps
-     </pre>
-     <br><dt><code>--stop-delta=</code><var>N</var><dd><a name="index-g_t_0040option_007b_002d_002dstop_002ddelta_007d-option-77"></a>Stop the simulation after <var>N</var> delta cycles in the same current time. 
+</pre>
+     <br><dt><code>--stop-delta=</code><var>N</var><dd><a name="index-g_t_0040option_007b_002d_002dstop_002ddelta_007d-option-82"></a>Stop the simulation after <var>N</var> delta cycles in the same current time. 
 <!-- Delta cycles is a simulation technic used by VHDL to -->
 
-     <br><dt><code>--disp-time</code><dd><a name="index-g_t_0040option_007b_002d_002ddisp_002dtime_007d-option-78"></a><a name="index-display-time-79"></a>Display the time and delta cycle number as simulation advances.
+     <br><dt><code>--disp-time</code><dd><a name="index-g_t_0040option_007b_002d_002ddisp_002dtime_007d-option-83"></a><a name="index-display-time-84"></a>Display the time and delta cycle number as simulation advances.
 
-     <br><dt><code>--disp-tree[</code><var>=KIND</var><code>]</code><dd><a name="index-g_t_0040option_007b_002d_002ddisp_002dtree_007d-option-80"></a><a name="index-display-design-hierarchy-81"></a>Display the design hierarchy as a tree of instantiated design entities. 
+     <br><dt><code>--disp-tree[</code><var>=KIND</var><code>]</code><dd><a name="index-g_t_0040option_007b_002d_002ddisp_002dtree_007d-option-85"></a><a name="index-display-design-hierarchy-86"></a>Display the design hierarchy as a tree of instantiated design entities. 
 This may be useful to understand the structure of a complex
 design. <var>KIND</var> is optional, but if set must be one of:
           <dl>
-<dt>`<samp><span class="samp">none</span></samp>'<dd>Do not display hierarchy.  Same as if the option was not present. 
-<br><dt>`<samp><span class="samp">inst</span></samp>'<dd>Display entities, architectures, instances, blocks and generates statements. 
-<br><dt>`<samp><span class="samp">proc</span></samp>'<dd>Like `<samp><span class="samp">inst</span></samp>' but also display processes. 
-<br><dt>`<samp><span class="samp">port</span></samp>'<dd>Like `<samp><span class="samp">proc</span></samp>' but display ports and signals too. 
+<dt>&lsquo;<samp><span class="samp">none</span></samp>&rsquo;<dd>Do not display hierarchy.  Same as if the option was not present. 
+<br><dt>&lsquo;<samp><span class="samp">inst</span></samp>&rsquo;<dd>Display entities, architectures, instances, blocks and generates statements. 
+<br><dt>&lsquo;<samp><span class="samp">proc</span></samp>&rsquo;<dd>Like &lsquo;<samp><span class="samp">inst</span></samp>&rsquo; but also display processes. 
+<br><dt>&lsquo;<samp><span class="samp">port</span></samp>&rsquo;<dd>Like &lsquo;<samp><span class="samp">proc</span></samp>&rsquo; but display ports and signals too. 
 </dl>
      If <var>KIND</var> is not specified, the hierarchy is displayed with the
-`<samp><span class="samp">port</span></samp>' mode.
+&lsquo;<samp><span class="samp">port</span></samp>&rsquo; mode.
 
-     <br><dt><code>--no-run</code><dd><a name="index-g_t_0040option_007b_002d_002dno_002drun_007d-option-82"></a>Do not simulate, only elaborate.  This may be used with
+     <br><dt><code>--no-run</code><dd><a name="index-g_t_0040option_007b_002d_002dno_002drun_007d-option-87"></a>Do not simulate, only elaborate.  This may be used with
 <samp><span class="option">--disp-tree</span></samp> to display the tree without simulating the whole
 design.
 
-     <br><dt><code>--vcd=</code><var>FILENAME</var><br><dt><code>--vcdgz=</code><var>FILENAME</var><dd><a name="index-g_t_0040option_007b_002d_002dvcd_007d-option-83"></a><a name="index-g_t_0040option_007b_002d_002dvcdgz_007d-option-84"></a><a name="index-vcd-85"></a><a name="index-value-change-dump-86"></a><a name="index-dump-of-signals-87"></a><samp><span class="option">--vcd</span></samp> dumps into the VCD file <var>FILENAME</var> the signal
-values before each non-delta cycle.  If <var>FILENAME</var> is `<samp><span class="samp">-</span></samp>',
+     <br><dt><code>--vcd=</code><var>FILENAME</var><br><dt><code>--vcdgz=</code><var>FILENAME</var><dd><a name="index-g_t_0040option_007b_002d_002dvcd_007d-option-88"></a><a name="index-g_t_0040option_007b_002d_002dvcdgz_007d-option-89"></a><a name="index-vcd-90"></a><a name="index-value-change-dump-91"></a><a name="index-dump-of-signals-92"></a><samp><span class="option">--vcd</span></samp> dumps into the VCD file <var>FILENAME</var> the signal
+values before each non-delta cycle.  If <var>FILENAME</var> is &lsquo;<samp><span class="samp">-</span></samp>&rsquo;,
 then the standard output is used, otherwise a file is created or
 overwritten.
 
      <p>The <samp><span class="option">--vcdgz</span></samp> option is the same as the <samp><span class="option">--vcd</span></samp> option,
 but the output is compressed using the <code>zlib</code> (<code>gzip</code>
-compression).  However, you can't use the `<samp><span class="samp">-</span></samp>' filename. 
+compression).  However, you can't use the &lsquo;<samp><span class="samp">-</span></samp>&rsquo; filename. 
 Furthermore, only one VCD file can be written.
 
      <p><dfn>VCD</dfn> (value change dump) is a file format defined
@@ -1827,17 +1907,17 @@ by the <code>verilog</code> standard and used by virtually any wave viewer.
      <p>Since it comes from <code>verilog</code>, only a few VHDL types can be dumped.  GHDL
 dumps only signals whose base type is of the following:
           <ul>
-<li>types defined in the `<samp><span class="samp">std.standard</span></samp>' package:
+<li>types defined in the &lsquo;<samp><span class="samp">std.standard</span></samp>&rsquo; package:
                <ul>
-<li>`<samp><span class="samp">bit</span></samp>'
-<li>`<samp><span class="samp">bit_vector</span></samp>'
+<li>&lsquo;<samp><span class="samp">bit</span></samp>&rsquo;
+<li>&lsquo;<samp><span class="samp">bit_vector</span></samp>&rsquo;
 </ul>
-          <li>types defined in the `<samp><span class="samp">ieee.std_logic_1164</span></samp>' package:
+          <li>types defined in the &lsquo;<samp><span class="samp">ieee.std_logic_1164</span></samp>&rsquo; package:
                <ul>
-<li>`<samp><span class="samp">std_ulogic</span></samp>'
-<li>`<samp><span class="samp">std_logic</span></samp>' (because it is a subtype of `<samp><span class="samp">std_ulogic</span></samp>')
-<li>`<samp><span class="samp">std_ulogic_vector</span></samp>'
-<li>`<samp><span class="samp">std_logic_vector</span></samp>'
+<li>&lsquo;<samp><span class="samp">std_ulogic</span></samp>&rsquo;
+<li>&lsquo;<samp><span class="samp">std_logic</span></samp>&rsquo; (because it is a subtype of &lsquo;<samp><span class="samp">std_ulogic</span></samp>&rsquo;)
+<li>&lsquo;<samp><span class="samp">std_ulogic_vector</span></samp>&rsquo;
+<li>&lsquo;<samp><span class="samp">std_logic_vector</span></samp>&rsquo;
 </ul>
           <li>any integer type
 </ul>
@@ -1851,11 +1931,11 @@ dumped, which can generate big files.
 format supporting VHDL types.  If you are aware of such a free format,
 please mail me (see <a href="#Reporting-bugs">Reporting bugs</a>).
 
-     <br><dt><code>--wave=</code><var>FILENAME</var><dd><a name="index-g_t_0040option_007b_002d_002dwave_007d-option-88"></a>Write the waveforms into a <code>ghw</code> (GHdl Waveform) file.  Currently, all
+     <br><dt><code>--wave=</code><var>FILENAME</var><dd><a name="index-g_t_0040option_007b_002d_002dwave_007d-option-93"></a>Write the waveforms into a <code>ghw</code> (GHdl Waveform) file.  Currently, all
 the signals are dumped into the waveform file, you cannot select a hierarchy
 of signals to be dumped.
 
-     <p>The format of this file was defined by myself and is not yet completly fixed. 
+     <p>The format of this file was defined by myself and is not yet completely fixed. 
 It may change slightly.
 
      <p>There is a patch against <code>gtkwave 1.3.72</code> on the ghdl website at
@@ -1863,9 +1943,9 @@ It may change slightly.
 
      <p>Contrary to VCD files, any VHDL type can be dumped into a GHW file.
 
-     <br><dt><code>--sdf=</code><var>PATH</var><code>=</code><var>FILENAME</var><br><dt><code>--sdf=min=</code><var>PATH</var><code>=</code><var>FILENAME</var><br><dt><code>--sdf=typ=</code><var>PATH</var><code>=</code><var>FILENAME</var><br><dt><code>--sdf=max=</code><var>PATH</var><code>=</code><var>FILENAME</var><dd><a name="index-g_t_0040option_007b_002d_002dsdf_007d-option-89"></a>Do VITAL annotation on <var>PATH</var> with SDF file <var>FILENAME</var>.
+     <br><dt><code>--sdf=</code><var>PATH</var><code>=</code><var>FILENAME</var><br><dt><code>--sdf=min=</code><var>PATH</var><code>=</code><var>FILENAME</var><br><dt><code>--sdf=typ=</code><var>PATH</var><code>=</code><var>FILENAME</var><br><dt><code>--sdf=max=</code><var>PATH</var><code>=</code><var>FILENAME</var><dd><a name="index-g_t_0040option_007b_002d_002dsdf_007d-option-94"></a>Do VITAL annotation on <var>PATH</var> with SDF file <var>FILENAME</var>.
 
-     <p><var>PATH</var> is a path of instances, separated with `<samp><span class="samp">.</span></samp>' or `<samp><span class="samp">/</span></samp>'. 
+     <p><var>PATH</var> is a path of instances, separated with &lsquo;<samp><span class="samp">.</span></samp>&rsquo; or &lsquo;<samp><span class="samp">/</span></samp>&rsquo;. 
 Any separator can be used.  Instances are component instantiation labels,
 generate labels or block labels.  Currently, you cannot use an indexed name.
 
@@ -1876,14 +1956,14 @@ the annotator use the typical delay.
 
      <p>See <a href="#Backannotation">Backannotation</a>, for more details.
 
-     <br><dt><code>--stack-max-size=</code><var>SIZE</var><dd><a name="index-g_t_0040option_007b_002d_002dstack_002dmax_002dsize_007d-option-90"></a>Set the maximum size in bytes of the non-sensitized processes stacks.
+     <br><dt><code>--stack-max-size=</code><var>SIZE</var><dd><a name="index-g_t_0040option_007b_002d_002dstack_002dmax_002dsize_007d-option-95"></a>Set the maximum size in bytes of the non-sensitized processes stacks.
 
-     <p>If the value <var>SIZE</var> is followed (without any space) by the `<samp><span class="samp">k</span></samp>',
-`<samp><span class="samp">K</span></samp>', `<samp><span class="samp">kb</span></samp>', `<samp><span class="samp">Kb</span></samp>', `<samp><span class="samp">ko</span></samp>' or `<samp><span class="samp">Ko</span></samp>' multiplier, then
+     <p>If the value <var>SIZE</var> is followed (without any space) by the &lsquo;<samp><span class="samp">k</span></samp>&rsquo;,
+&lsquo;<samp><span class="samp">K</span></samp>&rsquo;, &lsquo;<samp><span class="samp">kb</span></samp>&rsquo;, &lsquo;<samp><span class="samp">Kb</span></samp>&rsquo;, &lsquo;<samp><span class="samp">ko</span></samp>&rsquo; or &lsquo;<samp><span class="samp">Ko</span></samp>&rsquo; multiplier, then
 the size is the numeric value multiplied by 1024.
 
-     <p>If the value <var>SIZE</var> is followed (without any space) by the `<samp><span class="samp">m</span></samp>',
-`<samp><span class="samp">M</span></samp>', `<samp><span class="samp">mb</span></samp>', `<samp><span class="samp">Mb</span></samp>', `<samp><span class="samp">mo</span></samp>' or `<samp><span class="samp">Mo</span></samp>' multiplier, then
+     <p>If the value <var>SIZE</var> is followed (without any space) by the &lsquo;<samp><span class="samp">m</span></samp>&rsquo;,
+&lsquo;<samp><span class="samp">M</span></samp>&rsquo;, &lsquo;<samp><span class="samp">mb</span></samp>&rsquo;, &lsquo;<samp><span class="samp">Mb</span></samp>&rsquo;, &lsquo;<samp><span class="samp">mo</span></samp>&rsquo; or &lsquo;<samp><span class="samp">Mo</span></samp>&rsquo; multiplier, then
 the size is the numeric value multiplied by 1024 * 1024 = 1048576.
 
      <p>Each non-sensitized process has its own stack, while the sensitized processes
@@ -1893,27 +1973,27 @@ operating system.
      <p>Using too small stacks may result in simulation failure due to lack of memory. 
 Using too big stacks may reduce the maximum number of processes.
 
-     <br><dt><code>--stack-size=</code><var>SIZE</var><dd><a name="index-g_t_0040option_007b_002d_002dstack_002dsize_007d-option-91"></a>Set the initial size in bytes of the non-sensitized processes stack. 
+     <br><dt><code>--stack-size=</code><var>SIZE</var><dd><a name="index-g_t_0040option_007b_002d_002dstack_002dsize_007d-option-96"></a>Set the initial size in bytes of the non-sensitized processes stack. 
 The <var>SIZE</var> value has the same format as the previous option.
 
      <p>The stack of the non-sensitized processes grows until reaching the
 maximum size limit.
 
-     <br><dt><code>--help</code><dd>Display a short description of the options accepted by the run time library. 
+     <br><dt><code>--help</code><dd>Display a short description of the options accepted by the runtime library. 
 </dl>
 
 <div class="node">
 <p><hr>
 <a name="Debugging-VHDL-programs"></a>
 Previous:&nbsp;<a rel="previous" accesskey="p" href="#Simulation-options">Simulation options</a>,
-Up:&nbsp;<a rel="up" accesskey="u" href="#Simulation-and-run-time">Simulation and run time</a>
+Up:&nbsp;<a rel="up" accesskey="u" href="#Simulation-and-runtime">Simulation and runtime</a>
 
 </div>
 
 <!-- node-name,  next,  previous,  up -->
 <h3 class="section">4.2 Debugging VHDL programs</h3>
 
-<p><a name="index-debugging-92"></a><a name="index-g_t_0040code_007b_005f_005fghdl_005ffatal_007d-93"></a>Debugging VHDL programs usign <code>GDB</code> is possible only on GNU/Linux systems.
+<p><a name="index-debugging-97"></a><a name="index-g_t_0040code_007b_005f_005fghdl_005ffatal_007d-98"></a>Debugging VHDL programs using <code>GDB</code> is possible only on GNU/Linux systems.
 
    <p><code>GDB</code> is a general purpose debugger for programs compiled by <code>GCC</code>. 
 Currently, there is no VHDL support for <code>GDB</code>.  It may be difficult
@@ -1921,9 +2001,9 @@ to inspect variables or signals in <code>GDB</code>, however, <code>GDB</code> i
 still able to display the stack frame in case of error or to set a breakpoint
 at a specified line.
 
-   <p><code>GDB</code> can be useful to precisely catch a run-time error, such as indexing
+   <p><code>GDB</code> can be useful to precisely catch a runtime error, such as indexing
 an array beyond its bounds.  All error check subprograms call the
-<code>__ghdl_fatal</code> procedure.  Therefore, to catch run-time error, set
+<code>__ghdl_fatal</code> procedure.  Therefore, to catch runtime error, set
 a breakpoint like this:
 <pre class="smallexample">     (gdb) break __ghdl_fatal
 </pre>
@@ -1934,7 +2014,7 @@ display the stack frames.
 <p><hr>
 <a name="GHDL-implementation-of-VHDL"></a>
 Next:&nbsp;<a rel="next" accesskey="n" href="#GHDL-implementation-of-VITAL">GHDL implementation of VITAL</a>,
-Previous:&nbsp;<a rel="previous" accesskey="p" href="#Simulation-and-run-time">Simulation and run time</a>,
+Previous:&nbsp;<a rel="previous" accesskey="p" href="#Simulation-and-runtime">Simulation and runtime</a>,
 Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 
 </div>
@@ -1967,7 +2047,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#GHDL-implementation-of-VHDL">GHDL impl
 <!-- node-name,  next,  previous,  up -->
 <h3 class="section">5.1 VHDL standards</h3>
 
-<p><a name="index-VHDL-standards-94"></a><a name="index-IEEE-1076-95"></a><a name="index-IEEE-1076a-96"></a><a name="index-g_t1076-97"></a><a name="index-g_t1076a-98"></a><a name="index-v87-99"></a><a name="index-v93-100"></a><a name="index-v93c-101"></a><a name="index-v00-102"></a><a name="index-v02-103"></a>This is very unfortunate, but there are many versions of the VHDL language.
+<p><a name="index-VHDL-standards-99"></a><a name="index-IEEE-1076-100"></a><a name="index-IEEE-1076a-101"></a><a name="index-g_t1076-102"></a><a name="index-g_t1076a-103"></a><a name="index-v87-104"></a><a name="index-v93-105"></a><a name="index-v93c-106"></a><a name="index-v00-107"></a><a name="index-v02-108"></a>This is very unfortunate, but there are many versions of the VHDL language.
 
    <p>The VHDL language was first standardized in 1987 by IEEE as IEEE 1076-1987, and
 is commonly referred as VHDL-87. This is certainly the most important version,
@@ -1979,7 +2059,7 @@ to give reasonable ways of interpreting the unclear portions of the standard.
    <p>VHDL was revised in 1993 by IEEE as IEEE 1076-1993.  This revision is still
 well-known.
 
-   <p>Unfortunatly, VHDL-93 is not fully compatible with VHDL-87, ie some perfectly
+   <p>Unfortunately, VHDL-93 is not fully compatible with VHDL-87, i.e. some perfectly
 valid VHDL-87 programs are invalid VHDL-93 programs.  Here are some of the
 reasons:
 
@@ -2001,28 +2081,28 @@ before).
 
    <p>Minors corrections were added by the 2002 revision of the VHDL standard.  This
 revision is not fully backward compatible with VHDL-00 since, for example,
-the value of the <code>'instance_name</code> attribute has slighly changed.
+the value of the <code>'instance_name</code> attribute has slightly changed.
 
    <p>You can select the VHDL standard expected by GHDL with the
-`<samp><span class="samp">--std=VER</span></samp>' option, where <var>VER</var> is one of the left column of the
+&lsquo;<samp><span class="samp">--std=VER</span></samp>&rsquo; option, where <var>VER</var> is one of the left column of the
 table below:
 
      <dl>
-<dt>`<samp><span class="samp">87</span></samp>'<dd>Select VHDL-87 standard as defined by IEEE 1076-1987.  LRM bugs corrected by
+<dt>&lsquo;<samp><span class="samp">87</span></samp>&rsquo;<dd>Select VHDL-87 standard as defined by IEEE 1076-1987.  LRM bugs corrected by
 later revisions are taken into account. 
-<br><dt>`<samp><span class="samp">93</span></samp>'<dd>Select VHDL-93; VHDL-87 file declarations are not accepted. 
-<br><dt>`<samp><span class="samp">93c</span></samp>'<dd>Select VHDL-93 standard with relaxed rules:
+<br><dt>&lsquo;<samp><span class="samp">93</span></samp>&rsquo;<dd>Select VHDL-93; VHDL-87 file declarations are not accepted. 
+<br><dt>&lsquo;<samp><span class="samp">93c</span></samp>&rsquo;<dd>Select VHDL-93 standard with relaxed rules:
           <ul>
 <li>VHDL-87 file declarations are accepted;
 <li>default binding indication rules of VHDL-02 are used.  Default binding rules
-are often used, but they are particulary obscure before VHDL-02. 
+are often used, but they are particularly obscure before VHDL-02. 
 </ul>
-     <br><dt>`<samp><span class="samp">00</span></samp>'<dd>Select VHDL-2000 standard, which adds protected types. 
-<br><dt>`<samp><span class="samp">02</span></samp>'<dd>Select VHDL-2002 standard (partially implemented). 
+     <br><dt>&lsquo;<samp><span class="samp">00</span></samp>&rsquo;<dd>Select VHDL-2000 standard, which adds protected types. 
+<br><dt>&lsquo;<samp><span class="samp">02</span></samp>&rsquo;<dd>Select VHDL-2002 standard (partially implemented). 
 </dl>
 
    <p>You cannot mix VHDL-87 and VHDL-93 units.  A design hierarchy must have been
-completly analyzed using either the 87 or the 93 version of the VHDL standard.
+completely analyzed using either the 87 or the 93 version of the VHDL standard.
 
 <div class="node">
 <p><hr>
@@ -2048,7 +2128,7 @@ GHDL may contain one or more design units.
    <p>It is common to have several design units in a design file.
 
    <p>GHDL does not impose any restriction on the name of a design file
-(except that the file name may not contain any control character or
+(except that the filename may not contain any control character or
 spaces).
 
    <p>GHDL do not keep a binary representation of the design units analyzed like
@@ -2069,17 +2149,17 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#GHDL-implementation-of-VHDL">GHDL impl
 <h3 class="section">5.3 Library database</h3>
 
 <p>Each design unit analyzed is placed into a design library.  By default,
-the name of this design library is `<samp><span class="samp">work</span></samp>'; however, this can be
+the name of this design library is &lsquo;<samp><span class="samp">work</span></samp>&rsquo;; however, this can be
 changed with the <samp><span class="option">--work=NAME</span></samp> option of GHDL.
 
    <p>To keep the list of design units in a design library, GHDL creates
-library files.  The name of these files is `<samp><span class="samp">NAME-objVER.cf</span></samp>', where
+library files.  The name of these files is &lsquo;<samp><span class="samp">NAME-objVER.cf</span></samp>&rsquo;, where
 <var>NAME</var> is the name of the library, and <var>VER</var> the VHDL version (87
 or 93) used to analyze the design units.
 
    <p>You don't have to know how to read a library file.  You can display it
 using the <samp><span class="option">-d</span></samp> of <code>ghdl</code>.  The file contains the name of the
-design units, as well as the location and the dependences.
+design units, as well as the location and the dependencies.
 
    <p>The format may change with the next version of GHDL.
 
@@ -2095,16 +2175,16 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#GHDL-implementation-of-VHDL">GHDL impl
 <!-- node-name,  next,  previous,  up -->
 <h3 class="section">5.4 VHDL files format</h3>
 
-<p><a name="index-file-format-104"></a><a name="index-logical-name-105"></a>VHDL has features to handle files.
+<p><a name="index-file-format-109"></a><a name="index-logical-name-110"></a>VHDL has features to handle files.
 
-   <p>GHDL associates a file logical name (the VHDL file name) to an operating
-system file name.  The logical name `<samp><span class="samp">STD_INPUT</span></samp>' is associated to
-the standard input as defined by `<samp><span class="samp">stdin</span></samp>' stream of the C library,
-while the logical name `<samp><span class="samp">STD_OUTPUT</span></samp>' is associated to the standard
-output, as defined by the `<samp><span class="samp">stdout</span></samp>' stream of the C library.  Other
-logical name are directly mapped to a file name as defined by the first
-(`<samp><span class="samp">path</span></samp>') argument of the `<samp><span class="samp">fopen</span></samp>' function of the C library. 
-For a binary file, the `<samp><span class="samp">b</span></samp>' character is appended to the mode argument
+   <p>GHDL associates a file logical name (the VHDL filename) to an operating
+system filename.  The logical name &lsquo;<samp><span class="samp">STD_INPUT</span></samp>&rsquo; is associated to
+the standard input as defined by &lsquo;<samp><span class="samp">stdin</span></samp>&rsquo; stream of the C library,
+while the logical name &lsquo;<samp><span class="samp">STD_OUTPUT</span></samp>&rsquo; is associated to the standard
+output, as defined by the &lsquo;<samp><span class="samp">stdout</span></samp>&rsquo; stream of the C library.  Other
+logical name are directly mapped to a filename as defined by the first
+(&lsquo;<samp><span class="samp">path</span></samp>&rsquo;) argument of the &lsquo;<samp><span class="samp">fopen</span></samp>&rsquo; function of the C library. 
+For a binary file, the &lsquo;<samp><span class="samp">b</span></samp>&rsquo; character is appended to the mode argument
 (binary mode).
 
    <p>If multiple file objects are associated with the same external file, a stream
@@ -2118,9 +2198,9 @@ may restrict the maximum number of file open at the same time.
 documentation.
 
 <!-- tell more about possible errors. -->
-<p>There are two kinds of files: binary or text files.
+   <p>There are two kinds of files: binary or text files.
 
-   <p>Text files are files of type `<samp><span class="samp">std.textio.text</span></samp>'.  The format is the
+   <p>Text files are files of type &lsquo;<samp><span class="samp">std.textio.text</span></samp>&rsquo;.  The format is the
 same as the format of any ascii file.  In VHDL-87, only the first 128
 characters (7 bits) are allowed, since the character type has only 128
 literals.  The end of line is system dependent.  Note that the stdio
@@ -2191,12 +2271,12 @@ compiled because lines such as:
       variable Read_A_Write_B  : memory_collision_type := Read_A_Write_B;
 </pre>
    <p>(there are 6 such lines). 
-According to VHDL visibility rules, `<samp><span class="samp">Write_A_Write_B</span></samp>' cannot be used
+According to VHDL visibility rules, &lsquo;<samp><span class="samp">Write_A_Write_B</span></samp>&rsquo; cannot be used
 while it is defined.  This is very logical because it prevents from silly
 declarations such as
 <pre class="smallexample">       constant k : natural := 2 * k;
 </pre>
-   <p>This files must be modified.  Fortunatly, in the example the variables
+   <p>This files must be modified.  Fortunately, in the example the variables
 are never written.  So it is enough to remove them.
 
 <div class="node">
@@ -2212,17 +2292,17 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#GHDL-implementation-of-VHDL">GHDL impl
 <!-- node-name,  next,  previous,  up -->
 <h3 class="section">5.7 Using ieee.math_real or ieee.math_complex</h3>
 
-<p><a name="index-math_005freal-106"></a><a name="index-math_005fcomplex-107"></a>Contrary to other `<samp><span class="samp">ieee</span></samp>' libraries, the math packages sources are not
+<p><a name="index-math_005freal-111"></a><a name="index-math_005fcomplex-112"></a>Contrary to other &lsquo;<samp><span class="samp">ieee</span></samp>&rsquo; libraries, the math packages sources are not
 freely available.  The sources provided with GHDL are based on an early draft
 and use the C libraries.  As a consequence, you should link your design
-with the `<samp><span class="samp">libm.a</span></samp>' library using the <samp><span class="option">-Wl,</span></samp> option like:
+with the &lsquo;<samp><span class="samp">libm.a</span></samp>&rsquo; library using the <samp><span class="option">-Wl,</span></samp> option like:
 <pre class="smallexample">     $ ghdl -e -Wl,-lm my_design
 </pre>
    <p>Please, refer to your system manual for more details.
 
-   <p>Please also note that the `<samp><span class="samp">ieee</span></samp>' libraries are not the same as the drafts.
+   <p>Please also note that the &lsquo;<samp><span class="samp">ieee</span></samp>&rsquo; libraries are not the same as the drafts.
 
-   <p>If you really need the `<samp><span class="samp">ieee</span></samp>' math libraries, they are available on the
+   <p>If you really need the &lsquo;<samp><span class="samp">ieee</span></samp>&rsquo; math libraries, they are available on the
 web, but they cannot be included in GHDL.
 
 <div class="node">
@@ -2236,7 +2316,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#GHDL-implementation-of-VHDL">GHDL impl
 <!-- node-name,  next,  previous,  up -->
 <h3 class="section">5.8 Interfacing to other languages</h3>
 
-<p><a name="index-interfacing-108"></a><a name="index-other-languages-109"></a><a name="index-foreign-110"></a><a name="index-VHPI-111"></a><a name="index-VHPIDIRECT-112"></a>Interfacing with foreign languages is possible only on GNU/Linux systems.
+<p><a name="index-interfacing-113"></a><a name="index-other-languages-114"></a><a name="index-foreign-115"></a><a name="index-VHPI-116"></a><a name="index-VHPIDIRECT-117"></a>Interfacing with foreign languages is possible only on GNU/Linux systems.
 
    <p>You can define a subprogram in a foreign language (such as <code>C</code> or
 <code>Ada</code>) and import it in a VHDL design.
@@ -2260,10 +2340,10 @@ attribute.  In this example, the <code>sin</code> function is imported:
 </pre>
    <p>A subprogram is made foreign if the <var>foreign</var> attribute decorates
 it.  This attribute is declared in the 1993 revision of the
-`<samp><span class="samp">std.standard</span></samp>' package.  Therefore, you cannot use this feature in
+&lsquo;<samp><span class="samp">std.standard</span></samp>&rsquo; package.  Therefore, you cannot use this feature in
 VHDL 1987.
 
-   <p>The decoration is achived through an attribute specification.  The
+   <p>The decoration is achieved through an attribute specification.  The
 attribute specification must be in the same declarative part as the
 subprogram and must be after it.  This is a general rule for specifications. 
 The value of the specification must be a locally static string.
@@ -2271,7 +2351,7 @@ The value of the specification must be a locally static string.
    <p>Even when a subprogram is foreign, its body must be present.  However, since
 it won't be called, you can made it empty or simply but an assertion.
 
-   <p>The value of the attribute must start with `<samp><span class="samp">VHPIDIRECT </span></samp>' (an
+   <p>The value of the attribute must start with &lsquo;<samp><span class="samp">VHPIDIRECT </span></samp>&rsquo; (an
 upper-case keyword followed by one or more blanks).  The linkage name of the
 subprogram follows.
 
@@ -2296,15 +2376,15 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Interfacing-to-other-languages">Interf
 
 <p>Any subprogram can be imported.  GHDL puts no restrictions on foreign
 subprograms.  However, the representation of a type or of an interface in a
-foreign language may be obscur.  Most of non-composite types are easily imported:
+foreign language may be obscure.  Most of non-composite types are easily imported:
      <dl>
-<dt>`<samp><span class="samp">integer types</span></samp>'<dd>They are represented on a 32 bits word.  This generally corresponds to
+<dt>&lsquo;<samp><span class="samp">integer types</span></samp>&rsquo;<dd>They are represented on a 32 bits word.  This generally corresponds to
 <code>int</code> for <code>C</code> or <code>Integer</code> for <code>Ada</code>. 
-<br><dt>`<samp><span class="samp">physical types</span></samp>'<dd>They are represented on a 64 bits word.  This generally corresponds to the
+<br><dt>&lsquo;<samp><span class="samp">physical types</span></samp>&rsquo;<dd>They are represented on a 64 bits word.  This generally corresponds to the
 <code>long long</code> for <code>C</code> or <code>Long_Long_Integer</code> for <code>Ada</code>. 
-<br><dt>`<samp><span class="samp">floating point types</span></samp>'<dd>They are represented on a 64 bits floating point word.  This generally
+<br><dt>&lsquo;<samp><span class="samp">floating point types</span></samp>&rsquo;<dd>They are represented on a 64 bits floating point word.  This generally
 corresponds to <code>double</code> for <code>C</code> or <code>Long_Float</code> for <code>Ada</code>. 
-<br><dt>`<samp><span class="samp">enumeration types</span></samp>'<dd>They are represented on 8 bits or 32 bits word, if the number of literals is
+<br><dt>&lsquo;<samp><span class="samp">enumeration types</span></samp>&rsquo;<dd>They are represented on 8 bits or 32 bits word, if the number of literals is
 greater than 256.  There is no corresponding C types, since arguments are
 not promoted. 
 </dl>
@@ -2325,7 +2405,7 @@ length is the number of elements, and are passed by reference to subprograms.
    <p>Unconstrained array are represented by a fat pointer.  Do not use unconstrained
 arrays in foreign subprograms.
 
-   <p>Accesses to an unconstrained array is a fat pointer.  Other accesses corresponds a an address and are passed to a subprogram like other non-composite types.
+   <p>Accesses to an unconstrained array is a fat pointer.  Other accesses correspond to an address and are passed to a subprogram like other non-composite types.
 
    <p>Files are represented by a 32 bits word, which corresponds to an index
 in a table.
@@ -2341,7 +2421,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Interfacing-to-other-languages">Interf
 
 <h4 class="subsection">5.8.3 Linking with foreign object files</h4>
 
-<p>You may add additionnal files or options during the link using the
+<p>You may add additional files or options during the link using the
 <samp><span class="option">-Wl,</span></samp> of <code>GHDL</code>, as described in <a href="#Elaboration-command">Elaboration command</a>. 
 For example:
 
@@ -2363,8 +2443,8 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Interfacing-to-other-languages">Interf
 
 <h4 class="subsection">5.8.4 Starting a simulation from a foreign program</h4>
 
-<p>You main run your design from an external program.  You just have to call
-the `<samp><span class="samp">ghdl_main</span></samp>' function which can be defined:
+<p>You may run your design from an external program.  You just have to call
+the &lsquo;<samp><span class="samp">ghdl_main</span></samp>&rsquo; function which can be defined:
 
    <p>in C:
 <pre class="smallexample">     extern int ghdl_main (int argc, char **argv);
@@ -2400,7 +2480,7 @@ suppose there is only one design file, <samp><span class="file">design.vhdl</spa
 <pre class="smallexample">     $ ghdl -a design.vhdl
 </pre>
    <p>Then, bind your design.  In this example, we suppose the entity at the
-design apex is `<samp><span class="samp">design</span></samp>'.
+design apex is &lsquo;<samp><span class="samp">design</span></samp>&rsquo;.
 <pre class="smallexample">     $ ghdl --bind design
 </pre>
    <p>Finally, compile, bind your <code>Ada</code> program at link it with your <code>VHDL</code>
@@ -2426,15 +2506,15 @@ each release.
 </blockquote>
 
    <p>The simulator kernel of <code>GHDL</code> named <dfn>GRT</dfn> is written in
-<code>Ada95</code> and contains a very light and slighly adapted version
+<code>Ada95</code> and contains a very light and slightly adapted version
 of <code>VHPI</code>.  Since it is an <code>Ada</code> implementation it is
 called <dfn>AVHPI</dfn>. Although being tough, you may interface to <code>AVHPI</code>.
 
    <p>For using <code>AVHPI</code>, you need the sources of <code>GHDL</code> and to recompile
 them (at least the <code>GRT</code> library).  This library is usually compiled with
 a <code>No_Run_Time</code> pragma, so that the user does not need to install the
-<code>GNAT</code> run time library.  However, you certainly want to use the usual
-run time library and want to avoid this pragma.  For this, reset the
+<code>GNAT</code> runtime library.  However, you certainly want to use the usual
+runtime library and want to avoid this pragma.  For this, reset the
 <var>GRT_PRAGMA_FLAG</var> variable.
 <pre class="smallexample">     $ make GRT_PRAGMA_FLAG= grt-all
 </pre>
@@ -2505,7 +2585,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <!-- node-name,  next,  previous,  up -->
 <h2 class="chapter">6 GHDL implementation of VITAL</h2>
 
-<p><a name="index-VITAL-113"></a><a name="index-IEEE-1076_002e4-114"></a><a name="index-g_t1076_002e4-115"></a>This chapter describes how VITAL is implemented in GHDL.  Support of VITAL is
+<p><a name="index-VITAL-118"></a><a name="index-IEEE-1076_002e4-119"></a><a name="index-g_t1076_002e4-120"></a>This chapter describes how VITAL is implemented in GHDL.  Support of VITAL is
 really in a preliminary stage.  Do not expect too much of it as now.
 
 <ul class="menu">
@@ -2536,7 +2616,7 @@ packages are used with other standards.  This choice is based on the
 requirements of VITAL: VITAL 1995 requires the models follow the VHDL
 1987 standard, while VITAL 2000 requires the models follow VHDL 1993.
 
-   <p>The VITAL 2000 packages were slighly modified so that they conform to
+   <p>The VITAL 2000 packages were slightly modified so that they conform to
 the VHDL 1993 standard (a few functions are made pure and a few one
 impure).
 
@@ -2582,7 +2662,7 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#GHDL-implementation-of-VITAL">GHDL imp
 <!-- node-name,  next,  previous,  up -->
 <h3 class="section">6.3 Backannotation</h3>
 
-<p><a name="index-SDF-116"></a><dfn>Backannotation</dfn> is the process of setting VITAL generics with timing
+<p><a name="index-SDF-121"></a><dfn>Backannotation</dfn> is the process of setting VITAL generics with timing
 information provided by an external files.
 
    <p>The external files must be SDF (Standard Delay Format) files.  GHDL
@@ -2592,11 +2672,11 @@ used, provided no features added by the next version are used.
    <p>Hierarchical instance names are not supported. However you can use a list of
 instances.  If there is no instance, the top entity will be annotated and
 the celltype must be the name of the top entity.  If there is at least one
-instance, the last instance name must be a component instantiation labe, and
+instance, the last instance name must be a component instantiation label, and
 the celltype must be the name of the component declaration instantiated.
 
    <p>Instances being annotated are not required to be VITAL compliant.  However
-generics being annotated must follow rules of VITAL (eg, type must be a
+generics being annotated must follow rules of VITAL (e.g., type must be a
 suitable vital delay type).
 
    <p>Currently, only timing constraints applying on a timing generic of type
@@ -2615,9 +2695,9 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#GHDL-implementation-of-VITAL">GHDL imp
 <!-- node-name,  next,  previous,  up -->
 <h3 class="section">6.4 Negative constraint calculation</h3>
 
-<p>Negative constraint delay adjustement are necessary to handle negative
+<p>Negative constraint delay adjustment are necessary to handle negative
 constraint such as a negative setup time.  This step is defined in the VITAL
-standard and should occurs after backannotation.
+standard and should occur after backannotation.
 
    <p>GHDL does not do negative constraint calculation.  It fails to handle models
 with negative constraint.  I hope to be able to add this phase soon.
@@ -2659,10 +2739,10 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Flaws-and-bugs-report">Flaws and bugs 
 <p>Here is the non-exhaustive list of flaws:
 
      <ul>
-<li>So far, <code>GHDL</code> has been compiled and tested only on `<samp><span class="samp">i386-linux</span></samp>' systems. 
+<li>So far, <code>GHDL</code> has been compiled and tested only on &lsquo;<samp><span class="samp">i386-linux</span></samp>&rsquo; systems. 
 <li>Overflow detection is not yet implemented. 
-<li>Some contraint checks are missing. 
-<li>VHDL-93 is not completly implemented. 
+<li>Some constraint checks are missing. 
+<li>VHDL-93 is not completely implemented. 
 <li>There are no checks for elaboration order. 
 <li>This list is not exhaustive. 
 <li><small class="dots">...</small>
@@ -2688,7 +2768,7 @@ email to <a href="mailto:ghdl@free.fr">ghdl@free.fr</a>.
    <p>If the compiler crashes, this is a bug.  Reliable tools never crash.
 
    <p>If your compiled VHDL executable crashes, this may be a bug at
-run time or the code produced may be wrong.  However, since VHDL
+runtime or the code produced may be wrong.  However, since VHDL
 has a notion of pointers, an erroneous VHDL program (using invalid
 pointers for example) may crash.
 
@@ -2712,7 +2792,7 @@ Again, rewriting part of it is a good way to improve it.
 
    <p>If you send a <code>VHDL</code> file producing a bug, it is a good idea to try
 to make it as short as possible.  It is also a good idea to make it
-looking like a test: write a comment which explains wether the file
+looking like a test: write a comment which explains whether the file
 should compile, and if yes, whether or not it should run successfully. 
 In the latter case, an assert statement should finish the test; the
 severity level note indicates success, while a severity level failure
@@ -2722,7 +2802,7 @@ indicates failure.
 reproduce the problem. This includes:
 
      <ul>
-<li>the version of <code>GHDL</code> (you can get it with `<samp><span class="samp">ghdl --version</span></samp>'). 
+<li>the version of <code>GHDL</code> (you can get it with &lsquo;<samp><span class="samp">ghdl --version</span></samp>&rsquo;). 
 <li>the operating system
 <li>whether you have built <code>GHDL</code> from sources or used the binary
 distribution. 
@@ -2771,12 +2851,12 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <!-- node-name,  next,  previous,  up -->
 <h2 class="chapter">8 Copyrights</h2>
 
-<p>The GHDL front-end, the `<samp><span class="samp">std.textio</span></samp>' package and the run-time
+<p>The GHDL front-end, the &lsquo;<samp><span class="samp">std.textio</span></samp>&rsquo; package and the runtime
 library (grt) are copyrighted Tristan Gingold, come with <em>absolutely
 no warranty</em>, and are distributed under the conditions of the General
 Public License.
 
-   <p>The `<samp><span class="samp">ieee.numeric_bit</span></samp>' and `<samp><span class="samp">ieee.numeric_std</span></samp>' packages are
+   <p>The &lsquo;<samp><span class="samp">ieee.numeric_bit</span></samp>&rsquo; and &lsquo;<samp><span class="samp">ieee.numeric_std</span></samp>&rsquo; packages are
 copyrighted by the IEEE.  The source files may be distributed without
 change, except as permitted by the standard. 
 <!-- FIXME: this sounds strange -->
@@ -2784,33 +2864,33 @@ This source file may not be
 sold or distributed for profit.  See the source file and the IEEE 1076.3
 standard for more information.
 
-   <p>The `<samp><span class="samp">ieee.std_logic_1164</span></samp>' package is copyrighted by the IEEE.  See
+   <p>The &lsquo;<samp><span class="samp">ieee.std_logic_1164</span></samp>&rsquo; package is copyrighted by the IEEE.  See
 source file and the IEEE 1164 standard for more information.
 
-   <p>The `<samp><span class="samp">ieee.VITAL_Primitives</span></samp>', `<samp><span class="samp">ieee.VITAL_Timing</span></samp>' and
-`<samp><span class="samp">ieee.VITAL_Memory</span></samp>' packages are copyrighted by IEEE.  See source
+   <p>The &lsquo;<samp><span class="samp">ieee.VITAL_Primitives</span></samp>&rsquo;, &lsquo;<samp><span class="samp">ieee.VITAL_Timing</span></samp>&rsquo; and
+&lsquo;<samp><span class="samp">ieee.VITAL_Memory</span></samp>&rsquo; packages are copyrighted by IEEE.  See source
 file and the IEEE 1076.4 standards for more information.
 
-   <p>The `<samp><span class="samp">ieee.Math_Real</span></samp>' and `<samp><span class="samp">ieee.Math_Complex</span></samp>' packages are
+   <p>The &lsquo;<samp><span class="samp">ieee.Math_Real</span></samp>&rsquo; and &lsquo;<samp><span class="samp">ieee.Math_Complex</span></samp>&rsquo; packages are
 copyrighted by IEEE.  These are draft versions which may used and distributed
 without restriction.  These packages cannot be sold or distributed for profit. 
 See source files for more information.
 
-   <p>The packages `<samp><span class="samp">std_logic_arith</span></samp>', <!-- @samp{std_logic_misc}, -->
-`<samp><span class="samp">std_logic_signed</span></samp>', `<samp><span class="samp">std_logic_unsigned</span></samp>' and
-`<samp><span class="samp">std_logic_textio</span></samp>' contained in the `<samp><span class="samp">synopsys</span></samp>' directory are
+   <p>The packages &lsquo;<samp><span class="samp">std_logic_arith</span></samp>&rsquo;, <!-- @samp{std_logic_misc}, -->
+&lsquo;<samp><span class="samp">std_logic_signed</span></samp>&rsquo;, &lsquo;<samp><span class="samp">std_logic_unsigned</span></samp>&rsquo; and
+&lsquo;<samp><span class="samp">std_logic_textio</span></samp>&rsquo; contained in the &lsquo;<samp><span class="samp">synopsys</span></samp>&rsquo; directory are
 copyrighted by Synopsys, Inc.  The source files may be used and
 distributed without restriction provided that the copyright statements
 are not removed from the files and that any derivative work contains the
 copyright notice.  See the source files for more information.
 
-   <p>The package `<samp><span class="samp">std_logic_arith</span></samp>' contained in the `<samp><span class="samp">mentor</span></samp>'
+   <p>The package &lsquo;<samp><span class="samp">std_logic_arith</span></samp>&rsquo; contained in the &lsquo;<samp><span class="samp">mentor</span></samp>&rsquo;
 directory is copyrighted by Mentor Graphics.  The source files may be
 distributed in whole without restriction provided that the copyright
 statement is not removed from the file and that any derivative work
 contains this copyright notice.  See the source files for more information.
 
-   <p>As a consequence of the run-time copyright, you may not be allowed to
+   <p>As a consequence of the runtime copyright, you may not be allowed to
 distribute an executable produced by <code>GHDL</code> without the VHDL
 sources.  To my mind, this is not a real restriction, since there is no
 points in distributing VHDL executable.  Please, send a comment
@@ -2827,37 +2907,39 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <h2 class="unnumbered">Index</h2>
 
 <ul class="index-cp" compact>
-<li><a href="#index-g_t_0040option_007b_002d_002dassert_002dlevel_007d-option-75"><samp><span class="option">--assert-level</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dassert_002dlevel_007d-option-79"><samp><span class="option">--assert-level</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dbind_007d-command-10"><samp><span class="option">--bind</span></samp> command</a>: <a href="#Bind-command">Bind command</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dchop_007d-command-65"><samp><span class="option">--chop</span></samp> command</a>: <a href="#Chop-command">Chop command</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dchop_007d-command-67"><samp><span class="option">--chop</span></samp> command</a>: <a href="#Chop-command">Chop command</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dclean_007d-command-58"><samp><span class="option">--clean</span></samp> command</a>: <a href="#Clean-command">Clean command</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002ddisp_002dstandard_007d-command-71"><samp><span class="option">--disp-standard</span></samp> command</a>: <a href="#Disp-standard-command">Disp standard command</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002ddisp_002dtime_007d-option-78"><samp><span class="option">--disp-time</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002ddisp_002dtree_007d-option-80"><samp><span class="option">--disp-tree</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002ddispconfig_007d-command-69"><samp><span class="option">--dispconfig</span></samp> command</a>: <a href="#Dispconfig-command">Dispconfig command</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dcopy_007d-command-62"><samp><span class="option">--copy</span></samp> command</a>: <a href="#Copy-command">Copy command</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002ddisp_002dstandard_007d-command-73"><samp><span class="option">--disp-standard</span></samp> command</a>: <a href="#Disp-standard-command">Disp standard command</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002ddisp_002dtime_007d-option-83"><samp><span class="option">--disp-time</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002ddisp_002dtree_007d-option-85"><samp><span class="option">--disp-tree</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002ddispconfig_007d-command-71"><samp><span class="option">--dispconfig</span></samp> command</a>: <a href="#Dispconfig-command">Dispconfig command</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002delab_002drun_007d-command-8"><samp><span class="option">--elab-run</span></samp> command</a>: <a href="#Elaborate-and-run-command">Elaborate and run command</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dgen_002dmakefile_007d-command-54"><samp><span class="option">--gen-makefile</span></samp> command</a>: <a href="#Generate-Makefile-command">Generate Makefile command</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dGHLD1_007d-switch-36"><samp><span class="option">--GHLD1</span></samp> switch</a>: <a href="#GHDL-options">GHDL options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dhelp_007d-command-68"><samp><span class="option">--help</span></samp> command</a>: <a href="#Help-command">Help command</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dhelp_007d-command-70"><samp><span class="option">--help</span></samp> command</a>: <a href="#Help-command">Help command</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dieee_007d-switch-26"><samp><span class="option">--ieee</span></samp> switch</a>: <a href="#GHDL-options">GHDL options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dlines_007d-command-66"><samp><span class="option">--lines</span></samp> command</a>: <a href="#Lines-command">Lines command</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dieee_002dasserts_007d-option-80"><samp><span class="option">--ieee-asserts</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dlines_007d-command-68"><samp><span class="option">--lines</span></samp> command</a>: <a href="#Lines-command">Lines command</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dlink_007d-command-12"><samp><span class="option">--link</span></samp> command</a>: <a href="#Link-command">Link command</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dlist_002dlink_007d-command-13"><samp><span class="option">--list-link</span></samp> command</a>: <a href="#List-link-command">List link command</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dno_002drun_007d-option-82"><samp><span class="option">--no-run</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dno_002drun_007d-option-87"><samp><span class="option">--no-run</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dno_002dvital_002dchecks_007d-switch-32"><samp><span class="option">--no-vital-checks</span></samp> switch</a>: <a href="#GHDL-options">GHDL options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dpp_002dhtml_007d-command-61"><samp><span class="option">--pp-html</span></samp> command</a>: <a href="#Pretty-print-command">Pretty print command</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dpp_002dhtml_007d-command-63"><samp><span class="option">--pp-html</span></samp> command</a>: <a href="#Pretty-print-command">Pretty print command</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dPREFIX_007d-switch-35"><samp><span class="option">--PREFIX</span></samp> switch</a>: <a href="#GHDL-options">GHDL options</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dremove_007d-command-60"><samp><span class="option">--remove</span></samp> command</a>: <a href="#Remove-command">Remove command</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dsdf_007d-option-89"><samp><span class="option">--sdf</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dstack_002dmax_002dsize_007d-option-90"><samp><span class="option">--stack-max-size</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dstack_002dsize_007d-option-91"><samp><span class="option">--stack-size</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dsdf_007d-option-94"><samp><span class="option">--sdf</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dstack_002dmax_002dsize_007d-option-95"><samp><span class="option">--stack-max-size</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dstack_002dsize_007d-option-96"><samp><span class="option">--stack-size</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dstd_007d-switch-25"><samp><span class="option">--std</span></samp> switch</a>: <a href="#GHDL-options">GHDL options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dstop_002ddelta_007d-option-77"><samp><span class="option">--stop-delta</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dstop_002dtime_007d-option-76"><samp><span class="option">--stop-time</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dstop_002ddelta_007d-option-82"><samp><span class="option">--stop-delta</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dstop_002dtime_007d-option-81"><samp><span class="option">--stop-time</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dsyn_002dbinding_007d-switch-34"><samp><span class="option">--syn-binding</span></samp> switch</a>: <a href="#GHDL-options">GHDL options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dvcd_007d-option-83"><samp><span class="option">--vcd</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dvcdgz_007d-option-84"><samp><span class="option">--vcdgz</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dversion_007d-command-73"><samp><span class="option">--version</span></samp> command</a>: <a href="#Version-command">Version command</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dvcd_007d-option-88"><samp><span class="option">--vcd</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dvcdgz_007d-option-89"><samp><span class="option">--vcdgz</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dversion_007d-command-75"><samp><span class="option">--version</span></samp> command</a>: <a href="#Version-command">Version command</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dvital_002dchecks_007d-switch-33"><samp><span class="option">--vital-checks</span></samp> switch</a>: <a href="#GHDL-options">GHDL options</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dwarn_002dbinding_007d-switch-42"><samp><span class="option">--warn-binding</span></samp> switch</a>: <a href="#GHDL-warnings">GHDL warnings</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dwarn_002dbody_007d-switch-46"><samp><span class="option">--warn-body</span></samp> switch</a>: <a href="#GHDL-warnings">GHDL warnings</a></li>
@@ -2869,17 +2951,17 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <li><a href="#index-g_t_0040option_007b_002d_002dwarn_002dspecs_007d-switch-47"><samp><span class="option">--warn-specs</span></samp> switch</a>: <a href="#GHDL-warnings">GHDL warnings</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dwarn_002dunused_007d-switch-48"><samp><span class="option">--warn-unused</span></samp> switch</a>: <a href="#GHDL-warnings">GHDL warnings</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dwarn_002dvital_002dgeneric_007d-switch-44"><samp><span class="option">--warn-vital-generic</span></samp> switch</a>: <a href="#GHDL-warnings">GHDL warnings</a></li>
-<li><a href="#index-g_t_0040option_007b_002d_002dwave_007d-option-88"><samp><span class="option">--wave</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-g_t_0040option_007b_002d_002dwave_007d-option-93"><samp><span class="option">--wave</span></samp> option</a>: <a href="#Simulation-options">Simulation options</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dwork_007d-switch-22"><samp><span class="option">--work</span></samp> switch</a>: <a href="#GHDL-options">GHDL options</a></li>
 <li><a href="#index-g_t_0040option_007b_002d_002dworkdir_007d-switch-24"><samp><span class="option">--workdir</span></samp> switch</a>: <a href="#GHDL-options">GHDL options</a></li>
 <li><a href="#index-g_t_0040option_007b_002da_007d-command-2"><samp><span class="option">-a</span></samp> command</a>: <a href="#Analysis-command">Analysis command</a></li>
 <li><a href="#index-g_t_0040option_007b_002dc_007d-command-17"><samp><span class="option">-c</span></samp> command</a>: <a href="#Analyze-and-elaborate-command">Analyze and elaborate command</a></li>
 <li><a href="#index-g_t_0040option_007b_002dd_007d-command-56"><samp><span class="option">-d</span></samp> command</a>: <a href="#Directory-command">Directory command</a></li>
 <li><a href="#index-g_t_0040option_007b_002de_007d-command-4"><samp><span class="option">-e</span></samp> command</a>: <a href="#Elaboration-command">Elaboration command</a></li>
-<li><a href="#index-g_t_0040option_007b_002df_007d-command-64"><samp><span class="option">-f</span></samp> command</a>: <a href="#Find-command">Find command</a></li>
+<li><a href="#index-g_t_0040option_007b_002df_007d-command-66"><samp><span class="option">-f</span></samp> command</a>: <a href="#Find-command">Find command</a></li>
 <li><a href="#index-g_t_0040option_007b_002dfexplicit_007d-switch-31"><samp><span class="option">-fexplicit</span></samp> switch</a>: <a href="#GHDL-options">GHDL options</a></li>
-<li><a href="#index-g_t_0040option_007b_002dh_007d-command-67"><samp><span class="option">-h</span></samp> command</a>: <a href="#Help-command">Help command</a></li>
-<li><a href="#index-g_t_0040option_007b_002di_007d-coomand-51"><samp><span class="option">-i</span></samp> coomand</a>: <a href="#Import-command">Import command</a></li>
+<li><a href="#index-g_t_0040option_007b_002dh_007d-command-69"><samp><span class="option">-h</span></samp> command</a>: <a href="#Help-command">Help command</a></li>
+<li><a href="#index-g_t_0040option_007b_002di_007d-command-51"><samp><span class="option">-i</span></samp> command</a>: <a href="#Import-command">Import command</a></li>
 <li><a href="#index-g_t_0040option_007b_002dm_007d-command-53"><samp><span class="option">-m</span></samp> command</a>: <a href="#Make-command">Make command</a></li>
 <li><a href="#index-g_t_0040option_007b_002dP_007d-switch-30"><samp><span class="option">-P</span></samp> switch</a>: <a href="#GHDL-options">GHDL options</a></li>
 <li><a href="#index-g_t_0040option_007b_002dr_007d-command-6"><samp><span class="option">-r</span></samp> command</a>: <a href="#Run-command">Run command</a></li>
@@ -2887,61 +2969,64 @@ Up:&nbsp;<a rel="up" accesskey="u" href="#Top">Top</a>
 <li><a href="#index-g_t_0040option_007b_002dW_007d-switch-37"><samp><span class="option">-W</span></samp> switch</a>: <a href="#Passing-options-to-other-programs">Passing options to other programs</a></li>
 <li><a href="#index-g_t_0040option_007b_002dWa_007d-switch-38"><samp><span class="option">-Wa</span></samp> switch</a>: <a href="#Passing-options-to-other-programs">Passing options to other programs</a></li>
 <li><a href="#index-g_t_0040option_007b_002dWl_007d-switch-39"><samp><span class="option">-Wl</span></samp> switch</a>: <a href="#Passing-options-to-other-programs">Passing options to other programs</a></li>
-<li><a href="#index-g_t1076-97">1076</a>: <a href="#VHDL-standards">VHDL standards</a></li>
+<li><a href="#index-g_t1076-102">1076</a>: <a href="#VHDL-standards">VHDL standards</a></li>
 <li><a href="#index-g_t1076_002e3-21">1076.3</a>: <a href="#GHDL-options">GHDL options</a></li>
-<li><a href="#index-g_t1076_002e4-115">1076.4</a>: <a href="#GHDL-implementation-of-VITAL">GHDL implementation of VITAL</a></li>
-<li><a href="#index-g_t1076a-98">1076a</a>: <a href="#VHDL-standards">VHDL standards</a></li>
+<li><a href="#index-g_t1076_002e4-120">1076.4</a>: <a href="#GHDL-implementation-of-VITAL">GHDL implementation of VITAL</a></li>
+<li><a href="#index-g_t1076a-103">1076a</a>: <a href="#VHDL-standards">VHDL standards</a></li>
 <li><a href="#index-g_t1164-19">1164</a>: <a href="#GHDL-options">GHDL options</a></li>
-<li><a href="#index-g_t_0040code_007b_005f_005fghdl_005ffatal_007d-93"><code>__ghdl_fatal</code></a>: <a href="#Debugging-VHDL-programs">Debugging VHDL programs</a></li>
+<li><a href="#index-g_t_0040code_007b_005f_005fghdl_005ffatal_007d-98"><code>__ghdl_fatal</code></a>: <a href="#Debugging-VHDL-programs">Debugging VHDL programs</a></li>
 <li><a href="#index-analysis-1">analysis</a>: <a href="#Analysis-command">Analysis command</a></li>
 <li><a href="#index-Analyze-and-elaborate-command-16">Analyze and elaborate command</a>: <a href="#Analyze-and-elaborate-command">Analyze and elaborate command</a></li>
 <li><a href="#index-binding-9">binding</a>: <a href="#Bind-command">Bind command</a></li>
 <li><a href="#index-checking-syntax-14">checking syntax</a>: <a href="#Check-syntax-command">Check syntax command</a></li>
 <li><a href="#index-cleaning-57">cleaning</a>: <a href="#Clean-command">Clean command</a></li>
 <li><a href="#index-cleaning-all-59">cleaning all</a>: <a href="#Remove-command">Remove command</a></li>
-<li><a href="#index-debugging-92">debugging</a>: <a href="#Debugging-VHDL-programs">Debugging VHDL programs</a></li>
-<li><a href="#index-display-configuration-70">display configuration</a>: <a href="#Dispconfig-command">Dispconfig command</a></li>
-<li><a href="#index-display-design-hierarchy-81">display design hierarchy</a>: <a href="#Simulation-options">Simulation options</a></li>
-<li><a href="#index-display-_0040samp_007bstd_002estandard_007d-72">display `<samp><span class="samp">std.standard</span></samp>'</a>: <a href="#Disp-standard-command">Disp standard command</a></li>
-<li><a href="#index-display-time-79">display time</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-copying-library-61">copying library</a>: <a href="#Copy-command">Copy command</a></li>
+<li><a href="#index-debugging-97">debugging</a>: <a href="#Debugging-VHDL-programs">Debugging VHDL programs</a></li>
+<li><a href="#index-display-configuration-72">display configuration</a>: <a href="#Dispconfig-command">Dispconfig command</a></li>
+<li><a href="#index-display-design-hierarchy-86">display design hierarchy</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-display-_0040samp_007bstd_002estandard_007d-74">display &lsquo;<samp><span class="samp">std.standard</span></samp>&rsquo;</a>: <a href="#Disp-standard-command">Disp standard command</a></li>
+<li><a href="#index-display-time-84">display time</a>: <a href="#Simulation-options">Simulation options</a></li>
 <li><a href="#index-displaying-library-55">displaying library</a>: <a href="#Directory-command">Directory command</a></li>
-<li><a href="#index-dump-of-signals-87">dump of signals</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-dump-of-signals-92">dump of signals</a>: <a href="#Simulation-options">Simulation options</a></li>
 <li><a href="#index-elaborate-and-run-7">elaborate and run</a>: <a href="#Elaborate-and-run-command">Elaborate and run command</a></li>
 <li><a href="#index-elaboration-3">elaboration</a>: <a href="#Elaboration-command">Elaboration command</a></li>
-<li><a href="#index-file-format-104">file format</a>: <a href="#VHDL-files-format">VHDL files format</a></li>
-<li><a href="#index-foreign-110">foreign</a>: <a href="#Interfacing-to-other-languages">Interfacing to other languages</a></li>
-<li><a href="#index-IEEE-1076-95">IEEE 1076</a>: <a href="#VHDL-standards">VHDL standards</a></li>
+<li><a href="#index-file-format-109">file format</a>: <a href="#VHDL-files-format">VHDL files format</a></li>
+<li><a href="#index-foreign-115">foreign</a>: <a href="#Interfacing-to-other-languages">Interfacing to other languages</a></li>
+<li><a href="#index-IEEE-1076-100">IEEE 1076</a>: <a href="#VHDL-standards">VHDL standards</a></li>
 <li><a href="#index-IEEE-1076_002e3-20">IEEE 1076.3</a>: <a href="#GHDL-options">GHDL options</a></li>
-<li><a href="#index-IEEE-1076_002e4-114">IEEE 1076.4</a>: <a href="#GHDL-implementation-of-VITAL">GHDL implementation of VITAL</a></li>
-<li><a href="#index-IEEE-1076a-96">IEEE 1076a</a>: <a href="#VHDL-standards">VHDL standards</a></li>
+<li><a href="#index-IEEE-1076_002e4-119">IEEE 1076.4</a>: <a href="#GHDL-implementation-of-VITAL">GHDL implementation of VITAL</a></li>
+<li><a href="#index-IEEE-1076a-101">IEEE 1076a</a>: <a href="#VHDL-standards">VHDL standards</a></li>
 <li><a href="#index-IEEE-1164-18">IEEE 1164</a>: <a href="#GHDL-options">GHDL options</a></li>
 <li><a href="#index-ieee-library-27">ieee library</a>: <a href="#GHDL-options">GHDL options</a></li>
 <li><a href="#index-importing-files-50">importing files</a>: <a href="#Import-command">Import command</a></li>
-<li><a href="#index-interfacing-108">interfacing</a>: <a href="#Interfacing-to-other-languages">Interfacing to other languages</a></li>
+<li><a href="#index-interfacing-113">interfacing</a>: <a href="#Interfacing-to-other-languages">Interfacing to other languages</a></li>
 <li><a href="#index-linking-11">linking</a>: <a href="#Link-command">Link command</a></li>
-<li><a href="#index-logical-name-105">logical name</a>: <a href="#VHDL-files-format">VHDL files format</a></li>
+<li><a href="#index-logical-name-110">logical name</a>: <a href="#VHDL-files-format">VHDL files format</a></li>
 <li><a href="#index-make-52">make</a>: <a href="#Make-command">Make command</a></li>
-<li><a href="#index-math_005fcomplex-107">math_complex</a>: <a href="#Using-ieee_002emath_005freal-or-ieee_002emath_005fcomplex">Using ieee.math_real or ieee.math_complex</a></li>
-<li><a href="#index-math_005freal-106">math_real</a>: <a href="#Using-ieee_002emath_005freal-or-ieee_002emath_005fcomplex">Using ieee.math_real or ieee.math_complex</a></li>
+<li><a href="#index-math_005fcomplex-112">math_complex</a>: <a href="#Using-ieee_002emath_005freal-or-ieee_002emath_005fcomplex">Using ieee.math_real or ieee.math_complex</a></li>
+<li><a href="#index-Math_005fComplex-78">Math_Complex</a>: <a href="#IEEE-math-packages">IEEE math packages</a></li>
+<li><a href="#index-math_005freal-111">math_real</a>: <a href="#Using-ieee_002emath_005freal-or-ieee_002emath_005fcomplex">Using ieee.math_real or ieee.math_complex</a></li>
+<li><a href="#index-Math_005fReal-77">Math_Real</a>: <a href="#IEEE-math-packages">IEEE math packages</a></li>
 <li><a href="#index-mentor-library-29">mentor library</a>: <a href="#GHDL-options">GHDL options</a></li>
-<li><a href="#index-other-languages-109">other languages</a>: <a href="#Interfacing-to-other-languages">Interfacing to other languages</a></li>
-<li><a href="#index-pretty-printing-62">pretty printing</a>: <a href="#Pretty-print-command">Pretty print command</a></li>
+<li><a href="#index-other-languages-114">other languages</a>: <a href="#Interfacing-to-other-languages">Interfacing to other languages</a></li>
+<li><a href="#index-pretty-printing-64">pretty printing</a>: <a href="#Pretty-print-command">Pretty print command</a></li>
 <li><a href="#index-run-5">run</a>: <a href="#Run-command">Run command</a></li>
-<li><a href="#index-SDF-116">SDF</a>: <a href="#Backannotation">Backannotation</a></li>
+<li><a href="#index-SDF-121">SDF</a>: <a href="#Backannotation">Backannotation</a></li>
 <li><a href="#index-synopsys-library-28">synopsys library</a>: <a href="#GHDL-options">GHDL options</a></li>
-<li><a href="#index-v00-102">v00</a>: <a href="#VHDL-standards">VHDL standards</a></li>
-<li><a href="#index-v02-103">v02</a>: <a href="#VHDL-standards">VHDL standards</a></li>
-<li><a href="#index-v87-99">v87</a>: <a href="#VHDL-standards">VHDL standards</a></li>
-<li><a href="#index-v93-100">v93</a>: <a href="#VHDL-standards">VHDL standards</a></li>
-<li><a href="#index-v93c-101">v93c</a>: <a href="#VHDL-standards">VHDL standards</a></li>
-<li><a href="#index-value-change-dump-86">value change dump</a>: <a href="#Simulation-options">Simulation options</a></li>
-<li><a href="#index-vcd-85">vcd</a>: <a href="#Simulation-options">Simulation options</a></li>
-<li><a href="#index-version-74">version</a>: <a href="#Version-command">Version command</a></li>
-<li><a href="#index-VHDL-standards-94">VHDL standards</a>: <a href="#VHDL-standards">VHDL standards</a></li>
-<li><a href="#index-vhdl-to-html-63">vhdl to html</a>: <a href="#Pretty-print-command">Pretty print command</a></li>
-<li><a href="#index-VHPI-111">VHPI</a>: <a href="#Interfacing-to-other-languages">Interfacing to other languages</a></li>
-<li><a href="#index-VHPIDIRECT-112">VHPIDIRECT</a>: <a href="#Interfacing-to-other-languages">Interfacing to other languages</a></li>
-<li><a href="#index-VITAL-113">VITAL</a>: <a href="#GHDL-implementation-of-VITAL">GHDL implementation of VITAL</a></li>
+<li><a href="#index-v00-107">v00</a>: <a href="#VHDL-standards">VHDL standards</a></li>
+<li><a href="#index-v02-108">v02</a>: <a href="#VHDL-standards">VHDL standards</a></li>
+<li><a href="#index-v87-104">v87</a>: <a href="#VHDL-standards">VHDL standards</a></li>
+<li><a href="#index-v93-105">v93</a>: <a href="#VHDL-standards">VHDL standards</a></li>
+<li><a href="#index-v93c-106">v93c</a>: <a href="#VHDL-standards">VHDL standards</a></li>
+<li><a href="#index-value-change-dump-91">value change dump</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-vcd-90">vcd</a>: <a href="#Simulation-options">Simulation options</a></li>
+<li><a href="#index-version-76">version</a>: <a href="#Version-command">Version command</a></li>
+<li><a href="#index-VHDL-standards-99">VHDL standards</a>: <a href="#VHDL-standards">VHDL standards</a></li>
+<li><a href="#index-vhdl-to-html-65">vhdl to html</a>: <a href="#Pretty-print-command">Pretty print command</a></li>
+<li><a href="#index-VHPI-116">VHPI</a>: <a href="#Interfacing-to-other-languages">Interfacing to other languages</a></li>
+<li><a href="#index-VHPIDIRECT-117">VHPIDIRECT</a>: <a href="#Interfacing-to-other-languages">Interfacing to other languages</a></li>
+<li><a href="#index-VITAL-118">VITAL</a>: <a href="#GHDL-implementation-of-VITAL">GHDL implementation of VITAL</a></li>
 <li><a href="#index-WORK-library-23">WORK library</a>: <a href="#GHDL-options">GHDL options</a></li>
    </ul></body></html>
 

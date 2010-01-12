@@ -55,6 +55,10 @@ package Libraries is
    --  Local (current) directory.
    Local_Directory : Name_Id;
 
+   --  Correspond to "" (empty identifier).  Used to denote current directory
+   --  for library directories.
+   Name_Nil : Name_Id;
+
    --  Initialize library pathes table.
    --  Set the local path.
    procedure Init_Pathes;

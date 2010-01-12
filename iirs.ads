@@ -212,9 +212,6 @@ package Iirs is
    -- Iir_Kind_String_Literal (Short)
    -- Iir_Kind_Bit_String_Literal (Medium)
    --
-   -- Type of the literal.  Note: for a (bit_)string_literal, the type must be
-   -- computed during semantization.  Roughly speaking, this is possible since
-   -- integer type range constraint are locally static.
    --   Get/Set_Type (Field1)
    --
    -- Used for computed literals.  Literal_Origin contains the expression whose
@@ -223,6 +220,8 @@ package Iirs is
    --
    --   Get/Set_String_Id (Field3)
    --
+   -- As bit-strings are expanded to '0'/'1' strings, this is the number of
+   -- characters.
    --   Get/Set_String_Length (Field0)
    --
    -- For bit string only:
@@ -578,6 +577,12 @@ package Iirs is
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
+
+   -- Iir_Kind_Psl_Expression (Short)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Psl_Expression (Field3)
 
    -- Iir_Kind_Signature (Short)
    --
@@ -1237,6 +1242,26 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
 
+   -- Iir_Kind_Psl_Declaration (Medium)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Psl_Declaration (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   -- Valid only for property declaration.
+   --   Get/Set_PSL_Clock (Field7)
+   --
+   -- Valid only for property declaration without parameters.
+   --   Get/Set_PSL_NFA (Field8)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+
    -- Iir_Kind_Use_Clause (Short)
    --
    --   Get/Set_Parent (Field0)
@@ -1729,6 +1754,40 @@ package Iirs is
    --   Get/Set_Report_Expression (Field6)
    --
    --   Get/Set_Postponed_Flag (Flag3)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+
+   -- Iir_Kind_Psl_Default_Clock (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Psl_Boolean (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+
+   -- Iir_Kind_Psl_Assert_Statement (Medium)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Psl_Property (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
+   --   Get/Set_Severity_Expression (Field5)
+   --
+   --   Get/Set_Report_Expression (Field6)
+   --
+   --   Get/Set_PSL_Clock (Field7)
+   --
+   --   Get/Set_PSL_NFA (Field8)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -2561,6 +2620,8 @@ package Iirs is
        Iir_Kind_Element_Declaration,
        Iir_Kind_Non_Object_Alias_Declaration,
 
+       Iir_Kind_Psl_Declaration,
+
        Iir_Kind_Function_Body,
        Iir_Kind_Function_Declaration,
        Iir_Kind_Implicit_Function_Declaration,
@@ -2621,6 +2682,7 @@ package Iirs is
        Iir_Kind_Selected_Element,
        Iir_Kind_Dereference,
        Iir_Kind_Implicit_Dereference,
+       Iir_Kind_Psl_Expression,
 
    -- Concurrent statements.
        Iir_Kind_Sensitized_Process_Statement,
@@ -2628,6 +2690,8 @@ package Iirs is
        Iir_Kind_Concurrent_Conditional_Signal_Assignment,
        Iir_Kind_Concurrent_Selected_Signal_Assignment,
        Iir_Kind_Concurrent_Assertion_Statement,
+       Iir_Kind_Psl_Default_Clock,
+       Iir_Kind_Psl_Assert_Statement,
        Iir_Kind_Concurrent_Procedure_Call_Statement,
        Iir_Kind_Block_Statement,
        Iir_Kind_Generate_Statement,
@@ -3332,6 +3396,8 @@ package Iirs is
    --Iir_Kind_Concurrent_Conditional_Signal_Assignment
    --Iir_Kind_Concurrent_Selected_Signal_Assignment
    --Iir_Kind_Concurrent_Assertion_Statement
+   --Iir_Kind_Psl_Default_Clock
+   --Iir_Kind_Psl_Assert_Statement
    --Iir_Kind_Concurrent_Procedure_Call_Statement
    --Iir_Kind_Block_Statement
    --Iir_Kind_Generate_Statement
@@ -3387,6 +3453,7 @@ package Iirs is
    --Iir_Kind_Group_Declaration
    --Iir_Kind_Element_Declaration
    --Iir_Kind_Non_Object_Alias_Declaration
+   --Iir_Kind_Psl_Declaration
    --Iir_Kind_Function_Body
    --Iir_Kind_Function_Declaration
    --Iir_Kind_Implicit_Function_Declaration
@@ -5032,4 +5099,28 @@ package Iirs is
    --  Field: Flag6
    function Get_Use_Flag (Decl : Iir) return Boolean;
    procedure Set_Use_Flag (Decl : Iir; Val : Boolean);
+
+   --  Field: Field1 (uc)
+   function Get_Psl_Property (Decl : Iir) return PSL_Node;
+   procedure Set_Psl_Property (Decl : Iir; Prop : PSL_Node);
+
+   --  Field: Field1 (uc)
+   function Get_Psl_Declaration (Decl : Iir) return PSL_Node;
+   procedure Set_Psl_Declaration (Decl : Iir; Prop : PSL_Node);
+
+   --  Field: Field3 (uc)
+   function Get_Psl_Expression (Decl : Iir) return PSL_Node;
+   procedure Set_Psl_Expression (Decl : Iir; Prop : PSL_Node);
+
+   --  Field: Field1 (uc)
+   function Get_Psl_Boolean (N : Iir) return PSL_Node;
+   procedure Set_Psl_Boolean (N : Iir; Bool : PSL_Node);
+
+   --  Field: Field7 (uc)
+   function Get_PSL_Clock (N : Iir) return PSL_Node;
+   procedure Set_PSL_Clock (N : Iir; Clock : PSL_Node);
+
+   --  Field: Field8 (uc)
+   function Get_PSL_NFA (N : Iir) return PSL_NFA;
+   procedure Set_PSL_NFA (N : Iir; Fa : PSL_NFA);
 end Iirs;

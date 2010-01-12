@@ -18,8 +18,9 @@
 with Ortho_Nodes; use Ortho_Nodes;
 
 package Trans_Decls is
-   --  Procedure called in case of assert failed.
+   --  Procedures called in case of assert failed.
    Ghdl_Assert_Failed : O_Dnode;
+   Ghdl_Psl_Assert_Failed : O_Dnode;
    --  Procedure for report statement.
    Ghdl_Report : O_Dnode;
    --  Ortho node for default report message.
@@ -30,6 +31,8 @@ package Trans_Decls is
    Ghdl_Sensitized_Process_Register : O_Dnode;
    Ghdl_Postponed_Process_Register : O_Dnode;
    Ghdl_Postponed_Sensitized_Process_Register : O_Dnode;
+
+   Ghdl_Finalize_Register : O_Dnode;
 
    --  Wait subprograms.
    --  Short forms.
@@ -221,6 +224,9 @@ package Trans_Decls is
    --  'Path_Name
    Ghdl_Get_Path_Name : O_Dnode;
    Ghdl_Get_Instance_Name : O_Dnode;
+
+   --  For PSL.
+   Ghdl_Std_Ulogic_To_Boolean_Array : O_Dnode;
 
    Ghdl_Elaborate : O_Dnode;
 end Trans_Decls;

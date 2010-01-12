@@ -169,7 +169,8 @@ package body Grt.Rtis_Utils is
    procedure Foreach_Scalar (Ctxt : Rti_Context;
                              Obj_Type : Ghdl_Rti_Access;
                              Obj_Addr : Address;
-                             Is_Sig : Boolean)
+                             Is_Sig : Boolean;
+                             Param : Param_Type)
    is
       --  Current address.
       Addr : Address;
@@ -185,7 +186,7 @@ package body Grt.Rtis_Utils is
             Addr := Addr + (S / Storage_Unit);
          end Update;
       begin
-         Process (Addr, Name, Rti);
+         Process (Addr, Name, Rti, Param);
 
          if Is_Sig then
             Update (Address'Size);
@@ -448,18 +449,15 @@ package body Grt.Rtis_Utils is
             declare
                S : String (1 .. 32);
                L : Integer;
-               --  Warning: this assumes a C99 snprintf (ie, it returns the
-               --  number of characters).
-               function snprintf (Cstr : Address;
-                                  Size : Natural;
-                                  Template : Address;
-                                  Arg : Ghdl_F64)
-                 return Integer;
-               pragma Import (C, snprintf);
 
-               Format : constant String := "%g" & Character'Val (0);
+               function Snprintf_G (Cstr : Address;
+                                    Size : Natural;
+                                    Arg : Ghdl_F64)
+                 return Integer;
+               pragma Import (C, Snprintf_G, "__ghdl_snprintf_g");
+
             begin
-               L := snprintf (S'Address, S'Length, Format'Address, Value.F64);
+               L := Snprintf_G (S'Address, S'Length, Value.F64);
                if L < 0 then
                   --  FIXME.
                   Append (Str, "?");

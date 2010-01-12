@@ -33,6 +33,7 @@ package Errorout is
    --procedure Error_Kind (Msg: String; Kind: Iir_Kind);
    procedure Error_Kind (Msg: String; An_Iir: in Iir);
    procedure Error_Kind (Msg: String; Def : Iir_Predefined_Functions);
+   procedure Error_Kind (Msg : String; N : PSL_Node);
    pragma No_Return (Error_Kind);
 
    -- Raise when an assertion of failure severity error fails.
@@ -75,6 +76,7 @@ package Errorout is
    -- Disp a message during semantic analysis.
    -- an_iir is used for location and current token.
    procedure Error_Msg_Sem (Msg: String; Loc: Iir);
+   procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node);
    procedure Error_Msg_Sem (Msg: String; Loc: Location_Type);
 
    -- Disp a message during elaboration.

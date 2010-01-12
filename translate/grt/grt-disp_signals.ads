@@ -26,6 +26,8 @@ package Grt.Disp_Signals is
 
    procedure Disp_Signals_Table;
 
+   procedure Disp_All_Sensitivity;
+
    procedure Disp_Mode_Signal (Mode : Mode_Signal_Type);
 
    --  Disp informations on signal SIG.

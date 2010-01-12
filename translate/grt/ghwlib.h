@@ -150,7 +150,7 @@ struct ghw_type_enum
   const char *name;
 
   enum ghw_wkt_type wkt;
-  int nbr;
+  unsigned int nbr;
   const char **lits;
 };
 
@@ -179,7 +179,7 @@ struct ghw_type_array
   enum ghdl_rtik kind;
   const char *name;
 
-  int nbr_dim;
+  unsigned int nbr_dim;
   union ghw_type *el;
   union ghw_type **dims;
 };
@@ -214,7 +214,7 @@ struct ghw_type_record
   enum ghdl_rtik kind;
   const char *name;
 
-  int nbr_fields;
+  unsigned int nbr_fields;
   int nbr_el;	/* Number of scalar signals.  */
   struct ghw_record_element *el;
 };

@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 -- Title        : Standard VITAL TIMING Package
---              : $Revision: 597 $
+--              : $Revision$
 -- Library      : VITAL
 --              :  
 -- Developers   : IEEE DASC Timing Working Group (TWG), PAR 1076.4

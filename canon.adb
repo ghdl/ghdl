@@ -23,6 +23,9 @@ with Sem;
 with Std_Names;
 with Iir_Chains; use Iir_Chains;
 with Flags; use Flags;
+with PSL.Nodes;
+with PSL.Rewrites;
+with PSL.Build;
 
 package body Canon is
    --  Canonicalize a list of declarations.  LIST can be null.
@@ -1408,18 +1411,23 @@ package body Canon is
       El := Get_Concurrent_Statement_Chain (Parent);
       while El /= Null_Iir loop
          --  Add a label if required.
-         if Canon_Flag_Add_Labels
-           and then Get_Label (El) = Null_Identifier
-         then
-            declare
-               Str : String := Natural'Image (Proc_Num);
-            begin
-               --  Note: the label starts with a capitalized letter, to avoid
-               --  any clash with user's identifiers.
-               Str (1) := 'P';
-               Set_Label (El, Name_Table.Get_Identifier (Str));
-            end;
-            Proc_Num := Proc_Num + 1;
+         if Canon_Flag_Add_Labels then
+            case Get_Kind (El) is
+               when Iir_Kind_Psl_Declaration =>
+                  null;
+               when others =>
+                  if Get_Label (El) = Null_Identifier then
+                     declare
+                        Str : String := Natural'Image (Proc_Num);
+                     begin
+                        --  Note: the label starts with a capitalized letter,
+                        --  to avoid any clash with user's identifiers.
+                        Str (1) := 'P';
+                        Set_Label (El, Name_Table.Get_Identifier (Str));
+                     end;
+                     Proc_Num := Proc_Num + 1;
+                  end if;
+            end case;
          end if;
 
          case Get_Kind (El) is
@@ -1580,6 +1588,50 @@ package body Canon is
                   end if;
                   Canon_Declarations (Top, El, El);
                   Canon_Concurrent_Stmts (Top, El);
+               end;
+
+            when Iir_Kind_Psl_Assert_Statement =>
+               declare
+                  use PSL.Nodes;
+                  Prop : PSL_Node;
+                  Fa : PSL_NFA;
+               begin
+                  Prop := Get_Psl_Property (El);
+                  Prop := PSL.Rewrites.Rewrite_Property (Prop);
+                  Set_Psl_Property (El, Prop);
+                  --  Generate the NFA.
+                  Fa := PSL.Build.Build_FA (Prop);
+                  Set_PSL_NFA (El, Fa);
+               end;
+
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
+            when Iir_Kind_Psl_Declaration =>
+               declare
+                  use PSL.Nodes;
+                  Decl : PSL_Node;
+                  Prop : PSL_Node;
+                  Fa : PSL_NFA;
+               begin
+                  Decl := Get_Psl_Declaration (El);
+                  case Get_Kind (Decl) is
+                     when N_Property_Declaration =>
+                        Prop := Get_Property (Decl);
+                        Prop := PSL.Rewrites.Rewrite_Property (Prop);
+                        Set_Property (Decl, Prop);
+                        if Get_Parameter_List (Decl) = Null_Node then
+                           --  Generate the NFA.
+                           Fa := PSL.Build.Build_FA (Prop);
+                           Set_PSL_NFA (El, Fa);
+                        end if;
+                     when N_Sequence_Declaration
+                       | N_Endpoint_Declaration =>
+                        Prop := Get_Sequence (Decl);
+                        Prop := PSL.Rewrites.Rewrite_SERE (Prop);
+                        Set_Sequence (Decl, Prop);
+                     when others =>
+                        Error_Kind ("canon psl_declaration", Decl);
+                  end case;
                end;
 
             when others =>
@@ -2342,7 +2394,10 @@ package body Canon is
                   end if;
                end;
             when Iir_Kind_Sensitized_Process_Statement
-              | Iir_Kind_Process_Statement =>
+              | Iir_Kind_Process_Statement
+              | Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Default_Clock
+              | Iir_Kind_Psl_Declaration =>
                null;
             when others =>
                Error_Kind ("canon_block_configuration(3)", El);

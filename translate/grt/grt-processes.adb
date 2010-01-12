@@ -46,9 +46,20 @@ package body Grt.Processes is
       Table_Low_Bound => 1,
       Table_Initial => 16);
 
-   --  List of non_sensitized processes.
-   package Non_Sensitized_Process_Table is new Grt.Table
-     (Table_Component_Type => Process_Acc,
+   function To_Proc_Acc is new Ada.Unchecked_Conversion
+     (Source => System.Address, Target => Proc_Acc);
+
+   type Finalizer_Type is record
+      --  Subprogram containing process code.
+      Subprg : Proc_Acc;
+
+      --  Instance (THIS parameter) for the subprogram.
+      This : System.Address;
+   end record;
+
+   --  List of finalizer.
+   package Finalizer_Table is new Grt.Table
+     (Table_Component_Type => Finalizer_Type,
       Table_Index_Type => Natural,
       Table_Low_Bound => 1,
       Table_Initial => 2);
@@ -106,8 +117,6 @@ package body Grt.Processes is
                                State : Process_State;
                                Postponed : Boolean)
    is
-      function To_Proc_Acc is new Ada.Unchecked_Conversion
-        (Source => System.Address, Target => Proc_Acc);
       Stack : Stack_Type;
       P : Process_Acc;
    begin
@@ -133,9 +142,6 @@ package body Grt.Processes is
       Process_Table.Append (P);
       --  Used to create drivers.
       Set_Current_Process (P);
-      if State /= State_Sensitized then
-         Non_Sensitized_Process_Table.Append (P);
-      end if;
       if Postponed then
          Nbr_Postponed_Processes := Nbr_Postponed_Processes + 1;
       else
@@ -227,6 +233,22 @@ package body Grt.Processes is
       Resume_Process_If_Event
         (Sig, Process_Table.Table (Process_Table.Last));
    end Ghdl_Process_Add_Sensitivity;
+
+   procedure Ghdl_Finalize_Register (Instance : System.Address;
+                                     Proc : System.Address)
+   is
+   begin
+      Finalizer_Table.Append (Finalizer_Type'(To_Proc_Acc (Proc), Instance));
+   end Ghdl_Finalize_Register;
+
+   procedure Call_Finalizers is
+      El : Finalizer_Type;
+   begin
+      for I in Finalizer_Table.First .. Finalizer_Table.Last loop
+         El := Finalizer_Table.Table (I);
+         El.Subprg.all (El.This);
+      end loop;
+   end Call_Finalizers;
 
    procedure Resume_Process (Proc : Process_Acc)
    is
@@ -982,6 +1004,8 @@ package body Grt.Processes is
       if Nbr_Threads /= 1 then
          Threads.Finish;
       end if;
+
+      Call_Finalizers;
 
       Grt.Hooks.Call_Finish_Hooks;
 

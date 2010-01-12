@@ -25,6 +25,7 @@ with Back_End;
 with Name_Table;
 with Errorout; use Errorout;
 with Std_Package;
+with Libraries;
 with Canon;
 with Configuration;
 with Annotations;
@@ -37,6 +38,7 @@ with Ghdlcomp;
 package body Ghdlsimul is
 
    Flag_Expect_Failure : Boolean := False;
+   pragma Unreferenced (Flag_Expect_Failure);
 
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
@@ -73,7 +75,6 @@ package body Ghdlsimul is
    end Compile_Elab;
 
    --  Set options.
-   --  This is a little bit over-kill: from C to Ada and then again to C...
    procedure Set_Run_Options (Args : Argument_List)
    is
       Arg : String_Access;

@@ -551,7 +551,7 @@ package body Sem_Assocs is
          exit when Index_Type = Null_Iir;
          Chain := Get_Individual_Association_Chain (Assoc);
          Sem_Choices_Range
-           (Chain, Index_Type, False, Get_Location (Assoc), Low, High);
+           (Chain, Index_Type, False, False, Get_Location (Assoc), Low, High);
          Set_Individual_Association_Chain (Assoc, Chain);
       end loop;
    end Finish_Individual_Assoc_Array_Subtype;
@@ -578,7 +578,7 @@ package body Sem_Assocs is
       end if;
       Chain := Get_Individual_Association_Chain (Assoc);
       Sem_Choices_Range
-        (Chain, Base_Index, True, Get_Location (Assoc), Low, High);
+        (Chain, Base_Index, True, False, Get_Location (Assoc), Low, High);
       Set_Individual_Association_Chain (Assoc, Chain);
       if Actual_Index = Null_Iir then
          declare

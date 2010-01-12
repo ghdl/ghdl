@@ -32,6 +32,7 @@ with Sem_Stmts; use Sem_Stmts;
 with Sem_Decls; use Sem_Decls;
 with Sem_Assocs; use Sem_Assocs;
 with Sem_Types;
+with Sem_Psl;
 with Xrefs; use Xrefs;
 
 package body Sem_Names is
@@ -1259,6 +1260,8 @@ package body Sem_Names is
 --                Finish_Sem_Scalar_Type_Attribute (Res, Null_Iir);
 --             end if;
 --             return;
+         when Iir_Kind_Psl_Expression =>
+            return;
          when others =>
             Error_Kind ("finish_sem_name", Res);
       end case;
@@ -2026,6 +2029,9 @@ package body Sem_Names is
                Error_Msg_Sem
                  (Disp_Node (Prefix) & " cannot be indexed or sliced", Name);
                Res := Null_Iir;
+
+            when Iir_Kind_Psl_Declaration =>
+               Res := Sem_Psl.Sem_Psl_Name (Name);
 
             when others =>
                Error_Kind ("sem_parenthesis_name", Prefix);
@@ -3018,6 +3024,8 @@ package body Sem_Names is
          when Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Function_Declaration =>
             Finish_Sem_Function_Specification (Name, Expr);
+         when Iir_Kind_Psl_Expression =>
+            null;
          when others =>
             Error_Kind ("maybe_finish_sem_name", Expr);
       end case;

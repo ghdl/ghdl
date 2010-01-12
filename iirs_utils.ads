@@ -29,9 +29,7 @@ package Iirs_Utils is
 
    --  Easier function for string literals.
    function Get_String_Fat_Acc (Str : Iir) return String_Fat_Acc;
-   function Get_String_Length (Str : Iir) return Natural;
    pragma Inline (Get_String_Fat_Acc);
-   pragma Inline (Get_String_Length);
 
    --  Find LIT in the list of identifiers or characters LIST.
    --  Return the literal (whose name is LIT) or null_iir if not found.
@@ -155,5 +153,7 @@ package Iirs_Utils is
    --  Return TRUE if the base name of NAME is a signal object.
    function Is_Signal_Object (Name: Iir) return Boolean;
 
+   --  IIR wrapper around Get_HDL_Node.
+   function Get_HDL_Node (N : PSL_Node) return Iir;
 end Iirs_Utils;
 

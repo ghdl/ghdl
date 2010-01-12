@@ -489,62 +489,71 @@ package Std_Names is
    Name_Finish :         constant Name_Id := Name_First_Systask + 01;
    Name_Last_Systask :   constant Name_Id := Name_Finish;
 
-   Name_First_Psl :          constant Name_Id := Name_Last_Systask + 1;
-   Name_A :                  constant Name_Id := Name_First_Psl + 00;
-   Name_Af :                 constant Name_Id := Name_First_Psl + 01;
-   Name_Ag :                 constant Name_Id := Name_First_Psl + 02;
-   Name_Ax :                 constant Name_Id := Name_First_Psl + 03;
-   Name_Abort :              constant Name_Id := Name_First_Psl + 04;
+   Name_First_Comment :  constant Name_Id := Name_Last_Systask + 1;
+   Name_Psl :            constant Name_Id := Name_First_Comment + 0;
+   Name_Pragma :         constant Name_Id := Name_First_Comment + 1;
+   Name_Last_Comment :   constant Name_Id := Name_First_Comment + 1;
+
+   --  PSL words.
+   Name_First_PSL :          constant Name_Id := Name_Last_Comment + 1;
+   Name_A :                  constant Name_Id := Name_First_PSL + 00;
+   Name_Af :                 constant Name_Id := Name_First_PSL + 01;
+   Name_Ag :                 constant Name_Id := Name_First_PSL + 02;
+   Name_Ax :                 constant Name_Id := Name_First_PSL + 03;
+   Name_Abort :              constant Name_Id := Name_First_PSL + 04;
    --  Name_Always
    --  Name_And
-   Name_Assume :             constant Name_Id := Name_First_Psl + 05;
-   Name_Assume_Guarantee :   constant Name_Id := Name_First_Psl + 06;
-   Name_Before :             constant Name_Id := Name_First_Psl + 07;
+   Name_Assume :             constant Name_Id := Name_First_PSL + 05;
+   Name_Assume_Guarantee :   constant Name_Id := Name_First_PSL + 06;
+   Name_Before :             constant Name_Id := Name_First_PSL + 07;
    --  Name_Boolean
-   Name_Clock :              constant Name_Id := Name_First_Psl + 08;
-   Name_Const :              constant Name_Id := Name_First_Psl + 09;
-   Name_Cover :              constant Name_Id := Name_First_Psl + 10;
+   Name_Clock :              constant Name_Id := Name_First_PSL + 08;
+   Name_Const :              constant Name_Id := Name_First_PSL + 09;
+   Name_Cover :              constant Name_Id := Name_First_PSL + 10;
    --  Name_Default
-   Name_E :                  constant Name_Id := Name_First_Psl + 11;
-   Name_Ef :                 constant Name_Id := Name_First_Psl + 12;
-   Name_Eg :                 constant Name_Id := Name_First_Psl + 13;
-   Name_Ex :                 constant Name_Id := Name_First_Psl + 14;
-   Name_Endpoint  :          constant Name_Id := Name_First_Psl + 15;
-   Name_Eventually :         constant Name_Id := Name_First_Psl + 16;
-   Name_Fairness :           constant Name_Id := Name_First_Psl + 17;
-   Name_Fell  :              constant Name_Id := Name_First_Psl + 18;
-   Name_forall :             constant Name_Id := Name_First_Psl + 19;
-   Name_G :                  constant Name_Id := Name_First_Psl + 20;
+   Name_E :                  constant Name_Id := Name_First_PSL + 11;
+   Name_Ef :                 constant Name_Id := Name_First_PSL + 12;
+   Name_Eg :                 constant Name_Id := Name_First_PSL + 13;
+   Name_Ex :                 constant Name_Id := Name_First_PSL + 14;
+   Name_Endpoint  :          constant Name_Id := Name_First_PSL + 15;
+   Name_Eventually :         constant Name_Id := Name_First_PSL + 16;
+   Name_Fairness :           constant Name_Id := Name_First_PSL + 17;
+   Name_Fell  :              constant Name_Id := Name_First_PSL + 18;
+   Name_forall :             constant Name_Id := Name_First_PSL + 19;
+   Name_G :                  constant Name_Id := Name_First_PSL + 20;
    --  Name_In
-   Name_Inf :                constant Name_Id := Name_First_Psl + 21;
-   Name_Inherit :            constant Name_Id := Name_First_Psl + 22;
+   Name_Inf :                constant Name_Id := Name_First_PSL + 21;
+   Name_Inherit :            constant Name_Id := Name_First_PSL + 22;
    --  Name_Is
-   Name_Never :              constant Name_Id := Name_First_Psl + 23;
+   Name_Never :              constant Name_Id := Name_First_PSL + 23;
    --  Name_Next
-   Name_Next_A :             constant Name_Id := Name_First_Psl + 24;
-   Name_Next_E :             constant Name_Id := Name_First_Psl + 25;
-   Name_Next_Event :         constant Name_Id := Name_First_Psl + 26;
-   Name_Next_Event_A :       constant Name_Id := Name_First_Psl + 27;
-   Name_Next_Event_E :       constant Name_Id := Name_First_Psl + 28;
+   Name_Next_A :             constant Name_Id := Name_First_PSL + 24;
+   Name_Next_E :             constant Name_Id := Name_First_PSL + 25;
+   Name_Next_Event :         constant Name_Id := Name_First_PSL + 26;
+   Name_Next_Event_A :       constant Name_Id := Name_First_PSL + 27;
+   Name_Next_Event_E :       constant Name_Id := Name_First_PSL + 28;
    --  Name_Not
    --  Name_Or
-   Name_Property :           constant Name_Id := Name_First_Psl + 29;
-   Name_Prev :               constant Name_Id := Name_First_Psl + 30;
-   Name_Restrict :           constant Name_Id := Name_First_Psl + 31;
-   Name_Restrict_Guarantee : constant Name_Id := Name_First_Psl + 32;
-   Name_Rose :               constant Name_Id := Name_First_Psl + 33;
-   Name_Sequence :           constant Name_Id := Name_First_Psl + 34;
-   Name_Strong :             constant Name_Id := Name_First_Psl + 35;
-   Name_Union :              constant Name_Id := Name_First_Psl + 36;
+   Name_Property :           constant Name_Id := Name_First_PSL + 29;
+   Name_Prev :               constant Name_Id := Name_First_PSL + 30;
+   Name_Restrict :           constant Name_Id := Name_First_PSL + 31;
+   Name_Restrict_Guarantee : constant Name_Id := Name_First_PSL + 32;
+   Name_Rose :               constant Name_Id := Name_First_PSL + 33;
+   Name_Sequence :           constant Name_Id := Name_First_PSL + 34;
+   Name_Strong :             constant Name_Id := Name_First_PSL + 35;
+   Name_Union :              constant Name_Id := Name_First_PSL + 36;
    --  Name_Until
-   Name_Vmode :              constant Name_Id := Name_First_Psl + 37;
-   Name_Vprop :              constant Name_Id := Name_First_Psl + 38;
-   Name_Vunit :              constant Name_Id := Name_First_Psl + 39;
-   Name_W :                  constant Name_Id := Name_First_Psl + 40;
-   Name_Whilenot :           constant Name_Id := Name_First_Psl + 41;
-   Name_Within :             constant Name_Id := Name_First_Psl + 42;
-   Name_X :                  constant Name_Id := Name_First_Psl + 43;
-   Name_Last_Psl :           constant Name_Id := Name_X;
+   Name_Vmode :              constant Name_Id := Name_First_PSL + 37;
+   Name_Vprop :              constant Name_Id := Name_First_PSL + 38;
+   Name_Vunit :              constant Name_Id := Name_First_PSL + 39;
+   Name_W :                  constant Name_Id := Name_First_PSL + 40;
+   Name_Whilenot :           constant Name_Id := Name_First_PSL + 41;
+   Name_Within :             constant Name_Id := Name_First_PSL + 42;
+   Name_X :                  constant Name_Id := Name_First_PSL + 43;
+   Name_Last_PSL :           constant Name_Id := Name_X;
+
+   subtype Name_Id_PSL_Keywords is
+     Name_Id range Name_First_PSL .. Name_Last_PSL;
 
    -- Initialize the name table with the values defined here.
    procedure Std_Names_Initialize;

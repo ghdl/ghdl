@@ -225,6 +225,10 @@ package Grt.Signals is
       --  Set when an event occured.
       --  Only reset by GHW file dumper.
       Cyc_Event : Boolean;
+
+      --  Set if the signal has already been visited.  When outside of the
+      --  algorithm that use it, it must be cleared.
+      Seen : Boolean;
    end record;
    pragma Pack (Ghdl_Signal_Flags);
 

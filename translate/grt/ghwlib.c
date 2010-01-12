@@ -296,7 +296,7 @@ ghw_read_range (struct ghw_handler *h)
 int
 ghw_read_str (struct ghw_handler *h)
 {
-  char hdr[12];
+  unsigned char hdr[12];
   int i;
   char *p;
   int prev_len;
@@ -435,7 +435,7 @@ get_range_length (union ghw_range *rng)
 int
 ghw_read_type (struct ghw_handler *h)
 {
-  char hdr[8];
+  unsigned char hdr[8];
   int i;
 
   if (fread (hdr, sizeof (hdr), 1, h->stream) != 1)
@@ -777,7 +777,7 @@ ghw_read_value (struct ghw_handler *h,
 int
 ghw_read_hie (struct ghw_handler *h)
 {
-  char hdr[16];
+  unsigned char hdr[16];
   int nbr_scopes;
   int nbr_sigs;
   int i;
@@ -1100,7 +1100,7 @@ ghw_read_signal_value (struct ghw_handler *h, struct ghw_sig *s)
 int
 ghw_read_snapshot (struct ghw_handler *h)
 {
-  char hdr[12];
+  unsigned char hdr[12];
   int i;
   struct ghw_sig *s;
 
@@ -1138,7 +1138,7 @@ void ghw_disp_values (struct ghw_handler *h);
 int
 ghw_read_cycle_start (struct ghw_handler *h)
 {
-  char hdr[8];
+  unsigned char hdr[8];
 
   if (fread (hdr, sizeof (hdr), 1, h->stream) != 1)
     return -1;
