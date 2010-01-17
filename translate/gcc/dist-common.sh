@@ -299,6 +299,4 @@ psl-rewrites.ads
 psl-subsets.adb
 psl-subsets.ads
 psl-tprint.adb
-psl-tprint.ads
-sa_bools.adb
-sa_bools.ads"
+psl-tprint.ads"
