@@ -149,7 +149,7 @@ SectionEnd
 
 Section "Documentation (Recommended)"
   SetOutPath $INSTDIR
-  File ghdl.htm
+  File /oname=ghdl.htm ..\..\..\doc\ghdl.html
 SectionEnd
 
 Section "Add in PATH (Recommended)"

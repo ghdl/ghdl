@@ -26,43 +26,52 @@ package body Ortho_Code.Consts is
       Kind : OC_Kind;
       Lit_Type : O_Tnode;
    end record;
+   for Cnode_Common'Size use 64;
 
    type Cnode_Signed is record
       Val : Integer_64;
    end record;
+   for Cnode_Signed'Size use 64;
 
    type Cnode_Unsigned is record
       Val : Unsigned_64;
    end record;
+   for Cnode_Unsigned'Size use 64;
 
    type Cnode_Float is record
       Val : IEEE_Float_64;
    end record;
+   for Cnode_Float'Size use 64;
 
    type Cnode_Enum is record
       Id : O_Ident;
       Val : Uns32;
    end record;
+   for Cnode_Enum'Size use 64;
 
    type Cnode_Addr is record
       Decl : O_Dnode;
       Pad : Int32;
    end record;
+   for Cnode_Addr'Size use 64;
 
    type Cnode_Aggr is record
       Els : Int32;
       Nbr : Int32;
    end record;
+   for Cnode_Aggr'Size use 64;
 
    type Cnode_Sizeof is record
       Atype : O_Tnode;
       Pad : Int32;
    end record;
+   for Cnode_Sizeof'Size use 64;
 
    type Cnode_Union is record
       El : O_Cnode;
       Field : O_Fnode;
    end record;
+   for Cnode_Union'Size use 64;
 
    package Cnodes is new GNAT.Table
      (Table_Component_Type => Cnode_Common,
@@ -86,7 +95,7 @@ package body Ortho_Code.Consts is
       function To_Cnode_Unsigned is new Ada.Unchecked_Conversion
         (Cnode_Common, Cnode_Unsigned);
    begin
-      return To_Cnode_Unsigned (Cnodes.Table (Cst  + 1)).Val;
+      return To_Cnode_Unsigned (Cnodes.Table (Cst + 1)).Val;
    end Get_Const_U64;
 
    function Get_Const_I64 (Cst : O_Cnode) return Integer_64
@@ -94,7 +103,7 @@ package body Ortho_Code.Consts is
       function To_Cnode_Signed is new Ada.Unchecked_Conversion
         (Cnode_Common, Cnode_Signed);
    begin
-      return To_Cnode_Signed (Cnodes.Table (Cst  + 1)).Val;
+      return To_Cnode_Signed (Cnodes.Table (Cst + 1)).Val;
    end Get_Const_I64;
 
    function Get_Const_F64 (Cst : O_Cnode) return IEEE_Float_64
@@ -102,7 +111,7 @@ package body Ortho_Code.Consts is
       function To_Cnode_Float is new Ada.Unchecked_Conversion
         (Cnode_Common, Cnode_Float);
    begin
-      return To_Cnode_Float (Cnodes.Table (Cst  + 1)).Val;
+      return To_Cnode_Float (Cnodes.Table (Cst + 1)).Val;
    end Get_Const_F64;
 
    function To_Cnode_Common is new Ada.Unchecked_Conversion

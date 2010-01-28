@@ -1931,7 +1931,8 @@ completely analyzed using either the 87 or the 93 version of the VHDL standard.
 @node PSL implementation, Source representation, VHDL standards, GHDL implementation of VHDL
 @comment  node-name,  next,  previous,  up
 @section PSL implementation
-GHDL understands embedded PSL annotations in VHDL files, but in separate files.
+GHDL understands embedded PSL annotations in VHDL files, but not in
+separate files.
 
 As PSL annotations are embedded within comments, you must analyze and elaborate
 your design with option @option{-fpsl} to enable PSL annotations.
@@ -1941,8 +1942,8 @@ with the @code{psl} keyword.  The keyword must be followed (on the
 same line) by a PSL keyword such as @code{assert} or @code{default}.
 To continue a PSL statement on the next line, just start a new comment.
 
-A PSL statement is considered as a concurrent statement, and therefore is
-allowed only where processes are.
+A PSL statement is considered as a process.  So it is not allowed within
+a process.
 
 All PSL assertions must be clocked (GHDL doesn't support unclocked assertion).
 Furthermore only one clock per assertion is allowed.

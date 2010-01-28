@@ -467,6 +467,7 @@ package body Sem_Assocs is
       Sub : Iir;
       Formal_Object : Iir;
    begin
+      --  Recurse.
       Formal_Object := Name_To_Object (Formal);
       case Get_Kind (Formal_Object) is
          when Iir_Kind_Indexed_Name
@@ -518,6 +519,7 @@ package body Sem_Assocs is
       end case;
    end Add_Individual_Association_1;
 
+   --  Insert ASSOC into the tree of individual assoc rooted by IASSOC.
    procedure Add_Individual_Association (Iassoc : Iir; Assoc : Iir)
    is
       Formal : Iir;

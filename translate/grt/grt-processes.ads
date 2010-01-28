@@ -127,6 +127,7 @@ package Grt.Processes is
 private
    --  Access to a process subprogram.
    type Proc_Acc is access procedure (Self : System.Address);
+   pragma Convention (C, Proc_Acc);
 
    --  State of a process.
    type Process_State is

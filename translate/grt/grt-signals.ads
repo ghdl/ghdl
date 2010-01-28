@@ -76,7 +76,8 @@ package Grt.Signals is
 
    --  Function access type used to evaluate the guard expression.
    type Guard_Func_Acc is access function (This : System.Address)
-     return Ghdl_B2;
+                                          return Ghdl_B2;
+   pragma Convention (C, Guard_Func_Acc);
 
    --  Simply linked list of processes to be resumed in case of events.
 

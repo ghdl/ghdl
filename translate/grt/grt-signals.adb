@@ -1804,6 +1804,7 @@ package body Grt.Signals is
    end Compute_Resolved_Signal;
 
    type Conversion_Func_Acc is access procedure (Instance : System.Address);
+   pragma Convention (C, Conversion_Func_Acc);
    function To_Conversion_Func_Acc is new Ada.Unchecked_Conversion
      (Source => System.Address, Target => Conversion_Func_Acc);
 

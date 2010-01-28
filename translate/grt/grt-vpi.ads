@@ -137,6 +137,7 @@ package Grt.Vpi is
      (Source => Address, Target => p_cb_data);
 
    type cb_rtn_type is access function (Cb : p_cb_data) return Integer;
+   pragma Convention (C, cb_rtn_type);
 
    type s_cb_data is record
       Reason : Integer;

@@ -722,6 +722,12 @@ package body Ortho_Code.Types is
             Put (", nbr_fields: ");
             Put (To_Int32 (Get_Type_Record_Nbr_Fields (Atype)));
             New_Line;
+         when OT_Subarray =>
+            Put ("  base type: ");
+            Put (Int32 (Get_Type_Subarray_Base (Atype)));
+            Put (", length: ");
+            Put (To_Int32 (Get_Type_Subarray_Length (Atype)));
+            New_Line;
          when others =>
             null;
       end case;

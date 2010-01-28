@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 with Ada.Text_IO;
 with Ortho_Code.Debug;
-with Ortho_Code.Sysdeps;
 with Ortho_Ident;
 -- with Binary_File;
 
@@ -80,7 +79,6 @@ package body Ortho_Mcode is
       if New_Access_Type (O_Tnode_Null) /= O_Tnode_Ptr then
          raise Program_Error;
       end if;
-      Ortho_Code.Sysdeps.Init;
       --  Do not finish the access, since this creates an infinite recursion
       --  in gdb (at least for GDB 6.3).
       --Finish_Access_Type (O_Tnode_Ptr, O_Tnode_Ptr);
