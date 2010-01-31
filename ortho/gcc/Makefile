@@ -15,8 +15,8 @@ include $(orthobe_srcdir)/Makefile.inc
 ORTHO_BASENAME=$(orthobe_srcdir)/ortho_gcc
 ORTHO_PACKAGE=Ortho_Gcc
 
-#LIBFLAGS=$(HOME)/dist/mpfr-2.3.1/.libs/libmpfr.a $(HOME)/dist/gmp-4.2.2/.libs/libgmp.a
-LIBFLAGS=-lmpfr -lgmp
+LIBFLAGS=$(HOME)/dist/mpfr-2.3.1/.libs/libmpfr.a $(HOME)/dist/gmp-4.2.2/.libs/libgmp.a
+#LIBFLAGS=-lmpfr -lgmp
 
 $(ortho_exec): $(AGCC_DEPS) $(ORTHO_BASENAME).ads force
 	$(GNATMAKE) -m -o $@ -g -aI$(ortho_srcdir) \
