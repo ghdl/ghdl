@@ -24,10 +24,11 @@ with Ortho_Code.Debug;
 package body Ortho_Code.Consts is
    type Cnode_Common is record
       Kind : OC_Kind;
-      Pad1 : Unsigned_8;
-      Pad2 : Unsigned_8;
-      Pad3 : Unsigned_8;
       Lit_Type : O_Tnode;
+   end record;
+   for Cnode_Common use record
+      Kind at 0 range 0 .. 31;
+      Lit_Type at 4 range 0 .. 31;
    end record;
    for Cnode_Common'Size use 64;
 
@@ -126,7 +127,7 @@ package body Ortho_Code.Consts is
       Res : O_Cnode;
    begin
       Cnodes.Append (Cnode_Common'(Kind => OC_Signed,
-                                   Lit_Type => Ltype, others => 0));
+                                   Lit_Type => Ltype));
       Res := Cnodes.Last;
       Cnodes.Append (To_Cnode_Common (Cnode_Signed'(Val => Value)));
       return Res;
@@ -141,7 +142,7 @@ package body Ortho_Code.Consts is
       Res : O_Cnode;
    begin
       Cnodes.Append (Cnode_Common'(Kind => OC_Unsigned,
-                                   Lit_Type => Ltype, others => 0));
+                                   Lit_Type => Ltype));
       Res := Cnodes.Last;
       Cnodes.Append (To_Cnode_Common (Value));
       return Res;
@@ -206,7 +207,7 @@ package body Ortho_Code.Consts is
         (Source => Cnode_Float, Target => Cnode_Common);
    begin
       Cnodes.Append (Cnode_Common'(Kind => OC_Float,
-                                   Lit_Type => Ltype, others => 0));
+                                   Lit_Type => Ltype));
       Res := Cnodes.Last;
       Cnodes.Append (To_Cnode_Common (Cnode_Float'(Val => Value)));
       return Res;
@@ -215,7 +216,7 @@ package body Ortho_Code.Consts is
    function New_Null_Access (Ltype : O_Tnode) return O_Cnode is
    begin
       Cnodes.Append (Cnode_Common'(Kind => OC_Null,
-                                   Lit_Type => Ltype, others => 0));
+                                   Lit_Type => Ltype));
       return Cnodes.Last;
    end New_Null_Access;
 
@@ -231,7 +232,7 @@ package body Ortho_Code.Consts is
       Res : O_Cnode;
    begin
       Cnodes.Append (Cnode_Common'(Kind => OC_Address,
-                                   Lit_Type => Atype, others => 0));
+                                   Lit_Type => Atype));
       Res := Cnodes.Last;
       Cnodes.Append (To_Cnode_Common (Cnode_Addr'(Decl => Decl,
                                                   Pad => 0)));
@@ -244,7 +245,7 @@ package body Ortho_Code.Consts is
       Res : O_Cnode;
    begin
       Cnodes.Append (Cnode_Common'(Kind => OC_Address,
-                                   Lit_Type => Atype, others => 0));
+                                   Lit_Type => Atype));
       Res := Cnodes.Last;
       Cnodes.Append (To_Cnode_Common (Cnode_Addr'(Decl => Decl,
                                                   Pad => 0)));
@@ -257,7 +258,7 @@ package body Ortho_Code.Consts is
       Res : O_Cnode;
    begin
       Cnodes.Append (Cnode_Common'(Kind => OC_Subprg_Address,
-                                   Lit_Type => Atype, others => 0));
+                                   Lit_Type => Atype));
       Res := Cnodes.Last;
       Cnodes.Append (To_Cnode_Common (Cnode_Addr'(Decl => Subprg,
                                                   Pad => 0)));
@@ -287,7 +288,7 @@ package body Ortho_Code.Consts is
       Res : O_Cnode;
    begin
       Cnodes.Append (Cnode_Common'(Kind => OC_Lit,
-                                   Lit_Type => Atype, others => 0));
+                                   Lit_Type => Atype));
       Res := Cnodes.Last;
       Cnodes.Append (To_Cnode_Common (Cnode_Enum'(Id => Id,
                                                   Val => Val)));
@@ -338,7 +339,7 @@ package body Ortho_Code.Consts is
       Val := Els.Allocate (Integer (Num));
 
       Cnodes.Append (Cnode_Common'(Kind => OC_Record,
-                                   Lit_Type => Atype, others => 0));
+                                   Lit_Type => Atype));
       List := (Res => Cnodes.Last,
                Rec_Field => Get_Type_Record_Fields (Atype),
                El => Val);
@@ -371,7 +372,7 @@ package body Ortho_Code.Consts is
       Val := Els.Allocate (Integer (Num));
 
       Cnodes.Append (Cnode_Common'(Kind => OC_Array,
-                                   Lit_Type => Atype, others => 0));
+                                   Lit_Type => Atype));
       List := (Res => Cnodes.Last,
                El => Val);
       Cnodes.Append (To_Cnode_Common (Cnode_Aggr'(Els => Val,
@@ -416,7 +417,7 @@ package body Ortho_Code.Consts is
    begin
       if Debug.Flag_Debug_Hli then
          Cnodes.Append (Cnode_Common'(Kind => OC_Union,
-                                      Lit_Type => Atype, others => 0));
+                                      Lit_Type => Atype));
          Res := Cnodes.Last;
          Cnodes.Append (To_Cnode_Common (Cnode_Union'(El => Value,
                                                       Field => Field)));
@@ -448,7 +449,7 @@ package body Ortho_Code.Consts is
    begin
       if Debug.Flag_Debug_Hli then
          Cnodes.Append (Cnode_Common'(Kind => OC_Sizeof,
-                                      Lit_Type => Rtype, others => 0));
+                                      Lit_Type => Rtype));
          Res := Cnodes.Last;
          Cnodes.Append (To_Cnode_Common (Cnode_Sizeof'(Atype => Atype,
                                                        Pad => 0)));
