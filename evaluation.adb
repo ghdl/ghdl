@@ -24,7 +24,9 @@ with Flags; use Flags;
 with Std_Names;
 
 package body Evaluation is
-   function Get_Physical_Value (Expr : Iir) return Iir_Int64 is
+   function Get_Physical_Value (Expr : Iir) return Iir_Int64
+   is
+      pragma Unsuppress (Overflow_Check);
    begin
       case Get_Kind (Expr) is
          when Iir_Kind_Physical_Int_Literal =>
@@ -35,6 +37,10 @@ package body Evaluation is
          when others =>
             Error_Kind ("get_physical_value", Expr);
       end case;
+   exception
+      when Constraint_Error =>
+         Error_Msg_Sem ("arithmetic overflow in physical expression", Expr);
+         return Get_Value (Expr);
    end Get_Physical_Value;
 
    function Build_Integer (Val : Iir_Int64; Origin : Iir)
