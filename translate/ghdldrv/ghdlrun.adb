@@ -144,6 +144,7 @@ package body Ghdlrun is
    pragma Export (C, Ghdl_Elaborate, "__ghdl_ELABORATE");
 
    type Elaborate_Acc is access procedure;
+   pragma Convention (C, Elaborate_Acc);
    Elaborate_Proc : Elaborate_Acc := null;
 
    procedure Ghdl_Elaborate is
