@@ -98,8 +98,8 @@ std.v93: $(LIB93_DIR) $(STD93_SRCS) force
 	mkdir $(STD93_DIR)
 	prev=`pwd`; cd $(STD93_DIR); \
 	for i in $(STD93_SRCS); do \
-	  echo $$i; \
-	  $(ANALYZE93) --bootstrap --work=std $(REL_DIR)/$$i || exit 1; \
+	  cmd="$(ANALYZE93) --bootstrap --work=std $(REL_DIR)/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
 	done; \
 	cd $$prev
 
@@ -149,8 +149,8 @@ std.v87: $(LIB87_DIR) $(STD87_SRCS) force
 	mkdir $(STD87_DIR)
 	prev=`pwd`; cd $(STD87_DIR); \
 	for i in $(STD87_SRCS); do \
-	  echo $$i; \
-	  $(ANALYZE87) --bootstrap --work=std $(REL_DIR)/$$i || exit 1; \
+	  cmd="$(ANALYZE87) --bootstrap --work=std $(REL_DIR)/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
 	done; \
 	cd $$prev
 

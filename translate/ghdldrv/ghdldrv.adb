@@ -671,6 +671,11 @@ package body Ghdldrv is
          Add_Argument (Compiler_Args, new String'(Opt));
          Flag_Expect_Failure := True;
          Res := Option_Ok;
+      elsif Opt = "-C" then
+         --  Translate -C into --mb-comments, as gcc already has a definition
+         --  for -C.  Done before Flags.Parse_Option.
+         Add_Argument (Compiler_Args, new String'("--mb-comments"));
+         Res := Option_Ok;
       elsif Options.Parse_Option (Opt) then
          Add_Argument (Compiler_Args, new String'(Opt));
          Res := Option_Ok;
@@ -888,22 +893,21 @@ package body Ghdldrv is
 
    procedure Bind_Anaelab (Files : Argument_List)
    is
-      Comp_List : Argument_List (1 .. 2 * Files'Length + 2);
-      Flag_C : String_Access;
+      Comp_List : Argument_List (1 .. Files'Length + 2);
       Index : Natural;
    begin
       Comp_List (1) := new String'("--anaelab");
       Comp_List (2) := Unit_Name;
-      Flag_C := new String'("-c");
       Index := 3;
       for I in Files'Range loop
-         Comp_List (Index) := Flag_C;
-         Comp_List (Index + 1) := Files (I);
-         Index := Index + 2;
+         Comp_List (Index) := new String'("--ghdl-source=" & Files (I).all);
+         Index := Index + 1;
       end loop;
       Do_Compile (Comp_List, Elab_Name.all);
-      Free (Flag_C);
       Free (Comp_List (1));
+      for I in 3 .. Comp_List'Last loop
+         Free (Comp_List (I));
+      end loop;
    end Bind_Anaelab;
 
    procedure Link (Add_Std : Boolean;

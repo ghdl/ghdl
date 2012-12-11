@@ -15,7 +15,7 @@
 #  along with GCC; see the file COPYING.  If not, write to the Free
 #  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #  02111-1307, USA.
-GNATFLAGS=-gnaty3befhkmr -gnata -gnatwae -aI../.. -aI.. -aI../../psl -aI../grt -aO.. -g -gnatf
+GNATFLAGS=-gnaty3befhkmr -gnata -gnatwae -aI../.. -aI.. -aI../../psl -aI../grt -aO.. -g -gnatf -gnat05
 GRT_FLAGS=-g
 LIB_CFLAGS=-g -O2
 GNATMAKE=gnatmake
@@ -41,6 +41,8 @@ all: ghdl_mcode
 
 target=i686-pc-linux-gnu
 #target=x86_64-pc-linux-gnu
+#target=i686-apple-darwin
+#target=x86_64-apple-darwin
 GRTSRCDIR=../grt
 include $(GRTSRCDIR)/Makefile.inc
 
@@ -63,11 +65,11 @@ ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.
 	$(GNATMAKE) -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_llvm_jit: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) bindings.o force 
+ghdl_llvm_jit: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) bindings.o force
 	$(GNATMAKE) -o $@ -aI../../ortho/llvm -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs -m64 bindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) --LINK=g++
 
-ghdl_simul: default_pathes.ads force 
-	$(GNATMAKE) -aI../../simulate $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS)
+ghdl_simul: default_pathes.ads $(GRT_ADD_OBJS) force
+	$(GNATMAKE) -aI../../simulate $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: ../../ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
@@ -75,10 +77,10 @@ memsegs_c.o: ../../ortho/mcode/memsegs_c.c
 bindings.o: ../../ortho/llvm/bindings.cpp
 	$(CXX) -c -m64 `$(LLVM_CONFIG) --cxxflags` -g -o $@ $<
 
-ghdl_gcc: default_pathes.ads force 
+ghdl_gcc: default_pathes.ads force
 	$(GNATMAKE) $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
-ghdl_llvm: default_pathes.ads force 
+ghdl_llvm: default_pathes.ads force
 	$(GNATMAKE) $(GNATFLAGS) ghdl_llvm $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
 default_pathes.ads: default_pathes.ads.in Makefile
@@ -104,7 +106,8 @@ LIB08_DIR:=../lib/v08
 
 LIBSRC_DIR:=../../libraries
 REL_DIR:=../..
-ANALYZE:=../../../ghdldrv/ghdl -a $(LIB_CFLAGS)
+GHDL=ghdl
+ANALYZE:=../../../ghdldrv/$(GHDL) -a $(LIB_CFLAGS)
 LN=ln -s
 CP=cp
 
@@ -150,6 +153,9 @@ grt.links:
 install.all: install.v87 install.v93 install.standard
 install.mcode: install.v87 install.v93 install.v08
 install.llvm: install.standard-llvm
+
+install.simul:
+	$(MAKE) GHDL=ghdl_simul install.v87 install.v93
 
 clean: force
 	$(RM) -f *.o *.ali ghdl_gcc ghdl_mcode 

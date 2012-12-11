@@ -39,7 +39,7 @@
 set -e
 
 # GCC version
-GCCVERSION=4.3.4
+GCCVERSION=4.7.2
 # Machine name used by GCC
 MACHINE=i686-pc-linux-gnu
 # Directory where GCC sources (and objects) stay.
@@ -187,11 +187,16 @@ do_compile ()
   case x86 in
   x86)
 	  BUILD=i686-pc-linux-gnu
-	  CONFIG_LIBS="--with-gmp=$PWD/../build --with-mpfr=$PWD/../build"
+          # gmp location (mpfr and mpc are supposed to be at the same place)
+	  CONFIG_LIBS="--with-gmp=$PWD/../build"
 	  ;;
   x86-64)
 	  BUILD=x86_64-pc-linux-gnu
 	  CONFIG_LIBS=""
+	  ;;
+  darwin)
+	  BUILD=x86_64-apple-darwin10.7
+	  CONFIG_LIBS="--with-gmp=$HOME/local"
 	  ;;
   *)
 	  exit 1

@@ -33,13 +33,14 @@ vhdl Separate
 vhdl Separate
 --anaelab <name>	Used internally during elaboration of <name>
 
-c
-vhdl Separate
--c <filename>	Analyze <filename> for --anaelab
+; -c is a driver option for gcc.  --ghdl-source is used instead.
+;c
+;vhdl Separate
+;-c <filename>	Analyze <filename> for --anaelab
 
-v
-vhdl
-Verbose
+;v
+;vhdl
+;Verbose
 
 -warn-
 vhdl Joined
@@ -81,9 +82,10 @@ l
 vhdl Joined Separate
 -l<filename>	Put list of files for link in <filename>
 
-C
-vhdl
-Allow any character in comments
+; -C was commented out, as it is already defined for C/C++.
+;C
+;vhdl
+;Allow any character in comments
 
 -mb-comments
 vhdl

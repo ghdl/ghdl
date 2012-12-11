@@ -426,6 +426,9 @@ package Ortho_Gcc is
 private
    subtype Tree is System.Address;
    NULL_TREE : constant Tree := System.Null_Address;
+
+   subtype Vec_Ptr is System.Address;
+
    type O_Cnode is new Tree;
    type O_Enode is new Tree;
    type O_Lnode is new Tree;
@@ -513,9 +516,17 @@ private
       Chain : Chain_Constr_Type;
    end record;
 
-   type O_Record_Aggr_List is new O_Aggr_List;
+   type O_Record_Aggr_List is record
+      Atype : Tree;
+      Afield : Tree;
+      Vec : Vec_Ptr;
+   end record;
    pragma Convention (C, O_Record_Aggr_List);
-   type O_Array_Aggr_List is new O_Aggr_List;
+
+   type O_Array_Aggr_List is record
+      Atype : Tree;
+      Vec : Vec_Ptr;
+   end record;
    pragma Convention (C, O_Array_Aggr_List);
 
    type O_Assoc_List is record

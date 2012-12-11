@@ -15,7 +15,7 @@
 #include "opts.h"
 #include "options.h"
 #include "real.h"
-#include "tree-gimple.h"
+#include "tree-iterator.h"
 #include "function.h"
 #include "cgraph.h"
 #include "target.h"
@@ -23,11 +23,16 @@
 #include "tree-pass.h"
 #include "tree-dump.h"
 
+/* TODO:
+ * remove stmt_list_stack, save in if/case/loop block
+ * Re-add -v (if necessary)
+ */
+
 static tree type_for_size (unsigned int precision, int unsignedp);
 
 const int tree_identifier_size = sizeof (struct tree_identifier);
 
-struct binding_level GTY(())
+struct GTY(()) binding_level
 {
   /*  The BIND_EXPR node for this binding.  */
   tree bind;
@@ -56,7 +61,8 @@ static GTY(()) struct binding_level *cur_binding_level = NULL;
 /*  Chain of unused binding levels.  */
 static GTY(()) struct binding_level *old_binding_levels = NULL;
 
-static tree cur_stmts = NULL_TREE;
+/*  Chain of statements currently generated.  */
+static GTY(()) tree cur_stmts = NULL_TREE;
 
 static void
 push_binding (void)
@@ -64,7 +70,7 @@ push_binding (void)
   struct binding_level *res;
 
   if (old_binding_levels == NULL)
-    res = (struct binding_level *) ggc_alloc (sizeof (struct binding_level));
+    res = ggc_alloc_binding_level ();
   else
     {
       res = old_binding_levels;
@@ -93,7 +99,7 @@ push_binding (void)
       if (cur_binding_level->first_block == NULL)
 	cur_binding_level->first_block = res->block;
       else
-	TREE_CHAIN (cur_binding_level->last_block) = res->block;
+	BLOCK_CHAIN (cur_binding_level->last_block) = res->block;
       cur_binding_level->last_block = res->block;
 
       BLOCK_SUPERCONTEXT (res->block) = cur_binding_level->block;
@@ -133,22 +139,21 @@ pop_binding (void)
       tree t;
 
       /* Create an artificial var to save the stack pointer.  */
-      tmp_var = build_decl (VAR_DECL, NULL, ptr_type_node);
+      tmp_var = build_decl (input_location, VAR_DECL, NULL, ptr_type_node);
       DECL_ARTIFICIAL (tmp_var) = true;
       DECL_IGNORED_P (tmp_var) = true;
       TREE_USED (tmp_var) = true;
       push_decl (tmp_var);
 
       /* Create the save stmt.  */
-      save_call = build_function_call_expr
-	(implicit_built_in_decls[BUILT_IN_STACK_SAVE], NULL_TREE);
+      save_call = build_call_expr
+	(builtin_decl_implicit (BUILT_IN_STACK_SAVE), 0);
       save = build2 (MODIFY_EXPR, ptr_type_node, tmp_var, save_call);
       TREE_SIDE_EFFECTS (save) = true;
 
       /* Create the restore stmt.  */
-      restore = build_function_call_expr
-	(implicit_built_in_decls[BUILT_IN_STACK_RESTORE],
-	 tree_cons (NULL_TREE, tmp_var, NULL_TREE));
+      restore = build_call_expr
+	(builtin_decl_implicit (BUILT_IN_STACK_RESTORE), 1, tmp_var);
 
       /* Build a try-finally block.
 	 The statement list is the block of current statements.  */
@@ -181,6 +186,22 @@ pop_binding (void)
   return res;
 }
 
+/* This is a stack of current statement_lists  */
+static GTY(()) VEC_tree_gc * stmt_list_stack;
+
+static void
+push_stmts (tree stmts)
+{
+  VEC_safe_push (tree, gc, stmt_list_stack, cur_stmts);
+  cur_stmts = stmts;
+}
+ 
+static void
+pop_stmts (void)
+{
+  cur_stmts = VEC_pop (tree, stmt_list_stack);
+}
+
 static void
 append_stmt (tree stmt)
 {
@@ -190,44 +211,21 @@ append_stmt (tree stmt)
   append_to_statement_list (stmt, &cur_stmts);
 }
 
-static void
-push_stmts (tree stmts)
-{
-  TREE_CHAIN (stmts) = cur_stmts;
-  cur_stmts = stmts;
-}
-
-static void
-pop_stmts (void)
-{
-  tree prev;
-
-  prev = cur_stmts;
-  cur_stmts = TREE_CHAIN (prev);
-  TREE_CHAIN (prev) = NULL_TREE;
-}
-
 static GTY(()) tree top;
 
 static GTY(()) tree stack_alloc_function_ptr;
 extern void ortho_fe_init (void);
 
-static int
+static bool
 global_bindings_p (void)
 {
   return cur_binding_level->prev == NULL;
 }
 
-static void
-insert_block (tree b)
-{
-  abort ();
-}
-
 static tree
 pushdecl (tree t)
 {
-  abort ();
+  gcc_unreachable ();
 }
 
 static tree
@@ -253,13 +251,12 @@ ortho_init (void)
   push_binding ();
 
   build_common_tree_nodes (0, 0);
-  size_type_node = type_for_size (GET_MODE_BITSIZE (Pmode), 1);
-  set_sizetype (size_type_node);
-  build_common_tree_nodes_2 (0);
 
-  n = build_decl (TYPE_DECL, get_identifier ("int"), integer_type_node);
+  n = build_decl (input_location,
+                  TYPE_DECL, get_identifier ("int"), integer_type_node);
   push_decl (n);
-  n = build_decl (TYPE_DECL, get_identifier ("char"), char_type_node);
+  n = build_decl (input_location,
+                  TYPE_DECL, get_identifier ("char"), char_type_node);
   push_decl (n);
 
   /* Create alloca builtin.  */
@@ -267,22 +264,26 @@ ortho_init (void)
     tree args_type = tree_cons (NULL_TREE, size_type_node, void_list_node);
     tree func_type = build_function_type (ptr_type_node, args_type);
        
-    implicit_built_in_decls[BUILT_IN_ALLOCA] = builtin_function
-      ("__builtin_alloca", func_type,
-       BUILT_IN_ALLOCA, BUILT_IN_NORMAL, NULL, NULL_TREE);
+    set_builtin_decl
+      (BUILT_IN_ALLOCA,
+       builtin_function
+       ("__builtin_alloca", func_type,
+	BUILT_IN_ALLOCA, BUILT_IN_NORMAL, NULL, NULL_TREE), true);
     
     stack_alloc_function_ptr = build1
       (ADDR_EXPR, 
        build_pointer_type (func_type),
-       implicit_built_in_decls[BUILT_IN_ALLOCA]);
+       builtin_decl_implicit (BUILT_IN_ALLOCA));
   }
 
   {
     tree ptr_ftype = build_function_type (ptr_type_node, NULL_TREE);
 
-    implicit_built_in_decls[BUILT_IN_STACK_SAVE] = builtin_function
-      ("__builtin_stack_save", ptr_ftype,
-       BUILT_IN_STACK_SAVE, BUILT_IN_NORMAL, NULL, NULL_TREE);
+    set_builtin_decl
+      (BUILT_IN_STACK_SAVE,
+       builtin_function
+       ("__builtin_stack_save", ptr_ftype,
+	BUILT_IN_STACK_SAVE, BUILT_IN_NORMAL, NULL, NULL_TREE), true);
   }
 
   {
@@ -292,9 +293,11 @@ ortho_init (void)
       (void_type_node,
        tree_cons (NULL_TREE, ptr_type_node, NULL_TREE));
 
-    implicit_built_in_decls[BUILT_IN_STACK_RESTORE] = builtin_function
-      ("__builtin_stack_restore", ftype_ptr,
-       BUILT_IN_STACK_RESTORE, BUILT_IN_NORMAL, NULL, NULL_TREE);
+    set_builtin_decl
+      (BUILT_IN_STACK_RESTORE,
+       builtin_function
+       ("__builtin_stack_restore", ftype_ptr,
+	BUILT_IN_STACK_RESTORE, BUILT_IN_NORMAL, NULL, NULL_TREE), true);
   }
 
   {
@@ -320,7 +323,7 @@ ortho_finish (void)
 }
 
 static unsigned int
-ortho_init_options (unsigned int argc, const char **argv)
+ortho_option_lang_mask (void)
 {
   return CL_vhdl;
 }
@@ -331,14 +334,19 @@ ortho_post_options (const char **pfilename)
   if (*pfilename == NULL || strcmp (*pfilename, "-") == 0)
     *pfilename = "*stdin*";
 
+  /* Default hook.  */
+  lhd_post_options (pfilename);
+
   /* Run the back-end.  */
   return false;
 }
 
-extern int lang_handle_option (const char *opt, const char *arg);
+extern bool lang_handle_option (const char *opt, const char *arg);
 
-static int
-ortho_handle_option (size_t code, const char *arg, int value)
+static bool
+ortho_handle_option (size_t code, const char *arg, int value, int kind,
+                     location_t loc,
+                     const struct cl_option_handlers *handlers)
 {
   const char *opt;
 
@@ -375,7 +383,7 @@ ortho_handle_option (size_t code, const char *arg, int value)
 extern int lang_parse_file (const char *filename);
 
 static void
-ortho_parse_file (int debug)
+ortho_parse_file (void)
 {
   const char *filename;
 
@@ -389,11 +397,6 @@ ortho_parse_file (int debug)
 
   if (!lang_parse_file (filename))
     errorcount++;
-  else
-    {
-      cgraph_finalize_compilation_unit ();
-      cgraph_optimize ();
-    }
   linemap_add (line_table, LC_LEAVE, 0, NULL, 1);
 }
 
@@ -436,7 +439,7 @@ ortho_mark_addressable (tree exp)
 	return true;
 
       default:
-	abort ();
+	gcc_unreachable ();
       }
 }
 
@@ -483,7 +486,7 @@ ortho_truthvalue_conversion (tree expr)
       return real_zerop (expr) ? f : t;
 
     default:
-      abort ();
+      gcc_unreachable ();
     }
 }
 
@@ -544,8 +547,7 @@ convert (tree type, tree expr)
     return error_mark_node;
   if (TREE_CODE (TREE_TYPE (expr)) == VOID_TYPE || code == VOID_TYPE)
     {
-      abort ();
-      return error_mark_node;
+      gcc_unreachable ();
     }
   if (code == INTEGER_TYPE || code == ENUMERAL_TYPE)
     return fold (convert_to_integer (type, e));
@@ -567,7 +569,7 @@ convert (tree type, tree expr)
   if (code == REAL_TYPE)
     return fold (convert_to_real (type, e));
 
-  abort ();
+  gcc_unreachable ();
 }
 
 /* Return a definition for a builtin function named NAME and whose data type
@@ -586,7 +588,8 @@ builtin_function (const char *name,
 		  const char *library_name,
 		  tree attrs ATTRIBUTE_UNUSED)
 {
-  tree decl = build_decl (FUNCTION_DECL, get_identifier (name), type);
+  tree decl = build_decl (input_location,
+                          FUNCTION_DECL, get_identifier (name), type);
   DECL_EXTERNAL (decl) = 1;
   TREE_PUBLIC (decl) = 1;
   if (library_name)
@@ -646,8 +649,8 @@ type_for_mode (enum machine_mode mode, int unsignedp)
 #define LANG_HOOKS_INIT ortho_init
 #undef LANG_HOOKS_FINISH
 #define LANG_HOOKS_FINISH ortho_finish
-#undef LANG_HOOKS_INIT_OPTIONS
-#define LANG_HOOKS_INIT_OPTIONS ortho_init_options
+#undef LANG_HOOKS_OPTION_LANG_MASK
+#define LANG_HOOKS_OPTION_LANG_MASK ortho_option_lang_mask
 #undef LANG_HOOKS_HANDLE_OPTION
 #define LANG_HOOKS_HANDLE_OPTION ortho_handle_option
 #undef LANG_HOOKS_POST_OPTIONS
@@ -678,60 +681,31 @@ type_for_mode (enum machine_mode mode, int unsignedp)
 #undef LANG_HOOKS_GETDECLS
 #define LANG_HOOKS_GETDECLS lhd_return_null_tree_v
 
-const struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
+struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
 
-/* Tree code classes.  */
-
-#define DEFTREECODE(SYM, NAME, TYPE, LENGTH) TYPE,
-
-const enum tree_code_class tree_code_type[] = {
-#include "tree.def"
-  'x'
-};
-#undef DEFTREECODE
-
-/* Table indexed by tree code giving number of expression
-   operands beyond the fixed part of the node structure.
-   Not used for types or decls.  */
-
-#define DEFTREECODE(SYM, NAME, TYPE, LENGTH) LENGTH,
-
-const unsigned char tree_code_length[] = {
-#include "tree.def"
-  0
-};
-#undef DEFTREECODE
-
-#define DEFTREECODE(SYM, NAME, TYPE, LENGTH) NAME,
-const char * const tree_code_name[] = {
-#include "tree.def"
-  "@@dummy"
-};
-#undef DEFTREECODE
-
-union lang_tree_node 
-  GTY((desc ("0"),
-       chain_next ("(union lang_tree_node *) GENERIC_NEXT (&%h.generic)")))
+union GTY((desc ("0"),
+	   chain_next ("CODE_CONTAINS_STRUCT (TREE_CODE (&%h.generic), TS_COMMON) ? ((union lang_tree_node *) TREE_CHAIN (&%h.generic)) : NULL")))
+  lang_tree_node
 {
-  union tree_node GTY ((tag ("0"))) generic;
+  union tree_node GTY((tag ("0"),
+		       desc ("tree_node_structure (&%h)"))) generic;
 };
 
-struct lang_decl GTY(())
+/* GHDL does not use the lang_decl and lang_type.
+
+   FIXME: the variable_size annotation here is needed because these types are
+   variable-sized in some other front-ends.  Due to gengtype deficiency, the
+   GTY options of such types have to agree across all front-ends.  */
+
+struct GTY((variable_size)) lang_type { char dummy; };
+struct GTY((variable_size)) lang_decl { char dummy; };
+
+struct GTY(()) language_function
 {
   char dummy;
 };
 
-struct lang_type GTY (())
-{
-  char dummy;
-};
-
-struct language_function GTY (())
-{
-  char dummy;
-};
-
-struct chain_constr_type
+struct GTY(()) chain_constr_type
 {
   tree first;
   tree last;
@@ -749,8 +723,7 @@ chain_append (struct chain_constr_type *constr, tree el)
 {
   if (constr->first == NULL_TREE)
     {
-      if (constr->last != NULL_TREE)
-	abort ();
+      gcc_assert (constr->last == NULL_TREE);
       constr->first = el;
     }
   else
@@ -758,7 +731,7 @@ chain_append (struct chain_constr_type *constr, tree el)
   constr->last = el;
 }
 
-struct list_constr_type
+struct GTY(()) list_constr_type
 {
   tree first;
   tree last;
@@ -855,8 +828,7 @@ new_dyadic_op (enum ON_op_kind kind, tree left, tree right)
   enum tree_code code;
 
   left_type = TREE_TYPE (left);
-  if (left_type != TREE_TYPE (right))
-    abort ();
+  gcc_assert (left_type == TREE_TYPE (right));
 
   switch (kind)
     {
@@ -882,10 +854,8 @@ new_monadic_op (enum ON_op_kind kind, tree operand)
 tree
 new_compare_op (enum ON_op_kind kind, tree left, tree right, tree ntype)
 {
-  if (TREE_CODE (ntype) != BOOLEAN_TYPE)
-    abort ();
-  if (TREE_TYPE (left) != TREE_TYPE (right))
-    abort ();
+  gcc_assert (TREE_CODE (ntype) == BOOLEAN_TYPE);
+  gcc_assert (TREE_TYPE (left) == TREE_TYPE (right));
   return build2 (ON_op_to_TREE_CODE[kind], ntype, left, right);
 }
 
@@ -947,7 +917,7 @@ new_convert_ov (tree val, tree rtype)
   else if (val_code == REAL_TYPE && rtype_code == REAL_TYPE)
     code = NOP_EXPR;
   else
-    abort ();
+    gcc_unreachable ();
 
   return build1 (code, rtype, val);
 }
@@ -956,15 +926,14 @@ tree
 new_alloca (tree rtype, tree size)
 {
   tree res;
-  tree args;
 
   /* Must save stack except when at function level.  */
   if (cur_binding_level->prev != NULL
       && cur_binding_level->prev->prev != NULL)
     cur_binding_level->save_stack = 1;
 
-  args = tree_cons (NULL_TREE, fold_convert (size_type_node, size), NULL_TREE);
-  res = build_call_list (ptr_type_node, stack_alloc_function_ptr, args);
+  res = build_call_nary (ptr_type_node, stack_alloc_function_ptr,
+                         1, fold_convert (size_type_node, size));
   return fold_convert (rtype, res);
 }
 
@@ -976,11 +945,7 @@ new_signed_literal (tree ltype, long long value)
   HOST_WIDE_INT hi;
 
   lo = value;
-  if (sizeof (HOST_WIDE_INT) == sizeof (long long))
-    hi = value >> (8 * sizeof (HOST_WIDE_INT) - 1);
-  else
-    hi = value >> (8 * sizeof (HOST_WIDE_INT));
-
+  hi = (value >> 1) >> (8 * sizeof (HOST_WIDE_INT) - 1);
   res = build_int_cst_wide (ltype, lo, hi);
   return res;
 }
@@ -993,11 +958,7 @@ new_unsigned_literal (tree ltype, unsigned long long value)
   unsigned HOST_WIDE_INT hi;
 
   lo = value;
-  if (sizeof (HOST_WIDE_INT) == sizeof (long long))
-    hi = 0;
-  else
-    hi = value >> (8 * sizeof (HOST_WIDE_INT));
-
+  hi = (value >> 1) >> (8 * sizeof (HOST_WIDE_INT) - 1);
   res = build_int_cst_wide (ltype, lo, hi);
   return res;
 }
@@ -1028,11 +989,7 @@ new_float_literal (tree ltype, double value)
   
   s = ldexp (frac, 60);
   lo = s;
-  if (sizeof (HOST_WIDE_INT) == sizeof (long long))
-    hi = s >> (8 * sizeof (HOST_WIDE_INT) - 1);
-  else
-    hi = s >> (8 * sizeof (HOST_WIDE_INT));
-
+  hi = (s >> 1) >> (8 * sizeof (HOST_WIDE_INT) - 1);
   res = build_int_cst_wide (long_integer_type_node, lo, hi);
   REAL_VALUE_FROM_INT (r_sign, lo, hi, DFmode);
   real_2expN (&r_exp, ex - 60, DFmode);
@@ -1041,7 +998,7 @@ new_float_literal (tree ltype, double value)
   return res;
 }
 
-struct o_element_list
+struct GTY(()) o_element_list
 {
   tree res;
   struct chain_constr_type chain;
@@ -1075,7 +1032,8 @@ new_record_union_field (struct o_element_list *list,
 {
   tree res;
 
-  res = build_decl (FIELD_DECL, ident, etype);
+  res = build_decl (input_location,
+                    FIELD_DECL, ident, etype);
   DECL_CONTEXT (res) = list->res;
   chain_append (&list->chain, res);
   *el = res;
@@ -1103,7 +1061,6 @@ finish_record_type (struct o_element_list *elements, tree *res)
       rest_of_type_compilation (elements->res, 1);
     }
 }
-
 
 void
 start_union_type (struct o_element_list *elements)
@@ -1162,7 +1119,7 @@ new_access_type (tree dtype)
       res = make_node (POINTER_TYPE);
       TREE_TYPE (res) = NULL_TREE;
       /* Seems necessary.  */
-      TYPE_MODE (res) = Pmode;
+      SET_TYPE_MODE (res, Pmode);
       layout_type (res);
       return res;
     }
@@ -1173,9 +1130,8 @@ new_access_type (tree dtype)
 void
 finish_access_type (tree atype, tree dtype)
 {
-  if (TREE_CODE (atype) != POINTER_TYPE
-      || TREE_TYPE (atype) != NULL_TREE)
-    abort ();
+  gcc_assert (TREE_CODE (atype) == POINTER_TYPE
+	      && TREE_TYPE (atype) == NULL_TREE);
 
   TREE_TYPE (atype) = dtype;
 }
@@ -1260,62 +1216,78 @@ finish_enum_type (struct o_enum_list *list, tree *res)
 {
   *res = list->res;
   TYPE_VALUES (*res) = list->chain.first;
-  TYPE_MIN_VALUE (*res) = TREE_VALUE (list->chain.first);
-  TYPE_MAX_VALUE (*res) = TREE_VALUE (list->chain.last);
   TYPE_UNSIGNED (*res) = 1;
   TYPE_PRECISION (*res) = list->size;
+  set_min_and_max_values_for_integral_type (*res, list->size, 1);
   layout_type (*res);
 }
 
-struct o_record_aggr_list
+struct GTY(()) o_record_aggr_list
 {
+  /* Type of the record.  */
   tree atype;
-  struct chain_constr_type chain;
+  /* Type of the next field to be added.  */
+  tree field;
+  /* Vector of elements.  */
+  VEC(constructor_elt,gc) *elts;
 };
 
 void
 start_record_aggr (struct o_record_aggr_list *list, tree atype)
 {
   list->atype = atype;
-  chain_init (&list->chain);
+  list->field = TYPE_FIELDS (atype);
+  list->elts = VEC_alloc (constructor_elt, gc, fields_length (atype));
+
 }
 
 void
 new_record_aggr_el (struct o_record_aggr_list *list, tree value)
 {
-  chain_append (&list->chain, build_tree_list (NULL_TREE, value));
+  CONSTRUCTOR_APPEND_ELT (list->elts, list->field, value);
+  list->field = TREE_CHAIN (list->field);
 }
 
 void
 finish_record_aggr (struct o_record_aggr_list *list, tree *res)
 {
-  *res = build_constructor_from_list (list->atype, list->chain.first);
+  *res = build_constructor (list->atype, list->elts);
 }
  
 
-struct o_array_aggr_list
+struct GTY(()) o_array_aggr_list
 {
   tree atype;
-  struct chain_constr_type chain;
+  /* Vector of elements.  */
+  VEC(constructor_elt,gc) *elts;
 };
 
 void
 start_array_aggr (struct o_array_aggr_list *list, tree atype)
 {
+  tree nelts;
+  unsigned HOST_WIDE_INT n;
+
   list->atype = atype;
-  chain_init (&list->chain);
+  list->elts = NULL;
+
+  nelts = array_type_nelts (atype);
+  gcc_assert (nelts != NULL_TREE && host_integerp (nelts, 1));
+
+  n = tree_low_cst (nelts, 1) + 1;
+  list->elts = VEC_alloc (constructor_elt, gc, n);
 }
 
 void
 new_array_aggr_el (struct o_array_aggr_list *list, tree value)
 {
-  chain_append (&list->chain, build_tree_list (NULL_TREE, value));
+  CONSTRUCTOR_APPEND_ELT (list->elts, NULL_TREE, value);
 }
  
 void
 finish_array_aggr (struct o_array_aggr_list *list, tree *res)
 {
-  *res = build_constructor_from_list (list->atype, list->chain.first);
+  *res = build_constructor (list->atype, list->elts);
 }
 
 
@@ -1349,8 +1321,7 @@ new_slice (tree arr, tree res_type, tree index)
 
   /*  *((RES_TYPE *)(&ARR[INDEX]))
       convert ARR to a pointer, add index, and reconvert to array ?  */
-  if (TREE_CODE (res_type) != ARRAY_TYPE)
-    abort ();
+  gcc_assert (TREE_CODE (res_type) == ARRAY_TYPE);
 
   ortho_mark_addressable (arr);
   return build4 (ARRAY_RANGE_REF, res_type, arr, index, NULL_TREE, NULL_TREE);
@@ -1372,8 +1343,7 @@ new_selected_element (tree rec, tree el)
 {
   tree res;
 
-  if (TREE_CODE (TREE_TYPE (rec)) != RECORD_TYPE)
-    abort ();
+  gcc_assert (TREE_CODE (TREE_TYPE (rec)) == RECORD_TYPE);
 
   res = build3 (COMPONENT_REF, TREE_TYPE (el), rec, el, NULL_TREE);
   return res;
@@ -1385,8 +1355,7 @@ new_access_element (tree acc)
   tree acc_type;
 
   acc_type = TREE_TYPE (acc);
-  if (TREE_CODE (acc_type) != POINTER_TYPE)
-    abort ();
+  gcc_assert (TREE_CODE (acc_type) == POINTER_TYPE);
 
   return build1 (INDIRECT_REF, TREE_TYPE (acc_type), acc);
 }
@@ -1400,18 +1369,14 @@ new_offsetof (tree field, tree rtype)
   tree res;
 
   off = DECL_FIELD_OFFSET (field);
-  if (!host_integerp (off, 1))
-    {
-      /*  The offset must be a constant.  */
-      abort ();
-    }
+
+  /*  The offset must be a constant.  */
+  gcc_assert (host_integerp (off, 1));
 
   bit_off = DECL_FIELD_BIT_OFFSET (field);
-  if (!host_integerp (bit_off, 1))
-    {
-      /*  The offset must be a constant.  */
-      abort ();
-    }
+
+  /*  The offset must be a constant.  */
+  gcc_assert (host_integerp (bit_off, 1));
 
   pos = TREE_INT_CST_LOW (off)
         + (TREE_INT_CST_LOW (bit_off) / BITS_PER_UNIT);
@@ -1574,7 +1539,7 @@ new_type_decl (tree ident, tree atype)
   tree decl;
 
   TYPE_NAME (atype) = ident;
-  decl = build_decl (TYPE_DECL, ident, atype);
+  decl = build_decl (input_location, TYPE_DECL, ident, atype);
   TYPE_STUB_DECL (atype) = decl;
   push_decl (decl);
   /*
@@ -1623,14 +1588,14 @@ new_const_decl (tree *res, tree ident, enum o_storage storage, tree atype)
 {
   tree cst;
 
-  cst = build_decl (VAR_DECL, ident, atype);
+  cst = build_decl (input_location, VAR_DECL, ident, atype);
   set_storage (cst, storage);
   TREE_READONLY (cst) = 1;
   push_decl (cst);
   switch (storage)
     {
     case o_storage_local:
-      abort ();
+      gcc_unreachable ();
     case o_storage_external:
       /*  We are at top level if Current_Function_Decl is null.  */
       rest_of_decl_compilation
@@ -1663,7 +1628,7 @@ new_var_decl (tree *res, tree ident, enum o_storage storage, tree atype)
 {
   tree var;
 
-  var = build_decl (VAR_DECL, ident, atype);
+  var = build_decl (input_location, VAR_DECL, ident, atype);
   if (current_function_decl != NULL_TREE)
     {    
       /*  Local variable. */
@@ -1682,7 +1647,7 @@ new_var_decl (tree *res, tree ident, enum o_storage storage, tree atype)
   *res = var;
 }
 
-struct o_inter_list
+struct GTY(()) o_inter_list
 {
   tree ident;
   enum o_storage storage;
@@ -1726,7 +1691,7 @@ new_interface_decl (struct o_inter_list *interfaces,
 {
   tree r;
 
-  r = build_decl (PARM_DECL, ident, atype);
+  r = build_decl (input_location, PARM_DECL, ident, atype);
   /* DECL_CONTEXT (Res, Xxx); */
 
   /*  Do type conversion: convert boolean and enums to int  */
@@ -1746,10 +1711,6 @@ new_interface_decl (struct o_inter_list *interfaces,
   *res = r;
 }
 
-/*  Current function nest level, or the number of parents.  */
-/* static int function_nest_level; */
-
-
 void
 finish_subprogram_decl (struct o_inter_list *interfaces, tree *res)
 {
@@ -1762,7 +1723,7 @@ finish_subprogram_decl (struct o_inter_list *interfaces, tree *res)
      is known not be have variables arguments.  */
   ortho_list_append (&interfaces->param_list, void_type_node);
 
-  decl = build_decl (FUNCTION_DECL, interfaces->ident,
+  decl = build_decl (input_location, FUNCTION_DECL, interfaces->ident,
 		     build_function_type (interfaces->rtype,
 					  interfaces->param_list.first));
   DECL_SOURCE_LOCATION (decl) = input_location;
@@ -1784,7 +1745,8 @@ finish_subprogram_decl (struct o_inter_list *interfaces, tree *res)
 
   /*  Declare the result.
       FIXME: should be moved in start_function_body. */
-  result = build_decl (RESULT_DECL, NULL_TREE, interfaces->rtype);
+  result = build_decl (input_location,
+                       RESULT_DECL, NULL_TREE, interfaces->rtype);
   DECL_RESULT (decl) = result;
   DECL_CONTEXT (result) = decl;
 
@@ -1811,8 +1773,7 @@ finish_subprogram_decl (struct o_inter_list *interfaces, tree *res)
 void
 start_subprogram_body (tree func)
 {
-  if (current_function_decl != DECL_CONTEXT (func))
-    abort ();
+  gcc_assert (current_function_decl == DECL_CONTEXT (func));
   current_function_decl = func;
 
   /* The function is not anymore external.  */
@@ -1842,19 +1803,11 @@ finish_subprogram_body (void)
   /* Store the end of the function.  */
   cfun->function_end_locus = input_location;
   
-  /* This function is being processed in whole-function mode.  */
-  /* cfun->x_whole_function_mode_p = 1; */
-
-  gimplify_function_tree (func);
-
-  /* Dump the genericized tree IR.
-     Enabled by -fdump-tree-gimple.  */
-  dump_function (TDI_generic, func);
 
   parent = DECL_CONTEXT (func);
 
   if (parent != NULL)
-    cgraph_node (func);
+    cgraph_get_create_node (func);
   else
     cgraph_finalize_function (func, false);
 
@@ -1887,31 +1840,31 @@ finish_declare_stmt (void)
 }
 
 
-struct o_assoc_list
+struct GTY(()) o_assoc_list
 {
   tree subprg;
-  struct list_constr_type list;
+  VEC(tree,gc) *vec;
 };
 
 void
 start_association (struct o_assoc_list *assocs, tree subprg)
 {
   assocs->subprg = subprg;
-  list_init (&assocs->list);
+  assocs->vec = NULL;
 }
 
 void
 new_association (struct o_assoc_list *assocs, tree val)
 {
-  ortho_list_append (&assocs->list, val);
+  VEC_safe_push (tree, gc, assocs->vec, val);
 }
 
 tree
 new_function_call (struct o_assoc_list *assocs)
 {
-  return build_call_list (TREE_TYPE (TREE_TYPE (assocs->subprg)),
-			  build_function_ptr (assocs->subprg),
-			  assocs->list.first);
+  return build_call_vec (TREE_TYPE (TREE_TYPE (assocs->subprg)),
+                         build_function_ptr (assocs->subprg),
+                         assocs->vec);
 }
 
 void
@@ -1919,9 +1872,9 @@ new_procedure_call (struct o_assoc_list *assocs)
 {
   tree res;
 
-  res = build_call_list (TREE_TYPE (TREE_TYPE (assocs->subprg)),
-			 build_function_ptr (assocs->subprg),
-			 assocs->list.first);
+  res = build_call_vec (TREE_TYPE (TREE_TYPE (assocs->subprg)),
+                        build_function_ptr (assocs->subprg),
+                        assocs->vec);
   TREE_SIDE_EFFECTS (res) = 1;
   append_stmt (res);
 }
@@ -1962,7 +1915,7 @@ new_proc_return_stmt (void)
 }
 
 
-struct o_if_block
+struct GTY(()) o_if_block
 {
   tree stmt;
 };
@@ -2012,13 +1965,7 @@ finish_if_stmt (struct o_if_block *block)
 }
 
 
-struct o_loop_block
-{
-  tree beg_label;
-  tree end_label;
-};
-
-struct o_snode
+struct GTY(()) o_snode
 {
   tree beg_label;
   tree end_label;
@@ -2030,7 +1977,7 @@ build_label (void)
 {
   tree res;
 
-  res = build_decl (LABEL_DECL, NULL_TREE, void_type_node);
+  res = build_decl (input_location, LABEL_DECL, NULL_TREE, void_type_node);
   DECL_CONTEXT (res) = current_function_decl;
   DECL_ARTIFICIAL (res) = 1;
   return res;
@@ -2086,7 +2033,7 @@ new_next_stmt (struct o_snode *l)
   append_stmt (stmt);
 }
 
-struct o_case_block
+struct GTY(()) o_case_block
 {
   tree end_label;
   int add_break;
@@ -2125,8 +2072,8 @@ new_expr_choice (struct o_case_block *block, tree expr)
 {
   tree stmt;
   
-  stmt = build3 (CASE_LABEL_EXPR, void_type_node,
-		 expr, NULL_TREE, create_artificial_label ());
+  stmt = build_case_label
+    (expr, NULL_TREE, create_artificial_label (input_location));
   append_stmt (stmt);
 }
 
@@ -2135,8 +2082,8 @@ new_range_choice (struct o_case_block *block, tree low, tree high)
 {
   tree stmt;
 
-  stmt = build3 (CASE_LABEL_EXPR, void_type_node,
-		 low, high, create_artificial_label ());
+  stmt = build_case_label
+    (low, high, create_artificial_label (input_location));
   append_stmt (stmt);
 }
 
@@ -2145,8 +2092,8 @@ new_default_choice (struct o_case_block *block)
 {
   tree stmt;
 
-  stmt = build3 (CASE_LABEL_EXPR, void_type_node,
-		 NULL_TREE, NULL_TREE, create_artificial_label ());
+  stmt = build_case_label
+    (NULL_TREE, NULL_TREE, create_artificial_label (input_location));
   append_stmt (stmt);
 }
 

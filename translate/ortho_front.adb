@@ -164,20 +164,23 @@ package body Ortho_Front is
          end if;
          Action := Action_Anaelab;
          return Decode_Elab_Option (Arg);
-      elsif Opt.all = "-c" then
+      elsif Opt'Length > 14
+        and then Opt (Opt'First .. Opt'First + 13) = "--ghdl-source="
+      then
          if Action /= Action_Anaelab then
             Error_Msg_Option
-              ("-c option allowed only after --anaelab options");
+              ("--ghdl-source option allowed only after --anaelab options");
             return 0;
          end if;
-         if Arg = null then
-            Error_Msg_Option ("filename required after -c");
+         if Arg /= null then
+            Error_Msg_Option ("no argument allowed after --ghdl-source");
             return 0;
          end if;
          declare
             L : Id_Link_Acc;
          begin
-            L := new Id_Link'(Id => Name_Table.Get_Identifier (Arg.all),
+            L := new Id_Link'(Id => Name_Table.Get_Identifier
+                                (Opt (Opt'First + 14 .. Opt'Last)),
                               Link => null);
             if Anaelab_Files = null then
                Anaelab_Files := L;
