@@ -1125,9 +1125,73 @@ package body Ghdllocal is
    function Convert_Name (Name : String_Access) return String_Access
    is
       use Name_Table;
+
+      function Is_Bad_Unit_Name return Boolean is
+      begin
+         if Name_Length = 0 then
+            return True;
+         end if;
+         --  Don't try to handle extended identifier.
+         if Name_Buffer (1) = '\' then
+            return False;
+         end if;
+         --  Look for suspicious characters.
+         --  Do not try to be exhaustive as the correct check will be done
+         --  by convert_identifier.
+         for I in 1 .. Name_Length loop
+            case Name_Buffer (I) is
+               when '.' | '/' | '\' =>
+                  return True;
+               when others =>
+                  null;
+            end case;
+         end loop;
+         return False;
+      end Is_Bad_Unit_Name;
+
+      function Is_A_File_Name return Boolean is
+      begin
+         --  Check .vhd
+         if Name_Length > 4
+           and then Name_Buffer (Name_Length - 3 .. Name_Length) = ".vhd"
+         then
+            return True;
+         end if;
+         --  Check .vhdl
+         if Name_Length > 5
+           and then Name_Buffer (Name_Length - 4 .. Name_Length) = ".vhdl"
+         then
+            return True;
+         end if;
+         --  Check ../
+         if Name_Length > 3
+           and then Name_Buffer (1 .. 3) = "../"
+         then
+            return True;
+         end if;
+         --  Check ..\
+         if Name_Length > 3
+           and then Name_Buffer (1 .. 3) = "..\"
+         then
+            return True;
+         end if;
+         --  Should try to find the file ?
+         return False;
+      end Is_A_File_Name;
    begin
       Name_Length := Name'Length;
       Name_Buffer (1 .. Name_Length) := Name.all;
+
+      --  Try to identifier bad names (such as file names), so that
+      --  friendly message can be displayed.
+      if Is_Bad_Unit_Name then
+         Errorout.Error_Msg_Option_NR ("bad unit name '" & Name.all & "'");
+         if Is_A_File_Name then
+            Errorout.Error_Msg_Option_NR
+              ("(a unit name is required instead of a filename)");
+         end if;
+         raise Option_Error;
+      end if;
       Scan.Convert_Identifier;
       return new String'(Name_Buffer (1 .. Name_Length));
    end Convert_Name;

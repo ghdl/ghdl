@@ -86,14 +86,16 @@ package body Errorout is
       raise Internal_Error;
    end Error_Kind;
 
-   -- Disp an error, prepended with program name.
-   -- This is used for errors before initialisation, such as bad option or
-   -- bad filename.
-   procedure Error_Msg_Option (Msg: String) is
+   procedure Error_Msg_Option_NR (Msg: String) is
    begin
       Put (Ada.Command_Line.Command_Name);
-      Put (":*command-line*: ");
+      Put (": ");
       Put_Line (Msg);
+   end Error_Msg_Option_NR;
+
+   procedure Error_Msg_Option (Msg: String) is
+   begin
+      Error_Msg_Option_NR (Msg);
       raise Option_Error;
    end Error_Msg_Option;
 

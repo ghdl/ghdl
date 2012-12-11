@@ -49,6 +49,10 @@ package Errorout is
    -- This is used for errors before initialisation, such as bad option or
    -- bad filename.
    procedure Error_Msg_Option (Msg: String);
+   pragma No_Return (Error_Msg_Option);
+
+   --  Same as Error_Msg_Option but do not raise Option_Error.
+   procedure Error_Msg_Option_NR (Msg: String);
 
    -- Disp an error location (using AN_IIR location) using the standard
    -- format `file:line:col: '.
