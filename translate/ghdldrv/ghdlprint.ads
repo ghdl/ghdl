@@ -18,5 +18,3 @@
 package Ghdlprint is
    procedure Register_Commands;
 end Ghdlprint;
-
-

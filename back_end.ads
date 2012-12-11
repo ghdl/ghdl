@@ -55,4 +55,3 @@ package Back_End is
    type Sem_Foreign_Acc is access procedure (Decl : Iir);
    Sem_Foreign : Sem_Foreign_Acc := null;
 end Back_End;
-

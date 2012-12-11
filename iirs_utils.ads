@@ -156,4 +156,3 @@ package Iirs_Utils is
    --  IIR wrapper around Get_HDL_Node.
    function Get_HDL_Node (N : PSL_Node) return Iir;
 end Iirs_Utils;
-
