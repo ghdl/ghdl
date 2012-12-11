@@ -60,7 +60,11 @@ ifeq ($(filter-out i%86 freebsd%,$(arch) $(osys)),)
 endif
 ifeq ($(filter-out i%86 darwin%,$(arch) $(osys)),)
   GRT_TARGET_OBJS=i386.o linux.o times.o
-  GRT_EXTRA_LIB=-lm
+  GRT_EXTRA_LIB=
+endif
+ifeq ($(filter-out x84_64 darwin%,$(arch) $(osys)),)
+  GRT_TARGET_OBJS=amd64.o linux.o times.o
+  GRT_EXTRA_LIB=
 endif
 ifeq ($(filter-out sparc solaris%,$(arch) $(osys)),)
   GRT_TARGET_OBJS=sparc.o linux.o times.o
