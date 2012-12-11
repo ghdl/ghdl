@@ -19,7 +19,7 @@ with System;
 with Grt.Stack2; use Grt.Stack2;
 with Grt.Types; use Grt.Types;
 with Grt.Signals; use Grt.Signals;
-with Grt.Stacks;
+with Grt.Stacks; use Grt.Stacks;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr;
 with Grt.Stdio;
@@ -63,31 +63,32 @@ package Grt.Processes is
 
    --  Register a process during elaboration.
    --  This procedure is called by vhdl elaboration code.
-   procedure Ghdl_Process_Register (Instance : System.Address;
-                                    Proc : System.Address;
+   procedure Ghdl_Process_Register (Instance : Instance_Acc;
+                                    Proc : Proc_Acc;
                                     Ctxt : Ghdl_Rti_Access;
                                     Addr : System.Address);
-   procedure Ghdl_Sensitized_Process_Register (Instance : System.Address;
-                                               Proc : System.Address;
+   procedure Ghdl_Sensitized_Process_Register (Instance : Instance_Acc;
+                                               Proc : Proc_Acc;
                                                Ctxt : Ghdl_Rti_Access;
                                                Addr : System.Address);
-   procedure Ghdl_Postponed_Process_Register (Instance : System.Address;
-                                              Proc : System.Address;
+   procedure Ghdl_Postponed_Process_Register (Instance : Instance_Acc;
+                                              Proc : Proc_Acc;
                                               Ctxt : Ghdl_Rti_Access;
                                               Addr : System.Address);
    procedure Ghdl_Postponed_Sensitized_Process_Register
-     (Instance : System.Address;
-      Proc : System.Address;
+     (Instance : Instance_Acc;
+      Proc : Proc_Acc;
       Ctxt : Ghdl_Rti_Access;
       Addr : System.Address);
 
-   procedure Ghdl_Finalize_Register (Instance : System.Address;
-                                     Proc : System.Address);
+   --  For verilog processes.
+   procedure Ghdl_Finalize_Register (Instance : Instance_Acc;
+                                     Proc : Proc_Acc);
 
-   procedure Ghdl_Initial_Register (Instance : System.Address;
-                                    Proc : System.Address);
-   procedure Ghdl_Always_Register (Instance : System.Address;
-                                   Proc : System.Address);
+   procedure Ghdl_Initial_Register (Instance : Instance_Acc;
+                                    Proc : Proc_Acc);
+   procedure Ghdl_Always_Register (Instance : Instance_Acc;
+                                   Proc : Proc_Acc);
 
    --  Add a simple signal in the sensitivity of the last registered
    --  (sensitized) process.
@@ -113,6 +114,7 @@ package Grt.Processes is
    --  Verilog.
    procedure Ghdl_Process_Delay (Del : Ghdl_U32);
 
+   --  Secondary stack.
    function Ghdl_Stack2_Allocate (Size : Ghdl_Index_Type)
      return System.Address;
    function Ghdl_Stack2_Mark return Mark_Id;
@@ -125,10 +127,6 @@ package Grt.Processes is
    procedure Ghdl_Protected_Fini (Obj : System.Address);
 
 private
-   --  Access to a process subprogram.
-   type Proc_Acc is access procedure (Self : System.Address);
-   pragma Convention (C, Proc_Acc);
-
    --  State of a process.
    type Process_State is
      (
@@ -164,7 +162,7 @@ private
       Subprg : Proc_Acc;
 
       --  Instance (THIS parameter) for the subprogram.
-      This : System.Address;
+      This : Instance_Acc;
 
       --  Name of the process.
       Rti : Rtis_Addr.Rti_Context;

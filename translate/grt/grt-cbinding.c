@@ -18,6 +18,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 FILE *
 __ghdl_get_stdout (void)
@@ -56,7 +57,7 @@ __ghdl_fprintf_clock (FILE *stream, int a, int b)
   fprintf (stream, "%3d.%03d", a, b);
 }
 
-#if 1
+#ifndef WITH_GNAT_RUN_TIME
 void
 __gnat_last_chance_handler (void)
 {

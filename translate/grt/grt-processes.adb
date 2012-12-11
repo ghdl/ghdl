@@ -23,7 +23,6 @@ pragma Unreferenced (System.Storage_Elements);
 with Grt.Disp;
 with Grt.Astdio;
 with Grt.Errors; use Grt.Errors;
-with Grt.Stacks; use Grt.Stacks;
 with Grt.Options;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Utils;
@@ -46,15 +45,12 @@ package body Grt.Processes is
       Table_Low_Bound => 1,
       Table_Initial => 16);
 
-   function To_Proc_Acc is new Ada.Unchecked_Conversion
-     (Source => System.Address, Target => Proc_Acc);
-
    type Finalizer_Type is record
       --  Subprogram containing process code.
       Subprg : Proc_Acc;
 
       --  Instance (THIS parameter) for the subprogram.
-      This : System.Address;
+      This : Instance_Acc;
    end record;
 
    --  List of finalizer.
@@ -111,8 +107,8 @@ package body Grt.Processes is
       return Nbr_Resumed_Processes;
    end Get_Nbr_Resumed_Processes;
 
-   procedure Process_Register (This : System.Address;
-                               Proc : System.Address;
+   procedure Process_Register (This : Instance_Acc;
+                               Proc : Proc_Acc;
                                Ctxt : Rti_Context;
                                State : Process_State;
                                Postponed : Boolean)
@@ -128,7 +124,7 @@ package body Grt.Processes is
       else
          Stack := Null_Stack;
       end if;
-      P := new Process_Type'(Subprg => To_Proc_Acc (Proc),
+      P := new Process_Type'(Subprg => Proc,
                              This => This,
                              Rti => Ctxt,
                              Sensitivity => null,
@@ -150,8 +146,8 @@ package body Grt.Processes is
    end Process_Register;
 
    procedure Ghdl_Process_Register
-     (Instance : System.Address;
-      Proc : System.Address;
+     (Instance : Instance_Acc;
+      Proc : Proc_Acc;
       Ctxt : Ghdl_Rti_Access;
       Addr : System.Address)
    is
@@ -160,8 +156,8 @@ package body Grt.Processes is
    end Ghdl_Process_Register;
 
    procedure Ghdl_Sensitized_Process_Register
-     (Instance : System.Address;
-      Proc : System.Address;
+     (Instance : Instance_Acc;
+      Proc : Proc_Acc;
       Ctxt : Ghdl_Rti_Access;
       Addr : System.Address)
    is
@@ -170,8 +166,8 @@ package body Grt.Processes is
    end Ghdl_Sensitized_Process_Register;
 
    procedure Ghdl_Postponed_Process_Register
-     (Instance : System.Address;
-      Proc : System.Address;
+     (Instance : Instance_Acc;
+      Proc : Proc_Acc;
       Ctxt : Ghdl_Rti_Access;
       Addr : System.Address)
    is
@@ -180,8 +176,8 @@ package body Grt.Processes is
    end Ghdl_Postponed_Process_Register;
 
    procedure Ghdl_Postponed_Sensitized_Process_Register
-     (Instance : System.Address;
-      Proc : System.Address;
+     (Instance : Instance_Acc;
+      Proc : Proc_Acc;
       Ctxt : Ghdl_Rti_Access;
       Addr : System.Address)
    is
@@ -189,12 +185,10 @@ package body Grt.Processes is
       Process_Register (Instance, Proc, (Addr, Ctxt), State_Sensitized, True);
    end Ghdl_Postponed_Sensitized_Process_Register;
 
-   procedure Verilog_Process_Register (This : System.Address;
-                                       Proc : System.Address;
+   procedure Verilog_Process_Register (This : Instance_Acc;
+                                       Proc : Proc_Acc;
                                        Ctxt : Rti_Context)
    is
-      function To_Proc_Acc is new Ada.Unchecked_Conversion
-        (Source => System.Address, Target => Proc_Acc);
       P : Process_Acc;
    begin
       P := new Process_Type'(Rti => Ctxt,
@@ -205,7 +199,7 @@ package body Grt.Processes is
                              Timeout => Bad_Time,
                              Timeout_Chain_Next => null,
                              Timeout_Chain_Prev => null,
-                             Subprg => To_Proc_Acc (Proc),
+                             Subprg => Proc,
                              This => This,
                              Stack => Null_Stack);
       Process_Table.Append (P);
@@ -213,15 +207,15 @@ package body Grt.Processes is
       Set_Current_Process (P);
    end Verilog_Process_Register;
 
-   procedure Ghdl_Initial_Register (Instance : System.Address;
-                                    Proc : System.Address)
+   procedure Ghdl_Initial_Register (Instance : Instance_Acc;
+                                    Proc : Proc_Acc)
    is
    begin
       Verilog_Process_Register (Instance, Proc, Null_Context);
    end Ghdl_Initial_Register;
 
-   procedure Ghdl_Always_Register (Instance : System.Address;
-                                   Proc : System.Address)
+   procedure Ghdl_Always_Register (Instance : Instance_Acc;
+                                   Proc : Proc_Acc)
    is
    begin
       Verilog_Process_Register (Instance, Proc, Null_Context);
@@ -234,11 +228,11 @@ package body Grt.Processes is
         (Sig, Process_Table.Table (Process_Table.Last));
    end Ghdl_Process_Add_Sensitivity;
 
-   procedure Ghdl_Finalize_Register (Instance : System.Address;
-                                     Proc : System.Address)
+   procedure Ghdl_Finalize_Register (Instance : Instance_Acc;
+                                     Proc : Proc_Acc)
    is
    begin
-      Finalizer_Table.Append (Finalizer_Type'(To_Proc_Acc (Proc), Instance));
+      Finalizer_Table.Append (Finalizer_Type'(Proc, Instance));
    end Ghdl_Finalize_Register;
 
    procedure Call_Finalizers is
@@ -667,7 +661,7 @@ package body Grt.Processes is
             Grt.Astdio.Put ("run process ");
             Disp_Process_Name (Stdio.stdout, Proc);
             Grt.Astdio.Put (" [");
-            Grt.Astdio.Put (Stdio.stdout, Proc.This);
+            Grt.Astdio.Put (Stdio.stdout, To_Address (Proc.This));
             Grt.Astdio.Put ("]");
             Grt.Astdio.New_Line;
          end if;
@@ -720,7 +714,7 @@ package body Grt.Processes is
                   Grt.Astdio.Put ("run process ");
                   Disp_Process_Name (Stdio.stdout, Proc);
                   Grt.Astdio.Put (" [");
-                  Grt.Astdio.Put (Stdio.stdout, Proc.This);
+                  Grt.Astdio.Put (Stdio.stdout, To_Address (Proc.This));
                   Grt.Astdio.Put ("]");
                   Grt.Astdio.New_Line;
                end if;
