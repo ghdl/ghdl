@@ -110,6 +110,9 @@ package body Grt.Disp_Signals is
       end case;
    end Disp_Context;
 
+   --  This is a debugging procedure.
+   pragma Unreferenced (Disp_Context);
+
    --  Option --trace-signals.
 
    --  Disp transaction TRANS from signal SIG.

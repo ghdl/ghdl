@@ -387,7 +387,7 @@ package body Grt.Waves is
       Put_I32 (stdout, Ghdl_I32 (Str_AVL.Table (N).Right));
       New_Line (stdout);
       Put (stdout, " height: ");
-      Put_I32 (stdout, Ghdl_I32 (Str_AVL.Table (N).Height));
+      Put_I32 (stdout, Str_AVL.Table (N).Height);
       New_Line (stdout);
       Put (stdout, " str: ");
       --Put (stdout, Str_AVL.Table (N).Val);

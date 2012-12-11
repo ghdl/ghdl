@@ -1070,7 +1070,7 @@ package body Ortho_Code.Dwarf is
       Pc := Get_Current_Pc;
       Gen_B8 (2);
       Gen_B8 (DW_OP_Fbreg);
-      Gen_Sleb128 (Int32 (Get_Decl_Info (Decl)));
+      Gen_Sleb128 (Get_Decl_Info (Decl));
       Patch_B8 (Pc, Unsigned_8 (Get_Current_Pc - (Pc + 1)));
    end Emit_Local_Location;
 

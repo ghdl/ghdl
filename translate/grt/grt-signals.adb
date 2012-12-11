@@ -2471,7 +2471,7 @@ package body Grt.Signals is
                   end if;
                end if;
             else
-               Sig.Net := Signal_Net_Type (Offs (Sig.Net));
+               Sig.Net := Offs (Sig.Net);
             end if;
             Sig.Link := null;
          end loop;

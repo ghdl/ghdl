@@ -807,8 +807,7 @@ package body Binary_File is
 
    function Get_Symbol_Vaddr (Sym : Symbol) return Pc_Type is
    begin
-      return Pc_Type (Get_Section (Sym).Vaddr)
-        + Pc_Type (Get_Symbol_Value (Sym));
+      return Get_Section (Sym).Vaddr + Get_Symbol_Value (Sym);
    end Get_Symbol_Vaddr;
 
    procedure Write_Left_Be32 (Sect : Section_Acc;
