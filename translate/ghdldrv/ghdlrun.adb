@@ -62,6 +62,7 @@ with Grt.Names;
 
 with Ghdlcomp;
 with Foreigns;
+with Grtlink;
 
 package body Ghdlrun is
    procedure Foreign_Hook (Decl : Iir;
@@ -136,10 +137,6 @@ package body Ghdlrun is
       end loop;
    end Set_Run_Options;
 
-   --  Toplevel function, defined by grt.
-   Flag_String : String (1 .. 5);
-   pragma Export (C, Flag_String, "__ghdl_flag_string");
-
    procedure Ghdl_Elaborate;
    pragma Export (C, Ghdl_Elaborate, "__ghdl_ELABORATE");
 
@@ -152,20 +149,6 @@ package body Ghdlrun is
       --Ada.Text_IO.Put_Line (Standard_Error, "ghdl_elaborate");
       Elaborate_Proc.all;
    end Ghdl_Elaborate;
-
-   Std_Standard_Bit_RTI_Ptr : Address := Null_Address;
-
-   Std_Standard_Boolean_RTI_Ptr : Address := Null_Address;
-
-   pragma Export (C, Std_Standard_Bit_RTI_Ptr,
-                  "std__standard__bit__RTI_ptr");
-
-   pragma Export (C, Std_Standard_Boolean_RTI_Ptr,
-                  "std__standard__boolean__RTI_ptr");
-
-   Ieee_Std_Logic_1164_Resolved_Resolv_Ptr : Address := Null_Address;
-   pragma Export (C, Ieee_Std_Logic_1164_Resolved_Resolv_Ptr,
-                  "ieee__std_logic_1164__resolved_RESOLV_ptr");
 
    function Find_Untruncated_Text_Read return O_Dnode
    is
@@ -553,20 +536,20 @@ package body Ghdlrun is
          raise Compile_Error;
       end if;
 
-      Std_Standard_Boolean_RTI_Ptr :=
+      Grtlink.Std_Standard_Boolean_RTI_Ptr :=
         Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Boolean_Rti);
-      Std_Standard_Bit_RTI_Ptr :=
+      Grtlink.Std_Standard_Bit_RTI_Ptr :=
         Ortho_Jit.Get_Address (Trans_Decls.Std_Standard_Bit_Rti);
       if Ieee.Std_Logic_1164.Resolved /= Null_Iir then
          Decl := Translation.Get_Resolv_Ortho_Decl
            (Ieee.Std_Logic_1164.Resolved);
          if Decl /= O_Dnode_Null then
-            Ieee_Std_Logic_1164_Resolved_Resolv_Ptr :=
+            Grtlink.Ieee_Std_Logic_1164_Resolved_Resolv_Ptr :=
               Ortho_Jit.Get_Address (Decl);
          end if;
       end if;
 
-      Flag_String := Flags.Flag_String;
+      Grtlink.Flag_String := Flags.Flag_String;
 
       Elaborate_Proc :=
         Conv (Ortho_Jit.Get_Address (Trans_Decls.Ghdl_Elaborate));

@@ -15,6 +15,9 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
+with Ada.Text_IO;
+
 with Ghdllocal; use Ghdllocal;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 
@@ -34,6 +37,10 @@ with Sim_Be;
 with Simulation;
 
 with Ghdlcomp;
+
+with Grt.Vpi;
+pragma Unreferenced (Grt.Vpi);
+with Grtlink;
 
 package body Ghdlsimul is
 
@@ -111,21 +118,31 @@ package body Ghdlsimul is
          Sec_Id := Get_Identifier (Sec_Name.all);
       end if;
       Top_Conf := Configuration.Configure (First_Id, Sec_Id);
+      if Top_Conf = Null_Iir then
+         raise Compilation_Error;
+      end if;
+
+      Grtlink.Flag_String := Flags.Flag_String;
 
       Simulation.Simulation_Entity (Top_Conf);
    end Run;
 
    function Decode_Option (Option : String) return Boolean
    is
-      pragma Unreferenced (Option);
    begin
-      return False;
+      if Option = "--debug" then
+         Simulation.Flag_Debugger := True;
+      else
+         return False;
+      end if;
+      return True;
    end Decode_Option;
 
    procedure Disp_Long_Help
    is
+      use Ada.Text_IO;
    begin
-      null;
+      Put_Line (" --debug        Run with debugger");
    end Disp_Long_Help;
 
 
