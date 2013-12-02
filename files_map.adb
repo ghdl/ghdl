@@ -757,6 +757,9 @@ package body Files_Map is
       declare
          Filename : String := Get_Pathname (Directory, Name, True);
       begin
+         if not Is_Regular_File(Filename) then
+            return No_Source_File_Entry;
+         end if;
          Fd := Open_Read (Filename'Address, Binary);
          if Fd = Invalid_FD then
             return No_Source_File_Entry;
