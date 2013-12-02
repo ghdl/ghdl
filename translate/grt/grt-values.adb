@@ -22,6 +22,135 @@ package body Grt.Values is
    NBSP : constant Character := Character'Val (160);
    HT : constant Character := Character'Val (9);
 
+   procedure Remove_Whitespace(S     : in Std_String_Basep;
+                               Pos   : in out Ghdl_Index_Type;
+                               Len   : in Ghdl_Index_Type;
+                               Chars : out Ghdl_B2) is
+   begin
+      Chars := False;
+      --  GHDL: allow several leading whitespace.
+      while Pos < Len loop
+         case S (Pos) is
+            when ' '
+              | NBSP
+              | HT =>
+               Pos := Pos + 1;
+            when others =>
+               Chars := True;
+               exit;
+         end case;
+      end loop;
+   end Remove_Whitespace;
+
+   procedure Stub_Error(S : String) is
+   begin
+      Error_E ("'value: function Ghdl_Value_" & S & " is a stub!"
+               & "Please report as missing to http://gna.org/projects/ghdl");
+   end Stub_Error;
+
+   function LC(C : in Character) return Character is
+   begin
+      if C >= 'A' and then C <= 'Z' then
+         return Character'val(Character'pos(C) + Character'pos('a')
+                                               - Character'pos('A'));
+      else
+         return C;
+      end if;
+   end LC;
+
+   procedure Make_LC_String(S : Std_String_Basep;
+                            Pos : in out Ghdl_Index_Type;
+                            Len : Ghdl_Index_Type;
+                            Str : out String) is
+   pragma unreferenced(Len);
+   begin
+      for i in Str'range loop
+         Str(i) := LC(S(Pos));  -- LC it later
+         Pos := Pos + 1;
+      end loop;
+   end Make_LC_String;
+
+   function StringMatch(Str : String; EnumStr : Ghdl_C_String) return boolean
+   is
+      EnumLen : constant Natural := strlen(EnumStr);
+   begin
+      for j in Str'range loop
+         if j > EnumLen or else Str(j) /= EnumStr(j) then
+            return false;
+         end if;
+      end loop;
+      if Str'last = EnumLen then
+         return true;
+      else
+         return false;
+      end if;
+   end StringMatch;
+
+   function Ghdl_Value_Enum (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+      return Ghdl_Index_Type
+   is
+      Val   : Ghdl_Index_Type := 0;
+      S     : constant Std_String_Basep := Str.Base;
+      Len   : constant Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
+      Pos   : Ghdl_Index_Type := 0;
+      Chars : Ghdl_B2;
+      Enum_Rti : Ghdl_Rtin_Type_Enum_Acc;
+
+   begin
+      Remove_Whitespace(S, Pos, Len, Chars);
+      if Pos = Len then
+         Error_E ("'value: empty string");
+      end if;
+
+      Enum_Rti := To_Ghdl_Rtin_Type_Enum_Acc (Rti);
+
+      declare
+         Str     : String(1..Natural(Len - Pos));
+         Found   : Boolean := False;
+      begin
+         Make_LC_String(S, Pos, Len, Str);
+         for i in 0 .. Enum_Rti.Nbr - 1 loop
+            if StringMatch(Str,  Enum_Rti.Names.all(i)) then
+               Found := True;
+               Val := i;
+               exit;
+            end if;
+         end loop;
+         if not Found then
+            Error_E ("'value: " & Str & " not in enumeration " &
+                     Enum_Rti.Name.all(1..strlen(Enum_Rti.Name)));
+         end if;
+      end;
+
+      Remove_Whitespace(S, Pos, Len, Chars);
+      if Chars then
+         Error_E ("'value: trailing characters after blank");
+      end if;
+      -- Stub_Error("E8");
+      return Val;
+   end Ghdl_Value_Enum;
+
+   function Ghdl_Value_B2 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+      return Ghdl_B2
+   is
+   begin
+      return Ghdl_B2'Val(Ghdl_Value_Enum (Str , Rti ));
+   end Ghdl_Value_B2;
+
+   function Ghdl_Value_E8 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+      return Ghdl_E8
+   is
+   begin
+      return Ghdl_E8'Val(Ghdl_Value_Enum (Str , Rti ));
+   end Ghdl_Value_E8;
+
+   function Ghdl_Value_E32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+      return Ghdl_E32
+   is
+   begin
+      return Ghdl_E32'Val(Ghdl_Value_Enum (Str , Rti ));
+   end Ghdl_Value_E32;
+
    function Ghdl_Value_I32 (Str : Std_String_Ptr) return Ghdl_I32
    is
       S : constant Std_String_Basep := Str.Base;
@@ -31,22 +160,13 @@ package body Grt.Values is
       Sep : Character;
       Val, D, Base : Ghdl_I32;
       Exp : Integer;
+      Chars : Ghdl_B2;
    begin
       --  LRM 14.1
       --  Leading [and trailing] whitespace is allowed and ignored.
       --
       --  GHDL: allow several leading whitespace.
-      while Pos < Len loop
-         case S (Pos) is
-            when ' '
-              | NBSP
-              | HT =>
-               Pos := Pos + 1;
-            when others =>
-               exit;
-         end case;
-      end loop;
-
+      Remove_Whitespace(S, Pos, Len, Chars);
       if Pos = Len then
          Error_E ("'value: empty string");
       end if;
@@ -197,19 +317,43 @@ package body Grt.Values is
       --  LRM 14.1
       --  [Leading] and trailing whitespace is allowed and ignored.
       --
-      --  GHDL: allow several leading whitespace.
-      while Pos < Len loop
-         case S (Pos) is
-            when ' '
-              | NBSP
-              | HT =>
-               Pos := Pos + 1;
-            when others =>
-               Error_E ("'value: trailing characters after blank");
-         end case;
-      end loop;
+      --  GHDL: allow several trailing whitespace.
+      Remove_Whitespace(S, Pos, Len, Chars);
+      if Chars then
+         Error_E ("'value: trailing characters after blank");
+      end if;
 
       return Val;
    end Ghdl_Value_I32;
+
+   function Ghdl_Value_F64 (Str : Std_String_Ptr) return Ghdl_F64 is
+      pragma unreferenced(Str);
+      Val : constant Ghdl_F64 := 0.0;
+   begin
+      Stub_Error("F64");
+      return Val;
+   end Ghdl_Value_F64;
+
+   function Ghdl_Value_P64 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+      return Ghdl_I64
+   is
+      pragma unreferenced(Str);
+      pragma unreferenced(Rti);
+      Val : constant Ghdl_I64 := 0;
+   begin
+      Stub_Error("P64");
+      return Val;
+   end Ghdl_Value_P64;
+
+   function Ghdl_Value_P32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+      return Ghdl_I32
+   is
+      pragma unreferenced(Str);
+      pragma unreferenced(Rti);
+      Val : constant Ghdl_I32 := 0;
+   begin
+      Stub_Error("P32");
+      return Val;
+   end Ghdl_Value_P32;
 
 end Grt.Values;

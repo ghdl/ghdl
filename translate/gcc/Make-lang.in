@@ -171,6 +171,8 @@ vhdl.generated-manpages:
 
 vhdl.install-normal:
 
+vhdl.install-plugin:
+
 # Install the driver program as ghdl.
 vhdl.install-common: ghdl$(exeext)
 	-mkdir $(DESTDIR)$(bindir)

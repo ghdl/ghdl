@@ -1449,19 +1449,52 @@ package body Sem_Names is
       is
          Prot_Type : Iir;
          Method : Iir;
+         Found : Boolean := False;
       begin
          Prot_Type := Get_Type (Sub_Name);
-         Method := Find_Name_In_Chain
-           (Get_Declaration_Chain (Prot_Type), Suffix);
-         if Method = Null_Iir then
+
+-- bld 26 apr 2013 : the following returned the FIRST method matching name
+-- rather than the full overload list.
+--         Method := Find_Name_In_Chain
+--           (Get_Declaration_Chain (Prot_Type), Suffix);
+--         if Method = Null_Iir then
+--            Error_Msg_Sem
+--              ("no method " & Name_Table.Image (Suffix) & " in "
+--               & Disp_Node (Prot_Type), Name);
+--            return;
+--         else
+--            Add_Result (Res, Method);
+--         end if;
+
+         -- build overload list from all declarations in chain, matching name,
+         -- which are actually functions or procedures.
+         -- TODO: error here if there's a variable with matching name?
+         -- currently we warn...
+         -- rather than add a "Find_nth_name_in chain" to iirs_utils I have
+         -- expanded the chain walk here.
+         Method := Get_Declaration_Chain (Prot_Type);
+         while Method /= Null_Iir loop
+            if Get_Identifier (Method) = Suffix then -- found the name
+               -- check it's a method!
+               case Get_Kind (Method) is
+                  when Iir_Kind_Function_Declaration |
+                       Iir_Kind_Procedure_Declaration =>
+                     Found := True;
+                     Add_Result (Res, Method);
+                  when others =>
+                     Warning_Msg_Sem ("sem_as_method_call", Method);
+               end case;
+            end if;
+            Method := Get_Chain (Method);
+         end loop;
+         if not Found then
             Error_Msg_Sem
               ("no method " & Name_Table.Image (Suffix) & " in "
                & Disp_Node (Prot_Type), Name);
             return;
-         else
-            Add_Result (Res, Method);
          end if;
 
+-- following is handled by later stages
 --          case Get_Kind (Method) is
 --             when Iir_Kind_Function_Declaration =>
 --                Call := Create_Iir (Iir_Kind_Function_Call);
@@ -1958,8 +1991,8 @@ package body Sem_Names is
                end;
                if Res = Null_Iir then
                   Error_Msg_Sem
-                    ("prefix is neither a function name "
-                     & "nor can it be sliced or indexed", Name);
+                    ("No overloaded subprogram found matching "
+                     & Disp_Node(Prefix_Name), Name);
                end if;
             when Iir_Kinds_Function_Declaration =>
                Add_Result (Res, Sem_As_Function_Call (Prefix_Name,
@@ -2032,6 +2065,9 @@ package body Sem_Names is
 
             when Iir_Kind_Psl_Declaration =>
                Res := Sem_Psl.Sem_Psl_Name (Name);
+
+            when Iir_Kind_Design_Unit =>
+               Error_Msg_Sem ("function name is a design unit", Name);
 
             when others =>
                Error_Kind ("sem_parenthesis_name", Prefix);

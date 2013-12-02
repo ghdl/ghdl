@@ -22,8 +22,8 @@ vhdl Joined
 Set the directory of the work library
 
 P
-vhdl Joined
--P<dir>	Add <dir> to the end of the vhdl library path
+vhdl JoinedOrMissing
+;-P<dir>	Add <dir> to the end of the vhdl library path
 
 -elab
 vhdl Separate
