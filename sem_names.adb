@@ -2085,6 +2085,7 @@ package body Sem_Names is
    procedure Sem_Selected_By_All_Name (Name : Iir_Selected_By_All_Name)
    is
       Prefix : Iir;
+      Prefix_Name : Iir;
       Res : Iir;
 
       procedure Sem_As_Selected_By_All_Name (Sub_Name : Iir)
@@ -2107,6 +2108,7 @@ package body Sem_Names is
    begin
       Prefix := Get_Prefix (Name);
       Sem_Name (Prefix, True);
+      Prefix_Name := Prefix;
       Prefix := Get_Named_Entity (Prefix);
       if Prefix = Null_Iir then
          return;
@@ -2116,7 +2118,18 @@ package body Sem_Names is
          when Iir_Kinds_Object_Declaration
            | Iir_Kind_Selected_Element
            | Iir_Kind_Dereference
-           | Iir_Kind_Indexed_Name =>
+           | Iir_Kind_Indexed_Name
+            -- Iir_Kind_Function_Call added to resolve testcase 2 in
+            -- https://gna.org/bugs/?18351
+           | Iir_Kind_Function_Call =>
+            Sem_As_Selected_By_All_Name (Prefix);
+            -- when clause added to resolve testcases 3-6 in
+            -- https://gna.org/bugs/?18351
+         when Iir_Kinds_Function_Declaration =>
+            -- or Iir_Kind_Function_Declaration to exclude implicit functions
+            Prefix := Sem_As_Function_Call (Name => Prefix_Name,
+                                            Spec => Prefix,
+                                            Assoc_Chain => Null_Iir);
             Sem_As_Selected_By_All_Name (Prefix);
          when Iir_Kind_Error =>
             Set_Named_Entity (Name, Error_Mark);
