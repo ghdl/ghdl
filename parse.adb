@@ -3984,8 +3984,12 @@ package body Parse is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
             Set_Implementation (Call, Name);
+         when Iir_Kind_Attribute_Name =>        -- Support issue 3060
+            Error_Msg_Parse ("Attribute cannot be applied to procedure call");
          when others =>
-            raise Internal_Error;
+            -- Support issue 2686 : no testcase, at least improve the error message
+            Error_Kind("parenthesis_name_to_procedure_call", Name);
+            -- raise Internal_Error;
       end case;
       return Res;
    end Parenthesis_Name_To_Procedure_Call;
