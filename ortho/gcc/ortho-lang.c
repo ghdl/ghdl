@@ -629,7 +629,11 @@ type_for_size (unsigned int precision, int unsignedp)
 
   if (precision <= MAX_BITS_PER_WORD)
     signed_and_unsigned_types[precision][unsignedp] = t;
-
+  else 
+    // Handle larger requests by returning a NULL tree and letting 
+    // the back end default to another approach.
+    t = NULL_TREE;
+ 
   return t;
 }
 
