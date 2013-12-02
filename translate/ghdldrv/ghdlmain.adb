@@ -132,7 +132,7 @@ package body Ghdlmain is
          end loop;
          New_Line;
          Put_Line ("To display the options of a GHDL program,");
-         Put_Line ("  run your programm with the --help option.");
+         Put_Line ("  run your program with the --help option.");
          Put_Line ("Also see --options-help for analyzer options.");
          New_Line;
          Put_Line ("Please, refer to the GHDL manual for more information.");

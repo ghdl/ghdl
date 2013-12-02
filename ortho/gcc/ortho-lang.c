@@ -187,19 +187,26 @@ pop_binding (void)
 }
 
 /* This is a stack of current statement_lists  */
-static GTY(()) VEC_tree_gc * stmt_list_stack;
+//static GTY(()) VEC_tree_gc * stmt_list_stack;
+
+// naive conversion to new vec API following the wiki at
+// http://gcc.gnu.org/wiki/cxx-conversion/cxx-vec
+// see also push_stmts, pop_stmts
+static vec <tree> stmt_list_stack = vec<tree>();
 
 static void
 push_stmts (tree stmts)
 {
-  VEC_safe_push (tree, gc, stmt_list_stack, cur_stmts);
+//  VEC_safe_push (tree, gc, stmt_list_stack, cur_stmts);
+  stmt_list_stack.safe_push(cur_stmts);
   cur_stmts = stmts;
 }
  
 static void
 pop_stmts (void)
 {
-  cur_stmts = VEC_pop (tree, stmt_list_stack);
+//  cur_stmts = VEC_pop (tree, stmt_list_stack);
+cur_stmts = stmt_list_stack.pop();
 }
 
 static void
@@ -214,7 +221,7 @@ append_stmt (tree stmt)
 static GTY(()) tree top;
 
 static GTY(()) tree stack_alloc_function_ptr;
-extern void ortho_fe_init (void);
+extern "C" void ortho_fe_init (void);
 
 static bool
 global_bindings_p (void)
@@ -232,7 +239,7 @@ static tree
 builtin_function (const char *name,
 		  tree type,
 		  int function_code,
-		  enum built_in_class class,
+		  enum built_in_class decl_class,
 		  const char *library_name,
 		  tree attrs ATTRIBUTE_UNUSED);
 
@@ -341,7 +348,7 @@ ortho_post_options (const char **pfilename)
   return false;
 }
 
-extern bool lang_handle_option (const char *opt, const char *arg);
+extern "C" bool lang_handle_option (const char *opt, const char *arg);
 
 static bool
 ortho_handle_option (size_t code, const char *arg, int value, int kind,
@@ -370,7 +377,7 @@ ortho_handle_option (size_t code, const char *arg, int value, int kind,
 	  
 	  len1 = strlen (opt);
 	  len2 = strlen (arg);
-	  nopt = alloca (len1 + len2 + 1);
+	  nopt = (char *) alloca (len1 + len2 + 1);
 	  memcpy (nopt, opt, len1);
 	  memcpy (nopt + len1, arg, len2);
 	  nopt[len1 + len2] = 0;
@@ -380,7 +387,7 @@ ortho_handle_option (size_t code, const char *arg, int value, int kind,
     }
 }
 
-extern int lang_parse_file (const char *filename);
+extern "C" int lang_parse_file (const char *filename);
 
 static void
 ortho_parse_file (void)
@@ -584,7 +591,7 @@ static tree
 builtin_function (const char *name,
 		  tree type,
 		  int function_code,
-		  enum built_in_class class,
+		  enum built_in_class decl_class,
 		  const char *library_name,
 		  tree attrs ATTRIBUTE_UNUSED)
 {
@@ -595,8 +602,8 @@ builtin_function (const char *name,
   if (library_name)
     SET_DECL_ASSEMBLER_NAME (decl, get_identifier (library_name));
   make_decl_rtl (decl);
-  DECL_BUILT_IN_CLASS (decl) = class;
-  DECL_FUNCTION_CODE (decl) = function_code;
+  DECL_BUILT_IN_CLASS (decl) = decl_class;
+  DECL_FUNCTION_CODE (decl) = (built_in_function) function_code;
   DECL_SOURCE_LOCATION (decl) = input_location;
   return decl;
 }
@@ -708,6 +715,10 @@ struct GTY(()) language_function
 {
   char dummy;
 };
+
+
+extern "C" {
+
 
 struct GTY(()) chain_constr_type
 {
@@ -1202,6 +1213,8 @@ void
 start_enum_type (struct o_enum_list *list, int size)
 {
   list->res = make_node (ENUMERAL_TYPE);
+  // as of gcc4.8, TYPE_PRECISION of 0 is rigorously enforced!
+  TYPE_PRECISION(list->res) = size;	
   chain_init (&list->chain);
   list->num = 0;
   list->size = size;
@@ -1210,7 +1223,7 @@ start_enum_type (struct o_enum_list *list, int size)
 void
 new_enum_literal (struct o_enum_list *list, tree ident, tree *res)
 {
-  *res = build_int_cstu (list->res, list->num);
+  *res = build_int_cstu (list->res, HOST_WIDE_INT(list->num));
   chain_append (&list->chain, tree_cons (ident, *res, NULL_TREE));
   list->num++;
 }
@@ -1233,7 +1246,8 @@ struct GTY(()) o_record_aggr_list
   /* Type of the next field to be added.  */
   tree field;
   /* Vector of elements.  */
-  VEC(constructor_elt,gc) *elts;
+  // VEC(constructor_elt,gc) *elts;
+  vec<constructor_elt,va_gc> *elts;
 };
 
 void
@@ -1241,8 +1255,8 @@ start_record_aggr (struct o_record_aggr_list *list, tree atype)
 {
   list->atype = atype;
   list->field = TYPE_FIELDS (atype);
-  list->elts = VEC_alloc (constructor_elt, gc, fields_length (atype));
-
+  //list->elts = VEC_alloc (constructor_elt, gc, fields_length (atype));
+  vec_alloc(list->elts, fields_length (atype));
 }
 
 void
@@ -1263,7 +1277,8 @@ struct GTY(()) o_array_aggr_list
 {
   tree atype;
   /* Vector of elements.  */
-  VEC(constructor_elt,gc) *elts;
+  //VEC(constructor_elt,gc) *elts;
+  vec<constructor_elt,va_gc> *elts;
 };
 
 void
@@ -1279,7 +1294,8 @@ start_array_aggr (struct o_array_aggr_list *list, tree atype)
   gcc_assert (nelts != NULL_TREE && host_integerp (nelts, 1));
 
   n = tree_low_cst (nelts, 1) + 1;
-  list->elts = VEC_alloc (constructor_elt, gc, n);
+  //list->elts = VEC_alloc (constructor_elt, gc, n);
+  vec_alloc(list->elts, n);
 }
 
 void
@@ -1847,20 +1863,22 @@ finish_declare_stmt (void)
 struct GTY(()) o_assoc_list
 {
   tree subprg;
-  VEC(tree,gc) *vec;
+//  VEC(tree,gc) *vec;
+  vec<tree, va_gc> *vecptr;
 };
 
 void
 start_association (struct o_assoc_list *assocs, tree subprg)
 {
   assocs->subprg = subprg;
-  assocs->vec = NULL;
+  assocs->vecptr = NULL;
 }
 
 void
 new_association (struct o_assoc_list *assocs, tree val)
 {
-  VEC_safe_push (tree, gc, assocs->vec, val);
+//  VEC_safe_push (tree, gc, assocs->vec, val);
+  vec_safe_push(assocs->vecptr, val);
 }
 
 tree
@@ -1868,7 +1886,7 @@ new_function_call (struct o_assoc_list *assocs)
 {
   return build_call_vec (TREE_TYPE (TREE_TYPE (assocs->subprg)),
                          build_function_ptr (assocs->subprg),
-                         assocs->vec);
+                         assocs->vecptr);
 }
 
 void
@@ -1878,7 +1896,7 @@ new_procedure_call (struct o_assoc_list *assocs)
 
   res = build_call_vec (TREE_TYPE (TREE_TYPE (assocs->subprg)),
                         build_function_ptr (assocs->subprg),
-                        assocs->vec);
+                        assocs->vecptr);
   TREE_SIDE_EFFECTS (res) = 1;
   append_stmt (res);
 }
@@ -2043,16 +2061,24 @@ struct GTY(()) o_case_block
   int add_break;
 };
 
+
+static GTY(()) tree t_condtype;
+
 void
 start_case_stmt (struct o_case_block *block, tree value)
 {
   tree stmt;
   tree stmts;
 
+// following https://bitbucket.org/goshawk/gdc/issue/344/compilation-with-latest-trunk-fails
+// gimplify_switch_expr now checks type of index expr is (some discrete type) but at least not void
+// Saved in static variable for start_choice to use
+  t_condtype = TREE_TYPE(value);
+
   block->end_label = build_label ();
   block->add_break = 0;
   stmts = alloc_stmt_list ();
-  stmt = build3 (SWITCH_EXPR, void_type_node, value, stmts, NULL_TREE);
+  stmt = build3 (SWITCH_EXPR, t_condtype, value, stmts, NULL_TREE);
   append_stmt (stmt);
   push_stmts (stmts);
 }
@@ -2061,10 +2087,11 @@ void
 start_choice (struct o_case_block *block)
 {
   tree stmt;
-
   if (block->add_break)
     {
-      stmt = build1 (GOTO_EXPR, void_type_node, block->end_label);
+// following https://bitbucket.org/goshawk/gdc/issue/344/compilation-with-latest-trunk-fails
+// gimplify_switch_expr now checks type of index expr is (saved) t_condtype
+      stmt = build1 (GOTO_EXPR, t_condtype, block->end_label);
       append_stmt (stmt);
 
       block->add_break = 0;
@@ -2075,7 +2102,7 @@ void
 new_expr_choice (struct o_case_block *block, tree expr)
 {
   tree stmt;
-  
+
   stmt = build_case_label
     (expr, NULL_TREE, create_artificial_label (input_location));
   append_stmt (stmt);
@@ -2115,6 +2142,8 @@ finish_case_stmt (struct o_case_block *block)
   pop_stmts ();
   stmt = build1 (LABEL_EXPR, void_type_node, block->end_label);
   append_stmt (stmt);
+
+  t_condtype = NULL_TREE;
 }
 
 bool
@@ -2134,6 +2163,27 @@ get_identifier_string (tree id, const char **str, int *len)
   *len = IDENTIFIER_LENGTH (id);
   *str = IDENTIFIER_POINTER (id);
 }
+
+// C linkage wrappers for two (now C++) functions so that 
+// Ada code can call them without name mangling
+tree get_identifier_with_length_c (const char *c, size_t s)
+{
+  return get_identifier_with_length(c, s);
+}
+
+int toplev_main_c (int argc, char **argv)
+{
+  return toplev_main(argc, argv);
+}
+
+void
+debug_tree_c ( tree expr)
+{
+  warning(OPT_Wall,"Debug tree");
+  debug_tree(expr);
+}
+
+} // end extern "C"
 
 #include "debug.h"
 #include "gt-vhdl-ortho-lang.h"

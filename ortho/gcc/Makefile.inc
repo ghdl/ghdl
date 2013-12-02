@@ -32,6 +32,7 @@ AGCC_LOCAL_OBJS=ortho-lang.o
 AGCC_DEPS := $(AGCC_LOCAL_OBJS)
 AGCC_OBJS := $(AGCC_LOCAL_OBJS) \
 	$(AGCC_GCCOBJ_DIR)gcc/toplev.o \
+	$(AGCC_GCCOBJ_DIR)gcc/vec.o \
 	$(AGCC_GCCOBJ_DIR)gcc/attribs.o \
 	$(AGCC_GCCOBJ_DIR)gcc/libbackend.a \
 	$(AGCC_GCCOBJ_DIR)libcpp/libcpp.a \
@@ -40,7 +41,7 @@ AGCC_OBJS := $(AGCC_LOCAL_OBJS) \
 ortho-lang.o: $(agcc_srcdir)/ortho-lang.c \
  $(AGCC_GCCOBJ_DIR)gcc/gtype-vhdl.h \
  $(AGCC_GCCOBJ_DIR)gcc/gt-vhdl-ortho-lang.h
-	$(CC) -c -o $@ $< $(AGCC_CFLAGS)
+	$(COMPILER) -c -o $@ $< $(AGCC_CFLAGS) $(INCLUDES) 
 
 agcc-clean: force
 	$(RM) -f $(agcc_objdir)/*.o

@@ -422,6 +422,7 @@ package Ortho_Gcc is
    procedure New_Default_Choice (Block : in out O_Case_Block);
    procedure Finish_Choice (Block : in out O_Case_Block);
    procedure Finish_Case_Stmt (Block : in out O_Case_Block);
+   procedure Debug_Tree_C(Expr : O_Cnode);
 
 private
    subtype Tree is System.Address;
@@ -657,4 +658,7 @@ private
    pragma Import (C, New_Default_Choice);
    pragma Import (C, Finish_Choice);
    pragma Import (C, Finish_Case_Stmt);
+
+   pragma Import (C, Debug_Tree_C);
+
 end Ortho_Gcc;

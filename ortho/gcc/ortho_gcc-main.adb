@@ -12,7 +12,7 @@ is
 
    function Toplev_Main (Argc : Integer; Argv : System.Address)
                         return Integer;
-   pragma Import (C, Toplev_Main);
+   pragma Import (C, Toplev_Main, "toplev_main_c");
 
    Status : Exit_Status;
 begin

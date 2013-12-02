@@ -4540,7 +4540,7 @@ TYPE VitalMemoryErrorType IS (
   ErrCrDatSubOut,-- 'E' Corrupting data out sub-word with 'X' based on data in
   ErrImplOut,    -- 'M' Implicit read from memory to data out
   ErrReadOut,    -- 'm' Reading data from memory to data out
-  ErrAssgOut,    -- 't' Transfering from data in to data out
+  ErrAssgOut,    -- 't' Transferring from data in to data out
   ErrAsgXOut,    -- 'X' Assigning unknown level to data out
   ErrAsg0Out,    -- '0' Assigning low level to data out
   ErrAsg1Out,    -- '1' Assigning high level to data out
@@ -4672,7 +4672,7 @@ CONSTANT MsgImplOut     : STRING
 CONSTANT MsgReadOut     : STRING
           := "Reading data from memory to data out";
 CONSTANT MsgAssgOut     : STRING
-          := "Transfering from data in to data out";
+          := "Transferring from data in to data out";
 CONSTANT MsgAsgXOut     : STRING
           := "Assigning unknown level to data out";
 CONSTANT MsgAsg0Out     : STRING
@@ -6207,7 +6207,7 @@ BEGIN
     PortFlag.DataCurrent := READ;
 
   WHEN 't'    =>
-    -- Transfering from data in to data out
+    -- Transferring from data in to data out
     IF (MsgOn) THEN
       PrintMemoryMessage(CallerName,ErrAssgOut,HeaderMsg,PortName);
     END IF;

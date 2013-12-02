@@ -1,7 +1,7 @@
 package body Ortho_Ident is
    function Get_Identifier_With_Length (Str : Address; Size : Integer)
                                        return O_Ident;
-   pragma Import (C, Get_Identifier_With_Length);
+   pragma Import (C, Get_Identifier_With_Length, "get_identifier_with_length_c");
 
    function Compare_Identifier_String
      (Id : O_Ident; Str : Address; Size : Integer)

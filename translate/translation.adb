@@ -13876,7 +13876,7 @@ package body Translation is
                    * Iir_Fp64 (Get_Value (Get_Physical_Unit_Value
                                           (Get_Unit_Name (Expr))))));
             when others =>
-               Error_Kind ("tranlate_numeric_literal", Expr);
+               Error_Kind ("translate_numeric_literal", Expr);
          end case;
       exception
          when Constraint_Error =>
