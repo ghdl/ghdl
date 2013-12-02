@@ -27742,16 +27742,16 @@ package body Translation is
 
       if False then
          El := Get_Context_Items (Unit);
-         while El /= Null_Iir loop
-            case Get_Kind (El) is
-               when Iir_Kind_Use_Clause =>
-                  null;
-               when Iir_Kind_Library_Clause =>
-                  null;
-               when others =>
-                  Error_Kind ("translate1", El);
-            end case;
-         end loop;
+--         while El /= Null_Iir loop
+--            case Get_Kind (El) is
+--               when Iir_Kind_Use_Clause =>
+--                  null;
+--               when Iir_Kind_Library_Clause =>
+--                  null;
+--               when others =>
+--                  Error_Kind ("translate1", El);
+--            end case;
+--         end loop;
       end if;
 
       El := Get_Library_Unit (Unit);

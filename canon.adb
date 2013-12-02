@@ -2429,16 +2429,16 @@ package body Canon is
          --  This code is not executed since context clauses are already
          --  canonicalized.
          El := Get_Context_Items (Unit);
-         while El /= Null_Iir loop
-            case Get_Kind (El) is
-               when Iir_Kind_Use_Clause =>
-                  null;
-               when Iir_Kind_Library_Clause =>
-                  null;
-               when others =>
-                  Error_Kind ("canonicalize1", El);
-            end case;
-         end loop;
+--         while El /= Null_Iir loop
+--            case Get_Kind (El) is
+--               when Iir_Kind_Use_Clause =>
+--                  null;
+--               when Iir_Kind_Library_Clause =>
+--                  null;
+--               when others =>
+--                  Error_Kind ("canonicalize1", El);
+--            end case;
+--         end loop;
       end if;
 
       El := Get_Library_Unit (Unit);
