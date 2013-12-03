@@ -1,0 +1,3 @@
+syntax:glob
+*~
+*.tar.bz2
