@@ -106,7 +106,8 @@ LIB08_DIR:=../lib/v08
 
 LIBSRC_DIR:=../../libraries
 REL_DIR:=../..
-GHDL=ghdl
+#GHDL=ghdl
+GHDL=ghdl_mcode
 ANALYZE:=../../../ghdldrv/$(GHDL) -a $(LIB_CFLAGS)
 LN=ln -s
 CP=cp

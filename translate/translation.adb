@@ -10345,7 +10345,8 @@ package body Translation is
                -- part 2 of fix for https://gna.org/bugs/?19195
                Open_Temp;
                Stabilize (Name_Node);
-               New_Assign_Stmt (Get_Var (Alias_Info.Alias_Var), M2Addr (Name_Node));
+               New_Assign_Stmt (Get_Var (Alias_Info.Alias_Var),
+                                M2Addr (Name_Node));
                Close_Temp;
             when others =>
                raise Internal_Error;
