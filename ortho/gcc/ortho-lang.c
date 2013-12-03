@@ -2061,8 +2061,8 @@ struct GTY(()) o_case_block
   int add_break;
 };
 
-
-static GTY(()) tree t_condtype;
+static GTY(()) tree t_condtype = NULL_TREE;
+static vec <tree> t_condtype_stack = vec<tree>();
 
 void
 start_case_stmt (struct o_case_block *block, tree value)
@@ -2072,7 +2072,12 @@ start_case_stmt (struct o_case_block *block, tree value)
 
 // following https://bitbucket.org/goshawk/gdc/issue/344/compilation-with-latest-trunk-fails
 // gimplify_switch_expr now checks type of index expr is (some discrete type) but at least not void
-// Saved in static variable for start_choice to use
+// Saved in static variable t_condtype for start_choice to use
+//
+// Static variable is inadequate : nested Case statements won't work, so we either:
+// need to stack t_condtypes, or add a parameter to start_choice, which affects 
+// translation.adb and the interface to ALL backends, mcode etc. I think this is less ugly.
+  t_condtype_stack.safe_push(t_condtype);
   t_condtype = TREE_TYPE(value);
 
   block->end_label = build_label ();
@@ -2142,8 +2147,8 @@ finish_case_stmt (struct o_case_block *block)
   pop_stmts ();
   stmt = build1 (LABEL_EXPR, void_type_node, block->end_label);
   append_stmt (stmt);
-
-  t_condtype = NULL_TREE;
+// see start_case_stmt : restore t_condtype to handle outer case statement
+  t_condtype = t_condtype_stack.pop();
 }
 
 bool
