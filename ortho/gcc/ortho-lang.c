@@ -639,7 +639,9 @@ type_for_size (unsigned int precision, int unsignedp)
   else 
     // Handle larger requests by returning a NULL tree and letting 
     // the back end default to another approach.
-    t = NULL_TREE;
+    // the exact test is unknown : distinguishing between 32 and 64 bits may be enough
+    // for all likely platforms
+    if (MAX_BITS_PER_WORD >= 64) t = NULL_TREE;
  
   return t;
 }
@@ -1223,7 +1225,7 @@ start_enum_type (struct o_enum_list *list, int size)
 void
 new_enum_literal (struct o_enum_list *list, tree ident, tree *res)
 {
-  *res = build_int_cstu (list->res, HOST_WIDE_INT(list->num));
+  *res = build_int_cstu (list->res, (HOST_WIDE_INT)(list->num));
   chain_append (&list->chain, tree_cons (ident, *res, NULL_TREE));
   list->num++;
 }
