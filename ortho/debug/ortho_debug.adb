@@ -1311,9 +1311,8 @@ package body Ortho_Debug is
    is
       subtype O_Dnode_Const_Value is O_Dnode_Type (ON_Const_Value);
       N : O_Dnode;
+      Temp : constant O_Dnode := Const;
    begin
-      Const := Const;
-
       if Const.Const_Value /= O_Dnode_Null then
          --  Constant already has a value.
          raise Syntax_Error;
@@ -1335,14 +1334,15 @@ package body Ortho_Debug is
                                     Lineno => 0,
                                     Const_Decl => Const,
                                     Value => O_Cnode_Null);
-      Const.Const_Value := N;
+      Temp.Const_Value := N;
+      Const := Temp;
       Add_Decl (N, False);
    end Start_Const_Value;
 
    procedure Finish_Const_Value (Const : in out O_Dnode; Val : O_Cnode)
    is
+      Temp : constant O_Dnode := Const;
    begin
-      Const := Const;
 
       if Const.Const_Value = O_Dnode_Null then
          --  Start_Const_Value not called.
@@ -1357,7 +1357,8 @@ package body Ortho_Debug is
          raise Type_Error;
       end if;
       Check_Type (Val.Ctype, Const.Dtype);
-      Const.Const_Value.Value := Val;
+      Temp.Const_Value.Value := Val;
+      Const := Temp;
    end Finish_Const_Value;
 
    procedure New_Var_Decl

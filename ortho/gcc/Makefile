@@ -2,11 +2,13 @@ ortho_srcdir=..
 orthobe_srcdir=$(ortho_srcdir)/gcc
 agcc_objdir=.
 agcc_srcdir=$(ortho_srcdir)/gcc
-AGCC_GCCSRC_DIR:=$(HOME)/dist/gcc-4.7.2
-AGCC_GCCOBJ_DIR:=$(AGCC_GCCSRC_DIR)-objs/
+# Modify AGCC_GCCSRC_DIR and AGCC_GCCOBJ_DIR for your environment
+AGCC_GCCSRC_DIR:=$(HOME)/Projects/gcc4.8.2/source/gcc-4.8.2/
+AGCC_GCCOBJ_DIR:=$(HOME)/Projects/gcc4.8.2/build/
 SED=sed
 GNATMAKE=gnatmake
 CC=gcc
+COMPILER=g++
 
 all: $(ortho_exec)
 
@@ -16,7 +18,8 @@ ORTHO_BASENAME=$(orthobe_srcdir)/ortho_gcc
 ORTHO_PACKAGE=Ortho_Gcc
 
 #LIBFLAGS=$(HOME)/dist/mpfr-2.3.1/.libs/libmpfr.a $(HOME)/dist/gmp-4.2.2/.libs/libgmp.a
-LIBFLAGS=-L$(HOME)/dist/build/lib -lmpc -lmpfr -lgmp -lz -ldl #$(AGCC_GCCOBJ_DIR)/intl/libintl.a -liconv -lz
+LIBFLAGS=-L$(AGCC_GCCOBJ_DIR)./mpfr/.libs -L$(AGCC_GCCOBJ_DIR)./mpc/src/.libs -lmpc -lmpfr -lgmp -lz -ldl -lstdc++
+#$(AGCC_GCCOBJ_DIR)/intl/libintl.a -liconv -lz
 
 $(ortho_exec): $(AGCC_DEPS) $(ORTHO_BASENAME).ads force
 	$(GNATMAKE) -m -o $@ -g -aI$(ortho_srcdir) \
@@ -26,6 +29,7 @@ $(ortho_exec): $(AGCC_DEPS) $(ORTHO_BASENAME).ads force
 	  $(AGCC_GCCOBJ_DIR)gcc/libcommon-target.a \
 	  $(AGCC_GCCOBJ_DIR)gcc/libcommon.a \
 	  $(AGCC_GCCOBJ_DIR)libcpp/libcpp.a \
+	  $(AGCC_GCCOBJ_DIR)libbacktrace/.libs/libbacktrace.a \
 	  $(AGCC_GCCOBJ_DIR)libiberty/libiberty.a \
 	  $(AGCC_GCCOBJ_DIR)libdecnumber/libdecnumber.a \
 	  $(LIBFLAGS) #-static

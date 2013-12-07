@@ -23,6 +23,9 @@
 #include "tree-pass.h"
 #include "tree-dump.h"
 
+// temp for debugging 
+// #include "stdio.h"
+
 /* TODO:
  * remove stmt_list_stack, save in if/case/loop block
  * Re-add -v (if necessary)
@@ -305,6 +308,38 @@ ortho_init (void)
        builtin_function
        ("__builtin_stack_restore", ftype_ptr,
 	BUILT_IN_STACK_RESTORE, BUILT_IN_NORMAL, NULL, NULL_TREE), true);
+  }
+
+  /* Test and (if necessary) repair BUILT_IN_UNREACHABLE builtin. 
+  FIXME: Re-evaluate this and remove when upstream gcc has fixed the 
+  underlying problem : gcc4.8.2 segfaults compiling with -O2, 
+  during fn "void unloop_loops" in tree-ssa-loop-ivcanon.c */
+  {
+    tree func_type = build_function_type (ptr_type_node, NULL_TREE);
+    
+    if (builtin_decl_implicit_p (BUILT_IN_UNREACHABLE))
+    {
+        // printf("BUILT_IN_UNREACHABLE function is available\n");
+    }
+    else
+    {  
+      tree builtin_f = builtin_decl_explicit (BUILT_IN_UNREACHABLE);
+      // printf("No implicit BUILT_IN_UNREACHABLE function : repairing!\n");
+      debug_tree(builtin_f);
+      if (builtin_f == NULL_TREE)
+      {
+        // printf("Adding BUILT_IN_UNREACHABLE function\n");
+        set_builtin_decl (BUILT_IN_UNREACHABLE,
+                          builtin_function("__builtin_unreachable", func_type,
+	                    BUILT_IN_UNREACHABLE, BUILT_IN_NORMAL, NULL, NULL_TREE), 
+                          true);
+      }
+      else
+      {
+        // printf("Making BUILT_IN_UNREACHABLE function implicit\n");
+        set_builtin_decl_implicit_p (BUILT_IN_UNREACHABLE, true);
+      }
+    }
   }
 
   {
