@@ -24,7 +24,7 @@
 #include "tree-dump.h"
 
 // temp for debugging 
-// #include "stdio.h"
+#include "stdio.h"
 
 /* TODO:
  * remove stmt_list_stack, save in if/case/loop block
@@ -235,7 +235,9 @@ global_bindings_p (void)
 static tree
 pushdecl (tree t)
 {
-  gcc_unreachable ();
+  //gcc_unreachable ();
+  // gcc4.8.2 we get here from build_common_builtin_nodes () call in ortho_init
+  return t;
 }
 
 static tree
@@ -309,39 +311,6 @@ ortho_init (void)
        ("__builtin_stack_restore", ftype_ptr,
 	BUILT_IN_STACK_RESTORE, BUILT_IN_NORMAL, NULL, NULL_TREE), true);
   }
-
-  /* Test and (if necessary) repair BUILT_IN_UNREACHABLE builtin. 
-  FIXME: Re-evaluate this and remove when upstream gcc has fixed the 
-  underlying problem : gcc4.8.2 segfaults compiling with -O2, 
-  during fn "void unloop_loops" in tree-ssa-loop-ivcanon.c */
-  {
-    tree func_type = build_function_type (ptr_type_node, NULL_TREE);
-    
-    if (builtin_decl_implicit_p (BUILT_IN_UNREACHABLE))
-    {
-        // printf("BUILT_IN_UNREACHABLE function is available\n");
-    }
-    else
-    {  
-      tree builtin_f = builtin_decl_explicit (BUILT_IN_UNREACHABLE);
-      // printf("No implicit BUILT_IN_UNREACHABLE function : repairing!\n");
-      debug_tree(builtin_f);
-      if (builtin_f == NULL_TREE)
-      {
-        // printf("Adding BUILT_IN_UNREACHABLE function\n");
-        set_builtin_decl (BUILT_IN_UNREACHABLE,
-                          builtin_function("__builtin_unreachable", func_type,
-	                    BUILT_IN_UNREACHABLE, BUILT_IN_NORMAL, NULL, NULL_TREE), 
-                          true);
-      }
-      else
-      {
-        // printf("Making BUILT_IN_UNREACHABLE function implicit\n");
-        set_builtin_decl_implicit_p (BUILT_IN_UNREACHABLE, true);
-      }
-    }
-  }
-
   {
     REAL_VALUE_TYPE v;
     
@@ -355,6 +324,10 @@ ortho_init (void)
   }
 
   ortho_fe_init ();
+
+  build_common_builtin_nodes ();
+  // FIXME: this MAY remove the need for creating the builtins above...
+  // Evaluate tree.c / build_common_builtin_nodes (); for each in turn.
 
   return true;
 }
@@ -378,6 +351,12 @@ ortho_post_options (const char **pfilename)
 
   /* Default hook.  */
   lhd_post_options (pfilename);
+
+  // This stops compile failures writing debug information when both -g and -O2 
+  // (or -O1, -O3 or -Os) options are present.
+  // Should really make it conditional on specific options
+  // FIXME : re-evaluate if this is still necessary with newer gccrevisions
+  dwarf_strict = 1;
 
   /* Run the back-end.  */
   return false;
