@@ -553,26 +553,26 @@ package body Grt.Vcd is
       end loop;
    end Vcd_Put_Integer32;
 
-	-- Using the floor attribute of Ghdl_F64 will result on a link error while
-	-- trying to simulate a design. So it was needed to create a floor function
+   -- Using the floor attribute of Ghdl_F64 will result on a link error while
+   -- trying to simulate a design. So it was needed to create a floor function
    function Digit_Floor (V : Ghdl_F64) return Ghdl_I32
    is
-		Var : Ghdl_I32;
-	begin
-		-- V is alway positiv in our case and we are only interested when it is a digit
-		if V > 10.0 then
-			return -1;
-		else
-			Var := Ghdl_I32(V-0.5); --Ghdl_I32 rounds to the nearest integer
-			-- The rounding made by Ghdl_I32 is asymetric :
-			-- 0.5 will be rounded to 1, but -0.5 to -1 instead of 0
-			if Var > 0 then
-				return Var;
-			else
-				return 0;
-			end if;
-		end if;
-	end Digit_Floor;
+      Var : Ghdl_I32;
+   begin
+      -- V is always positive here and only of interest when it is a digit
+      if V > 10.0 then
+         return -1;
+      else
+         Var := Ghdl_I32(V-0.5); --Ghdl_I32 rounds to the nearest integer
+         -- The rounding made by Ghdl_I32 is asymetric :
+         -- 0.5 will be rounded to 1, but -0.5 to -1 instead of 0
+         if Var > 0 then
+            return Var;
+         else
+            return 0;
+         end if;
+      end if;
+   end Digit_Floor;
 
    procedure Vcd_Put_Float64 (V : Ghdl_F64)
    is
@@ -580,56 +580,56 @@ package body Grt.Vcd is
       Digit, Exp, Delta_Exp, N_Exp : Ghdl_I32;
       --
    begin
-		Exp := 0;
-		if V /= V then
-			Vcd_Put("NaN");
-			return;
-		end if;
-		if V < 0.0 then
-			Vcd_Putc ('-');
-			Val_tmp := -V;
-		elsif V = 0.0 then
-			Vcd_Put("0.0");
-			return;
-		else
-			Val_tmp := V;
-		end if;
-		if Val_tmp > Ghdl_F64'Last then
-			Vcd_Put("Inf");
-			return;
-		elsif Val_tmp < 1.0 then
-			Fact := 10.0;
-			Delta_Exp := -1;
-		else
-			Fact := 0.1;
-			Delta_Exp := 1;
-		end if;
-		while 1 = 1 loop -- Seek the first digit
-			Digit := Digit_Floor(Val_tmp);
-			if Digit > 0 then
-				exit;
-			end if;
-			Exp := Exp + Delta_Exp;
-			Val_tmp := Val_tmp * Fact;
-		end loop;
-		Vcd_Putc(Character'Val(Digit + 48));
-		Vcd_Putc('.');
-		for i in 0..4 loop -- 5 digits displayed after the point
-			Val_tmp := abs(Val_tmp - Ghdl_F64(Digit))*10.0;
-			Digit := Digit_Floor(Val_tmp);
-			Vcd_Putc(Character'Val(Digit + 48));
-		end loop;
-		Vcd_Putc('E');
-		if Exp < 0 then
-			Vcd_Putc('-');
-			Exp := -Exp;
-		end if;
-		N_Exp := 100;
-		while N_Exp > 0 loop
-			Vcd_Putc(Character'Val(Exp/N_Exp + 48));
-			Exp := Exp Mod N_Exp;
-			N_Exp := N_Exp/10;
-		end loop;
+      Exp := 0;
+      if V /= V then
+         Vcd_Put("NaN");
+         return;
+      end if;
+      if V < 0.0 then
+         Vcd_Putc ('-');
+         Val_tmp := -V;
+      elsif V = 0.0 then
+         Vcd_Put("0.0");
+         return;
+      else
+         Val_tmp := V;
+      end if;
+      if Val_tmp > Ghdl_F64'Last then
+         Vcd_Put("Inf");
+         return;
+      elsif Val_tmp < 1.0 then
+         Fact := 10.0;
+         Delta_Exp := -1;
+      else
+         Fact := 0.1;
+         Delta_Exp := 1;
+      end if;
+      while 1 = 1 loop -- Seek the first digit
+         Digit := Digit_Floor(Val_tmp);
+         if Digit > 0 then
+            exit;
+         end if;
+         Exp := Exp + Delta_Exp;
+         Val_tmp := Val_tmp * Fact;
+      end loop;
+      Vcd_Putc(Character'Val(Digit + 48));
+      Vcd_Putc('.');
+      for i in 0..4 loop -- 5 digits displayed after the point
+         Val_tmp := abs(Val_tmp - Ghdl_F64(Digit))*10.0;
+         Digit := Digit_Floor(Val_tmp);
+         Vcd_Putc(Character'Val(Digit + 48));
+      end loop;
+      Vcd_Putc('E');
+      if Exp < 0 then
+         Vcd_Putc('-');
+         Exp := -Exp;
+      end if;
+      N_Exp := 100;
+      while N_Exp > 0 loop
+         Vcd_Putc(Character'Val(Exp/N_Exp + 48));
+         Exp := Exp mod N_Exp;
+         N_Exp := N_Exp/10;
+      end loop;
    end Vcd_Put_Float64;
 
    procedure Vcd_Put_Var (I : Vcd_Index_Type)
@@ -691,7 +691,8 @@ package body Grt.Vcd is
                   Vcd_Putc (' ');
                when Vcd_Float64 =>
                   Vcd_Putc ('r');
-                  Vcd_Put_Float64 (To_Signal_Arr_Ptr (Addr)(0).Driving_Value.F64);
+                  Vcd_Put_Float64 (To_Signal_Arr_Ptr (Addr)(0)
+                                           .Driving_Value.F64);
                   Vcd_Putc (' ');
                when Vcd_Bitvector =>
                   Vcd_Putc ('b');
