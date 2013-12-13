@@ -2386,7 +2386,10 @@ package body Sem_Names is
                Attr);
             return Error_Mark;
          when others =>
-            raise Internal_Error;
+            Error_Msg_Sem ("Attribute '"
+                          & Name_Table.Image(Get_Attribute_Identifier (Attr))
+                          & " not valid on this type", Attr);
+            return Error_Mark;
       end case;
       Location_Copy (Res, Attr);
       Prefix := Get_Named_Entity (Get_Prefix (Attr));
