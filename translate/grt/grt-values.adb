@@ -231,8 +231,8 @@ package body Grt.Values is
                when others =>
                   Error_E ("'value: digit expected");
             end case;
-            if D > Base then
-               Error_E ("'value: digit greather than base");
+            if D >= Base then
+               Error_E ("'value: digit >= base");
             end if;
             Val := Val * Base + D;
             Pos := Pos + 1;
