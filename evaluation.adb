@@ -22,6 +22,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Std_Package; use Std_Package;
 with Flags; use Flags;
 with Std_Names;
+with Ada.Characters.Handling;
 
 package body Evaluation is
    function Get_Physical_Value (Expr : Iir) return Iir_Int64
@@ -1346,6 +1347,104 @@ package body Evaluation is
       return Res;
    end Eval_Floating_Image;
 
+   function Eval_Enumeration_Image (Enum, Expr : Iir) return Iir
+   is
+      Name : constant String := Image_Identifier (Enum);
+      Image_Id : constant String_Id := Str_Table.Start;
+   begin
+      for i in Name'range loop
+         Str_Table.Append(Name(i));
+      end loop;
+      Str_Table.Finish;
+      return Build_String (Image_Id, Nat32(Name'Length), Expr);
+   end Eval_Enumeration_Image;
+
+   function Build_Enumeration_Value (Val : String; Enum, Expr : Iir) return Iir
+   is
+   Value : String(Val'range);
+   List  : constant Iir_List := Get_Enumeration_Literal_List(Enum);
+   begin
+      for i in Val'range loop
+         Value(i) := Ada.Characters.Handling.To_Lower (Val(i));
+      end loop;
+      for i in 0 .. Get_Nbr_Elements(List) - 1 loop
+         if Value = Image_Identifier(Get_Nth_Element(List, i)) then
+            return Build_Discrete(Iir_Int64(i), Expr);
+         end if;
+      end loop;
+      Error_Msg_Sem ("value """ & Value & """ not in enumeration", Expr);
+      return Null_Iir;
+   end Build_Enumeration_Value;
+
+   function Eval_Physical_Image (Phys, Expr : Iir) return Iir
+   -- reduces to the base unit (e.g. femtoseconds)
+   is
+      Value : constant String := Iir_Int64'image(
+                                    Get_Physical_Literal_Value(Phys));
+      Unit : constant Iir := Get_Primary_Unit (Get_Base_Type (Get_Type(Phys)));
+      UnitName : constant String := Image_Identifier (Unit);
+      Image_Id : constant String_Id := Str_Table.Start;
+      Length : Nat32 := Value'Length + UnitName'Length + 1;
+   begin
+      for i in Value'range loop
+         -- Suppress the Ada +ve integer'image leading space
+         if i > Value'first or else Value(i) /= ' ' then
+            Str_Table.Append(Value(i));
+         else
+            Length := Length - 1;
+         end if;
+      end loop;
+      Str_Table.Append(' ');
+      for i in UnitName'range loop
+         Str_Table.Append(UnitName(i));
+      end loop;
+      Str_Table.Finish;
+
+      return Build_String (Image_Id, Length, Expr);
+   end Eval_Physical_Image;
+
+   function Build_Physical_Value (Val: String; Phys_Type, Expr: Iir) return Iir
+   is
+      function White (C : in Character) return Boolean is
+         NBSP : constant Character := Character'Val (160);
+         HT   : constant Character := Character'Val (9);
+      begin
+         return C = ' ' or C = NBSP or C = HT;
+      end White;
+
+      UnitName : String(Val'range);
+      Sep : Natural;
+      Found_Unit : Boolean := false;
+      Unit : Iir := Get_Primary_Unit (Phys_Type);
+   begin
+      -- Separate string into numeric value and make lowercase unit.
+      for i in reverse Val'range loop
+         UnitName(i) := Ada.Characters.Handling.To_Lower (Val(i));
+         if White(Val(i)) and Found_Unit then
+            Sep := i;
+            exit;
+         else
+            Found_Unit := true;
+         end if;
+      end loop;
+      -- Unit name  is UnitName(Sep+1..Unit'Last)
+
+      -- Chain down the units looking for matching one
+      Unit := Get_Primary_Unit (Phys_Type);
+      while Unit /= Null_Iir loop
+         exit when UnitName(Sep+1..UnitName'Last) = Image_Identifier(Unit);
+         Unit := Get_Chain (Unit);
+      end loop;
+      if Unit = Null_Iir then
+         Error_Msg_Sem ("Unit """ & UnitName(Sep+1..UnitName'Last)
+                         & """ not in physical type", Expr);
+         return Null_Iir;
+      end if;
+      -- FIXME: Should we support real values too?
+      return Build_Physical(Iir_Int64'value(Val(Val'first .. Sep)), Expr);
+   end Build_Physical_Value;
+
+
    function Eval_Incdec (Expr : Iir; N : Iir_Int64) return Iir
    is
       P : Iir_Int64;
@@ -1625,9 +1724,46 @@ package body Evaluation is
                      return Eval_Integer_Image (Get_Value (Param), Expr);
                   when Iir_Kind_Floating_Type_Definition =>
                      return Eval_Floating_Image (Get_Fp_Value (Param), Expr);
+                  when Iir_Kind_Enumeration_Type_Definition =>
+                     return Eval_Enumeration_Image (Param, Expr);
+                  when Iir_Kind_Physical_Type_Definition =>
+                     return Eval_Physical_Image (Param, Expr);
                   when others =>
-                     Error_Kind ("eval_static_expr('image)", Param_Type);
+                     Error_Kind ("eval_static_expr('image)", Param);
                end case;
+            end;
+         when Iir_Kind_Value_Attribute =>
+            declare
+               Param : Iir;
+               Param_Type : Iir;
+            begin
+               Param := Get_Parameter (Expr);
+               Param := Eval_Static_Expr (Param);
+               Set_Parameter (Expr, Param);
+               if Get_Kind (Param) /= Iir_Kind_String_Literal then
+                  Error_Msg_Sem ("'value argument not a string", Expr);
+                  return Null_Iir; -- or Expr?
+               else
+                  -- what type are we converting the string to?
+                  Param_Type := Get_Base_Type (Get_Type (Expr));
+                  declare
+                     Value : constant String := Image_String_Lit(Param);
+                  begin
+                     case Get_Kind (Param_Type) is
+                     when Iir_Kind_Integer_Type_Definition =>
+                        return Build_Discrete(Iir_Int64'value(Value), Expr);
+                     when Iir_Kind_Enumeration_Type_Definition =>
+                        return Build_Enumeration_Value (Value, Param_Type,
+                                                        Expr);
+                     when Iir_Kind_Floating_Type_Definition =>
+                        return Build_Floating (Iir_Fp64'value (Value), Expr);
+                     when Iir_Kind_Physical_Type_Definition =>
+                        return Build_Physical_Value (Value, Param_Type, Expr);
+                     when others =>
+                        Error_Kind ("eval_static_expr('value)", Param);
+                     end case;
+                  end;
+               end if;
             end;
 
          when Iir_Kind_Left_Type_Attribute =>

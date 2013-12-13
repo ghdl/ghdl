@@ -16,11 +16,18 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Grt.Errors; use Grt.Errors;
+with System;
+with Ada.Unchecked_Conversion;
 
 package body Grt.Values is
 
    NBSP : constant Character := Character'Val (160);
    HT : constant Character := Character'Val (9);
+
+   function White (C : in Character) return Boolean is
+   begin
+      return C = ' ' or C = NBSP or C = HT;
+   end White;
 
    procedure Remove_Whitespace(S     : in Std_String_Basep;
                                Pos   : in out Ghdl_Index_Type;
@@ -30,23 +37,14 @@ package body Grt.Values is
       Chars := False;
       --  GHDL: allow several leading whitespace.
       while Pos < Len loop
-         case S (Pos) is
-            when ' '
-              | NBSP
-              | HT =>
-               Pos := Pos + 1;
-            when others =>
-               Chars := True;
-               exit;
-         end case;
+         if White (S (Pos)) then
+            Pos := Pos + 1;
+         else
+            Chars := True;
+            exit;
+         end if;
       end loop;
    end Remove_Whitespace;
-
-   procedure Stub_Error(S : String) is
-   begin
-      Error_E ("'value: function Ghdl_Value_" & S & " is a stub!"
-               & "Please report as missing to http://gna.org/projects/ghdl");
-   end Stub_Error;
 
    function LC(C : in Character) return Character is
    begin
@@ -60,12 +58,10 @@ package body Grt.Values is
 
    procedure Make_LC_String(S : Std_String_Basep;
                             Pos : in out Ghdl_Index_Type;
-                            Len : Ghdl_Index_Type;
                             Str : out String) is
-   pragma unreferenced(Len);
    begin
       for i in Str'range loop
-         Str(i) := LC(S(Pos));  -- LC it later
+         Str(i) := LC(S(Pos));
          Pos := Pos + 1;
       end loop;
    end Make_LC_String;
@@ -108,7 +104,7 @@ package body Grt.Values is
          Str     : String(1..Natural(Len - Pos));
          Found   : Boolean := False;
       begin
-         Make_LC_String(S, Pos, Len, Str);
+         Make_LC_String(S, Pos, Str);
          for i in 0 .. Enum_Rti.Nbr - 1 loop
             if StringMatch(Str,  Enum_Rti.Names.all(i)) then
                Found := True;
@@ -126,7 +122,6 @@ package body Grt.Values is
       if Chars then
          Error_E ("'value: trailing characters after blank");
       end if;
-      -- Stub_Error("E8");
       return Val;
    end Ghdl_Value_Enum;
 
@@ -151,14 +146,14 @@ package body Grt.Values is
       return Ghdl_E32'Val(Ghdl_Value_Enum (Str , Rti ));
    end Ghdl_Value_E32;
 
-   function Ghdl_Value_I32 (Str : Std_String_Ptr) return Ghdl_I32
+   function Ghdl_Value_I64 (Str : Std_String_Ptr) return Ghdl_I64
    is
       S : constant Std_String_Basep := Str.Base;
       Len : constant Ghdl_Index_Type := Str.Bounds.Dim_1.Length;
       Pos : Ghdl_Index_Type := 0;
       C : Character;
       Sep : Character;
-      Val, D, Base : Ghdl_I32;
+      Val, D, Base : Ghdl_I64;
       Exp : Integer;
       Chars : Ghdl_B2;
    begin
@@ -320,40 +315,298 @@ package body Grt.Values is
       --  GHDL: allow several trailing whitespace.
       Remove_Whitespace(S, Pos, Len, Chars);
       if Chars then
-         Error_E ("'value: trailing characters after blank");
+         Error_E ("integer'value: trailing characters after blank");
       end if;
 
       return Val;
+   end Ghdl_Value_I64;
+
+   function Ghdl_Value_I32 (Str : Std_String_Ptr) return Ghdl_I32
+   is
+   begin
+      return Ghdl_I32 (Ghdl_Value_I64 (Str));
    end Ghdl_Value_I32;
 
-   function Ghdl_Value_F64 (Str : Std_String_Ptr) return Ghdl_F64 is
-      pragma unreferenced(Str);
-      Val : constant Ghdl_F64 := 0.0;
+   function Ghdl_Value_Physical_Type (Str : Std_String_Ptr;
+                                      Rti : Ghdl_Rti_Access)
+      return Ghdl_I64
+   is
+      function To_Std_String_Ptr is new Ada.Unchecked_Conversion
+         (Source => System.Address, Target => Std_String_Ptr);
+      function To_Std_String_Boundp is new Ada.Unchecked_Conversion
+         (Source => System.Address, Target => Std_String_Boundp);
+
+      S : aliased Std_String := Str.all;
+      Bound : aliased Std_String_Bound := Str.Bounds.all;
+
+      Base_Val : Ghdl_I64;
+      Multiple : Ghdl_Rti_Unit_Val;
+
+      Phys_Rti : Ghdl_Rtin_Type_Physical_Acc;
+      Unit     : Ghdl_Rtin_Unit_Acc;
+      Start, Finish : Ghdl_Index_Type;
+
    begin
-      Stub_Error("F64");
-      return Val;
-   end Ghdl_Value_F64;
+      Phys_Rti := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
+
+      S.Bounds := To_Std_String_Boundp(Bound'Address);
+      -- find characters at the end... 
+      Finish := Ghdl_Index_Type(Bound.Dim_1.Length)-1;
+      while White(S.Base.all(Finish)) loop
+         Finish := Finish - 1;
+      end loop;
+      Start := Finish;
+      while not White(S.Base.all(Start - 1)) loop
+         Start := Start - 1;
+      end loop;
+      -- shorten Bounds to exclude non-numeric part
+      Bound.Dim_1.Right := Bound.Dim_1.Right
+                          - Std_Integer(Bound.Dim_1.Length - Start);
+      Bound.Dim_1.Length := Start;
+      -- and capture integer value
+      -- FIXME: Should we support real values too?
+      Base_Val := Ghdl_Value_I64(To_Std_String_Ptr(S'Address));
+
+      declare
+         Unit_Str : String(1 .. Natural(1 + Finish - Start));
+         Found    : Boolean := False;
+      begin
+         Make_LC_String(Str.Base, Start, Unit_Str);
+         for i in 0 .. Phys_Rti.Nbr - 1 loop
+            Unit := To_Ghdl_Rtin_Unit_Acc(Phys_Rti.Units(i));
+            if StringMatch(Unit_Str, Unit.Name) then
+               Found := True;
+               Multiple := To_Ghdl_Rtin_Unit_Acc (Phys_Rti.Units (i)).Value;
+               exit;
+            end if;
+         end loop;
+         if not Found then
+            Error_E ("'value: Unit " & Unit_Str & " not in physical type" &
+                     Phys_Rti.Name.all(1..strlen(Phys_Rti.Name)));
+         end if;
+      end;
+
+      if Rti.Kind = Ghdl_Rtik_Type_P64 then
+         return Base_Val * Ghdl_I64(Multiple.Unit_64);
+      else
+         return Base_Val * Ghdl_I64(Multiple.Unit_32);
+      end if;
+   end Ghdl_Value_Physical_Type;
 
    function Ghdl_Value_P64 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_I64
    is
-      pragma unreferenced(Str);
-      pragma unreferenced(Rti);
-      Val : constant Ghdl_I64 := 0;
    begin
-      Stub_Error("P64");
-      return Val;
+      if Rti.Kind /= Ghdl_Rtik_Type_P64 then
+         Error_E ("Physical_Type_64'value: incorrect RTI");
+      end if;
+      return Ghdl_Value_Physical_Type(Str, Rti);
    end Ghdl_Value_P64;
 
    function Ghdl_Value_P32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_I32
    is
-      pragma unreferenced(Str);
-      pragma unreferenced(Rti);
-      Val : constant Ghdl_I32 := 0;
    begin
-      Stub_Error("P32");
-      return Val;
+      if Rti.Kind /= Ghdl_Rtik_Type_P32 then
+         Error_E ("Physical_Type_32'value: incorrect RTI");
+      end if;
+      return Ghdl_I32(Ghdl_Value_Physical_Type(Str, Rti));
    end Ghdl_Value_P32;
+
+   -- From patch attached to https://gna.org/bugs/index.php?18352
+   -- thanks to Christophe Curis https://gna.org/users/lobotomy
+   function Ghdl_Value_F64 (Str : Std_String_Ptr) return Ghdl_F64
+   is
+      S       : constant Std_String_Basep := Str.Base;
+      Len     : constant Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
+      Pos     : Ghdl_Index_Type := 0;
+      C       : Character;
+      Chars   : Ghdl_B2;
+      Is_Negative, Is_Neg_Exp : Boolean := False;
+      Base    : Ghdl_F64;
+      Intg    : Ghdl_I32;
+      Val, Df : Ghdl_F64;
+      Sep     : Character;
+      FrcExp  : Ghdl_F64;
+   begin
+      --  LRM 14.1
+      --  Leading [and trailing] whitespace is allowed and ignored.
+      --
+      --  GHDL: allow several leading whitespace.
+      Remove_Whitespace(S, Pos, Len, Chars);
+
+      if Pos = Len then
+         Error_E ("'value: empty string");
+      end if;
+
+      C := S (Pos);
+      if C = '-' then
+         Is_Negative := True;
+         Pos := Pos + 1;
+      elsif C = '+' then
+         Pos := Pos + 1;
+      end if;
+
+      if Pos >= Len then
+         Error_E ("'value: decimal digit expected");
+      end if;
+
+      -- Read Integer-or-Base part (may be optional)
+      Intg := 0;
+      while Pos < Len loop
+         C := S (Pos);
+         if C in '0' .. '9' then
+            Intg := Intg * 10 + Character'Pos (C) - Character'Pos ('0');
+         elsif C /= '_' then
+            exit;
+         end if;
+         Pos := Pos + 1;
+      end loop;
+
+      if Pos = Len then
+         return Ghdl_F64 (Intg);
+      end if;
+
+      -- Special case: base was specified
+      if C = '#' or C = ':' then
+         if Intg < 2 or Intg > 16 then
+            Error_E ("'value: bad base");
+         end if;
+         Base := Ghdl_F64 (Intg);
+         Val  := 0.0;
+         Sep  := C;
+         Pos  := Pos + 1;
+         if Pos >= Len then
+            Error_E ("'value: missing based decimal");
+         end if;
+
+         -- Get the Integer part of the Value
+         while Pos < Len loop
+            C := S (Pos);
+            case C is
+               when '0' .. '9' =>
+                  Df := Ghdl_F64 (Character'Pos (C) - Character'Pos('0') );
+               when 'A' .. 'F' =>
+                  Df := Ghdl_F64 (Character'Pos (C) - Character'Pos('A') + 10);
+               when 'a' .. 'f' =>
+                  Df := Ghdl_F64 (Character'Pos (C) - Character'Pos('a') + 10);
+               when others =>
+                  exit;
+            end case;
+            if C /= '_' then
+               if Df >= Base then
+                  Error_E ("'value: digit greater than base");
+               end if;
+               Val := Val * Base + Df;
+            end if;
+            Pos := Pos + 1;
+         end loop;
+         if Pos >= Len then
+            Error_E ("'value: missing end sign number");
+         end if;
+      else
+         Base := 10.0;
+         Sep  := ' ';
+         Val  := Ghdl_F64 (Intg);
+      end if;
+
+      -- Handle the Fractional part
+      if C = '.' then
+         Pos := Pos + 1;
+         FrcExp := 1.0;
+         while Pos < Len loop
+            C := S (Pos);
+            case C is
+               when '0' .. '9' =>
+                  Df := Ghdl_F64 (Character'Pos (C) - Character'Pos('0'));
+               when 'A' .. 'F' =>
+                  exit when Sep = ' ';
+                  Df := Ghdl_F64 (Character'Pos (C) - Character'Pos('A') + 10);
+               when 'a' .. 'f' =>
+                  exit when Sep = ' ';
+                  Df := Ghdl_F64 (Character'Pos (C) - Character'Pos('a') + 10);
+               when others =>
+                  exit;
+            end case;
+            if C /= '_' then
+               FrcExp := FrcExp / Base;
+               if Df > Base then
+                  Error_E ("'value: digit greater than base");
+               end if;
+               Val := Val + Df * FrcExp;
+            end if;
+            Pos := Pos + 1;
+         end loop;
+      end if;
+
+      -- If base was specified, we must find here the end marker
+      if Sep /= ' ' then
+         if Pos >= Len then
+            Error_E ("'value: missing end sign number");
+         end if;
+         if C /= Sep then
+            Error_E ("'value: sign number mismatch");
+         end if;
+         Pos := Pos + 1;
+      end if;
+
+      -- Handle exponent
+      if Pos < Len then
+         C := S (Pos);
+         if C = 'e' or C = 'E' then
+            Pos := Pos + 1;
+            if Pos >= Len then
+               Error_E ("'value: no character after exponent");
+            end if;
+            C := S (Pos);
+            if C = '-' then
+               Is_Neg_Exp := True;
+               Pos := Pos + 1;
+            elsif C = '+' then
+               Pos := Pos + 1;
+            end if;
+            Intg := 0;
+            while Pos < Len loop
+               C := S (Pos);
+               if C in '0' .. '9' then
+                  Intg := Intg * 10 + Character'Pos (C) - Character'Pos ('0');
+               else
+                  exit;
+               end if;
+               Pos := Pos + 1;
+            end loop;
+            -- This Exponentiation method is sub-optimal,
+            -- but it does not depend on any library
+            FrcExp := 1.0;
+            if Is_Neg_Exp then
+               while Intg > 0 loop
+                  FrcExp := FrcExp / 10.0;
+                  Intg := Intg - 1;
+               end loop;
+            else
+               while Intg > 0 loop
+                  FrcExp := FrcExp * 10.0;
+                  Intg := Intg - 1;
+               end loop;
+            end if;
+            Val := Val * FrcExp;
+         end if;
+      end if;
+
+      --  LRM 14.1
+      --  [Leading] and trailing whitespace is allowed and ignored.
+      --
+      --  GHDL: allow several leading whitespace.
+      Remove_Whitespace(S, Pos, Len, Chars);
+      if Chars then
+         Error_E ("'value: trailing characters after blank");
+      end if;
+
+      if Is_Negative then
+         Val := -Val;
+      end if;
+
+      return Val;
+   end Ghdl_Value_F64;
 
 end Grt.Values;

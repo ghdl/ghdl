@@ -253,8 +253,10 @@ package body Grt.Disp_Rti is
             Disp_Record_Value
               (Stream, To_Ghdl_Rtin_Type_Record_Acc (Rti), Ctxt, Obj, Is_Sig);
          when others =>
-            Put (Stream, "??");
+            Put (Stream, "Unknown Rti Kind : ");
+            Disp_Kind(Rti.Kind);
       end case;
+      Put_Line(":");
    end Disp_Value;
 
    procedure Disp_Kind (Kind : Ghdl_Rtik) is

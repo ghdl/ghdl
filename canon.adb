@@ -241,7 +241,9 @@ package body Canon is
             --Canon_Extract_Sensitivity
             --  (Get_Prefix (Expr), Sensitivity_List, Is_Target);
 
-         when Iir_Kinds_Scalar_Type_Attribute =>
+         when Iir_Kind_Value_Attribute
+           | Iir_Kind_Image_Attribute
+           | Iir_Kinds_Scalar_Type_Attribute =>
             Canon_Extract_Sensitivity
               (Get_Parameter (Expr), Sensitivity_List, Is_Target);
 
