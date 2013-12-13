@@ -32,6 +32,7 @@ package Grt.Vcd is
    type Vcd_Var_Kind is (Vcd_Bad,
                          Vcd_Bool,
                          Vcd_Integer32,
+                         Vcd_Float64,
                          Vcd_Bit, Vcd_Stdlogic,
                          Vcd_Bitvector, Vcd_Stdlogic_Vector);
 

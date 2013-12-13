@@ -417,7 +417,8 @@ package body Grt.Vpi is
          when Vcd_Effective =>
             case Info.Kind is
                when Vcd_Bad
-                 | Vcd_Integer32 =>
+                 | Vcd_Integer32
+                 | Vcd_Float64 =>
                   return null;
                when Vcd_Bit
                  | Vcd_Bool
@@ -436,7 +437,8 @@ package body Grt.Vpi is
          when Vcd_Driving =>
             case Info.Kind is
                when Vcd_Bad
-                 | Vcd_Integer32 =>
+                 | Vcd_Integer32
+                 | Vcd_Float64 =>
                   return null;
                when Vcd_Bit
                  | Vcd_Bool
@@ -633,7 +635,8 @@ package body Grt.Vpi is
                ii_vpi_put_value_bin_str_E8(
                   To_Signal_Arr_Ptr(Info.Addr)(J), ValueStr(Integer(J+1)));
             end loop;
-         when Vcd_Integer32 =>
+         when Vcd_Integer32
+           | Vcd_Float64 =>
             null;
       end case;
 
