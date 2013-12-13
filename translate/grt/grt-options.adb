@@ -217,7 +217,12 @@ package body Grt.Options is
       end if;
       if Pos > Str'Last then
          --  No suffix.
-         return Natural (Val);
+         if Val > Integer_64(Natural'Last) then
+            Error_C ("Size exceeds limit for option ");
+            Error_E (Option_Name);
+         else
+            return Natural (Val);
+         end if;
       end if;
       if Pos = Str'Last
         or else (Pos + 1 = Str'Last
