@@ -232,11 +232,10 @@ package body Canon is
            | Iir_Kind_File_Declaration =>
             null;
 
-         when Iir_Kind_Left_Array_Attribute
-           | Iir_Kind_Right_Array_Attribute
-           | Iir_Kind_Length_Array_Attribute
-           | Iir_Kind_Low_Array_Attribute
-           | Iir_Kind_High_Array_Attribute =>
+         when Iir_Kinds_Array_Attribute =>
+            -- was Iir_Kind_Left_Array_Attribute
+            -- ditto Right, Low, High, Length
+            -- add Ascending, Range and Reverse_Range...
             null;
             --Canon_Extract_Sensitivity
             --  (Get_Prefix (Expr), Sensitivity_List, Is_Target);
