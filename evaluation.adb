@@ -1376,7 +1376,7 @@ package body Evaluation is
       return Null_Iir;
    end Build_Enumeration_Value;
 
-   function Eval_Physical_Image (Phys, Expr : Iir) return Iir
+   function Eval_Physical_Image (Phys, Expr: Iir) return Iir
    -- reduces to the base unit (e.g. femtoseconds)
    is
       Value : constant String := Iir_Int64'image(
@@ -1415,6 +1415,7 @@ package body Evaluation is
       UnitName : String(Val'range);
       Sep : Natural;
       Found_Unit : Boolean := false;
+      Found_Real : Boolean := false;
       Unit : Iir := Get_Primary_Unit (Phys_Type);
    begin
       -- Separate string into numeric value and make lowercase unit.
@@ -1428,7 +1429,11 @@ package body Evaluation is
          end if;
       end loop;
       -- Unit name  is UnitName(Sep+1..Unit'Last)
-
+      for i in Val'first .. Sep loop
+         if Val(i) = '.' then
+            Found_Real := true;
+         end if;
+      end loop;
       -- Chain down the units looking for matching one
       Unit := Get_Primary_Unit (Phys_Type);
       while Unit /= Null_Iir loop
@@ -1440,8 +1445,15 @@ package body Evaluation is
                          & """ not in physical type", Expr);
          return Null_Iir;
       end if;
-      -- FIXME: Should we support real values too?
-      return Build_Physical(Iir_Int64'value(Val(Val'first .. Sep)), Expr);
+      if Found_Real then
+         return Build_Physical(Iir_Int64(
+                                    Iir_Fp64'value(Val(Val'first .. Sep)) *
+                                    Iir_Fp64(Get_Value (Get_Physical_Unit_Value
+                                    (Unit)))), Expr);
+      else
+         return Build_Physical(Iir_Int64'value(Val(Val'first .. Sep)) *
+                             Get_Value (Get_Physical_Unit_Value(Unit)), Expr);
+      end if;
    end Build_Physical_Value;
 
 

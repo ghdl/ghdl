@@ -336,21 +336,20 @@ package body Grt.Values is
       function To_Std_String_Boundp is new Ada.Unchecked_Conversion
          (Source => System.Address, Target => Std_String_Boundp);
 
-      S : aliased Std_String := Str.all;
+      S     : aliased Std_String := Str.all;
       Bound : aliased Std_String_Bound := Str.Bounds.all;
-
-      Base_Val : Ghdl_I64;
-      Multiple : Ghdl_Rti_Unit_Val;
+      Start, Finish : Ghdl_Index_Type;
+      Found_Real    : Boolean := false;
 
       Phys_Rti : Ghdl_Rtin_Type_Physical_Acc;
       Unit     : Ghdl_Rtin_Unit_Acc;
-      Start, Finish : Ghdl_Index_Type;
-
+      Multiple : Ghdl_Rti_Unit_Val;
+      Mult     : Ghdl_I64;
    begin
       Phys_Rti := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
 
       S.Bounds := To_Std_String_Boundp(Bound'Address);
-      -- find characters at the end... 
+      -- find characters at the end...
       Finish := Ghdl_Index_Type(Bound.Dim_1.Length)-1;
       while White(S.Base.all(Finish)) loop
          Finish := Finish - 1;
@@ -363,9 +362,12 @@ package body Grt.Values is
       Bound.Dim_1.Right := Bound.Dim_1.Right
                           - Std_Integer(Bound.Dim_1.Length - Start);
       Bound.Dim_1.Length := Start;
-      -- and capture integer value
-      -- FIXME: Should we support real values too?
-      Base_Val := Ghdl_Value_I64(To_Std_String_Ptr(S'Address));
+      -- does the string represent a Real?
+      for i in 0 .. Start loop
+         if S.Base.all(i) = '.' then
+            Found_Real := true;
+         end if;
+      end loop;
 
       declare
          Unit_Str : String(1 .. Natural(1 + Finish - Start));
@@ -387,9 +389,16 @@ package body Grt.Values is
       end;
 
       if Rti.Kind = Ghdl_Rtik_Type_P64 then
-         return Base_Val * Ghdl_I64(Multiple.Unit_64);
+         Mult := Ghdl_I64(Multiple.Unit_64);
       else
-         return Base_Val * Ghdl_I64(Multiple.Unit_32);
+         Mult := Ghdl_I64(Multiple.Unit_32);
+      end if;
+
+      if Found_Real then
+         return Ghdl_I64 (Ghdl_Value_F64 (To_Std_String_Ptr(S'Address))
+                                * Ghdl_F64 (Mult));
+      else
+         return Ghdl_Value_I64 (To_Std_String_Ptr(S'Address)) * Mult;
       end if;
    end Ghdl_Value_Physical_Type;
 

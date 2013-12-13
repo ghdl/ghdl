@@ -24834,6 +24834,8 @@ package body Translation is
                Subprg := Ghdl_Value_E32;
             when Type_Mode_I32 =>
                Subprg := Ghdl_Value_I32;
+            when Type_Mode_P32 =>
+               Subprg := Ghdl_Value_P32;
             when Type_Mode_P64 =>
                Subprg := Ghdl_Value_P64;
             when Type_Mode_F64 =>
@@ -24849,6 +24851,7 @@ package body Translation is
          case Pinfo.Type_Mode is
             when Type_Mode_B2
               | Type_Mode_E8
+              | Type_Mode_P32
               | Type_Mode_P64 =>
                New_Association
                  (Assoc, New_Lit (Rtis.New_Rti_Address (Pinfo.Type_Rti)));
