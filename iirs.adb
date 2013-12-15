@@ -147,7 +147,9 @@ package body Iirs is
    begin
       if An_Iir = Null_Iir then
          if Nbr_Errors = 0 then
-            Failed ("Mode", An_Iir);
+            -- calling "Failed" would get back here via Error_Kind
+            Error_Msg ("Cannot get kind of null object : aborting.");
+            raise Internal_Error;
          else
             Error_Msg_Sem ("Aborting compilation due to previous errors.",
                              An_Iir);
