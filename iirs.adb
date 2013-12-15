@@ -145,6 +145,15 @@ package body Iirs is
       --  Speed up: avoid to check that nkind is in the bounds of Iir_Kind.
       pragma Suppress (Range_Check);
    begin
+      if An_Iir = Null_Iir then
+         if Nbr_Errors = 0 then
+            Failed ("Mode", An_Iir);
+         else
+            Error_Msg_Sem ("Aborting compilation due to previous errors.",
+                             An_Iir);
+            raise Compilation_Error;
+         end if;
+      end if;
       return Iir_Kind'Val (Get_Nkind (An_Iir));
    end Get_Kind;
 
