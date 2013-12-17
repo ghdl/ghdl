@@ -643,20 +643,21 @@ type_for_size (unsigned int precision, int unsignedp)
       && signed_and_unsigned_types[precision][unsignedp] != NULL_TREE)
     return signed_and_unsigned_types[precision][unsignedp];
 
-  if (unsignedp) 
+  if (unsignedp)
     t = make_unsigned_type (precision);
   else
     t = make_signed_type (precision);
 
   if (precision <= MAX_BITS_PER_WORD)
     signed_and_unsigned_types[precision][unsignedp] = t;
-  else 
-    // Handle larger requests by returning a NULL tree and letting 
+  else
+    // Handle larger requests by returning a NULL tree and letting
     // the back end default to another approach.
-    // the exact test is unknown : distinguishing between 32 and 64 bits may be enough
-    // for all likely platforms
-    if (MAX_BITS_PER_WORD >= 64) t = NULL_TREE;
- 
+    // the exact test is unknown : distinguishing between 32 and 64 bits
+    // may be enough for all likely platforms
+    if (MAX_BITS_PER_WORD >= 64)
+      t = NULL_TREE;
+
   return t;
 }
 

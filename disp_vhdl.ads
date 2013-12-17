@@ -24,6 +24,9 @@ package Disp_Vhdl is
    -- the node.
    procedure Disp_Vhdl (An_Iir: Iir);
 
+   procedure Disp_Expression (Expr: Iir);
+   --  Display an expression.
+
    -- Disp an iir_int64, without the leading blank.
    procedure Disp_Int64 (Val: Iir_Int64);
 
@@ -33,4 +36,3 @@ package Disp_Vhdl is
    -- Disp an iir_Fp64, without the leading blank.
    procedure Disp_Fp64 (Val: Iir_Fp64);
 end Disp_Vhdl;
-

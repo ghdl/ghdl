@@ -1731,6 +1731,7 @@ package body Sem_Types is
    is
       Res : Iir;
       A_Range : Iir;
+      Tolerance : Iir;
    begin
       if Def = Null_Iir then
          Res := Copy_Subtype_Indication (Type_Mark);
@@ -1747,8 +1748,11 @@ package body Sem_Types is
             return Type_Mark;
          end if;
 
+         Tolerance := Get_Tolerance (Def);
+
          if Get_Range_Constraint (Def) = Null_Iir
            and then Resolution = Null_Iir
+           and then Tolerance = Null_Iir
          then
             --  This defines an alias, and must have been handled just
             --  before the case statment.
@@ -1780,6 +1784,29 @@ package body Sem_Types is
          Set_Type_Staticness (Res, Get_Expr_Staticness (A_Range));
          Free_Name (Def);
          Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
+         if Tolerance /= Null_Iir then
+            --  LRM93 4.2 Subtype declarations
+            --  It is an error in this case the subtype is not a nature
+            --  type
+            --
+            --  FIXME: should be moved into sem_subtype_indication
+            if Get_Kind (Res) /= Iir_Kind_Floating_Subtype_Definition then
+               Error_Msg_Sem ("tolerance allowed only for floating subtype",
+                              Tolerance);
+            else
+               --  LRM93 4.2 Subtype declarations
+               --  If the subtype indication includes a tolerance aspect, then
+               --  the string expression must be a static expression
+               Tolerance := Sem_Expression (Tolerance, String_Type_Definition);
+               if Tolerance /= Null_Iir
+                 and then Get_Expr_Staticness (Tolerance) /= Locally
+               then
+                  Error_Msg_Sem ("tolerance must be a static string",
+                                 Tolerance);
+               end if;
+               Set_Tolerance (Res, Tolerance);
+            end if;
+         end if;
       end if;
 
       if Resolution /= Null_Iir then
@@ -2005,4 +2032,30 @@ package body Sem_Types is
       Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Def));
       return Res;
    end Copy_Subtype_Indication;
+
+   function Sem_Subnature_Indication (Def: Iir) return Iir
+   is
+      Nature_Mark: Iir;
+   begin
+      -- LRM 4.8 Nature declatation
+      --
+      -- If the subnature indication does not include a constraint, the
+      -- subnature is the same as that denoted by the type mark.
+      case Get_Kind (Def) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            --  Used for reference declared by a nature
+            return Def;
+         when Iir_Kinds_Name =>
+            Nature_Mark := Find_Declaration (Def, Decl_Nature);
+            if Nature_Mark = Null_Iir then
+               --  return Create_Error_Type (Def);
+               raise Program_Error; --  TODO
+            else
+               return Nature_Mark;
+            end if;
+         when others =>
+            raise Program_Error; --  TODO
+      end case;
+   end Sem_Subnature_Indication;
+
 end Sem_Types;

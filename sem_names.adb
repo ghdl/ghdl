@@ -1453,29 +1453,16 @@ package body Sem_Names is
       begin
          Prot_Type := Get_Type (Sub_Name);
 
--- bld 26 apr 2013 : the following returned the FIRST method matching name
--- rather than the full overload list.
---         Method := Find_Name_In_Chain
---           (Get_Declaration_Chain (Prot_Type), Suffix);
---         if Method = Null_Iir then
---            Error_Msg_Sem
---              ("no method " & Name_Table.Image (Suffix) & " in "
---               & Disp_Node (Prot_Type), Name);
---            return;
---         else
---            Add_Result (Res, Method);
---         end if;
-
-         -- build overload list from all declarations in chain, matching name,
+         -- Build overload list from all declarations in chain, matching name,
          -- which are actually functions or procedures.
          -- TODO: error here if there's a variable with matching name?
          -- currently we warn...
-         -- rather than add a "Find_nth_name_in chain" to iirs_utils I have
+         -- Rather than add a "Find_nth_name_in chain" to iirs_utils I have
          -- expanded the chain walk here.
          Method := Get_Declaration_Chain (Prot_Type);
          while Method /= Null_Iir loop
             if Get_Identifier (Method) = Suffix then -- found the name
-               -- check it's a method!
+               -- Check it's a method.
                case Get_Kind (Method) is
                   when Iir_Kind_Function_Declaration |
                        Iir_Kind_Procedure_Declaration =>
@@ -1493,22 +1480,6 @@ package body Sem_Names is
                & Disp_Node (Prot_Type), Name);
             return;
          end if;
-
--- following is handled by later stages
---          case Get_Kind (Method) is
---             when Iir_Kind_Function_Declaration =>
---                Call := Create_Iir (Iir_Kind_Function_Call);
---                Set_Type (Call, Get_Return_Type (Method));
---                Set_Base_Name (Call, Call);
---             when Iir_Kind_Procedure_Declaration =>
---                Call := Create_Iir (Iir_Kind_Procedure_Call);
---             when others =>
---                Error_Kind ("sem_as_method_call", Method);
---          end case;
---          Location_Copy (Call, Sub_Name);
---          Set_Implementation (Call, Method);
---          --Set_Parameter_Association_Chain (Call, Xx);
---          Add_Result (Res, Call);
       end Sem_As_Method_Call;
 
    begin
@@ -1992,7 +1963,7 @@ package body Sem_Names is
                if Res = Null_Iir then
                   Error_Msg_Sem
                     ("No overloaded subprogram found matching "
-                     & Disp_Node(Prefix_Name), Name);
+                       & Disp_Node (Prefix_Name), Name);
                end if;
             when Iir_Kinds_Function_Declaration =>
                Add_Result (Res, Sem_As_Function_Call (Prefix_Name,
@@ -2119,14 +2090,9 @@ package body Sem_Names is
            | Iir_Kind_Selected_Element
            | Iir_Kind_Dereference
            | Iir_Kind_Indexed_Name
-            -- Iir_Kind_Function_Call added to resolve testcase 2 in
-            -- https://gna.org/bugs/?18351
            | Iir_Kind_Function_Call =>
             Sem_As_Selected_By_All_Name (Prefix);
-            -- when clause added to resolve testcases 3-6 in
-            -- https://gna.org/bugs/?18351
          when Iir_Kinds_Function_Declaration =>
-            -- or Iir_Kind_Function_Declaration to exclude implicit functions
             Prefix := Sem_As_Function_Call (Name => Prefix_Name,
                                             Spec => Prefix,
                                             Assoc_Chain => Null_Iir);
@@ -3005,7 +2971,8 @@ package body Sem_Names is
       case Get_Kind (Expr) is
          when Iir_Kind_Error =>
             null;
-         when Iir_Kinds_Object_Declaration =>
+         when Iir_Kinds_Object_Declaration
+           | Iir_Kinds_Quantity_Declaration =>
             Set_Base_Name (Name, Expr);
             Sem_Check_Pure (Name, Expr);
             Sem_Check_All_Sensitized (Expr);
@@ -3438,6 +3405,17 @@ package body Sem_Names is
                     ("type expected, found " & Disp_Node (Res), Name);
                   return Null_Iir;
             end case;
+         when Decl_Nature =>
+            case Get_Kind (Res) is
+               when Iir_Kind_Nature_Declaration =>
+                  Res := Get_Nature (Res);
+               when others =>
+                  Error_Msg_Sem
+                    ("nature expected, found " & Disp_Node (Res), Name);
+                  return Null_Iir;
+            end case;
+         when Decl_Terminal =>
+            Res := Check_Kind (Res, Iir_Kind_Terminal_Declaration, "terminal");
          when Decl_Component =>
             Res := Check_Kind (Res, Iir_Kind_Component_Declaration,
                                "component");

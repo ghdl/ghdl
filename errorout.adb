@@ -463,6 +463,9 @@ package body Errorout is
          when Iir_Kind_Overload_List =>
             return "overloaded name or expression";
 
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Enumeration_Type_Definition =>
+            return Iirs_Utils.Image_Identifier (Get_Type_Declarator (Node));
          when Iir_Kind_Array_Type_Definition =>
             return Disp_Type (Node, "array type");
          when Iir_Kind_Array_Subtype_Definition =>
@@ -497,6 +500,9 @@ package body Errorout is
          when Iir_Kind_Subtype_Definition =>
             return "subtype definition";
 
+         when Iir_Kind_Scalar_Nature_Definition =>
+            return Iirs_Utils.Image_Identifier (Get_Nature_Declarator (Node));
+
          when Iir_Kind_Choice_By_Expression =>
             return "choice by expression";
          when Iir_Kind_Choice_By_Range =>
@@ -508,9 +514,6 @@ package body Errorout is
          when Iir_Kind_Choice_By_None =>
             return "positionnal choice";
 
-         when Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Enumeration_Type_Definition =>
-            return Iirs_Utils.Image_Identifier (Get_Type_Declarator (Node));
          when Iir_Kind_Function_Call =>
             return "function call";
          when Iir_Kind_Procedure_Call_Statement =>
@@ -667,6 +670,11 @@ package body Errorout is
          when Iir_Kind_Subtype_Declaration =>
             return Disp_Identifier (Node, "subtype");
 
+         when Iir_Kind_Nature_Declaration =>
+            return Disp_Identifier (Node, "nature");
+         when Iir_Kind_Subnature_Declaration =>
+            return Disp_Identifier (Node, "subnature");
+
          when Iir_Kind_Component_Instantiation_Statement =>
             return Disp_Identifier (Node, "component instance");
          when Iir_Kind_Configuration_Specification =>
@@ -689,8 +697,18 @@ package body Errorout is
          when Iir_Kind_Generate_Statement =>
             return "generate statement";
 
+         when Iir_Kind_Simple_Simultaneous_Statement =>
+            return "simple simultaneous statement";
+
          when Iir_Kind_Psl_Declaration =>
             return Disp_Identifier (Node, "PSL declaration");
+
+         when Iir_Kind_Terminal_Declaration =>
+            return Disp_Identifier (Node, "terminal declaration");
+         when Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration =>
+            return Disp_Identifier (Node, "quantity declaration");
 
          when Iir_Kind_Attribute_Declaration =>
             return Disp_Identifier (Node, "attribute");

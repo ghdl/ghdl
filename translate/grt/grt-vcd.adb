@@ -604,7 +604,9 @@ package body Grt.Vcd is
          Fact := 0.1;
          Delta_Exp := 1;
       end if;
-      while 1 = 1 loop -- Seek the first digit
+
+      -- Seek the first digit
+      loop
          Digit := Digit_Floor(Val_tmp);
          if Digit > 0 then
             exit;

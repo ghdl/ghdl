@@ -1702,6 +1702,31 @@ package body Sem_Stmts is
       Sem_Guard (Stmt);
    end Sem_Concurrent_Selected_Signal_Assignment;
 
+   procedure Simple_Simultaneous_Statement (Stmt : Iir) is
+      Left, Right : Iir;
+      Res_Type : Iir;
+   begin
+      Left := Get_Simultaneous_Left (Stmt);
+      Right := Get_Simultaneous_Right (Stmt);
+
+      Left := Sem_Expression_Ov (Left, Null_Iir);
+      Right := Sem_Expression_Ov (Right, Null_Iir);
+
+      --  Give up in case of error
+      if Left = Null_Iir or else Right = Null_Iir then
+         return;
+      end if;
+
+      Res_Type := Search_Compatible_Type (Get_Type (Left), Get_Type (Right));
+      if Res_Type = Null_Iir then
+         Error_Msg_Sem ("types of left and right expressions are incompatible",
+                        Stmt);
+         return;
+      end if;
+
+      --  FIXME: check for nature type...
+   end Simple_Simultaneous_Statement;
+
    procedure Sem_Concurrent_Statement_Chain
      (Parent : Iir; Is_Passive : Boolean)
    is
@@ -1776,6 +1801,8 @@ package body Sem_Stmts is
                Sem_Psl.Sem_Psl_Assert_Statement (El);
             when Iir_Kind_Psl_Default_Clock =>
                Sem_Psl.Sem_Psl_Default_Clock (El);
+            when Iir_Kind_Simple_Simultaneous_Statement =>
+               Simple_Simultaneous_Statement (El);
             when others =>
                Error_Kind ("sem_concurrent_statement_chain", El);
          end case;

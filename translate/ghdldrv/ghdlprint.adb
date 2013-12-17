@@ -374,17 +374,11 @@ package body Ghdlprint is
                Disp_Spaces;
                Disp_Text;
             when Tok_Xnor .. Tok_Ror =>
-               if Flags.Vhdl_Std > Vhdl_87 then
-                  Disp_Reserved;
-               else
-                  Disp_Identifier;
-               end if;
+               Disp_Reserved;
             when Tok_Protected =>
-               if Flags.Vhdl_Std >= Vhdl_00 then
-                  Disp_Reserved;
-               else
-                  Disp_Identifier;
-               end if;
+               Disp_Reserved;
+            when Tok_Across .. Tok_Tolerance =>
+               Disp_Reserved;
             when Tok_Psl_Default
               | Tok_Psl_Clock
               | Tok_Psl_Property
@@ -429,6 +423,7 @@ package body Ghdlprint is
                end if;
             when Tok_Left_Paren .. Tok_Colon
               | Tok_Comma .. Tok_Dot
+              | Tok_Equal_Equal
               | Tok_Integer
               | Tok_Real
               | Tok_Equal .. Tok_Slash

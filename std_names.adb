@@ -17,394 +17,371 @@
 --  02111-1307, USA.
 with Name_Table;
 with Tokens; use Tokens;
+with Ada.Exceptions;
 
 package body Std_Names is
    procedure Std_Names_Initialize is
-      function GI (S : String) return Name_Id
-         renames Name_Table.Get_Identifier;
-
---       function GI (S : String) return Name_Id is
---       begin
---          Ada.Text_IO.Put_Line ("add " & S);
---          return Name_Table.Get_Identifier (S);
---       end GI;
-
+      procedure Def (S : String; Id : Name_Id) is
+      begin
+         if Name_Table.Get_Identifier (S) /= Id then
+            Ada.Exceptions.Raise_Exception
+              (Program_Error'Identity, "wrong name_id for " & S);
+         end if;
+      end Def;
    begin
       Name_Table.Initialize;
 
-      -- Create keywords.
-      for I in Tok_Mod .. Tok_Protected loop
-         if GI (Image (I)) /=
-           Name_First_Keyword +
-           Token_Type'Pos (I) - Token_Type'Pos (Tok_First_Keyword)
-         then
-            raise Program_Error;
-         end if;
+      -- Create reserved words.
+      for I in Tok_Mod .. Tok_Tolerance loop
+         Def (Image (I),
+              Name_First_Keyword +
+                Token_Type'Pos (I) - Token_Type'Pos (Tok_First_Keyword));
       end loop;
 
       -- Create operators.
-      if GI ("=") /= Name_Op_Equality
-        or GI ("/=") /= Name_Op_Inequality
-        or GI ("<") /= Name_Op_Less
-        or GI ("<=") /= Name_Op_Less_Equal
-        or GI (">") /= Name_Op_Greater
-        or GI (">=") /= Name_Op_Greater_Equal
-        or GI ("+") /= Name_Op_Plus
-        or GI ("-") /= Name_Op_Minus
-        or GI ("*") /= Name_Op_Mul
-        or GI ("/") /= Name_Op_Div
-        or GI ("**") /= Name_Op_Exp
-        or GI ("&") /= Name_Op_Concatenation
-        or GI ("??") /= Name_Op_Condition
-      then
-         raise Program_Error;
-      end if;
+      Def ("=",  Name_Op_Equality);
+      Def ("/=", Name_Op_Inequality);
+      Def ("<",  Name_Op_Less);
+      Def ("<=", Name_Op_Less_Equal);
+      Def (">",  Name_Op_Greater);
+      Def (">=", Name_Op_Greater_Equal);
+      Def ("+",  Name_Op_Plus);
+      Def ("-",  Name_Op_Minus);
+      Def ("*",  Name_Op_Mul);
+      Def ("/",  Name_Op_Div);
+      Def ("**", Name_Op_Exp);
+      Def ("&",  Name_Op_Concatenation);
+      Def ("??", Name_Op_Condition);
 
       -- Create Attributes.
-      if   GI ("base") /= Name_Base
-        or GI ("left") /= Name_Left
-        or GI ("right") /= Name_Right
-        or GI ("high") /= Name_High
-        or GI ("low") /= Name_Low
-        or GI ("pos") /= Name_Pos
-        or GI ("val") /= Name_Val
-        or GI ("succ") /= Name_Succ
-        or GI ("pred") /= Name_Pred
-        or GI ("leftof") /= Name_Leftof
-        or GI ("rightof") /= Name_Rightof
-        or GI ("reverse_range") /= Name_Reverse_Range
-        or GI ("length") /= Name_Length
-        or GI ("delayed") /= Name_Delayed
-        or GI ("stable") /= Name_Stable
-        or GI ("quiet") /= Name_Quiet
-        or GI ("transaction") /= Name_Transaction
-        or GI ("event") /= Name_Event
-        or GI ("active") /= Name_Active
-        or GI ("last_event") /= Name_Last_Event
-        or GI ("last_active") /= Name_Last_Active
-        or GI ("last_value") /= Name_Last_Value
+      Def ("base",          Name_Base);
+      Def ("left",          Name_Left);
+      Def ("right",         Name_Right);
+      Def ("high",          Name_High);
+      Def ("low",           Name_Low);
+      Def ("pos",           Name_Pos);
+      Def ("val",           Name_Val);
+      Def ("succ",          Name_Succ);
+      Def ("pred",          Name_Pred);
+      Def ("leftof",        Name_Leftof);
+      Def ("rightof",       Name_Rightof);
+      Def ("reverse_range", Name_Reverse_Range);
+      Def ("length",        Name_Length);
+      Def ("delayed",       Name_Delayed);
+      Def ("stable",        Name_Stable);
+      Def ("quiet",         Name_Quiet);
+      Def ("transaction",   Name_Transaction);
+      Def ("event",         Name_Event);
+      Def ("active",        Name_Active);
+      Def ("last_event",    Name_Last_Event);
+      Def ("last_active",   Name_Last_Active);
+      Def ("last_value",    Name_Last_Value);
 
-        or GI ("behavior") /= Name_Behavior
-        or GI ("structure") /= Name_Structure
+      Def ("behavior",      Name_Behavior);
+      Def ("structure",     Name_Structure);
 
-        or GI ("ascending") /= Name_Ascending
-        or GI ("image") /= Name_Image
-        or GI ("value") /= Name_Value
-        or GI ("driving") /= Name_Driving
-        or GI ("driving_value") /= Name_Driving_Value
-        or GI ("simple_name") /= Name_Simple_Name
-        or GI ("instance_name") /= Name_Instance_Name
-        or GI ("path_name") /= Name_Path_Name
-      then
-         raise Program_Error;
-      end if;
+      Def ("ascending",     Name_Ascending);
+      Def ("image",         Name_Image);
+      Def ("value",         Name_Value);
+      Def ("driving",       Name_Driving);
+      Def ("driving_value", Name_Driving_Value);
+      Def ("simple_name",   Name_Simple_Name);
+      Def ("instance_name", Name_Instance_Name);
+      Def ("path_name",     Name_Path_Name);
+
+      Def ("contribution",  Name_Contribution);
+      Def ("dot",           Name_Dot);
+      Def ("integ",         Name_Integ);
+      Def ("above",         Name_Above);
+      Def ("zoh",           Name_ZOH);
+      Def ("ltf",           Name_LTF);
+      Def ("ztf",           Name_ZTF);
+      Def ("ramp",          Name_Ramp);
+      Def ("slew",          Name_Slew);
 
       --  Create standard.
-      if GI ("std") /= Name_Std
-        or GI ("standard") /= Name_Standard
-        or GI ("boolean") /= Name_Boolean
-        or GI ("false") /= Name_False
-        or GI ("true") /= Name_True
-        or GI ("bit") /= Name_Bit
-        or GI ("character") /= Name_Character
-        or GI ("severity_level") /= Name_Severity_Level
-        or GI ("note") /= Name_Note
-        or GI ("warning") /= Name_Warning
-        or GI ("error") /= Name_Error
-        or GI ("failure") /= Name_Failure
-        or GI ("UNIVERSAL_INTEGER") /= Name_Universal_Integer
-        or GI ("UNIVERSAL_REAL") /= Name_Universal_Real
-        or GI ("CONVERTIBLE_INTEGER") /= Name_Convertible_Integer
-        or GI ("CONVERTIBLE_REAL") /= Name_Convertible_Real
-        or GI ("integer") /= Name_Integer
-        or GI ("real") /= Name_Real
-        or GI ("time") /= Name_Time
-        or GI ("fs") /= Name_Fs
-        or GI ("ps") /= Name_Ps
-        or GI ("ns") /= Name_Ns
-        or GI ("us") /= Name_Us
-        or GI ("ms") /= Name_Ms
-        or GI ("sec") /= Name_Sec
-        or GI ("min") /= Name_Min
-        or GI ("hr") /= Name_Hr
-        or GI ("delay_length") /= Name_Delay_Length
-        or GI ("now") /= Name_Now
-        or GI ("natural") /= Name_Natural
-        or GI ("positive") /= Name_Positive
-        or GI ("string") /= Name_String
-        or GI ("bit_vector") /= Name_Bit_Vector
-        or GI ("file_open_kind") /= Name_File_Open_Kind
-        or GI ("read_mode") /= Name_Read_Mode
-        or GI ("write_mode") /= Name_Write_Mode
-        or GI ("append_mode") /= Name_Append_Mode
-        or GI ("file_open_status") /= Name_File_Open_Status
-        or GI ("open_ok") /= Name_Open_Ok
-        or GI ("status_error") /= Name_Status_Error
-        or GI ("name_error") /= Name_Name_Error
-        or GI ("mode_error") /= Name_Mode_Error
-        or GI ("foreign") /= Name_Foreign
-      then
-         raise Program_Error;
-      end if;
+      Def ("std",                 Name_Std);
+      Def ("standard",            Name_Standard);
+      Def ("boolean",             Name_Boolean);
+      Def ("false",               Name_False);
+      Def ("true",                Name_True);
+      Def ("bit",                 Name_Bit);
+      Def ("character",           Name_Character);
+      Def ("severity_level",      Name_Severity_Level);
+      Def ("note",                Name_Note);
+      Def ("warning",             Name_Warning);
+      Def ("error",               Name_Error);
+      Def ("failure",             Name_Failure);
+      Def ("UNIVERSAL_INTEGER",   Name_Universal_Integer);
+      Def ("UNIVERSAL_REAL",      Name_Universal_Real);
+      Def ("CONVERTIBLE_INTEGER", Name_Convertible_Integer);
+      Def ("CONVERTIBLE_REAL",    Name_Convertible_Real);
+      Def ("integer",             Name_Integer);
+      Def ("real",                Name_Real);
+      Def ("time",                Name_Time);
+      Def ("fs",                  Name_Fs);
+      Def ("ps",                  Name_Ps);
+      Def ("ns",                  Name_Ns);
+      Def ("us",                  Name_Us);
+      Def ("ms",                  Name_Ms);
+      Def ("sec",                 Name_Sec);
+      Def ("min",                 Name_Min);
+      Def ("hr",                  Name_Hr);
+      Def ("delay_length",        Name_Delay_Length);
+      Def ("now",                 Name_Now);
+      Def ("natural",             Name_Natural);
+      Def ("positive",            Name_Positive);
+      Def ("string",              Name_String);
+      Def ("bit_vector",          Name_Bit_Vector);
+      Def ("file_open_kind",      Name_File_Open_Kind);
+      Def ("read_mode",           Name_Read_Mode);
+      Def ("write_mode",          Name_Write_Mode);
+      Def ("append_mode",         Name_Append_Mode);
+      Def ("file_open_status",    Name_File_Open_Status);
+      Def ("open_ok",             Name_Open_Ok);
+      Def ("status_error",        Name_Status_Error);
+      Def ("name_error",          Name_Name_Error);
+      Def ("mode_error",          Name_Mode_Error);
+      Def ("foreign",             Name_Foreign);
+      Def ("domain_type",         Name_Domain_Type);
+      Def ("quiescent_domain",    Name_Quiescent_Domain);
+      Def ("time_domain",         Name_Time_Domain);
+      Def ("frequency_domain",    Name_Frequency_Domain);
+      Def ("domain",              Name_Domain);
+      Def ("frequency",           Name_Frequency);
+      Def ("real_vector",         Name_Real_Vector);
 
-      if GI ("nul") /= Name_Nul
-        or GI ("soh") /= Name_Soh
-        or GI ("stx") /= Name_Stx
-        or GI ("etx") /= Name_Etx
-        or GI ("eot") /= Name_Eot
-        or GI ("enq") /= Name_Enq
-        or GI ("ack") /= Name_Ack
-        or GI ("bel") /= Name_Bel
-        or GI ("bs") /= Name_Bs
-        or GI ("ht") /= Name_Ht
-        or GI ("lf") /= Name_Lf
-        or GI ("vt") /= Name_Vt
-        or GI ("ff") /= Name_Ff
-        or GI ("cr") /= Name_Cr
-        or GI ("so") /= Name_So
-        or GI ("si") /= Name_Si
-        or GI ("dle") /= Name_Dle
-        or GI ("dc1") /= Name_Dc1
-        or GI ("dc2") /= Name_Dc2
-        or GI ("dc3") /= Name_Dc3
-        or GI ("dc4") /= Name_Dc4
-        or GI ("nak") /= Name_Nak
-        or GI ("syn") /= Name_Syn
-        or GI ("etb") /= Name_Etb
-        or GI ("can") /= Name_Can
-        or GI ("em") /= Name_Em
-        or GI ("sub") /= Name_Sub
-        or GI ("esc") /= Name_Esc
-        or GI ("fsp") /= Name_Fsp
-        or GI ("gsp") /= Name_Gsp
-        or GI ("rsp") /= Name_Rsp
-        or GI ("usp") /= Name_Usp
-        or GI ("del") /= Name_Del
-      then
-         raise Program_Error;
-      end if;
+      Def ("nul", Name_Nul);
+      Def ("soh", Name_Soh);
+      Def ("stx", Name_Stx);
+      Def ("etx", Name_Etx);
+      Def ("eot", Name_Eot);
+      Def ("enq", Name_Enq);
+      Def ("ack", Name_Ack);
+      Def ("bel", Name_Bel);
+      Def ("bs",  Name_Bs);
+      Def ("ht",  Name_Ht);
+      Def ("lf",  Name_Lf);
+      Def ("vt",  Name_Vt);
+      Def ("ff",  Name_Ff);
+      Def ("cr",  Name_Cr);
+      Def ("so",  Name_So);
+      Def ("si",  Name_Si);
+      Def ("dle", Name_Dle);
+      Def ("dc1", Name_Dc1);
+      Def ("dc2", Name_Dc2);
+      Def ("dc3", Name_Dc3);
+      Def ("dc4", Name_Dc4);
+      Def ("nak", Name_Nak);
+      Def ("syn", Name_Syn);
+      Def ("etb", Name_Etb);
+      Def ("can", Name_Can);
+      Def ("em",  Name_Em);
+      Def ("sub", Name_Sub);
+      Def ("esc", Name_Esc);
+      Def ("fsp", Name_Fsp);
+      Def ("gsp", Name_Gsp);
+      Def ("rsp", Name_Rsp);
+      Def ("usp", Name_Usp);
+      Def ("del", Name_Del);
 
-      if GI ("c128") /= Name_C128
-        or GI ("c129") /= Name_C129
-        or GI ("c130") /= Name_C130
-        or GI ("c131") /= Name_C131
-        or GI ("c132") /= Name_C132
-        or GI ("c133") /= Name_C133
-        or GI ("c134") /= Name_C134
-        or GI ("c135") /= Name_C135
-        or GI ("c136") /= Name_C136
-        or GI ("c137") /= Name_C137
-        or GI ("c138") /= Name_C138
-        or GI ("c139") /= Name_C139
-        or GI ("c140") /= Name_C140
-        or GI ("c141") /= Name_C141
-        or GI ("c142") /= Name_C142
-        or GI ("c143") /= Name_C143
-        or GI ("c144") /= Name_C144
-        or GI ("c145") /= Name_C145
-        or GI ("c146") /= Name_C146
-        or GI ("c147") /= Name_C147
-        or GI ("c148") /= Name_C148
-        or GI ("c149") /= Name_C149
-        or GI ("c150") /= Name_C150
-        or GI ("c151") /= Name_C151
-        or GI ("c152") /= Name_C152
-        or GI ("c153") /= Name_C153
-        or GI ("c154") /= Name_C154
-        or GI ("c155") /= Name_C155
-        or GI ("c156") /= Name_C156
-        or GI ("c157") /= Name_C157
-        or GI ("c158") /= Name_C158
-        or GI ("c159") /= Name_C159
-      then
-         raise Program_Error;
-      end if;
+      Def ("c128", Name_C128);
+      Def ("c129", Name_C129);
+      Def ("c130", Name_C130);
+      Def ("c131", Name_C131);
+      Def ("c132", Name_C132);
+      Def ("c133", Name_C133);
+      Def ("c134", Name_C134);
+      Def ("c135", Name_C135);
+      Def ("c136", Name_C136);
+      Def ("c137", Name_C137);
+      Def ("c138", Name_C138);
+      Def ("c139", Name_C139);
+      Def ("c140", Name_C140);
+      Def ("c141", Name_C141);
+      Def ("c142", Name_C142);
+      Def ("c143", Name_C143);
+      Def ("c144", Name_C144);
+      Def ("c145", Name_C145);
+      Def ("c146", Name_C146);
+      Def ("c147", Name_C147);
+      Def ("c148", Name_C148);
+      Def ("c149", Name_C149);
+      Def ("c150", Name_C150);
+      Def ("c151", Name_C151);
+      Def ("c152", Name_C152);
+      Def ("c153", Name_C153);
+      Def ("c154", Name_C154);
+      Def ("c155", Name_C155);
+      Def ("c156", Name_C156);
+      Def ("c157", Name_C157);
+      Def ("c158", Name_C158);
+      Def ("c159", Name_C159);
 
       -- Create misc.
-      if GI ("guard") /= Name_Guard
-        or GI ("deallocate") /= Name_Deallocate
-        or GI ("file_open") /= Name_File_Open
-        or GI ("file_close") /= Name_File_Close
-        or GI ("read") /= Name_Read
-        or GI ("write") /= Name_Write
-        or GI ("flush") /= Name_Flush
-        or GI ("endfile") /= Name_Endfile
-        or GI ("p") /= Name_P
-        or GI ("f") /= Name_F
-        or GI ("external_name") /= Name_External_Name
-        or GI ("open_kind") /= Name_Open_Kind
-        or GI ("status") /= Name_Status
-        or GI ("first") /= Name_First
-        or GI ("last") /= Name_Last
-        or GI ("textio") /= Name_Textio
-        or GI ("work") /= Name_Work
-        or GI ("text") /= Name_Text
-        or GI ("to_string") /= Name_To_String
-        or GI ("untruncated_text_read") /= Name_Untruncated_Text_Read
-      then
-         raise Program_Error;
-      end if;
+      Def ("guard",                 Name_Guard);
+      Def ("deallocate",            Name_Deallocate);
+      Def ("file_open",             Name_File_Open);
+      Def ("file_close",            Name_File_Close);
+      Def ("read",                  Name_Read);
+      Def ("write",                 Name_Write);
+      Def ("flush",                 Name_Flush);
+      Def ("endfile",               Name_Endfile);
+      Def ("p",                     Name_P);
+      Def ("f",                     Name_F);
+      Def ("external_name",         Name_External_Name);
+      Def ("open_kind",             Name_Open_Kind);
+      Def ("status",                Name_Status);
+      Def ("first",                 Name_First);
+      Def ("last",                  Name_Last);
+      Def ("textio",                Name_Textio);
+      Def ("work",                  Name_Work);
+      Def ("text",                  Name_Text);
+      Def ("to_string",             Name_To_String);
+      Def ("untruncated_text_read", Name_Untruncated_Text_Read);
 
-      if GI ("ieee") /= Name_Ieee
-        or GI ("std_logic_1164") /= Name_Std_Logic_1164
-        or GI ("std_ulogic") /= Name_Std_Ulogic
-        or GI ("std_ulogic_vector") /= Name_Std_Ulogic_Vector
-        or GI ("std_logic") /= Name_Std_Logic
-        or GI ("std_logic_vector") /= Name_Std_Logic_Vector
-        or GI ("rising_edge") /= Name_Rising_Edge
-        or GI ("falling_edge") /= Name_Falling_Edge
-        or GI ("vital_timing") /= Name_VITAL_Timing
-        or GI ("vital_level0") /= Name_VITAL_Level0
-        or GI ("vital_level1") /= Name_VITAL_Level1
-      then
-         raise Program_Error;
-      end if;
+      Def ("ieee",              Name_Ieee);
+      Def ("std_logic_1164",    Name_Std_Logic_1164);
+      Def ("std_ulogic",        Name_Std_Ulogic);
+      Def ("std_ulogic_vector", Name_Std_Ulogic_Vector);
+      Def ("std_logic",         Name_Std_Logic);
+      Def ("std_logic_vector",  Name_Std_Logic_Vector);
+      Def ("rising_edge",       Name_Rising_Edge);
+      Def ("falling_edge",      Name_Falling_Edge);
+      Def ("vital_timing",      Name_VITAL_Timing);
+      Def ("vital_level0",      Name_VITAL_Level0);
+      Def ("vital_level1",      Name_VITAL_Level1);
 
       --  Verilog keywords
-      if GI ("always") /= Name_Always
-        or GI ("assign") /= Name_Assign
-        or GI ("buf") /= Name_Buf
-        or GI ("bufif0") /= Name_Bufif0
-        or GI ("bufif1") /= Name_Bufif1
-        or GI ("casex") /= Name_Casex
-        or GI ("casez") /= Name_Casez
-        or GI ("cmos") /= Name_Cmos
-        or GI ("deassign") /= Name_Deassign
-        or GI ("default") /= Name_Default
-        or GI ("defparam") /= Name_Defparam
-        or GI ("disable") /= Name_Disable
-        or GI ("endcase") /= Name_Endcase
-        or GI ("endfunction") /= Name_Endfunction
-        or GI ("endmodule") /= Name_Endmodule
-        or GI ("endprimitive") /= Name_Endprimitive
-        or GI ("endspecify") /= Name_Endspecify
-        or GI ("endtable") /= Name_Endtable
-        or GI ("endtask") /= Name_Endtask
-        or GI ("forever") /= Name_Forever
-        or GI ("fork") /= Name_Fork
-        or GI ("highz0") /= Name_Highz0
-        or GI ("highz1") /= Name_Highz1
-        or GI ("initial") /= Name_Initial
-        or GI ("input") /= Name_Input
-        or GI ("join") /= Name_Join
-        or GI ("large") /= Name_Large
-        or GI ("medium") /= Name_Medium
-        or GI ("module") /= Name_Module
-        or GI ("negedge") /= Name_Negedge
-        or GI ("nmos") /= Name_Nmos
-        or GI ("notif0") /= Name_Notif0
-        or GI ("notif1") /= Name_Notif1
-        or GI ("output") /= Name_Output
-        or GI ("parameter") /= Name_Parameter
-        or GI ("pmos") /= Name_Pmos
-        or GI ("posedge") /= Name_Posedge
-        or GI ("primitive") /= Name_Primitive
-        or GI ("pull0") /= Name_Pull0
-        or GI ("pull1") /= Name_Pull1
-        or GI ("pulldown") /= Name_Pulldown
-        or GI ("pullup") /= Name_Pullup
-        or GI ("reg") /= Name_Reg
-        or GI ("repeat") /= Name_Repeat
-        or GI ("rcmos") /= Name_Rcmos
-        or GI ("rnmos") /= Name_Rnmos
-        or GI ("rpmos") /= Name_Rpmos
-        or GI ("rtran") /= Name_Rtran
-        or GI ("rtranif0") /= Name_Rtranif0
-        or GI ("rtranif1") /= Name_Rtranif1
-        or GI ("small") /= Name_Small
-        or GI ("specify") /= Name_Specify
-        or GI ("specparam") /= Name_Specparam
-        or GI ("strong0") /= Name_Strong0
-        or GI ("strong1") /= Name_Strong1
-        or GI ("supply0") /= Name_Supply0
-        or GI ("supply1") /= Name_Supply1
-        or GI ("table") /= Name_Tablex
-        or GI ("task") /= Name_Task
-        or GI ("tran") /= Name_Tran
-        or GI ("tranif0") /= Name_Tranif0
-        or GI ("tranif1") /= Name_Tranif1
-        or GI ("tri") /= Name_Tri
-        or GI ("tri0") /= Name_Tri0
-        or GI ("tri1") /= Name_Tri1
-        or GI ("trireg") /= Name_Trireg
-        or GI ("wand") /= Name_Wand
-        or GI ("weak0") /= Name_Weak0
-        or GI ("weak1") /= Name_Weak1
-        or GI ("wire") /= Name_Wire
-        or GI ("wor") /= Name_Wor
-      then
-         raise Program_Error;
-      end if;
+      Def ("always",       Name_Always);
+      Def ("assign",       Name_Assign);
+      Def ("buf",          Name_Buf);
+      Def ("bufif0",       Name_Bufif0);
+      Def ("bufif1",       Name_Bufif1);
+      Def ("casex",        Name_Casex);
+      Def ("casez",        Name_Casez);
+      Def ("cmos",         Name_Cmos);
+      Def ("deassign",     Name_Deassign);
+      Def ("default",      Name_Default);
+      Def ("defparam",     Name_Defparam);
+      Def ("disable",      Name_Disable);
+      Def ("endcase",      Name_Endcase);
+      Def ("endfunction",  Name_Endfunction);
+      Def ("endmodule",    Name_Endmodule);
+      Def ("endprimitive", Name_Endprimitive);
+      Def ("endspecify",   Name_Endspecify);
+      Def ("endtable",     Name_Endtable);
+      Def ("endtask",      Name_Endtask);
+      Def ("forever",      Name_Forever);
+      Def ("fork",         Name_Fork);
+      Def ("highz0",       Name_Highz0);
+      Def ("highz1",       Name_Highz1);
+      Def ("initial",      Name_Initial);
+      Def ("input",        Name_Input);
+      Def ("join",         Name_Join);
+      Def ("large",        Name_Large);
+      Def ("medium",       Name_Medium);
+      Def ("module",       Name_Module);
+      Def ("negedge",      Name_Negedge);
+      Def ("nmos",         Name_Nmos);
+      Def ("notif0",       Name_Notif0);
+      Def ("notif1",       Name_Notif1);
+      Def ("output",       Name_Output);
+      Def ("parameter",    Name_Parameter);
+      Def ("pmos",         Name_Pmos);
+      Def ("posedge",      Name_Posedge);
+      Def ("primitive",    Name_Primitive);
+      Def ("pull0",        Name_Pull0);
+      Def ("pull1",        Name_Pull1);
+      Def ("pulldown",     Name_Pulldown);
+      Def ("pullup",       Name_Pullup);
+      Def ("reg",          Name_Reg);
+      Def ("repeat",       Name_Repeat);
+      Def ("rcmos",        Name_Rcmos);
+      Def ("rnmos",        Name_Rnmos);
+      Def ("rpmos",        Name_Rpmos);
+      Def ("rtran",        Name_Rtran);
+      Def ("rtranif0",     Name_Rtranif0);
+      Def ("rtranif1",     Name_Rtranif1);
+      Def ("small",        Name_Small);
+      Def ("specify",      Name_Specify);
+      Def ("specparam",    Name_Specparam);
+      Def ("strong0",      Name_Strong0);
+      Def ("strong1",      Name_Strong1);
+      Def ("supply0",      Name_Supply0);
+      Def ("supply1",      Name_Supply1);
+      Def ("table",        Name_Tablex);
+      Def ("task",         Name_Task);
+      Def ("tran",         Name_Tran);
+      Def ("tranif0",      Name_Tranif0);
+      Def ("tranif1",      Name_Tranif1);
+      Def ("tri",          Name_Tri);
+      Def ("tri0",         Name_Tri0);
+      Def ("tri1",         Name_Tri1);
+      Def ("trireg",       Name_Trireg);
+      Def ("wand",         Name_Wand);
+      Def ("weak0",        Name_Weak0);
+      Def ("weak1",        Name_Weak1);
+      Def ("wire",         Name_Wire);
+      Def ("wor",          Name_Wor);
 
-      if GI ("define") /= Name_Define
-        or GI ("endif") /= Name_Endif
-        or GI ("ifdef") /= Name_Ifdef
-        or GI ("include") /= Name_Include
-        or GI ("timescale") /= Name_Timescale
-        or GI ("undef") /= Name_Undef
-      then
-         raise Program_Error;
-      end if;
+      Def ("define",       Name_Define);
+      Def ("endif",        Name_Endif);
+      Def ("ifdef",        Name_Ifdef);
+      Def ("include",      Name_Include);
+      Def ("timescale",    Name_Timescale);
+      Def ("undef",        Name_Undef);
 
-      if GI ("display") /= Name_Display
-        or GI ("finish") /= Name_Finish
-      then
-         raise Program_Error;
-      end if;
+      Def ("display", Name_Display);
+      Def ("finish",  Name_Finish);
 
-      if GI ("psl") /= Name_Psl
-        or GI ("pragma") /= Name_Pragma
-      then
-         raise Program_Error;
-      end if;
+      Def ("psl",    Name_Psl);
+      Def ("pragma", Name_Pragma);
 
       --  PSL keywords
-      if GI ("a") /= Name_A
-        or GI ("af") /= Name_Af
-        or GI ("ag") /= Name_Ag
-        or GI ("ax") /= Name_Ax
-        or GI ("abort") /= Name_Abort
-        or GI ("assume") /= Name_Assume
-        or GI ("assume_guarantee") /= Name_Assume_Guarantee
-        or GI ("before") /= Name_Before
-        or GI ("clock") /= Name_Clock
-        or GI ("const") /= Name_Const
-        or GI ("cover") /= Name_Cover
-        or GI ("e") /= Name_E
-        or GI ("ef") /= Name_Ef
-        or GI ("eg") /= Name_Eg
-        or GI ("ex") /= Name_Ex
-        or GI ("endpoint") /= Name_Endpoint
-        or GI ("eventually") /= Name_Eventually
-        or GI ("fairness") /= Name_Fairness
-        or GI ("fell ") /= Name_Fell
-        or GI ("forall") /= Name_forall
-        or GI ("g") /= Name_G
-        or GI ("inf") /= Name_Inf
-        or GI ("inherit") /= Name_Inherit
-        or GI ("never") /= Name_Never
-        or GI ("next_a") /= Name_Next_A
-        or GI ("next_e") /= Name_Next_E
-        or GI ("next_event") /= Name_Next_Event
-        or GI ("next_event_a") /= Name_Next_Event_A
-        or GI ("next_event_e") /= Name_Next_Event_E
-        or GI ("property") /= Name_Property
-        or GI ("prev") /= Name_Prev
-        or GI ("restrict") /= Name_Restrict
-        or GI ("restrict_guarantee") /= Name_Restrict_Guarantee
-        or GI ("rose") /= Name_Rose
-        or GI ("sequence") /= Name_Sequence
-        or GI ("strong") /= Name_Strong
-        or GI ("union") /= Name_Union
-        or GI ("vmode") /= Name_Vmode
-        or GI ("vprop") /= Name_Vprop
-        or GI ("vunit") /= Name_Vunit
-        or GI ("w") /= Name_W
-        or GI ("whilenot") /= Name_Whilenot
-        or GI ("within") /= Name_Within
-        or GI ("x") /= Name_X
-      then
-         raise Program_Error;
-      end if;
+      Def ("a",                  Name_A);
+      Def ("af",                 Name_Af);
+      Def ("ag",                 Name_Ag);
+      Def ("ax",                 Name_Ax);
+      Def ("abort",              Name_Abort);
+      Def ("assume",             Name_Assume);
+      Def ("assume_guarantee",   Name_Assume_Guarantee);
+      Def ("before",             Name_Before);
+      Def ("clock",              Name_Clock);
+      Def ("const",              Name_Const);
+      Def ("cover",              Name_Cover);
+      Def ("e",                  Name_E);
+      Def ("ef",                 Name_Ef);
+      Def ("eg",                 Name_Eg);
+      Def ("ex",                 Name_Ex);
+      Def ("endpoint",           Name_Endpoint);
+      Def ("eventually",         Name_Eventually);
+      Def ("fairness",           Name_Fairness);
+      Def ("fell ",              Name_Fell);
+      Def ("forall",             Name_Forall);
+      Def ("g",                  Name_G);
+      Def ("inf",                Name_Inf);
+      Def ("inherit",            Name_Inherit);
+      Def ("never",              Name_Never);
+      Def ("next_a",             Name_Next_A);
+      Def ("next_e",             Name_Next_E);
+      Def ("next_event",         Name_Next_Event);
+      Def ("next_event_a",       Name_Next_Event_A);
+      Def ("next_event_e",       Name_Next_Event_E);
+      Def ("property",           Name_Property);
+      Def ("prev",               Name_Prev);
+      Def ("restrict",           Name_Restrict);
+      Def ("restrict_guarantee", Name_Restrict_Guarantee);
+      Def ("rose",               Name_Rose);
+      Def ("sequence",           Name_Sequence);
+      Def ("strong",             Name_Strong);
+      Def ("union",              Name_Union);
+      Def ("vmode",              Name_Vmode);
+      Def ("vprop",              Name_Vprop);
+      Def ("vunit",              Name_Vunit);
+      Def ("w",                  Name_W);
+      Def ("whilenot",           Name_Whilenot);
+      Def ("within",             Name_Within);
+      Def ("x",                  Name_X);
    end Std_Names_Initialize;
 end Std_Names;

@@ -152,7 +152,7 @@ package body Iirs is
             raise Internal_Error;
          else
             Error_Msg_Sem ("Aborting compilation due to previous errors.",
-                             An_Iir);
+                           An_Iir);
             raise Compilation_Error;
          end if;
       end if;
@@ -375,10 +375,8 @@ package body Iirs is
            | Iir_Kind_File_Type_Definition
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
-           | Iir_Kind_Record_Subtype_Definition
            | Iir_Kind_Access_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition
-           | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition
@@ -387,11 +385,12 @@ package body Iirs is
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Range_Expression
            | Iir_Kind_Protected_Type_Body
-           | Iir_Kind_Subtype_Definition
            | Iir_Kind_Overload_List
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Nature_Declaration
+           | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
@@ -400,6 +399,7 @@ package body Iirs is
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
+           | Iir_Kind_Terminal_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Object_Alias_Declaration
@@ -508,12 +508,19 @@ package body Iirs is
            | Iir_Kind_Attribute_Specification
            | Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Record_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Subtype_Definition
+           | Iir_Kind_Scalar_Nature_Definition
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
@@ -538,6 +545,7 @@ package body Iirs is
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Signal_Assignment_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
@@ -1846,9 +1854,14 @@ package body Iirs is
          when Iir_Kind_Design_Unit
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Nature_Declaration
+           | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Group_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
@@ -1874,6 +1887,7 @@ package body Iirs is
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
@@ -2117,6 +2131,8 @@ package body Iirs is
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Nature_Declaration
+           | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
@@ -2125,6 +2141,10 @@ package body Iirs is
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Terminal_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
@@ -2152,6 +2172,7 @@ package body Iirs is
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
@@ -2259,6 +2280,9 @@ package body Iirs is
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Element_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Enumeration_Literal
@@ -2397,6 +2421,30 @@ package body Iirs is
       Set_Field4 (Target, Def);
    end Set_Subtype_Definition;
 
+   procedure Check_Kind_For_Nature (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Nature_Declaration
+           | Iir_Kind_Subnature_Declaration
+           | Iir_Kind_Terminal_Declaration =>
+            null;
+         when others =>
+            Failed ("Nature", Target);
+      end case;
+   end Check_Kind_For_Nature;
+
+   function Get_Nature (Target : Iir) return Iir is
+   begin
+      Check_Kind_For_Nature (Target);
+      return Get_Field1 (Target);
+   end Get_Nature;
+
+   procedure Set_Nature (Target : Iir; Nature : Iir) is
+   begin
+      Check_Kind_For_Nature (Target);
+      Set_Field1 (Target, Nature);
+   end Set_Nature;
+
    procedure Check_Kind_For_Mode (Target : Iir) is
    begin
       case Get_Kind (Target) is
@@ -2452,6 +2500,9 @@ package body Iirs is
       case Get_Kind (Target) is
          when Iir_Kind_Attribute_Value
            | Iir_Kind_Operator_Symbol
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_File_Declaration
@@ -2797,7 +2848,10 @@ package body Iirs is
    procedure Check_Kind_For_Default_Value (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Signal_Declaration
+         when Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
+           | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Constant_Interface_Declaration
@@ -3351,6 +3405,8 @@ package body Iirs is
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Nature_Declaration
+           | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
@@ -3365,6 +3421,10 @@ package body Iirs is
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Terminal_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
@@ -3392,6 +3452,7 @@ package body Iirs is
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
@@ -3439,6 +3500,7 @@ package body Iirs is
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
@@ -3478,6 +3540,8 @@ package body Iirs is
            | Iir_Kind_Record_Element_Constraint
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Nature_Declaration
+           | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
@@ -3487,6 +3551,10 @@ package body Iirs is
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Terminal_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
@@ -3513,6 +3581,7 @@ package body Iirs is
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
@@ -3704,6 +3773,124 @@ package body Iirs is
       Check_Kind_For_Resolution_Function (Decl);
       Set_Field5 (Decl, Func);
    end Set_Resolution_Function;
+
+   procedure Check_Kind_For_Tolerance (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Record_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Subtype_Definition
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
+           | Iir_Kind_Simple_Simultaneous_Statement =>
+            null;
+         when others =>
+            Failed ("Tolerance", Target);
+      end case;
+   end Check_Kind_For_Tolerance;
+
+   function Get_Tolerance (Def : Iir) return Iir is
+   begin
+      Check_Kind_For_Tolerance (Def);
+      return Get_Field7 (Def);
+   end Get_Tolerance;
+
+   procedure Set_Tolerance (Def : Iir; Tol : Iir) is
+   begin
+      Check_Kind_For_Tolerance (Def);
+      Set_Field7 (Def, Tol);
+   end Set_Tolerance;
+
+   procedure Check_Kind_For_Plus_Terminal (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration =>
+            null;
+         when others =>
+            Failed ("Plus_Terminal", Target);
+      end case;
+   end Check_Kind_For_Plus_Terminal;
+
+   function Get_Plus_Terminal (Def : Iir) return Iir is
+   begin
+      Check_Kind_For_Plus_Terminal (Def);
+      return Get_Field8 (Def);
+   end Get_Plus_Terminal;
+
+   procedure Set_Plus_Terminal (Def : Iir; Terminal : Iir) is
+   begin
+      Check_Kind_For_Plus_Terminal (Def);
+      Set_Field8 (Def, Terminal);
+   end Set_Plus_Terminal;
+
+   procedure Check_Kind_For_Minus_Terminal (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration =>
+            null;
+         when others =>
+            Failed ("Minus_Terminal", Target);
+      end case;
+   end Check_Kind_For_Minus_Terminal;
+
+   function Get_Minus_Terminal (Def : Iir) return Iir is
+   begin
+      Check_Kind_For_Minus_Terminal (Def);
+      return Get_Field9 (Def);
+   end Get_Minus_Terminal;
+
+   procedure Set_Minus_Terminal (Def : Iir; Terminal : Iir) is
+   begin
+      Check_Kind_For_Minus_Terminal (Def);
+      Set_Field9 (Def, Terminal);
+   end Set_Minus_Terminal;
+
+   procedure Check_Kind_For_Simultaneous_Left (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Simple_Simultaneous_Statement =>
+            null;
+         when others =>
+            Failed ("Simultaneous_Left", Target);
+      end case;
+   end Check_Kind_For_Simultaneous_Left;
+
+   function Get_Simultaneous_Left (Def : Iir) return Iir is
+   begin
+      Check_Kind_For_Simultaneous_Left (Def);
+      return Get_Field5 (Def);
+   end Get_Simultaneous_Left;
+
+   procedure Set_Simultaneous_Left (Def : Iir; Expr : Iir) is
+   begin
+      Check_Kind_For_Simultaneous_Left (Def);
+      Set_Field5 (Def, Expr);
+   end Set_Simultaneous_Left;
+
+   procedure Check_Kind_For_Simultaneous_Right (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Simple_Simultaneous_Statement =>
+            null;
+         when others =>
+            Failed ("Simultaneous_Right", Target);
+      end case;
+   end Check_Kind_For_Simultaneous_Right;
+
+   function Get_Simultaneous_Right (Def : Iir) return Iir is
+   begin
+      Check_Kind_For_Simultaneous_Right (Def);
+      return Get_Field6 (Def);
+   end Get_Simultaneous_Right;
+
+   procedure Set_Simultaneous_Right (Def : Iir; Expr : Iir) is
+   begin
+      Check_Kind_For_Simultaneous_Right (Def);
+      Set_Field6 (Def, Expr);
+   end Set_Simultaneous_Right;
 
    procedure Check_Kind_For_Text_File_Flag (Target : Iir) is
    begin
@@ -3925,6 +4112,94 @@ package body Iirs is
       Check_Kind_For_Designated_Type (Target);
       Set_Field2 (Target, Dtype);
    end Set_Designated_Type;
+
+   procedure Check_Kind_For_Reference (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            null;
+         when others =>
+            Failed ("Reference", Target);
+      end case;
+   end Check_Kind_For_Reference;
+
+   function Get_Reference (Def : Iir) return Iir is
+   begin
+      Check_Kind_For_Reference (Def);
+      return Get_Field2 (Def);
+   end Get_Reference;
+
+   procedure Set_Reference (Def : Iir; Ref : Iir) is
+   begin
+      Check_Kind_For_Reference (Def);
+      Set_Field2 (Def, Ref);
+   end Set_Reference;
+
+   procedure Check_Kind_For_Nature_Declarator (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            null;
+         when others =>
+            Failed ("Nature_Declarator", Target);
+      end case;
+   end Check_Kind_For_Nature_Declarator;
+
+   function Get_Nature_Declarator (Def : Iir) return Iir is
+   begin
+      Check_Kind_For_Nature_Declarator (Def);
+      return Get_Field3 (Def);
+   end Get_Nature_Declarator;
+
+   procedure Set_Nature_Declarator (Def : Iir; Decl : Iir) is
+   begin
+      Check_Kind_For_Nature_Declarator (Def);
+      Set_Field3 (Def, Decl);
+   end Set_Nature_Declarator;
+
+   procedure Check_Kind_For_Across_Type (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            null;
+         when others =>
+            Failed ("Across_Type", Target);
+      end case;
+   end Check_Kind_For_Across_Type;
+
+   function Get_Across_Type (Def : Iir) return Iir is
+   begin
+      Check_Kind_For_Across_Type (Def);
+      return Get_Field7 (Def);
+   end Get_Across_Type;
+
+   procedure Set_Across_Type (Def : Iir; Atype : Iir) is
+   begin
+      Check_Kind_For_Across_Type (Def);
+      Set_Field7 (Def, Atype);
+   end Set_Across_Type;
+
+   procedure Check_Kind_For_Through_Type (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            null;
+         when others =>
+            Failed ("Through_Type", Target);
+      end case;
+   end Check_Kind_For_Through_Type;
+
+   function Get_Through_Type (Def : Iir) return Iir is
+   begin
+      Check_Kind_For_Through_Type (Def);
+      return Get_Field8 (Def);
+   end Get_Through_Type;
+
+   procedure Set_Through_Type (Def : Iir; Atype : Iir) is
+   begin
+      Check_Kind_For_Through_Type (Def);
+      Set_Field8 (Def, Atype);
+   end Set_Through_Type;
 
    procedure Check_Kind_For_Target (Target : Iir) is
    begin
@@ -5100,6 +5375,8 @@ package body Iirs is
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Nature_Declaration
+           | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
@@ -5111,6 +5388,10 @@ package body Iirs is
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Terminal_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
@@ -5140,6 +5421,7 @@ package body Iirs is
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
@@ -5397,6 +5679,9 @@ package body Iirs is
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Range_Expression
            | Iir_Kind_Unit_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_File_Declaration
@@ -5722,6 +6007,9 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Attribute_Value
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_File_Declaration
@@ -6757,12 +7045,18 @@ package body Iirs is
       case Get_Kind (Target) is
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Nature_Declaration
+           | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Terminal_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration

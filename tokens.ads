@@ -37,6 +37,8 @@ package Tokens is
        Tok_Box,                 -- <>
        Tok_Dot,                 -- .
 
+       Tok_Equal_Equal,         -- == (AMS Vhdl)
+
        Tok_Eof,                 -- End of file.
        Tok_Newline,
        Tok_Comment,
@@ -207,6 +209,21 @@ package Tokens is
 
    -- Added by Vhdl 2000:
        Tok_Protected,
+
+   --  AMS reserved words
+       Tok_Across,
+       Tok_Break,
+       Tok_Limit,
+       Tok_Nature,
+       Tok_Noise,
+       Tok_Procedural,
+       Tok_Quantity,
+       Tok_Reference,
+       Tok_Spectrum,
+       Tok_Subnature,
+       Tok_Terminal,
+       Tok_Through,
+       Tok_Tolerance,
 
    -- PSL words
        Tok_Psl_Default,

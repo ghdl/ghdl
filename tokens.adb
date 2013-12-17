@@ -70,6 +70,9 @@ package body Tokens is
          when Tok_Bit_String =>
             return "<bit string>";
 
+         when Tok_Equal_Equal =>
+            return "==";
+
          -- relational_operator:
          when Tok_Equal =>
             return "=";
@@ -317,8 +320,37 @@ package body Tokens is
          when Tok_Ror =>
             return "ror";
 
+         --  VHDL 00
          when Tok_Protected =>
             return "protected";
+
+         --  AMS-VHDL
+         when Tok_Across =>
+            return "across";
+         when Tok_Break =>
+            return "break";
+         when Tok_Limit =>
+            return "limit";
+         when Tok_Nature =>
+            return "nature";
+         when Tok_Noise =>
+            return "noise";
+         when Tok_Procedural =>
+            return "procedural";
+         when Tok_Quantity =>
+            return "quantity";
+         when Tok_Reference =>
+            return "reference";
+         when Tok_Spectrum =>
+            return "spectrum";
+         when Tok_Subnature =>
+            return "subnature";
+         when Tok_Terminal =>
+            return "terminal";
+         when Tok_Through =>
+            return "through";
+         when Tok_Tolerance =>
+            return "tolerance";
 
          when Tok_And_And =>
             return "&&";

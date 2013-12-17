@@ -89,6 +89,8 @@ package body Options is
          else
             return False;
          end if;
+      elsif Opt'Length = 5 and then Opt (Beg .. Beg + 4) = "--ams" then
+         AMS_Vhdl := True;
       elsif Opt'Length > 2 and then Opt (Beg .. Beg + 1) = "-P" then
          Libraries.Add_Library_Path (Opt (Beg + 2 .. Opt'Last));
       elsif Opt'Length > 10 and then Opt (Beg .. Beg + 9) = "--workdir=" then

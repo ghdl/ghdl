@@ -52,8 +52,8 @@ package body Disp_Vhdl is
 --    end Disp_Tab;
 
    procedure Disp_Type (A_Type: Iir);
+   procedure Disp_Nature (Nature : Iir);
 
-   procedure Disp_Expression (Expr: Iir);
    procedure Disp_Concurrent_Statement (Stmt: Iir);
    procedure Disp_Concurrent_Statement_Chain (Parent: Iir; Indent : Count);
    procedure Disp_Declaration_Chain (Parent : Iir; Indent: Count);
@@ -145,7 +145,10 @@ package body Disp_Vhdl is
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Library_Declaration
-           | Iir_Kind_Unit_Declaration =>
+           | Iir_Kind_Unit_Declaration
+           | Iir_Kind_Nature_Declaration
+           | Iir_Kind_Terminal_Declaration
+           | Iir_Kinds_Quantity_Declaration =>
             Disp_Identifier (Decl);
          when Iir_Kind_Anonymous_Type_Declaration =>
             Put ('<');
@@ -212,7 +215,8 @@ package body Disp_Vhdl is
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Terminal_Declaration =>
             Disp_Name_Of (Name);
          when others =>
             Error_Kind ("disp_name", Name);
@@ -383,6 +387,15 @@ package body Disp_Vhdl is
       end case;
    end Disp_Element_Constraint;
 
+   procedure Disp_Tolerance_Opt (N : Iir) is
+      Tol : constant Iir := Get_Tolerance (N);
+   begin
+      if Tol /= Null_Iir then
+         Put ("tolerance ");
+         Disp_Expression (Tol);
+      end if;
+   end Disp_Tolerance_Opt;
+
    procedure Disp_Subtype_Indication (Def : Iir; Full_Decl : Boolean := False)
    is
       Type_Mark : Iir;
@@ -419,6 +432,9 @@ package body Disp_Vhdl is
                   Put (" range ");
                end if;
                Disp_Expression (Get_Range_Constraint (Def));
+            end if;
+            if Get_Kind (Base_Type) = Iir_Kind_Floating_Type_Definition then
+               Disp_Tolerance_Opt (Def);
             end if;
          when Iir_Kind_Array_Type_Definition =>
             Disp_Array_Element_Constraint (Def, Type_Mark);
@@ -729,6 +745,42 @@ package body Disp_Vhdl is
       end if;
    end Disp_Type;
 
+   procedure Disp_Nature_Definition (Def : Iir) is
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            Disp_Subtype_Indication (Get_Across_Type (Def));
+            Put (" across ");
+            Disp_Subtype_Indication (Get_Through_Type (Def));
+            Put (" through ");
+            Disp_Name_Of (Get_Reference (Def));
+            Put (" reference");
+         when others =>
+            Error_Kind ("disp_nature_definition", Def);
+      end case;
+   end Disp_Nature_Definition;
+
+   procedure Disp_Nature_Declaration (Decl : Iir) is
+   begin
+      Put ("nature ");
+      Disp_Name_Of (Decl);
+      Put (" is ");
+      Disp_Nature_Definition (Get_Nature (Decl));
+      Put_Line (";");
+   end Disp_Nature_Declaration;
+
+   procedure Disp_Nature (Nature : Iir)
+   is
+      Decl: Iir;
+   begin
+      Decl := Get_Nature_Declarator (Nature);
+      if Decl /= Null_Iir then
+         Disp_Name_Of (Decl);
+      else
+         Error_Kind ("disp_nature", Nature);
+      end if;
+   end Disp_Nature;
+
    procedure Disp_Mode (Mode: Iir_Mode) is
    begin
       case Mode is
@@ -948,6 +1000,56 @@ package body Disp_Vhdl is
       Put (';');
    end Disp_File_Declaration;
 
+   procedure Disp_Quantity_Declaration (Decl: Iir)
+   is
+      Expr : Iir;
+      Term : Iir;
+   begin
+      Put ("quantity ");
+      Disp_Name_Of (Decl);
+
+      case Get_Kind (Decl) is
+         when Iir_Kinds_Branch_Quantity_Declaration =>
+            Disp_Tolerance_Opt (Decl);
+            Expr := Get_Default_Value (Decl);
+            if Expr /= Null_Iir then
+               Put (":= ");
+               Disp_Expression (Expr);
+            end if;
+            if Get_Kind (Decl) = Iir_Kind_Across_Quantity_Declaration then
+               Put (" across ");
+            else
+               Put (" through ");
+            end if;
+            Disp_Name_Of (Get_Plus_Terminal (Decl));
+            Term := Get_Minus_Terminal (Decl);
+            if Term /= Null_Iir then
+               Put (" to ");
+               Disp_Name_Of (Term);
+            end if;
+         when Iir_Kind_Free_Quantity_Declaration =>
+            Put (": ");
+            Disp_Type (Get_Type (Decl));
+            Expr := Get_Default_Value (Decl);
+            if Expr /= Null_Iir then
+               Put (":= ");
+               Disp_Expression (Expr);
+            end if;
+         when others =>
+            raise Program_Error;
+      end case;
+      Put (';');
+   end Disp_Quantity_Declaration;
+
+   procedure Disp_Terminal_Declaration (Decl: Iir) is
+   begin
+      Put ("terminal ");
+      Disp_Name_Of (Decl);
+      Put (": ");
+      Disp_Nature (Get_Nature (Decl));
+      Put (';');
+   end Disp_Terminal_Declaration;
+
    procedure Disp_Object_Declaration (Decl: Iir) is
    begin
       case Get_Kind (Decl) is
@@ -1159,6 +1261,12 @@ package body Disp_Vhdl is
                Disp_Component_Declaration (Decl);
             when Iir_Kinds_Object_Declaration =>
                Disp_Object_Declaration (Decl);
+            when Iir_Kind_Terminal_Declaration =>
+               Disp_Terminal_Declaration (Decl);
+            when Iir_Kinds_Quantity_Declaration =>
+               Disp_Quantity_Declaration (Decl);
+            when Iir_Kind_Nature_Declaration =>
+               Disp_Nature_Declaration (Decl);
             when Iir_Kind_Non_Object_Alias_Declaration =>
                Disp_Non_Object_Alias_Declaration (Decl);
             when Iir_Kind_Implicit_Function_Declaration
@@ -2201,6 +2309,16 @@ package body Disp_Vhdl is
       end if;
    end Disp_Psl_Assert_Statement;
 
+   procedure Disp_Simple_Simultaneous_Statement (Stmt : Iir)
+   is
+   begin
+      Disp_Label (Get_Label (Stmt));
+      Disp_Expression (Get_Simultaneous_Left (Stmt));
+      Put (" == ");
+      Disp_Expression (Get_Simultaneous_Right (Stmt));
+      Put_Line (";");
+   end Disp_Simple_Simultaneous_Statement;
+
    procedure Disp_Concurrent_Statement (Stmt: Iir) is
    begin
       case Get_Kind (Stmt) is
@@ -2225,6 +2343,8 @@ package body Disp_Vhdl is
             Disp_Psl_Default_Clock (Stmt);
          when Iir_Kind_Psl_Assert_Statement =>
             Disp_Psl_Assert_Statement (Stmt);
+         when Iir_Kind_Simple_Simultaneous_Statement =>
+            Disp_Simple_Simultaneous_Statement (Stmt);
          when others =>
             Error_Kind ("disp_concurrent_statement", Stmt);
       end case;

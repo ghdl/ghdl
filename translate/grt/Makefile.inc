@@ -62,7 +62,7 @@ ifeq ($(filter-out i%86 darwin%,$(arch) $(osys)),)
   GRT_TARGET_OBJS=i386.o linux.o times.o
   GRT_EXTRA_LIB=
 endif
-ifeq ($(filter-out x84_64 darwin%,$(arch) $(osys)),)
+ifeq ($(filter-out x86_64 darwin%,$(arch) $(osys)),)
   GRT_TARGET_OBJS=amd64.o linux.o times.o
   GRT_EXTRA_LIB=
 endif

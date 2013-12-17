@@ -2150,6 +2150,11 @@ package body Sem is
                null;
             when Iir_Kind_Protected_Type_Body =>
                null;
+            when Iir_Kind_Nature_Declaration
+              | Iir_Kind_Subnature_Declaration =>
+               null;
+            when Iir_Kind_Terminal_Declaration =>
+               null;
             when others =>
                Error_Kind ("package_need_body_p", El);
          end case;

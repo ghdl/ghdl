@@ -51,7 +51,8 @@ package body Parse is
 
    -- current_token must be valid.
    -- Leaves a token.
-   function Parse_Simple_Expression return Iir_Expression;
+   function Parse_Simple_Expression (Primary : Iir := Null_Iir)
+                                    return Iir_Expression;
    function Parse_Primary return Iir_Expression;
    function Parse_Use_Clause return Iir_Use_Clause;
 
@@ -1939,6 +1940,24 @@ package body Parse is
       return Def;
    end Parse_Element_Constraint;
 
+   --  precond : tolerance
+   --  postcond: next token
+   --
+   --  [ LRM93 4.2 ]
+   --  tolerance_aspect ::= TOLERANCE string_expression
+   function Parse_Tolerance_Aspect_Opt return Iir
+   is
+   begin
+      if AMS_Vhdl
+        and then Current_Token = Tok_Tolerance
+      then
+         Scan.Scan;
+         return Parse_Expression;
+      else
+         return Null_Iir;
+      end if;
+   end Parse_Tolerance_Aspect_Opt;
+
    --  precond : identifier or '('
    --  postcond: next token
    --
@@ -1960,6 +1979,7 @@ package body Parse is
       Type_Mark : Iir;
       Def: Iir;
       Resolution_Function: Iir;
+      Tolerance : Iir;
    begin
       -- FIXME: location.
       Resolution_Function := Null_Iir;
@@ -1996,6 +2016,7 @@ package body Parse is
             Def := Parse_Element_Constraint;
             Set_Type_Mark (Def, Type_Mark);
             Set_Resolution_Function (Def, Resolution_Function);
+            Set_Tolerance (Def, Parse_Tolerance_Aspect_Opt);
 
          when Tok_Range =>
             --  range_constraint.
@@ -2004,13 +2025,18 @@ package body Parse is
             Set_Type_Mark (Def, Type_Mark);
             Set_Range_Constraint (Def, Parse_Range_Constraint);
             Set_Resolution_Function (Def, Resolution_Function);
+            Set_Tolerance (Def, Parse_Tolerance_Aspect_Opt);
 
          when others =>
-            if Resolution_Function /= Null_Iir then
+            Tolerance := Parse_Tolerance_Aspect_Opt;
+            if Resolution_Function /= Null_Iir
+              or else Tolerance /= Null_Iir
+            then
                Def := Create_Iir (Iir_Kind_Subtype_Definition);
                Location_Copy (Def, Type_Mark);
                Set_Type_Mark (Def, Type_Mark);
                Set_Resolution_Function (Def, Resolution_Function);
+               Set_Tolerance (Def, Tolerance);
             else
                Def := Type_Mark;
             end if;
@@ -2041,6 +2067,417 @@ package body Parse is
       Expect (Tok_Semi_Colon);
       return Decl;
    end Parse_Subtype_Declaration;
+
+   --  precond : NATURE
+   --  postcond: a token
+   --
+   --  [ §4.8 ]
+   --  nature_definition ::= scalar_nature_definition
+   --                    | composite_nature_definition
+   --
+   --  [ §3.5.1 ]
+   --  scalar_nature_definition ::= type_mark ACROSS
+   --                               type_mark THROUGH
+   --                               identifier REFERENCE
+   --
+   --  [ §3.5.2 ]
+   --  composite_nature_definition ::= array_nature_definition
+   --                              | record_nature_definition
+   function Parse_Nature_Declaration return Iir
+   is
+      Def : Iir;
+      Ref : Iir;
+      Loc : Location_Type;
+      Ident : Name_Id;
+      Decl : Iir;
+   begin
+      -- The current token must be type.
+      if Current_Token /= Tok_Nature then
+         raise Program_Error;
+      end if;
+
+      -- Get the identifier
+      Scan_Expect (Tok_Identifier,
+                   "an identifier is expected after 'nature'");
+      Loc := Get_Token_Location;
+      Ident := Current_Identifier;
+
+      Scan.Scan;
+
+      if Current_Token /= Tok_Is then
+         Error_Msg_Parse ("'is' expected here");
+         --  Act as if IS token was forgotten.
+      else
+         --  Eat IS token.
+         Scan.Scan;
+      end if;
+
+      case Current_Token is
+         when Tok_Array =>
+            --  TODO
+            Error_Msg_Parse ("array nature definition not supported");
+            Def := Null_Iir;
+            Eat_Tokens_Until_Semi_Colon;
+         when Tok_Record =>
+            --  TODO
+            Error_Msg_Parse ("record nature definition not supported");
+            Def := Null_Iir;
+            Eat_Tokens_Until_Semi_Colon;
+         when Tok_Identifier =>
+            Def := Create_Iir (Iir_Kind_Scalar_Nature_Definition);
+            Set_Location (Def, Loc);
+            Set_Across_Type (Def, Parse_Type_Mark);
+            if Current_Token = Tok_Across then
+               Scan.Scan;
+            else
+               Expect (Tok_Across, "'across' expected after type mark");
+            end if;
+            Set_Through_Type (Def, Parse_Type_Mark);
+            if Current_Token = Tok_Through then
+               Scan.Scan;
+            else
+               Expect (Tok_Across, "'through' expected after type mark");
+            end if;
+            if Current_Token = Tok_Identifier then
+               Ref := Create_Iir (Iir_Kind_Terminal_Declaration);
+               Set_Identifier (Ref, Current_Identifier);
+               Set_Location (Ref);
+               Set_Reference (Def, Ref);
+               Scan.Scan;
+               if Current_Token = Tok_Reference then
+                  Scan.Scan;
+               else
+                  Expect (Tok_Reference, "'reference' expected");
+                  Eat_Tokens_Until_Semi_Colon;
+               end if;
+            else
+               Error_Msg_Parse ("reference identifier expected");
+               Eat_Tokens_Until_Semi_Colon;
+            end if;
+         when others =>
+            Error_Msg_Parse ("nature definition expected here");
+            Eat_Tokens_Until_Semi_Colon;
+      end case;
+
+      Decl := Create_Iir (Iir_Kind_Nature_Declaration);
+      Set_Nature (Decl, Def);
+      Set_Identifier (Decl, Ident);
+      Set_Location (Decl, Loc);
+
+      -- ';' is expected after end of type declaration
+      Expect (Tok_Semi_Colon);
+      Invalidate_Current_Token;
+      return Decl;
+   end Parse_Nature_Declaration;
+
+   --  precond : identifier
+   --  postcond: next token
+   --
+   --  LRM 4.8 Nature declaration
+   --
+   --  subnature_indication ::=
+   --      nature_mark [ index_constraint ]
+   --      [ TOLERANCE string_expression ACROSS string_expression THROUGH ]
+   --
+   --  nature_mark ::=
+   --      nature_name | subnature_name
+   function Parse_Subnature_Indication return Iir is
+      Nature_Mark : Iir;
+   begin
+      if Current_Token /= Tok_Identifier then
+         Error_Msg_Parse ("nature mark expected in a subnature indication");
+         raise Parse_Error;
+      end if;
+      Nature_Mark := Parse_Name (Allow_Indexes => False);
+
+      if Current_Token = Tok_Left_Paren then
+         --  TODO
+         Error_Msg_Parse
+           ("index constraint not supported for subnature indication");
+         raise Parse_Error;
+      end if;
+
+      if Current_Token = Tok_Tolerance then
+         Error_Msg_Parse
+           ("tolerance not supported for subnature indication");
+         raise Parse_Error;
+      end if;
+      return Nature_Mark;
+   end Parse_Subnature_Indication;
+
+   --  precond : TERMINAL
+   --  postcond: ;
+   --
+   --  [ 4.3.1.5 Terminal declarations ]
+   --  terminal_declaration ::=
+   --      TERMINAL identifier_list : subnature_indication
+   function Parse_Terminal_Declaration (Parent : Iir) return Iir
+   is
+      --  First and last element of the chain to be returned.
+      First, Last : Iir;
+      Terminal : Iir;
+      Subnature : Iir;
+      Proxy : Iir_Proxy;
+   begin
+      Sub_Chain_Init (First, Last);
+
+      loop
+         -- 'terminal' or "," was just scanned.
+         Terminal := Create_Iir (Iir_Kind_Terminal_Declaration);
+         Scan_Expect (Tok_Identifier);
+         Set_Identifier (Terminal, Current_Identifier);
+         Set_Location (Terminal);
+         Set_Parent (Terminal, Parent);
+
+         Sub_Chain_Append (First, Last, Terminal);
+
+         Scan.Scan;
+         exit when Current_Token = Tok_Colon;
+         if Current_Token /= Tok_Comma then
+            Error_Msg_Parse
+              ("',' or ':' is expected after "
+                 & "identifier in terminal declaration");
+            raise Expect_Error;
+         end if;
+      end loop;
+
+      -- The colon was parsed.
+      Scan.Scan;
+      Subnature := Parse_Subnature_Indication;
+
+      Proxy := Null_Iir;
+      Terminal := First;
+      while Terminal /= Null_Iir loop
+         -- Type definitions are factorized.  This is OK, but not done by
+         -- sem.
+         if Terminal = First then
+            Set_Nature (Terminal, Subnature);
+         else
+            --  FIXME: could avoid to create many proxies, by adding
+            --  a reference counter.
+            Proxy := Create_Iir (Iir_Kind_Proxy);
+            Set_Proxy (Proxy, First);
+            Set_Nature (Terminal, Proxy);
+         end if;
+         Terminal := Get_Chain (Terminal);
+      end loop;
+      Expect (Tok_Semi_Colon);
+      return First;
+   end Parse_Terminal_Declaration;
+
+   --  precond : QUANTITY
+   --  postcond: ;
+   --
+   --  [ 4.3.1.6 Quantity declarations ]
+   --  quantity_declaration ::=
+   --      free_quantity_declaration
+   --      | branch_quantity_declaration
+   --      | source_quantity_declaration
+   --
+   --  free_quantity_declaration ::=
+   --      QUANTITY identifier_list : subtype_indication [ := expression ] ;
+   --
+   --  branch_quantity_declaration ::=
+   --      QUANTITY [ across_aspect ] [ through_aspect ] terminal_aspect ;
+   --
+   --  source_quantity_declaration ::=
+   --      QUANTITY identifier_list : subtype_indication source_aspect ;
+   --
+   --  across_aspect ::=
+   --      identifier_list [ tolerance_aspect ] [ := expression ] ACROSS
+   --
+   --  through_aspect ::=
+   --      identifier_list [ tolerance_aspect ] [ := expression ] THROUGH
+   --
+   --  terminal_aspect ::=
+   --      plus_terminal_name [ TO minus_terminal_name ]
+   function Parse_Quantity_Declaration (Parent : Iir) return Iir
+   is
+      --  First and last element of the chain to be returned.
+      First, Last : Iir;
+      Object : Iir;
+      New_Object : Iir;
+      Tolerance : Iir;
+      Default_Value : Iir;
+      Kind : Iir_Kind;
+      Plus_Terminal : Iir;
+      Proxy : Iir;
+      First_Through : Iir;
+   begin
+      Sub_Chain_Init (First, Last);
+
+      --  Eat 'quantity'
+      Scan.Scan;
+
+      loop
+         --  Quantity or "," was just scanned.  We assume a free quantity
+         --  declaration and will change to branch or source quantity if
+         --  necessary.
+         Object := Create_Iir (Iir_Kind_Free_Quantity_Declaration);
+         Expect (Tok_Identifier);
+         Set_Identifier (Object, Current_Identifier);
+         Set_Location (Object);
+         Set_Parent (Object, Parent);
+
+         Sub_Chain_Append (First, Last, Object);
+
+         --  Eat identifier
+         Scan.Scan;
+         exit when Current_Token /= Tok_Comma;
+
+         --  Eat ','
+         Scan.Scan;
+      end loop;
+
+      case Current_Token is
+         when Tok_Colon =>
+            --  Either a free quantity (or a source quantity)
+            --  TODO
+            raise Program_Error;
+         when Tok_Tolerance
+           | Tok_Assign
+           | Tok_Across
+           | Tok_Through =>
+            --  A branch quantity
+
+            --  Parse tolerance aspect
+            Tolerance := Parse_Tolerance_Aspect_Opt;
+
+            --  Parse default value
+            if Current_Token = Tok_Assign then
+               Scan.Scan;
+               Default_Value := Parse_Expression;
+            else
+               Default_Value := Null_Iir;
+            end if;
+
+            case Current_Token is
+               when Tok_Across =>
+                  Kind := Iir_Kind_Across_Quantity_Declaration;
+               when Tok_Through =>
+                  Kind := Iir_Kind_Through_Quantity_Declaration;
+               when others =>
+                  Error_Msg_Parse ("'across' or 'through' expected here");
+                  Eat_Tokens_Until_Semi_Colon;
+                  raise Expect_Error;
+            end case;
+
+            --  Eat across/through
+            Scan.Scan;
+
+            --  Change declarations
+            Object := First;
+            Sub_Chain_Init (First, Last);
+            while Object /= Null_Iir loop
+               New_Object := Create_Iir (Kind);
+               Location_Copy (New_Object, Object);
+               Set_Identifier (New_Object, Get_Identifier (Object));
+               Set_Parent (New_Object, Parent);
+               Set_Tolerance (New_Object, Tolerance);
+               Set_Default_Value (New_Object, Default_Value);
+
+               Sub_Chain_Append (First, Last, New_Object);
+
+               if Object /= First then
+                  Proxy := Create_Iir (Iir_Kind_Proxy);
+                  Set_Proxy (Proxy, First);
+                  Set_Plus_Terminal (New_Object, Proxy);
+               end if;
+               New_Object := Get_Chain (Object);
+               Free_Iir (Object);
+               Object := New_Object;
+            end loop;
+
+            --  Parse terminal (or first identifier of through declarations)
+            Plus_Terminal := Parse_Name;
+
+            case Current_Token is
+               when Tok_Comma
+                 | Tok_Tolerance
+                 | Tok_Assign
+                 | Tok_Through
+                 | Tok_Across =>
+                  --  Through quantity declaration.  Convert the Plus_Terminal
+                  --  to a declaration.
+                  Object := Create_Iir (Iir_Kind_Through_Quantity_Declaration);
+                  New_Object := Object;
+                  Location_Copy (Object, Plus_Terminal);
+                  if Get_Kind (Plus_Terminal) /= Iir_Kind_Simple_Name then
+                     Error_Msg_Parse
+                       ("identifier for quantity declaration expected");
+                  else
+                     Set_Identifier (Object, Get_Identifier (Plus_Terminal));
+                  end if;
+                  Proxy := Create_Iir (Iir_Kind_Proxy);
+                  Set_Proxy (Proxy, First);
+                  Set_Plus_Terminal (Object, Proxy);
+                  First_Through := Object;
+                  Free_Iir (Plus_Terminal);
+
+                  loop
+                     Set_Parent (Object, Parent);
+                     Sub_Chain_Append (First, Last, Object);
+                     exit when Current_Token /= Tok_Comma;
+                     Scan.Scan;
+
+                     Object := Create_Iir
+                       (Iir_Kind_Through_Quantity_Declaration);
+                     Set_Location (Object);
+                     if Current_Token /= Tok_Identifier then
+                        Error_Msg_Parse
+                          ("identifier for quantity declaration expected");
+                     else
+                        Set_Identifier (Object, Current_Identifier);
+                        Scan.Scan;
+                     end if;
+                     Proxy := Create_Iir (Iir_Kind_Proxy);
+                     Set_Proxy (Proxy, First_Through);
+                     Set_Plus_Terminal (Object, Proxy);
+
+                  end loop;
+
+                  --  Parse tolerance aspect
+                  Set_Tolerance (Object, Parse_Tolerance_Aspect_Opt);
+
+                  --  Parse default value
+                  if Current_Token = Tok_Assign then
+                     Scan.Scan;
+                     Set_Default_Value (Object, Parse_Expression);
+                  end if;
+
+                  --  Scan 'through'
+                  if Current_Token = Tok_Through then
+                     Scan.Scan;
+                  elsif Current_Token = Tok_Across then
+                     Error_Msg_Parse ("across quantity declaration must appear"
+                                        & " before though declaration");
+                     Scan.Scan;
+                  else
+                     Error_Msg_Parse ("'through' expected");
+                  end if;
+
+                  --  Parse plus terminal
+                  Plus_Terminal := Parse_Name;
+               when others =>
+                  null;
+            end case;
+
+            Set_Plus_Terminal (First, Plus_Terminal);
+
+            --  Parse minus terminal (if present)
+            if Current_Token = Tok_To then
+               Scan.Scan;
+               Set_Minus_Terminal (First, Parse_Name);
+            end if;
+         when others =>
+            Error_Msg_Parse ("missign type or across/throught aspect "
+                               & "in quantity declaration");
+            Eat_Tokens_Until_Semi_Colon;
+            raise Expect_Error;
+      end case;
+      Expect (Tok_Semi_Colon);
+      return First;
+   end Parse_Quantity_Declaration;
 
    --  precond : token (CONSTANT, SIGNAL, VARIABLE, FILE)
    --  postcond: ;
@@ -2762,6 +3199,12 @@ package body Parse is
                end if;
             when Tok_Subtype =>
                Decl := Parse_Subtype_Declaration;
+            when Tok_Nature =>
+               Decl := Parse_Nature_Declaration;
+            when Tok_Terminal =>
+               Decl := Parse_Terminal_Declaration (Parent);
+            when Tok_Quantity =>
+               Decl := Parse_Quantity_Declaration (Parent);
             when Tok_Signal =>
                case Get_Kind (Parent) is
                   when Iir_Kind_Function_Body
@@ -3254,24 +3697,34 @@ package body Parse is
    --  factor ::= primary [ ** primary ]
    --           | ABS primary
    --           | NOT primary
-   function Parse_Factor return Iir_Expression is
+   function Parse_Factor (Primary : Iir := Null_Iir) return Iir_Expression is
       Res, Tmp: Iir_Expression;
    begin
       case Current_Token is
          when Tok_Abs =>
+            if Primary /= Null_Iir then
+               return Primary;
+            end if;
             Scan.Scan;
             Res := Create_Iir (Iir_Kind_Absolute_Operator);
             Set_Location (Res);
             Set_Operand (Res, Parse_Primary);
             return Res;
          when Tok_Not =>
+            if Primary /= Null_Iir then
+               return Primary;
+            end if;
             Res := Create_Iir (Iir_Kind_Not_Operator);
             Set_Location (Res);
             Scan.Scan;
             Set_Operand (Res, Parse_Primary);
             return Res;
          when others =>
-            Tmp := Parse_Primary;
+            if Primary /= Null_Iir then
+               Tmp := Primary;
+            else
+               Tmp := Parse_Primary;
+            end if;
             if Current_Token = Tok_Double_Star then
                Res := Create_Iir (Iir_Kind_Exponentiation_Operator);
                Set_Location (Res);
@@ -3293,10 +3746,10 @@ package body Parse is
    --
    --  [ §7.2 ]
    --  multiplying_operator ::= * | / | MOD | REM
-   function Parse_Term return Iir_Expression is
+   function Parse_Term (Primary : Iir) return Iir_Expression is
       Res, Tmp: Iir_Expression;
    begin
-      Res := Parse_Factor;
+      Res := Parse_Factor (Primary);
       while Current_Token in Token_Multiplying_Operator_Type loop
          case Current_Token is
             when Tok_Star =>
@@ -3330,10 +3783,14 @@ package body Parse is
    --
    --  [ §7.2 ]
    --  adding_operator ::= + | - | &
-   function Parse_Simple_Expression return Iir_Expression is
+   function Parse_Simple_Expression (Primary : Iir := Null_Iir)
+                                    return Iir_Expression
+   is
       Res, Tmp: Iir_Expression;
    begin
-      if Current_Token in Token_Sign_Type then
+      if Current_Token in Token_Sign_Type
+        and then Primary = Null_Iir
+      then
          case Current_Token is
             when Tok_Plus =>
                Res := Create_Iir (Iir_Kind_Identity_Operator);
@@ -3344,9 +3801,9 @@ package body Parse is
          end case;
          Set_Location (Res);
          Scan.Scan;
-         Set_Operand (Res, Parse_Term);
+         Set_Operand (Res, Parse_Term (Null_Iir));
       else
-         Res := Parse_Term;
+         Res := Parse_Term (Primary);
       end if;
       while Current_Token in Token_Adding_Operator_Type loop
          case Current_Token is
@@ -3362,7 +3819,7 @@ package body Parse is
          Set_Location (Tmp);
          Scan.Scan;
          Set_Left (Tmp, Res);
-         Set_Right (Tmp, Parse_Term);
+         Set_Right (Tmp, Parse_Term (Null_Iir));
          Res := Tmp;
       end loop;
       return Res;
@@ -3984,12 +4441,10 @@ package body Parse is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
             Set_Implementation (Call, Name);
-         when Iir_Kind_Attribute_Name =>        -- Support issue 3060
-            Error_Msg_Parse ("Attribute cannot be applied to procedure call");
+         when Iir_Kind_Attribute_Name =>
+            Error_Msg_Parse ("attribute cannot be used as procedure call");
          when others =>
-            -- Support issue 2686 : no testcase, but improve the error message
-            Error_Kind("parenthesis_name_to_procedure_call", Name);
-            -- raise Internal_Error;
+            Error_Kind ("parenthesis_name_to_procedure_call", Name);
       end case;
       return Res;
    end Parenthesis_Name_To_Procedure_Call;
@@ -5024,6 +5479,7 @@ package body Parse is
    --    | [ label : ] [ POSTPONED ] selected_signal_assignment
    function Parse_Concurrent_Assignment (Target : Iir) return Iir
    is
+      Res : Iir;
    begin
       case Current_Token is
          when Tok_Less_Equal
@@ -5038,9 +5494,28 @@ package body Parse is
             Expect (Tok_Semi_Colon);
             return Parenthesis_Name_To_Procedure_Call
               (Target, Iir_Kind_Concurrent_Procedure_Call_Statement);
-         when others =>
+         when Tok_Generic | Tok_Port =>
             -- or a component instantiation.
             return Parse_Component_Instantiation (Target);
+         when others =>
+            -- or a simple simultaneous statement
+            if AMS_Vhdl then
+               Res := Create_Iir (Iir_Kind_Simple_Simultaneous_Statement);
+               Set_Simultaneous_Left (Res, Parse_Simple_Expression (Target));
+               if Current_Token /= Tok_Equal_Equal then
+                  Error_Msg_Parse ("'==' expected after expression");
+               else
+                  Set_Location (Res);
+                  Scan.Scan;
+               end if;
+               Set_Simultaneous_Right (Res, Parse_Simple_Expression);
+               Set_Tolerance (Res, Parse_Tolerance_Aspect_Opt);
+               Expect (Tok_Semi_Colon);
+               return Res;
+            else
+               return Parse_Conditional_Signal_Assignment
+                 (Parse_Simple_Expression (Target));
+            end if;
       end case;
    end Parse_Concurrent_Assignment;
 

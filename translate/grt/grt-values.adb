@@ -350,7 +350,7 @@ package body Grt.Values is
 
       S.Bounds := To_Std_String_Boundp(Bound'Address);
       -- find characters at the end...
-      Finish := Ghdl_Index_Type(Bound.Dim_1.Length)-1;
+      Finish := Bound.Dim_1.Length - 1;
       while White(S.Base.all(Finish)) loop
          Finish := Finish - 1;
       end loop;
@@ -389,7 +389,7 @@ package body Grt.Values is
       end;
 
       if Rti.Kind = Ghdl_Rtik_Type_P64 then
-         Mult := Ghdl_I64(Multiple.Unit_64);
+         Mult := Multiple.Unit_64;
       else
          Mult := Ghdl_I64(Multiple.Unit_32);
       end if;

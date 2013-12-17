@@ -642,31 +642,44 @@ package body Scan is
          --   The identifiers listed below are called reserved words and are
          --   reserved for signifiances in the language.
          -- IN: this is also achieved in packages std_names and tokens.
-         if Current_Identifier > Std_Names.Name_Last_Vhdl87
-           and then Vhdl_Std = Vhdl_87
-         then
-            if Flags.Warn_Reserved_Word then
-               Warning_Msg_Scan
-                 ("using """ & Name_Buffer (1 .. Name_Length)
-                  & """ vhdl93 reserved word as a vhdl87 identifier");
-               Warning_Msg_Scan
-                 ("(use option --std=93 to compile as vhdl93)");
-            end if;
-            Current_Token := Tok_Identifier;
-         elsif Current_Identifier > Std_Names.Name_Last_Vhdl93
-           and then Vhdl_Std < Vhdl_00
-         then
-            if Flags.Warn_Reserved_Word then
-               Warning_Msg_Scan
-                 ("using """ & Name_Buffer (1 .. Name_Length)
-                  & """ vhdl00 reserved word as an identifier");
-            end if;
-            Current_Token := Tok_Identifier;
-         else
-            Current_Token := Token_Type'Val
-              (Token_Type'Pos (Tok_First_Keyword)
-               + Current_Identifier - Std_Names.Name_First_Keyword);
-         end if;
+         Current_Token := Token_Type'Val
+           (Token_Type'Pos (Tok_First_Keyword)
+              + Current_Identifier - Std_Names.Name_First_Keyword);
+         case Current_Identifier is
+            when Std_Names.Name_Id_AMS_Reserved_Words =>
+               if not AMS_Vhdl then
+                  if Flags.Warn_Reserved_Word then
+                     Warning_Msg_Scan
+                       ("using """ & Name_Buffer (1 .. Name_Length)
+                          & """ AMS-VHDL reserved word as an identifier");
+                  end if;
+                  Current_Token := Tok_Identifier;
+               end if;
+            when Std_Names.Name_Id_Vhdl00_Reserved_Words =>
+               if Vhdl_Std < Vhdl_00 then
+                  if Flags.Warn_Reserved_Word then
+                     Warning_Msg_Scan
+                       ("using """ & Name_Buffer (1 .. Name_Length)
+                          & """ vhdl00 reserved word as an identifier");
+                  end if;
+                  Current_Token := Tok_Identifier;
+               end if;
+            when Std_Names.Name_Id_Vhdl93_Reserved_Words =>
+               if Vhdl_Std = Vhdl_87 then
+                  if Flags.Warn_Reserved_Word then
+                     Warning_Msg_Scan
+                       ("using """ & Name_Buffer (1 .. Name_Length)
+                          & """ vhdl93 reserved word as a vhdl87 identifier");
+                     Warning_Msg_Scan
+                       ("(use option --std=93 to compile as vhdl93)");
+                  end if;
+                  Current_Token := Tok_Identifier;
+               end if;
+            when Std_Names.Name_Id_Vhdl87_Reserved_Words =>
+               null;
+            when others =>
+               raise Program_Error;
+         end case;
       elsif Flag_Psl then
          case Current_Identifier is
             when Std_Names.Name_Clock =>
@@ -1217,7 +1230,16 @@ package body Scan is
             end if;
             return;
          when '=' =>
-            if Source (Pos + 1) = '>' then
+            if Source (Pos + 1) = '=' then
+               if AMS_Vhdl then
+                  Current_Token := Tok_Equal_Equal;
+               else
+                  Error_Msg_Scan
+                    ("'==' is not the vhdl equality, replaced by '='");
+                  Current_Token := Tok_Equal;
+               end if;
+               Pos := Pos + 2;
+            elsif Source (Pos + 1) = '>' then
                Current_Token := Tok_Double_Arrow;
                Pos := Pos + 2;
             else

@@ -98,7 +98,8 @@ package Sem_Names is
    type Decl_Kind_Type is
      (Decl_Type, Decl_Incomplete_Type,
       Decl_Component, Decl_Unit, Decl_Label,
-      Decl_Group_Template, Decl_Entity, Decl_Configuration, Decl_Attribute);
+      Decl_Group_Template, Decl_Entity, Decl_Configuration, Decl_Attribute,
+      Decl_Nature, Decl_Terminal);
 
    --  Find a uniq declaration for name NAME, which can be a simple_name,
    --  an identifier or a selected_name.

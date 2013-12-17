@@ -18,7 +18,7 @@
 */
 	.file		"i386.S"
 	.version	"01.01"
-	
+
 	.text
 
 #ifdef __ELF__
@@ -34,7 +34,7 @@
 #define END(func)
 #define NAME(name) name
 #endif
-	
+
 	/* Function called to loop on the process.  */
 ENTRY(grt_stack_loop)
 	call	*4(%esp)
@@ -50,7 +50,7 @@ ENTRY(grt_stack_create)
 	movl	%esp,%ebp
 	/* Keep aligned (call + pushl + 8 = 16 bytes).  */
 	subl	$8,%esp
-	
+
 	/* Allocate the stack, and exit in case of failure  */
 	call	NAME(grt_stack_allocate)
 	testl	%eax,%eax
@@ -58,7 +58,7 @@ ENTRY(grt_stack_create)
 
 	/* Note: %EAX contains the address of the stack_context.  This is
 	   also the top of the stack.  */
-				
+
 	/* Prepare stack.  */
 	/* The function to be executed.  */
 	movl	8(%ebp), %ecx
@@ -67,7 +67,13 @@ ENTRY(grt_stack_create)
 	movl	12(%ebp), %ecx
 	movl	%ecx, -8(%eax)
 	/* The return function.  */
+#if __APPLE__
+	call	___x86.get_pc_thunk.cx
+L1$pb:
+	movl	L_grt_stack_loop$non_lazy_ptr-L1$pb(%ecx), %eax
+#else
 	movl	$NAME(grt_stack_loop), -12(%eax)
+#endif
 	/* The context.  */
 	movl	%ebx, -16(%eax)
 	movl	%esi, -20(%eax)
@@ -109,5 +115,19 @@ ENTRY(grt_stack_switch)
 	ret
 END(grt_stack_switch)
 
-	
+
+#if __APPLE__
+	.section __TEXT,__textcoal_nt,coalesced,pure_instructions
+	.weak_definition ___x86.get_pc_thunk.cx
+	.private_extern	___x86.get_pc_thunk.cx
+___x86.get_pc_thunk.cx:
+	movl	(%esp), %ecx
+	ret
+
+	.section __IMPORT,__pointers,non_lazy_symbol_pointers
+L_grt_stack_loop$non_lazy_ptr:
+	.indirect_symbol _grt_stack_loop
+	.long	0
+#endif
+
 	.ident	"Written by T.Gingold"

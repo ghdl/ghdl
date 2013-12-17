@@ -92,7 +92,7 @@ ghdllib: ghdl$(exeext) $(GCC_PASSES) force
 
 # Build hooks:
 
-vhdl.all.build: 
+vhdl.all.build:
 
 vhdl.all.cross:
 	@echo "No support for building vhdl cross-compiler"

@@ -878,6 +878,11 @@ package body Sem_Scopes is
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
+           | Iir_Kind_Nature_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration
+           | Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Terminal_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kinds_Concurrent_Statement

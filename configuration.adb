@@ -220,7 +220,8 @@ package body Configuration is
               | Iir_Kind_Sensitized_Process_Statement
               | Iir_Kind_Psl_Assert_Statement
               | Iir_Kind_Psl_Default_Clock
-              | Iir_Kind_Psl_Declaration =>
+              | Iir_Kind_Psl_Declaration
+              | Iir_Kind_Simple_Simultaneous_Statement =>
                null;
             when others =>
                Error_Kind ("add_design_concurrent_stmts(2)", Stmt);

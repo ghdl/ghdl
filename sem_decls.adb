@@ -2001,6 +2001,8 @@ package body Sem_Decls is
             when Iir_Kind_Subtype_Declaration
               | Iir_Kind_Attribute_Declaration =>
                null;
+            when Iir_Kind_Terminal_Declaration =>
+               null;
             when others =>
                Error_Kind ("sem_non_object_alias_declaration", N_Entity);
          end case;
@@ -2128,6 +2130,152 @@ package body Sem_Decls is
       Set_Visible_Flag (Group, True);
    end Sem_Group_Declaration;
 
+   function Sem_Scalar_Nature_Definition (Def : Iir; Decl : Iir) return Iir
+   is
+      function Sem_Scalar_Nature_Typemark (T : Iir; Name : String) return Iir
+      is
+         Res : Iir;
+      begin
+         Res := Find_Declaration (T, Decl_Type);
+         if Res = Null_Iir then
+            return Real_Type_Definition;
+         end if;
+         --  LRM93 3.5.1
+         --  The type marks must denote floating point types
+         case Get_Kind (Res) is
+            when Iir_Kind_Floating_Subtype_Definition
+              | Iir_Kind_Floating_Type_Definition =>
+               return Res;
+            when others =>
+               Error_Msg_Sem (Name & "type must be a floating point type", T);
+               return Real_Type_Definition;
+         end case;
+      end Sem_Scalar_Nature_Typemark;
+
+      Tm : Iir;
+      Ref : Iir;
+   begin
+      Tm := Get_Across_Type (Def);
+      Tm := Sem_Scalar_Nature_Typemark (Tm, "across");
+      Set_Across_Type (Def, Tm);
+
+      Tm := Get_Through_Type (Def);
+      Tm := Sem_Scalar_Nature_Typemark (Tm, "through");
+      Set_Through_Type (Def, Tm);
+
+      --  Declare the reference
+      Ref := Get_Reference (Def);
+      Set_Nature (Ref, Def);
+      Set_Chain (Ref, Get_Chain (Decl));
+      Set_Chain (Decl, Ref);
+
+      return Def;
+   end Sem_Scalar_Nature_Definition;
+
+   function Sem_Nature_Definition (Def : Iir; Decl : Iir) return Iir
+   is
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            return Sem_Scalar_Nature_Definition (Def, Decl);
+         when others =>
+            Error_Kind ("sem_nature_definition", Def);
+            return Null_Iir;
+      end case;
+   end Sem_Nature_Definition;
+
+   procedure Sem_Nature_Declaration (Decl : Iir)
+   is
+      Def : Iir;
+   begin
+      Def := Get_Nature (Decl);
+      if Def /= Null_Iir then
+         Sem_Scopes.Add_Name (Decl);
+         Xref_Decl (Decl);
+
+         Def := Sem_Nature_Definition (Def, Decl);
+         if Def /= Null_Iir then
+            Set_Nature_Declarator (Def, Decl);
+            Sem_Scopes.Name_Visible (Decl);
+         end if;
+      end if;
+   end Sem_Nature_Declaration;
+
+   procedure Sem_Terminal_Declaration (Decl : Iir)
+   is
+      Def, Nature : Iir;
+   begin
+      Def := Get_Nature (Decl);
+      if Def /= Null_Iir then
+         Sem_Scopes.Add_Name (Decl);
+         Xref_Decl (Decl);
+
+         if Get_Kind (Def) = Iir_Kind_Proxy then
+            Nature := Get_Nature (Get_Proxy (Def));
+            Free_Iir (Def);
+         else
+            Nature := Sem_Subnature_Indication (Def);
+         end if;
+         if Nature /= Null_Iir then
+            Set_Nature (Decl, Nature);
+            Sem_Scopes.Name_Visible (Decl);
+         end if;
+      end if;
+   end Sem_Terminal_Declaration;
+
+   procedure Sem_Branch_Quantity_Declaration (Decl : Iir)
+   is
+      Plus : Iir;
+      Minus : Iir;
+      Branch_Type : Iir;
+      Value : Iir;
+      Proxy : Iir;
+   begin
+      Plus := Get_Plus_Terminal (Decl);
+      if Get_Kind (Plus) = Iir_Kind_Proxy then
+         Proxy := Get_Proxy (Plus);
+         Free_Iir (Plus);
+         Plus := Get_Plus_Terminal (Proxy);
+         Minus := Get_Minus_Terminal (Proxy);
+         Value := Get_Default_Value (Proxy);
+      else
+         Plus := Find_Declaration (Plus, Decl_Terminal);
+         Minus := Get_Minus_Terminal (Decl);
+         if Minus /= Null_Iir then
+            Minus := Find_Declaration (Minus, Decl_Terminal);
+         end if;
+         Proxy := Null_Iir;
+      end if;
+      Set_Plus_Terminal (Decl, Plus);
+      Set_Minus_Terminal (Decl, Minus);
+      case Get_Kind (Decl) is
+         when Iir_Kind_Across_Quantity_Declaration =>
+            Branch_Type := Get_Across_Type (Get_Nature (Plus));
+         when Iir_Kind_Through_Quantity_Declaration =>
+            Branch_Type := Get_Through_Type (Get_Nature (Plus));
+         when others =>
+            raise Program_Error;
+      end case;
+      Set_Type (Decl, Branch_Type);
+      Set_Base_Name (Decl, Decl);
+
+      if Proxy = Null_Iir then
+         Value := Get_Default_Value (Decl);
+         if Value /= Null_Iir then
+            Value := Sem_Expression (Value, Branch_Type);
+         end if;
+      else
+         Value := Get_Default_Value (Proxy);
+      end if;
+      Set_Default_Value (Decl, Value);
+
+      --  TODO: tolerance
+
+      Sem_Scopes.Add_Name (Decl);
+      Xref_Decl (Decl);
+      Sem_Scopes.Name_Visible (Decl);
+   end Sem_Branch_Quantity_Declaration;
+
    --  Semantize every declaration of DECLS_PARENT.
    --  STMTS is the concurrent statement list associated with DECLS_PARENT
    --  if any, or null_iir.  This is used for specification.
@@ -2231,6 +2379,13 @@ package body Sem_Decls is
                null;
             when Iir_Kind_Protected_Type_Body =>
                Sem_Protected_Type_Body (Decl);
+            when Iir_Kind_Nature_Declaration =>
+               Sem_Nature_Declaration (Decl);
+            when Iir_Kind_Terminal_Declaration =>
+               Sem_Terminal_Declaration (Decl);
+            when Iir_Kind_Across_Quantity_Declaration
+              | Iir_Kind_Through_Quantity_Declaration =>
+               Sem_Branch_Quantity_Declaration (Decl);
             when others =>
                Error_Kind ("sem_declaration_chain", Decl);
          end case;

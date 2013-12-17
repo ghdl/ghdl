@@ -1635,6 +1635,12 @@ package body Canon is
                   end case;
                end;
 
+            when Iir_Kind_Simple_Simultaneous_Statement =>
+               if Canon_Flag_Expressions then
+                  Canon_Expression (Get_Simultaneous_Left (El));
+                  Canon_Expression (Get_Simultaneous_Right (El));
+               end if;
+
             when others =>
                Error_Kind ("canon_concurrent_stmts", El);
          end case;
@@ -2201,6 +2207,13 @@ package body Canon is
 
          when Iir_Kinds_Signal_Attribute =>
             null;
+
+         when Iir_Kind_Nature_Declaration =>
+            null;
+         when Iir_Kind_Terminal_Declaration =>
+            null;
+         when Iir_Kinds_Quantity_Declaration =>
+            null;
          when others =>
             Error_Kind ("canon_declaration", Decl);
       end case;
@@ -2394,12 +2407,15 @@ package body Canon is
                      end if;
                   end if;
                end;
+
             when Iir_Kind_Sensitized_Process_Statement
               | Iir_Kind_Process_Statement
               | Iir_Kind_Psl_Assert_Statement
               | Iir_Kind_Psl_Default_Clock
-              | Iir_Kind_Psl_Declaration =>
+              | Iir_Kind_Psl_Declaration
+              | Iir_Kind_Simple_Simultaneous_Statement =>
                null;
+
             when others =>
                Error_Kind ("canon_block_configuration(3)", El);
          end case;
@@ -2430,16 +2446,17 @@ package body Canon is
          --  This code is not executed since context clauses are already
          --  canonicalized.
          El := Get_Context_Items (Unit);
---         while El /= Null_Iir loop
---            case Get_Kind (El) is
---               when Iir_Kind_Use_Clause =>
---                  null;
---               when Iir_Kind_Library_Clause =>
---                  null;
---               when others =>
---                  Error_Kind ("canonicalize1", El);
---            end case;
---         end loop;
+         while El /= Null_Iir loop
+            case Get_Kind (El) is
+               when Iir_Kind_Use_Clause =>
+                  null;
+               when Iir_Kind_Library_Clause =>
+                  null;
+               when others =>
+                  Error_Kind ("canonicalize1", El);
+            end case;
+            El := Get_Chain (El);
+         end loop;
       end if;
 
       El := Get_Library_Unit (Unit);

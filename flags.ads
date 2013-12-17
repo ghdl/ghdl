@@ -28,8 +28,11 @@ package Flags is
    type Vhdl_Std_Type is
      (Vhdl_87, Vhdl_93c, Vhdl_93, Vhdl_00, Vhdl_02, Vhdl_08);
 
-   -- Standard accepted.
+   --  Standard accepted.
    Vhdl_Std: Vhdl_Std_Type := Vhdl_93c;
+
+   --  Enable AMS-VHDL extensions.
+   AMS_Vhdl : Boolean := False;
 
    --  Some flags (such as vhdl version) must be the same for every design
    --  units of a hierarchy.

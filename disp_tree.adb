@@ -270,6 +270,23 @@ package body Disp_Tree is
          when Iir_Kind_Subtype_Declaration =>
             Put ("subtype_declaration");
             Disp_Identifier (Tree);
+
+         when Iir_Kind_Nature_Declaration =>
+            Put ("nature_declaration");
+            Disp_Identifier (Tree);
+         when Iir_Kind_Subnature_Declaration =>
+            Put ("subnature_declaration");
+            Disp_Identifier (Tree);
+         when Iir_Kind_Terminal_Declaration =>
+            Put ("terminal_declaration");
+            Disp_Identifier (Tree);
+         when Iir_Kind_Through_Quantity_Declaration =>
+            Put ("through_quantity_declaration");
+            Disp_Identifier (Tree);
+         when Iir_Kind_Across_Quantity_Declaration =>
+            Put ("across_quantity_declaration");
+            Disp_Identifier (Tree);
+
          when Iir_Kind_Component_Declaration =>
             Put ("component_declaration");
             Disp_Identifier (Tree);
@@ -334,6 +351,10 @@ package body Disp_Tree is
             Disp_Identifier (Get_Type_Declarator (Tree));
          when Iir_Kind_Physical_Subtype_Definition =>
             Put_Line ("physical_subtype_definition");
+
+         when Iir_Kind_Scalar_Nature_Definition =>
+            Put ("scalar_nature_definition");
+            Disp_Identifier (Get_Nature_Declarator (Tree));
 
          when Iir_Kind_Simple_Name =>
             Put ("simple_name ");
@@ -989,6 +1010,15 @@ package body Disp_Tree is
             end if;
             Header ("type (definition):");
             Disp_Tree (Get_Type (Tree), Ntab);
+         when Iir_Kind_Nature_Declaration
+           | Iir_Kind_Subnature_Declaration =>
+            if Flat_Decl then
+               return;
+            end if;
+            Header ("nature (definition):");
+            Disp_Tree (Get_Nature (Tree), Ntab);
+            Header ("attribute_value_chain:");
+            Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
          when Iir_Kind_Component_Declaration =>
             if Flat_Decl then
                return;
@@ -1013,6 +1043,39 @@ package body Disp_Tree is
             end if;
             Header ("type:");
             Disp_Tree (Get_Type (Tree), Ntab, True);
+         when Iir_Kind_Terminal_Declaration =>
+            if Flat_Decl then
+               return;
+            end if;
+            Header ("nature:");
+            Disp_Tree (Get_Nature (Tree), Ntab, True);
+         when Iir_Kind_Free_Quantity_Declaration =>
+            if Flat_Decl then
+               return;
+            end if;
+            Header ("type:");
+            Disp_Tree (Get_Type (Tree), Ntab, True);
+            Header ("default value:");
+            Disp_Tree (Get_Default_Value (Tree), Ntab, True);
+            Header ("attribute_value_chain:");
+            Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
+         when Iir_Kind_Across_Quantity_Declaration
+           | Iir_Kind_Through_Quantity_Declaration =>
+            if Flat_Decl then
+               return;
+            end if;
+            Header ("type:");
+            Disp_Tree (Get_Type (Tree), Ntab, True);
+            Header ("default value:");
+            Disp_Tree (Get_Default_Value (Tree), Ntab, True);
+            Header ("plus terminal:");
+            Disp_Tree (Get_Plus_Terminal (Tree), Ntab, True);
+            Header ("minus terminal:");
+            Disp_Tree (Get_Minus_Terminal (Tree), Ntab, True);
+            Header ("tolerance:");
+            Disp_Tree (Get_Tolerance (Tree), Ntab, True);
+            Header ("attribute_value_chain:");
+            Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
          when Iir_Kind_Psl_Declaration =>
             if Flat_Decl then
                return;
@@ -1151,6 +1214,12 @@ package body Disp_Tree is
             Disp_Tree_Flat (Get_Resolution_Function (Tree), Ntab);
             Header ("range constraint:");
             Disp_Tree (Get_Range_Constraint (Tree), Ntab);
+            if Kind = Iir_Kind_Floating_Subtype_Definition
+              or else Kind = Iir_Kind_Subtype_Definition
+            then
+               Header ("tolerance");
+               Disp_Tree (Get_Tolerance (Tree), Ntab);
+            end if;
          when Iir_Kind_Range_Expression =>
             Header ("staticness:", false);
             Disp_Expr_Staticness (Tree);
@@ -1340,6 +1409,19 @@ package body Disp_Tree is
             Header ("declarative_part:");
             Disp_Tree_Chain (Get_Declaration_Chain (Tree), Ntab);
 
+         when Iir_Kind_Scalar_Nature_Definition =>
+            if Flat_Decl then
+               return;
+            end if;
+            Header ("across_type:");
+            Disp_Tree_Flat (Get_Across_Type (Tree), Ntab);
+            Header ("through_type:");
+            Disp_Tree_Flat (Get_Through_Type (Tree), Ntab);
+            Header ("reference: ", False);
+            Disp_Tree_Flat (Get_Reference (Tree), Ntab);
+            Header ("nature_declarator:");
+            Disp_Tree_Flat (Get_Nature_Declarator (Tree), Ntab);
+
          when Iir_Kind_Block_Statement =>
             if Flat_Decl then
                return;
@@ -1428,6 +1510,16 @@ package body Disp_Tree is
             PSL.Dump_Tree.Dump_Tree (Get_Psl_Property (Tree), True);
          when Iir_Kind_Psl_Default_Clock =>
             null;
+
+         when Iir_Kind_Simple_Simultaneous_Statement =>
+            Header ("left:");
+            Disp_Tree (Get_Simultaneous_Left (Tree), Ntab);
+            Header ("right:");
+            Disp_Tree (Get_Simultaneous_Right (Tree), Ntab);
+            Header ("tolerance:");
+            Disp_Tree (Get_Tolerance (Tree), Ntab, True);
+            Header ("attribute_value_chain:");
+            Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
 
          when Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement =>

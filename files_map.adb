@@ -754,6 +754,7 @@ package body Files_Map is
          return Res;
       end if;
 
+      --  Open the file (punt on non regular files).
       declare
          Filename : String := Get_Pathname (Directory, Name, True);
       begin

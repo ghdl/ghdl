@@ -10278,7 +10278,6 @@ package body Translation is
                      Atype := Tinfo.Ortho_Ptr_Type (Mode_Value);
                end case;
             when Type_Mode_Record =>
-               -- part 1 of fix for https://gna.org/bugs/?19195
                --  Create an object pointer.
                --  At elaboration: copy base from name.
                Atype := Tinfo.Ortho_Ptr_Type (Info.Alias_Kind);
@@ -10342,7 +10341,6 @@ package body Translation is
                                       M2E (Name_Node));
                end case;
             when Type_Mode_Record =>
-               -- part 2 of fix for https://gna.org/bugs/?19195
                Open_Temp;
                Stabilize (Name_Node);
                New_Assign_Stmt (Get_Var (Alias_Info.Alias_Var),
@@ -13220,7 +13218,6 @@ package body Translation is
                            return Lp2M (R, Type_Info, Name_Info.Alias_Kind);
                         end if;
                      when Type_Mode_Record =>
-                        -- part 3 of fix for https://gna.org/bugs/?19195
                         R := Get_Var (Name_Info.Alias_Var);
                         return Lp2M (R, Type_Info, Name_Info.Alias_Kind);
                      when others =>
@@ -27746,16 +27743,17 @@ package body Translation is
 
       if False then
          El := Get_Context_Items (Unit);
---         while El /= Null_Iir loop
---            case Get_Kind (El) is
---               when Iir_Kind_Use_Clause =>
---                  null;
---               when Iir_Kind_Library_Clause =>
---                  null;
---               when others =>
---                  Error_Kind ("translate1", El);
---            end case;
---         end loop;
+         while El /= Null_Iir loop
+            case Get_Kind (El) is
+               when Iir_Kind_Use_Clause =>
+                  null;
+               when Iir_Kind_Library_Clause =>
+                  null;
+               when others =>
+                  Error_Kind ("translate1", El);
+            end case;
+            El := Get_Chain (El);
+         end loop;
       end if;
 
       El := Get_Library_Unit (Unit);

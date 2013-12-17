@@ -809,6 +809,38 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
 
+   -- Iir_Kind_Nature_Declaration (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Nature (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+
+   -- Iir_Kind_Subnature_Declaration (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Nature (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+
    -- Iir_Kind_Signal_Interface_Declaration (Medium)
    -- Iir_Kind_Constant_Interface_Declaration (Medium)
    -- Iir_Kind_Variable_Interface_Declaration (Medium)
@@ -1262,6 +1294,75 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
 
+   -- Iir_Kind_Terminal_Declaration (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Nature (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+
+   -- Iir_Kind_Free_Quantity_Declaration (Medium)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Default_Value (Field6)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
+   -- Iir_Kind_Across_Quantity_Declaration (Medium)
+   -- Iir_Kind_Through_Quantity_Declaration (Medium)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Default_Value (Field6)
+   --
+   --   Get/Set_Tolerance (Field7)
+   --
+   --   Get/Set_Plus_Terminal (Field8)
+   --
+   --   Get/Set_Minus_Terminal (Field9)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
    -- Iir_Kind_Use_Clause (Short)
    --
    --   Get/Set_Parent (Field0)
@@ -1550,7 +1651,6 @@ package Iirs is
 
    -- Iir_Kind_Enumeration_Subtype_Definition (Short)
    -- Iir_Kind_Integer_Subtype_Definition (Short)
-   -- Iir_Kind_Floating_Subtype_Definition (Short)
    -- Iir_Kind_Physical_Subtype_Definition (Short)
    --
    --   Get/Set_Range_Constraint (Field1)
@@ -1562,6 +1662,28 @@ package Iirs is
    --   Get/Set_Base_Type (Field4)
    --
    --   Get/Set_Resolution_Function (Field5)
+   --
+   --   Get/Set_Resolved_Flag (Flag1)
+   --
+   --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_Has_Signal_Flag (Flag3)
+   --
+   --   Get/Set_Type_Staticness (State1)
+
+   -- Iir_Kind_Floating_Subtype_Definition (Medium)
+   --
+   --   Get/Set_Range_Constraint (Field1)
+   --
+   --   Get/Set_Type_Mark (Field2)
+   --
+   --   Get/Set_Type_Declarator (Field3)
+   --
+   --   Get/Set_Base_Type (Field4)
+   --
+   --   Get/Set_Resolution_Function (Field5)
+   --
+   --   Get/Set_Tolerance (Field7)
    --
    --   Get/Set_Resolved_Flag (Flag1)
    --
@@ -1587,7 +1709,7 @@ package Iirs is
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
 
-   -- Iir_Kind_Record_Subtype_Definition (Short)
+   -- Iir_Kind_Record_Subtype_Definition (Medium)
    --
    --   Get/Set_Elements_Declaration_List (Field1)
    --
@@ -1598,6 +1720,8 @@ package Iirs is
    --   Get/Set_Base_Type (Field4)
    --
    --   Get/Set_Resolution_Function (Field5)
+   --
+   --   Get/Set_Tolerance (Field7)
    --
    --   Get/Set_Resolved_Flag (Flag1)
    --
@@ -1623,6 +1747,8 @@ package Iirs is
    --
    --   Get/Set_Index_Subtype_List (Field6)
    --
+   --   Get/Set_Tolerance (Field7)
+   --
    --   Get/Set_Type_Staticness (State1)
    --
    --   Get/Set_Constraint_State (State2)
@@ -1647,7 +1773,7 @@ package Iirs is
    --
    --   Get/Set_Direction (State2)
 
-   -- Iir_Kind_Subtype_Definition (Short)
+   -- Iir_Kind_Subtype_Definition (Medium)
    -- Such a node is only created by parse and transformed into the correct
    -- kind (enumeration_subtype, integer_subtype...) by sem.
    --
@@ -1656,6 +1782,28 @@ package Iirs is
    --   Get/Set_Type_Mark (Field2)
    --
    --   Get/Set_Resolution_Function (Field5)
+   --
+   --   Get/Set_Tolerance (Field7)
+
+   ------------------------
+   -- Nature definitions --
+   ------------------------
+
+   -- Iir_Kind_Scalar_Nature_Definition (Medium)
+   --
+   --   Get/Set_Reference (Field2)
+   --
+   -- Get/Set the declarator that has created this nature type.
+   --   Get/Set_Nature_Declarator (Field3)
+   --
+   -- C--  Get/Set_Base_Type (Field4)
+   --
+   -- Type staticness is always locally.
+   -- C--  Get/Set_Type_Staticness (State1)
+   --
+   --   Get/Set_Across_Type (Field7)
+   --
+   --   Get/Set_Through_Type (Field8)
 
    ---------------------------
    -- concurrent statements --
@@ -1877,6 +2025,25 @@ package Iirs is
    --
    -- The block configuration for this statement.
    --   Get/Set_Generate_Block_Configuration (Field7)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+
+   -- Iir_Kind_Simple_Simultaneous_Statement (Medium)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
+   --   Get/Set_Simultaneous_Left (Field5)
+   --
+   --   Get/Set_Simultaneous_Right (Field6)
+   --
+   --   Get/Set_Tolerance (Field7)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -2599,6 +2766,9 @@ package Iirs is
        Iir_Kind_Protected_Type_Body,
        Iir_Kind_Subtype_Definition,  -- temporary (must not appear after sem).
 
+   -- Nature definition
+       Iir_Kind_Scalar_Nature_Definition,
+
    -- Lists.
        Iir_Kind_Overload_List,  -- used internally by sem_expr.
 
@@ -2606,6 +2776,8 @@ package Iirs is
        Iir_Kind_Type_Declaration,
        Iir_Kind_Anonymous_Type_Declaration,
        Iir_Kind_Subtype_Declaration,
+       Iir_Kind_Nature_Declaration,
+       Iir_Kind_Subnature_Declaration,
        Iir_Kind_Configuration_Declaration,
        Iir_Kind_Entity_Declaration,
        Iir_Kind_Package_Declaration,
@@ -2621,6 +2793,10 @@ package Iirs is
        Iir_Kind_Non_Object_Alias_Declaration,
 
        Iir_Kind_Psl_Declaration,
+       Iir_Kind_Terminal_Declaration,
+       Iir_Kind_Free_Quantity_Declaration,
+       Iir_Kind_Across_Quantity_Declaration,
+       Iir_Kind_Through_Quantity_Declaration,
 
        Iir_Kind_Function_Body,
        Iir_Kind_Function_Declaration,
@@ -2696,6 +2872,8 @@ package Iirs is
        Iir_Kind_Block_Statement,
        Iir_Kind_Generate_Statement,
        Iir_Kind_Component_Instantiation_Statement,
+
+       Iir_Kind_Simple_Simultaneous_Statement,
 
    -- Iir_Kind_Sequential_Statement
        Iir_Kind_Signal_Assignment_Statement,
@@ -3266,6 +3444,15 @@ package Iirs is
    --Iir_Kind_Signal_Interface_Declaration
      Iir_Kind_File_Interface_Declaration;
 
+   subtype Iir_Kinds_Branch_Quantity_Declaration is Iir_Kind range
+     Iir_Kind_Across_Quantity_Declaration ..
+     Iir_Kind_Through_Quantity_Declaration;
+
+   subtype Iir_Kinds_Quantity_Declaration is Iir_Kind range
+     Iir_Kind_Free_Quantity_Declaration ..
+   --Iir_Kind_Across_Quantity_Declaration
+     Iir_Kind_Through_Quantity_Declaration;
+
    subtype Iir_Kinds_Non_Alias_Object_Declaration is Iir_Kind range
      Iir_Kind_File_Declaration ..
    --Iir_Kind_Guard_Signal_Declaration
@@ -3440,6 +3627,8 @@ package Iirs is
      Iir_Kind_Type_Declaration ..
    --Iir_Kind_Anonymous_Type_Declaration
    --Iir_Kind_Subtype_Declaration
+   --Iir_Kind_Nature_Declaration
+   --Iir_Kind_Subnature_Declaration
    --Iir_Kind_Configuration_Declaration
    --Iir_Kind_Entity_Declaration
    --Iir_Kind_Package_Declaration
@@ -3454,6 +3643,10 @@ package Iirs is
    --Iir_Kind_Element_Declaration
    --Iir_Kind_Non_Object_Alias_Declaration
    --Iir_Kind_Psl_Declaration
+   --Iir_Kind_Terminal_Declaration
+   --Iir_Kind_Free_Quantity_Declaration
+   --Iir_Kind_Across_Quantity_Declaration
+   --Iir_Kind_Through_Quantity_Declaration
    --Iir_Kind_Function_Body
    --Iir_Kind_Function_Declaration
    --Iir_Kind_Implicit_Function_Declaration
@@ -4257,6 +4450,10 @@ package Iirs is
    function Get_Subtype_Definition (Target : Iir) return Iir;
    procedure Set_Subtype_Definition (Target : Iir; Def : Iir);
 
+   --  Field: Field1
+   function Get_Nature (Target : Iir) return Iir;
+   procedure Set_Nature (Target : Iir; Nature : Iir);
+
    --  Mode of interfaces or file (v87).
    --  Field: Odigit1 (pos)
    function Get_Mode (Target : Iir) return Iir_Mode;
@@ -4506,6 +4703,26 @@ package Iirs is
    function Get_Resolution_Function (Decl : Iir) return Iir;
    procedure Set_Resolution_Function (Decl : Iir; Func : Iir);
 
+   --  Field: Field7
+   function Get_Tolerance (Def : Iir) return Iir;
+   procedure Set_Tolerance (Def : Iir; Tol : Iir);
+
+   --  Field: Field8
+   function Get_Plus_Terminal (Def : Iir) return Iir;
+   procedure Set_Plus_Terminal (Def : Iir; Terminal : Iir);
+
+   --  Field: Field9
+   function Get_Minus_Terminal (Def : Iir) return Iir;
+   procedure Set_Minus_Terminal (Def : Iir; Terminal : Iir);
+
+   --  Field: Field5
+   function Get_Simultaneous_Left (Def : Iir) return Iir;
+   procedure Set_Simultaneous_Left (Def : Iir; Expr : Iir);
+
+   --  Field: Field6
+   function Get_Simultaneous_Right (Def : Iir) return Iir;
+   procedure Set_Simultaneous_Right (Def : Iir; Expr : Iir);
+
    --  True if ATYPE defines std.textio.text file type.
    --  Field: Flag4
    function Get_Text_File_Flag (Atype : Iir) return Boolean;
@@ -4544,6 +4761,23 @@ package Iirs is
    --  Field: Field2
    function Get_Designated_Type (Target : Iir) return Iir;
    procedure Set_Designated_Type (Target : Iir; Dtype : Iir);
+
+   --  The terminal declaration for the reference (ground) of a nature
+   --  Field: Field2
+   function Get_Reference (Def : Iir) return Iir;
+   procedure Set_Reference (Def : Iir; Ref : Iir);
+
+   --  Field: Field3
+   function Get_Nature_Declarator (Def : Iir) return Iir;
+   procedure Set_Nature_Declarator (Def : Iir; Decl : Iir);
+
+   --  Field: Field7
+   function Get_Across_Type (Def : Iir) return Iir;
+   procedure Set_Across_Type (Def : Iir; Atype : Iir);
+
+   --  Field: Field8
+   function Get_Through_Type (Def : Iir) return Iir;
+   procedure Set_Through_Type (Def : Iir; Atype : Iir);
 
    --  Field: Field1
    function Get_Target (Target : Iir) return Iir;

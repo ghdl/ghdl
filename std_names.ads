@@ -139,8 +139,10 @@ package Std_Names is
    Name_With :           constant Name_Id := Name_First_Keyword + 080;
 
    Name_Last_Vhdl87 :    constant Name_Id := Name_With;
+   subtype Name_Id_Vhdl87_Reserved_Words is
+     Name_Id range Name_First_Keyword .. Name_With;
 
-   -- VHDL93 keywords.
+   -- VHDL93 reserved words.
    Name_Xnor :           constant Name_Id := Name_First_Keyword + 081;
    Name_Group :          constant Name_Id := Name_First_Keyword + 082;
    Name_Impure :         constant Name_Id := Name_First_Keyword + 083;
@@ -161,10 +163,35 @@ package Std_Names is
    subtype Name_Shift_Operators is Name_Id range Name_Sll .. Name_Ror;
 
    Name_Last_Vhdl93 :    constant Name_Id := Name_Ror;
+   subtype Name_Id_Vhdl93_Reserved_Words is
+     Name_Id range Name_Xnor .. Name_Ror;
 
    Name_Protected :      constant Name_Id := Name_First_Keyword + 097;
 
-   Name_Last_Keyword :   constant Name_Id := Name_Protected;
+   Name_Last_Vhdl00 :    constant Name_Id := Name_Protected;
+   subtype Name_Id_Vhdl00_Reserved_Words is
+     Name_Id range Name_Protected .. Name_Protected;
+
+   Name_Across :         constant Name_Id := Name_First_Keyword + 098;
+   Name_Break :          constant Name_Id := Name_First_Keyword + 099;
+   Name_Limit :          constant Name_Id := Name_First_Keyword + 100;
+   Name_Nature :         constant Name_Id := Name_First_Keyword + 101;
+   Name_Noise :          constant Name_Id := Name_First_Keyword + 102;
+   Name_Procedural :     constant Name_Id := Name_First_Keyword + 103;
+   Name_Quantity :       constant Name_Id := Name_First_Keyword + 104;
+   Name_Reference :      constant Name_Id := Name_First_Keyword + 105;
+   Name_Spectrum :       constant Name_Id := Name_First_Keyword + 106;
+   Name_Subnature :      constant Name_Id := Name_First_Keyword + 107;
+   Name_Terminal :       constant Name_Id := Name_First_Keyword + 108;
+   Name_Through :        constant Name_Id := Name_First_Keyword + 109;
+   Name_Tolerance :      constant Name_Id := Name_First_Keyword + 110;
+
+   Name_Last_AMS_Vhdl :  constant Name_Id := Name_Tolerance;
+
+   subtype Name_Id_AMS_Reserved_Words is
+     Name_Id range Name_Across .. Name_Tolerance;
+
+   Name_Last_Keyword :   constant Name_Id := Name_Tolerance;
 
    subtype Name_Id_Keywords is
      Name_Id range Name_First_Keyword .. Name_Last_Keyword;
@@ -241,11 +268,25 @@ package Std_Names is
 
    subtype Name_Id_Vhdl93_Attributes is Name_Id
      range Name_First_Vhdl93_Attribute ..Name_Last_Vhdl93_Attribute;
+
+   Name_First_AMS_Attribute : constant Name_Id :=
+     Name_Last_Vhdl93_Attribute + 1;
+   Name_Contribution :   constant Name_Id := Name_First_AMS_Attribute + 000;
+   Name_Dot :            constant Name_Id := Name_First_AMS_Attribute + 001;
+   Name_Integ :          constant Name_Id := Name_First_AMS_Attribute + 002;
+   Name_Above :          constant Name_Id := Name_First_AMS_Attribute + 003;
+   Name_ZOH :            constant Name_Id := Name_First_AMS_Attribute + 004;
+   Name_LTF :            constant Name_Id := Name_First_AMS_Attribute + 005;
+   Name_ZTF :            constant Name_Id := Name_First_AMS_Attribute + 006;
+   Name_Ramp :           constant Name_Id := Name_First_AMS_Attribute + 007;
+   Name_Slew :           constant Name_Id := Name_First_AMS_Attribute + 008;
+   Name_Last_AMS_Attribute : constant Name_Id := Name_Slew;
+
    subtype Name_Id_Name_Attributes is Name_Id
      range Name_Simple_Name .. Name_Path_Name;
 
    --  Names used in std.standard package.
-   Name_First_Standard : constant Name_Id := Name_Last_Vhdl93_Attribute + 1;
+   Name_First_Standard : constant Name_Id := Name_Last_AMS_Attribute + 1;
    Name_Std :            constant Name_Id := Name_First_Standard + 000;
    Name_Standard :       constant Name_Id := Name_First_Standard + 001;
    Name_Boolean :        constant Name_Id := Name_First_Standard + 002;
@@ -289,7 +330,17 @@ package Std_Names is
    Name_Name_Error :     constant Name_Id := Name_First_Standard + 040;
    Name_Mode_Error :     constant Name_Id := Name_First_Standard + 041;
    Name_Foreign :        constant Name_Id := Name_First_Standard + 042;
-   Name_Last_Standard :  constant Name_Id := Name_Foreign;
+
+   --  Added by AMS vhdl.
+   Name_Domain_Type :      constant Name_Id := Name_First_Standard + 043;
+   Name_Quiescent_Domain : constant Name_Id := Name_First_Standard + 044;
+   Name_Time_Domain :      constant Name_Id := Name_First_Standard + 045;
+   Name_Frequency_Domain : constant Name_Id := Name_First_Standard + 046;
+   Name_Domain :           constant Name_Id := Name_First_Standard + 047;
+   Name_Frequency :        constant Name_Id := Name_First_Standard + 048;
+   Name_Real_Vector :      constant Name_Id := Name_First_Standard + 049;
+
+   Name_Last_Standard :  constant Name_Id := Name_Real_Vector;
 
    Name_First_Charname : constant Name_Id := Name_Last_Standard + 1;
    Name_Nul :            constant Name_Id := Name_First_Charname + 00;
@@ -519,7 +570,7 @@ package Std_Names is
    Name_Eventually :         constant Name_Id := Name_First_PSL + 16;
    Name_Fairness :           constant Name_Id := Name_First_PSL + 17;
    Name_Fell  :              constant Name_Id := Name_First_PSL + 18;
-   Name_forall :             constant Name_Id := Name_First_PSL + 19;
+   Name_Forall :             constant Name_Id := Name_First_PSL + 19;
    Name_G :                  constant Name_Id := Name_First_PSL + 20;
    --  Name_In
    Name_Inf :                constant Name_Id := Name_First_PSL + 21;

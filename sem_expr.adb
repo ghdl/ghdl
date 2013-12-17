@@ -189,6 +189,8 @@ package body Sem_Expr is
            | Iir_Kind_Allocator_By_Subtype
            | Iir_Kind_Qualified_Expression =>
             return Expr;
+         when Iir_Kinds_Quantity_Declaration =>
+            return Expr;
          when Iir_Kinds_Dyadic_Operator
            | Iir_Kinds_Monadic_Operator =>
             return Expr;
@@ -682,7 +684,6 @@ package body Sem_Expr is
          return Get_Expr_Staticness (Expr);
       end if;
    end Get_Discrete_Range_Staticness;
-
 
    procedure Set_Function_Call_Staticness (Expr : Iir; Imp : Iir)
    is
@@ -3478,6 +3479,8 @@ package body Sem_Expr is
               | Iir_Kind_Attribute_Value
               | Iir_Kind_Iterator_Declaration
               | Iir_Kind_Guard_Signal_Declaration =>
+               return;
+            when Iir_Kinds_Quantity_Declaration =>
                return;
             when Iir_Kind_File_Declaration
               | Iir_Kind_File_Interface_Declaration =>
