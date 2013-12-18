@@ -517,8 +517,16 @@ package body Ghdlrun is
       Def (Trans_Decls.Ghdl_Image_P32,
            Grt.Images.Ghdl_Image_P32'Address);
 
+      Def (Trans_Decls.Ghdl_Value_B2,
+           Grt.Values.Ghdl_Value_B2'Address);
       Def (Trans_Decls.Ghdl_Value_I32,
            Grt.Values.Ghdl_Value_I32'Address);
+      Def (Trans_Decls.Ghdl_Value_F64,
+           Grt.Values.Ghdl_Value_F64'Address);
+      Def (Trans_Decls.Ghdl_Value_P32,
+           Grt.Values.Ghdl_Value_P32'Address);
+      Def (Trans_Decls.Ghdl_Value_P64,
+           Grt.Values.Ghdl_Value_P64'Address);
 
       Def (Trans_Decls.Ghdl_Get_Path_Name,
            Grt.Names.Ghdl_Get_Path_Name'Address);
