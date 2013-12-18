@@ -70,7 +70,8 @@ ENTRY(grt_stack_create)
 #if __APPLE__
 	call	___x86.get_pc_thunk.cx
 L1$pb:
-	movl	L_grt_stack_loop$non_lazy_ptr-L1$pb(%ecx), %eax
+	movl	L_grt_stack_loop$non_lazy_ptr-L1$pb(%ecx), %ecx
+	movl	%ecx,-12(%eax)
 #else
 	movl	$NAME(grt_stack_loop), -12(%eax)
 #endif
