@@ -1,0 +1,38 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                       Chapter 21 - Files and Input/Output
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+ROM.vhd                                         entity ROM                              behavioral                      Figure 21-1
+stimulate_network.vhd                           entity stimulate_network_write_data     writer                          --
+--                                              entity stimulate_network                test                            Figure 21-2
+CPU.vhd                                         package CPU_types                       --                              --
+--                                              entity CPU                              instrumented                    Figure 21-3
+cache.vhd                                       entity cache                            instrumented                    Figure 21-4
+read_array.vhd                                  entity read_array_write_data            writer                          --
+--                                              entity read_array                       test                            Section 21.1, Figure 21-5
+stimulus_generator.vhd                          entity stimulus_generator               test                            Figure 21-6
+read_transform.vhd                              entity read_transform_write_data        writer                          --
+--                                              entity read_transform                   test                            Section 21.1, Figure 21-7
+textio.vhd                                      package textio                          --                              Figure 21-8
+stimulus_interpreter-1.vhd                      entity stimulus_interpreter             test                            Figure 21-9
+bus_monitor.vhd                                 entity bus_monitor                      test                            Figure 21-10
+inline_01.vhd                                   entity inline_01                        test                            Section 21.1
+inline_02.vhd                                   entity inline_02_write_data             writer                          --
+--                                              entity inline_02                        test                            Section 21.1
+inline_03.vhd                                   entity inline_03                        test                            Section 21.1
+inline_04.vhd                                   entity inline_04                        test                            Section 21.1
+inline_05.vhd                                   entity inline_05                        test                            Section 21.1
+inline_06.vhd                                   entity inline_06                        test                            Section 21.1
+inline_08.vhd                                   entity inline_08                        test                            Section 21.2
+inline_09.vhd                                   entity inline_09                        test                            Section 21.2
+inline_10.vhd                                   entity inline_10                        test                            Section 21.2
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_ROM.vhd                                      entity tb_ROM_write_data                writer                          --
+--                                              entity tb_ROM                           test                            ROM.vhd
+tb_cache.vhd                                    entity tb_cache                         test                            cache.vhd
+--                                              entity tb_cache_read_data               reader                          --

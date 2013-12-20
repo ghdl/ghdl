@@ -1,0 +1,27 @@
+
+This directory contains copies of the VHDL files from The Designer's
+Guild to VHDL written by Peter Ashenden and published by Morgan Kaufmann
+Publishers, Inc in 1996.  Morgan Kaufmann has given the University of
+Cincinnati permission to release these files under the GNU Public
+License.
+
+In many cases the original figures contained incomplete VHDL.  We have
+added additional VHDL constructs we believed necessary to make the VHDL
+complete and processable by a VHDL '93 compliant analyzer.  As we made
+changes to the examples, comments were inserted to demarcate the changes
+we made.
+
+The VHDL files are organized into two subdirectories, fail_tests and
+pass_tests, corresponding to their being non-compliant or compliant to
+the 1076-1993 standard.
+
+If you find errors or corrections to these files, please submit them to
+us at vests@cliftonlabs.com.  Thank you.
+
+------------------------------------------------------------------------
+Philip A. Wilsey 
+The University of Cincinnati
+vests@cliftonlabs.com
+------------------------------------------------------------------------
+Last Revised: March 27, 2002
+

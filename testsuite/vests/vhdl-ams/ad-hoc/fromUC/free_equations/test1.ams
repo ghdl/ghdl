@@ -1,0 +1,81 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test1.ams,v 1.1 2002-03-27 22:11:17 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH Ground reference;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    FUNCTION POW(X,Y : real) RETURN real;
+END PACKAGE electricalSystem;
+
+use work.electricalsystem.all;
+
+--entity declaration
+
+ENTITY RLC IS
+
+END RLC;
+
+--architecture declaration
+
+ARCHITECTURE behavior  OF RLC IS
+
+--   terminal n1,n2,n3: electrical;
+
+--   quantity vl1 across il1 through n1 ;
+--   quantity vl2 across il2 through n2 ;
+--   quantity vl3 across il3 through n2 ;
+
+--   quantity vs across n1 ;
+
+   quantity x:real;
+   quantity y:real;
+   quantity z:real;
+
+--   constant l : REAL := 0.01;
+
+BEGIN 
+
+--r1 : vl1 == il1'dot * l;
+--r2 : vl2 == il2'dot * l;
+--r3 : vl3 == il3'dot * l;
+
+e1 : x == (16.00 - (6.00 * y)) / 4.00;
+e2 : y == (5.00 - x)/2.00;
+e3 : z == x+y;
+
+--eqn4:vs == 5.0 * sin(2.0 * 3.1415 * 10.0 --sine source
+--                                * real(time'pos(now)) * 1.0e-15);
+
+END architecture behavior;

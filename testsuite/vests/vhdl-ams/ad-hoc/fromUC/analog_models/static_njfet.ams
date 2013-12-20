@@ -1,0 +1,219 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: static_njfet.ams,v 1.1 2002-03-27 22:11:16 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+-- This ckt is used to find the output and transfer characteristics of an
+-- n-channel JFET model. 
+-- The model is Spice2 model, taken from the SPICE book, pg 142, fig 3.7
+------------------------------------------------------------------------
+-- The ckt used here is from sedra and smith's page no. 215, fig  5.18
+------------------------------------------------------------------------
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
+    FUNCTION POW(X,Y: real) RETURN real;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+END PACKAGE electricalSystem;
+
+
+-----------------------------------------------------------------------
+--                              G            D1      rd         D
+--                              o-----|>|--o-------/\/\---------o  
+--                              |          |                       
+--                              -      Id ( )                      
+--                              V          |                       
+--                              -          |                       
+--                           S1 o----------o
+--                              |
+--                              >
+--                              < rs
+--                              |
+--                              0 S
+-----------------------------------------------------------------------
+
+----- NMOS 
+--use std.textio.all;
+use work.electricalsystem.all;
+
+entity njfet is
+    generic(T : real := 300.0;
+	    vto : real := -2.0; -- Zero-bais threshold voltage
+	    beta : real := 1.0e-4; -- transconductance parameter
+	    lambda : real := 0.0; -- channel lenght modulation
+	    af : real := 1.0; -- flicker noise exponent
+	    kf : real := 0.0; -- flicker noise coefficient
+	    iss : real := 1.0e-14; -- gate junction saturation current
+	    pb : real := 1.0; -- gate junction potential
+	    fc : real := 0.5; -- forward-bais depletion capacitance coeff
+	    cgd : real := 4.0e-11; -- zero-bais gate-drain junction cap
+	    cgs : real := 4.0e-11; -- zero-bias gate-source junction cap
+	    rd : real := 1.0e-6; -- drain ohmic resistance
+	    rs : real := 1.0e-6); -- source ohmic resistance
+    port (terminal g,s,d : electrical);
+end entity njfet;
+
+architecture behav of njfet is
+  terminal d1, s1 : electrical;
+  quantity vds across id through d1 to s1;
+  quantity vrd across ird through d to d1;
+  quantity vrs across irs through s1 to s;
+  quantity vgs across igs through g to s1;
+  quantity vgd across igd through g to d1;
+  constant gmin : real := 1.0e-12;
+  quantity ktq : real := 2.586e-2; -- (kT/q) thermal voltage at T=300K 
+  --constant k : real := 1.38e-23; -- J/K ..... boltzman constant 
+  -- T = 300 K ............ Absolute temperature
+  --constant q : real := 1.60e-19; -- C ....... magnitude of electron charge
+  quantity vds_free : real := 2.0;
+  quantity vgs_free : real := 0.0;
+  quantity vgd_free : real := 2.0;
+  
+begin
+  ------ Setting initial conditions
+  initreg : break vgs => 0.0, vds => 2.0, vgd => 2.0;
+  therm_volt : ktq == 2.586e-2 * (T/300.0);
+  dres : vrd == ird * rd;
+  oup_res : vds_free == vds;
+  inp_res : vgs_free == vgs;
+  vgdf : vgd_free == vgd;
+  sres : vrs == irs * rs;
+
+---- Current is in Amps.
+-- Normal mode
+  ------ Cut off Region
+  regions : if((vgs <= vto) and (vds >= 0.0))use
+	gncn : id == 1.0e-9 * vds;
+  ------ Linear Region
+  elsif((vds < (vgs-vto)) and (vgs > vto) and (vds >= 0.0)) use
+      	gnln : id == vds*beta*((2.0*(vgs_free-vto)) - vds_free)*(1.0 + lambda*vds_free);
+  ------ Saturation Region
+  elsif((vds >= vgs-vto) and (vgs > vto) and (vds >= 0.0)) use
+     	gnsn : id == beta*(pow((vgs_free-vto),2.0))*(1.0 + lambda*vds_free);
+
+-- Inversted mode
+  ------ Cut off Region
+  elsif((vgd <= vto) and (vds < 0.0))use
+	gnci : id == 1.0e-9 * vds;
+  ------ Linear Region
+  elsif(((-1.0*vds) < (vgd-vto)) and (vgd > vto) and (vds < 0.0)) use
+      	gnli : id == vds*beta*((2.0*(vgd_free-vto)) + vds_free)*(1.0 - lambda*vds_free);
+  ------ Saturation Region
+  elsif(((-1.0*vds) >= vgd-vto) and (vgd > vto) and (vds < 0.0)) use
+     	gnsi : id == -1.0*(beta)*(pow((vgd_free-vto),2.0))*(1.0 - lambda*vds_free);
+  end use;
+  
+----- Gate diode equations 
+  initsub : break vgd => 0.0, vgs => 0.0, igs => 0.0, igd => 0.0;
+  
+   ----- Gate to source
+   subcond1 : if(vgs > -5.0*ktq) use
+	gsf : igs == ((iss*(exp(vgs/ktq) - 1.0)) + (gmin*vgs));
+   elsif(vgs <= -5.0*ktq ) use
+   	gsr : igs == -1.0*iss + (gmin*vgs);
+   end use;
+   ----- Gate to drain
+   subcond2 : if(vgd > -5.0*ktq) use
+	gdf : igd == ((iss*(exp(vgd/ktq) - 1.0)) + (gmin*vgd));
+   elsif(vgd <= -5.0*ktq ) use
+    	gdr : igd == -1.0*iss + (gmin*vgd);
+   end use;
+
+end architecture behav; --- of njfet;
+
+---- DC Voltage source
+
+use work.electricalsystem.all;
+
+entity DCVSrc is
+	generic (v : real := 10.0); -- voltage
+	port (terminal pos, neg : electrical);
+end entity DCVSrc;
+
+architecture behav of DCVSrc is
+  terminal temp : electrical;
+  quantity vdc across idc through temp to neg;
+  quantity vtemp across itemp through pos to temp;
+
+begin
+
+  VSrc : vdc == v;
+  temp_volt : vtemp == itemp * 1.0e-03;
+
+end architecture behav; --- of DCVSrc
+
+
+------ njfet amplifier circuit
+
+use std.textio.all;
+use work.electricalsystem.all;
+
+entity njfet_ckt is
+end entity;
+
+architecture test of njfet_ckt is
+  terminal t1, t2, t3: electrical;
+  quantity vrd1 across ird1 through t1 to t2;
+  quantity vrs1 across irs1 through t3 to electrical'reference;
+  quantity vdd across idd through t1 to electrical'reference;
+
+
+  component njfet_comp is
+    generic(T : real := 300.0;
+	    vto : real := -2.0; -- Zero-bais threshold voltage
+	    beta : real := 1.0e-4; -- transconductance parameter
+	    lambda : real := 0.0; -- channel lenght modulation
+	    af : real := 1.0; -- flicker noise exponent
+	    kf : real := 0.0; -- flicker noise coefficient
+	    iss : real := 1.0e-14; -- gate junction saturation current
+	    pb : real := 1.0; -- gate junction potential
+	    fc : real := 0.5; -- forward-bais depletion capacitance coeff
+	    cgd : real := 4.0e-11; -- zero-bais gate-drain junction cap
+	    cgs : real := 4.0e-11; -- zero-bias gate-source junction cap
+	    rd : real := 1.0e-6; -- drain ohmic resistance
+	    rs : real := 1.0e-6); -- source ohmic resistance
+    port (terminal g,s,d : electrical);                         
+  end component;
+  for all :njfet_comp use entity work.njfet(behav);
+
+begin
+
+  jn1 : njfet_comp 
+       generic map(vto => -4.0, beta => 1.0e-3, lambda => 0.0)
+       port map(ground, t3, t2);	
+
+  rd1 : vrd1 == ird1 * 1.0e3;
+  rs1 : vrs1 == irs1 * 0.5e3;
+  src : vdd == 10.0;
+  
+end architecture test; -- njfet_ckt

@@ -1,0 +1,33 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                         Chapter 17 - Generate Statements
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+led_bar_display.vhd                             entity resistor                         ideal                           --
+--                                              entity led                              ideal                           --
+--                                              entity led_bar_display                  device_level                    Figure 17-2
+resistor_pack.vhd                               entity resistor_pack                    coupled                         Figure 17-3
+graphics_engine.vhd                             entity graphics_engine                  behavioral                      Figure 17-4
+memory_board.vhd                                entity DRAM                             empty                           --
+--                                              entity memory_board                     chip_level                      Figure 17-5
+carry_chain.vhd                                 entity nmos                             ideal, spice_equivalent         --
+--                                              entity carry_chain                      device_level                    Figure 17-8
+computer_system.vhd                             entity computer_system                  block_level                     Section 17.2, Figure 17-9
+fanout_tree.vhd                                 entity buf                              basic                           --
+--                                              entity fanout_tree                      recursive                       Figure 17-11
+computer_system-1.vhd                           package bus_monitor_pkg                 --                              --
+--                                              entity bus_monitor                      general_purpose                 --
+--                                              entity computer_system                  block_level                     Figure 17-12
+architectural.vhd                               configuration architectural             --                              Figure 17-13
+identical_devices.vhd                           configuration identical_devices         --                              Figure 17-14
+down_to_chips.vhd                               entity DRAM_4M_by_4                     chip_function                   --
+--                                              configuration down_to_chips             --                              Figure 17-15
+last_pass_spice.vhd                             configuration last_pass_spice           --                              Figure 17-16
+inline_01.vhd                                   entity inline_01                        test                            --
+--                                              configuration inline_01_test            --                              Section 17.2
+inline_02.vhd                                   entity inline_02                        test                            Section 17.2
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------

@@ -1,0 +1,80 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test121.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of Cincinnati
+-- Cincinnati
+----------------------------------------------------------------------
+-- File          : test3.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : May 2001
+----------------------------------------------------------------------
+-- Description :
+----------------------------------------------------------------------
+-- this is to check the quantity: q'dot in the lhs and rhs of the 
+-- simultaneous statements
+---------------------------------------------------------------------
+PACKAGE electricalSystem is 
+    NATURE electrical IS real ACROSS real THROUGH GROUND REFERENCE;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    FUNCTION POW(X,Y : real) RETURN real;
+
+END PACKAGE electricalSystem;
+use work.electricalSystem.all;
+
+entity test is
+end entity;
+
+architecture atest of test is
+	quantity x11: real;
+	constant x1:real:=2.0;
+	constant x2:real:=1.0;
+	constant m1 : real:=1.0;
+	quantity f : real;	
+	quantity dx1 : real;
+ 
+begin
+e1:	f == 10.0* sin(2.0 * 3.141592 *10000.0 * real(time'pos(now))*1.0e-12);
+e2:	x11 == f*(x1-x2)/m1;
+e3:	dx1 == f'dot;
+
+--	x1'dot == f*(x1-x2)/m1;
+--	x2'dot == f*(x1-x2)/m2;
+--	xs == (m1*x1+m2*x2)/(m1+m2);
+--	m3 == m1*x1'dot+ m2*x2'dot;
+end atest;

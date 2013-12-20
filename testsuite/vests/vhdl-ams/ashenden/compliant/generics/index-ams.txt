@@ -1,0 +1,23 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                          Chapter 9 - Generic Constants
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+control_unit.vhd                                entity control_unit                     test                            Figure 12-1
+timer.vhd                                       entity timer                            behavioral                      Figure 12-2
+reg.vhd                                         entity reg                              behavioral                      Figure 12-3
+multiple_opamp.vhd                              entity multiple_opamp                   ideal                           Figure 12-4
+inline_01.vhd                                   entity inline_01                        test                            Section 12.1
+inline_02a.vhd                                  entity resistor                         simple                          Section 12.1
+inline_03.vhd                                   entity inline_03                        test                            Section 12.1
+inline_05a.vhd                                  entity inline_05a                       test                            Section 12.1
+inline_06.vhd                                   entity inline_06                        test                            Section 12.2
+inline_07.vhd                                   entity inline_07                        test                            Section 12.2
+inline_08.vhd                                   entity inline_08                        test                            Section 12.2
+inline_09a.vhd                                  entity inline_09a                       test                            Section 12.2
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_timer_w_stim.vhd                             entity tb_timer_w_stim                  TB_timer_w_stim                 timer.vhd

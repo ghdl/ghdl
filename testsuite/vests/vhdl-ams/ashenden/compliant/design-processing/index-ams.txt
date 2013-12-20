@@ -1,0 +1,26 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                          Chapter 7 - Design Processing
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+inverting_integrator.vhd                        entity inverting_integrator             structural                      Figure 7-3
+dff.vhd                                         entity dff                              behav                           Figure 7-4
+volume_sensor.vhd                               entity volume_sensor                    structural                      Figure 7-5
+active_filter.vhd                               entity resistor                         --                              --
+--                                              entity capacitor                        --                              --
+--                                              entity LF353_opamp                      --                              --
+--                                              entity active_filter                    component_based                 Figure 7-7
+inline_01a.vhd                                  entity inline_01a                       test                            Section 7.1
+inline_02a.vhd                                  entity inline_02a                       test                            Section 7.1
+inline_03a.vhd                                  entity bottom                           bottom_arch                     Section 7.2
+--                                              entity other_ent                        other_arch                      --
+--                                              entity inline_03a                       test                            Section 7.2
+inline_04a.vhd                                  entity battery                          wrong, correct                  Section 7.2
+--                                              entity inline_04a                       test                            Section 7.2
+inline_05a.vhd                                  entity inline_05a                       test                            Section 7.3
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_volume_sensor.vhd                            entity tb_volume_sensor                 test_bench                      volume_sensor.vhd

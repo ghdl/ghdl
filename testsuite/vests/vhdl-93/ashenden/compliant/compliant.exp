@@ -1,0 +1,826 @@
+
+# Copyright (C) 2001 Clifton Labs, Inc
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+
+# Please email any bugs, comments, and/or additions to this file to:
+# vests@cliftonlabs.com
+
+# Authors: Philip A. Wilsey	philip.wilsey@ieee.org
+# 	   Dale E. Martin	dmartin@cliftonlabs.com
+
+# $Author: paw $
+# $Revision: 1.6 $
+
+# ------------------------------------------------------------------------
+#
+# $Id: compliant.exp,v 1.6 2001-11-03 23:19:37 paw Exp $
+#
+# ------------------------------------------------------------------------
+
+setup_test_group "Ashenden:Compliant Cases" "1076-1993"
+
+# create general libraries used in the testsuite
+
+create_lib stimulus
+build_compliant_test util_pk_test.vhd LIBRARY=stimulus
+
+create_lib bv_utilities
+
+build_compliant_test bv_arithmetic.vhd LIBRARY=bv_utilities
+build_compliant_test bv_arithmetic_body.vhd LIBRARY=bv_utilities
+
+build_compliant_test bv_images.vhd LIBRARY=bv_utilities
+build_compliant_test bv_images_body.vhd LIBRARY=bv_utilities
+
+# ------------------------------------------------------------------------
+# models from chapter 1....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_01_fg_01_07.vhd
+build_compliant_test ch_01_fg_01_08.vhd
+build_compliant_test ch_01_fg_01_10.vhd
+build_compliant_test ch_01_fg_01_11.vhd
+
+build_compliant_test ch_01_fg_01_13.vhd
+
+build_compliant_test ch_01_tb_01_01.vhd
+
+build_compliant_test ch_01_tb_01_02.vhd
+
+build_compliant_test ch_01_tb_01_03.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 2....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_02_tb_02_01.vhd
+build_compliant_test ch_02_fg_02_01.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 3....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_03_ch_03_01.vhd
+build_compliant_test ch_03_ch_03_02.vhd
+build_compliant_test ch_03_ch_03_03.vhd
+build_compliant_test ch_03_ch_03_04.vhd
+build_compliant_test ch_03_ch_03_05.vhd
+build_compliant_test ch_03_ch_03_06.vhd
+build_compliant_test ch_03_ch_03_07.vhd
+build_compliant_test ch_03_ch_03_08.vhd
+build_compliant_test ch_03_ch_03_10.vhd
+build_compliant_test ch_03_ch_03_11.vhd
+build_compliant_test ch_03_ch_03_12.vhd
+build_compliant_test ch_03_ch_03_13.vhd
+build_compliant_test ch_03_ch_03_14.vhd
+build_compliant_test ch_03_ch_03_16.vhd
+build_compliant_test ch_03_ch_03_17.vhd
+build_compliant_test ch_03_ch_03_18.vhd
+build_compliant_test ch_03_ch_03_19.vhd
+build_compliant_test ch_03_ch_03_20.vhd
+
+build_compliant_test ch_03_fg_03_01.vhd
+build_compliant_test ch_03_tb_03_01.vhd
+
+build_compliant_test ch_03_tb_03_02.vhd
+build_compliant_test ch_03_fg_03_02.vhd
+build_compliant_test ch_03_tb_03_03.vhd
+
+build_compliant_test ch_03_fg_03_03.vhd
+build_compliant_test ch_03_tb_03_04.vhd
+
+build_compliant_test ch_03_fg_03_04.vhd
+build_compliant_test ch_03_tb_03_05.vhd
+
+build_compliant_test ch_03_fg_03_05.vhd
+build_compliant_test ch_03_tb_03_06.vhd
+
+build_compliant_test ch_03_fg_03_05.vhd
+build_compliant_test ch_03_fg_03_06.vhd
+build_compliant_test ch_03_tb_03_07.vhd
+
+build_compliant_test ch_03_fg_03_07.vhd
+build_compliant_test ch_03_tb_03_08.vhd
+
+build_compliant_test ch_03_fg_03_08.vhd
+build_compliant_test ch_03_tb_03_09.vhd
+
+build_compliant_test ch_03_fg_03_09.vhd
+build_compliant_test ch_03_tb_03_10.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 4....
+# ------------------------------------------------------------------------
+
+create_lib ch4_pkgs
+
+build_compliant_test ch_04_pk_04_01.vhd LIBRARY=ch4_pkgs
+build_compliant_test ch_04_pk_04_02.vhd LIBRARY=ch4_pkgs
+
+build_compliant_test ch_04_ch_04_01.vhd
+build_compliant_test ch_04_ch_04_02.vhd
+build_compliant_test ch_04_ch_04_04.vhd
+build_compliant_test ch_04_ch_04_05.vhd
+build_compliant_test ch_04_ch_04_06.vhd
+build_compliant_test ch_04_ch_04_07.vhd
+build_compliant_test ch_04_ch_04_08.vhd
+build_compliant_test ch_04_ch_04_10.vhd
+
+build_compliant_test ch_04_fg_04_01.vhd
+build_compliant_test ch_04_fg_04_03.vhd
+
+build_compliant_test ch_04_tb_04_04.vhd
+build_compliant_test ch_04_fg_04_06.vhd
+
+build_compliant_test ch_04_tb_04_01.vhd
+
+build_compliant_test ch_04_fg_04_04.vhd
+build_compliant_test ch_04_tb_04_02.vhd
+
+build_compliant_test ch_04_fg_04_05.vhd
+build_compliant_test ch_04_tb_04_03.vhd
+
+delete_lib ch4_pkgs
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 5....
+# ------------------------------------------------------------------------
+
+# consider removing this test....doesn't it duplicate util_pk_test.vhd??
+build_compliant_test ch_05_pk_test.vhd
+
+build_compliant_test ch_05_ch_05_03.vhd
+build_compliant_test ch_05_fg_05_02.vhd
+build_compliant_test ch_05_tb_05_01.vhd
+build_compliant_test ch_05_tb_05_02.vhd
+
+build_compliant_test ch_05_fg_05_05.vhd
+build_compliant_test ch_05_fg_05_25.vhd
+build_compliant_test ch_05_tb_05_03.vhd
+
+build_compliant_test ch_05_fg_05_06.vhd
+build_compliant_test ch_05_tb_05_04.vhd
+
+build_compliant_test ch_05_fg_05_16.vhd
+build_compliant_test ch_05_tb_05_05.vhd
+
+# this file should be placed in a library
+build_compliant_test ch_05_fg_05_22.vhd
+build_compliant_test ch_05_tb_05_06.vhd
+build_compliant_test ch_05_fg_05_22.vhd
+build_compliant_test ch_05_tb_05_07.vhd
+
+build_compliant_test ch_05_fg_05_24.vhd
+build_compliant_test ch_05_tb_05_08.vhd
+
+build_compliant_test ch_05_fg_05_05.vhd
+
+create_lib star_lib
+
+build_compliant_test ch_05_fg_05_05.vhd
+build_compliant_test ch_05_fg_05_25.vhd
+
+build_compliant_test ch_05_tb_05_09.vhd
+build_compliant_test ch_05_tb_05_10.vhd
+build_compliant_test ch_05_fg_05_27.vhd
+build_compliant_test ch_05_tb_05_11.vhd
+
+create_lib widget_cells
+
+build_compliant_test ch_05_tb_05_12.vhd LIBRARY=widget_cells
+
+create_lib wasp_lib
+
+build_compliant_test ch_05_tb_05_13.vhd
+build_compliant_test ch_05_ch_05_01.vhd
+build_compliant_test ch_05_ch_05_02.vhd 
+build_compliant_test ch_05_ch_05_05.vhd
+build_compliant_test ch_05_tb_05_12.vhd LIBRARY=wasp_lib
+
+build_compliant_test ch_05_ch_05_04.vhd
+build_compliant_test ch_05_ch_05_06.vhd
+build_compliant_test ch_05_ch_05_07.vhd
+build_compliant_test ch_05_ch_05_08.vhd
+build_compliant_test ch_05_ch_05_09.vhd
+build_compliant_test ch_05_ch_05_10.vhd
+build_compliant_test ch_05_ch_05_11.vhd
+build_compliant_test ch_05_ch_05_12.vhd
+build_compliant_test ch_05_ch_05_13.vhd
+build_compliant_test ch_05_ch_05_14.vhd
+build_compliant_test ch_05_ch_05_15.vhd
+build_compliant_test ch_05_ch_05_16.vhd
+build_compliant_test ch_05_ch_05_17.vhd
+build_compliant_test ch_05_ch_05_18.vhd
+build_compliant_test ch_05_ch_05_19.vhd
+build_compliant_test ch_05_ch_05_20.vhd
+build_compliant_test ch_05_ch_05_21.vhd
+build_compliant_test ch_05_ch_05_22.vhd
+build_compliant_test ch_05_ch_05_23.vhd
+build_compliant_test ch_05_ch_05_24.vhd
+build_compliant_test ch_05_ch_05_25.vhd
+build_compliant_test ch_05_ch_05_26.vhd
+build_compliant_test ch_05_ch_05_27.vhd
+build_compliant_test ch_05_fg_05_01.vhd
+build_compliant_test ch_05_fg_05_03.vhd
+build_compliant_test ch_05_fg_05_04.vhd
+build_compliant_test ch_05_fg_05_07.vhd
+build_compliant_test ch_05_fg_05_08.vhd
+build_compliant_test ch_05_fg_05_09.vhd
+build_compliant_test ch_05_fg_05_12.vhd
+build_compliant_test ch_05_fg_05_17.vhd
+build_compliant_test ch_05_fg_05_18.vhd
+build_compliant_test ch_05_fg_05_19.vhd
+build_compliant_test ch_05_fg_05_20.vhd
+build_compliant_test ch_05_fg_05_21.vhd
+build_compliant_test ch_05_fg_05_23.vhd
+build_compliant_test ch_05_fg_05_25.vhd
+build_compliant_test ch_05_fg_05_28.vhd
+build_compliant_test ch_05_tb_05_12.vhd
+build_compliant_test ch_05_fg_05_30.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 6....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_06_acca.vhd
+build_compliant_test ch_06_acca-b.vhd
+build_compliant_test ch_06_accr.vhd
+build_compliant_test ch_06_accr-b.vhd
+build_compliant_test ch_06_mac.vhd
+build_compliant_test ch_06_tovec.vhd
+build_compliant_test ch_06_tovec-b.vhd
+build_compliant_test ch_06_tofp.vhd
+build_compliant_test ch_06_tofp-b.vhd
+build_compliant_test ch_06_reg.vhd
+build_compliant_test ch_06_reg-b.vhd
+build_compliant_test ch_06_mac-b.vhd
+build_compliant_test ch_06_mult.vhd
+build_compliant_test ch_06_mult-b.vhd
+build_compliant_test ch_06_pas.vhd
+build_compliant_test ch_06_pas-b.vhd
+build_compliant_test ch_06_srff.vhd
+build_compliant_test ch_06_srff-b.vhd
+build_compliant_test ch_06_ovfl.vhd
+build_compliant_test ch_06_ovfl-b.vhd
+build_compliant_test ch_06_mac-r.vhd
+
+build_compliant_test ch_06_mact.vhd
+build_compliant_test ch_06_mact-bb.vhd
+build_compliant_test ch_06_mact-br.vhd
+build_compliant_test ch_06_mact-bv.vhd
+build_compliant_test ch_06_multt.vhd
+build_compliant_test ch_06_multt-b.vhd
+build_compliant_test ch_06_tofpt.vhd
+build_compliant_test ch_06_tofpt-b.vhd
+build_compliant_test ch_06_tovect.vhd
+build_compliant_test ch_06_tovect-b.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 7....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_07_ch_07_01.vhd
+build_compliant_test ch_07_ch_07_02.vhd
+
+build_compliant_test ch_07_ch_07_03.vhd
+
+build_compliant_test ch_07_ch_07_04.vhd
+build_compliant_test ch_07_ch_07_05.vhd
+build_compliant_test ch_07_ch_07_06.vhd
+build_compliant_test ch_07_fg_07_01.vhd
+build_compliant_test ch_07_fg_07_02.vhd
+build_compliant_test ch_07_fg_07_03.vhd
+build_compliant_test ch_07_fg_07_04.vhd
+build_compliant_test ch_07_fg_07_05.vhd
+build_compliant_test ch_07_fg_07_06.vhd
+build_compliant_test ch_07_fg_07_07.vhd
+build_compliant_test ch_07_fg_07_08.vhd
+build_compliant_test ch_07_fg_07_09.vhd
+build_compliant_test ch_07_fg_07_10.vhd
+build_compliant_test ch_07_fg_07_11.vhd
+build_compliant_test ch_07_fg_07_12.vhd
+build_compliant_test ch_07_fg_07_13.vhd
+build_compliant_test ch_07_fg_07_14.vhd
+build_compliant_test ch_07_fg_07_15.vhd
+build_compliant_test ch_07_fg_07_16.vhd
+build_compliant_test ch_07_fg_07_17.vhd
+build_compliant_test ch_07_fg_07_18.vhd
+build_compliant_test ch_07_fg_07_19.vhd
+
+build_compliant_test ch_07_fg_07_20.vhd
+build_compliant_test ch_07_fg_07_22.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 8....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_08_ch_08_01.vhd
+build_compliant_test ch_08_fg_08_06.vhd
+build_compliant_test ch_08_ch_08_02.vhd
+build_compliant_test ch_08_ch_08_03.vhd
+build_compliant_test ch_08_ch_08_04.vhd
+build_compliant_test ch_08_ch_08_05.vhd
+build_compliant_test ch_08_fg_08_01.vhd
+build_compliant_test ch_08_fg_08_02.vhd
+build_compliant_test ch_08_fg_08_03.vhd
+build_compliant_test ch_08_fg_08_05.vhd
+build_compliant_test ch_08_fg_08_04.vhd
+build_compliant_test ch_08_fg_08_06.vhd
+build_compliant_test ch_08_fg_08_07.vhd
+build_compliant_test ch_08_fg_08_08.vhd LIBRARY=bv_utilities
+build_compliant_test ch_08_fg_08_09.vhd
+build_compliant_test ch_08_fg_08_10.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 9....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_09_ch_09_01.vhd
+build_compliant_test ch_09_ch_09_02.vhd
+build_compliant_test ch_09_ch_09_03.vhd
+build_compliant_test ch_09_ch_09_04.vhd
+build_compliant_test ch_09_fg_09_01.vhd
+build_compliant_test ch_09_fg_09_02.vhd
+build_compliant_test ch_09_fg_09_03.vhd
+build_compliant_test ch_09_fg_09_04.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 10....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_10_alut.vhd
+build_compliant_test ch_10_alu.vhd
+build_compliant_test ch_10_alu-b.vhd
+build_compliant_test ch_10_bvat.vhd
+build_compliant_test ch_10_bvat-b.vhd
+build_compliant_test ch_10_chkdiv.vhd
+build_compliant_test ch_10_chkmult.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 11....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_11_ch_11_01.vhd
+build_compliant_test ch_11_ch_11_02.vhd
+build_compliant_test ch_11_ch_11_03.vhd
+build_compliant_test ch_11_fg_11_01.vhd
+build_compliant_test ch_11_fg_11_02.vhd
+build_compliant_test ch_11_fg_11_03.vhd
+build_compliant_test ch_11_fg_11_04.vhd
+build_compliant_test ch_11_fg_11_05.vhd
+build_compliant_test ch_11_fg_11_06.vhd
+build_compliant_test ch_11_fg_11_07.vhd
+build_compliant_test ch_11_fg_11_08.vhd
+build_compliant_test ch_11_fg_11_09.vhd
+build_compliant_test ch_11_fg_11_10.vhd
+build_compliant_test ch_11_fg_11_12.vhd
+build_compliant_test ch_11_fg_11_13.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 12....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_12_ch_12_01.vhd
+build_compliant_test ch_12_ch_12_02.vhd
+build_compliant_test ch_12_ch_12_03.vhd
+build_compliant_test ch_12_fg_12_01.vhd
+build_compliant_test ch_12_fg_12_02.vhd
+build_compliant_test ch_12_fg_12_03.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 13....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_13_ch_13_01.vhd
+build_compliant_test ch_13_fg_13_01.vhd LIBRARY=star_lib
+build_compliant_test ch_13_fg_13_02.vhd
+build_compliant_test ch_13_fg_13_03.vhd
+build_compliant_test ch_13_fg_13_04.vhd
+build_compliant_test ch_13_fg_13_05.vhd
+build_compliant_test ch_13_fg_13_06.vhd
+build_compliant_test ch_13_fg_13_07.vhd
+build_compliant_test ch_13_fg_13_08.vhd
+build_compliant_test ch_13_fg_13_09.vhd
+build_compliant_test ch_13_fg_13_10.vhd
+build_compliant_test ch_13_fg_13_11.vhd
+build_compliant_test ch_13_fg_13_12.vhd
+build_compliant_test ch_13_fg_13_13.vhd
+build_compliant_test ch_13_fg_13_14.vhd
+build_compliant_test ch_13_fg_13_15.vhd
+build_compliant_test ch_13_fg_13_17.vhd
+
+create_lib chips
+
+build_compliant_test ch_13_fg_13_17.vhd LIBRARY=chips
+build_compliant_test ch_13_fg_13_18.vhd LIBRARY=chips
+build_compliant_test ch_13_fg_13_18.vhd
+
+create_lib gate_lib
+
+build_compliant_test ch_13_fg_13_19.vhd LIBRARY=gate_lib
+build_compliant_test ch_13_fg_13_19.vhd
+build_compliant_test ch_13_fg_13_20.vhd
+build_compliant_test ch_13_fg_13_21.vhd
+build_compliant_test ch_13_fg_13_22.vhd
+
+create_lib cell_lib
+
+build_compliant_test ch_13_fg_13_23.vhd LIBRARY=cell_lib
+build_compliant_test ch_13_fg_13_23.vhd
+build_compliant_test ch_13_fg_13_24.vhd
+
+create_lib project_lib
+
+build_compliant_test ch_05_pk_test.vhd LIBRARY=project_lib
+build_compliant_test ch_13_fg_13_25.vhd LIBRARY=project_lib
+build_compliant_test ch_13_fg_13_25.vhd
+build_compliant_test ch_13_fg_13_26.vhd
+
+build_compliant_test ch_14_ch_14_01.vhd
+build_compliant_test ch_14_fg_14_01.vhd LIBRARY=cell_lib
+build_compliant_test ch_14_fg_14_01.vhd
+build_compliant_test ch_14_fg_14_02.vhd
+build_compliant_test ch_14_fg_14_04.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 14....
+# ------------------------------------------------------------------------
+
+create_lib chip_lib
+
+build_compliant_test ch_14_fg_14_04.vhd LIBRARY=chip_lib
+build_compliant_test ch_14_fg_14_05.vhd
+build_compliant_test ch_14_fg_14_05.vhd LIBRARY=cell_lib
+build_compliant_test ch_14_fg_14_06.vhd
+build_compliant_test ch_14_fg_14_08.vhd
+build_compliant_test ch_14_fg_14_09.vhd
+build_compliant_test ch_14_fg_14_10.vhd
+build_compliant_test ch_14_fg_14_11.vhd
+build_compliant_test ch_14_fg_14_12.vhd
+build_compliant_test ch_14_fg_14_13.vhd LIBRARY=cell_lib
+build_compliant_test ch_14_fg_14_13.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 15....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_15_dlxt.vhd
+build_compliant_test ch_15_alut.vhd
+
+build_compliant_test ch_15_dlxi.vhd
+build_compliant_test ch_15_dlxi-b.vhd
+
+build_compliant_test ch_15_rft.vhd
+
+build_compliant_test ch_15_latch.vhd
+build_compliant_test ch_15_latch-b.vhd
+
+build_compliant_test ch_15_alu.vhd
+build_compliant_test ch_15_alu-b.vhd
+
+build_compliant_test ch_15_cg.vhd
+build_compliant_test ch_15_cg-b.vhd
+
+build_compliant_test ch_15_rf.vhd
+build_compliant_test ch_15_rf-b.vhd
+
+build_compliant_test ch_15_crtl.vhd
+build_compliant_test ch_15_ctrl-b.vhd
+
+build_compliant_test ch_15_regm.vhd
+build_compliant_test ch_15_regm-b.vhd
+
+build_compliant_test ch_15_regmpr.vhd
+build_compliant_test ch_15_regmpr-b.vhd
+
+build_compliant_test ch_15_dlx.vhd
+build_compliant_test ch_15_dlx-b.vhd
+build_compliant_test ch_15_dlx-r.vhd
+
+build_compliant_test ch_15_dlxr.vhd
+build_compliant_test ch_15_mem.vhd
+build_compliant_test ch_15_mem-pl.vhd
+
+build_compliant_test ch_15_ire.vhd
+build_compliant_test ch_15_ire-b.vhd
+
+build_compliant_test ch_15_mem-fl.vhd
+
+build_compliant_test ch_15_mux2.vhd
+build_compliant_test ch_15_mux2-b.vhd
+
+build_compliant_test ch_15_regmp.vhd
+build_compliant_test ch_15_regmp-b.vhd
+
+build_compliant_test ch_15_dlxtst.vhd
+build_compliant_test ch_15_dlxtst-b.vhd
+build_compliant_test ch_15_dlxtst-v.vhd
+
+build_compliant_test ch_15_dlxtstb.vhd
+
+build_compliant_test ch_15_dlxtstr.vhd
+build_compliant_test ch_15_dlxstsv.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 16....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_16_ch_16_01.vhd
+build_compliant_test ch_16_ch_16_02.vhd
+build_compliant_test ch_16_ch_16_03.vhd
+build_compliant_test ch_16_ch_16_04.vhd
+build_compliant_test ch_16_ch_16_05.vhd
+build_compliant_test ch_16_ch_16_06.vhd
+build_compliant_test ch_16_fg_16_01.vhd
+build_compliant_test ch_16_fg_16_02.vhd
+build_compliant_test ch_16_fg_16_04.vhd
+build_compliant_test ch_16_fg_16_05.vhd
+build_compliant_test ch_16_fg_16_06.vhd
+build_compliant_test ch_16_fg_16_07.vhd
+build_compliant_test ch_16_fg_16_08.vhd
+build_compliant_test ch_16_fg_16_09.vhd
+build_compliant_test ch_16_fg_16_10.vhd
+build_compliant_test ch_16_fg_16_12.vhd
+build_compliant_test ch_16_fg_16_13.vhd
+build_compliant_test ch_16_fg_16_14.vhd
+build_compliant_test ch_16_fg_16_15.vhd
+build_compliant_test ch_16_fg_16_16.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 17....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_17_ch_17_01.vhd
+build_compliant_test ch_17_ch_17_02.vhd
+build_compliant_test ch_17_ch_17_03.vhd
+build_compliant_test ch_17_ch_17_04.vhd
+build_compliant_test ch_17_ch_17_05.vhd
+build_compliant_test ch_17_ch_17_06.vhd
+build_compliant_test ch_17_ch_17_07.vhd
+build_compliant_test ch_17_ch_17_08.vhd
+build_compliant_test ch_17_ch_17_09.vhd
+build_compliant_test ch_17_fg_17_05.vhd
+build_compliant_test ch_17_fg_17_07.vhd
+build_compliant_test ch_17_fg_17_08.vhd
+build_compliant_test ch_17_fg_17_09.vhd
+build_compliant_test ch_17_fg_17_11.vhd
+build_compliant_test ch_17_fg_17_13.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 18....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_18_ch_18_01.vhd
+build_compliant_test ch_18_ch_18_02.vhd
+build_compliant_test ch_18_ch_18_03.vhd
+build_compliant_test ch_18_ch_18_04.vhd
+build_compliant_test ch_18_ch_18_05.vhd
+build_compliant_test ch_18_ch_18_06.vhd
+build_compliant_test ch_18_ch_18_07.vhd
+build_compliant_test ch_18_ch_18_08.vhd
+build_compliant_test ch_18_ch_18_09.vhd
+build_compliant_test ch_18_ch_18_10.vhd
+build_compliant_test ch_18_fg_18_01.vhd
+build_compliant_test ch_18_fg_18_02.vhd
+build_compliant_test ch_18_fg_18_03.vhd
+build_compliant_test ch_18_fg_18_04.vhd
+build_compliant_test ch_18_fg_18_05.vhd
+build_compliant_test ch_18_fg_18_06.vhd
+build_compliant_test ch_18_fg_18_07.vhd
+build_compliant_test ch_18_fg_18_08.vhd
+build_compliant_test ch_18_fg_18_09.vhd
+build_compliant_test ch_18_fg_18_10.vhd
+build_compliant_test ch_18_fg_18_11.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 19....
+# ------------------------------------------------------------------------
+
+create_lib math
+
+build_compliant_test math_real.vhd LIBRARY=math
+
+create_lib qsim
+
+build_compliant_test ch_19_qsimt.vhd LIBRARY=qsim
+build_compliant_test ch_19_qsimt-b.vhd LIBRARY=qsim
+
+build_compliant_test ch_19_qt.vhd LIBRARY=qsim
+
+build_compliant_test ch_19_wtfifo.vhd LIBRARY=qsim
+build_compliant_test ch_19_wtfifo-b.vhd LIBRARY=qsim
+
+build_compliant_test ch_19_tkfifo.vhd LIBRARY=qsim
+build_compliant_test ch_19_tkfifo-b.vhd LIBRARY=qsim
+
+create_lib random
+
+build_compliant_test ch_19_random.vhd LIBRARY=random
+build_compliant_test ch_19_random-b.vhd LIBRARY=random
+
+build_compliant_test ch_19_source.vhd
+build_compliant_test ch_19_source-b.vhd
+
+build_compliant_test ch_19_sink.vhd
+build_compliant_test ch_19_sink-b.vhd
+
+build_compliant_test ch_19_queue.vhd
+build_compliant_test ch_19_queue-b.vhd
+
+build_compliant_test ch_19_srvr.vhd
+build_compliant_test ch_19_srvr-b.vhd
+
+build_compliant_test ch_19_fork.vhd
+build_compliant_test ch_19_fork-b.vhd
+
+build_compliant_test ch_19_join.vhd
+build_compliant_test ch_19_join-b.vhd
+
+build_compliant_test ch_19_ds.vhd
+build_compliant_test ch_19_ds-qn.vhd
+
+build_compliant_test ch_19_tb.vhd
+build_compliant_test ch_19_tb-src.vhd
+
+# we may have to re-add ch_19_tb.vhd to work each time.....
+
+build_compliant_test ch_19_tb-snk.vhd
+build_compliant_test ch_19_tb-frk.vhd
+build_compliant_test ch_19_tb-jn.vhd
+build_compliant_test ch_19_tb-qs.vhd
+build_compliant_test ch_19_tb-jnsth.vhd
+
+delete_lib math
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 20....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_20_ch_20_01.vhd
+build_compliant_test ch_20_ch_20_02.vhd
+build_compliant_test ch_20_ch_20_03.vhd
+build_compliant_test ch_20_ch_20_04.vhd
+build_compliant_test ch_20_ch_20_05.vhd
+build_compliant_test ch_20_ch_20_06.vhd
+build_compliant_test ch_20_ch_20_08.vhd
+build_compliant_test ch_20_ch_20_09.vhd
+build_compliant_test ch_20_ch_20_07.vhd
+build_compliant_test ch_20_ch_20_10.vhd
+build_compliant_test ch_20_ch_20_11.vhd
+build_compliant_test ch_20_fg_20_05.vhd
+build_compliant_test ch_20_fg_20_06.vhd
+build_compliant_test ch_20_fg_20_09.vhd
+build_compliant_test ch_20_fg_20_07.vhd
+build_compliant_test ch_20_fg_20_11.vhd
+build_compliant_test ch_20_fg_20_12.vhd
+build_compliant_test ch_20_fg_20_13.vhd
+build_compliant_test ch_20_fg_20_14.vhd
+build_compliant_test ch_20_fg_20_15.vhd
+build_compliant_test ch_20_fg_20_16.vhd
+build_compliant_test ch_20_fg_20_17.vhd
+build_compliant_test ch_20_fg_20_18.vhd
+build_compliant_test ch_20_fg_20_19.vhd
+build_compliant_test ch_20_fg_20_20.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from chapter 21....
+# ------------------------------------------------------------------------
+
+build_compliant_test ch_21_ch_21_01.vhd
+build_compliant_test ch_21_ch_21_02.vhd
+build_compliant_test ch_21_ch_21_03.vhd
+build_compliant_test ch_21_fg_21_01.vhd
+build_compliant_test ch_21_fg_21_02.vhd
+build_compliant_test ch_21_fg_21_03.vhd
+build_compliant_test ch_21_fg_21_04.vhd
+build_compliant_test ch_21_fg_21_05.vhd
+build_compliant_test ch_21_fg_21_06.vhd
+
+delete_lib work
+
+# ------------------------------------------------------------------------
+# models from appendix a....
+# ------------------------------------------------------------------------
+
+build_compliant_test ap_a_ap_a_01.vhd
+build_compliant_test ap_a_ap_a_02.vhd
+build_compliant_test ap_a_ap_a_03.vhd
+build_compliant_test ap_a_ap_a_04.vhd
+build_compliant_test ap_a_ap_a_05.vhd
+build_compliant_test ap_a_ap_a_06.vhd
+build_compliant_test ap_a_ap_a_07.vhd
+build_compliant_test ap_a_ap_a_08.vhd
+build_compliant_test ap_a_ap_a_09.vhd
+build_compliant_test ap_a_ap_a_10.vhd
+build_compliant_test ap_a_fg_a_01.vhd
+build_compliant_test ap_a_fg_a_02.vhd
+build_compliant_test ap_a_fg_a_03.vhd
+build_compliant_test ap_a_fg_a_04.vhd
+build_compliant_test ap_a_fg_a_05.vhd
+build_compliant_test ap_a_fg_a_06.vhd
+build_compliant_test ap_a_fg_a_07.vhd
+build_compliant_test ap_a_fg_a_08.vhd
+build_compliant_test ap_a_fg_a_09.vhd
+build_compliant_test ap_a_fg_a_10.vhd
+build_compliant_test ap_a_fg_a_11.vhd
+
+delete_lib work
+
+delete_lib star_lib
+delete_lib widget_cells
+delete_lib wasp_lib
+delete_lib chips
+delete_lib gate_lib
+delete_lib cell_lib
+delete_lib project_lib
+delete_lib chip_lib
+delete_lib qsim
+
+delete_lib bv_utilities
+delete_lib stimulus
+
+end_test_group
+
+# $Log: compliant.exp,v $
+# Revision 1.6  2001-11-03 23:19:37  paw
+# Updating the test script so that each chapter builds into the work library
+# and work is not deleted until processing all the files for that chapter.
+# This means that none of the tests are setup for simulation (the most they
+# can test is the build), but they are now setup to satisfy the library
+# dependencies.  With these changes the analyzer passes just over 80% of the
+# tests correctly.  I will have to run through these tests chapter by chapter
+# to ensure everything is setup properly.  The original vests distributed
+# from UC was/is very inadequate.  This will take quite some time to fix.  In
+# the mean time, the files are at least useful for testing everything up to
+# TESTLEVEL=build.
+#
+# Revision 1.5  2001/10/25 01:24:24  paw
+# More changes/corrections to library creation/reference.  The parser now
+# reports over 80% on ashenden.  Many changes remain to correct errors in
+# this set of tests.
+#
+# Revision 1.3  2001/10/24 23:31:00  paw
+# More revisions/reorganization to have test harness satisfy dependencies
+# between tests.
+#
+# Revision 1.2  2001/10/24 22:18:13  paw
+# Setup a stricter library structure for the chapter 19 tests.  This is a
+# safety commit.
+#
+# Revision 1.1  2001/10/19 23:28:54  paw
+# Adding dejagnu scripts to run ashenden's test cases.
+#
+

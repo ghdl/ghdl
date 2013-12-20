@@ -1,0 +1,35 @@
+
+                    LICENSE INFORMATION
+
+Copyright (c) 2001-2002 The University of Cincinnati.  All rights reserved.
+
+UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
+NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR DISTRIBUTING
+THIS SOFTWARE OR ITS DERIVATIVES.
+
+By using or copying this Software, Licensee agrees to abide by the
+intellectual property laws, and all other applicable laws of the U.S., and
+the terms of this license.
+
+You may modify, distribute, and use the software contained in this package
+under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2, June
+1991. A copy of this license agreement can be found in the file "COPYING",
+distributed with this archive.
+
+VESTs is actually a collection of VHDL test files that have been
+contributed for collective distribution under the GNU Public License.  We
+encourage users to develop software and products with VESTs.  Whenever
+possible, we hope that users will also develop and contribute tests back
+for inclusion into VESTs.  Thank you.
+
+------------------------------------------------------------------------
+VESTs version 1.0
+Philip A. Wilsey 
+The University of Cincinnati
+vests@cliftonlabs.com
+------------------------------------------------------------------------
+Last Revised: March 27, 2002
+

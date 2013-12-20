@@ -1,0 +1,71 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test135.ams,v 1.1 2002-03-27 22:11:18 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH ground refernce;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    FUNCTION POW(X,Y : real) RETURN real;
+END PACKAGE electricalSystem;
+
+USE use.electricalSystem.all;
+ENTITY vpwl IS
+    GENERIC (v0 : real := 0.0);
+    PORT (SIGNAL slope : in real;
+          TERMINAL p, m : electrical);
+END ENTITY vpwl;
+
+ARCHITECTURE one OF vpwl IS
+    QUANTITY v  ACROSS i THROUGH p TO m;
+BEGIN
+    v==v0;
+    BREAK WHEN slope'event;
+    v'dot == slope;
+END ARCHITECTURE one;
+
+entity tb is
+end entity;
+architecture atb of tb is
+signal myinput: real;
+
+begin
+	myinput<='1';
+ARCHITECTURE two OF vpwl IS
+    QUANTITY v ACROSS i THROUGH p TO m;
+    SIGNAL startv : voltage := v0;
+BEGIN
+    BREAK WHEN slope'event;
+    startv <= v WHEN slope'event;
+    v == startv + slope'delayed * startv'last_event;
+END ARCHITECTURE two;

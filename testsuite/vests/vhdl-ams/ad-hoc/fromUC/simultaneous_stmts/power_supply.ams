@@ -1,0 +1,138 @@
+
+-- Copyright (C) 1997-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: power_supply.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- Title         : Power supply circuit (Behavioral)
+-- Project       : Mixed signal simulation
+----------------------------------------------------------------------
+-- File          : power_supply.ams
+-- Author        : Kathiresan Nellayappan  <knellaya@ececs.uc.edu>
+--                 Chandrashekar L Chetput <cchetput@ececs.uc.edu>
+-- Created       : 26.11.1997
+----------------------------------------------------------------------
+-- Description :
+-- VHDL-AMS description of a power supply circuit.
+-- BEHAVIORAL DESCRIPTION.
+----------------------------------------------------------------------
+-- The ciruit schematic for the power supply circuit is as below:
+-- ==============================================================
+--                                                     It comprises:
+--             diode D1            inductor            i) a sinusoidal 
+--  T2      _____|\|____     T3      L1       T4        voltage source
+--  o______|     |/|    |____o______()()()____o______o  ii) a diode D1
+--  |      |            |    |       0.1H     |      | iii)3 capacitors
+--  <      |            |    |                |      | iv) inductor L1
+--  < R1   |_____||_____|    |                |      |  v)  source and 
+--  < 5ohms      ||        _____            _____    < load resistances
+--  <            C1        -----            -----    < RL 
+--  |            1microF     |                |      <
+--  o T1                     |                |      <
+--  |                        |C2              |C3    < 1K
+-- ( )Vin                    |1mf             |1mf   <
+--  | 10(sinwt)              |                |      |
+--  o________________________|________________|______|
+--                           |gnd
+--                         -----
+----------------------------------------------------------------------
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
+    FUNCTION SIN (X : real ) RETURN real;
+    FUNCTION EXP  (X : real ) RETURN real;
+END PACKAGE electricalSystem;
+
+use work.electricalSystem.all;
+
+--Entity declaration:
+ENTITY power_supply IS
+END ENTITY power_supply;
+
+
+--Architecture declaration:
+ARCHITECTURE behavior OF power_supply IS
+
+    CONSTANT Capacitance1 : real := 0.000001;  -- value of C1
+    CONSTANT Capacitance2 : real := 0.001;     -- value of C2
+    CONSTANT resistance1 : real := 5.0;        -- value of R1
+    CONSTANT load_resistance : real := 1000.0; -- value of RL
+    CONSTANT inductance : real := 0.1;         -- value of L1
+    CONSTANT BV : real := 100.0;               -- Diode Breakdown voltage
+    CONSTANT saturation_current : real
+        := 0.0000000000001;       -- Diode saturation current value.
+    CONSTANT Vt : real := 0.025;  -- Vt = KT/q (thermal voltage)     
+    CONSTANT neg_sat : real
+        := -saturation_current;   -- Negative of the saturation current
+    CONSTANT  MATH_PI :  real := 3.14159_26535_89793_23846;  
+
+    terminal t1, t2, t3, t4 : electrical;
+
+    
+--quantity declarations:
+  QUANTITY Vin ACROSS Iin THROUGH T1;
+  QUANTITY vr1 ACROSS ir1 THROUGH T2 TO T1;
+  QUANTITY d1_v ACROSS d1_i THROUGH T2 TO T3;
+  QUANTITY vc1 ACROSS ic1 THROUGH T2 TO T3;
+  QUANTITY vc2 ACROSS ic2 THROUGH T3;
+  QUANTITY vl ACROSS il THROUGH T3 TO T4;
+  QUANTITY vc3 ACROSS ic3 THROUGH T4;
+  QUANTITY vr2 ACROSS ir2 THROUGH T4;
+  QUANTITY phi : real; --free quantity.
+
+
+BEGIN
+
+  C1: ic1 == vc1'dot * Capacitance1;       -- capacitance equation: ic = c*dv/dt.
+  C2: ic2 == vc2'dot * Capacitance2;       -- capacitance equation for C2.
+  C3: ic3 == vc3'dot * Capacitance2;       -- capacitance equation for C3.
+  res_stmt1: vr1 == ir1 * resistance1;     -- resistance equation: v = i*r.
+  res_stmt2: vr2 == ir2 * load_resistance; -- resistance equation.
+  induct_stmt: phi == inductance * il;     -- inductance equation: flux = L*I 
+  aux_stmt:    vl == phi'dot;              -- inductance equation: VL = dflux/dt.
+
+  -- the diode equations:
+  diode1Cond1: IF( d1_V >= (-3.0 * Vt) ) USE 
+		 --active region:
+  diode1St1:   d1_I == saturation_current * (exp(d1_V/Vt) - 1.0);
+              ELSIF( (d1_V < (-3.0 * Vt)) AND (d1_V > -BV)) USE
+		 --
+  diode1St2:    d1_I == neg_sat;
+              ELSE
+  diode1St3:    d1_I == neg_sat * (exp(-(BV + d1_V)/Vt) -1.0 +
+                                   saturation_current);
+              END USE;
+
+  --Sinusoidal voltage source:
+  vsource: Vin == 10.0 * sin(2.0 * 3.14 * 60.0 * real(time'pos(now)) *
+                             1.0e-15);
+
+END ARCHITECTURE behavior;

@@ -1,0 +1,96 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test171.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of Cincinnati
+-- Cincinnati
+----------------------------------------------------------------------
+-- File          : test171.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : Sept 2001
+----------------------------------------------------------------------
+-- Description :
+----------------------------------------------------------------------
+-- the test is done for checking the correct implementation 
+-- of the simultaneous if equation statement.it checks 
+-- nature declaration, terminal and quantity declarations.
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH GROUND REFERENCE;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+END PACKAGE electricalSystem;
+use work.electricalSystem.all;
+
+entity test is
+end entity;
+
+architecture atest of test is
+terminal T1,T2, T3 :electrical;
+quantity VC1 across IC1 through T1 to T2;
+quantity VC2 across IC2 through T3;
+quantity VD1 across ID1 through T2;
+quantity VD2 across ID2 through T2 to T3;
+quantity VS across T1;
+constant BV: real:=100.0;
+constant satcur: real:=1.0e-12;
+constant negsatcur: real:= -1.0*satcur;
+constant VT: real:=0.025;
+constant C1: real:= 1.0e-12;
+constant C2: real:= 1.0e-12;
+begin
+
+e1:	IC1 == C1 * VC1'dot;
+e2:	IC2 == C2*VC2'dot;
+diode1: if (VD1>=(-3.0*VT)) use
+           ID1 == satcur*(exp(VD1/VT)-1.0);
+        elsif (VD1 < (-3.0*VT) and (VD1 >-BV)) use
+           ID1==negsatcur;
+        else
+           ID1 == negsatcur * (exp(-(BV+ VD1/VT)-1)+satcur);
+        end use;
+
+diode2: if (VD2>=(-3.0*VT)) use
+           ID2 == satcur*(exp(VD2/VT)-1.0);
+        elsif (VD2 < (-3.0*VT) and (VD2 >-BV)) use
+           ID2==negsatcur;
+        else
+           ID2 == negsatcur * (exp(-(BV+ VD2/VT)-1)+satcur);
+        end use;
+
+esource: VS == 5.0 * sin(2.0 *3.141592 *10000.0 * real(time'pos(now))*1.0e-12);
+
+end architecture atest;

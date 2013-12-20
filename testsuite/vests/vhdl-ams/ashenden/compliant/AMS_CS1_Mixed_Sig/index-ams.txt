@@ -1,0 +1,53 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                   Chapter 8 - Case Study 1: Mixed Signal Focus
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+switch_dig_2in.vhd                              entity switch_dig_2in                   ideal                           Figure 8-6
+a2d_nbit.vhd                                    entity a2d_nbit                         sar                             Figure 8-7
+dac_10_bit.vhd                                  entity dac_10_bit                       behavioral                      Figure 8-12
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_2in_switch.vhd                               entity tb_2in_switch                    TB_2in_switch                   switch_dig_2in.vhd
+tb_a2d_d2a.vhd                                  entity tb_a2d_d2a                       TB_a2d_d2a                      a2d_nbit.vhd, dac_10_bit.vhd
+tb_CS1.vhd                                      entity switch_dig_2in                   ideal                           Case Study 1
+--                                              entity clock                            ideal
+--                                              entity clock_duty                       ideal
+--                                              entity rc_clk                           rc_clk
+--                                              entity bit_cnt                          behavioral
+--                                              entity state_mach1                      state_diagram
+--                                              entity sm_cnt                           sm_cnt
+--                                              entity a2d_nbit                         sar
+--                                              entity shift_reg                        behavioral
+--                                              entity frame_gen                        simple
+--                                              entity xor2                             ideal
+--                                              entity level_set_tri                    ideal
+--                                              entity buffer_tri                       ideal
+--                                              entity d2a_bit                          ideal
+--                                              entity parity_gen                       parity_gen
+--                                              entity tdm_encoder                      tdm_encoder
+--                                              entity Digitize_Encode                  Digitize_Encode
+--                                              entity stick                            ideal
+--                                              entity and2                             ideal
+--                                              entity d_latch_n_edge_rst               behav
+--                                              entity counter_12                       counter_12
+--                                              entity a2d_bit                          ideal
+--                                              entity clock_en                         ideal
+--                                              entity inverter                         ideal
+--                                              entity or2                              ideal
+--                                              entity d2a_nbit                         behavioral
+--                                              entity pw2ana                           pw2ana
+--                                              entity dig_cmp                          simple
+--                                              entity sr_ff                            simple
+--                                              entity state_mach_rcvr                  state_diagram
+--                                              entity sm_cnt_rcvr                      sm_cnt_rcvr
+--                                              entity level_set                        ideal
+--                                              entity ser2par                          a1
+--                                              entity frame_det                        simple
+--                                              entity parity_det                       parity_det
+--                                              entity TDM_Demux_dbg                    TDM_Demux_dbg
+--                                              entity Decode_PW                        Decode_PW
+--                                              entity tb_CS1                           TB_CS1

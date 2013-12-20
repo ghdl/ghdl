@@ -1,0 +1,109 @@
+
+-- Copyright (C) 1998-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: hwr_filter.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- Title         : Half Wave Rectifier with capacitor filter
+-- Project       : Mixed signal simulation
+----------------------------------------------------------------------
+-- File          : hwr.vhd (Behavioral)
+-- Author(s)     : Vasudevan Shanmugasundaram(vasu@ececs.uc.edu)
+-- Created       : jan 16 1998
+----------------------------------------------------------------------
+-- Description : 
+-- Behavioral description of a half wave rectifier circuit with a 
+-- capacitor filter.
+----------------------------------------------------------------------
+--     T1   diode D  T2    
+--     o-----|>|-----o----o-------o   The circuit comprises:
+--     |             |    |           i)  A diode .
+--    ( )            |    >R=100ohms  ii) A sinusoidal voltage source
+--     |Vs = 5sinwt  __   >           iii)A resistor R.
+--     |             --   >           iv) A capacitor C.
+--     |             |C   |
+--     |_____________|____|_______o
+--                   |gnd
+--                 -----
+----------------------------------------------------------------------
+
+PACKAGE electricalSystem IS
+    
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
+    FUNCTION  SIN (X : real ) RETURN real;
+    FUNCTION EXP  (X : real ) RETURN real;
+    
+END PACKAGE electricalSystem;
+
+----------------------------------------------------------------------
+
+USE work.electricalSystem.all;
+
+ENTITY hwr_filter IS    
+END hwr_filter;
+
+-- purpose: a capacitor filtered half wave rectifier
+ARCHITECTURE behav OF hwr_filter IS
+
+    terminal t1, t2 : electrical;
+    quantity vDiode across iDiode through t1 TO t2;
+    quantity v2 across i2 through t2 TO electrical'reference;
+    quantity vc across ic through t2 TO electrical'reference;
+    quantity vs across t1 TO electrical'reference;
+
+    CONSTANT saturation_current : real := 0.0000000000001;
+    CONSTANT Vt : real := 0.025;
+        
+    CONSTANT BV : real := 100.0;
+    CONSTANT neg_sat : real := -saturation_current; 
+    
+BEGIN  -- behav
+
+      -- diode behavior equation
+      if( vDiode >= (-1.0 * Vt)) USE
+        eqn1_1: iDiode == saturation_current * (exp(vDiode/Vt) - 1.0);
+      
+      ELSIF ((vDiode < (-3.0 * Vt)) AND (vDiode > -BV)) use
+        eqn1_2:  iDiode == neg_sat;
+      
+      ELSE
+        eqn1_3: iDiode == neg_sat * (exp(-(BV + vDiode)/Vt) - 1.0 +                                          saturation_current);
+        
+      END USE ;
+                            
+      eqn2:  v2 == 100.0 * i2;                   -- resistor
+
+      eqn4:  vs == 5.0 * sin(2.0 * 3.1415 * 10000.0 --sine source
+				* real(time'pos(now)) * 1.0e-15); 
+
+      eqn6:  ic ==  0.000005 * vc'dot;          -- capacitor
+
+END behav;

@@ -1,0 +1,48 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                        Chapter 22 - Attributes and Groups
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+flipflop.vhd                                    entity flipflop                         behavior                        Figure 22-8
+mem_pkg.vhd                                     package mem_pkg                         body                            Figure 22-9
+top.vhd                                         entity top                              top_arch                        Figure 22-10
+bottom.vhd                                      entity bottom                           bottom_arch                     Figure 22-12
+add_with_overflow.vhd                           entity add_with_overflow                test                            Figure 22-14
+74x138.vhd                                      package physical_attributes             --                              Section 22.2
+--                                              entity \74x138\                         --                              Figure 22-15
+mem_read.vhd                                    entity mem_read                         test                            Figure 22-16
+gate_components.vhd                             package graphics_pkg                    --                              --
+--                                              package gate_components                 --                              Figure 22-17
+CPU.vhd                                         package cell_attributes                 --                              --
+--                                              entity CPU                              cell_based                      Figure 22-18
+controller.vhd                                  entity controller                       test                            Figure 22-19
+voltage_defs.vhd                                package voltage_defs                    --                              Figure 22-20
+sequencer.vhd                                   package timing_attributes               --                              --
+--                                              entity sequencer                        structural                      Figure 22-21
+display_interface.vhd                           package display_interface               --                              Figure 22-22
+clock_buffer.vhd                                package constraints                     --                              Section 20.3
+--                                              entity clock_buffer                     --                              Figure 20-23
+inline_01.vhd                                   package utility_definitions             --                              --
+--                                              entity inline_01                        test                            Section 22.1
+inline_02.vhd                                   entity inline_02                        test                            Section 22.1
+inline_03.vhd                                   package inline_03_defs                  --                              Section 22.2
+--                                              entity inline_03                        test                            Section 22.2
+inline_04.vhd                                   package inline_04                       --                              --
+--                                              entity flipflop                         std_cell                        Section 22.2
+--                                              package model_utilities                 --                              Section 22.2
+inline_05.vhd                                   entity inline_05                        test                            Section 22.2
+inline_06.vhd                                   entity inline_06                        test                            Section 22.2
+inline_07.vhd                                   entity inline_07                        test                            Section 22.2
+inline_08.vhd                                   entity inline_08                        test                            Section 22.2
+inline_09.vhd                                   package inline_09_defs                  --                              --
+--                                              entity e                                arch                            --
+--                                              entity inline_09                        test                            Section 22.2
+inline_10.vhd                                   package inline_10                       --                              Section 22.2
+--                                              entity and2                             accelerated                     Section 22.2
+inline_11.vhd                                   entity inline_11                        test                            Section 22.3
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_flipflop.vhd                                 entity tb_flipflop                      test                            flipflop.vhd

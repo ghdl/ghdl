@@ -1,0 +1,143 @@
+
+-- Copyright (C) 1998-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: mesh.ams,v 1.1 2002-03-27 22:11:17 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+-- /**************************************************************************/
+-- /* File: mesh.ams                                                         */
+-- /**************************************************************************/
+-- /* Author:           Venkateswaran Krishna                                */
+-- /* Date of creation: Dec 1 1998                                           */
+-- /* Last changed by:  Venkateswaran Krishna                                */
+-- /**************************************************************************/
+-- Roadmap
+----------
+--While it might look like a trivial circuit this model actually
+--managed to find a breach in seams!! Specifically with the code
+--generation of generics... so it is important to have it as part
+--of the test suite. The model is a small mesh ckt with 3 resistors
+--and 2 voltage sources.. simple nodal soln of the mesh is all that
+--seams has to do
+--
+--
+--    t1    1      t2    3      t3
+--    o---/\/\/\---o---/\/\/\---o
+--    |            |            |
+--    |            <            |
+--   ( )5v         <2          ( )10v
+--    |            <            |
+--    |            |            |
+--    o------------o------------o
+--                 |
+--                _|
+--                \/
+
+--package definition
+PACKAGE electricalSystem IS
+    
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
+    FUNCTION  SIN (X : real ) RETURN real;
+    FUNCTION EXP  (X : real ) RETURN real;
+    
+END PACKAGE electricalSystem;
+
+use work.electricalSystem.all;
+
+entity resistor is
+   generic(r: real := 10000.0 );  --- resistance
+   port( terminal tr1,tr2 : electrical); --- interface ports
+end resistor;
+
+architecture rbehavior of resistor is
+   quantity Vr across Ir through tr1 to tr2;
+begin
+   Vr == Ir*r;
+end architecture rbehavior; --- of resisitor
+
+
+use work.electricalSystem.all;
+ENTITY constVSource IS
+    GENERIC (voltage : real := 10.0);
+    PORT (TERMINAL ta4, tb4 : electrical );
+END constVSource;
+
+ARCHITECTURE behavioral OF constVSource IS
+    quantity vsource across isource through ta4 TO tb4;
+BEGIN  -- behavior
+    constSource_equation: vsource == voltage;
+END behavioral;
+
+
+use work.electricalSystem.all;
+
+entity mesh is
+end mesh;
+
+architecture struc of mesh is
+
+  terminal t1, t2, t3  : electrical;
+
+  component resComp
+    generic(r: real := 10000.0 );  --- resistance
+    port( terminal tr1,tr2 : electrical); --- interface ports
+  end component;
+
+  for all : rescomp use entity work.resistor(rbehavior);
+
+  component source
+    GENERIC (voltage : real := 10.0);
+    PORT (TERMINAL ta4, tb4 : electrical );
+  END component;
+
+  for all : source use entity work.constVSource(behavioral);
+
+begin
+
+  voltage_source1: source
+    generic map(5.0)
+    port map(t1, ground);
+
+  voltage_source2: source
+    port map(t3, ground);
+
+  r1: resComp
+    generic map(1.0)
+    port map(t1, t2);
+
+  r2: resComp
+    generic map(2.0)
+    port map(t2, ground);
+
+  r3: resComp
+    generic map(3.0)
+    port map(t2, t3);
+
+end;

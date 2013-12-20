@@ -1,0 +1,100 @@
+
+-- Copyright (C) 1998-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: clipper.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+------------------------------------------------------------------------
+-- Title         : Single diode clipper circuit
+-- Project       : Mixed signal simulation
+------------------------------------------------------------------------
+-- File          : diode_clipper1.vhd
+-- Author(s)     : Vasudevan Shanmugasundaram(vasu@ececs.uc.edu)
+-- Created       : jan 16 1998
+------------------------------------------------------------------------
+-- Description : 
+-- Behavioral description of a single diode clipper circuit.
+------------------------------------------------------------------------
+-- circuit diagram for the diode clipper:
+--                                         the circuit comprises:
+--  o______|l______o____|>|______o         i)  a diode D.
+--  |      |l      |   diode D             ii) a constant voltage source vd.
+--  |    const     |                       iii)a sinusoidal voltage source.
+-- ( )    Vsource  >                       iv) a resistor R.
+--  |Vs            >R
+--  |              >
+--  o______________|_____________o
+--  
+------------------------------------------------------------------------
+
+--package definition
+PACKAGE electricalSystem IS
+NATURE electrical IS real ACROSS real THROUGH ground reference;
+FUNCTION  SIN (X : real ) RETURN real;
+FUNCTION EXP  (X : real ) RETURN real;
+END PACKAGE electricalSystem;
+-------------------------------------------------------------------------------
+
+USE work.electricalSystem.all;
+
+ENTITY diode_clipper IS
+END diode_clipper;
+
+ARCHITECTURE behav OF diode_clipper IS
+    --terminal declarations
+    terminal t1, t2, t3 : electrical;
+    --quantity declarations
+    quantity vDiode across iDiode through t1 TO t2;
+    quantity v2 across i2 through t2 TO t3;
+    quantity vd across electrical'reference TO t1;
+    quantity vs across electrical'reference TO t3;
+    --constants 
+    CONSTANT saturation_current : real := 0.0000000000001;
+    CONSTANT Vt : real := 0.025;        
+    CONSTANT BV : real := 100.0;
+    CONSTANT neg_sat : real := -saturation_current; 
+
+BEGIN  -- behav
+      if( vDiode >= (-1.0 * Vt)) USE --diode equations
+        eqn1_1: iDiode == saturation_current * ( exp(vDiode/Vt) - 1.0 );
+      ELSIF ((vDiode < (-3.0 * Vt)) AND (vDiode > -BV)) use
+        eqn1_2:  iDiode == neg_sat;
+      ELSE
+        eqn1_3: iDiode == neg_sat * (exp(-(BV + vDiode)/Vt) - 1.0 +
+				     saturation_current);
+      END USE ;
+      
+      eqn2:     v2 == i2 * 100.0;  -- resistor eqn.
+
+      eqn3:     vs == 20.0 * sin(2.0 * 3.1415 * 10000.0 * real(time'pos(now)) *
+                   1.0e-15);  -- source
+
+      eqn4:     vd == 5.0;  -- dc source
+END behav;

@@ -1,0 +1,1693 @@
+
+# Copyright (C) Clifton Labs, Inc
+# All rights reserved.
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+
+# This script should runs the tests in this subdirectory.  It should
+# only use functions that are defined (or redefined by the tool under
+# test) in vests.drivers.exp and the reporting functions in
+# vests-support.exp.  That way the integration of vests with another
+# VHDL system requires only the redefinition of the functions in
+# vests-drivers.exp. 
+
+setup_test_group "Billowitch:Compliant Cases" "1076-1993"
+
+run_compliant_test tc1.vhd
+
+run_compliant_test tc10.vhd
+run_compliant_test tc14.vhd
+run_compliant_test tc15.vhd
+run_compliant_test tc17.vhd
+run_compliant_test tc18.vhd
+run_compliant_test tc23.vhd
+run_compliant_test tc24.vhd
+run_compliant_test tc25.vhd
+run_compliant_test tc26.vhd
+run_compliant_test tc27.vhd
+run_compliant_test tc29.vhd
+run_compliant_test tc30.vhd
+run_compliant_test tc31.vhd
+run_compliant_test tc32.vhd
+run_compliant_test tc33.vhd
+run_compliant_test tc35.vhd
+run_compliant_test tc36.vhd
+run_compliant_test tc37.vhd
+run_compliant_test tc38.vhd
+run_compliant_test tc39.vhd
+run_compliant_test tc40.vhd
+run_compliant_test tc41.vhd
+run_compliant_test tc43.vhd
+run_compliant_test tc45.vhd
+run_compliant_test tc52.vhd
+run_compliant_test tc53.vhd
+run_compliant_test tc54.vhd
+run_compliant_test tc56.vhd
+run_compliant_test tc63.vhd
+run_compliant_test tc64.vhd
+run_compliant_test tc66.vhd
+run_compliant_test tc68.vhd
+run_compliant_test tc69.vhd
+run_compliant_test tc70.vhd
+run_compliant_test tc76.vhd
+run_compliant_test tc80.vhd
+run_compliant_test tc81.vhd
+run_compliant_test tc82.vhd
+run_compliant_test tc83.vhd
+run_compliant_test tc84.vhd
+run_compliant_test tc86.vhd
+run_compliant_test tc87.vhd
+run_compliant_test tc88.vhd
+run_compliant_test tc90.vhd
+run_compliant_test tc91.vhd
+run_compliant_test tc98.vhd
+run_compliant_test tc99.vhd
+
+run_compliant_test tc100.vhd
+run_compliant_test tc110.vhd
+run_compliant_test tc111.vhd
+run_compliant_test tc113.vhd
+run_compliant_test tc114.vhd
+run_compliant_test tc115.vhd
+run_compliant_test tc116.vhd
+run_compliant_test tc117.vhd
+run_compliant_test tc118.vhd
+run_compliant_test tc119.vhd
+run_compliant_test tc131.vhd
+run_compliant_test tc133.vhd
+run_compliant_test tc134.vhd
+run_compliant_test tc135.vhd
+run_compliant_test tc136.vhd
+run_compliant_test tc137.vhd
+run_compliant_test tc138.vhd
+run_compliant_test tc141.vhd
+run_compliant_test tc143.vhd
+run_compliant_test tc146.vhd
+run_compliant_test tc147.vhd
+run_compliant_test tc148.vhd
+run_compliant_test tc149.vhd
+run_compliant_test tc150.vhd
+run_compliant_test tc154.vhd
+run_compliant_test tc157.vhd
+run_compliant_test tc158.vhd
+run_compliant_test tc162.vhd
+run_compliant_test tc163.vhd
+run_compliant_test tc164.vhd
+run_compliant_test tc166.vhd
+run_compliant_test tc167.vhd
+run_compliant_test tc168.vhd
+run_compliant_test tc169.vhd
+run_compliant_test tc171.vhd
+run_compliant_test tc172.vhd
+run_compliant_test tc173.vhd
+run_compliant_test tc176.vhd
+run_compliant_test tc179.vhd
+run_compliant_test tc180.vhd
+run_compliant_test tc182.vhd
+run_compliant_test tc183.vhd
+run_compliant_test tc187.vhd
+run_compliant_test tc188.vhd
+run_compliant_test tc194.vhd
+run_compliant_test tc198.vhd
+run_compliant_test tc201.vhd
+run_compliant_test tc203.vhd
+run_compliant_test tc204.vhd
+run_compliant_test tc205.vhd
+run_compliant_test tc206.vhd
+run_compliant_test tc208.vhd
+run_compliant_test tc209.vhd
+run_compliant_test tc211.vhd
+run_compliant_test tc213.vhd
+run_compliant_test tc217.vhd
+run_compliant_test tc218.vhd
+run_compliant_test tc219.vhd
+run_compliant_test tc220.vhd
+run_compliant_test tc228.vhd
+run_compliant_test tc229.vhd
+run_compliant_test tc230.vhd
+run_compliant_test tc234.vhd
+run_compliant_test tc239.vhd
+run_compliant_test tc241.vhd
+run_compliant_test tc251.vhd
+run_compliant_test tc254.vhd
+run_compliant_test tc265.vhd
+run_compliant_test tc272.vhd
+run_compliant_test tc276.vhd
+run_compliant_test tc277.vhd
+run_compliant_test tc278.vhd
+run_compliant_test tc279.vhd
+run_compliant_test tc281.vhd
+run_compliant_test tc284.vhd
+run_compliant_test tc285.vhd
+run_compliant_test tc286.vhd
+run_compliant_test tc287.vhd
+run_compliant_test tc288.vhd
+run_compliant_test tc290.vhd
+run_compliant_test tc291.vhd
+run_compliant_test tc292.vhd
+run_compliant_test tc293.vhd
+run_compliant_test tc294.vhd
+run_compliant_test tc295.vhd
+run_compliant_test tc297.vhd
+run_compliant_test tc298.vhd
+run_compliant_test tc299.vhd
+run_compliant_test tc301.vhd
+run_compliant_test tc308.vhd
+run_compliant_test tc309.vhd
+run_compliant_test tc311.vhd
+run_compliant_test tc312.vhd
+run_compliant_test tc313.vhd
+run_compliant_test tc314.vhd
+run_compliant_test tc317.vhd
+run_compliant_test tc318.vhd
+run_compliant_test tc319.vhd
+run_compliant_test tc320.vhd
+run_compliant_test tc322.vhd
+run_compliant_test tc323.vhd
+run_compliant_test tc326.vhd
+run_compliant_test tc333.vhd
+run_compliant_test tc334.vhd
+run_compliant_test tc335.vhd
+run_compliant_test tc337.vhd
+run_compliant_test tc339.vhd
+run_compliant_test tc341.vhd
+run_compliant_test tc343.vhd
+run_compliant_test tc344.vhd
+run_compliant_test tc346.vhd
+run_compliant_test tc347.vhd
+run_compliant_test tc349.vhd
+run_compliant_test tc350.vhd
+run_compliant_test tc351.vhd
+run_compliant_test tc355.vhd
+run_compliant_test tc359.vhd
+run_compliant_test tc361.vhd
+run_compliant_test tc364.vhd
+run_compliant_test tc365.vhd
+run_compliant_test tc366.vhd
+run_compliant_test tc376.vhd
+run_compliant_test tc377.vhd
+run_compliant_test tc378.vhd
+run_compliant_test tc381.vhd
+run_compliant_test tc382.vhd
+run_compliant_test tc385.vhd
+run_compliant_test tc386.vhd
+run_compliant_test tc387.vhd
+run_compliant_test tc388.vhd
+run_compliant_test tc392.vhd
+run_compliant_test tc393.vhd
+run_compliant_test tc395.vhd
+run_compliant_test tc397.vhd
+run_compliant_test tc398.vhd
+run_compliant_test tc399.vhd
+run_compliant_test tc400.vhd
+run_compliant_test tc401.vhd
+run_compliant_test tc402.vhd
+run_compliant_test tc403.vhd
+run_compliant_test tc404.vhd
+run_compliant_test tc406.vhd
+run_compliant_test tc407.vhd
+run_compliant_test tc408.vhd
+run_compliant_test tc409.vhd
+run_compliant_test tc410.vhd
+run_compliant_test tc411.vhd
+run_compliant_test tc412.vhd
+run_compliant_test tc413.vhd
+run_compliant_test tc414.vhd
+run_compliant_test tc415.vhd
+run_compliant_test tc416.vhd
+run_compliant_test tc417.vhd
+run_compliant_test tc418.vhd
+run_compliant_test tc419.vhd
+run_compliant_test tc420.vhd
+run_compliant_test tc421.vhd
+run_compliant_test tc422.vhd
+run_compliant_test tc423.vhd
+run_compliant_test tc424.vhd
+run_compliant_test tc425.vhd
+run_compliant_test tc426.vhd
+run_compliant_test tc427.vhd
+run_compliant_test tc428.vhd
+run_compliant_test tc429.vhd
+run_compliant_test tc430.vhd
+run_compliant_test tc431.vhd
+run_compliant_test tc432.vhd
+run_compliant_test tc433.vhd
+run_compliant_test tc434.vhd
+run_compliant_test tc435.vhd
+run_compliant_test tc436.vhd
+run_compliant_test tc437.vhd
+run_compliant_test tc438.vhd
+run_compliant_test tc439.vhd
+run_compliant_test tc440.vhd
+run_compliant_test tc441.vhd
+run_compliant_test tc442.vhd
+run_compliant_test tc443.vhd
+run_compliant_test tc444.vhd
+run_compliant_test tc445.vhd
+run_compliant_test tc446.vhd
+run_compliant_test tc447.vhd
+run_compliant_test tc448.vhd
+run_compliant_test tc449.vhd
+run_compliant_test tc450.vhd
+run_compliant_test tc451.vhd
+run_compliant_test tc452.vhd
+run_compliant_test tc453.vhd
+run_compliant_test tc454.vhd
+run_compliant_test tc455.vhd
+run_compliant_test tc456.vhd
+run_compliant_test tc457.vhd
+run_compliant_test tc458.vhd
+run_compliant_test tc459.vhd
+run_compliant_test tc460.vhd
+run_compliant_test tc461.vhd
+run_compliant_test tc462.vhd
+run_compliant_test tc463.vhd
+run_compliant_test tc464.vhd
+run_compliant_test tc465.vhd
+run_compliant_test tc466.vhd
+run_compliant_test tc467.vhd
+run_compliant_test tc468.vhd
+run_compliant_test tc469.vhd
+run_compliant_test tc470.vhd
+run_compliant_test tc471.vhd
+run_compliant_test tc472.vhd
+run_compliant_test tc473.vhd
+run_compliant_test tc474.vhd
+run_compliant_test tc475.vhd
+run_compliant_test tc476.vhd
+run_compliant_test tc477.vhd
+run_compliant_test tc478.vhd
+run_compliant_test tc479.vhd
+run_compliant_test tc480.vhd
+run_compliant_test tc481.vhd
+run_compliant_test tc482.vhd
+run_compliant_test tc483.vhd
+run_compliant_test tc484.vhd
+run_compliant_test tc485.vhd
+run_compliant_test tc486.vhd
+run_compliant_test tc487.vhd
+run_compliant_test tc488.vhd
+run_compliant_test tc489.vhd
+run_compliant_test tc490.vhd
+run_compliant_test tc491.vhd
+run_compliant_test tc492.vhd
+run_compliant_test tc493.vhd
+run_compliant_test tc494.vhd
+run_compliant_test tc495.vhd
+run_compliant_test tc496.vhd
+run_compliant_test tc497.vhd
+run_compliant_test tc498.vhd
+run_compliant_test tc499.vhd
+run_compliant_test tc500.vhd
+run_compliant_test tc501.vhd
+run_compliant_test tc503.vhd
+run_compliant_test tc505.vhd
+run_compliant_test tc512.vhd
+run_compliant_test tc513.vhd
+run_compliant_test tc515.vhd
+run_compliant_test tc516.vhd
+run_compliant_test tc517.vhd
+run_compliant_test tc519.vhd
+run_compliant_test tc520.vhd
+run_compliant_test tc521.vhd
+run_compliant_test tc522.vhd
+run_compliant_test tc523.vhd
+run_compliant_test tc524.vhd
+run_compliant_test tc525.vhd
+run_compliant_test tc526.vhd
+run_compliant_test tc527.vhd
+run_compliant_test tc528.vhd
+run_compliant_test tc529.vhd
+run_compliant_test tc530.vhd
+run_compliant_test tc531.vhd
+run_compliant_test tc534.vhd
+run_compliant_test tc535.vhd
+run_compliant_test tc537.vhd
+run_compliant_test tc538.vhd
+run_compliant_test tc539.vhd
+run_compliant_test tc541.vhd
+run_compliant_test tc542.vhd
+run_compliant_test tc544.vhd
+run_compliant_test tc545.vhd
+run_compliant_test tc546.vhd
+run_compliant_test tc554.vhd INPUT=iofile.10:iofiles/iofile.10
+run_compliant_test tc555.vhd OUTPUT=iofile.10:iofiles/iofile.10
+run_compliant_test tc556.vhd OUTPUT=iofile.25:iofiles/iofile.25
+run_compliant_test tc557.vhd OUTPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc558.vhd INPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc559.vhd INPUT=iofile.25:iofiles/iofile.25
+run_compliant_test tc560.vhd OUTPUT=iofile.16:iofiles/iofile.16
+run_compliant_test tc561.vhd INPUT=iofile.16:iofiles/iofile.16
+run_compliant_test tc562.vhd OUTPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc563.vhd OUTPUT=iofile.17:iofiles/iofile.17
+run_compliant_test tc564.vhd INPUT=iofile.17:iofiles/iofile.17
+run_compliant_test tc565.vhd OUTPUT=iofile.25:iofiles/iofile.25
+run_compliant_test tc566.vhd OUTPUT=iofile.18:iofiles/iofile.18
+run_compliant_test tc567.vhd INPUT=iofile.18:iofiles/iofile.18
+run_compliant_test tc568.vhd INPUT=iofile.25:iofiles/iofile.25
+run_compliant_test tc569.vhd OUTPUT=iofile.19:iofiles/iofile.19
+run_compliant_test tc570.vhd INPUT=iofile.19:iofiles/iofile.19
+run_compliant_test tc571.vhd INPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc572.vhd OUTPUT=iofile.20:iofiles/iofile.20
+run_compliant_test tc573.vhd INPUT=iofile.20:iofiles/iofile.20
+run_compliant_test tc574.vhd OUTPUT=iofile.28:iofiles/iofile.28
+run_compliant_test tc575.vhd OUTPUT=iofile.18:iofiles/iofile.18
+run_compliant_test tc576.vhd INPUT=iofile.18:iofiles/iofile.18
+run_compliant_test tc577.vhd INPUT=iofile.28:iofiles/iofile.28
+run_compliant_test tc578.vhd OUTPUT=iofile.18:iofiles/iofile.18
+run_compliant_test tc579.vhd INPUT=iofile.18:iofiles/iofile.18
+run_compliant_test tc580.vhd OUTPUT=iofile.28:iofiles/iofile.28
+run_compliant_test tc581.vhd OUTPUT=iofile.21:iofiles/iofile.21
+run_compliant_test tc582.vhd INPUT=iofile.21:iofiles/iofile.21
+run_compliant_test tc583.vhd OUTPUT=iofile.29:iofiles/iofile.29
+run_compliant_test tc584.vhd OUTPUT=iofile.22:iofiles/iofile.22
+run_compliant_test tc585.vhd INPUT=iofile.22:iofiles/iofile.22
+run_compliant_test tc586.vhd OUTPUT=iofile.31:iofiles/iofile.31
+run_compliant_test tc587.vhd OUTPUT=iofile.23:iofiles/iofile.23
+run_compliant_test tc588.vhd INPUT=iofile.23:iofiles/iofile.23
+run_compliant_test tc589.vhd INPUT=iofile.31:iofiles/iofile.31
+run_compliant_test tc590.vhd OUTPUT=iofile.24:iofiles/iofile.24
+run_compliant_test tc591.vhd INPUT=iofile.24:iofiles/iofile.24
+run_compliant_test tc592.vhd INPUT=iofile.29:iofiles/iofile.29
+run_compliant_test tc593.vhd OUTPUT=iofile.25:iofiles/iofile.25
+run_compliant_test tc594.vhd INPUT=iofile.25:iofiles/iofile.25
+run_compliant_test tc595.vhd INPUT=iofile.28:iofiles/iofile.28
+run_compliant_test tc596.vhd OUTPUT=iofile.26:iofiles/iofile.26
+run_compliant_test tc597.vhd INPUT=iofile.26:iofiles/iofile.26
+run_compliant_test tc598.vhd OUTPUT=iofile.32:iofiles/iofile.32
+run_compliant_test tc599.vhd OUTPUT=iofile.27:iofiles/iofile.27
+run_compliant_test tc600.vhd INPUT=iofile.27:iofiles/iofile.27
+run_compliant_test tc601.vhd INPUT=iofile.32:iofiles/iofile.32
+run_compliant_test tc602.vhd OUTPUT=iofile.32:iofiles/iofile.32
+run_compliant_test tc603.vhd OUTPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc604.vhd INPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc605.vhd OUTPUT=iofile.29:iofiles/iofile.29
+run_compliant_test tc606.vhd OUTPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc607.vhd INPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc608.vhd INPUT=iofile.29:iofiles/iofile.29
+run_compliant_test tc609.vhd OUTPUT=iofile.33:iofiles/iofile.33
+run_compliant_test tc610.vhd INPUT=iofile.33:iofiles/iofile.33
+run_compliant_test tc611.vhd INPUT=iofile.32:iofiles/iofile.32
+run_compliant_test tc612.vhd OUTPUT=iofile.34:iofiles/iofile.34
+run_compliant_test tc613.vhd INPUT=iofile.34:iofiles/iofile.34
+run_compliant_test tc614.vhd OUTPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc615.vhd INPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc616.vhd OUTPUT=iofile.34:iofiles/iofile.34
+run_compliant_test tc617.vhd OUTPUT=iofile.31:iofiles/iofile.31
+run_compliant_test tc618.vhd INPUT=iofile.31:iofiles/iofile.31
+run_compliant_test tc619.vhd OUTPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc620.vhd INPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc621.vhd INPUT=iofile.34:iofiles/iofile.34
+run_compliant_test tc622.vhd OUTPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc623.vhd INPUT=iofile.30:iofiles/iofile.30
+run_compliant_test tc624.vhd OUTPUT=iofile.36:iofiles/iofile.36
+run_compliant_test tc625.vhd OUTPUT=iofile.35:iofiles/iofile.35
+run_compliant_test tc626.vhd INPUT=iofile.35:iofiles/iofile.35
+run_compliant_test tc627.vhd INPUT=iofile.36:iofiles/iofile.36
+run_compliant_test tc628.vhd OUTPUT=iofile.40:iofiles/iofile.40
+run_compliant_test tc629.vhd OUTPUT=iofile.37:iofiles/iofile.37
+run_compliant_test tc630.vhd INPUT=iofile.37:iofiles/iofile.37
+run_compliant_test tc631.vhd INPUT=iofile.40:iofiles/iofile.40
+run_compliant_test tc632.vhd OUTPUT=iofile.38:iofiles/iofile.38
+run_compliant_test tc633.vhd INPUT=iofile.38:iofiles/iofile.38
+run_compliant_test tc634.vhd OUTPUT=iofile.43:iofiles/iofile.43
+run_compliant_test tc635.vhd OUTPUT=iofile.39:iofiles/iofile.39
+run_compliant_test tc636.vhd INPUT=iofile.39:iofiles/iofile.39
+run_compliant_test tc637.vhd OUTPUT=iofile.41:iofiles/iofile.41
+run_compliant_test tc638.vhd INPUT=iofile.41:iofiles/iofile.41
+run_compliant_test tc639.vhd INPUT=iofile.43:iofiles/iofile.43
+run_compliant_test tc640.vhd OUTPUT=iofile.42:iofiles/iofile.42
+run_compliant_test tc641.vhd INPUT=iofile.42:iofiles/iofile.42
+run_compliant_test tc642.vhd OUTPUT=iofile.44:iofiles/iofile.44
+run_compliant_test tc643.vhd OUTPUT=iofile.46:iofiles/iofile.46
+run_compliant_test tc644.vhd INPUT=iofile.44:iofiles/iofile.44
+run_compliant_test tc645.vhd INPUT=iofile.46:iofiles/iofile.46
+run_compliant_test tc646.vhd OUTPUT=iofile.62:iofiles/iofile.62
+run_compliant_test tc647.vhd INPUT=iofile.62:iofiles/iofile.62
+run_compliant_test tc648.vhd OUTPUT=iofile.01:iofiles/iofile.01
+run_compliant_test tc649.vhd OUTPUT=iofile.63:iofiles/iofile.63
+run_compliant_test tc650.vhd INPUT=iofile.63:iofiles/iofile.63
+run_compliant_test tc651.vhd INPUT=iofile.01:iofiles/iofile.01
+run_compliant_test tc652.vhd OUTPUT=iofile.45:iofiles/iofile.45
+run_compliant_test tc653.vhd INPUT=iofile.45:iofiles/iofile.45
+run_compliant_test tc654.vhd OUTPUT=iofile.03:iofiles/iofile.03
+run_compliant_test tc655.vhd INPUT=iofile.03:iofiles/iofile.03
+run_compliant_test tc656.vhd OUTPUT=iofile.05:iofiles/iofile.05
+run_compliant_test tc657.vhd INPUT=iofile.05:iofiles/iofile.05
+run_compliant_test tc658.vhd OUTPUT=iofile.07:iofiles/iofile.07
+run_compliant_test tc659.vhd INPUT=iofile.07:iofiles/iofile.07
+run_compliant_test tc660.vhd OUTPUT=iofile.03:iofiles/iofile.03
+run_compliant_test tc661.vhd INPUT=iofile.03:iofiles/iofile.03
+run_compliant_test tc662.vhd OUTPUT=iofile.03:iofiles/iofile.03
+run_compliant_test tc663.vhd INPUT=iofile.03:iofiles/iofile.03
+run_compliant_test tc664.vhd OUTPUT=iofile.11:iofiles/iofile.11
+run_compliant_test tc665.vhd INPUT=iofile.11:iofiles/iofile.11
+run_compliant_test tc666.vhd OUTPUT=iofile.13:iofiles/iofile.13
+run_compliant_test tc667.vhd INPUT=iofile.13:iofiles/iofile.13
+run_compliant_test tc668.vhd OUTPUT=iofile.15:iofiles/iofile.15
+run_compliant_test tc669.vhd INPUT=iofile.15:iofiles/iofile.15
+run_compliant_test tc670.vhd OUTPUT=iofile.48:iofiles/iofile.48
+run_compliant_test tc671.vhd OUTPUT=iofile.51:iofiles/iofile.51
+run_compliant_test tc672.vhd INPUT=iofile.48:iofiles/iofile.48
+run_compliant_test tc673.vhd INPUT=iofile.51:iofiles/iofile.51
+run_compliant_test tc674.vhd OUTPUT=iofile.49:iofiles/iofile.49
+run_compliant_test tc675.vhd INPUT=iofile.49:iofiles/iofile.49
+run_compliant_test tc676.vhd OUTPUT=iofile.54:iofiles/iofile.54
+run_compliant_test tc677.vhd OUTPUT=iofile.50:iofiles/iofile.50
+run_compliant_test tc678.vhd INPUT=iofile.50:iofiles/iofile.50
+run_compliant_test tc679.vhd OUTPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc680.vhd INPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc681.vhd OUTPUT=iofile.47:iofiles/iofile.47 
+run_compliant_test tc682.vhd INPUT=iofile.47:iofiles/iofile.47
+run_compliant_test tc683.vhd INPUT=iofile.54:iofiles/iofile.54
+run_compliant_test tc684.vhd OUTPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc685.vhd INPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc686.vhd OUTPUT=iofile.10:iofiles/iofile.10
+run_compliant_test tc687.vhd OUTPUT=iofile.52:iofiles/iofile.52
+run_compliant_test tc688.vhd INPUT=iofile.52:iofiles/iofile.52
+run_compliant_test tc689.vhd OUTPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc690.vhd OUTPUT=iofile.53:iofiles/iofile.53
+run_compliant_test tc691.vhd INPUT=iofile.53:iofiles/iofile.53
+run_compliant_test tc692.vhd INPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc693.vhd INPUT=iofile.54:iofiles/iofile.54
+run_compliant_test tc694.vhd OUTPUT=iofile.54:iofiles/iofile.54
+run_compliant_test tc695.vhd INPUT=iofile.10:iofiles/iofile.10
+run_compliant_test tc696.vhd INPUT=iofile.55:iofiles/iofile.55
+run_compliant_test tc697.vhd OUTPUT=iofile.55:iofiles/iofile.55
+run_compliant_test tc698.vhd OUTPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc699.vhd INPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc700.vhd OUTPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc701.vhd INPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc702.vhd OUTPUT=iofile.56:iofiles/iofile.56
+run_compliant_test tc703.vhd INPUT=iofile.56:iofiles/iofile.56
+run_compliant_test tc704.vhd OUTPUT=iofile.57:iofiles/iofile.57
+run_compliant_test tc705.vhd INPUT=iofile.57:iofiles/iofile.57
+run_compliant_test tc706.vhd OUTPUT=iofile.58:iofiles/iofile.58
+run_compliant_test tc707.vhd INPUT=iofile.58:iofiles/iofile.58
+run_compliant_test tc708.vhd OUTPUT=iofile.59:iofiles/iofile.59
+run_compliant_test tc709.vhd INPUT=iofile.59:iofiles/iofile.59
+run_compliant_test tc710.vhd OUTPUT=iofile.60:iofiles/iofile.60
+run_compliant_test tc711.vhd INPUT=iofile.60:iofiles/iofile.60
+run_compliant_test tc712.vhd OUTPUT=iofile.01:iofiles/iofile.01
+run_compliant_test tc713.vhd INPUT=iofile.02:iofiles/iofile.02
+run_compliant_test tc717.vhd
+run_compliant_test tc719.vhd
+run_compliant_test tc731.vhd
+run_compliant_test tc740.vhd
+run_compliant_test tc741.vhd
+run_compliant_test tc742.vhd
+run_compliant_test tc743.vhd
+run_compliant_test tc744.vhd
+run_compliant_test tc745.vhd
+run_compliant_test tc746.vhd
+run_compliant_test tc747.vhd
+run_compliant_test tc748.vhd
+run_compliant_test tc749.vhd
+run_compliant_test tc750.vhd
+run_compliant_test tc751.vhd
+run_compliant_test tc752.vhd
+run_compliant_test tc753.vhd
+run_compliant_test tc754.vhd
+run_compliant_test tc755.vhd
+run_compliant_test tc756.vhd
+run_compliant_test tc757.vhd
+run_compliant_test tc759.vhd
+run_compliant_test tc760.vhd
+run_compliant_test tc761.vhd
+run_compliant_test tc762.vhd
+run_compliant_test tc763.vhd
+run_compliant_test tc765.vhd
+run_compliant_test tc768.vhd
+run_compliant_test tc772.vhd
+run_compliant_test tc776.vhd
+run_compliant_test tc777.vhd
+run_compliant_test tc778.vhd
+run_compliant_test tc782.vhd
+run_compliant_test tc784.vhd
+run_compliant_test tc791.vhd
+run_compliant_test tc792.vhd
+run_compliant_test tc805.vhd
+run_compliant_test tc817.vhd
+run_compliant_test tc820.vhd
+run_compliant_test tc837.vhd
+run_compliant_test tc840.vhd
+run_compliant_test tc842.vhd
+run_compliant_test tc843.vhd
+run_compliant_test tc844.vhd
+run_compliant_test tc846.vhd
+run_compliant_test tc849.vhd
+run_compliant_test tc850.vhd
+run_compliant_test tc852.vhd
+run_compliant_test tc853.vhd
+run_compliant_test tc854.vhd
+run_compliant_test tc855.vhd
+run_compliant_test tc856.vhd
+run_compliant_test tc857.vhd
+run_compliant_test tc858.vhd
+run_compliant_test tc859.vhd
+run_compliant_test tc860.vhd
+run_compliant_test tc861.vhd
+run_compliant_test tc862.vhd
+run_compliant_test tc863.vhd
+run_compliant_test tc864.vhd
+run_compliant_test tc866.vhd
+run_compliant_test tc867.vhd
+run_compliant_test tc868.vhd
+run_compliant_test tc869.vhd
+run_compliant_test tc870.vhd
+run_compliant_test tc871.vhd
+run_compliant_test tc872.vhd
+run_compliant_test tc873.vhd
+run_compliant_test tc874.vhd
+run_compliant_test tc876.vhd
+run_compliant_test tc877.vhd
+run_compliant_test tc878.vhd
+run_compliant_test tc879.vhd
+run_compliant_test tc880.vhd
+run_compliant_test tc881.vhd
+run_compliant_test tc883.vhd
+run_compliant_test tc884.vhd
+run_compliant_test tc885.vhd
+run_compliant_test tc886.vhd
+run_compliant_test tc887.vhd
+run_compliant_test tc888.vhd
+run_compliant_test tc889.vhd
+run_compliant_test tc890.vhd
+run_compliant_test tc891.vhd
+run_compliant_test tc892.vhd
+run_compliant_test tc893.vhd
+run_compliant_test tc894.vhd
+run_compliant_test tc895.vhd
+run_compliant_test tc896.vhd
+run_compliant_test tc897.vhd
+run_compliant_test tc898.vhd
+run_compliant_test tc900.vhd
+run_compliant_test tc902.vhd
+run_compliant_test tc911.vhd
+run_compliant_test tc912.vhd
+run_compliant_test tc913.vhd
+run_compliant_test tc914.vhd
+run_compliant_test tc915.vhd
+run_compliant_test tc916.vhd
+run_compliant_test tc917.vhd
+run_compliant_test tc918.vhd
+run_compliant_test tc919.vhd
+run_compliant_test tc920.vhd
+run_compliant_test tc921.vhd
+run_compliant_test tc922.vhd
+run_compliant_test tc923.vhd
+run_compliant_test tc924.vhd
+run_compliant_test tc925.vhd
+run_compliant_test tc926.vhd
+run_compliant_test tc927.vhd
+run_compliant_test tc930.vhd
+run_compliant_test tc931.vhd
+run_compliant_test tc932.vhd
+run_compliant_test tc933.vhd
+run_compliant_test tc934.vhd
+run_compliant_test tc935.vhd
+run_compliant_test tc936.vhd
+run_compliant_test tc938.vhd
+run_compliant_test tc940.vhd
+run_compliant_test tc942.vhd
+run_compliant_test tc943.vhd
+run_compliant_test tc945.vhd
+run_compliant_test tc951.vhd
+run_compliant_test tc952.vhd
+run_compliant_test tc953.vhd
+run_compliant_test tc954.vhd
+run_compliant_test tc955.vhd
+run_compliant_test tc956.vhd
+run_compliant_test tc958.vhd
+run_compliant_test tc962.vhd
+run_compliant_test tc964.vhd
+run_compliant_test tc965.vhd
+run_compliant_test tc966.vhd
+run_compliant_test tc968.vhd
+run_compliant_test tc969.vhd
+run_compliant_test tc973.vhd
+run_compliant_test tc983.vhd
+run_compliant_test tc986.vhd
+run_compliant_test tc987.vhd
+run_compliant_test tc988.vhd
+run_compliant_test tc992.vhd
+run_compliant_test tc993.vhd
+run_compliant_test tc995.vhd
+
+run_compliant_test tc1009.vhd
+run_compliant_test tc1010.vhd
+run_compliant_test tc1011.vhd
+run_compliant_test tc1012.vhd
+run_compliant_test tc1013.vhd
+run_compliant_test tc1019.vhd
+run_compliant_test tc1020.vhd
+run_compliant_test tc1024.vhd
+run_compliant_test tc1026.vhd
+run_compliant_test tc1027.vhd
+run_compliant_test tc1028.vhd
+run_compliant_test tc1029.vhd
+run_compliant_test tc1030.vhd
+run_compliant_test tc1031.vhd
+run_compliant_test tc1032.vhd
+run_compliant_test tc1033.vhd
+run_compliant_test tc1034.vhd
+run_compliant_test tc1035.vhd
+run_compliant_test tc1037.vhd
+run_compliant_test tc1038.vhd
+run_compliant_test tc1039.vhd
+run_compliant_test tc1040.vhd
+run_compliant_test tc1050.vhd
+run_compliant_test tc1067.vhd
+run_compliant_test tc1069.vhd
+run_compliant_test tc1070.vhd
+run_compliant_test tc1071.vhd
+run_compliant_test tc1072.vhd
+run_compliant_test tc1073.vhd
+run_compliant_test tc1075.vhd
+run_compliant_test tc1076.vhd
+run_compliant_test tc1077.vhd
+run_compliant_test tc1078.vhd
+run_compliant_test tc1079.vhd
+run_compliant_test tc1080.vhd
+run_compliant_test tc1081.vhd
+run_compliant_test tc1086.vhd
+run_compliant_test tc1087.vhd
+run_compliant_test tc1088.vhd
+run_compliant_test tc1089.vhd
+run_compliant_test tc1090.vhd
+run_compliant_test tc1091.vhd
+run_compliant_test tc1092.vhd
+run_compliant_test tc1103.vhd
+run_compliant_test tc1104.vhd
+run_compliant_test tc1117.vhd
+run_compliant_test tc1119.vhd
+run_compliant_test tc1121.vhd
+run_compliant_test tc1122.vhd
+run_compliant_test tc1123.vhd
+run_compliant_test tc1126.vhd
+run_compliant_test tc1137.vhd
+run_compliant_test tc1138.vhd
+run_compliant_test tc1139.vhd
+run_compliant_test tc1140.vhd
+run_compliant_test tc1145.vhd
+run_compliant_test tc1147.vhd
+run_compliant_test tc1149.vhd
+run_compliant_test tc1151.vhd
+run_compliant_test tc1152.vhd
+run_compliant_test tc1153.vhd
+run_compliant_test tc1154.vhd
+run_compliant_test tc1155.vhd
+run_compliant_test tc1156.vhd
+run_compliant_test tc1157.vhd
+run_compliant_test tc1159.vhd
+run_compliant_test tc1164.vhd
+run_compliant_test tc1165.vhd
+run_compliant_test tc1166.vhd
+run_compliant_test tc1167.vhd
+run_compliant_test tc1174.vhd
+run_compliant_test tc1175.vhd
+run_compliant_test tc1176.vhd
+run_compliant_test tc1177.vhd
+run_compliant_test tc1178.vhd
+run_compliant_test tc1179.vhd
+run_compliant_test tc1180.vhd
+run_compliant_test tc1182.vhd
+run_compliant_test tc1183.vhd
+run_compliant_test tc1187.vhd
+run_compliant_test tc1192.vhd
+run_compliant_test tc1197.vhd
+run_compliant_test tc1199.vhd
+run_compliant_test tc1205.vhd
+run_compliant_test tc1206.vhd
+run_compliant_test tc1207.vhd
+run_compliant_test tc1208.vhd
+run_compliant_test tc1209.vhd
+run_compliant_test tc1210.vhd
+run_compliant_test tc1211.vhd
+run_compliant_test tc1212.vhd
+run_compliant_test tc1213.vhd
+run_compliant_test tc1214.vhd
+run_compliant_test tc1215.vhd
+run_compliant_test tc1216.vhd
+run_compliant_test tc1218.vhd
+run_compliant_test tc1220.vhd
+run_compliant_test tc1221.vhd
+run_compliant_test tc1222.vhd
+run_compliant_test tc1223.vhd
+run_compliant_test tc1224.vhd
+run_compliant_test tc1225.vhd
+run_compliant_test tc1230.vhd
+run_compliant_test tc1232.vhd
+run_compliant_test tc1233.vhd
+run_compliant_test tc1234.vhd
+run_compliant_test tc1256.vhd
+run_compliant_test tc1257.vhd
+run_compliant_test tc1258.vhd
+run_compliant_test tc1259.vhd
+run_compliant_test tc1260.vhd
+run_compliant_test tc1261.vhd
+run_compliant_test tc1262.vhd
+run_compliant_test tc1263.vhd
+run_compliant_test tc1265.vhd
+run_compliant_test tc1266.vhd
+run_compliant_test tc1267.vhd
+run_compliant_test tc1268.vhd
+run_compliant_test tc1269.vhd
+run_compliant_test tc1292.vhd
+run_compliant_test tc1294.vhd
+run_compliant_test tc1299.vhd
+run_compliant_test tc1306.vhd
+run_compliant_test tc1307.vhd
+run_compliant_test tc1309.vhd
+run_compliant_test tc1310.vhd
+run_compliant_test tc1316.vhd
+run_compliant_test tc1317.vhd
+run_compliant_test tc1318.vhd
+run_compliant_test tc1321.vhd
+run_compliant_test tc1322.vhd
+run_compliant_test tc1323.vhd
+run_compliant_test tc1327.vhd
+run_compliant_test tc1328.vhd
+run_compliant_test tc1331.vhd
+run_compliant_test tc1332.vhd
+run_compliant_test tc1335.vhd
+run_compliant_test tc1337.vhd
+run_compliant_test tc1338.vhd
+run_compliant_test tc1339.vhd
+run_compliant_test tc1340.vhd
+run_compliant_test tc1341.vhd
+run_compliant_test tc1342.vhd
+run_compliant_test tc1343.vhd
+run_compliant_test tc1344.vhd
+run_compliant_test tc1347.vhd
+run_compliant_test tc1348.vhd
+run_compliant_test tc1349.vhd
+run_compliant_test tc1350.vhd
+run_compliant_test tc1354.vhd
+run_compliant_test tc1356.vhd
+run_compliant_test tc1359.vhd
+run_compliant_test tc1360.vhd
+run_compliant_test tc1361.vhd
+run_compliant_test tc1362.vhd
+run_compliant_test tc1363.vhd
+run_compliant_test tc1364.vhd
+run_compliant_test tc1365.vhd
+run_compliant_test tc1366.vhd
+run_compliant_test tc1367.vhd
+run_compliant_test tc1368.vhd
+run_compliant_test tc1369.vhd
+run_compliant_test tc1370.vhd
+run_compliant_test tc1371.vhd
+run_compliant_test tc1372.vhd
+run_compliant_test tc1373.vhd
+run_compliant_test tc1374.vhd
+run_compliant_test tc1375.vhd
+run_compliant_test tc1386.vhd
+run_compliant_test tc1387.vhd
+run_compliant_test tc1389.vhd
+run_compliant_test tc1390.vhd
+run_compliant_test tc1392.vhd
+run_compliant_test tc1393.vhd
+run_compliant_test tc1394.vhd
+run_compliant_test tc1403.vhd
+run_compliant_test tc1405.vhd
+run_compliant_test tc1409.vhd
+run_compliant_test tc1410.vhd
+run_compliant_test tc1412.vhd
+run_compliant_test tc1413.vhd
+run_compliant_test tc1414.vhd
+run_compliant_test tc1421.vhd
+run_compliant_test tc1422.vhd
+run_compliant_test tc1423.vhd
+run_compliant_test tc1424.vhd
+run_compliant_test tc1425.vhd
+run_compliant_test tc1442.vhd
+run_compliant_test tc1443.vhd
+run_compliant_test tc1444.vhd
+run_compliant_test tc1445.vhd
+run_compliant_test tc1446.vhd
+run_compliant_test tc1447.vhd
+run_compliant_test tc1448.vhd
+run_compliant_test tc1450.vhd
+run_compliant_test tc1451.vhd
+run_compliant_test tc1452.vhd
+run_compliant_test tc1456.vhd
+run_compliant_test tc1457.vhd
+run_compliant_test tc1458.vhd
+run_compliant_test tc1459.vhd
+run_compliant_test tc1460.vhd
+run_compliant_test tc1461.vhd
+run_compliant_test tc1462.vhd
+run_compliant_test tc1463.vhd
+run_compliant_test tc1473.vhd
+run_compliant_test tc1474.vhd
+run_compliant_test tc1475.vhd
+run_compliant_test tc1483.vhd
+run_compliant_test tc1485.vhd
+run_compliant_test tc1486.vhd
+run_compliant_test tc1487.vhd
+run_compliant_test tc1488.vhd
+run_compliant_test tc1491.vhd
+run_compliant_test tc1493.vhd
+run_compliant_test tc1495.vhd
+run_compliant_test tc1496.vhd
+run_compliant_test tc1497.vhd
+run_compliant_test tc1499.vhd
+run_compliant_test tc1500.vhd
+run_compliant_test tc1505.vhd
+run_compliant_test tc1507.vhd
+run_compliant_test tc1508.vhd
+run_compliant_test tc1509.vhd
+run_compliant_test tc1510.vhd
+run_compliant_test tc1511.vhd
+run_compliant_test tc1512.vhd
+run_compliant_test tc1514.vhd
+run_compliant_test tc1516.vhd
+run_compliant_test tc1521.vhd
+run_compliant_test tc1522.vhd
+run_compliant_test tc1523.vhd
+run_compliant_test tc1524.vhd
+run_compliant_test tc1529.vhd
+run_compliant_test tc1530.vhd
+run_compliant_test tc1531.vhd
+run_compliant_test tc1536.vhd
+run_compliant_test tc1539.vhd
+run_compliant_test tc1540.vhd
+run_compliant_test tc1543.vhd
+run_compliant_test tc1544.vhd
+run_compliant_test tc1545.vhd
+run_compliant_test tc1546.vhd
+run_compliant_test tc1547.vhd
+run_compliant_test tc1548.vhd
+run_compliant_test tc1549.vhd
+run_compliant_test tc1550.vhd
+run_compliant_test tc1551.vhd
+run_compliant_test tc1552.vhd
+run_compliant_test tc1553.vhd
+run_compliant_test tc1554.vhd
+run_compliant_test tc1555.vhd
+run_compliant_test tc1558.vhd
+run_compliant_test tc1560.vhd
+run_compliant_test tc1565.vhd
+run_compliant_test tc1566.vhd
+run_compliant_test tc1567.vhd
+run_compliant_test tc1568.vhd
+run_compliant_test tc1569.vhd
+run_compliant_test tc1570.vhd
+run_compliant_test tc1571.vhd
+run_compliant_test tc1572.vhd
+run_compliant_test tc1573.vhd
+run_compliant_test tc1574.vhd
+run_compliant_test tc1576.vhd
+run_compliant_test tc1581.vhd
+run_compliant_test tc1582.vhd
+run_compliant_test tc1583.vhd
+run_compliant_test tc1585.vhd
+run_compliant_test tc1587.vhd
+run_compliant_test tc1589.vhd
+run_compliant_test tc1594.vhd
+run_compliant_test tc1596.vhd
+run_compliant_test tc1597.vhd
+run_compliant_test tc1598.vhd
+run_compliant_test tc1599.vhd
+run_compliant_test tc16.vhd
+run_compliant_test tc1600.vhd
+run_compliant_test tc1601.vhd
+run_compliant_test tc1603.vhd
+run_compliant_test tc1606.vhd
+run_compliant_test tc1607.vhd
+run_compliant_test tc1608.vhd
+run_compliant_test tc1613.vhd
+run_compliant_test tc1614.vhd
+run_compliant_test tc1617.vhd
+run_compliant_test tc1619.vhd
+run_compliant_test tc1630.vhd
+run_compliant_test tc1633.vhd
+run_compliant_test tc1634.vhd
+run_compliant_test tc1635.vhd
+run_compliant_test tc1636.vhd
+run_compliant_test tc1637.vhd
+run_compliant_test tc1639.vhd
+run_compliant_test tc1641.vhd
+run_compliant_test tc1642.vhd
+run_compliant_test tc1643.vhd
+run_compliant_test tc1644.vhd
+run_compliant_test tc1646.vhd
+run_compliant_test tc1647.vhd
+run_compliant_test tc1648.vhd
+run_compliant_test tc1649.vhd
+run_compliant_test tc1650.vhd
+run_compliant_test tc1651.vhd
+run_compliant_test tc1653.vhd
+run_compliant_test tc1654.vhd
+run_compliant_test tc1655.vhd
+run_compliant_test tc1658.vhd
+run_compliant_test tc1659.vhd
+run_compliant_test tc1662.vhd
+run_compliant_test tc1665.vhd
+run_compliant_test tc1677.vhd
+run_compliant_test tc1678.vhd
+run_compliant_test tc1679.vhd
+run_compliant_test tc1681.vhd
+run_compliant_test tc1684.vhd
+run_compliant_test tc1690.vhd
+run_compliant_test tc1691.vhd
+run_compliant_test tc1698.vhd
+run_compliant_test tc1703.vhd
+run_compliant_test tc1704.vhd
+run_compliant_test tc1705.vhd
+run_compliant_test tc1709.vhd
+#run_compliant_test tc1710.vhd
+run_compliant_test tc1711.vhd
+run_compliant_test tc1717.vhd
+run_compliant_test tc1718.vhd
+run_compliant_test tc1719.vhd
+run_compliant_test tc1720.vhd
+run_compliant_test tc1721.vhd
+run_compliant_test tc1723.vhd
+run_compliant_test tc1724.vhd
+run_compliant_test tc1727.vhd
+run_compliant_test tc1728.vhd
+run_compliant_test tc1729.vhd
+run_compliant_test tc1732.vhd
+run_compliant_test tc1733.vhd
+run_compliant_test tc1734.vhd
+run_compliant_test tc1735.vhd
+run_compliant_test tc1736.vhd
+run_compliant_test tc1739.vhd
+run_compliant_test tc1744.vhd
+run_compliant_test tc1745.vhd
+run_compliant_test tc1747.vhd
+run_compliant_test tc1748.vhd
+run_compliant_test tc1753.vhd
+run_compliant_test tc1756.vhd
+run_compliant_test tc1757.vhd
+run_compliant_test tc1761.vhd
+run_compliant_test tc1762.vhd
+run_compliant_test tc1763.vhd
+run_compliant_test tc1766.vhd
+run_compliant_test tc1775.vhd
+run_compliant_test tc1776.vhd
+run_compliant_test tc1781.vhd
+run_compliant_test tc1782.vhd
+run_compliant_test tc1785.vhd
+run_compliant_test tc1787.vhd
+run_compliant_test tc1792.vhd
+run_compliant_test tc1793.vhd
+run_compliant_test tc1798.vhd
+#run_compliant_test tc1801.vhd
+run_compliant_test tc1803.vhd
+run_compliant_test tc1804.vhd
+run_compliant_test tc1807.vhd
+run_compliant_test tc1808.vhd
+run_compliant_test tc1809.vhd
+run_compliant_test tc1810.vhd
+run_compliant_test tc1813.vhd
+run_compliant_test tc1906.vhd
+run_compliant_test tc1907.vhd
+run_compliant_test tc1908.vhd
+run_compliant_test tc1909.vhd
+run_compliant_test tc1910.vhd
+run_compliant_test tc1911.vhd
+run_compliant_test tc1912.vhd
+run_compliant_test tc1914.vhd
+run_compliant_test tc1915.vhd
+run_compliant_test tc1916.vhd
+run_compliant_test tc1917.vhd
+run_compliant_test tc1918.vhd
+run_compliant_test tc1919.vhd
+run_compliant_test tc1920.vhd
+run_compliant_test tc1921.vhd
+run_compliant_test tc1922.vhd
+run_compliant_test tc1923.vhd
+run_compliant_test tc1924.vhd
+run_compliant_test tc1925.vhd
+run_compliant_test tc1931.vhd
+run_compliant_test tc1932.vhd
+run_compliant_test tc1942.vhd
+#run_compliant_test tc1943.vhd
+run_compliant_test tc1944.vhd
+run_compliant_test tc1945.vhd
+run_compliant_test tc1946.vhd
+run_compliant_test tc1947.vhd
+run_compliant_test tc1948.vhd
+run_compliant_test tc1949.vhd
+run_compliant_test tc1950.vhd
+run_compliant_test tc1952.vhd
+run_compliant_test tc1953.vhd
+run_compliant_test tc1954.vhd
+run_compliant_test tc1955.vhd
+run_compliant_test tc1956.vhd
+run_compliant_test tc1957.vhd
+run_compliant_test tc1958.vhd
+run_compliant_test tc1959.vhd
+run_compliant_test tc1960.vhd
+run_compliant_test tc1961.vhd
+run_compliant_test tc1962.vhd
+run_compliant_test tc1963.vhd
+run_compliant_test tc1964.vhd
+run_compliant_test tc1965.vhd
+run_compliant_test tc1966.vhd
+run_compliant_test tc1967.vhd
+run_compliant_test tc1968.vhd
+run_compliant_test tc1969.vhd
+run_compliant_test tc1970.vhd
+run_compliant_test tc1971.vhd
+run_compliant_test tc1972.vhd
+run_compliant_test tc1973.vhd
+run_compliant_test tc1974.vhd
+run_compliant_test tc1975.vhd
+run_compliant_test tc1976.vhd
+#run_compliant_test tc1978.vhd
+run_compliant_test tc1981.vhd
+run_compliant_test tc1982.vhd
+run_compliant_test tc1983.vhd
+run_compliant_test tc1984.vhd
+run_compliant_test tc1985.vhd
+run_compliant_test tc1986.vhd
+run_compliant_test tc1987.vhd
+run_compliant_test tc1988.vhd
+run_compliant_test tc1991.vhd
+run_compliant_test tc1992.vhd
+run_compliant_test tc1993.vhd
+run_compliant_test tc1994.vhd
+run_compliant_test tc1995.vhd
+run_compliant_test tc1996.vhd
+run_compliant_test tc1997.vhd
+run_compliant_test tc1998.vhd
+run_compliant_test tc1999.vhd
+run_compliant_test tc2000.vhd
+run_compliant_test tc2001.vhd
+run_compliant_test tc2004.vhd
+run_compliant_test tc2005.vhd
+run_compliant_test tc2006.vhd
+run_compliant_test tc2007.vhd
+run_compliant_test tc2008.vhd
+run_compliant_test tc2010.vhd
+run_compliant_test tc2011.vhd
+run_compliant_test tc2012.vhd
+run_compliant_test tc2013.vhd
+run_compliant_test tc2014.vhd
+run_compliant_test tc2015.vhd
+run_compliant_test tc2016.vhd
+run_compliant_test tc2017.vhd
+run_compliant_test tc2021.vhd
+run_compliant_test tc2022.vhd
+run_compliant_test tc2061.vhd
+run_compliant_test tc2062.vhd
+run_compliant_test tc2063.vhd
+run_compliant_test tc2077.vhd
+run_compliant_test tc2078.vhd
+run_compliant_test tc2079.vhd
+run_compliant_test tc2080.vhd
+run_compliant_test tc2081.vhd
+run_compliant_test tc2082.vhd
+run_compliant_test tc2083.vhd
+run_compliant_test tc2084.vhd
+run_compliant_test tc2085.vhd
+run_compliant_test tc2086.vhd
+run_compliant_test tc2087.vhd
+run_compliant_test tc2088.vhd
+run_compliant_test tc2089.vhd
+run_compliant_test tc2090.vhd
+run_compliant_test tc2091.vhd
+run_compliant_test tc2092.vhd
+run_compliant_test tc2093.vhd
+run_compliant_test tc2094.vhd
+run_compliant_test tc2095.vhd
+run_compliant_test tc2096.vhd
+run_compliant_test tc2097.vhd
+run_compliant_test tc2098.vhd
+run_compliant_test tc2099.vhd
+run_compliant_test tc2100.vhd
+run_compliant_test tc2101.vhd
+run_compliant_test tc2102.vhd
+run_compliant_test tc2103.vhd
+run_compliant_test tc2104.vhd
+run_compliant_test tc2105.vhd
+run_compliant_test tc2106.vhd
+run_compliant_test tc2107.vhd
+run_compliant_test tc2108.vhd
+run_compliant_test tc2109.vhd
+run_compliant_test tc2110.vhd
+run_compliant_test tc2111.vhd
+run_compliant_test tc2112.vhd
+run_compliant_test tc2113.vhd
+run_compliant_test tc2114.vhd
+run_compliant_test tc2115.vhd
+run_compliant_test tc2116.vhd
+run_compliant_test tc2117.vhd
+run_compliant_test tc2118.vhd
+run_compliant_test tc2119.vhd
+run_compliant_test tc2120.vhd
+run_compliant_test tc2121.vhd
+run_compliant_test tc2122.vhd
+run_compliant_test tc2123.vhd
+run_compliant_test tc2124.vhd
+run_compliant_test tc2125.vhd
+run_compliant_test tc2126.vhd
+run_compliant_test tc2127.vhd
+run_compliant_test tc2128.vhd
+run_compliant_test tc2129.vhd
+run_compliant_test tc2130.vhd
+run_compliant_test tc2131.vhd
+run_compliant_test tc2132.vhd
+run_compliant_test tc2133.vhd
+run_compliant_test tc2134.vhd
+run_compliant_test tc2135.vhd
+run_compliant_test tc2136.vhd
+run_compliant_test tc2137.vhd
+run_compliant_test tc2138.vhd
+run_compliant_test tc2139.vhd
+run_compliant_test tc2140.vhd
+run_compliant_test tc2141.vhd
+run_compliant_test tc2142.vhd
+run_compliant_test tc2143.vhd
+run_compliant_test tc2144.vhd
+run_compliant_test tc2145.vhd
+run_compliant_test tc2146.vhd
+run_compliant_test tc2147.vhd
+run_compliant_test tc2148.vhd
+run_compliant_test tc2149.vhd
+run_compliant_test tc2150.vhd
+run_compliant_test tc2151.vhd
+run_compliant_test tc2152.vhd
+run_compliant_test tc2153.vhd
+run_compliant_test tc2154.vhd
+run_compliant_test tc2155.vhd
+run_compliant_test tc2156.vhd
+run_compliant_test tc2157.vhd
+run_compliant_test tc2158.vhd
+run_compliant_test tc2159.vhd
+run_compliant_test tc2160.vhd
+run_compliant_test tc2161.vhd
+run_compliant_test tc2162.vhd
+run_compliant_test tc2163.vhd
+run_compliant_test tc2164.vhd
+run_compliant_test tc2165.vhd
+run_compliant_test tc2166.vhd
+run_compliant_test tc2167.vhd
+run_compliant_test tc2168.vhd
+run_compliant_test tc2169.vhd
+run_compliant_test tc2172.vhd
+run_compliant_test tc2173.vhd
+run_compliant_test tc2174.vhd
+run_compliant_test tc2175.vhd
+run_compliant_test tc2176.vhd
+run_compliant_test tc2177.vhd
+run_compliant_test tc2178.vhd
+run_compliant_test tc2179.vhd
+run_compliant_test tc2180.vhd
+run_compliant_test tc2181.vhd
+run_compliant_test tc2182.vhd
+run_compliant_test tc2183.vhd
+run_compliant_test tc2184.vhd
+run_compliant_test tc2185.vhd
+run_compliant_test tc2186.vhd
+run_compliant_test tc2187.vhd
+run_compliant_test tc2199.vhd
+run_compliant_test tc2200.vhd
+run_compliant_test tc2203.vhd
+run_compliant_test tc2204.vhd
+run_compliant_test tc2205.vhd
+run_compliant_test tc2206.vhd
+run_compliant_test tc2208.vhd
+run_compliant_test tc2257.vhd
+run_compliant_test tc2258.vhd
+run_compliant_test tc2259.vhd
+run_compliant_test tc2260.vhd
+run_compliant_test tc2261.vhd
+run_compliant_test tc2262.vhd
+run_compliant_test tc2263.vhd
+run_compliant_test tc2264.vhd
+run_compliant_test tc2265.vhd
+run_compliant_test tc2266.vhd
+run_compliant_test tc2267.vhd
+run_compliant_test tc2268.vhd
+run_compliant_test tc2269.vhd
+run_compliant_test tc2270.vhd
+run_compliant_test tc2271.vhd
+run_compliant_test tc2272.vhd
+run_compliant_test tc2283.vhd
+run_compliant_test tc2285.vhd
+run_compliant_test tc2286.vhd
+run_compliant_test tc2287.vhd
+run_compliant_test tc2288.vhd
+run_compliant_test tc2289.vhd
+run_compliant_test tc2290.vhd
+run_compliant_test tc2291.vhd
+run_compliant_test tc2292.vhd
+run_compliant_test tc2293.vhd
+run_compliant_test tc2294.vhd
+run_compliant_test tc2295.vhd
+run_compliant_test tc2296.vhd
+run_compliant_test tc2297.vhd
+run_compliant_test tc2298.vhd
+run_compliant_test tc2299.vhd
+run_compliant_test tc2300.vhd
+run_compliant_test tc2301.vhd
+run_compliant_test tc2302.vhd
+run_compliant_test tc2303.vhd
+run_compliant_test tc2304.vhd
+run_compliant_test tc2305.vhd
+run_compliant_test tc2307.vhd
+run_compliant_test tc2308.vhd
+run_compliant_test tc2309.vhd
+run_compliant_test tc2324.vhd
+run_compliant_test tc2325.vhd
+run_compliant_test tc2326.vhd
+run_compliant_test tc2329.vhd
+run_compliant_test tc2330.vhd
+run_compliant_test tc2331.vhd
+run_compliant_test tc2332.vhd
+run_compliant_test tc2359.vhd
+run_compliant_test tc2360.vhd
+run_compliant_test tc2363.vhd
+run_compliant_test tc2364.vhd
+run_compliant_test tc2365.vhd
+run_compliant_test tc2366.vhd
+run_compliant_test tc2367.vhd
+run_compliant_test tc2368.vhd
+run_compliant_test tc2369.vhd
+run_compliant_test tc2370.vhd
+run_compliant_test tc2371.vhd
+run_compliant_test tc2372.vhd
+run_compliant_test tc2373.vhd
+run_compliant_test tc2374.vhd
+run_compliant_test tc2378.vhd
+run_compliant_test tc2380.vhd
+run_compliant_test tc2382.vhd
+run_compliant_test tc2383.vhd
+run_compliant_test tc2384.vhd
+run_compliant_test tc2387.vhd
+run_compliant_test tc2388.vhd
+run_compliant_test tc2389.vhd
+run_compliant_test tc2390.vhd
+run_compliant_test tc2391.vhd
+run_compliant_test tc2392.vhd
+run_compliant_test tc2394.vhd
+run_compliant_test tc2395.vhd
+run_compliant_test tc2396.vhd
+run_compliant_test tc2399.vhd
+run_compliant_test tc2400.vhd
+run_compliant_test tc2401.vhd
+run_compliant_test tc2403.vhd
+run_compliant_test tc2404.vhd
+run_compliant_test tc2408.vhd
+run_compliant_test tc2412.vhd
+run_compliant_test tc2415.vhd
+run_compliant_test tc2417.vhd
+run_compliant_test tc2421.vhd
+run_compliant_test tc2425.vhd
+run_compliant_test tc2428.vhd
+run_compliant_test tc2430.vhd
+run_compliant_test tc2432.vhd
+run_compliant_test tc2435.vhd
+run_compliant_test tc2436.vhd
+run_compliant_test tc2439.vhd
+run_compliant_test tc2440.vhd
+run_compliant_test tc2446.vhd
+run_compliant_test tc2448.vhd
+run_compliant_test tc2452.vhd
+run_compliant_test tc2453.vhd
+run_compliant_test tc2454.vhd
+run_compliant_test tc2455.vhd
+run_compliant_test tc2456.vhd
+run_compliant_test tc2457.vhd
+run_compliant_test tc2458.vhd
+run_compliant_test tc2459.vhd
+run_compliant_test tc2460.vhd
+run_compliant_test tc2461.vhd
+run_compliant_test tc2462.vhd
+run_compliant_test tc2463.vhd
+run_compliant_test tc2464.vhd
+run_compliant_test tc2465.vhd
+run_compliant_test tc2466.vhd
+run_compliant_test tc2467.vhd
+run_compliant_test tc2471.vhd
+run_compliant_test tc2472.vhd
+run_compliant_test tc2474.vhd
+run_compliant_test tc2475.vhd
+run_compliant_test tc2477.vhd
+run_compliant_test tc2478.vhd
+run_compliant_test tc2479.vhd
+run_compliant_test tc2480.vhd
+run_compliant_test tc2481.vhd
+run_compliant_test tc2483.vhd
+run_compliant_test tc2484.vhd
+run_compliant_test tc2485.vhd
+run_compliant_test tc2486.vhd
+run_compliant_test tc2487.vhd
+run_compliant_test tc2494.vhd
+run_compliant_test tc2495.vhd
+run_compliant_test tc2496.vhd
+run_compliant_test tc2499.vhd
+run_compliant_test tc2500.vhd
+run_compliant_test tc2501.vhd
+run_compliant_test tc2502.vhd
+run_compliant_test tc2506.vhd
+run_compliant_test tc2511.vhd
+run_compliant_test tc2513.vhd
+run_compliant_test tc2515.vhd
+run_compliant_test tc2519.vhd
+run_compliant_test tc2520.vhd
+run_compliant_test tc2522.vhd
+run_compliant_test tc2524.vhd
+run_compliant_test tc2525.vhd
+run_compliant_test tc2527.vhd
+run_compliant_test tc2528.vhd
+run_compliant_test tc2529.vhd
+run_compliant_test tc2530.vhd
+run_compliant_test tc2531.vhd
+run_compliant_test tc2532.vhd
+run_compliant_test tc2533.vhd
+run_compliant_test tc2535.vhd
+run_compliant_test tc2546.vhd
+run_compliant_test tc2547.vhd
+run_compliant_test tc2550.vhd
+run_compliant_test tc2551.vhd
+run_compliant_test tc2558.vhd
+run_compliant_test tc2559.vhd
+run_compliant_test tc2562.vhd
+run_compliant_test tc2563.vhd
+run_compliant_test tc2564.vhd
+run_compliant_test tc2565.vhd
+run_compliant_test tc2566.vhd
+run_compliant_test tc2567.vhd
+run_compliant_test tc2569.vhd
+run_compliant_test tc2570.vhd
+run_compliant_test tc2573.vhd
+run_compliant_test tc2575.vhd
+run_compliant_test tc2578.vhd
+run_compliant_test tc258.vhd
+run_compliant_test tc2642.vhd
+run_compliant_test tc2643.vhd
+run_compliant_test tc2675.vhd
+run_compliant_test tc2676.vhd
+run_compliant_test tc2677.vhd
+run_compliant_test tc2679.vhd
+run_compliant_test tc2690.vhd
+run_compliant_test tc2697.vhd
+run_compliant_test tc2698.vhd
+run_compliant_test tc2699.vhd
+run_compliant_test tc2700.vhd
+run_compliant_test tc2701.vhd
+run_compliant_test tc2702.vhd
+run_compliant_test tc2703.vhd
+run_compliant_test tc2704.vhd
+run_compliant_test tc2705.vhd
+run_compliant_test tc2707.vhd
+run_compliant_test tc2708.vhd
+run_compliant_test tc2709.vhd
+run_compliant_test tc2710.vhd
+run_compliant_test tc2711.vhd
+run_compliant_test tc2712.vhd
+run_compliant_test tc2713.vhd
+run_compliant_test tc2718.vhd
+run_compliant_test tc2719.vhd
+run_compliant_test tc2722.vhd
+run_compliant_test tc2724.vhd
+run_compliant_test tc2725.vhd
+run_compliant_test tc2726.vhd
+run_compliant_test tc2733.vhd
+run_compliant_test tc2734.vhd
+run_compliant_test tc2735.vhd
+run_compliant_test tc2736.vhd
+run_compliant_test tc2737.vhd
+run_compliant_test tc2738.vhd
+run_compliant_test tc2739.vhd
+run_compliant_test tc2740.vhd
+run_compliant_test tc2742.vhd
+run_compliant_test tc2743.vhd
+run_compliant_test tc2744.vhd
+run_compliant_test tc2745.vhd
+run_compliant_test tc2747.vhd
+run_compliant_test tc2758.vhd
+run_compliant_test tc2759.vhd
+run_compliant_test tc2760.vhd
+run_compliant_test tc2761.vhd
+run_compliant_test tc2765.vhd
+run_compliant_test tc2767.vhd
+run_compliant_test tc2768.vhd
+run_compliant_test tc2769.vhd
+run_compliant_test tc2771.vhd
+run_compliant_test tc2853.vhd
+run_compliant_test tc2854.vhd
+run_compliant_test tc2860.vhd
+run_compliant_test tc2861.vhd
+run_compliant_test tc2862.vhd
+run_compliant_test tc2863.vhd
+run_compliant_test tc2864.vhd
+run_compliant_test tc2865.vhd
+run_compliant_test tc2866.vhd
+run_compliant_test tc2868.vhd
+run_compliant_test tc2870.vhd
+run_compliant_test tc2874.vhd
+run_compliant_test tc2876.vhd
+run_compliant_test tc2879.vhd
+run_compliant_test tc2880.vhd
+run_compliant_test tc2881.vhd
+run_compliant_test tc2882.vhd
+run_compliant_test tc2883.vhd
+run_compliant_test tc2900.vhd
+run_compliant_test tc2901.vhd
+run_compliant_test tc2902.vhd
+run_compliant_test tc2903.vhd
+run_compliant_test tc2904.vhd
+run_compliant_test tc2917.vhd
+run_compliant_test tc2918.vhd
+run_compliant_test tc2932.vhd
+run_compliant_test tc2945.vhd
+run_compliant_test tc2948.vhd
+run_compliant_test tc2949.vhd
+run_compliant_test tc2950.vhd
+run_compliant_test tc2951.vhd
+run_compliant_test tc2952.vhd
+run_compliant_test tc2955.vhd
+run_compliant_test tc2959.vhd
+run_compliant_test tc2960.vhd
+run_compliant_test tc2961.vhd
+run_compliant_test tc2962.vhd
+run_compliant_test tc2964.vhd
+run_compliant_test tc2966.vhd
+run_compliant_test tc2967.vhd
+run_compliant_test tc2968.vhd
+run_compliant_test tc2969.vhd
+run_compliant_test tc2972.vhd
+run_compliant_test tc2973.vhd
+run_compliant_test tc2974.vhd
+run_compliant_test tc2975.vhd
+run_compliant_test tc2976.vhd
+run_compliant_test tc2977.vhd
+run_compliant_test tc2978.vhd
+run_compliant_test tc2979.vhd
+run_compliant_test tc2980.vhd
+run_compliant_test tc2981.vhd
+run_compliant_test tc2982.vhd
+run_compliant_test tc2987.vhd
+run_compliant_test tc2988.vhd
+run_compliant_test tc2989.vhd
+run_compliant_test tc2990.vhd
+run_compliant_test tc3001.vhd
+run_compliant_test tc3005.vhd
+run_compliant_test tc3010.vhd
+run_compliant_test tc3016.vhd
+run_compliant_test tc3022.vhd
+run_compliant_test tc3023.vhd
+run_compliant_test tc3024.vhd
+run_compliant_test tc3029.vhd
+run_compliant_test tc3032.vhd
+run_compliant_test tc3033.vhd
+run_compliant_test tc3034.vhd
+run_compliant_test tc3035.vhd
+run_compliant_test tc3036.vhd
+run_compliant_test tc3037.vhd
+run_compliant_test tc3038.vhd
+run_compliant_test tc3039.vhd
+run_compliant_test tc3040.vhd
+run_compliant_test tc3041.vhd
+run_compliant_test tc3042.vhd
+run_compliant_test tc3043.vhd
+run_compliant_test tc3044.vhd
+run_compliant_test tc3045.vhd
+run_compliant_test tc3046.vhd
+run_compliant_test tc3047.vhd
+run_compliant_test tc3048.vhd
+run_compliant_test tc3049.vhd
+run_compliant_test tc3050.vhd
+run_compliant_test tc3051.vhd
+run_compliant_test tc3052.vhd
+run_compliant_test tc3053.vhd
+run_compliant_test tc3054.vhd
+run_compliant_test tc3055.vhd
+run_compliant_test tc3057.vhd
+run_compliant_test tc3059.vhd
+run_compliant_test tc3060.vhd
+run_compliant_test tc3061.vhd
+run_compliant_test tc3062.vhd
+run_compliant_test tc3063.vhd
+run_compliant_test tc3066.vhd
+run_compliant_test tc3067.vhd
+run_compliant_test tc3068.vhd
+run_compliant_test tc3069.vhd
+run_compliant_test tc3070.vhd
+run_compliant_test tc3071.vhd
+run_compliant_test tc3072.vhd
+run_compliant_test tc3073.vhd
+run_compliant_test tc3074.vhd
+run_compliant_test tc3075.vhd
+run_compliant_test tc3076.vhd
+run_compliant_test tc3077.vhd
+run_compliant_test tc3078.vhd
+run_compliant_test tc3079.vhd
+run_compliant_test tc3080.vhd
+run_compliant_test tc3081.vhd
+run_compliant_test tc3082.vhd
+run_compliant_test tc3083.vhd
+run_compliant_test tc3084.vhd
+run_compliant_test tc3085.vhd
+run_compliant_test tc3086.vhd
+run_compliant_test tc3099.vhd
+run_compliant_test tc3100.vhd
+run_compliant_test tc3101.vhd
+run_compliant_test tc3102.vhd
+run_compliant_test tc3109.vhd
+run_compliant_test tc3110.vhd
+run_compliant_test tc3111.vhd
+run_compliant_test tc3112.vhd
+run_compliant_test tc3113.vhd
+run_compliant_test tc3114.vhd
+run_compliant_test tc3115.vhd
+run_compliant_test tc3116.vhd
+run_compliant_test tc3117.vhd
+run_compliant_test tc3118.vhd
+run_compliant_test tc3119.vhd
+run_compliant_test tc3120.vhd
+run_compliant_test tc3121.vhd
+run_compliant_test tc3122.vhd
+run_compliant_test tc3123.vhd
+run_compliant_test tc3125.vhd
+run_compliant_test tc3126.vhd
+run_compliant_test tc3127.vhd
+run_compliant_test tc3128.vhd
+run_compliant_test tc3137.vhd
+run_compliant_test tc3138.vhd
+run_compliant_test tc3139.vhd
+run_compliant_test tc3140.vhd
+run_compliant_test tc3141.vhd
+run_compliant_test tc3142.vhd
+run_compliant_test tc3143.vhd
+run_compliant_test tc3144.vhd
+run_compliant_test tc3145.vhd
+run_compliant_test tc3146.vhd
+run_compliant_test tc3147.vhd
+run_compliant_test tc3148.vhd
+run_compliant_test tc3149.vhd
+run_compliant_test tc3150.vhd
+run_compliant_test tc3151.vhd
+run_compliant_test tc3152.vhd
+run_compliant_test tc3153.vhd
+run_compliant_test tc3154.vhd
+run_compliant_test tc3155.vhd
+run_compliant_test tc3156.vhd
+run_compliant_test tc3157.vhd
+run_compliant_test tc3158.vhd
+run_compliant_test tc3159.vhd
+run_compliant_test tc3160.vhd
+run_compliant_test tc3162.vhd
+run_compliant_test tc3163.vhd
+run_compliant_test tc3164.vhd
+run_compliant_test tc3165.vhd
+run_compliant_test tc3166.vhd
+run_compliant_test tc3167.vhd
+run_compliant_test tc3168.vhd
+run_compliant_test tc3169.vhd
+run_compliant_test tc3170.vhd
+run_compliant_test tc3171.vhd
+run_compliant_test tc3172.vhd
+run_compliant_test tc3173.vhd
+run_compliant_test tc3174.vhd
+run_compliant_test tc3175.vhd
+run_compliant_test tc3176.vhd
+run_compliant_test tc3177.vhd
+run_compliant_test tc3178.vhd
+run_compliant_test tc3179.vhd
+run_compliant_test tc3180.vhd
+run_compliant_test tc3181.vhd
+run_compliant_test tc3182.vhd
+run_compliant_test tc3183.vhd
+run_compliant_test tc3184.vhd
+run_compliant_test tc3185.vhd OUTPUT=iofile.02:iofiles/iofile.02
+run_compliant_test tc3186.vhd OUTPUT=iofile.01:iofiles/iofile.01
+run_compliant_test tc3187.vhd OUTPUT=iofile.04:iofiles/iofile.04
+run_compliant_test tc3188.vhd INPUT=iofile.06:iofiles/iofile.06
+run_compliant_test tc3189.vhd INPUT=iofile.02:iofiles/iofile.02
+run_compliant_test tc3190.vhd OUTPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc3191.vhd INPUT=iofile.04:iofiles/iofile.04
+run_compliant_test tc3192.vhd OUTPUT=iofile.06:iofiles/iofile.06
+run_compliant_test tc3193.vhd INPUT=iofile.08:iofiles/iofile.08
+run_compliant_test tc3194.vhd OUTPUT=iofile.09:iofiles/iofile.09
+run_compliant_test tc3195.vhd INPUT=iofile.09:iofiles/iofile.09
+run_compliant_test tc3196.vhd OUTPUT=iofile.10:iofiles/iofile.10
+run_compliant_test tc3197.vhd INPUT=iofile.10:iofiles/iofile.10
+run_compliant_test tc3198.vhd OUTPUT=iofile.12:iofiles/iofile.12
+run_compliant_test tc3199.vhd INPUT=iofile.12:iofiles/iofile.12
+run_compliant_test tc3200.vhd OUTPUT=iofile.14:iofiles/iofile.14
+run_compliant_test tc3201.vhd INPUT=iofile.14:iofiles/iofile.14
+run_compliant_test tc3202.vhd INPUT=iofile.61:iofiles/iofile.61
+run_compliant_test tc3203.vhd OUTPUT=iofile.61:iofiles/iofile.61
+run_compliant_test tc3204.vhd OUTPUT=iofile.47:iofiles/iofile.47
+run_compliant_test tc3205.vhd OUTPUT=iofile.64:iofiles/iofile.64
+run_compliant_test tc3206.vhd INPUT=iofile.64:iofiles/iofile.64
+
+end_test_group
+
+# $Log: compliant.exp,v $
+# Revision 1.6  2009-09-05 21:58:50  paw
+# Removing 4 empty shells of test cases from the list of test models to evaluate.
+#
+# Revision 1.5  2008-04-06 17:01:06  paw
+# Updated these vhdl files with filename strings that is consistent with the
+# rest of the regression setup.  Updated the runtest script (compliant.exp)
+# with these filenames.  This should change all these from failed to passed.
+#
+# Revision 1.4  2001-10-29 02:12:44  paw
+# Modifications for file IO.  I have replaced all the file names with
+# iofile.X and have placed all the files for savant in the subdirectory
+# iofiles.  Technically these files should be described using XML and we
+# should build translators to/from the files.  I'll leave that exercise for
+# another time.  In addition, I could build files only for those vhdl files
+# that we can build and simulate in savant; consequently there are still
+# about 5-6 tests with the old file names.  As the system matures so that
+# these tests execute, I will incorporate their iofiles (or point them at the
+# correct existing file should it already exist).
+#
+# Revision 1.3  2001/10/19 23:29:32  paw
+# Adding comments for cvs tracking information.
+#
+# Revision 1.2  2001/10/15 16:00:50  paw
+# Updating the compliant.exp script to properly use the functions in the new
+# savant test harness.
+#
+# Adding the scripts for non_compliant testing in the billowitch suite.
+#
+# When properly placed in the testsuite subdirectory of savant, a make check
+# will work.  Documentation will be added to the testsuite to describe how.
+#
+# Revision 1.1  2001/09/14 14:31:25  paw
+# This script sets up the group (Billowitch:Pass Cases) run and invokes
+# the run_compliant_test procedure for each file.  For those cases
+# requiring file input/output, additional modifications will be needed.
+#

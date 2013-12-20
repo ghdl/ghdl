@@ -1,0 +1,135 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: am_modulation.ams,v 1.1 2002-03-27 22:11:17 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+--Package defining eleectrical nature and some functions...
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+END PACKAGE electricalSystem;
+
+USE work.electricalSystem.ALL;
+----------------------------------------------------------------------  
+-- The sinusoidal voltage source definition begins.....  
+----------------------------------------------------------------------  
+-- Schematic of the sinusoidal voltage source:  
+-- -------------------------------------------  
+--  
+--        p o----(~)----o m a sinusoidal voltage of amplitude ampl  
+--                  Vs          and frequency 'freq'.  
+----------------------------------------------------------------------  
+ 
+--entity declaration.  
+ENTITY sineSource IS    
+    generic (ampl,freq : REAL);  
+    PORT(TERMINAL p,m: ELECTRICAL); --Interface ports.  
+END;  
+ 
+--architecture declaration.  
+ARCHITECTURE behav OF sineSource IS  
+    --quantity declarations.  
+    quantity v_in across i_out through p to m;  
+BEGIN  
+     -- The sinusoidal voltage source equation.        
+     v_in==ampl * sin (2.0*3.14* freq *  real(time'pos(now)) * 1.0e-15); --input sinusoidal source  
+END;  
+   
+USE work.electricalSystem.ALL; 
+----------------------------------------------------------------------  
+-- The resistor definition begins.....  
+----------------------------------------------------------------------  
+-- Schematic of the resistor component:  
+--  
+--        p o----/\/\/\----o m  
+--          
+----------------------------------------------------------------------  
+ 
+ENTITY resistor IS  
+    GENERIC  (resistance    : REAL);        --resistance value given as a generic parameter.
+ 
+    PORT     (TERMINAL p,m  : ELECTRICAL);    --Interface ports.  
+END resistor;  
+ 
+ARCHITECTURE behav OF resistor IS  
+    quantity r_e across r_i through p to m;  
+BEGIN  
+    r_i == r_e/resistance;  -- The ohmic resistance equation.  
+END behav;  
+----------------------------------------------------------------  
+ 
+ 
+USE work.electricalSystem.ALL;
+-----------------------------------------------------------------     
+--testbench  
+-- ==============================================================  
+--  n1                    R2 1k                     n2  
+--  o __________________/\/\/\__________________o                    
+--  |             |               |        |                    
+--  | T1          |               |        |  
+--  |             <               <        |  
+-- (~)modulation  < R1            <    R3 (~) basiswave  
+--  | 100(sinwt)  < 1k            <    1k    |  320(sinwt)   
+--  |              |               |        |  
+--  |             |               |        |  
+--  o___________________________________________o  
+--                        | gnd          
+--                      -----      
+ 
+ENTITY network IS  
+END;  
+                                                 
+ARCHITECTURE behav OF network IS 
+component sineSource IS
+    generic (ampl,freq : REAL);
+    PORT(TERMINAL p,m: ELECTRICAL); --Interface ports.
+END component;
+
+component resistor IS
+    GENERIC  (resistance    : REAL);        --resistance value given as a generic parameter.
+    
+    PORT     (TERMINAL p,m  : ELECTRICAL);    --Interface ports.
+END component;
+     
+    terminal n1,n2: ELECTRICAL;  
+BEGIN  
+    Modulation  : sineSource  generic MAP(100.0,5000.0) PORT MAP(n1,ground);
+ 
+    R1   : Resistor    generic MAP(1000.0)       PORT MAP(n1,ground);
+ 
+    Groundwave  : sineSource  generic MAP(320.0,500.0)  PORT MAP(n2,ground);
+ 
+    R3   : Resistor    generic MAP(1000.0)       PORT MAP (n2,ground);
+ 
+    R2   : Resistor    generic MAP(1000.0)       PORT MAP (n1, n2);
+ 
+END;              

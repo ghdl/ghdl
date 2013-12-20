@@ -1,0 +1,65 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: step_limit.ams,v 1.2 2003-08-05 15:14:24 paw Exp $
+-- $Revision: 1.2 $
+--
+-- ---------------------------------------------------------------------
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH Ground reference;
+    FUNCTION  SIN (X : real ) RETURN real;
+    FUNCTION  COS (X : real ) RETURN real;
+    FUNCTION EXP  (X : real ) RETURN real;
+END PACKAGE electricalSystem;
+
+USE work.electricalSystem.all;
+
+--entity declaration
+ENTITY hwr IS
+END hwr;
+
+--architecture declaration
+ARCHITECTURE behavior  OF hwr IS
+
+    terminal t1, t2 : electrical;
+    constant step : real := 5.0e12;
+    quantity v2 across i2 through t1 ;
+    quantity vs across t1 ;
+    limit vs:real with step/1000.0;
+    quantity vikram:real;
+    limit v2,vs:real with 2.0e9;
+BEGIN  -- behavior 
+
+      eqn1: v2 == 100.0 * i2;
+    
+      --voltage source equation
+      eqn2: vs == 5.0 * sin(2.0 * 3.14 * 100000.0 *
+                            real(time'pos(now)) * 1.0e-12 );
+    
+END behavior ;

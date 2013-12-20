@@ -1,0 +1,32 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                 Chapter 18 - Case Study 3: DC-DC Power Converter
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+tb_BuckConverter.vhd                            entity tb_BuckConverter                 tb_BuckConverter                Figure 18-7
+capacitor.vhd                                   entity capacitor                        esr                             Figure 18-9
+switch_dig.vhd                                  entity switch_dig                       linear                          Figure 18-10
+buck_sw.vhd                                     entity buck_sw                          average                         Figure 18-13
+sw_LoopCtrl.vhd                                 entity sw_LoopCtrl                      ideal                           Figure 18-16
+sw_LoopCtrl_wa.vhd                              entity sw_LoopCtrl_wa                   ideal                           --
+comp_2p2z.vhd                                   entity comp_2p2z                        ltf                             Figure 18-18
+pwl_load.vhd                                    entity pwl_load                         ideal                           Figure 18-20
+pwl_load_wa.vhd                                 entity pwl_load_wa                      ideal                           --
+CalcBuckParams.vhd                              entity CalcBuckParams                   behavioral                      Figure 18-23
+CalcBuckParams_wa.vhd                           entity CalcBuckParams_wa                ideal                           --
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_CalcBuckParams.vhd                           entity tb_CalcBuckParams                tb_CalcBuckParams               CalcBuckParams.vhd
+tb_CS3_BuckConverter_average.vhd                entity inductor                         ideal
+--                                              entity inductor                         ideal2
+--                                              entity capacitor                        esr
+--                                              entity v_constant                       ideal
+--                                              entity sw_LoopCtrl_wa                   ideal
+--                                              entity pwl_load_wa                      ideal
+--                                              entity v_pulse                          ideal
+--                                              entity buck_sw                          average
+--                                              entity comp_2p2z                        ltf
+--                                              entity TB_CS3_BuckConverter_average     TB_CS3_BuckConverter_average

@@ -1,0 +1,75 @@
+
+# Copyright (C) 2001 Clifton Labs, Inc
+
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+
+# Please email any bugs, comments, and/or additions to this file to:
+# vests@cliftonlabs.com
+
+# Authors: Philip A. Wilsey	philip.wilsey@ieee.org
+# 	   Dale E. Martin	dmartin@cliftonlabs.com
+
+# $Author: paw $
+# $Revision: 1.2 $
+
+# ------------------------------------------------------------------------
+#
+# $Id: non_compliant.exp,v 1.2 2001-10-19 23:29:32 paw Exp $
+#
+# ------------------------------------------------------------------------
+
+setup_test_group "Billowitch:Non-compliant Cases:Simulation Failure" "1076-1993"
+
+run_non_compliant_test tc77.vhd
+run_non_compliant_test tc78.vhd
+
+run_non_compliant_test tc255.vhd
+run_non_compliant_test tc259.vhd
+run_non_compliant_test tc260.vhd
+run_non_compliant_test tc261.vhd
+run_non_compliant_test tc262.vhd
+run_non_compliant_test tc263.vhd
+run_non_compliant_test tc264.vhd
+run_non_compliant_test tc536.vhd
+
+run_non_compliant_test tc1074.vhd
+run_non_compliant_test tc1227.vhd
+run_non_compliant_test tc1336.vhd
+run_non_compliant_test tc1399.vhd
+run_non_compliant_test tc1400.vhd
+run_non_compliant_test tc1401.vhd
+run_non_compliant_test tc1402.vhd
+run_non_compliant_test tc1404.vhd
+run_non_compliant_test tc1707.vhd
+run_non_compliant_test tc1708.vhd
+run_non_compliant_test tc1725.vhd
+run_non_compliant_test tc1951.vhd
+run_non_compliant_test tc3056.vhd
+
+end_test_group
+
+# $Log: non_compliant.exp,v $
+# Revision 1.2  2001-10-19 23:29:32  paw
+# Adding comments for cvs tracking information.
+#
+# Revision 1.1  2001/10/15 16:00:51  paw
+# Updating the compliant.exp script to properly use the functions in the new
+# savant test harness.
+#
+# Adding the scripts for non_compliant testing in the billowitch suite.
+#
+# When properly placed in the testsuite subdirectory of savant, a make check
+# will work.  Documentation will be added to the testsuite to describe how.
+#

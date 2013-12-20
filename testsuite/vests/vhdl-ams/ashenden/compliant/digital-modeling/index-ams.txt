@@ -1,0 +1,82 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                     Chapter 5 - Digital Modeling Constructs
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+program_rom.vhd                                 entity program_rom                      --                              Figure 5-1
+and_or_inv.vhd                                  entity and_or_inv                       primitive                       Figure 5-2
+clock_gen.vhd                                   entity clock_gen                        test                            Figure 5-3
+mux.vhd                                         entity mux                              test                            Figure 5-4
+edge_triggered_Dff.vhd                          entity edge_triggered_Dff               behavioral                      Figure 5-5
+mux2.vhd                                        entity mux2                             behavioral                      Figure 5-6
+clock_gen-1.vhd                                 entity clock_gen                        test                            Figure 5-7
+clock_gen-2.vhd                                 entity clock_gen                        test                            Figure 5-8
+computer_system.vhd                             entity computer_system                  abstract                        Figure 5-9
+asym_delay.vhd                                  entity asym_delay                       test                            Figure 5-12
+and2.vhd                                        entity and2                             detailed_delay                  Figure 5-16
+zmux.vhd                                        entity zmux                             test                            Figure 5-17
+zmux-1.vhd                                      entity zmux                             test                            Figure 5-18
+scheduler.vhd                                   entity scheduler                        test                            Figure 5-19
+alu.vhd                                         entity alu                              test                            Figure 5-20
+full_adder.vhd                                  entity full_adder                       truth_table                     Figure 5-21
+S_R_flipflop.vhd                                entity S_R_flipflop                     functional                      Figure 5-22
+S_R_flipflop-1.vhd                              entity S_R_flipflop                     --                              Figure 5-23
+rom.vhd                                         entity rom                              --                              Figure 5-24
+reg4.vhd                                        entity reg4                             struct                          Figure 5-25
+counter.vhd                                     package counter_types                   --                              Section 5.4
+--                                              entity add_1                            boolean_eqn                     --
+--                                              entity buf4                             basic                           --
+--                                              counter                                 registered                      Figure 5-27
+microprocessor.vhd                              reg                                     --                              Figure 5-28
+--                                              microprocessor                          RTL                             Figure 5-28
+inline_01.vhd                                   package adder_types                     --                              --
+--                                              entity adder                            --                              Section 5.1
+inline_02.vhd                                   package adder_types                     --                              --
+--                                              entity adder                            --                              Section 5.1
+inline_03.vhd                                   entity and_or_inv                       --                              Section 5.1
+inline_04.vhd                                   entity top_level                        --                              Section 5.1
+inline_05.vhd                                   --                                      abstract                        Section 5.2
+inline_06.vhd                                   entity inline_06                        test                            Section 5.3
+inline_07.vhd                                   entity inline_07                        test                            Section 5.3
+inline_08.vhd                                   entity inline_08                        test                            Section 5.3
+inline_09.vhd                                   entity inline_09                        test                            Section 5.3
+inline_10.vhd                                   entity inline_10                        test                            Section 5.3
+inline_11.vhd                                   entity inline_11                        test                            Section 5.3
+inline_12.vhd                                   entity inline_12                        test                            Section 5.3
+inline_13.vhd                                   entity inline_13                        test                            Section 5.3
+inline_14.vhd                                   entity inline_14                        test                            Section 5.3
+inline_15.vhd                                   entity inline_15                        test                            Section 5.3
+inline_16.vhd                                   entity inline_16                        test                            Section 5.3
+inline_17.vhd                                   entity inline_17                        test                            Section 5.3
+inline_18.vhd                                   entity DRAM_controller                  fpld                            Section 5.4
+--                                              entity inline_18                        test                            Section 5.4
+inline_19.vhd                                   package inline_19                       --                              Section 5.4
+inline_20.vhd                                   package inline_20_types                 --                              Section 5.4
+--                                              entity FIFO                             --                              --
+--                                              entity inline_20                        test                            Section 5.4
+inline_21.vhd                                   entity and_gate                         behavioral                      Section 5.4
+--                                              entity inline_21                        test                            Section 5.4
+inline_22.vhd                                   entity mux4                             functional                      Section 5.4
+--                                              entity inline_22                        test                            Section 5.4
+inline_23.vhd                                   entity and_or_inv                       functional                      Section 5.4
+--                                              entity inline_23                        test                            Section 5.4
+inline_24.vhd                                   entity and3                             functional                      Section 5.4
+--                                              entity inline_24                        test                            Section 5.4
+inline_28a.vhd                                  entity inline_28a                       test                            Section 5.3
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_and_or_inv.vhd                               entity tb_and_or_inv                    test                            and_or_inv.vhd
+tb_edge_triggered_Dff.vhd                       entity tb_edge_triggered_Dff            test                            edge_triggered_Dff.vhd
+tb_mux2.vhd                                     entity tb_mux2                          test                            mux2.vhd
+tb_and2.vhd                                     entity tb_and2                          test                            and2.vhd
+tb_full_adder.vhd                               entity tb_full_adder                    test                            full_adder.vhd
+tb_S_R_flipflop.vhd                             entity tb_S_R_flipflop                  test                            S_R_flipflop.vhd
+tb_S_R_flipflop-1.vhd                           --                                      functional                      S_R_flipflop.vhd
+--                                              entity tb_S_R_flipflop                  test                            --
+tb_rom.vhd                                      --                                      do_nothing                      rom.vhd
+--                                              entity tb_rom                           test                            --
+tb_reg4.vhd                                     entity tb_reg4                          test                            reg4.vhd
+tb_counter.vhd                                  entity tb_counter                       test                            counter.vhd

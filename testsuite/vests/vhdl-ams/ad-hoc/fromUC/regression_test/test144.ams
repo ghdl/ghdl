@@ -1,0 +1,130 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test144.ams,v 1.1 2002-03-27 22:11:18 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+-------------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of cincinnati
+-- Cincinnati
+-------------------------------------------------------------------------
+-- File          : test144.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : May 2001
+----------------------------------------------------------------------------
+-- Description :
+-----------------------------------------------------------------------------
+-- the test checks for the correctness of the ATTRIBUTE declaration
+-- also checks function, real_vector and quantity vector declarations
+-- the integer range<> is used instead of specifying the actaul range 
+-- or size of the matrix.
+-- 1 D and 2 D matrix operations are verified.
+-- the test performs the matrix dot product caluculation and also 
+-- product of a 2 D matrix with a column vector.
+----------------------------------------------------------------------
+
+PACKAGE electrical_system IS
+ 
+    -- declare attribute to hold units
+    ATTRIBUTE unit : string; 
+    NATURE electrical IS
+        real ACROSS
+        real THROUGH;
+    NATURE electrical_vector IS ARRAY(integer range<>)  OF electrical;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    FUNCTION POW(X,Y : real) RETURN real;
+    NATURE real_vector IS ARRAY(integer range<>) of real;
+END PACKAGE electrical_system;
+
+PACKAGE real_aux IS
+    TYPE real_vector IS ARRAY(integer range<>) OF real;
+    TYPE real_matrix IS ARRAY(integer range<>, integer range<>) OF real;
+
+    -- scalar := (row_)vector * (column_)vector
+
+    FUNCTION "*"(v1, v2 : real_vector) RETURN real IS
+        VARIABLE result : real := 0.0;
+    BEGIN
+        ASSERT v1'range = v2'range; -- to ensure correct dot product evaluation
+        FOR i IN v1'range LOOP
+            result := result + v1(i) * v2(i);
+        END LOOP;
+        RETURN result;
+    END FUNCTION "*";
+ 
+    -- (column_)vector := matrix * (column_)vector
+
+    FUNCTION "*"(m : real_matrix; v : real_vector) RETURN real_vector IS
+        VARIABLE result : real_vector(m'range(1));
+    BEGIN
+        ASSERT m'range(2) = v'range;
+        FOR i IN result'range LOOP
+            result(i) = 0.0;
+            FOR j IN v'range LOOP
+                result(i) := result(i) + m(i,j) * v(j);
+            END LOOP;
+        END LOOP;
+        RETURN result;
+    END FUNCTION "*";
+END PACKAGE real_aux;
+ 
+use work.electrical_system.all;
+-- ideal multiplier
+ 
+ENTITY mult IS
+    PORT (TERMINAL in1, in2, output, ref : electrical);
+END ENTITY mult;
+ 
+ARCHITECTURE ideal OF mult IS
+    QUANTITY vout ACROSS iout THROUGH output TO ref;
+    QUANTITY vin1 ACROSS in1 TO ref;
+    QUANTITY vin2 ACROSS in2 TO ref;
+BEGIN
+    vout == vin1 * vin2;
+END ARCHITECTURE ideal;
+
+USE work.electrical_system.all;
+USE work.real_aux.all;
+                
+ENTITY xfrm IS     
+    GENERIC (ml : real_matrix);            -- self/mutual inductances
+    PORT (TERMINAL p, m : electrical_vector);
+END ENTITY xfrm;
+                    
+ARCHITECTURE one OF xfrm IS
+    QUANTITY v ACROSS i THROUGH p TO m;    -- arrays!
+BEGIN
+    v == ml*real_vector(i'dot);
+END ARCHITECTURE one;   

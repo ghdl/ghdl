@@ -1,0 +1,30 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                          Chapter 15 - Resolved Signals
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+resolve_tri_state_logic.vhd                     entity resolve_tri_state_logic          test                            Section 15.1, Figure 15-1
+MVL4.vhd                                        package MVL4                            body                            Section 15.1, Figure 15-2
+tri_state_buffer.vhd                            entity tri_state_buffer                 behavioral                      Figure 15.3
+misc_logic.vhd                                  entity misc_logic                       gate_level                      Figure 15.4
+words.vhd                                       package words                           body                            Figure 15.5
+computer_system.vhd                             entity cpu                              behavioral                      Figure 15.6
+--                                              entity memory                           behavioral                      Figure 15.6
+--                                              entity ROM                              behavioral                      --
+--                                              entity computer_system                  top_level                       Figure 15.6
+memory_system.vhd                               entity ROM                              behavioral                      Figure 15-7
+--                                              entity SIMM                             behavioral                      Figure 15-7
+--                                              entity memory_system                    detailed                        Figure 15-7
+resolved.vhd                                    package resolved                        body                            Figure 15-8
+bus_based_system.vhd                            entity bus_module                       behavioral                      Figures 15-9, 15-10
+--                                              entity bus_based_system                 top_level                       Figure 15-9
+synchronize.vhd                                 package synchronize                     body                            Figure 15-12
+synchronized_module.vhd                         entity synchronized_module              test                            Figure 15-13
+inline_01.vhd                                   entity inline_01                        test                            Section 15.1
+inline_02.vhd                                   package inline_02                       test                            Section 15.2
+inline_03.vhd                                   entity IO_section                       --                              Section 15.3
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------

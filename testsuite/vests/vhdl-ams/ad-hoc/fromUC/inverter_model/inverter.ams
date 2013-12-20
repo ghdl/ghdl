@@ -1,0 +1,431 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: inverter.ams,v 1.1 2002-03-27 22:11:18 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+-- /**************************************************************************/
+-- /* File: inverter.ams                                                     */
+-- /**************************************************************************/
+-- /* Author(s):        Vishwashanth Kasula Reddy & Venkateswaran Krishna    */
+-- /* Date of creation: Mon Nov 30th 1998                                    */
+-- /**************************************************************************/
+--Roadmap:
+----------
+--This is a mixed signal model of an inverter... The input is a bit signal
+-- which is converted to a 5/0 value realSignal. This signal is then given
+-- to the input of the cmos inverter and the output of the cmos inverter is
+-- then given to a atod... the final output is then a bit signal which is
+-- the inverse of the input bit signal...
+
+------------------------------------------------------------------------
+--                             /\ Vdd
+--                              | 
+--                              o S
+--                              |
+--                             --
+--                     -----<-|p
+--                     |       --
+--                     |        |
+--          --0--/\/\--0      D 0--------o--------o----------
+--         + /\        |        |        |        |        /\ +
+--            |        |       --        >        |         |
+--  vin is    |        ----->-|n         <       ---       Vout ==> atod ==> op
+-- atod(inp)  Vin              --        >       ---        |
+--            |                 |        <        |         |
+--            |                 o S      |        |         |
+--         - \/                 |        |        |        \/ -
+--          -------------------------------------------------
+--                                       |
+--                                      ---
+--                                       -
+------------------------------------------------------------------------
+
+-------*****************************************************************
+--                   Package definition Begins 
+-------*****************************************************************
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    FUNCTION POW(X,Y : real) RETURN real;
+--    ALIAS GND is electrical'reference;
+END PACKAGE electricalSystem;
+
+------- Square wave generator
+
+-------*****************************************************************
+--                   New Entity Begins : 1 BIT A/D CONVERTER
+-------*****************************************************************
+
+use work.electricalsystem.all;
+
+entity a2d1bit is
+	generic (vlo : real := 0.0;
+	        vhi : real := 10.0;
+	        ped : time := 1 ns);
+	port (signal input : in bit;
+	      terminal pos, neg : electrical);
+end entity a2d1bit;
+
+architecture behav of a2d1bit is
+  quantity vsqr across isqr through pos to neg;
+  signal vsig : real := 0.0;
+begin
+
+  vsqr == vsig;
+  break on vsig;
+
+  bit2real : process
+  begin
+    if(input = '0') then
+      vsig <= vlo;
+    else
+      vsig <= vhi;
+    end if;
+    wait on input;
+  end process; --- generator;
+
+end architecture behav; 
+
+-------*****************************************************************
+--                   New Entity Begins : RESISTOR       
+-------*****************************************************************
+use work.electricalSystem.all;
+
+entity resistor is
+   generic(r: real := 1.0 );  --- resistance
+   port( terminal tr1,tr2 : electrical); --- interface ports
+end resistor;
+
+architecture rbehavior of resistor is
+   quantity Vr across Ir through tr1 to tr2;
+begin
+   Vr == Ir*r;
+end architecture rbehavior; --- of resistor
+
+-------*****************************************************************
+--                   New Entity Begins : PMOS TRANSISTOR
+-------*****************************************************************
+
+----- PMOS 
+--use std.textio.all;
+use work.electricalsystem.all;
+
+entity pmos is
+    port (terminal g,s,d : electrical);
+end entity pmos;
+
+architecture behav of pmos is
+  terminal g2, d1 : electrical;
+  quantity vdsg across idsgi through d1 to s;
+  quantity idsg through d1 to s;
+  quantity vdsr across idsr through d1 to d;
+  quantity vds across d to s;
+  quantity vgs_in across g to s;
+  quantity vgsr across igsr through g to g2;
+  quantity vgs across igs through g2 to s;
+  constant vth : real := 0.5;
+  constant hfe : real := 3.54e-03;
+--  quantity flag : real := 1.0; 
+--    quantity vgs : real;
+--  signal vgs_sig,vds_sig : real := 0.0;
+
+begin
+  ------ Setting initial conditions
+--  init : break vds => 1.0;
+
+  opn : vdsg == 1.0e+06 * idsgi ; -- almost 
+  d12_res : vdsr == idsr * 1.0;
+  g12res : vgsr == igsr * 1.0;
+  g_oup : vgs == igs * 1.0;
+  
+--  flag == 1.0;
+ 
+---- Current is in Micro Amps.
+
+  ------ Cut OffRegion
+    if((vgs <= 0.0) and (vgs >= vth)) use
+	gnc :    idsg == 0.0;
+
+  ------ Linear Region
+  elsif((vds >= (vgs-vth)) and (vds < 0.0)) use
+      	gnl :    idsg == -1.0*hfe*(((vgs-vth)*vds) - (pow(vds,2.0)/2.0));
+ 
+  ------ Saturation Region
+  elsif((vds < (vgs-vth)) and (vgs < vth)) use
+      gns2 : idsg == -1.0*(hfe/2.0)*(pow((vgs-vth),2.0));
+
+  ------ Other conditions
+ -- elsif(vgs < 0.0 or vds <= 0.0) use
+  elsif(1.0 = 1.0) use
+      temp : idsg == 0.0;
+  end use;
+
+end architecture behav; --- of pmos;
+
+
+-------*****************************************************************
+--                   New Entity Begins : NMOS TRANSISTOR
+-------*****************************************************************
+
+----- NMOS 
+--use std.textio.all;
+use work.electricalsystem.all;
+
+entity nmos is
+    port (terminal g,s,d : electrical);
+end entity nmos;
+
+architecture behav of nmos is
+  terminal g2, d1 : electrical;
+  quantity vdsg across idsgi through d1 to s;
+  quantity idsg through d1 to s;
+  quantity vdsr across idsr through d1 to d;
+  quantity vds across d to s;
+  quantity vgs_in across g to s;
+  quantity vgsr across igsr through g to g2;
+  quantity vgs across igs through g2 to s;
+  constant vth : real := 0.5;
+  constant hfe : real := 8.85e-03;
+--  quantity flag : real := 1.0; 
+--    quantity vgs : real;
+--  signal vgs_sig,vds_sig : real := 0.0;
+
+begin
+  ------ Setting initial conditions
+--  init : break vds => 1.0;
+
+  opn : vdsg == 1.0* idsgi ; -- almost 
+  d12_res : vdsr == idsr * 1.0e-3;
+  g12res : vgsr == igsr * 1.0;
+  g_oup : vgs == igs * 1.0;
+  
+--  flag == 1.0;
+ 
+---- Current is in Micro Amps.
+
+  ------ Cut OffRegion
+    if((vgs >= 0.0) and (vgs <= vth)) use
+	gnc :    idsg == 0.0;
+
+  ------ Linear Region
+  elsif((vds <= (vgs-vth)) and (vds > 0.0)) use
+      	gnl :    idsg == hfe*(((vgs-vth)*vds) - (pow(vds,2.0)/2.0));
+ 
+  ------ Saturation Region
+  elsif((vds > (vgs-vth)) and (vgs > vth)) use
+      gns2 : idsg == (hfe/2.0)*(pow((vgs-vth),2.0));
+
+  ------ Other conditions
+ -- elsif(vgs < 0.0 or vds <= 0.0) use
+  elsif(1.0 = 1.0) use
+      temp : idsg == 0.0;
+  end use;
+
+end architecture behav; --- of nmos;
+
+--------- Inverter Test Bench
+
+-------*****************************************************************
+--                   New Entity Begins : CMOS INVERTER
+-------*****************************************************************
+
+use work.electricalsystem.all;
+
+entity inverter is
+  port(inv_inp : in bit;
+       inv_op : out bit);
+end entity inverter;
+
+architecture behav of inverter is
+
+  terminal iin, iout, idd : electrical;
+  quantity vdd across idd to electrical'reference;
+  quantity vin across iin to electrical'reference;
+  quantity vout across irout through iout to electrical'reference;
+  
+  constant power : real := 5.0;
+
+  component nmos is
+    port (terminal g,s,d : electrical);
+  end component;
+  for all : nmos use entity work.nmos(behav);
+
+  component pmos is
+    port (terminal g,s,d : electrical);
+  end component;
+  for all : pmos use entity work.pmos(behav);
+
+  component a2d_comp is
+     generic(vlo : real := 0.0;
+             vhi : real := 10.0;
+	     ped : time := 1 ns);
+     port (signal input : in bit;
+	   terminal pos, neg : electrical); 
+  end component;
+  for all : a2d_comp use entity work.a2d1bit(behav);
+
+  component resistor_comp 
+    generic ( r : real := 1.0);
+    port ( terminal tr1, tr2 : electrical );
+  end component;
+  for all : resistor_comp use entity work.resistor(rbehavior);
+
+begin
+  
+  vdd == power;
+
+  sqr : a2d_comp  
+	generic map(0.0, 10.0,  500 ps)
+	port map(inv_inp, iin, electrical'reference);
+
+  nm : nmos port map(iin, electrical'reference, iout);
+  pm : pmos port map(iin, idd, iout);
+
+  res_out : resistor_comp 
+    generic map(5000000.0)
+    port map(iout,electrical'reference);
+
+  a2d: process 
+  begin
+    if(vout'above(0.003) = true) then
+      inv_op <= '1';
+    else
+      inv_op <= '0';
+    end if;
+  end process;
+
+end architecture behav; ---- of inverter 
+
+-------*****************************************************************
+--                   New Entity Begins : TESTBENCH
+-------*****************************************************************
+
+use std.textio.all;
+
+entity test_bench is
+end test_bench;
+
+architecture tb_arch of test_bench is
+
+component inverter_comp
+  port(inv_inp : in bit;
+       inv_op : out bit);
+end component;
+
+for all : inverter_comp use entity work.inverter(behav);
+
+signal ip, op : bit;
+
+begin
+
+  i1 : inverter_comp
+    port map(ip, op);
+
+  inputtestbench:PROCESS
+  begin
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    ip <= '0';
+    wait for 100 NS;
+    ip <= '1';
+    wait for 100 NS;
+    
+    END process;
+
+  testbench:PROCESS
+    VARIABLE outline : LINE;
+    VARIABLE Headline   : string(1 TO 54) :=
+      "time inv_input inv_output";
+    VARIABLE   seperator    : string(1 TO 1) := " ";
+    VARIABLE   flag     : bit := '0';
+    FILE outfile: text OPEN WRITE_MODE IS "Output.out";
+  BEGIN
+    IF (flag = '0') THEN
+      flag := '1';
+      WRITE(outline,Headline);
+      WRITELINE(outfile,outline);
+    ELSE
+      WRITE(outline, now);
+      WRITE(outline,seperator);
+      WRITE(outline,ip);
+      WRITE(outline,seperator);
+      WRITE(outline,op);
+      WRITELINE(outfile,outline);
+    END IF;
+    WAIT ON ip, op;
+  END PROCESS;
+
+end;

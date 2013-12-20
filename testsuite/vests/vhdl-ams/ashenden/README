@@ -1,0 +1,23 @@
+
+This directory contains copies of the VHDL files from The Designer's Guild
+to VHDL-AMS written by Peter Ashenden, Gregory D. Peterson, and Darrell
+A. Teegarden and published by Morgan Kaufmann Publishers, Inc in 2002.
+Morgan Kaufmann has given the University of Cincinnati permission to
+release these files under the GNU Public License.
+
+In many cases the original figures contained incomplete VHDL.  We have
+added additional VHDL constructs we believed necessary to make the VHDL
+complete and processable by a VHDL-AMS compliant analyzer.  As we made
+changes to the examples, comments were inserted to demarcate the changes
+we made.
+
+If you find errors or corrections to these files, please submit them to
+us at vests@cliftonlabs.com.  Thank you.
+
+------------------------------------------------------------------------
+Philip A. Wilsey 
+The University of Cincinnati
+vests@cliftonlabs.com
+------------------------------------------------------------------------
+Last Revised: November 3, 2003
+

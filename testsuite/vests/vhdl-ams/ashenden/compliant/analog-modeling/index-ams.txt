@@ -1,0 +1,84 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                      Chapter 6 - Analog Modeling Constructs
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+control_system.vhd                              entity control_system                   simple_feedback                 Figure 6-2
+comparator.vhd                                  entity comparator                       ideal                           Figure 6-9
+variable_comparator.vhd                         entity variable_comparator              ideal                           Figure 6-10
+transmission_line.vhd                           entity transmission_line                abstract                        Figure 6-11
+transmission_line_wa.vhd                        entity transmission_line_wa             abstract                        --
+inductor.vhd                                    entity inductor                         ideal                           Figure 6-12
+piston.vhd                                      entity piston                           simple                          Figure 6-13
+inductor-1.vhd                                  entity inductor                         integral_form                   Figure 6-14
+moving_mass.vhd                                 entity moving_mass                      behavioral                      Figure 6-15
+moving_mass_wa.vhd                              entity moving_mass_wa                   behavioral                      --
+opamp.vhd                                       entity opamp                            slew_limited                    Figure 6-17
+quad_opamp.vhd                                  entity quad_opamp                       slew_limited                    Figure 6-19
+quad_opamp_wa.vhd                               entity quad_opamp_wa                    slew_limited                    --
+bit_to_analog.vhd                               entity bit_to_analog                    ideal                           Figure 6-21
+std_logic_to_analog.vhd                         entity std_logic_to_analog              ideal                           Figure 6-23
+opamp-1.vhd                                     entity opamp                            saturating                      Figure 6-24
+opamp_wa-1.vhd                                  entity opamp_wa                         saturating                      --
+resistor.vhd                                    entity resistor                         ideal                           Figure 6-26
+capacitor.vhd                                   entity capacitor                        leakage                         Figure 6-26
+inverting_integrator.vhd                        entity inverting_integrator             structural                      Figure 6-27
+timer.vhd                                       entity timer                            behavioral                      Figure 6-29
+ball.vhd                                        entity ball                             bouncer                         Figure 6-30
+ball_wa.vhd                                     entity ball_wa                          simple                          --
+analog_switch.vhd                               entity analog_switch                    ideal                           Figure 6-31
+pendulum.vhd                                    entity pendulum                         constrained                     Figure 6-33
+pendulum_wa.vhd                                 entity pendulum_wa                      constrained                     --
+triangle_waveform.vhd                           entity triangle_waveform                ideal                           Figure 6-34
+triangle_waveform_wa.vhd                        entity triangle_waveform_wa             ideal                           --
+comparator-1.vhd                                entity comparator                       hysteresis                      Figure 6-35
+dac_12_bit.vhd                                  entity dac_12_bit                       behavioral                      Figure 6-36
+diode.vhd                                       entity diode                            one                             Figure 6-38
+inline_01a.vhd                                  entity inline_01a                       test                            Section 6.1
+inline_02a.vhd                                  entity inline_02a                       test                            Section 6.1
+inline_03a.vhd                                  entity temperature_dependent_resistor   linear_approx                   Section 6.1
+inline_04a.vhd                                  entity inline_04a                       test                            Section 6.2
+inline_05a.vhd                                  entity inline_05a                       test                            Section 6.2
+inline_06a.vhd                                  entity inline_06a                       test                            Section 6.2
+inline_07a.vhd                                  entity battery                          --                              Section 6.2
+--                                              entity ADC                              --                              Section 6.2
+--                                              entity diode_thermal                    --                              Section 6.2
+inline_08a.vhd                                  entity inline_08a                       test                            Section 6.3
+inline_09a.vhd                                  entity inline_09a                       test                            Section 6.4
+inline_10a.vhd                                  entity inline_10a                       test                            Section 6.4
+inline_11a.vhd                                  entity inline_11a                       test                            Section 6.4
+inline_12a.vhd                                  entity inline_12a                       test                            Section 6.4
+inline_13a.vhd                                  entity inline_13a                       test                            Section 6.4
+inline_14a.vhd                                  entity inline_14a                       test                            Section 6.4
+inline_15a.vhd                                  entity inline_15a                       test                            Section 6.5
+inline_16a.vhd                                  package inline_16a_types                --                              Section 6.5
+--                                              entity seven_segment_led                basic_optics                    Section 6.5
+--                                              entity inline_16a                       test                            Section 6.5
+inline_17a.vhd                                  entity adc_with_ref                     signal_flow                     Section 6.5
+--                                              entity inline_17a                       test                            Section 6.5
+inline_18a.vhd                                  entity inline_18a                       test                            Section 6.6
+inline_19a.vhd                                  entity inline_19a                       test                            Section 6.6
+inline_20a.vhd                                  entity inline_20a                       test                            Section 6.6
+inline_21a.vhd                                  entity inline_21a                       test                            Section 6.7
+inline_22a.vhd                                  entity inline_22a                       test                            Section 6.8
+inline_23a.vhd                                  entity inline_23a                       test                            Section 6.8
+inline_24a.vhd                                  entity inline_24a                       test                            Section 6.9
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_control_system.vhd                           entity tb_control_system                TB_control_system               control_system.vhd
+tb_comparator.vhd                               entity tb_comparator                    TB_comparator                   comparator.vhd
+tb_variable_comparator.vhd                      entity tb_variable_comparator           TB_variable_comparator          variable_comparator.vhd
+tb_transmission_line.vhd                        entity tb_transmission_line             TB_transmission_line            transmission_line_wa.vhd
+tb_piston.vhd                                   entity tb_piston                        TB_piston                       piston.vhd
+tb_moving_mass.vhd                              entity tb_moving_mass                   TB_moving_mass                  moving_mass_wa.vhd
+tb_quad_opamp.vhd                               entity tb_quad_opamp                    TB_quad_opamp                   quad_opamp_wa.vhd
+tb_bit_to_analog.vhd                            entity tb_bit_to_analog                 TB_bit2analog                   bit_to_analog.vhd
+tb_std_logic_to_analog.vhd                      entity tb_std_logic_to_analog           TB_std_logic2analog             std_logic_to_analog.vhd
+tb_inv_integrator.vhd                           entity tb_inv_integrator                TB_inv_integrator               inverting_integrator.vhd
+tb_analog_switch.vhd                            entity tb_analog_switch                 TB_analog_switch                analog_switch.vhd
+tb_triangle_waveform.vhd                        entity tb_triangle_waveform             TB_triangle_waveform            triangle_waveform.vhd
+tb_comparator-1.vhd                             entity tb_comparator                    TB_comparator                   comparator-1.vhd
+tb_diode.vhd                                    entity tb_diode                         TB_diode                        diode.vhd

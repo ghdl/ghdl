@@ -1,0 +1,31 @@
+
+VESTs: Vhdl tESTs
+
+VESTs is a test suite for the VHDL language.  It is not intended to be a
+compliance suite or even a single unified test system for VHDL.  Instead
+it is designed be a public repository containing tests that can be
+meaningfully orgainized for the various versions or important subsets of
+the VHDL language.  We welcome and encourage contributions to VESTs with
+the restriction that the tests must be distributed under the GNU General
+Public License Version 2.  A copy of this license is in this directory
+in the file named COPYING.
+
+This directory contains the following subdirectories:
+
+vhdl-93:
+    Containing tests against the VHDL 1076-1993 language standard.
+
+vhdl-ams:
+    Containing tests against the VHDL 1076.1-1999 language standard.
+
+If you find errors or corrections to files contained herein or would
+like to submit additional tests for the VESTs suite, please contact us
+at vests@cliftonlabs.com.  Thank you.
+
+------------------------------------------------------------------------
+VESTs version 1.0
+Philip A. Wilsey 
+The University of Cincinnati
+vests@cliftonlabs.com
+------------------------------------------------------------------------
+Last Revised: March 27, 2002

@@ -1,0 +1,61 @@
+############################################################################
+################  Error cases in Billowitch ################################
+############################################################################
+
+[1]tc1158.vhd : synopsys treats differently the BASE attribute
+[2]tc2284.vhd : synopsys problem with multiplication and division of physical
+	        types and real and integer
+[3]tc2568.vhd : synopsys problem with universal real types, addition and
+	        equality
+[4]tc814.vhd  : wrong test case, should be PASSED TEST and not FAILED TEST
+[5]tc1120.vhd : type of the constrained range of the unconstrained array is
+	        not given
+[6]tc1148.vhd : type mismatch error
+[7]tc1150.vhd : same as above.
+[8]tc1779.vhd : Guess it is a typo, defining a architecture of an entity
+	        which is defined later.
+[9]tc232.vhdl : synopsys reports the following error : "Numeric type
+                definition range must be locally static". 
+[10]tc233.vhd  : same as above
+[11]tc237.vhd  : same as above
+[12]tc238.vhd  : same as above
+[13]tc3090.vhd : Synopsys reports that the attribute specification is wrong.
+	         Name must denote entity of specified class in this
+	         declarative region.
+[14]tc3124.vhd : Synopsys reports "component local ----- must be
+	         associated as an actual with at least one entity formal".
+[15]tc3129.vhd : ,,
+[16]tc3130.vhd : ,,
+[17]tc3131.vhd : ,,
+[18]tc3132.vhd : ,,
+[19]tc3133.vhd : ,,
+[20]tc3134.vhd : ,,
+[21]tc3135.vhd : ,,
+[22]tc3136.vhd : ,,
+[23]tc851.vhd  : Synopsys reports the following error :
+	         for G(three downto zero )
+		       ^
+	         Slice discrete range direction is opposite that to prefix.
+[24]tc865.vhd  : ,,
+[25]tc882.vhd  : word work missing in the entity used in the configuration
+	         declaration 
+[27]tc996.vhd  : non-existing architecture name
+[28]tc1021.vhd : has two blocks. when simulating in SYnopsys, it goes on
+	         for ever. There is no termination condition.
+[29]tc1737.vhd : works correctly in synopsys. But runs forever.
+[30]tc1738.vhd : ,,
+[31]tc3065.vhd : ,,
+[32]tc1675.vhd : synopsys hangs, but gives the "passed test" message
+[33]tc1740.vhd : synopsys hangs, but gives the "passed test" message
+[34]tc1749.vhd : ,,
+[35]tc3018.vhd : correct, but can't be simulated because, it is just a package
+[36]tc737.vhd  : Top level entity has a generic (GC3) with no default value.
+[37]tc758.vhd  : Synopsys gives this error message:Top level entity has a port
+   	         (VGEN18) which is either unconstrained/is of mode IN and has
+                 no default value.
+[38]tc816.vhd  : Synopsys does not give "PASSED TEST", but if the order of
+	         architecture is changed, then it is works.
+[39]tc833.vhd  : does not print "FAILED TEST" or "PASSED TEST",because there is
+   	         only "FAILED TEST" in the file and that too is commented
+                 out. Dont know why !! .
+

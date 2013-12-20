@@ -1,0 +1,37 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                 Chapter 23 - Case Study 4: Communications System
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+bfsk.vhd                                        entity bfsk                             behavioral                      Figure 23-3
+bfsk_wa.vhd                                     entity bfsk_wa                          behavioral                      --
+MeasFreq.vhd                                    entity MeasFreq                         ThresDetect                     Figure 23-5
+v_BPF.vhd                                       entity v_BPF                            behavioral                      Figure 23-8
+v_Sum.vhd                                       entity v_Sum                            behavioral                      Figure 23-9
+PLL.vhd                                         entity PLL                              behavioral                      Figure 23-12
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_pll.vhd                                      entity tb_pll                           tb_pll                          PLL.vhd
+tb_CS4_CommSys_PLL.vhd                          entity VCOAnalog                        behavioral
+--                                              entity vLeadLag                         behavioral
+--                                              entity vMult                            behavioral
+--                                              entity PLL                              PLL
+--                                              entity bfsk                             behavioral
+--                                              entity vLPF_2nd                         behavioral
+--                                              entity MeasFreq                         ThresDetect
+--                                              entity a2d_bit                          ideal
+--                                              entity tb_CS4_CommSys_PLL               TB_CS4_CommSys_PLL
+tb_CS4_CommSys_det.vhd                          entity capacitor                        ideal
+--                                              entity resistor                         ideal
+--                                              entity diode                            ideal
+--                                              entity EnvDetect                        EnvDetect
+--                                              entity bfsk                             behavioral
+--                                              entity vSum                             behavioral
+--                                              entity vLPF_2nd                         behavioral
+--                                              entity vBPF                             behavioral
+--                                              entity MeasFreq                         ThresDetect
+--                                              entity a2d_bit                          ideal
+--                                              entity tb_CS4_CommSys_det               TB_CS4_CommSys_det

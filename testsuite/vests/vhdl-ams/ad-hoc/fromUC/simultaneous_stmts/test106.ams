@@ -1,0 +1,85 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test106.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of Cincinnati
+----------------------------------------------------------------------
+-- File          : test106.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : Sept 2001
+----------------------------------------------------------------------
+-- Description :
+----------------------------------------------------------------------
+-- A simple resistor model...
+-- the test is done for checking the correct implementation 
+-- of the simple simultaneous equation statement.it checks 
+-- nature declaration, terminal and quantity declarations.
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH GROUND REFERENCE;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+END PACKAGE electricalSystem;
+use work.electricalSystem.all;
+
+entity test is
+end entity;
+
+architecture atest of test is
+terminal T1,T2, T3, T4,T5,T6:electrical;
+quantity VRgen across IRgen  through T1 to T2;
+quantity VLgen across ILgen through T2 to T3;
+quantity VRin across IRin through T3; 
+quantity VR1 across IR1 through T4 to T5;
+quantity VR1A across IR1A through T4 to T6;
+quantity VC1A across IC1A through T6 to T5;
+quantity VC1 across IC1 through T5;
+quantity VS across T1;
+constant C1: real:=3.5e-3;
+constant C1A: real:=0.3e-3;
+begin
+
+e1:     VRgen == IRgen*10.0;
+e2:     VLgen == 0.5*ILgen'dot;
+e3:     VRin == IRin*500.0;
+e4:	VR1 == IR1*1.0;
+e5:	VR1A == IR1A*0.2;
+e6:	IC1 == C1 * VC1'dot;
+e7:	IC1A == C1A*VC1A'dot;
+
+esource: VS == 5.0 * sin(2.0 *3.141592 *10000.0 * real(time'pos(now))*1.0e-12);
+
+end architecture atest;

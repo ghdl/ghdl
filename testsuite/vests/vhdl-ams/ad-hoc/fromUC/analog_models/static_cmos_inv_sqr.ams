@@ -1,0 +1,531 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: static_cmos_inv_sqr.ams,v 1.1 2002-03-27 22:11:16 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+-- This ckt is used to find the output characteristics of a cmos inverter
+-- The ckt used here is from sedra and smith's page no. 565, fig  13.13
+-- The mos W/L are according to the model specified in spice using the deck
+-- provided in the book. 
+-- The vgs, resistance is now removed, to avoid the RC effect on the imput.
+-- the square input is used 
+
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH;
+    FUNCTION POW(X,Y: real) RETURN real;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+END PACKAGE electricalSystem;
+
+
+-----------------------------------------------------------------------
+--                       G        B            D1    1.0 ohm          D
+--                        o      o-----|>|--o---o----/\/\---------o  /\
+--                        |      |          |   |                     |+
+--                   Vgs  <      -     Idsg( )  >                    Vdso
+--                        >      V          |   <                     |-
+--                        |      -          |   |                     |
+--                     S1 o------o--o------------------------------o S1V
+--                                  |
+--                                  >
+--                                  < rs= 1.0 ohm
+--                                  |
+--                                  0 S
+-----------------------------------------------------------------------
+
+----- NMOS 
+--use std.textio.all;
+use work.electricalsystem.all;
+
+entity nmos is
+    generic(mos_type : real := 1.0; -- +1.0 for nmos , -1.0 for pmos
+	    T : real := 300.0;
+	    W : real := 1.0;
+	    L : real := 1.0;
+	    vto : real := 1.0; -- Zero-bais threshold voltage
+	    kp : real := 2.0e-5; -- transcondiuctanec parameter
+	    gamma : real := 0.0; -- body-effect parameter
+	    phi : real := 0.6; -- surface inversion potential
+	    lambda : real := 0.02; -- channel lenght modulation
+	    tox : real := 1.0e-7; -- thin oxide thickness
+	    nsub : real := 0.0; -- Substrate doping
+	    nss : real := 0.0; -- Surface STate density
+	    ld : real := 0.0; -- lateral diffusion;
+	    tpg : real := 1.0; -- Type of Gate material
+	    uo : real := 600.0; -- Surface mobility
+	    af : real := 1.0; -- flicker noise exponent
+	    kf : real := 0.0; -- fliccker noise coefficient
+	    iss : real := 1.0e-14; -- bulk junction saturation current
+	    js : real := 0.0; -- bulk junctioin saturatioin current/ sqr meter
+	    pb : real := 0.80; -- bulk junction potential
+	    cj : real := 0.0; -- Zero-bias bulk capacitance/ sqr meter
+	    mj : real := 0.5; -- bulk junctioin grading coefficient
+	    cjsw : real := 0.0; -- Zero bias perimeter capacitance / sqr meter
+	    mjsw : real := 0.33; -- Perimiter capacitance rading coefficient
+	    fc : real := 0.5; -- forward-bais depletion capacitance coeff
+--  	    cgbo : real := 4.0e-10; -- gate-bulk overlap cap / meter
+--  	    cgdo : real := 1.5e-10; -- gate-drain overlap cap / meter
+--  	    cgso : real := 1.5e-10; -- gate-source overlap cap / meter
+	    cgbo : real := 2.0e-10; -- gate-bulk overlap cap / meter
+	    cgdo : real := 4.0e-11; -- gate-drain overlap cap / meter
+	    cgso : real := 4.0e-11; -- gate-source overlap cap / meter
+	    rd : real := 1.0; -- drain ohmic resistance
+	    rs : real := 1.0; -- source ohmic resistance
+	    rsh : real := 0.0); -- source and drain sheet resistance
+    port (terminal g,s,d,b : electrical);
+end entity nmos;
+
+architecture behav of nmos is
+  terminal d1, s1 : electrical;
+  quantity vds across idsg through d1 to s1;
+  quantity vdsr across idsr through d1 to d;
+  quantity vgs across igs through g to s1;
+  quantity vbs across ibs through b to s1;
+  quantity vbd across ibd through b to d1;
+-- new quantities added for source resistance
+  quantity vsr across isr through s1 to s;
+  quantity iss, isd : real := 1.0e-12;
+  quantity beta : real := 8.85e-05; -- gain
+  quantity leff : real := 1.0; -- effective length
+  constant gmin : real := 1.0e-12;
+  quantity vth : real := 0.5; -- threshold voltage
+  quantity ktq : real := 2.586e-2; -- (kT/q) thermal voltage at T=300K 
+  --constant k : real := 1.38e-23; -- J/K ..... boltzman constant 
+  -- T = 300 K ............ Absolute temperature
+  --constant q : real := 1.60e-19; -- C ....... magnitude of electron charge
+  constant cox_prime : real := 3.4515e-8; -- oxide capacitance per unit area F/cm2. cox_prime = EOX/TOX
+  quantity cox : real := 3.4515e-8;
+  quantity vds_free : real := 5.0;
+  quantity vgs_free : real := 0.0;
+  constant as : real := 15.0e-12; -- source area
+  constant ad : real := 15.0e-12; -- drain area
+  
+begin
+  ------ Setting initial conditions
+  initreg : break vgs => 0.0, vds => 5.0, vth => 0.5;
+
+  thres_volt : vth == vto + (gamma *(sqrt((2.0*phi)-vbs) - sqrt(phi)));
+  eff_length : leff == L - (2.0*ld);
+  therm_volt : ktq == 2.586e-2 * (T/300.0);
+  sat_scurr : iss == js*as;
+  sat_dcurr : isd == js*ad;
+--  gn : beta == 8.85e-05 * (W/L);
+  gn : beta == kp * ( w/leff);
+--  opn : vdsg == 1.0e9 * idsgi; -- almost open
+  d12_res : vdsr == idsr * rd;
+--  g12res : vgsr == igsr * rs;
+--  g_oup : vgs == igs * 1.0e9;
+--  oup_res : vds == ids * 1.0e9;
+  oup_res : vds_free == vds;
+  inp_res : vgs_free == vgs;
+  gre : vgs == igs * 1.0e9;
+  capeqn : cox == cox_prime * W * Leff; -- cox_prime * W * Leff
+  src_res : isr == vsr * rs;
+
+---- Current is in Micro Amps.
+-- Normal mode
+  ------ Cut off Region
+  regions : if((vgs < vth) and (vds >= 0.0))use
+	gncn : idsg == 1.0e-9 * vds;
+  ------ Linear Region
+  elsif((vds <= (vgs-vth)) and (vgs >= vth) and (vds >= 0.0)) use
+      	gnln : idsg == vds*beta*((vgs_free-vth) - (vds_free/2.0))*(1.0 + lambda*vds_free);
+  ------ Saturation Region
+  elsif((vds > vgs-vth) and (vgs >= vth) and (vds >= 0.0)) use
+     	gnsn : idsg == (beta/2.0)*(pow((vgs_free-vth),2.0))*(1.0 + lambda*vds_free);
+
+-- Inversion mode
+  ------ Cut off Region
+  elsif((vgs < vth) and (vds < 0.0))use
+	gnci : idsg == 1.0e-9 * vds;
+  ------ Linear Region
+  elsif(((-1.0*vds) <= (vgs-vth)) and (vgs >= vth) and (vds < 0.0)) use
+      	gnli : idsg == vds*beta*((vgs_free-vth) + (vds_free/2.0))*(1.0 - lambda*vds_free);
+  ------ Saturation Region
+  elsif(((-1.0*vds) > vgs-vth) and (vgs >= vth) and (vds < 0.0)) use
+     	gnsi : idsg == -1.0*(beta/2.0)*(pow((vgs_free-vth),2.0))*(1.0 - lambda*vds_free);
+  end use;
+  
+----- Substrate diode equations 
+  initsub : break vbd => 0.0, vbs => 0.0, ibs => 0.0, ibd => 0.0;
+  
+   ----- Substrate to source
+   subcond1 : if(vbs > 0.0) use
+	bulk1 : ibs == ((iss*(exp(vbs/ktq) - 1.0)) + (gmin*vbs));
+   elsif(vbs <= 0.0 ) use
+   	bulk2 : ibs == ((iss*(vbs/ktq)) + (gmin*vbs));
+   end use;
+   ----- Substrate to drain
+   subcond2 : if(vbd > 0.0) use
+	bulk3 : ibd == ((isd*(exp(vbd/ktq) - 1.0)) + (gmin*vbd));
+   elsif(vbd <= 0.0 ) use
+    	bulk4 : ibd == ((isd*(vbd/ktq)) + (gmin*vbd));
+   end use;
+
+end architecture behav; --- of nmos;
+
+
+-----------------------------------------------------------------------
+--                       G        B            D1    1.0 ohm          D
+--                        o      o-----|>|--o---o----/\/\---------o  /\
+--                        |      |          |   |                     |+
+--                   Vgs  <      -     Idsg( )  >                    Vdso
+--                        >      V          |   <                     |-
+--                        |      -          |   |                     |
+--                     S1 o------o--o------------------------------o S1V
+--                                  |
+--                                  >
+--                                  < rs= 1.0 ohm
+--                                  |
+--                                  0 S
+-----------------------------------------------------------------------
+
+----- PMOS 
+--use std.textio.all;
+use work.electricalsystem.all;
+
+entity pmos is
+    generic(mos_type : real := 1.0; -- +1.0 for nmos , -1.0 for pmos
+	    T : real := 300.0;
+	    W : real := 1.0;
+	    L : real := 1.0;
+	    vto : real := 1.0; -- Zero-bais threshold voltage
+	    kp : real := 2.0e-5; -- transcondiuctanec parameter
+	    gamma : real := 0.0; -- body-effect parameter
+	    phi : real := 0.6; -- surface inversion potential
+	    lambda : real := 0.02; -- channel lenght modulation
+	    tox : real := 1.0e-7; -- thin oxide thickness
+	    nsub : real := 0.0; -- Substrate doping
+	    nss : real := 0.0; -- Surface STate density
+	    ld : real := 0.0; -- lateral diffusion;
+	    tpg : real := 1.0; -- Type of Gate material
+	    uo : real := 600.0; -- Surface mobility
+	    af : real := 1.0; -- flicker noise exponent
+	    kf : real := 0.0; -- fliccker noise coefficient
+	    iss : real := 1.0e-14; -- bulk junction saturation current
+	    js : real := 0.0; -- bulk junctioin saturatioin current/ sqr meter
+	    pb : real := 0.80; -- bulk junction potential
+	    cj : real := 0.0; -- Zero-bias bulk capacitance/ sqr meter
+	    mj : real := 0.5; -- bulk junctioin grading coefficient
+	    cjsw : real := 0.0; -- Zero bias perimeter capacitance / sqr meter
+	    mjsw : real := 0.33; -- Perimiter capacitance rading coefficient
+	    fc : real := 0.5; -- forward-bais depletion capacitance coeff
+	    cgbo : real := 2.0e-10; -- gate-bulk overlap cap / meter
+	    cgdo : real := 4.0e-11; -- gate-drain overlap cap / meter
+	    cgso : real := 4.0e-11; -- gate-source overlap cap / meter
+	    rd : real := 1.0; -- drain ohmic resistance
+	    rs : real := 1.0; -- source ohmic resistance
+	    rsh : real := 0.0); -- source and drain sheet resistance
+    port (terminal g,s,d,b : electrical);
+end entity pmos;
+
+architecture behav of pmos is
+  terminal d1, s1 : electrical;
+  quantity vds across idsg through d1 to s1;
+  quantity vdsr across idsr through d1 to d;
+  quantity vgs across igs through g to s1;
+  quantity vbs across ibs through s1 to b;
+  quantity vbd across ibd through d1 to b;
+-- new quantities added for source resistance
+  quantity vsr across isr through s1 to s;
+  quantity iss, isd : real := 1.0e-12;
+  quantity beta : real := 8.85e-05; -- gain
+  quantity leff : real := 1.0; -- effective length
+  constant gmin : real := 1.0e-12;
+  quantity vth : real := 0.5; -- threshold voltage
+  quantity ktq : real := 2.586e-2; -- (kT/q) thermal voltage at T=300K 
+  --constant k : real := 1.38e-23; -- J/K ..... boltzman constant 
+  -- T = 300 K ............ Absolute temperature
+  --constant q : real := 1.60e-19; -- C ....... magnitude of electron charge
+  constant cox_prime : real := 3.4515e-8; -- oxide capacitance per unit area F/cm2. cox_prime = EOX/TOX
+  quantity cox : real := 3.4515e-8;
+  quantity vds_free : real := 5.0;
+  quantity vgs_free : real := 0.0;
+  constant as : real := 15.0e-12; -- source area
+  constant ad : real := 15.0e-12; -- drain area
+  
+begin
+  ------ Setting initial conditions
+  initreg : break vgs => 0.0, vds => 0.0, vth => 0.5;
+
+  thres_volt : vth == vto + (gamma *(sqrt((2.0*phi)-vbs) - sqrt(phi)));
+  eff_length : leff == L - (2.0*ld);
+  therm_volt : ktq == 2.586e-2 * (T/300.0);
+  sat_scurr : iss == js*as;
+  sat_dcurr : isd == js*ad;
+  gn : beta == kp * ( w/leff);
+  d12_res : vdsr == idsr * rd;
+  oup_res : vds_free == vds;
+  inp_res : vgs_free == vgs;
+  gre : vgs == igs * 1.0e9;
+  capeqn : cox == cox_prime * W * Leff; -- cox_prime * W * Leff
+  src_res : isr == vsr * rs;
+
+---- Current is in Micro Amps.
+-- Normal mode
+  ------ Cut off Region
+  regions : if((vgs > vth) and (vds <= 0.0))use
+	gncn : idsg == 1.0e-9 * vds;
+  ------ Linear Region
+  elsif((vds >= (vgs-vth)) and (vgs <= vth) and (vds <= 0.0)) use
+      	gnln : idsg == -1.0*vds*beta*((vgs_free-vth) - (vds_free/2.0))*(1.0 - lambda*vds_free);
+  ------ Saturation Region
+  elsif((vds < vgs-vth) and (vgs <= vth) and (vds <= 0.0)) use
+     	gnsn : idsg == -1.0*(beta/2.0)*(pow((vgs_free-vth),2.0))*(1.0 - lambda*vds_free);
+
+-- Inversion mode
+  ------ Cut off Region
+  elsif((vgs > vth) and (vds > 0.0))use
+	gnci : idsg == 1.0e-9 * vds;
+  ------ Linear Region
+  elsif(((-1.0*vds) >= (vgs-vth)) and (vgs <= vth) and (vds > 0.0)) use
+      	gnli : idsg == -1.0*vds*beta*((vgs_free-vth) + (vds_free/2.0))*(1.0 + lambda*vds_free);
+  ------ Saturation Region
+  elsif(((-1.0*vds) < vgs-vth) and (vgs >= vth) and (vds > 0.0)) use
+     	gnsi : idsg == (beta/2.0)*(pow((vgs_free-vth),2.0))*(1.0 + lambda*vds_free);
+  end use;
+  
+----- Substrate diode equations 
+  initsub : break vbd => 0.0, vbs => 0.0, ibs => 0.0, ibd => 0.0;
+  
+   ----- Substrate to source
+   subcond1 : if(vbs > 0.0) use
+	bulk1 : ibs == ((iss*(exp(vbs/ktq) - 1.0)) + (gmin*vbs));
+   elsif(vbs <= 0.0 ) use
+   	bulk2 : ibs == ((iss*(vbs/ktq)) + (gmin*vbs));
+   end use;
+   ----- Substrate to drain
+   subcond2 : if(vbd > 0.0) use
+	bulk3 : ibd == ((isd*(exp(vbd/ktq) - 1.0)) + (gmin*vbd));
+   elsif(vbd <= 0.0 ) use
+    	bulk4 : ibd == ((isd*(vbd/ktq)) + (gmin*vbd));
+   end use;
+
+end architecture behav; --- of pmos;
+
+
+---- DC Voltage source
+
+use work.electricalsystem.all;
+
+entity DCVSrc is
+	generic (v : real := 10.0); -- voltage
+	port (terminal pos, neg : electrical);
+end entity DCVSrc;
+
+architecture behav of DCVSrc is
+  terminal temp : electrical;
+  quantity vdc across idc through temp to neg;
+  quantity vtemp across itemp through pos to temp;
+
+begin
+
+  VSrc : vdc == v;
+  temp_volt : vtemp == itemp * 1.0e-03;
+
+end architecture behav; --- of DCVSrc
+
+------- Square wave generator
+
+use work.electricalsystem.all;
+
+entity sqr_gen is
+	generic (vlo : real := 0.0;
+	        vhi : real := 10.0;
+	        ped : time := 1 ns);
+	port (terminal pos, neg : electrical);
+end entity sqr_gen;
+
+architecture behav of sqr_gen is
+  quantity vsqr across isqr through pos to neg;
+  signal vsig : real := 0.0;
+  signal clk : bit := '0';
+begin
+
+  vsqr == vsig;
+  break on vsig;
+
+  clock : process
+  begin
+     clk <= '0';
+     wait for ped;
+     clk <= '1';
+     wait for ped;
+  end process; --- clock
+     
+
+  generator : process
+     variable xv : real := 0.0;
+  begin
+	if(clk = '1') then
+    	   xv := vhi;
+	elsif(clk = '0') then
+	   xv := vlo;
+   	end if;
+        vsig <= xv;
+	wait on clk;
+  end process; --- generator;
+
+end architecture behav; --- of sqr_gen
+
+
+------ inverter circuit
+
+use std.textio.all;
+use work.electricalsystem.all;
+
+entity inv is
+end entity;
+
+architecture test of inv is
+  terminal inv_in1, inv_in2, inv_src, inv_out : electrical;
+  quantity vrin across irin through inv_in1 to inv_in2;
+  quantity vcin across icin through inv_in2 to electrical'reference;
+  quantity vrout across irout through inv_out to electrical'reference;
+  quantity icout through inv_out to electrical'reference;
+
+  component nmos_comp is
+    generic(mos_type : real := 1.0; -- +1.0 for nmos , -1.0 for pmos
+	    T : real := 300.0;
+	    W : real := 1.0;
+	    L : real := 1.0;
+	    vto : real := 1.0; -- Zero-bais threshold voltage
+	    kp : real := 2.0e-5; -- transcondiuctanec parameter
+	    gamma : real := 0.0; -- body-effect parameter
+	    phi : real := 0.6; -- surface inversion potential
+	    lambda : real := 0.02; -- channel lenght modulation
+	    tox : real := 1.0e-7; -- thin oxide thickness
+	    nsub : real := 0.0; -- Substrate doping
+	    nss : real := 0.0; -- Surface STate density
+	    ld : real := 0.0; -- lateral diffusion;
+	    tpg : real := 1.0; -- Type of Gate material
+	    uo : real := 600.0; -- Surface mobility
+	    af : real := 1.0; -- flicker noise exponent
+	    kf : real := 0.0; -- fliccker noise coefficient
+	    iss : real := 1.0e-14; -- bulk junction saturation current
+	    js : real := 0.0; -- bulk junctioin saturatioin current/ sqr meter
+	    pb : real := 0.80; -- bulk junction potential
+	    cj : real := 0.0; -- Zero-bias bulk capacitance/ sqr meter
+	    mj : real := 0.5; -- bulk junctioin grading coefficient
+	    cjsw : real := 0.0; -- Zero bias perimeter capacitance / sqr meter
+	    mjsw : real := 0.33; -- Perimiter capacitance rading coefficient
+	    fc : real := 0.5; -- forward-bais depletion capacitance coeff
+--  	    cgbo : real := 4.0e-10; -- gate-bulk overlap cap / meter
+--  	    cgdo : real := 1.5e-10; -- gate-drain overlap cap / meter
+--  	    cgso : real := 1.5e-10; -- gate-source overlap cap / meter
+	    cgbo : real := 2.0e-10; -- gate-bulk overlap cap / meter
+	    cgdo : real := 4.0e-11; -- gate-drain overlap cap / meter
+	    cgso : real := 4.0e-11; -- gate-source overlap cap / meter
+	    rd : real := 1.0; -- drain ohmic resistance
+	    rs : real := 1.0; -- source ohmic resistance
+	    rsh : real := 0.0); -- source and drain sheet resistance
+     port (terminal g,s,d,b : electrical);
+  end component;
+  for all :nmos_comp use entity work.nmos(behav);
+
+  component pmos_comp is
+    generic(mos_type : real := 1.0; -- +1.0 for nmos , -1.0 for pmos
+	    T : real := 300.0;
+	    W : real := 1.0;
+	    L : real := 1.0;
+	    vto : real := 1.0; -- Zero-bais threshold voltage
+	    kp : real := 2.0e-5; -- transcondiuctanec parameter
+	    gamma : real := 0.0; -- body-effect parameter
+	    phi : real := 0.6; -- surface inversion potential
+	    lambda : real := 0.02; -- channel lenght modulation
+	    tox : real := 1.0e-7; -- thin oxide thickness
+	    nsub : real := 0.0; -- Substrate doping
+	    nss : real := 0.0; -- Surface STate density
+	    ld : real := 0.0; -- lateral diffusion;
+	    tpg : real := 1.0; -- Type of Gate material
+	    uo : real := 600.0; -- Surface mobility
+	    af : real := 1.0; -- flicker noise exponent
+	    kf : real := 0.0; -- fliccker noise coefficient
+	    iss : real := 1.0e-14; -- bulk junction saturation current
+	    js : real := 0.0; -- bulk junctioin saturatioin current/ sqr meter
+	    pb : real := 0.80; -- bulk junction potential
+	    cj : real := 0.0; -- Zero-bias bulk capacitance/ sqr meter
+	    mj : real := 0.5; -- bulk junctioin grading coefficient
+	    cjsw : real := 0.0; -- Zero bias perimeter capacitance / sqr meter
+	    mjsw : real := 0.33; -- Perimiter capacitance rading coefficient
+	    fc : real := 0.5; -- forward-bais depletion capacitance coeff
+--  	    cgbo : real := 4.0e-10; -- gate-bulk overlap cap / meter
+--  	    cgdo : real := 1.5e-10; -- gate-drain overlap cap / meter
+--  	    cgso : real := 1.5e-10; -- gate-source overlap cap / meter
+	    cgbo : real := 2.0e-10; -- gate-bulk overlap cap / meter
+	    cgdo : real := 4.0e-11; -- gate-drain overlap cap / meter
+	    cgso : real := 4.0e-11; -- gate-source overlap cap / meter
+	    rd : real := 1.0; -- drain ohmic resistance
+	    rs : real := 1.0; -- source ohmic resistance
+	    rsh : real := 0.0); -- source and drain sheet resistance
+     port (terminal g,s,d,b : electrical);
+  end component;
+  for all :pmos_comp use entity work.pmos(behav);
+  
+  component DCVSrc
+    generic (v : real := 10.0); -- voltage
+    port (terminal pos, neg : electrical);
+  end component;
+  for all : DCVSrc
+    use entity work.DCVSrc(behav);
+
+  component sqr_comp is
+     generic(vlo : real := 0.0;
+             vhi : real := 10.0;
+	     ped : time := 1 ns);
+     port (terminal pos, neg : electrical); 
+  end component;
+  for all : sqr_comp use entity work.sqr_gen(behav);
+  
+begin
+  sqr : sqr_comp  
+	generic map(0.0, 5.0,  50 ns)
+	port map(inv_in1, electrical'reference);
+  
+  inpdc : DCVSrc generic map (5.0)
+           port map(inv_src, electrical'reference);
+                           
+  resin : vrin == irin * 1.0e3;
+  capin : icin == 4.0e-12 * vcin'dot;
+  oup : vrout == irout * 1.0e9;
+  capbrk : break vcin => 5.0, vrout => 0.0;
+  capout : icout == 1.0e-13 * vrout'dot;
+  nm : nmos_comp
+    generic map(vto => 0.7, w => 3.0e-6, l => 3.0e-6, cj => 0.00044, cjsw => 4.0e-4, mj => 0.5, mjsw => 0.3, pb => 0.7, js => 1.0e-5)
+    port map(inv_in2, electrical'reference, inv_out, electrical'reference);
+
+  pm : pmos_comp
+    generic map(vto => -0.7, w => 9.0e-6, l => 3.0e-6, cj => 0.00015, cjsw => 4.0e-4, mj => 0.6, mjsw => 0.6, pb => 0.6, js => 1.0e-5)
+    port map(inv_in2, inv_src, inv_out, inv_src);	  
+
+end architecture test; -- inv

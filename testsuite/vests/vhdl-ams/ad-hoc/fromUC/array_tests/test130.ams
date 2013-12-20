@@ -1,0 +1,70 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test130.ams,v 1.1 2002-03-27 22:11:16 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+package electricalSystem is
+    NATURE electrical IS real ACROSS real THROUGH ground reference; 
+    FUNCTION POW(X,Y: real) RETURN real;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    nature electrical_vector is array(natural range<>) of electrical;
+    subnature el_vec is electrical_vector(0 to 3);
+END PACKAGE electricalSystem;
+
+use work.electricalSystem.all;
+
+entity test is
+generic( a: real);
+port( terminal ip: el_vec;
+      terminal op:electrical);
+end entity;
+
+architecture atest of test is
+variable a:real:=5.0;
+variable output:real:=0.0;
+quantity vin0 across ip(0) to op;
+quantity vin1 across ip(1) to op;
+quantity vin2 across ip(2) to op;
+quantity vin3 across ip(3) to op;
+quantity vout across iout through op;
+
+begin
+
+e1: vin0 == 5.0* sin(2.0*3.14*10.0*real(time'pos(now))*1.0e-9);
+e2: vin1 == 5.0* sin(2.0*3.14*10.0*real(time'pos(now))*1.0e-9);
+e3: vin2 == 5.0* sin(2.0*3.14*10.0*real(time'pos(now))*1.0e-9);
+e4: vin3 == 5.0* sin(2.0*3.14*10.0*real(time'pos(now))*1.0e-9);
+
+vout == (vin0+vin1+vin2+vin3)*a;
+
+end architecture atest;

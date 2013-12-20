@@ -1,0 +1,39 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                         Chapter 4 - Composite Data Types
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+coeff_ram.vhd                                   package coeff_ram_types                 --                              Section 4.1
+--                                              entity coeff_ram                        abstract                        Figure 4-1
+transmission_lines.vhd                          package transmission_lines_types        --                              Section 4.1
+--                                              entity transmission_lines               abstract                        Figure 4-2
+modem_controller.vhd                            entity modem_controller                 test                            Figure 4-4
+and_multiple.vhd                                entity and_multiple                     behavioral                      Figure 4-5
+tb_and_multiple.vhd                             tb_and_multiple                         test_behavioral                 Section 4.2
+byte_swap.vhd                                   package byte_swap_types                 --                              Section 4.3
+--                                              entity byte_swap                        behavior                        Figure 4-6
+computer.vhd                                    entity computer                         system_level                    Figure 4-7
+inline_01.vhd                                   entity inline_01                        test                            Section 4.1
+inline_02a.vhd                                  entity inline_02a                       test                            Section 4.1
+inline_03.vhd                                   entity inline_03                        test                            Section 4.1
+inline_04a.vhd                                  entity inline_04a                       test                            Section 4.1
+inline_05.vhd                                   entity inline_05                        test                            Section 4.1
+inline_06a.vhd                                  entity inline_06a                       test                            Section 4.1
+inline_07a.vhd                                  entity inline_07a                       test                            Section 4.1
+inline_08.vhd                                   entity inline_08                        test                            Section 4.2
+inline_09a.vhd                                  entity inline_09a                       test                            Section 4.2
+inline_10.vhd                                   entity inline_10                        test                            Section 4.2
+inline_11a.vhd                                  entity inline_11a                       test                            Section 4.2
+inline_12.vhd                                   entity inline_12                        test                            Section 4.3
+inline_13.vhd                                   entity inline_13                        test                            Section 4.3
+inline_14a.vhd                                  entity inline_14a                       test                            Section 4.3
+inline_15.vhd                                   entity inline_15                        test                            Section 4.3
+inline_16.vhd                                   entity inline_16                        test                            Section 4.4
+inline_17a.vhd                                  entity inline_17a                       test                            Section 4.4
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_coeff_ram.vhd                                entity tb_coeff_ram                     test_abstract                   coeff_ram.vhd
+tb_byte_swap.vhd                                entity tb_byte_swap                     test_behavior                   byte_swap.vhd

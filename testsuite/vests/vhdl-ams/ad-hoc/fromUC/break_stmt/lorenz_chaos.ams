@@ -1,0 +1,56 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: lorenz_chaos.ams,v 1.1 2002-03-27 22:11:17 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+entity LorenzChaos is 
+end entity LorenzChaos; 
+
+architecture Chaotic of LorenzChaos is 
+
+    constant s: real := 10.0;    -- define equation parameters s,b,r 
+    constant b: real := 8.0/3.0; 
+    constant r: real := 28.0; 
+    quantity x: real;
+    quantity y: real;
+    quantity z: real;
+    
+begin 
+    -- set an initial condition to guarantee chaotic behaviour: 
+   br:break x=> y , y => 5.0, z => 25.0; 
+   br1:break when y'above(25.0);
+   
+    -- equation set: 
+    eq1:x == y-(x'dot/s); 
+    eq2:y == r*x-x*z-y'dot; 
+    eq3:z == (x*y -z'dot)/b;
+ 
+end architecture Chaotic; 

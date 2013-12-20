@@ -1,0 +1,18 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                        Chapter 1 - Fundamental Concepts
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+adc.vhd                                         entity adc                              ideal, struct                   Figures 1-13, 1-14, 1-17
+resistor.vhd                                    entity resistor                         ideal                           Figure 1-16
+vc_amp.vhd                                      entity vc_amp                           ideal                           Figure 1-16
+comparator.vhd                                  entity comparator                       ideal                           Figure 1-16
+d_ff.vhd                                        entity d_ff                             basic                           Figure 1-16
+propulsion.vhd                                  entity propulsion                       mixed                           Figure 1-18
+test_bench-1.vhd                                entity test_bench                       example                         Figure 1-19
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_adc.vhd                                      entity tb_adc                           tb_adc                          adc.vhd

@@ -1,0 +1,34 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                          Chapter 19 - Guards and Blocks
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+computer_system.vhd                             entity computer_system                  top_level                       Figure 19-1
+processor.vhd                                   entity processor                        rtl                             Figure 19-2
+resolve.vhd                                     package resolve                         body                            Section 19.1, Figure 19-4
+tri_state_reg.vhd                               entity tri_state_reg                    behavioral                      Section 19.1, Figure 19-5
+data_logger.vhd                                 entity data_logger                      high_level                      Figure 19-6
+reg_read_selector.vhd                           entity reg_read_selector                test                            Figure 19-7
+processor_node.vhd                              entity processor_node                   dataflow                        Figure 19-8
+latch.vhd                                       entity latch                            behavioral                      Figure 19-9
+computer_system-1.vhd                           entity computer_system_abstract         abstract                        Figure 19-10
+sensor.vhd                                      entity sensor                           detailed_timing                 Figures 19-12, 19-13
+example_entity.vhd                              entity example_entity                   contrived                       Figure 19-14
+circuit.vhd                                     entity circuit                          with_pad_delays                 Figure 19-15
+full.vhd                                        entity real_subcircuit                  basic                           --
+--                                              configuration full                      --                              Figure 19-16
+inline_01.vhd                                   entity inline_01                        test                            Section 19.1
+inline_02.vhd                                   entity inline_02                        test                            Section 19.1
+inline_03.vhd                                   entity inline_03                        test                            Section 19.1
+inline_04.vhd                                   entity inline_04                        test                            Section 19.2
+inline_05.vhd                                   entity inline_05                        test                            Section 19.2
+inline_06.vhd                                   entity inline_06                        test                            Section 19.2
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_tri_state_reg.vhd                            entity tb_tri_state_reg                 test                            tri_state_reg.vhd
+tb_latch.vhd                                    entity tb_latch                         test                            latch.vhd
+tb_sensor.vhd                                   entity tb_sensor                        tb_sensor                       sensor.vhd
+tb_full.vhd                                     entity tb_full                          test                            full.vhd

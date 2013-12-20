@@ -1,0 +1,36 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                              Chapter 13 - Frequency and Transfer Function Modeling
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+v_source.vhd                                    entity v_source                         behavior                        Figure 13-3
+v_source-1.vhd                                  entity v_source                         behavior                        Figure 13-4
+nmos_transistor.vhd                             entity NMOS_transistor                  noisy                           Figure 13-5
+nmos_transistor_wa.vhd                          entity nmos_transistor_wa               noisy                           --
+lowpass-1.vhd                                   entity resistor                         ideal                           --
+--                                              entity capacitor                        ideal                           --
+--                                              entity lowpass                          RC                              Figure 13-7
+lowpass-2.vhd                                   entity lowpass                          dot                             Figure 13-9
+lowpass-3.vhd                                   entity lowpass                          ltf                             Figure 13-11
+opamp.vhd                                       entity opamp                            slew_limited                    Figure 13-13
+opamp_2pole.vhd                                 entity opamp_2pole                      dot, ltf                        Figure 13-15
+opamp_2pole_res.vhd                             entity opamp_2pole_res                  ltf                             Figure 13-16
+lowpass-4.vhd                                   entity lowpass                          z_minus_1                       Figure 13-17
+lowpass-5.vhd                                   entity lowpass                          ztf                             Figure 13-19
+lowpass.vhd                                     entity lowpass                          RC, dot, ltf, z_minus_1, ztf    Figure 13-22
+inline_01a.vhd                                  entity inline_01a                       test                            Section 13.1
+inline_02a.vhd                                  entity inline_02a                       test                            Section 13.2
+inline_03a.vhd                                  entity inline_03a                       test                            Section 13.3
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_v_source.vhd                                 entity tb_v_source                      TB_v_source                     v_source.vhd
+tb_mosfet_noisy.vhd                             entity tb_mosfet_noisy                  TB_mosfet_noisy                 nmos_transistor_wa.vhd
+tb_opamp.vhd                                    entity tb_opamp                         TB_opamp                        opamp.vhd
+tb_opamp_2pole.vhd                              entity tb_opamp_2pole                   TB_opamp_2pole                  opamp_2pole.vhd
+tb_lpf_dot_ltf_ztf-1.vhd                        entity tb_lpf_dot_ltf_ztf               TB_lpf_dot_ltf_ztf              lowpass-1.vhd, lowpass-2.vhd,
+--                                                                                                                      lowpass-3.vhd, lowpass-4.vhd,
+--                                                                                                                      lowpass-5.vhd
+tb_lpf_dot_ltf_ztf.vhd                          entity tb_lpf_dot_ltf_ztf               TB_lpf_dot_ltf_ztf              lowpass.vhd

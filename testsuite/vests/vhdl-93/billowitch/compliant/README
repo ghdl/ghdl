@@ -1,0 +1,8 @@
+The following files have been modified to be VHDL 93 compliant.  (In 
+VHDL 87, string literals like B"0010" had to be of type bit vector.  Now,
+they can be of any character type.)
+
+tc2759.vhd
+tc2761.vhd
+tc2767.vhd 
+tc2768.vhd

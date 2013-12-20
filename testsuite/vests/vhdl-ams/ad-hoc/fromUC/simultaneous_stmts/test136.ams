@@ -1,0 +1,85 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test136.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of Cincinnati
+-- Cincinnati
+----------------------------------------------------------------------
+-- File          : test136.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : Sept 2001
+-- Last modified :
+----------------------------------------------------------------------
+-- Description :
+----------------------------------------------------------------------
+-- A resistor bridge network...
+-- the test is done for checking the correct implementation
+-- of the simple simultaneous equation statement.it checks
+-- nature declaration, terminal and quantity declarations.
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+END PACKAGE electricalSystem;
+use work.electricalSystem.all;
+
+entity test is
+end entity;
+
+architecture mesh of test is
+
+terminal t1, t2, t4 : electrical;
+quantity v1 across i1 through t1 to t2;
+quantity v2 across i2 through t2;
+quantity v3 across i3 through t4;
+quantity v4 across i4 through t1 to t4;
+quantity v5 across i5 through t1;
+quantity vs across t1;
+
+begin
+
+e1:	v1== i1*10.0;
+e2:	v2== i2*10.0;
+e3:	v3== i3*10.0;
+e4:	v4== i4*10.0;
+e5:	v5== i5*20.0;
+
+esource: vs== 10.0 * sin(2.0 *3.141592 *10000.0 * real(time'pos(now))*1.0e-15);
+
+end architecture mesh;
+
+

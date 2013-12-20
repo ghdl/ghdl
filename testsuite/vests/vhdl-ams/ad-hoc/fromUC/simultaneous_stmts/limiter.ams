@@ -1,0 +1,153 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: limiter.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+--
+--	    		R1(10.0)   R2(10.0)	
+--		o----^^^^^^^^------o-^^^--o--------------o 
+--	       V_in		 T1|	  |            V_out		
+--				   |	  |		
+--				   |	  |		
+--			 	  _|_	 ---  
+--			          \ /	 / \
+--				  ---	 ---
+--				   |	  |	
+--				T2 o	  o T3	
+--				   |	  |	
+--				 -----	 ---
+--				  ---   -----	 	
+--  				   |	  |	
+--  				   |	  |	
+--  	    V_in_gnd		   |	  |	     V_out_gnd	
+--		o----------------------------------------o		
+
+
+ PACKAGE electricalsystem IS
+     NATURE electrical IS real ACROSS real THROUGH ground reference;
+     FUNCTION SIN(X:real) RETURN real;
+     FUNCTION EXP(X:real) RETURN real;
+ END PACKAGE electricalsystem;
+
+-------------------------- LIMITER ------------------------------
+use work.electricalsystem.all;
+
+entity limiter is 
+generic (lim:real:=1.0);
+port (terminal v_in,v_out :electrical);
+end entity limiter;
+
+architecture behav of limiter is
+
+terminal t1,t2,t3 :electrical;
+
+constant    k:real := 0.02586; 		-- thermal voltage
+constant  iss:real := 1.8104e-15;	
+constant gmin:real := 1.0e-12;
+
+quantity vd1 across id1 through t1 to t2;
+quantity vd2 across id2 through t3 to v_out;
+quantity V_volt1 across i_volt1 through t2 to ground ;
+quantity V_volt2 across i_volt2 through ground to t3;
+quantity v_r1 across i_r1 through V_in to T1;
+quantity v_r2 across i_r2 through T1 to V_out;
+
+BEGIN
+ 
+	if (vd1 >= (-5.0*k)) use
+		  id1 == iss * (exp(vd1/k)-1.0) + vd1*gmin;
+	elsif (vd1<-5.0*k) use
+		  id1 == -1.0*iss + vd1*gmin;
+	end use;
+
+	if (vd2 >= (-5.0*k)) use
+		  id2 == iss * (exp(vd2/k)-1.0) + vd2*gmin;
+	elsif (vd2<-5.0*k) use
+		  id2 == -1.0*iss + vd2*gmin;
+	end use;
+	V_volt1 == (lim);
+	V_volt2 == (lim);
+        V_r1 == i_r1*10.0;
+        V_r2 == i_r2*10.0;
+
+end architecture behav;
+
+
+--------------------------- Test Waveforms -----------------------------
+
+use work.electricalsystem.all;
+ENTITY sineSource IS
+generic( amp:real:=1.0);
+  PORT( TERMINAL ta2,tb2 : electrical);
+END sineSource;
+
+ARCHITECTURE sinebehavior OF sineSource IS
+quantity Vsine across isine through ta2 to tb2;
+
+BEGIN
+  Vsine == (amp*sin((2.0*22.0/7.0*10.7e6)*real(time'pos(now))*1.0e-15));
+
+END ARCHITECTURE sinebehavior;
+    
+
+------------------------------ Test Case -------------------------------
+use work.electricalsystem.all;
+entity testbench is
+end entity;
+
+architecture basic of testbench is 
+
+
+terminal t1,t2 :electrical;
+
+quantity v_out across i_out through t2 to ground;
+
+component limiter is
+generic (lim:real:=1.0);
+port(terminal v_in,v_out :electrical);
+end component;
+
+component sinesource is
+generic( amp:real:=1.0);
+  PORT( TERMINAL ta2,tb2 : electrical);
+end component;
+
+BEGIN
+
+lim : limiter    generic map(lim=>3.0)
+	         port map(t1,t2);
+
+sine: sinesource generic map(amp=>6.0)
+		 port map(t1,ground);
+
+v_out ==i_out*1.0e3;
+
+end basic;

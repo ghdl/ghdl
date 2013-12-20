@@ -1,0 +1,72 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test138.ams,v 1.1 2002-03-27 22:11:18 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+package mosdata is 
+-- 
+ type mosmodel is 
+  record 
+     vt0    : real; 
+     kp     : real; 
+  end record mosmodel;
+
+  nature electrical is real across real through ground reference;
+   FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    FUNCTION POW(X,Y : real) RETURN real;
+
+end package mosdata;
+
+use work.mosdata.all;
+
+entity test is
+generic (
+	  model: mosmodel:=(
+			    vt0 => 0.7,
+			    kp => 1.0);
+				
+	 constant a: real:=1.0
+	);
+end entity;
+
+architecture atest of test is
+terminal t1, t2: electrical;
+quantity vr across ir through t1 to t2;
+quantity vs across t1;
+
+begin
+e1: vs== 5.0 * sin(2.0 * 3.141592 *10000.0 * real(time'pos(now))*1.0e-12);
+
+e2: vr== ir* model.kp*a  + model.vt0;
+
+end architecture atest;

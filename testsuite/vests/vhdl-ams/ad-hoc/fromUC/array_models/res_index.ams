@@ -1,0 +1,104 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: res_index.ams,v 1.2 2003-08-05 15:14:24 paw Exp $
+-- $Revision: 1.2 $
+--
+-- ---------------------------------------------------------------------
+
+PACKAGE electricalSystem IS
+    subtype voltage is real ;
+    subtype current is real ;
+
+   NATURE electrical IS voltage ACROSS current THROUGH Ground reference;
+   NATURE electrical_vector is array(natural range<>) of electrical ;
+   type real_vector is array(natural range<>) of voltage ;
+	subtype real_vec4 is real_vector(0 to 3);
+   subnature el_vect4 is electrical_vector(0 to 3);
+   FUNCTION SIN(X : real) RETURN real;
+END PACKAGE electricalSystem;
+
+use work.electricalsystem.all;
+
+--entity declaration
+
+ENTITY RLC IS
+
+END RLC;
+
+--architecture declaration
+
+ARCHITECTURE behavior  OF RLC IS
+
+
+   terminal n1, n4 : electrical;
+   terminal n2 , n3: el_vect4;
+
+  --quantity V across I through n1(0 to 2) to n1(1 to 3);
+  quantity V1 across I1 through n1 to n2;
+  quantity V2 across I2 through n2 to n3;
+  quantity V3 across I3 through n3 to n4;
+  quantity Vout across Iout through n4;
+  --quantity vs across n1(0) ;
+  quantity vs across n1 ;
+   constant r1 : REAL := 200.0;
+   constant r2 : REAL := 200.0;
+   constant r3 : REAL := 200.0;
+   constant r4 : REAL := 200.0;
+
+	signal my_sig : real_vec4 ;
+
+BEGIN 
+-- the below statement parses but seems like 'delayed is not
+-- there in VHDL.
+--my_sig(2) <= my_sig(1)'delayed(5 ns) * 10.0;
+--my_sig(3) <= my_sig(2) * 10.0;
+-- the four statement are equivalent to 
+-- V == I * r1 ;
+-- also the operator * should be overloaded
+
+--res0:	 V1 == I1 * r1;
+--res1:	 V == I * r1;
+--res1:	 V(0) ==  5.0 ;
+res1 :   V1(0) == I1(0) * r1;
+res2 :   V1(1) == I1(1) * r1;
+res3 :   V1(2) == I1(2) * r1;
+res4 :   V1(3) == I1(3) * r1;
+res11 :   V2(0) == I2(0) * r1;
+res21 :   V2(1) == I2(1) * r1;
+res31 :   V2(2) == I2(2) * r1;
+res41 :   V2(3) == I2(3) * r1;
+res111 :   V3(0) == I3(0) * r1;
+res211 :   V3(1) == I3(1) * r1;
+res311 :   V3(2) == I3(2) * r1;
+res411 :   V3(3) == I3(3) * r1;
+res641 :   Vout == Iout * r1;
+vsrc : vs  == 5.0 * sin(2.0 * 3.1415 * 10.0 --sine source
+                           * real(time'pos(now)) * 1.0e-9);
+
+END architecture behavior;

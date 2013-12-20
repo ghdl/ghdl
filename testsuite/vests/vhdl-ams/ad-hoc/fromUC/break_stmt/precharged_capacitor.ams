@@ -1,0 +1,67 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: precharged_capacitor.ams,v 1.1 2002-03-27 22:11:17 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+-- This is a model of discharging of a precharged capacitor
+-- Break statement has been used here to set the initial 
+-- value of the voltage to which the capacotor was charged
+-- authors: Shishir Agrawal
+--          Vikram
+--          Sanjiv Pandey
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH Ground REFERENCE;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    FUNCTION POW(X,Y : real) RETURN real;
+END PACKAGE electricalSystem;
+
+use work.electricalsystem.all;
+
+ENTITY RC IS
+END;
+
+ARCHITECTURE behav OF RC IS
+    TERMINAL n1,n2: ELECTRICAL;
+    QUANTITY v_in ACROSS i_in THROUGH  n1;
+    QUANTITY u_r ACROSS i_r THROUGH n1 TO n2;
+    QUANTITY u_c ACROSS i_c THROUGH n2;
+BEGIN
+
+
+    b1: BREAK  u_c => 0.5;       	--initvalue
+
+    e1: v_in == 0.0;      			--constant  voltage source
+    e2: i_r  == u_r  / 1000.0;      --resistor  equation
+    e3: i_c  == 1.0e-6 * u_c'dot;   --capacitor equation
+END;

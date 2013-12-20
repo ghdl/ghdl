@@ -1,0 +1,18 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    Utilities
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+clock_duty.vhd                                  entity clock_duty                       ideal
+gain.vhd                                        entity gain                             simple
+resistor.vhd                                    entity resistor                         ideal
+src_constant.vhd                                entity src_constant                     ideal
+src_pulse.vhd                                   entity src_pulse                        ideal
+src_sine.vhd                                    entity src_sine                         ideal
+sum2.vhd                                        entity sum2                             simple
+stimulus_generators.vhd                         package stimulus_generators             body
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------

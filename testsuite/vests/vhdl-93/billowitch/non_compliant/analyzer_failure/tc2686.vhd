@@ -1,0 +1,47 @@
+
+-- Copyright (C) 2001 Bill Billowitch.
+
+-- Some of the work to develop this test suite was done with Air Force
+-- support.  The Air Force and Bill Billowitch assume no
+-- responsibilities for this software.
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- VESTs is free software; you can redistribute it and/or modify it
+-- under the terms of the GNU General Public License as published by the
+-- Free Software Foundation; either version 2 of the License, or (at
+-- your option) any later version. 
+
+-- VESTs is distributed in the hope that it will be useful, but WITHOUT
+-- ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+-- FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+-- for more details. 
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: tc2686.vhd,v 1.2 2001-10-26 16:30:21 paw Exp $
+-- $Revision: 1.2 $
+--
+-- ---------------------------------------------------------------------
+
+ENTITY c13s04b01x00p02n01i02686ent IS
+  --ERROR: only 1 decimal point allowed in real literal
+  constant A1: REAL:=3.5.7;   -- failure_here
+END c13s04b01x00p02n01i02686ent;
+
+ARCHITECTURE c13s04b01x00p02n01i02686arch OF c13s04b01x00p02n01i02686ent IS
+
+BEGIN
+  TESTING: PROCESS
+  BEGIN
+    assert FALSE
+      report "***FAILED TEST: c13s04b01x00p02n01i02686 - Two decimal points are not permitted in real literals."
+      severity ERROR;
+    wait;
+  END PROCESS TESTING;
+
+END c13s04b01x00p02n01i02686arch;

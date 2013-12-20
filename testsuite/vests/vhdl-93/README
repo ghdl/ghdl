@@ -1,0 +1,28 @@
+
+This directory contains tests for the 1076-1993 standard.  It contains
+the following subdirectories:
+
+ad-hoc:
+    Containing tests collected from various sources.  In general tests
+    in this subdirectory are one-off constructions that have been
+    made available for us to include in VESTs.
+
+ashenden: 
+    Containing tests from The Designer's Guild to VHDL written by Peter
+    Ashenden and published by Morgan Kaufmann Publishers, Inc in 1996.
+
+billowitch: 
+    Containing tests that were originally developed by Bill Billowitch
+    for the VHDL 1076-1987 language standard.
+
+If you find errors or corrections to these files or would like to submit
+additional tests for the VESTs suite, please contact us at
+vests@cliftonlabs.com.  Thank you.
+
+------------------------------------------------------------------------
+Philip A. Wilsey 
+The University of Cincinnati
+vests@cliftonlabs.com
+------------------------------------------------------------------------
+Last Revised: March 27, 2002
+

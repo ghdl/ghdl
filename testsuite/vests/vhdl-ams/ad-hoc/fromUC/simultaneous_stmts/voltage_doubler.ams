@@ -1,0 +1,227 @@
+
+-- Copyright (C) 1997-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: voltage_doubler.ams,v 1.1 2002-03-27 22:11:20 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- Title         : Voltage doubler circuit 
+-- Project       : Mixed signal simulation
+----------------------------------------------------------------------
+-- File          : voltageDoubler.ams
+-- Author        : Kathiresan Nellayappan  <knellaya@ececs.uc.edu>
+--                 Chandrashekar L Chetput <cchetput@ececs.uc.edu>
+-- Created       : 26.11.1997
+----------------------------------------------------------------------
+-- Description :
+-- VHDL-AMS description of a voltage doubler circuit
+-- STRUCTURAL DESCRIPTION.
+----------------------------------------------------------------------
+--
+-- The ciruit schematic for the voltage doubler circuit is as below:
+-- =================================================================
+--      
+--  T1       C1      T2   diode D2    T3
+--  o_________||_____o_____|<|________o_____o_  The circuit comprises:
+--  |         ||     |                |        i)A sinusoidal voltage
+--  |        1microF |                |                    source.
+-- ( )               __             _____     ii)  2 capacitors.
+--  |Vs              \/diode        ----- C2 = 1microF iii) 2 diodes.
+--  |=10sinwt        -- D1            |                  
+--  |                |                |
+--  |                |                |
+--  o________________|________________|_____o_
+--                           |gnd
+--                         -----
+-- The diode is modelled as a component and then instantiated twice.
+-- The diode model used is a spice behavioral model of a real diode.
+-- 
+----------------------------------------------------------------------
+
+
+--Package defining eleectrical nature and some functions...
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+END PACKAGE electricalSystem;
+
+----------------------------------------------------------------------
+-- The diode component definition.....
+USE work.electricalSystem.ALL;
+
+----------------------------------------------------------------------
+-- Schematic of the diode component:
+-- 
+--        Ta o----|>|----o Tb
+--
+----------------------------------------------------------------------
+
+ENTITY diodeReal IS
+  PORT( TERMINAL ta,tb : electrical);
+END diodeReal;
+
+
+ARCHITECTURE behavior OF diodeReal IS
+  
+  QUANTITY d_V ACROSS d_I THROUGH ta TO tb;
+  CONSTANT saturation_current : real := 0.0000000000001;
+  CONSTANT Vt : real := 0.025;
+  CONSTANT neg_sat : real := -saturation_current; 
+  CONSTANT IBV : real := 0.001;
+  CONSTANT  PI :  real := 3.14159_26535_89793_23846;  
+  CONSTANT BV : real := -100.0;
+
+BEGIN
+
+  IF( d_V >= ((-5.0) * Vt) ) USE 
+    diode1St1:   d_I == saturation_current * (exp(d_V/Vt) - 1.0);
+  ELSIF( (d_V < ((-5.0) * Vt)) AND (d_V > BV)) USE
+    diode1St2:    d_I == neg_sat;
+  ELSIF(d_V = BV) USE
+    diode1St3: d_I == -IBV;
+  ELSE
+    diode1St4: d_I == neg_sat * (exp((BV + d_V)/Vt) -1.0 +((-BV)/Vt));
+  END USE;
+
+END ARCHITECTURE behavior;
+
+----------------------------------------------------------------------
+-- The capacitor definition begins.....
+USE work.electricalSystem.ALL;
+----------------------------------------------------------------------
+-- Schematic of the capacitor component:
+-- 
+--        Ta1 o----||----o Tb1
+--
+----------------------------------------------------------------------
+--entity declaration.
+ENTITY capacitor IS
+     --capacitance value given as a generic parameter.
+  GENERIC( C : real := 1.0e-6);
+  PORT( TERMINAL ta1,tb1 : electrical);--Interface ports.
+END capacitor;
+
+--architecture declaration.
+ARCHITECTURE capbehavior OF capacitor IS
+--quantity declarations.
+-- --voltage across and current through  the capacitor.  
+  quantity Vc across Ic through ta1 to tb1;
+                                        
+BEGIN
+
+  Ic == C*Vc'dot; -- The ohmic resistance equation.
+
+END ARCHITECTURE capbehavior;
+----------------------------------------------------------------------
+-- The sinusoidal voltage source definition begins.....
+USE work.electricalSystem.ALL;
+----------------------------------------------------------------------
+-- Schematic of the sinusoidal voltage source:
+-- -------------------------------------------
+--
+--        Ta2 o----(~)----o Tb2 a sinusoidal voltage of amplitude V
+--                  Vs          and frequency 'f'.
+----------------------------------------------------------------------
+--entity declaration.
+ENTITY sineSource IS
+     --frequency value and voltage value given as generic parameters.
+  GENERIC( f : real := 100000.0; 
+	   v : real := 10.0    );
+  PORT( TERMINAL ta2,tb2 : electrical);--Interface ports.
+END sineSource;
+
+--architecture declaration.
+ARCHITECTURE sinebehavior OF sineSource IS
+--quantity declarations.  
+  quantity Vsine across Isine through ta2 to tb2; 
+
+BEGIN
+
+  -- The sinusoidal voltage source equation.
+  vsource: Vsine == V * sin(2.0 * (22.0/7.0) * f *
+                 real(time'pos(now)) * 1.0e-15);
+
+END ARCHITECTURE sinebehavior;
+
+----------------------------------------------------------------------
+--The description of the voltage doubler begins here.....
+
+USE work.electricalSystem.ALL;
+
+ENTITY voltage_doubler IS
+END voltage_doubler;
+
+ARCHITECTURE vdBehavior OF voltage_doubler IS
+
+  TERMINAL t1, t2, t3 : electrical;
+
+  COMPONENT diodeRealComp 
+      PORT(TERMINAL ta,tb : electrical);
+  END COMPONENT;
+
+  FOR ALL : diodeRealComp USE ENTITY work.diodeReal(behavior);
+
+  COMPONENT capacitorComp IS
+  GENERIC( C : real := 1.0e-6);
+  PORT( TERMINAL ta1,tb1 : electrical);
+  END COMPONENT;
+
+  FOR ALL :  capacitorComp USE ENTITY work.capacitor(capbehavior);
+
+  COMPONENT sineSourceComp IS
+  GENERIC( f : real := 100000.0;  
+	   v : real := 10.0    ); 
+  PORT( TERMINAL ta2,tb2 : electrical);
+  END COMPONENT;
+
+  FOR ALL : sineSourceComp USE ENTITY work.sineSource(sinebehavior);
+
+  CONSTANT C : real := 0.000001;
+  CONSTANT  MATH_PI :  real := 3.14159_26535_89793_23846;  
+  
+BEGIN
+
+  C1: capacitorComp
+    PORT MAP(t1,t2);
+  
+  C2: capacitorComp
+    PORT MAP(t3,ground);
+  
+  d1: diodeRealComp
+    PORT MAP(t2,ground);
+  
+  d2: diodeRealComp
+    PORT MAP(t3,t2);
+  
+  vsource: sineSourceComp
+    PORT MAP(t1,ground);
+  
+END ARCHITECTURE vdBehavior;

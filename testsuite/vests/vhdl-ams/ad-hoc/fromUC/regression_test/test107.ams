@@ -1,0 +1,152 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test107.ams,v 1.1 2002-03-27 22:11:18 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of cincinnati
+-- Cincinnati
+----------------------------------------------------------------------
+-- File          : test107.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : May 2001
+----------------------------------------------------------------------
+-- Description :
+----------------------------------------------------------------------
+-- the test checks for the correct impelmentation of the port terminal
+-- decl. signal decl. of type real, type array decl. 
+-- the test performs a 4 bit digital to analog conversion.
+----------------------------------------------------------------------
+
+PACKAGE electricalsystem IS
+  NATURE electrical IS real ACROSS real THROUGH GROUND REFERENCE;
+END electricalsystem;
+
+USE work.electricalsystem.all;
+ENTITY dac is
+  port(inputvector : in bit_vector(3 downto 0); --inputvector is an array of 16 bits
+       terminal T1, T2: electrical);	--terminal declarations
+END dac;
+
+ARCHITECTURE behavior OF dac IS
+
+  type temp_array is array(0 to 3) of integer; -- temp to store the array values
+  quantity vout across T1 to T2;	--output of the dac
+  
+  signal vout_sig, vcopy : real;	
+BEGIN
+
+  dac_process: PROCESS(inputvector) 
+    variable a : temp_array := (0,0,0,0);
+    variable tmp : real;
+    
+  BEGIN
+    for index in 3 downto 0 loop
+      if inputvector(index) = '0' then
+	a(index) := 0;			--bit to integer conversion done here
+      else a(index) := 1; 
+      end if;
+    end loop;
+
+    tmp := real(a(3)*8) + real(a(2)*4) + real(a(1)*2 + a(0)); --find the corresponding value of the binary 
+    vout_sig <= tmp;		
+
+  END PROCESS dac_process;
+
+  -- digital to analog conversion is done here
+  vout == vcopy;
+
+  convert: process(vout_sig)
+  begin
+    vcopy <= TRANSPORT vout_sig;
+  end process;
+
+END behavior;
+use work.electricalsystem.all;
+ENTITY tb_dac is
+end tb_dac;
+
+architecture stimuli of tb_dac is
+  signal myinputvector : bit_vector(3 downto 0);
+  terminal tout : electrical;
+  component dac port( inputvector : in bit_vector(3 downto 0);
+                      terminal T1, T2: electrical);
+  end component;
+  for all: dac use entity work.dac(behavior);
+  
+BEGIN
+  
+  unit:dac port map (myinputvector, tout, electrical'reference);
+
+  stimuli_process: process
+  BEGIN
+    
+    myinputvector <= "0000";
+    wait for 10 ns;
+
+   myinputvector <= "0001";
+    wait for 10 ns;
+
+  myinputvector <= "0010";
+    wait for 10 ns;
+
+    myinputvector <= "0100";
+    wait for 10 ns;
+
+    myinputvector <= "1000";
+    wait for 10 ns;
+
+    myinputvector <= "1100";
+    wait for 10 ns;
+
+    myinputvector <= "1110";    
+    wait for 10 ns;
+
+    myinputvector <= "1101"; 
+    wait for 10 ns;
+
+    myinputvector <= "1111"; 
+    wait for 10 ns;
+    myinputvector <= "0000";
+    wait for 10 ns;
+  
+    myinputvector <= "1100";
+    wait for 10 ns;
+    
+    myinputvector <= "1010";
+    wait for 10 ns;
+  
+    wait;
+  end process;
+end stimuli;

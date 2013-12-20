@@ -1,0 +1,113 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test149.ams,v 1.1 2002-03-27 22:11:18 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of Cincinnati
+-- Cincinnati
+----------------------------------------------------------------------
+-- File          : test149.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : sept 2001
+----------------------------------------------------------------------
+-- Description :
+----------------------------------------------------------------------
+-- A simple resistor model...
+-- the test is done for checking the correct implementation of the 
+-- componet declaration. The model consists of 2 resistor models which are 
+-- instantiated.
+
+package electricalSystem is
+    NATURE electrical IS real ACROSS real THROUGH Ground reference;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    FUNCTION POW(X,Y : real) RETURN real;
+END PACKAGE electricalSystem;
+
+use work.electricalsystem.all;
+
+entity test1 is
+	port (terminal P, N : electrical );
+end entity test1;
+
+architecture behav of test1 is 
+   quantity Vt1 across It1 through P to N;
+begin
+	res1 : Vt1 == It1 * 10.0 ;
+end architecture behav;
+
+use work.electricalsystem.all;
+entity test2 is
+	port (terminal P, N : electrical );
+end test2;
+
+architecture behav of test2 is 
+   quantity Vt2 across It2 through P to N;
+begin
+	res1 : Vt2 == It2 * 100.0 ;
+end behav;
+
+
+use work.electricalsystem.all;
+
+entity resistor_ckt is 
+end resistor_ckt;
+
+architecture ares_ckt of resistor_ckt is
+
+	component test1 is 
+           port (terminal P, N : electrical );
+	end component;
+
+	component test2 is 
+           port (terminal P, N : electrical );
+	end component;
+
+        for all : test1 use entity work.test1(behav);  
+        for all : test2 use entity work.test2(behav);  
+
+	terminal a,b,c,t1,t2 : electrical;
+	quantity vout across iout through t2 to electrical'reference;
+	quantity vs across a to electrical'reference;
+
+begin
+	e1 : test1 port map (P => a, N => b);
+	e2 : test2 port map (P => b, N => c);
+ 	e3 : vout == iout * 1200.0;
+	e4 : test1 port map (P => c, N => t1);
+	e5 : test1 port map (P => t1, N => t2);
+    source : vs  == 5.0 * sin(2.0 * 3.1415 * 10000.0* real(time'pos(now)) * 1.0e-12);
+end architecture ares_ckt;

@@ -1,0 +1,359 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test145.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of cincinnati
+-- Cincinnati
+----------------------------------------------------------------------
+-- File          : test145.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : June 2001
+----------------------------------------------------------------------
+-- Description :
+--this is a mos model. It tests for the correctness of the procedural
+--statement.
+--
+--the model accepts the mos data as generic constants. The terminals
+--are defined as of nature electrical.
+--it also tests the alias declaration for real'low.
+--Charges associated with the 4 terminals are declared as quantities.
+--The voltage associated with each of them is also defined.
+--a signal is used to drive i.e to carry out a generic initialization.
+--The various mos equations are evaluated depending on the conditions.
+--The equations for charges and currents are evaluated.
+----------------------------------------------------------------------
+
+package mosdata is 
+  NATURE electrical is real across real through;
+  FUNCTION SIN(X : real) RETURN real;
+  FUNCTION EXP(X : real) RETURN real;
+  FUNCTION SQRT(X : real) RETURN real;
+  FUNCTION POW(X,Y : real) RETURN real;
+  alias undefined is real'low; 
+  constant Temperature: real:=27.0;
+  constant eps0 : real :=8.85418e-12; 
+  constant Ni : real :=1.45e16; 
+  constant Boltzmann : real :=1.380662e-23; 
+  constant echarge: real :=1.6021892e-19; 
+  constant epsSiO2 : real :=3.9*eps0; 
+  constant epsSi : real :=11.7*eps0; 
+  constant kTQ : real :=Boltzmann*temperature/echarge; 
+  constant pi: real := 3.14159;  
+end package mosdata; 
+
+use work.mosdata.all; 
+entity mos is 
+
+  generic( 
+    width  : real:=1.0E-4; 
+    length : real:=1.0E-4;  
+    channel: real :=1.0;
+    kp :real:= 2.0E-5; 
+    gamma :undefined; 
+    phi   :undefined; 
+    tox   :real:= 1.0E-7;
+    nsub  :real:= 0.0;
+    nss   :real:=0.0; 
+    nfs   :real:= 0.0; 
+    tpg   :real:= 1.0; 
+    xj    :real:=0.0; 
+    ld    :real:= 0.0; 
+    u0    :real:= 600.0; 
+    vmax  :real:=0.0;
+    xqc   :real:= 1.0; 
+    kf    :real:=0.0; 
+    af    :real:=1.0; 
+    fc    :real:=0.5; 
+    delta :real:=0.0; 
+    theta :real:=0.0; 
+    eta   :real:=0.0;
+    Sigma :real:=0.0;
+    kappa :real:=0.2 );
+
+  port ( terminal  drain,  gate,  source,  bulk  : electrical); 
+
+end entity mos; 
+
+architecture amos of mos is 
+  quantity Qc, Qb, Qg: real;
+  quantity Qcq, Qbq, Qgq : real; -- channel, bulk and gate charges 
+  quantity Vdsq across drain to source; 
+  quantity Vgsq across gate to source; 
+  quantity Vbsq across bulk to source; 
+  quantity Idq through drain; 
+  quantity Igq through gate; 
+  quantity Isq through source; 
+  quantity Ibq through bulk; 
+
+  signal Initialized: boolean; -- use a signal as generic initialisation 
+
+begin 
+  MOSeqns: procedural is 
+     variable 
+	cox,vt,beta,sigma,nsub,Phi,Gamma,nss,ngate,A,B,C,D,Vfb,fshort, 
+        wp,wc,sqwpxj,vbulk,delv,vth,Vgstos, Vgst, 
+	Ueff,Tau,Vsat,Vpp,fdrain, 
+        stfct,leff,xd,qnfscox,fn,dcrit,deltal,It,Ids,R,Vds,Vgs,Vbs, 
+        forward ,egfet,fermig, mobdeg: real;
+  begin -- procedural statements 
+
+    if not Initialized then 
+      if tox<=0.0 then 
+        cox:=epsSiO2/1.0e-7; 
+      else 
+        cox:=epsSiO2/tox; 
+      end if; 
+
+      if kp = 0.0 then 
+        beta:=cox*u0; 
+      else 
+        beta:=kp; 
+      end if; 
+
+     nsub := nsub * 1.0e6;  -- scale nsub to SI units 
+  
+      if (phi = undefined) then 
+        if (nsub > 0.0) then
+		if (0.1<2.0*KTQ*(nsub/Ni)) then 
+          	Phi:=(2.0*kTQ*(nsub/Ni));
+		else
+		Phi:=0.1;
+		end if; 
+        else 
+          Phi:=0.6; 
+        end if; 
+      else 
+        Phi:=phi; 
+      end if;
+  
+      if (gamma = undefined) then 
+        if (nsub > 0.0) then 
+          Gamma:=sqrt(2.0*epsSi*echarge*nsub)/cox; 
+        else 
+          Gamma:=0.0; 
+        end if; 
+      else 
+        Gamma:=gamma; 
+      end if;
+
+      nss:=nss*1.0e4;              -- Scale to SI 
+      ngate:=gamma*1.0e4;           -- Scale to SI 
+
+      leff:=length-2.0*ld; 
+      if leff>0.0 then 
+        Sigma:= eta * 8.15e-22/(cox*leff*leff*leff); 
+      else 
+        Sigma:=0.0; 
+      end if; 
+
+      if nsub>0.0 then -- N.B. nsub was scaled, above. 
+        xd:=sqrt(2.0*epsSi/(echarge*nsub)); 
+      else 
+        xd:=0.0; 
+      end if; 
+
+      if (nfs>0.0) and(cox>0.0) then 
+        qnfscox:=echarge*nfs/cox; 
+      else 
+        qnfscox:=0.0; 
+      end if; 
+
+      if cox>0.0 then 
+        fn:=delta*pi*epsSi*0.5/(cox*width); 
+      else 
+        fn:=delta*pi*epsSi*0.5*tox/epsSiO2; 
+      end if; 
+
+      --Scale beta and convert cox from Fm^-2 to F 
+      beta:=beta*width/leff; 
+      cox:=cox*width*leff; 
+
+      Initialized <= true; 
+    end if; -- not initialized 
+
+    Vds:=channel*Vdsq; 
+    if Vds>=0.0 then 
+        Vgs:=channel* Vgsq; 
+        Vbs:=channel* Vbsq; 
+        forward:=1.0; 
+    else 
+        Vds:=-Vds; 
+        Vgs:=channel* Vgsq; 
+        Vbs:=channel* Vbsq; 
+        forward:=-1.0; 
+    end if; 
+
+    if Vbs<=0.0 then 
+        A:=Phi-Vbs; 
+        D:=sqrt(A); 
+    else 
+        D:=2.0*sqrt(Phi)*Phi/(2.0*Phi+Vbs); 
+        A:=D*D; 
+    end if; 
+
+    Vfb:=Vt-Gamma*sqrt(Phi)-Sigma*Vds; 
+    if (xd=0.0) OR (xj=0.0) then 
+        fshort:=1.0; 
+    else 
+        wp:=xd*D; 
+        wc:=0.0631353*xj+0.8013292*wp-0.01110777*wp*wp/xj; 
+        sqwpxj:=sqrt(1.0-(wp*wp/((wp+xj)*(wp+xj)))); 
+        fshort:=1.0-((ld+wc)*sqwpxj-ld)/leff; 
+    end if; 
+
+    vbulk:=Gamma*fshort*D+fn*A; 
+    if nfs=0.0 then 
+        delv:=0.0; 
+    else 
+        delv:=kTQ*(1.0+qnfscox+vbulk*0.5/A); 
+    end if; 
+
+    vth:=Vfb+vbulk; 
+    Vgstos:=Vgs-Vfb;
+
+    if (vgs-vth > delv) then  
+        Vgst:=Vgs-vth;
+    else
+        Vgst:= delv;
+    end if;
+ 
+    if (vgs>=vth) or (delv/=0.0) then 
+
+      if (Vbs<=0.0) or (Phi /= 0.0) then 
+          B:=0.5*Gamma/D+fn; 
+      else 
+          B:=fn; 
+      end if; 
+
+      mobdeg:=1.0/(1.0+theta*Vgst); 
+   
+      if (vmax /=0.0) then 
+         Ueff:=u0*mobdeg; 
+          Tau:=Ueff/Leff*vmax; 
+      else 
+          Tau:=0.0; 
+      end if; 
+
+      Vsat:=Vgst/(1.0+B); 
+      Vsat:=Vsat*(1.0-0.5*Tau*Vsat); -- not quite the same as SPICE 
+      if (vds<Vsat) then
+	Vpp:=vds;
+      else
+	Vpp:= Vsat;
+      end if;
+
+      fdrain:=1.0/(1.0+Tau*Vpp); 
+      if (Vgs<vth+delv) and (nfs>0.0) then 
+        stfct:=exp((Vgs-vth-delv)/delv); 
+      else 
+          stfct:=1.0; 
+      end if; 
+
+      if Vds>=Vsat then 
+        if (kappa>0.0) and (xd>0.0) then 
+
+          if vmax=0.0 then 
+              deltal:=sqrt(kappa*xd*xd*(Vds-Vsat)); 
+          else 
+              dcrit:=(xd*xd*vmax*0.5)/(Ueff*(1.0-fdrain)); 
+              
+	      deltal:=sqrt(kappa*xd*xd*(Vds-Vsat)+dcrit*dcrit)-dcrit; 
+          end if; 
+
+          if deltal<=0.5*Leff then 
+              C:=Leff/(Leff-deltal); 
+          else 
+              C:=4.0*deltal/Leff; 
+          end if; 
+
+        else 
+            C:=1.0; 
+        end if; 
+
+      else 
+          C:=1.0; 
+      end if; 
+
+      It:=Vgst-Vpp*(1.0+B)*0.5; 
+        Beta:=Beta*mobdeg; 
+        Ids:=Beta*Vpp*It*C*fdrain*stfct; 
+    else 
+        -- Cutoff 
+        Ids:=0.0; 
+    end if; -- vgs >= vth 
+
+    if Cox /= 0.0 then 
+        --Charges 
+      if Vgs<=vth then 
+        if Gamma /= 0.0 then 
+          if Vgstos < -A then 
+                Qg:=Cox*(Vgstos+A); -- Accumulation 
+          else 
+                Qg:=0.5*Gamma*Cox*(sqrt(4.0*(Vgstos+A)+Gamma*Gamma-Gamma)); 
+          end if ; -- vgstos <-A 
+        else-- Gamma = 0.0 
+            Qg:=0.0; 
+        end if; -- gamma /= 0 
+          Qb:=-Qg; 
+          Qc:=0.0; 
+      else 
+          -- depletion mode: 
+          R:=(1.0+B)*Vpp*Vpp/(12.0*It); 
+          Qg:=Cox*(Vgstos-Vpp*0.5+R); 
+          Qc:=-Cox*(Vgst+(1.0+B)*(R-Vpp*0.5)); 
+          Qb:=-(Qc+Qg); 
+      end if;
+
+    else 
+        Qg:=0.0; 
+        Qc:=0.0; 
+        Qb:=0.0; 
+    end if; -- cox /= 0 
+
+    -- equations for charges (in a procedural we have assignments to 
+    --quantitites): 
+      Qcq := Qc; 
+      Qgq := Qg; 
+      Qbq := Qb; 
+
+    -- equations for currents: 
+      Idq := channel*forward*Ids+channel*xqc*Qc'dot; 
+      Igq := channel*Qg'dot; 
+      Ibq := channel*Qb'dot; 
+      Isq := -Idq - Igq - Ibq; 
+
+  end procedural; 
+end architecture amos; 

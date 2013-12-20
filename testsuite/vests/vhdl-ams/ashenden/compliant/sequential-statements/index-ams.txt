@@ -1,0 +1,47 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                        Chapter 3 - Sequential Statements
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure
+-----------                                     ------------                            --------------                  -------
+thermostat-1.vhd                                entity thermostat                       example                         Figure 3-1
+mux4.vhd                                        package mux4_types                      body                            Section 3.2
+--                                              entity mux4                             demo                            Figure 3-2
+counter.vhd                                     entity counter                          behavior                        Figure 3-3
+counter-1.vhd                                   entity counter                          behavior                        Figure 3-4
+cos.vhd                                         entity cos                              series                          Figure 3-5
+--                                                                                      fixed_length_series             Figure 3-6
+SR_flipflop.vhd                                 entity SR_flipflop                      checking                        Figure 3-7
+max3.vhd                                        entity max3                             check_error                     Figure 3-8
+edge_triggered_register.vhd                     entity edge_triggered_register          check_timing                    Figure 3-9
+inline_01.vhd                                   entity inline_01                        test                            Section 3.1
+inline_02.vhd                                   entity inline_02                        test                            Section 3.1
+inline_03.vhd                                   entity inline_03                        test                            Section 3.1
+inline_04a.vhd                                  entity inline_04a                       test                            Section 3.1
+inline_05.vhd                                   entity inline_05                        test                            Section 3.1
+inline_06.vhd                                   entity inline_06                        test                            Section 3.2
+inline_07.vhd                                   entity inline_07                        test                            Section 3.2
+inline_08.vhd                                   entity inline_08                        test                            Section 3.2
+inline_09.vhd                                   entity inline_09                        test                            Section 3.2
+inline_10a.vhd                                  entity inline_10a                       test                            Section 3.3
+inline_11.vhd                                   entity inline_11                        test                            Section 3.3
+inline_12.vhd                                   entity inline_12                        test                            Section 3.4
+inline_13.vhd                                   entity inline_13                        test                            Section 3.4
+inline_14.vhd                                   entity inline_14                        test                            Section 3.4
+inline_15.vhd                                   entity inline_15                        test                            Section 3.4
+inline_16.vhd                                   entity inline_16                        test                            Section 3.4
+inline_17.vhd                                   entity inline_17                        test                            Section 3.4
+inline_18.vhd                                   entity inline_18                        test                            Section 3.5
+inline_19.vhd                                   entity inline_19                        test                            Section 3.5
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_mux4.vhd                                     entity tb_mux4                          test_demo                       mux4.vhd
+tb_counter.vhd                                  entity tb_counter                       test_behavior                   counter.vhd
+tb_counter-1.vhd                                entity tb_counter                       test_behavior                   counter-1.vhd
+tb_cos.vhd                                      entity tb_cos                           test_series                     cos.vhd
+tb_cos-1.vhd                                    entity tb_cos                           test_fixed_length_series        cos.vhd
+tb_SR_flipflop.vhd                              tb_SR_flipflop                          test_checking                   SR_flipflop.vhd
+tb_max3.vhd                                     entity tb_max3                          test_check_error                max3.vhd
+tb_edge_triggered_register.vhd                  entity tb_edge_triggered_register       test_check_timing               edge_triggered_register.vhd

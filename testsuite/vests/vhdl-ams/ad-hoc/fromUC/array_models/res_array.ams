@@ -1,0 +1,83 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: res_array.ams,v 1.2 2003-08-05 15:14:24 paw Exp $
+-- $Revision: 1.2 $
+--
+-- ---------------------------------------------------------------------
+
+PACKAGE electricalSystem IS
+    subtype voltage is real ;
+    subtype current is real ;
+
+   NATURE electrical IS voltage ACROSS current THROUGH Ground reference;
+   NATURE electrical_vector is array(natural range<>) of electrical ;
+   subnature el_vect4 is electrical_vector(1 to 4);
+   FUNCTION SIN(X : real) RETURN real;
+END PACKAGE electricalSystem;
+
+use work.electricalsystem.all;
+
+--entity declaration
+
+ENTITY RLC IS
+
+END RLC;
+
+--architecture declaration
+
+ARCHITECTURE behavior  OF RLC IS
+
+
+   terminal n1 : electrical;
+   terminal n2: el_vect4;
+
+   quantity vr1 across ir1 through n1 to n2;
+   quantity vr2 across ir2 through n2 ;
+   quantity vs across n1 ;
+   constant r1 : REAL := 20.0;
+   constant r2 : REAL := 10.0;
+
+
+BEGIN 
+
+-- this will no longer work
+-- * should be overloaded to support such a statement.
+--res1 : vr1 == ir1 * r1;
+res11 : vr1(1) == ir1(1) * r1;
+res12 : vr1(2) == ir1(2) * r1;
+res13 : vr1(3) == ir1(3) * r1;
+res14 : vr1(4) == ir1(4) * r1;
+res21 : vr2(1) == ir2(1) * r2;
+res22 : vr2(2) == ir2(2) * r2;
+res23 : vr2(3) == ir2(3) * r2;
+res24 : vr2(4) == ir2(4) * r2;
+vsrc : vs  == 5.0 * sin(2.0 * 3.1415 * 10.0 --sine source
+                              * real(time'pos(now)) * 1.0e-9);
+
+END architecture behavior;

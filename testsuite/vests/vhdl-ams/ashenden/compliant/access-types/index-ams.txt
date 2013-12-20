@@ -1,0 +1,30 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                Chapter 20 - Access Types and Abstract Data Types
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+list_traversal.vhd                              entity list_traversal                   test                            Figure 20-5
+list_search.vhd                                 entity list_search                      test                            Figure 20-7
+bounded_buffer_adt.vhd                          package bounded_buffer_adt              body                            Figures 20-8, 20-11
+receiver.vhd                                    entity receiver                         test                            Figure 20-9
+ordered_collection_adt.vhd                      package «element_type_simple_name»_ordered_collection_adt
+--                                                                                      body                            Figures 20-12, 20-16
+stimulus_types-1.vhd                            package stimulus_types                  body                            Figure 20-13
+test_bench-1.vhd                                package stimulus_element_ordered_collection_adt
+--                                                                                      body                            --
+--                                              entity test_bench                       initial_test                    Figure 20-14
+inline_01.vhd                                   entity inline_01                        test                            Section 20.1
+inline_02a.vhd                                  entity inline_02a                       test                            Section 20.1
+inline_03.vhd                                   entity inline_03                        test                            Section 20.1
+inline_04a.vhd                                  entity inline_04a                       test                            Section 20.1
+inline_05.vhd                                   entity inline_05                        test                            Section 20.1
+inline_06a.vhd                                  entity inline_06a                       test                            Section 20.2
+inline_07a.vhd                                  entity inline_07a                       test                            Section 20.2
+inline_08.vhd                                   entity inline_08                        test                            Section 20.2
+inline_09.vhd                                   entity inline_09                        test                            Section 20.2
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_bounded_buffer_adt.vhd                       entity tb_bounded_buffer_adt            test                            bounded_buffer_adt.vhd

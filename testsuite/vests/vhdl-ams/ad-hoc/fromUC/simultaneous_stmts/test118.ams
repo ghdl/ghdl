@@ -1,0 +1,91 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test118.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of Cincinnati
+-- Cincinnati
+----------------------------------------------------------------------
+-- File          : test118.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : May 2001
+----------------------------------------------------------------------
+-- Description :
+----------------------------------------------------------------------
+
+-- the test checks for the correctness of the implemenatation of the case statement.
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    FUNCTION POW(X,Y : real) RETURN real;
+
+    --ALIAS GND is electrical'reference;
+END PACKAGE electricalSystem;
+
+use work.electricalSystem.all;
+
+entity test is
+end entity test;
+
+architecture atest of test is
+terminal t1:electrical;
+signal ison: boolean;
+quantity vr across ir through t1;
+constant vt:real:=0.0258;
+begin
+
+process 
+	variable off : boolean:=true;
+begin
+	ison <= not off;
+	case off is
+	   when true=> 
+		ison<= not off;
+	   when false=>
+		ison<=off;
+	end case;
+end process;
+source: vr==10.0 * sin(2.0 *(22.0/7.0)*100000.0*real(time'pos(now)) * 1.0e-15);
+if ison use
+	ir== 5.0; --*(exp(vr/vt)-1.0);
+else	
+	ir==0.0;
+end use;
+
+break on ison;
+end architecture;

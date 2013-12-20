@@ -1,0 +1,100 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test129.ams,v 1.1 2002-03-27 22:11:18 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+package electricalSystem is
+     NATURE electrical IS real ACROSS real THROUGH ground reference; 
+    FUNCTION POW(X,Y: real) RETURN real;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    type electrical_vector is array(0 to 3) of electrical;
+END PACKAGE electricalSystem;
+
+use work.electricalSystem.all;
+
+entity test is
+generic( a: real);
+port( terminal ip: electrical_vector;
+      terminal op:electrical);
+end entity;
+
+architecture atest of test is
+type electrical_vector is array(0 to 3) of electrical;
+--variable i: real:=0.0;
+variable a:real:=5.0;
+variable output:real:=0.0;
+quantity vin across ip to electrical'reference;
+quantity vout across iout through ip to op;
+begin
+
+   for i in 0 to 3 loop
+	output:=output + vin(i)*a;
+   end loop;
+vout:=output;
+
+end architecture atest;
+-- test bench needs to be corrected
+
+use work.electricalSystem.all;
+entity tb is
+end entity;
+
+architecture atb of tb is
+signal myvector : electrical_vector(0 to 3);
+terminal tip : electrical_vector;
+terminal top:electrical;
+component test 
+	port(terminal ip, op: electrical);
+end component;
+for all: test use entity work.test(atest);
+begin
+
+unit: test port map(tip, top, electrical'reference);
+
+a_process: process
+begin
+
+myvector == 1.0;
+wait for 10 ns;
+myvector  == 2.0;
+wait for 10 ns;
+myvector  == 2.0;
+wait for 10 ns;
+myvector  ==1.0;
+wait for 10 ns;
+
+wait;
+
+end process;
+
+end atb;

@@ -1,0 +1,463 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: wein_bridge.ams,v 1.1 2002-03-27 22:11:20 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+--^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--				REMARKS	
+--				-------
+--  TESTED   : Works great for freq of 1.0 KHz - 30.0MHz
+--  COMMENTS : The Values of R1_a and R1_b have to be 18.0k & 32.0K resp.
+--             The freq. is given by the equation
+--	 			F = 1/(2*PI*R*C)	  
+--					 where R=R3=R4 and
+--					       C=C3=C4.			
+--^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--*************************************************************************
+-- Structural Level Model of a WEIN BRIDGE OSCILLATOR.
+-- VHDL-AMS implementation
+-- Developed at Distributed Processing Laboratory
+-- University of Cincinnati
+--************************************************************************* 
+
+--#########################################################################
+--				 BLOCK DIAGRAM
+--				 -------------
+--			    o V_out	
+--			    |	       D1  
+--			    |__________|\_______________	
+--		R1_a   R1_b |	       |/    R2=10.0K	|
+--	     -----^^^.^^^---o--------/\/\/\/\-----------|
+--	    |	     | T4   |__________/|_______________|		
+--       -------     | 		       \|		|
+--	   --	     |		     D2			|
+--		     |	   		|\   		|
+--                    ------------------|-\		|
+--		     			|  \____________o T3 
+--					|  / 		|
+--		     -------------------|+/		|
+--		    |  			|/		|
+--		    |T1		    T2			|
+--	   _________o__________||____o_____/\/\/\/\_____|
+--	  |	    |	       || 	  
+--	  |	    |       C4=16.0pF	    R4=10.0K 
+--	  |	    <  
+--     C3 |16.0pF   < R3=10.0K		  	
+--	-----	    <
+--	-----       |
+--	  |         |
+--     -------	 -------
+--	 --	   --	
+--
+--#########################################################################
+
+ PACKAGE electricalsystem IS
+     NATURE electrical IS real ACROSS real THROUGH ground reference;
+     FUNCTION SIN(X:real) RETURN real;
+     FUNCTION COS(X:real) RETURN real;
+     FUNCTION EXP(X:real) RETURN real;
+ END PACKAGE electricalsystem;
+
+------------------------ RESISTOR ---------------------------
+ 
+use work.electricalsystem.all;
+ 
+entity resistor is
+ generic(res :real:=1.0 );
+  port(terminal r_in,r_out: electrical);
+end entity resistor;
+  
+architecture behav of resistor is
+   quantity vr across ir through r_in to r_out;
+ 
+begin
+  vr==ir*res;
+end architecture behav;
+ 
+------------------------ CAPACITOR---------------------------
+use work.electricalsystem.all;
+ 
+entity capacitor is
+ generic(cap :real:=1.0);
+ port(terminal c_in,c_out: electrical);
+end entity capacitor;
+ 
+architecture behav of capacitor is
+ 
+quantity vc across ic through c_in to c_out;
+begin
+    init: break vc=>0.0;
+	
+  ic==cap*vc'dot;
+end architecture behav;
+
+---------------------------- Diode -----------------------------
+use work.electricalsystem.all;
+
+entity diode is  
+generic (
+    Isat : real := 1.0e-14;             -- saturatioin current
+    n : real := 1.0;                    -- emmission coefficient
+    bv : real := 1.0;                   -- reverse breakdown voltage
+    ibv : real := 1.0e-3;               -- Breakdown current
+    rds : real := 1.0                   -- Ohnic resistamce 
+    );
+port (terminal pos, neg : electrical);
+end diode;
+
+architecture behav of diode is
+  terminal td : electrical;
+  quantity vd across id through td to neg;
+  quantity vrd across ird through pos to td;
+  quantity vdiode : real := 2.0;
+  constant gmin : real := 1.0e-12;     -- conductance  
+  constant vt : real := 0.026;         -- thermal voltage
+begin  -- behav
+  brk : break vd => 1.0;
+  diodecondition : if(vd >= -5.0*(vt*n)) use
+    dfow : id == ((isat*(exp(vd/(vt*n)) - 1.0)) + (gmin*vd));
+  elsif(vd < -5.0*(vt*n)  and (vd > -1.0*bv)) use
+    drev: id == ((-1.0*isat) + (gmin*vd));
+  elsif vd = -1.0*bv use
+    dbv : id == -1.0*ibv;
+  elsif vd < -1.0*bv use
+    blbv : id == -1.0*Isat*(exp(-1.0*((bv + vd)/vt)) - 1.0 + (bv/vt));
+  end use;
+  diododeres : vrd == ird * rds;
+  diodevolt : vdiode == vd + vrd;
+
+end behav;
+
+-------------------- NPN transistor  ---------------------------
+use work.electricalsystem.all;
+
+entity trans_npn is
+    port( terminal emitter,base,collector : electrical);
+end trans_npn;
+ 
+architecture trans_behav of trans_npn is
+ 
+terminal t1,t2,t3,t4,t5,e,b :electrical; 
+ 
+constant Lb   :real:=0.5e-9;
+constant rb1  :real:=1.0;
+constant rb2  :real:=3.1;
+constant rb3  :real:=2.7;
+constant r_pi :real:=110.0;
+constant c_pi :real:=18.0e-12;
+constant gm   :real:=0.88;
+constant cc1  :real:=0.091e-12;
+constant cc2  :real:=0.048e-12;
+constant cc3  :real:=0.023e-12;
+constant Le   :real:=0.2e-9;
+constant Rbase:real:=22.0;
+constant Remit:real:=0.6;
+ 
+  
+quantity v1   across i1  through  b to t1;
+quantity v2   across i2  through t1 to t2;
+quantity v3   across i3  through t2 to t3;
+quantity v4   across i4  through t3 to t4;
+quantity v_pi across i5  through t4 to t5;
+quantity i6   		 through t4 to t5;
+quantity v7   across i7  through t1 to collector;
+quantity v8   across i8  through t2 to collector;
+quantity v9   across i9  through t3 to collector;
+quantity v10  across i10 through t5 to e;
+quantity v11  across i11 through  collector to t5;
+quantity v_base  across i_base through base to b;
+quantity v_emit  across i_emit through e to emitter;
+ 
+ 
+BEGIN
+
+  v1  ==Lb*i1'dot;
+  v2  ==i2*rb1;
+  v3  ==i3*rb2;
+  v4  ==i4*rb3;
+  v_pi==i5*r_pi;
+  i6  ==c_pi*v_pi'dot;
+  i7  ==cc1*v7'dot;
+  i8  ==cc2*v8'dot;
+  i9  ==cc3*v9'dot;
+  v10 ==Le*i10'dot; 
+  i11 ==gm*v_pi;
+ v_base==rbase*i_base;
+ v_emit==remit*i_emit;
+ 
+end architecture trans_behav;
+ 
+
+-------------------- PNP transistor  ---------------------------
+use work.electricalsystem.all;
+
+entity trans_pnp is
+    port( terminal emitter,base,collector : electrical);
+end trans_pnp;
+ 
+architecture trans_behav of trans_pnp is
+ 
+terminal t1,t2,t3,t4,t5,e,b :electrical; 
+ 
+constant Lb   :real:=0.5e-9;
+constant rb1  :real:=1.0;
+constant rb2  :real:=3.1;
+constant rb3  :real:=2.7;
+constant r_pi :real:=110.0;
+constant c_pi :real:=18.0e-12;
+constant gm   :real:=0.88;
+constant cc1  :real:=0.091e-12;
+constant cc2  :real:=0.048e-12;
+constant cc3  :real:=0.023e-12;
+constant Le   :real:=0.2e-9;
+constant Rbase:real:=22.0;
+constant Remit:real:=0.6;
+ 
+  
+quantity v1   across i1  through t1 to b;
+quantity v2   across i2  through t2 to t1;
+quantity v3   across i3  through t3 to t2;
+quantity v4   across i4  through t4 to t3;
+quantity v_pi across i5  through t5 to t4;
+quantity i6   		 through t5 to t4;
+quantity v7   across i7  through collector to t1;
+quantity v8   across i8  through collector to t2;
+quantity v9   across i9  through collector to t3;
+quantity v10  across i10 through e to t5;
+quantity v11  across i11 through  t5 to collector;
+quantity v_base  across i_base through b to base;
+quantity v_emit  across i_emit through emitter to e;
+ 
+ 
+BEGIN
+
+  v1  ==Lb*i1'dot;
+  v2  ==i2*rb1;
+  v3  ==i3*rb2;
+  v4  ==i4*rb3;
+  v_pi==i5*r_pi;
+  i6  ==c_pi*v_pi'dot;
+  i7  ==cc1*v7'dot;
+  i8  ==cc2*v8'dot;
+  i9  ==cc3*v9'dot;
+  v10 ==Le*i10'dot; 
+  i11 ==gm*v_pi;
+ v_base==rbase*i_base;
+ v_emit==remit*i_emit;
+ 
+end architecture trans_behav;
+ 
+
+--> Constant Voltage source
+---------------------------
+use work.electricalsystem.all;
+ENTITY voltSource IS
+  generic(amp:real:=22.0);
+  PORT( TERMINAL ta2,tb2 : electrical);
+END voltSource;
+ 
+ARCHITECTURE voltbehavior OF voltSource IS
+
+terminal t1: electrical;
+quantity V_volt across i_volt through t1 to tb2;
+quantity V_drop across i_drop through ta2 to t1;
+ 
+BEGIN
+  V_volt == amp;
+  V_drop == i_drop*100.0;
+
+END ARCHITECTURE voltbehavior;
+
+-- ********* Structural Model Of a simple High Frequency OpAmp *********--
+
+use work.electricalsystem.all;
+entity op_amp is
+port(terminal inverting_ip,non_inverting_ip,output :electrical);
+end entity op_amp;
+
+architecture struct of op_amp is
+
+--> components
+
+COMPONENT trans_pnp is
+    port( terminal emitter,base,collector : electrical);
+end component;
+for all : trans_pnp use entity work.trans_pnp(trans_behav);
+
+COMPONENT trans_npn is
+    port( terminal emitter,base,collector : electrical);
+end component;
+for all : trans_npn use entity work.trans_npn(trans_behav);
+
+component resistor is
+generic(res :real:=1.0 );
+port(terminal r_in,r_out: electrical);
+end component;
+for all: resistor use entity work.resistor(behav);
+
+component voltsource is
+generic(amp:real:=22.0);
+PORT( TERMINAL ta2,tb2 : electrical);
+end component;
+for all: voltsource use entity work.voltsource(voltbehavior);
+
+terminal t1,t2,t3,t4,t5,t6,t7,t8,t9,t10:electrical;
+terminal V_pos,V_neg: electrical;
+
+BEGIN
+   
+  Q01_npn: trans_npn   port map(emitter=>T2    ,base=>T1	      ,collector=>T9);
+  Q02_npn: trans_npn   port map(emitter=>T2    ,base=>T3              ,collector=>T4);
+  Q03_npn: trans_npn   port map(emitter=>T5    ,base=>T6              ,collector=>T2);
+  Q04_npn: trans_pnp   port map(emitter=>T7    ,base=>T4              ,collector=>T8);
+  Q05_npn: trans_npn   port map(emitter=>output,base=>T8              ,collector=>V_pos);
+
+  Res_i1 : resistor    generic map(1.0e3)
+		       port map(inverting_ip,T1);
+  Res_i2 : resistor   generic map(1.0e3)
+		       port map(non_inverting_ip,T3);
+  Res_a  : resistor    generic map(220.0e3)
+		       port map(T6,V_pos);
+  Res_c1 : resistor    generic map(13.0e3)
+		       port map(T9,V_pos);
+  Res_c2 : resistor    generic map(13.0e3)
+		       port map(V_pos,T4);
+  Res_e4 : resistor    generic map(10.0e3)
+		       port map(V_pos,T7);
+  Res_b  : resistor    generic map(20.0e3)
+		       port map(T6,V_neg);
+  Res_e3 : resistor    generic map(1.3e3)
+		       port map(T5,V_neg);
+  Res_c4 : resistor    generic map(21.0e3)
+		       port map(T8,V_neg);
+  Res_e5 : resistor    generic map(12.0e3)
+		       port map(output,V_neg);
+	
+  vpos  : voltsource  generic map(amp=>15.0)    -- test case
+		       port map(V_pos,ground);	 
+  vneg  : voltsource  generic map(amp=>-15.0)    -- test case
+		       port map(V_neg,ground);	 
+
+end architecture struct;
+
+--------------------------------------------------------------------- 
+-------------------   WEIN BRIDGE OSCILLATOR    ---------------------
+--------------------------------------------------------------------- 
+use work.electricalsystem.all;
+ 
+entity wein_bridge_osc  is
+port( terminal signal_out :electrical); 
+end entity wein_bridge_osc;
+
+architecture struct of wein_bridge_osc is
+
+--> components
+component op_amp is
+port(terminal inverting_ip,non_inverting_ip,output :electrical);
+end component;
+for all:op_amp use entity work.op_amp(struct);
+
+component diode
+generic (
+    Isat : real := 1.0e-14;             -- saturatioin current
+    n : real := 1.0;                    -- emmission coefficient
+    bv : real := 1.0;                   -- reverse breakdown voltage
+    ibv : real := 1.0e-3;               -- Breakdown current
+    rds : real := 1.0                   -- Ohnic resistamce 
+    );      
+port (terminal pos, neg : electrical);
+end component;
+for all  : diode use entity work.Diode(behav);
+
+component capacitor is
+generic(cap :real:=1.0);
+port(terminal c_in,c_out: electrical);
+end component;
+for all: capacitor use entity work.capacitor(behav);
+
+component resistor is
+generic(res :real:=1.0 );
+port(terminal r_in,r_out: electrical);
+end component;
+for all: resistor use entity work.resistor(behav);
+
+terminal t1,t2,t3,t4: electrical;
+
+begin
+
+op_amplifier : op_amp    port map(inverting_ip=>t4,non_inverting_ip=>t1,output=>t3);
+
+D1           : diode     port map(t3,signal_out);      
+D2           : diode     port map(signal_out,t3);      
+
+R1_a 	     : resistor  generic map(18.0e3)
+			 port map(t4, ground);
+R1_b 	     : resistor  generic map(32.0e3)
+			 port map(t4,signal_out);
+R2 	     : resistor  generic map(10.0e3)
+			 port map(signal_out,t3);
+R3 	     : resistor  generic map(10.0e3)
+			 port map(t1,ground);
+R4 	     : resistor  generic map(10.0e3)
+			 port map(t2,t3);
+
+C3           : capacitor generic map(16.0e-12)
+			 port map(T1,ground);
+C4           : capacitor generic map(16.0e-12)
+			 port map(T1,T2);
+end struct;
+
+---------------------------- Test Bench ----------------------------- 
+
+use work.electricalsystem.all;
+
+entity testbench is
+end entity;
+
+architecture basic of testbench is
+
+-->components
+component wein_bridge_osc is
+port( terminal signal_out :electrical); 
+end component;
+for all: wein_bridge_osc use entity work.wein_bridge_osc(struct);
+
+terminal t1: electrical;
+
+quantity V_out across i_out through t1 to ground;
+
+BEGIN
+
+osc: wein_bridge_osc port map(T1);
+
+V_out == i_out*1.0e6;
+
+end basic;

@@ -1,0 +1,201 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: double_tuned.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+--************************************************************************
+-- Structural Model of a DOUBLED TUNED TRANSFORMER 
+-- VHDL-AMS implementation
+-- Developed at Distributed Processing Laboratory
+-- University of Cincinnati
+--************************************************************************
+
+--************************************************************************
+--
+--	             ________________________________
+-- 	    V_in    |                                |           
+--	      o-----|--------            ------------|---o  V_out         
+--	            |  |     |          |      |     |	
+--	            |  |     |          |      |     |	
+--	            |  |     |          |      |     |
+--	            |  |     >rp      rs<      |     |
+--	            |  |     >          <     ---    |
+--	      FM    | _|_    | .        |     ---    |  FM & AM Signal
+--	    Signal  | ___   ( )        ( )     |Cs   |
+--	            |  |    ( )  ||    ( )     |     |
+--	            |  |Cp  ( )  ||    ( )     |     |
+--	            |  |     | Lp    Ls |      |     |
+--	      o-----|--------            ------------|---o V_out_gnd      
+--	  Vin_gnd   |________________________________|
+--
+--************************************************************************
+
+PACKAGE electricalSystem IS
+NATURE electrical IS real ACROSS real THROUGH ground reference;
+FUNCTION SIN (X : real ) RETURN real;
+FUNCTION COS (X : real ) RETURN real;
+FUNCTION EXP  (X : real ) RETURN real;
+FUNCTION SQRT (X : real) RETURN real;
+END PACKAGE electricalSystem;
+
+------------------------------------------------------------------------------
+----------------------  TUNED TRANSFORMER ------------------------------------
+------------------------------------------------------------------------------
+
+USE work.electricalSystem.all;
+
+ENTITY FM_2_AM_Converter IS
+generic (freq_fm : real := 1.0);
+port (terminal Signal_in, Signal_out : electrical);
+END FM_2_AM_Converter;
+
+ARCHITECTURE behav OF FM_2_AM_Converter IS
+
+  CONSTANT  k :real:=0.4;
+  CONSTANT lp :real:=1.0e-3;
+  CONSTANT ls :real:=1.0e-3;
+  CONSTANT rp :real:=10.0;	
+  CONSTANT rs :real:=10.0;	
+
+--> Q = 2*PI*Freq*L/R 		: for 10.7 MHz -> q=6723     
+
+  terminal temp1,temp2: electrical;
+
+  quantity v_rp across i_rp through Signal_in to temp1;
+  quantity v_rs across i_rs through temp2     to Signal_out;
+  
+  quantity V_cp across i_cp through Signal_in  to ground;
+  quantity V_cs across i_cs through Signal_out to ground;
+   	
+  QUANTITY V_lp ACROSS i_lp Through temp1 to ground;
+  quantity v_ls across i_ls through temp2 to ground;
+
+  quantity m : real ;         -- mutual inductance;
+
+
+BEGIN    --  behavior
+
+  brk : break i_lp => 0.0, i_ls => 0.0,v_cp=>0.0,v_cs=>0.0;
+
+  mutual : m == k * sqrt(lp*ls);
+  voltp : v_lp == lp * i_lp'dot + m * i_ls'dot;
+  volts : v_ls == ls * i_ls'dot + m * i_lp'dot;
+
+  i_cp == (25.331/(freq_fm*freq_fm))*v_cp'dot;   -- cal. using the value of Inductance
+  i_cs == (25.331/(freq_fm*freq_fm))*v_cs'dot;   -- as 1.0e-3.
+				     	  	 -- modify this if u want to use another	
+  v_rp == rp *i_rp;	              	         -- value of Lp and ls	
+  v_rs == rs *i_rs;				 -- c =1/(2*PI*F)*(2*PI*F)*L
+
+END behav;
+
+------------------------------Test Waveforms-----------------------
+
+--> FM  wave generator 
+----------------------
+
+use work.electricalsystem.all;
+
+ENTITY fm_source IS
+generic(c_freq:real:=100.0e6;		-- carrier frequency
+	s_freq:real:=25.0e3;		-- modulating(signal) frequency 
+	 V_fm :real:=1.0		-- Peak voltage of FM signal
+       );
+PORT(TERMINAL fm_out,fm_gnd : electrical);
+END fm_source;
+
+ARCHITECTURE fm_behavior OF fm_source IS
+
+quantity V_fm_signal across i_fm_signal through fm_out to fm_gnd;
+
+BEGIN
+
+--- the max. freq. deviation is 75.0Khz for FM Signal. 
+
+  V_fm_signal == (V_fm*sin((2.0*22.0/7.0*c_freq*real(time'pos(now))*1.0e-15)+(75.0e3/s_freq*sin(2.0*22.0/7.0*s_freq*real(time'pos(now))*1.0e-15))));
+
+END ARCHITECTURE fm_behavior;
+
+--------------------------------  TEST BENCH --------------------------
+
+use work.electricalSystem.all;
+
+entity test is
+end test;
+
+architecture structure of test is
+
+  terminal t1,t2,t3 : electrical;
+
+--> Component Declarations
+
+component fm_source is
+generic(c_freq:real:=100.0e6;		-- carrier frequency
+	s_freq:real:=25.0e3;		-- modulating(signal) frequency 
+	  V_fm:real:=1.0		-- Peak Voltage of FM Signal	
+       );
+PORT( TERMINAL fm_out,fm_gnd : electrical);
+end component;
+for all: fm_source use entity work.fm_source(fm_behavior);
+
+component FM_2_AM_Converter IS
+generic (freq_fm : real := 1.0);
+port (terminal Signal_in, Signal_out : electrical);
+end component;
+for all : FM_2_AM_Converter use entity work.FM_2_AM_Converter(behav);
+
+quantity v_out across i_out through t2 to ground;
+
+begin  
+
+   FM_AM : FM_2_AM_Converter generic map(freq_fm=>10.7816e6)
+ 		       	     port map(t1,t2);
+
+   fm_ip : fm_source         generic map(10.7e6,10.0e3,1.0)
+			     port map(t1,ground);
+   
+  resout : v_out == i_out * 1.0e6;
+
+end structure;
+
+------------------------------  NOTES -------------------------------------
+--	It is a tuned transformer with the resonant freq. slighty higher 
+--	than the carrier freq.
+--
+--	Q = 2*PI*Freq*L/Rl		BandWidth = F_carrier/Q
+--	F_carrier = 1/2*PI*sqrt(L*C)    
+--
+--	Tune the Transformer to a frequency of   (All quantities in MHz)
+--		( F_carrier + 0.075 + 0.005 + Band_width ) 
+--			       |	
+--			       |	
+-- 			       *-> Max Deviation	
+----------------------------------------------------------------------------

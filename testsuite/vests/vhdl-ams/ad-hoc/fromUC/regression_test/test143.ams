@@ -1,0 +1,83 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test143.ams,v 1.1 2002-03-27 22:11:18 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+-------------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of cincinnati
+-- Cincinnati
+-------------------------------------------------------------------------
+-- File          : test143.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : May 2001
+------------------------------------------------------------------------
+-- Description :
+------------------------------------------------------------------------
+-- the test checks for the correctness of the concurrent signal
+-- assignment.  it accepts sine wave as input and the architecture has a
+-- concurrent signal assignment statement that assigns either a 1 or 0
+-- depending on the condition. 
+------------------------------------------------------------------------
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    FUNCTION POW(X,Y : real) RETURN real;
+    subtype voltage is real;
+    subtype current is real;
+
+END PACKAGE electricalSystem;
+use work.electricalSystem.all;
+
+entity AnaComparator is
+  generic( Vth: voltage := 0.0   -- [V] comparator threshold level
+         );
+  port( terminal P_T: electrical; 
+        signal Out_T: out BIT             
+      );
+end entity AnaComparator;
+
+architecture Behavior of AnaComparator is
+ quantity DeltaV across P_T to electrical'reference; -- differential input voltage
+
+begin
+
+e1: DeltaV== 5.0*sin(2.0*3.14159*10000.0*real(time'pos(now))*1.0e-15);
+
+  out_T <=        '1' when     DeltaV'above(0.0)  -- trigger event when V+>V-
+             else '0' when not DeltaV'above(0.0); -- trigger event when V+<=Vt-
+
+end architecture Behavior;

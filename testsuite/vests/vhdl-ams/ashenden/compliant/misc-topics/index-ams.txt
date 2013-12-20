@@ -1,0 +1,25 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                        Chapter 24 - Miscellaneous Topics
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+count2-1.vhd                                    entity D_flipflop                       behavioral                      --
+--                                              entity inverter                         behavioral                      --
+--                                              entity count2                           buffered_outputs                Figure 24-1
+limit_checker.vhd                               package project_util                    body                            Section 24.2
+--                                              entity limit_checker                    behavioral                      Figure 24-2
+test_bench.vhd                                  entity random_source                    fudged                          Section 24.2
+--                                              entity test_bench                       random_test                     Figure 24-3
+processor.vhd                                   entity processor                        rtl                             Figure 24-4
+SR_flipflop.vhd                                 entity SR_flipflop                      dataflow                        Figure 24-5
+inline_01.vhd                                   entity inline_01                        test                            Section 24.2
+inline_02.vhd                                   entity inline_02                        test                            Section 24.3
+inline_04a.vhd                                  entity controller                       instrumented                    Section 24.4
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_count2.vhd                                   entity tb_count2                        test                            count2.vhd
+tb_limit_checker.vhd                            entity tb_limit_checker                 test                            limit_checker.vhd
+tb_SR_flipflop.vhd                              entity tb_SR_flipflop                   test                            SR_flipflop.vhd

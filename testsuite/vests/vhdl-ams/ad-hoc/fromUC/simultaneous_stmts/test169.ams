@@ -1,0 +1,143 @@
+
+-- Copyright (C) 1999-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test169.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+-----------------------------------------------------------------------------
+--  Ebers-moll Model for a transistor                             --
+--  VHDL-AMS Implementation                                       --
+--  Developed at the Distributed Processing Lab at the University --
+--  of Cincinnati                                                 --
+--  by VishwaShanth Kasula on May 10, 1999                        --
+--------------------------------------------------------------------
+--  Circuit Topology                                              --
+--  BJT Ebers-Moll static model
+--  Testbench Ckt to evaluate the DC operatioing point of an npn BJT,
+--  Sedra smith page no. 152, fig 4.9
+--------------------------------------------------------------------
+
+-- Three regions are simulated
+-- Active region, vbb = 4.0 V
+-- Saturation region, vbb = 6.0 V
+-- Cutoff region, vbb = 0.0;
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+END PACKAGE electricalSystem;
+
+use work.electricalsystem.all;
+
+entity bjt_npn is
+  generic(isat : real := 1.0e-16;         -- Saturation Current
+          bf   : real := 100.0;           -- Ideal maximus forward current
+          br   : real := 1.0;             -- ideal maximum reverse current
+          rb   : real := 1.0e-5;          -- Base resistance
+          rc   : real := 1.0e-5;          -- collector resistance
+          re   : real := 1.0e-5;          -- emmiter resistance
+          vaf  : real := 100.0);          -- Forward Early Voltage
+  port(terminal e,b,c : electrical);
+end bjt_npn;
+
+architecture structure of bjt_npn is
+  terminal b1, c1, e1 : electrical;
+  quantity vbo across ib through b to b1;
+  quantity vco across ic through c to c1;
+  quantity veo across ie through e to e1;
+  quantity vct across Ict through c1 to e1;--current source
+  quantity vbe across ibe through b1 to e1;
+  quantity vbc across ibc through b1 to c1;
+  quantity vce : real := 1.0;           -- used to calculate VCE
+  constant gmin : real := 1.0e-12;      -- condutsnce in parallel with every pn junction
+  constant vt : real := 0.02589; -- thermal voltage
+ 
+begin
+  brk : break vbe => 1.0, vbc => -1.0;
+
+  diodecond1 : if(vbe > -5.0*vt) use
+    diodebef : ibe == ((isat*(exp(vbe/vt) - 1.0)) + (gmin*vbe))/bf;
+  elsif (vbe <= -5.0*vt ) use
+    diodeber: ibe == ((-1.0*isat) + (gmin*vbe))/bf;
+  end use;
+  diodecond2 : if(vbc > -5.0*vt) use
+    diodebcf : ibc == ((isat*(exp(vbc/vt) - 1.0)) + (gmin*vbc))/br;
+  elsif(vbc <= -5.0*vt) use
+    diodebcr : ibc == ((-1.0*isat) + (gmin*vbc))/br;
+  end use;
+  bres : vbo == ib * 1.0e-6;
+  cres : vco == ic * 1.0e-6;
+  eres : veo == ie * 1.0e-6;
+  kcl_eqn : ie == -1.0*(ib + ic);
+  vcevolt : vce == vbe - vbc;
+  ictdep : Ict == ((Ibe*bf) - (Ibc*br)) * (1.0 -(vbc/vaf));
+  
+end architecture structure;
+
+
+--*****************************************************
+--TEST BENCH
+use std.textio.all;
+use work.electricalsystem.all;
+
+entity bjt_testbench is
+end bjt_testbench;
+
+architecture structure of bjt_testbench is
+  terminal t1, t2, t3, t4 : electrical ;
+  component bjt_npn_comp
+    generic(isat : real := 1.0e-16;         -- Saturation Current
+            bf : real := 100.0;           -- Ideal maximus forward current
+            br : real := 1.0;             -- ideal maximum reverse current
+            rb : real := 1.0e-5;          -- Base resistance
+            rc : real := 1.0e-5;          -- collector resistance
+            re : real := 1.0e-5;          -- emmiter resistance
+            vaf : real := 100.0);         -- Forward Early Voltage
+    port(terminal e,b,c : electrical);	  
+  end component;
+  for all : bjt_npn_comp use entity work.bjt_npn(structure);
+  
+  quantity vcc across icc through t1 to electrical'reference;
+  quantity vrc across irc through t1 to t2;
+  quantity vbb across ibb through t3 to electrical'reference;
+  quantity vre across ire through t4 to electrical'reference;
+  
+begin
+   
+   bjt : bjt_npn_comp
+     generic map (isat => 1.8104e-15, vaf => 100.0)
+     port map(t4,t3,t2);
+   emres : vre == ire * 3.3e3;
+   ccurr : vcc == 10.0;
+   ecurr : vbb == 6.0;
+   cores : vrc == irc * 4.7e3;
+
+end architecture structure;

@@ -1,0 +1,80 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test178.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of Cincinnati
+-- Cincinnati
+----------------------------------------------------------------------
+-- File          : test178.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : Sept 2001
+----------------------------------------------------------------------
+-- Description :
+----------------------------------------------------------------------
+-- the test is done for checking the correct implementation
+-- of the simultaneous procedural equation statement.it checks
+-- nature declaration, terminal and quantity declarations.
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH GROUND REFERENCE;
+    FUNCTION  SIN (X : real ) RETURN real;
+    FUNCTION  EXP  (X : real ) RETURN real;
+END PACKAGE electricalSystem;
+
+
+USE work.electricalSystem.all;
+
+ENTITY simproc IS
+END simproc;
+
+ARCHITECTURE asimproc OF simproc IS
+
+    terminal T1: electrical;
+    quantity vd across id through T1;
+    quantity charge: real;
+    constant vt: real:= 1.0;
+BEGIN
+        eq1: vd==1.0;
+	proc1: procedural is
+	variable vres:real;
+	constant tau:real:=1.0;
+	variable ares: real;
+	begin
+		e1: ares:=vd*1.0;
+		e3: vres:=vt;
+        end procedural;
+
+END asimproc ;

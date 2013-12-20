@@ -1,0 +1,58 @@
+
+# Copyright (C) Clifton Labs, Inc.  All rights reserved.
+
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the
+# Free Software Foundation; either version 2 of the License, or (at your
+# option) any later version.
+# 
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+# Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 675 Mass Ave, Cambridge, MA 02139, USA.
+
+setup_test_group "Clifton Labs:Compliant Cases" "1076-1993"
+
+set dir_prefix_length [expr [string length ${subdir}] + 3]
+
+foreach local_test_name [find ${subdir} *\.vhd*] {
+    # look for input files that might be needed
+    regsub {\.vhd|\.vhdl} ${local_test_name} "\*.in" input_files_glob
+    set input_files [glob -nocomplain ${input_files_glob}]
+    set input_files_argument ""
+    if {${input_files} != ""} {
+	regsub "^.*vhdl-93/clifton-labs/compliant/" ${input_files} "" input_files
+	set input_file_name [split ${input_files} "/"]
+	set input_file_name [lindex ${input_file_name} [expr [llength ${input_file_name}] - 1]]
+#	set input_files_argument "INPUT=${input_file_name}:[pwd]/${input_files}"
+	set input_files_argument "INPUT=${input_file_name}:${input_files}"
+	verbose "Input files glob: ${input_files_glob}, files found: ${input_files}, argument generated ${input_files_argument}" 2
+    }
+
+    # look for output files that might be needed
+    regsub {\.vhd|\.vhdl} ${local_test_name} "\*.out" output_files_glob
+    set output_files [glob -nocomplain ${output_files_glob}]
+    set output_files_argument ""
+    if {${output_files} != ""} {
+	regsub "^.*vhdl-93/clifton-labs/compliant/" ${output_files} "" output_files
+	set output_file_name [split ${output_files} "/"]
+	set output_file_name [lindex ${output_file_name} [expr [llength ${output_file_name}] - 1]]
+#	set output_files_argument "INPUT=${output_file_name}:[pwd]/${output_files}"
+	set output_files_argument "INPUT=${output_file_name}:${output_files}"
+	verbose "Ouput files glob: ${output_files_glob}, files found: ${output_files}, argument generated ${output_files_argument}" 2
+    }
+
+    verbose "Running test at ./[string range ${local_test_name} [expr ${dir_prefix_length} - 2] end]  ${input_files_argument} ${output_files_argument}" 2
+    if {${input_files_argument} == "" && ${output_files_argument} == ""} {
+	run_compliant_test ./[string range ${local_test_name} [expr ${dir_prefix_length} - 2] end] 
+    } else {
+	run_compliant_test ./[string range ${local_test_name} [expr ${dir_prefix_length} - 2] end] "${input_files_argument} ${output_files_argument}"
+    }
+    delete_lib work
+}
+
+end_test_group

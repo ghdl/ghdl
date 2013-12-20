@@ -1,0 +1,80 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test176.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of Cincinnati
+-- Cincinnati
+----------------------------------------------------------------------
+-- File          : test176.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : Sept 2001
+----------------------------------------------------------------------
+-- Description :
+----------------------------------------------------------------------
+-- the test is done for checking the correct implementation
+-- of the simultaneous null statement.it checks
+-- nature declaration, terminal and quantity declarations.
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH GROUND REFERENCE;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+END PACKAGE electricalSystem;
+use work.electricalSystem.all;
+
+entity test is
+end entity;
+
+architecture atest of test is
+terminal T1,T2:electrical;
+quantity V1 across I1 through T1 to T2;
+quantity V2 across I2 through T2;
+quantity V3 across I3 through T2;
+quantity VS across T1;
+
+begin
+
+	V1==1.0;
+	if (V1<=1.0) use
+	   NULL;
+	else
+          V2 == V1*1.0;
+        end use;
+
+
+esource: VS == 5.0 * sin(2.0 *3.141592 *10000.0 * real(time'pos(now))*1.0e-12);
+
+end architecture atest;

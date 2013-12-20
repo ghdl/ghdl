@@ -1,0 +1,39 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                              Chapter 10 - Packages
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+cpu_types.vhd                                   package cpu_types                       --                              Figure 10-1
+--                                              package cpu_types_test                  --                              Section 10.1
+address_decoder.vhd                             entity address_decoder                  functional                      Figure 10-2
+clock_power_pkg.vhd                             package clock_power_pkg                 --                              Figure 10-3
+io_controller-1.vhd                             entity phase_locked_clock_gen           std_cell                        --
+--                                              entity regulator                        device_level                    --
+--                                              entity io_controller                    top_level                       Figure 10-4
+bus_sequencer-1.vhd                             entity state_register                   std_cell                        --
+--                                              entity bus_sequencer                    fsm                             Figure 10-5
+analog_output_interface.vhd                     entity analog_interface_dac             macroblock                      --
+--                                              entity analog_output_interface          structural                      Figure 10-6
+cpu_types-1.vhd                                 package cpu_types                       --                              Figure 10-7
+cpu.vhd                                         entity cpu                              behavioral                      Figure 10-8
+bit_vector_signed_arithmetic.vhd                package bit_vector_signed_arithmetic    body                            Figure 10-9
+cpu-1.vhd                                       entity cpu                              behavioral                      Figure 10-10
+lessthan.vhd                                    entity lessthan                         test                            Figure 10-11
+test_alu.vhd                                    package alu_types                       --                              Section 10.5
+--                                              entity ALU                              structural                      Section 10.5
+--                                              test_alu                                random_test                     Figure 10-14
+inline_01.vhd                                   entity inline_01                        test                            Section 10.1
+inline_02.vhd                                   package inline_02                       body                            Section 10.1
+inline_03.vhd                                   entity inline_03                        test                            Section 10.3
+inline_04a.vhd                                  entity inline_04a                       test                            Section 10.3
+inline_05.vhd                                   entity logic_block                      --                              Section 10.3
+inline_06.vhd                                   entity inline_06                        test                            Section 10.4
+inline_08.vhd                                   package inline_08                       --                              Section 10.5
+inline_09.vhd                                   entity inline_09                        test                            Section 10.5
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_address_decoder.vhd                          entity tb_address_decoder               test                            address_decoder.vhd
+tb_bit_vector_signed_arithmetic.vhd             tb_bit_vector_signed_arithmetic         test                            bit_vector_signed_arithmetic.vhd

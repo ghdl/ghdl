@@ -1,0 +1,274 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: peak_detector.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+-- Change the values of res. and cap for various freq.'s
+
+
+
+--*************************************************************************
+-- Conceptual Level Model of a Peak Detector
+-- VHDL-AMS implementation
+-- Developed at Distributed Processing Laboratory
+-- University of Cincinnati
+-- by Murthy Revanuru on October 27, 2000.
+--*************************************************************************
+
+--#########################################################################
+--			  R2= 10.0e3
+--		 --------/\/\/\----------
+--		|	|\		 |
+--		.-------|-\        Diode |		
+--			|  \________|\___|_____o V_out
+--		    10K	|  /	    |/	 |
+--	V_in	o---^^^-|+/		 |-------- 		
+--		    R1	|/		 |	  |
+--				       _____	  \		
+--				  Cap  _____	  / Res	
+--				 	 |	  \	
+--					 |	  /	
+--					 | 	  |
+--				     ---------  -----
+--					---	  -	 		
+--
+--#########################################################################
+
+ PACKAGE electricalsystem IS
+     NATURE electrical IS real ACROSS real THROUGH ground reference;
+     FUNCTION SIN(X:real) RETURN real;
+     FUNCTION COS(X:real) RETURN real;
+     FUNCTION EXP(X:real) RETURN real;
+     FUNCTION SQRT(X:real) RETURN real;
+ END PACKAGE electricalsystem;
+
+---------------------------- Diode -----------------------------
+use work.electricalsystem.all;
+
+entity diode is 
+port (terminal t21,t22:electrical);
+end diode;
+
+architecture behavior of diode is
+
+quantity vd across id through t21 to t22;
+constant k:real:=0.02586; -- thermal voltage
+constant iss:real:=1.8104e-15;
+constant gmin:real:=1.0e-12;
+
+begin
+
+if (vd >= (-5.0*k)) use
+  id == iss * (exp(vd/k)-1.0) + vd*gmin;
+elsif (vd<-5.0*k) use
+  id == -1.0*iss + vd*gmin;
+end use;
+end architecture behavior;
+
+------------------------ RESISTOR---------------------------
+use work.electricalsystem.all;
+
+entity resistor is
+ generic(res :real:=1.0 );
+  port(terminal r_in,r_out: electrical);
+end entity resistor;
+
+architecture behav of resistor is
+   quantity vr across ir through r_in to r_out;
+
+begin
+  vr==ir*res;
+end architecture behav;
+
+------------------------ CAPACITOR---------------------------
+use work.electricalsystem.all;
+
+entity capacitor is
+ generic(cap :real:=1.0;v_init:real:=0.0);
+ port(terminal c_in,c_out: electrical);
+end entity capacitor;
+
+architecture behav of capacitor is
+
+quantity vc across ic through c_in to c_out;
+
+begin
+  break vc=>v_init;
+  ic==cap*vc'dot;
+end architecture behav;
+
+------------------------- OP AMP -------------------------
+use work.electricalsystem.all;
+
+entity op_amp is
+port(terminal inverting_ip,non_inverting_ip,output :electrical);
+end entity op_amp;
+
+architecture struct of op_amp is
+
+Constant R_in:real:=1.0e6;
+Constant R_out:real:=1.0;
+
+terminal t1:electrical;
+ 
+quantity v_in  across i_in  through non_inverting_ip to inverting_ip;
+quantity v_gain across i_gain through t1 to ground;
+quantity v_drop across i_drop through t1 to output;
+
+BEGIN
+ 
+ V_in==i_in*R_in;
+ V_gain==V_in*(100.0);
+ V_drop==i_drop*R_out;
+ 
+end architecture struct;
+
+---------------------- PEAK  DETECTOR ---------------------
+use work.electricalsystem.all;
+
+entity peak_detector is
+port (terminal v_in,v_out: electrical);
+end entity peak_detector;
+
+architecture struct of peak_detector is
+
+component capacitor is 
+ generic(cap :real:=1.0;v_init:real:=0.0);
+ port(terminal c_in,c_out: electrical);
+end component;
+for all: capacitor use entity work.capacitor(behav);
+ 
+component resistor is
+ generic(res :real:=1.0 );
+  port(terminal r_in,r_out: electrical);
+end component;
+for all: resistor use entity work.resistor(behav);
+ 
+component diode is
+port (terminal t21,t22:electrical);
+end component;
+for all: diode use entity work.diode(behavior);
+
+component op_amp is
+port(terminal inverting_ip,non_inverting_ip,output :electrical);
+end component;
+for all:op_amp use entity work.op_amp(struct);
+
+terminal t11,t12,t13,t14: electrical;
+
+
+begin
+
+ D1: diode     port map(t12,t13);
+
+ R1: resistor  generic map(10.0e3)
+	       port map(v_in,T11);
+ R2: resistor  generic map(10.0e3)
+	       port map(T13,T14);
+ Rs: resistor  generic map(1.0e-3)
+	       port map(T13,V_out);
+
+ C1: capacitor generic map(1.0e-9)
+	       port map(T13,ground);
+
+ op: op_amp    port map(inverting_ip=>T14,non_inverting_ip=>T11,output=>T12);
+
+end struct;
+ 		
+-- ################### TEST WAVE FORMS #######################
+-- Sine Source
+--------------
+use work.electricalsystem.all;
+ENTITY sineSource IS
+generic (amp:real:=1.0; freq:real:=1.0);
+  PORT( TERMINAL ta2,tb2 : electrical);
+END sineSource;
+
+ARCHITECTURE sinebehavior OF sineSource IS
+quantity Vsine across isine through ta2 to tb2;
+
+BEGIN
+  Vsine ==(amp*sin((2.0*22.0/7.0*freq)*real(time'pos(now))*1.0e-15));
+
+END ARCHITECTURE sinebehavior;
+
+-- AM Source
+--------------
+use work.electricalsystem.all;
+ENTITY amSource IS
+generic (amp:real:=1.0; wc:real:=1.0;wm:real:=1.0);
+  PORT( TERMINAL ta2,tb2 : electrical);
+END amSource;
+
+ARCHITECTURE ambehavior OF amSource IS
+quantity V_am across i_am through ta2 to tb2;
+
+BEGIN
+  V_am == (amp*cos((2.0*22.0/7.0*wc)*real(time'pos(now))*1.0e-15)) +(amp/2.0*cos((2.0*22.0/7.0*(wc+wm))*real(time'pos(now))*1.0e-15)) +
+	  (cos((2.0*22.0/7.0*(wc-wm))*real(time'pos(now))*1.0e-15));
+
+END ARCHITECTURE ambehavior;
+
+------------------------- Test bench -------------------------
+
+use work.electricalsystem.all;
+
+entity rf_test_bench is
+end entity rf_test_bench;
+
+architecture basic of rf_test_bench is
+
+terminal t1,t2,t3,t4 : electrical;
+
+----> Components are declared here
+
+component peak_detector is
+port(terminal v_in,v_out :electrical);
+end component;
+for all: peak_detector use entity work.peak_detector(struct);
+
+COMPONENT sineSource IS
+generic (amp:real:=1.0; freq:real:=1.0);
+    PORT( TERMINAL ta2,tb2 : electrical);--Interface ports.
+end COMPONENT;
+for all : sinesource use entity work.sinesource(sinebehavior);
+
+quantity volt_op across i_op through t4 to ground;
+
+begin
+
+      op_1    : volt_op==i_op*10000.0;
+
+   peak_det   : peak_detector port map(t1,t4);	
+   sine_ip    : sinesource    generic map(1.0,455.0e3)
+			      port map(t1,ground);
+
+end architecture basic;

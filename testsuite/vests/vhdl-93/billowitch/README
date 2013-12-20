@@ -1,0 +1,26 @@
+
+This directory contains copies of the VHDL files that were originally
+developed by Bill Billowitch to form a VHDL 1076-1987 test suite.  The
+development of the test suite was done with partial support of the
+United States Air Force.  Both Bill Billowitch and the Air Force have
+granted the University of Cincinnati permission to release these files
+under the GNU Public License.
+
+Since the original test suite was developed for the 1076-1987 standard,
+some changes were required to make them compliant with the 1076-1993
+standard; they are now not necessarily compilant with the earlier
+(1076-1987) standard.  The VHDL files are organized into three
+subdirectories, fail_tests, pass_tests or disputed_tests, corresponding
+to their being non-compliant, compliant, or in question to the 1076-1993
+standard (files in this subdirectory were originally located in the
+compliant subdirectory of the 1076-1987 test suite).
+
+If you find errors or corrections to these files, please submit them to
+us at vests@cliftonlabs.com.  Thank you.
+
+------------------------------------------------------------------------
+Philip A. Wilsey 
+The University of Cincinnati
+vests@cliftonlabs.com
+------------------------------------------------------------------------
+Last Revised: March 27, 2002

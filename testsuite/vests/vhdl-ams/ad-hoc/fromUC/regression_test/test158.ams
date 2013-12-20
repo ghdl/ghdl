@@ -1,0 +1,98 @@
+
+-- Copyright (C) 2001-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: test158.ams,v 1.1 2002-03-27 22:11:19 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+----------------------------------------------------------------------
+-- SIERRA REGRESSION TESTING MODEL
+-- Develooped at:
+-- Distriburted Processing Laboratory
+-- University of Cincinnati
+-- Cincinnati
+----------------------------------------------------------------------
+-- File          : test134.ams
+-- Author(s)     : Geeta Balarkishnan(gbalakri@ececs.uc.edu)
+-- Created       : June 2001
+----------------------------------------------------------------------
+-- Description :
+----------------------------------------------------------------------
+-- this is a test to check the corretness of the implemntation of the break
+-- statement and also the use of quantity port of type voltage.
+-- this is a vco model which first sets the initial condition
+-- using a break statement. Then again, a break statement is applied to keep 
+-- the phase within 0-2pi. Thr output voltage eqn is obtained as vout and the 
+-- phase eqn as phase'dot.
+-- LRM ref: 8.14, 4.3.2.
+----------------------------------------------------------------------
+PACKAGE electricalSystem IS
+   -- SUBTYPE voltage is real;
+    NATURE electrical IS real ACROSS real THROUGH ground reference;
+    FUNCTION SIN(X : real) RETURN real;
+    FUNCTION EXP(X : real) RETURN real;
+    FUNCTION SQRT(X : real) RETURN real;
+    FUNCTION POW(X,Y : real) RETURN real;
+END PACKAGE electricalSystem;
+
+use work.electricalSystem.all;
+
+entity vco is 
+  generic( 
+          fc: real := 1.0e6;    -- VCO frequency at Vc 
+          df: real := 0.5e6;  -- [Hz/V], frequency characteristic slope 
+          Vc: voltage := 0.0 --  centre frequency input voltage 
+         ); 
+  port( quantity Vin: in real; 
+        terminal OutTerminal: electrical); 
+end entity VCO; 
+
+architecture avco of vco is 
+    constant TwoPi: real := 6.283118530718; -- 2pi 
+
+    quantity Phase : real; 
+
+    -- define a branch for the output voltage source 
+
+    quantity Vout across Iout through OutTerminal to electrical'reference; 
+
+begin 
+   -- use break to set the phase initial condition 
+   break Phase => 0.0; 
+
+   -- another break statement keeps the phase within 0.. 2pi 
+   break Phase => Phase mod TwoPi on Phase'above(TwoPi); 
+
+   -- phase equation 
+   Phase'dot == TwoPi*realmax(0.5E6, fc+(Vin-Vc)*df); 
+
+     -- output voltage source equation 
+     Vout == 2.5*(1.0+sin(Phase)); 
+
+end architecture avco; 

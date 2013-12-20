@@ -1,0 +1,161 @@
+
+-- Copyright (C) 2000-2002 The University of Cincinnati.  
+-- All rights reserved. 
+
+-- This file is part of VESTs (Vhdl tESTs).
+
+-- UC MAKES NO REPRESENTATIONS OR WARRANTIES ABOUT THE SUITABILITY OF THE
+-- SOFTWARE, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+-- IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+-- OR NON-INFRINGEMENT.  UC SHALL NOT BE LIABLE FOR ANY DAMAGES SUFFERED BY
+-- LICENSEE AS A RESULT OF USING, RESULT OF USING, MODIFYING OR
+-- DISTRIBUTING THIS SOFTWARE OR ITS DERIVATIVES.
+
+-- By using or copying this Software, Licensee agrees to abide by the
+-- intellectual property laws, and all other applicable laws of the U.S.,
+-- and the terms of this license.
+
+-- You may modify, distribute, and use the software contained in this
+-- package under the terms of the "GNU GENERAL PUBLIC LICENSE" version 2,
+-- June 1991. A copy of this license agreement can be found in the file
+-- "COPYING", distributed with this archive.
+
+-- You should have received a copy of the GNU General Public License
+-- along with VESTs; if not, write to the Free Software Foundation,
+-- Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
+
+-- ---------------------------------------------------------------------
+--
+-- $Id: parallel-plates4.ams,v 1.1 2002-03-27 22:11:17 paw Exp $
+-- $Revision: 1.1 $
+--
+-- ---------------------------------------------------------------------
+
+-- This model was tested and compared with SPICE.
+-- The results match with SPICE
+-- The model implements a simple parallel plate cap with just 
+-- one top and one bottom  plate.
+-- The top and bottom plates have been divided into 4 sub plates.
+-- Actually its like 4 parallel-plate subsections have been connected
+-- to form the capacitor.
+-- simulation time 2e11.
+-- Initially proposed by Dr. Carter.
+
+PACKAGE electricalSystem IS
+    NATURE electrical IS real ACROSS real THROUGH GROUND REFERENCE;
+    FUNCTION  SIN (X : real ) RETURN real;
+END PACKAGE electricalSystem;
+
+use work.electricalSystem.all;
+entity plate is 
+	generic (
+		cell_resistance : real := 1000.0 
+		);
+
+	port ( 
+		terminal up, down, left, right, top : electrical 
+	    );
+end entity plate;
+
+architecture behav of plate is 
+
+quantity Vup across Iup through up to top ;
+quantity Vdown across Idown through down to top ;
+quantity Vleft across Ileft through left to top ;
+quantity Vright across Iright through right to top ;
+
+begin
+
+	Rup : Vup == Iup * cell_resistance ; 
+	Rdown : Vdown == Idown * cell_resistance ; 
+	Rleft : Vleft == Ileft * cell_resistance ; 
+	Rright : Vright == Iright * cell_resistance ; 
+end behav ;
+
+
+use work.electricalSystem.all;
+
+entity parallel_plate_cap is
+	port ( 
+	     terminal up1, up2, down1, down2, left1, left2, right1, right2, top1, top2: electrical 
+	    );
+end entity;
+
+architecture struc of parallel_plate_cap is
+	component plate is 
+        generic (
+                cell_resistance : real := 1000.0
+                );
+	    port (
+		   terminal up, down, left, right, top : electrical
+                 );
+	end component ;
+        for all : plate use entity work.plate(behav);    
+
+	-- this need not be in the port list but i am adding it
+	-- to observe vcap uniquely.
+	--terminal top1, top2 : electrical ;
+	quantity vcap across icap through top1 to top2 ;
+	quantity vrgnd across irgnd through top2 ;
+--	quantity vs1 across left1 to left2;
+--	quantity vs2 across right1 to right2;
+--	quantity vs3 across up1 to up2;
+--	quantity vs4 across down1 to down2;
+
+	constant cell_cap : real := 1.0e-8;
+	
+begin
+	plate1 : plate port map ( up1, down1, left1, right1, top1) ;
+        plate2 : plate port map ( up2, down2, left2, right2, top2) ;
+	--plate2 : plate port map ( up2, down2, left2, right2, ground) ;
+	
+	capeqn : icap == cell_cap * vcap'dot;
+	-- there should be some ground
+	resgnd : vrgnd == irgnd * 1000.0 ;
+--        vsrc1 : vs1  == 5.0 * sin(2.0 * 3.1415 * 10.0e3 --sine source
+                   --            * real(time'pos(now)) * 1.0e-15);
+ --       vsrc2 : vs2  == 5.0 * sin(2.0 * 3.1415 * 10.0e3 --sine source
+ --                              * real(time'pos(now)) * 1.0e-15);
+  --      vsrc3 : vs3  == 5.0 * sin(2.0 * 3.1415 * 10.0e3 --sine source
+   --                            * real(time'pos(now)) * 1.0e-15);
+    --    vsrc4 : vs4  == 5.0 * sin(2.0 * 3.1415 * 10.0e3 --sine source
+     --                          * real(time'pos(now)) * 1.0e-15);
+
+end struc ;
+
+use work.electricalSystem.all;
+
+entity real_cap is 
+end entity ;
+
+architecture struct of real_cap is 
+	component parallel_plate_cap is
+	port ( 
+	     terminal up1, up2, down1, down2, left1, left2, right1, right2, top1, top2: electrical 
+	    );
+	end component ;
+
+	for all : parallel_plate_cap use entity work.parallel_plate_cap(struc);
+
+	terminal u1, u2, u3 , u4, d1, d2, d3, d4, l1, l2 , r1, r2, r3, r4 , t1, t2, t3, t4: electrical ;
+	terminal d11, d21, d31, d41, l11, l21 , r11, r21, r31, r41 , t11, t21, t31, t41: electrical ;
+	-- not needed.
+	--terminal l3 , l4 : electrical ;
+
+	quantity vs across l1 to l2 ;
+	quantity vs1 across l11 to l21 ;
+
+
+begin
+
+	p1 : parallel_plate_cap port map (u1, u2, d1, d2, l1, l2, r1, r2, t1, t2);
+	p2 : parallel_plate_cap port map (u3, u4, d3, d4, r1, r2, r3, r4, t3, t4);
+	p3 : parallel_plate_cap port map (d1, d2, d11, d21, l11, l21, r11, r21, t11, t21);
+	p4 : parallel_plate_cap port map (d3, d4, d31, d41, r11, r21, r31, r41, t31, t41);
+
+        vsrc : vs  == 5.0 * sin(2.0 * 3.1415 * 10.0e3 --sine source
+                              * real(time'pos(now)) * 1.0e-15);
+        vsrc1 : vs1  == 5.0 * sin(2.0 * 3.1415 * 10.0e3 --sine source
+                              * real(time'pos(now)) * 1.0e-15);
+
+end ;	

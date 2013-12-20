@@ -1,0 +1,77 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                Chapter 14 - Case Study 2: Mixed-Technology Focus
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+gain.vhd                                        entity gain                             simple                          Figure 14-3
+gain_e.vhd                                      entity gain_e                           simple                          Figure 14-4
+sum2.vhd                                        entity sum2                             simple                          Figure 14-6
+limiter.vhd                                     entity limiter                          simple                          Figure 14-7
+lpf_1.vhd                                       entity lpf_1                            simple                          Figure 14-9
+lead_lag.vhd                                    entity lead_lag                         simple                          Figure 14-18
+DC_Motor.vhd                                    entity DC_Motor                         basic                           Figure 14-21
+gear_rv_r.vhd                                   entity gear_rv_r                        ideal                           Figure 14-22
+stop_r.vhd                                      entity stop_r                           ideal                           Fgiure 14-23
+lead_lag_ztf.vhd                                entity lead_lag_ztf                     simple                          Figure 14-27
+lead_lag_diff.vhd                               entity lead_lag_diff                    bhv                             Figure 14-30
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
+tb_CS2_Mech_Domain.vhd                          entity sum2_e                           simple
+--                                              entity gain_e                           simple
+--                                              entity lead_lag_e                       simple
+--                                              entity limiter_2_e                      simple 
+--                                              entity rudder_servo                     rudder_servo
+--                                              entity gear_rv_r                        ideal
+--                                              entity rot2v                            bhv
+--                                              entity horn_r2t                         bhv
+--                                              entity horn_t2r                         bhv
+--                                              entity DC_Motor                         basic
+--                                              entity stop_r                           ideal
+--                                              entity tran_linkage                     a1
+--                                              entity rudder                           bhv
+--                                              entity v_sine                           ideal
+--                                              entity TB_CS2_Mech_Domain               TB_CS2_Mech_Domain
+tb_CS2_S_Domain.vhd                             entity v_sine                           ideal
+--                                              entity sum2_e                           simple
+--                                              entity lead_lag_e                       simple
+--                                              entity gain_e                           simple
+--                                              entity limiter_2_e                      simple
+--                                              entity ctl_horn_e                       bhv
+--                                              entity rudder_horn_e                    bhv
+--                                              entity integ_1_e                        simple
+--                                              entity lpf_1_e                          simple
+--                                              entity TB_CS2_S_Domain                  TB_CS2_S_Domain
+tb_CS2_Z_Domain_Diff.vhd                        entity gear_rv_r                        ideal
+--                                              entity rot2v                            bhv
+--                                              entity horn_r2t                         bhv
+--                                              entity horn_t2r                         bhv
+--                                              entity DC_Motor                         basic
+--                                              entity stop_r                           ideal
+--                                              entity tran_linkage                     a1
+--                                              entity rudder                           bhv
+--                                              entity sum2_e                           simple
+--                                              entity gain_e                           simple
+--                                              entity limiter_2_e                      simple
+--                                              entity clock                            ideal
+--                                              entity lead_lag_diff                    bhv
+--                                              entity rudder_servo_z                   rudder_servo_z
+--                                              entity v_sine                           ideal
+--                                              entity TB_CS2_Z_Domain_Diff             TB_CS2_Z_Domain_Diff
+tb_CS2_Z_Domain_ZTF.vhd                         entity gear_rv_r                        ideal
+--                                              entity rot2v                            bhv
+--                                              entity horn_r2t                         bhv
+--                                              entity horn_t2r                         bhv
+--                                              entity DC_Motor                         basic
+--                                              entity stop_r                           ideal
+--                                              entity tran_linkage                     a1
+--                                              entity rudder                           bhv
+--                                              entity sum2_e                           simple
+--                                              entity gain_e                           simple
+--                                              entity limiter_2_e                      simple
+--                                              entity lead_lag_ztf                     simple
+--                                              entity rudder_servo_ztf                 rudder_servo_ztf
+--                                              entity v_sine                           ideal
+--                                              entity TB_CS2_Z_Domain_ZTF              TB_CS2_Z_Domain_ZTF

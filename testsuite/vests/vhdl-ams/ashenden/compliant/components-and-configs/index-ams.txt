@@ -1,0 +1,47 @@
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                    Chapter 16 - Components and Configurations
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Figure/Section
+-----------                                     ------------                            --------------                  --------------
+opamp.vhd                                       entity bulk_cmos_nfet                   basic, detailed                 --
+--                                              entity opamp                            struct                          Figure 16-1
+automotive_valve_defs.vhd                       package automotive_valve_defs           --                              Figure 16-2
+automotive_valve.vhd                            entity automotive_valve                 test                            Figure 16-3
+brake_system.vhd                                entity brake_system                     structure                       Figure 16-4
+opamp_mosfets.vhd                               configuration opamp_mosfets             --                              Figure 16-5
+notch_filter.vhd                                entity notch_filter                     opamp_based                     Figure 16-6
+notch_filter_down_to_device_level.vhd           configuration notch_filter_down_to_device_level  --                     Figure 16-7
+notch_filter_full.vhd                           configuration full                      --                              Figure 16-8
+fm_radio.vhd                                    entity fm_radio                         top_level                       Figure 16-9
+successive_approx_adc.vhd                       entity successive_approx_adc            struct                          Figure 16-10
+sensor_interface.vhd                            entity sensor_interface                 structural                      Figure 16-11
+sensor_interface_with_timing.vhd                configuration sensor_interface_with_timing  --                          Figure 16-12
+computer_system.vhd                             entity computer_system                  structure                       Figure 16-13
+decoder_3_to_8.vhd                              entity decoder_3_to_8                   basic                           Figure 16-14
+computer_structure.vhd                          configuration computer_structure        --                              Figure 16-15
+single_board_computer.vhd                       entity single_board_computer            structural                      Figure 16-17
+intermediate.vhd                                entity XYZ3000_cpu                      full_function                   --
+--                                              entity memory_array                     behavioral                      --
+--                                              configuration intermediate              --                              Figure 16-18
+logic_block.vhd                                 entity nand3                            behavioral                      --
+--                                              entity logic_block                      ideal                           Figure 16-19
+reg-1.vhd                                       entity reg                              gate_level                      Figure 16-21
+control_section.vhd                             entity control_section                  structural                      Figure 16-20
+controller_with_timing-1.vhd                    configuration controller_with_timing    --                              Figure 16-22
+interlock_control.vhd                           entity not_gate                         primitive                       --
+--                                              entity interlock_control                detailed_timing                 Figure 16-23
+interlock_control_with_estimates.vhd            configuration interlock_control_with_estimates  --                      Figure 16-24
+--                                              configuration interlock_control_with_actual  --                         Figure 16-24
+misc_logic.vhd                                  entity misc_logic                       gate_level                      Figure 16-25
+misc_logic_reconfigured.vhd                     configuration misc_logic_reconfigured   --                              Figure 16-26
+inline_02a.vhd                                  configuration inline_02a                --                              Section 16.2
+inline_04a.vhd                                  entity inline_04a                       test                            --
+--                                              configuration inline_04a_test           --                              Section 16.2
+inline_05.vhd                                   entity inline_05                        test                            Section 16.2
+--                                              entity nand2                            --                              Section 16.2
+--                                              configuration inline_05_test            --                              Section 16.2
+---------------------------------------------------------------------------------------------------------------------------------------------
+--                                                                    TestBenches
+---------------------------------------------------------------------------------------------------------------------------------------------
+-- Filename                                     Primary Unit                            Secondary Unit                  Tested Model
+------------                                    ------------                            --------------                  ------------
