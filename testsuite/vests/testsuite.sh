@@ -143,6 +143,9 @@ done
 
 # Test group
 
+dir=vhdl-93/clifton-labs/compliant
+. $dir/compliant1.exp
+
 # ashenden compliant
 # OK
 dir=vhdl-93/ashenden/compliant
