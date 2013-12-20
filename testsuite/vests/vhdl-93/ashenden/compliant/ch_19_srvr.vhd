@@ -25,7 +25,7 @@
 -- ---------------------------------------------------------------------
 
 library qsim;
-library random
+library random;
 
   use qsim.qsim_types.all, random.random.all;
 

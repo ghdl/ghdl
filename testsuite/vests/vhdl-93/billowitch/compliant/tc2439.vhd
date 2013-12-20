@@ -51,7 +51,7 @@ BEGIN
     -- Assign each of these arrays using aggregates.
     -- 1. Individual aggregates.
     CHARV := CHAR_ARR'( 'a' => '1', 'b' => '0', NUL to '`' => '1',
-                        'c' to DEL => '1' );
+                        'c' to character'high => '1' );
     for C in CHARACTER loop
       if  (C = 'a') then
         assert( CHARV( C ) = '1' );
@@ -100,7 +100,7 @@ BEGIN
     
     -- 2. Groups of aggregates.
     CHARV := CHAR_ARR'( 'a' | 'b' => '1', NUL to '`' => '0',
-                        'c' to DEL => '0' );
+                        'c' to character'high => '0' );
     for C in CHARACTER loop
       if  (C = 'a') then
         assert( CHARV( C ) = '1' );

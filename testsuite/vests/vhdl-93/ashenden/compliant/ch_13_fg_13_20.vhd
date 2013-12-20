@@ -46,8 +46,9 @@ library ieee;  use ieee.std_logic_1164.all;
                  for flag_reg : reg
                    use entity work.reg(gate_level)
                    -- workaround for MTI bug mt023
-                   -- port map ( clock => clk, data_in => d, data_out => q );
-                   port map ( clock => clk, data_in => d, data_out => q, reset_n => '1' );
+                   --  reverted for ghdl
+                   port map ( clock => clk, data_in => d, data_out => q );
+                   -- port map ( clock => clk, data_in => d, data_out => q, reset_n => '1' );
                  -- end workaround
 
                  -- . . .

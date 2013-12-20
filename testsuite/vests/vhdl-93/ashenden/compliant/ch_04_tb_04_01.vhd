@@ -28,7 +28,7 @@ entity test_bench_04_01 is
 end entity test_bench_04_01;
 
 library ch4_pkgs;
-use ch4_pkgs.pk_04_02.all;
+use ch4_pkgs.pk_04_01.all;
 
 architecture test_coeff_ram_abstract of test_bench_04_01 is
 

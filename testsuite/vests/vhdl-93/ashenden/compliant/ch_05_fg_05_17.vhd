@@ -79,7 +79,7 @@ begin
 
   end block equivalent_mux;
 
-  stimulus :
+  stimulus_proc :
     all_possible_values( bv(0) => sel0, bv(1) => sel1,
 			 bv(2) => d0, bv(3) => d1,
 			 bv(4) => d2, bv(5) => d3,

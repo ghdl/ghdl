@@ -30,9 +30,7 @@
 
 ENTITY c02s01b00x00p06n05i02874ent IS
   function "+" (I1:Bit) return bit;  --- No_Failure_here
-END c02s01b00x00p06n05i02874ent;
-
-ARCHITECTURE c02s01b00x00p06n05i02874arch OF c02s01b00x00p06n05i02874ent IS
+  
   function "+" (I1:Bit) return bit is
   begin
     if (I1 = '1') then
@@ -41,6 +39,9 @@ ARCHITECTURE c02s01b00x00p06n05i02874arch OF c02s01b00x00p06n05i02874ent IS
       return '0';
     end if;
   end;
+END c02s01b00x00p06n05i02874ent;
+
+ARCHITECTURE c02s01b00x00p06n05i02874arch OF c02s01b00x00p06n05i02874ent IS
 BEGIN
   TESTING: PROCESS
     variable k : bit := '0';

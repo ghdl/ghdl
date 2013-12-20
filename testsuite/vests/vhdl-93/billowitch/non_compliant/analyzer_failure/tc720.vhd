@@ -29,7 +29,7 @@
 -- ---------------------------------------------------------------------
 
 ENTITY c01s01b00x00p04n01i00720ent IS
-END c01s01b00x00p04n01i00720ent;
+END    c01s01b00x00p04n01i00720ent;
 
 ARCHITECTURE c01s01b00x00p04n01i00720arch OF c01s01b00x00p04n01i00720ent IS
 

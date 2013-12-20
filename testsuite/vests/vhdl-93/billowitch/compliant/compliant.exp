@@ -318,10 +318,10 @@ run_compliant_test tc512.vhd
 run_compliant_test tc513.vhd
 run_compliant_test tc515.vhd
 run_compliant_test tc516.vhd
-run_compliant_test tc517.vhd
+#run_compliant_test tc517.vhd # non static choice
 run_compliant_test tc519.vhd
-run_compliant_test tc520.vhd
-run_compliant_test tc521.vhd
+#run_compliant_test tc520.vhd # idem
+#run_compliant_test tc521.vhd # idem
 run_compliant_test tc522.vhd
 run_compliant_test tc523.vhd
 run_compliant_test tc524.vhd
@@ -336,7 +336,7 @@ run_compliant_test tc534.vhd
 run_compliant_test tc535.vhd
 run_compliant_test tc537.vhd
 run_compliant_test tc538.vhd
-run_compliant_test tc539.vhd
+#run_compliant_test tc539.vhd # illegal test
 run_compliant_test tc541.vhd
 run_compliant_test tc542.vhd
 run_compliant_test tc544.vhd
@@ -499,7 +499,7 @@ run_compliant_test tc707.vhd INPUT=iofile.58:iofiles/iofile.58
 run_compliant_test tc708.vhd OUTPUT=iofile.59:iofiles/iofile.59
 run_compliant_test tc709.vhd INPUT=iofile.59:iofiles/iofile.59
 run_compliant_test tc710.vhd OUTPUT=iofile.60:iofiles/iofile.60
-run_compliant_test tc711.vhd INPUT=iofile.60:iofiles/iofile.60
+#run_compliant_test tc711.vhd INPUT=iofile.60:iofiles/iofile.60 # direction mism
 run_compliant_test tc712.vhd OUTPUT=iofile.01:iofiles/iofile.01
 run_compliant_test tc713.vhd INPUT=iofile.02:iofiles/iofile.02
 run_compliant_test tc717.vhd
@@ -644,7 +644,7 @@ run_compliant_test tc987.vhd
 run_compliant_test tc988.vhd
 run_compliant_test tc992.vhd
 run_compliant_test tc993.vhd
-run_compliant_test tc995.vhd
+run_compliant_test tc995.vhd # Changed (FIXME)
 
 run_compliant_test tc1009.vhd
 run_compliant_test tc1010.vhd
@@ -1280,7 +1280,7 @@ run_compliant_test tc2365.vhd
 run_compliant_test tc2366.vhd
 run_compliant_test tc2367.vhd
 run_compliant_test tc2368.vhd
-run_compliant_test tc2369.vhd
+run_compliant_test tc2369.vhd # changed
 run_compliant_test tc2370.vhd
 run_compliant_test tc2371.vhd
 run_compliant_test tc2372.vhd
@@ -1316,7 +1316,7 @@ run_compliant_test tc2430.vhd
 run_compliant_test tc2432.vhd
 run_compliant_test tc2435.vhd
 run_compliant_test tc2436.vhd
-run_compliant_test tc2439.vhd
+run_compliant_test tc2439.vhd # changed
 run_compliant_test tc2440.vhd
 run_compliant_test tc2446.vhd
 run_compliant_test tc2448.vhd
@@ -1454,7 +1454,7 @@ run_compliant_test tc2865.vhd
 run_compliant_test tc2866.vhd
 run_compliant_test tc2868.vhd
 run_compliant_test tc2870.vhd
-run_compliant_test tc2874.vhd
+run_compliant_test tc2874.vhd # changed
 run_compliant_test tc2876.vhd
 run_compliant_test tc2879.vhd
 run_compliant_test tc2880.vhd

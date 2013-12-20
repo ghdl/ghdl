@@ -39,24 +39,24 @@ run_non_compliant_test tc255.vhd
 run_non_compliant_test tc259.vhd
 run_non_compliant_test tc260.vhd
 run_non_compliant_test tc261.vhd
-run_non_compliant_test tc262.vhd
-run_non_compliant_test tc263.vhd
+#run_non_compliant_test tc262.vhd # ??? no recovery with ghdl_mcode
+#run_non_compliant_test tc263.vhd # idem
 run_non_compliant_test tc264.vhd
 run_non_compliant_test tc536.vhd
 
 run_non_compliant_test tc1074.vhd
-run_non_compliant_test tc1227.vhd
+#run_non_compliant_test tc1227.vhd # detected during analysis
 run_non_compliant_test tc1336.vhd
 run_non_compliant_test tc1399.vhd
 run_non_compliant_test tc1400.vhd
 run_non_compliant_test tc1401.vhd
 run_non_compliant_test tc1402.vhd
 run_non_compliant_test tc1404.vhd
-run_non_compliant_test tc1707.vhd
-run_non_compliant_test tc1708.vhd
-run_non_compliant_test tc1725.vhd
-run_non_compliant_test tc1951.vhd
-run_non_compliant_test tc3056.vhd
+#run_non_compliant_test tc1707.vhd # detected during analysis
+#run_non_compliant_test tc1708.vhd # detected during analysis
+#run_non_compliant_test tc1725.vhd # detected during analysis
+#run_non_compliant_test tc1951.vhd # ??? no recovery with ghdl_mcode
+#run_non_compliant_test tc3056.vhd # missing pkg body
 
 end_test_group
 

@@ -35,6 +35,7 @@ end entity decoder_3_to_8;
 -- not in book
 
 architecture basic of decoder_3_to_8 is
+    subtype bv_vec3 is bit_vector (2 downto 0);
 begin
 
   process (enable, s2, s1, s0) is
@@ -42,7 +43,7 @@ begin
     if enable = '0' then
       (y7, y6, y5, y4, y3, y2, y1, y0) <= bit_vector'("00000000");
     else
-      case bit_vector'(s2, s1, s0) is
+      case bv_vec3'(s2, s1, s0) is
         when "000" => (y7, y6, y5, y4, y3, y2, y1, y0) <= bit_vector'("00000001");
         when "001" => (y7, y6, y5, y4, y3, y2, y1, y0) <= bit_vector'("00000010");
         when "010" => (y7, y6, y5, y4, y3, y2, y1, y0) <= bit_vector'("00000100");

@@ -36,10 +36,10 @@ ARCHITECTURE c07s03b01x00p06n02i02369arch OF c07s03b01x00p06n02i02369ent IS
 BEGIN
   TESTING: PROCESS
   BEGIN
-    assert NOT( O"4777" = B"100_111_111_111" )
+    assert NOT( bit_vector'(O"4777") = B"100_111_111_111" )
       report "***PASSED TEST: c07s03b01x00p06n02i02369"
       severity NOTE;
-    assert ( O"4777" = B"100_111_111_111" )
+    assert ( bit_vector'(O"4777") = B"100_111_111_111" )
       report "***FAILED TEST: c07s03b01x00p06n02i02369 - The type of the literal is determinable from the context in which it appears."
       severity ERROR;
     wait;

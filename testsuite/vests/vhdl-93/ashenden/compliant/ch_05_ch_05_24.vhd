@@ -87,7 +87,7 @@ begin
 
   end block block_05_4_b;
 
-  stimulus : all_possible_values( bv => test_input,
+  stimulus_proc : all_possible_values( bv => test_input,
 				  delay_between_values => 10 ns );
 
   (s1, s2) <= test_input;

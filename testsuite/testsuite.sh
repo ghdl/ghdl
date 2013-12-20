@@ -17,19 +17,32 @@ do_gna ()
   cd ..
 }
 
+# The VESTS testsuite:
+# compliance testsuite, from: https://github.com/nickg/vests.git 388250486a
+do_vests ()
+{
+  echo "**** VESTS ****"
+  echo "***************"
+  cd vests
+  ./testsuite.sh
+  cd ..
+}
+
 # Run a testsuite
 do_test ()
 {
   case $1 in
       gna)
 	  do_gna;;
+      vests)
+	  do_vests;;
       *)
           echo "$0: test name '$1' is unknown"
           exit 1;;
   esac
 }
 
-all_list="gna"
+all_list="gna vests"
 
 echo "GHDL is: $GHDL"
 

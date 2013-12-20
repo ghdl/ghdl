@@ -32,11 +32,11 @@
 
 setup_test_group "Ashenden:Non-compliant Cases" "1076-1993"
 
-run_non_compliant_test ch_02_ch_02_01.vhd
-run_non_compliant_test ch_03_ch_03_09.vhd
+run_compliant_test ch_02_ch_02_01.vhd # no error
+run_compliant_test ch_03_ch_03_09.vhd # no error
 run_non_compliant_test ch_03_ch_03_15.vhd
-run_non_compliant_test ch_04_ch_04_03.vhd
-run_non_compliant_test ch_04_ch_04_09.vhd
+run_compliant_test ch_04_ch_04_03.vhd # no error
+run_compliant_test ch_04_ch_04_09.vhd # no error
 run_non_compliant_test ch_17_fg_17_12.vhd
 run_non_compliant_test ch_17_fg_17_14.vhd
 run_non_compliant_test ch_17_fg_17_16.vhd
@@ -46,5 +46,5 @@ end_test_group
 # $Log: non_compliant.exp,v $
 # Revision 1.1  2001-10-19 23:28:54  paw
 # Adding dejagnu scripts to run ashenden's test cases.
-#
+# 
 

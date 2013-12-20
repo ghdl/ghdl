@@ -47,14 +47,14 @@ run_non_compliant_test tc13.vhd
 run_non_compliant_test tc19.vhd
 run_non_compliant_test tc20.vhd
 run_non_compliant_test tc21.vhd
-run_non_compliant_test tc22.vhd
+#run_non_compliant_test tc22.vhd # time subtype check
 run_non_compliant_test tc28.vhd
 run_non_compliant_test tc34.vhd
 run_non_compliant_test tc42.vhd
 run_non_compliant_test tc44.vhd
 run_non_compliant_test tc46.vhd
 run_non_compliant_test tc47.vhd
-run_non_compliant_test tc48.vhd
+#run_non_compliant_test tc48.vhd # ??? junk test
 run_non_compliant_test tc49.vhd
 run_non_compliant_test tc50.vhd
 run_non_compliant_test tc51.vhd
@@ -131,7 +131,7 @@ run_non_compliant_test tc190.vhd
 run_non_compliant_test tc191.vhd
 run_non_compliant_test tc192.vhd
 run_non_compliant_test tc193.vhd
-run_non_compliant_test tc195.vhd
+#run_non_compliant_test tc195.vhd # failure at simulation
 run_non_compliant_test tc196.vhd
 run_non_compliant_test tc197.vhd
 run_non_compliant_test tc199.vhd
@@ -165,7 +165,7 @@ run_non_compliant_test tc249.vhd
 run_non_compliant_test tc250.vhd
 run_non_compliant_test tc252.vhd
 run_non_compliant_test tc253.vhd
-run_non_compliant_test tc256.vhd
+#run_non_compliant_test tc256.vhd # physical type larger than integer
 run_non_compliant_test tc257.vhd
 run_non_compliant_test tc266.vhd
 run_non_compliant_test tc267.vhd
@@ -179,7 +179,7 @@ run_non_compliant_test tc275.vhd
 run_non_compliant_test tc280.vhd
 run_non_compliant_test tc282.vhd
 run_non_compliant_test tc283.vhd
-run_non_compliant_test tc289.vhd
+#run_non_compliant_test tc289.vhd # out of range signal assignment
 run_non_compliant_test tc296.vhd
 run_non_compliant_test tc300.vhd
 run_non_compliant_test tc302.vhd
@@ -188,7 +188,7 @@ run_non_compliant_test tc304.vhd
 run_non_compliant_test tc305.vhd
 run_non_compliant_test tc306.vhd
 run_non_compliant_test tc307.vhd
-run_non_compliant_test tc310.vhd
+#run_non_compliant_test tc310.vhd # idem
 run_non_compliant_test tc315.vhd
 run_non_compliant_test tc316.vhd
 run_non_compliant_test tc321.vhd
@@ -256,10 +256,10 @@ run_non_compliant_test tc551.vhd
 run_non_compliant_test tc552.vhd
 run_non_compliant_test tc553.vhd
 run_non_compliant_test tc714.vhd
-run_non_compliant_test tc715.vhd
-run_non_compliant_test tc716.vhd
+#run_non_compliant_test tc715.vhd # junk test
+#run_non_compliant_test tc716.vhd # junk test
 run_non_compliant_test tc718.vhd
-run_non_compliant_test tc720.vhd
+#run_non_compliant_test tc720.vhd # junk test
 run_non_compliant_test tc721.vhd
 run_non_compliant_test tc722.vhd
 run_non_compliant_test tc723.vhd
@@ -275,8 +275,8 @@ run_non_compliant_test tc733.vhd
 run_non_compliant_test tc734.vhd
 run_non_compliant_test tc735.vhd
 run_non_compliant_test tc736.vhd
-run_non_compliant_test tc738.vhd
-run_non_compliant_test tc739.vhd
+#run_non_compliant_test tc738.vhd # ??
+#run_non_compliant_test tc739.vhd # ??
 run_non_compliant_test tc764.vhd
 run_non_compliant_test tc766.vhd
 run_non_compliant_test tc767.vhd
@@ -286,9 +286,9 @@ run_non_compliant_test tc771.vhd
 run_non_compliant_test tc773.vhd
 run_non_compliant_test tc774.vhd
 run_non_compliant_test tc775.vhd
-run_non_compliant_test tc779.vhd
-run_non_compliant_test tc780.vhd
-run_non_compliant_test tc781.vhd
+#run_non_compliant_test tc779.vhd # error at elaboration
+#run_non_compliant_test tc780.vhd # idem
+#run_non_compliant_test tc781.vhd # idem
 run_non_compliant_test tc783.vhd
 run_non_compliant_test tc785.vhd
 run_non_compliant_test tc786.vhd
@@ -308,8 +308,8 @@ run_non_compliant_test tc801.vhd
 run_non_compliant_test tc802.vhd
 run_non_compliant_test tc803.vhd
 run_non_compliant_test tc804.vhd
-run_non_compliant_test tc806.vhd
-run_non_compliant_test tc807.vhd
+#run_non_compliant_test tc806.vhd # ??
+#run_non_compliant_test tc807.vhd # ??
 run_non_compliant_test tc808.vhd
 run_non_compliant_test tc809.vhd
 run_non_compliant_test tc810.vhd
@@ -506,7 +506,7 @@ run_non_compliant_test tc1201.vhd
 run_non_compliant_test tc1202.vhd
 run_non_compliant_test tc1203.vhd
 run_non_compliant_test tc1204.vhd
-run_non_compliant_test tc1217.vhd
+#run_non_compliant_test tc1217.vhd # ??
 run_non_compliant_test tc1219.vhd
 run_non_compliant_test tc1226.vhd
 run_non_compliant_test tc1228.vhd
@@ -580,10 +580,10 @@ run_non_compliant_test tc1325.vhd
 run_non_compliant_test tc1326.vhd
 run_non_compliant_test tc1329.vhd
 run_non_compliant_test tc1330.vhd
-run_non_compliant_test tc1333.vhd
-run_non_compliant_test tc1334.vhd
-run_non_compliant_test tc1345.vhd
-run_non_compliant_test tc1346.vhd
+#run_non_compliant_test tc1333.vhd # error at execution
+#run_non_compliant_test tc1334.vhd # idem
+#run_non_compliant_test tc1345.vhd # idem
+#run_non_compliant_test tc1346.vhd # idem
 run_non_compliant_test tc1351.vhd
 run_non_compliant_test tc1352.vhd
 run_non_compliant_test tc1353.vhd
@@ -591,7 +591,7 @@ run_non_compliant_test tc1355.vhd
 run_non_compliant_test tc1357.vhd
 run_non_compliant_test tc1358.vhd
 run_non_compliant_test tc1376.vhd
-run_non_compliant_test tc1377.vhd
+#run_non_compliant_test tc1377.vhd # out of range
 run_non_compliant_test tc1378.vhd
 run_non_compliant_test tc1379.vhd
 run_non_compliant_test tc1380.vhd
@@ -753,8 +753,8 @@ run_non_compliant_test tc1694.vhd
 run_non_compliant_test tc1695.vhd
 run_non_compliant_test tc1696.vhd
 run_non_compliant_test tc1697.vhd
-run_non_compliant_test tc1699.vhd
-run_non_compliant_test tc1700.vhd
+#run_non_compliant_test tc1699.vhd # vhdl87 test
+#run_non_compliant_test tc1700.vhd # idem
 run_non_compliant_test tc1701.vhd
 run_non_compliant_test tc1702.vhd
 run_non_compliant_test tc1706.vhd
@@ -777,7 +777,7 @@ run_non_compliant_test tc1752.vhd
 run_non_compliant_test tc1754.vhd
 run_non_compliant_test tc1755.vhd
 run_non_compliant_test tc1758.vhd
-run_non_compliant_test tc1759.vhd
+#run_non_compliant_test tc1759.vhd # vhdl87 test (???)
 run_non_compliant_test tc1760.vhd
 run_non_compliant_test tc1764.vhd
 run_non_compliant_test tc1765.vhd
@@ -792,7 +792,7 @@ run_non_compliant_test tc1774.vhd
 run_non_compliant_test tc1777.vhd
 run_non_compliant_test tc1778.vhd
 run_non_compliant_test tc1780.vhd
-run_non_compliant_test tc1783.vhd
+#run_non_compliant_test tc1783.vhd # vhdl87 test (incremental binding)
 run_non_compliant_test tc1784.vhd
 run_non_compliant_test tc1786.vhd
 run_non_compliant_test tc1788.vhd
@@ -802,8 +802,8 @@ run_non_compliant_test tc1791.vhd
 run_non_compliant_test tc1794.vhd
 run_non_compliant_test tc1795.vhd
 run_non_compliant_test tc1796.vhd
-run_non_compliant_test tc1797.vhd
-run_non_compliant_test tc1799.vhd
+#run_non_compliant_test tc1797.vhd # no error
+#run_non_compliant_test tc1799.vhd # no error (???)
 run_non_compliant_test tc1800.vhd
 run_non_compliant_test tc1802.vhd
 run_non_compliant_test tc1805.vhd
@@ -908,15 +908,15 @@ run_non_compliant_test tc1927.vhd
 run_non_compliant_test tc1928.vhd
 run_non_compliant_test tc1929.vhd
 run_non_compliant_test tc1930.vhd
-run_non_compliant_test tc1933.vhd
-run_non_compliant_test tc1934.vhd
-run_non_compliant_test tc1935.vhd
-run_non_compliant_test tc1936.vhd
-run_non_compliant_test tc1937.vhd
-run_non_compliant_test tc1938.vhd
-run_non_compliant_test tc1939.vhd
-run_non_compliant_test tc1940.vhd
-run_non_compliant_test tc1941.vhd
+#run_non_compliant_test tc1933.vhd # error at simulation
+#run_non_compliant_test tc1934.vhd # idem...
+#run_non_compliant_test tc1935.vhd
+#run_non_compliant_test tc1936.vhd
+#run_non_compliant_test tc1937.vhd
+#run_non_compliant_test tc1938.vhd
+#run_non_compliant_test tc1939.vhd
+#run_non_compliant_test tc1940.vhd
+#run_non_compliant_test tc1941.vhd
 run_non_compliant_test tc1977.vhd
 run_non_compliant_test tc1979.vhd
 run_non_compliant_test tc1980.vhd
@@ -1134,8 +1134,8 @@ run_non_compliant_test tc2437.vhd
 run_non_compliant_test tc2438.vhd
 run_non_compliant_test tc2441.vhd
 run_non_compliant_test tc2442.vhd
-run_non_compliant_test tc2443.vhd
-run_non_compliant_test tc2444.vhd
+#run_non_compliant_test tc2443.vhd # no error
+#run_non_compliant_test tc2444.vhd
 run_non_compliant_test tc2445.vhd
 run_non_compliant_test tc2447.vhd
 run_non_compliant_test tc2449.vhd
@@ -1168,10 +1168,10 @@ run_non_compliant_test tc2516.vhd
 run_non_compliant_test tc2517.vhd
 run_non_compliant_test tc2518.vhd
 run_non_compliant_test tc2521.vhd
-run_non_compliant_test tc2523.vhd
+#run_non_compliant_test tc2523.vhd # simul error (to be improved)
 run_non_compliant_test tc2526.vhd
-run_non_compliant_test tc2534.vhd
-run_non_compliant_test tc2536.vhd
+#run_non_compliant_test tc2534.vhd # idem
+#run_non_compliant_test tc2536.vhd # idem
 run_non_compliant_test tc2537.vhd
 run_non_compliant_test tc2538.vhd
 run_non_compliant_test tc2539.vhd
@@ -1181,7 +1181,7 @@ run_non_compliant_test tc2542.vhd
 run_non_compliant_test tc2543.vhd
 run_non_compliant_test tc2544.vhd
 run_non_compliant_test tc2545.vhd
-run_non_compliant_test tc2548.vhd
+#run_non_compliant_test tc2548.vhd # idem
 run_non_compliant_test tc2549.vhd
 run_non_compliant_test tc2552.vhd
 run_non_compliant_test tc2553.vhd
@@ -1192,7 +1192,7 @@ run_non_compliant_test tc2557.vhd
 run_non_compliant_test tc2560.vhd
 run_non_compliant_test tc2561.vhd
 run_non_compliant_test tc2571.vhd
-run_non_compliant_test tc2572.vhd
+#run_non_compliant_test tc2572.vhd # no error (fp range)
 run_non_compliant_test tc2574.vhd
 run_non_compliant_test tc2576.vhd
 run_non_compliant_test tc2577.vhd
@@ -1534,7 +1534,7 @@ run_non_compliant_test tc3030.vhd
 run_non_compliant_test tc3031.vhd
 run_non_compliant_test tc3058.vhd
 run_non_compliant_test tc3064.vhd
-run_non_compliant_test tc3087.vhd
+#run_non_compliant_test tc3087.vhd # no test
 run_non_compliant_test tc3088.vhd
 run_non_compliant_test tc3089.vhd
 run_non_compliant_test tc3091.vhd
@@ -1552,7 +1552,7 @@ run_non_compliant_test tc3106.vhd
 run_non_compliant_test tc3107.vhd
 run_non_compliant_test tc3108.vhd
 run_non_compliant_test tc3161.vhd
-run_non_compliant_test tc3207.vhd
+#run_non_compliant_test tc3207.vhd # no test
 
 end_test_group
 

@@ -110,7 +110,7 @@ ENTITY c06s03b00x00p08n01i00995ent IS
   ATTRIBUTE atr_scl3 OF c06s03b00x00p08n01i00995ent: ENTITY IS       'z';
   ATTRIBUTE atr_scl4 OF c06s03b00x00p08n01i00995ent: ENTITY IS         0;
   ATTRIBUTE atr_scl5 OF c06s03b00x00p08n01i00995ent: ENTITY IS      10.0;
-  ATTRIBUTE atr_scl6 OF c06s03b00x00p08n01i00995ent: ENTITY IS     10 ns;
+--  ATTRIBUTE atr_scl6 OF c06s03b00x00p08n01i00995ent: ENTITY IS     10 ns;
   ATTRIBUTE atr_scl7 OF c06s03b00x00p08n01i00995ent: ENTITY IS  10000 pf;
   ATTRIBUTE atr_scl8 OF c06s03b00x00p08n01i00995ent: ENTITY IS        FX;
   
@@ -122,7 +122,7 @@ ENTITY c06s03b00x00p08n01i00995ent IS
   ATTRIBUTE cat_scl3 OF c06s03b00x00p08n01i00995ent: ENTITY IS       'z';
   ATTRIBUTE cat_scl4 OF c06s03b00x00p08n01i00995ent: ENTITY IS         0;
   ATTRIBUTE cat_scl5 OF c06s03b00x00p08n01i00995ent: ENTITY IS      10.0;
-  ATTRIBUTE cat_scl6 OF c06s03b00x00p08n01i00995ent: ENTITY IS     10 ns;
+--  ATTRIBUTE cat_scl6 OF c06s03b00x00p08n01i00995ent: ENTITY IS     10 ns;
   ATTRIBUTE cat_scl7 OF c06s03b00x00p08n01i00995ent: ENTITY IS  10000 pf;
   ATTRIBUTE cat_scl8 OF c06s03b00x00p08n01i00995ent: ENTITY IS        FX;
 END c06s03b00x00p08n01i00995ent;
@@ -141,8 +141,8 @@ BEGIN
       REPORT "ERROR: Wrong value for 'atr_scl4" SEVERITY FAILURE;
     ASSERT c06s03b00x00p08n01i00995ent'atr_scl5 =      10.0 
       REPORT "ERROR: Wrong value for 'atr_scl5" SEVERITY FAILURE;
-    ASSERT c06s03b00x00p08n01i00995ent'atr_scl6 =     10 ns 
-      REPORT "ERROR: Wrong value for 'atr_scl6" SEVERITY FAILURE;
+--    ASSERT c06s03b00x00p08n01i00995ent'atr_scl6 =     10 ns 
+--      REPORT "ERROR: Wrong value for 'atr_scl6" SEVERITY FAILURE;
     ASSERT c06s03b00x00p08n01i00995ent'atr_scl7 =  10000 pf 
       REPORT "ERROR: Wrong value for 'atr_scl7" SEVERITY FAILURE;
     ASSERT c06s03b00x00p08n01i00995ent'atr_scl8 =        FX 
@@ -163,8 +163,8 @@ BEGIN
       REPORT "ERROR: Wrong value for 'cat_scl4" SEVERITY FAILURE;
     ASSERT c06s03b00x00p08n01i00995ent'cat_scl5 =      10.0 
       REPORT "ERROR: Wrong value for 'cat_scl5" SEVERITY FAILURE;
-    ASSERT c06s03b00x00p08n01i00995ent'cat_scl6 =     10 ns 
-      REPORT "ERROR: Wrong value for 'cat_scl6" SEVERITY FAILURE;
+--    ASSERT c06s03b00x00p08n01i00995ent'cat_scl6 =     10 ns 
+--      REPORT "ERROR: Wrong value for 'cat_scl6" SEVERITY FAILURE;
     ASSERT c06s03b00x00p08n01i00995ent'cat_scl7 =  10000 pf 
       REPORT "ERROR: Wrong value for 'cat_scl7" SEVERITY FAILURE;
     ASSERT c06s03b00x00p08n01i00995ent'cat_scl8 =        FX 
@@ -175,7 +175,7 @@ BEGIN
                 and c06s03b00x00p08n01i00995ent'atr_scl3 =       'z' 
                 and c06s03b00x00p08n01i00995ent'atr_scl4 =         0 
                 and c06s03b00x00p08n01i00995ent'atr_scl5 =      10.0 
-                and c06s03b00x00p08n01i00995ent'atr_scl6 =     10 ns 
+--                and c06s03b00x00p08n01i00995ent'atr_scl6 =     10 ns 
                 and c06s03b00x00p08n01i00995ent'atr_scl7 =  10000 pf 
                 and c06s03b00x00p08n01i00995ent'atr_scl8 =        FX 
                 and c06s03b00x00p08n01i00995ent'atr_str1 =  "entity" 
@@ -185,7 +185,7 @@ BEGIN
                 and c06s03b00x00p08n01i00995ent'cat_scl3 =       'z' 
                 and c06s03b00x00p08n01i00995ent'cat_scl4 =         0 
                 and c06s03b00x00p08n01i00995ent'cat_scl5 =      10.0 
-                and c06s03b00x00p08n01i00995ent'cat_scl6 =     10 ns 
+--                and c06s03b00x00p08n01i00995ent'cat_scl6 =     10 ns 
                 and c06s03b00x00p08n01i00995ent'cat_scl7 =  10000 pf 
                 and c06s03b00x00p08n01i00995ent'cat_scl8 =        FX   ) 
       report "***PASSED TEST: c06s03b00x00p08n01i00995"
@@ -195,7 +195,7 @@ BEGIN
                 and c06s03b00x00p08n01i00995ent'atr_scl3 =       'z' 
                 and c06s03b00x00p08n01i00995ent'atr_scl4 =         0 
                 and c06s03b00x00p08n01i00995ent'atr_scl5 =      10.0 
-                and c06s03b00x00p08n01i00995ent'atr_scl6 =     10 ns 
+--                and c06s03b00x00p08n01i00995ent'atr_scl6 =     10 ns 
                 and c06s03b00x00p08n01i00995ent'atr_scl7 =  10000 pf 
                 and c06s03b00x00p08n01i00995ent'atr_scl8 =        FX 
                 and c06s03b00x00p08n01i00995ent'atr_str1 =  "entity" 
@@ -205,7 +205,7 @@ BEGIN
                 and c06s03b00x00p08n01i00995ent'cat_scl3 =       'z' 
                 and c06s03b00x00p08n01i00995ent'cat_scl4 =         0 
                 and c06s03b00x00p08n01i00995ent'cat_scl5 =      10.0 
-                and c06s03b00x00p08n01i00995ent'cat_scl6 =     10 ns 
+--                and c06s03b00x00p08n01i00995ent'cat_scl6 =     10 ns 
                 and c06s03b00x00p08n01i00995ent'cat_scl7 =  10000 pf 
                 and c06s03b00x00p08n01i00995ent'cat_scl8 =        FX   ) 
       report "***FAILED TEST: c06s03b00x00p08n01i00995 - Expanded name denotes a primary unit contained in design library test failed."

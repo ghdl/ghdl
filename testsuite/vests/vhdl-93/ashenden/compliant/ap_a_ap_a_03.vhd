@@ -30,7 +30,7 @@ end entity ap_a_03;
 
 
 library ieee;  use ieee.std_logic_1164.all;
-use work.numeric_std.all;
+use ieee.numeric_std.all;
 
 architecture test of ap_a_03 is
 begin

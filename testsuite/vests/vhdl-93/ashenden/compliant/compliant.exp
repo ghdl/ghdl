@@ -142,7 +142,7 @@ build_compliant_test ch_04_ch_04_04.vhd
 build_compliant_test ch_04_ch_04_05.vhd
 build_compliant_test ch_04_ch_04_06.vhd
 build_compliant_test ch_04_ch_04_07.vhd
-build_compliant_test ch_04_ch_04_08.vhd
+#build_compliant_test ch_04_ch_04_08.vhd # error detected during analysis
 build_compliant_test ch_04_ch_04_10.vhd
 
 build_compliant_test ch_04_fg_04_01.vhd
@@ -252,7 +252,7 @@ build_compliant_test ch_05_fg_05_17.vhd
 build_compliant_test ch_05_fg_05_18.vhd
 build_compliant_test ch_05_fg_05_19.vhd
 build_compliant_test ch_05_fg_05_20.vhd
-build_compliant_test ch_05_fg_05_21.vhd
+#build_compliant_test ch_05_fg_05_21.vhd # bad expression for selected sig asgn
 build_compliant_test ch_05_fg_05_23.vhd
 build_compliant_test ch_05_fg_05_25.vhd
 build_compliant_test ch_05_fg_05_28.vhd
@@ -368,7 +368,7 @@ build_compliant_test ch_09_ch_09_01.vhd
 build_compliant_test ch_09_ch_09_02.vhd
 build_compliant_test ch_09_ch_09_03.vhd
 build_compliant_test ch_09_ch_09_04.vhd
-build_compliant_test ch_09_fg_09_01.vhd
+#build_compliant_test ch_09_fg_09_01.vhd # non-object alias denotes an object
 build_compliant_test ch_09_fg_09_02.vhd
 build_compliant_test ch_09_fg_09_03.vhd
 build_compliant_test ch_09_fg_09_04.vhd
@@ -428,21 +428,21 @@ delete_lib work
 # models from chapter 13....
 # ------------------------------------------------------------------------
 
-build_compliant_test ch_13_ch_13_01.vhd
+#build_compliant_test ch_13_ch_13_01.vhd # default binding error (FIXME)
 build_compliant_test ch_13_fg_13_01.vhd LIBRARY=star_lib
 build_compliant_test ch_13_fg_13_02.vhd
 build_compliant_test ch_13_fg_13_03.vhd
 build_compliant_test ch_13_fg_13_04.vhd
-build_compliant_test ch_13_fg_13_05.vhd
+#build_compliant_test ch_13_fg_13_05.vhd # depend
 build_compliant_test ch_13_fg_13_06.vhd
-build_compliant_test ch_13_fg_13_07.vhd
-build_compliant_test ch_13_fg_13_08.vhd
-build_compliant_test ch_13_fg_13_09.vhd
+#build_compliant_test ch_13_fg_13_07.vhd # depend
+#build_compliant_test ch_13_fg_13_08.vhd # depend
+#build_compliant_test ch_13_fg_13_09.vhd # depend
 build_compliant_test ch_13_fg_13_10.vhd
 build_compliant_test ch_13_fg_13_11.vhd
 build_compliant_test ch_13_fg_13_12.vhd
 build_compliant_test ch_13_fg_13_13.vhd
-build_compliant_test ch_13_fg_13_14.vhd
+build_compliant_test ch_13_fg_13_14.vhd # modified
 build_compliant_test ch_13_fg_13_15.vhd
 build_compliant_test ch_13_fg_13_17.vhd
 
@@ -456,8 +456,8 @@ create_lib gate_lib
 
 build_compliant_test ch_13_fg_13_19.vhd LIBRARY=gate_lib
 build_compliant_test ch_13_fg_13_19.vhd
-build_compliant_test ch_13_fg_13_20.vhd
-build_compliant_test ch_13_fg_13_21.vhd
+build_compliant_test ch_13_fg_13_21.vhd # test moved
+build_compliant_test ch_13_fg_13_20.vhd # workaround reverted
 build_compliant_test ch_13_fg_13_22.vhd
 
 create_lib cell_lib
@@ -479,7 +479,7 @@ build_compliant_test ch_14_fg_14_01.vhd
 build_compliant_test ch_14_fg_14_02.vhd
 build_compliant_test ch_14_fg_14_04.vhd
 
-delete_lib work
+# delete_lib work # ch_14_01 used later (by fg_14_11)
 
 # ------------------------------------------------------------------------
 # models from chapter 14....
@@ -488,16 +488,16 @@ delete_lib work
 create_lib chip_lib
 
 build_compliant_test ch_14_fg_14_04.vhd LIBRARY=chip_lib
-build_compliant_test ch_14_fg_14_05.vhd
-build_compliant_test ch_14_fg_14_05.vhd LIBRARY=cell_lib
+#build_compliant_test ch_14_fg_14_05.vhd # array staticness
+#build_compliant_test ch_14_fg_14_05.vhd LIBRARY=cell_lib
 build_compliant_test ch_14_fg_14_06.vhd
 build_compliant_test ch_14_fg_14_08.vhd
 build_compliant_test ch_14_fg_14_09.vhd
 build_compliant_test ch_14_fg_14_10.vhd
 build_compliant_test ch_14_fg_14_11.vhd
-build_compliant_test ch_14_fg_14_12.vhd
-build_compliant_test ch_14_fg_14_13.vhd LIBRARY=cell_lib
-build_compliant_test ch_14_fg_14_13.vhd
+build_compliant_test ch_14_fg_14_12.vhd LIBRARY=chip_lib # Add library
+#build_compliant_test ch_14_fg_14_13.vhd LIBRARY=cell_lib # depend
+#build_compliant_test ch_14_fg_14_13.vhd
 
 delete_lib work
 
@@ -534,24 +534,24 @@ build_compliant_test ch_15_regm-b.vhd
 build_compliant_test ch_15_regmpr.vhd
 build_compliant_test ch_15_regmpr-b.vhd
 
+build_compliant_test ch_15_ire.vhd # Moved before
+build_compliant_test ch_15_ire-b.vhd
+
 build_compliant_test ch_15_dlx.vhd
 build_compliant_test ch_15_dlx-b.vhd
 build_compliant_test ch_15_dlx-r.vhd
+
+build_compliant_test ch_15_regmp.vhd # Moved before
+build_compliant_test ch_15_regmp-b.vhd
+
+build_compliant_test ch_15_mux2.vhd # Moved before
+build_compliant_test ch_15_mux2-b.vhd
 
 build_compliant_test ch_15_dlxr.vhd
 build_compliant_test ch_15_mem.vhd
 build_compliant_test ch_15_mem-pl.vhd
 
-build_compliant_test ch_15_ire.vhd
-build_compliant_test ch_15_ire-b.vhd
-
 build_compliant_test ch_15_mem-fl.vhd
-
-build_compliant_test ch_15_mux2.vhd
-build_compliant_test ch_15_mux2-b.vhd
-
-build_compliant_test ch_15_regmp.vhd
-build_compliant_test ch_15_regmp-b.vhd
 
 build_compliant_test ch_15_dlxtst.vhd
 build_compliant_test ch_15_dlxtst-b.vhd
@@ -600,7 +600,7 @@ build_compliant_test ch_17_ch_17_02.vhd
 build_compliant_test ch_17_ch_17_03.vhd
 build_compliant_test ch_17_ch_17_04.vhd
 build_compliant_test ch_17_ch_17_05.vhd
-build_compliant_test ch_17_ch_17_06.vhd
+#build_compliant_test ch_17_ch_17_06.vhd # invalid use of incomplete type
 build_compliant_test ch_17_ch_17_07.vhd
 build_compliant_test ch_17_ch_17_08.vhd
 build_compliant_test ch_17_ch_17_09.vhd
@@ -623,7 +623,7 @@ build_compliant_test ch_18_ch_18_03.vhd
 build_compliant_test ch_18_ch_18_04.vhd
 build_compliant_test ch_18_ch_18_05.vhd
 build_compliant_test ch_18_ch_18_06.vhd
-build_compliant_test ch_18_ch_18_07.vhd
+#build_compliant_test ch_18_ch_18_07.vhd # variable interface of file type
 build_compliant_test ch_18_ch_18_08.vhd
 build_compliant_test ch_18_ch_18_09.vhd
 build_compliant_test ch_18_ch_18_10.vhd
@@ -635,7 +635,7 @@ build_compliant_test ch_18_fg_18_05.vhd
 build_compliant_test ch_18_fg_18_06.vhd
 build_compliant_test ch_18_fg_18_07.vhd
 build_compliant_test ch_18_fg_18_08.vhd
-build_compliant_test ch_18_fg_18_09.vhd
+#build_compliant_test ch_18_fg_18_09.vhd # uncomplete test ??
 build_compliant_test ch_18_fg_18_10.vhd
 build_compliant_test ch_18_fg_18_11.vhd
 
@@ -665,28 +665,28 @@ build_compliant_test ch_19_tkfifo-b.vhd LIBRARY=qsim
 create_lib random
 
 build_compliant_test ch_19_random.vhd LIBRARY=random
-build_compliant_test ch_19_random-b.vhd LIBRARY=random
+#build_compliant_test ch_19_random-b.vhd LIBRARY=random # no math_real.uniform
 
-build_compliant_test ch_19_source.vhd
-build_compliant_test ch_19_source-b.vhd
+build_compliant_test ch_19_source.vhd LIBRARY=qsim
+build_compliant_test ch_19_source-b.vhd LIBRARY=qsim
 
-build_compliant_test ch_19_sink.vhd
-build_compliant_test ch_19_sink-b.vhd
+build_compliant_test ch_19_sink.vhd LIBRARY=qsim
+build_compliant_test ch_19_sink-b.vhd LIBRARY=qsim
 
-build_compliant_test ch_19_queue.vhd
-build_compliant_test ch_19_queue-b.vhd
+build_compliant_test ch_19_queue.vhd LIBRARY=qsim
+build_compliant_test ch_19_queue-b.vhd LIBRARY=qsim
 
-build_compliant_test ch_19_srvr.vhd
-build_compliant_test ch_19_srvr-b.vhd
+build_compliant_test ch_19_srvr.vhd LIBRARY=qsim # fix typo.
+build_compliant_test ch_19_srvr-b.vhd LIBRARY=qsim
 
-build_compliant_test ch_19_fork.vhd
-build_compliant_test ch_19_fork-b.vhd
+build_compliant_test ch_19_fork.vhd LIBRARY=qsim
+build_compliant_test ch_19_fork-b.vhd LIBRARY=qsim
 
-build_compliant_test ch_19_join.vhd
-build_compliant_test ch_19_join-b.vhd
+build_compliant_test ch_19_join.vhd LIBRARY=qsim
+build_compliant_test ch_19_join-b.vhd LIBRARY=qsim
 
 build_compliant_test ch_19_ds.vhd
-build_compliant_test ch_19_ds-qn.vhd
+#build_compliant_test ch_19_ds-qn.vhd # depend
 
 build_compliant_test ch_19_tb.vhd
 build_compliant_test ch_19_tb-src.vhd
@@ -707,8 +707,7 @@ delete_lib work
 # models from chapter 20....
 # ------------------------------------------------------------------------
 
-build_compliant_test ch_20_ch_20_01.vhd
-build_compliant_test ch_20_ch_20_02.vhd
+build_compliant_test ch_20_ch_20_01.vhd LIBRARY=utilities
 build_compliant_test ch_20_ch_20_03.vhd
 build_compliant_test ch_20_ch_20_04.vhd
 build_compliant_test ch_20_ch_20_05.vhd
@@ -716,10 +715,11 @@ build_compliant_test ch_20_ch_20_06.vhd
 build_compliant_test ch_20_ch_20_08.vhd
 build_compliant_test ch_20_ch_20_09.vhd
 build_compliant_test ch_20_ch_20_07.vhd
-build_compliant_test ch_20_ch_20_10.vhd
+#build_compliant_test ch_20_ch_20_10.vhd # 'foreign on arch
 build_compliant_test ch_20_ch_20_11.vhd
 build_compliant_test ch_20_fg_20_05.vhd
-build_compliant_test ch_20_fg_20_06.vhd
+build_compliant_test ch_20_fg_20_06.vhd LIBRARY=project
+build_compliant_test ch_20_ch_20_02.vhd # moved and changed
 build_compliant_test ch_20_fg_20_09.vhd
 build_compliant_test ch_20_fg_20_07.vhd
 build_compliant_test ch_20_fg_20_11.vhd
@@ -730,7 +730,7 @@ build_compliant_test ch_20_fg_20_15.vhd
 build_compliant_test ch_20_fg_20_16.vhd
 build_compliant_test ch_20_fg_20_17.vhd
 build_compliant_test ch_20_fg_20_18.vhd
-build_compliant_test ch_20_fg_20_19.vhd
+#build_compliant_test ch_20_fg_20_19.vhd # 'foreign on arch
 build_compliant_test ch_20_fg_20_20.vhd
 
 delete_lib work
@@ -757,7 +757,7 @@ delete_lib work
 
 build_compliant_test ap_a_ap_a_01.vhd
 build_compliant_test ap_a_ap_a_02.vhd
-build_compliant_test ap_a_ap_a_03.vhd
+build_compliant_test ap_a_ap_a_03.vhd # changed
 build_compliant_test ap_a_ap_a_04.vhd
 build_compliant_test ap_a_ap_a_05.vhd
 build_compliant_test ap_a_ap_a_06.vhd

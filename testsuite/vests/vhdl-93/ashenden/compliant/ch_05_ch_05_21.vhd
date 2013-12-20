@@ -78,7 +78,7 @@ begin
 
   -- end of code from book
 
-  stimulus : all_possible_values( bv => test_input,
+  stimulus_proc : all_possible_values( bv => test_input,
                                   delay_between_values => 10 ns );
 
   (serial_select, write_en, bus_clk) <= test_input;

@@ -35,10 +35,10 @@ begin
 
   process is
 
-            --use project.mem_pkg;
-            --use project.mem_pkg.all;
-            use work.mem_pkg;
-          use work.mem_pkg.all;
+            use project.mem_pkg;
+            use project.mem_pkg.all;
+            --use work.mem_pkg;
+          --use work.mem_pkg.all;
           variable words : word_array(0 to 3);
 
   begin
