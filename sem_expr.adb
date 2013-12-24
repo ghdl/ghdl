@@ -1760,6 +1760,7 @@ package body Sem_Expr is
 
    --  Semantize LIT whose elements must be of type EL_TYPE, and return
    --  the length.
+   --  FIXME: the errors are reported, but there is no mark of that.
    function Sem_String_Literal (Lit: Iir; El_Type : Iir) return Natural
    is
       function Find_Literal (Etype : Iir_Enumeration_Type_Definition;

@@ -111,10 +111,13 @@ package Ortho_Code.Exprs is
       --  ARG1 is subprogram
       --  ARG2 is arguments.
       OE_Call,
-      --  ARG1 is the subprogram.
-      OE_Setup_Frame,
       --  ARG1 is intrinsic operation.
       OE_Intrinsic,
+
+      --  Modify the stack pointer value, to align the stack before pushing
+      --  arguments, or to free the stack.
+      --  ARG1 is the signed offset.
+      OE_Stack_Adjust,
 
       --  Return ARG1 (if not mode_nil) from current subprogram.
       --  ARG1: expression.
@@ -325,6 +328,12 @@ package Ortho_Code.Exprs is
    --  If O_Enode_Null, then use current frame.
    function Get_Addrl_Frame (Enode : O_Enode) return O_Enode;
    procedure Set_Addrl_Frame (Enode : O_Enode; Frame : O_Enode);
+
+   --  Return the stack adjustment. For positive values, this is the amount of
+   --  bytes to allocate on the stack before pushing arguments, so that the
+   --  stack pointer stays aligned. For negtive values, this is the amount of
+   --  bytes to release on the stack.
+   function Get_Stack_Adjust (Enode : O_Enode) return Int32;
 
    --  Get the subprogram called by ENODE.
    function Get_Call_Subprg (Enode : O_Enode) return O_Dnode;

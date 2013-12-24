@@ -463,6 +463,10 @@ package body Ortho_Code.X86.Abi is
             end if;
             Disp_Decl_Name (Get_Call_Subprg (Stmt));
             New_Line;
+         when OE_Stack_Adjust =>
+            Put ("  stack_adjust: ");
+            Put (Int32'Image (Get_Stack_Adjust (Stmt)));
+            New_Line;
          when OE_Intrinsic =>
             Disp_Reg_Op_Name ("intrinsic");
             --Disp_Decl_Name (Get_Call_Subprg (Stmt));

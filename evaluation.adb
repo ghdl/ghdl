@@ -1188,7 +1188,7 @@ package body Evaluation is
          return Null_Iir;
    end Eval_Dyadic_Operator;
 
-   --  Evaluate any array attribute
+   --  Evaluate any array attribute, return the type for the prefix.
    function Eval_Array_Attribute (Attr : Iir) return Iir
    is
       Prefix : Iir;
@@ -2461,6 +2461,9 @@ package body Evaluation is
                --  This linear search is O(n)!
                S := Find_Name_In_List (Literal_List,
                                        Name_Table.Get_Identifier (C));
+               if S = Null_Iir then
+                  return -1;
+               end if;
             when Iir_Kind_Bit_String_Literal =>
                C := Str.Ptr (Idx + 1);
                case C is

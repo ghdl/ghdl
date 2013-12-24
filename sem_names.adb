@@ -1252,7 +1252,8 @@ package body Sem_Names is
             --end;
             return;
          when Iir_Kind_Length_Array_Attribute
-           | Iir_Kind_Range_Array_Attribute =>
+           | Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute =>
             Finish_Sem_Array_Attribute (Res, Null_Iir);
             return;
 --          when Iir_Kind_Pos_Attribute =>
@@ -2476,9 +2477,11 @@ package body Sem_Names is
             Res := Create_Iir (Iir_Kind_Reverse_Range_Array_Attribute);
          when Name_Length =>
             Res := Create_Iir (Iir_Kind_Length_Array_Attribute);
+            --  FIXME: Error if ambiguous
             Set_Type (Res, Convertible_Integer_Type_Definition);
          when Name_Ascending =>
             Res := Create_Iir (Iir_Kind_Ascending_Array_Attribute);
+            --  FIXME: Error if ambiguous
             Set_Type (Res, Boolean_Type_Definition);
          when others =>
             raise Internal_Error;

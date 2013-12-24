@@ -181,6 +181,11 @@ package body Ortho_Code.Exprs is
       return O_Dnode (Enodes.Table (Enode).Arg1);
    end Get_Call_Subprg;
 
+   function Get_Stack_Adjust (Enode : O_Enode) return Int32 is
+   begin
+      return Int32 (Enodes.Table (Enode).Arg1);
+   end Get_Stack_Adjust;
+
    function Get_Arg_Link (Enode : O_Enode) return O_Enode is
    begin
       return Enodes.Table (Enode).Arg2;
@@ -1231,7 +1236,7 @@ package body Ortho_Code.Exprs is
 
       New_Enode_Stmt (OE_Ret, Get_Type_Mode (V_Type), Value, O_Enode_Null);
       if not Flag_Debug_Hli then
-         Emit_Jmp (OE_Jump, O_Enode_Null, Cur_Subprg.Exit_Label);
+         New_Allocb_Jump (Cur_Subprg.Exit_Label);
       end if;
    end New_Return_Stmt;
 
@@ -1244,7 +1249,7 @@ package body Ortho_Code.Exprs is
       end if;
 
       if not Flag_Debug_Hli then
-         Emit_Jmp (OE_Jump, O_Enode_Null, Cur_Subprg.Exit_Label);
+         New_Allocb_Jump (Cur_Subprg.Exit_Label);
       else
          New_Enode_Stmt (OE_Ret, Mode_Nil, O_Enode_Null, O_Enode_Null);
       end if;

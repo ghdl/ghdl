@@ -792,20 +792,28 @@ package body Ortho_Code.X86.Emits is
 
    procedure Emit_Setup_Frame (Stmt : O_Enode)
    is
-      use Ortho_Code.Decls;
-      Subprg : O_Dnode;
-      Val : Unsigned_32;
+      Val : constant Int32 := Get_Stack_Adjust (Stmt);
    begin
-      Subprg := Get_Call_Subprg (Stmt);
-      Val := Unsigned_32 (Get_Subprg_Stack (Subprg));
-      --  Pad the stack if necessary.
-      Val := Val and (Flags.Stack_Boundary - 1);
-      if Val /= 0 then
+      if Val > 0 then
          Start_Insn;
          --  subl esp, val
          Gen_B8 (2#100000_11#);
          Gen_B8 (2#11_101_100#);
-         Gen_B8 (Byte (Flags.Stack_Boundary - Val));
+         Gen_B8 (Byte (Val));
+         End_Insn;
+      elsif Val < 0 then
+         Start_Insn;
+         if -Val <= 127 then
+            --  addl esp, val
+            Gen_B8 (2#100000_11#);
+            Gen_B8 (2#11_000_100#);
+            Gen_B8 (Byte (-Val));
+         else
+            --  addl esp, val
+            Gen_B8 (2#100000_01#);
+            Gen_B8 (2#11_000_100#);
+            Gen_Le32 (Unsigned_32 (-Val));
+         end if;
          End_Insn;
       end if;
    end Emit_Setup_Frame;
@@ -815,29 +823,10 @@ package body Ortho_Code.X86.Emits is
       use Ortho_Code.Decls;
       Subprg : O_Dnode;
       Sym : Symbol;
-      Val : Unsigned_32;
    begin
       Subprg := Get_Call_Subprg (Stmt);
       Sym := Get_Decl_Symbol (Subprg);
       Gen_Call (Sym);
-      Val := Unsigned_32 (Get_Subprg_Stack (Subprg));
-      Val := (Val + Flags.Stack_Boundary - 1)
-        and not (Flags.Stack_Boundary - 1);
-      if Val /= 0 then
-         Start_Insn;
-         if Val <= 127 then
-            --  addl esp, val
-            Gen_B8 (2#100000_11#);
-            Gen_B8 (2#11_000_100#);
-            Gen_B8 (Byte (Val));
-         else
-            --  addl esp, val
-            Gen_B8 (2#100000_01#);
-            Gen_B8 (2#11_000_100#);
-            Gen_Le32 (Val);
-         end if;
-         End_Insn;
-      end if;
    end Emit_Call;
 
    procedure Emit_Intrinsic (Stmt : O_Enode)
@@ -1853,12 +1842,8 @@ package body Ortho_Code.X86.Emits is
                when others =>
                   Error_Emit ("emit_insn: oe_arg", Stmt);
             end case;
-         when OE_Setup_Frame =>
-            pragma Warnings (Off);
-            if Flags.Stack_Boundary > 4 then
-               Emit_Setup_Frame (Stmt);
-            end if;
-            pragma Warnings (On);
+         when OE_Stack_Adjust =>
+            Emit_Setup_Frame (Stmt);
          when OE_Call =>
             Emit_Call (Stmt);
          when OE_Intrinsic =>
@@ -2007,7 +1992,11 @@ package body Ortho_Code.X86.Emits is
       Frame_Size : Unsigned_32;
       Saved_Regs_Size : Unsigned_32;
    begin
+      --  Switch to .text section and align the function (to avoid the nested
+      --  function trick and for performance).
       Set_Current_Section (Sect_Text);
+      Gen_Pow_Align (2);
+
       Subprg_Decl := Subprg.D_Decl;
       Sym := Get_Decl_Symbol (Subprg_Decl);
       case Get_Decl_Storage (Subprg_Decl) is

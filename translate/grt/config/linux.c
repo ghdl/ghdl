@@ -32,9 +32,15 @@
 /* On x86, the stack growns downward.  */
 #define STACK_GROWNS_DOWNWARD 1
 
-#ifdef linux
+#ifdef __linux__
 /* If set, SIGSEGV is caught in order to automatically grow the stacks.  */
 #define EXTEND_STACK 1
+#define STACK_SIGNAL SIGSEGV
+#endif
+#ifdef __APPLE__
+/* If set, SIGSEGV is caught in order to automatically grow the stacks.  */
+#define EXTEND_STACK 1
+#define STACK_SIGNAL SIGBUS
 #endif
 
 /* Defined in Grt.Stacks.  */
@@ -99,6 +105,14 @@ static struct sigaction sigsegv_act;
 #error "Not implemented"
 #endif
 
+#ifdef __APPLE__
+/* Handler for SIGFPE signal, raised in case of overflow (i386).  */
+static void grt_overflow_handler (int signo, siginfo_t *info, void *ptr)
+{
+  grt_overflow_error ();
+}
+#endif
+
 /* Handler for SIGSEGV signal, which grow the stack.  */
 static void grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
 {
@@ -113,6 +127,7 @@ static void grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
 
   in_handler++;
 
+#ifdef __linux__
 #ifdef __i386__
   /* Linux generates a SIGSEGV (!) for an overflow exception.  */
   if (uctxt->uc_mcontext.gregs[REG_TRAPNO] == 4)
@@ -120,16 +135,17 @@ static void grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
       grt_overflow_error ();
     }
 #endif
+#endif
 
   if (info == NULL || grt_get_current_process () == NULL || in_handler > 1)
     {
       /* We loose.  */
-      sigaction (SIGSEGV, &prev_sigsegv_act, NULL);
+      sigaction (STACK_SIGNAL, &prev_sigsegv_act, NULL);
       return;
     }
 
   addr = info->si_addr;
-  
+
   /* Check ADDR belong to the stack.  */
   ctxt = grt_get_current_process ()->cur_sp;
   stack_high = (void *)(ctxt + 1);
@@ -166,7 +182,7 @@ static void grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
 
   ctxt->cur_length = n_len;
 
-  sigaction (SIGSEGV, &sigsegv_act, NULL);
+  sigaction (STACK_SIGNAL, &sigsegv_act, NULL);
 
   in_handler--;
 
@@ -178,7 +194,12 @@ static void grt_signal_setup (void)
 {
   sigsegv_act.sa_sigaction = &grt_sigsegv_handler;
   sigemptyset (&sigsegv_act.sa_mask);
-  sigsegv_act.sa_flags = SA_ONESHOT | SA_ONSTACK | SA_SIGINFO;
+  sigsegv_act.sa_flags = SA_ONSTACK | SA_SIGINFO;
+#ifdef SA_ONESHOT
+  sigsegv_act.sa_flags |= SA_ONESHOT;
+#elif defined (SA_RESETHAND)
+  sigsegv_act.sa_flags |= SA_RESETHAND;
+#endif
 
   /* Use an alternate stack during signals.  */
   sig_stk.ss_sp = sig_stack;
@@ -188,7 +209,19 @@ static void grt_signal_setup (void)
 
   /* We don't care about the return status.
      If the handler is not installed, then some feature are lost.  */
-  sigaction (SIGSEGV, &sigsegv_act, &prev_sigsegv_act);
+  sigaction (STACK_SIGNAL, &sigsegv_act, &prev_sigsegv_act);
+
+#ifdef __APPLE__
+  {
+    struct sigaction sig_ovf_act;
+
+    sig_ovf_act.sa_sigaction = &grt_overflow_handler;
+    sigemptyset (&sig_ovf_act.sa_mask);
+    sig_ovf_act.sa_flags = SA_SIGINFO;
+
+    sigaction (SIGFPE, &sig_ovf_act, NULL);
+  }
+#endif
 }
 #endif
 

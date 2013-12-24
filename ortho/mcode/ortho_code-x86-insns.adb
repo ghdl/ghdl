@@ -15,6 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Interfaces;
 with Ada.Text_IO;
 with Ortho_Code.Abi;
 with Ortho_Code.Decls; use Ortho_Code.Decls;
@@ -71,6 +72,10 @@ package body Ortho_Code.X86.Insns is
    --  Stack slot management.
    Stack_Offset : Uns32 := 0;
    Stack_Max : Uns32 := 0;
+
+   --  Count how many bytes have been pushed on the stack, during a call. This
+   --  is used to correctly align the stack for nested calls.
+   Push_Offset : Uns32 := 0;
 
    --  STMT is an OE_END statement.
    --  Swap Stack_Offset with Max_Stack of STMT.
@@ -1004,15 +1009,30 @@ package body Ortho_Code.X86.Insns is
    function Gen_Call (Stmt : O_Enode; Reg : O_Reg; Pnum : O_Inum)
                      return O_Enode
    is
+      use Interfaces;
       Left : O_Enode;
       Reg_Res : O_Reg;
+      Subprg : O_Dnode;
+      Push_Size : Uns32;
+      Pad : Uns32;
+      Res_Stmt : O_Enode;
    begin
-      Link_Stmt
-        (New_Enode (OE_Setup_Frame, Mode_Nil, O_Tnode_Null,
-                    O_Enode (Get_Call_Subprg (Stmt)), O_Enode_Null));
+      --  Emit Setup_Frame (to align stack).
+      Subprg := Get_Call_Subprg (Stmt);
+      Push_Size := Uns32 (Get_Subprg_Stack (Subprg));
+      --  Pad the stack if necessary.
+      Pad := (Push_Size + Push_Offset) and Uns32 (Flags.Stack_Boundary - 1);
+      if Pad /= 0 then
+         Pad := Uns32 (Flags.Stack_Boundary) - Pad;
+         Link_Stmt (New_Enode (OE_Stack_Adjust, Mode_Nil, O_Tnode_Null,
+                               O_Enode (Pad), O_Enode_Null));
+      end if;
+      --  The stack has been adjusted by Pad bytes.
+      Push_Offset := Push_Offset + Pad;
+
+      --  Generate code for arguments (if any).
       Left := Get_Arg_Link (Stmt);
       if Left /= O_Enode_Null then
-         --  Generate code for arguments.
          Left := Gen_Insn (Left, R_None, Pnum);
       end if;
 
@@ -1022,9 +1042,22 @@ package body Ortho_Code.X86.Insns is
       Clobber_R32 (R_Cx);
       --  FIXME: fp regs.
 
+      --  Add the call.
       Reg_Res := Get_Call_Register (Get_Expr_Mode (Stmt));
       Set_Expr_Reg (Stmt, Reg_Res);
       Link_Stmt (Stmt);
+      Res_Stmt := Stmt;
+
+      if Push_Size + Pad /= 0 then
+         Res_Stmt :=
+           New_Enode (OE_Stack_Adjust, Get_Expr_Mode (Stmt), O_Tnode_Null,
+                      O_Enode (-Int32 (Push_Size + Pad)), O_Enode_Null);
+         Set_Expr_Reg (Res_Stmt, Reg_Res);
+         Link_Stmt (Res_Stmt);
+      end if;
+
+      --  The stack has been restored (just after the call).
+      Push_Offset := Push_Offset - (Push_Size + Pad);
 
       case Reg is
          when R_Any32
@@ -1037,18 +1070,18 @@ package body Ortho_Code.X86.Insns is
            | R_Ax
            | R_St0
            | R_Edx_Eax =>
-            Reg_Res := Alloc_Reg (Reg_Res, Stmt, Pnum);
-            return Stmt;
+            Reg_Res := Alloc_Reg (Reg_Res, Res_Stmt, Pnum);
+            return Res_Stmt;
          when R_Any_Cc =>
             --  Move to register.
             --  (use the 'test' instruction).
-            Alloc_Cc (Stmt, Pnum);
-            return Insert_Move (Stmt, R_Ne);
+            Alloc_Cc (Res_Stmt, Pnum);
+            return Insert_Move (Res_Stmt, R_Ne);
          when R_None =>
             if Reg_Res /= R_None then
                raise Program_Error;
             end if;
-            return Stmt;
+            return Res_Stmt;
          when others =>
             Error_Gen_Insn (Stmt, Reg);
       end case;
@@ -1621,6 +1654,7 @@ package body Ortho_Code.X86.Insns is
                      return Reload (Stmt, Reg, Pnum);
                   when Mode_U64
                     | Mode_I64 =>
+                     --  FIXME: align stack
                      Insert_Arg (Gen_Insn (Right, R_Irm, Num));
                      Insert_Arg (Gen_Insn (Left, R_Irm, Num));
                      return Insert_Intrinsic (Stmt, R_Edx_Eax, Pnum);
@@ -1821,9 +1855,11 @@ package body Ortho_Code.X86.Insns is
             end if;
             Left := Get_Arg_Link (Stmt);
             if Left /= O_Enode_Null then
-               --  Previous argument.
+               --  Recurse on next argument, so the first argument is pushed
+               --  the last one.
                Left := Gen_Insn (Left, R_None, Pnum);
             end if;
+
             Left := Get_Expr_Operand (Stmt);
             case Get_Expr_Mode (Left) is
                when Mode_F32 .. Mode_F64 =>
@@ -1835,6 +1871,8 @@ package body Ortho_Code.X86.Insns is
             end case;
             Left := Gen_Insn (Left, Reg_Res, Pnum);
             Set_Expr_Operand (Stmt, Left);
+            Push_Offset := Push_Offset +
+              Do_Align (Get_Mode_Size (Get_Expr_Mode (Left)), Mode_U32);
             Link_Stmt (Stmt);
             Free_Insn_Regs (Left);
             return Stmt;
@@ -2010,7 +2048,14 @@ package body Ortho_Code.X86.Insns is
          exit when Get_Expr_Kind (Stmt) = OE_Leave;
          Stmt := N_Stmt;
       end loop;
+
+      --  Keep stack depth for this subprogram.
       Subprg.Stack_Max := Stack_Max;
+
+      --  Sanity check: there must be no remaining pushed bytes.
+      if Push_Offset /= 0 then
+         raise Program_Error with "gen_subprg_insn: push_offset not 0";
+      end if;
    end Gen_Subprg_Insns;
 
 end Ortho_Code.X86.Insns;
