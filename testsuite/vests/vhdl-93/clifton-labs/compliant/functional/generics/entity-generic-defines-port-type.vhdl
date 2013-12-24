@@ -24,7 +24,7 @@ architecture only of test_bench is
   signal gdpt1_input : bit_vector( 3 downto 0 ) := "0000";
   signal gdpt1_finished : boolean := false;
 begin  -- only
-  gdpt1: entity generic_defines_port_type
+  gdpt1: entity work.generic_defines_port_type
     generic map ( width => 4 )
     port    map ( input => gdpt1_input, finished => gdpt1_finished );
 

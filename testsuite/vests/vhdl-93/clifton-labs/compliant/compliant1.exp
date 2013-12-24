@@ -13,7 +13,7 @@ run_compliant_test functional/attributes/signal/simple-last_event-attribute.vhdl
 run_compliant_test functional/attributes/signal/simple-last_value-attribute.vhdl
 run_compliant_test functional/attributes/type/base/simple-integer-test.vhdl
 run_compliant_test functional/attributes/type/left/simple-integer-test.vhdl
-#run_compliant_test functional/attributes/type/range/simple-range-attribute.vhdl
+run_compliant_test functional/attributes/type/range/simple-range-attribute.vhdl
 run_compliant_test functional/attributes/type/right/simple-integer-test.vhdl
 run_compliant_test functional/attributes/type/simple-integer-test-ascending.vhdl
 run_compliant_test functional/attributes/type/simple-integer-test-high.vhdl
@@ -37,7 +37,7 @@ run_compliant_test functional/entities/pass-integer-through-inout-port.vhdl
 run_compliant_test functional/functions/simple-out-parameter.vhdl
 run_compliant_test functional/functions/simple-procedure-call.vhdl
 run_compliant_test functional/functions/unconstrained_parameter.vhdl
-#run_compliant_test functional/generics/entity-generic-defines-port-type.vhdl
+run_compliant_test functional/generics/entity-generic-defines-port-type.vhdl
 run_compliant_test functional/generics/simple-entity-generic.vhdl
 run_compliant_test functional/objects/constants/simple-string-constant.vhdl
 run_compliant_test functional/objects/signals/assignments/integer-fanout.vhdl
@@ -61,8 +61,8 @@ run_compliant_test functional/signals/assign/simple-integer-initialize.vhdl
 run_compliant_test functional/slices/simple-slice.vhdl
 run_compliant_test functional/slices/slice-lvalue.vhdl
 run_compliant_test functional/statements/block-statements/simple-grouping-block.vhdl
-#run_compliant_test functional/statements/for-loops/dynamic_package_procedure_for_loop.vhdl
-#run_compliant_test functional/statements/for-loops/dynamic_procedure_for_loop.vhdl
+run_compliant_test functional/statements/for-loops/dynamic_package_procedure_for_loop.vhdl
+run_compliant_test functional/statements/for-loops/dynamic_procedure_for_loop.vhdl
 run_compliant_test functional/statements/for-loops/enumeration-for-loop-constrained.vhdl
 run_compliant_test functional/statements/for-loops/enumeration-for-loop.vhdl
 run_compliant_test functional/statements/for-loops/integer-for-loop.vhdl

@@ -134,7 +134,8 @@ package body Sem_Names is
                Add_Element (Res_List, Get_Return_Type (Decl));
             when Iir_Kind_Enumeration_Literal
               | Iir_Kind_Function_Call
-              | Iir_Kind_Indexed_Name =>
+              | Iir_Kind_Indexed_Name
+              | Iir_Kind_Selected_Element =>
                Add_Element (Res_List, Get_Type (Decl));
             when others =>
                Error_Kind ("create_list_of_types", Decl);
@@ -208,7 +209,8 @@ package body Sem_Names is
       begin
          case Get_Kind (El) is
             when Iir_Kind_Function_Call
-              | Iir_Kind_Indexed_Name =>
+              | Iir_Kind_Indexed_Name
+              | Iir_Kind_Selected_Element =>
                --  FIXME: recursion ?
                Free_Iir (El);
             when Iir_Kinds_Function_Declaration
@@ -450,8 +452,8 @@ package body Sem_Names is
       return Call;
    end Sem_As_Function_Call;
 
-   --  If PREFIX is a function specification, then return a function call,
-   --  else return PREFIX.
+   --  If SPEC is a function specification, then return a function call,
+   --  else return SPEC.
    function Maybe_Insert_Function_Call (Name : Iir; Spec : Iir) return Iir
    is
    begin
@@ -1365,6 +1367,9 @@ package body Sem_Names is
       Prefix_Loc : Location_Type;
       Res : Iir;
 
+      --  Semantize SUB_NAME.NAME as an expanded name (ie, NAME is declared
+      --  within SUB_NAME).  This is possible only if the expanded name is
+      --  analyzed within the context of SUB_NAME.
       procedure Sem_As_Expanded_Name (Sub_Name : Iir)
       is
          Sub_Res : Iir;
@@ -1382,6 +1387,8 @@ package body Sem_Names is
       --  the suffix must be a simple name denoting an element of a
       --  record object or value.  The prefix must be appropriate for the
       --  type of this object or value.
+      --
+      --  Semantize SUB_NAME.NAME as a selected element.
       procedure Sem_As_Selected_Element (Sub_Name : Iir)
       is
          Base_Type : Iir;
@@ -1392,11 +1399,9 @@ package body Sem_Names is
       begin
          --  FIXME: if not is_expr (sub_name) return.
          Base_Type := Get_Base_Type (Get_Type (Sub_Name));
-         if Get_Kind (Base_Type) = Iir_Kind_Access_Type_Definition
-         then
+         if Get_Kind (Base_Type) = Iir_Kind_Access_Type_Definition then
             Ptr_Type := Base_Type;
-            Base_Type :=
-              Get_Base_Type (Get_Designated_Type (Base_Type));
+            Base_Type := Get_Base_Type (Get_Designated_Type (Base_Type));
          else
             Ptr_Type := Null_Iir;
          end if;
@@ -1516,13 +1521,16 @@ package body Sem_Names is
                Prefix_List : Iir_List;
                El : Iir;
             begin
+               --  So, first try as expanded name.
                Prefix_List := Get_Overload_List (Prefix);
                for I in Natural loop
                   El := Get_Nth_Element (Prefix_List, I);
                   exit when El = Null_Iir;
                   Sem_As_Expanded_Name (El);
                end loop;
-               if Res /= Null_Iir then
+
+               --  If no expanded name are found, try as selected element.
+               if Res = Null_Iir then
                   for I in Natural loop
                      El := Get_Nth_Element (Prefix_List, I);
                      exit when El = Null_Iir;
@@ -1542,7 +1550,7 @@ package body Sem_Names is
             --  in that library.
             --  An expanded name is not allowed for a secondary unit,
             --  particularly for an architecture body.
-            --  GHDL: FIXME: error message more explicite
+            --  GHDL: FIXME: error message more explicit
             Res := Libraries.Load_Primary_Unit (Prefix, Suffix, Name);
             if Res = Null_Iir then
                Error_Msg_Sem
@@ -2063,16 +2071,23 @@ package body Sem_Names is
       procedure Sem_As_Selected_By_All_Name (Sub_Name : Iir)
       is
          Base_Type : Iir;
-         R : Iir;
+         R, R1 : Iir;
       begin
+         --  Only accept prefix of access type.
          Base_Type := Get_Base_Type (Get_Type (Sub_Name));
          if Get_Kind (Base_Type) /= Iir_Kind_Access_Type_Definition then
             return;
          end if;
 
+         if not Maybe_Function_Call (Sub_Name) then
+            return;
+         end if;
+
+         R1 := Maybe_Insert_Function_Call (Get_Prefix (Name), Sub_Name);
+
          R := Create_Iir (Iir_Kind_Dereference);
          Location_Copy (R, Name);
-         Set_Prefix (R, Sub_Name);
+         Set_Prefix (R, R1);
          --  FIXME: access subtype.
          Set_Type (R, Get_Designated_Type (Base_Type));
          Add_Result (Res, R);
@@ -2086,7 +2101,20 @@ package body Sem_Names is
          return;
       end if;
       Res := Null_Iir;
+
       case Get_Kind (Prefix) is
+         when Iir_Kind_Overload_List =>
+            declare
+               Prefix_List : Iir_List;
+               El : Iir;
+            begin
+               Prefix_List := Get_Overload_List (Prefix);
+               for I in Natural loop
+                  El := Get_Nth_Element (Prefix_List, I);
+                  exit when El = Null_Iir;
+                  Sem_As_Selected_By_All_Name (El);
+               end loop;
+            end;
          when Iir_Kinds_Object_Declaration
            | Iir_Kind_Selected_Element
            | Iir_Kind_Dereference
@@ -2378,12 +2406,14 @@ package body Sem_Names is
 
    --  Called for attributes Length, Left, Right, High, Low, Range,
    --  Reverse_Range, Ascending.
-   function Sem_Array_Attribute (Attr : Iir_Attribute_Name) return Iir
+   --  FIXME: handle overload
+   function Sem_Array_Attribute_Name (Attr : Iir_Attribute_Name) return Iir
    is
       use Std_Names;
       Prefix: Iir;
       Prefix_Type : Iir;
       Res : Iir;
+      Res_Type : Iir;
    begin
       Prefix := Get_Named_Entity (Get_Prefix (Attr));
 
@@ -2434,8 +2464,11 @@ package body Sem_Names is
                --  constrained, the base type would be the same.
             end if;
          when Iir_Kind_Range_Array_Attribute
-           | Iir_Kind_Reverse_Range_Array_Attribute
-           | Iir_Kind_Process_Statement =>
+           | Iir_Kind_Reverse_Range_Array_Attribute =>
+            --  For names such as pfx'Range'Left.
+            Finish_Sem_Array_Attribute (Prefix, Null_Iir);
+            Prefix_Type := Get_Type (Prefix);
+         when Iir_Kind_Process_Statement =>
             Error_Msg_Sem
               (Disp_Node (Prefix) & " is not an appropriate prefix for '"
                & Name_Table.Image (Get_Attribute_Identifier (Attr))
@@ -2462,6 +2495,7 @@ package body Sem_Names is
             return Error_Mark;
       end case;
 
+      Res_Type := Prefix_Type;
       case Get_Attribute_Identifier (Attr) is
          when Name_Left =>
             Res := Create_Iir (Iir_Kind_Left_Array_Attribute);
@@ -2478,18 +2512,19 @@ package body Sem_Names is
          when Name_Length =>
             Res := Create_Iir (Iir_Kind_Length_Array_Attribute);
             --  FIXME: Error if ambiguous
-            Set_Type (Res, Convertible_Integer_Type_Definition);
+            Res_Type := Convertible_Integer_Type_Definition;
          when Name_Ascending =>
             Res := Create_Iir (Iir_Kind_Ascending_Array_Attribute);
             --  FIXME: Error if ambiguous
-            Set_Type (Res, Boolean_Type_Definition);
+            Res_Type := Boolean_Type_Definition;
          when others =>
             raise Internal_Error;
       end case;
       Location_Copy (Res, Attr);
       Set_Prefix (Res, Prefix);
+      Set_Type (Res, Res_Type);
       return Res;
-   end Sem_Array_Attribute;
+   end Sem_Array_Attribute_Name;
 
    function Sem_Signal_Signal_Attribute
      (Attr : Iir_Attribute_Name; Kind : Iir_Kind)
@@ -2806,7 +2841,7 @@ package body Sem_Names is
       return Res;
    end Sem_Name_Attribute;
 
-   procedure Sem_Attribute (Attr : Iir_Attribute_Name)
+   procedure Sem_Attribute_Name (Attr : Iir_Attribute_Name)
    is
       use Std_Names;
       Prefix : Iir;
@@ -2891,11 +2926,11 @@ package body Sem_Names is
            | Name_Low
            | Name_Range
            | Name_Reverse_Range =>
-            Res := Sem_Array_Attribute (Attr);
+            Res := Sem_Array_Attribute_Name (Attr);
 
          when Name_Ascending =>
             if Flags.Vhdl_Std > Vhdl_87 then
-               Res := Sem_Array_Attribute (Attr);
+               Res := Sem_Array_Attribute_Name (Attr);
             else
                Res := Sem_User_Attribute (Attr);
             end if;
@@ -2933,10 +2968,10 @@ package body Sem_Names is
       end case;
 
       if Res = Null_Iir then
-         Error_Kind ("sem_attribute", Attr);
+         Error_Kind ("sem_attribute_name", Attr);
       end if;
       Set_Named_Entity (Attr, Res);
-   end Sem_Attribute;
+   end Sem_Attribute_Name;
 
    --  LRM93 §6
    procedure Sem_Name (Name : Iir; Keep_Alias : Boolean)
@@ -2959,7 +2994,7 @@ package body Sem_Names is
          when Iir_Kind_Selected_By_All_Name =>
             Sem_Selected_By_All_Name (Name);
          when Iir_Kind_Attribute_Name =>
-            Sem_Attribute (Name);
+            Sem_Attribute_Name (Name);
          when others =>
             Error_Kind ("sem_name", Name);
       end case;
