@@ -35,6 +35,7 @@ begin  -- only
     gdpt1_finished <= true;
     wait for 1 fs;
     report "TEST PASSED";
+    wait;
   end process doit;
   
 end only;

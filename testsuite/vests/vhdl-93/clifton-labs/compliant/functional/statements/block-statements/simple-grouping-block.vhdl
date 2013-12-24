@@ -20,7 +20,7 @@ begin  -- only
   begin
     if delay_line_out = '1' then
       assert now = 1 ns report "TEST FAILED - delay did not happen as expected!" severity FAILURE;
-      assert not(now = 1 ns) report "TEST PASSED" severity FAILURE;
+      assert not(now = 1 ns) report "TEST PASSED" severity WARNING;
     end if;
   end process;
 end only;

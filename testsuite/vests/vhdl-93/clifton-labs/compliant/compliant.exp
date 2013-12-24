@@ -43,7 +43,7 @@ foreach local_test_name [find ${subdir} *\.vhd*] {
 	set output_file_name [lindex ${output_file_name} [expr [llength ${output_file_name}] - 1]]
 #	set output_files_argument "INPUT=${output_file_name}:[pwd]/${output_files}"
 	set output_files_argument "INPUT=${output_file_name}:${output_files}"
-	verbose "Ouput files glob: ${output_files_glob}, files found: ${output_files}, argument generated ${output_files_argument}" 2
+	verbose "Output files glob: ${output_files_glob}, files found: ${output_files}, argument generated ${output_files_argument}" 2
     }
 
     verbose "Running test at ./[string range ${local_test_name} [expr ${dir_prefix_length} - 2] end]  ${input_files_argument} ${output_files_argument}" 2

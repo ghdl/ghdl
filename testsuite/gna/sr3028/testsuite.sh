@@ -2,12 +2,7 @@
 
 . ../../testenv.sh
 
-echo "Skipped !!!!"
-exit 0
-
-analyze vc.vhdl
-analyze top.vhdl
-elab_simulate_failure top
+analyze_failure vc.vhdl
 
 clean
 

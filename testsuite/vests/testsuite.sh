@@ -72,6 +72,17 @@ handle_test ()
          ;;
     run)
          eval $cmd
+         ent=`$GET_ENTITIES $dir/$file`
+         if [ x$ent = "x" ]; then
+           echo "Cannot elaborate or run : no top level entity";
+         else
+           cmd="$GHDL -e $ent";
+           echo "$cmd";
+           eval $cmd;
+           cmd="$GHDL -r $ent --assert-level=error";
+           echo "$cmd";
+           eval $cmd;
+         fi
          ;;
     ana_err)
          if eval $cmd; then
@@ -81,14 +92,20 @@ handle_test ()
          ;;
     run_err)
          eval $cmd
-         ent=`sed -n -e "/^ENTITY \([a-zA-Z0-9]*\) IS$/p" < $dir/$file \
-              | cut -f 2 -d ' '`
-         cmd="$GHDL -e $ent"
-         echo "$cmd"
-         eval $cmd
-         cmd="$GHDL -r $ent --expect-failure --assert-level=error"
-         echo "$cmd"
-         eval $cmd
+#         ent=`sed -n -e "/^ENTITY \([a-zA-Z0-9]*\) IS$/p" < $dir/$file \
+#              | cut -f 2 -d ' '`
+         ent=`$GET_ENTITIES $dir/$file`
+         if [ x$ent = "x" ]; then
+           echo "Cannot elaborate or run : no top level entity";
+           exit 1;
+         else
+           cmd="$GHDL -e $ent";
+           echo "$cmd";
+           eval $cmd;
+           cmd="$GHDL -r $ent --expect-failure --assert-level=error";
+           echo "$cmd";
+           eval $cmd;
+         fi
          ;;
     *)
          echo "Unknown mode '$mode'";

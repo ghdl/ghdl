@@ -16,6 +16,7 @@
 #GHDL=ghdl
 RM=rm
 LN=ln
+GET_ENTITIES=../get_entities
 
 # Exit in case of failure in shell scripts.
 set -e
