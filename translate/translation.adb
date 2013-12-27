@@ -2249,14 +2249,14 @@ package body Translation is
       function Translate_Left_Array_Attribute (Expr : Iir) return O_Enode;
       function Translate_Ascending_Array_Attribute (Expr : Iir) return O_Enode;
 
+      function Translate_High_Low_Type_Attribute
+        (Attr : Iir; Is_High : Boolean) return O_Enode;
+
       --  Return the value of the left bound/right bound/direction of scalar
       --  type ATYPE.
       function Translate_Left_Type_Attribute (Atype : Iir) return O_Enode;
       function Translate_Right_Type_Attribute (Atype : Iir) return O_Enode;
       function Translate_Dir_Type_Attribute (Atype : Iir) return O_Enode;
-
-      function Translate_High_Type_Attribute (Atype : Iir) return O_Enode;
-      function Translate_Low_Type_Attribute (Atype : Iir) return O_Enode;
 
       function Translate_Val_Attribute (Attr : Iir) return O_Enode;
       function Translate_Pos_Attribute (Attr : Iir; Res_Type : Iir)
@@ -16403,13 +16403,19 @@ package body Translation is
                Res := Chap14.Translate_Last_Value_Attribute (Expr);
 
             when Iir_Kind_High_Type_Attribute =>
-               return Chap14.Translate_High_Type_Attribute (Get_Type (Expr));
+               return Chap14.Translate_High_Low_Type_Attribute (Expr, True);
             when Iir_Kind_Low_Type_Attribute =>
-               return Chap14.Translate_Low_Type_Attribute (Get_Type (Expr));
+               return Chap14.Translate_High_Low_Type_Attribute (Expr, False);
             when Iir_Kind_Left_Type_Attribute =>
-               return Chap14.Translate_Left_Type_Attribute (Get_Type (Expr));
+               return M2E
+                 (Chap3.Range_To_Left
+                    (Lv2M (Translate_Range (Get_Prefix (Expr), Expr_Type),
+                           Get_Info (Get_Base_Type (Expr_Type)), Mode_Value)));
             when Iir_Kind_Right_Type_Attribute =>
-               return Chap14.Translate_Right_Type_Attribute (Get_Type (Expr));
+               return M2E
+                 (Chap3.Range_To_Right
+                    (Lv2M (Translate_Range (Get_Prefix (Expr), Expr_Type),
+                           Get_Info (Get_Base_Type (Expr_Type)), Mode_Value)));
 
             when Iir_Kind_Last_Event_Attribute =>
                return Chap14.Translate_Last_Time_Attribute
@@ -16706,6 +16712,9 @@ package body Translation is
         return O_Lnode is
       begin
          case Get_Kind (Arange) is
+            when Iir_Kind_Subtype_Declaration =>
+               --  Must be a scalar subtype.  Range of types is static.
+               return Get_Var (Get_Info (Get_Type (Arange)).T.Range_Var);
             when Iir_Kind_Range_Array_Attribute =>
                return Chap14.Translate_Range_Array_Attribute (Arange);
             when Iir_Kind_Reverse_Range_Array_Attribute =>
@@ -24005,12 +24014,18 @@ package body Translation is
 
       --  Extract high or low bound of RANGE_VAR, which must be stable.
       --  Put the result into RES.
-      procedure Range_To_High_Low
-        (Range_Var : Mnode; Res : O_Dnode; Is_High : Boolean)
+      function Range_To_High_Low
+        (Range_Var : Mnode; Range_Type : Iir; Is_High : Boolean)
+        return Mnode
       is
          Op : ON_Op_Kind;
          If_Blk : O_If_Block;
+         Range_Svar : constant Mnode := Stabilize (Range_Var);
+         Res : O_Dnode;
+         Tinfo : constant Ortho_Info_Acc := Get_Info (Range_Type);
       begin
+         Res := Create_Temp (Tinfo.Ortho_Type (Mode_Value));
+         Open_Temp;
          if Is_High then
             Op := ON_Neq;
          else
@@ -24018,43 +24033,42 @@ package body Translation is
          end if;
          Start_If_Stmt (If_Blk,
                         New_Compare_Op (Op,
-                                        M2E (Chap3.Range_To_Dir (Range_Var)),
+                                        M2E (Chap3.Range_To_Dir (Range_Svar)),
                                         New_Lit (Ghdl_Dir_To_Node),
                                         Ghdl_Bool_Type));
          New_Assign_Stmt (New_Obj (Res),
-                          M2E (Chap3.Range_To_Left (Range_Var)));
+                          M2E (Chap3.Range_To_Left (Range_Svar)));
          New_Else_Stmt (If_Blk);
          New_Assign_Stmt (New_Obj (Res),
-                          M2E (Chap3.Range_To_Right (Range_Var)));
+                          M2E (Chap3.Range_To_Right (Range_Svar)));
          Finish_If_Stmt (If_Blk);
+         Close_Temp;
+         return Dv2M (Res, Tinfo, Mode_Value);
       end Range_To_High_Low;
+
+      function Translate_High_Low_Type_Attribute
+        (Attr : Iir; Is_High : Boolean) return O_Enode
+      is
+         Attr_Type : constant Iir := Get_Type (Attr);
+         Tinfo : constant Ortho_Info_Acc := Get_Info (Attr_Type);
+      begin
+         return M2E
+           (Chap14.Range_To_High_Low
+              (Lv2M (Chap7.Translate_Range (Get_Prefix (Attr), Attr_Type),
+                     True,
+                     Tinfo.T.Range_Type, Tinfo.T.Range_Ptr_Type,
+                     Tinfo, Mode_Value),
+               Attr_Type, Is_High));
+      end Translate_High_Low_Type_Attribute;
 
       function Translate_High_Low_Array_Attribute (Expr : Iir;
                                                    Is_High : Boolean)
-        return O_Enode
+                                                  return O_Enode
       is
-         Prefix : Iir;
-         Prefix_Type : Iir;
-         Dim : Natural;
-         Index_Type : Iir;
-         Index_Info : Type_Info_Acc;
-         Res : O_Dnode;
-         Range_Var : Mnode;
       begin
-         Prefix := Get_Prefix (Expr);
-         Prefix_Type := Get_Type (Prefix);
-         Dim := Natural (Get_Value (Get_Parameter (Expr)));
-         Index_Type := Get_Nth_Element (Get_Index_Subtype_List (Prefix_Type),
-                                        Dim - 1);
-         Index_Info := Get_Info (Get_Base_Type (Index_Type));
-
-         Res := Create_Temp (Index_Info.Ortho_Type (Mode_Value));
-
-         Open_Temp;
-         Range_Var := Stabilize (Translate_Array_Attribute_To_Range (Expr));
-         Range_To_High_Low (Range_Var, Res, Is_High);
-         Close_Temp;
-         return New_Obj_Value (Res);
+         return M2E (Range_To_High_Low
+                       (Translate_Array_Attribute_To_Range (Expr),
+                        Get_Type (Expr), Is_High));
       end Translate_High_Low_Array_Attribute;
 
       function Translate_Low_Array_Attribute (Expr : Iir)
@@ -24100,48 +24114,6 @@ package body Translation is
                                 New_Lit (Ghdl_Dir_To_Node),
                                 Std_Boolean_Type_Node);
       end Translate_Ascending_Array_Attribute;
-
-      function Translate_Low_High_Type_Attribute
-        (Atype : Iir; Is_Low : Boolean)
-        return O_Enode
-      is
-         Range_Constr : Iir;
-      begin
-         if Get_Type_Staticness (Atype) = Locally then
-            Range_Constr := Get_Range_Constraint (Atype);
-            if Get_Direction (Range_Constr) = Iir_To xor Is_Low then
-               --  TO and HIGH   or  DOWNTO and LOW  -> right
-               return New_Lit (Chap7.Translate_Static_Range_Right
-                               (Range_Constr, Atype));
-            else
-               --  TO and LOW   or   DOWNTO and HIGH  -> left
-               return New_Lit (Chap7.Translate_Static_Range_Left
-                               (Range_Constr, Atype));
-            end if;
-         else
-            declare
-               Res : O_Dnode;
-               Rng : Mnode;
-            begin
-               Res := Create_Temp (Get_Ortho_Type (Atype, Mode_Value));
-               Open_Temp;
-               Rng := Stabilize (Chap3.Type_To_Range (Atype));
-               Range_To_High_Low (Rng, Res, not Is_Low);
-               Close_Temp;
-               return New_Obj_Value (Res);
-            end;
-         end if;
-      end Translate_Low_High_Type_Attribute;
-
-      function Translate_High_Type_Attribute (Atype : Iir) return O_Enode is
-      begin
-         return Translate_Low_High_Type_Attribute (Atype, False);
-      end Translate_High_Type_Attribute;
-
-      function Translate_Low_Type_Attribute (Atype : Iir) return O_Enode is
-      begin
-         return Translate_Low_High_Type_Attribute (Atype, True);
-      end Translate_Low_Type_Attribute;
 
       function Translate_Left_Type_Attribute (Atype : Iir) return O_Enode is
       begin

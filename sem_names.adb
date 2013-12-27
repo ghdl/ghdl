@@ -2205,7 +2205,6 @@ package body Sem_Names is
                            & "anonymous object", Attr);
             return Error_Mark;
          when Iir_Kinds_Object_Declaration
-           | Iir_Kind_Design_Unit
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kinds_Function_Declaration
@@ -2216,6 +2215,8 @@ package body Sem_Names is
            | Iir_Kinds_Concurrent_Statement =>
             --  FIXME: to complete
             null;
+         when Iir_Kind_Design_Unit =>
+            Sem.Add_Dependence (Prefix);
          when others =>
             Error_Kind ("sem_user_attribute", Prefix);
       end case;
@@ -2400,7 +2401,13 @@ package body Sem_Names is
             --  Result Type: Same type as T.
             Set_Type (Res, Prefix_Type);
       end case;
-      Set_Expr_Staticness (Res, Get_Type_Staticness (Prefix_Type));
+      case Get_Kind (Prefix) is
+         when Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute =>
+            Set_Expr_Staticness (Res, Get_Expr_Staticness (Prefix));
+         when others =>
+            Set_Expr_Staticness (Res, Get_Type_Staticness (Prefix_Type));
+      end case;
       return Res;
    end Sem_Predefined_Type_Attribute;
 

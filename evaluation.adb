@@ -1780,19 +1780,19 @@ package body Evaluation is
 
          when Iir_Kind_Left_Type_Attribute =>
             return Build_Constant
-              (Get_Left_Limit (Eval_Range (Get_Type (Expr))), Expr);
+              (Get_Left_Limit (Eval_Range (Get_Prefix (Expr))), Expr);
          when Iir_Kind_Right_Type_Attribute =>
             return Build_Constant
-              (Get_Right_Limit (Eval_Range (Get_Type (Expr))), Expr);
+              (Get_Right_Limit (Eval_Range (Get_Prefix (Expr))), Expr);
          when Iir_Kind_High_Type_Attribute =>
             return Build_Constant
-              (Get_High_Limit (Eval_Range (Get_Type (Expr))), Expr);
+              (Get_High_Limit (Eval_Range (Get_Prefix (Expr))), Expr);
          when Iir_Kind_Low_Type_Attribute =>
             return Build_Constant
-              (Get_Low_Limit (Eval_Range (Get_Type (Expr))), Expr);
+              (Get_Low_Limit (Eval_Range (Get_Prefix (Expr))), Expr);
          when Iir_Kind_Ascending_Type_Attribute =>
             return Build_Boolean
-              (Get_Direction (Eval_Range (Get_Type (Expr))) = Iir_To, Expr);
+              (Get_Direction (Eval_Range (Get_Prefix (Expr))) = Iir_To, Expr);
 
          when Iir_Kind_Range_Array_Attribute =>
             declare
@@ -2317,6 +2317,10 @@ package body Evaluation is
                     (Get_Index_Subtype_List (Prefix),
                      Natural (Eval_Pos (Get_Parameter (Expr))) - 1);
                end;
+            when Iir_Kind_Subtype_Declaration
+              | Iir_Kind_Type_Declaration
+              | Iir_Kind_Base_Attribute =>
+               return Eval_Range (Get_Type (Expr));
             when others =>
                Error_Kind ("eval_range", Expr);
          end case;
