@@ -38,6 +38,8 @@ BEGIN
   begin
     k <= 5;
     wait for 1 ns;
+    --  Avoid infinite simulation
+    wait;
   end process L1;
 
   TESTING: PROCESS

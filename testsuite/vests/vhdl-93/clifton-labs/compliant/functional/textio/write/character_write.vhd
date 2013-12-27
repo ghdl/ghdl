@@ -27,10 +27,10 @@ architecture test0 of character_write is
   type character_file is file of character;
 begin
   doit: process
-    file fileout : character_file open write_mode is "character_write.out";
+    file fileout : character_file open write_mode is "character.file";
   begin
     write(fileout, '1');
-    write(fileout, 'a');
+    write(fileout, 'A');
     write(fileout, '$');
     write(fileout, '+');
 

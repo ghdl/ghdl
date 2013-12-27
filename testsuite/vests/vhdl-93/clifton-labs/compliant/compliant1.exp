@@ -77,8 +77,11 @@ run_compliant_test functional/std_standard/simple-now-test.vhdl
 #run_compliant_test functional/subtypes/modified-character-subtype.vhdl
 #run_compliant_test functional/subtypes/modified-integer-subtype.vhdl
 #run_compliant_test functional/subtypes/simple-enumeration-subtype.vhdl
+run_compliant_test functional/textio/write/character_array_write.vhd
 run_compliant_test functional/textio/read/character_array_read.vhdl
+run_compliant_test functional/textio/write/character_write.vhd
 run_compliant_test functional/textio/read/character_read.vhdl
+run_compliant_test functional/textio/write/simple-write.vhdl
 run_compliant_test functional/textio/read/simple-read.vhdl
 run_compliant_test functional/textio/write/fopen_test_1.vhdl
 run_compliant_test functional/textio/write/fopen_test_2.vhdl

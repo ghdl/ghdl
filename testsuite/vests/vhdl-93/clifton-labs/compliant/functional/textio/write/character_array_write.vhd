@@ -28,7 +28,7 @@ architecture test0 of character_array_write is
   type character_array_file is file of character_array;
 begin
   doit: process
-    file fileout : character_array_file open write_mode is "character_array_write.out";
+    file fileout : character_array_file open write_mode is "character_array.file";
   begin
     write(fileout,('1','a','$','+'));
 

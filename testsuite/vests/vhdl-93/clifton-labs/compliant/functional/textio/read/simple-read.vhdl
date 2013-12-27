@@ -29,7 +29,7 @@ architecture only of simple_read is
   type integer_file is file of integer;
 begin  -- only
   doit: process
-    file infile : integer_file open read_mode is "simple-read.in";
+    file infile : integer_file open read_mode is "simple.file";
     variable v : integer;
   begin  -- process
 

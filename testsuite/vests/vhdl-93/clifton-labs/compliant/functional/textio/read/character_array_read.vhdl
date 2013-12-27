@@ -29,7 +29,7 @@ architecture test0 of character_array_read is
   signal    k : integer := 0;
 begin
   doit: process
-    file filein    : character_array_file open read_mode is "character_array_read.in";
+    file filein    : character_array_file open read_mode is "character_array.file";
     variable  v    : character_array(0 to 3);
     variable  len   : natural;
   begin

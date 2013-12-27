@@ -69,7 +69,8 @@ BEGIN
   TESTING : PROCESS
     subtype String3to3 is STRING(3 to 3);
   BEGIN
-    CheckConcat(String3to3'("9") & "A", "9A", 3, 4);
+    --  VHDL87: CheckConcat(String3to3'("9") & "A", "9A", 3, 4);
+    CheckConcat(String3to3'("9") & "A", "9A", 1, 2);  -- VHDL93
     wait;
   END PROCESS TESTING;
 

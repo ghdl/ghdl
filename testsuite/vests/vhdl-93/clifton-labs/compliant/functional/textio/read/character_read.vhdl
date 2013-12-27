@@ -28,7 +28,7 @@ architecture test0 of character_read is
   signal k : integer := 0;
 begin
   doit: process
-    file filein : character_file open read_mode is "character_read.in";
+    file filein : character_file open read_mode is "character.file";
     variable  v : character;
   begin
     assert(endfile(filein) = false)

@@ -50,7 +50,7 @@ BEGIN
     end write1;
 
     procedure read1 is
-      file F: TEXT open read_mode is "s010301.in";
+      file F: TEXT open read_mode is "iofile.64";
       variable    L: LINE;
       variable    i,v_integer : Integer;
     begin

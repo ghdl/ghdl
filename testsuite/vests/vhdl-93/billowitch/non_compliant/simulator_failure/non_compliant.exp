@@ -42,7 +42,7 @@ run_non_compliant_test tc261.vhd
 #run_non_compliant_test tc262.vhd # ??? no recovery with ghdl_mcode
 #run_non_compliant_test tc263.vhd # idem
 run_non_compliant_test tc264.vhd
-run_non_compliant_test tc536.vhd
+run_non_compliant_test tc536.vhd ENTITY=c03s03b00x00p05n02i00536ent
 
 run_non_compliant_test tc1074.vhd
 #run_non_compliant_test tc1227.vhd # detected during analysis
