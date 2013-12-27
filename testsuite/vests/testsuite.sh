@@ -42,6 +42,7 @@ handle_test ()
   file=$1
   shift
   args="$common_args"
+  entity=""
   # handle options.
   for arg; do
     case $arg in
@@ -55,6 +56,9 @@ handle_test ()
     OUTPUT=*)
          output=$arg;
          ;;
+    ENTITY=*)
+         entity=`echo $arg | sed -e s/ENTITY=//`
+	 ;;
     *)
          echo "build_compliant_test: unknown argument '$arg'";
          exit 4;
@@ -72,14 +76,13 @@ handle_test ()
          ;;
     run)
          eval $cmd
-         ent=`$GET_ENTITIES $dir/$file`
-         if [ x$ent = "x" ]; then
+         if [ x$entity = "x" ]; then
+           entity=`$GET_ENTITIES $dir/$file`
+	 fi
+         if [ "x$entity" = "x" ]; then
            echo "Cannot elaborate or run : no top level entity";
          else
-           cmd="$GHDL -e $ent";
-           echo "$cmd";
-           eval $cmd;
-           cmd="$GHDL -r $ent --assert-level=error";
+           cmd="$GHDL --elab-run $entity --assert-level=error";
            echo "$cmd";
            eval $cmd;
          fi
@@ -94,15 +97,17 @@ handle_test ()
          eval $cmd
 #         ent=`sed -n -e "/^ENTITY \([a-zA-Z0-9]*\) IS$/p" < $dir/$file \
 #              | cut -f 2 -d ' '`
-         ent=`$GET_ENTITIES $dir/$file`
-         if [ x$ent = "x" ]; then
+         if [ x$entity = "x" ]; then
+           entity=`$GET_ENTITIES $dir/$file`
+	 fi
+         if [ "x$entity" = "x" ]; then
            echo "Cannot elaborate or run : no top level entity";
            exit 1;
          else
-           cmd="$GHDL -e $ent";
+           cmd="$GHDL -e $entity";
            echo "$cmd";
            eval $cmd;
-           cmd="$GHDL -r $ent --expect-failure --assert-level=error";
+           cmd="$GHDL -r $entity --expect-failure --assert-level=error";
            echo "$cmd";
            eval $cmd;
          fi
@@ -112,18 +117,18 @@ handle_test ()
          exit 4;
          ;;
     esac
+
+    if [ $do_inter_clean = "yes" ]; then
+      if [ `expr $test_num % 16` = "0" ]; then
+         delete_lib work;
+      fi
+    fi
   else
     echo "skip";
   fi
   
   # Increment test_num
   test_num=`expr $test_num + 1`
-  
-  if [ $do_inter_clean = "yes" ]; then
-    if [ `expr $test_num % 16` = "0" ]; then
-       delete_lib work;
-    fi
-  fi
 }
 
 build_compliant_test ()
