@@ -19,9 +19,8 @@
 --      along with get_entities.  If not, see <http://www.gnu.org/licenses/>.
 ----------------------------------------------------------------------------
 
-
-with Ada.Text_Io; 	
-with Ada.Characters.Handling;	
+with Ada.Text_Io; use Ada.Text_IO;
+with Ada.Characters.Handling;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 with Ada.Strings.Unbounded;
@@ -34,7 +33,8 @@ procedure get_entities is
       use Ada.Directories;
       use Ada.Characters.Handling;
    begin
-      return Extension(To_Lower(Name)) = "vhd" or Extension(To_Lower(Name)) = "vhdl";
+      return Extension(To_Lower(Name)) = "vhd"
+        or Extension(To_Lower(Name)) = "vhdl";
    end Valid_Test;
 
    procedure Get_Top_Entities(Test_Name : in String) is
@@ -48,11 +48,11 @@ procedure get_entities is
       function Get_End(Line : in String) return Natural is
          Comment : natural := Index(Line,"--");
       begin
-         if Comment = 0 then 
+         if Comment = 0 then
             return Line'last;
          else
             return Comment - 1;
-         end if;         
+         end if;
       end Get_End;
 
       type State_Type is (Idle, Have_Entity, Have_Name, In_Entity, Have_End);
@@ -61,6 +61,7 @@ procedure get_entities is
       Top_Level_Entity : Boolean;
       Name : Unbounded_String;
 
+      Last_Entity : Unbounded_String;
    begin
    -- Return the name of all top-level entities in the file.
    -- Report on stderr, a malformed one
@@ -73,9 +74,9 @@ procedure get_entities is
       Open(File, In_File, Test_Name);
       State := Idle;
       loop
-         declare 
+         declare
             -- strip name of blanks etc...
-            CharSet       : constant Ada.Strings.Maps.Character_Ranges := (('A','Z'), ('a','z'), ('0','9'), ('_','_')); 
+            CharSet       : constant Ada.Strings.Maps.Character_Ranges := (('A','Z'), ('a','z'), ('0','9'), ('_','_'));
 
             function Token(Source, Name : String; From : positive := 1) return natural is
                use Ada.Strings.Maps;
@@ -102,7 +103,7 @@ procedure get_entities is
                   if copy then
                      if Raw(i) = '"' then
                         copy := not copy;
-                     else 
+                     else
                         temp(t) := Raw(i);
                         t := t + 1;
                      end if;
@@ -120,7 +121,7 @@ procedure get_entities is
             EndLine : natural := Get_End (Line);
             Raw     : String  := To_Lower(Line (1 .. EndLine));
             Code    : String  := Strip_Quoted(Raw);
-            -- positions of specific strings in a line. 
+            -- positions of specific strings in a line.
             Ent     : Natural := Token(Code, "entity");
             Port    : Natural := Token(Code, "port");
             End_Pos : Natural := Token(Code, "end");
@@ -132,15 +133,15 @@ procedure get_entities is
 
             procedure Get_Name is
             begin
-               Name_e := Index(Code, Ada.Strings.Maps.To_Set(CharSet), 
-                                        Test => Ada.Strings.Outside, From => Name_s); 
+               Name_e := Index(Code, Ada.Strings.Maps.To_Set(CharSet),
+                                        Test => Ada.Strings.Outside, From => Name_s);
                if Name_e = 0 then Name_e := Code'last; end if;
-               --Put_Line("Name : " & To_S(Name) & " " 
+               --Put_Line("Name : " & To_S(Name) & " "
                --           & natural'image(Name_s) & " " & natural'image(Name_e)
                --           & natural'image(Code'last));
                if Name_e < Code'last then
                   Name_n := Index(Code, Ada.Strings.Maps.To_Set(CharSet), From => Name_e);
-               else 
+               else
                   Name_n := 0;
                end if;
                I := Token(Code, "is", From => Name_e);
@@ -178,7 +179,7 @@ procedure get_entities is
                         Get_Name;
                      end if;
                   end if;
-               when Have_Entity => 
+               when Have_Entity =>
                   Name_s := Index(Code, Ada.Strings.Maps.To_Set(CharSet), From => Ent + 6);
                   if Name_s > 0 then
                      Get_Name;
@@ -193,12 +194,12 @@ procedure get_entities is
                   if Port > 0 then
                      Top_Level_Entity := False;
                   end if;
-                  if End_Pos > 0 then 
+                  if End_Pos > 0 then
                      State := Have_End;
                   end if;
-               when Have_End =>  
+               when Have_End =>
                   if Top_Level_Entity then -- write name to stdout
-                     Put(To_String(Name) & " ");
+                     Last_Entity := Name;
                   end if;
                   State := Idle;
             end Case;
@@ -206,20 +207,23 @@ procedure get_entities is
          end;
       end loop;
 
-      New_Line;
+      if Last_Entity /= "" then
+         Put_Line (To_String (Last_Entity));
+      end if;
       Close(File);
 
    end Get_Top_Entities;
 
    procedure Usage is
    begin
-      Ada.Text_Io.Put_Line(Ada.Text_Io.Standard_Error, "Usage : " & Ada.Command_Line.Command_Name & " <filename>");
+      Put_Line(Standard_Error,
+               "Usage : " & Ada.Command_Line.Command_Name & " <filename>");
    end Usage;
 
 begin
    if Ada.Command_Line.Argument_Count = 0 then
       raise Program_Error;
-   end if;   
+   end if;
    Get_Top_Entities(Ada.Command_Line.Argument(1));
 exception
    when Program_Error => Usage;
