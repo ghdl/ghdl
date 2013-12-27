@@ -1692,7 +1692,10 @@ package body Ortho_Code.X86.Insns is
                   end if;
                   Left := Gen_Insn (Left, R_Any_Cc, Pnum);
                   Set_Expr_Operand (Stmt, Left);
-                  Set_Expr_Reg (Stmt, Inverse_Cc (Get_Expr_Reg (Left)));
+                  Reg_Res := Inverse_Cc (Get_Expr_Reg (Left));
+                  Free_Cc;
+                  Set_Expr_Reg (Stmt, Reg_Res);
+                  Alloc_Cc (Stmt, Pnum);
                   return Stmt;
                when R_Irm
                  | R_Rm
@@ -1703,7 +1706,9 @@ package body Ortho_Code.X86.Insns is
             end case;
             Left := Gen_Insn (Left, Reg_Res, Pnum);
             Set_Expr_Operand (Stmt, Left);
-            Set_Expr_Reg (Stmt, Get_Expr_Reg (Left));
+            Reg_Res := Get_Expr_Reg (Left);
+            Free_Insn_Regs (Left);
+            Set_Expr_Reg (Stmt, Alloc_Reg (Reg_Res, Stmt, Pnum));
             Link_Stmt (Stmt);
             return Stmt;
          when OE_Conv =>

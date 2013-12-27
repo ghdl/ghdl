@@ -1551,7 +1551,7 @@ package body Ortho_Code.Exprs is
       Disp_Mode (Get_Expr_Mode (N));
       Put ("  ");
       Put (OE_Kind'Image (Get_Expr_Kind (N)));
-      Set_Col (Indent + 26);
+      Set_Col (Indent + 28);
 --       Put (Abi.Image_Insn (Get_Expr_Insn (N)));
 --       Put ("  ");
       Put (Abi.Image_Reg (Get_Expr_Reg (N)));
