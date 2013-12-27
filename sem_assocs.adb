@@ -1015,6 +1015,7 @@ package body Sem_Assocs is
                Formal_Type := Get_Type (Inter);
                Set_Named_Entity (Formal, Inter);
                Set_Type (Formal, Formal_Type);
+               Set_Base_Name (Formal, Inter);
                --Xrefs.Xref_Name (Formal);
                return Whole;
             end if;
