@@ -392,6 +392,7 @@ package body Sem is
             Error_Kind ("sem_generic_port_association_list", Assoc_Parent);
       end case;
 
+      --  The generics
       Assoc_Chain := Get_Generic_Map_Aspect_Chain (Assoc_Parent);
       if Sem_Actual_Of_Association_Chain (Assoc_Chain) then
          Sem_Association_Chain
@@ -421,6 +422,7 @@ package body Sem is
          end if;
       end if;
 
+      --  The ports
       Assoc_Chain := Get_Port_Map_Aspect_Chain (Assoc_Parent);
       if not Sem_Actual_Of_Association_Chain (Assoc_Chain) then
          return;
@@ -446,12 +448,15 @@ package body Sem is
       Inter := Get_Port_Chain (Inter_Parent);
       while El /= Null_Iir loop
          Formal := Get_Formal (El);
+
          if Formal = Null_Iir then
+            --  No formal: use association by position.
             Formal := Inter;
             Inter := Get_Chain (Inter);
          else
             Inter := Null_Iir;
          end if;
+
          if Get_Kind (El) = Iir_Kind_Association_Element_By_Expression then
             Actual := Get_Actual (El);
             --  There has been an error, exit from the loop.
