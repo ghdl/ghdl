@@ -17,16 +17,21 @@
 --  02111-1307, USA.
 
 package Default_Pathes is
+
+   --  Accept long lines.
+   pragma Style_Checks ("M999");
+
+   Compiler_Gcc : constant String :=
+     "@COMPILER_GCC@";
+   Prefix : constant String :=
+     "@PREFIX@";
+
    Compiler_Mcode : constant String :=
      "@COMPILER_MCODE@";
    Compiler_Llvm : constant String :=
      "@COMPILER_LLVM@";
-   Compiler_Gcc : constant String :=
-     "@COMPILER_GCC@";
    Compiler_Debug : constant String :=
      "@COMPILER_DEBUG@";
    Post_Processor : constant String :=
      "@POST_PROCESSOR@";
-   Prefix : constant String :=
-     "@PREFIX@";
 end Default_Pathes;
