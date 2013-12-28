@@ -6,7 +6,7 @@
 
 set -e
 
-dirs="bug* sr*"
+dirs="bug* sr* deb*"
 failures=""
 full=n
 
