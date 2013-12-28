@@ -9,6 +9,7 @@ syntax:glob
 *.a
 *.lst
 *.orig
+.gdb_history
 ortho/oread/oread-gcc
 translate/ghdl1-debug
 translate/ghdl1-gcc
