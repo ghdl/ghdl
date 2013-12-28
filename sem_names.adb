@@ -873,7 +873,16 @@ package body Sem_Names is
          Error_Msg_Sem ("'transaction does not allow a parameter", Attr);
       else
          Param := Sem_Expression (Parameter, Time_Subtype_Definition);
-         Set_Parameter (Attr, Param);
+         if Param /= Null_Iir then
+            --  LRM93 14.1
+            --  Parameter: A static expression of type TIME [that evaluate
+            --  to a nonnegative value.]
+            if Get_Expr_Staticness (Param) = None then
+               Error_Msg_Sem
+                 ("parameter of signal attribute must be static", Param);
+            end if;
+            Set_Parameter (Attr, Param);
+         end if;
       end if;
    end Finish_Sem_Signal_Attribute;
 
