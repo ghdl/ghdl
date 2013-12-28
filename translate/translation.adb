@@ -1861,6 +1861,13 @@ package body Translation is
       --  if not from a tree) is not in range specified by ATYPE.
       procedure Check_Range (Value : O_Dnode; Expr : Iir; Atype : Iir);
 
+      --  The base type of EXPR and the base type of ATYPE must be the same.
+      --  If the type is a scalar type, and if a range check is needed, this
+      --  function inserts the check.  Otherwise, it returns VALUE.
+      function Maybe_Insert_Scalar_Check
+        (Value : O_Enode; Expr : Iir; Atype : Iir)
+        return O_Enode;
+
       --  Check bounds length of L match bounds length of R.
       --  If L_TYPE (resp. R_TYPE) is not a thin array, then L_NODE
       --    (resp. R_NODE) are not used (and may be Mnode_Null).
@@ -8607,18 +8614,8 @@ package body Translation is
          return True;
       end Need_Range_Check;
 
-      procedure Check_Range_Low (Value : O_Dnode; Atype : Iir)
-      is
-         If_Blk : O_If_Block;
-      begin
-         Open_Temp;
-         Start_If_Stmt (If_Blk, Not_In_Range (Value, Atype));
-         Chap6.Gen_Bound_Error (Null_Iir);
-         Finish_If_Stmt (If_Blk);
-         Close_Temp;
-      end Check_Range_Low;
-
       procedure Check_Range (Value : O_Dnode; Expr : Iir; Atype : Iir) is
+         If_Blk : O_If_Block;
       begin
          if not Need_Range_Check (Expr, Atype) then
             return;
@@ -8632,9 +8629,33 @@ package body Translation is
                Chap6.Gen_Bound_Error (Expr);
             end if;
          else
-            Check_Range_Low (Value, Atype);
+            Open_Temp;
+            Start_If_Stmt (If_Blk, Not_In_Range (Value, Atype));
+            Chap6.Gen_Bound_Error (Expr);
+            Finish_If_Stmt (If_Blk);
+            Close_Temp;
          end if;
       end Check_Range;
+
+      function Maybe_Insert_Scalar_Check
+        (Value : O_Enode; Expr : Iir; Atype : Iir)
+        return O_Enode
+      is
+         Expr_Type : constant Iir := Get_Type (Expr);
+         Var : O_Dnode;
+      begin
+         --  pragma Assert (Base_Type = Get_Base_Type (Atype));
+         if Get_Kind (Expr_Type) in Iir_Kinds_Scalar_Type_Definition
+           and then Need_Range_Check (Expr, Atype)
+         then
+            Var := Create_Temp_Init
+              (Get_Ortho_Type (Get_Base_Type (Atype), Mode_Value), Value);
+            Check_Range (Var, Expr, Atype);
+            return New_Obj_Value (Var);
+         else
+            return Value;
+         end if;
+      end Maybe_Insert_Scalar_Check;
 
       procedure Check_Array_Match (L_Type : Iir;
                                    L_Node : Mnode;
@@ -14109,7 +14130,9 @@ package body Translation is
          case Get_Kind (Formal_Base) is
             when Iir_Kind_Constant_Interface_Declaration
               | Iir_Kind_File_Interface_Declaration =>
-               return Translate_Expression (Actual, Get_Type (Formal_Base));
+               return Chap3.Maybe_Insert_Scalar_Check
+                 (Translate_Expression (Actual, Get_Type (Formal)),
+                  Actual, Get_Type (Formal));
             when Iir_Kind_Signal_Interface_Declaration =>
                return Translate_Implicit_Conv
                  (M2E (Chap6.Translate_Name (Actual)),
@@ -24022,7 +24045,8 @@ package body Translation is
          If_Blk : O_If_Block;
          Range_Svar : constant Mnode := Stabilize (Range_Var);
          Res : O_Dnode;
-         Tinfo : constant Ortho_Info_Acc := Get_Info (Range_Type);
+         Tinfo : constant Ortho_Info_Acc :=
+           Get_Info (Get_Base_Type (Range_Type));
       begin
          Res := Create_Temp (Tinfo.Ortho_Type (Mode_Value));
          Open_Temp;
