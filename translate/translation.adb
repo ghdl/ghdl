@@ -24035,8 +24035,7 @@ package body Translation is
          return Val;
       end Translate_Length_Array_Attribute;
 
-      --  Extract high or low bound of RANGE_VAR, which must be stable.
-      --  Put the result into RES.
+      --  Extract high or low bound of RANGE_VAR.
       function Range_To_High_Low
         (Range_Var : Mnode; Range_Type : Iir; Is_High : Boolean)
         return Mnode
