@@ -1,0 +1,23 @@
+library ieee;
+use ieee.std_logic_1164.all;
+
+use ieee.numeric_std.all;
+package reset_types is
+
+type reset_state is (
+	RST,
+	ENABLE_CORE_POWER,
+	SAMPLE_HW_CONFIG,
+	SELECT_PROCESSOR_POR_CONFIG,
+	SELECT_PERSONALITY_ID,
+	SAMPLE_PERSONALITY_ID,
+	DESELECT_PERSONALITY_ID,
+	DEASSERT_HRESET,
+	DESELECT_PROCESSOR_POR_CONFIG,
+	WAIT_FOR_PROCESSOR,
+	ENABLE_ALL_DEVICES,
+	MONITOR_RESET
+);
+
+
+end reset_types;
