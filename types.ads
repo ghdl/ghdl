@@ -57,11 +57,6 @@ package Types is
    type String_Fat is array (Pos32) of Character;
    type String_Fat_Acc is access String_Fat;
 
-   -- Array of iir_int32.
-   -- Used by recording feature of scan.
-   type Iir_Int32_Array is array (Natural range <>) of Iir_Int32;
-   type Iir_Int32_Array_Acc is access Iir_Int32_Array;
-
    -- Type of a name table element.
    -- The name table is defined in the name_table package.
    type Name_Id is new Nat32;

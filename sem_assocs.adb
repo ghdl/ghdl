@@ -540,22 +540,30 @@ package body Sem_Assocs is
       end if;
    end Add_Individual_Association;
 
-   procedure Finish_Individual_Assoc_Array_Subtype (Assoc : Iir; Atype : Iir)
+   procedure Finish_Individual_Assoc_Array_Subtype
+     (Assoc : Iir; Atype : Iir; Dim : Positive)
    is
-      Index_Tlist : Iir_List;
+      Index_Tlist : constant Iir_List := Get_Index_Subtype_List (Atype);
+      Nbr_Dims : constant Natural := Get_Nbr_Elements (Index_Tlist);
       Index_Type : Iir;
       Low, High : Iir;
       Chain : Iir;
+      El : Iir;
    begin
-      Index_Tlist := Get_Index_Subtype_List (Atype);
-      for I in Natural loop
-         Index_Type := Get_Nth_Element (Index_Tlist, I);
-         exit when Index_Type = Null_Iir;
-         Chain := Get_Individual_Association_Chain (Assoc);
-         Sem_Choices_Range
-           (Chain, Index_Type, False, False, Get_Location (Assoc), Low, High);
-         Set_Individual_Association_Chain (Assoc, Chain);
-      end loop;
+      Index_Type := Get_Nth_Element (Index_Tlist, Dim - 1);
+      Chain := Get_Individual_Association_Chain (Assoc);
+      Sem_Choices_Range
+        (Chain, Index_Type, False, False, Get_Location (Assoc), Low, High);
+      Set_Individual_Association_Chain (Assoc, Chain);
+      if Dim < Nbr_Dims then
+         El := Chain;
+         while El /= Null_Iir loop
+            pragma Assert (Get_Kind (El) = Iir_Kind_Choice_By_Expression);
+            Finish_Individual_Assoc_Array_Subtype
+              (Get_Associated (El), Atype, Dim + 1);
+            El := Get_Chain (El);
+         end loop;
+      end if;
    end Finish_Individual_Assoc_Array_Subtype;
 
    procedure Finish_Individual_Assoc_Array
@@ -687,7 +695,7 @@ package body Sem_Assocs is
 
       case Get_Kind (Atype) is
          when Iir_Kind_Array_Subtype_Definition =>
-            Finish_Individual_Assoc_Array_Subtype (Assoc, Atype);
+            Finish_Individual_Assoc_Array_Subtype (Assoc, Atype, 1);
          when Iir_Kind_Array_Type_Definition =>
             Atype := Create_Array_Subtype (Atype, Get_Location (Assoc));
             Set_Index_Constraint_Flag (Atype, True);

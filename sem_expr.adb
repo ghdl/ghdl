@@ -651,6 +651,9 @@ package body Sem_Expr is
 
          --  FIXME: catch phys/phys.
          Set_Type (Expr, Integer_Type_Definition);
+         if Get_Expr_Staticness (Expr) = Locally then
+            Eval_Check_Range (Expr, Integer_Subtype_Definition, True);
+         end if;
       elsif Range_Type = Universal_Integer_Type_Definition then
          if Vhdl_Std >= Vhdl_08 then
             --  LRM08 5.3.2.2

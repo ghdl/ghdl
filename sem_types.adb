@@ -99,7 +99,9 @@ package body Sem_Types is
       end case;
    end Set_Type_Has_Signal;
 
-   --  Sem a range expression.
+   --  Sem a range expression that appears in an integer, real or physical
+   --  type definition.
+   --
    --  Both left and right bounds must be of the same type kind, ie
    --  integer types, or if INT_ONLY is false, real types.
    --  However, the two bounds need not have the same type.
