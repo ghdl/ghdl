@@ -868,6 +868,7 @@ package body Ghdlprint is
    begin
       Local_Id := Get_Identifier ("");
       for I in Args'Range loop
+         --  Load the file.
          Id := Get_Identifier (Args (I).all);
          Fe := Files_Map.Load_Source_File (Local_Id, Id);
          if Fe = No_Source_File_Entry then
@@ -875,6 +876,8 @@ package body Ghdlprint is
             raise Compile_Error;
          end if;
          Set_File (Fe);
+
+         --  Scan the content, to compute the number of lines.
          loop
             Scan.Scan;
             exit when Current_Token = Tok_Eof;
@@ -925,7 +928,10 @@ package body Ghdlprint is
             end loop;
 
             --  Disp line.
-            Put (String (Buf (Ptr .. Eptr - 1)));
+            if Eptr > Ptr then
+               --  Avoid constraint error on conversion of nul array.
+               Put (String (Buf (Ptr .. Eptr - 1)));
+            end if;
             New_Line;
          end loop;
       end loop;
