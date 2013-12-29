@@ -55,7 +55,7 @@ procedure get_entities is
          end if;
       end Get_End;
 
-      type State_Type is (Idle, Have_Entity, Have_Name, In_Entity, Have_End);
+      type State_Type is (Idle, Have_Entity, Have_Name, In_Entity);
       State : State_Type;
 
       Top_Level_Entity : Boolean;
@@ -194,14 +194,12 @@ procedure get_entities is
                   if Port > 0 then
                      Top_Level_Entity := False;
                   end if;
-                  if End_Pos > 0 then
-                     State := Have_End;
+                  if End_Pos > 0 then 
+                     if Top_Level_Entity then -- write name to stdout
+                        Last_Entity := Name;
+                     end if;
+                     State := Idle;
                   end if;
-               when Have_End =>
-                  if Top_Level_Entity then -- write name to stdout
-                     Last_Entity := Name;
-                  end if;
-                  State := Idle;
             end Case;
 	    exit when End_Of_File (File);
          end;

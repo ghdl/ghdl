@@ -42,6 +42,7 @@ handle_test ()
   file=$1
   shift
   args="$common_args"
+  stop=""
   entity=""
   # handle options.
   for arg; do
@@ -55,6 +56,9 @@ handle_test ()
          ;;
     OUTPUT=*)
          output=$arg;
+         ;;
+    STOP=*)
+         stop=`echo $arg | sed -e s/STOP=/--stop-time=/`;
          ;;
     ENTITY=*)
          entity=`echo $arg | sed -e s/ENTITY=//`
@@ -82,7 +86,7 @@ handle_test ()
          if [ "x$entity" = "x" ]; then
            echo "Cannot elaborate or run : no top level entity";
          else
-           cmd="$GHDL --elab-run $entity --assert-level=error";
+           cmd="$GHDL --elab-run $entity $stop --assert-level=error";
            echo "$cmd";
            eval $cmd;
          fi
@@ -107,7 +111,7 @@ handle_test ()
            cmd="$GHDL -e $entity";
            echo "$cmd";
            eval $cmd;
-           cmd="$GHDL -r $entity --expect-failure --assert-level=error";
+           cmd="$GHDL -r $entity $stop --expect-failure --assert-level=error";
            echo "$cmd";
            eval $cmd;
          fi
