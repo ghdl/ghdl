@@ -948,8 +948,13 @@ package body Parse is
                end if;
                Inter := Create_Iir (Iir_Kind_File_Interface_Declaration);
             when Tok_Right_Paren =>
-               Error_Msg_Parse
-                 ("extra ';' at end of interface list", Prev_Loc);
+               if Res = Null_Iir then
+                  Error_Msg_Parse
+                    ("empty interface list not allowed", Prev_Loc);
+               else
+                  Error_Msg_Parse
+                    ("extra ';' at end of interface list", Prev_Loc);
+               end if;
                exit;
             when others =>
                Error_Msg_Parse
