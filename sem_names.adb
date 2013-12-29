@@ -1642,7 +1642,8 @@ package body Sem_Names is
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Concurrent_Procedure_Call_Statement
-           | Iir_Kind_Component_Instantiation_Statement =>
+           | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Slice_Name =>
             Error_Msg_Sem
               (Disp_Node (Prefix) & " cannot be selected by name", Prefix_Loc);
 

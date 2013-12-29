@@ -1369,7 +1369,8 @@ package body Sem_Decls is
                  | Iir_Kind_Architecture_Declaration
                  | Iir_Kind_Package_Declaration
                  | Iir_Kind_Package_Body
-                 | Iir_Kind_Block_Statement =>
+                 | Iir_Kind_Block_Statement
+                 | Iir_Kind_Generate_Statement =>
                   if not Get_Shared_Flag (Decl) then
                      Error_Msg_Sem
                        ("non shared variable declaration not allowed here",
@@ -1393,7 +1394,7 @@ package body Sem_Decls is
                   --  in sem_protected_type_declaration.
                   null;
                when others =>
-                  Error_Kind ("parse_declarative_part(2)", Parent);
+                  Error_Kind ("sem_object_declaration(2)", Parent);
             end case;
 
             if Flags.Vhdl_Std >= Vhdl_00 then
