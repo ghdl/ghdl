@@ -191,7 +191,8 @@ package body Iirs_Utils is
               | Iir_Kind_Simple_Aggregate
               | Iir_Kind_Dereference
               | Iir_Kind_Implicit_Dereference
-              | Iir_Kind_Unit_Declaration =>
+              | Iir_Kind_Unit_Declaration
+              | Iir_Kinds_Concurrent_Statement =>
                return Adecl;
             when Iir_Kind_Simple_Name
               | Iir_Kind_Selected_Name =>
