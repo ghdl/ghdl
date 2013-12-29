@@ -2355,14 +2355,19 @@ package body Translation is
       --  Close the temporary region.
       procedure Close_Temp;
 
+      --  Like Open_Temp, but will never create a declare region. To be used
+      --  only within a subprogram, to use the declare region of the
+      --  subprogram.
+      procedure Open_Local_Temp;
+      --  Destroy transient types created in a temporary region.
+      procedure Destroy_Local_Transient_Types;
+      procedure Close_Local_Temp;
+
       --  Return TRUE if stack2 will be released.  Used for fine-tuning only
       --  (return statement).
       function Has_Stack2_Mark return Boolean;
       --  Manually release stack2.  Used for fine-tuning only.
       procedure Stack2_Release;
-
-      --  Check there is no temporary region.
-      procedure Check_No_Temp;
 
       --  Free all old temp.
       --  Used only to free memory.
@@ -3284,6 +3289,12 @@ package body Translation is
          end if;
       end Open_Temp;
 
+      procedure Open_Local_Temp is
+      begin
+         Open_Temp;
+         Temp_Level.Emitted := True;
+      end Open_Local_Temp;
+
       procedure Add_Transient_Type_In_Temp (Atype : Iir)
       is
          Type_Info : Type_Info_Acc;
@@ -3292,6 +3303,21 @@ package body Translation is
          Type_Info.Type_Transient_Chain := Temp_Level.Transient_Types;
          Temp_Level.Transient_Types := Atype;
       end Add_Transient_Type_In_Temp;
+
+      procedure Release_Transient_Types (Chain : in out Iir) is
+         N_Atype : Iir;
+      begin
+         while Chain /= Null_Iir loop
+            N_Atype := Get_Info (Chain).Type_Transient_Chain;
+            Chap3.Destroy_Type_Info (Chain);
+            Chain := N_Atype;
+         end loop;
+      end Release_Transient_Types;
+
+      procedure Destroy_Local_Transient_Types is
+      begin
+         Release_Transient_Types (Temp_Level.Transient_Types);
+      end Destroy_Local_Transient_Types;
 
       function Has_Stack2_Mark return Boolean is
       begin
@@ -3332,19 +3358,7 @@ package body Translation is
          end if;
 
          --  Destroy transcient types.
-         if Temp_Level.Transient_Types /= Null_Iir then
-            declare
-               Atype : Iir;
-               N_Atype : Iir;
-            begin
-               Atype := Temp_Level.Transient_Types;
-               while Atype /= Null_Iir loop
-                  N_Atype := Get_Info (Atype).Type_Transient_Chain;
-                  Chap3.Destroy_Type_Info (Atype);
-                  Atype := N_Atype;
-               end loop;
-            end;
-         end if;
+         Release_Transient_Types (Temp_Level.Transient_Types);
 
          --  Unlink temp_level.
          L := Temp_Level;
@@ -3353,12 +3367,11 @@ package body Translation is
          Old_Level := L;
       end Close_Temp;
 
-      procedure Check_No_Temp is
+      procedure Close_Local_Temp is
       begin
-         if Temp_Level /= null then
-            raise Internal_Error;
-         end if;
-      end Check_No_Temp;
+         Temp_Level.Emitted := False;
+         Close_Temp;
+      end Close_Local_Temp;
 
       procedure Free_Old_Temp
       is
@@ -3903,19 +3916,23 @@ package body Translation is
          --  Generics.
          El := Get_Generic_Chain (Entity);
          while El /= Null_Iir loop
+            Open_Temp;
             Chap4.Elab_Object_Value (El, Get_Default_Value (El));
+            Close_Temp;
             El := Get_Chain (El);
          end loop;
 
          --  Ports.
          El := Get_Port_Chain (Entity);
          while El /= Null_Iir loop
+            Open_Temp;
             El_Type := Get_Type (El);
             if not Is_Fully_Constrained_Type (El_Type) then
                Chap5.Elab_Unconstrained_Port (El, Get_Default_Value (El));
             end if;
             Chap4.Elab_Signal_Declaration_Storage (El);
             Chap4.Elab_Signal_Declaration_Object (El, Entity, False);
+            Close_Temp;
 
             El := Get_Chain (El);
          end loop;
@@ -4654,7 +4671,9 @@ package body Translation is
          Push_Architecture_Scope (Arch, Instance);
 
          if Get_Kind (Config) = Iir_Kind_Configuration_Declaration then
+            Open_Temp;
             Chap4.Elab_Declaration_Chain (Config, Final);
+            Close_Temp;
             if Final then
                raise Internal_Error;
             end if;
@@ -4981,6 +5000,7 @@ package body Translation is
          Start_Subprg_Instance_Use (Spec);
 
          Push_Local_Factory;
+         Open_Local_Temp;
          Chap2.Save_Subprg_Instance (Subprg_Instances);
 
          --  Init out parameter passed by value/copy.
@@ -5013,8 +5033,6 @@ package body Translation is
          Chap4.Translate_Declaration_Chain_Subprograms (Subprg, Null_Iir);
 
          Chap4.Elab_Declaration_Chain (Subprg, Final);
-
-         pragma Debug (Check_No_Temp);
 
          --  If finalization is required, create a dummy loop around the
          --  body and convert returns into exit out of this loop.
@@ -5076,13 +5094,12 @@ package body Translation is
          end if;
 
          Chap2.Restore_Subprg_Instance (Subprg_Instances);
+         Close_Local_Temp;
          Pop_Local_Factory;
 
          Finish_Subprg_Instance_Use (Spec);
 
          Finish_Subprogram_Body;
-
-         pragma Debug (Check_No_Temp);
 
          Pop_Identifier_Prefix (Mark);
       end Translate_Subprogram_Body;
@@ -5270,7 +5287,10 @@ package body Translation is
          Push_Local_Factory;
 
          Elab_Dependence (Get_Design_Unit (Spec));
+
+         Open_Temp;
          Chap4.Elab_Declaration_Chain (Spec, Final);
+         Close_Temp;
 
          Pop_Local_Factory;
          Finish_Subprogram_Body;
@@ -5302,7 +5322,9 @@ package body Translation is
 
          if Bod /= Null_Iir then
             Elab_Dependence (Get_Design_Unit (Bod));
+            Open_Temp;
             Chap4.Elab_Declaration_Chain (Bod, Final);
+            Close_Temp;
          end if;
 
          Pop_Local_Factory;
@@ -6954,7 +6976,9 @@ package body Translation is
          Call_Ghdl_Protected_Procedure (Decl, Ghdl_Protected_Init);
 
          --   Elaborate fields.
+         Open_Temp;
          Chap4.Elab_Declaration_Chain (Bod, Final);
+         Close_Temp;
 
          Chap2.Finish_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
          Finish_Subprogram_Body;
@@ -9348,10 +9372,14 @@ package body Translation is
 
          Alloc_Kind := Get_Alloc_Kind_For_Var (Obj_Info.Object_Var);
 
-         Open_Temp;
+         --  Note: no temporary variable region is created, as the allocation
+         --  may be performed on the stack.
+
          if Value = Null_Iir then
             --  Performs default initialization.
+            Open_Temp;
             Init_Object (Name, Obj_Type);
+            Close_Temp;
          elsif Get_Kind (Value) = Iir_Kind_Aggregate then
             if Type_Info.Type_Mode = Type_Mode_Fat_Array then
                --  Allocate.
@@ -9403,9 +9431,8 @@ package body Translation is
             else
                Chap3.Translate_Object_Copy (Name, Value_Node, Obj_Type);
             end if;
+            Destroy_Local_Transient_Types;
          end if;
-
-         Close_Temp;
       end Elab_Object_Init;
 
       --  Generate code to create object OBJ and initialize it with value VAL.
@@ -10976,8 +11003,6 @@ package body Translation is
          Decl := Get_Declaration_Chain (Parent);
          Need_Final := False;
          while Decl /= Null_Iir loop
-            Open_Temp;
-
             case Get_Kind (Decl) is
                when Iir_Kind_Use_Clause =>
                   null;
@@ -11055,8 +11080,6 @@ package body Translation is
                when others =>
                   Error_Kind ("elab_declaration_chain", Decl);
             end case;
-
-            Close_Temp;
 
             Decl := Get_Chain (Decl);
          end loop;
@@ -12105,6 +12128,7 @@ package body Translation is
          --  the ports, since a port subtype may depend on a generic.
          Assoc := Get_Generic_Map_Aspect_Chain (Mapping);
          while Assoc /= Null_Iir loop
+            Open_Temp;
             Formal := Get_Formal (Assoc);
             case Get_Kind (Assoc) is
                when Iir_Kind_Association_Element_By_Expression =>
@@ -12113,17 +12137,14 @@ package body Translation is
                      Targ := Chap6.Translate_Name (Formal);
                      Chap4.Elab_Object_Init (Targ, Formal, Get_Actual (Assoc));
                   else
-                     Open_Temp;
                      Targ := Chap6.Translate_Name (Formal);
                      Chap7.Translate_Assign
                        (Targ, Get_Actual (Assoc), Get_Type (Formal));
-                     Close_Temp;
                   end if;
                when Iir_Kind_Association_Element_Open =>
                   Chap4.Elab_Object_Value (Formal, Get_Default_Value (Formal));
                when Iir_Kind_Association_Element_By_Individual =>
                   --  Create the object.
-                  Open_Temp;
                   declare
                      Formal_Node : Mnode;
                      Formal_Type : Iir;
@@ -12150,10 +12171,10 @@ package body Translation is
                           (Formal_Node, Alloc_System, Formal_Type, Bounds);
                      end if;
                   end;
-                  Close_Temp;
                when others =>
                   Error_Kind ("elab_map_aspect(1)", Assoc);
             end case;
+            Close_Temp;
             Assoc := Get_Chain (Assoc);
          end loop;
 
@@ -12164,6 +12185,7 @@ package body Translation is
             Formal_Base := Get_Base_Name (Formal);
             Fb_Type := Get_Type (Formal_Base);
 
+            Open_Temp;
             --  Set bounds of unconstrained ports.
             Fbt_Info := Get_Info (Fb_Type);
             if Fbt_Info.Type_Mode = Type_Mode_Fat_Array then
@@ -12173,7 +12195,6 @@ package body Translation is
                         Elab_Unconstrained_Port (Formal, Get_Actual (Assoc));
                      end if;
                   when Iir_Kind_Association_Element_Open =>
-                     Open_Temp;
                      declare
                         Actual_Type : Iir;
                         Bounds : Mnode;
@@ -12187,9 +12208,7 @@ package body Translation is
                           (M2Lp (Chap3.Get_Array_Bounds (Formal_Node)),
                            M2Addr (Bounds));
                      end;
-                     Close_Temp;
                   when Iir_Kind_Association_Element_By_Individual =>
-                     Open_Temp;
                      declare
                         Actual_Type : Iir;
                         Bounds : Mnode;
@@ -12203,13 +12222,14 @@ package body Translation is
                           (M2Lp (Chap3.Get_Array_Bounds (Formal_Node)),
                            M2Addr (Bounds));
                      end;
-                     Close_Temp;
                when others =>
                   Error_Kind ("elab_map_aspect(2)", Assoc);
                end case;
             end if;
+            Close_Temp;
 
             --  Allocate storage of ports.
+            Open_Temp;
             case Get_Kind (Assoc) is
                when Iir_Kind_Association_Element_By_Individual
                  | Iir_Kind_Association_Element_Open =>
@@ -12221,8 +12241,10 @@ package body Translation is
                when others =>
                   Error_Kind ("elab_map_aspect(3)", Assoc);
             end case;
+            Close_Temp;
 
             --  Create or copy signals.
+            Open_Temp;
             case Get_Kind (Assoc) is
                when Iir_Kind_Association_Element_By_Expression =>
                   if Get_Whole_Association_Flag (Assoc) then
@@ -12263,6 +12285,7 @@ package body Translation is
                when others =>
                   Error_Kind ("elab_map_aspect(4)", Assoc);
             end case;
+            Close_Temp;
 
             Assoc := Get_Chain (Assoc);
          end loop;
@@ -22301,7 +22324,9 @@ package body Translation is
          --  First elaborate declarations since a driver may depend on
          --  an alias declaration.
          --  Also, with vhdl 08 a sensitivity element may depend on an alias.
+         Open_Temp;
          Chap4.Elab_Declaration_Chain (Proc, Final);
+         Close_Temp;
 
          --  Register drivers.
          if Flag_Direct_Drivers then
@@ -23104,7 +23129,9 @@ package body Translation is
                Error_Kind ("elab_block_declarations", Block);
          end case;
 
+         Open_Temp;
          Chap4.Elab_Declaration_Chain (Block, Final);
+         Close_Temp;
 
          Stmt := Get_Concurrent_Statement_Chain (Block);
          while Stmt /= Null_Iir loop
