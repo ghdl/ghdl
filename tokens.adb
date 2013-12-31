@@ -87,7 +87,20 @@ package body Tokens is
          when Tok_Greater_Equal =>
             return ">=";
 
-            -- sign token
+         when Tok_Match_Equal =>
+            return "?=";
+         when Tok_Match_Not_Equal =>
+            return "?/=";
+         when Tok_Match_Less =>
+            return "?<";
+         when Tok_Match_Less_Equal =>
+            return "?<=";
+         when Tok_Match_Greater =>
+            return "?>";
+         when Tok_Match_Greater_Equal =>
+            return "?>=";
+
+         -- sign token
          when Tok_Plus =>
             return "+";
          when Tok_Minus =>

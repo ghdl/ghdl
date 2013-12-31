@@ -233,6 +233,81 @@ package body Std_Package is
          Set_Subtype_Definition (Type_Decl, Subtype_Definition);
       end Create_Integer_Subtype;
 
+      --  Create an array of EL_TYPE, indexed by Natural.
+      procedure Create_Array_Type
+        (Def : out Iir; Decl : out Iir; El_Type : Iir; Name : Name_Id)
+      is
+         Index_List : Iir_List;
+      begin
+         Def := Create_Std_Iir (Iir_Kind_Array_Type_Definition);
+         Set_Base_Type (Def, Def);
+         Index_List := Create_Iir_List;
+         Set_Index_Subtype_List (Def, Index_List);
+         Append_Element (Index_List, Natural_Subtype_Definition);
+         Set_Element_Subtype (Def, El_Type);
+         Set_Type_Staticness (Def, None);
+         Set_Signal_Type_Flag (Def, True);
+         Set_Has_Signal_Flag (Def, not Flags.Flag_Whole_Analyze);
+
+         Decl := Create_Std_Decl (Iir_Kind_Type_Declaration);
+         Set_Std_Identifier (Decl, Name);
+         Set_Type (Decl, Def);
+         Add_Decl (Decl);
+         Set_Type_Declarator (Def, Decl);
+
+         Add_Implicit_Operations (Decl);
+      end Create_Array_Type;
+
+      --  Create:
+      --  function TO_STRING (VALUE: inter_type) return STRING;
+      procedure Create_To_String (Inter_Type : Iir)
+      is
+         Decl : Iir_Implicit_Function_Declaration;
+         Inter : Iir_Constant_Interface_Declaration;
+      begin
+         Decl := Create_Std_Decl (Iir_Kind_Implicit_Function_Declaration);
+         Set_Std_Identifier (Decl, Std_Names.Name_To_String);
+         Set_Return_Type (Decl, String_Type_Definition);
+         Set_Pure_Flag (Decl, True);
+         --  FIXME!!!
+         Set_Implicit_Definition (Decl, Iir_Predefined_Now_Function);
+
+         Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+         Set_Identifier (Inter, Std_Names.Name_Value);
+         Set_Type (Inter, Inter_Type);
+         Set_Mode (Inter, Iir_In_Mode);
+         Set_Base_Name (Inter, Inter);
+         Set_Interface_Declaration_Chain (Decl, Inter);
+
+         Sem.Compute_Subprogram_Hash (Decl);
+         Add_Decl (Decl);
+      end Create_To_String;
+
+      --  Create:
+      --  function NAME (signal S : I inter_type) return BOOLEAN;
+      procedure Create_Edge_Function
+        (Name : Name_Id; Func : Iir_Predefined_Functions; Inter_Type : Iir)
+      is
+         Decl : Iir_Implicit_Function_Declaration;
+         Inter : Iir_Constant_Interface_Declaration;
+      begin
+         Decl := Create_Std_Decl (Iir_Kind_Implicit_Function_Declaration);
+         Set_Std_Identifier (Decl, Name);
+         Set_Return_Type (Decl, Boolean_Type_Definition);
+         Set_Pure_Flag (Decl, True);
+         Set_Implicit_Definition (Decl, Func);
+
+         Inter := Create_Iir (Iir_Kind_Signal_Interface_Declaration);
+         Set_Identifier (Inter, Std_Names.Name_S);
+         Set_Type (Inter, Inter_Type);
+         Set_Mode (Inter, Iir_In_Mode);
+         Set_Base_Name (Inter, Inter);
+         Set_Interface_Declaration_Chain (Decl, Inter);
+
+         Sem.Compute_Subprogram_Hash (Decl);
+         Add_Decl (Decl);
+      end Create_Edge_Function;
+
    begin
       Std_Standard_File := Create_Std_Iir (Iir_Kind_Design_File);
       Set_Parent (Std_Standard_File, Parent);
@@ -298,6 +373,15 @@ package body Std_Package is
          Add_Implicit_Operations (Boolean_Type);
       end;
 
+      if Vhdl_Std >= Vhdl_08 then
+         Create_Edge_Function
+           (Std_Names.Name_Rising_Edge, Iir_Predefined_Boolean_Rising_Edge,
+            Boolean_Type_Definition);
+         Create_Edge_Function
+           (Std_Names.Name_Falling_Edge, Iir_Predefined_Boolean_Falling_Edge,
+            Boolean_Type_Definition);
+      end if;
+
       -- bit.
       begin
          -- ('0', '1')
@@ -327,6 +411,15 @@ package body Std_Package is
            (Bit_Type_Definition);
          Add_Implicit_Operations (Bit_Type);
       end;
+
+      if Vhdl_Std >= Vhdl_08 then
+         Create_Edge_Function
+           (Std_Names.Name_Rising_Edge, Iir_Predefined_Bit_Rising_Edge,
+            Bit_Type_Definition);
+         Create_Edge_Function
+           (Std_Names.Name_Falling_Edge, Iir_Predefined_Bit_Falling_Edge,
+            Bit_Type_Definition);
+      end if;
 
       -- characters.
       declare
@@ -649,28 +742,16 @@ package body Std_Package is
 
       -- bit_vector type.
       -- type bit_vector is array (natural range <>) of bit;
-      begin
-         Bit_Vector_Type_Definition :=
-           Create_Std_Iir (Iir_Kind_Array_Type_Definition);
-         Set_Base_Type (Bit_Vector_Type_Definition,
-                        Bit_Vector_Type_Definition);
-         Set_Index_Subtype_List (Bit_Vector_Type_Definition, Create_Iir_List);
-         Append_Element (Get_Index_Subtype_List (Bit_Vector_Type_Definition),
-                         Natural_Subtype_Definition);
-         Set_Element_Subtype (Bit_Vector_Type_Definition, Bit_Type_Definition);
-         Set_Type_Staticness (Bit_Vector_Type_Definition, None);
-         Set_Signal_Type_Flag (Bit_Vector_Type_Definition, True);
-         Set_Has_Signal_Flag (Bit_Vector_Type_Definition,
-                              not Flags.Flag_Whole_Analyze);
+      Create_Array_Type (Bit_Vector_Type_Definition, Bit_Vector_Type,
+                         Bit_Type_Definition, Name_Bit_Vector);
 
-         Bit_Vector_Type := Create_Std_Decl (Iir_Kind_Type_Declaration);
-         Set_Std_Identifier (Bit_Vector_Type, Name_Bit_Vector);
-         Set_Type (Bit_Vector_Type, Bit_Vector_Type_Definition);
-         Add_Decl (Bit_Vector_Type);
-         Set_Type_Declarator (Bit_Vector_Type_Definition, Bit_Vector_Type);
-
-         Add_Implicit_Operations (Bit_Vector_Type);
-      end;
+      if Vhdl_Std >= Vhdl_08 then
+         -- integer_vector type.
+         -- type integer_vector is array (natural range <>) of Integer;
+         Create_Array_Type
+           (Integer_Vector_Type_Definition, Integer_Vector_Type,
+            Integer_Type_Definition, Name_Integer_Vector);
+      end if;
 
       -- time definition
       declare
@@ -963,5 +1044,20 @@ package body Std_Package is
       else
          Foreign_Attribute := Null_Iir;
       end if;
+
+      if Vhdl_Std >= Vhdl_08 then
+         Create_To_String (Boolean_Type_Definition);
+         Create_To_String (Bit_Type_Definition);
+         Create_To_String (Character_Type_Definition);
+         Create_To_String (Severity_Level_Type_Definition);
+         Create_To_String (Universal_Integer_Type_Definition);
+         Create_To_String (Universal_Real_Type_Definition);
+         Create_To_String (Integer_Type_Definition);
+         Create_To_String (Real_Type_Definition);
+         Create_To_String (Time_Type_Definition);
+         Create_To_String (File_Open_Kind_Type_Definition);
+         Create_To_String (File_Open_Status_Type_Definition);
+      end if;
+
    end Create_Std_Standard_Package;
 end Std_Package;

@@ -59,7 +59,9 @@ package Sem_Scopes is
    --  Replace the interpretation OLD of ID by DECL.
    --  ID must have a uniq interpretation OLD (ie, it must not be overloaded).
    --  The interpretation must have been done in the current scope.
-   --  This is necessary when a concurrent_procedure_call_statement becomes
+   --
+   --  This procedure is used when the meaning of a name is changed due to its
+   --  analysis, eg: when a concurrent_procedure_call_statement becomes
    --  a component_instantiation_statement.
    procedure Replace_Name (Id: Name_Id; Old : Iir; Decl: Iir);
 

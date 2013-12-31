@@ -21,6 +21,7 @@ with Std_Names;
 with Tokens;
 with Flags; use Flags;
 with Std_Package; use Std_Package;
+with Ieee.Std_Logic_1164;
 with Iir_Chains;
 with Evaluation; use Evaluation;
 with Name_Table;
@@ -589,6 +590,18 @@ package body Sem_Decls is
          Add_Operation (Name, Def, Unary_Chain, Type_Definition);
       end Add_Unary;
 
+      procedure Add_Min_Max (Name : Name_Id; Def : Iir_Predefined_Functions)
+      is
+         Left, Right : Iir;
+      begin
+         Left := Create_Anonymous_Interface (Type_Definition);
+         Set_Identifier (Left, Name_L);
+         Right := Create_Anonymous_Interface (Type_Definition);
+         Set_Identifier (Right, Name_R);
+         Set_Chain (Left, Right);
+         Add_Operation (Name, Def, Left, Type_Definition);
+      end Add_Min_Max;
+
       procedure Add_Shift_Operators
       is
          Inter_Chain : Iir_Constant_Interface_Declaration;
@@ -639,6 +652,26 @@ package body Sem_Decls is
             Add_Relational (Name_Op_Less, Iir_Predefined_Enum_Less);
             Add_Relational
               (Name_Op_Less_Equal, Iir_Predefined_Enum_Less_Equal);
+
+            if Flags.Vhdl_Std >= Vhdl_08 then
+               Add_Min_Max (Name_Minimum, Iir_Predefined_Enum_Minimum);
+               Add_Min_Max (Name_Maximum, Iir_Predefined_Enum_Maximum);
+
+               if Type_Definition = Ieee.Std_Logic_1164.Std_Ulogic_Type then
+                  Add_Binary (Name_Op_Match_Equality,
+                              Iir_Predefined_Std_Ulogic_Match_Equality);
+                  Add_Binary (Name_Op_Match_Inequality,
+                              Iir_Predefined_Std_Ulogic_Match_Inequality);
+                  Add_Binary (Name_Op_Match_Less,
+                              Iir_Predefined_Std_Ulogic_Match_Less);
+                  Add_Binary (Name_Op_Match_Less_Equal,
+                              Iir_Predefined_Std_Ulogic_Match_Less_Equal);
+                  Add_Binary (Name_Op_Match_Greater,
+                              Iir_Predefined_Std_Ulogic_Match_Greater);
+                  Add_Binary (Name_Op_Match_Greater_Equal,
+                              Iir_Predefined_Std_Ulogic_Match_Greater_Equal);
+               end if;
+            end if;
 
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
@@ -704,7 +737,8 @@ package body Sem_Decls is
                     and then String_Type_Definition /= Null_Iir
                     and then Get_Kind (Get_Base_Type (Element_Type))
                     = Iir_Kind_Enumeration_Type_Definition
-                    and then Get_Only_Characters_Flag (Element_Type)
+                    and then Get_Only_Characters_Flag
+                    (Get_Base_Type (Element_Type))
                   then
                      Add_Operation (Name_To_String,
                                     Iir_Predefined_Array_To_String,
@@ -814,6 +848,11 @@ package body Sem_Decls is
                               Inter_Chain, Type_Definition);
             end;
 
+            if Vhdl_Std >= Vhdl_08 then
+               Add_Min_Max (Name_Minimum, Iir_Predefined_Integer_Minimum);
+               Add_Min_Max (Name_Maximum, Iir_Predefined_Integer_Maximum);
+            end if;
+
          when Iir_Kind_Floating_Type_Definition =>
             Add_Relational
               (Name_Op_Equality, Iir_Predefined_Floating_Equality);
@@ -849,6 +888,11 @@ package body Sem_Decls is
                Add_Operation (Name_Op_Exp, Iir_Predefined_Floating_Exp,
                               Inter_Chain, Type_Definition);
             end;
+
+            if Vhdl_Std >= Vhdl_08 then
+               Add_Min_Max (Name_Minimum, Iir_Predefined_Floating_Minimum);
+               Add_Min_Max (Name_Maximum, Iir_Predefined_Floating_Maximum);
+            end if;
 
          when Iir_Kind_Physical_Type_Definition =>
             Add_Relational
@@ -920,6 +964,11 @@ package body Sem_Decls is
 
             Add_Unary (Name_Abs, Iir_Predefined_Physical_Absolute);
 
+            if Vhdl_Std >= Vhdl_08 then
+               Add_Min_Max (Name_Minimum, Iir_Predefined_Physical_Minimum);
+               Add_Min_Max (Name_Maximum, Iir_Predefined_Physical_Maximum);
+            end if;
+
          when Iir_Kind_File_Type_Definition =>
             Create_Implicit_File_Primitives (Decl, Type_Definition);
 
@@ -953,6 +1002,20 @@ package body Sem_Decls is
             Add_Binary (Name_Xnor, Iir_Predefined_Bit_Xnor);
          end if;
          Add_Unary (Name_Not, Iir_Predefined_Bit_Not);
+         if Flags.Vhdl_Std >= Vhdl_08 then
+            Add_Binary (Name_Op_Match_Equality,
+                        Iir_Predefined_Bit_Match_Equality);
+            Add_Binary (Name_Op_Match_Inequality,
+                        Iir_Predefined_Bit_Match_Inequality);
+            Add_Binary (Name_Op_Match_Less,
+                        Iir_Predefined_Bit_Match_Less);
+            Add_Binary (Name_Op_Match_Less_Equal,
+                        Iir_Predefined_Bit_Match_Less_Equal);
+            Add_Binary (Name_Op_Match_Greater,
+                        Iir_Predefined_Bit_Match_Greater);
+            Add_Binary (Name_Op_Match_Greater_Equal,
+                        Iir_Predefined_Bit_Match_Greater_Equal);
+         end if;
       elsif Decl = Std_Package.Universal_Real_Type then
          declare
             Inter_Chain : Iir;
@@ -1640,36 +1703,10 @@ package body Sem_Decls is
    procedure Sem_Object_Alias_Declaration (Alias: Iir_Object_Alias_Declaration)
    is
       N_Type: Iir;
-      N_Name: Iir;
-      Name : Iir;
+      N_Name: constant Iir := Get_Name (Alias);
       Name_Type : Iir;
    begin
-      Sem_Scopes.Add_Name (Alias);
-      Xref_Decl (Alias);
-
-      Name := Get_Name (Alias);
-      Sem_Name (Name, False);
-      N_Name := Get_Named_Entity (Name);
-      if N_Name = Error_Mark then
-         return;
-      end if;
-      --  FIXME: overload list ?
-
-      Name_Visible (Alias);
-
-      case Get_Kind (N_Name) is
-         when Iir_Kinds_Object_Declaration
-           | Iir_Kind_Slice_Name
-           | Iir_Kind_Indexed_Name
-           | Iir_Kind_Selected_Name
-           | Iir_Kind_Selected_Element =>
-            Set_Base_Name (Alias, Alias); -- Get_Base_Name (N_Name));
-            Xref_Name (Name);
-            Set_Name (Alias, N_Name);
-         when others =>
-            Error_Msg_Sem ("can only alias named object", Alias);
-            return;
-      end case;
+      Set_Base_Name (Alias, Alias); -- Get_Base_Name (N_Name));
 
       --  LRM93 4.3.3.1 Object Aliases.
       --  1. A signature may not appear in a declaration of an object alias.
@@ -1690,6 +1727,7 @@ package body Sem_Decls is
          Set_Type (Alias, Name_Type);
          N_Type := Name_Type;
       else
+         --  FIXME: must be analyzed before calling Name_Visibility.
          N_Type := Sem_Subtype_Indication (N_Type);
          if N_Type /= Null_Iir then
             Set_Type (Alias, N_Type);
@@ -1869,152 +1907,120 @@ package body Sem_Decls is
      (Alias : Iir_Non_Object_Alias_Declaration)
    is
       use Std_Names;
-      Name : Iir;
-      Sig : Iir_Signature;
-      N_Entity : Iir;
+      N_Entity : constant Iir := Get_Name (Alias);
       Id : Name_Id;
    begin
-      Name := Get_Name (Alias);
-      Sem_Name (Name, False);
-      N_Entity := Get_Named_Entity (Name);
-      if N_Entity = Error_Mark then
-         return;
-      end if;
-      Xref_Decl (Alias);
-
-      Sig := Get_Signature (Alias);
-      if Is_Overload_List (N_Entity) then
-         if Sig = Null_Iir then
-            Error_Msg_Sem
-              ("signature required for alias of a subprogram", Alias);
-            return;
-         end if;
-      end if;
-
-      if Sig /= Null_Iir then
-         N_Entity := Sem_Signature (N_Entity, Sig);
-      else
-         case Get_Kind (N_Entity) is
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Procedure_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration =>
-               --  LRM93 4.3.3.2  Non-Object Aliases
-               --  2.  A signature is required if the name denotes a subprogram
-               --      (including an operator) or enumeration literal.
+      case Get_Kind (N_Entity) is
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Implicit_Function_Declaration
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Implicit_Procedure_Declaration =>
+            --  LRM93 4.3.3.2  Non-Object Aliases
+            --  2.  A signature is required if the name denotes a subprogram
+            --      (including an operator) or enumeration literal.
+            if Get_Signature (Alias) = Null_Iir then
                Error_Msg_Sem ("signature required for subprogram", Alias);
-               return;
-            when Iir_Kind_Enumeration_Literal =>
+            end if;
+         when Iir_Kind_Enumeration_Literal =>
+            if Get_Signature (Alias) = Null_Iir then
                Error_Msg_Sem ("signature required for enumeration literal",
                               Alias);
-               return;
-            when Iir_Kind_Type_Declaration =>
-               declare
-                  Def : Iir;
-                  Last : Iir;
-                  El : Iir;
-                  Enum_List : Iir_Enumeration_Literal_List;
+            end if;
+         when Iir_Kind_Type_Declaration =>
+            declare
+               Def : Iir;
+               Last : Iir;
+               El : Iir;
+               Enum_List : Iir_Enumeration_Literal_List;
 
-                  procedure Add_Implicit_Alias (Decl : Iir)
-                  is
-                     N_Alias : Iir_Non_Object_Alias_Declaration;
-                  begin
-                     N_Alias :=
-                       Create_Iir (Iir_Kind_Non_Object_Alias_Declaration);
-                     Location_Copy (N_Alias, Alias);
-                     Set_Identifier (N_Alias, Get_Identifier (Decl));
-                     Set_Name (N_Alias, Decl);
-
-                     Add_Name (El, Get_Identifier (El), False);
-                     Set_Visible_Flag (N_Alias, True);
-
-                     --  Append in the declaration chain.
-                     Set_Chain (N_Alias, Get_Chain (Last));
-                     Set_Chain (Last, N_Alias);
-                     Last := N_Alias;
-                  end Add_Implicit_Alias;
+               procedure Add_Implicit_Alias (Decl : Iir)
+               is
+                  N_Alias : constant Iir_Non_Object_Alias_Declaration :=
+                    Create_Iir (Iir_Kind_Non_Object_Alias_Declaration);
                begin
-                  Def := Get_Type (N_Entity);
-                  Last := Alias;
-                  if Get_Kind (Def) = Iir_Kind_Enumeration_Type_Definition
-                  then
+                  Location_Copy (N_Alias, Alias);
+                  Set_Identifier (N_Alias, Get_Identifier (Decl));
+                  Set_Name (N_Alias, Decl);
+
+                  Add_Name (El, Get_Identifier (El), False);
+                  Set_Visible_Flag (N_Alias, True);
+
+                  --  Append in the declaration chain.
+                  Set_Chain (N_Alias, Get_Chain (Last));
+                  Set_Chain (Last, N_Alias);
+                  Last := N_Alias;
+               end Add_Implicit_Alias;
+            begin
+               Def := Get_Type (N_Entity);
+               Last := Alias;
+               if Get_Kind (Def) = Iir_Kind_Enumeration_Type_Definition then
+                  --  LRM93 4.3.3.2  Non-Object Aliases
+                  --  3.  If the name denotes an enumeration type, then one
+                  --      implicit alias declaration for each of the
+                  --      literals of the type immediatly follows the alias
+                  --      declaration for the enumeration type; [...]
+                  Enum_List := Get_Enumeration_Literal_List (Def);
+                  for I in Natural loop
+                     El := Get_Nth_Element (Enum_List, I);
+                     exit when El = Null_Iir;
                      --  LRM93 4.3.3.2  Non-Object Aliases
-                     --  3.  If the name denotes an enumeration type, then one
-                     --      implicit alias declaration for each of the
-                     --      literals of the type immediatly follows the alias
-                     --      declaration for the enumeration type; [...]
-                     Enum_List := Get_Enumeration_Literal_List (Def);
-                     for I in Natural loop
-                        El := Get_Nth_Element (Enum_List, I);
-                        exit when El = Null_Iir;
-                        --  LRM93 4.3.3.2  Non-Object Aliases
-                        --      [...] each such implicit declaration has, as
-                        --      its alias designator, the simple name or
-                        --      character literal of the literal, and has,
-                        --      as its name, a name constructed
-                        --      by taking the name of the alias for the
-                        --      enumeration type and substituting the simple
-                        --      name or character literal being aliased for
-                        --      the simple name of the type.
-                        --      Each implicit alias has a signature that
-                        --      matches the parameter and result type profile
-                        --      of the literal being aliased.
-                        Add_Implicit_Alias (El);
-                     end loop;
-                  end if;
-
-                  --  LRM93 4.3.3.2  Non-Object Aliases
-                  --  4.  Alternatively, if the name denotes a physical type
-                  --      [...]
-                  -- GHDL: this is not possible, since a physical type is
-                  -- anonymous (LRM93 is buggy on this point).
-                  if Get_Kind (Def) = Iir_Kind_Physical_Type_Definition then
-                     raise Internal_Error;
-                  end if;
-
-                  --  LRM93 4.3.3.2  Non-Object Aliases
-                  --  5.  Finally, if the name denotes a type, then implicit
-                  --      alias declarations for each predefined operator
-                  --      for the type immediatly follow the explicit alias
-                  --      declaration for the type, and if present, any
-                  --      implicit alias declarations for literals or units
-                  --      of the type.
-                  --      Each implicit alias has a signature that matches the
-                  --      parameter and result type profule of the implicit
-                  --      operator being aliased.
-                  El := Get_Chain (N_Entity);
-                  while El /= Null_Iir loop
-                     case Get_Kind (El) is
-                        when Iir_Kind_Implicit_Function_Declaration
-                          | Iir_Kind_Implicit_Procedure_Declaration =>
-                           exit when Get_Type_Reference (El) /= N_Entity;
-                        when others =>
-                           exit;
-                     end case;
+                     --      [...] each such implicit declaration has, as
+                     --      its alias designator, the simple name or
+                     --      character literal of the literal, and has,
+                     --      as its name, a name constructed
+                     --      by taking the name of the alias for the
+                     --      enumeration type and substituting the simple
+                     --      name or character literal being aliased for
+                     --      the simple name of the type.
+                     --      Each implicit alias has a signature that
+                     --      matches the parameter and result type profile
+                     --      of the literal being aliased.
                      Add_Implicit_Alias (El);
-                     El := Get_Chain (El);
                   end loop;
-               end;
-            when Iir_Kinds_Object_Declaration =>
-               Error_Msg_Sem
-                 ("non-object alias cannot denotes an object", Alias);
-               --  Do not return and add the name to avoid an error storm.
-            when Iir_Kind_Subtype_Declaration
-              | Iir_Kind_Attribute_Declaration =>
-               null;
-            when Iir_Kind_Terminal_Declaration =>
-               null;
-            when others =>
-               Error_Kind ("sem_non_object_alias_declaration", N_Entity);
-         end case;
-      end if;
-      if N_Entity = Null_Iir then
-         return;
-      end if;
-      Set_Named_Entity (Name, N_Entity);
-      Xref_Name (Name);
+               end if;
 
-      Set_Name (Alias, N_Entity);
+               --  LRM93 4.3.3.2  Non-Object Aliases
+               --  4.  Alternatively, if the name denotes a physical type
+               --      [...]
+               -- GHDL: this is not possible, since a physical type is
+               -- anonymous (LRM93 is buggy on this point).
+               if Get_Kind (Def) = Iir_Kind_Physical_Type_Definition then
+                  raise Internal_Error;
+               end if;
+
+               --  LRM93 4.3.3.2  Non-Object Aliases
+               --  5.  Finally, if the name denotes a type, then implicit
+               --      alias declarations for each predefined operator
+               --      for the type immediatly follow the explicit alias
+               --      declaration for the type, and if present, any
+               --      implicit alias declarations for literals or units
+               --      of the type.
+               --      Each implicit alias has a signature that matches the
+               --      parameter and result type profule of the implicit
+               --      operator being aliased.
+               El := Get_Chain (N_Entity);
+               while El /= Null_Iir loop
+                  case Get_Kind (El) is
+                     when Iir_Kind_Implicit_Function_Declaration
+                       | Iir_Kind_Implicit_Procedure_Declaration =>
+                        exit when Get_Type_Reference (El) /= N_Entity;
+                     when others =>
+                        exit;
+                  end case;
+                  Add_Implicit_Alias (El);
+                  El := Get_Chain (El);
+               end loop;
+            end;
+         when Iir_Kinds_Object_Declaration =>
+            raise Internal_Error;
+         when Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Attribute_Declaration =>
+            null;
+         when Iir_Kind_Terminal_Declaration =>
+            null;
+         when others =>
+            Error_Kind ("sem_non_object_alias_declaration", N_Entity);
+      end case;
 
       Id := Get_Identifier (Alias);
 
@@ -2047,9 +2053,83 @@ package body Sem_Decls is
          when others =>
             null;
       end case;
-      Add_Name (Alias);
-      Set_Visible_Flag (Alias, True);
    end Sem_Non_Object_Alias_Declaration;
+
+   function Sem_Alias_Declaration (Alias : Iir) return Iir
+   is
+      use Std_Names;
+      Name : Iir;
+      Sig : Iir_Signature;
+      N_Entity : Iir;
+      Res : Iir;
+   begin
+      Xref_Decl (Alias);
+
+      Name := Get_Name (Alias);
+      if Get_Kind (Name) = Iir_Kind_Signature then
+         Sig := Name;
+         Name := Get_Prefix (Name);
+      else
+         Sig := Null_Iir;
+      end if;
+
+      Sem_Name (Name, False);
+      N_Entity := Get_Named_Entity (Name);
+      if N_Entity = Error_Mark then
+         return Alias;
+      end if;
+
+      if Is_Overload_List (N_Entity) then
+         if Sig = Null_Iir then
+            Error_Msg_Sem
+              ("signature required for alias of a subprogram", Alias);
+            return Alias;
+         end if;
+      end if;
+
+      if Sig /= Null_Iir then
+         N_Entity := Sem_Signature (N_Entity, Sig);
+      end if;
+      if N_Entity = Null_Iir then
+         return Alias;
+      end if;
+
+      Set_Named_Entity (Name, N_Entity);
+      Xref_Name (Name);
+
+      if Is_Object_Name (N_Entity) then
+         Sem_Scopes.Add_Name (Alias);
+         Name_Visible (Alias);
+
+         if Sig /= Null_Iir then
+            Error_Msg_Sem
+              ("signature not allowed for object alias", Sig);
+         end if;
+         Set_Name (Alias, N_Entity);
+         Sem_Object_Alias_Declaration (Alias);
+         return Alias;
+      else
+         if Get_Type (Alias) /= Null_Iir then
+            Error_Msg_Sem
+              ("subtype indication not allowed for non-object alias", Alias);
+         end if;
+         Res := Create_Iir (Iir_Kind_Non_Object_Alias_Declaration);
+         Location_Copy (Res, Alias);
+         Set_Parent (Res, Get_Parent (Alias));
+         Set_Chain (Res, Get_Chain (Alias));
+         Set_Identifier (Res, Get_Identifier (Alias));
+         Set_Name (Res, N_Entity);
+         Set_Signature (Res, Sig);
+
+         Sem_Scopes.Add_Name (Res);
+         Name_Visible (Res);
+
+         Free_Iir (Alias);
+
+         Sem_Non_Object_Alias_Declaration (Res);
+         return Res;
+      end if;
+   end Sem_Alias_Declaration;
 
    procedure Sem_Group_Template_Declaration
      (Decl : Iir_Group_Template_Declaration)
@@ -2349,20 +2429,29 @@ package body Sem_Decls is
               | Iir_Kind_Implicit_Procedure_Declaration =>
                Sem_Scopes.Add_Name (Decl);
                Name_Visible (Decl);
-            when Iir_Kind_Object_Alias_Declaration =>
-               Sem_Object_Alias_Declaration (Decl);
             when Iir_Kind_Non_Object_Alias_Declaration =>
-               Last_Decl := Decl;
-               Decl := Get_Chain (Decl);
-               Sem_Non_Object_Alias_Declaration (Last_Decl);
-               if Attr_Spec_Chain /= Null_Iir then
-                  while Last_Decl /= Decl loop
-                     Check_Post_Attribute_Specification
-                       (Attr_Spec_Chain, Last_Decl);
-                     Last_Decl := Get_Chain (Last_Decl);
-                  end loop;
-               end if;
-               goto Again;
+               --  Added by Sem_Alias_Declaration.  Need to check that no
+               --  existing attribute specification apply to them.
+               null;
+            when Iir_Kind_Object_Alias_Declaration =>
+               declare
+                  Res : Iir;
+               begin
+                  Res := Sem_Alias_Declaration (Decl);
+                  if Res /= Decl then
+                     --  Replace DECL with RES.
+                     if Last_Decl = Null_Iir then
+                        Set_Declaration_Chain (Parent, Res);
+                     else
+                        Set_Chain (Last_Decl, Res);
+                     end if;
+                     Decl := Res;
+
+                     --  An alias may add new alias declarations. Do not skip
+                     --  them: check that no existing attribute specifications
+                     --  apply to them.
+                  end if;
+               end;
             when Iir_Kind_File_Declaration =>
                Sem_File_Declaration (Decl);
             when Iir_Kind_Use_Clause =>

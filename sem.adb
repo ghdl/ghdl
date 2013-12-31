@@ -18,6 +18,7 @@
 with Ada.Unchecked_Conversion;
 with Errorout; use Errorout;
 with Std_Package; use Std_Package;
+with Ieee.Std_Logic_1164;
 with Libraries;
 with Std_Names;
 with Sem_Scopes; use Sem_Scopes;
@@ -1770,8 +1771,8 @@ package body Sem is
       --  Purity/wait/all-sensitized is unknown (recursion).
       Update_Pure_Unknown
      );
-   function Update_And_Check_Pure_Wait (Subprg : Iir)
-                                       return Update_Pure_Status
+
+   function Update_And_Check_Pure_Wait (Subprg : Iir) return Update_Pure_Status
    is
       procedure Error_Wait (Caller : Iir; Callee : Iir) is
       begin
@@ -1880,9 +1881,10 @@ package body Sem is
                --  Second loop: recurse if a state is not known.
                if J = 1
                  and then
-                 (Get_Purity_State (Callee) = Unknown
-                    or else Get_Wait_State (Callee) = Unknown
-                    or else Get_All_Sensitized_State (Callee) = Unknown)
+                 ((Get_Kind (Callee) = Iir_Kind_Procedure_Declaration
+                     and then Get_Purity_State (Callee) = Unknown)
+                  or else Get_Wait_State (Callee) = Unknown
+                  or else Get_All_Sensitized_State (Callee) = Unknown)
                then
                   Res1 := Update_And_Check_Pure_Wait (Callee);
                   if Res1 = Update_Pure_Missing then
@@ -1962,7 +1964,8 @@ package body Sem is
             --  Keep in list.
             if Callee_Bod = Null_Iir
               or else
-              (Get_Purity_State (Callee) = Unknown
+              (Get_Kind (Callee) = Iir_Kind_Procedure_Declaration
+                 and then Get_Purity_State (Callee) = Unknown
                  and then Depth /= Iir_Depth_Impure)
               or else
               (Get_Wait_State (Callee) = Unknown
@@ -2178,6 +2181,14 @@ package body Sem is
       Sem_Scopes.Add_Name (Unit);
       Set_Visible_Flag (Unit, True);
       Xref_Decl (Decl);
+
+      --  Identify IEEE.Std_Logic_1164 for VHDL08.
+      if Get_Identifier (Decl) = Std_Names.Name_Std_Logic_1164
+        and then (Get_Identifier (Get_Library (Get_Design_File (Unit)))
+                    = Std_Names.Name_Ieee)
+      then
+         Ieee.Std_Logic_1164.Std_Logic_1164_Pkg := Decl;
+      end if;
 
       --  LRM93 10.1 Declarative Region
       --  4. A package declaration, together with the corresponding

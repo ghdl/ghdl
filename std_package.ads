@@ -136,6 +136,10 @@ package Std_Package is
    --    atribute foreign : string;
    Foreign_Attribute : Iir_Attribute_Declaration;
 
+   --  For VHDL-08
+   Integer_Vector_Type_Definition : Iir_Array_Type_Definition;
+   Integer_Vector_Type : Iir_Type_Declaration;
+
    --  Internal use only.
    --  These types should be considered like universal types, but
    --  furthermore, they can be converted to any integer/real types while

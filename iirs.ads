@@ -590,8 +590,7 @@ package Iirs is
    --
    --   Get/Set_Type_Marks_List (Field2)
    --
-   -- Used only for attribute specification.
-   --   Get/Set_Name (Field4)
+   --   Get/Set_Prefix (Field3)
 
    -- Iir_Kind_Overload_List (Short)
    --
@@ -2823,6 +2822,13 @@ package Iirs is
        Iir_Kind_Negation_Operator,
        Iir_Kind_Absolute_Operator,
        Iir_Kind_Not_Operator,
+       Iir_Kind_Condition_Operator,
+       Iir_Kind_Reduction_And_Operator,
+       Iir_Kind_Reduction_Or_Operator,
+       Iir_Kind_Reduction_Nand_Operator,
+       Iir_Kind_Reduction_Nor_Operator,
+       Iir_Kind_Reduction_Xor_Operator,
+       Iir_Kind_Reduction_Xnor_Operator,
        Iir_Kind_And_Operator,
        Iir_Kind_Or_Operator,
        Iir_Kind_Nand_Operator,
@@ -2835,6 +2841,12 @@ package Iirs is
        Iir_Kind_Less_Than_Or_Equal_Operator,
        Iir_Kind_Greater_Than_Operator,
        Iir_Kind_Greater_Than_Or_Equal_Operator,
+       Iir_Kind_Match_Equality_Operator,
+       Iir_Kind_Match_Inequality_Operator,
+       Iir_Kind_Match_Less_Than_Operator,
+       Iir_Kind_Match_Less_Than_Or_Equal_Operator,
+       Iir_Kind_Match_Greater_Than_Operator,
+       Iir_Kind_Match_Greater_Than_Or_Equal_Operator,
        Iir_Kind_Sll_Operator,
        Iir_Kind_Sla_Operator,
        Iir_Kind_Srl_Operator,
@@ -3015,6 +3027,9 @@ package Iirs is
        Iir_Predefined_Boolean_Xnor,
        Iir_Predefined_Boolean_Not,
 
+       Iir_Predefined_Boolean_Rising_Edge,
+       Iir_Predefined_Boolean_Falling_Edge,
+
    --  Predefined operators for any enumeration type.
        Iir_Predefined_Enum_Equality,
        Iir_Predefined_Enum_Inequality,
@@ -3022,6 +3037,9 @@ package Iirs is
        Iir_Predefined_Enum_Less_Equal,
        Iir_Predefined_Enum_Greater,
        Iir_Predefined_Enum_Greater_Equal,
+
+       Iir_Predefined_Enum_Minimum,
+       Iir_Predefined_Enum_Maximum,
 
    --  Predefined operators for BIT type.
        Iir_Predefined_Bit_And,
@@ -3031,6 +3049,16 @@ package Iirs is
        Iir_Predefined_Bit_Xor,
        Iir_Predefined_Bit_Xnor,
        Iir_Predefined_Bit_Not,
+
+       Iir_Predefined_Bit_Match_Equality,
+       Iir_Predefined_Bit_Match_Inequality,
+       Iir_Predefined_Bit_Match_Less,
+       Iir_Predefined_Bit_Match_Less_Equal,
+       Iir_Predefined_Bit_Match_Greater,
+       Iir_Predefined_Bit_Match_Greater_Equal,
+
+       Iir_Predefined_Bit_Rising_Edge,
+       Iir_Predefined_Bit_Falling_Edge,
 
    --  Predefined operators for any integer type.
        Iir_Predefined_Integer_Equality,
@@ -3053,6 +3081,9 @@ package Iirs is
 
        Iir_Predefined_Integer_Exp,
 
+       Iir_Predefined_Integer_Minimum,
+       Iir_Predefined_Integer_Maximum,
+
    --  Predefined operators for any floating type.
        Iir_Predefined_Floating_Equality,
        Iir_Predefined_Floating_Inequality,
@@ -3071,6 +3102,9 @@ package Iirs is
        Iir_Predefined_Floating_Div,
 
        Iir_Predefined_Floating_Exp,
+
+       Iir_Predefined_Floating_Minimum,
+       Iir_Predefined_Floating_Maximum,
 
    --  Predefined operator for universal types.
        Iir_Predefined_Universal_R_I_Mul,
@@ -3099,6 +3133,9 @@ package Iirs is
        Iir_Predefined_Physical_Integer_Div,
        Iir_Predefined_Physical_Real_Div,
        Iir_Predefined_Physical_Physical_Div,
+
+       Iir_Predefined_Physical_Minimum,
+       Iir_Predefined_Physical_Maximum,
 
    --  Predefined operators for access.
        Iir_Predefined_Access_Equality,
@@ -3180,6 +3217,14 @@ package Iirs is
 
    --  To_String
        Iir_Predefined_Array_To_String,
+
+   --  IEEE.Std_Logic_1164.Std_Ulogic
+       Iir_Predefined_Std_Ulogic_Match_Equality,
+       Iir_Predefined_Std_Ulogic_Match_Inequality,
+       Iir_Predefined_Std_Ulogic_Match_Less,
+       Iir_Predefined_Std_Ulogic_Match_Less_Equal,
+       Iir_Predefined_Std_Ulogic_Match_Greater,
+       Iir_Predefined_Std_Ulogic_Match_Greater_Equal,
 
    --  Predefined function.
        Iir_Predefined_Now_Function
@@ -3377,7 +3422,14 @@ package Iirs is
      Iir_Kind_Identity_Operator ..
    --Iir_Kind_Negation_Operator
    --Iir_Kind_Absolute_Operator
-     Iir_Kind_Not_Operator;
+   --Iir_Kind_Not_Operator
+   --Iir_Kind_Condition_Operator
+   --Iir_Kind_Reduction_And_Operator
+   --Iir_Kind_Reduction_Or_Operator
+   --Iir_Kind_Reduction_Nand_Operator
+   --Iir_Kind_Reduction_Nor_Operator
+   --Iir_Kind_Reduction_Xor_Operator
+     Iir_Kind_Reduction_Xnor_Operator;
 
    subtype Iir_Kinds_Dyadic_Operator is Iir_Kind range
      Iir_Kind_And_Operator ..
@@ -3392,6 +3444,12 @@ package Iirs is
    --Iir_Kind_Less_Than_Or_Equal_Operator
    --Iir_Kind_Greater_Than_Operator
    --Iir_Kind_Greater_Than_Or_Equal_Operator
+   --Iir_Kind_Match_Equality_Operator
+   --Iir_Kind_Match_Inequality_Operator
+   --Iir_Kind_Match_Less_Than_Operator
+   --Iir_Kind_Match_Less_Than_Or_Equal_Operator
+   --Iir_Kind_Match_Greater_Than_Operator
+   --Iir_Kind_Match_Greater_Than_Or_Equal_Operator
    --Iir_Kind_Sll_Operator
    --Iir_Kind_Sla_Operator
    --Iir_Kind_Srl_Operator

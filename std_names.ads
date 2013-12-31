@@ -196,21 +196,27 @@ package Std_Names is
    subtype Name_Id_Keywords is
      Name_Id range Name_First_Keyword .. Name_Last_Keyword;
 
-   Name_First_Operator : constant Name_Id := Name_Last_Keyword + 1;
-   Name_Op_Equality :    constant Name_Id := Name_First_Operator + 000;
-   Name_Op_Inequality :  constant Name_Id := Name_First_Operator + 001;
-   Name_Op_Less :        constant Name_Id := Name_First_Operator + 002;
-   Name_Op_Less_Equal :  constant Name_Id := Name_First_Operator + 003;
-   Name_Op_Greater :     constant Name_Id := Name_First_Operator + 004;
+   Name_First_Operator :   constant Name_Id := Name_Last_Keyword + 1;
+   Name_Op_Equality :      constant Name_Id := Name_First_Operator + 000;
+   Name_Op_Inequality :    constant Name_Id := Name_First_Operator + 001;
+   Name_Op_Less :          constant Name_Id := Name_First_Operator + 002;
+   Name_Op_Less_Equal :    constant Name_Id := Name_First_Operator + 003;
+   Name_Op_Greater :       constant Name_Id := Name_First_Operator + 004;
    Name_Op_Greater_Equal : constant Name_Id := Name_First_Operator + 5;
-   Name_Op_Plus :        constant Name_Id := Name_First_Operator + 006;
-   Name_Op_Minus :       constant Name_Id := Name_First_Operator + 007;
-   Name_Op_Mul :         constant Name_Id := Name_First_Operator + 008;
-   Name_Op_Div :         constant Name_Id := Name_First_Operator + 009;
-   Name_Op_Exp :         constant Name_Id := Name_First_Operator + 010;
+   Name_Op_Plus :          constant Name_Id := Name_First_Operator + 006;
+   Name_Op_Minus :         constant Name_Id := Name_First_Operator + 007;
+   Name_Op_Mul :           constant Name_Id := Name_First_Operator + 008;
+   Name_Op_Div :           constant Name_Id := Name_First_Operator + 009;
+   Name_Op_Exp :           constant Name_Id := Name_First_Operator + 010;
    Name_Op_Concatenation : constant Name_Id := Name_First_Operator + 011;
-   Name_Op_Condition :   constant Name_Id := Name_First_Operator + 012;
-   Name_Last_Operator :  constant Name_Id := Name_Op_Condition;
+   Name_Op_Condition :     constant Name_Id := Name_First_Operator + 012;
+   Name_Op_Match_Equality :      constant Name_Id := Name_First_Operator + 013;
+   Name_Op_Match_Inequality :    constant Name_Id := Name_First_Operator + 014;
+   Name_Op_Match_Less :          constant Name_Id := Name_First_Operator + 015;
+   Name_Op_Match_Less_Equal :    constant Name_Id := Name_First_Operator + 016;
+   Name_Op_Match_Greater :       constant Name_Id := Name_First_Operator + 017;
+   Name_Op_Match_Greater_Equal : constant Name_Id := Name_First_Operator + 018;
+   Name_Last_Operator :  constant Name_Id := Name_Op_Match_Greater_Equal;
 
    subtype Name_Relational_Operators is Name_Id
      range Name_Op_Equality .. Name_Op_Greater_Equal;
@@ -331,16 +337,27 @@ package Std_Names is
    Name_Mode_Error :     constant Name_Id := Name_First_Standard + 041;
    Name_Foreign :        constant Name_Id := Name_First_Standard + 042;
 
-   --  Added by AMS vhdl.
-   Name_Domain_Type :      constant Name_Id := Name_First_Standard + 043;
-   Name_Quiescent_Domain : constant Name_Id := Name_First_Standard + 044;
-   Name_Time_Domain :      constant Name_Id := Name_First_Standard + 045;
-   Name_Frequency_Domain : constant Name_Id := Name_First_Standard + 046;
-   Name_Domain :           constant Name_Id := Name_First_Standard + 047;
-   Name_Frequency :        constant Name_Id := Name_First_Standard + 048;
-   Name_Real_Vector :      constant Name_Id := Name_First_Standard + 049;
+   --  Added by VHDL 08
+   Name_Boolean_Vector :   constant Name_Id := Name_First_Standard + 043;
+   Name_To_Bstring :       constant Name_Id := Name_First_Standard + 044;
+   Name_To_Binary_String : constant Name_Id := Name_First_Standard + 045;
+   Name_To_Ostring :       constant Name_Id := Name_First_Standard + 046;
+   Name_To_Octal_String :  constant Name_Id := Name_First_Standard + 047;
+   Name_To_Hstring :       constant Name_Id := Name_First_Standard + 048;
+   Name_To_Hex_String :    constant Name_Id := Name_First_Standard + 049;
+   Name_Integer_Vector :   constant Name_Id := Name_First_Standard + 050;
+   Name_Real_Vector :      constant Name_Id := Name_First_Standard + 051;
+   Name_Time_Vector :      constant Name_Id := Name_First_Standard + 052;
 
-   Name_Last_Standard :  constant Name_Id := Name_Real_Vector;
+   --  Added by AMS vhdl.
+   Name_Domain_Type :      constant Name_Id := Name_First_Standard + 053;
+   Name_Quiescent_Domain : constant Name_Id := Name_First_Standard + 054;
+   Name_Time_Domain :      constant Name_Id := Name_First_Standard + 055;
+   Name_Frequency_Domain : constant Name_Id := Name_First_Standard + 056;
+   Name_Domain :           constant Name_Id := Name_First_Standard + 057;
+   Name_Frequency :        constant Name_Id := Name_First_Standard + 058;
+
+   Name_Last_Standard :  constant Name_Id := Name_Frequency;
 
    Name_First_Charname : constant Name_Id := Name_Last_Standard + 1;
    Name_Nul :            constant Name_Id := Name_First_Charname + 00;
@@ -423,16 +440,21 @@ package Std_Names is
    Name_Endfile :        constant Name_Id := Name_First_Misc + 007;
    Name_P :              constant Name_Id := Name_First_Misc + 008;
    Name_F :              constant Name_Id := Name_First_Misc + 009;
-   Name_External_Name :  constant Name_Id := Name_First_Misc + 010;
-   Name_Open_Kind :      constant Name_Id := Name_First_Misc + 011;
-   Name_Status :         constant Name_Id := Name_First_Misc + 012;
-   Name_First :          constant Name_Id := Name_First_Misc + 013;
-   Name_Last :           constant Name_Id := Name_First_Misc + 014;
-   Name_Textio :         constant Name_Id := Name_First_Misc + 015;
-   Name_Work :           constant Name_Id := Name_First_Misc + 016;
-   Name_Text :           constant Name_Id := Name_First_Misc + 017;
-   Name_To_String :      constant Name_Id := Name_First_Misc + 018;
-   Name_Untruncated_Text_Read : constant Name_Id := Name_First_Misc + 019;
+   Name_L :              constant Name_Id := Name_First_Misc + 010;
+   Name_R :              constant Name_Id := Name_First_Misc + 011;
+   Name_S :              constant Name_Id := Name_First_Misc + 012;
+   Name_External_Name :  constant Name_Id := Name_First_Misc + 013;
+   Name_Open_Kind :      constant Name_Id := Name_First_Misc + 014;
+   Name_Status :         constant Name_Id := Name_First_Misc + 015;
+   Name_First :          constant Name_Id := Name_First_Misc + 016;
+   Name_Last :           constant Name_Id := Name_First_Misc + 017;
+   Name_Textio :         constant Name_Id := Name_First_Misc + 018;
+   Name_Work :           constant Name_Id := Name_First_Misc + 019;
+   Name_Text :           constant Name_Id := Name_First_Misc + 020;
+   Name_To_String :      constant Name_Id := Name_First_Misc + 021;
+   Name_Minimum :        constant Name_Id := Name_First_Misc + 022;
+   Name_Maximum :        constant Name_Id := Name_First_Misc + 023;
+   Name_Untruncated_Text_Read : constant Name_Id := Name_First_Misc + 024;
    Name_Last_Misc :      constant Name_Id := Name_Untruncated_Text_Read;
 
    Name_First_Ieee :     constant Name_Id := Name_Last_Misc + 1;

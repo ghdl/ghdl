@@ -17,6 +17,7 @@
 #  02111-1307, USA.
 
 # Variable to be defined:
+# LIB08_DIR
 # LIB93_DIR
 # LIB87_DIR
 # REL_DIR
@@ -43,8 +44,26 @@ VITAL2000_BSRCS := vital2000/timing_p.vhdl vital2000/timing_b.vhdl \
 SYNOPSYS_BSRCS := synopsys/std_logic_arith.vhdl \
   synopsys/std_logic_textio.vhdl synopsys/std_logic_unsigned.vhdl \
   synopsys/std_logic_signed.vhdl \
-  synopsys/std_logic_misc.vhdl synopsys/std_logic_misc-body.vhdl 
+  synopsys/std_logic_misc.vhdl synopsys/std_logic_misc-body.vhdl
 MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
+IEEE08_BSRCS := \
+ieee2008/std_logic_1164.vhdl ieee2008/std_logic_1164-body.vhdl \
+ieee2008/std_logic_textio.vhdl \
+ieee2008/math_real.vhdl ieee2008/math_real-body.vhdl \
+ieee2008/math_complex.vhdl ieee2008/math_complex-body.vhdl \
+ieee2008/numeric_bit.vhdl \
+ieee2008/numeric_bit_unsigned.vhdl ieee2008/numeric_bit_unsigned-body.vhdl \
+ieee2008/numeric_std.vhdl \
+ieee2008/numeric_std-body.vhdl \
+ieee2008/numeric_std_unsigned.vhdl ieee2008/numeric_std_unsigned-body.vhdl
+# ieee2008/numeric_bit-body.vhdl \
+#ieee2008/fixed_float_types.vhdl
+#ieee2008/fixed_generic_pkg-body.vhdl
+#ieee2008/fixed_generic_pkg.vhdl
+#ieee2008/fixed_pkg.vhdl
+#ieee2008/float_generic_pkg-body.vhdl
+#ieee2008/float_generic_pkg.vhdl
+#ieee2008/float_pkg.vhdl
 
 STD87_BSRCS := $(STD_SRCS:.vhdl=.v87)
 STD93_BSRCS := $(STD_SRCS:.vhdl=.v93)
@@ -77,6 +96,7 @@ SYN93_DIR:=$(LIB93_DIR)/synopsys
 MENTOR93_DIR:=$(LIB93_DIR)/mentor
 
 STD08_DIR:=$(LIB08_DIR)/std
+IEEE08_DIR:=$(LIB08_DIR)/ieee
 
 ANALYZE87:=$(ANALYZE) --std=87
 ANALYZE93:=$(ANALYZE) --std=93
@@ -88,6 +108,7 @@ STD08_SRCS=$(addprefix $(LIBSRC_DIR)/,$(STD08_BSRCS))
 
 IEEE93_SRCS=$(addprefix $(LIBSRC_DIR)/,$(IEEE93_BSRCS))
 IEEE87_SRCS=$(addprefix $(LIBSRC_DIR)/,$(IEEE87_BSRCS))
+IEEE08_SRCS=$(addprefix $(LIBSRC_DIR)/,$(IEEE08_BSRCS))
 SYNOPSYS_SRCS=$(addprefix $(LIBSRC_DIR)/,$(SYNOPSYS_BSRCS))
 MENTOR93_SRCS=$(addprefix $(LIBSRC_DIR)/,$(MENTOR93_BSRCS))
 VITAL95_SRCS=$(addprefix $(LIBSRC_DIR)/,$(VITAL95_BSRCS))
@@ -188,5 +209,18 @@ std.v08: $(LIB08_DIR) $(STD08_SRCS) force
 	for i in $(STD08_SRCS); do \
 	  echo $$i; \
 	  $(ANALYZE08) --bootstrap --work=std $(REL_DIR)/$$i || exit 1; \
+	done; \
+	cd $$prev
+
+ANALYZE_IEEE08=$(ANALYZE08) -P../std --work=ieee
+
+ieee.v08: $(LIB08_DIR) $(IEEE08_SRCS) force
+	$(RM) -rf $(IEEE08_DIR)
+	mkdir $(IEEE08_DIR)
+#       FIXME: add VITAL2000 ?
+	prev=`pwd`; cd $(IEEE08_DIR); \
+	for i in $(IEEE08_BSRCS); do \
+          cmd="$(ANALYZE_IEEE08) $(REL_DIR)/$(LIBSRC_DIR)/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
 	done; \
 	cd $$prev

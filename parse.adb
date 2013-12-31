@@ -513,10 +513,19 @@ package body Parse is
                when '?' =>
                   if Vhdl_Std < Vhdl_08 then
                      Bad_Operator_Symbol;
-                  elsif C2 /= '?' then
+                     Id := Name_Op_Condition;
+                  elsif C2 = '?' then
+                     Id := Name_Op_Condition;
+                  elsif C2 = '=' then
+                     Id := Name_Op_Match_Equality;
+                  elsif C2 = '<' then
+                     Id := Name_Op_Match_Less;
+                  elsif C2 = '>' then
+                     Id := Name_Op_Match_Greater;
+                  else
                      Bad_Operator_Symbol;
+                     Id := Name_Op_Condition;
                   end if;
-                  Id := Name_Op_Condition;
                when others =>
                   Bad_Operator_Symbol;
                   Id := Name_Op_Equality;
@@ -611,6 +620,22 @@ package body Parse is
                   else
                      Id := Name_Rem;
                      Bad_Operator_Symbol;
+                  end if;
+               when '?' =>
+                  if Vhdl_Std < Vhdl_08 then
+                     Bad_Operator_Symbol;
+                     Id := Name_Op_Match_Less_Equal;
+                  else
+                     if C2 = '<' and C3 = '=' then
+                        Id := Name_Op_Match_Less_Equal;
+                     elsif C2 = '>' and C3 = '=' then
+                        Id := Name_Op_Match_Greater_Equal;
+                     elsif C2 = '/' and C3 = '=' then
+                        Id := Name_Op_Match_Inequality;
+                     else
+                        Bad_Operator_Symbol;
+                        Id := Name_Op_Match_Less_Equal;
+                     end if;
                   end if;
                when others =>
                   Id := Name_And;
@@ -719,6 +744,13 @@ package body Parse is
    --
    --  [ §6.6 ]
    --  attribute_designator ::= ATTRIBUTE_simple_name
+   --
+   --  Note: in order to simplify the parsing, this function may return a
+   --  signature without attribute designator. Signatures may appear at 3
+   --  places:
+   --  - in attribute name
+   --  - in alias declaration
+   --  - in entity designator
    function Parse_Name_Suffix (Pfx : Iir; Allow_Indexes: Boolean := True)
      return Iir
    is
@@ -731,30 +763,14 @@ package body Parse is
 
          case Current_Token is
             when Tok_Left_Bracket =>
-               if not Allow_Indexes then
-                  return Res;
-               end if;
-
                if Get_Kind (Prefix) = Iir_Kind_String_Literal then
                   Prefix := String_To_Operator_Symbol (Prefix);
                end if;
 
-               -- There is an attribute with a signature.
-               Res := Create_Iir (Iir_Kind_Attribute_Name);
+               --  There is a signature. They are normally followed by an
+               --  attribute.
+               Res := Parse_Signature;
                Set_Prefix (Res, Prefix);
-               Set_Signature (Res, Parse_Signature);
-               if Current_Token /= Tok_Tick then
-                  Error_Msg_Parse ("' is expected after a signature");
-               else
-                  Set_Location (Res);
-                  Scan.Scan;
-                  if Current_Token /= Tok_Identifier then
-                     Error_Msg_Parse ("attribute_designator expected after '");
-                  else
-                     Set_Attribute_Identifier (Res, Current_Identifier);
-                     Scan.Scan;
-                  end if;
-               end if;
 
             when Tok_Tick =>
                -- There is an attribute.
@@ -779,7 +795,13 @@ package body Parse is
                Res := Create_Iir (Iir_Kind_Attribute_Name);
                Set_Attribute_Identifier (Res, Current_Identifier);
                Set_Location (Res);
-               Set_Prefix (Res, Prefix);
+               if Get_Kind (Prefix) = Iir_Kind_Signature then
+                  Set_Signature (Res, Prefix);
+                  Set_Prefix (Res, Get_Prefix (Prefix));
+               else
+                  Set_Prefix (Res, Prefix);
+               end if;
+
                -- accept the identifier.
                Scan.Scan;
 
@@ -2761,12 +2783,14 @@ package body Parse is
    function Parse_Alias_Declaration return Iir
    is
       Res: Iir;
-      Loc : Location_Type;
       Ident : Name_Id;
    begin
+      Res := Create_Iir (Iir_Kind_Object_Alias_Declaration);
+      Set_Location (Res);
+
       -- accept ALIAS.
       Scan.Scan;
-      Loc := Get_Token_Location;
+
       case Current_Token is
          when Tok_Identifier =>
             Ident := Current_Identifier;
@@ -2779,31 +2803,18 @@ package body Parse is
          when others =>
             Error_Msg_Parse ("alias designator expected");
       end case;
+      Set_Identifier (Res, Ident);
       Scan.Scan;
+
       if Current_Token = Tok_Colon then
          Scan.Scan;
-         Res := Create_Iir (Iir_Kind_Object_Alias_Declaration);
          Set_Type (Res, Parse_Subtype_Indication);
-         --  FIXME: nice message if token is ':=' ?
-         Expect (Tok_Is);
-         Scan.Scan;
-         Set_Name (Res, Parse_Name);
-         --  FIXME: emit error if token = '['
-      elsif Current_Token = Tok_Is then
-         Res := Create_Iir (Iir_Kind_Non_Object_Alias_Declaration);
-         Scan.Scan;
-         Set_Name (Res, Parse_Name (Allow_Indexes => False));
-         if Current_Token = Tok_Left_Bracket then
-            Set_Signature (Res, Parse_Signature);
-         end if;
-      else
-         Error_Msg_Parse ("'is' or ':' expected");
-         Res := Create_Iir (Iir_Kind_Object_Alias_Declaration);
-         Eat_Tokens_Until_Semi_Colon;
       end if;
 
-      Set_Location (Res, Loc);
-      Set_Identifier (Res, Ident);
+      --  FIXME: nice message if token is ':=' ?
+      Expect (Tok_Is);
+      Scan.Scan;
+      Set_Name (Res, Parse_Name);
 
       return Res;
    end Parse_Alias_Declaration;
@@ -2913,7 +2924,7 @@ package body Parse is
       if Current_Token = Tok_Left_Bracket then
          Name := Res;
          Res := Parse_Signature;
-         Set_Name (Res, Name);
+         Set_Prefix (Res, Name);
       end if;
       return Res;
    end Parse_Entity_Designator;
@@ -3702,43 +3713,78 @@ package body Parse is
    --  factor ::= primary [ ** primary ]
    --           | ABS primary
    --           | NOT primary
+   --           | logical_operator primary  [ VHDL08 9.1 ]
+   function Build_Unary_Factor (Primary : Iir; Op : Iir_Kind) return Iir is
+      Res : Iir;
+   begin
+      if Primary /= Null_Iir then
+         return Primary;
+      end if;
+      Res := Create_Iir (Op);
+      Set_Location (Res);
+      Scan.Scan;
+      Set_Operand (Res, Parse_Primary);
+      return Res;
+   end Build_Unary_Factor;
+
+   function Build_Unary_Factor_08 (Primary : Iir; Op : Iir_Kind) return Iir is
+   begin
+      if Primary /= Null_Iir then
+         return Primary;
+      end if;
+      if Flags.Vhdl_Std < Vhdl_08 then
+         Error_Msg_Parse ("missing left operand of logical expression");
+         --  Skip operator
+         Scan.Scan;
+         return Parse_Primary;
+      else
+         return Build_Unary_Factor (Primary, Op);
+      end if;
+   end Build_Unary_Factor_08;
+
    function Parse_Factor (Primary : Iir := Null_Iir) return Iir_Expression is
-      Res, Tmp: Iir_Expression;
+      Res, Left: Iir_Expression;
    begin
       case Current_Token is
          when Tok_Abs =>
-            if Primary /= Null_Iir then
-               return Primary;
-            end if;
-            Scan.Scan;
-            Res := Create_Iir (Iir_Kind_Absolute_Operator);
-            Set_Location (Res);
-            Set_Operand (Res, Parse_Primary);
-            return Res;
+            return Build_Unary_Factor (Primary, Iir_Kind_Absolute_Operator);
          when Tok_Not =>
-            if Primary /= Null_Iir then
-               return Primary;
-            end if;
-            Res := Create_Iir (Iir_Kind_Not_Operator);
-            Set_Location (Res);
-            Scan.Scan;
-            Set_Operand (Res, Parse_Primary);
-            return Res;
+            return Build_Unary_Factor (Primary, Iir_Kind_Not_Operator);
+
+         when Tok_And =>
+            return Build_Unary_Factor_08
+              (Primary, Iir_Kind_Reduction_And_Operator);
+         when Tok_Or =>
+            return Build_Unary_Factor_08
+              (Primary, Iir_Kind_Reduction_Or_Operator);
+         when Tok_Nand =>
+            return Build_Unary_Factor_08
+              (Primary, Iir_Kind_Reduction_Nand_Operator);
+         when Tok_Nor =>
+            return Build_Unary_Factor_08
+              (Primary, Iir_Kind_Reduction_Nor_Operator);
+         when Tok_Xor =>
+            return Build_Unary_Factor_08
+              (Primary, Iir_Kind_Reduction_Xor_Operator);
+         when Tok_Xnor =>
+            return Build_Unary_Factor_08
+              (Primary, Iir_Kind_Reduction_Xnor_Operator);
+
          when others =>
             if Primary /= Null_Iir then
-               Tmp := Primary;
+               Left := Primary;
             else
-               Tmp := Parse_Primary;
+               Left := Parse_Primary;
             end if;
             if Current_Token = Tok_Double_Star then
                Res := Create_Iir (Iir_Kind_Exponentiation_Operator);
                Set_Location (Res);
                Scan.Scan;
-               Set_Left (Res, Tmp);
+               Set_Left (Res, Left);
                Set_Right (Res, Parse_Primary);
                return Res;
             else
-               return Tmp;
+               return Left;
             end if;
       end case;
    end Parse_Factor;
@@ -3897,6 +3943,19 @@ package body Parse is
                Res := Create_Iir (Iir_Kind_Greater_Than_Operator);
             when Tok_Greater_Equal =>
                Res := Create_Iir (Iir_Kind_Greater_Than_Or_Equal_Operator);
+            when Tok_Match_Equal =>
+               Res := Create_Iir (Iir_Kind_Match_Equality_Operator);
+            when Tok_Match_Not_Equal =>
+               Res := Create_Iir (Iir_Kind_Match_Inequality_Operator);
+            when Tok_Match_Less =>
+               Res := Create_Iir (Iir_Kind_Match_Less_Than_Operator);
+            when Tok_Match_Less_Equal =>
+               Res := Create_Iir (Iir_Kind_Match_Less_Than_Or_Equal_Operator);
+            when Tok_Match_Greater =>
+               Res := Create_Iir (Iir_Kind_Match_Greater_Than_Operator);
+            when Tok_Match_Greater_Equal =>
+               Res := Create_Iir
+                 (Iir_Kind_Match_Greater_Than_Or_Equal_Operator);
             when others =>
                raise Program_Error;
          end case;
@@ -3920,6 +3979,7 @@ package body Parse is
    --
    --  [ §7.2 ]
    --  relational_operator ::= = | /= | < | <= | > | >=
+   --                        | ?= | ?/= | ?< | ?<= | ?> | ?>=
    function Parse_Relation return Iir
    is
       Tmp: Iir;

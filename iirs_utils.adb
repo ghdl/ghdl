@@ -48,18 +48,25 @@ package body Iirs_Utils is
    function Get_Operator_Name (Op : Iir) return Name_Id is
    begin
       case Get_Kind (Op) is
-         when Iir_Kind_And_Operator =>
+         when Iir_Kind_And_Operator
+           | Iir_Kind_Reduction_And_Operator =>
             return Name_And;
-         when Iir_Kind_Or_Operator =>
+         when Iir_Kind_Or_Operator
+           | Iir_Kind_Reduction_Or_Operator =>
             return Name_Or;
-         when Iir_Kind_Nand_Operator =>
+         when Iir_Kind_Nand_Operator
+           | Iir_Kind_Reduction_Nand_Operator =>
             return Name_Nand;
-         when Iir_Kind_Nor_Operator =>
+         when Iir_Kind_Nor_Operator
+           | Iir_Kind_Reduction_Nor_Operator =>
             return Name_Nor;
-         when Iir_Kind_Xor_Operator =>
+         when Iir_Kind_Xor_Operator
+           | Iir_Kind_Reduction_Xor_Operator =>
             return Name_Xor;
-         when Iir_Kind_Xnor_Operator =>
+         when Iir_Kind_Xnor_Operator
+           | Iir_Kind_Reduction_Xnor_Operator =>
             return Name_Xnor;
+
          when Iir_Kind_Equality_Operator =>
             return Name_Op_Equality;
          when Iir_Kind_Inequality_Operator =>
@@ -72,6 +79,20 @@ package body Iirs_Utils is
             return Name_Op_Greater;
          when Iir_Kind_Greater_Than_Or_Equal_Operator =>
             return Name_Op_Greater_Equal;
+
+         when Iir_Kind_Match_Equality_Operator =>
+            return Name_Op_Match_Equality;
+         when Iir_Kind_Match_Inequality_Operator =>
+            return Name_Op_Match_Inequality;
+         when Iir_Kind_Match_Less_Than_Operator =>
+            return Name_Op_Match_Less;
+         when Iir_Kind_Match_Less_Than_Or_Equal_Operator =>
+            return Name_Op_Match_Less_Equal;
+         when Iir_Kind_Match_Greater_Than_Operator =>
+            return Name_Op_Match_Greater;
+         when Iir_Kind_Match_Greater_Than_Or_Equal_Operator =>
+            return Name_Op_Match_Greater_Equal;
+
          when Iir_Kind_Sll_Operator =>
             return Name_Sll;
          when Iir_Kind_Sla_Operator =>
@@ -108,6 +129,8 @@ package body Iirs_Utils is
             return Name_Op_Plus;
          when Iir_Kind_Absolute_Operator =>
             return Name_Abs;
+         when Iir_Kind_Condition_Operator =>
+            return Name_Op_Condition;
          when others =>
             raise Internal_Error;
       end case;
@@ -730,7 +753,7 @@ package body Iirs_Utils is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Error);
-      Set_Expr_Staticness (Res, Locally);
+      Set_Expr_Staticness (Res, None);
       Set_Type (Res, Atype);
       Set_Error_Origin (Res, Orig);
       Location_Copy (Res, Orig);

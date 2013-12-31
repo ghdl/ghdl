@@ -396,6 +396,13 @@ package body Iirs is
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
            | Iir_Kind_Not_Operator
+           | Iir_Kind_Condition_Operator
+           | Iir_Kind_Reduction_And_Operator
+           | Iir_Kind_Reduction_Or_Operator
+           | Iir_Kind_Reduction_Nand_Operator
+           | Iir_Kind_Reduction_Nor_Operator
+           | Iir_Kind_Reduction_Xor_Operator
+           | Iir_Kind_Reduction_Xnor_Operator
            | Iir_Kind_And_Operator
            | Iir_Kind_Or_Operator
            | Iir_Kind_Nand_Operator
@@ -408,6 +415,12 @@ package body Iirs is
            | Iir_Kind_Less_Than_Or_Equal_Operator
            | Iir_Kind_Greater_Than_Operator
            | Iir_Kind_Greater_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Equality_Operator
+           | Iir_Kind_Match_Inequality_Operator
+           | Iir_Kind_Match_Less_Than_Operator
+           | Iir_Kind_Match_Less_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Greater_Than_Operator
+           | Iir_Kind_Match_Greater_Than_Or_Equal_Operator
            | Iir_Kind_Sll_Operator
            | Iir_Kind_Sla_Operator
            | Iir_Kind_Srl_Operator
@@ -2290,6 +2303,13 @@ package body Iirs is
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
            | Iir_Kind_Not_Operator
+           | Iir_Kind_Condition_Operator
+           | Iir_Kind_Reduction_And_Operator
+           | Iir_Kind_Reduction_Or_Operator
+           | Iir_Kind_Reduction_Nand_Operator
+           | Iir_Kind_Reduction_Nor_Operator
+           | Iir_Kind_Reduction_Xor_Operator
+           | Iir_Kind_Reduction_Xnor_Operator
            | Iir_Kind_And_Operator
            | Iir_Kind_Or_Operator
            | Iir_Kind_Nand_Operator
@@ -2302,6 +2322,12 @@ package body Iirs is
            | Iir_Kind_Less_Than_Or_Equal_Operator
            | Iir_Kind_Greater_Than_Operator
            | Iir_Kind_Greater_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Equality_Operator
+           | Iir_Kind_Match_Inequality_Operator
+           | Iir_Kind_Match_Less_Than_Operator
+           | Iir_Kind_Match_Less_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Greater_Than_Operator
+           | Iir_Kind_Match_Greater_Than_Or_Equal_Operator
            | Iir_Kind_Sll_Operator
            | Iir_Kind_Sla_Operator
            | Iir_Kind_Srl_Operator
@@ -5687,6 +5713,13 @@ package body Iirs is
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
            | Iir_Kind_Not_Operator
+           | Iir_Kind_Condition_Operator
+           | Iir_Kind_Reduction_And_Operator
+           | Iir_Kind_Reduction_Or_Operator
+           | Iir_Kind_Reduction_Nand_Operator
+           | Iir_Kind_Reduction_Nor_Operator
+           | Iir_Kind_Reduction_Xor_Operator
+           | Iir_Kind_Reduction_Xnor_Operator
            | Iir_Kind_And_Operator
            | Iir_Kind_Or_Operator
            | Iir_Kind_Nand_Operator
@@ -5699,6 +5732,12 @@ package body Iirs is
            | Iir_Kind_Less_Than_Or_Equal_Operator
            | Iir_Kind_Greater_Than_Operator
            | Iir_Kind_Greater_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Equality_Operator
+           | Iir_Kind_Match_Inequality_Operator
+           | Iir_Kind_Match_Less_Than_Operator
+           | Iir_Kind_Match_Less_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Greater_Than_Operator
+           | Iir_Kind_Match_Greater_Than_Or_Equal_Operator
            | Iir_Kind_Sll_Operator
            | Iir_Kind_Sla_Operator
            | Iir_Kind_Srl_Operator
@@ -5809,7 +5848,14 @@ package body Iirs is
          when Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
-           | Iir_Kind_Not_Operator =>
+           | Iir_Kind_Not_Operator
+           | Iir_Kind_Condition_Operator
+           | Iir_Kind_Reduction_And_Operator
+           | Iir_Kind_Reduction_Or_Operator
+           | Iir_Kind_Reduction_Nand_Operator
+           | Iir_Kind_Reduction_Nor_Operator
+           | Iir_Kind_Reduction_Xor_Operator
+           | Iir_Kind_Reduction_Xnor_Operator =>
             null;
          when others =>
             Failed ("Operand", Target);
@@ -5843,6 +5889,12 @@ package body Iirs is
            | Iir_Kind_Less_Than_Or_Equal_Operator
            | Iir_Kind_Greater_Than_Operator
            | Iir_Kind_Greater_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Equality_Operator
+           | Iir_Kind_Match_Inequality_Operator
+           | Iir_Kind_Match_Less_Than_Operator
+           | Iir_Kind_Match_Less_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Greater_Than_Operator
+           | Iir_Kind_Match_Greater_Than_Or_Equal_Operator
            | Iir_Kind_Sll_Operator
            | Iir_Kind_Sla_Operator
            | Iir_Kind_Srl_Operator
@@ -5890,6 +5942,12 @@ package body Iirs is
            | Iir_Kind_Less_Than_Or_Equal_Operator
            | Iir_Kind_Greater_Than_Operator
            | Iir_Kind_Greater_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Equality_Operator
+           | Iir_Kind_Match_Inequality_Operator
+           | Iir_Kind_Match_Less_Than_Operator
+           | Iir_Kind_Match_Less_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Greater_Than_Operator
+           | Iir_Kind_Match_Greater_Than_Or_Equal_Operator
            | Iir_Kind_Sll_Operator
            | Iir_Kind_Sla_Operator
            | Iir_Kind_Srl_Operator
@@ -5949,7 +6007,6 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Choice_By_Name
-           | Iir_Kind_Signature
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Object_Alias_Declaration =>
             null;
@@ -6049,7 +6106,8 @@ package body Iirs is
    procedure Check_Kind_For_Prefix (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Selected_Element
+         when Iir_Kind_Signature
+           | Iir_Kind_Selected_Element
            | Iir_Kind_Dereference
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Slice_Name
@@ -6576,6 +6634,13 @@ package body Iirs is
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
            | Iir_Kind_Not_Operator
+           | Iir_Kind_Condition_Operator
+           | Iir_Kind_Reduction_And_Operator
+           | Iir_Kind_Reduction_Or_Operator
+           | Iir_Kind_Reduction_Nand_Operator
+           | Iir_Kind_Reduction_Nor_Operator
+           | Iir_Kind_Reduction_Xor_Operator
+           | Iir_Kind_Reduction_Xnor_Operator
            | Iir_Kind_And_Operator
            | Iir_Kind_Or_Operator
            | Iir_Kind_Nand_Operator
@@ -6588,6 +6653,12 @@ package body Iirs is
            | Iir_Kind_Less_Than_Or_Equal_Operator
            | Iir_Kind_Greater_Than_Operator
            | Iir_Kind_Greater_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Equality_Operator
+           | Iir_Kind_Match_Inequality_Operator
+           | Iir_Kind_Match_Less_Than_Operator
+           | Iir_Kind_Match_Less_Than_Or_Equal_Operator
+           | Iir_Kind_Match_Greater_Than_Operator
+           | Iir_Kind_Match_Greater_Than_Or_Equal_Operator
            | Iir_Kind_Sll_Operator
            | Iir_Kind_Sla_Operator
            | Iir_Kind_Srl_Operator

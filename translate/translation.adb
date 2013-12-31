@@ -4706,7 +4706,13 @@ package body Translation is
          Std_Names.Name_Op_Div => "OPDi",
          Std_Names.Name_Op_Exp => "OPEx",
          Std_Names.Name_Op_Concatenation => "OPCc",
-         Std_Names.Name_Op_Condition => "OPCd");
+         Std_Names.Name_Op_Condition => "OPCd",
+         Std_Names.Name_Op_Match_Equality => "OPQe",
+         Std_Names.Name_Op_Match_Inequality => "OPQi",
+         Std_Names.Name_Op_Match_Less => "OPQL",
+         Std_Names.Name_Op_Match_Less_Equal => "OPQl",
+         Std_Names.Name_Op_Match_Greater => "OPQG",
+         Std_Names.Name_Op_Match_Greater_Equal => "OPQg");
 
       --  Set the identifier prefix with the subprogram identifier and
       --  overload number if any.

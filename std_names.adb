@@ -52,6 +52,12 @@ package body Std_Names is
       Def ("**", Name_Op_Exp);
       Def ("&",  Name_Op_Concatenation);
       Def ("??", Name_Op_Condition);
+      Def ("?=", Name_Op_Match_Equality);
+      Def ("?/=", Name_Op_Match_Inequality);
+      Def ("?<",  Name_Op_Match_Less);
+      Def ("?<=", Name_Op_Match_Less_Equal);
+      Def ("?>",  Name_Op_Match_Greater);
+      Def ("?>=", Name_Op_Match_Greater_Equal);
 
       -- Create Attributes.
       Def ("base",          Name_Base);
@@ -143,6 +149,18 @@ package body Std_Names is
       Def ("name_error",          Name_Name_Error);
       Def ("mode_error",          Name_Mode_Error);
       Def ("foreign",             Name_Foreign);
+
+      Def ("boolean_vector",      Name_Boolean_Vector);
+      Def ("to_bstring",          Name_To_Bstring);
+      Def ("to_binary_string",    Name_To_Binary_String);
+      Def ("to_ostring",          Name_To_Ostring);
+      Def ("to_octal_string",     Name_To_Octal_String);
+      Def ("to_hstring",          Name_To_Hstring);
+      Def ("to_hex_string",       Name_To_Hex_String);
+      Def ("integer_vector",      Name_Integer_Vector);
+      Def ("real_vector",         Name_Real_Vector);
+      Def ("time_vector",         Name_Time_Vector);
+
       Def ("domain_type",         Name_Domain_Type);
       Def ("quiescent_domain",    Name_Quiescent_Domain);
       Def ("time_domain",         Name_Time_Domain);
@@ -229,6 +247,9 @@ package body Std_Names is
       Def ("endfile",               Name_Endfile);
       Def ("p",                     Name_P);
       Def ("f",                     Name_F);
+      Def ("l",                     Name_L);
+      Def ("r",                     Name_R);
+      Def ("s",                     Name_S);
       Def ("external_name",         Name_External_Name);
       Def ("open_kind",             Name_Open_Kind);
       Def ("status",                Name_Status);
@@ -238,6 +259,8 @@ package body Std_Names is
       Def ("work",                  Name_Work);
       Def ("text",                  Name_Text);
       Def ("to_string",             Name_To_String);
+      Def ("minimum",               Name_Minimum);
+      Def ("maximum",               Name_Maximum);
       Def ("untruncated_text_read", Name_Untruncated_Text_Read);
 
       Def ("ieee",              Name_Ieee);

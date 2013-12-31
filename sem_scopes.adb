@@ -832,13 +832,17 @@ package body Sem_Scopes is
       Inter : Name_Interpretation_Type;
    begin
       Inter := Get_Interpretation (Id);
-      if Get_Declaration (Inter) /= Old then
-         raise Internal_Error;
-      end if;
+      loop
+         exit when Get_Declaration (Inter) = Old;
+         Inter := Get_Next_Interpretation (Inter);
+         if not Valid_Interpretation (Inter) then
+            raise Internal_Error;
+         end if;
+      end loop;
+      Interpretations.Table (Inter).Decl := Decl;
       if Get_Next_Interpretation (Inter) /= No_Name_Interpretation then
          raise Internal_Error;
       end if;
-      Interpretations.Table (Inter).Decl := Decl;
    end Replace_Name;
 
    procedure Name_Visible (Ident : Name_Id; Decl : Iir)

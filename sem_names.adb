@@ -1981,7 +1981,7 @@ package body Sem_Names is
                end;
                if Res = Null_Iir then
                   Error_Msg_Sem
-                    ("No overloaded subprogram found matching "
+                    ("no overloaded function found matching "
                        & Disp_Node (Prefix_Name), Name);
                end if;
             when Iir_Kinds_Function_Declaration =>

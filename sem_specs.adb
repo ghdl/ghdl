@@ -586,7 +586,7 @@ package body Sem_Specs is
       Name : Iir;
    begin
       List := Create_Iir_List;
-      Inter := Get_Interpretation (Get_Identifier (Get_Name (Sig)));
+      Inter := Get_Interpretation (Get_Identifier (Get_Prefix (Sig)));
       while Valid_Interpretation (Inter) loop
          exit when not Is_In_Current_Declarative_Region (Inter);
          if not Is_Potentially_Visible (Inter) then
@@ -616,7 +616,7 @@ package body Sem_Specs is
       if Name = Null_Iir then
          return;
       end if;
-      Attribute_A_Decl (Name, Attr, Get_Name (Sig), True, True);
+      Attribute_A_Decl (Name, Attr, Get_Prefix (Sig), True, True);
    end Sem_Signature_Entity_Designator;
 
    procedure Sem_Attribute_Specification

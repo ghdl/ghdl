@@ -29,6 +29,7 @@ with Name_Table;
 with Std_Names;
 with Iirs_Utils; use Iirs_Utils;
 with Std_Package; use Std_Package;
+with Ieee.Std_Logic_1164;
 with Xrefs; use Xrefs;
 
 package body Sem_Types is
@@ -757,6 +758,15 @@ package body Sem_Types is
                Set_Only_Characters_Flag (Def, Only_Characters);
             end;
             Set_Resolved_Flag (Def, False);
+
+            --  Identifier IEEE.Std_Logic_1164.Std_Ulogic.
+            if Get_Identifier (Decl) = Std_Names.Name_Std_Ulogic
+              and then
+              Get_Parent (Decl) = Ieee.Std_Logic_1164.Std_Logic_1164_Pkg
+            then
+               Ieee.Std_Logic_1164.Std_Ulogic_Type := Def;
+            end if;
+
             return Def;
 
          when Iir_Kind_Range_Expression =>

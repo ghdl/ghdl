@@ -775,8 +775,7 @@ package body Sem_Stmts is
       Expr : Iir;
    begin
       Expr := Get_Assertion_Condition (Stmt);
-      Expr := Sem_Expression (Expr, Boolean_Type_Definition);
-      Check_Read (Expr);
+      Expr := Sem_Condition (Expr);
       Expr := Eval_Expr_If_Static (Expr);
       Set_Assertion_Condition (Stmt, Expr);
 
@@ -1050,8 +1049,7 @@ package body Sem_Stmts is
       end if;
       Expr := Get_Condition_Clause (Stmt);
       if Expr /= Null_Iir then
-         Expr := Sem_Expression (Expr, Boolean_Type_Definition);
-         Check_Read (Expr);
+         Expr := Sem_Condition (Expr);
          Set_Condition_Clause (Stmt, Expr);
       end if;
       Expr := Get_Timeout_Clause (Stmt);
@@ -1078,8 +1076,7 @@ package body Sem_Stmts is
    begin
       Cond := Get_Condition (Stmt);
       if Cond /= Null_Iir then
-         Cond := Sem_Expression (Cond, Boolean_Type_Definition);
-         Check_Read (Cond);
+         Cond := Sem_Condition (Cond);
          Set_Condition (Stmt, Cond);
       end if;
       Label := Get_Loop (Stmt);
@@ -1137,8 +1134,7 @@ package body Sem_Stmts is
                   while Clause /= Null_Iir loop
                      Cond := Get_Condition (Clause);
                      if Cond /= Null_Iir then
-                        Cond := Sem_Expression (Cond, Boolean_Type_Definition);
-                        Check_Read (Cond);
+                        Cond := Sem_Condition (Cond);
                         Set_Condition (Clause, Cond);
                      end if;
                      Sem_Sequential_Statements_Internal
@@ -1171,8 +1167,7 @@ package body Sem_Stmts is
                begin
                   Cond := Get_Condition (Stmt);
                   if Cond /= Null_Iir then
-                     Cond := Sem_Expression (Cond, Boolean_Type_Definition);
-                     Check_Read (Cond);
+                     Cond := Sem_Condition (Cond);
                      Set_Condition (Stmt, Cond);
                   end if;
                   Sem_Sequential_Statements_Internal
@@ -1430,9 +1425,8 @@ package body Sem_Stmts is
          Set_Expr_Staticness (Guard, None);
          Set_Name_Staticness (Guard, Locally);
          Expr := Get_Guard_Expression (Guard);
-         Expr := Sem_Expression (Expr, Boolean_Type_Definition);
+         Expr := Sem_Condition (Expr);
          if Expr /= Null_Iir then
-            Check_Read (Expr);
             Set_Guard_Expression (Guard, Expr);
          end if;
 
@@ -1480,8 +1474,7 @@ package body Sem_Stmts is
             Error_Msg_Sem ("range must be a static discrete range", Stmt);
          end if;
       else
-         Scheme := Sem_Expression (Scheme, Boolean_Type_Definition);
-         Check_Read (Scheme);
+         Scheme := Sem_Condition (Scheme);
          --  LRM93 §9.7
          --  the condition in a generation scheme of the second form must be
          --  a static expression.
@@ -1609,9 +1602,8 @@ package body Sem_Stmts is
          Sem_Check_Waveform_Chain (Stmt, Wf_Chain);
          Expr := Get_Condition (Cond_Wf);
          if Expr /= Null_Iir then
-            Expr := Sem_Expression (Expr, Boolean_Type_Definition);
+            Expr := Sem_Condition (Expr);
             if Expr /= Null_Iir then
-               Check_Read (Expr);
                Set_Condition (Cond_Wf, Expr);
             end if;
          end if;

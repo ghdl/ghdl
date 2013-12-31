@@ -926,6 +926,13 @@ package body Evaluation is
          when Iir_Predefined_Integer_Less =>
             return Build_Boolean (Get_Value (Left) < Get_Value (Right), Orig);
 
+         when Iir_Predefined_Integer_Minimum =>
+            return Build_Integer
+              (Iir_Int64'Min (Get_Value (Left), Get_Value (Right)), Orig);
+         when Iir_Predefined_Integer_Maximum =>
+            return Build_Integer
+              (Iir_Int64'Max (Get_Value (Left), Get_Value (Right)), Orig);
+
          when Iir_Predefined_Floating_Equality =>
             return Build_Boolean
               (Get_Fp_Value (Left) = Get_Fp_Value (Right), Orig);
@@ -984,6 +991,13 @@ package body Evaluation is
                return Build_Floating (Res, Orig);
             end;
 
+         when Iir_Predefined_Floating_Minimum =>
+            return Build_Floating
+              (Iir_Fp64'Min (Get_Fp_Value (Left), Get_Fp_Value (Right)), Orig);
+         when Iir_Predefined_Floating_Maximum =>
+            return Build_Floating
+              (Iir_Fp64'Max (Get_Fp_Value (Left), Get_Fp_Value (Right)), Orig);
+
          when Iir_Predefined_Physical_Equality =>
             return Build_Boolean
               (Get_Physical_Value (Left) = Get_Physical_Value (Right), Orig);
@@ -1037,30 +1051,56 @@ package body Evaluation is
               (Iir_Int64 (Iir_Fp64 (Get_Physical_Value (Left))
                           / Get_Fp_Value (Right)), Orig);
 
+         when Iir_Predefined_Physical_Minimum =>
+            return Build_Physical (Iir_Int64'Min (Get_Physical_Value (Left),
+                                                  Get_Physical_Value (Right)),
+                                   Orig);
+         when Iir_Predefined_Physical_Maximum =>
+            return Build_Physical (Iir_Int64'Max (Get_Physical_Value (Left),
+                                                  Get_Physical_Value (Right)),
+                                   Orig);
+
          when Iir_Predefined_Element_Array_Concat
            | Iir_Predefined_Array_Element_Concat
            | Iir_Predefined_Array_Array_Concat
            | Iir_Predefined_Element_Element_Concat =>
             return Eval_Concatenation (Left, Right, Orig, Func);
 
-         when Iir_Predefined_Enum_Equality =>
+         when Iir_Predefined_Enum_Equality
+           | Iir_Predefined_Bit_Match_Equality =>
             return Build_Boolean
               (Get_Enum_Pos (Left) = Get_Enum_Pos (Right), Orig);
-         when Iir_Predefined_Enum_Inequality =>
+         when Iir_Predefined_Enum_Inequality
+           | Iir_Predefined_Bit_Match_Inequality =>
             return Build_Boolean
               (Get_Enum_Pos (Left) /= Get_Enum_Pos (Right), Orig);
-         when Iir_Predefined_Enum_Greater_Equal =>
+         when Iir_Predefined_Enum_Greater_Equal
+           | Iir_Predefined_Bit_Match_Greater_Equal =>
             return Build_Boolean
               (Get_Enum_Pos (Left) >= Get_Enum_Pos (Right), Orig);
-         when Iir_Predefined_Enum_Greater =>
+         when Iir_Predefined_Enum_Greater
+           | Iir_Predefined_Bit_Match_Greater =>
             return Build_Boolean
               (Get_Enum_Pos (Left) > Get_Enum_Pos (Right), Orig);
-         when Iir_Predefined_Enum_Less_Equal =>
+         when Iir_Predefined_Enum_Less_Equal
+           | Iir_Predefined_Bit_Match_Less_Equal =>
             return Build_Boolean
               (Get_Enum_Pos (Left) <= Get_Enum_Pos (Right), Orig);
-         when Iir_Predefined_Enum_Less =>
+         when Iir_Predefined_Enum_Less
+           | Iir_Predefined_Bit_Match_Less =>
             return Build_Boolean
               (Get_Enum_Pos (Left) < Get_Enum_Pos (Right), Orig);
+
+         when Iir_Predefined_Enum_Minimum =>
+            return Build_Enumeration
+              (Iir_Index32 (Iir_Int32'Min (Get_Enum_Pos (Left),
+                                           Get_Enum_Pos (Right))),
+               Orig);
+         when Iir_Predefined_Enum_Maximum =>
+            return Build_Enumeration
+              (Iir_Index32 (Iir_Int32'Max (Get_Enum_Pos (Left),
+                                           Get_Enum_Pos (Right))),
+               Orig);
 
          when Iir_Predefined_Boolean_And
            | Iir_Predefined_Bit_And =>
@@ -1133,7 +1173,11 @@ package body Evaluation is
                             Iir_Predefined_Functions'Image (Func));
 
          when Iir_Predefined_Boolean_Not
+           | Iir_Predefined_Boolean_Rising_Edge
+           | Iir_Predefined_Boolean_Falling_Edge
            | Iir_Predefined_Bit_Not
+           | Iir_Predefined_Bit_Rising_Edge
+           | Iir_Predefined_Bit_Falling_Edge
            | Iir_Predefined_Integer_Absolute
            | Iir_Predefined_Integer_Identity
            | Iir_Predefined_Integer_Negation
@@ -1180,7 +1224,16 @@ package body Evaluation is
            | Iir_Predefined_Array_To_String =>
             --  Not binary or never locally static.
             Error_Internal (Orig, "eval_dyadic_operator: " &
-                            Iir_Predefined_Functions'Image (Func));
+                              Iir_Predefined_Functions'Image (Func));
+
+         when Iir_Predefined_Std_Ulogic_Match_Equality
+           | Iir_Predefined_Std_Ulogic_Match_Inequality
+           | Iir_Predefined_Std_Ulogic_Match_Less
+           | Iir_Predefined_Std_Ulogic_Match_Less_Equal
+           | Iir_Predefined_Std_Ulogic_Match_Greater
+           | Iir_Predefined_Std_Ulogic_Match_Greater_Equal =>
+            -- TODO
+            raise Program_Error;
       end case;
    exception
       when Constraint_Error =>

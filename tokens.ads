@@ -57,6 +57,13 @@ package Tokens is
        Tok_Greater,             -- >
        Tok_Greater_Equal,       -- >=
 
+       Tok_Match_Equal,         -- ?=
+       Tok_Match_Not_Equal,     -- ?/=
+       Tok_Match_Less,          -- ?<
+       Tok_Match_Less_Equal,    -- ?<=
+       Tok_Match_Greater,       -- ?>
+       Tok_Match_Greater_Equal, -- ?>=
+
    -- sign token
        Tok_Plus,                -- +
        Tok_Minus,               -- -
@@ -252,7 +259,7 @@ package Tokens is
 
    -- subtype Token_Relation_Type is Token_Type range Tok_And .. Tok_Xnor;
    subtype Token_Relational_Operator_Type is Token_Type range
-     Tok_Equal .. Tok_Greater_Equal;
+     Tok_Equal .. Tok_Match_Greater_Equal;
    subtype Token_Shift_Operator_Type is Token_Type range
      Tok_Sll .. Tok_Ror;
    subtype Token_Sign_Type is Token_Type range

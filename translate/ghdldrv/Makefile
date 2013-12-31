@@ -139,7 +139,7 @@ $(LIB87_DIR)/std/std_standard.bc: $(GHDL1LLVM)
 
 install.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
 install.v87: std.v87 ieee.v87 synopsys.v87
-install.v08: std.v08
+install.v08: std.v08 ieee.v08
 
 install.standard: $(LIB93_DIR)/std/std_standard.o \
  $(LIB87_DIR)/std/std_standard.o

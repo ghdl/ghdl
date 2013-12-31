@@ -1393,7 +1393,44 @@ package body Scan is
             Pos := Pos + 1;
             Current_Token := Tok_Not;
             return;
-         when '$' | '?' | '`'
+         when '?' =>
+            if Vhdl_Std < Vhdl_08 then
+               Error_Msg_Scan ("'?' can only be used in strings or comments");
+               Pos := Pos + 1;
+               goto Again;
+            else
+               if Source (Pos + 1) = '<' then
+                  if Source (Pos + 2) = '=' then
+                     Current_Token := Tok_Match_Less_Equal;
+                     Pos := Pos + 3;
+                  else
+                     Current_Token := Tok_Match_Less;
+                     Pos := Pos + 2;
+                  end if;
+               elsif Source (Pos + 1) = '>' then
+                  if Source (Pos + 2) = '=' then
+                     Current_Token := Tok_Match_Greater_Equal;
+                     Pos := Pos + 3;
+                  else
+                     Current_Token := Tok_Match_Greater;
+                     Pos := Pos + 2;
+                  end if;
+               elsif Source (Pos + 1) = '=' then
+                  Current_Token := Tok_Match_Equal;
+                  Pos := Pos + 2;
+               elsif Source (Pos + 1) = '/'
+                 and then Source (Pos + 2) = '='
+               then
+                  Current_Token := Tok_Match_Not_Equal;
+                  Pos := Pos + 3;
+               else
+                  Error_Msg_Scan ("unknown matching operator");
+                  Pos := Pos + 1;
+                  goto Again;
+               end if;
+            end if;
+            return;
+         when '$' | '`'
            | Inverted_Exclamation .. Inverted_Question
            | Multiplication_Sign | Division_Sign =>
             Error_Msg_Scan ("character """ & Source (Pos)

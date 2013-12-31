@@ -4116,4 +4116,54 @@ package body Sem_Expr is
       return Sem_Expression_Ov (Expr1, Res);
    end Sem_Case_Expression;
 
+   function Sem_Condition (Cond : Iir) return Iir
+   is
+      Res : Iir;
+      Op : Iir;
+   begin
+      if Vhdl_Std < Vhdl_08 then
+         Res := Sem_Expression (Cond, Boolean_Type_Definition);
+
+         Check_Read (Res);
+         return Res;
+      else
+         --  LRM08 9.2.9
+         --  If, without overload resolution (see 12.5), the expression is
+         --  of type BOOLEAN defined in package STANDARD, or if, assuming a
+         --  rule requiring the expression to be of type BOOLEAN defined in
+         --  package STANDARD, overload resolution can determine at least one
+         --  interpretation of each constituent of the innermost complete
+         --  context including the expression, then the condition operator is
+         --  not applied.
+
+         --  GHDL: what does the second alternative mean ?  Any example ?
+
+         Res := Sem_Expression_Ov (Cond, Null_Iir);
+
+         if Res = Null_Iir then
+            return Res;
+         end if;
+
+         if not Is_Overloaded (Res)
+           and then Get_Type (Res) = Boolean_Type_Definition
+         then
+            Check_Read (Res);
+            return Res;
+         end if;
+
+         --  LRM08 9.2.9
+         --  Otherwise, the condition operator is implicitely applied, and the
+         --  type of the expresion with the implicit application shall be
+         --  BOOLEAN defined in package STANDARD.
+
+         Op := Create_Iir (Iir_Kind_Condition_Operator);
+         Location_Copy (Op, Res);
+         Set_Operand (Op, Res);
+
+         Res := Sem_Operator (Op, Boolean_Type_Definition, 1);
+         Check_Read (Res);
+         return Res;
+      end if;
+   end Sem_Condition;
+
 end Sem_Expr;

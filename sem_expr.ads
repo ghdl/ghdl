@@ -63,6 +63,12 @@ package Sem_Expr is
    --  (Handle specific overloading rules).
    function Sem_Case_Expression (Expr : Iir) return Iir;
 
+   --  Sem COND as a condition.
+   --  In VHDL08, this follows 9.2.9 Condition operator.
+   --  In VHDL87 and 93, type of COND must be a boolean.
+   --  A check is made that COND can be read.
+   function Sem_Condition (Cond : Iir) return Iir;
+
    --  Check EXPR can be read.
    procedure Check_Read (Expr : Iir);
 
