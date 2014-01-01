@@ -1,0 +1,33 @@
+
+ The Windows 0.29.1 GHDL build errors at compile time when
+an attribute is placed on a signal for which an alias has 
+previously been created.
+
+--------
+
+Code snippet from attached <alias_bug.vhd> example:
+
+   signal processor_address : std_logic_vector(15 downto 0);
+
+   alias  address_ms       : std_logic_vector(3 downto 0)   is   processor_address(15 downto 12);
+
+   attribute keep : boolean;
+   attribute keep of processor_address: signal is TRUE;
+
+Resulting error message:
+
+ .\alias_bug.vhd:35:13: alias "address_ms" does not denote the entire object
+
+--------
+
+Workaround:
+
+ Moving the alias _after_ the attribute causes the error to go away.
+
+--------
+
+alias_bug.zip contents : 
+
+ alias_bug.txt              this file
+ alias_bug.vhd              test program to demonstrate alias bug
+ ghdc.bat                   batch file to invoke compiler

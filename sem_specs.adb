@@ -331,7 +331,9 @@ package body Sem_Specs is
    is
       Res : Boolean;
 
-      procedure Sem_Named_Entity1 (Ent : Iir; Decl : Iir)
+      --  If declaration DECL matches then named entity ENT, apply attribute
+      --  specification and returns TRUE. Otherwise, return FALSE.
+      function Sem_Named_Entity1 (Ent : Iir; Decl : Iir) return Boolean
       is
          Ent_Id : Name_Id;
       begin
@@ -345,9 +347,10 @@ package body Sem_Specs is
             else
                Attribute_A_Decl
                  (Decl, Attr, Name, Is_Designators, Check_Defined);
-               Res := True;
+               return True;
             end if;
          end if;
+         return False;
       end Sem_Named_Entity1;
 
       procedure Sem_Named_Entity (Ent : Iir) is
@@ -366,7 +369,7 @@ package body Sem_Specs is
               | Iir_Kind_Unit_Declaration
               | Iir_Kind_Group_Template_Declaration
               | Iir_Kind_Group_Declaration =>
-               Sem_Named_Entity1 (Ent, Ent);
+               Res := Res or Sem_Named_Entity1 (Ent, Ent);
             when Iir_Kind_Object_Alias_Declaration =>
                --  LRM93 5.1
                --  An entity designator that denotes an alias of an object is
@@ -374,18 +377,19 @@ package body Sem_Specs is
                --  or slice thereof.
                declare
                   Decl : Iir;
+                  Applied : Boolean;
                begin
                   Decl := Get_Name (Ent);
-                  if Get_Base_Name (Decl) /= Decl then
+                  Applied := Sem_Named_Entity1 (Ent, Decl);
+                  if Applied and then Get_Base_Name (Decl) /= Decl then
                      Error_Msg_Sem
                        (Disp_Node (Ent) & " does not denote the entire object",
                         Attr);
-                     return;
                   end if;
-                  Sem_Named_Entity1 (Ent, Decl);
+                  Res := Res or Applied;
                end;
             when Iir_Kind_Non_Object_Alias_Declaration =>
-               Sem_Named_Entity1 (Ent, Get_Name (Ent));
+               Res := Res or Sem_Named_Entity1 (Ent, Get_Name (Ent));
             when Iir_Kind_Attribute_Declaration
               | Iir_Kind_Attribute_Specification
               | Iir_Kind_Configuration_Specification
