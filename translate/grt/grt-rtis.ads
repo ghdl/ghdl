@@ -335,7 +335,7 @@ package Grt.Rtis is
       Children => null);
 
    --  Address of the top instance.
-   Ghdl_Rti_Top_Instance : Ghdl_Rti_Access;
+   Ghdl_Rti_Top_Instance : Address;
 
    --  Instances have a pointer to their RTI at offset 0.
    type Ghdl_Rti_Acc_Acc is access Ghdl_Rti_Access;

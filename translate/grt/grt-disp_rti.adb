@@ -1001,7 +1001,7 @@ package body Grt.Disp_Rti is
       Put ("DISP_RTI.Disp_All: ");
       Disp_Kind (Ghdl_Rti_Top.Common.Kind);
       New_Line;
-      Ctxt := (Base => To_Address (Ghdl_Rti_Top_Instance),
+      Ctxt := (Base => Ghdl_Rti_Top_Instance,
                Block => Ghdl_Rti_Top.Parent);
       Disp_Rti_Arr (Ghdl_Rti_Top.Nbr_Child,
                     Ghdl_Rti_Top.Children,

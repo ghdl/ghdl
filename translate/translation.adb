@@ -20877,8 +20877,14 @@ package body Translation is
       end Translate_Signal_Target_Aggr;
 
       type Signal_Direct_Assign_Data is record
+         --  The driver
          Drv : Mnode;
+
+         --  The value
          Expr : Mnode;
+
+         --  The node for the expression (used to locate errors).
+         Expr_Node : Iir;
       end record;
 
       procedure Gen_Signal_Direct_Assign_Non_Composite
@@ -20896,7 +20902,7 @@ package body Translation is
 
          --  Set driver.
          Chap7.Translate_Assign
-           (Drv, M2E (Data.Expr), Null_Iir, Targ_Type);
+           (Drv, M2E (Data.Expr), Data.Expr_Node, Targ_Type);
 
          --  Test if the signal is active.
          Start_If_Stmt
@@ -20956,7 +20962,8 @@ package body Translation is
       begin
          return Signal_Direct_Assign_Data'
            (Drv => Stabilize (Val.Drv),
-            Expr => Stabilize (Val.Expr));
+            Expr => Stabilize (Val.Expr),
+            Expr_Node => Val.Expr_Node);
       end Gen_Signal_Direct_Prepare_Data_Record;
 
       function Gen_Signal_Direct_Update_Data_Array
@@ -20970,7 +20977,8 @@ package body Translation is
            (Drv => Chap3.Index_Base (Chap3.Get_Array_Base (Val.Drv),
                                      Targ_Type, New_Obj_Value (Index)),
             Expr => Chap3.Index_Base (Chap3.Get_Array_Base (Val.Expr),
-                                      Targ_Type, New_Obj_Value (Index)));
+                                      Targ_Type, New_Obj_Value (Index)),
+            Expr_Node => Val.Expr_Node);
       end Gen_Signal_Direct_Update_Data_Array;
 
       function Gen_Signal_Direct_Update_Data_Record
@@ -20983,7 +20991,8 @@ package body Translation is
       begin
          return Signal_Direct_Assign_Data'
            (Drv => Chap6.Translate_Selected_Element (Val.Drv, El),
-            Expr => Chap6.Translate_Selected_Element (Val.Expr, El));
+            Expr => Chap6.Translate_Selected_Element (Val.Expr, El),
+            Expr_Node => Val.Expr_Node);
       end Gen_Signal_Direct_Update_Data_Record;
 
       procedure Gen_Signal_Direct_Finish_Data_Composite
@@ -21018,6 +21027,7 @@ package body Translation is
 
          Arg.Expr := E2M (Chap7.Translate_Expression (We, Target_Type),
                           Get_Info (Target_Type), Mode_Value);
+         Arg.Expr_Node := We;
          Gen_Signal_Direct_Assign (Targ_Sig, Target_Type, Arg);
          return;
       end Translate_Direct_Signal_Assignment;
@@ -29436,17 +29446,15 @@ package body Translation is
          --  We need to create code.
          Set_Global_Storage (O_Storage_Private);
 
-         --  Create the array of packages (as a variable, dynamically
-         --  initialized).
+         --  Create the array of RTIs for packages (as a variable, initialized
+         --  during elaboration).
          Arr_Type := New_Constrained_Array_Type
            (Rtis.Ghdl_Rti_Array,
             New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Pkgs)));
          New_Var_Decl (Arr, Get_Identifier ("__ghdl_top_RTIARRAY"),
                        O_Storage_Private, Arr_Type);
 
-         --  Declare (but do not define):
-         --  Variable for the hierarchy top instance.
-
+         --  The elaboration entry point.
          Start_Procedure_Decl (Inter_List, Get_Identifier ("__ghdl_ELABORATE"),
                                O_Storage_Public);
          Finish_Subprogram_Decl (Inter_List, Ghdl_Elaborate);
@@ -29458,7 +29466,7 @@ package body Translation is
          New_Var_Decl (Instance, Wki_Instance, O_Storage_Local,
                        Entity_Info.Block_Decls_Ptr_Type);
 
-         --  create instance for the architecture
+         --  Create instance for the architecture.
          New_Assign_Stmt
            (New_Obj (Arch_Instance),
             Gen_Alloc (Alloc_System,
