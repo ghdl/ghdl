@@ -679,7 +679,7 @@ package body Evaluation is
            | Iir_Predefined_Array_Ror =>
             Cnt := Cnt mod Len;
             if not Dir_Left then
-               Cnt := Len - Cnt;
+               Cnt := (Len - Cnt) mod Len;
             end if;
       end case;
 

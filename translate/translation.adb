@@ -17943,9 +17943,17 @@ package body Translation is
          Finish_If_Stmt (If_Blk);
 
          if Shift = Rotation then
+            --  *     If I1 = LENGTH then
+            --  *        I1 := 0
+            Start_If_Stmt (If_Blk, New_Compare_Op (ON_Ge,
+                                                   New_Obj_Value (Var_I1),
+                                                   New_Obj_Value (Var_Length),
+                                                   Ghdl_Bool_Type));
+            Init_Var (Var_I1);
+            Finish_If_Stmt (If_Blk);
+
             --  *   for I = 0 to LENGTH - 1 loop
             --  *     RES[I] := L[I1];
-
             Init_Var (Var_I);
             Start_Loop_Stmt (Label);
             Gen_Exit_When (Label, New_Compare_Op (ON_Ge,
