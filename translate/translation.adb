@@ -7314,16 +7314,6 @@ package body Translation is
                                Def : Iir;
                                Mode : Type_Mode_Type) return Boolean
       is
-
-         function Get_Value_I32 (Lit : Iir) return Iir_Int32 is
-         begin
-            return Iir_Int32(Get_Value(Lit));
-         exception
-            when Constraint_Error =>
-               Error_Msg_Sem ("Value exceeds range of 32-bit Integer" , Lit);
-               return Iir_Int32(0);
-         end Get_Value_I32;
-
       begin
          case Mode is
             when Type_Mode_B2 =>
@@ -7356,7 +7346,7 @@ package body Translation is
                declare
                   V : Iir_Int32;
                begin
-                  V := Get_Value_I32 (Lit);
+                  V := Iir_Int32 (Get_Value (Lit));
                   if Is_Hi then
                      return V = Iir_Int32'Last;
                   else
