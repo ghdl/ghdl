@@ -999,14 +999,14 @@ package body Grt.Disp_Rti is
       end if;
 
       Put ("DISP_RTI.Disp_All: ");
-      Disp_Kind (Ghdl_Rti_Top_Ptr.Common.Kind);
+      Disp_Kind (Ghdl_Rti_Top.Common.Kind);
       New_Line;
       Ctxt := (Base => To_Address (Ghdl_Rti_Top_Instance),
-               Block => Ghdl_Rti_Top_Ptr.Parent);
-      Disp_Rti_Arr (Ghdl_Rti_Top_Ptr.Nbr_Child,
-                    Ghdl_Rti_Top_Ptr.Children,
+               Block => Ghdl_Rti_Top.Parent);
+      Disp_Rti_Arr (Ghdl_Rti_Top.Nbr_Child,
+                    Ghdl_Rti_Top.Children,
                     Ctxt, 0);
-      Disp_Rti (Ghdl_Rti_Top_Ptr.Parent, Ctxt, 0);
+      Disp_Rti (Ghdl_Rti_Top.Parent, Ctxt, 0);
 
       --Disp_Hierarchy;
    end Disp_All;

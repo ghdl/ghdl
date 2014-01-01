@@ -397,8 +397,8 @@ package body Grt.Disp_Tree is
       New_Line;
       Disp_Tree_Block (Parent, Ctxt, "");
 
-      for I in 1 .. Ghdl_Rti_Top_Ptr.Nbr_Child loop
-         Child := Ghdl_Rti_Top_Ptr.Children (I - 1);
+      for I in 1 .. Ghdl_Rti_Top.Nbr_Child loop
+         Child := Ghdl_Rti_Top.Children (I - 1);
          Ctxt := (Base => Null_Address,
                   Block => Child);
          Disp_Tree_Child (Child, Ctxt);

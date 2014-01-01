@@ -380,7 +380,8 @@ package body Sem_Specs is
                   Applied : Boolean;
                begin
                   Decl := Get_Name (Ent);
-                  Applied := Sem_Named_Entity1 (Ent, Decl);
+                  Applied := Sem_Named_Entity1 (Ent, Get_Base_Name (Decl));
+                  --  FIXME: check the alias denotes a local entity...
                   if Applied and then Get_Base_Name (Decl) /= Decl then
                      Error_Msg_Sem
                        (Disp_Node (Ent) & " does not denote the entire object",

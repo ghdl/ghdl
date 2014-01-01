@@ -738,8 +738,9 @@ package body Translation is
       procedure Generate_Library (Lib : Iir_Library_Declaration;
                                   Public : Boolean);
 
-      --  Generate RTI for the top of the hierarchy.
-      procedure Generate_Top (Arch : Iir);
+      --  Generate RTI for the top of the hierarchy.  Return the maximum number
+      --  of packages.
+      procedure Generate_Top (Nbr_Pkgs : out Natural);
 
       --  Add two associations to ASSOC to add an rti_context for NODE.
       procedure Associate_Rti_Context
@@ -5286,6 +5287,7 @@ package body Translation is
       is
          Info : Ortho_Info_Acc;
          Final : Boolean;
+         Constr : O_Assoc_List;
          pragma Unreferenced (Final);
       begin
          Info := Get_Info (Spec);
@@ -5293,6 +5295,15 @@ package body Translation is
          Push_Local_Factory;
 
          Elab_Dependence (Get_Design_Unit (Spec));
+
+         --  Register the package.  This is done dynamically, as we know only
+         --  during elaboration that the design depends on a package (a package
+         --  maybe referenced by an entity which is never map due to generate
+         --  statements).
+         Start_Association (Constr, Ghdl_Rti_Add_Package);
+         New_Association
+           (Constr, New_Lit (Rtis.New_Rti_Address (Info.Package_Rti_Const)));
+         New_Procedure_Call (Constr);
 
          Open_Temp;
          Chap4.Elab_Declaration_Chain (Spec, Final);
@@ -27611,20 +27622,18 @@ package body Translation is
          end if;
       end Generate_Unit;
 
-      procedure Generate_Top (Arch : Iir)
+      procedure Generate_Top (Nbr_Pkgs : out Natural)
       is
          use Configuration;
 
          Unit : Iir_Design_Unit;
-         Lib_Unit : Iir;
          Lib : Iir_Library_Declaration;
-         Arr : O_Dnode;
-         Res : O_Cnode;
-         Aggr : O_Record_Aggr_List;
          Prev : Rti_Block;
       begin
          Push_Rti_Node (Prev);
-         Add_Rti_Node (Get_Info (Standard_Package).Package_Rti_Const);
+
+         --  Generate RTI for libraries, count number of packages.
+         Nbr_Pkgs := 1; --  At least std.standard.
          for I in Design_Units.First .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
 
@@ -27632,31 +27641,13 @@ package body Translation is
             Lib := Get_Library (Get_Design_File (Unit));
             Generate_Library (Lib, True);
 
-            Lib_Unit := Get_Library_Unit (Unit);
-            case Get_Kind (Lib_Unit) is
-               when Iir_Kind_Package_Declaration =>
-                  Add_Rti_Node (Get_Info (Lib_Unit).Package_Rti_Const);
-               when others =>
-                  null;
-            end case;
+            if Get_Kind (Get_Library_Unit (Unit))
+              = Iir_Kind_Package_Declaration
+            then
+               Nbr_Pkgs := Nbr_Pkgs + 1;
+            end if;
          end loop;
-         Arr := Generate_Rti_Array (Get_Identifier ("__ghdl_top_RTIARRAY"));
-         New_Const_Decl (Ghdl_Rti_Top, Get_Identifier ("__ghdl_rti_top"),
-                         O_Storage_Public, Ghdl_Rtin_Block);
-         Start_Const_Value (Ghdl_Rti_Top);
-         Start_Record_Aggr (Aggr, Ghdl_Rtin_Block);
-         New_Record_Aggr_El (Aggr, Generate_Common (Ghdl_Rtik_Top));
-         New_Record_Aggr_El (Aggr, New_Null_Access (Char_Ptr_Type));
-         New_Record_Aggr_El (Aggr, Get_Null_Loc);
-         New_Record_Aggr_El
-           (Aggr, New_Rti_Address (Get_Info (Arch).Block_Rti_Const));
-         New_Record_Aggr_El (Aggr, Ghdl_Index_0);
-         New_Record_Aggr_El
-           (Aggr, New_Unsigned_Literal (Ghdl_Index_Type,
-                                        Unsigned_64 (Cur_Block.Nbr)));
-         New_Record_Aggr_El (Aggr, New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
-         Finish_Record_Aggr (Aggr, Res);
-         Finish_Const_Value (Ghdl_Rti_Top, Res);
+
          Pop_Rti_Node (Prev);
       end Generate_Top;
 
@@ -29190,6 +29181,27 @@ package body Translation is
          --                                     name : __ghdl_str_len_ptr);
          Create_Get_Name ("__ghdl_get_instance_name", Ghdl_Get_Instance_Name);
       end;
+
+      --  procedure __ghdl_rti_add_package (rti : ghdl_rti_access)
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_rti_add_package"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Wki_Rti, Rtis.Ghdl_Rti_Access);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Rti_Add_Package);
+
+      --  procedure __ghdl_rti_add_top (max_pkgs : ghdl_index_type;
+      --                                pkgs : ghdl_rti_arr_acc);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_rti_add_top"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("max_pkgs"),
+                          Ghdl_Index_Type);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("pkgs"),
+                          Rtis.Ghdl_Rti_Arr_Acc);
+      New_Interface_Decl (Interfaces, Param, Wki_Rti, Rtis.Ghdl_Rti_Access);
+      New_Interface_Decl
+        (Interfaces, Param, Wki_Instance, Ghdl_Ptr_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Rti_Add_Top);
    end Post_Initialize;
 
    procedure Translate_Std_Type_Declaration (Decl : Iir)
@@ -29405,7 +29417,8 @@ package body Translation is
       --  Create __ghdl_ELABORATE
       procedure Gen_Main (Entity : Iir_Entity_Declaration;
                           Arch : Iir_Architecture_Declaration;
-                          Config_Subprg : O_Dnode)
+                          Config_Subprg : O_Dnode;
+                          Nbr_Pkgs : Natural)
       is
          Entity_Info : Block_Info_Acc;
          Arch_Info : Block_Info_Acc;
@@ -29414,6 +29427,8 @@ package body Translation is
          Instance : O_Dnode;
          Arch_Instance : O_Dnode;
          Mark : Id_Mark_Type;
+         Arr_Type : O_Tnode;
+         Arr : O_Dnode;
       begin
          Arch_Info := Get_Info (Arch);
          Entity_Info := Get_Info (Entity);
@@ -29421,14 +29436,13 @@ package body Translation is
          --  We need to create code.
          Set_Global_Storage (O_Storage_Private);
 
-         New_Var_Decl
-           (Ghdl_Rti_Top_Instance, Get_Identifier ("__ghdl_rti_top_instance"),
-            O_Storage_External, Ghdl_Ptr_Type);
-
-         New_Var_Decl (Ghdl_Rti_Top_Ptr,
-                       Get_Identifier ("__ghdl_rti_top_ptr"),
-                       O_Storage_External, Ghdl_Ptr_Type);
-
+         --  Create the array of packages (as a variable, dynamically
+         --  initialized).
+         Arr_Type := New_Constrained_Array_Type
+           (Rtis.Ghdl_Rti_Array,
+            New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Pkgs)));
+         New_Var_Decl (Arr, Get_Identifier ("__ghdl_top_RTIARRAY"),
+                       O_Storage_Private, Arr_Type);
 
          --  Declare (but do not define):
          --  Variable for the hierarchy top instance.
@@ -29470,13 +29484,28 @@ package body Translation is
          --  Set top instances and RTI.
          --  Do it before the elaboration code, since it may be used to
          --  diagnose errors.
-         New_Assign_Stmt (New_Obj (Ghdl_Rti_Top_Instance),
-                          New_Convert_Ov (New_Obj_Value (Arch_Instance),
-                                          Ghdl_Ptr_Type));
+         --  Call ghdl_rti_add_top
+         Start_Association (Assoc, Ghdl_Rti_Add_Top);
+         New_Association
+           (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
+                                                  Unsigned_64 (Nbr_Pkgs))));
+         New_Association
+           (Assoc, New_Lit (New_Global_Address (Arr, Rtis.Ghdl_Rti_Arr_Acc)));
+         New_Association
+           (Assoc,
+            New_Lit (Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const)));
+         New_Association
+           (Assoc, New_Convert_Ov (New_Obj_Value (Arch_Instance),
+                                   Ghdl_Ptr_Type));
+         New_Procedure_Call (Assoc);
 
-         New_Assign_Stmt (New_Obj (Ghdl_Rti_Top_Ptr),
-                          New_Unchecked_Address (New_Obj (Ghdl_Rti_Top),
-                                                 Ghdl_Ptr_Type));
+         --  Add std.standard rti
+         Start_Association (Assoc, Ghdl_Rti_Add_Package);
+         New_Association
+           (Assoc,
+            New_Lit (Rtis.New_Rti_Address
+                       (Get_Info (Standard_Package).Package_Rti_Const)));
+         New_Procedure_Call (Assoc);
 
          Gen_Filename (Get_Design_File (Get_Design_Unit (Entity)));
 
@@ -29886,6 +29915,7 @@ package body Translation is
          Arch : Iir_Architecture_Declaration;
          Conf_Info : Config_Info_Acc;
          Last_Design_Unit : Natural;
+         Nbr_Pkgs : Natural;
       begin
          Primary_Id := Get_Identifier (Primary);
          if Secondary /= "" then
@@ -29980,6 +30010,11 @@ package body Translation is
          end loop;
 
          --  Generate code to elaboration body-less package.
+         --
+         --  When a package is analyzed, we don't know wether there is body
+         --  or not.  Therefore, we assume there is always a body, and will
+         --  elaborate the body (which elaborates its spec).  If a package
+         --  has no body, create the body elaboration procedure.
          for I in Design_Units.First .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
             Lib_Unit := Get_Library_Unit (Unit);
@@ -29999,13 +30034,11 @@ package body Translation is
             end case;
          end loop;
 
-         if Flag_Rti then
-            Rtis.Generate_Top (Arch);
-         end if;
+         Rtis.Generate_Top (Nbr_Pkgs);
 
          --  Create main code.
          Conf_Info := Get_Info (Config_Lib);
-         Gen_Main (Entity, Arch, Conf_Info.Config_Subprg);
+         Gen_Main (Entity, Arch, Conf_Info.Config_Subprg, Nbr_Pkgs);
 
          Gen_Setup_Info;
 

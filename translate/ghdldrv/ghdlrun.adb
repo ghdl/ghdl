@@ -455,10 +455,10 @@ package body Ghdlrun is
       Def (Trans_Decls.Ghdl_Create_Delayed_Signal,
            Grt.Signals.Ghdl_Create_Delayed_Signal'Address);
 
-      Def (Trans_Decls.Ghdl_Rti_Top_Instance,
-           Grt.Rtis.Ghdl_Rti_Top_Instance'Address);
-      Def (Trans_Decls.Ghdl_Rti_Top_Ptr,
-           Grt.Rtis.Ghdl_Rti_Top_Ptr'Address);
+      Def (Trans_Decls.Ghdl_Rti_Add_Package,
+           Grt.Rtis.Ghdl_Rti_Add_Package'Address);
+      Def (Trans_Decls.Ghdl_Rti_Add_Top,
+           Grt.Rtis.Ghdl_Rti_Add_Top'Address);
 
       Def (Trans_Decls.Ghdl_Protected_Enter,
            Grt.Processes.Ghdl_Protected_Enter'Address);

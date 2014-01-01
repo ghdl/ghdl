@@ -325,7 +325,14 @@ package Grt.Rtis is
      (Source => Address, Target => Ghdl_Component_Link_Acc);
 
    --  TOP rti.
-   Ghdl_Rti_Top_Ptr : Ghdl_Rtin_Block_Acc;
+   Ghdl_Rti_Top : Ghdl_Rtin_Block :=
+     (Common => (Ghdl_Rtik_Top, 0, 0, 0),
+      Name => null,
+      Loc => (Rel => True, Off => 0),
+      Parent => null,
+      Size => 0,
+      Nbr_Child => 0,
+      Children => null);
 
    --  Address of the top instance.
    Ghdl_Rti_Top_Instance : Ghdl_Rti_Access;
@@ -341,7 +348,13 @@ package Grt.Rtis is
    function To_Ghdl_Rti_Access is new Ada.Unchecked_Conversion
      (Source => Address, Target => Ghdl_Rti_Access);
 
-private
-   pragma Export (C, Ghdl_Rti_Top_Ptr, "__ghdl_rti_top_ptr");
-   pragma Export (C, Ghdl_Rti_Top_Instance, "__ghdl_rti_top_instance");
+   procedure Ghdl_Rti_Add_Top (Max_Pkg : Ghdl_Index_Type;
+                               Pkgs : Ghdl_Rti_Arr_Acc;
+                               Top : Ghdl_Rti_Access;
+                               Instance : Address);
+   pragma Export (C, Ghdl_Rti_Add_Top, "__ghdl_rti_add_top");
+
+   --  Register a package
+   procedure Ghdl_Rti_Add_Package (Pkg : Ghdl_Rti_Access);
+   pragma Export (C, Ghdl_Rti_Add_Package, "__ghdl_rti_add_package");
 end Grt.Rtis;

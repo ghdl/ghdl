@@ -265,7 +265,7 @@ package body Grt.Rtis_Addr is
       Ctxt : Rti_Context;
    begin
       Ctxt := (Base => To_Address (Ghdl_Rti_Top_Instance),
-               Block => Ghdl_Rti_Top_Ptr.Parent);
+               Block => Ghdl_Rti_Top.Parent);
       return Ctxt;
    end Get_Top_Context;
 

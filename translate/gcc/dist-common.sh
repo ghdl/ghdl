@@ -204,6 +204,7 @@ grt-options.ads
 grt-processes.adb
 grt-processes.ads
 grt-rtis.ads
+grt-rtis.adb
 grt-rtis_addr.adb
 grt-rtis_addr.ads
 grt-rtis_utils.adb

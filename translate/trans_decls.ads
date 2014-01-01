@@ -170,11 +170,6 @@ package Trans_Decls is
    Ghdl_Stack2_Mark : O_Dnode;
    Ghdl_Stack2_Release : O_Dnode;
 
-   --  RTI root.
-   Ghdl_Rti_Top : O_Dnode;
-   Ghdl_Rti_Top_Ptr : O_Dnode;
-   Ghdl_Rti_Top_Instance : O_Dnode;
-
    Std_Standard_Boolean_Rti : O_Dnode;
    Std_Standard_Bit_Rti : O_Dnode;
 
@@ -227,6 +222,10 @@ package Trans_Decls is
 
    --  For PSL.
    Ghdl_Std_Ulogic_To_Boolean_Array : O_Dnode;
+
+   --  Register a package
+   Ghdl_Rti_Add_Package : O_Dnode;
+   Ghdl_Rti_Add_Top : O_Dnode;
 
    Ghdl_Elaborate : O_Dnode;
 end Trans_Decls;

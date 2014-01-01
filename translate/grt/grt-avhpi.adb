@@ -31,7 +31,7 @@ package body Grt.Avhpi is
    begin
       Res := (Kind => VhpiIteratorK,
               Ctxt => (Base => Null_Address,
-                       Block => To_Ghdl_Rti_Access (Ghdl_Rti_Top_Ptr)),
+                       Block => To_Ghdl_Rti_Access (Ghdl_Rti_Top'Address)),
               Rel => VhpiPackInsts,
               It_Cur => 0,
               It2 => 0,
