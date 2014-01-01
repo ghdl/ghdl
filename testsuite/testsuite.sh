@@ -23,6 +23,7 @@ do_vests ()
 {
   echo "**** VESTS ****"
   echo "***************"
+  gnatmake get_entities
   cd vests
   ./testsuite.sh
   cd ..
