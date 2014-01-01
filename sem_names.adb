@@ -1877,6 +1877,38 @@ package body Sem_Names is
          return R;
       end Sem_As_Indexed_Or_Slice_Name;
 
+      --  Sem parenthesis name when the prefix is a function declaration.
+      --  Can be either a function call (and the expression is the actual) or
+      --  a slice/index of the result of a call without actual.
+      procedure Sem_Parenthesis_Function (Sub_Name : Iir) is
+         Used : Boolean;
+         R : Iir;
+         Match : Boolean;
+      begin
+         Used := False;
+         if Get_Kind (Sub_Name) in Iir_Kinds_Function_Declaration then
+            Sem_Association_Chain
+              (Get_Interface_Declaration_Chain (Sub_Name),
+               Assoc_Chain, False, Missing_Parameter, Name, Match);
+            if Match then
+               Add_Result
+                 (Res,
+                  Sem_As_Function_Call (Prefix_Name, Sub_Name, Assoc_Chain));
+               Used := True;
+            end if;
+         end if;
+         if Get_Kind (Sub_Name) not in Iir_Kinds_Procedure_Declaration then
+            R := Sem_As_Indexed_Or_Slice_Name (Sub_Name, False);
+            if R /= Null_Iir then
+               Add_Result (Res, R);
+               Used := True;
+            end if;
+         end if;
+         if not Used then
+            Sem_Name_Free_Result (Sub_Name, Null_Iir);
+         end if;
+      end Sem_Parenthesis_Function;
+
       Actual : Iir;
       Actual_Expr : Iir;
    begin
@@ -1945,38 +1977,13 @@ package body Sem_Names is
             when Iir_Kind_Overload_List =>
                declare
                   El : Iir;
-                  Used : Boolean;
-                  R : Iir;
-                  Match : Boolean;
                   Prefix_List : Iir_List;
                begin
                   Prefix_List := Get_Overload_List (Prefix);
                   for I in Natural loop
                      El := Get_Nth_Element (Prefix_List, I);
                      exit when El = Null_Iir;
-                     Used := False;
-                     if Get_Kind (El) in Iir_Kinds_Function_Declaration then
-                        Sem_Association_Chain
-                          (Get_Interface_Declaration_Chain (El),
-                           Assoc_Chain, False, Missing_Parameter, Name, Match);
-                        if Match then
-                           Add_Result
-                             (Res, Sem_As_Function_Call (Prefix_Name, El,
-                                                         Assoc_Chain));
-                           Used := True;
-                        end if;
-                     end if;
-                     if Get_Kind (El) not in Iir_Kinds_Procedure_Declaration
-                     then
-                        R := Sem_As_Indexed_Or_Slice_Name (El, False);
-                        if R /= Null_Iir then
-                           Add_Result (Res, R);
-                           Used := True;
-                        end if;
-                     end if;
-                     if not Used then
-                        Sem_Name_Free_Result (El, Null_Iir);
-                     end if;
+                     Sem_Parenthesis_Function (El);
                   end loop;
                end;
                if Res = Null_Iir then
@@ -1985,9 +1992,7 @@ package body Sem_Names is
                        & Disp_Node (Prefix_Name), Name);
                end if;
             when Iir_Kinds_Function_Declaration =>
-               Add_Result (Res, Sem_As_Function_Call (Prefix_Name,
-                                                      Prefix, Assoc_Chain));
-               Add_Result (Res, Sem_As_Indexed_Or_Slice_Name (Prefix, False));
+               Sem_Parenthesis_Function (Prefix);
                if Res = Null_Iir then
                   Error_Msg_Sem
                     ("prefix is neither a function name "
