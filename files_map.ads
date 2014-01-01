@@ -84,9 +84,6 @@ package Files_Map is
    --  Get the path of directory DIR.
    --function Get_Directory_Path (Dir : Directory_Index) return String;
 
-   --  Return TRUE is PATH is an absolute pathname.
-   function Is_Absolute_Pathname (Path : String) return Boolean;
-
    -- Add a new entry in the lines_table.
    -- The new entry must be the next one after the last entry.
    procedure File_Add_Line_Number

@@ -94,111 +94,6 @@ package body Files_Map is
       return Home_Dir;
    end Get_Home_Directory;
 
-   function Is_Absolute_Pathname (Path : String) return Boolean is
-   begin
-      --  This is the POSIX rule.
-      if Path'Length = 0 then
-         return False;
-      end if;
-      return Path (Path'First) = GNAT.OS_Lib.Directory_Separator;
-   end Is_Absolute_Pathname;
-
-   --  Note: BUF must be 1 based.
---    procedure Get_Directory_Path (Dir : Directory_Index;
---                                  Buf : out String;
---                                  Len : out Natural)
---    is
---    begin
---       if Dir < Pathes.First or else Dir > Pathes.Last then
---          raise Constraint_Error;
---       end if;
---       Len := Pathes.Table (Dir).all'Length;
---       if  Len > Buf'Length then
---          raise Constraint_Error;
---       end if;
---       Buf (1 .. Len) := Pathes.Table (Dir).all;
---    end Get_Directory_Path;
-
---    --  Revert path of directory DIR into BUF of length LEN.
---    --  If DIR is a relative path, compute the relative path from DIR to the
---    --  current directory.
---    --  If DIR is an absolute path, then return DIR.
---    procedure Revert_Pathname (Dir : Directory_Index;
---                               Buf : out String;
---                               Len : out Natural)
---    is
---       Dir_Path : String (1 .. Max_Path_Len);
---       Dir_Len : Natural;
---       Cur_Path : String (1 .. Max_Path_Len);
---       Cur_Len : Natural;
---       Cur_S, Cur_L : Natural;
---       S, L : Natural;
-
---    begin
---       Get_Directory_Path (Dir, Buf, Len);
---      --  Easy case: DIR is empty (ie, is the local directory) or an absolute
---       --  path.
---       if Len = 0 or else Is_Absolute_Pathname (Buf (1 .. Len)) then
---          return;
---       end if;
-
---       --  Copy the path to revert into Dir_Path.
---       Dir_Len := Len;
---       Dir_Path (1 .. Dir_Len) := Buf (1 .. Len);
---       S := 1;
---       L := 1;
-
---       --  Get the local path.
---       Get_Current_Dir (Cur_Path, Cur_Len);
---       Cur_S := Cur_Len;
---       Cur_L := Cur_Len;
-
---       --  Start to revert.
---       --  Step 1:
---       --  ../ -> Y/ where Y is taken from CUR_PATH
---       --  ./ -> (none)
---       loop
---          while S <= Dir_Len and then Dir_Path (S) = Directory_Separator loop
---             S := S + 1;
---          end loop;
---          --  Exit when no more components.
---          exit when S > Dir_Len;
---          L := S;
-
---          --  Look for a path component.
---          --  At the end of the loop, Dir_Path (S .. L) is a path component,
---          --  without any directory_separator.
---          loop
---             if Dir_Path (L) = Directory_Separator then
---                L := L - 1;
---                exit;
---             end if;
---             exit when L = Dir_Len;
---             L := L + 1;
---          end loop;
-
---          if S = L and Dir_Path (S) = '.' then
---             null;
---          elsif L = S + 1
---            and then Dir_Path (S) = '.'
---            and then Dir_Path (S + 1) = '.'
---          then
---             Xxxx;
---          else
---             Yyy;
---          end if;
---    end Revert_Pathname;
-
---    function Get_Directory_Path (Dir : Directory_Index) return String
---    is
---    begin
---       if Dir < Pathes.First or else Dir > Pathes.Last then
---          raise Constraint_Error;
---       end if;
---       return Pathes.Table (Dir).all;
---    end Get_Directory_Path;
-
-
    procedure Location_To_File_Pos (Location : Location_Type;
                                    File : out Source_File_Entry;
                                    Pos : out Source_Ptr)
@@ -654,7 +549,7 @@ package body Files_Map is
       L : Natural;
    begin
       Image (Name);
-      if not Is_Absolute_Pathname (Name_Buffer (1 .. Name_Length)) then
+      if not GNAT.OS_Lib.Is_Absolute_Path (Name_Buffer (1 .. Name_Length)) then
          L := Name_Length;
          Image (Directory);
          Name_Buffer (Name_Length + 1 .. Name_Length + L) := Image (Name);

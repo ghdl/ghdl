@@ -934,8 +934,7 @@ package body Libraries is
          New_Lib_Time_Stamp := Files_Map.Get_File_Time_Stamp (File);
          File_Name := Files_Map.Get_File_Name (File);
          Image (File_Name);
-         if Files_Map.Is_Absolute_Pathname (Name_Buffer (1 .. Name_Length))
-         then
+         if GNAT.OS_Lib.Is_Absolute_Path (Name_Buffer (1 .. Name_Length)) then
             Dir_Name := Null_Identifier;
          else
             Dir_Name := Files_Map.Get_Home_Directory;
