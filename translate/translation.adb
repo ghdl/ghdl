@@ -4167,10 +4167,7 @@ package body Translation is
       end Translate_Architecture_Declaration;
 
       procedure Translate_Component_Configuration_Decl
-        (Cfg : Iir;
-         Blk : Iir;
-         Arch : Iir_Architecture_Declaration;
-         Num : in out Iir_Int32)
+        (Cfg : Iir; Blk : Iir; Base_Block : Iir; Num : in out Iir_Int32)
       is
          Inter_List : O_Inter_List;
          Comp : Iir_Component_Declaration;
@@ -4179,8 +4176,8 @@ package body Translation is
          Instance : O_Dnode;
          Mark, Mark2 : Id_Mark_Type;
 
-         Arch_Info : Block_Info_Acc;
-         Arch_Param : O_Dnode;
+         Base_Info : Block_Info_Acc;
+         Base_Instance : O_Dnode;
 
          Block : Iir_Block_Configuration;
          Binding : Iir_Binding_Indication;
@@ -4229,17 +4226,18 @@ package body Translation is
          end if;
          Info := Add_Info (Cfg, Kind_Config);
 
-         Arch_Info := Get_Info (Arch);
+         Base_Info := Get_Info (Base_Block);
 
          Chap4.Translate_Association_Subprograms
-           (Binding, Blk, Arch, Get_Entity_From_Entity_Aspect (Entity_Aspect));
+           (Binding, Blk, Base_Block,
+            Get_Entity_From_Entity_Aspect (Entity_Aspect));
 
          Start_Procedure_Decl
            (Inter_List, Create_Identifier, O_Storage_Private);
          New_Interface_Decl (Inter_List, Instance, Wki_Instance,
                              Comp_Info.Comp_Ptr_Type);
-         New_Interface_Decl (Inter_List, Arch_Param, Get_Identifier ("ARCH"),
-                             Arch_Info.Block_Decls_Ptr_Type);
+         New_Interface_Decl (Inter_List, Base_Instance, Get_Identifier ("BLK"),
+                             Base_Info.Block_Decls_Ptr_Type);
          Finish_Subprogram_Decl (Inter_List, Info.Config_Subprg);
 
          --  Extract the entity/architecture.
@@ -4247,7 +4245,12 @@ package body Translation is
          Start_Subprogram_Body (Info.Config_Subprg);
          Push_Local_Factory;
 
-         Push_Architecture_Scope (Arch, Arch_Param);
+         if Get_Kind (Base_Block) = Iir_Kind_Architecture_Declaration then
+            Push_Architecture_Scope (Base_Block, Base_Instance);
+         else
+            Push_Scope (Base_Info.Block_Decls_Type, Base_Instance);
+         end if;
+
          Push_Scope (Comp_Info.Comp_Type, Instance);
 
          if Conf_Info /= null then
@@ -4262,7 +4265,13 @@ package body Translation is
          end if;
 
          Pop_Scope (Comp_Info.Comp_Type);
-         Pop_Architecture_Scope (Arch);
+
+         if Get_Kind (Base_Block) = Iir_Kind_Architecture_Declaration then
+            Pop_Architecture_Scope (Base_Block);
+         else
+            Pop_Scope (Base_Info.Block_Decls_Type);
+         end if;
+
          Pop_Local_Factory;
          Finish_Subprogram_Body;
 
@@ -4276,12 +4285,14 @@ package body Translation is
       procedure Translate_Block_Configuration_Decls
         (Block_Config : Iir_Block_Configuration;
          Block : Iir;
-         Arch : Iir_Architecture_Declaration;
+         Base_Block : Iir;
          Num : in out Iir_Int32)
       is
          El : Iir;
          Mark : Id_Mark_Type;
          Blk : Iir;
+         Block_Info : constant Block_Info_Acc := Get_Info (Block);
+         Blk_Info : Block_Info_Acc;
       begin
          El := Get_Configuration_Item_Chain (Block_Config);
          while El /= Null_Iir loop
@@ -4289,12 +4300,32 @@ package body Translation is
                when Iir_Kind_Component_Configuration
                  | Iir_Kind_Configuration_Specification =>
                   Translate_Component_Configuration_Decl
-                    (El, Block, Arch, Num);
+                    (El, Block, Base_Block, Num);
                when Iir_Kind_Block_Configuration =>
                   Blk := Get_Block_From_Block_Specification
                     (Get_Block_Specification (El));
                   Push_Identifier_Prefix (Mark, Get_Identifier (Blk));
-                  Translate_Block_Configuration_Decls (El, Blk, Arch, Num);
+                  Blk_Info := Get_Info (Blk);
+                  case Get_Kind (Blk) is
+                     when Iir_Kind_Generate_Statement =>
+                        Push_Scope_Via_Field_Ptr
+                          (Block_Info.Block_Decls_Type,
+                           Blk_Info.Block_Origin_Field,
+                           Blk_Info.Block_Decls_Type);
+                        Translate_Block_Configuration_Decls
+                          (El, Blk, Blk, Num);
+                        Pop_Scope (Block_Info.Block_Decls_Type);
+                     when Iir_Kind_Block_Statement =>
+                        Push_Scope (Blk_Info.Block_Decls_Type,
+                                    Blk_Info.Block_Parent_Field,
+                                    Block_Info.Block_Decls_Type);
+                        Translate_Block_Configuration_Decls
+                          (El, Blk, Base_Block, Num);
+                        Pop_Scope (Blk_Info.Block_Decls_Type);
+                     when others =>
+                        Error_Kind
+                          ("translate_block_configuration_decls(2)", Blk);
+                  end case;
                   Pop_Identifier_Prefix (Mark);
                when others =>
                   Error_Kind ("translate_block_configuration_decls(1)", El);
@@ -4304,12 +4335,10 @@ package body Translation is
       end Translate_Block_Configuration_Decls;
 
       procedure Translate_Component_Configuration_Call
-        (Cfg : Iir;
-         Arch : Iir_Architecture_Declaration;
-         Block_Info : Block_Info_Acc)
+        (Cfg : Iir; Base_Block : Iir; Block_Info : Block_Info_Acc)
       is
          Cfg_Info : Config_Info_Acc;
-         Arch_Info : Block_Info_Acc;
+         Base_Info : Block_Info_Acc;
       begin
          if Get_Binding_Indication (Cfg) = Null_Iir then
             --  Unbound component configuration, nothing to do.
@@ -4317,7 +4346,7 @@ package body Translation is
          end if;
 
          Cfg_Info := Get_Info (Cfg);
-         Arch_Info := Get_Info (Arch);
+         Base_Info := Get_Info (Base_Block);
 
          --  Call the subprogram for the instantiation list.
          declare
@@ -4345,10 +4374,10 @@ package body Translation is
                         V := New_Selected_Element (V, Info.Block_Link_Field);
                         New_Association
                           (Assoc, New_Address (V, Comp_Info.Comp_Ptr_Type));
-                        V := Get_Instance_Ref (Arch_Info.Block_Decls_Type);
+                        V := Get_Instance_Ref (Base_Info.Block_Decls_Type);
                         New_Association
                           (Assoc,
-                           New_Address (V, Arch_Info.Block_Decls_Ptr_Type));
+                           New_Address (V, Base_Info.Block_Decls_Ptr_Type));
                         New_Procedure_Call (Assoc);
                      end;
                   when others =>
@@ -4360,12 +4389,11 @@ package body Translation is
 
       procedure Translate_Block_Configuration_Calls
         (Block_Config : Iir_Block_Configuration;
-         Arch : Iir_Architecture_Declaration;
+         Base_Block : Iir;
          Info : Block_Info_Acc);
 
       procedure Translate_Generate_Block_Configuration_Calls
         (Block_Config : Iir_Block_Configuration;
-         Arch : Iir_Architecture_Declaration;
          Parent_Info : Block_Info_Acc)
       is
          Spec : Iir;
@@ -4412,7 +4440,7 @@ package body Translation is
               (Parent_Info.Block_Decls_Type,
                Info.Block_Origin_Field,
                Info.Block_Decls_Type);
-            Translate_Block_Configuration_Calls (Block_Config, Arch, Info);
+            Translate_Block_Configuration_Calls (Block_Config, Block, Info);
             Pop_Scope (Parent_Info.Block_Decls_Type);
             Pop_Scope (Info.Block_Decls_Type);
 
@@ -4585,7 +4613,7 @@ package body Translation is
                Push_Scope_Via_Field_Ptr (Parent_Info.Block_Decls_Type,
                                          Info.Block_Origin_Field,
                                          Info.Block_Decls_Type);
-               Translate_Block_Configuration_Calls (Block_Config, Arch, Info);
+               Translate_Block_Configuration_Calls (Block_Config, Block, Info);
                Pop_Scope (Parent_Info.Block_Decls_Type);
                Pop_Scope (Info.Block_Decls_Type);
                Finish_If_Stmt (If_Blk);
@@ -4596,7 +4624,7 @@ package body Translation is
 
       procedure Translate_Block_Configuration_Calls
         (Block_Config : Iir_Block_Configuration;
-         Arch : Iir_Architecture_Declaration;
+         Base_Block : Iir;
          Info : Block_Info_Acc)
       is
          El : Iir;
@@ -4606,7 +4634,8 @@ package body Translation is
             case Get_Kind (El) is
                when Iir_Kind_Component_Configuration
                  | Iir_Kind_Configuration_Specification =>
-                  Translate_Component_Configuration_Call (El, Arch, Info);
+                  Translate_Component_Configuration_Call
+                    (El, Base_Block, Info);
                when Iir_Kind_Block_Configuration =>
                   declare
                      Block : Iir;
@@ -4619,11 +4648,11 @@ package body Translation is
                                     Block_Info.Block_Parent_Field,
                                     Info.Block_Decls_Type);
                         Translate_Block_Configuration_Calls
-                          (El, Arch, Block_Info);
+                          (El, Base_Block, Block_Info);
                         Pop_Scope (Block_Info.Block_Decls_Type);
                      else
                         Translate_Generate_Block_Configuration_Calls
-                          (El, Arch, Info);
+                          (El, Info);
                      end if;
                   end;
                when others =>
@@ -23443,6 +23472,7 @@ package body Translation is
          Res : Scope_Acc;
       begin
          Res := Get_A_Scope;
+         --  FIXME: check that Scope_Parent can be reached ?
          Res.all := (Is_Ptr => False,
                      Stype => Scope_Type,
                      Field => Scope_Field,
