@@ -3269,7 +3269,8 @@ package body Parse is
                case Get_Kind (Parent) is
                   when Iir_Kind_Entity_Declaration
                     | Iir_Kind_Procedure_Body
-                    | Iir_Kind_Function_Body =>
+                    | Iir_Kind_Function_Body
+                    | Iir_Kinds_Process_Statement =>
                      Error_Msg_Parse
                        ("component declaration are not allowed here");
                   when others =>
