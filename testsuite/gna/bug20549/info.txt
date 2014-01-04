@@ -1,0 +1,38 @@
+$ ghdl_mcode -r tb --trace-signals --activity=all
+.tb(arch).c 7A616610  e8 --a- last_event=-9223372036854775807fs last_active=-9223372036854775807fs val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).b 7A6235C0  e8 --a- last_event=-9223372036854775807fs last_active=-9223372036854775807fs val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).a 7A6232F0  e8 --a- last_event=-9223372036854775807fs last_active=-9223372036854775807fs val='U'; drv='U'
+Now is 0ms +0
+.tb(arch).c 7A616610  e8 AEa- last_event=0ms last_active=0ms val='U'; drv='U'
+.tb(arch).u0@clkgen(arch).b 7A6235C0  e8 A-a- last_event=-9223372036854775807fs last_active=0ms val='0'; drv='U'
+.tb(arch).u0@clkgen(arch).a 7A6232F0  e8 AEa- last_event=0ms last_active=0ms val='0'; drv='0'
+Now is 0ms +1
+.tb(arch).c 7A616610  e8 AEa- last_event=0ms last_active=0ms val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).b 7A6235C0  e8 A-a- last_event=-9223372036854775807fs last_active=0ms val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).a 7A6232F0  e8 --a- last_event=0ms last_active=0ms val='0'; drv='0'
+Now is 1ns +0
+tb.vhdl:43:13:@1ns:(report note): good: C is '0' as expected
+.tb(arch).c 7A616610  e8 --a- last_event=0ms last_active=0ms val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).b 7A6235C0  e8 --a- last_event=-9223372036854775807fs last_active=0ms val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).a 7A6232F0  e8 --a- last_event=0ms last_active=0ms val='0'; drv='0'
+Now is 10ns +0
+.tb(arch).c 7A616610  e8 --a- last_event=0ms last_active=0ms val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).b 7A6235C0  e8 --a- last_event=-9223372036854775807fs last_active=0ms val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).a 7A6232F0  e8 AEa- last_event=10ns last_active=10ns val='1'; drv='1'
+Now is 10ns +1
+.tb(arch).c 7A616610  e8 AEa- last_event=10ns last_active=10ns val='1'; drv='1'
+.tb(arch).u0@clkgen(arch).b 7A6235C0  e8 A-a- last_event=-9223372036854775807fs last_active=10ns val='0'; drv='1'
+.tb(arch).u0@clkgen(arch).a 7A6232F0  e8 --a- last_event=10ns last_active=10ns val='1'; drv='1'
+Now is 20ns +0
+.tb(arch).c 7A616610  e8 --a- last_event=10ns last_active=10ns val='1'; drv='1'
+.tb(arch).u0@clkgen(arch).b 7A6235C0  e8 --a- last_event=-9223372036854775807fs last_active=10ns val='0'; drv='1'
+.tb(arch).u0@clkgen(arch).a 7A6232F0  e8 AEa- last_event=20ns last_active=20ns val='0'; drv='0'
+Now is 20ns +1
+tb.vhdl:56:13:@20ns:(report note): good: C is '0' as expected
+.tb(arch).c 7A616610  e8 AEa- last_event=20ns last_active=20ns val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).b 7A6235C0  e8 A-a- last_event=-9223372036854775807fs last_active=20ns val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).a 7A6232F0  e8 --a- last_event=20ns last_active=20ns val='0'; drv='0'
+Now is 9223372036854775807fs +0
+.tb(arch).c 7A616610  e8 --a- last_event=20ns last_active=20ns val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).b 7A6235C0  e8 --a- last_event=-9223372036854775807fs last_active=20ns val='0'; drv='0'
+.tb(arch).u0@clkgen(arch).a 7A6232F0  e8 --a- last_event=20ns last_active=20ns val='0'; drv='0'
