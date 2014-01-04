@@ -868,6 +868,7 @@ package body Sem_Scopes is
          when Iir_Kinds_Procedure_Declaration
            | Iir_Kinds_Function_Declaration
            | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Enumeration_Literal --  By use clause
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
