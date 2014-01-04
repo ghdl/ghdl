@@ -20765,7 +20765,7 @@ package body Translation is
          Prepare_Data_Array => Gen_Signal_Prepare_Data_Composite,
          Update_Data_Array => Gen_Signal_Update_Data_Array,
          Finish_Data_Array => Gen_Signal_Finish_Data_Composite,
-         Prepare_Data_Record => Gen_Signal_Prepare_Data_Composite,
+         Prepare_Data_Record => Gen_Signal_Prepare_Data_Record,
          Update_Data_Record => Gen_Signal_Update_Data_Record,
          Finish_Data_Record => Gen_Signal_Finish_Data_Composite);
 
