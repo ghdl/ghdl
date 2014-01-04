@@ -495,10 +495,20 @@ package body Scan is
                     ("underscore not allowed at the end of a bit string");
                end if;
                goto Again;
-            when others =>
+            when '"' =>
+               pragma Assert (Mark = '%');
                Error_Msg_Scan
-                 ("character '" & C & "' not allowed in a bit string");
-               goto Again;
+                 ("'""' cannot close a bit string opened by '%'");
+               exit;
+            when '%' =>
+               pragma Assert (Mark = '%');
+               Error_Msg_Scan
+                 ("'%' cannot close a bit string opened by '""'");
+               exit;
+            when others =>
+               Error_Msg_Scan ("bit string not terminated");
+               Pos := Pos - 1;
+               exit;
          end case;
 
          case Base_Len is
