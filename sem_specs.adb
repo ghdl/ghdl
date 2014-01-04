@@ -89,7 +89,8 @@ package body Sem_Specs is
            | Iir_Kind_Constant_Interface_Declaration =>
             return Tok_Constant;
          when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Signal_Interface_Declaration =>
+           | Iir_Kind_Signal_Interface_Declaration
+           | Iir_Kind_Guard_Signal_Declaration =>
             return Tok_Signal;
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Variable_Interface_Declaration =>
@@ -534,9 +535,8 @@ package body Sem_Specs is
                Sem_Named_Entity_Chain (Get_Port_Chain (Scope));
             when Iir_Kind_Block_Statement =>
                declare
-                  Header : Iir;
+                  Header : constant Iir := Get_Block_Header (Scope);
                begin
-                  Header := Get_Block_Header (Scope);
                   if Header /= Null_Iir then
                      Sem_Named_Entity_Chain (Get_Generic_Chain (Header));
                      Sem_Named_Entity_Chain (Get_Port_Chain (Header));
@@ -559,8 +559,17 @@ package body Sem_Specs is
       case Get_Kind (Scope) is
          when Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Declaration
-           | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement =>
+            Sem_Named_Entity_Chain (Get_Declaration_Chain (Scope));
+            Sem_Named_Entity_Chain (Get_Concurrent_Statement_Chain (Scope));
+         when Iir_Kind_Block_Statement =>
+            declare
+               Guard : constant Iir := Get_Guard_Decl (Scope);
+            begin
+               if Guard /= Null_Iir then
+                  Sem_Named_Entity (Guard);
+               end if;
+            end;
             Sem_Named_Entity_Chain (Get_Declaration_Chain (Scope));
             Sem_Named_Entity_Chain (Get_Concurrent_Statement_Chain (Scope));
          when Iir_Kind_Configuration_Declaration =>
@@ -730,20 +739,12 @@ package body Sem_Specs is
       end if;
    end Sem_Attribute_Specification;
 
-   --  LRM 5.1  Attribute specifications
-   --  An attribute specification with the entity name list OTHERS or ALL for
-   --  a given entity class that appears in a declarative part must be the
-   --  last such specification for the given attribute for the given
-   --  entity class in that declarative part.
-   --
-   --  It is an error if a named entity in the specificied entity class is
-   --  declared in a given declarative part following such an attribute
-   --  specification.
    procedure Check_Post_Attribute_Specification
      (Attr_Spec_Chain : Iir; Decl : Iir)
    is
       use Tokens;
 
+      Has_Error : Boolean;
       Spec : Iir;
       Decl_Class : Token_Type;
       Decl_Class2 : Token_Type;
@@ -756,7 +757,8 @@ package body Sem_Specs is
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Use_Clause
            | Iir_Kind_Attribute_Declaration
-           | Iir_Kinds_Signal_Attribute =>
+           | Iir_Kinds_Signal_Attribute
+           | Iir_Kind_Disconnection_Specification =>
             return;
          when Iir_Kind_Anonymous_Type_Declaration =>
             --  A physical type definition declares units.
@@ -792,20 +794,41 @@ package body Sem_Specs is
          Spec := Get_Attribute_Specification_Chain (Spec);
       end if;
       while Spec /= Null_Iir loop
+         pragma Assert (Get_Entity_Name_List (Spec) in Iir_Lists_All_Others);
          Ent_Class := Get_Entity_Class (Spec);
          if Ent_Class = Decl_Class or Ent_Class = Decl_Class2 then
+            Has_Error := False;
+
             if Get_Kind (Decl) = Iir_Kind_Attribute_Specification then
-               Error_Msg_Sem
-                 ("no attribute specification may follow an all/others spec",
-                  Decl);
+               --  LRM 5.1  Attribute specifications
+               --  An attribute specification with the entity name list OTHERS
+               --  or ALL for a given entity class that appears in a
+               --  declarative part must be the last such specification for the
+               --  given attribute for the given entity class in that
+               --  declarative part.
+               if Get_Identifier (Get_Attribute_Designator (Decl))
+                 = Get_Identifier (Get_Attribute_Designator (Spec))
+               then
+                  Error_Msg_Sem
+                    ("no attribute specification may follow an "
+                       & "all/others spec", Decl);
+                  Has_Error := True;
+               end if;
             else
+               --  LRM 5.1  Attribute specifications
+               --  It is an error if a named entity in the specificied entity
+               --  class is declared in a given declarative part following such
+               --  an attribute specification.
                Error_Msg_Sem
                  ("no named entity may follow an all/others attribute "
-                  & "specification", Decl);
+                    & "specification", Decl);
+               Has_Error := True;
             end if;
-            Error_Msg_Sem
-              ("(previous all/others specification for the given "
-               &"entity class)", Spec);
+            if Has_Error then
+               Error_Msg_Sem
+                 ("(previous all/others specification for the given "
+                    &"entity class)", Spec);
+            end if;
          end if;
          Spec := Get_Attribute_Specification_Chain (Spec);
       end loop;
