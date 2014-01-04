@@ -1229,6 +1229,9 @@ package body Sem_Names is
       case Get_Kind (Res) is
          when Iir_Kind_Design_Unit =>
             return;
+         when Iir_Kind_Block_Statement =>
+            --  Part of an expanded name
+            return;
          when Iir_Kinds_Object_Declaration
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Type_Declaration

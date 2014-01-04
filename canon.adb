@@ -190,7 +190,8 @@ package body Canon is
 
          when Iir_Kinds_Type_Attribute =>
             null;
-         when Iir_Kind_Event_Attribute =>
+         when Iir_Kind_Event_Attribute
+           | Iir_Kind_Active_Attribute =>
             --  LRM 8.1
             --  An attribute name: [...]; otherwise, apply this rule to the
             --  prefix of the attribute name.

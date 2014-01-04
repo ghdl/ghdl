@@ -3978,8 +3978,11 @@ package body Translation is
             Rtis.Generate_Unit (Entity);
          end if;
 
-         if Global_Storage /= O_Storage_External then
-            --  Entity process subprograms.
+         if Global_Storage = O_Storage_External then
+            --  Entity declaration subprograms.
+            Chap4.Translate_Declaration_Chain_Subprograms (Entity, Entity);
+         else
+            --  Entity declaration and process subprograms.
             Chap9.Translate_Block_Subprograms (Entity, Entity);
 
             --  Elaborator Body.
@@ -10321,7 +10324,9 @@ package body Translation is
                --   check for matching bounds.
                Atype := Get_Ortho_Type (Decl_Type, Info.Alias_Kind);
             when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+              | Type_Mode_Ptr_Array
+              | Type_Mode_Acc
+              | Type_Mode_Fat_Acc =>
                --  Create an object pointer.
                --  At elaboration: copy base from name.
                Atype := Tinfo.Ortho_Ptr_Type (Info.Alias_Kind);
@@ -10386,6 +10391,10 @@ package body Translation is
                                         Name_Type, Name_Node,
                                         Decl);
                Close_Temp;
+            when Type_Mode_Acc
+              | Type_Mode_Fat_Acc =>
+               New_Assign_Stmt (Get_Var (Alias_Info.Alias_Var),
+                                M2Addr (Name_Node));
             when Type_Mode_Scalar =>
                case Alias_Info.Alias_Kind is
                   when Mode_Value =>
@@ -10965,8 +10974,13 @@ package body Translation is
                   end if;
                when Iir_Kind_Function_Body
                  | Iir_Kind_Procedure_Body =>
-                  if not Flag_Discard_Unused
-                    or else Get_Use_Flag (Get_Subprogram_Specification (El))
+                  --  Do not translate body if generating only specs (for
+                  --  subprograms in an entity).
+                  if Global_Storage /= O_Storage_External
+                    and then
+                    (not Flag_Discard_Unused
+                       or else
+                       Get_Use_Flag (Get_Subprogram_Specification (El)))
                   then
                      Chap2.Translate_Subprogram_Body (El);
                      Translate_Resolution_Function_Body
@@ -13258,7 +13272,10 @@ package body Translation is
                         return Get_Var (Name_Info.Alias_Var, Type_Info,
                                         Name_Info.Alias_Kind);
                      when Type_Mode_Ptr_Array
-                       | Type_Mode_Array =>
+                       | Type_Mode_Array
+                       | Type_Mode_Record
+                       | Type_Mode_Acc
+                       | Type_Mode_Fat_Acc =>
                         R := Get_Var (Name_Info.Alias_Var);
                         return Lp2M (R, Type_Info, Name_Info.Alias_Kind);
                      when Type_Mode_Scalar =>
@@ -13268,9 +13285,6 @@ package body Translation is
                         else
                            return Lp2M (R, Type_Info, Name_Info.Alias_Kind);
                         end if;
-                     when Type_Mode_Record =>
-                        R := Get_Var (Name_Info.Alias_Var);
-                        return Lp2M (R, Type_Info, Name_Info.Alias_Kind);
                      when others =>
                         raise Internal_Error;
                   end case;
@@ -15862,6 +15876,9 @@ package body Translation is
                   return Translate_Fat_Array_Type_Conversion
                     (Expr, Expr_Type, Res_Type, Loc);
                end if;
+            when Iir_Kind_Record_Type_Definition
+              | Iir_Kind_Record_Subtype_Definition =>
+               return Expr;
             when others =>
                Error_Kind ("translate_type_conversion", Res_Type);
          end case;
@@ -27591,9 +27608,7 @@ package body Translation is
                             O_Storage_External, Ghdl_Rtin_Block);
             case Get_Kind (Lib_Unit) is
                when Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Architecture_Declaration =>
-                  Info.Block_Rti_Const := Rti;
-               when Iir_Kind_Package_Declaration =>
+                 | Iir_Kind_Package_Declaration =>
                   declare
                      Prev : Rti_Block;
                   begin
@@ -27601,8 +27616,16 @@ package body Translation is
                      Generate_Declaration_Chain
                        (Get_Declaration_Chain (Lib_Unit));
                      Pop_Rti_Node (Prev);
-                     Info.Package_Rti_Const := Rti;
                   end;
+               when others =>
+                  null;
+            end case;
+            case Get_Kind (Lib_Unit) is
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Architecture_Declaration =>
+                  Info.Block_Rti_Const := Rti;
+               when Iir_Kind_Package_Declaration =>
+                  Info.Package_Rti_Const := Rti;
                when Iir_Kind_Package_Body =>
                   --  Replace package declaration RTI with the body one.
                   Get_Info (Get_Package (Lib_Unit)).Package_Rti_Const := Rti;

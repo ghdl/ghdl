@@ -118,9 +118,6 @@ package body Trans_Be is
       if not Main then
          --  Main units (those from the analyzed design file) are translated
          --  directly by ortho_front.
-         if Flags.Verbose then
-            Put_Line ("translate " & Disp_Node (Lib));
-         end if;
 
          Translation.Translate (Unit, Main);
 

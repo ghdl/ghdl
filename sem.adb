@@ -2309,6 +2309,7 @@ package body Sem is
                   return;
                end if;
                Libraries.Load_Design_Unit (Prefix_Name, Clause);
+               Add_Dependence (Prefix_Name);
             when others =>
                Error_Msg_Sem ("prefix must designate a package or a library",
                               Prefix);

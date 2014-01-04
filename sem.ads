@@ -30,7 +30,7 @@ package Sem is
    function Get_Current_Design_Unit return Iir_Design_Unit;
 
    --  Makes the current design unit depends on UNIT.
-   --  UNIT must be either an entit_aspect or a design_unit.
+   --  UNIT must be either an entity_aspect or a design_unit.
    procedure Add_Dependence (Unit : Iir);
 
    --  Add EL in the current design unit list of items to be checked later.
