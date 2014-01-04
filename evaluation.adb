@@ -1525,8 +1525,9 @@ package body Evaluation is
             else
                return Build_Enumeration (Iir_Index32 (P), Expr);
             end if;
-         when Iir_Kind_Physical_Int_Literal =>
-            return Build_Physical (Get_Value (Expr) + N, Expr);
+         when Iir_Kind_Physical_Int_Literal
+           | Iir_Kind_Unit_Declaration =>
+            return Build_Physical (Get_Physical_Value (Expr) + N, Expr);
          when others =>
             Error_Kind ("eval_incdec", Expr);
       end case;
