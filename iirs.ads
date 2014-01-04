@@ -654,7 +654,7 @@ package Iirs is
    --
    --   Get/Set_Block_Configuration (Field5)
 
-   -- Iir_Kind_Package_Declaration (Short)
+   -- Iir_Kind_Package_Declaration (Medium)
    --
    --   Get/Set_Parent (Field0)
    --   Get/Set_Design_Unit (Alias Field0)
@@ -664,6 +664,10 @@ package Iirs is
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Package_Body (Field4)
+   --
+   --   Get/Set_Generic_Chain (Field6)
+   --
+   --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
    --   Get/Set_Need_Body (Flag1)
 
@@ -867,9 +871,6 @@ package Iirs is
    -- Must always be null_iir for iir_kind_file_interface_declaration.
    --   Get/Set_Default_Value (Field6)
    --
-   -- Only for Iir_Kind_Signal_Interface_Declaration:
-   --   Get/Set_Extra_Info (Field8)
-   --
    --   Get/Set_Mode (Odigit1)
    --
    --   Get/Set_Lexical_Layout (Odigit2)
@@ -918,17 +919,19 @@ package Iirs is
    --
    --   Get_Interface_Declaration_Chain (Field5)
    --
-   --   Get/Set_Subprogram_Body (Field6)
+   --   Get/Set_Generic_Chain (Field6)
    --
    --   Get/Set_Callees_List (Field7)
    --
-   --   Get/Set_Extra_Info (Field8)
+   --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
-   --   Get/Set_Overload_Number (Field9)
+   --   Get/Set_Subprogram_Body (Field9)
    --
    --   Get/Set_Subprogram_Depth (Field10)
    --
    --   Get/Set_Subprogram_Hash (Field11)
+   --
+   --   Get/Set_Overload_Number (Field12)
    --
    --   Get/Set_Seen_Flag (Flag1)
    --
@@ -997,17 +1000,19 @@ package Iirs is
    --
    --   Get_Interface_Declaration_Chain (Field5)
    --
-   --   Get/Set_Implicit_Definition (Field6)
+   --   Get/Set_Generic_Chain (Field6)
    --
    --   Get/Set_Callees_List (Field7)
    --
-   --   Get/Set_Extra_Info (Field8)
+   --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
-   --   Get/Set_Overload_Number (Field9)
+   --   Get/Set_Implicit_Definition (Field9)
    --
    --   Get/Set_Type_Reference (Field10)
    --
    --   Get/Set_Subprogram_Hash (Field11)
+   --
+   --   Get/Set_Overload_Number (Field12)
    --
    --   Get/Set_Wait_State (State1)
    --
@@ -1043,8 +1048,6 @@ package Iirs is
    -- driver.  This is used to catch at analyse time unresolved signals with
    -- several drivers.
    --   Get/Set_Signal_Driver (Field7)
-   --
-   --   Get/Set_Extra_Info (Field8)
    --
    --   Get/Set_Has_Disconnect_Flag (Flag1)
    --
@@ -1868,8 +1871,6 @@ package Iirs is
    --   Get_Sensitivity_List (Field6)
    --
    --   Get/Set_Callees_List (Field7)
-   --
-   --   Get/Set_Extra_Info (Field8)
    --
    --   Get/Set_Wait_State (State1)
    --
@@ -4542,7 +4543,7 @@ package Iirs is
    function Get_Sequential_Statement_Chain (Target : Iir) return Iir;
    procedure Set_Sequential_Statement_Chain (Target : Iir; Chain : Iir);
 
-   --  Field: Field6
+   --  Field: Field9
    function Get_Subprogram_Body (Target : Iir) return Iir;
    procedure Set_Subprogram_Body (Target : Iir; A_Body : Iir);
 
@@ -4550,7 +4551,7 @@ package Iirs is
    --  identifier.  If the overload number is not 0, it is the rank of the
    --  subprogram.  If the overload number is 0, then the identifier is not
    --  overloaded in the declarative region.
-   --  Field: Field9 (pos)
+   --  Field: Field12 (pos)
    function Get_Overload_Number (Target : Iir) return Iir_Int32;
    procedure Set_Overload_Number (Target : Iir; Val : Iir_Int32);
 
@@ -4572,15 +4573,6 @@ package Iirs is
    procedure Set_Subprogram_Hash (Target : Iir; Val : Iir_Int32);
    pragma Inline (Get_Subprogram_Hash);
 
-   --  Index for extra infos.
-   --  Subprograms and processes need a lot of field in their nodes.
-   --  Unfortunatly, the size of the nodes is limited and these infos are
-   --  only used for optimization.
-   --  This is an index into a separate table.
-   --  Field: Field8 (pos)
-   function Get_Extra_Info (Target : Iir) return Iir_Int32;
-   procedure Set_Extra_Info (Target : Iir; Info : Iir_Int32);
-
    --  Depth of the deepest impure object.
    --  Field: Field3 (uc)
    function Get_Impure_Depth (Target : Iir) return Iir_Int32;
@@ -4592,7 +4584,7 @@ package Iirs is
    pragma Inline (Get_Return_Type);
 
    --  Code of an implicit subprogram definition.
-   --  Field: Field6 (pos)
+   --  Field: Field9 (pos)
    function Get_Implicit_Definition (D : Iir) return Iir_Predefined_Functions;
    procedure Set_Implicit_Definition (D : Iir; Def : Iir_Predefined_Functions);
 

@@ -381,7 +381,6 @@ package body Iirs is
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
@@ -515,6 +514,7 @@ package body Iirs is
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
            | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Declaration
            | Iir_Kind_Architecture_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
@@ -2240,7 +2240,12 @@ package body Iirs is
       case Get_Kind (Target) is
          when Iir_Kind_Block_Header
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Component_Declaration =>
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Component_Declaration
+           | Iir_Kind_Function_Declaration
+           | Iir_Kind_Implicit_Function_Declaration
+           | Iir_Kind_Implicit_Procedure_Declaration
+           | Iir_Kind_Procedure_Declaration =>
             null;
          when others =>
             Failed ("Generic_Chain", Target);
@@ -2652,13 +2657,13 @@ package body Iirs is
    function Get_Subprogram_Body (Target : Iir) return Iir is
    begin
       Check_Kind_For_Subprogram_Body (Target);
-      return Get_Field6 (Target);
+      return Get_Field9 (Target);
    end Get_Subprogram_Body;
 
    procedure Set_Subprogram_Body (Target : Iir; A_Body : Iir) is
    begin
       Check_Kind_For_Subprogram_Body (Target);
-      Set_Field6 (Target, A_Body);
+      Set_Field9 (Target, A_Body);
    end Set_Subprogram_Body;
 
    procedure Check_Kind_For_Overload_Number (Target : Iir) is
@@ -2677,13 +2682,13 @@ package body Iirs is
    function Get_Overload_Number (Target : Iir) return Iir_Int32 is
    begin
       Check_Kind_For_Overload_Number (Target);
-      return Iir_Int32'Val (Get_Field9 (Target));
+      return Iir_Int32'Val (Get_Field12 (Target));
    end Get_Overload_Number;
 
    procedure Set_Overload_Number (Target : Iir; Val : Iir_Int32) is
    begin
       Check_Kind_For_Overload_Number (Target);
-      Set_Field9 (Target, Iir_Int32'Pos (Val));
+      Set_Field12 (Target, Iir_Int32'Pos (Val));
    end Set_Overload_Number;
 
    procedure Check_Kind_For_Subprogram_Depth (Target : Iir) is
@@ -2734,35 +2739,6 @@ package body Iirs is
       Check_Kind_For_Subprogram_Hash (Target);
       Set_Field11 (Target, Iir_Int32'Pos (Val));
    end Set_Subprogram_Hash;
-
-   procedure Check_Kind_For_Extra_Info (Target : Iir) is
-   begin
-      case Get_Kind (Target) is
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Implicit_Function_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration
-           | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
-           | Iir_Kind_Sensitized_Process_Statement
-           | Iir_Kind_Process_Statement =>
-            null;
-         when others =>
-            Failed ("Extra_Info", Target);
-      end case;
-   end Check_Kind_For_Extra_Info;
-
-   function Get_Extra_Info (Target : Iir) return Iir_Int32 is
-   begin
-      Check_Kind_For_Extra_Info (Target);
-      return Iir_Int32'Val (Get_Field8 (Target));
-   end Get_Extra_Info;
-
-   procedure Set_Extra_Info (Target : Iir; Info : Iir_Int32) is
-   begin
-      Check_Kind_For_Extra_Info (Target);
-      Set_Field8 (Target, Iir_Int32'Pos (Info));
-   end Set_Extra_Info;
 
    procedure Check_Kind_For_Impure_Depth (Target : Iir) is
    begin
@@ -2827,14 +2803,14 @@ package body Iirs is
       is
    begin
       Check_Kind_For_Implicit_Definition (D);
-      return Iir_Predefined_Functions'Val (Get_Field6 (D));
+      return Iir_Predefined_Functions'Val (Get_Field9 (D));
    end Get_Implicit_Definition;
 
    procedure Set_Implicit_Definition (D : Iir; Def : Iir_Predefined_Functions)
       is
    begin
       Check_Kind_For_Implicit_Definition (D);
-      Set_Field6 (D, Iir_Predefined_Functions'Pos (Def));
+      Set_Field9 (D, Iir_Predefined_Functions'Pos (Def));
    end Set_Implicit_Definition;
 
    procedure Check_Kind_For_Type_Reference (Target : Iir) is
@@ -4910,6 +4886,11 @@ package body Iirs is
       case Get_Kind (Target) is
          when Iir_Kind_Block_Header
            | Iir_Kind_Binding_Indication
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Function_Declaration
+           | Iir_Kind_Implicit_Function_Declaration
+           | Iir_Kind_Implicit_Procedure_Declaration
+           | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Component_Instantiation_Statement =>
             null;
          when others =>
