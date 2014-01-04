@@ -2357,16 +2357,26 @@ package body Sem_Decls is
       Sem_Scopes.Name_Visible (Decl);
    end Sem_Branch_Quantity_Declaration;
 
-   --  Semantize every declaration of DECLS_PARENT.
-   --  STMTS is the concurrent statement list associated with DECLS_PARENT
-   --  if any, or null_iir.  This is used for specification.
-   procedure Sem_Declaration_Chain (Parent : Iir; Is_Global : Boolean)
+   procedure Sem_Declaration_Chain (Parent : Iir)
    is
       Decl: Iir;
       Last_Decl : Iir;
       Attr_Spec_Chain : Iir;
       Kind : Iir_Kind;
+
+      --  If IS_GLOBAL is set, then declarations may be seen outside of unit.
+      --  This must be set for entities and packages (except when
+      --   Flags.Flag_Whole_Analyze is set).
+      Is_Global : Boolean;
    begin
+      case Get_Kind (Parent) is
+         when Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Declaration =>
+            Is_Global :=  not Flags.Flag_Whole_Analyze;
+         when others =>
+            Is_Global := False;
+      end case;
+
       --  Due to implicit declarations, the list can grow during sem.
       Decl := Get_Declaration_Chain (Parent);
       Last_Decl := Null_Iir;

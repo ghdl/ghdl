@@ -19,12 +19,13 @@ with Iirs; use Iirs;
 
 package Sem_Stmts is
    --  Semantize declarations and concurrent statements of BLK, which is
-   --  either an architecture_declaration or a block_statement.
+   --  either an architecture_declaration, and entity_declaration or
+   --  a block_statement.
    --  If SEM_DECLS is true, then semantize the declarations of BLK.
    procedure Sem_Block (Blk: Iir; Sem_Decls : Boolean);
 
-   procedure Sem_Concurrent_Statement_Chain
-     (Parent : Iir; Is_Passive : Boolean);
+   --  Analyze the concurrent statements of PARENT.
+   procedure Sem_Concurrent_Statement_Chain (Parent : Iir);
 
    --  Some signals are implicitly declared.  This is the case for signals
    --  declared by an attribute ('stable, 'quiet and 'transaction).

@@ -25,6 +25,9 @@ package Sem_Specs is
      (Spec : Iir_Attribute_Specification; Scope : Iir);
 
    --  Check declarations following an ALL/OTHERS attribute specification.
+   --  ATTR_SPEC_CHAIN is the linked list of all attribute specifications whith
+   --  the entity name list ALL or OTHERS until the current declaration DECL.
+   --  So no specification in the chain must match the declaration.
    procedure Check_Post_Attribute_Specification
      (Attr_Spec_Chain : Iir; Decl : Iir);
 

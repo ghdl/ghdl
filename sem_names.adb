@@ -1569,6 +1569,7 @@ package body Sem_Names is
                Sem.Add_Dependence (Res);
             end if;
          when Iir_Kind_Process_Statement
+           | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Design_Unit
 --            | Iir_Kind_Architecture_Declaration
@@ -2227,7 +2228,8 @@ package body Sem_Names is
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Unit_Declaration
            | Iir_Kinds_Sequential_Statement
-           | Iir_Kinds_Concurrent_Statement =>
+           | Iir_Kinds_Concurrent_Statement
+           | Iir_Kind_Component_Declaration =>
             --  FIXME: to complete
             null;
          when Iir_Kind_Design_Unit =>

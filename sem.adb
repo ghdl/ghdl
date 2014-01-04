@@ -53,7 +53,6 @@ package body Sem is
    procedure Sem_Entity_Declaration (Entity: Iir_Entity_Declaration)
    is
       Unit : Iir_Design_Unit;
-      Implicit : Implicit_Signal_Declaration_Type;
    begin
       Unit := Get_Design_Unit (Entity);
       Xrefs.Xref_Decl (Entity);
@@ -73,17 +72,9 @@ package body Sem is
       -- Sem ports.
       Sem_Interface_Chain (Get_Port_Chain (Entity), Interface_Port);
 
-      -- entity declarative part.
-      Push_Signals_Declarative_Part (Implicit, Entity);
-      Sem_Declaration_Chain (Entity, not Flags.Flag_Whole_Analyze);
-      Sem_Specification_Chain (Entity, Null_Iir);
+      --  Entity declarative part and concurrent statements.
+      Sem_Block (Entity, True);
 
-      --  Check for missing subprogram bodies.
-      Check_Full_Declaration (Entity, Entity);
-
-      -- statements.
-      Sem_Concurrent_Statement_Chain (Entity, True);
-      Pop_Signals_Declarative_Part (Implicit);
       Close_Declarative_Region;
       Set_Is_Within_Flag (Entity, False);
    end Sem_Entity_Declaration;
@@ -578,7 +569,7 @@ package body Sem is
       Add_Context_Clauses (Entity_Design);
       Sem_Scopes.Add_Entity_Declarations (Get_Library_Unit (Entity_Design));
 
-      Sem_Declaration_Chain (Decl, False);
+      Sem_Declaration_Chain (Decl);
       --  GHDL: no need to check for missing subprogram bodies, since they are
       --  not allowed in configuration declarations.
 
@@ -2152,6 +2143,8 @@ package body Sem is
             when Iir_Kind_Attribute_Declaration
               | Iir_Kind_Attribute_Specification =>
                null;
+            when Iir_Kind_Disconnection_Specification =>
+               null;
             when Iir_Kind_Use_Clause =>
                null;
             when Iir_Kind_Component_Declaration =>
@@ -2197,7 +2190,7 @@ package body Sem is
 
       Push_Signals_Declarative_Part (Implicit, Decl);
 
-      Sem_Declaration_Chain (Decl, not Flags.Flag_Whole_Analyze);
+      Sem_Declaration_Chain (Decl);
       --  GHDL: subprogram bodies appear in package body.
 
       Pop_Signals_Declarative_Part (Implicit);
@@ -2254,7 +2247,7 @@ package body Sem is
 
       Sem_Scopes.Add_Package_Declarations (Package_Decl);
 
-      Sem_Declaration_Chain (Decl, False);
+      Sem_Declaration_Chain (Decl);
       Check_Full_Declaration (Decl, Decl);
       Check_Full_Declaration (Package_Decl, Decl);
 

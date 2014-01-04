@@ -1216,7 +1216,7 @@ package body Sem_Stmts is
 
       -- Sem declarations
       Sem_Sequential_Labels (Get_Sequential_Statement_Chain (Body_Parent));
-      Sem_Declaration_Chain (Body_Parent, False);
+      Sem_Declaration_Chain (Body_Parent);
       Sem_Specification_Chain (Body_Parent, Null_Iir);
 
       -- Sem statements.
@@ -1719,9 +1719,10 @@ package body Sem_Stmts is
       --  FIXME: check for nature type...
    end Simple_Simultaneous_Statement;
 
-   procedure Sem_Concurrent_Statement_Chain
-     (Parent : Iir; Is_Passive : Boolean)
+   procedure Sem_Concurrent_Statement_Chain (Parent : Iir)
    is
+      Is_Passive : constant Boolean :=
+        Get_Kind (Parent) = Iir_Kind_Entity_Declaration;
       El: Iir;
       Prev_El : Iir;
       Prev_Concurrent_Statement : Iir;
@@ -1843,8 +1844,6 @@ package body Sem_Stmts is
       end loop;
    end Sem_Labels_Chain;
 
-   --  Semantize declarations and concurrent statements of ARCH, which is
-   --  either an architecture_declaration or a block_statement.
    procedure Sem_Block (Blk: Iir; Sem_Decls : Boolean)
    is
       Implicit : Implicit_Signal_Declaration_Type;
@@ -1853,10 +1852,10 @@ package body Sem_Stmts is
 
       if Sem_Decls then
          Sem_Labels_Chain (Blk);
-         Sem_Declaration_Chain (Blk, False);
+         Sem_Declaration_Chain (Blk);
       end if;
 
-      Sem_Concurrent_Statement_Chain (Blk, False);
+      Sem_Concurrent_Statement_Chain (Blk);
 
       if Sem_Decls then
          --  FIXME: do it only if there is conf. spec. in the declarative

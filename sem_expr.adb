@@ -170,6 +170,7 @@ package body Sem_Expr is
            | Iir_Kind_Range_Array_Attribute
            | Iir_Kind_Reverse_Range_Array_Attribute
            | Iir_Kind_Element_Declaration
+           | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Psl_Declaration =>
             Error_Msg_Sem (Disp_Node (Expr)
                            & " not allowed in an expression", Loc);
@@ -431,34 +432,12 @@ package body Sem_Expr is
       end if;
    end Compatibility_Types;
 
-   function Sem_Type_Range (Expr : Iir; A_Type : Iir) return Iir
-   is
-      Expr_Type : Iir;
-   begin
-      Expr_Type := Get_Type (Expr);
-      if Expr_Type = Null_Iir then
-         return A_Type;
-      end if;
-      if Get_Kind (Expr_Type) in Iir_Kinds_Scalar_Type_Definition then
-         return Expr_Type;
-      end if;
-      Expr_Type := Find_Declaration (Expr_Type, Decl_Type);
-      if A_Type /= Null_Iir and then A_Type /= Expr_Type then
-         -- This can happend when EXPR is an array subtype index subtype
-         -- and A_TYPE is the array index type.
-         Error_Msg_Sem ("subtype " & Disp_Node (Expr_Type)
-                        & " doesn't match expected type "
-                        & Disp_Node (A_Type), Expr);
-      end if;
-      return Expr_Type;
-   end Sem_Type_Range;
-
    -- Semantize the range expression EXPR.
    -- If A_TYPE is not null_iir, EXPR is expected to be of type A_TYPE.
    -- LRM93 3.2.1.1
    -- FIXME: avoid to run it on an already semantized node, be careful
    --  with range_type_expr.
-   function Sem_Range_Expression
+   function Sem_Simple_Range_Expression
      (Expr: Iir_Range_Expression; A_Type: Iir; Any_Dir : Boolean)
       return Iir_Range_Expression
    is
@@ -466,13 +445,31 @@ package body Sem_Expr is
       Left, Right: Iir;
       Expr_Type : Iir;
    begin
-      Expr_Type := Sem_Type_Range (Expr, A_Type);
+      Expr_Type := Get_Type (Expr);
+
+      if Expr_Type = Null_Iir then
+         --  EXPR has the form: 'range L to/downto R'
+         Expr_Type := A_Type;
+      elsif Get_Kind (Expr_Type) not in Iir_Kinds_Scalar_Type_Definition then
+         --  EXPR has the form: 'NAME range L to/downto R', but NAME may
+         --  have already be analyzed.
+         Expr_Type := Find_Declaration (Expr_Type, Decl_Type);
+         if A_Type /= Null_Iir and then A_Type /= Expr_Type then
+            -- This can happend when EXPR is an array subtype index subtype
+            -- and A_TYPE is the array index type.
+            Error_Msg_Sem ("subtype " & Disp_Node (Expr_Type)
+                             & " doesn't match expected type "
+                             & Disp_Node (A_Type), Expr);
+         end if;
+      end if;
+
       if Expr_Type /= Null_Iir then
          Base_Type := Get_Base_Type (Expr_Type);
       else
          Base_Type := Null_Iir;
       end if;
 
+      --  Analyze left and right bounds.
       Left := Get_Left_Limit (Expr);
       Right := Get_Right_Limit (Expr);
       Right := Sem_Expression_Ov (Right, Base_Type);
@@ -480,6 +477,7 @@ package body Sem_Expr is
       if Left = Null_Iir or else Right = Null_Iir then
          return Null_Iir;
       end if;
+
       if Is_Overloaded (Left) or else Is_Overloaded (Right) then
          if Base_Type /= Null_Iir then
             --  Cannot happen, since sem_expression_ov should resolved
@@ -544,9 +542,8 @@ package body Sem_Expr is
          Set_Type (Expr, Base_Type);
       end if;
       return Expr;
-   end Sem_Range_Expression;
+   end Sem_Simple_Range_Expression;
 
-   -- Set semantic to expr.
    -- The result can be:
    --  a subtype definition
    --  a range attribute
@@ -554,7 +551,7 @@ package body Sem_Expr is
    -- LRM93 3.2.1.1
    -- FIXME: avoid to run it on an already semantized node, be careful
    --  with range_type_expr.
-   function Sem_Discrete_Range_Expression
+   function Sem_Range_Expression
      (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
      return Iir
    is
@@ -562,7 +559,7 @@ package body Sem_Expr is
       Res_Type : Iir;
    begin
       if Get_Kind (Expr) = Iir_Kind_Range_Expression then
-         Res := Sem_Range_Expression (Expr, A_Type, Any_Dir);
+         Res := Sem_Simple_Range_Expression (Expr, A_Type, Any_Dir);
          if Res = Null_Iir then
             return Null_Iir;
          end if;
@@ -587,12 +584,6 @@ package body Sem_Expr is
               | Iir_Kind_Subtype_Declaration =>
                Res := Get_Type (Res);
                Res_Type := Res;
-               if Get_Kind (Res) not in Iir_Kinds_Discrete_Type_Definition
-               then
-                  Error_Msg_Sem
-                    (Disp_Node (Res) & " is not a discrete range type", Expr);
-                  return Null_Iir;
-               end if;
             when Iir_Kind_Range_Array_Attribute
               | Iir_Kind_Reverse_Range_Array_Attribute =>
                Res_Type := Get_Type (Res);
@@ -607,6 +598,11 @@ package body Sem_Expr is
             Not_Match (Expr, A_Type);
             return Null_Iir;
          end if;
+      end if;
+
+      if Get_Kind (Res_Type) not in Iir_Kinds_Scalar_Type_Definition then
+         Error_Msg_Sem (Disp_Node (Res) & " is not a range type", Expr);
+         return Null_Iir;
       end if;
 
       if A_Type /= Null_Iir
@@ -625,6 +621,34 @@ package body Sem_Expr is
                end if;
          end case;
       end if;
+      return Res;
+   end Sem_Range_Expression;
+
+   function Sem_Discrete_Range_Expression
+     (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
+     return Iir
+   is
+      Res : Iir;
+      Res_Type : Iir;
+   begin
+      Res := Sem_Range_Expression (Expr, A_Type, Any_Dir);
+
+      if Res = Null_Iir then
+         return Null_Iir;
+      end if;
+
+      if Get_Kind (Res) in Iir_Kinds_Type_And_Subtype_Definition then
+         Res_Type := Res;
+      else
+         Res_Type := Get_Type (Res);
+      end if;
+
+      if Get_Kind (Res_Type) not in Iir_Kinds_Discrete_Type_Definition then
+         Error_Msg_Sem
+           (Disp_Node (Res) & " is not a discrete range type", Expr);
+         return Null_Iir;
+      end if;
+
       return Res;
    end Sem_Discrete_Range_Expression;
 
@@ -4113,7 +4137,7 @@ package body Sem_Expr is
          Disp_Overload_List (List, Expr1);
          return Null_Iir;
       end if;
-      return Sem_Expression_Ov (Expr1, Res);
+      return Sem_Expression_Ov (Expr1, Get_Base_Type (Res));
    end Sem_Case_Expression;
 
    function Sem_Condition (Cond : Iir) return Iir

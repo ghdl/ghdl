@@ -492,7 +492,7 @@ package body Sem_Types is
       --     body.
       Open_Declarative_Region;
 
-      Sem_Decls.Sem_Declaration_Chain (Decl, False);
+      Sem_Decls.Sem_Declaration_Chain (Decl);
       El := Get_Declaration_Chain (Decl);
       while El /= Null_Iir loop
          case Get_Kind (El) is
@@ -613,7 +613,7 @@ package body Sem_Types is
          Add_Protected_Type_Declarations (Decl);
       end if;
 
-      Sem_Decls.Sem_Declaration_Chain (Bod, False);
+      Sem_Decls.Sem_Declaration_Chain (Bod);
 
       El := Get_Declaration_Chain (Bod);
       while El /= Null_Iir loop
@@ -1093,6 +1093,9 @@ package body Sem_Types is
          when Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Integer_Subtype_Definition =>
             Sub_Type := Create_Iir (Iir_Kind_Integer_Subtype_Definition);
+         when Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Floating_Subtype_Definition =>
+            Sub_Type := Create_Iir (Iir_Kind_Floating_Subtype_Definition);
          when others =>
             raise Internal_Error;
       end case;
@@ -1559,7 +1562,7 @@ package body Sem_Types is
    begin
       Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
       Location_Copy (Res, Def);
-      Set_Base_Type (Res, Type_Mark);
+      Set_Base_Type (Res, Get_Base_Type (Type_Mark));
       Set_Type_Staticness (Res, Get_Type_Staticness (Type_Mark));
       Set_Type_Mark (Res, Type_Mark);
       if Get_Kind (Type_Mark) = Iir_Kind_Record_Subtype_Definition then
@@ -1785,8 +1788,7 @@ package body Sem_Types is
          if A_Range = Null_Iir then
             A_Range := Get_Range_Constraint (Type_Mark);
          else
-            A_Range := Sem_Discrete_Range_Expression
-              (A_Range, Type_Mark, True);
+            A_Range := Sem_Range_Expression (A_Range, Type_Mark, True);
             if A_Range = Null_Iir then
                --  Avoid error propagation.
                A_Range := Get_Range_Constraint (Type_Mark);
