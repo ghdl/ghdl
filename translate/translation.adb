@@ -13700,41 +13700,19 @@ package body Translation is
          return Res;
       end Translate_Static_String_Literal;
 
-      --  Some strings literal have an unconstrained array type,
-      --  eg: 'image of constant.  Its type is not constrained
-      --  because it is not so in VHDL!
-      function Translate_Non_Static_String_Literal (Str : Iir)
-        return O_Enode
+      --  Create a variable (constant) for string or bit string literal STR.
+      --  The type of the literal element is ELEMENT_TYPE, and the ortho type
+      --  of the string (a constrained array type) is STR_TYPE.
+      function Create_String_Literal_Var_Inner
+        (Str : Iir; Element_Type : Iir; Str_Type : O_Tnode)
+        return Var_Acc
       is
          use Name_Table;
 
-         Lit_Type : Iir;
-         Element_Type : Iir;
-         Index_Type : Iir;
          Val_Aggr : O_Array_Aggr_List;
-         Bound_Aggr : O_Record_Aggr_List;
-         Index_Aggr : O_Record_Aggr_List;
-         Res_Aggr : O_Record_Aggr_List;
          Res : O_Cnode;
-         Str_Type : O_Tnode;
-         Type_Info : Type_Info_Acc;
-         Index_Type_Info : Type_Info_Acc;
-         Len : Int32;
-         Val : Var_Acc;
-         Bound : Var_Acc;
-         R : O_Enode;
       begin
-         Lit_Type := Get_Type (Str);
-         Type_Info := Get_Info (Lit_Type);
-
-         --  Create the string value.
-         Len := Get_String_Length (Str);
-         Str_Type := New_Constrained_Array_Type
-           (Type_Info.T.Base_Type (Mode_Value),
-            New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Len)));
-
          Start_Array_Aggr (Val_Aggr, Str_Type);
-         Element_Type := Get_Element_Subtype (Lit_Type);
          case Get_Kind (Str) is
             when Iir_Kind_String_Literal =>
                Translate_Static_String_Literal_Inner
@@ -13747,8 +13725,54 @@ package body Translation is
          end case;
          Finish_Array_Aggr (Val_Aggr, Res);
 
-         Val := Create_Global_Const
+         return Create_Global_Const
            (Create_Uniq_Identifier, Str_Type, O_Storage_Private, Res);
+      end Create_String_Literal_Var_Inner;
+
+      --  Create a variable (constant) for string or bit string literal STR.
+      function Create_String_Literal_Var (Str : Iir) return Var_Acc is
+         use Name_Table;
+
+         Str_Type : constant Iir := Get_Type (Str);
+         Arr_Type : O_Tnode;
+      begin
+         --  Create the string value.
+         Arr_Type := New_Constrained_Array_Type
+           (Get_Info (Str_Type).T.Base_Type (Mode_Value),
+            New_Unsigned_Literal (Ghdl_Index_Type,
+                                  Unsigned_64 (Get_String_Length (Str))));
+
+         return Create_String_Literal_Var_Inner
+           (Str, Get_Element_Subtype (Str_Type), Arr_Type);
+      end Create_String_Literal_Var;
+
+      --  Some strings literal have an unconstrained array type,
+      --  eg: 'image of constant.  Its type is not constrained
+      --  because it is not so in VHDL!
+      function Translate_Non_Static_String_Literal (Str : Iir)
+        return O_Enode
+      is
+         use Name_Table;
+
+         Lit_Type : Iir;
+         Index_Type : Iir;
+         Bound_Aggr : O_Record_Aggr_List;
+         Index_Aggr : O_Record_Aggr_List;
+         Res_Aggr : O_Record_Aggr_List;
+         Res : O_Cnode;
+         Type_Info : Type_Info_Acc;
+         Index_Type_Info : Type_Info_Acc;
+         Len : Int32;
+         Val : Var_Acc;
+         Bound : Var_Acc;
+         R : O_Enode;
+      begin
+         Lit_Type := Get_Type (Str);
+         Type_Info := Get_Info (Lit_Type);
+
+         --  Create the string value.
+         Len := Get_String_Length (Str);
+         Val := Create_String_Literal_Var (Str);
 
          if Type_Info.Type_Mode = Type_Mode_Fat_Array then
             --  Create the string bound.
@@ -15254,6 +15278,66 @@ package body Translation is
          P : Natural;
          El : Iir;
       begin
+         case Get_Kind (Aggr) is
+            when Iir_Kind_Aggregate =>
+               --  Continue below.
+               null;
+            when Iir_Kind_String_Literal
+              | Iir_Kind_Bit_String_Literal =>
+               declare
+                  Len : constant Nat32 := Get_String_Length (Aggr);
+
+                  --  Type of the unconstrained array type.
+                  Arr_Type : O_Tnode;
+
+                  --  Type of the constrained array type.
+                  Str_Type : O_Tnode;
+
+                  Cst : Var_Acc;
+                  Var_I : O_Dnode;
+                  Label : O_Snode;
+               begin
+                  Expr_Type := Get_Element_Subtype (Aggr_Type);
+
+                  --  Create a constant for the string.
+                  --  First, create its type, because the literal has no
+                  --  type (subaggregate).
+                  Arr_Type := New_Array_Type
+                    (Get_Ortho_Type (Expr_Type, Mode_Value),
+                     Ghdl_Index_Type);
+                  New_Type_Decl (Create_Uniq_Identifier, Arr_Type);
+                  Str_Type := New_Constrained_Array_Type
+                    (Arr_Type, New_Index_Lit (Unsigned_64 (Len)));
+                  Cst := Create_String_Literal_Var_Inner
+                    (Aggr, Expr_Type, Str_Type);
+
+                  --  Copy it.
+                  Open_Temp;
+                  Var_I := Create_Temp (Ghdl_Index_Type);
+                  Init_Var (Var_I);
+                  Start_Loop_Stmt (Label);
+                  Gen_Exit_When
+                    (Label,
+                     New_Compare_Op (ON_Eq,
+                                     New_Obj_Value (Var_I),
+                                     New_Lit (New_Index_Lit (Nat32'Pos (Len))),
+                                     Ghdl_Bool_Type));
+                  New_Assign_Stmt
+                    (M2Lv (Chap3.Index_Base (Base_Ptr, Aggr_Type,
+                                             New_Obj_Value (Var_Index))),
+                     New_Value (New_Indexed_Element (Get_Var (Cst),
+                                                     New_Obj_Value (Var_I))));
+                  Inc_Var (Var_I);
+                  Inc_Var (Var_Index);
+                  Finish_Loop_Stmt (Label);
+                  Close_Temp;
+                  Free_Var (Cst);
+               end;
+               return;
+            when others =>
+               raise Internal_Error;
+         end case;
+
          Index_List := Get_Index_Subtype_List (Aggr_Type);
 
          --  FINAL is true if the elements of the aggregate are elements of
@@ -15264,53 +15348,6 @@ package body Translation is
          else
             Final := False;
          end if;
-
-         case Get_Kind (Aggr) is
-            when Iir_Kind_Aggregate =>
-               --  Continue below.
-               null;
-            when Iir_Kind_String_Literal =>
-               declare
-                  Literal_List : Iir_List;
-                  Lit : Iir;
-                  Pos : O_Enode;
-                  Ptr : String_Fat_Acc;
-                  Len : Nat32;
-               begin
-                  Ptr := Get_String_Fat_Acc (Aggr);
-                  Len := Get_String_Length (Aggr);
-                  Literal_List := Get_Enumeration_Literal_List
-                    (Get_Base_Type (Expr_Type));
-                  for I in 1 .. Len loop
-                     Lit := Find_Name_In_List
-                       (Literal_List, Name_Table.Get_Identifier (Ptr (I)));
-                     if I = 1 then
-                        Pos := New_Obj_Value (Var_Index);
-                     else
-                        Pos := New_Dyadic_Op
-                          (ON_Add_Ov,
-                           New_Obj_Value (Var_Index),
-                           New_Lit (New_Unsigned_Literal
-                                      (Ghdl_Index_Type, Nat32'Pos (I - 1))));
-                     end if;
-                     New_Assign_Stmt
-                       (M2Lv (Chap3.Index_Base (Base_Ptr, Aggr_Type, Pos)),
-                        New_Lit (Get_Ortho_Expr (Lit)));
-                  end loop;
-                  New_Assign_Stmt
-                    (New_Obj (Var_Index),
-                     New_Dyadic_Op
-                     (ON_Add_Ov,
-                      New_Obj_Value (Var_Index),
-                      New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                     Nat32'Pos (Len)))));
-               end;
-               return;
-            when Iir_Kind_Bit_String_Literal =>
-               raise Internal_Error;
-            when others =>
-               raise Internal_Error;
-         end case;
 
          El := Get_Association_Choices_Chain (Aggr);
 
