@@ -449,6 +449,7 @@ package body Translation is
 
       procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir);
 
+      --  Elaborate packages that DESIGN_UNIT depends on (except std.standard).
       procedure Elab_Dependence (Design_Unit: Iir_Design_Unit);
 
       --  Subprograms instances.
@@ -1239,6 +1240,11 @@ package body Translation is
             Block_Elab_Subprg : O_Dnode;
             --  Size of the block instance.
             Block_Instance_Size : O_Dnode;
+
+            --  Only for an entity: procedure that elaborate the packages this
+            --  units depend on.  That must be done before elaborating the
+            --  entity and before evaluating default expressions in generics.
+            Block_Elab_Pkg_Subprg : O_Dnode;
 
             --  RTI constant for the block.
             Block_Rti_Const : O_Dnode := O_Dnode_Null;
@@ -3973,6 +3979,11 @@ package body Translation is
          Chap2.Add_Subprg_Instance_Interfaces (Interface_List, Instance);
          Finish_Subprogram_Decl (Interface_List, Info.Block_Elab_Subprg);
 
+         --  Entity dependences elaborator.
+         Start_Procedure_Decl (Interface_List, Create_Identifier ("PKG_ELAB"),
+                               Global_Storage);
+         Finish_Subprogram_Decl (Interface_List, Info.Block_Elab_Pkg_Subprg);
+
          --  Generate RTI.
          if Flag_Rti then
             Rtis.Generate_Unit (Entity);
@@ -3985,13 +3996,20 @@ package body Translation is
             --  Entity declaration and process subprograms.
             Chap9.Translate_Block_Subprograms (Entity, Entity);
 
+            --  Package elaborator Body.
+            Start_Subprogram_Body (Info.Block_Elab_Pkg_Subprg);
+            Push_Local_Factory;
+            New_Debug_Line_Stmt (Get_Line_Number (Entity));
+            Chap2.Elab_Dependence (Get_Design_Unit (Entity));
+            Pop_Local_Factory;
+            Finish_Subprogram_Body;
+
             --  Elaborator Body.
             Start_Subprogram_Body (Info.Block_Elab_Subprg);
             Push_Local_Factory;
             Chap2.Start_Subprg_Instance_Use (Instance);
-            --  Set entity name.
             New_Debug_Line_Stmt (Get_Line_Number (Entity));
-            Chap2.Elab_Dependence (Get_Design_Unit (Entity));
+
             Chap9.Elab_Block_Declarations (Entity, Entity);
             Chap2.Finish_Subprg_Instance_Use (Instance);
             Pop_Local_Factory;
@@ -4123,12 +4141,8 @@ package body Translation is
          Start_Subprogram_Body (Info.Block_Elab_Subprg);
          Push_Local_Factory;
 
-         ----  Allocate memory for the instance.
-         --New_Assign_Stmt
-         --  (Instance, Gen_Alloc (Alloc_Memory,
-         --                        New_Sizeof (Info.Block_Decls_Type,
-         --                                    Ghdl_Index_Type),
-         --                        Info.Block_Decls_Ptr_Type));
+         --  Create a variable for the architecture instance (with the right
+         --  type, instead of the entity instance type).
          New_Var_Decl (Var_Arch_Instance, Wki_Arch_Instance,
                        O_Storage_Local, Info.Block_Decls_Ptr_Type);
          New_Assign_Stmt
@@ -4147,7 +4161,7 @@ package body Translation is
                                       Rtis.Ghdl_Rti_Access));
          end if;
 
-         --  Call entity elaborator.
+         --  Call entity elaborators.
          Start_Association (Constr, Entity_Info.Block_Elab_Subprg);
          New_Association (Constr, New_Value (New_Obj (Instance)));
          New_Procedure_Call (Constr);
@@ -22794,6 +22808,15 @@ package body Translation is
             end case;
          end;
 
+         --  Elab entity packages.
+         declare
+            Assoc : O_Assoc_List;
+         begin
+            Start_Association (Assoc, Entity_Info.Block_Elab_Pkg_Subprg);
+            New_Procedure_Call (Assoc);
+         end;
+
+         --  Elab map aspects.
          Push_Scope (Entity_Info.Block_Decls_Type, Var_Sub);
          Chap5.Elab_Map_Aspect (Mapping, Entity);
          Pop_Scope (Entity_Info.Block_Decls_Type);
@@ -29611,6 +29634,11 @@ package body Translation is
          New_Procedure_Call (Assoc);
 
          Gen_Filename (Get_Design_File (Get_Design_Unit (Entity)));
+
+         --  Elab package dependences of top entity (so that default
+         --  expressions can be evaluated).
+         Start_Association (Assoc, Entity_Info.Block_Elab_Pkg_Subprg);
+         New_Procedure_Call (Assoc);
 
          --  init instance
          Push_Scope (Entity_Info.Block_Decls_Type, Instance);
