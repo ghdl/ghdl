@@ -358,19 +358,17 @@ package body Sem is
             --  ...
             --  Each local port (or subelement or slice therof) must be
             --  associated {VHDL87: exactly}{VHDL93: at most} once.
-            if Flags.Vhdl_Std = Vhdl_87 then
+
+            --  GHDL: for a direct instantiation, follow rules of
+            --  LRM 1.1.1.1 Generic and LRM 1.1.1.2 Ports.
+            if Flags.Vhdl_Std = Vhdl_87
+              or else Get_Kind (Inter_Parent) = Iir_Kind_Entity_Declaration
+            then
                Miss_Generic := Missing_Generic;
                Miss_Port := Missing_Port;
             else
                Miss_Generic := Missing_Allowed;
-               if Get_Kind (Inter_Parent) = Iir_Kind_Entity_Declaration then
-                  --  FIXME: to be checked.
-                  --  Ghdl: for a direct instantiation, follow rules of
-                  --  LRM 1.1.1.2 Ports.
-                  Miss_Port := Missing_Port;
-               else
-                  Miss_Port := Missing_Allowed;
-               end if;
+               Miss_Port := Missing_Allowed;
             end if;
          when Iir_Kind_Binding_Indication =>
             --  LRM 5.2.1.2  Generic map and port map aspects
