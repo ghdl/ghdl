@@ -489,6 +489,7 @@ package body Sem_Assocs is
                Sub := Create_Iir (Iir_Kind_Association_Element_By_Individual);
                Location_Copy (Sub, Formal);
                Set_Formal (Sub, Iassoc);
+               Set_Associated (Iassoc, Sub);
                Iassoc := Sub;
             else
                case Get_Kind (Sub) is
