@@ -501,7 +501,7 @@ package body Scan is
                  ("'""' cannot close a bit string opened by '%'");
                exit;
             when '%' =>
-               pragma Assert (Mark = '%');
+               pragma Assert (Mark = '"');
                Error_Msg_Scan
                  ("'%' cannot close a bit string opened by '""'");
                exit;
