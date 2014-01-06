@@ -80,6 +80,7 @@ do_clean ()
   mkdir $VHDLDIR/libraries/std $VHDLDIR/libraries/ieee
   mkdir $VHDLDIR/libraries/vital95 $VHDLDIR/libraries/vital2000
   mkdir $VHDLDIR/libraries/synopsys $VHDLDIR/libraries/mentor
+  mkdir $VHDLDIR/libraries/ieee2008
   mkdir $VHDLDIR/grt
   mkdir $VHDLDIR/grt/config
 }
