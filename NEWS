@@ -2,6 +2,7 @@ NEWS for ghdl-0.32dev
 
 None yet... but the ghdl-0.31 branch should remain stable (only essential 
 changes committed to it) and development can continue on the "default" branch.
+Make "tip" default...
 
 ---------------------------------------------------------------------------
 
