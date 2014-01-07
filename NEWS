@@ -1,0 +1,29 @@
+NEWS for ghdl-0.31 (Dunoon Edition)
+
+New in ghdl-0.31:
+
+Updated to build with gcc-4.8.2.
+Supports OSVVM (Open-Source VHDL Verification Methodology) (see osvvm.org) 
+in its VHDL-2002 form.
+Adds 'image and 'value attributes for all required datatypes
+Many bugs and support issues fixed.
+New home on https://sourceforge.net/projects/ghdl-updates/
+
+Contributors to ghdl-0.31:
+
+Tristan Gingold    (sole author of ghdl as a whole, as well as most of the bugfixes in 0.31)
+Brian Drummond     (gcc4.8.2 update, OSVVM port, some bugfixes)
+David Koontz       (Mac OSX builds, LRM compliance work, bugfix analyses)
+Joris van Rantwijk (Debian packaging)
+Brian Davis        (Windows Mcode builds)
+Adam Jensen        (FreeBSD builds)
+
+with apologies to anyone who ought to be on this list but isn't.
+Thanks also to all those who have reported bugs and support issues, 
+and often patches and testcases to either:
+https://gna.org/bugs/?group=ghdl
+or 
+https://sourceforge.net/p/ghdl-updates/tickets/
+
+
+
