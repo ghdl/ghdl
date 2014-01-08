@@ -874,6 +874,31 @@ good feature, because it breaks the encapsulation rule.  When set, an
 operator can be silently overridden in another package.  You'd better to fix
 your design and use the @samp{numeric_std} package.
 
+@item -frelaxed-rules
+@cindex @option{-frelaxed-rules} switch
+Within an object declaration, allow to reference the name (which
+references the hidden declaration).  This ignores the error in the
+following code:
+
+@example
+package pkg1 is
+ type state is (state1, state2, state3);
+end pkg1;
+
+use work.pkg1.all;
+package pkg2 is
+ constant state1 : state := state1;
+end pkg2;
+@end example
+
+Some code (such as Xilinx packages) have such constructs, which
+are valid.
+
+(The scope of the @samp{state1} constant start at the @code{constant}
+word. Because the constant @samp{state1} and the enumeration literal
+@samp{state1} are homograph, the enumeration literal is hidden in the
+immediate scope of the constant).
+
 @item -fpsl
 @cindex @option{-fpsl} switch
 Enable parsing of PSL assertions within comments.  @xref{PSL implementation},
@@ -1546,38 +1571,8 @@ end good;
 @cindex Math_Complex
 
 The @samp{ieee} math packages (@samp{math_real} and
-@samp{math_complex}) provided with @code{GHDL} are not fully compliant with
-the @code{IEEE} standard.  They are based on an early draft which can be
-redistributed contrary to the final version of the package.
-
-This is unfortunate and may generate errors as some declarations are missing
-or have slightly changed.
-
-If you have bought the standard from @samp{ieee} then you can download
-the sources of the packages from
-@url{http://standards.ieee.org/downloads/1076/1076.2-1996}
-(unrestricted access).  You'd better to just download
-@file{math_real.vhdl}, @file{math_real-body.vhdl},
-@file{math_complex.vhdl} and @file{math_complex-body.vhdl}.  The other files
-are not necessary: the @samp{std_logic_1164} package has to be updated for
-@code{VHDL} 1993 (the @code{xnor} functions are commented out).
-
-If you want to replace math packages for the standard version of the
-@code{ieee} library, do:
-@smallexample
-$ cp math_real.vhdl math_real-body.vhdl @file{ieee_install_dir}
-$ cp math_complex.vhdl math_complex-body.vhdl @file{ieee_install_dir}
-$ cd @file{ieee_install_dir}
-$ ghdl -a --work=ieee math_real.vhdl math_real-body.vhdl
-$ ghdl -a --work=ieee math_complex.vhdl math_complex-body.vhdl
-@end smallexample
-(Replace @file{ieee_install_dir} by the location of the @code{ieee} library as
-displayed by @samp{ghdl -dispconfig}).
-
-You can repeat this for the @samp{synopsys} version of the @code{ieee} library.
-
-Don't forget that the math packages are only defined for the 1993 standard.
-
+@samp{math_complex}) provided with @code{GHDL} are fully compliant with
+the @code{IEEE} standard.
 
 @node Simulation and runtime, GHDL implementation of VHDL, Invoking GHDL, Top
 @comment  node-name,  next,  previous,  up
@@ -1843,7 +1838,6 @@ This chapter describes several implementation defined aspect of VHDL in GHDL.
 * VHDL files format::           
 * Top entity::                  
 * Using vendor libraries::      
-* Using ieee.math_real or ieee.math_complex::  
 * Interfacing to other languages::  
 @end menu
 
@@ -2070,7 +2064,7 @@ default value;
 The ports type must be constrained.
 @end itemize
 
-@node Using vendor libraries, Using ieee.math_real or ieee.math_complex, Top entity, GHDL implementation of VHDL
+@node Using vendor libraries, Interfacing to other languages, Top entity, GHDL implementation of VHDL
 @comment  node-name,  next,  previous,  up
 @section Using vendor libraries
 Many vendors libraries have been analyzed with GHDL.  There are
@@ -2079,47 +2073,10 @@ However, some problems have been encountered.
 
 GHDL follows the VHDL LRM (the manual which defines VHDL) more
 strictly than other VHDL tools.  You could try to relax the
-restrictions by using the @option{--std=93c}, @option{-fexplicit} and
-@option{--warn-no-vital-generic}.
+restrictions by using the @option{--std=93c}, @option{-fexplicit},
+@option{-frelaxed-rules} and @option{--warn-no-vital-generic}.
 
-Even with these relaxations, some broken libraries may fail.
-
-For example, @code{unisim_VITAL.vhd} from @code{Xilinx} can't be
-compiled because lines such as:
-@smallexample
- variable Write_A_Write_B : memory_collision_type := Write_A_Write_B;
- variable Read_A_Write_B  : memory_collision_type := Read_A_Write_B;
-@end smallexample
-(there are 6 such lines).
-According to VHDL visibility rules, @samp{Write_A_Write_B} cannot be used
-while it is defined.  This is very logical because it prevents from silly
-declarations such as
-@smallexample
-  constant k : natural := 2 * k;
-@end smallexample
-This files must be modified.  Fortunately, in the example the variables
-are never written.  So it is enough to remove them.
-
-@node Using ieee.math_real or ieee.math_complex, Interfacing to other languages, Using vendor libraries, GHDL implementation of VHDL
-@comment  node-name,  next,  previous,  up
-@section Using ieee.math_real or ieee.math_complex
-@cindex math_real
-@cindex math_complex
-Contrary to other @samp{ieee} libraries, the math packages sources are not
-freely available.  The sources provided with GHDL are based on an early draft
-and use the C libraries.  As a consequence, you should link your design
-with the @samp{libm.a} library using the @option{-Wl,} option like:
-@smallexample
-$ ghdl -e -Wl,-lm my_design
-@end smallexample
-Please, refer to your system manual for more details.
-
-Please also note that the @samp{ieee} libraries are not the same as the drafts.
-
-If you really need the @samp{ieee} math libraries, they are available on the
-web, but they cannot be included in GHDL.
-
-@node Interfacing to other languages,  , Using ieee.math_real or ieee.math_complex, GHDL implementation of VHDL
+@node Interfacing to other languages,  , Using vendor libraries, GHDL implementation of VHDL
 @comment  node-name,  next,  previous,  up
 @section Interfacing to other languages
 @cindex interfacing
