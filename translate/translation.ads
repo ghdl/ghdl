@@ -76,6 +76,9 @@ package Translation is
    --  If set, do not create identifiers (for in memory compilation).
    Flag_Discard_Identifiers : Boolean := False;
 
+   --  If true, do not create nested subprograms.
+   Flag_Unnest_Subprograms : Boolean := False;
+
    type Foreign_Kind_Type is (Foreign_Unknown,
                               Foreign_Vhpidirect,
                               Foreign_Intrinsic);

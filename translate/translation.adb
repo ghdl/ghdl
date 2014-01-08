@@ -181,6 +181,8 @@ package body Translation is
    Wki_Hi : O_Ident;
    Wki_Mid : O_Ident;
    Wki_Cmp : O_Ident;
+   Wki_Upframe : O_Ident;
+   Wki_Frame : O_Ident;
 
    --  ALLOCATION_KIND defines the type of memory storage.
    --  ALLOC_STACK means the object is allocated on the local stack and
@@ -461,80 +463,72 @@ package body Translation is
       --   files, signals or types.  However these data are not shared between
       --   instances of the same entity, architecture...  Subprograms instances
       --   is the way subprograms access to these data.
-      --  One subprogram instance corresponds to a record.  Generally, a
-      --   subprogram has 0 or 1 instance.  Subprograms of protected objects
-      --   have an additionnal instance for the variable (object).
-      --
+      --  One subprogram instance corresponds to a record.
+
+      --  Type to save an old instance builder.  Subprograms may have at most
+      --  one instance.  If they need severals (for example a protected
+      --  subprogram), the most recent one will have a reference to the
+      --  previous one.
+      type Subprg_Instance_Stack is limited private;
+
       --  Declare an instance to be added for subprograms.
       --  DECL_TYPE is the type of the instance; this should be a record.  This
       --   is used by PUSH_SCOPE.
       --  PTR_TYPE is a pointer to DECL_TYPE.
       --  IDENT is an identifier for the interface.
-      --  DATA is a stabilized O_LNODE whose value will be passed to call to
-      --   subprograms.
+      --  The previous instance is stored to PREV.  It must be restored with
+      --  Pop_Subprg_Instance.
       --  Add_Subprg_Instance_Interfaces will add an interface of name IDENT
       --   and type PTR_TYPE for every instance declared by
       --   PUSH_SUBPRG_INSTANCE.
       procedure Push_Subprg_Instance (Decl_Type : O_Tnode;
                                       Ptr_Type : O_Tnode;
-                                      Ident : O_Ident);
-
-      --  Revert of the previous subprogram.
-      --  Instances must be removed in opposite order they are added.
-      procedure Pop_Subprg_Instance (Ident : O_Ident);
+                                      Ident : O_Ident;
+                                      Prev : out Subprg_Instance_Stack);
 
       --  Since local subprograms has a direct access to its father interfaces,
       --  they do not required instances interfaces.
       --  These procedures are provided to temporarly disable the addition of
-      --   instances interfaces.
-      type Subprg_Instance_Stack is limited private;
-      procedure Save_Subprg_Instance (Stack : out Subprg_Instance_Stack);
-      procedure Restore_Subprg_Instance (Stack : Subprg_Instance_Stack);
+      --  instances interfaces. Use Pop_Subpg_Instance to restore to the
+      --  previous state.
+      procedure Clear_Subprg_Instance (Prev : out Subprg_Instance_Stack);
 
-      --  Provides/removes an access to an instance.
-      --  PTR is a pointer to the instance.  PTR must be stable if this
-      --  access is used several times.
-      --  SET_SUBPRG_INSTANCE must not be called twice on the same instance
-      --  unless the access to the instance has been cleared with
-      --  CLEAR_SUBPRG_INSTANCE.
-      --  At the association, instances without explicit accesses are
-      --  associated with the access found in the scope.
-      --procedure Set_Subprg_Instance (Decl_Type : O_Tnode; Ptr : O_Lnode);
-      --procedure Clear_Subprg_Instance (Decl_Type : O_Tnode);
+      --  Revert of the previous subprogram.
+      --  Instances must be removed in opposite order they are added.
+      procedure Pop_Subprg_Instance (Ident : O_Ident;
+                                     Prev : Subprg_Instance_Stack);
+
+      --  Contains the subprogram interface for the instance.
+      type Subprg_Instance_Type is private;
+      Null_Subprg_Instance : constant Subprg_Instance_Type;
 
       --  Add interfaces during the creation of a subprogram.
-      type Subprg_Instance_El is record
-         Inter : O_Dnode;
-         Inter_Type : O_Tnode;
-         Inst_Type : O_Tnode;
-      end record;
-      Null_Subprg_Instance_El : constant Subprg_Instance_El :=
-        (O_Dnode_Null, O_Tnode_Null, O_Tnode_Null);
-
-      type Subprg_Instance_Array is array (Natural range <>)
-        of Subprg_Instance_El;
-
       procedure Add_Subprg_Instance_Interfaces
-        (Interfaces : in out O_Inter_List; Vars : out Subprg_Instance_Array);
+        (Interfaces : in out O_Inter_List; Vars : out Subprg_Instance_Type);
+
+      --  Add a field in the current factory that reference the current
+      --  instance.
+      procedure Add_Subprg_Instance_Field (Field : out O_Fnode);
+
       --  Associate values to the instance interfaces during invocation of a
       --  subprogram.
       procedure Add_Subprg_Instance_Assoc
-        (Assocs : in out O_Assoc_List; Vars : Subprg_Instance_Array);
-      procedure Add_Subprg_Instance_Assoc
-        (Assocs : in out O_Assoc_List;
-         Vars : Subprg_Instance_Array;
-         Inst1_Type : O_Tnode;
-         Inst1_Val : O_Enode);
+        (Assocs : in out O_Assoc_List; Vars : Subprg_Instance_Type);
+
+      --  Assign the instance field FIELD of VAR.
+      procedure Set_Subprg_Instance_Field
+        (Var : O_Dnode; Field : O_Fnode; Vars : Subprg_Instance_Type);
 
       --  To be called at the beginning and end of a subprogram body creation.
       --  Call PUSH_SCOPE for the subprogram intances.
-      procedure Start_Subprg_Instance_Use (Vars : Subprg_Instance_Array);
-      procedure Finish_Subprg_Instance_Use (Vars : Subprg_Instance_Array);
+      procedure Start_Subprg_Instance_Use (Vars : Subprg_Instance_Type);
+      procedure Finish_Subprg_Instance_Use (Vars : Subprg_Instance_Type);
 
-      subtype Instance_Inters is Subprg_Instance_Array (0 .. 1);
-      Null_Instance_Inters : constant Instance_Inters :=
-        (others => Null_Subprg_Instance_El);
-
+      --  Call Push_Scope to reference instance from FIELD.
+      procedure Start_Prev_Subprg_Instance_Use_Via_Field
+        (Prev : Subprg_Instance_Stack; Field : O_Fnode);
+      procedure Finish_Prev_Subprg_Instance_Use_Via_Field
+        (Prev : Subprg_Instance_Stack; Field : O_Fnode);
 
       --  Same as above, but for IIR.
       procedure Create_Subprg_Instance (Interfaces : in out O_Inter_List;
@@ -543,23 +537,25 @@ package body Translation is
       procedure Start_Subprg_Instance_Use (Subprg : Iir);
       procedure Finish_Subprg_Instance_Use (Subprg : Iir);
    private
-      type Subprg_Instance_Type;
-      type Subprg_Instance_Stack is access Subprg_Instance_Type;
-
       type Subprg_Instance_Type is record
-         --  Arguments of push.
+         Inter : O_Dnode;
+         Inter_Type : O_Tnode;
+         Inst_Type : O_Tnode;
+      end record;
+      Null_Subprg_Instance : constant Subprg_Instance_Type :=
+        (O_Dnode_Null, O_Tnode_Null, O_Tnode_Null);
+
+      type Subprg_Instance_Stack is record
          Decl_Type : O_Tnode;
          Ptr_Type : O_Tnode;
          Ident : O_Ident;
-
-         --  Double linked list.
-         Next : Subprg_Instance_Stack;
-         Prev : Subprg_Instance_Stack;
       end record;
 
-      Subprg_Instance_First : Subprg_Instance_Stack := null;
-      Subprg_Instance_Last : Subprg_Instance_Stack := null;
-      Subprg_Instance_Unused : Subprg_Instance_Stack := null;
+      Null_Subprg_Instance_Stack : constant Subprg_Instance_Stack :=
+        (O_Tnode_Null, O_Tnode_Null, O_Ident_Nul);
+
+      Current_Subprg_Instance : Subprg_Instance_Stack :=
+        Null_Subprg_Instance_Stack;
    end Chap2;
 
    package Chap5 is
@@ -792,7 +788,7 @@ package body Translation is
    type O_Dnode_Array is array (Object_Kind_Type) of O_Dnode;
    type Var_Acc_Array is array (Object_Kind_Type) of Var_Acc;
    type Instance_Inters_Array is array (Object_Kind_Type)
-     of Chap2.Instance_Inters;
+     of Chap2.Subprg_Instance_Type;
 
    type Rti_Depth_Type is new Natural range 0 .. 255;
 
@@ -861,10 +857,15 @@ package body Translation is
          when Kind_Type_Protected =>
             --  Init procedure for the protected type.
             Prot_Init_Node : O_Dnode;
-            Prot_Init_Instance : Chap2.Instance_Inters;
+            Prot_Init_Instance : Chap2.Subprg_Instance_Type;
+            Prot_Init_Obj : O_Dnode;
             --  Final procedure.
             Prot_Final_Node : O_Dnode;
-            Prot_Final_Instance : Chap2.Instance_Inters;
+            Prot_Final_Instance : Chap2.Subprg_Instance_Type;
+            --  The outer instance, if any.
+            Prot_Subprg_Instance_Field : O_Fnode;
+            --  The LOCK field in the object type
+            Prot_Lock_Field : O_Fnode;
       end case;
    end record;
 
@@ -907,9 +908,12 @@ package body Translation is
      (Kind => Kind_Type_Protected,
       Rti_Max_Depth => 0,
       Prot_Init_Node => O_Dnode_Null,
-      Prot_Init_Instance => Chap2.Null_Instance_Inters,
+      Prot_Init_Instance => Chap2.Null_Subprg_Instance,
+      Prot_Init_Obj => O_Dnode_Null,
       Prot_Final_Node => O_Dnode_Null,
-      Prot_Final_Instance => Chap2.Null_Instance_Inters);
+      Prot_Subprg_Instance_Field => O_Fnode_Null,
+      Prot_Final_Instance => Chap2.Null_Subprg_Instance,
+      Prot_Lock_Field => O_Fnode_Null);
 
    --  Mode of the type; roughly speaking, this corresponds to its size
    --  (for scalars) or its layout (for composite types).
@@ -1101,7 +1105,7 @@ package body Translation is
 
             --  For a function:
             --    If the return value is not composite, then this field
-            --      must be O_LNODE_NULL.
+            --      must be O_DNODE_NULL.
             --    If the return value is a composite type, then the caller must
             --    give to the callee an area to put the result.  This area is
             --    given via an (hidden to the user) interface.  Furthermore,
@@ -1119,8 +1123,8 @@ package body Translation is
             Res_Record_Ptr : O_Tnode := O_Tnode_Null;
 
             --  Instances for the subprograms.
-            Subprg_Instance : Chap2.Instance_Inters :=
-              Chap2.Null_Instance_Inters;
+            Subprg_Instance : Chap2.Subprg_Instance_Type :=
+              Chap2.Null_Subprg_Instance;
 
             Subprg_Resolv : Subprg_Resolv_Info_Acc := null;
 
@@ -3951,7 +3955,8 @@ package body Translation is
       is
          Info : Block_Info_Acc;
          Interface_List : O_Inter_List;
-         Instance : Chap2.Instance_Inters;
+         Instance : Chap2.Subprg_Instance_Type;
+         Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
       begin
          Info := Add_Info (Entity, Kind_Block);
          Chap1.Start_Block_Decl (Entity);
@@ -3971,7 +3976,8 @@ package body Translation is
 
          Chap2.Push_Subprg_Instance (Info.Block_Decls_Type,
                                      Info.Block_Decls_Ptr_Type,
-                                     Wki_Instance);
+                                     Wki_Instance,
+                                     Prev_Subprg_Instance);
 
          --  Entity elaborator.
          Start_Procedure_Decl (Interface_List, Create_Identifier ("ELAB"),
@@ -4035,7 +4041,7 @@ package body Translation is
                end;
             end if;
          end if;
-         Chap2.Pop_Subprg_Instance (Wki_Instance);
+         Chap2.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
       end Translate_Entity_Declaration;
 
       --  Push scope for architecture ARCH via INSTANCE, and for its
@@ -4079,6 +4085,7 @@ package body Translation is
          Constr : O_Assoc_List;
          Instance : O_Dnode;
          Var_Arch_Instance : O_Dnode;
+         Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
       begin
          if Get_Foreign_Flag (Arch) then
             Error_Msg_Sem ("FOREIGN architectures are not yet handled", Arch);
@@ -4127,7 +4134,8 @@ package body Translation is
 
          Chap2.Push_Subprg_Instance (Info.Block_Decls_Type,
                                      Info.Block_Decls_Ptr_Type,
-                                     Wki_Instance);
+                                     Wki_Instance,
+                                     Prev_Subprg_Instance);
 
          --  Create process subprograms.
          Push_Scope (Entity_Info.Block_Decls_Type,
@@ -4135,7 +4143,7 @@ package body Translation is
          Chap9.Translate_Block_Subprograms (Arch, Arch);
          Pop_Scope (Entity_Info.Block_Decls_Type);
 
-         Chap2.Pop_Subprg_Instance (Wki_Instance);
+         Chap2.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
 
          --  Elaborator body.
          Start_Subprogram_Body (Info.Block_Elab_Subprg);
@@ -5016,6 +5024,51 @@ package body Translation is
          return True;
       end Is_Subprogram_Ortho_Function;
 
+      --  Return TRUE iif SUBPRG_BODY declares explicitely or implicitely
+      --  (or even implicitely by translation) a subprogram.
+      function Has_Nested_Subprograms (Subprg_Body : Iir) return Boolean
+      is
+         Decl : Iir;
+         Atype : Iir;
+      begin
+         Decl := Get_Declaration_Chain (Subprg_Body);
+         while Decl /= Null_Iir loop
+            case Get_Kind (Decl) is
+               when Iir_Kind_Function_Declaration
+                 | Iir_Kind_Procedure_Declaration =>
+                  return True;
+               when Iir_Kind_Function_Body
+                 | Iir_Kind_Procedure_Body =>
+                  --  The declaration preceed the body.
+                  raise Internal_Error;
+               when Iir_Kind_Type_Declaration
+                 | Iir_Kind_Anonymous_Type_Declaration =>
+                  Atype := Get_Type (Decl);
+                  case Iir_Kinds_Type_And_Subtype_Definition
+                    (Get_Kind (Atype)) is
+                     when Iir_Kinds_Scalar_Type_Definition =>
+                        null;
+                     when Iir_Kind_Access_Type_Definition
+                       | Iir_Kind_Access_Subtype_Definition =>
+                        null;
+                     when Iir_Kind_File_Type_Definition =>
+                        return True;
+                     when Iir_Kind_Protected_Type_Declaration =>
+                        raise Internal_Error;
+                     when Iir_Kinds_Composite_Type_Definition =>
+                        --  At least for "=".
+                        return True;
+                     when Iir_Kind_Incomplete_Type_Definition =>
+                        null;
+                  end case;
+               when others =>
+                  null;
+            end case;
+            Decl := Get_Chain (Decl);
+         end loop;
+         return False;
+      end Has_Nested_Subprograms;
+
       procedure Translate_Subprogram_Body (Subprg : Iir)
       is
          Spec : Iir;
@@ -5030,9 +5083,18 @@ package body Translation is
          --  and retained.
          Is_Prot : Boolean := False;
 
+         --  True if the body has local (nested) subprograms.
+         Has_Nested : Boolean;
+
+         Frame_Type : O_Tnode;
+         Frame_Ptr_Type : O_Tnode;
+         Upframe_Field : O_Fnode;
+         Frame : O_Dnode;
+         Frame_Ptr : O_Dnode;
+
          Has_Return : Boolean;
 
-         Subprg_Instances : Chap2.Subprg_Instance_Stack;
+         Prev_Subprg_Instances : Chap2.Subprg_Instance_Stack;
       begin
          Spec := Get_Subprogram_Specification (Subprg);
          Info := Get_Info (Spec);
@@ -5043,18 +5105,50 @@ package body Translation is
             return;
          end if;
 
+         if Flag_Unnest_Subprograms then
+            Has_Nested := Has_Nested_Subprograms (Subprg);
+         else
+            Has_Nested := False;
+         end if;
+
          --  Set the identifier prefix with the subprogram identifier and
          --  overload number if any.
          Push_Subprg_Identifier (Spec, Mark);
-         Restore_Local_Identifier (Info.Subprg_Local_Id);
+
+         if Has_Nested then
+            --  Unnest subprograms.
+            --  Create an instance for the local declarations.
+            Push_Instance_Factory (O_Tnode_Null);
+            Add_Subprg_Instance_Field (Upframe_Field);
+
+            --  FIXME: parameters
+
+            Chap4.Translate_Declaration_Chain (Subprg);
+            Pop_Instance_Factory (Frame_Type);
+
+            New_Type_Decl (Create_Identifier ("_FRAMETYPE"), Frame_Type);
+            Frame_Ptr_Type := New_Access_Type (Frame_Type);
+            New_Type_Decl (Create_Identifier ("_FRAMEPTR"), Frame_Ptr_Type);
+
+            Rtis.Generate_Subprogram_Body (Subprg);
+
+            Chap2.Push_Subprg_Instance (Frame_Type, Frame_Ptr_Type,
+                                        Wki_Upframe, Prev_Subprg_Instances);
+
+            Chap4.Translate_Declaration_Chain_Subprograms (Subprg, Null_Iir);
+
+            Chap2.Pop_Subprg_Instance (Wki_Upframe, Prev_Subprg_Instances);
+         end if;
 
          Start_Subprogram_Body (Func_Decl);
 
          Start_Subprg_Instance_Use (Spec);
 
+         Restore_Local_Identifier (Info.Subprg_Local_Id);
+
          Push_Local_Factory;
+         Chap2.Clear_Subprg_Instance (Prev_Subprg_Instances);
          Open_Local_Temp;
-         Chap2.Save_Subprg_Instance (Subprg_Instances);
 
          --  Init out parameter passed by value/copy.
          declare
@@ -5081,9 +5175,20 @@ package body Translation is
             end loop;
          end;
 
-         Chap4.Translate_Declaration_Chain (Subprg);
-         Rtis.Generate_Subprogram_Body (Subprg);
-         Chap4.Translate_Declaration_Chain_Subprograms (Subprg, Null_Iir);
+         if not Has_Nested then
+            Chap4.Translate_Declaration_Chain (Subprg);
+            Rtis.Generate_Subprogram_Body (Subprg);
+            Chap4.Translate_Declaration_Chain_Subprograms (Subprg, Null_Iir);
+         else
+            New_Var_Decl (Frame, Wki_Frame, O_Storage_Local, Frame_Type);
+            --  FIXME!
+            New_Var_Decl (Frame_Ptr, Get_Identifier ("FRAMEPTR"),
+                          O_Storage_Local, Frame_Ptr_Type);
+            New_Assign_Stmt (New_Obj (Frame_Ptr),
+                             New_Address (New_Obj (Frame), Frame_Ptr_Type));
+            Push_Scope (Frame_Type, Frame_Ptr);
+            --  Init instance.
+         end if;
 
          Chap4.Elab_Declaration_Chain (Subprg, Final);
 
@@ -5115,7 +5220,7 @@ package body Translation is
          Current_Subprogram := Old_Subprogram;
 
          if Final or Is_Prot then
-            --  FIXME: create a barrier to catch missing return statement.
+            --  Create a barrier to catch missing return statement.
             if Get_Kind (Spec) = Iir_Kind_Procedure_Declaration then
                New_Exit_Stmt (Info.Subprg_Exit);
             else
@@ -5146,7 +5251,7 @@ package body Translation is
             end if;
          end if;
 
-         Chap2.Restore_Subprg_Instance (Subprg_Instances);
+         Chap2.Pop_Subprg_Instance (O_Ident_Nul, Prev_Subprg_Instances);
          Close_Local_Temp;
          Pop_Local_Factory;
 
@@ -5437,148 +5542,121 @@ package body Translation is
          end loop;
       end Elab_Dependence;
 
+      procedure Clear_Subprg_Instance (Prev : out Subprg_Instance_Stack)
+      is
+      begin
+         Prev := Current_Subprg_Instance;
+         Current_Subprg_Instance := Null_Subprg_Instance_Stack;
+      end Clear_Subprg_Instance;
+
       procedure Push_Subprg_Instance (Decl_Type : O_Tnode;
                                       Ptr_Type : O_Tnode;
-                                      Ident : O_Ident)
+                                      Ident : O_Ident;
+                                      Prev : out Subprg_Instance_Stack)
       is
-         El : Subprg_Instance_Stack;
       begin
-         if Subprg_Instance_Unused /= null then
-            El := Subprg_Instance_Unused;
-            Subprg_Instance_Unused := El.Next;
-         else
-            El := new Subprg_Instance_Type;
-         end if;
-         El.all := (Decl_Type => Decl_Type,
-                    Ptr_Type => Ptr_Type,
-                    Ident => Ident,
-                    Next => null,
-                    Prev => Subprg_Instance_Last);
-         if Subprg_Instance_First = null then
-            Subprg_Instance_First := El;
-         else
-            Subprg_Instance_Last.Next := El;
-         end if;
-         Subprg_Instance_Last := El;
+         Prev := Current_Subprg_Instance;
+         Current_Subprg_Instance := (Decl_Type => Decl_Type,
+                                     Ptr_Type => Ptr_Type,
+                                     Ident => Ident);
       end Push_Subprg_Instance;
 
-      procedure Pop_Subprg_Instance (Ident : O_Ident)
-      is
-         El : Subprg_Instance_Stack;
+      function Has_Current_Subprg_Instance return Boolean is
       begin
-         El := Subprg_Instance_Last;
-         if El = null or else not Is_Equal (El.Ident, Ident) then
+         return Current_Subprg_Instance.Decl_Type /= O_Tnode_Null;
+      end Has_Current_Subprg_Instance;
+
+      procedure Pop_Subprg_Instance (Ident : O_Ident;
+                                     Prev : Subprg_Instance_Stack)
+      is
+      begin
+         if Is_Equal (Current_Subprg_Instance.Ident, Ident) then
+            Current_Subprg_Instance := Prev;
+         else
             --  POP does not match with a push.
             raise Internal_Error;
          end if;
-         Subprg_Instance_Last := El.Prev;
-         if El.Prev = null then
-            Subprg_Instance_First := null;
-         else
-            El.Prev.Next := null;
-         end if;
-         El.Next := Subprg_Instance_Unused;
-         Subprg_Instance_Unused := El;
       end Pop_Subprg_Instance;
 
-      procedure Save_Subprg_Instance (Stack : out Subprg_Instance_Stack)
-      is
-      begin
-         Stack := Subprg_Instance_First;
-         if Stack /= null then
-            if Stack.Prev /= null then
-               raise Internal_Error;
-            end if;
-            Stack.Prev := Subprg_Instance_Last;
-         end if;
-         Subprg_Instance_First := null;
-         Subprg_Instance_Last := null;
-      end Save_Subprg_Instance;
-
-      procedure Restore_Subprg_Instance (Stack : Subprg_Instance_Stack)
-      is
-      begin
-         if Subprg_Instance_First /= null then
-            --  Not matching with a save.
-            raise Internal_Error;
-         end if;
-         Subprg_Instance_First := Stack;
-         if Stack /= null then
-            Subprg_Instance_Last := Stack.Prev;
-            Stack.Prev := null;
-         end if;
-      end Restore_Subprg_Instance;
-
       procedure Add_Subprg_Instance_Interfaces
-        (Interfaces : in out O_Inter_List; Vars : out Subprg_Instance_Array)
+        (Interfaces : in out O_Inter_List; Vars : out Subprg_Instance_Type)
       is
-         El : Subprg_Instance_Stack;
-         I : Natural;
       begin
-         El := Subprg_Instance_First;
-         I := Vars'First;
-         while El /= null loop
-            Vars (I).Inst_Type := El.Decl_Type;
-            Vars (I).Inter_Type := El.Ptr_Type;
+         if Has_Current_Subprg_Instance then
+            Vars.Inst_Type := Current_Subprg_Instance.Decl_Type;
+            Vars.Inter_Type := Current_Subprg_Instance.Ptr_Type;
             New_Interface_Decl
-              (Interfaces, Vars (I).Inter, El.Ident, El.Ptr_Type);
-            I := I + 1;
-            El := El.Next;
-         end loop;
-         Vars (I .. Vars'Last) := (others => Null_Subprg_Instance_El);
+              (Interfaces, Vars.Inter,
+               Current_Subprg_Instance.Ident,
+               Current_Subprg_Instance.Ptr_Type);
+         else
+            Vars := Null_Subprg_Instance;
+         end if;
       end Add_Subprg_Instance_Interfaces;
 
+      procedure Add_Subprg_Instance_Field (Field : out O_Fnode) is
+      begin
+         if Has_Current_Subprg_Instance then
+            Field := Add_Instance_Factory_Field
+              (Current_Subprg_Instance.Ident,
+               Current_Subprg_Instance.Ptr_Type);
+         else
+            Field := O_Fnode_Null;
+         end if;
+      end Add_Subprg_Instance_Field;
+
       procedure Add_Subprg_Instance_Assoc
-        (Assocs : in out O_Assoc_List; Vars : Subprg_Instance_Array)
+        (Assocs : in out O_Assoc_List; Vars : Subprg_Instance_Type)
       is
          Val : O_Enode;
       begin
-         for I in Vars'Range loop
-            exit when Vars (I).Inter = O_Dnode_Null;
-            Val := New_Address (Get_Instance_Ref (Vars (I).Inst_Type),
-                                Vars (I).Inter_Type);
+         if Vars.Inter /= O_Dnode_Null then
+            Val := New_Address (Get_Instance_Ref (Vars.Inst_Type),
+                                Vars.Inter_Type);
             New_Association (Assocs, Val);
-         end loop;
+         end if;
       end Add_Subprg_Instance_Assoc;
 
-      procedure Add_Subprg_Instance_Assoc
-        (Assocs : in out O_Assoc_List;
-         Vars : Subprg_Instance_Array;
-         Inst1_Type : O_Tnode;
-         Inst1_Val : O_Enode)
+      procedure Set_Subprg_Instance_Field
+        (Var : O_Dnode; Field : O_Fnode; Vars : Subprg_Instance_Type)
       is
-         Val : O_Enode;
       begin
-         for I in Vars'Range loop
-            exit when Vars (I).Inter = O_Dnode_Null;
-            if Vars (I).Inst_Type = Inst1_Type then
-               Val := Inst1_Val;
-            else
-               Val := New_Address (Get_Instance_Ref (Vars (I).Inst_Type),
-                                   Vars (I).Inter_Type);
-            end if;
-            New_Association (Assocs, Val);
-         end loop;
-      end Add_Subprg_Instance_Assoc;
+         if Vars.Inter /= O_Dnode_Null then
+            New_Assign_Stmt (New_Selected_Acc_Value (New_Obj (Var), Field),
+                             New_Obj_Value (Vars.Inter));
+         end if;
+      end Set_Subprg_Instance_Field;
 
-      procedure Start_Subprg_Instance_Use (Vars : Subprg_Instance_Array)
-      is
+      procedure Start_Subprg_Instance_Use (Vars : Subprg_Instance_Type) is
       begin
-         for I in Vars'Range loop
-            exit when Vars (I).Inter = O_Dnode_Null;
-            Push_Scope (Vars (I).Inst_Type, Vars (I).Inter);
-         end loop;
+         if Vars.Inter /= O_Dnode_Null then
+            Push_Scope (Vars.Inst_Type, Vars.Inter);
+         end if;
       end Start_Subprg_Instance_Use;
 
-      procedure Finish_Subprg_Instance_Use (Vars : Subprg_Instance_Array)
-      is
+      procedure Finish_Subprg_Instance_Use (Vars : Subprg_Instance_Type) is
       begin
-         for I in reverse Vars'Range loop
-            if Vars (I).Inter /= O_Dnode_Null then
-               Pop_Scope (Vars (I).Inst_Type);
-            end if;
-         end loop;
+         if Vars.Inter /= O_Dnode_Null then
+            Pop_Scope (Vars.Inst_Type);
+         end if;
       end Finish_Subprg_Instance_Use;
+
+      procedure Start_Prev_Subprg_Instance_Use_Via_Field
+        (Prev : Subprg_Instance_Stack; Field : O_Fnode) is
+      begin
+         if Field /= O_Fnode_Null then
+            Push_Scope_Via_Field_Ptr
+              (Prev.Decl_Type, Field, Current_Subprg_Instance.Decl_Type);
+         end if;
+      end Start_Prev_Subprg_Instance_Use_Via_Field;
+
+      procedure Finish_Prev_Subprg_Instance_Use_Via_Field
+        (Prev : Subprg_Instance_Stack; Field : O_Fnode) is
+      begin
+         if Field /= O_Fnode_Null then
+            Pop_Scope (Prev.Decl_Type);
+         end if;
+      end Finish_Prev_Subprg_Instance_Use_Via_Field;
 
       procedure Create_Subprg_Instance (Interfaces : in out O_Inter_List;
                                         Subprg : Iir)
@@ -6919,22 +6997,28 @@ package body Translation is
          Info : Type_Info_Acc;
          Inter_List : O_Inter_List;
          Mark : Id_Mark_Type;
+         Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
       begin
          Push_Identifier_Prefix
            (Mark, Get_Identifier (Get_Type_Declarator (Def)));
 
          Info := Get_Info (Def);
 
-         Chap2.Push_Subprg_Instance (Info.Ortho_Type (Mode_Value),
-                                     Info.Ortho_Ptr_Type (Mode_Value),
-                                     Wki_Obj);
-
          --  Init.
          Start_Procedure_Decl
            (Inter_List, Create_Identifier ("INIT"), Global_Storage);
          Chap2.Add_Subprg_Instance_Interfaces
            (Inter_List, Info.T.Prot_Init_Instance);
+         New_Interface_Decl
+           (Inter_List, Info.T.Prot_Init_Obj, Wki_Obj,
+            Info.Ortho_Ptr_Type (Mode_Value));
          Finish_Subprogram_Decl (Inter_List, Info.T.Prot_Init_Node);
+
+         --  Use the object as instance.
+         Chap2.Push_Subprg_Instance (Info.Ortho_Type (Mode_Value),
+                                     Info.Ortho_Ptr_Type (Mode_Value),
+                                     Wki_Obj,
+                                     Prev_Subprg_Instance);
 
          --  Final.
          Start_Procedure_Decl
@@ -6959,7 +7043,7 @@ package body Translation is
             El := Get_Chain (El);
          end loop;
 
-         Chap2.Pop_Subprg_Instance (Wki_Obj);
+         Chap2.Pop_Subprg_Instance (Wki_Obj, Prev_Subprg_Instance);
 
          Pop_Identifier_Prefix (Mark);
       end Translate_Protected_Type_Subprograms;
@@ -6969,16 +7053,19 @@ package body Translation is
          Decl : Iir_Protected_Type_Declaration;
          Mark : Id_Mark_Type;
          Info : Type_Info_Acc;
-         Lock_Field : O_Fnode;
-         pragma Unreferenced (Lock_Field);
       begin
          Decl := Get_Protected_Type_Declaration (Bod);
          Info := Get_Info (Decl);
 
          Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
 
+         --  Create the object type
          Push_Instance_Factory (Info.Ortho_Type (Mode_Value));
-         Lock_Field := Add_Instance_Factory_Field
+         --  First, the previous instance.
+         Chap2.Add_Subprg_Instance_Field
+           (Info.T.Prot_Subprg_Instance_Field);
+         --  Then the object lock
+         Info.T.Prot_Lock_Field := Add_Instance_Factory_Field
            (Get_Identifier ("LOCK"), Ghdl_Ptr_Type);
 
          --  Translate declarations.
@@ -6986,6 +7073,7 @@ package body Translation is
 
          Pop_Instance_Factory (Info.Ortho_Type (Mode_Value));
          if Global_Storage /= O_Storage_External then
+            --  FIXME: the size may not be constant!
             Info.C.Size_Var (Mode_Value) := Create_Global_Const
               (Create_Identifier ("SIZE"), Ghdl_Index_Type,
                Global_Storage, New_Sizeof (Info.Ortho_Type (Mode_Value),
@@ -6995,6 +7083,7 @@ package body Translation is
          Pop_Identifier_Prefix (Mark);
       end Translate_Protected_Type_Body;
 
+      --  Call lock or unlock on a protected object.
       procedure Call_Ghdl_Protected_Procedure (Type_Def : Iir; Proc : O_Dnode)
       is
          Assoc : O_Assoc_List;
@@ -7005,7 +7094,10 @@ package body Translation is
          New_Association
            (Assoc,
             New_Unchecked_Address
-            (Get_Instance_Ref (Info.Ortho_Type (Mode_Value)), Ghdl_Ptr_Type));
+              (New_Selected_Element
+                 (Get_Instance_Ref (Info.Ortho_Type (Mode_Value)),
+                  Info.T.Prot_Lock_Field),
+               Ghdl_Ptr_Type));
          New_Procedure_Call (Assoc);
       end Call_Ghdl_Protected_Procedure;
 
@@ -7014,6 +7106,7 @@ package body Translation is
          Decl : Iir;
          Info : Type_Info_Acc;
          Final : Boolean;
+         Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
       begin
          Decl := Get_Protected_Type_Declaration (Bod);
          Info := Get_Info (Decl);
@@ -7021,46 +7114,60 @@ package body Translation is
          --  Subprograms of BOD.
          Chap2.Push_Subprg_Instance (Info.Ortho_Type (Mode_Value),
                                      Info.Ortho_Ptr_Type (Mode_Value),
-                                     Wki_Obj);
+                                     Wki_Obj,
+                                     Prev_Subprg_Instance);
+         Chap2.Start_Prev_Subprg_Instance_Use_Via_Field
+           (Prev_Subprg_Instance, Info.T.Prot_Subprg_Instance_Field);
 
          Chap4.Translate_Declaration_Chain_Subprograms (Bod, Null_Iir);
 
-         Chap2.Pop_Subprg_Instance (Wki_Obj);
+         Chap2.Finish_Prev_Subprg_Instance_Use_Via_Field
+           (Prev_Subprg_Instance, Info.T.Prot_Subprg_Instance_Field);
+         Chap2.Pop_Subprg_Instance (Wki_Obj, Prev_Subprg_Instance);
 
          if Global_Storage = O_Storage_External then
             return;
          end if;
 
-         --  Init
-         Start_Subprogram_Body (Info.T.Prot_Init_Node);
-         Chap2.Start_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
+         --  Init subprogram
+         begin
+            Start_Subprogram_Body (Info.T.Prot_Init_Node);
+            Chap2.Start_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
+            Chap2.Set_Subprg_Instance_Field
+              (Info.T.Prot_Init_Obj, Info.T.Prot_Subprg_Instance_Field,
+               Info.T.Prot_Init_Instance);
+            Push_Scope (Info.Ortho_Type (Mode_Value), Info.T.Prot_Init_Obj);
 
-         --   Create lock.
-         Call_Ghdl_Protected_Procedure (Decl, Ghdl_Protected_Init);
+            --   Create lock.
+            Call_Ghdl_Protected_Procedure (Decl, Ghdl_Protected_Init);
 
-         --   Elaborate fields.
-         Open_Temp;
-         Chap4.Elab_Declaration_Chain (Bod, Final);
-         Close_Temp;
+            --   Elaborate fields.
+            Open_Temp;
+            Chap4.Elab_Declaration_Chain (Bod, Final);
+            Close_Temp;
 
-         Chap2.Finish_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
-         Finish_Subprogram_Body;
+            Pop_Scope (Info.Ortho_Type (Mode_Value));
 
+            Chap2.Finish_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
+            Finish_Subprogram_Body;
+         end;
 
-         --  Fini
-         Start_Subprogram_Body (Info.T.Prot_Final_Node);
-         Chap2.Start_Subprg_Instance_Use (Info.T.Prot_Final_Instance);
+         --  Fini subprogram
+         begin
+            Start_Subprogram_Body (Info.T.Prot_Final_Node);
+            Chap2.Start_Subprg_Instance_Use (Info.T.Prot_Final_Instance);
 
-         --   Deallocate fields.
-         if Final or True then
-            Chap4.Final_Declaration_Chain (Bod, True);
-         end if;
+            --   Deallocate fields.
+            if Final or True then
+               Chap4.Final_Declaration_Chain (Bod, True);
+            end if;
 
-         --   Destroy lock.
-         Call_Ghdl_Protected_Procedure (Decl, Ghdl_Protected_Fini);
+            --   Destroy lock.
+            Call_Ghdl_Protected_Procedure (Decl, Ghdl_Protected_Fini);
 
-         Chap2.Finish_Subprg_Instance_Use (Info.T.Prot_Final_Instance);
-         Finish_Subprogram_Body;
+            Chap2.Finish_Subprg_Instance_Use (Info.T.Prot_Final_Instance);
+            Finish_Subprogram_Body;
+         end;
       end Translate_Protected_Type_Body_Subprograms;
 
       ---------------
@@ -9292,9 +9399,8 @@ package body Translation is
          --  The object has already been allocated.
          --  Call the initializator.
          Start_Association (Assoc, Info.T.Prot_Init_Node);
-         Chap2.Add_Subprg_Instance_Assoc (Assoc, Info.T.Prot_Init_Instance,
-                                          Info.Ortho_Type (Mode_Value),
-                                          M2E (Obj));
+         Chap2.Add_Subprg_Instance_Assoc (Assoc, Info.T.Prot_Init_Instance);
+         New_Association (Assoc, M2E (Obj));
          New_Procedure_Call (Assoc);
       end Init_Protected_Object;
 
@@ -9309,9 +9415,7 @@ package body Translation is
          Obj := Chap6.Translate_Name (Decl);
          --  Call the Finalizator.
          Start_Association (Assoc, Info.T.Prot_Final_Node);
-         Chap2.Add_Subprg_Instance_Assoc (Assoc, Info.T.Prot_Final_Instance,
-                                          Info.Ortho_Type (Mode_Value),
-                                          M2E (Obj));
+         New_Association (Assoc, M2E (Obj));
          New_Procedure_Call (Assoc);
       end Fini_Protected_Object;
 
@@ -10532,7 +10636,7 @@ package body Translation is
                null;
 
             when Iir_Kind_Protected_Type_Body =>
-               Chap3.Translate_Protected_Type_Body (Decl);
+               null;
 
             --when Iir_Kind_Implicit_Function_Declaration =>
             --when Iir_Kind_Signal_Declaration
@@ -11034,6 +11138,7 @@ package body Translation is
                   Chap3.Translate_Type_Subprograms (El);
                   Chap7.Init_Implicit_Subprogram_Infos (Infos);
                when Iir_Kind_Protected_Type_Body =>
+                  Chap3.Translate_Protected_Type_Body (El);
                   Chap3.Translate_Protected_Type_Body_Subprograms (El);
                when Iir_Kind_Implicit_Function_Declaration
                  | Iir_Kind_Implicit_Procedure_Declaration =>
@@ -14295,15 +14400,7 @@ package body Translation is
 
          --  If the subprogram is a method, pass the protected object.
          if Obj /= Null_Iir then
-            declare
-               Prot_Info : Type_Info_Acc;
-            begin
-               Prot_Info := Get_Info (Get_Method_Type (Imp));
-               Chap2.Add_Subprg_Instance_Assoc
-                 (Constr, Info.Subprg_Instance,
-                  Prot_Info.Ortho_Type (Mode_Value),
-                  M2E (Chap6.Translate_Name (Obj)));
-            end;
+            New_Association (Constr, M2E (Chap6.Translate_Name (Obj)));
          else
             Chap2.Add_Subprg_Instance_Assoc (Constr, Info.Subprg_Instance);
          end if;
@@ -20285,15 +20382,7 @@ package body Translation is
 
          Obj := Get_Method_Object (Stmt);
          if Obj /= Null_Iir then
-            declare
-               Prot_Info : Type_Info_Acc;
-            begin
-               Prot_Info := Get_Info (Get_Method_Type (Imp));
-               Chap2.Add_Subprg_Instance_Assoc
-                 (Constr, Info.Subprg_Instance,
-                  Prot_Info.Ortho_Type (Mode_Value),
-                  M2E (Chap6.Translate_Name (Obj)));
-            end;
+            New_Association (Constr, M2E (Chap6.Translate_Name (Obj)));
          else
             Chap2.Add_Subprg_Instance_Assoc (Constr, Info.Subprg_Instance);
          end if;
@@ -22224,20 +22313,20 @@ package body Translation is
                when Iir_Kind_Generate_Statement =>
                   declare
                      Info : Block_Info_Acc;
-                     Prev_Instance : Chap2.Subprg_Instance_Stack;
+                     Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
                   begin
                      Info := Get_Info (Stmt);
-                     Chap2.Save_Subprg_Instance (Prev_Instance);
                      Chap2.Push_Subprg_Instance (Info.Block_Decls_Type,
                                                  Info.Block_Decls_Ptr_Type,
-                                                 Wki_Instance);
+                                                 Wki_Instance,
+                                                 Prev_Subprg_Instance);
                      Push_Scope_Via_Field_Ptr (Base_Info.Block_Decls_Type,
                                                Info.Block_Origin_Field,
                                                Info.Block_Decls_Type);
                      Translate_Block_Subprograms (Stmt, Stmt);
                      Pop_Scope (Base_Info.Block_Decls_Type);
-                     Chap2.Pop_Subprg_Instance (Wki_Instance);
-                     Chap2.Restore_Subprg_Instance (Prev_Instance);
+                     Chap2.Pop_Subprg_Instance
+                       (Wki_Instance, Prev_Subprg_Instance);
                   end;
                when others =>
                   Error_Kind ("translate_block_subprograms", Stmt);
@@ -28047,6 +28136,8 @@ package body Translation is
       Wki_Hi := Get_Identifier ("hi");
       Wki_Mid := Get_Identifier ("mid");
       Wki_Cmp := Get_Identifier ("cmp");
+      Wki_Upframe := Get_Identifier ("UPFRAME");
+      Wki_Frame := Get_Identifier ("FRAME");
 
       Sizetype := New_Unsigned_Type (32);
       New_Type_Decl (Get_Identifier ("__ghdl_size_type"), Sizetype);
