@@ -4822,15 +4822,9 @@ package body Translation is
       --  interface record.
       function Translate_Interface_Type (Inter : Iir) return O_Tnode
       is
-         Info : Ortho_Info_Acc;
          Mode : Object_Kind_Type;
-         Tinfo : Type_Info_Acc;
+         Tinfo : constant Type_Info_Acc := Get_Info (Get_Type (Inter));
       begin
-         Info := Get_Info (Inter);
-         if Info.Interface_Field /= O_Fnode_Null then
-            return O_Tnode_Null;
-         end if;
-
          case Get_Kind (Inter) is
             when Iir_Kind_Constant_Interface_Declaration
               | Iir_Kind_Variable_Interface_Declaration
@@ -4841,7 +4835,6 @@ package body Translation is
             when others =>
                Error_Kind ("translate_interface_type", Inter);
          end case;
-         Tinfo := Get_Info (Get_Type (Inter));
          case Tinfo.Type_Mode is
             when Type_Mode_Unknown =>
                raise Internal_Error;
@@ -4988,8 +4981,8 @@ package body Translation is
                Arg_Info := Get_Info (Inter);
             end if;
 
-            Arg_Info.Interface_Type := Translate_Interface_Type (Inter);
-            if Arg_Info.Interface_Type /= O_Tnode_Null then
+            if Arg_Info.Interface_Field = O_Fnode_Null then
+               Arg_Info.Interface_Type := Translate_Interface_Type (Inter);
                New_Interface_Decl
                  (Interface_List, Arg_Info.Interface_Node,
                   Create_Identifier_Without_Prefix (Inter),
@@ -13291,25 +13284,28 @@ package body Translation is
                return Get_Var (Info.Object_Var, Type_Info, Kind);
             when Kind_Interface =>
                --  For a parameter.
-               case Type_Info.Type_Mode is
-                  when Type_Mode_Unknown =>
-                     raise Internal_Error;
-                  when Type_Mode_By_Value =>
-                     --  Parameter is passed by value.
-                     if Info.Interface_Field /= O_Fnode_Null then
-                        --  And by copy.
-                        return Lv2M (New_Selected_Acc_Value
-                                     (New_Obj (Info.Interface_Node),
-                                      Info.Interface_Field),
-                                     Type_Info, Kind);
-                     else
+               if Get_Kind (Inter) = Iir_Kind_Variable_Interface_Declaration
+                 and then Get_Mode (Inter) in Iir_Out_Modes
+                 and then Type_Info.Type_Mode not in Type_Mode_By_Ref
+                 and then Type_Info.Type_Mode /= Type_Mode_File
+               then
+                  --  Passed by copy in the RESULT record.
+                  return Lv2M (New_Selected_Acc_Value
+                                 (New_Obj (Info.Interface_Node),
+                                  Info.Interface_Field),
+                               Type_Info, Kind);
+               else
+                  case Type_Info.Type_Mode is
+                     when Type_Mode_Unknown =>
+                        raise Internal_Error;
+                     when Type_Mode_By_Value =>
                         return Dv2M (Info.Interface_Node, Type_Info, Kind);
-                     end if;
-                  when Type_Mode_By_Ref
-                    | Type_Mode_By_Copy =>
-                     --  Parameter is passed by reference, dereference it.
-                     return Dp2M (Info.Interface_Node, Type_Info, Kind);
-               end case;
+                     when Type_Mode_By_Copy
+                       | Type_Mode_By_Ref =>
+                        --  Parameter is passed by reference, dereference it.
+                        return Dp2M (Info.Interface_Node, Type_Info, Kind);
+                  end case;
+               end if;
             when others =>
                raise Internal_Error;
          end case;
@@ -13453,17 +13449,7 @@ package body Translation is
                return Translate_Interface_Name (Name, Name_Info, Mode_Value);
 
             when Iir_Kind_Variable_Interface_Declaration =>
-               if Name_Info.Interface_Field /= O_Fnode_Null then
-                  --  Passed via the result record.
-                  return Lv2M
-                    (New_Selected_Element
-                     (New_Acc_Value (New_Obj (Name_Info.Interface_Node)),
-                      Name_Info.Interface_Field),
-                     Type_Info, Mode_Value);
-               else
-                  return Translate_Interface_Name
-                    (Name, Name_Info, Mode_Value);
-               end if;
+               return Translate_Interface_Name (Name, Name_Info, Mode_Value);
 
             when Iir_Kind_Signal_Interface_Declaration =>
                return Translate_Interface_Name (Name, Name_Info, Mode_Signal);
