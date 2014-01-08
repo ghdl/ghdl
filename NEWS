@@ -1,13 +1,3 @@
-NEWS for ghdl-0.32dev
-
-None yet... but the ghdl-0.31 branch should remain stable (only essential
-changes committed to it) and development can continue on the "default" branch.
-Make "tip" default...
-
-See contributors at the end of the file
-
----------------------------------------------------------------------------
-
 NEWS for ghdl-0.31 (Dunoon Edition)
 
 New in 0.31 (2014-01-XX)
@@ -18,8 +8,12 @@ New in 0.31 (2014-01-XX)
 * Many bugs and support issues fixed.
 * New home on https://sourceforge.net/projects/ghdl-updates/
 
+See contributors at the end of the file
+
+---------------------------------------------------------------------------
+
 New in 0.30
-Never released, swith to Dunoon Edition.
+Never released, switch to Dunoon Edition.
 
 New in 0.29 (2010-01-09)
 * Initial implementation of embedded PSL assertions.
