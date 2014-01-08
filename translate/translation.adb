@@ -8702,7 +8702,7 @@ package body Translation is
            and then Get_Expr_Staticness (Expr) = Locally
            and then Get_Type_Staticness (Atype) = Locally
          then
-            if not Eval_Is_In_Bound (Expr, Atype) then
+            if not Eval_Is_In_Bound (Eval_Static_Expr (Expr), Atype) then
                Chap6.Gen_Bound_Error (Expr);
             end if;
          else
