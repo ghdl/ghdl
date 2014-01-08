@@ -5078,6 +5078,29 @@ package body Iirs is
       Set_Field5 (Target, Expr);
    end Set_Expression;
 
+   procedure Check_Kind_For_Allocator_Designated_Type (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Allocator_By_Expression
+           | Iir_Kind_Allocator_By_Subtype =>
+            null;
+         when others =>
+            Failed ("Allocator_Designated_Type", Target);
+      end case;
+   end Check_Kind_For_Allocator_Designated_Type;
+
+   function Get_Allocator_Designated_Type (Target : Iir) return Iir is
+   begin
+      Check_Kind_For_Allocator_Designated_Type (Target);
+      return Get_Field2 (Target);
+   end Get_Allocator_Designated_Type;
+
+   procedure Set_Allocator_Designated_Type (Target : Iir; A_Type : Iir) is
+   begin
+      Check_Kind_For_Allocator_Designated_Type (Target);
+      Set_Field2 (Target, A_Type);
+   end Set_Allocator_Designated_Type;
+
    procedure Check_Kind_For_Selected_Waveform_Chain (Target : Iir) is
    begin
       case Get_Kind (Target) is

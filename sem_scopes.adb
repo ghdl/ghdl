@@ -32,9 +32,6 @@ package body Sem_Scopes is
    procedure Disp_Scopes;
    pragma Unreferenced (Disp_Scopes);
 
-   procedure Disp_Visible_Types;
-   pragma Unreferenced (Disp_Visible_Types);
-
    procedure Disp_Detailed_Interpretations (Ident : Name_Id);
    pragma Unreferenced (Disp_Detailed_Interpretations);
 
@@ -90,18 +87,6 @@ package body Sem_Scopes is
       Id: Name_Id;
    end record;
 
-   type Visible_Type_Cell is record
-      Id: Name_Id;
-      Decl: Iir;
-   end record;
-
-   package Visible_Types is new GNAT.Table
-     (Table_Component_Type => Visible_Type_Cell,
-      Table_Index_Type => Visible_Type_Index_Type,
-      Table_Low_Bound => No_Visible_Type_Index + 1,
-      Table_Initial => 32,
-      Table_Increment => 10);
-
    package Interpretations is new GNAT.Table
      (Table_Component_Type => Interpretation_Cell,
       Table_Index_Type => Name_Interpretation_Type,
@@ -119,8 +104,6 @@ package body Sem_Scopes is
    -- Index into Interpretations marking the last interpretation of
    -- the previous (immediate) declarative region.
    Current_Scope_Start: Name_Interpretation_Type := No_Name_Interpretation;
-   Current_Composite_Types_Start : Visible_Type_Index_Type :=
-     No_Visible_Type_Index;
 
    function Valid_Interpretation (Inter : Name_Interpretation_Type)
                                  return Boolean is
@@ -206,7 +189,7 @@ package body Sem_Scopes is
       Scopes.Increment_Last;
       Scopes.Table (Scopes.Last) := (Kind => Region_Start,
                                      Inter => Current_Scope_Start,
-                                     Id => Name_Id (Visible_Types.Last));
+                                     Id => Null_Identifier);
       Current_Scope_Start := Interpretations.Last;
    end Open_Declarative_Region;
 
@@ -221,8 +204,6 @@ package body Sem_Scopes is
                Interpretations.Set_Last (Current_Scope_Start);
                --  Restore Current_Scope_Start.
                Current_Scope_Start := Scopes.Table (Scopes.Last).Inter;
-               Visible_Types.Set_Last
-                 (Visible_Type_Index_Type (Scopes.Table (Scopes.Last).Id));
                Scopes.Decrement_Last;
                return;
             when Save_Cell =>
@@ -315,14 +296,13 @@ package body Sem_Scopes is
       Scopes.Table (Scopes.Last) :=
         (Kind => Barrier_End,
          Inter => Interpretations.Last,
-         Id => Name_Id (Current_Composite_Types_Start));
+         Id => Null_Identifier);
 
       -- Start a completly new scope.
       Current_Scope_Start := Interpretations.Last + 1;
 
       -- Keep the last barrier.
       Current_Barrier := Scopes.Last + 1;
-      Current_Composite_Types_Start := Visible_Types.Last;
 
       pragma Debug (Name_Table.Assert_No_Infos);
    end Push_Interpretations;
@@ -344,8 +324,6 @@ package body Sem_Scopes is
 
       -- Restore the stack pointer of interpretations.
       Interpretations.Set_Last (Scopes.Table (Scopes.Last).Inter);
-      Current_Composite_Types_Start :=
-        Visible_Type_Index_Type (Scopes.Table (Scopes.Last).Id);
       Scopes.Decrement_Last;
 
       -- Restore all name interpretations.
@@ -397,78 +375,6 @@ package body Sem_Scopes is
       end case;
    end Is_Overloadable;
 
-   -- Return true if DECL declare a type that is visible.
-   --  This is used to build the list of visible types, ie types that must
-   --  be considered for certains expression: access for NULL literals,
-   --  arrays and records for aggregates, arrays for string literals.
---    function Is_Visible_Type (Decl: Iir) return Boolean
---    is
---       Def: Iir;
---    begin
---       case Get_Kind (Decl) is
---          when Iir_Kind_Array_Type_Definition
---            | Iir_Kind_Array_Subtype_Definition =>
---             raise Internal_Error;
---          when Iir_Kind_Type_Declaration =>
---             Def := Get_Type (Decl);
---          when others =>
---             return False;
---       end case;
---       case Get_Kind (Def) is
---          when Iir_Kind_Array_Type_Definition
---            | Iir_Kind_Array_Subtype_Definition =>
---             return True;
---          when Iir_Kind_Record_Type_Definition =>
---             return True;
---          when Iir_Kind_Access_Type_Definition
---            | Iir_Kind_Access_Subtype_Definition =>
---             return True;
---          when others =>
---             return False;
---       end case;
---    end Is_Visible_Type;
-
-   function Get_Visible_Type (Vt: Visible_Type_Index_Type)
-     return Visible_Type_Index_Type
-   is
-      Pt: Visible_Type_Index_Type := Vt;
-   begin
-      if True then
-         return Pt;
-      else
-         while Pt > Current_Composite_Types_Start loop
-            if Get_Declaration
-              (Get_Interpretation (Visible_Types.Table (Pt).Id))
-              = Visible_Types.Table (Pt).Decl
-            then
-               return Pt;
-            end if;
-            Pt := Pt - 1;
-         end loop;
-         return No_Visible_Type_Index;
-      end if;
-   end Get_Visible_Type;
-
-   -- Get the first visible declaration of unidim array.
-   function Get_First_Visible_Type return Visible_Type_Index_Type is
-   begin
-      return Get_Visible_Type (Visible_Types.Last);
-   end Get_First_Visible_Type;
-
-   -- Get the next visible declaration of unidim array in the list.
-   function Get_Next_Visible_Type (Index: Visible_Type_Index_Type)
-     return Visible_Type_Index_Type is
-   begin
-      return Get_Visible_Type (Index - 1);
-   end Get_Next_Visible_Type;
-
-   -- Get the declaration corresponding to an uni_array_visible_type.
-   function Get_Visible_Type_Decl (Index : Visible_Type_Index_Type)
-     return Iir is
-   begin
-      return Visible_Types.Table (Index).Decl;
-   end Get_Visible_Type_Decl;
-
    -- Return TRUE if INTER was made direclty visible in the current
    -- declarative region.
    function Is_In_Current_Declarative_Region (Inter: Name_Interpretation_Type)
@@ -509,11 +415,6 @@ package body Sem_Scopes is
 --             return False;
 --       end case;
 --    end Redeclaration_Allowed;
-
-   procedure Add_Visible_Type (Decl : Iir) is
-   begin
-      Visible_Types.Append ((Id => Get_Identifier (Decl), Decl => Decl));
-   end Add_Visible_Type;
 
    -- Add interpretation DECL to the identifier of DECL.
    -- POTENTIALLY is true if the identifier comes from a use clause.
@@ -973,11 +874,8 @@ package body Sem_Scopes is
          when Iir_Kind_Library_Clause =>
             Add_Name (Get_Library_Declaration (Decl),
                       Get_Identifier (Decl), Potentially);
-         when Iir_Kind_Type_Declaration =>
-            Add_Name (Decl, Get_Identifier (Decl), Potentially);
-            Add_Visible_Type (Decl);
          when Iir_Kind_Anonymous_Type_Declaration =>
-            Add_Visible_Type (Decl);
+            null;
          when others =>
             Add_Name (Decl, Get_Identifier (Decl), Potentially);
       end case;
@@ -1157,18 +1055,6 @@ package body Sem_Scopes is
    end Extend_Scope_Of_Block_Declarations;
 
    -- Debugging
-   procedure Disp_Visible_Types
-   is
-      use Ada.Text_IO;
-      Index: Visible_Type_Index_Type;
-   begin
-      Index := Get_First_Visible_Type;
-      while Index /= No_Visible_Type_Index loop
-         Put_Line (Disp_Node (Get_Visible_Type_Decl (Index)));
-         Index := Get_Next_Visible_Type (Index);
-      end loop;
-   end Disp_Visible_Types;
-
    procedure Disp_Detailed_Interpretations (Ident : Name_Id)
    is
       use Ada.Text_IO;

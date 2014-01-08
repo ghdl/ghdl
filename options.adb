@@ -114,6 +114,8 @@ package body Options is
          Bootstrap := True;
       elsif Opt = "-fexplicit" then
          Flag_Explicit := True;
+      elsif Opt = "-frelaxed-rules" then
+         Flag_Relaxed_Rules := True;
       elsif Opt = "--syn-binding" then
          Flag_Syn_Binding := True;
       elsif Opt = "--no-vital-checks" then
@@ -215,6 +217,7 @@ package body Options is
 --    P ("           failure or none");
       P ("Extensions:");
       P ("  -fexplicit         give priority to explicitly declared operator");
+      P ("  -frelaxed-rules    relax some LRM rules");
       P ("  -C  --mb-comments  allow multi-bytes chars in a comment");
       P ("  --bootstrap        allow --work=std");
       P ("  --syn-binding      use synthesis default binding rule");

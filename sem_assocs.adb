@@ -1204,7 +1204,6 @@ package body Sem_Assocs is
       Formal : Iir;
       Formal_Type : Iir;
       Actual: Iir;
-      Actual_Types : Iir;
       Out_Conv, In_Conv : Iir;
       Expr : Iir;
       Res_Type : Iir;
@@ -1267,12 +1266,7 @@ package body Sem_Assocs is
 
       --  Extract conversion from actual.
       Actual := Get_Actual (Assoc);
-      Actual_Types := Get_Type (Actual);
       In_Conv := Null_Iir;
-      if Actual_Types = Null_Iir then
-         Match := False;
-         return;
-      end if;
       if Get_Kind (Inter) /= Iir_Kind_Constant_Interface_Declaration then
          case Get_Kind (Actual) is
             when Iir_Kind_Function_Call =>
@@ -1289,7 +1283,6 @@ package body Sem_Assocs is
             when others =>
                null;
          end case;
-         Actual_Types := Get_Type (Actual);
       end if;
 
       --  4 cases: F:out_conv, G:in_conv.
@@ -1298,16 +1291,16 @@ package body Sem_Assocs is
       --    A  => G(B)  type of A = type of G
       --  F(A) => G(B)  type of B = type of F, type of A = type of G
       if Out_Conv = Null_Iir and then In_Conv = Null_Iir then
-         Match := Compatibility_Types (Formal_Type, Actual_Types);
+         Match := Is_Expr_Compatible (Formal_Type, Actual);
       else
          Match := True;
          if In_Conv /= Null_Iir then
-            if not Compatibility_Types (Formal_Type, Get_Type (In_Conv)) then
+            if not Is_Expr_Compatible (Formal_Type, In_Conv) then
                Match := False;
             end if;
          end if;
          if Out_Conv /= Null_Iir then
-            if not Compatibility_Types (Get_Type (Out_Conv), Actual_Types) then
+            if not Is_Expr_Compatible (Get_Type (Out_Conv), Actual) then
                Match := False;
             end if;
          end if;
@@ -1337,9 +1330,9 @@ package body Sem_Assocs is
       else
          if Out_Conv /= Null_Iir then
             Res_Type := Search_Compatible_Type (Get_Type (Out_Conv),
-                                                Actual_Types);
+                                                Get_Type (Actual));
          else
-            Res_Type := Actual_Types;
+            Res_Type := Get_Type (Actual);
          end if;
 
          if In_Conv /= Null_Iir then

@@ -2430,6 +2430,10 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
+   -- To ease analysis: set to the designated type (either the type of the
+   -- expression or the subtype)
+   --   Get/Set_Allocator_Designated_Type (Field2)
+   --
    -- Contains the expression for a by expression allocator or the
    -- subtype indication for a by subtype allocator.
    --   Get/Set_Expression (Field5)
@@ -5027,6 +5031,12 @@ package Iirs is
    --  Field: Field5
    function Get_Expression (Target : Iir) return Iir;
    procedure Set_Expression (Target : Iir; Expr : Iir);
+
+   --  Set to the designated type (either the type of the expression or the
+   --  subtype) when the expression is analyzed.
+   --  Field: Field2
+   function Get_Allocator_Designated_Type (Target : Iir) return Iir;
+   procedure Set_Allocator_Designated_Type (Target : Iir; A_Type : Iir);
 
    --  Field: Field7
    function Get_Selected_Waveform_Chain (Target : Iir) return Iir;

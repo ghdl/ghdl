@@ -53,9 +53,6 @@ package Sem_Scopes is
    --  Set the visible_flag of DECL to true.
    procedure Name_Visible (Decl : Iir);
 
-   --  Add DECL is the list of visible types.
-   procedure Add_Visible_Type (Decl : Iir);
-
    --  Replace the interpretation OLD of ID by DECL.
    --  ID must have a uniq interpretation OLD (ie, it must not be overloaded).
    --  The interpretation must have been done in the current scope.
@@ -181,31 +178,6 @@ package Sem_Scopes is
    --  declarations added can be removed with Close_Scope_Extension.
    procedure Extend_Scope_Of_Block_Declarations (Decl : Iir);
 
-   -- It is necessary to keep trace of all visible type definition of
-   -- arrays, record and access.  This is used by string, bit string, aggregate
-   -- and null literal.
-   -- This is for the user a simple linked list.
-
-   -- list element type.
-   type Visible_Type_Index_Type is private;
-
-   -- End of the list element.
-   No_Visible_Type_Index: constant Visible_Type_Index_Type;
-
-   -- Get the first visible type declaration.
-   function Get_First_Visible_Type return Visible_Type_Index_Type;
-   pragma Inline (Get_First_Visible_Type);
-
-   -- Get the visible type declaration after INDEX.
-   function Get_Next_Visible_Type (Index: Visible_Type_Index_Type)
-     return Visible_Type_Index_Type;
-   pragma Inline (Get_Next_Visible_Type);
-
-   -- Get the declaration corresponding to INDEX.
-   function Get_Visible_Type_Decl (Index: Visible_Type_Index_Type)
-     return Iir;
-   pragma Inline (Get_Visible_Type_Decl);
-
    --  Call HANDLE_DECL for each declaration found in DECL.
    --  This will generally call HANDLE_DECL with DECL.
    --  For types, HANDLE_DECL is first called with the type declaration, then
@@ -235,7 +207,4 @@ private
    No_Name_Interpretation : constant Name_Interpretation_Type := 0;
    Conflict_Interpretation : constant Name_Interpretation_Type := 1;
    First_Valid_Interpretation : constant Name_Interpretation_Type := 2;
-
-   type Visible_Type_Index_Type is new Nat32;
-   No_Visible_Type_Index: constant Visible_Type_Index_Type := 0;
 end Sem_Scopes;

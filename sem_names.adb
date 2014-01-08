@@ -1998,6 +1998,13 @@ package body Sem_Names is
             when Iir_Kinds_Function_Declaration =>
                Sem_Parenthesis_Function (Prefix);
                if Res = Null_Iir then
+                  declare
+                     Match : Boolean;
+                  begin
+                     Sem_Association_Chain
+                       (Get_Interface_Declaration_Chain (Prefix),
+                        Assoc_Chain, True, Missing_Parameter, Name, Match);
+                  end;
                   Error_Msg_Sem
                     ("prefix is neither a function name "
                      & "nor can it be sliced or indexed", Name);

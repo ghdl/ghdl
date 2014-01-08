@@ -92,14 +92,6 @@ package Sem_Expr is
    --  If EXPR is NULL_IIR, NULL_IIR is silently returned.
    function Check_Is_Expression (Expr : Iir; Loc : Iir) return Iir;
 
-   -- LEFT are RIGHT must be really a type (not a subtype).
-   function Are_Basetypes_Compatible (Left: Iir; Right: Iir)
-     return Boolean;
-
-   --  Return TRUE iif types of LEFT and RIGHT are compatible.
-   function Are_Nodes_Compatible (Left: Iir; Right: Iir)
-     return Boolean;
-
    --  Semantize a procedure_call or a concurrent_procedure_call_statement.
    procedure Sem_Procedure_Call (Call : Iir_Procedure_Call; Stmt : Iir);
 
@@ -163,8 +155,16 @@ package Sem_Expr is
    --  one-dimensional character array type.
    procedure Sem_String_Choices_Range (Choice_Chain : Iir; Sel : Iir);
 
-   function Compatibility_Types (Left_Types : Iir; Right_Types : Iir)
+   -- LEFT are RIGHT must be really a type (not a subtype).
+   function Are_Basetypes_Compatible (Left: Iir; Right: Iir)
      return Boolean;
+
+   --  Return TRUE iif types of LEFT and RIGHT are compatible.
+   function Are_Nodes_Compatible (Left: Iir; Right: Iir)
+     return Boolean;
+
+   --  Return TRUE iff the type of EXPR is compatible with A_TYPE
+   function Is_Expr_Compatible (A_Type : Iir; Expr : Iir) return Boolean;
 
    --  LIST1, LIST2 are either a type node or an overload list of types.
    --  Return THE type which is compatible with LIST1 are LIST2.

@@ -1129,8 +1129,6 @@ package body Sem_Decls is
 
                   Sem_Scopes.Name_Visible (St_Decl);
 
-                  Sem_Scopes.Add_Visible_Type (Decl);
-
                   --  The implicit subprogram will be added in the
                   -- scope just after.
                   Create_Implicit_Operations (Decl, False);
@@ -1144,7 +1142,6 @@ package body Sem_Decls is
                   Set_Type_Declarator (Def, Decl);
 
                   Sem_Scopes.Name_Visible (Decl);
-                  Sem_Scopes.Add_Visible_Type (Decl);
 
                   --  The implicit subprogram will be added in the
                   -- scope just after.
@@ -1152,7 +1149,6 @@ package body Sem_Decls is
 
                when Iir_Kind_Protected_Type_Declaration =>
                   Set_Type_Declarator (Def, Decl);
-                  Sem_Scopes.Add_Visible_Type (Decl);
                   St_Decl := Null_Iir;
                   --  No implicit subprograms.
 
@@ -1280,7 +1276,9 @@ package body Sem_Decls is
       end if;
 
       if Deferred_Const = Null_Iir then
-         Sem_Scopes.Add_Name (Decl);
+         if not Flag_Relaxed_Rules then
+            Sem_Scopes.Add_Name (Decl);
+         end if;
          Xref_Decl (Decl);
       else
          Xref_Ref (Decl, Deferred_Const);
@@ -1306,6 +1304,11 @@ package body Sem_Decls is
             Check_Read (Default_Value);
          end if;
       end if;
+
+      if Deferred_Const = Null_Iir and Flag_Relaxed_Rules then
+         Sem_Scopes.Add_Name (Decl);
+      end if;
+
       Set_Type (Decl, Atype);
       Default_Value := Eval_Expr_Check_If_Static (Default_Value, Atype);
       Set_Default_Value (Decl, Default_Value);

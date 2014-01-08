@@ -134,6 +134,12 @@ package Flags is
    --  If set, all the design units are analyzed in whole to do the simulation.
    Flag_Whole_Analyze : Boolean := False;
 
+   --  If true, relax some rules:
+   --  * the scope of an object declaration names start after the declaration,
+   --    so that it is possible to use the old name in the default expression:
+   --    constant x : xtype := x;
+   Flag_Relaxed_Rules : Boolean := False;
+
    -- --warn-undriven
    --Warn_Undriven : Boolean := False;
 

@@ -1425,6 +1425,9 @@ package body Scan is
                      Current_Token := Tok_Match_Greater;
                      Pos := Pos + 2;
                   end if;
+               elsif Source (Pos + 1) = '?' then
+                  Current_Token := Tok_Condition;
+                  Pos := Pos + 2;
                elsif Source (Pos + 1) = '=' then
                   Current_Token := Tok_Match_Equal;
                   Pos := Pos + 2;

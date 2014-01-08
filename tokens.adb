@@ -105,11 +105,14 @@ package body Tokens is
             return "+";
          when Tok_Minus =>
             return "-";
-            -- and adding_operator
+         -- and adding_operator
          when Tok_Ampersand =>
             return "&";
 
-            -- multiplying operator
+         when Tok_Condition =>
+            return "??";
+
+         -- multiplying operator
          when Tok_Star =>
             return "*";
          when Tok_Slash =>
@@ -119,7 +122,7 @@ package body Tokens is
          when Tok_Rem =>
             return "rem";
 
-            -- relation token:
+         -- relation token:
          when Tok_And =>
             return "and";
          when Tok_Or =>
@@ -133,7 +136,7 @@ package body Tokens is
          when Tok_Xnor =>
             return "xnor";
 
-            -- Key words.
+         -- Reserved words.
          when Tok_Abs =>
             return "abs";
          when Tok_Access =>

@@ -88,10 +88,12 @@ package body Sem_Expr is
       Set_Type (Target, A_Type);
    end Replace_Type;
 
-   -- Return true if ID is overloaded, ie has several meanings.
-   function Is_Overloaded (Id: Iir) return Boolean is
+   --  Return true if EXPR is overloaded, ie has several meanings.
+   function Is_Overloaded (Expr : Iir) return Boolean
+   is
+      Expr_Type : constant Iir := Get_Type (Expr);
    begin
-      return Is_Overload_List (Get_Type (Id));
+      return Expr_Type = Null_Iir or else Is_Overload_List (Expr_Type);
    end Is_Overloaded;
 
    -- Return the common type of base types LEFT and RIGHT.
@@ -147,6 +149,163 @@ package body Sem_Expr is
    begin
       return Are_Types_Compatible (Get_Type (Left), Get_Type (Right));
    end Are_Nodes_Compatible;
+
+   --  Return TRUE iif LEFT_TYPE and RIGHT_TYPES are compatible. RIGHT_TYPES
+   --  may be an overload list.
+   function Compatibility_Types1 (Left_Type : Iir; Right_Types : Iir)
+                                 return Boolean
+   is
+      El : Iir;
+      Right_List : Iir_List;
+   begin
+      pragma Assert (not Is_Overload_List (Left_Type));
+
+      if Is_Overload_List (Right_Types) then
+         Right_List := Get_Overload_List (Right_Types);
+         for I in Natural loop
+            El := Get_Nth_Element (Right_List, I);
+            exit when El = Null_Iir;
+            if Are_Types_Compatible (Left_Type, El) then
+               return True;
+            end if;
+         end loop;
+         return False;
+      else
+         return Are_Types_Compatible (Left_Type, Right_Types);
+      end if;
+   end Compatibility_Types1;
+
+   --  Return compatibility for nodes LEFT and RIGHT.
+   --  LEFT is expected to be an interface of a function definition.
+   --  Type of RIGHT can be an overload_list
+   --  RIGHT might be implicitly converted to LEFT.
+   function Compatibility_Nodes (Left : Iir; Right : Iir)
+     return Boolean
+   is
+      Left_Type, Right_Type : Iir;
+   begin
+      Left_Type := Get_Base_Type (Get_Type (Left));
+      Right_Type := Get_Type (Right);
+
+      --  Check.
+      case Get_Kind (Left_Type) is
+         when Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Record_Type_Definition
+           | Iir_Kind_File_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Access_Type_Definition
+           | Iir_Kind_Array_Type_Definition =>
+            null;
+         when others =>
+            Error_Kind ("are_node_compatible_ov", Left_Type);
+      end case;
+
+      return Compatibility_Types1 (Left_Type, Right_Type);
+   end Compatibility_Nodes;
+
+   --  Return TRUE iff A_TYPE can be the type of string or bit string literal
+   --  EXPR.  EXPR is needed to distinguish between string and bit string
+   --  for VHDL87 rule about the type of a bit string.
+   function Is_String_Literal_Type (A_Type : Iir; Expr : Iir) return Boolean
+   is
+      Base_Type : constant Iir := Get_Base_Type (A_Type);
+      El_Bt : Iir;
+   begin
+      --  LRM 7.3.1
+      --  [...] the type of the literal must be a one-dimensional array ...
+      if not Is_Unidim_Array_Type (Base_Type) then
+         return False;
+      end if;
+      --  LRM 7.3.1
+      --  ... of a character type ...
+      El_Bt := Get_Base_Type (Get_Element_Subtype (Base_Type));
+      if Get_Kind (El_Bt) /= Iir_Kind_Enumeration_Type_Definition then
+         return False;
+      end if;
+      --  LRM87 7.3.1
+      --  ... (for string literals) or of type BIT (for bit string literals).
+      if Flags.Vhdl_Std = Vhdl_87
+        and then Get_Kind (Expr) = Iir_Kind_Bit_String_Literal
+        and then El_Bt /= Bit_Type_Definition
+      then
+         return False;
+      end if;
+      return True;
+   end Is_String_Literal_Type;
+
+   --  Return TRUE iff A_TYPE can be the type of an aggregate.
+   function Is_Aggregate_Type (A_Type : Iir) return Boolean is
+   begin
+      --  LRM 7.3.2 Aggregates
+      --  [...]  the type of the aggregate must be a composite type.
+      case Get_Kind (Get_Base_Type (A_Type)) is
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Record_Type_Definition =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_Aggregate_Type;
+
+   --  Return TRUE iff A_TYPE can be the type of a null literal.
+   function Is_Null_Literal_Type (A_Type : Iir) return Boolean is
+   begin
+      --  LRM 7.3.1 Literals
+      --  The literal NULL represents the null access value for any access
+      --  type.
+      return
+        Get_Kind (Get_Base_Type (A_Type)) = Iir_Kind_Access_Type_Definition;
+   end Is_Null_Literal_Type;
+
+   --  Return TRUE iff A_TYPE can be the type of allocator EXPR.  Note that
+   --  the allocator must have been analyzed.
+   function Is_Allocator_Type (A_Type : Iir; Expr : Iir) return Boolean
+   is
+      Base_Type : constant Iir := Get_Base_Type (A_Type);
+      Designated_Type : Iir;
+   begin
+      --  LRM 7.3.6 Allocators
+      --  [...] the value returned is of an access type having the named
+      --  designated type.
+
+      if Get_Kind (Base_Type) /= Iir_Kind_Access_Type_Definition then
+         return False;
+      end if;
+      Designated_Type := Get_Allocator_Designated_Type (Expr);
+      pragma Assert (Designated_Type /= Null_Iir);
+      --  Cheat: there is no allocators on universal types.
+      return Get_Base_Type (Get_Designated_Type (Base_Type))
+        = Get_Base_Type (Designated_Type);
+   end Is_Allocator_Type;
+
+   --  Return TRUE iff the type of EXPR is compatible with A_TYPE
+   function Is_Expr_Compatible (A_Type : Iir; Expr : Iir) return Boolean
+   is
+      Expr_Type : constant Iir := Get_Type (Expr);
+   begin
+      if Expr_Type /= Null_Iir then
+         return Compatibility_Types1 (A_Type, Expr_Type);
+      end if;
+
+      case Get_Kind (Expr) is
+         when Iir_Kind_Aggregate =>
+            return Is_Aggregate_Type (A_Type);
+         when Iir_Kind_String_Literal
+           | Iir_Kind_Bit_String_Literal =>
+            return Is_String_Literal_Type (A_Type, Expr);
+         when Iir_Kind_Null_Literal =>
+            return Is_Null_Literal_Type (A_Type);
+         when Iir_Kind_Allocator_By_Expression
+           | Iir_Kind_Allocator_By_Subtype =>
+            return Is_Allocator_Type (A_Type, Expr);
+         when others =>
+            --  Error while EXPR was typed.  FIXME: should create an ERROR
+            --  node?
+            return False;
+      end case;
+   end Is_Expr_Compatible;
 
    function Check_Is_Expression (Expr : Iir; Loc : Iir) return Iir
    is
@@ -334,103 +493,6 @@ package body Sem_Expr is
          return Search_Overloaded_Type (List2, List1);
       end if;
    end Search_Compatible_Type;
-
-   --  Return compatibility for type nodes LEFT and RIGHT.
-   function Compatibility (Left_Type, Right_Type : Iir)
-     return Boolean
-   is
-      Right_Base_Type : Iir;
-      Left_Base_Type : Iir;
-   begin
-      Right_Base_Type := Get_Base_Type (Right_Type);
-      Left_Base_Type := Get_Base_Type (Left_Type);
-      if Right_Base_Type = Left_Base_Type then
-         return True;
-      end if;
-      if Get_Kind (Left_Base_Type) = Iir_Kind_Integer_Type_Definition
-        and then Right_Base_Type = Convertible_Integer_Type_Definition
-      then
-         return True;
-      end if;
-      if Get_Kind (Left_Base_Type) = Iir_Kind_Floating_Type_Definition
-        and then Right_Base_Type = Convertible_Real_Type_Definition
-      then
-         return True;
-      end if;
-      return False;
-   end Compatibility;
-
-   function Compatibility_Types1 (Left_Type : Iir; Right_Types : Iir)
-                                 return Boolean
-   is
-      El : Iir;
-      Right_List : Iir_List;
-   begin
-      if Is_Overload_List (Right_Types) then
-         Right_List := Get_Overload_List (Right_Types);
-         for I in Natural loop
-            El := Get_Nth_Element (Right_List, I);
-            exit when El = Null_Iir;
-            if Compatibility (Left_Type, El) then
-               return True;
-            end if;
-         end loop;
-         return False;
-      else
-         return Compatibility (Left_Type, Right_Types);
-      end if;
-   end Compatibility_Types1;
-
-   --  Return compatibility for nodes LEFT and RIGHT.
-   --  LEFT is expected to be an interface of a function definition.
-   --  Type of RIGHT can be an overload_list
-   --  RIGHT might be implicitly converted to LEFT.
-   function Compatibility_Nodes (Left : Iir; Right : Iir)
-     return Boolean
-   is
-      Left_Type, Right_Type : Iir;
-   begin
-      Left_Type := Get_Base_Type (Get_Type (Left));
-      Right_Type := Get_Type (Right);
-
-      --  Check.
-      case Get_Kind (Left_Type) is
-         when Iir_Kind_Floating_Type_Definition
-           | Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Record_Type_Definition
-           | Iir_Kind_File_Type_Definition
-           | Iir_Kind_Physical_Type_Definition
-           | Iir_Kind_Access_Type_Definition
-           | Iir_Kind_Array_Type_Definition =>
-            null;
-         when others =>
-            Error_Kind ("are_node_compatible_ov", Left_Type);
-      end case;
-
-      return Compatibility_Types1 (Left_Type, Right_Type);
-   end Compatibility_Nodes;
-
-   function Compatibility_Types (Left_Types : Iir; Right_Types : Iir)
-                                return Boolean
-   is
-      El : Iir;
-      Left_List : Iir_List;
-   begin
-      if Is_Overload_List (Left_Types) then
-         Left_List := Get_Overload_List (Left_Types);
-         for I in Natural loop
-            El := Get_Nth_Element (Left_List, I);
-            exit when El = Null_Iir;
-            if Compatibility_Types1 (El, Right_Types) then
-               return True;
-            end if;
-         end loop;
-         return False;
-      else
-         return Compatibility_Types1 (Left_Types, Right_Types);
-      end if;
-   end Compatibility_Types;
 
    -- Semantize the range expression EXPR.
    -- If A_TYPE is not null_iir, EXPR is expected to be of type A_TYPE.
@@ -1528,7 +1590,7 @@ package body Sem_Expr is
          Set_Type (Expr, Get_Return_Type (Decl));
          Interface_Chain := Get_Interface_Declaration_Chain (Decl);
          Err := False;
-         if Is_Overload_List (Get_Type (Left)) then
+         if Is_Overloaded (Left) then
             Left := Sem_Expression_Ov
               (Left, Get_Base_Type (Get_Type (Interface_Chain)));
             if Left = Null_Iir then
@@ -1543,7 +1605,7 @@ package body Sem_Expr is
          end if;
          Check_Read (Left);
          if Arity = 2 then
-            if Is_Overload_List (Get_Type (Right)) then
+            if Is_Overloaded (Right) then
                Right := Sem_Expression_Ov
                  (Right,
                   Get_Base_Type (Get_Type (Get_Chain (Interface_Chain))));
@@ -1626,7 +1688,8 @@ package body Sem_Expr is
 
             --  Check return type.
             if Res_Type /= Null_Iir
-              and then not Compatibility (Res_Type, Get_Return_Type (Decl))
+              and then
+              not Are_Types_Compatible (Res_Type, Get_Return_Type (Decl))
             then
                goto Next;
             end if;
@@ -1634,16 +1697,26 @@ package body Sem_Expr is
             Interface_Chain := Get_Interface_Declaration_Chain (Decl);
 
             --  Check arity.
+
+            --  LRM93 2.5.2 Operator overloading
+            --  The subprogram specification of a unary operator must have
+            --  a single parameter [...]
+            --  The subprogram specification of a binary operator must have
+            --  two parameters [...]
+            --
+            --  GHDL: So even in presence of default expression in a parameter,
+            --  a unary operation has to match with a binary operator.
             if Iir_Chains.Get_Chain_Length (Interface_Chain) /= Arity then
                goto Next;
             end if;
 
             -- Check operands.
-            if not Compatibility_Nodes (Interface_Chain, Left) then
+            if not Is_Expr_Compatible (Get_Type (Interface_Chain), Left) then
                goto Next;
             end if;
             if Arity = 2 then
-               if not Compatibility_Nodes (Get_Chain (Interface_Chain), Right)
+               if not Is_Expr_Compatible
+                 (Get_Type (Get_Chain (Interface_Chain)), Right)
                then
                   goto Next;
                end if;
@@ -1740,7 +1813,7 @@ package body Sem_Expr is
             Decl := Get_Nth_Element (Overload_List, I);
             exit when Decl = Null_Iir;
             --  FIXME: wrong: compatibilty with return type and args.
-            if Compatibility (Get_Return_Type (Decl), Res_Type) then
+            if Are_Types_Compatible (Get_Return_Type (Decl), Res_Type) then
                if Full_Compat /= Null_Iir then
                   Error_Operator_Overload (Overload_List);
                   return Null_Iir;
@@ -1753,37 +1826,6 @@ package body Sem_Expr is
          return Set_Uniq_Interpretation (Full_Compat);
       end if;
    end Sem_Operator;
-
-   -- Create a subtype for a string literal.
-   -- The literal must have been typed, with a type or a subtype.
-   -- FIXME: not general at all!
-   function Check_Type_For_String_Literal (A_Type : Iir; Expr : Iir)
-                                          return Boolean
-   is
-      Base_Type : constant Iir := Get_Base_Type (A_Type);
-      El_Bt : Iir;
-   begin
-      --  LRM 7.3.1
-      --  [...] the type of the literal must be a one-dimensional array ...
-      if not Is_Unidim_Array_Type (Base_Type) then
-         return False;
-      end if;
-      --  LRM 7.3.1
-      --  ... of a character type ...
-      El_Bt := Get_Base_Type (Get_Element_Subtype (Base_Type));
-      if Get_Kind (El_Bt) /= Iir_Kind_Enumeration_Type_Definition then
-         return False;
-      end if;
-      --  LRM87 7.3.1
-      --  ... (for string literals) or of type BIT (for bit string literals).
-      if Flags.Vhdl_Std = Vhdl_87
-        and then Get_Kind (Expr) = Iir_Kind_Bit_String_Literal
-        and then El_Bt /= Bit_Type_Definition
-      then
-         return False;
-      end if;
-      return True;
-   end Check_Type_For_String_Literal;
 
    --  Semantize LIT whose elements must be of type EL_TYPE, and return
    --  the length.
@@ -2135,7 +2177,7 @@ package body Sem_Expr is
       end if;
    end Sem_String_Choices_Range;
 
-   function Is_Name (Name : Iir) return Boolean
+   function Is_Choice_Name (Name : Iir) return Boolean
    is
    begin
       case Get_Kind (Name) is
@@ -2147,7 +2189,7 @@ package body Sem_Expr is
          when others =>
             return False;
       end case;
-   end Is_Name;
+   end Is_Choice_Name;
 
    procedure Sem_Choices_Range
      (Choice_Chain : in out Iir;
@@ -2193,7 +2235,7 @@ package body Sem_Expr is
          Expr := Get_Expression (El);
          if Get_Kind (El) = Iir_Kind_Choice_By_Range then
             Expr := Sem_Discrete_Range_Expression (Expr, Sub_Type, True);
-         elsif Is_Name (Expr) then
+         elsif Is_Choice_Name (Expr) then
             declare
                Name : Iir;
                N_Choice : Iir;
@@ -3388,96 +3430,74 @@ package body Sem_Expr is
    begin
       Arg := Get_Expression (Expr);
       Set_Expr_Staticness (Expr, None);
-      if Get_Type (Expr) = Null_Iir then
-         if Get_Kind (Expr) = Iir_Kind_Allocator_By_Expression then
-            if Get_Kind (Arg) /= Iir_Kind_Qualified_Expression then
-               raise Internal_Error;
-            end if;
-            Arg := Sem_Expression (Arg, Null_Iir);
-            if Arg = Null_Iir then
-               return Null_Iir;
-            end if;
-            Check_Read (Arg);
-            Arg_Type := Get_Type (Arg);
-         else
-            Arg := Sem_Types.Sem_Subtype_Indication (Arg);
-            if Arg = Null_Iir then
-               return Null_Iir;
-            end if;
-            --  LRM93 §7.3.6
-            --  If an allocator includes a subtype indication and if the
-            --  type of the object created is an array type, then the
-            --  subtype indication must either denote a constrained
-            --  subtype or include an explicit index constraint.
-            if not Is_Fully_Constrained_Type (Arg) then
-               Error_Msg_Sem ("allocator of unconstrained " &
-                              Disp_Node (Arg) & " is not allowed", Expr);
-            end if;
-            --  LRM93 7.3.6
-            --  A subtype indication that is part of an allocator must
-            --  not include a resolution function.
-            if Is_Anonymous_Type_Definition (Arg)
-              and then Get_Resolution_Function (Arg) /= Null_Iir
-            then
-               Error_Msg_Sem ("subtype indication must not include"
-                              & " a resolution function", Expr);
-            end if;
-            Arg_Type := Arg;
-         end if;
+
+      Arg_Type := Get_Allocator_Designated_Type (Expr);
+
+      if Arg_Type = Null_Iir then
+         --  Expression was not analyzed.
+         case Iir_Kinds_Allocator (Get_Kind (Expr)) is
+            when Iir_Kind_Allocator_By_Expression =>
+               if Get_Kind (Arg) /= Iir_Kind_Qualified_Expression then
+                  raise Internal_Error;
+               end if;
+               Arg := Sem_Expression (Arg, Null_Iir);
+               if Arg = Null_Iir then
+                  return Null_Iir;
+               end if;
+               Check_Read (Arg);
+               Arg_Type := Get_Type (Arg);
+            when Iir_Kind_Allocator_By_Subtype =>
+               Arg := Sem_Types.Sem_Subtype_Indication (Arg);
+               if Arg = Null_Iir then
+                  return Null_Iir;
+               end if;
+               --  LRM93 §7.3.6
+               --  If an allocator includes a subtype indication and if the
+               --  type of the object created is an array type, then the
+               --  subtype indication must either denote a constrained
+               --  subtype or include an explicit index constraint.
+               if not Is_Fully_Constrained_Type (Arg) then
+                  Error_Msg_Sem
+                    ("allocator of unconstrained " &
+                       Disp_Node (Arg) & " is not allowed", Expr);
+               end if;
+               --  LRM93 7.3.6
+               --  A subtype indication that is part of an allocator must
+               --  not include a resolution function.
+               if Is_Anonymous_Type_Definition (Arg)
+                 and then Get_Resolution_Function (Arg) /= Null_Iir
+               then
+                  Error_Msg_Sem ("subtype indication must not include"
+                                   & " a resolution function", Expr);
+               end if;
+               Arg_Type := Arg;
+         end case;
          Set_Expression (Expr, Arg);
-      else
-         if Get_Kind (Expr) = Iir_Kind_Allocator_By_Expression then
-            Arg_Type := Get_Type (Arg);
-         else
-            Arg_Type := Arg;
-         end if;
+         Set_Allocator_Designated_Type (Expr, Arg_Type);
       end if;
 
+      --  LRM 7.3.6 Allocators
+      --  The type of the access value returned by an allocator must be
+      --  determinable solely from the context, but using the fact that the
+      --  value returned is of an access type having the named designated
+      --  type.
       if A_Type = Null_Iir then
-         --  Pass 1.
-         --  LRM 7.3.6 Allocators
-         --  The type of the access value returned by an allocator must be
-         --  determinable solely from the context, but using the fact that the
-         --  value returned is of an access type having the named designated
-         --  type.
-         declare
-            Index : Visible_Type_Index_Type;
-            Vtype : Iir;
-            Btype : Iir;
-            Dtype : Iir;
-            List : Iir_List;
-         begin
-            List := Create_Iir_List;
-            Index := Get_First_Visible_Type;
-            while Index /= No_Visible_Type_Index loop
-               Vtype := Get_Visible_Type_Decl (Index);
-               Btype := Get_Base_Type (Get_Type (Vtype));
-               if Get_Kind (Btype) = Iir_Kind_Access_Type_Definition then
-                  Dtype := Get_Base_Type (Get_Designated_Type (Btype));
-                  if Dtype = Get_Base_Type (Arg_Type) then
-                     Add_Element (List, Dtype);
-                  end if;
-               end if;
-               Index := Get_Next_Visible_Type (Index);
-            end loop;
-            Set_Type (Expr, Simplify_Overload_List (List));
-         end;
+         --  Type of the context is not yet known.
+         return Expr;
       else
-         if Get_Kind (A_Type) /= Iir_Kind_Access_Type_Definition then
-            if Get_Kind (A_Type) /= Iir_Kind_Error then
-               Error_Msg_Sem ("expected type is not an access type", Expr);
+         if not Is_Allocator_Type (A_Type, Expr) then
+            if Get_Kind (A_Type) /= Iir_Kind_Access_Type_Definition then
+               if Get_Kind (A_Type) /= Iir_Kind_Error then
+                  Error_Msg_Sem ("expected type is not an access type", Expr);
+               end if;
+            else
+               Not_Match (Expr, A_Type);
             end if;
             return Null_Iir;
          end if;
-         if not Are_Types_Compatible (Arg_Type, Get_Designated_Type (A_Type))
-         then
-            Not_Match (Expr, A_Type);
-            return Null_Iir;
-         end if;
-         Free_Old_Iir (Get_Type (Expr));
          Set_Type (Expr, A_Type);
+         return Expr;
       end if;
-      return Expr;
    end Sem_Allocator;
 
    procedure Check_Read_Aggregate (Aggr : Iir)
@@ -3810,92 +3830,47 @@ package body Sem_Expr is
 
          when Iir_Kind_String_Literal
            | Iir_Kind_Bit_String_Literal =>
-            if A_Type /= Null_Iir then
-               if not Check_Type_For_String_Literal (A_Type, Expr) then
-                  Not_Match (Expr, A_Type);
-                  return Null_Iir;
-               end if;
-               -- It is enough ?
-               -- FIXME: check against LRM.
+            --  LRM93 7.3.1 Literals
+            --  The type of a string or bit string literal must be
+            --  determinable solely from the context in whcih the literal
+            --  appears, excluding the literal itself [...]
+            if A_Type = Null_Iir then
+               return Expr;
+            end if;
+
+            if not Is_String_Literal_Type (A_Type, Expr) then
+               Not_Match (Expr, A_Type);
+               return Null_Iir;
+            else
                Replace_Type (Expr, A_Type);
                Sem_String_Literal (Expr);
                return Expr;
             end if;
 
-            -- Look on every visible declaration of unidimensional array.
-            declare
-               Vt: Visible_Type_Index_Type;
-               Vt_Type : Iir;
-               Decl: Iir;
-               List: Iir_List;
-            begin
-               Vt := Get_First_Visible_Type;
-               List := Create_Iir_List;
-               while Vt /= No_Visible_Type_Index loop
-                  Vt_Type := Get_Type (Get_Visible_Type_Decl (Vt));
-                  Decl := Get_Base_Type (Vt_Type);
-                  if Check_Type_For_String_Literal (Decl, Expr) then
-                     Append_Element (List, Decl);
-                  end if;
-                  Vt := Get_Next_Visible_Type (Vt);
-               end loop;
-               case Get_Nbr_Elements (List) is
-                  when 0 =>
-                     Destroy_Iir_List (List);
-                     Error_Msg_Sem
-                       ("no character type for string literal", Expr);
-                     return Null_Iir;
-                  when 1 =>
-                     Set_Type (Expr, Get_First_Element (List));
-                     Destroy_Iir_List (List);
-                     Sem_String_Literal (Expr);
-                     return Expr;
-                  when others =>
-                     Set_Type (Expr, Create_Overload_List (List));
-                     return Expr;
-               end case;
-            end;
-
          when Iir_Kind_Null_Literal =>
             Set_Expr_Staticness (Expr, Locally);
+            --  GHDL: the LRM doesn't explain how the type of NULL is
+            --  determined.  Use the same rule as string or aggregates.
             if A_Type = Null_Iir then
-               declare
-                  Vt: Visible_Type_Index_Type;
-                  Vt_Type : Iir;
-                  Decl: Iir;
-                  List: Iir_List;
-               begin
-                  Vt := Get_First_Visible_Type;
-                  List := Create_Iir_List;
-                  while Vt /= No_Visible_Type_Index loop
-                     Vt_Type := Get_Type (Get_Visible_Type_Decl (Vt));
-                     Decl := Get_Base_Type (Vt_Type);
-                     if Get_Kind (Decl) = Iir_Kind_Access_Type_Definition then
-                        Append_Element (List, Decl);
-                     end if;
-                     Vt := Get_Next_Visible_Type (Vt);
-                  end loop;
-                  case Get_Nbr_Elements (List) is
-                     when 0 =>
-                        Error_Msg_Sem
-                          ("no visible access type for null literal", Expr);
-                        Destroy_Iir_List (List);
-                        return Null_Iir;
-                     when 1 =>
-                        Set_Type (Expr, Get_First_Element (List));
-                        Destroy_Iir_List (List);
-                        return Expr;
-                     when others =>
-                        Set_Type (Expr, Create_Overload_List (List));
-                        return Expr;
-                  end case;
-               end;
-            elsif Get_Kind (A_Type) /= Iir_Kind_Access_Type_Definition then
+               return Expr;
+            end if;
+            if not Is_Null_Literal_Type (A_Type) then
                Error_Msg_Sem ("null literal can only be access type", Expr);
                return Null_Iir;
             else
                Set_Type (Expr, A_Type);
                return Expr;
+            end if;
+
+         when Iir_Kind_Aggregate =>
+            --  LRM93 7.3.2 Aggregates
+            --  The type of an aggregate must be determinable solely from the
+            --  context in which the aggregate appears, excluding the aggregate
+            --  itself but [...]
+            if A_Type = Null_Iir then
+               return Expr;
+            else
+               return Sem_Aggregate (Expr, A_Type);
             end if;
 
          when Iir_Kind_Qualified_Expression =>
@@ -3930,48 +3905,6 @@ package body Sem_Expr is
          when Iir_Kind_Allocator_By_Expression
            | Iir_Kind_Allocator_By_Subtype =>
             return Sem_Allocator (Expr, A_Type);
-
-         when Iir_Kind_Aggregate =>
-            if A_Type = Null_Iir then
-               declare
-                  Vt: Visible_Type_Index_Type;
-                  Vt_Type : Iir;
-                  Decl: Iir;
-                  List: Iir_List;
-                  Res : Iir;
-               begin
-                  Vt := Get_First_Visible_Type;
-                  List := Create_Iir_List;
-                  while Vt /= No_Visible_Type_Index loop
-                     Vt_Type := Get_Type (Get_Visible_Type_Decl (Vt));
-                     Decl := Get_Base_Type (Vt_Type);
-                     case Get_Kind (Decl) is
-                        when Iir_Kind_Array_Type_Definition
-                          | Iir_Kind_Record_Type_Definition =>
-                           Append_Element (List, Decl);
-                        when others =>
-                           null;
-                     end case;
-                     Vt := Get_Next_Visible_Type (Vt);
-                  end loop;
-                  case Get_Nbr_Elements (List) is
-                     when 0 =>
-                        Destroy_Iir_List (List);
-                        Error_Msg_Sem
-                          ("no visible composite type for aggregate", Expr);
-                        return Null_Iir;
-                     when 1 =>
-                        Res := Sem_Aggregate (Expr, Get_First_Element (List));
-                        Destroy_Iir_List (List);
-                        return Res;
-                     when others =>
-                        Set_Type (Expr, Create_Overload_List (List));
-                        return Expr;
-                  end case;
-               end;
-            else
-               return Sem_Aggregate (Expr, A_Type);
-            end if;
 
          when Iir_Kinds_Procedure_Declaration =>
             Error_Msg_Sem
@@ -4027,7 +3960,7 @@ package body Sem_Expr is
             if A_Type = Null_Iir then
                Res := Sem_Expression_Ov (Expr, Null_Iir);
             else
-               if not Check_Type_For_String_Literal (A_Type, Expr) then
+               if not Is_String_Literal_Type (A_Type, Expr) then
                   Not_Match (Expr, A_Type);
                   return Null_Iir;
                end if;
@@ -4040,8 +3973,12 @@ package body Sem_Expr is
       end case;
 
       if Res /= Null_Iir and then Is_Overloaded (Res) then
+         --  FIXME: clarify between overload and not determinable from the
+         --  context.
          Error_Overload (Expr);
-         Disp_Overload_List (Get_Overload_List (Get_Type (Res)), Expr);
+         if Get_Type (Res) /= Null_Iir then
+            Disp_Overload_List (Get_Overload_List (Get_Type (Res)), Expr);
+         end if;
          return Null_Iir;
       end if;
       return Res;
@@ -4104,6 +4041,17 @@ package body Sem_Expr is
          return Null_Iir;
       end if;
       Expr_Type := Get_Type (Expr1);
+      if Expr_Type = Null_Iir then
+         --  Possible only if the type cannot be determined without the
+         --  context (aggregate or string literal).
+         Error_Msg_Sem
+           ("cannot determine the type of choice expression", Expr);
+         if Get_Kind (Expr1) = Iir_Kind_Aggregate then
+            Error_Msg_Sem
+              ("(use a qualified expression of the form T'(xxx).)", Expr);
+         end if;
+         return Null_Iir;
+      end if;
       if not Is_Overload_List (Expr_Type) then
          return Expr1;
       end if;
