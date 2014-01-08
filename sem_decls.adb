@@ -1276,9 +1276,7 @@ package body Sem_Decls is
       end if;
 
       if Deferred_Const = Null_Iir then
-         if not Flag_Relaxed_Rules then
-            Sem_Scopes.Add_Name (Decl);
-         end if;
+         Sem_Scopes.Add_Name (Decl);
          Xref_Decl (Decl);
       else
          Xref_Ref (Decl, Deferred_Const);
@@ -1303,10 +1301,6 @@ package body Sem_Decls is
             end if;
             Check_Read (Default_Value);
          end if;
-      end if;
-
-      if Deferred_Const = Null_Iir and Flag_Relaxed_Rules then
-         Sem_Scopes.Add_Name (Decl);
       end if;
 
       Set_Type (Decl, Atype);

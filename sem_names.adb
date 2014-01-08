@@ -1309,12 +1309,13 @@ package body Sem_Names is
    --  If SOFT is TRUE, then no error message is reported in case of failure.
    procedure Sem_Simple_Name (Name : Iir; Keep_Alias : Boolean; Soft : Boolean)
    is
+      Id : constant Name_Id := Get_Identifier (Name);
       Interpretation: Name_Interpretation_Type;
       Res: Iir;
       Res_List : Iir_List;
       N : Natural;
    begin
-      Interpretation := Get_Interpretation (Get_Identifier (Name));
+      Interpretation := Get_Interpretation (Id);
 
       if not Valid_Interpretation (Interpretation) then
          if not Soft then
@@ -1326,20 +1327,29 @@ package body Sem_Names is
       then
          -- not overloaded.
          Res := Get_Declaration (Interpretation);
+
+         if not Get_Visible_Flag (Res) then
+            if Flag_Relaxed_Rules
+              and then Get_Kind (Res) in Iir_Kinds_Object_Declaration
+              and then Valid_Interpretation (Get_Under_Interpretation (Id))
+            then
+               Res := Get_Declaration (Get_Under_Interpretation (Id));
+            else
+               if not Soft then
+                  Error_Msg_Sem
+                    (Disp_Node (Res) & " is not visible here", Name);
+               end if;
+               --  Even if a named entity was found, return an error_mark.
+               --  Indeed, the named entity found is certainly the one being
+               --  semantized, and the semantization may be uncomplete.
+               Res := Error_Mark;
+            end if;
+         end if;
+
          if not Keep_Alias
            and then Get_Kind (Res) = Iir_Kind_Non_Object_Alias_Declaration
          then
             Res := Get_Name (Res);
-         end if;
-
-         if not Get_Visible_Flag (Res) then
-            if not Soft then
-               Error_Msg_Sem (Disp_Node (Res) & " is not visible here", Name);
-            end if;
-            --  Even if a named entity was found, return an error_mark.
-            --  Indeed, the named entity found is certainly the one being
-            --  semantized, and the semantization may be uncomplete.
-            Res := Error_Mark;
          end if;
       else
          Res_List := Create_Iir_List;
