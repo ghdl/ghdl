@@ -1124,7 +1124,31 @@ package body Libraries is
 
    -- Save the file map of library LIBRARY.
    procedure Save_Library (Library: Iir_Library_Declaration) is
-      File: File_Type;
+      use GNAT.OS_Lib;
+      use Iirs_Utils;
+      Temp_Name : String_Access;
+      FD : File_Descriptor;
+      Success : Boolean;
+
+      --  Write a string to the temporary file.
+      procedure WR (S : String) is
+      begin
+         if Write (FD, S'Address, S'Length) /= S'Length then
+            Error_Msg
+              ("cannot write library file for " & Image_Identifier (Library));
+            Close (FD);
+            Delete_File (Temp_Name.all, Success);
+            --  Ignore failure to delete the file.
+            Free (Temp_Name);
+            raise Option_Error;
+         end if;
+      end WR;
+
+      --  Write a line terminator in the temporary file.
+      procedure WR_LF is
+      begin
+         WR (String'(1 => ASCII.LF));
+      end WR_LF;
 
       Design_File: Iir_Design_File;
       Design_Unit: Iir_Design_Unit;
@@ -1135,84 +1159,82 @@ package body Libraries is
       Pos: Source_Ptr;
       Source_File : Source_File_Entry;
    begin
-      -- FIXME: directory
-      declare
-         use Files_Map;
-         File_Name: constant String := Image (Work_Directory)
-           & Back_End.Library_To_File_Name (Library);
-      begin
-         Create (File, Out_File, File_Name);
-      exception
-         when Use_Error =>
-            Open (File, Out_File, File_Name);
-         when Name_Error =>
-            Error_Msg ("cannot create library file """ & File_Name & """");
-            raise Option_Error;
-      end;
+      --  Create a temporary file so that the real library is atomically
+      --  updated, and won't be corrupted in case of Control-C, or concurrent
+      --  writes.
+      Create_Temp_Output_File (FD, Temp_Name);
+
+      if FD = Invalid_FD then
+         Error_Msg
+           ("cannot create library file for " & Image_Identifier (Library));
+         raise Option_Error;
+      end if;
 
       --  Header: version.
-      Put_Line (File, "v 3");
+      WR ("v 3");
+      WR_LF;
 
       Design_File := Get_Design_File_Chain (Library);
       while Design_File /= Null_Iir loop
+         --  Ignore std.standard as there is no corresponding file.
          if Design_File = Std_Package.Std_Standard_File then
             goto Continue;
          end if;
          Design_Unit := Get_First_Design_Unit (Design_File);
 
          if Design_Unit /= Null_Iir then
-            Put (File, "file ");
+            WR ("file ");
             Dir := Get_Design_File_Directory (Design_File);
             if Dir = Null_Identifier then
                --  Absolute filenames.
-               Put (File, "/");
+               WR ("/");
             elsif Work_Directory = Name_Nil
               and then Dir = Files_Map.Get_Home_Directory
             then
                --  If the library is in the current directory, do not write
                --  it.  This allows to move the library file.
-               Put (File, ".");
+               WR (".");
             else
                Image (Dir);
-               Put (File, """");
-               Put (File, Name_Buffer (1 .. Name_Length));
-               Put (File, """");
+               WR ("""");
+               WR (Name_Buffer (1 .. Name_Length));
+               WR ("""");
             end if;
-            Put (File, " """);
+            WR (" """);
             Image (Get_Design_File_Filename (Design_File));
-            Put (File, Name_Buffer (1 .. Name_Length));
-            Put (File, """ """);
-            Put (File, Files_Map.Get_Time_Stamp_String
-                 (Get_File_Time_Stamp (Design_File)));
-            Put (File, """ """);
-            Put (File, Files_Map.Get_Time_Stamp_String
-                 (Get_Analysis_Time_Stamp (Design_File)));
-            Put_Line (File, """:");
+            WR (Name_Buffer (1 .. Name_Length));
+            WR (""" """);
+            WR (Files_Map.Get_Time_Stamp_String
+                  (Get_File_Time_Stamp (Design_File)));
+            WR (""" """);
+            WR (Files_Map.Get_Time_Stamp_String
+                  (Get_Analysis_Time_Stamp (Design_File)));
+            WR (""":");
+            WR_LF;
          end if;
 
          while Design_Unit /= Null_Iir loop
             Library_Unit := Get_Library_Unit (Design_Unit);
 
-            Put (File, "  ");
+            WR ("  ");
             case Get_Kind (Library_Unit) is
                when Iir_Kind_Entity_Declaration =>
-                  Put (File, "entity ");
-                  Put (File, Iirs_Utils.Image_Identifier (Library_Unit));
+                  WR ("entity ");
+                  WR (Image_Identifier (Library_Unit));
                when Iir_Kind_Architecture_Declaration =>
-                  Put (File, "architecture ");
-                  Put (File, Iirs_Utils.Image_Identifier (Library_Unit));
-                  Put (File, " of ");
-                  Put (File, Iirs_Utils.Image_Identifier
-                       (Get_Entity (Library_Unit)));
+                  WR ("architecture ");
+                  WR (Image_Identifier (Library_Unit));
+                  WR (" of ");
+                  WR (Image_Identifier (Get_Entity (Library_Unit)));
                when Iir_Kind_Package_Declaration =>
-                  Put (File, "package ");
-                  Put (File, Iirs_Utils.Image_Identifier (Library_Unit));
+                  WR ("package ");
+                  WR (Image_Identifier (Library_Unit));
                when Iir_Kind_Package_Body =>
-                  Put (File, "package body ");
-                  Put (File, Iirs_Utils.Image_Identifier (Library_Unit));
+                  WR ("package body ");
+                  WR (Image_Identifier (Library_Unit));
                when Iir_Kind_Configuration_Declaration =>
-                  Put (File, "configuration ");
-                  Put (File, Iirs_Utils.Image_Identifier (Library_Unit));
+                  WR ("configuration ");
+                  WR (Image_Identifier (Library_Unit));
                when others =>
                   Error_Kind ("save_library", Library_Unit);
             end case;
@@ -1224,28 +1246,29 @@ package body Libraries is
                                             Source_File, Pos, Line, Off);
             end if;
 
-            Put (File, " at");
-            Put (File, Natural'Image (Line));
-            Put (File, "(");
-            Put (File, Source_Ptr'Image (Pos));
-            Put (File, ") +");
-            Put (File, Natural'Image (Off));
-            Put (File, " on");
+            WR (" at");
+            WR (Natural'Image (Line));
+            WR ("(");
+            WR (Source_Ptr'Image (Pos));
+            WR (") +");
+            WR (Natural'Image (Off));
+            WR (" on");
             case Get_Date (Design_Unit) is
                when Date_Valid
                  | Date_Analyzed
                  | Date_Parsed =>
-                  Put (File, Date_Type'Image (Get_Date (Design_Unit)));
+                  WR (Date_Type'Image (Get_Date (Design_Unit)));
                when others =>
-                  Put_Line (Date_Type'Image (Get_Date (Design_Unit)));
+                  WR (Date_Type'Image (Get_Date (Design_Unit)));
                   raise Internal_Error;
             end case;
             if Get_Kind (Library_Unit) = Iir_Kind_Package_Declaration
               and then Get_Need_Body (Library_Unit)
             then
-               Put (File, " body");
+               WR (" body");
             end if;
-            Put_Line (File, ";");
+            WR (";");
+            WR_LF;
 
             Design_Unit := Get_Chain (Design_Unit);
          end loop;
@@ -1253,7 +1276,25 @@ package body Libraries is
          Design_File := Get_Chain (Design_File);
       end loop;
 
-      Close (File);
+      Close (FD);
+
+      --  Rename the temporary file to the library file.
+      --  FIXME: It may fail if they aren't on the same filesystem, but we
+      --  could assume it doesn't happen (humm...)
+      declare
+         use Files_Map;
+         File_Name: constant String := Image (Work_Directory)
+           & Back_End.Library_To_File_Name (Library);
+         Delete_Success : Boolean;
+      begin
+         Rename_File (Temp_Name.all, File_Name, Success);
+         Delete_File (Temp_Name.all, Delete_Success);
+         Free (Temp_Name);
+         if not Success then
+            Error_Msg ("cannot update library file """ & File_Name & """");
+            raise Option_Error;
+         end if;
+      end;
    end Save_Library;
 
    -- Save the map of the work library.
