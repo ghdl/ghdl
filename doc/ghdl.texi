@@ -1546,38 +1546,8 @@ end good;
 @cindex Math_Complex
 
 The @samp{ieee} math packages (@samp{math_real} and
-@samp{math_complex}) provided with @code{GHDL} are not fully compliant with
-the @code{IEEE} standard.  They are based on an early draft which can be
-redistributed contrary to the final version of the package.
-
-This is unfortunate and may generate errors as some declarations are missing
-or have slightly changed.
-
-If you have bought the standard from @samp{ieee} then you can download
-the sources of the packages from
-@url{http://standards.ieee.org/downloads/1076/1076.2-1996}
-(unrestricted access).  You'd better to just download
-@file{math_real.vhdl}, @file{math_real-body.vhdl},
-@file{math_complex.vhdl} and @file{math_complex-body.vhdl}.  The other files
-are not necessary: the @samp{std_logic_1164} package has to be updated for
-@code{VHDL} 1993 (the @code{xnor} functions are commented out).
-
-If you want to replace math packages for the standard version of the
-@code{ieee} library, do:
-@smallexample
-$ cp math_real.vhdl math_real-body.vhdl @file{ieee_install_dir}
-$ cp math_complex.vhdl math_complex-body.vhdl @file{ieee_install_dir}
-$ cd @file{ieee_install_dir}
-$ ghdl -a --work=ieee math_real.vhdl math_real-body.vhdl
-$ ghdl -a --work=ieee math_complex.vhdl math_complex-body.vhdl
-@end smallexample
-(Replace @file{ieee_install_dir} by the location of the @code{ieee} library as
-displayed by @samp{ghdl -dispconfig}).
-
-You can repeat this for the @samp{synopsys} version of the @code{ieee} library.
-
-Don't forget that the math packages are only defined for the 1993 standard.
-
+@samp{math_complex}) provided with @code{GHDL} are fully compliant with
+the @code{IEEE} standard.
 
 @node Simulation and runtime, GHDL implementation of VHDL, Invoking GHDL, Top
 @comment  node-name,  next,  previous,  up
@@ -1843,7 +1813,6 @@ This chapter describes several implementation defined aspect of VHDL in GHDL.
 * VHDL files format::           
 * Top entity::                  
 * Using vendor libraries::      
-* Using ieee.math_real or ieee.math_complex::  
 * Interfacing to other languages::  
 @end menu
 
@@ -2070,7 +2039,7 @@ default value;
 The ports type must be constrained.
 @end itemize
 
-@node Using vendor libraries, Using ieee.math_real or ieee.math_complex, Top entity, GHDL implementation of VHDL
+@node Using vendor libraries, Interfacing to other languages, Top entity, GHDL implementation of VHDL
 @comment  node-name,  next,  previous,  up
 @section Using vendor libraries
 Many vendors libraries have been analyzed with GHDL.  There are
@@ -2100,26 +2069,7 @@ declarations such as
 This files must be modified.  Fortunately, in the example the variables
 are never written.  So it is enough to remove them.
 
-@node Using ieee.math_real or ieee.math_complex, Interfacing to other languages, Using vendor libraries, GHDL implementation of VHDL
-@comment  node-name,  next,  previous,  up
-@section Using ieee.math_real or ieee.math_complex
-@cindex math_real
-@cindex math_complex
-Contrary to other @samp{ieee} libraries, the math packages sources are not
-freely available.  The sources provided with GHDL are based on an early draft
-and use the C libraries.  As a consequence, you should link your design
-with the @samp{libm.a} library using the @option{-Wl,} option like:
-@smallexample
-$ ghdl -e -Wl,-lm my_design
-@end smallexample
-Please, refer to your system manual for more details.
-
-Please also note that the @samp{ieee} libraries are not the same as the drafts.
-
-If you really need the @samp{ieee} math libraries, they are available on the
-web, but they cannot be included in GHDL.
-
-@node Interfacing to other languages,  , Using ieee.math_real or ieee.math_complex, GHDL implementation of VHDL
+@node Interfacing to other languages,  , Using vendor libraries, GHDL implementation of VHDL
 @comment  node-name,  next,  previous,  up
 @section Interfacing to other languages
 @cindex interfacing
