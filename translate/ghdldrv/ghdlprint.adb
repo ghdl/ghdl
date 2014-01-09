@@ -27,7 +27,7 @@ with Libraries;
 with Errorout; use Errorout;
 with Iirs; use Iirs;
 with Tokens;
-with Scan;
+with Scanner;
 with Version;
 with Xrefs;
 with Ghdlmain; use Ghdlmain;
@@ -76,7 +76,7 @@ package body Ghdlprint is
    procedure PP_Html_File (File : Source_File_Entry)
    is
       use Flags;
-      use Scan;
+      use Scanner;
       use Tokens;
       use Files_Map;
       use Ada.Characters.Latin_1;
@@ -329,8 +329,8 @@ package body Ghdlprint is
          end if;
       end Disp_Attribute;
    begin
-      Scan.Flag_Comment := True;
-      Scan.Flag_Newline := True;
+      Scanner.Flag_Comment := True;
+      Scanner.Flag_Newline := True;
 
       Set_File (File);
       Buf := Get_File_Source (File);
@@ -341,7 +341,7 @@ package body Ghdlprint is
       Last_Tok := Source_Ptr_Org;
       Prev_Tok := Tok_Invalid;
       loop
-         Scan.Scan;
+         Scan;
          Bef_Tok := Get_Token_Position;
          Aft_Tok := Get_Position;
          case Current_Token is
@@ -848,7 +848,7 @@ package body Ghdlprint is
    procedure Perform_Action (Cmd : in out Command_Lines; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Scan;
+      use Scanner;
       use Tokens;
       use Files_Map;
       use Ada.Characters.Latin_1;
@@ -879,7 +879,7 @@ package body Ghdlprint is
 
          --  Scan the content, to compute the number of lines.
          loop
-            Scan.Scan;
+            Scan;
             exit when Current_Token = Tok_Eof;
          end loop;
          File := Get_Current_Source_File;
@@ -997,7 +997,7 @@ package body Ghdlprint is
                              Files : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Scan;
+      use Scanner;
       use Tokens;
       use Files_Map;
       use Ada.Characters.Latin_1;

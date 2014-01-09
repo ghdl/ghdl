@@ -19,7 +19,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.Table;
 with GNAT.OS_Lib;
 with Errorout; use Errorout;
-with Scan;
+with Scanner;
 with Iirs_Utils;
 with Parse;
 with Back_End;
@@ -119,7 +119,7 @@ package body Libraries is
       if Fe = No_Source_File_Entry then
          return False;
       end if;
-      Scan.Set_File (Fe);
+      Scanner.Set_File (Fe);
       return True;
    end Set_Library_File_Name;
 
@@ -265,7 +265,7 @@ package body Libraries is
    function Load_Library (Library: Iir_Library_Declaration)
      return Boolean
    is
-      use Scan;
+      use Scanner;
       use Tokens;
       use Iirs_Utils;
 
@@ -279,7 +279,7 @@ package body Libraries is
 
       procedure Scan_Expect (Tok: Token_Type) is
       begin
-         Scan.Scan;
+         Scan;
          if Current_Token /= Tok then
             Bad_Library_Format;
             raise Compilation_Error;
@@ -320,17 +320,17 @@ package body Libraries is
             loop
                Scan_Expect (Tok_Dot);
                Scan_Expect (Tok_Identifier);
-               Scan.Scan;
+               Scan;
                if Current_Token = Tok_Left_Paren then
                   --  This is an architecture.
                   Scan_Expect (Tok_Identifier);
                   Scan_Expect (Tok_Right_Paren);
-                  Scan.Scan;
+                  Scan;
                end if;
                exit when Current_Token /= Tok_Comma;
-               Scan.Scan;
+               Scan;
             end loop;
-            Scan.Scan;
+            Scan;
          end if;
          return Null_Iir_List;
       end Scan_Unit_List;
@@ -387,7 +387,7 @@ package body Libraries is
       File := Get_Current_Source_File;
 
       --  Parse header.
-      Scan.Scan;
+      Scan;
       if Current_Token /= Tok_Identifier
         or else Name_Length /= 1 or else Name_Buffer (1) /= 'v'
       then
@@ -399,7 +399,7 @@ package body Libraries is
          Bad_Library_Format;
          raise Compilation_Error;
       end if;
-      Scan.Scan;
+      Scan;
 
       Last_Design_Unit := Null_Iir;
       while Current_Token /= Tok_Eof loop
@@ -407,7 +407,7 @@ package body Libraries is
             -- This is a new design file.
             Design_File := Create_Iir (Iir_Kind_Design_File);
 
-            Scan.Scan;
+            Scan;
             if Current_Token = Tok_Dot then
                --  The filename is local, use the directory of the library.
                if Dir = Name_Nil then
@@ -451,7 +451,7 @@ package body Libraries is
             Set_Analysis_Time_Stamp (Design_File, Current_Time_Stamp);
 
             Scan_Expect (Tok_Colon);
-            Scan.Scan;
+            Scan;
             Last_Design_Unit := Null_Iir;
          else
             -- This is a new design unit.
@@ -460,20 +460,20 @@ package body Libraries is
             case Current_Token is
                when Tok_Entity =>
                   Library_Unit := Create_Iir (Iir_Kind_Entity_Declaration);
-                  Scan.Scan;
+                  Scan;
                when Tok_Architecture =>
                   Library_Unit :=
                     Create_Iir (Iir_Kind_Architecture_Declaration);
-                  Scan.Scan;
+                  Scan;
                when Tok_Configuration =>
                   Library_Unit :=
                     Create_Iir (Iir_Kind_Configuration_Declaration);
-                  Scan.Scan;
+                  Scan;
                when Tok_Package =>
-                  Scan.Scan;
+                  Scan;
                   if Current_Token = Tok_Body then
                      Library_Unit := Create_Iir (Iir_Kind_Package_Body);
-                     Scan.Scan;
+                     Scan;
                   else
                      Library_Unit := Create_Iir (Iir_Kind_Package_Declaration);
                   end if;
@@ -488,7 +488,7 @@ package body Libraries is
                   end if;
                   Scan_Expect (Tok_Configuration);
                   Scan_Expect (Tok_Colon);
-                  Scan.Scan;
+                  Scan;
                   Set_Dependence_List (Design_Unit, Scan_Unit_List);
                   goto Next_Line;
                when others =>
@@ -526,17 +526,17 @@ package body Libraries is
             Scan_Expect (Tok_Integer);
             Date := Date_Type (Current_Iir_Int64);
 
-            Scan.Scan;
+            Scan;
             if Get_Kind (Library_Unit) = Iir_Kind_Package_Declaration
               and then Current_Token = Tok_Body
             then
                Set_Need_Body (Library_Unit, True);
-               Scan.Scan;
+               Scan;
             end if;
             if Current_Token /= Tok_Semi_Colon then
                raise Internal_Error;
             end if;
-            Scan.Scan;
+            Scan;
 
             if False then
                Put_Line ("line:" & Natural'Image (Line)
@@ -746,7 +746,7 @@ package body Libraries is
       end if;
 
       Library := Create_Iir (Iir_Kind_Library_Declaration);
-      Set_Location (Library, Scan.Get_Token_Location);
+      Set_Location (Library, Scanner.Get_Token_Location);
       Set_Library_Directory (Library, Null_Identifier);
       Set_Identifier (Library, Ident);
       if Load_Library (Library) = False then
@@ -1348,9 +1348,9 @@ package body Libraries is
    is
       Res : Iir_Design_File;
    begin
-      Scan.Set_File (File);
+      Scanner.Set_File (File);
       Res := Parse.Parse_Design_File;
-      Scan.Close_File;
+      Scanner.Close_File;
       if Res /= Null_Iir then
          Set_Parent (Res, Work_Library);
          Set_Design_File_Filename (Res, Files_Map.Get_File_Name (File));
@@ -1450,7 +1450,7 @@ package body Libraries is
 
    procedure Load_Parse_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir)
    is
-      use Scan;
+      use Scanner;
       Line, Off: Natural;
       Pos: Source_Ptr;
       Res: Iir;

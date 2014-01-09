@@ -1,5 +1,5 @@
 --  Lexical analysis for numbers.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Copyright (C) 2002 - 2014 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Ada.Unchecked_Conversion;
 
-separate (Scan)
+separate (Scanner)
 
 -- scan a decimal literal or a based literal.
 --

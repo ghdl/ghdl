@@ -25,7 +25,7 @@ with Std_Names;
 with Back_End;
 with Disp_Vhdl;
 with Default_Pathes;
-with Scan;
+with Scanner;
 with Sem;
 with Canon;
 with Errorout;
@@ -1192,7 +1192,7 @@ package body Ghdllocal is
          end if;
          raise Option_Error;
       end if;
-      Scan.Convert_Identifier;
+      Scanner.Convert_Identifier;
       return new String'(Name_Buffer (1 .. Name_Length));
    end Convert_Name;
 

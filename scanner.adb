@@ -1,5 +1,5 @@
 --  VHDL lexical scanner.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Copyright (C) 2002 - 2014 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -24,7 +24,7 @@ with Std_Names;
 with Str_Table;
 with Flags; use Flags;
 
-package body Scan is
+package body Scanner is
 
    -- This classification is a simplification of the categories of LRM93 13.1
    -- LRM93 13.1
@@ -1523,4 +1523,4 @@ package body Scan is
       return File_Pos_To_Location
         (Current_Context.Source_File, Current_Context.Token_Pos);
    end Get_Token_Location;
-end Scan;
+end Scanner;

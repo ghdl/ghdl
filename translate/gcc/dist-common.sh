@@ -2,9 +2,9 @@
 cfiles="
 evaluation.adb
 evaluation.ads
-scan.ads
-scan.adb
-scan-scan_literal.adb
+scanner.ads
+scanner.adb
+scanner-scan_literal.adb
 back_end.ads
 back_end.adb
 files_map.adb

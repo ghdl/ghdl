@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Ada.Text_IO;
 with Ada.Command_Line;
-with Scan;
+with Scanner;
 with Tokens; use Tokens;
 with Name_Table;
 with Iirs_Utils;
@@ -112,16 +112,16 @@ package body Errorout is
 
    procedure Disp_Current_Location is
    begin
-      Disp_Location (Scan.Get_Current_File,
-                     Scan.Get_Current_Line,
-                     Scan.Get_Current_Column);
+      Disp_Location (Scanner.Get_Current_File,
+                     Scanner.Get_Current_Line,
+                     Scanner.Get_Current_Column);
    end Disp_Current_Location;
 
    procedure Disp_Token_Location is
    begin
-      Disp_Location (Scan.Get_Current_File,
-                     Scan.Get_Current_Line,
-                     Scan.Get_Token_Column);
+      Disp_Location (Scanner.Get_Current_File,
+                     Scanner.Get_Current_Line,
+                     Scanner.Get_Token_Column);
    end Disp_Token_Location;
 
    procedure Disp_Location (Loc : Location_Type)
@@ -221,12 +221,12 @@ package body Errorout is
 
    procedure Disp_Current_Token is
    begin
-      case Scan.Current_Token is
+      case Scanner.Current_Token is
          when Tok_Identifier =>
             Put ("identifier """
-                 & Name_Table.Image (Scan.Current_Identifier) & """");
+                 & Name_Table.Image (Scanner.Current_Identifier) & """");
          when others =>
-            Put (Token_Type'Image (Scan.Current_Token));
+            Put (Token_Type'Image (Scanner.Current_Token));
       end case;
    end Disp_Current_Token;
 

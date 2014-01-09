@@ -18,14 +18,12 @@
 
 with PSL.Nodes; use PSL.Nodes;
 with Iirs;
-with Scan; use Scan;
+with Scanner; use Scanner;
 with PSL.Errors; use PSL.Errors;
 with PSL.Priorities; use PSL.Priorities;
 with Parse;
 
 package body Parse_Psl is
-   procedure Scan renames Scan.Scan;
-
    function Create_Node_Loc (K : Nkind) return Node is
       Res : Node;
    begin

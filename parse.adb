@@ -19,7 +19,7 @@ with Iir_Chains; use Iir_Chains;
 with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
 with Tokens; use Tokens;
-with Scan; use Scan;
+with Scanner; use Scanner;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Std_Names; use Std_Names;
@@ -127,7 +127,7 @@ package body Parse is
    --  Scan a token and expect it.
    procedure Scan_Expect (Token: Token_Type; Msg: String := "") is
    begin
-      Scan.Scan;
+      Scan;
       Expect (Token, Msg);
    end Scan_Expect;
 
@@ -150,7 +150,7 @@ package body Parse is
             Xrefs.Xref_End (Get_Token_Location, Decl);
          end if;
       end if;
-      Scan.Scan;
+      Scan;
    end Check_End_Name;
 
    procedure Check_End_Name (Decl : Iir) is
@@ -165,12 +165,12 @@ package body Parse is
       if Current_Token /= Tok_End then
          Error_Msg_Parse ("""end " & Image (Tok) & ";"" expected");
       else
-         Scan.Scan;
+         Scan;
          if Current_Token /= Tok then
             Error_Msg_Parse
               ("""end"" must be followed by """ & Image (Tok) & """");
          else
-            Scan.Scan;
+            Scan;
          end if;
          Check_End_Name (Decl);
          Expect (Tok_Semi_Colon);
@@ -185,7 +185,7 @@ package body Parse is
               | Tok_Eof =>
                exit;
             when others =>
-               Scan.Scan;
+               Scan;
          end case;
       end loop;
    end Eat_Tokens_Until_Semi_Colon;
@@ -203,25 +203,25 @@ package body Parse is
          when Tok_Identifier =>
             return Default;
          when Tok_In =>
-            Scan.Scan;
+            Scan;
             if Current_Token = Tok_Out then
                --  Nice message for Ada users...
                Error_Msg_Parse ("typo error, in out must be 'inout' in vhdl");
-               Scan.Scan;
+               Scan;
                return Iir_Inout_Mode;
             end if;
             return Iir_In_Mode;
          when Tok_Out =>
-            Scan.Scan;
+            Scan;
             return Iir_Out_Mode;
          when Tok_Inout =>
-            Scan.Scan;
+            Scan;
             return Iir_Inout_Mode;
          when Tok_Linkage =>
-            Scan.Scan;
+            Scan;
             return Iir_Linkage_Mode;
          when Tok_Buffer =>
-            Scan.Scan;
+            Scan;
             return Iir_Buffer_Mode;
          when others =>
             Error_Msg_Parse
@@ -240,10 +240,10 @@ package body Parse is
    function Parse_Signal_Kind return Iir_Signal_Kind is
    begin
       if Current_Token = Tok_Bus then
-         Scan.Scan;
+         Scan;
          return Iir_Bus_Kind;
       elsif Current_Token = Tok_Register then
-         Scan.Scan;
+         Scan;
          return Iir_Register_Kind;
       else
          return Iir_No_Signal_Kind;
@@ -286,10 +286,10 @@ package body Parse is
             if not Discrete then
                Unexpected ("range definition");
             end if;
-            Scan.Scan;
+            Scan;
             if Current_Token = Tok_Box then
                Unexpected ("range expression expected");
-               Scan.Scan;
+               Scan;
                return Null_Iir;
             end if;
             Res := Parse_Range_Expression (Null_Iir, False);
@@ -313,7 +313,7 @@ package body Parse is
       Set_Left_Limit (Res, Left1);
       Location_Copy (Res, Left1);
 
-      Scan.Scan;
+      Scan;
       Set_Right_Limit (Res, Parse_Simple_Expression);
       return Res;
    end Parse_Range_Expression;
@@ -347,7 +347,7 @@ package body Parse is
             raise Internal_Error;
       end case;
 
-      Scan.Scan;
+      Scan;
       Set_Right_Limit (Res, Parse_Simple_Expression);
       return Res;
    end Parse_Range_Right;
@@ -383,11 +383,11 @@ package body Parse is
          Error_Msg_Parse ("'range' expected");
          return Null_Iir;
       end if;
-      Scan.Scan;
+      Scan;
 
       if Current_Token = Tok_Box then
          Error_Msg_Parse ("range constraint required");
-         Scan.Scan;
+         Scan;
          return Null_Iir;
       end if;
 
@@ -778,7 +778,7 @@ package body Parse is
                   Prefix := String_To_Operator_Symbol (Prefix);
                end if;
 
-               Scan.Scan;
+               Scan;
                if Current_Token = Tok_Left_Paren then
                   -- A qualified expression.
                   Res := Create_Iir (Iir_Kind_Qualified_Expression);
@@ -803,7 +803,7 @@ package body Parse is
                end if;
 
                -- accept the identifier.
-               Scan.Scan;
+               Scan;
 
             when Tok_Left_Paren =>
                if not Allow_Indexes then
@@ -824,7 +824,7 @@ package body Parse is
                   Prefix := String_To_Operator_Symbol (Prefix);
                end if;
 
-               Scan.Scan;
+               Scan;
                case Current_Token is
                   when Tok_All =>
                      Res := Create_Iir (Iir_Kind_Selected_By_All_Name);
@@ -845,7 +845,7 @@ package body Parse is
                   when others =>
                      Error_Msg_Parse ("an identifier or all is expected");
                end case;
-               Scan.Scan;
+               Scan;
             when others =>
                return Res;
          end case;
@@ -871,7 +871,7 @@ package body Parse is
             raise Parse_Error;
       end case;
 
-      Scan.Scan;
+      Scan;
 
       return Parse_Name_Suffix (Res, Allow_Indexes);
    end Parse_Name;
@@ -954,7 +954,7 @@ package body Parse is
       Last := Null_Iir;
       loop
          Prev_Loc := Get_Token_Location;
-         Scan.Scan;
+         Scan;
          case Current_Token is
             when Tok_Identifier =>
                Inter := Create_Iir (Default);
@@ -991,7 +991,7 @@ package body Parse is
          else
             Is_Default := False;
             Lexical_Layout := Iir_Lexical_Has_Mode;
-            Scan.Scan;
+            Scan;
          end if;
 
          Prev_First := Last;
@@ -1010,16 +1010,16 @@ package body Parse is
             end if;
             Last := Inter;
 
-            Scan.Scan;
+            Scan;
             exit when Current_Token = Tok_Colon;
             Expect (Tok_Comma, "',' or ':' expected after identifier");
-            Scan.Scan;
+            Scan;
             Inter := Create_Iir (Get_Kind (Inter));
          end loop;
 
          Expect (Tok_Colon,
                  "':' must follow the interface element identifier");
-         Scan.Scan;
+         Scan;
 
          --  LRM93 2.1.1
          --  If the mode is INOUT or OUT, and no object class is explicitly
@@ -1104,7 +1104,7 @@ package body Parse is
                Error_Msg_Parse
                  ("default expression not allowed for an interface file");
             end if;
-            Scan.Scan;
+            Scan;
             Default_Value := Parse_Expression;
          else
             Default_Value := Null_Iir;
@@ -1140,7 +1140,7 @@ package body Parse is
       if Current_Token /= Tok_Right_Paren then
          Error_Msg_Parse ("')' expected at end of interface list");
       end if;
-      Scan.Scan;
+      Scan;
       return Res;
    end Parse_Interface_Chain;
 
@@ -1162,7 +1162,7 @@ package body Parse is
          raise Program_Error;
       end if;
 
-      Scan.Scan;
+      Scan;
       Res := Parse_Interface_Chain
         (Iir_Kind_Signal_Interface_Declaration, Parent);
 
@@ -1178,7 +1178,7 @@ package body Parse is
       if Current_Token /= Tok_Semi_Colon then
          Error_Msg_Parse ("missing "";"" at end of port clause");
       else
-         Scan.Scan;
+         Scan;
       end if;
       Set_Port_Chain (Parent, Res);
    end Parse_Port_Clause;
@@ -1200,13 +1200,13 @@ package body Parse is
          raise Program_Error;
       end if;
 
-      Scan.Scan;
+      Scan;
       Res := Parse_Interface_Chain
         (Iir_Kind_Constant_Interface_Declaration, Parent);
       if Current_Token /= Tok_Semi_Colon then
          Error_Msg_Parse ("missing "";"" at end of generic clause");
       else
-         Scan.Scan;
+         Scan;
       end if;
       Set_Generic_Chain (Parent, Res);
    end Parse_Generic_Clause;
@@ -1277,10 +1277,10 @@ package body Parse is
       -- The position number of the first listed enumeration literal is zero.
       Pos := 0;
       -- scan every literal.
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Right_Paren then
          Error_Msg_Parse ("at least one literal must be declared");
-         Scan.Scan;
+         Scan;
          return Enum_Type;
       end if;
       loop
@@ -1306,20 +1306,20 @@ package body Parse is
          Append_Element (Enum_List, Enum_Lit);
 
          -- next token.
-         Scan.Scan;
+         Scan;
          exit when Current_Token = Tok_Right_Paren;
          if Current_Token /= Tok_Comma then
             Error_Msg_Parse ("')' or ',' is expected after an enum literal");
          end if;
 
          -- scan a literal.
-         Scan.Scan;
+         Scan;
          if Current_Token = Tok_Right_Paren then
             Error_Msg_Parse ("extra ',' ignored");
             exit;
          end if;
       end loop;
-      Scan.Scan;
+      Scan;
       return Enum_Type;
    end Parse_Enumeration_Type_Definition;
 
@@ -1366,7 +1366,7 @@ package body Parse is
       Loc := Get_Token_Location;
 
       Scan_Expect (Tok_Left_Paren);
-      Scan.Scan;
+      Scan;
       First := True;
       Index_List := Create_Iir_List;
 
@@ -1375,11 +1375,11 @@ package body Parse is
          case Current_Token is
             when Tok_Range =>
                --  Type_Mark is a name...
-               Scan.Scan;
+               Scan;
                if Current_Token = Tok_Box then
                   --  This is an index_subtype_definition.
                   Index_Constrained := False;
-                  Scan.Scan;
+                  Scan;
                   Def := Type_Mark;
                else
                   Index_Constrained := True;
@@ -1417,7 +1417,7 @@ package body Parse is
             end if;
          end if;
          exit when Current_Token /= Tok_Comma;
-         Scan.Scan;
+         Scan;
       end loop;
 
       if Array_Constrained then
@@ -1430,7 +1430,7 @@ package body Parse is
 
       Expect (Tok_Right_Paren);
       Scan_Expect (Tok_Of);
-      Scan.Scan;
+      Scan;
       Set_Element_Subtype (Res_Type, Parse_Subtype_Indication);
       return Res_Type;
    end Parse_Array_Definition;
@@ -1463,7 +1463,7 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Physical_Type_Definition);
       Set_Location (Res);
       Expect (Tok_Units);
-      Scan.Scan;
+      Scan;
       --  Parse primary unit.
       Expect (Tok_Identifier);
       Unit := Create_Iir (Iir_Kind_Unit_Declaration);
@@ -1472,14 +1472,14 @@ package body Parse is
       Build_Init (Last);
       Append (Last, Res, Unit);
       Scan_Expect (Tok_Semi_Colon);
-      Scan.Scan;
+      Scan;
       --  Parse secondary units.
       while Current_Token /= Tok_End loop
          Unit := Create_Iir (Iir_Kind_Unit_Declaration);
          Set_Location (Unit);
          Set_Identifier (Unit, Current_Identifier);
          Scan_Expect (Tok_Equal);
-         Scan.Scan;
+         Scan;
          Multiplier := Parse_Primary;
          Set_Physical_Literal (Unit, Multiplier);
          case Get_Kind (Multiplier) is
@@ -1491,11 +1491,11 @@ package body Parse is
          end case;
          Append (Last, Res, Unit);
          Expect (Tok_Semi_Colon);
-         Scan.Scan;
+         Scan;
       end loop;
-      Scan.Scan;
+      Scan;
       Expect (Tok_Units);
-      Scan.Scan;
+      Scan;
       return Res;
    end Parse_Physical_Type_Definition;
 
@@ -1526,7 +1526,7 @@ package body Parse is
       Set_Location (Res);
       El_List := Create_Iir_List;
       Set_Elements_Declaration_List (Res, El_List);
-      Scan.Scan;
+      Scan;
       Pos := 0;
       First := Null_Iir;
       loop
@@ -1546,21 +1546,21 @@ package body Parse is
             if First = Null_Iir then
                First := El;
             end if;
-            Scan.Scan;
+            Scan;
             exit when Current_Token /= Tok_Comma;
-            Scan.Scan;
+            Scan;
          end loop;
          Expect (Tok_Colon);
-         Scan.Scan;
+         Scan;
          Subtype_Indication := Parse_Subtype_Indication;
          Set_Type (First, Subtype_Indication);
          First := Null_Iir;
          Expect (Tok_Semi_Colon);
-         Scan.Scan;
+         Scan;
          exit when Current_Token = Tok_End;
       end loop;
       Scan_Expect (Tok_Record);
-      Scan.Scan;
+      Scan;
       return Res;
    end Parse_Record_Definition;
 
@@ -1575,7 +1575,7 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Access_Type_Definition);
       Set_Location (Res);
       Expect (Tok_Access);
-      Scan.Scan;
+      Scan;
       Set_Designated_Type (Res, Parse_Subtype_Indication);
       return Res;
    end Parse_Access_Definition;
@@ -1594,7 +1594,7 @@ package body Parse is
       Set_Location (Res);
       -- Accept token 'file'.
       Scan_Expect (Tok_Of);
-      Scan.Scan;
+      Scan;
       Type_Mark := Parse_Type_Mark (Check_Paren => True);
       if Get_Kind (Type_Mark) not in Iir_Kinds_Name then
          Error_Msg_Parse ("type mark expected");
@@ -1652,10 +1652,10 @@ package body Parse is
       Res : Iir;
       Decl : Iir;
    begin
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Body then
          Res := Create_Iir (Iir_Kind_Protected_Type_Body);
-         Scan.Scan;
+         Scan;
          Decl := Res;
       else
          Decl := Create_Iir (Iir_Kind_Type_Declaration);
@@ -1671,7 +1671,7 @@ package body Parse is
       if Get_Kind (Res) = Iir_Kind_Protected_Type_Body then
          Scan_Expect (Tok_Body);
       end if;
-      Scan.Scan;
+      Scan;
       Check_End_Name (Decl);
       return Decl;
    end Parse_Protected_Type_Definition;
@@ -1719,7 +1719,7 @@ package body Parse is
       Loc := Get_Token_Location;
       Ident := Current_Identifier;
 
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Semi_Colon then
          --  If there is a ';', this is an imcomplete type declaration.
          Invalidate_Current_Token;
@@ -1734,7 +1734,7 @@ package body Parse is
          --  Act as if IS token was forgotten.
       else
          --  Eat IS token.
-         Scan.Scan;
+         Scan;
       end if;
 
       case Current_Token is
@@ -1869,7 +1869,7 @@ package body Parse is
          --  Element resolution.
          Loc := Get_Token_Location;
 
-         Scan.Scan; -- Eat '('
+         Scan; -- Eat '('
          Res := Parse_Resolution_Indication;
          if Current_Token = Tok_Identifier
            or else Current_Token = Tok_Left_Paren
@@ -1893,14 +1893,14 @@ package body Parse is
                Append_Element (El_List, El);
                exit when Current_Token = Tok_Right_Paren;
                Expect (Tok_Comma);
-               Scan.Scan;
+               Scan;
                if Current_Token /= Tok_Identifier then
                   Error_Msg_Parse ("record element identifier expected");
                   exit;
                end if;
                Id := Current_Identifier;
                Loc := Get_Token_Location;
-               Scan.Scan;
+               Scan;
             end loop;
          else
             Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
@@ -1908,7 +1908,7 @@ package body Parse is
             Set_Element_Subtype (Def, Res);
          end if;
          Expect (Tok_Right_Paren);
-         Scan.Scan;
+         Scan;
          return Def;
       else
          Error_Msg_Parse ("resolution indication expected");
@@ -1941,11 +1941,11 @@ package body Parse is
       Set_Location (Def);
 
       --  Eat '('.
-      Scan.Scan;
+      Scan;
 
       if Current_Token = Tok_Open then
          --  Eat 'open'.
-         Scan.Scan;
+         Scan;
       else
          Set_Index_Subtype_List (Def, Create_Iir_List);
          -- index_constraint ::= (discrete_range {, discrete_range} )
@@ -1955,11 +1955,11 @@ package body Parse is
             Append_Element (Get_Index_Subtype_List (Def), El);
             exit when Current_Token = Tok_Right_Paren;
             Expect (Tok_Comma);
-            Scan.Scan;
+            Scan;
          end loop;
       end if;
       Expect (Tok_Right_Paren);
-      Scan.Scan;
+      Scan;
 
       if Current_Token = Tok_Left_Paren then
          Set_Element_Subtype (Def, Parse_Element_Constraint);
@@ -1978,7 +1978,7 @@ package body Parse is
       if AMS_Vhdl
         and then Current_Token = Tok_Tolerance
       then
-         Scan.Scan;
+         Scan;
          return Parse_Expression;
       else
          return Null_Iir;
@@ -2087,7 +2087,7 @@ package body Parse is
       Set_Location (Decl);
 
       Scan_Expect (Tok_Is);
-      Scan.Scan;
+      Scan;
       Def := Parse_Subtype_Indication;
       Set_Type (Decl, Def);
 
@@ -2129,14 +2129,14 @@ package body Parse is
       Loc := Get_Token_Location;
       Ident := Current_Identifier;
 
-      Scan.Scan;
+      Scan;
 
       if Current_Token /= Tok_Is then
          Error_Msg_Parse ("'is' expected here");
          --  Act as if IS token was forgotten.
       else
          --  Eat IS token.
-         Scan.Scan;
+         Scan;
       end if;
 
       case Current_Token is
@@ -2155,13 +2155,13 @@ package body Parse is
             Set_Location (Def, Loc);
             Set_Across_Type (Def, Parse_Type_Mark);
             if Current_Token = Tok_Across then
-               Scan.Scan;
+               Scan;
             else
                Expect (Tok_Across, "'across' expected after type mark");
             end if;
             Set_Through_Type (Def, Parse_Type_Mark);
             if Current_Token = Tok_Through then
-               Scan.Scan;
+               Scan;
             else
                Expect (Tok_Across, "'through' expected after type mark");
             end if;
@@ -2170,9 +2170,9 @@ package body Parse is
                Set_Identifier (Ref, Current_Identifier);
                Set_Location (Ref);
                Set_Reference (Def, Ref);
-               Scan.Scan;
+               Scan;
                if Current_Token = Tok_Reference then
-                  Scan.Scan;
+                  Scan;
                else
                   Expect (Tok_Reference, "'reference' expected");
                   Eat_Tokens_Until_Semi_Colon;
@@ -2258,7 +2258,7 @@ package body Parse is
 
          Sub_Chain_Append (First, Last, Terminal);
 
-         Scan.Scan;
+         Scan;
          exit when Current_Token = Tok_Colon;
          if Current_Token /= Tok_Comma then
             Error_Msg_Parse
@@ -2269,7 +2269,7 @@ package body Parse is
       end loop;
 
       -- The colon was parsed.
-      Scan.Scan;
+      Scan;
       Subnature := Parse_Subnature_Indication;
 
       Proxy := Null_Iir;
@@ -2334,7 +2334,7 @@ package body Parse is
       Sub_Chain_Init (First, Last);
 
       --  Eat 'quantity'
-      Scan.Scan;
+      Scan;
 
       loop
          --  Quantity or "," was just scanned.  We assume a free quantity
@@ -2349,11 +2349,11 @@ package body Parse is
          Sub_Chain_Append (First, Last, Object);
 
          --  Eat identifier
-         Scan.Scan;
+         Scan;
          exit when Current_Token /= Tok_Comma;
 
          --  Eat ','
-         Scan.Scan;
+         Scan;
       end loop;
 
       case Current_Token is
@@ -2372,7 +2372,7 @@ package body Parse is
 
             --  Parse default value
             if Current_Token = Tok_Assign then
-               Scan.Scan;
+               Scan;
                Default_Value := Parse_Expression;
             else
                Default_Value := Null_Iir;
@@ -2390,7 +2390,7 @@ package body Parse is
             end case;
 
             --  Eat across/through
-            Scan.Scan;
+            Scan;
 
             --  Change declarations
             Object := First;
@@ -2445,7 +2445,7 @@ package body Parse is
                      Set_Parent (Object, Parent);
                      Sub_Chain_Append (First, Last, Object);
                      exit when Current_Token /= Tok_Comma;
-                     Scan.Scan;
+                     Scan;
 
                      Object := Create_Iir
                        (Iir_Kind_Through_Quantity_Declaration);
@@ -2455,7 +2455,7 @@ package body Parse is
                           ("identifier for quantity declaration expected");
                      else
                         Set_Identifier (Object, Current_Identifier);
-                        Scan.Scan;
+                        Scan;
                      end if;
                      Proxy := Create_Iir (Iir_Kind_Proxy);
                      Set_Proxy (Proxy, First_Through);
@@ -2468,17 +2468,17 @@ package body Parse is
 
                   --  Parse default value
                   if Current_Token = Tok_Assign then
-                     Scan.Scan;
+                     Scan;
                      Set_Default_Value (Object, Parse_Expression);
                   end if;
 
                   --  Scan 'through'
                   if Current_Token = Tok_Through then
-                     Scan.Scan;
+                     Scan;
                   elsif Current_Token = Tok_Across then
                      Error_Msg_Parse ("across quantity declaration must appear"
                                         & " before though declaration");
-                     Scan.Scan;
+                     Scan;
                   else
                      Error_Msg_Parse ("'through' expected");
                   end if;
@@ -2493,7 +2493,7 @@ package body Parse is
 
             --  Parse minus terminal (if present)
             if Current_Token = Tok_To then
-               Scan.Scan;
+               Scan;
                Set_Minus_Terminal (First, Parse_Name);
             end if;
          when others =>
@@ -2596,7 +2596,7 @@ package body Parse is
 
          Sub_Chain_Append (First, Last, Object);
 
-         Scan.Scan;
+         Scan;
          exit when Current_Token = Tok_Colon;
          if Current_Token /= Tok_Comma then
             case Current_Token is
@@ -2613,7 +2613,7 @@ package body Parse is
       end loop;
 
       -- The colon was parsed.
-      Scan.Scan;
+      Scan;
       Object_Type := Parse_Subtype_Indication;
 
       if Kind = Iir_Kind_Signal_Declaration then
@@ -2625,7 +2625,7 @@ package body Parse is
             Error_Msg_Parse
               ("default expression not allowed for a file declaration");
          end if;
-         Scan.Scan;
+         Scan;
          Default_Value := Parse_Expression;
       else
          Default_Value := Null_Iir;
@@ -2637,7 +2637,7 @@ package body Parse is
                Error_Msg_Parse
                  ("'open' and open kind expression not allowed in vhdl 87");
             end if;
-            Scan.Scan;
+            Scan;
             Open_Kind := Parse_Expression;
          else
             Open_Kind := Null_Iir;
@@ -2654,7 +2654,7 @@ package body Parse is
 
          Logical_Name := Null_Iir;
          if Current_Token = Tok_Is then
-            Scan.Scan;
+            Scan;
             case Current_Token is
                when Tok_In | Tok_Out | Tok_Inout =>
                   if Flags.Vhdl_Std >= Vhdl_93 then
@@ -2723,12 +2723,12 @@ package body Parse is
                    "an identifier is expected after 'component'");
       Set_Identifier (Component, Current_Identifier);
       Set_Location (Component);
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Is then
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("""is"" keyword is not allowed here by vhdl 87");
          end if;
-         Scan.Scan;
+         Scan;
       end if;
       Parse_Generic_Port_Clauses (Component);
       Check_End_Name (Tok_Component, Component);
@@ -2748,7 +2748,7 @@ package body Parse is
       Expect (Tok_Left_Bracket);
       Res := Create_Iir (Iir_Kind_Signature);
       Set_Location (Res);
-      Scan.Scan;
+      Scan;
       --  List of type_marks.
       if Current_Token = Tok_Identifier then
          List := Create_Iir_List;
@@ -2756,15 +2756,15 @@ package body Parse is
          loop
             Append_Element (List, Parse_Type_Mark (Check_Paren => True));
             exit when Current_Token /= Tok_Comma;
-            Scan.Scan;
+            Scan;
          end loop;
       end if;
       if Current_Token = Tok_Return then
-         Scan.Scan;
+         Scan;
          Set_Return_Type (Res, Parse_Name);
       end if;
       Expect (Tok_Right_Bracket);
-      Scan.Scan;
+      Scan;
       return Res;
    end Parse_Signature;
 
@@ -2789,7 +2789,7 @@ package body Parse is
       Set_Location (Res);
 
       -- accept ALIAS.
-      Scan.Scan;
+      Scan;
 
       case Current_Token is
          when Tok_Identifier =>
@@ -2804,16 +2804,16 @@ package body Parse is
             Error_Msg_Parse ("alias designator expected");
       end case;
       Set_Identifier (Res, Ident);
-      Scan.Scan;
+      Scan;
 
       if Current_Token = Tok_Colon then
-         Scan.Scan;
+         Scan;
          Set_Type (Res, Parse_Subtype_Indication);
       end if;
 
       --  FIXME: nice message if token is ':=' ?
       Expect (Tok_Is);
-      Scan.Scan;
+      Scan;
       Set_Name (Res, Parse_Name);
 
       return Res;
@@ -2833,7 +2833,7 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Configuration_Specification);
       Set_Location (Res);
       Expect (Tok_For);
-      Scan.Scan;
+      Scan;
       Parse_Component_Specification (Res);
       Set_Binding_Indication (Res, Parse_Binding_Indication);
       Expect (Tok_Semi_Colon);
@@ -2877,7 +2877,7 @@ package body Parse is
               (''' & Tokens.Image (Current_Token) & "' is not a entity class");
       end case;
       Res := Current_Token;
-      Scan.Scan;
+      Scan;
       return Res;
    end Parse_Entity_Class;
 
@@ -2920,7 +2920,7 @@ package body Parse is
             Error_Msg_Parse ("identifier, character or string expected");
             raise Expect_Error;
       end case;
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Left_Bracket then
          Name := Res;
          Res := Parse_Signature;
@@ -2945,22 +2945,22 @@ package body Parse is
       case Current_Token is
          when Tok_All =>
             List := Iir_List_All;
-            Scan.Scan;
+            Scan;
          when Tok_Others =>
             List := Iir_List_Others;
-            Scan.Scan;
+            Scan;
          when others =>
             List := Create_Iir_List;
             loop
                El := Parse_Entity_Designator;
                Append_Element (List, El);
                exit when Current_Token /= Tok_Comma;
-               Scan.Scan;
+               Scan;
             end loop;
       end case;
       Set_Entity_Name_List (Attribute, List);
       if Current_Token = Tok_Colon then
-         Scan.Scan;
+         Scan;
          Set_Entity_Class (Attribute, Parse_Entity_Class);
       else
          Error_Msg_Parse
@@ -2987,7 +2987,7 @@ package body Parse is
       Scan_Expect (Tok_Identifier);
       Loc := Get_Token_Location;
       Ident := Current_Identifier;
-      Scan.Scan;
+      Scan;
       case Current_Token is
          when Tok_Colon =>
             declare
@@ -2996,7 +2996,7 @@ package body Parse is
                Res := Create_Iir (Iir_Kind_Attribute_Declaration);
                Set_Location (Res, Loc);
                Set_Identifier (Res, Ident);
-               Scan.Scan;
+               Scan;
                Set_Type (Res, Parse_Type_Mark (Check_Paren => True));
                Expect (Tok_Semi_Colon);
                return Res;
@@ -3012,10 +3012,10 @@ package body Parse is
                Set_Location (Designator, Loc);
                Set_Identifier (Designator, Ident);
                Set_Attribute_Designator (Res, Designator);
-               Scan.Scan;
+               Scan;
                Parse_Entity_Name_List (Res);
                Expect (Tok_Is);
-               Scan.Scan;
+               Scan;
                Set_Expression (Res, Parse_Expression);
                Expect (Tok_Semi_Colon);
                return Res;
@@ -3044,7 +3044,7 @@ package body Parse is
       Scan_Expect (Tok_Identifier);
       Loc := Get_Token_Location;
       Ident := Current_Identifier;
-      Scan.Scan;
+      Scan;
       case Current_Token is
          when Tok_Is =>
             declare
@@ -3057,7 +3057,7 @@ package body Parse is
                Set_Location (Res, Loc);
                Set_Identifier (Res, Ident);
                Scan_Expect (Tok_Left_Paren);
-               Scan.Scan;
+               Scan;
                Build_Init (Last);
                loop
                   Append (Last, Res, Parse_Entity_Class_Entry);
@@ -3066,7 +3066,7 @@ package body Parse is
                      Set_Location (El);
                      Set_Entity_Class (El, Tok_Box);
                      Append (Last, Res, El);
-                     Scan.Scan;
+                     Scan;
                      if Current_Token = Tok_Comma then
                         Error_Msg_Parse
                           ("'<>' is allowed only for the last "
@@ -3075,7 +3075,7 @@ package body Parse is
                   end if;
                   exit when Current_Token = Tok_Right_Paren;
                   Expect (Tok_Comma);
-                  Scan.Scan;
+                  Scan;
                end loop;
                Scan_Expect (Tok_Semi_Colon);
                return Res;
@@ -3088,18 +3088,18 @@ package body Parse is
                Res := Create_Iir (Iir_Kind_Group_Declaration);
                Set_Location (Res, Loc);
                Set_Identifier (Res, Ident);
-               Scan.Scan;
+               Scan;
                Set_Group_Template_Name
                  (Res, Parse_Name (Allow_Indexes => False));
                Expect (Tok_Left_Paren);
-               Scan.Scan;
+               Scan;
                List := Create_Iir_List;
                Set_Group_Constituent_List (Res, List);
                loop
                   Append_Element (List, Parse_Name (Allow_Indexes => False));
                   exit when Current_Token = Tok_Right_Paren;
                   Expect (Tok_Comma);
-                  Scan.Scan;
+                  Scan;
                end loop;
                Scan_Expect (Tok_Semi_Colon);
                return Res;
@@ -3123,10 +3123,10 @@ package body Parse is
    begin
       case Current_Token is
          when Tok_Others =>
-            Scan.Scan;
+            Scan;
             return Iir_List_Others;
          when Tok_All =>
-            Scan.Scan;
+            Scan;
             return Iir_List_All;
          when others =>
             Res := Create_Iir_List;
@@ -3134,7 +3134,7 @@ package body Parse is
                Append_Element (Res, Parse_Name);
                exit when Current_Token = Tok_Colon;
                Expect (Tok_Comma);
-               Scan.Scan;
+               Scan;
             end loop;
             return Res;
       end case;
@@ -3154,13 +3154,13 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Disconnection_Specification);
       Set_Location (Res);
       Expect (Tok_Disconnect);
-      Scan.Scan;
+      Scan;
       Set_Signal_List (Res, Parse_Signal_List);
       Expect (Tok_Colon);
-      Scan.Scan;
+      Scan;
       Set_Type (Res, Parse_Name (Allow_Indexes => False));
       Expect (Tok_After);
-      Scan.Scan;
+      Scan;
       Set_Expression (Res, Parse_Expression);
       return Res;
    end Parse_Disconnection_Specification;
@@ -3313,7 +3313,7 @@ package body Parse is
                Eat_Tokens_Until_Semi_Colon;
             when Tok_Semi_Colon =>
                Error_Msg_Parse ("';' (semi colon) not allowed alone");
-               Scan.Scan;
+               Scan;
             when others =>
                exit;
          end case;
@@ -3322,7 +3322,7 @@ package body Parse is
          end if;
 
          if Current_Token = Tok_Semi_Colon or Current_Token = Tok_Invalid then
-            Scan.Scan;
+            Scan;
          end if;
       end loop;
    end Parse_Declarative_Part;
@@ -3357,14 +3357,14 @@ package body Parse is
       Set_Location (Res);
 
       Scan_Expect (Tok_Is, "missing ""is"" after identifier");
-      Scan.Scan;
+      Scan;
 
       Parse_Generic_Port_Clauses (Res);
 
       Parse_Declarative_Part (Res);
 
       if Current_Token = Tok_Begin then
-         Scan.Scan;
+         Scan;
          Parse_Concurrent_Statements (Res);
       end if;
 
@@ -3372,12 +3372,12 @@ package body Parse is
       Expect (Tok_End);
       Set_End_Location (Unit);
 
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Entity then
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("""entity"" keyword not allowed here by vhdl 87");
          end if;
-         Scan.Scan;
+         Scan;
       end if;
       Check_End_Name (Res);
       Expect (Tok_Semi_Colon);
@@ -3399,7 +3399,7 @@ package body Parse is
          if Current_Token = Tok_Others then
             A_Choice := Create_Iir (Iir_Kind_Choice_By_Others);
             Set_Location (A_Choice);
-            Scan.Scan;
+            Scan;
             return A_Choice;
          else
             Expr1 := Parse_Expression;
@@ -3462,7 +3462,7 @@ package body Parse is
          if Current_Token /= Tok_Bar then
             return First;
          end if;
-         Scan.Scan;
+         Scan;
          Expr1 := Null_Iir;
       end loop;
    end Parse_Choices;
@@ -3487,7 +3487,7 @@ package body Parse is
       Loc : Location_Type;
    begin
       Loc := Get_Token_Location;
-      Scan.Scan;
+      Scan;
       if Current_Token /= Tok_Others then
          Expr := Parse_Expression;
          case Current_Token is
@@ -3499,7 +3499,7 @@ package body Parse is
             when Tok_Right_Paren =>
                -- This was just a braced expression.
                -- Eat ')'.
-               Scan.Scan;
+               Scan;
                return Expr;
             when Tok_Semi_Colon =>
                --  Surely a missing parenthesis.
@@ -3526,7 +3526,7 @@ package body Parse is
          if Current_Token = Tok_Others then
             Assoc := Parse_A_Choice (Null_Iir);
             Expect (Tok_Double_Arrow);
-            Scan.Scan;
+            Scan;
             Expr := Parse_Expression;
          else
             if Expr = Null_Iir then
@@ -3543,7 +3543,7 @@ package body Parse is
                when others =>
                   Assoc := Parse_Choices (Expr);
                   Expect (Tok_Double_Arrow);
-                  Scan.Scan;
+                  Scan;
                   Expr := Parse_Expression;
             end case;
          end if;
@@ -3551,10 +3551,10 @@ package body Parse is
          Append_Subchain (Last, Res, Assoc);
          exit when Current_Token = Tok_Right_Paren;
          Expect (Tok_Comma);
-         Scan.Scan;
+         Scan;
          Expr := Null_Iir;
       end loop;
-      Scan.Scan;
+      Scan;
       return Res;
    end Parse_Aggregate;
 
@@ -3571,7 +3571,7 @@ package body Parse is
    begin
       Loc := Get_Token_Location;
       -- Accept 'new'.
-      Scan.Scan;
+      Scan;
       Expr := Parse_Name (Allow_Indexes => False);
       if Get_Kind (Expr) /= Iir_Kind_Qualified_Expression then
          -- This is a subtype_indication.
@@ -3625,12 +3625,12 @@ package body Parse is
          when Tok_Integer =>
             Int := Current_Iir_Int64;
             Loc := Get_Token_Location;
-            Scan.Scan;
+            Scan;
             if Current_Token = Tok_Identifier then
                -- physical literal
                Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
                Set_Unit_Name (Res, Current_Text);
-               Scan.Scan;
+               Scan;
             else
                -- integer literal
                Res := Create_Iir (Iir_Kind_Integer_Literal);
@@ -3641,12 +3641,12 @@ package body Parse is
          when Tok_Real =>
             Fp := Current_Iir_Fp64;
             Loc := Get_Token_Location;
-            Scan.Scan;
+            Scan;
             if Current_Token = Tok_Identifier then
                -- physical literal
                Res := Create_Iir (Iir_Kind_Physical_Fp_Literal);
                Set_Unit_Name (Res, Current_Text);
-               Scan.Scan;
+               Scan;
             else
                -- real literal
                Res := Create_Iir (Iir_Kind_Floating_Point_Literal);
@@ -3658,14 +3658,14 @@ package body Parse is
             return Parse_Name (Allow_Indexes => True);
          when Tok_Character =>
             Res := Current_Text;
-            Scan.Scan;
+            Scan;
             if Current_Token = Tok_Tick then
                Error_Msg_Parse
                  ("prefix of an attribute can't be a character literal");
                --  skip tick.
-               Scan.Scan;
+               Scan;
                --  skip attribute designator
-               Scan.Scan;
+               Scan;
             end if;
             return Res;
          when Tok_Left_Paren =>
@@ -3675,7 +3675,7 @@ package body Parse is
          when Tok_Null =>
             Res := Create_Iir (Iir_Kind_Null_Literal);
             Set_Location (Res);
-            Scan.Scan;
+            Scan;
             return Res;
          when Tok_New =>
             return Parse_Allocator;
@@ -3694,7 +3694,7 @@ package body Parse is
                when others =>
                   raise Internal_Error;
             end case;
-            Scan.Scan;
+            Scan;
             return Res;
          when Tok_Minus
            | Tok_Plus =>
@@ -3723,7 +3723,7 @@ package body Parse is
       end if;
       Res := Create_Iir (Op);
       Set_Location (Res);
-      Scan.Scan;
+      Scan;
       Set_Operand (Res, Parse_Primary);
       return Res;
    end Build_Unary_Factor;
@@ -3736,7 +3736,7 @@ package body Parse is
       if Flags.Vhdl_Std < Vhdl_08 then
          Error_Msg_Parse ("missing left operand of logical expression");
          --  Skip operator
-         Scan.Scan;
+         Scan;
          return Parse_Primary;
       else
          return Build_Unary_Factor (Primary, Op);
@@ -3780,7 +3780,7 @@ package body Parse is
             if Current_Token = Tok_Double_Star then
                Res := Create_Iir (Iir_Kind_Exponentiation_Operator);
                Set_Location (Res);
-               Scan.Scan;
+               Scan;
                Set_Left (Res, Left);
                Set_Right (Res, Parse_Primary);
                return Res;
@@ -3817,7 +3817,7 @@ package body Parse is
          end case;
          Set_Location (Tmp);
          Set_Left (Tmp, Res);
-         Scan.Scan;
+         Scan;
          Set_Right (Tmp, Parse_Factor);
          Res := Tmp;
       end loop;
@@ -3852,7 +3852,7 @@ package body Parse is
                raise Program_Error;
          end case;
          Set_Location (Res);
-         Scan.Scan;
+         Scan;
          Set_Operand (Res, Parse_Term (Null_Iir));
       else
          Res := Parse_Term (Primary);
@@ -3869,7 +3869,7 @@ package body Parse is
                raise Program_Error;
          end case;
          Set_Location (Tmp);
-         Scan.Scan;
+         Scan;
          Set_Left (Tmp, Res);
          Set_Right (Tmp, Parse_Term (Null_Iir));
          Res := Tmp;
@@ -3912,7 +3912,7 @@ package body Parse is
             raise Program_Error;
       end case;
       Set_Location (Res);
-      Scan.Scan;
+      Scan;
       Set_Left (Res, Tmp);
       Set_Right (Res, Parse_Simple_Expression);
       return Res;
@@ -3961,7 +3961,7 @@ package body Parse is
                raise Program_Error;
          end case;
          Set_Location (Res);
-         Scan.Scan;
+         Scan;
          Set_Left (Res, Tmp);
          Set_Right (Res, Parse_Shift_Expression);
          exit when Current_Token not in Token_Relational_Operator_Type;
@@ -4052,7 +4052,7 @@ package body Parse is
          end if;
 
          Set_Location (Res);
-         Scan.Scan;
+         Scan;
 
          --  Catch errors for Ada programmers.
          if Current_Token = Tok_Then or Current_Token = Tok_Else then
@@ -4060,7 +4060,7 @@ package body Parse is
                              & "are not allowed in vhdl");
             Error_Msg_Parse ("""and"" and ""or"" are short-circuit "
                              & "operators for BIT and BOOLEAN types");
-            Scan.Scan;
+            Scan;
          end if;
 
          Set_Left (Res, Tmp);
@@ -4095,7 +4095,7 @@ package body Parse is
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("'unaffected' is not allowed in vhdl87");
          end if;
-         Scan.Scan;
+         Scan;
          return Null_Iir;
       else
          Sub_Chain_Init (Res, Last_We);
@@ -4106,11 +4106,11 @@ package body Parse is
             --  Note: NULL is handled as a null_literal.
             Set_We_Value (We, Parse_Expression);
             if Current_Token = Tok_After then
-               Scan.Scan;
+               Scan;
                Set_Time (We, Parse_Expression);
             end if;
             exit when Current_Token /= Tok_Comma;
-            Scan.Scan;
+            Scan;
          end loop;
          return Res;
       end if;
@@ -4126,7 +4126,7 @@ package body Parse is
    begin
       if Current_Token = Tok_Transport then
          Set_Delay_Mechanism (Assign, Iir_Transport_Delay);
-         Scan.Scan;
+         Scan;
       else
          Set_Delay_Mechanism (Assign, Iir_Inertial_Delay);
          if Current_Token = Tok_Reject then
@@ -4134,16 +4134,16 @@ package body Parse is
                Error_Msg_Parse
                  ("'reject' delay mechanism not allowed in vhdl 87");
             end if;
-            Scan.Scan;
+            Scan;
             Set_Reject_Time_Expression (Assign, Parse_Expression);
             Expect (Tok_Inertial);
-            Scan.Scan;
+            Scan;
          elsif Current_Token = Tok_Inertial then
             if Flags.Vhdl_Std = Vhdl_87 then
                Error_Msg_Parse
                  ("'inertial' keyword not allowed in vhdl 87");
             end if;
-            Scan.Scan;
+            Scan;
          end if;
       end if;
    end Parse_Delay_Mechanism;
@@ -4157,7 +4157,7 @@ package body Parse is
    begin
       if Current_Token = Tok_Guarded then
          Set_Guard (Stmt, Stmt);
-         Scan.Scan;
+         Scan;
       end if;
       Parse_Delay_Mechanism (Stmt);
    end Parse_Options;
@@ -4192,7 +4192,7 @@ package body Parse is
          when others =>
             Expect (Tok_Less_Equal);
       end case;
-      Scan.Scan;
+      Scan;
 
       Parse_Options (Res);
 
@@ -4203,7 +4203,7 @@ package body Parse is
          Set_Location (Cond_Wf);
          Set_Waveform_Chain (Cond_Wf, Parse_Waveform);
          exit when Current_Token /= Tok_When;
-         Scan.Scan;
+         Scan;
          Set_Condition (Cond_Wf, Parse_Expression);
          if Current_Token /= Tok_Else then
             if Flags.Vhdl_Std = Vhdl_87 then
@@ -4211,7 +4211,7 @@ package body Parse is
             end if;
             exit;
          end if;
-         Scan.Scan;
+         Scan;
       end loop;
       Expect (Tok_Semi_Colon);
       return Res;
@@ -4238,13 +4238,13 @@ package body Parse is
       Target : Iir;
       Last : Iir;
    begin
-      Scan.Scan;  -- accept 'with' token.
+      Scan;  -- accept 'with' token.
       Res := Create_Iir (Iir_Kind_Concurrent_Selected_Signal_Assignment);
       Set_Location (Res);
       Set_Expression (Res, Parse_Expression);
 
       Expect (Tok_Select, "'select' expected after expression");
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Left_Paren then
          Target := Parse_Aggregate;
       else
@@ -4252,7 +4252,7 @@ package body Parse is
       end if;
       Set_Target (Res, Target);
       Expect (Tok_Less_Equal);
-      Scan.Scan;
+      Scan;
 
       Parse_Options (Res);
 
@@ -4260,13 +4260,13 @@ package body Parse is
       loop
          Wf_Chain := Parse_Waveform;
          Expect (Tok_When, "'when' expected after waveform");
-         Scan.Scan;
+         Scan;
          Assoc := Parse_Choices (Null_Iir);
          Set_Associated (Assoc, Wf_Chain);
          Append_Subchain (Last, Res, Assoc);
          exit when Current_Token = Tok_Semi_Colon;
          Expect (Tok_Comma, "',' (comma) expected after choice");
-         Scan.Scan;
+         Scan;
       end loop;
       return Res;
    end Parse_Selected_Signal_Assignment;
@@ -4297,7 +4297,7 @@ package body Parse is
          end case;
          Append_Element (List, El);
          exit when Current_Token /= Tok_Comma;
-         Scan.Scan;
+         Scan;
       end loop;
    end Parse_Sensitivity_List;
 
@@ -4311,20 +4311,20 @@ package body Parse is
    procedure Parse_Assertion (Stmt: Iir) is
    begin
       Set_Location (Stmt);
-      Scan.Scan;
+      Scan;
       Set_Assertion_Condition (Stmt, Parse_Expression);
       if Current_Token = Tok_Report then
-         Scan.Scan;
+         Scan;
          Set_Report_Expression (Stmt, Parse_Expression);
       end if;
       if Current_Token = Tok_Severity then
-         Scan.Scan;
+         Scan;
          Set_Severity_Expression (Stmt, Parse_Expression);
          if Current_Token = Tok_Report then
             --  Nice message in case of inversion.
             Error_Msg_Parse
               ("report expression must precede severity expression");
-            Scan.Scan;
+            Scan;
             Set_Report_Expression (Stmt, Parse_Expression);
          end if;
       end if;
@@ -4344,10 +4344,10 @@ package body Parse is
       if Flags.Vhdl_Std = Vhdl_87 then
          Error_Msg_Parse ("report statement not allowed in vhdl87");
       end if;
-      Scan.Scan;
+      Scan;
       Set_Report_Expression (Res, Parse_Expression);
       if Current_Token = Tok_Severity then
-         Scan.Scan;
+         Scan;
          Set_Severity_Expression (Res, Parse_Expression);
       end if;
       return Res;
@@ -4376,12 +4376,12 @@ package body Parse is
    begin
       Res := Create_Iir (Iir_Kind_Wait_Statement);
       Set_Location (Res);
-      Scan.Scan;
+      Scan;
       case Current_Token is
          when Tok_On =>
             List := Create_Iir_List;
             Set_Sensitivity_List (Res, List);
-            Scan.Scan;
+            Scan;
             Parse_Sensitivity_List (List);
          when Tok_Until =>
             null;
@@ -4400,7 +4400,7 @@ package body Parse is
             -- FIXME: sync
             return Res;
          when Tok_Until =>
-            Scan.Scan;
+            Scan;
             Set_Condition_Clause (Res, Parse_Expression);
          when Tok_For =>
             null;
@@ -4421,7 +4421,7 @@ package body Parse is
             -- FIXME: sync
             return Res;
          when Tok_For =>
-            Scan.Scan;
+            Scan;
             Set_Timeout_Clause (Res, Parse_Expression);
             return Res;
          when Tok_Semi_Colon =>
@@ -4457,12 +4457,12 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_If_Statement);
       Set_Location (Res);
       Set_Parent (Res, Parent);
-      Scan.Scan;
+      Scan;
       Clause := Res;
       loop
          Set_Condition (Clause, Parse_Expression);
          Expect (Tok_Then, "'then' is expected here");
-         Scan.Scan;
+         Scan;
          Set_Sequential_Statement_Chain
            (Clause, Parse_Sequential_Statements (Res));
          exit when Current_Token = Tok_End;
@@ -4471,19 +4471,19 @@ package body Parse is
          Set_Else_Clause (Clause, N_Clause);
          Clause := N_Clause;
          if Current_Token = Tok_Else then
-            Scan.Scan;
+            Scan;
             Set_Sequential_Statement_Chain
               (Clause, Parse_Sequential_Statements (Res));
             exit;
          elsif Current_Token = Tok_Elsif then
-            Scan.Scan;
+            Scan;
          else
             Error_Msg_Parse ("'else' or 'elsif' expected");
          end if;
       end loop;
       Expect (Tok_End);
       Scan_Expect (Tok_If);
-      Scan.Scan;
+      Scan;
       return Res;
    end Parse_If_Statement;
 
@@ -4531,7 +4531,7 @@ package body Parse is
       Expect (Tok_Identifier);
       Set_Identifier (Decl, Current_Identifier);
       Scan_Expect (Tok_In);
-      Scan.Scan;
+      Scan;
       -- parse a range.
       Set_Type (Decl, Parse_Range_Expression (Null_Iir, True));
       return Decl;
@@ -4551,7 +4551,7 @@ package body Parse is
       Stmt := Create_Iir (Iir_Kind_Signal_Assignment_Statement);
       Location_Copy (Stmt, Target);
       Set_Target (Stmt, Target);
-      Scan.Scan;
+      Scan;
       Parse_Delay_Mechanism (Stmt);
       Wave_Chain := Parse_Waveform;
       --  LRM 8.4 Signal assignment statement
@@ -4578,7 +4578,7 @@ package body Parse is
       Stmt := Create_Iir (Iir_Kind_Variable_Assignment_Statement);
       Location_Copy (Stmt, Target);
       Set_Target (Stmt, Target);
-      Scan.Scan;
+      Scan;
       Set_Expression (Stmt, Parse_Expression);
       return Stmt;
    end Parse_Variable_Assignment_Statement;
@@ -4685,9 +4685,9 @@ package body Parse is
          Loc := Get_Token_Location;
          if Current_Token = Tok_Identifier then
             Label := Current_Identifier;
-            Scan.Scan;
+            Scan;
             if Current_Token = Tok_Colon then
-               Scan.Scan;
+               Scan;
             else
                Target := Create_Iir (Iir_Kind_Simple_Name);
                Set_Identifier (Target, Label);
@@ -4704,7 +4704,7 @@ package body Parse is
          case Current_Token is
             when Tok_Null =>
                Stmt := Create_Iir (Iir_Kind_Null_Statement);
-               Scan.Scan;
+               Scan;
             when Tok_Assert =>
                Stmt := Create_Iir (Iir_Kind_Assertion_Statement);
                Parse_Assertion (Stmt);
@@ -4735,7 +4735,7 @@ package body Parse is
                end;
             when Tok_Return =>
                Stmt := Create_Iir (Iir_Kind_Return_Statement);
-               Scan.Scan;
+               Scan;
                if Current_Token /= Tok_Semi_Colon then
                   Set_Expression (Stmt, Parse_Expression);
                end if;
@@ -4743,16 +4743,16 @@ package body Parse is
                Stmt := Create_Iir (Iir_Kind_For_Loop_Statement);
                Set_Location (Stmt, Loc);
                Set_Label (Stmt, Label);
-               Scan.Scan;
+               Scan;
                Set_Iterator_Scheme
                  (Stmt, Parse_Parameter_Specification (Stmt));
                Expect (Tok_Loop);
-               Scan.Scan;
+               Scan;
                Set_Sequential_Statement_Chain
                  (Stmt, Parse_Sequential_Statements (Stmt));
                Expect (Tok_End);
                Scan_Expect (Tok_Loop);
-               Scan.Scan;
+               Scan;
                Check_End_Name (Stmt);
                --  A loop statement can have a label, even in vhdl87.
                Label := Null_Identifier;
@@ -4762,16 +4762,16 @@ package body Parse is
                Set_Location (Stmt);
                Set_Label (Stmt, Label);
                if Current_Token = Tok_While then
-                  Scan.Scan;
+                  Scan;
                   Set_Condition (Stmt, Parse_Expression);
                   Expect (Tok_Loop);
                end if;
-               Scan.Scan;
+               Scan;
                Set_Sequential_Statement_Chain
                  (Stmt, Parse_Sequential_Statements (Stmt));
                Expect (Tok_End);
                Scan_Expect (Tok_Loop);
-               Scan.Scan;
+               Scan;
                Check_End_Name (Stmt);
                --  A loop statement can have a label, even in vhdl87.
                Label := Null_Identifier;
@@ -4782,13 +4782,13 @@ package body Parse is
                else
                   Stmt := Create_Iir (Iir_Kind_Exit_Statement);
                end if;
-               Scan.Scan;
+               Scan;
                if Current_Token = Tok_Identifier then
                   Set_Loop (Stmt, Current_Text);
-                  Scan.Scan;
+                  Scan;
                end if;
                if Current_Token = Tok_When then
-                  Scan.Scan;
+                  Scan;
                   Set_Condition (Stmt, Parse_Expression);
                end if;
             when Tok_Case =>
@@ -4800,30 +4800,30 @@ package body Parse is
                   Stmt := Create_Iir (Iir_Kind_Case_Statement);
                   Set_Location (Stmt);
                   Set_Label (Stmt, Label);
-                  Scan.Scan;
+                  Scan;
                   Set_Expression (Stmt, Parse_Expression);
                   Expect (Tok_Is);
-                  Scan.Scan;
+                  Scan;
                   if Current_Token = Tok_End then
                      Error_Msg_Parse ("missing alternative in case statement");
                   end if;
                   Build_Init (Last_Assoc);
                   while Current_Token /= Tok_End loop
                      Expect (Tok_When);
-                     Scan.Scan;
+                     Scan;
                      if Current_Token = Tok_Double_Arrow then
                         Error_Msg_Parse ("missing expression in alternative");
                      else
                         Assoc := Parse_Choices (Null_Iir);
                      end if;
                      Expect (Tok_Double_Arrow);
-                     Scan.Scan;
+                     Scan;
                      Set_Associated
                        (Assoc, Parse_Sequential_Statements (Stmt));
                      Append_Subchain (Last_Assoc, Stmt, Assoc);
                   end loop;
                   Scan_Expect (Tok_Case);
-                  Scan.Scan;
+                  Scan;
                   if Flags.Vhdl_Std >= Vhdl_93c then
                      Check_End_Name (Stmt);
                   end if;
@@ -4845,7 +4845,7 @@ package body Parse is
             end if;
          end if;
          Expect (Tok_Semi_Colon);
-         Scan.Scan;
+         Scan;
 
          --  Append it to the chain.
          if First_Stmt = Null_Iir then
@@ -4919,14 +4919,14 @@ package body Parse is
             end if;
             --  FIXME: what to do in case of error ??
             --  Eat PURE or IMPURE.
-            Scan.Scan;
+            Scan;
             Expect (Tok_Function, "'function' must follow 'pure' or 'impure'");
          when others =>
             raise Internal_Error;
       end case;
 
       --  Eat PROCEDURE or FUNCTION.
-      Scan.Scan;
+      Scan;
 
       if Current_Token = Tok_Identifier then
          Set_Identifier (Subprg, Current_Identifier);
@@ -4947,7 +4947,7 @@ package body Parse is
          Expect (Tok_Identifier);
       end if;
 
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Left_Paren then
          --  Parse the interface declaration.
          Set_Interface_Declaration_Chain
@@ -4960,10 +4960,10 @@ package body Parse is
          if Get_Kind (Subprg) = Iir_Kind_Procedure_Declaration then
             Error_Msg_Parse ("'return' not allowed for a procedure");
             Error_Msg_Parse ("(remove return part or define a function)");
-            Scan.Scan;
+            Scan;
             Old := Parse_Type_Mark;
          else
-            Scan.Scan;
+            Scan;
             Set_Return_Type (Subprg, Parse_Type_Mark (Check_Paren => True));
          end if;
       else
@@ -4990,14 +4990,14 @@ package body Parse is
          Error_Msg_Parse ("subprogram body not allowed in package spec");
       end if;
       Expect (Tok_Is);
-      Scan.Scan;
+      Scan;
       Parse_Declarative_Part (Subprg_Body);
       Expect (Tok_Begin);
-      Scan.Scan;
+      Scan;
       Set_Sequential_Statement_Chain
         (Subprg_Body, Parse_Sequential_Statements (Subprg_Body));
       Expect (Tok_End);
-      Scan.Scan;
+      Scan;
 
       case Current_Token is
          when Tok_Function =>
@@ -5007,7 +5007,7 @@ package body Parse is
             if Get_Kind (Subprg) = Iir_Kind_Procedure_Declaration then
                Error_Msg_Parse ("'procedure' expected instead of 'function'");
             end if;
-            Scan.Scan;
+            Scan;
          when Tok_Procedure =>
             if Flags.Vhdl_Std = Vhdl_87 then
                Error_Msg_Parse ("'procedure' not allowed here by vhdl 87");
@@ -5015,7 +5015,7 @@ package body Parse is
             if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
                Error_Msg_Parse ("'function' expected instead of 'procedure'");
             end if;
-            Scan.Scan;
+            Scan;
          when others =>
             null;
       end case;
@@ -5030,7 +5030,7 @@ package body Parse is
                  ("mispelling, 'end """ & Image_Identifier (Subprg)
                   & """;' expected");
             end if;
-            Scan.Scan;
+            Scan;
          when others =>
             null;
       end case;
@@ -5059,25 +5059,25 @@ package body Parse is
       Sensitivity_List : Iir_List;
    begin
       -- The PROCESS keyword was just scaned.
-      Scan.Scan;
+      Scan;
 
       if Current_Token = Tok_Left_Paren then
          Res := Create_Iir (Iir_Kind_Sensitized_Process_Statement);
-         Scan.Scan;
+         Scan;
          if Current_Token = Tok_All then
             if Vhdl_Std < Vhdl_08 then
                Error_Msg_Parse
                  ("all sensitized process allowed only in vhdl 08");
             end if;
             Sensitivity_List := Iir_List_All;
-            Scan.Scan;
+            Scan;
          else
             Sensitivity_List := Create_Iir_List;
             Parse_Sensitivity_List (Sensitivity_List);
          end if;
          Set_Sensitivity_List (Res, Sensitivity_List);
          Expect (Tok_Right_Paren);
-         Scan.Scan;
+         Scan;
       else
          Res := Create_Iir (Iir_Kind_Process_Statement);
       end if;
@@ -5089,19 +5089,19 @@ package body Parse is
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("""is"" not allowed here by vhdl 87");
          end if;
-         Scan.Scan;
+         Scan;
       end if;
 
       -- declarative part.
       Parse_Declarative_Part (Res);
 
       Expect (Tok_Begin);
-      Scan.Scan;
+      Scan;
 
       Set_Sequential_Statement_Chain (Res, Parse_Sequential_Statements (Res));
 
       Expect (Tok_End);
-      Scan.Scan;
+      Scan;
 
       if Current_Token = Tok_Postponed then
          if not Is_Postponed then
@@ -5110,14 +5110,14 @@ package body Parse is
             --  statement, the process must be a postponed process.
             Error_Msg_Parse ("process is not a postponed process");
          end if;
-         Scan.Scan;
+         Scan;
       end if;
 
       if Current_Token = Tok_Semi_Colon then
          Error_Msg_Parse ("""end"" must be followed by ""process""");
       else
          Expect (Tok_Process);
-         Scan.Scan;
+         Scan;
          Check_End_Name (Res);
          Expect (Tok_Semi_Colon);
       end if;
@@ -5167,7 +5167,7 @@ package body Parse is
       Sub_Chain_Init (Res, Last);
 
       Expect (Tok_Left_Paren);
-      Scan.Scan;
+      Scan;
 
       if Current_Token = Tok_Right_Paren then
          Error_Msg_Parse ("empty association list is not allowed");
@@ -5185,7 +5185,7 @@ package body Parse is
                  | Tok_Downto =>
                   if Actual = Null_Iir then
                      --  Left expression is missing ie: (downto x).
-                     Scan.Scan;
+                     Scan;
                      Actual := Parse_Expression;
                   else
                      Actual := Parse_Range_Expression (Actual);
@@ -5195,7 +5195,7 @@ package body Parse is
                   end if;
                when Tok_Double_Arrow =>
                   Formal := Actual;
-                  Scan.Scan;
+                  Scan;
                   if Current_Token /= Tok_Open then
                      Actual := Parse_Expression;
                   end if;
@@ -5207,7 +5207,7 @@ package body Parse is
          if Current_Token = Tok_Open then
             El := Create_Iir (Iir_Kind_Association_Element_Open);
             Set_Location (El);
-            Scan.Scan; -- past open.
+            Scan; -- past open.
          else
             El := Create_Iir (Iir_Kind_Association_Element_By_Expression);
             if Formal = Null_Iir then
@@ -5222,10 +5222,10 @@ package body Parse is
          Sub_Chain_Append (Res, Last, El);
          exit when Current_Token = Tok_Right_Paren;
          Expect (Tok_Comma);
-         Scan.Scan;
+         Scan;
          Nbr_Assocs := Nbr_Assocs + 1;
       end loop;
-      Scan.Scan;
+      Scan;
       return Res;
    end Parse_Association_Chain;
 
@@ -5238,7 +5238,7 @@ package body Parse is
    begin
       Expect (Tok_Generic);
       Scan_Expect (Tok_Map);
-      Scan.Scan;
+      Scan;
       return Parse_Association_Chain;
    end Parse_Generic_Map_Aspect;
 
@@ -5251,7 +5251,7 @@ package body Parse is
    begin
       Expect (Tok_Port);
       Scan_Expect (Tok_Map);
-      Scan.Scan;
+      Scan;
       return Parse_Association_Chain;
    end Parse_Port_Map_Aspect;
 
@@ -5274,18 +5274,18 @@ package body Parse is
 
       case Current_Token is
          when Tok_Component =>
-            Scan.Scan;
+            Scan;
             return Parse_Name (False);
          when Tok_Entity =>
             Res := Create_Iir (Iir_Kind_Entity_Aspect_Entity);
             Set_Location (Res);
-            Scan.Scan;
+            Scan;
             Set_Entity (Res, Parse_Name (False));
             if Current_Token = Tok_Left_Paren then
                Scan_Expect (Tok_Identifier);
                Set_Architecture (Res, Current_Text);
                Scan_Expect (Tok_Right_Paren);
-               Scan.Scan;
+               Scan;
             end if;
             return Res;
          when Tok_Configuration =>
@@ -5340,7 +5340,7 @@ package body Parse is
          if Current_Token = Tok_Generic then
             Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
             Expect (Tok_Semi_Colon);
-            Scan.Scan;
+            Scan;
          end if;
       end if;
       if Current_Token = Tok_Port then
@@ -5348,7 +5348,7 @@ package body Parse is
          if Current_Token = Tok_Port then
             Set_Port_Map_Aspect_Chain (Res, Parse_Port_Map_Aspect);
             Expect (Tok_Semi_Colon);
-            Scan.Scan;
+            Scan;
          end if;
       end if;
       return Res;
@@ -5386,21 +5386,21 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Block_Statement);
       Set_Location (Res, Loc);
       Set_Label (Res, Label);
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Left_Paren then
          Guard := Create_Iir (Iir_Kind_Guard_Signal_Declaration);
          Set_Location (Guard);
          Set_Guard_Decl (Res, Guard);
-         Scan.Scan;
+         Scan;
          Set_Guard_Expression (Guard, Parse_Expression);
          Expect (Tok_Right_Paren, "a ')' is expected after guard expression");
-         Scan.Scan;
+         Scan;
       end if;
       if Current_Token = Tok_Is then
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("'is' not allowed here in vhdl87");
          end if;
-         Scan.Scan;
+         Scan;
       end if;
       if Current_Token = Tok_Generic or Current_Token = Tok_Port then
          Set_Block_Header (Res, Parse_Block_Header);
@@ -5409,7 +5409,7 @@ package body Parse is
          Parse_Declarative_Part (Res);
       end if;
       Expect (Tok_Begin);
-      Scan.Scan;
+      Scan;
       Parse_Concurrent_Statements (Res);
       Check_End_Name (Tok_Block, Res);
       return Res;
@@ -5445,17 +5445,17 @@ package body Parse is
       Set_Label (Res, Label);
       case Current_Token is
          when Tok_For =>
-            Scan.Scan;
+            Scan;
             Set_Generation_Scheme (Res, Parse_Parameter_Specification (Res));
          when Tok_If =>
-            Scan.Scan;
+            Scan;
             Set_Generation_Scheme (Res, Parse_Expression);
          when others =>
             raise Internal_Error;
       end case;
       Expect (Tok_Generate);
 
-      Scan.Scan;
+      Scan;
       --  Check for a block declarative item.
       case Current_Token is
          when
@@ -5501,7 +5501,7 @@ package body Parse is
             end if;
             Parse_Declarative_Part (Res);
             Expect (Tok_Begin);
-            Scan.Scan;
+            Scan;
          when others =>
             null;
       end case;
@@ -5509,7 +5509,7 @@ package body Parse is
       Parse_Concurrent_Statements (Res);
       Expect (Tok_End);
       Scan_Expect (Tok_Generate);
-      Scan.Scan;
+      Scan;
 
       --  LRM93 9.7
       --  If a label appears at the end of a generate statement, it must repeat
@@ -5572,7 +5572,7 @@ package body Parse is
                   Error_Msg_Parse ("'==' expected after expression");
                else
                   Set_Location (Res);
-                  Scan.Scan;
+                  Scan;
                end if;
                Set_Simultaneous_Right (Res, Parse_Simple_Expression);
                Set_Tolerance (Res, Parse_Tolerance_Aspect_Opt);
@@ -5590,14 +5590,14 @@ package body Parse is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Psl_Default_Clock);
-      Scan.Flag_Psl := True;
+      Scanner.Flag_Psl := True;
       Scan_Expect (Tok_Psl_Clock);
       Scan_Expect (Tok_Is);
-      Scan.Scan;
+      Scan;
       Set_Psl_Boolean (Res, Parse_Psl.Parse_Psl_Boolean);
       Expect (Tok_Semi_Colon);
-      Scan.Flag_Scan_In_Comment := False;
-      Scan.Flag_Psl := False;
+      Scanner.Flag_Scan_In_Comment := False;
+      Scanner.Flag_Psl := False;
       return Res;
    end Parse_Psl_Default_Clock;
 
@@ -5607,17 +5607,17 @@ package body Parse is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Psl_Declaration);
-      Scan.Scan;
+      Scan;
       if Current_Token /= Tok_Identifier then
          Error_Msg_Parse ("property name expected here");
       else
          Set_Identifier (Res, Current_Identifier);
       end if;
-      Scan.Flag_Psl := True;
+      Scanner.Flag_Psl := True;
       Set_Psl_Declaration (Res, Parse_Psl.Parse_Psl_Declaration (Tok));
       Expect (Tok_Semi_Colon);
-      Scan.Flag_Scan_In_Comment := False;
-      Scan.Flag_Psl := False;
+      Scanner.Flag_Scan_In_Comment := False;
+      Scanner.Flag_Psl := False;
       return Res;
    end Parse_Psl_Declaration;
 
@@ -5626,12 +5626,12 @@ package body Parse is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Psl_Assert_Statement);
-      Scan.Flag_Psl := True;
-      Scan.Scan;
+      Scanner.Flag_Psl := True;
+      Scan;
       Set_Psl_Property (Res, Parse_Psl.Parse_Psl_Property);
       Expect (Tok_Semi_Colon);
-      Scan.Flag_Scan_In_Comment := False;
-      Scan.Flag_Psl := False;
+      Scanner.Flag_Scan_In_Comment := False;
+      Scanner.Flag_Psl := False;
       return Res;
    end Parse_Psl_Assert_Statement;
 
@@ -5664,10 +5664,10 @@ package body Parse is
          -- Try to find a label.
          if Current_Token = Tok_Identifier then
             Label := Current_Identifier;
-            Scan.Scan;
+            Scan;
             if Current_Token = Tok_Colon then
                -- The identifier is really a label.
-               Scan.Scan;
+               Scan;
             else
                -- This is not a label.
                Target := Create_Iir (Iir_Kind_Simple_Name);
@@ -5686,7 +5686,7 @@ package body Parse is
             else
                Postponed := True;
             end if;
-            Scan.Scan;
+            Scan;
          end if;
 
          case Current_Token is
@@ -5788,7 +5788,7 @@ package body Parse is
             Last_Stmt := Stmt;
          end if;
 
-         Scan.Scan;
+         Scan;
       end loop;
    end Parse_Concurrent_Statements;
 
@@ -5810,11 +5810,11 @@ package body Parse is
          Set_Identifier (Library, Current_Identifier);
          Set_Location (Library);
          Sub_Chain_Append (First, Last, Library);
-         Scan.Scan;
+         Scan;
          exit when Current_Token = Tok_Semi_Colon;
          Expect (Tok_Comma);
       end loop;
-      Scan.Scan;
+      Scan;
       return First;
    end Parse_Library_Clause;
 
@@ -5832,7 +5832,7 @@ package body Parse is
    begin
       First := Null_Iir;
       Last := Null_Iir;
-      Scan.Scan;
+      Scan;
       loop
          Use_Clause := Create_Iir (Iir_Kind_Use_Clause);
          Set_Location (Use_Clause);
@@ -5849,7 +5849,7 @@ package body Parse is
 
          exit when Current_Token = Tok_Semi_Colon;
          Expect (Tok_Comma);
-         Scan.Scan;
+         Scan;
       end loop;
       return First;
    end Parse_Use_Clause;
@@ -5875,31 +5875,31 @@ package body Parse is
       Scan_Expect (Tok_Identifier);
       Set_Identifier (Res, Current_Identifier);
       Set_Location (Res);
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Is then
          Error_Msg_Parse ("architecture identifier is missing");
       else
          Expect (Tok_Of);
-         Scan.Scan;
+         Scan;
          Set_Entity (Res, Parse_Name (False));
          Expect (Tok_Is);
       end if;
 
-      Scan.Scan;
+      Scan;
       Parse_Declarative_Part (Res);
 
       Expect (Tok_Begin);
-      Scan.Scan;
+      Scan;
       Parse_Concurrent_Statements (Res);
       -- end was scanned.
       Set_End_Location (Unit);
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Architecture then
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse
               ("'architecture' keyword not allowed here by vhdl 87");
          end if;
-         Scan.Scan;
+         Scan;
       end if;
       Check_End_Name (Res);
       Expect (Tok_Semi_Colon);
@@ -5919,19 +5919,19 @@ package body Parse is
    begin
       case Current_Token is
          when Tok_All =>
-            Scan.Scan;
+            Scan;
             return Iir_List_All;
          when Tok_Others =>
-            Scan.Scan;
+            Scan;
             return Iir_List_Others;
          when Tok_Identifier =>
             Res := Create_Iir_List;
             loop
                Append_Element (Res, Current_Text);
-               Scan.Scan;
+               Scan;
                exit when Current_Token /= Tok_Comma;
                Expect (Tok_Comma);
-               Scan.Scan;
+               Scan;
             end loop;
             return Res;
          when others =>
@@ -5977,7 +5977,7 @@ package body Parse is
                Scan_Expect (Tok_Identifier);
                Set_Architecture (Res, Current_Text);
                Scan_Expect (Tok_Right_Paren);
-               Scan.Scan;
+               Scan;
             end if;
          when Tok_Configuration =>
             Res := Create_Iir (Iir_Kind_Entity_Aspect_Configuration);
@@ -5987,7 +5987,7 @@ package body Parse is
          when Tok_Open =>
             Res := Create_Iir (Iir_Kind_Entity_Aspect_Open);
             Set_Location (Res);
-            Scan.Scan;
+            Scan;
          when others =>
             --  FIXME: if the token is an identifier, try as if the 'entity'
             --  keyword is missing.
@@ -6020,7 +6020,7 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Binding_Indication);
       Set_Location (Res);
       if Current_Token = Tok_Use then
-         Scan.Scan;
+         Scan;
          Set_Entity_Aspect (Res, Parse_Entity_Aspect);
       end if;
       if Current_Token = Tok_Generic then
@@ -6062,14 +6062,14 @@ package body Parse is
            | Tok_Port =>
             Set_Binding_Indication (Res, Parse_Binding_Indication);
             Expect (Tok_Semi_Colon);
-            Scan.Scan;
+            Scan;
          when others =>
             null;
       end case;
       if Current_Token = Tok_For then
          Set_Block_Configuration (Res, Parse_Block_Configuration);
          --  Eat ';'.
-         Scan.Scan;
+         Scan;
       end if;
       Expect (Tok_End);
       Scan_Expect (Tok_For);
@@ -6114,7 +6114,7 @@ package body Parse is
             while Current_Token = Tok_Use loop
                Append_Subchain (Last, Res, Parse_Use_Clause);
                --  Eat ';'.
-               Scan.Scan;
+               Scan;
             end loop;
          end;
       end if;
@@ -6128,7 +6128,7 @@ package body Parse is
          while Current_Token /= Tok_End loop
             Append (Last, Res, Parse_Configuration_Item);
             --  Eat ';'.
-            Scan.Scan;
+            Scan;
          end loop;
       end;
       Scan_Expect (Tok_For);
@@ -6144,7 +6144,7 @@ package body Parse is
       Expect (Tok_For);
 
       --  Parse label.
-      Scan.Scan;
+      Scan;
       return Parse_Block_Configuration_Suffix (Loc, Parse_Name);
    end Parse_Block_Configuration;
 
@@ -6162,20 +6162,20 @@ package body Parse is
    begin
       Loc := Get_Token_Location;
       Expect (Tok_For);
-      Scan.Scan;
+      Scan;
 
       --  ALL and OTHERS are tokens from an instantiation list.
       --  Thus, the rule is a component_configuration.
       case Current_Token is
          when Tok_All =>
-            Scan.Scan;
+            Scan;
             return Parse_Component_Configuration (Loc, Iir_List_All);
          when Tok_Others =>
-            Scan.Scan;
+            Scan;
             return Parse_Component_Configuration (Loc, Iir_List_Others);
          when Tok_Identifier =>
             El := Current_Text;
-            Scan.Scan;
+            Scan;
             case Current_Token is
                when Tok_Colon =>
                   --  The identifier was a label from an instantiation list.
@@ -6189,7 +6189,7 @@ package body Parse is
                   loop
                      Scan_Expect (Tok_Identifier);
                      Append_Element (List, Current_Text);
-                     Scan.Scan;
+                     Scan;
                      exit when Current_Token /= Tok_Comma;
                   end loop;
                   return Parse_Component_Configuration (Loc, List);
@@ -6257,7 +6257,7 @@ package body Parse is
             when others =>
                exit;
          end case;
-         Scan.Scan;
+         Scan;
       end loop;
    end Parse_Configuration_Declarative_Part;
 
@@ -6287,11 +6287,11 @@ package body Parse is
       Set_Identifier (Res, Current_Identifier);
       Set_Location (Res);
       Scan_Expect (Tok_Of);
-      Scan.Scan;
+      Scan;
       Set_Entity (Res, Parse_Name (False));
       Expect (Tok_Is);
 
-      Scan.Scan;
+      Scan;
       Parse_Configuration_Declarative_Part (Res);
 
       Set_Block_Configuration (Res, Parse_Block_Configuration);
@@ -6299,13 +6299,13 @@ package body Parse is
       Scan_Expect (Tok_End);
       Set_End_Location (Unit);
       -- end was scanned.
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Configuration then
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse
               ("'configuration' keyword not allowed here by vhdl 87");
          end if;
-         Scan.Scan;
+         Scan;
       end if;
 
       -- LRM93 1.3
@@ -6335,18 +6335,18 @@ package body Parse is
       Expect (Tok_Identifier);
       Set_Identifier (Res, Current_Identifier);
       Scan_Expect (Tok_Is);
-      Scan.Scan;
+      Scan;
 
       Parse_Declarative_Part (Res);
 
       Expect (Tok_End);
       Set_End_Location (Unit);
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Package then
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("'package' keyword not allowed here by vhdl 87");
          end if;
-         Scan.Scan;
+         Scan;
       end if;
       Check_End_Name (Res);
       Expect (Tok_Semi_Colon);
@@ -6372,19 +6372,19 @@ package body Parse is
       Expect (Tok_Identifier);
       Set_Identifier (Res, Current_Identifier);
       Scan_Expect (Tok_Is);
-      Scan.Scan;
+      Scan;
 
       Parse_Declarative_Part (Res);
 
       Expect (Tok_End);
       Set_End_Location (Unit);
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Package then
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("'package' keyword not allowed here by vhdl 87");
          end if;
          Scan_Expect (Tok_Body);
-         Scan.Scan;
+         Scan;
       end if;
       Check_End_Name (Res);
       Expect (Tok_Semi_Colon);
@@ -6412,7 +6412,7 @@ package body Parse is
       if Current_Token /= Tok_Invalid then
          raise Internal_Error;
       end if;
-      Scan.Scan;
+      Scan;
       if Current_Token = Tok_Eof then
          return Null_Iir;
       end if;
@@ -6436,13 +6436,13 @@ package body Parse is
                   Els := Parse_Library_Clause;
                when Tok_Use =>
                   Els := Parse_Use_Clause;
-                  Scan.Scan;
+                  Scan;
                when Tok_With =>
                   --  Be Ada friendly.
                   Error_Msg_Parse ("'with' not allowed in context clause "
                                    & "(try 'use' or 'library')");
                   Els := Parse_Use_Clause;
-                  Scan.Scan;
+                  Scan;
                when others =>
                   exit;
             end case;
@@ -6457,9 +6457,9 @@ package body Parse is
          when Tok_Architecture =>
             Parse_Architecture (Res);
          when Tok_Package =>
-            Scan.Scan;
+            Scan;
             if Current_Token = Tok_Body then
-               Scan.Scan;
+               Scan;
                Parse_Package_Body (Res);
             else
                Parse_Package_Declaration (Res);
