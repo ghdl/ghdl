@@ -785,10 +785,6 @@ package body Translation is
       );
    type O_Tnode_Array is array (Object_Kind_Type) of O_Tnode;
    type O_Fnode_Array is array (Object_Kind_Type) of O_Fnode;
-   type O_Dnode_Array is array (Object_Kind_Type) of O_Dnode;
-   type Var_Acc_Array is array (Object_Kind_Type) of Var_Acc;
-   type Instance_Inters_Array is array (Object_Kind_Type)
-     of Chap2.Subprg_Instance_Type;
 
    type Rti_Depth_Type is new Natural range 0 .. 255;
 
@@ -1110,20 +1106,21 @@ package body Translation is
       --  Variable containing the size of the type.
       --  This is defined only for types whose size is only known at
       --  running time (and not a compile-time).
-      Size_Var : Var_Acc_Array;
+      Size_Var : Var_Acc;
 
       Builder_Need_Func : Boolean;
 
       --  Parameters for type builders.
       --  NOTE: this is only set for types (and *not* for subtypes).
-      Builder_Instance : Instance_Inters_Array;
-      Builder_Base_Param : O_Dnode_Array;
-      Builder_Bound_Param : O_Dnode_Array;
-      Builder_Func : O_Dnode_Array;
+      Builder_Instance : Chap2.Subprg_Instance_Type;
+      Builder_Base_Param : O_Dnode;
+      Builder_Bound_Param : O_Dnode;
+      Builder_Func : O_Dnode;
    end record;
-   type Complex_Type_Info_Acc is access Complex_Type_Info;
+   type Complex_Type_Arr_Info is array (Object_Kind_Type) of Complex_Type_Info;
+   type Complex_Type_Info_Acc is access Complex_Type_Arr_Info;
    procedure Free_Complex_Type_Info is new Ada.Unchecked_Deallocation
-     (Complex_Type_Info, Complex_Type_Info_Acc);
+     (Complex_Type_Arr_Info, Complex_Type_Info_Acc);
 
    type Assoc_Conv_Info is record
       --  The subprogram created to do the conversion.
@@ -1508,8 +1505,8 @@ package body Translation is
             null;
       end case;
       if Info.C /= null then
-         Free_Var (Info.C.Size_Var (Mode_Value));
-         Free_Var (Info.C.Size_Var (Mode_Signal));
+         Free_Var (Info.C (Mode_Value).Size_Var);
+         Free_Var (Info.C (Mode_Signal).Size_Var);
          Free_Complex_Type_Info (Info.C);
       end if;
       Unchecked_Deallocation (Info);
@@ -5812,11 +5809,11 @@ package body Translation is
          Info : Type_Info_Acc;
       begin
          Info := Get_Info (Def);
-         Info.C := new Complex_Type_Info;
-         Info.C.Size_Var (Mode_Value) := Create_Var
+         Info.C := new Complex_Type_Arr_Info;
+         Info.C (Mode_Value).Size_Var := Create_Var
            (Create_Var_Identifier ("SIZE"), Ghdl_Index_Type);
          if Get_Has_Signal_Flag (Def) then
-            Info.C.Size_Var (Mode_Signal) := Create_Var
+            Info.C (Mode_Signal).Size_Var := Create_Var
               (Create_Var_Identifier ("SIGSIZE"), Ghdl_Index_Type);
          end if;
       end Create_Size_Var;
@@ -5841,7 +5838,7 @@ package body Translation is
          Start_Function_Decl
            (Interface_List, Ident, Global_Storage, Char_Ptr_Type);
          Chap2.Add_Subprg_Instance_Interfaces
-           (Interface_List, Info.C.Builder_Instance (Kind));
+           (Interface_List, Info.C (Kind).Builder_Instance);
          case Info.Type_Mode is
             when Type_Mode_Fat_Array =>
                Ptype := Info.T.Base_Ptr_Type (Kind);
@@ -5851,15 +5848,15 @@ package body Translation is
                raise Internal_Error;
          end case;
          New_Interface_Decl
-           (Interface_List, Info.C.Builder_Base_Param (Kind),
+           (Interface_List, Info.C (Kind).Builder_Base_Param,
             Get_Identifier ("base_ptr"), Ptype);
          --  Add parameter for array bounds.
          if Info.Type_Mode in Type_Mode_Arrays then
             New_Interface_Decl
-              (Interface_List, Info.C.Builder_Bound_Param (Kind),
+              (Interface_List, Info.C (Kind).Builder_Bound_Param,
                Get_Identifier ("bound"), Info.T.Bounds_Ptr_Type);
          end if;
-         Finish_Subprogram_Decl (Interface_List, Info.C.Builder_Func (Kind));
+         Finish_Subprogram_Decl (Interface_List, Info.C (Kind).Builder_Func);
       end Create_Builder_Subprogram_Decl;
 
       function Gen_Call_Type_Builder (Var_Ptr : O_Dnode;
@@ -5874,9 +5871,9 @@ package body Translation is
          Tinfo := Get_Info (Var_Type);
          --  Build the field
          Binfo := Get_Info (Get_Base_Type (Var_Type));
-         Start_Association (Assoc, Binfo.C.Builder_Func (Kind));
+         Start_Association (Assoc, Binfo.C (Kind).Builder_Func);
          Chap2.Add_Subprg_Instance_Assoc
-           (Assoc, Binfo.C.Builder_Instance (Kind));
+           (Assoc, Binfo.C (Kind).Builder_Instance);
          case Tinfo.Type_Mode is
             when Type_Mode_Record
               | Type_Mode_Array =>
@@ -5933,7 +5930,7 @@ package body Translation is
       begin
          Tinfo := Get_Info (Field_Type);
          if Tinfo.C /= null then
-            if Tinfo.C.Builder_Need_Func then
+            if Tinfo.C (Kind).Builder_Need_Func then
                --  This is a complex type.
                Start_Declare_Stmt;
                New_Var_Decl (Var_Ptr, Get_Identifier ("var_ptr"),
@@ -5965,7 +5962,7 @@ package body Translation is
                   New_Address
                   (New_Slice (New_Acc_Value (New_Obj (Mem)),
                               Chararray_Type,
-                              New_Value (Get_Var (Tinfo.C.Size_Var (Kind)))),
+                              New_Value (Get_Var (Tinfo.C (Kind).Size_Var))),
                    Char_Ptr_Type));
             end if;
          end if;
@@ -6524,11 +6521,12 @@ package body Translation is
          El_Tinfo := Get_Info (Get_Element_Subtype (Def));
          if El_Tinfo.C /= null then
             --  This is a complex type.
-            Info.C := new Complex_Type_Info;
+            Info.C := new Complex_Type_Arr_Info;
             --  No size variable for unconstrained array type.
-            Info.C.Size_Var (Mode_Value) := null;
-            Info.C.Size_Var (Mode_Signal) := null;
-            Info.C.Builder_Need_Func := True;
+            Info.C (Mode_Value).Size_Var := null;
+            Info.C (Mode_Signal).Size_Var := null;
+            Info.C (Mode_Value).Builder_Need_Func := True;
+            Info.C (Mode_Signal).Builder_Need_Func := True;
          end if;
          Info.Type_Incomplete := False;
       end Translate_Array_Type;
@@ -6606,11 +6604,13 @@ package body Translation is
          if Binfo.C /= null then
             --  The base type is a complex type, so is the type.
             Create_Size_Var (Def);
-            Info.C.Builder_Need_Func := True;
+            Info.C (Mode_Value).Builder_Need_Func := True;
+            Info.C (Mode_Signal).Builder_Need_Func := True;
          elsif Len < 0 then
             --  This may creates complex types.
             Create_Size_Var (Def);
-            Info.C.Builder_Need_Func := False;
+            Info.C (Mode_Value).Builder_Need_Func := False;
+            Info.C (Mode_Signal).Builder_Need_Func := False;
          end if;
       end Translate_Array_Subtype;
 
@@ -6756,11 +6756,11 @@ package body Translation is
          Label : O_Snode;
       begin
          Info := Get_Info (Def);
-         Start_Subprogram_Body (Info.C.Builder_Func (Kind));
-         Chap2.Start_Subprg_Instance_Use (Info.C.Builder_Instance (Kind));
+         Start_Subprogram_Body (Info.C (Kind).Builder_Func);
+         Chap2.Start_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
 
          --  Aliased
-         Base := Info.C.Builder_Base_Param (Kind);
+         Base := Info.C (Kind).Builder_Base_Param;
 
          --  Compute length of the array.
          New_Var_Decl (Var_Length, Wki_Length, O_Storage_Local,
@@ -6769,7 +6769,7 @@ package body Translation is
                        Char_Ptr_Type);
          New_Assign_Stmt
            (New_Obj (Var_Length),
-            Chap3.Get_Bounds_Ptr_Length (Info.C.Builder_Bound_Param (Kind),
+            Chap3.Get_Bounds_Ptr_Length (Info.C (Kind).Builder_Bound_Param,
                                          Def));
 
          --  Reserve the size of the array vector.
@@ -6803,7 +6803,7 @@ package body Translation is
 
          New_Return_Stmt (New_Obj_Value (Mem));
 
-         Chap2.Finish_Subprg_Instance_Use (Info.C.Builder_Instance (Kind));
+         Chap2.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
          Finish_Subprogram_Body;
       end Create_Array_Type_Builder;
 
@@ -6863,7 +6863,8 @@ package body Translation is
 
          if Need_Size then
             Create_Size_Var (Def);
-            Info.C.Builder_Need_Func := True;
+            Info.C (Mode_Value).Builder_Need_Func := True;
+            Info.C (Mode_Signal).Builder_Need_Func := True;
          end if;
       end Translate_Record_Type;
 
@@ -6890,11 +6891,11 @@ package body Translation is
          El_Type : Iir;
       begin
          Info := Get_Info (Def);
-         Start_Subprogram_Body (Info.C.Builder_Func (Kind));
-         Chap2.Start_Subprg_Instance_Use (Info.C.Builder_Instance (Kind));
+         Start_Subprogram_Body (Info.C (Kind).Builder_Func);
+         Chap2.Start_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
 
          --  Aliases.
-         Base := Info.C.Builder_Base_Param (Kind);
+         Base := Info.C (Kind).Builder_Base_Param;
 
          New_Var_Decl (Mem, Get_Identifier ("mem"), O_Storage_Local,
                        Char_Ptr_Type);
@@ -6922,7 +6923,7 @@ package body Translation is
                Update_Field (El_Type, Mem, Kind);
             end if;
          end loop;
-         Chap2.Finish_Subprg_Instance_Use (Info.C.Builder_Instance (Kind));
+         Chap2.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
          New_Return_Stmt (New_Obj_Value (Mem));
          Finish_Subprogram_Body;
       end Create_Record_Type_Builder;
@@ -7064,11 +7065,11 @@ package body Translation is
 
          Info.Type_Mode := Type_Mode_Protected;
 
-         Info.C := new Complex_Type_Info;
-         Info.C.Size_Var (Mode_Value) := Create_Global_Const
+         Info.C := new Complex_Type_Arr_Info;
+         Info.C (Mode_Value).Size_Var := Create_Global_Const
            (Create_Identifier ("SIZE"), Ghdl_Index_Type,
             O_Storage_External, O_Cnode_Null);
-         Info.C.Builder_Need_Func := False;
+         Info.C (Mode_Value).Builder_Need_Func := False;
 
          --  This is just use to set overload number on subprograms, and to
          --  translate interfaces.
@@ -7159,7 +7160,7 @@ package body Translation is
          Pop_Instance_Factory (Info.Ortho_Type (Mode_Value));
          if Global_Storage /= O_Storage_External then
             --  FIXME: the size may not be constant!
-            Info.C.Size_Var (Mode_Value) := Create_Global_Const
+            Info.C (Mode_Value).Size_Var := Create_Global_Const
               (Create_Identifier ("SIZE"), Ghdl_Index_Type,
                Global_Storage, New_Sizeof (Info.Ortho_Type (Mode_Value),
                                            Ghdl_Index_Type));
@@ -7384,7 +7385,7 @@ package body Translation is
             --  Short-cut.
             return O_Enode_Null;
          else
-            return New_Value (Get_Var (Info.C.Size_Var (Kind)));
+            return New_Value (Get_Var (Info.C (Kind).Size_Var));
          end if;
       end Get_Additionnal_Size;
 
@@ -7400,7 +7401,7 @@ package body Translation is
             return;
          end if;
          for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
-            if Info.C.Size_Var (Kind) /= null then
+            if Info.C (Kind).Size_Var /= null then
                Open_Temp;
                case Info.Type_Mode is
                   when Type_Mode_Non_Composite
@@ -7469,7 +7470,7 @@ package body Translation is
                            Res);
                      end;
                end case;
-               New_Assign_Stmt (Get_Var (Info.C.Size_Var (Kind)), Res);
+               New_Assign_Stmt (Get_Var (Info.C (Kind).Size_Var), Res);
                Close_Temp;
             end if;
          end loop;
@@ -7882,7 +7883,9 @@ package body Translation is
          end if;
 
          Tinfo := Get_Info (Def);
-         if Tinfo.C = null or else Tinfo.C.Builder_Need_Func = False then
+         if Tinfo.C = null
+           or else Tinfo.C (Mode_Value).Builder_Need_Func = False
+         then
             return;
          end if;
 
@@ -8414,9 +8417,8 @@ package body Translation is
       is
          Dinfo : Type_Info_Acc;
          Length : O_Enode;
-         Kind : Object_Kind_Type;
+         Kind : constant Object_Kind_Type := Get_Object_Kind (Res);
       begin
-         Kind := Get_Object_Kind (Res);
          Dinfo := Get_Info (Get_Base_Type (Arr_Type));
          --  Compute array size.
          Length := Get_Object_Size (Res, Arr_Type);
@@ -8425,7 +8427,7 @@ package body Translation is
            (M2Lp (Chap3.Get_Array_Base (Res)),
             Gen_Alloc (Alloc_Kind, Length, Dinfo.T.Base_Ptr_Type (Kind)));
 
-         if Dinfo.C /= null and then Dinfo.C.Builder_Need_Func then
+         if Dinfo.C /= null and then Dinfo.C (Kind).Builder_Need_Func then
             Open_Temp;
             --  Build the type.
             Chap3.Gen_Call_Type_Builder (Res, Arr_Type);
@@ -8548,7 +8550,7 @@ package body Translation is
       begin
          Kind := Get_Object_Kind (Dest);
          Info := Get_Info (Obj_Type);
-         if Info.C /= null and then Info.C.Builder_Need_Func then
+         if Info.C /= null and then Info.C (Kind).Builder_Need_Func then
             D := Stabilize (Dest);
             --  A complex type that must be rebuilt.
             --  Save destinaton.
@@ -8627,9 +8629,9 @@ package body Translation is
          Type_Info := Get_Type_Info (Obj);
          Kind := Get_Object_Kind (Obj);
          if Type_Info.C /= null
-           and then Type_Info.C.Size_Var (Kind) /= null
+           and then Type_Info.C (Kind).Size_Var /= null
          then
-            return New_Value (Get_Var (Type_Info.C.Size_Var (Kind)));
+            return New_Value (Get_Var (Type_Info.C (Kind).Size_Var));
          end if;
          case Type_Info.Type_Mode is
             when Type_Mode_Non_Composite
@@ -8701,7 +8703,7 @@ package body Translation is
                                        Obj_Type),
                 Dinfo.Ortho_Ptr_Type (Kind)));
 
-            if Dinfo.C /= null and then Dinfo.C.Builder_Need_Func then
+            if Dinfo.C /= null and then Dinfo.C (Kind).Builder_Need_Func then
                Open_Temp;
                --  Build the type.
                Chap3.Gen_Call_Type_Builder (Res, Obj_Type);
@@ -9395,7 +9397,9 @@ package body Translation is
             return;
          end if;
 
-         if Type_Info.C.Builder_Need_Func and then not Is_Stable (Var) then
+         if Type_Info.C (Kind).Builder_Need_Func
+           and then not Is_Stable (Var)
+         then
             Targ := Create_Temp (Type_Info, Kind);
          else
             Targ := Var;
@@ -9408,7 +9412,7 @@ package body Translation is
                        Chap3.Get_Object_Size (Var, Obj_Type),
                        Type_Info.Ortho_Ptr_Type (Kind)));
 
-         if Type_Info.C.Builder_Need_Func then
+         if Type_Info.C (Kind).Builder_Need_Func then
             --  Build the type.
             Chap3.Gen_Call_Type_Builder (Targ, Obj_Type);
             if not Is_Stable (Var) then
@@ -26884,8 +26888,8 @@ package body Translation is
                      Val := Get_Null_Loc;
                   end if;
                when Type_Mode_Ptr_Array =>
-                  if Info.C.Size_Var (I) /= null then
-                     Val := Var_Acc_To_Loc (Info.C.Size_Var (I));
+                  if Info.C (I) .Size_Var/= null then
+                     Val := Var_Acc_To_Loc (Info.C (I).Size_Var);
                   else
                      Val := Get_Null_Loc;
                   end if;
