@@ -1013,6 +1013,98 @@ package body Translation is
    end record;
    type Subprg_Resolv_Info_Acc is access Subprg_Resolv_Info;
 
+   --  Complex types.
+   --
+   --  A complex type is not a VHDL notion, but a translation notion.
+   --  A complex type is a composite type whose size is not known at compile
+   --  type. This happends in VHDL because a bound can be globally static.
+   --  Therefore, the length of an array may not be known at compile type,
+   --  and this propagates to composite types (record and array) if they
+   --  have such an element. This is different from unconstrained arrays.
+   --
+   --  This occurs frequently in VHDL, and could even happen within
+   --  subprograms.
+   --
+   --  Such types are always dynamically allocated (on the stack or on the
+   --  heap). They must be continuous in memory so that they could be copied
+   --  via memcpy/memmove.
+   --
+   --  At runtime, the size of such type is computed. A builder procedure
+   --  is also created to setup inner pointers. This builder procedure should
+   --  be called at initialization, but also after a copy.
+   --
+   --  Example:
+   --  1) subtype bv_type is bit_vector (l to h);
+   --     variable a : bv_type
+   --
+   --     This is represented by a pointer to an array of bit. No need for
+   --     builder procedure, as the element type is not complex. But there
+   --     is a size variable for the size of bv_type
+   --
+   --  2) type rec1_type is record
+   --       f1 : integer;
+   --       f2 : bv_type;
+   --     end record;
+   --
+   --     This is represented by a pointer to a record. The 'f2' field is
+   --     a pointer to an array of bit. The size of the object is the size
+   --     of the record (with f2 as a pointer) + the size of bv_type.
+   --     A builder procedure is needed to initialize the 'f2' field.
+   --     The memory layout is:
+   --     +--------------+
+   --     | rec1:     f1 |
+   --     |           f2 |---+
+   --     +--------------+   |
+   --     | bv_type      |<--+
+   --     | ...          |
+   --     +--------------+
+   --
+   --  3) type rec2_type is record
+   --      g1: rec1_type;
+   --      g2: bv_type;
+   --      g3: bv_type;
+   --    end record;
+   --
+   --    This is represented by a pointer to a record.  All the three fields
+   --    are pointers.
+   --     The memory layout is:
+   --     +--------------+
+   --     | rec2:     g1 |---+
+   --     |           g2 |---|---+
+   --     |           g3 |---|---|---+
+   --     +--------------+   |   |   |
+   --     | rec1:     f1 |<--+   |   |
+   --     |           f2 |---+   |   |
+   --     +--------------+   |   |   |
+   --     | bv_type (f2) |<--+   |   |
+   --     | ...          |       |   |
+   --     +--------------+       |   |
+   --     | bv_type (g2) |<------+   |
+   --     | ...          |           |
+   --     +--------------+           |
+   --     | bv_type (g3) |<----------+
+   --     | ...          |
+   --     +--------------+
+   --
+   --  4) type bv_arr_type is array (natural range <>) of bv_type;
+   --     arr2 : bv_arr_type (1 to 4)
+   --
+   --     This should be represented by a pointer to bv_type.
+   --     The memory layout is:
+   --     +--------------+
+   --     | bv_type  (1) |
+   --     | ...          |
+   --     +--------------+
+   --     | bv_type  (2) |
+   --     | ...          |
+   --     +--------------+
+   --     | bv_type  (3) |
+   --     | ...          |
+   --     +--------------+
+   --     | bv_type  (4) |
+   --     | ...          |
+   --     +--------------+
+
    --  Additional info for complex types.
    type Complex_Type_Info is record
       --  Variable containing the size of the type.
@@ -7344,8 +7436,7 @@ package body Translation is
                            exit when El = Null_Iir;
                            N_Res := Get_Additionnal_Size (Get_Type (El), Kind);
                            if N_Res /= O_Enode_Null then
-                              Res := New_Dyadic_Op
-                                (ON_Add_Ov, Res, N_Res);
+                              Res := New_Dyadic_Op (ON_Add_Ov, Res, N_Res);
                            end if;
                         end loop;
                      end;
