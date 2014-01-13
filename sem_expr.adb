@@ -505,6 +505,7 @@ package body Sem_Expr is
    is
       Base_Type: Iir;
       Left, Right: Iir;
+      Left_Type, Right_Type : Iir;
       Expr_Type : Iir;
    begin
       Expr_Type := Get_Type (Expr);
@@ -540,7 +541,22 @@ package body Sem_Expr is
          return Null_Iir;
       end if;
 
-      if Is_Overloaded (Left) or else Is_Overloaded (Right) then
+      Left_Type := Get_Type (Left);
+      Right_Type := Get_Type (Right);
+      --  Check for string or aggregate literals
+      --  FIXME: improve error message
+      if Left_Type = Null_Iir then
+         Error_Msg_Sem ("bad expression for a scalar", Left);
+         return Null_Iir;
+      end if;
+      if Right_Type = Null_Iir then
+         Error_Msg_Sem ("bad expression for a scalar", Right);
+         return Null_Iir;
+      end if;
+
+      if Is_Overload_List (Left_Type)
+        or else Is_Overload_List (Right_Type)
+      then
          if Base_Type /= Null_Iir then
             --  Cannot happen, since sem_expression_ov should resolved
             --  ambiguties if a type is given.
@@ -548,21 +564,20 @@ package body Sem_Expr is
          end if;
 
          --  Try to find a common type.
-         Base_Type := Search_Compatible_Type
-           (Get_Type (Left), Get_Type (Right));
+         Base_Type := Search_Compatible_Type (Left_Type, Right_Type);
          if Base_Type = Null_Iir then
-            if Compatibility_Types1
-              (Universal_Integer_Type_Definition, Get_Type (Left))
+            if Compatibility_Types1 (Universal_Integer_Type_Definition,
+                                     Left_Type)
               and then
-              Compatibility_Types1
-              (Universal_Integer_Type_Definition, Get_Type (Right))
+              Compatibility_Types1 (Universal_Integer_Type_Definition,
+                                    Right_Type)
             then
                Base_Type := Universal_Integer_Type_Definition;
-            elsif Compatibility_Types1
-              (Universal_Real_Type_Definition, Get_Type (Left))
+            elsif Compatibility_Types1 (Universal_Real_Type_Definition,
+                                        Left_Type)
               and then
-              Compatibility_Types1
-              (Universal_Real_Type_Definition, Get_Type (Right))
+              Compatibility_Types1 (Universal_Real_Type_Definition,
+                                    Right_Type)
             then
                Base_Type := Universal_Real_Type_Definition;
             else
@@ -3997,6 +4012,11 @@ package body Sem_Expr is
          return Null_Iir;
       end if;
       Expr_Type := Get_Type (Expr1);
+      if Expr_Type = Null_Iir then
+         --  FIXME: improve message
+         Error_Msg_Sem ("bad expression for a scalar", Expr);
+         return Null_Iir;
+      end if;
       if not Is_Overload_List (Expr_Type) then
          return Expr1;
       end if;

@@ -341,8 +341,7 @@ package body Grt.Avhpi is
             Res := (Kind => VhpiGenericDeclK,
                     Ctxt => Ctxt,
                     Obj => To_Ghdl_Rtin_Object_Acc (Rti));
-         when Ghdl_Rtik_Subtype_Array
-           | Ghdl_Rtik_Subtype_Array_Ptr =>
+         when Ghdl_Rtik_Subtype_Array =>
             declare
                Atype : Ghdl_Rtin_Subtype_Array_Acc;
                Bt : Ghdl_Rtin_Type_Array_Acc;
@@ -429,7 +428,6 @@ package body Grt.Avhpi is
                  | Ghdl_Rtik_Signal
                  | Ghdl_Rtik_Type_Array
                  | Ghdl_Rtik_Subtype_Array
-                 | Ghdl_Rtik_Subtype_Array_Ptr
                  | Ghdl_Rtik_Type_E8
                  | Ghdl_Rtik_Type_E32
                  | Ghdl_Rtik_Type_B2

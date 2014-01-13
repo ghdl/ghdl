@@ -148,13 +148,6 @@ package body Grt.Rtis_Utils is
       return Traverse_Instance (Ctxt);
    end Traverse_Blocks;
 
-   function Rti_Complex_Type (Atype : Ghdl_Rti_Access) return Boolean
-   is
-   begin
-      return (Atype.Mode and Ghdl_Rti_Type_Complex_Mask)
-        = Ghdl_Rti_Type_Complex;
-   end Rti_Complex_Type;
-
    --  Disp value stored at ADDR and whose type is described by RTI.
    procedure Get_Enum_Value
      (Vstr : in out Vstring; Rti : Ghdl_Rti_Access; Val : Ghdl_Index_Type)
@@ -328,10 +321,12 @@ package body Grt.Rtis_Utils is
       is
          El : Ghdl_Rtin_Element_Acc;
          Obj_Addr : Address;
+         Last_Addr : Address;
          P : Natural;
       begin
          P := Length (Name);
          Obj_Addr := Addr;
+         Last_Addr := Addr;
          for I in 1 .. Rti.Nbrel loop
             El := To_Ghdl_Rtin_Element_Acc (Rti.Elements (I - 1));
             if Is_Sig then
@@ -339,18 +334,21 @@ package body Grt.Rtis_Utils is
             else
                Addr := Obj_Addr + El.Val_Off;
             end if;
+            if Rti_Complex_Type (El.Eltype) then
+               Addr := To_Addr_Acc (Addr).all;
+            end if;
             Append (Name, '.');
             Append (Name, El.Name);
             Handle_Any (El.Eltype);
+            if Addr > Last_Addr then
+               Last_Addr := Addr;
+            end if;
             Truncate (Name, P);
          end loop;
-         -- FIXME
-         --Addr := Obj_Addr + Rti.Xx;
+         Addr := Last_Addr;
       end Handle_Record;
 
-      procedure Handle_Any (Rti : Ghdl_Rti_Access)
-      is
-         Save_Addr : Address;
+      procedure Handle_Any (Rti : Ghdl_Rti_Access) is
       begin
          case Rti.Kind is
             when Ghdl_Rtik_Subtype_Scalar =>
@@ -372,28 +370,7 @@ package body Grt.Rtis_Utils is
                begin
                   Bound_To_Range
                     (Loc_To_Addr (St.Common.Depth, St.Bounds, Ctxt), Bt, Rngs);
-                  if Rti_Complex_Type (Rti) then
-                     Save_Addr := Addr;
-                     Addr := To_Addr_Acc (Addr).all;
-                  end if;
                   Handle_Array_1 (Bt.Element, Rngs, Bt.Indexes, 0);
-                  if Rti_Complex_Type (Rti) then
-                     Addr := Save_Addr + (Address'Size / Storage_Unit);
-                  end if;
-               end;
-            when Ghdl_Rtik_Subtype_Array_Ptr =>
-               declare
-                  St : constant Ghdl_Rtin_Subtype_Array_Acc :=
-                    To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
-                  Bt : constant Ghdl_Rtin_Type_Array_Acc := St.Basetype;
-                  Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
-               begin
-                  Bound_To_Range
-                    (Loc_To_Addr (St.Common.Depth, St.Bounds, Ctxt), Bt, Rngs);
-                  Save_Addr := Addr;
-                  Addr := To_Addr_Acc (Addr).all;
-                  Handle_Array_1 (Bt.Element, Rngs, Bt.Indexes, 0);
-                  Addr := Save_Addr + (Address'Size / Storage_Unit);
                end;
 --          when Ghdl_Rtik_Type_File =>
 --             declare
@@ -406,20 +383,17 @@ package body Grt.Rtis_Utils is
 --                --   composite type).
 --             end;
             when Ghdl_Rtik_Type_Record =>
-               if Rti_Complex_Type (Rti) then
-                  Save_Addr := Addr;
-                  Addr := To_Addr_Acc (Addr).all;
-               end if;
                Handle_Record (To_Ghdl_Rtin_Type_Record_Acc (Rti));
-               if Rti_Complex_Type (Rti) then
-                  Addr := Save_Addr + (Address'Size / Storage_Unit);
-               end if;
             when others =>
                Internal_Error ("grt.rtis_utils.foreach_scalar.handle_any");
          end case;
       end Handle_Any;
    begin
-      Addr := Obj_Addr;
+      if Rti_Complex_Type (Obj_Type) then
+         Addr := To_Addr_Acc (Obj_Addr).all;
+      else
+         Addr := Obj_Addr;
+      end if;
       Handle_Any (Obj_Type);
       Free (Name);
    end Foreach_Scalar;

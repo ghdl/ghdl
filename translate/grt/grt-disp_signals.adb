@@ -245,7 +245,7 @@ package body Grt.Disp_Signals is
          when Ghdl_Rtik_Attribute_Transaction =>
             Put (stdout, Ctxt);
             Put (".");
-            Put (Stream, " 'quiet");
+            Put (Stream, " 'transaction");
          when others =>
             null;
       end case;

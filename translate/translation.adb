@@ -661,7 +661,6 @@ package body Translation is
       Ghdl_Rtik_Type_File : O_Cnode;
       Ghdl_Rtik_Subtype_Scalar : O_Cnode;
       Ghdl_Rtik_Subtype_Array : O_Cnode;
-      Ghdl_Rtik_Subtype_Array_Ptr : O_Cnode;
       Ghdl_Rtik_Subtype_Unconstrained_Array : O_Cnode;
       Ghdl_Rtik_Subtype_Record : O_Cnode;
       Ghdl_Rtik_Subtype_Access : O_Cnode;
@@ -946,9 +945,6 @@ package body Translation is
       Type_Mode_Protected,
       --  Constrained array type (length is known at compile-time).
       Type_Mode_Array,
-      --  Array pointer type (used for constrained array whose length is
-      --  known at run-time).
-      Type_Mode_Ptr_Array,
       --  Fat array type (used for unconstrained array).
       Type_Mode_Fat_Array);
 
@@ -1165,6 +1161,11 @@ package body Translation is
 
             --  If true, the type is (still) incomplete.
             Type_Incomplete : Boolean := False;
+
+            --  For array only.  True if the type is constrained with locally
+            --  static bounds.  May have non locally-static bounds in some
+            --  of its sub-element (ie being a complex type).
+            Type_Locally_Constrained : Boolean := False;
 
             --  Chain of temporary types to be destroyed at end of scope.
             Type_Transient_Chain : Iir := Null_Iir;
@@ -1562,6 +1563,15 @@ package body Translation is
       return Info.Type_Mode in Type_Mode_Fat;
    end Is_Composite;
 
+   function Is_Complex_Type (Tinfo : Type_Info_Acc) return Boolean;
+   pragma Inline (Is_Complex_Type);
+
+   function Is_Complex_Type (Tinfo : Type_Info_Acc) return Boolean is
+   begin
+      return Tinfo.C /= null;
+   end Is_Complex_Type;
+
+
    --  Convert an o_lnode to an o_enode, either by taking value or address.
    function L2e_Node (L : O_Lnode;
                       Type_Info : Type_Info_Acc;
@@ -1573,7 +1583,6 @@ package body Translation is
             raise Internal_Error;
          when Type_Mode_Scalar
            | Type_Mode_Acc
-           | Type_Mode_Ptr_Array
            | Type_Mode_File =>
             return New_Value (L);
          when Type_Mode_Fat_Array
@@ -1585,35 +1594,6 @@ package body Translation is
             return New_Address (L, Type_Info.Ortho_Ptr_Type (Kind));
       end case;
    end L2e_Node;
-
---    --  Get Lnode from a variable pointer.
--- function Ptr2l_Node (Var_Ptr : O_Lnode; Info : Type_Info_Acc) return O_Lnode
---    is
---    begin
---       case Info.Type_Mode is
---          when Type_Mode_Fat_Array
---            | Type_Mode_Array
---            | Type_Mode_Record
---            | Type_Mode_Fat_Acc =>
---             return New_Access_Element (New_Value (Var_Ptr));
---          when Type_Mode_Ptr_Array =>
---             return Var_Ptr;
---          when others =>
---             raise Internal_Error;
---       end case;
---    end Ptr2l_Node;
-
---    function Get_Bounds_Ptr (Info : Type_Info_Acc) return O_Enode is
---    begin
---       case Info.Type_Mode is
---          when Type_Mode_Array
---            | Type_Mode_Ptr_Array =>
---             return New_Address (Get_Var (Info.T.Array_Bounds),
---                                 Info.T.Bounds_Ptr_Type);
---          when others =>
---             raise Internal_Error;
---       end case;
---    end Get_Bounds_Ptr;
 
    --  In order to simplify the handling of Enode/Lnode, let's introduce
    --  Mnode (yes, another node).
@@ -1845,8 +1825,15 @@ package body Translation is
       function Index_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
         return Mnode;
 
+      --  Same for for slicing.
+      function Slice_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
+                          return Mnode;
+
       --  Get the length of the array.
       function Get_Array_Length (Arr : Mnode; Atype : Iir) return O_Enode;
+
+      function Get_Bounds_Ptr_Length (Ptr : O_Dnode; Atype : Iir)
+                                     return O_Enode;
 
       function Get_Array_Type_Length (Atype : Iir) return O_Enode;
 
@@ -1880,10 +1867,6 @@ package body Translation is
 
       --  Get array bounds for type ATYPE.
       function Get_Array_Type_Bounds (Atype : Iir) return Mnode;
-
-      --  PTR must be a variable pointing to a bounds of type ATYPE.
-      function Get_Bounds_Ptr_Length (Ptr : O_Dnode; Atype : Iir)
-        return O_Enode;
 
       --  Return the a pointer to the array base from variable PTR
       --  containing a pointer to array.
@@ -2989,7 +2972,7 @@ package body Translation is
       return Lv2M (Get_Var (Var), Var_Type, Mode, Vtype, Ptype);
    end Varv2M;
 
-   --  Convert a Lnode for a sub object) to an MNODE.
+   --  Convert a Lnode for a sub object to an MNODE.
    function Lo2M (L : O_Lnode; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
      return Mnode is
    begin
@@ -3000,8 +2983,7 @@ package body Translation is
            | Type_Mode_Fat_Array
            | Type_Mode_Fat_Acc =>
             return Lv2M (L, Vtype, Mode);
-         when Type_Mode_Ptr_Array
-           | Type_Mode_Array
+         when Type_Mode_Array
            | Type_Mode_Record
            | Type_Mode_Protected =>
             if Vtype.C = null then
@@ -3024,8 +3006,7 @@ package body Translation is
            | Type_Mode_Fat_Array
            | Type_Mode_Fat_Acc =>
             return Dv2M (D, Vtype, Mode);
-         when Type_Mode_Ptr_Array
-           | Type_Mode_Array
+         when Type_Mode_Array
            | Type_Mode_Record
            | Type_Mode_Protected =>
             if Vtype.C = null then
@@ -3064,8 +3045,7 @@ package body Translation is
             else
                return Lv2M (L, Vtype, Mode);
             end if;
-         when Type_Mode_Ptr_Array
-           | Type_Mode_Array
+         when Type_Mode_Array
            | Type_Mode_Record
            | Type_Mode_Protected =>
             if Vtype.C = null then
@@ -3721,46 +3701,8 @@ package body Translation is
          case Type_Info.Type_Mode is
             when Type_Mode_Scalar =>
                Do_Non_Composite (Targ, Targ_Type, Data);
-            when Type_Mode_Array =>
-               declare
-                  Var_I : O_Dnode;
-                  Var_Array : Mnode;
-                  Label : O_Snode;
-                  Composite_Data : Composite_Data_Type;
-                  Sub_Data : Data_Type;
-               begin
-                  Open_Temp;
-                  Var_Array := Stabilize (Targ);
-                  if True then
-                     Var_I := Create_Temp (Ghdl_Index_Type);
-                  else
-                     New_Var_Decl
-                       (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
-                  end if;
-                  Init_Var (Var_I);
-                  Composite_Data :=
-                    Prepare_Data_Array (Var_Array, Targ_Type, Data);
-                  Start_Loop_Stmt (Label);
-                  Gen_Exit_When
-                    (Label,
-                     New_Compare_Op (ON_Ge,
-                                     New_Value (New_Obj (Var_I)),
-                                     Chap3.Get_Array_Type_Length (Targ_Type),
-                                     Ghdl_Bool_Type));
-                  Sub_Data := Update_Data_Array
-                    (Composite_Data, Targ_Type, Var_I);
-                  Foreach_Non_Composite
-                    (Chap3.Index_Base (Var_Array, Targ_Type,
-                                       New_Value (New_Obj (Var_I))),
-                     Get_Element_Subtype (Targ_Type),
-                     Sub_Data);
-                  Inc_Var (Var_I);
-                  Finish_Loop_Stmt (Label);
-                  Finish_Data_Array (Composite_Data);
-                  Close_Temp;
-               end;
             when Type_Mode_Fat_Array
-              | Type_Mode_Ptr_Array =>
+              | Type_Mode_Array =>
                declare
                   Var_Array : Mnode;
                   Var_Base : Mnode;
@@ -3935,7 +3877,6 @@ package body Translation is
          Res := E2M (Val, Type_Info, Mode_Value);
          case Type_Info.Type_Mode is
             when Type_Mode_Array
-              | Type_Mode_Ptr_Array
               | Type_Mode_Fat_Array =>
                Res := Chap3.Get_Array_Base (Res);
             when Type_Mode_Record =>
@@ -5835,6 +5776,7 @@ package body Translation is
             when Mode_Signal =>
                Ident := Create_Identifier (Name, "_SIGBUILDER");
          end case;
+         --  FIXME: return the same type as its first parameter ???
          Start_Function_Decl
            (Interface_List, Ident, Global_Storage, Char_Ptr_Type);
          Chap2.Add_Subprg_Instance_Interfaces
@@ -5878,9 +5820,6 @@ package body Translation is
             when Type_Mode_Record
               | Type_Mode_Array =>
                New_Association (Assoc, New_Obj_Value (Var_Ptr));
-            when Type_Mode_Ptr_Array =>
-               --New_Association (Assoc, New_Value (New_Acc_Value (Var_Ptr)));
-               New_Association (Assoc, New_Obj_Value (Var_Ptr));
             when Type_Mode_Fat_Array =>
                --  Note: a fat array can only be at the top of a complex type;
                --  the bounds must have been set.
@@ -5891,8 +5830,7 @@ package body Translation is
                raise Internal_Error;
          end case;
          case Tinfo.Type_Mode is
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                New_Association
                  (Assoc,
                   Get_Array_Bounds_Ptr (O_Lnode_Null, Var_Type, Kind));
@@ -5946,6 +5884,8 @@ package body Translation is
                New_Assign_Stmt (Get_Field_Lnode, New_Obj_Value (Var_Ptr));
 
                --  Build second/third-order complex type.
+               --  FIXME: use Size_Var here too, and merge both branches of
+               --  the above 'if'.
                New_Assign_Stmt
                  (New_Obj (Mem),
                   Gen_Call_Type_Builder (Var_Ptr, Field_Type, Kind));
@@ -5953,6 +5893,7 @@ package body Translation is
                Finish_Declare_Stmt;
             else
                --  Allocate memory.
+               --  FIXME: alignment ???
                New_Assign_Stmt (Get_Field_Lnode,
                                 New_Convert_Ov (New_Obj_Value (Mem),
                                                 Tinfo.Ortho_Ptr_Type (Kind)));
@@ -6406,34 +6347,45 @@ package body Translation is
          El_Type := Get_Element_Subtype (Def);
          Translate_Type_Definition (El_Type, True);
          El_Tinfo := Get_Info (El_Type);
-         for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
-            case Kind is
-               when Mode_Value =>
-                  --  For the values.
-                  Id := Create_Identifier ("BASE");
-                  if not Complete then
-                     Idptr := Create_Identifier ("BASEP");
-                  else
-                     Idptr := O_Ident_Nul;
-                  end if;
-               when Mode_Signal =>
-                  --  For the signals
-                  Id := Create_Identifier ("SIGBASE");
-                  Idptr := Create_Identifier ("SIGBASEP");
-            end case;
-            Info.T.Base_Type (Kind) :=
-              New_Array_Type (Chap4.Get_Element_Type (El_Tinfo, Kind),
-                              Ghdl_Index_Type);
-            New_Type_Decl (Id, Info.T.Base_Type (Kind));
-            if Is_Equal (Idptr, O_Ident_Nul) then
-               Finish_Access_Type (Info.T.Base_Ptr_Type (Kind),
-                                   Info.T.Base_Type (Kind));
+
+         if Is_Complex_Type (El_Tinfo) then
+            if El_Tinfo.Type_Mode = Type_Mode_Array then
+               Info.T.Base_Type := El_Tinfo.T.Base_Ptr_Type;
+               Info.T.Base_Ptr_Type := El_Tinfo.T.Base_Ptr_Type;
             else
-               Info.T.Base_Ptr_Type (Kind) :=
-                 New_Access_Type (Info.T.Base_Type (Kind));
-               New_Type_Decl (Idptr, Info.T.Base_Ptr_Type (Kind));
+               Info.T.Base_Type := El_Tinfo.Ortho_Ptr_Type;
+               Info.T.Base_Ptr_Type := El_Tinfo.Ortho_Ptr_Type;
             end if;
-         end loop;
+         else
+            for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
+               case Kind is
+                  when Mode_Value =>
+                     --  For the values.
+                     Id := Create_Identifier ("BASE");
+                     if not Complete then
+                        Idptr := Create_Identifier ("BASEP");
+                     else
+                        Idptr := O_Ident_Nul;
+                     end if;
+                  when Mode_Signal =>
+                     --  For the signals
+                     Id := Create_Identifier ("SIGBASE");
+                     Idptr := Create_Identifier ("SIGBASEP");
+               end case;
+               Info.T.Base_Type (Kind) :=
+                 New_Array_Type (El_Tinfo.Ortho_Type (Kind),
+                                 Ghdl_Index_Type);
+               New_Type_Decl (Id, Info.T.Base_Type (Kind));
+               if Is_Equal (Idptr, O_Ident_Nul) then
+                  Finish_Access_Type (Info.T.Base_Ptr_Type (Kind),
+                                      Info.T.Base_Type (Kind));
+               else
+                  Info.T.Base_Ptr_Type (Kind) :=
+                    New_Access_Type (Info.T.Base_Type (Kind));
+                  New_Type_Decl (Idptr, Info.T.Base_Ptr_Type (Kind));
+               end if;
+            end loop;
+         end if;
       end Translate_Array_Type_Base;
 
       --  For unidimensional arrays: create a constant bounds whose length
@@ -6519,14 +6471,15 @@ package body Translation is
          Translate_Static_Unidimensional_Array_Length_One (Def);
 
          El_Tinfo := Get_Info (Get_Element_Subtype (Def));
-         if El_Tinfo.C /= null then
+         if Is_Complex_Type (El_Tinfo) then
             --  This is a complex type.
             Info.C := new Complex_Type_Arr_Info;
             --  No size variable for unconstrained array type.
-            Info.C (Mode_Value).Size_Var := null;
-            Info.C (Mode_Signal).Size_Var := null;
-            Info.C (Mode_Value).Builder_Need_Func := True;
-            Info.C (Mode_Signal).Builder_Need_Func := True;
+            for Mode in Object_Kind_Type loop
+               Info.C (Mode).Size_Var := null;
+               Info.C (Mode).Builder_Need_Func :=
+                 El_Tinfo.C (Mode).Builder_Need_Func;
+            end loop;
          end if;
          Info.Type_Incomplete := False;
       end Translate_Array_Type;
@@ -6555,7 +6508,6 @@ package body Translation is
          return Len;
       end Get_Array_Subtype_Length;
 
-
       procedure Translate_Array_Subtype (Def : Iir_Array_Subtype_Definition)
       is
          Info : Type_Info_Acc;
@@ -6563,7 +6515,6 @@ package body Translation is
 
          Len : Iir_Int64;
 
-         Ptr : O_Tnode;
          Id : O_Ident;
       begin
          Info := Get_Info (Def);
@@ -6572,15 +6523,27 @@ package body Translation is
          --  Note: info of indexes subtype are not created!
 
          Len := Get_Array_Subtype_Length (Def);
-         if Len < 0 then
-            --  Length of the array is not known at compile time.
-            Info.Type_Mode := Type_Mode_Ptr_Array;
+         Info.Type_Mode := Type_Mode_Array;
+         Info.Type_Locally_Constrained := (Len >= 0);
+         if Is_Complex_Type (Binfo)
+           or else not Info.Type_Locally_Constrained
+         then
+            --  This is a complex type as the size is not known at compile
+            --- time.
             Info.Ortho_Type := Binfo.T.Base_Ptr_Type;
             Info.Ortho_Ptr_Type := Binfo.T.Base_Ptr_Type;
+
+            Create_Size_Var (Def);
+
+            for Mode in Object_Kind_Type loop
+               Info.C (Mode).Builder_Need_Func :=
+                 Is_Complex_Type (Binfo)
+                 and then Binfo.C (Mode).Builder_Need_Func;
+            end loop;
          else
             --  Length is known.  Create a constrained array.
-            Info.Type_Mode := Type_Mode_Array;
             Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
+            Info.Ortho_Ptr_Type := Binfo.T.Base_Ptr_Type;
             for I in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
                case I is
                   when Mode_Value =>
@@ -6592,25 +6555,7 @@ package body Translation is
                  (Binfo.T.Base_Type (I),
                   New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Len)));
                New_Type_Decl (Id, Info.Ortho_Type (I));
-               --Ptr := New_Access_Type (Info.Ortho_Type);
-               --New_Type_Decl (Create_Identifier (Name, "_ARGT"), Ptr);
-               Ptr := Binfo.T.Base_Ptr_Type (I);
-               Info.Ortho_Ptr_Type (I) := Ptr;
             end loop;
-         end if;
-
-         --  Create a size variable if the length is not known or if
-         --  the element size is not known at compile-time.
-         if Binfo.C /= null then
-            --  The base type is a complex type, so is the type.
-            Create_Size_Var (Def);
-            Info.C (Mode_Value).Builder_Need_Func := True;
-            Info.C (Mode_Signal).Builder_Need_Func := True;
-         elsif Len < 0 then
-            --  This may creates complex types.
-            Create_Size_Var (Def);
-            Info.C (Mode_Value).Builder_Need_Func := False;
-            Info.C (Mode_Signal).Builder_Need_Func := False;
          end if;
       end Translate_Array_Subtype;
 
@@ -6739,54 +6684,49 @@ package body Translation is
         (Def : Iir_Array_Type_Definition; Kind : Object_Kind_Type)
       is
          Base : O_Dnode;
+         Bound : O_Dnode;
          Var_I : O_Dnode;
 
-         function Get_Field_Lnode return O_Lnode is
-         begin
-            return New_Indexed_Element (New_Acc_Value (New_Obj (Base)),
-                                        New_Obj_Value (Var_I));
-         end Get_Field_Lnode;
-
-         procedure Update_Field is new Builder_Update_Field (Get_Field_Lnode);
-
-         Mem : O_Dnode;
-         Info : Type_Info_Acc;
+         Var_Mem : O_Dnode;
+         Var_Step : O_Dnode;
+         Info : constant Type_Info_Acc := Get_Info (Def);
+         El_Type : Iir;
          El_Info : Type_Info_Acc;
          Var_Length : O_Dnode;
          Label : O_Snode;
       begin
-         Info := Get_Info (Def);
          Start_Subprogram_Body (Info.C (Kind).Builder_Func);
          Chap2.Start_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
 
          --  Aliased
          Base := Info.C (Kind).Builder_Base_Param;
+         Bound := Info.C (Kind).Builder_Bound_Param;
 
          --  Compute length of the array.
          New_Var_Decl (Var_Length, Wki_Length, O_Storage_Local,
                        Ghdl_Index_Type);
-         New_Var_Decl (Mem, Get_Identifier ("mem"), O_Storage_Local,
-                       Char_Ptr_Type);
+         New_Var_Decl (Var_Mem, Get_Identifier ("mem"), O_Storage_Local,
+                       Info.T.Base_Ptr_Type (Kind));
+         New_Var_Decl (Var_Step, Get_Identifier ("step"), O_Storage_Local,
+                       Ghdl_Index_Type);
+         New_Assign_Stmt (New_Obj (Var_Mem), New_Obj_Value (Base));
+
+         El_Type := Get_Element_Subtype (Def);
+         El_Info := Get_Info (El_Type);
+
          New_Assign_Stmt
            (New_Obj (Var_Length),
-            Chap3.Get_Bounds_Ptr_Length (Info.C (Kind).Builder_Bound_Param,
-                                         Def));
+            New_Dyadic_Op (ON_Mul_Ov,
+                           New_Value (Get_Var (El_Info.C (Kind).Size_Var)),
+                           Get_Bounds_Ptr_Length (Bound, Def)));
 
-         --  Reserve the size of the array vector.
-         El_Info := Get_Info (Get_Element_Subtype (Def));
+         while El_Info.Type_Mode = Type_Mode_Array loop
+            El_Type := Get_Element_Subtype (El_Type);
+            El_Info := Get_Info (El_Type);
+         end loop;
          New_Assign_Stmt
-           (New_Obj (Mem),
-            New_Address
-            (New_Slice
-             (New_Access_Element
-              (New_Convert_Ov (New_Obj_Value (Base), Char_Ptr_Type)),
-              Chararray_Type,
-              New_Dyadic_Op (ON_Mul_Ov,
-                             New_Obj_Value (Var_Length),
-                             New_Lit (New_Sizeof
-                                      (El_Info.Ortho_Ptr_Type (Kind),
-                                       Ghdl_Index_Type)))),
-             Char_Ptr_Type));
+           (New_Obj (Var_Step),
+            New_Value (Get_Var (El_Info.C (Kind).Size_Var)));
 
          --  Set each index of the array.
          New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
@@ -6797,11 +6737,18 @@ package body Translation is
                                         New_Obj_Value (Var_I),
                                         New_Obj_Value (Var_Length),
                                         Ghdl_Bool_Type));
-         Update_Field (Get_Element_Subtype (Def), Mem, Kind);
-         Inc_Var (Var_I);
+         New_Assign_Stmt
+           (New_Obj (Var_Mem),
+            New_Convert_Ov (Gen_Call_Type_Builder (Var_Mem, El_Type, Kind),
+                            Info.T.Base_Ptr_Type (Kind)));
+         New_Assign_Stmt (New_Obj (Var_I),
+                          New_Dyadic_Op (ON_Add_Ov,
+                                         New_Obj_Value (Var_I),
+                                         New_Obj_Value (Var_Step)));
          Finish_Loop_Stmt (Label);
 
-         New_Return_Stmt (New_Obj_Value (Mem));
+         New_Return_Stmt (New_Convert_Ov (New_Obj_Value (Var_Mem),
+                                          Char_Ptr_Type));
 
          Chap2.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
          Finish_Subprogram_Body;
@@ -6829,6 +6776,8 @@ package body Translation is
          Info := Get_Info (Def);
          Need_Size := False;
          List := Get_Elements_Declaration_List (Def);
+
+         --  First, translate the anonymous type of the elements.
          for I in Natural loop
             El := Get_Nth_Element (List, I);
             exit when El = Null_Iir;
@@ -6844,6 +6793,7 @@ package body Translation is
             Field_Info := Add_Info (El, Kind_Field);
          end loop;
 
+         --  Then create the record type.
          Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
          for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
             Start_Record_Type (El_List);
@@ -6918,7 +6868,7 @@ package body Translation is
             El := Get_Nth_Element (List, I);
             exit when El = Null_Iir;
             El_Type := Get_Type (El);
-            if Get_Info (El_Type).C /= null then
+            if Is_Complex_Type (Get_Info (El_Type)) then
                --  Complex type.
                Update_Field (El_Type, Mem, Kind);
             end if;
@@ -7374,32 +7324,16 @@ package body Translation is
          end case;
       end Create_Type_Definition_Type_Range;
 
-      function Get_Additionnal_Size (Def : Iir; Kind : Object_Kind_Type)
-        return O_Enode
-      is
-         Info : Type_Info_Acc;
-      begin
-         Info := Get_Info (Def);
-
-         if Info.C = null then
-            --  Short-cut.
-            return O_Enode_Null;
-         else
-            return New_Value (Get_Var (Info.C (Kind).Size_Var));
-         end if;
-      end Get_Additionnal_Size;
-
       procedure Create_Type_Definition_Size_Var (Def : Iir)
       is
          Info : Type_Info_Acc;
          Res : O_Enode;
-         V : O_Cnode;
-         Add : O_Enode;
       begin
          Info := Get_Info (Def);
          if Info.C = null then
             return;
          end if;
+
          for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
             if Info.C (Kind).Size_Var /= null then
                Open_Temp;
@@ -7409,65 +7343,38 @@ package body Translation is
                     | Type_Mode_Unknown
                     | Type_Mode_Protected =>
                      raise Internal_Error;
-                  when Type_Mode_Array =>
-                     V := New_Sizeof (Info.Ortho_Type (Kind),
-                                      Ghdl_Index_Type);
-                     Add := Get_Additionnal_Size
-                       (Get_Element_Subtype (Def), Kind);
-                     if Add /= O_Enode_Null then
-                        Add := New_Dyadic_Op
-                          (ON_Mul_Ov, Get_Array_Type_Length (Def), Add);
-                        Res := New_Dyadic_Op (ON_Add_Ov, New_Lit (V), Add);
-                     else
-                        Res := New_Lit (V);
-                     end if;
                   when Type_Mode_Record =>
                      declare
                         List : Iir_List;
                         El : Iir_Element_Declaration;
-                        N_Res : O_Enode;
+                        El_Tinfo : Type_Info_Acc;
                      begin
-                        V := New_Sizeof (Info.Ortho_Type (Kind),
-                                         Ghdl_Index_Type);
                         List := Get_Elements_Declaration_List
                           (Get_Base_Type (Def));
-                        Res := New_Lit (V);
+                        Res := New_Lit (New_Sizeof (Info.Ortho_Type (Kind),
+                                                    Ghdl_Index_Type));
                         for I in Natural loop
                            El := Get_Nth_Element (List, I);
                            exit when El = Null_Iir;
-                           N_Res := Get_Additionnal_Size (Get_Type (El), Kind);
-                           if N_Res /= O_Enode_Null then
-                              Res := New_Dyadic_Op (ON_Add_Ov, Res, N_Res);
+                           El_Tinfo := Get_Info (Get_Type (El));
+                           if Is_Complex_Type (El_Tinfo) then
+                              Res := New_Dyadic_Op
+                                (ON_Add_Ov,
+                                 New_Value
+                                   (Get_Var (El_Tinfo.C (Kind).Size_Var)),
+                                 Res);
                            end if;
                         end loop;
                      end;
-                  when Type_Mode_Ptr_Array =>
-                     --  If element is a composite type then
-                     --    Return length * (sizeof (element)
-                     --                     + sizeof (element_ptr))
-                     --  else
-                     --    Return length * sizeof (element)
-                     --  end if
+                  when Type_Mode_Array =>
                      declare
-                        El_Type : Iir;
-                        El_Tinfo : Type_Info_Acc;
+                        El_Type : constant Iir := Get_Element_Subtype (Def);
                      begin
-                        El_Type := Get_Element_Subtype (Def);
-                        El_Tinfo := Get_Info (El_Type);
-                        Res := Chap3.Get_Object_Size
-                          (T2M (El_Type, Kind), El_Type);
-                        if El_Tinfo.C /= null then
-                           Res := New_Dyadic_Op
-                             (ON_Add_Ov,
-                              Res,
-                              New_Lit
-                              (New_Sizeof (El_Tinfo.Ortho_Ptr_Type (Kind),
-                                           Ghdl_Index_Type)));
-                        end if;
                         Res := New_Dyadic_Op
                           (ON_Mul_Ov,
-                           Chap3.Get_Array_Type_Length (Def),
-                           Res);
+                           Get_Array_Type_Length (Def),
+                           Chap3.Get_Object_Size (T2M (El_Type, Kind),
+                                                  El_Type));
                      end;
                end case;
                New_Assign_Stmt (Get_Var (Info.C (Kind).Size_Var), Res);
@@ -8043,38 +7950,6 @@ package body Translation is
          return New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Val));
       end Get_Thin_Array_Length;
 
-      function Get_Bounds_Ptr_Length (Ptr : O_Dnode; Atype : Iir)
-        return O_Enode
-      is
-         Index_List : Iir_List;
-         Index_Type : Iir;
-         Nbr_Dim : Natural;
-         Dim_Length : O_Enode;
-         Res : O_Enode;
-         Type_Info : Type_Info_Acc;
-         Index_Info : Type_Info_Acc;
-      begin
-         Index_List := Get_Index_Subtype_List (Atype);
-         Nbr_Dim := Get_Nbr_Elements (Index_List);
-
-         Type_Info := Get_Info (Get_Base_Type (Atype));
-         for Dim in 1 .. Nbr_Dim loop
-            Index_Type := Get_Nth_Element (Index_List, Dim - 1);
-            Index_Info := Get_Info (Get_Base_Type (Index_Type));
-            Dim_Length := New_Value
-              (New_Selected_Element
-               (New_Selected_Element (New_Acc_Value (New_Obj (Ptr)),
-                                      Type_Info.T.Bounds_Vector (Dim)),
-                Index_Info.T.Range_Length));
-            if Dim = 1 then
-               Res := Dim_Length;
-            else
-               Res := New_Dyadic_Op (ON_Mul_Ov, Res, Dim_Length);
-            end if;
-         end loop;
-         return Res;
-      end Get_Bounds_Ptr_Length;
-
       function Bounds_To_Range (B : Mnode; Atype : Iir; Dim : Positive)
         return Mnode
       is
@@ -8153,8 +8028,7 @@ package body Translation is
          case Info.Type_Mode is
             when Type_Mode_Fat_Array =>
                raise Internal_Error;
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                return Varv2M (Info.T.Array_Bounds,
                               Info, Mode_Value,
                               Info.T.Bounds_Type,
@@ -8189,8 +8063,7 @@ package body Translation is
                      Info.T.Bounds_Type,
                      Info.T.Bounds_Ptr_Type);
                end;
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                return Get_Array_Type_Bounds (Info);
             when others =>
                raise Internal_Error;
@@ -8212,23 +8085,19 @@ package body Translation is
          Type_Info : Type_Info_Acc;
          Bounds : Mnode;
       begin
+         --  Handle non-complex array case.
+         Type_Info := Get_Info (Atype);
+         if Type_Info.Type_Locally_Constrained then
+            return New_Lit (Get_Thin_Array_Length (Atype));
+         end if;
+
+         --  FIXME: share code with get_array_length ???
          Index_List := Get_Index_Subtype_List (Atype);
          Nbr_Dim := Get_Nbr_Elements (Index_List);
-
-         --  Handle thin array case.
-         Type_Info := Get_Info (Atype);
-         case Type_Info.Type_Mode is
-            when Type_Mode_Ptr_Array =>
-               Bounds := Get_Array_Type_Bounds (Atype);
-               if Nbr_Dim > 1 then
-                  Bounds := Stabilize (Bounds);
-               end if;
-            when Type_Mode_Array =>
-               return New_Lit (Get_Thin_Array_Length (Atype));
-            when others =>
-               raise Internal_Error;
-         end case;
-
+         Bounds := Get_Array_Type_Bounds (Atype);
+         if Nbr_Dim > 1 then
+            Bounds := Stabilize (Bounds);
+         end if;
          for Dim in 1 .. Nbr_Dim loop
             Dim_Length :=
               M2E (Range_To_Length (Bounds_To_Range (Bounds, Atype, Dim)));
@@ -8241,6 +8110,38 @@ package body Translation is
          return Res;
       end Get_Array_Type_Length;
 
+      function Get_Bounds_Ptr_Length (Ptr : O_Dnode; Atype : Iir)
+                                     return O_Enode
+      is
+         Index_List : Iir_List;
+         Index_Type : Iir;
+         Nbr_Dim : Natural;
+         Dim_Length : O_Enode;
+         Res : O_Enode;
+         Type_Info : Type_Info_Acc;
+         Index_Info : Type_Info_Acc;
+      begin
+         Index_List := Get_Index_Subtype_List (Atype);
+         Nbr_Dim := Get_Nbr_Elements (Index_List);
+
+         Type_Info := Get_Info (Get_Base_Type (Atype));
+         for Dim in 1 .. Nbr_Dim loop
+            Index_Type := Get_Nth_Element (Index_List, Dim - 1);
+            Index_Info := Get_Info (Get_Base_Type (Index_Type));
+            Dim_Length := New_Value
+              (New_Selected_Element
+                 (New_Selected_Element (New_Acc_Value (New_Obj (Ptr)),
+                                        Type_Info.T.Bounds_Vector (Dim)),
+                  Index_Info.T.Range_Length));
+            if Dim = 1 then
+               Res := Dim_Length;
+            else
+               Res := New_Dyadic_Op (ON_Mul_Ov, Res, Dim_Length);
+            end if;
+         end loop;
+         return Res;
+      end Get_Bounds_Ptr_Length;
+
       function Get_Array_Length (Arr : Mnode; Atype : Iir) return O_Enode
       is
          Index_List : Iir_List;
@@ -8250,21 +8151,14 @@ package body Translation is
          Type_Info : Type_Info_Acc;
          B : Mnode;
       begin
-         Index_List := Get_Index_Subtype_List (Atype);
-         Nbr_Dim := Get_Nbr_Elements (Index_List);
-
          --  Handle thin array case.
          Type_Info := Get_Info (Atype);
-         case Type_Info.Type_Mode is
-            when Type_Mode_Ptr_Array
-              | Type_Mode_Array =>
-               return Get_Array_Type_Length (Atype);
-            when Type_Mode_Fat_Array =>
-               null;
-            when others =>
-               raise Internal_Error;
-         end case;
+         if Type_Info.Type_Locally_Constrained then
+            return New_Lit (Get_Thin_Array_Length (Atype));
+         end if;
 
+         Index_List := Get_Index_Subtype_List (Atype);
+         Nbr_Dim := Get_Nbr_Elements (Index_List);
          for Dim in 1 .. Nbr_Dim loop
             B := Get_Array_Bounds (Arr);
             Dim_Length :=
@@ -8298,23 +8192,72 @@ package body Translation is
                      Info.T.Base_Type (Kind),
                      Info.T.Base_Ptr_Type (Kind));
                end;
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                return Arr;
             when others =>
                raise Internal_Error;
          end case;
       end Get_Array_Base;
 
+      function Reindex_Complex_Array
+        (Base : Mnode; Atype : Iir; Index : O_Enode; Res_Info : Type_Info_Acc)
+        return Mnode
+      is
+         El_Type : constant Iir := Get_Element_Subtype (Atype);
+         El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+         Kind : constant Object_Kind_Type := Get_Object_Kind (Base);
+      begin
+         pragma Assert (Is_Complex_Type (El_Tinfo));
+         return
+           E2M
+           (New_Unchecked_Address
+              (New_Slice
+                 (New_Access_Element
+                    (New_Convert_Ov (M2E (Base), Char_Ptr_Type)),
+                  Chararray_Type,
+                  New_Dyadic_Op (ON_Mul_Ov,
+                                 New_Value
+                                   (Get_Var (El_Tinfo.C (Kind).Size_Var)),
+                                 Index)),
+               El_Tinfo.Ortho_Ptr_Type (Kind)),
+            Res_Info, Kind);
+      end Reindex_Complex_Array;
+
       function Index_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
         return Mnode
       is
-         El_Type : Iir;
+         El_Type : constant Iir := Get_Element_Subtype (Atype);
+         El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+         Kind : constant Object_Kind_Type := Get_Object_Kind (Base);
       begin
-         El_Type := Get_Element_Subtype (Atype);
-         return Lo2M (New_Indexed_Element (M2Lv (Base), Index),
-                      Get_Info (El_Type), Get_Object_Kind (Base));
+         if Is_Complex_Type (El_Tinfo) then
+            return Reindex_Complex_Array (Base, Atype, Index, El_Tinfo);
+         else
+            return Lo2M (New_Indexed_Element (M2Lv (Base), Index),
+                         El_Tinfo, Kind);
+         end if;
       end Index_Base;
+
+      function Slice_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
+        return Mnode
+      is
+         T_Info : constant Type_Info_Acc :=  Get_Info (Atype);
+         El_Type : constant Iir := Get_Element_Subtype (Atype);
+         El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+         Kind : constant Object_Kind_Type := Get_Object_Kind (Base);
+      begin
+         if Is_Complex_Type (El_Tinfo) then
+            return Reindex_Complex_Array (Base, Atype, Index, T_Info);
+         else
+            return Lv2M (New_Slice (M2Lv (Base),
+                                    T_Info.T.Base_Type (Kind),
+                                    Index),
+                         False,
+                         T_Info.T.Base_Type (Kind),
+                         T_Info.T.Base_Ptr_Type (Kind),
+                         T_Info, Kind);
+         end if;
+      end Slice_Base;
 
       function Get_Array_Ptr_Base_Ptr
         (Ptr : O_Lnode; Atype : Iir; Is_Sig : Object_Kind_Type)
@@ -8328,8 +8271,7 @@ package body Translation is
                return New_Selected_Element
                  (New_Access_Element (New_Value (Ptr)),
                   Tinfo.T.Base_Field (Is_Sig));
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                return Ptr;
             when others =>
                raise Internal_Error;
@@ -8352,8 +8294,7 @@ package body Translation is
                                         Dim - 1);
          Index_Info := Get_Info (Get_Base_Type (Index_Type));
          case Array_Info.Type_Mode is
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                --  Extract bound variable.
                Res := Get_Var (Array_Info.T.Array_Bounds);
             when Type_Mode_Fat_Array =>
@@ -8381,8 +8322,7 @@ package body Translation is
                return New_Value
                  (New_Selected_Element (New_Acc_Value (Ptr),
                                         Info.T.Bounds_Field (Is_Sig)));
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                return New_Address (Get_Var (Info.T.Array_Bounds),
                                    Info.T.Bounds_Ptr_Type);
             when others =>
@@ -8401,8 +8341,7 @@ package body Translation is
             when Type_Mode_Fat_Array =>
                return New_Value (New_Selected_Element
                                  (Arr, Type_Info.T.Bounds_Field (Is_Sig)));
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                return New_Address (Get_Var (Type_Info.T.Array_Bounds),
                                    Type_Info.T.Bounds_Ptr_Type);
             when others =>
@@ -8453,91 +8392,6 @@ package body Translation is
          Pop_Identifier_Prefix (Mark);
       end Create_Array_Subtype;
 
-      function Get_Memory_Complex_1
-        (Ptr : O_Lnode; Obj_Type : Iir; Kind : Object_Kind_Type)
-        return O_Enode
-      is
-         Info : Type_Info_Acc;
-      begin
-         Info := Get_Info (Obj_Type);
-         case Info.Type_Mode is
-            when Type_Mode_Ptr_Array =>
-               return New_Value (Ptr);
-            when Type_Mode_Array =>
-               return Get_Memory_Complex_1
-                 (New_Indexed_Element (Ptr, New_Lit (Ghdl_Index_0)),
-                  Get_Element_Subtype (Obj_Type),
-                  Kind);
-            when Type_Mode_Record =>
-               declare
-                  List : Iir_List;
-                  El : Iir_Element_Declaration;
-                  El_Type : Iir;
-                  El_Info : Type_Info_Acc;
-               begin
-                  List := Get_Elements_Declaration_List
-                    (Get_Base_Type (Obj_Type));
-                  for I in Natural loop
-                     El := Get_Nth_Element (List, I);
-                     exit when El = Null_Iir;
-                     El_Type := Get_Type (El);
-                     El_Info := Get_Info (El_Type);
-                     if El_Info.C /= null then
-                        return Get_Memory_Complex_1
-                          (New_Selected_Element
-                           (Ptr, Get_Info (El).Field_Node (Kind)),
-                           El_Type,
-                           Kind);
-                     end if;
-                  end loop;
-                  --  Record is known to be complex but has no complex
-                  --  element.
-                  raise Internal_Error;
-               end;
-            when Type_Mode_Scalar
-              | Type_Mode_Unknown
-              | Type_Mode_File
-              | Type_Mode_Acc
-              | Type_Mode_Fat_Acc
-              | Type_Mode_Fat_Array
-              | Type_Mode_Protected =>
-               raise Internal_Error;
-         end case;
-      end Get_Memory_Complex_1;
-
---      --  VAR_PTR is a pointer to an object of type OBJ_TYPE (and kind KIND).
---       --  This object is known to be of a complex type.
---       --  Return the value of the first internal pointer of the object.
---       function Get_Memory_Complex
---         (Var_Ptr : O_Lnode; Obj_Type : Iir; Kind : Object_Kind_Type)
---         return O_Enode
---       is
---          Info : Type_Info_Acc;
---          Res : O_Enode;
---       begin
---          Info := Get_Info (Obj_Type);
---          case Info.Type_Mode is
---             when Type_Mode_Fat_Array
---               | Type_Mode_Array
---               | Type_Mode_Ptr_Array =>
---                Res := Get_Memory_Complex_1
---                  (New_Indexed_Element
---                   (New_Acc_Value (Get_Array_Ptr_Base_Ptr
---                                   (Var_Ptr, Obj_Type, Kind)),
---                    New_Unsigned_Literal (Ghdl_Index_Type, 0)),
---                   Get_Element_Subtype (Obj_Type),
---                   Kind);
---             when Type_Mode_Record =>
---                Res := Get_Memory_Complex_1
---                  (New_Acc_Value (Var_Ptr), Obj_Type, Kind);
---             when Type_Mode_Non_Composite
---               | Type_Mode_Unknown =>
---                --  Cannot be a complex type.
---                raise Internal_Error;
---          end case;
---          return New_Convert_Ov (Res, Char_Ptr_Type_Node);
---       end Get_Memory_Complex;
-
       --  Copy SRC to DEST.
       --  Both have the same type, OTYPE.
       procedure Translate_Object_Copy (Dest : Mnode;
@@ -8565,8 +8419,7 @@ package body Translation is
                                             Info.T.Base_Field (Kind))),
                      Get_Object_Size (Dest, Obj_Type));
                when Type_Mode_Record
-                 | Type_Mode_Array
-                 | Type_Mode_Ptr_Array =>
+                 | Type_Mode_Array =>
                   Gen_Memcpy (M2Addr (D),
                               Src,
                               Get_Object_Size (Dest, Obj_Type));
@@ -8606,8 +8459,7 @@ package body Translation is
                     (M2Addr (Get_Array_Base (D)),
                      M2Addr (Get_Array_Base (E2M (Src, Info, Kind))),
                      Get_Object_Size (D, Obj_Type));
-               when Type_Mode_Record
-                 | Type_Mode_Ptr_Array =>
+               when Type_Mode_Record =>
                   Gen_Memcpy
                     (M2Addr (Dest), Src, Get_Object_Size (Dest, Obj_Type));
                when Type_Mode_Array =>
@@ -8937,8 +8789,11 @@ package body Translation is
       begin
          L_Tinfo := Get_Info (L_Type);
          R_Tinfo := Get_Info (R_Type);
+         --  FIXME: optimize for a statically bounded array of a complex type.
          if L_Tinfo.Type_Mode = Type_Mode_Array
-           and R_Tinfo.Type_Mode = Type_Mode_Array
+           and then L_Tinfo.Type_Locally_Constrained
+           and then R_Tinfo.Type_Mode = Type_Mode_Array
+           and then R_Tinfo.Type_Locally_Constrained
          then
             --  Both left and right are thin array.
             --  Check here the length are the same.
@@ -9197,7 +9052,6 @@ package body Translation is
                   return Tinfo.Ortho_Type (Kind);
                when Type_Mode_Record
                  | Type_Mode_Array
-                 | Type_Mode_Ptr_Array
                  | Type_Mode_Protected =>
                   --  For a complex type, use a pointer.
                   return Tinfo.Ortho_Ptr_Type (Kind);
@@ -10559,7 +10413,6 @@ package body Translation is
                --   check for matching bounds.
                Atype := Get_Ortho_Type (Decl_Type, Info.Alias_Kind);
             when Type_Mode_Array
-              | Type_Mode_Ptr_Array
               | Type_Mode_Acc
               | Type_Mode_Fat_Acc =>
                --  Create an object pointer.
@@ -10615,8 +10468,7 @@ package body Translation is
                            Tinfo, Alias_Info.Alias_Kind));
                Copy_Fat_Pointer (Alias_Node, Name_Node);
                Close_Temp;
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                Open_Temp;
                Stabilize (Name_Node);
                New_Assign_Stmt
@@ -12570,7 +12422,7 @@ package body Translation is
                  (Fat_Array, Array_Info.T.Bounds_Field (Is_Sig));
                --  Dereference it.
                Lval := New_Access_Element (New_Value (Lval));
-            when Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                Lval := Get_Var (Array_Info.T.Array_Bounds);
             when others =>
                raise Internal_Error;
@@ -12594,21 +12446,16 @@ package body Translation is
                                         Dim - 1);
 
          Tinfo := Get_Info (Arr_Type);
-         case Tinfo.Type_Mode is
-            when Type_Mode_Fat_Array
-              | Type_Mode_Ptr_Array =>
-               Rinfo := Get_Info (Get_Base_Type (Index_Type));
-               return New_Value
-                 (New_Selected_Element
-                  (Fat_Array_To_Range (Arr, Arr_Type, Dim, Is_Sig),
-                   Rinfo.T.Range_Length));
-            when Type_Mode_Array =>
-               Constraint := Get_Range_Constraint (Index_Type);
-               return New_Lit
-                 (Chap7.Translate_Static_Range_Length (Constraint));
-            when others =>
-               raise Internal_Error;
-         end case;
+         if Tinfo.Type_Locally_Constrained then
+            Constraint := Get_Range_Constraint (Index_Type);
+            return New_Lit (Chap7.Translate_Static_Range_Length (Constraint));
+         else
+            Rinfo := Get_Info (Get_Base_Type (Index_Type));
+            return New_Value
+              (New_Selected_Element
+                 (Fat_Array_To_Range (Arr, Arr_Type, Dim, Is_Sig),
+                  Rinfo.T.Range_Length));
+         end if;
       end Get_Array_Bound_Length;
 
       function Get_Array_Ptr_Bound_Length (Ptr : O_Lnode;
@@ -12624,8 +12471,7 @@ package body Translation is
             when Type_Mode_Fat_Array =>
                return Get_Array_Bound_Length
                  (New_Acc_Value (Ptr), Arr_Type, Dim, Is_Sig);
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                return Get_Array_Bound_Length
                  (O_Lnode_Null, Arr_Type, Dim, Is_Sig);
             when others =>
@@ -12970,9 +12816,6 @@ package body Translation is
                Prefix := Stabilize (Prefix_Orig);
             when Type_Mode_Array =>
                Prefix := Prefix_Orig;
-            when Type_Mode_Ptr_Array =>
-               --  FIXME: should save the bounds address ?
-               Prefix := Prefix_Orig;
             when others =>
                raise Internal_Error;
          end case;
@@ -12994,20 +12837,21 @@ package body Translation is
                     (Range_Ptr,
                      Chap7.Translate_Expression (Index, Ibasetype),
                      Null_Iir, Itype, Index);
-               when Type_Mode_Ptr_Array =>
-                  --  Manually extract range since there is no infos for
-                  --   index subtype.
-                  Range_Ptr := Chap3.Bounds_To_Range
-                    (Chap3.Get_Array_Type_Bounds (Prefix_Type),
-                     Prefix_Type, Dim);
-                  Stabilize (Range_Ptr);
-                  R := Translate_Index_To_Offset
-                    (Range_Ptr,
-                     Chap7.Translate_Expression (Index, Ibasetype),
-                     Index, Itype, Index);
                when Type_Mode_Array =>
-                  --  BASE is a thin array.
-                  R := Translate_Thin_Index_Offset (Itype, Dim, Index);
+                  if Prefix_Info.Type_Locally_Constrained then
+                     R := Translate_Thin_Index_Offset (Itype, Dim, Index);
+                  else
+                     --  Manually extract range since there is no infos for
+                     --   index subtype.
+                     Range_Ptr := Chap3.Bounds_To_Range
+                       (Chap3.Get_Array_Type_Bounds (Prefix_Type),
+                        Prefix_Type, Dim);
+                     Stabilize (Range_Ptr);
+                     R := Translate_Index_To_Offset
+                       (Range_Ptr,
+                        Chap7.Translate_Expression (Index, Ibasetype),
+                        Index, Itype, Index);
+                  end if;
                when others =>
                   raise Internal_Error;
             end case;
@@ -13017,16 +12861,12 @@ package body Translation is
             else
                --  If there are more dimension(s) to follow, then multiply
                --  the current offset by the length of the current dimension.
-               case Prefix_Info.Type_Mode is
-                  when Type_Mode_Fat_Array
-                    | Type_Mode_Ptr_Array =>
-                     Length := M2E (Chap3.Range_To_Length (Range_Ptr));
-                  when Type_Mode_Array =>
-                     Length := New_Lit (Chap7.Translate_Static_Range_Length
-                                        (Get_Range_Constraint (Itype)));
-                  when others =>
-                     raise Internal_Error;
-               end case;
+               if Prefix_Info.Type_Locally_Constrained then
+                  Length := New_Lit (Chap7.Translate_Static_Range_Length
+                                       (Get_Range_Constraint (Itype)));
+               else
+                  Length := M2E (Chap3.Range_To_Length (Range_Ptr));
+               end if;
                New_Assign_Stmt
                  (New_Obj (Offset),
                   New_Dyadic_Op (ON_Add_Ov,
@@ -13124,7 +12964,9 @@ package body Translation is
          Slice_Info := Get_Info (Slice_Type);
 
          if Slice_Info.Type_Mode = Type_Mode_Array
+           and then Slice_Info.Type_Locally_Constrained
            and then Prefix_Info.Type_Mode = Type_Mode_Array
+           and then Prefix_Info.Type_Locally_Constrained
          then
             Data.Is_Off := True;
             Data.Prefix_Var := Prefix;
@@ -13297,30 +13139,18 @@ package body Translation is
         return Mnode
       is
          --  Type of the slice.
-         Slice_Type : Iir;
-         Slice_Info : Type_Info_Acc;
+         Slice_Type : constant Iir := Get_Type (Expr);
+         Slice_Info : constant Type_Info_Acc := Get_Info (Slice_Type);
 
          --  Object kind of the prefix.
-         Kind : Object_Kind_Type;
+         Kind : constant Object_Kind_Type := Get_Object_Kind (Prefix);
 
-         Res_L : O_Lnode;
          Res_D : O_Dnode;
       begin
-         --  Evaluate the prefix.
-         Slice_Type := Get_Type (Expr);
-
-         Kind := Get_Object_Kind (Prefix);
-
-         Slice_Info := Get_Info (Slice_Type);
-
          if Data.Is_Off then
-            return Lv2M
-              (New_Slice (M2Lv (Prefix),
-                          Slice_Info.Ortho_Type (Kind),
-                          New_Lit (New_Unsigned_Literal
-                                   (Ghdl_Index_Type, Data.Off))),
-               Slice_Info,
-               Kind);
+            return Chap3.Slice_Base
+              (Prefix, Slice_Type, New_Lit (New_Unsigned_Literal
+                                              (Ghdl_Index_Type, Data.Off)));
          else
             --  Create the result (fat array) and assign the bounds field.
             case Slice_Info.Type_Mode is
@@ -13333,23 +13163,16 @@ package body Translation is
                   New_Assign_Stmt
                     (New_Selected_Element (New_Obj (Res_D),
                                            Slice_Info.T.Base_Field (Kind)),
-                     New_Address
-                     (New_Slice (M2Lv (Chap3.Get_Array_Base (Prefix)),
-                                 Slice_Info.T.Base_Type (Kind),
-                                 New_Obj_Value (Data.Unsigned_Diff)),
-                      Slice_Info.T.Base_Ptr_Type (Kind)));
+                     M2E (Chap3.Slice_Base
+                            (Chap3.Get_Array_Base (Prefix),
+                             Slice_Type,
+                             New_Obj_Value (Data.Unsigned_Diff))));
                   return Dv2M (Res_D, Slice_Info, Kind);
-               when Type_Mode_Array
-                 | Type_Mode_Ptr_Array =>
-                  Res_L := New_Slice
-                    (M2Lv (Chap3.Get_Array_Base (Prefix)),
-                     Slice_Info.T.Base_Type (Kind),
+               when Type_Mode_Array =>
+                  return Chap3.Slice_Base
+                    (Chap3.Get_Array_Base (Prefix),
+                     Slice_Type,
                      New_Obj_Value (Data.Unsigned_Diff));
-                  return Lv2M (Res_L,
-                               True,
-                               Slice_Info.T.Base_Type (Kind),
-                               Slice_Info.T.Base_Ptr_Type (Kind),
-                               Slice_Info, Kind);
                when others =>
                   raise Internal_Error;
             end case;
@@ -13510,8 +13333,7 @@ package body Translation is
                      when Type_Mode_Fat_Array =>
                         return Get_Var (Name_Info.Alias_Var, Type_Info,
                                         Name_Info.Alias_Kind);
-                     when Type_Mode_Ptr_Array
-                       | Type_Mode_Array
+                     when Type_Mode_Array
                        | Type_Mode_Record
                        | Type_Mode_Acc
                        | Type_Mode_Fat_Acc =>
@@ -14018,7 +13840,7 @@ package body Translation is
             Val := Create_Global_Const
               (Create_Uniq_Identifier, Type_Info.Ortho_Type (Mode_Value),
                O_Storage_Private, Res);
-         elsif Type_Info.Type_Mode = Type_Mode_Ptr_Array then
+         elsif Type_Info.Type_Mode = Type_Mode_Array then
             null;
          else
             raise Internal_Error;
@@ -14641,8 +14463,7 @@ package body Translation is
                      when Type_Mode_Fat_Array =>
                         --  unconstrained to unconstrained.
                         return Expr;
-                     when Type_Mode_Array
-                       | Type_Mode_Ptr_Array =>
+                     when Type_Mode_Array =>
                         --  constrained to unconstrained.
                         return Convert_Constrained_To_Unconstrained
                           (Expr, Expr_Type, Atype, Is_Sig);
@@ -14651,49 +14472,38 @@ package body Translation is
                   end case;
                when Type_Mode_Array =>
                   --  X to constrained.
-                  case Einfo.Type_Mode is
-                     when Type_Mode_Fat_Array
-                       | Type_Mode_Ptr_Array =>
-                        --  unconstrained to constrained.
-                        return Convert_Array_To_Thin_Array
-                          (Expr, Expr_Type, Atype, Is_Sig, Loc);
-                     when Type_Mode_Array =>
-                        --  constrained to constrained.
-                        declare
-                           E_List, A_List : Iir_List;
-                           E_El, A_El : Iir;
-                        begin
-                           E_List := Get_Index_Subtype_List (Expr_Type);
-                           A_List := Get_Index_Subtype_List (Atype);
-                           for I in Natural loop
-                              E_El := Get_Nth_Element (E_List, I);
-                              A_El := Get_Nth_Element (A_List, I);
-                              exit when E_El = Null_Iir
-                                and then A_El = Null_Iir;
-                              if Eval_Discrete_Type_Length (E_El)
-                                /= Eval_Discrete_Type_Length (A_El)
-                              then
-                                 --  FIXME: generate a bound error ?
-                                 --  Even if this is caught at compile-time,
-                                 --  the code is not required to run.
-                                 Chap6.Gen_Bound_Error (Loc);
-                              end if;
-                           end loop;
-                        end;
-                        return Expr;
-                     when others =>
-                        raise Internal_Error;
-                  end case;
-               when Type_Mode_Ptr_Array =>
-                  case Einfo.Type_Mode is
-                     when Type_Mode_Fat_Array
-                       | Type_Mode_Array
-                       | Type_Mode_Ptr_Array =>
-                        return Convert_Array_To_Thin_Array
-                          (Expr, Expr_Type, Atype, Is_Sig, Loc);
-                     when others =>
-                        raise Internal_Error;
-                  end case;
+                  if Einfo.Type_Locally_Constrained
+                    and then Ainfo.Type_Locally_Constrained
+                  then
+                     --  FIXME: optimize static vs non-static
+                     --  constrained to constrained.
+                     declare
+                        E_List, A_List : Iir_List;
+                        E_El, A_El : Iir;
+                     begin
+                        E_List := Get_Index_Subtype_List (Expr_Type);
+                        A_List := Get_Index_Subtype_List (Atype);
+                        for I in Natural loop
+                           E_El := Get_Nth_Element (E_List, I);
+                           A_El := Get_Nth_Element (A_List, I);
+                           exit when E_El = Null_Iir
+                             and then A_El = Null_Iir;
+                           if Eval_Discrete_Type_Length (E_El)
+                             /= Eval_Discrete_Type_Length (A_El)
+                           then
+                              --  FIXME: generate a bound error ?
+                              --  Even if this is caught at compile-time,
+                              --  the code is not required to run.
+                              Chap6.Gen_Bound_Error (Loc);
+                           end if;
+                        end loop;
+                     end;
+                     return Expr;
+                  else
+                     --  unconstrained to constrained.
+                     return Convert_Array_To_Thin_Array
+                       (Expr, Expr_Type, Atype, Is_Sig, Loc);
+                  end if;
                when others =>
                   raise Internal_Error;
             end case;
@@ -15315,8 +15125,7 @@ package body Translation is
                   Chap3.Translate_Object_Copy
                     (T, New_Obj_Value (E), Target_Type);
                end;
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                --  Source is of type TARGET_TYPE, so no length check is
                --  necessary.
                Chap3.Translate_Object_Copy (Target, Val, Target_Type);
@@ -15405,8 +15214,7 @@ package body Translation is
                Arr_Var := Stabilize (Target);
                Base_Ptr := Stabilize (Chap3.Get_Array_Base (Arr_Var));
                Len_Val := Chap3.Get_Array_Length (Arr_Var, Target_Type);
-            when Type_Mode_Ptr_Array
-              | Type_Mode_Array =>
+            when Type_Mode_Array =>
                Base_Ptr := Stabilize (Chap3.Get_Array_Base (Target));
                Len_Val := Chap3.Get_Array_Type_Length (Target_Type);
             when others =>
@@ -16063,8 +15871,7 @@ package body Translation is
          Res_Info := Get_Info (Res_Type);
          Expr_Info := Get_Info (Expr_Type);
          case Res_Info.Type_Mode is
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                declare
                   E : O_Dnode;
                begin
@@ -17291,8 +17098,7 @@ package body Translation is
                   return New_Dyadic_Op (ON_And, V1, V2);
                end;
 
-            when Type_Mode_Array
-              | Type_Mode_Ptr_Array =>
+            when Type_Mode_Array =>
                declare
                   Lc, Rc : O_Enode;
                   Base_Type : Iir_Array_Type_Definition;
@@ -17737,10 +17543,9 @@ package body Translation is
                M2Addr (Chap3.Get_Array_Bounds (R)));
             New_Assign_Stmt
               (M2Lp (Chap3.Get_Array_Base (Var_Arr)),
-               New_Address (New_Slice (M2Lv (Chap3.Get_Array_Base (Res)),
-                                       Info.T.Base_Type (Mode_Value),
-                                       New_Obj_Value (Var_L_Len)),
-                            Info.T.Base_Ptr_Type (Mode_Value)));
+               M2Addr (Chap3.Slice_Base (Chap3.Get_Array_Base (Res),
+                                         Arr_Type,
+                                         New_Obj_Value (Var_L_Len))));
             Chap3.Translate_Object_Copy
               (Var_Arr, New_Obj_Value (Var_R), Arr_Type);
             Close_Temp;
@@ -18344,8 +18149,7 @@ package body Translation is
                      end loop;
                      Close_Temp;
                   end;
-               when Type_Mode_Array
-                 | Type_Mode_Ptr_Array =>
+               when Type_Mode_Array =>
                   declare
                      Var_Max : O_Dnode;
                   begin
@@ -18746,7 +18550,6 @@ package body Translation is
                Gen_Return;
             when Type_Mode_Record
               | Type_Mode_Array
-              | Type_Mode_Ptr_Array
               | Type_Mode_Fat_Acc =>
                --  * if the return type is a constrained composite type, copy
                --    it to the result area.
@@ -19943,7 +19746,6 @@ package body Translation is
                Close_Temp;
             when Type_Mode_Array
               | Type_Mode_Record
-              | Type_Mode_Ptr_Array
               | Type_Mode_Fat_Array =>
                Subprg_Info := Get_Info (Imp);
                Start_Association (Assocs, Subprg_Info.Ortho_Func);
@@ -19998,7 +19800,6 @@ package body Translation is
                New_Procedure_Call (Assocs);
                Close_Temp;
             when Type_Mode_Array
-              | Type_Mode_Ptr_Array
               | Type_Mode_Record =>
                Subprg_Info := Get_Info (Imp);
                Start_Association (Assocs, Subprg_Info.Ortho_Func);
@@ -25664,9 +25465,6 @@ package body Translation is
               (Constr, Get_Identifier ("__ghdl_rtik_subtype_array"),
                Ghdl_Rtik_Subtype_Array);
             New_Enum_Literal
-              (Constr, Get_Identifier ("__ghdl_rtik_subtype_array_ptr"),
-               Ghdl_Rtik_Subtype_Array_Ptr);
-            New_Enum_Literal
               (Constr,
                Get_Identifier ("__ghdl_rtik_subtype_unconstrained_array"),
                Ghdl_Rtik_Subtype_Unconstrained_Array);
@@ -26537,7 +26335,7 @@ package body Translation is
          Push_Rti_Node (Prev, False);
          Unit := Get_Unit_Chain (Atype);
          if Get_Info (Unit) /= null then
-            Mode := 1;
+            Mode := 4;
          else
             Mode := 0;
          end if;
@@ -26739,13 +26537,19 @@ package body Translation is
          Finish_Const_Value (Res, Val);
       end Generate_Array_Type_Indexes;
 
-      function Type_To_Mode (Info : Type_Info_Acc) return Natural is
+      function Type_To_Mode (Atype : Iir) return Natural is
+         Res : Natural := 0;
       begin
-         if Info.C /= null then
-            return 1;
-         else
-            return 0;
+         if Is_Complex_Type (Get_Info (Atype)) then
+            Res := Res + 1;
          end if;
+         if Is_Anonymous_Type_Definition (Atype)
+           or else (Get_Kind (Get_Type_Declarator (Atype))
+                      = Iir_Kind_Anonymous_Type_Declaration)
+         then
+            Res := Res + 2;
+         end if;
+         return Res;
       end Type_To_Mode;
 
       procedure Generate_Array_Type_Definition
@@ -26796,7 +26600,7 @@ package body Translation is
          New_Record_Aggr_El
            (Aggr,
             Generate_Common_Type
-            (Ghdl_Rtik_Type_Array, 0, Max_Depth, Type_To_Mode (Info)));
+            (Ghdl_Rtik_Type_Array, 0, Max_Depth, Type_To_Mode (Atype)));
          New_Record_Aggr_El (Aggr, New_Name_Address (Name));
          New_Record_Aggr_El (Aggr, New_Rti_Address (El_Info.Type_Rti));
          New_Record_Aggr_El
@@ -26858,8 +26662,6 @@ package body Translation is
          case Info.Type_Mode is
             when Type_Mode_Array =>
                Kind := Ghdl_Rtik_Subtype_Array;
-            when Type_Mode_Ptr_Array =>
-               Kind := Ghdl_Rtik_Subtype_Array_Ptr;
             when Type_Mode_Fat_Array =>
                Kind := Ghdl_Rtik_Subtype_Unconstrained_Array;
             when others =>
@@ -26867,8 +26669,8 @@ package body Translation is
          end case;
          New_Record_Aggr_El
            (Aggr,
-            Generate_Common_Type (Kind, Depth,
-                                  Info.T.Rti_Max_Depth, Type_To_Mode (Info)));
+            Generate_Common_Type
+              (Kind, Depth, Info.T.Rti_Max_Depth, Type_To_Mode (Atype)));
          New_Record_Aggr_El (Aggr, New_Name_Address (Name));
          New_Record_Aggr_El (Aggr, New_Rti_Address (Base_Info.Type_Rti));
          if Bounds = null then
@@ -26880,18 +26682,18 @@ package body Translation is
          for I in Mode_Value .. Mode_Signal loop
             case Info.Type_Mode is
                when Type_Mode_Array =>
+                  Val := Get_Null_Loc;
                   if Info.Ortho_Type (I) /= O_Tnode_Null then
-                     Val := New_Union_Aggr (Ghdl_Rti_Loc, Ghdl_Rti_Loc_Offset,
-                                            New_Sizeof (Info.Ortho_Type (I),
-                                                        Ghdl_Index_Type));
-                  else
-                     Val := Get_Null_Loc;
-                  end if;
-               when Type_Mode_Ptr_Array =>
-                  if Info.C (I) .Size_Var/= null then
-                     Val := Var_Acc_To_Loc (Info.C (I).Size_Var);
-                  else
-                     Val := Get_Null_Loc;
+                     if Is_Complex_Type (Info) then
+                        if Info.C (I).Size_Var /= null then
+                           Val := Var_Acc_To_Loc (Info.C (I).Size_Var);
+                        end if;
+                     else
+                        Val := New_Union_Aggr
+                          (Ghdl_Rti_Loc, Ghdl_Rti_Loc_Offset,
+                           New_Sizeof (Info.Ortho_Type (I),
+                                       Ghdl_Index_Type));
+                     end if;
                   end if;
                when Type_Mode_Fat_Array =>
                   Val := Get_Null_Loc;
@@ -26989,7 +26791,7 @@ package body Translation is
             New_Record_Aggr_El
               (Aggr,
                Generate_Common_Type (Ghdl_Rtik_Type_Record, 0, Max_Depth,
-                                     Type_To_Mode (Info)));
+                                     Type_To_Mode (Atype)));
             New_Record_Aggr_El (Aggr, New_Name_Address (Name));
             New_Record_Aggr_El
               (Aggr, New_Unsigned_Literal
@@ -27020,7 +26822,7 @@ package body Translation is
          New_Record_Aggr_El
            (List,
             Generate_Common_Type (Ghdl_Rtik_Type_Protected, 0, 0,
-                                  Type_To_Mode (Info)));
+                                  Type_To_Mode (Atype)));
          New_Record_Aggr_El (List, New_Name_Address (Name));
          Finish_Record_Aggr (List, Val);
          Finish_Const_Value (Info.Type_Rti, Val);
@@ -27470,6 +27272,9 @@ package body Translation is
             case Get_Kind (Decl) is
                when Iir_Kind_Use_Clause =>
                   null;
+               when Iir_Kind_Anonymous_Type_Declaration =>
+                  --  Handled in subtype declaration.
+                  null;
                when Iir_Kind_Type_Declaration
                  | Iir_Kind_Subtype_Declaration =>
                   Add_Rti_Node (Generate_Type_Decl (Decl));
@@ -27524,9 +27329,6 @@ package body Translation is
                when Iir_Kind_Function_Body
                  | Iir_Kind_Procedure_Body =>
                   --  Already handled by Translate_Subprogram_Body.
-                  null;
-               when Iir_Kind_Anonymous_Type_Declaration =>
-                  --  Handled in subtype declaration.
                   null;
                when Iir_Kind_Configuration_Specification
                  | Iir_Kind_Attribute_Specification

@@ -225,20 +225,6 @@ package body Grt.Disp_Rti is
                Disp_Array_Value_1
                  (Stream, Bt.Element, Ctxt, Rngs, Bt.Indexes, 0, B, Is_Sig);
             end;
-         when Ghdl_Rtik_Subtype_Array_Ptr =>
-            declare
-               St : constant Ghdl_Rtin_Subtype_Array_Acc :=
-                 To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
-               Bt : constant Ghdl_Rtin_Type_Array_Acc := St.Basetype;
-               Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
-               B : Address;
-            begin
-               Bound_To_Range
-                 (Loc_To_Addr (St.Common.Depth, St.Bounds, Ctxt), Bt, Rngs);
-               B := To_Addr_Acc (Obj).all;
-               Disp_Array_Value_1
-                 (Stream, Bt.Element, Ctxt, Rngs, Bt.Indexes, 0, B, Is_Sig);
-            end;
          when Ghdl_Rtik_Type_File =>
             declare
                Vptr : Ghdl_Value_Ptr;
@@ -328,8 +314,6 @@ package body Grt.Disp_Rti is
             Put ("ghdl_rtik_type_array");
          when Ghdl_Rtik_Subtype_Array =>
             Put ("ghdl_rtik_subtype_array");
-         when Ghdl_Rtik_Subtype_Array_Ptr =>
-            Put ("ghdl_rtik_subtype_array_ptr");
          when Ghdl_Rtik_Type_Record =>
             Put ("ghdl_rtik_type_record");
 
@@ -534,8 +518,7 @@ package body Grt.Disp_Rti is
                Disp_Type_Array_Name (To_Ghdl_Rtin_Type_Array_Acc (Def),
                                      Bounds);
             end;
-         when Ghdl_Rtik_Subtype_Array
-           | Ghdl_Rtik_Subtype_Array_Ptr =>
+         when Ghdl_Rtik_Subtype_Array =>
             declare
                Sdef : Ghdl_Rtin_Subtype_Array_Acc;
             begin
@@ -649,7 +632,7 @@ package body Grt.Disp_Rti is
       --  FIXME: put this into a function.
       if (Obj_Type.Kind = Ghdl_Rtik_Subtype_Array
           or Obj_Type.Kind = Ghdl_Rtik_Type_Record)
-        and then Obj_Type.Mode = 1
+        and then Rti_Complex_Type (Obj_Type)
       then
          Addr := To_Addr_Acc (Addr).all;
       end if;
@@ -811,16 +794,16 @@ package body Grt.Disp_Rti is
                      Put (" = ");
                      case Bt.Kind is
                         when Ghdl_Rtik_Type_P64 =>
-                           if Bt.Mode = 0 then
-                              Put_I64 (stdout, Unit.Value.Unit_64);
-                           else
+                           if Rti_Non_Static_Physical_Type (Bt) then
                               Put_I64 (stdout, Unit.Value.Unit_Addr.I64);
+                           else
+                              Put_I64 (stdout, Unit.Value.Unit_64);
                            end if;
                         when Ghdl_Rtik_Type_P32 =>
-                           if Bt.Mode = 0 then
-                              Put_I32 (stdout, Unit.Value.Unit_32);
-                           else
+                           if Rti_Non_Static_Physical_Type (Bt) then
                               Put_I32 (stdout, Unit.Value.Unit_Addr.I32);
+                           else
+                              Put_I32 (stdout, Unit.Value.Unit_32);
                            end if;
                         when others =>
                            null;
@@ -861,6 +844,7 @@ package body Grt.Disp_Rti is
                                       Ctxt : Rti_Context;
                                       Indent : Natural)
    is
+      Basetype : constant Ghdl_Rtin_Type_Array_Acc := Def.Basetype;
    begin
       Disp_Indent (Indent);
       Disp_Kind (Def.Common.Kind);
@@ -868,9 +852,11 @@ package body Grt.Disp_Rti is
       Disp_Name (Def.Name);
       Put (" is ");
       Disp_Type_Array_Name
-        (Def.Basetype, Loc_To_Addr (Def.Common.Depth, Def.Bounds, Ctxt));
-      --  FIXME: If the subtype array contains a type array, then the
-      --  definition is not complete: display the element type.
+        (Basetype, Loc_To_Addr (Def.Common.Depth, Def.Bounds, Ctxt));
+      if Rti_Anonymous_Type (To_Ghdl_Rti_Access (Basetype)) then
+         Put (" of ");
+         Disp_Subtype_Indication (Basetype.Element, Ctxt, Null_Address);
+      end if;
       New_Line;
    end Disp_Subtype_Array_Decl;
 
@@ -970,8 +956,7 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_Type_Array =>
             Disp_Type_Array_Decl
               (To_Ghdl_Rtin_Type_Array_Acc (Rti), Ctxt, Indent);
-         when Ghdl_Rtik_Subtype_Array
-           | Ghdl_Rtik_Subtype_Array_Ptr =>
+         when Ghdl_Rtik_Subtype_Array =>
             Disp_Subtype_Array_Decl
               (To_Ghdl_Rtin_Subtype_Array_Acc (Rti), Ctxt, Indent);
          when Ghdl_Rtik_Type_Access

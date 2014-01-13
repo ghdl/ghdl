@@ -325,17 +325,6 @@ package body Grt.Vcd is
                  (Loc_To_Addr (St.Common.Depth, St.Bounds,
                                Avhpi_Get_Context (Sig)));
             end;
-         when Ghdl_Rtik_Subtype_Array_Ptr =>
-            declare
-               St : Ghdl_Rtin_Subtype_Array_Acc;
-            begin
-               St := To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
-               Info.Kind := Rti_To_Vcd_Kind (St.Basetype);
-               Info.Addr := To_Addr_Acc (Sig_Addr).all;
-               Info.Irange := To_Ghdl_Range_Ptr
-                 (Loc_To_Addr (St.Common.Depth, St.Bounds,
-                               Avhpi_Get_Context (Sig)));
-            end;
          when Ghdl_Rtik_Type_Array =>
             declare
                Uc : Ghdl_Uc_Array_Acc;

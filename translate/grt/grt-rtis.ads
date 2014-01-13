@@ -59,7 +59,6 @@ package Grt.Rtis is
       Ghdl_Rtik_Type_File,
       Ghdl_Rtik_Subtype_Scalar,
       Ghdl_Rtik_Subtype_Array,
-      Ghdl_Rtik_Subtype_Array_Ptr,
       Ghdl_Rtik_Subtype_Unconstrained_Array,
       Ghdl_Rtik_Subtype_Record,
       Ghdl_Rtik_Subtype_Access,
@@ -78,10 +77,27 @@ package Grt.Rtis is
    type Ghdl_Rti_U8 is mod 2 ** 8;
    for Ghdl_Rti_U8'Size use 8;
 
+   --  This structure is common to all RTI nodes.
    type Ghdl_Rti_Common is record
+      --  Kind of the RTI, list is above.
       Kind : Ghdl_Rtik;
+
       Depth : Ghdl_Rti_Depth;
+
+      --  * array types and subtypes, record types, protected types:
+      --    bit 0: set for complex type
+      --    bit 1: set for anonymous type definition
+      --    bit 2: set only for physical type with non-static units (time)
+      --  * signals:
+      --    bit 0-3: mode (1: linkage, 2: buffer, 3 : out, 4 : inout, 5: in)
+      --    bit 4-5: kind (0 : none, 1 : register, 2 : bus)
+      --    bit 6: set if has 'active attributes
       Mode : Ghdl_Rti_U8;
+
+      --  * Types and subtypes definition:
+      --    maximum depth of all RTIs referenced.
+      --  * Others:
+      --    0
       Max_Depth : Ghdl_Rti_Depth;
    end record;
 
@@ -202,6 +218,14 @@ package Grt.Rtis is
    Ghdl_Rti_Type_Complex_Mask : constant Ghdl_Rti_U8 := 1;
    Ghdl_Rti_Type_Complex      : constant Ghdl_Rti_U8 := 1;
 
+   --  True if the type is anonymous
+   Ghdl_Rti_Type_Anonymous_Mask : constant Ghdl_Rti_U8 := 2;
+   Ghdl_Rti_Type_Anonymous      : constant Ghdl_Rti_U8 := 2;
+
+   --  True if the physical type is not static
+   Ghdl_Rti_Type_Non_Static_Mask : constant Ghdl_Rti_U8 := 4;
+   Ghdl_Rti_Type_Non_Static      : constant Ghdl_Rti_U8 := 4;
+
    type Ghdl_Rtin_Type_Array is record
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
@@ -282,7 +306,7 @@ package Grt.Rtis is
    function To_Ghdl_Rtin_Unit_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Unit_Acc);
 
-   --  Mode field is set to 1 if units value is per address.  Otherwise,
+   --  Mode field is set to 4 if units value is per address.  Otherwise,
    --  mode is 0.
    type Ghdl_Rtin_Type_Physical is record
       Common : Ghdl_Rti_Common;

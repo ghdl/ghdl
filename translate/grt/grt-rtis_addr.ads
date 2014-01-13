@@ -83,6 +83,21 @@ package Grt.Rtis_Addr is
    --  Get the base type of ATYPE.
    function Get_Base_Type (Atype : Ghdl_Rti_Access) return Ghdl_Rti_Access;
 
+   --  Return true iff ATYPE is anonymous.
+   --  Valid only on type and subtype definitions.
+   function Rti_Anonymous_Type (Atype : Ghdl_Rti_Access) return Boolean;
+   pragma Inline (Rti_Anonymous_Type);
+
+   --  Return true iff ATYPE is complex.
+   --  Valid only on type and subtype definitions.
+   function Rti_Complex_Type (Atype : Ghdl_Rti_Access) return Boolean;
+   pragma Inline (Rti_Complex_Type);
+
+   --  Return true iff physical type ATYPE is non-static (std.standard.time)
+   function Rti_Non_Static_Physical_Type (Atype : Ghdl_Rti_Access)
+                                         return Boolean;
+   pragma Inline (Rti_Non_Static_Physical_Type);
+
    --  Get the top context.
    function Get_Top_Context return Rti_Context;
 
