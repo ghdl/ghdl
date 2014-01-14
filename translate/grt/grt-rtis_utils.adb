@@ -335,7 +335,7 @@ package body Grt.Rtis_Utils is
                Addr := Obj_Addr + El.Val_Off;
             end if;
             if Rti_Complex_Type (El.Eltype) then
-               Addr := To_Addr_Acc (Addr).all;
+               Addr := Obj_Addr + To_Ghdl_Index_Acc (Addr).all;
             end if;
             Append (Name, '.');
             Append (Name, El.Name);

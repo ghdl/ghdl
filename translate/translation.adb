@@ -1802,13 +1802,6 @@ package body Translation is
       --  Call builder for variable pointed VAR of type VAR_TYPE.
       procedure Gen_Call_Type_Builder (Var : Mnode; Var_Type : Iir);
 
-      --  Build variable given by GET_FIELD_LNODE: ie set internals
-      --  fields.
-      generic
-         with function Get_Field_Lnode return O_Lnode;
-      procedure Builder_Update_Field
-        (Field_Type : Iir; Mem : O_Dnode; Kind : Object_Kind_Type);
-
       --  Functions for fat array.
       --  Fat array are array whose size is not known at compilation time.
       --  This corresponds to an unconstrained array or a non locally static
@@ -2053,11 +2046,6 @@ package body Translation is
 
       --  Get the ortho type for an object of type TINFO.
       function Get_Object_Type (Tinfo : Type_Info_Acc; Kind : Object_Kind_Type)
-        return O_Tnode;
-
-      --  Get the ortho type for an element of type TINFO.
-      function Get_Element_Type (Tinfo : Type_Info_Acc;
-                                 Kind : Object_Kind_Type)
         return O_Tnode;
 
       --  Allocate (and build) a complex object of type OBJ_TYPE.
@@ -2986,10 +2974,10 @@ package body Translation is
          when Type_Mode_Array
            | Type_Mode_Record
            | Type_Mode_Protected =>
-            if Vtype.C = null then
-               return Lv2M (L, Vtype, Mode);
-            else
+            if Is_Complex_Type (Vtype) then
                return Lp2M (L, Vtype, Mode);
+            else
+               return Lv2M (L, Vtype, Mode);
             end if;
          when Type_Mode_Unknown =>
             raise Internal_Error;
@@ -3009,10 +2997,10 @@ package body Translation is
          when Type_Mode_Array
            | Type_Mode_Record
            | Type_Mode_Protected =>
-            if Vtype.C = null then
-               return Dv2M (D, Vtype, Mode);
-            else
+            if Is_Complex_Type (Vtype) then
                return Dp2M (D, Vtype, Mode);
+            else
+               return Dv2M (D, Vtype, Mode);
             end if;
          when Type_Mode_Unknown =>
             raise Internal_Error;
@@ -3048,17 +3036,17 @@ package body Translation is
          when Type_Mode_Array
            | Type_Mode_Record
            | Type_Mode_Protected =>
-            if Vtype.C = null then
-               if Stable then
-                  return Dv2M (D, Vtype, Mode);
-               else
-                  return Lv2M (L, Vtype, Mode);
-               end if;
-            else
+            if Is_Complex_Type (Vtype) then
                if Stable then
                   return Dp2M (D, Vtype, Mode);
                else
                   return Lp2M (L, Vtype, Mode);
+               end if;
+            else
+               if Stable then
+                  return Dv2M (D, Vtype, Mode);
+               else
+                  return Lv2M (L, Vtype, Mode);
                end if;
             end if;
          when Type_Mode_Unknown =>
@@ -3070,7 +3058,9 @@ package body Translation is
                          Kind : Object_Kind_Type := Mode_Value)
                         return Mnode is
    begin
-      if Info.C /= null and then Info.Type_Mode /= Type_Mode_Fat_Array then
+      if Is_Complex_Type (Info)
+        and then Info.Type_Mode /= Type_Mode_Fat_Array
+      then
          --  For a complex and constrained object, we just allocate
          --  a pointer to the object.
          return Dp2M (Create_Temp (Info.Ortho_Ptr_Type (Kind)), Info, Kind);
@@ -5778,7 +5768,7 @@ package body Translation is
          end case;
          --  FIXME: return the same type as its first parameter ???
          Start_Function_Decl
-           (Interface_List, Ident, Global_Storage, Char_Ptr_Type);
+           (Interface_List, Ident, Global_Storage, Ghdl_Index_Type);
          Chap2.Add_Subprg_Instance_Interfaces
            (Interface_List, Info.C (Kind).Builder_Instance);
          case Info.Type_Mode is
@@ -5793,7 +5783,7 @@ package body Translation is
            (Interface_List, Info.C (Kind).Builder_Base_Param,
             Get_Identifier ("base_ptr"), Ptype);
          --  Add parameter for array bounds.
-         if Info.Type_Mode in Type_Mode_Arrays then
+         if Info.Type_Mode = Type_Mode_Fat_Array then
             New_Interface_Decl
               (Interface_List, Info.C (Kind).Builder_Bound_Param,
                Get_Identifier ("bound"), Info.T.Bounds_Ptr_Type);
@@ -5853,61 +5843,12 @@ package body Translation is
       begin
          Open_Temp;
          V := Stabilize (Var);
-         Mem := Create_Temp (Char_Ptr_Type);
+         Mem := Create_Temp (Ghdl_Index_Type);
          New_Assign_Stmt
            (New_Obj (Mem),
             Gen_Call_Type_Builder (M2Dp (V), Var_Type, Get_Object_Kind (Var)));
          Close_Temp;
       end Gen_Call_Type_Builder;
-
-      procedure Builder_Update_Field
-        (Field_Type : Iir; Mem : O_Dnode; Kind : Object_Kind_Type)
-      is
-         Tinfo : Type_Info_Acc;
-         Var_Ptr : O_Dnode;
-      begin
-         Tinfo := Get_Info (Field_Type);
-         if Tinfo.C /= null then
-            if Tinfo.C (Kind).Builder_Need_Func then
-               --  This is a complex type.
-               Start_Declare_Stmt;
-               New_Var_Decl (Var_Ptr, Get_Identifier ("var_ptr"),
-                             O_Storage_Local, Tinfo.Ortho_Ptr_Type (Kind));
-
-               --  Allocate memory.
-               --  Set the field with mem.
-               --  FIXME: alignment ???
-               New_Assign_Stmt
-                 (New_Obj (Var_Ptr),
-                  New_Convert_Ov (New_Obj_Value (Mem),
-                                  Tinfo.Ortho_Ptr_Type (Kind)));
-               New_Assign_Stmt (Get_Field_Lnode, New_Obj_Value (Var_Ptr));
-
-               --  Build second/third-order complex type.
-               --  FIXME: use Size_Var here too, and merge both branches of
-               --  the above 'if'.
-               New_Assign_Stmt
-                 (New_Obj (Mem),
-                  Gen_Call_Type_Builder (Var_Ptr, Field_Type, Kind));
-
-               Finish_Declare_Stmt;
-            else
-               --  Allocate memory.
-               --  FIXME: alignment ???
-               New_Assign_Stmt (Get_Field_Lnode,
-                                New_Convert_Ov (New_Obj_Value (Mem),
-                                                Tinfo.Ortho_Ptr_Type (Kind)));
-               --  Allocate memory for first order complex type.
-               New_Assign_Stmt
-                 (New_Obj (Mem),
-                  New_Address
-                  (New_Slice (New_Acc_Value (New_Obj (Mem)),
-                              Chararray_Type,
-                              New_Value (Get_Var (Tinfo.C (Kind).Size_Var))),
-                   Char_Ptr_Type));
-            end if;
-         end if;
-      end Builder_Update_Field;
 
       ------------------
       --  Enumeration --
@@ -6683,33 +6624,26 @@ package body Translation is
       procedure Create_Array_Type_Builder
         (Def : Iir_Array_Type_Definition; Kind : Object_Kind_Type)
       is
-         Base : O_Dnode;
-         Bound : O_Dnode;
-         Var_I : O_Dnode;
-
-         Var_Mem : O_Dnode;
-         Var_Step : O_Dnode;
          Info : constant Type_Info_Acc := Get_Info (Def);
+         Base : constant O_Dnode := Info.C (Kind).Builder_Base_Param;
+         Bound : constant O_Dnode := Info.C (Kind).Builder_Bound_Param;
+         Var_Off : O_Dnode;
+         Var_Mem : O_Dnode;
+         Var_Length : O_Dnode;
          El_Type : Iir;
          El_Info : Type_Info_Acc;
-         Var_Length : O_Dnode;
          Label : O_Snode;
       begin
          Start_Subprogram_Body (Info.C (Kind).Builder_Func);
          Chap2.Start_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
-
-         --  Aliased
-         Base := Info.C (Kind).Builder_Base_Param;
-         Bound := Info.C (Kind).Builder_Bound_Param;
 
          --  Compute length of the array.
          New_Var_Decl (Var_Length, Wki_Length, O_Storage_Local,
                        Ghdl_Index_Type);
          New_Var_Decl (Var_Mem, Get_Identifier ("mem"), O_Storage_Local,
                        Info.T.Base_Ptr_Type (Kind));
-         New_Var_Decl (Var_Step, Get_Identifier ("step"), O_Storage_Local,
+         New_Var_Decl (Var_Off, Get_Identifier ("off"), O_Storage_Local,
                        Ghdl_Index_Type);
-         New_Assign_Stmt (New_Obj (Var_Mem), New_Obj_Value (Base));
 
          El_Type := Get_Element_Subtype (Def);
          El_Info := Get_Info (El_Type);
@@ -6720,35 +6654,39 @@ package body Translation is
                            New_Value (Get_Var (El_Info.C (Kind).Size_Var)),
                            Get_Bounds_Ptr_Length (Bound, Def)));
 
+         --  Find the innest non-array element.
          while El_Info.Type_Mode = Type_Mode_Array loop
             El_Type := Get_Element_Subtype (El_Type);
             El_Info := Get_Info (El_Type);
          end loop;
-         New_Assign_Stmt
-           (New_Obj (Var_Step),
-            New_Value (Get_Var (El_Info.C (Kind).Size_Var)));
 
          --  Set each index of the array.
-         New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
-         Init_Var (Var_I);
+         Init_Var (Var_Off);
          Start_Loop_Stmt (Label);
          Gen_Exit_When (Label,
                         New_Compare_Op (ON_Eq,
-                                        New_Obj_Value (Var_I),
+                                        New_Obj_Value (Var_Off),
                                         New_Obj_Value (Var_Length),
                                         Ghdl_Bool_Type));
+
          New_Assign_Stmt
            (New_Obj (Var_Mem),
-            New_Convert_Ov (Gen_Call_Type_Builder (Var_Mem, El_Type, Kind),
-                            Info.T.Base_Ptr_Type (Kind)));
-         New_Assign_Stmt (New_Obj (Var_I),
-                          New_Dyadic_Op (ON_Add_Ov,
-                                         New_Obj_Value (Var_I),
-                                         New_Obj_Value (Var_Step)));
+            New_Unchecked_Address
+              (New_Slice (New_Access_Element
+                            (New_Convert_Ov (New_Obj_Value (Base),
+                                             Char_Ptr_Type)),
+                          Chararray_Type,
+                          New_Obj_Value (Var_Off)),
+               Info.T.Base_Ptr_Type (Kind)));
+
+         New_Assign_Stmt
+           (New_Obj (Var_Off),
+            New_Dyadic_Op (ON_Add_Ov,
+                           New_Obj_Value (Var_Off),
+                           Gen_Call_Type_Builder (Var_Mem, El_Type, Kind)));
          Finish_Loop_Stmt (Label);
 
-         New_Return_Stmt (New_Convert_Ov (New_Obj_Value (Var_Mem),
-                                          Char_Ptr_Type));
+         New_Return_Stmt (New_Obj_Value (Var_Off));
 
          Chap2.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
          Finish_Subprogram_Body;
@@ -6766,6 +6704,7 @@ package body Translation is
          Field_Info : Ortho_Info_Acc;
          El_Type : Iir;
          El_Tinfo : Type_Info_Acc;
+         El_Tnode : O_Tnode;
 
          --  True if a size variable will be created since the size of
          --  the record is not known at compile-time.
@@ -6787,7 +6726,7 @@ package body Translation is
                Translate_Type_Definition (El_Type);
                Pop_Identifier_Prefix (Mark);
             end if;
-            if not Need_Size and then Get_Info (El_Type).C /= null then
+            if not Need_Size and then Is_Complex_Type (Get_Info (El_Type)) then
                Need_Size := True;
             end if;
             Field_Info := Add_Info (El, Kind_Field);
@@ -6802,9 +6741,16 @@ package body Translation is
                exit when El = Null_Iir;
                Field_Info := Get_Info (El);
                El_Tinfo := Get_Info (Get_Type (El));
+               if Is_Complex_Type (El_Tinfo) then
+                  --  Always use an offset for a complex type.
+                  El_Tnode := Ghdl_Index_Type;
+               else
+                  El_Tnode := El_Tinfo.Ortho_Type (Kind);
+               end if;
+
                New_Record_Field (El_List, Field_Info.Field_Node (Kind),
                                  Create_Identifier_Without_Prefix (El),
-                                 Chap4.Get_Element_Type (El_Tinfo, Kind));
+                                 El_Tnode);
             end loop;
             Finish_Record_Type (El_List, Info.Ortho_Type (Kind));
          end loop;
@@ -6821,46 +6767,28 @@ package body Translation is
       procedure Create_Record_Type_Builder
         (Def : Iir_Record_Type_Definition; Kind : Object_Kind_Type)
       is
-         Base : O_Dnode;
+         Info : constant Type_Info_Acc := Get_Info (Def);
+         Base : constant O_Dnode := Info.C (Kind).Builder_Base_Param;
          List : Iir_List;
          El : Iir_Element_Declaration;
 
-         function Get_Field_Lnode
-           return O_Lnode
-         is
-         begin
-            return New_Selected_Element (New_Acc_Value (New_Obj (Base)),
-                                         Get_Info (El).Field_Node (Kind));
-         end Get_Field_Lnode;
-
-         procedure Update_Field is new
-           Builder_Update_Field (Get_Field_Lnode);
-
-         Info : Type_Info_Acc;
-         Mem : O_Dnode;
+         Off_Var : O_Dnode;
+         Ptr_Var : O_Dnode;
          El_Type : Iir;
+         El_Tinfo : Type_Info_Acc;
       begin
-         Info := Get_Info (Def);
          Start_Subprogram_Body (Info.C (Kind).Builder_Func);
          Chap2.Start_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
 
-         --  Aliases.
-         Base := Info.C (Kind).Builder_Base_Param;
-
-         New_Var_Decl (Mem, Get_Identifier ("mem"), O_Storage_Local,
-                       Char_Ptr_Type);
+         New_Var_Decl (Off_Var, Get_Identifier ("off"), O_Storage_Local,
+                       Ghdl_Index_Type);
 
          --  Reserve memory for the record, ie:
-         --  MEM = BASE + SIZEOF (record).
+         --  OFF = SIZEOF (record).
          New_Assign_Stmt
-           (New_Obj (Mem),
-            New_Address
-            (New_Slice (New_Access_Element
-                        (New_Convert_Ov (New_Obj_Value (Base), Char_Ptr_Type)),
-                        Chararray_Type,
-                        New_Lit (New_Sizeof (Info.Ortho_Type (Kind),
-                                             Ghdl_Index_Type))),
-             Char_Ptr_Type));
+           (New_Obj (Off_Var),
+            New_Lit (New_Sizeof (Info.Ortho_Type (Kind),
+                                 Ghdl_Index_Type)));
 
          --  Set memory for each complex element.
          List := Get_Elements_Declaration_List (Def);
@@ -6868,13 +6796,50 @@ package body Translation is
             El := Get_Nth_Element (List, I);
             exit when El = Null_Iir;
             El_Type := Get_Type (El);
-            if Is_Complex_Type (Get_Info (El_Type)) then
+            El_Tinfo := Get_Info (El_Type);
+            if Is_Complex_Type (El_Tinfo) then
                --  Complex type.
-               Update_Field (El_Type, Mem, Kind);
+
+               --  Set the offset.
+               --  FIXME: alignment
+               New_Assign_Stmt
+                 (New_Selected_Element (New_Acc_Value (New_Obj (Base)),
+                                        Get_Info (El).Field_Node (Kind)),
+                  New_Obj_Value (Off_Var));
+
+               if El_Tinfo.C (Kind).Builder_Need_Func then
+                  --  This type needs a builder, call it.
+                  Start_Declare_Stmt;
+                  New_Var_Decl
+                    (Ptr_Var, Get_Identifier ("var_ptr"),
+                     O_Storage_Local, El_Tinfo.Ortho_Ptr_Type (Kind));
+
+                  New_Assign_Stmt
+                    (New_Obj (Ptr_Var),
+                     M2E (Chap6.Translate_Selected_Element
+                            (Dp2M (Base, Info, Kind), El)));
+
+                  New_Assign_Stmt
+                    (New_Obj (Off_Var),
+                     New_Dyadic_Op (ON_Add_Ov,
+                                    New_Obj_Value (Off_Var),
+                                    Gen_Call_Type_Builder
+                                      (Ptr_Var, El_Type, Kind)));
+
+                  Finish_Declare_Stmt;
+               else
+                  --  Allocate memory.
+                  New_Assign_Stmt
+                    (New_Obj (Off_Var),
+                     New_Dyadic_Op
+                       (ON_Add_Ov,
+                        New_Obj_Value (Off_Var),
+                        New_Value (Get_Var (El_Tinfo.C (Kind).Size_Var))));
+               end if;
             end if;
          end loop;
          Chap2.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
-         New_Return_Stmt (New_Obj_Value (Mem));
+         New_Return_Stmt (New_Obj_Value (Off_Var));
          Finish_Subprogram_Body;
       end Create_Record_Type_Builder;
 
@@ -7330,7 +7295,7 @@ package body Translation is
          Res : O_Enode;
       begin
          Info := Get_Info (Def);
-         if Info.C = null then
+         if not Is_Complex_Type (Info) then
             return;
          end if;
 
@@ -7790,7 +7755,7 @@ package body Translation is
          end if;
 
          Tinfo := Get_Info (Def);
-         if Tinfo.C = null
+         if not Is_Complex_Type (Tinfo)
            or else Tinfo.C (Mode_Value).Builder_Need_Func = False
          then
             return;
@@ -8233,7 +8198,7 @@ package body Translation is
          if Is_Complex_Type (El_Tinfo) then
             return Reindex_Complex_Array (Base, Atype, Index, El_Tinfo);
          else
-            return Lo2M (New_Indexed_Element (M2Lv (Base), Index),
+            return Lv2M (New_Indexed_Element (M2Lv (Base), Index),
                          El_Tinfo, Kind);
          end if;
       end Index_Base;
@@ -8366,7 +8331,9 @@ package body Translation is
            (M2Lp (Chap3.Get_Array_Base (Res)),
             Gen_Alloc (Alloc_Kind, Length, Dinfo.T.Base_Ptr_Type (Kind)));
 
-         if Dinfo.C /= null and then Dinfo.C (Kind).Builder_Need_Func then
+         if Is_Complex_Type (Dinfo)
+           and then Dinfo.C (Kind).Builder_Need_Func
+         then
             Open_Temp;
             --  Build the type.
             Chap3.Gen_Call_Type_Builder (Res, Arr_Type);
@@ -8404,7 +8371,9 @@ package body Translation is
       begin
          Kind := Get_Object_Kind (Dest);
          Info := Get_Info (Obj_Type);
-         if Info.C /= null and then Info.C (Kind).Builder_Need_Func then
+         if Is_Complex_Type (Info)
+           and then Info.C (Kind).Builder_Need_Func
+         then
             D := Stabilize (Dest);
             --  A complex type that must be rebuilt.
             --  Save destinaton.
@@ -8431,8 +8400,6 @@ package body Translation is
                  | Type_Mode_Protected =>
                   raise Internal_Error;
             end case;
-            --  Rebuilt the type.
-            Gen_Call_Type_Builder (D, Obj_Type);
          else
             case Info.Type_Mode is
                when Type_Mode_Scalar
@@ -8480,7 +8447,7 @@ package body Translation is
       begin
          Type_Info := Get_Type_Info (Obj);
          Kind := Get_Object_Kind (Obj);
-         if Type_Info.C /= null
+         if Is_Complex_Type (Type_Info)
            and then Type_Info.C (Kind).Size_Var /= null
          then
             return New_Value (Get_Var (Type_Info.C (Kind).Size_Var));
@@ -8503,7 +8470,7 @@ package body Translation is
                   El_Tinfo := Get_Info (El_Type);
                   --  See create_type_definition_size_var.
                   Sz := Get_Object_Size (T2M (El_Type, Kind), El_Type);
-                  if El_Tinfo.C /= null then
+                  if Is_Complex_Type (El_Tinfo) then
                      Sz := New_Dyadic_Op
                        (ON_Add_Ov,
                         Sz,
@@ -8555,7 +8522,9 @@ package body Translation is
                                        Obj_Type),
                 Dinfo.Ortho_Ptr_Type (Kind)));
 
-            if Dinfo.C /= null and then Dinfo.C (Kind).Builder_Need_Func then
+            if Is_Complex_Type (Dinfo)
+              and then Dinfo.C (Kind).Builder_Need_Func
+            then
                Open_Temp;
                --  Build the type.
                Chap3.Gen_Call_Type_Builder (Res, Obj_Type);
@@ -9046,7 +9015,7 @@ package body Translation is
       function Get_Object_Type (Tinfo : Type_Info_Acc; Kind : Object_Kind_Type)
         return O_Tnode is
       begin
-         if Tinfo.C /= null then
+         if Is_Complex_Type (Tinfo) then
             case Tinfo.Type_Mode is
                when Type_Mode_Fat_Array =>
                   return Tinfo.Ortho_Type (Kind);
@@ -9062,19 +9031,6 @@ package body Translation is
             return Tinfo.Ortho_Type (Kind);
          end if;
       end Get_Object_Type;
-
-      --  Get the ortho type for an object of mode MODE.
-      function Get_Element_Type (Tinfo : Type_Info_Acc;
-                                 Kind : Object_Kind_Type)
-        return O_Tnode is
-      begin
-         if Tinfo.C /= null then
-            --  Always use a pointer for a complex type.
-            return Tinfo.Ortho_Ptr_Type (Kind);
-         else
-            return Tinfo.Ortho_Type (Kind);
-         end if;
-      end Get_Element_Type;
 
       procedure Create_Object (El : Iir)
       is
@@ -9246,7 +9202,7 @@ package body Translation is
          end if;
          Kind := Get_Object_Kind (Var);
 
-         if Type_Info.C = null then
+         if not Is_Complex_Type (Type_Info) then
             --  Object is not complex.
             return;
          end if;
@@ -9441,7 +9397,7 @@ package body Translation is
          --  FIXME: the object type may be a fat array!
          --  FIXME: fat array + aggregate ?
 
-         if Type_Info.C /= null
+         if Is_Complex_Type (Type_Info)
            and then Type_Info.Type_Mode /= Type_Mode_Fat_Array
          then
             --  FIXME: avoid allocation if the value is a string and
@@ -9604,7 +9560,7 @@ package body Translation is
                  (New_Value (M2Lp (Chap3.Get_Array_Base (V))));
                Close_Temp;
             end;
-         elsif Type_Info.C /= null then
+         elsif Is_Complex_Type (Type_Info) then
             Chap3.Gen_Deallocate
               (New_Value (M2Lp (Chap6.Translate_Name (Obj))));
          end if;
@@ -9951,7 +9907,7 @@ package body Translation is
             Name_Node := Chap6.Translate_Name (Decl);
             Name_Node := Stabilize (Name_Node);
             Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Node, Sig_Type);
-         elsif Type_Info.C /= null then
+         elsif Is_Complex_Type (Type_Info) then
             Name_Node := Chap6.Translate_Name (Decl);
             Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Node);
          end if;
@@ -9991,7 +9947,7 @@ package body Translation is
                M2Addr (Chap3.Get_Array_Bounds (Chap6.Translate_Name (Decl))));
             --  Allocate base.
             Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Node, Sig_Type);
-         elsif Type_Info.C /= null then
+         elsif Is_Complex_Type (Type_Info) then
             Name_Node := Get_Var (Sig_Info.Object_Driver,
                                   Type_Info, Mode_Value);
             Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Node);
@@ -10228,7 +10184,7 @@ package body Translation is
          Sig_Type := Get_Type (Decl);
          Type_Info := Get_Info (Sig_Type);
 
-         if Type_Info.C /= null then
+         if Is_Complex_Type (Type_Info) then
             Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Node);
             --  We cannot stabilize NAME_NODE, since Allocate_Complex_Object
             --  assign it.
@@ -13233,14 +13189,32 @@ package body Translation is
                                            El : Iir_Element_Declaration)
         return Mnode
       is
-         El_Info : Field_Info_Acc;
-         Kind : Object_Kind_Type;
+         El_Info : constant Field_Info_Acc := Get_Info (El);
+         El_Type : constant Iir := Get_Type (El);
+         El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+         Kind : constant Object_Kind_Type := Get_Object_Kind (Prefix);
+         Stable_Prefix : Mnode;
       begin
-         El_Info := Get_Info (El);
-         Kind := Get_Object_Kind (Prefix);
-         return Lo2M (New_Selected_Element (M2Lv (Prefix),
-                                            El_Info.Field_Node (Kind)),
-                      Get_Info (Get_Type (El)), Kind);
+         if Is_Complex_Type (El_Tinfo) then
+            --  The element is in fact an offset.
+            Stable_Prefix := Stabilize (Prefix);
+            return E2M
+              (New_Unchecked_Address
+                 (New_Slice
+                    (New_Access_Element
+                       (New_Unchecked_Address
+                          (M2Lv (Stable_Prefix), Char_Ptr_Type)),
+                     Chararray_Type,
+                     New_Value
+                       (New_Selected_Element (M2Lv (Stable_Prefix),
+                                              El_Info.Field_Node (Kind)))),
+                  El_Tinfo.Ortho_Ptr_Type (Kind)),
+               El_Tinfo, Kind);
+         else
+            return Lv2M (New_Selected_Element (M2Lv (Prefix),
+                                               El_Info.Field_Node (Kind)),
+                         El_Tinfo, Kind);
+         end if;
       end Translate_Selected_Element;
 
 --       function Translate_Formal_Interface_Name (Scope_Type : O_Tnode;
@@ -16166,7 +16140,7 @@ package body Translation is
 
                   --  Allocate base.
                   Chap3.Allocate_Fat_Array_Base (Alloc_Stack, Res, Sig_Type);
-               elsif Tinfo.C /= null then
+               elsif Is_Complex_Type (Tinfo) then
                   Res := Create_Temp (Tinfo);
                   Chap4.Allocate_Complex_Object (Sig_Type, Alloc_Stack, Res);
                else
@@ -16336,7 +16310,7 @@ package body Translation is
                   Tinfo := Get_Info (Aggr_Type);
 
                   --  The result area has to be created
-                  if Tinfo.C /= null then
+                  if Is_Complex_Type (Tinfo) then
                      Mres := Create_Temp (Tinfo);
                      Chap4.Allocate_Complex_Object
                        (Aggr_Type, Alloc_Stack, Mres);
