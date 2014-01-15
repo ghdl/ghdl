@@ -3,6 +3,10 @@
 # Driver for the GNA testsuite.
 # Each test correspond to one report, and is put in one directory (using
 # the support/bug number)
+#
+# bugXXX is for bugs reported on https://gna.org/bugs/?group=ghdl
+# srXXX is for support reported on https://gna.org/support/?group=ghdl
+# debXX is for bugs report on http://bugs.debian.org/
 
 set -e
 
