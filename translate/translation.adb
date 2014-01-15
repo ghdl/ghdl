@@ -1212,6 +1212,9 @@ package body Translation is
             --    Type definition for access to the record.
             Res_Record_Ptr : O_Tnode := O_Tnode_Null;
 
+            --  Type of the frame record (used to unnest subprograms).
+            Subprg_Frame_Type : O_Tnode := O_Tnode_Null;
+
             --  Instances for the subprograms.
             Subprg_Instance : Chap2.Subprg_Instance_Type :=
               Chap2.Null_Subprg_Instance;
@@ -1248,9 +1251,19 @@ package body Translation is
             Iterator_Var : Var_Acc;
 
          when Kind_Interface =>
-            --  Ortho node for the interface.
-            Interface_Node : O_Dnode;
+            --  Ortho declaration for the interface. If not null, there is
+            --  a corresponding ortho parameter for the interface. While
+            --  translating nested subprograms (that are unnested),
+            --  Interface_Field may be set to the corresponding field in the
+            --  FRAME record. So:
+            --   Node: not null, Field:     null: parameter
+            --   Node: not null, Field: not null: parameter with a copy in
+            --                                    the FRAME record.
+            --   Node: null,     Field:     null: not possible
+            --   Node: null,     Field: not null: field in RESULT record
+            Interface_Node : O_Dnode := O_Dnode_Null;
             --  Field of the result record for copy-out arguments of procedure.
+            --  In that case, Interface_Node must be null.
             Interface_Field : O_Fnode;
             --  Type of the interface.
             Interface_Type : O_Tnode;
@@ -1414,7 +1427,7 @@ package body Translation is
    subtype Field_Info_Acc is Ortho_Info_Acc (Kind_Field);
    subtype Config_Info_Acc is Ortho_Info_Acc (Kind_Config);
    subtype Assoc_Info_Acc is Ortho_Info_Acc (Kind_Assoc);
-   --subtype Inter_Info_Acc is Ortho_Info_Acc (Kind_Interface);
+   subtype Inter_Info_Acc is Ortho_Info_Acc (Kind_Interface);
    subtype Design_File_Info_Acc is Ortho_Info_Acc (Kind_Design_File);
    subtype Library_Info_Acc is Ortho_Info_Acc (Kind_Library);
 
@@ -4874,30 +4887,28 @@ package body Translation is
 
       procedure Translate_Subprogram_Declaration (Spec : Iir)
       is
+         Info : constant Subprg_Info_Acc := Get_Info (Spec);
+         Is_Func : constant Boolean :=
+           Get_Kind (Spec) = Iir_Kind_Function_Declaration;
          Inter : Iir;
          Inter_Type : Iir;
-         Info : Subprg_Info_Acc;
          Arg_Info : Ortho_Info_Acc;
          Tinfo : Type_Info_Acc;
          Interface_List : O_Inter_List;
          Has_Result_Record : Boolean;
          El_List : O_Element_List;
          Mark : Id_Mark_Type;
-         Is_Func : Boolean;
          Rtype : Iir;
          Id : O_Ident;
          Storage : O_Storage;
          Foreign : Foreign_Info_Type := Foreign_Bad;
       begin
-         Info := Get_Info (Spec);
-         Info.Res_Interface := O_Dnode_Null;
-         Is_Func := Get_Kind (Spec) = Iir_Kind_Function_Declaration;
-
          --  Set the identifier prefix with the subprogram identifier and
          --  overload number if any.
          Push_Subprg_Identifier (Spec, Mark);
 
          if Get_Foreign_Flag (Spec) then
+            --  Special handling for foreign subprograms.
             Foreign := Translate_Foreign_Id (Spec);
             case Foreign.Kind is
                when Foreign_Unknown =>
@@ -4935,8 +4946,10 @@ package body Translation is
                   Info.Use_Stack2 := True;
                end if;
             else
+               --  Normal function.
                Start_Function_Decl
                  (Interface_List, Id, Storage, Tinfo.Ortho_Type (Mode_Value));
+               Info.Res_Interface := O_Dnode_Null;
             end if;
          else
             --  Create info for each interface of the procedure.
@@ -4964,7 +4977,6 @@ package body Translation is
                      Has_Result_Record := True;
                   end if;
                   --  Add a field to the record.
-                  Tinfo := Get_Info (Inter_Type);
                   New_Record_Field (El_List, Arg_Info.Interface_Field,
                                     Create_Identifier_Without_Prefix (Inter),
                                     Tinfo.Ortho_Type (Mode_Value));
@@ -4981,6 +4993,8 @@ package body Translation is
                Info.Res_Record_Ptr := New_Access_Type (Info.Res_Record_Type);
                New_Type_Decl (Create_Identifier ("RESPTR"),
                               Info.Res_Record_Ptr);
+            else
+               Info.Res_Interface := O_Dnode_Null;
             end if;
 
             Start_Procedure_Decl (Interface_List, Id, Storage);
@@ -4998,29 +5012,31 @@ package body Translation is
             Chap2.Create_Subprg_Instance (Interface_List, Spec);
          end if;
 
+         --  Translate interfaces.
          Inter := Get_Interface_Declaration_Chain (Spec);
          while Inter /= Null_Iir loop
             if Is_Func then
+               --  Create the info.
                Arg_Info := Add_Info (Inter, Kind_Interface);
                Arg_Info.Interface_Field := O_Fnode_Null;
             else
+               --  The info was already created (just above)
                Arg_Info := Get_Info (Inter);
             end if;
 
             if Arg_Info.Interface_Field = O_Fnode_Null then
+               --  Not via the RESULT parameter.
                Arg_Info.Interface_Type := Translate_Interface_Type (Inter);
                New_Interface_Decl
                  (Interface_List, Arg_Info.Interface_Node,
                   Create_Identifier_Without_Prefix (Inter),
                   Arg_Info.Interface_Type);
-            else
-               --  Parameter is passed by the result record.
-               Arg_Info.Interface_Node := Info.Res_Interface;
             end if;
             Inter := Get_Chain (Inter);
          end loop;
          Finish_Subprogram_Decl (Interface_List, Info.Ortho_Func);
 
+         --  Call the hook for foreign subprograms.
          if Get_Foreign_Flag (Spec) and then Foreign_Hook /= null then
             Foreign_Hook.all (Spec, Foreign, Info.Ortho_Func);
          end if;
@@ -5090,9 +5106,9 @@ package body Translation is
 
       procedure Translate_Subprogram_Body (Subprg : Iir)
       is
-         Spec : Iir;
-         Func_Decl : O_Dnode;
-         Info : Ortho_Info_Acc;
+         Spec : constant Iir := Get_Subprogram_Specification (Subprg);
+         Info : constant Ortho_Info_Acc := Get_Info (Spec);
+
          Old_Subprogram : Iir;
          Mark : Id_Mark_Type;
          Final : Boolean;
@@ -5105,9 +5121,12 @@ package body Translation is
          --  True if the body has local (nested) subprograms.
          Has_Nested : Boolean;
 
-         Frame_Type : O_Tnode;
          Frame_Ptr_Type : O_Tnode;
          Upframe_Field : O_Fnode;
+
+         --  Field in the frame for a pointer to the RESULT structure.
+         Res_Field : O_Fnode := O_Fnode_Null;
+
          Frame : O_Dnode;
          Frame_Ptr : O_Dnode;
 
@@ -5115,15 +5134,14 @@ package body Translation is
 
          Prev_Subprg_Instances : Chap2.Subprg_Instance_Stack;
       begin
-         Spec := Get_Subprogram_Specification (Subprg);
-         Info := Get_Info (Spec);
-         Func_Decl := Info.Ortho_Func;
-
          --  Do not translate body for foreign subprograms.
          if Get_Foreign_Flag (Spec) then
             return;
          end if;
 
+         --  Check if there are nested subprograms to unnest.  In that case,
+         --  a frame record is created, which is less efficient than the
+         --  use of local variables.
          if Flag_Unnest_Subprograms then
             Has_Nested := Has_Nested_Subprograms (Subprg);
          else
@@ -5140,36 +5158,79 @@ package body Translation is
             Push_Instance_Factory (O_Tnode_Null);
             Add_Subprg_Instance_Field (Upframe_Field);
 
-            --  FIXME: parameters
+            if Info.Res_Record_Ptr /= O_Tnode_Null then
+               Res_Field := Add_Instance_Factory_Field
+                 (Get_Identifier ("RESULT"), Info.Res_Record_Ptr);
+            end if;
+
+            --  Create fields for parameters.
+            --  FIXME: do it only if they are referenced in nested
+            --  subprograms.
+            declare
+               Inter : Iir;
+               Inter_Info : Inter_Info_Acc;
+            begin
+               Inter := Get_Interface_Declaration_Chain (Spec);
+               while Inter /= Null_Iir loop
+                  Inter_Info := Get_Info (Inter);
+                  if Inter_Info.Interface_Node /= O_Dnode_Null then
+                     Inter_Info.Interface_Field :=
+                       Add_Instance_Factory_Field
+                       (Create_Identifier_Without_Prefix (Inter),
+                        Inter_Info.Interface_Type);
+                  end if;
+                  Inter := Get_Chain (Inter);
+               end loop;
+            end;
 
             Chap4.Translate_Declaration_Chain (Subprg);
-            Pop_Instance_Factory (Frame_Type);
+            Pop_Instance_Factory (Info.Subprg_Frame_Type);
 
-            New_Type_Decl (Create_Identifier ("_FRAMETYPE"), Frame_Type);
-            Frame_Ptr_Type := New_Access_Type (Frame_Type);
+            New_Type_Decl (Create_Identifier ("_FRAMETYPE"),
+                           Info.Subprg_Frame_Type);
+            Frame_Ptr_Type := New_Access_Type (Info.Subprg_Frame_Type);
             New_Type_Decl (Create_Identifier ("_FRAMEPTR"), Frame_Ptr_Type);
 
             Rtis.Generate_Subprogram_Body (Subprg);
 
-            Chap2.Push_Subprg_Instance (Frame_Type, Frame_Ptr_Type,
-                                        Wki_Upframe, Prev_Subprg_Instances);
-
+            Chap2.Push_Subprg_Instance
+              (Info.Subprg_Frame_Type, Frame_Ptr_Type,
+               Wki_Upframe, Prev_Subprg_Instances);
+            if Info.Res_Record_Ptr /= O_Tnode_Null then
+               Chap10.Push_Scope_Via_Field_Ptr
+                 (Info.Res_Record_Type, Res_Field, Info.Subprg_Frame_Type);
+            end if;
             Chap4.Translate_Declaration_Chain_Subprograms (Subprg, Null_Iir);
 
+            if Info.Res_Record_Ptr /= O_Tnode_Null then
+               Chap10.Pop_Scope (Info.Res_Record_Type);
+            end if;
             Chap2.Pop_Subprg_Instance (Wki_Upframe, Prev_Subprg_Instances);
          end if;
 
-         Start_Subprogram_Body (Func_Decl);
+         --  Create the body
+
+         Start_Subprogram_Body (Info.Ortho_Func);
 
          Start_Subprg_Instance_Use (Spec);
 
+         if Info.Res_Record_Type /= O_Tnode_Null then
+            Push_Scope (Info.Res_Record_Type, Info.Res_Interface);
+         end if;
+
          Restore_Local_Identifier (Info.Subprg_Local_Id);
 
+         --  Variables will be created on the stack.
          Push_Local_Factory;
+
+         --  Code has access to local (and outer) variables.
+         --  FIXME: this is not necessary if Has_Nested is set
          Chap2.Clear_Subprg_Instance (Prev_Subprg_Instances);
+
+         --  There is a local scope for temporaries.
          Open_Local_Temp;
 
-         --  Init out parameter passed by value/copy.
+         --  Init out parameters passed by value/copy.
          declare
             Inter : Iir;
             Inter_Type : Iir;
@@ -5199,14 +5260,44 @@ package body Translation is
             Rtis.Generate_Subprogram_Body (Subprg);
             Chap4.Translate_Declaration_Chain_Subprograms (Subprg, Null_Iir);
          else
-            New_Var_Decl (Frame, Wki_Frame, O_Storage_Local, Frame_Type);
-            --  FIXME!
+            New_Var_Decl (Frame, Wki_Frame, O_Storage_Local,
+                          Info.Subprg_Frame_Type);
+            --  FIXME: Remove this pointer, get a direct access to the frame.
             New_Var_Decl (Frame_Ptr, Get_Identifier ("FRAMEPTR"),
                           O_Storage_Local, Frame_Ptr_Type);
             New_Assign_Stmt (New_Obj (Frame_Ptr),
                              New_Address (New_Obj (Frame), Frame_Ptr_Type));
-            Push_Scope (Frame_Type, Frame_Ptr);
-            --  Init instance.
+            Push_Scope (Info.Subprg_Frame_Type, Frame_Ptr);
+
+            if Info.Res_Record_Type /= O_Tnode_Null then
+               --  Initialize the RESULT field
+               New_Assign_Stmt (New_Selected_Element (New_Obj (Frame),
+                                                      Res_Field),
+                                New_Obj_Value (Info.Res_Interface));
+            end if;
+
+            --  Copy parameter to FRAME.
+            declare
+               Inter : Iir;
+               Inter_Info : Inter_Info_Acc;
+            begin
+               Inter := Get_Interface_Declaration_Chain (Spec);
+               while Inter /= Null_Iir loop
+                  Inter_Info := Get_Info (Inter);
+                  if Inter_Info.Interface_Node /= O_Dnode_Null then
+                     New_Assign_Stmt
+                       (New_Selected_Element (New_Obj (Frame),
+                                              Inter_Info.Interface_Field),
+                        New_Obj_Value (Inter_Info.Interface_Node));
+
+                     --  Forget the reference to the field in FRAME, so that
+                     --  this subprogram will directly reference the parameter
+                     --  (and not its copy in the FRAME).
+                     Inter_Info.Interface_Field := O_Fnode_Null;
+                  end if;
+                  Inter := Get_Chain (Inter);
+               end loop;
+            end;
          end if;
 
          Chap4.Elab_Declaration_Chain (Subprg, Final);
@@ -5270,9 +5361,17 @@ package body Translation is
             end if;
          end if;
 
+         if Has_Nested then
+            Pop_Scope (Info.Subprg_Frame_Type);
+         end if;
+
          Chap2.Pop_Subprg_Instance (O_Ident_Nul, Prev_Subprg_Instances);
          Close_Local_Temp;
          Pop_Local_Factory;
+
+         if Info.Res_Record_Type /= O_Tnode_Null then
+            Pop_Scope (Info.Res_Record_Type);
+         end if;
 
          Finish_Subprg_Instance_Use (Spec);
 
@@ -13178,25 +13277,36 @@ package body Translation is
         (Inter : Iir; Info : Ortho_Info_Acc; Kind : Object_Kind_Type)
         return Mnode
       is
-         Type_Info : Type_Info_Acc;
+         Type_Info : constant Type_Info_Acc := Get_Info (Get_Type (Inter));
       begin
-         Type_Info := Get_Info (Get_Type (Inter));
          case Info.Kind is
             when Kind_Object =>
                --  For a generic or a port.
                return Get_Var (Info.Object_Var, Type_Info, Kind);
             when Kind_Interface =>
                --  For a parameter.
-               if Get_Kind (Inter) = Iir_Kind_Variable_Interface_Declaration
-                 and then Get_Mode (Inter) in Iir_Out_Modes
-                 and then Type_Info.Type_Mode not in Type_Mode_By_Ref
-                 and then Type_Info.Type_Mode /= Type_Mode_File
-               then
-                  --  Passed by copy in the RESULT record.
-                  return Lv2M (New_Selected_Acc_Value
-                                 (New_Obj (Info.Interface_Node),
-                                  Info.Interface_Field),
-                               Type_Info, Kind);
+               if Info.Interface_Field /= O_Fnode_Null then
+                  declare
+                     Subprg_Info : constant Subprg_Info_Acc :=
+                       Get_Info (Get_Parent (Inter));
+                  begin
+                     if Info.Interface_Node = O_Dnode_Null then
+                        --  Passed by copy in the RESULT record.
+                        return Lv2M
+                          (New_Selected_Element
+                             (Get_Instance_Ref (Subprg_Info.Res_Record_Type),
+                              Info.Interface_Field),
+                           Type_Info, Kind);
+                     else
+                        --  Use field in FRAME (instead of direct reference
+                        --  to parameter - used to unnest subprograms).
+                        return Lv2M
+                          (New_Selected_Element
+                             (Get_Instance_Ref (Subprg_Info.Subprg_Frame_Type),
+                              Info.Interface_Field),
+                           Type_Info, Kind);
+                     end if;
+                  end;
                else
                   case Type_Info.Type_Mode is
                      when Type_Mode_Unknown =>
@@ -13205,7 +13315,7 @@ package body Translation is
                         return Dv2M (Info.Interface_Node, Type_Info, Kind);
                      when Type_Mode_By_Copy
                        | Type_Mode_By_Ref =>
-                        --  Parameter is passed by reference, dereference it.
+                        --  Parameter is passed by reference.
                         return Dp2M (Info.Interface_Node, Type_Info, Kind);
                   end case;
                end if;
