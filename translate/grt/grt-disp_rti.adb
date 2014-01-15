@@ -97,6 +97,15 @@ package body Grt.Disp_Rti is
             if not Is_Sig then
                Update (64);
             end if;
+         when Ghdl_Rtik_Type_P32 =>
+            Put_I32 (Stream, Vptr.I32);
+            Put (Stream, " ");
+            Put (Stream,
+                 To_Ghdl_Rtin_Unit_Acc
+                 (To_Ghdl_Rtin_Type_Physical_Acc (Rti).Units (0)).Name);
+            if not Is_Sig then
+               Update (32);
+            end if;
          when others =>
             Internal_Error ("disp_rti.disp_scalar_value");
       end case;
@@ -184,6 +193,9 @@ package body Grt.Disp_Rti is
          else
             El_Addr := Obj + El.Val_Off;
          end if;
+         if Rti_Complex_Type (El.Eltype) then
+            El_Addr := Obj + To_Ghdl_Index_Acc (El_Addr).all;
+         end if;
          Disp_Value (Stream, El.Eltype, Ctxt, El_Addr, Is_Sig);
       end loop;
       Put (")");
@@ -242,7 +254,7 @@ package body Grt.Disp_Rti is
             Put (Stream, "Unknown Rti Kind : ");
             Disp_Kind(Rti.Kind);
       end case;
-      Put_Line(":");
+      --  Put_Line(":");
    end Disp_Value;
 
    procedure Disp_Kind (Kind : Ghdl_Rtik) is
