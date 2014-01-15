@@ -134,21 +134,21 @@ package body Scanner is
    -- it can be used to push/pop a lexical analysis, to restart the
    -- scanner from a context marking a previous point.
    type Scan_Context is record
-         Source: File_Buffer_Acc;
-         Source_File: Source_File_Entry;
-         Line_Number: Natural;
-         Line_Pos: Source_Ptr;
-         Pos: Source_Ptr;
-         Token_Pos: Source_Ptr;
-         File_Len: Source_Ptr;
-         File_Name: Name_Id;
-         Token: Token_Type;
-         Prev_Token: Token_Type;
-         Str_Id : String_Id;
-         Str_Len : Nat32;
-         Identifier: Name_Id;
-         Int64: Iir_Int64;
-         Fp64: Iir_Fp64;
+      Source: File_Buffer_Acc;
+      Source_File: Source_File_Entry;
+      Line_Number: Natural;
+      Line_Pos: Source_Ptr;
+      Pos: Source_Ptr;
+      Token_Pos: Source_Ptr;
+      File_Len: Source_Ptr;
+      File_Name: Name_Id;
+      Token: Token_Type;
+      Prev_Token: Token_Type;
+      Str_Id : String_Id;
+      Str_Len : Nat32;
+      Identifier: Name_Id;
+      Int64: Iir_Int64;
+      Fp64: Iir_Fp64;
    end record;
 
    -- The current context.
