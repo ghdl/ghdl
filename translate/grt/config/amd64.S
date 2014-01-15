@@ -17,7 +17,6 @@
     02111-1307, USA.
 */
 	.file		"amd64.S"
-	.version	"01.01"
 
 #ifdef __ELF__
 #define ENTRY(func) .align 4; .globl func; .type func,@function; func:
