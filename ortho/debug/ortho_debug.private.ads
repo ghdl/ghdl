@@ -119,6 +119,7 @@ private
       OC_Enum_Lit,
       OC_Null_Lit,
       OC_Sizeof_Lit,
+      OC_Alignof_Lit,
       OC_Offsetof_Lit,
       OC_Aggregate,
       OC_Aggr_Element,
@@ -148,7 +149,8 @@ private
             E_Name : O_Ident;
          when OC_Null_Lit =>
             null;
-         when OC_Sizeof_Lit =>
+         when OC_Sizeof_Lit
+           | OC_Alignof_Lit =>
             S_Type : O_Tnode;
          when OC_Offsetof_Lit =>
             Off_Field : O_Fnode;

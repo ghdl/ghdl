@@ -39,6 +39,9 @@ package Ortho_Code.Types is
    type Mode_Align_Array is array (Mode_Type) of Small_Natural;
    function Get_Type_Align (Atype : O_Tnode) return Small_Natural;
 
+   --  Alignment for ATYPE in bytes.
+   function Get_Type_Align_Bytes (Atype : O_Tnode) return Uns32;
+
    --  Return true is the type was incomplete at creation.
    --  (it may - or not - have been completed later).
    function Get_Type_Deferred (Atype : O_Tnode) return Boolean;

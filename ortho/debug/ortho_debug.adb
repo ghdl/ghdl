@@ -425,6 +425,20 @@ package body Ortho_Debug is
                                       S_Type => Atype);
    end New_Sizeof;
 
+   function New_Alignof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode
+   is
+      subtype O_Cnode_Alignof_Type is O_Cnode_Type (OC_Alignof_Lit);
+   begin
+      if Rtype.Kind /= ON_Unsigned_Type then
+         raise Type_Error;
+      end if;
+      Check_Complete_Type (Atype);
+      return new O_Cnode_Alignof_Type'(Kind => OC_Alignof_Lit,
+                                       Ctype => Rtype,
+                                       Ref => False,
+                                       S_Type => Atype);
+   end New_Alignof;
+
    function New_Offsetof (Field : O_Fnode; Rtype : O_Tnode) return O_Cnode
    is
       subtype O_Cnode_Offsetof_Type is O_Cnode_Type (OC_Offsetof_Lit);

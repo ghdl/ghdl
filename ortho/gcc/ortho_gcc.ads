@@ -233,6 +233,10 @@ package Ortho_Gcc is
    --  ATYPE cannot be an unconstrained array type.
    function New_Sizeof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode;
 
+   --  Returns the alignment in bytes for ATYPE.  The result is a literal of
+   --  unsgined type RTYPE.
+   function New_Alignof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode;
+
    --  Returns the offset of FIELD in its record.  The result is a literal
    --  of unsigned type RTYPE.
    function New_Offsetof (Field : O_Fnode; Rtype : O_Tnode) return O_Cnode;
@@ -598,6 +602,7 @@ private
    pragma Import (C, New_Access_Element);
 
    pragma Import (C, New_Sizeof);
+   pragma Import (C, New_Alignof);
    pragma Import (C, New_Offsetof);
 
    pragma Import (C, New_Address);

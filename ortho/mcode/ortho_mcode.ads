@@ -275,6 +275,11 @@ package Ortho_Mcode is
    function New_Sizeof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode
      renames Ortho_Code.Consts.New_Sizeof;
 
+   --  Returns the alignment in bytes for ATYPE.  The result is a literal of
+   --  unsgined type RTYPE.
+   function New_Alignof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode
+     renames Ortho_Code.Consts.New_Alignof;
+
    --  Returns the offset of FIELD in its record.  The result is a literal
    --  of unsigned type RTYPE.
    function New_Offsetof (Field : O_Fnode; Rtype : O_Tnode) return O_Cnode

@@ -714,7 +714,8 @@ package body Ortho_Code.Exprs is
             when OC_Array
               | OC_Record
               | OC_Union
-              | OC_Sizeof =>
+              | OC_Sizeof
+              | OC_Alignof =>
                raise Syntax_Error;
          end case;
       end if;

@@ -28,7 +28,7 @@ package Ortho_Code.X86.Abi is
       Mode_U16 | Mode_I16 => 1,
       Mode_U32 | Mode_I32 | Mode_F32 | Mode_P32 => 2,
       Mode_U64 | Mode_I64 => 2,
-      Mode_F64 => 2,
+      Mode_F64 => 2, -- 2 for SVR4-ABI and Darwin, 3 for Windows.
       Mode_Blk | Mode_X1 | Mode_Nil | Mode_P64 => 0,
       Mode_B2 => 0);
 

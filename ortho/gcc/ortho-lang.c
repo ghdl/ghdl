@@ -1431,6 +1431,12 @@ new_sizeof (tree atype, tree rtype)
  return fold (build1 (NOP_EXPR, rtype, size));
 }
 
+tree
+new_alignof (tree atype, tree rtype)
+{
+  return build_int_cstu (rtype, TYPE_ALIGN_UNIT (atype));
+}
+
 /* Convert the array expression EXP to a pointer.  */
 static tree array_to_pointer_conversion (tree exp);
 

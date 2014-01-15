@@ -132,7 +132,7 @@ package body Ortho_Front is
       if Buf (Pos) = NUL then
          --  Read line.
          Buf_Len := Read (Fd, Buf'Address, Buf'Length - 1);
-         if Buf_Len <= 0 then
+         if Buf_Len = 0 then
             --  End of file.
             return NUL;
          end if;
@@ -212,6 +212,7 @@ package body Ortho_Front is
    Id_Subprg_Addr : Syment_Acc;
    Id_Conv : Syment_Acc;
    Id_Sizeof : Syment_Acc;
+   Id_Alignof : Syment_Acc;
    Id_Alloca : Syment_Acc;
    Id_Offsetof : Syment_Acc;
 
@@ -1263,6 +1264,22 @@ package body Ortho_Front is
       return Res;
    end Parse_Sizeof;
 
+   function Parse_Alignof (Atype : Node_Acc) return O_Cnode
+   is
+      Res : O_Cnode;
+   begin
+      Next_Expect (Tok_Left_Paren);
+      Next_Token;
+      if Tok /= Tok_Ident then
+         Parse_Error ("type name expected");
+      end if;
+      Res := New_Alignof
+        (Get_Decl (Token_Sym).Decl_Dtype.Type_Onode,
+         Atype.Type_Onode);
+      Next_Expect (Tok_Right_Paren);
+      return Res;
+   end Parse_Alignof;
+
    function Parse_Typed_Literal (Atype : Node_Acc) return O_Cnode
    is
       Res : O_Cnode;
@@ -1325,6 +1342,8 @@ package body Ortho_Front is
                         Res := Parse_Offsetof (N);
                      elsif Token_Sym = Id_Sizeof then
                         Res := Parse_Sizeof (N);
+                     elsif Token_Sym = Id_Alignof then
+                        Res := Parse_Alignof (N);
                      elsif Token_Sym = Id_Conv then
                         Next_Expect (Tok_Left_Paren);
                         Next_Token;
@@ -1410,6 +1429,10 @@ package body Ortho_Front is
                --  Fall-through.
             elsif Token_Sym = Id_Sizeof then
                Res := New_Lit (Parse_Sizeof (Name.Decl_Dtype));
+               Next_Token;
+               return Res;
+            elsif Token_Sym = Id_Alignof then
+               Res := New_Lit (Parse_Alignof (Name.Decl_Dtype));
                Next_Token;
                return Res;
             elsif Token_Sym = Id_Alloca then
@@ -2614,6 +2637,7 @@ package body Ortho_Front is
       Id_Subprg_Addr := New_Symbol ("subprg_addr");
       Id_Conv := New_Symbol ("conv");
       Id_Sizeof := New_Symbol ("sizeof");
+      Id_Alignof := New_Symbol ("alignof");
       Id_Alloca := New_Symbol ("alloca");
       Id_Offsetof := New_Symbol ("offsetof");
 

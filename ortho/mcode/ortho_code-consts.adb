@@ -468,6 +468,27 @@ package body Ortho_Code.Consts is
       return To_Cnode_Sizeof (Cnodes.Table (Cst + 1)).Atype;
    end Get_Sizeof_Type;
 
+   function New_Alignof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode
+   is
+      function To_Cnode_Common is new Ada.Unchecked_Conversion
+        (Source => Cnode_Sizeof, Target => Cnode_Common);
+
+      Res : O_Cnode;
+   begin
+      if Debug.Flag_Debug_Hli then
+         Cnodes.Append (Cnode_Common'(Kind => OC_Alignof,
+                                      Lit_Type => Rtype));
+         Res := Cnodes.Last;
+         Cnodes.Append (To_Cnode_Common (Cnode_Sizeof'(Atype => Atype,
+                                                       Pad => 0)));
+         return Res;
+      else
+         return New_Unsigned_Literal
+           (Rtype, Unsigned_64 (Get_Type_Align_Bytes (Atype)));
+      end if;
+   end New_Alignof;
+
+
    function New_Offsetof (Field : O_Fnode; Rtype : O_Tnode) return O_Cnode is
    begin
       return New_Unsigned_Literal
@@ -492,6 +513,7 @@ package body Ortho_Code.Consts is
            | OC_Record
            | OC_Union
            | OC_Sizeof
+           | OC_Alignof
            | OC_Address
            | OC_Subprg_Address =>
             raise Syntax_Error;

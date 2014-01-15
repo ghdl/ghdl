@@ -2233,6 +2233,7 @@ package body Ortho_Code.X86.Emits is
                end loop;
             end;
          when OC_Sizeof
+           | OC_Alignof
            | OC_Union =>
             raise Program_Error;
       end case;

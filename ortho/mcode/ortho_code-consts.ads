@@ -21,7 +21,7 @@ package Ortho_Code.Consts is
    type OC_Kind is (OC_Signed, OC_Unsigned, OC_Float, OC_Lit, OC_Null,
                     OC_Array, OC_Record, OC_Union,
                     OC_Subprg_Address, OC_Address,
-                    OC_Sizeof);
+                    OC_Sizeof, OC_Alignof);
 
    function Get_Const_Kind (Cst : O_Cnode) return OC_Kind;
 
@@ -118,6 +118,10 @@ package Ortho_Code.Consts is
    --  unsigned type RTYPE
    --  ATYPE cannot be an unconstrained array type.
    function New_Sizeof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode;
+
+   --  Returns the alignment in bytes for ATYPE.  The result is a literal of
+   --  unsgined type RTYPE.
+   function New_Alignof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode;
 
    --  Returns the offset of FIELD in its record.  The result is a literal
    --  of unsigned type RTYPE.

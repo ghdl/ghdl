@@ -450,6 +450,11 @@ package body Ortho_Debug.Disp is
             Put ("'sizeof (");
             Disp_Tnode_Name (C.S_Type);
             Put (")");
+         when OC_Alignof_Lit =>
+            Disp_Tnode_Name (C.Ctype);
+            Put ("'alignof (");
+            Disp_Tnode_Name (C.S_Type);
+            Put (")");
          when OC_Offsetof_Lit =>
             Disp_Tnode_Name (C.Ctype);
             Put ("'offsetof (");

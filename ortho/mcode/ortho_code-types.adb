@@ -105,10 +105,10 @@ package body Ortho_Code.Types is
       return Tnodes.Table (Atype).Align;
    end Get_Type_Align;
 
-   function Get_Type_Align_Byte (Atype : O_Tnode) return Uns32 is
+   function Get_Type_Align_Bytes (Atype : O_Tnode) return Uns32 is
    begin
       return 2 ** Get_Type_Align (Atype);
-   end Get_Type_Align_Byte;
+   end Get_Type_Align_Bytes;
 
    function Get_Type_Mode (Atype : O_Tnode) return Mode_Type is
    begin
@@ -569,19 +569,17 @@ package body Ortho_Code.Types is
 
    function Do_Align (Off : Uns32; Atype : O_Tnode) return Uns32
    is
-      Msk : Uns32;
+      Msk : constant Uns32 := Get_Type_Align_Bytes (Atype) - 1;
    begin
       --  Align.
-      Msk := Get_Type_Align_Byte (Atype) - 1;
       return (Off + Msk) and (not Msk);
    end Do_Align;
 
    function Do_Align (Off : Uns32; Mode : Mode_Type) return Uns32
    is
-      Msk : Uns32;
+      Msk : constant Uns32 := (2 ** Mode_Align (Mode)) - 1;
    begin
       --  Align.
-      Msk := Get_Mode_Size (Mode) - 1;
       return (Off + Msk) and (not Msk);
    end Do_Align;
 
