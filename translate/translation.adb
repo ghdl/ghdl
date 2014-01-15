@@ -6654,7 +6654,7 @@ package body Translation is
                            New_Value (Get_Var (El_Info.C (Kind).Size_Var)),
                            Get_Bounds_Ptr_Length (Bound, Def)));
 
-         --  Find the innest non-array element.
+         --  Find the innermost non-array element.
          while El_Info.Type_Mode = Type_Mode_Array loop
             El_Type := Get_Element_Subtype (El_Type);
             El_Info := Get_Info (El_Type);
@@ -6695,6 +6695,38 @@ package body Translation is
       --------------
       --  record  --
       --------------
+
+      --  Align VALUE (of unsigned type) for type ATYPE.
+      --  The formulae is: (V + (A - 1)) and not (A - 1), where A is the
+      --  alignment for ATYPE in bytes.
+      function Realign (Value : O_Enode; Atype : O_Tnode) return O_Enode
+      is
+         Align : constant O_Cnode := New_Alignof (Atype, Ghdl_Index_Type);
+
+         --  Return A - 1
+         function Mask return O_Enode is
+         begin
+            return New_Dyadic_Op
+              (ON_Sub_Ov, New_Lit (Align), New_Lit (Ghdl_Index_1));
+         end Mask;
+      begin
+         return New_Dyadic_Op
+           (ON_And,
+            New_Dyadic_Op (ON_Add_Ov, Value, Mask),
+            New_Monadic_Op (ON_Not, Mask));
+      end Realign;
+
+      --  Find the innermost non-array element.
+      function Get_Innermost_Non_Array_Element (Atype : Iir) return Iir
+      is
+         Res : Iir := Atype;
+      begin
+         while Get_Kind (Res) in Iir_Kinds_Array_Type_Definition loop
+            Res := Get_Element_Subtype (Res);
+         end loop;
+         return Res;
+      end Get_Innermost_Non_Array_Element;
+
       procedure Translate_Record_Type (Def : Iir_Record_Type_Definition)
       is
          El_List : O_Element_List;
@@ -6775,6 +6807,7 @@ package body Translation is
          Off_Var : O_Dnode;
          Ptr_Var : O_Dnode;
          El_Type : Iir;
+         Inner_Type : Iir;
          El_Tinfo : Type_Info_Acc;
       begin
          Start_Subprogram_Body (Info.C (Kind).Builder_Func);
@@ -6800,8 +6833,14 @@ package body Translation is
             if Is_Complex_Type (El_Tinfo) then
                --  Complex type.
 
+               --  Align on the innermost array element
+               Inner_Type := Get_Innermost_Non_Array_Element (El_Type);
+               New_Assign_Stmt
+                 (New_Obj (Off_Var),
+                  Realign (New_Obj_Value (Off_Var),
+                           Get_Info (Inner_Type).Ortho_Type (Kind)));
+
                --  Set the offset.
-               --  FIXME: alignment
                New_Assign_Stmt
                  (New_Selected_Element (New_Acc_Value (New_Obj (Base)),
                                         Get_Info (El).Field_Node (Kind)),
@@ -6839,7 +6878,8 @@ package body Translation is
             end if;
          end loop;
          Chap2.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
-         New_Return_Stmt (New_Obj_Value (Off_Var));
+         New_Return_Stmt
+           (Realign (New_Obj_Value (Off_Var), Info.Ortho_Type (Kind)));
          Finish_Subprogram_Body;
       end Create_Record_Type_Builder;
 
@@ -7310,26 +7350,34 @@ package body Translation is
                      raise Internal_Error;
                   when Type_Mode_Record =>
                      declare
-                        List : Iir_List;
+                        List : constant Iir_List :=
+                          Get_Elements_Declaration_List (Get_Base_Type (Def));
                         El : Iir_Element_Declaration;
+                        El_Type : Iir;
                         El_Tinfo : Type_Info_Acc;
+                        Inner_Type : Iir;
                      begin
-                        List := Get_Elements_Declaration_List
-                          (Get_Base_Type (Def));
                         Res := New_Lit (New_Sizeof (Info.Ortho_Type (Kind),
                                                     Ghdl_Index_Type));
                         for I in Natural loop
                            El := Get_Nth_Element (List, I);
                            exit when El = Null_Iir;
-                           El_Tinfo := Get_Info (Get_Type (El));
+                           El_Type := Get_Type (El);
+                           El_Tinfo := Get_Info (El_Type);
                            if Is_Complex_Type (El_Tinfo) then
+                              Inner_Type :=
+                                Get_Innermost_Non_Array_Element (El_Type);
+
                               Res := New_Dyadic_Op
                                 (ON_Add_Ov,
                                  New_Value
                                    (Get_Var (El_Tinfo.C (Kind).Size_Var)),
-                                 Res);
+                                 Realign
+                                   (Res,
+                                    Get_Info (Inner_Type).Ortho_Type (Kind)));
                            end if;
                         end loop;
+                        Res := Realign (Res, Info.Ortho_Type (Kind));
                      end;
                   when Type_Mode_Array =>
                      declare
@@ -8365,78 +8413,42 @@ package body Translation is
                                        Src : O_Enode;
                                        Obj_Type : Iir)
       is
-         Info : Type_Info_Acc;
+         Info : constant Type_Info_Acc := Get_Info (Obj_Type);
+         Kind : constant Object_Kind_Type := Get_Object_Kind (Dest);
          D : Mnode;
-         Kind : Object_Kind_Type;
       begin
-         Kind := Get_Object_Kind (Dest);
-         Info := Get_Info (Obj_Type);
-         if Is_Complex_Type (Info)
-           and then Info.C (Kind).Builder_Need_Func
-         then
-            D := Stabilize (Dest);
-            --  A complex type that must be rebuilt.
-            --  Save destinaton.
-            --  Do the copy.
-            case Info.Type_Mode is
-               when Type_Mode_Fat_Array =>
-                  --  a fat array.
-                  Gen_Memcpy
-                    (M2Addr (Chap3.Get_Array_Base (D)),
-                     New_Value
-                     (New_Selected_Element (New_Access_Element (Src),
-                                            Info.T.Base_Field (Kind))),
-                     Get_Object_Size (Dest, Obj_Type));
-               when Type_Mode_Record
-                 | Type_Mode_Array =>
-                  Gen_Memcpy (M2Addr (D),
-                              Src,
-                              Get_Object_Size (Dest, Obj_Type));
-               when Type_Mode_Unknown
-                 | Type_Mode_File
-                 | Type_Mode_Scalar
-                 | Type_Mode_Acc
-                 | Type_Mode_Fat_Acc
-                 | Type_Mode_Protected =>
-                  raise Internal_Error;
-            end case;
-         else
-            case Info.Type_Mode is
-               when Type_Mode_Scalar
-                 | Type_Mode_Acc
-                 | Type_Mode_File =>
-                  --  Scalar or thin pointer.
-                  New_Assign_Stmt (M2Lv (Dest), Src);
-               when Type_Mode_Fat_Acc =>
-                  --  a fat pointer.
-                  declare
-                     Var_S : O_Dnode;
-                     Var_D : O_Dnode;
-                  begin
-                     Var_S := Create_Temp_Init (Info.Ortho_Ptr_Type (Kind),
-                                                Src);
-                     Var_D := Create_Temp_Init (Info.Ortho_Ptr_Type (Kind),
-                                                M2Addr (Dest));
-                     Copy_Fat_Access (Var_D, Var_S, Get_Base_Type (Obj_Type));
-                  end;
-               when Type_Mode_Fat_Array =>
-                  --  a fat array.
-                  D := Stabilize (Dest);
-                  Gen_Memcpy
-                    (M2Addr (Get_Array_Base (D)),
-                     M2Addr (Get_Array_Base (E2M (Src, Info, Kind))),
-                     Get_Object_Size (D, Obj_Type));
-               when Type_Mode_Record =>
-                  Gen_Memcpy
-                    (M2Addr (Dest), Src, Get_Object_Size (Dest, Obj_Type));
-               when Type_Mode_Array =>
-                  D := Stabilize (Dest);
-                  Gen_Memcpy (M2Addr (D), Src, Get_Object_Size (D, Obj_Type));
-               when Type_Mode_Unknown
-                 | Type_Mode_Protected =>
-                  raise Internal_Error;
-            end case;
-         end if;
+         case Info.Type_Mode is
+            when Type_Mode_Scalar
+              | Type_Mode_Acc
+              | Type_Mode_File =>
+               --  Scalar or thin pointer.
+               New_Assign_Stmt (M2Lv (Dest), Src);
+            when Type_Mode_Fat_Acc =>
+               --  a fat pointer.
+               declare
+                  Var_S : O_Dnode;
+                  Var_D : O_Dnode;
+               begin
+                  Var_S := Create_Temp_Init (Info.Ortho_Ptr_Type (Kind),
+                                             Src);
+                  Var_D := Create_Temp_Init (Info.Ortho_Ptr_Type (Kind),
+                                             M2Addr (Dest));
+                  Copy_Fat_Access (Var_D, Var_S, Get_Base_Type (Obj_Type));
+               end;
+            when Type_Mode_Fat_Array =>
+               --  a fat array.
+               D := Stabilize (Dest);
+               Gen_Memcpy (M2Addr (Get_Array_Base (D)),
+                           M2Addr (Get_Array_Base (E2M (Src, Info, Kind))),
+                           Get_Object_Size (D, Obj_Type));
+            when Type_Mode_Array
+              | Type_Mode_Record =>
+               D := Stabilize (Dest);
+               Gen_Memcpy (M2Addr (D), Src, Get_Object_Size (D, Obj_Type));
+            when Type_Mode_Unknown
+              | Type_Mode_Protected =>
+               raise Internal_Error;
+         end case;
       end Translate_Object_Copy;
 
       function Get_Object_Size (Obj : Mnode; Obj_Type : Iir)
