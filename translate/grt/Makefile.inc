@@ -104,7 +104,7 @@ endif
 GRT_ARCH?=None
 
 # Configuration pragmas.
-GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc
+GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnat05
 
 # Rule to compile an Ada file.
 GRT_ADACOMPILE=$(ADAC) -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG) -o $@ $<
