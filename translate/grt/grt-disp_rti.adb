@@ -250,6 +250,8 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_Type_Record =>
             Disp_Record_Value
               (Stream, To_Ghdl_Rtin_Type_Record_Acc (Rti), Ctxt, Obj, Is_Sig);
+         when Ghdl_Rtik_Type_Protected =>
+            Put (Stream, "Unhandled protected type");
          when others =>
             Put (Stream, "Unknown Rti Kind : ");
             Disp_Kind(Rti.Kind);
@@ -333,6 +335,8 @@ package body Grt.Disp_Rti is
             Put ("ghdl_rtik_type_access");
          when Ghdl_Rtik_Type_File =>
             Put ("ghdl_rtik_type_file");
+         when Ghdl_Rtik_Type_Protected =>
+            Put ("ghdl_rtik_type_protected");
 
          when Ghdl_Rtik_Subtype_Scalar =>
             Put ("ghdl_rtik_subtype_scalar");
@@ -543,6 +547,8 @@ package body Grt.Disp_Rti is
                      Loc_To_Addr (Sdef.Common.Depth, Sdef.Bounds, Ctxt));
                end if;
             end;
+         when Ghdl_Rtik_Type_Protected =>
+            Disp_Name (To_Ghdl_Rtin_Type_Scalar_Acc (Def).Name);
          when others =>
             Disp_Kind (Def.Kind);
             Put (' ');
@@ -918,6 +924,20 @@ package body Grt.Disp_Rti is
       end loop;
    end Disp_Type_Record;
 
+   procedure Disp_Type_Protected (Def : Ghdl_Rtin_Type_Scalar_Acc;
+                                  Ctxt : Rti_Context;
+                                  Indent : Natural)
+   is
+      pragma Unreferenced (Ctxt);
+   begin
+      Disp_Indent (Indent);
+      Disp_Kind (Def.Common.Kind);
+      Put (": ");
+      Disp_Name (Def.Name);
+      Put (" is protected");
+      New_Line;
+   end Disp_Type_Protected;
+
    procedure Disp_Rti (Rti : Ghdl_Rti_Access;
                        Ctxt : Rti_Context;
                        Indent : Natural)
@@ -978,6 +998,9 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_Type_Record =>
             Disp_Type_Record
               (To_Ghdl_Rtin_Type_Record_Acc (Rti), Ctxt, Indent);
+         when Ghdl_Rtik_Type_Protected =>
+            Disp_Type_Protected
+              (To_Ghdl_Rtin_Type_Scalar_Acc (Rti), Ctxt, Indent);
          when others =>
             Disp_Indent (Indent);
             Disp_Kind (Rti.Kind);

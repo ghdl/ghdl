@@ -236,7 +236,7 @@ package body Translation is
       procedure Push_Scope (Scope_Type : O_Tnode;
                             Scope_Field : O_Fnode; Scope_Parent : O_Tnode);
       --  Variables defined in SCOPE_TYPE can be accessed by dereferencing
-      --  fiel SCOPE_FIELD defined in SCOPE_PARENT.
+      --  field SCOPE_FIELD defined in SCOPE_PARENT.
       procedure Push_Scope_Via_Field_Ptr
         (Scope_Type : O_Tnode;
          Scope_Field : O_Fnode; Scope_Parent : O_Tnode);
@@ -851,11 +851,10 @@ package body Translation is
 
          when Kind_Type_Protected =>
             --  Init procedure for the protected type.
-            Prot_Init_Node : O_Dnode;
+            Prot_Init_Subprg : O_Dnode;
             Prot_Init_Instance : Chap2.Subprg_Instance_Type;
-            Prot_Init_Obj : O_Dnode;
             --  Final procedure.
-            Prot_Final_Node : O_Dnode;
+            Prot_Final_Subprg : O_Dnode;
             Prot_Final_Instance : Chap2.Subprg_Instance_Type;
             --  The outer instance, if any.
             Prot_Subprg_Instance_Field : O_Fnode;
@@ -902,10 +901,9 @@ package body Translation is
    Ortho_Info_Type_Prot_Init : constant Ortho_Info_Type_Type :=
      (Kind => Kind_Type_Protected,
       Rti_Max_Depth => 0,
-      Prot_Init_Node => O_Dnode_Null,
+      Prot_Init_Subprg => O_Dnode_Null,
       Prot_Init_Instance => Chap2.Null_Subprg_Instance,
-      Prot_Init_Obj => O_Dnode_Null,
-      Prot_Final_Node => O_Dnode_Null,
+      Prot_Final_Subprg => O_Dnode_Null,
       Prot_Subprg_Instance_Field => O_Fnode_Null,
       Prot_Final_Instance => Chap2.Null_Subprg_Instance,
       Prot_Lock_Field => O_Fnode_Null);
@@ -1180,10 +1178,12 @@ package body Translation is
             --  The declaration of the incomplete type.
             Incomplete_Type : Iir;
             Incomplete_Array : Ortho_Info_Acc;
+
          when Kind_Expr =>
             --  Ortho tree which represents the expression, used for
             --  enumeration literals.
             Expr_Node : O_Cnode;
+
          when Kind_Subprg =>
             --  Subprogram declaration node.
             Ortho_Func : O_Dnode;
@@ -1226,6 +1226,7 @@ package body Translation is
             --  SUBPRG_RESULT, if any.
             Subprg_Exit : O_Snode := O_Snode_Null;
             Subprg_Result : O_Dnode := O_Dnode_Null;
+
          when Kind_Object =>
             --  For constants: set when the object is defined as a constant.
             Object_Static : Boolean;
@@ -1238,11 +1239,14 @@ package body Translation is
             --  Function to compute the value of object (used for implicit
             --   guard signal declaration).
             Object_Function : O_Dnode;
+
          when Kind_Alias =>
             Alias_Var : Var_Acc;
             Alias_Kind : Object_Kind_Type;
+
          when Kind_Iterator =>
             Iterator_Var : Var_Acc;
+
          when Kind_Interface =>
             --  Ortho node for the interface.
             Interface_Node : O_Dnode;
@@ -1250,10 +1254,12 @@ package body Translation is
             Interface_Field : O_Fnode;
             --  Type of the interface.
             Interface_Type : O_Tnode;
+
          when Kind_Disconnect =>
             --  Variable which contains the time_expression of the
             --  disconnection specification
             Disconnect_Var : Var_Acc;
+
          when Kind_Process =>
             --  Type of process declarations record.
             Process_Decls_Type : O_Tnode;
@@ -7020,10 +7026,9 @@ package body Translation is
 
          Info.Type_Mode := Type_Mode_Protected;
 
+         --  A protected type is a complex type, as its size is not known
+         --  at definition point (will be known at body declaration).
          Info.C := new Complex_Type_Arr_Info;
-         Info.C (Mode_Value).Size_Var := Create_Global_Const
-           (Create_Identifier ("SIZE"), Ghdl_Index_Type,
-            O_Storage_External, O_Cnode_Null);
          Info.C (Mode_Value).Builder_Need_Func := False;
 
          --  This is just use to set overload number on subprograms, and to
@@ -7046,14 +7051,12 @@ package body Translation is
          Info := Get_Info (Def);
 
          --  Init.
-         Start_Procedure_Decl
-           (Inter_List, Create_Identifier ("INIT"), Global_Storage);
+         Start_Function_Decl
+           (Inter_List, Create_Identifier ("INIT"), Global_Storage,
+            Info.Ortho_Ptr_Type (Mode_Value));
          Chap2.Add_Subprg_Instance_Interfaces
            (Inter_List, Info.T.Prot_Init_Instance);
-         New_Interface_Decl
-           (Inter_List, Info.T.Prot_Init_Obj, Wki_Obj,
-            Info.Ortho_Ptr_Type (Mode_Value));
-         Finish_Subprogram_Decl (Inter_List, Info.T.Prot_Init_Node);
+         Finish_Subprogram_Decl (Inter_List, Info.T.Prot_Init_Subprg);
 
          --  Use the object as instance.
          Chap2.Push_Subprg_Instance (Info.Ortho_Type (Mode_Value),
@@ -7066,7 +7069,7 @@ package body Translation is
            (Inter_List, Create_Identifier ("FINI"), Global_Storage);
          Chap2.Add_Subprg_Instance_Interfaces
            (Inter_List, Info.T.Prot_Final_Instance);
-         Finish_Subprogram_Decl (Inter_List, Info.T.Prot_Final_Node);
+         Finish_Subprogram_Decl (Inter_List, Info.T.Prot_Final_Subprg);
 
          --  Methods.
          El := Get_Declaration_Chain (Def);
@@ -7113,13 +7116,6 @@ package body Translation is
          Chap4.Translate_Declaration_Chain (Bod);
 
          Pop_Instance_Factory (Info.Ortho_Type (Mode_Value));
-         if Global_Storage /= O_Storage_External then
-            --  FIXME: the size may not be constant!
-            Info.C (Mode_Value).Size_Var := Create_Global_Const
-              (Create_Identifier ("SIZE"), Ghdl_Index_Type,
-               Global_Storage, New_Sizeof (Info.Ortho_Type (Mode_Value),
-                                           Ghdl_Index_Type));
-         end if;
 
          Pop_Identifier_Prefix (Mark);
       end Translate_Protected_Type_Body;
@@ -7171,13 +7167,27 @@ package body Translation is
          end if;
 
          --  Init subprogram
+         declare
+            Var_Obj : O_Dnode;
          begin
-            Start_Subprogram_Body (Info.T.Prot_Init_Node);
+            Start_Subprogram_Body (Info.T.Prot_Init_Subprg);
             Chap2.Start_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
+            New_Var_Decl (Var_Obj, Wki_Obj, O_Storage_Local,
+                          Info.Ortho_Ptr_Type (Mode_Value));
+
+            --  Allocate the object
+            New_Assign_Stmt
+              (New_Obj (Var_Obj),
+               Gen_Alloc (Alloc_System,
+                          New_Lit (New_Sizeof (Info.Ortho_Type (Mode_Value),
+                                               Ghdl_Index_Type)),
+                          Info.Ortho_Ptr_Type (Mode_Value)));
+
             Chap2.Set_Subprg_Instance_Field
-              (Info.T.Prot_Init_Obj, Info.T.Prot_Subprg_Instance_Field,
+              (Var_Obj, Info.T.Prot_Subprg_Instance_Field,
                Info.T.Prot_Init_Instance);
-            Push_Scope (Info.Ortho_Type (Mode_Value), Info.T.Prot_Init_Obj);
+
+            Push_Scope (Info.Ortho_Type (Mode_Value), Var_Obj);
 
             --   Create lock.
             Call_Ghdl_Protected_Procedure (Decl, Ghdl_Protected_Init);
@@ -7189,13 +7199,15 @@ package body Translation is
 
             Pop_Scope (Info.Ortho_Type (Mode_Value));
 
+            New_Return_Stmt (New_Obj_Value (Var_Obj));
             Chap2.Finish_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
+
             Finish_Subprogram_Body;
          end;
 
          --  Fini subprogram
          begin
-            Start_Subprogram_Body (Info.T.Prot_Final_Node);
+            Start_Subprogram_Body (Info.T.Prot_Final_Subprg);
             Chap2.Start_Subprg_Instance_Use (Info.T.Prot_Final_Instance);
 
             --   Deallocate fields.
@@ -9306,12 +9318,12 @@ package body Translation is
       begin
          Info := Get_Info (Obj_Type);
 
-         --  The object has already been allocated.
-         --  Call the initializator.
-         Start_Association (Assoc, Info.T.Prot_Init_Node);
+         --  Call the initializer.
+         Start_Association (Assoc, Info.T.Prot_Init_Subprg);
          Chap2.Add_Subprg_Instance_Assoc (Assoc, Info.T.Prot_Init_Instance);
-         New_Association (Assoc, M2E (Obj));
-         New_Procedure_Call (Assoc);
+         --  Use of M2Lp is a little bit fragile (not sure we get the
+         --  variable, but should work: we didn't stabilize it).
+         New_Assign_Stmt (M2Lp (Obj), New_Function_Call (Assoc));
       end Init_Protected_Object;
 
       procedure Fini_Protected_Object (Decl : Iir)
@@ -9324,7 +9336,7 @@ package body Translation is
 
          Obj := Chap6.Translate_Name (Decl);
          --  Call the Finalizator.
-         Start_Association (Assoc, Info.T.Prot_Final_Node);
+         Start_Association (Assoc, Info.T.Prot_Final_Subprg);
          New_Association (Assoc, M2E (Obj));
          New_Procedure_Call (Assoc);
       end Fini_Protected_Object;
@@ -9408,6 +9420,11 @@ package body Translation is
 
          --  FIXME: the object type may be a fat array!
          --  FIXME: fat array + aggregate ?
+
+         if Type_Info.Type_Mode = Type_Mode_Protected then
+            --  Protected object will be created by its INIT function.
+            return;
+         end if;
 
          if Is_Complex_Type (Type_Info)
            and then Type_Info.Type_Mode /= Type_Mode_Fat_Array
@@ -23759,27 +23776,6 @@ package body Translation is
          Unchecked_Deallocation (Var);
       end Free_Var;
 
---       type Scope_Layer is record
---          --  How to dereference a variable in the scope.
---          --  O_Enode_Null if no there is no way to dereference an element of
---          --   the scope, like during scope creation.
---          This : O_Enode;
-
---          --  Type of the scope; this must be a record type or NULL_TREE for
---          --   the global scope.
---          --  This is very important since a variable (in fact a FIELD_DECL)
---          --   belong to a scope iff the type of the field context is
---          --   Scope_Type.  As a consequence, Scope_Type of two different
---          --   layers must be different.
---          --  Note: scope_type is a type definition (such as RECORD_TYPE) and
---          --   *not* a TYPE_DECL.
---          --  NULL_TREE for a local scope.
---          Scope_Type : O_Tnode;
-
---          --  The scope just below this one.
---          --Prev : Scope_Acc;
---       end record;
-
       procedure Save_Local_Identifier (Id : out Local_Identifier_Type) is
       begin
          Id := Identifier_Local;
@@ -23809,8 +23805,7 @@ package body Translation is
          Identifier_Local := Mark.Local_Id;
       end Pop_Identifier_Prefix;
 
-      procedure Add_String (Len : in out Natural; Str : String)
-      is
+      procedure Add_String (Len : in out Natural; Str : String) is
       begin
          Identifier_Buffer (Len + 1 .. Len + Str'Length) := Str;
          Len := Len + Str'Length;
@@ -23939,27 +23934,6 @@ package body Translation is
          Push_Identifier_Prefix (Mark, Name_Buffer (1 .. Name_Length), Val);
       end Push_Identifier_Prefix;
 
---       procedure Add_Local_Identifier (Len : in out Natural)
---       is
---          Str : String := Local_Identifier_Type'Image (Identifier_Local);
---       begin
---          Identifier_Local := Identifier_Local + 1;
-
---          if Inst_Build = null then
---             Str (1) := 'N';
---          else
---             case Inst_Build.Kind is
---                when Local =>
---                   Str (1) := 'L';
---                when Global =>
---                   Str (1) := 'G';
---                when Instance =>
---                   Str (1) := 'I';
---             end case;
---          end if;
---          Add_String (Len, Str);
---       end Add_Local_Identifier;
-
       procedure Push_Identifier_Prefix_Uniq (Mark : out Id_Mark_Type)
       is
          Str : String := Local_Identifier_Type'Image (Identifier_Local);
@@ -23971,10 +23945,7 @@ package body Translation is
 
       procedure Add_Identifier (Len : in out Natural; Id : Name_Id) is
       begin
-         if Id = Null_Identifier then
-            --Add_Local_Identifier (Len);
-            null;
-         else
+         if Id /= Null_Identifier then
             Add_Name (Len, Id);
          end if;
       end Add_Identifier;
