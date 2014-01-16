@@ -66,6 +66,10 @@ fexplicit
 vhdl
 Explicit function declarations override implicit one in use
 
+frelaxed-rules
+vhdl
+Relax some LRM rules to compile vendor libraries
+
 fpsl
 vhdl
 Allow PSL asserts in comments
