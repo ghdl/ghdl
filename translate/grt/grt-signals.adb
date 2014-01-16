@@ -3257,7 +3257,7 @@ package body Grt.Signals is
 
             when Net_One_Resolved =>
                Sig.Has_Active := True;
-               if Sig.Nbr_Ports > 0 then
+               if Sig.S.Nbr_Drivers + Sig.Nbr_Ports > 0 then
                   Compute_Resolved_Signal (Sig.S.Resolv);
                   Sig.Value := Sig.Driving_Value;
                end if;
