@@ -8175,9 +8175,8 @@ package body Translation is
 
       function Get_Array_Bounds (Arr : Mnode) return Mnode
       is
-         Info : Type_Info_Acc;
+         Info : constant Type_Info_Acc := Get_Type_Info (Arr);
       begin
-         Info := Get_Type_Info (Arr);
          case Info.Type_Mode is
             when Type_Mode_Fat_Array
               | Type_Mode_Fat_Acc =>
@@ -9320,16 +9319,14 @@ package body Translation is
                                          Alloc_Kind : Allocation_Kind;
                                          Var : in out Mnode)
       is
-         Type_Info : Type_Info_Acc;
-         Kind : Object_Kind_Type;
+         Type_Info : constant Type_Info_Acc := Get_Type_Info (Var);
+         Kind : constant Object_Kind_Type := Get_Object_Kind (Var);
          Targ : Mnode;
       begin
-         Type_Info := Get_Type_Info (Var);
          if Type_Info.Type_Mode = Type_Mode_Fat_Array then
             --  Cannot allocate unconstrained object (since size is unknown).
             raise Internal_Error;
          end if;
-         Kind := Get_Object_Kind (Var);
 
          if not Is_Complex_Type (Type_Info) then
             --  Object is not complex.
@@ -9702,32 +9699,59 @@ package body Translation is
 
       function Get_Nbr_Signals (Sig : Mnode; Sig_Type : Iir) return O_Enode
       is
-         Info : Type_Info_Acc;
+         Info : constant Type_Info_Acc := Get_Info (Sig_Type);
       begin
-         Info := Get_Info (Sig_Type);
          case Info.Type_Mode is
             when Type_Mode_Scalar =>
+               --  Note: here we discard SIG...
                return New_Lit (Ghdl_Index_1);
             when Type_Mode_Arrays =>
-               return New_Dyadic_Op
-                 (ON_Mul_Ov,
-                  Chap3.Get_Array_Length (Sig, Sig_Type),
-                  Get_Nbr_Signals (Mnode_Null,
-                                   Get_Element_Subtype (Sig_Type)));
+               declare
+                  Len : O_Dnode;
+                  If_Blk : O_If_Block;
+                  Ssig : Mnode;
+               begin
+                  Ssig := Stabilize (Sig);
+                  Len := Create_Temp_Init
+                    (Ghdl_Index_Type,
+                     Chap3.Get_Array_Length (Ssig, Sig_Type));
+                  Start_If_Stmt (If_Blk,
+                                 New_Compare_Op (ON_Neq,
+                                                 New_Obj_Value (Len),
+                                                 New_Lit (Ghdl_Index_0),
+                                                 Ghdl_Bool_Type));
+                  New_Assign_Stmt
+                    (New_Obj (Len),
+                     New_Dyadic_Op
+                       (ON_Mul_Ov,
+                        New_Obj_Value (Len),
+                        Get_Nbr_Signals
+                          (Chap3.Index_Base
+                             (Chap3.Get_Array_Base (Ssig), Sig_Type,
+                              New_Lit (Ghdl_Index_0)),
+                           Get_Element_Subtype (Sig_Type))));
+                  Finish_If_Stmt (If_Blk);
+
+                  return New_Obj_Value (Len);
+               end;
             when Type_Mode_Record =>
                declare
                   List : Iir_List;
                   El : Iir;
                   Res : O_Enode;
                   E : O_Enode;
+                  Sig_El : Mnode;
+                  Ssig : Mnode;
                begin
                   List :=
                     Get_Elements_Declaration_List (Get_Base_Type (Sig_Type));
+                  Ssig := Stabilize (Sig);
                   Res := O_Enode_Null;
                   for I in Natural loop
                      El := Get_Nth_Element (List, I);
                      exit when El = Null_Iir;
-                     E := Get_Nbr_Signals (Mnode_Null, Get_Type (El));
+                     Sig_El := Chap6.Translate_Selected_Element (Ssig, El);
+                     E := Get_Nbr_Signals (Sig_El, Get_Type (El));
                      if Res /= O_Enode_Null then
                         Res := New_Dyadic_Op (ON_Add_Ov, Res, E);
                      else
@@ -9735,10 +9759,10 @@ package body Translation is
                      end if;
                   end loop;
                   if Res = O_Enode_Null then
-                     return New_Lit (Ghdl_Index_0);
-                  else
-                     return Res;
+                     --  Empty records.
+                     Res := New_Lit (Ghdl_Index_0);
                   end if;
+                  return Res;
                end;
             when Type_Mode_Unknown
               | Type_Mode_File
@@ -9749,7 +9773,7 @@ package body Translation is
          end case;
       end Get_Nbr_Signals;
 
-            --  Get the leftest signal of SIG.
+      --  Get the leftest signal of SIG.
       --  The leftest signal of
       --   a scalar signal is itself,
       --   an array signal is the leftest,
@@ -10716,16 +10740,15 @@ package body Translation is
          --  Type of the resolution function parameter.
          El_Type : Iir;
          El_Info : Type_Info_Acc;
-         Finfo : Subprg_Info_Acc;
+         Finfo : constant Subprg_Info_Acc := Get_Info (Func);
          Interface_List : O_Inter_List;
-         Rinfo : Subprg_Resolv_Info_Acc;
+         Rinfo : constant Subprg_Resolv_Info_Acc := Finfo.Subprg_Resolv;
          Block_Info : Block_Info_Acc;
          Id : O_Ident;
          Itype : O_Tnode;
       begin
-         Finfo := Get_Info (Func);
-         Rinfo := Finfo.Subprg_Resolv;
          if Rinfo = null then
+            --  Not a resolution function
             return;
          end if;
 
@@ -10734,11 +10757,12 @@ package body Translation is
          Start_Procedure_Decl (Interface_List, Id, Global_Storage);
 
          --  The instance.
-         if Block /= Null_Iir then --and then Get_Pure_Flag (Func) = False then
+         if Block /= Null_Iir then
             Block_Info := Get_Info (Block);
             Rinfo.Resolv_Block := Block;
             Itype := Block_Info.Block_Decls_Ptr_Type;
          else
+            --  Create a dummy instance parameter
             Rinfo.Resolv_Block := Null_Iir;
             Itype := Ghdl_Ptr_Type;
          end if;
@@ -10749,6 +10773,7 @@ package body Translation is
          El_Type := Get_Type (Get_Interface_Declaration_Chain (Func));
          El_Type := Get_Element_Subtype (El_Type);
          El_Info := Get_Info (El_Type);
+         --  FIXME: create a function for getting the type of an interface.
          case El_Info.Type_Mode is
             when Type_Mode_Thin =>
                Itype := El_Info.Ortho_Type (Mode_Signal);
@@ -10908,16 +10933,15 @@ package body Translation is
          Var_Bound : O_Dnode;
          Var_Range_Ptr : O_Dnode;
          Var_Array : O_Dnode;
-         Finfo : Subprg_Info_Acc;
+         Finfo : constant Subprg_Info_Acc := Get_Info (Func);
+         Rinfo : constant Subprg_Resolv_Info_Acc := Finfo.Subprg_Resolv;
          Assoc : O_Assoc_List;
-         Rinfo : Subprg_Resolv_Info_Acc;
          Block_Info : Block_Info_Acc;
 
          Data : Read_Source_Data;
       begin
-         Finfo := Get_Info (Func);
-         Rinfo := Finfo.Subprg_Resolv;
          if Rinfo = null then
+            --  Not resolver for this function
             return;
          end if;
 
@@ -10943,8 +10967,9 @@ package body Translation is
 
          --  A signal.
 
-         New_Var_Decl (Var_Res, Get_Identifier ("res"),
-                       O_Storage_Local, Ret_Info.Ortho_Type (Mode_Value));
+         New_Var_Decl
+           (Var_Res, Get_Identifier ("res"),
+            O_Storage_Local, Get_Object_Type (Ret_Info, Mode_Value));
 
          --  I, J.
          New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
