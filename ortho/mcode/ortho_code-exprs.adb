@@ -1035,6 +1035,11 @@ package body Ortho_Code.Exprs is
          if Get_Type_Kind (Atype) /= OT_Access then
             raise Syntax_Error;
          end if;
+         if Get_Base_Type (Get_Enode_Type (O_Enode (Lvalue)))
+           /= Get_Base_Type (Get_Type_Access_Type (Atype))
+         then
+            raise Syntax_Error;
+         end if;
          Check_Ref (Lvalue);
       end if;
 

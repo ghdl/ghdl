@@ -774,6 +774,17 @@ package body Ortho_Code.Types is
       end case;
    end Get_Type_Next;
 
+   function Get_Base_Type (Atype : O_Tnode) return O_Tnode
+   is
+   begin
+      case Get_Type_Kind (Atype) is
+         when OT_Subarray =>
+            return Get_Type_Subarray_Base (Atype);
+         when others =>
+            return Atype;
+      end case;
+   end Get_Base_Type;
+
    procedure Mark (M : out Mark_Type) is
    begin
       M.Tnode := Tnodes.Last;

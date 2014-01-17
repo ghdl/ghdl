@@ -149,6 +149,9 @@ package Ortho_Code.Types is
    function New_Constrained_Array_Type (Atype : O_Tnode; Length : Uns32)
      return O_Tnode;
 
+   --  Return the base type of ATYPE: for a subarray this is the uc array,
+   --  otherwise this is the type.
+   function Get_Base_Type (Atype : O_Tnode) return O_Tnode;
 
    type O_Element_List is limited private;
 

@@ -6575,7 +6575,7 @@ package body Translation is
            or else not Info.Type_Locally_Constrained
          then
             --  This is a complex type as the size is not known at compile
-            --- time.
+            --  time.
             Info.Ortho_Type := Binfo.T.Base_Ptr_Type;
             Info.Ortho_Ptr_Type := Binfo.T.Base_Ptr_Type;
 
@@ -6993,16 +6993,12 @@ package body Translation is
       --------------
       procedure Translate_Access_Type (Def : Iir_Access_Type_Definition)
       is
-         D_Type : Iir;
-         D_Info : Ortho_Info_Acc;
+         D_Type : constant Iir := Get_Designated_Type (Def);
+         D_Info : constant Ortho_Info_Acc := Get_Info (D_Type);
+         Def_Info : constant Type_Info_Acc := Get_Info (Def);
          Dtype : O_Tnode;
-         Def_Info : Type_Info_Acc;
          Arr_Info : Type_Info_Acc;
       begin
-         D_Type := Get_Designated_Type (Def);
-         D_Info := Get_Info (D_Type);
-         Def_Info := Get_Info (Def);
-
          if not Is_Fully_Constrained_Type (D_Type) then
             --  An access type to an unconstrained type definition is a fat
             --  pointer.
@@ -7023,8 +7019,19 @@ package body Translation is
          else
             --  Otherwise, it is a thin pointer.
             Def_Info.Type_Mode := Type_Mode_Acc;
+            --  No access types for signals.
+            Def_Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
+
             if D_Info.Kind = Kind_Incomplete_Type then
                Dtype := O_Tnode_Null;
+            elsif Is_Complex_Type (D_Info) then
+               --  The type for a complex type is already a pointer, do not
+               --  create a new indirection.
+               Def_Info.Ortho_Type (Mode_Value) :=
+                 D_Info.Ortho_Type (Mode_Value);
+               Finish_Type_Definition (Def_Info, True);
+               --  FIXME: avoid this return in the middle of the code.
+               return;
             elsif D_Info.Type_Mode in Type_Mode_Arrays then
                --  The designated type cannot be a sub array inside ortho.
                Dtype := D_Info.T.Base_Type (Mode_Value);
@@ -7032,7 +7039,6 @@ package body Translation is
                Dtype := D_Info.Ortho_Type (Mode_Value);
             end if;
             Def_Info.Ortho_Type (Mode_Value) := New_Access_Type (Dtype);
-            Def_Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
             Finish_Type_Definition (Def_Info);
          end if;
       end Translate_Access_Type;
@@ -13417,13 +13423,10 @@ package body Translation is
 
       function Translate_Name (Name : Iir) return Mnode
       is
-         Name_Type : Iir;
-         Name_Info : Ortho_Info_Acc;
-         Type_Info : Type_Info_Acc;
+         Name_Type : constant Iir := Get_Type (Name);
+         Name_Info : constant Ortho_Info_Acc := Get_Info (Name);
+         Type_Info : constant Type_Info_Acc := Get_Info (Name_Type);
       begin
-         Name_Type := Get_Type (Name);
-         Name_Info := Get_Info (Name);
-         Type_Info := Get_Info (Name_Type);
          case Get_Kind (Name) is
             when Iir_Kind_Constant_Declaration
               | Iir_Kind_Variable_Declaration

@@ -19,6 +19,9 @@
 with Ada.Unchecked_Deallocation;
 
 package body Ortho_Debug is
+   --  If True, disable some checks so that the output can be generated.
+   Disable_Checks : constant Boolean := False;
+
    --  Metrics:
    --  Alignment and size for an address.
    Metric_Access_Align : constant Natural := 2;
@@ -844,7 +847,6 @@ package body Ortho_Debug is
       end case;
    end Get_Base_Type;
 
-
    procedure Start_Record_Aggr (List : out O_Record_Aggr_List; Atype : O_Tnode)
    is
       subtype O_Cnode_Aggregate is O_Cnode_Type (OC_Aggregate);
@@ -1118,7 +1120,9 @@ package body Ortho_Debug is
          raise Type_Error;
       end if;
       if Get_Base_Type (Lvalue.Rtype) /= Get_Base_Type (Atype.D_Type) then
-         raise Type_Error;
+         if not Disable_Checks then
+            raise Type_Error;
+         end if;
       end if;
       return new O_Enode_Address'(Kind => OE_Address,
                                   Rtype => Atype,
