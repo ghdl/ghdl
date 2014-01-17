@@ -23,6 +23,50 @@
 #include "tree-pass.h"
 #include "tree-dump.h"
 
+//#define GCC49
+
+#ifdef GCC49
+
+// New includes for gcc4.9 : big refactoring of tree.h, 19-Nov-2013 dnovillo
+#include "print-tree.h"
+#include "stringpool.h"
+#include "stor-layout.h"
+//#include "tree-dfa.h"
+#include "expr.h"
+#include "varasm.h"
+
+/* Returns the number of FIELD_DECLs in TYPE.  
+Copied here from expr.c in gcc4.9 as it is no longer exported 
+by tree.h */
+
+static int
+fields_length (const_tree type)
+{
+  tree t = TYPE_FIELDS (type);
+  int count = 0;
+
+  for (; t; t = DECL_CHAIN (t))
+    if (TREE_CODE (t) == FIELD_DECL)
+      ++count;
+
+  return count;
+}
+
+#else
+
+// adapt gcc4.9 practice to gcc4.8 functions
+bool tree_fits_uhwi_p (const_tree t)
+{
+  return host_integerp (t, 1);
+}
+
+unsigned HOST_WIDE_INT tree_to_uhwi (const_tree t)
+{
+  return tree_low_cst (t, 1);
+}
+
+#endif
+
 // temp for debugging 
 #include "stdio.h"
 
@@ -1308,9 +1352,9 @@ start_array_aggr (struct o_array_aggr_list *list, tree atype)
   list->elts = NULL;
 
   nelts = array_type_nelts (atype);
-  gcc_assert (nelts != NULL_TREE && host_integerp (nelts, 1));
+  gcc_assert (nelts != NULL_TREE && tree_fits_uhwi_p (nelts));
 
-  n = tree_low_cst (nelts, 1) + 1;
+  n = tree_to_uhwi (nelts) + 1;
   //list->elts = VEC_alloc (constructor_elt, gc, n);
   vec_alloc(list->elts, n);
 }
@@ -1408,12 +1452,12 @@ new_offsetof (tree field, tree rtype)
   off = DECL_FIELD_OFFSET (field);
 
   /*  The offset must be a constant.  */
-  gcc_assert (host_integerp (off, 1));
+  gcc_assert (tree_fits_uhwi_p (off));
 
   bit_off = DECL_FIELD_BIT_OFFSET (field);
 
   /*  The offset must be a constant.  */
-  gcc_assert (host_integerp (bit_off, 1));
+  gcc_assert (tree_fits_uhwi_p (bit_off));
 
   pos = TREE_INT_CST_LOW (off)
         + (TREE_INT_CST_LOW (bit_off) / BITS_PER_UNIT);
