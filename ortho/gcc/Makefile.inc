@@ -24,7 +24,7 @@
 
 AGCC_INC_FLAGS=-I$(AGCC_GCCOBJ_DIR)/gcc -I$(AGCC_GCCSRC_DIR)/include \
  -I$(AGCC_GCCSRC_DIR)/gcc -I$(AGCC_GCCSRC_DIR)/gcc/config \
- -I$(AGCC_GCCSRC_DIR)/libcpp/include
+ -I$(AGCC_GCCSRC_DIR)/libcpp/include $(GMPINC)
 AGCC_CFLAGS=-g -Wall -DIN_GCC $(AGCC_INC_FLAGS)
 
 AGCC_LOCAL_OBJS=ortho-lang.o
