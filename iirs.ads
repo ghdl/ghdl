@@ -1467,6 +1467,10 @@ package Iirs is
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
+   -- Never set to true, but possible when used as a prefix of an expanded
+   -- name in a overloaded subprogram.
+   --   Get/Set_Is_Within_Flag (Flag5)
+   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)

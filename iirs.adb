@@ -6881,6 +6881,7 @@ package body Iirs is
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Block_Statement
