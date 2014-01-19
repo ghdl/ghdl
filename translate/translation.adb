@@ -10599,7 +10599,7 @@ package body Translation is
                Stabilize (Name_Node);
                New_Assign_Stmt
                  (Get_Var (Alias_Info.Alias_Var),
-                  New_Value (M2Lp (Chap3.Get_Array_Base (Name_Node))));
+                  M2E (Chap3.Get_Array_Base (Name_Node)));
                Chap3.Check_Array_Match (Decl_Type, T2M (Decl_Type, Kind),
                                         Name_Type, Name_Node,
                                         Decl);
@@ -11844,7 +11844,7 @@ package body Translation is
          Info := Add_Info (Spec, Kind_Object);
          Info.Object_Var := Create_Var
            (Create_Var_Identifier (Attr),
-            Atinfo.Ortho_Type (Mode_Value),
+            Chap4.Get_Object_Type (Atinfo, Mode_Value),
             Global_Storage);
          Pop_Identifier_Prefix (Mark);
       end Translate_Attribute_Specification;
