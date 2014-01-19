@@ -4717,7 +4717,9 @@ package body Parse is
                if Flags.Vhdl_Std >= Vhdl_93c then
                   Check_End_Name (Stmt);
                end if;
-            when Tok_Identifier => -- | tok_left_paren
+            when Tok_Identifier
+              | Tok_String =>
+               --  String for an expanded name with operator_symbol prefix.
                Stmt := Parse_Sequential_Assignment_Statement (Parse_Name);
             when Tok_Left_Paren =>
                declare
