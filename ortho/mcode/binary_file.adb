@@ -319,7 +319,7 @@ package body Binary_File is
 
    procedure End_Insn
    is
-      Str : String (1 .. 128);
+      Str : String (1 .. 256);
       Len : Natural;
       Insn_Len : Natural;
    begin

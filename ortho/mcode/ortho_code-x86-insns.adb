@@ -1646,8 +1646,10 @@ package body Ortho_Code.X86.Insns is
                      end if;
                      if Kind = OE_Div_Ov or Kind = OE_Mul_Ov then
                         Reg_Res := R_Ax;
+                        Clobber_R32 (R_Dx);
                      else
                         Reg_Res := R_Dx;
+                        Clobber_R32 (R_Ax);
                      end if;
                      Set_Expr_Reg (Stmt, Alloc_Reg (Reg_Res, Stmt, Pnum));
                      Link_Stmt (Stmt);
