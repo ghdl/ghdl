@@ -1149,14 +1149,6 @@ package body Translation is
             --  Mode of the type.
             Type_Mode : Type_Mode_Type := Type_Mode_Unknown;
 
-            --  Additionnal info for complex types.
-            C : Complex_Type_Info_Acc := null;
-
-            --  Ortho node which represents the type.
-            Ortho_Type : O_Tnode_Array;
-            --  Ortho pointer to the type.
-            Ortho_Ptr_Type : O_Tnode_Array;
-
             --  If true, the type is (still) incomplete.
             Type_Incomplete : Boolean := False;
 
@@ -1164,6 +1156,26 @@ package body Translation is
             --  static bounds.  May have non locally-static bounds in some
             --  of its sub-element (ie being a complex type).
             Type_Locally_Constrained : Boolean := False;
+
+            --  Additionnal info for complex types.
+            C : Complex_Type_Info_Acc := null;
+
+            --  Ortho node which represents the type.
+            --  Type                             -> Ortho type
+            --   scalar                          ->  scalar
+            --   record (complex or not)         ->  record
+            --   constrained non-complex array   ->  constrained array
+            --   constrained complex array       ->  the element
+            --   unconstrained array             ->  fat pointer
+            --   access to unconstrained array   ->  fat pointer
+            --   access (others)                 ->  access
+            --   file                            ->  file_index_type
+            --   protected                       ->  instance
+            Ortho_Type : O_Tnode_Array;
+
+            --  Ortho pointer to the type.  This is always an access to the
+            --  ortho_type.
+            Ortho_Ptr_Type : O_Tnode_Array;
 
             --  Chain of temporary types to be destroyed at end of scope.
             Type_Transient_Chain : Iir := Null_Iir;
@@ -1185,13 +1197,13 @@ package body Translation is
             Expr_Node : O_Cnode;
 
          when Kind_Subprg =>
-            --  Subprogram declaration node.
-            Ortho_Func : O_Dnode;
-
             --  True if the function can return a value stored in the secondary
             --  stack.  In this case, the caller must deallocate the area
             --  allocated by the callee when the value was used.
             Use_Stack2 : Boolean := False;
+
+            --  Subprogram declaration node.
+            Ortho_Func : O_Dnode;
 
             --  For a function:
             --    If the return value is not composite, then this field
@@ -7025,15 +7037,15 @@ package body Translation is
             if D_Info.Kind = Kind_Incomplete_Type then
                Dtype := O_Tnode_Null;
             elsif Is_Complex_Type (D_Info) then
-               --  The type for a complex type is already a pointer, do not
-               --  create a new indirection.
+               --  FIXME: clean here when the ortho_type of a array
+               --  complex_type is correctly set (not a pointer).
                Def_Info.Ortho_Type (Mode_Value) :=
-                 D_Info.Ortho_Type (Mode_Value);
+                 D_Info.Ortho_Ptr_Type (Mode_Value);
                Finish_Type_Definition (Def_Info, True);
-               --  FIXME: avoid this return in the middle of the code.
                return;
             elsif D_Info.Type_Mode in Type_Mode_Arrays then
                --  The designated type cannot be a sub array inside ortho.
+               --  FIXME: lift this restriction.
                Dtype := D_Info.T.Base_Type (Mode_Value);
             else
                Dtype := D_Info.Ortho_Type (Mode_Value);
@@ -15922,21 +15934,17 @@ package body Translation is
       is
          Val : O_Enode;
          Val_M : Mnode;
-         P_Type : Iir;
-         P_Info : Type_Info_Acc;
-         D_Type : Iir;
-         D_Info : Type_Info_Acc;
+         A_Type : constant Iir := Get_Type (Expr);
+         A_Info : constant Type_Info_Acc := Get_Info (A_Type);
+         D_Type : constant Iir := Get_Designated_Type (A_Type);
+         D_Info : constant Type_Info_Acc := Get_Info (D_Type);
          R : Mnode;
          Rtype : O_Tnode;
       begin
-         P_Type := Get_Type (Expr);
-         P_Info := Get_Info (P_Type);
-         D_Type := Get_Designated_Type (P_Type);
-         D_Info := Get_Info (D_Type);
          --  Compute the expression.
          Val := Translate_Expression (Get_Expression (Expr), D_Type);
          --  Allocate memory for the object.
-         case P_Info.Type_Mode is
+         case A_Info.Type_Mode is
             when Type_Mode_Fat_Acc =>
                R := Dv2M (Create_Temp (D_Info.Ortho_Type (Mode_Value)),
                           D_Info, Mode_Value);
@@ -15945,13 +15953,13 @@ package body Translation is
                  (R, Alloc_Heap, D_Type,
                   M2Addr (Chap3.Get_Array_Bounds (Val_M)));
                Val := M2E (Val_M);
-               Rtype := P_Info.Ortho_Ptr_Type (Mode_Value);
+               Rtype := A_Info.Ortho_Ptr_Type (Mode_Value);
             when Type_Mode_Acc =>
                R := Dp2M (Create_Temp (D_Info.Ortho_Ptr_Type (Mode_Value)),
                           D_Info, Mode_Value);
                Chap3.Translate_Object_Allocation
                  (R, Alloc_Heap, D_Type, O_Enode_Null);
-               Rtype := P_Info.Ortho_Type (Mode_Value);
+               Rtype := A_Info.Ortho_Type (Mode_Value);
             when others =>
                raise Internal_Error;
          end case;
