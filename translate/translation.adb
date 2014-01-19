@@ -25032,6 +25032,7 @@ package body Translation is
          case Pinfo.Type_Mode is
             when Type_Mode_B2
               | Type_Mode_E8
+              | Type_Mode_E32
               | Type_Mode_P32
               | Type_Mode_P64 =>
                New_Association
@@ -25081,6 +25082,7 @@ package body Translation is
          case Pinfo.Type_Mode is
             when Type_Mode_B2
               | Type_Mode_E8
+              | Type_Mode_E32
               | Type_Mode_P32
               | Type_Mode_P64 =>
                New_Association
