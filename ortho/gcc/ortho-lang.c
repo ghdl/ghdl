@@ -406,7 +406,7 @@ ortho_post_options (const char **pfilename)
   return false;
 }
 
-extern "C" bool lang_handle_option (const char *opt, const char *arg);
+extern "C" int lang_handle_option (const char *opt, const char *arg);
 
 static bool
 ortho_handle_option (size_t code, const char *arg, int value, int kind,
@@ -424,7 +424,7 @@ ortho_handle_option (size_t code, const char *arg, int value, int kind,
     case OPT_c:
     case OPT__anaelab:
       /* Only a few options have a real arguments.  */
-      return lang_handle_option (opt, arg);
+      return lang_handle_option (opt, arg) != 0;
     default:
       /* The other options must have a joint argument.  */
       if (arg != NULL)
@@ -432,7 +432,7 @@ ortho_handle_option (size_t code, const char *arg, int value, int kind,
 	  size_t len1;
 	  size_t len2;
 	  char *nopt;
-	  
+
 	  len1 = strlen (opt);
 	  len2 = strlen (arg);
 	  nopt = (char *) alloca (len1 + len2 + 1);
@@ -441,7 +441,7 @@ ortho_handle_option (size_t code, const char *arg, int value, int kind,
 	  nopt[len1 + len2] = 0;
 	  opt = nopt;
 	}
-      return lang_handle_option (opt, NULL);
+      return lang_handle_option (opt, NULL) != 0;
     }
 }
 
