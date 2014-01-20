@@ -39,9 +39,7 @@ LIBIBERTY = $(AGCC_GCCOBJ_DIR)/libiberty/libiberty.a
 CPPLIB= # Not needed for GHDL
 
 BACKEND = $(AGCC_GCCOBJ_DIR)/gcc/libbackend.a \
-         $(AGCC_GCCOBJ_DIR)/gcc/libcommon-target.a \
-         $(AGCC_GCCOBJ_DIR)/gcc/libcommon.a \
-	 $(CPPLIB) $(LIBDECNUMBER)
+         $(AGCC_GCCOBJ_DIR)/gcc/libcommon-target.a
 
 BACKENDLIBS = $(CLOOGLIBS) $(GMPLIBS) $(PLUGINLIBS) $(HOST_LIBS) \
 	$(ZLIB)

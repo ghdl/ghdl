@@ -1,0 +1,4 @@
+# Example Makefile.conf
+# Copy this file to Makefile.conf and edit as necessary for your platform
+
+HOST_LIBS = -ldl -lstdc++
