@@ -25263,6 +25263,7 @@ package body Translation is
          Prefix : Iir;
          Res : O_Dnode;
          Name_Cst : O_Dnode;
+         Str_Cst : O_Cnode;
          Constr : O_Assoc_List;
          Is_Instance : Boolean;
       begin
@@ -25313,12 +25314,12 @@ package body Translation is
          Create_Temp_Stack2_Mark;
 
          Res := Create_Temp (Std_String_Node);
+         Str_Cst := Create_String_Len (Path_Str (1 .. Path_Len),
+                                       Create_Uniq_Identifier);
          New_Const_Decl (Name_Cst, Create_Uniq_Identifier, O_Storage_Private,
                          Ghdl_Str_Len_Type_Node);
          Start_Const_Value (Name_Cst);
-         Finish_Const_Value (Name_Cst,
-                             Create_String_Len (Path_Str (1 .. Path_Len),
-                                                Create_Uniq_Identifier));
+         Finish_Const_Value (Name_Cst, Str_Cst);
          if Is_Instance then
             Start_Association (Constr, Ghdl_Get_Instance_Name);
          else
