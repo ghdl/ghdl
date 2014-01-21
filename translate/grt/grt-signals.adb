@@ -2360,10 +2360,7 @@ package body Grt.Signals is
       --  Reorder propagation table.
       declare
          type Off_Array is array (Signal_Net_Type range <>) of Signal_Net_Type;
-         type Off_Array_Acc is access Off_Array;
-         Offs : Off_Array_Acc;
-         procedure Free is new Ada.Unchecked_Deallocation
-           (Name => Off_Array_Acc, Object => Off_Array);
+         Offs : Off_Array (0 .. Last_Signal_Net) := (others => 0);
 
          Last_Off : Signal_Net_Type;
          Num : Signal_Net_Type;
@@ -2385,10 +2382,6 @@ package body Grt.Signals is
 
          type Propag_Array is array (Signal_Net_Type range <>)
            of Propagation_Type;
-         type Propag_Array_Acc is access Propag_Array;
-         Propag : Propag_Array_Acc;
-         procedure Free is new Ada.Unchecked_Deallocation
-           (Name => Propag_Array_Acc, Object => Propag_Array);
 
          procedure Deallocate is new Ada.Unchecked_Deallocation
            (Object => Forward_Build_Type, Name => Forward_Build_Acc);
@@ -2396,8 +2389,6 @@ package body Grt.Signals is
          Net : Signal_Net_Type;
       begin
          --  1) Count number of propagation cell per net.
-         Offs := new Off_Array (0 .. Last_Signal_Net);
-         Offs.all := (others => 0);
          for I in Propagation.First .. Propagation.Last loop
             Net := Get_Propagation_Net (I);
             Offs (Net) := Offs (Net) + 1;
@@ -2415,27 +2406,28 @@ package body Grt.Signals is
          end loop;
          Offs (0) := Last_Off + 1;
 
-         --  3) Gather entries by net (copy)
-         Propag := new Propag_Array (1 .. Last_Off);
-         for I in Propagation.First .. Propagation.Last loop
-            Net := Get_Propagation_Net (I);
-            if Net /= No_Signal_Net then
-               Propag (Offs (Net)) := Propagation.Table (I);
-               Offs (Net) := Offs (Net) + 1;
-            end if;
-         end loop;
-         Propagation.Set_Last (Last_Off);
-         Propagation.Release;
-         for I in Propagation.First .. Propagation.Last loop
-            if Propag (I).Kind = Imp_Forward_Build then
-               Propagation.Table (I) := (Kind => Imp_Forward,
+         declare
+            Propag : Propag_Array (1 .. Last_Off);  --  := (others => 0);
+         begin
+            for I in Propagation.First .. Propagation.Last loop
+               Net := Get_Propagation_Net (I);
+               if Net /= No_Signal_Net then
+                  Propag (Offs (Net)) := Propagation.Table (I);
+                  Offs (Net) := Offs (Net) + 1;
+               end if;
+            end loop;
+            Propagation.Set_Last (Last_Off);
+            Propagation.Release;
+            for I in Propagation.First .. Propagation.Last loop
+               if Propag (I).Kind = Imp_Forward_Build then
+                  Propagation.Table (I) := (Kind => Imp_Forward,
                                          Sig => Propag (I).Forward.Targ);
-               Deallocate (Propag (I).Forward);
-            else
-               Propagation.Table (I) := Propag (I);
-            end if;
-         end loop;
-         Free (Propag);
+                  Deallocate (Propag (I).Forward);
+               else
+                  Propagation.Table (I) := Propag (I);
+               end if;
+            end loop;
+         end;
          for I in 1 .. Last_Signal_Net loop
             --  Ignore holes.
             if Offs (I) /= 0 then
@@ -2475,7 +2467,6 @@ package body Grt.Signals is
             end if;
             Sig.Link := null;
          end loop;
-         Free (Offs);
       end;
    end Create_Nets;
 
