@@ -847,7 +847,7 @@ enum ON_op_kind {
 
   /*  Binary operations.  */
   ON_And,
-  ON_Or, 
+  ON_Or,
   ON_Xor,
   ON_And_Then,
   ON_Or_Else,
@@ -879,13 +879,13 @@ static enum tree_code ON_op_to_TREE_CODE[ON_LAST] = {
   TRUNC_MOD_EXPR,
   FLOOR_MOD_EXPR,
 
-  TRUTH_AND_EXPR,
-  TRUTH_OR_EXPR,
-  TRUTH_XOR_EXPR,
+  BIT_AND_EXPR,
+  BIT_IOR_EXPR,
+  BIT_XOR_EXPR,
   TRUTH_ANDIF_EXPR,
   TRUTH_ORIF_EXPR,
 
-  TRUTH_NOT_EXPR,
+  BIT_NOT_EXPR,
   NEGATE_EXPR,
   ABS_EXPR,
 
