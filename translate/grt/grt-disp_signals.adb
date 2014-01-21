@@ -153,6 +153,8 @@ package body Grt.Disp_Signals is
    procedure Disp_Simple_Signal
      (Sig : Ghdl_Signal_Ptr; Sig_Type : Ghdl_Rti_Access; Sources : Boolean)
    is
+      function To_Address is new Ada.Unchecked_Conversion
+        (Source => Resolved_Signal_Acc, Target => Address);
    begin
       Put (' ');
       Put (stdout, Sig.all'Address);
@@ -204,6 +206,10 @@ package body Grt.Disp_Signals is
             Put (" ports");
          end if;
          if Sig.S.Mode_Sig in Mode_Signal_User then
+            if Sig.S.Resolv /= null then
+               Put (stdout, " res func ");
+               Put (stdout, To_Address(Sig.S.Resolv));
+            end if;
             if Sig.S.Nbr_Drivers = 0 then
                Put ("; no driver");
             elsif Sig.S.Nbr_Drivers = 1 then

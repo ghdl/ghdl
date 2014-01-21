@@ -43,7 +43,7 @@
 #define STACK_SIGNAL SIGBUS
 #endif
 
-/* Defined in Grt.Stacks.  */
+/* Defined in Grt.Options.  */
 extern unsigned int stack_size;
 extern unsigned int stack_max_size;
 
