@@ -311,10 +311,6 @@ private
       ON_Array_Sub_Type, ON_Record_Type, ON_Union_Type, ON_Access_Type);
    type O_Tnode_Type (Kind : ON_Type_Kind) is record
       Decl : O_Dnode;
-      --  Alignment, in power of 2.
-      Align : Natural;
-      --  Size in bytes.
-      Size : Unsigned_32;
       --  True if the type was first created as an uncomplete type.
       Uncomplete : Boolean;
       --  True if the type is complete.
@@ -325,7 +321,7 @@ private
             False_N : O_Cnode;
          when ON_Unsigned_Type
            | ON_Signed_Type =>
-            null;
+            Int_Size : Natural;
          when ON_Float_Type =>
             null;
          when ON_Enum_Type =>
