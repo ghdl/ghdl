@@ -1472,7 +1472,7 @@ package body Sem_Specs is
          Comp_El := Find_Name_In_Chain (Comp_Chain, Get_Identifier (Ent_El));
          if Comp_El = Null_Iir then
             Assoc := Create_Iir (Iir_Kind_Association_Element_Open);
-            Location_Copy (Assoc, Comp);
+            Location_Copy (Assoc, Parent);
          else
             if not Are_Nodes_Compatible (Comp_El, Ent_El) then
                Error_Msg_Sem
@@ -1490,7 +1490,7 @@ package body Sem_Specs is
                Error := True;
             end if;
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
-            Location_Copy (Assoc, Comp_El);
+            Location_Copy (Assoc, Parent);
             Set_Whole_Association_Flag (Assoc, True);
             Set_Actual (Assoc, Comp_El);
             Found := Found + 1;

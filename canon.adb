@@ -1698,8 +1698,14 @@ package body Canon is
       end if;
    end Add_Binding_Indication_Dependence;
 
+   --  Canon the component_configuration or configuration_specification CFG.
    procedure Canon_Component_Configuration (Top : Iir_Design_Unit; Cfg : Iir)
    is
+      --  True iff CFG is a component_configuration.
+      --  False iff CFG is a configuration_specification.
+      Is_Config : constant Boolean :=
+        Get_Kind (Cfg) = Iir_Kind_Component_Configuration;
+
       Bind : Iir;
       Instances : Iir_List;
       Entity_Aspect : Iir;
@@ -1738,7 +1744,9 @@ package body Canon is
             Entity := Get_Entity_From_Entity_Aspect (Entity_Aspect);
             Map_Chain := Get_Generic_Map_Aspect_Chain (Bind);
             if Map_Chain = Null_Iir then
-               Map_Chain := Get_Default_Generic_Map_Aspect_Chain (Bind);
+               if Is_Config then
+                  Map_Chain := Get_Default_Generic_Map_Aspect_Chain (Bind);
+               end if;
             else
                Map_Chain := Canon_Association_Chain
                  (Get_Generic_Chain (Entity), Map_Chain, Map_Chain);
@@ -1747,7 +1755,9 @@ package body Canon is
 
             Map_Chain := Get_Port_Map_Aspect_Chain (Bind);
             if Map_Chain = Null_Iir then
-               Map_Chain := Get_Default_Port_Map_Aspect_Chain (Bind);
+               if Is_Config then
+                  Map_Chain := Get_Default_Port_Map_Aspect_Chain (Bind);
+               end if;
             else
                Map_Chain := Canon_Association_Chain
                  (Get_Port_Chain (Entity), Map_Chain, Map_Chain);
@@ -1873,6 +1883,7 @@ package body Canon is
       Res : Iir_Component_Configuration;
       Cs_Binding : Iir_Binding_Indication;
       Cc_Binding : Iir_Binding_Indication;
+      Cs_Chain : Iir;
       Res_Binding : Iir_Binding_Indication;
       Entity : Iir;
       Instance_List : Iir_List;
@@ -1911,17 +1922,25 @@ package body Canon is
       Entity := Get_Entity_From_Entity_Aspect (Get_Entity_Aspect (Cs_Binding));
 
       --  Merge generic map aspect.
+      Cs_Chain := Get_Generic_Map_Aspect_Chain (Cs_Binding);
+      if Cs_Chain = Null_Iir then
+         Cs_Chain := Get_Default_Generic_Map_Aspect_Chain (Cs_Binding);
+      end if;
       Set_Generic_Map_Aspect_Chain
         (Res_Binding,
          Merge_Association_Chain (Get_Generic_Chain (Entity),
-                                  Get_Generic_Map_Aspect_Chain (Cs_Binding),
+                                  Cs_Chain,
                                   Get_Generic_Map_Aspect_Chain (Cc_Binding)));
 
       --  merge port map aspect
+      Cs_Chain := Get_Port_Map_Aspect_Chain (Cs_Binding);
+      if Cs_Chain = Null_Iir then
+         Cs_Chain := Get_Default_Port_Map_Aspect_Chain (Cs_Binding);
+      end if;
       Set_Port_Map_Aspect_Chain
         (Res_Binding,
          Merge_Association_Chain (Get_Port_Chain (Entity),
-                                  Get_Port_Map_Aspect_Chain (Cs_Binding),
+                                  Cs_Chain,
                                   Get_Port_Map_Aspect_Chain (Cc_Binding)));
 
       --  set entity aspect
