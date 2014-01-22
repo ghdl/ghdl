@@ -638,11 +638,11 @@ package body Ortho_Debug.Disp is
             Put ("}");
          when ON_Unsigned_Type =>
             Put ("unsigned (");
-            Put_Trim (Unsigned_32'Image (8 * Atype.Size));
+            Put_Trim (Natural'Image (Atype.Int_Size));
             Put (")");
          when ON_Signed_Type =>
             Put ("signed (");
-            Put_Trim (Unsigned_32'Image (8 * Atype.Size));
+            Put_Trim (Natural'Image (Atype.Int_Size));
             Put (")");
          when ON_Float_Type =>
             Put ("float");

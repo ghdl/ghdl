@@ -22,11 +22,6 @@ package body Ortho_Debug is
    --  If True, disable some checks so that the output can be generated.
    Disable_Checks : constant Boolean := False;
 
-   --  Metrics:
-   --  Alignment and size for an address.
-   Metric_Access_Align : constant Natural := 2;
-   Metric_Access_Size : constant Unsigned_32 := 4;
-
    type ON_Op_To_OE_Type is array (ON_Op_Kind) of OE_Kind;
    ON_Op_To_OE : constant ON_Op_To_OE_Type :=
      (
@@ -511,8 +506,6 @@ package body Ortho_Debug is
    begin
       Res := new O_Tnode_Record_Type'(Kind => ON_Record_Type,
                                       Decl => O_Dnode_Null,
-                                      Align => 0,
-                                      Size => 0,
                                       Uncomplete => True,
                                       Complete => False,
                                       Elements => O_Fnode_Null);
@@ -539,22 +532,11 @@ package body Ortho_Debug is
    begin
       Elements.Res := new O_Tnode_Record_Type'(Kind => ON_Record_Type,
                                                Decl => O_Dnode_Null,
-                                               Align => 0,
-                                               Size => 0,
                                                Uncomplete => False,
                                                Complete => False,
                                                Elements => O_Fnode_Null);
       Elements.Last := null;
    end Start_Record_Type;
-
-   function Align_Size (Size : Unsigned_32; Align : Natural)
-     return Unsigned_32
-   is
-      M : Unsigned_32;
-   begin
-      M := (2 ** Align) - 1;
-      return (Size + M) and (not M);
-   end Align_Size;
 
    procedure New_Record_Field
      (Elements : in out O_Element_List;
@@ -564,19 +546,12 @@ package body Ortho_Debug is
    begin
       Check_Complete_Type (Etype);
       Check_Constrained_Type (Etype);
-      --  The alignment of a structure is the max alignment of its field.
-      if Etype.Align > Elements.Res.Align then
-         Elements.Res.Align := Etype.Align;
-      end if;
-      --  Align the current size for the new field.
-      Elements.Res.Size := Align_Size (Elements.Res.Size, Etype.Align);
       El := new O_Fnode_Type'(Parent => Elements.Res,
                               Next => null,
                               Ident => Ident,
                               Ftype => Etype,
-                              Offset => Elements.Res.Size);
-      --  Add the size of the field.
-      Elements.Res.Size := Elements.Res.Size + Etype.Size;
+                              Offset => 0);
+      --  Append EL.
       if Elements.Last = null then
          Elements.Res.Elements := El;
       else
@@ -590,7 +565,6 @@ package body Ortho_Debug is
    begin
       --  Align the structure.
       Res := Elements.Res;
-      Res.Size := Align_Size (Res.Size, Res.Align);
       if Res.Uncomplete then
          New_Completed_Type_Decl (Res);
       end if;
@@ -603,8 +577,6 @@ package body Ortho_Debug is
    begin
       Elements.Res := new O_Tnode_Union_Type'(Kind => ON_Union_Type,
                                               Decl => O_Dnode_Null,
-                                              Align => 0,
-                                              Size => 0,
                                               Uncomplete => False,
                                               Complete => False,
                                               Elements => O_Fnode_Null);
@@ -623,9 +595,7 @@ package body Ortho_Debug is
    procedure Finish_Union_Type
      (Elements : in out O_Element_List; Res : out O_Tnode) is
    begin
-      --  Align the structure.
       Res := Elements.Res;
-      Res.Size := Align_Size (Res.Size, Res.Align);
       Res.Complete := True;
    end Finish_Union_Type;
 
@@ -642,8 +612,6 @@ package body Ortho_Debug is
       end if;
       Res := new O_Tnode_Access'(Kind => ON_Access_Type,
                                  Decl => O_Dnode_Null,
-                                 Align => Metric_Access_Align,
-                                 Size => Metric_Access_Size,
                                  Uncomplete => Dtype = O_Tnode_Null,
                                  Complete => True,
                                  D_Type => Dtype);
@@ -676,8 +644,6 @@ package body Ortho_Debug is
       Check_Complete_Type (El_Type);
       return new O_Tnode_Array'(Kind => ON_Array_Type,
                                 Decl => O_Dnode_Null,
-                                Align => El_Type.Align,
-                                Size => 0,
                                 Uncomplete => False,
                                 Complete => True,
                                 El_Type => El_Type,
@@ -688,61 +654,38 @@ package body Ortho_Debug is
      return O_Tnode
    is
       subtype O_Tnode_Sub_Array is O_Tnode_Type (ON_Array_Sub_Type);
-      Size : Unsigned_32;
    begin
       if Atype.Kind /= ON_Array_Type then
          raise Type_Error;
       end if;
-      Size := Unsigned_32 (Length.U_Val) * Atype.El_Type.Size;
       return new O_Tnode_Sub_Array'(Kind => ON_Array_Sub_Type,
                                     Decl => O_Dnode_Null,
-                                    Align => Atype.Align,
-                                    Size => Size,
                                     Uncomplete => False,
                                     Complete => True,
                                     Base_Type => Atype,
                                     Length => Length);
    end New_Constrained_Array_Type;
 
-   function Get_Scalar_Pow (Bit_Size : Natural) return Natural is
-   begin
-      if Bit_Size <= 8 then
-         return 0;
-      elsif Bit_Size <= 32 then
-         return 2;
-      elsif Bit_Size <= 64 then
-         return 3;
-      else
-         raise Type_Error;
-      end if;
-   end Get_Scalar_Pow;
-
    function New_Unsigned_Type (Size : Natural) return O_Tnode
    is
       subtype O_Tnode_Unsigned is O_Tnode_Type (ON_Unsigned_Type);
-      Align : Natural;
    begin
-      Align := Get_Scalar_Pow (Size);
       return new O_Tnode_Unsigned'(Kind => ON_Unsigned_Type,
                                    Decl => O_Dnode_Null,
-                                   Align => Align,
-                                   Size => 2 ** Align,
                                    Uncomplete => False,
-                                   Complete => True);
+                                   Complete => True,
+                                   Int_Size => Size);
    end New_Unsigned_Type;
 
    function New_Signed_Type (Size : Natural) return O_Tnode
    is
       subtype O_Tnode_Signed is O_Tnode_Type (ON_Signed_Type);
-      Align : Natural;
    begin
-      Align := Get_Scalar_Pow (Size);
       return new O_Tnode_Signed'(Kind => ON_Signed_Type,
                                  Decl => O_Dnode_Null,
-                                 Align => Align,
-                                 Size => 2 ** Align,
                                  Uncomplete => False,
-                                 Complete => True);
+                                 Complete => True,
+                                 Int_Size => Size);
    end New_Signed_Type;
 
    function New_Float_Type return O_Tnode
@@ -751,8 +694,6 @@ package body Ortho_Debug is
    begin
       return new O_Tnode_Float'(Kind => ON_Float_Type,
                                 Decl => O_Dnode_Null,
-                                Align => 0,
-                                Size => 1,
                                 Uncomplete => False,
                                 Complete => True);
    end New_Float_Type;
@@ -768,8 +709,6 @@ package body Ortho_Debug is
    begin
       Res := new O_Tnode_Boolean'(Kind => ON_Boolean_Type,
                                   Decl => O_Dnode_Null,
-                                  Align => 0,
-                                  Size => 1,
                                   Uncomplete => False,
                                   Complete => True,
                                   True_N => O_Cnode_Null,
@@ -790,15 +729,12 @@ package body Ortho_Debug is
 
    procedure Start_Enum_Type (List : out O_Enum_List; Size : Natural)
    is
+      pragma Unreferenced (Size);
       subtype O_Tnode_Enum is O_Tnode_Type (ON_Enum_Type);
       Res : O_Tnode;
-      Align : Natural;
    begin
-      Align := Get_Scalar_Pow (Size);
       Res := new O_Tnode_Enum'(Kind => ON_Enum_Type,
                                Decl => O_Dnode_Null,
-                               Align => Align,
-                               Size => 2 ** Align,
                                Uncomplete => False,
                                Complete => False,
                                Nbr => 0,
