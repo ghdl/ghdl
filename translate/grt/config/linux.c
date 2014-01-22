@@ -37,6 +37,11 @@
 #define EXTEND_STACK 1
 #define STACK_SIGNAL SIGSEGV
 #endif
+#ifdef __FreeBSD__
+/* If set, SIGSEGV is caught in order to automatically grow the stacks.  */
+#define EXTEND_STACK 1
+#define STACK_SIGNAL SIGSEGV
+#endif
 #ifdef __APPLE__
 /* If set, SIGSEGV is caught in order to automatically grow the stacks.  */
 #define EXTEND_STACK 1
