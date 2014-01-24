@@ -488,6 +488,13 @@ package body Ortho_Code.Consts is
       end if;
    end New_Alignof;
 
+   function Get_Alignof_Type (Cst : O_Cnode) return O_Tnode
+   is
+      function To_Cnode_Sizeof is new Ada.Unchecked_Conversion
+        (Cnode_Common, Cnode_Sizeof);
+   begin
+      return To_Cnode_Sizeof (Cnodes.Table (Cst + 1)).Atype;
+   end Get_Alignof_Type;
 
    function New_Offsetof (Field : O_Fnode; Rtype : O_Tnode) return O_Cnode is
    begin

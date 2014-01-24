@@ -56,8 +56,11 @@ package Ortho_Code.Consts is
    --  Declaration for an address.
    function Get_Const_Decl (Cst : O_Cnode) return O_Dnode;
 
-   --  Get the type whose size is expected.
+   --  Get the type from an OC_Sizeof node.
    function Get_Sizeof_Type (Cst : O_Cnode) return O_Tnode;
+
+   --  Get the type from an OC_Alignof node.
+   function Get_Alignof_Type (Cst : O_Cnode) return O_Tnode;
 
    --  Get the value of a named literal.
    --function Get_Const_Literal (Cst : O_Cnode) return Uns32;
