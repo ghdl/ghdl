@@ -1037,8 +1037,10 @@ package body Translation is
    --     end record;
    --
    --     This is represented by a pointer to a record. The 'f2' field is
-   --     a pointer to an array of bit. The size of the object is the size
+   --     an offset to an array of bit. The size of the object is the size
    --     of the record (with f2 as a pointer) + the size of bv_type.
+   --     The alinment of the object is the maximum alignment of its sub-
+   --     objects: rec1 and bv_type.
    --     A builder procedure is needed to initialize the 'f2' field.
    --     The memory layout is:
    --     +--------------+
@@ -1056,7 +1058,8 @@ package body Translation is
    --    end record;
    --
    --    This is represented by a pointer to a record.  All the three fields
-   --    are pointers.
+   --    are offset (relative to rec2). Alignment is the maximum alignment of
+   --    the sub-objects (rec2, rec1, bv_type x 3).
    --     The memory layout is:
    --     +--------------+
    --     | rec2:     g1 |---+
@@ -1101,6 +1104,17 @@ package body Translation is
       --  This is defined only for types whose size is only known at
       --  running time (and not a compile-time).
       Size_Var : Var_Acc;
+
+      --  Variable containing the alignment of the type.
+      --  Only defined for recods and for Mode_Value.
+      --  Note: this is not optimal, because the alignment could be computed
+      --  at compile time, but there is no way to do that with ortho (no
+      --  operation on constants). Furthermore, the alignment is independent
+      --  of the instance, so there could be one global variable. But this
+      --  doesn't fit in the whole machinery (in particular, there is no
+      --  easy way to compute it once). As the overhead is very low, no need
+      --  to bother with this issue.
+      Align_Var : Var_Acc;
 
       Builder_Need_Func : Boolean;
 
@@ -1539,6 +1553,7 @@ package body Translation is
       if Info.C /= null then
          Free_Var (Info.C (Mode_Value).Size_Var);
          Free_Var (Info.C (Mode_Signal).Size_Var);
+         Free_Var (Info.C (Mode_Value).Align_Var);
          Free_Complex_Type_Info (Info.C);
       end if;
       Unchecked_Deallocation (Info);
@@ -6813,24 +6828,47 @@ package body Translation is
       --  record  --
       --------------
 
+      --  Get the alignment mask for *ortho* type ATYPE.
+      function Get_Type_Alignmask (Atype : O_Tnode) return O_Enode is
+      begin
+         return New_Dyadic_Op
+           (ON_Sub_Ov,
+            New_Lit (New_Alignof (Atype, Ghdl_Index_Type)),
+            New_Lit (Ghdl_Index_1));
+      end Get_Type_Alignmask;
+
+      --  Get the alignment mask for type INFO (Mode_Value).
+      function Get_Type_Alignmask (Info : Type_Info_Acc) return O_Enode is
+      begin
+         if Is_Complex_Type (Info) then
+            if Info.Type_Mode /= Type_Mode_Record then
+               raise Internal_Error;
+            end if;
+            return New_Value (Get_Var (Info.C (Mode_Value).Align_Var));
+         else
+            return Get_Type_Alignmask (Info.Ortho_Type (Mode_Value));
+         end if;
+      end Get_Type_Alignmask;
+
       --  Align VALUE (of unsigned type) for type ATYPE.
       --  The formulae is: (V + (A - 1)) and not (A - 1), where A is the
       --  alignment for ATYPE in bytes.
-      function Realign (Value : O_Enode; Atype : O_Tnode) return O_Enode
+      function Realign (Value : O_Enode; Atype : Iir) return O_Enode
       is
-         Align : constant O_Cnode := New_Alignof (Atype, Ghdl_Index_Type);
-
-         --  Return A - 1
-         function Mask return O_Enode is
-         begin
-            return New_Dyadic_Op
-              (ON_Sub_Ov, New_Lit (Align), New_Lit (Ghdl_Index_1));
-         end Mask;
+         Tinfo : constant Type_Info_Acc := Get_Info (Atype);
       begin
          return New_Dyadic_Op
            (ON_And,
-            New_Dyadic_Op (ON_Add_Ov, Value, Mask),
-            New_Monadic_Op (ON_Not, Mask));
+            New_Dyadic_Op (ON_Add_Ov, Value, Get_Type_Alignmask (Tinfo)),
+            New_Monadic_Op (ON_Not, Get_Type_Alignmask (Tinfo)));
+      end Realign;
+
+      function Realign (Value : O_Enode; Mask : O_Dnode) return O_Enode is
+      begin
+         return New_Dyadic_Op
+           (ON_And,
+            New_Dyadic_Op (ON_Add_Ov, Value, New_Obj_Value (Mask)),
+            New_Monadic_Op (ON_Not, New_Obj_Value (Mask)));
       end Realign;
 
       --  Find the innermost non-array element.
@@ -6908,6 +6946,8 @@ package body Translation is
 
          if Need_Size then
             Create_Size_Var (Def);
+            Info.C (Mode_Value).Align_Var := Create_Var
+              (Create_Var_Identifier ("ALIGNMSK"), Ghdl_Index_Type);
             Info.C (Mode_Value).Builder_Need_Func := True;
             Info.C (Mode_Signal).Builder_Need_Func := True;
          end if;
@@ -6923,6 +6963,7 @@ package body Translation is
 
          Off_Var : O_Dnode;
          Ptr_Var : O_Dnode;
+         Off_Val : O_Enode;
          El_Type : Iir;
          Inner_Type : Iir;
          El_Tinfo : Type_Info_Acc;
@@ -6950,12 +6991,15 @@ package body Translation is
             if Is_Complex_Type (El_Tinfo) then
                --  Complex type.
 
-               --  Align on the innermost array element
+               --  Align on the innermost array element (which should be
+               --  a record) for Mode_Value.  No need to align for signals,
+               --  as all non-composite elements are accesses.
                Inner_Type := Get_Innermost_Non_Array_Element (El_Type);
-               New_Assign_Stmt
-                 (New_Obj (Off_Var),
-                  Realign (New_Obj_Value (Off_Var),
-                           Get_Info (Inner_Type).Ortho_Type (Kind)));
+               Off_Val := New_Obj_Value (Off_Var);
+               if Kind = Mode_Value then
+                  Off_Val := Realign (Off_Val, Inner_Type);
+               end if;
+               New_Assign_Stmt (New_Obj (Off_Var), Off_Val);
 
                --  Set the offset.
                New_Assign_Stmt
@@ -6994,9 +7038,8 @@ package body Translation is
                end if;
             end if;
          end loop;
+         New_Return_Stmt (New_Value (Get_Var (Info.C (Kind).Size_Var)));
          Chap2.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
-         New_Return_Stmt
-           (Realign (New_Obj_Value (Off_Var), Info.Ortho_Type (Kind)));
          Finish_Subprogram_Body;
       end Create_Record_Type_Builder;
 
@@ -7458,19 +7501,98 @@ package body Translation is
          end case;
       end Create_Type_Definition_Type_Range;
 
-      procedure Create_Type_Definition_Size_Var (Def : Iir)
+      procedure Create_Record_Size_Var (Def : Iir; Kind : Object_Kind_Type)
       is
-         Info : Type_Info_Acc;
+         Info : constant Type_Info_Acc := Get_Info (Def);
+         List : constant Iir_List :=
+           Get_Elements_Declaration_List (Get_Base_Type (Def));
+         El : Iir_Element_Declaration;
+         El_Type : Iir;
+         El_Tinfo : Type_Info_Acc;
+         Inner_Type : Iir;
+         Inner_Tinfo : Type_Info_Acc;
+         Res : O_Enode;
+         Align_Var : O_Dnode;
+         If_Blk : O_If_Block;
+      begin
+         Open_Temp;
+
+         --  Start with the size of the 'base' record, that
+         --  contains all non-complex types and an offset for
+         --  each complex types.
+         Res := New_Lit (New_Sizeof (Info.Ortho_Type (Kind), Ghdl_Index_Type));
+
+         --  Start with alignment of the record.
+         --  ALIGN = ALIGNOF (record)
+         if Kind = Mode_Value then
+            Align_Var := Create_Temp (Ghdl_Index_Type);
+            New_Assign_Stmt
+              (New_Obj (Align_Var),
+               Get_Type_Alignmask (Info.Ortho_Type (Kind)));
+         end if;
+
+         for I in Natural loop
+            El := Get_Nth_Element (List, I);
+            exit when El = Null_Iir;
+            El_Type := Get_Type (El);
+            El_Tinfo := Get_Info (El_Type);
+            if Is_Complex_Type (El_Tinfo) then
+               Inner_Type := Get_Innermost_Non_Array_Element (El_Type);
+
+               --  Align (only for Mode_Value) the size,
+               --  and add the size of the element.
+               if Kind = Mode_Value then
+                  Inner_Tinfo := Get_Info (Inner_Type);
+                  --  If alignmask (Inner_Type) > alignmask then
+                  --    alignmask = alignmask (Inner_type);
+                  --  end if;
+                  Start_If_Stmt
+                    (If_Blk,
+                     New_Compare_Op (ON_Gt,
+                                     Get_Type_Alignmask (Inner_Tinfo),
+                                     New_Obj_Value (Align_Var),
+                                     Ghdl_Bool_Type));
+                  New_Assign_Stmt
+                    (New_Obj (Align_Var), Get_Type_Alignmask (Inner_Tinfo));
+                  Finish_If_Stmt (If_Blk);
+                  Res := Realign (Res, Inner_Type);
+               end if;
+               Res := New_Dyadic_Op
+                 (ON_Add_Ov,
+                  New_Value (Get_Var (El_Tinfo.C (Kind).Size_Var)),
+                  Res);
+            end if;
+         end loop;
+         if Kind = Mode_Value then
+            Res := Realign (Res, Align_Var);
+         end if;
+         New_Assign_Stmt (Get_Var (Info.C (Kind).Size_Var), Res);
+         Close_Temp;
+      end Create_Record_Size_Var;
+
+      procedure Create_Array_Size_Var (Def : Iir; Kind : Object_Kind_Type)
+      is
+         Info : constant Type_Info_Acc := Get_Info (Def);
+         El_Type : constant Iir := Get_Element_Subtype (Def);
          Res : O_Enode;
       begin
-         Info := Get_Info (Def);
+         Res := New_Dyadic_Op
+           (ON_Mul_Ov,
+            Get_Array_Type_Length (Def),
+            Chap3.Get_Object_Size (T2M (El_Type, Kind), El_Type));
+         New_Assign_Stmt (Get_Var (Info.C (Kind).Size_Var), Res);
+      end Create_Array_Size_Var;
+
+      procedure Create_Type_Definition_Size_Var (Def : Iir)
+      is
+         Info : constant Type_Info_Acc := Get_Info (Def);
+      begin
          if not Is_Complex_Type (Info) then
             return;
          end if;
 
          for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
             if Info.C (Kind).Size_Var /= null then
-               Open_Temp;
                case Info.Type_Mode is
                   when Type_Mode_Non_Composite
                     | Type_Mode_Fat_Array
@@ -7478,49 +7600,10 @@ package body Translation is
                     | Type_Mode_Protected =>
                      raise Internal_Error;
                   when Type_Mode_Record =>
-                     declare
-                        List : constant Iir_List :=
-                          Get_Elements_Declaration_List (Get_Base_Type (Def));
-                        El : Iir_Element_Declaration;
-                        El_Type : Iir;
-                        El_Tinfo : Type_Info_Acc;
-                        Inner_Type : Iir;
-                     begin
-                        Res := New_Lit (New_Sizeof (Info.Ortho_Type (Kind),
-                                                    Ghdl_Index_Type));
-                        for I in Natural loop
-                           El := Get_Nth_Element (List, I);
-                           exit when El = Null_Iir;
-                           El_Type := Get_Type (El);
-                           El_Tinfo := Get_Info (El_Type);
-                           if Is_Complex_Type (El_Tinfo) then
-                              Inner_Type :=
-                                Get_Innermost_Non_Array_Element (El_Type);
-
-                              Res := New_Dyadic_Op
-                                (ON_Add_Ov,
-                                 New_Value
-                                   (Get_Var (El_Tinfo.C (Kind).Size_Var)),
-                                 Realign
-                                   (Res,
-                                    Get_Info (Inner_Type).Ortho_Type (Kind)));
-                           end if;
-                        end loop;
-                        Res := Realign (Res, Info.Ortho_Type (Kind));
-                     end;
+                     Create_Record_Size_Var (Def, Kind);
                   when Type_Mode_Array =>
-                     declare
-                        El_Type : constant Iir := Get_Element_Subtype (Def);
-                     begin
-                        Res := New_Dyadic_Op
-                          (ON_Mul_Ov,
-                           Get_Array_Type_Length (Def),
-                           Chap3.Get_Object_Size (T2M (El_Type, Kind),
-                                                  El_Type));
-                     end;
+                     Create_Array_Size_Var (Def, Kind);
                end case;
-               New_Assign_Stmt (Get_Var (Info.C (Kind).Size_Var), Res);
-               Close_Temp;
             end if;
          end loop;
       end Create_Type_Definition_Size_Var;
