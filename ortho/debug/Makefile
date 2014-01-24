@@ -43,4 +43,6 @@ force:
 ORTHO_PACKAGE=Ortho_Debug
 ORTHO_BASENAME=$(orthobe_srcdir)/ortho_debug
 
+# Automatically build ortho_debug.ads from ortho_node.common.ads and
+# ortho_debug.private.ads
 include $(ortho_srcdir)/Makefile.inc
