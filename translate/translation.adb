@@ -28995,11 +28995,14 @@ package body Translation is
       New_Type_Decl (Get_Identifier ("__ghdl_scalar_bytes"),
                      Ghdl_Scalar_Bytes);
 
-      Ghdl_Signal_Ptr := New_Access_Type (O_Tnode_Null);
+      New_Uncomplete_Record_Type (Ghdl_Signal_Type);
+      New_Type_Decl (Get_Identifier ("__ghdl_signal"), Ghdl_Signal_Type);
+
+      Ghdl_Signal_Ptr := New_Access_Type (Ghdl_Signal_Ptr);
       New_Type_Decl (Get_Identifier ("__ghdl_signal_ptr"), Ghdl_Signal_Ptr);
 
       --  Type __signal_signal is record
-      Start_Record_Type (Rec);
+      Start_Uncomplete_Record_Type (Ghdl_Signal_Type, Rec);
       New_Record_Field (Rec, Ghdl_Signal_Value_Field,
                         Get_Identifier ("value"),
                         Ghdl_Scalar_Bytes);
@@ -29028,9 +29031,6 @@ package body Translation is
                         Get_Identifier ("has_active"),
                         Ghdl_Bool_Type);
       Finish_Record_Type (Rec, Ghdl_Signal_Type);
-      New_Type_Decl (Get_Identifier ("__ghdl_signal"), Ghdl_Signal_Type);
-
-      Finish_Access_Type (Ghdl_Signal_Ptr, Ghdl_Signal_Type);
 
       Ghdl_Signal_Ptr_Ptr := New_Access_Type (Ghdl_Signal_Ptr);
       New_Type_Decl (Get_Identifier ("__ghdl_signal_ptr_ptr"),
