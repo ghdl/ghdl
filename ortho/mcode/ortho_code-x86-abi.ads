@@ -23,7 +23,7 @@ package Ortho_Code.X86.Abi is
    procedure Init;
    procedure Finish;
 
-   Mode_Align : constant Mode_Align_Array :=
+   Mode_Align : Mode_Align_Array :=
      (Mode_U8 | Mode_I8 => 0,
       Mode_U16 | Mode_I16 => 1,
       Mode_U32 | Mode_I32 | Mode_F32 | Mode_P32 => 2,

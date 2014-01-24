@@ -25,4 +25,7 @@ package Ortho_Code.X86.Flags_Linux is
    --  Prefered stack alignment.
    --  Must be a power of 2.
    Stack_Boundary : constant Unsigned_32 := 2 ** 3;
+
+   --  Alignment for double (64 bit float).
+   Mode_F64_Align : constant Natural := 2;
 end Ortho_Code.X86.Flags_Linux;
