@@ -152,9 +152,6 @@ package body Grt.Options is
       P (" --stop-time=X     stop the simulation at time X");
       P ("       X is expressed as a time value, without spaces: 1ns, ps...");
       P (" --stop-delta=X    stop the simulation cycle after X delta");
-      -- P (" --disp-tree[=KIND] disp the design hierarchy after elaboration");
-      --  P ("       KIND is inst, proc, port (default)");
-      --  --disp-tree from grt-disp_tree.adb via Grt.Hooks.Call_Help_Hooks;
       P (" --expect-failure  invert exit status");
       P (" --stack-size=X    set the stack size of non-sensitized processes");
       P (" --stack-max-size=X  set the maximum stack size");
