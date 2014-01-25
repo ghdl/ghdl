@@ -77,6 +77,7 @@ package body Ortho_Code.Types is
       Table_Increment => 100);
 
    type Field_Type is record
+      Parent : O_Tnode;
       Ident : O_Ident;
       Ftype : O_Tnode;
       Offset : Uns32;
@@ -225,6 +226,11 @@ package body Ortho_Code.Types is
    begin
       Fnodes.Table (Field).Offset := Offset;
    end Set_Field_Offset;
+
+   function Get_Field_Parent (Field : O_Fnode) return O_Tnode is
+   begin
+      return Fnodes.Table (Field).Parent;
+   end Get_Field_Parent;
 
    function Get_Field_Type (Field : O_Fnode) return O_Tnode is
    begin
@@ -592,7 +598,8 @@ package body Ortho_Code.Types is
    begin
       Elements.Off := Do_Align (Elements.Off, Etype);
 
-      Fnodes.Append (Field_Type'(Ident => Ident,
+      Fnodes.Append (Field_Type'(Parent => Elements.Res,
+                                 Ident => Ident,
                                  Ftype => Etype,
                                  Offset => Elements.Off,
                                  Next => O_Fnode_Null));

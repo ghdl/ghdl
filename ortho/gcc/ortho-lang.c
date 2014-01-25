@@ -1442,12 +1442,14 @@ new_access_element (tree acc)
 }
 
 tree
-new_offsetof (tree field, tree rtype)
+new_offsetof (tree rec_type, tree field, tree rtype)
 {
   tree off;
   tree bit_off;
   HOST_WIDE_INT pos;
   tree res;
+
+  gcc_assert (DECL_CONTEXT (field) == rec_type);
 
   off = DECL_FIELD_OFFSET (field);
 

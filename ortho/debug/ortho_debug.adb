@@ -437,11 +437,15 @@ package body Ortho_Debug is
                                        S_Type => Atype);
    end New_Alignof;
 
-   function New_Offsetof (Field : O_Fnode; Rtype : O_Tnode) return O_Cnode
+   function New_Offsetof (Rec_Type : O_Tnode; Field : O_Fnode; Rtype : O_Tnode)
+                         return O_Cnode
    is
       subtype O_Cnode_Offsetof_Type is O_Cnode_Type (OC_Offsetof_Lit);
    begin
       if Rtype.Kind /= ON_Unsigned_Type then
+         raise Type_Error;
+      end if;
+      if Field.Parent /= Rec_Type then
          raise Type_Error;
       end if;
       return new O_Cnode_Offsetof_Type'(Kind => OC_Offsetof_Lit,

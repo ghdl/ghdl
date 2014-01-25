@@ -496,8 +496,12 @@ package body Ortho_Code.Consts is
       return To_Cnode_Sizeof (Cnodes.Table (Cst + 1)).Atype;
    end Get_Alignof_Type;
 
-   function New_Offsetof (Field : O_Fnode; Rtype : O_Tnode) return O_Cnode is
+   function New_Offsetof (Rec_Type : O_Tnode; Field : O_Fnode; Rtype : O_Tnode)
+                         return O_Cnode is
    begin
+      if Get_Field_Parent (Field) /= Rec_Type then
+         raise Syntax_Error;
+      end if;
       return New_Unsigned_Literal
         (Rtype, Unsigned_64 (Get_Field_Offset (Field)));
    end New_Offsetof;

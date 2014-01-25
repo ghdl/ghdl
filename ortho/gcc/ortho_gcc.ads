@@ -237,9 +237,10 @@ package Ortho_Gcc is
    --  unsgined type RTYPE.
    function New_Alignof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode;
 
-   --  Returns the offset of FIELD in its record.  The result is a literal
-   --  of unsigned type RTYPE.
-   function New_Offsetof (Field : O_Fnode; Rtype : O_Tnode) return O_Cnode;
+   --  Returns the offset of FIELD in its record REC_TYPE.  The result is a
+   --  literal of unsigned type or access type RTYPE.
+   function New_Offsetof (Rec_Type : O_Tnode; Field : O_Fnode; Rtype : O_Tnode)
+                         return O_Cnode;
 
    --  Get an element of an array.
    --  INDEX must be of the type of the array index.

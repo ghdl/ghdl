@@ -351,6 +351,7 @@ package body Translation is
       --  Used only to generate RTI.
       function Is_Var_Field (Var : Var_Acc) return Boolean;
       function Get_Var_Field (Var : Var_Acc) return O_Fnode;
+      function Get_Var_Record (Var : Var_Acc) return O_Tnode;
       function Get_Var_Label (Var : Var_Acc) return O_Dnode;
    private
       type Local_Identifier_Type is new Natural;
@@ -4450,14 +4451,13 @@ package body Translation is
                   when Iir_Kind_Component_Instantiation_Statement =>
                      declare
                         Assoc : O_Assoc_List;
-                        Info : Block_Info_Acc;
-                        Comp_Info : Comp_Info_Acc;
+                        Info : constant Block_Info_Acc := Get_Info (El);
+                        Comp_Info : constant Comp_Info_Acc :=
+                          Get_Info (Get_Instantiated_Unit (El));
                         V : O_Lnode;
                      begin
                         --  The component is really a component and not a
                         --  direct instance.
-                        Info := Get_Info (El);
-                        Comp_Info := Get_Info (Get_Instantiated_Unit (El));
                         Start_Association (Assoc, Cfg_Info.Config_Subprg);
                         V := Get_Instance_Ref (Block_Info.Block_Decls_Type);
                         V := New_Selected_Element (V, Info.Block_Link_Field);
@@ -21703,7 +21703,7 @@ package body Translation is
 
       procedure Translate_Component_Instantiation_Statement (Inst : Iir)
       is
-         Comp : Iir;
+         Comp : constant Iir := Get_Instantiated_Unit (Inst);
          Info : Block_Info_Acc;
          Comp_Info : Comp_Info_Acc;
 
@@ -21711,7 +21711,6 @@ package body Translation is
          Assoc, Conv, In_Type : Iir;
          Has_Conv_Record : Boolean := False;
       begin
-         Comp := Get_Instantiated_Unit (Inst);
          Info := Add_Info (Inst, Kind_Block);
          Info.Block_Decls_Type := O_Tnode_Null;
          if Get_Kind (Comp) = Iir_Kind_Component_Declaration then
@@ -23986,6 +23985,17 @@ package body Translation is
                return Var.I_Field;
          end case;
       end Get_Var_Field;
+
+      function Get_Var_Record (Var : Var_Acc) return O_Tnode is
+      begin
+         case Var.Kind is
+            when Var_Local
+              | Var_Global =>
+               raise Internal_Error;
+            when Var_Scope =>
+               return Var.I_Type;
+         end case;
+      end Get_Var_Record;
 
       function Get_Var_Label (Var : Var_Acc) return O_Dnode is
       begin
@@ -26278,7 +26288,8 @@ package body Translation is
       begin
          if Is_Var_Field (Var) then
             return New_Union_Aggr (Ghdl_Rti_Loc, Ghdl_Rti_Loc_Offset,
-                                   New_Offsetof (Get_Var_Field (Var),
+                                   New_Offsetof (Get_Var_Record (Var),
+                                                 Get_Var_Field (Var),
                                                  Ghdl_Index_Type));
          else
             return New_Union_Aggr
@@ -26892,10 +26903,9 @@ package body Translation is
          Prev : Rti_Block;
          El_Arr : O_Dnode;
          Res : O_Cnode;
-         Info : Type_Info_Acc;
+         Info : constant Type_Info_Acc := Get_Info (Atype);
          Max_Depth : Rti_Depth_Type;
       begin
-         Info := Get_Info (Atype);
          Generate_Type_Rti (Info, Ghdl_Rtin_Type_Record);
          if Global_Storage = O_Storage_External then
             return;
@@ -26912,23 +26922,21 @@ package body Translation is
             declare
                Type_Rti : O_Dnode;
                El_Name : O_Dnode;
-               El_Type : Iir;
+               El_Type : constant Iir := Get_Type (El);
                Aggr : O_Record_Aggr_List;
-               Field_Info : Field_Info_Acc;
+               Field_Info : constant Field_Info_Acc := Get_Info (El);
                Val : O_Cnode;
                El_Const : O_Dnode;
                Mark : Id_Mark_Type;
             begin
                Push_Identifier_Prefix (Mark, Get_Identifier (El));
 
-               El_Type := Get_Type (El);
                Type_Rti := Generate_Type_Definition (El_Type);
                Max_Depth :=
                  Rti_Depth_Type'Max (Max_Depth,
                                      Get_Info (El_Type).T.Rti_Max_Depth);
 
                El_Name := Generate_Name (El);
-               Field_Info := Get_Info (El);
                New_Const_Decl (El_Const, Create_Identifier ("RTIEL"),
                                Global_Storage, Ghdl_Rtin_Element);
                Start_Const_Value (El_Const);
@@ -26939,7 +26947,8 @@ package body Translation is
                New_Record_Aggr_El (Aggr, New_Rti_Address (Type_Rti));
                for I in Object_Kind_Type loop
                   if Field_Info.Field_Node (I) /= O_Fnode_Null then
-                     Val := New_Offsetof (Field_Info.Field_Node (I),
+                     Val := New_Offsetof (Info.Ortho_Type (I),
+                                          Field_Info.Field_Node (I),
                                           Ghdl_Index_Type);
                   else
                      Val := Ghdl_Index_0;
@@ -27393,24 +27402,25 @@ package body Translation is
          Name : O_Dnode;
          List : O_Record_Aggr_List;
          Val : O_Cnode;
-         Inst : Iir;
-         Info : Block_Info_Acc;
+         Inst : constant Iir := Get_Instantiated_Unit (Stmt);
+         Info : constant Block_Info_Acc := Get_Info (Stmt);
       begin
          Name := Generate_Name (Stmt);
-         Info := Get_Info (Stmt);
 
          New_Const_Decl (Info.Block_Rti_Const, Create_Identifier ("RTI"),
                          Global_Storage, Ghdl_Rtin_Instance);
 
-         Inst := Get_Instantiated_Unit (Stmt);
          Start_Const_Value (Info.Block_Rti_Const);
          Start_Record_Aggr (List, Ghdl_Rtin_Instance);
          New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_Instance));
          New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
          New_Record_Aggr_El
-           (List, New_Union_Aggr (Ghdl_Rti_Loc, Ghdl_Rti_Loc_Offset,
-                                  New_Offsetof (Info.Block_Link_Field,
-                                                Ghdl_Index_Type)));
+           (List,
+            New_Union_Aggr (Ghdl_Rti_Loc, Ghdl_Rti_Loc_Offset,
+                            New_Offsetof
+                              (Get_Info (Get_Parent (Stmt)).Block_Decls_Type,
+                               Info.Block_Link_Field,
+                               Ghdl_Index_Type)));
          New_Record_Aggr_El (List, New_Rti_Address (Parent));
          case Get_Kind (Inst) is
             when Iir_Kind_Component_Declaration =>
@@ -27599,6 +27609,7 @@ package body Translation is
          Info : Ortho_Info_Acc;
 
          Field : O_Fnode;
+         Field_Parent : O_Tnode;
          Inst : O_Tnode;
       begin
          --  The type of a generator iterator is elaborated in the parent.
@@ -27646,6 +27657,7 @@ package body Translation is
                  (Get_Concurrent_Statement_Chain (Blk), Rti);
                Field := Info.Block_Parent_Field;
                Inst := Info.Block_Decls_Type;
+               Field_Parent := Info.Block_Decls_Type;
             when Iir_Kind_Entity_Declaration =>
                Kind := Ghdl_Rtik_Entity;
                Generate_Declaration_Chain (Get_Generic_Chain (Blk));
@@ -27659,6 +27671,7 @@ package body Translation is
                Kind := Ghdl_Rtik_Process;
                Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
                Field := Info.Process_Parent_Field;
+               Field_Parent := Get_Info (Get_Parent (Blk)).Block_Decls_Type;
                Inst := Info.Process_Decls_Type;
             when Iir_Kind_Block_Statement =>
                Kind := Ghdl_Rtik_Block;
@@ -27683,6 +27696,7 @@ package body Translation is
                Generate_Concurrent_Statement_Chain
                  (Get_Concurrent_Statement_Chain (Blk), Rti);
                Field := Info.Block_Parent_Field;
+               Field_Parent := Get_Info (Get_Parent (Blk)).Block_Decls_Type;
                Inst := Info.Block_Decls_Type;
             when Iir_Kind_Generate_Statement =>
                declare
@@ -27702,6 +27716,7 @@ package body Translation is
                Generate_Concurrent_Statement_Chain
                  (Get_Concurrent_Statement_Chain (Blk), Rti);
                Field := Info.Block_Parent_Field;
+               Field_Parent := Get_Info (Get_Parent (Blk)).Block_Decls_Type;
                Inst := Info.Block_Decls_Type;
             when others =>
                Error_Kind ("rti.generate_block", Blk);
@@ -27718,9 +27733,10 @@ package body Translation is
          if Field = O_Fnode_Null then
             Res := Get_Null_Loc;
          else
-            Res := New_Union_Aggr (Ghdl_Rti_Loc,
-                                   Ghdl_Rti_Loc_Offset,
-                                   New_Offsetof (Field, Ghdl_Index_Type));
+            Res := New_Union_Aggr
+              (Ghdl_Rti_Loc,
+               Ghdl_Rti_Loc_Offset,
+               New_Offsetof (Field_Parent, Field, Ghdl_Index_Type));
          end if;
          New_Record_Aggr_El (List, Res);
          if Parent_Rti = O_Dnode_Null then

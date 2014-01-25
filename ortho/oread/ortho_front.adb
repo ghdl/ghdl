@@ -1244,7 +1244,8 @@ package body Ortho_Front is
       Next_Expect (Tok_Ident);
       Rec_Field := Find_Field_By_Name (Rec_Type.Decl_Dtype);
       Next_Expect (Tok_Right_Paren);
-      return New_Offsetof (Rec_Field.Field_Fnode,
+      return New_Offsetof (Rec_Type.Decl_Dtype.Type_Onode,
+                           Rec_Field.Field_Fnode,
                            Atype.Type_Onode);
    end Parse_Offsetof;
 

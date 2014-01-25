@@ -93,6 +93,9 @@ package Ortho_Code.Types is
    function Get_Type_Bool_False (Atype : O_Tnode) return O_Cnode;
    function Get_Type_Bool_True (Atype : O_Tnode) return O_Cnode;
 
+   --  Return the union/record type which contains FIELD.
+   function Get_Field_Parent (Field : O_Fnode) return O_Tnode;
+
    --  Get the offset of FIELD in its record/union.
    function Get_Field_Offset (Field : O_Fnode) return Uns32;
    procedure Set_Field_Offset (Field : O_Fnode; Offset : Uns32);
