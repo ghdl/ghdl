@@ -274,14 +274,6 @@ package body Grt.Rtis_Addr is
         = Ghdl_Rti_Type_Anonymous;
    end Rti_Anonymous_Type;
 
-   function Rti_Non_Static_Physical_Type (Atype : Ghdl_Rti_Access)
-                                         return Boolean
-   is
-   begin
-      return (Atype.Mode and Ghdl_Rti_Type_Non_Static_Mask)
-        = Ghdl_Rti_Type_Non_Static;
-   end Rti_Non_Static_Physical_Type;
-
    function Get_Top_Context return Rti_Context
    is
       Ctxt : Rti_Context;

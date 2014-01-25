@@ -675,13 +675,14 @@ package body Grt.Waves is
            | Ghdl_Rtik_Type_P64 =>
             declare
                Base : Ghdl_Rtin_Type_Physical_Acc;
-               Unit : Ghdl_Rtin_Unit_Acc;
+               Unit_Name : Ghdl_C_String;
             begin
                Base := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
                Create_String_Id (Base.Name);
                for I in 1 .. Base.Nbr loop
-                  Unit := To_Ghdl_Rtin_Unit_Acc (Base.Units (I - 1));
-                  Create_String_Id (Unit.Name);
+                  Unit_Name :=
+                    Rtis_Utils.Get_Physical_Unit_Name (Base.Units (I - 1));
+                  Create_String_Id (Unit_Name);
                end loop;
             end;
          when Ghdl_Rtik_Type_Record =>
@@ -1341,38 +1342,37 @@ package body Grt.Waves is
                  | Ghdl_Rtik_Type_P64 =>
                   declare
                      Base : Ghdl_Rtin_Type_Physical_Acc;
-                     Unit : Ghdl_Rtin_Unit_Acc;
+                     Unit : Ghdl_Rti_Access;
                   begin
                      Base := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
                      Write_String_Id (Base.Name);
                      Wave_Put_ULEB128 (Ghdl_U32 (Base.Nbr));
                      for I in 1 .. Base.Nbr loop
-                        Unit := To_Ghdl_Rtin_Unit_Acc (Base.Units (I - 1));
-                        Write_String_Id (Unit.Name);
-                        if Rti_Non_Static_Physical_Type (Rti) then
-                           case Rti.Kind is
-                              when Ghdl_Rtik_Type_P32 =>
-                                 Wave_Put_SLEB128
-                                   (Unit.Value.Unit_Addr.I32);
-                              when Ghdl_Rtik_Type_P64 =>
-                                 Wave_Put_LSLEB128
-                                   (Unit.Value.Unit_Addr.I64);
-                              when others =>
-                                 Internal_Error
-                                   ("wave.write_types(P32/P64-1)");
-                           end case;
-                        else
-                           --  Value is locally static.
-                           case Base.Common.Kind is
-                              when Ghdl_Rtik_Type_P32 =>
-                                 Wave_Put_SLEB128 (Unit.Value.Unit_32);
-                              when Ghdl_Rtik_Type_P64 =>
-                                 Wave_Put_LSLEB128 (Unit.Value.Unit_64);
-                              when others =>
-                                 Internal_Error
-                                   ("wave.write_types(P32/P64-0)");
-                           end case;
-                        end if;
+                        Unit := Base.Units (I - 1);
+                        Write_String_Id
+                          (Rtis_Utils.Get_Physical_Unit_Name (Unit));
+                        case Unit.Kind is
+                           when Ghdl_Rtik_Unit64 =>
+                              Wave_Put_LSLEB128
+                                (To_Ghdl_Rtin_Unit64_Acc (Unit).Value);
+                           when Ghdl_Rtik_Unitptr =>
+                              case Rti.Kind is
+                                 when Ghdl_Rtik_Type_P64 =>
+                                    Wave_Put_LSLEB128
+                                      (To_Ghdl_Rtin_Unitptr_Acc (Unit).
+                                         Addr.I64);
+                                 when Ghdl_Rtik_Type_P32 =>
+                                    Wave_Put_SLEB128
+                                      (To_Ghdl_Rtin_Unitptr_Acc (Unit).
+                                         Addr.I32);
+                                 when others =>
+                                    Internal_Error
+                                      ("wave.write_types(P32/P64-1)");
+                              end case;
+                           when others =>
+                              Internal_Error
+                                ("wave.write_types(P32/P64-2)");
+                        end case;
                      end loop;
                   end;
                when others =>

@@ -18,6 +18,7 @@
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Errors; use Grt.Errors;
 with Grt.Hooks; use Grt.Hooks;
+with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 
 package body Grt.Disp_Rti is
    procedure Disp_Kind (Kind : Ghdl_Rtik);
@@ -92,8 +93,8 @@ package body Grt.Disp_Rti is
             Put_I64 (Stream, Vptr.I64);
             Put (Stream, " ");
             Put (Stream,
-                 To_Ghdl_Rtin_Unit_Acc
-                 (To_Ghdl_Rtin_Type_Physical_Acc (Rti).Units (0)).Name);
+                 Get_Physical_Unit_Name
+                   (To_Ghdl_Rtin_Type_Physical_Acc (Rti).Units (0)));
             if not Is_Sig then
                Update (64);
             end if;
@@ -101,8 +102,8 @@ package body Grt.Disp_Rti is
             Put_I32 (Stream, Vptr.I32);
             Put (Stream, " ");
             Put (Stream,
-                 To_Ghdl_Rtin_Unit_Acc
-                 (To_Ghdl_Rtin_Type_Physical_Acc (Rti).Units (0)).Name);
+                 Get_Physical_Unit_Name
+                   (To_Ghdl_Rtin_Type_Physical_Acc (Rti).Units (0)));
             if not Is_Sig then
                Update (32);
             end if;
@@ -343,8 +344,10 @@ package body Grt.Disp_Rti is
 
          when Ghdl_Rtik_Element =>
             Put ("ghdl_rtik_element");
-         when Ghdl_Rtik_Unit =>
-            Put ("ghdl_rtik_unit");
+         when Ghdl_Rtik_Unit64 =>
+            Put ("ghdl_rtik_unit64");
+         when Ghdl_Rtik_Unitptr =>
+            Put ("ghdl_rtik_unitptr");
 
          when others =>
             Put ("ghdl_rtik_#");
@@ -792,7 +795,7 @@ package body Grt.Disp_Rti is
            | Ghdl_Rtik_Type_P32 =>
             declare
                Bdef : Ghdl_Rtin_Type_Physical_Acc;
-               Unit : Ghdl_Rtin_Unit_Acc;
+               Unit : Ghdl_Rti_Access;
             begin
                Bdef := To_Ghdl_Rtin_Type_Physical_Acc (Bt);
                if Bdef.Name /= Def.Name then
@@ -803,28 +806,34 @@ package body Grt.Disp_Rti is
                Disp_Subtype_Scalar_Range (stdout, Def, Ctxt);
                if Bdef.Name = Def.Name then
                   for I in 0 .. Bdef.Nbr - 1 loop
-                     Unit := To_Ghdl_Rtin_Unit_Acc (Bdef.Units (I));
+                     Unit := Bdef.Units (I);
                      New_Line;
                      Disp_Indent (Indent + 1);
-                     Disp_Kind (Unit.Common.Kind);
+                     Disp_Kind (Unit.Kind);
                      Put (": ");
-                     Disp_Name (Unit.Name);
+                     Disp_Name (Get_Physical_Unit_Name (Unit));
                      Put (" = ");
-                     case Bt.Kind is
-                        when Ghdl_Rtik_Type_P64 =>
-                           if Rti_Non_Static_Physical_Type (Bt) then
-                              Put_I64 (stdout, Unit.Value.Unit_Addr.I64);
-                           else
-                              Put_I64 (stdout, Unit.Value.Unit_64);
-                           end if;
-                        when Ghdl_Rtik_Type_P32 =>
-                           if Rti_Non_Static_Physical_Type (Bt) then
-                              Put_I32 (stdout, Unit.Value.Unit_Addr.I32);
-                           else
-                              Put_I32 (stdout, Unit.Value.Unit_32);
-                           end if;
+                     case Unit.Kind is
+                        when Ghdl_Rtik_Unit64 =>
+                           Put_I64 (stdout,
+                                    To_Ghdl_Rtin_Unit64_Acc (Unit).Value);
+                        when Ghdl_Rtik_Unitptr =>
+                           case Bt.Kind is
+                              when Ghdl_Rtik_Type_P64 =>
+                                 Put_I64
+                                   (stdout,
+                                    To_Ghdl_Rtin_Unitptr_Acc (Unit).Addr.I64);
+                              when Ghdl_Rtik_Type_P32 =>
+                                 Put_I32
+                                   (stdout,
+                                    To_Ghdl_Rtin_Unitptr_Acc (Unit).Addr.I32);
+                              when others =>
+                                 Internal_Error
+                                   ("disp_rti.subtype.scalar_decl(P32/P64)");
+                           end case;
                         when others =>
-                           null;
+                           Internal_Error
+                             ("disp_rti.subtype.scalar_decl(P32/P64)");
                      end case;
                   end loop;
                end if;

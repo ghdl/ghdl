@@ -64,7 +64,8 @@ package Grt.Rtis is
       Ghdl_Rtik_Subtype_Access,
       Ghdl_Rtik_Type_Protected,
       Ghdl_Rtik_Element,
-      Ghdl_Rtik_Unit,
+      Ghdl_Rtik_Unit64,
+      Ghdl_Rtik_Unitptr,
       Ghdl_Rtik_Attribute_Transaction,
       Ghdl_Rtik_Attribute_Quiet,
       Ghdl_Rtik_Attribute_Stable,
@@ -222,10 +223,6 @@ package Grt.Rtis is
    Ghdl_Rti_Type_Anonymous_Mask : constant Ghdl_Rti_U8 := 2;
    Ghdl_Rti_Type_Anonymous      : constant Ghdl_Rti_U8 := 2;
 
-   --  True if the physical type is not static
-   Ghdl_Rti_Type_Non_Static_Mask : constant Ghdl_Rti_U8 := 4;
-   Ghdl_Rti_Type_Non_Static      : constant Ghdl_Rti_U8 := 4;
-
    type Ghdl_Rtin_Type_Array is record
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
@@ -283,28 +280,23 @@ package Grt.Rtis is
    function To_Ghdl_Rtin_Type_Record_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Type_Record_Acc);
 
-   --  MODE is never used.  Refer to mode field of physical type.
-   type Ghdl_Rti_Unit_Mode is (Unit_Mode_32, Unit_Mode_64, Unit_Mode_Addr);
-   type Ghdl_Rti_Unit_Val (Mode : Ghdl_Rti_Unit_Mode := Unit_Mode_64) is record
-      case Mode is
-         when Unit_Mode_32 =>
-            Unit_32 : Ghdl_I32;
-         when Unit_Mode_64 =>
-            Unit_64 : Ghdl_I64;
-         when Unit_Mode_Addr =>
-            Unit_Addr : Ghdl_Value_Ptr;
-      end case;
-   end record;
-   pragma Unchecked_Union (Ghdl_Rti_Unit_Val);
-
-   type Ghdl_Rtin_Unit is record
+   type Ghdl_Rtin_Unit64 is record
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
-      Value : Ghdl_Rti_Unit_Val;
+      Value : Ghdl_I64;
    end record;
-   type Ghdl_Rtin_Unit_Acc is access Ghdl_Rtin_Unit;
-   function To_Ghdl_Rtin_Unit_Acc is new Ada.Unchecked_Conversion
-     (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Unit_Acc);
+   type Ghdl_Rtin_Unit64_Acc is access Ghdl_Rtin_Unit64;
+   function To_Ghdl_Rtin_Unit64_Acc is new Ada.Unchecked_Conversion
+     (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Unit64_Acc);
+
+   type Ghdl_Rtin_Unitptr is record
+      Common : Ghdl_Rti_Common;
+      Name : Ghdl_C_String;
+      Addr : Ghdl_Value_Ptr;
+   end record;
+   type Ghdl_Rtin_Unitptr_Acc is access Ghdl_Rtin_Unitptr;
+   function To_Ghdl_Rtin_Unitptr_Acc is new Ada.Unchecked_Conversion
+     (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Unitptr_Acc);
 
    --  Mode field is set to 4 if units value is per address.  Otherwise,
    --  mode is 0.

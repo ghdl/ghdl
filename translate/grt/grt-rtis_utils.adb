@@ -446,9 +446,9 @@ package body Grt.Rtis_Utils is
             begin
                To_String (S, F, Value.I32);
                Append (Str, S (F .. S'Last));
-               Append (Str,
-                       To_Ghdl_Rtin_Unit_Acc (To_Ghdl_Rtin_Type_Physical_Acc
-                                              (Type_Rti).Units (0)).Name);
+               Append
+                 (Str, Get_Physical_Unit_Name
+                    (To_Ghdl_Rtin_Type_Physical_Acc (Type_Rti).Units (0)));
             end;
          when Ghdl_Rtik_Type_P64 =>
             declare
@@ -457,9 +457,9 @@ package body Grt.Rtis_Utils is
             begin
                To_String (S, F, Value.I64);
                Append (Str, S (F .. S'Last));
-               Append (Str,
-                       To_Ghdl_Rtin_Unit_Acc (To_Ghdl_Rtin_Type_Physical_Acc
-                                              (Type_Rti).Units (0)).Name);
+               Append
+                 (Str, Get_Physical_Unit_Name
+                    (To_Ghdl_Rtin_Type_Physical_Acc (Type_Rti).Units (0)));
             end;
          when others =>
             Internal_Error ("grt.rtis_utils.get_value");
@@ -476,6 +476,20 @@ package body Grt.Rtis_Utils is
       Put (Stream, Name);
       Free (Name);
    end Disp_Value;
+
+   function Get_Physical_Unit_Name (Unit : Ghdl_Rti_Access)
+                                   return Ghdl_C_String
+   is
+   begin
+      case Unit.Kind is
+         when Ghdl_Rtik_Unit64 =>
+            return To_Ghdl_Rtin_Unit64_Acc (Unit).Name;
+         when Ghdl_Rtik_Unitptr =>
+            return To_Ghdl_Rtin_Unitptr_Acc (Unit).Name;
+         when others =>
+            Internal_Error ("rtis_utils.physical_unit_name");
+      end case;
+   end Get_Physical_Unit_Name;
 
    procedure Get_Enum_Value
      (Rstr : in out Rstring; Rti : Ghdl_Rti_Access; Val : Ghdl_Index_Type)

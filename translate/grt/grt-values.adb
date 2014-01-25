@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Grt.Errors; use Grt.Errors;
+with Grt.Rtis_Utils;
 with System;
 with Ada.Unchecked_Conversion;
 
@@ -342,63 +343,74 @@ package body Grt.Values is
       Found_Real    : Boolean := false;
 
       Phys_Rti : Ghdl_Rtin_Type_Physical_Acc;
-      Unit     : Ghdl_Rtin_Unit_Acc;
-      Multiple : Ghdl_Rti_Unit_Val;
+      Unit_Name : Ghdl_C_String;
+      Multiple : Ghdl_Rti_Access;
       Mult     : Ghdl_I64;
    begin
       Phys_Rti := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
 
-      S.Bounds := To_Std_String_Boundp(Bound'Address);
+      S.Bounds := To_Std_String_Boundp (Bound'Address);
       -- find characters at the end...
       Finish := Bound.Dim_1.Length - 1;
-      while White(S.Base.all(Finish)) loop
+      while White (S.Base (Finish)) loop
          Finish := Finish - 1;
       end loop;
       Start := Finish;
-      while not White(S.Base.all(Start - 1)) loop
+      while not White (S.Base (Start - 1)) loop
          Start := Start - 1;
       end loop;
       -- shorten Bounds to exclude non-numeric part
       Bound.Dim_1.Right := Bound.Dim_1.Right
-                          - Std_Integer(Bound.Dim_1.Length - Start);
+                          - Std_Integer (Bound.Dim_1.Length - Start);
       Bound.Dim_1.Length := Start;
       -- does the string represent a Real?
       for i in 0 .. Start loop
-         if S.Base.all(i) = '.' then
+         if S.Base (i) = '.' then
             Found_Real := true;
          end if;
       end loop;
 
       declare
-         Unit_Str : String(1 .. Natural(1 + Finish - Start));
-         Found    : Boolean := False;
+         Unit_Str : String (1 .. Natural (1 + Finish - Start));
       begin
-         Make_LC_String(Str.Base, Start, Unit_Str);
+         Make_LC_String (Str.Base, Start, Unit_Str);
+         Multiple := null;
          for i in 0 .. Phys_Rti.Nbr - 1 loop
-            Unit := To_Ghdl_Rtin_Unit_Acc(Phys_Rti.Units(i));
-            if StringMatch(Unit_Str, Unit.Name) then
-               Found := True;
-               Multiple := To_Ghdl_Rtin_Unit_Acc (Phys_Rti.Units (i)).Value;
+            Unit_Name :=
+              Rtis_Utils.Get_Physical_Unit_Name (Phys_Rti.Units (i));
+            if StringMatch (Unit_Str, Unit_Name) then
+               Multiple := Phys_Rti.Units (i);
                exit;
             end if;
          end loop;
-         if not Found then
+         if Multiple = null then
             Error_E ("'value: Unit " & Unit_Str & " not in physical type" &
-                     Phys_Rti.Name.all(1..strlen(Phys_Rti.Name)));
+                     Phys_Rti.Name.all (1 .. strlen (Phys_Rti.Name)));
          end if;
       end;
 
-      if Rti.Kind = Ghdl_Rtik_Type_P64 then
-         Mult := Multiple.Unit_64;
-      else
-         Mult := Ghdl_I64(Multiple.Unit_32);
-      end if;
+      case Multiple.Kind is
+         when Ghdl_Rtik_Unit64 =>
+            Mult := To_Ghdl_Rtin_Unit64_Acc (Multiple).Value;
+         when Ghdl_Rtik_Unitptr =>
+            case Rti.Kind is
+               when Ghdl_Rtik_Type_P64 =>
+                  Mult := To_Ghdl_Rtin_Unitptr_Acc (Multiple).Addr.I64;
+               when Ghdl_Rtik_Type_P32 =>
+                  Mult := Ghdl_I64
+                    (To_Ghdl_Rtin_Unitptr_Acc (Multiple).Addr.I32);
+               when others =>
+                  Internal_Error ("values.physical_type(P32/P64-1)");
+            end case;
+         when others =>
+            Internal_Error ("values.physical_type(P32/P64-2)");
+      end case;
 
       if Found_Real then
-         return Ghdl_I64 (Ghdl_Value_F64 (To_Std_String_Ptr(S'Address))
+         return Ghdl_I64 (Ghdl_Value_F64 (To_Std_String_Ptr (S'Address))
                                 * Ghdl_F64 (Mult));
       else
-         return Ghdl_Value_I64 (To_Std_String_Ptr(S'Address)) * Mult;
+         return Ghdl_Value_I64 (To_Std_String_Ptr (S'Address)) * Mult;
       end if;
    end Ghdl_Value_Physical_Type;
 
@@ -409,7 +421,7 @@ package body Grt.Values is
       if Rti.Kind /= Ghdl_Rtik_Type_P64 then
          Error_E ("Physical_Type_64'value: incorrect RTI");
       end if;
-      return Ghdl_Value_Physical_Type(Str, Rti);
+      return Ghdl_Value_Physical_Type (Str, Rti);
    end Ghdl_Value_P64;
 
    function Ghdl_Value_P32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
@@ -419,7 +431,7 @@ package body Grt.Values is
       if Rti.Kind /= Ghdl_Rtik_Type_P32 then
          Error_E ("Physical_Type_32'value: incorrect RTI");
       end if;
-      return Ghdl_I32(Ghdl_Value_Physical_Type(Str, Rti));
+      return Ghdl_I32 (Ghdl_Value_Physical_Type (Str, Rti));
    end Ghdl_Value_P32;
 
    -- From patch attached to https://gna.org/bugs/index.php?18352

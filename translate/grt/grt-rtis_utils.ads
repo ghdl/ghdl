@@ -59,6 +59,9 @@ package Grt.Rtis_Utils is
                         Value : Value_Union;
                         Type_Rti : Ghdl_Rti_Access);
 
+   --  Get the name of a physical unit.
+   function Get_Physical_Unit_Name (Unit : Ghdl_Rti_Access)
+                                   return Ghdl_C_String;
    --  Disp a value.
    procedure Disp_Value (Stream : FILEs;
                          Value : Value_Union;

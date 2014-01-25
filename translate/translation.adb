@@ -666,7 +666,8 @@ package body Translation is
       Ghdl_Rtik_Subtype_Access : O_Cnode;
       Ghdl_Rtik_Type_Protected : O_Cnode;
       Ghdl_Rtik_Element : O_Cnode;
-      Ghdl_Rtik_Unit : O_Cnode;
+      Ghdl_Rtik_Unit64 : O_Cnode;
+      Ghdl_Rtik_Unitptr : O_Cnode;
       Ghdl_Rtik_Attribute_Transaction : O_Cnode;
       Ghdl_Rtik_Attribute_Quiet : O_Cnode;
       Ghdl_Rtik_Attribute_Stable : O_Cnode;
@@ -25447,17 +25448,17 @@ package body Translation is
       Ghdl_Rtin_Type_Enum_Nbr : O_Fnode;
       Ghdl_Rtin_Type_Enum_Lits : O_Fnode;
 
-      --  Node for an unit value.
-      Ghdl_Rti_Unit_Val : O_Tnode;
-      Ghdl_Rti_Unit_32 : O_Fnode;
-      Ghdl_Rti_Unit_64 : O_Fnode;
-      Ghdl_Rti_Unit_Addr : O_Fnode;
+      --  Node for an unit64.
+      Ghdl_Rtin_Unit64 : O_Tnode;
+      Ghdl_Rtin_Unit64_Common : O_Fnode;
+      Ghdl_Rtin_Unit64_Name : O_Fnode;
+      Ghdl_Rtin_Unit64_Value  : O_Fnode;
 
-      --  Node for an unit.
-      Ghdl_Rtin_Unit : O_Tnode;
-      Ghdl_Rtin_Unit_Common : O_Fnode;
-      Ghdl_Rtin_Unit_Name : O_Fnode;
-      Ghdl_Rtin_Unit_Value  : O_Fnode;
+      --  Node for an unitptr.
+      Ghdl_Rtin_Unitptr : O_Tnode;
+      Ghdl_Rtin_Unitptr_Common : O_Fnode;
+      Ghdl_Rtin_Unitptr_Name : O_Fnode;
+      Ghdl_Rtin_Unitptr_Value  : O_Fnode;
 
       --  Node for a physical type
       Ghdl_Rtin_Type_Physical : O_Tnode;
@@ -25669,8 +25670,10 @@ package body Translation is
 
             New_Enum_Literal (Constr, Get_Identifier ("__ghdl_rtik_element"),
                               Ghdl_Rtik_Element);
-            New_Enum_Literal (Constr, Get_Identifier ("__ghdl_rtik_unit"),
-                              Ghdl_Rtik_Unit);
+            New_Enum_Literal (Constr, Get_Identifier ("__ghdl_rtik_unit64"),
+                              Ghdl_Rtik_Unit64);
+            New_Enum_Literal (Constr, Get_Identifier ("__ghdl_rtik_unitptr"),
+                              Ghdl_Rtik_Unitptr);
 
             New_Enum_Literal
               (Constr, Get_Identifier ("__ghdl_rtik_attribute_transaction"),
@@ -25851,37 +25854,36 @@ package body Translation is
                            Ghdl_Rtin_Subtype_Scalar);
          end;
 
-         declare
-            Constr : O_Element_List;
-         begin
-            Start_Union_Type (Constr);
-            New_Union_Field (Constr, Ghdl_Rti_Unit_32,
-                             Get_Identifier ("unit_32"), Ghdl_I32_Type);
-            if not Flag_Only_32b then
-               New_Union_Field (Constr, Ghdl_Rti_Unit_64,
-                                Get_Identifier ("unit_64"), Ghdl_I64_Type);
-            end if;
-            New_Union_Field (Constr, Ghdl_Rti_Unit_Addr,
-                             Get_Identifier ("addr"), Ghdl_Ptr_Type);
-            Finish_Union_Type (Constr, Ghdl_Rti_Unit_Val);
-            New_Type_Decl (Get_Identifier ("__ghdl_rti_unit_val"),
-                           Ghdl_Rti_Unit_Val);
-         end;
-
-         --  Unit
+         --  Unit64
          declare
             Constr : O_Element_List;
          begin
             Start_Record_Type (Constr);
-            New_Record_Field (Constr, Ghdl_Rtin_Unit_Common,
+            New_Record_Field (Constr, Ghdl_Rtin_Unit64_Common,
                               Get_Identifier ("common"), Ghdl_Rti_Common);
-            New_Record_Field (Constr, Ghdl_Rtin_Unit_Name,
+            New_Record_Field (Constr, Ghdl_Rtin_Unit64_Name,
                               Get_Identifier ("name"), Char_Ptr_Type);
-            New_Record_Field (Constr, Ghdl_Rtin_Unit_Value,
-                              Get_Identifier ("value"), Ghdl_Rti_Unit_Val);
-            Finish_Record_Type (Constr, Ghdl_Rtin_Unit);
-            New_Type_Decl (Get_Identifier ("__ghdl_rtin_unit"),
-                           Ghdl_Rtin_Unit);
+            New_Record_Field (Constr, Ghdl_Rtin_Unit64_Value,
+                              Get_Identifier ("value"), Ghdl_I64_Type);
+            Finish_Record_Type (Constr, Ghdl_Rtin_Unit64);
+            New_Type_Decl (Get_Identifier ("__ghdl_rtin_unit64"),
+                           Ghdl_Rtin_Unit64);
+         end;
+
+         --  Unitptr
+         declare
+            Constr : O_Element_List;
+         begin
+            Start_Record_Type (Constr);
+            New_Record_Field (Constr, Ghdl_Rtin_Unitptr_Common,
+                              Get_Identifier ("common"), Ghdl_Rti_Common);
+            New_Record_Field (Constr, Ghdl_Rtin_Unitptr_Name,
+                              Get_Identifier ("name"), Char_Ptr_Type);
+            New_Record_Field (Constr, Ghdl_Rtin_Unitptr_Value,
+                              Get_Identifier ("addr"), Ghdl_Ptr_Type);
+            Finish_Record_Type (Constr, Ghdl_Rtin_Unitptr);
+            New_Type_Decl (Get_Identifier ("__ghdl_rtin_unitptr"),
+                           Ghdl_Rtin_Unitptr);
          end;
 
          --  Physical type.
@@ -26458,43 +26460,37 @@ package body Translation is
          Mark : Id_Mark_Type;
          Aggr : O_Record_Aggr_List;
          Val : O_Cnode;
-         Field : O_Fnode;
          Const : O_Dnode;
-         Conv_Type : O_Tnode;
-         Unit_Type : Type_Info_Acc;
-         Info : Object_Info_Acc;
+         Info : constant Object_Info_Acc := Get_Info (Unit);
+         Rti_Type : O_Tnode;
+         Rtik : O_Cnode;
       begin
          Push_Identifier_Prefix (Mark, Get_Identifier (Unit));
          Name := Generate_Name (Unit);
+         if Info /= null then
+            --  Non-static units.  The only possibility is a unit of
+            --  std.standard.time.
+            Rti_Type := Ghdl_Rtin_Unitptr;
+            Rtik := Ghdl_Rtik_Unitptr;
+         else
+            Rti_Type := Ghdl_Rtin_Unit64;
+            Rtik := Ghdl_Rtik_Unit64;
+         end if;
          New_Const_Decl (Const, Create_Identifier ("RTI"),
-                         Global_Storage, Ghdl_Rtin_Unit);
+                         Global_Storage, Rti_Type);
          Start_Const_Value (Const);
-         Start_Record_Aggr (Aggr, Ghdl_Rtin_Unit);
-         New_Record_Aggr_El (Aggr, Generate_Common (Ghdl_Rtik_Unit));
+         Start_Record_Aggr (Aggr, Rti_Type);
+         New_Record_Aggr_El (Aggr, Generate_Common (Rtik));
          New_Record_Aggr_El (Aggr, New_Name_Address (Name));
-         Info := Get_Info (Unit);
          if Info /= null then
             --  Handle non-static units.  The only possibility is a unit of
             --  std.standard.time.
-            Field := Ghdl_Rti_Unit_Addr;
             Val := New_Global_Unchecked_Address
               (Get_Var_Label (Info.Object_Var), Ghdl_Ptr_Type);
          else
-            Unit_Type := Get_Info (Get_Type (Unit));
-            case Unit_Type.Type_Mode is
-               when Type_Mode_P64 =>
-                  Field := Ghdl_Rti_Unit_64;
-                  Conv_Type := Ghdl_I64_Type;
-               when Type_Mode_P32 =>
-                  Field := Ghdl_Rti_Unit_32;
-                  Conv_Type := Ghdl_I32_Type;
-               when others =>
-                  raise Internal_Error;
-            end case;
-            Val := Chap7.Translate_Numeric_Literal (Unit, Conv_Type);
+            Val := Chap7.Translate_Numeric_Literal (Unit, Ghdl_I64_Type);
          end if;
-         New_Record_Aggr_El
-           (Aggr, New_Union_Aggr (Ghdl_Rti_Unit_Val, Field, Val));
+         New_Record_Aggr_El (Aggr, Val);
          Finish_Record_Aggr (Aggr, Val);
          Finish_Const_Value (Const, Val);
          Add_Rti_Node (Const);
@@ -26510,7 +26506,6 @@ package body Translation is
          Unit : Iir_Unit_Declaration;
          Nbr_Units : Integer;
          Unit_Arr : O_Dnode;
-         Mode : Integer;
          Rti_Kind : O_Cnode;
       begin
          Info := Get_Info (Atype);
@@ -26523,11 +26518,6 @@ package body Translation is
 
          Push_Rti_Node (Prev, False);
          Unit := Get_Unit_Chain (Atype);
-         if Get_Info (Unit) /= null then
-            Mode := 4;
-         else
-            Mode := 0;
-         end if;
          Nbr_Units := 0;
          while Unit /= Null_Iir loop
             Generate_Unit_Declaration (Unit);
@@ -26548,7 +26538,7 @@ package body Translation is
                raise Internal_Error;
          end case;
          New_Record_Aggr_El
-           (List, Generate_Common_Type (Rti_Kind, 0, 0, Mode));
+           (List, Generate_Common_Type (Rti_Kind, 0, 0, 0));
          New_Record_Aggr_El (List, New_Name_Address (Name));
          New_Record_Aggr_El
            (List,

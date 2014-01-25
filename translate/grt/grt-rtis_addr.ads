@@ -93,11 +93,6 @@ package Grt.Rtis_Addr is
    function Rti_Complex_Type (Atype : Ghdl_Rti_Access) return Boolean;
    pragma Inline (Rti_Complex_Type);
 
-   --  Return true iff physical type ATYPE is non-static (std.standard.time)
-   function Rti_Non_Static_Physical_Type (Atype : Ghdl_Rti_Access)
-                                         return Boolean;
-   pragma Inline (Rti_Non_Static_Physical_Type);
-
    --  Get the top context.
    function Get_Top_Context return Rti_Context;
 

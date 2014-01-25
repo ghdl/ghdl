@@ -19,6 +19,7 @@ with System; use System;
 with System.Storage_Elements; --  Work around GNAT bug.
 pragma Unreferenced (System.Storage_Elements);
 with Ada.Unchecked_Conversion;
+with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 with Grt.Processes; use Grt.Processes;
 with Grt.Vstrings; use Grt.Vstrings;
 
@@ -90,21 +91,21 @@ package body Grt.Images is
    is
       Str : String (1 .. 21);
       First : Natural;
-      Unit : Ghdl_C_String;
-      Phys : Ghdl_Rtin_Type_Physical_Acc;
+      Phys : constant Ghdl_Rtin_Type_Physical_Acc
+        := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
+      Unit_Name : Ghdl_C_String;
       Unit_Len : Natural;
    begin
       To_String (Str, First, Val);
-      Phys := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
-      Unit := To_Ghdl_Rtin_Unit_Acc (Phys.Units (0)).Name;
-      Unit_Len := strlen (Unit);
+      Unit_Name := Get_Physical_Unit_Name (Phys.Units (0));
+      Unit_Len := strlen (Unit_Name);
       declare
          L : constant Natural := Str'Last + 1 - First;
          Str2 : String (1 .. L + 1 + Unit_Len);
       begin
          Str2 (1 .. L) := Str (First .. Str'Last);
          Str2 (L + 1) := ' ';
-         Str2 (L + 2 .. Str2'Last) := Unit (1 .. Unit_Len);
+         Str2 (L + 2 .. Str2'Last) := Unit_Name (1 .. Unit_Len);
          Return_String (Res, Str2);
       end;
    end Ghdl_Image_P64;
@@ -114,21 +115,21 @@ package body Grt.Images is
    is
       Str : String (1 .. 11);
       First : Natural;
-      Unit : Ghdl_C_String;
-      Phys : Ghdl_Rtin_Type_Physical_Acc;
+      Phys : constant Ghdl_Rtin_Type_Physical_Acc
+        := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
+      Unit_Name : Ghdl_C_String;
       Unit_Len : Natural;
    begin
       To_String (Str, First, Val);
-      Phys := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
-      Unit := To_Ghdl_Rtin_Unit_Acc (Phys.Units (0)).Name;
-      Unit_Len := strlen (Unit);
+      Unit_Name := Get_Physical_Unit_Name (Phys.Units (0));
+      Unit_Len := strlen (Unit_Name);
       declare
          L : constant Natural := Str'Last + 1 - First;
          Str2 : String (1 .. L + 1 + Unit_Len);
       begin
          Str2 (1 .. L) := Str (First .. Str'Last);
          Str2 (L + 1) := ' ';
-         Str2 (L + 2 .. Str2'Last) := Unit (1 .. Unit_Len);
+         Str2 (L + 2 .. Str2'Last) := Unit_Name (1 .. Unit_Len);
          Return_String (Res, Str2);
       end;
    end Ghdl_Image_P32;
