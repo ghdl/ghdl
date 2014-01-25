@@ -1,4 +1,4 @@
-entity tb is 
+entity tb is
 end tb;
 
 architecture sim of tb is
@@ -95,6 +95,10 @@ architecture sim of tb is
   end e_img;
 
 
+  function t_val (t : string) return time is
+    begin
+      return time'value (t);
+    end t_val;
 begin
 -- At least one test for each constant, signal or function
 
@@ -134,9 +138,25 @@ begin
   Assert my_e32 = T296 report "Assertion 21 triggered ... correctly" severity NOTE;
 
   my_e32_str <= "T24" after 40 ns;
-  Assert e_val(my_e32_str) = T23 report "Assertion 19 triggered ... correctly" severity NOTE;
-  Assert e_val(my_e32_str) = T22 report "Assertion 20 triggered ... wrongly except at 40ns" severity NOTE;
+  Assert e_val(my_e32_str) = T23 report "Assertion 22 triggered ... correctly" severity NOTE;
+  Assert e_val(my_e32_str) = T22 report "Assertion 23 triggered ... wrongly except at 40ns" severity NOTE;
 
+  --  Check white spaces and case.
+  assert e_val(" one") = one report "assertion 31" severity failure;
+  assert e_val(" one ") = one report "assertion 32" severity failure;
+  assert e_val("one ") = one report "assertion 33" severity failure;
+  assert e_val("oNe") = one report "assertion 34" severity failure;
+
+  assert e_val(" T1") = t1 report "assertion 35" severity failure;
+  assert e_val(" t2 ") = t2 report "assertion 36" severity failure;
+  assert e_val("t3 ") = t3 report "assertion 37" severity failure;
+  assert e_val("t39") = t39 report "assertion 38" severity failure;
+
+  assert t_val("1 ns") = 1 ns report "assertion 40" severity failure;
+  assert t_val(" 1 nS") = 1 ns report "assertion 41" severity failure;
+  assert t_val(" 1 Ns ") = 1 ns report "assertion 42" severity failure;
+  assert t_val(" -1.5 ns ") = -1500 ps report "assertion 44" severity failure;
+  
 -------------- runtime image ----------------------
   -- runtime enumeration
   sig_e8 <= Two after 50 ns, Four after 60 ns;

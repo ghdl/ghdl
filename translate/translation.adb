@@ -26537,8 +26537,7 @@ package body Translation is
             when others =>
                raise Internal_Error;
          end case;
-         New_Record_Aggr_El
-           (List, Generate_Common_Type (Rti_Kind, 0, 0, 0));
+         New_Record_Aggr_El (List, Generate_Common_Type (Rti_Kind, 0, 0, 0));
          New_Record_Aggr_El (List, New_Name_Address (Name));
          New_Record_Aggr_El
            (List,

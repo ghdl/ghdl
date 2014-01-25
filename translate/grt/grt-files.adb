@@ -243,7 +243,8 @@ package body Grt.Files is
 
       if Res /= Open_Ok then
          Error_C ("open: cannot open text file ");
-         Error_E_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
+         Error_C_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
+         Error_E;
       end if;
    end Ghdl_Text_File_Open;
 
@@ -258,7 +259,8 @@ package body Grt.Files is
 
       if Res /= Open_Ok then
          Error_C ("open: cannot open file ");
-         Error_E_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
+         Error_C_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
+         Error_E;
       end if;
    end Ghdl_File_Open;
 

@@ -17,158 +17,138 @@
 --  02111-1307, USA.
 with Grt.Errors; use Grt.Errors;
 with Grt.Rtis_Utils;
-with System;
-with Ada.Unchecked_Conversion;
 
 package body Grt.Values is
 
    NBSP : constant Character := Character'Val (160);
    HT : constant Character := Character'Val (9);
 
-   function White (C : in Character) return Boolean is
+   --  Return True IFF C is a whitespace character (as defined in LRM93 14.3)
+   function Is_Whitespace (C : in Character) return Boolean
+   is
    begin
       return C = ' ' or C = NBSP or C = HT;
-   end White;
+   end Is_Whitespace;
 
-   procedure Remove_Whitespace(S     : in Std_String_Basep;
-                               Pos   : in out Ghdl_Index_Type;
-                               Len   : in Ghdl_Index_Type;
-                               Chars : out Ghdl_B2) is
+   --  Increase POS to skip leading whitespace characters, decrease LEN to
+   --  skip trailing whitespaces in string S.
+   procedure Remove_Whitespaces (S     : Std_String_Basep;
+                                 Len   : in out Ghdl_Index_Type;
+                                 Pos   : in out Ghdl_Index_Type) is
    begin
-      Chars := False;
       --  GHDL: allow several leading whitespace.
       while Pos < Len loop
-         if White (S (Pos)) then
-            Pos := Pos + 1;
-         else
-            Chars := True;
-            exit;
-         end if;
+         exit when not Is_Whitespace (S (Pos));
+         Pos := Pos + 1;
       end loop;
-   end Remove_Whitespace;
 
-   function LC(C : in Character) return Character is
+      --  GHDL: allow several leading whitespace.
+      while Len > Pos loop
+         exit when not Is_Whitespace (S (Len - 1));
+         Len := Len - 1;
+      end loop;
+      if Pos = Len then
+         Error_E ("'value: empty string");
+      end if;
+   end Remove_Whitespaces;
+
+   --  Convert C to lowercase.
+   function LC (C : in Character) return Character is
    begin
       if C >= 'A' and then C <= 'Z' then
-         return Character'val(Character'pos(C) + Character'pos('a')
-                                               - Character'pos('A'));
+         return Character'Val
+           (Character'Pos (C) + Character'Pos ('a') - Character'Pos ('A'));
       else
          return C;
       end if;
    end LC;
 
-   procedure Make_LC_String(S : Std_String_Basep;
-                            Pos : in out Ghdl_Index_Type;
-                            Str : out String) is
-   begin
-      for i in Str'range loop
-         Str(i) := LC(S(Pos));
-         Pos := Pos + 1;
-      end loop;
-   end Make_LC_String;
-
-   function StringMatch(Str : String; EnumStr : Ghdl_C_String) return boolean
+   --  Return TRUE iff user string S (POS .. LEN) is equal to REF. Comparaison
+   --  is case insensitive, but REF must be lowercase (REF is supposed to
+   --  come from an RTI).
+   function String_Match (S : Std_String_Basep;
+                          Pos : Ghdl_Index_Type;
+                          Len : Ghdl_Index_Type;
+                          Ref : Ghdl_C_String) return Boolean
    is
-      EnumLen : constant Natural := strlen(EnumStr);
+      P : Ghdl_Index_Type;
+      C : Character;
    begin
-      for j in Str'range loop
-         if j > EnumLen or else Str(j) /= EnumStr(j) then
-            return false;
+      P := 0;
+      loop
+         C := Ref (Natural (P + 1));
+         if Pos + P = Len then
+            --  End of string.
+            return C = ASCII.NUL;
          end if;
+         if LC (S (Pos + P)) /= C or else C = ASCII.NUL then
+            return False;
+         end if;
+         P := P + 1;
       end loop;
-      if Str'last = EnumLen then
-         return true;
-      else
-         return false;
-      end if;
-   end StringMatch;
+   end String_Match;
 
+   --  Return the value of STR for enumerated type RTI.
    function Ghdl_Value_Enum (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_Index_Type
    is
-      Val   : Ghdl_Index_Type := 0;
+      Enum_Rti : constant Ghdl_Rtin_Type_Enum_Acc :=
+        To_Ghdl_Rtin_Type_Enum_Acc (Rti);
       S     : constant Std_String_Basep := Str.Base;
-      Len   : constant Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
+      Len   : Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
       Pos   : Ghdl_Index_Type := 0;
-      Chars : Ghdl_B2;
-      Enum_Rti : Ghdl_Rtin_Type_Enum_Acc;
-
    begin
-      Remove_Whitespace(S, Pos, Len, Chars);
-      if Pos = Len then
-         Error_E ("'value: empty string");
-      end if;
+      Remove_Whitespaces (S, Len, Pos);
 
-      Enum_Rti := To_Ghdl_Rtin_Type_Enum_Acc (Rti);
-
-      declare
-         Str     : String(1..Natural(Len - Pos));
-         Found   : Boolean := False;
-      begin
-         Make_LC_String(S, Pos, Str);
-         for i in 0 .. Enum_Rti.Nbr - 1 loop
-            if StringMatch(Str,  Enum_Rti.Names.all(i)) then
-               Found := True;
-               Val := i;
-               exit;
-            end if;
-         end loop;
-         if not Found then
-            Error_E ("'value: " & Str & " not in enumeration " &
-                     Enum_Rti.Name.all(1..strlen(Enum_Rti.Name)));
+      for I in 0 .. Enum_Rti.Nbr - 1 loop
+         if String_Match (S, Pos, Len, Enum_Rti.Names (I)) then
+            return I;
          end if;
-      end;
-
-      Remove_Whitespace(S, Pos, Len, Chars);
-      if Chars then
-         Error_E ("'value: trailing characters after blank");
-      end if;
-      return Val;
+      end loop;
+      Error_C ("'value: '");
+      Error_C_Std (S (Pos .. Len));
+      Error_C ("' not in enumeration '");
+      Error_C (Enum_Rti.Name);
+      Error_E ("'");
    end Ghdl_Value_Enum;
 
    function Ghdl_Value_B2 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_B2
    is
    begin
-      return Ghdl_B2'Val(Ghdl_Value_Enum (Str , Rti ));
+      return Ghdl_B2'Val (Ghdl_Value_Enum (Str, Rti));
    end Ghdl_Value_B2;
 
    function Ghdl_Value_E8 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_E8
    is
    begin
-      return Ghdl_E8'Val(Ghdl_Value_Enum (Str , Rti ));
+      return Ghdl_E8'Val (Ghdl_Value_Enum (Str, Rti));
    end Ghdl_Value_E8;
 
    function Ghdl_Value_E32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_E32
    is
    begin
-      return Ghdl_E32'Val(Ghdl_Value_Enum (Str , Rti ));
+      return Ghdl_E32'Val (Ghdl_Value_Enum (Str, Rti));
    end Ghdl_Value_E32;
 
-   function Ghdl_Value_I64 (Str : Std_String_Ptr) return Ghdl_I64
+   --  Convert S (INIT_POS .. LEN) to a signed integer.
+   function Ghdl_Value_I64 (S : Std_String_Basep;
+                            Len : Ghdl_Index_Type;
+                            Init_Pos : Ghdl_Index_Type)
+                           return Ghdl_I64
    is
-      S : constant Std_String_Basep := Str.Base;
-      Len : constant Ghdl_Index_Type := Str.Bounds.Dim_1.Length;
-      Pos : Ghdl_Index_Type := 0;
+      Pos : Ghdl_Index_Type := Init_Pos;
       C : Character;
       Sep : Character;
       Val, D, Base : Ghdl_I64;
       Exp : Integer;
-      Chars : Ghdl_B2;
    begin
-      --  LRM 14.1
-      --  Leading [and trailing] whitespace is allowed and ignored.
-      --
-      --  GHDL: allow several leading whitespace.
-      Remove_Whitespace(S, Pos, Len, Chars);
-      if Pos = Len then
-         Error_E ("'value: empty string");
-      end if;
       C := S (Pos);
 
       --  Be user friendly.
+      --  FIXME: reference.
       if C = '-' or C = '+' then
          Error_E ("'value: leading sign +/- not allowed");
       end if;
@@ -310,16 +290,26 @@ package body Grt.Values is
          end loop;
       end if;
 
-      --  LRM 14.1
-      --  [Leading] and trailing whitespace is allowed and ignored.
-      --
-      --  GHDL: allow several trailing whitespace.
-      Remove_Whitespace(S, Pos, Len, Chars);
-      if Chars then
-         Error_E ("integer'value: trailing characters after blank");
+      if Pos /= Len then
+         Error_E ("'value: trailing characters after blank");
       end if;
 
       return Val;
+   end Ghdl_Value_I64;
+
+   function Ghdl_Value_I64 (Str : Std_String_Ptr) return Ghdl_I64
+   is
+      S : constant Std_String_Basep := Str.Base;
+      Len : Ghdl_Index_Type := Str.Bounds.Dim_1.Length;
+      Pos : Ghdl_Index_Type := 0;
+   begin
+      --  LRM 14.1
+      --  Leading [and trailing] whitespace is allowed and ignored.
+      --
+      --  GHDL: allow several leading whitespace.
+      Remove_Whitespaces (S, Len, Pos);
+
+      return Ghdl_Value_I64 (S, Len, Pos);
    end Ghdl_Value_I64;
 
    function Ghdl_Value_I32 (Str : Std_String_Ptr) return Ghdl_I32
@@ -328,121 +318,15 @@ package body Grt.Values is
       return Ghdl_I32 (Ghdl_Value_I64 (Str));
    end Ghdl_Value_I32;
 
-   function Ghdl_Value_Physical_Type (Str : Std_String_Ptr;
-                                      Rti : Ghdl_Rti_Access)
-      return Ghdl_I64
-   is
-      function To_Std_String_Ptr is new Ada.Unchecked_Conversion
-         (Source => System.Address, Target => Std_String_Ptr);
-      function To_Std_String_Boundp is new Ada.Unchecked_Conversion
-         (Source => System.Address, Target => Std_String_Boundp);
-
-      S     : aliased Std_String := Str.all;
-      Bound : aliased Std_String_Bound := Str.Bounds.all;
-      Start, Finish : Ghdl_Index_Type;
-      Found_Real    : Boolean := false;
-
-      Phys_Rti : Ghdl_Rtin_Type_Physical_Acc;
-      Unit_Name : Ghdl_C_String;
-      Multiple : Ghdl_Rti_Access;
-      Mult     : Ghdl_I64;
-   begin
-      Phys_Rti := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
-
-      S.Bounds := To_Std_String_Boundp (Bound'Address);
-      -- find characters at the end...
-      Finish := Bound.Dim_1.Length - 1;
-      while White (S.Base (Finish)) loop
-         Finish := Finish - 1;
-      end loop;
-      Start := Finish;
-      while not White (S.Base (Start - 1)) loop
-         Start := Start - 1;
-      end loop;
-      -- shorten Bounds to exclude non-numeric part
-      Bound.Dim_1.Right := Bound.Dim_1.Right
-                          - Std_Integer (Bound.Dim_1.Length - Start);
-      Bound.Dim_1.Length := Start;
-      -- does the string represent a Real?
-      for i in 0 .. Start loop
-         if S.Base (i) = '.' then
-            Found_Real := true;
-         end if;
-      end loop;
-
-      declare
-         Unit_Str : String (1 .. Natural (1 + Finish - Start));
-      begin
-         Make_LC_String (Str.Base, Start, Unit_Str);
-         Multiple := null;
-         for i in 0 .. Phys_Rti.Nbr - 1 loop
-            Unit_Name :=
-              Rtis_Utils.Get_Physical_Unit_Name (Phys_Rti.Units (i));
-            if StringMatch (Unit_Str, Unit_Name) then
-               Multiple := Phys_Rti.Units (i);
-               exit;
-            end if;
-         end loop;
-         if Multiple = null then
-            Error_E ("'value: Unit " & Unit_Str & " not in physical type" &
-                     Phys_Rti.Name.all (1 .. strlen (Phys_Rti.Name)));
-         end if;
-      end;
-
-      case Multiple.Kind is
-         when Ghdl_Rtik_Unit64 =>
-            Mult := To_Ghdl_Rtin_Unit64_Acc (Multiple).Value;
-         when Ghdl_Rtik_Unitptr =>
-            case Rti.Kind is
-               when Ghdl_Rtik_Type_P64 =>
-                  Mult := To_Ghdl_Rtin_Unitptr_Acc (Multiple).Addr.I64;
-               when Ghdl_Rtik_Type_P32 =>
-                  Mult := Ghdl_I64
-                    (To_Ghdl_Rtin_Unitptr_Acc (Multiple).Addr.I32);
-               when others =>
-                  Internal_Error ("values.physical_type(P32/P64-1)");
-            end case;
-         when others =>
-            Internal_Error ("values.physical_type(P32/P64-2)");
-      end case;
-
-      if Found_Real then
-         return Ghdl_I64 (Ghdl_Value_F64 (To_Std_String_Ptr (S'Address))
-                                * Ghdl_F64 (Mult));
-      else
-         return Ghdl_Value_I64 (To_Std_String_Ptr (S'Address)) * Mult;
-      end if;
-   end Ghdl_Value_Physical_Type;
-
-   function Ghdl_Value_P64 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_I64
-   is
-   begin
-      if Rti.Kind /= Ghdl_Rtik_Type_P64 then
-         Error_E ("Physical_Type_64'value: incorrect RTI");
-      end if;
-      return Ghdl_Value_Physical_Type (Str, Rti);
-   end Ghdl_Value_P64;
-
-   function Ghdl_Value_P32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_I32
-   is
-   begin
-      if Rti.Kind /= Ghdl_Rtik_Type_P32 then
-         Error_E ("Physical_Type_32'value: incorrect RTI");
-      end if;
-      return Ghdl_I32 (Ghdl_Value_Physical_Type (Str, Rti));
-   end Ghdl_Value_P32;
-
    -- From patch attached to https://gna.org/bugs/index.php?18352
    -- thanks to Christophe Curis https://gna.org/users/lobotomy
-   function Ghdl_Value_F64 (Str : Std_String_Ptr) return Ghdl_F64
+   function Ghdl_Value_F64 (S : Std_String_Basep;
+                            Len : Ghdl_Index_Type;
+                            Init_Pos : Ghdl_Index_Type)
+                           return Ghdl_F64
    is
-      S       : constant Std_String_Basep := Str.Base;
-      Len     : constant Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
-      Pos     : Ghdl_Index_Type := 0;
+      Pos     : Ghdl_Index_Type := Init_Pos;
       C       : Character;
-      Chars   : Ghdl_B2;
       Is_Negative, Is_Neg_Exp : Boolean := False;
       Base    : Ghdl_F64;
       Intg    : Ghdl_I32;
@@ -450,16 +334,6 @@ package body Grt.Values is
       Sep     : Character;
       FrcExp  : Ghdl_F64;
    begin
-      --  LRM 14.1
-      --  Leading [and trailing] whitespace is allowed and ignored.
-      --
-      --  GHDL: allow several leading whitespace.
-      Remove_Whitespace(S, Pos, Len, Chars);
-
-      if Pos = Len then
-         Error_E ("'value: empty string");
-      end if;
-
       C := S (Pos);
       if C = '-' then
          Is_Negative := True;
@@ -614,12 +488,7 @@ package body Grt.Values is
          end if;
       end if;
 
-      --  LRM 14.1
-      --  [Leading] and trailing whitespace is allowed and ignored.
-      --
-      --  GHDL: allow several leading whitespace.
-      Remove_Whitespace(S, Pos, Len, Chars);
-      if Chars then
+      if Pos /= Len then
          Error_E ("'value: trailing characters after blank");
       end if;
 
@@ -629,5 +498,132 @@ package body Grt.Values is
 
       return Val;
    end Ghdl_Value_F64;
+
+   -- From patch attached to https://gna.org/bugs/index.php?18352
+   -- thanks to Christophe Curis https://gna.org/users/lobotomy
+   function Ghdl_Value_F64 (Str : Std_String_Ptr) return Ghdl_F64
+   is
+      S       : constant Std_String_Basep := Str.Base;
+      Len     : Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
+      Pos     : Ghdl_Index_Type := 0;
+   begin
+      --  LRM 14.1
+      --  Leading and trailing whitespace is allowed and ignored.
+      --
+      --  GHDL: allow several leading whitespace.
+      Remove_Whitespaces (S, Len, Pos);
+
+      return Ghdl_Value_F64 (S, Len, Pos);
+   end Ghdl_Value_F64;
+
+   function Ghdl_Value_Physical_Type (Str : Std_String_Ptr;
+                                      Rti : Ghdl_Rti_Access)
+                                     return Ghdl_I64
+   is
+      S        : constant Std_String_Basep := Str.Base;
+      Len      : Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
+      Pos      : Ghdl_Index_Type := 0;
+      Unit_Pos : Ghdl_Index_Type;
+      Lit_End  : Ghdl_Index_Type;
+
+      Found_Real : Boolean;
+
+      Phys_Rti : constant Ghdl_Rtin_Type_Physical_Acc :=
+        To_Ghdl_Rtin_Type_Physical_Acc (Rti);
+      Unit_Name : Ghdl_C_String;
+      Multiple : Ghdl_Rti_Access;
+      Mult     : Ghdl_I64;
+   begin
+      --  LRM 14.1
+      --  Leading and trailing whitespace is allowed and ignored.
+      Remove_Whitespaces (S, Len, Pos);
+
+      --  Split between abstract literal (optionnal) and unit name.
+      Lit_End := Pos;
+      Found_Real := False;
+      while Lit_End < Len loop
+         exit when Is_Whitespace (S (Lit_End));
+         if S (Lit_End) = '.' then
+            Found_Real := True;
+         end if;
+         Lit_End := Lit_End + 1;
+      end loop;
+      if Lit_End = Len then
+         --  No literal
+         Unit_Pos := Pos;
+         Lit_End := 0;
+      else
+         Unit_Pos := Lit_End + 1;
+         while Unit_Pos < Len loop
+            exit when not Is_Whitespace (S (Unit_Pos));
+            Unit_Pos := Unit_Pos + 1;
+         end loop;
+      end if;
+
+      Multiple := null;
+      for i in 0 .. Phys_Rti.Nbr - 1 loop
+         Unit_Name :=
+           Rtis_Utils.Get_Physical_Unit_Name (Phys_Rti.Units (i));
+         if String_Match (S, Unit_Pos, Len, Unit_Name) then
+            Multiple := Phys_Rti.Units (i);
+            exit;
+         end if;
+      end loop;
+      if Multiple = null then
+         Error_C ("'value: unit '");
+         Error_C_Std (S (Unit_Pos .. Len));
+         Error_C ("' not in physical type '");
+         Error_C (Phys_Rti.Name);
+         Error_E ("'");
+      end if;
+
+      case Multiple.Kind is
+         when Ghdl_Rtik_Unit64 =>
+            Mult := To_Ghdl_Rtin_Unit64_Acc (Multiple).Value;
+         when Ghdl_Rtik_Unitptr =>
+            case Rti.Kind is
+               when Ghdl_Rtik_Type_P64 =>
+                  Mult := To_Ghdl_Rtin_Unitptr_Acc (Multiple).Addr.I64;
+               when Ghdl_Rtik_Type_P32 =>
+                  Mult := Ghdl_I64
+                    (To_Ghdl_Rtin_Unitptr_Acc (Multiple).Addr.I32);
+               when others =>
+                  Internal_Error ("values.physical_type(P32/P64-1)");
+            end case;
+         when others =>
+            Internal_Error ("values.physical_type(P32/P64-2)");
+      end case;
+
+      if Lit_End = 0 then
+         return Mult;
+      else
+         if Found_Real then
+            return Ghdl_I64
+              (Ghdl_Value_F64 (S, Lit_End, Pos) * Ghdl_F64 (Mult));
+         else
+            return Ghdl_Value_I64 (S, Lit_End, Pos) * Mult;
+         end if;
+      end if;
+   end Ghdl_Value_Physical_Type;
+
+   function Ghdl_Value_P64 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+      return Ghdl_I64
+   is
+   begin
+      if Rti.Kind /= Ghdl_Rtik_Type_P64 then
+         Error_E ("Physical_Type_64'value: incorrect RTI");
+      end if;
+      return Ghdl_Value_Physical_Type (Str, Rti);
+   end Ghdl_Value_P64;
+
+   function Ghdl_Value_P32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+      return Ghdl_I32
+   is
+   begin
+      if Rti.Kind /= Ghdl_Rtik_Type_P32 then
+         Error_E ("Physical_Type_32'value: incorrect RTI");
+      end if;
+      return Ghdl_I32 (Ghdl_Value_Physical_Type (Str, Rti));
+   end Ghdl_Value_P32;
 
 end Grt.Values;

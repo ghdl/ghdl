@@ -194,7 +194,7 @@ package body Grt.Errors is
 --       end case;
 --    end Error_C;
 
-   procedure Error_E (Str : String) is
+   procedure Error_E (Str : String := "") is
    begin
       Put_Err (Str);
       Newline_Err;
@@ -202,12 +202,12 @@ package body Grt.Errors is
       Fatal_Error;
    end Error_E;
 
-   procedure Error_E_Std (Str : Std_String_Uncons)
+   procedure Error_C_Std (Str : Std_String_Uncons)
    is
       subtype Str_Subtype is String (1 .. Str'Length);
    begin
-      Error_E (Str_Subtype (Str));
-   end Error_E_Std;
+      Error_C (Str_Subtype (Str));
+   end Error_C_Std;
 
    procedure Error (Str : String) is
    begin
