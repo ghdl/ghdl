@@ -28987,7 +28987,7 @@ package body Translation is
       New_Uncomplete_Record_Type (Ghdl_Signal_Type);
       New_Type_Decl (Get_Identifier ("__ghdl_signal"), Ghdl_Signal_Type);
 
-      Ghdl_Signal_Ptr := New_Access_Type (Ghdl_Signal_Ptr);
+      Ghdl_Signal_Ptr := New_Access_Type (Ghdl_Signal_Type);
       New_Type_Decl (Get_Identifier ("__ghdl_signal_ptr"), Ghdl_Signal_Ptr);
 
       --  Type __signal_signal is record
