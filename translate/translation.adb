@@ -691,11 +691,6 @@ package body Translation is
       Ghdl_Rti_Array : O_Tnode;
       Ghdl_Rti_Arr_Acc : O_Tnode;
 
-      --  Location of an object.
-      Ghdl_Rti_Loc : O_Tnode;
-      Ghdl_Rti_Loc_Offset : O_Fnode;
-      Ghdl_Rti_Loc_Address : O_Fnode;
-
       --  Instance link.
       --  This is a structure at the beginning of each entity/architecture
       --  instance.  This allow the run-time to find the parent of an instance.
@@ -25776,19 +25771,6 @@ package body Translation is
             Finish_Record_Type (Constr, Ghdl_Component_Link_Type);
          end;
 
-         --  Create type ghdl_rti_loc
-         declare
-            Constr : O_Element_List;
-         begin
-            Start_Union_Type (Constr);
-            New_Union_Field (Constr, Ghdl_Rti_Loc_Offset,
-                             Get_Identifier ("offset"), Ghdl_Index_Type);
-            New_Union_Field (Constr, Ghdl_Rti_Loc_Address,
-                             Get_Identifier ("address"), Ghdl_Ptr_Type);
-            Finish_Union_Type (Constr, Ghdl_Rti_Loc);
-            New_Type_Decl (Get_Identifier ("__ghdl_rti_loc"), Ghdl_Rti_Loc);
-         end;
-
          --  Create type ghdl_rtin_block
          declare
             Constr : O_Element_List;
@@ -25799,7 +25781,7 @@ package body Translation is
             New_Record_Field (Constr, Ghdl_Rtin_Block_Name,
                               Get_Identifier ("name"), Char_Ptr_Type);
             New_Record_Field (Constr, Ghdl_Rtin_Block_Loc,
-                              Get_Identifier ("loc"), Ghdl_Rti_Loc);
+                              Get_Identifier ("loc"), Ghdl_Ptr_Type);
             New_Record_Field (Constr, Ghdl_Rtin_Block_Parent,
                               Wki_Parent, Ghdl_Rti_Access);
             New_Record_Field (Constr, Ghdl_Rtin_Block_Size,
@@ -25858,7 +25840,7 @@ package body Translation is
             New_Record_Field (Constr, Ghdl_Rtin_Subtype_Scalar_Base,
                               Get_Identifier ("base"), Ghdl_Rti_Access);
             New_Record_Field (Constr, Ghdl_Rtin_Subtype_Scalar_Range,
-                              Get_Identifier ("range"), Ghdl_Rti_Loc);
+                              Get_Identifier ("range"), Ghdl_Ptr_Type);
             Finish_Record_Type (Constr, Ghdl_Rtin_Subtype_Scalar);
             New_Type_Decl (Get_Identifier ("__ghdl_rtin_subtype_scalar"),
                            Ghdl_Rtin_Subtype_Scalar);
@@ -25962,11 +25944,11 @@ package body Translation is
             New_Record_Field (Constr, Ghdl_Rtin_Subtype_Array_Basetype,
                               Get_Identifier ("basetype"), Ghdl_Rti_Access);
             New_Record_Field (Constr, Ghdl_Rtin_Subtype_Array_Bounds,
-                              Get_Identifier ("bounds"), Ghdl_Rti_Loc);
+                              Get_Identifier ("bounds"), Ghdl_Ptr_Type);
             New_Record_Field (Constr, Ghdl_Rtin_Subtype_Array_Valsize,
-                              Get_Identifier ("val_size"), Ghdl_Rti_Loc);
+                              Get_Identifier ("val_size"), Ghdl_Ptr_Type);
             New_Record_Field (Constr, Ghdl_Rtin_Subtype_Array_Sigsize,
-                              Get_Identifier ("sig_size"), Ghdl_Rti_Loc);
+                              Get_Identifier ("sig_size"), Ghdl_Ptr_Type);
             Finish_Record_Type (Constr, Ghdl_Rtin_Subtype_Array);
             New_Type_Decl (Get_Identifier ("__ghdl_rtin_subtype_array"),
                            Ghdl_Rtin_Subtype_Array);
@@ -25985,10 +25967,6 @@ package body Translation is
                               Get_Identifier ("nbrel"), Ghdl_Index_Type);
             New_Record_Field (Constr, Ghdl_Rtin_Type_Record_Elements,
                               Get_Identifier ("elements"), Ghdl_Rti_Arr_Acc);
-            --New_Record_Field (Constr, Ghdl_Rtin_Type_Record_Valsize,
-            --                  Get_Identifier ("val_size"), Ghdl_Rti_Loc);
-            --New_Record_Field (Constr, Ghdl_Rtin_Type_Record_Sigsize,
-            --                  Get_Identifier ("sig_size"), Ghdl_Rti_Loc);
             Finish_Record_Type (Constr, Ghdl_Rtin_Type_Record);
             New_Type_Decl (Get_Identifier ("__ghdl_rtin_type_record"),
                            Ghdl_Rtin_Type_Record);
@@ -26024,7 +26002,7 @@ package body Translation is
             New_Record_Field (Constr, Ghdl_Rtin_Object_Name,
                               Get_Identifier ("name"), Char_Ptr_Type);
             New_Record_Field (Constr, Ghdl_Rtin_Object_Loc,
-                              Get_Identifier ("loc"), Ghdl_Rti_Loc);
+                              Get_Identifier ("loc"), Ghdl_Ptr_Type);
             New_Record_Field (Constr, Ghdl_Rtin_Object_Type,
                               Get_Identifier ("obj_type"), Ghdl_Rti_Access);
             Finish_Record_Type (Constr, Ghdl_Rtin_Object);
@@ -26042,7 +26020,7 @@ package body Translation is
             New_Record_Field (Constr, Ghdl_Rtin_Instance_Name,
                               Get_Identifier ("name"), Char_Ptr_Type);
             New_Record_Field (Constr, Ghdl_Rtin_Instance_Loc,
-                              Get_Identifier ("loc"), Ghdl_Rti_Loc);
+                              Get_Identifier ("loc"), Ghdl_Ptr_Type);
             New_Record_Field (Constr, Ghdl_Rtin_Instance_Parent,
                               Wki_Parent, Ghdl_Rti_Access);
             New_Record_Field (Constr, Ghdl_Rtin_Instance_Type,
@@ -26278,24 +26256,19 @@ package body Translation is
 
       function Get_Null_Loc return O_Cnode is
       begin
-         return New_Union_Aggr (Ghdl_Rti_Loc,
-                                Ghdl_Rti_Loc_Address,
-                                New_Null_Access (Ghdl_Ptr_Type));
+         return New_Null_Access (Ghdl_Ptr_Type);
       end Get_Null_Loc;
 
       function Var_Acc_To_Loc (Var : Var_Acc) return O_Cnode
       is
       begin
          if Is_Var_Field (Var) then
-            return New_Union_Aggr (Ghdl_Rti_Loc, Ghdl_Rti_Loc_Offset,
-                                   New_Offsetof (Get_Var_Record (Var),
-                                                 Get_Var_Field (Var),
-                                                 Ghdl_Index_Type));
+            return New_Offsetof (Get_Var_Record (Var),
+                                 Get_Var_Field (Var),
+                                 Ghdl_Ptr_Type);
          else
-            return New_Union_Aggr
-              (Ghdl_Rti_Loc, Ghdl_Rti_Loc_Address,
-               New_Global_Unchecked_Address (Get_Var_Label (Var),
-                                             Ghdl_Ptr_Type));
+            return New_Global_Unchecked_Address (Get_Var_Label (Var),
+                                                 Ghdl_Ptr_Type);
          end if;
       end Var_Acc_To_Loc;
 
@@ -26878,10 +26851,8 @@ package body Translation is
                            Val := Var_Acc_To_Loc (Info.C (I).Size_Var);
                         end if;
                      else
-                        Val := New_Union_Aggr
-                          (Ghdl_Rti_Loc, Ghdl_Rti_Loc_Offset,
-                           New_Sizeof (Info.Ortho_Type (I),
-                                       Ghdl_Index_Type));
+                        Val := New_Sizeof (Info.Ortho_Type (I),
+                                           Ghdl_Ptr_Type);
                      end if;
                   end if;
                when Type_Mode_Fat_Array =>
@@ -27415,12 +27386,9 @@ package body Translation is
          New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_Instance));
          New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
          New_Record_Aggr_El
-           (List,
-            New_Union_Aggr (Ghdl_Rti_Loc, Ghdl_Rti_Loc_Offset,
-                            New_Offsetof
-                              (Get_Info (Get_Parent (Stmt)).Block_Decls_Type,
-                               Info.Block_Link_Field,
-                               Ghdl_Index_Type)));
+           (List, New_Offsetof (Get_Info (Get_Parent (Stmt)).Block_Decls_Type,
+                                Info.Block_Link_Field,
+                                Ghdl_Ptr_Type));
          New_Record_Aggr_El (List, New_Rti_Address (Parent));
          case Get_Kind (Inst) is
             when Iir_Kind_Component_Declaration =>
@@ -27733,10 +27701,7 @@ package body Translation is
          if Field = O_Fnode_Null then
             Res := Get_Null_Loc;
          else
-            Res := New_Union_Aggr
-              (Ghdl_Rti_Loc,
-               Ghdl_Rti_Loc_Offset,
-               New_Offsetof (Field_Parent, Field, Ghdl_Index_Type));
+            Res := New_Offsetof (Field_Parent, Field, Ghdl_Ptr_Type);
          end if;
          New_Record_Aggr_El (List, Res);
          if Parent_Rti = O_Dnode_Null then

@@ -18,24 +18,30 @@
 with Grt.Errors; use Grt.Errors;
 
 package body Grt.Rtis_Addr is
+   function "+" (L : Address; R : Ghdl_Rti_Loc) return Address
+   is
+   begin
+      return To_Address (To_Integer (L) + R);
+   end "+";
+
    function "+" (L : Address; R : Ghdl_Index_Type) return Address
    is
    begin
       return To_Address (To_Integer (L) + Integer_Address (R));
    end "+";
 
-   function "-" (L : Address; R : Ghdl_Index_Type) return Address
+   function "-" (L : Address; R : Ghdl_Rti_Loc) return Address
    is
    begin
-      return To_Address (To_Integer (L) - Integer_Address (R));
+      return To_Address (To_Integer (L) - R);
    end "-";
 
-   function Align (L : Address; R : Ghdl_Index_Type) return Address
+   function Align (L : Address; R : Ghdl_Rti_Loc) return Address
    is
       Nad : Integer_Address;
    begin
       Nad := To_Integer (L + (R - 1));
-      return To_Address (Nad - (Nad mod Integer_Address (R)));
+      return To_Address (Nad - (Nad mod R));
    end Align;
 
    function Get_Parent_Context (Ctxt : Rti_Context) return Rti_Context
@@ -46,13 +52,13 @@ package body Grt.Rtis_Addr is
       case Ctxt.Block.Kind is
          when Ghdl_Rtik_Process
            | Ghdl_Rtik_Block =>
-            return (Base => Ctxt.Base - Blk.Loc.Off,
+            return (Base => Ctxt.Base - Blk.Loc,
                     Block => Blk.Parent);
          when Ghdl_Rtik_Architecture =>
-            if Blk.Loc.Off /= 0 then
+            if Blk.Loc /= Null_Rti_Loc then
                Internal_Error ("get_parent_context(3)");
             end if;
-            return (Base => Ctxt.Base + Blk.Loc.Off,
+            return (Base => Ctxt.Base + Blk.Loc,
                     Block => Blk.Parent);
          when Ghdl_Rtik_For_Generate
            | Ghdl_Rtik_If_Generate =>
@@ -75,7 +81,7 @@ package body Grt.Rtis_Addr is
                         exit;
                      when Ghdl_Rtik_Block =>
                         Blk1 := To_Ghdl_Rtin_Block_Acc (Parent);
-                        Nbase := Nbase + Blk1.Loc.Off;
+                        Nbase := Nbase + Blk1.Loc;
                         Parent := Blk1.Parent;
                      when others =>
                         Internal_Error ("get_parent_context(2)");
@@ -102,7 +108,7 @@ package body Grt.Rtis_Addr is
       else
          Stmt := Link.Parent.Stmt;
          Obj := To_Ghdl_Rtin_Instance_Acc (Stmt);
-         Ctxt := (Base => Link.Parent.all'Address - Obj.Loc.Off,
+         Ctxt := (Base => Link.Parent.all'Address - Obj.Loc,
                   Block => Obj.Parent);
       end if;
    end Get_Instance_Link;
@@ -116,10 +122,10 @@ package body Grt.Rtis_Addr is
       Nctxt : Rti_Context;
    begin
       if Depth = 0 then
-         return Loc.Addr;
+         return To_Address (Loc);
       elsif Ctxt.Block.Depth = Depth then
          --Addr := Base + Storage_Offset (Obj.Loc.Off);
-         return Ctxt.Base + Loc.Off;
+         return Ctxt.Base + Loc;
       else
          if Ctxt.Block.Depth < Depth then
             Internal_Error ("loc_to_addr");
@@ -128,7 +134,7 @@ package body Grt.Rtis_Addr is
          loop
             Nctxt := Get_Parent_Context (Cur_Ctxt);
             if Nctxt.Block.Depth = Depth then
-               return Nctxt.Base + Loc.Off;
+               return Nctxt.Base + Loc;
             end if;
             Cur_Ctxt := Nctxt;
          end loop;
@@ -178,7 +184,7 @@ package body Grt.Rtis_Addr is
       Inst_Base : Address;
    begin
       --  Address of the field containing the address of the instance.
-      Inst_Addr := Ctxt.Base + Inst.Loc.Off;
+      Inst_Addr := Ctxt.Base + Inst.Loc;
       --  Read sub instance address.
       Inst_Base := To_Addr_Acc (Inst_Addr).all;
       --  Read instance RTI.
@@ -198,7 +204,7 @@ package body Grt.Rtis_Addr is
 
       procedure Align (A : Ghdl_Index_Type) is
       begin
-         Bounds := Align (Bounds, A);
+         Bounds := Align (Bounds, Ghdl_Rti_Loc (A));
       end Align;
 
       procedure Update (S : Ghdl_Index_Type) is

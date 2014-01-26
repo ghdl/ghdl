@@ -410,7 +410,9 @@ package body Ortho_Debug is
    is
       subtype O_Cnode_Sizeof_Type is O_Cnode_Type (OC_Sizeof_Lit);
    begin
-      if Rtype.Kind /= ON_Unsigned_Type then
+      if Rtype.Kind /= ON_Unsigned_Type
+        and then Rtype.Kind /= ON_Access_Type
+      then
          raise Type_Error;
       end if;
       Check_Complete_Type (Atype);
@@ -442,7 +444,9 @@ package body Ortho_Debug is
    is
       subtype O_Cnode_Offsetof_Type is O_Cnode_Type (OC_Offsetof_Lit);
    begin
-      if Rtype.Kind /= ON_Unsigned_Type then
+      if Rtype.Kind /= ON_Unsigned_Type
+        and then Rtype.Kind /= ON_Access_Type
+      then
          raise Type_Error;
       end if;
       if Field.Parent /= Rec_Type then

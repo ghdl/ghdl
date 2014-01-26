@@ -899,6 +899,7 @@ package body Ortho_Front is
 
    function Parse_Constant_Value (Atype : Node_Acc) return O_Cnode;
    function Parse_Address (Prefix : Node_Acc) return O_Enode;
+   function Parse_Constant_Address (Prefix : Node_Acc) return O_Cnode;
    procedure Parse_Declaration;
    procedure Parse_Compound_Statement;
 
@@ -1320,6 +1321,7 @@ package body Ortho_Front is
             Res := New_Float_Literal (Atype.Type_Onode, Token_Float);
          when Tok_Ident =>
             declare
+               Pfx : Node_Acc;
                N : Node_Acc;
             begin
                --  Note: we don't use get_decl, since the name can be a literal
@@ -1328,7 +1330,8 @@ package body Ortho_Front is
                  and then Token_Sym.Name.Inter.Kind = Decl_Type
                then
                   --  A typed expression.
-                  N := Token_Sym.Name.Inter.Decl_Dtype;
+                  Pfx := Token_Sym.Name.Inter;
+                  N := Pfx.Decl_Dtype;
                   if Atype /= null and then N /= Atype then
                      Parse_Error ("type mismatch");
                   end if;
@@ -1345,6 +1348,11 @@ package body Ortho_Front is
                         Res := Parse_Sizeof (N);
                      elsif Token_Sym = Id_Alignof then
                         Res := Parse_Alignof (N);
+                     elsif Token_Sym = Id_Address
+                       or Token_Sym = Id_Unchecked_Address
+                       or Token_Sym = Id_Subprg_Addr
+                     then
+                        Res := Parse_Constant_Address (Pfx);
                      elsif Token_Sym = Id_Conv then
                         Next_Expect (Tok_Left_Paren);
                         Next_Token;
@@ -2312,7 +2320,6 @@ package body Ortho_Front is
          end if;
       end if;
       Expect (Tok_Right_Paren);
-      Next_Token;
       return Res;
    end Parse_Constant_Address;
 
@@ -2346,7 +2353,8 @@ package body Ortho_Front is
            | Type_Signed
            | Type_Enum
            | Type_Float
-           | Type_Boolean =>
+           | Type_Boolean
+           | Type_Access =>
             --return Parse_Primary_Expression (Atype);
             return Parse_Typed_Literal (Atype);
          when Type_Record =>
@@ -2396,40 +2404,6 @@ package body Ortho_Front is
                Expect (Tok_Right_Brace);
                Next_Token;
                return Res;
-            end;
-         when Type_Access =>
-            --  The only way to initialize an access is either NULL
-            --  or 'Address.
-            if Tok = Tok_Null then
-               Res := New_Null_Access (Atype.Type_Onode);
-               Next_Token;
-               return Res;
-            end if;
-
-            if Tok /= Tok_Ident then
-               Parse_Error ("identifier expected for access literal");
-            end if;
-
-            declare
-               T : Node_Acc;
-            begin
-               T := Get_Decl (Token_Sym);
-               Next_Expect (Tok_Tick);
-               Next_Token;
-               if Tok = Tok_Left_Brack then
-                  if T.Kind /= Decl_Type
-                    or else T.Decl_Dtype.Kind /= Type_Access
-                  then
-                     Parse_Error ("name is not an access type name");
-                  end if;
-                  Next_Expect (Tok_Null);
-                  Next_Expect (Tok_Right_Brack);
-                  Next_Token;
-                  return New_Null_Access (Atype.Type_Onode);
-               else
-                  Expect (Tok_Ident);
-                  return Parse_Constant_Address (T);
-               end if;
             end;
          when others =>
             raise Program_Error;

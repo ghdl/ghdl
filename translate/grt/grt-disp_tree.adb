@@ -237,7 +237,7 @@ package body Grt.Disp_Tree is
                     To_Ghdl_Rtin_Block_Acc (Child);
                   Nctxt : Rti_Context;
                begin
-                  Nctxt := (Base => Ctxt.Base + Nblk.Loc.Off,
+                  Nctxt := (Base => Ctxt.Base + Nblk.Loc,
                             Block => Child);
                   Disp_Header (Nctxt, False);
                   Disp_Sub_Block (Nblk, Nctxt);
@@ -250,7 +250,7 @@ package body Grt.Disp_Tree is
                   Length : Ghdl_Index_Type;
                   Old_Child2 : Ghdl_Rti_Access;
                begin
-                  Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc.Off).all,
+                  Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc).all,
                             Block => Child);
                   Length := Get_For_Generate_Length (Nblk, Ctxt);
                   Disp_Header (Nctxt, Length > 1);
@@ -276,7 +276,7 @@ package body Grt.Disp_Tree is
                     To_Ghdl_Rtin_Block_Acc (Child);
                   Nctxt : Rti_Context;
                begin
-                  Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc.Off).all,
+                  Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc).all,
                             Block => Child);
                   Disp_Header (Nctxt);
                   if Nctxt.Base /= Null_Address then

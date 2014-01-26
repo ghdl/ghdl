@@ -1290,7 +1290,7 @@ package body Grt.Signals is
                  Mode => Ghdl_Rti_Signal_Mode_None,
                  Max_Depth => 0),
       Name => null,
-      Loc => (Rel => True, Off => 0),
+      Loc => Null_Rti_Loc,
       Obj_Type => null);
 
    Boolean_Signal_Rti : aliased Ghdl_Rtin_Object :=
@@ -1299,7 +1299,7 @@ package body Grt.Signals is
                  Mode => Ghdl_Rti_Signal_Mode_None,
                  Max_Depth => 0),
       Name => null,
-      Loc => (Rel => True, Off => 0),
+      Loc => Null_Rti_Loc,
       Obj_Type => null);
 
    function Ghdl_Create_Signal_Attribute
@@ -1380,7 +1380,7 @@ package body Grt.Signals is
                  Mode => Ghdl_Rti_Signal_Mode_None,
                  Max_Depth => 0),
       Name => null,
-      Loc => (Rel => True, Off => 0),
+      Loc => Null_Rti_Loc,
       Obj_Type => Std_Standard_Boolean_RTI_Ptr);
 
    function Ghdl_Signal_Create_Guard (This : System.Address;

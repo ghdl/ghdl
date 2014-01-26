@@ -108,15 +108,8 @@ package Grt.Rtis is
    type Ghdl_Rti_Array is array (Ghdl_Index_Type) of Ghdl_Rti_Access;
    type Ghdl_Rti_Arr_Acc is access Ghdl_Rti_Array;
 
-   type Ghdl_Rti_Loc (Rel : Boolean := False) is record
-      case Rel is
-         when True =>
-            Off : Ghdl_Index_Type;
-         when False =>
-            Addr : Address;
-      end case;
-   end record;
-   pragma Unchecked_Union (Ghdl_Rti_Loc);
+   subtype Ghdl_Rti_Loc is Integer_Address;
+   Null_Rti_Loc : constant Ghdl_Rti_Loc := 0;
 
    type Ghdl_C_String_Array is array (Ghdl_Index_Type) of Ghdl_C_String;
    type Ghdl_C_String_Array_Ptr is access Ghdl_C_String_Array;
@@ -344,7 +337,7 @@ package Grt.Rtis is
    Ghdl_Rti_Top : Ghdl_Rtin_Block :=
      (Common => (Ghdl_Rtik_Top, 0, 0, 0),
       Name => null,
-      Loc => (Rel => True, Off => 0),
+      Loc => Null_Rti_Loc,
       Parent => null,
       Size => 0,
       Nbr_Child => 0,

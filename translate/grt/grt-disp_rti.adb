@@ -430,7 +430,7 @@ package body Grt.Disp_Rti is
 
       procedure Align (A : Ghdl_Index_Type) is
       begin
-         Bounds := Align (Bounds, A);
+         Bounds := Align (Bounds, Ghdl_Rti_Loc (A));
       end Align;
 
       procedure Update (S : Ghdl_Index_Type) is
@@ -602,7 +602,7 @@ package body Grt.Disp_Rti is
            | Ghdl_Rtik_Architecture
            | Ghdl_Rtik_Block
            | Ghdl_Rtik_Process =>
-            Nctxt := (Base => Ctxt.Base + Blk.Loc.Off,
+            Nctxt := (Base => Ctxt.Base + Blk.Loc,
                       Block => To_Ghdl_Rti_Access (Blk));
             Disp_Rti_Arr (Blk.Nbr_Child, Blk.Children,
                           Nctxt, Indent + 1);
@@ -610,7 +610,7 @@ package body Grt.Disp_Rti is
             declare
                Length : Ghdl_Index_Type;
             begin
-               Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Blk.Loc.Off).all,
+               Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Blk.Loc).all,
                          Block => To_Ghdl_Rti_Access (Blk));
                Length := Get_For_Generate_Length (Blk, Ctxt);
                for I in 1 .. Length loop
@@ -620,7 +620,7 @@ package body Grt.Disp_Rti is
                end loop;
             end;
          when Ghdl_Rtik_If_Generate =>
-            Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Blk.Loc.Off).all,
+            Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Blk.Loc).all,
                       Block => To_Ghdl_Rti_Access (Blk));
             if Nctxt.Base /= Null_Address then
                Disp_Rti_Arr (Blk.Nbr_Child, Blk.Children,
@@ -705,7 +705,7 @@ package body Grt.Disp_Rti is
       Disp_Name (Inst.Name);
       New_Line;
 
-      Inst_Addr := Ctxt.Base + Inst.Loc.Off;
+      Inst_Addr := Ctxt.Base + Inst.Loc;
       --  Read sub instance.
       Inst_Base := To_Addr_Acc (Inst_Addr).all;
 

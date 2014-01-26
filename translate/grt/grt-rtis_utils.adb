@@ -50,7 +50,7 @@ package body Grt.Rtis_Utils is
                      Nblk : Ghdl_Rtin_Block_Acc;
                   begin
                      Nblk := To_Ghdl_Rtin_Block_Acc (Child);
-                     Nctxt := (Base => Ctxt.Base + Nblk.Loc.Off,
+                     Nctxt := (Base => Ctxt.Base + Nblk.Loc,
                                Block => Child);
                      Res := Traverse_Blocks_1 (Nctxt);
                   end;
@@ -61,7 +61,7 @@ package body Grt.Rtis_Utils is
                   begin
                      Nblk := To_Ghdl_Rtin_Block_Acc (Child);
                      Nctxt :=
-                       (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc.Off).all,
+                       (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc).all,
                         Block => Child);
                      Length := Get_For_Generate_Length (Nblk, Ctxt);
                      for I in 1 .. Length loop
@@ -76,7 +76,7 @@ package body Grt.Rtis_Utils is
                   begin
                      Nblk := To_Ghdl_Rtin_Block_Acc (Child);
                      Nctxt :=
-                       (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc.Off).all,
+                       (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc).all,
                         Block => Child);
                      if Nctxt.Base /= Null_Address then
                         Res := Traverse_Blocks_1 (Nctxt);

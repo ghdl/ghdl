@@ -182,11 +182,11 @@ package body Grt.Avhpi is
             end if;
          when Ghdl_Rtik_Subtype_Array =>
             if Is_Sig then
-               El_Size :=
-                 To_Ghdl_Rtin_Subtype_Array_Acc (El_Type1).Sigsize.Off;
+               El_Size := Ghdl_Index_Type
+                 (To_Ghdl_Rtin_Subtype_Array_Acc (El_Type1).Sigsize);
             else
-               El_Size :=
-                 To_Ghdl_Rtin_Subtype_Array_Acc (El_Type1).Valsize.Off;
+               El_Size := Ghdl_Index_Type
+                 (To_Ghdl_Rtin_Subtype_Array_Acc (El_Type1).Valsize);
             end if;
          when others =>
             Internal_Error ("add_index");
@@ -259,7 +259,7 @@ package body Grt.Avhpi is
                declare
                   Base : Address;
                begin
-                  Base := To_Addr_Acc (Iterator.Ctxt.Base + Nblk.Loc.Off).all;
+                  Base := To_Addr_Acc (Iterator.Ctxt.Base + Nblk.Loc).all;
                   Base := Base + Iterator.It2 * Nblk.Size;
                   Res := (Kind => VhpiForGenerateK,
                           Ctxt => (Base => Base,
@@ -277,20 +277,20 @@ package body Grt.Avhpi is
          case Ch.Kind is
             when Ghdl_Rtik_Process =>
                Res := (Kind => VhpiProcessStmtK,
-                       Ctxt => (Base => Iterator.Ctxt.Base + Nblk.Loc.Off,
+                       Ctxt => (Base => Iterator.Ctxt.Base + Nblk.Loc,
                                 Block => Ch));
                Error := AvhpiErrorOk;
                return;
             when Ghdl_Rtik_Block =>
                Res := (Kind => VhpiBlockStmtK,
-                       Ctxt => (Base => Iterator.Ctxt.Base + Nblk.Loc.Off,
+                       Ctxt => (Base => Iterator.Ctxt.Base + Nblk.Loc,
                                 Block => Ch));
                Error := AvhpiErrorOk;
                return;
             when Ghdl_Rtik_If_Generate =>
                Res := (Kind => VhpiIfGenerateK,
                        Ctxt => (Base => To_Addr_Acc (Iterator.Ctxt.Base
-                                                     + Nblk.Loc.Off).all,
+                                                     + Nblk.Loc).all,
                                 Block => Ch));
                --  Return only if the condition is true.
                if Res.Ctxt.Base /= Null_Address then
@@ -300,7 +300,7 @@ package body Grt.Avhpi is
             when Ghdl_Rtik_For_Generate =>
                Res := (Kind => VhpiForGenerateK,
                        Ctxt => (Base => To_Addr_Acc (Iterator.Ctxt.Base
-                                                     + Nblk.Loc.Off).all,
+                                                     + Nblk.Loc).all,
                                 Block => Ch));
                Iterator.Max2 := Get_For_Generate_Length (Nblk, Iterator.Ctxt);
                Iterator.It2 := 0;
@@ -743,7 +743,7 @@ package body Grt.Avhpi is
                      Rti := To_Ghdl_Rtin_Block_Acc (Ref.Ctxt.Block).Parent;
                      Ent := To_Ghdl_Rtin_Block_Acc (Rti);
                      Res := (Kind => VhpiEntityDeclK,
-                             Ctxt => (Base => Ref.Ctxt.Base + Ent.Loc.Off,
+                             Ctxt => (Base => Ref.Ctxt.Base + Ent.Loc,
                                       Block => Rti));
                      Error := AvhpiErrorOk;
                   end;

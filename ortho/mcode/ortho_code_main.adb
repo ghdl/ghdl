@@ -33,7 +33,7 @@ procedure Ortho_Code_Main
 is
    Output : String_Acc := null;
    type Format_Type is (Format_Coff, Format_Elf);
-   Format : Format_Type := Format_Elf;
+   Format : constant Format_Type := Format_Elf;
    Fd : File_Descriptor;
 
    First_File : Natural;
@@ -56,7 +56,7 @@ begin
    I := 1;
    while I <= Argc loop
       declare
-         Arg : String := Argument (I);
+         Arg : constant String := Argument (I);
       begin
          if Arg (1) = '-' then
             if Arg'Length > 5 and then Arg (1 .. 5) = "--be-" then

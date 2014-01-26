@@ -22,11 +22,12 @@ with Grt.Rtis; use Grt.Rtis;
 
 --  Addresses handling.
 package Grt.Rtis_Addr is
+   function "+" (L : Address; R : Ghdl_Rti_Loc) return Address;
    function "+" (L : Address; R : Ghdl_Index_Type) return Address;
 
-   function "-" (L : Address; R : Ghdl_Index_Type) return Address;
+   function "-" (L : Address; R : Ghdl_Rti_Loc) return Address;
 
-   function Align (L : Address; R : Ghdl_Index_Type) return Address;
+   function Align (L : Address; R : Ghdl_Rti_Loc) return Address;
 
    --  An RTI context contains a pointer (BASE) to or into an instance.
    --  BLOCK describes data being pointed.  If a reference is made to a field
