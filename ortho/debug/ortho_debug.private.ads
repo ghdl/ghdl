@@ -390,9 +390,12 @@ private
             Loop_Id : O_Snode;
          when ON_Case_Stmt =>
             Selector : O_Enode;
+            --  Simply linked list of branches
             Branches : O_Snode;
             Case_Last : O_Snode;
          when ON_When_Stmt =>
+            --  The corresponding 'case'
+            Branch_Parent : O_Snode;
             Choice_List : O_Choice;
             Next_Branch : O_Snode;
          when ON_Call_Stmt =>
@@ -443,7 +446,7 @@ private
       Last : O_Cnode;
    end record;
    type O_Case_Block is record
-      null;
+      Case_Stmt : O_Snode;
    end record;
 
    type O_If_Block is record

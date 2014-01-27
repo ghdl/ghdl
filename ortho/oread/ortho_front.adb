@@ -1201,8 +1201,9 @@ package body Ortho_Front is
 
 --    procedure Parse_Declaration;
 
-   function Parse_Unary_Expression (Atype : Node_Acc) return O_Enode;
-   function Parse_Expression (Expr_Type : Node_Acc) return O_Enode;
+   procedure Parse_Expression (Expr_Type : Node_Acc;
+                               Expr : out O_Enode;
+                               Res_Type : out Node_Acc);
    procedure Parse_Name (Prefix : Node_Acc;
                          Name : out O_Lnode; N_Type : out Node_Acc);
    procedure Parse_Lvalue (N : in out O_Lnode; N_Type : in out Node_Acc);
@@ -1282,6 +1283,7 @@ package body Ortho_Front is
       return Res;
    end Parse_Alignof;
 
+   --  Parse a literal whose type is ATYPE.
    function Parse_Typed_Literal (Atype : Node_Acc) return O_Cnode
    is
       Res : O_Cnode;
@@ -1395,12 +1397,12 @@ package body Ortho_Front is
    end Parse_Typed_Literal;
 
    --  expect: next token
-   function Parse_Named_Expression
-     (Atype : Node_Acc; Name : Node_Acc; Stop_At_All : Boolean)
-     return O_Enode
+   --  Parse an expression starting with NAME.
+   procedure Parse_Named_Expression
+     (Atype : Node_Acc; Name : Node_Acc; Stop_At_All : Boolean;
+                                         Res : out O_Enode;
+                                         Res_Type : out Node_Acc)
    is
-      Res : O_Enode;
-      R_Type : Node_Acc;
    begin
       if Tok = Tok_Tick then
          Next_Token;
@@ -1408,55 +1410,59 @@ package body Ortho_Front is
             --  Typed literal.
             Next_Token;
             Res := New_Lit (Parse_Typed_Literal (Name.Decl_Dtype));
+            Res_Type := Name.Decl_Dtype;
             Expect (Tok_Right_Brack);
             Next_Token;
-            return Res;
          elsif Tok = Tok_Left_Paren then
-            --  Typed expression.
+            --  Typed expression (used for comparaison operators)
             Next_Token;
-            Res := Parse_Expression (Name.Decl_Dtype);
+            Parse_Expression (Name.Decl_Dtype, Res, Res_Type);
             Expect (Tok_Right_Paren);
             Next_Token;
-            return Res;
          elsif Tok = Tok_Ident then
             --  Attribute.
             if Token_Sym = Id_Conv then
                Next_Expect (Tok_Left_Paren);
                Next_Token;
-               Res := Parse_Expression (null);
+               Parse_Expression (null, Res, Res_Type);
+               --  Discard Res_Type.
                Expect (Tok_Right_Paren);
                Next_Token;
-               R_Type := Name.Decl_Dtype;
-               Res := New_Convert_Ov (Res, R_Type.Type_Onode);
+               Res_Type := Name.Decl_Dtype;
+               Res := New_Convert_Ov (Res, Res_Type.Type_Onode);
                --  Fall-through.
             elsif Token_Sym = Id_Address
               or Token_Sym = Id_Unchecked_Address
               or Token_Sym = Id_Subprg_Addr
             then
-               R_Type := Name.Decl_Dtype;
+               Res_Type := Name.Decl_Dtype;
                Res := Parse_Address (Name);
                --  Fall-through.
             elsif Token_Sym = Id_Sizeof then
-               Res := New_Lit (Parse_Sizeof (Name.Decl_Dtype));
+               Res_Type := Name.Decl_Dtype;
+               Res := New_Lit (Parse_Sizeof (Res_Type));
                Next_Token;
-               return Res;
+               return;
             elsif Token_Sym = Id_Alignof then
-               Res := New_Lit (Parse_Alignof (Name.Decl_Dtype));
+               Res_Type := Name.Decl_Dtype;
+               Res := New_Lit (Parse_Alignof (Res_Type));
                Next_Token;
-               return Res;
+               return;
             elsif Token_Sym = Id_Alloca then
                Next_Expect (Tok_Left_Paren);
                Next_Token;
-               Res := New_Alloca
-                 (Name.Decl_Dtype.Type_Onode,
-                  Parse_Expression (null));
+               Parse_Expression (null, Res, Res_Type);
+               --  Discard Res_Type.
+               Res_Type := Name.Decl_Dtype;
+               Res := New_Alloca (Res_Type.Type_Onode, Res);
                Expect (Tok_Right_Paren);
                Next_Token;
-               return Res;
+               return;
             elsif Token_Sym = Id_Offsetof then
-               Res := New_Lit (Parse_Offsetof (Atype));
+               Res_Type := Atype;
+               Res := New_Lit (Parse_Offsetof (Res_Type));
                Next_Token;
-               return Res;
+               return;
             else
                Parse_Error ("unknown attribute name");
             end if;
@@ -1473,7 +1479,7 @@ package body Ortho_Front is
          begin
             Parse_Association (Constr, Name);
             Res := New_Function_Call (Constr);
-            R_Type := Name.Decl_Dtype;
+            Res_Type := Name.Decl_Dtype;
             --  Fall-through.
          end;
       elsif Name.Kind = Node_Object
@@ -1482,10 +1488,9 @@ package body Ortho_Front is
          --  Name.
          declare
             Lval : O_Lnode;
-            L_Type : Node_Acc;
          begin
-            Parse_Name (Name, Lval, L_Type);
-            return New_Value (Lval);
+            Parse_Name (Name, Lval, Res_Type);
+            Res := New_Value (Lval);
          end;
       else
          Parse_Error ("bad ident expression: "
@@ -1496,11 +1501,11 @@ package body Ortho_Front is
       --  R_TYPE and RES must be set.
       if Tok = Tok_Dot then
          if Stop_At_All then
-            return Res;
+            return;
          end if;
          Next_Token;
          if Tok = Tok_All then
-            if R_Type.Kind /= Type_Access then
+            if Res_Type.Kind /= Type_Access then
                Parse_Error ("type of prefix is not an access");
             end if;
             declare
@@ -1508,101 +1513,69 @@ package body Ortho_Front is
             begin
                Next_Token;
                N := New_Access_Element (Res);
-               R_Type := R_Type.Access_Dtype;
-               Parse_Lvalue (N, R_Type);
+               Res_Type := Res_Type.Access_Dtype;
+               Parse_Lvalue (N, Res_Type);
                Res := New_Value (N);
             end;
-            return Res;
+            return;
          else
             Parse_Error ("'.all' expected");
          end if;
-      else
-         return Res;
       end if;
    end Parse_Named_Expression;
 
-   function Parse_Primary_Expression (Atype : Node_Acc) return O_Enode
+   procedure Parse_Primary_Expression (Atype : Node_Acc;
+                                       Res : out O_Enode;
+                                       Res_Type : out Node_Acc)
    is
-      Res : O_Enode;
    begin
       case Tok is
          when Tok_Num
            | Tok_Float_Num =>
-            return New_Lit (Parse_Typed_Literal (Atype));
+            if Atype = null then
+               Parse_Error ("numeric literal without type context");
+            end if;
+            Res_Type := Atype;
+            Res := New_Lit (Parse_Typed_Literal (Atype));
          when Tok_Ident =>
             declare
                N : Node_Acc;
             begin
                N := Get_Decl (Token_Sym);
                Next_Token;
-               return Parse_Named_Expression (Atype, N, False);
+               Parse_Named_Expression (Atype, N, False, Res, Res_Type);
             end;
          when Tok_Left_Paren =>
             Next_Token;
-            Res := Parse_Expression (Atype);
+            Parse_Expression (Atype, Res, Res_Type);
             Expect (Tok_Right_Paren);
             Next_Token;
-            return Res;
---           when Tok_Ident =>
---              declare
---                 Inter : Node_Acc;
---              begin
---                 Inter := Token_Sym.Inter;
---                 while Inter /= null loop
---                    case Inter.Kind is
---                       when Inter_Var
---                         | Inter_Param =>
---                          Res := New_Value (Inter.Object_Node);
---                          Next_Token;
---                          return Res;
---                       when Inter_Subprg =>
---                          return Parse_Function_Call (Inter);
---                       when Inter_Keyword =>
---                          raise Program_Error;
---                    end case;
---                    Inter := Inter.Next;
---                 end loop;
---              Parse_Error ("undefined name " & Get_String (Token_Sym.Ident));
---                 return O_Enode_Null;
---              end;
          when others =>
             Parse_Error ("bad primary expression: " & Token_Type'Image (Tok));
-            return O_Enode_Null;
       end case;
    end Parse_Primary_Expression;
 
-   function Parse_Unary_Expression (Atype : Node_Acc) return O_Enode
+   --  Parse '-' EXPR, 'not' EXPR, 'abs' EXPR or EXPR.
+   procedure Parse_Unary_Expression (Atype : Node_Acc;
+                                     Res : out O_Enode;
+                                     Res_Type : out Node_Acc)
    is
-      Operand : O_Enode;
    begin
       case Tok is
          when Tok_Minus =>
             Next_Token;
-            case Tok is
---                 when Tok_Float_Num =>
---                    Operand := New_Float_Literal (Atype.Type_Onode,
---                                                  -Token_Float);
---                    Next_Token;
---                    return Operand;
---                 when Tok_Num =>
---                    Operand := New_Signed_Literal (Atype.Type_Onode,
---                                                 -Integer_64 (Token_Number));
---                    Next_Token;
---                    return Operand;
-               when others =>
-                  Operand := Parse_Primary_Expression (Atype);
-                  return New_Monadic_Op (ON_Neg_Ov, Operand);
-            end case;
+            Parse_Primary_Expression (Atype, Res, Res_Type);
+            Res := New_Monadic_Op (ON_Neg_Ov, Res);
          when Tok_Not =>
             Next_Token;
-            Operand := Parse_Unary_Expression (Atype);
-            return New_Monadic_Op (ON_Not, Operand);
+            Parse_Unary_Expression (Atype, Res, Res_Type);
+            Res := New_Monadic_Op (ON_Not, Res);
          when Tok_Abs =>
             Next_Token;
-            Operand := Parse_Unary_Expression (Atype);
-            return New_Monadic_Op (ON_Abs_Ov, Operand);
+            Parse_Unary_Expression (Atype, Res, Res_Type);
+            Res := New_Monadic_Op (ON_Abs_Ov, Res);
          when others =>
-            return Parse_Primary_Expression (Atype);
+            Parse_Primary_Expression (Atype, Res, Res_Type);
       end case;
    end Parse_Unary_Expression;
 
@@ -1613,13 +1586,23 @@ package body Ortho_Front is
       return Op_Ov;
    end Check_Sharp;
 
-   function Parse_Expression (Expr_Type : Node_Acc) return O_Enode
+   procedure Parse_Expression (Expr_Type : Node_Acc;
+                               Expr : out O_Enode;
+                               Res_Type : out Node_Acc)
    is
+      Op_Type : Node_Acc;
       L : O_Enode;
       R : O_Enode;
       Op : ON_Op_Kind;
    begin
-      L := Parse_Unary_Expression (Expr_Type);
+      if Expr_Type = null or else Expr_Type.Kind = Type_Boolean then
+         --  The type of the expression isn't known, as this can be a
+         --  comparaison operator.
+         Op_Type := null;
+      else
+         Op_Type := Expr_Type;
+      end if;
+      Parse_Unary_Expression (Op_Type, L, Res_Type);
       case Tok is
          when Tok_Div =>
             Op := Check_Sharp (ON_Div_Ov);
@@ -1658,18 +1641,23 @@ package body Ortho_Front is
             Next_Token;
 
          when others =>
-            return L;
+            Expr := L;
+            return;
       end case;
       if Op in ON_Compare_Op_Kind then
          Next_Token;
       end if;
 
-      R := Parse_Unary_Expression (Expr_Type);
+      Parse_Unary_Expression (Res_Type, R, Res_Type);
       case Op is
          when ON_Dyadic_Op_Kind =>
-            return New_Dyadic_Op (Op, L, R);
+            Expr := New_Dyadic_Op (Op, L, R);
          when ON_Compare_Op_Kind =>
-            return New_Compare_Op (Op, L, R, Expr_Type.Type_Onode);
+            if Expr_Type = null then
+               Parse_Error ("comparaison operator requires a type");
+            end if;
+            Expr := New_Compare_Op (Op, L, R, Expr_Type.Type_Onode);
+            Res_Type := Expr_Type;
          when others =>
             raise Program_Error;
       end case;
@@ -1712,6 +1700,7 @@ package body Ortho_Front is
                declare
                   V : O_Enode;
                   Bt : Node_Acc;
+                  Res_Type : Node_Acc;
                begin
                   Next_Token;
                   if N_Type.Kind = Type_Subarray then
@@ -1722,7 +1711,7 @@ package body Ortho_Front is
                   if Bt.Kind /= Type_Array then
                      Parse_Error ("type of prefix is not an array");
                   end if;
-                  V := Parse_Expression (Bt.Array_Index);
+                  Parse_Expression (Bt.Array_Index, V, Res_Type);
                   if Tok = Tok_Elipsis then
                      N := New_Slice (N, Bt.Type_Onode, V);
                      Next_Token;
@@ -1754,8 +1743,10 @@ package body Ortho_Front is
             declare
                Val : O_Enode;
             begin
-               Val := Parse_Named_Expression (null, Prefix, True);
-               N_Type := Prefix.Decl_Dtype;
+               Parse_Named_Expression (null, Prefix, True, Val, N_Type);
+               if N_Type /= Prefix.Decl_Dtype then
+                  Parse_Error ("type doesn't match");
+               end if;
                if Tok = Tok_Dot then
                   Next_Token;
                   if Tok = Tok_All then
@@ -1783,6 +1774,8 @@ package body Ortho_Front is
    procedure Parse_Association (Constr : in out O_Assoc_List; Decl : Node_Acc)
    is
       Param : Node_Acc;
+      Expr : O_Enode;
+      Expr_Type : Node_Acc;
    begin
       Start_Association (Constr, Decl.Subprg_Node);
       if Tok /= Tok_Left_Paren then
@@ -1794,7 +1787,8 @@ package body Ortho_Front is
          if Param = null then
             Parse_Error ("too many parameters");
          end if;
-         New_Association (Constr, Parse_Expression (Param.Decl_Dtype));
+         Parse_Expression (Param.Decl_Dtype, Expr, Expr_Type);
+         New_Association (Constr, Expr);
          Param := Param.Param_Next;
          exit when Tok /= Tok_Comma;
          Next_Token;
@@ -1880,9 +1874,12 @@ package body Ortho_Front is
          when Tok_If =>
             declare
                If_Blk : O_If_Block;
+               Cond : O_Enode;
+               Cond_Type : Node_Acc;
             begin
                Next_Token;
-               Start_If_Stmt (If_Blk, Parse_Expression (null));
+               Parse_Expression (null, Cond, Cond_Type);
+               Start_If_Stmt (If_Blk, Cond);
                Expect (Tok_Then);
                Next_Token;
                Parse_Statements;
@@ -1947,16 +1944,22 @@ package body Ortho_Front is
             end;
 
          when Tok_Return =>
-            Next_Token;
-            if Tok /= Tok_Semicolon then
-               New_Return_Stmt (Parse_Expression (Current_Subprg.Decl_Dtype));
+            declare
+               Res : O_Enode;
+               Res_Type : Node_Acc;
+            begin
+               Next_Token;
                if Tok /= Tok_Semicolon then
-                  Parse_Error ("';' expected at end of return statement");
+                  Parse_Expression (Current_Subprg.Decl_Dtype, Res, Res_Type);
+                  New_Return_Stmt (Res);
+                  if Tok /= Tok_Semicolon then
+                     Parse_Error ("';' expected at end of return statement");
+                  end if;
+               else
+                  New_Return_Stmt;
                end if;
-            else
-               New_Return_Stmt;
-            end if;
-            Next_Token;
+               Next_Token;
+            end;
 
          when Tok_Ident =>
             --  This is either a procedure call or an assignment.
@@ -1982,6 +1985,8 @@ package body Ortho_Front is
                   --  An assignment.
                   declare
                      Name : O_Lnode;
+                     Expr : O_Enode;
+                     Expr_Type : Node_Acc;
                      N_Type : Node_Acc;
                   begin
                      Parse_Name (Inter, Name, N_Type);
@@ -1989,7 +1994,8 @@ package body Ortho_Front is
                         Parse_Error ("`:=' expected after a variable");
                      end if;
                      Next_Token;
-                     New_Assign_Stmt (Name, Parse_Expression (N_Type));
+                     Parse_Expression (N_Type, Expr, Expr_Type);
+                     New_Assign_Stmt (Name, Expr);
                      if Tok /= Tok_Semicolon then
                         Parse_Error ("';' expected at end of assignment");
                      end if;
@@ -2003,9 +2009,12 @@ package body Ortho_Front is
             declare
                Case_Blk : O_Case_Block;
                L : O_Cnode;
+               Choice : O_Enode;
+               Choice_Type : Node_Acc;
             begin
                Next_Token;
-               Start_Case_Stmt (Case_Blk, Parse_Expression (null));
+               Parse_Expression (null, Choice, Choice_Type);
+               Start_Case_Stmt (Case_Blk, Choice);
                Expect (Tok_Is);
                Next_Token;
                loop
@@ -2367,13 +2376,14 @@ package body Ortho_Front is
                Start_Record_Aggr (Constr, Atype.Type_Onode);
                Field := Atype.Record_Union_Fields;
                while Field /= null loop
-                  Expect (Tok_Dot);
-                  Next_Expect (Tok_Ident);
-                  if Token_Sym /= Field.Field_Ident then
-                     Parse_Error ("bad field name");
+                  if Tok = Tok_Dot then
+                     Next_Expect (Tok_Ident);
+                     if Token_Sym /= Field.Field_Ident then
+                        Parse_Error ("bad field name");
+                     end if;
+                     Next_Expect (Tok_Equal);
+                     Next_Token;
                   end if;
-                  Next_Expect (Tok_Equal);
-                  Next_Token;
                   New_Record_Aggr_El
                     (Constr, Parse_Constant_Value (Field.Field_Type));
                   Field := Field.Field_Next;

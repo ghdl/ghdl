@@ -1583,9 +1583,10 @@ package body Ortho_Debug is
       N : O_Anode;
    begin
       Check_Type (Assocs.Interfaces.Dtype, Val.Rtype);
-      Assocs.Interfaces := Assocs.Interfaces.Next;
       Check_Ref (Val);
-      N := new O_Anode_Type'(Next => null, Formal => null, Actual => Val);
+      N := new O_Anode_Type'(Next => null,
+                             Formal => Assocs.Interfaces, Actual => Val);
+      Assocs.Interfaces := Assocs.Interfaces.Next;
       if Assocs.Last = null then
          Assocs.First := N;
       else
@@ -1753,7 +1754,6 @@ package body Ortho_Debug is
 
    procedure Start_Case_Stmt (Block : in out O_Case_Block; Value : O_Enode)
    is
-      pragma Unreferenced (Block);
       subtype O_Snode_Case_Type is O_Snode_Type (ON_Case_Stmt);
       N : O_Snode;
    begin
@@ -1773,6 +1773,7 @@ package body Ortho_Debug is
                                   Case_Last => null,
                                   Selector => Value,
                                   Branches => null);
+      Block.Case_Stmt := N;
       Add_Stmt (N);
       Push_Stmt_Scope (new Stmt_Case_Scope_Type'(Kind => Stmt_Case,
                                                  Parent => N,
@@ -1784,7 +1785,6 @@ package body Ortho_Debug is
 
    procedure Start_Choice (Block : in out O_Case_Block)
    is
-      pragma Unreferenced (Block);
       N : O_Snode;
    begin
       if Current_Stmt_Scope.Kind /= Stmt_Case then
@@ -1800,6 +1800,7 @@ package body Ortho_Debug is
       N.all := O_Snode_Type'(Kind => ON_When_Stmt,
                              Next => null,
                              Lineno => 0,
+                             Branch_Parent => Block.Case_Stmt,
                              Choice_List => null,
                              Next_Branch => null);
       if Current_Stmt_Scope.Last_Branch = null then
