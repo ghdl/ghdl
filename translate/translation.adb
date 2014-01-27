@@ -5174,6 +5174,7 @@ package body Translation is
          --  Set the identifier prefix with the subprogram identifier and
          --  overload number if any.
          Push_Subprg_Identifier (Spec, Mark);
+         Restore_Local_Identifier (Info.Subprg_Local_Id);
 
          if Has_Nested then
             --  Unnest subprograms.
@@ -5216,18 +5217,29 @@ package body Translation is
 
             Rtis.Generate_Subprogram_Body (Subprg);
 
+            --  Local frame
             Chap2.Push_Subprg_Instance
               (Info.Subprg_Frame_Type, Frame_Ptr_Type,
                Wki_Upframe, Prev_Subprg_Instances);
+            --  Link to previous frame
+            Chap2.Start_Prev_Subprg_Instance_Use_Via_Field
+              (Prev_Subprg_Instances, Upframe_Field);
+            --  Result record
             if Info.Res_Record_Ptr /= O_Tnode_Null then
                Chap10.Push_Scope_Via_Field_Ptr
                  (Info.Res_Record_Type, Res_Field, Info.Subprg_Frame_Type);
             end if;
+
             Chap4.Translate_Declaration_Chain_Subprograms (Subprg, Null_Iir);
 
+            --  Result
             if Info.Res_Record_Ptr /= O_Tnode_Null then
                Chap10.Pop_Scope (Info.Res_Record_Type);
             end if;
+            --  Link to previous frame
+            Chap2.Finish_Prev_Subprg_Instance_Use_Via_Field
+              (Prev_Subprg_Instances, Upframe_Field);
+            --  Local frame
             Chap2.Pop_Subprg_Instance (Wki_Upframe, Prev_Subprg_Instances);
          end if;
 
@@ -5240,8 +5252,6 @@ package body Translation is
          if Info.Res_Record_Type /= O_Tnode_Null then
             Push_Scope (Info.Res_Record_Type, Info.Res_Interface);
          end if;
-
-         Restore_Local_Identifier (Info.Subprg_Local_Id);
 
          --  Variables will be created on the stack.
          Push_Local_Factory;
@@ -5291,6 +5301,10 @@ package body Translation is
             New_Assign_Stmt (New_Obj (Frame_Ptr),
                              New_Address (New_Obj (Frame), Frame_Ptr_Type));
             Push_Scope (Info.Subprg_Frame_Type, Frame_Ptr);
+
+            --  Set UPFRAME.
+            Chap2.Set_Subprg_Instance_Field
+              (Frame_Ptr, Upframe_Field, Info.Subprg_Instance);
 
             if Info.Res_Record_Type /= O_Tnode_Null then
                --  Initialize the RESULT field
