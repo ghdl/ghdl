@@ -2026,11 +2026,11 @@ package body Ortho_Front is
                      New_Default_Choice (Case_Blk);
                      Next_Token;
                   else
-                     L := Parse_Typed_Literal (null);
+                     L := Parse_Typed_Literal (Choice_Type);
                      if Tok = Tok_Elipsis then
                         Next_Token;
                         New_Range_Choice
-                          (Case_Blk, L, Parse_Typed_Literal (null));
+                          (Case_Blk, L, Parse_Typed_Literal (Choice_Type));
                      else
                         New_Expr_Choice (Case_Blk, L);
                      end if;
