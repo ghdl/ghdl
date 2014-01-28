@@ -13425,6 +13425,7 @@ package body Translation is
                   declare
                      Subprg_Info : constant Subprg_Info_Acc :=
                        Get_Info (Get_Parent (Inter));
+                     Linter : O_Lnode;
                   begin
                      if Info.Interface_Node = O_Dnode_Null then
                         --  Passed by copy in the RESULT record.
@@ -13436,11 +13437,20 @@ package body Translation is
                      else
                         --  Use field in FRAME (instead of direct reference
                         --  to parameter - used to unnest subprograms).
-                        return Lv2M
-                          (New_Selected_Element
-                             (Get_Instance_Ref (Subprg_Info.Subprg_Frame_Type),
-                              Info.Interface_Field),
-                           Type_Info, Kind);
+                        Linter :=
+                          New_Selected_Element
+                          (Get_Instance_Ref (Subprg_Info.Subprg_Frame_Type),
+                           Info.Interface_Field);
+                        case Type_Info.Type_Mode is
+                           when Type_Mode_Unknown =>
+                              raise Internal_Error;
+                           when Type_Mode_By_Value =>
+                              return Lv2M (Linter, Type_Info, Kind);
+                           when Type_Mode_By_Copy
+                             | Type_Mode_By_Ref =>
+                              --  Parameter is passed by reference.
+                              return Lp2M (Linter, Type_Info, Kind);
+                        end case;
                      end if;
                   end;
                else
