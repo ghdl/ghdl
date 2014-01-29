@@ -330,10 +330,8 @@ package body Translation is
 
       --  Return the (real) reference to a variable created by Create_Var.
       function Get_Var (Var : Var_Acc) return O_Lnode;
-      --function Get_Var (Var : Var_Acc) return O_Dnode;
 
       procedure Free_Var (Var : in out Var_Acc);
-
 
       --  Return a reference to the instance of type ITYPE.
       function Get_Instance_Ref (Itype : O_Tnode) return O_Lnode;
@@ -23711,18 +23709,33 @@ package body Translation is
 
       type Scope_Type;
       type Scope_Acc is access Scope_Type;
+
       type Scope_Type is record
+         --  True if the instance is a pointer.
          Is_Ptr : Boolean;
+
+         --  Type of the scope.
          Stype : O_Tnode;
+
+         --  Scope is within FIELD of scope PARENT.
          Field : O_Fnode;
          Parent : O_Tnode;
+
+         --  Previous scope in the stack.
          Prev : Scope_Acc;
       end record;
+
       type Scope_Var_Type;
       type Scope_Var_Acc is access Scope_Var_Type;
+
       type Scope_Var_Type is record
+         --  Type of the scope.
          Svtype : O_Tnode;
+
+         --  Variable containing the reference of the scope.
          Var : O_Dnode;
+
+         --  Previous variable in the stack.
          Prev : Scope_Var_Acc;
       end record;
 
@@ -23887,16 +23900,24 @@ package body Translation is
          end case;
       end Create_Var;
 
-      function Find_Scope_Type (Stype : O_Tnode) return O_Lnode
+      --  Get a reference to scope STYPE. If IS_PTR is set, RES is an access
+      --  to the scope, otherwise RES directly designates the scope.
+      procedure Find_Scope_Type (Stype : O_Tnode;
+                                 Res : out O_Lnode;
+                                 Is_Ptr : out Boolean)
       is
          S : Scope_Acc;
          Sv : Scope_Var_Acc;
+         Prev_Res : O_Lnode;
+         Prev_Ptr : Boolean;
       begin
          --  Find in var.
          Sv := Scopes_Var;
          while Sv /= null loop
             if Sv.Svtype = Stype then
-               return New_Acc_Value (New_Obj (Sv.Var));
+               Res := New_Obj (Sv.Var);
+               Is_Ptr := True;
+               return;
             end if;
             Sv := Sv.Prev;
          end loop;
@@ -23905,15 +23926,13 @@ package body Translation is
          S := Scopes;
          while S /= null loop
             if S.Stype = Stype then
-               if S.Is_Ptr then
-                  return New_Access_Element
-                    (New_Value
-                     (New_Selected_Element (Find_Scope_Type (S.Parent),
-                                            S.Field)));
-               else
-                  return New_Selected_Element
-                    (Find_Scope_Type (S.Parent), S.Field);
+               Find_Scope_Type (S.Parent, Prev_Res, Prev_Ptr);
+               if Prev_Ptr then
+                  Prev_Res := New_Acc_Value (Prev_Res);
                end if;
+               Res := New_Selected_Element (Prev_Res, S.Field);
+               Is_Ptr := S.Is_Ptr;
+               return;
             end if;
             S := S.Prev;
          end loop;
@@ -23922,28 +23941,42 @@ package body Translation is
          raise Internal_Error;
       end Find_Scope_Type;
 
-      function Get_Instance_Access (Block : Iir) return O_Enode
-      is
-         Info : Block_Info_Acc;
-      begin
-         Info := Get_Info (Block);
-         if Info.Block_Decls_Type = Scopes_Var.Svtype then
-            return New_Value (New_Obj (Scopes_Var.Var));
-         else
-            return New_Address (Get_Instance_Ref (Info.Block_Decls_Type),
-                                Info.Block_Decls_Ptr_Type);
-         end if;
-      end Get_Instance_Access;
-
-      function Get_Instance_Ref (Itype : O_Tnode) return O_Lnode
-      is
+      procedure Check_Not_Building is
       begin
          --  Variables cannot be referenced if there is an instance being
          --  built.
          if Inst_Build /= null and then Inst_Build.Kind = Instance then
             raise Internal_Error;
          end if;
-         return Find_Scope_Type (Itype);
+      end Check_Not_Building;
+
+      function Get_Instance_Access (Block : Iir) return O_Enode
+      is
+         Info : constant Block_Info_Acc := Get_Info (Block);
+         Res : O_Lnode;
+         Is_Ptr : Boolean;
+      begin
+         Check_Not_Building;
+         Find_Scope_Type (Info.Block_Decls_Type, Res, Is_Ptr);
+         if Is_Ptr then
+            return New_Value (Res);
+         else
+            return New_Address (Res, Info.Block_Decls_Ptr_Type);
+         end if;
+      end Get_Instance_Access;
+
+      function Get_Instance_Ref (Itype : O_Tnode) return O_Lnode
+      is
+         Res : O_Lnode;
+         Is_Ptr : Boolean;
+      begin
+         Check_Not_Building;
+         Find_Scope_Type (Itype, Res, Is_Ptr);
+         if Is_Ptr then
+            return New_Acc_Value (Res);
+         else
+            return Res;
+         end if;
       end Get_Instance_Ref;
 
       function Get_Var (Var : Var_Acc) return O_Lnode
