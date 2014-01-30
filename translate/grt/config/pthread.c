@@ -1,5 +1,5 @@
 /*  GRT stack implementation based on pthreads.
-    Copyright (C) 2003, 2004, 2005 Felix Bertram & Tristan Gingold.
+    Copyright (C) 2003 - 2014 Felix Bertram & Tristan Gingold.
 
     GHDL is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License as published by the Free
@@ -19,7 +19,7 @@
 //-----------------------------------------------------------------------------
 // Project:     GHDL - VHDL Simulator
 // Description: pthread port of stacks package, for use with MacOSX
-// Note:        Tristan's original i386/Linux used assembly-code 
+// Note:        Tristan's original i386/Linux used assembly-code
 //              to manually switch stacks for performance reasons.
 // History:     2003may22, FB, created.
 //-----------------------------------------------------------------------------
@@ -35,8 +35,8 @@
 
 // GHDL names an endless loop calling FUNC with ARG a 'stack'
 // at a given time, only one stack may be 'executed'
-typedef struct 
-{	
+typedef struct
+{
   pthread_t           thread;         // stack's thread
   pthread_mutex_t     mutex;          // mutex to suspend/resume thread
 #if defined(__CYGWIN__)
@@ -60,7 +60,7 @@ void grt_stack_init(void)
   int res;
   INFO("grt_stack_init\n");
   INFO("  main_stack_context=0x%08x\n", &main_stack_context);
-	
+
 
 #if defined(__CYGWIN__)
   res = pthread_mutexattr_init (&main_stack_context.mxAttr);
@@ -78,7 +78,7 @@ void grt_stack_init(void)
   // lock the mutex, as we are currently running
   res = pthread_mutex_lock (&main_stack_context.mutex);
   assert (res == 0);
-	
+
   current = &main_stack_context;
 
   grt_set_main_stack (&main_stack_context);
@@ -90,26 +90,26 @@ static void* grt_stack_loop(void* pv_myStack)
   Stack_Type myStack= (Stack_Type)pv_myStack;
 
   INFO("grt_stack_loop\n");
-	
+
   INFO("  myStack=0x%08x\n", myStack);
 
   // block until mutex becomes available again.
   // this happens when this stack is enabled for the first time
   pthread_mutex_lock(&(myStack->mutex));
-	
+
   // run stack's function in endless loop
   while(1)
     {
       INFO("  call 0x%08x with 0x%08x\n", myStack->Func, myStack->Arg);
       myStack->Func(myStack->Arg);
     }
-	
+
   // we never get here...
   return 0;
 }
 
 //----------------------------------------------------------------------------
-Stack_Type grt_stack_create(void* Func, void* Arg) 
+Stack_Type grt_stack_create(void* Func, void* Arg)
 // Create a new stack, which on first execution will call FUNC with
 // an argument ARG.
 // => function Stack_Create (Func : Address; Arg : Address) return Stack_Type;
@@ -119,13 +119,13 @@ Stack_Type grt_stack_create(void* Func, void* Arg)
 
   INFO("grt_stack_create\n");
   INFO("  call 0x%08x with 0x%08x\n", Func, Arg);
-			
+
   newStack = malloc (sizeof(Stack_Type_t));
-	
+
   // init function and argument
   newStack->Func = Func;
   newStack->Arg = Arg;
-	
+
   // create mutex
 #if defined(__CYGWIN__)
   res = pthread_mutexattr_init (&newStack->mxAttr);
@@ -138,16 +138,16 @@ Stack_Type grt_stack_create(void* Func, void* Arg)
   res = pthread_mutex_init (&newStack->mutex, NULL);
   assert (res == 0);
 #endif
-	
+
   // block the mutex, so that thread will blocked in grt_stack_loop
   res = pthread_mutex_lock (&newStack->mutex);
   assert (res == 0);
-  
+
   INFO("  newStack=0x%08x\n", newStack);
-	
+
   // create thread, which executes grt_stack_loop
-  pthread_create (&newStack->thread, NULL, grt_stack_loop, newStack); 
-	
+  pthread_create (&newStack->thread, NULL, grt_stack_loop, newStack);
+
   return newStack;
 }
 
@@ -160,7 +160,7 @@ void grt_stack_switch(Stack_Type To, Stack_Type From)
 // Resume stack TO and save the current context to the stack pointed by
 // CUR.
 // => procedure Stack_Switch (To : Stack_Type; From : Stack_Type);
-{	
+{
   int res;
   INFO("grt_stack_switch\n");
   INFO("  from 0x%08x to 0x%08x\n", From, To);
@@ -172,7 +172,7 @@ void grt_stack_switch(Stack_Type To, Stack_Type From)
   // - resumes at lock below
   res = pthread_mutex_unlock (&To->mutex);
   assert (res == 0);
-		
+
   // block until 'From' mutex becomes available again
   // as we are running, our mutex is locked and we block here
   // when stacks are switched, with above unlock, we may proceed
@@ -187,7 +187,7 @@ void grt_stack_switch(Stack_Type To, Stack_Type From)
 void grt_stack_delete(Stack_Type Stack)
 // Delete stack STACK, which must not be currently executed.
 // => procedure Stack_Delete (Stack : Stack_Type);
-{	
+{
   INFO("grt_stack_delete\n");
 }
 

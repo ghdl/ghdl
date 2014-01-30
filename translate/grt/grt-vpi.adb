@@ -1,5 +1,5 @@
 --  GHDL Run Time (GRT) - VPI interface.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold & Felix Bertram
+--  Copyright (C) 2002 - 2014 Tristan Gingold & Felix Bertram
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
