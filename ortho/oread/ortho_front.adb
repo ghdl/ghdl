@@ -2020,24 +2020,29 @@ package body Ortho_Front is
                loop
                   exit when Tok = Tok_End;
                   Expect (Tok_When);
+                  Next_Token;
                   Start_Choice (Case_Blk);
-                  Next_Token;
-                  if Tok = Tok_Default then
-                     New_Default_Choice (Case_Blk);
-                     Next_Token;
-                  else
-                     L := Parse_Typed_Literal (Choice_Type);
-                     if Tok = Tok_Elipsis then
+                  loop
+                     if Tok = Tok_Default then
+                        New_Default_Choice (Case_Blk);
                         Next_Token;
-                        New_Range_Choice
-                          (Case_Blk, L, Parse_Typed_Literal (Choice_Type));
                      else
-                        New_Expr_Choice (Case_Blk, L);
+                        L := Parse_Typed_Literal (Choice_Type);
+                        if Tok = Tok_Elipsis then
+                           Next_Token;
+                           New_Range_Choice
+                             (Case_Blk, L, Parse_Typed_Literal (Choice_Type));
+                        else
+                           New_Expr_Choice (Case_Blk, L);
+                        end if;
                      end if;
-                  end if;
-                  Finish_Choice (Case_Blk);
-                  Expect (Tok_Arrow);
+                     exit when Tok = Tok_Arrow;
+                     Expect (Tok_Comma);
+                     Next_Token;
+                  end loop;
+                  --  Skip '=>'.
                   Next_Token;
+                  Finish_Choice (Case_Blk);
                   Parse_Statements;
                end loop;
                Finish_Case_Stmt (Case_Blk);

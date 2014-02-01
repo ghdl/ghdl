@@ -938,8 +938,8 @@ package body Ortho_Debug.Disp is
                begin
                   Rem_Tab;
                   Choice := Stmt.Choice_List;
-                  while Choice /= null loop
-                     Put ("when ");
+                  Put ("when ");
+                  loop
                      case Choice.Kind is
                         when ON_Choice_Expr =>
                            Disp_Cnode (Choice.Expr, Choice_Type);
@@ -950,9 +950,12 @@ package body Ortho_Debug.Disp is
                         when ON_Choice_Default =>
                            Put ("default");
                      end case;
-                     Put_Line (" =>");
                      Choice := Choice.Next;
+                     exit when Choice = null;
+                     Put_Line (",");
+                     Put ("     ");
                   end loop;
+                  Put_Line (" =>");
                   Add_Tab;
                end;
             when ON_Call_Stmt =>
