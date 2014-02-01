@@ -7,10 +7,11 @@
 # bugXXX is for bugs reported on https://gna.org/bugs/?group=ghdl
 # srXXX is for support reported on https://gna.org/support/?group=ghdl
 # debXX is for bugs report on http://bugs.debian.org/
+# ticketXX is from https://sourceforge.net/p/ghdl-updates/tickets/
 
 set -e
 
-dirs="bug* sr* deb*"
+dirs="bug* sr* deb* ticket*"
 failures=""
 full=n
 
