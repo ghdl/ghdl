@@ -1287,8 +1287,11 @@ package body Libraries is
            & Back_End.Library_To_File_Name (Library);
          Delete_Success : Boolean;
       begin
+         --  For windows: renames doesn't overwrite destination; so first
+         --  delete it. This can create races condition on Unix: if the
+         --  program is killed between delete and rename, the library is lost.
+         Delete_File (File_Name, Delete_Success);
          Rename_File (Temp_Name.all, File_Name, Success);
-         Delete_File (Temp_Name.all, Delete_Success);
          Free (Temp_Name);
          if not Success then
             Error_Msg ("cannot update library file """ & File_Name & """");

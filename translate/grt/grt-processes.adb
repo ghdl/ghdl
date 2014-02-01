@@ -628,12 +628,6 @@ package body Grt.Processes is
 
    pragma Unreferenced (Disp_All_Processes);
 
-   type Run_Handler is access function return Integer;
-   --  pragma Convention (C, Run_Handler);
-
-   function Run_Through_Longjump (Hand : Run_Handler) return Integer;
-   pragma Import (Ada, Run_Through_Longjump, "__ghdl_run_through_longjump");
-
    --  Run resumed processes.
    --  If POSTPONED is true, resume postponed processes, else resume
    --  non-posponed processes.

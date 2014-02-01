@@ -53,6 +53,13 @@ package body Grt.Main is
    procedure Ghdl_Elaborate;
    pragma Import (C, Ghdl_Elaborate, "__ghdl_ELABORATE");
 
+   --  Wrapper around elaboration just to return 0.
+   function Ghdl_Elaborate_Wrapper return Integer is
+   begin
+      Ghdl_Elaborate;
+      return 0;
+   end Ghdl_Elaborate_Wrapper;
+
    procedure Disp_Stats_Hook (Code : Integer);
    pragma Convention (C, Disp_Stats_Hook);
 
@@ -135,8 +142,12 @@ package body Grt.Main is
          Stats.Start_Elaboration;
       end if;
 
-      --  Elaboration.
-      Ghdl_Elaborate;
+      --  Elaboration.  Run through longjump to catch errors.
+      if Grt.Processes.Run_Through_Longjump (Ghdl_Elaborate_Wrapper'Access) < 0
+      then
+         Grt.Errors.Error ("error during elaboration");
+         return;
+      end if;
 
       if Flag_Stats then
          Stats.Start_Order;

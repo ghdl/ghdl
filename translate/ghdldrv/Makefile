@@ -43,6 +43,7 @@ target=i686-pc-linux-gnu
 #target=x86_64-pc-linux-gnu
 #target=i686-apple-darwin
 #target=x86_64-apple-darwin
+#target=i386-pc-mingw32
 GRTSRCDIR=../grt
 include $(GRTSRCDIR)/Makefile.inc
 
@@ -51,6 +52,9 @@ ifeq ($(filter-out i%86 linux,$(arch) $(osys)),)
 endif
 ifeq ($(filter-out i%86 darwin%,$(arch) $(osys)),)
   ORTHO_X86_FLAGS=Flags_Macosx
+endif
+ifeq ($(filter-out i%86 mingw32%,$(arch) $(osys)),)
+  ORTHO_X86_FLAGS=Flags_Windows
 endif
 ifdef ORTHO_X86_FLAGS
   ORTHO_DEPS=ortho_code-x86-flags.ads

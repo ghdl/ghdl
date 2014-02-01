@@ -133,6 +133,13 @@ package Grt.Processes is
    procedure Ghdl_Protected_Init (Obj : System.Address);
    procedure Ghdl_Protected_Fini (Obj : System.Address);
 
+   type Run_Handler is access function return Integer;
+
+   --  Run HAND through a wrapper that catch some errors (in particular on
+   --  windows).  Returns < 0 in case of error.
+   function Run_Through_Longjump (Hand : Run_Handler) return Integer;
+   pragma Import (Ada, Run_Through_Longjump, "__ghdl_run_through_longjump");
+
 private
    --  State of a process.
    type Process_State is
