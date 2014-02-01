@@ -44,7 +44,6 @@ package body Ghdldrv is
    Post_Processor_Cmd : String_Access := null;
    Assembler_Cmd : constant String := "as";
    Linker_Cmd : constant String := "gcc";
-   Llvm_Linker_Cmd : constant String := "llvm-ld";
 
    --  Path of the tools.
    Compiler_Path : String_Access;
@@ -57,11 +56,13 @@ package body Ghdldrv is
    Output_File : String_Access;
 
    --  "-o" string.
-   Dash_O : String_Access;
+   Dash_o : constant String_Access := new String'("-o");
+
+   --  "-c" string.
+   Dash_c : constant String_Access := new String'("-c");
 
    --  "-quiet" option.
-   Dash_Quiet : String_Access;
-
+   Dash_Quiet : constant String_Access := new String'("-quiet");
 
    --  If set, do not assmble
    Flag_Asm : Boolean;
@@ -139,17 +140,13 @@ package body Ghdldrv is
          when Compile_Gcc
            | Compile_Debug =>
             Asm_File := Append_Suffix (File, Asm_Suffix);
-         when Compile_Llvm =>
-            Asm_File := Append_Suffix (File, Llvm_Suffix);
-         when Compile_Mcode =>
+         when Compile_Llvm
+           | Compile_Mcode =>
             null;
       end case;
 
-      --  Create obj file.
-      if Compile_Kind = Compile_Mcode or else not Flag_Asm
-      then
-         Obj_File := Append_Suffix (File, Get_Object_Suffix.all);
-      end if;
+      --  Create obj file (may not be used, but the condition isn't simple).
+      Obj_File := Append_Suffix (File, Get_Object_Suffix.all);
 
       --  Compile.
       declare
@@ -169,19 +166,28 @@ package body Ghdldrv is
          end loop;
 
          --  Add -quiet.
-         if not Flag_Not_Quiet then
-            P := P + 1;
-            Args (P) := Dash_Quiet;
-         end if;
+         case Compile_Kind is
+            when Compile_Gcc =>
+               if not Flag_Not_Quiet then
+                  P := P + 1;
+                  Args (P) := Dash_Quiet;
+               end if;
+            when Compile_Llvm =>
+               P := P + 1;
+               Args (P) := Dash_c;
+            when Compile_Debug
+              | Compile_Mcode =>
+               null;
+         end case;
 
-         Args (P + 1) := Dash_O;
+         Args (P + 1) := Dash_o;
          case Compile_Kind is
             when Compile_Debug =>
                Args (P + 2) := Post_File;
-            when Compile_Gcc
-              | Compile_Llvm =>
+            when Compile_Gcc =>
                Args (P + 2) := Asm_File;
-            when Compile_Mcode =>
+            when Compile_Mcode
+              | Compile_Llvm =>
                Args (P + 2) := Obj_File;
          end case;
          Args (P + 3) := new String'(File);
@@ -214,7 +220,7 @@ package body Ghdldrv is
                Args (P) := Dash_Quiet;
             end if;
 
-            Args (P + 1) := Dash_O;
+            Args (P + 1) := Dash_o;
             Args (P + 2) := Asm_File;
             Args (P + 3) := Post_File;
             My_Spawn (Post_Processor_Path.all, Args (1 .. P + 3));
@@ -240,7 +246,7 @@ package body Ghdldrv is
                   Args (P) := Assembler_Args.Table (I);
                end loop;
 
-               Args (P + 1) := Dash_O;
+               Args (P + 1) := Dash_o;
                Args (P + 2) := Obj_File;
                Args (P + 3) := Asm_File;
                My_Spawn (Assembler_Path.all, Args (1 .. P + 3));
@@ -518,8 +524,7 @@ package body Ghdldrv is
       end if;
    end Set_Tools_Name;
 
-   procedure Locate_Tools
-   is
+   procedure Locate_Tools is
    begin
       Compiler_Path := Locate_Exec_On_Path (Compiler_Cmd.all);
       if Compiler_Path = null then
@@ -537,19 +542,10 @@ package body Ghdldrv is
             Tool_Not_Found (Assembler_Cmd);
          end if;
       end if;
-      if Compile_Kind = Compile_Llvm then
-         Linker_Path := Locate_Exec_On_Path (Llvm_Linker_Cmd);
-         if Linker_Path = null then
-            Tool_Not_Found (Llvm_Linker_Cmd);
-         end if;
-      else
-         Linker_Path := Locate_Exec_On_Path (Linker_Cmd);
-         if Linker_Path = null then
-            Tool_Not_Found (Linker_Cmd);
-         end if;
+      Linker_Path := Locate_Exec_On_Path (Linker_Cmd);
+      if Linker_Path = null then
+         Tool_Not_Found (Linker_Cmd);
       end if;
-      Dash_O := new String'("-o");
-      Dash_Quiet := new String'("-quiet");
    end Locate_Tools;
 
    procedure Setup_Compiler (Load : Boolean)
@@ -914,20 +910,8 @@ package body Ghdldrv is
                    Disp_Only : Boolean)
    is
       Last_File : Natural;
-      Final_Output_File : String_Access;
    begin
-      case Compile_Kind is
-         when Compile_Llvm =>
-            Link_Obj_Suffix := new String'(Llvm_Suffix);
-            --  Hacks for llvm:
-            --  1. Generate a native executable.
-            Add_Argument (Linker_Args, new String'("-native"));
-            --  2. Use an intermediate file.
-            Final_Output_File := Output_File;
-            Output_File := new String'(Output_File.all & "~e");
-         when others =>
-            Link_Obj_Suffix := Get_Object_Suffix;
-      end case;
+      Link_Obj_Suffix := Get_Object_Suffix;
 
       --  read files list
       if Filelist_Name /= null then
@@ -943,11 +927,10 @@ package body Ghdldrv is
          Args : Argument_List (1 .. Nbr_Args);
          Obj_File : String_Access;
          Std_File : String_Access;
-         Status : Boolean;
       begin
          Obj_File := Append_Suffix (Elab_Name.all, Link_Obj_Suffix.all);
          P := 0;
-         Args (P + 1) := Dash_O;
+         Args (P + 1) := Dash_o;
          Args (P + 2) := Output_File;
          Args (P + 3) := Obj_File;
          P := P + 3;
@@ -986,14 +969,6 @@ package body Ghdldrv is
             end loop;
          else
             My_Spawn (Linker_Path.all, Args (1 .. P));
-            if Compile_Kind = Compile_Llvm then
-               Rename_File (Output_File.all, Final_Output_File.all, Status);
-               if not Status then
-                  raise Compile_Error;
-               end if;
-               Free (Output_File);
-               Output_File := Final_Output_File;
-            end if;
          end if;
 
          Free (Obj_File);
