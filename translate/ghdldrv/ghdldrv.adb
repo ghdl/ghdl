@@ -649,8 +649,7 @@ package body Ghdldrv is
          elsif Opt (3) = 'l' then
             Add_Arguments (Linker_Args, Opt);
          else
-            Error
-              ("unknown tool name in '-W" & Opt (3) & ",' option");
+            Error ("unknown tool name in '-W" & Opt (3) & ",' option");
             raise Option_Error;
          end if;
          Res := Option_Ok;
