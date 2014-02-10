@@ -25,6 +25,7 @@ with GNAT.Directory_Operations;
 with Name_Table; use Name_Table;
 with Str_Table;
 with Ada.Calendar;
+with Ada.Calendar.Time_Zones;
 
 package body Files_Map is
 
@@ -488,8 +489,11 @@ package body Files_Map is
    function Get_Os_Time_Stamp return Time_Stamp_Id
    is
       use Ada.Calendar;
+      use Ada.Calendar.Time_Zones;
       use Str_Table;
 
+      Now : constant Time := Clock;
+      Now_UTC : constant Time := Now - Duration (UTC_Time_Offset (Now) * 60);
       Year : Year_Number;
       Month : Month_Number;
       Day : Day_Number;
@@ -499,9 +503,8 @@ package body Files_Map is
       M : Integer;
       Res: Time_Stamp_Id;
    begin
-      --  FIXME: Clock is local time, while get_file_time_stamp returns
-      --  GMT time.
-      Split (Clock, Year, Month, Day, Sec);
+      --  Use UTC time (like file time stamp).
+      Split (Now_UTC, Year, Month, Day, Sec);
 
       Res := Time_Stamp_Id (Start);
       Append (Digit_To_Char (Year / 1000));
