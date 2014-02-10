@@ -439,18 +439,36 @@ package Grt.Signals is
    procedure Resume_Process_If_Event
      (Sig : Ghdl_Signal_Ptr; Proc : Process_Acc);
 
+   --  Creating a signal:
+   --  1) call Ghdl_Signal_Name_Rti (CTXT and ADDR are unused) to register
+   --     the RTI for the whole signal (in particular the mode and the
+   --     has_active flag)
+   --  2) call Ghdl_Create_Signal_XXX for each non-composite element
+
    procedure Ghdl_Signal_Name_Rti (Sig : Ghdl_Rti_Access;
                                    Ctxt : Ghdl_Rti_Access;
                                    Addr : System.Address);
 
+   --  FIXME: document.
    procedure Ghdl_Signal_Merge_Rti (Sig : Ghdl_Signal_Ptr;
                                     Rti : Ghdl_Rti_Access);
+
+   --  Assigning a waveform to a signal:
+   --
+   --  For simple waveform (sig <= val), the short form can be used:
+   --    Ghdl_Signal_Simple_Assign_XX (Sig, Val);
+   --  For all other forms
+   --  SIG <= reject R inertial V1 after T1, V2 after T2, ...:
+   --    Ghdl_Signal_Start_Assign_XX (SIG, R, V1, T1);
+   --    Ghdl_Signal_Next_Assign_XX (SIG, V2, T2);
+   --    ...
+   --  If the delay mechanism is transport, they R = 0,
+   --  if there is no rejection time, the mechanism is internal and R = T1.
 
    --  Performs some internal checks on signals (transaction order).
    --  Internal_error is called in case of error.
    procedure Ghdl_Signal_Internal_Checks;
 
-   --  Subprograms to be called by generated code.
    procedure Ghdl_Signal_Simple_Assign_Error (Sign : Ghdl_Signal_Ptr;
                                               File : Ghdl_C_String;
                                               Line : Ghdl_I32);
@@ -475,11 +493,10 @@ package Grt.Signals is
 
    function Ghdl_Signal_Driving (Sig : Ghdl_Signal_Ptr) return Ghdl_B2;
 
-   function Ghdl_Create_Signal_B2
-     (Init_Val : Ghdl_B2;
-      Resolv_Func : System.Address;
-      Resolv_Inst : System.Address)
-     return Ghdl_Signal_Ptr;
+   function Ghdl_Create_Signal_B2 (Init_Val : Ghdl_B2;
+                                   Resolv_Func : System.Address;
+                                   Resolv_Inst : System.Address)
+                                  return Ghdl_Signal_Ptr;
    procedure Ghdl_Signal_Init_B2 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_B2);
    procedure Ghdl_Signal_Associate_B2 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_B2);
    procedure Ghdl_Signal_Simple_Assign_B2 (Sign : Ghdl_Signal_Ptr;
@@ -494,11 +511,10 @@ package Grt.Signals is
    function Ghdl_Signal_Driving_Value_B2 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_B2;
 
-   function Ghdl_Create_Signal_E8
-     (Init_Val : Ghdl_E8;
-      Resolv_Func : System.Address;
-      Resolv_Inst : System.Address)
-     return Ghdl_Signal_Ptr;
+   function Ghdl_Create_Signal_E8 (Init_Val : Ghdl_E8;
+                                   Resolv_Func : System.Address;
+                                   Resolv_Inst : System.Address)
+                                  return Ghdl_Signal_Ptr;
    procedure Ghdl_Signal_Init_E8 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_E8);
    procedure Ghdl_Signal_Associate_E8 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_E8);
    procedure Ghdl_Signal_Simple_Assign_E8 (Sign : Ghdl_Signal_Ptr;
@@ -513,11 +529,10 @@ package Grt.Signals is
    function Ghdl_Signal_Driving_Value_E8 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_E8;
 
-   function Ghdl_Create_Signal_E32
-     (Init_Val : Ghdl_E32;
-      Resolv_Func : System.Address;
-      Resolv_Inst : System.Address)
-     return Ghdl_Signal_Ptr;
+   function Ghdl_Create_Signal_E32 (Init_Val : Ghdl_E32;
+                                    Resolv_Func : System.Address;
+                                    Resolv_Inst : System.Address)
+                                   return Ghdl_Signal_Ptr;
    procedure Ghdl_Signal_Init_E32 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_E32);
    procedure Ghdl_Signal_Associate_E32 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_E32);
    procedure Ghdl_Signal_Simple_Assign_E32 (Sign : Ghdl_Signal_Ptr;
@@ -532,11 +547,10 @@ package Grt.Signals is
    function Ghdl_Signal_Driving_Value_E32 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_E32;
 
-   function Ghdl_Create_Signal_I32
-     (Init_Val : Ghdl_I32;
-      Resolv_Func : System.Address;
-      Resolv_Inst : System.Address)
-     return Ghdl_Signal_Ptr;
+   function Ghdl_Create_Signal_I32 (Init_Val : Ghdl_I32;
+                                    Resolv_Func : System.Address;
+                                    Resolv_Inst : System.Address)
+                                   return Ghdl_Signal_Ptr;
    procedure Ghdl_Signal_Init_I32 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_I32);
    procedure Ghdl_Signal_Associate_I32 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_I32);
    procedure Ghdl_Signal_Simple_Assign_I32 (Sign : Ghdl_Signal_Ptr;
@@ -551,11 +565,10 @@ package Grt.Signals is
    function Ghdl_Signal_Driving_Value_I32 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_I32;
 
-   function Ghdl_Create_Signal_I64
-     (Init_Val : Ghdl_I64;
-      Resolv_Func : System.Address;
-      Resolv_Inst : System.Address)
-     return Ghdl_Signal_Ptr;
+   function Ghdl_Create_Signal_I64 (Init_Val : Ghdl_I64;
+                                    Resolv_Func : System.Address;
+                                    Resolv_Inst : System.Address)
+                                   return Ghdl_Signal_Ptr;
    procedure Ghdl_Signal_Init_I64 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_I64);
    procedure Ghdl_Signal_Associate_I64 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_I64);
    procedure Ghdl_Signal_Simple_Assign_I64 (Sign : Ghdl_Signal_Ptr;
@@ -570,11 +583,10 @@ package Grt.Signals is
    function Ghdl_Signal_Driving_Value_I64 (Sig : Ghdl_Signal_Ptr)
                                           return Ghdl_I64;
 
-   function Ghdl_Create_Signal_F64
-     (Init_Val : Ghdl_F64;
-      Resolv_Func : System.Address;
-      Resolv_Inst : System.Address)
-     return Ghdl_Signal_Ptr;
+   function Ghdl_Create_Signal_F64 (Init_Val : Ghdl_F64;
+                                    Resolv_Func : System.Address;
+                                    Resolv_Inst : System.Address)
+                                   return Ghdl_Signal_Ptr;
    procedure Ghdl_Signal_Init_F64 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_F64);
    procedure Ghdl_Signal_Associate_F64 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_F64);
    procedure Ghdl_Signal_Simple_Assign_F64 (Sign : Ghdl_Signal_Ptr;
@@ -643,7 +655,8 @@ package Grt.Signals is
    --  Create a new implicitly defined GUARD signal.
    function Ghdl_Signal_Create_Guard (This : System.Address;
                                       Proc : Guard_Func_Acc)
-     return Ghdl_Signal_Ptr;
+                                     return Ghdl_Signal_Ptr;
+
    --  Add SIG to the list of referenced signals that appear in the guard
    --  expression.
    procedure Ghdl_Signal_Guard_Dependence (Sig : Ghdl_Signal_Ptr);

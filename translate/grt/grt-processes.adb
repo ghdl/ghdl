@@ -123,7 +123,7 @@ package body Grt.Processes is
       Stack : Stack_Type;
       P : Process_Acc;
    begin
-      if State /= State_Sensitized then
+      if State /= State_Sensitized and then not One_Stack then
          Stack := Stack_Create (Proc, This);
          if Stack = Null_Stack then
             Internal_Error ("cannot allocate stack: memory exhausted");
@@ -352,7 +352,16 @@ package body Grt.Processes is
       Update_Process_First_Timeout (Proc);
    end Ghdl_Process_Wait_Set_Timeout;
 
-   function Ghdl_Process_Wait_Suspend return Boolean
+   function Ghdl_Process_Wait_Has_Timeout return Boolean
+   is
+      Proc : constant Process_Acc := Get_Current_Process;
+   begin
+      -- Note: in case of timeout, the timeout is removed when process is
+      -- woken up.
+      return Proc.State = State_Timeout;
+   end Ghdl_Process_Wait_Has_Timeout;
+
+   procedure Ghdl_Process_Wait_Wait
    is
       Proc : constant Process_Acc := Get_Current_Process;
    begin
@@ -364,10 +373,19 @@ package body Grt.Processes is
 --       if Cur_Proc.Timeout = Bad_Time then
 --          Cur_Proc.Timeout := Std_Time'Last;
 --       end if;
-      Stack_Switch (Get_Main_Stack, Proc.Stack);
-      -- Note: in case of timeout, the timeout is removed when process is
-      -- woken up.
-      return Proc.State = State_Timeout;
+   end Ghdl_Process_Wait_Wait;
+
+   function Ghdl_Process_Wait_Suspend return Boolean
+   is
+      Proc : constant Process_Acc := Get_Current_Process;
+   begin
+      Ghdl_Process_Wait_Wait;
+      if One_Stack then
+         Internal_Error ("wait_suspend");
+      else
+         Stack_Switch (Get_Main_Stack, Proc.Stack);
+      end if;
+      return Ghdl_Process_Wait_Has_Timeout;
    end Ghdl_Process_Wait_Suspend;
 
    procedure Free is new Ada.Unchecked_Deallocation
@@ -446,8 +464,11 @@ package body Grt.Processes is
       --  Mark this process as dead, in order to kill it.
       --  It cannot be killed now, since this code is still in the process.
       Proc.State := State_Dead;
+
       --  Suspend this process.
-      Stack_Switch (Get_Main_Stack, Proc.Stack);
+      if not One_Stack then
+         Stack_Switch (Get_Main_Stack, Proc.Stack);
+      end if;
    end Ghdl_Process_Wait_Exit;
 
    procedure Ghdl_Process_Wait_Timeout (Time : Std_Time)
@@ -465,7 +486,11 @@ package body Grt.Processes is
       Proc.State := State_Wait;
       Update_Process_First_Timeout (Proc);
       --  Suspend this process.
-      Stack_Switch (Get_Main_Stack, Proc.Stack);
+      if One_Stack then
+         Internal_Error ("wait_timeout");
+      else
+         Stack_Switch (Get_Main_Stack, Proc.Stack);
+      end if;
       --  Clean-up.
       Proc.Timeout := Bad_Time;
       Remove_Process_From_Timeout_Chain (Proc);
@@ -671,7 +696,7 @@ package body Grt.Processes is
          end if;
          Proc.Resumed := False;
          Set_Current_Process (Proc);
-         if Proc.State = State_Sensitized then
+         if Proc.State = State_Sensitized or else One_Stack then
             Proc.Subprg.all (Proc.This);
          else
             Stack_Switch (Proc.Stack, Get_Main_Stack);
@@ -722,7 +747,7 @@ package body Grt.Processes is
 
                Proc.Resumed := False;
                Set_Current_Process (Proc);
-               if Proc.State = State_Sensitized then
+               if Proc.State = State_Sensitized or else One_Stack then
                   Proc.Subprg.all (Proc.This);
                else
                   Stack_Switch (Proc.Stack, Get_Main_Stack);

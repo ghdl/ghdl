@@ -169,6 +169,7 @@ package Grt.Rtis is
    Ghdl_Rti_Signal_Mode_In      : constant Ghdl_Rti_U8 := 5;
 
    Ghdl_Rti_Signal_Kind_Mask     : constant Ghdl_Rti_U8 := 3 * 16;
+   Ghdl_Rti_Signal_Kind_Offset   : constant Ghdl_Rti_U8 := 1 * 16;
    Ghdl_Rti_Signal_Kind_No       : constant Ghdl_Rti_U8 := 0 * 16;
    Ghdl_Rti_Signal_Kind_Register : constant Ghdl_Rti_U8 := 1 * 16;
    Ghdl_Rti_Signal_Kind_Bus      : constant Ghdl_Rti_U8 := 2 * 16;

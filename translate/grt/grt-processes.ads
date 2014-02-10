@@ -49,6 +49,10 @@ package Grt.Processes is
    --  If true, the simulation should be stopped.
    Break_Simulation : Boolean;
 
+   --  If true, there is one stack for all processes.  Non-sensitized
+   --  processes must save their state.
+   One_Stack : Boolean := False;
+
    type Process_Type is private;
    --  type Process_Acc is access all Process_Type;
 
@@ -104,19 +108,33 @@ package Grt.Processes is
    --  Resume a process.
    procedure Resume_Process (Proc : Process_Acc);
 
-   --  Wait without timeout or sensitivity.
+   --  Wait without timeout or sensitivity: wait;
    procedure Ghdl_Process_Wait_Exit;
-   --  Wait for a timeout.
+   --  Wait for a timeout (without sensitivity): wait for X;
    procedure Ghdl_Process_Wait_Timeout (Time : Std_Time);
-   --  Add a sensitivity for a wait.
-   procedure Ghdl_Process_Wait_Add_Sensitivity (Sig : Ghdl_Signal_Ptr);
+
+   --  Full wait statement:
+   --  1. Call Ghdl_Process_Wait_Set_Timeout (if there is a timeout)
+   --  2. Call Ghdl_Process_Wait_Add_Sensitivity (for each signal)
+   --  3. Call Ghdl_Process_Wait_Suspend, go to 4 if it returns true (timeout)
+   --     Evaluate the condition and go to 4 if true
+   --     Else, restart 3
+   --  4. Call Ghdl_Process_Wait_Close
+
    --  Add a timeout for a wait.
    procedure Ghdl_Process_Wait_Set_Timeout (Time : Std_Time);
+   --  Add a sensitivity for a wait.
+   procedure Ghdl_Process_Wait_Add_Sensitivity (Sig : Ghdl_Signal_Ptr);
    --  Wait until timeout or sensitivity.
    --  Return TRUE in case of timeout.
    function Ghdl_Process_Wait_Suspend return Boolean;
    --  Finish a wait statement.
    procedure Ghdl_Process_Wait_Close;
+
+   --  For one stack setups, wait_suspend is decomposed into the suspension
+   --  procedure and the function to get resume status.
+   procedure Ghdl_Process_Wait_Wait;
+   function Ghdl_Process_Wait_Has_Timeout return Boolean;
 
    --  Verilog.
    procedure Ghdl_Process_Delay (Del : Ghdl_U32);
