@@ -17,7 +17,9 @@
 --  02111-1307, USA.
 
 with Ada.Text_IO;
+with Ada.Command_Line;
 
+with Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 
@@ -40,6 +42,8 @@ with Ghdlcomp;
 
 with Grt.Vpi;
 pragma Unreferenced (Grt.Vpi);
+with Grt.Types;
+with Grt.Options;
 with Grtlink;
 
 package body Ghdlsimul is
@@ -94,10 +98,13 @@ package body Ghdlsimul is
             Flag_Expect_Failure := True;
          elsif Arg.all = "--trace-elab" then
             Elaboration.Trace_Elaboration := True;
+         elsif Arg.all = "--trace-annotation" then
+            Annotations.Trace_Annotation := True;
          elsif Arg.all = "--trace-simu" then
             Simulation.Trace_Simulation := True;
          else
-            null;
+            Ghdlmain.Error ("unknown run options '" & Arg.all & "'");
+            raise Option_Error;
          end if;
       end loop;
    end Set_Run_Options;
@@ -110,7 +117,12 @@ package body Ghdlsimul is
       First_Id : Name_Id;
       Sec_Id : Name_Id;
       Top_Conf : Iir;
+      Argv0 : String_Acc;
    begin
+      --  Set progname (used for grt error messages)
+      Argv0 := new String'(Ada.Command_Line.Command_Name & ASCII.Nul);
+      Grt.Options.Progname := Grt.Types.To_Ghdl_C_String (Argv0.all'Address);
+
       First_Id := Get_Identifier (Prim_Name.all);
       if Sec_Name = null then
          Sec_Id := Null_Identifier;
@@ -144,7 +156,6 @@ package body Ghdlsimul is
    begin
       Put_Line (" --debug        Run with debugger");
    end Disp_Long_Help;
-
 
    procedure Register_Commands
    is
