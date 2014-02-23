@@ -26,6 +26,9 @@ with Grt.Types; use Grt.Types;
 with Grt.Rtis; use Grt.Rtis;
 
 package Grt.Images is
+   --  For all images procedures, the result is allocated on the secondary
+   --  stack.
+
    procedure Ghdl_Image_B2
      (Res : Std_String_Ptr; Val : Ghdl_B2; Rti : Ghdl_Rti_Access);
    procedure Ghdl_Image_E8

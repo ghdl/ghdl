@@ -130,5 +130,3 @@ private
    pragma Export (C, Ghdl_Std_Ulogic_To_Boolean_Array,
                   "__ghdl_std_ulogic_to_boolean_array");
 end Grt.Lib;
-
-
