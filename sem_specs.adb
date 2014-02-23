@@ -947,6 +947,7 @@ package body Sem_Specs is
             if New_Entity = Null_Iir then
                return Null_Iir;
             end if;
+            --  Note: dependency is added by Find_Declaration.
             Set_Entity (Aspect, New_Entity);
 
             --  Check architecture.
@@ -959,7 +960,7 @@ package body Sem_Specs is
                end if;
 
                --  FIXME: may emit a warning if the architecture does not
-               --  exists.
+               --  exist.
                --  Note: the design needs the architecture.
                Add_Dependence (Aspect);
             end if;
@@ -970,6 +971,7 @@ package body Sem_Specs is
                return Null_Iir;
             end if;
 
+            --  Note: dependency is added by Find_Declaration.
             Set_Configuration (Aspect, Conf);
 
             Libraries.Load_Design_Unit (Conf, Aspect);
