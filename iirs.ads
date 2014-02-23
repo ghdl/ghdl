@@ -4208,7 +4208,10 @@ package Iirs is
    function Get_Context_Items (Design_Unit : Iir) return Iir;
    procedure Set_Context_Items (Design_Unit : Iir; Items_Chain : Iir);
 
-   --  List of design units on which the design unit depends.
+   --  List of design units on which the design unit depends. There is an
+   --  exception: the architecture of an entity aspect (of a component
+   --  instantiation) may not have been analyzed.  The Entity_Aspect_Entity
+   --  is added to this list (instead of the non-existing design unit).
    --  Field: Field8 (uc)
    function Get_Dependence_List (Unit : Iir) return Iir_List;
    procedure Set_Dependence_List (Unit : Iir; List : Iir_List);
