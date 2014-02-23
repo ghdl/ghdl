@@ -252,10 +252,236 @@ package body Grt.Options is
       end if;
    end To_Lower;
 
+   procedure Decode_Option
+     (Option : String; Status : out Decode_Option_Status)
+   is
+      pragma Assert (Option'First = 1);
+      Len : constant Natural := Option'Last;
+   begin
+      Status := Decode_Option_Ok;
+      if Option = "--" then
+         Status := Decode_Option_Last;
+      elsif Option = "--help" or else Option = "-h" then
+         Help;
+         Status := Decode_Option_Help;
+      elsif Option = "--disp-time" then
+         Disp_Time := True;
+      elsif Option = "--trace-signals" then
+         Trace_Signals := True;
+         Disp_Time := True;
+      elsif Option = "--trace-processes" then
+         Trace_Processes := True;
+         Disp_Time := True;
+      elsif Option = "--disp-order" then
+         Disp_Signals_Order := True;
+      elsif Option = "--checks" then
+         Checks := True;
+      elsif Option = "--disp-sources" then
+         Disp_Sources := True;
+      elsif Option = "--disp-sig-types" then
+         Disp_Sig_Types := True;
+      elsif Option = "--disp-signals-map" then
+         Disp_Signals_Map := True;
+      elsif Option = "--disp-signals-table" then
+         Disp_Signals_Table := True;
+      elsif Option = "--disp-sensitivity" then
+         Disp_Sensitivity := True;
+      elsif Option = "--stats" then
+         Flag_Stats := True;
+      elsif Option = "--no-run" then
+         Flag_No_Run := True;
+      elsif Len > 18 and then Option (1 .. 18) = "--time-resolution=" then
+         declare
+            Res : Character;
+            Unit : String (1 .. 3);
+         begin
+            Res := '?';
+            if Len >= 20 then
+               Unit (1) := To_Lower (Option (19));
+               Unit (2) := To_Lower (Option (20));
+               if Len = 20 then
+                  if Unit (1 .. 2) = "fs" then
+                     Res := 'f';
+                  elsif Unit (1 .. 2) = "ps" then
+                     Res := 'p';
+                  elsif Unit (1 .. 2) = "ns" then
+                     Res := 'n';
+                  elsif Unit (1 .. 2) = "us" then
+                     Res := 'u';
+                  elsif Unit (1 .. 2) = "ms" then
+                     Res := 'm';
+                  elsif Unit (1 .. 2) = "hr" then
+                     Res := 'h';
+                  end if;
+               elsif Len = 21 then
+                  Unit (3) := To_Lower (Option (21));
+                  if Unit = "min" then
+                     Res := 'M';
+                  elsif Unit = "sec" then
+                     Res := 's';
+                  end if;
+               end if;
+            end if;
+            if Res = '?' then
+               Error_C ("bad unit for '");
+               Error_C (Option);
+               Error_E ("'");
+            else
+               if Flag_String (5) = '-' then
+                  Error ("time resolution is ignored");
+               elsif Flag_String (5) = '?' then
+                  if Stop_Time /= Std_Time'Last then
+                     Error ("time resolution must be set "
+                              & "before --stop-time");
+                  else
+                     Set_Time_Resolution (Res);
+                  end if;
+               elsif Flag_String (5) /= Res then
+                  Error ("time resolution is fixed during analysis");
+               end if;
+            end if;
+         end;
+      elsif Len > 12 and then Option (1 .. 12) = "--stop-time=" then
+         declare
+            Ok : Boolean;
+            Pos : Natural;
+            Time : Integer_64;
+            Unit : String (1 .. 3);
+         begin
+            Extract_Integer (Option (13 .. Len), Ok, Time, Pos);
+            if not Ok then
+               Time := 1;
+            end if;
+            if (Len - Pos + 1) not in 2 .. 3 then
+               Error_C ("bad unit for '");
+               Error_C (Option);
+               Error_E ("'");
+               return;
+            end if;
+            Unit (1) := To_Lower (Option (Pos));
+            Unit (2) := To_Lower (Option (Pos + 1));
+            if Len = Pos + 2 then
+               Unit (3) := To_Lower (Option (Pos + 2));
+            else
+               Unit (3) := ' ';
+            end if;
+            if Unit = "fs " then
+               null;
+            elsif Unit = "ps " then
+               Time := Time * (10 ** 3);
+            elsif Unit = "ns " then
+               Time := Time * (10 ** 6);
+            elsif Unit = "us " then
+               Time := Time * (10 ** 9);
+            elsif Unit = "ms " then
+               Time := Time * (10 ** 12);
+            elsif Unit = "sec" then
+               Time := Time * (10 ** 15);
+            elsif Unit = "min" then
+               Time := Time * (10 ** 15) * 60;
+            elsif Unit = "hr " then
+               Time := Time * (10 ** 15) * 3600;
+            else
+               Error_C ("bad unit name for '");
+               Error_C (Option);
+               Error_E ("'");
+            end if;
+            Stop_Time := Std_Time (Time);
+         end;
+      elsif Len > 13 and then Option (1 .. 13) = "--stop-delta=" then
+         declare
+            Ok : Boolean;
+            Pos : Natural;
+            Time : Integer_64;
+         begin
+            Extract_Integer (Option (14 .. Len), Ok, Time, Pos);
+            if not Ok or else Pos <= Len then
+               Error_C ("bad value in '");
+               Error_C (Option);
+               Error_E ("'");
+            else
+               if Time > Integer_64 (Integer'Last) then
+                  Stop_Delta := Integer'Last;
+               else
+                  Stop_Delta := Integer (Time);
+               end if;
+            end if;
+         end;
+      elsif Len > 15 and then Option (1 .. 15) = "--assert-level=" then
+         if Option (16 .. Len) = "note" then
+            Severity_Level := Note_Severity;
+         elsif Option (16 .. Len) = "warning" then
+            Severity_Level := Warning_Severity;
+         elsif Option (16 .. Len) = "error" then
+            Severity_Level := Error_Severity;
+         elsif Option (16 .. Len) = "failure" then
+            Severity_Level := Failure_Severity;
+         elsif Option (16 .. Len) = "none" then
+            Severity_Level := 4;
+         else
+            Error ("bad argument for --assert-level option, try --help");
+         end if;
+      elsif Len > 15 and then Option (1 .. 15) = "--ieee-asserts=" then
+         if Option (16 .. Len) = "disable" then
+            Ieee_Asserts := Disable_Asserts;
+         elsif Option (16 .. Len) = "enable" then
+            Ieee_Asserts := Enable_Asserts;
+         elsif Option (16 .. Len) = "disable-at-0" then
+            Ieee_Asserts := Disable_Asserts_At_Time_0;
+         else
+            Error ("bad argument for --ieee-asserts option, try --help");
+         end if;
+      elsif Option = "--expect-failure" then
+         Expect_Failure := True;
+      elsif Len >= 13 and then Option (1 .. 13) = "--stack-size=" then
+         Stack_Size := Extract_Size
+           (Option (14 .. Len), "--stack-size");
+         if Stack_Size > Stack_Max_Size then
+            Stack_Max_Size := Stack_Size;
+         end if;
+      elsif Len >= 17 and then Option (1 .. 17) = "--stack-max-size=" then
+         Stack_Max_Size := Extract_Size
+           (Option (18 .. Len), "--stack-size");
+         if Stack_Size > Stack_Max_Size then
+            Stack_Size := Stack_Max_Size;
+         end if;
+      elsif Len >= 11 and then Option (1 .. 11) = "--activity=" then
+         if Option (12 .. Len) = "none" then
+            Flag_Activity := Activity_None;
+         elsif Option (12 .. Len) = "min" then
+            Flag_Activity := Activity_Minimal;
+         elsif Option (12 .. Len) = "all" then
+            Flag_Activity := Activity_All;
+         else
+            Error ("bad argument for --activity, try --help");
+         end if;
+      elsif Len > 10 and then Option (1 .. 10) = "--threads=" then
+         declare
+            Ok : Boolean;
+            Pos : Natural;
+            Val : Integer_64;
+         begin
+            Extract_Integer (Option (11 .. Len), Ok, Val, Pos);
+            if not Ok or else Pos <= Len then
+               Error_C ("bad value in '");
+               Error_C (Option);
+               Error_E ("'");
+            else
+               Nbr_Threads := Integer (Val);
+            end if;
+         end;
+      elsif not Grt.Hooks.Call_Option_Hooks (Option) then
+         Error_C ("unknown option '");
+         Error_C (Option);
+         Error_E ("', try --help");
+      end if;
+   end Decode_Option;
+
    procedure Decode (Stop : out Boolean)
    is
       Arg : Ghdl_C_String;
       Len : Natural;
+      Status : Decode_Option_Status;
    begin
       Stop := False;
       Last_Opt := Argc - 1;
@@ -265,226 +491,16 @@ package body Grt.Options is
          declare
             Argument : constant String := Arg (1 .. Len);
          begin
-            if Argument = "--" then
-               Last_Opt := I;
-               exit;
-            elsif Argument = "--help" or else Argument = "-h" then
-               Help;
-               Stop := True;
-            elsif Argument = "--disp-time" then
-               Disp_Time := True;
-            elsif Argument = "--trace-signals" then
-               Trace_Signals := True;
-               Disp_Time := True;
-            elsif Argument = "--trace-processes" then
-               Trace_Processes := True;
-               Disp_Time := True;
-            elsif Argument = "--disp-order" then
-               Disp_Signals_Order := True;
-            elsif Argument = "--checks" then
-               Checks := True;
-            elsif Argument = "--disp-sources" then
-               Disp_Sources := True;
-            elsif Argument = "--disp-sig-types" then
-               Disp_Sig_Types := True;
-            elsif Argument = "--disp-signals-map" then
-               Disp_Signals_Map := True;
-            elsif Argument = "--disp-signals-table" then
-               Disp_Signals_Table := True;
-            elsif Argument = "--disp-sensitivity" then
-               Disp_Sensitivity := True;
-            elsif Argument = "--stats" then
-               Flag_Stats := True;
-            elsif Argument = "--no-run" then
-               Flag_No_Run := True;
-            elsif Len > 18 and then Argument (1 .. 18) = "--time-resolution="
-            then
-               declare
-                  Res : Character;
-                  Unit : String (1 .. 3);
-               begin
-                  Res := '?';
-                  if Len >= 20 then
-                     Unit (1) := To_Lower (Argument (19));
-                     Unit (2) := To_Lower (Argument (20));
-                     if Len = 20 then
-                        if Unit (1 .. 2) = "fs" then
-                           Res := 'f';
-                        elsif Unit (1 .. 2) = "ps" then
-                           Res := 'p';
-                        elsif Unit (1 .. 2) = "ns" then
-                           Res := 'n';
-                        elsif Unit (1 .. 2) = "us" then
-                           Res := 'u';
-                        elsif Unit (1 .. 2) = "ms" then
-                           Res := 'm';
-                        elsif Unit (1 .. 2) = "hr" then
-                           Res := 'h';
-                        end if;
-                     elsif Len = 21 then
-                        Unit (3) := To_Lower (Argument (21));
-                        if Unit = "min" then
-                           Res := 'M';
-                        elsif Unit = "sec" then
-                           Res := 's';
-                        end if;
-                     end if;
-                  end if;
-                  if Res = '?' then
-                     Error_C ("bad unit for '");
-                     Error_C (Argument);
-                     Error_E ("'");
-                  else
-                     if Flag_String (5) = '-' then
-                        Error ("time resolution is ignored");
-                     elsif Flag_String (5) = '?' then
-                        if Stop_Time /= Std_Time'Last then
-                           Error ("time resolution must be set "
-                                  & "before --stop-time");
-                        else
-                           Set_Time_Resolution (Res);
-                        end if;
-                     elsif Flag_String (5) /= Res then
-                        Error ("time resolution is fixed during analysis");
-                     end if;
-                  end if;
-               end;
-            elsif Len > 12 and then Argument (1 .. 12) = "--stop-time=" then
-               declare
-                  Ok : Boolean;
-                  Pos : Natural;
-                  Time : Integer_64;
-                  Unit : String (1 .. 3);
-               begin
-                  Extract_Integer (Argument (13 .. Len), Ok, Time, Pos);
-                  if not Ok then
-                     Time := 1;
-                  end if;
-                  if (Len - Pos + 1) not in 2 .. 3 then
-                     Error_C ("bad unit for '");
-                     Error_C (Argument);
-                     Error_E ("'");
-                     return;
-                  end if;
-                  Unit (1) := To_Lower (Argument (Pos));
-                  Unit (2) := To_Lower (Argument (Pos + 1));
-                  if Len = Pos + 2 then
-                     Unit (3) := To_Lower (Argument (Pos + 2));
-                  else
-                     Unit (3) := ' ';
-                  end if;
-                  if Unit = "fs " then
-                     null;
-                  elsif Unit = "ps " then
-                     Time := Time * (10 ** 3);
-                  elsif Unit = "ns " then
-                     Time := Time * (10 ** 6);
-                  elsif Unit = "us " then
-                     Time := Time * (10 ** 9);
-                  elsif Unit = "ms " then
-                     Time := Time * (10 ** 12);
-                  elsif Unit = "sec" then
-                     Time := Time * (10 ** 15);
-                  elsif Unit = "min" then
-                     Time := Time * (10 ** 15) * 60;
-                  elsif Unit = "hr " then
-                     Time := Time * (10 ** 15) * 3600;
-                  else
-                     Error_C ("bad unit name for '");
-                     Error_C (Argument);
-                     Error_E ("'");
-                  end if;
-                  Stop_Time := Std_Time (Time);
-               end;
-            elsif Len > 13 and then Argument (1 .. 13) = "--stop-delta=" then
-               declare
-                  Ok : Boolean;
-                  Pos : Natural;
-                  Time : Integer_64;
-               begin
-                  Extract_Integer (Argument (14 .. Len), Ok, Time, Pos);
-                  if not Ok or else Pos <= Len then
-                     Error_C ("bad value in '");
-                     Error_C (Argument);
-                     Error_E ("'");
-                  else
-                     if Time > Integer_64 (Integer'Last) then
-                        Stop_Delta := Integer'Last;
-                     else
-                        Stop_Delta := Integer (Time);
-                     end if;
-                  end if;
-               end;
-            elsif Len > 15 and then Argument (1 .. 15) = "--assert-level=" then
-               if Argument (16 .. Len) = "note" then
-                  Severity_Level := Note_Severity;
-               elsif Argument (16 .. Len) = "warning" then
-                  Severity_Level := Warning_Severity;
-               elsif Argument (16 .. Len) = "error" then
-                  Severity_Level := Error_Severity;
-               elsif Argument (16 .. Len) = "failure" then
-                  Severity_Level := Failure_Severity;
-               elsif Argument (16 .. Len) = "none" then
-                  Severity_Level := 4;
-               else
-                  Error ("bad argument for --assert-level option, try --help");
-               end if;
-            elsif Len > 15 and then Argument (1 .. 15) = "--ieee-asserts=" then
-               if Argument (16 .. Len) = "disable" then
-                  Ieee_Asserts := Disable_Asserts;
-               elsif Argument (16 .. Len) = "enable" then
-                  Ieee_Asserts := Enable_Asserts;
-               elsif Argument (16 .. Len) = "disable-at-0" then
-                  Ieee_Asserts := Disable_Asserts_At_Time_0;
-               else
-                  Error ("bad argument for --ieee-asserts option, try --help");
-               end if;
-            elsif Argument = "--expect-failure" then
-               Expect_Failure := True;
-            elsif Len >= 13 and then Argument (1 .. 13) = "--stack-size=" then
-               Stack_Size := Extract_Size
-                 (Argument (14 .. Len), "--stack-size");
-               if Stack_Size > Stack_Max_Size then
-                  Stack_Max_Size := Stack_Size;
-               end if;
-            elsif Len >= 17 and then Argument (1 .. 17) = "--stack-max-size="
-            then
-               Stack_Max_Size := Extract_Size
-                 (Argument (18 .. Len), "--stack-size");
-               if Stack_Size > Stack_Max_Size then
-                  Stack_Size := Stack_Max_Size;
-               end if;
-            elsif Len >= 11 and then Argument (1 .. 11) = "--activity="
-            then
-               if Argument (12 .. Len) = "none" then
-                  Flag_Activity := Activity_None;
-               elsif Argument (12 .. Len) = "min" then
-                  Flag_Activity := Activity_Minimal;
-               elsif Argument (12 .. Len) = "all" then
-                  Flag_Activity := Activity_All;
-               else
-                  Error ("bad argument for --activity, try --help");
-               end if;
-            elsif Len > 10 and then Argument (1 .. 10) = "--threads=" then
-               declare
-                  Ok : Boolean;
-                  Pos : Natural;
-                  Val : Integer_64;
-               begin
-                  Extract_Integer (Argument (11 .. Len), Ok, Val, Pos);
-                  if not Ok or else Pos <= Len then
-                     Error_C ("bad value in '");
-                     Error_C (Argument);
-                     Error_E ("'");
-                  else
-                     Nbr_Threads := Integer (Val);
-                  end if;
-               end;
-            elsif not Grt.Hooks.Call_Option_Hooks (Argument) then
-               Error_C ("unknown option '");
-               Error_C (Argument);
-               Error_E ("', try --help");
-            end if;
+            Decode_Option (Argument, Status);
+            case Status is
+               when Decode_Option_Last =>
+                  Last_Opt := I;
+                  exit;
+               when Decode_Option_Help =>
+                  Stop := True;
+               when Decode_Option_Ok =>
+                  null;
+            end case;
          end;
       end loop;
    end Decode;

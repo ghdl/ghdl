@@ -59,6 +59,22 @@ package Grt.Options is
    --  Should not be called directly.
    procedure Help;
 
+   --  Status from Decode_Option.
+   type Decode_Option_Status is
+     (
+      --  Last option, next arguments aren't options.
+      Decode_Option_Last,
+
+      --  --help option, program shouldn't run.
+      Decode_Option_Help,
+
+      --  Option was successfuly decoded.
+      Decode_Option_Ok);
+
+   --  Decode option Option and set Status.
+   procedure Decode_Option
+     (Option : String; Status : out Decode_Option_Status);
+
    --  Decode command line options.
    --  If STOP is true, there nothing must happen (set by --help).
    procedure Decode (Stop : out Boolean);
