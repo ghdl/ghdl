@@ -169,6 +169,8 @@ done
 
 # Test group
 
+delete_lib work
+
 dir=vhdl-93/clifton-labs/compliant
 . $dir/compliant1.exp
 

@@ -53,8 +53,8 @@ run_compliant_test functional/operators/addition/variable-plus-variable.vhdl
 run_compliant_test functional/operators/concatenation/concatenate-string-character.vhdl
 run_compliant_test functional/operators/concatenation/concatenate-two-strings.vhdl
 run_compliant_test functional/operators/division/integer-division.vhdl
-run_compliant_test functional/packages/simple_package_body_test.vhdl
 run_compliant_test functional/packages/simple_package_test.vhdl
+run_compliant_test functional/packages/simple_package_body_test.vhdl
 run_compliant_test functional/signals/assign/simple-array-assign.vhdl
 run_compliant_test functional/signals/assign/simple-integer-assign.vhdl
 run_compliant_test functional/signals/assign/simple-integer-initialize.vhdl
