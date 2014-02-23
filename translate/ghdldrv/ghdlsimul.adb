@@ -19,7 +19,6 @@
 with Ada.Text_IO;
 with Ada.Command_Line;
 
-with Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 
@@ -88,8 +87,16 @@ package body Ghdlsimul is
    --  Set options.
    procedure Set_Run_Options (Args : Argument_List)
    is
+      use Grt.Options;
+      use Types;
       Arg : String_Access;
+      Status : Decode_Option_Status;
+      Argv0 : String_Acc;
    begin
+      --  Set progname (used for grt error messages)
+      Argv0 := new String'(Ada.Command_Line.Command_Name & ASCII.Nul);
+      Grt.Options.Progname := Grt.Types.To_Ghdl_C_String (Argv0.all'Address);
+
       for I in Args'Range loop
          Arg := Args (I);
          if Arg.all = "--disp-tree" then
@@ -103,8 +110,18 @@ package body Ghdlsimul is
          elsif Arg.all = "--trace-simu" then
             Simulation.Trace_Simulation := True;
          else
-            Ghdlmain.Error ("unknown run options '" & Arg.all & "'");
-            raise Option_Error;
+            Decode_Option (Arg.all, Status);
+            case Status is
+               when Decode_Option_Last =>
+                  exit;
+               when Decode_Option_Help =>
+                  --  FIXME: is that correct ?
+                  exit;
+               when Decode_Option_Ok =>
+                  null;
+            end case;
+            --  Ghdlmain.Error ("unknown run options '" & Arg.all & "'");
+            --  raise Option_Error;
          end if;
       end loop;
    end Set_Run_Options;
@@ -117,12 +134,7 @@ package body Ghdlsimul is
       First_Id : Name_Id;
       Sec_Id : Name_Id;
       Top_Conf : Iir;
-      Argv0 : String_Acc;
    begin
-      --  Set progname (used for grt error messages)
-      Argv0 := new String'(Ada.Command_Line.Command_Name & ASCII.Nul);
-      Grt.Options.Progname := Grt.Types.To_Ghdl_C_String (Argv0.all'Address);
-
       First_Id := Get_Identifier (Prim_Name.all);
       if Sec_Name = null then
          Sec_Id := Null_Identifier;
@@ -137,6 +149,9 @@ package body Ghdlsimul is
       Grtlink.Flag_String := Flags.Flag_String;
 
       Simulation.Simulation_Entity (Top_Conf);
+   exception
+      when Errorout.Execution_Constraint_Error =>
+         null;
    end Run;
 
    function Decode_Option (Option : String) return Boolean
