@@ -11093,7 +11093,6 @@ package body Translation is
 
          Open_Temp;
 
-
          case El_Info.Type_Mode is
             when Type_Mode_Thin =>
                Vals := Dv2M (Rinfo.Var_Vals, El_Info, Mode_Signal);
