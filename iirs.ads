@@ -329,7 +329,7 @@ package Iirs is
    --   Get/Set_Out_Conversion (Field5)
    --
    -- Get/Set the whole association flag (true if the formal is associated in
-   -- whole, see LRM 4.3.2.2)
+   -- whole and not individually, see LRM93 4.3.2.2)
    --   Get/Set_Whole_Association_Flag (Flag1)
    --
    --   Get/Set_Collapse_Signal_Flag (Flag2)
