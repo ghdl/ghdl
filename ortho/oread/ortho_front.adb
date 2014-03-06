@@ -63,13 +63,14 @@ package body Ortho_Front is
    procedure Puterr (Msg : String)
    is
       L : Integer;
+      pragma Unreferenced (L);
    begin
       L := Write (Standerr, Msg'Address, Msg'Length);
    end Puterr;
 
    procedure Puterr (N : Natural)
    is
-      Str : String := Natural'Image (N);
+      Str : constant String := Natural'Image (N);
    begin
       Puterr (Str (Str'First + 1 .. Str'Last));
    end Puterr;
