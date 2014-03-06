@@ -6209,8 +6209,7 @@ package body Translation is
          Info.Type_Mode := Type_Mode_File;
       end Translate_File_Type;
 
-      function Get_File_Signature_Length (Def : Iir) return Natural
-      is
+      function Get_File_Signature_Length (Def : Iir) return Natural is
       begin
          case Get_Kind (Def) is
             when Iir_Kinds_Scalar_Type_Definition =>
@@ -6282,17 +6281,16 @@ package body Translation is
 
       procedure Create_File_Type_Var (Def : Iir_File_Type_Definition)
       is
-         Type_Name : Iir;
+         Type_Name : constant Iir := Get_Type_Mark (Def);
          Info : Type_Info_Acc;
       begin
-         Type_Name := Get_Type_Mark (Def);
          if Get_Kind (Type_Name) in Iir_Kinds_Scalar_Type_Definition then
             return;
          end if;
          declare
             Len : constant Natural := Get_File_Signature_Length (Type_Name);
             Sig : String (1 .. Len + 2);
-            Off : Natural := 1;
+            Off : Natural := Sig'First;
          begin
             Get_File_Signature (Type_Name, Sig, Off);
             Sig (Len + 1) := '.';
@@ -13662,7 +13660,8 @@ package body Translation is
                      --  FIXME : to be done
                      raise Internal_Error;
                   else
-                     Assoc_Chain := Canon.Canon_Subprogram_Call (Name);
+                     Canon.Canon_Subprogram_Call (Name);
+                     Assoc_Chain := Get_Parameter_Association_Chain (Name);
                      Obj := Get_Method_Object (Name);
                      return E2M
                        (Chap7.Translate_Function_Call (Imp, Assoc_Chain, Obj),
@@ -16733,7 +16732,8 @@ package body Translation is
                           (Imp, Left, Right, Res_Type, Expr);
                      end;
                   else
-                     Assoc_Chain := Canon.Canon_Subprogram_Call (Expr);
+                     Canon.Canon_Subprogram_Call (Expr);
+                     Assoc_Chain := Get_Parameter_Association_Chain (Expr);
                      Res := Translate_Function_Call
                        (Imp, Assoc_Chain, Get_Method_Object (Expr));
                      Expr_Type := Get_Return_Type (Imp);
@@ -20323,8 +20323,8 @@ package body Translation is
            Iir_Chains.Get_Chain_Length (Assoc_Chain);
          Params : Mnode_Array (0 .. Nbr_Assoc - 1);
          E_Params : O_Enode_Array (0 .. Nbr_Assoc - 1);
-         Imp : Iir;
-         Info : Subprg_Info_Acc;
+         Imp : constant Iir := Get_Implementation (Stmt);
+         Info : constant Subprg_Info_Acc := Get_Info (Imp);
          Res : O_Dnode;
          El : Iir;
          Pos : Natural;
@@ -20346,9 +20346,6 @@ package body Translation is
          Bounds : O_Enode;
          Obj : Iir;
       begin
-         Imp := Get_Implementation (Stmt);
-         Info := Get_Info (Imp);
-
          --  Create an in-out result record for in-out arguments passed by
          --  value.
          if Info.Res_Record_Type /= O_Tnode_Null then
@@ -21564,7 +21561,8 @@ package body Translation is
                   Imp : Iir;
                begin
                   Call := Get_Procedure_Call (Stmt);
-                  Assocs := Canon.Canon_Subprogram_Call (Call);
+                  Canon.Canon_Subprogram_Call (Call);
+                  Assocs := Get_Parameter_Association_Chain (Call);
                   Imp := Get_Implementation (Call);
                   if Get_Kind (Imp) = Iir_Kind_Implicit_Procedure_Declaration
                   then

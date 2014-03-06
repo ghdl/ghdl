@@ -48,9 +48,8 @@ package body Canon is
      (Interface_Chain: Iir; Association_Chain: Iir; Loc : Iir)
      return Iir;
 
-   function Canon_Association_Chain_And_Actuals
-     (Interface_Chain : Iir; Association_Chain : Iir; Loc : Iir)
-     return Iir;
+   --  Like Canon_Subprogram_Call, but recurse on actuals.
+   procedure Canon_Subprogram_Call_And_Actuals (Call : Iir);
 
    --  Canonicalize block configuration CONF.
    --  TOP is used to added dependences to the design unit which CONF
@@ -612,23 +611,10 @@ package body Canon is
             end if;
 
          when Iir_Kind_Function_Call =>
-            declare
-               Imp : Iir;
-               Assoc_Chain : Iir;
-            begin
-               Imp := Get_Implementation (Expr);
-               if Get_Kind (Imp) /= Iir_Kind_Implicit_Function_Declaration then
-                  Assoc_Chain := Canon_Association_Chain_And_Actuals
-                    (Get_Interface_Declaration_Chain (Imp),
-                     Get_Parameter_Association_Chain (Expr),
-                     Expr);
-                  Set_Parameter_Association_Chain (Expr, Assoc_Chain);
-               else
-                  -- FIXME:
-                  -- should canon concatenation.
-                  null;
-               end if;
-            end;
+            Canon_Subprogram_Call_And_Actuals (Expr);
+            -- FIXME:
+            -- should canon concatenation.
+
          when Iir_Kind_Type_Conversion
            | Iir_Kind_Qualified_Expression =>
             Canon_Expression (Get_Expression (Expr));
@@ -843,19 +829,7 @@ package body Canon is
       end loop;
    end Canon_Association_Chain_Actuals;
 
-   function Canon_Association_Chain_And_Actuals
-     (Interface_Chain : Iir; Association_Chain : Iir; Loc : Iir)
-     return Iir
-   is
-      Res : Iir;
-   begin
-      Res := Canon_Association_Chain
-        (Interface_Chain, Association_Chain, Loc);
-      Canon_Association_Chain_Actuals (Res);
-      return Res;
-   end Canon_Association_Chain_And_Actuals;
-
-   function Canon_Subprogram_Call (Call : Iir) return Iir
+   procedure Canon_Subprogram_Call (Call : Iir)
    is
       Imp : Iir;
       Assoc_Chain : Iir;
@@ -866,8 +840,13 @@ package body Canon is
       Assoc_Chain := Get_Parameter_Association_Chain (Call);
       Assoc_Chain := Canon_Association_Chain (Inter_Chain, Assoc_Chain, Call);
       Set_Parameter_Association_Chain (Call, Assoc_Chain);
-      return Assoc_Chain;
    end Canon_Subprogram_Call;
+
+   procedure Canon_Subprogram_Call_And_Actuals (Call : Iir) is
+   begin
+      Canon_Subprogram_Call (Call);
+      Canon_Association_Chain_Actuals (Get_Parameter_Association_Chain (Call));
+   end Canon_Subprogram_Call_And_Actuals;
 
    --  Create a default association list for INTERFACE_LIST.
    --  The default is a list of interfaces associated with open.
@@ -937,17 +916,6 @@ package body Canon is
 
    --  Inner loop if any; used to canonicalize exit/next statement.
    Cur_Loop : Iir;
-
-   procedure Canon_Procedure_Call (Call : Iir_Procedure_Call)
-   is
-      Assoc_Chain : Iir;
-   begin
-      Assoc_Chain := Canon_Association_Chain_And_Actuals
-        (Get_Interface_Declaration_Chain (Get_Implementation (Call)),
-         Get_Parameter_Association_Chain (Call),
-         Call);
-      Set_Parameter_Association_Chain (Call, Assoc_Chain);
-   end Canon_Procedure_Call;
 
    procedure Canon_Sequential_Stmts (First : Iir)
    is
@@ -1060,7 +1028,7 @@ package body Canon is
                end if;
 
             when Iir_Kind_Procedure_Call_Statement =>
-               Canon_Procedure_Call (Get_Procedure_Call (Stmt));
+               Canon_Subprogram_Call_And_Actuals (Get_Procedure_Call (Stmt));
 
             when Iir_Kind_Null_Statement =>
                null;
@@ -1249,9 +1217,6 @@ package body Canon is
          end case;
          Assoc := Get_Chain (Assoc);
       end loop;
-      if Get_Nbr_Elements (Sensitivity_List) = 0 then
-         Destroy_Iir_List (Sensitivity_List);
-      end if;
       if Is_Sensitized then
          Set_Sensitivity_List (Proc, Sensitivity_List);
       else

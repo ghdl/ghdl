@@ -67,6 +67,7 @@ package body Ghdlsimul is
       Annotations.Annotate (Std_Package.Std_Standard_Unit);
 
       Canon.Canon_Flag_Add_Labels := True;
+      Canon.Canon_Flag_Sequentials_Stmts := True;
    end Compile_Init;
 
    procedure Compile_Elab

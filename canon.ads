@@ -49,8 +49,7 @@ package Canon is
      return Iir_Design_Unit;
 
    --  Canonicalize a subprogram call.
-   --  Return the new association chain.
-   function Canon_Subprogram_Call (Call : Iir) return Iir;
+   procedure Canon_Subprogram_Call (Call : Iir);
 
    -- Compute the sensivity list of EXPR and add it to SENSIVITY_LIST.
    -- If IS_TARGET is true, the longuest static prefix of the signal name
