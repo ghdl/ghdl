@@ -20394,11 +20394,11 @@ package body Translation is
                   if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
                      Chap3.Create_Array_Subtype (Actual_Type, True);
                      Bounds := M2E (Chap3.Get_Array_Type_Bounds (Actual_Type));
-                     Param := Create_Temp (Ftype_Info, Mode_Value);
+                     Param := Create_Temp (Ftype_Info, Formal_Object_Kind);
                      Chap3.Translate_Object_Allocation
                        (Param, Alloc_Stack, Formal_Type, Bounds);
                   else
-                     Param := Create_Temp (Ftype_Info, Mode_Value);
+                     Param := Create_Temp (Ftype_Info, Formal_Object_Kind);
                      Chap4.Allocate_Complex_Object
                        (Formal_Type, Alloc_Stack, Param);
                   end if;
