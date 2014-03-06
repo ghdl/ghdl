@@ -69,17 +69,17 @@ ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.
 	$(GNATMAKE) -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_llvm_jit: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) bindings.o force
-	$(GNATMAKE) -o $@ -aI../../ortho/llvm -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs -m64 bindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) --LINK=g++
+ghdl_llvm_jit: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
+	$(GNATMAKE) -o $@ -aI../../ortho/llvm -aI../../ortho $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
+
+llvm-cbindings.o: ../../ortho/llvm/llvm-cbindings.cpp
+	$(CXX) -c -m64 `$(LLVM_CONFIG) --includedir --cxxflags` -g -o $@ $<
 
 ghdl_simul: default_pathes.ads $(GRT_ADD_OBJS) force
 	$(GNATMAKE) -aI../../simulate $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: ../../ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
-
-bindings.o: ../../ortho/llvm/bindings.cpp
-	$(CXX) -c -m64 `$(LLVM_CONFIG) --cxxflags` -g -o $@ $<
 
 ghdl_gcc: default_pathes.ads force
 	$(GNATMAKE) $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
@@ -123,23 +123,24 @@ include ../../libraries/Makefile.inc
 
 GHDL1=../ghdl1-gcc
 $(LIB93_DIR)/std/std_standard.o: $(GHDL1)
+ifeq ($(GHDL),ghdl_llvm)
+	$(GHDL1) --std=93 -quiet $(LIB_CFLAGS)  -c -o $@ --compile-standard
+else
 	$(GHDL1) --std=93 -quiet $(LIB_CFLAGS)  -o std_standard.s \
 	 --compile-standard
 	$(CC) -c -o $@ std_standard.s
 	$(RM) std_standard.s
+endif
 
 $(LIB87_DIR)/std/std_standard.o: $(GHDL1)
+ifeq ($(GHDL),ghdl_llvm)
+	$(GHDL1) --std=87 -quiet $(LIB_CFLAGS)  -c -o $@ --compile-standard
+else
 	$(GHDL1) --std=87 -quiet $(LIB_CFLAGS) -o std_standard.s \
 	 --compile-standard
 	$(CC) -c -o $@ std_standard.s
 	$(RM) std_standard.s
-
-GHDL1LLVM=../ghdl1-llvm
-$(LIB93_DIR)/std/std_standard.bc: $(GHDL1LLVM)
-	$(GHDL1LLVM) --std=93 -o $@ --compile-standard
-
-$(LIB87_DIR)/std/std_standard.bc: $(GHDL1LLVM)
-	$(GHDL1LLVM) --std=87 -o $@ --compile-standard
+endif
 
 install.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
 install.v87: std.v87 ieee.v87 synopsys.v87
@@ -148,18 +149,17 @@ install.v08: std.v08 ieee.v08
 install.standard: $(LIB93_DIR)/std/std_standard.o \
  $(LIB87_DIR)/std/std_standard.o
 
-install.standard-llvm: $(LIB93_DIR)/std/std_standard.bc \
- $(LIB87_DIR)/std/std_standard.bc
-
 grt.links:
 	cd ../lib; ln -sf $(GRTSRCDIR)/grt.lst .; ln -sf $(GRTSRCDIR)/libgrt.a .; ln -sf $(GRTSRCDIR)/grt.ver .
 
 install.all: install.v87 install.v93 install.standard
 install.mcode: install.v87 install.v93 install.v08
-install.llvm: install.standard-llvm
 
 install.simul:
 	$(MAKE) GHDL=ghdl_simul install.v87 install.v93
+
+install.llvm:
+	$(MAKE) GHDL=ghdl_llvm GHDL1=../ghdl1-llvm install.all
 
 clean: force
 	$(RM) -f *.o *.ali ghdl_gcc ghdl_mcode
