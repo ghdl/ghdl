@@ -1,3 +1,23 @@
+--  DO NOT MODIFY - this file was generated from:
+--  ortho_nodes.common.ads and ortho_gcc.private.ads
+--
+--  GCC back-end for ortho.
+--  Copyright (C) 2002-1014 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
 with System;
 with Interfaces; use Interfaces;
 with Ortho_Ident;
@@ -5,26 +25,25 @@ use Ortho_Ident;
 
 --  Interface to create nodes.
 package Ortho_Gcc is
-   --- PUBLIC DECLARATIONS
-   --  PUBLIC PART is defined in ortho_nodes.common.ads
-   type O_Cnode is private;
+
+--  Start of common part
+
    type O_Enode is private;
+   type O_Cnode is private;
    type O_Lnode is private;
    type O_Tnode is private;
-   type O_Fnode is private;
-   type O_Dnode is private;
    type O_Snode is private;
-
-   --  Must be called during initialization, before use of any subprograms.
-   procedure Init;
+   type O_Dnode is private;
+   type O_Fnode is private;
 
    O_Cnode_Null : constant O_Cnode;
-   O_Enode_Null : constant O_Enode;
-   O_Lnode_Null : constant O_Lnode;
-   O_Tnode_Null : constant O_Tnode;
-   O_Fnode_Null : constant O_Fnode;
-   O_Snode_Null : constant O_Snode;
    O_Dnode_Null : constant O_Dnode;
+   O_Enode_Null : constant O_Enode;
+   O_Fnode_Null : constant O_Fnode;
+   O_Lnode_Null : constant O_Lnode;
+   O_Snode_Null : constant O_Snode;
+   O_Tnode_Null : constant O_Tnode;
+
 
    ------------------------
    --  Type definitions  --
@@ -101,89 +120,9 @@ package Ortho_Gcc is
                                Ident : O_Ident; Res : out O_Cnode);
    procedure Finish_Enum_Type (List : in out O_Enum_List; Res : out O_Tnode);
 
-   -------------------
-   --  Expressions  --
-   -------------------
-
-   type ON_Op_Kind is
-     (
-      --  Not an operation; invalid.
-      ON_Nil,
-
-      --  Dyadic operations.
-      ON_Add_Ov,                --  ON_Dyadic_Op_Kind
-      ON_Sub_Ov,                --  ON_Dyadic_Op_Kind
-      ON_Mul_Ov,                --  ON_Dyadic_Op_Kind
-      ON_Div_Ov,                --  ON_Dyadic_Op_Kind
-      ON_Rem_Ov,                --  ON_Dyadic_Op_Kind
-      ON_Mod_Ov,                --  ON_Dyadic_Op_Kind
-
-      --  Binary operations.
-      ON_And,                   --  ON_Dyadic_Op_Kind
-      ON_Or,                    --  ON_Dyadic_Op_Kind
-      ON_Xor,                   --  ON_Dyadic_Op_Kind
-      ON_And_Then,              --  ON_Dyadic_Op_Kind
-      ON_Or_Else,               --  ON_Dyadic_Op_Kind
-
-      --  Monadic operations.
-      ON_Not,                   --  ON_Monadic_Op_Kind
-      ON_Neg_Ov,                --  ON_Monadic_Op_Kind
-      ON_Abs_Ov,                --  ON_Monadic_Op_Kind
-
-      --  Comparaisons
-      ON_Eq,                    --  ON_Compare_Op_Kind
-      ON_Neq,                   --  ON_Compare_Op_Kind
-      ON_Le,                    --  ON_Compare_Op_Kind
-      ON_Lt,                    --  ON_Compare_Op_Kind
-      ON_Ge,                    --  ON_Compare_Op_Kind
-      ON_Gt                     --  ON_Compare_Op_Kind
-      );
-
-   pragma Convention (C, ON_Op_Kind);
-
-   subtype ON_Dyadic_Op_Kind is ON_Op_Kind range ON_Add_Ov .. ON_Or_Else;
-   subtype ON_Monadic_Op_Kind is ON_Op_Kind range ON_Not .. ON_Abs_Ov;
-   subtype ON_Compare_Op_Kind is ON_Op_Kind range ON_Eq .. ON_Gt;
-
-   type O_Storage is (O_Storage_External,
-                      O_Storage_Public,
-                      O_Storage_Private,
-                      O_Storage_Local);
-   pragma Convention (C, O_Storage);
-   --  Specifies the storage kind of a declaration.
-   --  O_STORAGE_EXTERNAL:
-   --    The declaration do not either reserve memory nor generate code, and
-   --    is imported either from an other file or from a later place in the
-   --    current file.
-   --  O_STORAGE_PUBLIC, O_STORAGE_PRIVATE:
-   --    The declaration reserves memory or generates code.
-   --    With O_STORAGE_PUBLIC, the declaration is exported outside of the
-   --    file while with O_STORAGE_PRIVATE, the declaration is local to the
-   --    file.
-
-   Type_Error : exception;
-   Syntax_Error : exception;
-
-   function New_Lit (Lit : O_Cnode) return O_Enode;
-   pragma Inline (New_Lit);
-
-   --  Create a dyadic operation.
-   --  Left and right nodes must have the same type.
-   --  Binary operation is allowed only on boolean types.
-   --  The result is of the type of the operands.
-   function New_Dyadic_Op (Kind : ON_Dyadic_Op_Kind; Left, Right : O_Enode)
-     return O_Enode;
-
-   --  Create a monadic operation.
-   --  Result is of the type of operand.
-   function New_Monadic_Op (Kind : ON_Monadic_Op_Kind; Operand : O_Enode)
-     return O_Enode;
-
-   --  Create a comparaison operator.
-   --  NTYPE is the type of the result and must be a boolean type.
-   function New_Compare_Op
-     (Kind : ON_Compare_Op_Kind; Left, Right : O_Enode; Ntype : O_Tnode)
-     return O_Enode;
+   ----------------
+   --  Literals  --
+   ----------------
 
    --  Create a literal from an integer.
    function New_Signed_Literal (Ltype : O_Tnode; Value : Integer_64)
@@ -197,20 +136,14 @@ package Ortho_Gcc is
    --  Create a null access literal.
    function New_Null_Access (Ltype : O_Tnode) return O_Cnode;
 
-   type O_Inter_List is limited private;
-   type O_Record_Aggr_List is limited private;
-   type O_Array_Aggr_List is limited private;
-   type O_Assoc_List is limited private;
-   type O_Loop_Block is limited private;
-   type O_If_Block is limited private;
-   type O_Case_Block is limited private;
-
-
    --  Build a record/array aggregate.
    --  The aggregate is constant, and therefore can be only used to initialize
    --  constant declaration.
    --  ATYPE must be either a record type or an array subtype.
    --  Elements must be added in the order, and must be literals or aggregates.
+   type O_Record_Aggr_List is limited private;
+   type O_Array_Aggr_List is limited private;
+
    procedure Start_Record_Aggr (List : out O_Record_Aggr_List;
                                 Atype : O_Tnode);
    procedure New_Record_Aggr_El (List : in out O_Record_Aggr_List;
@@ -237,10 +170,110 @@ package Ortho_Gcc is
    --  unsgined type RTYPE.
    function New_Alignof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode;
 
-   --  Returns the offset of FIELD in its record REC_TYPE.  The result is a
+   --  Returns the offset of FIELD in its record ATYPE.  The result is a
    --  literal of unsigned type or access type RTYPE.
-   function New_Offsetof (Rec_Type : O_Tnode; Field : O_Fnode; Rtype : O_Tnode)
+   function New_Offsetof (Atype : O_Tnode; Field : O_Fnode; Rtype : O_Tnode)
                          return O_Cnode;
+
+   --  Get the address of a subprogram.
+   function New_Subprogram_Address (Subprg : O_Dnode; Atype : O_Tnode)
+     return O_Cnode;
+
+   --  Get the address of LVALUE.
+   --  ATYPE must be a type access whose designated type is the type of LVALUE.
+   --  FIXME: what about arrays.
+   function New_Global_Address (Decl : O_Dnode; Atype : O_Tnode)
+                               return O_Cnode;
+
+   --  Same as New_Address but without any restriction.
+   function New_Global_Unchecked_Address (Decl : O_Dnode; Atype : O_Tnode)
+     return O_Cnode;
+
+   -------------------
+   --  Expressions  --
+   -------------------
+
+   type ON_Op_Kind is
+     (
+      --  Not an operation; invalid.
+      ON_Nil,
+
+      --  Dyadic operations.
+      ON_Add_Ov,                --  ON_Dyadic_Op_Kind
+      ON_Sub_Ov,                --  ON_Dyadic_Op_Kind
+      ON_Mul_Ov,                --  ON_Dyadic_Op_Kind
+      ON_Div_Ov,                --  ON_Dyadic_Op_Kind
+      ON_Rem_Ov,                --  ON_Dyadic_Op_Kind
+      ON_Mod_Ov,                --  ON_Dyadic_Op_Kind
+
+      --  Binary operations.
+      ON_And,                   --  ON_Dyadic_Op_Kind
+      ON_Or,                    --  ON_Dyadic_Op_Kind
+      ON_Xor,                   --  ON_Dyadic_Op_Kind
+
+      --  Monadic operations.
+      ON_Not,                   --  ON_Monadic_Op_Kind
+      ON_Neg_Ov,                --  ON_Monadic_Op_Kind
+      ON_Abs_Ov,                --  ON_Monadic_Op_Kind
+
+      --  Comparaisons
+      ON_Eq,                    --  ON_Compare_Op_Kind
+      ON_Neq,                   --  ON_Compare_Op_Kind
+      ON_Le,                    --  ON_Compare_Op_Kind
+      ON_Lt,                    --  ON_Compare_Op_Kind
+      ON_Ge,                    --  ON_Compare_Op_Kind
+      ON_Gt                     --  ON_Compare_Op_Kind
+      );
+
+   subtype ON_Dyadic_Op_Kind is ON_Op_Kind range ON_Add_Ov .. ON_Xor;
+   subtype ON_Monadic_Op_Kind is ON_Op_Kind range ON_Not .. ON_Abs_Ov;
+   subtype ON_Compare_Op_Kind is ON_Op_Kind range ON_Eq .. ON_Gt;
+
+   type O_Storage is (O_Storage_External,
+                      O_Storage_Public,
+                      O_Storage_Private,
+                      O_Storage_Local);
+   --  Specifies the storage kind of a declaration.
+   --  O_STORAGE_EXTERNAL:
+   --    The declaration do not either reserve memory nor generate code, and
+   --    is imported either from an other file or from a later place in the
+   --    current file.
+   --  O_STORAGE_PUBLIC, O_STORAGE_PRIVATE:
+   --    The declaration reserves memory or generates code.
+   --    With O_STORAGE_PUBLIC, the declaration is exported outside of the
+   --    file while with O_STORAGE_PRIVATE, the declaration is local to the
+   --    file.
+
+   Type_Error : exception;
+   Syntax_Error : exception;
+
+   --  Create a value from a literal.
+   function New_Lit (Lit : O_Cnode) return O_Enode;
+
+   --  Create a dyadic operation.
+   --  Left and right nodes must have the same type.
+   --  Binary operation is allowed only on boolean types.
+   --  The result is of the type of the operands.
+   function New_Dyadic_Op (Kind : ON_Dyadic_Op_Kind; Left, Right : O_Enode)
+     return O_Enode;
+
+   --  Create a monadic operation.
+   --  Result is of the type of operand.
+   function New_Monadic_Op (Kind : ON_Monadic_Op_Kind; Operand : O_Enode)
+     return O_Enode;
+
+   --  Create a comparaison operator.
+   --  NTYPE is the type of the result and must be a boolean type.
+   function New_Compare_Op
+     (Kind : ON_Compare_Op_Kind; Left, Right : O_Enode; Ntype : O_Tnode)
+     return O_Enode;
+
+
+   type O_Inter_List is limited private;
+   type O_Assoc_List is limited private;
+   type O_If_Block is limited private;
+   type O_Case_Block is limited private;
+
 
    --  Get an element of an array.
    --  INDEX must be of the type of the array index.
@@ -273,24 +306,17 @@ package Ortho_Gcc is
    --  ATYPE must be a type access whose designated type is the type of LVALUE.
    --  FIXME: what about arrays.
    function New_Address (Lvalue : O_Lnode; Atype : O_Tnode) return O_Enode;
-   function New_Global_Address (Decl : O_Dnode; Atype : O_Tnode)
-                               return O_Cnode;
 
    --  Same as New_Address but without any restriction.
    function New_Unchecked_Address (Lvalue : O_Lnode; Atype : O_Tnode)
      return O_Enode;
-   function New_Global_Unchecked_Address (Decl : O_Dnode; Atype : O_Tnode)
-                                         return O_Cnode;
-
-   --  Get the address of a subprogram.
-   function New_Subprogram_Address (Subprg : O_Dnode; Atype : O_Tnode)
-     return O_Cnode;
 
    --  Get the value of an Lvalue.
    function New_Value (Lvalue : O_Lnode) return O_Enode;
-   --  Get the value of an object.
    function New_Obj_Value (Obj : O_Dnode) return O_Enode;
-   pragma Inline (New_Obj_Value);
+
+   --  Get an lvalue from a declaration.
+   function New_Obj (Obj : O_Dnode) return O_Lnode;
 
    --  Return a pointer of type RTPE to SIZE bytes allocated on the stack.
    function New_Alloca (Rtype : O_Tnode; Size : O_Enode) return O_Enode;
@@ -303,7 +329,7 @@ package Ortho_Gcc is
    --  Declarations.  --
    ---------------------
 
-   --  Filename.
+   --  Filename of the next declaration.
    procedure New_Debug_Filename_Decl (Filename : String);
 
    --  Line number of the next declaration.
@@ -334,9 +360,6 @@ package Ortho_Gcc is
       Ident : O_Ident;
       Storage : O_Storage;
       Atype : O_Tnode);
-
-   function New_Obj (Decl : O_Dnode) return O_Lnode;
-   pragma Inline (New_Obj);
 
    --  Start a subprogram declaration.
    --  Note: nested subprograms are allowed, ie o_storage_local subprograms can
@@ -402,14 +425,12 @@ package Ortho_Gcc is
 
    --  Build an IF statement.
    procedure Start_If_Stmt (Block : in out O_If_Block; Cond : O_Enode);
-   --  COND is NULL for the final else statement.
-   procedure New_Elsif_Stmt (Block : in out O_If_Block; Cond : O_Enode);
    procedure New_Else_Stmt (Block : in out O_If_Block);
    procedure Finish_If_Stmt (Block : in out O_If_Block);
 
    --  Create a infinite loop statement.
    procedure Start_Loop_Stmt (Label : out O_Snode);
-   procedure Finish_Loop_Stmt (Block : in out O_Snode);
+   procedure Finish_Loop_Stmt (Label : in out O_Snode);
 
    --  Exit from a loop stmt or from a for stmt.
    procedure New_Exit_Stmt (L : O_Snode);
@@ -420,6 +441,9 @@ package Ortho_Gcc is
    --  Case statement.
    --  VALUE is the selector and must be a discrete type.
    procedure Start_Case_Stmt (Block : in out O_Case_Block; Value : O_Enode);
+   --  A choice branch is composed of expr, range or default choices.
+   --  A choice branch is enclosed between a Start_Choice and a Finish_Choice.
+   --  The statements are after the finish_choice.
    procedure Start_Choice (Block : in out O_Case_Block);
    procedure New_Expr_Choice (Block : in out O_Case_Block; Expr : O_Cnode);
    procedure New_Range_Choice (Block : in out O_Case_Block;
@@ -428,7 +452,11 @@ package Ortho_Gcc is
    procedure Finish_Choice (Block : in out O_Case_Block);
    procedure Finish_Case_Stmt (Block : in out O_Case_Block);
 
+--  End of common part
 private
+   pragma Convention (C, O_Storage);
+   --   pragma Convention (C, ON_Op_Kind);
+
    subtype Tree is System.Address;
    NULL_TREE : constant Tree := System.Null_Address;
 
@@ -446,8 +474,6 @@ private
    end record;
    pragma Convention (C, O_Snode);
 
-   pragma Export (C, Init, "ortho_fe_init");
-
    O_Cnode_Null : constant O_Cnode := O_Cnode (NULL_TREE);
    O_Enode_Null : constant O_Enode := O_Enode (NULL_TREE);
    O_Lnode_Null : constant O_Lnode := O_Lnode (NULL_TREE);
@@ -455,6 +481,10 @@ private
    O_Fnode_Null : constant O_Fnode := O_Fnode (NULL_TREE);
    O_Snode_Null : constant O_Snode := (NULL_TREE, NULL_TREE);
    O_Dnode_Null : constant O_Dnode := O_Dnode (NULL_TREE);
+
+   pragma Inline (New_Lit);
+   pragma Inline (New_Obj);
+   pragma Inline (New_Obj_Value);
 
    --  Efficiently append element EL to a chain.
    --  FIRST is the first element of the chain (must NULL_TREE if the chain
@@ -641,7 +671,6 @@ private
    pragma Import (C, New_Assign_Stmt);
 
    pragma Import (C, Start_If_Stmt);
-   pragma Import (C, New_Elsif_Stmt);
    pragma Import (C, New_Else_Stmt);
    pragma Import (C, Finish_If_Stmt);
 

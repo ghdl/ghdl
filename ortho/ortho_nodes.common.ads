@@ -18,11 +18,17 @@
 with Interfaces; use Interfaces;
 with Ortho_Ident;
 use Ortho_Ident;
---- PRIVATE CONTEXT CLAUSES
 
 --  Interface to create nodes.
 package ORTHO_NODES is
-   --- PUBLIC DECLARATIONS
+
+   type O_Enode is private;
+   type O_Cnode is private;
+   type O_Lnode is private;
+   type O_Tnode is private;
+   type O_Snode is private;
+   type O_Dnode is private;
+   type O_Fnode is private;
 
    O_Cnode_Null : constant O_Cnode;
    O_Dnode_Null : constant O_Dnode;
@@ -36,19 +42,6 @@ package ORTHO_NODES is
    ------------------------
    --  Type definitions  --
    ------------------------
-
-   type Bitsize_Type is range 0 .. 1024;
-
-   --  Standard types metrics.  0 means unknown.
-   Metric_Char        : Bitsize_Type := 0;
-   Metric_Short       : Bitsize_Type := 0;
-   Metric_Int         : Bitsize_Type := 0;
-   Metric_Long        : Bitsize_Type := 0;
-   Metric_Long_Long   : Bitsize_Type := 0;
-   Metric_Enum        : Bitsize_Type := 0;
-   Metric_Float       : Bitsize_Type := 0;
-   Metric_Double      : Bitsize_Type := 0;
-   Metric_Long_Double : Bitsize_Type := 0;
 
    type O_Element_List is limited private;
 
@@ -171,9 +164,9 @@ package ORTHO_NODES is
    --  unsgined type RTYPE.
    function New_Alignof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode;
 
-   --  Returns the offset of FIELD in its record REC_TYPE.  The result is a
+   --  Returns the offset of FIELD in its record ATYPE.  The result is a
    --  literal of unsigned type or access type RTYPE.
-   function New_Offsetof (Rec_Type : O_Tnode; Field : O_Fnode; Rtype : O_Tnode)
+   function New_Offsetof (Atype : O_Tnode; Field : O_Fnode; Rtype : O_Tnode)
                          return O_Cnode;
 
    --  Get the address of a subprogram.
@@ -211,8 +204,6 @@ package ORTHO_NODES is
       ON_And,                   --  ON_Dyadic_Op_Kind
       ON_Or,                    --  ON_Dyadic_Op_Kind
       ON_Xor,                   --  ON_Dyadic_Op_Kind
-      ON_And_Then,              --  ON_Dyadic_Op_Kind
-      ON_Or_Else,               --  ON_Dyadic_Op_Kind
 
       --  Monadic operations.
       ON_Not,                   --  ON_Monadic_Op_Kind
@@ -228,7 +219,7 @@ package ORTHO_NODES is
       ON_Gt                     --  ON_Compare_Op_Kind
       );
 
-   subtype ON_Dyadic_Op_Kind is ON_Op_Kind range ON_Add_Ov .. ON_Or_Else;
+   subtype ON_Dyadic_Op_Kind is ON_Op_Kind range ON_Add_Ov .. ON_Xor;
    subtype ON_Monadic_Op_Kind is ON_Op_Kind range ON_Not .. ON_Abs_Ov;
    subtype ON_Compare_Op_Kind is ON_Op_Kind range ON_Eq .. ON_Gt;
 

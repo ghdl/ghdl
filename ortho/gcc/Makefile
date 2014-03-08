@@ -3,6 +3,7 @@ orthobe_srcdir=$(ortho_srcdir)/gcc
 agcc_objdir=.
 agcc_srcdir=$(ortho_srcdir)/gcc
 SED=sed
+BE=gcc
 GNATMAKE=gnatmake
 CC=gcc
 CXX=g++
@@ -28,10 +29,9 @@ ZLIB=-lz
 
 all: $(ortho_exec)
 
+ORTHO_BASENAME=ortho_gcc
 include $(orthobe_srcdir)/Makefile.inc
-
-ORTHO_BASENAME=$(orthobe_srcdir)/ortho_gcc
-ORTHO_PACKAGE=Ortho_Gcc
+include $(ortho_srcdir)/Makefile.inc
 
 LIBBACKTRACE = $(AGCC_GCCOBJ_DIR)/libbacktrace/.libs/libbacktrace.a
 LIBDECNUMBER = $(AGCC_GCCOBJ_DIR)/libdecnumber/libdecnumber.a
@@ -47,10 +47,10 @@ LIBS =  $(AGCC_GCCOBJ_DIR)/gcc/libcommon.a \
         $(CPPLIB) $(LIBINTL) $(LIBICONV) $(LIBBACKTRACE) \
 	$(LIBIBERTY) $(LIBDECNUMBER) $(HOST_LIBS)
 
-$(ortho_exec): $(AGCC_DEPS) $(ORTHO_BASENAME).ads force
+$(ortho_exec): $(AGCC_DEPS) $(orthobe_srcdir)/ortho_gcc.ads force
 	$(GNATMAKE) -m -o $@ -g -aI$(ortho_srcdir) \
 	 -aI$(ortho_srcdir)/gcc $(GNAT_FLAGS) ortho_gcc-main \
-	 -bargs -E -largs --GCC=$(LINKER) $(AGCC_OBJS) \
+	 -bargs -E -largs --LINK=$(LINKER) $(AGCC_OBJS) \
         $(BACKEND) $(LIBS) $(BACKENDLIBS)
 
 clean: agcc-clean

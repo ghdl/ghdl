@@ -1,5 +1,5 @@
 --  Ortho debug back-end declarations.
---  Copyright (C) 2005 Tristan Gingold
+--  Copyright (C) 2005-2014 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -16,27 +16,26 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-package Ortho_Debug is
-   type O_Enode is private;
-   type O_Cnode is private;
-   type O_Lnode is private;
-   --  A node for a type.
-   type O_Tnode_Type (<>) is private;
-   type O_Tnode is access O_Tnode_Type;
-   --  A node for a statement.
-   type O_Snode_Type (<>) is private;
-   type O_Snode is access O_Snode_Type;
-   --  A node for a function.
-   type O_Dnode_Type (<>) is private;
-   type O_Dnode is access O_Dnode_Type;
-   --  A node for a record element.
-   type O_Fnode_Type is private;
-   type O_Fnode is access O_Fnode_Type;
+with Interfaces; use Interfaces;
+with Ortho_Ident;
+use Ortho_Ident;
 
+--  Interface to create nodes.
+package Ortho_Debug is
    procedure Init;
    procedure Finish;
-   Top : O_Snode;
+
 private
+   --  A node for a type.
+   type O_Tnode_Type (<>);
+   type O_Tnode is access O_Tnode_Type;
+
+   --  A node for a statement.
+   type O_Snode_Type (<>);
+   type O_Snode is access O_Snode_Type;
+
+   Top : O_Snode;
+
    type Str_Acc is access String;
 
    type Decl_Scope_Type;
@@ -48,7 +47,12 @@ private
       ON_Function_Decl, ON_Function_Body,
       ON_Const_Value,
       ON_Debug_Line_Decl, ON_Debug_Comment_Decl, ON_Debug_Filename_Decl);
+
+   type O_Dnode_Type (<>);
+   type O_Dnode is access O_Dnode_Type;
+
    O_Dnode_Null : constant O_Dnode := null;
+
    type O_Dnode_Type (Kind : On_Decl_Kind) is record
       Next : O_Dnode;
       Name : O_Ident;
@@ -88,7 +92,12 @@ private
       end case;
    end record;
 
+   --  A node for a record element.
+   type O_Fnode_Type;
+   type O_Fnode is access O_Fnode_Type;
+
    O_Fnode_Null : constant O_Fnode := null;
+
    type O_Fnode_Type is record
       --  Record type.
       Parent : O_Tnode;

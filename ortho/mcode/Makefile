@@ -1,10 +1,12 @@
 ortho_srcdir=..
 GNAT_FLAGS=-gnaty3befhkmr -gnata -gnatf -gnatwlcru
 CC=gcc
+BE=mcode
+SED=sed
 
 all: $(ortho_exec)
 
-$(ortho_exec): memsegs_c.o force
+$(ortho_exec): $(ortho_srcdir)/mcode/ortho_mcode.ads memsegs_c.o force
 	gnatmake -m -o $@ -g -aI$(ortho_srcdir)/mcode -aI$(ortho_srcdir) \
 	$(GNAT_FLAGS) ortho_code_main -bargs -E -largs memsegs_c.o #-static
 
@@ -31,3 +33,5 @@ force:
 
 .PHONY: force all clean
 
+ORTHO_BASENAME=ortho_mcode
+include $(ortho_srcdir)/Makefile.inc

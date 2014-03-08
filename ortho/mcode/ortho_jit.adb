@@ -17,14 +17,13 @@
 --  02111-1307, USA.
 
 with GNAT.OS_Lib; use GNAT.OS_Lib;
-with Ada.Unchecked_Conversion;
 with Ada.Text_IO;
 
 with Binary_File; use Binary_File;
 with Binary_File.Memory;
 with Ortho_Mcode; use Ortho_Mcode;
+with Ortho_Mcode.Jit;
 with Ortho_Code.Flags; use Ortho_Code.Flags;
-with Ortho_Code.Binary;
 with Ortho_Code.Debug;
 with Ortho_Code.Abi;
 with Binary_File.Elf;
@@ -41,22 +40,11 @@ package body Ortho_Jit is
 
    --  Set address of non-defined global variables or functions.
    procedure Set_Address (Decl : O_Dnode; Addr : Address)
-   is
-      use Ortho_Code.Binary;
-   begin
-      Binary_File.Memory.Set_Symbol_Address (Get_Decl_Symbol (Decl), Addr);
-   end Set_Address;
+     renames Ortho_Mcode.Jit.Set_Address;
 
    --  Get address of a global.
    function Get_Address (Decl : O_Dnode) return Address
-   is
-      use Ortho_Code.Binary;
-
-      function Conv is new Ada.Unchecked_Conversion
-        (Source => Pc_Type, Target => Address);
-   begin
-      return Conv (Get_Symbol_Vaddr (Get_Decl_Symbol (Decl)));
-   end Get_Address;
+     renames Ortho_Mcode.Jit.Get_Address;
 
    --  Do link.
    procedure Link (Status : out Boolean) is
@@ -130,4 +118,3 @@ package body Ortho_Jit is
    end Disp_Help;
 
 end Ortho_Jit;
-

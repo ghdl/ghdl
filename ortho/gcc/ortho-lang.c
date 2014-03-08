@@ -268,7 +268,6 @@ append_stmt (tree stmt)
 static GTY(()) tree top;
 
 static GTY(()) tree stack_alloc_function_ptr;
-extern "C" void ortho_fe_init (void);
 
 static bool
 global_bindings_p (void)
@@ -366,8 +365,6 @@ ortho_init (void)
     
     REAL_VALUE_FROM_INT (fp_const_zero, 0, 0, DFmode);
   }
-
-  ortho_fe_init ();
 
   build_common_builtin_nodes ();
   // FIXME: this MAY remove the need for creating the builtins above...
@@ -849,8 +846,6 @@ enum ON_op_kind {
   ON_And,
   ON_Or,
   ON_Xor,
-  ON_And_Then,
-  ON_Or_Else,
 
   /*  Monadic operations.  */
   ON_Not,
@@ -882,8 +877,6 @@ static enum tree_code ON_op_to_TREE_CODE[ON_LAST] = {
   BIT_AND_EXPR,
   BIT_IOR_EXPR,
   BIT_XOR_EXPR,
-  TRUTH_ANDIF_EXPR,
-  TRUTH_ORIF_EXPR,
 
   BIT_NOT_EXPR,
   NEGATE_EXPR,
@@ -902,6 +895,9 @@ new_dyadic_op (enum ON_op_kind kind, tree left, tree right)
 {
   tree left_type;
   enum tree_code code;
+  
+  /* Truncate to avoid representations issue.  */
+  kind = (enum ON_op_kind)((unsigned)kind & 0xff);
 
   left_type = TREE_TYPE (left);
   gcc_assert (left_type == TREE_TYPE (right));
@@ -924,6 +920,9 @@ new_dyadic_op (enum ON_op_kind kind, tree left, tree right)
 tree
 new_monadic_op (enum ON_op_kind kind, tree operand)
 {
+  /* Truncate to avoid representations issue.  */
+  kind = (enum ON_op_kind)((unsigned)kind & 0xff);
+
   return build1 (ON_op_to_TREE_CODE[kind], TREE_TYPE (operand), operand);
 }
 
@@ -932,6 +931,10 @@ new_compare_op (enum ON_op_kind kind, tree left, tree right, tree ntype)
 {
   gcc_assert (TREE_CODE (ntype) == BOOLEAN_TYPE);
   gcc_assert (TREE_TYPE (left) == TREE_TYPE (right));
+
+  /* Truncate to avoid representations issue.  */
+  kind = (enum ON_op_kind)((unsigned)kind & 0xff);
+
   return build2 (ON_op_to_TREE_CODE[kind], ntype, left, right);
 }
 
@@ -2021,20 +2024,6 @@ start_if_stmt (struct o_if_block *block, tree cond)
   stmt = build3 (COND_EXPR, void_type_node, cond, stmts, NULL_TREE);
   block->stmt = stmt;
   append_stmt (stmt);
-  push_stmts (stmts);
-}
-
-void
-new_elsif_stmt (struct o_if_block *block, tree cond)
-{
-  tree stmts;
-  tree stmt;
-
-  pop_stmts ();
-  stmts = alloc_stmt_list ();
-  stmt = build3 (COND_EXPR, void_type_node, cond, stmts, NULL_TREE);
-  COND_EXPR_ELSE (block->stmt) = stmt;
-  block->stmt = stmt;
   push_stmts (stmts);
 }
 

@@ -18,34 +18,14 @@
 
 BE=gcc
 ortho_srcdir=../ortho
-GNAT_FLAGS=-aI.. -aI../psl -gnaty3befhkmr -gnata -gnatf -gnatwael
+GNAT_FLAGS=-aI.. -aI../psl -gnaty3befhkmr -gnata -gnatf -gnatwael -gnat05
 #GNAT_FLAGS+=-O -gnatn
 LN=ln -s
 
-compiler: force # ortho_nodes.ads ortho_$(BE)_front.ads 
+compiler: force # ortho_nodes.ads ortho_$(BE)_front.ads
 	$(MAKE) -f $(ortho_srcdir)/$(BE)/Makefile \
 	 ortho_srcdir=$(ortho_srcdir) GNAT_FLAGS="$(GNAT_FLAGS)" \
 	 ortho_exec=ghdl1-$(BE) all
-
-#ortho_nodes.ads: ortho_nodes.tmp
-#	if cmp -s $@ $< ; then \
-#	 rm -f $<; \
-#	else \
-#	 mv $< $@; \
-#	fi
-
-#BE_Case:=$(shell echo $(BE) | sed -e "h" -e "s/.\(.*\)/\1/" -e "x" -e "s/\(.\).*/\1/" -e "y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ/" -e 'G'  -e 's/\n//"
-
-#BE_Case:=$(shell echo $(BE) | sed -e "s/debug/Debug/" -e "s/regen/Regen/")
-
-#ortho_nodes.tmp: force
-#	echo "with Ortho_$(BE_Case);" > $@
-#	echo "" >> $@
-#	echo "package Ortho_Nodes renames Ortho_$(BE_Case);" >> $@
-
-#ortho_$(BE)_front.ads: Makefile
-#	echo "with Ortho_Front;" > $@
-#	echo "package Ortho_$(BE_Case)_Front renames Ortho_Front;" >> $@
 
 all:
 	[ -d lib ] || mkdir lib

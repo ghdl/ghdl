@@ -1,3 +1,6 @@
+--  DO NOT MODIFY - this file was generated from:
+--  ortho_nodes.common.ads and ortho_llvm.private.ads
+--
 --  LLVM back-end for ortho.
 --  Copyright (C) 2014 Tristan Gingold
 --
@@ -24,27 +27,26 @@ with LLVM.Core;
 
 --  Interface to create nodes.
 package Ortho_LLVM is
-   --- PUBLIC DECLARATIONS
-   type O_Enode is private;
-   O_Enode_Null : constant O_Enode;
-   type O_Cnode is private;
-   O_Cnode_Null : constant O_Cnode;
-   type O_Lnode is private;
-   O_Lnode_Null : constant O_Lnode;
-   --  A node for a type.
-   type O_Tnode is private;
-   O_Tnode_Null : constant O_Tnode;
-   --  A node for a statement.
-   type O_Snode is private;
-   O_Snode_Null : constant O_Snode;
-   --  A node for a function.
-   type O_Dnode is private;
-   O_Dnode_Null : constant O_Dnode;
-   --  A node for a record element.
-   type O_Fnode is private;
-   O_Fnode_Null : constant O_Fnode;
-
    procedure Finish_Debug;
+
+--  Start of common part
+
+   type O_Enode is private;
+   type O_Cnode is private;
+   type O_Lnode is private;
+   type O_Tnode is private;
+   type O_Snode is private;
+   type O_Dnode is private;
+   type O_Fnode is private;
+
+   O_Cnode_Null : constant O_Cnode;
+   O_Dnode_Null : constant O_Dnode;
+   O_Enode_Null : constant O_Enode;
+   O_Fnode_Null : constant O_Fnode;
+   O_Lnode_Null : constant O_Lnode;
+   O_Snode_Null : constant O_Snode;
+   O_Tnode_Null : constant O_Tnode;
+
 
    ------------------------
    --  Type definitions  --
@@ -171,8 +173,8 @@ package Ortho_LLVM is
    --  unsgined type RTYPE.
    function New_Alignof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode;
 
-   --  Returns the offset of FIELD in record ATYPE.  The result is a literal
-   --  of unsigned type RTYPE.
+   --  Returns the offset of FIELD in its record ATYPE.  The result is a
+   --  literal of unsigned type or access type RTYPE.
    function New_Offsetof (Atype : O_Tnode; Field : O_Fnode; Rtype : O_Tnode)
                          return O_Cnode;
 
@@ -211,8 +213,6 @@ package Ortho_LLVM is
       ON_And,                   --  ON_Dyadic_Op_Kind
       ON_Or,                    --  ON_Dyadic_Op_Kind
       ON_Xor,                   --  ON_Dyadic_Op_Kind
-      ON_And_Then,              --  ON_Dyadic_Op_Kind
-      ON_Or_Else,               --  ON_Dyadic_Op_Kind
 
       --  Monadic operations.
       ON_Not,                   --  ON_Monadic_Op_Kind
@@ -228,7 +228,7 @@ package Ortho_LLVM is
       ON_Gt                     --  ON_Compare_Op_Kind
       );
 
-   subtype ON_Dyadic_Op_Kind is ON_Op_Kind range ON_Add_Ov .. ON_Or_Else;
+   subtype ON_Dyadic_Op_Kind is ON_Op_Kind range ON_Add_Ov .. ON_Xor;
    subtype ON_Monadic_Op_Kind is ON_Op_Kind range ON_Not .. ON_Abs_Ov;
    subtype ON_Compare_Op_Kind is ON_Op_Kind range ON_Eq .. ON_Gt;
 
@@ -455,6 +455,7 @@ package Ortho_LLVM is
    procedure Finish_Choice (Block : in out O_Case_Block);
    procedure Finish_Case_Stmt (Block : in out O_Case_Block);
 
+--  End of common part
 private
    use LLVM.Core;
 

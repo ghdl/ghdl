@@ -393,7 +393,7 @@ package body Binary_File.Coff is
 
          for I in Symbols.First .. Symbols.Last loop
             declare
-               Str : String := Get_Symbol_Name (I);
+               Str : constant String := Get_Symbol_Name (I);
             begin
                Write_String (Str & NUL);
             end;

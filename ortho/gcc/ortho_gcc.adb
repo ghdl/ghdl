@@ -1,3 +1,20 @@
+--  GCC back-end for ortho.
+--  Copyright (C) 2002-1014 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
 with Ada.Unchecked_Deallocation;
 with Ortho_Gcc_Front; use Ortho_Gcc_Front;
 
@@ -8,21 +25,15 @@ package body Ortho_Gcc is
       return O_Enode (Lit);
    end New_Lit;
 
-   function New_Obj (Decl : O_Dnode) return O_Lnode is
+   function New_Obj (Obj : O_Dnode) return O_Lnode is
    begin
-      return O_Lnode (Decl);
+      return O_Lnode (Obj);
    end New_Obj;
 
    function New_Obj_Value (Obj : O_Dnode) return O_Enode is
    begin
       return O_Enode (Obj);
    end New_Obj_Value;
-
-   procedure Init
-   is
-   begin
-      null;
-   end Init;
 
    procedure New_Debug_Filename_Decl (Filename : String) is
    begin

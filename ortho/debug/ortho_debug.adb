@@ -39,8 +39,6 @@ package body Ortho_Debug is
       ON_And => OE_And,
       ON_Or => OE_Or,
       ON_Xor => OE_Xor,
-      ON_And_Then => OE_And_Then,
-      ON_Or_Else => OE_Or_Else,
 
       --  Monadic operations.
       ON_Not => OE_Not,
@@ -439,7 +437,7 @@ package body Ortho_Debug is
                                        S_Type => Atype);
    end New_Alignof;
 
-   function New_Offsetof (Rec_Type : O_Tnode; Field : O_Fnode; Rtype : O_Tnode)
+   function New_Offsetof (Atype : O_Tnode; Field : O_Fnode; Rtype : O_Tnode)
                          return O_Cnode
    is
       subtype O_Cnode_Offsetof_Type is O_Cnode_Type (OC_Offsetof_Lit);
@@ -449,7 +447,7 @@ package body Ortho_Debug is
       then
          raise Type_Error;
       end if;
-      if Field.Parent /= Rec_Type then
+      if Field.Parent /= Atype then
          raise Type_Error;
       end if;
       return new O_Cnode_Offsetof_Type'(Kind => OC_Offsetof_Lit,
@@ -1269,9 +1267,6 @@ package body Ortho_Debug is
       Add_Decl (Res);
    end New_Const_Decl;
 
-   --  Const is not modified
-   pragma Warnings (Off, "*is not modified");
-
    procedure Start_Const_Value (Const : in out O_Dnode)
    is
       subtype O_Dnode_Const_Value is O_Dnode_Type (ON_Const_Value);
@@ -1320,8 +1315,6 @@ package body Ortho_Debug is
       Check_Type (Val.Ctype, Const.Dtype);
       Const.Const_Value.Value := Val;
    end Finish_Const_Value;
-
-   pragma Warnings (On, "*is not modified");
 
    procedure New_Var_Decl
      (Res : out O_Dnode;

@@ -1177,9 +1177,6 @@ package body Ortho_LLVM is
                      when others =>
                         null;
                   end case;
-
-               when others =>
-                  null;
             end case;
 
          when ON_Float_Type =>

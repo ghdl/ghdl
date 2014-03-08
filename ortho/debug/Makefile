@@ -31,17 +31,16 @@ SED=sed
 all: $(ortho_exec)
 
 
-$(ortho_exec): force $(orthobe_srcdir)/ortho_debug.ads
+$(ortho_exec): force $(ortho_srcdir)/$(BE)/ortho_debug.ads
 	gnatmake -o $@ $(GNATMAKE_FLAGS) ortho_debug-main -bargs -E $(LARGS)
 
 clean:
 	$(RM) -f *.o *.ali *~ b~*.ad? ortho_nodes-main
-	$(RM) $(orthobe_srcdir)/ortho_debug.ads
+	$(RM) ortho_debug.ads
 
 force:
 
-ORTHO_PACKAGE=Ortho_Debug
-ORTHO_BASENAME=$(orthobe_srcdir)/ortho_debug
+ORTHO_BASENAME=ortho_debug
 
 # Automatically build ortho_debug.ads from ortho_node.common.ads and
 # ortho_debug.private.ads
