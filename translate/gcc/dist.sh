@@ -43,7 +43,7 @@ GCCVERSION=4.8.2
 # Machine name used by GCC
 MACHINE=i686-pc-linux-gnu
 # Directory where GCC sources (and objects) stay.
-DISTDIR=$HOME/dist
+DISTDIR=${DISTDIR:-$HOME/dist}
 # GTKWave version.
 GTKWAVE_VERSION=3.3.50
 

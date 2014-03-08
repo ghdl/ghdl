@@ -536,6 +536,7 @@ private
    pragma Convention (C, O_Element_List);
 
    type O_Case_Block is record
+      Case_Type : Tree;
       End_Label : Tree;
       Add_Break : Integer;
    end record;

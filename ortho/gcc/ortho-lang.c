@@ -1,3 +1,21 @@
+/* GCC back-end for ortho
+  Copyright (C) 2002-1014 Tristan Gingold and al.
+
+  GHDL is free software; you can redistribute it and/or modify it under
+  the terms of the GNU General Public License as published by the Free
+  Software Foundation; either version 2, or (at your option) any later
+  version.
+
+  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+  for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with GCC; see the file COPYING.  If not, write to the Free
+  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+  02111-1307, USA.  */
+
 #include <stddef.h>
 #include <math.h>
 #include "config.h"
@@ -35,9 +53,8 @@
 #include "expr.h"
 #include "varasm.h"
 
-/* Returns the number of FIELD_DECLs in TYPE.  
-Copied here from expr.c in gcc4.9 as it is no longer exported 
-by tree.h */
+/* Returns the number of FIELD_DECLs in TYPE.
+   Copied here from expr.c in gcc4.9 as it is no longer exported by tree.h.  */
 
 static int
 fields_length (const_tree type)
@@ -55,20 +72,19 @@ fields_length (const_tree type)
 #else
 
 // adapt gcc4.9 practice to gcc4.8 functions
-bool tree_fits_uhwi_p (const_tree t)
+bool
+tree_fits_uhwi_p (const_tree t)
 {
   return host_integerp (t, 1);
 }
 
-unsigned HOST_WIDE_INT tree_to_uhwi (const_tree t)
+unsigned HOST_WIDE_INT
+tree_to_uhwi (const_tree t)
 {
   return tree_low_cst (t, 1);
 }
 
 #endif
-
-// temp for debugging 
-#include "stdio.h"
 
 /* TODO:
  * remove stmt_list_stack, save in if/case/loop block
@@ -233,9 +249,6 @@ pop_binding (void)
   return res;
 }
 
-/* This is a stack of current statement_lists  */
-//static GTY(()) VEC_tree_gc * stmt_list_stack;
-
 // naive conversion to new vec API following the wiki at
 // http://gcc.gnu.org/wiki/cxx-conversion/cxx-vec
 // see also push_stmts, pop_stmts
@@ -244,16 +257,14 @@ static vec <tree> stmt_list_stack = vec<tree>();
 static void
 push_stmts (tree stmts)
 {
-//  VEC_safe_push (tree, gc, stmt_list_stack, cur_stmts);
   stmt_list_stack.safe_push(cur_stmts);
   cur_stmts = stmts;
 }
- 
+
 static void
 pop_stmts (void)
 {
-//  cur_stmts = VEC_pop (tree, stmt_list_stack);
-cur_stmts = stmt_list_stack.pop();
+  cur_stmts = stmt_list_stack.pop();
 }
 
 static void
@@ -318,15 +329,15 @@ ortho_init (void)
   {
     tree args_type = tree_cons (NULL_TREE, size_type_node, void_list_node);
     tree func_type = build_function_type (ptr_type_node, args_type);
-       
+
     set_builtin_decl
       (BUILT_IN_ALLOCA,
        builtin_function
        ("__builtin_alloca", func_type,
 	BUILT_IN_ALLOCA, BUILT_IN_NORMAL, NULL, NULL_TREE), true);
-    
+
     stack_alloc_function_ptr = build1
-      (ADDR_EXPR, 
+      (ADDR_EXPR,
        build_pointer_type (func_type),
        builtin_decl_implicit (BUILT_IN_ALLOCA));
   }
@@ -356,13 +367,13 @@ ortho_init (void)
   }
   {
     REAL_VALUE_TYPE v;
-    
+
     REAL_VALUE_FROM_INT (v, 1, 0, DFmode);
     real_ldexp (&fp_const_p5, &v, -1);
-    
+
     REAL_VALUE_FROM_INT (v, -1, -1, DFmode);
     real_ldexp (&fp_const_m_p5, &v, -1);
-    
+
     REAL_VALUE_FROM_INT (fp_const_zero, 0, 0, DFmode);
   }
 
@@ -393,7 +404,7 @@ ortho_post_options (const char **pfilename)
   /* Default hook.  */
   lhd_post_options (pfilename);
 
-  // This stops compile failures writing debug information when both -g and -O2 
+  // This stops compile failures writing debug information when both -g and -O2
   // (or -O1, -O3 or -Os) options are present.
   // Should really make it conditional on specific options
   // FIXME : re-evaluate if this is still necessary with newer gccrevisions
@@ -668,7 +679,7 @@ builtin_function (const char *name,
 #endif
 
 /*  This variable keeps a table for types for each precision so that we only
-    allocate each of them once. Signed and unsigned types are kept separate. 
+    allocate each of them once. Signed and unsigned types are kept separate.
  */
 static GTY(()) tree signed_and_unsigned_types[MAX_BITS_PER_WORD + 1][2];
 
@@ -777,7 +788,6 @@ struct GTY(()) language_function
 
 extern "C" {
 
-
 struct GTY(()) chain_constr_type
 {
   tree first;
@@ -863,7 +873,6 @@ enum ON_op_kind {
   ON_LAST
 };
 
-
 static enum tree_code ON_op_to_TREE_CODE[ON_LAST] = {
   ERROR_MARK,
 
@@ -895,7 +904,7 @@ new_dyadic_op (enum ON_op_kind kind, tree left, tree right)
 {
   tree left_type;
   enum tree_code code;
-  
+
   /* Truncate to avoid representations issue.  */
   kind = (enum ON_op_kind)((unsigned)kind & 0xff);
 
@@ -1065,7 +1074,7 @@ new_float_literal (tree ltype, double value)
   HOST_WIDE_INT hi;
 
   frac = frexp (value, &ex);
-  
+
   s = ldexp (frac, 60);
   lo = s;
   hi = (s >> 1) >> (8 * sizeof (HOST_WIDE_INT) - 1);
@@ -1278,7 +1287,7 @@ start_enum_type (struct o_enum_list *list, int size)
 {
   list->res = make_node (ENUMERAL_TYPE);
   // as of gcc4.8, TYPE_PRECISION of 0 is rigorously enforced!
-  TYPE_PRECISION(list->res) = size;	
+  TYPE_PRECISION(list->res) = size;
   chain_init (&list->chain);
   list->num = 0;
   list->size = size;
@@ -1335,13 +1344,11 @@ finish_record_aggr (struct o_record_aggr_list *list, tree *res)
 {
   *res = build_constructor (list->atype, list->elts);
 }
- 
 
 struct GTY(()) o_array_aggr_list
 {
   tree atype;
   /* Vector of elements.  */
-  //VEC(constructor_elt,gc) *elts;
   vec<constructor_elt,va_gc> *elts;
 };
 
@@ -1358,7 +1365,6 @@ start_array_aggr (struct o_array_aggr_list *list, tree atype)
   gcc_assert (nelts != NULL_TREE && tree_fits_uhwi_p (nelts));
 
   n = tree_to_uhwi (nelts) + 1;
-  //list->elts = VEC_alloc (constructor_elt, gc, n);
   vec_alloc(list->elts, n);
 }
 
@@ -1367,7 +1373,7 @@ new_array_aggr_el (struct o_array_aggr_list *list, tree value)
 {
   CONSTRUCTOR_APPEND_ELT (list->elts, NULL_TREE, value);
 }
- 
+
 void
 finish_array_aggr (struct o_array_aggr_list *list, tree *res)
 {
@@ -1514,7 +1520,7 @@ ortho_build_addr (tree lvalue, tree atype)
 
 	  idx = fold_convert (sizetype, idx);
 	  offset = fold_build2 (MULT_EXPR, sizetype, idx,
-				array_ref_element_size (lvalue)); 
+				array_ref_element_size (lvalue));
 
 	  base = array_to_pointer_conversion (base);
 	  base_type = TREE_TYPE (base);
@@ -1722,7 +1728,7 @@ new_var_decl (tree *res, tree ident, enum o_storage storage, tree atype)
 
   var = build_decl (input_location, VAR_DECL, ident, atype);
   if (current_function_decl != NULL_TREE)
-    {    
+    {
       /*  Local variable. */
       TREE_STATIC (var) = 0;
       DECL_EXTERNAL (var) = 0;
@@ -1894,7 +1900,6 @@ finish_subprogram_body (void)
 
   /* Store the end of the function.  */
   cfun->function_end_locus = input_location;
-  
 
   parent = DECL_CONTEXT (func);
 
@@ -1935,7 +1940,6 @@ finish_declare_stmt (void)
 struct GTY(()) o_assoc_list
 {
   tree subprg;
-//  VEC(tree,gc) *vec;
   vec<tree, va_gc> *vecptr;
 };
 
@@ -1949,7 +1953,6 @@ start_association (struct o_assoc_list *assocs, tree subprg)
 void
 new_association (struct o_assoc_list *assocs, tree val)
 {
-//  VEC_safe_push (tree, gc, assocs->vec, val);
   vec_safe_push(assocs->vecptr, val);
 }
 
@@ -2115,12 +2118,10 @@ new_next_stmt (struct o_snode *l)
 
 struct GTY(()) o_case_block
 {
+  tree case_type;
   tree end_label;
   int add_break;
 };
-
-static GTY(()) tree t_condtype = NULL_TREE;
-static vec <tree> t_condtype_stack = vec<tree>();
 
 void
 start_case_stmt (struct o_case_block *block, tree value)
@@ -2128,20 +2129,11 @@ start_case_stmt (struct o_case_block *block, tree value)
   tree stmt;
   tree stmts;
 
-// following https://bitbucket.org/goshawk/gdc/issue/344/compilation-with-latest-trunk-fails
-// gimplify_switch_expr now checks type of index expr is (some discrete type) but at least not void
-// Saved in static variable t_condtype for start_choice to use
-//
-// Static variable is inadequate : nested Case statements won't work, so we either:
-// need to stack t_condtypes, or add a parameter to start_choice, which affects 
-// translation.adb and the interface to ALL backends, mcode etc. I think this is less ugly.
-  t_condtype_stack.safe_push(t_condtype);
-  t_condtype = TREE_TYPE(value);
-
+  block->case_type = TREE_TYPE (value);
   block->end_label = build_label ();
   block->add_break = 0;
   stmts = alloc_stmt_list ();
-  stmt = build3 (SWITCH_EXPR, t_condtype, value, stmts, NULL_TREE);
+  stmt = build3 (SWITCH_EXPR, block->case_type, value, stmts, NULL_TREE);
   append_stmt (stmt);
   push_stmts (stmts);
 }
@@ -2152,9 +2144,7 @@ start_choice (struct o_case_block *block)
   tree stmt;
   if (block->add_break)
     {
-// following https://bitbucket.org/goshawk/gdc/issue/344/compilation-with-latest-trunk-fails
-// gimplify_switch_expr now checks type of index expr is (saved) t_condtype
-      stmt = build1 (GOTO_EXPR, t_condtype, block->end_label);
+      stmt = build1 (GOTO_EXPR, block->case_type, block->end_label);
       append_stmt (stmt);
 
       block->add_break = 0;
@@ -2205,8 +2195,6 @@ finish_case_stmt (struct o_case_block *block)
   pop_stmts ();
   stmt = build1 (LABEL_EXPR, void_type_node, block->end_label);
   append_stmt (stmt);
-// see start_case_stmt : restore t_condtype to handle outer case statement
-  t_condtype = t_condtype_stack.pop();
 }
 
 bool
@@ -2227,7 +2215,7 @@ get_identifier_string (tree id, const char **str, int *len)
   *str = IDENTIFIER_POINTER (id);
 }
 
-// C linkage wrappers for two (now C++) functions so that 
+// C linkage wrappers for two (now C++) functions so that
 // Ada code can call them without name mangling
 tree get_identifier_with_length_c (const char *c, size_t s)
 {
@@ -2240,10 +2228,10 @@ int toplev_main_c (int argc, char **argv)
 }
 
 void
-debug_tree_c ( tree expr)
+debug_tree_c (tree expr)
 {
-  warning(OPT_Wall,"Debug tree");
-  debug_tree(expr);
+  warning (OPT_Wall, "Debug tree");
+  debug_tree (expr);
 }
 
 } // end extern "C"
