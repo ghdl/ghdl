@@ -18,19 +18,34 @@
 
 with Interfaces; use Interfaces;
 with Interfaces.C; use Interfaces.C;
-with Ortho_Ident;
-use Ortho_Ident;
-with LLVM.Core;
+with Ortho_Ident; use Ortho_Ident;
+with LLVM.Core; use LLVM.Core;
+with LLVM.TargetMachine;
+with LLVM.Target;
 
 --  Interface to create nodes.
 package Ortho_LLVM is
+   procedure Init;
    procedure Finish_Debug;
+
+   --  LLVM specific: the module.
+   Module : ModuleRef;
+
+   --  Descriptor for the layout.
+   Target_Data : LLVM.Target.TargetDataRef;
+
+   Target_Machine : LLVM.TargetMachine.TargetMachineRef;
+
+   --  Optimization level
+   Optimization : LLVM.TargetMachine.CodeGenOptLevel :=
+     LLVM.TargetMachine.CodeGenLevelDefault;
+
+   --  Set by -g to generate debug info.
+   Flag_Debug : Boolean := False;
 
 private
    --  No support for nested subprograms in LLVM.
    Has_Nested_Subprograms : constant Boolean := False;
-
-   use LLVM.Core;
 
    type O_Tnode_Type (<>);
    type O_Tnode is access O_Tnode_Type;
@@ -287,12 +302,4 @@ private
    end record;
 
    function Get_LLVM_Type (Atype : O_Tnode) return TypeRef;
-
-   --  Builder for statements.
-   Builder : BuilderRef;
-
-   --  Builder for declarations (local variables).
-   Decl_Builder : BuilderRef;
-
-   Llvm_Dbg_Declare : ValueRef;
 end Ortho_LLVM;

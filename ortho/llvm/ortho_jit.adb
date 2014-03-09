@@ -19,7 +19,7 @@
 --  with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ada.Text_IO; use Ada.Text_IO;
 
-with Ortho_LLVM.Main; use Ortho_LLVM.Main;
+with Ortho_LLVM; use Ortho_LLVM;
 with Ortho_LLVM.Jit;
 
 with LLVM.Core; use LLVM.Core;
@@ -59,15 +59,14 @@ package body Ortho_Jit is
       if CreateExecutionEngineForModule
         (Ortho_LLVM.Jit.Engine'Access, Module, Msg'Access) /= 0
       then
-         Put_Line (Standard_Error,
-                   "cannot create execute: " & To_String (Msg));
+         Put_Line (Standard_Error, "cannot create execution engine");
          raise Program_Error;
       end if;
 
       Target_Data := GetExecutionEngineTargetData (Ortho_LLVM.Jit.Engine);
       SetDataLayout (Module, CopyStringRepOfTargetData (Target_Data));
 
-      Ortho_LLVM.Main.Init;
+      Ortho_LLVM.Init;
    end Init;
 
    procedure Set_Address (Decl : O_Dnode; Addr : Address)

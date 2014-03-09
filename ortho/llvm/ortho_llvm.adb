@@ -16,29 +16,56 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ortho_LLVM.Main; use Ortho_LLVM.Main;
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with LLVM.Target; use LLVM.Target;
+with GNAT.Directory_Operations;
 
 package body Ortho_LLVM is
-
-   --  Target_Data : TargetDataRef;
+   --  The current function for LLVM (needed to add new basic blocks).
    Cur_Func : ValueRef;
+
+   --  The current function node (needed for return type).
    Cur_Func_Decl : O_Dnode;
+
+   --  Wether the code is currently unreachable.  LLVM doesn't accept basic
+   --  blocks that cannot be reached (using trivial rules).  So we need to
+   --  discard instructions after a return, a next or an exit statement.
    Unreach : Boolean;
 
+   --  Builder for statements.
+   Builder : BuilderRef;
+
+   --  Builder for declarations (local variables).
+   Decl_Builder : BuilderRef;
+
+   --  Declaration of llvm.dbg.declare
+   Llvm_Dbg_Declare : ValueRef;
+
+   Debug_ID : unsigned;
+
+   Current_Directory : constant String :=
+     GNAT.Directory_Operations.Get_Current_Dir;
+
+   --  Additional data for declare blocks.
    type Declare_Block_Type;
    type Declare_Block_Acc is access Declare_Block_Type;
 
    type Declare_Block_Type is record
+      --  First basic block of the declare.
       Stmt_Bb : BasicBlockRef;
 
+      --  Debug data for the scope of the declare block.
       Dbg_Scope : ValueRef;
+
+      --  Previous element in the stack.
       Prev : Declare_Block_Acc;
    end record;
 
+   --  Current declare block.
    Cur_Declare_Block : Declare_Block_Acc;
+
+   --  Chain of unused blocks to be recycled.
    Old_Declare_Block : Declare_Block_Acc;
 
    --  For debugging
@@ -257,18 +284,23 @@ package body Ortho_LLVM is
    is
       Res : Declare_Block_Acc;
    begin
+      --  Try to recycle an unused record.
       if Old_Declare_Block /= null then
          Res := Old_Declare_Block;
          Old_Declare_Block := Res.Prev;
       else
+         --  Create a new one if no unused records.
          Res := new Declare_Block_Type;
       end if;
 
+      --  Chain.
       Res.Prev := Cur_Declare_Block;
       Cur_Declare_Block := Res;
 
       if not Unreach then
          Res.Stmt_Bb := AppendBasicBlock (Cur_Func, Empty_Cstring);
+      else
+         Res.Stmt_Bb := Null_BasicBlockRef;
       end if;
    end Create_Declare_Block;
 
@@ -276,7 +308,10 @@ package body Ortho_LLVM is
    is
       Blk : constant Declare_Block_Acc := Cur_Declare_Block;
    begin
+      --  Unchain.
       Cur_Declare_Block := Blk.Prev;
+
+      --  Put on the recyle list.
       Blk.Prev := Old_Declare_Block;
       Old_Declare_Block := Blk;
    end Destroy_Declare_Block;
@@ -700,7 +735,6 @@ package body Ortho_LLVM is
       --  FIXME: make it local to List ?
       Append (Enum_Nodes, MDNode (Vals, Vals'Length));
    end Dbg_Add_Enumeration;
-
 
    ----------------------
    -- New_Boolean_Type --
@@ -1232,7 +1266,6 @@ package body Ortho_LLVM is
                when ON_Neg_Ov =>
                   Res := BuildNeg (Builder, Operand.LLVM, Empty_Cstring);
                when ON_Abs_Ov =>
-                  --  FIXME: float ?
                   Res := BuildSelect
                     (Builder,
                      BuildICmp (Builder, IntSLT,
@@ -2762,4 +2795,58 @@ package body Ortho_LLVM is
            (Module, Module_Flags'Address, MDNode (Flags2, Flags2'Length));
       end;
    end Finish_Debug;
+
+   Dbg_Str : constant String := "dbg";
+
+   Stacksave_Fun : ValueRef;
+   pragma Unreferenced (Stacksave_Fun);
+   Stacksave_Name : constant String := "llvm.stacksave" & ASCII.NUL;
+   Stackrestore_Fun : ValueRef;
+   pragma Unreferenced (Stackrestore_Fun);
+   Stackrestore_Name : constant String := "llvm.stackrestore" & ASCII.NUL;
+
+   procedure Init is
+      --  Some predefined types and functions.
+      Char_Type : O_Tnode;
+      Char_Ptr_Type : O_Tnode;
+   begin
+      Builder := CreateBuilder;
+      Decl_Builder := CreateBuilder;
+
+      Char_Type := New_Unsigned_Type (8);
+      New_Type_Decl (Get_Identifier ("__llvm_char"), Char_Type);
+
+      if False then
+         Char_Ptr_Type := New_Access_Type (Char_Type);
+         New_Type_Decl (Get_Identifier ("__llvm_char_ptr"), Char_Ptr_Type);
+
+         Stacksave_Fun := AddFunction
+           (Module, Stacksave_Name'Address,
+            FunctionType (Get_LLVM_Type (Char_Ptr_Type),
+                          TypeRefArray'(1 .. 0 => Null_TypeRef), 0, 0));
+
+         Stackrestore_Fun := AddFunction
+           (Module, Stackrestore_Name'Address,
+            FunctionType
+              (VoidType,
+               TypeRefArray'(1 => Get_LLVM_Type (Char_Ptr_Type)), 1, 0));
+      end if;
+
+      if Flag_Debug then
+         Debug_ID := GetMDKindID (Dbg_Str, Dbg_Str'Length);
+
+         declare
+            Atypes : TypeRefArray (1 .. 2);
+            Ftype : TypeRef;
+            Name : String := "llvm.dbg.declare" & ASCII.NUL;
+         begin
+            Atypes := (MetadataType, MetadataType);
+            Ftype := FunctionType (VoidType, Atypes, Atypes'Length, 0);
+            Llvm_Dbg_Declare := AddFunction (Module, Name'Address, Ftype);
+            AddFunctionAttr (Llvm_Dbg_Declare,
+                             NoUnwindAttribute + ReadNoneAttribute);
+         end;
+      end if;
+   end Init;
+
 end Ortho_LLVM;

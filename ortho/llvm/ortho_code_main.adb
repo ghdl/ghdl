@@ -18,8 +18,9 @@
 
 with Ada.Command_Line; use Ada.Command_Line;
 with Ada.Unchecked_Deallocation;
+with Ada.Unchecked_Conversion;
 with Ada.Text_IO; use Ada.Text_IO;
-with Ortho_LLVM.Main; use Ortho_LLVM.Main;
+
 with Ortho_Front; use Ortho_Front;
 with LLVM.BitWriter;
 with LLVM.Core; use LLVM.Core;
@@ -28,11 +29,11 @@ with LLVM.Target; use LLVM.Target;
 with LLVM.TargetMachine; use LLVM.TargetMachine;
 with LLVM.Analysis;
 with LLVM.Transforms.Scalar;
+with Ortho_LLVM; use Ortho_LLVM;
 with Interfaces;
 with Interfaces.C; use Interfaces.C;
 
-procedure Ortho_Code_Main
-is
+procedure Ortho_Code_Main is
    --  Name of the output filename (given by option '-o').
    Output : String_Acc := null;
 
@@ -83,6 +84,19 @@ is
          null;
       end if;
    end Dump_Llvm;
+
+   function To_String (C : Cstring) return String is
+      function Strlen (C : Cstring) return Natural;
+      pragma Import (C, Strlen);
+
+      subtype Fat_String is String (Positive);
+      type Fat_String_Acc is access Fat_String;
+
+      function To_Fat_String_Acc is new
+        Ada.Unchecked_Conversion (Cstring, Fat_String_Acc);
+   begin
+      return To_Fat_String_Acc (C)(1 .. Strlen (C));
+   end To_String;
 
    Codegen : CodeGenFileType := ObjectFile;
 
@@ -235,7 +249,7 @@ begin
       -- Target_Data := CreateTargetData (Triple);
    end if;
 
-   Ortho_LLVM.Main.Init;
+   Ortho_LLVM.Init;
 
    Set_Exit_Status (Failure);
 
