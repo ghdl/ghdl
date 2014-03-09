@@ -39,6 +39,9 @@ package body Ortho_LLVM is
    --  Builder for declarations (local variables).
    Decl_Builder : BuilderRef;
 
+   --  Temporary builder.
+   Extra_Builder : BuilderRef;
+
    --  Declaration of llvm.dbg.declare
    Llvm_Dbg_Declare : ValueRef;
 
@@ -55,6 +58,12 @@ package body Ortho_LLVM is
       --  First basic block of the declare.
       Stmt_Bb : BasicBlockRef;
 
+      --  Stack pointer at entry of the block.  This value has to be restore
+      --  when leaving the block (either normally or via exit/next).  Set only
+      --  if New_Alloca was used.
+      --  FIXME: TODO: restore stack pointer on exit/next stmts.
+      Stack_Value : ValueRef;
+
       --  Debug data for the scope of the declare block.
       Dbg_Scope : ValueRef;
 
@@ -67,6 +76,11 @@ package body Ortho_LLVM is
 
    --  Chain of unused blocks to be recycled.
    Old_Declare_Block : Declare_Block_Acc;
+
+   Stacksave_Fun : ValueRef;
+   Stacksave_Name : constant String := "llvm.stacksave" & ASCII.NUL;
+   Stackrestore_Fun : ValueRef;
+   Stackrestore_Name : constant String := "llvm.stackrestore" & ASCII.NUL;
 
    --  For debugging
 
@@ -294,13 +308,14 @@ package body Ortho_LLVM is
       end if;
 
       --  Chain.
-      Res.Prev := Cur_Declare_Block;
+      Res.all := (Stmt_Bb => Null_BasicBlockRef,
+                  Stack_Value => Null_ValueRef,
+                  Dbg_Scope => Null_ValueRef,
+                  Prev => Cur_Declare_Block);
       Cur_Declare_Block := Res;
 
       if not Unreach then
          Res.Stmt_Bb := AppendBasicBlock (Cur_Func, Empty_Cstring);
-      else
-         Res.Stmt_Bb := Null_BasicBlockRef;
       end if;
    end Create_Declare_Block;
 
@@ -1630,10 +1645,29 @@ package body Ortho_LLVM is
    is
       Res : ValueRef;
    begin
-      Res := BuildArrayAlloca (Builder, Int8Type, Size.LLVM, Empty_Cstring);
-      Set_Insn_Dbg (Res);
-      Res := BuildBitCast (Builder, Res, Get_LLVM_Type (Rtype), Empty_Cstring);
-      Set_Insn_Dbg (Res);
+      if Unreach then
+         Res := Null_ValueRef;
+      else
+         if Cur_Declare_Block.Stack_Value = Null_ValueRef
+           and then Cur_Declare_Block.Prev /= null
+         then
+            --  Save stack pointer at entry of block
+            PositionBuilderBefore
+              (Extra_Builder, GetFirstInstruction (Cur_Declare_Block.Stmt_Bb));
+            Cur_Declare_Block.Stack_Value :=
+              BuildCall (Extra_Builder, Stacksave_Fun,
+                         (1 .. 0 => Null_ValueRef), 0, Empty_Cstring);
+         end if;
+
+         Res := BuildArrayAlloca
+           (Builder, Int8Type, Size.LLVM, Empty_Cstring);
+         Set_Insn_Dbg (Res);
+
+         Res := BuildBitCast
+           (Builder, Res, Get_LLVM_Type (Rtype), Empty_Cstring);
+         Set_Insn_Dbg (Res);
+      end if;
+
       return O_Enode'(LLVM => Res, Etype => Rtype);
    end New_Alloca;
 
@@ -2280,11 +2314,19 @@ package body Ortho_LLVM is
    is
       Bb : BasicBlockRef;
       Br : ValueRef;
-      pragma Unreferenced (Br);
+      Tmp : ValueRef;
+      pragma Unreferenced (Br, Tmp);
    begin
       if not Unreach then
          --  Create a basic block for the statements after the declare.
          Bb := AppendBasicBlock (Cur_Func, Empty_Cstring);
+
+         if Cur_Declare_Block.Stack_Value /= Null_ValueRef then
+            --  Restore stack pointer.
+            Tmp := BuildCall (Builder, Stackrestore_Fun,
+                              (1 .. 1 => Cur_Declare_Block.Stack_Value), 1,
+                              Empty_Cstring);
+         end if;
 
          --  Execution will continue on the next statement
          Br := BuildBr (Builder, Bb);
@@ -2798,39 +2840,26 @@ package body Ortho_LLVM is
 
    Dbg_Str : constant String := "dbg";
 
-   Stacksave_Fun : ValueRef;
-   pragma Unreferenced (Stacksave_Fun);
-   Stacksave_Name : constant String := "llvm.stacksave" & ASCII.NUL;
-   Stackrestore_Fun : ValueRef;
-   pragma Unreferenced (Stackrestore_Fun);
-   Stackrestore_Name : constant String := "llvm.stackrestore" & ASCII.NUL;
-
    procedure Init is
       --  Some predefined types and functions.
-      Char_Type : O_Tnode;
-      Char_Ptr_Type : O_Tnode;
+      I8_Ptr_Type : TypeRef;
    begin
       Builder := CreateBuilder;
       Decl_Builder := CreateBuilder;
+      Extra_Builder := CreateBuilder;
 
-      Char_Type := New_Unsigned_Type (8);
-      New_Type_Decl (Get_Identifier ("__llvm_char"), Char_Type);
+      --  Create type i8 *.
+      I8_Ptr_Type := PointerType (Int8Type);
 
-      if False then
-         Char_Ptr_Type := New_Access_Type (Char_Type);
-         New_Type_Decl (Get_Identifier ("__llvm_char_ptr"), Char_Ptr_Type);
+      --  Create intrinsic 'i8 *stacksave (void)'.
+      Stacksave_Fun := AddFunction
+        (Module, Stacksave_Name'Address,
+         FunctionType (I8_Ptr_Type, (1 .. 0 => Null_TypeRef), 0, 0));
 
-         Stacksave_Fun := AddFunction
-           (Module, Stacksave_Name'Address,
-            FunctionType (Get_LLVM_Type (Char_Ptr_Type),
-                          TypeRefArray'(1 .. 0 => Null_TypeRef), 0, 0));
-
-         Stackrestore_Fun := AddFunction
-           (Module, Stackrestore_Name'Address,
-            FunctionType
-              (VoidType,
-               TypeRefArray'(1 => Get_LLVM_Type (Char_Ptr_Type)), 1, 0));
-      end if;
+      --  Create intrinsic 'void stackrestore (i8 *)'.
+      Stackrestore_Fun := AddFunction
+        (Module, Stackrestore_Name'Address,
+         FunctionType (VoidType, (1 => I8_Ptr_Type), 1, 0));
 
       if Flag_Debug then
          Debug_ID := GetMDKindID (Dbg_Str, Dbg_Str'Length);
