@@ -44,6 +44,8 @@ package Ortho_Gcc is
    O_Snode_Null : constant O_Snode;
    O_Tnode_Null : constant O_Tnode;
 
+   --  True if the code generated supports nested subprograms.
+   Has_Nested_Subprograms : constant Boolean;
 
    ------------------------
    --  Type definitions  --
@@ -454,6 +456,9 @@ package Ortho_Gcc is
 
 --  End of common part
 private
+   --  GCC supports nested subprograms.
+   Has_Nested_Subprograms : constant Boolean := True;
+
    pragma Convention (C, O_Storage);
    --   pragma Convention (C, ON_Op_Kind);
 

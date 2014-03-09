@@ -26,6 +26,9 @@ package Ortho_Debug is
    procedure Finish;
 
 private
+   --  This back-end supports nested subprograms.
+   Has_Nested_Subprograms : constant Boolean := True;
+
    --  A node for a type.
    type O_Tnode_Type (<>);
    type O_Tnode is access O_Tnode_Type;

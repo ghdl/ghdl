@@ -27,6 +27,9 @@ package Ortho_LLVM is
    procedure Finish_Debug;
 
 private
+   --  No support for nested subprograms in LLVM.
+   Has_Nested_Subprograms : constant Boolean := False;
+
    use LLVM.Core;
 
    type O_Tnode_Type (<>);

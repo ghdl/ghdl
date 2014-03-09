@@ -1,5 +1,5 @@
 ortho_srcdir=..
-GNAT_FLAGS=-gnaty3befhkmr -gnata -gnatf -gnatwlcru
+GNAT_FLAGS=-gnaty3befhkmr -gnata -gnatf -gnatwlcru -gnat05
 CC=gcc
 BE=mcode
 SED=sed

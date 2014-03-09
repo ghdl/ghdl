@@ -28201,12 +28201,18 @@ package body Translation is
       Interfaces : O_Inter_List;
       Param : O_Dnode;
    begin
+      --  Create the node extension for translate.
       Node_Infos.Init;
       Node_Infos.Set_Last (4);
       Node_Infos.Table (0 .. 4) := (others => null);
+
+      --  Force to unnest subprograms is the code generator doesn't support
+      --  nested subprograms.
+      if not Ortho_Nodes.Has_Nested_Subprograms then
+         Flag_Unnest_Subprograms := True;
+      end if;
+
       New_Debug_Comment_Decl ("internal declarations, part 1");
-      --  Give a name to sizetype.
-      --Finish_Type_Decl (Sizetype, Get_Identifier ("__ghdl_size_t"));
 
       -- Create well known identifiers.
       Wki_This := Get_Identifier ("this");

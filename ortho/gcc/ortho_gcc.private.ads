@@ -24,6 +24,9 @@ use Ortho_Ident;
 package Ortho_Gcc is
 
 private
+   --  GCC supports nested subprograms.
+   Has_Nested_Subprograms : constant Boolean := True;
+
    pragma Convention (C, O_Storage);
    --   pragma Convention (C, ON_Op_Kind);
 

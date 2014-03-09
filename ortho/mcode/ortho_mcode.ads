@@ -51,6 +51,8 @@ package Ortho_Mcode is
    O_Snode_Null : constant O_Snode;
    O_Tnode_Null : constant O_Tnode;
 
+   --  True if the code generated supports nested subprograms.
+   Has_Nested_Subprograms : constant Boolean;
 
    ------------------------
    --  Type definitions  --
@@ -461,7 +463,9 @@ package Ortho_Mcode is
 
 --  End of common part
 private
-   --- PUBLIC DECLARATIONS
+   --  MCode supports nested subprograms.
+   Has_Nested_Subprograms : constant Boolean := True;
+
    type O_Tnode is new Ortho_Code.O_Tnode;
    type O_Cnode is new Ortho_Code.O_Cnode;
    type O_Dnode is new Ortho_Code.O_Dnode;

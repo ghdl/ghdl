@@ -38,6 +38,8 @@ package ORTHO_NODES is
    O_Snode_Null : constant O_Snode;
    O_Tnode_Null : constant O_Tnode;
 
+   --  True if the code generated supports nested subprograms.
+   Has_Nested_Subprograms : constant Boolean;
 
    ------------------------
    --  Type definitions  --

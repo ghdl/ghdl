@@ -1,6 +1,6 @@
 ortho_srcdir=..
-GNAT_FLAGS=-gnaty3befhkmr -gnata -gnatf -gnatwael
-CC=clang
+GNAT_FLAGS=-gnaty3befhkmr -gnata -gnatf -gnatwael -gnat05
+CXX=clang++ --std=c++11
 LLVM_CONFIG=llvm-config
 SED=sed
 BE=llvm
@@ -13,7 +13,7 @@ $(ortho_exec): $(ortho_srcdir)/llvm/ortho_llvm.ads force llvm-cbindings.o
 	-largs llvm-cbindings.o `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++ #-static
 
 llvm-cbindings.o: $(ortho_srcdir)/llvm/llvm-cbindings.cpp
-	$(CC) -c  -I`$(LLVM_CONFIG) --includedir --cflags` -g -o $@ $<
+	$(CXX) -c  -I`$(LLVM_CONFIG) --includedir --cflags` -g -o $@ $<
 
 clean:
 	$(RM) -f *.o *.ali ortho_code_main

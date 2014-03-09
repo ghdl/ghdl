@@ -31,7 +31,9 @@ package Ortho_Mcode is
    procedure Free_All;
 
 private
-   --- PUBLIC DECLARATIONS
+   --  MCode supports nested subprograms.
+   Has_Nested_Subprograms : constant Boolean := True;
+
    type O_Tnode is new Ortho_Code.O_Tnode;
    type O_Cnode is new Ortho_Code.O_Cnode;
    type O_Dnode is new Ortho_Code.O_Dnode;

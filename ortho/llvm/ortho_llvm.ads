@@ -47,6 +47,8 @@ package Ortho_LLVM is
    O_Snode_Null : constant O_Snode;
    O_Tnode_Null : constant O_Tnode;
 
+   --  True if the code generated supports nested subprograms.
+   Has_Nested_Subprograms : constant Boolean;
 
    ------------------------
    --  Type definitions  --
@@ -457,6 +459,9 @@ package Ortho_LLVM is
 
 --  End of common part
 private
+   --  No support for nested subprograms in LLVM.
+   Has_Nested_Subprograms : constant Boolean := False;
+
    use LLVM.Core;
 
    type O_Tnode_Type (<>);

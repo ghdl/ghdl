@@ -77,6 +77,8 @@ package Translation is
    Flag_Discard_Identifiers : Boolean := False;
 
    --  If true, do not create nested subprograms.
+   --  This flag is forced during initialization if the code generated doesn't
+   --  support nested subprograms.
    Flag_Unnest_Subprograms : Boolean := False;
 
    type Foreign_Kind_Type is (Foreign_Unknown,
