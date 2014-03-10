@@ -66,20 +66,20 @@ ortho_code-x86-flags.ads:
 
 ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
-	$(GNATMAKE) -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+	$(GNATMAKE) -o $@ -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+
+memsegs_c.o: ../../ortho/mcode/memsegs_c.c
+	$(CC) -c -g -o $@ $<
 
 ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_llvm_jit: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
-	$(GNATMAKE) -o $@ -aI../../ortho/llvm -aI../../ortho $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
+	$(GNATMAKE) -o $@ -aI../../ortho/llvm -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
 
 llvm-cbindings.o: ../../ortho/llvm/llvm-cbindings.cpp
 	$(CXX) -c -m64 `$(LLVM_CONFIG) --includedir --cxxflags` -g -o $@ $<
 
 ghdl_simul: default_pathes.ads $(GRT_ADD_OBJS) force
 	$(GNATMAKE) -aI../../simulate $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
-
-memsegs_c.o: ../../ortho/mcode/memsegs_c.c
-	$(CC) -c -g -o $@ $<
 
 ghdl_gcc: default_pathes.ads force
 	$(GNATMAKE) $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
@@ -162,8 +162,8 @@ install.llvm:
 	$(MAKE) GHDL=ghdl_llvm GHDL1=../ghdl1-llvm install.all
 
 clean: force
-	$(RM) -f *.o *.ali ghdl_gcc ghdl_mcode
-	$(RM) -f b~*.ad? *~ default_pathes.ads
+	$(RM) -f *.o *.ali ghdl_gcc ghdl_mcode ghdl_llvm ghdl_llvm_jit
+	$(RM) -f b~*.ad? *~ default_pathes.ads ghdl_simul
 	$(RM) -rf ../lib
 
 force:

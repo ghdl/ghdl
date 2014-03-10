@@ -143,4 +143,9 @@ package body Ortho_Jit is
       null;
    end Disp_Help;
 
+   function Get_Jit_Name return String is
+   begin
+      return "LLVM";
+   end Get_Jit_Name;
+
 end Ortho_Jit;

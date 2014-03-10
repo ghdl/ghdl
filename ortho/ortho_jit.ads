@@ -36,5 +36,8 @@ package Ortho_Jit is
 
    function Decode_Option (Option : String) return Boolean;
    procedure Disp_Help;
+
+   --  Return the name of the code generator, to be displayed by --version.
+   function Get_Jit_Name return String;
 end Ortho_Jit;
 

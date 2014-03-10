@@ -117,4 +117,9 @@ package body Ortho_Jit is
       Put_Line (" --snap=FILE    Write memory snapshot to FILE");
    end Disp_Help;
 
+   function Get_Jit_Name return String is
+   begin
+      return "mcode";
+   end Get_Jit_Name;
+
 end Ortho_Jit;
