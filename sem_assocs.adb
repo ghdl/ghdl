@@ -697,6 +697,7 @@ package body Sem_Assocs is
       case Get_Kind (Atype) is
          when Iir_Kind_Array_Subtype_Definition =>
             Finish_Individual_Assoc_Array_Subtype (Assoc, Atype, 1);
+            Set_Actual_Type (Assoc, Atype);
          when Iir_Kind_Array_Type_Definition =>
             Atype := Create_Array_Subtype (Atype, Get_Location (Assoc));
             Set_Index_Constraint_Flag (Atype, True);

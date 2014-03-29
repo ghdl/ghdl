@@ -802,6 +802,7 @@ package body Canon is
          -- No association, use default expr.
          Assoc_El := Create_Iir (Iir_Kind_Association_Element_Open);
          Set_Artificial_Flag (Assoc_El, True);
+         Set_Whole_Association_Flag (Assoc_El, True);
          Location_Copy (Assoc_El, Loc);
          Set_Formal (Assoc_El, Inter);
          Sub_Chain_Append (N_Chain, Last, Assoc_El);

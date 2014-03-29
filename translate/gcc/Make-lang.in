@@ -166,11 +166,6 @@ vhdl.distclean:
 vhdl.extraclean:
 
 vhdl.maintainer-clean:
-	$(RM) $(agcc_srcdir)/agcc-trees.ads $(agcc_srcdir)/agcc-hwint.ads
-	$(RM) $(agcc_srcdir)/agcc-hwint.ads $(agcc_srcdir)/agcc-gconfig.ads
-	$(RM) $(agcc_srcdir)/agcc-real.ads $(agcc_srcdir)/agcc-machmode.ads
-	$(RM) $(agcc_srcdir)/agcc-tm.ads
-	$(RM) $(agcc_exedir)/gen_tree.o $(agcc_exedir)/gen_tree
 
 
 # Stage hooks:

@@ -166,6 +166,9 @@ clean: force
 	$(RM) -f b~*.ad? *~ default_pathes.ads ghdl_simul
 	$(RM) -rf ../lib
 
+clean-c: force
+	$(RM) -f memsegs_c.o chkstk.o linux.o times.o grt-cbinding.o grt-cvpi.o
+
 force:
 
 .PHONY: force clean

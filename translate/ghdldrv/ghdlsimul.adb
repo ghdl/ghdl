@@ -68,6 +68,7 @@ package body Ghdlsimul is
 
       Canon.Canon_Flag_Add_Labels := True;
       Canon.Canon_Flag_Sequentials_Stmts := True;
+      Canon.Canon_Flag_Expressions := True;
    end Compile_Init;
 
    procedure Compile_Elab
