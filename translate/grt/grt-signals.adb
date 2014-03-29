@@ -675,6 +675,34 @@ package body Grt.Signals is
                   Next := Next.Next;
                end if;
             end loop;
+
+            --  A previous assignment (with a 0 after time) may have put this
+            --  signal on the active chain.  But maybe this previous
+            --  transaction has been removed (due to rejection) and therefore
+            --  this signal won't be active at the next delta.  So remove it
+            --  from the active chain.  This is a little bit costly (because
+            --  the chain is simply linked), but that issue doesn't appear
+            --  frequently.
+            if Sign.Link /= null
+              and then Driver.First_Trans.Next.Time /= Current_Time
+            then
+               if Ghdl_Signal_Active_Chain = Sign then
+                  --  At the head of the chain.
+                  --  FIXME: this is not atomic.
+                  Ghdl_Signal_Active_Chain := Sign.Link;
+               else
+                  --  In the middle of the chain.
+                  declare
+                     Prev : Ghdl_Signal_Ptr := Ghdl_Signal_Active_Chain;
+                  begin
+                     while Prev.Link /= Sign loop
+                        Prev := Prev.Link;
+                     end loop;
+                     Prev.Link := Sign.Link;
+                  end;
+               end if;
+               Sign.Link := null;
+            end if;
          end;
       elsif Reject /= 0 then
          --  LRM93 8.4
