@@ -909,8 +909,11 @@ package body Sem_Scopes is
       end loop;
    end Iterator_Decl_Chain;
 
-   procedure Add_Declarations is new Iterator_Decl_Chain
+   procedure Add_Declarations_1 is new Iterator_Decl_Chain
      (Arg_Type => Boolean, Handle_Decl => Add_Declaration);
+
+   procedure Add_Declarations (Chain : Iir; Potentially : Boolean := False)
+     renames Add_Declarations_1;
 
    procedure Add_Declarations_List is new Iterator_Decl_List
      (Arg_Type => Boolean, Handle_Decl => Add_Declaration);

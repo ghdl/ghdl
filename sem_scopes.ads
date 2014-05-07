@@ -160,9 +160,15 @@ package Sem_Scopes is
    procedure Add_Protected_Type_Declarations
      (Decl : Iir_Protected_Type_Declaration);
 
-   --  Add declaration of interface chain CHAIN into the current
+   --  Add declarations of interface chain CHAIN into the current
    --  declarative region.
    procedure Add_Declarations_From_Interface_Chain (Chain : Iir);
+
+   --  Add all declarations for concurrent statements declared in PARENT.
+   procedure Add_Declarations_Of_Concurrent_Statement (Parent : Iir);
+
+   --  Add declarations of a declaration chain CHAIN.
+   procedure Add_Declarations (Chain : Iir; Potentially : Boolean := False);
 
    --  Scope extension area contains declarations from another declarative
    --  region.  These area are abstract and only used to be able to add
