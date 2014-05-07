@@ -135,10 +135,6 @@ package body Grt.Main is
       Grt.Signals.Init;
 
       if Flag_Stats then
-         if Boolean'(False) then
-            --  Replaced by Setjump/Longjump.
-            Grt.Errors.Ghdl_Exit_Cb1 := Disp_Stats_Hook'Access;
-         end if;
          Stats.Start_Elaboration;
       end if;
 

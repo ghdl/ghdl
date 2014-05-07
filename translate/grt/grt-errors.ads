@@ -23,6 +23,7 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with Grt.Types; use Grt.Types;
+with Grt.Hooks;
 
 package Grt.Errors is
    pragma Preelaborate (Grt.Errors);
@@ -61,18 +62,13 @@ package Grt.Errors is
    --  Display an error message for an overflow.
    procedure Grt_Overflow_Error;
 
-   type Exit_Cb_Type is access procedure (Code : Integer);
-   pragma Convention (C, Exit_Cb_Type);
-
-   Ghdl_Exit_Cb : Exit_Cb_Type := null;
-   Ghdl_Exit_Cb1 : Exit_Cb_Type := null;
+   --  Hook called in case of error.
+   Error_Hook : Grt.Hooks.Proc_Hook_Type := null;
 
    --  If true, an error is expected and the exit status is inverted.
    Expect_Failure : Boolean := False;
 
 private
-   pragma Export (C, Ghdl_Exit_Cb, "__ghdl_exit_cb");
-
    pragma Export (C, Grt_Overflow_Error, "grt_overflow_error");
 
    pragma No_Return (Error);

@@ -776,6 +776,12 @@ package body Grt.Processes is
    is
       Status : Integer;
    begin
+      --  Allocate processes arrays.
+      Resume_Process_Table :=
+        new Process_Acc_Array (1 .. Nbr_Non_Postponed_Processes);
+      Postponed_Resume_Process_Table :=
+        new Process_Acc_Array (1 .. Nbr_Postponed_Processes);
+
       --  LRM93 12.6.4
       --  At the beginning of initialization, the current time, Tc, is assumed
       --  to be 0 ns.
@@ -820,6 +826,9 @@ package body Grt.Processes is
       --    first simulation cycle), Tn, is calculated according to the rules
       --    of step f of the simulation cycle, below.
       Current_Time := Compute_Next_Time;
+
+      --  Clear current_delta, will be set by Simulation_Cycle.
+      Current_Delta := 0;
 
       return Run_Resumed;
    end Initialization_Phase;
@@ -962,18 +971,11 @@ package body Grt.Processes is
 --          Grt.Disp.Disp_Signals_Type;
 --       end if;
 
-      --  Allocate processes arrays.
-      Resume_Process_Table :=
-        new Process_Acc_Array (1 .. Nbr_Non_Postponed_Processes);
-      Postponed_Resume_Process_Table :=
-        new Process_Acc_Array (1 .. Nbr_Postponed_Processes);
-
       Status := Run_Through_Longjump (Initialization_Phase'Access);
       if Status /= Run_Resumed then
          return -1;
       end if;
 
-      Current_Delta := 0;
       Nbr_Delta_Cycles := 0;
       Nbr_Cycles := 0;
       if Trace_Signals then
@@ -981,7 +983,8 @@ package body Grt.Processes is
       end if;
 
       if Current_Time /= 0 then
-         --  This is the end of a cycle.
+         --  This is the end of a cycle.  This can happen when the time is not
+         --  zero after initialization.
          Cycle_Time := 0;
          Grt.Hooks.Call_Cycle_Hooks;
       end if;

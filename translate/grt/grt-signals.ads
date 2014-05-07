@@ -665,12 +665,14 @@ package Grt.Signals is
    procedure Ghdl_Signal_Effective_Value (Targ : Ghdl_Signal_Ptr;
                                           Src : Ghdl_Signal_Ptr);
 
-   --  Create a new 'stable (VAL) signal.
+   --  Create a new 'stable (VAL) signal.  The prefixes are set by
+   --  ghdl_signal_attribute_register_prefix.
    function Ghdl_Create_Stable_Signal (Val : Std_Time) return Ghdl_Signal_Ptr;
-   --  Create a new 'quiet (VAL) signal.
+   --  Create a new 'quiet (VAL) signal.  The prefixes are set by
+   --  ghdl_signal_attribute_register_prefix.
    function Ghdl_Create_Quiet_Signal (Val : Std_Time) return Ghdl_Signal_Ptr;
-
-   --  Create a new 'transaction signal.
+   --  Create a new 'transaction signal.  The prefixes are set by
+   --  ghdl_signal_attribute_register_prefix.
    function Ghdl_Create_Transaction_Signal return Ghdl_Signal_Ptr;
 
    --  Create a new SIG'delayed (VAL) signal.

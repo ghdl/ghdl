@@ -25,6 +25,7 @@
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Options; use Grt.Options;
+with Grt.Hooks; use Grt.Hooks;
 
 package body Grt.Errors is
    procedure Fatal_Error;
@@ -42,13 +43,6 @@ package body Grt.Errors is
       pragma Import (C, C_Exit, "exit");
       pragma No_Return (C_Exit);
    begin
-      if Ghdl_Exit_Cb1 /= null then
-         Ghdl_Exit_Cb1.all (Code);
-      end if;
-
-      if Ghdl_Exit_Cb /= null then
-         Ghdl_Exit_Cb.all (Code);
-      end if;
       C_Exit (Code);
    end Ghdl_Exit;
 
@@ -58,6 +52,15 @@ package body Grt.Errors is
 
    procedure Fatal_Error is
    begin
+      if Error_Hook /= null then
+         --  Call the hook, but avoid infinite loop by reseting it.
+         declare
+            Current_Hook : constant Proc_Hook_Type := Error_Hook;
+         begin
+            Error_Hook := null;
+            Current_Hook.all;
+         end;
+      end if;
       Maybe_Return_Via_Longjump (-1);
       if Expect_Failure then
          Ghdl_Exit (0);
