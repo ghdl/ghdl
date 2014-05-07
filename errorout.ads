@@ -22,12 +22,6 @@ package Errorout is
    Option_Error: exception;
    Parse_Error: exception;
    Compilation_Error: exception;
-   Simulation_Error: exception;
-   Elaboration_Error : exception;
-
-   -- This exception is raised when a constraint error is detected during
-   -- an evaluation of an expression.
-   Execution_Constraint_Error: exception;
 
    -- This kind can't be handled.
    --procedure Error_Kind (Msg: String; Kind: Iir_Kind);
@@ -35,9 +29,6 @@ package Errorout is
    procedure Error_Kind (Msg: String; Def : Iir_Predefined_Functions);
    procedure Error_Kind (Msg : String; N : PSL_Node);
    pragma No_Return (Error_Kind);
-
-   -- Raise when an assertion of failure severity error fails.
-   Assertion_Failure: exception;
 
    -- The number of errors (ie, number of calls to error_msg*).
    Nbr_Errors: Natural := 0;
@@ -62,7 +53,6 @@ package Errorout is
    procedure Warning_Msg (Msg: String);
    procedure Warning_Msg_Parse (Msg: String);
    procedure Warning_Msg_Sem (Msg: String; Loc : Iir);
-   procedure Warning_Msg_Elab (Msg: String; Loc : Iir);
    procedure Warning_Msg_Sem (Msg: String; Loc : Location_Type);
 
    -- Disp a message during scan.
@@ -83,19 +73,12 @@ package Errorout is
    procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node);
    procedure Error_Msg_Sem (Msg: String; Loc: Location_Type);
 
-   -- Disp a message during elaboration.
+   -- Disp a message during elaboration (or configuration).
    procedure Error_Msg_Elab (Msg: String);
    procedure Error_Msg_Elab (Msg: String; Loc: Iir);
 
-   -- Disp a message during execution.
-   procedure Error_Msg_Exec (Msg: String; Loc: Iir);
-   pragma No_Return (Error_Msg_Exec);
-
-   procedure Warning_Msg_Exec (Msg: String; Loc: Iir);
-
-   -- Disp a message for a constraint error.
-   -- And raise the exception execution_constraint_error.
-   procedure Error_Msg_Constraint (Expr: Iir);
+   --  Disp a warning durig elaboration (or configuration).
+   procedure Warning_Msg_Elab (Msg: String; Loc : Iir);
 
    -- Disp a bug message.
    procedure Error_Internal (Expr: Iir; Msg: String := "");
@@ -138,6 +121,4 @@ package Errorout is
    --  Report an error message as type of EXPR does not match A_TYPE.
    --  Location is LOC.
    procedure Error_Not_Match (Expr: Iir; A_Type: Iir; Loc : Iir);
-
-
 end Errorout;

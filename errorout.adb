@@ -319,49 +319,6 @@ package body Errorout is
       Put_Line (Msg);
    end Error_Msg_Elab;
 
-   -- Disp a message during execution.
-   procedure Error_Msg_Exec (Msg: String; Loc: in Iir) is
-   begin
-      Nbr_Errors := Nbr_Errors + 1;
-      Disp_Iir_Location (Loc);
-      Put (' ');
-      Put_Line (Msg);
-      raise Simulation_Error;
-   end Error_Msg_Exec;
-
-   procedure Warning_Msg_Exec (Msg: String; Loc: Iir) is
-   begin
-      Disp_Iir_Location (Loc);
-      Put ("warning: ");
-      Put_Line (Msg);
-   end Warning_Msg_Exec;
-
-   -- Disp a message for a constraint error.
-   procedure Error_Msg_Constraint (Expr: in Iir) is
-   begin
-      Nbr_Errors := Nbr_Errors + 1;
-      if Expr /= Null_Iir then
-         Disp_Iir_Location (Expr);
-      end if;
-      Put ("constraint violation");
-      if Expr /= Null_Iir then
-         case Get_Kind (Expr) is
-            when Iir_Kind_Addition_Operator =>
-               Put_Line (" in the ""+"" operation");
-            when Iir_Kind_Substraction_Operator =>
-               Put_Line (" in the ""-"" operation");
-            when Iir_Kind_Integer_Literal =>
-               Put_Line (", literal out of range");
-            when Iir_Kind_Signal_Interface_Declaration
-              | Iir_Kind_Signal_Declaration =>
-               Put_Line (" for " & Disp_Node (Expr));
-            when others =>
-               Put_Line ("");
-         end case;
-      end if;
-      raise Execution_Constraint_Error;
-   end Error_Msg_Constraint;
-
    -- Disp a bug message.
    procedure Error_Internal (Expr: in Iir; Msg: String := "")
    is
@@ -383,7 +340,6 @@ package body Errorout is
          return Str & " labeled """ & Name_Table.Image (Id) & """";
       end if;
    end Disp_Label;
-
 
    -- Disp a node.
    -- Used for output of message.

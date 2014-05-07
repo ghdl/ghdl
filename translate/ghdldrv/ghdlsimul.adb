@@ -107,6 +107,8 @@ package body Ghdlsimul is
             Flag_Expect_Failure := True;
          elsif Arg.all = "--trace-elab" then
             Elaboration.Trace_Elaboration := True;
+         elsif Arg.all = "--trace-drivers" then
+            Elaboration.Trace_Drivers := True;
          elsif Arg.all = "--trace-annotation" then
             Annotations.Trace_Annotation := True;
          elsif Arg.all = "--trace-simu" then
@@ -151,9 +153,6 @@ package body Ghdlsimul is
       Grtlink.Flag_String := Flags.Flag_String;
 
       Simulation.Simulation_Entity (Top_Conf);
-   exception
-      when Errorout.Execution_Constraint_Error =>
-         null;
    end Run;
 
    function Decode_Option (Option : String) return Boolean
