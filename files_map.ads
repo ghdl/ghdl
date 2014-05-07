@@ -46,6 +46,11 @@ package Files_Map is
    function Create_Virtual_Source_File (Name: Name_Id)
                                        return Source_File_Entry;
 
+   --  Create a Source_File for a possible virtual file NAME using CONTENT
+   --  as content of the file.  The file must not already exist.
+   function Create_Source_File_From_String (Name: Name_Id; Content : String)
+                                           return Source_File_Entry;
+
    -- Return a buffer (access to the contents of the file) for a file entry.
    function Get_File_Source (File: Source_File_Entry)
                              return File_Buffer_Acc;

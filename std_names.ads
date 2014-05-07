@@ -562,7 +562,96 @@ package Std_Names is
    Name_Finish :         constant Name_Id := Name_First_Systask + 01;
    Name_Last_Systask :   constant Name_Id := Name_Finish;
 
-   Name_First_Comment :  constant Name_Id := Name_Last_Systask + 1;
+   --  BSV names
+   Name_First_BSV :         constant Name_Id := Name_Last_Systask + 1;
+   Name_uAction :           constant Name_Id := Name_First_BSV + 0;
+   Name_uActionValue :      constant Name_Id := Name_First_BSV + 1;
+   Name_BVI :               constant Name_Id := Name_First_BSV + 2;
+   Name_uC :                constant Name_Id := Name_First_BSV + 3;
+   Name_uCF :               constant Name_Id := Name_First_BSV + 4;
+   Name_uE :                constant Name_Id := Name_First_BSV + 5;
+   Name_uSB :               constant Name_Id := Name_First_BSV + 6;
+   Name_uSBR :              constant Name_Id := Name_First_BSV + 7;
+   Name_Action :            constant Name_Id := Name_First_BSV + 8;
+   Name_Endaction :         constant Name_Id := Name_First_BSV + 9;
+   Name_Actionvalue :       constant Name_Id := Name_First_BSV + 10;
+   Name_Endactionvalue :    constant Name_Id := Name_First_BSV + 11;
+   Name_Ancestor :          constant Name_Id := Name_First_BSV + 12;
+   --   begin
+   --   bit
+   --   case
+   --   endcase
+   Name_Clocked_By :        constant Name_Id := Name_First_BSV + 13;
+   Name_Continue :          constant Name_Id := Name_First_BSV + 14;
+   --   default
+   Name_Default_Clock :     constant Name_Id := Name_First_BSV + 15;
+   Name_Default_Reset :     constant Name_Id := Name_First_BSV + 16;
+   Name_Dependencies  :     constant Name_Id := Name_First_BSV + 17;
+   Name_Deriving :          constant Name_Id := Name_First_BSV + 18;
+   Name_Determines :        constant Name_Id := Name_First_BSV + 19;
+   --   e
+   --   else
+   Name_Enable :            constant Name_Id := Name_First_BSV + 20;
+   --   end
+   Name_Enum :              constant Name_Id := Name_First_BSV + 21;
+   Name_Export :            constant Name_Id := Name_First_BSV + 22;
+   --   for
+   --   function
+   --   endfunction
+   --   if
+   Name_Ifc_Inout :         constant Name_Id := Name_First_BSV + 23;
+   Name_Import :            constant Name_Id := Name_First_BSV + 24;
+   --   inout
+   Name_Input_Clock :       constant Name_Id := Name_First_BSV + 25;
+   Name_Input_Reset :       constant Name_Id := Name_First_BSV + 26;
+   Name_Instance :          constant Name_Id := Name_First_BSV + 27;
+   Name_Endinstance :       constant Name_Id := Name_First_BSV + 28;
+   Name_Interface :         constant Name_Id := Name_First_BSV + 29;
+   Name_Endinterface :      constant Name_Id := Name_First_BSV + 30;
+   Name_Let :               constant Name_Id := Name_First_BSV + 31;
+   Name_Match :             constant Name_Id := Name_First_BSV + 32;
+   Name_Matches :           constant Name_Id := Name_First_BSV + 33;
+   Name_Method :            constant Name_Id := Name_First_BSV + 34;
+   Name_Endmethod :         constant Name_Id := Name_First_BSV + 35;
+   --   module
+   --   endmodule
+   Name_Numeric :           constant Name_Id := Name_First_BSV + 36;
+   Name_Output_Clock :      constant Name_Id := Name_First_BSV + 37;
+   Name_Output_Reset :      constant Name_Id := Name_First_BSV + 38;
+   --   package
+   Name_Endpackage :        constant Name_Id := Name_First_BSV + 39;
+   --   parameter
+   Name_Par :               constant Name_Id := Name_First_BSV + 40;
+   Name_Endpar :            constant Name_Id := Name_First_BSV + 41;
+   Name_Path :              constant Name_Id := Name_First_BSV + 42;
+   --   port
+   Name_Provisos :          constant Name_Id := Name_First_BSV + 43;
+   Name_Ready :             constant Name_Id := Name_First_BSV + 44;
+   Name_Reset_By :          constant Name_Id := Name_First_BSV + 45;
+   --   return
+   Name_Rule :              constant Name_Id := Name_First_BSV + 46;
+   Name_Endrule :           constant Name_Id := Name_First_BSV + 47;
+   Name_Rules :             constant Name_Id := Name_First_BSV + 48;
+   Name_Endrules :          constant Name_Id := Name_First_BSV + 49;
+   Name_Same_Family :       constant Name_Id := Name_First_BSV + 50;
+   Name_Schedule :          constant Name_Id := Name_First_BSV + 51;
+   Name_Seq :               constant Name_Id := Name_First_BSV + 52;
+   Name_Endseq :            constant Name_Id := Name_First_BSV + 53;
+   Name_Struct :            constant Name_Id := Name_First_BSV + 54;
+   Name_Tagged :            constant Name_Id := Name_First_BSV + 55;
+   --   type
+   Name_Typeclass :         constant Name_Id := Name_First_BSV + 56;
+   Name_Endtypeclass :      constant Name_Id := Name_First_BSV + 57;
+   Name_Typedef :           constant Name_Id := Name_First_BSV + 58;
+   Name_Union :             constant Name_Id := Name_First_BSV + 59;
+   Name_Valueof :           constant Name_Id := Name_First_BSV + 60;
+   Name_uValueof :          constant Name_Id := Name_First_BSV + 61;
+   Name_Void :              constant Name_Id := Name_First_BSV + 62;
+   --   while
+   Name_Last_BSV :          constant Name_Id := Name_First_BSV + 62;
+
+   --  VHDL special comments
+   Name_First_Comment :  constant Name_Id := Name_Last_BSV + 1;
    Name_Psl :            constant Name_Id := Name_First_Comment + 0;
    Name_Pragma :         constant Name_Id := Name_First_Comment + 1;
    Name_Last_Comment :   constant Name_Id := Name_First_Comment + 1;
@@ -614,16 +703,16 @@ package Std_Names is
    Name_Rose :               constant Name_Id := Name_First_PSL + 33;
    Name_Sequence :           constant Name_Id := Name_First_PSL + 34;
    Name_Strong :             constant Name_Id := Name_First_PSL + 35;
-   Name_Union :              constant Name_Id := Name_First_PSL + 36;
-   --  Name_Until
-   Name_Vmode :              constant Name_Id := Name_First_PSL + 37;
-   Name_Vprop :              constant Name_Id := Name_First_PSL + 38;
-   Name_Vunit :              constant Name_Id := Name_First_PSL + 39;
-   Name_W :                  constant Name_Id := Name_First_PSL + 40;
-   Name_Whilenot :           constant Name_Id := Name_First_PSL + 41;
-   Name_Within :             constant Name_Id := Name_First_PSL + 42;
-   Name_X :                  constant Name_Id := Name_First_PSL + 43;
-   Name_Last_PSL :           constant Name_Id := Name_X;
+   --   union
+   --   until
+   Name_Vmode :              constant Name_Id := Name_First_PSL + 36;
+   Name_Vprop :              constant Name_Id := Name_First_PSL + 37;
+   Name_Vunit :              constant Name_Id := Name_First_PSL + 38;
+   Name_W :                  constant Name_Id := Name_First_PSL + 39;
+   Name_Whilenot :           constant Name_Id := Name_First_PSL + 40;
+   Name_Within :             constant Name_Id := Name_First_PSL + 41;
+   Name_X :                  constant Name_Id := Name_First_PSL + 42;
+   Name_Last_PSL :           constant Name_Id := Name_First_PSL + 42;
 
    subtype Name_Id_PSL_Keywords is
      Name_Id range Name_First_PSL .. Name_Last_PSL;

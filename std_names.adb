@@ -355,9 +355,76 @@ package body Std_Names is
       Def ("timescale",    Name_Timescale);
       Def ("undef",        Name_Undef);
 
+      --  Verilog system tasks
       Def ("display", Name_Display);
       Def ("finish",  Name_Finish);
 
+      --  BSV keywords
+      Def ("Action",         Name_uAction);
+      Def ("ActionValue",    Name_uActionValue);
+      Def ("BVI",            Name_BVI);
+      Def ("C",              Name_uC);
+      Def ("CF",             Name_uCF);
+      Def ("E",              Name_uE);
+      Def ("SB",             Name_uSB);
+      Def ("SBR",            Name_uSBR);
+      Def ("action",         Name_Action);
+      Def ("endaction",      Name_Endaction);
+      Def ("actionvalue",    Name_Actionvalue);
+      Def ("endactionvalue", Name_Endactionvalue);
+      Def ("ancestor",       Name_Ancestor);
+      Def ("clocked_by",     Name_Clocked_By);
+      Def ("continue",       Name_Continue);
+      Def ("default_clock",  Name_Default_Clock);
+      Def ("default_reset",  Name_Default_Reset);
+      Def ("dependencies",   Name_Dependencies);
+      Def ("deriving",       Name_Deriving);
+      Def ("determines",     Name_Determines);
+      Def ("enable",         Name_Enable);
+      Def ("enum",           Name_Enum);
+      Def ("export",         Name_Export);
+      Def ("ifc_inout",      Name_Ifc_Inout);
+      Def ("import",         Name_Import);
+      Def ("input_clock",    Name_Input_Clock);
+      Def ("input_reset",    Name_Input_Reset);
+      Def ("instance",       Name_Instance);
+      Def ("endinstance",    Name_Endinstance);
+      Def ("interface",      Name_Interface);
+      Def ("endinterface",   Name_Endinterface);
+      Def ("let",            Name_Let);
+      Def ("match",          Name_Match);
+      Def ("matches",        Name_Matches);
+      Def ("method",         Name_Method);
+      Def ("endmethod",      Name_Endmethod);
+      Def ("numeric",        Name_Numeric);
+      Def ("output_clock",   Name_Output_Clock);
+      Def ("output_reset",   Name_Output_Reset);
+      Def ("endpackage",     Name_Endpackage);
+      Def ("par",            Name_Par);
+      Def ("endpar",         Name_Endpar);
+      Def ("path",           Name_Path);
+      Def ("provisos",       Name_Provisos);
+      Def ("ready",          Name_Ready);
+      Def ("reset_by",       Name_Reset_By);
+      Def ("rule",           Name_Rule);
+      Def ("endrule",        Name_Endrule);
+      Def ("rules",          Name_Rules);
+      Def ("endrules",       Name_Endrules);
+      Def ("same_family",    Name_Same_Family);
+      Def ("schedule",       Name_Schedule);
+      Def ("seq",            Name_Seq);
+      Def ("endseq",         Name_Endseq);
+      Def ("struct",         Name_Struct);
+      Def ("tagged",         Name_Tagged);
+      Def ("typeclass",      Name_Typeclass);
+      Def ("endtypeclass",   Name_Endtypeclass);
+      Def ("typedef",        Name_Typedef);
+      Def ("union",          Name_Union);
+      Def ("valueof",        Name_Valueof);
+      Def ("valueOf",        Name_uValueof);
+      Def ("void",           Name_Void);
+
+      --  VHDL special comments
       Def ("psl",    Name_Psl);
       Def ("pragma", Name_Pragma);
 

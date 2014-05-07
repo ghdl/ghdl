@@ -610,24 +610,37 @@ package body Files_Map is
       return Res;
    end Create_Source_File_Entry;
 
-   function Create_Virtual_Source_File (Name: Name_Id)
-                                       return Source_File_Entry
+   function Create_Source_File_From_String (Name: Name_Id; Content : String)
+                                           return Source_File_Entry
    is
       Res : Source_File_Entry;
       Buffer: File_Buffer_Acc;
+      Len : constant Source_Ptr := Source_Ptr (Content'Length);
    begin
       Res := Create_Source_File_Entry (Null_Identifier, Name);
 
-      Buffer := new File_Buffer (Source_Ptr_Org .. Source_Ptr_Org + 1);
+      Buffer := new File_Buffer
+        (Source_Ptr_Org .. Source_Ptr_Org + Len + 1);
 
-      Buffer (Source_Ptr_Org) := EOT;
-      Buffer (Source_Ptr_Org + 1) := EOT;
+      Buffer (Source_Ptr_Org .. Source_Ptr_Org + Len - 1) :=
+        File_Buffer (Content);
+      Buffer (Source_Ptr_Org + Len) := EOT;
+      Buffer (Source_Ptr_Org + Len + 1) := EOT;
 
-      Source_Files.Table (Res).Last_Location := Next_Location + 1;
-      Next_Location := Next_Location + 2;
+      Source_Files.Table (Res).Last_Location :=
+        Next_Location + Location_Type (Len) + 1;
+      Next_Location := Source_Files.Table (Res).Last_Location + 1;
       Source_Files.Table (Res).Source := Buffer;
-      Source_Files.Table (Res).File_Length := 0;
+      Source_Files.Table (Res).File_Length := Natural (Len);
+
       return Res;
+   end Create_Source_File_From_String;
+
+   function Create_Virtual_Source_File (Name: Name_Id)
+                                       return Source_File_Entry
+   is
+   begin
+      return Create_Source_File_From_String (Name, "");
    end Create_Virtual_Source_File;
 
    -- Return an entry for a filename.
