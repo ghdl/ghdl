@@ -628,7 +628,7 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   -- Set the entity of an architecture.
+   -- Entity declaration for the architecture.
    -- Before the semantic pass, it can be a name.
    --   Get/Set_Entity (Field4)
    --

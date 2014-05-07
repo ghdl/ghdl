@@ -464,13 +464,24 @@ package body Sem_Stmts is
       Ok := True;
       -- Find the signal.
       Target := Get_Target (Stmt);
-      Target := Sem_Expression (Target, Sig_Type);
-      if Target /= Null_Iir then
-         Set_Target (Stmt, Target);
-         Check_Target (Stmt, Target);
-         Sem_Types.Set_Type_Has_Signal (Get_Type (Target));
-      else
+
+      if Sig_Type = Null_Iir
+        and then Get_Kind (Target) = Iir_Kind_Aggregate
+      then
+         --  Do not try to analyze an aggregate if its type is unknown.
+         --  A target cannot be a qualified type and its type should be
+         --  determine by the context (LRM93 7.3.2 Aggregates).
          Ok := False;
+      else
+         --  Analyze the target
+         Target := Sem_Expression (Target, Sig_Type);
+         if Target /= Null_Iir then
+            Set_Target (Stmt, Target);
+            Check_Target (Stmt, Target);
+            Sem_Types.Set_Type_Has_Signal (Get_Type (Target));
+         else
+            Ok := False;
+         end if;
       end if;
 
       Expr := Get_Reject_Time_Expression (Stmt);
@@ -517,7 +528,7 @@ package body Sem_Stmts is
               and then Waveform_Type = Null_Iir
             then
                Error_Msg_Sem
-                 ("type of waveform is unknown, use type qualifier", Expr);
+                 ("type of waveform is unknown, use qualified type", Expr);
             else
                Expr := Sem_Expression (Expr, Waveform_Type);
                if Expr /= Null_Iir then
