@@ -33,6 +33,11 @@ package body Evaluation is
          when Iir_Kind_Physical_Int_Literal =>
             return Get_Value (Expr)
               * Get_Value (Get_Physical_Unit_Value (Get_Unit_Name (Expr)));
+         when Iir_Kind_Physical_Fp_Literal =>
+            return Iir_Int64
+              (Get_Fp_Value (Expr)
+                 * Iir_Fp64 (Get_Value (Get_Physical_Unit_Value
+                                          (Get_Unit_Name (Expr)))));
          when Iir_Kind_Unit_Declaration =>
             return Get_Value (Get_Physical_Unit_Value (Expr));
          when others =>
@@ -1678,11 +1683,7 @@ package body Evaluation is
                return Build_Physical (Get_Physical_Value (Expr), Expr);
             end if;
          when Iir_Kind_Physical_Fp_Literal =>
-            return Build_Physical
-              (Iir_Int64 (Get_Fp_Value (Expr)
-                          * Iir_Fp64 (Get_Value (Get_Physical_Unit_Value
-                                                 (Get_Unit_Name (Expr))))),
-               Expr);
+            return Build_Physical (Get_Physical_Value (Expr), Expr);
          when Iir_Kind_Constant_Declaration =>
             Val := Get_Default_Value (Expr);
             Res := Build_Constant (Val, Expr);
