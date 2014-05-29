@@ -36,6 +36,7 @@ with Annotations;
 with Elaboration;
 with Sim_Be;
 with Simulation;
+with Execution;
 
 with Ghdlcomp;
 
@@ -46,9 +47,6 @@ with Grt.Options;
 with Grtlink;
 
 package body Ghdlsimul is
-
-   Flag_Expect_Failure : Boolean := False;
-   pragma Unreferenced (Flag_Expect_Failure);
 
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
@@ -104,7 +102,8 @@ package body Ghdlsimul is
          if Arg.all = "--disp-tree" then
             Simulation.Disp_Tree := True;
          elsif Arg.all = "--expect-failure" then
-            Flag_Expect_Failure := True;
+            Decode_Option (Arg.all, Status);
+            pragma Assert (Status = Decode_Option_Ok);
          elsif Arg.all = "--trace-elab" then
             Elaboration.Trace_Elaboration := True;
          elsif Arg.all = "--trace-drivers" then
@@ -113,6 +112,10 @@ package body Ghdlsimul is
             Annotations.Trace_Annotation := True;
          elsif Arg.all = "--trace-simu" then
             Simulation.Trace_Simulation := True;
+         elsif Arg.all = "--trace-stmt" then
+            Execution.Trace_Statements := True;
+         elsif Arg.all = "-i" then
+            Simulation.Flag_Interractive := True;
          else
             Decode_Option (Arg.all, Status);
             case Status is
