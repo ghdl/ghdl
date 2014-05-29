@@ -2011,7 +2011,8 @@ package body Sem_Decls is
          when Iir_Kinds_Object_Declaration =>
             raise Internal_Error;
          when Iir_Kind_Subtype_Declaration
-           | Iir_Kind_Attribute_Declaration =>
+           | Iir_Kind_Attribute_Declaration
+           | Iir_Kind_Component_Declaration =>
             null;
          when Iir_Kind_Terminal_Declaration =>
             null;
