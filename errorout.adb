@@ -841,7 +841,7 @@ package body Errorout is
    begin
       if Loc = Location_Nil then
          --  Avoid a crash.
-         return "??:??:??:";
+         return "??:??:??";
       else
          Location_To_Position (Loc, Name, Line, Col);
          return Get_Location_Str (Name, Line, Col, Filename);
