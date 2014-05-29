@@ -6383,7 +6383,7 @@ package body Translation is
          for I in Natural loop
             Index := Get_Nth_Element (Index_List, I);
             exit when Index = Null_Iir;
-            if Get_Info (Index) = null then
+            if Is_Anonymous_Type_Definition (Index) then
                Push_Identifier_Prefix (Mark, "DIM", Iir_Int32 (I + 1));
                Translate_Type_Definition (Index, True);
                Pop_Identifier_Prefix (Mark);
@@ -6521,6 +6521,40 @@ package body Translation is
                Arr_Info.T.Bounds_Type, Global_Storage);
          end if;
       end Translate_Static_Unidimensional_Array_Length_One;
+
+      procedure Translate_Dynamic_Unidimensional_Array_Length_One
+        (Def : Iir_Array_Type_Definition)
+      is
+         Indexes : constant Iir_List := Get_Index_Subtype_List (Def);
+         Index_Type : Iir;
+         Arr_Info : Type_Info_Acc;
+         Bound1, Rng : Mnode;
+      begin
+         if Get_Nbr_Elements (Indexes) /= 1 then
+            return;
+         end if;
+         Index_Type := Get_First_Element (Indexes);
+         if Get_Type_Staticness (Index_Type) = Locally then
+            return;
+         end if;
+         Arr_Info := Get_Info (Def);
+         Open_Temp;
+         Bound1 := Varv2M (Arr_Info.T.Array_1bound, Arr_Info, Mode_Value,
+                           Arr_Info.T.Bounds_Type, Arr_Info.T.Bounds_Ptr_Type);
+         Bound1 := Bounds_To_Range (Bound1, Def, 1);
+         Stabilize (Bound1);
+         Rng := Type_To_Range (Index_Type);
+         Stabilize (Rng);
+         New_Assign_Stmt (M2Lv (Range_To_Dir (Bound1)),
+                          M2E (Range_To_Dir (Rng)));
+         New_Assign_Stmt (M2Lv (Range_To_Left (Bound1)),
+                          M2E (Range_To_Left (Rng)));
+         New_Assign_Stmt (M2Lv (Range_To_Right (Bound1)),
+                          M2E (Range_To_Left (Rng)));
+         New_Assign_Stmt (M2Lv (Range_To_Length (Bound1)),
+                          New_Lit (Ghdl_Index_1));
+         Close_Temp;
+      end Translate_Dynamic_Unidimensional_Array_Length_One;
 
       procedure Translate_Array_Type (Def : Iir_Array_Type_Definition)
       is
@@ -7492,7 +7526,20 @@ package body Translation is
                end if;
 
             when Iir_Kind_Array_Type_Definition =>
-               --  FIXME: create unidimensional array bound of length 1
+               declare
+                  Index_List : constant Iir_List :=
+                    Get_Index_Subtype_List (Def);
+                  Index : Iir;
+               begin
+                  for I in Natural loop
+                     Index := Get_Nth_Element (Index_List, I);
+                     exit when Index = Null_Iir;
+                     if Is_Anonymous_Type_Definition (Index) then
+                        Create_Type_Definition_Type_Range (Index);
+                     end if;
+                  end loop;
+               end;
+               Translate_Dynamic_Unidimensional_Array_Length_One (Def);
                return;
             when Iir_Kind_Access_Type_Definition
               | Iir_Kind_Access_Subtype_Definition

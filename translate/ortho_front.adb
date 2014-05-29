@@ -430,8 +430,7 @@ package body Ortho_Front is
       --   Error_Msg_Option ("cannot open file '" & Filename.all & "'");
       --   return False;
       when Compilation_Error
-        | Parse_Error
-        | Elaboration_Error =>
+        | Parse_Error =>
          if Flag_Expect_Failure then
             --  Very brutal...
             GNAT.OS_Lib.OS_Exit (0);
