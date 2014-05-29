@@ -48,6 +48,11 @@ package body Canon is
      (Interface_Chain: Iir; Association_Chain: Iir; Loc : Iir)
      return Iir;
 
+   --  Like Canon_Association_Chain but recurse on actuals.
+   function Canon_Association_Chain_And_Actuals
+     (Interface_Chain: Iir; Association_Chain: Iir; Loc : Iir)
+     return Iir;
+
    --  Like Canon_Subprogram_Call, but recurse on actuals.
    procedure Canon_Subprogram_Call_And_Actuals (Call : Iir);
 
@@ -830,6 +835,19 @@ package body Canon is
       end loop;
    end Canon_Association_Chain_Actuals;
 
+   function Canon_Association_Chain_And_Actuals
+     (Interface_Chain: Iir; Association_Chain: Iir; Loc : Iir)
+     return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Canon_Association_Chain (Interface_Chain, Association_Chain, Loc);
+      if Canon_Flag_Expressions then
+         Canon_Association_Chain_Actuals (Res);
+      end if;
+      return Res;
+   end Canon_Association_Chain_And_Actuals;
+
    procedure Canon_Subprogram_Call (Call : Iir)
    is
       Imp : Iir;
@@ -846,7 +864,10 @@ package body Canon is
    procedure Canon_Subprogram_Call_And_Actuals (Call : Iir) is
    begin
       Canon_Subprogram_Call (Call);
-      Canon_Association_Chain_Actuals (Get_Parameter_Association_Chain (Call));
+      if Canon_Flag_Expressions then
+         Canon_Association_Chain_Actuals
+           (Get_Parameter_Association_Chain (Call));
+      end if;
    end Canon_Subprogram_Call_And_Actuals;
 
    --  Create a default association list for INTERFACE_LIST.
@@ -862,6 +883,7 @@ package body Canon is
       Sub_Chain_Init (Res, Last);
       while El /= Null_Iir loop
          Assoc := Create_Iir (Iir_Kind_Association_Element_Open);
+         Set_Whole_Association_Flag (Assoc, True);
          Set_Artificial_Flag (Assoc, True);
          Set_Formal (Assoc, El);
          Location_Copy (Assoc, El);
@@ -1097,6 +1119,7 @@ package body Canon is
          -- is as follows:
          --  if GUARD then signal_transform end if;
          If_Stmt := Create_Iir (Iir_Kind_If_Statement);
+         Set_Parent (If_Stmt, Proc);
          Set_Sequential_Statement_Chain (Proc, If_Stmt);
          Location_Copy (If_Stmt, Stmt);
          Canon_Extract_Sensitivity (Get_Guard (Stmt), Sensitivity_List, False);
@@ -1117,6 +1140,7 @@ package body Canon is
                Set_Else_Clause (If_Stmt, Else_Clause);
                Dis_Stmt := Create_Iir (Iir_Kind_Signal_Assignment_Statement);
                Location_Copy (Dis_Stmt, Stmt);
+               Set_Parent (Dis_Stmt, If_Stmt);
                Set_Target (Dis_Stmt, Target);
                Set_Sequential_Statement_Chain (Else_Clause, Dis_Stmt);
                --  XX
@@ -1185,8 +1209,9 @@ package body Canon is
       Call_Stmt := Create_Iir (Iir_Kind_Procedure_Call_Statement);
       Set_Sequential_Statement_Chain (Proc, Call_Stmt);
       Location_Copy (Call_Stmt, El);
+      Set_Parent (Call_Stmt, Proc);
       Set_Procedure_Call (Call_Stmt, Call);
-      Assoc_Chain := Canon_Association_Chain
+      Assoc_Chain := Canon_Association_Chain_And_Actuals
         (Get_Interface_Declaration_Chain (Imp),
          Get_Parameter_Association_Chain (Call),
          Call);
@@ -1230,6 +1255,7 @@ package body Canon is
       return Proc;
    end Canon_Concurrent_Procedure_Call;
 
+   --  Return a statement from a waveform.
    function Canon_Wave_Transform
      (Orig_Stmt : Iir; Waveform_Chain : Iir_Waveform_Element; Proc : Iir)
      return Iir
@@ -1283,10 +1309,12 @@ package body Canon is
       Stmt := Null_Iir;
       Cond_Wf := Cond_Wf_Chain;
       Last_Res := Null_Iir;
+
       while Cond_Wf /= Null_Iir loop
          Expr := Get_Condition (Cond_Wf);
          Wf := Canon_Wave_Transform
            (Conc_Stmt, Get_Waveform_Chain (Cond_Wf), Proc);
+         Set_Parent (Wf, Parent);
          if Expr = Null_Iir and Cond_Wf = Cond_Wf_Chain then
             Res1 := Wf;
          else
@@ -1299,6 +1327,7 @@ package body Canon is
             end if;
             if Stmt = Null_Iir then
                Res1 := Create_Iir (Iir_Kind_If_Statement);
+               Set_Parent (Res1, Parent);
             else
                Res1 := Create_Iir (Iir_Kind_Elsif);
             end if;
@@ -1327,6 +1356,7 @@ package body Canon is
       Assoc : Iir;
    begin
       Case_Stmt := Create_Iir (Iir_Kind_Case_Statement);
+      Set_Parent (Case_Stmt, Parent);
       Set_Sequential_Statement_Chain (Parent, Case_Stmt);
       Location_Copy (Case_Stmt, Conc_Stmt);
       Expr := Get_Expression (Conc_Stmt);
@@ -1343,6 +1373,7 @@ package body Canon is
          Assoc := Get_Associated (Selected_Waveform);
          if Assoc /= Null_Iir then
             Stmt := Canon_Wave_Transform (Conc_Stmt, Assoc, Proc);
+            Set_Parent (Stmt, Case_Stmt);
             Set_Associated (Selected_Waveform, Stmt);
          end if;
          Selected_Waveform := Get_Chain (Selected_Waveform);
@@ -1440,6 +1471,7 @@ package body Canon is
 
                Stmt := Create_Iir (Iir_Kind_Assertion_Statement);
                Set_Sequential_Statement_Chain (Proc, Stmt);
+               Set_Parent (Stmt, Proc);
                Location_Copy (Stmt, El);
                Sensitivity_List := Create_Iir_List;
                Set_Sensitivity_List (Proc, Sensitivity_List);
@@ -1487,13 +1519,13 @@ package body Canon is
                begin
                   Inst := Get_Instantiated_Unit (El);
                   Inst := Get_Entity_From_Entity_Aspect (Inst);
-                  Assoc_Chain := Canon_Association_Chain
+                  Assoc_Chain := Canon_Association_Chain_And_Actuals
                     (Get_Generic_Chain (Inst),
                      Get_Generic_Map_Aspect_Chain (El),
                      El);
                   Set_Generic_Map_Aspect_Chain (El, Assoc_Chain);
 
-                  Assoc_Chain := Canon_Association_Chain
+                  Assoc_Chain := Canon_Association_Chain_And_Actuals
                     (Get_Port_Chain (Inst),
                      Get_Port_Map_Aspect_Chain (El),
                      El);
@@ -1521,7 +1553,7 @@ package body Canon is
                      --  Generics.
                      Chain := Get_Generic_Map_Aspect_Chain (Header);
                      if Chain /= Null_Iir then
-                        Chain := Canon_Association_Chain
+                        Chain := Canon_Association_Chain_And_Actuals
                           (Get_Generic_Chain (Header), Chain, Chain);
                      else
                         Chain := Canon_Default_Association_Chain
@@ -1532,7 +1564,7 @@ package body Canon is
                      --  Ports.
                      Chain := Get_Port_Map_Aspect_Chain (Header);
                      if Chain /= Null_Iir then
-                        Chain := Canon_Association_Chain
+                        Chain := Canon_Association_Chain_And_Actuals
                           (Get_Port_Chain (Header), Chain, Chain);
                      else
                         Chain := Canon_Default_Association_Chain
