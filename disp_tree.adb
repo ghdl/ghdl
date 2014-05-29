@@ -1737,8 +1737,8 @@ package body Disp_Tree is
             Disp_Tree (Get_Aggr_Low_Limit (Tree), Ntab, False);
             Header ("aggr_high_limit:");
             Disp_Tree (Get_Aggr_High_Limit (Tree), Ntab, False);
-            Header ("aggr_max_length:" &
-                    Iir_Int32'Image (Get_Aggr_Max_Length (Tree)));
+            Header ("aggr_min_length:" &
+                    Iir_Int32'Image (Get_Aggr_Min_Length (Tree)));
             Header ("sub_aggregate_info:");
             Disp_Tree (Get_Sub_Aggregate_Info (Tree), Ntab);
          when Iir_Kind_Operator_Symbol =>

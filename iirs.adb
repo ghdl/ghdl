@@ -6399,29 +6399,29 @@ package body Iirs is
       Set_Flag3 (Target, Val);
    end Set_Aggr_Dynamic_Flag;
 
-   procedure Check_Kind_For_Aggr_Max_Length (Target : Iir) is
+   procedure Check_Kind_For_Aggr_Min_Length (Target : Iir) is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Aggregate_Info =>
             null;
          when others =>
-            Failed ("Aggr_Max_Length", Target);
+            Failed ("Aggr_Min_Length", Target);
       end case;
-   end Check_Kind_For_Aggr_Max_Length;
+   end Check_Kind_For_Aggr_Min_Length;
 
-   function Get_Aggr_Max_Length (Info : Iir_Aggregate_Info) return Iir_Int32
+   function Get_Aggr_Min_Length (Info : Iir_Aggregate_Info) return Iir_Int32
       is
    begin
-      Check_Kind_For_Aggr_Max_Length (Info);
+      Check_Kind_For_Aggr_Min_Length (Info);
       return Iir_To_Iir_Int32 (Get_Field4 (Info));
-   end Get_Aggr_Max_Length;
+   end Get_Aggr_Min_Length;
 
-   procedure Set_Aggr_Max_Length (Info : Iir_Aggregate_Info; Nbr : Iir_Int32)
+   procedure Set_Aggr_Min_Length (Info : Iir_Aggregate_Info; Nbr : Iir_Int32)
       is
    begin
-      Check_Kind_For_Aggr_Max_Length (Info);
+      Check_Kind_For_Aggr_Min_Length (Info);
       Set_Field4 (Info, Iir_Int32_To_Iir (Nbr));
-   end Set_Aggr_Max_Length;
+   end Set_Aggr_Min_Length;
 
    procedure Check_Kind_For_Aggr_Low_Limit (Target : Iir) is
    begin

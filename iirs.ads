@@ -684,6 +684,7 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
+   -- The corresponding package declaration.
    --   Get/Set_Package (Field4)
 
    -- Iir_Kind_Library_Declaration (Medium)
@@ -2384,7 +2385,7 @@ package Iirs is
    --   Get/Set_Sub_Aggregate_Info (Field1)
    --
    -- For array aggregate only:
-   -- If TRUE, the aggregate bounds are not locally static.
+   -- If TRUE, the choices are not locally static.
    -- This flag is only valid when the array aggregate is constrained, ie
    -- has no 'others' choice.
    --   Get/Set_Aggr_Dynamic_Flag (Flag3)
@@ -2405,8 +2406,8 @@ package Iirs is
    --
    --   Get/Set_Aggr_High_Limit (Field3)
    --
-   -- The maximum number of elements, if any.
-   --   Get/Set_Aggr_Max_Length (Field4)
+   -- The minimum number of elements, if any.  This is a minimax.
+   --   Get/Set_Aggr_Min_Length (Field4)
    --
    -- True if the choice list has an 'others' choice.
    --   Get/Set_Aggr_Others_Flag (Flag2)
@@ -5248,13 +5249,13 @@ package Iirs is
    function Get_Aggr_Dynamic_Flag (Target : Iir) return Boolean;
    procedure Set_Aggr_Dynamic_Flag (Target : Iir; Val : Boolean);
 
-   --  Get/Set the maximum number of elements for the lowest dimension of
+   --  Get/Set the minimum number of elements for the lowest dimension of
    --  the aggregate or for the current dimension of a sub-aggregate.
    --  The real number of elements may be greater than this number if there
    --  is an 'other' choice.
    --  Field: Field4 (uc)
-   function Get_Aggr_Max_Length (Info : Iir_Aggregate_Info) return Iir_Int32;
-   procedure Set_Aggr_Max_Length (Info : Iir_Aggregate_Info; Nbr : Iir_Int32);
+   function Get_Aggr_Min_Length (Info : Iir_Aggregate_Info) return Iir_Int32;
+   procedure Set_Aggr_Min_Length (Info : Iir_Aggregate_Info; Nbr : Iir_Int32);
 
    --  Highest index choice, if any.
    --  Field: Field2

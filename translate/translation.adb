@@ -14028,31 +14028,29 @@ package body Translation is
       is
          use Name_Table;
 
-         Lit_Type : Iir;
+         Lit_Type : constant Iir := Get_Type (Str);
+         Type_Info : constant Type_Info_Acc := Get_Info (Lit_Type);
          Index_Type : Iir;
          Bound_Aggr : O_Record_Aggr_List;
          Index_Aggr : O_Record_Aggr_List;
          Res_Aggr : O_Record_Aggr_List;
          Res : O_Cnode;
-         Type_Info : Type_Info_Acc;
          Index_Type_Info : Type_Info_Acc;
          Len : Int32;
          Val : Var_Acc;
          Bound : Var_Acc;
          R : O_Enode;
       begin
-         Lit_Type := Get_Type (Str);
-         Type_Info := Get_Info (Lit_Type);
-
          --  Create the string value.
          Len := Get_String_Length (Str);
          Val := Create_String_Literal_Var (Str);
 
+         Index_Type :=
+           Get_First_Element (Get_Index_Subtype_List (Lit_Type));
+         Index_Type_Info := Get_Info (Index_Type);
+
          if Type_Info.Type_Mode = Type_Mode_Fat_Array then
             --  Create the string bound.
-            Index_Type :=
-              Get_First_Element (Get_Index_Subtype_List (Lit_Type));
-            Index_Type_Info := Get_Info (Index_Type);
             Start_Record_Aggr (Bound_Aggr, Type_Info.T.Bounds_Type);
             Start_Record_Aggr (Index_Aggr, Index_Type_Info.T.Range_Type);
             New_Record_Aggr_El
@@ -14093,7 +14091,15 @@ package body Translation is
               (Create_Uniq_Identifier, Type_Info.Ortho_Type (Mode_Value),
                O_Storage_Private, Res);
          elsif Type_Info.Type_Mode = Type_Mode_Array then
-            null;
+            --  Type of string literal isn't statically known; check the
+            --  length.
+            Chap6.Check_Bound_Error
+              (New_Compare_Op
+                 (ON_Neq,
+                  New_Lit (New_Index_Lit (Unsigned_64 (Len))),
+                  Chap3.Get_Array_Type_Length (Lit_Type),
+                  Ghdl_Bool_Type),
+               Str, 1);
          else
             raise Internal_Error;
          end if;
@@ -15826,35 +15832,39 @@ package body Translation is
          Var_Index : O_Dnode;
          Targ : Mnode;
 
-         Range_Ptr : Mnode;
          Rinfo : Type_Info_Acc;
          Bt : Iir;
 
-         function Check_Value
-           (Lval : Iir; Lop : ON_Op_Kind; Rval : Iir; Rop : ON_Op_Kind)
-            return O_Enode
+         --  Generate code for: (LVAL lop RNG.left) or (RVAL rop RNG.right)
+         function Check_Value (Lval : Iir;
+                               Lop : ON_Op_Kind;
+                               Rval : Iir;
+                               Rop : ON_Op_Kind;
+                               Rng : Mnode)
+                              return O_Enode
          is
             L, R : O_Enode;
          begin
             L := New_Compare_Op
               (Lop,
                New_Lit (Translate_Static_Expression (Lval, Bt)),
-               M2E (Chap3.Range_To_Left (Range_Ptr)),
+               M2E (Chap3.Range_To_Left (Rng)),
                Ghdl_Bool_Type);
             R := New_Compare_Op
               (Rop,
                New_Lit (Translate_Static_Expression (Rval, Bt)),
-               M2E (Chap3.Range_To_Right (Range_Ptr)),
+               M2E (Chap3.Range_To_Right (Rng)),
                Ghdl_Bool_Type);
             return New_Dyadic_Op (ON_Or, L, R);
          end Check_Value;
 
+         Range_Ptr : Mnode;
          Index_List : Iir_List;
          Targ_Index_List : Iir_List;
          Subtarg_Type : Iir;
          Subaggr_Type : Iir;
          L, H : Iir;
-         Max : Iir_Int32;
+         Min : Iir_Int32;
          Has_Others : Boolean;
 
          Aggr_Info : Iir_Aggregate_Info;
@@ -15882,56 +15892,53 @@ package body Translation is
             Bt := Get_Base_Type (Subaggr_Type);
             Rinfo := Get_Info (Bt);
 
-            if Get_Type_Staticness (Subaggr_Type) /= Locally then
-               --  Aggregate has dynamic bounds.
-               if Subaggr_Type /= Subtarg_Type then
-                  --  And it is not the same as the target.
-                  --  Must be checked.
+            if Get_Aggr_Dynamic_Flag (Aggr_Info) then
+               --  Dynamic range, must evaluate it.
+               Open_Temp;
+               declare
+                  A_Range : O_Dnode;
+                  Rng_Ptr : O_Dnode;
+               begin
+                  --  Evaluate the range.
+                  Chap3.Translate_Anonymous_Type_Definition
+                    (Subaggr_Type, True);
 
-                  Open_Temp;
-                  declare
-                     A_Range : O_Dnode;
-                     Rng_Ptr : O_Dnode;
-                  begin
-                     --  Evaluate the range.
-                     Chap3.Translate_Anonymous_Type_Definition
-                       (Subaggr_Type, True);
+                  A_Range := Create_Temp (Rinfo.T.Range_Type);
+                  Rng_Ptr := Create_Temp_Ptr
+                    (Rinfo.T.Range_Ptr_Type, New_Obj (A_Range));
+                  Chap7.Translate_Range_Ptr
+                    (Rng_Ptr,
+                     Get_Range_Constraint (Subaggr_Type),
+                     Subaggr_Type);
 
-                     A_Range := Create_Temp (Rinfo.T.Range_Type);
-                     Rng_Ptr := Create_Temp_Ptr
-                       (Rinfo.T.Range_Ptr_Type, New_Obj (A_Range));
-                     Chap7.Translate_Range_Ptr
-                       (Rng_Ptr,
-                        Get_Range_Constraint (Subaggr_Type),
-                        Subaggr_Type);
-
-                     --  Check range length VS target length.
-                     Chap6.Check_Bound_Error
-                       (New_Compare_Op
-                        (ON_Neq,
-                         M2E (Chap3.Range_To_Length
-                              (Dv2M (A_Range,
-                                     Rinfo,
-                                     Mode_Value,
-                                     Rinfo.T.Range_Type,
-                                     Rinfo.T.Range_Ptr_Type))),
-                         M2E (Chap3.Range_To_Length
-                              (Chap3.Bounds_To_Range
-                               (Bounds, Target_Type, I + 1))),
-                         Ghdl_Bool_Type),
-                        Aggr, I);
-                  end;
-                  Close_Temp;
-               end if;
-            else
+                  --  Check range length VS target length.
+                  Chap6.Check_Bound_Error
+                    (New_Compare_Op
+                       (ON_Neq,
+                        M2E (Chap3.Range_To_Length
+                               (Dv2M (A_Range,
+                                      Rinfo,
+                                      Mode_Value,
+                                      Rinfo.T.Range_Type,
+                                      Rinfo.T.Range_Ptr_Type))),
+                        M2E (Chap3.Range_To_Length
+                               (Chap3.Bounds_To_Range
+                                  (Bounds, Target_Type, I + 1))),
+                        Ghdl_Bool_Type),
+                     Aggr, I);
+               end;
+               Close_Temp;
+            elsif Get_Type_Staticness (Subaggr_Type) /= Locally
+              or else Subaggr_Type /= Subtarg_Type
+            then
                --  Note: if the aggregate has no others, then the bounds
                --  must be the same, otherwise, aggregate bounds must be
                --  inside type bounds.
                Has_Others := Get_Aggr_Others_Flag (Aggr_Info);
-               Max := Get_Aggr_Max_Length (Aggr_Info);
+               Min := Get_Aggr_Min_Length (Aggr_Info);
                L := Get_Aggr_Low_Limit (Aggr_Info);
 
-               if Max > 0 or L /= Null_Iir then
+               if Min > 0 or L /= Null_Iir then
                   Open_Temp;
 
                   --  Pointer to the range.
@@ -15941,6 +15948,9 @@ package body Translation is
                   H := Get_Aggr_High_Limit (Aggr_Info);
 
                   if L /= Null_Iir then
+                     --  Check the index range of the aggregrate is equal
+                     --  (or within in presence of 'others') the index range
+                     --  of the target.
                      Start_If_Stmt
                        (If_Blk,
                         New_Compare_Op (ON_Eq,
@@ -15948,26 +15958,30 @@ package body Translation is
                                         New_Lit (Ghdl_Dir_To_Node),
                                         Ghdl_Bool_Type));
                      if Has_Others then
-                        E := Check_Value (L, ON_Lt, H, ON_Gt);
+                        E := Check_Value (L, ON_Lt, H, ON_Gt, Range_Ptr);
                      else
-                        E := Check_Value (L, ON_Neq, H, ON_Neq);
+                        E := Check_Value (L, ON_Neq, H, ON_Neq, Range_Ptr);
                      end if;
                      New_Assign_Stmt (New_Obj (Var_Err), E);
                      New_Else_Stmt (If_Blk);
                      if Has_Others then
-                        E := Check_Value (H, ON_Gt, L, ON_Lt);
+                        E := Check_Value (H, ON_Gt, L, ON_Lt, Range_Ptr);
                      else
-                        E := Check_Value (H, ON_Neq, L, ON_Neq);
+                        E := Check_Value (H, ON_Neq, L, ON_Neq, Range_Ptr);
                      end if;
                      New_Assign_Stmt (New_Obj (Var_Err), E);
                      Finish_If_Stmt (If_Blk);
-                     -- If L and H are greather than the maximum length,
-                     -- then there is no need to check with max.
-                     if Iir_Int32 (Eval_Pos (H) - Eval_Pos (L) + 1) >= Max then
-                        Max := 0;
+                     -- If L and H are greather than the minimum length,
+                     -- then there is no need to check with min.
+                     if Iir_Int32 (Eval_Pos (H) - Eval_Pos (L) + 1) >= Min then
+                        Min := 0;
                      end if;
                   end if;
-                  if Max > 0 then
+
+                  if Min > 0 then
+                     --  Check the number of elements is equal (or less in
+                     --  presence of 'others') than the length of the index
+                     --  range of the target.
                      if Has_Others then
                         Op := ON_Lt;
                      else
@@ -15977,7 +15991,7 @@ package body Translation is
                        (Op,
                         M2E (Chap3.Range_To_Length (Range_Ptr)),
                         New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                       Unsigned_64 (Max))),
+                                                       Unsigned_64 (Min))),
                         Ghdl_Bool_Type);
                      if L /= Null_Iir then
                         E := New_Dyadic_Op (ON_Or, E, New_Obj_Value (Var_Err));
@@ -19274,14 +19288,11 @@ package body Translation is
       procedure Translate_Variable_Assignment_Statement
         (Stmt : Iir_Variable_Assignment_Statement)
       is
-         Target : Iir;
-         Targ_Type : Iir;
-         Expr : Iir;
+         Target : constant Iir := Get_Target (Stmt);
+         Targ_Type : constant Iir := Get_Type (Target);
+         Expr : constant Iir := Get_Expression (Stmt);
          Targ_Node : Mnode;
       begin
-         Target := Get_Target (Stmt);
-         Targ_Type := Get_Type (Target);
-         Expr := Get_Expression (Stmt);
          if Get_Kind (Target) = Iir_Kind_Aggregate then
             declare
                E : O_Enode;

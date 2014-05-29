@@ -3335,8 +3335,6 @@ package body Sem_Expr is
          Set_Index_Constraint_Flag (A_Subtype, True);
          Set_Constraint_State (A_Subtype, Fully_Constrained);
          Set_Type (Aggr, A_Subtype);
-      else
-         Set_Type (Aggr, Base_Type);
       end if;
 
       Prev_Info := Null_Iir;
@@ -3355,7 +3353,7 @@ package body Sem_Expr is
          Set_Aggr_Named_Flag (Info, Infos (I).Has_Named);
          Set_Aggr_Low_Limit (Info, Infos (I).Low);
          Set_Aggr_High_Limit (Info, Infos (I).High);
-         Set_Aggr_Max_Length (Info, Iir_Int32 (Infos (I).Min_Length));
+         Set_Aggr_Min_Length (Info, Iir_Int32 (Infos (I).Min_Length));
          Set_Aggr_Others_Flag (Info, Infos (I).Has_Others);
       end loop;
       return Aggr;
