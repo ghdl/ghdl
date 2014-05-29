@@ -270,6 +270,7 @@ package body Iirs_Utils is
 
    procedure Add_Dependence (Target: Iir_Design_Unit; Unit: Iir) is
    begin
+      --  Do not add self-dependency
       if Unit = Target then
          return;
       end if;
