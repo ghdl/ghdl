@@ -1169,6 +1169,7 @@ GHDL has a few commands which act on a library.
 * Clean command::               
 * Remove command::              
 * Copy command::                
+* Create a Library::
 @end menu
 
 @node Directory command, Clean command, Library commands, Library commands
@@ -1217,7 +1218,7 @@ There is no short command line form for this option to prevent accidental
 clean up.  Note that after removing a design library, the files are not
 known anymore by GHDL.
 
-@node Copy command,  , Remove command, Library commands
+@node Copy command, Create a Library, Remove command, Library commands
 @subsection Copy command
 @cindex copying library
 @cindex @option{--copy} command
@@ -1233,6 +1234,25 @@ add unit to the @samp{ieee} library:
 $ ghdl --copy --work=ieee --ieee=synopsys
 $ ghdl -a --work=ieee numeric_unsigned.vhd
 @end example
+
+@node Create a Library,  , Copy command, Library commands
+@subsection Create a Library
+@cindex create your own library
+
+A new library is created by compiling entities (packages etc.) into it.
+
+@smallexample
+ghdl -a --work=my_custom_lib my_file.vhd
+@end smallexample
+
+A library's source code is usually stored and compiled into its own directory,
+that you specify with the --workdir option.
+
+@smallexample
+ghdl -a --work=my_custom_lib --workdir=my_custom_libdir my_custom_lib_srcdir/my_file.vhd
+@end smallexample
+
+See also the -PPATH command line option.
 
 @node Cross-reference command, File commands, Library commands, Invoking GHDL
 @comment  node-name,  next,  previous,  up
