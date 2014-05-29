@@ -44,9 +44,17 @@ package body Sem is
    procedure Sem_Component_Configuration
      (Conf : Iir_Component_Configuration; Father : Iir);
 
-   procedure Add_Dependence (Unit : Iir) is
+   procedure Add_Dependence (Unit : Iir)
+   is
+      Targ : constant Iir := Get_Current_Design_Unit;
    begin
-      Add_Dependence (Get_Current_Design_Unit, Unit);
+      --  During normal analysis, there is a current design unit.  But not
+      --  during debugging outside of any context.
+      if Targ = Null_Iir then
+         return;
+      end if;
+
+      Add_Dependence (Targ, Unit);
    end Add_Dependence;
 
    --  LRM 1.1  Entity declaration.
