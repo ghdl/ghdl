@@ -166,6 +166,12 @@ package Grt.Signals is
 
    type Resolved_Signal_Acc is access Resolved_Signal_Type;
 
+   type Conversion_Func_Acc is access procedure (Instance : System.Address);
+   pragma Convention (C, Conversion_Func_Acc);
+
+   function To_Conversion_Func_Acc is new Ada.Unchecked_Conversion
+     (Source => System.Address, Target => Conversion_Func_Acc);
+
    --  Signal conversion data.
    type Sig_Conversion_Type is record
       --  Function which performs the conversion.
@@ -287,6 +293,11 @@ package Grt.Signals is
       Has_Active : Boolean;
 
       --  Internal fields.
+      --  NOTE: keep above fields (components) in sync with translation.
+
+      --  Kind of the signal (none, bus or register).
+      Sig_Kind : Kind_Signal_Type;
+
       --  Values mode of this signal.
       Mode : Mode_Type;
 
@@ -468,16 +479,25 @@ package Grt.Signals is
      (Sig : Ghdl_Signal_Ptr; Proc : Process_Acc);
 
    --  Creating a signal:
-   --  1) call Ghdl_Signal_Name_Rti (CTXT and ADDR are unused) to register
-   --     the RTI for the whole signal (in particular the mode and the
-   --     has_active flag)
+   --  1a) call Ghdl_Signal_Name_Rti (CTXT and ADDR are unused) to register
+   --      the RTI for the whole signal (in particular the mode and the
+   --      has_active flag)
+   --  or
+   --  1b) call Ghdl_Signal_Set_Mode to register the mode and the has_active
+   --      flag.  In that case, the signal has no name.
+   --
    --  2) call Ghdl_Create_Signal_XXX for each non-composite element
 
    procedure Ghdl_Signal_Name_Rti (Sig : Ghdl_Rti_Access;
                                    Ctxt : Ghdl_Rti_Access;
                                    Addr : System.Address);
 
+   procedure Ghdl_Signal_Set_Mode (Mode : Mode_Signal_Type;
+                                   Kind : Kind_Signal_Type;
+                                   Has_Active : Boolean);
+
    --  FIXME: document.
+   --  Merge RTI with SIG: adjust the has_active flag of SIG according to RTI.
    procedure Ghdl_Signal_Merge_Rti (Sig : Ghdl_Signal_Ptr;
                                     Rti : Ghdl_Rti_Access);
 
@@ -641,13 +661,28 @@ package Grt.Signals is
    procedure Ghdl_Signal_Add_Source (Targ : Ghdl_Signal_Ptr;
                                      Src : Ghdl_Signal_Ptr);
 
+   --  The effective value of TARG is the effective value of SRC.
+   procedure Ghdl_Signal_Effective_Value (Targ : Ghdl_Signal_Ptr;
+                                          Src : Ghdl_Signal_Ptr);
+
+   --  Conversions.  In order to do conversion from A to B, an intermediate
+   --  signal T must be created.  The flow is A -> T -> B.
+   --  The link from A -> T is a conversion, added by one of the two
+   --  following procedures.  The type of A and T is different.
+   --  The link from T -> B is a normal connection: either an effective
+   --  one (for in conversion) or a source (for out conversion).
+
    --  Add an in conversion (from SRC to DEST using function FUNC).
+   --  The effective value can be read and writen directly.
    procedure Ghdl_Signal_In_Conversion (Func : System.Address;
                                         Instance : System.Address;
                                         Src : Ghdl_Signal_Ptr;
                                         Src_Len : Ghdl_Index_Type;
                                         Dst : Ghdl_Signal_Ptr;
                                         Dst_Len : Ghdl_Index_Type);
+
+   --  Add an out conversion.
+   --  The driving value can be read and writen directly.
    procedure Ghdl_Signal_Out_Conversion (Func : System.Address;
                                          Instance : System.Address;
                                          Src : Ghdl_Signal_Ptr;
@@ -660,10 +695,6 @@ package Grt.Signals is
                                             Instance : System.Address;
                                             Sig : System.Address;
                                             Nbr_Sig : Ghdl_Index_Type);
-
-   --  The effective value of TARG is the effective value of SRC.
-   procedure Ghdl_Signal_Effective_Value (Targ : Ghdl_Signal_Ptr;
-                                          Src : Ghdl_Signal_Ptr);
 
    --  Create a new 'stable (VAL) signal.  The prefixes are set by
    --  ghdl_signal_attribute_register_prefix.

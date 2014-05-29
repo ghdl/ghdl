@@ -277,7 +277,6 @@ package Grt.Types is
    --  Kind of a signal.
    type Kind_Signal_Type is
      (Kind_Signal_No, Kind_Signal_Register, Kind_Signal_Bus);
-   pragma Convention (C, Kind_Signal_Type);
 
    --  Note: we could use system.storage_elements, but unfortunatly,
    --  this doesn't work with pragma no_run_time (gnat 3.15p).

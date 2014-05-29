@@ -48,24 +48,25 @@ package body Grt.Signals is
    end Free_In;
    pragma Inline (Free_In);
 
-   function Is_Signal_Guarded (Sig : Ghdl_Signal_Ptr) return Boolean
-   is
-   begin
-      return (Sig.Rti.Common.Mode and Ghdl_Rti_Signal_Kind_Mask)
-        /= Ghdl_Rti_Signal_Kind_No;
-   end Is_Signal_Guarded;
-
+   --  RTI for the current signal.
    Sig_Rti : Ghdl_Rtin_Object_Acc;
+
+   --  Signal mode (and flags) for the current signal.
+   Sig_Mode : Mode_Signal_Type;
+   Sig_Has_Active : Boolean;
+   Sig_Kind : Kind_Signal_Type;
+
+   --  Last created implicit signal.  This is used to add dependencies on
+   --  the prefix.
    Last_Implicit_Signal : Ghdl_Signal_Ptr;
+
+   --  Current signal resolver.
    Current_Resolv : Resolved_Signal_Acc := null;
 
-   function Get_Current_Mode_Signal return Mode_Signal_Type
-   is
+   function Get_Current_Mode_Signal return Mode_Signal_Type is
    begin
-      return Mode_Signal_Type'Val
-        (Sig_Rti.Common.Mode and Ghdl_Rti_Signal_Mode_Mask);
+      return Sig_Mode;
    end Get_Current_Mode_Signal;
-
 
    procedure Ghdl_Signal_Name_Rti (Sig : Ghdl_Rti_Access;
                                    Ctxt : Ghdl_Rti_Access;
@@ -75,7 +76,29 @@ package body Grt.Signals is
       pragma Unreferenced (Addr);
    begin
       Sig_Rti := To_Ghdl_Rtin_Object_Acc (Sig);
+      Sig_Mode := Mode_Signal_Type'Val
+        (Sig.Mode and Ghdl_Rti_Signal_Mode_Mask);
+      Sig_Kind := Kind_Signal_Type'Val
+        ((Sig.Mode and Ghdl_Rti_Signal_Kind_Mask)
+         / Ghdl_Rti_Signal_Kind_Offset);
+      Sig_Has_Active :=
+        (Sig_Rti.Common.Mode and Ghdl_Rti_Signal_Has_Active) /= 0;
    end Ghdl_Signal_Name_Rti;
+
+   procedure Ghdl_Signal_Set_Mode (Mode : Mode_Signal_Type;
+                                   Kind : Kind_Signal_Type;
+                                   Has_Active : Boolean) is
+   begin
+      Sig_Rti := null;
+      Sig_Mode := Mode;
+      Sig_Kind := Kind;
+      Sig_Has_Active := Has_Active;
+   end Ghdl_Signal_Set_Mode;
+
+   function Is_Signal_Guarded (Sig : Ghdl_Signal_Ptr) return Boolean is
+   begin
+      return Sig.Sig_Kind /= Kind_Signal_No;
+   end Is_Signal_Guarded;
 
    function To_Address is new Ada.Unchecked_Conversion
      (Source => Ghdl_Signal_Ptr, Target => Address);
@@ -148,6 +171,7 @@ package body Grt.Signals is
                               Event => False,
                               Active => False,
                               Has_Active => False,
+                              Sig_Kind => Sig_Kind,
 
                               Mode => Mode,
                               Flags => (Propag => Propag_None,
@@ -176,9 +200,7 @@ package body Grt.Signals is
          when Activity_All =>
             Res.Has_Active := True;
          when Activity_Minimal =>
-            if (Sig_Rti.Common.Mode and Ghdl_Rti_Signal_Has_Active) /= 0 then
-               Res.Has_Active := True;
-            end if;
+            Res.Has_Active := Sig_Has_Active;
          when Activity_None =>
             Res.Has_Active := False;
       end case;
@@ -237,11 +259,12 @@ package body Grt.Signals is
             --  LRM 4.3.1.2 Signal Declaration
             --  It is an error if, after the elaboration of a description, a
             --  signal has multiple sources and it is not a resolved signal.
-            Put ("for signal: ");
-            Disp_Signals.Put_Signal_Name (stderr, Sig);
-            New_Line (stderr);
+            if Sig.Rti /= null then
+               Put ("for signal: ");
+               Disp_Signals.Put_Signal_Name (stderr, Sig);
+               New_Line (stderr);
+            end if;
             Error ("several sources for unresolved signal");
-            --  FIXME: display signal name.
          elsif Sig.S.Mode_Sig = Mode_Buffer and False then
             --  LRM 1.1.1.2  Ports
             --  A BUFFER port may have at most one source.
@@ -1359,7 +1382,7 @@ package body Grt.Signals is
       Res := Create_Signal
         (Mode_B2, Value_Union'(Mode => Mode_B2, B2 => True),
          Mode, null, Null_Address);
-
+      Sig_Rti := null;
       Last_Implicit_Signal := Res;
 
       if Mode /= Mode_Transaction then
@@ -1429,6 +1452,7 @@ package body Grt.Signals is
       Res := Create_Signal
         (Mode_B2, Value_Union'(Mode => Mode_B2, B2 => Proc.all (This)),
          Mode_Guard, null, Null_Address);
+      Sig_Rti := null;
       Res.S.Guard_Func := Proc;
       Res.S.Guard_Instance := This;
       Last_Implicit_Signal := Res;
@@ -1812,9 +1836,9 @@ package body Grt.Signals is
       end loop;
 
       --  if no driving sources and register, exit.
-      if Length = 0 and then Sig.Nbr_Ports = 0
-        and then ((Sig.Rti.Common.Mode and Ghdl_Rti_Signal_Kind_Mask)
-                  = Ghdl_Rti_Signal_Kind_Register)
+      if Length = 0
+        and then Sig.Nbr_Ports = 0
+        and then Sig.Sig_Kind = Kind_Signal_Register
       then
          return;
       end if;
@@ -1827,11 +1851,6 @@ package body Grt.Signals is
                               Sig.S.Nbr_Drivers,
                               Sig.Nbr_Ports);
    end Compute_Resolved_Signal;
-
-   type Conversion_Func_Acc is access procedure (Instance : System.Address);
-   pragma Convention (C, Conversion_Func_Acc);
-   function To_Conversion_Func_Acc is new Ada.Unchecked_Conversion
-     (Source => System.Address, Target => Conversion_Func_Acc);
 
    procedure Call_Conversion_Function (Conv : Sig_Conversion_Acc)
    is
@@ -3305,6 +3324,7 @@ package body Grt.Signals is
                                      Event => False,
                                      Active => False,
                                      Has_Active => False,
+                                     Sig_Kind => Kind_Signal_No,
                                      Mode => Mode_B2,
 
                                      Flags => (Propag => Propag_None,
