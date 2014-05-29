@@ -1493,10 +1493,10 @@ package body Sem_Specs is
             end if;
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
             Location_Copy (Assoc, Parent);
-            Set_Whole_Association_Flag (Assoc, True);
             Set_Actual (Assoc, Comp_El);
             Found := Found + 1;
          end if;
+         Set_Whole_Association_Flag (Assoc, True);
          Set_Formal (Assoc, Ent_El);
          if Kind = Map_Port
            and then not Error
