@@ -174,4 +174,7 @@ package Libraries is
    --  If there are severals entities, return NULL_IIR;
    function Find_Entity_For_Component (Name: Name_Id) return Iir_Design_Unit;
 
+   --  Get the chain of libraries.  Can be used only to read (it musn't be
+   --  modified).
+   function Get_Libraries_Chain return Iir_Library_Declaration;
 end Libraries;

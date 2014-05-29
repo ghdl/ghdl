@@ -1699,4 +1699,8 @@ package body Libraries is
       return Res;
    end Find_Entity_For_Component;
 
+   function Get_Libraries_Chain return Iir_Library_Declaration is
+   begin
+      return Libraries_Chain;
+   end Get_Libraries_Chain;
 end Libraries;
