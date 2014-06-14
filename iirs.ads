@@ -1879,6 +1879,10 @@ package Iirs is
    --
    --   Get/Set_Callees_List (Field7)
    --
+   -- The concurrent statement at the origin of that process.  This is Null_Iir
+   -- for a user process.
+   --   Get/Set_Process_Origin (Field8)
+   --
    --   Get/Set_Wait_State (State1)
    --
    --   Get/Set_Seen_Flag (Flag1)
@@ -4866,6 +4870,10 @@ package Iirs is
    --  Field: Field6 (uc)
    function Get_Sensitivity_List (Wait : Iir) return Iir_List;
    procedure Set_Sensitivity_List (Wait : Iir; List : Iir_List);
+
+   --  Field: Field8
+   function Get_Process_Origin (Proc : Iir) return Iir;
+   procedure Set_Process_Origin (Proc : Iir; Orig : Iir);
 
    --  Field: Field5
    function Get_Condition_Clause (Wait : Iir_Wait_Statement) return Iir;

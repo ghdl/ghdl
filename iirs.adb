@@ -4335,6 +4335,29 @@ package body Iirs is
       Set_Field6 (Wait, Iir_List_To_Iir (List));
    end Set_Sensitivity_List;
 
+   procedure Check_Kind_For_Process_Origin (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Process_Statement =>
+            null;
+         when others =>
+            Failed ("Process_Origin", Target);
+      end case;
+   end Check_Kind_For_Process_Origin;
+
+   function Get_Process_Origin (Proc : Iir) return Iir is
+   begin
+      Check_Kind_For_Process_Origin (Proc);
+      return Get_Field8 (Proc);
+   end Get_Process_Origin;
+
+   procedure Set_Process_Origin (Proc : Iir; Orig : Iir) is
+   begin
+      Check_Kind_For_Process_Origin (Proc);
+      Set_Field8 (Proc, Orig);
+   end Set_Process_Origin;
+
    procedure Check_Kind_For_Condition_Clause (Target : Iir) is
    begin
       case Get_Kind (Target) is
