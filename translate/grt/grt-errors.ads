@@ -62,6 +62,11 @@ package Grt.Errors is
    --  Display an error message for an overflow.
    procedure Grt_Overflow_Error;
 
+   --  Called at end of error message.  Central point for failures.
+   procedure Fatal_Error;
+   pragma No_Return (Fatal_Error);
+   pragma Export (C, Fatal_Error, "__ghdl_fatal");
+
    --  Hook called in case of error.
    Error_Hook : Grt.Hooks.Proc_Hook_Type := null;
 

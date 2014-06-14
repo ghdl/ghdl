@@ -28,10 +28,6 @@ with Grt.Options; use Grt.Options;
 with Grt.Hooks; use Grt.Hooks;
 
 package body Grt.Errors is
-   procedure Fatal_Error;
-   pragma No_Return (Fatal_Error);
-   pragma Export (C, Fatal_Error, "__ghdl_fatal");
-
    --  Called in case of premature exit.
    --  CODE is 0 for success, 1 for failure.
    procedure Ghdl_Exit (Code : Integer);
