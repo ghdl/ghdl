@@ -149,8 +149,13 @@ package body Grt.Disp_Signals is
             when Trans_Error =>
                Put ("ERROR");
          end case;
-         Put ("@");
-         Put_Time (stdout, T.Time);
+         if T.Kind = Trans_Direct then
+            --  The Time field is not updated for direct transaction.
+            Put ("[DIRECT]");
+         else
+            Put ("@");
+            Put_Time (stdout, T.Time);
+         end if;
          T := T.Next;
          exit when T = null;
          Put (", ");
