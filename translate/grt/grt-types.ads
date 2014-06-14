@@ -89,7 +89,7 @@ package Grt.Types is
    function To_Ghdl_Uc_Array_Acc is new Ada.Unchecked_Conversion
      (Source => Address, Target => Ghdl_Uc_Array_Acc);
 
-   type Std_String_Ptr is access Std_String;
+   type Std_String_Ptr is access all Std_String;
 
    --  Verilog types.
 
