@@ -39,6 +39,9 @@ package body Canon is
                                 Parent : Iir;
                                 Decl_Parent : Iir);
 
+   --  Canon on expressions, mainly for function calls.
+   procedure Canon_Expression (Expr: Iir);
+
    --  Canonicalize an association list.
    --  If ASSOCIATION_LIST is not null, then it is re-ordored and returned.
    --  If ASSOCIATION_LIST is null then:
@@ -61,6 +64,8 @@ package body Canon is
    --  belongs to.
    procedure Canon_Block_Configuration (Top : Iir_Design_Unit;
                                         Conf : Iir_Block_Configuration);
+
+   procedure Canon_Subtype_Indication_If_Anonymous (Def : Iir);
 
    procedure Canon_Extract_Sensitivity_Aggregate
      (Aggr : Iir;
@@ -552,6 +557,35 @@ package body Canon is
 --       end loop;
 --    end Canon_Concatenation_Operator;
 
+   procedure Canon_Aggregate_Expression (Expr: Iir)
+   is
+      Assoc : Iir;
+   begin
+      Assoc := Get_Association_Choices_Chain (Expr);
+      while Assoc /= Null_Iir loop
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Choice_By_Others
+              | Iir_Kind_Choice_By_None
+              | Iir_Kind_Choice_By_Name =>
+               null;
+            when Iir_Kind_Choice_By_Expression =>
+               Canon_Expression (Get_Expression (Assoc));
+            when Iir_Kind_Choice_By_Range =>
+               declare
+                  Choice : constant Iir := Get_Expression (Assoc);
+               begin
+                  if Get_Kind (Choice) = Iir_Kind_Range_Expression then
+                     Canon_Expression (Choice);
+                  end if;
+               end;
+            when others =>
+               Error_Kind ("canon_aggregate_expression", Assoc);
+         end case;
+         Canon_Expression (Get_Associated (Assoc));
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Canon_Aggregate_Expression;
+
    -- canon on expressions, mainly for function calls.
    procedure Canon_Expression (Expr: Iir)
    is
@@ -624,8 +658,7 @@ package body Canon is
            | Iir_Kind_Qualified_Expression =>
             Canon_Expression (Get_Expression (Expr));
          when Iir_Kind_Aggregate =>
-            --  FIXME
-            null;
+            Canon_Aggregate_Expression (Expr);
          when Iir_Kind_Allocator_By_Expression =>
             Canon_Expression (Get_Expression (Expr));
          when Iir_Kind_Allocator_By_Subtype =>
@@ -706,6 +739,19 @@ package body Canon is
             null;
       end case;
    end Canon_Expression;
+
+   procedure Canon_Discrete_Range (Rng : Iir) is
+   begin
+      case Get_Kind (Rng) is
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
+            Canon_Expression (Get_Range_Constraint (Rng));
+         when Iir_Kind_Enumeration_Type_Definition =>
+            null;
+         when others =>
+            Error_Kind ("canon_discrete_range", Rng);
+      end case;
+   end Canon_Discrete_Range;
 
    procedure Canon_Waveform_Chain
      (Chain : Iir_Waveform_Element; Sensitivity_List: Iir_List)
@@ -1026,6 +1072,9 @@ package body Canon is
                -- FIXME: decl.
                Prev_Loop := Cur_Loop;
                Cur_Loop := Stmt;
+               if Canon_Flag_Expressions then
+                  Canon_Discrete_Range (Get_Type (Get_Iterator_Scheme (Stmt)));
+               end if;
                Canon_Sequential_Stmts (Get_Sequential_Statement_Chain (Stmt));
                Cur_Loop := Prev_Loop;
 
@@ -1086,6 +1135,7 @@ package body Canon is
       Set_Parent (Proc, Get_Parent (Stmt));
       Sensitivity_List := Create_Iir_List;
       Set_Sensitivity_List (Proc, Sensitivity_List);
+      Set_Process_Origin (Proc, Stmt);
 
       --  LRM93 9.5
       --  1. If a label appears on the concurrent signal assignment, then the
@@ -1190,6 +1240,7 @@ package body Canon is
       end if;
       Location_Copy (Proc, El);
       Set_Parent (Proc, Get_Parent (El));
+      Set_Process_Origin (Proc, El);
 
       --  LRM93 9.3
       --  The equivalent process statement has a label if and only if the
@@ -1455,6 +1506,7 @@ package body Canon is
                Proc := Create_Iir (Iir_Kind_Sensitized_Process_Statement);
                Location_Copy (Proc, El);
                Set_Parent (Proc, Get_Parent (El));
+               Set_Process_Origin (Proc, El);
 
                --  LRM93 9.4
                --  The equivalent process statement has a label if and only if
@@ -2107,6 +2159,49 @@ package body Canon is
       end loop;
    end Canon_Disconnection_Specification;
 
+   procedure Canon_Subtype_Indication (Def : Iir) is
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Array_Subtype_Definition =>
+            declare
+               Indexes : constant Iir_List :=
+                 Get_Index_Subtype_List (Def);
+               Index : Iir;
+            begin
+               for I in Natural loop
+                  Index := Get_Nth_Element (Indexes, I);
+                  exit when Index = Null_Iir;
+                  Canon_Subtype_Indication_If_Anonymous (Index);
+               end loop;
+            end;
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition
+           | Iir_Kind_Physical_Subtype_Definition =>
+            declare
+               Rng : constant Iir := Get_Range_Constraint (Def);
+            begin
+               if Get_Kind (Rng) = Iir_Kind_Range_Expression then
+                  Canon_Expression (Rng);
+               end if;
+            end;
+         when Iir_Kind_Record_Subtype_Definition
+           | Iir_Kind_Record_Type_Definition =>
+            null;
+         when Iir_Kind_Access_Subtype_Definition =>
+            null;
+         when others =>
+            Error_Kind ("canon_subtype_indication", Def);
+      end case;
+   end Canon_Subtype_Indication;
+
+   procedure Canon_Subtype_Indication_If_Anonymous (Def : Iir) is
+   begin
+      if Is_Anonymous_Type_Definition (Def) then
+         Canon_Subtype_Indication (Def);
+      end if;
+   end Canon_Subtype_Indication_If_Anonymous;
+
    procedure Canon_Declaration (Top : Iir_Design_Unit;
                                 Decl : Iir;
                                 Parent : Iir;
@@ -2146,6 +2241,7 @@ package body Canon is
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Constant_Declaration =>
             if Canon_Flag_Expressions then
+               Canon_Subtype_Indication_If_Anonymous (Get_Type (Decl));
                Canon_Expression (Get_Default_Value (Decl));
             end if;
 
@@ -2455,6 +2551,19 @@ package body Canon is
       end loop;
    end Canon_Block_Configuration;
 
+   procedure Canon_Interface_List (Chain : Iir)
+   is
+      Inter : Iir;
+   begin
+      if Canon_Flag_Expressions then
+         Inter := Chain;
+         while Inter /= Null_Iir loop
+            Canon_Expression (Get_Default_Value (Inter));
+            Inter := Get_Chain (Inter);
+         end loop;
+      end if;
+   end Canon_Interface_List;
+
    procedure Canonicalize (Unit: Iir_Design_Unit)
    is
       El: Iir;
@@ -2480,6 +2589,8 @@ package body Canon is
       El := Get_Library_Unit (Unit);
       case Get_Kind (El) is
          when Iir_Kind_Entity_Declaration =>
+            Canon_Interface_List (Get_Generic_Chain (El));
+            Canon_Interface_List (Get_Port_Chain (El));
             Canon_Declarations (Unit, El, El);
             Canon_Concurrent_Stmts (Unit, El);
          when Iir_Kind_Architecture_Declaration =>
