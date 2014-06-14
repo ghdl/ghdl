@@ -2099,6 +2099,9 @@ package body Disp_Vhdl is
          when Iir_Kind_Last_Value_Attribute =>
             Disp_Expression (Get_Prefix (Expr));
             Put ("'last_value");
+         when Iir_Kind_Last_Active_Attribute =>
+            Disp_Expression (Get_Prefix (Expr));
+            Put ("'last_active");
          when Iir_Kind_Last_Event_Attribute =>
             Disp_Expression (Get_Prefix (Expr));
             Put ("'last_event");
