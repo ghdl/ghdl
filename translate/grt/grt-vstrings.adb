@@ -251,4 +251,91 @@ package body Grt.Vstrings is
 
    procedure To_String (Str : out String; First : out Natural; N : Ghdl_I64)
      renames To_String_I64;
+
+   procedure To_String (Str : out String; Last : out Natural; N : Ghdl_F64)
+   is
+      function Trunc (V : Ghdl_F64) return Ghdl_F64;
+      pragma Import (C, Trunc);
+
+      P : Natural := Str'First;
+      V : Ghdl_F64;
+      Vmax : Ghdl_F64;
+      Vd : Ghdl_F64;
+      Exp : Integer;
+      D : Integer;
+      B : Boolean;
+   begin
+      --  Handle sign.
+      if N < 0.0 then
+         Str (P) := '-';
+         P := P + 1;
+         V := -N;
+      else
+         V := N;
+      end if;
+
+      --  Compute the mantissa.
+      --  and normalize V in [0 .. 10.0[
+      --  FIXME: should do a dichotomy.
+      if V  = 0.0 then
+         Exp := 0;
+      elsif V < 1.0 then
+         Exp := 0;
+         loop
+            exit when V >= 1.0;
+            Exp := Exp - 1;
+            V := V * 10.0;
+         end loop;
+      else
+         Exp := 0;
+         loop
+            exit when V < 10.0;
+            Exp := Exp + 1;
+            V := V / 10.0;
+         end loop;
+      end if;
+
+      Vmax := 10.0 ** (1 - 15);
+      for I in 0 .. 15 loop
+         --  Vd := Ghdl_F64'Truncation (V);
+         Vd := Trunc (V);
+         Str (P) := Character'Val (48 + Integer (Vd));
+         P := P + 1;
+         V := (V - Vd) * 10.0;
+
+         if I = 0 then
+            Str (P) := '.';
+            P := P + 1;
+         end if;
+         exit when I > 0 and V < Vmax;
+         Vmax := Vmax * 10.0;
+      end loop;
+
+      if Exp /= 0 then
+         --  LRM93 14.3
+         --  if the exponent is present, the `e' is written as a lower case
+         --  character.
+         Str (P) := 'e';
+         P := P + 1;
+
+         if Exp < 0 then
+            Str (P) := '-';
+            P := P + 1;
+            Exp := -Exp;
+         end if;
+         B := False;
+         for I in 0 .. 4 loop
+            D := (Exp / 10000) mod 10;
+            if D /= 0 or B or I = 4 then
+               Str (P) := Character'Val (48 + D);
+               P := P + 1;
+               B := True;
+            end if;
+            Exp := (Exp - D * 10000) * 10;
+         end loop;
+      end if;
+
+      Last := P - 1;
+   end To_String;
+
 end Grt.Vstrings;

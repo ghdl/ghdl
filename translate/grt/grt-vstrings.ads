@@ -84,6 +84,11 @@ package Grt.Vstrings is
    --  Requires at least 21 characters.
    procedure To_String (Str : out String; First : out Natural; N : Ghdl_I64);
 
+   --  Requires at least 24 characters.
+   --  Sign (1) + digit (1) + dot (1) + digits (15) + exp (1) + sign (1)
+   --  + exp_digits (4) -> 24.
+   procedure To_String (Str : out String; Last : out Natural; N : Ghdl_F64);
+
 private
    subtype Fat_String is String (Positive);
    type Fat_String_Acc is access Fat_String;
