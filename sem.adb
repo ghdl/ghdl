@@ -915,8 +915,6 @@ package body Sem is
       --  component instance is unbound in the corresponding block, then any
       --  implicit component configuration for that instance will contain an
       --  implicit, default binding indication.
-      -- FIXME: ports and generics declared by the component must be
-      --   made visible here; create a declarative_region only for this purpose
       Open_Declarative_Region;
       Sem_Scopes.Add_Component_Declarations (Comp);
       Binding := Get_Binding_Indication (Conf);
