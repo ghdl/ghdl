@@ -995,8 +995,8 @@ package body Sem_Specs is
    begin
       if Bind = Null_Iir then
          raise Internal_Error;
-         return;
       end if;
+
       Entity_Aspect := Get_Entity_Aspect (Bind);
       if Entity_Aspect /= Null_Iir then
          Entity := Sem_Entity_Aspect (Entity_Aspect);
@@ -1058,6 +1058,11 @@ package body Sem_Specs is
          end if;
       else
          Sem_Generic_Port_Association_Chain (Entity, Bind);
+
+         --  LRM 5.2.1 Binding Indication
+         --  If the generic map aspect or port map aspect of a binding
+         --  indication is not present, then the default rules as described
+         --  in 5.2.2 apply.
          if Get_Generic_Map_Aspect_Chain (Bind) = Null_Iir
            and then Primary_Entity_Aspect = Null_Iir
          then
@@ -1260,14 +1265,12 @@ package body Sem_Specs is
                               & Image_Identifier (El) & ''', El);
             elsif not Is_In_Current_Declarative_Region (Inter) then
                --  FIXME.
-               Error_Msg_Sem
-                 ("label not in block declarative part", El);
+               Error_Msg_Sem ("label not in block declarative part", El);
             else
                Comp := Get_Declaration (Inter);
                if Get_Kind (Comp) /= Iir_Kind_Component_Instantiation_Statement
                then
-                  Error_Msg_Sem
-                    ("label does not denote an instantiation", El);
+                  Error_Msg_Sem ("label does not denote an instantiation", El);
                else
                   Inst := Get_Instantiated_Unit (Comp);
                   if Get_Kind (Inst) /= Iir_Kind_Component_Declaration then
@@ -1408,6 +1411,10 @@ package body Sem_Specs is
    end Sem_Create_Default_Binding_Indication;
 
    --  LRM 5.2.2
+   --  The default binding indication includes a default generic map aspect
+   --  if the design entity implied by the entity aspect contains formal
+   --  generics.
+   --
    --  The default generic map aspect associates each local generic in
    --  the corresponding component instantiation (if any) with a formal
    --  of the same simple name.
@@ -1417,6 +1424,10 @@ package body Sem_Specs is
    --  designator OPEN.
 
    --  LRM 5.2.2
+   --  The default binding indication includes a default port map aspect
+   --  if the design entity implied by the entity aspect contains formal
+   --  ports.
+   --
    --  The default port map aspect associates each local port in the
    --  corresponding component instantiation (if any) with a formal of
    --  the same simple name.
@@ -1424,11 +1435,6 @@ package body Sem_Specs is
    --  and type are not appropriate for such an association.
    --  Any remaining unassociated formals are associated with the actual
    --  designator OPEN.
-   type Map_Kind_String_Type is array (Map_Kind_Type) of String_Cst;
-   Map_Kind_Name : constant Map_Kind_String_Type :=
-     (Map_Generic => new String'("generic"),
-      Map_Port => new String'("port"));
-
    function Create_Default_Map_Aspect
      (Comp : Iir; Entity : Iir; Kind : Map_Kind_Type; Parent : Iir)
      return Iir
@@ -1451,15 +1457,7 @@ package body Sem_Specs is
       end case;
 
       --  If no formal, then there is no association list.
-      --  Just check there is no actuals.
       if Ent_Chain = Null_Iir then
-         if Comp_Chain /= Null_Iir then
-            Error_Msg_Sem ("no " & Map_Kind_Name (Kind).all & "s of "
-                           & Disp_Node (Entity)
-                           & " to be associated with "
-                           & Map_Kind_Name (Kind).all
-                           & "s of " & Disp_Node (Comp), Parent);
-         end if;
          return Null_Iir;
       end if;
 

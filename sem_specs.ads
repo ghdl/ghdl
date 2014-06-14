@@ -37,6 +37,9 @@ package Sem_Specs is
    procedure Sem_Configuration_Specification
      (Parent_Stmts : Iir; Conf : Iir_Configuration_Specification);
 
+   --  Analyze binding indication BIND of configuration specification or
+   --  component configuration PARENT.
+   --  PRIMARY_ENTITY_ASPECT is not Null_Iir for an incremental binding.
    procedure Sem_Binding_Indication (Bind : Iir_Binding_Indication;
                                      Comp : Iir_Component_Declaration;
                                      Parent : Iir;
