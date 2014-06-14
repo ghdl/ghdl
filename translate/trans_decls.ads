@@ -49,8 +49,9 @@ package Trans_Decls is
 
    --  Register a driver for a process.
    Ghdl_Process_Add_Driver : O_Dnode;
+   Ghdl_Signal_Add_Direct_Driver : O_Dnode;
 
-   --  NOW variables.
+   --  NOW variable.
    Ghdl_Now : O_Dnode;
 
    --  Protected variables.
@@ -64,6 +65,7 @@ package Trans_Decls is
 
    Ghdl_Signal_Driving : O_Dnode;
 
+   Ghdl_Signal_Direct_Assign : O_Dnode;
 
    Ghdl_Signal_Simple_Assign_Error : O_Dnode;
    Ghdl_Signal_Start_Assign_Error : O_Dnode;
@@ -71,8 +73,6 @@ package Trans_Decls is
 
    Ghdl_Signal_Start_Assign_Null : O_Dnode;
    Ghdl_Signal_Next_Assign_Null : O_Dnode;
-
-   Ghdl_Signal_Direct_Driver : O_Dnode;
 
    Ghdl_Create_Signal_E8 : O_Dnode;
    Ghdl_Signal_Init_E8 : O_Dnode;
@@ -137,9 +137,6 @@ package Trans_Decls is
    Ghdl_Signal_Get_Nbr_Ports: O_Dnode;
    Ghdl_Signal_Read_Driver : O_Dnode;
    Ghdl_Signal_Read_Port : O_Dnode;
-
-   --  Chain of to be active signals.
-   Ghdl_Signal_Active_Chain : O_Dnode;
 
    --  Signal attribute.
    Ghdl_Create_Stable_Signal : O_Dnode;

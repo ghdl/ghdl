@@ -275,17 +275,12 @@ package Grt.Signals is
    pragma Pack (Ghdl_Signal_Flags);
 
    type Ghdl_Signal is record
-      --  Fields known by ghdl.
+      --  Fields known by the compilers.
       Value : Value_Union;
       Driving_Value : Value_Union;
       Last_Value : Value_Union;
       Last_Event : Std_Time;
       Last_Active : Std_Time;
-
-      --  Chain of signals.
-      --  Used to build nets.
-      --  This is also the simply linked list of future active signals.
-      Link : Ghdl_Signal_Ptr;
 
       Event : Boolean;
       Active : Boolean;
@@ -294,6 +289,9 @@ package Grt.Signals is
 
       --  Internal fields.
       --  NOTE: keep above fields (components) in sync with translation.
+
+      --  If set, the signal has an active direct driver.
+      Is_Direct_Active : Boolean;
 
       --  Kind of the signal (none, bus or register).
       Sig_Kind : Kind_Signal_Type;
@@ -307,7 +305,12 @@ package Grt.Signals is
       --  Net of the signal.
       Net : Signal_Net_Type;
 
-      --  Chain of signals whose active flag was set.  Used to clear it.
+      --  Chain of signals that will be active in the next delta-cycle.
+      --  (Also used to build nets).
+      Link : Ghdl_Signal_Ptr;
+
+      --  Chain of signals whose active flag was set.  Used to clear the active
+      --  flag at the end of the delta cycle.
       Alink : Ghdl_Signal_Ptr;
 
       --  Chain of signals that have a projected waveform in the real future.
@@ -530,6 +533,8 @@ package Grt.Signals is
                                             File : Ghdl_C_String;
                                             Line : Ghdl_I32);
 
+   procedure Ghdl_Signal_Direct_Assign (Sign : Ghdl_Signal_Ptr);
+
    procedure Ghdl_Signal_Set_Disconnect (Sign : Ghdl_Signal_Ptr;
                                          Time : Std_Time);
 
@@ -652,9 +657,15 @@ package Grt.Signals is
    --  Add a driver to SIGN for the current process.
    procedure Ghdl_Process_Add_Driver (Sign : Ghdl_Signal_Ptr);
 
-   --  Add a direct driver for the current process.
-   procedure Ghdl_Signal_Direct_Driver (Sign : Ghdl_Signal_Ptr;
-                                        Drv : Ghdl_Value_Ptr);
+   --  Add a direct driver for the current process.  This is an optimization
+   --  that could be used when a driver has no projected waveforms.
+   --
+   --  Assignment using direct driver:
+   --  * the driver value is set
+   --  * put the signal on the ghdl_signal_active_chain, if the signal will
+   --    be active and if not already on the chain.
+   procedure Ghdl_Signal_Add_Direct_Driver (Sign : Ghdl_Signal_Ptr;
+                                            Drv : Ghdl_Value_Ptr);
 
    --  Used for connexions:
    --  SRC is a source for TARG.
@@ -759,6 +770,9 @@ private
    pragma Export (C, Ghdl_Signal_Start_Assign_Null,
                   "__ghdl_signal_start_assign_null");
 
+   pragma Export (C, Ghdl_Signal_Direct_Assign,
+                  "__ghdl_signal_direct_assign");
+
    pragma Export (C, Ghdl_Signal_Set_Disconnect,
                   "__ghdl_signal_set_disconnect");
    pragma Export (C, Ghdl_Signal_Disconnect,
@@ -859,8 +873,8 @@ private
 
    pragma Export (C, Ghdl_Process_Add_Driver,
                   "__ghdl_process_add_driver");
-   pragma Export (C, Ghdl_Signal_Direct_Driver,
-                  "__ghdl_signal_direct_driver");
+   pragma Export (C, Ghdl_Signal_Add_Direct_Driver,
+                  "__ghdl_signal_add_direct_driver");
 
    pragma Export (C, Ghdl_Signal_Add_Source,
                   "__ghdl_signal_add_source");

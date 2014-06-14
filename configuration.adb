@@ -21,6 +21,7 @@ with Std_Package;
 with Sem_Names;
 with Name_Table; use Name_Table;
 with Flags;
+with Iirs_Utils;
 
 package body Configuration is
    procedure Add_Design_Concurrent_Stmts (Parent : Iir);
@@ -572,4 +573,41 @@ package body Configuration is
       return Top;
    end Configure;
 
+   procedure Check_Entity_Declaration_Top (Entity : Iir_Entity_Declaration)
+   is
+      Has_Error : Boolean := False;
+
+      procedure Error (Msg : String; Loc : Iir) is
+      begin
+         if not Has_Error then
+            Error_Msg_Elab
+              (Disp_Node (Entity) & " cannot be at the top of a design");
+            Has_Error := True;
+         end if;
+         Error_Msg_Elab (Msg, Loc);
+      end Error;
+
+      El : Iir;
+   begin
+      --  Check generics.
+      El := Get_Generic_Chain (Entity);
+      while El /= Null_Iir loop
+         if Get_Default_Value (El) = Null_Iir then
+            Error ("(" & Disp_Node (El) & " has no default value)", El);
+         end if;
+         El := Get_Chain (El);
+      end loop;
+
+      --  Check port.
+      El := Get_Port_Chain (Entity);
+      while El /= Null_Iir loop
+         if not Iirs_Utils.Is_Fully_Constrained_Type (Get_Type (El))
+           and then Get_Default_Value (El) = Null_Iir
+         then
+            Error ("(" & Disp_Node (El)
+                     & " is unconstrained and has no default value)", El);
+         end if;
+         El := Get_Chain (El);
+      end loop;
+   end Check_Entity_Declaration_Top;
 end Configuration;

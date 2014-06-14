@@ -104,4 +104,16 @@ package Evaluation is
    --  Compare two string literals (of same length).
    type Compare_Type is (Compare_Lt, Compare_Eq, Compare_Gt);
    function Compare_String_Literals (L, R : Iir) return Compare_Type;
+
+   --  Return the local part of 'Instance_Name or 'Path_Name.
+   type Path_Instance_Name_Type (Len : Natural) is record
+      --  The node before suffix (entity, architecture or generate iterator).
+      Path_Instance : Iir;
+
+      --  The suffix
+      Suffix : String (1 .. Len);
+   end record;
+
+   function Get_Path_Instance_Name_Suffix (Attr : Iir)
+                                          return Path_Instance_Name_Type;
 end Evaluation;

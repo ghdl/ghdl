@@ -46,4 +46,10 @@ package Configuration is
    Flag_Load_All_Design_Units : Boolean := True;
 
    Flag_Build_File_Dependence : Boolean := False;
+
+   --  Check if ENTITY can be at the top of a hierarchy, ie:
+   --  ENTITY has no generics or all generics have a default expression
+   --  ENTITY has no ports or all ports type are constrained.
+   --  If not, emit a elab error message.
+   procedure Check_Entity_Declaration_Top (Entity : Iir_Entity_Declaration);
 end Configuration;

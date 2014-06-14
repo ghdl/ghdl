@@ -147,7 +147,6 @@ package body Translation is
    Ghdl_Signal_Last_Value_Field : O_Fnode;
    Ghdl_Signal_Last_Event_Field : O_Fnode;
    Ghdl_Signal_Last_Active_Field : O_Fnode;
-   Ghdl_Signal_Active_Chain_Field : O_Fnode;
    Ghdl_Signal_Event_Field : O_Fnode;
    Ghdl_Signal_Active_Field : O_Fnode;
    Ghdl_Signal_Has_Active_Field : O_Fnode;
@@ -21264,6 +21263,7 @@ package body Translation is
       is
          Targ_Sig : Mnode;
          If_Blk : O_If_Block;
+         Constr : O_Assoc_List;
          Cond : O_Dnode;
          Drv : Mnode;
       begin
@@ -21300,25 +21300,14 @@ package body Translation is
 
          --  Put signal into active list (if not already in the list).
          --  FIXME: this is not thread-safe!
-         Start_If_Stmt
-           (If_Blk,
-            New_Dyadic_Op
-            (ON_And,
-             New_Obj_Value (Cond),
-             New_Compare_Op
-             (ON_Eq,
-              New_Value (Chap14.Get_Signal_Field
-                         (Targ_Sig, Ghdl_Signal_Active_Chain_Field)),
-              New_Lit (New_Null_Access (Ghdl_Signal_Ptr)),
-              Ghdl_Bool_Type)));
-         New_Assign_Stmt
-           (Chap14.Get_Signal_Field (Targ_Sig, Ghdl_Signal_Active_Chain_Field),
-            New_Obj_Value (Ghdl_Signal_Active_Chain));
-         New_Assign_Stmt
-           (New_Obj (Ghdl_Signal_Active_Chain),
-            New_Convert_Ov (New_Value (M2Lv (Targ_Sig)),
-                            Ghdl_Signal_Ptr));
+         Start_If_Stmt (If_Blk, New_Obj_Value (Cond));
+         Start_Association (Constr, Ghdl_Signal_Direct_Assign);
+         New_Association (Constr,
+                          New_Convert_Ov (New_Value (M2Lv (Targ_Sig)),
+                                          Ghdl_Signal_Ptr));
+         New_Procedure_Call (Constr);
          Finish_If_Stmt (If_Blk);
+
          Close_Temp;
       end Gen_Signal_Direct_Assign_Non_Composite;
 
@@ -22590,7 +22579,7 @@ package body Translation is
          pragma Unreferenced (Targ_Type);
          Constr : O_Assoc_List;
       begin
-         Start_Association (Constr, Ghdl_Signal_Direct_Driver);
+         Start_Association (Constr, Ghdl_Signal_Add_Direct_Driver);
          New_Association
            (Constr, New_Convert_Ov (New_Value (M2Lv (Targ)), Ghdl_Signal_Ptr));
          New_Association
@@ -22662,7 +22651,7 @@ package body Translation is
 --           pragma Unreferenced (Sig_Type);
 --           Constr : O_Assoc_List;
 --        begin
---           Start_Association (Constr, Ghdl_Signal_Direct_Driver);
+--           Start_Association (Constr, Ghdl_Signal_Add_Direct_Driver);
 --           New_Association
 --          (Constr, New_Convert_Ov (New_Value (M2Lv (Sig)), Ghdl_Signal_Ptr));
 --           New_Association
@@ -25298,225 +25287,22 @@ package body Translation is
                                 Pinfo.Ortho_Type (Mode_Value));
       end Translate_Value_Attribute;
 
-      --  Current path for name attributes.
-      Path_Str : String_Acc := null;
-      Path_Maxlen : Natural := 0;
-      Path_Len : Natural;
-      Path_Instance : Iir;
-
-      procedure Deallocate is new Ada.Unchecked_Deallocation
-        (Name => String_Acc, Object => String);
-
-      procedure Path_Reset is
-      begin
-         Path_Len := 0;
-         Path_Instance := Null_Iir;
-         if Path_Maxlen = 0 then
-            Path_Maxlen := 256;
-            Path_Str := new String (1 .. Path_Maxlen);
-         end if;
-      end Path_Reset;
-
-      procedure Path_Add (Str : String)
-      is
-         N_Len : Natural;
-         N_Path : String_Acc;
-      begin
-         N_Len := Path_Maxlen;
-         loop
-            exit when Path_Len + Str'Length <= N_Len;
-            N_Len := N_Len * 2;
-         end loop;
-         if N_Len /= Path_Maxlen then
-            N_Path := new String (1 .. N_Len);
-            N_Path (1 .. Path_Len) := Path_Str (1 .. Path_Len);
-            Deallocate (Path_Str);
-            Path_Str := N_Path;
-            Path_Maxlen := N_Len;
-         end if;
-         Path_Str (Path_Len + 1 .. Path_Len + Str'Length) := Str;
-         Path_Len := Path_Len + Str'Length;
-      end Path_Add;
-
-      procedure Path_Add_Type_Name (Atype : Iir)
-      is
-         use Name_Table;
-         Adecl : Iir;
-      begin
-         Adecl := Get_Type_Declarator (Atype);
-         Image (Get_Identifier (Adecl));
-         Path_Add (Name_Buffer (1 .. Name_Length));
-      end Path_Add_Type_Name;
-
-      procedure Path_Add_Signature (Subprg : Iir)
-      is
-         Chain : Iir;
-      begin
-         Path_Add ("[");
-         Chain := Get_Interface_Declaration_Chain (Subprg);
-         while Chain /= Null_Iir loop
-            Path_Add_Type_Name (Get_Type (Chain));
-            Chain := Get_Chain (Chain);
-            if Chain /= Null_Iir then
-               Path_Add (",");
-            end if;
-         end loop;
-
-         case Get_Kind (Subprg) is
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Implicit_Function_Declaration =>
-               Path_Add (" return ");
-               Path_Add_Type_Name (Get_Return_Type (Subprg));
-            when others =>
-               null;
-         end case;
-         Path_Add ("]");
-      end Path_Add_Signature;
-
-      procedure Path_Add_Name (N : Iir)
-      is
-         use Name_Table;
-      begin
-         Eval_Simple_Name (Get_Identifier (N));
-         if Name_Buffer (1) /= 'P' then
-            --  Skip anonymous processes.
-            Path_Add (Name_Buffer (1 .. Name_Length));
-         end if;
-      end Path_Add_Name;
-
-      procedure Path_Add_Element (El : Iir; Is_Instance : Boolean)
-      is
-      begin
-         --  LRM 14.1
-         --  E'INSTANCE_NAME
-         --    There is one full pah instance element for each component
-         --    instantiation, block statement, generate statemenent, process
-         --    statement, or subprogram body in the design hierarchy between
-         --    the top design entity and the named entity denoted by the
-         --    prefix.
-         --
-         --  E'PATH_NAME
-         --    There is one path instance element for each component
-         --    instantiation, block statement, generate statement, process
-         --    statement, or subprogram body in the design hierarchy between
-         --    the root design entity and the named entity denoted by the
-         --    prefix.
-         case Get_Kind (El) is
-            when Iir_Kind_Library_Declaration =>
-               Path_Add (":");
-               Path_Add_Name (El);
-               Path_Add (":");
-            when Iir_Kind_Package_Declaration =>
-               Path_Add_Element
-                 (Get_Library (Get_Design_File (Get_Design_Unit (El))),
-                  Is_Instance);
-               Path_Add_Name (El);
-               Path_Add (":");
-            when Iir_Kind_Entity_Declaration =>
-               Path_Instance := El;
-            when Iir_Kind_Architecture_Declaration =>
-               Path_Instance := El;
-            when Iir_Kind_Design_Unit =>
-               Path_Add_Element (Get_Library_Unit (El), Is_Instance);
-            when Iir_Kind_Sensitized_Process_Statement
-              | Iir_Kind_Process_Statement
-              | Iir_Kind_Block_Statement =>
-               Path_Add_Element (Get_Parent (El), Is_Instance);
-               Path_Add_Name (El);
-               Path_Add (":");
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration
-              | Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration =>
-               Path_Add_Element (Get_Parent (El), Is_Instance);
-               Path_Add_Name (El);
-               if Flags.Vhdl_Std >= Vhdl_02 then
-                  --  Add signature.
-                  Path_Add_Signature (El);
-               end if;
-               Path_Add (":");
-            when Iir_Kind_Procedure_Body =>
-               Path_Add_Element (Get_Subprogram_Specification (El),
-                                 Is_Instance);
-            when Iir_Kind_Generate_Statement =>
-               declare
-                  Scheme : Iir;
-               begin
-                  Scheme := Get_Generation_Scheme (El);
-                  if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
-                     Path_Instance := El;
-                  else
-                     Path_Add_Element (Get_Parent (El), Is_Instance);
-                     Path_Add_Name (El);
-                     Path_Add (":");
-                  end if;
-               end;
-            when Iir_Kinds_Sequential_Statement =>
-               Path_Add_Element (Get_Parent (El), Is_Instance);
-            when others =>
-               Error_Kind ("path_add_element", El);
-         end case;
-      end Path_Add_Element;
-
       function Translate_Path_Instance_Name_Attribute (Attr : Iir)
                                                       return O_Enode
       is
-         Prefix : Iir;
+         Name : constant Path_Instance_Name_Type :=
+           Get_Path_Instance_Name_Suffix (Attr);
          Res : O_Dnode;
          Name_Cst : O_Dnode;
          Str_Cst : O_Cnode;
          Constr : O_Assoc_List;
-         Is_Instance : Boolean;
+         Is_Instance : constant Boolean :=
+           Get_Kind (Attr) = Iir_Kind_Instance_Name_Attribute;
       begin
-         Prefix := Get_Prefix (Attr);
-         Is_Instance := Get_Kind (Attr) = Iir_Kind_Instance_Name_Attribute;
-
-         Path_Reset;
-
-         --  LRM 14.1
-         --  E'PATH_NAME
-         --    The local item name in E'PATH_NAME equals E'SIMPLE_NAME, unless
-         --    E denotes a library, package, subprogram or label. In this
-         --    latter case, the package based path or instance based path,
-         --    as appropriate, will not contain a local item name.
-         --
-         --  E'INSTANCE_NAME
-         --    The local item name in E'INSTANCE_NAME equals E'SIMPLE_NAME,
-         --    unless E denotes a library, package, subprogram, or label.  In
-         --    this latter case, the package based path or full instance based
-         --    path, as appropriate, will not contain a local item name.
-         case Get_Kind (Prefix) is
-            when Iir_Kind_Constant_Declaration
-              | Iir_Kind_Constant_Interface_Declaration
-              | Iir_Kind_Iterator_Declaration
-              | Iir_Kind_Variable_Declaration
-              | Iir_Kind_Variable_Interface_Declaration
-              | Iir_Kind_Signal_Declaration
-              | Iir_Kind_Signal_Interface_Declaration
-              | Iir_Kind_File_Declaration
-              | Iir_Kind_File_Interface_Declaration
-              | Iir_Kind_Type_Declaration
-              | Iir_Kind_Subtype_Declaration =>
-               Path_Add_Element (Get_Parent (Prefix), Is_Instance);
-               Path_Add_Name (Prefix);
-            when Iir_Kind_Library_Declaration
-              | Iir_Kind_Design_Unit
-              | Iir_Kind_Package_Declaration
-              | Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration
-              | Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration
-              | Iir_Kinds_Concurrent_Statement
-              | Iir_Kinds_Sequential_Statement =>
-               Path_Add_Element (Prefix, Is_Instance);
-            when others =>
-               Error_Kind ("translate_path_instance_name_attribute", Prefix);
-         end case;
          Create_Temp_Stack2_Mark;
 
          Res := Create_Temp (Std_String_Node);
-         Str_Cst := Create_String_Len (Path_Str (1 .. Path_Len),
-                                       Create_Uniq_Identifier);
+         Str_Cst := Create_String_Len (Name.Suffix, Create_Uniq_Identifier);
          New_Const_Decl (Name_Cst, Create_Uniq_Identifier, O_Storage_Private,
                          Ghdl_Str_Len_Type_Node);
          Start_Const_Value (Name_Cst);
@@ -25528,10 +25314,10 @@ package body Translation is
          end if;
          New_Association
            (Constr, New_Address (New_Obj (Res), Std_String_Ptr_Node));
-         if Path_Instance = Null_Iir then
+         if Name.Path_Instance = Null_Iir then
             Rtis.Associate_Null_Rti_Context (Constr);
          else
-            Rtis.Associate_Rti_Context (Constr, Path_Instance);
+            Rtis.Associate_Rti_Context (Constr, Name.Path_Instance);
          end if;
          New_Association (Constr,
                           New_Address (New_Obj (Name_Cst),
@@ -29106,9 +28892,6 @@ package body Translation is
       New_Record_Field (Rec, Ghdl_Signal_Last_Active_Field,
                         Get_Identifier ("last_active"),
                         Time_Otype);
-      New_Record_Field (Rec, Ghdl_Signal_Active_Chain_Field,
-                        Get_Identifier ("active_chain"),
-                        Ghdl_Signal_Ptr);
       New_Record_Field (Rec, Ghdl_Signal_Event_Field,
                         Get_Identifier ("event"),
                         Std_Boolean_Type_Node);
@@ -29123,11 +28906,6 @@ package body Translation is
       Ghdl_Signal_Ptr_Ptr := New_Access_Type (Ghdl_Signal_Ptr);
       New_Type_Decl (Get_Identifier ("__ghdl_signal_ptr_ptr"),
                      Ghdl_Signal_Ptr_Ptr);
-
-      New_Var_Decl (Ghdl_Signal_Active_Chain,
-                    Get_Identifier ("__ghdl_signal_active_chain"),
-                    O_Storage_External,
-                    Ghdl_Signal_Ptr);
 
       --  procedure __ghdl_signal_merge_rti
       --       (sig : ghdl_signal_ptr; rti : ghdl_rti_access)
@@ -29370,16 +29148,24 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Add_Driver);
 
-      --  procedure __ghdl_signal_direct_driver (sig : __ghdl_signal_ptr;
-      --                                         Drv : Ghdl_Ptr_type);
+      --  procedure __ghdl_signal_add_direct_driver (sig : __ghdl_signal_ptr;
+      --                                             Drv : Ghdl_Ptr_type);
       Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_direct_driver"),
+        (Interfaces, Get_Identifier ("__ghdl_signal_add_direct_driver"),
          O_Storage_External);
       New_Interface_Decl
         (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl
         (Interfaces, Param, Get_Identifier ("drv"), Ghdl_Ptr_Type);
-      Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Direct_Driver);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Add_Direct_Driver);
+
+      --  procedure __ghdl_signal_direct_assign (sig : __ghdl_signal_ptr);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_signal_direct_assign"),
+         O_Storage_External);
+      New_Interface_Decl
+        (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Direct_Assign);
 
       declare
          procedure Create_Signal_Conversion (Name : String; Res : out O_Dnode)
@@ -29924,47 +29710,6 @@ package body Translation is
                                Get_Identifier ("__ghdl_flag_string"),
                                O_Storage_Public);
       end Gen_Setup_Info;
-
-      --  Return TRUE iff ENTITY can be at the top of a hierarchy, ie:
-      --  ENTITY has no generics or all generics have a default expression
-      --  ENTITY has no ports or all ports type are constrained.
-      procedure Check_Entity_Declaration_Top (Entity : Iir_Entity_Declaration)
-      is
-         Has_Error : Boolean := False;
-
-         procedure Error (Msg : String; Loc : Iir) is
-         begin
-            if not Has_Error then
-               Error_Msg_Elab
-                 (Disp_Node (Entity) & " cannot be at the top of a design");
-               Has_Error := True;
-            end if;
-            Error_Msg_Elab (Msg, Loc);
-         end Error;
-
-         El : Iir;
-      begin
-         --  Check generics.
-         El := Get_Generic_Chain (Entity);
-         while El /= Null_Iir loop
-            if Get_Default_Value (El) = Null_Iir then
-               Error ("(" & Disp_Node (El) & " has no default value)", El);
-            end if;
-            El := Get_Chain (El);
-         end loop;
-
-         --  Check port.
-         El := Get_Port_Chain (Entity);
-         while El /= Null_Iir loop
-            if not Is_Fully_Constrained_Type (Get_Type (El))
-              and then Get_Default_Value (El) = Null_Iir
-            then
-               Error ("(" & Disp_Node (El)
-                      & " is unconstrained and has no default value)", El);
-            end if;
-            El := Get_Chain (El);
-         end loop;
-      end Check_Entity_Declaration_Top;
 
       procedure Gen_Last_Arch (Entity : Iir_Entity_Declaration)
       is

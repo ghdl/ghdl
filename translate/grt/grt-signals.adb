@@ -173,6 +173,7 @@ package body Grt.Signals is
                               Has_Active => False,
                               Sig_Kind => Sig_Kind,
 
+                              Is_Direct_Active => False,
                               Mode => Mode,
                               Flags => (Propag => Propag_None,
                                         Is_Dumped => False,
@@ -336,8 +337,8 @@ package body Grt.Signals is
       end if;
    end Ghdl_Process_Add_Driver;
 
-   procedure Ghdl_Signal_Direct_Driver (Sign : Ghdl_Signal_Ptr;
-                                        Drv : Ghdl_Value_Ptr)
+   procedure Ghdl_Signal_Add_Direct_Driver (Sign : Ghdl_Signal_Ptr;
+                                            Drv : Ghdl_Value_Ptr)
    is
       Trans : Transaction_Acc;
       Trans1 : Transaction_Acc;
@@ -360,7 +361,7 @@ package body Grt.Signals is
                                  Val_Ptr => Drv);
       Sign.S.Drivers (Sign.S.Nbr_Drivers - 1).Last_Trans := Trans1;
       Trans.Next := Trans1;
-   end Ghdl_Signal_Direct_Driver;
+   end Ghdl_Signal_Add_Direct_Driver;
 
    procedure Append_Port (Targ : Ghdl_Signal_Ptr; Src : Ghdl_Signal_Ptr)
    is
@@ -504,6 +505,32 @@ package body Grt.Signals is
       end loop;
       return null;
    end Get_Driver;
+
+   --  Return TRUE iff SIG has a future transaction for the current time,
+   --  ie iff SIG will be active in the next delta cycle.  This is used to
+   --  recompute wether SIG must be in the active chain.  SIG must be a user
+   --  signal.
+   function Has_Transaction_In_Next_Delta (Sig : Ghdl_Signal_Ptr)
+                                          return Boolean  is
+   begin
+      if Sig.Is_Direct_Active then
+         return True;
+      end if;
+
+      for I in 1 .. Sig.S.Nbr_Drivers loop
+         declare
+            Trans : constant Transaction_Acc :=
+              Sig.S.Drivers (I - 1).First_Trans.Next;
+         begin
+            if Trans.Kind /= Trans_Direct
+              and then Trans.Time = Current_Time
+            then
+               return True;
+            end if;
+         end;
+      end loop;
+      return False;
+   end Has_Transaction_In_Next_Delta;
 
    --  Unused but well-known signal which always terminate
    --    ghdl_signal_active_chain.
@@ -707,7 +734,7 @@ package body Grt.Signals is
             --  the chain is simply linked), but that issue doesn't appear
             --  frequently.
             if Sign.Link /= null
-              and then Driver.First_Trans.Next.Time /= Current_Time
+              and then not Has_Transaction_In_Next_Delta (Sign)
             then
                if Ghdl_Signal_Active_Chain = Sign then
                   --  At the head of the chain.
@@ -766,6 +793,17 @@ package body Grt.Signals is
       Driver.Last_Trans.Next := Trans;
       Driver.Last_Trans := Trans;
    end Ghdl_Signal_Next_Assign;
+
+   procedure Ghdl_Signal_Direct_Assign (Sign : Ghdl_Signal_Ptr) is
+   begin
+      if Sign.Link = null then
+         Sign.Link := Grt.Threads.Atomic_Insert
+           (Ghdl_Signal_Active_Chain'access, Sign);
+      end if;
+
+      --  Must be always set (as Sign.Link may be set by a regular driver).
+      Sign.Is_Direct_Active := True;
+   end Ghdl_Signal_Direct_Assign;
 
    procedure Ghdl_Signal_Simple_Assign_Error (Sign : Ghdl_Signal_Ptr;
                                               File : Ghdl_C_String;
@@ -2624,6 +2662,7 @@ package body Grt.Signals is
 
    Clear_List : Ghdl_Signal_Ptr := null;
 
+   --  Mark SIG as active and put it on Clear_List (if not already).
    procedure Mark_Active (Sig : Ghdl_Signal_Ptr);
    pragma Inline (Mark_Active);
 
@@ -3055,6 +3094,7 @@ package body Grt.Signals is
       --  1) Reset active flag.
       Reset_Active_Flag;
 
+      --  For each active signals
       Sig := Ghdl_Signal_Active_Chain;
       Ghdl_Signal_Active_Chain := Signal_End;
       while Sig.S.Mode_Sig /= Mode_End loop
@@ -3083,6 +3123,7 @@ package body Grt.Signals is
 
             when Net_One_Direct =>
                Mark_Active (Sig);
+               Sig.Is_Direct_Active := False;
 
                Trans := Sig.S.Drivers (0).Last_Trans;
                Direct_Assign (Sig.Driving_Value, Trans.Val_Ptr, Sig.Mode);
@@ -3092,6 +3133,7 @@ package body Grt.Signals is
             when Net_One_Resolved =>
                --  This signal is active.
                Mark_Active (Sig);
+               Sig.Is_Direct_Active := False;
 
                for J in 1 .. Sig.S.Nbr_Drivers loop
                   Trans := Sig.S.Drivers (J - 1).First_Trans.Next;
@@ -3112,6 +3154,7 @@ package body Grt.Signals is
                Internal_Error ("update_signals: no_signal_net");
 
             when others =>
+               Sig.Is_Direct_Active := False;
                if not Propagation.Table (Sig.Net).Updated then
                   Propagation.Table (Sig.Net).Updated := True;
                   Run_Propagation (Sig.Net + 1);
@@ -3324,6 +3367,7 @@ package body Grt.Signals is
                                      Event => False,
                                      Active => False,
                                      Has_Active => False,
+                                     Is_Direct_Active => False,
                                      Sig_Kind => Kind_Signal_No,
                                      Mode => Mode_B2,
 

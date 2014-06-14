@@ -304,13 +304,10 @@ package body Ghdlrun is
       Def (Trans_Decls.Ghdl_Now,
            Grt.Types.Current_Time'Address);
 
-      Def (Trans_Decls.Ghdl_Signal_Active_Chain,
-           Grt.Signals.Ghdl_Signal_Active_Chain'Address);
-
       Def (Trans_Decls.Ghdl_Process_Add_Driver,
            Grt.Signals.Ghdl_Process_Add_Driver'Address);
-      Def (Trans_Decls.Ghdl_Signal_Direct_Driver,
-           Grt.Signals.Ghdl_Signal_Direct_Driver'Address);
+      Def (Trans_Decls.Ghdl_Signal_Add_Direct_Driver,
+           Grt.Signals.Ghdl_Signal_Add_Direct_Driver'Address);
 
       Def (Trans_Decls.Ghdl_Signal_Add_Source,
            Grt.Signals.Ghdl_Signal_Add_Source'Address);
@@ -365,6 +362,9 @@ package body Ghdlrun is
 
       Def (Trans_Decls.Ghdl_Signal_Start_Assign_Null,
            Grt.Signals.Ghdl_Signal_Start_Assign_Null'Address);
+
+      Def (Trans_Decls.Ghdl_Signal_Direct_Assign,
+           Grt.Signals.Ghdl_Signal_Direct_Assign'Address);
 
       Def (Trans_Decls.Ghdl_Create_Signal_B2,
            Grt.Signals.Ghdl_Create_Signal_B2'Address);

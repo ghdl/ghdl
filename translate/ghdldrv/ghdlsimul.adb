@@ -48,6 +48,9 @@ with Grtlink;
 
 package body Ghdlsimul is
 
+   --  FIXME: reuse simulation.top_config
+   Top_Conf : Iir;
+
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
       if Analyze_Only then
@@ -72,6 +75,11 @@ package body Ghdlsimul is
    procedure Compile_Elab
      (Cmd_Name : String; Args : Argument_List; Opt_Arg : out Natural)
    is
+      use Name_Table;
+      use Types;
+
+      First_Id : Name_Id;
+      Sec_Id : Name_Id;
    begin
       Extract_Elab_Unit (Cmd_Name, Args, Opt_Arg);
 
@@ -82,6 +90,31 @@ package body Ghdlsimul is
          --  This may happen (bad entity for example).
          raise Compilation_Error;
       end if;
+
+      First_Id := Get_Identifier (Prim_Name.all);
+      if Sec_Name = null then
+         Sec_Id := Null_Identifier;
+      else
+         Sec_Id := Get_Identifier (Sec_Name.all);
+      end if;
+      Top_Conf := Configuration.Configure (First_Id, Sec_Id);
+      if Top_Conf = Null_Iir then
+         raise Compilation_Error;
+      end if;
+
+      --  Check (and possibly abandon) if entity can be at the top of the
+      --  hierarchy.
+      declare
+         Conf_Unit : constant Iir := Get_Library_Unit (Top_Conf);
+         Arch : constant Iir :=
+           Get_Block_Specification (Get_Block_Configuration (Conf_Unit));
+         Entity : constant Iir := Get_Entity (Arch);
+      begin
+         Configuration.Check_Entity_Declaration_Top (Entity);
+         if Nbr_Errors > 0 then
+            raise Compilation_Error;
+         end if;
+      end;
    end Compile_Elab;
 
    --  Set options.
@@ -114,6 +147,8 @@ package body Ghdlsimul is
             Simulation.Trace_Simulation := True;
          elsif Arg.all = "--trace-stmt" then
             Execution.Trace_Statements := True;
+         elsif Arg.all = "--stats" then
+            Simulation.Disp_Stats := True;
          elsif Arg.all = "-i" then
             Simulation.Flag_Interractive := True;
          else
@@ -133,26 +168,8 @@ package body Ghdlsimul is
       end loop;
    end Set_Run_Options;
 
-   procedure Run
-   is
-      use Name_Table;
-      use Types;
-
-      First_Id : Name_Id;
-      Sec_Id : Name_Id;
-      Top_Conf : Iir;
+   procedure Run is
    begin
-      First_Id := Get_Identifier (Prim_Name.all);
-      if Sec_Name = null then
-         Sec_Id := Null_Identifier;
-      else
-         Sec_Id := Get_Identifier (Sec_Name.all);
-      end if;
-      Top_Conf := Configuration.Configure (First_Id, Sec_Id);
-      if Top_Conf = Null_Iir then
-         raise Compilation_Error;
-      end if;
-
       Grtlink.Flag_String := Flags.Flag_String;
 
       Simulation.Simulation_Entity (Top_Conf);

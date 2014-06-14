@@ -15,6 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Ada.Unchecked_Deallocation;
 with Errorout; use Errorout;
 with Name_Table; use Name_Table;
 with Str_Table;
@@ -1470,50 +1471,55 @@ package body Evaluation is
          return C = ' ' or C = NBSP or C = HT;
       end White;
 
-      UnitName : String(Val'range);
+      UnitName : String (Val'range);
+      Mult : Iir_Int64;
       Sep : Natural;
       Found_Unit : Boolean := false;
       Found_Real : Boolean := false;
       Unit : Iir := Get_Primary_Unit (Phys_Type);
    begin
       -- Separate string into numeric value and make lowercase unit.
-      for i in reverse Val'range loop
-         UnitName(i) := Ada.Characters.Handling.To_Lower (Val(i));
-         if White(Val(i)) and Found_Unit then
-            Sep := i;
+      for I in reverse Val'range loop
+         UnitName (I) := Ada.Characters.Handling.To_Lower (Val (I));
+         if White (Val (I)) and Found_Unit then
+            Sep := I;
             exit;
          else
             Found_Unit := true;
          end if;
       end loop;
+
       -- Unit name  is UnitName(Sep+1..Unit'Last)
-      for i in Val'first .. Sep loop
-         if Val(i) = '.' then
+      for I in Val'First .. Sep loop
+         if Val (I) = '.' then
             Found_Real := true;
          end if;
       end loop;
+
       -- Chain down the units looking for matching one
       Unit := Get_Primary_Unit (Phys_Type);
       while Unit /= Null_Iir loop
-         exit when UnitName(Sep+1..UnitName'Last) = Image_Identifier(Unit);
+         exit when (UnitName (Sep + 1 .. UnitName'Last)
+                      = Image_Identifier (Unit));
          Unit := Get_Chain (Unit);
       end loop;
       if Unit = Null_Iir then
-         Error_Msg_Sem ("Unit """ & UnitName(Sep+1..UnitName'Last)
+         Error_Msg_Sem ("Unit """ & UnitName (Sep + 1 .. UnitName'Last)
                          & """ not in physical type", Expr);
          return Null_Iir;
       end if;
+
+      Mult := Get_Value (Get_Physical_Unit_Value (Unit));
       if Found_Real then
-         return Build_Physical(Iir_Int64(
-                                    Iir_Fp64'value(Val(Val'first .. Sep)) *
-                                    Iir_Fp64(Get_Value (Get_Physical_Unit_Value
-                                    (Unit)))), Expr);
+         return Build_Physical
+           (Iir_Int64 (Iir_Fp64'Value (Val (Val'First .. Sep))
+                         * Iir_Fp64 (Mult)),
+            Expr);
       else
-         return Build_Physical(Iir_Int64'value(Val(Val'first .. Sep)) *
-                             Get_Value (Get_Physical_Unit_Value(Unit)), Expr);
+         return Build_Physical
+           (Iir_Int64'Value (Val (Val'First .. Sep)) * Mult, Expr);
       end if;
    end Build_Physical_Value;
-
 
    function Eval_Incdec (Expr : Iir; N : Iir_Int64) return Iir
    is
@@ -1814,11 +1820,11 @@ package body Evaluation is
                   -- what type are we converting the string to?
                   Param_Type := Get_Base_Type (Get_Type (Expr));
                   declare
-                     Value : constant String := Image_String_Lit(Param);
+                     Value : constant String := Image_String_Lit (Param);
                   begin
                      case Get_Kind (Param_Type) is
                      when Iir_Kind_Integer_Type_Definition =>
-                        return Build_Discrete(Iir_Int64'value(Value), Expr);
+                        return Build_Discrete (Iir_Int64'Value (Value), Expr);
                      when Iir_Kind_Enumeration_Type_Definition =>
                         return Build_Enumeration_Value (Value, Param_Type,
                                                         Expr);
@@ -2565,5 +2571,222 @@ package body Evaluation is
       end loop;
       return Compare_Eq;
    end Compare_String_Literals;
+
+   function Get_Path_Instance_Name_Suffix (Attr : Iir)
+                                          return Path_Instance_Name_Type
+   is
+      --  Current path for name attributes.
+      Path_Str : String_Acc := null;
+      Path_Maxlen : Natural := 0;
+      Path_Len : Natural;
+      Path_Instance : Iir;
+
+      procedure Deallocate is new Ada.Unchecked_Deallocation
+        (Name => String_Acc, Object => String);
+
+      procedure Path_Reset is
+      begin
+         Path_Len := 0;
+         Path_Instance := Null_Iir;
+         if Path_Maxlen = 0 then
+            Path_Maxlen := 256;
+            Path_Str := new String (1 .. Path_Maxlen);
+         end if;
+      end Path_Reset;
+
+      procedure Path_Add (Str : String)
+      is
+         N_Len : Natural;
+         N_Path : String_Acc;
+      begin
+         N_Len := Path_Maxlen;
+         loop
+            exit when Path_Len + Str'Length <= N_Len;
+            N_Len := N_Len * 2;
+         end loop;
+         if N_Len /= Path_Maxlen then
+            N_Path := new String (1 .. N_Len);
+            N_Path (1 .. Path_Len) := Path_Str (1 .. Path_Len);
+            Deallocate (Path_Str);
+            Path_Str := N_Path;
+            Path_Maxlen := N_Len;
+         end if;
+         Path_Str (Path_Len + 1 .. Path_Len + Str'Length) := Str;
+         Path_Len := Path_Len + Str'Length;
+      end Path_Add;
+
+      procedure Path_Add_Type_Name (Atype : Iir)
+      is
+         Adecl : Iir;
+      begin
+         Adecl := Get_Type_Declarator (Atype);
+         Image (Get_Identifier (Adecl));
+         Path_Add (Name_Buffer (1 .. Name_Length));
+      end Path_Add_Type_Name;
+
+      procedure Path_Add_Signature (Subprg : Iir)
+      is
+         Chain : Iir;
+      begin
+         Path_Add ("[");
+         Chain := Get_Interface_Declaration_Chain (Subprg);
+         while Chain /= Null_Iir loop
+            Path_Add_Type_Name (Get_Type (Chain));
+            Chain := Get_Chain (Chain);
+            if Chain /= Null_Iir then
+               Path_Add (",");
+            end if;
+         end loop;
+
+         case Get_Kind (Subprg) is
+            when Iir_Kind_Function_Declaration
+              | Iir_Kind_Implicit_Function_Declaration =>
+               Path_Add (" return ");
+               Path_Add_Type_Name (Get_Return_Type (Subprg));
+            when others =>
+               null;
+         end case;
+         Path_Add ("]");
+      end Path_Add_Signature;
+
+      procedure Path_Add_Name (N : Iir) is
+      begin
+         Eval_Simple_Name (Get_Identifier (N));
+         if Name_Buffer (1) /= 'P' then
+            --  Skip anonymous processes.
+            Path_Add (Name_Buffer (1 .. Name_Length));
+         end if;
+      end Path_Add_Name;
+
+      procedure Path_Add_Element (El : Iir; Is_Instance : Boolean) is
+      begin
+         --  LRM 14.1
+         --  E'INSTANCE_NAME
+         --    There is one full path instance element for each component
+         --    instantiation, block statement, generate statemenent, process
+         --    statement, or subprogram body in the design hierarchy between
+         --    the top design entity and the named entity denoted by the
+         --    prefix.
+         --
+         --  E'PATH_NAME
+         --    There is one path instance element for each component
+         --    instantiation, block statement, generate statement, process
+         --    statement, or subprogram body in the design hierarchy between
+         --    the root design entity and the named entity denoted by the
+         --    prefix.
+         case Get_Kind (El) is
+            when Iir_Kind_Library_Declaration =>
+               Path_Add (":");
+               Path_Add_Name (El);
+               Path_Add (":");
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body =>
+               Path_Add_Element
+                 (Get_Library (Get_Design_File (Get_Design_Unit (El))),
+                  Is_Instance);
+               Path_Add_Name (El);
+               Path_Add (":");
+            when Iir_Kind_Entity_Declaration =>
+               Path_Instance := El;
+            when Iir_Kind_Architecture_Declaration =>
+               Path_Instance := El;
+            when Iir_Kind_Design_Unit =>
+               Path_Add_Element (Get_Library_Unit (El), Is_Instance);
+            when Iir_Kind_Sensitized_Process_Statement
+              | Iir_Kind_Process_Statement
+              | Iir_Kind_Block_Statement =>
+               Path_Add_Element (Get_Parent (El), Is_Instance);
+               Path_Add_Name (El);
+               Path_Add (":");
+            when Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Implicit_Function_Declaration
+              | Iir_Kind_Implicit_Procedure_Declaration =>
+               Path_Add_Element (Get_Parent (El), Is_Instance);
+               Path_Add_Name (El);
+               if Flags.Vhdl_Std >= Vhdl_02 then
+                  --  Add signature.
+                  Path_Add_Signature (El);
+               end if;
+               Path_Add (":");
+            when Iir_Kind_Procedure_Body =>
+               Path_Add_Element (Get_Subprogram_Specification (El),
+                                 Is_Instance);
+            when Iir_Kind_Generate_Statement =>
+               declare
+                  Scheme : Iir;
+               begin
+                  Scheme := Get_Generation_Scheme (El);
+                  if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
+                     Path_Instance := El;
+                  else
+                     Path_Add_Element (Get_Parent (El), Is_Instance);
+                     Path_Add_Name (El);
+                     Path_Add (":");
+                  end if;
+               end;
+            when Iir_Kinds_Sequential_Statement =>
+               Path_Add_Element (Get_Parent (El), Is_Instance);
+            when others =>
+               Error_Kind ("path_add_element", El);
+         end case;
+      end Path_Add_Element;
+
+      Prefix : constant Iir := Get_Prefix (Attr);
+      Is_Instance : constant Boolean :=
+        Get_Kind (Attr) = Iir_Kind_Instance_Name_Attribute;
+   begin
+      Path_Reset;
+
+      --  LRM 14.1
+      --  E'PATH_NAME
+      --    The local item name in E'PATH_NAME equals E'SIMPLE_NAME, unless
+      --    E denotes a library, package, subprogram or label. In this
+      --    latter case, the package based path or instance based path,
+      --    as appropriate, will not contain a local item name.
+      --
+      --  E'INSTANCE_NAME
+      --    The local item name in E'INSTANCE_NAME equals E'SIMPLE_NAME,
+      --    unless E denotes a library, package, subprogram, or label.  In
+      --    this latter case, the package based path or full instance based
+      --    path, as appropriate, will not contain a local item name.
+      case Get_Kind (Prefix) is
+         when Iir_Kind_Constant_Declaration
+           | Iir_Kind_Constant_Interface_Declaration
+           | Iir_Kind_Iterator_Declaration
+           | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Variable_Interface_Declaration
+           | Iir_Kind_Signal_Declaration
+           | Iir_Kind_Signal_Interface_Declaration
+           | Iir_Kind_File_Declaration
+           | Iir_Kind_File_Interface_Declaration
+           | Iir_Kind_Type_Declaration
+           | Iir_Kind_Subtype_Declaration =>
+            Path_Add_Element (Get_Parent (Prefix), Is_Instance);
+            Path_Add_Name (Prefix);
+         when Iir_Kind_Library_Declaration
+           | Iir_Kind_Design_Unit
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Implicit_Function_Declaration
+           | Iir_Kind_Implicit_Procedure_Declaration
+           | Iir_Kinds_Concurrent_Statement
+           | Iir_Kinds_Sequential_Statement =>
+            Path_Add_Element (Prefix, Is_Instance);
+         when others =>
+            Error_Kind ("get_path_instance_name_suffix", Prefix);
+      end case;
+
+      declare
+         Result : constant Path_Instance_Name_Type :=
+           (Len => Path_Len,
+            Path_Instance => Path_Instance,
+            Suffix => Path_Str (1 .. Path_Len));
+      begin
+         Deallocate (Path_Str);
+         return Result;
+      end;
+   end Get_Path_Instance_Name_Suffix;
 
 end Evaluation;
