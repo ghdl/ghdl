@@ -31,8 +31,7 @@ package body Grt.Values is
    HT : constant Character := Character'Val (9);
 
    --  Return True IFF C is a whitespace character (as defined in LRM93 14.3)
-   function Is_Whitespace (C : in Character) return Boolean
-   is
+   function Is_Whitespace (C : in Character) return Boolean is
    begin
       return C = ' ' or C = NBSP or C = HT;
    end Is_Whitespace;
@@ -60,7 +59,7 @@ package body Grt.Values is
    end Remove_Whitespaces;
 
    --  Convert C to lowercase.
-   function LC (C : in Character) return Character is
+   function To_LC (C : in Character) return Character is
    begin
       if C >= 'A' and then C <= 'Z' then
          return Character'Val
@@ -68,7 +67,7 @@ package body Grt.Values is
       else
          return C;
       end if;
-   end LC;
+   end To_LC;
 
    --  Return TRUE iff user string S (POS .. LEN) is equal to REF. Comparaison
    --  is case insensitive, but REF must be lowercase (REF is supposed to
@@ -88,7 +87,7 @@ package body Grt.Values is
             --  End of string.
             return C = ASCII.NUL;
          end if;
-         if LC (S (Pos + P)) /= C or else C = ASCII.NUL then
+         if To_LC (S (Pos + P)) /= C or else C = ASCII.NUL then
             return False;
          end if;
          P := P + 1;
@@ -523,14 +522,51 @@ package body Grt.Values is
       return Ghdl_Value_F64 (S, Len, Pos);
    end Ghdl_Value_F64;
 
+   procedure Ghdl_Value_Physical_Split (Str : Std_String_Ptr;
+                                        Is_Real : out Boolean;
+                                        Lit_Pos : out Ghdl_Index_Type;
+                                        Lit_End : out Ghdl_Index_Type;
+                                        Unit_Pos : out Ghdl_Index_Type)
+   is
+      S        : constant Std_String_Basep := Str.Base;
+      Len      : Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
+   begin
+      --  LRM 14.1
+      --  Leading and trailing whitespace is allowed and ignored.
+      Lit_Pos := 0;
+      Remove_Whitespaces (S, Len, Lit_Pos);
+
+      --  Split between abstract literal (optionnal) and unit name.
+      Lit_End := Lit_Pos;
+      Is_Real := False;
+      while Lit_End < Len loop
+         exit when Is_Whitespace (S (Lit_End));
+         if S (Lit_End) = '.' then
+            Is_Real := True;
+         end if;
+         Lit_End := Lit_End + 1;
+      end loop;
+      if Lit_End = Len then
+         --  No literal
+         Unit_Pos := Lit_Pos;
+         Lit_End := 0;
+      else
+         Unit_Pos := Lit_End + 1;
+         while Unit_Pos < Len loop
+            exit when not Is_Whitespace (S (Unit_Pos));
+            Unit_Pos := Unit_Pos + 1;
+         end loop;
+      end if;
+   end Ghdl_Value_Physical_Split;
+
    function Ghdl_Value_Physical_Type (Str : Std_String_Ptr;
                                       Rti : Ghdl_Rti_Access)
                                      return Ghdl_I64
    is
       S        : constant Std_String_Basep := Str.Base;
-      Len      : Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
-      Pos      : Ghdl_Index_Type := 0;
+      Len      : constant Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
       Unit_Pos : Ghdl_Index_Type;
+      Lit_Pos  : Ghdl_Index_Type;
       Lit_End  : Ghdl_Index_Type;
 
       Found_Real : Boolean;
@@ -541,32 +577,10 @@ package body Grt.Values is
       Multiple : Ghdl_Rti_Access;
       Mult     : Ghdl_I64;
    begin
-      --  LRM 14.1
-      --  Leading and trailing whitespace is allowed and ignored.
-      Remove_Whitespaces (S, Len, Pos);
+      --  Extract literal and unit
+      Ghdl_Value_Physical_Split (Str, Found_Real, Lit_Pos, Lit_End, Unit_Pos);
 
-      --  Split between abstract literal (optionnal) and unit name.
-      Lit_End := Pos;
-      Found_Real := False;
-      while Lit_End < Len loop
-         exit when Is_Whitespace (S (Lit_End));
-         if S (Lit_End) = '.' then
-            Found_Real := True;
-         end if;
-         Lit_End := Lit_End + 1;
-      end loop;
-      if Lit_End = Len then
-         --  No literal
-         Unit_Pos := Pos;
-         Lit_End := 0;
-      else
-         Unit_Pos := Lit_End + 1;
-         while Unit_Pos < Len loop
-            exit when not Is_Whitespace (S (Unit_Pos));
-            Unit_Pos := Unit_Pos + 1;
-         end loop;
-      end if;
-
+      --  Find unit value
       Multiple := null;
       for i in 0 .. Phys_Rti.Nbr - 1 loop
          Unit_Name :=
@@ -606,9 +620,9 @@ package body Grt.Values is
       else
          if Found_Real then
             return Ghdl_I64
-              (Ghdl_Value_F64 (S, Lit_End, Pos) * Ghdl_F64 (Mult));
+              (Ghdl_Value_F64 (S, Lit_End, Lit_Pos) * Ghdl_F64 (Mult));
          else
-            return Ghdl_Value_I64 (S, Lit_End, Pos) * Mult;
+            return Ghdl_Value_I64 (S, Lit_End, Lit_Pos) * Mult;
          end if;
       end if;
    end Ghdl_Value_Physical_Type;

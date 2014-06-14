@@ -26,6 +26,24 @@ with Grt.Types; use Grt.Types;
 with Grt.Rtis; use Grt.Rtis;
 
 package Grt.Values is
+   --  Return True IFF C is a whitespace character (as defined in LRM93 14.3)
+   function Is_Whitespace (C : in Character) return Boolean;
+
+   --  Convert C to lowercase.
+   function To_LC (C : in Character) return Character;
+
+   --  Extract position of numeric literal and unit in string STR.
+   --  Set IS_REAL if the unit is a real number (presence of '.').
+   --  Set UNIT_POS to the position of the first character of the unit name.
+   --  Set LIT_POS to the position of the first character of the numeric
+   --  literal (after whitespaces are skipped).
+   --  Set LIT_END to the position of the next character of the numeric lit.
+   procedure Ghdl_Value_Physical_Split (Str : Std_String_Ptr;
+                                        Is_Real : out Boolean;
+                                        Lit_Pos : out Ghdl_Index_Type;
+                                        Lit_End : out Ghdl_Index_Type;
+                                        Unit_Pos : out Ghdl_Index_Type);
+
    function Ghdl_Value_B2 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_B2;
    function Ghdl_Value_E8 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
@@ -33,6 +51,7 @@ package Grt.Values is
    function Ghdl_Value_E32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_E32;
    function Ghdl_Value_I32 (Str : Std_String_Ptr) return Ghdl_I32;
+   function Ghdl_Value_I64 (Str : Std_String_Ptr) return Ghdl_I64;
    function Ghdl_Value_F64 (Str : Std_String_Ptr) return Ghdl_F64;
    function Ghdl_Value_P64 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_I64;
@@ -43,6 +62,7 @@ private
    pragma Export (C, Ghdl_Value_E8, "__ghdl_value_e8");
    pragma Export (C, Ghdl_Value_E32, "__ghdl_value_e32");
    pragma Export (C, Ghdl_Value_I32, "__ghdl_value_i32");
+   pragma Export (C, Ghdl_Value_I64, "__ghdl_value_i64");
    pragma Export (C, Ghdl_Value_F64, "__ghdl_value_f64");
    pragma Export (C, Ghdl_Value_P64, "__ghdl_value_p64");
    pragma Export (C, Ghdl_Value_P32, "__ghdl_value_p32");
