@@ -1237,6 +1237,10 @@ package body Disp_Tree is
             end if;
             Header ("staticness:", false);
             Disp_Type_Staticness (Tree);
+            Header ("index_constraint: ", False);
+            Disp_Flag (Get_Index_Constraint_Flag (Tree));
+            Header ("constraint_state: "
+                      & Iir_Constraint'Image (Get_Constraint_State (Tree)));
             Header ("resolved flag: ", False);
             Disp_Type_Resolved_Flag (Tree);
             Header ("signal_type_flag: ", False);
@@ -1268,10 +1272,6 @@ package body Disp_Tree is
             Disp_Tree (Get_Element_Subtype (Tree), Ntab, True);
             Header ("resolution function:");
             Disp_Tree_Flat (Get_Resolution_Function (Tree), Ntab);
-            Header ("index_constraint: ", False);
-            Disp_Flag (Get_Index_Constraint_Flag (Tree));
-            Header ("constraint_state: "
-                      & Iir_Constraint'Image (Get_Constraint_State (Tree)));
          when Iir_Kind_Array_Type_Definition  =>
             if Flat_Decl and then Get_Type_Declarator (Tree) /= Null_Iir then
                return;
