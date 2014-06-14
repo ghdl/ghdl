@@ -3487,7 +3487,10 @@ package body Parse is
       Loc : Location_Type;
    begin
       Loc := Get_Token_Location;
+
+      --  Skip '('
       Scan;
+
       if Current_Token /= Tok_Others then
          Expr := Parse_Expression;
          case Current_Token is
@@ -3516,11 +3519,7 @@ package body Parse is
          Expr := Null_Iir;
       end if;
       Res := Create_Iir (Iir_Kind_Aggregate);
-      if Expr /= Null_Iir then
-         Location_Copy (Res, Expr);
-      else
-         Set_Location (Res);
-      end if;
+      Set_Location (Res, Loc);
       Build_Init (Last);
       loop
          if Current_Token = Tok_Others then
