@@ -1,0 +1,2513 @@
+--  Elaboration
+--  Copyright (C) 2014 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GHDL; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
+with Ada.Text_IO;
+with Errorout; use Errorout;
+with Execution; use Execution;
+with Simulation; use Simulation;
+with Iirs_Utils; use Iirs_Utils;
+with Libraries;
+with Name_Table;
+with File_Operation;
+with Debugger; use Debugger;
+with Iir_Chains; use Iir_Chains;
+with Sem_Names;
+with Grt.Types; use Grt.Types;
+with Simulation.AMS; use Simulation.AMS;
+with Areapools; use Areapools;
+with Grt.Errors;
+
+package body Elaboration is
+
+   procedure Elaborate_Dependence (Design_Unit: Iir_Design_Unit);
+
+   procedure Elaborate_Statement_Part
+     (Instance : Block_Instance_Acc; Stmt_Chain: Iir);
+   procedure Elaborate_Type_Definition
+     (Instance : Block_Instance_Acc; Def : Iir);
+   procedure Elaborate_Nature_Definition
+     (Instance : Block_Instance_Acc; Def : Iir);
+
+   function Elaborate_Default_Value
+     (Instance : Block_Instance_Acc; Decl : Iir)
+     return Iir_Value_Literal_Acc;
+
+   --  CONF is the block_configuration for components of ARCH.
+   function Elaborate_Architecture (Arch : Iir_Architecture_Declaration;
+                                    Conf : Iir_Block_Configuration;
+                                    Parent_Instance : Block_Instance_Acc;
+                                    Stmt : Iir;
+                                    Generic_Map : Iir;
+                                    Port_Map : Iir)
+     return Block_Instance_Acc;
+
+   -- Create a new signal, using DEFAULT as initial value.
+   -- Set its number.
+   procedure Elaborate_Signal (Block: Block_Instance_Acc;
+                               Signal: Iir;
+                               Default : Iir_Value_Literal_Acc)
+   is
+      function Create_Signal (Lit: Iir_Value_Literal_Acc)
+                             return Iir_Value_Literal_Acc
+      is
+         Res : Iir_Value_Literal_Acc;
+      begin
+         case Lit.Kind is
+            when Iir_Value_Array =>
+               Res := Create_Array_Value (Lit.Val_Array.Len,
+                                          Lit.Bounds.Nbr_Dims);
+               Res.Bounds.D := Lit.Bounds.D;
+               Res := Unshare_Bounds (Res, Global_Pool'Access);
+
+               for I in Lit.Val_Array.V'Range loop
+                  Res.Val_Array.V (I) := Create_Signal (Lit.Val_Array.V (I));
+               end loop;
+            when Iir_Value_Record =>
+               Res := Create_Record_Value
+                 (Lit.Val_Record.Len, Instance_Pool);
+               for I in Lit.Val_Record.V'Range loop
+                  Res.Val_Record.V (I) := Create_Signal (Lit.Val_Record.V (I));
+               end loop;
+
+            when Iir_Value_I64
+              | Iir_Value_F64
+              | Iir_Value_B2
+              | Iir_Value_E32 =>
+               Res := Create_Signal_Value (null);
+
+            when Iir_Value_Signal
+              | Iir_Value_Range
+              | Iir_Value_File
+              | Iir_Value_Access
+              | Iir_Value_Protected
+              | Iir_Value_Quantity
+              | Iir_Value_Terminal =>
+               raise Internal_Error;
+         end case;
+         return Res;
+      end Create_Signal;
+
+      Sig : Iir_Value_Literal_Acc;
+      Def : Iir_Value_Literal_Acc;
+      Slot : constant Iir_Index32 := Get_Info (Signal).Slot;
+   begin
+      Sig := Create_Signal (Default);
+      Def := Unshare (Default, Global_Pool'Access);
+      Block.Objects (Slot) := Sig;
+      Block.Objects (Slot + 1) := Def;
+
+      Signals_Table.Append ((Kind => User_Signal,
+                             Decl => Signal,
+                             Sig => Sig,
+                             Instance => Block,
+                             Init => Def));
+   end Elaborate_Signal;
+
+   function Execute_Time_Attribute (Instance : Block_Instance_Acc; Attr : Iir)
+                                   return Ghdl_I64
+   is
+      Param : constant Iir := Get_Parameter (Attr);
+      Res : Ghdl_I64;
+      Val : Iir_Value_Literal_Acc;
+   begin
+      if Param = Null_Iir then
+         Res := 0;
+      else
+         Val := Execute_Expression (Instance, Param);
+         Res := Val.I64;
+      end if;
+      return Res;
+   end Execute_Time_Attribute;
+
+   procedure Elaborate_Implicit_Signal
+     (Instance: Block_Instance_Acc; Signal: Iir; Kind : Signal_Type_Kind)
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Signal);
+      Prefix : Iir_Value_Literal_Acc;
+      T : Ghdl_I64;
+      Sig : Iir_Value_Literal_Acc;
+      Init : Iir_Value_Literal_Acc;
+   begin
+      if Kind = Implicit_Transaction then
+         T := 0;
+         Init := Create_B2_Value (False);
+      else
+         T := Execute_Time_Attribute (Instance, Signal);
+         Init := Create_B2_Value (False);
+      end if;
+      Sig := Create_Signal_Value (null);
+      Instance.Objects (Info.Slot) := Sig;
+      Instance.Objects (Info.Slot + 1) := Unshare (Init, Global_Pool'Access);
+
+      Prefix := Execute_Name (Instance, Get_Prefix (Signal), True);
+      Prefix := Unshare_Bounds (Prefix, Global_Pool'Access);
+      case Kind is
+         when Implicit_Stable =>
+            Signals_Table.Append ((Kind => Implicit_Stable,
+                                   Decl => Signal,
+                                   Sig => Sig,
+                                   Instance => Instance,
+                                   Time => T,
+                                   Prefix => Prefix));
+         when Implicit_Quiet =>
+            Signals_Table.Append ((Kind => Implicit_Quiet,
+                                   Decl => Signal,
+                                   Sig => Sig,
+                                   Instance => Instance,
+                                   Time => T,
+                                   Prefix => Prefix));
+         when Implicit_Transaction =>
+            Signals_Table.Append ((Kind => Implicit_Transaction,
+                                   Decl => Signal,
+                                   Sig => Sig,
+                                   Instance => Instance,
+                                   Time => 0,
+                                   Prefix => Prefix));
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Elaborate_Implicit_Signal;
+
+   function Create_Delayed_Signal (Pfx : Iir_Value_Literal_Acc)
+                                  return Iir_Value_Literal_Acc
+   is
+      Res : Iir_Value_Literal_Acc;
+   begin
+      case Pfx.Kind is
+         when Iir_Value_Array =>
+            Res := Create_Array_Value (Pfx.Val_Array.Len,
+                                       Pfx.Bounds.Nbr_Dims,
+                                       Global_Pool'Access);
+            Res.Bounds.D := Pfx.Bounds.D;
+
+            for I in Pfx.Val_Array.V'Range loop
+               Res.Val_Array.V (I) := Create_Delayed_Signal
+                 (Pfx.Val_Array.V (I));
+            end loop;
+         when Iir_Value_Record =>
+            Res := Create_Record_Value (Pfx.Val_Record.Len,
+                                        Global_Pool'Access);
+            for I in Pfx.Val_Record.V'Range loop
+               Res.Val_Record.V (I) := Create_Delayed_Signal
+                 (Pfx.Val_Record.V (I));
+            end loop;
+         when Iir_Value_Signal =>
+            Res := Create_Signal_Value (null);
+         when others =>
+            raise Internal_Error;
+      end case;
+      return Res;
+   end Create_Delayed_Signal;
+
+   procedure Elaborate_Delayed_Signal
+     (Instance: Block_Instance_Acc; Signal: Iir)
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Signal);
+      Prefix : Iir_Value_Literal_Acc;
+      Sig : Iir_Value_Literal_Acc;
+      Init : Iir_Value_Literal_Acc;
+      T : Ghdl_I64;
+   begin
+      Prefix := Execute_Name (Instance, Get_Prefix (Signal), True);
+      Prefix := Unshare_Bounds (Prefix, Global_Pool'Access);
+
+      T := Execute_Time_Attribute (Instance, Signal);
+
+      Sig := Create_Delayed_Signal (Prefix);
+      Instance.Objects (Info.Slot) := Sig;
+
+      Init := Execute_Signal_Init_Value (Instance, Get_Prefix (Signal));
+      Init := Unshare_Bounds (Init, Global_Pool'Access);
+      Instance.Objects (Info.Slot + 1) := Init;
+
+      Signals_Table.Append ((Kind => Implicit_Delayed,
+                             Decl => Signal,
+                             Sig => Sig,
+                             Instance => Instance,
+                             Time => T,
+                             Prefix => Prefix));
+   end Elaborate_Delayed_Signal;
+
+   procedure Elaborate_Package (Decl: Iir)
+   is
+      Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Instance : Block_Instance_Acc;
+   begin
+      if Package_Info.Elaborated then
+         return;
+      end if;
+
+      -- Create packages_instance only if it was not already created.
+      Instance := new Block_Instance_Type'
+        (Max_Objs => Package_Info.Nbr_Objects,
+         Scope_Level => Package_Info.Frame_Scope_Level,
+         Up_Block => null,
+         Name => Decl,
+         Parent => null,
+         Children => null,
+         Brother => null,
+         Configuration => Null_Iir,
+         Marker => Empty_Marker,
+         Objects => (others => null),
+         Elab_Objects => 0,
+         Instances => null,
+         In_Wait_Flag => False,
+         Cur_Stmt => Null_Iir,
+         Actuals_Ref => null,
+         Result => null);
+
+      Package_Instances (Package_Info.Inst_Slot) := Instance;
+
+      if Trace_Elaboration then
+         Ada.Text_IO.Put_Line ("elaborating " & Disp_Node (Decl));
+      end if;
+
+      -- Elaborate objects declarations.
+      Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Decl));
+      Package_Info.Elaborated := True;
+   end Elaborate_Package;
+
+   procedure Elaborate_Package_Body (Decl: Iir)
+   is
+      Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Instance : Block_Instance_Acc;
+   begin
+      Instance :=
+        Package_Instances (Iir_Index32 (-Package_Info.Frame_Scope_Level));
+
+      if Trace_Elaboration then
+         Ada.Text_IO.Put_Line ("elaborating " & Disp_Node (Decl));
+      end if;
+
+      -- Elaborate objects declarations.
+      Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Decl));
+   end Elaborate_Package_Body;
+
+   -- Elaborate all packages which DESIGN_UNIT depends on.
+   -- The packages are elaborated only once.  The body, if the package needs
+   -- one, can be loaded during the elaboration.
+   -- Recursive function.
+   -- FIXME: handle pathological cases of recursion.
+   -- Due to the rules of analysis, it is not possible to have a circulare
+   -- dependence.
+   procedure Elaborate_Dependence (Design_Unit: Iir_Design_Unit) is
+      Depend_List: Iir_Design_Unit_List;
+      Design: Iir;
+      Library_Unit: Iir;
+      Body_Design: Iir_Design_Unit;
+      Need_A_Body: Boolean;
+   begin
+      Depend_List := Get_Dependence_List (Design_Unit);
+
+      for I in Natural loop
+         Design := Get_Nth_Element (Depend_List, I);
+         exit when Design = Null_Iir;
+         if Get_Kind (Design) = Iir_Kind_Entity_Aspect_Entity then
+            --  During Sem, the architecture may be still unknown, and the
+            --  dependency is therefore the aspect.
+            Library_Unit := Get_Architecture (Design);
+            Design := Get_Design_Unit (Library_Unit);
+         else
+            Library_Unit := Get_Library_Unit (Design);
+         end if;
+         -- Elaborates only non-elaborated packages.
+         case Get_Kind (Library_Unit) is
+            when Iir_Kind_Package_Declaration =>
+               if not Get_Info (Library_Unit).Elaborated then
+                  Body_Design := Libraries.Load_Secondary_Unit
+                    (Design, Null_Identifier, Design_Unit);
+                  -- First the packages on which DESIGN depends.
+                  Elaborate_Dependence (Design);
+                  -- Then the declaration.
+                  Elaborate_Package (Library_Unit);
+                  Need_A_Body := Get_Need_Body (Library_Unit);
+                  if Body_Design = Null_Iir then
+                     if Need_A_Body then
+                        Error_Msg_Elab ("no package body for `" &
+                                        Image_Identifier (Library_Unit) & ''');
+                     end if;
+                  else
+                     -- Then the body (this can elaborate some packages).
+                     Elaborate_Package_Body (Get_Library_Unit (Body_Design));
+                  end if;
+               end if;
+            when Iir_Kind_Entity_Declaration
+              | Iir_Kind_Configuration_Declaration
+              | Iir_Kind_Architecture_Declaration =>
+               Elaborate_Dependence (Design);
+            when others =>
+               Error_Kind ("elaborate_dependence", Library_Unit);
+         end case;
+      end loop;
+   end Elaborate_Dependence;
+
+   --  Create a block instance to instantiate OBJ (block, component,
+   --  architecture, generate) in FATHER.  STMT is the statement/declaration
+   --  at the origin of the instantiation (it is generally the same as OBJ,
+   --  except for component where STMT is the component instantation
+   --  statement).
+   function Create_Block_Instance
+     (Father : Block_Instance_Acc;
+      Obj : Iir;
+      Stmt : Iir)
+      return Block_Instance_Acc
+   is
+      Obj_Info : constant Sim_Info_Acc := Get_Info (Obj);
+      Res : Block_Instance_Acc;
+   begin
+      Res := new Block_Instance_Type'
+        (Max_Objs => Obj_Info.Nbr_Objects,
+         Scope_Level => Obj_Info.Frame_Scope_Level,
+         Up_Block => Father,
+         Name => Stmt,
+         Parent => Father,
+         Children => null,
+         Brother => null,
+         Configuration => Null_Iir,
+         Marker => Empty_Marker,
+         Objects => (others => null),
+         Elab_Objects => 0,
+         Instances => null,
+         In_Wait_Flag => False,
+         Cur_Stmt => Null_Iir,
+         Actuals_Ref => null,
+         Result => null);
+      Res.Instances :=
+        new Block_Instance_Acc_Array (0 .. Obj_Info.Nbr_Instances - 1);
+
+      if Father /= null then
+         Res.Brother := Father.Children;
+         Father.Children := Res;
+         Father.Instances (Get_Info (Stmt).Inst_Slot) := Res;
+      end if;
+
+      return Res;
+   end Create_Block_Instance;
+
+   function Create_Protected_Object (Block: Block_Instance_Acc; Decl: Iir)
+                                    return Iir_Value_Literal_Acc
+   is
+      Bod : constant Iir := Get_Protected_Type_Body (Decl);
+      Inst : Block_Instance_Acc;
+      Res : Iir_Value_Literal_Acc;
+   begin
+      Protected_Table.Increment_Last;
+      Res := Create_Protected_Value (Protected_Table.Last);
+
+      Inst := Create_Subprogram_Instance (Block, Bod);
+      Protected_Table.Table (Res.Prot) := Inst;
+      Elaborate_Declarative_Part (Inst, Get_Declaration_Chain (Bod));
+
+      return Res;
+   end Create_Protected_Object;
+
+   --  Create an value_literal for DECL (defined in BLOCK) and set it with
+   --  its default values. Nodes are shared.
+   function Create_Value_For_Type
+     (Block: Block_Instance_Acc; Decl: Iir; Default : Boolean)
+      return Iir_Value_Literal_Acc
+   is
+      Res : Iir_Value_Literal_Acc;
+      Bounds : Iir_Value_Literal_Acc;
+   begin
+      case Get_Kind (Decl) is
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Physical_Subtype_Definition
+           | Iir_Kind_Physical_Type_Definition =>
+            if Default then
+               Bounds := Execute_Bounds (Block, Decl);
+               Res := Bounds.Left;
+            else
+               case Get_Info (Get_Base_Type (Decl)).Scalar_Mode is
+                  when Iir_Value_B2 =>
+                     Res := Create_B2_Value (False);
+                  when Iir_Value_E32 =>
+                     Res := Create_E32_Value (0);
+                  when Iir_Value_I64 =>
+                     Res := Create_I64_Value (0);
+                  when Iir_Value_F64 =>
+                     Res := Create_F64_Value (0.0);
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end if;
+
+         when Iir_Kind_Array_Subtype_Definition =>
+            Res := Create_Array_Bounds_From_Type (Block, Decl, True);
+            declare
+               El : Iir_Value_Literal_Acc;
+            begin
+               if Res.Val_Array.Len > 0 then
+                  El := Create_Value_For_Type
+                    (Block, Get_Element_Subtype (Decl), Default);
+                  Res.Val_Array.V (1) := El;
+                  for I in 2 .. Res.Val_Array.Len loop
+                     Res.Val_Array.V (I) := El;
+                  end loop;
+               end if;
+            end;
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            declare
+               El : Iir_Element_Declaration;
+               List : constant Iir_List :=
+                 Get_Elements_Declaration_List (Get_Base_Type (Decl));
+            begin
+               Res := Create_Record_Value
+                 (Iir_Index32 (Get_Nbr_Elements (List)));
+
+               for I in Natural loop
+                  El := Get_Nth_Element (List, I);
+                  exit when El = Null_Iir;
+                  Res.Val_Record.V (1 + Get_Element_Position (El)) :=
+                    Create_Value_For_Type (Block, Get_Type (El), Default);
+               end loop;
+            end;
+         when Iir_Kind_Access_Type_Definition
+           | Iir_Kind_Access_Subtype_Definition =>
+            return Create_Access_Value (null);
+         when Iir_Kind_Protected_Type_Declaration =>
+            return Create_Protected_Object (Block, Decl);
+         when others =>
+            Error_Kind ("create_value_for_type", Decl);
+      end case;
+      return Res;
+   end Create_Value_For_Type;
+
+   procedure Create_Object (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Slot : constant Iir_Index32 := Get_Info (Decl).Slot;
+   begin
+      --  Check elaboration order.
+      --  Note: this is not done for package since objects from package are
+      --  commons (same scope), and package annotation order can be different
+      --  from package elaboration order (eg: body).
+      if Slot /= Instance.Elab_Objects + 1
+        or else Instance.Objects (Slot) /= null
+      then
+         Error_Msg_Elab ("bad elaboration order");
+         raise Internal_Error;
+      end if;
+      Instance.Elab_Objects := Slot;
+   end Create_Object;
+
+   procedure Destroy_Object (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Slot : constant Iir_Index32 := Info.Slot;
+   begin
+      if Slot /= Instance.Elab_Objects
+        or else Info.Scope_Level /= Instance.Scope_Level
+      then
+         Error_Msg_Elab ("bad destroy order");
+         raise Internal_Error;
+      end if;
+      --  Clear the slot (this is necessary for ranges).
+      Instance.Objects (Slot) := null;
+      Instance.Elab_Objects := Slot - 1;
+   end Destroy_Object;
+
+   procedure Create_Signal (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Slot : constant Iir_Index32 := Get_Info (Decl).Slot;
+   begin
+      if Slot /= Instance.Elab_Objects + 1
+        or else Instance.Objects (Slot) /= null
+      then
+         Error_Msg_Elab ("bad elaboration order");
+         raise Internal_Error;
+      end if;
+      --  One slot is reserved for default value
+      Instance.Elab_Objects := Slot + 1;
+   end Create_Signal;
+
+   function Create_Terminal_Object (Block: Block_Instance_Acc;
+                                    Decl : Iir;
+                                    Def: Iir)
+                                   return Iir_Value_Literal_Acc
+   is
+      Res : Iir_Value_Literal_Acc;
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            Res := Create_Terminal_Value
+              (Create_Scalar_Terminal (Decl, Block));
+         when others =>
+            Error_Kind ("create_terminal_object", Def);
+      end case;
+      return Res;
+   end Create_Terminal_Object;
+
+   procedure Create_Terminal (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Slot : Iir_Index32;
+   begin
+      Slot := Get_Info (Decl).Slot;
+      if Slot + 1 = Instance.Elab_Objects then
+         --  Reference terminal of nature declaration may have already been
+         --  elaborated.
+         return;
+      end if;
+      if Slot /= Instance.Elab_Objects then
+         Error_Msg_Elab ("bad elaboration order");
+         raise Internal_Error;
+      end if;
+      Instance.Objects (Slot) :=
+        Create_Terminal_Object (Instance, Decl, Get_Nature (Decl));
+      Instance.Elab_Objects := Slot + 1;
+   end Create_Terminal;
+
+   function Create_Quantity_Object (Block: Block_Instance_Acc;
+                                    Decl : Iir;
+                                    Def: Iir)
+                                   return Iir_Value_Literal_Acc
+   is
+      Res : Iir_Value_Literal_Acc;
+      Kind : Quantity_Kind;
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Floating_Subtype_Definition =>
+            case Iir_Kinds_Quantity_Declaration (Get_Kind (Decl)) is
+               when Iir_Kind_Across_Quantity_Declaration =>
+                  Kind := Quantity_Across;
+               when Iir_Kind_Through_Quantity_Declaration =>
+                  Kind := Quantity_Through;
+               when Iir_Kind_Free_Quantity_Declaration =>
+                  Kind := Quantity_Free;
+            end case;
+            Res := Create_Quantity_Value
+              (Create_Scalar_Quantity (Kind, Decl, Block));
+         when others =>
+            Error_Kind ("create_quantity_object", Def);
+      end case;
+      return Res;
+   end Create_Quantity_Object;
+
+   function Create_Quantity (Instance : Block_Instance_Acc; Decl : Iir)
+     return Iir_Value_Literal_Acc
+   is
+      Slot : Iir_Index32;
+      Res : Iir_Value_Literal_Acc;
+   begin
+      Slot := Get_Info (Decl).Slot;
+      if Slot /= Instance.Elab_Objects then
+         Error_Msg_Elab ("bad elaboration order");
+         raise Internal_Error;
+      end if;
+      Res := Create_Quantity_Object (Instance, Decl, Get_Type (Decl));
+      Instance.Objects (Slot) := Res;
+      Instance.Elab_Objects := Slot + 1;
+      return Res;
+   end Create_Quantity;
+
+   function Elaborate_Bound_Constraint
+     (Instance : Block_Instance_Acc; Bound: Iir)
+      return Iir_Value_Literal_Acc
+   is
+      Value : Iir_Value_Literal_Acc;
+      Ref : Iir;
+      Res : Iir_Value_Literal_Acc;
+   begin
+      Ref := Get_Type (Bound);
+      Res := Create_Value_For_Type (Instance, Ref, False);
+      Res := Unshare (Res, Instance_Pool);
+      Value := Execute_Expression (Instance, Bound);
+      Assign_Value_To_Object (Instance, Res, Ref, Value, Bound);
+      return Res;
+   end Elaborate_Bound_Constraint;
+
+   procedure Elaborate_Range_Expression
+     (Instance : Block_Instance_Acc; Rc: Iir_Range_Expression)
+   is
+      Range_Info : Sim_Info_Acc;
+      Val : Iir_Value_Literal_Acc;
+   begin
+      Range_Info := Get_Info (Rc);
+      if Range_Info.Scope_Level /= Instance.Scope_Level
+        or else Instance.Objects (Range_Info.Slot) /= null
+      then
+         --  A range expression may have already been created, for example
+         --  when severals objects are created with the same subtype:
+         --    variable v, v1 : bit_vector (x to y);
+         return;
+      end if;
+      if False
+        and then (Range_Info.Scope_Level /= Instance.Scope_Level
+                    or else Range_Info.Slot < Instance.Elab_Objects)
+      then
+         --  FIXME: the test is wrong for packages.
+         --  The range was already elaborated.
+         --  ?? Is that possible
+         raise Internal_Error;
+         return;
+      end if;
+      Create_Object (Instance, Rc);
+      Val := Create_Range_Value
+        (Elaborate_Bound_Constraint (Instance, Get_Left_Limit (Rc)),
+         Elaborate_Bound_Constraint (Instance, Get_Right_Limit (Rc)),
+         Get_Direction (Rc));
+      Instance.Objects (Range_Info.Slot) := Unshare (Val, Instance_Pool);
+   end Elaborate_Range_Expression;
+
+   procedure Elaborate_Range_Constraint
+     (Instance : Block_Instance_Acc; Rc: Iir)
+   is
+   begin
+      case Get_Kind (Rc) is
+         when Iir_Kind_Range_Expression =>
+            Elaborate_Range_Expression (Instance, Rc);
+         when Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute =>
+            null;
+         when others =>
+            Error_Kind ("elaborate_range_constraint", Rc);
+      end case;
+   end Elaborate_Range_Constraint;
+
+   --  Create the bounds of a scalar type definition.
+   --  Elaborate_Range_Constraint cannot be used, as it checks bounds (and
+   --  here we create the bounds).
+   procedure Elaborate_Type_Range
+     (Instance : Block_Instance_Acc; Rc: Iir_Range_Expression)
+   is
+      Range_Info : Sim_Info_Acc;
+      Val : Iir_Value_Literal_Acc;
+   begin
+      Range_Info := Get_Info (Rc);
+      Create_Object (Instance, Rc);
+      Val := Create_Range_Value
+        (Execute_Expression (Instance, Get_Left_Limit (Rc)),
+         Execute_Expression (Instance, Get_Right_Limit (Rc)),
+         Get_Direction (Rc));
+      Instance.Objects (Range_Info.Slot) := Unshare (Val, Instance_Pool);
+   end Elaborate_Type_Range;
+
+   --  DECL is a subtype indication.
+   --  Elaborate DECL only if it is anonymous.
+   procedure Elaborate_Subtype_Indication_If_Anonymous
+     (Instance : Block_Instance_Acc; Decl : Iir) is
+   begin
+      if Is_Anonymous_Type_Definition (Decl) then
+         Elaborate_Subtype_Indication (Instance, Decl);
+      end if;
+   end Elaborate_Subtype_Indication_If_Anonymous;
+
+   --  LRM93 §12.3.1.3  Subtype Declarations
+   --  The elaboration of a subtype indication creates a subtype.
+   procedure Elaborate_Subtype_Indication
+     (Instance : Block_Instance_Acc; Ind : Iir)
+   is
+   begin
+      case Get_Kind (Ind) is
+         when Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Array_Type_Definition
+           | Iir_Kind_File_Type_Definition
+           | Iir_Kind_Access_Type_Definition
+           | Iir_Kind_Record_Type_Definition =>
+            Elaborate_Type_Definition (Instance, Ind);
+         when Iir_Kind_Array_Subtype_Definition =>
+            --  LRM93 §12.3.1.3
+            --  The elaboration of an index constraint consists of the
+            --  declaration of each of the discrete ranges in the index
+            --  constraint in some order that is not defined by the language.
+            declare
+               St_Indexes : Iir_List;
+               St_El : Iir;
+            begin
+               St_Indexes := Get_Index_Subtype_List (Ind);
+               for I in Natural loop
+                  St_El := Get_Nth_Element (St_Indexes, I);
+                  exit when St_El = Null_Iir;
+                  Elaborate_Subtype_Indication_If_Anonymous (Instance, St_El);
+               end loop;
+               Elaborate_Subtype_Indication_If_Anonymous
+                 (Instance, Get_Element_Subtype (Ind));
+            end;
+         when Iir_Kind_Record_Subtype_Definition =>
+            null;
+         when Iir_Kind_Access_Subtype_Definition =>
+            null;
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
+            Elaborate_Range_Constraint (Instance, Get_Range_Constraint (Ind));
+         when Iir_Kind_Physical_Subtype_Definition =>
+            Elaborate_Range_Constraint (Instance, Get_Range_Constraint (Ind));
+         when others =>
+            Error_Kind ("elaborate_subtype_indication", Ind);
+      end case;
+   end Elaborate_Subtype_Indication;
+
+   --  LRM93 §12.3.1.2  Type Declarations.
+   procedure Elaborate_Type_Definition
+     (Instance : Block_Instance_Acc; Def : Iir)
+   is
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Enumeration_Type_Definition =>
+            --  Elaboration of an enumeration type definition has not effect
+            --  other than the creation of the corresponding type.
+            Elaborate_Type_Range (Instance, Get_Range_Constraint (Def));
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Physical_Type_Definition =>
+            null;
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Physical_Subtype_Definition =>
+            --  Elaboration of an integer, floating point, or physical type
+            --  definition consists of the elaboration of the corresponding
+            --  range constraint.
+            Elaborate_Subtype_Indication_If_Anonymous (Instance, Def);
+            --  Elaboration of a physical unit declaration has no effect other
+            --  than to create the unit defined by the unit declaration.
+            null;
+         when Iir_Kind_Array_Type_Definition =>
+            --  Elaboration of an unconstrained array type definition consists
+            --  of the elaboration of the element subtype indication of the
+            --  array type.
+            Elaborate_Subtype_Indication_If_Anonymous
+              (Instance, Get_Element_Subtype (Def));
+         when Iir_Kind_Access_Type_Definition =>
+            --  Elaboration of an access type definition consists of the
+            --  elaboration of the corresponding subtype indication.
+            Elaborate_Subtype_Indication_If_Anonymous
+              (Instance, Get_Designated_Type (Def));
+         when Iir_Kind_File_Type_Definition =>
+            --  GHDL: There is nothing about elaboration of a file type
+            --  definition.  FIXME ??
+            null;
+         when Iir_Kind_Record_Type_Definition =>
+            --  Elaboration of a record type definition consists of the
+            --  elaboration of the equivalent single element declarations in
+            --  the given order.
+            declare
+               El : Iir_Element_Declaration;
+               List : Iir_List;
+            begin
+               List := Get_Elements_Declaration_List (Def);
+               for I in Natural loop
+                  El := Get_Nth_Element (List, I);
+                  exit when El = Null_Iir;
+                  --  Elaboration of an element declaration consists of
+                  --  elaboration of the element subtype indication.
+                  Elaborate_Subtype_Indication_If_Anonymous
+                    (Instance, Get_Type (El));
+               end loop;
+            end;
+         when Iir_Kind_Protected_Type_Declaration =>
+            Elaborate_Declarative_Part
+              (Instance, Get_Declaration_Chain (Def));
+
+         when Iir_Kind_Incomplete_Type_Definition =>
+            null;
+         when others =>
+            Error_Kind ("elaborate_type_definition", Def);
+      end case;
+   end Elaborate_Type_Definition;
+
+   --  LRM93 §12.3.1.2  Type Declarations.
+   procedure Elaborate_Type_Declaration
+     (Instance : Block_Instance_Acc; Decl : Iir_Type_Declaration)
+   is
+      Def : Iir;
+      Base_Type : Iir_Array_Type_Definition;
+   begin
+      --  Elaboration of a type declaration generally consists of the
+      --  elaboration of the definition of the type and the creation of that
+      --  type.
+      Def := Get_Type (Decl);
+      if Def = Null_Iir then
+         --  FIXME: can this happen ?
+         raise Program_Error;
+      end if;
+      if Get_Kind (Def) = Iir_Kind_Array_Subtype_Definition then
+         Base_Type := Get_Base_Type (Def);
+         --  For a constrained array type declaration, however,
+         --  elaboration consists of the elaboration of the equivalent
+         --  anonymous unconstrained array type [...]
+         Elaborate_Subtype_Indication_If_Anonymous (Instance, Base_Type);
+         --  [...] followed by the elaboration of the named subtype
+         --  of that unconstrained type.
+         Elaborate_Subtype_Indication (Instance, Def);
+      else
+         Elaborate_Type_Definition (Instance, Def);
+      end if;
+   end Elaborate_Type_Declaration;
+
+   procedure Elaborate_Nature_Definition
+     (Instance : Block_Instance_Acc; Def : Iir)
+   is
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Scalar_Nature_Definition =>
+            Elaborate_Subtype_Indication (Instance, Get_Across_Type (Def));
+            Elaborate_Subtype_Indication (Instance, Get_Through_Type (Def));
+         when others =>
+            Error_Kind ("elaborate_nature_definition", Def);
+      end case;
+   end Elaborate_Nature_Definition;
+
+   --  LRM93 §12.2.1  The Generic Clause
+   procedure Elaborate_Generic_Clause
+     (Instance : Block_Instance_Acc; Generic_Chain : Iir)
+   is
+      Decl : Iir_Constant_Interface_Declaration;
+   begin
+      --  Elaboration of a generic clause consists of the elaboration of each
+      --  of the equivalent single generic declarations contained in the
+      --  clause, in the order given.
+      Decl := Generic_Chain;
+      while Decl /= Null_Iir loop
+         --  The elaboration of a generic declaration consists of elaborating
+         --  the subtype indication and then creating a generic constant of
+         --  that subtype.
+         Elaborate_Subtype_Indication_If_Anonymous (Instance, Get_Type (Decl));
+         Create_Object (Instance, Decl);
+         --  The value of a generic constant is not defined until a subsequent
+         --  generic map aspect is evaluated, or in the absence of a generic
+         --  map aspect, until the default expression associated with the
+         --  generic constant is evaluated to determine the value of the
+         --  constant.
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Elaborate_Generic_Clause;
+
+   --  LRM93 12.2.3  The Port Clause
+   procedure Elaborate_Port_Clause
+     (Instance : Block_Instance_Acc; Port_Chain : Iir)
+   is
+      Decl : Iir_Signal_Interface_Declaration;
+   begin
+      Decl := Port_Chain;
+      while Decl /= Null_Iir loop
+         --  LRM93 §12.2.3
+         --  The elaboration of a port declaration consists of elaborating the
+         --  subtype indication and then creating a port of that subtype.
+         Elaborate_Subtype_Indication_If_Anonymous (Instance, Get_Type (Decl));
+
+         --  Simply increase an index to check that the port was created.
+         Create_Signal (Instance, Decl);
+
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Elaborate_Port_Clause;
+
+   --  LRM93 §12.2.2  The generic Map Aspect
+   procedure Elaborate_Generic_Map_Aspect
+     (Target_Instance : Block_Instance_Acc;
+      Local_Instance : Block_Instance_Acc;
+      Map : Iir)
+   is
+      Assoc : Iir;
+      Inter : Iir_Constant_Interface_Declaration;
+      Value : Iir;
+      Val : Iir_Value_Literal_Acc;
+      Last_Individual : Iir_Value_Literal_Acc;
+   begin
+      --  Elaboration of a generic map aspect consists of elaborating the
+      --  generic association list.
+
+      --  Elaboration of a generic association list consists of the
+      --  elaboration of each generic association element in the
+      --  association list.
+      Assoc := Map;
+      while Assoc /= Null_Iir loop
+         --  Elaboration of a generic association element consists of the
+         --  elaboration of the formal part and the evaluation of the actual
+         --  part.
+         --  FIXME:  elaboration of the formal part.
+         Inter := Get_Formal (Assoc);
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Association_Element_Open =>
+               --  The generic association list contains an implicit
+               --  association element for each generic constant that is not
+               --  explicitly associated with an actual [GHDL: done trought
+               --  annotations] or that is associated with the reserved word
+               --  OPEN; the actual part of such an implicit association
+               --  element is the default expression appearing in the
+               --  declaration of that generic constant.
+               Value := Get_Default_Value (Inter);
+               if Value = Null_Iir then
+                  Error_Msg_Exec ("no default value", Inter);
+                  return;
+               end if;
+               Val := Execute_Expression (Target_Instance, Value);
+            when Iir_Kind_Association_Element_By_Expression =>
+               Value := Get_Actual (Assoc);
+               Val := Execute_Expression (Local_Instance, Value);
+            when Iir_Kind_Association_Element_By_Individual =>
+               Val := Create_Value_For_Type
+                 (Local_Instance, Get_Actual_Type (Assoc), False);
+
+               Last_Individual := Unshare (Val, Instance_Pool);
+               Target_Instance.Objects (Get_Info (Inter).Slot) :=
+                 Last_Individual;
+               goto Continue;
+            when others =>
+               Error_Kind ("elaborate_generic_map_aspect", Assoc);
+         end case;
+
+         if Get_Whole_Association_Flag (Assoc) then
+            --  It is an error if the value of the actual does not belong to
+            --  the subtype denoted by the subtype indication of the formal.
+            --  If the subtype denoted by the subtype indication of the
+            --  declaration of the formal is a constrained array subtype, then
+            --  an implicit subtype conversion is performed prior to this
+            --  check.
+            --  It is also an error if the type of the formal is an array type
+            --  and the value of each element of the actual does not belong to
+            --  the element subtype of the formal.
+            Implicit_Array_Conversion
+              (Target_Instance, Val, Get_Type (Inter), Inter);
+            Check_Constraints (Target_Instance, Val, Get_Type (Inter), Inter);
+
+            --  The generic constant or subelement or slice thereof designated
+            --  by the formal part is then initialized with the value
+            --  resulting from the evaluation of the corresponding actual part.
+            Target_Instance.Objects (Get_Info (Inter).Slot) :=
+              Unshare (Val, Instance_Pool);
+         else
+            declare
+               Targ : Iir_Value_Literal_Acc;
+               Is_Sig : Boolean;
+            begin
+               Execute_Name_With_Base
+                 (Target_Instance, Get_Formal (Assoc),
+                  Last_Individual, Targ, Is_Sig);
+               Store (Targ, Val);
+            end;
+         end if;
+
+         <<Continue>> null;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Elaborate_Generic_Map_Aspect;
+
+   --  Return TRUE if EXPR is a signal name.
+   function Is_Signal (Expr : Iir) return Boolean
+   is
+      Obj : Iir;
+   begin
+      Obj := Sem_Names.Name_To_Object (Expr);
+      if Obj /= Null_Iir then
+         return Is_Signal_Object (Obj);
+      else
+         return False;
+      end if;
+   end Is_Signal;
+
+   --  LRM93 12.2.3  The Port Clause
+   procedure Elaborate_Port_Declaration
+     (Instance : Block_Instance_Acc;
+      Decl : Iir_Signal_Interface_Declaration;
+      Default_Value : Iir_Value_Literal_Acc)
+   is
+      Val : Iir_Value_Literal_Acc;
+   begin
+      if Default_Value = null then
+         Val := Elaborate_Default_Value (Instance, Decl);
+      else
+         Val := Default_Value;
+      end if;
+      Elaborate_Signal (Instance, Decl, Val);
+   end Elaborate_Port_Declaration;
+
+   procedure Elab_Connect
+     (Formal_Instance : Block_Instance_Acc;
+      Local_Instance : Block_Instance_Acc;
+      Actual_Expr : Iir_Value_Literal_Acc;
+      Assoc : Iir_Association_Element_By_Expression)
+   is
+      Inter : Iir;
+      Actual : Iir;
+      Local_Expr : Iir_Value_Literal_Acc;
+      Formal_Expr : Iir_Value_Literal_Acc;
+   begin
+      Inter := Get_Formal (Assoc);
+      Actual := Get_Actual (Assoc);
+      Formal_Expr := Execute_Name (Formal_Instance, Inter, True);
+      Formal_Expr := Unshare_Bounds (Formal_Expr, Global_Pool'Access);
+      if Actual_Expr = null then
+         Local_Expr := Execute_Name (Local_Instance, Actual, True);
+         Local_Expr := Unshare_Bounds (Local_Expr, Global_Pool'Access);
+      else
+         Local_Expr := Actual_Expr;
+      end if;
+
+      Connect_Table.Append ((Formal => Formal_Expr,
+                             Formal_Instance => Formal_Instance,
+                             Actual => Local_Expr,
+                             Actual_Instance => Local_Instance,
+                             Assoc => Assoc));
+   end Elab_Connect;
+
+   --  LRM93 12.2.3  The Port Clause
+   --  LRM93 §12.2.4  The Port Map Aspect
+   procedure Elaborate_Port_Map_Aspect
+     (Formal_Instance : Block_Instance_Acc;
+      Actual_Instance : Block_Instance_Acc;
+      Ports : Iir;
+      Map : Iir)
+   is
+      Assoc : Iir;
+      Inter : Iir_Signal_Interface_Declaration;
+      Actual_Expr : Iir_Value_Literal_Acc;
+      Init_Expr : Iir_Value_Literal_Acc;
+      Actual : Iir;
+   begin
+      if Ports = Null_Iir then
+         return;
+      end if;
+
+      --  Elaboration of a port map aspect consists of elaborating the port
+      --  association list.
+      if Map = Null_Iir then
+         -- No port association, elaborate the port clause.
+         --  Elaboration of a port clause consists of the elaboration of each
+         --  of the equivalent signal port declaration in the clause, in the
+         --  order given.
+         Inter := Ports;
+         while Inter /= Null_Iir loop
+            Elaborate_Port_Declaration (Formal_Instance, Inter, null);
+            Inter := Get_Chain (Inter);
+         end loop;
+         return;
+      end if;
+
+      Current_Component := Formal_Instance;
+
+      Assoc := Map;
+      while Assoc /= Null_Iir loop
+         --  Elaboration of a port association list consists of the elaboration
+         --  of each port association element in the association list whose
+         --  actual is not the reserved word OPEN.
+         Inter := Get_Formal (Assoc);
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Association_Element_By_Expression =>
+               if Get_In_Conversion (Assoc) = Null_Iir
+                 and then Get_Out_Conversion (Assoc) = Null_Iir
+               then
+                  Actual := Get_Actual (Assoc);
+                  if Is_Signal (Actual) then
+                     --  Association with a signal
+                     Init_Expr := Execute_Signal_Init_Value
+                       (Actual_Instance, Actual);
+                     Implicit_Array_Conversion
+                       (Formal_Instance, Init_Expr, Get_Type (Inter), Actual);
+                     Init_Expr := Unshare_Bounds
+                       (Init_Expr, Global_Pool'Access);
+                     Actual_Expr := null;
+                  else
+                     --  Association with an expression
+                     Init_Expr := Execute_Expression
+                       (Actual_Instance, Actual);
+                     Implicit_Array_Conversion
+                       (Formal_Instance, Init_Expr,
+                        Get_Type (Inter), Actual);
+                     Init_Expr := Unshare (Init_Expr, Global_Pool'Access);
+                     Actual_Expr := Init_Expr;
+                  end if;
+               else
+                  --  The actual doesn't define the constraints of the formal.
+                  if Get_Whole_Association_Flag (Assoc) then
+                     Init_Expr := Elaborate_Default_Value
+                       (Formal_Instance, Inter);
+                     Actual_Expr := null;
+                  end if;
+               end if;
+               if Get_Whole_Association_Flag (Assoc) then
+                  Elaborate_Signal (Formal_Instance, Inter, Init_Expr);
+               end if;
+
+               --  Elaboration of a port association element consists of the
+               --  elaboration of the formal part; the port or subelement
+               --  or slice thereof designated by the formal part is then
+               --  associated with the signal or expression designated
+               --  by the actual part.
+               Elab_Connect
+                 (Formal_Instance, Actual_Instance, Actual_Expr, Assoc);
+
+            when Iir_Kind_Association_Element_Open =>
+               --  Note that an open cannot be associated with a formal that
+               --  is associated individually.
+               Elaborate_Port_Declaration (Formal_Instance, Inter, null);
+
+            when Iir_Kind_Association_Element_By_Individual =>
+               Init_Expr := Create_Value_For_Type
+                 (Formal_Instance, Get_Actual_Type (Assoc), False);
+               Elaborate_Signal (Formal_Instance, Inter, Init_Expr);
+
+            when others =>
+               Error_Kind ("elaborate_port_map_aspect", Assoc);
+         end case;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+
+      Current_Component := null;
+   end Elaborate_Port_Map_Aspect;
+
+   --  LRM93 §12.2  Elaboration of a block header
+   --  Elaboration of a block header consists of the elaboration of the
+   --  generic clause, the generic map aspect, the port clause, and the port
+   --  map aspect, in that order.
+   procedure Elaborate_Block_Header
+     (Instance : Block_Instance_Acc; Header : Iir_Block_Header)
+   is
+   begin
+      Elaborate_Generic_Clause (Instance, Get_Generic_Chain (Header));
+      Elaborate_Generic_Map_Aspect
+        (Instance, Instance, Get_Generic_Map_Aspect_Chain (Header));
+      Elaborate_Port_Clause (Instance, Get_Port_Chain (Header));
+      Elaborate_Port_Map_Aspect
+        (Instance, Instance,
+         Get_Port_Chain (Header), Get_Port_Map_Aspect_Chain (Header));
+   end Elaborate_Block_Header;
+
+   procedure Elaborate_Guard_Signal
+     (Instance : Block_Instance_Acc; Guard : Iir)
+   is
+      Sig : Iir_Value_Literal_Acc;
+      Info : constant Sim_Info_Acc := Get_Info (Guard);
+   begin
+      Create_Signal (Instance, Guard);
+
+      Sig := Create_Signal_Value (null);
+      Instance.Objects (Info.Slot) := Sig;
+      Instance.Objects (Info.Slot + 1) :=
+        Unshare (Create_B2_Value (False), Instance_Pool);
+
+      Signals_Table.Append ((Kind => Guard_Signal,
+                             Decl => Guard,
+                             Sig => Sig,
+                             Instance => Instance));
+   end Elaborate_Guard_Signal;
+
+   --  LRM93 §12.4.1  Block statements.
+   procedure Elaborate_Block_Statement
+     (Instance : Block_Instance_Acc; Block : Iir_Block_Statement)
+   is
+      Header : Iir_Block_Header;
+      Ninstance : Block_Instance_Acc;  -- FIXME
+      Guard : Iir;
+   begin
+      Ninstance := Create_Block_Instance (Instance, Block, Block);
+
+      Guard := Get_Guard_Decl (Block);
+      if Guard /= Null_Iir then
+         --  LRM93 12.6.4 (3)
+         --  The value of each implicit GUARD signal is set to the result of
+         --  evaluating the corresponding guard expression.
+         --  GHDL: done by grt when the guard signal is created.
+         Elaborate_Guard_Signal (Ninstance, Guard);
+      end if;
+
+      --  Elaboration of a block statement consists of the elaboration of the
+      --  block header, if present [...]
+      Header := Get_Block_Header (Block);
+      if Header /= Null_Iir then
+         Elaborate_Block_Header (Ninstance, Header);
+      end if;
+
+      --  [...] followed by the elaboration of the block declarative part [...]
+      Elaborate_Declarative_Part (Ninstance,
+                                  Get_Declaration_Chain (Block));
+      --  [...] followed by the elaboration of the block statement part.
+      Elaborate_Statement_Part
+        (Ninstance, Get_Concurrent_Statement_Chain (Block));
+      --  Elaboration of a block statement may occur under the control of a
+      --  configuration declaration.
+      --  In particular, a block configuration, wether implicit or explicit,
+      --  within a configuration declaration may supply a sequence of
+      --  additionnal implicit configuration specification to be applied
+      --  during the elaboration of the corresponding block statement.
+      --  If a block statement is being elaborated under the control of a
+      --  configuration declaration, then the sequence of implicit
+      --  configuration specifications supplied by the block configuration
+      --  is elaborated as part of the block declarative part, following all
+      --  other declarative items in that part.
+      --  The sequence of implicit configuration specifications supplied by a
+      --  block configuration, wether implicit or explicit, consists of each of
+      --  the configuration specifications implied by component configurations
+      --  occurring immediatly within the block configuration, and in the
+      --  order in which the component configurations themselves appear.
+      -- FIXME.
+   end Elaborate_Block_Statement;
+
+   function Create_Default_Association (Formal_Chain : Iir;
+                                        Local_Chain : Iir;
+                                        Node : Iir)
+                                        return Iir
+   is
+      Nbr_Formals : Natural;
+   begin
+      --  LRM93 5.2.2
+      --  The default binding indication includes a default generic map
+      --  aspect if the design entity implied by the entity aspect contains
+      --  formal generic.
+      --
+      --  LRM93 5.2.2
+      --  The default binding indication includes a default port map aspect if
+      --  the design entity implied by the entity aspect contains formal ports.
+      if Formal_Chain = Null_Iir then
+         if Local_Chain /= Null_Iir then
+            Error_Msg_Sem ("cannot create default map aspect", Node);
+         end if;
+         return Null_Iir;
+      end if;
+      Nbr_Formals := Get_Chain_Length (Formal_Chain);
+      declare
+         Assoc_List : Iir_Array (0 .. Nbr_Formals - 1) := (others => Null_Iir);
+         Assoc : Iir;
+         Local : Iir;
+         Formal : Iir;
+         Pos : Natural;
+         First, Last : Iir;
+      begin
+         --  LRM93 5.2.2
+         --  The default generic map aspect associates each local generic in
+         --  the corresponding component instantiation (if any) with a formal
+         --  of the same simple name.
+         Local := Local_Chain;
+         while Local /= Null_Iir loop
+            Formal := Formal_Chain;
+            Pos := 0;
+            while Formal /= Null_Iir loop
+               exit when Get_Identifier (Formal) = Get_Identifier (Local);
+               Formal := Get_Chain (Formal);
+               Pos := Pos + 1;
+            end loop;
+            if Formal = Null_Iir then
+               --  LRM93 5.2.2
+               --  It is an error if such a formal does not exist, or if
+               --  its mode and type are not appropriate for such an
+               --  association.
+               --  FIXME: mode/type check.
+               Error_Msg_Sem
+                 ("cannot associate local " & Disp_Node (Local), Node);
+               exit;
+            end if;
+            if Assoc_List (Pos) /= Null_Iir then
+               raise Internal_Error;
+            end if;
+            Assoc_List (Pos) := Local;
+
+            Local := Get_Chain (Local);
+         end loop;
+
+         Sub_Chain_Init (First, Last);
+         Formal := Formal_Chain;
+         for I in Assoc_List'Range loop
+            if Assoc_List (I) = Null_Iir then
+               --  LRM93 5.2.2
+               --  Any remaining unassociated formals are associated with the
+               --  actual designator any.
+               Assoc := Create_Iir (Iir_Kind_Association_Element_Open);
+            else
+               Assoc :=
+                 Create_Iir (Iir_Kind_Association_Element_By_Expression);
+               Set_Actual (Assoc, Assoc_List (I));
+            end if;
+            Set_Whole_Association_Flag (Assoc, True);
+            Set_Formal (Assoc, Formal);
+            Sub_Chain_Append (First, Last, Assoc);
+
+            Formal := Get_Chain (Formal);
+         end loop;
+         return First;
+      end;
+   end Create_Default_Association;
+
+   --  LRM93 §12.4.3
+   function Is_Fully_Bound (Conf : Iir) return Boolean
+   is
+      Binding : Iir;
+   begin
+      if Conf = Null_Iir then
+         return False;
+      end if;
+      case Get_Kind (Conf) is
+         when Iir_Kind_Configuration_Specification
+           | Iir_Kind_Component_Configuration =>
+            Binding := Get_Binding_Indication (Conf);
+            if Binding = Null_Iir then
+               return False;
+            end if;
+            if Get_Kind (Get_Entity_Aspect (Binding))
+              = Iir_Kind_Entity_Aspect_Open
+            then
+               return False;
+            end if;
+         when others =>
+            null;
+      end case;
+      return True;
+   end Is_Fully_Bound;
+
+   procedure Elaborate_Component_Instantiation
+     (Instance : Block_Instance_Acc;
+      Stmt : Iir_Component_Instantiation_Statement)
+   is
+      Component : constant Iir := Get_Instantiated_Unit (Stmt);
+      Frame : Block_Instance_Acc;
+   begin
+      if Get_Kind (Component) = Iir_Kind_Component_Declaration then
+
+         --  Elaboration of a component instantiation statement that
+         --  instanciates a component declaration has no effect unless the
+         --  component instance is either fully bound to a design entity
+         --  defined by an entity declaration and architecture body or is
+         --  bound to a configuration of such a design entity.
+         --  FIXME: in fact the component is created.
+
+         --  If a component instance is so bound, then elaboration of the
+         --  corresponding component instantiation statement consists of the
+         --  elaboration of the implied block statement representing the
+         --  component instance and [...]
+         Frame := Create_Block_Instance (Instance, Component, Stmt);
+
+         Elaborate_Generic_Clause (Frame, Get_Generic_Chain (Component));
+         Elaborate_Generic_Map_Aspect
+           (Frame, Instance, Get_Generic_Map_Aspect_Chain (Stmt));
+         Elaborate_Port_Clause (Frame, Get_Port_Chain (Component));
+         Elaborate_Port_Map_Aspect
+           (Frame, Instance,
+            Get_Port_Chain (Component), Get_Port_Map_Aspect_Chain (Stmt));
+      else
+         --  Direct instantiation
+         declare
+            Aspect : constant Iir := Component;
+            Entity_Unit : Iir;
+            Arch : Iir;
+            Config : Iir;
+         begin
+            case Get_Kind (Aspect) is
+               when Iir_Kind_Entity_Aspect_Entity =>
+                  Entity_Unit := Get_Entity (Aspect);
+                  Arch := Get_Architecture (Aspect);
+                  if Arch = Null_Iir then
+                     Arch := Libraries.Get_Latest_Architecture
+                       (Get_Library_Unit (Entity_Unit));
+                  end if;
+                  Config := Get_Default_Configuration_Declaration (Arch);
+               when Iir_Kind_Entity_Aspect_Configuration =>
+                  Config := Get_Configuration (Aspect);
+                  Entity_Unit := Get_Entity (Config);
+                  Arch := Get_Block_Specification
+                    (Get_Block_Configuration (Config));
+               when Iir_Kind_Entity_Aspect_Open =>
+                  return;
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Config := Get_Block_Configuration (Get_Library_Unit (Config));
+
+            Frame := Elaborate_Architecture
+              (Arch, Config, Instance, Stmt,
+               Get_Generic_Map_Aspect_Chain (Stmt),
+               Get_Port_Map_Aspect_Chain (Stmt));
+
+            --  FIXME Create_Block_Instance.
+            --  Make the difference between the father in the hierachy and
+            --  the father in instances. Be sure that architecture is
+            --  elaborated.
+            Frame.Up_Block := null; -- Packages_Instance;
+            Frame.Name := Arch;
+         end;
+      end if;
+   end Elaborate_Component_Instantiation;
+
+   --  LRM93 12.4.2 Generate Statements
+   procedure Elaborate_Conditional_Generate_Statement
+     (Instance : Block_Instance_Acc; Generate : Iir_Generate_Statement)
+   is
+      Scheme : Iir;
+      Ninstance : Block_Instance_Acc;
+      Lit : Iir_Value_Literal_Acc;
+   begin
+      --  LRM93 12.4.2
+      --  For a generate statement with an if generation scheme, elaboration
+      --  consists of the evaluation of the boolean expression, followed by
+      --  the generation of exactly one block statement if the expression
+      --  evaluates to TRUE, and no block statement otherwise.
+      Scheme := Get_Generation_Scheme (Generate);
+      Lit := Execute_Expression (Instance, Scheme);
+      if Lit.B2 /= True then
+         return;
+      end if;
+
+      --  LRM93 12.4.2
+      --  If generated, the block statement has the following form:
+      --  1.  The block label is the same as the label of the generate
+      --      statement.
+      --  2.  The block declarative part consists of a copy of the declarative
+      --      items contained within the generate statement.
+      --  3.  The block statement part consists of a copy of the concurrent
+      --      statement contained within the generate statement.
+      Ninstance := Create_Block_Instance (Instance, Generate, Generate);
+      Elaborate_Declarative_Part (Ninstance, Get_Declaration_Chain (Generate));
+      Elaborate_Statement_Part
+        (Ninstance, Get_Concurrent_Statement_Chain (Generate));
+   end Elaborate_Conditional_Generate_Statement;
+
+   --  LRM93 12.4.2 Generate Statements
+   procedure Elaborate_Iterative_Generate_Statement
+     (Instance : Block_Instance_Acc; Generate : Iir_Generate_Statement)
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Generate);
+      Scheme : constant Iir_Iterator_Declaration :=
+        Get_Generation_Scheme (Generate);
+      Ninstance : Block_Instance_Acc;
+      Bound, Index : Iir_Value_Literal_Acc;
+      Shadow : Block_Instance_Acc;
+      Idx : Iir_Index32;
+   begin
+      --  LRM93 12.4.2
+      --  For a generate statement with a for generation scheme, elaboration
+      --  consists of the elaboration of the discrete range
+
+      Shadow := new Block_Instance_Type'
+        (Max_Objs => 1,
+         Scope_Level => Info.Frame_Scope_Level,
+         Up_Block => Instance,
+         Name => Scheme,
+         Parent => Instance,
+         Children => null,
+         Brother => Instance.Children,
+         Configuration => Null_Iir,
+         Marker => Empty_Marker,
+         Objects => (others => null),
+         Elab_Objects => 0,
+         Instances => null,
+         In_Wait_Flag => False,
+         Cur_Stmt => Null_Iir,
+         Actuals_Ref => null,
+         Result => null);
+      Instance.Children := Shadow;
+      Instance.Instances (Info.Inst_Slot) := Shadow;
+
+      Ninstance := Create_Block_Instance (null, Generate, Generate);
+      Ninstance.Parent := Shadow;
+      Ninstance.Up_Block := Instance;
+
+      Elaborate_Declaration (Ninstance, Scheme);
+      Bound := Execute_Bounds (Ninstance, Get_Type (Scheme));
+      Shadow.Objects (1) := Bound; -- FIXME: should be in the instance pool.
+
+      --  Index is the iterator value.
+      Index := Unshare (Ninstance.Objects (Get_Info (Scheme).Slot),
+                        Current_Pool);
+
+      --  Initialize the iterator.
+      Store (Index, Bound.Left);
+
+      if not Is_In_Range (Index, Bound) then
+         --  Well, this instance should have never been built.
+         --  Should be destroyed ??
+         raise Internal_Error;
+         return;
+      end if;
+      Idx := 0;
+      Shadow.Instances := new Block_Instance_Acc_Array (0 .. Bound.Length - 1);
+      loop
+         Shadow.Instances (Idx) := Ninstance;
+         Ninstance.Brother := Shadow.Children;
+         Shadow.Children := Ninstance;
+
+         -- Store index.
+         Store (Ninstance.Objects (Get_Info (Scheme).Slot), Index);
+         Elaborate_Declarative_Part
+           (Ninstance, Get_Declaration_Chain (Generate));
+         Elaborate_Statement_Part
+           (Ninstance, Get_Concurrent_Statement_Chain (Generate));
+         Update_Loop_Index (Index, Bound);
+         exit when not Is_In_Range (Index, Bound);
+
+         --  Next instance.
+         Ninstance := Create_Block_Instance (null, Generate, Generate);
+         Ninstance.Parent := Shadow;
+         Ninstance.Up_Block := Instance;
+
+         Elaborate_Declaration (Ninstance, Scheme);
+         Idx := Idx + 1;
+      end loop;
+      --  FIXME: destroy index ?
+   end Elaborate_Iterative_Generate_Statement;
+
+   procedure Elaborate_Generate_Statement
+     (Instance : Block_Instance_Acc; Generate : Iir_Generate_Statement)
+   is
+      Scheme : Iir;
+   begin
+      Scheme := Get_Generation_Scheme (Generate);
+      if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
+         Elaborate_Iterative_Generate_Statement (Instance, Generate);
+      else
+         Elaborate_Conditional_Generate_Statement (Instance, Generate);
+      end if;
+   end Elaborate_Generate_Statement;
+
+   procedure Elaborate_Process_Statement
+     (Instance : Block_Instance_Acc; Stmt : Iir)
+   is
+      Proc_Instance : Block_Instance_Acc;
+   begin
+      Proc_Instance := Create_Block_Instance (Instance, Stmt, Stmt);
+
+      Processes_Table.Append (Proc_Instance);
+
+      --  Processes aren't elaborated here.  They are elaborated
+      --  just before simulation.
+   end Elaborate_Process_Statement;
+
+   --  LRM93 §12.4  Elaboration of a Statement Part.
+   procedure Elaborate_Statement_Part
+     (Instance : Block_Instance_Acc; Stmt_Chain: Iir)
+   is
+      Stmt : Iir;
+   begin
+      --  Concurrent statements appearing in the statement part of a block
+      --  must be elaborated before execution begins.
+      --  Elaboration of the statement part of a block consists of the
+      --  elaboration of each concurrent statement in the order given.
+      Stmt := Stmt_Chain;
+      while Stmt /= Null_Iir loop
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Block_Statement =>
+               Elaborate_Block_Statement (Instance, Stmt);
+
+            when Iir_Kind_Sensitized_Process_Statement
+              | Iir_Kind_Process_Statement =>
+               Elaborate_Process_Statement (Instance, Stmt);
+
+            when Iir_Kind_Component_Instantiation_Statement =>
+               Elaborate_Component_Instantiation (Instance, Stmt);
+
+            when Iir_Kind_Generate_Statement =>
+               Elaborate_Generate_Statement (Instance, Stmt);
+
+            when Iir_Kind_Simple_Simultaneous_Statement =>
+               Add_Characteristic_Expression
+                 (Explicit,
+                  Build (Op_Plus,
+                         Instance, Get_Simultaneous_Right (Stmt),
+                         Build (Op_Minus,
+                                Instance, Get_Simultaneous_Left (Stmt))));
+
+            when others =>
+               Error_Kind ("elaborate_statement_part", Stmt);
+         end case;
+         Stmt := Get_Chain (Stmt);
+      end loop;
+   end Elaborate_Statement_Part;
+
+   --  Compute the default value for declaration DECL, using either
+   --  DEFAULT_VALUE if not null, or the implicit default value for DECL.
+   --  DECL must have a type.
+   function Elaborate_Default_Value (Instance : Block_Instance_Acc; Decl : Iir)
+                                    return Iir_Value_Literal_Acc
+   is
+      Default_Value : constant Iir := Get_Default_Value (Decl);
+      Val : Iir_Value_Literal_Acc;
+   begin
+      if Default_Value /= Null_Iir then
+         Val := Execute_Expression_With_Type
+           (Instance, Default_Value, Get_Type (Decl));
+      else
+         Val := Create_Value_For_Type (Instance, Get_Type (Decl), True);
+      end if;
+      return Val;
+   end Elaborate_Default_Value;
+
+   --  LRM93 §12.3.1.1  Subprogram Declaration and Bodies
+   procedure Elaborate_Interface_List
+     (Instance : Block_Instance_Acc; Inter_Chain : Iir)
+   is
+      Inter : Iir;
+   begin
+      --  elaboration of the parameter interface list
+      --  this in turn involves the elaboration of the subtype indication of
+      --  each interface element to determine the subtype of each formal
+      --  parameter of the subprogram.
+      Inter := Inter_Chain;
+      while Inter /= Null_Iir loop
+         case Get_Kind (Inter) is
+            when Iir_Kind_Signal_Interface_Declaration
+              | Iir_Kind_Variable_Interface_Declaration
+              | Iir_Kind_Constant_Interface_Declaration
+              | Iir_Kind_File_Interface_Declaration =>
+               Elaborate_Subtype_Indication_If_Anonymous
+                 (Instance, Get_Type (Inter));
+            when others =>
+               Error_Kind ("elaborate_interface_list", Inter);
+         end case;
+         Inter := Get_Chain (Inter);
+      end loop;
+   end Elaborate_Interface_List;
+
+   --  LRM93 §12.3.1.1  Subprogram Declaration and Bodies
+   procedure Elaborate_Subprogram_Declaration
+     (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+   begin
+      --  Elaboration of a subprogram declaration involves the elaboration
+      --  of the parameter interface list of the subprogram declaration; [...]
+      Elaborate_Interface_List
+        (Instance, Get_Interface_Declaration_Chain (Decl));
+
+      --  Elaboration of a subprogram body has no effect other than to
+      --  establish that the body can, from then on, be used for the
+      --  execution of calls of the subprogram.
+      --  FIXME
+      null;
+   end Elaborate_Subprogram_Declaration;
+
+   procedure Elaborate_Component_Configuration
+     (Stmt : Iir_Component_Instantiation_Statement;
+      Instance : Block_Instance_Acc;
+      Conf : Iir_Component_Configuration)
+   is
+      Component : constant Iir_Component_Declaration :=
+        Get_Instantiated_Unit (Stmt);
+      Stmt_Info : constant Sim_Info_Acc := Get_Info (Stmt);
+      Frame : Block_Instance_Acc;
+      Entity_Design : Iir_Design_Unit;
+      Entity : Iir_Entity_Declaration;
+      Arch_Name : Name_Id;
+      Arch_Design : Iir_Design_Unit;
+      Arch : Iir_Architecture_Declaration;
+      Arch_Frame : Block_Instance_Acc;
+      pragma Unreferenced (Arch_Frame);
+      Generic_Map_Aspect_Chain : Iir;
+      Port_Map_Aspect_Chain : Iir;
+      Unit : Iir;
+      Binding : Iir_Binding_Indication;
+      Aspect : Iir;
+      Sub_Conf : Iir;
+   begin
+      if Trace_Elaboration then
+         Ada.Text_IO.Put ("configure component ");
+         Ada.Text_IO.Put (Name_Table.Image (Get_Label (Stmt)));
+         Ada.Text_IO.Put (": ");
+         Ada.Text_IO.Put_Line (Image_Identifier (Component));
+      end if;
+
+      --  Elaboration of a component instantiation statement that instanciates
+      --  a component declaration has no effect unless the component instance
+      --  is either fully bound to a design entity defined by an entity
+      --  declaration and architecture body or is bound to a configuration of
+      --  such a design entity.
+      if not Is_Fully_Bound (Conf) then
+         Warning_Msg (Disp_Node (Stmt) & " not bound");
+         return;
+      end if;
+
+      if Trace_Elaboration then
+         Ada.Text_IO.Put_Line
+           (" using " & Disp_Node (Conf) & " from " & Disp_Location (Conf));
+      end if;
+
+      --  If a component instance is so bound, then elaboration of the
+      --  corresponding component instantiation statement consists of the
+      --  elaboration of the implied block statement representing the
+      --  component instance and [...]
+      --  FIXME: extract frame.
+      Frame := Instance.Instances (Stmt_Info.Inst_Slot);
+
+      --  and (within that block) the implied block statement representing the
+      --  design entity to which the component instance is so bound.
+      Arch := Null_Iir;
+      Arch_Name := Null_Identifier;
+      Binding := Get_Binding_Indication (Conf);
+      Aspect := Get_Entity_Aspect (Binding);
+
+      case Get_Kind (Conf) is
+         when Iir_Kind_Component_Configuration =>
+            Sub_Conf := Get_Block_Configuration (Conf);
+         when Iir_Kind_Configuration_Specification =>
+            Sub_Conf := Null_Iir;
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      case Get_Kind (Aspect) is
+         when Iir_Kind_Design_Unit =>
+            Entity_Design := Aspect;
+         when Iir_Kind_Entity_Aspect_Entity =>
+            Entity_Design := Get_Entity (Aspect);
+            if Get_Architecture (Aspect) /= Null_Iir then
+               Arch_Name := Get_Identifier (Get_Architecture (Aspect));
+            end if;
+         when Iir_Kind_Entity_Aspect_Configuration =>
+            if Sub_Conf /= Null_Iir then
+               raise Internal_Error;
+            end if;
+            declare
+               Cf : Iir;
+            begin
+               Cf := Get_Configuration (Aspect);
+               Cf := Get_Library_Unit (Cf);
+               Entity_Design := Get_Entity (Cf);
+               Sub_Conf := Get_Block_Configuration (Cf);
+               Arch := Get_Block_Specification (Sub_Conf);
+            end;
+         when others =>
+            Error_Kind ("elaborate_component_declaration0", Aspect);
+      end case;
+
+      Unit := Get_Library_Unit (Entity_Design);
+      case Get_Kind (Unit) is
+         when Iir_Kind_Entity_Declaration =>
+            Entity := Unit;
+         when Iir_Kind_Configuration_Declaration =>
+            Entity_Design := Get_Entity (Unit);
+            Entity := Get_Library_Unit (Entity_Design);
+         when others =>
+            Error_Kind ("elaborate_component_declaration2", Unit);
+      end case;
+
+      if Arch = Null_Iir then
+         if Arch_Name = Null_Identifier then
+            Arch := Libraries.Get_Latest_Architecture (Entity);
+            if Arch = Null_Iir then
+               Error_Msg_Elab ("no architecture analysed for "
+                                 & Disp_Node (Entity), Stmt);
+            end if;
+            Arch_Name := Get_Identifier (Arch);
+         end if;
+         Arch_Design := Libraries.Load_Secondary_Unit
+           (Entity_Design, Arch_Name, Stmt);
+         if Arch_Design = Null_Iir then
+            Error_Msg_Elab ("no architecture `" & Name_Table.Image (Arch_Name)
+                              & "' for " & Disp_Node (Entity), Stmt);
+         end if;
+         Arch := Get_Library_Unit (Arch_Design);
+      end if;
+
+      Generic_Map_Aspect_Chain := Get_Generic_Map_Aspect_Chain (Binding);
+      Port_Map_Aspect_Chain := Get_Port_Map_Aspect_Chain (Binding);
+
+      if Generic_Map_Aspect_Chain = Null_Iir then
+         --  LRM93 5.2.2
+         --  The default binding indication includes a default generic map
+         --  aspect if the design entity implied by the entity aspect contains
+         --  formal generic
+         --  GHDL: this condition is checked by create_default_association.
+         Generic_Map_Aspect_Chain :=
+           Create_Default_Association (Get_Generic_Chain (Entity),
+                                       Get_Generic_Chain (Component),
+                                       Stmt);
+      end if;
+
+      if Port_Map_Aspect_Chain = Null_Iir then
+         Port_Map_Aspect_Chain :=
+           Create_Default_Association (Get_Port_Chain (Entity),
+                                       Get_Port_Chain (Component),
+                                       Stmt);
+      end if;
+
+      if Sub_Conf = Null_Iir then
+         Sub_Conf := Get_Default_Configuration_Declaration (Arch);
+         Sub_Conf := Get_Block_Configuration (Get_Library_Unit (Sub_Conf));
+      end if;
+
+      --  FIXME: Use Sub_Conf instead of Arch for Stmt ? (But need to add
+      --  info for block configuration).
+      Arch_Frame := Elaborate_Architecture
+        (Arch, Sub_Conf, Frame, Arch,
+         Generic_Map_Aspect_Chain, Port_Map_Aspect_Chain);
+   end Elaborate_Component_Configuration;
+
+   procedure Elaborate_Block_Configuration
+     (Conf : Iir_Block_Configuration; Instance : Block_Instance_Acc);
+
+   procedure Apply_Block_Configuration_To_Slice_Or_Index
+     (Instance : Block_Instance_Acc; Item : Iir)
+   is
+      Spec : constant Iir := Get_Block_Specification (Item);
+      Generate : constant Iir_Generate_Statement := Get_Prefix (Spec);
+      Info : constant Sim_Info_Acc := Get_Info (Generate);
+      Sub_Instance : constant Block_Instance_Acc :=
+        Instance.Instances (Info.Inst_Slot);
+      Bounds : constant Iir_Value_Literal_Acc := Sub_Instance.Objects (1);
+      Expr : Iir_Value_Literal_Acc;
+      Ind : Iir_Index32;
+   begin
+      case Get_Kind (Spec) is
+         when Iir_Kind_Slice_Name =>
+            Expr := Execute_Bounds (Instance, Get_Suffix (Spec));
+            Ind := Get_Index_Offset (Execute_Low_Limit (Expr), Bounds, Spec);
+            for I in 1 .. Expr.Length loop
+               Elaborate_Block_Configuration
+                 (Item, Sub_Instance.Instances (Ind + I - 1));
+            end loop;
+         when Iir_Kind_Indexed_Name =>
+            Expr := Execute_Expression
+              (Instance, Get_First_Element (Get_Index_List (Spec)));
+            Ind := Get_Index_Offset (Expr, Bounds, Spec);
+            Elaborate_Block_Configuration
+              (Item, Sub_Instance.Instances (Ind));
+         when Iir_Kind_Selected_Name =>
+            for I in Sub_Instance.Instances'Range loop
+               if Sub_Instance.Instances (I).Configuration = Null_Iir then
+                  Elaborate_Block_Configuration
+                    (Item, Sub_Instance.Instances (I));
+               end if;
+            end loop;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Apply_Block_Configuration_To_Slice_Or_Index;
+
+   procedure Elaborate_Block_Configuration
+     (Conf : Iir_Block_Configuration; Instance : Block_Instance_Acc)
+   is
+      Item : Iir;
+      List : Iir_List;
+      El : Iir;
+      Comp : Iir_Component_Declaration;
+   begin
+      if Conf = Null_Iir then
+         raise Program_Error;
+         --  FIXME.
+         -- Clear_Instantiation_Configuration (Stmt_Chain);
+         return;
+      end if;
+
+      if Instance.Configuration /= Null_Iir then
+         raise Internal_Error;
+      end if;
+      Instance.Configuration := Conf;
+
+      Item := Get_Configuration_Item_Chain (Conf);
+      while Item /= Null_Iir loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Block_Configuration =>
+               declare
+                  Spec : Iir;
+                  Gen : Iir_Generate_Statement;
+                  Info : Sim_Info_Acc;
+                  Sub_Instance : Block_Instance_Acc;
+               begin
+                  Spec := Get_Block_Specification (Item);
+                  case Get_Kind (Spec) is
+                     when Iir_Kind_Slice_Name
+                       | Iir_Kind_Indexed_Name
+                       | Iir_Kind_Selected_Name =>
+                        --  Block configuration for a generate statement.
+                        if Get_Prev_Block_Configuration (Item) = Null_Iir then
+                           Gen := Get_Prefix (Spec);
+                           Set_Generate_Block_Configuration (Gen, Item);
+                        end if;
+                        Apply_Block_Configuration_To_Slice_Or_Index
+                          (Instance, Item);
+                     when Iir_Kind_Generate_Statement =>
+                        --  Block configuration for any blocks created by the
+                        --  generate statement.
+                        Info := Get_Info (Spec);
+                        Sub_Instance := Instance.Instances (Info.Inst_Slot);
+                        if Get_Kind (Get_Generation_Scheme (Spec))
+                          = Iir_Kind_Iterator_Declaration
+                        then
+                           --  Iterative generate: apply to all instances
+                           for I in Sub_Instance.Instances'Range loop
+                              Elaborate_Block_Configuration
+                                (Item, Sub_Instance.Instances (I));
+                           end loop;
+                        else
+                           --  Conditional generate: may not be instantiated
+                           if Sub_Instance /= null then
+                              Elaborate_Block_Configuration
+                                (Item, Sub_Instance);
+                           end if;
+                        end if;
+                     when Iir_Kind_Block_Statement =>
+                        --  Block configuration for a block statement.
+                        Info := Get_Info (Spec);
+                        Sub_Instance := Instance.Instances (Info.Inst_Slot);
+                        Elaborate_Block_Configuration (Item, Sub_Instance);
+                     when others =>
+                        Error_Kind ("elaborate_block_configuration1", Spec);
+                  end case;
+               end;
+
+            when Iir_Kind_Component_Configuration =>
+               Comp := Get_Component_Name (Item);
+               List := Get_Instantiation_List (Item);
+               case List is
+                  when Iir_List_All
+                    | Iir_List_Others =>
+                     El := Null_Iir; --Stmt_Chain;
+                     while El /= Null_Iir loop
+                        if Get_Kind (El) =
+                          Iir_Kind_Component_Instantiation_Statement
+                          and then Get_Instantiated_Unit (El) = Comp
+                        then
+                           if List = Iir_List_All
+                             or else
+                             Get_Component_Configuration (El) = Null_Iir
+                           then
+                              Set_Component_Configuration (El, Item);
+                           end if;
+                        end if;
+                        El := Get_Chain (El);
+                     end loop;
+                     raise Internal_Error;
+                  when others =>
+                     for I in Natural loop
+                        El := Get_Nth_Element (List, I);
+                        exit when El = Null_Iir;
+                        Elaborate_Component_Configuration (El, Instance, Item);
+                        --  Set_Component_Configuration (El, Item);
+                     end loop;
+               end case;
+
+            when others =>
+               Error_Kind ("elaborate_block_configuration", Item);
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
+   end Elaborate_Block_Configuration;
+
+   procedure Elaborate_Alias_Declaration
+     (Instance : Block_Instance_Acc; Decl : Iir_Object_Alias_Declaration)
+   is
+      Alias_Type : Iir;
+      Res : Iir_Value_Literal_Acc;
+   begin
+      --  LRM93 12.3.1.5
+      --  Elaboration of an alias declaration consists of the elaboration
+      --  of the subtype indication to establish the subtype associated
+      --  with the alias, folloed by the creation of the alias as an
+      --  alternative name for the named entity.
+      --  The creation of an alias for an array object involves a check
+      --  that the subtype associated with the alias includes a matching
+      --  element for each element of the named object.
+      --  It is an error if this check fails.
+      Alias_Type := Get_Type (Decl);
+      Elaborate_Subtype_Indication_If_Anonymous (Instance, Alias_Type);
+      Create_Object (Instance, Decl);
+      Res := Execute_Name (Instance, Get_Name (Decl), True);
+      Implicit_Array_Conversion (Instance, Res, Alias_Type, Get_Name (Decl));
+      Instance.Objects (Get_Info (Decl).Slot) :=
+        Unshare_Bounds (Res, Instance_Pool);
+   end Elaborate_Alias_Declaration;
+
+   --  LRM93 §12.3.2.3  Disconnection Specifications
+   procedure Elaborate_Disconnection_Specification
+     (Instance : Block_Instance_Acc;
+      Decl : Iir_Disconnection_Specification)
+   is
+      Time_Val : Iir_Value_Literal_Acc;
+      Time : Iir_Value_Time;
+      List : Iir_List;
+      Sig : Iir;
+      Val : Iir_Value_Literal_Acc;
+   begin
+      --  LRM93 §12.3.2.3
+      --  Elaboration of a disconnection specification proceeds as follows:
+      --  2. The time expression is evaluated to determine the disconnection
+      --     time for drivers of the affected signals.
+      Time_Val := Execute_Expression (Instance, Get_Expression (Decl));
+      Time := Time_Val.I64;
+
+      --  LRM93 5.3
+      --  The time expression in a disconnection specification must be static
+      --  and must evaluate to a non-negative value.
+
+      if Time < 0 then
+         Error_Msg_Sem ("time must be non-negative", Decl);
+      end if;
+
+      --  LRM93 §12.3.2.3
+      --  1. The guarded signal specification is elaborated in order to
+      --     identify the signals affected by the disconnection specification.
+      --
+      --  3. The diconnection time is associated with each affected signal for
+      --     later use in constructing disconnection statements in the
+      --     equivalent processes for guarded assignments to the affected
+      --     signals.
+      List := Get_Signal_List (Decl);
+      case List is
+         when Iir_List_All
+           | Iir_List_Others =>
+            Error_Kind ("elaborate_disconnection_specification", Decl);
+         when others =>
+            for I in Natural loop
+               Sig := Get_Nth_Element (List, I);
+               exit when Sig = Null_Iir;
+               Val := Execute_Name (Instance, Sig, True);
+               Disconnection_Table.Append ((Sig => Val, Time => Time));
+            end loop;
+      end case;
+   end Elaborate_Disconnection_Specification;
+
+   procedure Elaborate_Branch_Quantity_Declaration
+     (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Terminal_Plus, Terminal_Minus : Iir;
+      Plus, Minus : Iir_Value_Literal_Acc;
+      Res : Iir_Value_Literal_Acc;
+   begin
+      Res := Create_Quantity (Instance, Decl);
+
+      Terminal_Plus := Get_Plus_Terminal (Decl);
+      Plus := Execute_Name (Instance, Terminal_Plus, True);
+      Terminal_Minus := Get_Minus_Terminal (Decl);
+      if Terminal_Minus = Null_Iir then
+         --  Get the reference of the nature
+         --  FIXME: select/index
+         Terminal_Minus := Get_Reference (Get_Nature (Terminal_Plus));
+      end if;
+      Minus := Execute_Name (Instance, Terminal_Minus, True);
+
+      case Iir_Kinds_Branch_Quantity_Declaration (Get_Kind (Decl)) is
+         when Iir_Kind_Across_Quantity_Declaration =>
+            --  Expr: q - P'ref + M'ref
+            Add_Characteristic_Expression
+              (Structural,
+               Build
+                 (Op_Plus, Res.Quantity,
+                  Build (Op_Minus,
+                         Get_Terminal_Reference (Plus.Terminal),
+                         Build (Op_Plus,
+                                Get_Terminal_Reference (Minus.Terminal)))));
+         when Iir_Kind_Through_Quantity_Declaration =>
+            --  P'Contrib <- P'Contrib + q
+            --  M'Contrib <- M'Contrib - q
+            Append_Characteristic_Expression
+              (Plus.Terminal, Build (Op_Plus, Res.Quantity));
+            Append_Characteristic_Expression
+              (Minus.Terminal, Build (Op_Minus, Res.Quantity));
+      end case;
+   end Elaborate_Branch_Quantity_Declaration;
+
+   --  LRM93 §12.3.1  Elaboration of a declaration
+   procedure Elaborate_Declaration (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Expr_Mark : Mark_Type;
+      Val : Iir_Value_Literal_Acc;
+   begin
+      Mark (Expr_Mark, Expr_Pool);
+
+      --  Elaboration of a declaration has the effect of creating the declared
+      --  item.  For each declaration, the language rules (in particular scope
+      --  and visibility rules) are such that it is either impossible or
+      --  illegal to use a given item before the elaboration of its
+      --  corresponding declaration.
+      --  Similarly, it is illegal to call a subprogram before its
+      --  corresponding body is elaborated.
+      case Get_Kind (Decl) is
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration =>
+            Elaborate_Subprogram_Declaration (Instance, Decl);
+         when Iir_Kind_Implicit_Function_Declaration
+           | Iir_Kind_Implicit_Procedure_Declaration =>
+            null;
+         when Iir_Kind_Anonymous_Type_Declaration =>
+            Elaborate_Type_Definition (Instance, Get_Type (Decl));
+         when Iir_Kind_Type_Declaration =>
+            Elaborate_Type_Declaration (Instance, Decl);
+         when Iir_Kind_Subtype_Declaration =>
+            Elaborate_Subtype_Indication (Instance, Get_Type (Decl));
+         when Iir_Kind_Iterator_Declaration =>
+            Elaborate_Subtype_Indication_If_Anonymous
+              (Instance, Get_Type (Decl));
+            Val := Create_Value_For_Type (Instance, Get_Type (Decl), True);
+            Create_Object (Instance, Decl);
+            Instance.Objects (Get_Info (Decl).Slot) :=
+              Unshare (Val, Instance_Pool);
+         when Iir_Kind_Signal_Declaration =>
+            Elaborate_Subtype_Indication_If_Anonymous
+              (Instance, Get_Type (Decl));
+            Val := Elaborate_Default_Value (Instance, Decl);
+            Create_Signal (Instance, Decl);
+            Elaborate_Signal (Instance, Decl, Val);
+         when Iir_Kind_Variable_Declaration =>
+            Elaborate_Subtype_Indication_If_Anonymous
+              (Instance, Get_Type (Decl));
+            Val := Elaborate_Default_Value (Instance, Decl);
+            Create_Object (Instance, Decl);
+            Instance.Objects (Get_Info (Decl).Slot) :=
+              Unshare (Val, Instance_Pool);
+         when Iir_Kind_Constant_Declaration =>
+            --  Elaboration of an object declaration that declares an object
+            --  other then a file object proceeds as follows:
+            --  1.  The subtype indication is first elaborated.
+            --      This establishes the subtype of the object.
+            if Get_Deferred_Declaration_Flag (Decl) then
+               Create_Object (Instance, Decl);
+            else
+               Elaborate_Subtype_Indication_If_Anonymous
+                 (Instance, Get_Type (Decl));
+               Val := Elaborate_Default_Value (Instance, Decl);
+               if Get_Deferred_Declaration (Decl) = Null_Iir then
+                  Create_Object (Instance, Decl);
+               end if;
+               Instance.Objects (Get_Info (Decl).Slot) :=
+                 Unshare (Val, Instance_Pool);
+            end if;
+         when Iir_Kind_File_Declaration =>
+            --  LRM93 12.3.1.4
+            --  Elaboration of a file object declaration consists of the
+            --  elaboration of the subtype indication...
+            null;  -- FIXME ??
+            --  ...followed by the creation of object.
+            Create_Object (Instance, Decl);
+            --  If the file object declaration contains file_open_information,
+            --  then the implicit call to FILE_OPEN is then executed.
+            Instance.Objects (Get_Info (Decl).Slot) := Unshare
+              (File_Operation.Elaborate_File_Declaration (Instance, Decl),
+               Instance_Pool);
+         when Iir_Kind_Object_Alias_Declaration =>
+            Elaborate_Alias_Declaration (Instance, Decl);
+         when Iir_Kind_Component_Declaration =>
+            --  LRM93 12.3.1.7
+            --  Elaboration of a component declaration has no effect other
+            --  than to create a template for instantiating component
+            --  instances.
+            null;
+         when Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body =>
+            null;
+         when Iir_Kind_Configuration_Specification =>
+            --  Elaboration of a configuration specification proceeds as
+            --  follows:
+            --  1. The component specification is elaborated in order to
+            --     determine which component instances are affected by the
+            --     configuration specification.
+            --  GHDL: this is done during sem.
+
+            --  2. The binding indication is elaborated to identify the design
+            --     entity to which the affected component instances will be
+            --     bound.
+            --  GHDL: this is already done during sem, according to rules
+            --     defined by section 5.3.1.1
+
+            --  3. The binding information is associated with each affected
+            --     component instance label for later use in instantiating
+            --     those component instances.
+            --  GHDL: this is done during step 1.
+
+            --  As part of this elaboration process, a check is made that both
+            --  the entity declaration and the corresponding architecture body
+            --  implied by the binding indication exist whithin the specified
+            --  library.
+            --  It is an error if this check fails.
+            --  GHDL: this is already done during sem, according to rules
+            --     defined by section 5.3.1.1
+            null;
+
+         when Iir_Kind_Attribute_Declaration =>
+            --  LRM93 12.3.1.6
+            --  Elaboration of an attribute declaration has no effect other
+            --  than to create a template for defining attributes of items.
+            null;
+
+         when Iir_Kind_Attribute_Specification =>
+            --  LRM93 12.3.2.1
+            --  Elaboration of an attribute specification proceeds as follows:
+            --  1. The entity specification is elaborated in order to
+            --     determine which items are affected by the attribute
+            --     specification.
+            --  GHDL: done by sem.
+
+            declare
+               Value : Iir_Attribute_Value;
+               Val : Iir_Value_Literal_Acc;
+               Attr_Type : Iir;
+            begin
+               Value := Get_Attribute_Value_Spec_Chain (Decl);
+               Attr_Type := Get_Type (Get_Attribute_Designator (Decl));
+               while Value /= Null_Iir loop
+                  --  2. The expression is evaluated to determine the value
+                  --     of the attribute.
+                  --     It is an error if the value of the expression does not
+                  --     belong to the subtype of the attribute; if the
+                  --     attribute is of an array type, then an implicit
+                  --     subtype conversion is first performed on the value,
+                  --     unless the attribute's subtype indication denotes an
+                  --     unconstrained array type.
+                  Val := Execute_Expression (Instance, Get_Expression (Decl));
+                  Check_Constraints (Instance, Val, Attr_Type, Decl);
+
+                  --  3. A new instance of the designated attribute is created
+                  --     and associated with each of the affected items.
+                  --
+                  --  4. Each new attribute instance is assigned the value of
+                  --     the expression.
+                  Create_Object (Instance, Value);
+                  Instance.Objects (Get_Info (Value).Slot) :=
+                    Unshare (Val, Instance_Pool);
+
+                  Value := Get_Spec_Chain (Value);
+               end loop;
+            end;
+
+         when Iir_Kind_Disconnection_Specification =>
+            Elaborate_Disconnection_Specification (Instance, Decl);
+
+         when Iir_Kind_Use_Clause =>
+            null;
+
+         when Iir_Kind_Delayed_Attribute =>
+            Elaborate_Delayed_Signal (Instance, Decl);
+         when Iir_Kind_Stable_Attribute =>
+            Elaborate_Implicit_Signal (Instance, Decl, Implicit_Stable);
+         when Iir_Kind_Quiet_Attribute =>
+            Elaborate_Implicit_Signal (Instance, Decl, Implicit_Quiet);
+         when Iir_Kind_Transaction_Attribute =>
+            Elaborate_Implicit_Signal (Instance, Decl, Implicit_Transaction);
+
+         when Iir_Kind_Non_Object_Alias_Declaration =>
+            null;
+         when Iir_Kind_Group_Template_Declaration
+           | Iir_Kind_Group_Declaration =>
+            null;
+         when Iir_Kind_Protected_Type_Body =>
+            null;
+
+         when Iir_Kind_Nature_Declaration =>
+            Elaborate_Nature_Definition (Instance, Get_Nature (Decl));
+            Create_Terminal (Instance, Get_Chain (Decl));
+
+         when Iir_Kind_Terminal_Declaration =>
+            Create_Terminal (Instance, Decl);
+
+         when Iir_Kinds_Branch_Quantity_Declaration =>
+            Elaborate_Branch_Quantity_Declaration (Instance, Decl);
+
+         when others =>
+            Error_Kind ("elaborate_declaration", Decl);
+      end case;
+
+      Release (Expr_Mark, Expr_Pool);
+   end Elaborate_Declaration;
+
+   procedure Destroy_Iterator_Declaration
+     (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Obj_Type : constant Iir := Get_Type (Decl);
+      Constraint : Iir;
+      Cons_Info : Sim_Info_Acc;
+   begin
+      if Get_Kind (Decl) /= Iir_Kind_Iterator_Declaration then
+         raise Internal_Error;
+      end if;
+      Destroy_Object (Instance, Decl);
+
+      if Get_Kind (Obj_Type) = Iir_Kind_Range_Array_Attribute
+        or else not Is_Anonymous_Type_Definition (Obj_Type)
+      then
+         return;
+      end if;
+
+      Constraint := Get_Range_Constraint (Obj_Type);
+      if Get_Kind (Constraint) /= Iir_Kind_Range_Expression then
+         return;
+      end if;
+      Cons_Info := Get_Info (Constraint);
+      if Cons_Info.Scope_Level = Instance.Scope_Level
+        and then Cons_Info.Slot = Instance.Elab_Objects
+      then
+         Destroy_Object (Instance, Constraint);
+      end if;
+   end Destroy_Iterator_Declaration;
+
+   procedure Finalize_Declarative_Part
+     (Instance : Block_Instance_Acc; Decl_Chain : Iir)
+   is
+      Decl : Iir;
+      Val : Iir_Value_Literal_Acc;
+   begin
+      Decl := Decl_Chain;
+      while Decl /= Null_Iir loop
+         case Get_Kind (Decl) is
+            when Iir_Kind_File_Declaration =>
+               --  LRM93 3.4.1
+               --  An implicit call to FILE_CLOSE exists in a subprogram body
+               --  for every file object declared in the corresponding
+               --  subprogram declarative part.
+               --  Each such call associates a unique file object with the
+               --  formal parameter F and is called whenever the corresponding
+               --  subprogram completes its execution.
+               Val := Instance.Objects (Get_Info (Decl).Slot);
+               if Get_Text_File_Flag (Get_Type (Decl)) then
+                  File_Operation.File_Close_Text (Val, Null_Iir);
+                  File_Operation.File_Destroy_Text (Val);
+               else
+                  File_Operation.File_Close_Binary (Val, Null_Iir);
+                  File_Operation.File_Destroy_Binary (Val);
+               end if;
+            when others =>
+               null;
+         end case;
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Finalize_Declarative_Part;
+
+   --  LRM93 §12.3  Elaboration of a Declarative Part
+   procedure Elaborate_Declarative_Part
+     (Instance : Block_Instance_Acc; Decl_Chain : Iir)
+   is
+      Decl : Iir;
+   begin
+      --  The elaboration of a declarative part consists of the elaboration
+      --  of the declarative items, if any, in the order in which they are
+      --  given in the declarative part.
+      --  [Exception for 'foreign ]
+      Decl := Decl_Chain;
+      while Decl /= Null_Iir loop
+         --  In certain cases, the elaboration of a declarative item involves
+         --  the evaluation of expressions that appear within the declarative
+         --  item.
+         --  The value of any object denoted by a primary in such an expression
+         --  must be defined at the time the primary is read.
+         --  In addition, if a primary in such an expression is a function call
+         --  then the value of any object denoted or appearing as part of an
+         --  actual designator in the function call must be defined at the
+         --  time the expression is evaluated.
+         --  FIXME: check this.
+         Elaborate_Declaration (Instance, Decl);
+         Decl := Get_Chain (Decl);
+      end loop;
+   end Elaborate_Declarative_Part;
+
+   function Elaborate_Architecture (Arch : Iir_Architecture_Declaration;
+                                    Conf : Iir_Block_Configuration;
+                                    Parent_Instance : Block_Instance_Acc;
+                                    Stmt : Iir;
+                                    Generic_Map : Iir;
+                                    Port_Map : Iir)
+     return Block_Instance_Acc
+   is
+      Entity : constant Iir_Entity_Declaration := Get_Entity (Arch);
+      Instance : Block_Instance_Acc;
+      Expr_Mark : Mark_Type;
+   begin
+      Mark (Expr_Mark, Expr_Pool);
+
+      if Trace_Elaboration then
+         Ada.Text_IO.Put ("elaborating ");
+         Ada.Text_IO.Put (Image_Identifier (Arch));
+         Ada.Text_IO.Put (" of ");
+         Ada.Text_IO.Put_Line (Image_Identifier (Entity));
+      end if;
+
+      Instance := Create_Block_Instance (Parent_Instance, Arch, Stmt);
+      Instance.Up_Block := null; -- Packages_Instance;
+
+      --  LRM93 §12.1
+      --  Elaboration of a block statement involves first elaborating each not
+      --  yet elaborated package containing declarations referenced by the
+      --  block.
+      Elaborate_Dependence (Get_Design_Unit (Arch));
+
+      Elaborate_Generic_Clause (Instance, Get_Generic_Chain (Entity));
+      Elaborate_Generic_Map_Aspect (Instance, Parent_Instance, Generic_Map);
+      Elaborate_Port_Clause (Instance, Get_Port_Chain (Entity));
+      Elaborate_Port_Map_Aspect (Instance, Parent_Instance,
+                                 Get_Port_Chain (Entity), Port_Map);
+
+      Elaborate_Declarative_Part
+        (Instance, Get_Declaration_Chain (Entity));
+      Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Arch));
+      Elaborate_Statement_Part
+        (Instance, Get_Concurrent_Statement_Chain (Entity));
+      Elaborate_Statement_Part
+        (Instance, Get_Concurrent_Statement_Chain (Arch));
+
+      --  Configure the unit.  This will create sub units.
+      Elaborate_Block_Configuration (Conf, Instance);
+
+      Release (Expr_Mark, Expr_Pool);
+
+      return Instance;
+   end Elaborate_Architecture;
+
+   -- Elaborate a design.
+   procedure Elaborate_Design (Design: Iir_Design_Unit)
+   is
+      Unit : constant Iir := Get_Library_Unit (Design);
+      Conf_Unit : Iir_Design_Unit;
+      Conf : Iir_Block_Configuration;
+      Arch_Unit : Iir_Design_Unit;
+      Arch : Iir_Architecture_Declaration;
+      Entity : Iir_Entity_Declaration;
+      Generic_Map : Iir;
+      Port_Map : Iir;
+   begin
+      Package_Instances := new Block_Instance_Acc_Array (1 .. Nbr_Packages);
+
+      --  Use a 'fake' process to execute code during elaboration.
+      Current_Process := No_Process;
+
+      --  Find architecture and configuration for the top unit
+      case Get_Kind (Unit) is
+         when Iir_Kind_Architecture_Declaration =>
+            Arch := Unit;
+            Conf_Unit := Get_Default_Configuration_Declaration (Unit);
+         when Iir_Kind_Configuration_Declaration =>
+            Conf_Unit := Design;
+            Arch := Get_Block_Specification (Get_Block_Configuration (Unit));
+            Elaborate_Dependence (Design);
+         when others =>
+            Error_Kind ("elaborate_design", Unit);
+      end case;
+
+      Arch_Unit := Get_Design_Unit (Arch);
+      Entity := Get_Entity (Arch);
+
+      Elaborate_Dependence (Arch_Unit);
+
+      --  Sanity check: memory area for expressions must be empty.
+      if not Is_Empty (Expr_Pool) then
+         raise Internal_Error;
+      end if;
+
+      --  Use default values for top entity generics and ports.
+      Generic_Map := Create_Default_Association
+        (Get_Generic_Chain (Entity), Null_Iir, Entity);
+      Port_Map := Create_Default_Association
+        (Get_Port_Chain (Entity), Null_Iir, Entity);
+
+      --  Elaborate from the top configuration.
+      Conf := Get_Block_Configuration (Get_Library_Unit (Conf_Unit));
+      Top_Instance := Elaborate_Architecture
+        (Arch, Conf, null, Arch, Generic_Map, Port_Map);
+
+      Current_Process := null;
+
+      --  Stop now in case of errors.
+      if Nbr_Errors /= 0 then
+         Grt.Errors.Fatal_Error;
+      end if;
+
+      --  Sanity check: memory area for expressions must be empty.
+      if not Is_Empty (Expr_Pool) then
+         raise Internal_Error;
+      end if;
+   end Elaborate_Design;
+
+end Elaboration;
