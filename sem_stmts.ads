@@ -56,6 +56,9 @@ package Sem_Stmts is
    --  This is used by processes and subprograms semantization.
    procedure Sem_Sequential_Statements (Decl : Iir; Body_Parent : Iir);
 
+   --  Sem for concurrent and sequential assertion statements.
+   procedure Sem_Report_Statement (Stmt : Iir);
+
    -- Get the current subprogram or process.
    function Get_Current_Subprogram return Iir;
    pragma Inline (Get_Current_Subprogram);

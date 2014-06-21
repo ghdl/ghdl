@@ -2578,7 +2578,11 @@ package Iirs is
    --
    --   Get/Set_Prefix (Field3)
    --
+   --   Get/Set_Base_Name (Field5)
+   --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Range_Array_Attribute (Short)
    -- Iir_Kind_Reverse_Range_Array_Attribute (Short)
@@ -2597,7 +2601,11 @@ package Iirs is
    --
    --   Get/Set_Parameter (Field4)
    --
+   --   Get/Set_Base_Name (Field5)
+   --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Stable_Attribute (Short)
    -- Iir_Kind_Delayed_Attribute (Short)
@@ -2651,7 +2659,11 @@ package Iirs is
    --
    --   Get/Set_Parameter (Field4)
    --
+   --   Get/Set_Base_Name (Field5)
+   --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Image_Attribute (Short)
    -- Iir_Kind_Value_Attribute (Short)
@@ -2662,7 +2674,11 @@ package Iirs is
    --
    --   Get/Set_Parameter (Field4)
    --
+   --   Get/Set_Base_Name (Field5)
+   --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Simple_Name_Attribute (Short)
    -- Iir_Kind_Instance_Name_Attribute (Short)
@@ -2675,7 +2691,11 @@ package Iirs is
    -- Only for Iir_Kind_Simple_Name_Attribute:
    --   Get/Set_Simple_Name_Identifier (Field2)
    --
+   --   Get/Set_Base_Name (Field5)
+   --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Behavior_Attribute (Short)
    -- Iir_Kind_Structure_Attribute (Short)

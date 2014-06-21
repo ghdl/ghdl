@@ -763,6 +763,10 @@ package body Sem_Names is
             raise Internal_Error;
       end case;
 
+      if Get_Parameter (Attr) /= Null_Iir then
+         raise Internal_Error;
+      end if;
+
       Set_Parameter (Attr, Parameter);
       if Get_Kind (Prefix_Type) = Iir_Kind_Array_Subtype_Definition then
          Set_Index_Subtype (Attr, Index_Type);
@@ -852,6 +856,9 @@ package body Sem_Names is
          when others =>
             raise Internal_Error;
       end case;
+      if Get_Parameter (Attr) /= Null_Iir then
+         raise Internal_Error;
+      end if;
       if Parameter = Null_Iir then
          Set_Parameter (Attr, Param);
          Set_Expr_Staticness (Attr, None);
@@ -860,6 +867,7 @@ package body Sem_Names is
       Set_Parameter (Attr, Parameter);
       Set_Expr_Staticness (Attr, Min (Get_Type_Staticness (Prefix_Type),
                                       Get_Expr_Staticness (Parameter)));
+      Set_Name_Staticness (Attr, Get_Expr_Staticness (Attr));
    end Finish_Sem_Scalar_Type_Attribute;
 
    procedure Finish_Sem_Signal_Attribute (Attr : Iir; Parameter : Iir)
@@ -1069,6 +1077,8 @@ package body Sem_Names is
                   Finish_Sem_Name (Name_Pfx, Pfx);
                end if;
             end if;
+         when Iir_Kinds_Attribute =>
+            null;
          when others =>
             Error_Kind ("finish_sem_implicits", Pfx);
       end case;
@@ -2043,14 +2053,20 @@ package body Sem_Names is
             when Iir_Kinds_Scalar_Type_Attribute
               | Iir_Kind_Image_Attribute
               | Iir_Kind_Value_Attribute =>
-               if Actual /= Null_Iir then
+               if Get_Parameter (Prefix) /= Null_Iir then
+                  --  Attribute already has a parameter, the expression
+                  --  is either a slice or an index.
+                  Add_Result
+                    (Res, Sem_As_Indexed_Or_Slice_Name (Prefix, True));
+               elsif Actual /= Null_Iir then
                   Finish_Sem_Scalar_Type_Attribute (Prefix, Actual);
                   Set_Named_Entity (Name, Prefix);
+                  return;
                else
                   Error_Msg_Sem ("bad attribute parameter", Name);
                   Set_Named_Entity (Name, Error_Mark);
+                  return;
                end if;
-               return;
 
             when Iir_Kind_Type_Declaration
               | Iir_Kind_Subtype_Declaration =>
@@ -2361,6 +2377,7 @@ package body Sem_Names is
       end case;
       Location_Copy (Res, Attr);
       Set_Prefix (Res, Prefix);
+      Set_Base_Name (Res, Res);
 
       case Get_Attribute_Identifier (Attr) is
          when Name_Pos =>
@@ -2427,6 +2444,8 @@ package body Sem_Names is
       Location_Copy (Res, Attr);
       Prefix := Get_Named_Entity (Get_Prefix (Attr));
       Set_Prefix (Res, Prefix);
+      Set_Base_Name (Res, Res);
+
       Prefix_Type := Get_Type (Prefix);
       case Get_Attribute_Identifier (Attr) is
          when Name_Ascending =>
@@ -3366,7 +3385,7 @@ package body Sem_Names is
            | Iir_Kind_Dereference
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Function_Call
-           | Iir_Kinds_Signal_Attribute =>
+           | Iir_Kinds_Attribute =>
             return True;
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>

@@ -2544,10 +2544,34 @@ package body Iirs is
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Selected_By_All_Name
+           | Iir_Kind_Left_Type_Attribute
+           | Iir_Kind_Right_Type_Attribute
+           | Iir_Kind_High_Type_Attribute
+           | Iir_Kind_Low_Type_Attribute
+           | Iir_Kind_Ascending_Type_Attribute
+           | Iir_Kind_Image_Attribute
+           | Iir_Kind_Value_Attribute
+           | Iir_Kind_Pos_Attribute
+           | Iir_Kind_Val_Attribute
+           | Iir_Kind_Succ_Attribute
+           | Iir_Kind_Pred_Attribute
+           | Iir_Kind_Leftof_Attribute
+           | Iir_Kind_Rightof_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
-           | Iir_Kind_Transaction_Attribute =>
+           | Iir_Kind_Transaction_Attribute
+           | Iir_Kind_Simple_Name_Attribute
+           | Iir_Kind_Instance_Name_Attribute
+           | Iir_Kind_Path_Name_Attribute
+           | Iir_Kind_Left_Array_Attribute
+           | Iir_Kind_Right_Array_Attribute
+           | Iir_Kind_High_Array_Attribute
+           | Iir_Kind_Low_Array_Attribute
+           | Iir_Kind_Length_Array_Attribute
+           | Iir_Kind_Ascending_Array_Attribute
+           | Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute =>
             null;
          when others =>
             Failed ("Base_Name", Target);
@@ -6101,6 +6125,19 @@ package body Iirs is
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Slice_Name
            | Iir_Kind_Indexed_Name
+           | Iir_Kind_Left_Type_Attribute
+           | Iir_Kind_Right_Type_Attribute
+           | Iir_Kind_High_Type_Attribute
+           | Iir_Kind_Low_Type_Attribute
+           | Iir_Kind_Ascending_Type_Attribute
+           | Iir_Kind_Image_Attribute
+           | Iir_Kind_Value_Attribute
+           | Iir_Kind_Pos_Attribute
+           | Iir_Kind_Val_Attribute
+           | Iir_Kind_Succ_Attribute
+           | Iir_Kind_Pred_Attribute
+           | Iir_Kind_Leftof_Attribute
+           | Iir_Kind_Rightof_Attribute
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -6111,7 +6148,18 @@ package body Iirs is
            | Iir_Kind_Last_Active_Attribute
            | Iir_Kind_Last_Value_Attribute
            | Iir_Kind_Driving_Attribute
-           | Iir_Kind_Driving_Value_Attribute =>
+           | Iir_Kind_Driving_Value_Attribute
+           | Iir_Kind_Simple_Name_Attribute
+           | Iir_Kind_Instance_Name_Attribute
+           | Iir_Kind_Path_Name_Attribute
+           | Iir_Kind_Left_Array_Attribute
+           | Iir_Kind_Right_Array_Attribute
+           | Iir_Kind_High_Array_Attribute
+           | Iir_Kind_Low_Array_Attribute
+           | Iir_Kind_Length_Array_Attribute
+           | Iir_Kind_Ascending_Array_Attribute
+           | Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute =>
             null;
          when others =>
             Failed ("Name_Staticness", Target);
