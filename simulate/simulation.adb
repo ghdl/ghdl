@@ -132,8 +132,13 @@ package body Simulation is
 
    type Read_Signal_Value_Enum is
      (Read_Signal_Last_Value,
+
+      --  For conversion functions.
       Read_Signal_Driving_Value,
-      Read_Signal_Effective_Value);
+      Read_Signal_Effective_Value,
+
+      --  'Driving_Value
+      Read_Signal_Driver_Value);
 
    function Execute_Read_Signal_Value (Sig: Iir_Value_Literal_Acc;
                                        Attr : Read_Signal_Value_Enum)
@@ -161,12 +166,33 @@ package body Simulation is
                when Read_Signal_Last_Value =>
                   return Value_To_Iir_Value
                     (Sig.Sig.Mode, Sig.Sig.Last_Value);
-               when Read_Signal_Driving_Value =>
-                  return Value_To_Iir_Value
-                    (Sig.Sig.Mode, Sig.Sig.Driving_Value);
+               when Read_Signal_Driver_Value =>
+                  case Sig.Sig.Mode is
+                     when Mode_F64 =>
+                        return Create_F64_Value
+                          (Grt.Signals.Ghdl_Signal_Driving_Value_F64
+                             (Sig.Sig));
+                     when Mode_I64 =>
+                        return Create_I64_Value
+                          (Grt.Signals.Ghdl_Signal_Driving_Value_I64
+                             (Sig.Sig));
+                     when Mode_E32 =>
+                        return Create_E32_Value
+                          (Grt.Signals.Ghdl_Signal_Driving_Value_E32
+                             (Sig.Sig));
+                     when Mode_B2 =>
+                        return Create_B2_Value
+                          (Grt.Signals.Ghdl_Signal_Driving_Value_B2
+                             (Sig.Sig));
+                     when others =>
+                        raise Internal_Error;
+                  end case;
                when Read_Signal_Effective_Value =>
                   return Value_To_Iir_Value
                     (Sig.Sig.Mode, Sig.Sig.Value);
+               when Read_Signal_Driving_Value =>
+                  return Value_To_Iir_Value
+                    (Sig.Sig.Mode, Sig.Sig.Driving_Value);
             end case;
          when others =>
             raise Internal_Error;
@@ -218,7 +244,7 @@ package body Simulation is
    function Execute_Driving_Value_Attribute (Indirect: Iir_Value_Literal_Acc)
                                             return Iir_Value_Literal_Acc is
    begin
-      return Execute_Read_Signal_Value (Indirect, Read_Signal_Driving_Value);
+      return Execute_Read_Signal_Value (Indirect, Read_Signal_Driver_Value);
    end Execute_Driving_Value_Attribute;
 
    type Signal_Read_Last_Type is
@@ -597,8 +623,8 @@ package body Simulation is
             if Process.Instance.In_Wait_Flag then
                raise Internal_Error;
             end if;
-            if Process.Instance.Cur_Stmt = Null_Iir then
-               Process.Instance.Cur_Stmt :=
+            if Process.Instance.Stmt = Null_Iir then
+               Process.Instance.Stmt :=
                  Get_Sequential_Statement_Chain (Process.Proc);
             end if;
          when Iir_Kind_Process_Statement =>
@@ -888,10 +914,10 @@ package body Simulation is
 
       for I in Processes_Table.First .. Processes_Table.Last loop
          Instance := Processes_Table.Table (I);
-         El := Instance.Name;
+         El := Instance.Label;
 
          Instance_Pool := Processes_State (I).Pool'Access;
-         Instance.Cur_Stmt := Get_Sequential_Statement_Chain (El);
+         Instance.Stmt := Get_Sequential_Statement_Chain (El);
 
          Processes_State (I).Top_Instance := Instance;
          Processes_State (I).Proc := El;
@@ -1554,69 +1580,6 @@ package body Simulation is
          end;
       end loop;
    end Create_Signals;
-
-   procedure Disp_Design_Stats
-   is
-      Proc : Iir;
-      Stmt : Iir;
-      Nbr_User_Sensitized_Processes : Natural := 0;
-      Nbr_User_If_Sensitized_Processes : Natural := 0;
-      Nbr_Conc_Sensitized_Processes : Natural := 0;
-      Nbr_User_Non_Sensitized_Processes : Natural := 0;
-      Nbr_Conc_Non_Sensitized_Processes : Natural := 0;
-   begin
-      for I in Processes_Table.First .. Processes_Table.Last loop
-         Proc := Processes_Table.Table (I).Name;
-         case Get_Kind (Proc) is
-            when Iir_Kind_Sensitized_Process_Statement =>
-               if Get_Process_Origin (Proc) = Null_Iir then
-                  Stmt := Get_Sequential_Statement_Chain (Proc);
-                  if Stmt /= Null_Iir
-                    and then Get_Kind (Stmt) = Iir_Kind_If_Statement
-                    and then Get_Chain (Stmt) = Null_Iir
-                  then
-                     Nbr_User_If_Sensitized_Processes :=
-                       Nbr_User_If_Sensitized_Processes + 1;
-                  else
-                     Nbr_User_Sensitized_Processes :=
-                       Nbr_User_Sensitized_Processes + 1;
-                  end if;
-               else
-                  Nbr_Conc_Sensitized_Processes :=
-                    Nbr_Conc_Sensitized_Processes + 1;
-               end if;
-            when Iir_Kind_Process_Statement =>
-               if Get_Process_Origin (Proc) = Null_Iir then
-                  Nbr_User_Non_Sensitized_Processes :=
-                    Nbr_User_Non_Sensitized_Processes + 1;
-               else
-                  Nbr_Conc_Non_Sensitized_Processes :=
-                    Nbr_Conc_Non_Sensitized_Processes + 1;
-               end if;
-            when others =>
-               raise Internal_Error;
-         end case;
-      end loop;
-
-      Put (Natural'Image (Nbr_User_If_Sensitized_Processes));
-      Put_Line (" user sensitized processes with only a if stmt");
-      Put (Natural'Image (Nbr_User_Sensitized_Processes));
-      Put_Line (" user sensitized processes (others)");
-      Put (Natural'Image (Nbr_User_Non_Sensitized_Processes));
-      Put_Line (" user non sensitized processes");
-      Put (Natural'Image (Nbr_Conc_Sensitized_Processes));
-      Put_Line (" sensitized concurrent statements");
-      Put (Natural'Image (Nbr_Conc_Non_Sensitized_Processes));
-      Put_Line (" non sensitized concurrent statements");
-      Put (Process_Index_Type'Image (Processes_Table.Last));
-      Put_Line (" processes (total)");
-
-      Put (Integer'Image (Signals_Table.Last));
-      Put_Line (" signals");
-
-      Put (Integer'Image (Connect_Table.Last));
-      Put_Line (" connections");
-   end Disp_Design_Stats;
 
    procedure Ghdl_Elaborate
    is

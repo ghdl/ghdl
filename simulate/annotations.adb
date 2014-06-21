@@ -267,13 +267,12 @@ package body Annotations is
 
       Assert_No_Info (Prot);
 
-      Prot_Info := new Sim_Info_Type'
-        (Kind => Kind_Frame,
-         Inst_Slot => 0,
-         Frame_Scope_Level => Current_Scope_Level,
-         Nbr_Objects => 0,
-         Nbr_Instances => 0,
-         Elaborated => False);
+      Prot_Info :=
+        new Sim_Info_Type'(Kind => Kind_Frame,
+                           Inst_Slot => 0,
+                           Frame_Scope_Level => Current_Scope_Level,
+                           Nbr_Objects => 0,
+                           Nbr_Instances => 0);
       Set_Info (Prot, Prot_Info);
 
       Annotate_Declaration_List
@@ -442,7 +441,7 @@ package body Annotations is
      (Block_Info: Sim_Info_Acc; Decl_Chain: Iir; With_Types : Boolean)
    is
       Decl : Iir;
-      N : Iir_Index32;
+      N : Object_Slot_Type;
    begin
       Decl := Decl_Chain;
       while Decl /= Null_Iir loop
@@ -498,13 +497,12 @@ package body Annotations is
 
       Assert_No_Info (Subprg);
 
-      Subprg_Info := new Sim_Info_Type'
-        (Kind => Kind_Frame,
-         Inst_Slot => 0,
-         Frame_Scope_Level => Current_Scope_Level,
-         Nbr_Objects => 0,
-         Nbr_Instances => 0,
-         Elaborated => False);
+      Subprg_Info :=
+        new Sim_Info_Type'(Kind => Kind_Frame,
+                           Inst_Slot => 0,
+                           Frame_Scope_Level => Current_Scope_Level,
+                           Nbr_Objects => 0,
+                           Nbr_Instances => 0);
       Set_Info (Subprg, Subprg_Info);
 
       Annotate_Create_Interface_List (Subprg_Info, Interfaces, False);
@@ -547,13 +545,11 @@ package body Annotations is
 
       Assert_No_Info (Comp);
 
-      Info := new Sim_Info_Type'
-        (Kind => Kind_Frame,
-         Inst_Slot => Invalid_Slot,
-         Frame_Scope_Level => Current_Scope_Level,
-         Nbr_Objects => 0,
-         Nbr_Instances => 1, --  For the instance.
-         Elaborated => False);
+      Info := new Sim_Info_Type'(Kind => Kind_Frame,
+                                 Inst_Slot => Invalid_Instance_Slot,
+                                 Frame_Scope_Level => Current_Scope_Level,
+                                 Nbr_Objects => 0,
+                                 Nbr_Instances => 1); --  For the instance.
       Set_Info (Comp, Info);
 
       Annotate_Create_Interface_List (Info, Get_Generic_Chain (Comp), True);
@@ -699,8 +695,8 @@ package body Annotations is
      (Block_Info: Sim_Info_Acc; Stmt_Chain: Iir)
    is
       El: Iir;
-      Max_Nbr_Objects : Iir_Index32;
-      Current_Nbr_Objects : Iir_Index32;
+      Max_Nbr_Objects : Object_Slot_Type;
+      Current_Nbr_Objects : Object_Slot_Type;
    begin
       Current_Nbr_Objects := Block_Info.Nbr_Objects;
       Max_Nbr_Objects := Block_Info.Nbr_Objects;
@@ -765,7 +761,7 @@ package body Annotations is
          --  other (ie following) loop statements.
          --  Furthermore, this allow to correctly check elaboration
          --  order.
-         Max_Nbr_Objects := Iir_Index32'Max
+         Max_Nbr_Objects := Object_Slot_Type'Max
            (Block_Info.Nbr_Objects, Max_Nbr_Objects);
          Block_Info.Nbr_Objects := Current_Nbr_Objects;
          El := Get_Chain (El);
@@ -784,13 +780,11 @@ package body Annotations is
 
       Increment_Current_Scope_Level;
 
-      Info := new Sim_Info_Type'
-        (Kind => Kind_Block,
-         Inst_Slot => Block_Info.Nbr_Instances,
-         Frame_Scope_Level => Current_Scope_Level,
-         Nbr_Objects => 0,
-         Nbr_Instances => 0,
-         Elaborated => False);
+      Info := new Sim_Info_Type'(Kind => Kind_Block,
+                                 Inst_Slot => Block_Info.Nbr_Instances,
+                                 Frame_Scope_Level => Current_Scope_Level,
+                                 Nbr_Objects => 0,
+                                 Nbr_Instances => 0);
       Set_Info (Block, Info);
 
       Block_Info.Nbr_Instances := Block_Info.Nbr_Instances + 1;
@@ -825,13 +819,11 @@ package body Annotations is
 
       Increment_Current_Scope_Level;
 
-      Info := new Sim_Info_Type'
-        (Kind => Kind_Block,
-         Inst_Slot => Block_Info.Nbr_Instances,
-         Frame_Scope_Level => Current_Scope_Level,
-         Nbr_Objects => 0,
-         Nbr_Instances => 0,
-         Elaborated => False);
+      Info := new Sim_Info_Type'(Kind => Kind_Block,
+                                 Inst_Slot => Block_Info.Nbr_Instances,
+                                 Frame_Scope_Level => Current_Scope_Level,
+                                 Nbr_Objects => 0,
+                                 Nbr_Instances => 0);
       Set_Info (Stmt, Info);
 
       Block_Info.Nbr_Instances := Block_Info.Nbr_Instances + 1;
@@ -853,20 +845,18 @@ package body Annotations is
    begin
       --  Add a slot just to put the instance.
       Assert_No_Info (Stmt);
-      Info := new Sim_Info_Type'
-        (Kind => Kind_Block,
-         Inst_Slot => Block_Info.Nbr_Instances,
-         Frame_Scope_Level => Current_Scope_Level + 1,
-         Nbr_Objects => 0,
-         Nbr_Instances => 1,
-         Elaborated => False);
+      Info := new Sim_Info_Type'(Kind => Kind_Block,
+                                 Inst_Slot => Block_Info.Nbr_Instances,
+                                 Frame_Scope_Level => Current_Scope_Level + 1,
+                                 Nbr_Objects => 0,
+                                 Nbr_Instances => 1);
       Set_Info (Stmt, Info);
       Block_Info.Nbr_Instances := Block_Info.Nbr_Instances + 1;
    end Annotate_Component_Instantiation_Statement;
 
-   procedure Annotate_Process_Statement
-     (Block_Info : Sim_Info_Acc; Stmt : Iir)
+   procedure Annotate_Process_Statement (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
+      pragma Unreferenced (Block_Info);
       Info: Sim_Info_Acc;
    begin
       Increment_Current_Scope_Level;
@@ -874,16 +864,12 @@ package body Annotations is
       --  Add a slot just to put the instance.
       Assert_No_Info (Stmt);
 
-      Info := new Sim_Info_Type'
-        (Kind => Kind_Process,
-         Inst_Slot => Block_Info.Nbr_Instances,
-         Frame_Scope_Level => Current_Scope_Level,
-         Nbr_Objects => 0,
-         Nbr_Instances => 0,
-         Elaborated => False);
+      Info := new Sim_Info_Type'(Kind => Kind_Process,
+                                 Inst_Slot => Invalid_Instance_Slot,
+                                 Frame_Scope_Level => Current_Scope_Level,
+                                 Nbr_Objects => 0,
+                                 Nbr_Instances => 0);
       Set_Info (Stmt, Info);
-
-      Block_Info.Nbr_Instances := Block_Info.Nbr_Instances + 1;
 
       Annotate_Declaration_List
         (Info, Get_Declaration_Chain (Stmt));
@@ -931,13 +917,12 @@ package body Annotations is
 
       Current_Scope_Level := Scope_Level_Entity;
 
-      Entity_Info := new Sim_Info_Type'
-        (Kind => Kind_Block,
-         Inst_Slot => Invalid_Slot,
-         Frame_Scope_Level => Current_Scope_Level,
-         Nbr_Objects => 0,
-         Nbr_Instances => 0,
-         Elaborated => False);
+      Entity_Info :=
+        new Sim_Info_Type'(Kind => Kind_Block,
+                           Inst_Slot => Invalid_Instance_Slot,
+                           Frame_Scope_Level => Current_Scope_Level,
+                           Nbr_Objects => 0,
+                           Nbr_Instances => 0);
       Set_Info (Decl, Entity_Info);
 
       -- generic list.
@@ -971,8 +956,7 @@ package body Annotations is
          Inst_Slot => 0, --  Slot for a component
          Frame_Scope_Level => Current_Scope_Level,
          Nbr_Objects => Entity_Info.Nbr_Objects,
-         Nbr_Instances => Entity_Info.Nbr_Instances, --  Should be 0.
-         Elaborated => False);
+         Nbr_Instances => Entity_Info.Nbr_Instances); --  Should be 0.
       Set_Info (Decl, Arch_Info);
 
       --  FIXME: annotate the default configuration for the arch ?
@@ -995,11 +979,10 @@ package body Annotations is
 
       Package_Info := new Sim_Info_Type'
         (Kind => Kind_Block,
-         Inst_Slot => Nbr_Packages,
+         Inst_Slot => Instance_Slot_Type (Nbr_Packages),
          Frame_Scope_Level => Current_Scope_Level,
          Nbr_Objects => 0,
-         Nbr_Instances => 0,
-         Elaborated => False);
+         Nbr_Instances => 0);
 
       Set_Info (Decl, Package_Info);
 
@@ -1066,11 +1049,10 @@ package body Annotations is
 
       Config_Info := new Sim_Info_Type'
         (Kind => Kind_Block,
-         Inst_Slot => Invalid_Slot,
+         Inst_Slot => Invalid_Instance_Slot,
          Frame_Scope_Level => Scope_Level_Global,
          Nbr_Objects => 0,
-         Nbr_Instances => 0,
-         Elaborated => False);
+         Nbr_Instances => 0);
 
       Current_Scope_Level := Scope_Level_Global;
 
@@ -1085,18 +1067,25 @@ package body Annotations is
       Table_Initial => 1024,
       Table_Increment => 100);
 
-   -- Decorate the tree in order to be usable with the internal simulator.
-   procedure Annotate (Tree: Iir_Design_Unit)
+   procedure Annotate_Expand_Table
    is
       El: Iir;
    begin
-      --  Expand info table.
       Info_Node.Increment_Last;
       El := Info_Node.Last;
       Info_Node.Set_Last (Get_Last_Node);
       for I in El .. Info_Node.Last loop
          Info_Node.Table (I) := null;
       end loop;
+   end Annotate_Expand_Table;
+
+   -- Decorate the tree in order to be usable with the internal simulator.
+   procedure Annotate (Tree: Iir_Design_Unit)
+   is
+      El: Iir;
+   begin
+      --  Expand info table.
+      Annotate_Expand_Table;
 
       El := Get_Library_Unit (Tree);
       if Trace_Annotation then
@@ -1140,18 +1129,18 @@ package body Annotations is
       case Info.Kind is
          when Kind_Block =>
             Put_Line
-              ("-- nbr objects:" & Iir_Index32'Image (Info.Nbr_Objects));
+              ("-- nbr objects:" & Object_Slot_Type'Image (Info.Nbr_Objects));
 
          when Kind_Frame | Kind_Process  =>
             Put_Line ("-- scope level:" &
                       Scope_Level_Type'Image (Info.Frame_Scope_Level));
             Set_Col (Indent);
             Put_Line
-              ("-- nbr objects:" & Iir_Index32'Image (Info.Nbr_Objects));
+              ("-- nbr objects:" & Object_Slot_Type'Image (Info.Nbr_Objects));
 
          when Kind_Object | Kind_Signal | Kind_File
            | Kind_Terminal | Kind_Quantity =>
-            Put_Line ("-- slot:" & Iir_Index32'Image (Info.Slot)
+            Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot)
                       & ", scope:"
                       & Scope_Level_Type'Image (Info.Scope_Level));
          when Kind_Scalar_Type
@@ -1159,7 +1148,7 @@ package body Annotations is
             null;
          when Kind_Range =>
             Put ("${");
-            Put (Iir_Index32'Image (Info.Slot));
+            Put (Object_Slot_Type'Image (Info.Slot));
             Put ("}");
       end case;
    end Disp_Vhdl_Info;
@@ -1180,19 +1169,21 @@ package body Annotations is
             Put_Line ("scope level:" &
                       Scope_Level_Type'Image (Info.Frame_Scope_Level));
             Set_Col (Indent);
-            Put_Line ("inst_slot:" & Iir_Index32'Image (Info.Inst_Slot));
+            Put_Line ("inst_slot:"
+                        & Instance_Slot_Type'Image (Info.Inst_Slot));
             Set_Col (Indent);
-            Put_Line ("nbr objects:" & Iir_Index32'Image (Info.Nbr_Objects));
+            Put_Line ("nbr objects:"
+                        & Object_Slot_Type'Image (Info.Nbr_Objects));
             Set_Col (Indent);
             Put_Line ("nbr instance:"
-                      & Iir_Index32'Image (Info.Nbr_Instances));
+                      & Instance_Slot_Type'Image (Info.Nbr_Instances));
          when Kind_Object | Kind_Signal | Kind_File
            | Kind_Terminal | Kind_Quantity =>
-            Put_Line ("slot:" & Iir_Index32'Image (Info.Slot)
+            Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot)
                       & ", scope:"
                       & Scope_Level_Type'Image (Info.Scope_Level));
          when Kind_Range =>
-            Put_Line ("range slot:" & Iir_Index32'Image (Info.Slot));
+            Put_Line ("range slot:" & Object_Slot_Type'Image (Info.Slot));
          when Kind_Scalar_Type =>
             Put_Line ("scalar type: "
                         & Iir_Value_Kind'Image (Info.Scalar_Mode));

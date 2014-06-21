@@ -67,7 +67,7 @@ package body Execution is
       end loop;
       --  Global scope (packages)
       if Scope_Level < Scope_Level_Global then
-         return Package_Instances (Iir_Index32 (-Scope_Level));
+         return Package_Instances (Instance_Slot_Type (-Scope_Level));
       end if;
       if Current_Component /= null
         and then Current_Component.Scope_Level = Scope_Level
@@ -2085,55 +2085,73 @@ package body Execution is
       return Res;
    end String_To_Iir_Value;
 
-   function Execute_Image_Attribute (Block: Block_Instance_Acc; Expr: Iir)
-                                    return Iir_Value_Literal_Acc
+   function Execute_Image_Attribute (Val : Iir_Value_Literal_Acc;
+                                     Expr_Type : Iir)
+                                    return String
    is
-      Val : Iir_Value_Literal_Acc;
-      Res : Iir_Value_Literal_Acc;
    begin
-      Val := Execute_Expression (Block, Get_Parameter (Expr));
-      case Val.Kind is
-         when Iir_Value_F64 =>
+      case Get_Kind (Expr_Type) is
+         when Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Floating_Subtype_Definition =>
             declare
                Str : String (1 .. 24);
                Last : Natural;
             begin
                Grt.Vstrings.To_String (Str, Last, Val.F64);
-               Res := String_To_Iir_Value (Str (Str'First .. Last));
+               return Str (Str'First .. Last);
             end;
-         when Iir_Value_I64 =>
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Integer_Subtype_Definition =>
             declare
                Str : String (1 .. 21);
                First : Natural;
             begin
                Grt.Vstrings.To_String (Str, First, Val.I64);
-               Res := String_To_Iir_Value (Str (First .. Str'Last));
+               return Str (First .. Str'Last);
             end;
-         when Iir_Value_B2 =>
+         when Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
             declare
-               Lits : constant Iir_List := Get_Enumeration_Literal_List
-                 (Get_Type (Get_Prefix (Expr)));
+               Lits : constant Iir_List :=
+                 Get_Enumeration_Literal_List (Expr_Type);
+               Pos : Natural;
             begin
-               Res := String_To_Iir_Value
-                 (Name_Table.Image
-                    (Get_Identifier
-                       (Get_Nth_Element (Lits, Ghdl_B2'Pos (Val.B2)))));
+               case Val.Kind is
+                  when Iir_Value_B2 =>
+                     Pos := Ghdl_B2'Pos (Val.B2);
+                  when Iir_Value_E32 =>
+                     Pos := Ghdl_E32'Pos (Val.E32);
+                  when others =>
+                     raise Internal_Error;
+               end case;
+               return Name_Table.Image
+                 (Get_Identifier (Get_Nth_Element (Lits, Pos)));
             end;
-         when Iir_Value_E32 =>
+         when Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Physical_Subtype_Definition =>
             declare
-               Lits : constant Iir_List := Get_Enumeration_Literal_List
-                 (Get_Type (Get_Prefix (Expr)));
+               Str : String (1 .. 21);
+               First : Natural;
+               Id : constant Name_Id :=
+                 Get_Identifier (Get_Primary_Unit (Get_Base_Type (Expr_Type)));
             begin
-               Res := String_To_Iir_Value
-                 (Name_Table.Image
-                    (Get_Identifier
-                       (Get_Nth_Element (Lits, Ghdl_E32'Pos (Val.E32)))));
+               Grt.Vstrings.To_String (Str, First, Val.I64);
+               return Str (First .. Str'Last) & ' ' & Name_Table.Image (Id);
             end;
          when others =>
-            Error_Kind ("image_attribute " & Iir_Value_Kind'Image (Val.Kind),
-                        Expr);
+            Error_Kind ("execute_image_attribute", Expr_Type);
       end case;
-      return Res;
+   end Execute_Image_Attribute;
+
+   function Execute_Image_Attribute (Block: Block_Instance_Acc; Expr: Iir)
+                                    return Iir_Value_Literal_Acc
+   is
+      Val : Iir_Value_Literal_Acc;
+      Attr_Type : constant Iir := Get_Type (Get_Prefix (Expr));
+   begin
+      Val := Execute_Expression (Block, Get_Parameter (Expr));
+      return String_To_Iir_Value
+        (Execute_Image_Attribute (Val, Attr_Type));
    end Execute_Image_Attribute;
 
    function Execute_Value_Attribute (Block: Block_Instance_Acc;
@@ -2279,27 +2297,31 @@ package body Execution is
       Is_Instance : constant Boolean :=
         Get_Kind (Attr) = Iir_Kind_Instance_Name_Attribute;
    begin
+      if Name.Path_Instance = Null_Iir then
+         return String_To_Iir_Value (Name.Suffix);
+      end if;
+
       Instance := Get_Instance_By_Scope_Level
         (Block, Get_Info (Name.Path_Instance).Frame_Scope_Level);
 
       loop
-         case Get_Kind (Instance.Name) is
+         case Get_Kind (Instance.Label) is
             when Iir_Kind_Entity_Declaration =>
                if Instance.Parent = null then
-                  Prepend (Rstr, Image (Get_Identifier (Instance.Name)));
+                  Prepend (Rstr, Image (Get_Identifier (Instance.Label)));
                   exit;
                end if;
             when Iir_Kind_Architecture_Declaration =>
                if Is_Instance then
                   Prepend (Rstr, ')');
-                  Prepend (Rstr, Image (Get_Identifier (Instance.Name)));
+                  Prepend (Rstr, Image (Get_Identifier (Instance.Label)));
                   Prepend (Rstr, '(');
                end if;
 
                if Is_Instance or else Instance.Parent = null then
                   Prepend
                     (Rstr,
-                     Image (Get_Identifier (Get_Entity (Instance.Name))));
+                     Image (Get_Identifier (Get_Entity (Instance.Label))));
                end if;
                if Instance.Parent = null then
                   Prepend (Rstr, ':');
@@ -2307,22 +2329,35 @@ package body Execution is
                else
                   Instance := Instance.Parent;
                end if;
-            when Iir_Kind_Generate_Statement =>
+            when Iir_Kind_Block_Statement =>
+               Prepend (Rstr, Image (Get_Label (Instance.Label)));
+               Prepend (Rstr, ':');
+               Instance := Instance.Parent;
+            when Iir_Kind_Iterator_Declaration =>
                declare
-                  Scheme : constant Iir :=
-                    Get_Generation_Scheme (Instance.Name);
+                  Val : Iir_Value_Literal_Acc;
                begin
-                  if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
-                     Prepend (Rstr, ')');
-                     Prepend (Rstr, 'X');
-                     Prepend (Rstr, '(');
-                     Prepend (Rstr, Image (Get_Label (Instance.Name)));
-                  end if;
-                  Instance := Instance.Parent;
+                  Val := Execute_Name (Instance, Instance.Label);
+                  Prepend (Rstr, ')');
+                  Prepend (Rstr, Execute_Image_Attribute
+                             (Val, Get_Type (Instance.Label)));
+                  Prepend (Rstr, '(');
                end;
+               Instance := Instance.Parent;
+            when Iir_Kind_Generate_Statement =>
+               Prepend (Rstr, Image (Get_Label (Instance.Label)));
+               Prepend (Rstr, ':');
+               Instance := Instance.Parent;
+            when Iir_Kind_Component_Instantiation_Statement =>
+               if Is_Instance then
+                  Prepend (Rstr, '@');
+               end if;
+               Prepend (Rstr, Image (Get_Label (Instance.Label)));
+               Prepend (Rstr, ':');
+               Instance := Instance.Parent;
             when others =>
                Error_Kind ("Execute_Path_Instance_Name_Attribute",
-                           Instance.Name);
+                           Instance.Label);
          end case;
       end loop;
       declare
@@ -2749,17 +2784,15 @@ package body Execution is
             Block_Instance_Type'(Max_Objs => Func_Info.Nbr_Objects,
                                  Scope_Level => Func_Info.Frame_Scope_Level,
                                  Up_Block => Up_Block,
-                                 Name => Imp,
+                                 Label => Imp,
+                                 Stmt => Null_Iir,
                                  Parent => Instance,
                                  Children => null,
                                  Brother => null,
-                                 Configuration => Null_Iir,
                                  Marker => Empty_Marker,
                                  Objects => (others => null),
                                  Elab_Objects => 0,
-                                 Instances => null,
                                  In_Wait_Flag => False,
-                                 Cur_Stmt => Null_Iir,
                                  Actuals_Ref => null,
                                  Result => null)));
       return Res;
@@ -2768,7 +2801,7 @@ package body Execution is
    -- Destroy a dynamic block_instance.
    procedure Execute_Subprogram_Call_Final (Instance : Block_Instance_Acc)
    is
-      Subprg_Body : constant Iir := Get_Subprogram_Body (Instance.Name);
+      Subprg_Body : constant Iir := Get_Subprogram_Body (Instance.Label);
    begin
       Finalize_Declarative_Part
         (Instance, Get_Declaration_Chain (Subprg_Body));
@@ -2786,7 +2819,7 @@ package body Execution is
         (Instance, Get_Declaration_Chain (Subprg_Body));
 
       -- execute statements
-      Instance.Cur_Stmt := Get_Sequential_Statement_Chain (Subprg_Body);
+      Instance.Stmt := Get_Sequential_Statement_Chain (Subprg_Body);
       Execute_Sequential_Statements (Current_Process);
       pragma Assert (Current_Process.Instance = Instance);
 
@@ -2873,6 +2906,8 @@ package body Execution is
       while Assoc /= Null_Iir loop
          Formal := Get_Formal (Assoc);
          Inter := Get_Base_Name (Formal);
+
+         --  Extract the actual value.
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_Open =>
                --  Not allowed in individual association.
@@ -2896,6 +2931,7 @@ package body Execution is
                Error_Kind ("execute_association(1)", Assoc);
          end case;
 
+         --  Compute actual value.
          case Get_Kind (Inter) is
             when Iir_Kind_Constant_Interface_Declaration
               | Iir_Kind_File_Interface_Declaration =>
@@ -2942,13 +2978,19 @@ package body Execution is
                     Unshare_Bounds (Val, Instance_Pool);
                end if;
 
-               if Mode = Iir_Out_Mode
-                 and then Get_Out_Conversion (Assoc) /= Null_Iir
-               then
-                  --  For an OUT variable using an out conversion, don't
-                  --  associate with the actual, create a temporary value.
-                  Val := Create_Value_For_Type
-                    (Out_Block, Get_Type (Formal), True);
+               if Mode = Iir_Out_Mode then
+                  if Get_Out_Conversion (Assoc) /= Null_Iir then
+                     --  For an OUT variable using an out conversion, don't
+                     --  associate with the actual, create a temporary value.
+                     Val := Create_Value_For_Type
+                       (Out_Block, Get_Type (Formal), True);
+                  elsif Get_Kind (Get_Type (Formal)) in
+                    Iir_Kinds_Scalar_Type_Definition
+                  then
+                     --  These are passed by value.  Must be reset.
+                     Val := Create_Value_For_Type
+                       (Out_Block, Get_Type (Formal), True);
+                  end if;
                else
                   if Get_Kind (Assoc) =
                     Iir_Kind_Association_Element_By_Expression
@@ -2960,9 +3002,12 @@ package body Execution is
                      end if;
                   end if;
 
-                  Implicit_Array_Conversion
-                    (Subprg_Block, Val, Get_Type (Formal), Assoc);
+                  --  FIXME: check constraints ?
                end if;
+
+               Implicit_Array_Conversion
+                 (Subprg_Block, Val, Get_Type (Formal), Assoc);
+
             when others =>
                Error_Kind ("execute_association(2)", Inter);
          end case;
@@ -3010,7 +3055,7 @@ package body Execution is
       Formal : Iir;
       Assoc_Idx : Iir_Index32;
    begin
-      Proc := Get_Procedure_Call (Instance.Parent.Cur_Stmt);
+      Proc := Get_Procedure_Call (Instance.Parent.Stmt);
       Assoc := Get_Parameter_Association_Chain (Proc);
       Assoc_Idx := 1;
       while Assoc /= Null_Iir loop
@@ -3761,7 +3806,7 @@ package body Execution is
    procedure Execute_For_Loop_Statement (Proc : Process_State_Acc)
    is
       Instance : constant Block_Instance_Acc := Proc.Instance;
-      Stmt : constant Iir_For_Loop_Statement := Instance.Cur_Stmt;
+      Stmt : constant Iir_For_Loop_Statement := Instance.Stmt;
       Bounds : Iir_Value_Literal_Acc;
       Iterator : Iir;
       Index : Iir_Value_Literal_Acc;
@@ -3793,7 +3838,7 @@ package body Execution is
             Finalize_For_Loop_Statement (Instance, Stmt);
             Update_Next_Statement (Proc);
          else
-            Instance.Cur_Stmt := Stmt_Chain;
+            Instance.Stmt := Stmt_Chain;
          end if;
       end if;
    end Execute_For_Loop_Statement;
@@ -3804,7 +3849,7 @@ package body Execution is
    function Finish_For_Loop_Statement (Instance : Block_Instance_Acc)
                                       return Boolean
    is
-      Iterator : constant Iir := Get_Iterator_Scheme (Instance.Cur_Stmt);
+      Iterator : constant Iir := Get_Iterator_Scheme (Instance.Stmt);
       Bounds : Iir_Value_Literal_Acc;
       Index : Iir_Value_Literal_Acc;
       Marker : Mark_Type;
@@ -3817,7 +3862,7 @@ package body Execution is
       if Is_Equal (Index, Bounds.Right) then
          -- Loop is complete.
          Release (Marker, Expr_Pool);
-         Finalize_For_Loop_Statement (Instance, Instance.Cur_Stmt);
+         Finalize_For_Loop_Statement (Instance, Instance.Stmt);
          return False;
       else
          -- Update the loop index.
@@ -3826,8 +3871,7 @@ package body Execution is
          Release (Marker, Expr_Pool);
 
          -- start the loop again.
-         Instance.Cur_Stmt :=
-           Get_Sequential_Statement_Chain (Instance.Cur_Stmt);
+         Instance.Stmt := Get_Sequential_Statement_Chain (Instance.Stmt);
          return True;
       end if;
    end Finish_For_Loop_Statement;
@@ -3856,7 +3900,7 @@ package body Execution is
    procedure Execute_While_Loop_Statement (Proc : Process_State_Acc)
    is
       Instance: constant Block_Instance_Acc := Proc.Instance;
-      Stmt : constant Iir := Instance.Cur_Stmt;
+      Stmt : constant Iir := Instance.Stmt;
       Cond : Boolean;
    begin
       Cond := Execute_Condition (Instance, Get_Condition (Stmt));
@@ -3875,12 +3919,11 @@ package body Execution is
    is
       Cond : Boolean;
    begin
-      Cond := Execute_Condition (Instance, Get_Condition (Instance.Cur_Stmt));
+      Cond := Execute_Condition (Instance, Get_Condition (Instance.Stmt));
 
       if Cond then
          -- start the loop again.
-         Instance.Cur_Stmt :=
-           Get_Sequential_Statement_Chain (Instance.Cur_Stmt);
+         Instance.Stmt := Get_Sequential_Statement_Chain (Instance.Stmt);
          return True;
       else
          -- Loop is complete.
@@ -3892,7 +3935,7 @@ package body Execution is
    function Finish_Loop_Statement (Instance : Block_Instance_Acc;
                                    Stmt : Iir) return Boolean is
    begin
-      Instance.Cur_Stmt := Stmt;
+      Instance.Stmt := Stmt;
       case Get_Kind (Stmt) is
          when Iir_Kind_While_Loop_Statement =>
             return Finish_While_Loop_Statement (Instance);
@@ -3909,7 +3952,7 @@ package body Execution is
                                           Is_Exit : Boolean)
    is
       Instance : constant Block_Instance_Acc := Proc.Instance;
-      Stmt : constant Iir := Instance.Cur_Stmt;
+      Stmt : constant Iir := Instance.Stmt;
       Label : constant Iir := Get_Loop (Stmt);
       Cond : Boolean;
       Parent : Iir;
@@ -3930,7 +3973,7 @@ package body Execution is
                   --  Target is this statement.
                   if Is_Exit then
                      Finalize_Loop_Statement (Instance, Parent);
-                     Instance.Cur_Stmt := Parent;
+                     Instance.Stmt := Parent;
                      Update_Next_Statement (Proc);
                   elsif not Finish_Loop_Statement (Instance, Parent) then
                      Update_Next_Statement (Proc);
@@ -3950,7 +3993,7 @@ package body Execution is
    procedure Execute_Case_Statement (Proc : Process_State_Acc)
    is
       Instance : constant Block_Instance_Acc := Proc.Instance;
-      Stmt : constant Iir := Instance.Cur_Stmt;
+      Stmt : constant Iir := Instance.Stmt;
       Value: Iir_Value_Literal_Acc;
       Assoc: Iir;
       Stmt_Chain : Iir;
@@ -3970,7 +4013,7 @@ package body Execution is
             if Stmt_Chain = Null_Iir then
                Update_Next_Statement (Proc);
             else
-               Instance.Cur_Stmt := Stmt_Chain;
+               Instance.Stmt := Stmt_Chain;
             end if;
             Release (Marker, Expr_Pool);
             return;
@@ -3986,7 +4029,7 @@ package body Execution is
    procedure Execute_Call_Statement (Proc : Process_State_Acc)
    is
       Instance : constant Block_Instance_Acc := Proc.Instance;
-      Stmt : constant Iir := Instance.Cur_Stmt;
+      Stmt : constant Iir := Instance.Stmt;
       Call : constant Iir := Get_Procedure_Call (Stmt);
       Imp  : constant Iir := Get_Implementation (Call);
       Subprg_Instance : Block_Instance_Acc;
@@ -4094,7 +4137,7 @@ package body Execution is
    is
       Res : Iir_Value_Literal_Acc;
       Instance : constant Block_Instance_Acc := Proc.Instance;
-      Stmt : constant Iir := Instance.Cur_Stmt;
+      Stmt : constant Iir := Instance.Stmt;
       Expr : constant Iir := Get_Expression (Stmt);
    begin
       if Expr /= Null_Iir then
@@ -4104,7 +4147,7 @@ package body Execution is
          Instance.Result := Res;
       end if;
 
-      case Get_Kind (Instance.Name) is
+      case Get_Kind (Instance.Label) is
          when Iir_Kind_Procedure_Declaration =>
             Finish_Procedure_Frame (Proc);
             Update_Next_Statement (Proc);
@@ -4124,7 +4167,7 @@ package body Execution is
    begin
       Stmt := Complex_Stmt;
       loop
-         Instance.Cur_Stmt := Stmt;
+         Instance.Stmt := Stmt;
          case Get_Kind (Stmt) is
             when Iir_Kind_For_Loop_Statement =>
                if Finish_For_Loop_Statement (Instance) then
@@ -4138,11 +4181,11 @@ package body Execution is
               | Iir_Kind_If_Statement =>
                null;
             when Iir_Kind_Sensitized_Process_Statement =>
-               Instance.Cur_Stmt := Null_Iir;
+               Instance.Stmt := Null_Iir;
                return;
             when Iir_Kind_Process_Statement =>
                --  Start again.
-               Instance.Cur_Stmt := Get_Sequential_Statement_Chain (Stmt);
+               Instance.Stmt := Get_Sequential_Statement_Chain (Stmt);
                return;
             when Iir_Kind_Procedure_Body =>
                Finish_Procedure_Frame (Proc);
@@ -4152,12 +4195,12 @@ package body Execution is
             when others =>
                Error_Kind ("execute_next_statement", Stmt);
          end case;
-         Stmt := Get_Chain (Instance.Cur_Stmt);
+         Stmt := Get_Chain (Instance.Stmt);
          if Stmt /= Null_Iir then
-            Instance.Cur_Stmt := Stmt;
+            Instance.Stmt := Stmt;
             return;
          end if;
-         Stmt := Get_Parent (Instance.Cur_Stmt);
+         Stmt := Get_Parent (Instance.Stmt);
       end loop;
    end Finish_Sequential_Statements;
 
@@ -4168,7 +4211,7 @@ package body Execution is
    begin
       Stmt := Get_Sequential_Statement_Chain (Complex_Stmt);
       if Stmt /= Null_Iir then
-         Proc.Instance.Cur_Stmt := Stmt;
+         Proc.Instance.Stmt := Stmt;
       else
          Finish_Sequential_Statements (Proc, Complex_Stmt);
       end if;
@@ -4179,12 +4222,12 @@ package body Execution is
       Instance : constant Block_Instance_Acc := Proc.Instance;
       Stmt : Iir;
    begin
-      Stmt := Get_Chain (Instance.Cur_Stmt);
+      Stmt := Get_Chain (Instance.Stmt);
       if Stmt /= Null_Iir then
-         Instance.Cur_Stmt := Stmt;
+         Instance.Stmt := Stmt;
          return;
       end if;
-      Finish_Sequential_Statements (Proc, Get_Parent (Instance.Cur_Stmt));
+      Finish_Sequential_Statements (Proc, Get_Parent (Instance.Stmt));
    end Update_Next_Statement;
 
    procedure Execute_Sequential_Statements (Proc : Process_State_Acc)
@@ -4194,7 +4237,7 @@ package body Execution is
    begin
       loop
          Instance := Proc.Instance;
-         Stmt := Instance.Cur_Stmt;
+         Stmt := Instance.Stmt;
 
          --  End of process or subprogram.
          exit when Stmt = Null_Iir;

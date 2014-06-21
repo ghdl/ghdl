@@ -1028,7 +1028,7 @@ package body Iir_Values is
          when Iir_Value_Quantity =>
             Put ("[quantity]");
          when Iir_Value_Terminal =>
-            Put ("[quantity]");
+            Put ("[terminal]");
          when Iir_Value_Signal =>
             Put ("[signal]");
          when Iir_Value_Protected =>

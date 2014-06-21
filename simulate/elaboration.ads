@@ -18,7 +18,6 @@
 
 with Ada.Unchecked_Deallocation;
 with GNAT.Table;
-with Types; use Types;
 with Iirs; use Iirs;
 with Iir_Values; use Iir_Values;
 with Grt.Types;
@@ -36,14 +35,13 @@ package Elaboration is
    type Block_Instance_Type;
    type Block_Instance_Acc is access Block_Instance_Type;
 
-   type Block_Instance_Acc_Array is array (Iir_Index32 range <>) of
-     Block_Instance_Acc;
-   type Block_Instance_Acc_Array_Acc is access Block_Instance_Acc_Array;
+   type Objects_Array is array (Object_Slot_Type range <>) of
+     Iir_Value_Literal_Acc;
 
    -- A block instance with its architecture/entity declaration is an
    -- instancied entity.
 
-   type Block_Instance_Type (Max_Objs : Iir_Index32) is record
+   type Block_Instance_Type (Max_Objs : Object_Slot_Type) is record
       --  Flag for wait statement: true if not yet executed.
       In_Wait_Flag : Boolean;
 
@@ -52,25 +50,25 @@ package Elaboration is
       Scope_Level: Scope_Level_Type;
       Up_Block: Block_Instance_Acc;
 
-      -- Block, architecture or process for this instance.
-      -- null for the package (there is only one instance for all packages).
-      Name: Iir;
+      --  Block, architecture, package, process, component instantiation for
+      --  this instance.
+      Label : Iir;
 
-      -- Instanciation tree.
+      --  For blocks: corresponding block (different from label for direct
+      --  component instantiation statement and generate iterator).
+      --  For packages: Null_Iir
+      --  For subprograms and processes: statement being executed.
+      Stmt : Iir;
+
+      --  Instanciation tree.
+      --  Parent is always set (but null for top-level block and packages)
       Parent: Block_Instance_Acc;
+      --  Not null only for blocks and processes.
       Children: Block_Instance_Acc;
       Brother: Block_Instance_Acc;
 
-      --  Pool marker for the child (only for subprograms).
+      --  Pool marker for the child (only for subprograms and processes).
       Marker : Areapools.Mark_Type;
-
-      --  Block configuration for this instance.
-      Configuration: Iir;
-
-      Instances : Block_Instance_Acc_Array_Acc;
-
-      -- Statement being executed.
-      Cur_Stmt : Iir;
 
       --  Reference to the actuals, for copy-out when returning from a
       --  procedure.
@@ -83,10 +81,10 @@ package Elaboration is
       --  Note: this is generally the slot index of the next object to be
       --  elaborated (this may be wrong for dynamic objects due to execution
       --  branches).
-      Elab_Objects : Iir_Index32 := 0;
+      Elab_Objects : Object_Slot_Type := 0;
 
       --  Values of the objects in that frame.
-      Objects : Iir_Value_Literal_Array (1 .. Max_Objs);
+      Objects : Objects_Array (1 .. Max_Objs);
    end record;
 
    procedure Free is new Ada.Unchecked_Deallocation
@@ -125,6 +123,10 @@ package Elaboration is
    procedure Create_Signal (Instance : Block_Instance_Acc; Decl : Iir);
 
    Top_Instance: Block_Instance_Acc;
+
+   type Block_Instance_Acc_Array is array (Instance_Slot_Type range <>) of
+     Block_Instance_Acc;
+   type Block_Instance_Acc_Array_Acc is access Block_Instance_Acc_Array;
 
    Package_Instances : Block_Instance_Acc_Array_Acc;
 

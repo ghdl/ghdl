@@ -177,4 +177,7 @@ package Execution is
    function Execute_Function_Body (Instance : Block_Instance_Acc; Func : Iir)
                                   return Iir_Value_Literal_Acc;
 
+   function Execute_Image_Attribute (Val : Iir_Value_Literal_Acc;
+                                     Expr_Type : Iir)
+                                    return String;
 end Execution;

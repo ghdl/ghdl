@@ -52,7 +52,10 @@ package Annotations is
    Scope_Level_Component : constant Scope_Level_Type :=
      Scope_Level_Type'Last - 1;
 
-   Invalid_Slot : constant Iir_Index32 := Iir_Index32'Last;
+   type Instance_Slot_Type is new Integer;
+   Invalid_Instance_Slot : constant Instance_Slot_Type := -1;
+
+   type Object_Slot_Type is new Integer;
 
    -- The annotation depends on the kind of the node.
    type Sim_Info_Kind is
@@ -71,19 +74,17 @@ package Annotations is
          when Kind_Block
            | Kind_Frame
            | Kind_Process =>
-            --  Only for packages: true if elaborated.
-            Elaborated: Boolean;
-
             --  Slot number.
-            Inst_Slot : Iir_Index32;
+            Inst_Slot : Instance_Slot_Type;
 
             -- scope level for this frame.
             Frame_Scope_Level: Scope_Level_Type;
 
             -- Number of objects/signals.
-            Nbr_Objects: Iir_Index32;
+            Nbr_Objects : Object_Slot_Type;
 
-            Nbr_Instances : Iir_Index32;
+            --  Number of children (blocks, generate, instantiation).
+            Nbr_Instances : Instance_Slot_Type;
 
          when Kind_Object
            | Kind_Signal
@@ -95,7 +96,7 @@ package Annotations is
             Scope_Level: Scope_Level_Type;
 
             -- Variable index.
-            Slot: Iir_Index32;
+            Slot: Object_Slot_Type;
 
          when Kind_Scalar_Type =>
             Scalar_Mode : Iir_Value_Kind;
@@ -106,11 +107,14 @@ package Annotations is
    end record;
 
    Nbr_Packages : Iir_Index32 := 0;
-   --  Packages_Last_Info: Sim_Info_Acc := null;
 
    -- Get/Set annotation fied from/to an iir.
    procedure Set_Info (Target: Iir; Info: Sim_Info_Acc);
    pragma Inline (Set_Info);
    function Get_Info (Target: Iir) return Sim_Info_Acc;
    pragma Inline (Get_Info);
+
+   --  Expand the annotation table.  This is automatically done by Annotate,
+   --  to be used only by debugger.
+   procedure Annotate_Expand_Table;
 end Annotations;

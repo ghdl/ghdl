@@ -134,29 +134,35 @@ package body Debugger is
 
    function Get_Instance_Local_Name (Instance : Block_Instance_Acc;
                                      Short : Boolean := False)
-                                    return String is
+                                    return String
+   is
+      Name : constant Iir := Instance.Label;
    begin
-      if Instance.Name = Null_Iir then
+      if Name = Null_Iir then
          return "<anon>";
       end if;
 
-      case Get_Kind (Instance.Name) is
+      case Get_Kind (Name) is
          when Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
-           | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Procedure_Declaration
            | Iir_Kinds_Process_Statement =>
-            return Image_Identifier (Instance.Name);
+            return Image_Identifier (Name);
+         when Iir_Kind_Iterator_Declaration =>
+            return Image_Identifier (Get_Parent (Name)) & '('
+              & Execute_Image_Attribute
+              (Instance.Objects (Get_Info (Name).Slot), Get_Type (Name))
+              & ')';
          when Iir_Kind_Architecture_Declaration =>
             if Short then
-               return Image_Identifier (Get_Entity (Instance.Name));
+               return Image_Identifier (Get_Entity (Name));
             else
-               return Image_Identifier (Get_Entity (Instance.Name))
-                 & '(' & Image_Identifier (Instance.Name) & ')';
+               return Image_Identifier (Get_Entity (Name))
+                 & '(' & Image_Identifier (Name) & ')';
             end if;
          when others =>
-            Error_Kind ("disp_instance_local_name", Instance.Name);
+            Error_Kind ("disp_instance_local_name", Name);
       end case;
    end Get_Instance_Local_Name;
 
@@ -185,29 +191,8 @@ package body Debugger is
       return Parent_Name & Get_Instance_Local_Name (Instance);
    end Get_Instance_Name;
 
-   procedure Disp_All_Instances1 (Inst : Block_Instance_Acc) is
+   procedure Disp_Instances_Tree_Name (Inst : Block_Instance_Acc) is
    begin
-      if Inst = null then
-         return;
-      end if;
-      Put (Get_Instance_Local_Name (Inst));
-      New_Line;
-
-      if Inst.Instances /= null then
-         for I in Inst.Instances'Range loop
-            Disp_All_Instances1 (Inst.Instances (I));
-         end loop;
-      end if;
-   end Disp_All_Instances1;
-
-   procedure Disp_All_Instances is
-   begin
-      Disp_All_Instances1 (Top_Instance);
-   end Disp_All_Instances;
-
-   procedure Disp_Instances_Tree1 (Inst : Block_Instance_Acc; Pfx : String) is
-   begin
-      Put (Pfx);
       if Inst = null then
          Put ("*null*");
          New_Line;
@@ -216,7 +201,7 @@ package body Debugger is
       Put (Get_Instance_Local_Name (Inst));
 
       Put (" ");
-      case Get_Kind (Inst.Name) is
+      case Get_Kind (Inst.Label) is
          when Iir_Kind_Block_Statement =>
             Put ("[block]");
          when Iir_Kind_Generate_Statement =>
@@ -230,20 +215,40 @@ package body Debugger is
          when Iir_Kind_Architecture_Declaration =>
             Put ("[entity]");
          when others =>
-            Error_Kind ("disp_instances_tree1", Inst.Name);
+            Error_Kind ("disp_instances_tree1", Inst.Label);
       end case;
       New_Line;
+   end Disp_Instances_Tree_Name;
 
-      if Inst.Instances /= null then
-         for I in Inst.Instances'Range loop
-            Disp_Instances_Tree1
-              (Inst.Instances (I), Pfx & Iir_Index32'Image (I) & ": ");
-         end loop;
+   procedure Disp_Instances_Tree1 (Inst : Block_Instance_Acc; Pfx : String)
+   is
+      Child : Block_Instance_Acc;
+   begin
+      Child := Inst.Children;
+      if Child = null then
+         return;
       end if;
+
+      loop
+         if Child.Brother /= null then
+            Put (Pfx & "+-");
+            Disp_Instances_Tree_Name (Child);
+
+            Disp_Instances_Tree1 (Child, Pfx & "| ");
+            Child := Child.Brother;
+         else
+            Put (Pfx & "`-");
+            Disp_Instances_Tree_Name (Child);
+
+            Disp_Instances_Tree1 (Child, Pfx & "  ");
+            exit;
+         end if;
+      end loop;
    end Disp_Instances_Tree1;
 
    procedure Disp_Instances_Tree is
    begin
+      Disp_Instances_Tree_Name (Top_Instance);
       Disp_Instances_Tree1 (Top_Instance, "");
    end Disp_Instances_Tree;
 
@@ -255,7 +260,7 @@ package body Debugger is
                   & Scope_Level_Type'Image (Instance.Scope_Level));
       Put_Line ("Objects:");
       for I in Instance.Objects'Range loop
-         Put (Iir_Index32'Image (I) & ": ");
+         Put (Object_Slot_Type'Image (I) & ": ");
          Disp_Value_Tab (Instance.Objects (I), 3);
          New_Line;
       end loop;
@@ -316,7 +321,6 @@ package body Debugger is
            | Iir_Value_B2
            | Iir_Value_Access =>
             Disp_Iir_Value (Value, A_Type);
-            --Disp_Signal_Status (Signals.Table (Indirect.Index), Status);
          when Iir_Value_Array =>
             Disp_Signal_Array (Value, A_Type, 1);
          when Iir_Value_Record =>
@@ -338,48 +342,76 @@ package body Debugger is
    is
       Info : constant Sim_Info_Acc := Get_Info (Decl);
    begin
+      Put ("  ");
       Put (Name_Table.Image (Get_Identifier (Decl)));
       Put (" = ");
       Disp_Signal (Instance.Objects (Info.Slot), Get_Type (Decl));
-      New_Line;
    end Disp_Instance_Signal;
+
+   procedure Disp_Instance_Signals_Of_Chain (Instance: Block_Instance_Acc;
+                                             Chain : Iir)
+   is
+      El : Iir;
+   begin
+      El := Chain;
+      while El /= Null_Iir loop
+         case Get_Kind (El) is
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Signal_Interface_Declaration =>
+               Disp_Instance_Signal (Instance, El);
+            when others =>
+               null;
+         end case;
+         El := Get_Chain (El);
+      end loop;
+   end Disp_Instance_Signals_Of_Chain;
 
    procedure Disp_Instance_Signals (Instance: Block_Instance_Acc)
    is
-      Blk : constant Iir := Instance.Name;
+      Blk : constant Iir := Instance.Label;
       Child: Block_Instance_Acc;
    begin
       case Get_Kind (Blk) is
          when Iir_Kind_Architecture_Declaration =>
             declare
                Ent : constant Iir := Get_Entity (Blk);
-               El : Iir;
             begin
-               El := Get_Port_Chain (Ent);
-               while El /= Null_Iir loop
-                  Disp_Instance_Signal (Instance, El);
-                  El := Get_Chain (El);
-               end loop;
+               Disp_Instance_Name (Instance);
+               Put_Line (" [architecture]:");
 
-               El := Get_Declaration_Chain (Blk);
-               while El /= Null_Iir loop
-                  if Get_Kind (El) = Iir_Kind_Signal_Declaration then
-                     Disp_Instance_Signal (Instance, El);
-                  end if;
-                  El := Get_Chain (El);
-               end loop;
+               Disp_Instance_Signals_Of_Chain
+                 (Instance, Get_Port_Chain (Ent));
+               Disp_Instance_Signals_Of_Chain
+                 (Instance, Get_Declaration_Chain (Ent));
             end;
+         when Iir_Kind_Block_Statement =>
+            Disp_Instance_Name (Instance);
+            Put_Line (" [block]:");
+
+            --  FIXME: ports.
+            Disp_Instance_Signals_Of_Chain
+              (Instance, Get_Declaration_Chain (Blk));
+         when Iir_Kind_Generate_Statement =>
+            Disp_Instance_Name (Instance);
+            Put_Line (" [generate]:");
+
+            Disp_Instance_Signals_Of_Chain
+              (Instance, Get_Declaration_Chain (Blk));
+         when Iir_Kind_Component_Instantiation_Statement =>
+            null;
+         when Iir_Kinds_Process_Statement =>
+            null;
+         when Iir_Kind_Iterator_Declaration =>
+            null;
          when others =>
-            Error_Kind ("disp_instance_signals", Instance.Name);
+            Error_Kind ("disp_instance_signals", Instance.Label);
       end case;
 
-      if Trace_All_Signals then
-         Child := Instance.Children;
-         while Child /= null loop
-            Disp_Instance_Signals (Child);
-            Child := Child.Brother;
-         end loop;
-      end if;
+      Child := Instance.Children;
+      while Child /= null loop
+         Disp_Instance_Signals (Child);
+         Child := Child.Brother;
+      end loop;
    end Disp_Instance_Signals;
 
    --  Disp all signals name and values.
@@ -464,7 +496,7 @@ package body Debugger is
 
    procedure Disp_Objects (Instance : Block_Instance_Acc)
    is
-      Decl : constant Iir := Instance.Name;
+      Decl : constant Iir := Instance.Label;
    begin
       Disp_Instance_Name (Instance);
       New_Line;
@@ -497,6 +529,138 @@ package body Debugger is
       end case;
    end Disp_Objects;
    pragma Unreferenced (Disp_Objects);
+
+   procedure Disp_Process_Stats
+   is
+      Proc : Iir;
+      Stmt : Iir;
+      Nbr_User_Sensitized_Processes : Natural := 0;
+      Nbr_User_If_Sensitized_Processes : Natural := 0;
+      Nbr_Conc_Sensitized_Processes : Natural := 0;
+      Nbr_User_Non_Sensitized_Processes : Natural := 0;
+      Nbr_Conc_Non_Sensitized_Processes : Natural := 0;
+   begin
+      for I in Processes_Table.First .. Processes_Table.Last loop
+         Proc := Processes_Table.Table (I).Label;
+         case Get_Kind (Proc) is
+            when Iir_Kind_Sensitized_Process_Statement =>
+               if Get_Process_Origin (Proc) = Null_Iir then
+                  Stmt := Get_Sequential_Statement_Chain (Proc);
+                  if Stmt /= Null_Iir
+                    and then Get_Kind (Stmt) = Iir_Kind_If_Statement
+                    and then Get_Chain (Stmt) = Null_Iir
+                  then
+                     Nbr_User_If_Sensitized_Processes :=
+                       Nbr_User_If_Sensitized_Processes + 1;
+                  else
+                     Nbr_User_Sensitized_Processes :=
+                       Nbr_User_Sensitized_Processes + 1;
+                  end if;
+               else
+                  Nbr_Conc_Sensitized_Processes :=
+                    Nbr_Conc_Sensitized_Processes + 1;
+               end if;
+            when Iir_Kind_Process_Statement =>
+               if Get_Process_Origin (Proc) = Null_Iir then
+                  Nbr_User_Non_Sensitized_Processes :=
+                    Nbr_User_Non_Sensitized_Processes + 1;
+               else
+                  Nbr_Conc_Non_Sensitized_Processes :=
+                    Nbr_Conc_Non_Sensitized_Processes + 1;
+               end if;
+            when others =>
+               raise Internal_Error;
+         end case;
+      end loop;
+
+      Put (Natural'Image (Nbr_User_If_Sensitized_Processes));
+      Put_Line (" user sensitized processes with only a if stmt");
+      Put (Natural'Image (Nbr_User_Sensitized_Processes));
+      Put_Line (" user sensitized processes (others)");
+      Put (Natural'Image (Nbr_User_Non_Sensitized_Processes));
+      Put_Line (" user non sensitized processes");
+      Put (Natural'Image (Nbr_Conc_Sensitized_Processes));
+      Put_Line (" sensitized concurrent statements");
+      Put (Natural'Image (Nbr_Conc_Non_Sensitized_Processes));
+      Put_Line (" non sensitized concurrent statements");
+      Put (Process_Index_Type'Image (Processes_Table.Last));
+      Put_Line (" processes (total)");
+   end Disp_Process_Stats;
+
+   procedure Disp_Signals_Stats
+   is
+      type Counters_Type is array (Signal_Type_Kind) of Natural;
+      Counters : Counters_Type := (others => 0);
+      Nbr_Signal_Elements : Natural := 0;
+   begin
+      for I in Signals_Table.First .. Signals_Table.Last loop
+         declare
+            Ent : Signal_Entry renames Signals_Table.Table (I);
+         begin
+            if Ent.Kind = User_Signal then
+               Nbr_Signal_Elements := Nbr_Signal_Elements +
+                 Get_Nbr_Of_Scalars (Signals_Table.Table (I).Sig);
+            end if;
+            Counters (Ent.Kind) := Counters (Ent.Kind) + 1;
+         end;
+      end loop;
+      Put (Integer'Image (Counters (User_Signal)));
+      Put_Line (" declared user signals or ports");
+      Put (Integer'Image (Nbr_Signal_Elements));
+      Put_Line (" user signals sub-elements");
+      Put (Integer'Image (Counters (Implicit_Quiet)));
+      Put_Line (" 'quiet implicit signals");
+      Put (Integer'Image (Counters (Implicit_Stable)));
+      Put_Line (" 'stable implicit signals");
+      Put (Integer'Image (Counters (Implicit_Delayed)));
+      Put_Line (" 'delayed implicit signals");
+      Put (Integer'Image (Counters (Implicit_Transaction)));
+      Put_Line (" 'transaction implicit signals");
+      Put (Integer'Image (Counters (Guard_Signal)));
+      Put_Line (" guard signals");
+   end Disp_Signals_Stats;
+
+   procedure Disp_Design_Stats is
+   begin
+      Disp_Process_Stats;
+
+      New_Line;
+
+      Disp_Signals_Stats;
+
+      New_Line;
+
+      Put (Integer'Image (Connect_Table.Last));
+      Put_Line (" connections");
+   end Disp_Design_Stats;
+
+   procedure Disp_Design_Non_Sensitized
+   is
+      Instance : Block_Instance_Acc;
+      Proc : Iir;
+   begin
+      for I in Processes_Table.First .. Processes_Table.Last loop
+         Instance := Processes_Table.Table (I);
+         Proc := Processes_Table.Table (I).Label;
+         if Get_Kind (Proc) = Iir_Kind_Process_Statement then
+            Disp_Instance_Name (Instance);
+            New_Line;
+            Put_Line ("   at " & Disp_Location (Proc));
+         end if;
+      end loop;
+   end Disp_Design_Non_Sensitized;
+
+   procedure Disp_Design_Connections is
+   begin
+      for I in Connect_Table.First .. Connect_Table.Last loop
+         declare
+            Conn : Connect_Entry renames Connect_Table.Table (I);
+         begin
+            Disp_Iir_Location (Conn.Assoc);
+            New_Line;
+         end;
+      end loop;
+   end Disp_Design_Connections;
 
    function Walk_Files (Cb : Walk_Cb) return Walk_Status
    is
@@ -649,6 +813,8 @@ package body Debugger is
       return P;
    end Skip_Blanks;
 
+   --  Return the position of the last character of the word (the last
+   --  non-blank character).
    function Get_Word (S : String) return Positive
    is
       P : Positive := S'First;
@@ -656,15 +822,15 @@ package body Debugger is
       while P <= S'Last and then not Is_Blank (S (P)) loop
          P := P + 1;
       end loop;
-      return P;
+      return P - 1;
    end Get_Word;
 
    procedure Disp_A_Frame (Instance: Block_Instance_Acc) is
    begin
-      Put (Disp_Node (Instance.Name));
-      if Instance.Cur_Stmt /= Null_Iir then
+      Put (Disp_Node (Instance.Label));
+      if Instance.Stmt /= Null_Iir then
          Put (" at ");
-         Put (Get_Location_Str (Get_Location (Instance.Cur_Stmt)));
+         Put (Get_Location_Str (Get_Location (Instance.Stmt)));
       end if;
       New_Line;
    end Disp_A_Frame;
@@ -842,7 +1008,7 @@ package body Debugger is
       if Top_Instance = null then
          Put_Line ("design not yet fully elaborated");
       else
-         Disp_All_Instances;
+         Disp_Instances_Tree;
       end if;
    end Info_Tree_Proc;
 
@@ -853,7 +1019,7 @@ package body Debugger is
       Params : Iir;
    begin
       Check_Current_Process;
-      Decl := Dbg_Cur_Frame.Name;
+      Decl := Dbg_Cur_Frame.Label;
       if Decl = Null_Iir
         or else Get_Kind (Decl) not in Iir_Kinds_Subprogram_Declaration
       then
@@ -929,6 +1095,32 @@ package body Debugger is
       Put_Line (Name_Table.Image (Get_Design_File_Filename (El)));
       return Walk_Continue;
    end Cb_Disp_File;
+
+   procedure Info_Stats_Proc (Line : String) is
+      P : Natural := Line'First;
+      E : Natural;
+   begin
+      P := Skip_Blanks (Line (P .. Line'Last));
+      if P > Line'Last then
+         --  No parameters.
+         Disp_Design_Stats;
+         return;
+      end if;
+
+      E := Get_Word (Line (P .. Line'Last));
+      if Line (P .. E) = "global" then
+         Disp_Design_Stats;
+      elsif Line (P .. E) = "non-sensitized" then
+         Disp_Design_Non_Sensitized;
+         null;
+      elsif Line (P .. E) = "connections" then
+         Disp_Design_Connections;
+         --  TODO: nbr of conversions
+      else
+         Put_Line ("options are: global, non-sensitized, connections");
+         --  TODO: signals: nbr of scalars, nbr of non-user...
+      end if;
+   end Info_Stats_Proc;
 
    procedure Info_Files_Proc (Line : String) is
       pragma Unreferenced (Line);
@@ -1048,7 +1240,9 @@ package body Debugger is
            | Iir_Kind_While_Loop_Statement =>
             Foreach_Scopes (Get_Parent (N), Handler);
 
-         when Iir_Kind_For_Loop_Statement =>
+         when Iir_Kind_For_Loop_Statement
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_Generate_Statement =>
             Foreach_Scopes (Get_Parent (N), Handler);
             Handler.all (N);
 
@@ -1104,6 +1298,14 @@ package body Debugger is
          when Iir_Kind_For_Loop_Statement =>
             Open_Declarative_Region;
             Add_Name (Get_Iterator_Scheme (N));
+         when Iir_Kind_Block_Statement =>
+            Open_Declarative_Region;
+            Add_Declarations (Get_Declaration_Chain (N), False);
+            Add_Declarations_Of_Concurrent_Statement (N);
+         when Iir_Kind_Generate_Statement =>
+            Open_Declarative_Region;
+            Add_Declarations (Get_Declaration_Chain (N), False);
+            Add_Declarations_Of_Concurrent_Statement (N);
          when others =>
             Error_Kind ("enter_scope(2)", N);
       end case;
@@ -1137,10 +1339,12 @@ package body Debugger is
            | Iir_Kind_Package_Body
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Function_Body
-           | Iir_Kind_For_Loop_Statement =>
+           | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_Generate_Statement =>
             Close_Declarative_Region;
          when others =>
-            Error_Kind ("Leave_scope(2)", N);
+            Error_Kind ("Decl_Decls_For", N);
       end case;
    end Del_Decls_For;
 
@@ -1197,9 +1401,9 @@ package body Debugger is
          return;
       end if;
 
-      Enter_Scope (Dbg_Cur_Frame.Cur_Stmt);
+      Enter_Scope (Dbg_Cur_Frame.Stmt);
       Expr := Sem_Expr.Sem_Expression_Universal (Expr);
-      Leave_Scope (Dbg_Cur_Frame.Cur_Stmt);
+      Leave_Scope (Dbg_Cur_Frame.Stmt);
 
       if Expr = Null_Iir
         or else Nbr_Errors /= 0
@@ -1212,13 +1416,15 @@ package body Debugger is
       Disp_Vhdl.Disp_Expression (Expr);
       New_Line;
 
+      Annotate_Expand_Table;
+
       Mark (Marker, Expr_Pool);
 
       Res := Execute_Expression (Dbg_Cur_Frame, Expr);
       if Opt_Value then
          Disp_Value (Res);
       else
-         Disp_Signal (Res, Get_Type (Expr));
+         Disp_Iir_Value (Res, Get_Type (Expr));
       end if;
       New_Line;
 
@@ -1246,10 +1452,16 @@ package body Debugger is
       end loop;
    end Cont_Proc;
 
+   Menu_Info_Stats : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("stats"),
+      Next => null,
+      Proc => Info_Stats_Proc'Access);
+
    Menu_Info_Tree : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("tree"),
-      Next => null,
+      Next => Menu_Info_Stats'Access,
       Proc => Info_Tree_Proc'Access);
 
    Menu_Info_Params : aliased Menu_Entry :=
@@ -1441,11 +1653,11 @@ package body Debugger is
          return;
       end if;
       E := Get_Word (Line (P .. Line'Last));
-      Menu := Find_Menu (Menu, Line (P .. E - 1));
+      Menu := Find_Menu (Menu, Line (P .. E));
       if Menu = null then
-         Put_Line ("command '" & Line (P .. E - 1) & "' not found");
+         Put_Line ("command '" & Line (P .. E) & "' not found");
       end if;
-      P := E;
+      P := E + 1;
    end Parse_Command;
 
    procedure Help_Proc (Line : String) is
@@ -1494,7 +1706,7 @@ package body Debugger is
 
    function Breakpoint_Hit return Natural
    is
-      Stmt : constant Iir := Current_Process.Instance.Cur_Stmt;
+      Stmt : constant Iir := Current_Process.Instance.Stmt;
    begin
       for I in Breakpoints.First .. Breakpoints.Last loop
          if Stmt = Breakpoints.Table (I).Stmt then
@@ -1556,7 +1768,7 @@ package body Debugger is
             end case;
             Set_Top_Frame (Current_Process.Instance);
             declare
-               Stmt : constant Iir := Dbg_Cur_Frame.Cur_Stmt;
+               Stmt : constant Iir := Dbg_Cur_Frame.Stmt;
             begin
                Put ("stopped at: ");
                Disp_Iir_Location (Stmt);

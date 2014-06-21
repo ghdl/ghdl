@@ -33,8 +33,6 @@ package Debugger is
 
    procedure Warning_Msg_Exec (Msg: String; Loc: Iir);
 
-   Trace_All_Signals : Boolean := False;
-
    --  Disp a block instance, in a human readable way.
    --  Used to debug.
    procedure Disp_Block_Instance (Instance: Block_Instance_Acc);
@@ -57,6 +55,9 @@ package Debugger is
    procedure Disp_Signals_Value;
 
    procedure Disp_Objects_Value;
+
+   --  Disp stats about the design (number of process, number of signals...)
+   procedure Disp_Design_Stats;
 
    --  The reason why the debugger is invoked.
    type Debug_Reason is
