@@ -5642,11 +5642,31 @@ package body Parse is
    begin
       Res := Create_Iir (Iir_Kind_Psl_Assert_Statement);
       Scanner.Flag_Psl := True;
+
+      --  Skip 'assert'
       Scan;
+
       Set_Psl_Property (Res, Parse_Psl.Parse_Psl_Property);
+
+      --  No more PSL tokens after the property.
+      Scanner.Flag_Psl := False;
+
+      if Current_Token = Tok_Report then
+         --  Skip 'report'
+         Scan;
+
+         Set_Report_Expression (Res, Parse_Expression);
+      end if;
+
+      if Current_Token = Tok_Severity then
+         --  Skip 'severity'
+         Scan;
+
+         Set_Severity_Expression (Res, Parse_Expression);
+      end if;
+
       Expect (Tok_Semi_Colon);
       Scanner.Flag_Scan_In_Comment := False;
-      Scanner.Flag_Psl := False;
       return Res;
    end Parse_Psl_Assert_Statement;
 

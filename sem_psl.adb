@@ -474,6 +474,9 @@ package body Sem_Psl is
       Extract_Clock (Prop, Clk);
       Set_Psl_Property (Stmt, Prop);
 
+      --  Sem report and severity expressions.
+      Sem_Report_Statement (Stmt);
+
       --  Properties must be clocked.
       if Clk = Null_Node then
          if Current_Psl_Default_Clock = Null_Iir then
