@@ -544,6 +544,7 @@ package body Iirs is
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
@@ -1885,6 +1886,7 @@ package body Iirs is
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -2170,6 +2172,7 @@ package body Iirs is
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -3463,6 +3466,7 @@ package body Iirs is
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -3511,6 +3515,7 @@ package body Iirs is
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -3592,6 +3597,7 @@ package body Iirs is
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -4861,6 +4867,7 @@ package body Iirs is
       case Get_Kind (Target) is
          when Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement =>
             null;
@@ -4886,6 +4893,7 @@ package body Iirs is
       case Get_Kind (Target) is
          when Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement =>
             null;
@@ -5483,6 +5491,7 @@ package body Iirs is
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
@@ -7229,7 +7238,8 @@ package body Iirs is
    procedure Check_Kind_For_Psl_Property (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Psl_Assert_Statement =>
+         when Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement =>
             null;
          when others =>
             Failed ("Psl_Property", Target);
@@ -7318,7 +7328,8 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Psl_Declaration
-           | Iir_Kind_Psl_Assert_Statement =>
+           | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement =>
             null;
          when others =>
             Failed ("PSL_Clock", Target);
@@ -7341,7 +7352,8 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Psl_Declaration
-           | Iir_Kind_Psl_Assert_Statement =>
+           | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement =>
             null;
          when others =>
             Failed ("PSL_NFA", Target);

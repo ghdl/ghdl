@@ -770,6 +770,8 @@ package body Errorout is
             return Disp_Label (Node, "concurrent assertion");
          when Iir_Kind_Psl_Assert_Statement =>
             return Disp_Label (Node, "PSL assertion");
+         when Iir_Kind_Psl_Cover_Statement =>
+            return Disp_Label (Node, "PSL cover");
          when Iir_Kind_Psl_Default_Clock =>
             return "PSL default clock";
 

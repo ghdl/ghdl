@@ -43,6 +43,19 @@ package Grt.Lib is
       Loc : Ghdl_Location_Ptr;
       Unit : Ghdl_Rti_Access);
 
+   --  Called when a sequence is covered (in a cover directive)
+   procedure Ghdl_Psl_Cover
+     (Str : Std_String_Ptr;
+      Severity : Integer;
+      Loc : Ghdl_Location_Ptr;
+      Unit : Ghdl_Rti_Access);
+
+   procedure Ghdl_Psl_Cover_Failed
+     (Str : Std_String_Ptr;
+      Severity : Integer;
+      Loc : Ghdl_Location_Ptr;
+      Unit : Ghdl_Rti_Access);
+
    procedure Ghdl_Report
      (Str : Std_String_Ptr;
       Severity : Integer;
@@ -77,22 +90,6 @@ package Grt.Lib is
    function Ghdl_Real_Exp (X : Ghdl_Real; Exp : Ghdl_I32)
      return Ghdl_Real;
 
-   --  Create a vhdl string.
-   Ghdl_Assert_Default_Report_Arr : constant String := "Assertion violation";
-   Ghdl_Assert_Default_Report_Bounds : constant Std_String_Bound :=
-     (Dim_1 => (Left => 1,
-                Right => Ghdl_Assert_Default_Report_Arr'Length,
-                Dir => Dir_To,
-                Length => Ghdl_Assert_Default_Report_Arr'Length));
-   Ghdl_Assert_Default_Report : constant Ghdl_Uc_Array :=
-     (Base => Ghdl_Assert_Default_Report_Arr'Address,
-      Bounds => Ghdl_Assert_Default_Report_Bounds'Address);
-
-   --  Unfortunatly, with gnat 3.15p, we cannot use a deferred constant with
-   --  the export pragma.
-   pragma Export (C, Ghdl_Assert_Default_Report,
-                  "__ghdl_assert_default_report");
-
    type Ghdl_Std_Ulogic_Boolean_Array_Type is array (Ghdl_E8 range 0 .. 8)
      of Ghdl_B2;
 
@@ -112,6 +109,8 @@ private
 
    pragma Export (C, Ghdl_Assert_Failed, "__ghdl_assert_failed");
    pragma Export (C, Ghdl_Psl_Assert_Failed, "__ghdl_psl_assert_failed");
+   pragma Export (C, Ghdl_Psl_Cover, "__ghdl_psl_cover");
+   pragma Export (C, Ghdl_Psl_Cover_Failed, "__ghdl_psl_cover_failed");
    pragma Export (C, Ghdl_Report, "__ghdl_report");
 
    pragma Export (C, Ghdl_Bound_Check_Failed_L0,

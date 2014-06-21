@@ -753,7 +753,7 @@ package body Translation is
       Kind_Interface,
       Kind_Disconnect,
       Kind_Process,
-      Kind_Psl_Assert,
+      Kind_Psl_Directive,
       Kind_Loop,
       Kind_Block,
       Kind_Component,
@@ -1308,7 +1308,7 @@ package body Translation is
 
             --  RTI for the process.
             Process_Rti_Const : O_Dnode := O_Dnode_Null;
-         when Kind_Psl_Assert =>
+         when Kind_Psl_Directive =>
             --  Type of assert declarations record.
             Psl_Decls_Type : O_Tnode;
 
@@ -1328,6 +1328,9 @@ package body Translation is
 
             --  State vector variable.
             Psl_Vect_Var : Var_Acc;
+
+            --  Boolean variable (for cover)
+            Psl_Bool_Var : Var_Acc;
 
             --  RTI for the process.
             Psl_Rti_Const : O_Dnode := O_Dnode_Null;
@@ -1440,7 +1443,7 @@ package body Translation is
    subtype Object_Info_Acc is Ortho_Info_Acc (Kind_Object);
    subtype Alias_Info_Acc is Ortho_Info_Acc (Kind_Alias);
    subtype Proc_Info_Acc is Ortho_Info_Acc (Kind_Process);
-   subtype Psl_Info_Acc is Ortho_Info_Acc (Kind_Psl_Assert);
+   subtype Psl_Info_Acc is Ortho_Info_Acc (Kind_Psl_Directive);
    subtype Loop_Info_Acc is Ortho_Info_Acc (Kind_Loop);
    subtype Block_Info_Acc is Ortho_Info_Acc (Kind_Block);
    subtype Comp_Info_Acc is Ortho_Info_Acc (Kind_Component);
@@ -19383,8 +19386,7 @@ package body Translation is
          Loc := Chap4.Get_Location (Stmt);
          Expr := Get_Report_Expression (Stmt);
          if Expr = Null_Iir then
-            Msg := New_Address (New_Obj (Ghdl_Assert_Default_Report),
-                                Std_String_Ptr_Node);
+            Msg := New_Lit (New_Null_Access (Std_String_Ptr_Node));
          else
             Msg := Chap7.Translate_Expression (Expr, String_Type_Definition);
          end if;
@@ -21887,7 +21889,7 @@ package body Translation is
          Info.Process_Parent_Field := Field;
       end Translate_Process_Declarations;
 
-      procedure Translate_Psl_Assert_Declarations (Stmt : Iir)
+      procedure Translate_Psl_Directive_Declarations (Stmt : Iir)
       is
          use PSL.Nodes;
          use PSL.NFAs;
@@ -21902,7 +21904,7 @@ package body Translation is
          --  Create process record.
          Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
          Push_Instance_Factory (O_Tnode_Null);
-         Info := Add_Info (Stmt, Kind_Psl_Assert);
+         Info := Add_Info (Stmt, Kind_Psl_Directive);
 
          N := Get_PSL_NFA (Stmt);
          Labelize_States (N, Info.Psl_Vect_Len);
@@ -21913,6 +21915,11 @@ package body Translation is
          New_Type_Decl (Create_Identifier ("VECTTYPE"), Info.Psl_Vect_Type);
          Info.Psl_Vect_Var :=
            Create_Var (Create_Var_Identifier ("VECT"), Info.Psl_Vect_Type);
+
+         if Get_Kind (Stmt) = Iir_Kind_Psl_Cover_Statement then
+            Info.Psl_Bool_Var :=
+              Create_Var (Create_Var_Identifier ("BOOL"), Ghdl_Bool_Type);
+         end if;
 
          Pop_Instance_Factory (Itype);
          New_Type_Decl (Create_Identifier ("INSTTYPE"), Itype);
@@ -21925,7 +21932,7 @@ package body Translation is
          --  Set info in child record.
          Info.Psl_Decls_Type := Itype;
          Info.Psl_Parent_Field := Field;
-      end Translate_Psl_Assert_Declarations;
+      end Translate_Psl_Directive_Declarations;
 
       function Translate_Psl_Expr (Expr : PSL_Node; Eos : Boolean)
                                   return O_Enode
@@ -21999,13 +22006,26 @@ package body Translation is
          return False;
       end Psl_Need_Finalizer;
 
-      procedure Translate_Psl_Assert_Statement
+      procedure Create_Psl_Final_Proc
+        (Stmt : Iir; Base : Block_Info_Acc; Instance : out O_Dnode)
+      is
+         Inter_List : O_Inter_List;
+         Info : constant Psl_Info_Acc := Get_Info (Stmt);
+      begin
+         Start_Procedure_Decl (Inter_List, Create_Identifier ("FINALPROC"),
+                               O_Storage_Private);
+         New_Interface_Decl (Inter_List, Instance, Wki_Instance,
+                             Base.Block_Decls_Ptr_Type);
+         Finish_Subprogram_Decl (Inter_List, Info.Psl_Proc_Final_Subprg);
+      end Create_Psl_Final_Proc;
+
+      procedure Translate_Psl_Directive_Statement
         (Stmt : Iir; Base : Block_Info_Acc)
       is
          use PSL.NFAs;
          Inter_List : O_Inter_List;
          Instance : O_Dnode;
-         Info : Psl_Info_Acc;
+         Info : constant Psl_Info_Acc := Get_Info (Stmt);
          Var_I : O_Dnode;
          Var_Nvec : O_Dnode;
          Label : O_Snode;
@@ -22020,7 +22040,6 @@ package body Translation is
          NFA : PSL_NFA;
          D_Lit : O_Cnode;
       begin
-         Info := Get_Info (Stmt);
          Start_Procedure_Decl (Inter_List, Create_Identifier ("PROC"),
                                O_Storage_Private);
          New_Interface_Decl (Inter_List, Instance, Wki_Instance,
@@ -22034,6 +22053,18 @@ package body Translation is
 
          --  New state vector.
          New_Var_Decl (Var_Nvec, Wki_Res, O_Storage_Local, Info.Psl_Vect_Type);
+
+         --  For cover directive, return now if already covered.
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Psl_Assert_Statement =>
+               null;
+            when Iir_Kind_Psl_Cover_Statement =>
+               Start_If_Stmt (S_Blk, New_Value (Get_Var (Info.Psl_Bool_Var)));
+               New_Return_Stmt;
+               Finish_If_Stmt (S_Blk);
+            when others =>
+               Error_Kind ("Translate_Psl_Directive_Statement(1)", Stmt);
+         end case;
 
          --  Initialize the new state vector.
          Start_Declare_Stmt;
@@ -22111,8 +22142,18 @@ package body Translation is
               (New_Indexed_Element (New_Obj (Var_Nvec),
                                     New_Lit (New_Index_Lit
                                                (Unsigned_64 (S_Num))))));
-         Chap8.Translate_Report
-           (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Psl_Assert_Statement =>
+               Chap8.Translate_Report
+                 (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
+            when Iir_Kind_Psl_Cover_Statement =>
+               Chap8.Translate_Report
+                 (Stmt, Ghdl_Psl_Cover, Severity_Level_Note);
+               New_Assign_Stmt (Get_Var (Info.Psl_Bool_Var),
+                                New_Lit (Ghdl_Bool_True_Node));
+            when others =>
+               Error_Kind ("Translate_Psl_Directive_Statement", Stmt);
+         end case;
          Finish_If_Stmt (S_Blk);
 
          --  Assign state vector.
@@ -22145,54 +22186,76 @@ package body Translation is
          Finish_Subprogram_Body;
 
          --  The finalizer.
-         if Psl_Need_Finalizer (NFA) then
-            Start_Procedure_Decl (Inter_List, Create_Identifier ("FINALPROC"),
-                                  O_Storage_Private);
-            New_Interface_Decl (Inter_List, Instance, Wki_Instance,
-                                Base.Block_Decls_Ptr_Type);
-            Finish_Subprogram_Decl (Inter_List, Info.Psl_Proc_Final_Subprg);
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Psl_Assert_Statement =>
+               if Psl_Need_Finalizer (NFA) then
+                  Create_Psl_Final_Proc (Stmt, Base, Instance);
 
-            Start_Subprogram_Body (Info.Psl_Proc_Final_Subprg);
-            Push_Local_Factory;
-            --  Push scope for architecture declarations.
-            Push_Scope (Base.Block_Decls_Type, Instance);
+                  Start_Subprogram_Body (Info.Psl_Proc_Final_Subprg);
+                  Push_Local_Factory;
+                  --  Push scope for architecture declarations.
+                  Push_Scope (Base.Block_Decls_Type, Instance);
 
-            S := Get_Final_State (NFA);
-            E := Get_First_Dest_Edge (S);
-            while E /= No_Edge loop
-               Sd := Get_Edge_Src (E);
+                  S := Get_Final_State (NFA);
+                  E := Get_First_Dest_Edge (S);
+                  while E /= No_Edge loop
+                     Sd := Get_Edge_Src (E);
 
-               if PSL.NFAs.Utils.Has_EOS (Get_Edge_Expr (E)) then
+                     if PSL.NFAs.Utils.Has_EOS (Get_Edge_Expr (E)) then
 
-                  S_Num := Get_State_Label (Sd);
-                  Open_Temp;
+                        S_Num := Get_State_Label (Sd);
+                        Open_Temp;
 
-                  Cond := New_Value
-                    (New_Indexed_Element
-                       (Get_Var (Info.Psl_Vect_Var),
-                        New_Lit (New_Index_Lit (Unsigned_64 (S_Num)))));
-                  Cond := New_Dyadic_Op
-                    (ON_And, Cond,
-                     Translate_Psl_Expr (Get_Edge_Expr (E), True));
-                  Start_If_Stmt (E_Blk, Cond);
-                  Chap8.Translate_Report
-                    (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
-                  New_Return_Stmt;
-                  Finish_If_Stmt (E_Blk);
+                        Cond := New_Value
+                          (New_Indexed_Element
+                             (Get_Var (Info.Psl_Vect_Var),
+                              New_Lit (New_Index_Lit (Unsigned_64 (S_Num)))));
+                        Cond := New_Dyadic_Op
+                          (ON_And, Cond,
+                           Translate_Psl_Expr (Get_Edge_Expr (E), True));
+                        Start_If_Stmt (E_Blk, Cond);
+                        Chap8.Translate_Report
+                          (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
+                        New_Return_Stmt;
+                        Finish_If_Stmt (E_Blk);
 
-                  Close_Temp;
+                        Close_Temp;
+                     end if;
+
+                     E := Get_Next_Dest_Edge (E);
+                  end loop;
+
+                  Pop_Scope (Base.Block_Decls_Type);
+                  Pop_Local_Factory;
+                  Finish_Subprogram_Body;
+               else
+                  Info.Psl_Proc_Final_Subprg := O_Dnode_Null;
                end if;
 
-               E := Get_Next_Dest_Edge (E);
-            end loop;
+            when Iir_Kind_Psl_Cover_Statement =>
+               Create_Psl_Final_Proc (Stmt, Base, Instance);
 
-            Pop_Scope (Base.Block_Decls_Type);
-            Pop_Local_Factory;
-            Finish_Subprogram_Body;
-         else
-            Info.Psl_Proc_Final_Subprg := O_Dnode_Null;
-         end if;
-      end Translate_Psl_Assert_Statement;
+               Start_Subprogram_Body (Info.Psl_Proc_Final_Subprg);
+               Push_Local_Factory;
+               --  Push scope for architecture declarations.
+               Push_Scope (Base.Block_Decls_Type, Instance);
+
+               Start_If_Stmt
+                 (S_Blk,
+                  New_Monadic_Op (ON_Not,
+                                  New_Value (Get_Var (Info.Psl_Bool_Var))));
+               Chap8.Translate_Report
+                 (Stmt, Ghdl_Psl_Cover_Failed, Severity_Level_Error);
+               Finish_If_Stmt (S_Blk);
+
+               Pop_Scope (Base.Block_Decls_Type);
+               Pop_Local_Factory;
+               Finish_Subprogram_Body;
+
+            when others =>
+               Error_Kind ("Translate_Psl_Directive_Statement(3)", Stmt);
+         end case;
+      end Translate_Psl_Directive_Statement;
 
       --  Create the instance for block BLOCK.
       --  BLOCK can be either an entity, an architecture or a block statement.
@@ -22212,8 +22275,9 @@ package body Translation is
                   null;
                when Iir_Kind_Psl_Declaration =>
                   null;
-               when Iir_Kind_Psl_Assert_Statement =>
-                  Translate_Psl_Assert_Declarations (El);
+               when Iir_Kind_Psl_Assert_Statement
+                 | Iir_Kind_Psl_Cover_Statement =>
+                  Translate_Psl_Directive_Declarations (El);
                when Iir_Kind_Component_Instantiation_Statement =>
                   Translate_Component_Instantiation_Statement (El);
                when Iir_Kind_Block_Statement =>
@@ -22445,7 +22509,8 @@ package body Translation is
                   null;
                when Iir_Kind_Psl_Declaration =>
                   null;
-               when Iir_Kind_Psl_Assert_Statement =>
+               when Iir_Kind_Psl_Assert_Statement
+                 | Iir_Kind_Psl_Cover_Statement =>
                   declare
                      Info : Psl_Info_Acc;
                   begin
@@ -22453,7 +22518,7 @@ package body Translation is
                      Push_Scope (Info.Psl_Decls_Type,
                                  Info.Psl_Parent_Field,
                                  Block_Info.Block_Decls_Type);
-                     Translate_Psl_Assert_Statement (Stmt, Base_Info);
+                     Translate_Psl_Directive_Statement (Stmt, Base_Info);
                      Pop_Scope (Info.Psl_Decls_Type);
                   end;
                when Iir_Kind_Component_Instantiation_Statement =>
@@ -22781,9 +22846,9 @@ package body Translation is
       --  PROC: the process to be elaborated
       --  BLOCK_INFO: info for the block containing the process
       --  BASE_INFO: info for the global block
-      procedure Elab_Psl_Assert (Stmt : Iir;
-                                 Block_Info : Block_Info_Acc;
-                                 Base_Info : Block_Info_Acc)
+      procedure Elab_Psl_Directive (Stmt : Iir;
+                                    Block_Info : Block_Info_Acc;
+                                    Base_Info : Block_Info_Acc)
       is
          Constr : O_Assoc_List;
          Info : Psl_Info_Acc;
@@ -22858,8 +22923,13 @@ package body Translation is
          Finish_Loop_Stmt (Label);
          Finish_Declare_Stmt;
 
+         if Info.Psl_Bool_Var /= null then
+            New_Assign_Stmt (Get_Var (Info.Psl_Bool_Var),
+                             New_Lit (Ghdl_Bool_False_Node));
+         end if;
+
          Pop_Scope (Info.Psl_Decls_Type);
-      end Elab_Psl_Assert;
+      end Elab_Psl_Directive;
 
       procedure Elab_Implicit_Guard_Signal
         (Block : Iir_Block_Statement; Block_Info : Block_Info_Acc)
@@ -23543,8 +23613,9 @@ package body Translation is
                   null;
                when Iir_Kind_Psl_Declaration =>
                   null;
-               when Iir_Kind_Psl_Assert_Statement =>
-                  Elab_Psl_Assert (Stmt, Block_Info, Base_Info);
+               when Iir_Kind_Psl_Assert_Statement
+                 | Iir_Kind_Psl_Cover_Statement =>
+                  Elab_Psl_Directive (Stmt, Block_Info, Base_Info);
                when Iir_Kind_Component_Instantiation_Statement =>
                   declare
                      Info : Block_Info_Acc;
@@ -27317,6 +27388,32 @@ package body Translation is
          Add_Rti_Node (Info.Block_Rti_Const);
       end Generate_Instance;
 
+      procedure Generate_Psl_Directive (Stmt : Iir)
+      is
+         Name : O_Dnode;
+         List : O_Record_Aggr_List;
+
+         Rti : O_Dnode;
+         Res : O_Cnode;
+         Info : constant Psl_Info_Acc := Get_Info (Stmt);
+         Mark : Id_Mark_Type;
+      begin
+         Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+         Name := Generate_Name (Stmt);
+
+         New_Const_Decl (Rti, Create_Identifier ("RTI"),
+                         O_Storage_Public, Ghdl_Rtin_Type_Scalar);
+
+         Start_Const_Value (Rti);
+         Start_Record_Aggr (List, Ghdl_Rtin_Type_Scalar);
+         New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_Psl_Assert));
+         New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
+         Finish_Record_Aggr (List, Res);
+         Finish_Const_Value (Rti, Res);
+         Info.Psl_Rti_Const := Rti;
+         Pop_Identifier_Prefix (Mark);
+      end Generate_Psl_Directive;
+
       procedure Generate_Declaration_Chain (Chain : Iir)
       is
          Decl : Iir;
@@ -27427,32 +27524,9 @@ package body Translation is
                when Iir_Kind_Psl_Declaration =>
                   null;
                when Iir_Kind_Psl_Assert_Statement =>
-                  declare
-                     Name : O_Dnode;
-                     List : O_Record_Aggr_List;
-
-                     Rti : O_Dnode;
-                     Res : O_Cnode;
-                     Info : Psl_Info_Acc;
-                  begin
-                     Info := Get_Info (Stmt);
-                     Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
-                     Name := Generate_Name (Stmt);
-
-                     New_Const_Decl (Rti, Create_Identifier ("RTI"),
-                                     O_Storage_Public, Ghdl_Rtin_Type_Scalar);
-
-                     Start_Const_Value (Rti);
-                     Start_Record_Aggr (List, Ghdl_Rtin_Type_Scalar);
-                     New_Record_Aggr_El
-                       (List, Generate_Common (Ghdl_Rtik_Psl_Assert));
-                     New_Record_Aggr_El
-                       (List, New_Global_Address (Name, Char_Ptr_Type));
-                     Finish_Record_Aggr (List, Res);
-                     Finish_Const_Value (Rti, Res);
-                     Info.Psl_Rti_Const := Rti;
-                     Pop_Identifier_Prefix (Mark);
-                  end;
+                  Generate_Psl_Directive (Stmt);
+               when Iir_Kind_Psl_Cover_Statement =>
+                  Generate_Psl_Directive (Stmt);
                when others =>
                   Error_Kind ("rti.generate_concurrent_statement_chain", Stmt);
             end case;
@@ -27832,7 +27906,8 @@ package body Translation is
             when Iir_Kind_Process_Statement
               | Iir_Kind_Sensitized_Process_Statement =>
                Rti_Const := Node_Info.Process_Rti_Const;
-            when Iir_Kind_Psl_Assert_Statement =>
+            when Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Cover_Statement =>
                Rti_Const := Node_Info.Psl_Rti_Const;
             when others =>
                Error_Kind ("get_context_rti", Node);
@@ -27862,7 +27937,8 @@ package body Translation is
             when Iir_Kind_Process_Statement
               | Iir_Kind_Sensitized_Process_Statement =>
                Block_Type := Node_Info.Process_Decls_Type;
-            when Iir_Kind_Psl_Assert_Statement =>
+            when Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Cover_Statement =>
                Block_Type := Node_Info.Psl_Decls_Type;
             when others =>
                Error_Kind ("get_context_addr", Node);
@@ -28634,6 +28710,9 @@ package body Translation is
          Create_Report_Subprg ("__ghdl_assert_failed", Ghdl_Assert_Failed);
          Create_Report_Subprg ("__ghdl_psl_assert_failed",
                                Ghdl_Psl_Assert_Failed);
+         Create_Report_Subprg ("__ghdl_psl_cover", Ghdl_Psl_Cover);
+         Create_Report_Subprg ("__ghdl_psl_cover_failed",
+                               Ghdl_Psl_Cover_Failed);
          Create_Report_Subprg ("__ghdl_report", Ghdl_Report);
       end;
 

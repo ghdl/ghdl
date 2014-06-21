@@ -1928,6 +1928,7 @@ package Iirs is
    --   Get/Set_Identifier (Alias Field3)
 
    -- Iir_Kind_Psl_Assert_Statement (Medium)
+   -- Iir_Kind_Psl_Cover_Statement (Medium)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -2916,6 +2917,7 @@ package Iirs is
        Iir_Kind_Concurrent_Assertion_Statement,
        Iir_Kind_Psl_Default_Clock,
        Iir_Kind_Psl_Assert_Statement,
+       Iir_Kind_Psl_Cover_Statement,
        Iir_Kind_Concurrent_Procedure_Call_Statement,
        Iir_Kind_Block_Statement,
        Iir_Kind_Generate_Statement,
@@ -3679,6 +3681,7 @@ package Iirs is
    --Iir_Kind_Concurrent_Assertion_Statement
    --Iir_Kind_Psl_Default_Clock
    --Iir_Kind_Psl_Assert_Statement
+   --Iir_Kind_Psl_Cover_Statement
    --Iir_Kind_Concurrent_Procedure_Call_Statement
    --Iir_Kind_Block_Statement
    --Iir_Kind_Generate_Statement

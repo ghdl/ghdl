@@ -21,6 +21,9 @@ package Trans_Decls is
    --  Procedures called in case of assert failed.
    Ghdl_Assert_Failed : O_Dnode;
    Ghdl_Psl_Assert_Failed : O_Dnode;
+
+   Ghdl_Psl_Cover : O_Dnode;
+   Ghdl_Psl_Cover_Failed : O_Dnode;
    --  Procedure for report statement.
    Ghdl_Report : O_Dnode;
    --  Ortho node for default report message.

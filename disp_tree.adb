@@ -1504,10 +1504,15 @@ package body Disp_Tree is
             Disp_Tree (Get_Severity_Expression (Tree), Ntab);
             Header ("attribute_value_chain:");
             Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
-         when Iir_Kind_Psl_Assert_Statement =>
+         when Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement =>
+            PSL.Dump_Tree.Dump_Tree (Get_Psl_Property (Tree), True);
+            Header ("report expression:");
+            Disp_Tree (Get_Report_Expression (Tree), Ntab);
+            Header ("severity expression:");
+            Disp_Tree (Get_Severity_Expression (Tree), Ntab);
             Header ("attribute_value_chain:");
             Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
-            PSL.Dump_Tree.Dump_Tree (Get_Psl_Property (Tree), True);
          when Iir_Kind_Psl_Default_Clock =>
             null;
 

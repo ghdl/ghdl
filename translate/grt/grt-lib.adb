@@ -43,6 +43,7 @@ package body Grt.Lib is
 
    procedure Do_Report (Msg : String;
                         Str : Std_String_Ptr;
+                        Default_Str : String;
                         Severity : Integer;
                         Loc : Ghdl_Location_Ptr;
                         Unit : Ghdl_Rti_Access)
@@ -96,7 +97,11 @@ package body Grt.Lib is
             Report_C ("???");
       end case;
       Report_C ("): ");
-      Report_E (Str);
+      if Str /= null then
+         Report_E (Str);
+      else
+         Report_E (Default_Str);
+      end if;
       if Level >= Grt.Options.Severity_Level then
          Error_C (Msg);
          Error_E (" failed");
@@ -110,7 +115,8 @@ package body Grt.Lib is
       Unit : Ghdl_Rti_Access)
    is
    begin
-      Do_Report ("assertion", Str, Severity, Loc, Unit);
+      Do_Report ("assertion",
+                 Str, "Assertion violation", Severity, Loc, Unit);
    end Ghdl_Assert_Failed;
 
    procedure Ghdl_Psl_Assert_Failed
@@ -120,8 +126,30 @@ package body Grt.Lib is
       Unit : Ghdl_Rti_Access)
    is
    begin
-      Do_Report ("psl assertion", Str, Severity, Loc, Unit);
+      Do_Report ("psl assertion",
+                 Str, "Assertion violation", Severity, Loc, Unit);
    end Ghdl_Psl_Assert_Failed;
+
+   procedure Ghdl_Psl_Cover
+     (Str : Std_String_Ptr;
+      Severity : Integer;
+      Loc : Ghdl_Location_Ptr;
+      Unit : Ghdl_Rti_Access)
+   is
+   begin
+      Do_Report ("psl cover", Str, "sequence covered", Severity, Loc, Unit);
+   end Ghdl_Psl_Cover;
+
+   procedure Ghdl_Psl_Cover_Failed
+     (Str : Std_String_Ptr;
+      Severity : Integer;
+      Loc : Ghdl_Location_Ptr;
+      Unit : Ghdl_Rti_Access)
+   is
+   begin
+      Do_Report ("psl cover failure",
+                 Str, "sequence not covered", Severity, Loc, Unit);
+   end Ghdl_Psl_Cover_Failed;
 
    procedure Ghdl_Report
      (Str : Std_String_Ptr;
@@ -130,7 +158,7 @@ package body Grt.Lib is
       Unit : Ghdl_Rti_Access)
    is
    begin
-      Do_Report ("report", Str, Severity, Loc, Unit);
+      Do_Report ("report", Str, "Assertion violation", Severity, Loc, Unit);
    end Ghdl_Report;
 
    procedure Ghdl_Program_Error (Filename : Ghdl_C_String;

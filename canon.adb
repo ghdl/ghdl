@@ -1642,7 +1642,8 @@ package body Canon is
                   Canon_Concurrent_Stmts (Top, El);
                end;
 
-            when Iir_Kind_Psl_Assert_Statement =>
+            when Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Cover_Statement =>
                declare
                   use PSL.Nodes;
                   Prop : PSL_Node;
@@ -1654,6 +1655,8 @@ package body Canon is
                   --  Generate the NFA.
                   Fa := PSL.Build.Build_FA (Prop);
                   Set_PSL_NFA (El, Fa);
+
+                  --  FIXME: report/severity.
                end;
 
             when Iir_Kind_Psl_Default_Clock =>
@@ -2525,6 +2528,7 @@ package body Canon is
             when Iir_Kind_Sensitized_Process_Statement
               | Iir_Kind_Process_Statement
               | Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Cover_Statement
               | Iir_Kind_Psl_Default_Clock
               | Iir_Kind_Psl_Declaration
               | Iir_Kind_Simple_Simultaneous_Statement =>

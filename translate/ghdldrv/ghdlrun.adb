@@ -246,8 +246,6 @@ package body Ghdlrun is
            Grt.Lib.Ghdl_Bound_Check_Failed_L1'Address);
       Def (Trans_Decls.Ghdl_Malloc0,
            Grt.Lib.Ghdl_Malloc0'Address);
-      Def (Trans_Decls.Ghdl_Assert_Default_Report,
-           Grt.Lib.Ghdl_Assert_Default_Report'Address);
       Def (Trans_Decls.Ghdl_Std_Ulogic_To_Boolean_Array,
            Grt.Lib.Ghdl_Std_Ulogic_To_Boolean_Array'Address);
 
@@ -257,6 +255,10 @@ package body Ghdlrun is
            Grt.Lib.Ghdl_Assert_Failed'Address);
       Def (Trans_Decls.Ghdl_Psl_Assert_Failed,
            Grt.Lib.Ghdl_Psl_Assert_Failed'Address);
+      Def (Trans_Decls.Ghdl_Psl_Cover,
+           Grt.Lib.Ghdl_Psl_Cover'Address);
+      Def (Trans_Decls.Ghdl_Psl_Cover_Failed,
+           Grt.Lib.Ghdl_Psl_Cover_Failed'Address);
       Def (Trans_Decls.Ghdl_Program_Error,
            Grt.Lib.Ghdl_Program_Error'Address);
       Def (Trans_Decls.Ghdl_Malloc,

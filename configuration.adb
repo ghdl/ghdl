@@ -220,6 +220,7 @@ package body Configuration is
             when Iir_Kind_Process_Statement
               | Iir_Kind_Sensitized_Process_Statement
               | Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Cover_Statement
               | Iir_Kind_Psl_Default_Clock
               | Iir_Kind_Psl_Declaration
               | Iir_Kind_Simple_Simultaneous_Statement =>

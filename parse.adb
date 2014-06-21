@@ -5640,7 +5640,16 @@ package body Parse is
    is
       Res : Iir;
    begin
-      Res := Create_Iir (Iir_Kind_Psl_Assert_Statement);
+      case Current_Token is
+         when Tok_Psl_Assert =>
+            Res := Create_Iir (Iir_Kind_Psl_Assert_Statement);
+         when Tok_Psl_Cover =>
+            Res := Create_Iir (Iir_Kind_Psl_Cover_Statement);
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      --  Scan extended PSL tokens.
       Scanner.Flag_Psl := True;
 
       --  Skip 'assert'
@@ -5791,7 +5800,8 @@ package body Parse is
               | Tok_Psl_Endpoint =>
                Postponed_Not_Allowed;
                Stmt := Parse_Psl_Declaration;
-            when Tok_Psl_Assert =>
+            when Tok_Psl_Assert
+              | Tok_Psl_Cover =>
                Postponed_Not_Allowed;
                Stmt := Parse_Psl_Assert_Statement;
             when others =>

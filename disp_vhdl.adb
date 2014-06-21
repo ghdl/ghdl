@@ -2274,7 +2274,7 @@ package body Disp_Vhdl is
       Put_Line (";");
    end Disp_Psl_Default_Clock;
 
-   procedure Disp_Psl_Assert_Statement (Stmt : Iir)
+   procedure Disp_PSL_NFA (N : PSL.Nodes.NFA)
    is
       use PSL.NFAs;
       use PSL.Nodes;
@@ -2285,15 +2285,10 @@ package body Disp_Vhdl is
          Put (Str (2 .. Str'Last));
       end Disp_State;
 
-      N : NFA;
       S : NFA_State;
       E : NFA_Edge;
    begin
-      Put ("--psl assert ");
-      Disp_Psl_Expression (Get_Psl_Property (Stmt));
-      Put_Line (";");
-      N := Get_PSL_NFA (Stmt);
-      if True and then N /= No_NFA then
+      if N /= No_NFA then
          S := Get_First_State (N);
          while S /= No_State loop
             E := Get_First_Src_Edge (S);
@@ -2310,7 +2305,23 @@ package body Disp_Vhdl is
             S := Get_Next_State (S);
          end loop;
       end if;
+   end Disp_PSL_NFA;
+
+   procedure Disp_Psl_Assert_Statement (Stmt : Iir) is
+   begin
+      Put ("--psl assert ");
+      Disp_Psl_Expression (Get_Psl_Property (Stmt));
+      Put_Line (";");
+      Disp_PSL_NFA (Get_PSL_NFA (Stmt));
    end Disp_Psl_Assert_Statement;
+
+   procedure Disp_Psl_Cover_Statement (Stmt : Iir) is
+   begin
+      Put ("--psl cover ");
+      Disp_Psl_Expression (Get_Psl_Property (Stmt));
+      Put_Line (";");
+      Disp_PSL_NFA (Get_PSL_NFA (Stmt));
+   end Disp_Psl_Cover_Statement;
 
    procedure Disp_Simple_Simultaneous_Statement (Stmt : Iir)
    is
@@ -2346,6 +2357,8 @@ package body Disp_Vhdl is
             Disp_Psl_Default_Clock (Stmt);
          when Iir_Kind_Psl_Assert_Statement =>
             Disp_Psl_Assert_Statement (Stmt);
+         when Iir_Kind_Psl_Cover_Statement =>
+            Disp_Psl_Cover_Statement (Stmt);
          when Iir_Kind_Simple_Simultaneous_Statement =>
             Disp_Simple_Simultaneous_Statement (Stmt);
          when others =>

@@ -41,7 +41,8 @@ package body PSL.Prints is
             return Prio_Seq_And;
          when N_Imp_Seq
            | N_Overlap_Imp_Seq
-           | N_Log_Imp_Prop =>
+           | N_Log_Imp_Prop
+           | N_Imp_Bool =>
             return Prio_Bool_Imp;
          when N_Name_Decl
            | N_Number
@@ -152,6 +153,10 @@ package body PSL.Prints is
          when N_Or_Bool =>
             Print_Expr (Get_Left (N), Prio);
             Put (" || ");
+            Print_Expr (Get_Right (N), Prio);
+         when N_Imp_Bool =>
+            Print_Expr (Get_Left (N), Prio);
+            Put (" -> ");
             Print_Expr (Get_Right (N), Prio);
          when others =>
             Error_Kind ("print_expr", N);

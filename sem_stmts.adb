@@ -1801,7 +1801,8 @@ package body Sem_Stmts is
                end;
             when Iir_Kind_Psl_Declaration =>
                Sem_Psl.Sem_Psl_Declaration (El);
-            when Iir_Kind_Psl_Assert_Statement =>
+            when Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Cover_Statement =>
                Sem_Psl.Sem_Psl_Assert_Statement (El);
             when Iir_Kind_Psl_Default_Clock =>
                Sem_Psl.Sem_Psl_Default_Clock (El);

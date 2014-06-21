@@ -952,6 +952,8 @@ package body Scanner is
       return True;
    end Scan_Comment_Identifier;
 
+   --  Scan tokens within a comment.  Return TRUE if Current_Token was set,
+   --  return FALSE to discard the comment (ie treat it like a real comment).
    function Scan_Comment return Boolean
    is
       use Std_Names;
@@ -966,10 +968,12 @@ package body Scanner is
 
       case Id is
          when Name_Psl =>
+            --  Scan first identifier after '-- psl'.
             if not Scan_Comment_Identifier then
                return False;
             end if;
-            case Name_Table.Get_Identifier is
+            Id := Name_Table.Get_Identifier;
+            case Id is
                when Name_Property =>
                   Current_Token := Tok_Psl_Property;
                when Name_Sequence =>
@@ -978,6 +982,8 @@ package body Scanner is
                   Current_Token := Tok_Psl_Endpoint;
                when Name_Assert =>
                   Current_Token := Tok_Psl_Assert;
+               when Name_Cover =>
+                  Current_Token := Tok_Psl_Cover;
                when Name_Default =>
                   Current_Token := Tok_Psl_Default;
                when others =>
