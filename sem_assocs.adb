@@ -65,24 +65,6 @@ package body Sem_Assocs is
       return Ok;
    end Sem_Actual_Of_Association_Chain;
 
-   function Get_Mode_Name (Mode : Iir_Mode) return String is
-   begin
-      case Mode is
-         when Iir_Unknown_Mode =>
-            raise Internal_Error;
-         when Iir_Linkage_Mode =>
-            return "linkage";
-         when Iir_Buffer_Mode =>
-            return "buffer";
-         when Iir_Out_Mode =>
-            return "out";
-         when Iir_Inout_Mode =>
-            return "inout";
-         when Iir_In_Mode =>
-            return "in";
-      end case;
-   end Get_Mode_Name;
-
    procedure Check_Parameter_Association_Restriction
      (Inter : Iir; Base_Actual : Iir; Loc : Iir)
    is
@@ -344,10 +326,12 @@ package body Sem_Assocs is
          end if;
       end if;
 
-      Error_Msg_Sem
-        ("cannot associate " & Get_Mode_Name (Fmode) & " "
-         & Disp_Node (Formal) & " with actual port of mode "
-         & Get_Mode_Name (Amode), Assoc);
+      if Assoc /= Null_Iir then
+         Error_Msg_Sem
+           ("cannot associate " & Get_Mode_Name (Fmode) & " "
+              & Disp_Node (Formal) & " with actual port of mode "
+              & Get_Mode_Name (Amode), Assoc);
+      end if;
       return False;
    end Check_Port_Association_Restriction;
 

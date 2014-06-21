@@ -1069,4 +1069,22 @@ package body Errorout is
       end if;
    end Error_Not_Match;
 
+   function Get_Mode_Name (Mode : Iir_Mode) return String is
+   begin
+      case Mode is
+         when Iir_Unknown_Mode =>
+            raise Internal_Error;
+         when Iir_Linkage_Mode =>
+            return "linkage";
+         when Iir_Buffer_Mode =>
+            return "buffer";
+         when Iir_Out_Mode =>
+            return "out";
+         when Iir_Inout_Mode =>
+            return "inout";
+         when Iir_In_Mode =>
+            return "in";
+      end case;
+   end Get_Mode_Name;
+
 end Errorout;

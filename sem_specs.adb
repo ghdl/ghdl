@@ -1475,18 +1475,36 @@ package body Sem_Specs is
             Location_Copy (Assoc, Parent);
          else
             if not Are_Nodes_Compatible (Comp_El, Ent_El) then
+               if not Error then
+                  Error_Msg_Sem
+                    ("for default port binding of " & Disp_Node (Parent)
+                       & ":", Parent);
+               end if;
                Error_Msg_Sem
-                 ("type of "
-                  & Disp_Node (Comp_El) & " from " & Disp_Node (Comp)
-                  & " and "
-                  & Disp_Node (Ent_El) & " from " & Disp_Node (Entity)
-                  & " are not compatible for an association",
-                  Parent);
+                 ("type of " & Disp_Node (Comp_El)
+                    & " declarared at " & Disp_Location (Comp_El), Parent);
+               Error_Msg_Sem
+                 ("not compatible with type of " & Disp_Node (Ent_El)
+                    & " declarared at " & Disp_Location (Ent_El), Parent);
                Error := True;
             elsif Kind = Map_Port
-              and then
-              not Check_Port_Association_Restriction (Ent_El, Comp_El, Parent)
+              and then not Check_Port_Association_Restriction
+              (Ent_El, Comp_El, Null_Iir)
             then
+               if not Error then
+                  Error_Msg_Sem
+                    ("for default port binding of " & Disp_Node (Parent)
+                       & ":", Parent);
+               end if;
+               Error_Msg_Sem
+                 ("cannot associate "
+                    & Get_Mode_Name (Get_Mode (Ent_El))
+                    & " " & Disp_Node (Ent_El)
+                    & " declarared at " & Disp_Location (Ent_El), Parent);
+               Error_Msg_Sem
+                 ("with actual port of mode "
+                    & Get_Mode_Name (Get_Mode (Comp_El))
+                    & " declared at " & Disp_Location (Comp_El), Parent);
                Error := True;
             end if;
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
