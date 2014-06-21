@@ -69,9 +69,9 @@ package body Grt.Values is
       end if;
    end To_LC;
 
-   --  Return TRUE iff user string S (POS .. LEN) is equal to REF. Comparaison
-   --  is case insensitive, but REF must be lowercase (REF is supposed to
-   --  come from an RTI).
+   --  Return TRUE iff user string S (POS .. LEN - 1) is equal to REF.
+   --  Comparaison is case insensitive, but REF must be lowercase (REF is
+   --  supposed to come from an RTI).
    function String_Match (S : Std_String_Basep;
                           Pos : Ghdl_Index_Type;
                           Len : Ghdl_Index_Type;
@@ -564,7 +564,7 @@ package body Grt.Values is
                                      return Ghdl_I64
    is
       S        : constant Std_String_Basep := Str.Base;
-      Len      : constant Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
+      Len      : Ghdl_Index_Type := Str.Bounds.Dim_1.Length;
       Unit_Pos : Ghdl_Index_Type;
       Lit_Pos  : Ghdl_Index_Type;
       Lit_End  : Ghdl_Index_Type;
@@ -577,6 +577,10 @@ package body Grt.Values is
       Multiple : Ghdl_Rti_Access;
       Mult     : Ghdl_I64;
    begin
+      --  Remove trailing whitespaces.  FIXME: also called in physical_split.
+      Lit_Pos := 0;
+      Remove_Whitespaces (S, Len, Lit_Pos);
+
       --  Extract literal and unit
       Ghdl_Value_Physical_Split (Str, Found_Real, Lit_Pos, Lit_End, Unit_Pos);
 
@@ -592,7 +596,7 @@ package body Grt.Values is
       end loop;
       if Multiple = null then
          Error_C ("'value: unit '");
-         Error_C_Std (S (Unit_Pos .. Len));
+         Error_C_Std (S (Unit_Pos .. Len - 1));
          Error_C ("' not in physical type '");
          Error_C (Phys_Rti.Name);
          Error_E ("'");
