@@ -5164,9 +5164,11 @@ package body Parse is
       Formal: Iir;
       Actual: Iir;
       Nbr_Assocs : Natural;
+      Loc : Location_Type;
    begin
       Sub_Chain_Init (Res, Last);
 
+      --  Skip '('
       Expect (Tok_Left_Paren);
       Scan;
 
@@ -5178,12 +5180,17 @@ package body Parse is
       Nbr_Assocs := 1;
       loop
          --  Parse formal and actual.
+         Loc := Get_Token_Location;
          Formal := Null_Iir;
+
          if Current_Token /= Tok_Open then
             Actual := Parse_Expression;
             case Current_Token is
                when Tok_To
                  | Tok_Downto =>
+                  --  To/downto can appear in slice name (which are parsed as
+                  --  function call).
+
                   if Actual = Null_Iir then
                      --  Left expression is missing ie: (downto x).
                      Scan;
@@ -5194,12 +5201,18 @@ package body Parse is
                   if Nbr_Assocs /= 1 then
                      Error_Msg_Parse ("multi-dimensional slice is forbidden");
                   end if;
+
                when Tok_Double_Arrow =>
                   Formal := Actual;
+
+                  --  Skip '=>'
                   Scan;
+                  Loc := Get_Token_Location;
+
                   if Current_Token /= Tok_Open then
                      Actual := Parse_Expression;
                   end if;
+
                when others =>
                   null;
             end case;
@@ -5208,14 +5221,12 @@ package body Parse is
          if Current_Token = Tok_Open then
             El := Create_Iir (Iir_Kind_Association_Element_Open);
             Set_Location (El);
-            Scan; -- past open.
+
+            --  Skip 'open'
+            Scan;
          else
             El := Create_Iir (Iir_Kind_Association_Element_By_Expression);
-            if Formal = Null_Iir then
-               Set_Location (El);
-            else
-               Location_Copy (El, Formal);
-            end if;
+            Set_Location (El, Loc);
             Set_Actual (El, Actual);
          end if;
          Set_Formal (El, Formal);
@@ -5226,7 +5237,10 @@ package body Parse is
          Scan;
          Nbr_Assocs := Nbr_Assocs + 1;
       end loop;
+
+      --  Skip ')'
       Scan;
+
       return Res;
    end Parse_Association_Chain;
 
