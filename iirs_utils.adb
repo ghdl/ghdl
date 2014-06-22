@@ -838,15 +838,6 @@ package body Iirs_Utils is
       Adecl := Get_Base_Name (Name);
       loop
          case Get_Kind (Adecl) is
-            when Iir_Kind_Variable_Declaration
-              | Iir_Kind_Variable_Interface_Declaration
-              | Iir_Kind_Constant_Declaration
-              | Iir_Kind_Constant_Interface_Declaration
-              | Iir_Kind_Implicit_Dereference
-              | Iir_Kind_Dereference
-              | Iir_Kind_Attribute_Value
-              | Iir_Kind_Function_Call =>
-               return False;
             when Iir_Kind_Signal_Declaration
               | Iir_Kind_Signal_Interface_Declaration
               | Iir_Kind_Guard_Signal_Declaration
@@ -855,7 +846,7 @@ package body Iirs_Utils is
             when Iir_Kind_Object_Alias_Declaration =>
                Adecl := Get_Base_Name (Get_Name (Adecl));
             when others =>
-               Error_Kind ("is_signal_object", Adecl);
+               return False;
          end case;
       end loop;
    end Is_Signal_Object;
