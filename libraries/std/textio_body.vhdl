@@ -17,6 +17,40 @@
 --  02111-1307, USA.
 
 package body textio is
+  --START-V08
+  --  LRM08 16.4
+  --  The JUSTIFY operation formats a string value within a field that is at
+  --  least at long as required to contain the value.  Parameter FIELD
+  --  specifies the desired field width.  Since the actual field width will
+  --  always be at least large enough to hold the string value, the default
+  --  value 0 for the FIELD parameter has the effect of causing the string
+  --  value to be contained in a field of exactly the right widteh (i.e., no
+  --  additional leading or tailing spaces).  Parameter JUSTIFIED specified
+  --  wether the string value is to be right- or left-justified within the
+  --  field; the default is right-justified.  If the FIELD parameter describes
+  --  a field width larger than the number of characters in the string value,
+  --  space characters are used to fill the remaining characters in the field.
+  --
+  --  TG: Note that the bounds of the result are not specified!
+  function Justify (Value: String;
+                    Justified : Side := Right;
+                    Field: Width := 0 ) return String
+  is
+    constant len : Width := Value'Length;
+  begin
+    if Field <= Len then
+      return Value;
+    else
+      case Justified is
+        when Right =>
+          return (1 to Field - Len => ' ') & Value;
+        when Left =>
+          return Value & (1 to Field - Len => ' ');
+      end case;
+    end if;
+  end Justify;
+  --END-V08
+
   -- output routines for standard types
 
   --  TIME_NAMES associates time units with textual names.
@@ -36,6 +70,18 @@ package body textio is
 
   --  Non breaking space character.                     --V93
   constant nbsp : character := character'val (160);	--V93
+
+  function is_whitespace (c : character) return Boolean is
+  begin
+    case c is
+      when ' '
+        | NBSP --V93
+	| HT =>
+        return True;
+      when others =>
+        return False;
+    end case;
+  end is_Whitespace;
 
   procedure writeline (f: out text; l: inout line) is --V87
   procedure writeline (file f: text; l: inout line) is --V93
@@ -373,7 +419,7 @@ package body textio is
       end loop;
 
       --  LRM93 14.3
-      --  if the exponent is present, the `e' is written as a lower case 
+      --  if the exponent is present, the `e' is written as a lower case
       --  character.
       add_char ('e');
 
@@ -428,7 +474,7 @@ package body textio is
   begin
     assert false report "must not be called" severity failure;
   end untruncated_text_read;
-  
+
   procedure readline (variable f: in text; l: inout line) --V87
   procedure readline (file f: text; l: inout line) --V93
   is
@@ -444,7 +490,7 @@ package body textio is
     if l /= null then
       deallocate (l);
     end if;
-    
+
     -- We read the input in 128-byte chunks.
     -- We keep reading until we reach a newline or there is no more input.
     -- The loop invariant is that old_l is allocated and contains the
@@ -467,7 +513,7 @@ package body textio is
         is_eol := true;
       else
         is_eol := false;
-      end if;        
+      end if;
       l := new string (1 to posn + len);
       if old_l /= null then
         l (1 to posn) := old_l (1 to posn);
@@ -566,7 +612,7 @@ package body textio is
     good := false;
     for i in l'range loop
       case l(i) is
-	when ' ' 
+	when ' '
 	  | NBSP --V93
 	  | HT =>
 	  null;
@@ -625,7 +671,7 @@ package body textio is
     pos := res'left;
     for i in l'range loop
       case l(i) is
-	when ' ' 
+	when ' '
 	  | NBSP --V93
 	  | HT =>
 	  case state is
@@ -654,7 +700,7 @@ package body textio is
 	  return;
       end case;
     end loop;
-    
+
     if len /= 0 then
       --  Not enough bits.
       return;
@@ -687,7 +733,7 @@ package body textio is
     --  L_ES : (tru)E or (fal)S(e) has been scanned.
     type state_type is (blank, l_tf, l_ra, l_ul, l_es);
     variable state : state_type;
-    
+
     --  Set to TRUE if T has been scanned, to FALSE if F has been scanned.
     variable res : boolean;
   begin
@@ -697,10 +743,7 @@ package body textio is
     for i in l'range loop
       case state is
 	when blank =>
-	  if l (i) = ' '
-	    or l (i) = nbsp --V93
-	    or l (i) = HT
-	  then
+	  if is_whitespace (l (i)) then
 	    null;
 	  elsif to_lower (l (i)) = 't' then
 	    res := true;
@@ -767,7 +810,7 @@ package body textio is
   begin
     return character'pos (c) - character'pos ('0');
   end char_to_nat;
-	
+
   procedure read (l: inout line; value: out integer; good: out boolean)
   is
     variable val : integer;
@@ -781,7 +824,7 @@ package body textio is
       case cur_state is
 	when leading =>
 	  case l(i) is
-	    when ' ' 
+	    when ' '
 	      | NBSP	--V93
 	      | ht =>
 	      null;
@@ -984,7 +1027,7 @@ package body textio is
 	  end case;
       end case;
     end loop;
-    
+
     --  End of string.
     case cur_state is
       when leading | sign | digits =>
@@ -1078,7 +1121,7 @@ package body textio is
     --  Fail by default; therefore, in case of error, a return statement is
     --  ok.
     good := false;
-    
+
     nbr_digits := 0;
     is_neg := false;
     exp := 0;
@@ -1331,4 +1374,57 @@ package body textio is
       severity failure;
   end read;
 
+  --START-V08
+  procedure Sread (L : inout Line; Value : out String; Strlen : out Natural)
+  is
+    constant maxlen : natural := Value'Length;
+    alias value1 : string (1 to maxlen) is Value;
+    variable skipping : boolean := True;
+    variable f, len, nl_left : natural;
+    variable nl : line;
+  begin
+    --  Skip leading spaces.  F designates the index of the first non-space
+    --  character, LEN the length of the extracted string.
+    len := 0;
+    for i in l'range loop
+      if skipping then
+        if not is_whitespace (l (i)) then
+          skipping := false;
+          f := i;
+          len := 1;
+        end if;
+      else
+        exit when is_whitespace (l (i));
+        len := len + 1;
+        exit when len = maxlen;
+      end if;
+    end loop;
+
+    --  Copy string.
+    if l'ascending then
+      value1 (1 to len) := l (f to f + len - 1);
+    else
+      value1 (1 to len) := l (f downto f - len + 1);
+    end if;
+    strlen := len;
+
+    if l'ascending then
+      if len = 0 then
+        f := l'right + 1;
+      end if;
+      nl_left := f + len;
+      nl := new string (nl_left to l'right);
+      nl.all := l (nl_left to l'right);
+    else
+      if len = 0 then
+        f := l'right - 1;
+      end if;
+      nl_left := f - len;
+      nl := new string (nl_left downto l'right);
+      nl.all := l (nl_left downto l'right);
+    end if;
+    deallocate (l);
+    l := nl;
+  end sread;
+  --END-V08
 end textio;

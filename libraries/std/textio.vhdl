@@ -1,6 +1,6 @@
 --  Std.Textio package declaration.  This file is part of GHDL.
 --  This file was written from the clause 14.3 of the VHDL LRM.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Copyright (C) 2002 - 2014 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -17,23 +17,29 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-package textio is
+package Textio is
 
 -- type definitions for text i/o
 
   -- a LINE is a pointer to a string value.
-  type line is access string;
+  type Line is access String;
 
   --  A file of variable-length ASCII records.
   --  Note: in order to work correctly, the TEXT file type must be declared in
-  --  the textio package of library std.  Otherwise, a file of string has a
+  --  the Textio package of library Std.  Otherwise, a file of string has a
   --  non-ASCII format.
-  type text is file of string;
+  type text is file of String;
 
   type side is (right, left);	-- For justifying ouput data within fields.
   subtype width is natural;	-- For specifying widths of output fields.
 
--- standard text files
+  -- standard text files
+
+  --START-V08
+  function Justify (Value: String;
+                    Justified : Side := Right;
+                    Field: Width := 0 ) return String;
+  --END-V08
 
   file input:  text is in "STD_INPUT";  --V87
   file output: text is out "STD_OUTPUT";  --V87
@@ -50,7 +56,7 @@ package textio is
   --  on direction, or left bound).  Therefore, even variable of type LINE
   --  not initialized by READLINE are accepted.  Strictly speaking, this is
   --  not required by LRM, nor prevented.  However, other implementations may
-  --  fail at parsing such strings.
+  --  fail at parsing such Strings.
   --
   --  Also, in case of error (GOOD is false), this implementation do not
   --  modify L (as specified by the LRM) nor VALUE.
@@ -60,10 +66,10 @@ package textio is
   --
   --  In case of overflow (ie, if the number is out of the bounds of the type),
   --  the procedure will fail with an execution error.
-  --  FIXME: this should not occur for a bad string.
+  --  FIXME: this should not occur for a bad String.
 
   procedure read (l: inout line; value: out bit; good: out boolean);
-  procedure read (l: inout line; value: out bit); 
+  procedure read (l: inout line; value: out bit);
 
   procedure read (l: inout line; value: out bit_vector; good: out boolean);
   procedure read (l: inout line; value: out bit_vector);
@@ -72,7 +78,7 @@ package textio is
   procedure read (l: inout line; value: out boolean);
 
   procedure read (l: inout line; value: out character; good: out boolean);
-  procedure read (l: inout line; value: out character); 
+  procedure read (l: inout line; value: out character);
 
   procedure read (l: inout line; value: out integer; good: out boolean);
   procedure read (l: inout line; value: out integer);
@@ -80,8 +86,8 @@ package textio is
   procedure read (l: inout line; value: out real; good: out boolean);
   procedure read (l: inout line; value: out real);
 
-  procedure read (l: inout line; value: out string; good: out boolean);
-  procedure read (l: inout line; value: out string);
+  procedure read (l: inout line; value: out String; good: out boolean);
+  procedure read (l: inout line; value: out String);
 
   --  This implementation requires no space after the unit identifier,
   --  ie "7.5 nsv" is parsed as 7.5 ns.
@@ -89,16 +95,26 @@ package textio is
   procedure read (l: inout line; value: out time; good: out boolean);
   procedure read (l: inout line; value: out time);
 
+  --START-V08
+  procedure Sread (L : inout Line; Value : out String; Strlen : out Natural);
+
+  alias STRING_READ is SREAD [LINE, STRING, NATURAL];
+  alias BREAD is READ [LINE, BIT_VECTOR, BOOLEAN];
+  alias BREAD is READ [LINE, BIT_VECTOR];
+  alias BINARY_READ is READ [LINE, BIT_VECTOR, BOOLEAN];
+  alias BINARY_READ is READ [LINE, BIT_VECTOR];
+  --END-V08
+
 -- output routines for standard types
 
   procedure writeline (variable f: out text; l: inout line); --V87
   procedure writeline (file f: text; l: inout line); --V93
 
   --  This implementation accept any value for all the types.
-  procedure write 
+  procedure write
     (l: inout line; value: in bit;
     justified: in side := right; field: in width := 0);
-  procedure write 
+  procedure write
     (l: inout line; value: in bit_vector;
     justified: in side := right; field: in width := 0);
   procedure write
@@ -114,8 +130,8 @@ package textio is
     (L: inout line; value: in real;
     justified: in side := right; field: in width := 0;
     digits: in natural := 0);
-  procedure write 
-    (l: inout line; value: in string;
+  procedure write
+    (l: inout line; value: in String;
     justified: in side := right; field: in width := 0);
 
   --  UNIT must be a unit name declared in std.standard.  Of course, no rules
@@ -127,4 +143,11 @@ package textio is
     (l: inout line; value : in time;
     justified: in side := right; field: in width := 0; unit : in TIME := ns);
 
+  --START-V08
+  alias Swrite is write [Line, String, Side, Width];
+  alias String_Write is Write [Line, String, Side, Width];
+
+  alias Bwrite is write [Line, Bit_Vector, Side, Width];
+  alias Binary_Write is write [Line, Bit_Vector, Side, Width];
+  --END-V08
 end textio;
