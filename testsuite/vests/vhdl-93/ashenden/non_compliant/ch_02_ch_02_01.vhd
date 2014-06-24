@@ -553,6 +553,8 @@ begin
                           -- end of code from book
 
   begin
+    -- TG: avoid overflow in multiplication
+    L1 := 1 mm;
 
     -- code from book:
 
