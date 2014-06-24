@@ -1416,22 +1416,20 @@ package body Elaboration is
          --  Direct instantiation
          declare
             Aspect : constant Iir := Component;
-            Entity_Unit : Iir;
             Arch : Iir;
             Config : Iir;
          begin
             case Get_Kind (Aspect) is
                when Iir_Kind_Entity_Aspect_Entity =>
-                  Entity_Unit := Get_Entity (Aspect);
                   Arch := Get_Architecture (Aspect);
                   if Arch = Null_Iir then
                      Arch := Libraries.Get_Latest_Architecture
-                       (Get_Library_Unit (Entity_Unit));
+                       (Get_Entity (Aspect));
                   end if;
-                  Config := Get_Default_Configuration_Declaration (Arch);
+                  Config := Get_Library_Unit
+                    (Get_Default_Configuration_Declaration (Arch));
                when Iir_Kind_Entity_Aspect_Configuration =>
                   Config := Get_Configuration (Aspect);
-                  Entity_Unit := Get_Entity (Config);
                   Arch := Get_Block_Specification
                     (Get_Block_Configuration (Config));
                when Iir_Kind_Entity_Aspect_Open =>
@@ -1439,7 +1437,7 @@ package body Elaboration is
                when others =>
                   raise Internal_Error;
             end case;
-            Config := Get_Block_Configuration (Get_Library_Unit (Config));
+            Config := Get_Block_Configuration (Config);
 
             Frame := Elaborate_Architecture
               (Arch, Config, Instance, Stmt,
@@ -1670,7 +1668,6 @@ package body Elaboration is
    is
       Component : constant Iir_Component_Declaration :=
         Get_Instantiated_Unit (Stmt);
-      Entity_Design : Iir_Design_Unit;
       Entity : Iir_Entity_Declaration;
       Arch_Name : Name_Id;
       Arch_Design : Iir_Design_Unit;
@@ -1679,7 +1676,6 @@ package body Elaboration is
       pragma Unreferenced (Arch_Frame);
       Generic_Map_Aspect_Chain : Iir;
       Port_Map_Aspect_Chain : Iir;
-      Unit : Iir;
       Binding : Iir_Binding_Indication;
       Aspect : Iir;
       Sub_Conf : Iir;
@@ -1730,9 +1726,9 @@ package body Elaboration is
 
       case Get_Kind (Aspect) is
          when Iir_Kind_Design_Unit =>
-            Entity_Design := Aspect;
+            raise Internal_Error;
          when Iir_Kind_Entity_Aspect_Entity =>
-            Entity_Design := Get_Entity (Aspect);
+            Entity := Get_Entity (Aspect);
             if Get_Architecture (Aspect) /= Null_Iir then
                Arch_Name := Get_Identifier (Get_Architecture (Aspect));
             end if;
@@ -1741,27 +1737,14 @@ package body Elaboration is
                raise Internal_Error;
             end if;
             declare
-               Cf : Iir;
+               Conf : constant Iir := Get_Configuration (Aspect);
             begin
-               Cf := Get_Configuration (Aspect);
-               Cf := Get_Library_Unit (Cf);
-               Entity_Design := Get_Entity (Cf);
-               Sub_Conf := Get_Block_Configuration (Cf);
+               Entity := Get_Entity (Conf);
+               Sub_Conf := Get_Block_Configuration (Conf);
                Arch := Get_Block_Specification (Sub_Conf);
             end;
          when others =>
             Error_Kind ("elaborate_component_declaration0", Aspect);
-      end case;
-
-      Unit := Get_Library_Unit (Entity_Design);
-      case Get_Kind (Unit) is
-         when Iir_Kind_Entity_Declaration =>
-            Entity := Unit;
-         when Iir_Kind_Configuration_Declaration =>
-            Entity_Design := Get_Entity (Unit);
-            Entity := Get_Library_Unit (Entity_Design);
-         when others =>
-            Error_Kind ("elaborate_component_declaration2", Unit);
       end case;
 
       if Arch = Null_Iir then
@@ -1774,7 +1757,7 @@ package body Elaboration is
             Arch_Name := Get_Identifier (Arch);
          end if;
          Arch_Design := Libraries.Load_Secondary_Unit
-           (Entity_Design, Arch_Name, Stmt);
+           (Get_Design_Unit (Entity), Arch_Name, Stmt);
          if Arch_Design = Null_Iir then
             Error_Msg_Elab ("no architecture `" & Name_Table.Image (Arch_Name)
                               & "' for " & Disp_Node (Entity), Stmt);

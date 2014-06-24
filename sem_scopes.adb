@@ -791,6 +791,7 @@ package body Sem_Scopes is
            | Iir_Kind_Terminal_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
+           | Iir_Kind_Configuration_Declaration
            | Iir_Kinds_Concurrent_Statement
            | Iir_Kinds_Sequential_Statement =>
             Handle_Decl (Decl, Arg);
@@ -844,8 +845,6 @@ package body Sem_Scopes is
 --                --  May be empty.
 --                Handle_Decl (El, Arg);
 --             end if;
-         when Iir_Kind_Design_Unit =>
-            Handle_Decl (Decl, Arg);
 
          when Iir_Kind_Procedure_Body
            | Iir_Kind_Function_Body =>
@@ -918,67 +917,6 @@ package body Sem_Scopes is
    procedure Add_Declarations_List is new Iterator_Decl_List
      (Arg_Type => Boolean, Handle_Decl => Add_Declaration);
 
-   procedure Use_Library_All (Library : Iir_Library_Declaration)
-   is
-      Design_File : Iir_Design_File;
-      Design_Unit : Iir_Design_Unit;
-      Library_Unit : Iir;
-   begin
-      Design_File := Get_Design_File_Chain (Library);
-      while Design_File /= Null_Iir loop
-         Design_Unit := Get_First_Design_Unit (Design_File);
-         while Design_Unit /= Null_Iir loop
-            Library_Unit := Get_Library_Unit (Design_Unit);
-            if Get_Kind (Library_Unit) /= Iir_Kind_Package_Body then
-               Add_Name (Design_Unit, Get_Identifier (Design_Unit), True);
-            end if;
-            Design_Unit := Get_Chain (Design_Unit);
-         end loop;
-         Design_File := Get_Chain (Design_File);
-      end loop;
-   end Use_Library_All;
-
-   procedure Use_Selected_Name (Name : Iir) is
-   begin
-      if Get_Kind (Name) = Iir_Kind_Overload_List then
-         Add_Declarations_List (Get_Overload_List (Name), True);
-      else
-         Add_Declaration (Name, True);
-      end if;
-   end Use_Selected_Name;
-
-   procedure Use_All_Names (Name: Iir) is
-   begin
-      case Get_Kind (Name) is
-         when Iir_Kind_Library_Declaration =>
-            Use_Library_All (Name);
-         when Iir_Kind_Design_Unit =>
-            --  The design unit is a package.
-            Add_Declarations
-              (Get_Declaration_Chain (Get_Library_Unit (Name)), True);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Use_All_Names;
-
-   procedure Add_Use_Clause (Clause : Iir_Use_Clause)
-   is
-      Name : Iir;
-      Cl : Iir_Use_Clause;
-   begin
-      Cl := Clause;
-      loop
-         Name := Get_Selected_Name (Cl);
-         if Get_Kind (Name) = Iir_Kind_Selected_By_All_Name then
-            Use_All_Names (Get_Named_Entity (Get_Prefix (Name)));
-         else
-            Use_Selected_Name (Get_Named_Entity (Name));
-         end if;
-         Cl := Get_Use_Clause_Chain (Cl);
-         exit when Cl = Null_Iir;
-      end loop;
-   end Add_Use_Clause;
-
    procedure Add_Declarations_From_Interface_Chain (Chain : Iir)
    is
       El: Iir;
@@ -1021,11 +959,20 @@ package body Sem_Scopes is
       Add_Declarations_Of_Concurrent_Statement (Entity);
    end Add_Entity_Declarations;
 
-   -- Add declarations from a package into the current declarative region.
-   -- This is needed when a package body is analysed.
+   --  Add declarations from a package into the current declarative region.
+   --  (for a use clause or when a package body is analyzed)
+   procedure Add_Package_Declarations
+     (Decl: Iir_Package_Declaration; Potentially : Boolean)
+   is
+   begin
+      Add_Declarations (Get_Declaration_Chain (Decl), Potentially);
+   end Add_Package_Declarations;
+
+   --  Add declarations from a package into the current declarative region.
+   --  This is needed when a package body is analysed.
    procedure Add_Package_Declarations (Decl: Iir_Package_Declaration) is
    begin
-      Add_Declarations (Get_Declaration_Chain (Decl), False);
+      Add_Package_Declarations (Decl, False);
    end Add_Package_Declarations;
 
    procedure Add_Component_Declarations (Component: Iir_Component_Declaration)
@@ -1056,6 +1003,65 @@ package body Sem_Scopes is
       Add_Declarations (Get_Declaration_Chain (Decl), False);
       Add_Declarations_Of_Concurrent_Statement (Decl);
    end Extend_Scope_Of_Block_Declarations;
+
+   procedure Use_Library_All (Library : Iir_Library_Declaration)
+   is
+      Design_File : Iir_Design_File;
+      Design_Unit : Iir_Design_Unit;
+      Library_Unit : Iir;
+   begin
+      Design_File := Get_Design_File_Chain (Library);
+      while Design_File /= Null_Iir loop
+         Design_Unit := Get_First_Design_Unit (Design_File);
+         while Design_Unit /= Null_Iir loop
+            Library_Unit := Get_Library_Unit (Design_Unit);
+            if Get_Kind (Library_Unit) /= Iir_Kind_Package_Body then
+               Add_Name (Design_Unit, Get_Identifier (Design_Unit), True);
+            end if;
+            Design_Unit := Get_Chain (Design_Unit);
+         end loop;
+         Design_File := Get_Chain (Design_File);
+      end loop;
+   end Use_Library_All;
+
+   procedure Use_Selected_Name (Name : Iir) is
+   begin
+      if Get_Kind (Name) = Iir_Kind_Overload_List then
+         Add_Declarations_List (Get_Overload_List (Name), True);
+      else
+         Add_Declaration (Name, True);
+      end if;
+   end Use_Selected_Name;
+
+   procedure Use_All_Names (Name: Iir) is
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Library_Declaration =>
+            Use_Library_All (Name);
+         when Iir_Kind_Package_Declaration =>
+            Add_Package_Declarations (Name, True);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Use_All_Names;
+
+   procedure Add_Use_Clause (Clause : Iir_Use_Clause)
+   is
+      Name : Iir;
+      Cl : Iir_Use_Clause;
+   begin
+      Cl := Clause;
+      loop
+         Name := Get_Selected_Name (Cl);
+         if Get_Kind (Name) = Iir_Kind_Selected_By_All_Name then
+            Use_All_Names (Get_Named_Entity (Get_Prefix (Name)));
+         else
+            Use_Selected_Name (Get_Named_Entity (Name));
+         end if;
+         Cl := Get_Use_Clause_Chain (Cl);
+         exit when Cl = Null_Iir;
+      end loop;
+   end Add_Use_Clause;
 
    -- Debugging
    procedure Disp_Detailed_Interpretations (Ident : Name_Id)

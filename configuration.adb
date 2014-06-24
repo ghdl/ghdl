@@ -125,7 +125,7 @@ package body Configuration is
             --  find all sub-configuration
             Libraries.Load_Design_Unit (Unit, From);
             Lib_Unit := Get_Library_Unit (Unit);
-            Add_Design_Unit (Get_Entity (Lib_Unit), Unit);
+            Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Unit);
             declare
                Blk : Iir_Block_Configuration;
                Prev_Configuration : Iir_Configuration_Declaration;
@@ -248,12 +248,12 @@ package body Configuration is
       case Get_Kind (Aspect) is
          when Iir_Kind_Entity_Aspect_Entity =>
             --  Add the entity.
-            Entity := Get_Entity (Aspect);
+            Entity_Lib := Get_Entity (Aspect);
+            Entity := Get_Design_Unit (Entity_Lib);
             Add_Design_Unit (Entity, Aspect);
 
             --  Extract and add the architecture.
             Arch := Get_Architecture (Aspect);
-            Entity_Lib := Get_Library_Unit (Entity);
             if Arch /= Null_Iir then
                case Get_Kind (Arch) is
                   when Iir_Kind_Simple_Name =>
@@ -293,7 +293,8 @@ package body Configuration is
                end if;
             end if;
          when Iir_Kind_Entity_Aspect_Configuration =>
-            Add_Design_Unit (Get_Configuration (Aspect), Aspect);
+            Add_Design_Unit
+              (Get_Design_Unit (Get_Configuration (Aspect)), Aspect);
          when Iir_Kind_Entity_Aspect_Open =>
             null;
          when others =>

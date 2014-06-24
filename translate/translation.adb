@@ -22982,17 +22982,16 @@ package body Translation is
          --  binding aspect.
          case Get_Kind (Aspect) is
             when Iir_Kind_Entity_Aspect_Entity =>
-               Entity_Unit := Get_Entity (Aspect);
+               Entity := Get_Entity (Aspect);
                Arch := Get_Architecture (Aspect);
                if Flags.Flag_Elaborate and then Arch = Null_Iir then
                   --  This is valid only during elaboration.
-                  Arch := Libraries.Get_Latest_Architecture
-                    (Get_Library_Unit (Entity_Unit));
+                  Arch := Libraries.Get_Latest_Architecture (Entity);
                end if;
                Config := Null_Iir;
             when Iir_Kind_Entity_Aspect_Configuration =>
-               Config := Get_Library_Unit (Get_Configuration (Aspect));
-               Entity_Unit := Get_Entity (Config);
+               Config := Get_Configuration (Aspect);
+               Entity := Get_Entity (Config);
                Arch := Get_Block_Specification
                  (Get_Block_Configuration (Config));
             when Iir_Kind_Entity_Aspect_Open =>
@@ -23000,7 +22999,7 @@ package body Translation is
             when others =>
                Error_Kind ("translate_entity_instantiation", Aspect);
          end case;
-         Entity := Get_Library_Unit (Entity_Unit);
+         Entity_Unit := Get_Design_Unit (Entity);
          Entity_Info := Get_Info (Entity);
          if Config_Override /= Null_Iir then
             Config := Config_Override;
@@ -27364,18 +27363,15 @@ package body Translation is
                Val := New_Rti_Address (Get_Info (Inst).Comp_Rti_Const);
             when Iir_Kind_Entity_Aspect_Entity =>
                declare
-                  Ent : Iir;
+                  Ent : constant Iir := Get_Entity (Inst);
                begin
-                  Ent := Get_Library_Unit (Get_Entity (Inst));
                   Val := New_Rti_Address (Get_Info (Ent).Block_Rti_Const);
                end;
             when Iir_Kind_Entity_Aspect_Configuration =>
                declare
-                  Config : Iir;
-                  Ent : Iir;
+                  Config : constant Iir := Get_Configuration (Inst);
+                  Ent : constant Iir := Get_Entity (Config);
                begin
-                  Config := Get_Library_Unit (Get_Configuration (Inst));
-                  Ent := Get_Library_Unit (Get_Entity (Config));
                   Val := New_Rti_Address (Get_Info (Ent).Block_Rti_Const);
                end;
             when others =>
@@ -28077,10 +28073,9 @@ package body Translation is
                   Mark_Arch : Id_Mark_Type;
                   Mark_Sep : Id_Mark_Type;
                   Arch : Iir;
-                  Entity : Iir;
+                  Entity : constant Iir := Get_Entity (El);
                begin
                   --  Note: this is done inside the architecture identifier.
-                  Entity := Get_Library_Unit (Get_Entity (El));
                   Push_Identifier_Prefix
                     (Mark_Entity, Get_Identifier (Entity));
                   Arch := Get_Block_Specification
@@ -30134,7 +30129,7 @@ package body Translation is
             return;
          end if;
          Config_Lib := Get_Library_Unit (Config);
-         Entity := Get_Library_Unit (Get_Entity (Config_Lib));
+         Entity := Get_Entity (Config_Lib);
          Arch := Get_Block_Specification
            (Get_Block_Configuration (Config_Lib));
 

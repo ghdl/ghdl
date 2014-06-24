@@ -2765,8 +2765,7 @@ package body Evaluation is
             Path_Add_Element (Get_Parent (Prefix), Is_Instance);
             Path_Add_Name (Prefix);
          when Iir_Kind_Library_Declaration
-           | Iir_Kind_Design_Unit
-           | Iir_Kind_Package_Declaration
+           | Iir_Kinds_Library_Unit_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Implicit_Function_Declaration

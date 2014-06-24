@@ -597,7 +597,7 @@ package body Errorout is
                if Id /= Null_Identifier then
                   return Disp_Identifier (Node, "configuration");
                else
-                  Ent := Get_Library_Unit (Get_Entity (Node));
+                  Ent := Get_Entity (Node);
                   Arch := Get_Block_Specification
                     (Get_Block_Configuration (Node));
                   return "default configuration of "

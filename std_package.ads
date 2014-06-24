@@ -137,8 +137,17 @@ package Std_Package is
    Foreign_Attribute : Iir_Attribute_Declaration;
 
    --  For VHDL-08
+   Boolean_Vector_Type_Definition : Iir_Array_Type_Definition;
+   Boolean_Vector_Type : Iir_Type_Declaration;
+
    Integer_Vector_Type_Definition : Iir_Array_Type_Definition;
    Integer_Vector_Type : Iir_Type_Declaration;
+
+   Real_Vector_Type_Definition : Iir_Array_Type_Definition;
+   Real_Vector_Type : Iir_Type_Declaration;
+
+   Time_Vector_Type_Definition : Iir_Array_Type_Definition;
+   Time_Vector_Type : Iir_Type_Declaration;
 
    --  Internal use only.
    --  These types should be considered like universal types, but

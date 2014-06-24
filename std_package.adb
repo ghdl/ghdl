@@ -313,7 +313,7 @@ package body Std_Package is
       Set_Parent (Std_Standard_File, Parent);
       Set_Design_File_Filename (Std_Standard_File, Std_Filename);
       Std_Standard_Unit := Create_Std_Iir (Iir_Kind_Design_Unit);
-      Set_Std_Identifier (Std_Standard_Unit, Name_Standard);
+      Set_Identifier (Std_Standard_Unit, Name_Standard);
       Set_First_Design_Unit (Std_Standard_File, Std_Standard_Unit);
       Set_Last_Design_Unit (Std_Standard_File, Std_Standard_Unit);
       Set_Design_File (Std_Standard_Unit, Std_Standard_File);
@@ -338,7 +338,7 @@ package body Std_Package is
 
       -- Adding "package STANDARD is"
       Standard_Package := Create_Std_Iir (Iir_Kind_Package_Declaration);
-      Set_Identifier (Standard_Package, Name_Standard);
+      Set_Std_Identifier (Standard_Package, Name_Standard);
       Set_Need_Body (Standard_Package, False);
 
       Set_Library_Unit (Std_Standard_Unit, Standard_Package);
@@ -745,14 +745,6 @@ package body Std_Package is
       Create_Array_Type (Bit_Vector_Type_Definition, Bit_Vector_Type,
                          Bit_Type_Definition, Name_Bit_Vector);
 
-      if Vhdl_Std >= Vhdl_08 then
-         -- integer_vector type.
-         -- type integer_vector is array (natural range <>) of Integer;
-         Create_Array_Type
-           (Integer_Vector_Type_Definition, Integer_Vector_Type,
-            Integer_Type_Definition, Name_Integer_Vector);
-      end if;
-
       -- time definition
       declare
          Time_Staticness : Iir_Staticness;
@@ -951,6 +943,30 @@ package body Std_Package is
          Sem.Compute_Subprogram_Hash (Function_Now);
          Add_Decl (Function_Now);
       end;
+
+      --  VHDL 2008
+      --  Vector types
+      if Vhdl_Std >= Vhdl_08 then
+         --  type Boolean_Vector is array (Natural range <>) of Boolean;
+         Create_Array_Type
+           (Boolean_Vector_Type_Definition, Boolean_Vector_Type,
+            Integer_Type_Definition, Name_Boolean_Vector);
+
+         -- type integer_vector is array (natural range <>) of Integer;
+         Create_Array_Type
+           (Integer_Vector_Type_Definition, Integer_Vector_Type,
+            Integer_Type_Definition, Name_Integer_Vector);
+
+         -- type Real_vector is array (natural range <>) of Real;
+         Create_Array_Type
+           (Real_Vector_Type_Definition, Real_Vector_Type,
+            Real_Type_Definition, Name_Real_Vector);
+
+         -- type Real_vector is array (natural range <>) of Real;
+         Create_Array_Type
+           (Time_Vector_Type_Definition, Time_Vector_Type,
+            Time_Type_Definition, Name_Time_Vector);
+      end if;
 
       --  VHDL93:
       --  type file_open_kind is (read_mode, write_mode, append_mode);

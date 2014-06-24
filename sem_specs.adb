@@ -62,19 +62,14 @@ package body Sem_Specs is
       use Tokens;
    begin
       case Get_Kind (Decl) is
-         when Iir_Kind_Design_Unit =>
-            case Get_Kind (Get_Library_Unit (Decl)) is
-               when Iir_Kind_Entity_Declaration =>
-                  return Tok_Entity;
-               when Iir_Kind_Architecture_Declaration =>
-                  return Tok_Architecture;
-               when Iir_Kind_Configuration_Declaration =>
-                  return Tok_Configuration;
-               when Iir_Kind_Package_Declaration =>
-                  return Tok_Package;
-               when others =>
-                  Error_Kind ("get_entity_class_kind(unit)", Decl);
-            end case;
+         when Iir_Kind_Entity_Declaration =>
+            return Tok_Entity;
+         when Iir_Kind_Architecture_Declaration =>
+            return Tok_Architecture;
+         when Iir_Kind_Configuration_Declaration =>
+            return Tok_Configuration;
+         when Iir_Kind_Package_Declaration =>
+            return Tok_Package;
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration =>
             return Tok_Procedure;
@@ -197,7 +192,7 @@ package body Sem_Specs is
            | Tok_Architecture
            | Tok_Configuration
            | Tok_Package =>
-            if Decl /= Get_Current_Design_Unit then
+            if Get_Design_Unit (Decl) /= Get_Current_Design_Unit then
                Error_Msg_Sem (Disp_Node (Attr) & " must appear immediatly "
                               & "within " & Disp_Node (Decl), Attr);
                return;
@@ -285,36 +280,36 @@ package body Sem_Specs is
         (Flags.Vhdl_Std <= Vhdl_93c
          and then Get_Identifier (Attr_Decl) = Std_Names.Name_Foreign)
       then
+         --  LRM93 12.4
+         --  The 'FOREIGN attribute may be associated only with
+         --  architectures or with subprograms.
+         case Get_Entity_Class (Attr) is
+            when Tok_Architecture =>
+               null;
+
+            when Tok_Function
+              | Tok_Procedure =>
+               --  LRM93 12.4
+               --  In the latter case, the attribute specification must
+               --  appear in the declarative part in which the subprogram
+               --  is declared.
+               --  GHDL: huh, this is the case for any attributes.
+               null;
+
+            when others =>
+               Error_Msg_Sem
+                 ("'FOREIGN allowed only for architectures and subprograms",
+                  Attr);
+               return;
+         end case;
+
+         Set_Foreign_Flag (Decl, True);
+
          declare
             use Back_End;
-            Decl1 : Iir;
          begin
-            --  LRM93 12.4
-            --  The 'FOREIGN attribute may be associated only with
-            --  architectures or with subprograms.
-            case Get_Entity_Class (Attr) is
-               when Tok_Architecture =>
-                  Decl1 := Get_Library_Unit (Decl);
-
-               when Tok_Function
-                 | Tok_Procedure =>
-                  --  LRM93 12.4
-                  --  In the latter case, the attribute specification must
-                  --  appear in the declarative part in which the subprogram
-                  --  is declared.
-                  --  GHDL: huh, this is the case for any attributes.
-                  Decl1 := Decl;
-
-               when others =>
-                  Error_Msg_Sem
-                    ("'FOREIGN allowed only for architectures and subprograms",
-                     Attr);
-                  return;
-            end case;
-
-            Set_Foreign_Flag (Decl1, True);
-            if Back_End.Sem_Foreign /= null then
-               Back_End.Sem_Foreign.all (Decl);
+            if Sem_Foreign /= null then
+               Sem_Foreign.all (Decl);
             end if;
          end;
       end if;
@@ -357,7 +352,7 @@ package body Sem_Specs is
       procedure Sem_Named_Entity (Ent : Iir) is
       begin
          case Get_Kind (Ent) is
-            when Iir_Kind_Design_Unit
+            when Iir_Kinds_Library_Unit_Declaration
               | Iir_Kinds_Concurrent_Statement
               | Iir_Kinds_Function_Declaration
               | Iir_Kinds_Procedure_Declaration
@@ -519,7 +514,7 @@ package body Sem_Specs is
               | Iir_Kind_Architecture_Declaration
               | Iir_Kind_Configuration_Declaration
               | Iir_Kind_Package_Declaration =>
-               Sem_Named_Entity (Get_Design_Unit (Scope));
+               Sem_Named_Entity (Scope);
             when others =>
                null;
          end case;
@@ -954,7 +949,7 @@ package body Sem_Specs is
             Arch := Get_Architecture (Aspect);
             if Arch /= Null_Iir then
                Arch_Unit := Libraries.Find_Secondary_Unit
-                 (New_Entity, Get_Identifier (Arch));
+                 (Get_Design_Unit (New_Entity), Get_Identifier (Arch));
                if Arch_Unit /= Null_Iir then
                   Xref_Ref (Arch, Arch_Unit);
                end if;
@@ -964,6 +959,8 @@ package body Sem_Specs is
                --  Note: the design needs the architecture.
                Add_Dependence (Aspect);
             end if;
+            return New_Entity;
+
          when Iir_Kind_Entity_Aspect_Configuration =>
             Conf := Get_Configuration (Aspect);
             Conf := Find_Declaration (Conf, Decl_Configuration);
@@ -974,15 +971,14 @@ package body Sem_Specs is
             --  Note: dependency is added by Find_Declaration.
             Set_Configuration (Aspect, Conf);
 
-            Libraries.Load_Design_Unit (Conf, Aspect);
-            New_Entity := Get_Entity (Get_Library_Unit (Conf));
+            return Get_Entity (Conf);
+
          when Iir_Kind_Entity_Aspect_Open =>
             return Null_Iir;
+
          when others =>
             Error_Kind ("sem_entity_aspect", Aspect);
       end case;
-      Libraries.Load_Design_Unit (New_Entity, Aspect);
-      return Get_Library_Unit (New_Entity);
    end Sem_Entity_Aspect;
 
    procedure Sem_Binding_Indication (Bind : Iir_Binding_Indication;
@@ -1023,8 +1019,7 @@ package body Sem_Specs is
                else
                   case Get_Kind (Primary_Entity_Aspect) is
                      when Iir_Kind_Entity_Aspect_Entity =>
-                        Entity := Get_Library_Unit
-                          (Get_Entity (Primary_Entity_Aspect));
+                        Entity := Get_Entity (Primary_Entity_Aspect);
                      when others =>
                         Error_Kind
                           ("sem_binding_indication", Primary_Entity_Aspect);
@@ -1390,7 +1385,7 @@ package body Sem_Specs is
       Res := Create_Iir (Iir_Kind_Binding_Indication);
       Aspect := Create_Iir (Iir_Kind_Entity_Aspect_Entity);
       Location_Copy (Aspect, Parent);
-      Set_Entity (Aspect, Design_Unit);
+      Set_Entity (Aspect, Entity);
       Set_Entity_Aspect (Res, Aspect);
 
       --  LRM 5.2.2

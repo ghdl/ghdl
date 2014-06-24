@@ -1475,7 +1475,7 @@ package body Sem_Assocs is
             if Inter = Null_Iir then
                if Finish then
                   Error_Msg_Sem
-                    ("too many arguments for " & Disp_Node (Loc), Assoc);
+                    ("too many actuals for " & Disp_Node (Loc), Assoc);
                end if;
                Match := False;
                return;

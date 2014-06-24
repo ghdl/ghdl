@@ -274,6 +274,15 @@ package body Iirs_Utils is
       if Unit = Target then
          return;
       end if;
+
+      case Get_Kind (Unit) is
+         when Iir_Kind_Design_Unit
+           | Iir_Kind_Entity_Aspect_Entity =>
+            null;
+         when others =>
+            Error_Kind ("add_dependence", Unit);
+      end case;
+
       Add_Element (Get_Dependence_List (Target), Unit);
    end Add_Dependence;
 
@@ -801,10 +810,10 @@ package body Iirs_Utils is
          when Iir_Kind_Component_Declaration =>
             return Aspect;
          when Iir_Kind_Entity_Aspect_Entity =>
-            return Get_Library_Unit (Get_Entity (Aspect));
+            return Get_Entity (Aspect);
          when Iir_Kind_Entity_Aspect_Configuration =>
-            Inst := Get_Library_Unit (Get_Configuration (Aspect));
-            return Get_Library_Unit (Get_Entity (Inst));
+            Inst := Get_Configuration (Aspect);
+            return Get_Entity (Inst);
          when Iir_Kind_Entity_Aspect_Open =>
             return Null_Iir;
          when others =>

@@ -24,7 +24,6 @@ with Errorout; use Errorout;
 with Evaluation;
 with Iirs_Utils; use Iirs_Utils;
 with Annotations; use Annotations;
-with Flags;
 with Name_Table;
 with File_Operation;
 with Debugger; use Debugger;
@@ -1962,32 +1961,29 @@ package body Execution is
                Index_Order : Order;
                -- Lower and upper bounds of the slice.
                Low, High: Iir_Index32;
-
-               use Flags;
             begin
                Srange := Execute_Bounds (Block, Get_Suffix (Expr));
 
                Prefix := Get_Prefix (Expr);
 
-               -- LRM93 §6.5: It is an error if either of the bounds of the
-               -- discrete range does not belong to the index range of the
-               -- prefixing array, unless the slice is a null slice.
                Execute_Name_With_Base
                  (Block, Prefix, Base, Prefix_Array, Is_Sig);
                if Prefix_Array = null then
                   raise Internal_Error;
                end if;
 
-               -- Check for null slice.
+               --  LRM93 6.5
+               --  It is an error if the direction of the discrete range is not
+               --  the same as that of the index range of the array denoted by
+               --  the prefix of the slice name.
                if Srange.Dir /= Prefix_Array.Bounds.D (1).Dir then
-                  if Vhdl_Std = Vhdl_87 then
-                     Res := null;  -- FIXME
-                     return;
-                  else
-                     raise Internal_Error;
-                  end if;
+                  Error_Msg_Exec ("slice direction mismatch", Expr);
                end if;
 
+               --  LRM93 6.5
+               --  It is an error if either of the bounds of the
+               --  discrete range does not belong to the index range of the
+               --  prefixing array, unless the slice is a null slice.
                Index_Order := Compare_Value (Srange.Left, Srange.Right);
                if (Srange.Dir = Iir_To and Index_Order = Greater)
                  or (Srange.Dir = Iir_Downto and Index_Order = Less)
@@ -2578,6 +2574,11 @@ package body Execution is
             Res := Execute_Indexes
               (Block, Get_Prefix (Expr), Get_Value (Get_Parameter (Expr)));
             return Execute_Length (Res);
+
+         when Iir_Kind_Ascending_Array_Attribute =>
+            Res := Execute_Indexes
+              (Block, Get_Prefix (Expr), Get_Value (Get_Parameter (Expr)));
+            return Boolean_To_Lit (Res.Dir = Iir_To);
 
          when Iir_Kind_Event_Attribute =>
             Res := Execute_Name (Block, Get_Prefix (Expr), True);

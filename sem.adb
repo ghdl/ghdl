@@ -58,14 +58,11 @@ package body Sem is
    end Add_Dependence;
 
    --  LRM 1.1  Entity declaration.
-   procedure Sem_Entity_Declaration (Entity: Iir_Entity_Declaration)
-   is
-      Unit : Iir_Design_Unit;
+   procedure Sem_Entity_Declaration (Entity: Iir_Entity_Declaration) is
    begin
-      Unit := Get_Design_Unit (Entity);
       Xrefs.Xref_Decl (Entity);
-      Sem_Scopes.Add_Name (Unit);
-      Set_Visible_Flag (Unit, True);
+      Sem_Scopes.Add_Name (Entity);
+      Set_Visible_Flag (Entity, True);
 
       Set_Is_Within_Flag (Entity, True);
 
@@ -94,51 +91,49 @@ package body Sem is
    is
       Name : Iir;
       Library : Iir_Library_Declaration;
-      Entity_Unit : Iir;
-      Entity_Library : Iir;
+      Entity : Iir;
    begin
       Name := Get_Entity (Library_Unit);
       Library := Get_Library
         (Get_Design_File (Get_Design_Unit (Library_Unit)));
       if Get_Kind (Name) = Iir_Kind_Simple_Name then
-         Entity_Unit := Libraries.Load_Primary_Unit
+         Entity := Libraries.Load_Primary_Unit
            (Library, Get_Identifier (Name), Library_Unit);
-         if Entity_Unit = Null_Iir then
+         if Entity = Null_Iir then
             Error_Msg_Sem ("entity " & Disp_Node (Name) & " was not analysed",
                            Library_Unit);
             return Null_Iir;
          end if;
-         Set_Named_Entity (Name, Entity_Unit);
+         Entity := Get_Library_Unit (Entity);
+         Set_Named_Entity (Name, Entity);
       else
          Sem_Name (Name, False);
-         Entity_Unit := Get_Named_Entity (Name);
-         if Entity_Unit = Error_Mark then
+         Entity := Get_Named_Entity (Name);
+         if Entity = Error_Mark then
             return Null_Iir;
          end if;
       end if;
-      if Get_Kind (Entity_Unit) = Iir_Kind_Design_Unit then
-         Entity_Library := Get_Library_Unit (Entity_Unit);
-         Xrefs.Xref_Ref (Name, Entity_Library);
-         if Get_Kind (Entity_Library) = Iir_Kind_Entity_Declaration then
-            --  LRM 1.2 Architecture bodies
-            --  For a given design entity, both the entity declaration and the
-            --  associated architecture body must reside in the same library.
+      Xrefs.Xref_Ref (Name, Entity);
+      if Get_Kind (Entity) = Iir_Kind_Entity_Declaration then
+         --  LRM 1.2 Architecture bodies
+         --  For a given design entity, both the entity declaration and the
+         --  associated architecture body must reside in the same library.
 
-            --  LRM 1.3 Configuration Declarations
-            --  For a configuration of a given design entity, both the
-            --  configuration declaration and the corresponding entity
-            --  declaration must reside in the same library.
-            if Get_Library (Get_Design_File (Entity_Unit)) /= Library then
-               Error_Msg_Sem
-                 (Disp_Node (Entity_Library) & " does not reside in "
-                  & Disp_Node (Library), Library_Unit);
-               return Null_Iir;
-            end if;
-            return Entity_Unit;
+         --  LRM 1.3 Configuration Declarations
+         --  For a configuration of a given design entity, both the
+         --  configuration declaration and the corresponding entity
+         --  declaration must reside in the same library.
+         if Get_Library (Get_Design_File (Get_Design_Unit (Entity))) /= Library
+         then
+            Error_Msg_Sem
+              (Disp_Node (Entity) & " does not reside in "
+                 & Disp_Node (Library), Library_Unit);
+            return Null_Iir;
          end if;
+         return Entity;
       end if;
 
-      Error_Msg_Sem ("entity name expected, found " & Disp_Node (Entity_Unit),
+      Error_Msg_Sem ("entity name expected, found " & Disp_Node (Entity),
                      Library_Unit);
       return Null_Iir;
    end Sem_Entity_Name;
@@ -146,17 +141,16 @@ package body Sem is
    --  LRM 1.2  Architecture bodies.
    procedure Sem_Architecture_Declaration (Arch: Iir_Architecture_Declaration)
    is
-      Unit : Iir_Design_Unit;
       Entity_Unit : Iir_Design_Unit;
       Entity_Library : Iir_Entity_Declaration;
    begin
       Xrefs.Xref_Decl (Arch);
       -- First, find the entity.
-      Entity_Unit := Sem_Entity_Name (Arch);
-      if Entity_Unit = Null_Iir then
+      Entity_Library := Sem_Entity_Name (Arch);
+      if Entity_Library = Null_Iir then
          return;
       end if;
-      Entity_Library := Get_Library_Unit (Entity_Unit);
+      Entity_Unit := Get_Design_Unit (Entity_Library);
 
       --  LRM93 11.4
       --   In each case, the second unit depends on the first unit.
@@ -173,7 +167,8 @@ package body Sem is
 
       --  Makes the entity name visible.
       --  FIXME: quote LRM.
-      Sem_Scopes.Add_Name (Entity_Unit, Get_Identifier (Entity_Unit), False);
+      Sem_Scopes.Add_Name
+        (Entity_Library, Get_Identifier (Entity_Library), False);
 
       --  LRM 10.1 Declarative Region
       --  1. An entity declaration, together with a corresponding architecture
@@ -188,9 +183,8 @@ package body Sem is
       --  declarative part of the corresponding entity declaration.
       --
       --  FIXME: before VHDL-02, an architecture is not a declaration.
-      Unit := Get_Design_Unit (Arch);
-      Sem_Scopes.Add_Name (Unit, Get_Identifier (Unit), True);
-      Set_Visible_Flag (Unit, True);
+      Sem_Scopes.Add_Name (Arch, Get_Identifier (Arch), True);
+      Set_Visible_Flag (Arch, True);
 
       --  LRM02 10.1  Declarative region
       --  The declarative region associated with an architecture body is
@@ -539,28 +533,29 @@ package body Sem is
    --  LRM 1.3  Configuration Declarations.
    procedure Sem_Configuration_Declaration (Decl: Iir)
    is
-      Unit : Iir_Design_Unit;
-      Entity_Design: Iir_Design_Unit;
+      Entity: Iir_Entity_Declaration;
+      Entity_Unit : Iir_Design_Unit;
    begin
       Xref_Decl (Decl);
 
       --  LRM 1.3
       --  The entity name identifies the name of the entity declaration that
       --  defines the design entity at the apex of the design hierarchy.
-      Entity_Design := Sem_Entity_Name (Decl);
-      if Entity_Design = Null_Iir then
+      Entity := Sem_Entity_Name (Decl);
+      if Entity = Null_Iir then
          return;
       end if;
-      Set_Entity (Decl, Entity_Design);
+      Set_Entity (Decl, Entity);
+      Entity_Unit := Get_Design_Unit (Entity);
 
       --  LRM 11.4
       --  A primary unit whose name is referenced within a given design unit
       --  must be analyzed prior to the analysis of the given design unit.
-      Add_Dependence (Entity_Design);
+      Add_Dependence (Entity_Unit);
 
-      Unit := Get_Design_Unit (Decl);
-      Sem_Scopes.Add_Name (Unit);
-      Set_Visible_Flag (Unit, True);
+      Sem_Scopes.Add_Name (Entity);
+
+      Set_Visible_Flag (Decl, True);
 
       --  LRM 10.1 Declarative Region
       --  2.  A configuration declaration.
@@ -572,8 +567,8 @@ package body Sem is
       --  it be an external block defined by a design entity or an internal
       --  block defined by a block statement) extends into a configuration
       --  declaration that configures the given block.
-      Add_Context_Clauses (Entity_Design);
-      Sem_Scopes.Add_Entity_Declarations (Get_Library_Unit (Entity_Design));
+      Add_Context_Clauses (Entity_Unit);
+      Sem_Scopes.Add_Entity_Declarations (Entity);
 
       Sem_Declaration_Chain (Decl);
       --  GHDL: no need to check for missing subprogram bodies, since they are
@@ -618,7 +613,8 @@ package body Sem is
                --  block configuration for an external block whose interface
                --  is defined by that entity declaration.
                Design := Libraries.Load_Secondary_Unit
-                 (Get_Entity (Father), Get_Identifier (Block_Spec),
+                 (Get_Design_Unit (Get_Entity (Father)),
+                  Get_Identifier (Block_Spec),
                   Block_Conf);
                if Design = Null_Iir then
                   Error_Msg_Sem
@@ -680,7 +676,8 @@ package body Sem is
                end if;
 
                Design := Libraries.Load_Secondary_Unit
-                 (Get_Entity (Entity_Aspect), Get_Identifier (Block_Spec),
+                 (Get_Design_Unit (Get_Entity (Entity_Aspect)),
+                  Get_Identifier (Block_Spec),
                   Block_Conf);
                if Design = Null_Iir then
                   Error_Msg_Sem
@@ -1300,8 +1297,9 @@ package body Sem is
    begin
       if not Are_Trees_Equal (Subprg, Spec) then
          --  FIXME: should explain why it does not conform ?
-         Error_Msg_Sem ("body does not conform with specification at "
-                        & Disp_Location (Spec), Subprg);
+         Error_Msg_Sem ("body of " & Disp_Node (Subprg)
+                          & " does not conform with specification at "
+                          & Disp_Location (Spec), Subprg);
       end if;
    end Check_Conformance_Rules;
 
@@ -1798,7 +1796,7 @@ package body Sem is
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration =>
             Kind := K_Function;
-            Subprg_Bod := Null_Iir;
+            Subprg_Bod := Get_Subprogram_Body (Subprg);
             Subprg_Depth := Get_Subprogram_Depth (Subprg);
             if Get_Pure_Flag (Subprg) then
                Depth := Iir_Depth_Pure;
@@ -1898,7 +1896,8 @@ package body Sem is
                      --  FIXME: check the compare.
                      Depth_Callee := Iir_Depth_Impure;
                      if Kind = K_Function then
-                        Error_Pure (Subprg, Callee, Null_Iir);
+                        --  FIXME: report call location
+                        Error_Pure (Subprg_Bod, Callee, Null_Iir);
                      end if;
                   end if;
 
@@ -2175,8 +2174,8 @@ package body Sem is
       Implicit : Implicit_Signal_Declaration_Type;
    begin
       Unit := Get_Design_Unit (Decl);
-      Sem_Scopes.Add_Name (Unit);
-      Set_Visible_Flag (Unit, True);
+      Sem_Scopes.Add_Name (Decl);
+      Set_Visible_Flag (Decl, True);
       Xref_Decl (Decl);
 
       --  Identify IEEE.Std_Logic_1164 for VHDL08.
@@ -2287,11 +2286,12 @@ package body Sem is
          Sem_Name (Prefix, False);
          Prefix_Name := Get_Named_Entity (Prefix);
          if Prefix_Name = Error_Mark then
+            --  FIXME: continue with the clauses
             return;
          end if;
 
          --  LRM 10.4 Use Clauses
-
+         --
          --  If the suffix of the selected name is [...], then the
          --  selected name identifies only the declaration(s) of that
          --  [...] contained within the package or library denoted by
@@ -2305,15 +2305,8 @@ package body Sem is
          case Get_Kind (Prefix_Name) is
             when Iir_Kind_Library_Declaration =>
                null;
-            when Iir_Kind_Design_Unit =>
-               if Get_Kind (Get_Library_Unit (Prefix_Name))
-                 /= Iir_Kind_Package_Declaration
-               then
-                  Error_Msg_Sem ("design unit is not a package", Prefix);
-                  return;
-               end if;
-               Libraries.Load_Design_Unit (Prefix_Name, Clause);
-               Add_Dependence (Prefix_Name);
+            when Iir_Kind_Package_Declaration =>
+               null;
             when others =>
                Error_Msg_Sem ("prefix must designate a package or a library",
                               Prefix);
@@ -2445,7 +2438,7 @@ package body Sem is
       Sem_Scopes.Add_Name (Get_Library (Get_Design_File (Design_Unit)),
                            Std_Names.Name_Work,
                            False);
-      Sem_Scopes.Use_All_Names (Std_Standard_Unit);
+      Sem_Scopes.Use_All_Names (Standard_Package);
       if Get_Dependence_List (Design_Unit) = Null_Iir_List then
          Set_Dependence_List (Design_Unit, Create_Iir_List);
       end if;

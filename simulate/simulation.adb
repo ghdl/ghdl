@@ -1592,8 +1592,7 @@ package body Simulation is
       Instance_Pool := Global_Pool'Access;
 
       Elaboration.Elaborate_Design (Top_Config);
-      Entity := Get_Library_Unit
-        (Get_Entity (Get_Library_Unit (Top_Config)));
+      Entity := Get_Entity (Get_Library_Unit (Top_Config));
 
       if not Is_Empty (Expr_Pool) then
          raise Internal_Error;

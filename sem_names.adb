@@ -1237,7 +1237,7 @@ package body Sem_Names is
       Pfx : Iir;
    begin
       case Get_Kind (Res) is
-         when Iir_Kind_Design_Unit =>
+         when Iir_Kinds_Library_Unit_Declaration =>
             return;
          when Iir_Kind_Block_Statement =>
             --  Part of an expanded name
@@ -1337,6 +1337,14 @@ package body Sem_Names is
       then
          -- not overloaded.
          Res := Get_Declaration (Interpretation);
+
+         --  For a design unit, return the library unit
+         if Get_Kind (Res) = Iir_Kind_Design_Unit then
+            --  FIXME: should replace interpretation ?
+            Libraries.Load_Design_Unit (Res, Name);
+            Sem.Add_Dependence (Res);
+            Res := Get_Library_Unit (Res);
+         end if;
 
          if not Get_Visible_Flag (Res) then
             if Flag_Relaxed_Rules
@@ -1590,14 +1598,14 @@ package body Sem_Names is
                   & """ not found in " & Disp_Node (Prefix), Name);
             else
                Sem.Add_Dependence (Res);
+               Res := Get_Library_Unit (Res);
             end if;
          when Iir_Kind_Process_Statement
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Sensitized_Process_Statement
-           | Iir_Kind_Design_Unit
---            | Iir_Kind_Architecture_Declaration
---            | Iir_Kind_Entity_Declaration
---            | Iir_Kind_Package_Declaration
+           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Declaration
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_For_Loop_Statement =>
@@ -2098,7 +2106,7 @@ package body Sem_Names is
             when Iir_Kind_Psl_Declaration =>
                Res := Sem_Psl.Sem_Psl_Name (Name);
 
-            when Iir_Kind_Design_Unit =>
+            when Iir_Kinds_Library_Unit_Declaration =>
                Error_Msg_Sem ("function name is a design unit", Name);
 
             when others =>
@@ -2265,11 +2273,10 @@ package body Sem_Names is
            | Iir_Kind_Unit_Declaration
            | Iir_Kinds_Sequential_Statement
            | Iir_Kinds_Concurrent_Statement
-           | Iir_Kind_Component_Declaration =>
+           | Iir_Kind_Component_Declaration
+           | Iir_Kinds_Library_Unit_Declaration =>
             --  FIXME: to complete
             null;
-         when Iir_Kind_Design_Unit =>
-            Sem.Add_Dependence (Prefix);
          when others =>
             Error_Kind ("sem_user_attribute", Prefix);
       end case;
@@ -2855,7 +2862,7 @@ package body Sem_Names is
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_File_Declaration
-           | Iir_Kind_Design_Unit
+           | Iir_Kinds_Library_Unit_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration =>
             null;
 
@@ -3451,25 +3458,6 @@ package body Sem_Names is
          end if;
       end Check_Kind;
 
-      function Check_Kind_Unit (Res: Iir; Kind : Iir_Kind; Str: String)
-        return Iir
-      is
-         Res_Kind : Iir_Kind;
-      begin
-         if Get_Kind (Res) /= Iir_Kind_Design_Unit then
-            Error (Res, Str);
-            return Null_Iir;
-         end if;
-
-         Res_Kind := Get_Kind (Get_Library_Unit (Res));
-         if Res_Kind /= Kind then
-            Error (Res, Str);
-            return Null_Iir;
-         else
-            return Res;
-         end if;
-      end Check_Kind_Unit;
-
       Res: Iir;
    begin
       Sem_Name (Name, False);
@@ -3525,11 +3513,10 @@ package body Sem_Names is
          when Decl_Label =>
             null;
          when Decl_Entity =>
-            Res := Check_Kind_Unit
-              (Res, Iir_Kind_Entity_Declaration, "entity");
+            Res := Check_Kind (Res, Iir_Kind_Entity_Declaration, "entity");
          when Decl_Configuration =>
-            Res := Check_Kind_Unit (Res, Iir_Kind_Configuration_Declaration,
-                                    "configuration");
+            Res := Check_Kind (Res, Iir_Kind_Configuration_Declaration,
+                               "configuration");
          when Decl_Group_Template =>
             Res := Check_Kind (Res, Iir_Kind_Group_Template_Declaration,
                                "group template");

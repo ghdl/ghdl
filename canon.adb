@@ -1723,7 +1723,6 @@ package body Canon is
                                                 Binding : Iir)
    is
       Aspect : Iir;
-      Unit : Iir;
    begin
       if Binding = Null_Iir then
          return;
@@ -1735,20 +1734,17 @@ package body Canon is
       case Get_Kind (Aspect) is
          when Iir_Kind_Entity_Aspect_Entity =>
             if Get_Architecture (Aspect) /= Null_Iir then
-               Unit := Aspect;
+               Add_Dependence (Top, Aspect);
             else
-               Unit := Get_Entity (Aspect);
+               Add_Dependence (Top, Get_Design_Unit (Get_Entity (Aspect)));
             end if;
          when Iir_Kind_Entity_Aspect_Configuration =>
-            Unit := Get_Configuration (Aspect);
+            Add_Dependence (Top, Get_Design_Unit (Get_Configuration (Aspect)));
          when Iir_Kind_Entity_Aspect_Open =>
-            Unit := Null_Iir;
+            null;
          when others =>
             Error_Kind ("add_binding_indication_dependence", Aspect);
       end case;
-      if Unit /= Null_Iir then
-         Add_Dependence (Top, Unit);
-      end if;
    end Add_Binding_Indication_Dependence;
 
    --  Canon the component_configuration or configuration_specification CFG.
@@ -1825,7 +1821,7 @@ package body Canon is
                   if Get_Kind (Entity_Aspect) = Iir_Kind_Entity_Aspect_Entity
                     and then Get_Architecture (Entity_Aspect) = Null_Iir
                   then
-                     Entity := Get_Library_Unit (Get_Entity (Entity_Aspect));
+                     Entity := Get_Entity (Entity_Aspect);
                      if Get_Kind (Entity) /= Iir_Kind_Entity_Declaration then
                         raise Internal_Error;
                      end if;
@@ -2664,24 +2660,24 @@ package body Canon is
      (Arch : Iir_Architecture_Declaration)
      return Iir_Design_Unit
    is
-      Loc : Location_Type;
+      Loc : constant Location_Type := Get_Location (Arch);
       Config : Iir_Configuration_Declaration;
       Res : Iir_Design_Unit;
       Entity : Iir_Entity_Declaration;
       Blk_Cfg : Iir_Block_Configuration;
    begin
-      Loc := Get_Location (Arch);
       Res := Create_Iir (Iir_Kind_Design_Unit);
       Set_Location (Res, Loc);
       Set_Parent (Res, Get_Parent (Get_Design_Unit (Arch)));
       Set_Date_State (Res, Date_Analyze);
       Set_Date (Res, Date_Uptodate);
+
       Config := Create_Iir (Iir_Kind_Configuration_Declaration);
       Set_Location (Config, Loc);
       Set_Library_Unit (Res, Config);
       Set_Design_Unit (Config, Res);
       Entity := Get_Entity (Arch);
-      Set_Entity (Config, Get_Design_Unit (Entity));
+      Set_Entity (Config, Entity);
       Set_Dependence_List (Res, Create_Iir_List);
       Add_Dependence (Res, Get_Design_Unit (Entity));
       Add_Dependence (Res, Get_Design_Unit (Arch));

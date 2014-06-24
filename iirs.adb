@@ -1775,14 +1775,14 @@ package body Iirs is
    function Get_Architecture (Target : Iir_Entity_Aspect_Entity) return Iir is
    begin
       Check_Kind_For_Architecture (Target);
-      return Get_Field2 (Target);
+      return Get_Field3 (Target);
    end Get_Architecture;
 
    procedure Set_Architecture (Target : Iir_Entity_Aspect_Entity; Arch : Iir)
       is
    begin
       Check_Kind_For_Architecture (Target);
-      Set_Field2 (Target, Arch);
+      Set_Field3 (Target, Arch);
    end Set_Architecture;
 
    procedure Check_Kind_For_Block_Specification (Target : Iir) is
@@ -1859,6 +1859,10 @@ package body Iirs is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Architecture_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Group_Declaration
@@ -1983,13 +1987,13 @@ package body Iirs is
    function Get_Entity (Decl : Iir) return Iir is
    begin
       Check_Kind_For_Entity (Decl);
-      return Get_Field4 (Decl);
+      return Get_Field2 (Decl);
    end Get_Entity;
 
    procedure Set_Entity (Decl : Iir; Entity : Iir) is
    begin
       Check_Kind_For_Entity (Decl);
-      Set_Field4 (Decl, Entity);
+      Set_Field2 (Decl, Entity);
    end Set_Entity;
 
    procedure Check_Kind_For_Package (Target : Iir) is
@@ -2028,13 +2032,13 @@ package body Iirs is
    function Get_Package_Body (Pkg : Iir) return Iir_Package_Body is
    begin
       Check_Kind_For_Package_Body (Pkg);
-      return Get_Field4 (Pkg);
+      return Get_Field2 (Pkg);
    end Get_Package_Body;
 
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir_Package_Body) is
    begin
       Check_Kind_For_Package_Body (Pkg);
-      Set_Field4 (Pkg, Decl);
+      Set_Field2 (Pkg, Decl);
    end Set_Package_Body;
 
    procedure Check_Kind_For_Need_Body (Target : Iir) is
@@ -3556,12 +3560,15 @@ package body Iirs is
    procedure Check_Kind_For_Visible_Flag (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Design_Unit
-           | Iir_Kind_Record_Element_Constraint
+         when Iir_Kind_Record_Element_Constraint
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Architecture_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration

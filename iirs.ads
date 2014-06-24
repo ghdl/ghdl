@@ -65,12 +65,11 @@ package Iirs is
    -- To add a new kind of node:
    --   the name should be of the form iir_kind_NAME
    --   add iir_kind_NAME in the definition of type iir_kind_type
-   --   add a declaration of access type of name iir_kind_NAME_acc
    --   document the node below: grammar, methods.
    --   for each methods, add the name if the case statement in the body
    --     (this enables the methods)
-   --   add an entry in create_iir and free_iir
    --   add an entry in disp_tree (debugging)
+   --   handle this node in Errorout.Disp_Node
 
    -------------------------------------------------
    -- General methods (can be used on all nodes): --
@@ -181,8 +180,6 @@ package Iirs is
    --
    -- Flag used during elaboration.  Set when the file was already seen.
    --   Get/Set_Elab_Flag (Flag3)
-   --
-   --   Get/Set_Visible_Flag (Flag4)
 
    -- Iir_Kind_Library_Clause (Short)
    -- Note: a library_clause node is created for every logical_name.
@@ -410,11 +407,11 @@ package Iirs is
    --
    -- Parse: a name
    -- Sem: a design unit
-   --   Get/Set_Entity (Field4)
+   --   Get/Set_Entity (Field2)
    --
    -- parse: a simple name.
    -- sem: an architecture declaration or NULL_IIR.
-   --   Get/Set_Architecture (Field2)
+   --   Get/Set_Architecture (Field3)
 
    -- Iir_Kind_Entity_Aspect_Open (Short)
 
@@ -611,11 +608,15 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
    --   Get/Set_Concurrent_Statement_Chain (Field5)
    --
    --   Get/Set_Generic_Chain (Field6)
    --
    --   Get/Set_Port_Chain (Field7)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
 
@@ -626,18 +627,21 @@ package Iirs is
    --
    --   Get_Declaration_Chain (Field1)
    --
-   --   Get/Set_Identifier (Field3)
-   --
    -- Entity declaration for the architecture.
    -- Before the semantic pass, it can be a name.
-   --   Get/Set_Entity (Field4)
+   --   Get/Set_Entity (Field2)
    --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
    --   Get/Set_Concurrent_Statement_Chain (Field5)
    --
    -- The default configuration created by canon.  This is a design unit.
    --   Get/Set_Default_Configuration_Declaration (Field6)
    --
    --   Get/Set_Foreign_Flag (Flag3)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
 
@@ -648,13 +652,17 @@ package Iirs is
    --
    --   Get_Declaration_Chain (Field1)
    --
-   --   Get/Set_Identifier (Field3)
-   --
    -- Set the entity of a configuration (a design_unit)
    -- Before the semantic pass, it can be an identifier.
-   --   Get/Set_Entity (Field4)
+   --   Get/Set_Entity (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Block_Configuration (Field5)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
 
    -- Iir_Kind_Package_Declaration (Medium)
    --
@@ -663,15 +671,19 @@ package Iirs is
    --
    --   Get_Declaration_Chain (Field1)
    --
+   --   Get/Set_Package_Body (Field2)
+   --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Package_Body (Field4)
-   --
    --   Get/Set_Generic_Chain (Field6)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
    --   Get/Set_Need_Body (Flag1)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
 
    -- Iir_Kind_Package_Body (Short)
    -- Note: a body is not a declaration, that's the reason why there is no
@@ -4457,7 +4469,7 @@ package Iirs is
    function Get_Same_Alternative_Flag (Target : Iir) return Boolean;
    procedure Set_Same_Alternative_Flag (Target : Iir; Val : Boolean);
 
-   --  Field: Field2
+   --  Field: Field3
    function Get_Architecture (Target : Iir_Entity_Aspect_Entity) return Iir;
    procedure Set_Architecture (Target : Iir_Entity_Aspect_Entity; Arch : Iir);
 
@@ -4500,7 +4512,7 @@ package Iirs is
    function Get_Attribute_Value_Spec_Chain (Target : Iir) return Iir;
    procedure Set_Attribute_Value_Spec_Chain (Target : Iir; Chain : Iir);
 
-   --  Field: Field4
+   --  Field: Field2
    function Get_Entity (Decl : Iir) return Iir;
    procedure Set_Entity (Decl : Iir; Entity : Iir);
 
@@ -4510,7 +4522,7 @@ package Iirs is
    procedure Set_Package (Package_Body : Iir; Decl : Iir_Package_Declaration);
 
    --  The package body corresponding to the package declaration.
-   --  Field: Field4
+   --  Field: Field2
    function Get_Package_Body (Pkg : Iir) return Iir_Package_Body;
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir_Package_Body);
 

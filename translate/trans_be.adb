@@ -135,7 +135,7 @@ package body Trans_Be is
       pragma Unreferenced (Fi);
    begin
       case Get_Kind (Decl) is
-         when Iir_Kind_Design_Unit =>
+         when Iir_Kind_Architecture_Declaration =>
             Error_Msg_Sem ("FOREIGN architectures are not yet handled", Decl);
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Declaration =>

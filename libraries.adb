@@ -148,7 +148,7 @@ package body Libraries is
             --  Architectures are put with the entity identifier.
             Id := Get_Identifier (Get_Entity (Lib_Unit));
          when others =>
-            Error_Kind ("get_id_for_unit_hash", Lib_Unit);
+            Error_Kind ("get_Hash_Id_For_Unit", Lib_Unit);
       end case;
       return Id mod Unit_Hash_Length;
    end Get_Hash_Id_For_Unit;
@@ -503,7 +503,6 @@ package body Libraries is
             end if;
             Set_Identifier (Library_Unit, Current_Identifier);
             Set_Identifier (Design_Unit, Current_Identifier);
-            Set_Visible_Flag (Design_Unit, True);
 
             if Get_Kind (Library_Unit) = Iir_Kind_Architecture_Declaration then
                Scan_Expect (Tok_Of);
@@ -1390,16 +1389,9 @@ package body Libraries is
                return Find_Primary_Unit (Lib, Get_Suffix_Identifier (Unit));
             end;
          when Iir_Kind_Entity_Aspect_Entity =>
-            declare
-               Prim : Iir_Design_Unit;
-            begin
-               Prim := Find_Design_Unit (Get_Entity (Unit));
-               if Prim = Null_Iir then
-                  return Null_Iir;
-               end if;
-               return Find_Secondary_Unit
-                 (Prim, Get_Identifier (Get_Architecture (Unit)));
-            end;
+            return Find_Secondary_Unit
+              (Get_Design_Unit (Get_Entity (Unit)),
+               Get_Identifier (Get_Architecture (Unit)));
          when others =>
             Error_Kind ("find_design_unit", Unit);
       end case;
