@@ -150,6 +150,12 @@ package Iirs_Utils is
    --  See also Evaluation.Get_Physical_Value.
    function Get_Physical_Literal_Value (Lit : Iir) return Iir_Int64;
 
+   --  Definitions from LRM08 4.7 Package declarations.
+   --  PKG must denote a package declaration.
+   function Is_Simple_Package (Pkg : Iir) return Boolean;
+   function Is_Uninstantiated_Package (Pkg : Iir) return Boolean;
+   function Is_Generic_Mapped_Package (Pkg : Iir) return Boolean;
+
    --  Return TRUE if the base name of NAME is a signal object.
    function Is_Signal_Object (Name: Iir) return Boolean;
 

@@ -142,7 +142,8 @@ package body Libraries is
          when Iir_Kind_Entity_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Body =>
+           | Iir_Kind_Package_Body
+           | Iir_Kind_Package_Instantiation_Declaration =>
             Id := Get_Identifier (Lib_Unit);
          when Iir_Kind_Architecture_Declaration =>
             --  Architectures are put with the entity identifier.
@@ -1225,7 +1226,8 @@ package body Libraries is
                   WR (Image_Identifier (Library_Unit));
                   WR (" of ");
                   WR (Image_Identifier (Get_Entity (Library_Unit)));
-               when Iir_Kind_Package_Declaration =>
+               when Iir_Kind_Package_Declaration
+                 | Iir_Kind_Package_Instantiation_Declaration =>
                   WR ("package ");
                   WR (Image_Identifier (Library_Unit));
                when Iir_Kind_Package_Body =>
@@ -1576,12 +1578,16 @@ package body Libraries is
          then
             case Get_Kind (Get_Library_Unit (Unit)) is
                when Iir_Kind_Package_Declaration
+                 | Iir_Kind_Package_Instantiation_Declaration
                  | Iir_Kind_Entity_Declaration
                  | Iir_Kind_Configuration_Declaration =>
                   --  Only return a primary unit.
                   return Unit;
-               when others =>
+               when Iir_Kind_Package_Body
+                 | Iir_Kind_Architecture_Declaration =>
                   null;
+               when others =>
+                  raise Internal_Error;
             end case;
          end if;
          Unit := Get_Hash_Chain (Unit);

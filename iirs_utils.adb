@@ -860,6 +860,37 @@ package body Iirs_Utils is
       end loop;
    end Is_Signal_Object;
 
+   --  LRM08 4.7 Package declarations
+   --  If the package header is empty, the package declared by a package
+   --  declaration is called a simple package.
+   function Is_Simple_Package (Pkg : Iir) return Boolean is
+   begin
+      return Get_Package_Header (Pkg) = Null_Iir;
+   end Is_Simple_Package;
+
+   --  LRM08 4.7 Package declarations
+   --  If the package header contains a generic clause and no generic map
+   --  aspect, the package is called an uninstantiated package.
+   function Is_Uninstantiated_Package (Pkg : Iir) return Boolean
+   is
+      Header : constant Iir := Get_Package_Header (Pkg);
+   begin
+      return Header /= Null_Iir
+        and then Get_Generic_Map_Aspect_Chain (Header) = Null_Iir;
+   end Is_Uninstantiated_Package;
+
+   --  LRM08 4.7 Package declarations
+   --  If the package header contains both a generic clause and a generic
+   --  map aspect, the package is declared a generic-mapped package.
+   function Is_Generic_Mapped_Package (Pkg : Iir) return Boolean
+   is
+      Header : constant Iir := Get_Package_Header (Pkg);
+   begin
+      return Header /= Null_Iir
+        and then Get_Generic_Map_Aspect_Chain (Header) /= Null_Iir;
+   end Is_Generic_Mapped_Package;
+
+
    function Get_HDL_Node (N : PSL_Node) return Iir is
    begin
       return Iir (PSL.Nodes.Get_HDL_Node (N));

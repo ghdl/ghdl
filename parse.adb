@@ -190,6 +190,16 @@ package body Parse is
       end loop;
    end Eat_Tokens_Until_Semi_Colon;
 
+   --  Expect and scan ';' emit an error message using MSG if not present.
+   procedure Scan_Semi_Colon (Msg : String) is
+   begin
+      if Current_Token /= Tok_Semi_Colon then
+         Error_Msg_Parse ("missing "";"" at end of " & Msg);
+      else
+         Scan;
+      end if;
+   end Scan_Semi_Colon;
+
    --  precond : next token
    --  postcond: next token.
    --
@@ -1175,21 +1185,17 @@ package body Parse is
          El := Get_Chain (El);
       end loop;
 
-      if Current_Token /= Tok_Semi_Colon then
-         Error_Msg_Parse ("missing "";"" at end of port clause");
-      else
-         Scan;
-      end if;
+      Scan_Semi_Colon ("port clause");
       Set_Port_Chain (Parent, Res);
    end Parse_Port_Clause;
 
    --  precond : GENERIC
    --  postcond: next token
    --
-   --  [ §1.1.1 ]
+   --  [ LRM93 1.1.1, LRM08 6.5.6.2 ]
    --  generic_clause ::= GENERIC ( generic_list ) ;
    --
-   --  [ §1.1.1.1]
+   --  [ LRM93 1.1.1.1, LRM08 6.5.6.2]
    --  generic_list ::= GENERIC_interface_list
    procedure Parse_Generic_Clause (Parent : Iir)
    is
@@ -1203,12 +1209,9 @@ package body Parse is
       Scan;
       Res := Parse_Interface_Chain
         (Iir_Kind_Constant_Interface_Declaration, Parent);
-      if Current_Token /= Tok_Semi_Colon then
-         Error_Msg_Parse ("missing "";"" at end of generic clause");
-      else
-         Scan;
-      end if;
       Set_Generic_Chain (Parent, Res);
+
+      Scan_Semi_Colon ("generic clause");
    end Parse_Generic_Clause;
 
    --  precond : a token.
@@ -1462,17 +1465,25 @@ package body Parse is
    begin
       Res := Create_Iir (Iir_Kind_Physical_Type_Definition);
       Set_Location (Res);
+
+      --  Eat 'units'
       Expect (Tok_Units);
       Scan;
+
       --  Parse primary unit.
       Expect (Tok_Identifier);
       Unit := Create_Iir (Iir_Kind_Unit_Declaration);
       Set_Location (Unit);
       Set_Identifier (Unit, Current_Identifier);
+
+      --  Skip identifier
+      Scan;
+
+      Scan_Semi_Colon ("primary unit");
+
       Build_Init (Last);
       Append (Last, Res, Unit);
-      Scan_Expect (Tok_Semi_Colon);
-      Scan;
+
       --  Parse secondary units.
       while Current_Token /= Tok_End loop
          Unit := Create_Iir (Iir_Kind_Unit_Declaration);
@@ -1490,8 +1501,7 @@ package body Parse is
                Error_Msg_Parse ("a physical literal is expected here");
          end case;
          Append (Last, Res, Unit);
-         Expect (Tok_Semi_Colon);
-         Scan;
+         Scan_Semi_Colon ("secondary unit");
       end loop;
       Scan;
       Expect (Tok_Units);
@@ -1555,8 +1565,7 @@ package body Parse is
          Subtype_Indication := Parse_Subtype_Indication;
          Set_Type (First, Subtype_Indication);
          First := Null_Iir;
-         Expect (Tok_Semi_Colon);
-         Scan;
+         Scan_Semi_Colon ("element declaration");
          exit when Current_Token = Tok_End;
       end loop;
       Scan_Expect (Tok_Record);
@@ -4810,21 +4819,31 @@ package body Parse is
                   end if;
                   Build_Init (Last_Assoc);
                   while Current_Token /= Tok_End loop
+                     --  Eat 'when'
                      Expect (Tok_When);
                      Scan;
+
                      if Current_Token = Tok_Double_Arrow then
                         Error_Msg_Parse ("missing expression in alternative");
+                        Assoc := Create_Iir (Iir_Kind_Choice_By_Expression);
+                        Set_Location (Assoc);
                      else
                         Assoc := Parse_Choices (Null_Iir);
                      end if;
+
+                     --  Eat '=>'
                      Expect (Tok_Double_Arrow);
                      Scan;
+
                      Set_Associated
                        (Assoc, Parse_Sequential_Statements (Stmt));
                      Append_Subchain (Last_Assoc, Stmt, Assoc);
                   end loop;
+
+                  --  Eat 'end', 'case'
                   Scan_Expect (Tok_Case);
                   Scan;
+
                   if Flags.Vhdl_Std >= Vhdl_93c then
                      Check_End_Name (Stmt);
                   end if;
@@ -4845,8 +4864,7 @@ package body Parse is
                Set_Label (Stmt, Label);
             end if;
          end if;
-         Expect (Tok_Semi_Colon);
-         Scan;
+         Scan_Semi_Colon ("statement");
 
          --  Append it to the chain.
          if First_Stmt = Null_Iir then
@@ -5247,7 +5265,7 @@ package body Parse is
    --  precond : GENERIC
    --  postcond: next token
    --
-   --  [ §5.2.1.2 ]
+   --  [ LRM93 5.2.1.2, LRM08 6.5.7.2 ]
    --  generic_map_aspect ::= GENERIC MAP ( GENERIC_association_list )
    function Parse_Generic_Map_Aspect return Iir is
    begin
@@ -5354,16 +5372,14 @@ package body Parse is
          Parse_Generic_Clause (Res);
          if Current_Token = Tok_Generic then
             Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
-            Expect (Tok_Semi_Colon);
-            Scan;
+            Scan_Semi_Colon ("generic map aspect");
          end if;
       end if;
       if Current_Token = Tok_Port then
          Parse_Port_Clause (Res);
          if Current_Token = Tok_Port then
             Set_Port_Map_Aspect_Chain (Res, Parse_Port_Map_Aspect);
-            Expect (Tok_Semi_Colon);
-            Scan;
+            Scan_Semi_Colon ("port map aspect");
          end if;
       end if;
       return Res;
@@ -6106,8 +6122,7 @@ package body Parse is
            | Tok_Generic
            | Tok_Port =>
             Set_Binding_Indication (Res, Parse_Binding_Indication);
-            Expect (Tok_Semi_Colon);
-            Scan;
+            Scan_Semi_Colon ("binding indication");
          when others =>
             null;
       end case;
@@ -6361,26 +6376,50 @@ package body Parse is
       Set_Library_Unit (Unit, Res);
    end Parse_Configuration_Declaration;
 
-   --  precond : identifier
+   --  precond : generic
+   --  postcond: next token
+   --
+   --  LRM08 4.7
+   --  package_header ::=
+   --      [ generic_clause               -- LRM08 6.5.6.2
+   --      [ generic_map aspect ; ] ]
+   function Parse_Package_Header return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Package_Header);
+      Parse_Generic_Clause (Res);
+
+      if Current_Token = Tok_Generic then
+         Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
+         Scan_Semi_Colon ("generic map aspect");
+      end if;
+      return Res;
+   end Parse_Package_Header;
+
+   --  precond : token (after 'IS')
    --  postcond: ';'
    --
-   --  [ §2.5 ]
+   --  [ LRM93 2.5, LRM08 4.7 ]
    --  package_declaration ::=
    --      PACKAGE identifier IS
+   --          package_header           -- LRM08
    --          package_declarative_part
    --      END [ PACKAGE ] [ PACKAGE_simple_name ] ;
-   procedure Parse_Package_Declaration (Unit : Iir_Design_Unit)
+   procedure Parse_Package_Declaration (Unit : Iir_Design_Unit; Id : Name_Id)
    is
       Res: Iir_Package_Declaration;
    begin
       Res := Create_Iir (Iir_Kind_Package_Declaration);
       Set_Location (Res);
+      Set_Identifier (Res, Id);
 
-      -- Get identifier.
-      Expect (Tok_Identifier);
-      Set_Identifier (Res, Current_Identifier);
-      Scan_Expect (Tok_Is);
-      Scan;
+      if Current_Token = Tok_Generic then
+         if Vhdl_Std < Vhdl_08 then
+            Error_Msg_Parse ("generic packages not allowed before vhdl 2008");
+         end if;
+         Set_Package_Header (Res, Parse_Package_Header);
+      end if;
 
       Parse_Declarative_Part (Res);
 
@@ -6401,7 +6440,7 @@ package body Parse is
    --  precond : BODY
    --  postcond: ';'
    --
-   --  [ §2.6 ]
+   --  [ LRM93 2.6, LRM08 4.8 ]
    --  package_body ::=
    --      PACKAGE BODY PACKAGE_simple_name IS
    --          package_body_declarative_part
@@ -6435,6 +6474,76 @@ package body Parse is
       Expect (Tok_Semi_Colon);
       Set_Library_Unit (Unit, Res);
    end Parse_Package_Body;
+
+   --  precond : NEW
+   --  postcond: ';'
+   --
+   --  [ LRM08 4.9 ]
+   --  package_instantiation_declaration ::=
+   --      PACKAGE identifier IS NEW uninstantiated_package_name
+   --         [ generic_map_aspect ] ;
+   function Parse_Package_Instantiation_Declaration
+     (Id : Name_Id; Loc : Location_Type)
+     return Iir
+   is
+      Res: Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Package_Instantiation_Declaration);
+      Set_Location (Res, Loc);
+      Set_Identifier (Res, Id);
+
+      --  Skip 'new'
+      Scan;
+
+      Set_Uninstantiated_Name (Res, Parse_Name (False));
+
+      if Current_Token = Tok_Generic then
+         Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
+      end if;
+
+      Expect (Tok_Semi_Colon);
+
+      return Res;
+   end Parse_Package_Instantiation_Declaration;
+
+   --  precond : PACKAGE
+   --  postcond: ';'
+   --
+   --    package_declaration
+   --  | package_body
+   --  | package_instantiation_declaration
+   procedure Parse_Package (Unit : Iir_Design_Unit)
+   is
+      Loc : constant Location_Type := Get_Token_Location;
+      Id : Name_Id;
+   begin
+      --  Skip 'package'
+      Scan;
+
+      if Current_Token = Tok_Body then
+         --  Skip 'body'
+         Scan;
+
+         Parse_Package_Body (Unit);
+      else
+         Expect (Tok_Identifier);
+         Id := Current_Identifier;
+         Scan;
+
+         Expect (Tok_Is);
+         Scan;
+
+         if Current_Token = Tok_New then
+            Set_Library_Unit
+              (Unit,
+               Parse_Package_Instantiation_Declaration (Id, Loc));
+            --  Note: there is no 'end' in instantiation.
+            Set_End_Location (Unit, Get_Token_Location);
+         else
+            Parse_Package_Declaration (Unit, Id);
+         end if;
+      end if;
+   end Parse_Package;
 
    -- Parse a design_unit.
    -- The lexical scanner must have been initialized, but without a
@@ -6502,13 +6611,7 @@ package body Parse is
          when Tok_Architecture =>
             Parse_Architecture (Res);
          when Tok_Package =>
-            Scan;
-            if Current_Token = Tok_Body then
-               Scan;
-               Parse_Package_Body (Res);
-            else
-               Parse_Package_Declaration (Res);
-            end if;
+            Parse_Package (Res);
          when Tok_Configuration =>
             Parse_Configuration_Declaration (Res);
          when others =>

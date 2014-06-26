@@ -699,6 +699,11 @@ package body Disp_Tree is
             Disp_Tree_Flat (Get_Package (Tree), Ntab);
             Header ("declaration:");
             Disp_Tree_Chain (Get_Declaration_Chain (Tree), Ntab);
+         when Iir_Kind_Package_Header =>
+            Header ("generic chain:");
+            Disp_Tree_Chain (Get_Generic_Chain (Tree), Ntab);
+            Header ("generic map aspect chain:");
+            Disp_Tree_Chain (Get_Generic_Map_Aspect_Chain (Tree), Ntab);
          when Iir_Kind_Architecture_Declaration =>
             if Flat_Decl then
                return;
@@ -719,6 +724,15 @@ package body Disp_Tree is
             Disp_Tree_Chain (Get_Declaration_Chain (Tree), Ntab);
             Header ("block_configuration:");
             Disp_Tree (Get_Block_Configuration (Tree), Ntab, True);
+
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            if Flat_Decl then
+               return;
+            end if;
+            Header ("uninstantiated_name:");
+            Disp_Tree_Flat (Get_Uninstantiated_Name (Tree), Ntab);
+            Header ("generic map aspect chain:");
+            Disp_Tree_Chain (Get_Generic_Map_Aspect_Chain (Tree), Ntab);
 
          when Iir_Kind_Entity_Aspect_Entity =>
             Header ("entity:");

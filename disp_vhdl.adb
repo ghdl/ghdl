@@ -210,7 +210,9 @@ package body Disp_Vhdl is
             Put (".");
             Disp_Ident (Get_Suffix_Identifier (Name));
          when Iir_Kind_Type_Declaration
+           | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Unit_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Variable_Declaration

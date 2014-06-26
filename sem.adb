@@ -334,9 +334,92 @@ package body Sem is
       return True;
    end Can_Collapse_Signals;
 
-   --  INTER_PARENT contains generics and ports interfaces;
-   --  ASSOC_PARENT constains generics and ports map aspects.
-   procedure Sem_Generic_Port_Association_Chain
+   --  INTER_PARENT contains generics interfaces;
+   --  ASSOC_PARENT constains generic aspects.
+   procedure Sem_Generic_Association_Chain
+     (Inter_Parent : Iir; Assoc_Parent : Iir)
+   is
+      El : Iir;
+      Match : Boolean;
+      Assoc_Chain : Iir;
+      Miss : Missing_Type;
+   begin
+      --  LRM08 6.5.6.2 Generic clauses
+      --  If no such actual is specified for a given formal generic constant
+      --  (either because the formal generic is unassociated or because the
+      --  actual is open), and if a default expression is specified for that
+      --  generic, the value of this expression is the value of the generic.
+      --  It is an error if no actual is specified for a given formal generic
+      --  constant and no default expression is present in the corresponding
+      --  interface element.
+
+      --  Note: CHECK_MATCH argument of sem_subprogram_arguments must be
+      --   true if parent is a component instantiation.
+      case Get_Kind (Assoc_Parent) is
+         when Iir_Kind_Component_Instantiation_Statement =>
+            --  LRM 9.6 Component Instantiation Statement
+            --  Each local generic (or subelement or slice thereof) must be
+            --  associated {VHDL87: exactly}{VHDL93: at most} once.
+            --  ...
+            --  Each local port (or subelement or slice therof) must be
+            --  associated {VHDL87: exactly}{VHDL93: at most} once.
+
+            --  GHDL: for a direct instantiation, follow rules of
+            --  LRM 1.1.1.1 Generic and LRM 1.1.1.2 Ports.
+            if Flags.Vhdl_Std = Vhdl_87
+              or else Get_Kind (Inter_Parent) = Iir_Kind_Entity_Declaration
+            then
+               Miss := Missing_Generic;
+            else
+               Miss := Missing_Allowed;
+            end if;
+         when Iir_Kind_Binding_Indication =>
+            --  LRM 5.2.1.2  Generic map and port map aspects
+            Miss := Missing_Allowed;
+         when Iir_Kind_Block_Header =>
+            Miss := Missing_Generic;
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            --  LRM08 4.9
+            --  Each formal generic (or member thereof) shall be associated
+            --  at most once.
+            Miss := Missing_Generic;
+         when others =>
+            Error_Kind ("sem_generic_association_list", Assoc_Parent);
+      end case;
+
+      --  The generics
+      Assoc_Chain := Get_Generic_Map_Aspect_Chain (Assoc_Parent);
+      if Sem_Actual_Of_Association_Chain (Assoc_Chain) then
+         Sem_Association_Chain
+           (Get_Generic_Chain (Inter_Parent), Assoc_Chain,
+            True, Miss, Assoc_Parent, Match);
+         Set_Generic_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
+
+         --  LRM 5.2.1.2   Generic map and port map aspects
+         --  An actual associated with a formal generic map aspect must be an
+         --  expression or the reserved word open;
+         if Match then
+            El := Assoc_Chain;
+            while El /= Null_Iir loop
+               case Get_Kind (El) is
+                  when Iir_Kind_Association_Element_By_Expression =>
+                     Check_Read (Get_Actual (El));
+                  when Iir_Kind_Association_Element_Open =>
+                     null;
+                  when Iir_Kind_Association_Element_By_Individual =>
+                     null;
+                  when others =>
+                     Error_Kind ("sem_generic_map_association_chain(1)", El);
+               end case;
+               El := Get_Chain (El);
+            end loop;
+         end if;
+      end if;
+   end Sem_Generic_Association_Chain;
+
+   --  INTER_PARENT contains ports interfaces;
+   --  ASSOC_PARENT constains ports map aspects.
+   procedure Sem_Port_Association_Chain
      (Inter_Parent : Iir; Assoc_Parent : Iir)
    is
       El : Iir;
@@ -345,8 +428,7 @@ package body Sem is
       Object : Iir;
       Match : Boolean;
       Assoc_Chain : Iir;
-      Miss_Generic : Missing_Type;
-      Miss_Port : Missing_Type;
+      Miss : Missing_Type;
       Inter : Iir;
       Formal : Iir;
    begin
@@ -366,53 +448,19 @@ package body Sem is
             if Flags.Vhdl_Std = Vhdl_87
               or else Get_Kind (Inter_Parent) = Iir_Kind_Entity_Declaration
             then
-               Miss_Generic := Missing_Generic;
-               Miss_Port := Missing_Port;
+               Miss := Missing_Port;
             else
-               Miss_Generic := Missing_Allowed;
-               Miss_Port := Missing_Allowed;
+               Miss := Missing_Allowed;
             end if;
          when Iir_Kind_Binding_Indication =>
             --  LRM 5.2.1.2  Generic map and port map aspects
-            Miss_Generic := Missing_Allowed;
-            Miss_Port := Missing_Allowed;
+            Miss := Missing_Allowed;
          when Iir_Kind_Block_Header =>
             --  FIXME: it is possible to have port unassociated ?
-            Miss_Generic := Missing_Generic;
-            Miss_Port := Missing_Port;
+            Miss := Missing_Port;
          when others =>
-            Error_Kind ("sem_generic_port_association_list", Assoc_Parent);
+            Error_Kind ("sem_port_association_list", Assoc_Parent);
       end case;
-
-      --  The generics
-      Assoc_Chain := Get_Generic_Map_Aspect_Chain (Assoc_Parent);
-      if Sem_Actual_Of_Association_Chain (Assoc_Chain) then
-         Sem_Association_Chain
-           (Get_Generic_Chain (Inter_Parent), Assoc_Chain,
-            True, Miss_Generic, Assoc_Parent, Match);
-         Set_Generic_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
-
-         --  LRM 5.2.1.2   Generic map and port map aspects
-         --  An actual associated with a formal generic map aspect must be an
-         --  expression or the reserved word open;
-         if Match then
-            El := Assoc_Chain;
-            while El /= Null_Iir loop
-               case Get_Kind (El) is
-                  when Iir_Kind_Association_Element_By_Expression =>
-                     Check_Read (Get_Actual (El));
-                  when Iir_Kind_Association_Element_Open =>
-                     null;
-                  when Iir_Kind_Association_Element_By_Individual =>
-                     null;
-                  when others =>
-                     Error_Kind
-                       ("sem_generic_port_map_association_chain(1)", El);
-               end case;
-               El := Get_Chain (El);
-            end loop;
-         end if;
-      end if;
 
       --  The ports
       Assoc_Chain := Get_Port_Map_Aspect_Chain (Assoc_Parent);
@@ -420,7 +468,7 @@ package body Sem is
          return;
       end if;
       Sem_Association_Chain (Get_Port_Chain (Inter_Parent), Assoc_Chain,
-                             True, Miss_Port, Assoc_Parent, Match);
+                             True, Miss, Assoc_Parent, Match);
       Set_Port_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
       if not Match then
          return;
@@ -528,6 +576,16 @@ package body Sem is
          end if;
          El := Get_Chain (El);
       end loop;
+   end Sem_Port_Association_Chain;
+
+   --  INTER_PARENT contains generics and ports interfaces;
+   --  ASSOC_PARENT constains generics and ports map aspects.
+   procedure Sem_Generic_Port_Association_Chain
+     (Inter_Parent : Iir; Assoc_Parent : Iir)
+   is
+   begin
+      Sem_Generic_Association_Chain (Inter_Parent, Assoc_Parent);
+      Sem_Port_Association_Chain (Inter_Parent, Assoc_Parent);
    end Sem_Generic_Port_Association_Chain;
 
    --  LRM 1.3  Configuration Declarations.
@@ -2172,6 +2230,7 @@ package body Sem is
    is
       Unit : Iir_Design_Unit;
       Implicit : Implicit_Signal_Declaration_Type;
+      Header : constant Iir := Get_Package_Header (Decl);
    begin
       Unit := Get_Design_Unit (Decl);
       Sem_Scopes.Add_Name (Decl);
@@ -2192,6 +2251,14 @@ package body Sem is
       Open_Declarative_Region;
 
       Push_Signals_Declarative_Part (Implicit, Decl);
+
+      if Header /= Null_Iir then
+         Sem_Interface_Chain (Get_Generic_Chain (Header), Interface_Generic);
+         if Get_Generic_Map_Aspect_Chain (Header) /= Null_Iir then
+            --  FIXME: todo
+            raise Internal_Error;
+         end if;
+      end if;
 
       Sem_Declaration_Chain (Decl);
       --  GHDL: subprogram bodies appear in package body.
@@ -2257,6 +2324,49 @@ package body Sem is
       Close_Declarative_Region;
    end Sem_Package_Body;
 
+   --  LRM08 4.9  Package Instantiation Declaration
+   procedure Sem_Package_Instantiation_Declaration (Decl : Iir)
+   is
+      Name : Iir;
+      Pkg : Iir;
+   begin
+      Sem_Scopes.Add_Name (Decl);
+      Set_Visible_Flag (Decl, True);
+      Xref_Decl (Decl);
+
+      --  LRM08 4.9
+      --  The uninstantiated package name shall denote an uninstantiated
+      --  package declared in a package declaration.
+      Name := Get_Uninstantiated_Name (Decl);
+      Sem_Name (Name, False);
+      Pkg := Get_Named_Entity (Name);
+      if Get_Kind (Pkg) = Iir_Kind_Design_Unit then
+         Pkg := Get_Library_Unit (Pkg);
+         Set_Named_Entity (Name, Pkg);
+      end if;
+      if Get_Kind (Pkg) /= Iir_Kind_Package_Declaration then
+         Error_Msg_Sem ("name must denote a package declaration", Name);
+
+         --  What could be done ?
+         return;
+      elsif not Is_Uninstantiated_Package (Pkg) then
+         Error_Msg_Sem
+           (Disp_Node (Pkg) & " is not an uninstantiated package", Name);
+
+         --  What could be done ?
+         return;
+      end if;
+
+      Xref_Name (Name);
+
+      --  LRM08 4.9
+      --  The generic map aspect, if present, optionally associates a single
+      --  actual with each formal generic (or member thereof) in the
+      --  corresponding package declaration.  Each formal generic (or member
+      --  thereof) shall be associated at most once.
+      Sem_Generic_Association_Chain (Get_Package_Header (Pkg), Decl);
+   end Sem_Package_Instantiation_Declaration;
+
    --  LRM 10.4  Use Clauses.
    procedure Sem_Use_Clause (Clauses: Iir_Use_Clause)
    is
@@ -2305,11 +2415,20 @@ package body Sem is
          case Get_Kind (Prefix_Name) is
             when Iir_Kind_Library_Declaration =>
                null;
-            when Iir_Kind_Package_Declaration =>
+            when Iir_Kind_Package_Instantiation_Declaration =>
                null;
+            when Iir_Kind_Package_Declaration =>
+               --  LRM08 12.4 Use clauses
+               --  It is an error if the prefix of a selected name in a use
+               --  clause denotes an uninstantiated package.
+               if Is_Uninstantiated_Package (Prefix_Name) then
+                  Error_Msg_Sem
+                    ("use of uninstantiated package is not allowed", Prefix);
+                  return;
+               end if;
             when others =>
-               Error_Msg_Sem ("prefix must designate a package or a library",
-                              Prefix);
+               Error_Msg_Sem
+                 ("prefix must designate a package or a library", Prefix);
                return;
          end case;
 
@@ -2460,6 +2579,8 @@ package body Sem is
             Sem_Package_Body (El);
          when Iir_Kind_Configuration_Declaration =>
             Sem_Configuration_Declaration (El);
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Sem_Package_Instantiation_Declaration (El);
          when others =>
             Error_Kind ("semantic", El);
       end case;

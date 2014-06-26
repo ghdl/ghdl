@@ -1696,7 +1696,10 @@ package body Sem_Expr is
                raise Internal_Error;
             end if;
 
-            --  If DECL has already been seen, then skip it.
+            --  LRM08 12.3 Visibility
+            --  [...] or all visible declarations denote the same named entity.
+            --
+            --  GHDL: If DECL has already been seen, then skip it.
             if Get_Seen_Flag (Decl) then
                goto Next;
             end if;

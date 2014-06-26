@@ -664,7 +664,13 @@ package Iirs is
    --
    --   Get/Set_Visible_Flag (Flag4)
 
-   -- Iir_Kind_Package_Declaration (Medium)
+   -- Iir_Kind_Package_Header (Medium)
+   --
+   --   Get/Set_Generic_Chain (Field6)
+   --
+   --   Get/Set_Generic_Map_Aspect_Chain (Field8)
+
+   -- Iir_Kind_Package_Declaration (Short)
    --
    --   Get/Set_Parent (Field0)
    --   Get/Set_Design_Unit (Alias Field0)
@@ -675,11 +681,9 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Generic_Chain (Field6)
-   --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Generic_Map_Aspect_Chain (Field8)
+   --   Get/Set_Package_Header (Field5)
    --
    --   Get/Set_Need_Body (Flag1)
    --
@@ -698,6 +702,19 @@ package Iirs is
    --
    -- The corresponding package declaration.
    --   Get/Set_Package (Field4)
+
+   -- Iir_Kind_Package_Instantiation_Declaration (Medium)
+   --
+   --   Get/Set_Parent (Field0)
+   --   Get/Set_Design_Unit (Alias Field0)
+   --
+   --   Get/Set_Uninstantiated_Name (Field1)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Generic_Map_Aspect_Chain (Field8)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
 
    -- Iir_Kind_Library_Declaration (Medium)
    --
@@ -2826,11 +2843,13 @@ package Iirs is
        Iir_Kind_Subtype_Declaration,
        Iir_Kind_Nature_Declaration,
        Iir_Kind_Subnature_Declaration,
-       Iir_Kind_Configuration_Declaration,
-       Iir_Kind_Entity_Declaration,
-       Iir_Kind_Package_Declaration,
-       Iir_Kind_Package_Body,
-       Iir_Kind_Architecture_Declaration,
+       Iir_Kind_Configuration_Declaration,      -- Library_Unit
+       Iir_Kind_Entity_Declaration,             -- Library_Unit
+       Iir_Kind_Package_Declaration,            -- Library_Unit
+       Iir_Kind_Package_Body,                   -- Library_Unit
+       Iir_Kind_Architecture_Declaration,       -- Library_Unit
+       Iir_Kind_Package_Instantiation_Declaration,
+       Iir_Kind_Package_Header,
        Iir_Kind_Unit_Declaration,
        Iir_Kind_Library_Declaration,
        Iir_Kind_Component_Declaration,
@@ -2847,10 +2866,10 @@ package Iirs is
        Iir_Kind_Through_Quantity_Declaration,
 
        Iir_Kind_Function_Body,
-       Iir_Kind_Function_Declaration,
-       Iir_Kind_Implicit_Function_Declaration,
-       Iir_Kind_Implicit_Procedure_Declaration,
-       Iir_Kind_Procedure_Declaration,
+       Iir_Kind_Function_Declaration,            --  Subprg, Func
+       Iir_Kind_Implicit_Function_Declaration,   --  Subprg, Func, Imp_Subprg
+       Iir_Kind_Implicit_Procedure_Declaration,  --  Subprg, Proc, Imp_Subprg
+       Iir_Kind_Procedure_Declaration,           --  Subprg, Proc
        Iir_Kind_Procedure_Body,
        Iir_Kind_Enumeration_Literal,
 
@@ -3379,7 +3398,8 @@ package Iirs is
    --Iir_Kind_Entity_Declaration
    --Iir_Kind_Package_Declaration
    --Iir_Kind_Package_Body
-     Iir_Kind_Architecture_Declaration;
+   --Iir_Kind_Architecture_Declaration
+     Iir_Kind_Package_Instantiation_Declaration;
 
    --  Note: does not include iir_kind_enumeration_literal since it is
    --  considered as a declaration.
@@ -3528,6 +3548,10 @@ package Iirs is
    --Iir_Kind_Implicit_Function_Declaration
    --Iir_Kind_Implicit_Procedure_Declaration
      Iir_Kind_Procedure_Declaration;
+
+   subtype Iir_Kinds_Implicit_Subprogram_Declaration is Iir_Kind range
+     Iir_Kind_Implicit_Function_Declaration ..
+     Iir_Kind_Implicit_Procedure_Declaration;
 
    subtype Iir_Kinds_Process_Statement is Iir_Kind range
      Iir_Kind_Sensitized_Process_Statement ..
@@ -3743,6 +3767,8 @@ package Iirs is
    --Iir_Kind_Package_Declaration
    --Iir_Kind_Package_Body
    --Iir_Kind_Architecture_Declaration
+   --Iir_Kind_Package_Instantiation_Declaration
+   --Iir_Kind_Package_Header
    --Iir_Kind_Unit_Declaration
    --Iir_Kind_Library_Declaration
    --Iir_Kind_Component_Declaration
@@ -5120,9 +5146,17 @@ package Iirs is
    function Get_Block_Block_Configuration (Block : Iir) return Iir;
    procedure Set_Block_Block_Configuration (Block : Iir; Conf : Iir);
 
+   --  Field: Field5
+   function Get_Package_Header (Pkg : Iir) return Iir_Package_Body;
+   procedure Set_Package_Header (Pkg : Iir; Header : Iir_Package_Body);
+
    --  Field: Field7
    function Get_Block_Header (Target : Iir) return Iir;
    procedure Set_Block_Header (Target : Iir; Header : Iir);
+
+   --  Field: Field1
+   function Get_Uninstantiated_Name (Inst : Iir) return Iir;
+   procedure Set_Uninstantiated_Name (Inst : Iir; Name : Iir);
 
    --  Get/Set the block_configuration (there may be several
    --  block_configuration through the use of prev_configuration singly linked

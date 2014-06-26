@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with Ada.Text_IO;
 with GNAT.Table;
+with Flags; use Flags;
 with Name_Table; -- use Name_Table;
 with Errorout; use Errorout;
 with Iirs_Utils;
@@ -446,7 +447,10 @@ package body Sem_Scopes is
       if Current_Inter = No_Name_Interpretation
         or else (Current_Inter = Conflict_Interpretation and not Potentially)
       then
-         -- Very simple: no hide, no overloading.
+         --  Very simple: no hidding, no overloading.
+         --  (current interpretation is Conflict_Interpretation if there is
+         --   only potentially visible declarations that are not made directly
+         --   visible).
          Save_Current_Interpretation;
          Add_New_Interpretation;
          return;
@@ -457,6 +461,7 @@ package body Sem_Scopes is
             --  Yet another conflicting interpretation.
             return;
          end if;
+
          -- Do not re-add a potential decl
          declare
             Inter: Name_Interpretation_Type := Current_Inter;
@@ -470,7 +475,7 @@ package body Sem_Scopes is
          end;
       end if;
 
-      --  LRM §10.3:
+      --  LRM 10.3 Visibility
       --  Each of two declarations is said to be a homograph of the other if
       --  both declarations have the same identifier, operator symbol, or
       --  character literal, and overloading is allowed for at most one
@@ -483,9 +488,10 @@ package body Sem_Scopes is
       Current_Decl := Get_Declaration (Current_Inter);
 
       if Is_Overloadable (Current_Decl) and then Is_Overloadable (Decl) then
-         --  Current_Inter and Decl overloads.
+         --  Current_Inter and Decl overloads (well, they have the same
+         --  designator).
 
-         --  LRM 10.3
+         --  LRM 10.3 Visibility
          --  If overloading is allowed for both declarations, then each of the
          --  two is a homograph of the other if they have the same identifier,
          --  operator symbol or character literal, as well as the same
@@ -494,6 +500,7 @@ package body Sem_Scopes is
          declare
             Homograph : Name_Interpretation_Type;
             Prev_Homograph : Name_Interpretation_Type;
+            Current_Decl_Non_Alias : Iir;
 
             procedure Maybe_Save_And_Add_New_Interpretation is
             begin
@@ -536,6 +543,15 @@ package body Sem_Scopes is
                end if;
             end Get_Hash_Non_Alias;
 
+            --  Return TRUE iff D is an implicit alias of an implicit
+            --  subprogram.
+            function Is_Implicit_Alias (D : Iir) return Boolean is
+            begin
+               return Get_Kind (D) = Iir_Kind_Non_Object_Alias_Declaration
+                 and then Get_Kind (Get_Name (D))
+                 in Iir_Kinds_Implicit_Subprogram_Declaration;
+            end Is_Implicit_Alias;
+
             Decl_Hash : Iir_Int32;
             Hash : Iir_Int32;
          begin
@@ -559,74 +575,126 @@ package body Sem_Scopes is
             if Homograph = No_Name_Interpretation then
                --  Simple case: no homograph.
                Maybe_Save_And_Add_New_Interpretation;
+               return;
+            end if;
+
+            --  There is an homograph.
+            if Potentially then
+               --  LRM 10.4 Use Clauses
+               --  1. A potentially visible declaration is not made
+               --  directly visible if the place considered is within the
+               --  immediate scope of a homograph of the declaration.
+               if Is_In_Current_Declarative_Region (Homograph) then
+                  if not Is_Potentially_Visible (Homograph) then
+                     return;
+                  end if;
+
+                  --  GHDL: if the homograph is in the same declarative
+                  --  region than DECL, it must be an implicit declaration
+                  --  to be hidden.
+                  --  FIXME: this rule is not in the LRM.
+                  if Get_Parent (Decl) = Get_Parent (Current_Decl) then
+                     if Flags.Vhdl_Std >= Vhdl_08
+                       and then Is_Implicit_Alias (Decl)
+                     then
+                        --  Re-declaration of an implicit subprogram via
+                        --  an implicit alias is simply discarded.
+                        return;
+                     end if;
+
+                     --  Note: no need to save previous interpretation, as it
+                     --  is in the same declarative region.
+                     Add_New_Interpretation;
+                     Hide_Homograph;
+                     return;
+                  end if;
+
+                  --  The homograph is potentially visible and was declared
+                  --  in a scope different from the DECL scope.
+                  --  (ie, it was certainly made visible by another use
+                  --   clause).
+                  Add_New_Interpretation;
+                  return;
+               else
+                  --  The homograph was made visible in an outer declarative
+                  --  region.  Therefore, it must not be hidden.
+                  Maybe_Save_And_Add_New_Interpretation;
+               end if;
+
+               return;
+
             else
-               --  There is an homograph.
-               if Potentially then
+               --  Added declaration DECL is made directly visible.
+
+               if not Is_Potentially_Visible (Homograph) then
+                  --  The homograph was also directly visible
+                  if Is_In_Current_Declarative_Region (Homograph) then
+                     --  ... and was declared in the same region
+
+                     --  LRM08 12.3 Visibility
+                     --  Two declarations that occur immediately within
+                     --  the same declarative regions [...] shall not be
+                     --  homograph, unless exactely one of them is the
+                     --  implicit declaration of a predefined operation, or
+                     --  is an implicit alias of such implicit declaration.
+                     --
+                     --  GHDL: FIXME: 'implicit alias'
+
+                     --  LRM08 12.3 Visibility
+                     --  LRM93 10.3 Visibility
+                     --  Each of two declarations is said to be a
+                     --  homograph of the other if and only if both
+                     --  declarations have the same designator, [...]
+                     --
+                     --  LRM08 12.3 Visibility
+                     --  [...] and they denote differrent named entities,
+                     --  and [...]
+                     if Flags.Vhdl_Std >= Vhdl_08 then
+                        if Is_Implicit_Alias (Decl) then
+                           --  Re-declaration of an implicit subprogram via
+                           --  an implicit alias is simply discarded.
+                           --  FIXME: implicit alias.
+                           return;
+                        end if;
+
+                        Current_Decl_Non_Alias :=
+                          Get_Non_Alias_Declaration (Homograph);
+                     else
+                        Current_Decl_Non_Alias := Current_Decl;
+                     end if;
+
+                     if Get_Kind (Current_Decl_Non_Alias)
+                       not in Iir_Kinds_Implicit_Subprogram_Declaration
+                     then
+                        Error_Msg_Sem
+                          ("redeclaration of " & Disp_Node (Current_Decl)
+                             & " defined at " & Disp_Location (Current_Decl),
+                           Decl);
+                        return;
+                     end if;
+
+                     --  FIXME: simply discard DECL if an *implicit* alias
+                     --  of the current declaration?
+                  else
+                     --  GHDL: hide directly visible declaration declared in
+                     --  an outer region.
+                     null;
+                  end if;
+               else
                   --  LRM 10.4 Use Clauses
                   --  1. A potentially visible declaration is not made
                   --  directly visible if the place considered is within the
                   --  immediate scope of a homograph of the declaration.
-                  if Is_In_Current_Declarative_Region (Homograph) then
-                     if not Is_Potentially_Visible (Homograph) then
-                        return;
-                     end if;
 
-                     --  GHDL: if the homograph is in the same declarative
-                     --  region than DECL, it must be an implicit declaration
-                     --  to be hidden.
-                     --  FIXME: this rule is not in the LRM.
-                     if Get_Parent (Decl) = Get_Parent (Current_Decl) then
-                        --  Note: no need to save previous interpretation!
-                        Add_New_Interpretation;
-                        Hide_Homograph;
-                        return;
-                     end if;
-
-                     --  The homograph is potentially visible and was declared
-                     --  in a scope different from the DECL scope.
-                     --  (ie, it was certainly made visible by another use
-                     --   clause).
-                     Add_New_Interpretation;
-                     return;
-                  else
-                     --  The homograph was made visible in an outer declarative
-                     --  region.  Therefore, it must not be hidden.
-                     Maybe_Save_And_Add_New_Interpretation;
-                  end if;
-               else
-                  if not Is_Potentially_Visible (Homograph) then
-                     if Is_In_Current_Declarative_Region (Homograph) then
-                        if Get_Kind (Current_Decl)
-                          /= Iir_Kind_Implicit_Function_Declaration
-                          and then
-                          Get_Kind (Current_Decl)
-                          /= Iir_Kind_Implicit_Procedure_Declaration
-                        then
-                           Error_Msg_Sem
-                             ("redeclaration of " & Disp_Node (Current_Decl)
-                              & " defined at " & Disp_Location (Current_Decl),
-                              Decl);
-                           return;
-                        end if;
-                     else
-                        --  Overload.
-                        null;
-                     end if;
-                  else
-                     --  LRM 10.4 Use Clauses
-                     --  1. A potentially visible declaration is not made
-                     --  directly visible if the place considered is within the
-                     --  immediate scope of a homograph of the declaration.
-                     null;
-                  end if;
-                  Maybe_Save_And_Add_New_Interpretation;
-
-                  Hide_Homograph;
-                  return;
+                  --  GHDL: hide the potentially visible declaration.
+                  null;
                end if;
+               Maybe_Save_And_Add_New_Interpretation;
+
+               Hide_Homograph;
+               return;
             end if;
          end;
-         return;
       end if;
 
       -- The current interpretation and the new one are homograph.
@@ -964,7 +1032,11 @@ package body Sem_Scopes is
    procedure Add_Package_Declarations
      (Decl: Iir_Package_Declaration; Potentially : Boolean)
    is
+      Header : constant Iir := Get_Package_Header (Decl);
    begin
+      if Header /= Null_Iir then
+         Add_Declarations (Get_Generic_Chain (Header), Potentially);
+      end if;
       Add_Declarations (Get_Declaration_Chain (Decl), Potentially);
    end Add_Package_Declarations;
 
@@ -1040,6 +1112,15 @@ package body Sem_Scopes is
             Use_Library_All (Name);
          when Iir_Kind_Package_Declaration =>
             Add_Package_Declarations (Name, True);
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            declare
+               Pkg : constant Iir :=
+                 Get_Named_Entity (Get_Uninstantiated_Name (Name));
+            begin
+               if Pkg /= Null_Iir then
+                  Add_Package_Declarations (Pkg, True);
+               end if;
+            end;
          when others =>
             raise Internal_Error;
       end case;

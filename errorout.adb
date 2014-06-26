@@ -605,6 +605,12 @@ package body Errorout is
                     & '(' & Iirs_Utils.Image_Identifier (Arch) & ')';
                end if;
             end;
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            return Disp_Identifier (Node, "instantiation package");
+
+         when Iir_Kind_Package_Header =>
+            return "package header";
+
          when Iir_Kind_Component_Declaration =>
             return Disp_Identifier (Node, "component");
 

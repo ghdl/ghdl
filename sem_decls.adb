@@ -1900,6 +1900,136 @@ package body Sem_Decls is
       return Res;
    end Sem_Signature;
 
+   --  Create implicit aliases for an alias ALIAS of a type or of a subtype.
+   procedure Add_Aliases_For_Type_Alias (Alias : Iir)
+   is
+      N_Entity : constant Iir := Get_Name (Alias);
+      Def : constant Iir := Get_Base_Type (Get_Type (N_Entity));
+      Type_Decl : constant Iir := Get_Type_Declarator (Def);
+      Last : Iir;
+      El : Iir;
+      Enum_List : Iir_Enumeration_Literal_List;
+
+      --  Append an implicit alias
+      procedure Add_Implicit_Alias (Decl : Iir)
+      is
+         N_Alias : constant Iir_Non_Object_Alias_Declaration :=
+           Create_Iir (Iir_Kind_Non_Object_Alias_Declaration);
+      begin
+         Location_Copy (N_Alias, Alias);
+         Set_Identifier (N_Alias, Get_Identifier (Decl));
+         Set_Name (N_Alias, Decl);
+         Set_Parent (N_Alias, Get_Parent (Alias));
+
+         Sem_Scopes.Add_Name (N_Alias);
+         Set_Visible_Flag (N_Alias, True);
+
+         --  Append in the declaration chain.
+         Set_Chain (N_Alias, Get_Chain (Last));
+         Set_Chain (Last, N_Alias);
+         Last := N_Alias;
+      end Add_Implicit_Alias;
+   begin
+      Last := Alias;
+
+      if Get_Kind (Def) = Iir_Kind_Enumeration_Type_Definition then
+         --  LRM93 4.3.3.2  Non-Object Aliases
+         --  3.  If the name denotes an enumeration type, then one
+         --      implicit alias declaration for each of the
+         --      literals of the type immediatly follows the alias
+         --      declaration for the enumeration type; [...]
+         --
+         --  LRM08 6.6.3 Nonobject aliases
+         --  c)  If the name denotes an enumeration type of a subtype of an
+         --      enumeration type, then one implicit alias declaration for each
+         --      of the litereals of the base type immediately follows the
+         --      alias declaration for the enumeration type; [...]
+         Enum_List := Get_Enumeration_Literal_List (Def);
+         for I in Natural loop
+            El := Get_Nth_Element (Enum_List, I);
+            exit when El = Null_Iir;
+            --  LRM93 4.3.3.2  Non-Object Aliases
+            --      [...] each such implicit declaration has, as its alias
+            --      designator, the simple name or character literal of the
+            --      literal, and has, as its name, a name constructed by taking
+            --      the name of the alias for the enumeration type and
+            --      substituting the simple name or character literal being
+            --      aliased for the simple name of the type.  Each implicit
+            --      alias has a signature that matches the parameter and result
+            --      type profile of the literal being aliased.
+            --
+            --  LRM08 6.6.3 Nonobject aliases
+            --      [...] each such implicit declaration has, as its alias
+            --      designator, the simple name or character literal of the
+            --      literal and has, as its name, a name constructed by taking
+            --      the name of the alias for the enumeration type or subtype
+            --      and substituing the simple name or character literal being
+            --      aliased for the simple name of the type or subtype.  Each
+            --      implicit alias has a signature that matches the parameter
+            --      and result type profile of the literal being aliased.
+            Add_Implicit_Alias (El);
+         end loop;
+      end if;
+
+      --  LRM93 4.3.3.2  Non-Object Aliases
+      --  4.  Alternatively, if the name denotes a physical type
+      --      [...]
+      --  GHDL: this is not possible, since a physical type is
+      --  anonymous (LRM93 is buggy on this point).
+      --
+      --  LRM08 6.6.3 Nonobject aliases
+      --  d)  Alternatively, if the name denotes a subtype of a physical type,
+      --      [...]
+      if Get_Kind (Def) = Iir_Kind_Physical_Type_Definition then
+         --  LRM08 6.3.3 Nonobject aliases
+         --      [...] then one implicit alias declaration for each of the
+         --      units of the base type immediately follows the alias
+         --      declaration for the physical type; each such implicit
+         --      declaration has, as its alias designator, the simple name of
+         --      the unit and has, as its name, a name constructed by taking
+         --      the name of the alias for the subtype of the physical type
+         --      and substituting the simple name of the unit being aliased for
+         --      the simple name of the subtype.
+         El := Get_Unit_Chain (Def);
+         while El /= Null_Iir loop
+            Add_Implicit_Alias (El);
+            El := Get_Chain (El);
+         end loop;
+      end if;
+
+      --  LRM93 4.3.3.2  Non-Object Aliases
+      --  5.  Finally, if the name denotes a type, then implicit
+      --      alias declarations for each predefined operator
+      --      for the type immediatly follow the explicit alias
+      --      declaration for the type, and if present, any
+      --      implicit alias declarations for literals or units
+      --      of the type.
+      --      Each implicit alias has a signature that matches the
+      --      parameter and result type profule of the implicit
+      --      operator being aliased.
+      --
+      --  LRM08 6.6.3 Nonobject aliases
+      --  e)  Finally, if the name denotes a type of a subtype, then implicit
+      --      alias declarations for each predefined operation for the type
+      --      immediately follow the explicit alias declaration for the type or
+      --      subtype and, if present, any implicit alias declarations for
+      --      literals or units of the type.  Each implicit alias has a
+      --      signature that matches the parameter and result type profile of
+      --      the implicit operation being aliased.
+      El := Get_Chain (Type_Decl);
+      while El /= Null_Iir loop
+         case Get_Kind (El) is
+            when Iir_Kind_Implicit_Function_Declaration
+              | Iir_Kind_Implicit_Procedure_Declaration =>
+               exit when Get_Type_Reference (El) /= Type_Decl;
+            when others =>
+               exit;
+         end case;
+         Add_Implicit_Alias (El);
+         El := Get_Chain (El);
+      end loop;
+   end Add_Aliases_For_Type_Alias;
+
    procedure Sem_Non_Object_Alias_Declaration
      (Alias : Iir_Non_Object_Alias_Declaration)
    is
@@ -1924,94 +2054,16 @@ package body Sem_Decls is
                               Alias);
             end if;
          when Iir_Kind_Type_Declaration =>
-            declare
-               Def : Iir;
-               Last : Iir;
-               El : Iir;
-               Enum_List : Iir_Enumeration_Literal_List;
-
-               procedure Add_Implicit_Alias (Decl : Iir)
-               is
-                  N_Alias : constant Iir_Non_Object_Alias_Declaration :=
-                    Create_Iir (Iir_Kind_Non_Object_Alias_Declaration);
-               begin
-                  Location_Copy (N_Alias, Alias);
-                  Set_Identifier (N_Alias, Get_Identifier (Decl));
-                  Set_Name (N_Alias, Decl);
-
-                  Add_Name (El, Get_Identifier (El), False);
-                  Set_Visible_Flag (N_Alias, True);
-
-                  --  Append in the declaration chain.
-                  Set_Chain (N_Alias, Get_Chain (Last));
-                  Set_Chain (Last, N_Alias);
-                  Last := N_Alias;
-               end Add_Implicit_Alias;
-            begin
-               Def := Get_Type (N_Entity);
-               Last := Alias;
-               if Get_Kind (Def) = Iir_Kind_Enumeration_Type_Definition then
-                  --  LRM93 4.3.3.2  Non-Object Aliases
-                  --  3.  If the name denotes an enumeration type, then one
-                  --      implicit alias declaration for each of the
-                  --      literals of the type immediatly follows the alias
-                  --      declaration for the enumeration type; [...]
-                  Enum_List := Get_Enumeration_Literal_List (Def);
-                  for I in Natural loop
-                     El := Get_Nth_Element (Enum_List, I);
-                     exit when El = Null_Iir;
-                     --  LRM93 4.3.3.2  Non-Object Aliases
-                     --      [...] each such implicit declaration has, as
-                     --      its alias designator, the simple name or
-                     --      character literal of the literal, and has,
-                     --      as its name, a name constructed
-                     --      by taking the name of the alias for the
-                     --      enumeration type and substituting the simple
-                     --      name or character literal being aliased for
-                     --      the simple name of the type.
-                     --      Each implicit alias has a signature that
-                     --      matches the parameter and result type profile
-                     --      of the literal being aliased.
-                     Add_Implicit_Alias (El);
-                  end loop;
-               end if;
-
-               --  LRM93 4.3.3.2  Non-Object Aliases
-               --  4.  Alternatively, if the name denotes a physical type
-               --      [...]
-               -- GHDL: this is not possible, since a physical type is
-               -- anonymous (LRM93 is buggy on this point).
-               if Get_Kind (Def) = Iir_Kind_Physical_Type_Definition then
-                  raise Internal_Error;
-               end if;
-
-               --  LRM93 4.3.3.2  Non-Object Aliases
-               --  5.  Finally, if the name denotes a type, then implicit
-               --      alias declarations for each predefined operator
-               --      for the type immediatly follow the explicit alias
-               --      declaration for the type, and if present, any
-               --      implicit alias declarations for literals or units
-               --      of the type.
-               --      Each implicit alias has a signature that matches the
-               --      parameter and result type profule of the implicit
-               --      operator being aliased.
-               El := Get_Chain (N_Entity);
-               while El /= Null_Iir loop
-                  case Get_Kind (El) is
-                     when Iir_Kind_Implicit_Function_Declaration
-                       | Iir_Kind_Implicit_Procedure_Declaration =>
-                        exit when Get_Type_Reference (El) /= N_Entity;
-                     when others =>
-                        exit;
-                  end case;
-                  Add_Implicit_Alias (El);
-                  El := Get_Chain (El);
-               end loop;
-            end;
+            Add_Aliases_For_Type_Alias (Alias);
+         when Iir_Kind_Subtype_Declaration =>
+            --  LRM08 6.6.3 Nonobject aliases
+            --  ... or a subtype ...
+            if Flags.Vhdl_Std >= Vhdl_08 then
+               Add_Aliases_For_Type_Alias (Alias);
+            end if;
          when Iir_Kinds_Object_Declaration =>
             raise Internal_Error;
-         when Iir_Kind_Subtype_Declaration
-           | Iir_Kind_Attribute_Declaration
+         when Iir_Kind_Attribute_Declaration
            | Iir_Kind_Component_Declaration =>
             null;
          when Iir_Kind_Terminal_Declaration =>

@@ -381,6 +381,7 @@ package body Iirs is
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
@@ -514,8 +515,9 @@ package body Iirs is
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Package_Declaration
            | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Package_Header
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
@@ -2247,7 +2249,7 @@ package body Iirs is
       case Get_Kind (Target) is
          when Iir_Kind_Block_Header
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Header
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
@@ -2971,7 +2973,8 @@ package body Iirs is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Architecture_Declaration =>
+           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration =>
             null;
          when others =>
             Failed ("Design_Unit", Target);
@@ -3434,6 +3437,7 @@ package body Iirs is
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
@@ -3569,6 +3573,7 @@ package body Iirs is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
@@ -4948,7 +4953,8 @@ package body Iirs is
       case Get_Kind (Target) is
          when Iir_Kind_Block_Header
            | Iir_Kind_Binding_Indication
-           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Package_Header
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
@@ -5295,6 +5301,28 @@ package body Iirs is
       Set_Field6 (Block, Conf);
    end Set_Block_Block_Configuration;
 
+   procedure Check_Kind_For_Package_Header (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Package_Declaration =>
+            null;
+         when others =>
+            Failed ("Package_Header", Target);
+      end case;
+   end Check_Kind_For_Package_Header;
+
+   function Get_Package_Header (Pkg : Iir) return Iir_Package_Body is
+   begin
+      Check_Kind_For_Package_Header (Pkg);
+      return Get_Field5 (Pkg);
+   end Get_Package_Header;
+
+   procedure Set_Package_Header (Pkg : Iir; Header : Iir_Package_Body) is
+   begin
+      Check_Kind_For_Package_Header (Pkg);
+      Set_Field5 (Pkg, Header);
+   end Set_Package_Header;
+
    procedure Check_Kind_For_Block_Header (Target : Iir) is
    begin
       case Get_Kind (Target) is
@@ -5316,6 +5344,28 @@ package body Iirs is
       Check_Kind_For_Block_Header (Target);
       Set_Field7 (Target, Header);
    end Set_Block_Header;
+
+   procedure Check_Kind_For_Uninstantiated_Name (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            null;
+         when others =>
+            Failed ("Uninstantiated_Name", Target);
+      end case;
+   end Check_Kind_For_Uninstantiated_Name;
+
+   function Get_Uninstantiated_Name (Inst : Iir) return Iir is
+   begin
+      Check_Kind_For_Uninstantiated_Name (Inst);
+      return Get_Field1 (Inst);
+   end Get_Uninstantiated_Name;
+
+   procedure Set_Uninstantiated_Name (Inst : Iir; Name : Iir) is
+   begin
+      Check_Kind_For_Uninstantiated_Name (Inst);
+      Set_Field1 (Inst, Name);
+   end Set_Uninstantiated_Name;
 
    procedure Check_Kind_For_Generate_Block_Configuration (Target : Iir) is
    begin
@@ -5463,6 +5513,7 @@ package body Iirs is
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
