@@ -697,9 +697,21 @@ package body Annotations is
       El: Iir;
       Max_Nbr_Objects : Object_Slot_Type;
       Current_Nbr_Objects : Object_Slot_Type;
+
+      procedure Save_Nbr_Objects is
+      begin
+         --  Objects used by loop statements can be reused later by
+         --  other (ie following) loop statements.
+         --  Furthermore, this allow to correctly check elaboration
+         --  order.
+         Max_Nbr_Objects := Object_Slot_Type'Max
+           (Block_Info.Nbr_Objects, Max_Nbr_Objects);
+         Block_Info.Nbr_Objects := Current_Nbr_Objects;
+      end Save_Nbr_Objects;
    begin
       Current_Nbr_Objects := Block_Info.Nbr_Objects;
-      Max_Nbr_Objects := Block_Info.Nbr_Objects;
+      Max_Nbr_Objects := Current_Nbr_Objects;
+
       El := Stmt_Chain;
       while El /= Null_Iir loop
          case Get_Kind (El) is
@@ -725,10 +737,26 @@ package body Annotations is
                declare
                   Clause: Iir := El;
                begin
-                  while Clause /= Null_Iir loop
+                  loop
                      Annotate_Sequential_Statement_Chain
                        (Block_Info, Get_Sequential_Statement_Chain (Clause));
                      Clause := Get_Else_Clause (Clause);
+                     exit when Clause = Null_Iir;
+                     Save_Nbr_Objects;
+                  end loop;
+               end;
+
+            when Iir_Kind_Case_Statement =>
+               declare
+                  Assoc: Iir;
+               begin
+                  Assoc := Get_Case_Statement_Alternative_Chain (El);
+                  loop
+                     Annotate_Sequential_Statement_Chain
+                       (Block_Info, Get_Associated (Assoc));
+                     Assoc := Get_Chain (Assoc);
+                     exit when Assoc = Null_Iir;
+                     Save_Nbr_Objects;
                   end loop;
                end;
 
@@ -738,18 +766,6 @@ package body Annotations is
                Annotate_Sequential_Statement_Chain
                  (Block_Info, Get_Sequential_Statement_Chain (El));
 
-            when Iir_Kind_Case_Statement =>
-               declare
-                  Assoc: Iir;
-               begin
-                  Assoc := Get_Case_Statement_Alternative_Chain (El);
-                  while Assoc /= Null_Iir loop
-                     Annotate_Sequential_Statement_Chain
-                       (Block_Info, Get_Associated (Assoc));
-                     Assoc := Get_Chain (Assoc);
-                  end loop;
-               end;
-
             when Iir_Kind_While_Loop_Statement =>
                Annotate_Sequential_Statement_Chain
                  (Block_Info, Get_Sequential_Statement_Chain (El));
@@ -757,13 +773,9 @@ package body Annotations is
             when others =>
                Error_Kind ("annotate_sequential_statement_chain", El);
          end case;
-         --  Objects used by loop statements can be reused later by
-         --  other (ie following) loop statements.
-         --  Furthermore, this allow to correctly check elaboration
-         --  order.
-         Max_Nbr_Objects := Object_Slot_Type'Max
-           (Block_Info.Nbr_Objects, Max_Nbr_Objects);
-         Block_Info.Nbr_Objects := Current_Nbr_Objects;
+
+         Save_Nbr_Objects;
+
          El := Get_Chain (El);
       end loop;
       Block_Info.Nbr_Objects := Max_Nbr_Objects;

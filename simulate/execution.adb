@@ -653,6 +653,13 @@ package body Execution is
                   raise Internal_Error;
             end case;
 
+         when Iir_Predefined_Integer_Minimum =>
+            Eval_Right;
+            Result := Create_I64_Value (Ghdl_I64'Min (Left.I64, Right.I64));
+         when Iir_Predefined_Integer_Maximum =>
+            Eval_Right;
+            Result := Create_I64_Value (Ghdl_I64'Max (Left.I64, Right.I64));
+
          when Iir_Predefined_Floating_Mul =>
             Eval_Right;
             Result := Create_F64_Value (Left.F64 * Right.F64);
@@ -686,6 +693,13 @@ package body Execution is
          when Iir_Predefined_Floating_Greater_Equal =>
             Eval_Right;
             Result := Boolean_To_Lit (Left.F64 >= Right.F64);
+
+         when Iir_Predefined_Floating_Minimum =>
+            Eval_Right;
+            Result := Create_F64_Value (Ghdl_F64'Min (Left.F64, Right.F64));
+         when Iir_Predefined_Floating_Maximum =>
+            Eval_Right;
+            Result := Create_F64_Value (Ghdl_F64'Max (Left.F64, Right.F64));
 
          when Iir_Predefined_Integer_Physical_Mul =>
             Eval_Right;
@@ -793,8 +807,7 @@ package body Execution is
 
          when others =>
             Error_Msg ("execute_implicit_function: unimplemented " &
-                       Iir_Predefined_Functions'Image
-                       (Get_Implicit_Definition (Expr)));
+                       Iir_Predefined_Functions'Image (Func));
             raise Internal_Error;
       end case;
       return Result;

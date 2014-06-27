@@ -887,29 +887,33 @@ package body Iir_Values is
       end case;
    end Is_Indirect;
 
-   procedure Disp_Iir_Value_Array
-     (Value: Iir_Value_Literal_Acc; A_Type: Iir; Dim: Natural)
+   procedure Disp_Iir_Value_Array (Value: Iir_Value_Literal_Acc;
+                                   A_Type: Iir;
+                                   Dim: Iir_Index32;
+                                   Off : in out Iir_Index32)
    is
       use Ada.Text_IO;
       type Last_Enum_Type is (None, Char, Identifier);
       Last_Enum: Last_Enum_Type;
-      Index_List: Iir_List;
       El_Type: Iir;
       Enum_List: Iir_List;
       El: Name_Id;
+      El_Pos : Natural;
    begin
-      Index_List := Get_Index_Subtype_List (A_Type);
-      if Dim = Get_Nbr_Elements (Index_List) then
+      if Dim = Value.Bounds.Nbr_Dims then
+         --  Last dimension
          El_Type := Get_Base_Type (Get_Element_Subtype (A_Type));
+
+         --  Pretty print vectors of enumerated types
          if Get_Kind (El_Type) = Iir_Kind_Enumeration_Type_Definition
            and then not Is_Indirect (Value)
          then
             Last_Enum := None;
             Enum_List := Get_Enumeration_Literal_List (El_Type);
-            for I in Value.Val_Array.V'Range loop
-               El := Get_Identifier
-                 (Get_Nth_Element (Enum_List,
-                                   Ghdl_E32'Pos (Value.Val_Array.V (I).E32)));
+            for I in 1 .. Value.Bounds.D (Dim).Length loop
+               El_Pos := Ghdl_E32'Pos (Value.Val_Array.V (Off).E32);
+               Off := Off + 1;
+               El := Get_Identifier (Get_Nth_Element (Enum_List, El_Pos));
                if Name_Table.Is_Character (El) then
                   case Last_Enum is
                      when None =>
@@ -942,20 +946,25 @@ package body Iir_Values is
                when Char =>
                   Put ("""");
             end case;
-            return;
+         else
+            Put ("(");
+            for I in 1 .. Value.Bounds.D (Dim).Length loop
+               if I /= 1 then
+                  Put (", ");
+               end if;
+               Disp_Iir_Value (Value.Val_Array.V (Off), El_Type);
+               Off := Off + 1;
+            end loop;
+            Put (")");
          end if;
+      else
          Put ("(");
-         for I in Value.Val_Array.V'Range loop
+         for I in 1 .. Value.Bounds.D (Dim).Length loop
             if I /= 1 then
                Put (", ");
             end if;
-            Disp_Iir_Value (Value.Val_Array.V (I), El_Type);
+            Disp_Iir_Value_Array (Value, A_Type, Dim + 1, Off);
          end loop;
-         Put (")");
-         return;
-      else
-         Put ("(");
-         Disp_Iir_Value_Array (Value, A_Type, Dim + 1);
          Put (")");
       end if;
    end Disp_Iir_Value_Array;
@@ -1017,7 +1026,13 @@ package body Iir_Values is
                Put ("*acc*");
             end if;
          when Iir_Value_Array =>
-            Disp_Iir_Value_Array (Value, A_Type, 1);
+            declare
+               Off : Iir_Index32;
+            begin
+               Off := 1;
+               Disp_Iir_Value_Array (Value, A_Type, 1, Off);
+               pragma Assert (Off = Value.Val_Array.Len + 1);
+            end;
          when Iir_Value_File =>
             raise Internal_Error;
          when Iir_Value_Record =>

@@ -1320,7 +1320,7 @@ package body Debugger is
 
       --  Add STD
       Add_Name (Libraries.Std_Library, Std_Names.Name_Std, False);
-      Use_All_Names (Std_Package.Std_Standard_Unit);
+      Use_All_Names (Std_Package.Standard_Package);
 
       Foreach_Scopes (Node, Add_Decls_For'Access);
    end Enter_Scope;
