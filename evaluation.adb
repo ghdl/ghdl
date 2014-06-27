@@ -1239,7 +1239,17 @@ package body Evaluation is
            | Iir_Predefined_Std_Ulogic_Match_Greater
            | Iir_Predefined_Std_Ulogic_Match_Greater_Equal =>
             -- TODO
-            raise Program_Error;
+            raise Internal_Error;
+
+         when Iir_Predefined_Enum_To_String
+           | Iir_Predefined_Integer_To_String
+           | Iir_Predefined_Floating_To_String
+           | Iir_Predefined_Real_To_String_Digits
+           | Iir_Predefined_Real_To_String_Format
+           | Iir_Predefined_Physical_To_String
+           | Iir_Predefined_Time_To_String_Unit =>
+            --  TODO
+            raise Internal_Error;
       end case;
    exception
       when Constraint_Error =>

@@ -160,6 +160,9 @@ package body Std_Names is
       Def ("integer_vector",      Name_Integer_Vector);
       Def ("real_vector",         Name_Real_Vector);
       Def ("time_vector",         Name_Time_Vector);
+      Def ("digits",              Name_Digits);
+      Def ("format",              Name_Format);
+      Def ("unit",                Name_Unit);
 
       Def ("domain_type",         Name_Domain_Type);
       Def ("quiescent_domain",    Name_Quiescent_Domain);

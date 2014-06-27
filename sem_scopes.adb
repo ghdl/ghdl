@@ -925,6 +925,11 @@ package body Sem_Scopes is
          when Iir_Kinds_Signal_Attribute =>
             null;
 
+         when Iir_Kind_Protected_Type_Body =>
+            --  FIXME: allowed only in debugger (if the current scope is
+            --  within a package body) ?
+            null;
+
          when others =>
             Error_Kind ("iterator_decl", Decl);
       end case;

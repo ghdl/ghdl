@@ -348,14 +348,17 @@ package Std_Names is
    Name_Integer_Vector :   constant Name_Id := Name_First_Standard + 050;
    Name_Real_Vector :      constant Name_Id := Name_First_Standard + 051;
    Name_Time_Vector :      constant Name_Id := Name_First_Standard + 052;
+   Name_Digits      :      constant Name_Id := Name_First_Standard + 053;
+   Name_Format      :      constant Name_Id := Name_First_Standard + 054;
+   Name_Unit        :      constant Name_Id := Name_First_Standard + 055;
 
    --  Added by AMS vhdl.
-   Name_Domain_Type :      constant Name_Id := Name_First_Standard + 053;
-   Name_Quiescent_Domain : constant Name_Id := Name_First_Standard + 054;
-   Name_Time_Domain :      constant Name_Id := Name_First_Standard + 055;
-   Name_Frequency_Domain : constant Name_Id := Name_First_Standard + 056;
-   Name_Domain :           constant Name_Id := Name_First_Standard + 057;
-   Name_Frequency :        constant Name_Id := Name_First_Standard + 058;
+   Name_Domain_Type :      constant Name_Id := Name_First_Standard + 056;
+   Name_Quiescent_Domain : constant Name_Id := Name_First_Standard + 057;
+   Name_Time_Domain :      constant Name_Id := Name_First_Standard + 058;
+   Name_Frequency_Domain : constant Name_Id := Name_First_Standard + 059;
+   Name_Domain :           constant Name_Id := Name_First_Standard + 060;
+   Name_Frequency :        constant Name_Id := Name_First_Standard + 061;
 
    Name_Last_Standard :  constant Name_Id := Name_Frequency;
 

@@ -260,17 +260,20 @@ package body Std_Package is
 
       --  Create:
       --  function TO_STRING (VALUE: inter_type) return STRING;
-      procedure Create_To_String (Inter_Type : Iir)
+      procedure Create_To_String (Inter_Type : Iir;
+                                  Imp : Iir_Predefined_Functions;
+                                  Inter2_Id : Name_Id := Null_Identifier;
+                                  Inter2_Type : Iir := Null_Iir)
       is
          Decl : Iir_Implicit_Function_Declaration;
          Inter : Iir_Constant_Interface_Declaration;
+         Inter2 : Iir_Constant_Interface_Declaration;
       begin
          Decl := Create_Std_Decl (Iir_Kind_Implicit_Function_Declaration);
          Set_Std_Identifier (Decl, Std_Names.Name_To_String);
          Set_Return_Type (Decl, String_Type_Definition);
          Set_Pure_Flag (Decl, True);
-         --  FIXME!!!
-         Set_Implicit_Definition (Decl, Iir_Predefined_Now_Function);
+         Set_Implicit_Definition (Decl, Imp);
 
          Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
          Set_Identifier (Inter, Std_Names.Name_Value);
@@ -278,6 +281,15 @@ package body Std_Package is
          Set_Mode (Inter, Iir_In_Mode);
          Set_Base_Name (Inter, Inter);
          Set_Interface_Declaration_Chain (Decl, Inter);
+
+         if Inter2_Id /= Null_Identifier then
+            Inter2 := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+            Set_Identifier (Inter2, Inter2_Id);
+            Set_Type (Inter2, Inter2_Type);
+            Set_Mode (Inter2, Iir_In_Mode);
+            Set_Base_Name (Inter2, Inter2);
+            Set_Chain (Inter, Inter2);
+         end if;
 
          Sem.Compute_Subprogram_Hash (Decl);
          Add_Decl (Decl);
@@ -309,16 +321,10 @@ package body Std_Package is
       end Create_Edge_Function;
 
    begin
+      --  Create design file.
       Std_Standard_File := Create_Std_Iir (Iir_Kind_Design_File);
       Set_Parent (Std_Standard_File, Parent);
       Set_Design_File_Filename (Std_Standard_File, Std_Filename);
-      Std_Standard_Unit := Create_Std_Iir (Iir_Kind_Design_Unit);
-      Set_Identifier (Std_Standard_Unit, Name_Standard);
-      Set_First_Design_Unit (Std_Standard_File, Std_Standard_Unit);
-      Set_Last_Design_Unit (Std_Standard_File, Std_Standard_Unit);
-      Set_Design_File (Std_Standard_Unit, Std_Standard_File);
-      Set_Date_State (Std_Standard_Unit, Date_Analyze);
-      Set_Dependence_List (Std_Standard_Unit, Create_Iir_List);
 
       declare
          use Str_Table;
@@ -333,6 +339,15 @@ package body Std_Package is
          Str_Table.Finish;
          Set_Analysis_Time_Stamp (Std_Standard_File, Id);
       end;
+
+      --  Create design unit.
+      Std_Standard_Unit := Create_Std_Iir (Iir_Kind_Design_Unit);
+      Set_Identifier (Std_Standard_Unit, Name_Standard);
+      Set_First_Design_Unit (Std_Standard_File, Std_Standard_Unit);
+      Set_Last_Design_Unit (Std_Standard_File, Std_Standard_Unit);
+      Set_Design_File (Std_Standard_Unit, Std_Standard_File);
+      Set_Date_State (Std_Standard_Unit, Date_Analyze);
+      Set_Dependence_List (Std_Standard_Unit, Create_Iir_List);
 
       Set_Date (Std_Standard_Unit, Date_Valid'First);
 
@@ -374,6 +389,7 @@ package body Std_Package is
       end;
 
       if Vhdl_Std >= Vhdl_08 then
+         --  Rising_Edge and Falling_Edge
          Create_Edge_Function
            (Std_Names.Name_Rising_Edge, Iir_Predefined_Boolean_Rising_Edge,
             Boolean_Type_Definition);
@@ -413,6 +429,7 @@ package body Std_Package is
       end;
 
       if Vhdl_Std >= Vhdl_08 then
+         --  Rising_Edge and Falling_Edge
          Create_Edge_Function
            (Std_Names.Name_Rising_Edge, Iir_Predefined_Bit_Rising_Edge,
             Bit_Type_Definition);
@@ -503,7 +520,7 @@ package body Std_Package is
          Add_Implicit_Operations (Severity_Level_Type);
       end;
 
-      -- universal types.
+      -- universal integer
       begin
          Create_Integer_Type (Universal_Integer_Type_Definition,
                               Universal_Integer_Type,
@@ -663,87 +680,6 @@ package body Std_Package is
 
          Set_Subtype_Definition (Real_Type, Real_Subtype_Definition);
       end;
-
-      -- natural subtype
-      declare
-         Constraint : Iir_Range_Expression;
-      begin
-         Natural_Subtype_Definition :=
-           Create_Std_Iir (Iir_Kind_Integer_Subtype_Definition);
-         Set_Base_Type (Natural_Subtype_Definition, Integer_Type_Definition);
-         Constraint := Create_Std_Range_Expr
-           (Create_Std_Integer (0, Integer_Type_Definition),
-            Create_Std_Integer (High_Bound (Flags.Flag_Integer_64),
-                                Integer_Type_Definition),
-            Integer_Type_Definition);
-         Set_Range_Constraint (Natural_Subtype_Definition, Constraint);
-         Set_Type_Staticness (Natural_Subtype_Definition, Locally);
-         Set_Signal_Type_Flag (Natural_Subtype_Definition, True);
-         Set_Has_Signal_Flag (Natural_Subtype_Definition,
-                              not Flags.Flag_Whole_Analyze);
-
-         Natural_Subtype := Create_Std_Decl (Iir_Kind_Subtype_Declaration);
-         Set_Std_Identifier (Natural_Subtype, Name_Natural);
-         Set_Type (Natural_Subtype, Natural_Subtype_Definition);
-         Add_Decl (Natural_Subtype);
-         Set_Type_Declarator (Natural_Subtype_Definition, Natural_Subtype);
-      end;
-
-      -- positive subtype
-      declare
-         Constraint : Iir_Range_Expression;
-      begin
-         Positive_Subtype_Definition :=
-           Create_Std_Iir (Iir_Kind_Integer_Subtype_Definition);
-         Set_Base_Type (Positive_Subtype_Definition,
-                        Integer_Type_Definition);
-         Constraint := Create_Std_Range_Expr
-           (Create_Std_Integer (1, Integer_Type_Definition),
-            Create_Std_Integer (High_Bound (Flags.Flag_Integer_64),
-                                Integer_Type_Definition),
-             Integer_Type_Definition);
-         Set_Range_Constraint (Positive_Subtype_Definition, Constraint);
-         Set_Type_Staticness (Positive_Subtype_Definition, Locally);
-         Set_Signal_Type_Flag (Positive_Subtype_Definition, True);
-         Set_Has_Signal_Flag (Positive_Subtype_Definition,
-                              not Flags.Flag_Whole_Analyze);
-
-         Positive_Subtype := Create_Std_Decl (Iir_Kind_Subtype_Declaration);
-         Set_Std_Identifier (Positive_Subtype, Name_Positive);
-         Set_Type (Positive_Subtype, Positive_Subtype_Definition);
-         Add_Decl (Positive_Subtype);
-         Set_Type_Declarator (Positive_Subtype_Definition, Positive_Subtype);
-      end;
-
-      -- string type.
-      -- type string is array (positive range <>) of character;
-      begin
-         String_Type_Definition :=
-           Create_Std_Iir (Iir_Kind_Array_Type_Definition);
-         Set_Base_Type (String_Type_Definition, String_Type_Definition);
-         Set_Index_Subtype_List (String_Type_Definition, Create_Iir_List);
-         Append_Element (Get_Index_Subtype_List (String_Type_Definition),
-                         Positive_Subtype_Definition);
-         Set_Element_Subtype (String_Type_Definition,
-                              Character_Type_Definition);
-         Set_Type_Staticness (String_Type_Definition, None);
-         Set_Signal_Type_Flag (String_Type_Definition, True);
-         Set_Has_Signal_Flag (String_Type_Definition,
-                              not Flags.Flag_Whole_Analyze);
-
-         String_Type := Create_Std_Decl (Iir_Kind_Type_Declaration);
-         Set_Std_Identifier (String_Type, Name_String);
-         Set_Type (String_Type, String_Type_Definition);
-         Add_Decl (String_Type);
-         Set_Type_Declarator (String_Type_Definition, String_Type);
-
-         Add_Implicit_Operations (String_Type);
-      end;
-
-      -- bit_vector type.
-      -- type bit_vector is array (natural range <>) of bit;
-      Create_Array_Type (Bit_Vector_Type_Definition, Bit_Vector_Type,
-                         Bit_Type_Definition, Name_Bit_Vector);
 
       -- time definition
       declare
@@ -944,28 +880,111 @@ package body Std_Package is
          Add_Decl (Function_Now);
       end;
 
-      --  VHDL 2008
-      --  Vector types
+      -- natural subtype
+      declare
+         Constraint : Iir_Range_Expression;
+      begin
+         Natural_Subtype_Definition :=
+           Create_Std_Iir (Iir_Kind_Integer_Subtype_Definition);
+         Set_Base_Type (Natural_Subtype_Definition, Integer_Type_Definition);
+         Constraint := Create_Std_Range_Expr
+           (Create_Std_Integer (0, Integer_Type_Definition),
+            Create_Std_Integer (High_Bound (Flags.Flag_Integer_64),
+                                Integer_Type_Definition),
+            Integer_Type_Definition);
+         Set_Range_Constraint (Natural_Subtype_Definition, Constraint);
+         Set_Type_Staticness (Natural_Subtype_Definition, Locally);
+         Set_Signal_Type_Flag (Natural_Subtype_Definition, True);
+         Set_Has_Signal_Flag (Natural_Subtype_Definition,
+                              not Flags.Flag_Whole_Analyze);
+
+         Natural_Subtype := Create_Std_Decl (Iir_Kind_Subtype_Declaration);
+         Set_Std_Identifier (Natural_Subtype, Name_Natural);
+         Set_Type (Natural_Subtype, Natural_Subtype_Definition);
+         Add_Decl (Natural_Subtype);
+         Set_Type_Declarator (Natural_Subtype_Definition, Natural_Subtype);
+      end;
+
+      -- positive subtype
+      declare
+         Constraint : Iir_Range_Expression;
+      begin
+         Positive_Subtype_Definition :=
+           Create_Std_Iir (Iir_Kind_Integer_Subtype_Definition);
+         Set_Base_Type (Positive_Subtype_Definition,
+                        Integer_Type_Definition);
+         Constraint := Create_Std_Range_Expr
+           (Create_Std_Integer (1, Integer_Type_Definition),
+            Create_Std_Integer (High_Bound (Flags.Flag_Integer_64),
+                                Integer_Type_Definition),
+             Integer_Type_Definition);
+         Set_Range_Constraint (Positive_Subtype_Definition, Constraint);
+         Set_Type_Staticness (Positive_Subtype_Definition, Locally);
+         Set_Signal_Type_Flag (Positive_Subtype_Definition, True);
+         Set_Has_Signal_Flag (Positive_Subtype_Definition,
+                              not Flags.Flag_Whole_Analyze);
+
+         Positive_Subtype := Create_Std_Decl (Iir_Kind_Subtype_Declaration);
+         Set_Std_Identifier (Positive_Subtype, Name_Positive);
+         Set_Type (Positive_Subtype, Positive_Subtype_Definition);
+         Add_Decl (Positive_Subtype);
+         Set_Type_Declarator (Positive_Subtype_Definition, Positive_Subtype);
+      end;
+
+      -- string type.
+      -- type string is array (positive range <>) of character;
+      begin
+         String_Type_Definition :=
+           Create_Std_Iir (Iir_Kind_Array_Type_Definition);
+         Set_Base_Type (String_Type_Definition, String_Type_Definition);
+         Set_Index_Subtype_List (String_Type_Definition, Create_Iir_List);
+         Append_Element (Get_Index_Subtype_List (String_Type_Definition),
+                         Positive_Subtype_Definition);
+         Set_Element_Subtype (String_Type_Definition,
+                              Character_Type_Definition);
+         Set_Type_Staticness (String_Type_Definition, None);
+         Set_Signal_Type_Flag (String_Type_Definition, True);
+         Set_Has_Signal_Flag (String_Type_Definition,
+                              not Flags.Flag_Whole_Analyze);
+
+         String_Type := Create_Std_Decl (Iir_Kind_Type_Declaration);
+         Set_Std_Identifier (String_Type, Name_String);
+         Set_Type (String_Type, String_Type_Definition);
+         Add_Decl (String_Type);
+         Set_Type_Declarator (String_Type_Definition, String_Type);
+
+         Add_Implicit_Operations (String_Type);
+      end;
+
       if Vhdl_Std >= Vhdl_08 then
          --  type Boolean_Vector is array (Natural range <>) of Boolean;
          Create_Array_Type
            (Boolean_Vector_Type_Definition, Boolean_Vector_Type,
-            Integer_Type_Definition, Name_Boolean_Vector);
+            Boolean_Type_Definition, Name_Boolean_Vector);
+      end if;
 
+      -- bit_vector type.
+      -- type bit_vector is array (natural range <>) of bit;
+      Create_Array_Type (Bit_Vector_Type_Definition, Bit_Vector_Type,
+                         Bit_Type_Definition, Name_Bit_Vector);
+
+      --  VHDL 2008
+      --  Vector types
+      if Vhdl_Std >= Vhdl_08 then
          -- type integer_vector is array (natural range <>) of Integer;
          Create_Array_Type
            (Integer_Vector_Type_Definition, Integer_Vector_Type,
-            Integer_Type_Definition, Name_Integer_Vector);
+            Integer_Subtype_Definition, Name_Integer_Vector);
 
          -- type Real_vector is array (natural range <>) of Real;
          Create_Array_Type
            (Real_Vector_Type_Definition, Real_Vector_Type,
-            Real_Type_Definition, Name_Real_Vector);
+            Real_Subtype_Definition, Name_Real_Vector);
 
-         -- type Real_vector is array (natural range <>) of Real;
+         -- type Time_vector is array (natural range <>) of Time;
          Create_Array_Type
            (Time_Vector_Type_Definition, Time_Vector_Type,
-            Time_Type_Definition, Name_Time_Vector);
+            Time_Subtype_Definition, Name_Time_Vector);
       end if;
 
       --  VHDL93:
@@ -1062,17 +1081,42 @@ package body Std_Package is
       end if;
 
       if Vhdl_Std >= Vhdl_08 then
-         Create_To_String (Boolean_Type_Definition);
-         Create_To_String (Bit_Type_Definition);
-         Create_To_String (Character_Type_Definition);
-         Create_To_String (Severity_Level_Type_Definition);
-         Create_To_String (Universal_Integer_Type_Definition);
-         Create_To_String (Universal_Real_Type_Definition);
-         Create_To_String (Integer_Type_Definition);
-         Create_To_String (Real_Type_Definition);
-         Create_To_String (Time_Type_Definition);
-         Create_To_String (File_Open_Kind_Type_Definition);
-         Create_To_String (File_Open_Status_Type_Definition);
+         Create_To_String (Boolean_Type_Definition,
+                           Iir_Predefined_Enum_To_String);
+         Create_To_String (Bit_Type_Definition,
+                           Iir_Predefined_Enum_To_String);
+         Create_To_String (Character_Type_Definition,
+                           Iir_Predefined_Enum_To_String);
+         Create_To_String (Severity_Level_Type_Definition,
+                           Iir_Predefined_Enum_To_String);
+         Create_To_String (Universal_Integer_Type_Definition,
+                           Iir_Predefined_Integer_To_String);
+         Create_To_String (Universal_Real_Type_Definition,
+                           Iir_Predefined_Floating_To_String);
+         Create_To_String (Integer_Type_Definition,
+                           Iir_Predefined_Integer_To_String);
+         Create_To_String (Real_Type_Definition,
+                           Iir_Predefined_Floating_To_String);
+         Create_To_String (Time_Type_Definition,
+                           Iir_Predefined_Physical_To_String);
+         Create_To_String (File_Open_Kind_Type_Definition,
+                           Iir_Predefined_Enum_To_String);
+         Create_To_String (File_Open_Status_Type_Definition,
+                           Iir_Predefined_Enum_To_String);
+
+         --  Predefined overload TO_STRING operations
+         Create_To_String (Real_Type_Definition,
+                           Iir_Predefined_Real_To_String_Digits,
+                           Name_Digits,
+                           Natural_Subtype_Definition);
+         Create_To_String (Real_Type_Definition,
+                           Iir_Predefined_Real_To_String_Format,
+                           Name_Format,
+                           String_Type_Definition);
+         Create_To_String (Time_Type_Definition,
+                           Iir_Predefined_Time_To_String_Unit,
+                           Name_Unit,
+                           Time_Subtype_Definition);
       end if;
 
    end Create_Std_Standard_Package;

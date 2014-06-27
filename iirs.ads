@@ -3109,6 +3109,7 @@ package Iirs is
 
        Iir_Predefined_Enum_Minimum,
        Iir_Predefined_Enum_Maximum,
+       Iir_Predefined_Enum_To_String,
 
    --  Predefined operators for BIT type.
        Iir_Predefined_Bit_And,
@@ -3152,6 +3153,7 @@ package Iirs is
 
        Iir_Predefined_Integer_Minimum,
        Iir_Predefined_Integer_Maximum,
+       Iir_Predefined_Integer_To_String,
 
    --  Predefined operators for any floating type.
        Iir_Predefined_Floating_Equality,
@@ -3174,6 +3176,10 @@ package Iirs is
 
        Iir_Predefined_Floating_Minimum,
        Iir_Predefined_Floating_Maximum,
+       Iir_Predefined_Floating_To_String,
+
+       Iir_Predefined_Real_To_String_Digits,
+       Iir_Predefined_Real_To_String_Format,
 
    --  Predefined operator for universal types.
        Iir_Predefined_Universal_R_I_Mul,
@@ -3205,6 +3211,9 @@ package Iirs is
 
        Iir_Predefined_Physical_Minimum,
        Iir_Predefined_Physical_Maximum,
+       Iir_Predefined_Physical_To_String,
+
+       Iir_Predefined_Time_To_String_Unit,
 
    --  Predefined operators for access.
        Iir_Predefined_Access_Equality,
