@@ -4000,6 +4000,45 @@ package body Sem_Expr is
       return Res;
    end Sem_Expression;
 
+   function Sem_Composite_Expression (Expr : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Sem_Expression_Ov (Expr, Null_Iir);
+      if Is_Overloaded (Res) then
+         declare
+            List : constant Iir_List := Get_Overload_List (Get_Type (Res));
+            Res_Type : Iir;
+            Atype : Iir;
+         begin
+            Res_Type := Null_Iir;
+            for I in Natural loop
+               Atype := Get_Nth_Element (List, I);
+               exit when Atype = Null_Iir;
+               if Is_Aggregate_Type (Atype) then
+                  Add_Result (Res_Type, Atype);
+               end if;
+            end loop;
+
+            if Res_Type = Null_Iir then
+               Error_Overload (Expr);
+               return Null_Iir;
+            elsif Is_Overload_List (Res_Type) then
+               Error_Overload (Expr);
+               Disp_Overload_List (Get_Overload_List (Res_Type), Expr);
+               Free_Overload_List (Res_Type);
+               return Null_Iir;
+            else
+               return Sem_Expression_Ov (Expr, Res_Type);
+            end if;
+         end;
+      else
+         --  Either an error (already handled) or not overloaded.  Type
+         --  matching will be done later (when the target is analyzed).
+         return Res;
+      end if;
+   end Sem_Composite_Expression;
+
    function Sem_Expression_Universal (Expr : Iir) return Iir
    is
       Expr1 : Iir;

@@ -87,6 +87,16 @@ package body Sem_Names is
       return Res;
    end Create_Overload_List;
 
+   procedure Free_Overload_List (N : in out Iir_Overload_List)
+   is
+      List : Iir_List;
+   begin
+      List := Get_Overload_List (N);
+      Destroy_Iir_List (List);
+      Free_Iir (N);
+      N := Null_Iir;
+   end Free_Overload_List;
+
    function Simplify_Overload_List (List : Iir_List) return Iir
    is
       Res : Iir;
@@ -144,9 +154,6 @@ package body Sem_Names is
       return Simplify_Overload_List (Res_List);
    end Create_List_Of_Types;
 
-   --  Add new interpretation DECL to RES.
-   --  Create an overload_list if necessary.
-   --  Before the first call, RES should be set to NULL_IIR.
    procedure Add_Result (Res : in out Iir; Decl : Iir)
    is
       Nres : Iir;

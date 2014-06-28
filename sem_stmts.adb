@@ -687,18 +687,31 @@ package body Sem_Stmts is
       -- Find the variable.
       Target := Get_Target (Stmt);
       Expr := Get_Expression (Stmt);
+
+      --  LRM93 8.5 Variable assignment statement
+      --  If the target of the variable assignment statement is in the form of
+      --  an aggregate, then the type of the aggregate must be determinable
+      --  from the context, excluding the aggregate itself but including the
+      --  fact that the type of the aggregate must be a composite type.  The
+      --  base type of the expression on the right-hand side must be the
+      --  same as the base type of the aggregate.
+      --
+      --  GHDL: this means that the type can only be deduced from the
+      --  expression (and not from the target).
       if Get_Kind (Target) = Iir_Kind_Aggregate then
          if Get_Kind (Expr) = Iir_Kind_Aggregate then
             Error_Msg_Sem ("can't determine type, use type qualifier", Expr);
             return;
          end if;
-         Expr := Sem_Expression (Get_Expression (Stmt), Null_Iir);
+         Expr := Sem_Composite_Expression (Get_Expression (Stmt));
          if Expr = Null_Iir then
             return;
          end if;
          Check_Read (Expr);
          Set_Expression (Stmt, Expr);
          Target_Type := Get_Type (Expr);
+
+         --  FIXME: check elements are identified at most once.
       else
          Target_Type := Null_Iir;
       end if;

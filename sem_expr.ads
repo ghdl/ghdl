@@ -69,6 +69,11 @@ package Sem_Expr is
    --  A check is made that COND can be read.
    function Sem_Condition (Cond : Iir) return Iir;
 
+   --  Same as Sem_Expression but knowing that the type of EXPR must be a
+   --  composite type.  Used for expressions in assignment statement when the
+   --  target is an aggregate.
+   function Sem_Composite_Expression (Expr : Iir) return Iir;
+
    --  Check EXPR can be read.
    procedure Check_Read (Expr : Iir);
 

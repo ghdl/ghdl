@@ -64,19 +64,31 @@ package Sem_Names is
    function Is_Overload_List (An_Iir: Iir) return Boolean;
    pragma Inline (Is_Overload_List);
 
-   -- Create an overload list.
-   -- must be destroyed with free_iir.
+   -- Create an overload list, that must be destroyed by Destroy_Overload_List.
    function Get_Overload_List return Iir_Overload_List;
    pragma Inline (Get_Overload_List);
+
    function Create_Overload_List (List : Iir_List) return Iir_Overload_List;
    pragma Inline (Create_Overload_List);
 
+   --  Free the list node (and the list itself).
+   procedure Free_Overload_List (N : in out Iir_Overload_List);
+   pragma Unreferenced (Free_Overload_List);
+
+   --  Display an error message if the overload resolution for EXPR find more
+   --  than one interpretation.
    procedure Error_Overload (Expr: Iir);
 
+   --  Disp the overload list LIST.
    procedure Disp_Overload_List (List : Iir_List; Loc : Iir);
 
    --  Convert a list to either Null_Iir, an element or an overload list.
    function Simplify_Overload_List (List : Iir_List) return Iir;
+
+   --  Add new interpretation DECL to RES.
+   --  Create an overload_list if necessary.
+   --  Before the first call, RES should be set to NULL_IIR.
+   procedure Add_Result (Res : in out Iir; Decl : Iir);
 
    --  Return TRUE iff TYPE1 and TYPE2 are closely related.
    function Are_Types_Closely_Related (Type1, Type2 : Iir) return Boolean;

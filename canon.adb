@@ -65,6 +65,7 @@ package body Canon is
    procedure Canon_Block_Configuration (Top : Iir_Design_Unit;
                                         Conf : Iir_Block_Configuration);
 
+   procedure Canon_Subtype_Indication (Def : Iir);
    procedure Canon_Subtype_Indication_If_Anonymous (Def : Iir);
 
    procedure Canon_Extract_Sensitivity_Aggregate
@@ -662,7 +663,13 @@ package body Canon is
          when Iir_Kind_Allocator_By_Expression =>
             Canon_Expression (Get_Expression (Expr));
          when Iir_Kind_Allocator_By_Subtype =>
-            null;
+            declare
+               Ind : constant Iir := Get_Expression (Expr);
+            begin
+               if Get_Kind (Ind) = Iir_Kind_Array_Subtype_Definition then
+                  Canon_Subtype_Indication (Ind);
+               end if;
+            end;
 
          when Iir_Kinds_Literal
            | Iir_Kind_Simple_Aggregate
@@ -2163,8 +2170,7 @@ package body Canon is
       case Get_Kind (Def) is
          when Iir_Kind_Array_Subtype_Definition =>
             declare
-               Indexes : constant Iir_List :=
-                 Get_Index_Subtype_List (Def);
+               Indexes : constant Iir_List := Get_Index_Subtype_List (Def);
                Index : Iir;
             begin
                for I in Natural loop
