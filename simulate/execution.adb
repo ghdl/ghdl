@@ -166,6 +166,80 @@ package body Execution is
       end case;
    end Create_Enum_Value;
 
+   function String_To_Iir_Value (Str : String) return Iir_Value_Literal_Acc
+   is
+      Res : Iir_Value_Literal_Acc;
+   begin
+      Res := Create_Array_Value (Str'Length, 1);
+      Res.Bounds.D (1) := Create_Range_Value
+        (Create_I64_Value (1),
+         Create_I64_Value (Str'Length),
+         Iir_To);
+      for I in Str'Range loop
+         Res.Val_Array.V (1 + Iir_Index32 (I - Str'First)) :=
+           Create_E32_Value (Character'Pos (Str (I)));
+      end loop;
+      return Res;
+   end String_To_Iir_Value;
+
+   function Execute_Image_Attribute (Val : Iir_Value_Literal_Acc;
+                                     Expr_Type : Iir)
+                                    return String
+   is
+   begin
+      case Get_Kind (Expr_Type) is
+         when Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Floating_Subtype_Definition =>
+            declare
+               Str : String (1 .. 24);
+               Last : Natural;
+            begin
+               Grt.Vstrings.To_String (Str, Last, Val.F64);
+               return Str (Str'First .. Last);
+            end;
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Integer_Subtype_Definition =>
+            declare
+               Str : String (1 .. 21);
+               First : Natural;
+            begin
+               Grt.Vstrings.To_String (Str, First, Val.I64);
+               return Str (First .. Str'Last);
+            end;
+         when Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition =>
+            declare
+               Lits : constant Iir_List :=
+                 Get_Enumeration_Literal_List (Expr_Type);
+               Pos : Natural;
+            begin
+               case Val.Kind is
+                  when Iir_Value_B2 =>
+                     Pos := Ghdl_B2'Pos (Val.B2);
+                  when Iir_Value_E32 =>
+                     Pos := Ghdl_E32'Pos (Val.E32);
+                  when others =>
+                     raise Internal_Error;
+               end case;
+               return Name_Table.Image
+                 (Get_Identifier (Get_Nth_Element (Lits, Pos)));
+            end;
+         when Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Physical_Subtype_Definition =>
+            declare
+               Str : String (1 .. 21);
+               First : Natural;
+               Id : constant Name_Id :=
+                 Get_Identifier (Get_Primary_Unit (Get_Base_Type (Expr_Type)));
+            begin
+               Grt.Vstrings.To_String (Str, First, Val.I64);
+               return Str (First .. Str'Last) & ' ' & Name_Table.Image (Id);
+            end;
+         when others =>
+            Error_Kind ("execute_image_attribute", Expr_Type);
+      end case;
+   end Execute_Image_Attribute;
+
    function Execute_Shift_Operator (Left : Iir_Value_Literal_Acc;
                                     Count : Ghdl_I64;
                                     Expr : Iir)
@@ -273,7 +347,6 @@ package body Execution is
       return Res;
    end Execute_Shift_Operator;
 
-
    --  EXPR is the expression whose implementation is an implicit function.
    function Execute_Implicit_Function (Block : Block_Instance_Acc;
                                        Expr: Iir;
@@ -289,7 +362,6 @@ package body Execution is
       --  Rename definition for monadic operations.
       Left, Right: Iir_Value_Literal_Acc;
       Operand : Iir_Value_Literal_Acc renames Left;
-      Res: Iir_Value_Literal_Acc;
       Result: Iir_Value_Literal_Acc;
 
       procedure Eval_Right is
@@ -298,7 +370,7 @@ package body Execution is
       end Eval_Right;
 
       --  Eval right argument, check left and right have same length,
-      --  Create RES from left.
+      --  Create RESULT from left.
       procedure Eval_Array is
       begin
          Eval_Right;
@@ -306,7 +378,7 @@ package body Execution is
             Error_Msg_Constraint (Expr);
          end if;
          --  Need to copy as the result is modified.
-         Res := Unshare (Left, Expr_Pool'Access);
+         Result := Unshare (Left, Expr_Pool'Access);
       end Eval_Array;
 
    begin
@@ -361,8 +433,8 @@ package body Execution is
                end if;
 
                -- Create the array result.
-               Res := Create_Array_Value (Len, 1);
-               Res.Bounds.D (1) := Create_Bounds_From_Length
+               Result := Create_Array_Value (Len, 1);
+               Result.Bounds.D (1) := Create_Bounds_From_Length
                  (Block, Get_First_Element (Get_Index_Subtype_List (Res_Type)),
                   Len);
 
@@ -371,12 +443,12 @@ package body Execution is
                   when Iir_Predefined_Array_Array_Concat
                     | Iir_Predefined_Array_Element_Concat =>
                      for I in Left.Val_Array.V'Range loop
-                        Res.Val_Array.V (I) := Left.Val_Array.V (I);
+                        Result.Val_Array.V (I) := Left.Val_Array.V (I);
                      end loop;
                      Pos := Left.Val_Array.Len;
                   when Iir_Predefined_Element_Array_Concat
                     | Iir_Predefined_Element_Element_Concat =>
-                     Res.Val_Array.V (1) := Left;
+                     Result.Val_Array.V (1) := Left;
                      Pos := 1;
                   when others =>
                      raise Program_Error;
@@ -390,16 +462,14 @@ package body Execution is
                   when Iir_Predefined_Array_Array_Concat
                     | Iir_Predefined_Element_Array_Concat =>
                      for I in Right.Val_Array.V'Range loop
-                        Res.Val_Array.V (Pos + I) := Right.Val_Array.V (I);
+                        Result.Val_Array.V (Pos + I) := Right.Val_Array.V (I);
                      end loop;
                   when Iir_Predefined_Array_Element_Concat
                     | Iir_Predefined_Element_Element_Concat =>
-                     Res.Val_Array.V (Pos + 1) := Right;
+                     Result.Val_Array.V (Pos + 1) := Right;
                   when others =>
                      raise Program_Error;
                end case;
-
-               Result := Res;
             end;
 
          when Iir_Predefined_Bit_And
@@ -736,52 +806,46 @@ package body Execution is
          when Iir_Predefined_Bit_Array_And
            | Iir_Predefined_Boolean_Array_And =>
             Eval_Array;
-            for I in Res.Val_Array.V'Range loop
-               Res.Val_Array.V (I).B2 :=
-                 Res.Val_Array.V (I).B2 and Right.Val_Array.V (I).B2;
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 Result.Val_Array.V (I).B2 and Right.Val_Array.V (I).B2;
             end loop;
-            Result := Res;
          when Iir_Predefined_Bit_Array_Nand
            | Iir_Predefined_Boolean_Array_Nand =>
             Eval_Array;
-            for I in Res.Val_Array.V'Range loop
-               Res.Val_Array.V (I).B2 :=
-                 not (Res.Val_Array.V (I).B2 and Right.Val_Array.V (I).B2);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 not (Result.Val_Array.V (I).B2 and Right.Val_Array.V (I).B2);
             end loop;
-            Result := Res;
          when Iir_Predefined_Bit_Array_Or
            | Iir_Predefined_Boolean_Array_Or =>
             Eval_Array;
-            for I in Res.Val_Array.V'Range loop
-               Res.Val_Array.V (I).B2 :=
-                 Res.Val_Array.V (I).B2 or Right.Val_Array.V (I).B2;
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 Result.Val_Array.V (I).B2 or Right.Val_Array.V (I).B2;
             end loop;
-            Result := Res;
          when Iir_Predefined_Bit_Array_Nor
            | Iir_Predefined_Boolean_Array_Nor =>
             Eval_Array;
-            for I in Res.Val_Array.V'Range loop
-               Res.Val_Array.V (I).B2 :=
-                 not (Res.Val_Array.V (I).B2 or Right.Val_Array.V (I).B2);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 not (Result.Val_Array.V (I).B2 or Right.Val_Array.V (I).B2);
             end loop;
-            Result := Res;
          when Iir_Predefined_Bit_Array_Xor
            | Iir_Predefined_Boolean_Array_Xor =>
             Eval_Array;
-            for I in Res.Val_Array.V'Range loop
-               Res.Val_Array.V (I).B2 :=
-                 Res.Val_Array.V (I).B2 xor Right.Val_Array.V (I).B2;
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 Result.Val_Array.V (I).B2 xor Right.Val_Array.V (I).B2;
             end loop;
-            Result := Res;
 
          when Iir_Predefined_Bit_Array_Not
            | Iir_Predefined_Boolean_Array_Not =>
             --  Need to copy as the result is modified.
-            Res := Unshare (Operand, Expr_Pool'Access);
-            for I in Res.Val_Array.V'Range loop
-               Res.Val_Array.V (I).B2 := not Res.Val_Array.V (I).B2;
+            Result := Unshare (Operand, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 := not Result.Val_Array.V (I).B2;
             end loop;
-            Result := Res;
 
          when Iir_Predefined_Array_Greater =>
             Eval_Right;
@@ -804,6 +868,10 @@ package body Execution is
 
          when Iir_Predefined_Now_Function =>
             Result := Create_I64_Value (Ghdl_I64 (Grt.Types.Current_Time));
+
+         when Iir_Predefined_Integer_To_String =>
+            Result := String_To_Iir_Value
+              (Execute_Image_Attribute (Left, Get_Type (Left_Param)));
 
          when others =>
             Error_Msg ("execute_implicit_function: unimplemented " &
@@ -2077,80 +2145,6 @@ package body Execution is
          return Execute_Signal_Value (Res);
       end if;
    end Execute_Name;
-
-   function String_To_Iir_Value (Str : String) return Iir_Value_Literal_Acc
-   is
-      Res : Iir_Value_Literal_Acc;
-   begin
-      Res := Create_Array_Value (Str'Length, 1);
-      Res.Bounds.D (1) := Create_Range_Value
-        (Create_I64_Value (1),
-         Create_I64_Value (Str'Length),
-         Iir_To);
-      for I in Str'Range loop
-         Res.Val_Array.V (1 + Iir_Index32 (I - Str'First)) :=
-           Create_E32_Value (Character'Pos (Str (I)));
-      end loop;
-      return Res;
-   end String_To_Iir_Value;
-
-   function Execute_Image_Attribute (Val : Iir_Value_Literal_Acc;
-                                     Expr_Type : Iir)
-                                    return String
-   is
-   begin
-      case Get_Kind (Expr_Type) is
-         when Iir_Kind_Floating_Type_Definition
-           | Iir_Kind_Floating_Subtype_Definition =>
-            declare
-               Str : String (1 .. 24);
-               Last : Natural;
-            begin
-               Grt.Vstrings.To_String (Str, Last, Val.F64);
-               return Str (Str'First .. Last);
-            end;
-         when Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Integer_Subtype_Definition =>
-            declare
-               Str : String (1 .. 21);
-               First : Natural;
-            begin
-               Grt.Vstrings.To_String (Str, First, Val.I64);
-               return Str (First .. Str'Last);
-            end;
-         when Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Enumeration_Subtype_Definition =>
-            declare
-               Lits : constant Iir_List :=
-                 Get_Enumeration_Literal_List (Expr_Type);
-               Pos : Natural;
-            begin
-               case Val.Kind is
-                  when Iir_Value_B2 =>
-                     Pos := Ghdl_B2'Pos (Val.B2);
-                  when Iir_Value_E32 =>
-                     Pos := Ghdl_E32'Pos (Val.E32);
-                  when others =>
-                     raise Internal_Error;
-               end case;
-               return Name_Table.Image
-                 (Get_Identifier (Get_Nth_Element (Lits, Pos)));
-            end;
-         when Iir_Kind_Physical_Type_Definition
-           | Iir_Kind_Physical_Subtype_Definition =>
-            declare
-               Str : String (1 .. 21);
-               First : Natural;
-               Id : constant Name_Id :=
-                 Get_Identifier (Get_Primary_Unit (Get_Base_Type (Expr_Type)));
-            begin
-               Grt.Vstrings.To_String (Str, First, Val.I64);
-               return Str (First .. Str'Last) & ' ' & Name_Table.Image (Id);
-            end;
-         when others =>
-            Error_Kind ("execute_image_attribute", Expr_Type);
-      end case;
-   end Execute_Image_Attribute;
 
    function Execute_Image_Attribute (Block: Block_Instance_Acc; Expr: Iir)
                                     return Iir_Value_Literal_Acc

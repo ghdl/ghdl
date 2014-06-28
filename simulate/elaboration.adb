@@ -411,7 +411,14 @@ package body Elaboration is
 
       Inst := Create_Subprogram_Instance (Block, Bod);
       Protected_Table.Table (Res.Prot) := Inst;
+
+      --  Temporary put the instancce on the stack in case of function calls
+      --  during the elaboration of the protected object.
+      Current_Process.Instance := Inst;
+
       Elaborate_Declarative_Part (Inst, Get_Declaration_Chain (Bod));
+
+      Current_Process.Instance := Block;
 
       return Res;
    end Create_Protected_Object;
