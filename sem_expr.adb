@@ -1800,7 +1800,13 @@ package body Sem_Expr is
 
                --  The return type is known.
                --  Search for explicit subprogram.
-               if Flags.Flag_Explicit then
+
+               --  LRM08 12.4 Use clause
+               --  b) If two potentially visible declarations are homograph
+               --     and one is explicitly declared and the other is
+               --     implicitly declared, then the implicit declaration is not
+               --     made directly visible.
+               if Flags.Flag_Explicit or else Flags.Vhdl_Std >= Vhdl_08 then
                   Decl := Get_Explicit_Subprogram (Overload_List);
                   if Decl /= Null_Iir then
                      return Set_Uniq_Interpretation (Decl);
@@ -1811,7 +1817,10 @@ package body Sem_Expr is
                Error_Operator_Overload (Overload_List);
 
                --  Give an advice.
-               if not Flags.Flag_Explicit and not Explicit_Advice_Given then
+               if not Flags.Flag_Explicit
+                 and then not Explicit_Advice_Given
+                 and then Flags.Vhdl_Std < Vhdl_08
+               then
                   Decl := Get_Explicit_Subprogram (Overload_List);
                   if Decl /= Null_Iir then
                      Error_Msg_Sem
@@ -3716,7 +3725,7 @@ package body Sem_Expr is
                if not Valid_Interpretation
                  (Get_Next_Interpretation (Interpretation))
                then
-                  Decl := Get_Declaration (Interpretation);
+                  Decl := Get_Non_Alias_Declaration (Interpretation);
                   if A_Type /= Null_Iir and then A_Type = Get_Type (Decl) then
                      --  Free overload list of expr (if any), and expr.
                      Replace_Type (Expr, Null_Iir);
@@ -3744,7 +3753,7 @@ package body Sem_Expr is
                -- Store overloaded interpretation.
                List := Create_Iir_List;
                while Valid_Interpretation (Interpretation) loop
-                  Decl := Get_Declaration (Interpretation);
+                  Decl := Get_Non_Alias_Declaration (Interpretation);
                   Append_Element (List, Get_Type (Decl));
                   Interpretation := Get_Next_Interpretation (Interpretation);
                end loop;

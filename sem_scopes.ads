@@ -114,8 +114,9 @@ package Sem_Scopes is
      return Boolean;
    pragma Inline (Is_Potentially_Visible);
 
-   -- Return TRUE if INTER was made direclty visible in the current
-   -- declarative region.
+   --  Return TRUE if INTER was made direclty visible in the current
+   --  declarative region.  Note this is different from being declared in the
+   --  current declarative region because of use clauses.
    function Is_In_Current_Declarative_Region (Inter: Name_Interpretation_Type)
      return Boolean;
    pragma Inline (Is_In_Current_Declarative_Region);

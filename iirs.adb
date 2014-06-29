@@ -7064,6 +7064,28 @@ package body Iirs is
       Set_Field2 (Target, Iir_List_To_Iir (List));
    end Set_Type_Marks_List;
 
+   procedure Check_Kind_For_Implicit_Alias_Flag (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Non_Object_Alias_Declaration =>
+            null;
+         when others =>
+            Failed ("Implicit_Alias_Flag", Target);
+      end case;
+   end Check_Kind_For_Implicit_Alias_Flag;
+
+   function Get_Implicit_Alias_Flag (Decl : Iir) return Boolean is
+   begin
+      Check_Kind_For_Implicit_Alias_Flag (Decl);
+      return Get_Flag1 (Decl);
+   end Get_Implicit_Alias_Flag;
+
+   procedure Set_Implicit_Alias_Flag (Decl : Iir; Flag : Boolean) is
+   begin
+      Check_Kind_For_Implicit_Alias_Flag (Decl);
+      Set_Flag1 (Decl, Flag);
+   end Set_Implicit_Alias_Flag;
+
    procedure Check_Kind_For_Signature (Target : Iir) is
    begin
       case Get_Kind (Target) is

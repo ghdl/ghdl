@@ -28,6 +28,10 @@ package Canon is
    --  If true, canon expressions.
    Canon_Flag_Expressions : Boolean := False;
 
+   --  If true, replace 'all' sensitivity list by the explicit list
+   --  (If true, Canon_Flag_Sequentials_Stmts must be true)
+   Canon_Flag_All_Sensitivity : Boolean := False;
+
    --  If true, operands of type array element of a concatenation operator
    --  are converted (by an aggregate) into array.
    Canon_Concatenation : Boolean := False;

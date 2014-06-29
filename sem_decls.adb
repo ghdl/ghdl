@@ -1237,9 +1237,15 @@ package body Sem_Decls is
       if not Valid_Interpretation (Interp) then
          return Null_Iir;
       end if;
-      if not Is_In_Current_Declarative_Region (Interp) then
+
+      if not Is_In_Current_Declarative_Region (Interp)
+        or else Is_Potentially_Visible (Interp)
+      then
+         --  Deferred and full declarations must be declared in the same
+         --  declarative region.
          return Null_Iir;
       end if;
+
       Deferred_Const := Get_Declaration (Interp);
       if Get_Kind (Deferred_Const) /= Iir_Kind_Constant_Declaration then
          return Null_Iir;
@@ -1920,6 +1926,7 @@ package body Sem_Decls is
          Set_Identifier (N_Alias, Get_Identifier (Decl));
          Set_Name (N_Alias, Decl);
          Set_Parent (N_Alias, Get_Parent (Alias));
+         Set_Implicit_Alias_Flag (N_Alias, True);
 
          Sem_Scopes.Add_Name (N_Alias);
          Set_Visible_Flag (N_Alias, True);

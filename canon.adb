@@ -1570,6 +1570,14 @@ package body Canon is
                if Canon_Flag_Sequentials_Stmts then
                   Canon_Sequential_Stmts (Get_Sequential_Statement_Chain (El));
                end if;
+               if Canon_Flag_All_Sensitivity
+                 and then Canon_Flag_Sequentials_Stmts
+                 and then Get_Kind (El) = Iir_Kind_Sensitized_Process_Statement
+                 and then Get_Sensitivity_List (El) = Iir_List_All
+               then
+                  Set_Sensitivity_List
+                    (El, Canon_Extract_Process_Sensitivity (El));
+               end if;
 
             when Iir_Kind_Component_Instantiation_Statement =>
                declare

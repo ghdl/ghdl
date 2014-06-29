@@ -788,6 +788,10 @@ package Iirs is
    --
    --   Get/Set_Signature (Field5)
    --
+   -- Set when the alias was implicitely created (by Sem) because of an
+   -- explicit alias of a type.
+   --   Get/Set_Implicit_Alias_Flag (Flag1)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
@@ -5446,6 +5450,10 @@ package Iirs is
    --  Field: Field2 (uc)
    function Get_Type_Marks_List (Target : Iir) return Iir_List;
    procedure Set_Type_Marks_List (Target : Iir; List : Iir_List);
+
+   --  Field: Flag1
+   function Get_Implicit_Alias_Flag (Decl : Iir) return Boolean;
+   procedure Set_Implicit_Alias_Flag (Decl : Iir; Flag : Boolean);
 
    --  Field: Field5
    function Get_Signature (Target : Iir) return Iir;

@@ -252,16 +252,21 @@ package body Sem_Scopes is
       return Interpretations.Table (Ni).Decl;
    end Get_Declaration;
 
-   function Get_Non_Alias_Declaration (Ni: Name_Interpretation_Type)
-                                      return Iir
+   function Strip_Non_Object_Alias (Decl : Iir) return Iir
    is
       Res : Iir;
    begin
-      Res := Get_Declaration (Ni);
+      Res := Decl;
       if Get_Kind (Res) = Iir_Kind_Non_Object_Alias_Declaration then
          Res := Get_Name (Res);
       end if;
       return Res;
+   end Strip_Non_Object_Alias;
+
+   function Get_Non_Alias_Declaration (Ni: Name_Interpretation_Type)
+                                      return Iir is
+   begin
+      return Strip_Non_Object_Alias (Get_Declaration (Ni));
    end Get_Non_Alias_Declaration;
 
    -- Pointer just past the last barrier_end in the scopes stack.
@@ -462,7 +467,8 @@ package body Sem_Scopes is
             return;
          end if;
 
-         -- Do not re-add a potential decl
+         --  Do not re-add a potential decl.  This handles cases like:
+         --  'use p.all; use p.all;'
          declare
             Inter: Name_Interpretation_Type := Current_Inter;
          begin
@@ -500,7 +506,6 @@ package body Sem_Scopes is
          declare
             Homograph : Name_Interpretation_Type;
             Prev_Homograph : Name_Interpretation_Type;
-            Current_Decl_Non_Alias : Iir;
 
             procedure Maybe_Save_And_Add_New_Interpretation is
             begin
@@ -548,9 +553,15 @@ package body Sem_Scopes is
             function Is_Implicit_Alias (D : Iir) return Boolean is
             begin
                return Get_Kind (D) = Iir_Kind_Non_Object_Alias_Declaration
-                 and then Get_Kind (Get_Name (D))
-                 in Iir_Kinds_Implicit_Subprogram_Declaration;
+                 and then Get_Implicit_Alias_Flag (D)
+                 and then (Get_Kind (Get_Name (D))
+                             in Iir_Kinds_Implicit_Subprogram_Declaration);
             end Is_Implicit_Alias;
+
+            procedure Replace_Current_Interpretation is
+            begin
+               Interpretations.Table (Current_Inter).Decl := Decl;
+            end Replace_Current_Interpretation;
 
             Decl_Hash : Iir_Int32;
             Hash : Iir_Int32;
@@ -624,19 +635,28 @@ package body Sem_Scopes is
                return;
 
             else
-               --  Added declaration DECL is made directly visible.
+               --  Added DECL was declared in the current declarative region.
 
                if not Is_Potentially_Visible (Homograph) then
-                  --  The homograph was also directly visible
+                  --  The homograph was also declared in that declarative
+                  --  region or in an inner one.
                   if Is_In_Current_Declarative_Region (Homograph) then
                      --  ... and was declared in the same region
 
+                     --  To sum up: at this point both DECL and CURRENT_DECL
+                     --  are overloadable, have the same profile (but may be
+                     --  aliases) and are declared in the same declarative
+                     --  region.
+
                      --  LRM08 12.3 Visibility
+                     --  LRM93 10.3 Visibility
                      --  Two declarations that occur immediately within
                      --  the same declarative regions [...] shall not be
                      --  homograph, unless exactely one of them is the
-                     --  implicit declaration of a predefined operation, or
-                     --  is an implicit alias of such implicit declaration.
+                     --  implicit declaration of a predefined operation,
+
+                     --  LRM08 12.3 Visibility
+                     --  or is an implicit alias of such implicit declaration.
                      --
                      --  GHDL: FIXME: 'implicit alias'
 
@@ -647,34 +667,67 @@ package body Sem_Scopes is
                      --  declarations have the same designator, [...]
                      --
                      --  LRM08 12.3 Visibility
-                     --  [...] and they denote differrent named entities,
+                     --  [...] and they denote different named entities,
                      --  and [...]
-                     if Flags.Vhdl_Std >= Vhdl_08 then
-                        if Is_Implicit_Alias (Decl) then
-                           --  Re-declaration of an implicit subprogram via
-                           --  an implicit alias is simply discarded.
-                           --  FIXME: implicit alias.
-                           return;
+                     declare
+                        Is_Decl_Implicit : Boolean;
+                        Is_Current_Decl_Implicit : Boolean;
+                     begin
+                        if Flags.Vhdl_Std >= Vhdl_08 then
+                           Is_Current_Decl_Implicit :=
+                             (Get_Kind (Current_Decl) in
+                                Iir_Kinds_Implicit_Subprogram_Declaration)
+                             or else Is_Implicit_Alias (Current_Decl);
+                           Is_Decl_Implicit :=
+                             (Get_Kind (Decl) in
+                                Iir_Kinds_Implicit_Subprogram_Declaration)
+                             or else Is_Implicit_Alias (Decl);
+
+                           --  If they denote the same entity, they aren't
+                           --  homograph.
+                           if Strip_Non_Object_Alias (Decl)
+                             = Strip_Non_Object_Alias (Current_Decl)
+                           then
+                              if Is_Current_Decl_Implicit
+                                and then not Is_Decl_Implicit
+                              then
+                                 --  They aren't homograph but DECL is stronger
+                                 --  (at it is not an implicit declaration)
+                                 --  than CURRENT_DECL
+                                 Replace_Current_Interpretation;
+                              end if;
+
+                              return;
+                           end if;
+
+                           if Is_Decl_Implicit
+                             and then not Is_Current_Decl_Implicit
+                           then
+                              --  Re-declaration of an implicit subprogram via
+                              --  an implicit alias is simply discarded.
+                              return;
+                           end if;
+                        else
+                           --  Can an implicit subprogram declaration appears
+                           --  after an explicit one in vhdl 93?  I don't
+                           --  think so.
+                           Is_Decl_Implicit :=
+                             (Get_Kind (Decl)
+                                in Iir_Kinds_Implicit_Subprogram_Declaration);
+                           Is_Current_Decl_Implicit :=
+                             (Get_Kind (Current_Decl)
+                                in Iir_Kinds_Implicit_Subprogram_Declaration);
                         end if;
 
-                        Current_Decl_Non_Alias :=
-                          Get_Non_Alias_Declaration (Homograph);
-                     else
-                        Current_Decl_Non_Alias := Current_Decl;
-                     end if;
-
-                     if Get_Kind (Current_Decl_Non_Alias)
-                       not in Iir_Kinds_Implicit_Subprogram_Declaration
-                     then
-                        Error_Msg_Sem
-                          ("redeclaration of " & Disp_Node (Current_Decl)
-                             & " defined at " & Disp_Location (Current_Decl),
-                           Decl);
-                        return;
-                     end if;
-
-                     --  FIXME: simply discard DECL if an *implicit* alias
-                     --  of the current declaration?
+                        if not (Is_Decl_Implicit xor Is_Current_Decl_Implicit)
+                        then
+                           Error_Msg_Sem
+                             ("redeclaration of " & Disp_Node (Current_Decl) &
+                                " defined at " & Disp_Location (Current_Decl),
+                              Decl);
+                           return;
+                        end if;
+                     end;
                   else
                      --  GHDL: hide directly visible declaration declared in
                      --  an outer region.
@@ -697,16 +750,18 @@ package body Sem_Scopes is
          end;
       end if;
 
-      -- The current interpretation and the new one are homograph.
+      --  The current interpretation and the new one aren't overloadable, ie
+      --  they are homograph (well almost).
+
       if Is_In_Current_Declarative_Region (Current_Inter) then
-         -- They are perhaps visible in the same declarative region.
+         --  They are perhaps visible in the same declarative region.
          if Is_Potentially_Visible (Current_Inter) then
             if Potentially then
-               -- LRM93 §10.4, item #2
-               -- Potentially visible declarations that have the same
-               -- designator are not made directly visible unless each of
-               -- them is either an enumeration literal specification or
-               -- the declaration of a subprogram.
+               --  LRM93 §10.4, item #2
+               --  Potentially visible declarations that have the same
+               --  designator are not made directly visible unless each of
+               --  them is either an enumeration literal specification or
+               --  the declaration of a subprogram.
                if Decl = Get_Declaration (Current_Inter) then
                   -- The rule applies only for distinct declaration.
                   -- This handles 'use p.all; use P.all;'.
@@ -715,6 +770,19 @@ package body Sem_Scopes is
                   raise Internal_Error;
                   return;
                end if;
+
+               --  LRM08 12.3 Visibility
+               --  Each of two declarations is said to be a homograph of the
+               --  other if and only if both declarations have the same
+               --  designator; and they denote different named entities, [...]
+               if Flags.Vhdl_Std >= Vhdl_08 then
+                  if Strip_Non_Object_Alias (Decl)
+                    = Strip_Non_Object_Alias (Current_Decl)
+                  then
+                     return;
+                  end if;
+               end if;
+
                Save_Current_Interpretation;
                Set_Interpretation (Ident, Conflict_Interpretation);
                return;
