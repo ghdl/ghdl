@@ -70,7 +70,7 @@ package Tokens is
    -- and adding_operator
        Tok_Ampersand,           -- &
 
-       Tok_Condition,
+       Tok_Condition,           -- ??
 
    --  PSL
        Tok_And_And,             -- &&

@@ -70,7 +70,7 @@ ieee2008/fixed_pkg.vhdl
 
 STD87_BSRCS := $(STD_SRCS:.vhdl=.v87)
 STD93_BSRCS := $(STD_SRCS:.vhdl=.v93)
-STD08_BSRCS := $(STD_SRCS:.vhdl=.v08)
+STD08_BSRCS := $(STD_SRCS:.vhdl=.v08) std/env.vhdl std/env_body.vhdl
 IEEE87_BSRCS := $(IEEE_SRCS:.vhdl=.v87)
 IEEE93_BSRCS := $(IEEE_SRCS:.vhdl=.v93) $(MATH_SRCS)
 SYNOPSYS87_BSRCS := $(SYNOPSYS_BSRCS)

@@ -367,6 +367,7 @@ package body Sem_Decls is
             Set_Parent (Proc, Get_Parent (Decl));
             Set_Identifier (Proc, Std_Names.Name_File_Open);
             Set_Type_Reference (Proc, Decl);
+            Set_Visible_Flag (Proc, True);
             Build_Init (Last_Interface);
             case I is
                when 1 =>
@@ -423,6 +424,7 @@ package body Sem_Decls is
          Set_Parent (Proc, Get_Parent (Decl));
          Set_Implicit_Definition (Proc, Iir_Predefined_File_Close);
          Set_Type_Reference (Proc, Decl);
+         Set_Visible_Flag (Proc, True);
          Build_Init (Last_Interface);
          Inter := Create_Iir (Iir_Kind_File_Interface_Declaration);
          Set_Identifier (Inter, Std_Names.Name_F);
@@ -448,6 +450,7 @@ package body Sem_Decls is
       Set_Location (Proc, Loc);
       Set_Parent (Proc, Get_Parent (Decl));
       Set_Type_Reference (Proc, Decl);
+      Set_Visible_Flag (Proc, True);
       Build_Init (Last_Interface);
       Inter := Create_Iir (File_Interface_Kind);
       Set_Identifier (Inter, Std_Names.Name_F);
@@ -487,6 +490,7 @@ package body Sem_Decls is
       Set_Location (Proc, Loc);
       Set_Parent (Proc, Get_Parent (Decl));
       Set_Type_Reference (Proc, Decl);
+      Set_Visible_Flag (Proc, True);
       Build_Init (Last_Interface);
       Inter := Create_Iir (File_Interface_Kind);
       Set_Identifier (Inter, Std_Names.Name_F);
@@ -513,8 +517,9 @@ package body Sem_Decls is
       Func := Create_Iir (Iir_Kind_Implicit_Function_Declaration);
       Set_Identifier (Func, Std_Names.Name_Endfile);
       Set_Location (Func, Loc);
-      Set_Parent (Proc, Get_Parent (Decl));
-      Set_Type_Reference (Proc, Decl);
+      Set_Parent (Func, Get_Parent (Decl));
+      Set_Type_Reference (Func, Decl);
+      Set_Visible_Flag (Func, True);
       Build_Init (Last_Interface);
       Inter := Create_Iir (File_Interface_Kind);
       Set_Identifier (Inter, Std_Names.Name_F);
@@ -569,6 +574,7 @@ package body Sem_Decls is
          Set_Return_Type (Operation, Return_Type);
          Set_Implicit_Definition (Operation, Def);
          Set_Identifier (Operation, Name);
+         Set_Visible_Flag (Operation, True);
          Compute_Subprogram_Hash (Operation);
          Insert_Incr (Last, Operation);
       end Add_Operation;
@@ -601,6 +607,17 @@ package body Sem_Decls is
          Set_Chain (Left, Right);
          Add_Operation (Name, Def, Left, Type_Definition);
       end Add_Min_Max;
+
+      procedure Add_Vector_Min_Max
+        (Name : Name_Id; Def : Iir_Predefined_Functions)
+      is
+         Left : Iir;
+      begin
+         Left := Create_Anonymous_Interface (Type_Definition);
+         Set_Identifier (Left, Name_L);
+         Add_Operation
+           (Name, Def, Left, Get_Element_Subtype (Type_Definition));
+      end Add_Vector_Min_Max;
 
       procedure Add_Shift_Operators
       is
@@ -657,6 +674,10 @@ package body Sem_Decls is
                Add_Min_Max (Name_Minimum, Iir_Predefined_Enum_Minimum);
                Add_Min_Max (Name_Maximum, Iir_Predefined_Enum_Maximum);
 
+               --  LRM08 9.2.3 Relational operators
+               --  The matching relational operators are predefined for the
+               --  [predefined type BIT and for the] type STD_ULOGIC defined
+               --  in package STD_LOGIC_1164.
                if Type_Definition = Ieee.Std_Logic_1164.Std_Ulogic_Type then
                   Add_Binary (Name_Op_Match_Equality,
                               Iir_Predefined_Std_Ulogic_Match_Equality);
@@ -676,8 +697,11 @@ package body Sem_Decls is
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
             declare
-               Inter_Chain : Iir;
                Element_Type : Iir;
+
+               Element_Array_Inter_Chain : Iir;
+               Array_Element_Inter_Chain : Iir;
+               Element_Element_Inter_Chain : Iir;
             begin
                Add_Relational
                  (Name_Op_Equality, Iir_Predefined_Array_Equality);
@@ -693,37 +717,54 @@ package body Sem_Decls is
                     (Name_Op_Less, Iir_Predefined_Array_Less);
                   Add_Relational
                     (Name_Op_Less_Equal, Iir_Predefined_Array_Less_Equal);
+
+                  --  LRM08 5.3.2.4 Predefined operations on array types
+                  --  Given a type declaration that declares a discrete array
+                  --  type T, the following operatons are implicitly declared
+                  --  immediately following the type declaration:
+                  --   function MINIMUM (L, R : T) return T;
+                  --   function MAXIMUM (L, R : T) return T;
+                  if Vhdl_Std >= Vhdl_08 then
+                     Add_Min_Max (Name_Maximum, Iir_Predefined_Array_Maximum);
+                     Add_Min_Max (Name_Minimum, Iir_Predefined_Array_Minimum);
+                  end if;
                end if;
 
                Element_Type := Get_Element_Subtype (Type_Definition);
 
                if Is_One_Dimensional (Type_Definition) then
+                  --  LRM93 7.2.4 Adding operators
+                  --  The concatenation operator & is predefined for any
+                  --  one-dimensional array type.
                   Add_Operation (Name_Op_Concatenation,
                                  Iir_Predefined_Array_Array_Concat,
                                  Binary_Chain,
                                  Type_Definition);
 
-                  Inter_Chain := Create_Anonymous_Interface (Element_Type);
-                  Set_Chain (Inter_Chain, Unary_Chain);
+                  Element_Array_Inter_Chain :=
+                    Create_Anonymous_Interface (Element_Type);
+                  Set_Chain (Element_Array_Inter_Chain, Unary_Chain);
                   Add_Operation (Name_Op_Concatenation,
                                  Iir_Predefined_Element_Array_Concat,
-                              Inter_Chain,
-                              Type_Definition);
+                                 Element_Array_Inter_Chain,
+                                 Type_Definition);
 
-                  Inter_Chain := Create_Anonymous_Interface (Type_Definition);
-                  Set_Chain (Inter_Chain,
+                  Array_Element_Inter_Chain :=
+                    Create_Anonymous_Interface (Type_Definition);
+                  Set_Chain (Array_Element_Inter_Chain,
                              Create_Anonymous_Interface (Element_Type));
                   Add_Operation (Name_Op_Concatenation,
                                  Iir_Predefined_Array_Element_Concat,
-                                 Inter_Chain,
+                                 Array_Element_Inter_Chain,
                                  Type_Definition);
 
-                  Inter_Chain := Create_Anonymous_Interface (Element_Type);
-                  Set_Chain (Inter_Chain,
+                  Element_Element_Inter_Chain :=
+                    Create_Anonymous_Interface (Element_Type);
+                  Set_Chain (Element_Element_Inter_Chain,
                              Create_Anonymous_Interface (Element_Type));
                   Add_Operation (Name_Op_Concatenation,
                                  Iir_Predefined_Element_Element_Concat,
-                                 Inter_Chain,
+                                 Element_Element_Inter_Chain,
                                  Type_Definition);
 
                   --  LRM08 5.3.2.4  Predefined operations on array type
@@ -745,35 +786,157 @@ package body Sem_Decls is
                                     Unary_Chain,
                                     String_Type_Definition);
                   end if;
-               end if;
 
-               if Is_Discrete_Array (Type_Definition) then
-                  if Element_Type = Std_Package.Boolean_Type_Definition then
-                     Add_Unary (Name_Not, Iir_Predefined_Boolean_Array_Not);
+                  --  LRM08 5.3.2.4 Predefined operations on array types
+                  --  In addition, given a type declaration that declares a
+                  --  one-dimensional array type T whose elements are of a
+                  --  sclar type E, the following operations are implicitly
+                  --  declared immediately following the type declaration:
+                  --   function MINIMUM (L : T) return E;
+                  --   function MAXIMUM (L : T) return E;
+                  if Vhdl_Std >= Vhdl_08
+                    and then (Get_Kind (Element_Type) in
+                                Iir_Kinds_Scalar_Type_Definition)
+                  then
+                     Add_Vector_Min_Max
+                       (Name_Maximum, Iir_Predefined_Vector_Maximum);
+                     Add_Vector_Min_Max
+                       (Name_Minimum, Iir_Predefined_Vector_Minimum);
+                  end if;
 
-                     Add_Binary (Name_And, Iir_Predefined_Boolean_Array_And);
-                     Add_Binary (Name_Or, Iir_Predefined_Boolean_Array_Or);
-                     Add_Binary (Name_Nand, Iir_Predefined_Boolean_Array_Nand);
-                     Add_Binary (Name_Nor, Iir_Predefined_Boolean_Array_Nor);
-                     Add_Binary (Name_Xor, Iir_Predefined_Boolean_Array_Xor);
+                  if Element_Type = Std_Package.Boolean_Type_Definition
+                    or else Element_Type = Std_Package.Bit_Type_Definition
+                  then
+                     --  LRM93 7.2.1 Logical operators
+                     --  LRM08 9.2.2 Logical operators
+                     --  The binary logical operators AND, OR, NAND, NOR, XOR,
+                     --  and XNOR, and the unary logical operator NOT are
+                     --  defined for predefined types BIT and BOOLEAN.  They
+                     --  are also defined for any one-dimensional array type
+                     --  whose element type is BIT or BOOLEAN.
+
+                     Add_Unary (Name_Not, Iir_Predefined_TF_Array_Not);
+
+                     Add_Binary (Name_And, Iir_Predefined_TF_Array_And);
+                     Add_Binary (Name_Or, Iir_Predefined_TF_Array_Or);
+                     Add_Binary (Name_Nand, Iir_Predefined_TF_Array_Nand);
+                     Add_Binary (Name_Nor, Iir_Predefined_TF_Array_Nor);
+                     Add_Binary (Name_Xor, Iir_Predefined_TF_Array_Xor);
                      if Flags.Vhdl_Std > Vhdl_87 then
-                        Add_Binary
-                          (Name_Xnor, Iir_Predefined_Boolean_Array_Xnor);
+                        Add_Binary (Name_Xnor, Iir_Predefined_TF_Array_Xnor);
 
+                        --  LRM93 7.2.3 Shift operators
+                        --  The shift operators SLL, SRL, SLA, SRA, ROL and
+                        --  ROR are defined for any one-dimensional array type
+                        --  whose element type is either of the predefined
+                        --  types BIT or BOOLEAN.
                         Add_Shift_Operators;
                      end if;
-                  elsif Element_Type = Std_Package.Bit_Type_Definition then
-                     Add_Unary (Name_Not, Iir_Predefined_Bit_Array_Not);
 
-                     Add_Binary (Name_And, Iir_Predefined_Bit_Array_And);
-                     Add_Binary (Name_Or, Iir_Predefined_Bit_Array_Or);
-                     Add_Binary (Name_Nand, Iir_Predefined_Bit_Array_Nand);
-                     Add_Binary (Name_Nor, Iir_Predefined_Bit_Array_Nor);
-                     Add_Binary (Name_Xor, Iir_Predefined_Bit_Array_Xor);
-                     if Flags.Vhdl_Std > Vhdl_87 then
-                        Add_Binary (Name_Xnor, Iir_Predefined_Bit_Array_Xnor);
+                     --  LRM08 9.2.2 Logical operators
+                     --  For the binary operators AND, OR, NAND, NOR, XOR and
+                     --  XNOR, the operands shall both be [of the same base
+                     --  type,] or one operand shall be of a scalar type and
+                     --  the other operand shall be a one-dimensional array
+                     --  whose element type is the scalar type.  The result
+                     --  type is the same as the base type of the operands if
+                     --  [both operands are scalars of the same base type or]
+                     --  both operands are arrays, or the same as the base type
+                     --  of the array operand if one operand is a scalar and
+                     --  the other operand is an array.
+                     if Flags.Vhdl_Std >= Vhdl_08 then
+                        Add_Operation
+                          (Name_And, Iir_Predefined_TF_Element_Array_And,
+                           Element_Array_Inter_Chain, Type_Definition);
+                        Add_Operation
+                          (Name_And, Iir_Predefined_TF_Array_Element_And,
+                           Array_Element_Inter_Chain, Type_Definition);
+                        Add_Operation
+                          (Name_Or, Iir_Predefined_TF_Element_Array_Or,
+                           Element_Array_Inter_Chain, Type_Definition);
+                        Add_Operation
+                          (Name_Or, Iir_Predefined_TF_Array_Element_Or,
+                           Array_Element_Inter_Chain, Type_Definition);
+                        Add_Operation
+                          (Name_Nand, Iir_Predefined_TF_Element_Array_Nand,
+                           Element_Array_Inter_Chain, Type_Definition);
+                        Add_Operation
+                          (Name_Nand, Iir_Predefined_TF_Array_Element_Nand,
+                           Array_Element_Inter_Chain, Type_Definition);
+                        Add_Operation
+                          (Name_Nor, Iir_Predefined_TF_Element_Array_Nor,
+                           Element_Array_Inter_Chain, Type_Definition);
+                        Add_Operation
+                          (Name_Nor, Iir_Predefined_TF_Array_Element_Nor,
+                           Array_Element_Inter_Chain, Type_Definition);
+                        Add_Operation
+                          (Name_Xor, Iir_Predefined_TF_Element_Array_Xor,
+                           Element_Array_Inter_Chain, Type_Definition);
+                        Add_Operation
+                          (Name_Xor, Iir_Predefined_TF_Array_Element_Xor,
+                           Array_Element_Inter_Chain, Type_Definition);
+                        Add_Operation
+                          (Name_Xnor, Iir_Predefined_TF_Element_Array_Xnor,
+                           Element_Array_Inter_Chain, Type_Definition);
+                        Add_Operation
+                          (Name_Xnor, Iir_Predefined_TF_Array_Element_Xnor,
+                           Array_Element_Inter_Chain, Type_Definition);
+                     end if;
 
-                        Add_Shift_Operators;
+                     if Flags.Vhdl_Std >= Vhdl_08 then
+                        --  LRM08 9.2.2 Logical operations
+                        --  The unary logical operators AND, OR, NAND, NOR,
+                        --  XOR, and XNOR are referred to as logical reduction
+                        --  operators.  The logical reduction operators are
+                        --  predefined for any one-dimensional array type whose
+                        --  element type is BIT or BOOLEAN.  The result type
+                        --  for the logical reduction operators is the same as
+                        --  the element type of the operand.
+                        Add_Operation
+                          (Name_And, Iir_Predefined_TF_Reduction_And,
+                           Unary_Chain, Element_Type);
+                        Add_Operation
+                          (Name_Or, Iir_Predefined_TF_Reduction_Or,
+                           Unary_Chain, Element_Type);
+                        Add_Operation
+                          (Name_Nand, Iir_Predefined_TF_Reduction_Nand,
+                           Unary_Chain, Element_Type);
+                        Add_Operation
+                          (Name_Nor, Iir_Predefined_TF_Reduction_Nor,
+                           Unary_Chain, Element_Type);
+                        Add_Operation
+                          (Name_Xor, Iir_Predefined_TF_Reduction_Xor,
+                           Unary_Chain, Element_Type);
+                        Add_Operation
+                          (Name_Xnor, Iir_Predefined_TF_Reduction_Xnor,
+                           Unary_Chain, Element_Type);
+                     end if;
+                  end if;
+
+                  --  LRM08 9.2.3 Relational operators
+                  --  The matching equality and matching inequality operatotrs
+                  --  are also defined for any one-dimensional array type
+                  --  whose element type is BIT or STD_ULOGIC.
+                  if Flags.Vhdl_Std >= Vhdl_08 then
+                     if Element_Type = Std_Package.Bit_Type_Definition then
+                        Add_Operation
+                          (Name_Op_Match_Equality,
+                           Iir_Predefined_Bit_Array_Match_Equality,
+                           Binary_Chain, Element_Type);
+                        Add_Operation
+                          (Name_Op_Match_Inequality,
+                           Iir_Predefined_Bit_Array_Match_Inequality,
+                           Binary_Chain, Element_Type);
+                     elsif Element_Type = Ieee.Std_Logic_1164.Std_Ulogic_Type
+                     then
+                        Add_Operation
+                          (Name_Op_Match_Equality,
+                           Iir_Predefined_Std_Ulogic_Array_Match_Equality,
+                           Binary_Chain, Element_Type);
+                        Add_Operation
+                          (Name_Op_Match_Inequality,
+                           Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
+                           Binary_Chain, Element_Type);
                      end if;
                   end if;
                end if;
@@ -801,6 +964,7 @@ package body Sem_Decls is
                --Set_Purity_State (Deallocate_Proc, Impure);
                Set_Wait_State (Deallocate_Proc, False);
                Set_Type_Reference (Deallocate_Proc, Decl);
+               Set_Visible_Flag (Deallocate_Proc, True);
 
                Set_Interface_Declaration_Chain
                  (Deallocate_Proc, Var_Interface);
@@ -1015,6 +1179,13 @@ package body Sem_Decls is
                         Iir_Predefined_Bit_Match_Greater);
             Add_Binary (Name_Op_Match_Greater_Equal,
                         Iir_Predefined_Bit_Match_Greater_Equal);
+
+            --  LRM08 9.2.9 Condition operator
+            --  The unary operator ?? is predefined for type BIT defined in
+            --  package STANDARD.
+            Add_Operation (Name_Op_Condition, Iir_Predefined_Bit_Condition,
+                           Unary_Chain, Std_Package.Boolean_Type_Definition);
+
          end if;
       elsif Decl = Std_Package.Universal_Real_Type then
          declare
@@ -2495,7 +2666,7 @@ package body Sem_Decls is
             when Iir_Kind_Implicit_Function_Declaration
               | Iir_Kind_Implicit_Procedure_Declaration =>
                Sem_Scopes.Add_Name (Decl);
-               Name_Visible (Decl);
+               --  Implicit subprogram are already visible.
             when Iir_Kind_Non_Object_Alias_Declaration =>
                --  Added by Sem_Alias_Declaration.  Need to check that no
                --  existing attribute specification apply to them.

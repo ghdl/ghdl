@@ -466,7 +466,7 @@ package body Evaluation is
             return Build_Enumeration
               (Boolean'Pos (Get_Enum_Pos (Operand) = 0), Orig);
 
-         when Iir_Predefined_Bit_Array_Not =>
+         when Iir_Predefined_TF_Array_Not =>
             declare
                O_List : Iir_List;
                R_List : Iir_List;
@@ -506,7 +506,7 @@ package body Evaluation is
    function Eval_Dyadic_Bit_Array_Operator
      (Expr : Iir;
       Left, Right : Iir;
-      Func : Iir_Predefined_Dyadic_Bit_Array_Functions)
+      Func : Iir_Predefined_Dyadic_TF_Array_Functions)
      return Iir
    is
       use Str_Table;
@@ -522,7 +522,7 @@ package body Evaluation is
       else
          Id := Start;
          case Func is
-            when Iir_Predefined_Bit_Array_And =>
+            when Iir_Predefined_TF_Array_And =>
                for I in 1 .. Len loop
                   case L_Str (I) is
                      when '0' =>
@@ -533,7 +533,7 @@ package body Evaluation is
                         raise Internal_Error;
                   end case;
                end loop;
-            when Iir_Predefined_Bit_Array_Nand =>
+            when Iir_Predefined_TF_Array_Nand =>
                for I in 1 .. Len loop
                   case L_Str (I) is
                      when '0' =>
@@ -551,7 +551,7 @@ package body Evaluation is
                         raise Internal_Error;
                   end case;
                end loop;
-            when Iir_Predefined_Bit_Array_Or =>
+            when Iir_Predefined_TF_Array_Or =>
                for I in 1 .. Len loop
                   case L_Str (I) is
                      when '1' =>
@@ -562,7 +562,7 @@ package body Evaluation is
                         raise Internal_Error;
                   end case;
                end loop;
-            when Iir_Predefined_Bit_Array_Nor =>
+            when Iir_Predefined_TF_Array_Nor =>
                for I in 1 .. Len loop
                   case L_Str (I) is
                      when '1' =>
@@ -580,7 +580,7 @@ package body Evaluation is
                         raise Internal_Error;
                   end case;
                end loop;
-            when Iir_Predefined_Bit_Array_Xor =>
+            when Iir_Predefined_TF_Array_Xor =>
                for I in 1 .. Len loop
                   case L_Str (I) is
                      when '1' =>
@@ -1136,7 +1136,8 @@ package body Evaluation is
               (not (Get_Enum_Pos (Left) = 1 xor Get_Enum_Pos (Right) = 1),
                Orig);
 
-         when Iir_Predefined_Dyadic_Bit_Array_Functions =>
+         when Iir_Predefined_Dyadic_TF_Array_Functions =>
+            --  FIXME: only for bit ?
             return Eval_Dyadic_Bit_Array_Operator (Orig, Left, Right, Func);
 
          when Iir_Predefined_Universal_R_I_Mul =>
@@ -1167,13 +1168,7 @@ package body Evaluation is
          when Iir_Predefined_Array_Less
            | Iir_Predefined_Array_Less_Equal
            | Iir_Predefined_Array_Greater
-           | Iir_Predefined_Array_Greater_Equal
-           | Iir_Predefined_Boolean_Array_And
-           | Iir_Predefined_Boolean_Array_Nand
-           | Iir_Predefined_Boolean_Array_Or
-           | Iir_Predefined_Boolean_Array_Nor
-           | Iir_Predefined_Boolean_Array_Xor
-           | Iir_Predefined_Boolean_Array_Xnor =>
+           | Iir_Predefined_Array_Greater_Equal =>
             --  FIXME: todo.
             Error_Internal (Orig, "eval_dyadic_operator: " &
                             Iir_Predefined_Functions'Image (Func));
@@ -1198,8 +1193,7 @@ package body Evaluation is
            | Iir_Predefined_Record_Inequality
            | Iir_Predefined_Access_Equality
            | Iir_Predefined_Access_Inequality
-           | Iir_Predefined_Bit_Array_Not
-           | Iir_Predefined_Boolean_Array_Not
+           | Iir_Predefined_TF_Array_Not
            | Iir_Predefined_Now_Function
            | Iir_Predefined_Deallocate
            | Iir_Predefined_Write
@@ -1232,6 +1226,15 @@ package body Evaluation is
             Error_Internal (Orig, "eval_dyadic_operator: " &
                               Iir_Predefined_Functions'Image (Func));
 
+         when Iir_Predefined_Bit_Condition =>
+            raise Internal_Error;
+
+         when Iir_Predefined_Array_Minimum
+           | Iir_Predefined_Array_Maximum
+           | Iir_Predefined_Vector_Minimum
+           | Iir_Predefined_Vector_Maximum =>
+            raise Internal_Error;
+
          when Iir_Predefined_Std_Ulogic_Match_Equality
            | Iir_Predefined_Std_Ulogic_Match_Inequality
            | Iir_Predefined_Std_Ulogic_Match_Less
@@ -1248,6 +1251,38 @@ package body Evaluation is
            | Iir_Predefined_Real_To_String_Format
            | Iir_Predefined_Physical_To_String
            | Iir_Predefined_Time_To_String_Unit =>
+            --  TODO
+            raise Internal_Error;
+
+         when Iir_Predefined_TF_Array_Element_And
+           | Iir_Predefined_TF_Element_Array_And
+           | Iir_Predefined_TF_Array_Element_Or
+           | Iir_Predefined_TF_Element_Array_Or
+           | Iir_Predefined_TF_Array_Element_Nand
+           | Iir_Predefined_TF_Element_Array_Nand
+           | Iir_Predefined_TF_Array_Element_Nor
+           | Iir_Predefined_TF_Element_Array_Nor
+           | Iir_Predefined_TF_Array_Element_Xor
+           | Iir_Predefined_TF_Element_Array_Xor
+           | Iir_Predefined_TF_Array_Element_Xnor
+           | Iir_Predefined_TF_Element_Array_Xnor =>
+            --  TODO
+            raise Internal_Error;
+
+         when Iir_Predefined_TF_Reduction_And
+           | Iir_Predefined_TF_Reduction_Or
+           | Iir_Predefined_TF_Reduction_Nand
+           | Iir_Predefined_TF_Reduction_Nor
+           | Iir_Predefined_TF_Reduction_Xor
+           | Iir_Predefined_TF_Reduction_Xnor
+           | Iir_Predefined_TF_Reduction_Not =>
+            --  TODO
+            raise Internal_Error;
+
+         when Iir_Predefined_Bit_Array_Match_Equality
+           | Iir_Predefined_Bit_Array_Match_Inequality
+           | Iir_Predefined_Std_Ulogic_Array_Match_Equality
+           | Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
             --  TODO
             raise Internal_Error;
       end case;

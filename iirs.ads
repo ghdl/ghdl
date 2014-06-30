@@ -3131,6 +3131,8 @@ package Iirs is
        Iir_Predefined_Bit_Match_Greater,
        Iir_Predefined_Bit_Match_Greater_Equal,
 
+       Iir_Predefined_Bit_Condition,
+
        Iir_Predefined_Bit_Rising_Edge,
        Iir_Predefined_Bit_Falling_Edge,
 
@@ -3240,6 +3242,11 @@ package Iirs is
        Iir_Predefined_Element_Array_Concat,
        Iir_Predefined_Element_Element_Concat,
 
+       Iir_Predefined_Array_Minimum,
+       Iir_Predefined_Array_Maximum,
+       Iir_Predefined_Vector_Minimum,
+       Iir_Predefined_Vector_Maximum,
+
    --  Predefined shift operators.
        Iir_Predefined_Array_Sll,
        Iir_Predefined_Array_Srl,
@@ -3248,22 +3255,40 @@ package Iirs is
        Iir_Predefined_Array_Rol,
        Iir_Predefined_Array_Ror,
 
-   --  Predefined operators for one dimensional array
-       Iir_Predefined_Bit_Array_And,
-       Iir_Predefined_Bit_Array_Or,
-       Iir_Predefined_Bit_Array_Nand,
-       Iir_Predefined_Bit_Array_Nor,
-       Iir_Predefined_Bit_Array_Xor,
-       Iir_Predefined_Bit_Array_Xnor,
-       Iir_Predefined_Bit_Array_Not,
+    --  Predefined operators for one dimensional array.
+    --  For bit and boolean type, the operations are the same.  For a neutral
+    --  noun, we use TF (for True/False) instead of Bit, Boolean or Logic.
+       Iir_Predefined_TF_Array_And,
+       Iir_Predefined_TF_Array_Or,
+       Iir_Predefined_TF_Array_Nand,
+       Iir_Predefined_TF_Array_Nor,
+       Iir_Predefined_TF_Array_Xor,
+       Iir_Predefined_TF_Array_Xnor,
+       Iir_Predefined_TF_Array_Not,
 
-       Iir_Predefined_Boolean_Array_And,
-       Iir_Predefined_Boolean_Array_Or,
-       Iir_Predefined_Boolean_Array_Nand,
-       Iir_Predefined_Boolean_Array_Nor,
-       Iir_Predefined_Boolean_Array_Xor,
-       Iir_Predefined_Boolean_Array_Xnor,
-       Iir_Predefined_Boolean_Array_Not,
+       Iir_Predefined_TF_Reduction_And,
+       Iir_Predefined_TF_Reduction_Or,
+       Iir_Predefined_TF_Reduction_Nand,
+       Iir_Predefined_TF_Reduction_Nor,
+       Iir_Predefined_TF_Reduction_Xor,
+       Iir_Predefined_TF_Reduction_Xnor,
+       Iir_Predefined_TF_Reduction_Not,
+
+       Iir_Predefined_TF_Array_Element_And,
+       Iir_Predefined_TF_Element_Array_And,
+       Iir_Predefined_TF_Array_Element_Or,
+       Iir_Predefined_TF_Element_Array_Or,
+       Iir_Predefined_TF_Array_Element_Nand,
+       Iir_Predefined_TF_Element_Array_Nand,
+       Iir_Predefined_TF_Array_Element_Nor,
+       Iir_Predefined_TF_Element_Array_Nor,
+       Iir_Predefined_TF_Array_Element_Xor,
+       Iir_Predefined_TF_Element_Array_Xor,
+       Iir_Predefined_TF_Array_Element_Xnor,
+       Iir_Predefined_TF_Element_Array_Xnor,
+
+       Iir_Predefined_Bit_Array_Match_Equality,
+       Iir_Predefined_Bit_Array_Match_Inequality,
 
    --  Predefined attribute functions.
        Iir_Predefined_Attribute_Image,
@@ -3308,6 +3333,9 @@ package Iirs is
        Iir_Predefined_Std_Ulogic_Match_Greater,
        Iir_Predefined_Std_Ulogic_Match_Greater_Equal,
 
+       Iir_Predefined_Std_Ulogic_Array_Match_Equality,
+       Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
+
    --  Predefined function.
        Iir_Predefined_Now_Function
        );
@@ -3319,14 +3347,14 @@ package Iirs is
    subtype Iir_Predefined_Pure_Functions is Iir_Predefined_Functions range
      Iir_Predefined_Boolean_And .. Iir_Predefined_Attribute_Driving_Value;
 
-   subtype Iir_Predefined_Dyadic_Bit_Array_Functions
+   subtype Iir_Predefined_Dyadic_TF_Array_Functions
    is Iir_Predefined_Functions range
-     Iir_Predefined_Bit_Array_And ..
-   --Iir_Predefined_Bit_Array_Or
-   --Iir_Predefined_Bit_Array_Nand
-   --Iir_Predefined_Bit_Array_Nor
-   --Iir_Predefined_Bit_Array_Xor
-     Iir_Predefined_Bit_Array_Xnor;
+     Iir_Predefined_TF_Array_And ..
+   --Iir_Predefined_TF_Array_Or
+   --Iir_Predefined_TF_Array_Nand
+   --Iir_Predefined_TF_Array_Nor
+   --Iir_Predefined_TF_Array_Xor
+     Iir_Predefined_TF_Array_Xnor;
 
    subtype Iir_Predefined_Shift_Functions is Iir_Predefined_Functions range
      Iir_Predefined_Array_Sll ..

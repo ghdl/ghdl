@@ -1674,7 +1674,9 @@ package body Parse is
       end if;
       Set_Identifier (Decl, Ident);
       Set_Location (Decl, Loc);
+
       Parse_Declarative_Part (Res);
+
       Expect (Tok_End);
       Scan_Expect (Tok_Protected);
       if Get_Kind (Res) = Iir_Kind_Protected_Type_Body then
@@ -3709,8 +3711,16 @@ package body Parse is
             Error_Msg_Parse
               ("'-' and '+' are not allowed in primary, use parenthesis");
             return Parse_Simple_Expression;
+         when Tok_Comma
+           | Tok_Semi_Colon
+           | Tok_Eof
+           | Tok_End =>
+            --  Token not to be skipped
+            Unexpected ("primary");
+            return Null_Iir;
          when others =>
             Unexpected ("primary");
+            Scan;
             return Null_Iir;
       end case;
    end Parse_Primary;
@@ -4079,9 +4089,27 @@ package body Parse is
 
    --  precond : next token
    --  postcond: next token
-   function Parse_Expression return Iir_Expression is
+   --
+   --  LRM08 9.1 General
+   --  expression ::= condition_operator primary
+   --              |  logical_expression
+   function Parse_Expression return Iir_Expression
+   is
+      Res : Iir;
    begin
-      return Parse_Expression_Rhs (Parse_Relation);
+      if Current_Token = Tok_Condition then
+         Res := Create_Iir (Iir_Kind_Condition_Operator);
+         Set_Location (Res);
+
+         --  Skip '??'
+         Scan;
+
+         Set_Operand (Res, Parse_Primary);
+      else
+         Res := Parse_Expression_Rhs (Parse_Relation);
+      end if;
+
+      return Res;
    end Parse_Expression;
 
    --  precond : next token
@@ -6467,8 +6495,15 @@ package body Parse is
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("'package' keyword not allowed here by vhdl 87");
          end if;
-         Scan_Expect (Tok_Body);
+         --  Skip 'package'
          Scan;
+
+         if Current_Token /= Tok_Body then
+            Error_Msg_Parse ("missing 'body' after 'package'");
+         else
+            --  Skip 'body'
+            Scan;
+         end if;
       end if;
       Check_End_Name (Res);
       Expect (Tok_Semi_Colon);

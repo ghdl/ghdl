@@ -265,6 +265,8 @@ package body Std_Names is
       Def ("minimum",               Name_Minimum);
       Def ("maximum",               Name_Maximum);
       Def ("untruncated_text_read", Name_Untruncated_Text_Read);
+      Def ("get_resolution_limit",  Name_Get_Resolution_Limit);
+      Def ("control_simulation",    Name_Control_Simulation);
 
       Def ("ieee",              Name_Ieee);
       Def ("std_logic_1164",    Name_Std_Logic_1164);

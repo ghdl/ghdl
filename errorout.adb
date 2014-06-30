@@ -523,6 +523,10 @@ package body Errorout is
             return "PSL instantiation";
 
          when Iir_Kind_Constant_Interface_Declaration =>
+            if Get_Parent (Node) = Null_Iir then
+               --  For constant interface of predefined operator.
+               return "anonymous interface";
+            end if;
             case Get_Kind (Get_Parent (Node)) is
                when Iir_Kind_Entity_Declaration
                  | Iir_Kind_Block_Statement

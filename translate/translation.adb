@@ -15331,20 +15331,13 @@ package body Translation is
                   New_Lit (Ghdl_Compare_Eq),
                   Std_Boolean_Type_Node);
 
-            when Iir_Predefined_Bit_Array_And
-              | Iir_Predefined_Bit_Array_Or
-              | Iir_Predefined_Bit_Array_Nand
-              | Iir_Predefined_Bit_Array_Nor
-              | Iir_Predefined_Bit_Array_Xor
-              | Iir_Predefined_Bit_Array_Xnor
-              | Iir_Predefined_Bit_Array_Not
-              | Iir_Predefined_Boolean_Array_And
-              | Iir_Predefined_Boolean_Array_Or
-              | Iir_Predefined_Boolean_Array_Nand
-              | Iir_Predefined_Boolean_Array_Nor
-              | Iir_Predefined_Boolean_Array_Xor
-              | Iir_Predefined_Boolean_Array_Xnor
-              | Iir_Predefined_Boolean_Array_Not
+            when Iir_Predefined_TF_Array_And
+              | Iir_Predefined_TF_Array_Or
+              | Iir_Predefined_TF_Array_Nand
+              | Iir_Predefined_TF_Array_Nor
+              | Iir_Predefined_TF_Array_Xor
+              | Iir_Predefined_TF_Array_Xnor
+              | Iir_Predefined_TF_Array_Not
               | Iir_Predefined_Array_Srl
               | Iir_Predefined_Array_Sra
               | Iir_Predefined_Array_Ror =>
@@ -17899,38 +17892,31 @@ package body Translation is
 
          Is_Monadic := False;
          case Get_Implicit_Definition (Subprg) is
-            when Iir_Predefined_Bit_Array_And
-              | Iir_Predefined_Boolean_Array_And =>
+            when Iir_Predefined_TF_Array_And =>
                Name := Create_Identifier (Id, "_AND");
                Op := ON_And;
                Do_Invert := False;
-            when Iir_Predefined_Bit_Array_Or
-              | Iir_Predefined_Boolean_Array_Or =>
+            when Iir_Predefined_TF_Array_Or =>
                Name := Create_Identifier (Id, "_OR");
                Op := ON_Or;
                Do_Invert := False;
-            when Iir_Predefined_Bit_Array_Nand
-              | Iir_Predefined_Boolean_Array_Nand =>
+            when Iir_Predefined_TF_Array_Nand =>
                Name := Create_Identifier (Id, "_NAND");
                Op := ON_And;
                Do_Invert := True;
-            when Iir_Predefined_Bit_Array_Nor
-              | Iir_Predefined_Boolean_Array_Nor =>
+            when Iir_Predefined_TF_Array_Nor =>
                Name := Create_Identifier (Id, "_NOR");
                Op := ON_Or;
                Do_Invert := True;
-            when Iir_Predefined_Bit_Array_Xor
-              | Iir_Predefined_Boolean_Array_Xor =>
+            when Iir_Predefined_TF_Array_Xor =>
                Name := Create_Identifier (Id, "_XOR");
                Op := ON_Xor;
                Do_Invert := False;
-            when Iir_Predefined_Bit_Array_Xnor
-              | Iir_Predefined_Boolean_Array_Xnor =>
+            when Iir_Predefined_TF_Array_Xnor =>
                Name := Create_Identifier (Id, "_XNOR");
                Op := ON_Xor;
                Do_Invert := True;
-            when Iir_Predefined_Bit_Array_Not
-              | Iir_Predefined_Boolean_Array_Not =>
+            when Iir_Predefined_TF_Array_Not =>
                Name := Create_Identifier (Id, "_NOT");
                Is_Monadic := True;
                Op := ON_Not;
@@ -18677,20 +18663,13 @@ package body Translation is
                   Set_Info (Subprg, Infos.Arr_Concat_Info);
                end if;
 
-            when Iir_Predefined_Bit_Array_And
-              | Iir_Predefined_Bit_Array_Or
-              | Iir_Predefined_Bit_Array_Nand
-              | Iir_Predefined_Bit_Array_Nor
-              | Iir_Predefined_Bit_Array_Xor
-              | Iir_Predefined_Bit_Array_Xnor
-              | Iir_Predefined_Bit_Array_Not
-              | Iir_Predefined_Boolean_Array_And
-              | Iir_Predefined_Boolean_Array_Or
-              | Iir_Predefined_Boolean_Array_Nand
-              | Iir_Predefined_Boolean_Array_Nor
-              | Iir_Predefined_Boolean_Array_Xor
-              | Iir_Predefined_Boolean_Array_Xnor
-              | Iir_Predefined_Boolean_Array_Not =>
+            when Iir_Predefined_TF_Array_And
+              | Iir_Predefined_TF_Array_Or
+              | Iir_Predefined_TF_Array_Nand
+              | Iir_Predefined_TF_Array_Nor
+              | Iir_Predefined_TF_Array_Xor
+              | Iir_Predefined_TF_Array_Xnor
+              | Iir_Predefined_TF_Array_Not =>
                Translate_Predefined_Array_Logical (Subprg);
 
             when Iir_Predefined_Array_Sll

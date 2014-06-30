@@ -458,7 +458,9 @@ package Std_Names is
    Name_Minimum :        constant Name_Id := Name_First_Misc + 022;
    Name_Maximum :        constant Name_Id := Name_First_Misc + 023;
    Name_Untruncated_Text_Read : constant Name_Id := Name_First_Misc + 024;
-   Name_Last_Misc :      constant Name_Id := Name_Untruncated_Text_Read;
+   Name_Get_Resolution_Limit :  constant Name_Id := Name_First_Misc + 025;
+   Name_Control_Simulation :    constant Name_Id := Name_First_Misc + 026;
+   Name_Last_Misc :      constant Name_Id := Name_Control_Simulation;
 
    Name_First_Ieee :     constant Name_Id := Name_Last_Misc + 1;
    Name_Ieee :           constant Name_Id := Name_First_Ieee + 000;

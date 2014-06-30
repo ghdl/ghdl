@@ -21,6 +21,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 with System;
 with Grt.Types; use Grt.Types;
 with Errorout; use Errorout;
+with Std_Package;
 with Evaluation;
 with Iirs_Utils; use Iirs_Utils;
 with Annotations; use Annotations;
@@ -803,44 +804,38 @@ package body Execution is
             Eval_Right;
             Result := Create_F64_Value (Left.F64 * Ghdl_F64 (Right.I64));
 
-         when Iir_Predefined_Bit_Array_And
-           | Iir_Predefined_Boolean_Array_And =>
+         when Iir_Predefined_TF_Array_And =>
             Eval_Array;
             for I in Result.Val_Array.V'Range loop
                Result.Val_Array.V (I).B2 :=
                  Result.Val_Array.V (I).B2 and Right.Val_Array.V (I).B2;
             end loop;
-         when Iir_Predefined_Bit_Array_Nand
-           | Iir_Predefined_Boolean_Array_Nand =>
+         when Iir_Predefined_TF_Array_Nand =>
             Eval_Array;
             for I in Result.Val_Array.V'Range loop
                Result.Val_Array.V (I).B2 :=
                  not (Result.Val_Array.V (I).B2 and Right.Val_Array.V (I).B2);
             end loop;
-         when Iir_Predefined_Bit_Array_Or
-           | Iir_Predefined_Boolean_Array_Or =>
+         when Iir_Predefined_TF_Array_Or =>
             Eval_Array;
             for I in Result.Val_Array.V'Range loop
                Result.Val_Array.V (I).B2 :=
                  Result.Val_Array.V (I).B2 or Right.Val_Array.V (I).B2;
             end loop;
-         when Iir_Predefined_Bit_Array_Nor
-           | Iir_Predefined_Boolean_Array_Nor =>
+         when Iir_Predefined_TF_Array_Nor =>
             Eval_Array;
             for I in Result.Val_Array.V'Range loop
                Result.Val_Array.V (I).B2 :=
                  not (Result.Val_Array.V (I).B2 or Right.Val_Array.V (I).B2);
             end loop;
-         when Iir_Predefined_Bit_Array_Xor
-           | Iir_Predefined_Boolean_Array_Xor =>
+         when Iir_Predefined_TF_Array_Xor =>
             Eval_Array;
             for I in Result.Val_Array.V'Range loop
                Result.Val_Array.V (I).B2 :=
                  Result.Val_Array.V (I).B2 xor Right.Val_Array.V (I).B2;
             end loop;
 
-         when Iir_Predefined_Bit_Array_Not
-           | Iir_Predefined_Boolean_Array_Not =>
+         when Iir_Predefined_TF_Array_Not =>
             --  Need to copy as the result is modified.
             Result := Unshare (Operand, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
@@ -3137,6 +3132,23 @@ package body Execution is
       end if;
    end Adjust_Up_Link_For_Protected_Object;
 
+   function Execute_Foreign_Function_Call
+     (Block: Block_Instance_Acc; Expr : Iir; Imp : Iir)
+      return Iir_Value_Literal_Acc
+   is
+      pragma Unreferenced (Block);
+   begin
+      case Get_Identifier (Imp) is
+         when Std_Names.Name_Get_Resolution_Limit =>
+            return Create_I64_Value
+              (Ghdl_I64
+                 (Evaluation.Get_Physical_Value (Std_Package.Time_Base)));
+         when others =>
+            Error_Msg_Exec ("unsupported foreign function call", Expr);
+      end case;
+      return null;
+   end Execute_Foreign_Function_Call;
+
    -- BLOCK is the block instance in which the function call appears.
    function Execute_Function_Call
      (Block: Block_Instance_Acc; Expr: Iir; Imp : Iir)
@@ -3168,7 +3180,11 @@ package body Execution is
             Error_Kind ("execute_subprogram_call_init", Expr);
       end case;
 
-      Res := Execute_Function_Body (Subprg_Block, Imp);
+      if Get_Foreign_Flag (Imp) then
+         Res := Execute_Foreign_Function_Call (Subprg_Block, Expr, Imp);
+      else
+         Res := Execute_Function_Body (Subprg_Block, Imp);
+      end if;
 
       --  Unfortunately, we don't know where the result has been allocated,
       --  so copy it before releasing the instance pool.

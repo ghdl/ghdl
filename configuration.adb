@@ -175,7 +175,7 @@ package body Configuration is
                   --  LIB_UNIT requires a body.
                   if Bod = Null_Iir then
                      Error_Msg_Elab ("body of " & Disp_Node (Lib_Unit)
-                                     & " was never analyzed");
+                                     & " was never analyzed", Lib_Unit);
                   elsif Get_Date (Bod) < Get_Date (Unit) then
                      Error_Msg_Elab (Disp_Node (Bod) & " is outdated");
                      Bod := Null_Iir;

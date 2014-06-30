@@ -2033,6 +2033,10 @@ package body Sem_Names is
             when Iir_Kinds_Function_Declaration =>
                Sem_Parenthesis_Function (Prefix);
                if Res = Null_Iir then
+                  Error_Msg_Sem
+                    ("cannot match " & Disp_Node (Prefix) & " with actuals",
+                     Name);
+                  --  Display error message.
                   declare
                      Match : Boolean;
                   begin
@@ -2040,9 +2044,6 @@ package body Sem_Names is
                        (Get_Interface_Declaration_Chain (Prefix),
                         Assoc_Chain, True, Missing_Parameter, Name, Match);
                   end;
-                  Error_Msg_Sem
-                    ("prefix is neither a function name "
-                     & "nor can it be sliced or indexed", Name);
                end if;
 
             when Iir_Kinds_Object_Declaration
