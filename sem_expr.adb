@@ -1146,6 +1146,7 @@ package body Sem_Expr is
       end case;
    end Sem_Subprogram_Call_Finish;
 
+   --  EXPR is a function or procedure call.
    function Sem_Subprogram_Call_Stage1
      (Expr : Iir; A_Type : Iir; Is_Func_Call : Boolean)
      return Iir
@@ -1208,8 +1209,9 @@ package body Sem_Expr is
       -- Create a set of possible return type in RES_TYPE.
       case Nbr_Inter is
          when 0 =>
-            Error_Msg_Sem ("can't find a subprogram for this overload call",
-                           Expr);
+            --  FIXME: display subprogram name.
+            Error_Msg_Sem
+              ("cannot resolve overloading for subprogram call", Expr);
             return Null_Iir;
          when 1 =>
             -- Very simple case: no overloading.

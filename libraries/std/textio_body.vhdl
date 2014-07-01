@@ -1426,5 +1426,225 @@ package body textio is
     deallocate (l);
     l := nl;
   end sread;
+
+  subtype bv4 is bit_vector (1 to 4);
+
+  function char_to_bv4 (c : character) return bv4 is
+  begin
+    case c is
+      when '0' => return "0000";
+      when '1' => return "0001";
+      when '2' => return "0010";
+      when '3' => return "0011";
+      when '4' => return "0100";
+      when '5' => return "0101";
+      when '6' => return "0110";
+      when '7' => return "0111";
+      when '8' => return "1000";
+      when '9' => return "1001";
+      when 'a' | 'A' => return "1010";
+      when 'b' | 'B' => return "1011";
+      when 'c' | 'C' => return "1100";
+      when 'd' | 'D' => return "1101";
+      when 'e' | 'E' => return "1110";
+      when 'f' | 'F' => return "1111";
+      when others =>
+        assert false report "bad hexa digit" severity failure;
+    end case;
+  end char_to_bv4;
+
+  procedure Oread (L : inout Line; Value : out Bit_Vector; Good : out Boolean)
+  is
+    --  Length of Value
+    constant vlen : natural := value'length;
+
+    --  Number of octal digits for Value
+    constant olen : natural := (vlen + 2) / 3;
+
+    variable res : bit_vector (1 to olen * 3);
+
+    --  Number of bit to parse.
+    variable len : natural;
+
+    variable pos : natural;
+
+    --  Last character from LEN to be removed
+    variable last : integer;
+
+    --  State of the previous byte:
+    --  SKIP: blank before the bit vector.
+    --  DIGIT: previous character was a digit
+    --  UNDERSCORE: was '_'
+    type state_type is (skip, digit, underscore);
+    variable state : state_type;
+  begin
+    --  Initialization.
+    if vlen = 0 then
+      --  If VALUE is a nul array, return now.
+      --  L stay unchanged.
+      --  FIXME: should blanks be removed ?
+      good := true;
+      return;
+    end if;
+    good := false;
+    state := skip;
+    pos := res'left;
+    if l'ascending then
+      last := l'left - 1;
+    else
+      last := l'left + 1;
+    end if;
+    for i in l'range loop
+      case l (i) is
+	when ' '
+	  | NBSP
+	  | HT =>
+	  exit when state /= skip;
+        when '_' =>
+          exit when state /= digit;
+          state := underscore;
+        when '0' to '7' =>
+          res (pos to pos + 2) := char_to_bv4 (l (i)) (2 to 4);
+          last := i;
+          state := digit;
+          pos := pos + 3;
+          --  LRM08 16.4
+          --  Character removal and compostion also stops when the expected
+          --  number of digits have been removed.
+          exit when pos = res'right + 1;
+        when others =>
+          exit;
+      end case;
+    end loop;
+
+    --  LRM08 16.4
+    --  The OREAD or HEAD procedure does not succeed if less than the expected
+    --  number of digits are removed.
+    if pos /= res'right + 1 then
+      return;
+    end if;
+
+    --  LRM08 16.4
+    --  The rightmost value'length bits of the binary number are used to form
+    --  the result for the VALUE parameter, [with a '0' element corresponding
+    --  to a 0 bit and a '1' element corresponding to a 1 bit].  The OREAD or
+    --  HREAD procedure does not succeed if any unused bits are 1.
+    for i in 1 to res'right - vlen loop
+      if res (i) = '1' then
+        return;
+      end if;
+    end loop;
+
+    Value := res (res'right - vlen + 1 to res'right);
+    good := true;
+    trim_next (l, last);
+  end Oread;
+
+  procedure Oread (L : inout Line; Value : out Bit_Vector)
+  is
+    variable res : boolean;
+  begin
+    Oread (l, value, res);
+    assert res = true
+      report "octal bit_vector read failure"
+      severity failure;
+  end Oread;
+
+  procedure Hread (L : inout Line; Value : out Bit_Vector; Good : out Boolean)
+  is
+    --  Length of Value
+    constant vlen : natural := value'length;
+
+    --  Number of hexa digits for Value
+    constant hlen : natural := (vlen + 3) / 4;
+
+    variable res : bit_vector (1 to hlen * 4);
+
+    --  Number of bit to parse.
+    variable len : natural;
+
+    variable pos : natural;
+
+    --  Last character from LEN to be removed
+    variable last : integer;
+
+    --  State of the previous byte:
+    --  SKIP: blank before the bit vector.
+    --  DIGIT: previous character was a digit
+    --  UNDERSCORE: was '_'
+    type state_type is (skip, digit, underscore);
+    variable state : state_type;
+  begin
+    --  Initialization.
+    if vlen = 0 then
+      --  If VALUE is a nul array, return now.
+      --  L stay unchanged.
+      --  FIXME: should blanks be removed ?
+      good := true;
+      return;
+    end if;
+    good := false;
+    state := skip;
+    pos := res'left;
+    if l'ascending then
+      last := l'left - 1;
+    else
+      last := l'left + 1;
+    end if;
+    for i in l'range loop
+      case l (i) is
+	when ' '
+	  | NBSP
+	  | HT =>
+	  exit when state /= skip;
+        when '_' =>
+          exit when state /= digit;
+          state := underscore;
+        when '0' to '9' | 'a' to 'f' | 'A' to 'F' =>
+          res (pos to pos + 3) := char_to_bv4 (l (i));
+          last := i;
+          state := digit;
+          pos := pos + 4;
+          --  LRM08 16.4
+          --  Character removal and compostion also stops when the expected
+          --  number of digits have been removed.
+          exit when pos = res'right + 1;
+        when others =>
+          exit;
+      end case;
+    end loop;
+
+    --  LRM08 16.4
+    --  The OREAD or HEAD procedure does not succeed if less than the expected
+    --  number of digits are removed.
+    if pos /= res'right + 1 then
+      return;
+    end if;
+
+    --  LRM08 16.4
+    --  The rightmost value'length bits of the binary number are used to form
+    --  the result for the VALUE parameter, [with a '0' element corresponding
+    --  to a 0 bit and a '1' element corresponding to a 1 bit].  The OREAD or
+    --  HREAD procedure does not succeed if any unused bits are 1.
+    for i in 1 to res'right - vlen loop
+      if res (i) = '1' then
+        return;
+      end if;
+    end loop;
+
+    Value := res (res'right - vlen + 1 to res'right);
+    good := true;
+    trim_next (l, last);
+  end Hread;
+
+  procedure Hread (L : inout Line; Value : out Bit_Vector)
+  is
+    variable res : boolean;
+  begin
+    Hread (l, value, res);
+    assert res = true
+      report "hexa bit_vector read failure"
+      severity failure;
+  end Hread;
   --END-V08
 end textio;

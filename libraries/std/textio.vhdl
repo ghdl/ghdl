@@ -103,6 +103,18 @@ package Textio is
   alias BREAD is READ [LINE, BIT_VECTOR];
   alias BINARY_READ is READ [LINE, BIT_VECTOR, BOOLEAN];
   alias BINARY_READ is READ [LINE, BIT_VECTOR];
+
+  procedure Oread (L : inout Line; Value : out Bit_Vector; Good : out Boolean);
+  procedure Oread (L : inout Line; Value : out Bit_Vector);
+
+  alias OCTAL_READ is OREAD [LINE, BIT_VECTOR, BOOLEAN];
+  alias OCTAL_READ is OREAD [LINE, BIT_VECTOR];
+
+  procedure Hread (L : inout Line; Value : out Bit_Vector; Good : out Boolean);
+  procedure Hread (L : inout Line; Value : out Bit_Vector);
+
+  alias HEX_READ is HREAD [LINE, BIT_VECTOR, BOOLEAN];
+  alias HEX_READ is HREAD [LINE, BIT_VECTOR];
   --END-V08
 
 -- output routines for standard types

@@ -3324,6 +3324,8 @@ package Iirs is
 
    --  To_String
        Iir_Predefined_Array_To_String,
+       Iir_Predefined_Bit_Vector_To_Ostring,
+       Iir_Predefined_Bit_Vector_To_Hstring,
 
    --  IEEE.Std_Logic_1164.Std_Ulogic
        Iir_Predefined_Std_Ulogic_Match_Equality,

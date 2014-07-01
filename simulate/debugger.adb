@@ -1237,7 +1237,8 @@ package body Debugger is
            | Iir_Kind_Exit_Statement
            | Iir_Kind_Procedure_Call_Statement
            | Iir_Kind_If_Statement
-           | Iir_Kind_While_Loop_Statement =>
+           | Iir_Kind_While_Loop_Statement
+           | Iir_Kind_Case_Statement =>
             Foreach_Scopes (Get_Parent (N), Handler);
 
          when Iir_Kind_For_Loop_Statement

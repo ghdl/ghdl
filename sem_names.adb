@@ -1837,13 +1837,13 @@ package body Sem_Names is
             return Null_Iir;
          end if;
 
-         --  Only prefixes can be indexed or sliced.
+         --  Only values can be indexed or sliced.
          --  Catch errors such as slice of a type conversion.
          if not Is_Object_Name (Sub_Name)
            and then Get_Kind (Sub_Name) not in Iir_Kinds_Function_Declaration
          then
             if Finish then
-               Error_Msg_Sem ("prefix is not a name (found "
+               Error_Msg_Sem ("prefix is not an array value (found "
                               & Disp_Node (Sub_Name) & ")", Name);
             end if;
             return Null_Iir;
@@ -1854,8 +1854,7 @@ package body Sem_Names is
          if Get_Kind (Base_Type) = Iir_Kind_Access_Type_Definition
          then
             Ptr_Type := Base_Type;
-            Base_Type :=
-              Get_Base_Type (Get_Designated_Type (Base_Type));
+            Base_Type := Get_Base_Type (Get_Designated_Type (Base_Type));
          else
             Ptr_Type := Null_Iir;
          end if;
@@ -1878,8 +1877,7 @@ package body Sem_Names is
 
          if not Maybe_Function_Call (Sub_Name) then
             if Finish then
-               --  Should not happen.
-               raise Internal_Error;
+               Error_Msg_Sem ("missing parameters for function call", Name);
             end if;
             return Null_Iir;
          end if;

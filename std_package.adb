@@ -262,6 +262,7 @@ package body Std_Package is
       --  function TO_STRING (VALUE: inter_type) return STRING;
       procedure Create_To_String (Inter_Type : Iir;
                                   Imp : Iir_Predefined_Functions;
+                                  Name : Name_Id := Std_Names.Name_To_String;
                                   Inter2_Id : Name_Id := Null_Identifier;
                                   Inter2_Type : Iir := Null_Iir)
       is
@@ -270,7 +271,7 @@ package body Std_Package is
          Inter2 : Iir_Constant_Interface_Declaration;
       begin
          Decl := Create_Std_Decl (Iir_Kind_Implicit_Function_Declaration);
-         Set_Std_Identifier (Decl, Std_Names.Name_To_String);
+         Set_Std_Identifier (Decl, Name);
          Set_Return_Type (Decl, String_Type_Definition);
          Set_Pure_Flag (Decl, True);
          Set_Implicit_Definition (Decl, Imp);
@@ -968,6 +969,19 @@ package body Std_Package is
       Create_Array_Type (Bit_Vector_Type_Definition, Bit_Vector_Type,
                          Bit_Type_Definition, Name_Bit_Vector);
 
+      --  LRM08 5.3.2.4 Predefined operations on array types
+      --  The following operations are implicitly declared in package
+      --  STD.STANDARD immediately following the declaration of type
+      --  BIT_VECTOR:
+      if Vhdl_Std >= Vhdl_08 then
+         Create_To_String (Bit_Vector_Type_Definition,
+                           Iir_Predefined_Bit_Vector_To_Ostring,
+                           Name_To_Ostring);
+         Create_To_String (Bit_Vector_Type_Definition,
+                           Iir_Predefined_Bit_Vector_To_Hstring,
+                           Name_To_Hstring);
+      end if;
+
       --  VHDL 2008
       --  Vector types
       if Vhdl_Std >= Vhdl_08 then
@@ -1107,14 +1121,17 @@ package body Std_Package is
          --  Predefined overload TO_STRING operations
          Create_To_String (Real_Type_Definition,
                            Iir_Predefined_Real_To_String_Digits,
+                           Name_To_String,
                            Name_Digits,
                            Natural_Subtype_Definition);
          Create_To_String (Real_Type_Definition,
                            Iir_Predefined_Real_To_String_Format,
+                           Name_To_String,
                            Name_Format,
                            String_Type_Definition);
          Create_To_String (Time_Type_Definition,
                            Iir_Predefined_Time_To_String_Unit,
+                           Name_To_String,
                            Name_Unit,
                            Time_Subtype_Definition);
       end if;

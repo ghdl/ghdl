@@ -767,26 +767,6 @@ package body Sem_Decls is
                                  Element_Element_Inter_Chain,
                                  Type_Definition);
 
-                  --  LRM08 5.3.2.4  Predefined operations on array type
-                  --
-                  --  Given a type declaration that declares a one-dimensional
-                  --  array type T whose element type is a character type that
-                  --  contains only character literals, the following operation
-                  --  is implicitely declared immediately following the type
-                  --  declaration
-                  if Vhdl_Std >= Vhdl_08
-                    and then String_Type_Definition /= Null_Iir
-                    and then Get_Kind (Get_Base_Type (Element_Type))
-                    = Iir_Kind_Enumeration_Type_Definition
-                    and then Get_Only_Characters_Flag
-                    (Get_Base_Type (Element_Type))
-                  then
-                     Add_Operation (Name_To_String,
-                                    Iir_Predefined_Array_To_String,
-                                    Unary_Chain,
-                                    String_Type_Definition);
-                  end if;
-
                   --  LRM08 5.3.2.4 Predefined operations on array types
                   --  In addition, given a type declaration that declares a
                   --  one-dimensional array type T whose elements are of a
@@ -938,6 +918,25 @@ package body Sem_Decls is
                            Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
                            Binary_Chain, Element_Type);
                      end if;
+                  end if;
+
+                  --  LRM08 5.3.2.4  Predefined operations on array type
+                  --
+                  --  Given a type declaration that declares a one-dimensional
+                  --  array type T whose element type is a character type that
+                  --  contains only character literals, the following operation
+                  --  is implicitely declared immediately following the type
+                  --  declaration
+                  if Vhdl_Std >= Vhdl_08
+                    and then String_Type_Definition /= Null_Iir
+                    and then (Get_Kind (Element_Type)
+                                = Iir_Kind_Enumeration_Type_Definition)
+                    and then Get_Only_Characters_Flag (Element_Type)
+                  then
+                     Add_Operation (Name_To_String,
+                                    Iir_Predefined_Array_To_String,
+                                    Unary_Chain,
+                                    String_Type_Definition);
                   end if;
                end if;
             end;

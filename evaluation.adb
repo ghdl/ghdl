@@ -1221,7 +1221,9 @@ package body Evaluation is
            | Iir_Predefined_Attribute_Last_Active
            | Iir_Predefined_Attribute_Driving
            | Iir_Predefined_Attribute_Driving_Value
-           | Iir_Predefined_Array_To_String =>
+           | Iir_Predefined_Array_To_String
+           | Iir_Predefined_Bit_Vector_To_Ostring
+           | Iir_Predefined_Bit_Vector_To_Hstring =>
             --  Not binary or never locally static.
             Error_Internal (Orig, "eval_dyadic_operator: " &
                               Iir_Predefined_Functions'Image (Func));
