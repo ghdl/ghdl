@@ -611,7 +611,7 @@ package body Sem is
       --  must be analyzed prior to the analysis of the given design unit.
       Add_Dependence (Entity_Unit);
 
-      Sem_Scopes.Add_Name (Entity);
+      Sem_Scopes.Add_Name (Decl);
 
       Set_Visible_Flag (Decl, True);
 
@@ -2189,7 +2189,7 @@ package body Sem is
               | Iir_Kind_Group_Declaration =>
                null;
             when Iir_Kind_Type_Declaration =>
-               Def := Get_Type (El);
+               Def := Get_Type_Definition (El);
                if Def /= Null_Iir
                  and then Get_Kind (Def) = Iir_Kind_Protected_Type_Declaration
                then

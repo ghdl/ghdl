@@ -413,7 +413,7 @@ package body Sem_Specs is
             Sem_Named_Entity (El);
             case Get_Kind (El) is
                when Iir_Kind_Type_Declaration =>
-                  Def := Get_Type (El);
+                  Def := Get_Type_Definition (El);
                   if Get_Kind (Def) = Iir_Kind_Enumeration_Type_Definition then
                      declare
                         List : Iir_List;
@@ -428,7 +428,7 @@ package body Sem_Specs is
                      end;
                   end if;
                when Iir_Kind_Anonymous_Type_Declaration =>
-                  Def := Get_Type (El);
+                  Def := Get_Type_Definition (El);
                   if Get_Kind (Def) = Iir_Kind_Physical_Type_Definition then
                      declare
                         El1 : Iir;
@@ -757,7 +757,8 @@ package body Sem_Specs is
             return;
          when Iir_Kind_Anonymous_Type_Declaration =>
             --  A physical type definition declares units.
-            if Get_Kind (Get_Type (Decl)) = Iir_Kind_Physical_Type_Definition
+            if Get_Kind (Get_Type_Definition (Decl))
+              = Iir_Kind_Physical_Type_Definition
             then
                Decl_Class := Tok_Units;
             else
@@ -768,7 +769,7 @@ package body Sem_Specs is
          when Iir_Kind_Type_Declaration =>
             Decl_Class := Tok_Type;
             --  An enumeration type declares literals.
-            if Get_Kind (Get_Type (Decl))
+            if Get_Kind (Get_Type_Definition (Decl))
               = Iir_Kind_Enumeration_Type_Definition
             then
                Decl_Class2 := Tok_Literal;

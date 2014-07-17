@@ -39,14 +39,11 @@ package Sem_Scopes is
    procedure Open_Declarative_Region;
    procedure Close_Declarative_Region;
 
-   -- Add interpretation DECL for ID to the current declarative region.
-   -- ID is an identifier or a character literal.
-   -- Note: ID may be different from get_identifier (DECL), since for example
-   --  DECL may be a type definition.
+   -- Add meaning DECL for its identifier to the current declarative region.
    procedure Add_Name (Decl: Iir);
    pragma Inline (Add_Name);
 
-   -- Add interpretation DECL to the identifier of DECL.
+   -- Add meaning DECL to the identifier IDENT.
    -- POTENTIALLY is true if the identifier comes from a use clause.
    procedure Add_Name (Decl: Iir; Ident : Name_Id; Potentially: Boolean);
 
@@ -63,6 +60,9 @@ package Sem_Scopes is
    procedure Replace_Name (Id: Name_Id; Old : Iir; Decl: Iir);
 
    --  Interpretation is a simply linked list of what an identifier means.
+   --  In LRM08 12.3 Visibility, the sentence is 'the declaration defines a
+   --  possible meaning of this occurrence'.
+   --  FIXME: replace Interpretation by Meaning.
    type Name_Interpretation_Type is private;
 
    --  Return true if INTER is a valid interpretation, ie has a corresponding

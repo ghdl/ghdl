@@ -1670,7 +1670,7 @@ package body Parse is
          Decl := Create_Iir (Iir_Kind_Type_Declaration);
          Res := Create_Iir (Iir_Kind_Protected_Type_Declaration);
          Set_Location (Res, Loc);
-         Set_Type (Decl, Res);
+         Set_Type_Definition (Decl, Res);
       end if;
       Set_Identifier (Decl, Ident);
       Set_Location (Decl, Loc);
@@ -1759,7 +1759,7 @@ package body Parse is
             Set_Identifier (Decl, Ident);
             Set_Location (Decl, Loc);
             Def := Parse_Range_Constraint;
-            Set_Type (Decl, Def);
+            Set_Type_Definition (Decl, Def);
             if Current_Token = Tok_Units then
                declare
                   Unit_Def : Iir;
@@ -1784,7 +1784,7 @@ package body Parse is
             Decl := Create_Iir (Iir_Kind_Type_Declaration);
             Set_Identifier (Decl, Ident);
             Set_Location (Decl, Loc);
-            Set_Type (Decl, Parse_Record_Definition);
+            Set_Type_Definition (Decl, Parse_Record_Definition);
             if Current_Token = Tok_Identifier then
                if Flags.Vhdl_Std = Vhdl_87 then
                   Error_Msg_Parse ("simple_name not allowed here in vhdl87");
@@ -1829,13 +1829,12 @@ package body Parse is
               | Iir_Kind_Array_Type_Definition
               | Iir_Kind_File_Type_Definition =>
                Decl := Create_Iir (Iir_Kind_Type_Declaration);
-               Set_Type (Decl, Def);
             when Iir_Kind_Array_Subtype_Definition =>
                Decl := Create_Iir (Iir_Kind_Anonymous_Type_Declaration);
-               Set_Type (Decl, Def);
             when others =>
                Error_Kind ("parse_type_declaration", Def);
          end case;
+         Set_Type_Definition (Decl, Def);
       end if;
       Set_Identifier (Decl, Ident);
       Set_Location (Decl, Loc);

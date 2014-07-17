@@ -2237,7 +2237,7 @@ package body Canon is
             declare
                Def : Iir;
             begin
-               Def := Get_Type (Decl);
+               Def := Get_Type_Definition (Decl);
                if Get_Kind (Def) = Iir_Kind_Protected_Type_Declaration then
                   Canon_Declarations (Decl, Def, Null_Iir);
                end if;
@@ -2617,6 +2617,14 @@ package body Canon is
          when Iir_Kind_Configuration_Declaration =>
             Canon_Declarations (Unit, El, Null_Iir);
             Canon_Block_Configuration (Unit, Get_Block_Configuration (El));
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Set_Generic_Map_Aspect_Chain
+              (El,
+               Canon_Association_Chain_And_Actuals
+                 (Get_Generic_Chain
+                    (Get_Package_Header
+                       (Get_Named_Entity (Get_Uninstantiated_Name (El)))),
+                  Get_Generic_Map_Aspect_Chain (El), El));
          when others =>
             Error_Kind ("canonicalize2", El);
       end case;

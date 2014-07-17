@@ -40,6 +40,7 @@ with Grt.Vstrings;
 with Grt_Interface;
 with Grt.Values;
 with Grt.Errors;
+with Grt.Std_Logic_1164;
 
 package body Execution is
 
@@ -52,6 +53,11 @@ package body Execution is
    procedure Init_Sequential_Statements
      (Proc : Process_State_Acc; Complex_Stmt : Iir);
    procedure Update_Next_Statement (Proc : Process_State_Acc);
+
+   -- Display a message when an assertion has failed.
+   procedure Execute_Failed_Assertion (Report : String;
+                                       Severity : Natural;
+                                       Stmt: Iir);
 
    function Get_Instance_By_Scope_Level
      (Instance: Block_Instance_Acc; Scope_Level: Scope_Level_Type)
@@ -149,6 +155,44 @@ package body Execution is
       end if;
       return Res;
    end Create_Bounds_From_Length;
+
+   function Execute_High_Limit (Bounds : Iir_Value_Literal_Acc)
+                                return Iir_Value_Literal_Acc is
+   begin
+      if Bounds.Dir = Iir_To then
+         return Bounds.Right;
+      else
+         return Bounds.Left;
+      end if;
+   end Execute_High_Limit;
+
+   function Execute_Low_Limit (Bounds : Iir_Value_Literal_Acc)
+                               return Iir_Value_Literal_Acc is
+   begin
+      if Bounds.Dir = Iir_To then
+         return Bounds.Left;
+      else
+         return Bounds.Right;
+      end if;
+   end Execute_Low_Limit;
+
+   function Execute_Left_Limit (Bounds : Iir_Value_Literal_Acc)
+                                return Iir_Value_Literal_Acc is
+   begin
+      return Bounds.Left;
+   end Execute_Left_Limit;
+
+   function Execute_Right_Limit (Bounds : Iir_Value_Literal_Acc)
+                                 return Iir_Value_Literal_Acc is
+   begin
+      return Bounds.Right;
+   end Execute_Right_Limit;
+
+   function Execute_Length (Bounds : Iir_Value_Literal_Acc)
+                           return Iir_Value_Literal_Acc is
+   begin
+      return Create_I64_Value (Ghdl_I64 (Bounds.Length));
+   end Execute_Length;
 
    function Create_Enum_Value (Pos : Natural; Etype : Iir)
                               return Iir_Value_Literal_Acc
@@ -348,6 +392,48 @@ package body Execution is
       return Res;
    end Execute_Shift_Operator;
 
+   Hex_Chars : constant array (Natural range 0 .. 15) of Character :=
+     "0123456789ABCDEF";
+
+   function Execute_Bit_Vector_To_String (Val : Iir_Value_Literal_Acc;
+                                          Log_Base : Natural)
+                                         return Iir_Value_Literal_Acc
+   is
+      Base : constant Natural := 2 ** Log_Base;
+      Blen : constant Natural := Natural (Val.Bounds.D (1).Length);
+      Str : String (1 .. (Blen + Log_Base - 1) / Log_Base);
+      Pos : Natural;
+      V : Natural;
+      N : Natural;
+   begin
+      V := 0;
+      N := 1;
+      Pos := Str'Last;
+      for I in reverse Val.Val_Array.V'Range loop
+         V := V + Ghdl_B2'Pos (Val.Val_Array.V (I).B2) * N;
+         N := N * 2;
+         if N = Base or else I = Val.Val_Array.V'First then
+            Str (Pos) := Hex_Chars (V);
+            Pos := Pos - 1;
+            N := 1;
+            V := 0;
+         end if;
+      end loop;
+      return String_To_Iir_Value (Str);
+   end Execute_Bit_Vector_To_String;
+
+   procedure Check_Std_Ulogic_Dc
+     (Loc : Iir; V : Grt.Std_Logic_1164.Std_Ulogic)
+   is
+      use Grt.Std_Logic_1164;
+   begin
+      if V = '-' then
+         Execute_Failed_Assertion
+           ("STD_LOGIC_1164: '-' operand for matching ordering operator",
+            2, Loc);
+      end if;
+   end Check_Std_Ulogic_Dc;
+
    --  EXPR is the expression whose implementation is an implicit function.
    function Execute_Implicit_Function (Block : Block_Instance_Acc;
                                        Expr: Iir;
@@ -385,12 +471,18 @@ package body Execution is
    begin
       Func := Get_Implicit_Definition (Get_Implementation (Expr));
 
-      --  Eval left operand (only if the predefined function is not NOW).
-      if Func /= Iir_Predefined_Now_Function then
-         Left := Execute_Expression (Block, Left_Param);
-      else
-         Left := null;
-      end if;
+      --  Eval left operand.
+      case Func is
+         when Iir_Predefined_Now_Function =>
+            Left := null;
+         when Iir_Predefined_Bit_Rising_Edge
+           | Iir_Predefined_Boolean_Rising_Edge
+           | Iir_Predefined_Bit_Falling_Edge
+           | Iir_Predefined_Boolean_Falling_Edge=>
+            Operand := Execute_Name (Block, Left_Param, True);
+         when others =>
+            Left := Execute_Expression (Block, Left_Param);
+      end case;
       Right := null;
 
       case Func is
@@ -521,6 +613,9 @@ package body Execution is
            | Iir_Predefined_Boolean_Not =>
             Result := Boolean_To_Lit (Operand.B2 = Lit_Enum_0.B2);
 
+         when Iir_Predefined_Bit_Condition =>
+            Result := Boolean_To_Lit (Operand.B2 = Lit_Enum_1.B2);
+
          when Iir_Predefined_Array_Sll
            | Iir_Predefined_Array_Srl
            | Iir_Predefined_Array_Sla
@@ -536,7 +631,9 @@ package body Execution is
            | Iir_Predefined_Access_Equality
            | Iir_Predefined_Physical_Equality
            | Iir_Predefined_Floating_Equality
-           | Iir_Predefined_Record_Equality =>
+           | Iir_Predefined_Record_Equality
+           | Iir_Predefined_Bit_Match_Equality
+           | Iir_Predefined_Bit_Array_Match_Equality =>
             Eval_Right;
             Result := Boolean_To_Lit (Is_Equal (Left, Right));
          when Iir_Predefined_Enum_Inequality
@@ -545,7 +642,9 @@ package body Execution is
            | Iir_Predefined_Access_Inequality
            | Iir_Predefined_Physical_Inequality
            | Iir_Predefined_Floating_Inequality
-           | Iir_Predefined_Record_Inequality =>
+           | Iir_Predefined_Record_Inequality
+           | Iir_Predefined_Bit_Match_Inequality
+           | Iir_Predefined_Bit_Array_Match_Inequality =>
             Eval_Right;
             Result := Boolean_To_Lit (not Is_Equal (Left, Right));
          when Iir_Predefined_Integer_Less
@@ -624,6 +723,23 @@ package body Execution is
                when others =>
                   raise Internal_Error;
             end case;
+
+         when Iir_Predefined_Enum_Minimum
+           | Iir_Predefined_Physical_Minimum =>
+            Eval_Right;
+            if Compare_Value (Left, Right) = Less then
+               Result := Left;
+            else
+               Result := Right;
+            end if;
+         when Iir_Predefined_Enum_Maximum
+           | Iir_Predefined_Physical_Maximum =>
+            Eval_Right;
+            if Compare_Value (Left, Right) = Less then
+               Result := Right;
+            else
+               Result := Left;
+            end if;
 
          when Iir_Predefined_Integer_Plus
            | Iir_Predefined_Physical_Plus =>
@@ -834,6 +950,102 @@ package body Execution is
                Result.Val_Array.V (I).B2 :=
                  Result.Val_Array.V (I).B2 xor Right.Val_Array.V (I).B2;
             end loop;
+         when Iir_Predefined_TF_Array_Xnor =>
+            Eval_Array;
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 not (Result.Val_Array.V (I).B2 xor Right.Val_Array.V (I).B2);
+            end loop;
+
+         when Iir_Predefined_TF_Array_Element_And =>
+            Eval_Right;
+            Result := Unshare (Left, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 Result.Val_Array.V (I).B2 and Right.B2;
+            end loop;
+         when Iir_Predefined_TF_Element_Array_And =>
+            Eval_Right;
+            Result := Unshare (Right, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 Result.Val_Array.V (I).B2 and Left.B2;
+            end loop;
+
+         when Iir_Predefined_TF_Array_Element_Or =>
+            Eval_Right;
+            Result := Unshare (Left, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 Result.Val_Array.V (I).B2 or Right.B2;
+            end loop;
+         when Iir_Predefined_TF_Element_Array_Or =>
+            Eval_Right;
+            Result := Unshare (Right, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 Result.Val_Array.V (I).B2 or Left.B2;
+            end loop;
+
+         when Iir_Predefined_TF_Array_Element_Xor =>
+            Eval_Right;
+            Result := Unshare (Left, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 Result.Val_Array.V (I).B2 xor Right.B2;
+            end loop;
+         when Iir_Predefined_TF_Element_Array_Xor =>
+            Eval_Right;
+            Result := Unshare (Right, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 Result.Val_Array.V (I).B2 xor Left.B2;
+            end loop;
+
+         when Iir_Predefined_TF_Array_Element_Nand =>
+            Eval_Right;
+            Result := Unshare (Left, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 not (Result.Val_Array.V (I).B2 and Right.B2);
+            end loop;
+         when Iir_Predefined_TF_Element_Array_Nand =>
+            Eval_Right;
+            Result := Unshare (Right, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 not (Result.Val_Array.V (I).B2 and Left.B2);
+            end loop;
+
+         when Iir_Predefined_TF_Array_Element_Nor =>
+            Eval_Right;
+            Result := Unshare (Left, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 not (Result.Val_Array.V (I).B2 or Right.B2);
+            end loop;
+         when Iir_Predefined_TF_Element_Array_Nor =>
+            Eval_Right;
+            Result := Unshare (Right, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 not (Result.Val_Array.V (I).B2 or Left.B2);
+            end loop;
+
+         when Iir_Predefined_TF_Array_Element_Xnor =>
+            Eval_Right;
+            Result := Unshare (Left, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 not (Result.Val_Array.V (I).B2 xor Right.B2);
+            end loop;
+         when Iir_Predefined_TF_Element_Array_Xnor =>
+            Eval_Right;
+            Result := Unshare (Right, Expr_Pool'Access);
+            for I in Result.Val_Array.V'Range loop
+               Result.Val_Array.V (I).B2 :=
+                 not (Result.Val_Array.V (I).B2 xor Left.B2);
+            end loop;
 
          when Iir_Predefined_TF_Array_Not =>
             --  Need to copy as the result is modified.
@@ -841,6 +1053,51 @@ package body Execution is
             for I in Result.Val_Array.V'Range loop
                Result.Val_Array.V (I).B2 := not Result.Val_Array.V (I).B2;
             end loop;
+
+         when Iir_Predefined_TF_Reduction_And =>
+            Result := Create_B2_Value (True);
+            for I in Operand.Val_Array.V'Range loop
+               Result.B2 := Result.B2 and Operand.Val_Array.V (I).B2;
+            end loop;
+         when Iir_Predefined_TF_Reduction_Nand =>
+            Result := Create_B2_Value (True);
+            for I in Operand.Val_Array.V'Range loop
+               Result.B2 := Result.B2 and Operand.Val_Array.V (I).B2;
+            end loop;
+            Result.B2 := not Result.B2;
+         when Iir_Predefined_TF_Reduction_Or =>
+            Result := Create_B2_Value (False);
+            for I in Operand.Val_Array.V'Range loop
+               Result.B2 := Result.B2 or Operand.Val_Array.V (I).B2;
+            end loop;
+         when Iir_Predefined_TF_Reduction_Nor =>
+            Result := Create_B2_Value (False);
+            for I in Operand.Val_Array.V'Range loop
+               Result.B2 := Result.B2 or Operand.Val_Array.V (I).B2;
+            end loop;
+            Result.B2 := not Result.B2;
+         when Iir_Predefined_TF_Reduction_Xor =>
+            Result := Create_B2_Value (False);
+            for I in Operand.Val_Array.V'Range loop
+               Result.B2 := Result.B2 xor Operand.Val_Array.V (I).B2;
+            end loop;
+         when Iir_Predefined_TF_Reduction_Xnor =>
+            Result := Create_B2_Value (False);
+            for I in Operand.Val_Array.V'Range loop
+               Result.B2 := Result.B2 xor Operand.Val_Array.V (I).B2;
+            end loop;
+            Result.B2 := not Result.B2;
+
+         when Iir_Predefined_Bit_Rising_Edge
+           | Iir_Predefined_Boolean_Rising_Edge =>
+            return Boolean_To_Lit
+              (Execute_Event_Attribute (Operand)
+                 and then Execute_Signal_Value (Operand).B2 = True);
+         when Iir_Predefined_Bit_Falling_Edge
+           | Iir_Predefined_Boolean_Falling_Edge =>
+            return Boolean_To_Lit
+              (Execute_Event_Attribute (Operand)
+                 and then Execute_Signal_Value (Operand).B2 = False);
 
          when Iir_Predefined_Array_Greater =>
             Eval_Right;
@@ -858,15 +1115,225 @@ package body Execution is
             Eval_Right;
             Result := Boolean_To_Lit (Compare_Value (Left, Right) <= Equal);
 
+         when Iir_Predefined_Array_Minimum =>
+            Eval_Right;
+            if Compare_Value (Left, Right) = Less then
+               Result := Left;
+            else
+               Result := Right;
+            end if;
+         when Iir_Predefined_Array_Maximum =>
+            Eval_Right;
+            if Compare_Value (Left, Right) = Less then
+               Result := Right;
+            else
+               Result := Left;
+            end if;
+
+         when Iir_Predefined_Vector_Maximum =>
+            declare
+               El_St : constant Iir :=
+                 Get_Return_Type (Get_Implementation (Expr));
+               V : Iir_Value_Literal_Acc;
+            begin
+               Result := Execute_Low_Limit (Execute_Bounds (Block, El_St));
+               for I in Left.Val_Array.V'Range loop
+                  V := Left.Val_Array.V (I);
+                  if Compare_Value (V, Result) = Greater then
+                     Result := V;
+                  end if;
+               end loop;
+            end;
+         when Iir_Predefined_Vector_Minimum =>
+            declare
+               El_St : constant Iir :=
+                 Get_Return_Type (Get_Implementation (Expr));
+               V : Iir_Value_Literal_Acc;
+            begin
+               Result := Execute_High_Limit (Execute_Bounds (Block, El_St));
+               for I in Left.Val_Array.V'Range loop
+                  V := Left.Val_Array.V (I);
+                  if Compare_Value (V, Result) = Less then
+                     Result := V;
+                  end if;
+               end loop;
+            end;
+
          when Iir_Predefined_Endfile =>
             Result := Boolean_To_Lit (File_Operation.Endfile (Left, Null_Iir));
 
          when Iir_Predefined_Now_Function =>
             Result := Create_I64_Value (Ghdl_I64 (Grt.Types.Current_Time));
 
-         when Iir_Predefined_Integer_To_String =>
+         when Iir_Predefined_Integer_To_String
+           | Iir_Predefined_Floating_To_String
+           | Iir_Predefined_Physical_To_String =>
             Result := String_To_Iir_Value
               (Execute_Image_Attribute (Left, Get_Type (Left_Param)));
+
+         when Iir_Predefined_Enum_To_String =>
+            declare
+               use Name_Table;
+               Base_Type : constant Iir :=
+                 Get_Base_Type (Get_Type (Left_Param));
+               Lits : constant Iir_List :=
+                 Get_Enumeration_Literal_List (Base_Type);
+               Pos : constant Natural := Get_Enum_Pos (Left);
+               Id : Name_Id;
+            begin
+               if Base_Type = Std_Package.Character_Type_Definition then
+                  Result := String_To_Iir_Value ((1 => Character'Val (Pos)));
+               else
+                  Id := Get_Identifier (Get_Nth_Element (Lits, Pos));
+                  if Is_Character (Id) then
+                     Result := String_To_Iir_Value ((1 => Get_Character (Id)));
+                  else
+                     Result := String_To_Iir_Value (Image (Id));
+                  end if;
+               end if;
+            end;
+
+         when Iir_Predefined_Array_Char_To_String =>
+            declare
+               Str : String (1 .. Natural (Left.Bounds.D (1).Length));
+               Lits : constant Iir_List :=
+                 Get_Enumeration_Literal_List
+                 (Get_Base_Type
+                    (Get_Element_Subtype (Get_Type (Left_Param))));
+               Pos : Natural;
+            begin
+               for I in Left.Val_Array.V'Range loop
+                  Pos := Get_Enum_Pos (Left.Val_Array.V (I));
+                  Str (Positive (I)) := Name_Table.Get_Character
+                    (Get_Identifier (Get_Nth_Element (Lits, Pos)));
+               end loop;
+               Result := String_To_Iir_Value (Str);
+            end;
+
+         when Iir_Predefined_Bit_Vector_To_Hstring =>
+            return Execute_Bit_Vector_To_String (Left, 4);
+
+         when Iir_Predefined_Bit_Vector_To_Ostring =>
+            return Execute_Bit_Vector_To_String (Left, 3);
+
+         when Iir_Predefined_Real_To_String_Digits =>
+            Eval_Right;
+            declare
+               Str : Grt.Vstrings.String_Real_Digits;
+               Last : Natural;
+            begin
+               Grt.Vstrings.To_String
+                 (Str, Last, Left.F64, Ghdl_I32 (Right.I64));
+               Result := String_To_Iir_Value (Str (1 .. Last));
+            end;
+         when Iir_Predefined_Real_To_String_Format =>
+            Eval_Right;
+            declare
+               Format : String (1 .. Natural (Right.Val_Array.Len) + 1);
+               Str : Grt.Vstrings.String_Real_Format;
+               Last : Natural;
+            begin
+               for I in Right.Val_Array.V'Range loop
+                  Format (Positive (I)) :=
+                    Character'Val (Right.Val_Array.V (I).E32);
+               end loop;
+               Format (Format'Last) := ASCII.NUL;
+               Grt.Vstrings.To_String
+                 (Str, Last, Left.F64, To_Ghdl_C_String (Format'Address));
+               Result := String_To_Iir_Value (Str (1 .. Last));
+            end;
+         when Iir_Predefined_Time_To_String_Unit =>
+            Eval_Right;
+            declare
+               Str : Grt.Vstrings.String_Time_Unit;
+               First : Natural;
+               Unit : Iir;
+            begin
+               Unit := Get_Unit_Chain (Std_Package.Time_Type_Definition);
+               while Unit /= Null_Iir loop
+                  exit when Evaluation.Get_Physical_Value (Unit)
+                    = Iir_Int64 (Right.I64);
+                  Unit := Get_Chain (Unit);
+               end loop;
+               if Unit = Null_Iir then
+                  Error_Msg_Exec
+                    ("to_string for time called with wrong unit", Expr);
+               end if;
+               Grt.Vstrings.To_String (Str, First, Left.I64, Right.I64);
+               Result := String_To_Iir_Value
+                 (Str (First .. Str'Last) & ' '
+                    & Name_Table.Image (Get_Identifier (Unit)));
+            end;
+
+         when Iir_Predefined_Std_Ulogic_Match_Equality =>
+            Eval_Right;
+            declare
+               use Grt.Std_Logic_1164;
+            begin
+               Result := Create_E32_Value
+                 (Std_Ulogic'Pos
+                    (Match_Eq_Table (Std_Ulogic'Val (Left.E32),
+                                     Std_Ulogic'Val (Right.E32))));
+            end;
+         when Iir_Predefined_Std_Ulogic_Match_Inequality =>
+            Eval_Right;
+            declare
+               use Grt.Std_Logic_1164;
+            begin
+               Result := Create_E32_Value
+                 (Std_Ulogic'Pos
+                    (Not_Table (Match_Eq_Table (Std_Ulogic'Val (Left.E32),
+                                                Std_Ulogic'Val (Right.E32)))));
+            end;
+         when Iir_Predefined_Std_Ulogic_Match_Ordering_Functions =>
+            Eval_Right;
+            declare
+               use Grt.Std_Logic_1164;
+               L : constant Std_Ulogic := Std_Ulogic'Val (Left.E32);
+               R : constant Std_Ulogic := Std_Ulogic'Val (Right.E32);
+               Res : Std_Ulogic;
+            begin
+               Check_Std_Ulogic_Dc (Expr, L);
+               Check_Std_Ulogic_Dc (Expr, R);
+               case Iir_Predefined_Std_Ulogic_Match_Ordering_Functions (Func)
+                  is
+                  when Iir_Predefined_Std_Ulogic_Match_Less =>
+                     Res := Match_Lt_Table (L, R);
+                  when Iir_Predefined_Std_Ulogic_Match_Less_Equal =>
+                     Res := Or_Table (Match_Lt_Table (L, R),
+                                      Match_Eq_Table (L, R));
+                  when Iir_Predefined_Std_Ulogic_Match_Greater =>
+                     Res := Not_Table (Or_Table (Match_Lt_Table (L, R),
+                                                 Match_Eq_Table (L, R)));
+                  when Iir_Predefined_Std_Ulogic_Match_Greater_Equal =>
+                     Res := Not_Table (Match_Lt_Table (L, R));
+               end case;
+               Result := Create_E32_Value (Std_Ulogic'Pos (Res));
+            end;
+
+         when Iir_Predefined_Std_Ulogic_Array_Match_Equality
+           | Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
+            Eval_Right;
+            if Left.Bounds.D (1).Length /= Right.Bounds.D (1).Length then
+               Error_Msg_Constraint (Expr);
+            end if;
+            declare
+               use Grt.Std_Logic_1164;
+               Res : Std_Ulogic := '1';
+            begin
+               Result := Create_E32_Value (Std_Ulogic'Pos ('1'));
+               for I in Left.Val_Array.V'Range loop
+                  Res := And_Table
+                    (Res,
+                     Match_Eq_Table
+                       (Std_Ulogic'Val (Left.Val_Array.V (I).E32),
+                        Std_Ulogic'Val (Right.Val_Array.V (I).E32)));
+               end loop;
+               if Func = Iir_Predefined_Std_Ulogic_Array_Match_Inequality then
+                  Res := Not_Table (Res);
+               end if;
+               Result := Create_E32_Value (Std_Ulogic'Pos (Res));
+            end;
 
          when others =>
             Error_Msg ("execute_implicit_function: unimplemented " &
@@ -927,6 +1394,8 @@ package body Execution is
             end if;
          when Iir_Predefined_Read =>
             File_Operation.Read_Binary (Args (0), Args (1));
+         when Iir_Predefined_Flush =>
+            File_Operation.Flush (Args (0));
          when Iir_Predefined_File_Close =>
             if Get_Text_File_Flag (Get_Type (Inter_Chain)) then
                File_Operation.File_Close_Text (Args (0), Stmt);
@@ -961,6 +1430,9 @@ package body Execution is
          when Std_Names.Name_Untruncated_Text_Read =>
             File_Operation.Untruncated_Text_Read
               (Args (0), Args (1), Args (2));
+         when Std_Names.Name_Control_Simulation =>
+            Put_Line (Standard_Error, "simulation finished");
+            raise Simulation_Finished;
          when others =>
             Error_Msg_Exec ("unsupported foreign procedure call", Stmt);
       end case;
@@ -1727,44 +2199,6 @@ package body Execution is
       return Bound;
    end Execute_Bounds;
 
-   function Execute_High_Limit (Bounds : Iir_Value_Literal_Acc)
-                                return Iir_Value_Literal_Acc is
-   begin
-      if Bounds.Dir = Iir_To then
-         return Bounds.Right;
-      else
-         return Bounds.Left;
-      end if;
-   end Execute_High_Limit;
-
-   function Execute_Low_Limit (Bounds : Iir_Value_Literal_Acc)
-                               return Iir_Value_Literal_Acc is
-   begin
-      if Bounds.Dir = Iir_To then
-         return Bounds.Left;
-      else
-         return Bounds.Right;
-      end if;
-   end Execute_Low_Limit;
-
-   function Execute_Left_Limit (Bounds : Iir_Value_Literal_Acc)
-                                return Iir_Value_Literal_Acc is
-   begin
-      return Bounds.Left;
-   end Execute_Left_Limit;
-
-   function Execute_Right_Limit (Bounds : Iir_Value_Literal_Acc)
-                                 return Iir_Value_Literal_Acc is
-   begin
-      return Bounds.Right;
-   end Execute_Right_Limit;
-
-   function Execute_Length (Bounds : Iir_Value_Literal_Acc)
-                           return Iir_Value_Literal_Acc is
-   begin
-      return Create_I64_Value (Ghdl_I64 (Bounds.Length));
-   end Execute_Length;
-
    -- Perform type conversion as desribed in LRM93 7.3.5
    function Execute_Type_Conversion (Block: Block_Instance_Acc;
                                      Conv : Iir_Type_Conversion;
@@ -1996,8 +2430,13 @@ package body Execution is
             if Base /= null then
                Res := Base;
             else
-               Slot_Block := Get_Instance_For_Slot (Block, Expr);
-               Res := Slot_Block.Objects (Get_Info (Expr).Slot);
+               declare
+                  Info : constant Sim_Info_Acc := Get_Info (Expr);
+               begin
+                  Slot_Block :=
+                    Get_Instance_By_Scope_Level (Block, Info.Scope_Level);
+                  Res := Slot_Block.Objects (Info.Slot);
+               end;
             end if;
 
          when Iir_Kind_Indexed_Name =>
@@ -2145,7 +2584,7 @@ package body Execution is
                                     return Iir_Value_Literal_Acc
    is
       Val : Iir_Value_Literal_Acc;
-      Attr_Type : constant Iir := Get_Type (Get_Prefix (Expr));
+      Attr_Type : constant Iir := Get_Type_Of_Type_Mark (Get_Prefix (Expr));
    begin
       Val := Execute_Expression (Block, Get_Parameter (Expr));
       return String_To_Iir_Value
@@ -2612,7 +3051,8 @@ package body Execution is
 
          when Iir_Kind_Val_Attribute =>
             declare
-               Prefix_Type: constant Iir := Get_Type (Get_Prefix (Expr));
+               Prefix_Type: constant Iir :=
+                 Get_Type_Of_Type_Mark (Get_Prefix (Expr));
                Base_Type : constant Iir := Get_Base_Type (Prefix_Type);
                Mode : constant Iir_Value_Kind :=
                  Get_Info (Base_Type).Scalar_Mode;
@@ -2636,7 +3076,8 @@ package body Execution is
          when Iir_Kind_Pos_Attribute =>
             declare
                N_Res: Iir_Value_Literal_Acc;
-               Prefix_Type: constant Iir := Get_Type (Get_Prefix (Expr));
+               Prefix_Type: constant Iir :=
+                 Get_Type_Of_Type_Mark (Get_Prefix (Expr));
                Base_Type : constant Iir := Get_Base_Type (Prefix_Type);
                Mode : constant Iir_Value_Kind :=
                  Get_Info (Base_Type).Scalar_Mode;
@@ -2676,7 +3117,8 @@ package body Execution is
                Bound : Iir_Value_Literal_Acc;
             begin
                Res := Execute_Expression (Block, Get_Parameter (Expr));
-               Bound := Execute_Bounds (Block, Get_Type (Get_Prefix (Expr)));
+               Bound := Execute_Bounds
+                 (Block, Get_Type_Of_Type_Mark (Get_Prefix (Expr)));
                case Bound.Dir is
                   when Iir_To =>
                      Res := Execute_Dec (Res, Expr);
@@ -2692,7 +3134,8 @@ package body Execution is
                Bound : Iir_Value_Literal_Acc;
             begin
                Res := Execute_Expression (Block, Get_Parameter (Expr));
-               Bound := Execute_Bounds (Block, Get_Type (Get_Prefix (Expr)));
+               Bound := Execute_Bounds
+                 (Block, Get_Type_Of_Type_Mark (Get_Prefix (Expr)));
                case Bound.Dir is
                   when Iir_Downto =>
                      Res := Execute_Dec (Res, Expr);
@@ -3638,7 +4081,7 @@ package body Execution is
    -- REPORT is the value (string) to display, or null to use default message.
    -- SEVERITY is the severity or null to use default (error).
    -- STMT is used to display location.
-   procedure Execute_Failed_Assertion (Report : Iir_Value_Literal_Acc;
+   procedure Execute_Failed_Assertion (Report : String;
                                        Severity : Natural;
                                        Stmt: Iir) is
    begin
@@ -3671,22 +4114,34 @@ package body Execution is
       Put (Standard_Error, "): ");
 
       -- 3: the value of the message string.
-      if Report /= null then
-         for I in Report.Val_Array.V'Range loop
-            Put (Standard_Error, Character'Val (Report.Val_Array.V (I).E32));
-         end loop;
-         New_Line (Standard_Error);
-      else
-         -- The default value for the message string is:
-         -- "Assertion violation.".
-         -- Does the message string include quotes ?
-         Put_Line (Standard_Error, "Assertion violation.");
-      end if;
+      Put_Line (Standard_Error, Report);
 
       -- Stop execution if the severity is too high.
       if Severity >= Grt.Options.Severity_Level then
          Debug (Reason_Assert);
          Grt.Errors.Fatal_Error;
+      end if;
+   end Execute_Failed_Assertion;
+
+   procedure Execute_Failed_Assertion (Report : Iir_Value_Literal_Acc;
+                                       Severity : Natural;
+                                       Stmt: Iir) is
+   begin
+      if Report /= null then
+         declare
+            Msg : String (1 .. Natural (Report.Val_Array.Len));
+         begin
+            for I in Report.Val_Array.V'Range loop
+               Msg (Positive (I)) :=
+                 Character'Val (Report.Val_Array.V (I).E32);
+            end loop;
+            Execute_Failed_Assertion (Msg, Severity, Stmt);
+         end;
+      else
+         -- The default value for the message string is:
+         -- "Assertion violation.".
+         -- Does the message string include quotes ?
+         Execute_Failed_Assertion ("Assertion violation.", Severity, Stmt);
       end if;
    end Execute_Failed_Assertion;
 

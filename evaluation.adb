@@ -1221,7 +1221,7 @@ package body Evaluation is
            | Iir_Predefined_Attribute_Last_Active
            | Iir_Predefined_Attribute_Driving
            | Iir_Predefined_Attribute_Driving_Value
-           | Iir_Predefined_Array_To_String
+           | Iir_Predefined_Array_Char_To_String
            | Iir_Predefined_Bit_Vector_To_Ostring
            | Iir_Predefined_Bit_Vector_To_Hstring =>
             --  Not binary or never locally static.
@@ -1981,11 +1981,11 @@ package body Evaluation is
 
          when Iir_Kind_Pred_Attribute =>
             Res := Eval_Incdec (Eval_Static_Expr (Get_Parameter (Expr)), -1);
-            Eval_Check_Bound (Res, Get_Type (Get_Prefix (Expr)));
+            Eval_Check_Bound (Res, Get_Type_Of_Type_Mark (Get_Prefix (Expr)));
             return Res;
          when Iir_Kind_Succ_Attribute =>
             Res := Eval_Incdec (Eval_Static_Expr (Get_Parameter (Expr)), +1);
-            Eval_Check_Bound (Res, Get_Type (Get_Prefix (Expr)));
+            Eval_Check_Bound (Res, Get_Type_Of_Type_Mark (Get_Prefix (Expr)));
             return Res;
          when Iir_Kind_Leftof_Attribute
            | Iir_Kind_Rightof_Attribute =>
@@ -1995,7 +1995,7 @@ package body Evaluation is
                Prefix_Type : Iir;
                Res : Iir;
             begin
-               Prefix_Type := Get_Type (Get_Prefix (Expr));
+               Prefix_Type := Get_Type_Of_Type_Mark (Get_Prefix (Expr));
                Rng := Eval_Range (Prefix_Type);
                case Get_Direction (Rng) is
                   when Iir_To =>
@@ -2426,9 +2426,10 @@ package body Evaluation is
                      Natural (Eval_Pos (Get_Parameter (Expr))) - 1);
                end;
             when Iir_Kind_Subtype_Declaration
-              | Iir_Kind_Type_Declaration
               | Iir_Kind_Base_Attribute =>
                return Eval_Range (Get_Type (Expr));
+            when Iir_Kind_Type_Declaration =>
+               return Eval_Range (Get_Type_Definition (Expr));
             when others =>
                Error_Kind ("eval_range", Expr);
          end case;

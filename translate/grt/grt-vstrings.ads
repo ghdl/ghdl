@@ -77,17 +77,48 @@ package Grt.Vstrings is
    --  Copy RSTR to STR, and return length of the string to LEN.
    procedure Copy (Rstr : Rstring; Str : in out String; Len : out Natural);
 
-   --  FIRST is the index of the first character.
+   --  Write the image of N into STR padded to the right.  FIRST is the index
+   --  of the first character, so the result is in STR (FIRST .. STR'last).
    --  Requires at least 11 characters.
    procedure To_String (Str : out String; First : out Natural; N : Ghdl_I32);
 
+   --  Write the image of N into STR padded to the right.  FIRST is the index
+   --  of the first character, so the result is in STR (FIRST .. STR'last).
    --  Requires at least 21 characters.
    procedure To_String (Str : out String; First : out Natural; N : Ghdl_I64);
 
+   --  Write the image of N into STR.  LAST is the index of the last character,
+   --  so the result is in STR (STR'first .. LAST).
    --  Requires at least 24 characters.
    --  Sign (1) + digit (1) + dot (1) + digits (15) + exp (1) + sign (1)
    --  + exp_digits (4) -> 24.
    procedure To_String (Str : out String; Last : out Natural; N : Ghdl_F64);
+
+   subtype String_Real_Digits is String (1 .. 128);
+
+   --  Write the image of N into STR using NBR_DIGITS digits after the decimal
+   --  point.
+   procedure To_String (Str : out String_Real_Digits;
+                        Last : out Natural;
+                        N : Ghdl_F64;
+                        Nbr_Digits : Ghdl_I32);
+
+   subtype String_Real_Format is String (1 .. 128);
+
+   --  Write the image of N into STR using NBR_DIGITS digits after the decimal
+   --  point.
+   procedure To_String (Str : out String_Real_Digits;
+                        Last : out Natural;
+                        N : Ghdl_F64;
+                        Format : Ghdl_C_String);
+
+   --  Write the image of VALUE to STR using UNIT as unit.  The output is in
+   --  STR (FIRST .. STR'last).
+   subtype String_Time_Unit is String (1 .. 22);
+   procedure To_String (Str : out String_Time_Unit;
+                        First : out Natural;
+                        Value : Ghdl_I64;
+                        Unit : Ghdl_I64);
 
 private
    subtype Fat_String is String (Positive);

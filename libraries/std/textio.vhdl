@@ -122,6 +122,10 @@ package Textio is
   procedure writeline (variable f: out text; l: inout line); --V87
   procedure writeline (file f: text; l: inout line); --V93
 
+  --START-V08
+  procedure Tee (file f : Text; L : inout LINE);
+  --END-V08
+
   --  This implementation accept any value for all the types.
   procedure write
     (l: inout line; value: in bit;
@@ -161,5 +165,13 @@ package Textio is
 
   alias Bwrite is write [Line, Bit_Vector, Side, Width];
   alias Binary_Write is write [Line, Bit_Vector, Side, Width];
-  --END-V08
+
+  procedure Owrite (L : inout line; value : in Bit_Vector;
+                    Justified : in Side := Right; Field : in Width := 0);
+  alias Octal_Write is Owrite [Line, Bit_Vector, Side, Width];
+
+  procedure Hwrite (L : inout line; value : in Bit_Vector;
+                    Justified : in Side := Right; Field : in Width := 0);
+  alias Hex_Write is Hwrite [Line, Bit_Vector, Side, Width];
+--END-V08
 end textio;

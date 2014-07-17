@@ -431,6 +431,11 @@ package body Sem_Scopes is
       Current_Inter: Name_Interpretation_Type;
       Current_Decl : Iir;
 
+      --  Before adding a new interpretation, the current interpretation
+      --  must be saved so that it could be restored when the current scope
+      --  is removed.  That must be done only once per scope and per
+      --  interpretation.  Note that the saved interpretation is not removed
+      --  from the chain of interpretations.
       procedure Save_Current_Interpretation is
       begin
          Scopes.Increment_Last;
@@ -438,6 +443,7 @@ package body Sem_Scopes is
            (Kind => Save_Cell, Id => Ident, Inter => Current_Inter);
       end Save_Current_Interpretation;
 
+      --  Add DECL in the chain of interpretation for the identifier.
       procedure Add_New_Interpretation is
       begin
          Interpretations.Increment_Last;
@@ -456,6 +462,9 @@ package body Sem_Scopes is
          --  (current interpretation is Conflict_Interpretation if there is
          --   only potentially visible declarations that are not made directly
          --   visible).
+         --  Note: in case of conflict interpretation, it may be unnecessary
+         --  to save the current interpretation (but it is simpler to always
+         --  save it).
          Save_Current_Interpretation;
          Add_New_Interpretation;
          return;
@@ -468,7 +477,9 @@ package body Sem_Scopes is
          end if;
 
          --  Do not re-add a potential decl.  This handles cases like:
-         --  'use p.all; use p.all;'
+         --  'use p.all; use p.all;'.
+         --  FIXME: add a flag (or reuse Visible_Flag) to avoid walking all
+         --  the interpretations.
          declare
             Inter: Name_Interpretation_Type := Current_Inter;
          begin
@@ -507,6 +518,8 @@ package body Sem_Scopes is
             Homograph : Name_Interpretation_Type;
             Prev_Homograph : Name_Interpretation_Type;
 
+            --  Add DECL in the chain of interpretation, and save the current
+            --  one if necessary.
             procedure Maybe_Save_And_Add_New_Interpretation is
             begin
                if not Is_In_Current_Declarative_Region (Current_Inter) then
@@ -515,6 +528,7 @@ package body Sem_Scopes is
                Add_New_Interpretation;
             end Maybe_Save_And_Add_New_Interpretation;
 
+            --  Hide HOMOGRAPH (ie unlink it from the chain of interpretation).
             procedure Hide_Homograph
             is
                S : Name_Interpretation_Type;
@@ -541,37 +555,57 @@ package body Sem_Scopes is
 
             function Get_Hash_Non_Alias (D : Iir) return Iir_Int32 is
             begin
-               if Get_Kind (D) = Iir_Kind_Non_Object_Alias_Declaration then
-                  return Get_Subprogram_Hash (Get_Name (D));
-               else
-                  return Get_Subprogram_Hash (D);
-               end if;
+               return Get_Subprogram_Hash (Strip_Non_Object_Alias (D));
             end Get_Hash_Non_Alias;
+
+            --  Return True iff D is an implicit declaration (either a
+            --  subprogram or an implicit alias).
+            function Is_Implicit_Declaration (D : Iir) return Boolean is
+            begin
+               case Get_Kind (D) is
+                  when Iir_Kinds_Implicit_Subprogram_Declaration =>
+                     return True;
+                  when Iir_Kind_Non_Object_Alias_Declaration =>
+                     return Get_Implicit_Alias_Flag (D);
+                  when Iir_Kind_Enumeration_Literal
+                    | Iir_Kind_Procedure_Declaration
+                    | Iir_Kind_Function_Declaration =>
+                     return False;
+                  when others =>
+                     Error_Kind ("is_implicit_declaration", D);
+               end case;
+            end Is_Implicit_Declaration;
 
             --  Return TRUE iff D is an implicit alias of an implicit
             --  subprogram.
             function Is_Implicit_Alias (D : Iir) return Boolean is
             begin
+               --  FIXME: Is it possible to have an implicit alias of an
+               --  explicit subprogram ? Yes for enumeration literal and
+               --  physical units.
                return Get_Kind (D) = Iir_Kind_Non_Object_Alias_Declaration
                  and then Get_Implicit_Alias_Flag (D)
                  and then (Get_Kind (Get_Name (D))
                              in Iir_Kinds_Implicit_Subprogram_Declaration);
             end Is_Implicit_Alias;
 
-            procedure Replace_Current_Interpretation is
+            --  Replace the homograph of DECL by DECL.
+            procedure Replace_Homograph is
             begin
-               Interpretations.Table (Current_Inter).Decl := Decl;
-            end Replace_Current_Interpretation;
+               Interpretations.Table (Homograph).Decl := Decl;
+            end Replace_Homograph;
 
             Decl_Hash : Iir_Int32;
             Hash : Iir_Int32;
          begin
             Decl_Hash := Get_Hash_Non_Alias (Decl);
             if Decl_Hash = 0 then
+               --  The hash must have been computed.
                raise Internal_Error;
             end if;
 
-            --  Find an homograph of this declaration.
+            --  Find an homograph of this declaration (and also keep the
+            --  interpretation just before it in the chain),
             Homograph := Current_Inter;
             Prev_Homograph := No_Name_Interpretation;
             while Homograph /= No_Name_Interpretation loop
@@ -591,51 +625,95 @@ package body Sem_Scopes is
 
             --  There is an homograph.
             if Potentially then
-               --  LRM 10.4 Use Clauses
+               --  Added DECL would be made potentially visible.
+
+               --  LRM93 10.4 1) / LRM08 12.4 a) Use Clauses
                --  1. A potentially visible declaration is not made
-               --  directly visible if the place considered is within the
-               --  immediate scope of a homograph of the declaration.
+               --     directly visible if the place considered is within the
+               --     immediate scope of a homograph of the declaration.
                if Is_In_Current_Declarative_Region (Homograph) then
                   if not Is_Potentially_Visible (Homograph) then
                      return;
                   end if;
-
-                  --  GHDL: if the homograph is in the same declarative
-                  --  region than DECL, it must be an implicit declaration
-                  --  to be hidden.
-                  --  FIXME: this rule is not in the LRM.
-                  if Get_Parent (Decl) = Get_Parent (Current_Decl) then
-                     if Flags.Vhdl_Std >= Vhdl_08
-                       and then Is_Implicit_Alias (Decl)
-                     then
-                        --  Re-declaration of an implicit subprogram via
-                        --  an implicit alias is simply discarded.
-                        return;
-                     end if;
-
-                     --  Note: no need to save previous interpretation, as it
-                     --  is in the same declarative region.
-                     Add_New_Interpretation;
-                     Hide_Homograph;
-                     return;
-                  end if;
-
-                  --  The homograph is potentially visible and was declared
-                  --  in a scope different from the DECL scope.
-                  --  (ie, it was certainly made visible by another use
-                  --   clause).
-                  Add_New_Interpretation;
-                  return;
-               else
-                  --  The homograph was made visible in an outer declarative
-                  --  region.  Therefore, it must not be hidden.
-                  Maybe_Save_And_Add_New_Interpretation;
                end if;
 
-               return;
+               --  LRM08 12.4 Use Clauses
+               --  b) If two potentially visible declarations are homograph
+               --     and one is explicitly declared and the other is
+               --     implicitly declared, then the implicit declaration is
+               --     not made directly visible.
+               if (Flags.Flag_Explicit or else Flags.Vhdl_Std >= Vhdl_08)
+                 and then Is_Potentially_Visible (Homograph)
+               then
+                  declare
+                     Implicit_Current_Decl : constant Boolean :=
+                       Is_Implicit_Declaration (Current_Decl);
+                     Implicit_Decl : constant Boolean :=
+                       Is_Implicit_Declaration (Decl);
+                  begin
+                     if Implicit_Current_Decl and then not Implicit_Decl then
+                        if Is_In_Current_Declarative_Region (Homograph) then
+                           Replace_Homograph;
+                        else
+                           --  Hide homoraph and insert decl.
+                           Maybe_Save_And_Add_New_Interpretation;
+                           Hide_Homograph;
+                        end if;
+                        return;
+                     elsif not Implicit_Current_Decl and then Implicit_Decl
+                     then
+                        --  Discard decl.
+                        return;
+                     elsif Strip_Non_Object_Alias (Decl)
+                       = Strip_Non_Object_Alias (Current_Decl)
+                     then
+                        --  This rule is not written clearly in the LRM, but
+                        --  if two designators denote the same named entity,
+                        --  no need to make both visible.
+                        return;
+                     end if;
+                  end;
+               end if;
 
+               --  GHDL: if the homograph is in the same declarative
+               --  region than DECL, it must be an implicit declaration
+               --  to be hidden.
+               --  FIXME: this rule is not in the LRM93, but it is necessary
+               --  so that explicit declaration hides the implicit one.
+               if Flags.Vhdl_Std < Vhdl_08
+                 and then not Flags.Flag_Explicit
+                 and then Get_Parent (Decl) = Get_Parent (Current_Decl)
+               then
+                  declare
+                     Implicit_Current_Decl : constant Boolean :=
+                       (Get_Kind (Current_Decl)
+                          in Iir_Kinds_Implicit_Subprogram_Declaration);
+                     Implicit_Decl : constant Boolean :=
+                       (Get_Kind (Decl)
+                          in Iir_Kinds_Implicit_Subprogram_Declaration);
+                  begin
+                     if Implicit_Current_Decl and not Implicit_Decl then
+                        --  Note: no need to save previous interpretation, as
+                        --  it is in the same declarative region.
+                        --  Replace the previous homograph with DECL.
+                        Replace_Homograph;
+                        return;
+                     elsif not Implicit_Current_Decl and Implicit_Decl then
+                        --  As we have replaced the homograph, it is possible
+                        --  than the implicit declaration is re-added (by
+                        --  a new use clause).  Discard it.
+                        return;
+                     end if;
+                  end;
+               end if;
+
+               --  The homograph was made visible in an outer declarative
+               --  region.  Therefore, it must not be hidden.
+               Maybe_Save_And_Add_New_Interpretation;
+
+               return;
             else
-               --  Added DECL was declared in the current declarative region.
+               --  Added DECL would be made directly visible.
 
                if not Is_Potentially_Visible (Homograph) then
                   --  The homograph was also declared in that declarative
@@ -694,7 +772,7 @@ package body Sem_Scopes is
                                  --  They aren't homograph but DECL is stronger
                                  --  (at it is not an implicit declaration)
                                  --  than CURRENT_DECL
-                                 Replace_Current_Interpretation;
+                                 Replace_Homograph;
                               end if;
 
                               return;
@@ -757,7 +835,7 @@ package body Sem_Scopes is
          --  They are perhaps visible in the same declarative region.
          if Is_Potentially_Visible (Current_Inter) then
             if Potentially then
-               --  LRM93 §10.4, item #2
+               --  LRM93 10.4 2) / LRM08 12.4 c) Use clauses
                --  Potentially visible declarations that have the same
                --  designator are not made directly visible unless each of
                --  them is either an enumeration literal specification or
@@ -882,20 +960,13 @@ package body Sem_Scopes is
       end if;
    end Replace_Name;
 
-   procedure Name_Visible (Ident : Name_Id; Decl : Iir)
-   is
-      pragma Unreferenced (Ident);
+   procedure Name_Visible (Decl : Iir) is
    begin
       if Get_Visible_Flag (Decl) then
          --  A name can be made visible only once.
          raise Internal_Error;
       end if;
       Set_Visible_Flag (Decl, True);
-   end Name_Visible;
-
-   procedure Name_Visible (Decl : Iir) is
-   begin
-      Name_Visible (Get_Identifier (Decl), Decl);
    end Name_Visible;
 
    procedure Iterator_Decl (Decl : Iir; Arg : Arg_Type)
@@ -937,7 +1008,7 @@ package body Sem_Scopes is
                List : Iir_List;
                El : Iir;
             begin
-               Def := Get_Type (Decl);
+               Def := Get_Type_Definition (Decl);
 
                -- Handle incomplete type declaration.
                if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition then
@@ -962,7 +1033,7 @@ package body Sem_Scopes is
                Def : Iir;
                El : Iir;
             begin
-               Def := Get_Type (Decl);
+               Def := Get_Type_Definition (Decl);
 
                if Get_Kind (Def) = Iir_Kind_Physical_Type_Definition then
                   El := Get_Unit_Chain (Def);
@@ -1222,12 +1293,6 @@ package body Sem_Scopes is
    is
       use Ada.Text_IO;
       use Name_Table;
-      procedure Disp_Type (Str : String; Node : Iir) is
-      begin
-         Put (Str);
-         Put_Line
-           (Image (Get_Identifier (Get_Type_Declarator (Node))));
-      end Disp_Type;
 
       Inter: Name_Interpretation_Type;
       Decl : Iir;
@@ -1237,18 +1302,17 @@ package body Sem_Scopes is
 
       Inter := Get_Interpretation (Ident);
       while Valid_Interpretation (Inter) loop
+         Put (Name_Interpretation_Type'Image (Inter));
+         if Is_Potentially_Visible (Inter) then
+            Put (" (use)");
+         end if;
+         Put (": ");
          Decl := Get_Declaration (Inter);
-         Put (' ');
          Put (Iir_Kind'Image (Get_Kind (Decl)));
          Put_Line (", loc: " & Get_Location_Str (Get_Location (Decl)));
-         case Get_Kind (Decl) is
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Implicit_Function_Declaration =>
-               Disp_Type ("  return type: ", Get_Return_Type (Decl));
-               null;
-            when others =>
-               null;
-         end case;
+         if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration then
+            Put_Line ("   " & Disp_Subprg (Decl));
+         end if;
          Inter := Get_Next_Interpretation (Inter);
       end loop;
    end Disp_Detailed_Interpretations;

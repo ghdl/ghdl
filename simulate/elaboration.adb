@@ -346,6 +346,8 @@ package body Elaboration is
                         end if;
                      else
                         -- Note: the body can elaborate some packages.
+                        Elaborate_Dependence (Body_Design);
+
                         Elaborate_Package_Body
                           (Get_Library_Unit (Body_Design));
                      end if;
@@ -842,7 +844,7 @@ package body Elaboration is
       --  Elaboration of a type declaration generally consists of the
       --  elaboration of the definition of the type and the creation of that
       --  type.
-      Def := Get_Type (Decl);
+      Def := Get_Type_Definition (Decl);
       if Def = Null_Iir then
          --  FIXME: can this happen ?
          raise Program_Error;
@@ -2177,7 +2179,7 @@ package body Elaboration is
            | Iir_Kind_Implicit_Procedure_Declaration =>
             null;
          when Iir_Kind_Anonymous_Type_Declaration =>
-            Elaborate_Type_Definition (Instance, Get_Type (Decl));
+            Elaborate_Type_Definition (Instance, Get_Type_Definition (Decl));
          when Iir_Kind_Type_Declaration =>
             Elaborate_Type_Declaration (Instance, Decl);
          when Iir_Kind_Subtype_Declaration =>

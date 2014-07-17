@@ -1009,21 +1009,28 @@ package body Disp_Tree is
             Disp_Tree (Get_File_Open_Kind (Tree), Ntab);
             Header ("attribute_value_chain:");
             Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
-         when Iir_Kind_Type_Declaration
-           | Iir_Kind_Subtype_Declaration =>
+         when Iir_Kind_Type_Declaration =>
             if Flat_Decl then
                return;
             end if;
             Header ("type (definition):");
-            Disp_Tree (Get_Type (Tree), Ntab);
+            Disp_Tree (Get_Type_Definition (Tree), Ntab);
             Header ("attribute_value_chain:");
             Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
          when Iir_Kind_Anonymous_Type_Declaration =>
             if Flat_Decl then
                return;
             end if;
-            Header ("type (definition):");
+            Header ("type definition:");
+            Disp_Tree (Get_Type_Definition (Tree), Ntab);
+         when Iir_Kind_Subtype_Declaration =>
+            if Flat_Decl then
+               return;
+            end if;
+            Header ("subtype indication:");
             Disp_Tree (Get_Type (Tree), Ntab);
+            Header ("attribute_value_chain:");
+            Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
          when Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration =>
             if Flat_Decl then

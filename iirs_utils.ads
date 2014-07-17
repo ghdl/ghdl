@@ -88,6 +88,10 @@ package Iirs_Utils is
    --  Return TRUE iff DEF is a fully constrained type (or subtype) definition.
    function Is_Fully_Constrained_Type (Def : Iir) return Boolean;
 
+   --  Return the type of a type name (type declaration, subtype declaration or
+   --  base attribute).
+   function Get_Type_Of_Type_Mark (Mark : Iir) return Iir;
+
    --  Return true iff L and R have the same profile.
    --  L and R must be subprograms specification (or spec_body).
    function Is_Same_Profile (L, R: Iir) return Boolean;

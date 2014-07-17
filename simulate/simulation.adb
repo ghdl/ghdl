@@ -1661,6 +1661,8 @@ package body Simulation is
    exception
       when Debugger_Quit =>
          null;
+      when Simulation_Finished =>
+         null;
    end Simulation_Entity;
 
 end Simulation;

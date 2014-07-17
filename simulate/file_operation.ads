@@ -73,6 +73,8 @@ package File_Operation is
                                     Str : Iir_Value_Literal_Acc;
                                     Length : Iir_Value_Literal_Acc);
 
+   procedure Flush (File : Iir_Value_Literal_Acc);
+
    --  Test end of FILE is reached.
    function Endfile (File : Iir_Value_Literal_Acc; Stmt : Iir)
      return Boolean;

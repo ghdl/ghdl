@@ -743,6 +743,18 @@ package body Iir_Values is
       end case;
    end Get_Nbr_Of_Scalars;
 
+   function Get_Enum_Pos (Val : Iir_Value_Literal_Acc) return Natural is
+   begin
+      case Val.Kind is
+         when Iir_Value_E32 =>
+            return Ghdl_E32'Pos (Val.E32);
+         when Iir_Value_B2 =>
+            return Ghdl_B2'Pos (Val.B2);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Enum_Pos;
+
    procedure Disp_Value_Tab (Value: Iir_Value_Literal_Acc;
                              Tab: Ada.Text_IO.Count)
    is
@@ -897,7 +909,7 @@ package body Iir_Values is
       Last_Enum: Last_Enum_Type;
       El_Type: Iir;
       Enum_List: Iir_List;
-      El: Name_Id;
+      El_Id : Name_Id;
       El_Pos : Natural;
    begin
       if Dim = Value.Bounds.Nbr_Dims then
@@ -911,10 +923,10 @@ package body Iir_Values is
             Last_Enum := None;
             Enum_List := Get_Enumeration_Literal_List (El_Type);
             for I in 1 .. Value.Bounds.D (Dim).Length loop
-               El_Pos := Ghdl_E32'Pos (Value.Val_Array.V (Off).E32);
+               El_Pos := Get_Enum_Pos (Value.Val_Array.V (Off));
                Off := Off + 1;
-               El := Get_Identifier (Get_Nth_Element (Enum_List, El_Pos));
-               if Name_Table.Is_Character (El) then
+               El_Id := Get_Identifier (Get_Nth_Element (Enum_List, El_Pos));
+               if Name_Table.Is_Character (El_Id) then
                   case Last_Enum is
                      when None =>
                         Put ("""");
@@ -923,7 +935,7 @@ package body Iir_Values is
                      when Char =>
                         null;
                   end case;
-                  Put (Name_Table.Get_Character (El));
+                  Put (Name_Table.Get_Character (El_Id));
                   Last_Enum := Char;
                else
                   case Last_Enum is
@@ -934,7 +946,7 @@ package body Iir_Values is
                      when Char =>
                         Put (""" & ");
                   end case;
-                  Put (Name_Table.Image (El));
+                  Put (Name_Table.Image (El_Id));
                   Last_Enum := Identifier;
                end if;
             end loop;

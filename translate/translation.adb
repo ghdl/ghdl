@@ -1978,7 +1978,13 @@ package body Translation is
 
       --  Generate an error if VALUE (computed from EXPR which may be NULL_IIR
       --  if not from a tree) is not in range specified by ATYPE.
-      procedure Check_Range (Value : O_Dnode; Expr : Iir; Atype : Iir);
+      procedure Check_Range
+        (Value : O_Dnode; Expr : Iir; Atype : Iir; Loc : Iir);
+
+      --  Insert a scalar check for VALUE of type ATYPE.  EXPR may be NULL_IIR.
+      function Insert_Scalar_Check
+        (Value : O_Enode; Expr : Iir; Atype : Iir; Loc : Iir)
+        return O_Enode;
 
       --  The base type of EXPR and the base type of ATYPE must be the same.
       --  If the type is a scalar type, and if a range check is needed, this
@@ -5101,7 +5107,7 @@ package body Translation is
                   raise Internal_Error;
                when Iir_Kind_Type_Declaration
                  | Iir_Kind_Anonymous_Type_Declaration =>
-                  Atype := Get_Type (Decl);
+                  Atype := Get_Type_Definition (Decl);
                   case Iir_Kinds_Type_And_Subtype_Definition
                     (Get_Kind (Atype)) is
                      when Iir_Kinds_Scalar_Type_Definition =>
@@ -7156,7 +7162,7 @@ package body Translation is
             --  types not used before the full type declaration).
             return;
          end if;
-         Ctype := Get_Type (Get_Type_Declarator (Def));
+         Ctype := Get_Type_Of_Type_Mark (Get_Type_Declarator (Def));
          Info := Add_Info (Ctype, Kind_Incomplete_Type);
          Info.Incomplete_Type := Def;
          Info.Incomplete_Array := null;
@@ -8050,7 +8056,7 @@ package body Translation is
          Tinfo : Type_Info_Acc;
          Id : Name_Id;
       begin
-         Def := Get_Type (Decl);
+         Def := Get_Type_Definition (Decl);
 
          if Get_Kind (Def) in Iir_Kinds_Subtype_Definition then
             --  Also elaborate the base type, iff DEF and its BASE_TYPE have
@@ -8203,7 +8209,7 @@ package body Translation is
       procedure Elab_Type_Declaration (Decl : Iir)
       is
       begin
-         Elab_Type_Definition (Get_Type (Decl));
+         Elab_Type_Definition (Get_Type_Definition (Decl));
       end Elab_Type_Declaration;
 
       procedure Elab_Subtype_Declaration (Decl : Iir_Subtype_Declaration)
@@ -8971,9 +8977,8 @@ package body Translation is
 
       function Need_Range_Check (Expr : Iir; Atype : Iir) return Boolean
       is
-         Info : Type_Info_Acc;
+         Info : constant Type_Info_Acc := Get_Info (Atype);
       begin
-         Info := Get_Info (Atype);
          if Info.T.Nocheck_Low and Info.T.Nocheck_Hi then
             return False;
          end if;
@@ -8983,7 +8988,9 @@ package body Translation is
          return True;
       end Need_Range_Check;
 
-      procedure Check_Range (Value : O_Dnode; Expr : Iir; Atype : Iir) is
+      procedure Check_Range
+        (Value : O_Dnode; Expr : Iir; Atype : Iir; Loc : Iir)
+      is
          If_Blk : O_If_Block;
       begin
          if not Need_Range_Check (Expr, Atype) then
@@ -8995,32 +9002,40 @@ package body Translation is
            and then Get_Type_Staticness (Atype) = Locally
          then
             if not Eval_Is_In_Bound (Eval_Static_Expr (Expr), Atype) then
-               Chap6.Gen_Bound_Error (Expr);
+               Chap6.Gen_Bound_Error (Loc);
             end if;
          else
             Open_Temp;
             Start_If_Stmt (If_Blk, Not_In_Range (Value, Atype));
-            Chap6.Gen_Bound_Error (Expr);
+            Chap6.Gen_Bound_Error (Loc);
             Finish_If_Stmt (If_Blk);
             Close_Temp;
          end if;
       end Check_Range;
+
+      function Insert_Scalar_Check
+        (Value : O_Enode; Expr : Iir; Atype : Iir; Loc : Iir)
+        return O_Enode
+      is
+         Var : O_Dnode;
+      begin
+         Var := Create_Temp_Init
+           (Get_Ortho_Type (Get_Base_Type (Atype), Mode_Value), Value);
+         Check_Range (Var, Expr, Atype, Loc);
+         return New_Obj_Value (Var);
+      end Insert_Scalar_Check;
 
       function Maybe_Insert_Scalar_Check
         (Value : O_Enode; Expr : Iir; Atype : Iir)
         return O_Enode
       is
          Expr_Type : constant Iir := Get_Type (Expr);
-         Var : O_Dnode;
       begin
          --  pragma Assert (Base_Type = Get_Base_Type (Atype));
          if Get_Kind (Expr_Type) in Iir_Kinds_Scalar_Type_Definition
            and then Need_Range_Check (Expr, Atype)
          then
-            Var := Create_Temp_Init
-              (Get_Ortho_Type (Get_Base_Type (Atype), Mode_Value), Value);
-            Check_Range (Var, Expr, Atype);
-            return New_Obj_Value (Var);
+            return Insert_Scalar_Check (Value, Expr, Atype, Expr);
          else
             return Value;
          end if;
@@ -9279,7 +9294,7 @@ package body Translation is
                           New_Dyadic_Op (Op, Left_Bound, Diff));
 
          --   Check the right bounds is inside the bounds of the index type.
-         Chap3.Check_Range (Var_Right, Null_Iir, Index_Type);
+         Chap3.Check_Range (Var_Right, Null_Iir, Index_Type, Null_Iir);
          New_Assign_Stmt
            (New_Selected_Acc_Value (New_Obj (Range_Ptr), Iinfo.T.Range_Right),
             New_Obj_Value (Var_Right));
@@ -10614,7 +10629,7 @@ package body Translation is
       procedure Translate_Type_Declaration (Decl : Iir)
       is
       begin
-         Chap3.Translate_Named_Type_Definition (Get_Type (Decl),
+         Chap3.Translate_Named_Type_Definition (Get_Type_Definition (Decl),
                                                 Get_Identifier (Decl));
       end Translate_Type_Declaration;
 
@@ -10625,7 +10640,7 @@ package body Translation is
       begin
          Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
          Push_Identifier_Prefix (Mark1, "BT");
-         Chap3.Translate_Type_Definition (Get_Type (Decl));
+         Chap3.Translate_Type_Definition (Get_Type_Definition (Decl));
          Pop_Identifier_Prefix (Mark1);
          Pop_Identifier_Prefix (Mark);
       end Translate_Anonymous_Type_Declaration;
@@ -10642,7 +10657,7 @@ package body Translation is
          Mark : Id_Mark_Type;
       begin
          Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
-         Chap3.Translate_Bool_Type_Definition (Get_Type (Decl));
+         Chap3.Translate_Bool_Type_Definition (Get_Type_Definition (Decl));
          Pop_Identifier_Prefix (Mark);
       end Translate_Bool_Type_Declaration;
 
@@ -15378,25 +15393,13 @@ package body Translation is
       procedure Translate_Assign
         (Target : Mnode; Val : O_Enode; Expr : Iir; Target_Type : Iir)
       is
-         T_Info : Type_Info_Acc;
+         T_Info : constant Type_Info_Acc := Get_Info (Target_Type);
       begin
-         T_Info := Get_Info (Target_Type);
          case T_Info.Type_Mode is
             when Type_Mode_Scalar =>
-               if not Chap3.Need_Range_Check (Expr, Target_Type) then
-                  New_Assign_Stmt (M2Lv (Target), Val);
-               else
-                  declare
-                     V : O_Dnode;
-                  begin
-                     Open_Temp;
-                     V := Create_Temp_Init (T_Info.Ortho_Type (Mode_Value),
-                                            Val);
-                     Chap3.Check_Range (V, Expr, Target_Type);
-                     New_Assign_Stmt (M2Lv (Target), New_Obj_Value (V));
-                     Close_Temp;
-                  end;
-               end if;
+               New_Assign_Stmt
+                 (M2Lv (Target),
+                  Chap3.Maybe_Insert_Scalar_Check (Val, Expr, Target_Type));
             when Type_Mode_Acc
               | Type_Mode_File =>
                New_Assign_Stmt (M2Lv (Target), Val);
@@ -16229,14 +16232,17 @@ package body Translation is
         (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
         return O_Enode
       is
-         Res_Info : Type_Info_Acc;
+         Res_Info : constant Type_Info_Acc := Get_Info (Res_Type);
+         Res : O_Enode;
       begin
-         Res_Info := Get_Info (Res_Type);
          case Get_Kind (Res_Type) is
             when Iir_Kinds_Scalar_Type_Definition =>
-               --  If res_type = expr_type, do not convert.
-               --  FIXME: range check ?
-               return New_Convert_Ov (Expr, Res_Info.Ortho_Type (Mode_Value));
+               Res := New_Convert_Ov (Expr, Res_Info.Ortho_Type (Mode_Value));
+               if Chap3.Need_Range_Check (Null_Iir, Res_Type) then
+                  Res := Chap3.Insert_Scalar_Check
+                    (Res, Null_Iir, Res_Type, Loc);
+               end if;
+               return Res;
             when Iir_Kinds_Array_Type_Definition =>
                if Get_Constraint_State (Res_Type) = Fully_Constrained then
                   return Translate_Array_Subtype_Conversion
@@ -17784,7 +17790,7 @@ package body Translation is
                Finish_If_Stmt (If_Blk);
                --   Check the right bounds is inside the bounds of the
                --   index type.
-               Chap3.Check_Range (Var_Right, Null_Iir, Index_Type);
+               Chap3.Check_Range (Var_Right, Null_Iir, Index_Type, Subprg);
                New_Assign_Stmt
                  (M2Lv (Chap3.Range_To_Right
                         (Chap3.Bounds_To_Range (V_Bounds, Arr_Type, 1))),
@@ -18739,10 +18745,6 @@ package body Translation is
             when Iir_Predefined_Now_Function =>
                null;
 
-            when Iir_Predefined_Array_To_String =>
-               --  Not yet supported!
-               null;
-
             when others =>
                Error_Kind ("translate_implicit_subprogram ("
                            & Iir_Predefined_Functions'Image (Kind) & ")",
@@ -18809,7 +18811,7 @@ package body Translation is
                      V := Create_Temp (Ret_Info.Ortho_Type (Mode_Value));
                      New_Assign_Stmt (New_Obj (V), R);
                      Stack2_Release;
-                     Chap3.Check_Range (V, Expr, Ret_Type);
+                     Chap3.Check_Range (V, Expr, Ret_Type, Expr);
                      Gen_Return_Value (New_Obj_Value (V));
                   else
                      Gen_Return_Value (R);
@@ -20379,7 +20381,9 @@ package body Translation is
          Last_Individual : Natural;
          Ptr : O_Lnode;
          In_Conv : Iir;
+         In_Expr : Iir;
          Out_Conv : Iir;
+         Out_Expr : Iir;
          Formal_Object_Kind : Object_Kind_Type;
          Bounds : O_Enode;
          Obj : Iir;
@@ -20463,10 +20467,15 @@ package body Translation is
                   Ptr := New_Selected_Element
                     (New_Obj (Res), Formal_Info.Interface_Field);
                   Param := Lv2M (Ptr, Ftype_Info, Mode_Value);
+                  if In_Conv /= Null_Iir then
+                     In_Expr := In_Conv;
+                  else
+                     In_Expr := Act;
+                  end if;
                   Chap7.Translate_Assign
                     (Param,
                      Do_Conversion (In_Conv, Act, Params (Pos)),
-                     In_Conv, --FIXME: may be null.
+                     In_Expr,
                      Formal_Type);
                end if;
             elsif Ftype_Info.Type_Mode not in Type_Mode_By_Value then
@@ -20635,13 +20644,18 @@ package body Translation is
                if Formal_Info.Interface_Field /= O_Fnode_Null then
                   --  OUT parameters.
                   Out_Conv := Get_Out_Conversion (El);
+                  if Out_Conv = Null_Iir then
+                     Out_Expr := Formal;
+                  else
+                     Out_Expr := Out_Conv;
+                  end if;
                   Ptr := New_Selected_Element
                     (New_Obj (Res), Formal_Info.Interface_Field);
                   Param := Lv2M (Ptr, Ftype_Info, Mode_Value);
                   Chap7.Translate_Assign (Params (Pos),
                                           Do_Conversion (Out_Conv, Formal,
                                                          Param),
-                                          Out_Conv, --FIXME: use real expr.
+                                          Out_Expr,
                                           Get_Type (Get_Actual (El)));
                elsif Base_Formal /= Formal then
                   --  By individual.
@@ -24484,7 +24498,7 @@ package body Translation is
          case Get_Kind (Prefix) is
             when Iir_Kind_Type_Declaration
               | Iir_Kind_Subtype_Declaration =>
-               Arr := T2M (Get_Type (Prefix), Mode_Value);
+               Arr := T2M (Get_Type_Of_Type_Mark (Prefix), Mode_Value);
             when others =>
                Arr := Chap6.Translate_Name (Prefix);
          end case;
@@ -24702,7 +24716,8 @@ package body Translation is
          end case;
 
          New_Assign_Stmt (New_Obj (Res_Var), New_Convert_Ov (Val, Res_Type));
-         Chap3.Check_Range (Res_Var, Attr, Get_Type (Get_Prefix (Attr)));
+         Chap3.Check_Range
+           (Res_Var, Attr, Get_Type_Of_Type_Mark (Get_Prefix (Attr)), Attr);
          return New_Obj_Value (Res_Var);
       end Translate_Val_Attribute;
 
@@ -24718,7 +24733,7 @@ package body Translation is
            (New_Obj (T),
             New_Convert_Ov (Chap7.Translate_Expression (Get_Parameter (Attr)),
                             Ttype));
-         Chap3.Check_Range (T, Attr, Res_Type);
+         Chap3.Check_Range (T, Attr, Res_Type, Attr);
          return New_Obj_Value (T);
       end Translate_Pos_Attribute;
 
@@ -25231,7 +25246,8 @@ package body Translation is
          Assoc : O_Assoc_List;
          Conv : O_Tnode;
       begin
-         Prefix_Type := Get_Base_Type (Get_Type (Get_Prefix (Attr)));
+         Prefix_Type :=
+           Get_Base_Type (Get_Type_Of_Type_Mark (Get_Prefix (Attr)));
          Pinfo := Get_Info (Prefix_Type);
          Res := Create_Temp (Std_String_Node);
          Create_Temp_Stack2_Mark;
@@ -25293,7 +25309,8 @@ package body Translation is
          Subprg : O_Dnode;
          Assoc : O_Assoc_List;
       begin
-         Prefix_Type := Get_Base_Type (Get_Type (Get_Prefix (Attr)));
+         Prefix_Type :=
+           Get_Base_Type (Get_Type_Of_Type_Mark (Get_Prefix (Attr)));
          Pinfo := Get_Info (Prefix_Type);
          case Pinfo.Type_Mode is
             when Type_Mode_B2 =>
@@ -26986,7 +27003,7 @@ package body Translation is
          Info : Type_Info_Acc;
          Rti_Type : O_Tnode;
       begin
-         Ndef := Get_Type (Get_Type_Declarator (Def));
+         Ndef := Get_Type_Of_Type_Mark (Get_Type_Declarator (Def));
          Info := Get_Info (Ndef);
          case Get_Kind (Ndef) is
             when Iir_Kind_Integer_Type_Definition
@@ -27027,7 +27044,7 @@ package body Translation is
       begin
          Id := Get_Identifier (Decl);
          Push_Identifier_Prefix (Mark, Id);
-         Def := Get_Type (Decl);
+         Def := Get_Type_Of_Type_Mark (Decl);
          if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition then
             Rti := Generate_Incomplete_Type_Definition (Def);
          else
@@ -27245,7 +27262,7 @@ package body Translation is
                   null;
                when Iir_Kind_Type_Declaration =>
                   --  FIXME: physicals ?
-                  if Get_Kind (Get_Type (Decl))
+                  if Get_Kind (Get_Type_Definition (Decl))
                     = Iir_Kind_Enumeration_Type_Definition
                   then
                      Add_Rti_Node (Generate_Type_Decl (Decl));
@@ -28689,11 +28706,6 @@ package body Translation is
                                Ghdl_Psl_Cover_Failed);
          Create_Report_Subprg ("__ghdl_report", Ghdl_Report);
       end;
-
-      New_Var_Decl (Ghdl_Assert_Default_Report,
-                    Get_Identifier ("__ghdl_assert_default_report"),
-                    O_Storage_External,
-                    Get_Info (String_Type_Definition).Ortho_Type (Mode_Value));
 
       --  procedure __ghdl_text_write (file : __ghdl_file_index;
       --                               str  : std_string_ptr);

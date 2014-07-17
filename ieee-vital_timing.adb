@@ -121,22 +121,22 @@ package body Ieee.Vital_Timing is
             when Iir_Kind_Type_Declaration =>
                Id := Get_Identifier (Decl);
                if Id = VitalDelayArrayType_Id then
-                  VitalDelayArrayType := Get_Type (Decl);
+                  VitalDelayArrayType := Get_Type_Definition (Decl);
                elsif Id = VitalDelayArrayType01_Id then
-                  VitalDelayArrayType01 := Get_Type (Decl);
+                  VitalDelayArrayType01 := Get_Type_Definition (Decl);
                elsif Id = VitalDelayArrayType01Z_Id then
-                  VitalDelayArrayType01Z := Get_Type (Decl);
+                  VitalDelayArrayType01Z := Get_Type_Definition (Decl);
                elsif Id = VitalDelayArrayType01ZX_Id then
-                  VitalDelayArrayType01ZX := Get_Type (Decl);
+                  VitalDelayArrayType01ZX := Get_Type_Definition (Decl);
                end if;
             when Iir_Kind_Anonymous_Type_Declaration =>
                Id := Get_Identifier (Decl);
                if Id = VitalDelayType01_Id then
-                  VitalDelayType01 := Get_Type (Decl);
+                  VitalDelayType01 := Get_Type_Definition (Decl);
                elsif Id = VitalDelayType01Z_Id then
-                  VitalDelayType01Z := Get_Type (Decl);
+                  VitalDelayType01Z := Get_Type_Definition (Decl);
                elsif Id = VitalDelayType01ZX_Id then
-                  VitalDelayType01ZX := Get_Type (Decl);
+                  VitalDelayType01ZX := Get_Type_Definition (Decl);
                end if;
             when others =>
                null;

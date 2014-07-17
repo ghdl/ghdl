@@ -32,6 +32,8 @@ pragma Elaborate_All (Grt.Table);
 package body Grt.Files is
    subtype C_Files is Grt.Stdio.FILEs;
 
+   Auto_Flush : constant Boolean := False;
+
    type File_Entry_Type is record
       Stream : C_Files;
       Signature : Ghdl_C_String;
@@ -307,7 +309,9 @@ package body Grt.Files is
       --  FIXME: check r
       --  Write '\n'.
       R1 := fputc (Character'Pos (Nl), Res);
-      R1 := fflush (Res);
+      if Auto_Flush then
+         fflush (Res);
+      end if;
    end Ghdl_Text_Write;
 
    procedure Ghdl_Write_Scalar (File : Ghdl_File_Index;
@@ -316,8 +320,6 @@ package body Grt.Files is
    is
       Res : C_Files;
       R : size_t;
-      R1 : int;
-      pragma Unreferenced (R1);
    begin
       Res := Get_File (File);
       Check_File_Mode (File, False);
@@ -329,7 +331,9 @@ package body Grt.Files is
       if R /= 1 then
          Error ("write_scalar failed");
       end if;
-      R1 := fflush (Res);
+      if Auto_Flush then
+         fflush (Res);
+      end if;
    end Ghdl_Write_Scalar;
 
    procedure Ghdl_Read_Scalar (File : Ghdl_File_Index;
@@ -433,5 +437,16 @@ package body Grt.Files is
    begin
       File_Close (File, False);
    end Ghdl_File_Close;
+
+   procedure Ghdl_File_Flush (File : Ghdl_File_Index)
+   is
+      Stream : C_Files;
+   begin
+      Stream := Get_File (File);
+      if Stream = NULL_Stream then
+         return;
+      end if;
+      fflush (Stream);
+   end Ghdl_File_Flush;
 end Grt.Files;
 

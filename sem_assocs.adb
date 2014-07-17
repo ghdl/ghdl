@@ -786,46 +786,46 @@ package body Sem_Assocs is
       end loop;
    end Is_Expanded_Name;
 
-   --  Return TRUE iff FUNC is valid as a conversion function/type.
-   function Is_Valid_Conversion (Func : Iir) return Boolean is
-   begin
-      case Get_Kind (Func) is
-         when Iir_Kinds_Function_Declaration =>
-            if not Is_Chain_Length_One (Get_Interface_Declaration_Chain (Func))
-            then
-               return False;
-            end if;
-         when Iir_Kind_Type_Declaration
-           | Iir_Kind_Subtype_Declaration =>
-            if Flags.Vhdl_Std = Vhdl_87 then
-               return False;
-            end if;
-         when others =>
-            return False;
-      end case;
-      return True;
-   end Is_Valid_Conversion;
-
    function Extract_Type_Of_Conversions (Convs : Iir) return Iir
    is
+      --  Return TRUE iff FUNC is valid as a conversion function/type.
+      function Extract_Type_Of_Conversion (Func : Iir) return Iir is
+      begin
+         case Get_Kind (Func) is
+            when Iir_Kinds_Function_Declaration =>
+               if Is_Chain_Length_One (Get_Interface_Declaration_Chain (Func))
+               then
+                  return Get_Type (Func);
+               else
+                  return Null_Iir;
+               end if;
+            when Iir_Kind_Type_Declaration
+              | Iir_Kind_Subtype_Declaration =>
+               if Flags.Vhdl_Std = Vhdl_87 then
+                  return Null_Iir;
+               end if;
+               return Get_Type_Of_Type_Mark (Func);
+            when others =>
+               return Null_Iir;
+         end case;
+      end Extract_Type_Of_Conversion;
+
       Res_List : Iir_List;
       Ov_List : Iir_List;
       El : Iir;
+      Conv_Type : Iir;
    begin
       if not Is_Overload_List (Convs) then
-         if Is_Valid_Conversion (Convs) then
-            return Get_Type (Convs);
-         else
-            return Null_Iir;
-         end if;
+         return Extract_Type_Of_Conversion (Convs);
       else
          Ov_List := Get_Overload_List (Convs);
          Res_List := Create_Iir_List;
          for I in Natural loop
             El := Get_Nth_Element (Ov_List, I);
             exit when El = Null_Iir;
-            if Is_Valid_Conversion (El) then
-               Add_Element (Res_List, Get_Type (El));
+            Conv_Type := Extract_Type_Of_Conversion (El);
+            if Conv_Type /= Null_Iir then
+               Add_Element (Res_List, Conv_Type);
             end if;
          end loop;
          return Simplify_Overload_List (Res_List);
@@ -1053,7 +1053,7 @@ package body Sem_Assocs is
             end if;
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration =>
-            R_Type := Get_Type (Func);
+            R_Type := Get_Type_Of_Type_Mark (Func);
             if Get_Base_Type (R_Type) = Res_Base_Type
               and then Are_Types_Closely_Related (R_Type, Param_Base_Type)
             then
@@ -1166,7 +1166,7 @@ package body Sem_Assocs is
             Res := Create_Iir (Iir_Kind_Type_Conversion);
             Location_Copy (Res, Conv);
             Set_Type_Mark (Res, Func);
-            Set_Type (Res, Get_Type (Func));
+            Set_Type (Res, Get_Type_Of_Type_Mark (Func));
             Set_Expression (Res, Null_Iir);
             Set_Expr_Staticness (Res, None);
          when others =>

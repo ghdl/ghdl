@@ -58,14 +58,12 @@ ieee2008/numeric_std-body.vhdl \
 ieee2008/numeric_std_unsigned.vhdl ieee2008/numeric_std_unsigned-body.vhdl \
 ieee2008/fixed_float_types.vhdl \
 ieee2008/fixed_generic_pkg.vhdl \
-ieee2008/fixed_pkg.vhdl
-# ieee2008/numeric_bit-body.vhdl \
-#
-#ieee2008/fixed_generic_pkg-body.vhdl
-
-#
-#ieee2008/float_generic_pkg-body.vhdl
+ieee2008/fixed_pkg.vhdl \
+ieee2008/numeric_bit-body.vhdl \
+ieee2008/fixed_generic_pkg-body.vhdl
 #ieee2008/float_generic_pkg.vhdl
+#ieee2008/float_generic_pkg-body.vhdl
+#
 #ieee2008/float_pkg.vhdl
 
 STD87_BSRCS := $(STD_SRCS:.vhdl=.v87)

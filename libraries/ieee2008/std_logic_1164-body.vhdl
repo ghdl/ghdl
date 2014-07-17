@@ -1108,7 +1108,8 @@ package body std_logic_1164 is
     variable c : CHARACTER;
   begin
     while L /= null and L.all'length /= 0 loop
-      if (L.all(1) = ' ' or L.all(1) = NBSP or L.all(1) = HT) then
+      c := l (l'left);
+      if c = ' ' or c = NBSP or c = HT then
         read (l, c, readOk);
       else
         exit;

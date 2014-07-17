@@ -474,7 +474,7 @@ package body Sem_Types is
       Decl : Iir_Protected_Type_Declaration;
       El : Iir;
    begin
-      Decl := Get_Type (Type_Decl);
+      Decl := Get_Type_Definition (Type_Decl);
       Set_Base_Type (Decl, Decl);
       Set_Resolved_Flag (Decl, False);
       Set_Signal_Type_Flag (Decl, False);
@@ -564,7 +564,7 @@ package body Sem_Types is
       then
          Type_Decl := Get_Declaration (Inter);
          if Get_Kind (Type_Decl) = Iir_Kind_Type_Declaration then
-            Decl := Get_Type (Type_Decl);
+            Decl := Get_Type_Definition (Type_Decl);
          else
             Decl := Null_Iir;
          end if;

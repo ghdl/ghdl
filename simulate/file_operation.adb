@@ -333,4 +333,9 @@ package body File_Operation is
       end loop;
       Length.I64 := Ghdl_I64 (Len);
    end Read_Length_Binary;
+
+   procedure Flush (File : Iir_Value_Literal_Acc) is
+   begin
+      Ghdl_File_Flush (File.File);
+   end Flush;
 end File_Operation;

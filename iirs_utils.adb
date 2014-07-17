@@ -549,6 +549,19 @@ package body Iirs_Utils is
         or else Get_Constraint_State (Def) = Fully_Constrained;
    end Is_Fully_Constrained_Type;
 
+   function Get_Type_Of_Type_Mark (Mark : Iir) return Iir is
+   begin
+      case Get_Kind (Mark) is
+         when Iir_Kind_Type_Declaration =>
+            return Get_Type_Definition (Mark);
+         when Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Base_Attribute =>
+            return Get_Type (Mark);
+         when others =>
+            Error_Kind ("get_type_of_type_mark", Mark);
+      end case;
+   end Get_Type_Of_Type_Mark;
+
    function Is_Same_Profile (L, R: Iir) return Boolean
    is
       L1, R1 : Iir;
@@ -889,7 +902,6 @@ package body Iirs_Utils is
       return Header /= Null_Iir
         and then Get_Generic_Map_Aspect_Chain (Header) /= Null_Iir;
    end Is_Generic_Mapped_Package;
-
 
    function Get_HDL_Node (N : PSL_Node) return Iir is
    begin

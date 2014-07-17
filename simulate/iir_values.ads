@@ -319,6 +319,9 @@ package Iir_Values is
    --  Return the number of scalars elements in VALS.
    function Get_Nbr_Of_Scalars (Val : Iir_Value_Literal_Acc) return Natural;
 
+   --  Return the position of an enumerated type value.
+   function Get_Enum_Pos (Val : Iir_Value_Literal_Acc) return Natural;
+
    -- Well known values.
    -- Boolean_to_lit can be used to convert a boolean value from Ada to a
    -- boolean value for vhdl.

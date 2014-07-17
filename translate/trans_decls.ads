@@ -26,8 +26,6 @@ package Trans_Decls is
    Ghdl_Psl_Cover_Failed : O_Dnode;
    --  Procedure for report statement.
    Ghdl_Report : O_Dnode;
-   --  Ortho node for default report message.
-   Ghdl_Assert_Default_Report : O_Dnode;
 
    --  Register a process.
    Ghdl_Process_Register : O_Dnode;

@@ -46,6 +46,19 @@ __ghdl_snprintf_g (char *buf, unsigned int len, double val)
 }
 
 void
+__ghdl_snprintf_nf (char *buf, unsigned int len, int ndigits, double val)
+{
+  snprintf (buf, len, "%.*f", ndigits, val);
+}
+
+void
+__ghdl_snprintf_fmtf (const char *buf, unsigned int len,
+		      const char *format, double v)
+{
+  snprintf (buf, len, format, v);
+}
+
+void
 __ghdl_fprintf_g (FILE *stream, double val)
 {
   fprintf (stream, "%g", val);

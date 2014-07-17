@@ -513,6 +513,28 @@ package body Sem_Decls is
       -- Add it to the list.
       Insert_Incr (Last, Proc);
 
+      --  Create the implicit procedure flush declaration
+      if Flags.Vhdl_Std >= Vhdl_08 then
+         Proc := Create_Iir (Iir_Kind_Implicit_Procedure_Declaration);
+         Set_Identifier (Proc, Std_Names.Name_Flush);
+         Set_Location (Proc, Loc);
+         Set_Parent (Proc, Get_Parent (Decl));
+         Set_Type_Reference (Proc, Decl);
+         Set_Visible_Flag (Proc, True);
+         Build_Init (Last_Interface);
+         Inter := Create_Iir (File_Interface_Kind);
+         Set_Identifier (Inter, Std_Names.Name_F);
+         Set_Location (Inter, Loc);
+         Set_Type (Inter, Type_Definition);
+         Set_Base_Name (Inter, Inter);
+         Set_Name_Staticness (Inter, Locally);
+         Set_Expr_Staticness (Inter, None);
+         Append (Last_Interface, Proc, Inter);
+         Set_Implicit_Definition (Proc, Iir_Predefined_Flush);
+         Compute_Subprogram_Hash (Proc);
+         -- Add it to the list.
+         Insert_Incr (Last, Proc);
+      end if;
       -- Create the implicit function endfile declaration.
       Func := Create_Iir (Iir_Kind_Implicit_Function_Declaration);
       Set_Identifier (Func, Std_Names.Name_Endfile);
@@ -596,6 +618,12 @@ package body Sem_Decls is
          Add_Operation (Name, Def, Unary_Chain, Type_Definition);
       end Add_Unary;
 
+      procedure Add_To_String (Def : Iir_Predefined_Functions) is
+      begin
+         Add_Operation (Name_To_String, Def,
+                        Unary_Chain, String_Type_Definition);
+      end Add_To_String;
+
       procedure Add_Min_Max (Name : Name_Id; Def : Iir_Predefined_Functions)
       is
          Left, Right : Iir;
@@ -651,7 +679,7 @@ package body Sem_Decls is
    begin
       Last := Decl;
 
-      Type_Definition := Get_Base_Type (Get_Type (Decl));
+      Type_Definition := Get_Base_Type (Get_Type_Definition (Decl));
       if Get_Kind (Type_Definition) /= Iir_Kind_File_Type_Definition then
          Unary_Chain := Create_Anonymous_Interface (Type_Definition);
          Binary_Chain := Create_Anonymous_Interface (Type_Definition);
@@ -671,8 +699,16 @@ package body Sem_Decls is
               (Name_Op_Less_Equal, Iir_Predefined_Enum_Less_Equal);
 
             if Flags.Vhdl_Std >= Vhdl_08 then
+               --  LRM08 5.2.6 Predefined operations on scalar types
+               --  Given a type declaration that declares a scalar type T, the
+               --  following operations are implicitely declared immediately
+               --  following the type declaration (except for the TO_STRING
+               --  operations in package STANDARD [...])
                Add_Min_Max (Name_Minimum, Iir_Predefined_Enum_Minimum);
                Add_Min_Max (Name_Maximum, Iir_Predefined_Enum_Maximum);
+               if not Is_Std_Standard then
+                  Add_To_String (Iir_Predefined_Enum_To_String);
+               end if;
 
                --  LRM08 9.2.3 Relational operators
                --  The matching relational operators are predefined for the
@@ -934,7 +970,7 @@ package body Sem_Decls is
                     and then Get_Only_Characters_Flag (Element_Type)
                   then
                      Add_Operation (Name_To_String,
-                                    Iir_Predefined_Array_To_String,
+                                    Iir_Predefined_Array_Char_To_String,
                                     Unary_Chain,
                                     String_Type_Definition);
                   end if;
@@ -1012,8 +1048,16 @@ package body Sem_Decls is
             end;
 
             if Vhdl_Std >= Vhdl_08 then
+               --  LRM08 5.2.6 Predefined operations on scalar types
+               --  Given a type declaration that declares a scalar type T, the
+               --  following operations are implicitely declared immediately
+               --  following the type declaration (except for the TO_STRING
+               --  operations in package STANDARD [...])
                Add_Min_Max (Name_Minimum, Iir_Predefined_Integer_Minimum);
                Add_Min_Max (Name_Maximum, Iir_Predefined_Integer_Maximum);
+               if not Is_Std_Standard then
+                  Add_To_String (Iir_Predefined_Integer_To_String);
+               end if;
             end if;
 
          when Iir_Kind_Floating_Type_Definition =>
@@ -1053,8 +1097,16 @@ package body Sem_Decls is
             end;
 
             if Vhdl_Std >= Vhdl_08 then
+               --  LRM08 5.2.6 Predefined operations on scalar types
+               --  Given a type declaration that declares a scalar type T, the
+               --  following operations are implicitely declared immediately
+               --  following the type declaration (except for the TO_STRING
+               --  operations in package STANDARD [...])
                Add_Min_Max (Name_Minimum, Iir_Predefined_Floating_Minimum);
                Add_Min_Max (Name_Maximum, Iir_Predefined_Floating_Maximum);
+               if not Is_Std_Standard then
+                  Add_To_String (Iir_Predefined_Floating_To_String);
+               end if;
             end if;
 
          when Iir_Kind_Physical_Type_Definition =>
@@ -1128,8 +1180,16 @@ package body Sem_Decls is
             Add_Unary (Name_Abs, Iir_Predefined_Physical_Absolute);
 
             if Vhdl_Std >= Vhdl_08 then
+               --  LRM08 5.2.6 Predefined operations on scalar types
+               --  Given a type declaration that declares a scalar type T, the
+               --  following operations are implicitely declared immediately
+               --  following the type declaration (except for the TO_STRING
+               --  operations in package STANDARD [...])
                Add_Min_Max (Name_Minimum, Iir_Predefined_Physical_Minimum);
                Add_Min_Max (Name_Maximum, Iir_Predefined_Physical_Maximum);
+               if not Is_Std_Standard then
+                  Add_To_String (Iir_Predefined_Physical_To_String);
+               end if;
             end if;
 
          when Iir_Kind_File_Type_Definition =>
@@ -1227,8 +1287,8 @@ package body Sem_Decls is
       then
          Old_Decl := Get_Declaration (Inter);
          if Get_Kind (Old_Decl) /= Iir_Kind_Type_Declaration
-           or else Get_Kind (Get_Type (Old_Decl)) /=
-           Iir_Kind_Incomplete_Type_Definition
+           or else (Get_Kind (Get_Type_Definition (Old_Decl)) /=
+                      Iir_Kind_Incomplete_Type_Definition)
          then
             Old_Decl := Null_Iir;
          end if;
@@ -1250,12 +1310,12 @@ package body Sem_Decls is
       end if;
 
       -- Check the definition of the type.
-      Def := Get_Type (Decl);
+      Def := Get_Type_Definition (Decl);
       if Def = Null_Iir then
          --  Incomplete type declaration
          Def := Create_Iir (Iir_Kind_Incomplete_Type_Definition);
          Location_Copy (Def, Decl);
-         Set_Type (Decl, Def);
+         Set_Type_Definition (Decl, Def);
          Set_Base_Type (Def, Def);
          Set_Signal_Type_Flag (Def, True);
          Set_Type_Declarator (Def, Decl);
@@ -1286,7 +1346,7 @@ package body Sem_Decls is
 
                   --  The type declaration declares the base type.
                   Bt_Def := Get_Base_Type (Def);
-                  Set_Type (Decl, Bt_Def);
+                  Set_Type_Definition (Decl, Bt_Def);
                   Set_Type_Declarator (Bt_Def, Decl);
                   Set_Subtype_Definition (Decl, Def);
 
@@ -1294,7 +1354,8 @@ package body Sem_Decls is
                      Sem_Scopes.Add_Name (St_Decl);
                   else
                      Replace_Name (Get_Identifier (Decl), Old_Decl, St_Decl);
-                     Set_Type_Declarator (Get_Type (Old_Decl), St_Decl);
+                     Set_Type_Declarator
+                       (Get_Type_Definition (Old_Decl), St_Decl);
                   end if;
 
                   Sem_Scopes.Name_Visible (St_Decl);
@@ -1333,7 +1394,7 @@ package body Sem_Decls is
                   El : Iir;
                   Old_Def : Iir;
                begin
-                  Old_Def := Get_Type (Old_Decl);
+                  Old_Def := Get_Type_Definition (Old_Decl);
                   Set_Signal_Type_Flag (Old_Def, Get_Signal_Type_Flag (Def));
                   List := Get_Incomplete_Type_List (Old_Def);
                   for I in Natural loop
@@ -1694,7 +1755,7 @@ package body Sem_Decls is
 
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration =>
-            --  LRM93 §3.2.1.1
+            --  LRM93 3.2.1.1 / LRM08 5.3.2.2
             --  For a variable or signal declared by an object declaration, the
             --  subtype indication of the corressponding object declaration
             --  must define a constrained array subtype.
@@ -2080,7 +2141,7 @@ package body Sem_Decls is
    procedure Add_Aliases_For_Type_Alias (Alias : Iir)
    is
       N_Entity : constant Iir := Get_Name (Alias);
-      Def : constant Iir := Get_Base_Type (Get_Type (N_Entity));
+      Def : constant Iir := Get_Base_Type (Get_Type_Of_Type_Mark (N_Entity));
       Type_Decl : constant Iir := Get_Type_Declarator (Def);
       Last : Iir;
       El : Iir;
@@ -2814,7 +2875,7 @@ package body Sem_Decls is
                declare
                   Def : Iir;
                begin
-                  Def := Get_Type (El);
+                  Def := Get_Type_Definition (El);
                   if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
                     and then Get_Type_Declarator (Def) = El
                   then

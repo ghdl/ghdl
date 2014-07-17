@@ -613,36 +613,36 @@ package body Disp_Vhdl is
 
    -- Display the full definition of a type, ie the sequence that can create
    -- such a type.
-   procedure Disp_Type_Definition (Decl: in Iir; Indent: Count) is
+   procedure Disp_Type_Definition (Def: Iir; Indent: Count) is
    begin
-      case Get_Kind (Decl) is
+      case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            Disp_Enumeration_Type_Definition (Decl);
+            Disp_Enumeration_Type_Definition (Def);
          when Iir_Kind_Enumeration_Subtype_Definition =>
-            Disp_Enumeration_Subtype_Definition (Decl);
+            Disp_Enumeration_Subtype_Definition (Def);
          when Iir_Kind_Integer_Subtype_Definition =>
-            Disp_Integer_Subtype_Definition (Decl);
+            Disp_Integer_Subtype_Definition (Def);
          when Iir_Kind_Floating_Subtype_Definition =>
-            Disp_Floating_Subtype_Definition (Decl);
+            Disp_Floating_Subtype_Definition (Def);
          when Iir_Kind_Array_Type_Definition =>
-            Disp_Array_Type_Definition (Decl);
+            Disp_Array_Type_Definition (Def);
          when Iir_Kind_Array_Subtype_Definition =>
-            Disp_Array_Subtype_Definition (Decl);
+            Disp_Array_Subtype_Definition (Def);
          when Iir_Kind_Physical_Subtype_Definition =>
-            Disp_Physical_Subtype_Definition (Decl, Indent);
+            Disp_Physical_Subtype_Definition (Def, Indent);
          when Iir_Kind_Record_Type_Definition =>
-            Disp_Record_Type_Definition (Decl, Indent);
+            Disp_Record_Type_Definition (Def, Indent);
          when Iir_Kind_Access_Type_Definition =>
             Put ("access ");
-            Disp_Subtype_Indication (Get_Designated_Type (Decl));
+            Disp_Subtype_Indication (Get_Designated_Type (Def));
             Put (';');
          when Iir_Kind_File_Type_Definition =>
             Put ("file of ");
-            Disp_Subtype_Indication (Get_Type_Mark (Decl));
+            Disp_Subtype_Indication (Get_Type_Mark (Def));
             Put (';');
          when Iir_Kind_Protected_Type_Declaration =>
             Put_Line ("protected");
-            Disp_Declaration_Chain (Decl, Indent + Indentation);
+            Disp_Declaration_Chain (Def, Indent + Indentation);
             Set_Col (Indent);
             Put ("end protected;");
          when Iir_Kind_Integer_Type_Definition =>
@@ -652,7 +652,7 @@ package body Disp_Vhdl is
          when Iir_Kind_Physical_Type_Definition =>
             Put ("<physical base type>");
          when others =>
-            Error_Kind ("disp_type_definition", Decl);
+            Error_Kind ("disp_type_definition", Def);
       end case;
    end Disp_Type_Definition;
 
@@ -664,7 +664,7 @@ package body Disp_Vhdl is
       Indent := Col;
       Put ("type ");
       Disp_Name_Of (Decl);
-      Def := Get_Type (Decl);
+      Def := Get_Type_Definition (Decl);
       if Def = Null_Iir
         or else Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
       then
@@ -686,7 +686,7 @@ package body Disp_Vhdl is
       Put ("-- type ");
       Disp_Name_Of (Decl);
       Put (" is ");
-      Def := Get_Type (Decl);
+      Def := Get_Type_Definition (Decl);
       Disp_Type_Definition (Def, Indent);
       if Get_Kind (Def) = Iir_Kind_Physical_Type_Definition then
          declare

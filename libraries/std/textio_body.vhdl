@@ -102,6 +102,28 @@ package body textio is
     end if;
   end writeline;
 
+  --START-V08
+  procedure Tee (file f : Text; L : inout LINE) is
+  begin
+    if l = null then
+      -- LRM93 14.3
+      -- If parameter L contains a null access value at the start of the call,
+      -- the a null string is written to the file.
+      write (f, "");
+      write (Output, "");
+    else
+      -- LRM93 14.3
+      -- Procedure WRITELINE causes the current line designated by parameter L
+      -- to be written to the file and returns with the value of parameter L
+      -- designating a null string.
+      write (f, l.all);
+      write (Output, l.all);
+      deallocate (l);
+      l := new string'("");
+    end if;
+  end Tee;
+  --END-V08
+  
   procedure write
     (l: inout line; value: in string;
     justified: in side := right; field: in width := 0)
@@ -460,6 +482,20 @@ package body textio is
     write (l, str (1 to pos - 1), justified, field);
   end write;
 
+  --START-V08
+  procedure Owrite (L : inout line; value : in Bit_Vector;
+                    Justified : in Side := Right; Field : in Width := 0) is
+  begin
+    write (l, to_ostring (value), justified, field);
+  end Owrite;
+
+  procedure Hwrite (L : inout line; value : in Bit_Vector;
+                    Justified : in Side := Right; Field : in Width := 0) is
+  begin
+    write (l, to_hstring (value), justified, field);
+  end Hwrite;
+--END-V08
+  
   procedure untruncated_text_read                              --V87
     (variable f : text; str : out string; len : out natural);  --V87
   procedure untruncated_text_read                              --V93

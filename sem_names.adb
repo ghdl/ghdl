@@ -737,7 +737,12 @@ package body Sem_Names is
          end if;
       end if;
       Prefix := Get_Prefix (Attr);
-      Prefix_Type := Get_Type (Prefix);
+      --  FIXME: the prefix should be a name.
+      if Get_Kind (Prefix) = Iir_Kind_Type_Declaration then
+         Prefix_Type := Get_Type_Definition (Prefix);
+      else
+         Prefix_Type := Get_Type (Prefix);
+      end if;
       declare
          Dim : Iir_Int64;
          Indexes_List : Iir_List;
@@ -812,6 +817,7 @@ package body Sem_Names is
 
    procedure Finish_Sem_Scalar_Type_Attribute (Attr : Iir; Param : Iir)
    is
+      Prefix : Iir;
       Prefix_Type : Iir;
       Prefix_Bt : Iir;
       Parameter : Iir;
@@ -822,7 +828,8 @@ package body Sem_Names is
          return;
       end if;
 
-      Prefix_Type := Get_Type (Get_Prefix (Attr));
+      Prefix := Get_Prefix (Attr);
+      Prefix_Type := Get_Type_Of_Type_Mark (Prefix);
       Prefix_Bt := Get_Base_Type (Prefix_Type);
 
       case Get_Kind (Attr) is
@@ -1317,12 +1324,13 @@ package body Sem_Names is
       end case;
    end Finish_Sem_Name;
 
-   --  LRM93 §6.2
+   --  LRM93 6.2
    --  The evaluation of a simple name has no other effect than to determine
    --  the named entity denoted by the name.
    --
    --  NAME may be a string literal too.
-   --  GHDL: set interpretation of NAME (possibly an overload list).
+   --  GHDL: set interpretation of NAME (possibly an overload list) or
+   --  error_mark for unknown names.
    --  If SOFT is TRUE, then no error message is reported in case of failure.
    procedure Sem_Simple_Name (Name : Iir; Keep_Alias : Boolean; Soft : Boolean)
    is
@@ -1335,6 +1343,7 @@ package body Sem_Names is
       Interpretation := Get_Interpretation (Id);
 
       if not Valid_Interpretation (Interpretation) then
+         --  Unknown name.
          if not Soft then
             Error_Msg_Sem
               ("no declaration for """ & Image_Identifier (Name) & """", Name);
@@ -1342,7 +1351,7 @@ package body Sem_Names is
          Res := Error_Mark;
       elsif not Valid_Interpretation (Get_Next_Interpretation (Interpretation))
       then
-         -- not overloaded.
+         --  One simple interpretation.
          Res := Get_Declaration (Interpretation);
 
          --  For a design unit, return the library unit
@@ -1353,6 +1362,7 @@ package body Sem_Names is
             Res := Get_Library_Unit (Res);
          end if;
 
+         --  Check visibility.
          if not Get_Visible_Flag (Res) then
             if Flag_Relaxed_Rules
               and then Get_Kind (Res) in Iir_Kinds_Object_Declaration
@@ -1377,6 +1387,7 @@ package body Sem_Names is
             Res := Get_Name (Res);
          end if;
       else
+         --  Name is overloaded.
          Res_List := Create_Iir_List;
          N := 0;
          --  The SEEN_FLAG is used to get only one meaning which can be reached
@@ -1395,12 +1406,16 @@ package body Sem_Names is
             end if;
             Interpretation := Get_Next_Interpretation (Interpretation);
          end loop;
+
+         --  Clear SEEN_FLAG.
          for I in 0 .. N - 1 loop
             Res := Get_Nth_Element (Res_List, I);
             Set_Seen_Flag (Res, False);
          end loop;
+
          Res := Create_Overload_List (Res_List);
       end if;
+
       Set_Base_Name (Name, Res);
       Set_Named_Entity (Name, Res);
    end Sem_Simple_Name;
@@ -1983,7 +1998,7 @@ package body Sem_Names is
          Res := Create_Iir (Iir_Kind_Type_Conversion);
          Location_Copy (Res, Name);
          Set_Type_Mark (Res, Prefix);
-         Set_Type (Res, Get_Type (Prefix));
+         Set_Type (Res, Get_Type_Of_Type_Mark (Prefix));
          Set_Expression (Res, Actual);
       else
          if Actual /= Null_Iir
@@ -2209,16 +2224,23 @@ package body Sem_Names is
 
    function Sem_Base_Attribute (Attr : Iir_Attribute_Name) return Iir
    is
+      Prefix_Name : constant Iir := Get_Prefix (Attr);
       Prefix : Iir;
       Res : Iir;
       Base_Type : Iir;
       Type_Decl : Iir;
    begin
-      Prefix := Get_Named_Entity (Get_Prefix (Attr));
+      Prefix := Get_Named_Entity (Prefix_Name);
       case Get_Kind (Prefix) is
-         when Iir_Kind_Type_Declaration
-           | Iir_Kind_Subtype_Declaration =>
-            null;
+         when Iir_Kind_Type_Declaration =>
+            Base_Type := Get_Type_Definition (Prefix);
+         when Iir_Kind_Subtype_Declaration =>
+            Base_Type := Get_Base_Type (Get_Type (Prefix));
+            --  Get the first subtype.  FIXME: ref?
+            Type_Decl := Get_Type_Declarator (Base_Type);
+            if Get_Kind (Type_Decl) = Iir_Kind_Anonymous_Type_Declaration then
+               Base_Type := Get_Subtype_Definition (Type_Decl);
+            end if;
          when others =>
             Error_Msg_Sem
               ("prefix of 'base attribute must be a type or a subtype", Attr);
@@ -2227,11 +2249,6 @@ package body Sem_Names is
       Res := Create_Iir (Iir_Kind_Base_Attribute);
       Location_Copy (Res, Attr);
       Set_Prefix (Res, Prefix);
-      Base_Type := Get_Base_Type (Get_Type (Prefix));
-      Type_Decl := Get_Type_Declarator (Base_Type);
-      if Get_Kind (Type_Decl) = Iir_Kind_Anonymous_Type_Declaration then
-         Base_Type := Get_Subtype_Definition (Type_Decl);
-      end if;
       Set_Type (Res, Base_Type);
       return Res;
    end Sem_Base_Attribute;
@@ -2313,30 +2330,32 @@ package body Sem_Names is
    end Sem_User_Attribute;
 
    function Sem_Scalar_Type_Attribute (Attr : Iir_Attribute_Name)
-     return Iir
+                                      return Iir
    is
       use Std_Names;
-      Prefix_Name : Iir;
+      Prefix_Name : constant Iir := Get_Prefix (Attr);
+      Id : constant Name_Id := Get_Attribute_Identifier (Attr);
       Prefix : Iir;
       Prefix_Type : Iir;
       Res : Iir;
-      Id : Name_Id;
    begin
-      Id := Get_Attribute_Identifier (Attr);
-      Prefix_Name := Get_Prefix (Attr);
       Prefix := Get_Named_Entity (Prefix_Name);
+
       --  LRM93 14.1
       --  Prefix: Any discrete or physical type of subtype T.
       case Get_Kind (Prefix) is
-         when Iir_Kinds_Type_Declaration
-           | Iir_Kind_Base_Attribute =>
-            null;
+         when Iir_Kind_Type_Declaration =>
+            Prefix_Type := Get_Type_Definition (Prefix);
+         when Iir_Kind_Subtype_Declaration =>
+            Prefix_Type := Get_Type (Prefix);
+         when Iir_Kind_Base_Attribute =>
+            Prefix_Type := Get_Type (Prefix);
          when others =>
             Error_Msg_Sem ("prefix of '" & Name_Table.Image (Id)
                            & " attribute must be a type", Attr);
             return Error_Mark;
       end case;
-      Prefix_Type := Get_Type (Prefix);
+
       case Id is
          when Name_Image
            | Name_Value =>
@@ -2427,11 +2446,13 @@ package body Sem_Names is
      return Iir
    is
       use Std_Names;
+      Prefix_Name : constant Iir := Get_Prefix (Attr);
+      Id : constant Name_Id := Get_Attribute_Identifier (Attr);
       Res : Iir;
       Prefix : Iir;
       Prefix_Type : Iir;
    begin
-      case Get_Attribute_Identifier (Attr) is
+      case Id is
          when Name_Left =>
             Res := Create_Iir (Iir_Kind_Left_Type_Attribute);
          when Name_Right =>
@@ -2449,17 +2470,25 @@ package body Sem_Names is
                Attr);
             return Error_Mark;
          when others =>
-            Error_Msg_Sem ("Attribute '"
-                          & Name_Table.Image(Get_Attribute_Identifier (Attr))
-                          & " not valid on this type", Attr);
+            Error_Msg_Sem ("Attribute '" & Name_Table.Image (Id)
+                             & " not valid on this type", Attr);
             return Error_Mark;
       end case;
       Location_Copy (Res, Attr);
-      Prefix := Get_Named_Entity (Get_Prefix (Attr));
+      Prefix := Get_Named_Entity (Prefix_Name);
       Set_Prefix (Res, Prefix);
       Set_Base_Name (Res, Res);
 
-      Prefix_Type := Get_Type (Prefix);
+      case Get_Kind (Prefix) is
+         when Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute =>
+            Prefix_Type := Get_Type (Prefix);
+            Set_Expr_Staticness (Res, Get_Expr_Staticness (Prefix));
+         when others =>
+            Prefix_Type := Get_Type_Of_Type_Mark (Prefix);
+            Set_Expr_Staticness (Res, Get_Type_Staticness (Prefix_Type));
+      end case;
+
       case Get_Attribute_Identifier (Attr) is
          when Name_Ascending =>
             --  LRM93 14.1
@@ -2469,13 +2498,6 @@ package body Sem_Names is
             --  LRM 14.1
             --  Result Type: Same type as T.
             Set_Type (Res, Prefix_Type);
-      end case;
-      case Get_Kind (Prefix) is
-         when Iir_Kind_Range_Array_Attribute
-           | Iir_Kind_Reverse_Range_Array_Attribute =>
-            Set_Expr_Staticness (Res, Get_Expr_Staticness (Prefix));
-         when others =>
-            Set_Expr_Staticness (Res, Get_Type_Staticness (Prefix_Type));
       end case;
       return Res;
    end Sem_Predefined_Type_Attribute;
@@ -2487,11 +2509,12 @@ package body Sem_Names is
    is
       use Std_Names;
       Prefix: Iir;
+      Prefix_Name : constant Iir := Get_Prefix (Attr);
       Prefix_Type : Iir;
       Res : Iir;
       Res_Type : Iir;
    begin
-      Prefix := Get_Named_Entity (Get_Prefix (Attr));
+      Prefix := Get_Named_Entity (Prefix_Name);
 
       --  LRM93 14.1
       --  Prefix: Any prefix A that is appropriate for an array object, or an
@@ -2524,15 +2547,10 @@ package body Sem_Names is
                   Error_Msg_Sem ("object prefix must be an array", Attr);
                   return Error_Mark;
             end case;
---          when Iir_Kind_Array_Subtype_Definition =>
---             Prefix_Type := Prefix;
---          when Iir_Kind_Array_Type_Definition =>
---             Error_Type;
---             return Null_Iir;
          when Iir_Kind_Subtype_Declaration
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Base_Attribute =>
-            Prefix_Type := Get_Type (Prefix);
+            Prefix_Type := Get_Type_Of_Type_Mark (Prefix);
             if not Is_Fully_Constrained_Type (Prefix_Type) then
                Error_Msg_Sem ("prefix type is not constrained", Attr);
                --  We continue using the unconstrained array type.
@@ -2619,17 +2637,6 @@ package body Sem_Names is
          Set_Type (Res, Boolean_Type_Definition);
       end if;
       Set_Base_Name (Res, Res);
---       Param := Get_Suffix (Attr);
---       if Param /= Null_Iir then
---          if Kind = Iir_Kind_Transaction_Attribute then
---             Error_Msg_Sem ("'transaction does not allow a parameter", Attr);
---             Param := Null_Iir;
---          else
---             Param := Sem_Expression
---               (Param, Time_Subtype_Definition);
---             Set_Parameter (Res, Param);
---          end if;
---       end if;
 
       if Get_Kind (Prefix) = Iir_Kind_Signal_Interface_Declaration then
          --  LRM93 2.1.1.2 / LRM08 4.2.2.3
@@ -2971,6 +2978,7 @@ package body Sem_Names is
       end if;
 
       if Get_Kind (Prefix) = Iir_Kind_Overload_List then
+         --  FIXME: this should be allowed.
          Error_Msg_Sem ("prefix of attribute is overloaded", Attr);
          Set_Named_Entity (Attr, Error_Mark);
          return;
@@ -3050,8 +3058,7 @@ package body Sem_Names is
    end Sem_Attribute_Name;
 
    --  LRM93 §6
-   procedure Sem_Name (Name : Iir; Keep_Alias : Boolean)
-   is
+   procedure Sem_Name (Name : Iir; Keep_Alias : Boolean) is
    begin
       --  Exit now if NAME was already semantized.
       if Get_Named_Entity (Name) /= Null_Iir then
@@ -3482,9 +3489,8 @@ package body Sem_Names is
          when Decl_Type
            | Decl_Incomplete_Type =>
             case Get_Kind (Res) is
-               when Iir_Kind_Type_Declaration
-                 | Iir_Kind_Subtype_Declaration =>
-                  Res := Get_Type (Res);
+               when Iir_Kind_Type_Declaration =>
+                  Res := Get_Type_Definition (Res);
                   --  Note: RES cannot be NULL_IIR, this is just to be more
                   --  bullet-proof.
                   if Kind /= Decl_Incomplete_Type
@@ -3495,6 +3501,8 @@ package body Sem_Names is
                      Error_Msg_Sem
                        ("invalid use of an incomplete type definition", Name);
                   end if;
+               when Iir_Kind_Subtype_Declaration =>
+                  Res := Get_Type (Res);
                when others =>
                   Error_Msg_Sem
                     ("type expected, found " & Disp_Node (Res), Name);

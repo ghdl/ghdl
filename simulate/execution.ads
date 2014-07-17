@@ -44,6 +44,8 @@ package Execution is
    end record;
    type Process_State_Acc is access all Process_State_Type;
 
+   Simulation_Finished : exception;
+
    --  Current process being executed.  This is only for the debugger.
    Current_Process : Process_State_Acc;
 

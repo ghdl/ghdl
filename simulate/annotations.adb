@@ -604,8 +604,9 @@ package body Annotations is
             Add_Quantity_Info (Block_Info, Decl);
 
          when Iir_Kind_Type_Declaration
-           | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Anonymous_Type_Declaration =>
+            Annotate_Type_Definition (Block_Info, Get_Type_Definition (Decl));
+         when Iir_Kind_Subtype_Declaration =>
             Annotate_Type_Definition (Block_Info, Get_Type (Decl));
 
          when Iir_Kind_Protected_Type_Body =>

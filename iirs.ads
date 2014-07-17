@@ -712,6 +712,8 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --   Get/Set_Generic_Chain (Field6)
+   --
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -800,7 +802,7 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
-   --   Get/Set_Type (Field1)
+   --   Get/Set_Type_Definition (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
@@ -820,7 +822,7 @@ package Iirs is
    -- The parser set this field to null_iir for an incomplete type declaration.
    -- This field is set to an incomplete_type_definition node when first
    -- semantized.
-   --   Get/Set_Type (Field1)
+   --   Get/Set_Type_Definition (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
@@ -2869,13 +2871,13 @@ package Iirs is
        Iir_Kind_Across_Quantity_Declaration,
        Iir_Kind_Through_Quantity_Declaration,
 
-       Iir_Kind_Function_Body,
+       Iir_Kind_Enumeration_Literal,
        Iir_Kind_Function_Declaration,            --  Subprg, Func
        Iir_Kind_Implicit_Function_Declaration,   --  Subprg, Func, Imp_Subprg
        Iir_Kind_Implicit_Procedure_Declaration,  --  Subprg, Proc, Imp_Subprg
        Iir_Kind_Procedure_Declaration,           --  Subprg, Proc
+       Iir_Kind_Function_Body,
        Iir_Kind_Procedure_Body,
-       Iir_Kind_Enumeration_Literal,
 
        Iir_Kind_Object_Alias_Declaration,       -- object
        Iir_Kind_File_Declaration,               -- object
@@ -3323,7 +3325,7 @@ package Iirs is
        Iir_Predefined_Endfile,
 
    --  To_String
-       Iir_Predefined_Array_To_String,
+       Iir_Predefined_Array_Char_To_String,
        Iir_Predefined_Bit_Vector_To_Ostring,
        Iir_Predefined_Bit_Vector_To_Hstring,
 
@@ -3371,6 +3373,13 @@ package Iirs is
    --Iir_Predefined_Array_Element_Concat
    --Iir_Predefined_Element_Array_Concat
      Iir_Predefined_Element_Element_Concat;
+
+   subtype Iir_Predefined_Std_Ulogic_Match_Ordering_Functions is
+     Iir_Predefined_Functions range
+     Iir_Predefined_Std_Ulogic_Match_Less ..
+   --Iir_Predefined_Std_Ulogic_Match_Less_Equal
+   --Iir_Predefined_Std_Ulogic_Match_Greater
+     Iir_Predefined_Std_Ulogic_Match_Greater_Equal;
 
    -- Staticness as defined by LRM93 §6.1 and §7.4
    type Iir_Staticness is (Unknown, None, Globally, Locally);
@@ -3580,6 +3589,11 @@ package Iirs is
 
    subtype Iir_Kinds_Function_Declaration is Iir_Kind range
      Iir_Kind_Function_Declaration ..
+     Iir_Kind_Implicit_Function_Declaration;
+
+   subtype Iir_Kinds_Functions_And_Literals is Iir_Kind range
+     Iir_Kind_Enumeration_Literal ..
+   --Iir_Kind_Function_Declaration
      Iir_Kind_Implicit_Function_Declaration;
 
    subtype Iir_Kinds_Procedure_Declaration is Iir_Kind range
@@ -3825,13 +3839,13 @@ package Iirs is
    --Iir_Kind_Free_Quantity_Declaration
    --Iir_Kind_Across_Quantity_Declaration
    --Iir_Kind_Through_Quantity_Declaration
-   --Iir_Kind_Function_Body
+   --Iir_Kind_Enumeration_Literal
    --Iir_Kind_Function_Declaration
    --Iir_Kind_Implicit_Function_Declaration
    --Iir_Kind_Implicit_Procedure_Declaration
    --Iir_Kind_Procedure_Declaration
+   --Iir_Kind_Function_Body
    --Iir_Kind_Procedure_Body
-   --Iir_Kind_Enumeration_Literal
    --Iir_Kind_Object_Alias_Declaration
    --Iir_Kind_File_Declaration
    --Iir_Kind_Guard_Signal_Declaration
@@ -4625,6 +4639,10 @@ package Iirs is
    function Get_Type (Target : Iir) return Iir;
    procedure Set_Type (Target : Iir; Atype : Iir);
    pragma Inline (Get_Type);
+
+   --  Field: Field1
+   function Get_Type_Definition (Decl : Iir) return Iir;
+   procedure Set_Type_Definition (Decl : Iir; Atype : Iir);
 
    --  The subtype definition associated with the type declaration (if any).
    --  Field: Field4

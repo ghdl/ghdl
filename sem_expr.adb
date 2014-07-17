@@ -657,8 +657,10 @@ package body Sem_Expr is
          end if;
 
          case Get_Kind (Res) is
-            when Iir_Kind_Type_Declaration
-              | Iir_Kind_Subtype_Declaration =>
+            when Iir_Kind_Type_Declaration =>
+               Res := Get_Type_Definition (Res);
+               Res_Type := Res;
+            when Iir_Kind_Subtype_Declaration =>
                Res := Get_Type (Res);
                Res_Type := Res;
             when Iir_Kind_Range_Array_Attribute
@@ -1160,6 +1162,8 @@ package body Sem_Expr is
       Inter: Iir;
       Match : Boolean;
    begin
+      --  Sem_Name has gathered all the possible names for the prefix of this
+      --  call.  Reduce this list to only names that match the types.
       Nbr_Inter := 0;
       Imp_List := Get_Overload_List (Get_Implementation (Expr));
       Assoc_Chain := Get_Parameter_Association_Chain (Expr);
@@ -1168,28 +1172,25 @@ package body Sem_Expr is
          A_Func := Get_Nth_Element (Imp_List, I);
          exit when A_Func = Null_Iir;
 
-         --  The identifier of a function call must be a function or an
-         --  enumeration literal.
-         if Is_Func_Call and then not
-           (Get_Kind (A_Func) = Iir_Kind_Function_Declaration
-            or else Get_Kind (A_Func) = Iir_Kind_Implicit_Function_Declaration
-            or else Get_Kind (A_Func) = Iir_Kind_Enumeration_Literal)
-         then
-            goto Continue;
-         end if;
-
-         --  The identifier of a procedure call must be a procedure.
-         if not Is_Func_Call and then not
-           (Get_Kind (A_Func) = Iir_Kind_Procedure_Declaration
-            or else
-            Get_Kind (A_Func) = Iir_Kind_Implicit_Procedure_Declaration)
-         then
-            goto Continue;
-         end if;
+         case Get_Kind (A_Func) is
+            when Iir_Kinds_Functions_And_Literals =>
+               if not Is_Func_Call then
+                  --  The identifier of a function call must be a function or
+                  --  an enumeration literal.
+                  goto Continue;
+               end if;
+            when Iir_Kinds_Procedure_Declaration =>
+               if Is_Func_Call then
+                  --  The identifier of a procedure call must be a procedure.
+                  goto Continue;
+               end if;
+            when others =>
+               Error_Kind ("sem_subprogram_call_stage1", A_Func);
+         end case;
 
          --  Keep this interpretation only if compatible.
-         if A_Type = Null_Iir or else
-           Compatibility_Nodes (A_Type, Get_Return_Type (A_Func))
+         if A_Type = Null_Iir
+           or else Compatibility_Nodes (A_Type, Get_Return_Type (A_Func))
          then
             Sem_Association_Chain
               (Get_Interface_Declaration_Chain (A_Func),
@@ -1213,8 +1214,9 @@ package body Sem_Expr is
             Error_Msg_Sem
               ("cannot resolve overloading for subprogram call", Expr);
             return Null_Iir;
+
          when 1 =>
-            -- Very simple case: no overloading.
+            --  Simple case: no overloading.
             Inter := Get_First_Element (Imp_List);
             Free_Iir (Get_Implementation (Expr));
             if Is_Func_Call then
@@ -1231,6 +1233,7 @@ package body Sem_Expr is
             Check_Subprogram_Associations (Inter_Chain, Assoc_Chain);
             Sem_Subprogram_Call_Finish (Expr, Inter);
             return Expr;
+
          when others =>
             if Is_Func_Call then
                if A_Type /= Null_Iir then
@@ -1240,12 +1243,15 @@ package body Sem_Expr is
                   Disp_Overload_List (Imp_List, Expr);
                   return Null_Iir;
                end if;
+
+               --  Create the list of types for the result.
                Res_Type := Create_Iir_List;
                for I in 0 .. Nbr_Inter - 1 loop
                   Add_Element
                     (Res_Type,
                      Get_Return_Type (Get_Nth_Element (Imp_List, I)));
                end loop;
+
                if Get_Nbr_Elements (Res_Type) = 1 then
                   -- several implementations but one profile.
                   Error_Overload (Expr);
@@ -1254,6 +1260,8 @@ package body Sem_Expr is
                end if;
                Set_Type (Expr, Create_Overload_List (Res_Type));
             else
+               --  For a procedure call, the context does't help to resolve
+               --  overload.
                Error_Overload (Expr);
                Disp_Overload_List (Imp_List, Expr);
             end if;
@@ -1265,7 +1273,7 @@ package body Sem_Expr is
    --  Associations must have already been semantized by sem_association_list.
    function Sem_Subprogram_Call (Expr: Iir; A_Type: Iir) return Iir
    is
-      Is_Func: Boolean;
+      Is_Func: constant Boolean := Get_Kind (Expr) = Iir_Kind_Function_Call;
       Res_Type: Iir;
       Res: Iir;
       Inter_List: Iir;
@@ -1274,15 +1282,13 @@ package body Sem_Expr is
       Assoc_Chain : Iir;
       Match : Boolean;
    begin
-      Is_Func := Get_Kind (Expr) = Iir_Kind_Function_Call;
-
       if Is_Func then
          Res_Type := Get_Type (Expr);
       end if;
 
       if not Is_Func or else Res_Type = Null_Iir then
          -- First call to sem_subprogram_call.
-         -- Create the list of possible implementation and possible
+         -- Create the list of possible implementations and possible
          -- return types, according to arguments and A_TYPE.
 
          -- Select possible interpretations among all interpretations.
@@ -1292,25 +1298,25 @@ package body Sem_Expr is
          Inter_List := Get_Implementation (Expr);
          if Get_Kind (Inter_List) = Iir_Kind_Error then
             return Null_Iir;
-         end if;
-         if Is_Overload_List (Inter_List) then
+         elsif Is_Overload_List (Inter_List) then
+            --  Subprogram name is overloaded.
             return Sem_Subprogram_Call_Stage1 (Expr, A_Type, Is_Func);
          else
+            --  Only one interpretation for the subprogram name.
             if Is_Func then
                if Get_Kind (Inter_List) not in Iir_Kinds_Function_Declaration
                then
-                  Error_Msg_Sem ("identifier is not a function", Expr);
+                  Error_Msg_Sem ("name does not designate a function", Expr);
                   return Null_Iir;
                end if;
             else
                if Get_Kind (Inter_List) not in Iir_Kinds_Procedure_Declaration
-                 and then Get_Kind (Inter_List) /=
-                 Iir_Kind_Implicit_Procedure_Declaration
                then
                   Error_Msg_Sem ("name does not designate a procedure", Expr);
                   return Null_Iir;
                end if;
             end if;
+
             Assoc_Chain := Get_Parameter_Association_Chain (Expr);
             Param_Chain := Get_Interface_Declaration_Chain (Inter_List);
             Sem_Association_Chain
@@ -1331,11 +1337,9 @@ package body Sem_Expr is
          end if;
       end if;
 
-      if Is_Func and then A_Type = Null_Iir then
-         -- Impossible case: second call to sem_function_call, without
-         -- A_TYPE set.
-         raise Internal_Error;
-      end if;
+      --  Second call to Sem_Function_Call (only for functions).
+      pragma Assert (Is_Func);
+      pragma Assert (A_Type /= Null_Iir);
 
       -- The implementation list was set.
       -- The return type was set.
@@ -1345,50 +1349,39 @@ package body Sem_Expr is
 
       -- Find a single implementation.
       Res := Null_Iir;
-      if Is_Func then
-         if Is_Overload_List (Inter_List) then
-            -- INTER_LIST is a list of possible declaration to call.
-            -- Find one, based on the return type A_TYPE.
-            for I in Natural loop
-               Inter := Get_Nth_Element (Get_Overload_List (Inter_List), I);
-               exit when Inter = Null_Iir;
-               if Are_Basetypes_Compatible
-                 (A_Type, Get_Base_Type (Get_Return_Type (Inter)))
-               then
-                  if Res /= Null_Iir then
-                     Error_Overload (Expr);
-                     Disp_Overload_List (Get_Overload_List (Inter_List), Expr);
-                     return Null_Iir;
-                  else
-                     Res := Inter;
-                  end if;
-               end if;
-            end loop;
-         else
+      if Is_Overload_List (Inter_List) then
+         -- INTER_LIST is a list of possible declaration to call.
+         -- Find one, based on the return type A_TYPE.
+         for I in Natural loop
+            Inter := Get_Nth_Element (Get_Overload_List (Inter_List), I);
+            exit when Inter = Null_Iir;
             if Are_Basetypes_Compatible
-              (Get_Base_Type (Get_Return_Type (Inter_List)), A_Type)
+              (A_Type, Get_Base_Type (Get_Return_Type (Inter)))
             then
-               Res := Inter_List;
+               if Res /= Null_Iir then
+                  Error_Overload (Expr);
+                  Disp_Overload_List (Get_Overload_List (Inter_List), Expr);
+                  return Null_Iir;
+               else
+                  Res := Inter;
+               end if;
             end if;
-         end if;
-         if Res = Null_Iir then
-            Not_Match (Expr, A_Type);
-            return Null_Iir;
-         end if;
-
-         -- Clean up.
-         if Res_Type /= Null_Iir and then Is_Overload_List (Res_Type) then
-            Free_Iir (Res_Type);
-         end if;
+         end loop;
       else
-         -- a procedure call.
-         if Is_Overload_List (Inter_List) then
-            Error_Overload (Expr);
-            Disp_Overload_List (Get_Overload_List (Inter_List), Expr);
-            return Null_Iir;
-         else
+         if Are_Basetypes_Compatible
+           (A_Type, Get_Base_Type (Get_Return_Type (Inter_List)))
+         then
             Res := Inter_List;
          end if;
+      end if;
+      if Res = Null_Iir then
+         Not_Match (Expr, A_Type);
+         return Null_Iir;
+      end if;
+
+      -- Clean up.
+      if Res_Type /= Null_Iir and then Is_Overload_List (Res_Type) then
+         Free_Iir (Res_Type);
       end if;
 
       if Is_Overload_List (Inter_List) then
@@ -1403,9 +1396,7 @@ package body Sem_Expr is
       end if;
 
       -- Set types.
-      if Is_Func then
-         Set_Type (Expr, Get_Return_Type (Res));
-      end if;
+      Set_Type (Expr, Get_Return_Type (Res));
       Assoc_Chain := Get_Parameter_Association_Chain (Expr);
       Param_Chain := Get_Interface_Declaration_Chain (Res);
       Sem_Association_Chain
@@ -1803,18 +1794,6 @@ package body Sem_Expr is
                --  The return type is known.
                --  Search for explicit subprogram.
 
-               --  LRM08 12.4 Use clause
-               --  b) If two potentially visible declarations are homograph
-               --     and one is explicitly declared and the other is
-               --     implicitly declared, then the implicit declaration is not
-               --     made directly visible.
-               if Flags.Flag_Explicit or else Flags.Vhdl_Std >= Vhdl_08 then
-                  Decl := Get_Explicit_Subprogram (Overload_List);
-                  if Decl /= Null_Iir then
-                     return Set_Uniq_Interpretation (Decl);
-                  end if;
-               end if;
-
                --  It was impossible to find one solution.
                Error_Operator_Overload (Overload_List);
 
@@ -1826,7 +1805,7 @@ package body Sem_Expr is
                   Decl := Get_Explicit_Subprogram (Overload_List);
                   if Decl /= Null_Iir then
                      Error_Msg_Sem
-                       ("(you may like to use the -fexplicit option)", Expr);
+                       ("(you may want to use the -fexplicit option)", Expr);
                      Explicit_Advice_Given := True;
                   end if;
                end if;
@@ -4016,7 +3995,9 @@ package body Sem_Expr is
       Res : Iir;
    begin
       Res := Sem_Expression_Ov (Expr, Null_Iir);
-      if Is_Overloaded (Res) then
+      if Res = Null_Iir or else Get_Type (Res) = Null_Iir then
+         return Res;
+      elsif Is_Overload_List (Get_Type (Res)) then
          declare
             List : constant Iir_List := Get_Overload_List (Get_Type (Res));
             Res_Type : Iir;

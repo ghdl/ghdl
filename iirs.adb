@@ -525,11 +525,11 @@ package body Iirs is
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
+           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_File_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Signal_Declaration
@@ -1871,11 +1871,11 @@ package body Iirs is
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
+           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_File_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Signal_Declaration
@@ -2155,11 +2155,11 @@ package body Iirs is
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
-           | Iir_Kind_Function_Body
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_File_Declaration
@@ -2249,6 +2249,7 @@ package body Iirs is
       case Get_Kind (Target) is
          when Iir_Kind_Block_Header
            | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Header
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Function_Declaration
@@ -2290,8 +2291,6 @@ package body Iirs is
            | Iir_Kind_Record_Element_Constraint
            | Iir_Kind_Disconnection_Specification
            | Iir_Kind_Range_Expression
-           | Iir_Kind_Type_Declaration
-           | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Attribute_Declaration
@@ -2299,9 +2298,9 @@ package body Iirs is
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
+           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
-           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Guard_Signal_Declaration
@@ -2427,6 +2426,29 @@ package body Iirs is
       Check_Kind_For_Type (Target);
       Set_Field1 (Target, Atype);
    end Set_Type;
+
+   procedure Check_Kind_For_Type_Definition (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Type_Declaration
+           | Iir_Kind_Anonymous_Type_Declaration =>
+            null;
+         when others =>
+            Failed ("Type_Definition", Target);
+      end case;
+   end Check_Kind_For_Type_Definition;
+
+   function Get_Type_Definition (Decl : Iir) return Iir is
+   begin
+      Check_Kind_For_Type_Definition (Decl);
+      return Get_Field1 (Decl);
+   end Get_Type_Definition;
+
+   procedure Set_Type_Definition (Decl : Iir; Atype : Iir) is
+   begin
+      Check_Kind_For_Type_Definition (Decl);
+      Set_Field1 (Decl, Atype);
+   end Set_Type_Definition;
 
    procedure Check_Kind_For_Subtype_Definition (Target : Iir) is
    begin
@@ -2750,11 +2772,11 @@ package body Iirs is
    procedure Check_Kind_For_Subprogram_Hash (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Function_Declaration
+         when Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
-           | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Enumeration_Literal =>
+           | Iir_Kind_Procedure_Declaration =>
             null;
          when others =>
             Failed ("Subprogram_Hash", Target);
@@ -2800,9 +2822,9 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Signature
+           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
-           | Iir_Kind_Implicit_Function_Declaration
-           | Iir_Kind_Enumeration_Literal =>
+           | Iir_Kind_Implicit_Function_Declaration =>
             null;
          when others =>
             Failed ("Return_Type", Target);
@@ -3451,11 +3473,11 @@ package body Iirs is
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
+           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Guard_Signal_Declaration
@@ -3587,11 +3609,11 @@ package body Iirs is
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
+           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Guard_Signal_Declaration
@@ -4598,11 +4620,11 @@ package body Iirs is
    procedure Check_Kind_For_Seen_Flag (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Function_Declaration
+         when Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement =>
             null;
@@ -5524,13 +5546,13 @@ package body Iirs is
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
-           | Iir_Kind_Function_Body
+           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
-           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Guard_Signal_Declaration
@@ -7015,11 +7037,11 @@ package body Iirs is
       case Get_Kind (Target) is
          when Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Block_Statement

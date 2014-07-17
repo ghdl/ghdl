@@ -338,4 +338,85 @@ package body Grt.Vstrings is
       Last := P - 1;
    end To_String;
 
+   procedure To_String (Str : out String_Real_Digits;
+                        Last : out Natural;
+                        N : Ghdl_F64;
+                        Nbr_Digits : Ghdl_I32)
+   is
+      procedure Snprintf_Nf (Str : in out String;
+                             Len : Natural;
+                             Ndigits : Ghdl_I32;
+                             V : Ghdl_F64);
+      pragma Import (C, Snprintf_Nf, "__ghdl_snprintf_nf");
+   begin
+      Snprintf_Nf (Str, Str'Length, Nbr_Digits, N);
+      Last := strlen (To_Ghdl_C_String (Str'Address));
+   end To_String;
+
+   procedure To_String (Str : out String_Real_Digits;
+                        Last : out Natural;
+                        N : Ghdl_F64;
+                        Format : Ghdl_C_String)
+   is
+      procedure Snprintf_Fmtf (Str : in out String;
+                               Len : Natural;
+                               Format : Ghdl_C_String;
+                               V : Ghdl_F64);
+      pragma Import (C, Snprintf_Fmtf, "__ghdl_snprintf_fmtf");
+   begin
+      --  FIXME: check format ('%', f/g/e/a)
+      Snprintf_Fmtf (Str, Str'Length, Format, N);
+      Last := strlen (To_Ghdl_C_String (Str'Address));
+   end To_String;
+
+   procedure To_String (Str : out String_Time_Unit;
+                        First : out Natural;
+                        Value : Ghdl_I64;
+                        Unit : Ghdl_I64)
+   is
+      V, U : Ghdl_I64;
+      D : Natural;
+      P : Natural := Str'Last;
+      Has_Digits : Boolean;
+   begin
+      --  Always work on negative values.
+      if Value > 0 then
+         V := -Value;
+      else
+         V := Value;
+      end if;
+
+      Has_Digits := False;
+      U := Unit;
+      loop
+         if U = 1 then
+            if Has_Digits then
+               Str (P) := '.';
+               P := P - 1;
+            else
+               Has_Digits := True;
+            end if;
+         end if;
+
+         D := Natural (-(V rem 10));
+         if D /= 0 or else Has_Digits then
+            Str (P) := Character'Val (48 + D);
+            P := P - 1;
+            Has_Digits := True;
+         end if;
+         U := U / 10;
+         V := V / 10;
+         exit when V = 0 and then U = 0;
+      end loop;
+      if not Has_Digits then
+         Str (P) := '0';
+      else
+         P := P + 1;
+      end if;
+      if Value < 0 then
+         P := P - 1;
+         Str (P) := '-';
+      end if;
+      First := P;
+   end To_String;
 end Grt.Vstrings;

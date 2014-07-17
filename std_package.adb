@@ -185,6 +185,18 @@ package body Std_Package is
          end loop;
       end Add_Implicit_Operations;
 
+      procedure Create_Std_Type (Decl : out Iir;
+                                 Def : Iir;
+                                 Name : Name_Id)
+      is
+      begin
+         Decl := Create_Std_Decl (Iir_Kind_Type_Declaration);
+         Set_Std_Identifier (Decl, Name);
+         Set_Type_Definition (Decl, Def);
+         Add_Decl (Decl);
+         Set_Type_Declarator (Def, Decl);
+      end Create_Std_Type;
+
       procedure Create_Integer_Type (Type_Definition : Iir;
                                      Type_Decl : out Iir;
                                      Type_Name : Name_Id)
@@ -199,7 +211,7 @@ package body Std_Package is
 
          Type_Decl := Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
          Set_Identifier (Type_Decl, Type_Name);
-         Set_Type (Type_Decl, Type_Definition);
+         Set_Type_Definition (Type_Decl, Type_Definition);
          Set_Type_Declarator (Type_Definition, Type_Decl);
       end Create_Integer_Type;
 
@@ -249,11 +261,7 @@ package body Std_Package is
          Set_Signal_Type_Flag (Def, True);
          Set_Has_Signal_Flag (Def, not Flags.Flag_Whole_Analyze);
 
-         Decl := Create_Std_Decl (Iir_Kind_Type_Declaration);
-         Set_Std_Identifier (Decl, Name);
-         Set_Type (Decl, Def);
-         Add_Decl (Decl);
-         Set_Type_Declarator (Def, Decl);
+         Create_Std_Type (Decl, Def, Name);
 
          Add_Implicit_Operations (Decl);
       end Create_Array_Type;
@@ -378,11 +386,7 @@ package body Std_Package is
                               not Flags.Flag_Whole_Analyze);
 
          -- type boolean is
-         Boolean_Type := Create_Std_Decl (Iir_Kind_Type_Declaration);
-         Set_Std_Identifier (Boolean_Type, Name_Boolean);
-         Set_Type (Boolean_Type, Boolean_Type_Definition);
-         Add_Decl (Boolean_Type);
-         Set_Type_Declarator (Boolean_Type_Definition, Boolean_Type);
+         Create_Std_Type (Boolean_Type, Boolean_Type_Definition, Name_Boolean);
 
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (Boolean_Type_Definition);
@@ -418,11 +422,7 @@ package body Std_Package is
          Set_Only_Characters_Flag (Bit_Type_Definition, True);
 
          -- type bit is
-         Bit_Type := Create_Std_Decl (Iir_Kind_Type_Declaration);
-         Set_Std_Identifier (Bit_Type, Name_Bit);
-         Set_Type (Bit_Type, Bit_Type_Definition);
-         Add_Decl (Bit_Type);
-         Set_Type_Declarator (Bit_Type_Definition, Bit_Type);
+         Create_Std_Type (Bit_Type, Bit_Type_Definition, Name_Bit);
 
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (Bit_Type_Definition);
@@ -473,12 +473,8 @@ package body Std_Package is
                               not Flags.Flag_Whole_Analyze);
 
          -- type character is
-         Character_Type := Create_Std_Decl (Iir_Kind_Type_Declaration);
-         Set_Std_Identifier (Character_Type, Name_Character);
-         Set_Type (Character_Type, Character_Type_Definition);
-         Add_Decl (Character_Type);
-         Set_Type_Declarator (Character_Type_Definition,
-                              Character_Type);
+         Create_Std_Type (Character_Type, Character_Type_Definition,
+                          Name_Character);
 
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (Character_Type_Definition);
@@ -509,12 +505,8 @@ package body Std_Package is
                               not Flags.Flag_Whole_Analyze);
 
          -- type severity_level is
-         Severity_Level_Type := Create_Std_Decl (Iir_Kind_Type_Declaration);
-         Set_Std_Identifier (Severity_Level_Type, Name_Severity_Level);
-         Set_Type (Severity_Level_Type, Severity_Level_Type_Definition);
-         Add_Decl (Severity_Level_Type);
-         Set_Type_Declarator (Severity_Level_Type_Definition,
-                              Severity_Level_Type);
+         Create_Std_Type (Severity_Level_Type, Severity_Level_Type_Definition,
+                          Name_Severity_Level);
 
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (Severity_Level_Type_Definition);
@@ -558,7 +550,8 @@ package body Std_Package is
          Universal_Real_Type :=
            Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
          Set_Identifier (Universal_Real_Type, Name_Universal_Real);
-         Set_Type (Universal_Real_Type, Universal_Real_Type_Definition);
+         Set_Type_Definition (Universal_Real_Type,
+                              Universal_Real_Type_Definition);
          Set_Type_Declarator (Universal_Real_Type_Definition,
                               Universal_Real_Type);
          Add_Decl (Universal_Real_Type);
@@ -580,7 +573,8 @@ package body Std_Package is
          Universal_Real_Subtype :=
            Create_Std_Decl (Iir_Kind_Subtype_Declaration);
          Set_Identifier (Universal_Real_Subtype, Name_Universal_Real);
-         Set_Type (Universal_Real_Subtype, Universal_Real_Subtype_Definition);
+         Set_Type (Universal_Real_Subtype,
+                   Universal_Real_Subtype_Definition);
          Set_Type_Declarator (Universal_Real_Subtype_Definition,
                               Universal_Real_Subtype);
          Set_Subtype_Definition (Universal_Real_Type,
@@ -615,7 +609,8 @@ package body Std_Package is
          Convertible_Real_Type :=
            Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
          Set_Identifier (Convertible_Real_Type, Name_Convertible_Real);
-         Set_Type (Convertible_Real_Type, Convertible_Real_Type_Definition);
+         Set_Type_Definition (Convertible_Real_Type,
+                              Convertible_Real_Type_Definition);
          Set_Type_Declarator (Convertible_Real_Type_Definition,
                               Convertible_Real_Type);
       end;
@@ -654,7 +649,7 @@ package body Std_Package is
 
          Real_Type := Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
          Set_Identifier (Real_Type, Name_Real);
-         Set_Type (Real_Type, Real_Type_Definition);
+         Set_Type_Definition (Real_Type, Real_Type_Definition);
          Set_Type_Declarator (Real_Type_Definition, Real_Type);
          Add_Decl (Real_Type);
 
@@ -770,7 +765,7 @@ package body Std_Package is
          --  type is
          Time_Type := Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
          Set_Identifier (Time_Type, Name_Time);
-         Set_Type (Time_Type, Time_Type_Definition);
+         Set_Type_Definition (Time_Type, Time_Type_Definition);
          Set_Type_Declarator (Time_Type_Definition, Time_Type);
          Add_Decl (Time_Type);
 
@@ -948,11 +943,7 @@ package body Std_Package is
          Set_Has_Signal_Flag (String_Type_Definition,
                               not Flags.Flag_Whole_Analyze);
 
-         String_Type := Create_Std_Decl (Iir_Kind_Type_Declaration);
-         Set_Std_Identifier (String_Type, Name_String);
-         Set_Type (String_Type, String_Type_Definition);
-         Add_Decl (String_Type);
-         Set_Type_Declarator (String_Type_Definition, String_Type);
+         Create_Std_Type (String_Type, String_Type_Definition, Name_String);
 
          Add_Implicit_Operations (String_Type);
       end;
@@ -1023,12 +1014,9 @@ package body Std_Package is
                               not Flags.Flag_Whole_Analyze);
 
          --  type file_open_kind is
-         File_Open_Kind_Type := Create_Std_Decl (Iir_Kind_Type_Declaration);
-         Set_Std_Identifier (File_Open_Kind_Type, Name_File_Open_Kind);
-         Set_Type (File_Open_Kind_Type, File_Open_Kind_Type_Definition);
-         Add_Decl (File_Open_Kind_Type);
-         Set_Type_Declarator (File_Open_Kind_Type_Definition,
-                              File_Open_Kind_Type);
+         Create_Std_Type (File_Open_Kind_Type, File_Open_Kind_Type_Definition,
+                          Name_File_Open_Kind);
+
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (File_Open_Kind_Type_Definition);
          Add_Implicit_Operations (File_Open_Kind_Type);
@@ -1065,12 +1053,9 @@ package body Std_Package is
                               not Flags.Flag_Whole_Analyze);
 
          --  type file_open_kind is
-         File_Open_Status_Type := Create_Std_Decl (Iir_Kind_Type_Declaration);
-         Set_Std_Identifier (File_Open_Status_Type, Name_File_Open_Status);
-         Set_Type (File_Open_Status_Type, File_Open_Status_Type_Definition);
-         Add_Decl (File_Open_Status_Type);
-         Set_Type_Declarator (File_Open_Status_Type_Definition,
-                              File_Open_Status_Type);
+         Create_Std_Type (File_Open_Status_Type,
+                          File_Open_Status_Type_Definition,
+                          Name_File_Open_Status);
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (File_Open_Status_Type_Definition);
          Add_Implicit_Operations (File_Open_Status_Type);

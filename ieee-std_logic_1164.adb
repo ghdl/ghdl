@@ -19,6 +19,7 @@ with Types; use Types;
 with Std_Names; use Std_Names;
 with Errorout; use Errorout;
 with Std_Package;
+with Iirs_Utils; use Iirs_Utils;
 
 package body Ieee.Std_Logic_1164 is
    function Skip_Implicit (Decl : Iir) return Iir
@@ -62,7 +63,7 @@ package body Ieee.Std_Logic_1164 is
          raise Error;
       end if;
 
-      Def := Get_Type (Decl);
+      Def := Get_Type_Definition (Decl);
       if Get_Kind (Def) /= Iir_Kind_Enumeration_Type_Definition then
          raise Error;
       end if;
@@ -77,7 +78,7 @@ package body Ieee.Std_Logic_1164 is
       then
          raise Error;
       end if;
-      Def := Get_Type (Decl);
+      Def := Get_Type_Definition (Decl);
       if Get_Kind (Def) /= Iir_Kind_Array_Type_Definition then
          raise Error;
       end if;
@@ -119,7 +120,7 @@ package body Ieee.Std_Logic_1164 is
       then
          raise Error;
       end if;
-      Def := Get_Type (Decl);
+      Def := Get_Type_Of_Type_Mark (Decl);
 --      if Get_Kind (Def) /= Iir_Kind_Array_Type_Definition then
 --         raise Error;
 --      end if;

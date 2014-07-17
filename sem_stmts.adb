@@ -711,6 +711,12 @@ package body Sem_Stmts is
          Set_Expression (Stmt, Expr);
          Target_Type := Get_Type (Expr);
 
+         --  An aggregate cannot be analyzed without a type.
+         --  FIXME: partially analyze the aggregate ?
+         if Target_Type = Null_Iir then
+            return;
+         end if;
+
          --  FIXME: check elements are identified at most once.
       else
          Target_Type := Null_Iir;
