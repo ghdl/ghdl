@@ -1309,7 +1309,7 @@ package body Ieee.Vital_Timing is
       Value : Iir_Attribute_Value;
       Spec : Iir_Attribute_Specification;
    begin
-      Value := Get_Attribute_Value_Chain (Unit);
+      Value := Get_Attribute_Value_Chain (Get_Library_Unit (Unit));
       while Value /= Null_Iir loop
          Spec := Get_Attribute_Specification (Value);
          if Get_Attribute_Designator (Spec) = Vital_Level0_Attribute then

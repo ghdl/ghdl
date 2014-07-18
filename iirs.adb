@@ -1856,8 +1856,7 @@ package body Iirs is
    procedure Check_Kind_For_Attribute_Value_Chain (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Design_Unit
-           | Iir_Kind_Type_Declaration
+         when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration

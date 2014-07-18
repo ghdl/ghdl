@@ -11521,9 +11521,11 @@ package body Translation is
          Base_Block : Iir;
          Entity : Iir)
       is
+         Formal : constant Iir := Get_Formal (Assoc);
+         Actual : constant Iir := Get_Actual (Assoc);
+
          Mark2, Mark3 : Id_Mark_Type;
          Inter_List : O_Inter_List;
-         Formal, Actual : Iir;
          In_Type, Out_Type : Iir;
          In_Info, Out_Info : Type_Info_Acc;
          Itype : O_Tnode;
@@ -11542,12 +11544,9 @@ package body Translation is
          Constr : O_Assoc_List;
          Subprg_Info : Subprg_Info_Acc;
          Res : Mnode;
-         Res_Info : Type_Info_Acc;
          Imp : Iir;
+         Func : Iir;
       begin
-         Formal := Get_Formal (Assoc);
-         Actual := Get_Actual (Assoc);
-
          case Mode is
             when Conv_Mode_In =>
                --  IN: from actual to formal.
@@ -11690,13 +11689,14 @@ package body Translation is
 
          case Get_Kind (Imp) is
             when Iir_Kind_Function_Call =>
-               Imp := Get_Implementation (Imp);
+               Func := Get_Implementation (Imp);
                R := Chap7.Translate_Implicit_Conv
-                 (R, In_Type, Get_Type (Get_Interface_Declaration_Chain (Imp)),
+                 (R, In_Type,
+                  Get_Type (Get_Interface_Declaration_Chain (Func)),
                   Mode_Value, Assoc);
 
                --  Create result value.
-               Subprg_Info := Get_Info (Imp);
+               Subprg_Info := Get_Info (Func);
 
                if Subprg_Info.Use_Stack2 then
                   Create_Temp_Stack2_Mark;
@@ -11706,11 +11706,9 @@ package body Translation is
                   --  Composite result.
                   --  If we need to allocate, do it before starting the call!
                   declare
-                     Res_Type : Iir;
-                     Res_Info : Type_Info_Acc;
+                     Res_Type : constant Iir := Get_Return_Type (Func);
+                     Res_Info : constant Type_Info_Acc := Get_Info (Res_Type);
                   begin
-                     Res_Type := Get_Return_Type (Imp);
-                     Res_Info := Get_Info (Res_Type);
                      Res := Create_Temp (Res_Info);
                      if Res_Info.Type_Mode /= Type_Mode_Fat_Array then
                         Chap4.Allocate_Complex_Object
@@ -11732,23 +11730,29 @@ package body Translation is
 
                New_Association (Constr, R);
 
-               Res_Info := Get_Info (Get_Return_Type (Imp));
                if Subprg_Info.Res_Interface /= O_Dnode_Null then
                   --  Composite result.
                   New_Procedure_Call (Constr);
+                  E := M2E (Res);
                else
-                  Res := E2M (New_Function_Call (Constr),
-                              Res_Info, Mode_Value);
+                  E := New_Function_Call (Constr);
                end if;
+               Res := E2M
+                 (Chap7.Translate_Implicit_Conv
+                    (E, Get_Return_Type (Func),
+                     Out_Type, Mode_Value, Imp),
+                  Get_Info (Out_Type), Mode_Value);
 
             when Iir_Kind_Type_Conversion =>
                declare
                   Conv_Type : Iir;
                begin
                   Conv_Type := Get_Type (Imp);
-                  Res := E2M (Chap7.Translate_Type_Conversion
-                              (R, In_Type, Conv_Type, Assoc),
-                              Get_Info (Conv_Type), Mode_Value);
+                  E := Chap7.Translate_Type_Conversion
+                    (R, In_Type, Conv_Type, Assoc);
+                  E := Chap7.Translate_Implicit_Conv
+                    (E, Conv_Type, Out_Type, Mode_Value, Imp);
+                  Res := E2M (E, Get_Info (Out_Type), Mode_Value);
                end;
 
             when others =>

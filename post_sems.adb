@@ -24,7 +24,7 @@ with Flags; use Flags;
 package body Post_Sems is
    procedure Post_Sem_Checks (Unit : Iir_Design_Unit)
    is
-      Lib_Unit : Iir;
+      Lib_Unit : constant Iir := Get_Library_Unit (Unit);
       Lib : Iir_Library_Declaration;
       Id : Name_Id;
 
@@ -32,7 +32,11 @@ package body Post_Sems is
       Spec : Iir_Attribute_Specification;
       Attr_Decl : Iir_Attribute_Declaration;
    begin
-      Lib_Unit := Get_Library_Unit (Unit);
+      --  No checks on package bodies.
+      if Get_Kind (Lib_Unit) = Iir_Kind_Package_Body then
+         return;
+      end if;
+
       Id := Get_Identifier (Lib_Unit);
       Lib := Get_Library (Get_Design_File (Unit));
 
@@ -49,7 +53,7 @@ package body Post_Sems is
 
       --  Look for VITAL attributes.
       if Flag_Vital_Checks then
-         Value := Get_Attribute_Value_Chain (Unit);
+         Value := Get_Attribute_Value_Chain (Lib_Unit);
          while Value /= Null_Iir loop
             Spec := Get_Attribute_Specification (Value);
             Attr_Decl := Get_Attribute_Designator (Spec);

@@ -146,8 +146,6 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    -- Get/Set the library unit, which can be an entity, an architecture,
    -- a package, a package body or a configuration.
    --   Get/Set_Library_Unit (Field5)
