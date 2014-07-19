@@ -1207,7 +1207,7 @@ package body Sem_Scopes is
    procedure Extend_Scope_Of_Block_Declarations (Decl : Iir) is
    begin
       case Get_Kind (Decl) is
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Add_Context_Clauses (Get_Design_Unit (Decl));
          when Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement =>

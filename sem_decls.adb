@@ -1663,7 +1663,7 @@ package body Sem_Decls is
             --  shared data.
             case Get_Kind (Parent) is
                when Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Architecture_Declaration
+                 | Iir_Kind_Architecture_Body
                  | Iir_Kind_Package_Declaration
                  | Iir_Kind_Package_Body
                  | Iir_Kind_Block_Statement
@@ -2825,7 +2825,7 @@ package body Sem_Decls is
             when Iir_Kind_Entity_Declaration =>
                --  May be used in architecture.
                null;
-            when Iir_Kind_Architecture_Declaration
+            when Iir_Kind_Architecture_Body
               | Iir_Kind_Block_Statement
               | Iir_Kind_Generate_Statement =>
                --  Might be used in a configuration.

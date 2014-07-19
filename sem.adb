@@ -139,7 +139,7 @@ package body Sem is
    end Sem_Entity_Name;
 
    --  LRM 1.2  Architecture bodies.
-   procedure Sem_Architecture_Declaration (Arch: Iir_Architecture_Declaration)
+   procedure Sem_Architecture_Body (Arch: Iir_Architecture_Body)
    is
       Entity_Unit : Iir_Design_Unit;
       Entity_Library : Iir_Entity_Declaration;
@@ -202,7 +202,7 @@ package body Sem is
       Close_Declarative_Region;
       Set_Is_Within_Flag (Arch, False);
       Set_Is_Within_Flag (Entity_Library, False);
-   end Sem_Architecture_Declaration;
+   end Sem_Architecture_Body;
 
    --  Return the real resolver used for (sub) object OBJ.
    --  Return NULL_IIR if none.
@@ -656,7 +656,7 @@ package body Sem is
             --  entity name of the enclosing configuration declaration.
             declare
                Block_Spec : Iir;
-               Arch : Iir_Architecture_Declaration;
+               Arch : Iir_Architecture_Body;
                Design: Iir_Design_Unit;
             begin
                Block_Spec := Get_Block_Specification (Block_Conf);
@@ -698,7 +698,7 @@ package body Sem is
             --  that to which the corresponding components are bound.
             declare
                Block_Spec : Iir;
-               Arch : Iir_Architecture_Declaration;
+               Arch : Iir_Architecture_Body;
                Design: Iir_Design_Unit;
                Entity_Aspect : Iir;
                Comp_Arch : Iir;
@@ -2571,8 +2571,8 @@ package body Sem is
       case Get_Kind (El) is
          when Iir_Kind_Entity_Declaration =>
             Sem_Entity_Declaration (El);
-         when Iir_Kind_Architecture_Declaration =>
-            Sem_Architecture_Declaration (El);
+         when Iir_Kind_Architecture_Body =>
+            Sem_Architecture_Body (El);
          when Iir_Kind_Package_Declaration =>
             Sem_Package_Declaration (El);
          when Iir_Kind_Package_Body =>

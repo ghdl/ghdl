@@ -78,7 +78,7 @@ package body Sim_Be is
       end if;
 
       if Flags.Flag_Elaborate then
-         if Get_Kind (Lib_Unit) = Iir_Kind_Architecture_Declaration then
+         if Get_Kind (Lib_Unit) = Iir_Kind_Architecture_Body then
             declare
                Config : Iir_Design_Unit;
             begin

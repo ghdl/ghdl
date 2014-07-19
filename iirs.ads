@@ -52,7 +52,7 @@ package Iirs is
    --       +-- design_unit
    --       |   +-- entity_declaration
    --       +-- design_unit
-   --           +-- architecture_declaration
+   --           +-- architecture_body
    -- ...
 
    -- Since the tree can represent all the libraries and their contents, it
@@ -624,7 +624,7 @@ package Iirs is
    --
    --   Get/Set_Is_Within_Flag (Flag5)
 
-   -- Iir_Kind_Architecture_Declaration (Medium)
+   -- Iir_Kind_Architecture_Body (Medium)
    --
    --   Get/Set_Parent (Field0)
    --   Get/Set_Design_Unit (Alias Field0)
@@ -2857,7 +2857,7 @@ package Iirs is
        Iir_Kind_Entity_Declaration,             -- Library_Unit
        Iir_Kind_Package_Declaration,            -- Library_Unit
        Iir_Kind_Package_Body,                   -- Library_Unit
-       Iir_Kind_Architecture_Declaration,       -- Library_Unit
+       Iir_Kind_Architecture_Body,              -- Library_Unit
        Iir_Kind_Package_Instantiation_Declaration,
        Iir_Kind_Package_Header,
        Iir_Kind_Unit_Declaration,
@@ -3454,7 +3454,7 @@ package Iirs is
    --Iir_Kind_Entity_Declaration
    --Iir_Kind_Package_Declaration
    --Iir_Kind_Package_Body
-   --Iir_Kind_Architecture_Declaration
+   --Iir_Kind_Architecture_Body
      Iir_Kind_Package_Instantiation_Declaration;
 
    --  Note: does not include iir_kind_enumeration_literal since it is
@@ -3827,7 +3827,7 @@ package Iirs is
    --Iir_Kind_Entity_Declaration
    --Iir_Kind_Package_Declaration
    --Iir_Kind_Package_Body
-   --Iir_Kind_Architecture_Declaration
+   --Iir_Kind_Architecture_Body
    --Iir_Kind_Package_Instantiation_Declaration
    --Iir_Kind_Package_Header
    --Iir_Kind_Unit_Declaration
@@ -4103,9 +4103,9 @@ package Iirs is
    -- Declaration and children.
    subtype Iir_Entity_Declaration is Iir;
 
-   subtype Iir_Signal_Interface_Declaration is Iir;
+   subtype Iir_Architecture_Body is Iir;
 
-   subtype Iir_Architecture_Declaration is Iir;
+   subtype Iir_Signal_Interface_Declaration is Iir;
 
    subtype Iir_Configuration_Declaration is Iir;
 

@@ -3250,7 +3250,7 @@ package body Parse is
                --  FIXME: remove this message (already checked during sem).
                case Get_Kind (Parent) is
                   when Iir_Kind_Entity_Declaration
-                    | Iir_Kind_Architecture_Declaration
+                    | Iir_Kind_Architecture_Body
                     | Iir_Kind_Block_Statement
                     | Iir_Kind_Package_Declaration
                     | Iir_Kind_Package_Body =>
@@ -5954,10 +5954,10 @@ package body Parse is
    --      END [ ARCHITECTURE ] [ ARCHITECTURE_simple_name ] ;
    procedure Parse_Architecture (Unit : Iir_Design_Unit)
    is
-      Res: Iir_Architecture_Declaration;
+      Res: Iir_Architecture_Body;
    begin
       Expect (Tok_Architecture);
-      Res := Create_Iir (Iir_Kind_Architecture_Declaration);
+      Res := Create_Iir (Iir_Kind_Architecture_Body);
 
       -- Get identifier.
       Scan_Expect (Tok_Identifier);

@@ -2748,7 +2748,7 @@ package body Execution is
                   Prepend (Rstr, Image (Get_Identifier (Instance.Label)));
                   exit;
                end if;
-            when Iir_Kind_Architecture_Declaration =>
+            when Iir_Kind_Architecture_Body =>
                if Is_Instance then
                   Prepend (Rstr, ')');
                   Prepend (Rstr, Image (Get_Identifier (Instance.Label)));

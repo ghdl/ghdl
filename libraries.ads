@@ -159,7 +159,7 @@ package Libraries is
 
    -- Return the latest architecture analysed for entity ENTITY.
    function Get_Latest_Architecture (Entity: Iir_Entity_Declaration)
-     return Iir_Architecture_Declaration;
+                                    return Iir_Architecture_Body;
 
    --  Return the design unit (stubed if not loaded) from UNIT.
    --  UNIT may be either a design unit, in this case UNIT is returned,

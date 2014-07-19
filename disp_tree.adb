@@ -207,8 +207,8 @@ package body Disp_Tree is
          when Iir_Kind_Entity_Declaration =>
             Put ("entity_declaration");
             Disp_Identifier (Tree);
-         when Iir_Kind_Architecture_Declaration =>
-            Put ("architecture_declaration");
+         when Iir_Kind_Architecture_Body =>
+            Put ("architecture_body");
             Disp_Identifier (Tree);
          when Iir_Kind_Configuration_Declaration =>
             Put ("configuration_declaration");
@@ -704,7 +704,7 @@ package body Disp_Tree is
             Disp_Tree_Chain (Get_Generic_Chain (Tree), Ntab);
             Header ("generic map aspect chain:");
             Disp_Tree_Chain (Get_Generic_Map_Aspect_Chain (Tree), Ntab);
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             if Flat_Decl then
                return;
             end if;

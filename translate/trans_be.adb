@@ -93,7 +93,7 @@ package body Trans_Be is
       end if;
 
       if Flags.Flag_Elaborate then
-         if Get_Kind (Lib) = Iir_Kind_Architecture_Declaration then
+         if Get_Kind (Lib) = Iir_Kind_Architecture_Body then
             declare
                Config : Iir_Design_Unit;
             begin
@@ -135,7 +135,7 @@ package body Trans_Be is
       pragma Unreferenced (Fi);
    begin
       case Get_Kind (Decl) is
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Error_Msg_Sem ("FOREIGN architectures are not yet handled", Decl);
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Declaration =>

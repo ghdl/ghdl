@@ -565,7 +565,7 @@ package body Ghdlprint is
                null;
             when Iir_Kind_Package_Body =>
                Len := Len + 1 + 4; -- add -body
-            when Iir_Kind_Architecture_Declaration =>
+            when Iir_Kind_Architecture_Body =>
                Id1 := Get_Identifier (Get_Entity (Lib));
                Len := Len + 1 + Get_Name_Length (Id1);
             when others =>
@@ -598,7 +598,7 @@ package body Ghdlprint is
                Image (Id);
                Append (Name_Buffer (1 .. Name_Length));
                Append ("-body");
-            when Iir_Kind_Architecture_Declaration =>
+            when Iir_Kind_Architecture_Body =>
                Image (Get_Identifier (Get_Entity (Lib)));
                Append (Name_Buffer (1 .. Name_Length));
                Append ("-");
@@ -1469,7 +1469,7 @@ package body Ghdlprint is
                      C := 't';
                   when Iir_Kind_Entity_Declaration =>
                      C := 'E';
-                  when Iir_Kind_Architecture_Declaration =>
+                  when Iir_Kind_Architecture_Body =>
                      C := 'A';
                   when Iir_Kind_Library_Declaration =>
                      C := 'L';

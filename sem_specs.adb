@@ -64,7 +64,7 @@ package body Sem_Specs is
       case Get_Kind (Decl) is
          when Iir_Kind_Entity_Declaration =>
             return Tok_Entity;
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             return Tok_Architecture;
          when Iir_Kind_Configuration_Declaration =>
             return Tok_Configuration;
@@ -511,7 +511,7 @@ package body Sem_Specs is
          --  of that design unit.
          case Get_Kind (Scope) is
             when Iir_Kind_Entity_Declaration
-              | Iir_Kind_Architecture_Declaration
+              | Iir_Kind_Architecture_Body
               | Iir_Kind_Configuration_Declaration
               | Iir_Kind_Package_Declaration =>
                Sem_Named_Entity (Scope);
@@ -553,7 +553,7 @@ package body Sem_Specs is
 
       case Get_Kind (Scope) is
          when Iir_Kind_Entity_Declaration
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Generate_Statement =>
             Sem_Named_Entity_Chain (Get_Declaration_Chain (Scope));
             Sem_Named_Entity_Chain (Get_Concurrent_Statement_Chain (Scope));

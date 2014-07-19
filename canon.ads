@@ -49,7 +49,7 @@ package Canon is
 
    --  Create a default configuration declaration for architecture ARCH.
    function Create_Default_Configuration_Declaration
-     (Arch : Iir_Architecture_Declaration)
+     (Arch : Iir_Architecture_Body)
      return Iir_Design_Unit;
 
    --  Canonicalize a subprogram call.

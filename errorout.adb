@@ -588,7 +588,7 @@ package body Errorout is
             return Disp_Identifier (Node, "package body");
          when Iir_Kind_Entity_Declaration =>
             return Disp_Identifier (Node, "entity");
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             return Disp_Identifier (Node, "architecture") &
               " of" & Disp_Identifier (Get_Entity (Node), "");
          when Iir_Kind_Configuration_Declaration =>

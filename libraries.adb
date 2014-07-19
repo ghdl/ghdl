@@ -145,7 +145,7 @@ package body Libraries is
            | Iir_Kind_Package_Body
            | Iir_Kind_Package_Instantiation_Declaration =>
             Id := Get_Identifier (Lib_Unit);
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             --  Architectures are put with the entity identifier.
             Id := Get_Identifier (Get_Entity (Lib_Unit));
          when others =>
@@ -463,8 +463,7 @@ package body Libraries is
                   Library_Unit := Create_Iir (Iir_Kind_Entity_Declaration);
                   Scan;
                when Tok_Architecture =>
-                  Library_Unit :=
-                    Create_Iir (Iir_Kind_Architecture_Declaration);
+                  Library_Unit := Create_Iir (Iir_Kind_Architecture_Body);
                   Scan;
                when Tok_Configuration =>
                   Library_Unit :=
@@ -481,8 +480,7 @@ package body Libraries is
                when Tok_With =>
                   if Library_Unit = Null_Iir
                     or else
-                    Get_Kind (Library_Unit)
-                    /= Iir_Kind_Architecture_Declaration
+                    Get_Kind (Library_Unit) /= Iir_Kind_Architecture_Body
                   then
                      Put_Line ("load_library: invalid use of 'with'");
                      raise Internal_Error;
@@ -505,7 +503,7 @@ package body Libraries is
             Set_Identifier (Library_Unit, Current_Identifier);
             Set_Identifier (Design_Unit, Current_Identifier);
 
-            if Get_Kind (Library_Unit) = Iir_Kind_Architecture_Declaration then
+            if Get_Kind (Library_Unit) = Iir_Kind_Architecture_Body then
                Scan_Expect (Tok_Of);
                Scan_Expect (Tok_Identifier);
                Set_Entity (Library_Unit, Current_Text);
@@ -790,8 +788,8 @@ package body Libraries is
 
       --  Two architecture declarations are identical only if they also have
       --  the same entity name.
-      if Unit_Kind = Iir_Kind_Architecture_Declaration
-        and then Library_Unit_Kind = Iir_Kind_Architecture_Declaration
+      if Unit_Kind = Iir_Kind_Architecture_Body
+        and then Library_Unit_Kind = Iir_Kind_Architecture_Body
       then
          Entity_Name1 := Get_Identifier (Get_Entity (Unit));
          Entity_Name2 := Get_Identifier (Get_Entity (Library_Unit));
@@ -802,11 +800,11 @@ package body Libraries is
 
       --  An architecture declaration never conflits with a library unit that
       --  is not an architecture declaration.
-      if (Unit_Kind = Iir_Kind_Architecture_Declaration
-          and then Library_Unit_Kind /= Iir_Kind_Architecture_Declaration)
+      if (Unit_Kind = Iir_Kind_Architecture_Body
+          and then Library_Unit_Kind /= Iir_Kind_Architecture_Body)
         or else
-        (Unit_Kind /= Iir_Kind_Architecture_Declaration
-         and then Library_Unit_Kind = Iir_Kind_Architecture_Declaration)
+        (Unit_Kind /= Iir_Kind_Architecture_Body
+         and then Library_Unit_Kind = Iir_Kind_Architecture_Body)
       then
          return False;
       end if;
@@ -840,7 +838,7 @@ package body Libraries is
       Destroy_Iir_List (Dep_List);
       Lib := Get_Library_Unit (Design_Unit);
       if Lib /= Null_Iir
-        and then Get_Kind (Lib) = Iir_Kind_Architecture_Declaration
+        and then Get_Kind (Lib) = Iir_Kind_Architecture_Body
       then
          Unit := Get_Default_Configuration_Declaration (Lib);
          if Unit /= Null_Iir then
@@ -1221,7 +1219,7 @@ package body Libraries is
                when Iir_Kind_Entity_Declaration =>
                   WR ("entity ");
                   WR (Image_Identifier (Library_Unit));
-               when Iir_Kind_Architecture_Declaration =>
+               when Iir_Kind_Architecture_Body =>
                   WR ("architecture ");
                   WR (Image_Identifier (Library_Unit));
                   WR (" of ");
@@ -1309,7 +1307,7 @@ package body Libraries is
 
    -- Return the name of the latest architecture analysed for an entity.
    function Get_Latest_Architecture (Entity: Iir_Entity_Declaration)
-     return Iir_Architecture_Declaration
+                                    return Iir_Architecture_Body
    is
       Entity_Id : Name_Id;
       Lib : Iir_Library_Declaration;
@@ -1328,7 +1326,7 @@ package body Libraries is
          while Design_Unit /= Null_Iir loop
             Library_Unit := Get_Library_Unit (Design_Unit);
 
-            if Get_Kind (Library_Unit) = Iir_Kind_Architecture_Declaration
+            if Get_Kind (Library_Unit) = Iir_Kind_Architecture_Body
               and then Get_Identifier (Get_Entity (Library_Unit)) = Entity_Id
             then
                if Res = Null_Iir then
@@ -1584,7 +1582,7 @@ package body Libraries is
                   --  Only return a primary unit.
                   return Unit;
                when Iir_Kind_Package_Body
-                 | Iir_Kind_Architecture_Declaration =>
+                 | Iir_Kind_Architecture_Body =>
                   null;
                when others =>
                   raise Internal_Error;
@@ -1632,7 +1630,7 @@ package body Libraries is
             -- Set design_unit to null iff this is not the correct
             -- design unit.
             case Get_Kind (Library_Unit) is
-               when Iir_Kind_Architecture_Declaration =>
+               when Iir_Kind_Architecture_Body =>
                   -- The entity field can be either an identifier (if the
                   -- library unit was not loaded) or an access to the entity
                   -- unit.

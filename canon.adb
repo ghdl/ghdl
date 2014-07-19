@@ -2607,7 +2607,7 @@ package body Canon is
             Canon_Interface_List (Get_Port_Chain (El));
             Canon_Declarations (Unit, El, El);
             Canon_Concurrent_Stmts (Unit, El);
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Canon_Declarations (Unit, El, El);
             Canon_Concurrent_Stmts (Unit, El);
          when Iir_Kind_Package_Declaration =>
@@ -2679,7 +2679,7 @@ package body Canon is
 
    --  Create a default configuration declaration for architecture ARCH.
    function Create_Default_Configuration_Declaration
-     (Arch : Iir_Architecture_Declaration)
+     (Arch : Iir_Architecture_Body)
      return Iir_Design_Unit
    is
       Loc : constant Location_Type := Get_Location (Arch);

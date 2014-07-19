@@ -125,7 +125,7 @@ package body Disp_Vhdl is
       case Get_Kind (Decl) is
          when Iir_Kind_Component_Declaration
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Constant_Interface_Declaration
            | Iir_Kind_Signal_Interface_Declaration
            | Iir_Kind_Variable_Interface_Declaration
@@ -935,7 +935,7 @@ package body Disp_Vhdl is
       end loop;
    end Disp_Concurrent_Statement_Chain;
 
-   procedure Disp_Architecture_Declaration (Arch: Iir_Architecture_Declaration)
+   procedure Disp_Architecture_Body (Arch: Iir_Architecture_Body)
    is
       Start: Count;
    begin
@@ -951,7 +951,7 @@ package body Disp_Vhdl is
       Disp_Concurrent_Statement_Chain (Arch, Start + Indentation);
       Set_Col (Start);
       Put_Line ("end;");
-   end Disp_Architecture_Declaration;
+   end Disp_Architecture_Body;
 
    procedure Disp_Object_Alias_Declaration (Decl: Iir_Object_Alias_Declaration)
    is
@@ -2469,7 +2469,7 @@ package body Disp_Vhdl is
       case Get_Kind (Spec) is
          when Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
-           | Iir_Kind_Architecture_Declaration =>
+           | Iir_Kind_Architecture_Body =>
             Disp_Name_Of (Spec);
          when Iir_Kind_Indexed_Name =>
             Disp_Name_Of (Get_Prefix (Spec));
@@ -2538,8 +2538,8 @@ package body Disp_Vhdl is
       case Get_Kind (Decl) is
          when Iir_Kind_Entity_Declaration =>
             Disp_Entity_Declaration (Decl);
-         when Iir_Kind_Architecture_Declaration =>
-            Disp_Architecture_Declaration (Decl);
+         when Iir_Kind_Architecture_Body =>
+            Disp_Architecture_Body (Decl);
          when Iir_Kind_Package_Declaration =>
             Disp_Package_Declaration (Decl);
          when Iir_Kind_Package_Body =>

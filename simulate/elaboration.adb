@@ -49,7 +49,7 @@ package body Elaboration is
      return Iir_Value_Literal_Acc;
 
    --  CONF is the block_configuration for components of ARCH.
-   function Elaborate_Architecture (Arch : Iir_Architecture_Declaration;
+   function Elaborate_Architecture (Arch : Iir_Architecture_Body;
                                     Conf : Iir_Block_Configuration;
                                     Parent_Instance : Block_Instance_Acc;
                                     Stmt : Iir;
@@ -355,7 +355,7 @@ package body Elaboration is
                end;
             when Iir_Kind_Entity_Declaration
               | Iir_Kind_Configuration_Declaration
-              | Iir_Kind_Architecture_Declaration =>
+              | Iir_Kind_Architecture_Body =>
                Elaborate_Dependence (Design);
             when others =>
                Error_Kind ("elaborate_dependence", Library_Unit);
@@ -1680,7 +1680,7 @@ package body Elaboration is
       Entity : Iir_Entity_Declaration;
       Arch_Name : Name_Id;
       Arch_Design : Iir_Design_Unit;
-      Arch : Iir_Architecture_Declaration;
+      Arch : Iir_Architecture_Body;
       Arch_Frame : Block_Instance_Acc;
       pragma Unreferenced (Arch_Frame);
       Generic_Map_Aspect_Chain : Iir;
@@ -2447,7 +2447,7 @@ package body Elaboration is
       end loop;
    end Elaborate_Declarative_Part;
 
-   function Elaborate_Architecture (Arch : Iir_Architecture_Declaration;
+   function Elaborate_Architecture (Arch : Iir_Architecture_Body;
                                     Conf : Iir_Block_Configuration;
                                     Parent_Instance : Block_Instance_Acc;
                                     Stmt : Iir;
@@ -2506,7 +2506,7 @@ package body Elaboration is
       Conf_Unit : Iir_Design_Unit;
       Conf : Iir_Block_Configuration;
       Arch_Unit : Iir_Design_Unit;
-      Arch : Iir_Architecture_Declaration;
+      Arch : Iir_Architecture_Body;
       Entity : Iir_Entity_Declaration;
       Generic_Map : Iir;
       Port_Map : Iir;
@@ -2519,7 +2519,7 @@ package body Elaboration is
 
       --  Find architecture and configuration for the top unit
       case Get_Kind (Unit) is
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Arch := Unit;
             Conf_Unit := Get_Default_Configuration_Declaration (Unit);
          when Iir_Kind_Configuration_Declaration =>

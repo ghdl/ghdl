@@ -2733,7 +2733,7 @@ package body Evaluation is
                Path_Add (":");
             when Iir_Kind_Entity_Declaration =>
                Path_Instance := El;
-            when Iir_Kind_Architecture_Declaration =>
+            when Iir_Kind_Architecture_Body =>
                Path_Instance := El;
             when Iir_Kind_Design_Unit =>
                Path_Add_Element (Get_Library_Unit (El), Is_Instance);

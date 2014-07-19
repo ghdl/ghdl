@@ -139,7 +139,7 @@ package body Configuration is
                Current_Configuration := Prev_Configuration;
                Add_Design_Unit (Get_Design_Unit (Arch), Unit);
             end;
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             --  Add entity
             --  find all entity/architecture/configuration instantiation
             Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Unit);
@@ -267,7 +267,7 @@ package body Configuration is
                      else
                         Set_Architecture (Aspect, Get_Library_Unit (Arch));
                      end if;
-                  when Iir_Kind_Architecture_Declaration =>
+                  when Iir_Kind_Architecture_Body =>
                      Arch := Get_Design_Unit (Arch);
                   when others =>
                      Error_Kind ("add_design_aspect", Arch);
@@ -538,7 +538,7 @@ package body Configuration is
                end if;
             else
                declare
-                  Arch_Unit : Iir_Architecture_Declaration;
+                  Arch_Unit : Iir_Architecture_Body;
                begin
                   Arch_Unit := Get_Latest_Architecture (Lib_Unit);
                   if Arch_Unit = Null_Iir then

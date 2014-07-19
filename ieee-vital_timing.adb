@@ -1321,8 +1321,7 @@ package body Ieee.Vital_Timing is
       return False;
    end Is_Vital_Level0;
 
-   procedure Check_Vital_Level0_Architecture
-     (Arch : Iir_Architecture_Declaration)
+   procedure Check_Vital_Level0_Architecture (Arch : Iir_Architecture_Body)
    is
       Decl : Iir;
    begin
@@ -1349,7 +1348,7 @@ package body Ieee.Vital_Timing is
       case Get_Kind (Lib_Unit) is
          when Iir_Kind_Entity_Declaration =>
             Check_Vital_Level0_Entity (Lib_Unit);
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Check_Vital_Level0_Architecture (Lib_Unit);
          when others =>
             Error_Vital
@@ -1362,7 +1361,7 @@ package body Ieee.Vital_Timing is
       Arch : Iir;
    begin
       Arch := Get_Library_Unit (Unit);
-      if Get_Kind (Arch) /= Iir_Kind_Architecture_Declaration then
+      if Get_Kind (Arch) /= Iir_Kind_Architecture_Body then
          Error_Vital ("only architecture can be VITAL_Level1", Arch);
          return;
       end if;

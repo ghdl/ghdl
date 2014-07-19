@@ -515,7 +515,7 @@ package body Iirs is
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Header
            | Iir_Kind_Unit_Declaration
@@ -1863,7 +1863,7 @@ package body Iirs is
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Group_Declaration
@@ -1978,7 +1978,7 @@ package body Iirs is
       case Get_Kind (Target) is
          when Iir_Kind_Entity_Aspect_Entity
            | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Architecture_Declaration =>
+           | Iir_Kind_Architecture_Body =>
             null;
          when others =>
             Failed ("Entity", Target);
@@ -2091,7 +2091,7 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Entity_Declaration
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement =>
             null;
@@ -2995,7 +2995,7 @@ package body Iirs is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Instantiation_Declaration =>
             null;
          when others =>
@@ -3071,7 +3071,7 @@ package body Iirs is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
            | Iir_Kind_Sensitized_Process_Statement
@@ -3458,7 +3458,7 @@ package body Iirs is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
@@ -3594,7 +3594,7 @@ package body Iirs is
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
@@ -4671,7 +4671,7 @@ package body Iirs is
    procedure Check_Kind_For_Foreign_Flag (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Architecture_Declaration
+         when Iir_Kind_Architecture_Body
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
             null;
@@ -5115,7 +5115,7 @@ package body Iirs is
    procedure Check_Kind_For_Default_Configuration_Declaration (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             null;
          when others =>
             Failed ("Default_Configuration_Declaration", Target);
@@ -5534,7 +5534,7 @@ package body Iirs is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Attribute_Declaration
@@ -7038,7 +7038,7 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Entity_Declaration
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration

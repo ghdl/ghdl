@@ -302,7 +302,7 @@ package body Sem_Names is
          when Iir_Kind_Entity_Declaration =>
             Iterator_Decl_Chain (Get_Generic_Chain (Decl), Id);
             Iterator_Decl_Chain (Get_Port_Chain (Decl), Id);
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             null;
          when Iir_Kind_Generate_Statement =>
             null;
@@ -335,7 +335,7 @@ package body Sem_Names is
               (Get_Declaration_Chain (Decl_Body), Id);
             Iterator_Decl_Chain
               (Get_Sequential_Statement_Chain (Decl_Body), Id);
-         when Iir_Kind_Architecture_Declaration
+         when Iir_Kind_Architecture_Body
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Block_Statement =>
@@ -1196,7 +1196,7 @@ package body Sem_Names is
 
       case Get_Kind (Parent) is
          when Iir_Kind_Entity_Declaration
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Block_Statement
@@ -1625,7 +1625,7 @@ package body Sem_Names is
          when Iir_Kind_Process_Statement
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Sensitized_Process_Statement
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Generate_Statement

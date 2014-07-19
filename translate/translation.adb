@@ -418,7 +418,7 @@ package body Translation is
       --  This is used when ENTITY is at the top of a design hierarchy.
       procedure Translate_Entity_Init (Entity : Iir);
 
-      procedure Translate_Architecture_Declaration (Arch : Iir);
+      procedure Translate_Architecture_Body (Arch : Iir);
 
       --  CONFIG may be one of:
       --  * configuration_declaration
@@ -4145,7 +4145,7 @@ package body Translation is
          Pop_Scope (Arch_Info.Block_Decls_Type);
       end Pop_Architecture_Scope;
 
-      procedure Translate_Architecture_Declaration (Arch : Iir)
+      procedure Translate_Architecture_Body (Arch : Iir)
       is
          Info : Block_Info_Acc;
          Entity : Iir;
@@ -4255,7 +4255,7 @@ package body Translation is
 
          Pop_Local_Factory;
          Finish_Subprogram_Body;
-      end Translate_Architecture_Declaration;
+      end Translate_Architecture_Body;
 
       procedure Translate_Component_Configuration_Decl
         (Cfg : Iir; Blk : Iir; Base_Block : Iir; Num : in out Iir_Int32)
@@ -4336,7 +4336,7 @@ package body Translation is
          Start_Subprogram_Body (Info.Config_Subprg);
          Push_Local_Factory;
 
-         if Get_Kind (Base_Block) = Iir_Kind_Architecture_Declaration then
+         if Get_Kind (Base_Block) = Iir_Kind_Architecture_Body then
             Push_Architecture_Scope (Base_Block, Base_Instance);
          else
             Push_Scope (Base_Info.Block_Decls_Type, Base_Instance);
@@ -4357,7 +4357,7 @@ package body Translation is
 
          Pop_Scope (Comp_Info.Comp_Type);
 
-         if Get_Kind (Base_Block) = Iir_Kind_Architecture_Declaration then
+         if Get_Kind (Base_Block) = Iir_Kind_Architecture_Body then
             Pop_Architecture_Scope (Base_Block);
          else
             Pop_Scope (Base_Info.Block_Decls_Type);
@@ -4756,7 +4756,7 @@ package body Translation is
       is
          Interface_List : O_Inter_List;
          Block_Config : Iir_Block_Configuration;
-         Arch : Iir_Architecture_Declaration;
+         Arch : Iir_Architecture_Body;
          Arch_Info : Block_Info_Acc;
          Config_Info : Config_Info_Acc;
          Instance : O_Dnode;
@@ -5694,7 +5694,7 @@ package body Translation is
                      null;
                   when Iir_Kind_Configuration_Declaration =>
                      null;
-                  when Iir_Kind_Architecture_Declaration =>
+                  when Iir_Kind_Architecture_Body =>
                      null;
                   when others =>
                      Error_Kind ("elab_dependence", Library_Unit);
@@ -23011,7 +23011,7 @@ package body Translation is
          if Arch /= Null_Iir then
             Arch_Info := Get_Info (Arch);
             if Config = Null_Iir
-              and then Get_Kind (Arch) = Iir_Kind_Architecture_Declaration
+              and then Get_Kind (Arch) = Iir_Kind_Architecture_Body
             then
                Config := Get_Default_Configuration_Declaration (Arch);
                if Config /= Null_Iir then
@@ -23571,7 +23571,7 @@ package body Translation is
          case Get_Kind (Block) is
             when Iir_Kind_Entity_Declaration =>
                Merge_Signals_Rti_Of_Port_Chain (Get_Port_Chain (Block));
-            when Iir_Kind_Architecture_Declaration =>
+            when Iir_Kind_Architecture_Body =>
                null;
             when Iir_Kind_Block_Statement =>
                declare
@@ -27587,7 +27587,7 @@ package body Translation is
                Kind := Ghdl_Rtik_Package_Body;
                --  Required at least for 'image
                Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
-            when Iir_Kind_Architecture_Declaration =>
+            when Iir_Kind_Architecture_Body =>
                Kind := Ghdl_Rtik_Architecture;
                Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
                Generate_Concurrent_Statement_Chain
@@ -27708,7 +27708,7 @@ package body Translation is
          --  Store the RTI.
          case Get_Kind (Blk) is
             when Iir_Kind_Entity_Declaration
-              | Iir_Kind_Architecture_Declaration
+              | Iir_Kind_Architecture_Body
               | Iir_Kind_Block_Statement
               | Iir_Kind_Generate_Statement =>
                Info.Block_Rti_Const := Rti;
@@ -27782,7 +27782,7 @@ package body Translation is
          case Get_Kind (Lib_Unit) is
             when Iir_Kind_Configuration_Declaration =>
                return;
-            when Iir_Kind_Architecture_Declaration =>
+            when Iir_Kind_Architecture_Body =>
                if Info.Block_Rti_Const /= O_Dnode_Null then
                   return;
                end if;
@@ -27812,7 +27812,7 @@ package body Translation is
             end case;
             case Get_Kind (Lib_Unit) is
                when Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Architecture_Declaration =>
+                 | Iir_Kind_Architecture_Body =>
                   Info.Block_Rti_Const := Rti;
                when Iir_Kind_Package_Declaration =>
                   Info.Package_Rti_Const := Rti;
@@ -27837,7 +27837,7 @@ package body Translation is
                   end;
                when Iir_Kind_Package_Body =>
                   Rti := Get_Info (Get_Package (Lib_Unit)).Package_Rti_Const;
-               when Iir_Kind_Architecture_Declaration =>
+               when Iir_Kind_Architecture_Body =>
                   Rti := Get_Info (Get_Entity (Lib_Unit)).Block_Rti_Const;
                when others =>
                   raise Internal_Error;
@@ -27893,7 +27893,7 @@ package body Translation is
             when Iir_Kind_Component_Instantiation_Statement =>
                Rti_Const := Node_Info.Block_Rti_Const;
             when Iir_Kind_Entity_Declaration
-              | Iir_Kind_Architecture_Declaration
+              | Iir_Kind_Architecture_Body
               | Iir_Kind_Block_Statement
               | Iir_Kind_Generate_Statement =>
                Rti_Const := Node_Info.Block_Rti_Const;
@@ -27924,7 +27924,7 @@ package body Translation is
             when Iir_Kind_Component_Declaration =>
                Block_Type := Node_Info.Comp_Type;
             when Iir_Kind_Entity_Declaration
-              | Iir_Kind_Architecture_Declaration
+              | Iir_Kind_Architecture_Body
               | Iir_Kind_Block_Statement
               | Iir_Kind_Generate_Statement =>
                Block_Type := Node_Info.Block_Decls_Type;
@@ -28022,7 +28022,7 @@ package body Translation is
       end if;
       Push_Identifier_Prefix (Lib_Mark, Id);
 
-      if Get_Kind (El) = Iir_Kind_Architecture_Declaration then
+      if Get_Kind (El) = Iir_Kind_Architecture_Body then
          --  Put 'ARCH' between the entity name and the architecture name, to
          --  avoid a name clash with names from entity (eg an entity port with
          --  the same name as an architecture).
@@ -28061,10 +28061,10 @@ package body Translation is
             New_Debug_Comment_Decl ("entity " & Image_Identifier (El));
             --Set_Global_Storage (O_Storage_Private);
             Chap1.Translate_Entity_Declaration (El);
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             New_Debug_Comment_Decl ("architecture " & Image_Identifier (El));
             --Set_Global_Storage (O_Storage_Private);
-            Chap1.Translate_Architecture_Declaration (El);
+            Chap1.Translate_Architecture_Body (El);
          when Iir_Kind_Configuration_Declaration =>
             New_Debug_Comment_Decl ("configuration " & Image_Identifier (El));
             if Id = Null_Identifier then
@@ -28105,7 +28105,7 @@ package body Translation is
       if Id /= Null_Identifier then
          Pop_Identifier_Prefix (Unit_Mark);
       end if;
-      if Get_Kind (El) = Iir_Kind_Architecture_Declaration then
+      if Get_Kind (El) = Iir_Kind_Architecture_Body then
          Pop_Identifier_Prefix (Sep_Mark);
          Pop_Identifier_Prefix (Ent_Mark);
       end if;
@@ -29651,7 +29651,7 @@ package body Translation is
    package body Chap12 is
       --  Create __ghdl_ELABORATE
       procedure Gen_Main (Entity : Iir_Entity_Declaration;
-                          Arch : Iir_Architecture_Declaration;
+                          Arch : Iir_Architecture_Body;
                           Config_Subprg : O_Dnode;
                           Nbr_Pkgs : Natural)
       is
@@ -29785,7 +29785,7 @@ package body Translation is
       is
          Entity_Info : Block_Info_Acc;
 
-         Arch : Iir_Architecture_Declaration;
+         Arch : Iir_Architecture_Body;
          Arch_Info : Block_Info_Acc;
 
          Lib : Iir_Library_Declaration;
@@ -29867,7 +29867,7 @@ package body Translation is
          Pop_Identifier_Prefix (Lib_Mark);
       end Gen_Last_Arch;
 
-      procedure Gen_Dummy_Default_Config (Arch : Iir_Architecture_Declaration)
+      procedure Gen_Dummy_Default_Config (Arch : Iir_Architecture_Body)
       is
          Entity : Iir_Entity_Declaration;
          Lib : Iir_Library_Declaration;
@@ -30005,7 +30005,7 @@ package body Translation is
                         Gen_Dummy_Package_Declaration (Unit);
                      end if;
                   end;
-               when Iir_Kind_Architecture_Declaration =>
+               when Iir_Kind_Architecture_Body =>
                   Gen_Dummy_Default_Config (Lib_Unit);
                when others =>
                   null;
@@ -30109,7 +30109,7 @@ package body Translation is
          Config : Iir_Design_Unit;
          Config_Lib : Iir_Configuration_Declaration;
          Entity : Iir_Entity_Declaration;
-         Arch : Iir_Architecture_Declaration;
+         Arch : Iir_Architecture_Body;
          Conf_Info : Config_Info_Acc;
          Last_Design_Unit : Natural;
          Nbr_Pkgs : Natural;
@@ -30193,7 +30193,7 @@ package body Translation is
                   --  and elaboration.
                   Translate (Unit, True);
                when Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Architecture_Declaration
+                 | Iir_Kind_Architecture_Body
                  | Iir_Kind_Package_Declaration =>
                   Set_Elab_Flag (Unit, False);
                   Translate (Unit, Whole);
@@ -30222,7 +30222,7 @@ package body Translation is
                   end if;
                when Iir_Kind_Entity_Declaration =>
                   Gen_Last_Arch (Lib_Unit);
-               when Iir_Kind_Architecture_Declaration
+               when Iir_Kind_Architecture_Body
                  | Iir_Kind_Package_Body
                  | Iir_Kind_Configuration_Declaration =>
                   null;

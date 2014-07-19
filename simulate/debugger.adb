@@ -154,7 +154,7 @@ package body Debugger is
               & Execute_Image_Attribute
               (Instance.Objects (Get_Info (Name).Slot), Get_Type (Name))
               & ')';
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             if Short then
                return Image_Identifier (Get_Entity (Name));
             else
@@ -212,7 +212,7 @@ package body Debugger is
             Put ("[component]");
          when Iir_Kinds_Process_Statement =>
             Put ("[process]");
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Put ("[entity]");
          when others =>
             Error_Kind ("disp_instances_tree1", Inst.Label);
@@ -372,7 +372,7 @@ package body Debugger is
       Child: Block_Instance_Acc;
    begin
       case Get_Kind (Blk) is
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             declare
                Ent : constant Iir := Get_Entity (Blk);
             begin
@@ -508,7 +508,7 @@ package body Debugger is
             Disp_Declaration_Objects
               (Instance,
                Get_Declaration_Chain (Get_Subprogram_Body (Decl)));
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             declare
                Entity : constant Iir_Entity_Declaration := Get_Entity (Decl);
             begin
@@ -766,7 +766,7 @@ package body Debugger is
             then
                return Walk_Abort;
             end if;
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             if (Walk_Decl_Chain
                   (Get_Declaration_Chain (Unit)) = Walk_Abort)
               or else (Walk_Conc_Chain
@@ -1066,7 +1066,7 @@ package body Debugger is
          when Iir_Kind_Entity_Declaration =>
             Put ("entity ");
             Put_Line (Name_Table.Image (Get_Identifier (El)));
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Put ("architecture ");
             Put (Name_Table.Image (Get_Identifier (El)));
             Put (" of ");
@@ -1166,7 +1166,7 @@ package body Debugger is
          when Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement =>
             Disp_Declared_Signals (Get_Parent (Decl), Instance);
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Disp_Declared_Signals (Get_Entity (Decl), Instance);
          when Iir_Kind_Entity_Declaration =>
             null;
@@ -1179,7 +1179,7 @@ package body Debugger is
            | Iir_Kind_Process_Statement =>
             --  No signal declaration in a process (FIXME: implicit signals)
             null;
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Put_Line ("Signals of architecture "
                         & Name_Table.Image (Get_Identifier (Decl)) & ':');
             Disp_Declared_Signals_Chain
@@ -1211,7 +1211,7 @@ package body Debugger is
            | Iir_Kind_Sensitized_Process_Statement =>
             Foreach_Scopes (Get_Parent (N), Handler);
             Handler.all (N);
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Foreach_Scopes (Get_Entity (N), Handler);
             Handler.all (N);
 
@@ -1265,7 +1265,7 @@ package body Debugger is
                --  Add_Name (Unit, Get_Identifier (N), False);
                Add_Entity_Declarations (N);
             end;
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Open_Declarative_Region;
             Add_Context_Clauses (Get_Design_Unit (N));
             Add_Declarations (Get_Declaration_Chain (N), False);
@@ -1333,7 +1333,7 @@ package body Debugger is
       case Get_Kind (N) is
          when Iir_Kind_Entity_Declaration =>
             null;
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Close_Declarative_Region;
          when Iir_Kind_Process_Statement
            | Iir_Kind_Sensitized_Process_Statement

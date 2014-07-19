@@ -424,7 +424,7 @@ package body Iirs_Utils is
          when Iir_Kind_Library_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Design_Unit
            | Iir_Kinds_Concurrent_Statement
            | Iir_Kinds_Sequential_Statement =>
@@ -490,7 +490,7 @@ package body Iirs_Utils is
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition =>
             return;
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Free_Recursive (Get_Entity (N));
          when Iir_Kind_Proxy =>
             null;
@@ -634,12 +634,12 @@ package body Iirs_Utils is
       case Get_Kind (Block_Spec) is
          when Iir_Kind_Design_Unit =>
             Res := Get_Library_Unit (Block_Spec);
-            if Get_Kind (Res) /= Iir_Kind_Architecture_Declaration then
+            if Get_Kind (Res) /= Iir_Kind_Architecture_Body then
                raise Internal_Error;
             end if;
             return Res;
          when Iir_Kind_Block_Statement
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Generate_Statement =>
             return Block_Spec;
          when Iir_Kind_Indexed_Name

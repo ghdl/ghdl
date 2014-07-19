@@ -312,7 +312,7 @@ package body Sem_Expr is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kinds_Subtype_Definition
            | Iir_Kind_Design_Unit
-           | Iir_Kind_Architecture_Declaration
+           | Iir_Kind_Architecture_Body
            | Iir_Kind_Entity_Declaration
            | Iir_Kinds_Concurrent_Statement
            | Iir_Kinds_Sequential_Statement

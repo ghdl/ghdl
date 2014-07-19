@@ -90,7 +90,7 @@ package body Ghdllocal is
 
          if Flag_Create_Default_Config then
             Lib := Get_Library_Unit (Unit);
-            if Get_Kind (Lib) = Iir_Kind_Architecture_Declaration then
+            if Get_Kind (Lib) = Iir_Kind_Architecture_Body then
                Config := Canon.Create_Default_Configuration_Declaration (Lib);
                Set_Default_Configuration_Declaration (Lib, Config);
             end if;
@@ -256,7 +256,7 @@ package body Ghdllocal is
       case Get_Kind (Unit) is
          when Iir_Kind_Entity_Declaration =>
             Put ("entity ");
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Put ("architecture ");
          when Iir_Kind_Configuration_Declaration =>
             Put ("configuration ");
@@ -271,7 +271,7 @@ package body Ghdllocal is
       Image (Id);
       Put (Name_Buffer (1 .. Name_Length));
       case Get_Kind (Unit) is
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Put (" of ");
             Image (Get_Identifier (Get_Entity (Unit)));
             Put (Name_Buffer (1 .. Name_Length));
@@ -721,7 +721,7 @@ package body Ghdllocal is
                when Iir_Kind_Entity_Declaration
                  | Iir_Kind_Configuration_Declaration =>
                   Delete_Top_Unit (Image (Get_Identifier (Lib_Unit)));
-               when Iir_Kind_Architecture_Declaration =>
+               when Iir_Kind_Architecture_Body =>
                   Ent_Unit := Get_Entity (Lib_Unit);
                   Delete_Top_Unit (Image (Get_Identifier (Ent_Unit))
                                    & '-'

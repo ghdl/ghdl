@@ -954,7 +954,8 @@ package body Annotations is
         (Entity_Info, Get_Concurrent_Statement_Chain (Decl));
    end Annotate_Entity;
 
-   procedure Annotate_Architecture (Decl: Iir_Architecture_Declaration) is
+   procedure Annotate_Architecture (Decl: Iir_Architecture_Body)
+   is
       Entity_Info: Sim_Info_Acc;
       Arch_Info: Sim_Info_Acc;
    begin
@@ -1107,7 +1108,7 @@ package body Annotations is
       case Get_Kind (El) is
          when Iir_Kind_Entity_Declaration =>
             Annotate_Entity (El);
-         when Iir_Kind_Architecture_Declaration =>
+         when Iir_Kind_Architecture_Body =>
             Annotate_Architecture (El);
          when Iir_Kind_Package_Declaration =>
             Annotate_Package (El);
