@@ -89,14 +89,24 @@ package body Sem is
    --  Return NULL_IIR in case of error (not found, bad library).
    function Sem_Entity_Name (Library_Unit : Iir) return Iir
    is
-      Name : Iir;
+      Name : constant Iir := Get_Entity_Name (Library_Unit);
       Library : Iir_Library_Declaration;
       Entity : Iir;
    begin
-      Name := Get_Entity (Library_Unit);
+      --  Get the library of architecture/configuration.
       Library := Get_Library
         (Get_Design_File (Get_Design_Unit (Library_Unit)));
+
       if Get_Kind (Name) = Iir_Kind_Simple_Name then
+         --  LRM93 10.1 Declarative Region
+         --  LRM08 12.1 Declarative Region
+         --  a) An entity declaration, tohether with a corresponding
+         --     architecture body.
+         --
+         --  GHDL: simple name needs to be handled specially.  Because
+         --  architecture body is in the declarative region of its entity,
+         --  the entity name is directly visible.  But we cannot really use
+         --  that rule as is, as we don't know which is the entity.
          Entity := Libraries.Load_Primary_Unit
            (Library, Get_Identifier (Name), Library_Unit);
          if Entity = Null_Iir then
@@ -114,6 +124,7 @@ package body Sem is
          end if;
       end if;
       Xrefs.Xref_Ref (Name, Entity);
+
       if Get_Kind (Entity) = Iir_Kind_Entity_Declaration then
          --  LRM 1.2 Architecture bodies
          --  For a given design entity, both the entity declaration and the
@@ -131,11 +142,11 @@ package body Sem is
             return Null_Iir;
          end if;
          return Entity;
+      else
+         Error_Msg_Sem ("entity name expected, found " & Disp_Node (Entity),
+                        Library_Unit);
+         return Null_Iir;
       end if;
-
-      Error_Msg_Sem ("entity name expected, found " & Disp_Node (Entity),
-                     Library_Unit);
-      return Null_Iir;
    end Sem_Entity_Name;
 
    --  LRM 1.2  Architecture bodies.

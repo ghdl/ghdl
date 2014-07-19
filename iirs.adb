@@ -380,7 +380,6 @@ package body Iirs is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
-           | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Attribute_Declaration
@@ -514,6 +513,7 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
+           | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Instantiation_Declaration
@@ -1996,6 +1996,29 @@ package body Iirs is
       Check_Kind_For_Entity (Decl);
       Set_Field2 (Decl, Entity);
    end Set_Entity;
+
+   procedure Check_Kind_For_Entity_Name (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Architecture_Body =>
+            null;
+         when others =>
+            Failed ("Entity_Name", Target);
+      end case;
+   end Check_Kind_For_Entity_Name;
+
+   function Get_Entity_Name (Arch : Iir) return Iir is
+   begin
+      Check_Kind_For_Entity_Name (Arch);
+      return Get_Field7 (Arch);
+   end Get_Entity_Name;
+
+   procedure Set_Entity_Name (Arch : Iir; Entity : Iir) is
+   begin
+      Check_Kind_For_Entity_Name (Arch);
+      Set_Field7 (Arch, Entity);
+   end Set_Entity_Name;
 
    procedure Check_Kind_For_Package (Target : Iir) is
    begin

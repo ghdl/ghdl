@@ -638,10 +638,13 @@ package Iirs is
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
+   --
    --   Get/Set_Concurrent_Statement_Chain (Field5)
    --
    -- The default configuration created by canon.  This is a design unit.
    --   Get/Set_Default_Configuration_Declaration (Field6)
+   --
+   --   Get/Set_Entity_Name (Field7)
    --
    --   Get/Set_Foreign_Flag (Flag3)
    --
@@ -649,7 +652,7 @@ package Iirs is
    --
    --   Get/Set_Is_Within_Flag (Flag5)
 
-   -- Iir_Kind_Configuration_Declaration (Short)
+   -- Iir_Kind_Configuration_Declaration (Medium)
    --
    --   Get/Set_Parent (Field0)
    --   Get/Set_Design_Unit (Alias Field0)
@@ -665,6 +668,8 @@ package Iirs is
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Block_Configuration (Field5)
+   --
+   --   Get/Set_Entity_Name (Field7)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -4599,9 +4604,15 @@ package Iirs is
    function Get_Attribute_Value_Spec_Chain (Target : Iir) return Iir;
    procedure Set_Attribute_Value_Spec_Chain (Target : Iir; Chain : Iir);
 
+   --  The entity declaration for an architecture or a configuration.
    --  Field: Field2
    function Get_Entity (Decl : Iir) return Iir;
    procedure Set_Entity (Decl : Iir; Entity : Iir);
+
+   --  The entity name for an architecture or a configuration.
+   --  Field: Field7
+   function Get_Entity_Name (Arch : Iir) return Iir;
+   procedure Set_Entity_Name (Arch : Iir; Entity : Iir);
 
    --  The package declaration corresponding to the body.
    --  Field: Field4

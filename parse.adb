@@ -5952,7 +5952,7 @@ package body Parse is
    --      BEGIN
    --          architecture_statement_part
    --      END [ ARCHITECTURE ] [ ARCHITECTURE_simple_name ] ;
-   procedure Parse_Architecture (Unit : Iir_Design_Unit)
+   procedure Parse_Architecture_Body (Unit : Iir_Design_Unit)
    is
       Res: Iir_Architecture_Body;
    begin
@@ -5969,7 +5969,7 @@ package body Parse is
       else
          Expect (Tok_Of);
          Scan;
-         Set_Entity (Res, Parse_Name (False));
+         Set_Entity_Name (Res, Parse_Name (False));
          Expect (Tok_Is);
       end if;
 
@@ -5992,7 +5992,7 @@ package body Parse is
       Check_End_Name (Res);
       Expect (Tok_Semi_Colon);
       Set_Library_Unit (Unit, Res);
-   end Parse_Architecture;
+   end Parse_Architecture_Body;
 
    --  precond : next token
    --  postcond: a token
@@ -6375,7 +6375,7 @@ package body Parse is
       Set_Location (Res);
       Scan_Expect (Tok_Of);
       Scan;
-      Set_Entity (Res, Parse_Name (False));
+      Set_Entity_Name (Res, Parse_Name (False));
       Expect (Tok_Is);
 
       Scan;
@@ -6643,7 +6643,7 @@ package body Parse is
          when Tok_Entity =>
             Parse_Entity_Declaration (Res);
          when Tok_Architecture =>
-            Parse_Architecture (Res);
+            Parse_Architecture_Body (Res);
          when Tok_Package =>
             Parse_Package (Res);
          when Tok_Configuration =>
