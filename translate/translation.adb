@@ -16884,6 +16884,7 @@ package body Translation is
                Res := Chap14.Translate_Path_Instance_Name_Attribute (Expr);
 
             when Iir_Kind_Simple_Name
+              | Iir_Kind_Character_Literal
               | Iir_Kind_Selected_Name =>
                return Translate_Expression (Get_Named_Entity (Expr), Rtype);
 

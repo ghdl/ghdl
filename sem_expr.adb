@@ -31,12 +31,6 @@ with Sem_Assocs; use Sem_Assocs;
 with Xrefs; use Xrefs;
 
 package body Sem_Expr is
-   procedure Undeclared (Expr: Iir) is
-   begin
-      Error_Msg_Sem ("identifier '" & Iirs_Utils.Image_Identifier (Expr)
-                     & "' not declared", Expr);
-   end Undeclared;
-
    procedure Not_Match (Expr: Iir; A_Type: Iir)
    is
       pragma Inline (Not_Match);
@@ -3564,6 +3558,7 @@ package body Sem_Expr is
               | Iir_Kind_Physical_Fp_Literal
               | Iir_Kind_String_Literal
               | Iir_Kind_Bit_String_Literal
+              | Iir_Kind_Character_Literal
               | Iir_Kind_Integer_Literal
               | Iir_Kind_Floating_Point_Literal
               | Iir_Kind_Null_Literal
@@ -3689,61 +3684,9 @@ package body Sem_Expr is
       end if;
 
       case Get_Kind (Expr) is
-         when Iir_Kind_Character_Literal =>
-            declare
-               Interpretation: Name_Interpretation_Type;
-               Decl: Iir;
-               List: Iir_List;
-            begin
-               Interpretation := Get_Interpretation (Get_Identifier (Expr));
-
-               -- Check the identifier was declared.
-               if not Valid_Interpretation (Interpretation) then
-                  Undeclared (Expr);
-                  return Null_Iir;
-               end if;
-
-               if not Valid_Interpretation
-                 (Get_Next_Interpretation (Interpretation))
-               then
-                  Decl := Get_Non_Alias_Declaration (Interpretation);
-                  if A_Type /= Null_Iir and then A_Type = Get_Type (Decl) then
-                     --  Free overload list of expr (if any), and expr.
-                     Replace_Type (Expr, Null_Iir);
-                     Iirs_Utils.Free_Name (Expr);
-                     return Decl;
-                  end if;
-               end if;
-
-               -- Character literal can only be an enumeration literal.
-               if A_Type /= Null_Iir then
-                  while Valid_Interpretation (Interpretation) loop
-                     Decl := Get_Non_Alias_Declaration (Interpretation);
-                     if Get_Type (Decl) = A_Type then
-                        Replace_Type (Expr, Null_Iir);
-                        Iirs_Utils.Free_Name (Expr);
-                        return Decl;
-                     end if;
-                     Interpretation :=
-                       Get_Next_Interpretation (Interpretation);
-                  end loop;
-                  Not_Match (Expr, A_Type);
-                  return Null_Iir;
-               end if;
-
-               -- Store overloaded interpretation.
-               List := Create_Iir_List;
-               while Valid_Interpretation (Interpretation) loop
-                  Decl := Get_Non_Alias_Declaration (Interpretation);
-                  Append_Element (List, Get_Type (Decl));
-                  Interpretation := Get_Next_Interpretation (Interpretation);
-               end loop;
-               Set_Type (Expr, Create_Overload_List (List));
-               return Expr;
-            end;
-
          when Iir_Kind_Selected_Name
            | Iir_Kind_Simple_Name
+           | Iir_Kind_Character_Literal
            | Iir_Kind_Parenthesis_Name
            | Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Attribute_Name =>

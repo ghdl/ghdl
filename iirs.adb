@@ -2548,7 +2548,8 @@ package body Iirs is
    procedure Check_Kind_For_Base_Name (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Attribute_Value
+         when Iir_Kind_Character_Literal
+           | Iir_Kind_Attribute_Value
            | Iir_Kind_Operator_Symbol
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
@@ -5794,7 +5795,8 @@ package body Iirs is
    procedure Check_Kind_For_Named_Entity (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Operator_Symbol
+         when Iir_Kind_Character_Literal
+           | Iir_Kind_Operator_Symbol
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Selected_By_All_Name
@@ -5822,6 +5824,7 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Error
+           | Iir_Kind_Character_Literal
            | Iir_Kind_Integer_Literal
            | Iir_Kind_Floating_Point_Literal
            | Iir_Kind_Null_Literal

@@ -1328,7 +1328,7 @@ package body Sem_Names is
    --  The evaluation of a simple name has no other effect than to determine
    --  the named entity denoted by the name.
    --
-   --  NAME may be a string literal too.
+   --  NAME may be a simple name, a strig literal or a character literal.
    --  GHDL: set interpretation of NAME (possibly an overload list) or
    --  error_mark for unknown names.
    --  If SOFT is TRUE, then no error message is reported in case of failure.
@@ -3067,6 +3067,7 @@ package body Sem_Names is
 
       case Get_Kind (Name) is
          when Iir_Kind_Simple_Name
+           | Iir_Kind_Character_Literal
            | Iir_Kind_Operator_Symbol =>
             --  String_Literal may be a symbol_operator.
             Sem_Simple_Name (Name, Keep_Alias, False);
@@ -3367,6 +3368,7 @@ package body Sem_Names is
       Xref_Name (Name);
       case Get_Kind (Name) is
          when Iir_Kind_Simple_Name
+           | Iir_Kind_Character_Literal
            | Iir_Kind_Selected_Name =>
             --Set_Base_Name (Name, Get_Base_Name (Expr));
             Set_Type (Name, Get_Type (Expr));

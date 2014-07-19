@@ -2854,6 +2854,7 @@ package body Execution is
             return Execute_Name (Block, Expr);
 
          when Iir_Kind_Simple_Name
+           | Iir_Kind_Character_Literal
            | Iir_Kind_Selected_Name =>
             return Execute_Expression (Block, Get_Named_Entity (Expr));
 

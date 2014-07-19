@@ -203,6 +203,12 @@ package Iirs is
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Named_Entity (Field4)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Expr_Staticness (State1)
 
    -- Iir_Kind_String_Literal (Short)
    -- Iir_Kind_Bit_String_Literal (Medium)

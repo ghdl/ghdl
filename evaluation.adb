@@ -1717,15 +1717,11 @@ package body Evaluation is
       Val : Iir;
    begin
       case Get_Kind (Expr) is
-         when Iir_Kind_Integer_Literal =>
-            return Expr;
-         when Iir_Kind_Enumeration_Literal =>
-            return Expr;
-         when Iir_Kind_Floating_Point_Literal =>
-            return Expr;
-         when Iir_Kind_String_Literal =>
-            return Expr;
-         when Iir_Kind_Bit_String_Literal =>
+         when Iir_Kind_Integer_Literal
+           | Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Floating_Point_Literal
+           | Iir_Kind_String_Literal
+           | Iir_Kind_Bit_String_Literal =>
             return Expr;
          when Iir_Kind_Physical_Int_Literal =>
             if Get_Unit_Name (Expr)
@@ -2049,6 +2045,7 @@ package body Evaluation is
             end;
 
          when Iir_Kind_Simple_Name
+           | Iir_Kind_Character_Literal
            | Iir_Kind_Selected_Name =>
             declare
                Res : Iir;
