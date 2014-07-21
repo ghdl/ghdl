@@ -160,7 +160,6 @@ package Trans_Decls is
 
    --  Procedure called in case of check failed.
    Ghdl_Program_Error : O_Dnode;
-   Ghdl_Bound_Check_Failed_L0 : O_Dnode;
    Ghdl_Bound_Check_Failed_L1 : O_Dnode;
 
    --  Stack 2.

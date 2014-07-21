@@ -240,8 +240,6 @@ package body Ghdlrun is
 
       Def (Trans_Decls.Ghdl_Memcpy,
            Grt.Lib.Ghdl_Memcpy'Address);
-      Def (Trans_Decls.Ghdl_Bound_Check_Failed_L0,
-           Grt.Lib.Ghdl_Bound_Check_Failed_L0'Address);
       Def (Trans_Decls.Ghdl_Bound_Check_Failed_L1,
            Grt.Lib.Ghdl_Bound_Check_Failed_L1'Address);
       Def (Trans_Decls.Ghdl_Malloc0,

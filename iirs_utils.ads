@@ -101,6 +101,9 @@ package Iirs_Utils is
    function Get_Block_From_Block_Specification (Block_Spec : Iir)
      return Iir;
 
+   --  Return the identifier of the entity for architecture ARCH.
+   function Get_Entity_Identifier_Of_Architecture (Arch : Iir) return Name_Id;
+
    --  Return the bound type of a string type, ie the type of the (first)
    --  dimension of a one-dimensional array type.
    function Get_String_Type_Bound_Type (Sub_Type : Iir) return Iir;

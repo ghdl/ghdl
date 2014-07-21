@@ -34,6 +34,7 @@ with Files_Map;
 with Post_Sems;
 with Disp_Tree;
 with Options;
+with Iirs_Utils; use Iirs_Utils;
 
 package body Ghdllocal is
    --  Version of the IEEE library to use.  This just change pathes.
@@ -273,12 +274,12 @@ package body Ghdllocal is
       case Get_Kind (Unit) is
          when Iir_Kind_Architecture_Body =>
             Put (" of ");
-            Image (Get_Identifier (Get_Entity (Unit)));
+            Image (Get_Entity_Identifier_Of_Architecture (Unit));
             Put (Name_Buffer (1 .. Name_Length));
          when Iir_Kind_Configuration_Declaration =>
             if Id = Null_Identifier then
                Put ("<default> of entity ");
-               Image (Get_Identifier (Get_Library_Unit (Get_Entity (Unit))));
+               Image (Get_Entity_Identifier_Of_Architecture (Unit));
                Put (Name_Buffer (1 .. Name_Length));
             end if;
          when others =>
@@ -580,7 +581,7 @@ package body Ghdllocal is
       return "-s [OPTS] FILEs    Check syntax of FILEs";
    end Get_Short_Help;
 
-   procedure Analyze_Files (Files : Argument_List; Save_Library : Boolean)
+   function Analyze_One_File (File_Name : String) return Iir_Design_File
    is
       use Ada.Text_IO;
       Id : Name_Id;
@@ -588,40 +589,52 @@ package body Ghdllocal is
       Unit : Iir;
       Next_Unit : Iir;
    begin
+      Id := Name_Table.Get_Identifier (File_Name);
+      if Flag_Verbose then
+         Put (File_Name);
+         Put_Line (":");
+      end if;
+      Design_File := Libraries.Load_File (Id);
+      if Design_File = Null_Iir then
+         raise Errorout.Compilation_Error;
+      end if;
+
+      Unit := Get_First_Design_Unit (Design_File);
+      while Unit /= Null_Iir loop
+         if Flag_Verbose then
+            Put (' ');
+            Disp_Library_Unit (Get_Library_Unit (Unit));
+            New_Line;
+         end if;
+         -- Sem, canon, annotate a design unit.
+         Back_End.Finish_Compilation (Unit, True);
+
+         Next_Unit := Get_Chain (Unit);
+         if Errorout.Nbr_Errors = 0 then
+            Set_Chain (Unit, Null_Iir);
+            Libraries.Add_Design_Unit_Into_Library (Unit);
+         end if;
+
+         Unit := Next_Unit;
+      end loop;
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Errorout.Compilation_Error;
+      end if;
+
+      return Design_File;
+   end Analyze_One_File;
+
+   procedure Analyze_Files (Files : Argument_List; Save_Library : Boolean)
+   is
+      Design_File : Iir_Design_File;
+      pragma Unreferenced (Design_File);
+   begin
       Setup_Libraries (True);
 
       --  Parse all files.
       for I in Files'Range loop
-         Id := Name_Table.Get_Identifier (Files (I).all);
-         if Flag_Verbose then
-            Put (Files (I).all);
-            Put_Line (":");
-         end if;
-         Design_File := Libraries.Load_File (Id);
-         if Design_File /= Null_Iir then
-            Unit := Get_First_Design_Unit (Design_File);
-            while Unit /= Null_Iir loop
-               if Flag_Verbose then
-                  Put (' ');
-                  Disp_Library_Unit (Get_Library_Unit (Unit));
-                  New_Line;
-               end if;
-               -- Sem, canon, annotate a design unit.
-               Back_End.Finish_Compilation (Unit, True);
-
-               Next_Unit := Get_Chain (Unit);
-               if Errorout.Nbr_Errors = 0 then
-                  Set_Chain (Unit, Null_Iir);
-                  Libraries.Add_Design_Unit_Into_Library (Unit);
-               end if;
-
-               Unit := Next_Unit;
-            end loop;
-
-            if Errorout.Nbr_Errors > 0 then
-               raise Errorout.Compilation_Error;
-            end if;
-         end if;
+         Design_File := Analyze_One_File (Files (I).all);
       end loop;
 
       if Save_Library then
@@ -694,7 +707,6 @@ package body Ghdllocal is
       File : Iir_Design_File;
       Design_Unit : Iir_Design_Unit;
       Lib_Unit : Iir;
-      Ent_Unit : Iir;
       Str : String_Access;
    begin
       if Args'Length /= 0 then
@@ -722,10 +734,10 @@ package body Ghdllocal is
                  | Iir_Kind_Configuration_Declaration =>
                   Delete_Top_Unit (Image (Get_Identifier (Lib_Unit)));
                when Iir_Kind_Architecture_Body =>
-                  Ent_Unit := Get_Entity (Lib_Unit);
-                  Delete_Top_Unit (Image (Get_Identifier (Ent_Unit))
-                                   & '-'
-                                   & Image (Get_Identifier (Lib_Unit)));
+                  Delete_Top_Unit
+                    (Image (Get_Entity_Identifier_Of_Architecture (Lib_Unit))
+                       & '-'
+                       & Image (Get_Identifier (Lib_Unit)));
                when others =>
                   null;
             end case;

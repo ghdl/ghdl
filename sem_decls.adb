@@ -1987,8 +1987,8 @@ package body Sem_Decls is
            /= Eval_Discrete_Type_Length
            (Get_Nth_Element (Get_Index_Subtype_List (Name_Type), 0))
          then
-            Error_Msg_Sem ("number of elements not matching in type and name",
-                           Alias);
+            Error_Msg_Sem
+              ("number of elements not matching in type and name", Alias);
          end if;
       end if;
 

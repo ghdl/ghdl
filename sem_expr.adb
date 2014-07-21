@@ -2062,7 +2062,11 @@ package body Sem_Expr is
          end if;
          Expr := Eval_Expr (Expr);
          Set_Expression (Choice, Expr);
-         if Eval_Discrete_Type_Length
+         if Get_Kind (Expr) = Iir_Kind_Overflow_Literal then
+            Error_Msg_Sem
+              ("bound error during evaluation of choice expression", Expr);
+            Has_Length_Error := True;
+         elsif Eval_Discrete_Type_Length
            (Get_String_Type_Bound_Type (Get_Type (Expr))) /= Sel_Length
          then
             Has_Length_Error := True;
@@ -2769,6 +2773,8 @@ package body Sem_Expr is
          Set_Name (N_El, Aggr_El);
          Set_Associated (N_El, Get_Associated (Ass));
          Set_Chain (N_El, Get_Chain (Ass));
+         Set_Same_Alternative_Flag (N_El, Get_Same_Alternative_Flag (Ass));
+
          Xref_Ref (Expr, Aggr_El);
          Free_Old_Iir (Ass);
          Add_Match (N_El, Aggr_El);
@@ -3563,7 +3569,8 @@ package body Sem_Expr is
               | Iir_Kind_Floating_Point_Literal
               | Iir_Kind_Null_Literal
               | Iir_Kind_Unit_Declaration
-              | Iir_Kind_Simple_Aggregate =>
+              | Iir_Kind_Simple_Aggregate
+              | Iir_Kind_Overflow_Literal =>
                return;
             when Iir_Kinds_Monadic_Operator
               | Iir_Kinds_Dyadic_Operator

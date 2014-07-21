@@ -739,7 +739,7 @@ package body Sem_Stmts is
          end if;
       end if;
       if not Check_Implicit_Conversion (Get_Type (Target), Expr) then
-         Error_Msg_Sem
+         Warning_Msg_Sem
            ("expression length does not match target length", Stmt);
       end if;
    end Sem_Variable_Assignment;

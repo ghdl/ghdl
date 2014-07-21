@@ -26,12 +26,14 @@ with Files_Map;
 with Libraries;
 with Errorout; use Errorout;
 with Iirs; use Iirs;
+with Iirs_Utils; use Iirs_Utils;
 with Tokens;
 with Scanner;
 with Version;
 with Xrefs;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
+with Disp_Vhdl;
 
 package body Ghdlprint is
    type Html_Format_Type is (Html_2, Html_Css);
@@ -566,7 +568,7 @@ package body Ghdlprint is
             when Iir_Kind_Package_Body =>
                Len := Len + 1 + 4; -- add -body
             when Iir_Kind_Architecture_Body =>
-               Id1 := Get_Identifier (Get_Entity (Lib));
+               Id1 := Get_Entity_Identifier_Of_Architecture (Lib);
                Len := Len + 1 + Get_Name_Length (Id1);
             when others =>
                Error_Kind ("build_file_name", Lib);
@@ -599,7 +601,7 @@ package body Ghdlprint is
                Append (Name_Buffer (1 .. Name_Length));
                Append ("-body");
             when Iir_Kind_Architecture_Body =>
-               Image (Get_Identifier (Get_Entity (Lib)));
+               Image (Get_Entity_Identifier_Of_Architecture (Lib));
                Append (Name_Buffer (1 .. Name_Length));
                Append ("-");
                Image (Id);
@@ -938,6 +940,50 @@ package body Ghdlprint is
       end loop;
    end Perform_Action;
 
+   --  Command Reprint.
+   type Command_Reprint is new Command_Lib with null record;
+   function Decode_Command (Cmd : Command_Reprint; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Reprint) return String;
+   procedure Perform_Action (Cmd : in out Command_Reprint;
+                             Args : Argument_List);
+
+   function Decode_Command (Cmd : Command_Reprint; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--reprint";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Reprint) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--reprint [OPTS] FILEs    Redisplay FILEs";
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : in out Command_Reprint;
+                             Args : Argument_List)
+   is
+      pragma Unreferenced (Cmd);
+      Design_File : Iir_Design_File;
+      Unit : Iir;
+   begin
+      Setup_Libraries (True);
+
+      --  Parse all files.
+      for I in Args'Range loop
+         Design_File := Analyze_One_File (Args (I).all);
+         Unit := Get_First_Design_Unit (Design_File);
+         while Unit /= Null_Iir loop
+            Disp_Vhdl.Disp_Vhdl (Unit);
+            Unit := Get_Chain (Unit);
+         end loop;
+      end loop;
+   end Perform_Action;
+
+   --  Command html.
    type Command_Html is abstract new Command_Lib with null record;
 
    procedure Decode_Option (Cmd : in out Command_Html;
@@ -1569,6 +1615,7 @@ package body Ghdlprint is
    begin
       Register_Command (new Command_Chop);
       Register_Command (new Command_Lines);
+      Register_Command (new Command_Reprint);
       Register_Command (new Command_PP_Html);
       Register_Command (new Command_Xref_Html);
       Register_Command (new Command_Xref);

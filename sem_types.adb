@@ -1884,6 +1884,7 @@ package body Sem_Types is
                      Res := Create_Iir (Iir_Kind_Access_Subtype_Definition);
                      Location_Copy (Res, Def);
                      Set_Base_Type (Res, Type_Mark);
+                     Set_Type_Mark (Res, Base_Type);
                      Set_Signal_Type_Flag (Res, False);
                      Free_Old_Iir (Def);
                      return Res;
@@ -2001,9 +2002,12 @@ package body Sem_Types is
             Set_Type_Mark (Res, Def);
             Set_Range_Constraint (Res, Get_Range_Constraint (Def));
 
-         when Iir_Kind_Access_Subtype_Definition
-           | Iir_Kind_Access_Type_Definition =>
+         when Iir_Kind_Access_Subtype_Definition =>
             Res := Create_Iir (Iir_Kind_Access_Subtype_Definition);
+            Set_Type_Mark (Res, Get_Type_Mark (Def));
+         when Iir_Kind_Access_Type_Definition =>
+            Res := Create_Iir (Iir_Kind_Access_Subtype_Definition);
+            Set_Type_Mark (Res, Get_Designated_Type (Def));
 
          when Iir_Kind_Array_Type_Definition =>
             Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
@@ -2035,7 +2039,8 @@ package body Sem_Types is
             end if;
             Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
             Set_Constraint_State (Res, Get_Constraint_State (Def));
-
+            Set_Elements_Declaration_List
+              (Res, Get_Elements_Declaration_List (Def));
          when others =>
             --  FIXME: todo
             Error_Kind ("copy_subtype_indication", Def);

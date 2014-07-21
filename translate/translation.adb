@@ -2008,9 +2008,10 @@ package body Translation is
       --  RANGE_PTR from length LENGTH, which is of type INDEX_TYPE.
       --  This is done according to rules 7.2.4 of LRM93, ie:
       --  direction and left bound of the range is the same of INDEX_TYPE.
-      --  LENGTH and RANGE_PTR are variables.
+      --  LENGTH and RANGE_PTR are variables. LOC is the location in case of
+      --  error.
       procedure Create_Range_From_Length
-        (Index_Type : Iir; Length : O_Dnode; Range_Ptr : O_Dnode);
+        (Index_Type : Iir; Length : O_Dnode; Range_Ptr : O_Dnode; Loc : Iir);
 
    end Chap3;
 
@@ -2330,12 +2331,13 @@ package body Translation is
       procedure Translate_Implicit_Subprogram
         (Subprg : Iir; Infos : in out Implicit_Subprogram_Infos);
 
-      --  Assign EXPR to TARGET.
+      --  Assign EXPR to TARGET.  LOC is the location used to report errors.
       --  FIXME: do the checks.
       procedure Translate_Assign
         (Target : Mnode; Expr : Iir; Target_Type : Iir);
       procedure Translate_Assign
-        (Target : Mnode; Val: O_Enode; Expr : Iir; Target_Type : Iir);
+        (Target : Mnode;
+         Val: O_Enode; Expr : Iir; Target_Type : Iir; Loc : Iir);
 
       --  Find the declaration of the predefined function IMP in type
       --  definition BASE_TYPE.
@@ -9228,7 +9230,7 @@ package body Translation is
       end Create_Range_From_Array_Attribute_And_Length;
 
       procedure Create_Range_From_Length
-        (Index_Type : Iir; Length : O_Dnode; Range_Ptr : O_Dnode)
+        (Index_Type : Iir; Length : O_Dnode; Range_Ptr : O_Dnode; Loc : Iir)
       is
          Iinfo : Type_Info_Acc;
          Op : ON_Op_Kind;
@@ -9294,7 +9296,7 @@ package body Translation is
                           New_Dyadic_Op (Op, Left_Bound, Diff));
 
          --   Check the right bounds is inside the bounds of the index type.
-         Chap3.Check_Range (Var_Right, Null_Iir, Index_Type, Null_Iir);
+         Chap3.Check_Range (Var_Right, Null_Iir, Index_Type, Loc);
          New_Assign_Stmt
            (New_Selected_Acc_Value (New_Obj (Range_Ptr), Iinfo.T.Range_Right),
             New_Obj_Value (Var_Right));
@@ -9378,9 +9380,7 @@ package body Translation is
                   --  Not a full constant declaration (ie a value for an
                   --   already declared constant).
                   --  Must create the declaration.
-                  if Get_Expr_Staticness (El) = Locally
-                    or else Chap7.Is_Static_Constant (El)
-                  then
+                  if Chap7.Is_Static_Constant (El) then
                      Info.Object_Static := True;
                      Info.Object_Var := Create_Global_Const
                        (Create_Identifier (El), Obj_Type, Global_Storage,
@@ -11179,7 +11179,7 @@ package body Translation is
 
          --  Create range from length
          Chap3.Create_Range_From_Length
-           (Index_Type, Var_Length, Var_Range_Ptr);
+           (Index_Type, Var_Length, Var_Range_Ptr, Func);
          New_Assign_Stmt
            (New_Selected_Element (New_Obj (Var_Array),
                                   Base_Info.T.Bounds_Field (Mode_Value)),
@@ -12762,30 +12762,17 @@ package body Translation is
          end case;
       end Get_Array_Ptr_Bound_Length;
 
-      --  There is a uniq number associated which each error.
-      Bound_Error_Number : Unsigned_64 := 0;
-
       procedure Gen_Bound_Error (Loc : Iir)
       is
          Constr : O_Assoc_List;
          Name : Name_Id;
          Line, Col : Natural;
       begin
-         if Loc /= Null_Iir then
-            Files_Map.Location_To_Position
-              (Get_Location (Loc), Name, Line, Col);
+         Files_Map.Location_To_Position (Get_Location (Loc), Name, Line, Col);
 
-            Start_Association (Constr, Ghdl_Bound_Check_Failed_L1);
-            Assoc_Filename_Line (Constr, Line);
-            New_Procedure_Call (Constr);
-         else
-            Start_Association (Constr, Ghdl_Bound_Check_Failed_L0);
-            New_Association
-              (Constr, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                      Bound_Error_Number)));
-            New_Procedure_Call (Constr);
-            Bound_Error_Number := Bound_Error_Number + 1;
-         end if;
+         Start_Association (Constr, Ghdl_Bound_Check_Failed_L1);
+         Assoc_Filename_Line (Constr, Line);
+         New_Procedure_Call (Constr);
       end Gen_Bound_Error;
 
       procedure Gen_Program_Error (Loc : Iir; Code : Natural)
@@ -13816,19 +13803,19 @@ package body Translation is
       function Is_Static_Constant (Decl : Iir_Constant_Declaration)
                                   return Boolean
       is
-         Expr : Iir;
+         Expr : constant Iir := Get_Default_Value (Decl);
          Atype : Iir;
          Info : Iir;
       begin
-         if Get_Expr_Staticness (Decl) = Locally then
-            --  Should be not necessary.
-            return True;
-         end if;
-
-         Expr := Get_Default_Value (Decl);
-         if Expr = Null_Iir then
+         if Expr = Null_Iir
+           or else Get_Kind (Expr) = Iir_Kind_Overflow_Literal
+         then
             --  Deferred constant.
             return False;
+         end if;
+
+         if Get_Expr_Staticness (Decl) = Locally then
+            return True;
          end if;
 
          --  Only aggregates are handled.
@@ -14376,9 +14363,8 @@ package body Translation is
       function Translate_Static_Expression (Expr : Iir; Res_Type : Iir)
         return O_Cnode
       is
-         Expr_Type : Iir;
+         Expr_Type : constant Iir := Get_Type (Expr);
       begin
-         Expr_Type := Get_Type (Expr);
          case Get_Kind (Expr) is
             when Iir_Kind_Integer_Literal
               | Iir_Kind_Enumeration_Literal
@@ -15395,7 +15381,8 @@ package body Translation is
 
       --  Assign EXPR to TARGET.
       procedure Translate_Assign
-        (Target : Mnode; Val : O_Enode; Expr : Iir; Target_Type : Iir)
+        (Target : Mnode;
+         Val : O_Enode; Expr : Iir; Target_Type : Iir; Loc : Iir)
       is
          T_Info : constant Type_Info_Acc := Get_Info (Target_Type);
       begin
@@ -15427,8 +15414,7 @@ package body Translation is
                     (T_Info.Ortho_Ptr_Type (Mode_Value), Val);
                   Chap3.Check_Array_Match
                     (Target_Type, T,
-                     Get_Type (Expr), Dp2M (E, T_Info, Mode_Value),
-                     Null_Iir);
+                     Get_Type (Expr), Dp2M (E, T_Info, Mode_Value), Loc);
                   Chap3.Translate_Object_Copy
                     (T, New_Obj_Value (E), Target_Type);
                end;
@@ -15455,7 +15441,7 @@ package body Translation is
          else
             Open_Temp;
             Val := Chap7.Translate_Expression (Expr, Target_Type);
-            Translate_Assign (Target, Val, Expr, Target_Type);
+            Translate_Assign (Target, Val, Expr, Target_Type, Expr);
             Close_Temp;
          end if;
       end Translate_Assign;
@@ -16176,11 +16162,9 @@ package body Translation is
         (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
         return O_Enode
       is
-         Res_Info : Type_Info_Acc;
-         Expr_Info : Type_Info_Acc;
+         Res_Info : constant Type_Info_Acc := Get_Info (Res_Type);
+         Expr_Info : constant Type_Info_Acc := Get_Info (Expr_Type);
       begin
-         Res_Info := Get_Info (Res_Type);
-         Expr_Info := Get_Info (Expr_Type);
          case Res_Info.Type_Mode is
             when Type_Mode_Array =>
                declare
@@ -16672,13 +16656,11 @@ package body Translation is
 
             when Iir_Kind_Null_Literal =>
                declare
+                  Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
+                  Otype : constant O_Tnode := Tinfo.Ortho_Type (Mode_Value);
                   L : O_Dnode;
-                  Otype : O_Tnode;
                   B : Type_Info_Acc;
-                  Tinfo : Type_Info_Acc;
                begin
-                  Tinfo := Get_Info (Expr_Type);
-                  Otype := Tinfo.Ortho_Type (Mode_Value);
                   if Tinfo.Type_Mode = Type_Mode_Fat_Acc then
                      --  Create a fat null pointer.
                      --  FIXME: should be optimized!!
@@ -16697,6 +16679,25 @@ package body Translation is
                                          Tinfo.Ortho_Ptr_Type (Mode_Value));
                   else
                      return New_Lit (New_Null_Access (Otype));
+                  end if;
+               end;
+
+            when Iir_Kind_Overflow_Literal =>
+               declare
+                  Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
+                  Otype : constant O_Tnode := Tinfo.Ortho_Type (Mode_Value);
+                  L : O_Dnode;
+               begin
+                  --  Generate the error message
+                  Chap6.Gen_Bound_Error (Expr);
+
+                  --  Create a dummy value
+                  L := Create_Temp (Otype);
+                  if Tinfo.Type_Mode = Type_Mode_Fat_Acc then
+                     return New_Address (New_Obj (L),
+                                         Tinfo.Ortho_Ptr_Type (Mode_Value));
+                  else
+                     return New_Obj_Value (L);
                   end if;
                end;
 
@@ -17819,7 +17820,7 @@ package body Translation is
                  (New_Obj (Var_Range_Ptr),
                   M2Addr (Chap3.Bounds_To_Range (V_Bounds, Arr_Type, 1)));
                Chap3.Create_Range_From_Length
-                 (Index_Type, Var_Length, Var_Range_Ptr);
+                 (Index_Type, Var_Length, Var_Range_Ptr, Subprg);
                Finish_Declare_Stmt;
             end;
          end if;
@@ -20481,7 +20482,7 @@ package body Translation is
                     (Param,
                      Do_Conversion (In_Conv, Act, Params (Pos)),
                      In_Expr,
-                     Formal_Type);
+                     Formal_Type, El);
                end if;
             elsif Ftype_Info.Type_Mode not in Type_Mode_By_Value then
                --  Passed by reference.
@@ -20546,7 +20547,7 @@ package body Translation is
                   Param := Chap6.Translate_Name (Formal);
                   Formal_Info.Interface_Node := Prev_Node;
                end;
-               Chap7.Translate_Assign (Param, Val, Act, Formal_Type);
+               Chap7.Translate_Assign (Param, Val, Act, Formal_Type, El);
             end if;
             << Continue >> null;
             El := Get_Chain (El);
@@ -20661,7 +20662,7 @@ package body Translation is
                                           Do_Conversion (Out_Conv, Formal,
                                                          Param),
                                           Out_Expr,
-                                          Get_Type (Get_Actual (El)));
+                                          Get_Type (Get_Actual (El)), El);
                elsif Base_Formal /= Formal then
                   --  By individual.
                   --  Copy back.
@@ -20678,7 +20679,7 @@ package body Translation is
                      Formal_Info.Interface_Node := Prev_Node;
                   end;
                   Chap7.Translate_Assign
-                    (Params (Pos), Val, Formal, Get_Type (Act));
+                    (Params (Pos), Val, Formal, Get_Type (Act), El);
                end if;
             end if;
             El := Get_Chain (El);
@@ -21274,7 +21275,7 @@ package body Translation is
 
          --  Set driver.
          Chap7.Translate_Assign
-           (Drv, M2E (Data.Expr), Data.Expr_Node, Targ_Type);
+           (Drv, M2E (Data.Expr), Data.Expr_Node, Targ_Type, Data.Expr_Node);
 
          --  Test if the signal is active.
          Start_If_Stmt
@@ -28326,14 +28327,6 @@ package body Translation is
       New_Interface_Decl
         (Interfaces, Param, Get_Identifier ("code"), Ghdl_Index_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Program_Error);
-
-      --  procedure __ghdl_bound_check_failed_l0;
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_bound_check_failed_l0"),
-         O_Storage_External);
-      New_Interface_Decl (Interfaces, Param, Get_Identifier ("index"),
-                          Ghdl_Index_Type);
-      Finish_Subprogram_Decl (Interfaces, Ghdl_Bound_Check_Failed_L0);
 
       --  procedure __ghdl_bound_check_failed_l1 (filename : char_ptr_type;
       --                                          line : ghdl_i32);

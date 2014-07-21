@@ -108,7 +108,8 @@ package body Xrefs is
       case Get_Kind (Name) is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
-           | Iir_Kind_Operator_Symbol =>
+           | Iir_Kind_Operator_Symbol
+           | Iir_Kind_Character_Literal =>
             Res := Get_Named_Entity (Name);
             if Res = Std_Package.Error_Mark then
                return;
@@ -126,7 +127,8 @@ package body Xrefs is
       end case;
       case Get_Kind (Name) is
          when Iir_Kind_Simple_Name
-           | Iir_Kind_Operator_Symbol =>
+           | Iir_Kind_Operator_Symbol
+           | Iir_Kind_Character_Literal =>
             null;
          when Iir_Kind_Selected_Name
            | Iir_Kind_Parenthesis_Name

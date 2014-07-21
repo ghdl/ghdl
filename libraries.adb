@@ -20,7 +20,7 @@ with GNAT.Table;
 with GNAT.OS_Lib;
 with Errorout; use Errorout;
 with Scanner;
-with Iirs_Utils;
+with Iirs_Utils; use Iirs_Utils;
 with Parse;
 with Back_End;
 with Name_Table; use Name_Table;
@@ -147,7 +147,7 @@ package body Libraries is
             Id := Get_Identifier (Lib_Unit);
          when Iir_Kind_Architecture_Body =>
             --  Architectures are put with the entity identifier.
-            Id := Get_Identifier (Get_Entity (Lib_Unit));
+            Id := Get_Entity_Identifier_Of_Architecture (Lib_Unit);
          when others =>
             Error_Kind ("get_Hash_Id_For_Unit", Lib_Unit);
       end case;
@@ -268,7 +268,6 @@ package body Libraries is
    is
       use Scanner;
       use Tokens;
-      use Iirs_Utils;
 
       File : Source_File_Entry;
 
@@ -506,7 +505,7 @@ package body Libraries is
             if Get_Kind (Library_Unit) = Iir_Kind_Architecture_Body then
                Scan_Expect (Tok_Of);
                Scan_Expect (Tok_Identifier);
-               Set_Entity (Library_Unit, Current_Text);
+               Set_Entity_Name (Library_Unit, Current_Text);
             end if;
 
             -- Scan position.
@@ -673,49 +672,6 @@ package body Libraries is
       Set_Visible_Flag (Work_Library, True);
    end Load_Work_Library;
 
---    procedure Unload_Library (Library : Iir_Library_Declaration)
---    is
---       File : Iir_Design_File;
---       Unit : Iir_Design_Unit;
---    begin
---       loop
---          File := Get_Design_File_Chain (Library);
---          exit when File = Null_Iir;
---          Set_Design_File_Chain (Library, Get_Chain (File));
-
---          loop
---             Unit := Get_Design_Unit_Chain (File);
---             exit when Unit = Null_Iir;
---             Set_Design_Unit_Chain (File, Get_Chain (Unit));
-
---             --  Units should not be loaded.
---             if Get_Loaded_Flag (Unit) then
---                raise Internal_Error;
---             end if;
-
---             --  Free dependences list.
---          end loop;
---       end loop;
---    end Unload_Library;
-
---    procedure Unload_All_Libraries
---    is
---       Library : Iir_Library_Declaration;
---    begin
---       if Get_Identifier (Std_Library) /= Name_Std then
---          raise Internal_Error;
---       end if;
---       if Std_Library /= Libraries_Chain then
---          raise Internal_Error;
---       end if;
---       loop
---          Library := Get_Chain (Libraries_Chain);
---          exit when Library = Null_Iir;
---          Set_Chain (Libraries_Chain, Get_Chain (Libraries_Chain));
---          Unload_Library (Library);
---       end loop;
---    end Unload_All_Libraries;
-
    -- Get or create a library from an identifier.
    function Get_Library (Ident: Name_Id; Loc : Location_Type)
                         return Iir_Library_Declaration
@@ -791,8 +747,8 @@ package body Libraries is
       if Unit_Kind = Iir_Kind_Architecture_Body
         and then Library_Unit_Kind = Iir_Kind_Architecture_Body
       then
-         Entity_Name1 := Get_Identifier (Get_Entity (Unit));
-         Entity_Name2 := Get_Identifier (Get_Entity (Library_Unit));
+         Entity_Name1 := Get_Entity_Identifier_Of_Architecture (Unit);
+         Entity_Name2 := Get_Entity_Identifier_Of_Architecture (Library_Unit);
          if Entity_Name1 /= Entity_Name2 then
             return False;
          end if;
@@ -1123,7 +1079,6 @@ package body Libraries is
    -- Save the file map of library LIBRARY.
    procedure Save_Library (Library: Iir_Library_Declaration) is
       use GNAT.OS_Lib;
-      use Iirs_Utils;
       Temp_Name : String_Access;
       FD : File_Descriptor;
       Success : Boolean;
@@ -1223,7 +1178,8 @@ package body Libraries is
                   WR ("architecture ");
                   WR (Image_Identifier (Library_Unit));
                   WR (" of ");
-                  WR (Image_Identifier (Get_Entity (Library_Unit)));
+                  WR (Image (Get_Entity_Identifier_Of_Architecture
+                               (Library_Unit)));
                when Iir_Kind_Package_Declaration
                  | Iir_Kind_Package_Instantiation_Declaration =>
                   WR ("package ");
@@ -1327,7 +1283,8 @@ package body Libraries is
             Library_Unit := Get_Library_Unit (Design_Unit);
 
             if Get_Kind (Library_Unit) = Iir_Kind_Architecture_Body
-              and then Get_Identifier (Get_Entity (Library_Unit)) = Entity_Id
+              and then
+              Get_Entity_Identifier_Of_Architecture (Library_Unit) = Entity_Id
             then
                if Res = Null_Iir then
                   Res := Design_Unit;
@@ -1616,7 +1573,6 @@ package body Libraries is
       Design_Unit: Iir_Design_Unit;
       Library_Unit: Iir;
       Primary_Ident: Name_Id;
-      Ident: Name_Id;
       Lib_Prim : Iir;
    begin
       Lib_Prim := Get_Library (Get_Design_File (Primary));
@@ -1634,8 +1590,8 @@ package body Libraries is
                   -- The entity field can be either an identifier (if the
                   -- library unit was not loaded) or an access to the entity
                   -- unit.
-                  Ident := Get_Identifier (Get_Entity (Library_Unit));
-                  if Ident = Primary_Ident
+                  if (Get_Entity_Identifier_Of_Architecture (Library_Unit)
+                        = Primary_Ident)
                     and then Get_Identifier (Library_Unit) = Name
                   then
                      return Design_Unit;

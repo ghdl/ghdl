@@ -167,6 +167,18 @@ package body Evaluation is
       return Res;
    end Build_Simple_Aggregate;
 
+   function Build_Overflow (Origin : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Overflow_Literal);
+      Location_Copy (Res, Origin);
+      Set_Type (Res, Get_Type (Origin));
+      Set_Literal_Origin (Res, Origin);
+      Set_Expr_Staticness (Res, Locally);
+      return Res;
+   end Build_Overflow;
+
    function Build_Constant (Val : Iir; Origin : Iir) return Iir
    is
       Res : Iir;
@@ -222,8 +234,8 @@ package body Evaluation is
             Res := Create_Iir (Iir_Kind_Simple_Aggregate);
             Set_Simple_Aggregate_List (Res, Get_Simple_Aggregate_List (Val));
 
-         when Iir_Kind_Error =>
-            return Val;
+         when Iir_Kind_Overflow_Literal =>
+            Res := Create_Iir (Iir_Kind_Overflow_Literal);
 
          when others =>
             Error_Kind ("build_constant", Val);
@@ -286,9 +298,7 @@ package body Evaluation is
    begin
       --  The left limit must be locally static in order to compute the right
       --  limit.
-      if Get_Type_Staticness (A_Type) /= Locally then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Get_Type_Staticness (A_Type) = Locally);
 
       Index_Constraint := Get_Range_Constraint (A_Type);
       Constraint := Create_Iir (Iir_Kind_Range_Expression);
@@ -306,9 +316,7 @@ package body Evaluation is
    is
       Res : Iir;
    begin
-      if Get_Type_Staticness (A_Type) /= Locally then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Get_Type_Staticness (A_Type) = Locally);
 
       case Get_Kind (A_Type) is
          when Iir_Kind_Enumeration_Type_Definition =>
@@ -438,6 +446,11 @@ package body Evaluation is
 
       Func : Iir_Predefined_Functions;
    begin
+      if Get_Kind (Operand) = Iir_Kind_Overflow_Literal then
+         --  Propagate overflow.
+         return Build_Overflow (Orig);
+      end if;
+
       Func := Get_Implicit_Definition (Get_Implementation (Orig));
       case Func is
          when Iir_Predefined_Integer_Negation =>
@@ -499,8 +512,9 @@ package body Evaluation is
       end case;
    exception
       when Constraint_Error =>
-         Error_Msg_Sem ("arithmetic overflow in static expression", Orig);
-         return Orig;
+         --  Can happen for absolute.
+         Warning_Msg_Sem ("arithmetic overflow in static expression", Orig);
+         return Build_Overflow (Orig);
    end Eval_Monadic_Operator;
 
    function Eval_Dyadic_Bit_Array_Operator
@@ -517,8 +531,8 @@ package body Evaluation is
    begin
       Len := Get_String_Length (Left);
       if Len /= Get_String_Length (Right) then
-         Error_Msg_Sem ("length of left and right operands mismatch", Expr);
-         return Left;
+         Warning_Msg_Sem ("length of left and right operands mismatch", Expr);
+         return Build_Overflow (Expr);
       else
          Id := Start;
          case Func is
@@ -620,7 +634,7 @@ package body Evaluation is
    is
    begin
       if Get_Value (Val) = 0 then
-         Error_Msg_Sem ("division by 0", Expr);
+         Warning_Msg_Sem ("division by 0", Expr);
          return False;
       else
          return True;
@@ -880,10 +894,10 @@ package body Evaluation is
       pragma Unsuppress (Overflow_Check);
       Func : Iir_Predefined_Functions;
    begin
-      if Get_Kind (Left) = Iir_Kind_Error
-        or else Get_Kind (Right) = Iir_Kind_Error
+      if Get_Kind (Left) = Iir_Kind_Overflow_Literal
+        or else Get_Kind (Right) = Iir_Kind_Overflow_Literal
       then
-         return Create_Error_Expr (Orig, Get_Type (Orig));
+         return Build_Overflow (Orig);
       end if;
 
       Func := Get_Implicit_Definition (Get_Implementation (Orig));
@@ -899,21 +913,21 @@ package body Evaluation is
                return Build_Integer
                  (Get_Value (Left) / Get_Value (Right), Orig);
             else
-               return Null_Iir;
+               return Build_Overflow (Orig);
             end if;
          when Iir_Predefined_Integer_Mod =>
             if Check_Integer_Division_By_Zero (Orig, Right) then
                return Build_Integer
                  (Get_Value (Left) mod Get_Value (Right), Orig);
             else
-               return Null_Iir;
+               return Build_Overflow (Orig);
             end if;
          when Iir_Predefined_Integer_Rem =>
             if Check_Integer_Division_By_Zero (Orig, Right) then
                return Build_Integer
                  (Get_Value (Left) rem Get_Value (Right), Orig);
             else
-               return Null_Iir;
+               return Build_Overflow (Orig);
             end if;
          when Iir_Predefined_Integer_Exp =>
             return Build_Integer
@@ -969,8 +983,8 @@ package body Evaluation is
               (Get_Fp_Value (Left) * Get_Fp_Value (Right), Orig);
          when Iir_Predefined_Floating_Div =>
             if Get_Fp_Value (Right) = 0.0 then
-               Error_Msg_Sem ("right operand of division is 0", Orig);
-               return Build_Floating (0.0, Orig);
+               Warning_Msg_Sem ("right operand of division is 0", Orig);
+               return Build_Overflow (Orig);
             else
                return Build_Floating
                  (Get_Fp_Value (Left) / Get_Fp_Value (Right), Orig);
@@ -1290,8 +1304,8 @@ package body Evaluation is
       end case;
    exception
       when Constraint_Error =>
-         Error_Msg_Sem ("arithmetic overflow in static expression", Orig);
-         return Null_Iir;
+         Warning_Msg_Sem ("arithmetic overflow in static expression", Orig);
+         return Build_Overflow (Orig);
    end Eval_Dyadic_Operator;
 
    --  Evaluate any array attribute, return the type for the prefix.
@@ -1467,42 +1481,43 @@ package body Evaluation is
 
    function Build_Enumeration_Value (Val : String; Enum, Expr : Iir) return Iir
    is
-   Value : String(Val'range);
-   List  : constant Iir_List := Get_Enumeration_Literal_List(Enum);
+      Value : String (Val'range);
+      List  : constant Iir_List := Get_Enumeration_Literal_List (Enum);
    begin
-      for i in Val'range loop
-         Value(i) := Ada.Characters.Handling.To_Lower (Val(i));
+      for I in Val'range loop
+         Value (I) := Ada.Characters.Handling.To_Lower (Val (I));
       end loop;
-      for i in 0 .. Get_Nbr_Elements(List) - 1 loop
-         if Value = Image_Identifier(Get_Nth_Element(List, i)) then
-            return Build_Discrete(Iir_Int64(i), Expr);
+      for I in 0 .. Get_Nbr_Elements (List) - 1 loop
+         if Value = Image_Identifier (Get_Nth_Element (List, I)) then
+            return Build_Enumeration (Iir_Index32 (I), Expr);
          end if;
       end loop;
-      Error_Msg_Sem ("value """ & Value & """ not in enumeration", Expr);
-      return Null_Iir;
+      Warning_Msg_Sem ("value """ & Value & """ not in enumeration", Expr);
+      return Build_Overflow (Expr);
    end Build_Enumeration_Value;
 
    function Eval_Physical_Image (Phys, Expr: Iir) return Iir
-   -- reduces to the base unit (e.g. femtoseconds)
    is
-      Value : constant String := Iir_Int64'image(
-                                    Get_Physical_Literal_Value(Phys));
-      Unit : constant Iir := Get_Primary_Unit (Get_Base_Type (Get_Type(Phys)));
+      --  Reduces to the base unit (e.g. femtoseconds).
+      Value : constant String :=
+        Iir_Int64'Image (Get_Physical_Literal_Value (Phys));
+      Unit : constant Iir :=
+        Get_Primary_Unit (Get_Base_Type (Get_Type (Phys)));
       UnitName : constant String := Image_Identifier (Unit);
       Image_Id : constant String_Id := Str_Table.Start;
       Length : Nat32 := Value'Length + UnitName'Length + 1;
    begin
-      for i in Value'range loop
+      for I in Value'range loop
          -- Suppress the Ada +ve integer'image leading space
-         if i > Value'first or else Value(i) /= ' ' then
-            Str_Table.Append(Value(i));
+         if I > Value'first or else Value (I) /= ' ' then
+            Str_Table.Append (Value (I));
          else
             Length := Length - 1;
          end if;
       end loop;
-      Str_Table.Append(' ');
-      for i in UnitName'range loop
-         Str_Table.Append(UnitName(i));
+      Str_Table.Append (' ');
+      for I in UnitName'range loop
+         Str_Table.Append (UnitName (I));
       end loop;
       Str_Table.Finish;
 
@@ -1551,9 +1566,9 @@ package body Evaluation is
          Unit := Get_Chain (Unit);
       end loop;
       if Unit = Null_Iir then
-         Error_Msg_Sem ("Unit """ & UnitName (Sep + 1 .. UnitName'Last)
+         Warning_Msg_Sem ("Unit """ & UnitName (Sep + 1 .. UnitName'Last)
                          & """ not in physical type", Expr);
-         return Null_Iir;
+         return Build_Overflow (Expr);
       end if;
 
       Mult := Get_Value (Get_Physical_Unit_Value (Unit));
@@ -1578,8 +1593,8 @@ package body Evaluation is
          when Iir_Kind_Enumeration_Literal =>
             P := Iir_Int64 (Get_Enum_Pos (Expr)) + N;
             if P < 0 then
-               Error_Msg_Sem ("static constant violates bounds", Expr);
-               return Expr;
+               Warning_Msg_Sem ("static constant violates bounds", Expr);
+               return Build_Overflow (Expr);
             else
                return Build_Enumeration (Iir_Index32 (P), Expr);
             end if;
@@ -1645,7 +1660,9 @@ package body Evaluation is
             if Eval_Discrete_Type_Length (Conv_Index_Type)
               /= Eval_Discrete_Type_Length (Val_Index_Type)
             then
-               Error_Msg_Sem ("non matching length in type convertion", Conv);
+               Warning_Msg_Sem
+                 ("non matching length in type conversion", Conv);
+               return Build_Overflow (Conv);
             end if;
             return Res;
          when Iir_Kind_Array_Type_Definition =>
@@ -1721,7 +1738,8 @@ package body Evaluation is
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Floating_Point_Literal
            | Iir_Kind_String_Literal
-           | Iir_Kind_Bit_String_Literal =>
+           | Iir_Kind_Bit_String_Literal
+           | Iir_Kind_Overflow_Literal =>
             return Expr;
          when Iir_Kind_Physical_Int_Literal =>
             if Get_Unit_Name (Expr)
@@ -1814,9 +1832,9 @@ package body Evaluation is
                  and then
                  not Eval_Int_In_Range (Val, Get_Range_Constraint (Expr_Type))
                then
-                  Error_Msg_Sem
+                  Warning_Msg_Sem
                     ("static argument out of the type range", Expr);
-                  Val := 0;
+                  return Build_Overflow (Expr);
                end if;
                if Get_Kind (Get_Base_Type (Get_Type (Expr)))
                  = Iir_Kind_Physical_Type_Definition
@@ -1857,8 +1875,9 @@ package body Evaluation is
                Param := Eval_Static_Expr (Param);
                Set_Parameter (Expr, Param);
                if Get_Kind (Param) /= Iir_Kind_String_Literal then
-                  Error_Msg_Sem ("'value argument not a string", Expr);
-                  return Null_Iir; -- or Expr?
+                  --  FIXME: Isn't it an implementation restriction.
+                  Warning_Msg_Sem ("'value argument not a string", Expr);
+                  return Build_Overflow (Expr);
                else
                   -- what type are we converting the string to?
                   Param_Type := Get_Base_Type (Get_Type (Expr));
@@ -2194,6 +2213,9 @@ package body Evaluation is
       if Get_Kind (Expr) = Iir_Kind_Error then
          return True;
       end if;
+      if Get_Kind (Expr) = Iir_Kind_Overflow_Literal then
+         return False;
+      end if;
 
       case Get_Kind (Sub_Type) is
          when Iir_Kind_Integer_Subtype_Definition =>
@@ -2235,9 +2257,13 @@ package body Evaluation is
       end case;
    end Eval_Is_In_Bound;
 
-   procedure Eval_Check_Bound (Expr : Iir; Sub_Type : Iir)
-   is
+   procedure Eval_Check_Bound (Expr : Iir; Sub_Type : Iir) is
    begin
+      if Get_Kind (Expr) = Iir_Kind_Overflow_Literal then
+         --  Nothing to check, and a message was already generated.
+         return;
+      end if;
+
       if not Eval_Is_In_Bound (Expr, Sub_Type) then
          Error_Msg_Sem ("static constant violates bounds", Expr);
       end if;
@@ -2307,10 +2333,6 @@ package body Evaluation is
       --  Should check L <= R or L >= R according to direction.
       --return Eval_Is_In_Bound (Get_Left_Limit (A_Range), Sub_Type)
       --  and then Eval_Is_In_Bound (Get_Right_Limit (A_Range), Sub_Type);
-   exception
-      when Node_Error =>
-         --  Avoid error storms.
-         return True;
    end Eval_Is_Range_In_Bound;
 
    procedure Eval_Check_Range
@@ -2382,8 +2404,6 @@ package body Evaluation is
             return Get_Physical_Value (Expr);
          when Iir_Kind_Unit_Declaration =>
             return Get_Value (Get_Physical_Unit_Value (Expr));
-         when Iir_Kind_Error =>
-            raise Node_Error;
          when others =>
             Error_Kind ("eval_pos", Expr);
       end case;
@@ -2512,7 +2532,6 @@ package body Evaluation is
 --          end;
 --       end if;
    end Eval_Simple_Name;
-
 
    function Compare_String_Literals (L, R : Iir) return Compare_Type
    is

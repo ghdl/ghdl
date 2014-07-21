@@ -150,6 +150,11 @@ run_compliant_test ()
    handle_test run $@
 }
 
+run_err_non_compliant_test ()
+{
+   handle_test run_err $@
+}
+
 
 # Decode options.
 skip=0

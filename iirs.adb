@@ -334,6 +334,7 @@ package body Iirs is
            | Iir_Kind_Null_Literal
            | Iir_Kind_String_Literal
            | Iir_Kind_Simple_Aggregate
+           | Iir_Kind_Overflow_Literal
            | Iir_Kind_Proxy
            | Iir_Kind_Waveform_Element
            | Iir_Kind_Conditional_Waveform
@@ -1262,6 +1263,7 @@ package body Iirs is
            | Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Bit_String_Literal
            | Iir_Kind_Simple_Aggregate
+           | Iir_Kind_Overflow_Literal
            | Iir_Kind_Enumeration_Literal =>
             null;
          when others =>
@@ -2309,6 +2311,7 @@ package body Iirs is
            | Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Bit_String_Literal
            | Iir_Kind_Simple_Aggregate
+           | Iir_Kind_Overflow_Literal
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Record_Element_Constraint
            | Iir_Kind_Disconnection_Specification
@@ -5856,6 +5859,7 @@ package body Iirs is
            | Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Bit_String_Literal
            | Iir_Kind_Simple_Aggregate
+           | Iir_Kind_Overflow_Literal
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Range_Expression
            | Iir_Kind_Unit_Declaration

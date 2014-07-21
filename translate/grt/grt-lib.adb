@@ -188,13 +188,6 @@ package body Grt.Lib is
       Error_E ("");
    end Ghdl_Program_Error;
 
-   procedure Ghdl_Bound_Check_Failed_L0 (Number : Ghdl_Index_Type) is
-   begin
-      Error_C ("bound check failed (#");
-      Error_C (Integer (Number));
-      Error_E (")");
-   end Ghdl_Bound_Check_Failed_L0;
-
    procedure Ghdl_Bound_Check_Failed_L1 (Filename : Ghdl_C_String;
                                          Line: Ghdl_I32)
    is

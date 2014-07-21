@@ -390,6 +390,8 @@ package body Errorout is
             return "record element constraint";
          when Iir_Kind_Null_Literal =>
             return "null literal";
+         when Iir_Kind_Overflow_Literal =>
+            return Disp_Node (Get_Literal_Origin (Node));
          when Iir_Kind_Aggregate =>
             return "aggregate";
          when Iir_Kind_Unit_Declaration =>

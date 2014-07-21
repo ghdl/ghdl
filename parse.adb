@@ -3435,11 +3435,6 @@ package body Parse is
          Location_Copy (A_Choice, Expr1);
          Set_Expression (A_Choice, Parse_Range_Right (Expr1));
          return A_Choice;
---       elsif Get_Kind (Expr1) in Iir_Kinds_Name then
---          A_Choice := Create_Iir (Iir_Kind_Choice_By_Name);
---          Location_Copy (A_Choice, Expr1);
---          Set_Name (A_Choice, Parse_Range_Type_Expression (Expr1));
---          return A_Choice;
       else
          A_Choice := Create_Iir (Iir_Kind_Choice_By_Expression);
          Location_Copy (A_Choice, Expr1);

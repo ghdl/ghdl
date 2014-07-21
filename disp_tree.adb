@@ -708,6 +708,8 @@ package body Disp_Tree is
             if Flat_Decl then
                return;
             end if;
+            Header ("entity_name:");
+            Disp_Tree (Get_Entity_Name (Tree), Ntab, True);
             Header ("entity:");
             Disp_Tree_Flat (Get_Entity (Tree), Ntab);
             Header ("declaration_chain:");
@@ -860,12 +862,18 @@ package body Disp_Tree is
             Disp_Tree (Get_Name (Tree), Ntab);
             Header ("associated:");
             Disp_Tree (Get_Associated (Tree), Ntab, True);
+            Header ("same_alternative_flag: ", False);
+            Disp_Flag (Get_Same_Alternative_Flag (Tree));
          when Iir_Kind_Choice_By_Others =>
             Header ("associated");
             Disp_Tree (Get_Associated (Tree), Ntab, True);
+            Header ("same_alternative_flag: ", False);
+            Disp_Flag (Get_Same_Alternative_Flag (Tree));
          when Iir_Kind_Choice_By_None =>
             Header ("associated");
             Disp_Tree (Get_Associated (Tree), Ntab, True);
+            Header ("same_alternative_flag: ", False);
+            Disp_Flag (Get_Same_Alternative_Flag (Tree));
          when Iir_Kind_Choice_By_Range =>
             Header ("staticness: ", False);
             Disp_Choice_Staticness (Tree);
@@ -873,6 +881,8 @@ package body Disp_Tree is
             Disp_Tree (Get_Expression (Tree), Ntab);
             Header ("associated");
             Disp_Tree (Get_Associated (Tree), Ntab, True);
+            Header ("same_alternative_flag: ", False);
+            Disp_Flag (Get_Same_Alternative_Flag (Tree));
          when Iir_Kind_Choice_By_Expression =>
             Header ("expression:");
             Disp_Tree (Get_Expression (Tree), Ntab);
@@ -880,6 +890,8 @@ package body Disp_Tree is
             Disp_Choice_Staticness (Tree);
             Header ("associated");
             Disp_Tree (Get_Associated (Tree), Ntab, True);
+            Header ("same_alternative_flag: ", False);
+            Disp_Flag (Get_Same_Alternative_Flag (Tree));
 
          when Iir_Kind_Signal_Interface_Declaration =>
             if Flat_Decl then
@@ -1395,10 +1407,6 @@ package body Disp_Tree is
             Disp_Tree (Get_Base_Type (Tree), Ntab, True);
             Header ("type mark:");
             Disp_Tree (Get_Type_Mark (Tree), Ntab, True);
-            Header ("designated type:");
-            Disp_Tree_Flat (Get_Designated_Type (Tree), Ntab);
-            Header ("resolution function:");
-            Disp_Tree_Flat (Get_Resolution_Function (Tree), Ntab);
 
          when Iir_Kind_Incomplete_Type_Definition =>
             Header ("staticness: ", False);
@@ -1805,7 +1813,7 @@ package body Disp_Tree is
          when Iir_Kind_Selected_Name =>
             Header ("prefix:");
             Disp_Tree (Get_Prefix (Tree), Ntab, True);
-            Header ("identifier: ", False);
+            Header ("suffix_identifier: ", False);
             Disp_Ident (Get_Suffix_Identifier (Tree));
 
          when Iir_Kind_Attribute_Name =>
@@ -1976,6 +1984,13 @@ package body Disp_Tree is
             Disp_Tree_List (Get_Simple_Aggregate_List (Tree), Ntab, True);
             Header ("type:");
             Disp_Tree (Get_Type (Tree), Ntab, True);
+            Header ("origin:");
+            Disp_Tree (Get_Literal_Origin (Tree), Ntab, True);
+         when Iir_Kind_Overflow_Literal =>
+            Header ("staticness:", false);
+            Disp_Expr_Staticness (Tree);
+            Header ("type:");
+            Disp_Tree_Flat (Get_Type (Tree), Ntab);
             Header ("origin:");
             Disp_Tree (Get_Literal_Origin (Tree), Ntab, True);
 

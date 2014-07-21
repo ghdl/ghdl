@@ -67,7 +67,6 @@ package Grt.Lib is
    Error_Severity   : constant Integer := 2;
    Failure_Severity : constant Integer := 3;
 
-   procedure Ghdl_Bound_Check_Failed_L0 (Number : Ghdl_Index_Type);
    procedure Ghdl_Bound_Check_Failed_L1 (Filename : Ghdl_C_String;
                                          Line: Ghdl_I32);
 
@@ -113,8 +112,6 @@ private
    pragma Export (C, Ghdl_Psl_Cover_Failed, "__ghdl_psl_cover_failed");
    pragma Export (C, Ghdl_Report, "__ghdl_report");
 
-   pragma Export (C, Ghdl_Bound_Check_Failed_L0,
-                  "__ghdl_bound_check_failed_l0");
    pragma Export (C, Ghdl_Bound_Check_Failed_L1,
                   "__ghdl_bound_check_failed_l1");
    pragma Export (C, Ghdl_Program_Error, "__ghdl_program_error");

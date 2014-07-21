@@ -652,6 +652,20 @@ package body Iirs_Utils is
       end case;
    end Get_Block_From_Block_Specification;
 
+   function Get_Entity_Identifier_Of_Architecture (Arch : Iir) return Name_Id
+   is
+      Name : constant Iir := Get_Entity_Name (Arch);
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Simple_Name =>
+            return Get_Identifier (Name);
+         when Iir_Kind_Selected_Name =>
+            return Get_Suffix_Identifier (Name);
+         when others =>
+            Error_Kind ("get_entity_identifier_of_architecture", Name);
+      end case;
+   end Get_Entity_Identifier_Of_Architecture;
+
    function Get_String_Type_Bound_Type (Sub_Type : Iir) return Iir is
    begin
       if Get_Kind (Sub_Type) /= Iir_Kind_Array_Subtype_Definition then
