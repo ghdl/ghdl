@@ -294,6 +294,8 @@ package body Sem_Expr is
          when Iir_Kind_Allocator_By_Expression
            | Iir_Kind_Allocator_By_Subtype =>
             return Is_Allocator_Type (A_Type, Expr);
+         when Iir_Kind_Parenthesis_Expression =>
+            return Is_Expr_Compatible (A_Type, Get_Expression (Expr));
          when others =>
             --  Error while EXPR was typed.  FIXME: should create an ERROR
             --  node?
@@ -355,6 +357,7 @@ package body Sem_Expr is
            | Iir_Kind_Implicit_Dereference
            | Iir_Kinds_Expression_Attribute
            | Iir_Kind_Attribute_Value
+           | Iir_Kind_Parenthesis_Expression
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Function_Call =>
             return Expr;
@@ -3576,6 +3579,8 @@ package body Sem_Expr is
               | Iir_Kinds_Dyadic_Operator
               | Iir_Kind_Function_Call =>
                return;
+            when Iir_Kind_Parenthesis_Expression =>
+               Obj := Get_Expression (Obj);
             when Iir_Kind_Qualified_Expression =>
                return;
             when Iir_Kind_Type_Conversion
@@ -3828,6 +3833,21 @@ package body Sem_Expr is
             else
                return Sem_Aggregate (Expr, A_Type);
             end if;
+
+         when Iir_Kind_Parenthesis_Expression =>
+            declare
+               Sub_Expr : Iir;
+            begin
+               Sub_Expr := Get_Expression (Expr);
+               Sub_Expr := Sem_Expression_Ov (Sub_Expr, A_Type1);
+               if Sub_Expr = Null_Iir then
+                  return Null_Iir;
+               end if;
+               Set_Expression (Expr, Sub_Expr);
+               Set_Type (Expr, Get_Type (Sub_Expr));
+               Set_Expr_Staticness (Expr, Get_Expr_Staticness (Sub_Expr));
+               return Expr;
+            end;
 
          when Iir_Kind_Qualified_Expression =>
             declare

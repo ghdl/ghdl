@@ -147,6 +147,7 @@ package body Parse is
             Error_Msg_Parse
               ("mispelling, """ & Name_Table.Image (Name) & """ expected");
          else
+            Set_End_Has_Identifier (Decl, True);
             Xrefs.Xref_End (Get_Token_Location, Decl);
          end if;
       end if;
@@ -803,7 +804,7 @@ package body Parse is
                   return Null_Iir;
                end if;
                Res := Create_Iir (Iir_Kind_Attribute_Name);
-               Set_Attribute_Identifier (Res, Current_Identifier);
+               Set_Identifier (Res, Current_Identifier);
                Set_Location (Res);
                if Get_Kind (Prefix) = Iir_Kind_Signature then
                   Set_Signature (Res, Prefix);
@@ -845,12 +846,12 @@ package body Parse is
                      Res := Create_Iir (Iir_Kind_Selected_Name);
                      Set_Location (Res);
                      Set_Prefix (Res, Prefix);
-                     Set_Suffix_Identifier (Res, Current_Identifier);
+                     Set_Identifier (Res, Current_Identifier);
                   when Tok_String =>
                      Res := Create_Iir (Iir_Kind_Selected_Name);
                      Set_Location (Res);
                      Set_Prefix (Res, Prefix);
-                     Set_Suffix_Identifier
+                     Set_Identifier
                        (Res, Scan_To_Operator_Name (Get_Token_Location));
                   when others =>
                      Error_Msg_Parse ("an identifier or all is expected");
@@ -1000,7 +1001,7 @@ package body Parse is
             Lexical_Layout := 0;
          else
             Is_Default := False;
-            Lexical_Layout := Iir_Lexical_Has_Mode;
+            Lexical_Layout := Iir_Lexical_Has_Class;
             Scan;
          end if;
 
@@ -1683,7 +1684,7 @@ package body Parse is
          Scan_Expect (Tok_Body);
       end if;
       Scan;
-      Check_End_Name (Decl);
+      Check_End_Name (Ident, Res);
       return Decl;
    end Parse_Protected_Type_Definition;
 
@@ -1770,7 +1771,7 @@ package body Parse is
                         Error_Msg_Parse
                           ("simple_name not allowed here in vhdl87");
                      end if;
-                     Check_End_Name (Decl);
+                     Check_End_Name (Get_Identifier (Decl), Unit_Def);
                   end if;
                   if Def /= Null_Iir then
                      Set_Type (Def, Unit_Def);
@@ -1784,12 +1785,13 @@ package body Parse is
             Decl := Create_Iir (Iir_Kind_Type_Declaration);
             Set_Identifier (Decl, Ident);
             Set_Location (Decl, Loc);
-            Set_Type_Definition (Decl, Parse_Record_Definition);
+            Def := Parse_Record_Definition;
+            Set_Type_Definition (Decl, Def);
             if Current_Token = Tok_Identifier then
                if Flags.Vhdl_Std = Vhdl_87 then
                   Error_Msg_Parse ("simple_name not allowed here in vhdl87");
                end if;
-               Check_End_Name (Decl);
+               Check_End_Name (Get_Identifier (Decl), Def);
             end if;
          when Tok_Access =>
             Def := Parse_Access_Definition;
@@ -3374,6 +3376,7 @@ package body Parse is
       Parse_Declarative_Part (Res);
 
       if Current_Token = Tok_Begin then
+         Set_Has_Begin (Res, True);
          Scan;
          Parse_Concurrent_Statements (Res);
       end if;
@@ -3387,6 +3390,7 @@ package body Parse is
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("""entity"" keyword not allowed here by vhdl 87");
          end if;
+         Set_End_Has_Reserved_Id (Res, True);
          Scan;
       end if;
       Check_End_Name (Res);
@@ -3486,7 +3490,7 @@ package body Parse is
    is
       use Iir_Chains.Association_Choices_Chain_Handling;
       Expr: Iir;
-      Res: Iir_Aggregate;
+      Res: Iir;
       Last : Iir;
       Assoc: Iir;
       Loc : Location_Type;
@@ -3506,9 +3510,19 @@ package body Parse is
                null;
             when Tok_Right_Paren =>
                -- This was just a braced expression.
+
                -- Eat ')'.
                Scan;
-               return Expr;
+
+               if Flag_Parse_Parenthesis then
+                  --  Create a node for the parenthesis.
+                  Res := Create_Iir (Iir_Kind_Parenthesis_Expression);
+                  Set_Location (Res, Loc);
+                  Set_Expression (Res, Expr);
+                  return Res;
+               else
+                  return Expr;
+               end if;
             when Tok_Semi_Colon =>
                --  Surely a missing parenthesis.
                --  FIXME: in case of multiple missing parenthesises, several
@@ -5159,6 +5173,7 @@ package body Parse is
       else
          Expect (Tok_Process);
          Scan;
+         Set_End_Has_Reserved_Id (Res, True);
          Check_End_Name (Res);
          Expect (Tok_Semi_Colon);
       end if;
@@ -5982,6 +5997,7 @@ package body Parse is
             Error_Msg_Parse
               ("'architecture' keyword not allowed here by vhdl 87");
          end if;
+         Set_End_Has_Reserved_Id (Res, True);
          Scan;
       end if;
       Check_End_Name (Res);

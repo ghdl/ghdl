@@ -200,9 +200,9 @@ package Iirs is
 
    -- Iir_Kind_Character_Literal (Short)
    --
-   --   Get/Set_Identifier (Field3)
-   --
    --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
    --
@@ -565,11 +565,11 @@ package Iirs is
    -- Iir_Kind_Selected_Element (Short)
    -- A record element selection.
    --
+   --   Get/Set_Prefix (Field0)
+   --
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Selected_Element (Field2)
-   --
-   --   Get/Set_Prefix (Field3)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -581,9 +581,9 @@ package Iirs is
    -- Iir_Kind_Dereference (Short)
    -- An implicit access dereference.
    --
-   --   Get/Set_Type (Field1)
+   --   Get/Set_Prefix (Field0)
    --
-   --   Get/Set_Prefix (Field3)
+   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -599,11 +599,11 @@ package Iirs is
 
    -- Iir_Kind_Signature (Short)
    --
+   --   Get/Set_Prefix (Field0)
+   --
    --   Get/Set_Return_Type (Field1)
    --
    --   Get/Set_Type_Marks_List (Field2)
-   --
-   --   Get/Set_Prefix (Field3)
 
    -- Iir_Kind_Overload_List (Short)
    --
@@ -633,6 +633,12 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --   Get/Set_Has_Begin (Flag10)
 
    -- Iir_Kind_Architecture_Body (Medium)
    --
@@ -661,6 +667,10 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Configuration_Declaration (Medium)
    --
@@ -682,6 +692,10 @@ package Iirs is
    --   Get/Set_Entity_Name (Field7)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Package_Header (Medium)
    --
@@ -707,6 +721,10 @@ package Iirs is
    --   Get/Set_Need_Body (Flag1)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Package_Body (Short)
    -- Note: a body is not a declaration, that's the reason why there is no
@@ -721,6 +739,10 @@ package Iirs is
    --
    -- The corresponding package declaration.
    --   Get/Set_Package (Field4)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Package_Instantiation_Declaration (Medium)
    --
@@ -736,6 +758,10 @@ package Iirs is
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Library_Declaration (Medium)
    --
@@ -771,6 +797,10 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Object_Alias_Declaration (Short)
    --
@@ -1033,6 +1063,10 @@ package Iirs is
    --   Get/Set_Subprogram_Specification (Field4)
    --
    --   Get/Set_Sequential_Statement_Chain (Field5)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Implicit_Procedure_Declaration (Medium)
    -- Iir_Kind_Implicit_Function_Declaration (Medium)
@@ -1548,6 +1582,10 @@ package Iirs is
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
    --   Get/Set_Type_Staticness (State1)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Unit_Declaration (Medium)
    --
@@ -1624,6 +1662,10 @@ package Iirs is
    --   Get/Set_Signal_Type_Flag (Flag2)
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Access_Type_Definition (Short)
    --
@@ -1695,6 +1737,10 @@ package Iirs is
    --   Get/Set_Resolved_Flag (Flag1)
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Protected_Type_Body (Short)
    --
@@ -1707,6 +1753,10 @@ package Iirs is
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Protected_Type_Declaration (Field4)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -------------------------
    -- subtype definitions --
@@ -1948,6 +1998,10 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Concurrent_Assertion_Statement (Medium)
    --
@@ -2068,6 +2122,10 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Generate_Statement (Medium)
    --
@@ -2093,6 +2151,10 @@ package Iirs is
    --   Get/Set_Generate_Block_Configuration (Field7)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Simple_Simultaneous_Statement (Medium)
    --
@@ -2145,6 +2207,8 @@ package Iirs is
    --
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_For_Loop_Statement (Short)
    --
@@ -2164,6 +2228,8 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Is_Within_Flag (Flag5)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_While_Loop_Statement (Short)
    --
@@ -2181,6 +2247,8 @@ package Iirs is
    --   Get/Set_Sequential_Statement_Chain (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Exit_Statement (Short)
    -- Iir_Kind_Next_Statement (Short)
@@ -2336,6 +2404,8 @@ package Iirs is
    --   Get/Set_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Procedure_Call_Statement (Short)
    -- Iir_Kind_Concurrent_Procedure_Call_Statement (Short)
@@ -2471,6 +2541,14 @@ package Iirs is
    -- True if the choice list has an 'others' choice.
    --   Get/Set_Aggr_Others_Flag (Flag2)
 
+   -- Iir_Kind_Parenthesis_Expression (Short)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+
    -- Iir_Kind_Qualified_Expression (Short)
    --
    --   Get/Set_Type (Field1)
@@ -2524,11 +2602,11 @@ package Iirs is
 
    -- Iir_Kind_Selected_Name (Short)
    --
+   --   Get/Set_Prefix (Field0)
+   --
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Suffix_Identifier (Field2)
-   --
-   --   Get/Set_Prefix (Field3)
+   --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
    --
@@ -2538,9 +2616,9 @@ package Iirs is
 
    -- Iir_Kind_Selected_By_All_Name (Short)
    --
-   --   Get/Set_Type (Field1)
+   --   Get/Set_Prefix (Field0)
    --
-   --   Get/Set_Prefix (Field3)
+   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Named_Entity (Field4)
    --
@@ -2559,11 +2637,11 @@ package Iirs is
    -- Iir_Kind_Indexed_Name (Short)
    -- Select the element designed with the INDEX_LIST from array PREFIX.
    --
+   --   Get/Set_Prefix (Field0)
+   --
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Index_List (Field2)
-   --
-   --   Get/Set_Prefix (Field3)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -2573,11 +2651,11 @@ package Iirs is
 
    -- Iir_Kind_Slice_Name (Short)
    --
+   --   Get/Set_Prefix (Field0)
+   --
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Suffix (Field2)
-   --
-   --   Get/Set_Prefix (Field3)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -2590,12 +2668,12 @@ package Iirs is
    -- either a function call, an indexed array, a type conversion or a slice
    -- name.
    --
+   --   Get/Set_Prefix (Field0)
+   --
    -- Always returns null_iir.
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Association_Chain (Field2)
-   --
-   --   Get/Set_Prefix (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
 
@@ -2605,11 +2683,11 @@ package Iirs is
 
    -- Iir_Kind_Attribute_Name (Short)
    --
+   --   Get/Set_Prefix (Field0)
+   --
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Attribute_Identifier (Field2)
-   --
-   --   Get/Set_Prefix (Field3)
+   --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
    --
@@ -2619,9 +2697,9 @@ package Iirs is
 
    -- Iir_Kind_Base_Attribute (Short)
    --
-   --   Get/Set_Type (Field1)
+   --   Get/Set_Prefix (Field0)
    --
-   --   Get/Set_Prefix (Field3)
+   --   Get/Set_Type (Field1)
 
    -- Iir_Kind_Left_Type_Attribute (Short)
    -- Iir_Kind_Right_Type_Attribute (Short)
@@ -2629,9 +2707,9 @@ package Iirs is
    -- Iir_Kind_Low_Type_Attribute (Short)
    -- Iir_Kind_Ascending_Type_Attribute (Short)
    --
-   --   Get/Set_Type (Field1)
+   --   Get/Set_Prefix (Field0)
    --
-   --   Get/Set_Prefix (Field3)
+   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -2648,11 +2726,11 @@ package Iirs is
    -- Iir_Kind_Ascending_Array_Attribute (Short)
    -- Iir_Kind_Length_Array_Attribute (Short)
    --
+   --   Get/Set_Prefix (Field0)
+   --
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Index_Subtype (Field2)
-   --
-   --   Get/Set_Prefix (Field3)
    --
    --   Get/Set_Parameter (Field4)
    --
@@ -2668,11 +2746,11 @@ package Iirs is
    -- Iir_Kind_Transaction_Attribute (Short)
    -- (Iir_Kinds_Signal_Attribute)
    --
+   --   Get/Set_Prefix (Field0)
+   --
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Chain (Field2)
-   --
-   --   Get/Set_Prefix (Field3)
    --
    -- Not used by Iir_Kind_Transaction_Attribute
    --   Get/Set_Parameter (Field4)
@@ -2693,9 +2771,9 @@ package Iirs is
    -- Iir_Kind_Driving_Attribute (Short)
    -- Iir_Kind_Driving_Value_Attribute (Short)
    --
-   --   Get/Set_Type (Field1)
+   --   Get/Set_Prefix (Field0)
    --
-   --   Get/Set_Prefix (Field3)
+   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -2708,9 +2786,9 @@ package Iirs is
    -- Iir_Kind_Leftof_Attribute (Short)
    -- Iir_Kind_Rightof_Attribute (Short)
    --
-   --   Get/Set_Type (Field1)
+   --   Get/Set_Prefix (Field0)
    --
-   --   Get/Set_Prefix (Field3)
+   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Parameter (Field4)
    --
@@ -2723,9 +2801,9 @@ package Iirs is
    -- Iir_Kind_Image_Attribute (Short)
    -- Iir_Kind_Value_Attribute (Short)
    --
-   --   Get/Set_Type (Field1)
+   --   Get/Set_Prefix (Field0)
    --
-   --   Get/Set_Prefix (Field3)
+   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Parameter (Field4)
    --
@@ -2739,12 +2817,12 @@ package Iirs is
    -- Iir_Kind_Instance_Name_Attribute (Short)
    -- Iir_Kind_Path_Name_Attribute (Short)
    --
+   --   Get/Set_Prefix (Field0)
+   --
    --   Get/Set_Type (Field1)
    --
    -- Only for Iir_Kind_Simple_Name_Attribute:
-   --   Get/Set_Simple_Name_Identifier (Field2)
-   --
-   --   Get/Set_Prefix (Field3)
+   --   Get/Set_Simple_Name_Identifier (Field3)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -2957,6 +3035,7 @@ package Iirs is
        Iir_Kind_Exponentiation_Operator,
        Iir_Kind_Function_Call,
        Iir_Kind_Aggregate,
+       Iir_Kind_Parenthesis_Expression,
        Iir_Kind_Qualified_Expression,
        Iir_Kind_Type_Conversion,
        Iir_Kind_Allocator_By_Expression,
@@ -4828,14 +4907,6 @@ package Iirs is
    function Get_Selected_Element (Target : Iir) return Iir;
    procedure Set_Selected_Element (Target : Iir; El : Iir);
 
-   --  Field: Field2 (uc)
-   function Get_Suffix_Identifier (Target : Iir) return Name_Id;
-   procedure Set_Suffix_Identifier (Target : Iir; Ident : Name_Id);
-
-   --  Field: Field2 (uc)
-   function Get_Attribute_Identifier (Target : Iir) return Name_Id;
-   procedure Set_Attribute_Identifier (Target : Iir; Ident : Name_Id);
-
    --  Selected names of an use_clause are chained.
    --  Field: Field3
    function Get_Use_Clause_Chain (Target : Iir) return Iir;
@@ -5360,7 +5431,7 @@ package Iirs is
    procedure Set_Name_Staticness (Target : Iir; Static : Iir_Staticness);
 
    --  Prefix of a name.
-   --  Field: Field3
+   --  Field: Field0
    function Get_Prefix (Target : Iir) return Iir;
    procedure Set_Prefix (Target : Iir; Prefix : Iir);
 
@@ -5538,7 +5609,7 @@ package Iirs is
    procedure Set_Overload_List (Target : Iir; List : Iir_List);
 
    --  Identifier of the simple_name attribute.
-   --  Field: Field2 (uc)
+   --  Field: Field3 (uc)
    function Get_Simple_Name_Identifier (Target : Iir) return Name_Id;
    procedure Set_Simple_Name_Identifier (Target : Iir; Ident : Name_Id);
 
@@ -5571,6 +5642,21 @@ package Iirs is
    --  Field: Flag6
    function Get_Use_Flag (Decl : Iir) return Boolean;
    procedure Set_Use_Flag (Decl : Iir; Val : Boolean);
+
+   --  Layout flag: true if 'end' is followed by the reserved identifier.
+   --  Field: Flag8
+   function Get_End_Has_Reserved_Id (Decl : Iir) return Boolean;
+   procedure Set_End_Has_Reserved_Id (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if 'end' is followed by the identifier.
+   --  Field: Flag9
+   function Get_End_Has_Identifier (Decl : Iir) return Boolean;
+   procedure Set_End_Has_Identifier (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if 'begin' is present.
+   --  Field: Flag10
+   function Get_Has_Begin (Decl : Iir) return Boolean;
+   procedure Set_Has_Begin (Decl : Iir; Flag : Boolean);
 
    --  Field: Field1 (uc)
    function Get_Psl_Property (Decl : Iir) return PSL_Node;

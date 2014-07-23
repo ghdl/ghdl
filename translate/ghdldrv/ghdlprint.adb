@@ -19,6 +19,7 @@ with Ada.Characters.Latin_1;
 with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.Directory_Operations;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
+with GNAT.Table;
 with Types; use Types;
 with Flags;
 with Name_Table; use Name_Table;
@@ -29,11 +30,13 @@ with Iirs; use Iirs;
 with Iirs_Utils; use Iirs_Utils;
 with Tokens;
 with Scanner;
+with Parse;
 with Version;
 with Xrefs;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Disp_Vhdl;
+with Back_End;
 
 package body Ghdlprint is
    type Html_Format_Type is (Html_2, Html_Css);
@@ -969,18 +972,134 @@ package body Ghdlprint is
       pragma Unreferenced (Cmd);
       Design_File : Iir_Design_File;
       Unit : Iir;
+
+      Id : Name_Id;
+      Next_Unit : Iir;
    begin
       Setup_Libraries (True);
+      Parse.Flag_Parse_Parenthesis := True;
 
       --  Parse all files.
       for I in Args'Range loop
-         Design_File := Analyze_One_File (Args (I).all);
+         Id := Name_Table.Get_Identifier (Args (I).all);
+         Design_File := Libraries.Load_File (Id);
+         if Design_File = Null_Iir then
+            raise Errorout.Compilation_Error;
+         end if;
+
          Unit := Get_First_Design_Unit (Design_File);
          while Unit /= Null_Iir loop
-            Disp_Vhdl.Disp_Vhdl (Unit);
-            Unit := Get_Chain (Unit);
+            -- Sem, canon, annotate a design unit.
+            Back_End.Finish_Compilation (Unit, True);
+
+            Next_Unit := Get_Chain (Unit);
+            if Errorout.Nbr_Errors = 0 then
+               Disp_Vhdl.Disp_Vhdl (Unit);
+               Set_Chain (Unit, Null_Iir);
+               Libraries.Add_Design_Unit_Into_Library (Unit);
+            end if;
+
+            Unit := Next_Unit;
          end loop;
+
+         if Errorout.Nbr_Errors > 0 then
+            raise Errorout.Compilation_Error;
+         end if;
       end loop;
+   end Perform_Action;
+
+   --  Command compare tokens.
+   type Command_Compare_Tokens is new Command_Lib with null record;
+   function Decode_Command (Cmd : Command_Compare_Tokens; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Compare_Tokens) return String;
+   procedure Perform_Action (Cmd : in out Command_Compare_Tokens;
+                             Args : Argument_List);
+
+   function Decode_Command (Cmd : Command_Compare_Tokens; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--compare-tokens";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Compare_Tokens) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--compare-tokens [OPTS] REF FILEs    Compare FILEs with REF";
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : in out Command_Compare_Tokens;
+                             Args : Argument_List)
+   is
+      pragma Unreferenced (Cmd);
+      use Tokens;
+      use Scanner;
+
+      package Ref_Tokens is new GNAT.Table
+        (Table_Component_Type => Token_Type,
+         Table_Index_Type => Integer,
+         Table_Low_Bound => 0,
+         Table_Initial => 1024,
+         Table_Increment => 100);
+
+      Id : Name_Id;
+      Fe : Source_File_Entry;
+      Local_Id : Name_Id;
+      Tok_Idx : Natural;
+   begin
+      if Args'Length < 1 then
+         Error ("missing ref file");
+         raise Compile_Error;
+      end if;
+
+      Local_Id := Get_Identifier ("");
+
+      for I in Args'Range loop
+         --  Load the file.
+         Id := Get_Identifier (Args (I).all);
+         Fe := Files_Map.Load_Source_File (Local_Id, Id);
+         if Fe = No_Source_File_Entry then
+            Error ("cannot open file " & Args (I).all);
+            raise Compile_Error;
+         end if;
+         Set_File (Fe);
+
+         if I = Args'First then
+            --  Scan ref file
+            loop
+               Scan;
+               Ref_Tokens.Append (Current_Token);
+               exit when Current_Token = Tok_Eof;
+            end loop;
+         else
+            --  Scane file
+            Tok_Idx := Ref_Tokens.First;
+            loop
+               Scan;
+               if Ref_Tokens.Table (Tok_Idx) /= Current_Token then
+                  Error_Msg_Parse ("token mismatch");
+                  exit;
+               end if;
+               case Current_Token is
+                  when Tok_Eof =>
+                     exit;
+                  when others =>
+                     null;
+               end case;
+               Tok_Idx := Tok_Idx + 1;
+            end loop;
+         end if;
+         Close_File;
+      end loop;
+
+      Ref_Tokens.Free;
+
+      if Nbr_Errors /= 0 then
+         raise Compilation_Error;
+      end if;
    end Perform_Action;
 
    --  Command html.
@@ -1616,6 +1735,7 @@ package body Ghdlprint is
       Register_Command (new Command_Chop);
       Register_Command (new Command_Lines);
       Register_Command (new Command_Reprint);
+      Register_Command (new Command_Compare_Tokens);
       Register_Command (new Command_PP_Html);
       Register_Command (new Command_Xref_Html);
       Register_Command (new Command_Xref);

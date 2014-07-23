@@ -84,10 +84,6 @@ package Ghdllocal is
    --  Setup standard libaries path.  If LOAD is true, then load them now.
    procedure Setup_Libraries (Load : Boolean);
 
-   --  Analyze file FILE_NAME.  Raise Compilation_Error in case of analysis
-   --  error.
-   function Analyze_One_File (File_Name : String) return Iir_Design_File;
-
    --  Setup library, analyze FILES, and if SAVE_LIBRARY is set save the
    --  work library only
    procedure Analyze_Files (Files : Argument_List; Save_Library : Boolean);

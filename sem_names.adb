@@ -294,7 +294,7 @@ package body Sem_Names is
       Id : Name_Id;
       Decl_Body : Iir;
    begin
-      Id := Get_Suffix_Identifier (Name);
+      Id := Get_Identifier (Name);
       case Get_Kind (Decl) is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
@@ -1559,7 +1559,7 @@ package body Sem_Names is
          Set_Named_Entity (Name, Prefix);
          return;
       end if;
-      Suffix := Get_Suffix_Identifier (Name);
+      Suffix := Get_Identifier (Name);
 
       Res := Null_Iir;
 
@@ -1982,9 +1982,9 @@ package body Sem_Names is
         (Get_Kind (Actual) = Iir_Kind_Range_Expression
          or else
          (Get_Kind (Actual) = Iir_Kind_Attribute_Name
-          and then (Get_Attribute_Identifier (Actual) = Std_Names.Name_Range
+          and then (Get_Identifier (Actual) = Std_Names.Name_Range
                     or else
-                    Get_Attribute_Identifier (Actual)
+                    Get_Identifier (Actual)
                     = Std_Names.Name_Reverse_Range)))
       then
          --  A slice.
@@ -2304,7 +2304,7 @@ package body Sem_Names is
             Error_Kind ("sem_user_attribute", Prefix);
       end case;
 
-      Attr_Id := Get_Attribute_Identifier (Attr);
+      Attr_Id := Get_Identifier (Attr);
       Value := Get_Attribute_Value_Chain (Prefix);
       while Value /= Null_Iir loop
          Spec := Get_Attribute_Specification (Value);
@@ -2334,7 +2334,7 @@ package body Sem_Names is
    is
       use Std_Names;
       Prefix_Name : constant Iir := Get_Prefix (Attr);
-      Id : constant Name_Id := Get_Attribute_Identifier (Attr);
+      Id : constant Name_Id := Get_Identifier (Attr);
       Prefix : Iir;
       Prefix_Type : Iir;
       Res : Iir;
@@ -2387,7 +2387,7 @@ package body Sem_Names is
       end case;
 
       --  Create the resulting node.
-      case Get_Attribute_Identifier (Attr) is
+      case Get_Identifier (Attr) is
          when Name_Pos =>
             Res := Create_Iir (Iir_Kind_Pos_Attribute);
          when Name_Val =>
@@ -2411,7 +2411,7 @@ package body Sem_Names is
       Set_Prefix (Res, Prefix);
       Set_Base_Name (Res, Res);
 
-      case Get_Attribute_Identifier (Attr) is
+      case Get_Identifier (Attr) is
          when Name_Pos =>
             --  LRM93 14.1
             --  Result type: universal_integer.
@@ -2447,7 +2447,7 @@ package body Sem_Names is
    is
       use Std_Names;
       Prefix_Name : constant Iir := Get_Prefix (Attr);
-      Id : constant Name_Id := Get_Attribute_Identifier (Attr);
+      Id : constant Name_Id := Get_Identifier (Attr);
       Res : Iir;
       Prefix : Iir;
       Prefix_Type : Iir;
@@ -2489,7 +2489,7 @@ package body Sem_Names is
             Set_Expr_Staticness (Res, Get_Type_Staticness (Prefix_Type));
       end case;
 
-      case Get_Attribute_Identifier (Attr) is
+      case Get_Identifier (Attr) is
          when Name_Ascending =>
             --  LRM93 14.1
             --  Result Type: type boolean.
@@ -2565,7 +2565,7 @@ package body Sem_Names is
          when Iir_Kind_Process_Statement =>
             Error_Msg_Sem
               (Disp_Node (Prefix) & " is not an appropriate prefix for '"
-               & Name_Table.Image (Get_Attribute_Identifier (Attr))
+               & Name_Table.Image (Get_Identifier (Attr))
                & " attribute",
                Attr);
             return Error_Mark;
@@ -2583,14 +2583,14 @@ package body Sem_Names is
          when others =>
             Error_Msg_Sem
               ("prefix of '"
-               & Name_Table.Image (Get_Attribute_Identifier (Attr))
+               & Name_Table.Image (Get_Identifier (Attr))
                & " attribute must denote a constrained array subtype",
                Attr);
             return Error_Mark;
       end case;
 
       Res_Type := Prefix_Type;
-      case Get_Attribute_Identifier (Attr) is
+      case Get_Identifier (Attr) is
          when Name_Left =>
             Res := Create_Iir (Iir_Kind_Left_Array_Attribute);
          when Name_Right =>
@@ -2648,7 +2648,7 @@ package body Sem_Names is
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
                Error_Msg_Sem
-                 ("'" & Name_Table.Image (Get_Attribute_Identifier (Attr)) &
+                 ("'" & Name_Table.Image (Get_Identifier (Attr)) &
                   " is not allowed for a signal parameter", Attr);
             when others =>
                null;
@@ -2676,11 +2676,11 @@ package body Sem_Names is
          when others =>
             Error_Msg_Sem
               ("prefix of '"
-               & Name_Table.Image (Get_Attribute_Identifier (Attr))
+               & Name_Table.Image (Get_Identifier (Attr))
                & " attribute must denote a signal", Attr);
             return Error_Mark;
       end case;
-      case Get_Attribute_Identifier (Attr) is
+      case Get_Identifier (Attr) is
          when Name_Stable =>
             Res := Sem_Signal_Signal_Attribute
               (Attr, Iir_Kind_Stable_Attribute);
@@ -2881,7 +2881,7 @@ package body Sem_Names is
 
          when Iir_Kind_Signal_Interface_Declaration
            | Iir_Kind_Constant_Interface_Declaration =>
-            if Get_Attribute_Identifier (Attr) /= Name_Simple_Name
+            if Get_Identifier (Attr) /= Name_Simple_Name
               and then Get_Kind (Get_Parent (Prefix))
               = Iir_Kind_Component_Declaration
             then
@@ -2894,7 +2894,7 @@ package body Sem_Names is
                            Attr);
       end case;
 
-      case Get_Attribute_Identifier (Attr) is
+      case Get_Identifier (Attr) is
          when Name_Simple_Name =>
             Res := Create_Iir (Iir_Kind_Simple_Name_Attribute);
             Eval_Simple_Name (Get_Identifier (Prefix));
@@ -2947,7 +2947,7 @@ package body Sem_Names is
       --  'Simple_Name, 'Path_Name or 'Instance_Name, then the attribute name
       --  denotes the attribute of the alias and not of the aliased name.
       if Flags.Vhdl_Std > Vhdl_87
-        and then Get_Attribute_Identifier (Attr) in Name_Id_Name_Attributes
+        and then Get_Identifier (Attr) in Name_Id_Name_Attributes
       then
          Sem_Name (Prefix, True);
       else
@@ -2984,7 +2984,7 @@ package body Sem_Names is
          return;
       end if;
 
-      case Get_Attribute_Identifier (Attr) is
+      case Get_Identifier (Attr) is
          when Name_Base =>
             Res := Sem_Base_Attribute (Attr);
          when Name_Image

@@ -18,6 +18,9 @@
 with Iirs; use Iirs;
 
 package Parse is
+   --  If True, create nodes for parenthesis expressions.
+   Flag_Parse_Parenthesis : Boolean := False;
+
    -- Parse an expression.
    -- (Used by PSL).
    function Parse_Expression return Iir;

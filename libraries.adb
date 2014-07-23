@@ -1343,7 +1343,7 @@ package body Libraries is
             begin
                Lib := Get_Library (Get_Identifier (Get_Prefix (Unit)),
                                    Get_Location (Unit));
-               return Find_Primary_Unit (Lib, Get_Suffix_Identifier (Unit));
+               return Find_Primary_Unit (Lib, Get_Identifier (Unit));
             end;
          when Iir_Kind_Entity_Aspect_Entity =>
             return Find_Secondary_Unit

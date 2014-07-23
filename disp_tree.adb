@@ -443,7 +443,7 @@ package body Disp_Tree is
 
          when Iir_Kind_Attribute_Name =>
             Put ("attribute_name");
-            Disp_Ident (Get_Attribute_Identifier (Tree));
+            Disp_Ident (Get_Identifier (Tree));
 
          when Iir_Kind_Implicit_Function_Declaration =>
             Put ("implicit_function_declaration: ");
@@ -656,8 +656,6 @@ package body Disp_Tree is
                Header ("context items:");
                Disp_Tree_Chain (Get_Context_Items (Tree), Ntab);
             end if;
-            Header ("attribute_value_chain:");
-            Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
             Header ("library unit:");
             Disp_Tree (Get_Library_Unit (Tree), Ntab);
          when Iir_Kind_Use_Clause =>
@@ -1712,6 +1710,13 @@ package body Disp_Tree is
             Disp_Tree (Get_Method_Object (Tree), Ntab);
             Header ("parameters:");
             Disp_Tree_Chain (Get_Parameter_Association_Chain (Tree), Ntab);
+         when Iir_Kind_Parenthesis_Expression =>
+            Header ("staticness:", false);
+            Disp_Expr_Staticness (Tree);
+            Header ("type:");
+            Disp_Tree_Flat (Get_Type (Tree), Ntab);
+            Header ("expression:");
+            Disp_Tree (Get_Expression (Tree), Ntab, True);
          when Iir_Kind_Qualified_Expression =>
             Header ("staticness:", false);
             Disp_Expr_Staticness (Tree);
@@ -1813,8 +1818,8 @@ package body Disp_Tree is
          when Iir_Kind_Selected_Name =>
             Header ("prefix:");
             Disp_Tree (Get_Prefix (Tree), Ntab, True);
-            Header ("suffix_identifier: ", False);
-            Disp_Ident (Get_Suffix_Identifier (Tree));
+            Header ("identifier: ", False);
+            Disp_Ident (Get_Identifier (Tree));
 
          when Iir_Kind_Attribute_Name =>
             Header ("prefix:");

@@ -657,10 +657,9 @@ package body Iirs_Utils is
       Name : constant Iir := Get_Entity_Name (Arch);
    begin
       case Get_Kind (Name) is
-         when Iir_Kind_Simple_Name =>
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name =>
             return Get_Identifier (Name);
-         when Iir_Kind_Selected_Name =>
-            return Get_Suffix_Identifier (Name);
          when others =>
             Error_Kind ("get_entity_identifier_of_architecture", Name);
       end case;
@@ -734,7 +733,7 @@ package body Iirs_Utils is
       if Get_Kind (Attr) /= Iir_Kind_Attribute_Name then
          return False;
       end if;
-      Id := Get_Attribute_Identifier (Attr);
+      Id := Get_Identifier (Attr);
       return Id = Name_Range or Id = Name_Reverse_Range;
    end Is_Range_Attribute_Name;
 

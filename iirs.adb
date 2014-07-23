@@ -437,6 +437,7 @@ package body Iirs is
            | Iir_Kind_Exponentiation_Operator
            | Iir_Kind_Function_Call
            | Iir_Kind_Aggregate
+           | Iir_Kind_Parenthesis_Expression
            | Iir_Kind_Qualified_Expression
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Allocator_By_Expression
@@ -2382,6 +2383,7 @@ package body Iirs is
            | Iir_Kind_Exponentiation_Operator
            | Iir_Kind_Function_Call
            | Iir_Kind_Aggregate
+           | Iir_Kind_Parenthesis_Expression
            | Iir_Kind_Qualified_Expression
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Allocator_By_Expression
@@ -3235,50 +3237,6 @@ package body Iirs is
       Set_Field2 (Target, El);
    end Set_Selected_Element;
 
-   procedure Check_Kind_For_Suffix_Identifier (Target : Iir) is
-   begin
-      case Get_Kind (Target) is
-         when Iir_Kind_Selected_Name =>
-            null;
-         when others =>
-            Failed ("Suffix_Identifier", Target);
-      end case;
-   end Check_Kind_For_Suffix_Identifier;
-
-   function Get_Suffix_Identifier (Target : Iir) return Name_Id is
-   begin
-      Check_Kind_For_Suffix_Identifier (Target);
-      return Iir_To_Name_Id (Get_Field2 (Target));
-   end Get_Suffix_Identifier;
-
-   procedure Set_Suffix_Identifier (Target : Iir; Ident : Name_Id) is
-   begin
-      Check_Kind_For_Suffix_Identifier (Target);
-      Set_Field2 (Target, Name_Id_To_Iir (Ident));
-   end Set_Suffix_Identifier;
-
-   procedure Check_Kind_For_Attribute_Identifier (Target : Iir) is
-   begin
-      case Get_Kind (Target) is
-         when Iir_Kind_Attribute_Name =>
-            null;
-         when others =>
-            Failed ("Attribute_Identifier", Target);
-      end case;
-   end Check_Kind_For_Attribute_Identifier;
-
-   function Get_Attribute_Identifier (Target : Iir) return Name_Id is
-   begin
-      Check_Kind_For_Attribute_Identifier (Target);
-      return Iir_To_Name_Id (Get_Field2 (Target));
-   end Get_Attribute_Identifier;
-
-   procedure Set_Attribute_Identifier (Target : Iir; Ident : Name_Id) is
-   begin
-      Check_Kind_For_Attribute_Identifier (Target);
-      Set_Field2 (Target, Name_Id_To_Iir (Ident));
-   end Set_Attribute_Identifier;
-
    procedure Check_Kind_For_Use_Clause_Chain (Target : Iir) is
    begin
       case Get_Kind (Target) is
@@ -3542,7 +3500,9 @@ package body Iirs is
            | Iir_Kind_Case_Statement
            | Iir_Kind_Procedure_Call_Statement
            | Iir_Kind_If_Statement
-           | Iir_Kind_Simple_Name =>
+           | Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name
+           | Iir_Kind_Attribute_Name =>
             null;
          when others =>
             Failed ("Identifier", Target);
@@ -5168,6 +5128,7 @@ package body Iirs is
            | Iir_Kind_Choice_By_Range
            | Iir_Kind_Attribute_Specification
            | Iir_Kind_Disconnection_Specification
+           | Iir_Kind_Parenthesis_Expression
            | Iir_Kind_Qualified_Expression
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Allocator_By_Expression
@@ -5923,6 +5884,7 @@ package body Iirs is
            | Iir_Kind_Exponentiation_Operator
            | Iir_Kind_Function_Call
            | Iir_Kind_Aggregate
+           | Iir_Kind_Parenthesis_Expression
            | Iir_Kind_Qualified_Expression
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Allocator_By_Expression
@@ -6354,13 +6316,13 @@ package body Iirs is
    function Get_Prefix (Target : Iir) return Iir is
    begin
       Check_Kind_For_Prefix (Target);
-      return Get_Field3 (Target);
+      return Get_Field0 (Target);
    end Get_Prefix;
 
    procedure Set_Prefix (Target : Iir; Prefix : Iir) is
    begin
       Check_Kind_For_Prefix (Target);
-      Set_Field3 (Target, Prefix);
+      Set_Field0 (Target, Prefix);
    end Set_Prefix;
 
    procedure Check_Kind_For_Suffix (Target : Iir) is
@@ -7195,13 +7157,13 @@ package body Iirs is
    function Get_Simple_Name_Identifier (Target : Iir) return Name_Id is
    begin
       Check_Kind_For_Simple_Name_Identifier (Target);
-      return Iir_To_Name_Id (Get_Field2 (Target));
+      return Iir_To_Name_Id (Get_Field3 (Target));
    end Get_Simple_Name_Identifier;
 
    procedure Set_Simple_Name_Identifier (Target : Iir; Ident : Name_Id) is
    begin
       Check_Kind_For_Simple_Name_Identifier (Target);
-      Set_Field2 (Target, Name_Id_To_Iir (Ident));
+      Set_Field3 (Target, Name_Id_To_Iir (Ident));
    end Set_Simple_Name_Identifier;
 
    procedure Check_Kind_For_Protected_Type_Body (Target : Iir) is
@@ -7365,6 +7327,109 @@ package body Iirs is
       Check_Kind_For_Use_Flag (Decl);
       Set_Flag6 (Decl, Val);
    end Set_Use_Flag;
+
+   procedure Check_Kind_For_End_Has_Reserved_Id (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Protected_Type_Declaration
+           | Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Body
+           | Iir_Kind_Architecture_Body
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Component_Declaration
+           | Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body
+           | Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Process_Statement
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_Generate_Statement =>
+            null;
+         when others =>
+            Failed ("End_Has_Reserved_Id", Target);
+      end case;
+   end Check_Kind_For_End_Has_Reserved_Id;
+
+   function Get_End_Has_Reserved_Id (Decl : Iir) return Boolean is
+   begin
+      Check_Kind_For_End_Has_Reserved_Id (Decl);
+      return Get_Flag8 (Decl);
+   end Get_End_Has_Reserved_Id;
+
+   procedure Set_End_Has_Reserved_Id (Decl : Iir; Flag : Boolean) is
+   begin
+      Check_Kind_For_End_Has_Reserved_Id (Decl);
+      Set_Flag8 (Decl, Flag);
+   end Set_End_Has_Reserved_Id;
+
+   procedure Check_Kind_For_End_Has_Identifier (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Protected_Type_Declaration
+           | Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Body
+           | Iir_Kind_Architecture_Body
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Component_Declaration
+           | Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body
+           | Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Process_Statement
+           | Iir_Kind_Block_Statement
+           | Iir_Kind_Generate_Statement
+           | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement
+           | Iir_Kind_Case_Statement
+           | Iir_Kind_If_Statement
+           | Iir_Kind_Elsif =>
+            null;
+         when others =>
+            Failed ("End_Has_Identifier", Target);
+      end case;
+   end Check_Kind_For_End_Has_Identifier;
+
+   function Get_End_Has_Identifier (Decl : Iir) return Boolean is
+   begin
+      Check_Kind_For_End_Has_Identifier (Decl);
+      return Get_Flag9 (Decl);
+   end Get_End_Has_Identifier;
+
+   procedure Set_End_Has_Identifier (Decl : Iir; Flag : Boolean) is
+   begin
+      Check_Kind_For_End_Has_Identifier (Decl);
+      Set_Flag9 (Decl, Flag);
+   end Set_End_Has_Identifier;
+
+   procedure Check_Kind_For_Has_Begin (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Entity_Declaration =>
+            null;
+         when others =>
+            Failed ("Has_Begin", Target);
+      end case;
+   end Check_Kind_For_Has_Begin;
+
+   function Get_Has_Begin (Decl : Iir) return Boolean is
+   begin
+      Check_Kind_For_Has_Begin (Decl);
+      return Get_Flag10 (Decl);
+   end Get_Has_Begin;
+
+   procedure Set_Has_Begin (Decl : Iir; Flag : Boolean) is
+   begin
+      Check_Kind_For_Has_Begin (Decl);
+      Set_Flag10 (Decl, Flag);
+   end Set_Has_Begin;
 
    procedure Check_Kind_For_Psl_Property (Target : Iir) is
    begin

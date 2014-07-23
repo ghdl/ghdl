@@ -581,7 +581,7 @@ package body Ghdllocal is
       return "-s [OPTS] FILEs    Check syntax of FILEs";
    end Get_Short_Help;
 
-   function Analyze_One_File (File_Name : String) return Iir_Design_File
+   procedure Analyze_One_File (File_Name : String)
    is
       use Ada.Text_IO;
       Id : Name_Id;
@@ -621,20 +621,15 @@ package body Ghdllocal is
       if Errorout.Nbr_Errors > 0 then
          raise Errorout.Compilation_Error;
       end if;
-
-      return Design_File;
    end Analyze_One_File;
 
-   procedure Analyze_Files (Files : Argument_List; Save_Library : Boolean)
-   is
-      Design_File : Iir_Design_File;
-      pragma Unreferenced (Design_File);
+   procedure Analyze_Files (Files : Argument_List; Save_Library : Boolean) is
    begin
       Setup_Libraries (True);
 
       --  Parse all files.
       for I in Files'Range loop
-         Design_File := Analyze_One_File (Files (I).all);
+         Analyze_One_File (Files (I).all);
       end loop;
 
       if Save_Library then

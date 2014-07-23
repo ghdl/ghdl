@@ -62,6 +62,9 @@ package Nodes is
    --   Flag5 : Boolean
    --   Flag6 : Boolean
    --   Flag7 : Boolean
+   --   Flag8 : Boolean
+   --   Flag9 : Boolean
+   --   Flag10 : Boolean
    --   Nkind : Kind_Type
    --   State1 : Bit2_Type
    --   State2 : Bit2_Type
@@ -210,6 +213,21 @@ package Nodes is
    pragma Inline (Get_Flag7);
    procedure Set_Flag7 (N : Node_Type; V : Boolean);
    pragma Inline (Set_Flag7);
+
+   function Get_Flag8 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag8);
+   procedure Set_Flag8 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag8);
+
+   function Get_Flag9 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag9);
+   procedure Set_Flag9 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag9);
+
+   function Get_Flag10 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag10);
+   procedure Set_Flag10 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag10);
 
 
    function Get_State1 (N : Node_Type) return Bit2_Type;

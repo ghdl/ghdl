@@ -921,7 +921,7 @@ package body Sem_Assocs is
             end if;
             Rec_El := Find_Name_In_List
               (Get_Elements_Declaration_List (Base_Type),
-               Get_Suffix_Identifier (Name));
+               Get_Identifier (Name));
             if Rec_El = Null_Iir then
                Name_Type := Null_Iir;
                return;

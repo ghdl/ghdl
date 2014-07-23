@@ -479,7 +479,7 @@ package body Errorout is
          when Iir_Kind_Procedure_Call =>
             return "procedure call";
          when Iir_Kind_Selected_Name =>
-            Name_Table.Image (Get_Suffix_Identifier (Node));
+            Name_Table.Image (Get_Identifier (Node));
             return '''
               & Name_Table.Name_Buffer (1 .. Name_Table.Name_Length)
               & ''';
@@ -502,6 +502,8 @@ package body Errorout is
             return "operator """
               & Name_Table.Image (Iirs_Utils.Get_Operator_Name (Node))
               & """";
+         when Iir_Kind_Parenthesis_Expression =>
+            return "expression";
          when Iir_Kind_Qualified_Expression =>
             return "qualified expression";
          when Iir_Kind_Type_Conversion =>

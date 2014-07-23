@@ -2526,8 +2526,7 @@ package body Canon is
                         Set_Parent (Res, Conf);
                         Blk_Spec := Create_Iir (Iir_Kind_Selected_Name);
                         Location_Copy (Blk_Spec, Res);
-                        Set_Suffix_Identifier
-                          (Blk_Spec, Std_Names.Name_Others);
+                        Set_Identifier (Blk_Spec, Std_Names.Name_Others);
                         Set_Prefix (Blk_Spec, El);
                         Set_Block_Specification (Res, Blk_Spec);
                         Append (Last_Item, Conf, Res);

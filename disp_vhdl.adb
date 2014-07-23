@@ -20,7 +20,7 @@
 -- Disp an iir tree.
 -- Try to be as pretty as possible, and to keep line numbers and positions
 -- of the identifiers.
-with Ada.Text_IO; use Ada.Text_IO;
+with GNAT.OS_Lib;
 with Std_Package;
 with Flags; use Flags;
 with Errorout; use Errorout;
@@ -34,10 +34,24 @@ with PSL.NFAs;
 
 package body Disp_Vhdl is
 
+   subtype Count is Positive;
+
+   Col : Count := 1;
+
+   IO_Error : exception;
+
    --  Disp the name of DECL.
    procedure Disp_Name_Of (Decl: Iir);
 
+   --  Indentation for nested declarations and statements.
    Indentation: constant Count := 2;
+
+   --  Line length (used to try to have a nice display).
+   Line_Length : constant Count := 80;
+
+   --  If True, display extra parenthesis to make priority of operators
+   --  explicit.
+   Flag_Parenthesis : constant Boolean := False;
 
    -- If set, disp after a string literal the type enclosed into brackets.
    Disp_String_Literal_Type: constant Boolean := False;
@@ -67,6 +81,42 @@ package body Disp_Vhdl is
    procedure Disp_Binding_Indication (Bind : Iir; Indent : Count);
    procedure Disp_Subtype_Indication (Def : Iir; Full_Decl : Boolean := False);
    procedure Disp_Parametered_Attribute (Name : String; Expr : Iir);
+
+   procedure Put (Str : String)
+   is
+      use GNAT.OS_Lib;
+      Len : constant Natural := Str'Length;
+   begin
+      if Write (Standout, Str'Address, Len) /= Len then
+         raise IO_Error;
+      end if;
+      Col := Col + Len;
+   end Put;
+
+   procedure Put (C : Character) is
+   begin
+      Put ((1 => C));
+   end Put;
+
+   procedure New_Line is
+   begin
+      Put (ASCII.LF);
+      Col := 1;
+   end New_Line;
+
+   procedure Put_Line (Str : String) is
+   begin
+      Put (Str);
+      New_Line;
+   end Put_Line;
+
+   procedure Set_Col (P : Count) is
+   begin
+      if Col /= 1 then
+         New_Line;
+      end if;
+      Put ((1 .. P - 1 => ' '));
+   end Set_Col;
 
    procedure Disp_Ident (Id: Name_Id) is
    begin
@@ -217,7 +267,7 @@ package body Disp_Vhdl is
          when Iir_Kind_Selected_Name =>
             Disp_Name (Get_Prefix (Name));
             Put (".");
-            Disp_Ident (Get_Suffix_Identifier (Name));
+            Disp_Ident (Get_Identifier (Name));
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Enumeration_Literal
@@ -616,6 +666,9 @@ package body Disp_Vhdl is
    begin
       if List = Null_Iir_List then
          return;
+      elsif List = Iir_List_All then
+         Put ("all");
+         return;
       end if;
       for I in Natural loop
          El := Get_Nth_Element (List, I);
@@ -849,7 +902,9 @@ package body Disp_Vhdl is
       end case;
       Disp_Name_Of (Inter);
       Put (": ");
-      Disp_Mode (Get_Mode (Inter));
+      if (Get_Lexical_Layout (Inter) and Iir_Lexical_Has_Mode) /= 0 then
+         Disp_Mode (Get_Mode (Inter));
+      end if;
       Disp_Type (Get_Type (Inter));
       if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration then
          Disp_Signal_Kind (Get_Signal_Kind (Inter));
@@ -897,6 +952,21 @@ package body Disp_Vhdl is
       Disp_Interface_Chain (Get_Generic_Chain (Parent), ";");
    end Disp_Generics;
 
+   procedure Disp_End (Decl : Iir; Name : String) is
+   begin
+      Put ("end");
+      if Get_End_Has_Reserved_Id (Decl) then
+         Put (' ');
+         Put (Name);
+      end if;
+      if Get_End_Has_Identifier (Decl) then
+         Put (' ');
+         Disp_Name_Of (Decl);
+      end if;
+      Put (';');
+      New_Line;
+   end Disp_End;
+
    procedure Disp_Entity_Declaration (Decl: Iir_Entity_Declaration) is
       Start: Count;
    begin
@@ -913,13 +983,15 @@ package body Disp_Vhdl is
          Disp_Ports (Decl);
       end if;
       Disp_Declaration_Chain (Decl, Start + Indentation);
-      if Get_Concurrent_Statement_Chain (Decl) /= Null_Iir then
+      if Get_Has_Begin (Decl) then
          Set_Col (Start);
          Put_Line ("begin");
+      end if;
+      if Get_Concurrent_Statement_Chain (Decl) /= Null_Iir then
          Disp_Concurrent_Statement_Chain (Decl, Start + Indentation);
       end if;
       Set_Col (Start);
-      Put_Line ("end entity;");
+      Disp_End (Decl, "entity");
    end Disp_Entity_Declaration;
 
    procedure Disp_Component_Declaration (Decl: Iir_Component_Declaration)
@@ -968,7 +1040,7 @@ package body Disp_Vhdl is
       Put_Line ("begin");
       Disp_Concurrent_Statement_Chain (Arch, Start + Indentation);
       Set_Col (Start);
-      Put_Line ("end;");
+      Disp_End (Arch, "architecture");
    end Disp_Architecture_Body;
 
    procedure Disp_Object_Alias_Declaration (Decl: Iir_Object_Alias_Declaration)
@@ -1583,11 +1655,15 @@ package body Disp_Vhdl is
 
    procedure Disp_Dyadic_Operator (Expr: Iir) is
    begin
-      Put ("(");
+      if Flag_Parenthesis then
+         Put ("(");
+      end if;
       Disp_Expression (Get_Left (Expr));
       Put (' ' & Name_Table.Image (Iirs_Utils.Get_Operator_Name (Expr)) & ' ');
       Disp_Expression (Get_Right (Expr));
-      Put (")");
+      if Flag_Parenthesis then
+         Put (")");
+      end if;
    end Disp_Dyadic_Operator;
 
    procedure Disp_Monadic_Operator (Expr: Iir) is
@@ -1803,7 +1879,7 @@ package body Disp_Vhdl is
       Set_Col (Start + Indentation);
       Disp_Sequential_Statements (Get_Sequential_Statement_Chain (Process));
       Set_Col (Start);
-      Put_Line ("end process;");
+      Disp_End (Process, "process");
    end Disp_Process_Statement;
 
    procedure Disp_Conversion (Conv : Iir) is
@@ -1992,8 +2068,8 @@ package body Disp_Vhdl is
       Expr : Iir;
    begin
       Indent := Col;
-      if Indent > 70 then
-         Indent := 3;
+      if Indent > Line_Length - 10 then
+         Indent := 2 * Indentation;
       end if;
       Put ("(");
       Assoc := Get_Association_Choices_Chain (Aggr);
@@ -2176,6 +2252,10 @@ package body Disp_Vhdl is
             Disp_Monadic_Operator (Expr);
          when Iir_Kind_Function_Call =>
             Disp_Function_Call (Expr);
+         when Iir_Kind_Parenthesis_Expression =>
+            Put ("(");
+            Disp_Expression (Get_Expression (Expr));
+            Put (")");
          when Iir_Kind_Type_Conversion =>
             Disp_Type (Get_Type (Expr));
             Put (" (");
@@ -2697,12 +2777,12 @@ package body Disp_Vhdl is
          when others =>
             Error_Kind ("disp_design_unit2", Decl);
       end case;
-      New_Line (2);
+      New_Line;
+      New_Line;
    end Disp_Design_Unit;
 
    procedure Disp_Vhdl (An_Iir: Iir) is
    begin
-      Set_Line_Length (80);
       -- Put (Count'Image (Line_Length));
       case Get_Kind (An_Iir) is
          when Iir_Kind_Design_Unit =>

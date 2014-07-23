@@ -333,6 +333,36 @@ package body Nodes is
       Nodet.Table (N).Flag7 := V;
    end Set_Flag7;
 
+   function Get_Flag8 (N : Node_Type) return Boolean is
+   begin
+      return Nodet.Table (N).Flag8;
+   end Get_Flag8;
+
+   procedure Set_Flag8 (N : Node_Type; V : Boolean) is
+   begin
+      Nodet.Table (N).Flag8 := V;
+   end Set_Flag8;
+
+   function Get_Flag9 (N : Node_Type) return Boolean is
+   begin
+      return Nodet.Table (N).Flag9;
+   end Get_Flag9;
+
+   procedure Set_Flag9 (N : Node_Type; V : Boolean) is
+   begin
+      Nodet.Table (N).Flag9 := V;
+   end Set_Flag9;
+
+   function Get_Flag10 (N : Node_Type) return Boolean is
+   begin
+      return Nodet.Table (N).Flag10;
+   end Get_Flag10;
+
+   procedure Set_Flag10 (N : Node_Type; V : Boolean) is
+   begin
+      Nodet.Table (N).Flag10 := V;
+   end Set_Flag10;
+
 
    function Get_State1 (N : Node_Type) return Bit2_Type is
    begin

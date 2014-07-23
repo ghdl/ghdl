@@ -1770,20 +1770,24 @@ package body Evaluation is
          when Iir_Kind_Simple_Aggregate =>
             return Expr;
 
+         when Iir_Kind_Parenthesis_Expression =>
+            return Build_Constant
+              (Eval_Static_Expr (Get_Expression (Expr)), Expr);
          when Iir_Kind_Qualified_Expression =>
-            return Build_Constant (Eval_Expr (Get_Expression (Expr)), Expr);
+            return Build_Constant
+              (Eval_Static_Expr (Get_Expression (Expr)), Expr);
          when Iir_Kind_Type_Conversion =>
             return Eval_Type_Conversion (Expr);
          when Iir_Kind_Range_Expression =>
-            Set_Left_Limit (Expr, Eval_Expr (Get_Left_Limit (Expr)));
-            Set_Right_Limit (Expr, Eval_Expr (Get_Right_Limit (Expr)));
+            Set_Left_Limit (Expr, Eval_Static_Expr (Get_Left_Limit (Expr)));
+            Set_Right_Limit (Expr, Eval_Static_Expr (Get_Right_Limit (Expr)));
             return Expr;
 
          when Iir_Kinds_Monadic_Operator =>
             declare
                Operand : Iir;
             begin
-               Operand := Eval_Expr (Get_Operand (Expr));
+               Operand := Eval_Static_Expr (Get_Operand (Expr));
                Set_Operand (Expr, Operand);
                return Eval_Monadic_Operator (Expr, Operand);
             end;
@@ -1791,8 +1795,8 @@ package body Evaluation is
             declare
                Left, Right : Iir;
             begin
-               Left := Eval_Expr (Get_Left (Expr));
-               Right := Eval_Expr (Get_Right (Expr));
+               Left := Eval_Static_Expr (Get_Left (Expr));
+               Right := Eval_Static_Expr (Get_Right (Expr));
 
                Set_Left (Expr, Left);
                Set_Right (Expr, Right);
@@ -2067,16 +2071,15 @@ package body Evaluation is
            | Iir_Kind_Character_Literal
            | Iir_Kind_Selected_Name =>
             declare
+               Orig : constant Iir := Get_Named_Entity (Expr);
                Res : Iir;
-               Orig : Iir;
             begin
-               Orig := Get_Named_Entity (Expr);
                Res := Eval_Static_Expr (Orig);
                if Res /= Orig then
-                  Location_Copy (Res, Expr);
+                  return Build_Constant (Res, Expr);
+               else
+                  return Res;
                end if;
-               Free_Name (Expr);
-               return Res;
             end;
          when Iir_Kind_Error =>
             return Expr;
