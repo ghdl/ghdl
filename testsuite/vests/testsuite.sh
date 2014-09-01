@@ -214,6 +214,6 @@ delete_lib random
 delete_lib utilities
 
 # Remove io files created by tests
-rm iofile.* *.file fopen*.out
+rm -f iofile.* *.file fopen*.out
 
 echo "Vests tests successful"

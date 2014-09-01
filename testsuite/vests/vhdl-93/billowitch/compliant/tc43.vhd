@@ -32,7 +32,9 @@ ENTITY c04s03b01x01p02n01i00043ent IS
 END c04s03b01x01p02n01i00043ent;
 
 ARCHITECTURE c04s03b01x01p02n01i00043arch OF c04s03b01x01p02n01i00043ent IS
-  constant integer:integer := 1;  -- No_failure_here
+  -- constant integer:integer := 1;  -- No_failure_here
+  -- According to scopes and visibility rules, this test is not correct.
+  constant integer:natural := 1;
 BEGIN
   TESTING: PROCESS
   BEGIN
