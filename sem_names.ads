@@ -18,22 +18,56 @@
 with Iirs; use Iirs;
 
 package Sem_Names is
-   --  Semantize NAME as long as it consists in named entities.
-   --  Set Named_Entity field of NAME, with:
-   --  * the named entity (if any)
-   --  * an overload_list of named entity
-   --  * error_mark (in case of error, the message error is displayed).
-   procedure Sem_Name (Name : Iir; Keep_Alias : Boolean);
+   --  In VHDL, most of name notations are ambiguous:
+   --   P.N is either
+   --     an expanded name or
+   --     a selected name for an element (with a possible implicit dereference)
+   --   P (A1, A2, ...) can be
+   --     an indexed name (with a possible implicit dereference)
+   --     a slice name (with a possible implicit dereference)
+   --     a subprogram call
+   --     a type conversion
 
-   --  Finish semantisation of NAME, if necessary.
+   --  The name analysis resolves two ambiguities: notation and overload.
+   --  In a first pass, all possible meaning are collected as an overload
+   --  list in the Named_Entity field of the name.  Prefixes in that list
+   --  are always declarations and not simple or expanded names.  This is done
+   --  to avoid creating nodes for simple or expanded names, as they cannot be
+   --  shared in the prefixes because they can have several meanings.
+   --
+   --  In a second pass, when the caller has resolved the overloading (using
+   --  the context), the name is rewritten: parenthesis and selected names are
+   --  replaced (by slice, index, call, element selection...).  Prefixes are
+   --  simple or expanded names (and never declarations).  Checks are also
+   --  performed on the result (pure, all sensitized).
+   --
+   --  The result of the name analysis may not be a name: a function_call or
+   --  a type conversion are not names.
+
+   --  Analyze NAME: perform the first pass only.  In case of error, a message
+   --  is displayed and the named entity is error_mark.
+   procedure Sem_Name (Name : Iir; Keep_Alias : Boolean := False);
+
+   --  Finish semantisation of NAME, if necessary.  The named entity must not
+   --  be an overload list (ie the overload resolution must have been done).
    --  This make remaining checks, transforms function names into calls...
-   procedure Maybe_Finish_Sem_Name (Name : Iir);
+   function Finish_Sem_Name (Name : Iir) return Iir;
+
+   --  Analyze NAME as a type mark.  NAME must be either a simple name or an
+   --  expanded name, and the denoted entity must be either a type or a subtype
+   --  declaration.  Return the name (possibly modified) and set named_entity
+   --  and type.  In case of error, the type is error_mark.  NAME may have
+   --  already been analyzed by Sem_Name.
+   --  Incomplete types are allowed only if INCOMPLETE is True.
+   function Sem_Type_Mark (Name : Iir; Incomplete : Boolean := False)
+                          return Iir;
 
    --  Same as Sem_Name but without any side-effect:
    --  * do not report error
    --  * do not set xrefs
    --  Currently, only simple names (and expanded names) are handled.
-   --  This is to be used during sem of associations.
+   --  This is to be used during sem of associations.  Because there is no side
+   --  effect, NAME is not modified.
    procedure Sem_Name_Soft (Name : Iir);
 
    --  Remove every named_entity of NAME.
@@ -54,11 +88,15 @@ package Sem_Names is
    --  method_object of CALL.
    procedure Name_To_Method_Object (Call : Iir; Name : Iir);
 
-   --  Convert name EXPR to an expression (ie, can create function call).
+   --  Convert name NAME to an expression (ie, can create function call).
    --  A_TYPE is the expected type of the expression.
    --  FIXME: it is unclear wether the result must be an expression or not
    --  (ie, it *must* have a type, but may be a range).
    function Name_To_Expression (Name : Iir; A_Type : Iir) return Iir;
+
+   --  Finish analyze of NAME and expect a range (either a type or subtype
+   --  declaration or a range attribute).  Return Error_Mark in case of error.
+   function Name_To_Range (Name : Iir) return Iir;
 
    -- Return true if AN_IIR is an overload list.
    function Is_Overload_List (An_Iir: Iir) return Boolean;
@@ -103,25 +141,16 @@ package Sem_Names is
    function Sem_Index_Specification (Name : Iir_Parenthesis_Name; Itype : Iir)
                                     return Iir;
 
-   --  Kind of declaration to find.
-   --  Decl_entity: an entity declaration (used for binding_indication).
-   --  Decl_Any : no checks is performed.
+   --  Analyze denoting name NAME.  NAME must be either a simple name or an
+   --  expanded name and so is the result.
+   function Sem_Denoting_Name (Name: Iir) return Iir;
 
-   type Decl_Kind_Type is
-     (Decl_Type, Decl_Incomplete_Type,
-      Decl_Component, Decl_Unit, Decl_Label,
-      Decl_Group_Template, Decl_Entity, Decl_Configuration, Decl_Attribute,
-      Decl_Nature, Decl_Terminal);
+   --  Like Sem_Denoting_Name but expect a terminal name.
+   function Sem_Terminal_Name (Name : Iir) return Iir;
 
-   --  Find a uniq declaration for name NAME, which can be a simple_name,
-   --  an identifier or a selected_name.
-   --  Disp an error message if:
-   --   NAME (or any prefix of it) is undefined
-   --   NAME is overloaded
-   --   NAME does not belong to KIND.
-   --  In these case, null_iir  is returned.
-   --  Otherwise, the declaration is returned, and NAME is freed.
-   --  If NAME is a selected_name, dependencies can be added to the current
-   --  design unit.
-   function Find_Declaration (Name: Iir; Kind: Decl_Kind_Type) return Iir;
+   --  Emit an error for NAME that doesn't match its class CLASS_NAME.
+   procedure Error_Class_Match (Name : Iir; Class_Name : String);
+
+   --  Create an error node for name ORIG; set its expr staticness to none.
+   function Create_Error_Name (Orig : Iir) return Iir;
 end Sem_Names;

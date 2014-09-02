@@ -17,7 +17,7 @@
 all: ../iirs.adb
 
 check_iirs: force
-	gnatmake -g check_iirs
+	gnatmake -g -gnatwa check_iirs
 
 MODE=--generate
 

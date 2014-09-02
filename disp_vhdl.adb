@@ -16,10 +16,10 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-
--- Disp an iir tree.
--- Try to be as pretty as possible, and to keep line numbers and positions
--- of the identifiers.
+--  Re-print a tree as VHDL sources.  Except for comments and parenthesis, the
+--  sequence of tokens displayed is the same as the sequence of tokens in the
+--  input file.  If parenthesis are kept by the parser, the only differences
+--  are comments and layout.
 with GNAT.OS_Lib;
 with Std_Package;
 with Flags; use Flags;
@@ -112,10 +112,13 @@ package body Disp_Vhdl is
 
    procedure Set_Col (P : Count) is
    begin
-      if Col /= 1 then
+      if Col = P then
+         return;
+      end if;
+      if Col >= P then
          New_Line;
       end if;
-      Put ((1 .. P - 1 => ' '));
+      Put ((Col .. P - 1 => ' '));
    end Set_Col;
 
    procedure Disp_Ident (Id: Name_Id) is
@@ -123,7 +126,8 @@ package body Disp_Vhdl is
       Put (Name_Table.Image (Id));
    end Disp_Ident;
 
-   procedure Disp_Identifier (Node : Iir) is
+   procedure Disp_Identifier (Node : Iir)
+   is
       Ident : Name_Id;
    begin
       Ident := Get_Identifier (Node);
@@ -133,17 +137,6 @@ package body Disp_Vhdl is
          Put ("<anonymous>");
       end if;
    end Disp_Identifier;
-
-   procedure Disp_Label (Node : Iir) is
-      Ident : Name_Id;
-   begin
-      Ident := Get_Label (Node);
-      if Ident /= Null_Identifier then
-         Disp_Ident (Ident);
-      else
-         Put ("<anonymous>");
-      end if;
-   end Disp_Label;
 
    procedure Disp_Character_Literal (Lit: Iir_Character_Literal) is
    begin
@@ -215,7 +208,11 @@ package body Disp_Vhdl is
            | Iir_Kind_Implicit_Procedure_Declaration =>
             Disp_Identifier (Decl);
          when Iir_Kind_Physical_Subtype_Definition
-           | Iir_Kind_Enumeration_Type_Definition =>
+           | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Protected_Type_Declaration =>
+            --  Used for 'end' DECL_NAME.
             Disp_Identifier (Get_Type_Declarator (Decl));
          when Iir_Kind_Component_Instantiation_Statement =>
             Disp_Ident (Get_Label (Decl));
@@ -226,32 +223,27 @@ package body Disp_Vhdl is
             Disp_Identifier (Decl);
          when Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement =>
-            Disp_Label (Decl);
+            declare
+               Ident : constant Name_Id := Get_Label (Decl);
+            begin
+               if Ident /= Null_Identifier then
+                  Disp_Ident (Ident);
+               else
+                  Put ("<anonymous>");
+               end if;
+            end;
+         when Iir_Kind_Package_Body =>
+            Disp_Identifier (Get_Package (Decl));
+         when Iir_Kind_Procedure_Body
+           | Iir_Kind_Function_Body =>
+            Disp_Function_Name (Get_Subprogram_Specification (Decl));
+         when Iir_Kind_Protected_Type_Body =>
+            Disp_Identifier
+              (Get_Type_Declarator (Get_Protected_Type_Declaration (Decl)));
          when others =>
             Error_Kind ("disp_name_of", Decl);
       end case;
    end Disp_Name_Of;
-
-   procedure Disp_Range (Rng : Iir) is
-   begin
-      case Get_Kind (Rng) is
-         when Iir_Kind_Range_Expression =>
-            Disp_Expression (Get_Left_Limit (Rng));
-            if Get_Direction (Rng) = Iir_To then
-               Put (" to ");
-            else
-               Put (" downto ");
-            end if;
-            Disp_Expression (Get_Right_Limit (Rng));
-         when Iir_Kind_Range_Array_Attribute =>
-            Disp_Parametered_Attribute ("range", Rng);
-         when Iir_Kind_Reverse_Range_Array_Attribute =>
-            Disp_Parametered_Attribute ("reverse_range", Rng);
-         when others =>
-            Disp_Subtype_Indication (Rng);
-            --  Disp_Name_Of (Get_Type_Declarator (Decl));
-      end case;
-   end Disp_Range;
 
    procedure Disp_Name (Name: Iir) is
    begin
@@ -262,12 +254,21 @@ package body Disp_Vhdl is
          when Iir_Kind_Dereference =>
             Disp_Name (Get_Prefix (Name));
             Put (".all");
-         when Iir_Kind_Simple_Name =>
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Character_Literal =>
             Put (Iirs_Utils.Image_Identifier (Name));
+         when Iir_Kind_Operator_Symbol =>
+            Disp_Function_Name (Name);
          when Iir_Kind_Selected_Name =>
             Disp_Name (Get_Prefix (Name));
             Put (".");
-            Disp_Ident (Get_Identifier (Name));
+            Disp_Function_Name (Name);
+         when Iir_Kind_Parenthesis_Name =>
+            Disp_Name (Get_Prefix (Name));
+            Disp_Association_Chain (Get_Association_Chain (Name));
+         when Iir_Kind_Base_Attribute =>
+            Disp_Name (Get_Prefix (Name));
+            Put ("'base");
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Enumeration_Literal
@@ -287,16 +288,119 @@ package body Disp_Vhdl is
       end case;
    end Disp_Name;
 
-   procedure Disp_Use_Clause (Clause: Iir_Use_Clause) is
+   procedure Disp_Range (Rng : Iir) is
+   begin
+      case Get_Kind (Rng) is
+         when Iir_Kind_Range_Expression =>
+            declare
+               Origin : constant Iir := Get_Range_Origin (Rng);
+            begin
+               if Origin /= Null_Iir then
+                  Disp_Expression (Origin);
+               else
+                  Disp_Expression (Get_Left_Limit (Rng));
+                  if Get_Direction (Rng) = Iir_To then
+                     Put (" to ");
+                  else
+                     Put (" downto ");
+                  end if;
+                  Disp_Expression (Get_Right_Limit (Rng));
+               end if;
+            end;
+         when Iir_Kind_Range_Array_Attribute =>
+            Disp_Parametered_Attribute ("range", Rng);
+         when Iir_Kind_Reverse_Range_Array_Attribute =>
+            Disp_Parametered_Attribute ("reverse_range", Rng);
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name =>
+            Disp_Name (Rng);
+         when others =>
+            Disp_Subtype_Indication (Rng);
+            --  Disp_Name_Of (Get_Type_Declarator (Decl));
+      end case;
+   end Disp_Range;
+
+   procedure Disp_After_End (Decl : Iir; Name : String) is
+   begin
+      if Get_End_Has_Reserved_Id (Decl) then
+         Put (' ');
+         Put (Name);
+      end if;
+      if Get_End_Has_Identifier (Decl) then
+         Put (' ');
+         Disp_Name_Of (Decl);
+      end if;
+      Put (';');
+      New_Line;
+   end Disp_After_End;
+
+   procedure Disp_End (Decl : Iir; Name : String) is
+   begin
+      Put ("end");
+      Disp_After_End (Decl, Name);
+   end Disp_End;
+
+   procedure Disp_End_Label (Stmt : Iir; Name : String) is
+   begin
+      Put ("end");
+      Put (' ');
+      Put (Name);
+      if Get_End_Has_Identifier (Stmt) then
+         Put (' ');
+         Disp_Ident (Get_Label (Stmt));
+      end if;
+      Put (';');
+      New_Line;
+   end Disp_End_Label;
+
+   procedure Disp_Use_Clause (Clause: Iir_Use_Clause)
+   is
+      Name : Iir;
    begin
       Put ("use ");
-      Disp_Name (Get_Selected_Name (Clause));
+      Name := Clause;
+      loop
+         Disp_Name (Get_Selected_Name (Name));
+         Name := Get_Use_Clause_Chain (Name);
+         exit when Name = Null_Iir;
+         Put (", ");
+      end loop;
       Put_Line (";");
    end Disp_Use_Clause;
 
    -- Disp the resolution function (if any) of type definition DEF.
    procedure Disp_Resolution_Function (Subtype_Def: Iir)
    is
+      --  Return TRUE iff subtype indication DEF has a resolution function
+      --  that differ from its type mark.
+      function Has_Own_Resolution_Function (Def : Iir) return Boolean is
+      begin
+         --  Only subtype indications may have their own resolution functions.
+         if Get_Kind (Def) not in Iir_Kinds_Subtype_Definition then
+            return False;
+         end if;
+
+         --  A resolution function is present.
+         if Get_Resolution_Function (Def) /= Null_Iir then
+            return True;
+         end if;
+
+         case Get_Kind (Def) is
+            when Iir_Kind_Array_Subtype_Definition =>
+               declare
+                  El_Def : constant Iir := Get_Element_Subtype (Def);
+               begin
+                  if El_Def /= Get_Element_Subtype (Get_Base_Type (Def)) then
+                     return Has_Own_Resolution_Function (El_Def);
+                  else
+                     return False;
+                  end if;
+               end;
+            when others =>
+               Error_Kind ("disp_resolution_function(1)", Def);
+         end case;
+      end Has_Own_Resolution_Function;
+
       procedure Inner (Def : Iir)
       is
          Decl: Iir;
@@ -312,14 +416,17 @@ package body Disp_Vhdl is
                      Inner (Get_Element_Subtype (Def));
                      Put (')');
                   when others =>
-                     Error_Kind ("disp_resolution_function", Def);
+                     Error_Kind ("disp_resolution_function(2)", Def);
                end case;
             end if;
          end if;
       end Inner;
 
    begin
-      if Get_Resolved_Flag (Subtype_Def) then
+      if not Get_Resolved_Flag (Subtype_Def) then
+         return;
+      end if;
+      if Has_Own_Resolution_Function (Subtype_Def) then
          Inner (Subtype_Def);
          Put (' ');
       end if;
@@ -373,36 +480,33 @@ package body Disp_Vhdl is
 
    procedure Disp_Array_Element_Constraint (Def : Iir; Type_Mark : Iir)
    is
+      Def_El : constant Iir := Get_Element_Subtype (Def);
+      Tm_El : constant Iir := Get_Element_Subtype (Type_Mark);
+      Has_Index : constant Boolean := Get_Index_Constraint_Flag (Def);
+      Has_Own_Element_Subtype : constant Boolean := Def_El /= Tm_El;
       Index : Iir;
-      Def_El : Iir;
-      Tm_El : Iir;
-      Has_Index : Boolean;
-      Has_Own_Element_Subtype : Boolean;
    begin
-      Has_Index := Get_Index_Constraint_Flag (Def);
-      Def_El := Get_Element_Subtype (Def);
-      Tm_El := Get_Element_Subtype (Type_Mark);
-      Has_Own_Element_Subtype := Def_El /= Tm_El;
-
       if not Has_Index and not Has_Own_Element_Subtype then
          return;
       end if;
 
-      Put (" (");
-      if Has_Index then
-         for I in Natural loop
-            Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
-            exit when Index = Null_Iir;
-            if I /= 0 then
-               Put (", ");
-            end if;
-            --Disp_Expression (Get_Range_Constraint (Index));
-            Disp_Range (Index);
-         end loop;
-      else
-         Put ("open");
+      if Get_Constraint_State (Type_Mark) /= Fully_Constrained then
+         Put (" (");
+         if Has_Index then
+            for I in Natural loop
+               Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
+               exit when Index = Null_Iir;
+               if I /= 0 then
+                  Put (", ");
+               end if;
+               --Disp_Expression (Get_Range_Constraint (Index));
+               Disp_Range (Index);
+            end loop;
+         else
+            Put ("open");
+         end if;
+         Put (")");
       end if;
-      Put (")");
 
       if Has_Own_Element_Subtype
         and then Get_Kind (Def_El) in Iir_Kinds_Composite_Type_Definition
@@ -466,6 +570,11 @@ package body Disp_Vhdl is
       Base_Type : Iir;
       Decl : Iir;
    begin
+      if Get_Kind (Def) in Iir_Kinds_Denoting_Name then
+         Disp_Name (Def);
+         return;
+      end if;
+
       Decl := Get_Type_Declarator (Def);
       if not Full_Decl and then Decl /= Null_Iir then
          Disp_Name_Of (Decl);
@@ -476,10 +585,10 @@ package body Disp_Vhdl is
       Disp_Resolution_Function (Def);
 
       -- type mark.
-      Type_Mark := Get_Type_Mark (Def);
+      Type_Mark := Get_Subtype_Type_Mark (Def);
       if Type_Mark /= Null_Iir then
-         Decl := Get_Type_Declarator (Type_Mark);
-         Disp_Name_Of (Decl);
+         Disp_Name (Type_Mark);
+         Type_Mark := Get_Type (Type_Mark);
       end if;
 
       Base_Type := Get_Base_Type (Def);
@@ -501,9 +610,23 @@ package body Disp_Vhdl is
                Disp_Tolerance_Opt (Def);
             end if;
          when Iir_Kind_Access_Type_Definition =>
-            Disp_Type (Get_Type_Mark (Def));
+            declare
+               Des_Ind : constant Iir :=
+                 Get_Designated_Subtype_Indication (Def);
+            begin
+               if Des_Ind /= Null_Iir then
+                  pragma Assert
+                    (Get_Kind (Des_Ind) = Iir_Kind_Array_Subtype_Definition);
+                  Disp_Array_Element_Constraint
+                    (Des_Ind, Get_Designated_Type (Base_Type));
+               end if;
+            end;
          when Iir_Kind_Array_Type_Definition =>
-            Disp_Array_Element_Constraint (Def, Type_Mark);
+            if Type_Mark = Null_Iir then
+               Disp_Array_Element_Constraint (Def, Def);
+            else
+               Disp_Array_Element_Constraint (Def, Type_Mark);
+            end if;
          when Iir_Kind_Record_Type_Definition =>
             Disp_Record_Element_Constraint (Def);
          when others =>
@@ -553,6 +676,15 @@ package body Disp_Vhdl is
       Put (";");
    end Disp_Enumeration_Subtype_Definition;
 
+   procedure Disp_Discrete_Range (Iterator: Iir) is
+   begin
+      if Get_Kind (Iterator) in Iir_Kinds_Subtype_Definition then
+         Disp_Subtype_Indication (Iterator);
+      else
+         Disp_Range (Iterator);
+      end if;
+   end Disp_Discrete_Range;
+
    procedure Disp_Array_Subtype_Definition
      (Def: Iir_Array_Subtype_Definition)
    is
@@ -567,7 +699,7 @@ package body Disp_Vhdl is
          if I /= 0 then
             Put (", ");
          end if;
-         Disp_Subtype_Indication (Index);
+         Disp_Discrete_Range (Index);
       end loop;
       Put (") of ");
       Disp_Subtype_Indication (Get_Element_Subtype (Def));
@@ -583,11 +715,11 @@ package body Disp_Vhdl is
          if I /= 0 then
             Put (", ");
          end if;
-         Disp_Subtype_Indication (Index);
+         Disp_Name (Index);
          Put (" range <>");
       end loop;
       Put (") of ");
-      Disp_Type (Get_Element_Subtype (Def));
+      Disp_Subtype_Indication (Get_Element_Subtype_Indication (Def));
       Put (";");
    end Disp_Array_Type_Definition;
 
@@ -605,37 +737,15 @@ package body Disp_Vhdl is
             Error_Kind ("disp_physical_literal", Lit);
       end case;
       Put (' ');
-      Disp_Identifier (Get_Unit_Name (Lit));
+      Disp_Name (Get_Unit_Name (Lit));
    end Disp_Physical_Literal;
 
    procedure Disp_Physical_Subtype_Definition
-     (Def: Iir_Physical_Subtype_Definition; Indent: Count)
-   is
-      Base_Type: Iir;
-      Unit: Iir_Unit_Declaration;
+     (Def: Iir_Physical_Subtype_Definition) is
    begin
       Disp_Resolution_Function (Def);
       Put ("range ");
       Disp_Expression (Get_Range_Constraint (Def));
-      Base_Type := Get_Base_Type (Def);
-      if Get_Type_Declarator (Base_Type) = Get_Type_Declarator (Def) then
-         Put_Line (" units");
-         Set_Col (Indent + Indentation);
-         Unit := Get_Unit_Chain (Base_Type);
-         Disp_Identifier (Unit);
-         Put_Line (";");
-         Unit := Get_Chain (Unit);
-         while Unit /= Null_Iir loop
-            Set_Col (Indent + Indentation);
-            Disp_Identifier (Unit);
-            Put (" = ");
-            Disp_Physical_Literal (Get_Physical_Literal (Unit));
-            Put_Line (";");
-            Unit := Get_Chain (Unit);
-         end loop;
-         Set_Col (Indent);
-         Put ("end units;");
-      end if;
    end Disp_Physical_Subtype_Definition;
 
    procedure Disp_Record_Type_Definition
@@ -643,22 +753,31 @@ package body Disp_Vhdl is
    is
       List : Iir_List;
       El: Iir_Element_Declaration;
+      Reindent : Boolean;
    begin
       Put_Line ("record");
       Set_Col (Indent);
-      Put_Line ("begin");
       List := Get_Elements_Declaration_List (Def);
+      Reindent := True;
       for I in Natural loop
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
-         Set_Col (Indent + Indentation);
+         if Reindent then
+            Set_Col (Indent + Indentation);
+         end if;
          Disp_Identifier (El);
-         Put (" : ");
-         Disp_Subtype_Indication (Get_Type (El));
-         Put_Line (";");
+         if Get_Has_Identifier_List (El) then
+            Put (", ");
+            Reindent := False;
+         else
+            Put (" : ");
+            Disp_Subtype_Indication (Get_Type (El));
+            Put_Line (";");
+            Reindent := True;
+         end if;
       end loop;
       Set_Col (Indent);
-      Put ("end record;");
+      Disp_End (Def, "record");
    end Disp_Record_Type_Definition;
 
    procedure Disp_Designator_List (List: Iir_List) is
@@ -699,22 +818,22 @@ package body Disp_Vhdl is
          when Iir_Kind_Array_Subtype_Definition =>
             Disp_Array_Subtype_Definition (Def);
          when Iir_Kind_Physical_Subtype_Definition =>
-            Disp_Physical_Subtype_Definition (Def, Indent);
+            Disp_Physical_Subtype_Definition (Def);
          when Iir_Kind_Record_Type_Definition =>
             Disp_Record_Type_Definition (Def, Indent);
          when Iir_Kind_Access_Type_Definition =>
             Put ("access ");
-            Disp_Subtype_Indication (Get_Designated_Type (Def));
+            Disp_Subtype_Indication (Get_Designated_Subtype_Indication (Def));
             Put (';');
          when Iir_Kind_File_Type_Definition =>
             Put ("file of ");
-            Disp_Subtype_Indication (Get_Type_Mark (Def));
+            Disp_Subtype_Indication (Get_File_Type_Mark (Def));
             Put (';');
          when Iir_Kind_Protected_Type_Declaration =>
             Put_Line ("protected");
             Disp_Declaration_Chain (Def, Indent + Indentation);
             Set_Col (Indent);
-            Put ("end protected;");
+            Disp_End (Def, "protected");
          when Iir_Kind_Integer_Type_Definition =>
             Put ("<integer base type>");
          when Iir_Kind_Floating_Type_Definition =>
@@ -749,48 +868,83 @@ package body Disp_Vhdl is
    procedure Disp_Anonymous_Type_Declaration
      (Decl: Iir_Anonymous_Type_Declaration)
    is
-      Indent: Count;
-      Def : Iir;
+      Def : constant Iir := Get_Type_Definition (Decl);
+      Indent: constant Count := Col;
    begin
-      Indent := Col;
-      Put ("-- type ");
-      Disp_Name_Of (Decl);
+      Put ("type ");
+      Disp_Identifier (Decl);
       Put (" is ");
-      Def := Get_Type_Definition (Decl);
-      Disp_Type_Definition (Def, Indent);
-      if Get_Kind (Def) = Iir_Kind_Physical_Type_Definition then
-         declare
-            Unit : Iir_Unit_Declaration;
-         begin
-            Put_Line (" units");
-            Set_Col (Indent);
-            Put ("--   ");
-            Unit := Get_Unit_Chain (Def);
-            Disp_Identifier (Unit);
-            Put_Line (";");
-            Unit := Get_Chain (Unit);
-            while Unit /= Null_Iir loop
-               Set_Col (Indent);
-               Put ("--   ");
+      case Get_Kind (Def) is
+         when Iir_Kind_Array_Type_Definition =>
+            declare
+               St : constant Iir := Get_Subtype_Definition (Decl);
+               Indexes : constant Iir_List := Get_Index_Subtype_List (St);
+               Index : Iir;
+            begin
+               Put ("array (");
+               for I in Natural loop
+                  Index := Get_Nth_Element (Indexes, I);
+                  exit when Index = Null_Iir;
+                  if I /= 0 then
+                     Put (", ");
+                  end if;
+                  Disp_Discrete_Range (Index);
+               end loop;
+               Put (") of ");
+               Disp_Subtype_Indication (Get_Element_Subtype_Indication (Def));
+               Put (";");
+            end;
+         when Iir_Kind_Physical_Type_Definition =>
+            declare
+               St : constant Iir := Get_Subtype_Definition (Decl);
+               Unit : Iir_Unit_Declaration;
+            begin
+               Put ("range ");
+               Disp_Expression (Get_Range_Constraint (St));
+               Put_Line (" units");
+               Set_Col (Indent + Indentation);
+               Unit := Get_Unit_Chain (Def);
                Disp_Identifier (Unit);
-               Put (" = ");
-               Disp_Physical_Literal (Get_Physical_Literal (Unit));
                Put_Line (";");
                Unit := Get_Chain (Unit);
-            end loop;
-            Set_Col (Indent);
-            Put ("-- end units;");
-         end;
-      end if;
+               while Unit /= Null_Iir loop
+                  Set_Col (Indent + Indentation);
+                  Disp_Identifier (Unit);
+                  Put (" = ");
+                  Disp_Expression (Get_Physical_Literal (Unit));
+                  Put_Line (";");
+                  Unit := Get_Chain (Unit);
+               end loop;
+               Set_Col (Indent);
+               Disp_End (Def, "units");
+            end;
+         when Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Integer_Type_Definition =>
+            declare
+               St : constant Iir := Get_Subtype_Definition (Decl);
+            begin
+               Put ("range ");
+               Disp_Expression (Get_Range_Constraint (St));
+               Put (";");
+            end;
+         when others =>
+            Disp_Type_Definition (Def, Indent);
+      end case;
       New_Line;
    end Disp_Anonymous_Type_Declaration;
 
-   procedure Disp_Subtype_Declaration (Decl: in Iir_Subtype_Declaration) is
+   procedure Disp_Subtype_Declaration (Decl: in Iir_Subtype_Declaration)
+   is
+      Def : constant Iir := Get_Type (Decl);
+      Bt_Decl : constant Iir := Get_Type_Declarator (Get_Base_Type (Def));
    begin
+      if Get_Identifier (Decl) = Get_Identifier (Bt_Decl) then
+         Put ("-- ");
+      end if;
       Put ("subtype ");
       Disp_Name_Of (Decl);
       Put (" is ");
-      Disp_Subtype_Indication (Get_Type (Decl), True);
+      Disp_Subtype_Indication (Def, True);
       Put_Line (";");
    end Disp_Subtype_Declaration;
 
@@ -884,41 +1038,55 @@ package body Disp_Vhdl is
       end case;
    end Disp_Signal_Kind;
 
-   procedure Disp_Interface_Declaration (Inter: Iir)
-   is
-      Default: Iir;
+   procedure Disp_Interface_Class (Inter: Iir) is
    begin
-      case Get_Kind (Inter) is
-         when Iir_Kind_Signal_Interface_Declaration =>
-            Put ("signal ");
-         when Iir_Kind_Variable_Interface_Declaration =>
-            Put ("variable ");
-         when Iir_Kind_Constant_Interface_Declaration =>
-            Put ("constant ");
-         when Iir_Kind_File_Interface_Declaration =>
-            Put ("file ");
-         when others =>
-            Error_Kind ("disp_interface_declaration", Inter);
-      end case;
-      Disp_Name_Of (Inter);
+      if (Get_Lexical_Layout (Inter) and Iir_Lexical_Has_Class) /= 0 then
+         case Get_Kind (Inter) is
+            when Iir_Kind_Signal_Interface_Declaration =>
+               Put ("signal ");
+            when Iir_Kind_Variable_Interface_Declaration =>
+               Put ("variable ");
+            when Iir_Kind_Constant_Interface_Declaration =>
+               Put ("constant ");
+            when Iir_Kind_File_Interface_Declaration =>
+               Put ("file ");
+            when others =>
+               Error_Kind ("disp_interface_class", Inter);
+         end case;
+      end if;
+   end Disp_Interface_Class;
+
+   procedure Disp_Interface_Mode_And_Type (Inter: Iir)
+   is
+      Default: constant Iir := Get_Default_Value (Inter);
+      Ind : constant Iir := Get_Subtype_Indication (Inter);
+   begin
       Put (": ");
       if (Get_Lexical_Layout (Inter) and Iir_Lexical_Has_Mode) /= 0 then
          Disp_Mode (Get_Mode (Inter));
       end if;
-      Disp_Type (Get_Type (Inter));
+      if Ind = Null_Iir then
+         --  For implicit subprogram
+         Disp_Type (Get_Type (Inter));
+      else
+         Disp_Subtype_Indication (Get_Subtype_Indication (Inter));
+      end if;
       if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration then
          Disp_Signal_Kind (Get_Signal_Kind (Inter));
       end if;
-      Default := Get_Default_Value (Inter);
       if Default /= Null_Iir then
          Put (" := ");
          Disp_Expression (Default);
       end if;
-   end Disp_Interface_Declaration;
+   end Disp_Interface_Mode_And_Type;
 
-   procedure Disp_Interface_Chain (Chain: Iir; Str: String)
+   --  Disp interfaces, followed by END_STR (';' in general).
+   procedure Disp_Interface_Chain (Chain: Iir;
+                                   End_Str: String := "";
+                                   Comment_Col : Natural := 0)
    is
       Inter: Iir;
+      Next_Inter : Iir;
       Start: Count;
    begin
       if Chain = Null_Iir then
@@ -927,16 +1095,32 @@ package body Disp_Vhdl is
       Put (" (");
       Start := Col;
       Inter := Chain;
-      while Inter /= Null_Iir loop
+      loop
+         Next_Inter := Get_Chain (Inter);
          Set_Col (Start);
-         Disp_Interface_Declaration (Inter);
-         if Get_Chain (Inter) /= Null_Iir then
-            Put ("; ");
+         Disp_Interface_Class (Inter);
+         Disp_Name_Of (Inter);
+         while (Get_Lexical_Layout (Inter) and Iir_Lexical_Has_Type) = 0 loop
+            Put (", ");
+            Inter := Next_Inter;
+            Next_Inter := Get_Chain (Inter);
+            Disp_Name_Of (Inter);
+         end loop;
+         Disp_Interface_Mode_And_Type (Inter);
+         if Next_Inter /= Null_Iir then
+            Put (";");
+            if Comment_Col /= 0 then
+               New_Line;
+               Set_Col (Comment_Col);
+               Put ("--");
+            end if;
          else
             Put (')');
-            Put (Str);
+            Put (End_Str);
+            exit;
          end if;
-         Inter := Get_Chain (Inter);
+         Inter := Next_Inter;
+         Next_Inter := Get_Chain (Inter);
       end loop;
    end Disp_Interface_Chain;
 
@@ -951,21 +1135,6 @@ package body Disp_Vhdl is
       Put ("generic");
       Disp_Interface_Chain (Get_Generic_Chain (Parent), ";");
    end Disp_Generics;
-
-   procedure Disp_End (Decl : Iir; Name : String) is
-   begin
-      Put ("end");
-      if Get_End_Has_Reserved_Id (Decl) then
-         Put (' ');
-         Put (Name);
-      end if;
-      if Get_End_Has_Identifier (Decl) then
-         Put (' ');
-         Disp_Name_Of (Decl);
-      end if;
-      Put (';');
-      New_Line;
-   end Disp_End;
 
    procedure Disp_Entity_Declaration (Decl: Iir_Entity_Declaration) is
       Start: Count;
@@ -1001,6 +1170,9 @@ package body Disp_Vhdl is
       Indent := Col;
       Put ("component ");
       Disp_Name_Of (Decl);
+      if Get_Has_Is (Decl) then
+         Put (" is");
+      end if;
       if Get_Generic_Chain (Decl) /= Null_Iir then
          Set_Col (Indent + Indentation);
          Disp_Generics (Decl);
@@ -1010,7 +1182,7 @@ package body Disp_Vhdl is
          Disp_Ports (Decl);
       end if;
       Set_Col (Indent);
-      Put ("end component;");
+      Disp_End (Decl, "component");
    end Disp_Component_Declaration;
 
    procedure Disp_Concurrent_Statement_Chain (Parent : Iir; Indent : Count)
@@ -1033,7 +1205,7 @@ package body Disp_Vhdl is
       Put ("architecture ");
       Disp_Name_Of (Arch);
       Put (" of ");
-      Disp_Name_Of (Get_Entity (Arch));
+      Disp_Name (Get_Entity_Name (Arch));
       Put_Line (" is");
       Disp_Declaration_Chain (Arch, Start + Indentation);
       Set_Col (Start);
@@ -1042,6 +1214,32 @@ package body Disp_Vhdl is
       Set_Col (Start);
       Disp_End (Arch, "architecture");
    end Disp_Architecture_Body;
+
+   procedure Disp_Signature (Sig : Iir)
+   is
+      List : Iir_List;
+      El : Iir;
+   begin
+      Disp_Name (Get_Prefix (Sig));
+      Put (" [");
+      List := Get_Type_Marks_List (Sig);
+      if List /= Null_Iir_List then
+         for I in Natural loop
+            El := Get_Nth_Element (List, I);
+            exit when El = Null_Iir;
+            if I /= 0 then
+               Put (", ");
+            end if;
+            Disp_Name (El);
+         end loop;
+      end if;
+      El := Get_Return_Type (Sig);
+      if El /= Null_Iir then
+         Put (" return ");
+         Disp_Name (El);
+      end if;
+      Put ("]");
+   end Disp_Signature;
 
    procedure Disp_Object_Alias_Declaration (Decl: Iir_Object_Alias_Declaration)
    is
@@ -1058,24 +1256,43 @@ package body Disp_Vhdl is
    procedure Disp_Non_Object_Alias_Declaration
      (Decl: Iir_Non_Object_Alias_Declaration)
    is
+      Sig : constant Iir := Get_Alias_Signature (Decl);
    begin
+      if Get_Implicit_Alias_Flag (Decl) then
+         Put ("-- ");
+      end if;
+
       Put ("alias ");
       Disp_Function_Name (Decl);
       Put (" is ");
-      Disp_Name (Get_Name (Decl));
+      if Sig /= Null_Iir then
+         Disp_Signature (Sig);
+      else
+         Disp_Name (Get_Name (Decl));
+      end if;
       Put_Line (";");
    end Disp_Non_Object_Alias_Declaration;
 
-   procedure Disp_File_Declaration (Decl: Iir_File_Declaration) is
+   procedure Disp_File_Declaration (Decl: Iir_File_Declaration)
+   is
+      Next_Decl : Iir;
       Expr: Iir;
    begin
       Put ("file ");
       Disp_Name_Of (Decl);
+      Next_Decl := Decl;
+      while Get_Has_Identifier_List (Next_Decl) loop
+         Next_Decl := Get_Chain (Next_Decl);
+         Put (", ");
+         Disp_Name_Of (Next_Decl);
+      end loop;
       Put (": ");
       Disp_Type (Get_Type (Decl));
       if Vhdl_Std = Vhdl_87 then
          Put (" is ");
-         Disp_Mode (Get_Mode (Decl));
+         if Get_Has_Mode (Decl) then
+            Disp_Mode (Get_Mode (Decl));
+         end if;
          Disp_Expression (Get_File_Logical_Name (Decl));
       else
          Expr := Get_File_Open_Kind (Decl);
@@ -1142,7 +1359,9 @@ package body Disp_Vhdl is
       Put (';');
    end Disp_Terminal_Declaration;
 
-   procedure Disp_Object_Declaration (Decl: Iir) is
+   procedure Disp_Object_Declaration (Decl: Iir)
+   is
+      Next_Decl : Iir;
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Variable_Declaration =>
@@ -1154,9 +1373,6 @@ package body Disp_Vhdl is
             Put ("constant ");
          when Iir_Kind_Signal_Declaration =>
             Put ("signal ");
-         when Iir_Kind_Object_Alias_Declaration =>
-            Disp_Object_Alias_Declaration (Decl);
-            return;
          when Iir_Kind_File_Declaration =>
             Disp_File_Declaration (Decl);
             return;
@@ -1164,8 +1380,14 @@ package body Disp_Vhdl is
             raise Internal_Error;
       end case;
       Disp_Name_Of (Decl);
+      Next_Decl := Decl;
+      while Get_Has_Identifier_List (Next_Decl) loop
+         Next_Decl := Get_Chain (Next_Decl);
+         Put (", ");
+         Disp_Name_Of (Next_Decl);
+      end loop;
       Put (": ");
-      Disp_Type (Get_Type (Decl));
+      Disp_Subtype_Indication (Get_Subtype_Indication (Decl));
       if Get_Kind (Decl) = Iir_Kind_Signal_Declaration then
          Disp_Signal_Kind (Get_Signal_Kind (Decl));
       end if;
@@ -1177,28 +1399,64 @@ package body Disp_Vhdl is
       Put_Line (";");
    end Disp_Object_Declaration;
 
-   procedure Disp_Subprogram_Declaration (Subprg: Iir) is
+   procedure Disp_Pure (Subprg : Iir) is
    begin
+      if Get_Pure_Flag (Subprg) then
+         Put ("pure");
+      else
+         Put ("impure");
+      end if;
+   end Disp_Pure;
+
+   procedure Disp_Subprogram_Declaration (Subprg: Iir)
+   is
+      Start : constant Count := Col;
+      Implicit : constant Boolean :=
+        Get_Kind (Subprg) in Iir_Kinds_Implicit_Subprogram_Declaration;
+      Inter : Iir;
+   begin
+      if Implicit
+        and then
+        Get_Implicit_Definition (Subprg) /= Iir_Predefined_Now_Function
+      then
+         Put ("-- ");
+      end if;
+
       case Get_Kind (Subprg) is
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Implicit_Function_Declaration =>
-            Put ("function ");
-            Disp_Function_Name (Subprg);
+         when Iir_Kind_Function_Declaration =>
+            if Get_Has_Pure (Subprg) then
+               Disp_Pure (Subprg);
+               Put (' ');
+            end if;
+            Put ("function");
+         when Iir_Kind_Implicit_Function_Declaration =>
+            Put ("function");
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration =>
-            Put ("procedure ");
-            Disp_Identifier (Subprg);
+            Put ("procedure");
          when others =>
             raise Internal_Error;
       end case;
 
-      Disp_Interface_Chain (Get_Interface_Declaration_Chain (Subprg), "");
+      Put (' ');
+      Disp_Function_Name (Subprg);
+
+      Inter := Get_Interface_Declaration_Chain (Subprg);
+      if Implicit then
+         Disp_Interface_Chain (Inter, "", Start);
+      else
+         Disp_Interface_Chain (Inter, "", 0);
+      end if;
 
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration =>
             Put (" return ");
-            Disp_Type (Get_Return_Type (Subprg));
+            if Implicit then
+               Disp_Type (Get_Return_Type (Subprg));
+            else
+               Disp_Name (Get_Return_Type_Mark (Subprg));
+            end if;
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration =>
             null;
@@ -1209,24 +1467,19 @@ package body Disp_Vhdl is
 
    procedure Disp_Subprogram_Body (Subprg : Iir)
    is
-      Decl : Iir;
-      Indent : Count;
+      Indent : constant Count := Col;
    begin
-      Decl := Get_Subprogram_Specification (Subprg);
-      Indent := Col;
-      if Get_Chain (Decl) /= Subprg then
-         Disp_Subprogram_Declaration (Decl);
-      end if;
-      Put_Line ("is");
-      Set_Col (Indent);
       Disp_Declaration_Chain (Subprg, Indent + Indentation);
       Set_Col (Indent);
       Put_Line ("begin");
       Set_Col (Indent + Indentation);
       Disp_Sequential_Statements (Get_Sequential_Statement_Chain (Subprg));
       Set_Col (Indent);
-      Put_Line ("end;");
-      New_Line;
+      if Get_Kind (Subprg) = Iir_Kind_Function_Body then
+         Disp_End (Subprg, "function");
+      else
+         Disp_End (Subprg, "procedure");
+      end if;
    end Disp_Subprogram_Body;
 
    procedure Disp_Instantiation_List (Insts: Iir_List) is
@@ -1257,7 +1510,7 @@ package body Disp_Vhdl is
       Put ("for ");
       Disp_Instantiation_List (Get_Instantiation_List (Spec));
       Put (": ");
-      Disp_Name_Of (Get_Component_Name (Spec));
+      Disp_Name (Get_Component_Name (Spec));
       New_Line;
       Disp_Binding_Indication (Get_Binding_Indication (Spec),
                                Indent + Indentation);
@@ -1271,7 +1524,7 @@ package body Disp_Vhdl is
       Put ("disconnect ");
       Disp_Instantiation_List (Get_Signal_List (Dis));
       Put (": ");
-      Disp_Subtype_Indication (Get_Type (Dis));
+      Disp_Name (Get_Type_Mark (Dis));
       Put (" after ");
       Disp_Expression (Get_Expression (Dis));
       Put_Line (";");
@@ -1283,7 +1536,7 @@ package body Disp_Vhdl is
       Put ("attribute ");
       Disp_Identifier (Attr);
       Put (": ");
-      Disp_Type (Get_Type (Attr));
+      Disp_Name (Get_Type_Mark (Attr));
       Put_Line (";");
    end Disp_Attribute_Declaration;
 
@@ -1295,36 +1548,23 @@ package body Disp_Vhdl is
         (Get_Attribute_Designator (Get_Attribute_Specification (Attr)));
    end Disp_Attribute_Value;
 
+   procedure Disp_Attribute_Name (Attr : Iir)
+   is
+      Sig : constant Iir := Get_Attribute_Signature (Attr);
+   begin
+      if Sig /= Null_Iir then
+         Disp_Signature (Sig);
+      else
+         Disp_Name (Get_Prefix (Attr));
+      end if;
+      Put ("'");
+      Disp_Ident (Get_Identifier (Attr));
+   end Disp_Attribute_Name;
+
    procedure Disp_Entity_Kind (Tok : Tokens.Token_Type) is
    begin
       Put (Tokens.Image (Tok));
    end Disp_Entity_Kind;
-
-   procedure Disp_Signature (Sig : Iir)
-   is
-      List : Iir_List;
-      El : Iir;
-   begin
-      Disp_Name (Get_Prefix (Sig));
-      Put (" [");
-      List := Get_Type_Marks_List (Sig);
-      if List /= Null_Iir_List then
-         for I in Natural loop
-            El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
-            if I /= 0 then
-               Put (", ");
-            end if;
-            Disp_Name (El);
-         end loop;
-      end if;
-      El := Get_Return_Type (Sig);
-      if El /= Null_Iir then
-         Put (" return ");
-         Disp_Type (El);
-      end if;
-      Put ("]");
-   end Disp_Signature;
 
    procedure Disp_Entity_Name_List (List : Iir_List)
    is
@@ -1344,7 +1584,7 @@ package body Disp_Vhdl is
             if Get_Kind (El) = Iir_Kind_Signature then
                Disp_Signature (El);
             else
-               Disp_Name_Of (El);
+               Disp_Name (El);
             end if;
          end loop;
       end if;
@@ -1374,11 +1614,12 @@ package body Disp_Vhdl is
       New_Line;
       Disp_Declaration_Chain (Bod, Indent + Indentation);
       Set_Col (Indent);
-      Put_Line ("end protected body;");
+      Disp_End (Bod, "protected body");
    end Disp_Protected_Type_Body;
 
    procedure Disp_Group_Template_Declaration (Decl : Iir)
    is
+      use Tokens;
       Ent : Iir;
    begin
       Put ("group ");
@@ -1389,7 +1630,12 @@ package body Disp_Vhdl is
          Disp_Entity_Kind (Get_Entity_Class (Ent));
          Ent := Get_Chain (Ent);
          exit when Ent = Null_Iir;
-         Put (", ");
+         if Get_Entity_Class (Ent) = Tok_Box then
+            Put (" <>");
+            exit;
+         else
+            Put (", ");
+         end if;
       end loop;
       Put_Line (");");
    end Disp_Group_Template_Declaration;
@@ -1434,8 +1680,16 @@ package body Disp_Vhdl is
                Disp_Use_Clause (Decl);
             when Iir_Kind_Component_Declaration =>
                Disp_Component_Declaration (Decl);
-            when Iir_Kinds_Object_Declaration =>
+            when Iir_Kind_File_Declaration
+              | Iir_Kind_Signal_Declaration
+              | Iir_Kind_Constant_Declaration
+              | Iir_Kind_Variable_Declaration =>
                Disp_Object_Declaration (Decl);
+               while Get_Has_Identifier_List (Decl) loop
+                  Decl := Get_Chain (Decl);
+               end loop;
+            when Iir_Kind_Object_Alias_Declaration =>
+               Disp_Object_Alias_Declaration (Decl);
             when Iir_Kind_Terminal_Declaration =>
                Disp_Terminal_Declaration (Decl);
             when Iir_Kinds_Quantity_Declaration =>
@@ -1451,13 +1705,14 @@ package body Disp_Vhdl is
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
                Disp_Subprogram_Declaration (Decl);
-               if Get_Subprogram_Body (Decl) = Null_Iir
-                 or else Get_Subprogram_Body (Decl) /= Get_Chain (Decl)
-               then
+               if not Get_Has_Body (Decl) then
                   Put_Line (";");
                end if;
             when Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
+               --  The declaration was just displayed.
+               Put_Line (" is");
+               Set_Col (Indent);
                Disp_Subprogram_Body (Decl);
             when Iir_Kind_Protected_Type_Body =>
                Disp_Protected_Type_Body (Decl, Indent);
@@ -1539,7 +1794,9 @@ package body Disp_Vhdl is
       Put_Line (";");
    end Disp_Variable_Assignment;
 
-   procedure Disp_Label (Label: Name_Id) is
+   procedure Disp_Label (Stmt : Iir)
+   is
+      Label: constant Name_Id := Get_Label (Stmt);
    begin
       if Label /= Null_Identifier then
          Disp_Ident (Label);
@@ -1547,15 +1804,22 @@ package body Disp_Vhdl is
       end if;
    end Disp_Label;
 
+   procedure Disp_Postponed (Stmt : Iir) is
+   begin
+      if Get_Postponed_Flag (Stmt) then
+         Put ("postponed ");
+      end if;
+   end Disp_Postponed;
+
    procedure Disp_Concurrent_Selected_Signal_Assignment (Stmt: Iir)
    is
-      Indent: Count;
+      Indent: constant Count := Col;
       Assoc: Iir;
       Assoc_Chain : Iir;
    begin
-      Indent := Col;
       Set_Col (Indent);
-      Disp_Label (Get_Label (Stmt));
+      Disp_Label (Stmt);
+      Disp_Postponed (Stmt);
       Put ("with ");
       Disp_Expression (Get_Expression (Stmt));
       Put (" select ");
@@ -1585,7 +1849,8 @@ package body Disp_Vhdl is
       Cond_Wf : Iir_Conditional_Waveform;
       Expr : Iir;
    begin
-      Disp_Label (Get_Label (Stmt));
+      Disp_Label (Stmt);
+      Disp_Postponed (Stmt);
       Disp_Expression (Get_Target (Stmt));
       Put (" <= ");
       if Get_Guard (Stmt) /= Null_Iir then
@@ -1610,13 +1875,14 @@ package body Disp_Vhdl is
       Put_Line (";");
    end Disp_Concurrent_Conditional_Signal_Assignment;
 
-   procedure Disp_Assertion_Statement (Stmt: Iir) is
-      Start: Count;
+   procedure Disp_Assertion_Statement (Stmt: Iir)
+   is
+      Start: constant Count := Col;
       Expr: Iir;
    begin
-      Start := Col;
       if Get_Kind (Stmt) = Iir_Kind_Concurrent_Assertion_Statement then
-         Disp_Label (Get_Label (Stmt));
+         Disp_Label (Stmt);
+         Disp_Postponed (Stmt);
       end if;
       Put ("assert ");
       Disp_Expression (Get_Assertion_Condition (Stmt));
@@ -1668,9 +1934,15 @@ package body Disp_Vhdl is
 
    procedure Disp_Monadic_Operator (Expr: Iir) is
    begin
-      Put (Name_Table.Image (Iirs_Utils.Get_Operator_Name (Expr)) & " (");
+      Put (Name_Table.Image (Iirs_Utils.Get_Operator_Name (Expr)));
+      Put (' ');
+      if Flag_Parenthesis then
+         Put ('(');
+      end if;
       Disp_Expression (Get_Operand (Expr));
-      Put (")");
+      if Flag_Parenthesis then
+         Put (')');
+      end if;
    end Disp_Monadic_Operator;
 
    procedure Disp_Case_Statement (Stmt: Iir_Case_Statement)
@@ -1694,7 +1966,7 @@ package body Disp_Vhdl is
          Disp_Sequential_Statements (Sel_Stmt);
       end loop;
       Set_Col (Indent);
-      Put_Line ("end case;");
+      Disp_End_Label (Stmt, "case");
    end Disp_Case_Statement;
 
    procedure Disp_Wait_Statement (Stmt: Iir_Wait_Statement) is
@@ -1746,23 +2018,18 @@ package body Disp_Vhdl is
          end if;
       end loop;
       Set_Col (Start);
-      Put_Line ("end if;");
+      Disp_End_Label (Stmt, "if");
    end Disp_If_Statement;
-
-   procedure Disp_Iterator (Iterator: Iir) is
-   begin
-      Disp_Subtype_Indication (Iterator);
-   end Disp_Iterator;
 
    procedure Disp_Parameter_Specification
      (Iterator : Iir_Iterator_Declaration) is
    begin
       Disp_Identifier (Iterator);
       Put (" in ");
-      Disp_Iterator (Get_Type (Iterator));
+      Disp_Discrete_Range (Get_Discrete_Range (Iterator));
    end Disp_Parameter_Specification;
 
-   procedure Disp_Procedure_Call (Call : Iir)
+   procedure Disp_Method_Object (Call : Iir)
    is
       Obj : Iir;
    begin
@@ -1771,8 +2038,17 @@ package body Disp_Vhdl is
          Disp_Name (Obj);
          Put ('.');
       end if;
-      Disp_Identifier (Get_Implementation (Call));
-      Put (' ');
+   end Disp_Method_Object;
+
+   procedure Disp_Procedure_Call (Call : Iir) is
+   begin
+      if True then
+         Disp_Name (Get_Prefix (Call));
+      else
+         Disp_Method_Object (Call);
+         Disp_Identifier (Get_Implementation (Call));
+         Put (' ');
+      end if;
       Disp_Association_Chain (Get_Parameter_Association_Chain (Call));
       Put_Line (";");
    end Disp_Procedure_Call;
@@ -1780,12 +2056,12 @@ package body Disp_Vhdl is
    procedure Disp_Sequential_Statements (First : Iir)
    is
       Stmt: Iir;
-      Start: Count;
+      Start: constant Count := Col;
    begin
-      Start := Col;
       Stmt := First;
       while Stmt /= Null_Iir loop
          Set_Col (Start);
+         Disp_Label (Stmt);
          case Get_Kind (Stmt) is
             when Iir_Kind_Null_Statement =>
                Put_Line ("null;");
@@ -1793,13 +2069,14 @@ package body Disp_Vhdl is
                Disp_If_Statement (Stmt);
             when Iir_Kind_For_Loop_Statement =>
                Put ("for ");
-               Disp_Parameter_Specification (Get_Iterator_Scheme (Stmt));
+               Disp_Parameter_Specification
+                 (Get_Parameter_Specification (Stmt));
                Put_Line (" loop");
                Set_Col (Start + Indentation);
                Disp_Sequential_Statements
                  (Get_Sequential_Statement_Chain (Stmt));
                Set_Col (Start);
-               Put_Line ("end loop;");
+               Disp_End_Label (Stmt, "loop");
             when Iir_Kind_While_Loop_Statement =>
                if Get_Condition (Stmt) /= Null_Iir then
                   Put ("while ");
@@ -1811,7 +2088,7 @@ package body Disp_Vhdl is
                Disp_Sequential_Statements
                  (Get_Sequential_Statement_Chain (Stmt));
                Set_Col (Start);
-               Put_Line ("end loop;");
+               Disp_End_Label (Stmt, "loop");
             when Iir_Kind_Signal_Assignment_Statement =>
                Disp_Signal_Assignment (Stmt);
             when Iir_Kind_Variable_Assignment_Statement =>
@@ -1836,17 +2113,25 @@ package body Disp_Vhdl is
                Disp_Procedure_Call (Get_Procedure_Call (Stmt));
             when Iir_Kind_Exit_Statement
               | Iir_Kind_Next_Statement =>
-               if Get_Kind (Stmt) = Iir_Kind_Exit_Statement then
-                  Put ("exit");
-               else
-                  Put ("next");
-               end if;
-               -- FIXME: label.
-               if Get_Condition (Stmt) /= Null_Iir then
-                  Put (" when ");
-                  Disp_Expression (Get_Condition (Stmt));
-               end if;
-               Put_Line (";");
+               declare
+                  Label : constant Iir := Get_Loop_Label (Stmt);
+                  Cond : constant Iir := Get_Condition (Stmt);
+               begin
+                  if Get_Kind (Stmt) = Iir_Kind_Exit_Statement then
+                     Put ("exit");
+                  else
+                     Put ("next");
+                  end if;
+                  if Label /= Null_Iir then
+                     Put (" ");
+                     Disp_Name (Label);
+                  end if;
+                  if Cond /= Null_Iir then
+                     Put (" when ");
+                     Disp_Expression (Cond);
+                  end if;
+                  Put_Line (";");
+               end;
 
             when others =>
                Error_Kind ("disp_sequential_statements", Stmt);
@@ -1857,10 +2142,10 @@ package body Disp_Vhdl is
 
    procedure Disp_Process_Statement (Process: Iir)
    is
-      Start: Count;
+      Start: constant Count := Col;
    begin
-      Start := Col;
-      Disp_Label (Get_Label (Process));
+      Disp_Label (Process);
+      Disp_Postponed (Process);
 
       Put ("process ");
       if Get_Kind (Process) = Iir_Kind_Sensitized_Process_Statement then
@@ -1868,18 +2153,21 @@ package body Disp_Vhdl is
          Disp_Designator_List (Get_Sensitivity_List (Process));
          Put (")");
       end if;
-      if Vhdl_Std >= Vhdl_93 then
-         Put_Line (" is");
-      else
-         New_Line;
+      if Get_Has_Is (Process) then
+         Put (" is");
       end if;
+      New_Line;
       Disp_Declaration_Chain (Process, Start + Indentation);
       Set_Col (Start);
       Put_Line ("begin");
       Set_Col (Start + Indentation);
       Disp_Sequential_Statements (Get_Sequential_Statement_Chain (Process));
       Set_Col (Start);
-      Disp_End (Process, "process");
+      Put ("end");
+      if Get_End_Has_Postponed (Process) then
+         Put (" postponed");
+      end if;
+      Disp_After_End (Process, "process");
    end Disp_Process_Statement;
 
    procedure Disp_Conversion (Conv : Iir) is
@@ -1968,7 +2256,7 @@ package body Disp_Vhdl is
       case Get_Kind (Aspect) is
          when Iir_Kind_Entity_Aspect_Entity =>
             Put ("entity ");
-            Disp_Name_Of (Get_Entity (Aspect));
+            Disp_Name (Get_Entity_Name (Aspect));
             Arch := Get_Architecture (Aspect);
             if Arch /= Null_Iir then
                Put (" (");
@@ -1977,7 +2265,7 @@ package body Disp_Vhdl is
             end if;
          when Iir_Kind_Entity_Aspect_Configuration =>
             Put ("configuration ");
-            Disp_Name_Of (Get_Configuration (Aspect));
+            Disp_Name (Get_Configuration_Name (Aspect));
          when Iir_Kind_Entity_Aspect_Open =>
             Put ("open");
          when others =>
@@ -1988,13 +2276,12 @@ package body Disp_Vhdl is
    procedure Disp_Component_Instantiation_Statement
      (Stmt: Iir_Component_Instantiation_Statement)
    is
-      Component: Iir;
+      Component: constant Iir := Get_Instantiated_Unit (Stmt);
       Alist: Iir;
    begin
-      Disp_Label (Get_Label (Stmt));
-      Component := Get_Instantiated_Unit (Stmt);
-      if Get_Kind (Component) = Iir_Kind_Component_Declaration then
-         Disp_Name_Of (Component);
+      Disp_Label (Stmt);
+      if Get_Kind (Component) in Iir_Kinds_Denoting_Name then
+         Disp_Name (Component);
       else
          Disp_Entity_Aspect (Component);
       end if;
@@ -2013,7 +2300,12 @@ package body Disp_Vhdl is
 
    procedure Disp_Function_Call (Expr: Iir_Function_Call) is
    begin
-      Disp_Function_Name (Get_Implementation (Expr));
+      if True then
+         Disp_Name (Get_Prefix (Expr));
+      else
+         Disp_Method_Object (Expr);
+         Disp_Function_Name (Get_Implementation (Expr));
+      end if;
       Disp_Association_Chain (Get_Parameter_Association_Chain (Expr));
    end Disp_Function_Call;
 
@@ -2129,21 +2421,36 @@ package body Disp_Vhdl is
       Put ("'");
       Put (Name);
       Param := Get_Parameter (Expr);
-      if Param /= Null_Iir then
+      if Param /= Null_Iir
+        and then Param /= Std_Package.Universal_Integer_One
+      then
          Put (" (");
          Disp_Expression (Param);
          Put (")");
       end if;
    end Disp_Parametered_Attribute;
 
+   procedure Disp_Parametered_Type_Attribute (Name : String; Expr : Iir) is
+   begin
+      Disp_Name (Get_Prefix (Expr));
+      Put ("'");
+      Put (Name);
+      Put (" (");
+      Disp_Expression (Get_Parameter (Expr));
+      Put (")");
+   end Disp_Parametered_Type_Attribute;
+
    procedure Disp_String_Literal (Str : Iir)
    is
-      Ptr : String_Fat_Acc;
-      Len : Int32;
+      Ptr : constant String_Fat_Acc := Get_String_Fat_Acc (Str);
+      Len : constant Int32 := Get_String_Length (Str);
    begin
-      Ptr := Get_String_Fat_Acc (Str);
-      Len := Get_String_Length (Str);
-      Put (String (Ptr (1 .. Len)));
+      for I in 1 .. Len loop
+         if Ptr (I) = '"' then
+            Put ('"');
+         end if;
+         Put (Ptr (I));
+      end loop;
    end Disp_String_Literal;
 
    procedure Disp_Expression (Expr: Iir)
@@ -2166,28 +2473,38 @@ package body Disp_Vhdl is
                Disp_Fp64 (Get_Fp_Value (Expr));
             end if;
          when Iir_Kind_String_Literal =>
-            Put ("""");
-            Disp_String_Literal (Expr);
-            Put ("""");
-            if Disp_String_Literal_Type or Flags.List_Verbose then
-               Put ("[type: ");
-               Disp_Type (Get_Type (Expr));
-               Put ("]");
+            Orig := Get_Literal_Origin (Expr);
+            if Orig /= Null_Iir then
+               Disp_Expression (Orig);
+            else
+               Put ("""");
+               Disp_String_Literal (Expr);
+               Put ("""");
+               if Disp_String_Literal_Type or Flags.List_Verbose then
+                  Put ("[type: ");
+                  Disp_Type (Get_Type (Expr));
+                  Put ("]");
+               end if;
             end if;
          when Iir_Kind_Bit_String_Literal =>
-            if False then
-               case Get_Bit_String_Base (Expr) is
-                  when Base_2 =>
-                     Put ('B');
-                  when Base_8 =>
-                     Put ('O');
-                  when Base_16 =>
-                     Put ('X');
-               end case;
+            Orig := Get_Literal_Origin (Expr);
+            if Orig /= Null_Iir then
+               Disp_Expression (Orig);
+            else
+               if False then
+                  case Get_Bit_String_Base (Expr) is
+                     when Base_2 =>
+                        Put ('B');
+                     when Base_8 =>
+                        Put ('O');
+                     when Base_16 =>
+                        Put ('X');
+                  end case;
+               end if;
+               Put ("B""");
+               Disp_String_Literal (Expr);
+               Put ("""");
             end if;
-            Put ("B""");
-            Disp_String_Literal (Expr);
-            Put ("""");
          when Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Physical_Int_Literal =>
             Orig := Get_Literal_Origin (Expr);
@@ -2201,7 +2518,12 @@ package body Disp_Vhdl is
          when Iir_Kind_Character_Literal =>
             Disp_Identifier (Expr);
          when Iir_Kind_Enumeration_Literal =>
-            Disp_Name_Of (Expr);
+            Orig := Get_Literal_Origin (Expr);
+            if Orig /= Null_Iir then
+               Disp_Expression (Orig);
+            else
+               Disp_Name_Of (Expr);
+            end if;
          when Iir_Kind_Overflow_Literal =>
             Orig := Get_Literal_Origin (Expr);
             if Orig /= Null_Iir then
@@ -2226,6 +2548,8 @@ package body Disp_Vhdl is
 
          when Iir_Kind_Attribute_Value =>
             Disp_Attribute_Value (Expr);
+         when Iir_Kind_Attribute_Name =>
+            Disp_Attribute_Name (Expr);
 
          when Iir_Kind_Element_Declaration =>
             Disp_Name_Of (Expr);
@@ -2243,9 +2567,6 @@ package body Disp_Vhdl is
             Disp_Name_Of (Expr);
             return;
 
-         when Iir_Kind_Simple_Name =>
-            Disp_Name (Expr);
-
          when Iir_Kinds_Dyadic_Operator =>
             Disp_Dyadic_Operator (Expr);
          when Iir_Kinds_Monadic_Operator =>
@@ -2257,21 +2578,33 @@ package body Disp_Vhdl is
             Disp_Expression (Get_Expression (Expr));
             Put (")");
          when Iir_Kind_Type_Conversion =>
-            Disp_Type (Get_Type (Expr));
+            Disp_Name (Get_Type_Mark (Expr));
             Put (" (");
             Disp_Expression (Get_Expression (Expr));
             Put (")");
          when Iir_Kind_Qualified_Expression =>
-            Disp_Type (Get_Type_Mark (Expr));
-            Put ("'(");
-            Disp_Expression (Get_Expression (Expr));
-            Put (")");
+            declare
+               Qexpr : constant Iir := Get_Expression (Expr);
+               Has_Paren : constant Boolean :=
+                 Get_Kind (Qexpr) = Iir_Kind_Parenthesis_Expression
+                 or else Get_Kind (Qexpr) = Iir_Kind_Aggregate;
+            begin
+               Disp_Name (Get_Type_Mark (Expr));
+               Put ("'");
+               if not Has_Paren then
+                  Put ("(");
+               end if;
+               Disp_Expression (Qexpr);
+               if not Has_Paren then
+                  Put (")");
+               end if;
+            end;
          when Iir_Kind_Allocator_By_Expression =>
             Put ("new ");
             Disp_Expression (Get_Expression (Expr));
          when Iir_Kind_Allocator_By_Subtype =>
             Put ("new ");
-            Disp_Subtype_Indication (Get_Expression (Expr));
+            Disp_Subtype_Indication (Get_Subtype_Indication (Expr));
 
          when Iir_Kind_Indexed_Name =>
             Disp_Indexed_Name (Expr);
@@ -2291,16 +2624,16 @@ package body Disp_Vhdl is
             Put (".all");
 
          when Iir_Kind_Left_Type_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
+            Disp_Name (Get_Prefix (Expr));
             Put ("'left");
          when Iir_Kind_Right_Type_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
+            Disp_Name (Get_Prefix (Expr));
             Put ("'right");
          when Iir_Kind_High_Type_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
+            Disp_Name (Get_Prefix (Expr));
             Put ("'high");
          when Iir_Kind_Low_Type_Attribute =>
-            Disp_Expression (Get_Prefix (Expr));
+            Disp_Name (Get_Prefix (Expr));
             Put ("'low");
 
          when Iir_Kind_Stable_Attribute =>
@@ -2335,13 +2668,17 @@ package body Disp_Vhdl is
             Put ("'last_event");
 
          when Iir_Kind_Pos_Attribute =>
-            Disp_Parametered_Attribute ("pos", Expr);
+            Disp_Parametered_Type_Attribute ("pos", Expr);
          when Iir_Kind_Val_Attribute =>
-            Disp_Parametered_Attribute ("val", Expr);
+            Disp_Parametered_Type_Attribute ("val", Expr);
          when Iir_Kind_Succ_Attribute =>
-            Disp_Parametered_Attribute ("succ", Expr);
+            Disp_Parametered_Type_Attribute ("succ", Expr);
          when Iir_Kind_Pred_Attribute =>
-            Disp_Parametered_Attribute ("pred", Expr);
+            Disp_Parametered_Type_Attribute ("pred", Expr);
+         when Iir_Kind_Leftof_Attribute =>
+            Disp_Parametered_Type_Attribute ("leftof", Expr);
+         when Iir_Kind_Rightof_Attribute =>
+            Disp_Parametered_Type_Attribute ("rightof", Expr);
 
          when Iir_Kind_Length_Array_Attribute =>
             Disp_Parametered_Attribute ("length", Expr);
@@ -2365,27 +2702,24 @@ package body Disp_Vhdl is
          when Iir_Kind_Value_Attribute =>
             Disp_Parametered_Attribute ("value", Expr);
          when Iir_Kind_Simple_Name_Attribute =>
-            Disp_Name_Of (Get_Prefix (Expr));
+            Disp_Name (Get_Prefix (Expr));
             Put ("'simple_name");
          when Iir_Kind_Instance_Name_Attribute =>
-            Disp_Name_Of (Get_Prefix (Expr));
+            Disp_Name (Get_Prefix (Expr));
             Put ("'instance_name");
          when Iir_Kind_Path_Name_Attribute =>
-            Disp_Name_Of (Get_Prefix (Expr));
+            Disp_Name (Get_Prefix (Expr));
             Put ("'path_name");
 
          when Iir_Kind_Selected_By_All_Name =>
             Disp_Expression (Get_Prefix (Expr));
-            Put ("");
-            return;
          when Iir_Kind_Selected_Name =>
-            Disp_Expression (Get_Named_Entity (Expr));
+            Disp_Name (Expr);
+         when Iir_Kind_Simple_Name =>
+            Disp_Name (Expr);
 
          when Iir_Kinds_Type_And_Subtype_Definition =>
             Disp_Type (Expr);
-
-         when Iir_Kind_Proxy =>
-            Disp_Expression (Get_Proxy (Expr));
 
          when Iir_Kind_Range_Expression =>
             Disp_Range (Expr);
@@ -2446,7 +2780,7 @@ package body Disp_Vhdl is
       Guard : Iir_Guard_Signal_Declaration;
    begin
       Indent := Col;
-      Disp_Label (Get_Label (Block));
+      Disp_Label (Block);
       Put ("block");
       Guard := Get_Guard_Decl (Block);
       if Guard /= Null_Iir then
@@ -2469,7 +2803,7 @@ package body Disp_Vhdl is
       Put_Line ("begin");
       Disp_Concurrent_Statement_Chain (Block, Indent + Indentation);
       Set_Col (Indent);
-      Put_Line ("end;");
+      Disp_End (Block, "block");
    end Disp_Block_Statement;
 
    procedure Disp_Generate_Statement (Stmt : Iir_Generate_Statement)
@@ -2478,7 +2812,7 @@ package body Disp_Vhdl is
       Scheme : Iir;
    begin
       Indent := Col;
-      Disp_Label (Get_Label (Stmt));
+      Disp_Label (Stmt);
       Scheme := Get_Generation_Scheme (Stmt);
       case Get_Kind (Scheme) is
          when Iir_Kind_Iterator_Declaration =>
@@ -2490,11 +2824,13 @@ package body Disp_Vhdl is
       end case;
       Put_Line (" generate");
       Disp_Declaration_Chain (Stmt, Indent);
-      Set_Col (Indent);
-      Put_Line ("begin");
+      if Get_Has_Begin (Stmt) then
+         Set_Col (Indent);
+         Put_Line ("begin");
+      end if;
       Disp_Concurrent_Statement_Chain (Stmt, Indent + Indentation);
       Set_Col (Indent);
-      Put_Line ("end generate;");
+      Disp_End (Stmt, "generate");
    end Disp_Generate_Statement;
 
    procedure Disp_Psl_Default_Clock (Stmt : Iir) is
@@ -2556,7 +2892,7 @@ package body Disp_Vhdl is
    procedure Disp_Simple_Simultaneous_Statement (Stmt : Iir)
    is
    begin
-      Disp_Label (Get_Label (Stmt));
+      Disp_Label (Stmt);
       Disp_Expression (Get_Simultaneous_Left (Stmt));
       Put (" == ");
       Disp_Expression (Get_Simultaneous_Right (Stmt));
@@ -2578,6 +2914,8 @@ package body Disp_Vhdl is
          when Iir_Kind_Component_Instantiation_Statement =>
             Disp_Component_Instantiation_Statement (Stmt);
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
+            Disp_Label (Stmt);
+            Disp_Postponed (Stmt);
             Disp_Procedure_Call (Get_Procedure_Call (Stmt));
          when Iir_Kind_Block_Statement =>
             Disp_Block_Statement (Stmt);
@@ -2602,7 +2940,7 @@ package body Disp_Vhdl is
       Disp_Identifier (Decl);
       Put_Line (" is");
       Disp_Declaration_Chain (Decl, Col + Indentation);
-      Put_Line ("end;");
+      Disp_End (Decl, "package");
    end Disp_Package_Declaration;
 
    procedure Disp_Package_Body (Decl: Iir)
@@ -2612,7 +2950,7 @@ package body Disp_Vhdl is
       Disp_Identifier (Decl);
       Put_Line (" is");
       Disp_Declaration_Chain (Decl, Col + Indentation);
-      Put_Line ("end;");
+      Disp_End (Decl, "package body");
    end Disp_Package_Body;
 
    procedure Disp_Binding_Indication (Bind : Iir; Indent : Count)
@@ -2646,12 +2984,13 @@ package body Disp_Vhdl is
       Set_Col (Indent);
       Put ("for ");
       Disp_Instantiation_List (Get_Instantiation_List (Conf));
-      Put(" : ");
+      Put (" : ");
       Disp_Name_Of (Get_Component_Name (Conf));
       New_Line;
       Binding := Get_Binding_Indication (Conf);
       if Binding /= Null_Iir then
          Disp_Binding_Indication (Binding, Indent + Indentation);
+         Put (";");
       end if;
       Block := Get_Block_Configuration (Conf);
       if Block /= Null_Iir then
@@ -2731,22 +3070,24 @@ package body Disp_Vhdl is
       Put ("configuration ");
       Disp_Name_Of (Decl);
       Put (" of ");
-      Disp_Name_Of (Get_Entity (Decl));
+      Disp_Name (Get_Entity_Name (Decl));
       Put_Line (" is");
       Disp_Declaration_Chain (Decl, Col);
       Disp_Block_Configuration (Get_Block_Configuration (Decl),
                                 Col + Indentation);
-      Put_Line ("end;");
+      Disp_End (Decl, "configuration");
    end Disp_Configuration_Declaration;
 
    procedure Disp_Design_Unit (Unit: Iir_Design_Unit)
    is
+      Indent: constant Count := Col;
       Decl: Iir;
-      Indent: Count;
+      Next_Decl : Iir;
    begin
-      Indent := Col;
       Decl := Get_Context_Items (Unit);
       while Decl /= Null_Iir loop
+         Next_Decl := Get_Chain (Decl);
+
          Set_Col (Indent);
          case Get_Kind (Decl) is
             when Iir_Kind_Use_Clause =>
@@ -2754,11 +3095,17 @@ package body Disp_Vhdl is
             when Iir_Kind_Library_Clause =>
                Put ("library ");
                Disp_Identifier (Decl);
+               while Get_Has_Identifier_List (Decl) loop
+                  Decl := Next_Decl;
+                  Next_Decl := Get_Chain (Decl);
+                  Put (", ");
+                  Disp_Identifier (Decl);
+               end loop;
                Put_Line (";");
             when others =>
                Error_Kind ("disp_design_unit1", Decl);
          end case;
-         Decl := Get_Chain (Decl);
+         Decl := Next_Decl;
       end loop;
 
       Decl := Get_Library_Unit (Unit);

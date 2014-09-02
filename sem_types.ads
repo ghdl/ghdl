@@ -18,26 +18,24 @@
 with Iirs; use Iirs;
 
 package Sem_Types is
-   --  Semantization of types (LRM chapter 3)
+   --  Semantization of types (LRM93 3 / LRM08 5)
 
-   -- Semantize subtype indication DEF.
-   -- If INCOMPLETE is TRUE, then DEF may designate an incomplete type
-   -- definition.
-   -- This is used by sem_expr for qualified expression and allocators.
+   --  Semantize subtype indication DEF.
+   --  If INCOMPLETE is TRUE, then DEF may designate an incomplete type
+   --  definition.  Return either a name (denoting a type) or an anonymous
+   --  subtype definition.
    function Sem_Subtype_Indication (Def: Iir; Incomplete : Boolean := False)
      return Iir;
-
-   -- Return FALSE if A_TYPE is an unconstrained array type or subtype.
-   --function Sem_Is_Constrained (A_Type: Iir) return Boolean;
 
    procedure Sem_Protected_Type_Body (Bod : Iir);
 
    function Sem_Type_Definition (Def: Iir; Decl: Iir) return Iir;
 
-   --  Convert a range expression to a subtype definition whose constraint is
-   --  A_RANGE.
-   --  This function extract the type of the range expression.
-   function Range_To_Subtype_Definition (A_Range: Iir) return Iir;
+   --  If A_RANGE is a range (range expression or range attribute), convert it
+   --  to a subtype definition.  Otherwise return A_RANGE.
+   --  The result is a subtype indication: either a type name or a subtype
+   --  definition.
+   function Range_To_Subtype_Indication (A_Range: Iir) return Iir;
 
    --  ATYPE is used to declare a signal.
    --  Set (recursively) the Has_Signal_Flag on ATYPE and all types used by
@@ -54,6 +52,6 @@ package Sem_Types is
    --  This is used when an alias of DEF is required (eg: subtype a is b).
    function Copy_Subtype_Indication (Def : Iir) return Iir;
 
+   --  Although a nature is not a type, it is patterned like a type.
    function Sem_Subnature_Indication (Def: Iir) return Iir;
-   --  Also a nature is not a type, it is patterned like a type.
 end Sem_Types;

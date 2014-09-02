@@ -410,7 +410,7 @@ package body Canon is
                --  LRM08 11.3
                --  See loop statement case.
                declare
-                  It : constant Iir := Get_Iterator_Scheme (Stmt);
+                  It : constant Iir := Get_Parameter_Specification (Stmt);
                   It_Type : constant Iir := Get_Type (It);
                   Rng : constant Iir := Get_Range_Constraint (It_Type);
                begin
@@ -438,7 +438,7 @@ package body Canon is
                   while Param /= Null_Iir loop
                      if (Get_Kind (Param)
                            = Iir_Kind_Association_Element_By_Expression)
-                       and then (Get_Mode (Get_Base_Name (Get_Formal (Param)))
+                       and then (Get_Mode (Get_Association_Interface (Param))
                                    /= Iir_Out_Mode)
                      then
                         Canon_Extract_Sensitivity (Get_Actual (Param), List);
@@ -622,18 +622,13 @@ package body Canon is
                Canon_Expression (El);
             end loop;
 
---          when Iir_Kind_Selected_Name =>
---             -- Use this order to allow tail recursion optimisation.
---             Canon_Expression (Get_Suffix (Expr));
---             Canon_Expression (Get_Prefix (Expr));
          when Iir_Kind_Selected_Element =>
             Canon_Expression (Get_Prefix (Expr));
          when Iir_Kind_Dereference
            | Iir_Kind_Implicit_Dereference =>
             Canon_Expression (Get_Prefix (Expr));
 
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name =>
+         when Iir_Kinds_Denoting_Name =>
             Canon_Expression (Get_Named_Entity (Expr));
 
          when Iir_Kinds_Monadic_Operator =>
@@ -664,7 +659,7 @@ package body Canon is
             Canon_Expression (Get_Expression (Expr));
          when Iir_Kind_Allocator_By_Subtype =>
             declare
-               Ind : constant Iir := Get_Expression (Expr);
+               Ind : constant Iir := Get_Subtype_Indication (Expr);
             begin
                if Get_Kind (Ind) = Iir_Kind_Array_Subtype_Definition then
                   Canon_Subtype_Indication (Ind);
@@ -680,16 +675,17 @@ package body Canon is
             -- No need to canon parameter, since it is a locally static
             -- expression.
             declare
-               Prefix : Iir;
+               Prefix : constant Iir := Get_Prefix (Expr);
             begin
-               Prefix := Get_Prefix (Expr);
-               case Get_Kind (Prefix) is
-                  when Iir_Kind_Type_Declaration
-                    | Iir_Kind_Subtype_Declaration =>
-                     null;
-                  when others =>
-                     Canon_Expression (Prefix);
-               end case;
+               if Get_Kind (Prefix) in Iir_Kinds_Denoting_Name
+                 and then (Get_Kind (Get_Named_Entity (Prefix))
+                             in Iir_Kinds_Type_Declaration)
+               then
+                  --  No canon for types.
+                  null;
+               else
+                  Canon_Expression (Prefix);
+               end if;
             end;
 
          when Iir_Kinds_Type_Attribute =>
@@ -732,13 +728,15 @@ package body Canon is
            | Iir_Kind_Object_Alias_Declaration =>
             null;
 
-         when Iir_Kind_Enumeration_Literal =>
+         when Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Overflow_Literal =>
             null;
 
          when Iir_Kind_Element_Declaration =>
             null;
 
-         when Iir_Kind_Attribute_Value =>
+         when Iir_Kind_Attribute_Value
+           | Iir_Kind_Attribute_Name =>
             null;
 
          when others =>
@@ -820,7 +818,7 @@ package body Canon is
             if Get_Formal (Assoc_El) = Null_Iir then
                Set_Formal (Assoc_El, Inter);
             end if;
-            if Get_Associated_Formal (Assoc_El) = Inter then
+            if Get_Association_Interface (Assoc_El) = Inter then
 
                --  Remove ASSOC_EL from ASSOC_CHAIN
                if Prev_Assoc_El /= Null_Iir then
@@ -903,12 +901,10 @@ package body Canon is
 
    procedure Canon_Subprogram_Call (Call : Iir)
    is
-      Imp : Iir;
+      Imp : constant Iir := Get_Named_Entity (Get_Implementation (Call));
+      Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
       Assoc_Chain : Iir;
-      Inter_Chain : Iir;
    begin
-      Imp := Get_Implementation (Call);
-      Inter_Chain := Get_Interface_Declaration_Chain (Imp);
       Assoc_Chain := Get_Parameter_Association_Chain (Call);
       Assoc_Chain := Canon_Association_Chain (Inter_Chain, Assoc_Chain, Call);
       Set_Parameter_Association_Chain (Call, Assoc_Chain);
@@ -998,7 +994,6 @@ package body Canon is
       Stmt: Iir;
       Expr: Iir;
       Prev_Loop : Iir;
-      Label : Iir;
    begin
       Stmt := First;
       while Stmt /= Null_Iir loop
@@ -1080,7 +1075,8 @@ package body Canon is
                Prev_Loop := Cur_Loop;
                Cur_Loop := Stmt;
                if Canon_Flag_Expressions then
-                  Canon_Discrete_Range (Get_Type (Get_Iterator_Scheme (Stmt)));
+                  Canon_Discrete_Range
+                    (Get_Type (Get_Parameter_Specification (Stmt)));
                end if;
                Canon_Sequential_Stmts (Get_Sequential_Statement_Chain (Stmt));
                Cur_Loop := Prev_Loop;
@@ -1097,14 +1093,18 @@ package body Canon is
 
             when Iir_Kind_Next_Statement
               | Iir_Kind_Exit_Statement =>
-               Expr := Get_Condition (Stmt);
-               if Expr /= Null_Iir then
-                  Canon_Expression (Expr);
-               end if;
-               Label := Get_Loop (Stmt);
-               if Label = Null_Iir then
-                  Set_Loop (Stmt, Cur_Loop);
-               end if;
+               declare
+                  Loop_Label : Iir;
+               begin
+                  Expr := Get_Condition (Stmt);
+                  if Expr /= Null_Iir then
+                     Canon_Expression (Expr);
+                  end if;
+                  Loop_Label := Get_Loop_Label (Stmt);
+                  if Loop_Label = Null_Iir then
+                     Set_Loop_Label (Stmt, Build_Simple_Name (Cur_Loop, Stmt));
+                  end if;
+               end;
 
             when Iir_Kind_Procedure_Call_Statement =>
                Canon_Subprogram_Call_And_Actuals (Get_Procedure_Call (Stmt));
@@ -1221,17 +1221,14 @@ package body Canon is
       Proc : Iir_Sensitized_Process_Statement;
       Call_Stmt : Iir_Procedure_Call_Statement;
       Wait_Stmt : Iir_Wait_Statement;
-      Call : Iir_Procedure_Call;
+      Call : constant Iir_Procedure_Call := Get_Procedure_Call (El);
+      Imp : constant Iir := Get_Named_Entity (Get_Implementation (Call));
       Assoc_Chain : Iir;
       Assoc : Iir;
-      Imp : Iir;
       Inter : Iir;
       Sensitivity_List : Iir_List;
       Is_Sensitized : Boolean;
    begin
-      Call := Get_Procedure_Call (El);
-      Imp := Get_Implementation (Call);
-
       --  Optimization: the process is a sensitized process only if the
       --  procedure is known not to have wait statement.
       Is_Sensitized := Get_Wait_State (Imp) = False;
@@ -1288,7 +1285,7 @@ package body Canon is
       while Assoc /= Null_Iir loop
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Expression =>
-               Inter := Get_Associated_Formal (Assoc);
+               Inter := Get_Association_Interface (Assoc);
                if Get_Mode (Inter) in Iir_In_Modes then
                   Canon_Extract_Sensitivity
                     (Get_Actual (Assoc), Sensitivity_List, False);
@@ -1788,7 +1785,7 @@ package body Canon is
             raise Internal_Error;
          else
             Bind := Get_Default_Binding_Indication
-              (Get_First_Element (Instances));
+              (Get_Named_Entity (Get_First_Element (Instances)));
          end if;
          if Bind = Null_Iir then
             --  Component is not bound.
@@ -1895,7 +1892,7 @@ package body Canon is
                Sub_Chain_Append (First, Last, El);
                Assoc := Get_Chain (Assoc);
                exit when Assoc = Null_Iir;
-               exit when Get_Associated_Formal (Assoc) /= Inter;
+               exit when Get_Association_Interface (Assoc) /= Inter;
             end loop;
          end Copy_Association;
 
@@ -1905,7 +1902,7 @@ package body Canon is
             loop
                Assoc := Get_Chain (Assoc);
                exit when Assoc = Null_Iir;
-               exit when Get_Associated_Formal (Assoc) /= Inter;
+               exit when Get_Association_Interface (Assoc) /= Inter;
             end loop;
          end Advance;
 
@@ -1922,13 +1919,12 @@ package body Canon is
          Inter := Inter_Chain;
          while Inter /= Null_Iir loop
             --  Consistency check.
-            if Get_Associated_Formal (F_El) /= Inter then
-               raise Internal_Error;
-            end if;
+            pragma Assert (Get_Association_Interface (F_El) = Inter);
+
             --  Find the associated in the second chain.
             S_El := Sec_Chain;
             while S_El /= Null_Iir loop
-               exit when Get_Associated_Formal (S_El) = Inter;
+               exit when Get_Association_Interface (S_El) = Inter;
                S_El := Get_Chain (S_El);
             end loop;
             if S_El /= Null_Iir
@@ -1953,6 +1949,7 @@ package body Canon is
       Instance_List : Iir_List;
       Conf_Instance_List : Iir_List;
       Instance : Iir;
+      Instance_Name : Iir;
       N_Nbr : Natural;
    begin
       --  Create the new component configuration
@@ -2019,13 +2016,14 @@ package body Canon is
       Conf_Instance_List := Get_Instantiation_List (Comp_Conf);
       N_Nbr := 0;
       for I in 0 .. Get_Nbr_Elements (Conf_Instance_List) - 1 loop
-         Instance := Get_Nth_Element (Conf_Instance_List, I);
+         Instance_Name := Get_Nth_Element (Conf_Instance_List, I);
+         Instance := Get_Named_Entity (Instance_Name);
          if Get_Component_Configuration (Instance) = Conf_Spec then
             --  The incremental binding applies to this instance.
             Set_Component_Configuration (Instance, Res);
-            Append_Element (Instance_List, Instance);
+            Append_Element (Instance_List, Instance_Name);
          else
-            Replace_Nth_Element (Conf_Instance_List, N_Nbr, Instance);
+            Replace_Nth_Element (Conf_Instance_List, N_Nbr, Instance_Name);
             N_Nbr := N_Nbr + 1;
          end if;
       end loop;
@@ -2041,16 +2039,20 @@ package body Canon is
    is
       El : Iir;
       Comp_Conf : Iir;
+      Inst : Iir;
    begin
       El := Get_Concurrent_Statement_Chain (Parent);
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Component_Instantiation_Statement =>
-               if Get_Instantiated_Unit (El) = Comp then
+               Inst := Get_Instantiated_Unit (El);
+               if Get_Kind (Inst) in Iir_Kinds_Denoting_Name
+                 and then Get_Named_Entity (Inst) = Comp
+               then
                   Comp_Conf := Get_Component_Configuration (El);
                   if Comp_Conf = Null_Iir then
                      --  The component is not yet configured.
-                     Append_Element (List, El);
+                     Append_Element (List, Build_Simple_Name (El, El));
                      Set_Component_Configuration (El, Conf);
                   else
                      --  The component is already configured.
@@ -2099,6 +2101,7 @@ package body Canon is
       for I in Natural loop
          El := Get_Nth_Element (Spec, I);
          exit when El = Null_Iir;
+         El := Get_Named_Entity (El);
          Comp_Conf := Get_Component_Configuration (El);
          if Comp_Conf /= Null_Iir and then Comp_Conf /= Conf then
             if Get_Kind (Comp_Conf) /= Iir_Kind_Configuration_Specification
@@ -2124,7 +2127,8 @@ package body Canon is
       if Spec = Iir_List_All or Spec = Iir_List_Others then
          List := Create_Iir_List;
          Canon_Component_Specification_All_Others
-           (Conf, Parent, Spec, List, Get_Component_Name (Conf));
+           (Conf, Parent, Spec, List,
+            Get_Named_Entity (Get_Component_Name (Conf)));
          Set_Instantiation_List (Conf, List);
       else
          --  Has Already a designator list.
@@ -2140,6 +2144,7 @@ package body Canon is
       Force : Boolean;
       El : Iir;
       N_List : Iir_Designator_List;
+      Dis_Type : Iir;
    begin
       if Canon_Flag_Expressions then
          Canon_Expression (Get_Expression (Dis));
@@ -2152,12 +2157,13 @@ package body Canon is
       else
          return;
       end if;
+      Dis_Type := Get_Type (Get_Type_Mark (Dis));
       N_List := Create_Iir_List;
       Set_Signal_List (Dis, N_List);
       El := Get_Declaration_Chain (Decl_Parent);
       while El /= Null_Iir loop
          if Get_Kind (El) = Iir_Kind_Signal_Declaration
-           and then Get_Type (El) = Get_Type (Dis)
+           and then Get_Type (El) = Dis_Type
            and then Get_Signal_Kind (El) /= Iir_No_Signal_Kind
          then
             if not Get_Has_Disconnect_Flag (El) then
@@ -2442,11 +2448,12 @@ package body Canon is
                   Designator_List : Iir_List;
                   Inst_List : Iir_List;
                   Inst : Iir;
+                  Inst_Name : Iir;
                begin
                   Comp_Conf := Get_Component_Configuration (El);
                   if Comp_Conf = Null_Iir then
                      Comp := Get_Instantiated_Unit (El);
-                     if Get_Kind (Comp) = Iir_Kind_Component_Declaration then
+                     if Get_Kind (Comp) in Iir_Kinds_Denoting_Name then
                         --  Create a component configuration.
                         --  FIXME: should merge all these default configuration
                         --    of the same component.
@@ -2455,7 +2462,8 @@ package body Canon is
                         Set_Parent (Res, Conf);
                         Set_Component_Name (Res, Comp);
                         Designator_List := Create_Iir_List;
-                        Append_Element (Designator_List, El);
+                        Append_Element
+                          (Designator_List, Build_Simple_Name (El, El));
                         Set_Instantiation_List (Res, Designator_List);
                         Append (Last_Item, Conf, Res);
                      end if;
@@ -2473,12 +2481,13 @@ package body Canon is
                      Inst_List := Get_Instantiation_List (Comp_Conf);
                      Designator_List := Create_Iir_List;
                      for I in 0 .. Get_Nbr_Elements (Inst_List) - 1 loop
-                        Inst := Get_Nth_Element (Inst_List, I);
+                        Inst_Name := Get_Nth_Element (Inst_List, I);
+                        Inst := Get_Named_Entity (Inst_Name);
                         if Get_Component_Configuration (Inst) = Comp_Conf
                           and then Get_Parent (Inst) = Blk
                         then
                            Set_Component_Configuration (Inst, Res);
-                           Append_Element (Designator_List, Inst);
+                           Append_Element (Designator_List, Inst_Name);
                         end if;
                      end loop;
                      Set_Instantiation_List (Res, Designator_List);
@@ -2684,7 +2693,6 @@ package body Canon is
       Loc : constant Location_Type := Get_Location (Arch);
       Config : Iir_Configuration_Declaration;
       Res : Iir_Design_Unit;
-      Entity : Iir_Entity_Declaration;
       Blk_Cfg : Iir_Block_Configuration;
    begin
       Res := Create_Iir (Iir_Kind_Design_Unit);
@@ -2697,10 +2705,9 @@ package body Canon is
       Set_Location (Config, Loc);
       Set_Library_Unit (Res, Config);
       Set_Design_Unit (Config, Res);
-      Entity := Get_Entity (Arch);
-      Set_Entity (Config, Entity);
+      Set_Entity_Name (Config, Get_Entity_Name (Arch));
       Set_Dependence_List (Res, Create_Iir_List);
-      Add_Dependence (Res, Get_Design_Unit (Entity));
+      Add_Dependence (Res, Get_Design_Unit (Get_Entity (Config)));
       Add_Dependence (Res, Get_Design_Unit (Arch));
 
       Blk_Cfg := Create_Iir (Iir_Kind_Block_Configuration);

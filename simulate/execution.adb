@@ -468,8 +468,13 @@ package body Execution is
          Result := Unshare (Left, Expr_Pool'Access);
       end Eval_Array;
 
+      Imp : Iir;
    begin
-      Func := Get_Implicit_Definition (Get_Implementation (Expr));
+      Imp := Get_Implementation (Expr);
+      if Get_Kind (Imp) in Iir_Kinds_Denoting_Name then
+         Imp := Get_Named_Entity (Imp);
+      end if;
+      Func := Get_Implicit_Definition (Imp);
 
       --  Eval left operand.
       case Func is
@@ -1350,7 +1355,7 @@ package body Execution is
      (Block: Block_Instance_Acc; Stmt: Iir_Procedure_Call)
    is
       Imp : constant Iir_Implicit_Procedure_Declaration :=
-        Get_Implementation (Stmt);
+        Get_Named_Entity (Get_Implementation (Stmt));
       Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Stmt);
       Assoc: Iir;
       Args: Iir_Value_Literal_Array (0 .. 3);
@@ -1663,7 +1668,7 @@ package body Execution is
 
       --  When created from static evaluation, a string may still have an
       --  unconstrained type.
-      if Get_Kind (Array_Type) = Iir_Kind_Array_Type_Definition then
+      if Get_Constraint_State (Array_Type) /= Fully_Constrained then
          Res.Bounds.D (1) :=
            Create_Range_Value (Create_I64_Value (1),
                                Create_I64_Value (Ghdl_I64 (Res.Val_Array.Len)),
@@ -2105,6 +2110,8 @@ package body Execution is
                   Natural (Dim - 1));
                return Execute_Bounds (Block, Index);
             end;
+         when Iir_Kinds_Denoting_Name =>
+            return Execute_Indexes (Block, Get_Named_Entity (Prefix), Dim);
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
             Error_Kind ("execute_indexes", Prefix);
@@ -2126,9 +2133,8 @@ package body Execution is
       case Get_Kind (Prefix) is
          when Iir_Kind_Range_Expression =>
             declare
-               Info : Sim_Info_Acc;
+               Info : constant Sim_Info_Acc := Get_Info (Prefix);
             begin
-               Info := Get_Info (Prefix);
                if Info = null then
                   Bound := Create_Range_Value
                     (Execute_Expression (Block, Get_Left_Limit (Prefix)),
@@ -2183,6 +2189,9 @@ package body Execution is
             return Execute_Bounds
               (Block,
                Get_Range_Constraint (Get_Type (Get_Type_Declarator (Prefix))));
+
+         when Iir_Kinds_Denoting_Name =>
+            return Execute_Bounds (Block, Get_Named_Entity (Prefix));
 
          when others =>
             -- Error_Kind ("execute_bounds", Get_Kind (Prefix));
@@ -2362,7 +2371,7 @@ package body Execution is
    function Execute_Signal_Init_Value (Block : Block_Instance_Acc; Expr : Iir)
                                       return Iir_Value_Literal_Acc
    is
-      Base : constant Iir := Get_Base_Name (Expr);
+      Base : constant Iir := Get_Object_Prefix (Expr);
       Info : constant Sim_Info_Acc := Get_Info (Base);
       Bblk : Block_Instance_Acc;
       Base_Val : Iir_Value_Literal_Acc;
@@ -2543,8 +2552,8 @@ package body Execution is
                end if;
             end;
 
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name =>
+         when Iir_Kinds_Denoting_Name
+           | Iir_Kind_Attribute_Name =>
             Execute_Name_With_Base
               (Block, Get_Named_Entity (Expr), Base, Res, Is_Sig);
 
@@ -2584,7 +2593,7 @@ package body Execution is
                                     return Iir_Value_Literal_Acc
    is
       Val : Iir_Value_Literal_Acc;
-      Attr_Type : constant Iir := Get_Type_Of_Type_Mark (Get_Prefix (Expr));
+      Attr_Type : constant Iir := Get_Type (Get_Prefix (Expr));
    begin
       Val := Execute_Expression (Block, Get_Parameter (Expr));
       return String_To_Iir_Value
@@ -2853,9 +2862,8 @@ package body Execution is
            | Iir_Kind_Implicit_Dereference =>
             return Execute_Name (Block, Expr);
 
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Character_Literal
-           | Iir_Kind_Selected_Name =>
+         when Iir_Kinds_Denoting_Name
+           | Iir_Kind_Attribute_Name =>
             return Execute_Expression (Block, Get_Named_Entity (Expr));
 
          when Iir_Kind_Aggregate =>
@@ -2887,11 +2895,11 @@ package body Execution is
 
          when Iir_Kind_Function_Call =>
             declare
-               Imp : Iir;
+               Imp : constant Iir :=
+                 Get_Named_Entity (Get_Implementation (Expr));
                Assoc : Iir;
                Args : Iir_Array (0 .. 1);
             begin
-               Imp := Get_Implementation (Expr);
                if Get_Kind (Imp) = Iir_Kind_Function_Declaration then
                   return Execute_Function_Call (Block, Expr, Imp);
                else
@@ -2956,6 +2964,10 @@ package body Execution is
          when Iir_Kind_Null_Literal =>
             return Null_Lit;
 
+         when Iir_Kind_Overflow_Literal =>
+            Error_Msg_Constraint (Expr);
+            return null;
+
          when Iir_Kind_Type_Conversion =>
             return Execute_Type_Conversion
               (Block, Expr,
@@ -2963,7 +2975,7 @@ package body Execution is
 
          when Iir_Kind_Qualified_Expression =>
             Res := Execute_Expression_With_Type
-              (Block, Get_Expression (Expr), Get_Type_Mark (Expr));
+              (Block, Get_Expression (Expr), Get_Type (Get_Type_Mark (Expr)));
             return Res;
 
          when Iir_Kind_Allocator_By_Expression =>
@@ -2972,7 +2984,10 @@ package body Execution is
             return Create_Access_Value (Res);
 
          when Iir_Kind_Allocator_By_Subtype =>
-            Res := Create_Value_For_Type (Block, Get_Expression (Expr), True);
+            Res := Create_Value_For_Type
+              (Block,
+               Get_Type_Of_Subtype_Indication (Get_Subtype_Indication (Expr)),
+               True);
             Res := Unshare_Heap (Res);
             return Create_Access_Value (Res);
 
@@ -3052,8 +3067,7 @@ package body Execution is
 
          when Iir_Kind_Val_Attribute =>
             declare
-               Prefix_Type: constant Iir :=
-                 Get_Type_Of_Type_Mark (Get_Prefix (Expr));
+               Prefix_Type: constant Iir := Get_Type (Get_Prefix (Expr));
                Base_Type : constant Iir := Get_Base_Type (Prefix_Type);
                Mode : constant Iir_Value_Kind :=
                  Get_Info (Base_Type).Scalar_Mode;
@@ -3077,8 +3091,7 @@ package body Execution is
          when Iir_Kind_Pos_Attribute =>
             declare
                N_Res: Iir_Value_Literal_Acc;
-               Prefix_Type: constant Iir :=
-                 Get_Type_Of_Type_Mark (Get_Prefix (Expr));
+               Prefix_Type: constant Iir := Get_Type (Get_Prefix (Expr));
                Base_Type : constant Iir := Get_Base_Type (Prefix_Type);
                Mode : constant Iir_Value_Kind :=
                  Get_Info (Base_Type).Scalar_Mode;
@@ -3119,7 +3132,7 @@ package body Execution is
             begin
                Res := Execute_Expression (Block, Get_Parameter (Expr));
                Bound := Execute_Bounds
-                 (Block, Get_Type_Of_Type_Mark (Get_Prefix (Expr)));
+                 (Block, Get_Type (Get_Prefix (Expr)));
                case Bound.Dir is
                   when Iir_To =>
                      Res := Execute_Dec (Res, Expr);
@@ -3136,7 +3149,7 @@ package body Execution is
             begin
                Res := Execute_Expression (Block, Get_Parameter (Expr));
                Bound := Execute_Bounds
-                 (Block, Get_Type_Of_Type_Mark (Get_Prefix (Expr)));
+                 (Block, Get_Type (Get_Prefix (Expr)));
                case Bound.Dir is
                   when Iir_Downto =>
                      Res := Execute_Dec (Res, Expr);
@@ -3315,15 +3328,28 @@ package body Execution is
      (Block : Block_Instance_Acc; Conv : Iir; Val : Iir_Value_Literal_Acc)
      return Iir_Value_Literal_Acc
    is
+      Ent : Iir;
    begin
-      if Get_Kind (Conv) = Iir_Kind_Function_Call then
-         return Execute_Assoc_Function_Conversion
-           (Block, Get_Implementation (Conv), Val);
-      elsif Get_Kind (Conv) = Iir_Kind_Function_Declaration then
-         return Execute_Assoc_Function_Conversion (Block, Conv, Val);
-      else
-         return Execute_Type_Conversion (Block, Conv, Val);
-      end if;
+      case Get_Kind (Conv) is
+         when Iir_Kind_Function_Call =>
+            --  FIXME: shouldn't CONV always be a denoting_name ?
+            return Execute_Assoc_Function_Conversion
+              (Block, Get_Named_Entity (Get_Implementation (Conv)), Val);
+         when Iir_Kind_Type_Conversion =>
+            --  FIXME: shouldn't CONV always be a denoting_name ?
+            return Execute_Type_Conversion (Block, Conv, Val);
+         when Iir_Kinds_Denoting_Name =>
+            Ent := Get_Named_Entity (Conv);
+            if Get_Kind (Ent) = Iir_Kind_Function_Declaration then
+               return Execute_Assoc_Function_Conversion (Block, Ent, Val);
+            elsif Get_Kind (Ent) in Iir_Kinds_Type_Declaration then
+               return Execute_Type_Conversion (Block, Ent, Val);
+            else
+               Error_Kind ("execute_assoc_conversion(1)", Ent);
+            end if;
+         when others =>
+            Error_Kind ("execute_assoc_conversion(2)", Conv);
+      end case;
    end Execute_Assoc_Conversion;
 
    --  Establish correspondance for association list ASSOC_LIST from block
@@ -3352,7 +3378,7 @@ package body Execution is
       Assoc_Idx := 1;
       while Assoc /= Null_Iir loop
          Formal := Get_Formal (Assoc);
-         Inter := Get_Base_Name (Formal);
+         Inter := Get_Association_Interface (Assoc);
 
          --  Extract the actual value.
          case Get_Kind (Assoc) is
@@ -3508,7 +3534,7 @@ package body Execution is
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Individual then
             Formal := Get_Formal (Assoc);
-            Inter := Get_Base_Name (Formal);
+            Inter := Get_Association_Interface (Assoc);
             case Get_Kind (Inter) is
                when Iir_Kind_Variable_Interface_Declaration =>
                   if Get_Mode (Inter) /= Iir_In_Mode
@@ -4511,7 +4537,7 @@ package body Execution is
       Instance : constant Block_Instance_Acc := Proc.Instance;
       Stmt : constant Iir := Instance.Stmt;
       Call : constant Iir := Get_Procedure_Call (Stmt);
-      Imp  : constant Iir := Get_Implementation (Call);
+      Imp  : constant Iir := Get_Named_Entity (Get_Implementation (Call));
       Subprg_Instance : Block_Instance_Acc;
       Assoc_Chain: Iir;
       Subprg_Body : Iir;

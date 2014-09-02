@@ -27,7 +27,6 @@ with Sem_Scopes; use Sem_Scopes;
 with Sem_Assocs; use Sem_Assocs;
 with Libraries;
 with Iir_Chains; use Iir_Chains;
-with Sem_Types;
 with Flags; use Flags;
 with Name_Table;
 with Std_Names;
@@ -36,27 +35,6 @@ with Xrefs; use Xrefs;
 with Back_End;
 
 package body Sem_Specs is
-   --  Compare ATYPE and TYPE_MARK.
-   --  ATYPE is a type definition, which can be anonymous.
-   --  TYPE_MARK is a subtype definition, established from a type mark.
-   --   Therefore, it is the name of a type or a subtype.
-   --  Return TRUE iff the type mark of ATYPE is TYPE_MARK.
-   function Is_Same_Type_Mark (Atype : Iir; Type_Mark : Iir)
-     return Boolean is
-   begin
-      if Get_Kind (Atype) in Iir_Kinds_Subtype_Definition
-        and then Is_Anonymous_Type_Definition (Atype)
-      then
-         --  FIXME: to be removed; used to catch uninitialized type_mark.
-         if Get_Type_Mark (Atype) = Null_Iir then
-            raise Internal_Error;
-         end if;
-         return Get_Type_Mark (Atype) = Type_Mark;
-      else
-         return Atype = Type_Mark;
-      end if;
-   end Is_Same_Type_Mark;
-
    function Get_Entity_Class_Kind (Decl : Iir) return Tokens.Token_Type
    is
       use Tokens;
@@ -143,7 +121,6 @@ package body Sem_Specs is
    procedure Attribute_A_Decl
      (Decl : Iir;
       Attr : Iir_Attribute_Specification;
-      Name : Iir;
       Check_Class : Boolean;
       Check_Defined : Boolean)
    is
@@ -201,7 +178,7 @@ package body Sem_Specs is
             null;
       end case;
 
-      Attr_Decl := Get_Attribute_Designator (Attr);
+      Attr_Decl := Get_Named_Entity (Get_Attribute_Designator (Attr));
 
       --  LRM93 5.1
       --  It is an error if a given attribute is associated more than once with
@@ -213,10 +190,10 @@ package body Sem_Specs is
       El := Get_Attribute_Value_Chain (Decl);
       while El /= Null_Iir loop
          declare
-            El_Attr : Iir_Attribute_Declaration;
+            El_Attr : constant Iir_Attribute_Declaration :=
+              Get_Named_Entity (Get_Attribute_Designator
+                                  (Get_Attribute_Specification (El)));
          begin
-            El_Attr := Get_Attribute_Designator
-              (Get_Attribute_Specification (El));
             if El_Attr = Attr_Decl then
                if Get_Attribute_Specification (El) = Attr then
                   --  Was already specified with the same attribute value.
@@ -270,9 +247,6 @@ package body Sem_Specs is
       Set_Attribute_Value_Chain (Decl, El);
       Set_Spec_Chain (El, Get_Attribute_Value_Spec_Chain (Attr));
       Set_Attribute_Value_Spec_Chain (Attr, El);
-      if Name /= Null_Iir then
-         Xref_Ref (Name, Decl);
-      end if;
 
       if (Flags.Vhdl_Std >= Vhdl_93c
           and then Attr_Decl = Foreign_Attribute)
@@ -329,20 +303,22 @@ package body Sem_Specs is
 
       --  If declaration DECL matches then named entity ENT, apply attribute
       --  specification and returns TRUE. Otherwise, return FALSE.
+      --  Note: ENT and DECL are different for aliases.
       function Sem_Named_Entity1 (Ent : Iir; Decl : Iir) return Boolean
       is
-         Ent_Id : Name_Id;
+         Ent_Id : constant Name_Id := Get_Identifier (Ent);
       begin
-         Ent_Id := Get_Identifier (Ent);
          if (Name = Null_Iir or else Ent_Id = Get_Identifier (Name))
            and then Ent_Id /= Null_Identifier
          then
+            if Is_Designators then
+               Xref_Ref (Name, Ent);
+            end if;
             if Get_Visible_Flag (Ent) = False then
                Error_Msg_Sem
                  (Disp_Node (Ent) & " is not yet visible", Attr);
             else
-               Attribute_A_Decl
-                 (Decl, Attr, Name, Is_Designators, Check_Defined);
+               Attribute_A_Decl (Decl, Attr, Is_Designators, Check_Defined);
                return True;
             end if;
          end if;
@@ -354,8 +330,8 @@ package body Sem_Specs is
          case Get_Kind (Ent) is
             when Iir_Kinds_Library_Unit_Declaration
               | Iir_Kinds_Concurrent_Statement
-              | Iir_Kinds_Function_Declaration
-              | Iir_Kinds_Procedure_Declaration
+              | Iir_Kind_Implicit_Function_Declaration
+              | Iir_Kind_Implicit_Procedure_Declaration
               | Iir_Kinds_Sequential_Statement
               | Iir_Kinds_Non_Alias_Object_Declaration
               | Iir_Kind_Type_Declaration
@@ -366,19 +342,24 @@ package body Sem_Specs is
               | Iir_Kind_Group_Template_Declaration
               | Iir_Kind_Group_Declaration =>
                Res := Res or Sem_Named_Entity1 (Ent, Ent);
+            when Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration =>
+               if not Is_Second_Subprogram_Specification (Ent) then
+                  Res := Res or Sem_Named_Entity1 (Ent, Ent);
+               end if;
             when Iir_Kind_Object_Alias_Declaration =>
                --  LRM93 5.1
                --  An entity designator that denotes an alias of an object is
                --  required to denote the entire object, and not a subelement
                --  or slice thereof.
                declare
-                  Decl : Iir;
+                  Decl : constant Iir := Get_Name (Ent);
+                  Base : constant Iir := Get_Object_Prefix (Decl, False);
                   Applied : Boolean;
                begin
-                  Decl := Get_Name (Ent);
-                  Applied := Sem_Named_Entity1 (Ent, Get_Base_Name (Decl));
+                  Applied := Sem_Named_Entity1 (Ent, Base);
                   --  FIXME: check the alias denotes a local entity...
-                  if Applied and then Get_Base_Name (Decl) /= Decl then
+                  if Applied and then Base /= Decl then
                      Error_Msg_Sem
                        (Disp_Node (Ent) & " does not denote the entire object",
                         Attr);
@@ -386,7 +367,8 @@ package body Sem_Specs is
                   Res := Res or Applied;
                end;
             when Iir_Kind_Non_Object_Alias_Declaration =>
-               Res := Res or Sem_Named_Entity1 (Ent, Get_Name (Ent));
+               Res := Res
+                 or Sem_Named_Entity1 (Ent, Get_Named_Entity (Get_Name (Ent)));
             when Iir_Kind_Attribute_Declaration
               | Iir_Kind_Attribute_Specification
               | Iir_Kind_Configuration_Specification
@@ -589,13 +571,18 @@ package body Sem_Specs is
    procedure Sem_Signature_Entity_Designator
      (Sig : Iir_Signature; Attr : Iir_Attribute_Specification)
    is
+      Prefix : Iir;
       Inter : Name_Interpretation_Type;
       List : Iir_List;
       Ov_List : Iir_Overload_List;
       Name : Iir;
    begin
       List := Create_Iir_List;
-      Inter := Get_Interpretation (Get_Identifier (Get_Prefix (Sig)));
+
+      --  Sem_Name cannot be used here (at least not directly) because only
+      --  the declarations of the current scope are considered.
+      Prefix := Get_Prefix (Sig);
+      Inter := Get_Interpretation (Get_Identifier (Prefix));
       while Valid_Interpretation (Inter) loop
          exit when not Is_In_Current_Declarative_Region (Inter);
          if not Is_Potentially_Visible (Inter) then
@@ -618,6 +605,7 @@ package body Sem_Specs is
          end if;
          Inter := Get_Next_Interpretation (Inter);
       end loop;
+
       Ov_List := Create_Overload_List (List);
       Name := Sem_Decls.Sem_Signature (Ov_List, Sig);
       Destroy_Iir_List (List);
@@ -625,7 +613,12 @@ package body Sem_Specs is
       if Name = Null_Iir then
          return;
       end if;
-      Attribute_A_Decl (Name, Attr, Get_Prefix (Sig), True, True);
+
+      Set_Named_Entity (Prefix, Name);
+      Prefix := Finish_Sem_Name (Prefix);
+      Set_Prefix (Sig, Prefix);
+
+      Attribute_A_Decl (Name, Attr, True, True);
    end Sem_Signature_Entity_Designator;
 
    procedure Sem_Attribute_Specification
@@ -634,26 +627,28 @@ package body Sem_Specs is
    is
       use Tokens;
 
-      Name : Iir_Attribute_Declaration;
+      Name : Iir;
+      Attr : Iir_Attribute_Declaration;
       List : Iir_List;
       Expr : Iir;
       Res : Boolean;
    begin
       --  LRM93 5.1
       --  The attribute designator must denote an attribute.
-      Name := Find_Declaration (Get_Attribute_Designator (Spec),
-                                Decl_Attribute);
-      if Name = Null_Iir then
+      Name := Sem_Denoting_Name (Get_Attribute_Designator (Spec));
+      Set_Attribute_Designator (Spec, Name);
+
+      Attr := Get_Named_Entity (Name);
+      if Get_Kind (Attr) /= Iir_Kind_Attribute_Declaration then
+         Error_Class_Match (Name, "attribute");
          return;
       end if;
-
-      Set_Attribute_Designator (Spec, Name);
 
       --  LRM 5.1
       --  The type of the expression in the attribute specification must be
       --  the same as (or implicitly convertible to) the type mark in the
       --  corresponding attribute declaration.
-      Expr := Sem_Expression (Get_Expression (Spec), Get_Type (Name));
+      Expr := Sem_Expression (Get_Expression (Spec), Get_Type (Attr));
       if Expr /= Null_Iir then
          Check_Read (Expr);
          Set_Expression (Spec, Eval_Expr_If_Static (Expr));
@@ -830,9 +825,31 @@ package body Sem_Specs is
       end loop;
    end Check_Post_Attribute_Specification;
 
-   procedure Sem_Disconnect_Specification
+   --  Compare ATYPE and TYPE_MARK.
+   --  ATYPE is a type definition, which can be anonymous.
+   --  TYPE_MARK is a subtype definition, established from a type mark.
+   --   Therefore, it is the name of a type or a subtype.
+   --  Return TRUE iff the type mark of ATYPE is TYPE_MARK.
+   function Is_Same_Type_Mark (Atype : Iir; Type_Mark : Iir)
+                              return Boolean is
+   begin
+      if Get_Kind (Atype) in Iir_Kinds_Subtype_Definition
+        and then Is_Anonymous_Type_Definition (Atype)
+      then
+         --  FIXME: to be removed; used to catch uninitialized type_mark.
+         if Get_Subtype_Type_Mark (Atype) = Null_Iir then
+            raise Internal_Error;
+         end if;
+         return Get_Type (Get_Subtype_Type_Mark (Atype)) = Type_Mark;
+      else
+         return Atype = Type_Mark;
+      end if;
+   end Is_Same_Type_Mark;
+
+   procedure Sem_Disconnection_Specification
      (Dis : Iir_Disconnection_Specification)
    is
+      Type_Mark : Iir;
       Atype : Iir;
       Time_Expr : Iir;
       List : Iir_List;
@@ -841,11 +858,10 @@ package body Sem_Specs is
       Prefix : Iir;
    begin
       --  Sem type mark.
-      Atype := Get_Type (Dis);
-      Atype := Sem_Types.Sem_Subtype_Indication (Atype);
-      if Atype /= Null_Iir then
-         Set_Type (Dis, Atype);
-      end if;
+      Type_Mark := Get_Type_Mark (Dis);
+      Type_Mark := Sem_Type_Mark (Type_Mark);
+      Set_Type_Mark (Dis, Type_Mark);
+      Atype := Get_Type (Type_Mark);
 
       --  LRM93 5.3
       --  The time expression in a disconnection specification must be static
@@ -868,13 +884,16 @@ package body Sem_Specs is
          for I in Natural loop
             El := Get_Nth_Element (List, I);
             exit when El = Null_Iir;
-            Sem_Name (El, False);
+
+            Sem_Name (El);
+            El := Finish_Sem_Name (El);
+            Replace_Nth_Element (List, I, El);
 
             Sig := Get_Named_Entity (El);
             Sig := Name_To_Object (Sig);
             if Sig /= Null_Iir then
                Set_Type (El, Get_Type (Sig));
-               Prefix := Get_Base_Name (Sig);
+               Prefix := Get_Object_Prefix (Sig);
                --  LRM93 5.3
                --  Each signal name in a signal list in a guarded signal
                --  specification must be a locally static name that
@@ -898,7 +917,7 @@ package body Sem_Specs is
                --  LRM93 5.3
                --  If the guarded signal is a declared signal or a slice of
                --  thereof, the type mark must be the same as the type mark
-               --  indicated in the guarded sugnal specification.
+               --  indicated in the guarded signal specification.
                --  If the guarded signal is an array element of an explicitly
                --  declared signal, the type mark must be the same as the
                --  element subtype indication in the (explicit or implicit)
@@ -924,55 +943,63 @@ package body Sem_Specs is
             end if;
          end loop;
       end if;
-   end Sem_Disconnect_Specification;
+   end Sem_Disconnection_Specification;
 
    --  Semantize entity aspect ASPECT and return the entity declaration.
    --  Return NULL_IIR if not found.
-   function Sem_Entity_Aspect (Aspect : Iir) return Iir
-   is
-      Entity : Iir;
-      New_Entity : Iir;
-      Conf : Iir;
-      Arch : Iir;
-      Arch_Unit : Iir;
+   function Sem_Entity_Aspect (Aspect : Iir) return Iir is
    begin
       case Get_Kind (Aspect) is
          when Iir_Kind_Entity_Aspect_Entity =>
-            Entity := Get_Entity (Aspect);
-            New_Entity := Find_Declaration (Entity, Decl_Entity);
-            if New_Entity = Null_Iir then
-               return Null_Iir;
-            end if;
-            --  Note: dependency is added by Find_Declaration.
-            Set_Entity (Aspect, New_Entity);
-
-            --  Check architecture.
-            Arch := Get_Architecture (Aspect);
-            if Arch /= Null_Iir then
-               Arch_Unit := Libraries.Find_Secondary_Unit
-                 (Get_Design_Unit (New_Entity), Get_Identifier (Arch));
-               if Arch_Unit /= Null_Iir then
-                  Xref_Ref (Arch, Arch_Unit);
+            declare
+               Entity_Name : Iir;
+               Entity : Iir;
+               Arch_Name : Iir;
+               Arch_Unit : Iir;
+            begin
+               Entity_Name := Sem_Denoting_Name (Get_Entity_Name (Aspect));
+               Set_Entity_Name (Aspect, Entity_Name);
+               Entity := Get_Named_Entity (Entity_Name);
+               if Get_Kind (Entity) /= Iir_Kind_Entity_Declaration then
+                  Error_Class_Match (Entity_Name, "entity");
+                  return Null_Iir;
                end if;
+               --  Note: dependency is added by Sem_Denoting_Name.
 
-               --  FIXME: may emit a warning if the architecture does not
-               --  exist.
-               --  Note: the design needs the architecture.
-               Add_Dependence (Aspect);
-            end if;
-            return New_Entity;
+               --  Check architecture.
+               Arch_Name := Get_Architecture (Aspect);
+               if Arch_Name /= Null_Iir then
+                  Arch_Unit := Libraries.Find_Secondary_Unit
+                    (Get_Design_Unit (Entity), Get_Identifier (Arch_Name));
+                  Set_Named_Entity (Arch_Name, Arch_Unit);
+                  if Arch_Unit /= Null_Iir then
+                     Xref_Ref (Arch_Name, Arch_Unit);
+                  end if;
+
+                  --  FIXME: may emit a warning if the architecture does not
+                  --  exist.
+                  --  Note: the design needs the architecture.
+                  Add_Dependence (Aspect);
+               end if;
+               return Entity;
+            end;
 
          when Iir_Kind_Entity_Aspect_Configuration =>
-            Conf := Get_Configuration (Aspect);
-            Conf := Find_Declaration (Conf, Decl_Configuration);
-            if Conf = Null_Iir then
-               return Null_Iir;
-            end if;
+            declare
+               Conf_Name : Iir;
+               Conf : Iir;
+            begin
+               Conf_Name :=
+                 Sem_Denoting_Name (Get_Configuration_Name (Aspect));
+               Set_Configuration_Name (Aspect, Conf_Name);
+               Conf := Get_Named_Entity (Conf_Name);
+               if Get_Kind (Conf) /= Iir_Kind_Configuration_Declaration then
+                  Error_Class_Match (Conf, "configuration");
+                  return Null_Iir;
+               end if;
 
-            --  Note: dependency is added by Find_Declaration.
-            Set_Configuration (Aspect, Conf);
-
-            return Get_Entity (Conf);
+               return Get_Entity (Conf);
+            end;
 
          when Iir_Kind_Entity_Aspect_Open =>
             return Null_Iir;
@@ -1159,17 +1186,19 @@ package body Sem_Specs is
         (Chain : Iir; Check_Applied : Boolean)
         return Boolean
       is
-         Comp : Iir;
+         Comp : constant Iir := Get_Named_Entity (Get_Component_Name (Spec));
+         Inst : Iir;
          El : Iir;
          Res : Boolean;
       begin
-         Comp := Get_Component_Name (Spec);
          El := Get_Concurrent_Statement_Chain (Chain);
          Res := False;
          while El /= Null_Iir loop
             case Get_Kind (El) is
                when Iir_Kind_Component_Instantiation_Statement =>
-                  if Get_Instantiated_Unit (El) = Comp
+                  Inst := Get_Instantiated_Unit (El);
+                  if Get_Kind (Inst) in Iir_Kinds_Denoting_Name
+                    and then Get_Named_Entity (Inst) = Comp
                     and then
                     (not Check_Applied
                      or else Get_Component_Configuration (El) = Null_Iir)
@@ -1195,14 +1224,18 @@ package body Sem_Specs is
       El : Iir;
       Inter : Sem_Scopes.Name_Interpretation_Type;
       Comp : Iir;
+      Comp_Name : Iir;
       Inst : Iir;
+      Inst_Unit : Iir;
    begin
       Primary_Entity_Aspect := Null_Iir;
-      Comp := Find_Declaration (Get_Component_Name (Spec), Decl_Component);
-      if Comp = Null_Iir then
+      Comp_Name := Sem_Denoting_Name (Get_Component_Name (Spec));
+      Set_Component_Name (Spec, Comp_Name);
+      Comp := Get_Named_Entity (Comp_Name);
+      if Get_Kind (Comp) /= Iir_Kind_Component_Declaration then
+         Error_Class_Match (Comp_Name, "component");
          return;
       end if;
-      Set_Component_Name (Spec, Comp);
 
       List := Get_Instantiation_List (Spec);
       if List = Iir_List_All then
@@ -1263,24 +1296,26 @@ package body Sem_Specs is
                --  FIXME.
                Error_Msg_Sem ("label not in block declarative part", El);
             else
-               Comp := Get_Declaration (Inter);
-               if Get_Kind (Comp) /= Iir_Kind_Component_Instantiation_Statement
+               Inst := Get_Declaration (Inter);
+               if Get_Kind (Inst) /= Iir_Kind_Component_Instantiation_Statement
                then
                   Error_Msg_Sem ("label does not denote an instantiation", El);
                else
-                  Inst := Get_Instantiated_Unit (Comp);
-                  if Get_Kind (Inst) /= Iir_Kind_Component_Declaration then
+                  Inst_Unit := Get_Instantiated_Unit (Inst);
+                  if Get_Kind (Inst_Unit) not in Iir_Kinds_Denoting_Name
+                    or else (Get_Kind (Get_Named_Entity (Inst_Unit))
+                               /= Iir_Kind_Component_Declaration)
+                  then
                      Error_Msg_Sem
                        ("specification does not apply to direct instantiation",
                         El);
-                  elsif Inst /= Get_Component_Name (Spec) then
+                  elsif Get_Named_Entity (Inst_Unit) /= Comp then
                      Error_Msg_Sem ("component names mismatch", El);
                   else
                      Apply_Configuration_Specification
-                       (Comp, Spec, Primary_Entity_Aspect);
-                     Xref_Ref (El, Comp);
-                     Free_Iir (El);
-                     Replace_Nth_Element (List, I, Comp);
+                       (Inst, Spec, Primary_Entity_Aspect);
+                     Xref_Ref (El, Inst);
+                     Set_Named_Entity (El, Inst);
                   end if;
                end if;
             end if;
@@ -1295,7 +1330,7 @@ package body Sem_Specs is
       Component : Iir;
    begin
       Sem_Component_Specification (Parent_Stmts, Conf, Primary_Entity_Aspect);
-      Component := Get_Component_Name (Conf);
+      Component := Get_Named_Entity (Get_Component_Name (Conf));
 
       --  Return now in case of error.
       if Get_Kind (Component) /= Iir_Kind_Component_Declaration then
@@ -1318,6 +1353,7 @@ package body Sem_Specs is
      return Iir_Binding_Indication
    is
       Entity : Iir_Entity_Declaration;
+      Entity_Name : Iir;
       Aspect : Iir;
       Res : Iir;
       Design_Unit : Iir_Design_Unit;
@@ -1386,7 +1422,12 @@ package body Sem_Specs is
       Res := Create_Iir (Iir_Kind_Binding_Indication);
       Aspect := Create_Iir (Iir_Kind_Entity_Aspect_Entity);
       Location_Copy (Aspect, Parent);
-      Set_Entity (Aspect, Entity);
+
+      Entity_Name := Create_Iir (Iir_Kind_Simple_Name);
+      Location_Copy (Entity_Name, Parent);
+      Set_Named_Entity (Entity_Name, Entity);
+
+      Set_Entity_Name (Aspect, Entity_Name);
       Set_Entity_Aspect (Res, Aspect);
 
       --  LRM 5.2.2

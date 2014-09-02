@@ -114,16 +114,6 @@ package body Iirs is
       end case;
    end Iir_Predefined_Shortcut_P;
 
-   function Create_Proxy (Proxy: Iir) return Iir_Proxy is
-      Res : Iir_Proxy;
-   begin
-      Res := Create_Iir (Iir_Kind_Proxy);
-      Set_Proxy (Res, Proxy);
-      return Res;
-   end Create_Proxy;
-
-   --
-
    function Create_Iir_Error return Iir
    is
       Res : Iir;
@@ -148,74 +138,6 @@ package body Iirs is
       return Iir_Kind'Val (Get_Nkind (An_Iir));
    end Get_Kind;
 
---    function Clone_Iir (Src : Iir; New_Kind : Iir_Kind) return Iir
---    is
---       Res : Iir;
---    begin
---       Res := new Iir_Node (New_Kind);
---       Res.Flag1 := Src.Flag1;
---       Res.Flag2 := Src.Flag2;
---       Res.Flag3 := Src.Flag3;
---       Res.Flag4 := Src.Flag4;
---       Res.Flag5 := Src.Flag5;
---       Res.Flag6 := Src.Flag6;
---       Res.Flag7 := Src.Flag7;
---       Res.Flag8 := Src.Flag8;
---       Res.State1 := Src.State1;
---       Res.State2 := Src.State2;
---       Res.State3 := Src.State3;
---       Res.Staticness1 := Src.Staticness1;
---       Res.Staticness2 := Src.Staticness2;
---       Res.Odigit1 := Src.Odigit1;
---       Res.Odigit2 := Src.Odigit2;
---       Res.Location := Src.Location;
---       Res.Back_End_Info := Src.Back_End_Info;
---       Res.Identifier := Src.Identifier;
---       Res.Field1 := Src.Field1;
---       Res.Field2 := Src.Field2;
---       Res.Field3 := Src.Field3;
---       Res.Field4 := Src.Field4;
---       Res.Field5 := Src.Field5;
---       Res.Nbr2 := Src.Nbr2;
---       Res.Nbr3 := Src.Nbr3;
-
---       Src.Identifier := Null_Identifier;
---       Src.Field1 := null;
---       Src.Field2 := null;
---       Src.Field3 := null;
---       Src.Field4 := null;
---       Src.Field5 := null;
---       return Res;
---    end Clone_Iir;
-
-
-   -----------------
-   -- design file --
-   -----------------
-
-   -- Iir_Design_File
-
---   type Int_Access_Type is new Integer;
---   for Int_Access_Type'Size use System.Word_Size; --Iir_Identifier_Acc'Size;
-
-   --  Safe conversions.
---    function Iir_To_Int_Access_Type is
---       new Ada.Unchecked_Conversion (Source => Iir,
---                                     Target => Int_Access_Type);
---    function Int_Access_Type_To_Iir is
---       new Ada.Unchecked_Conversion (Source => Int_Access_Type,
---                                     Target => Iir);
-
---    function To_Iir (V : Integer) return Iir is
---    begin
---       return Int_Access_Type_To_Iir (Int_Access_Type (V));
---    end To_Iir;
-
---    function To_Integer (N : Iir) return Integer is
---    begin
---       return Integer (Iir_To_Int_Access_Type (N));
---    end To_Integer;
-
    procedure Set_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
                                Pos : Source_Ptr; Line, Off: Natural) is
    begin
@@ -235,6 +157,7 @@ package body Iirs is
    -----------
    -- Lists --
    -----------
+
    --  Layout of lists:
    --  A list is stored into an IIR.
    --  There are two bounds for a list:

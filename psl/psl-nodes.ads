@@ -511,7 +511,7 @@ package PSL.Nodes is
    function Get_Decl (N : Node) return Node;
    procedure Set_Decl (N : Node; D : Node);
 
-   --  Field: Field1
+   --  Field: Field1 (conv)
    function Get_HDL_Node (N : Node) return HDL_Node;
    procedure Set_HDL_Node (N : Node; H : HDL_Node);
 

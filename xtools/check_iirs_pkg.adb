@@ -43,83 +43,82 @@ package body Check_Iirs_Pkg is
 
    --  Patterns
    --  Space.
-   Wsp : Pattern := Span (' ');
+   Wsp : constant Pattern := Span (' ');
 
    --  "type Iir_Kind is".
-   Type_Iir_Kind_Pat : Pattern :=
+   Type_Iir_Kind_Pat : constant Pattern :=
      Wsp & "type" & Wsp & "Iir_Kind" & Wsp & "is" & Rpos (0);
 
    --  "("
-   Lparen_Pat : Pattern := Wsp & '(' & Rpos (0);
+   Lparen_Pat : constant Pattern := Wsp & '(' & Rpos (0);
 
    --  Comment.
-   Comment_Pat : Pattern := Wsp & "--";
+   Comment_Pat : constant Pattern := Wsp & "--";
 
    --  End of ada line
-   Eol_Pat : Pattern := Comment_Pat or Rpos (0);
-
-   --  "," followed by EOL.
-   Comma_Eol_Pat : Pattern := ',' & Eol_Pat;
+   Eol_Pat : constant Pattern := Comment_Pat or Rpos (0);
 
    --  A-Za-z
-   Basic_Pat : Pattern := Span (Basic_Set);
+   Basic_Pat : constant Pattern := Span (Basic_Set);
 
    --  A-Za-z0-9
-   Alnum_Pat : Pattern := Span (Alphanumeric_Set);
+   Alnum_Pat : constant Pattern := Span (Alphanumeric_Set);
 
    --  Ada identifier.
-   Ident_Pat : Pattern := Basic_Pat & Arbno (('_' or "") & Alnum_Pat);
+   Ident_Pat : constant Pattern := Basic_Pat & Arbno (('_' or "") & Alnum_Pat);
    -- Basic_Pat & Arbno (Alnum_Pat) & Arbno ('_' & Alnum_Pat);
 
    --  Eat the ada identifier.
-   Getident_Pat : Pattern := Ident_Pat * Ident;
-   Getident2_Pat : Pattern := Ident_Pat * Ident_2;
-   Getident3_Pat : Pattern := Ident_Pat * Ident_3;
-   Getident4_Pat : Pattern := Ident_Pat * Ident_4;
-   Getident5_Pat : Pattern := Ident_Pat * Ident_5;
+   Getident_Pat : constant Pattern := Ident_Pat * Ident;
+   Getident2_Pat : constant Pattern := Ident_Pat * Ident_2;
+   Getident3_Pat : constant Pattern := Ident_Pat * Ident_3;
+   Getident4_Pat : constant Pattern := Ident_Pat * Ident_4;
+   Getident5_Pat : constant Pattern := Ident_Pat * Ident_5;
 
    --  Get an enumeration elements.
-   Enumel_Pat : Pattern := Wsp & Getident_Pat
+   Enumel_Pat : constant Pattern := Wsp & Getident_Pat
      & ((',' & Setcur (Comma_Pos'Access)) or "") & Eol_Pat;
 
    --  End of an enumeration declaration.
-   End_Enum_Pat : Pattern := Wsp & ");" & Eol_Pat;
+   End_Enum_Pat : constant Pattern := Wsp & ");" & Eol_Pat;
 
-   Format_Pat : Pattern := "      Format_" & Getident_Pat
+   Format_Pat : constant Pattern := "      Format_" & Getident_Pat
      & ((',' & Setcur (Comma_Pos'Access)) or "") & Eol_Pat;
 
-   Fields_Of_Format_Pat : Pattern := "   -- Fields of Format_" & Getident_Pat
-     & ":" & Rpos (0);
+   Fields_Of_Format_Pat : constant Pattern :=
+     "   -- Fields of Format_" & Getident_Pat & ":" & Rpos (0);
 
    --  "subtype XX is Iir_Kind range".
-   Iir_Kind_Subtype_Pat : Pattern :=
+   Iir_Kind_Subtype_Pat : constant Pattern :=
      Wsp & "subtype" & Wsp & Getident_Pat & Wsp & "is" & Wsp & "Iir_Kind"
      & Wsp & "range" & Eol_Pat;
 
    --  Pattern for a range.
-   Start_Range_Pat : Pattern := Wsp & Getident_Pat & Wsp & ".." & Eol_Pat;
-   Comment_Range_Pat : Pattern := Wsp & "--" & Getident_Pat & Rpos (0);
-   End_Range_Pat : Pattern := Wsp & Getident_Pat & ";" & Eol_Pat;
+   Start_Range_Pat : constant Pattern :=
+     Wsp & Getident_Pat & Wsp & ".." & Eol_Pat;
+   Comment_Range_Pat : constant Pattern :=
+     Wsp & "--" & Getident_Pat & Rpos (0);
+   End_Range_Pat : constant Pattern := Wsp & Getident_Pat & ";" & Eol_Pat;
 
    --  End of public package part.
-   End_Pat : Pattern := "end Iirs;" & Rpos (0);
+   End_Pat : constant Pattern := "end Iirs;" & Rpos (0);
 
    --  Pattern for a function field.
-   Func_Decl_Pat : Pattern := "   --  Field: " & Getident_Pat
+   Func_Decl_Pat : constant Pattern := "   --  Field: " & Getident_Pat
      & ( "" or (" (" & Getident2_Pat & ")")) & Rpos (0);
 
    --  function Get_XXX.
-   Function_Get_Pat : Pattern := "   function Get_"  & Getident_Pat
+   Function_Get_Pat : constant Pattern := "   function Get_"  & Getident_Pat
      & " (" & Getident2_Pat & " : " & Getident3_Pat & ") return "
      & Getident4_Pat & ";" & Rpos (0);
 
    --  procedure Set_XXX.
-   Procedure_Set_Pat : Pattern := "   procedure Set_"  & Getident_Pat
+   Procedure_Set_Pat : constant Pattern := "   procedure Set_"  & Getident_Pat
      & " (" & Getident2_Pat & " : " & Getident3_Pat
      & "; " & Getident4_Pat & " : " & Getident5_Pat & ");" & Rpos (0);
 
-   Field_Decl_Pat : Pattern := "   --   " & Getident_Pat & " : ";
-   Field_Type_Pat : Pattern := "   --   " & Ident_Pat & " : "
+   Field_Decl_Pat : constant Pattern := "   --   " & Getident_Pat & " : ";
+   Field_Type_Pat : constant Pattern := "   --   " & Ident_Pat & " : "
      & Getident_Pat & ("" or (" (" & Arb & ")")) & Rpos (0);
 
    --  Formats of nodes.
@@ -270,10 +269,8 @@ package body Check_Iirs_Pkg is
       return Iir_Type (P);
    end Get_Iir_Pos;
 
-   Disp_Func : Boolean := False;
-
-   Flag_Disp_Format : Boolean := False;
-   Flag_Disp_Field : Boolean := False;
+   Flag_Disp_Format : constant Boolean := False;
+   Flag_Disp_Field : constant Boolean := False;
 
    procedure Read_Fields
    is
@@ -285,7 +282,7 @@ package body Check_Iirs_Pkg is
       procedure Parse_Field
       is
          P : Integer;
-         Name : Vstring := Ident;
+         Name : constant Vstring := Ident;
       begin
          if not Match (Line, Field_Type_Pat) then
             Put_Line ("**  field declaration without type");
@@ -500,7 +497,7 @@ package body Check_Iirs_Pkg is
                Start : Iir_Type;
                Pos : Iir_Type;
                P : Iir_Type;
-               Rng_Ident : VString := Ident;
+               Rng_Ident : constant VString := Ident;
             begin
                Line := Get_Line (In_Iirs);
                if not Match (Line, Start_Range_Pat) then
@@ -638,34 +635,37 @@ package body Check_Iirs_Pkg is
    end Check_Iirs;
 
    --  Start of node description.
-   Start_Of_Iir_Kind_Pat : Pattern := "   -- Start of Iir_Kind." & Rpos (0);
-   End_Of_Iir_Kind_Pat : Pattern := "   -- End of Iir_Kind." & Rpos (0);
+   Start_Of_Iir_Kind_Pat : constant Pattern :=
+     "   -- Start of Iir_Kind." & Rpos (0);
+   End_Of_Iir_Kind_Pat : constant Pattern :=
+     "   -- End of Iir_Kind." & Rpos (0);
 
    --  Box ("----------") delimiters.
-   Box_Delim_Pat : Pattern := "   --" & Span ('-') & Rpos (0);
+   Desc_Box_Comment_Pat : constant Pattern := "   --" & Span ('-') & Rpos (0);
 
-   --  Inside a box ("-- XXX --").
-   Box_Inside_Pat : Pattern := "   --" & Arb & "--" & Rpos (0);
+   --  A comment ("--  XXXX")
+   Desc_Comment_Pat : constant Pattern := "   --  " & Arb & Rpos (0);
+   Desc_Empty_Comment_Pat : constant Pattern := "   --" & Rpos (0);
 
    --  Get a iir_kind identifier.
-   Desc_Iir_Kind_Pat : Pattern :=
+   Desc_Iir_Kind_Pat : constant Pattern :=
      "   -- " & Getident_Pat
      & ("" or ( " (" & Getident2_Pat & ")"))
      & Rpos (0);
 
-   Subprogram_Pat : Pattern := "   --   Get" & ("_" or "/Set_") & Getident_Pat
+   Subprogram_Pat : constant Pattern :=
+     "   --   Get" & ("_" or "/Set_") & Getident_Pat
      & ((" " & Arb) or "") & Rpos (0);
 
-   Desc_Only_For_Pat : Pattern := "   -- Only for " & Getident_Pat & ":"
-     & Rpos (0);
-   Desc_Comment_Pat : Pattern := "   -- " & (Alnum_Pat or Any ("*_(.|"));
-   Desc_Empty_Pat : Pattern := "   --" & Rpos (0);
-   Desc_Subprogram_Pat : Pattern := "   --   " & ("function" or "procedure");
+   Desc_Only_For_Pat : constant Pattern :=
+     "   -- Only for " & Getident_Pat & ":" & Rpos (0);
+   Desc_Subprogram_Pat : constant Pattern :=
+     "   --   " & ("function" or "procedure");
 
-   Field_Pat : Pattern := Arb & "(" & Getident_Pat & ")";
-   Alias_Field_Pat : Pattern := Arb & "(Alias " & Getident_Pat & ")";
+   Field_Pat : constant Pattern := Arb & "(" & Getident_Pat & ")";
+   Alias_Field_Pat : constant Pattern := Arb & "(Alias " & Getident_Pat & ")";
 
-   Disp_Desc : Boolean := False;
+   Disp_Desc : constant Boolean := False;
 
    --  Check descriptions.
    procedure Read_Desc
@@ -744,229 +744,230 @@ package body Check_Iirs_Pkg is
       --  Read descriptions.
       L1 : loop
 
-         --  Empty lines.
+         --  Look for a description
+
          loop
             Line := Get_Line (In_Iirs);
-            exit when not Match (Line, Rpos (0));
+
+            --  The description
+            exit when Match (Line, "   -- Iir_Kind");
+
+            --  End of descriptions
+            exit L1 when Match (Line, End_Of_Iir_Kind_Pat);
+
+            --  Skip over comments
+            if Match (Line, Desc_Box_Comment_Pat)
+              or else Match (Line, Desc_Comment_Pat)
+            then
+               loop
+                  Line := Get_Line (In_Iirs);
+                  exit when Match (Line, Rpos (0));
+                  if Match (Line, Desc_Comment_Pat)
+                    or else Match (Line, Desc_Empty_Comment_Pat)
+                    or else Match (Line, Desc_Box_Comment_Pat)
+                  then
+                     null;
+                  else
+                     raise Err;
+                  end if;
+               end loop;
+            end if;
          end loop;
 
-         if Match (Line, Box_Delim_Pat) then
-            --  A box.
-            Line := Get_Line (In_Iirs);
-            if not Match (Line, Box_Inside_Pat) then
-               raise Err;
-            end if;
-            Line := Get_Line (In_Iirs);
-            if not Match (Line, Box_Delim_Pat) then
-               raise Err;
-            end if;
-         else
-            --  A description.
-            if not Match (Line, "   -- Iir_Kind") then
-               if Match (Line, End_Of_Iir_Kind_Pat) then
-                  exit L1;
-               elsif Match (Line, "   -- For Iir_Kinds_") then
-                  null;
+         --  Get iir_kind.
+         declare
+            P_Num : Integer;
+            Rng : Range_Type;
+            Format : Format_Type;
+         begin
+            --  No iir being described.
+            Nbr_Desc := 0;
+            loop
+               Ident_2 := Nul;
+               exit when not Match (Line, Desc_Iir_Kind_Pat);
+
+               --  Check format.
+               if Ident_2 = Nul then
+                  Put_Line (Standard_Error,
+                            "*** no format for " & S (Ident));
+                  raise Err;
+               end if;
+               P_Num := Get (Format2pos, Ident_2);
+               if P_Num < 0 then
+                  Put_Line (Standard_Error, "*** unknown format");
+                  raise Err;
+               end if;
+               Format := Format_Type (P_Num);
+
+               --  Handle nodes.
+               P_Num := Get (Iir_Kind2pos, Ident);
+               if P_Num >= 0 then
+                  Add_Desc (Iir_Type (P_Num), Format);
+               else
+                  Rng := Get (Iir_Kinds2pos, Ident);
+                  if Rng = Null_Range then
+                     Put_Line (Standard_Error, "*** " & S (Ident));
+                     raise Err;
+                  end if;
+                  for I in Rng.L .. Rng.H loop
+                     Add_Desc (I, Format);
+                  end loop;
+               end if;
+
+               if Disp_Desc then
+                  Put_Line ("desc for " & S (Ident));
+               end if;
+
+               Line := Get_Line (In_Iirs);
+            end loop;
+         end;
+
+         --Debug_Mode := True;
+
+         --  Read the functions.
+         loop
+            if not Match (Line, Comment_Pat) then
+               if Match (Line, Rpos (0)) then
+                  exit;
                else
                   raise Err;
                end if;
             end if;
-
-            --  Get iir_kind.
             declare
-               P_Num : Integer;
-               Rng : Range_Type;
-               Format : Format_Type;
-            begin
-               --  No iir being described.
-               Nbr_Desc := 0;
-               loop
-                  Ident_2 := Nul;
-                  exit when not Match (Line, Desc_Iir_Kind_Pat);
+               Func : Func_Type;
+               Func_Num : Integer;
+               Field : Field_Type;
+               Field_Num : Integer;
+               Is_Alias : Boolean;
 
-                  --  Check format.
-                  if Ident_2 = Nul then
-                     Put_Line (Standard_Error,
-                               "*** no format for " & S (Ident));
+               procedure Add_Field (N : Iir_Type) is
+               begin
+                  if not Field_Table.Table (Field).
+                    Formats (Iir_Table.Table (N).Format)
+                  then
+                     Put_Line (Standard_Error, "** no field for format");
                      raise Err;
                   end if;
-                  P_Num := Get (Format2pos, Ident_2);
-                  if P_Num < 0 then
-                     Put_Line (Standard_Error, "*** unknown format");
-                     raise Err;
-                  end if;
-                  Format := Format_Type (P_Num);
-
-                  --  Handle nodes.
-                  P_Num := Get (Iir_Kind2pos, Ident);
-                  if P_Num >= 0 then
-                     Add_Desc (Iir_Type (P_Num), Format);
-                  else
-                     Rng := Get (Iir_Kinds2pos, Ident);
-                     if Rng = Null_Range then
-                        Put_Line (Standard_Error, "*** " & S (Ident));
-                        raise Err;
-                     end if;
-                     for I in Rng.L .. Rng.H loop
-                        Add_Desc (I, Format);
-                     end loop;
-                  end if;
-
-                  if Disp_Desc then
-                     Put_Line ("desc for " & S (Ident));
-                  end if;
-
-                  Line := Get_Line (In_Iirs);
-               end loop;
-            end;
-
-            --Debug_Mode := True;
-
-            --  Read the functions.
-            loop
-               if not Match (Line, Comment_Pat) then
-                  if Match (Line, Rpos (0)) then
-                     exit;
-                  else
-                     raise Err;
-                  end if;
-               end if;
-               declare
-                  Func : Func_Type;
-                  Func_Num : Integer;
-                  Field : Field_Type;
-                  Field_Num : Integer;
-                  Is_Alias : Boolean;
-
-                  procedure Add_Field (N : Iir_Type) is
-                  begin
-                     if not Field_Table.Table (Field).
-                       Formats (Iir_Table.Table (N).Format)
+                  if Is_Alias then
+                     if Iir_Table.Table (N).Func (Field) = No_Func
                      then
-                        Put_Line (Standard_Error, "** no field for format");
+                        Put_Line (Standard_Error,
+                                  "**  aliased field not yet used");
                         raise Err;
                      end if;
-                     if Is_Alias then
-                        if Iir_Table.Table (N).Func (Field) = No_Func
-                        then
-                           Put_Line (Standard_Error,
-                                     "**  aliased field not yet used");
-                           raise Err;
-                        end if;
-                     else
-                        if Iir_Table.Table (N).Func (Field) /= No_Func
-                          --and then
-                          --Iir_Table.Table (N).Func (Field) /= Func
+                  else
+                     if Iir_Table.Table (N).Func (Field) /= No_Func
+                       --and then
+                       --Iir_Table.Table (N).Func (Field) /= Func
                         then
                            Put_Line (Standard_Error,
                                      "**  Field already used");
                            raise Err;
-                        end if;
-                        Iir_Table.Table (N).Func (Field) := Func;
                      end if;
-                     Func_Table.Table (Func).Uses (N) := True;
-                  end Add_Field;
-               begin
-                  if Match (Line, Subprogram_Pat) then
-                     if Disp_Desc then
-                        Put ("subprg: " & S (Ident));
-                     end if;
-                     Func_Num := Get (Function2pos, Ident);
-                     if Func_Num < 0 then
-                        Put_Line (Standard_Error,
-                                  "*** function not found: " & S (Ident));
-                        raise Err;
-                     end if;
-                     Func := Func_Type (Func_Num);
-                     if Match (Line, Field_Pat) then
-                        Is_Alias := False;
-                     elsif Match (Line, Alias_Field_Pat) then
-                        Is_Alias := True;
-                     else
-                        raise Err;
-                     end if;
-                     if Disp_Desc then
-                        Put_Line ("  (" & S (Ident) & ")");
-                     end if;
-                     Field_Num := Get (Field2pos, Ident);
-                     if Field_Num < 0 then
-                        Put_Line (Standard_Error,
-                                  "*** unknown field: " & S (Ident));
-                        raise Err;
-                     end if;
-                     Field := Field_Type (Field_Num);
-                     if Func_Table.Table (Func).Field /= Field then
-                        if Func_Table.Table (Func).Field = No_Field then
-                           Func_Table.Table (Func).Field := Field;
-                        else
-                           --  Field redefined for the function.
-                           Put_Line (Standard_Error,
-                                     "**  field redefined for function "
-                                    & Func_Table.Table (Func).Name.all);
-                           raise Err;
-                        end if;
-                     end if;
-
-                     --  Check the field is not already used by another func.
-                     if Nbr_Only_For > 0 then
-                        for I in 1 .. Nbr_Only_For loop
-                           Add_Field (Only_For (I));
-                        end loop;
-                        Nbr_Only_For := 0;
-                     else
-                        for I in 1 .. Nbr_Desc loop
-                           Add_Field (Iir_Desc (I));
-                        end loop;
-                     end if;
-                  elsif Match (Line, Desc_Only_For_Pat) then
-                     declare
-                        P_Num : Integer;
-                        Rng : Range_Type;
-
-                        procedure Add_Only_For (N : Iir_Type) is
-                        begin
-                           for I in 1 .. Nbr_Desc loop
-                              if Iir_Desc (I) = N then
-                                 Nbr_Only_For := Nbr_Only_For + 1;
-                                 Only_For (Nbr_Only_For) := N;
-                                 return;
-                              end if;
-                           end loop;
-                           Put_Line (Standard_Error,
-                                     "**  not currently described");
-                           raise Err;
-                        end Add_Only_For;
-                     begin
-                        P_Num := Get (Iir_Kind2pos, Ident);
-                        if P_Num >= 0 then
-                           Add_Only_For (Iir_Type (P_Num));
-                        else
-                           Rng := Get (Iir_Kinds2pos, Ident);
-                           if Rng = Null_Range then
-                              Put_Line (Standard_Error, "*** " & S (Ident));
-                              raise Err;
-                           end if;
-                           for I in Rng.L .. Rng.H loop
-                              Add_Only_For (I);
-                           end loop;
-                        end if;
-                     end;
-                  elsif Match (Line, "   -- Only") then
-                     Put_Line (Standard_Error, "**  bad 'Only' for line");
+                     Iir_Table.Table (N).Func (Field) := Func;
+                  end if;
+                  Func_Table.Table (Func).Uses (N) := True;
+               end Add_Field;
+            begin
+               if Match (Line, Subprogram_Pat) then
+                  if Disp_Desc then
+                     Put ("subprg: " & S (Ident));
+                  end if;
+                  Func_Num := Get (Function2pos, Ident);
+                  if Func_Num < 0 then
+                     Put_Line (Standard_Error,
+                               "*** function not found: " & S (Ident));
                      raise Err;
-                  elsif Match (Line, Desc_Comment_Pat) then
-                     null;
-                  elsif Match (Line, Desc_Empty_Pat) then
-                     null;
-                  elsif Match (Line, Desc_Subprogram_Pat) then
-                     null;
+                  end if;
+                  Func := Func_Type (Func_Num);
+                  if Match (Line, Field_Pat) then
+                     Is_Alias := False;
+                  elsif Match (Line, Alias_Field_Pat) then
+                     Is_Alias := True;
                   else
                      raise Err;
                   end if;
-               end;
-               Line := Get_Line (In_Iirs);
-            end loop;
-         end if;
+                  if Disp_Desc then
+                     Put_Line ("  (" & S (Ident) & ")");
+                  end if;
+                  Field_Num := Get (Field2pos, Ident);
+                  if Field_Num < 0 then
+                     Put_Line (Standard_Error,
+                               "*** unknown field: " & S (Ident));
+                     raise Err;
+                  end if;
+                  Field := Field_Type (Field_Num);
+                  if Func_Table.Table (Func).Field /= Field then
+                     if Func_Table.Table (Func).Field = No_Field then
+                        Func_Table.Table (Func).Field := Field;
+                     else
+                        --  Field redefined for the function.
+                        Put_Line (Standard_Error,
+                                  "**  field redefined for function "
+                                    & Func_Table.Table (Func).Name.all);
+                        raise Err;
+                     end if;
+                  end if;
+
+                  --  Check the field is not already used by another func.
+                  if Nbr_Only_For > 0 then
+                     for I in 1 .. Nbr_Only_For loop
+                        Add_Field (Only_For (I));
+                     end loop;
+                     Nbr_Only_For := 0;
+                  else
+                     for I in 1 .. Nbr_Desc loop
+                        Add_Field (Iir_Desc (I));
+                     end loop;
+                  end if;
+               elsif Match (Line, Desc_Only_For_Pat) then
+                  declare
+                     P_Num : Integer;
+                     Rng : Range_Type;
+
+                     procedure Add_Only_For (N : Iir_Type) is
+                     begin
+                        for I in 1 .. Nbr_Desc loop
+                           if Iir_Desc (I) = N then
+                              Nbr_Only_For := Nbr_Only_For + 1;
+                              Only_For (Nbr_Only_For) := N;
+                              return;
+                           end if;
+                        end loop;
+                        Put_Line (Standard_Error,
+                                  "**  not currently described");
+                        raise Err;
+                     end Add_Only_For;
+                  begin
+                     P_Num := Get (Iir_Kind2pos, Ident);
+                     if P_Num >= 0 then
+                        Add_Only_For (Iir_Type (P_Num));
+                     else
+                        Rng := Get (Iir_Kinds2pos, Ident);
+                        if Rng = Null_Range then
+                           Put_Line (Standard_Error, "*** " & S (Ident));
+                           raise Err;
+                        end if;
+                        for I in Rng.L .. Rng.H loop
+                           Add_Only_For (I);
+                        end loop;
+                     end if;
+                  end;
+               elsif Match (Line, "   -- Only") then
+                  Put_Line (Standard_Error, "**  bad 'Only' for line");
+                  raise Err;
+               elsif Match (Line, Desc_Comment_Pat) then
+                  null;
+               elsif Match (Line, Desc_Empty_Comment_Pat) then
+                  null;
+               elsif Match (Line, Desc_Subprogram_Pat) then
+                  null;
+               else
+                  raise Err;
+               end if;
+            end;
+            Line := Get_Line (In_Iirs);
+         end loop;
       end loop L1;
 
       --  Check each Iir was described.
@@ -1231,4 +1232,3 @@ package body Check_Iirs_Pkg is
       end loop;
    end List_Free_Fields;
 end Check_Iirs_Pkg;
-

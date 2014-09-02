@@ -836,7 +836,8 @@ package body Libraries is
    Last_Design_File : Iir_Design_File := Null_Iir;
 
    -- Add or replace a design unit in the working library.
-   procedure Add_Design_Unit_Into_Library (Unit : Iir_Design_Unit)
+   procedure Add_Design_Unit_Into_Library
+     (Unit : in Iir_Design_Unit; Keep_Obsolete : Boolean := False)
    is
       Design_File: Iir_Design_File;
       Design_Unit, Prev_Design_Unit : Iir_Design_Unit;
@@ -852,11 +853,11 @@ package body Libraries is
       File_Name : Name_Id;
       Dir_Name : Name_Id;
    begin
+      --  As specified, the Chain must be not set.
       pragma Assert (Get_Chain (Unit) = Null_Iir);
 
-      if Get_Date_State (Unit) /= Date_Extern then
-         raise Internal_Error;
-      end if;
+      --  The unit must not be in the library.
+      pragma Assert (Get_Date_State (Unit) = Date_Extern);
 
       --  Mark this design unit as being loaded.
       New_Library_Unit := Get_Library_Unit (Unit);
@@ -921,11 +922,20 @@ package body Libraries is
                end if;
 
                --  Remove DESIGN_UNIT from the design_file.
-               Remove_Unit_From_File (Design_Unit, Design_File);
+               --  If KEEP_OBSOLETE is True, units that are obsoleted by units
+               --  in the same design file are kept.  This allows to process
+               --  (pretty print, xrefs, ...) all units of a design file.
+               --  But still remove units that are replaced (if a file was
+               --  already in the library).
+               if not Keep_Obsolete
+                 or else Get_Date_State (Design_Unit) = Date_Disk
+               then
+                  Remove_Unit_From_File (Design_Unit, Design_File);
+               end if;
             end;
 
-            -- UNIT *must* replace library_unit if they don't belong
-            -- to the same file.
+            --  UNIT *must* replace library_unit if they don't belong
+            --  to the same file.
             if Get_Design_File_Filename (Design_File) = File_Name
               and then Get_Design_File_Directory (Design_File) = Dir_Name
             then
@@ -943,7 +953,9 @@ package body Libraries is
                   end if;
                else
                   --  Free the stub.
-                  Free_Design_Unit (Design_Unit);
+                  if not Keep_Obsolete then
+                     Free_Design_Unit (Design_Unit);
+                  end if;
                end if;
 
                --  Note: the current design unit should not be freed if
@@ -965,9 +977,10 @@ package body Libraries is
                end if;
             end if;
             exit;
+         else
+            Prev_Design_Unit := Design_Unit;
+            Design_Unit := Get_Hash_Chain (Design_Unit);
          end if;
-         Prev_Design_Unit := Design_Unit;
-         Design_Unit := Get_Hash_Chain (Design_Unit);
       end loop;
 
       --  Try to find the design file in the library.
@@ -1068,7 +1081,7 @@ package body Libraries is
       while Unit /= Null_Iir loop
          Next_Unit := Get_Chain (Unit);
          Set_Chain (Unit, Null_Iir);
-         Libraries.Add_Design_Unit_Into_Library (Unit);
+         Libraries.Add_Design_Unit_Into_Library (Unit, True);
          Unit := Next_Unit;
       end loop;
       if First_Unit /= Null_Iir then

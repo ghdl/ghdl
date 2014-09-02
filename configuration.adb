@@ -21,7 +21,7 @@ with Std_Package;
 with Sem_Names;
 with Name_Table; use Name_Table;
 with Flags;
-with Iirs_Utils;
+with Iirs_Utils; use Iirs_Utils;
 
 package body Configuration is
    procedure Add_Design_Concurrent_Stmts (Parent : Iir);
@@ -207,10 +207,10 @@ package body Configuration is
          case Get_Kind (Stmt) is
             when Iir_Kind_Component_Instantiation_Statement =>
                declare
-                  Unit : Iir;
+                  Unit : constant Iir := Get_Instantiated_Unit (Stmt);
                begin
-                  Unit := Get_Instantiated_Unit (Stmt);
-                  if Get_Kind (Unit) /= Iir_Kind_Component_Declaration then
+                  if Get_Kind (Unit) not in Iir_Kinds_Denoting_Name then
+                     --  Entity or configuration instantiation.
                      Add_Design_Aspect (Unit, True);
                   end if;
                end;
@@ -365,7 +365,7 @@ package body Configuration is
       Assoc := Conf_Chain;
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-            Formal := Get_Formal (Assoc);
+            Formal := Get_Association_Interface (Assoc);
             Err := Err or Check_Open_Port (Formal, Assoc);
             if Flags.Warn_Binding and then not Get_Artificial_Flag (Assoc) then
                Warning_Msg_Elab
@@ -387,6 +387,7 @@ package body Configuration is
       for I in Natural loop
          Inst := Get_Nth_Element (Inst_List, I);
          exit when Inst = Null_Iir;
+         Inst := Get_Named_Entity (Inst);
          Err := False;
 
          --  Mark component ports not associated.
@@ -394,7 +395,7 @@ package body Configuration is
          Assoc := Inst_Chain;
          while Assoc /= Null_Iir loop
             if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-               Formal := Get_Base_Name (Get_Formal (Assoc));
+               Formal := Get_Association_Interface (Assoc);
                Set_Open_Flag (Formal, True);
                Err := True;
             end if;
@@ -406,15 +407,15 @@ package body Configuration is
          if Err then
             Assoc := Conf_Chain;
             while Assoc /= Null_Iir loop
-               Formal := Get_Base_Name (Get_Formal (Assoc));
+               Formal := Get_Association_Interface (Assoc);
                if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
                   Actual := Null_Iir;
                else
                   Actual := Get_Actual (Assoc);
                   Actual := Sem_Names.Name_To_Object (Actual);
-               end if;
-               if Actual /= Null_Iir then
-                  Actual := Get_Base_Name (Actual);
+                  if Actual /= Null_Iir then
+                     Actual := Get_Object_Prefix (Actual);
+                  end if;
                end if;
                if Actual /= Null_Iir
                  and then Get_Open_Flag (Actual)
@@ -424,7 +425,7 @@ package body Configuration is
                   Assoc_1 := Inst_Chain;
                   while Assoc_1 /= Null_Iir loop
                      if Get_Kind (Assoc_1) = Iir_Kind_Association_Element_Open
-                       and then Actual = Get_Base_Name (Get_Formal (Assoc_1))
+                       and then Actual = Get_Association_Interface (Assoc_1)
                      then
                         Err := Check_Open_Port (Formal, Assoc_1);
                         exit;
@@ -439,7 +440,7 @@ package body Configuration is
             Assoc := Inst_Chain;
             while Assoc /= Null_Iir loop
                if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-                  Formal := Get_Base_Name (Get_Formal (Assoc));
+                  Formal := Get_Association_Interface (Assoc);
                   Set_Open_Flag (Formal, False);
                end if;
                Assoc := Get_Chain (Assoc);
@@ -454,10 +455,9 @@ package body Configuration is
    --  binding must be added if required.
    procedure Add_Design_Binding_Indication (Conf : Iir; Add_Default : Boolean)
    is
-      Bind : Iir_Binding_Indication;
+      Bind : constant Iir_Binding_Indication := Get_Binding_Indication (Conf);
       Inst : Iir;
    begin
-      Bind := Get_Binding_Indication (Conf);
       if Bind = Null_Iir then
          if Flags.Warn_Binding then
             Inst := Get_First_Element (Get_Instantiation_List (Conf));
@@ -603,7 +603,7 @@ package body Configuration is
       --  Check port.
       El := Get_Port_Chain (Entity);
       while El /= Null_Iir loop
-         if not Iirs_Utils.Is_Fully_Constrained_Type (Get_Type (El))
+         if not Is_Fully_Constrained_Type (Get_Type (El))
            and then Get_Default_Value (El) = Null_Iir
          then
             Error ("(" & Disp_Node (El)

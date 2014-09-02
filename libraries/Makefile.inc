@@ -51,16 +51,15 @@ ieee2008/std_logic_1164.vhdl ieee2008/std_logic_1164-body.vhdl \
 ieee2008/std_logic_textio.vhdl \
 ieee2008/math_real.vhdl ieee2008/math_real-body.vhdl \
 ieee2008/math_complex.vhdl ieee2008/math_complex-body.vhdl \
-ieee2008/numeric_bit.vhdl \
+ieee2008/numeric_bit.vhdl ieee2008/numeric_bit-body.vhdl \
 ieee2008/numeric_bit_unsigned.vhdl ieee2008/numeric_bit_unsigned-body.vhdl \
 ieee2008/numeric_std.vhdl \
 ieee2008/numeric_std-body.vhdl \
 ieee2008/numeric_std_unsigned.vhdl ieee2008/numeric_std_unsigned-body.vhdl \
 ieee2008/fixed_float_types.vhdl \
 ieee2008/fixed_generic_pkg.vhdl \
-ieee2008/fixed_pkg.vhdl \
-ieee2008/numeric_bit-body.vhdl \
 ieee2008/fixed_generic_pkg-body.vhdl
+# ieee2008/fixed_pkg.vhdl \
 #ieee2008/float_generic_pkg.vhdl
 #ieee2008/float_generic_pkg-body.vhdl
 #

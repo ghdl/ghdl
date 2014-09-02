@@ -20,19 +20,41 @@ with Iirs; use Iirs;
 
 package Evaluation is
 
+   --  Evaluation is about compile-time computation of expressions, such as
+   --  2 + 1 --> 3.  This is (of course) possible only with locally (and some
+   --  globally) static expressions.  Evaluation is required during semantic
+   --  analysis at many places (in fact those where locally static expression
+   --  are required by the language).  For example, the type of O'Range (N)
+   --  depends on N, so we need to evaluate N.
+   --
+   --  The result of evaluation is a literal (integer, enumeration, real,
+   --  physical), a string or a simple aggregate.  For scalar types, the
+   --  result is therefore normalized (there is only one kind of result), but
+   --  for array types, the result isn't: in general it will be a string, but
+   --  it may be a simple aggregate.  Strings are preferred (because they are
+   --  more compact), but aren't possible in some cases.  For example, the
+   --  evaluation of "Text" & NUL cannot be a string.
+   --
+   --  Some functions (like Eval_Static_Expr) simply returns a result (which
+   --  may be a node of the expression), others returns a result and set the
+   --  origin (Literal_Origin or Range_Origin) to remember the original
+   --  expression that was evaluation.  The original expression is kept so that
+   --  it is possible to print the original tree.
+
    --  Get the value of a physical integer literal or unit.
    function Get_Physical_Value (Expr : Iir) return Iir_Int64;
+
+   --  Evaluate the locally static expression EXPR (without checking that EXPR
+   --  is locally static).  Return a literal or an aggregate, without setting
+   --  the origin, and do not modify EXPR.  This can be used only to get the
+   --  value of an expression, without replacing it.
+   function Eval_Static_Expr (Expr: Iir) return Iir;
 
    --  Evaluate (ie compute) expression EXPR.
    --  EXPR is required to be a locally static expression, otherwise an error
    --  message is generated.
-   --  The result is a literal.
+   --  The result is a literal with the origin set.
    function Eval_Expr (Expr: Iir) return Iir;
-
-   --  Same as Eval_Expr, but do not check that EXPR is locally static.
-   --  May be used instead of Eval_Expr if you know than EXPR is locally
-   --  static, or for literals of type std.time.
-   function Eval_Static_Expr (Expr: Iir) return Iir;
 
    --  Same as Eval_Expr, but if EXPR is not locally static, the result is
    --  EXPR.  Also, if EXPR is null_iir, then null_iir is returned.
@@ -46,21 +68,37 @@ package Evaluation is
    --  Emit an error if EXPR violates SUB_TYPE bounds.
    procedure Eval_Check_Bound (Expr : Iir; Sub_Type : Iir);
 
-   --  Return TRUE if range expression A_RANGE is not included in SUB_TYPE.
-   function Eval_Is_Range_In_Bound
-     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean)
-     return Boolean;
-
-   --  Emit an error if A_RANGE is not included in SUB_TYPE.
-   procedure Eval_Check_Range (A_Range : Iir; Sub_Type : Iir;
-                               Any_Dir : Boolean);
-
    --  Same as Eval_Expr, but a range check with SUB_TYPE is performed after
    --  computation.
    function Eval_Expr_Check (Expr : Iir; Sub_Type : Iir) return Iir;
 
    --  Call Eval_Expr_Check only if EXPR is static.
    function Eval_Expr_Check_If_Static (Expr : Iir; Atype : Iir) return Iir;
+
+   --  For a locally static range RNG (a range expression, a range attribute
+   --  or a name that denotes a type or a subtype) returns its corresponding
+   --  locally static range_expression.  The bounds of the results are also
+   --  literals.
+   --  Return a range_expression or NULL_IIR for a non locally static range.
+   function Eval_Static_Range (Rng : Iir) return Iir;
+
+   --  Return a locally static range expression with the origin set for ARANGE.
+   function Eval_Range (Arange : Iir) return Iir;
+
+   --  If ARANGE is a locally static range, return locally static range
+   --  expression (with the origin set), else return ARANGE.
+   function Eval_Range_If_Static (Arange : Iir) return Iir;
+
+   --  Emit an error if A_RANGE is not included in SUB_TYPE.  A_RANGE can be
+   --  a range expression, a range attribute or a name that denotes a discrete
+   --  type or subtype.  A_RANGE must be a locally static range.
+   procedure Eval_Check_Range (A_Range : Iir; Sub_Type : Iir;
+                               Any_Dir : Boolean);
+
+   --  Return TRUE if range expression A_RANGE is not included in SUB_TYPE.
+   function Eval_Is_Range_In_Bound
+     (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean)
+     return Boolean;
 
    --  Return TRUE iff VAL belongs to BOUND.
    function Eval_Int_In_Range (Val : Iir_Int64; Bound : Iir) return Boolean;
@@ -74,10 +112,6 @@ package Evaluation is
    --  Get the left bound of a range constraint.
    --  Note: the range constraint may be an attribute or a subtype.
    function Eval_Discrete_Range_Left (Constraint : Iir) return Iir;
-
-   --  Return the range_expression of RNG, which is a range or a subtype.
-   --  Return NULL_IIR if the range constraint is not a range_expression.
-   function Eval_Range (Rng : Iir) return Iir;
 
    --  Return the position of EXPR, ie the result of sub_type'pos (EXPR), where
    --  sub_type is the type of expr.
@@ -96,7 +130,7 @@ package Evaluation is
      (A_Type : Iir; Len : Iir_Int64; Loc : Location_Type)
      return Iir;
 
-   --  Store into NAME_BUFFER,NAME_LENGTH the simple name, character literal
+   --  Store into NAME_BUFFER, NAME_LENGTH the simple name, character literal
    --  or operator sumbol of ID, using the same format as SIMPLE_NAME
    --  attribute.
    procedure Eval_Simple_Name (Id : Name_Id);

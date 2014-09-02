@@ -68,6 +68,16 @@ package body Xrefs is
 
    procedure Add_Xref (Loc : Location_Type; Ref : Iir; Kind : Xref_Kind) is
    begin
+      --  Check there is no xref for the same location to the same reference.
+      --  (Note that a designatore may reference several declarations, this
+      --   is possible in attribute specification for an overloadable name).
+      --  This is a simple heuristic as this catch only two referenced in the
+      --  row but efficient and should be enough to catch errors.
+      pragma Assert
+        (Xref_Table.Last < Xref_Table.First
+           or else Xref_Table.Table (Xref_Table.Last).Loc /= Loc
+           or else Xref_Table.Table (Xref_Table.Last).Ref /= Ref);
+
       Xref_Table.Append (Xref_Type'(Loc => Loc,
                                     Ref => Ref,
                                     Kind => Kind));
@@ -101,27 +111,37 @@ package body Xrefs is
       end if;
    end Xref_End;
 
-   procedure Xref_Name_1 (Name : Iir)
-   is
-      Res : Iir;
+   procedure Xref_Name_1 (Name : Iir) is
    begin
       case Get_Kind (Name) is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Operator_Symbol
            | Iir_Kind_Character_Literal =>
-            Res := Get_Named_Entity (Name);
-            if Res = Std_Package.Error_Mark then
-               return;
-            end if;
-            Add_Xref (Get_Location (Name), Res, Xref_Ref);
-         when Iir_Kind_Parenthesis_Name
-           | Iir_Kind_Selected_By_All_Name
-           | Iir_Kind_Slice_Name =>
+            declare
+               Res : constant Iir := Get_Named_Entity (Name);
+            begin
+               if Res = Std_Package.Error_Mark then
+                  return;
+               end if;
+               Add_Xref (Get_Location (Name), Res, Xref_Ref);
+            end;
+         when Iir_Kind_Selected_Element =>
+            Add_Xref (Get_Location (Name),
+                      Get_Selected_Element (Name), Xref_Ref);
+         when Iir_Kind_Dereference
+           | Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Slice_Name
+           | Iir_Kind_Indexed_Name
+           | Iir_Kind_Function_Call =>
+            null;
+         when Iir_Kinds_Attribute =>
             null;
          when Iir_Kind_Attribute_Name =>
             --  FIXME: user defined attributes.
             null;
+         when Iir_Kind_Type_Conversion =>
+            return;
          when others =>
             Error_Kind ("xref_name_1", Name);
       end case;
@@ -131,10 +151,14 @@ package body Xrefs is
            | Iir_Kind_Character_Literal =>
             null;
          when Iir_Kind_Selected_Name
-           | Iir_Kind_Parenthesis_Name
+           | Iir_Kind_Selected_Element
            | Iir_Kind_Attribute_Name
            | Iir_Kind_Slice_Name
-           | Iir_Kind_Selected_By_All_Name =>
+           | Iir_Kind_Indexed_Name
+           | Iir_Kind_Dereference
+           | Iir_Kind_Implicit_Dereference
+           | Iir_Kinds_Attribute
+           | Iir_Kind_Function_Call =>
             Xref_Name_1 (Get_Prefix (Name));
          when others =>
             Error_Kind ("xref_name_1", Name);
@@ -157,9 +181,12 @@ package body Xrefs is
       Xref_Table.Table (From) := Tmp;
    end Move;
 
-   function Loc_Lt (Op1, Op2 : Natural) return Boolean is
+   function Loc_Lt (Op1, Op2 : Natural) return Boolean
+   is
+      L1 : constant Location_Type := Xref_Table.Table (Op1).Loc;
+      L2 : constant Location_Type := Xref_Table.Table (Op2).Loc;
    begin
-      return Xref_Table.Table (Op1).Loc < Xref_Table.Table (Op2).Loc;
+      return L1 < L2;
    end Loc_Lt;
 
    procedure Sort_By_Location is
@@ -250,4 +277,3 @@ package body Xrefs is
       end loop;
    end Fix_End_Xrefs;
 end Xrefs;
-

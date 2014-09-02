@@ -78,6 +78,9 @@ package body Ghdlprint is
    type Filexref_Info_Arr_Acc is access Filexref_Info_Arr;
    Filexref_Info : Filexref_Info_Arr_Acc := null;
 
+   --  If True, at least one xref is missing.
+   Missing_Xref : Boolean := False;
+
    procedure PP_Html_File (File : Source_File_Entry)
    is
       use Flags;
@@ -238,6 +241,7 @@ package body Ghdlprint is
             if Ref = Bad_Xref then
                Disp_Text;
                Warning_Msg_Sem ("cannot find xref", Loc);
+               Missing_Xref := True;
                return;
             end if;
          else
@@ -989,7 +993,7 @@ package body Ghdlprint is
 
          Unit := Get_First_Design_Unit (Design_File);
          while Unit /= Null_Iir loop
-            -- Sem, canon, annotate a design unit.
+            --  Analyze the design unit.
             Back_End.Finish_Compilation (Unit, True);
 
             Next_Unit := Get_Chain (Unit);
@@ -1204,6 +1208,7 @@ package body Ghdlprint is
    --  Command --xref-html.
    type Command_Xref_Html is new Command_Html with record
       Output_Dir : String_Access := null;
+      Check_Missing : Boolean := False;
    end record;
 
    function Decode_Command (Cmd : Command_Xref_Html; Name : String)
@@ -1246,6 +1251,9 @@ package body Ghdlprint is
             Cmd.Output_Dir := new String'(Arg);
             Res := Option_Arg;
          end if;
+      elsif Option = "--check-missing" then
+         Cmd.Check_Missing := True;
+         Res := Option_Ok;
       else
          Decode_Option (Command_Html (Cmd), Option, Arg, Res);
       end if;
@@ -1255,6 +1263,7 @@ package body Ghdlprint is
    begin
       Disp_Long_Help (Command_Html (Cmd));
       Put_Line ("-o DIR          Put generated files into DIR (def: html/)");
+      Put_Line ("--check-missing Fail if a reference is missing");
       New_Line;
       Put_Line ("When format is css, the CSS file 'ghdl.css' "
                 & "is never overwritten.");
@@ -1492,6 +1501,11 @@ package body Ghdlprint is
                Close (Output);
             end if;
          end;
+      end if;
+
+      if Missing_Xref and Cmd.Check_Missing then
+         Error ("missing xrefs");
+         raise Compile_Error;
       end if;
    exception
       when Compilation_Error =>

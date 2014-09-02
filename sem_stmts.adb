@@ -205,8 +205,13 @@ package body Sem_Stmts is
             end if;
          end loop;
          return False;
+      elsif Get_Kind (N1) in Iir_Kinds_Denoting_Name
+        and then Get_Kind (N2) in Iir_Kinds_Denoting_Name
+      then
+         return Get_Named_Entity (N1) /= Get_Named_Entity (N2);
+      else
+         return True;
       end if;
-      return True;
    end Is_Disjoint;
 
    procedure Check_Uniq_Aggregate_Associated
@@ -544,7 +549,9 @@ package body Sem_Stmts is
          if Get_Time (We) /= Null_Iir then
             Expr := Sem_Expression (Get_Time (We), Time_Type_Definition);
             if Expr /= Null_Iir then
+               Set_Time (We, Expr);
                Check_Read (Expr);
+
                if Get_Expr_Staticness (Expr) = Locally
                  or else (Get_Kind (Expr) = Iir_Kind_Physical_Int_Literal
                           and then Flags.Flag_Time_64)
@@ -571,7 +578,6 @@ package body Sem_Stmts is
                      Last_Time := Time;
                   end if;
                end if;
-               Set_Time (We, Expr);
             end if;
          else
             if We /= Waveform_Chain then
@@ -992,26 +998,28 @@ package body Sem_Stmts is
          -- El is an iir_identifier.
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
-         Sem_Name (El, False);
+
+         Sem_Name (El);
+
          Res := Get_Named_Entity (El);
          if Res = Error_Mark then
             null;
          elsif Is_Overload_List (Res) or else not Is_Object_Name (Res) then
             Error_Msg_Sem ("a sensitivity element must be a signal name", El);
          else
+            Res := Finish_Sem_Name (El);
             Prefix := Get_Object_Prefix (Res);
             case Get_Kind (Prefix) is
                when Iir_Kind_Signal_Declaration
                  | Iir_Kind_Guard_Signal_Declaration
                  | Iir_Kinds_Signal_Attribute =>
-                  Xref_Name (El);
+                  null;
                when Iir_Kind_Signal_Interface_Declaration =>
                   if not Iir_Mode_Readable (Get_Mode (Prefix)) then
                      Error_Msg_Sem
                        (Disp_Node (Res) & " of mode out"
                         & " can't be in a sensivity list", El);
                   end if;
-                  Xref_Name (El);
                when others =>
                   Error_Msg_Sem (Disp_Node (Res)
                                  & " is neither a signal nor a port", El);
@@ -1101,7 +1109,8 @@ package body Sem_Stmts is
    procedure Sem_Exit_Next_Statement (Stmt : Iir)
    is
       Cond: Iir;
-      Label: Iir;
+      Loop_Label : Iir;
+      Loop_Stmt: Iir;
       P : Iir;
    begin
       Cond := Get_Condition (Stmt);
@@ -1109,20 +1118,24 @@ package body Sem_Stmts is
          Cond := Sem_Condition (Cond);
          Set_Condition (Stmt, Cond);
       end if;
-      Label := Get_Loop (Stmt);
-      if Label /= Null_Iir then
-         Label := Find_Declaration (Label, Decl_Label);
-      end if;
-      if Label /= Null_Iir then
-         case Get_Kind (Label) is
-            when Iir_Kind_While_Loop_Statement
-              | Iir_Kind_For_Loop_Statement =>
-               Set_Loop (Stmt, Label);
+
+      Loop_Label := Get_Loop_Label (Stmt);
+      if Loop_Label /= Null_Iir then
+         Loop_Label := Sem_Denoting_Name (Loop_Label);
+         Set_Loop_Label (Stmt, Loop_Label);
+         Loop_Stmt := Get_Named_Entity (Loop_Label);
+         case Get_Kind (Loop_Stmt) is
+            when Iir_Kind_For_Loop_Statement
+              | Iir_Kind_While_Loop_Statement =>
+               null;
             when others =>
-               Error_Msg_Sem ("loop label expected", Stmt);
-               Label := Null_Iir;
+               Error_Class_Match (Loop_Label, "loop statement");
+               Loop_Stmt := Null_Iir;
          end case;
+      else
+         Loop_Stmt := Null_Iir;
       end if;
+
       --  Check the current statement is inside the labeled loop.
       P := Stmt;
       loop
@@ -1130,7 +1143,7 @@ package body Sem_Stmts is
          case Get_Kind (P) is
             when Iir_Kind_While_Loop_Statement
               | Iir_Kind_For_Loop_Statement =>
-               if Label = Null_Iir or else Label = P then
+               if Loop_Stmt = Null_Iir or else P = Loop_Stmt then
                   exit;
                end if;
             when Iir_Kind_If_Statement
@@ -1181,7 +1194,7 @@ package body Sem_Stmts is
                   Open_Declarative_Region;
 
                   Set_Is_Within_Flag (Stmt, True);
-                  Iterator := Get_Iterator_Scheme (Stmt);
+                  Iterator := Get_Parameter_Specification (Stmt);
                   Sem_Scopes.Add_Name (Iterator);
                   Sem_Iterator (Iterator, None);
                   Set_Visible_Flag (Iterator, True);
@@ -1266,21 +1279,28 @@ package body Sem_Stmts is
      return Iir
    is
       Inst : Iir;
+      Comp_Name : Iir;
+      Comp : Iir;
    begin
       Inst := Get_Instantiated_Unit (Stmt);
 
-      if Get_Kind (Inst) = Iir_Kind_Component_Declaration then
-         --  Already semantized before, while trying to separate
-         --  concurrent procedure calls from instantiation stmts.
-         return Inst;
-      elsif Get_Kind (Inst) in Iir_Kinds_Name then
+      if Get_Kind (Inst) in Iir_Kinds_Denoting_Name then
+         Comp := Get_Named_Entity (Inst);
+         if Comp /= Null_Iir then
+            --  Already semantized before, while trying to separate
+            --  concurrent procedure calls from instantiation stmts.
+            pragma Assert (Get_Kind (Comp) = Iir_Kind_Component_Declaration);
+            return Comp;
+         end if;
          --  The component may be an entity or a configuration.
-         Inst := Find_Declaration (Inst, Decl_Component);
-         if Inst = Null_Iir then
+         Comp_Name := Sem_Denoting_Name (Inst);
+         Set_Instantiated_Unit (Stmt, Comp_Name);
+         Comp := Get_Named_Entity (Comp_Name);
+         if Get_Kind (Comp) /= Iir_Kind_Component_Declaration then
+            Error_Class_Match (Comp_Name, "component");
             return Null_Iir;
          end if;
-         Set_Instantiated_Unit (Stmt, Inst);
-         return Inst;
+         return Comp;
       else
          return Sem_Entity_Aspect (Inst);
       end if;
@@ -1358,17 +1378,18 @@ package body Sem_Stmts is
    begin
       Call := Get_Procedure_Call (Stmt);
       if Get_Parameter_Association_Chain (Call) = Null_Iir then
-         Imp := Get_Implementation (Call);
-         Sem_Name (Imp, False);
+         Imp := Get_Prefix (Call);
+         Sem_Name (Imp);
+         Set_Prefix (Call, Imp);
+
          Decl := Get_Named_Entity (Imp);
          if Get_Kind (Decl) = Iir_Kind_Component_Declaration then
             N_Stmt := Create_Iir (Iir_Kind_Component_Instantiation_Statement);
             Label := Get_Label (Stmt);
             Set_Label (N_Stmt, Label);
             Set_Parent (N_Stmt, Get_Parent (Stmt));
-            Set_Instantiated_Unit (N_Stmt, Decl);
+            Set_Instantiated_Unit (N_Stmt, Finish_Sem_Name (Imp));
             Location_Copy (N_Stmt, Stmt);
-            Xref_Name (Imp);
 
             if Label /= Null_Identifier then
                --  A component instantiation statement must have
@@ -1387,7 +1408,7 @@ package body Sem_Stmts is
       Sem_Procedure_Call (Call, Stmt);
 
       if Is_Passive then
-         Imp := Get_Implementation (Call);
+         Imp := Get_Named_Entity (Get_Implementation (Call));
          if Get_Kind (Imp) = Iir_Kind_Procedure_Declaration then
             Decl := Get_Interface_Declaration_Chain (Imp);
             while Decl /= Null_Iir loop
@@ -1467,7 +1488,6 @@ package body Sem_Stmts is
 
          --  the guard expression is an implicit definition of a signal named
          --  GUARD.  Create this definition.  This is necessary for the type.
-         Set_Base_Name (Guard, Guard);
          Set_Identifier (Guard, Std_Names.Name_Guard);
          Set_Type (Guard, Boolean_Type_Definition);
          Set_Block_Statement (Guard, Stmt);

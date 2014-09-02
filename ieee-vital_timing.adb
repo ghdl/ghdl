@@ -25,6 +25,7 @@ with Ieee.Std_Logic_1164; use Ieee.Std_Logic_1164;
 with Sem_Scopes;
 with Evaluation;
 with Sem;
+with Iirs_Utils;
 with Flags;
 
 package body Ieee.Vital_Timing is
@@ -207,7 +208,9 @@ package body Ieee.Vital_Timing is
       --  The expression in the VITAL_Level0 attribute specification shall be
       --  the Boolean literal TRUE.
       Expr := Get_Expression (Decl);
-      if Expr /= Boolean_True then
+      if Get_Kind (Expr) not in Iir_Kinds_Denoting_Name
+        or else Get_Named_Entity (Expr) /= Boolean_True
+      then
          Error_Vital
            ("the expression in the VITAL_Level0 attribute specification shall "
             & "be the Boolean literal TRUE", Decl);
@@ -1304,12 +1307,12 @@ package body Ieee.Vital_Timing is
    end Check_Vital_Level0_Entity;
 
    --  Return TRUE if UNIT was decorated with attribute VITAL_Level0.
-   function Is_Vital_Level0 (Unit : Iir_Design_Unit) return Boolean
+   function Is_Vital_Level0 (Unit : Iir_Entity_Declaration) return Boolean
    is
       Value : Iir_Attribute_Value;
       Spec : Iir_Attribute_Specification;
    begin
-      Value := Get_Attribute_Value_Chain (Get_Library_Unit (Unit));
+      Value := Get_Attribute_Value_Chain (Unit);
       while Value /= Null_Iir loop
          Spec := Get_Attribute_Specification (Value);
          if Get_Attribute_Designator (Spec) = Vital_Level0_Attribute then
@@ -1328,7 +1331,7 @@ package body Ieee.Vital_Timing is
       --  IEEE 1076.4 4.1
       --  The entity associated with a Level 0 architecture shall be a VITAL
       --  Level 0 entity.
-      if not Is_Vital_Level0 (Get_Design_Unit (Get_Entity (Arch))) then
+      if not Is_Vital_Level0 (Iirs_Utils.Get_Entity (Arch)) then
          Error_Vital ("entity associated with a VITAL level 0 architecture "
                       & "shall be a VITAL level 0 entity", Arch);
       end if;

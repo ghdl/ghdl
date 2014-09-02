@@ -81,14 +81,14 @@ package body Trans_Analyzes is
                Call := Get_Procedure_Call (Stmt);
                Assoc := Get_Parameter_Association_Chain (Call);
                Inter := Get_Interface_Declaration_Chain
-                 (Get_Implementation (Call));
+                 (Get_Named_Entity (Get_Implementation (Call)));
                while Assoc /= Null_Iir loop
                   Formal := Get_Formal (Assoc);
                   if Formal = Null_Iir then
                      Formal := Inter;
                      Inter := Get_Chain (Inter);
                   else
-                     Formal := Get_Base_Name (Formal);
+                     Formal := Get_Association_Interface (Assoc);
                   end if;
                   if Get_Kind (Assoc)
                     = Iir_Kind_Association_Element_By_Expression
@@ -154,7 +154,7 @@ package body Trans_Analyzes is
       for I in Natural loop
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
-         Set_After_Drivers_Flag (Get_Base_Name (El), False);
+         Set_After_Drivers_Flag (Get_Object_Prefix (El), False);
       end loop;
       Destroy_Iir_List (List);
    end Free_Drivers_List;
@@ -170,7 +170,7 @@ package body Trans_Analyzes is
       for I in Natural loop
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
-         if Get_After_Drivers_Flag (Get_Base_Name (El)) then
+         if Get_After_Drivers_Flag (Get_Object_Prefix (El)) then
             Put ("*  ");
          else
             Put ("   ");

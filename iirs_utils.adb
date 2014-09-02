@@ -45,6 +45,11 @@ package body Iirs_Utils is
       return Res;
    end Current_Text;
 
+   function Is_Error (N : Iir) return Boolean is
+   begin
+      return Get_Kind (N) = Iir_Kind_Error;
+   end Is_Error;
+
    function Get_Operator_Name (Op : Iir) return Name_Id is
    begin
       case Get_Kind (Op) is
@@ -175,10 +180,12 @@ package body Iirs_Utils is
       end loop;
    end Get_Longuest_Static_Prefix;
 
-   function Get_Object_Prefix (Decl: Iir) return Iir is
-      Adecl: Iir;
+   function Get_Object_Prefix (Name: Iir; With_Alias : Boolean := True)
+                              return Iir
+   is
+      Adecl : Iir;
    begin
-      Adecl := Decl;
+      Adecl := Name;
       loop
          case Get_Kind (Adecl) is
             when Iir_Kind_Variable_Declaration
@@ -193,7 +200,11 @@ package body Iirs_Utils is
               | Iir_Kind_Iterator_Declaration =>
                return Adecl;
             when Iir_Kind_Object_Alias_Declaration =>
-               Adecl := Get_Name (Adecl);
+               if With_Alias then
+                  Adecl := Get_Name (Adecl);
+               else
+                  return Adecl;
+               end if;
             when Iir_Kind_Indexed_Name
               | Iir_Kind_Slice_Name
               | Iir_Kind_Selected_Element
@@ -220,11 +231,34 @@ package body Iirs_Utils is
             when Iir_Kind_Simple_Name
               | Iir_Kind_Selected_Name =>
                Adecl := Get_Named_Entity (Adecl);
+            when Iir_Kind_Attribute_Name =>
+               return Get_Named_Entity (Adecl);
             when others =>
                Error_Kind ("get_object_prefix", Adecl);
          end case;
       end loop;
    end Get_Object_Prefix;
+
+   function Get_Association_Interface (Assoc : Iir) return Iir
+   is
+      Formal : Iir;
+   begin
+      Formal := Get_Formal (Assoc);
+      loop
+         case Get_Kind (Formal) is
+            when Iir_Kind_Simple_Name =>
+               return Get_Named_Entity (Formal);
+            when Iir_Kinds_Interface_Declaration =>
+               return Formal;
+            when Iir_Kind_Slice_Name
+              | Iir_Kind_Indexed_Name
+              | Iir_Kind_Selected_Element =>
+               Formal := Get_Prefix (Formal);
+            when others =>
+               Error_Kind ("get_association_interface", Formal);
+         end case;
+      end loop;
+   end Get_Association_Interface;
 
    function Find_Name_In_List (List: Iir_List; Lit: Name_Id) return Iir is
       El: Iir;
@@ -492,8 +526,6 @@ package body Iirs_Utils is
             return;
          when Iir_Kind_Architecture_Body =>
             Free_Recursive (Get_Entity (N));
-         when Iir_Kind_Proxy =>
-            null;
          when Iir_Kind_Overload_List =>
             Free_Recursive_List (Get_Overload_List (N));
             if not Free_List then
@@ -549,18 +581,101 @@ package body Iirs_Utils is
         or else Get_Constraint_State (Def) = Fully_Constrained;
    end Is_Fully_Constrained_Type;
 
-   function Get_Type_Of_Type_Mark (Mark : Iir) return Iir is
+   function Strip_Denoting_Name (Name : Iir) return Iir is
    begin
-      case Get_Kind (Mark) is
-         when Iir_Kind_Type_Declaration =>
-            return Get_Type_Definition (Mark);
-         when Iir_Kind_Subtype_Declaration
-           | Iir_Kind_Base_Attribute =>
-            return Get_Type (Mark);
+      if Get_Kind (Name) in Iir_Kinds_Denoting_Name then
+         return Get_Named_Entity (Name);
+      else
+         return Name;
+      end if;
+   end Strip_Denoting_Name;
+
+   function Build_Simple_Name (Ref : Iir; Loc : Location_Type) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Simple_Name);
+      Set_Location (Res, Loc);
+      Set_Identifier (Res, Get_Identifier (Ref));
+      Set_Named_Entity (Res, Ref);
+      Set_Base_Name (Res, Res);
+      --  FIXME: set type and expr staticness ?
+      return Res;
+   end Build_Simple_Name;
+
+   function Build_Simple_Name (Ref : Iir; Loc : Iir) return Iir is
+   begin
+      return Build_Simple_Name (Ref, Get_Location (Loc));
+   end Build_Simple_Name;
+
+   function Get_Primary_Unit_Name (Physical_Def : Iir) return Iir
+   is
+      Unit : constant Iir := Get_Primary_Unit (Physical_Def);
+   begin
+      return Get_Unit_Name (Get_Physical_Unit_Value (Unit));
+   end Get_Primary_Unit_Name;
+
+   function Is_Type_Name (Name : Iir) return Iir
+   is
+      Ent : Iir;
+   begin
+      if Get_Kind (Name) in Iir_Kinds_Denoting_Name then
+         Ent := Get_Named_Entity (Name);
+         case Get_Kind (Ent) is
+            when Iir_Kind_Type_Declaration =>
+               return Get_Type_Definition (Ent);
+            when Iir_Kind_Subtype_Declaration
+              | Iir_Kind_Base_Attribute =>
+               return Get_Type (Ent);
+            when others =>
+               return Null_Iir;
+         end case;
+      else
+         return Null_Iir;
+      end if;
+   end Is_Type_Name;
+
+   function Get_Type_Of_Subtype_Indication (Ind : Iir) return Iir is
+   begin
+      case Get_Kind (Ind) is
+         when Iir_Kinds_Denoting_Name =>
+            return Get_Type (Ind);
+         when Iir_Kinds_Subtype_Definition =>
+            return Ind;
          when others =>
-            Error_Kind ("get_type_of_type_mark", Mark);
+            Error_Kind ("get_type_of_subtype_indication", Ind);
       end case;
-   end Get_Type_Of_Type_Mark;
+   end Get_Type_Of_Subtype_Indication;
+
+   function Get_Index_Type (Indexes : Iir_List; Idx : Natural) return Iir
+   is
+      Index : constant Iir := Get_Nth_Element (Indexes, Idx);
+   begin
+      if Index = Null_Iir then
+         return Null_Iir;
+      else
+         return Get_Index_Type (Index);
+      end if;
+   end Get_Index_Type;
+
+   function Get_Index_Type (Array_Type : Iir; Idx : Natural) return Iir is
+   begin
+      return Get_Index_Type (Get_Index_Subtype_List (Array_Type), Idx);
+   end Get_Index_Type;
+
+   function Get_Element_Subtype (Def : Iir) return Iir is
+   begin
+      return Get_Type_Of_Subtype_Indication
+        (Get_Element_Subtype_Indication (Def));
+   end Get_Element_Subtype;
+
+   function Is_Second_Subprogram_Specification (Spec : Iir) return Boolean
+   is
+      Bod : constant Iir := Get_Subprogram_Body (Spec);
+   begin
+      return Bod /= Null_Iir
+        and then Get_Subprogram_Specification (Bod) /= Spec;
+   end Is_Second_Subprogram_Specification;
 
    function Is_Same_Profile (L, R: Iir) return Boolean
    is
@@ -570,14 +685,14 @@ package body Iirs_Utils is
    begin
       L_Kind := Get_Kind (L);
       if L_Kind = Iir_Kind_Non_Object_Alias_Declaration then
-         L1 := Get_Name (L);
+         L1 := Get_Named_Entity (Get_Name (L));
          L_Kind := Get_Kind (L1);
       else
          L1 := L;
       end if;
       R_Kind := Get_Kind (R);
       if R_Kind = Iir_Kind_Non_Object_Alias_Declaration then
-         R1 := Get_Name (R);
+         R1 := Get_Named_Entity (Get_Name (R));
          R_Kind := Get_Kind (R1);
       else
          R1 := R;
@@ -651,6 +766,25 @@ package body Iirs_Utils is
             return Null_Iir;
       end case;
    end Get_Block_From_Block_Specification;
+
+   function Get_Entity (Decl : Iir) return Iir
+   is
+      Name : constant Iir := Get_Entity_Name (Decl);
+      Res : constant Iir := Get_Named_Entity (Name);
+   begin
+      pragma Assert (Res = Null_Iir
+                       or else Get_Kind (Res) = Iir_Kind_Entity_Declaration);
+      return Res;
+   end Get_Entity;
+
+   function Get_Configuration (Aspect : Iir) return Iir
+   is
+      Name : constant Iir := Get_Configuration_Name (Aspect);
+      Res : constant Iir := Get_Named_Entity (Name);
+   begin
+      pragma Assert (Get_Kind (Res) = Iir_Kind_Configuration_Declaration);
+      return Res;
+   end Get_Configuration;
 
    function Get_Entity_Identifier_Of_Architecture (Arch : Iir) return Name_Id
    is
@@ -747,7 +881,8 @@ package body Iirs_Utils is
       Set_Location (Res, Loc);
       Base_Type := Get_Base_Type (Arr_Type);
       Set_Base_Type (Res, Base_Type);
-      Set_Element_Subtype (Res, Get_Element_Subtype (Base_Type));
+      Set_Element_Subtype_Indication
+        (Res, Get_Element_Subtype_Indication (Base_Type));
       if Get_Kind (Arr_Type) /= Iir_Kind_Array_Type_Definition then
          Set_Resolution_Function (Res, Get_Resolution_Function (Arr_Type));
       end if;
@@ -811,21 +946,6 @@ package body Iirs_Utils is
       return Res;
    end Create_Error_Type;
 
-   function Get_Associated_Formal (Assoc : Iir) return Iir
-   is
-      Formal : Iir;
-   begin
-      Formal := Get_Formal (Assoc);
-      case Get_Kind (Formal) is
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name =>
-            Formal := Get_Named_Entity (Formal);
-         when others =>
-            null;
-      end case;
-      return Get_Base_Name (Formal);
-   end Get_Associated_Formal;
-
    --  Extract the entity from ASPECT.
    --  Note: if ASPECT is a component declaration, returns ASPECT.
    function Get_Entity_From_Entity_Aspect (Aspect : Iir) return Iir
@@ -833,6 +953,11 @@ package body Iirs_Utils is
       Inst : Iir;
    begin
       case Get_Kind (Aspect) is
+         when Iir_Kinds_Denoting_Name =>
+            --  A component declaration.
+            Inst := Get_Named_Entity (Aspect);
+            pragma Assert (Get_Kind (Inst) = Iir_Kind_Component_Declaration);
+            return Inst;
          when Iir_Kind_Component_Declaration =>
             return Aspect;
          when Iir_Kind_Entity_Aspect_Entity =>
@@ -847,43 +972,22 @@ package body Iirs_Utils is
       end case;
    end Get_Entity_From_Entity_Aspect;
 
-   function Get_Physical_Literal_Value (Lit : Iir) return Iir_Int64
-   is
-   begin
-      case Get_Kind (Lit) is
-         when Iir_Kind_Physical_Int_Literal =>
-            return Get_Value (Lit)
-              * Get_Value (Get_Physical_Unit_Value (Get_Unit_Name (Lit)));
-         when Iir_Kind_Unit_Declaration =>
-            return Get_Value (Get_Physical_Unit_Value (Lit));
-         when Iir_Kind_Physical_Fp_Literal =>
-            return Iir_Int64
-              (Get_Fp_Value (Lit)
-               * Iir_Fp64 (Get_Value (Get_Physical_Unit_Value
-                                      (Get_Unit_Name (Lit)))));
-         when others =>
-            Error_Kind ("get_physical_literal_value", Lit);
-      end case;
-   end Get_Physical_Literal_Value;
-
    function Is_Signal_Object (Name : Iir) return Boolean
    is
       Adecl: Iir;
    begin
-      Adecl := Get_Base_Name (Name);
-      loop
-         case Get_Kind (Adecl) is
-            when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Signal_Interface_Declaration
-              | Iir_Kind_Guard_Signal_Declaration
-              | Iir_Kinds_Signal_Attribute =>
-               return True;
-            when Iir_Kind_Object_Alias_Declaration =>
-               Adecl := Get_Base_Name (Get_Name (Adecl));
-            when others =>
-               return False;
-         end case;
-      end loop;
+      Adecl := Get_Object_Prefix (Name, True);
+      case Get_Kind (Adecl) is
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Signal_Interface_Declaration
+           | Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kinds_Signal_Attribute =>
+            return True;
+         when Iir_Kind_Object_Alias_Declaration =>
+            raise Internal_Error;
+         when others =>
+            return False;
+      end case;
    end Is_Signal_Object;
 
    --  LRM08 4.7 Package declarations
@@ -920,4 +1024,9 @@ package body Iirs_Utils is
    begin
       return Iir (PSL.Nodes.Get_HDL_Node (N));
    end Get_HDL_Node;
+
+   procedure Set_HDL_Node (N : PSL_Node; Expr : Iir) is
+   begin
+      PSL.Nodes.Set_HDL_Node (N, PSL.Nodes.HDL_Node (Expr));
+   end Set_HDL_Node;
 end Iirs_Utils;

@@ -15,15 +15,24 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
+--  Display trees in raw form.  Mainly used for debugging.
+
 with Ada.Text_IO; use Ada.Text_IO;
 with Name_Table;
-with Iirs_Utils; use Iirs_Utils;
 with Tokens;
 with Errorout;
 with Files_Map;
 with PSL.Dump_Tree;
 
+--  Do not add a use clause for iirs_utils, as it may crash for ill-formed
+--  trees, which is annoying while debugging.
+with Iirs_Utils;
+
 package body Disp_Tree is
+   function Is_Anonymous_Type_Definition (Def : Iir) return Boolean
+     renames Iirs_Utils.Is_Anonymous_Type_Definition;
+
    procedure Disp_Tab (Tab: Natural) is
       Blanks : constant String (1 .. Tab) := (others => ' ');
    begin
@@ -191,9 +200,6 @@ package body Disp_Tree is
          when Iir_Kind_Library_Declaration =>
             Put ("library declaration");
             Disp_Identifier (Tree);
-
-         when Iir_Kind_Proxy =>
-            Put_Line ("proxy");
 
          when Iir_Kind_Waveform_Element =>
             Put_Line ("waveform_element");
@@ -433,7 +439,7 @@ package body Disp_Tree is
             Put_Line ("floating_point_literal: "
                       & Iir_Fp64'Image (Get_Fp_Value (Tree)));
          when Iir_Kind_String_Literal =>
-            Put_Line ("string_literal: " & Image_String_Lit (Tree));
+            Put_Line ("string_literal: " & Iirs_Utils.Image_String_Lit (Tree));
          when Iir_Kind_Unit_Declaration =>
             Put ("physical unit");
             Disp_Identifier (Tree);
@@ -708,8 +714,6 @@ package body Disp_Tree is
             end if;
             Header ("entity_name:");
             Disp_Tree (Get_Entity_Name (Tree), Ntab, True);
-            Header ("entity:");
-            Disp_Tree_Flat (Get_Entity (Tree), Ntab);
             Header ("declaration_chain:");
             Disp_Tree_Chain (Get_Declaration_Chain (Tree), Ntab);
             Header ("concurrent_statements:");
@@ -718,8 +722,8 @@ package body Disp_Tree is
             Disp_Tree_Flat
               (Get_Default_Configuration_Declaration (Tree), Ntab);
          when Iir_Kind_Configuration_Declaration =>
-            Header ("entity:");
-            Disp_Tree_Flat (Get_Entity (Tree), Ntab);
+            Header ("entity_Name:");
+            Disp_Tree_Flat (Get_Entity_Name (Tree), Ntab);
             Header ("declaration_chain:");
             Disp_Tree_Chain (Get_Declaration_Chain (Tree), Ntab);
             Header ("block_configuration:");
@@ -735,13 +739,13 @@ package body Disp_Tree is
             Disp_Tree_Chain (Get_Generic_Map_Aspect_Chain (Tree), Ntab);
 
          when Iir_Kind_Entity_Aspect_Entity =>
-            Header ("entity:");
-            Disp_Tree_Flat (Get_Entity (Tree), Ntab);
+            Header ("entity_name:");
+            Disp_Tree_Flat (Get_Entity_Name (Tree), Ntab);
             Header ("architecture:");
             Disp_Tree_Flat (Get_Architecture (Tree), Ntab);
          when Iir_Kind_Entity_Aspect_Configuration =>
             Header ("configuration:");
-            Disp_Tree (Get_Configuration (Tree), Ntab, True);
+            Disp_Tree (Get_Configuration_Name (Tree), Ntab, True);
          when Iir_Kind_Entity_Aspect_Open =>
             null;
 
@@ -814,7 +818,7 @@ package body Disp_Tree is
             Header ("signal_list:");
             Disp_Tree_List (Get_Signal_List (Tree), Ntab, True);
             Header ("type_mark:");
-            Disp_Tree (Get_Type (Tree), Ntab, True);
+            Disp_Tree (Get_Type_Mark (Tree), Ntab, True);
             Header ("time expression:");
             Disp_Tree (Get_Expression (Tree), Ntab);
 
@@ -1072,8 +1076,8 @@ package body Disp_Tree is
             if Flat_Decl then
                return;
             end if;
-            Header ("type:");
-            Disp_Tree (Get_Type (Tree), Ntab, True);
+            Header ("type mark:");
+            Disp_Tree (Get_Type_Mark (Tree), Ntab, True);
          when Iir_Kind_Terminal_Declaration =>
             if Flat_Decl then
                return;
@@ -1183,7 +1187,7 @@ package body Disp_Tree is
             Header ("name:");
             Disp_Tree (Get_Name (Tree), Ntab);
             Header ("signature:");
-            Disp_Tree (Get_Signature (Tree), Ntab, True);
+            Disp_Tree (Get_Alias_Signature (Tree), Ntab, True);
 
          when Iir_Kind_Group_Template_Declaration =>
             Header ("entity_class_entry:");
@@ -1240,7 +1244,7 @@ package body Disp_Tree is
                Disp_Tree (Get_Base_Type (Tree), Ntab, True);
             end if;
             Header ("type mark:");
-            Disp_Tree (Get_Type_Mark (Tree), Ntab, True);
+            Disp_Tree (Get_Subtype_Type_Mark (Tree), Ntab, True);
             Header ("resolution function:");
             Disp_Tree_Flat (Get_Resolution_Function (Tree), Ntab);
             Header ("range constraint:");
@@ -1262,6 +1266,9 @@ package body Disp_Tree is
                     & Iir_Direction'Image (Get_Direction (Tree)));
             Header ("type:");
             Disp_Tree (Get_Type (Tree), Ntab, True);
+            Header ("origin:");
+            Disp_Tree (Get_Range_Origin (Tree), Ntab, True);
+
          when Iir_Kind_Array_Subtype_Definition =>
             if Flat_Decl and then Get_Type_Declarator (Tree) /= Null_Iir then
                return;
@@ -1296,11 +1303,11 @@ package body Disp_Tree is
                Disp_Tree (Base, Ntab, Fl);
             end;
             Header ("type mark:");
-            Disp_Tree (Get_Type_Mark (Tree), Ntab, True);
+            Disp_Tree (Get_Subtype_Type_Mark (Tree), Ntab, True);
             Header ("index_subtype_list:");
             Disp_Tree_List (Get_Index_Subtype_List (Tree), Ntab, True);
-            Header ("element_subtype:");
-            Disp_Tree (Get_Element_Subtype (Tree), Ntab, True);
+            Header ("element_subtype_indication:");
+            Disp_Tree (Get_Element_Subtype_Indication (Tree), Ntab, True);
             Header ("resolution function:");
             Disp_Tree_Flat (Get_Resolution_Function (Tree), Ntab);
          when Iir_Kind_Array_Type_Definition  =>
@@ -1317,8 +1324,8 @@ package body Disp_Tree is
             Disp_Flag (Get_Has_Signal_Flag (Tree));
             Header ("index_subtype_list:");
             Disp_Tree_List (Get_Index_Subtype_List (Tree), Ntab, True);
-            Header ("element_subtype:");
-            Disp_Tree (Get_Element_Subtype (Tree), Ntab, True);
+            Header ("element_subtype_indication:");
+            Disp_Tree (Get_Element_Subtype_Indication (Tree), Ntab, True);
          when Iir_Kind_Record_Type_Definition =>
             if Flat_Decl and then Get_Type_Declarator (Tree) /= Null_Iir then
                return;
@@ -1348,7 +1355,7 @@ package body Disp_Tree is
             Header ("base type:");
             Disp_Tree (Get_Base_Type (Tree), Ntab, True);
             Header ("type mark:");
-            Disp_Tree (Get_Type_Mark (Tree), Ntab, True);
+            Disp_Tree (Get_Subtype_Type_Mark (Tree), Ntab, True);
             Header ("resolution function:");
             Disp_Tree_Flat (Get_Resolution_Function (Tree), Ntab);
             Header ("constraint_state: "
@@ -1403,8 +1410,8 @@ package body Disp_Tree is
             Disp_Tree_Flat (Get_Type_Declarator (Tree), Ntab);
             Header ("base type:");
             Disp_Tree (Get_Base_Type (Tree), Ntab, True);
-            Header ("type mark:");
-            Disp_Tree (Get_Type_Mark (Tree), Ntab, True);
+            Header ("designated subtype indication:");
+            Disp_Tree (Get_Designated_Subtype_Indication (Tree), Ntab);
 
          when Iir_Kind_Incomplete_Type_Definition =>
             Header ("staticness: ", False);
@@ -1419,8 +1426,8 @@ package body Disp_Tree is
             Disp_Type_Staticness (Tree);
             Header ("declarator:");
             Disp_Tree_Flat (Get_Type_Declarator (Tree), Ntab);
-            Header ("type mark:");
-            Disp_Tree_Flat (Get_Type_Mark (Tree), Ntab);
+            Header ("file type mark:");
+            Disp_Tree_Flat (Get_File_Type_Mark (Tree), Ntab);
          when Iir_Kind_Protected_Type_Declaration =>
             Header ("staticness: ", False);
             Disp_Type_Staticness (Tree);
@@ -1584,8 +1591,8 @@ package body Disp_Tree is
             Header ("elsif:");
             Disp_Tree (Get_Else_Clause (Tree), Tab);
          when Iir_Kind_For_Loop_Statement =>
-            Header ("iterator:");
-            Disp_Tree (Get_Iterator_Scheme (Tree), Ntab);
+            Header ("parameter specification:");
+            Disp_Tree (Get_Parameter_Specification (Tree), Ntab);
             Header ("statements:");
             Disp_Tree_Chain (Get_Sequential_Statement_Chain (Tree), Ntab);
             Header ("attribute_value_chain:");
@@ -1659,6 +1666,8 @@ package body Disp_Tree is
             Header ("attribute_value_chain:");
             Disp_Tree_Flat_Chain (Get_Attribute_Value_Chain (Tree), Ntab);
          when Iir_Kind_Procedure_Call =>
+            Header ("prefix:");
+            Disp_Tree (Get_Prefix (Tree), Ntab);
             Header ("implementation:");
             Disp_Tree (Get_Implementation (Tree), Ntab, True);
             Header ("method_object:");
@@ -1667,8 +1676,8 @@ package body Disp_Tree is
             Disp_Tree_Chain (Get_Parameter_Association_Chain (Tree), Ntab);
          when Iir_Kind_Exit_Statement
            | Iir_Kind_Next_Statement =>
-            Header ("loop:");
-            Disp_Tree_Flat (Get_Loop (Tree), Ntab);
+            Header ("loop_label:");
+            Disp_Tree (Get_Loop_Label (Tree), Ntab);
             Header ("condition:");
             Disp_Tree (Get_Condition (Tree), Ntab);
             Header ("attribute_value_chain:");
@@ -1704,6 +1713,8 @@ package body Disp_Tree is
             Disp_Expr_Staticness (Tree);
             Header ("type:");
             Disp_Tree_Flat (Get_Type (Tree), Ntab);
+            Header ("prefix:");
+            Disp_Tree (Get_Prefix (Tree), Ntab);
             Header ("implementation:");
             Disp_Tree_Flat (Get_Implementation (Tree), Ntab);
             Header ("method_object:");
@@ -1731,6 +1742,8 @@ package body Disp_Tree is
             Disp_Expr_Staticness (Tree);
             Header ("type:");
             Disp_Tree_Flat (Get_Type (Tree), Ntab);
+            Header ("type_mark:");
+            Disp_Tree_Flat (Get_Type_Mark (Tree), Ntab);
             Header ("expression:");
             Disp_Tree (Get_Expression (Tree), Ntab, True);
          when Iir_Kind_Allocator_By_Expression =>
@@ -1744,6 +1757,8 @@ package body Disp_Tree is
             Header ("subtype indication:");
             Disp_Tree (Get_Expression (Tree), Ntab, True);
          when Iir_Kind_Selected_Element =>
+            Header ("staticness:", false);
+            Disp_Name_Staticness (Tree);
             Header ("prefix:");
             Disp_Tree (Get_Prefix (Tree), Ntab, True);
             Header ("selected element:");
@@ -1784,9 +1799,11 @@ package body Disp_Tree is
             null;
          when Iir_Kind_Simple_Name =>
             Header ("staticness:", false);
-            Disp_Expr_Staticness (Tree);
+            Disp_Name_Staticness (Tree);
             Header ("type:");
             Disp_Tree (Get_Type (Tree), Ntab, True);
+            Header ("named_entity:");
+            Disp_Tree_Flat (Get_Named_Entity (Tree), Ntab);
          when Iir_Kind_Indexed_Name =>
             Header ("staticness:", false);
             Disp_Name_Staticness (Tree);
@@ -1820,12 +1837,14 @@ package body Disp_Tree is
             Disp_Tree (Get_Prefix (Tree), Ntab, True);
             Header ("identifier: ", False);
             Disp_Ident (Get_Identifier (Tree));
+            Header ("named_entity:");
+            Disp_Tree_Flat (Get_Named_Entity (Tree), Ntab);
 
          when Iir_Kind_Attribute_Name =>
             Header ("prefix:");
             Disp_Tree (Get_Prefix (Tree), Ntab, True);
             Header ("signature:");
-            Disp_Tree (Get_Signature (Tree), Ntab);
+            Disp_Tree (Get_Attribute_Signature (Tree), Ntab);
 
          when Iir_Kind_Base_Attribute =>
             Header ("prefix:");
@@ -1846,7 +1865,7 @@ package body Disp_Tree is
          when Iir_Kind_Image_Attribute
            | Iir_Kind_Value_Attribute =>
             Header ("prefix:");
-            Disp_Tree_Flat (Get_Prefix (Tree), Ntab);
+            Disp_Tree (Get_Prefix (Tree), Ntab);
             Header ("type:");
             Disp_Tree_Flat (Get_Type (Tree), Ntab);
             Header ("parameter:");
@@ -1860,7 +1879,7 @@ package body Disp_Tree is
             Header ("staticness:", false);
             Disp_Expr_Staticness (Tree);
             Header ("prefix:");
-            Disp_Tree_Flat (Get_Prefix (Tree), Ntab);
+            Disp_Tree (Get_Prefix (Tree), Ntab);
             Header ("type:");
             Disp_Tree_Flat (Get_Type (Tree), Ntab);
             Header ("parameter:");
@@ -1999,9 +2018,6 @@ package body Disp_Tree is
             Header ("origin:");
             Disp_Tree (Get_Literal_Origin (Tree), Ntab, True);
 
-         when Iir_Kind_Proxy =>
-            Header ("proxy:");
-            Disp_Tree_Flat (Get_Proxy (Tree), Ntab);
          when Iir_Kind_Entity_Class =>
             null;
       end case;

@@ -19,6 +19,7 @@
 with Ada.Unchecked_Conversion;
 with Ada.Text_IO; use Ada.Text_IO;
 with Errorout; use Errorout;
+with Iirs_Utils; use Iirs_Utils;
 with Trans_Analyzes;
 with Types; use Types;
 with Debugger; use Debugger;
@@ -1592,7 +1593,7 @@ package body Simulation is
       Instance_Pool := Global_Pool'Access;
 
       Elaboration.Elaborate_Design (Top_Config);
-      Entity := Get_Entity (Get_Library_Unit (Top_Config));
+      Entity := Iirs_Utils.Get_Entity (Get_Library_Unit (Top_Config));
 
       if not Is_Empty (Expr_Pool) then
          raise Internal_Error;

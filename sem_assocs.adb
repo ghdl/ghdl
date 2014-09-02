@@ -117,7 +117,7 @@ package body Sem_Assocs is
             Inter := Get_Chain (Inter);
          else
             --  Association by name.
-            Formal_Inter := Get_Base_Name (Formal);
+            Formal_Inter := Get_Association_Interface (Assoc);
             Inter := Null_Iir;
          end if;
          case Get_Kind (Assoc) is
@@ -420,7 +420,7 @@ package body Sem_Assocs is
       Index := Get_Suffix (Formal);
 
       --  Evaluate index.
-      Index := Eval_Expr (Index);
+      Index := Eval_Range (Index);
       Set_Suffix (Formal, Index);
 
       Choice := Create_Iir (Iir_Kind_Choice_By_Range);
@@ -482,7 +482,7 @@ package body Sem_Assocs is
                   when others =>
                      Error_Msg_Sem
                        ("individual association of "
-                        & Disp_Node (Get_Associated_Formal (Iassoc))
+                        & Disp_Node (Get_Association_Interface (Iassoc))
                         & " conflicts with that at " & Disp_Location (Sub),
                         Formal);
                      return;
@@ -517,7 +517,7 @@ package body Sem_Assocs is
       Prev := Get_Associated (Iass);
       if Prev /= Null_Iir then
          Error_Msg_Sem ("individual association of "
-                        & Disp_Node (Get_Base_Name (Formal))
+                        & Disp_Node (Get_Association_Interface (Assoc))
                         & " conflicts with that at " & Disp_Location (Prev),
                         Assoc);
       else
@@ -568,8 +568,7 @@ package body Sem_Assocs is
          Base_Index := Actual_Index;
       else
          Base_Type := Get_Base_Type (Actual_Type);
-         Base_Index := Get_Nth_Element (Get_Index_Subtype_List (Base_Type),
-                                        Dim - 1);
+         Base_Index := Get_Index_Type (Base_Type, Dim - 1);
       end if;
       Chain := Get_Individual_Association_Chain (Assoc);
       Sem_Choices_Range
@@ -675,7 +674,7 @@ package body Sem_Assocs is
          return;
       end if;
 
-      Formal := Get_Associated_Formal (Assoc);
+      Formal := Get_Association_Interface (Assoc);
       Atype := Get_Type (Formal);
 
       case Get_Kind (Atype) is
@@ -715,7 +714,7 @@ package body Sem_Assocs is
       while Assoc /= Null_Iir loop
          Formal := Get_Formal (Assoc);
          if Formal /= Null_Iir then
-            Formal := Get_Base_Name (Formal);
+            Formal := Get_Object_Prefix (Formal);
          end if;
          if Formal = Null_Iir or else Formal /= Cur_Iface then
             --  New formal name, sem the current assoc.
@@ -804,7 +803,7 @@ package body Sem_Assocs is
                if Flags.Vhdl_Std = Vhdl_87 then
                   return Null_Iir;
                end if;
-               return Get_Type_Of_Type_Mark (Func);
+               return Get_Type (Func);
             when others =>
                return Null_Iir;
          end case;
@@ -1010,7 +1009,6 @@ package body Sem_Assocs is
                Set_Named_Entity (Formal, Inter);
                Set_Type (Formal, Formal_Type);
                Set_Base_Name (Formal, Inter);
-               --Xrefs.Xref_Name (Formal);
                return Whole;
             end if;
             return None;
@@ -1053,7 +1051,7 @@ package body Sem_Assocs is
             end if;
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration =>
-            R_Type := Get_Type_Of_Type_Mark (Func);
+            R_Type := Get_Type (Func);
             if Get_Base_Type (R_Type) = Res_Base_Type
               and then Are_Types_Closely_Related (R_Type, Param_Base_Type)
             then
@@ -1066,6 +1064,9 @@ package body Sem_Assocs is
                                         Res_Base_Type, Param_Base_Type);
          when Iir_Kind_Type_Conversion =>
             return Is_Valid_Conversion (Get_Type_Mark (Func),
+                                        Res_Base_Type, Param_Base_Type);
+         when Iir_Kinds_Denoting_Name =>
+            return Is_Valid_Conversion (Get_Named_Entity (Func),
                                         Res_Base_Type, Param_Base_Type);
          when others =>
             Error_Kind ("is_valid_conversion(2)", Func);
@@ -1150,12 +1151,14 @@ package body Sem_Assocs is
       if Func = Null_Iir then
          return Null_Iir;
       end if;
+      pragma Assert (Get_Kind (Conv) in Iir_Kinds_Denoting_Name);
+      Set_Named_Entity (Conv, Func);
 
       case Get_Kind (Func) is
          when Iir_Kinds_Function_Declaration =>
             Res := Create_Iir (Iir_Kind_Function_Call);
             Location_Copy (Res, Conv);
-            Set_Implementation (Res, Func);
+            Set_Implementation (Res, Conv);
             Set_Base_Name (Res, Res);
             Set_Parameter_Association_Chain (Res, Null_Iir);
             Set_Type (Res, Get_Return_Type (Func));
@@ -1165,14 +1168,13 @@ package body Sem_Assocs is
            | Iir_Kind_Type_Declaration =>
             Res := Create_Iir (Iir_Kind_Type_Conversion);
             Location_Copy (Res, Conv);
-            Set_Type_Mark (Res, Func);
-            Set_Type (Res, Get_Type_Of_Type_Mark (Func));
+            Set_Type_Mark (Res, Conv);
+            Set_Type (Res, Get_Type (Func));
             Set_Expression (Res, Null_Iir);
             Set_Expr_Staticness (Res, None);
          when others =>
             Error_Kind ("extract_out_conversion", Res);
       end case;
-      Set_Named_Entity (Conv, Res);
       Xrefs.Xref_Name (Conv);
       return Res;
    end Extract_Out_Conversion;
@@ -1206,13 +1208,16 @@ package body Sem_Assocs is
             end if;
             Set_Whole_Association_Flag (Assoc, Assoc_Kind = Whole);
             if Finish then
-               Set_Type (Formal, Null_Iir);
-               Sem_Name (Formal, False);
-               Expr := Get_Named_Entity (Formal);
-               if Get_Kind (Expr) = Iir_Kind_Error then
+               Sem_Name (Formal);
+               Formal := Finish_Sem_Name (Formal);
+               Set_Formal (Assoc, Formal);
+               if Get_Kind (Formal) in Iir_Kinds_Denoting_Name
+                 and then Is_Error (Get_Named_Entity (Formal))
+               then
                   Match := False;
                   return;
                end if;
+
                --  LRM 4.3.3.2  Associations lists
                --  It is an error if an actual of open is associated with a
                --  formal that is associated individually.
@@ -1220,9 +1225,6 @@ package body Sem_Assocs is
                   Error_Msg_Sem ("cannot associate individually with open",
                                  Assoc);
                end if;
-
-               Xrefs.Xref_Name (Formal);
-               Set_Formal (Assoc, Expr);
             end if;
          else
             Set_Whole_Association_Flag (Assoc, True);
@@ -1338,14 +1340,13 @@ package body Sem_Assocs is
       --  Semantize formal.
       if Get_Formal (Assoc) /= Null_Iir then
          Set_Type (Formal, Null_Iir);
-         Sem_Name (Formal, False);
+         Sem_Name (Formal);
          Expr := Get_Named_Entity (Formal);
          if Get_Kind (Expr) = Iir_Kind_Error then
             return;
          end if;
-         Xrefs.Xref_Name (Formal);
-         Free_Name (Formal);
-         Set_Formal (Assoc, Expr);
+         Formal := Finish_Sem_Name (Formal);
+         Set_Formal (Assoc, Formal);
          Formal_Type := Get_Type (Expr);
          if Out_Conv = Null_Iir and In_Conv = Null_Iir then
             Res_Type := Formal_Type;

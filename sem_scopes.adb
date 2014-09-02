@@ -20,7 +20,7 @@ with GNAT.Table;
 with Flags; use Flags;
 with Name_Table; -- use Name_Table;
 with Errorout; use Errorout;
-with Iirs_Utils;
+with Iirs_Utils; use Iirs_Utils;
 
 package body Sem_Scopes is
    -- FIXME: names:
@@ -258,7 +258,7 @@ package body Sem_Scopes is
    begin
       Res := Decl;
       if Get_Kind (Res) = Iir_Kind_Non_Object_Alias_Declaration then
-         Res := Get_Name (Res);
+         Res := Get_Named_Entity (Get_Name (Res));
       end if;
       return Res;
    end Strip_Non_Object_Alias;
@@ -366,7 +366,7 @@ package body Sem_Scopes is
            | Iir_Kinds_Procedure_Declaration =>
             return True;
          when Iir_Kind_Non_Object_Alias_Declaration =>
-            case Get_Kind (Get_Name (Decl)) is
+            case Get_Kind (Get_Named_Entity (Get_Name (Decl))) is
                when Iir_Kind_Enumeration_Literal
                  | Iir_Kinds_Function_Declaration
                  | Iir_Kinds_Procedure_Declaration =>
@@ -585,7 +585,7 @@ package body Sem_Scopes is
                --  physical units.
                return Get_Kind (D) = Iir_Kind_Non_Object_Alias_Declaration
                  and then Get_Implicit_Alias_Flag (D)
-                 and then (Get_Kind (Get_Name (D))
+                 and then (Get_Kind (Get_Named_Entity (Get_Name (D)))
                              in Iir_Kinds_Implicit_Subprogram_Declaration);
             end Is_Implicit_Alias;
 
@@ -612,7 +612,7 @@ package body Sem_Scopes is
                Current_Decl := Get_Declaration (Homograph);
                Hash := Get_Hash_Non_Alias (Current_Decl);
                exit when Decl_Hash = Hash
-                 and then Iirs_Utils.Is_Same_Profile (Decl, Current_Decl);
+                 and then Is_Same_Profile (Decl, Current_Decl);
                Prev_Homograph := Homograph;
                Homograph := Get_Next_Interpretation (Homograph);
             end loop;
@@ -973,8 +973,8 @@ package body Sem_Scopes is
    is
    begin
       case Get_Kind (Decl) is
-         when Iir_Kinds_Procedure_Declaration
-           | Iir_Kinds_Function_Declaration
+         when Iir_Kind_Implicit_Procedure_Declaration
+           | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Enumeration_Literal --  By use clause
            | Iir_Kind_Constant_Declaration
@@ -1002,6 +1002,11 @@ package body Sem_Scopes is
            | Iir_Kinds_Concurrent_Statement
            | Iir_Kinds_Sequential_Statement =>
             Handle_Decl (Decl, Arg);
+         when Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Function_Declaration =>
+            if not Is_Second_Subprogram_Specification (Decl) then
+               Handle_Decl (Decl, Arg);
+            end if;
          when Iir_Kind_Type_Declaration =>
             declare
                Def : Iir;
@@ -1242,11 +1247,14 @@ package body Sem_Scopes is
 
    procedure Use_Selected_Name (Name : Iir) is
    begin
-      if Get_Kind (Name) = Iir_Kind_Overload_List then
-         Add_Declarations_List (Get_Overload_List (Name), True);
-      else
-         Add_Declaration (Name, True);
-      end if;
+      case Get_Kind (Name) is
+         when Iir_Kind_Overload_List =>
+            Add_Declarations_List (Get_Overload_List (Name), True);
+         when Iir_Kind_Error =>
+            null;
+         when others =>
+            Add_Declaration (Name, True);
+      end case;
    end Use_Selected_Name;
 
    procedure Use_All_Names (Name: Iir) is
@@ -1265,6 +1273,8 @@ package body Sem_Scopes is
                   Add_Package_Declarations (Pkg, True);
                end if;
             end;
+         when Iir_Kind_Error =>
+            null;
          when others =>
             raise Internal_Error;
       end case;

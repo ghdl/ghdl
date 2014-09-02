@@ -31,7 +31,7 @@ package Sem_Specs is
    procedure Check_Post_Attribute_Specification
      (Attr_Spec_Chain : Iir; Decl : Iir);
 
-   procedure Sem_Disconnect_Specification
+   procedure Sem_Disconnection_Specification
      (Dis : Iir_Disconnection_Specification);
 
    procedure Sem_Configuration_Specification

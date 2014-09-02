@@ -32,7 +32,6 @@ with Flags; use Flags;
 with Name_Table;
 with Str_Table;
 with Sem_Stmts; use Sem_Stmts;
-with Sem_Types; use Sem_Types;
 with Iir_Chains;
 with Xrefs; use Xrefs;
 
@@ -89,7 +88,7 @@ package body Sem is
    --  Return NULL_IIR in case of error (not found, bad library).
    function Sem_Entity_Name (Library_Unit : Iir) return Iir
    is
-      Name : constant Iir := Get_Entity_Name (Library_Unit);
+      Name : Iir;
       Library : Iir_Library_Declaration;
       Entity : Iir;
    begin
@@ -97,6 +96,9 @@ package body Sem is
       Library := Get_Library
         (Get_Design_File (Get_Design_Unit (Library_Unit)));
 
+      --  Resolve the name.
+
+      Name := Get_Entity_Name (Library_Unit);
       if Get_Kind (Name) = Iir_Kind_Simple_Name then
          --  LRM93 10.1 Declarative Region
          --  LRM08 12.1 Declarative Region
@@ -116,37 +118,36 @@ package body Sem is
          end if;
          Entity := Get_Library_Unit (Entity);
          Set_Named_Entity (Name, Entity);
+         Xrefs.Xref_Ref (Name, Entity);
       else
-         Sem_Name (Name, False);
+         --  Certainly an expanded name.  Use the standard name analysis.
+         Name := Sem_Denoting_Name (Name);
+         Set_Entity_Name (Library_Unit, Name);
          Entity := Get_Named_Entity (Name);
-         if Entity = Error_Mark then
-            return Null_Iir;
-         end if;
       end if;
-      Xrefs.Xref_Ref (Name, Entity);
 
-      if Get_Kind (Entity) = Iir_Kind_Entity_Declaration then
-         --  LRM 1.2 Architecture bodies
-         --  For a given design entity, both the entity declaration and the
-         --  associated architecture body must reside in the same library.
-
-         --  LRM 1.3 Configuration Declarations
-         --  For a configuration of a given design entity, both the
-         --  configuration declaration and the corresponding entity
-         --  declaration must reside in the same library.
-         if Get_Library (Get_Design_File (Get_Design_Unit (Entity))) /= Library
-         then
-            Error_Msg_Sem
-              (Disp_Node (Entity) & " does not reside in "
-                 & Disp_Node (Library), Library_Unit);
-            return Null_Iir;
-         end if;
-         return Entity;
-      else
-         Error_Msg_Sem ("entity name expected, found " & Disp_Node (Entity),
-                        Library_Unit);
+      if Get_Kind (Entity) /= Iir_Kind_Entity_Declaration then
+         Error_Class_Match (Name, "entity");
          return Null_Iir;
       end if;
+
+      --  LRM 1.2 Architecture bodies
+      --  For a given design entity, both the entity declaration and the
+      --  associated architecture body must reside in the same library.
+
+      --  LRM 1.3 Configuration Declarations
+      --  For a configuration of a given design entity, both the
+      --  configuration declaration and the corresponding entity
+      --  declaration must reside in the same library.
+      if Get_Library (Get_Design_File (Get_Design_Unit (Entity))) /= Library
+      then
+         Error_Msg_Sem
+           (Disp_Node (Entity) & " does not reside in "
+              & Disp_Node (Library), Library_Unit);
+         return Null_Iir;
+      end if;
+
+      return Entity;
    end Sem_Entity_Name;
 
    --  LRM 1.2  Architecture bodies.
@@ -167,9 +168,6 @@ package body Sem is
       --   In each case, the second unit depends on the first unit.
       --  GHDL: an architecture depends on its entity.
       Add_Dependence (Entity_Unit);
-
-      -- Transforms an identifier into an entity_decl.
-      Set_Entity (Arch, Entity_Library);
 
       Add_Context_Clauses (Entity_Unit);
 
@@ -280,7 +278,7 @@ package body Sem is
          return False;
       end if;
 
-      Formal_Base := Get_Base_Name (Formal);
+      Formal_Base := Get_Object_Prefix (Formal);
       Actual_Base := Get_Object_Prefix (Actual);
 
       --  If the formal is of mode IN, then it has no driving value, and its
@@ -442,6 +440,7 @@ package body Sem is
       Miss : Missing_Type;
       Inter : Iir;
       Formal : Iir;
+      Formal_Base : Iir;
    begin
       --  Note: CHECK_MATCH argument of sem_subprogram_arguments must be
       --   true if parent is a component instantiation.
@@ -503,9 +502,11 @@ package body Sem is
          if Formal = Null_Iir then
             --  No formal: use association by position.
             Formal := Inter;
+            Formal_Base := Inter;
             Inter := Get_Chain (Inter);
          else
             Inter := Null_Iir;
+            Formal_Base := Get_Association_Interface (El);
          end if;
 
          if Get_Kind (El) = Iir_Kind_Association_Element_By_Expression then
@@ -537,7 +538,7 @@ package body Sem is
                         pragma Unreferenced (P);
                      begin
                         P := Check_Port_Association_Restriction
-                          (Get_Base_Name (Formal), Prefix, El);
+                          (Formal_Base, Prefix, El);
                      end;
                   end if;
                when others =>
@@ -564,8 +565,7 @@ package body Sem is
                      --  with an expression, in order to provide these ports
                      --  with constant driving values; such ports must be
                      --  of mode in.
-                     if Get_Mode (Get_Base_Name (Formal)) /= Iir_In_Mode
-                     then
+                     if Get_Mode (Formal_Base) /= Iir_In_Mode then
                         Error_Msg_Sem ("only 'in' ports may be associated "
                                        & "with expression", El);
                      end if;
@@ -614,7 +614,6 @@ package body Sem is
       if Entity = Null_Iir then
          return;
       end if;
-      Set_Entity (Decl, Entity);
       Entity_Unit := Get_Design_Unit (Entity);
 
       --  LRM 11.4
@@ -772,6 +771,7 @@ package body Sem is
             --  containing block configuration.
             declare
                Block_Spec : Iir;
+               Block_Name : Iir;
                Block_Stmts : Iir;
                Block_Spec_Kind : Iir_Kind;
                Prev : Iir_Block_Configuration;
@@ -782,19 +782,17 @@ package body Sem is
                Block_Spec_Kind := Get_Kind (Block_Spec);
                case Block_Spec_Kind is
                   when Iir_Kind_Simple_Name =>
-                     Block := Block_Spec;
+                     Block_Name := Block_Spec;
                   when Iir_Kind_Parenthesis_Name =>
-                     Block := Get_Prefix (Block_Spec);
+                     Block_Name := Get_Prefix (Block_Spec);
                   when Iir_Kind_Slice_Name =>
-                     Block := Get_Prefix (Block_Spec);
+                     Block_Name := Get_Prefix (Block_Spec);
                   when others =>
                      Error_Msg_Sem ("label expected", Block_Spec);
                      return;
                end case;
-               Block := Find_Declaration (Block, Decl_Label);
-               if Block = Null_Iir then
-                  return;
-               end if;
+               Block_Name := Sem_Denoting_Name (Block_Name);
+               Block := Get_Named_Entity (Block_Name);
                case Get_Kind (Block) is
                   when Iir_Kind_Block_Statement =>
                      if Block_Spec_Kind /= Iir_Kind_Simple_Name then
@@ -966,10 +964,11 @@ package body Sem is
       Sem_Component_Specification
         (Configured_Block, Conf, Primary_Entity_Aspect);
 
-      Comp := Get_Component_Name (Conf);
+      Comp := Get_Named_Entity (Get_Component_Name (Conf));
       if Get_Kind (Comp) /= Iir_Kind_Component_Declaration then
          --  There has been an error in sem_component_specification.
          --  Leave here.
+         Close_Declarative_Region;
          return;
       end if;
 
@@ -1013,10 +1012,10 @@ package body Sem is
                      S_El := Get_Port_Map_Aspect_Chain (Binding);
                      while S_El /= Null_Iir loop
                         --  Find S_EL formal in F_CHAIN.
-                        Formal := Get_Associated_Formal (S_El);
+                        Formal := Get_Association_Interface (S_El);
                         F_El := F_Chain;
                         while F_El /= Null_Iir loop
-                           exit when Get_Associated_Formal (F_El) = Formal;
+                           exit when Get_Association_Interface (F_El) = Formal;
                            F_El := Get_Chain (F_El);
                         end loop;
                         if F_El /= Null_Iir
@@ -1143,7 +1142,9 @@ package body Sem is
               (Get_Interface_Declaration_Chain (Left),
                Get_Interface_Declaration_Chain (Right));
          when Iir_Kinds_Function_Declaration =>
-            if Get_Return_Type (Left) /= Get_Return_Type (Right) then
+            if not Are_Trees_Equal (Get_Return_Type (Left),
+                                    Get_Return_Type (Right))
+            then
                return False;
             end if;
             if Get_Pure_Flag (Left) /= Get_Pure_Flag (Right) then
@@ -1224,17 +1225,45 @@ package body Sem is
                end loop;
             end;
             return True;
+         when Iir_Kind_Record_Subtype_Definition =>
+            if Get_Base_Type (Left) /= Get_Base_Type (Right)
+              or else (Get_Resolution_Function (Left)
+                       /= Get_Resolution_Function (Right))
+            then
+               return False;
+            end if;
+            declare
+               L_Left, L_Right : Iir_List;
+            begin
+               L_Left := Get_Elements_Declaration_List (Left);
+               L_Right := Get_Elements_Declaration_List (Right);
+               for I in Natural loop
+                  El_Left := Get_Nth_Element (L_Left, I);
+                  El_Right := Get_Nth_Element (L_Right, I);
+                  exit when El_Left = Null_Iir;
+                  if not Are_Trees_Equal (El_Left, El_Right) then
+                     return False;
+                  end if;
+               end loop;
+            end;
+            return True;
 
-         when Iir_Kind_Integer_Literal
-           | Iir_Kind_Enumeration_Literal =>
+         when Iir_Kind_Integer_Literal =>
             if Get_Value (Left) /= Get_Value (Right) then
+               return False;
+            end if;
+            return Are_Trees_Equal (Get_Literal_Origin (Left),
+                                    Get_Literal_Origin (Right));
+         when Iir_Kind_Enumeration_Literal =>
+            if Get_Enum_Pos (Left) /= Get_Enum_Pos (Right) then
                return False;
             end if;
             return Are_Trees_Equal (Get_Literal_Origin (Left),
                                     Get_Literal_Origin (Right));
          when Iir_Kind_Physical_Int_Literal =>
             if Get_Value (Left) /= Get_Value (Right)
-              or else Get_Unit_Name (Left) /= Get_Unit_Name (Right)
+              or else not Are_Trees_Equal (Get_Unit_Name (Left),
+                                           Get_Unit_Name (Right))
             then
                return False;
             end if;
@@ -1356,6 +1385,9 @@ package body Sem is
             end if;
             return Are_Trees_Equal (Get_Associated (Left),
                                     Get_Associated (Right));
+         when Iir_Kind_Character_Literal =>
+            return Are_Trees_Equal (Get_Named_Entity (Left),
+                                    Get_Named_Entity (Right));
          when others =>
             Error_Kind ("are_trees_equal", Left);
       end case;
@@ -1597,11 +1629,12 @@ package body Sem is
    end Compute_Subprogram_Hash;
 
    --  LRM 2.1  Subprogram Declarations.
-   function Sem_Subprogram_Declaration (Subprg: Iir) return Iir
+   procedure Sem_Subprogram_Declaration (Subprg: Iir)
    is
       Spec: Iir;
       Interface_Chain : Iir;
       Subprg_Body : Iir;
+      Return_Type : Iir;
    begin
       --  Set depth.
       declare
@@ -1632,8 +1665,11 @@ package body Sem is
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration =>
             Sem_Interface_Chain (Interface_Chain, Interface_Function);
-            Set_Return_Type
-              (Subprg, Sem_Subtype_Indication (Get_Return_Type (Subprg)));
+            --  FIXME: the return type is in fact a type mark.
+            Return_Type := Get_Return_Type_Mark (Subprg);
+            Return_Type := Sem_Type_Mark (Return_Type);
+            Set_Return_Type_Mark (Subprg, Return_Type);
+            Set_Return_Type (Subprg, Get_Type (Return_Type));
             Set_All_Sensitized_State (Subprg, Unknown);
          when Iir_Kind_Procedure_Declaration =>
             Sem_Interface_Chain (Interface_Chain, Interface_Procedure);
@@ -1669,6 +1705,7 @@ package body Sem is
       --  now.
       Close_Declarative_Region;
 
+      --  Look if there is an associated body (the next node).
       Subprg_Body := Get_Chain (Subprg);
       if Subprg_Body /= Null_Iir
         and then (Get_Kind (Subprg_Body) = Iir_Kind_Function_Body
@@ -1683,17 +1720,15 @@ package body Sem is
          -- SUBPRG is the body of the specification SPEC.
          Check_Conformance_Rules (Subprg, Spec);
          Xref_Body (Subprg, Spec);
-         Free_Old_Iir (Subprg);
+         Set_Subprogram_Body (Subprg, Subprg_Body);
          Set_Subprogram_Specification (Subprg_Body, Spec);
          Set_Subprogram_Body (Spec, Subprg_Body);
-         return Subprg_Body;
       else
          --  Forward declaration or specification followed by body.
          Set_Subprogram_Overload_Number (Subprg);
          Sem_Scopes.Add_Name (Subprg);
          Name_Visible (Subprg);
          Xref_Decl (Subprg);
-         return Subprg;
       end if;
    end Sem_Subprogram_Declaration;
 
@@ -2348,15 +2383,11 @@ package body Sem is
       --  LRM08 4.9
       --  The uninstantiated package name shall denote an uninstantiated
       --  package declared in a package declaration.
-      Name := Get_Uninstantiated_Name (Decl);
-      Sem_Name (Name, False);
+      Name := Sem_Denoting_Name (Get_Uninstantiated_Name (Decl));
+      Set_Uninstantiated_Name (Decl, Name);
       Pkg := Get_Named_Entity (Name);
-      if Get_Kind (Pkg) = Iir_Kind_Design_Unit then
-         Pkg := Get_Library_Unit (Pkg);
-         Set_Named_Entity (Name, Pkg);
-      end if;
       if Get_Kind (Pkg) /= Iir_Kind_Package_Declaration then
-         Error_Msg_Sem ("name must denote a package declaration", Name);
+         Error_Class_Match (Name, "package");
 
          --  What could be done ?
          return;
@@ -2367,8 +2398,6 @@ package body Sem is
          --  What could be done ?
          return;
       end if;
-
-      Xref_Name (Name);
 
       --  LRM08 4.9
       --  The generic map aspect, if present, optionally associates a single
@@ -2384,7 +2413,7 @@ package body Sem is
       Clause : Iir_Use_Clause;
       Name: Iir;
       Prefix: Iir;
-      Prefix_Name : Iir;
+      Name_Prefix : Iir;
    begin
       Clause := Clauses;
       loop
@@ -2398,15 +2427,16 @@ package body Sem is
          case Get_Kind (Name) is
             when Iir_Kind_Selected_By_All_Name
               | Iir_Kind_Selected_Name =>
-               Prefix := Get_Prefix (Name);
+               Name_Prefix := Get_Prefix (Name);
             when others =>
                Error_Msg_Sem ("use clause allows only selected name", Name);
                return;
          end case;
 
-         Sem_Name (Prefix, False);
-         Prefix_Name := Get_Named_Entity (Prefix);
-         if Prefix_Name = Error_Mark then
+         Name_Prefix := Sem_Denoting_Name (Name_Prefix);
+         Set_Prefix (Name, Name_Prefix);
+         Prefix := Get_Named_Entity (Name_Prefix);
+         if Is_Error (Prefix) then
             --  FIXME: continue with the clauses
             return;
          end if;
@@ -2423,7 +2453,7 @@ package body Sem is
          --  or library denoted by the prefix of the selected name.
          --
          --  GHDL: therefore, the suffix must be either a package or a library.
-         case Get_Kind (Prefix_Name) is
+         case Get_Kind (Prefix) is
             when Iir_Kind_Library_Declaration =>
                null;
             when Iir_Kind_Package_Instantiation_Declaration =>
@@ -2432,9 +2462,10 @@ package body Sem is
                --  LRM08 12.4 Use clauses
                --  It is an error if the prefix of a selected name in a use
                --  clause denotes an uninstantiated package.
-               if Is_Uninstantiated_Package (Prefix_Name) then
+               if Is_Uninstantiated_Package (Prefix) then
                   Error_Msg_Sem
-                    ("use of uninstantiated package is not allowed", Prefix);
+                    ("use of uninstantiated package is not allowed",
+                     Name_Prefix);
                   return;
                end if;
             when others =>
@@ -2445,13 +2476,19 @@ package body Sem is
 
          case Get_Kind (Name) is
             when Iir_Kind_Selected_Name =>
-               Sem_Name (Name, False);
-               if Get_Named_Entity (Name) = Error_Mark then
-                  return;
-               end if;
-               Xref_Name (Name);
+               Sem_Name (Name);
+               case Get_Kind (Get_Named_Entity (Name)) is
+                  when Iir_Kind_Error =>
+                     --  Continue in case of error.
+                     null;
+                  when Iir_Kind_Overload_List =>
+                     --  Analyze is correct as is.
+                     null;
+                  when others =>
+                     Name := Finish_Sem_Name (Name);
+                     Set_Selected_Name (Clause, Name);
+               end case;
             when Iir_Kind_Selected_By_All_Name =>
-               Xref_Name (Prefix);
                null;
             when others =>
                raise Internal_Error;
@@ -2531,6 +2568,10 @@ package body Sem is
             Set_Date (Design_Unit, Date_Analyzing);
          when Date_Valid =>
             null;
+         when Date_Obsolete =>
+            --  This happens only when design files are added into the library
+            --  and keeping obsolete units (eg: to pretty print a file).
+            Set_Date (Design_Unit, Date_Analyzing);
          when others =>
             raise Internal_Error;
       end case;

@@ -19,8 +19,8 @@ with Types; use Types;
 with Iirs; use Iirs;
 
 package Iirs_Utils is
-   -- Transform the current token into an iir literal.
-   -- The current token must be either a character, a string or an identifier.
+   --  Transform the current token into an iir literal.
+   --  The current token must be either a character, a string or an identifier.
    function Current_Text return Iir;
 
    --  Get identifier of NODE as a string.
@@ -30,6 +30,10 @@ package Iirs_Utils is
    --  Easier function for string literals.
    function Get_String_Fat_Acc (Str : Iir) return String_Fat_Acc;
    pragma Inline (Get_String_Fat_Acc);
+
+   --  Return True iff N is an error node.
+   function Is_Error (N : Iir) return Boolean;
+   pragma Inline (Is_Error);
 
    --  Find LIT in the list of identifiers or characters LIST.
    --  Return the literal (whose name is LIT) or null_iir if not found.
@@ -46,10 +50,18 @@ package Iirs_Utils is
    -- See LRM §8.1
    function Get_Longuest_Static_Prefix (Expr: Iir) return Iir;
 
-   -- Get the prefix of DECL, ie:
-   -- {signal, variable, constant}{interface_declaration, declaration}, or
-   -- DECL itself, if it is not an object.
-   function Get_Object_Prefix (Decl: Iir) return Iir;
+   --  Get the prefix of NAME, ie the declaration at the base of NAME.
+   --  Return NAME itself if NAME is not an object or a subelement of
+   --  an object.  If WITH_ALIAS is true, continue with the alias name when an
+   --  alias is found, else return the alias.
+   --  FIXME: clarify when NAME is returned.
+   function Get_Object_Prefix (Name: Iir; With_Alias : Boolean := True)
+                              return Iir;
+
+
+   --  Get the interface associated by the association ASSOC.  This is always
+   --  an interface, even if the formal is a name.
+   function Get_Association_Interface (Assoc : Iir) return Iir;
 
    --  Make TARGETS depends on UNIT.
    --  UNIT must be either a design unit or a entity_aspect_entity.
@@ -88,9 +100,49 @@ package Iirs_Utils is
    --  Return TRUE iff DEF is a fully constrained type (or subtype) definition.
    function Is_Fully_Constrained_Type (Def : Iir) return Boolean;
 
-   --  Return the type of a type name (type declaration, subtype declaration or
-   --  base attribute).
-   function Get_Type_Of_Type_Mark (Mark : Iir) return Iir;
+   --  Return the type definition/subtype indication of NAME if NAME denotes
+   --  a type or subtype name.  Otherwise, return Null_Iir;
+   function Is_Type_Name (Name : Iir) return Iir;
+
+   --  Return TRUE iff SPEC is the subprogram specification of a subprogram
+   --  body which was previously declared.  In that case, the only use of SPEC
+   --  is to match the body with its declaration.
+   function Is_Second_Subprogram_Specification (Spec : Iir) return Boolean;
+
+   --  If NAME is a simple or an expanded name, return the denoted declaration.
+   --  Otherwise, return NAME.
+   function Strip_Denoting_Name (Name : Iir) return Iir;
+
+   --  Build a simple name node whose named entity is REF and location LOC.
+   function Build_Simple_Name (Ref : Iir; Loc : Location_Type) return Iir;
+   function Build_Simple_Name (Ref : Iir; Loc : Iir) return Iir;
+
+   --  Return a simple name for the primary unit of physical type PHYSICAL_DEF.
+   --  This is the artificial unit name for the value of the primary unit, thus
+   --  its location is the location of the primary unit.  Used mainly to build
+   --  evaluated literals.
+   function Get_Primary_Unit_Name (Physical_Def : Iir) return Iir;
+
+   --  Get the type of any node representing a subtype indication.  This simply
+   --  skip over denoting names.
+   function Get_Type_Of_Subtype_Indication (Ind : Iir) return Iir;
+
+   --  Get the type of an index_subtype_definition or of a discrete_range from
+   --  an index_constraint.
+   function Get_Index_Type (Index_Type : Iir) return Iir
+     renames Get_Type_Of_Subtype_Indication;
+
+   --  Return the IDX-th index type for index subtype definition list or
+   --  index_constraint INDEXES.  Return Null_Iir if IDX is out of dimension
+   --  bounds, so that this function can be used to iterator over indexes of
+   --  a type (or subtype).  Note that IDX starts at 0.
+   function Get_Index_Type (Indexes : Iir_List; Idx : Natural) return Iir;
+
+   --  Likewise but for array type or subtype ARRAY_TYPE.
+   function Get_Index_Type (Array_Type : Iir; Idx : Natural) return Iir;
+
+   --  Return the element type of array type or array subtype DEF.
+   function Get_Element_Subtype (Def : Iir) return Iir;
 
    --  Return true iff L and R have the same profile.
    --  L and R must be subprograms specification (or spec_body).
@@ -100,6 +152,14 @@ package Iirs_Utils is
    --  Roughly speaking, this get prefix of indexed and sliced name.
    function Get_Block_From_Block_Specification (Block_Spec : Iir)
      return Iir;
+
+   --  Wrapper around Get_Entity_Name: return the entity declaration of the
+   --  entity name of DECL.
+   function Get_Entity (Decl : Iir) return Iir;
+
+   --  Wrapper around get_Configuration_Name: return the configuration
+   --  declaration of ASPECT.
+   function Get_Configuration (Aspect : Iir) return Iir;
 
    --  Return the identifier of the entity for architecture ARCH.
    function Get_Entity_Identifier_Of_Architecture (Arch : Iir) return Name_Id;
@@ -143,19 +203,10 @@ package Iirs_Utils is
    --  Create an error node for node ORIG, which is supposed to be a type.
    function Create_Error_Type (Orig : Iir) return Iir;
 
-   --  Get the base name of the formal of an association.
-   function Get_Associated_Formal (Assoc : Iir) return Iir;
-
    --  Extract the entity from ASPECT.
    --  Note: if ASPECT is a component declaration, returns ASPECT.
    --        if ASPECT is open, return Null_Iir;
    function Get_Entity_From_Entity_Aspect (Aspect : Iir) return Iir;
-
-   --  Get the value of any physical literals.
-   --  A physical literal can be either an int_literal, and fp_literal or
-   --  a unit_declaration.
-   --  See also Evaluation.Get_Physical_Value.
-   function Get_Physical_Literal_Value (Lit : Iir) return Iir_Int64;
 
    --  Definitions from LRM08 4.7 Package declarations.
    --  PKG must denote a package declaration.
@@ -166,6 +217,7 @@ package Iirs_Utils is
    --  Return TRUE if the base name of NAME is a signal object.
    function Is_Signal_Object (Name: Iir) return Boolean;
 
-   --  IIR wrapper around Get_HDL_Node.
+   --  IIR wrapper around Get_HDL_Node/Set_HDL_Node.
    function Get_HDL_Node (N : PSL_Node) return Iir;
+   procedure Set_HDL_Node (N : PSL_Node; Expr : Iir);
 end Iirs_Utils;

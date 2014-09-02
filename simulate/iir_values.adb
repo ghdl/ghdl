@@ -21,6 +21,7 @@ with Ada.Unchecked_Conversion;
 with GNAT.Debug_Utilities;
 with Name_Table;
 with Debugger; use Debugger;
+with Iirs_Utils; use Iirs_Utils;
 
 package body Iir_Values is
 

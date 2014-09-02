@@ -29,16 +29,24 @@ package body Evaluation is
    function Get_Physical_Value (Expr : Iir) return Iir_Int64
    is
       pragma Unsuppress (Overflow_Check);
+      Kind : constant Iir_Kind := Get_Kind (Expr);
+      Unit : Iir;
    begin
-      case Get_Kind (Expr) is
-         when Iir_Kind_Physical_Int_Literal =>
-            return Get_Value (Expr)
-              * Get_Value (Get_Physical_Unit_Value (Get_Unit_Name (Expr)));
-         when Iir_Kind_Physical_Fp_Literal =>
-            return Iir_Int64
-              (Get_Fp_Value (Expr)
-                 * Iir_Fp64 (Get_Value (Get_Physical_Unit_Value
-                                          (Get_Unit_Name (Expr)))));
+      case Kind is
+         when Iir_Kind_Physical_Int_Literal
+           | Iir_Kind_Physical_Fp_Literal =>
+            --  Extract Unit.
+            Unit := Get_Physical_Unit_Value
+              (Get_Named_Entity (Get_Unit_Name (Expr)));
+            case Kind is
+               when Iir_Kind_Physical_Int_Literal =>
+                  return Get_Value (Expr) * Get_Value (Unit);
+               when Iir_Kind_Physical_Fp_Literal =>
+                  return Iir_Int64
+                    (Get_Fp_Value (Expr) * Iir_Fp64 (Get_Value (Unit)));
+               when others =>
+                  raise Program_Error;
+            end case;
          when Iir_Kind_Unit_Declaration =>
             return Get_Value (Get_Physical_Unit_Value (Expr));
          when others =>
@@ -78,7 +86,7 @@ package body Evaluation is
       return Res;
    end Build_Floating;
 
-   function Build_Enumeration (Val : Iir_Index32; Origin : Iir)
+   function Build_Enumeration_Constant (Val : Iir_Index32; Origin : Iir)
      return Iir_Enumeration_Literal
    is
       Res : Iir_Enumeration_Literal;
@@ -99,21 +107,18 @@ package body Evaluation is
       Set_Expr_Staticness (Res, Locally);
       Set_Enumeration_Decl (Res, Lit);
       return Res;
-   end Build_Enumeration;
-
-   function Build_Boolean (Cond : Boolean; Origin : Iir) return Iir is
-   begin
-      return Build_Enumeration (Boolean'Pos (Cond), Origin);
-   end Build_Boolean;
+   end Build_Enumeration_Constant;
 
    function Build_Physical (Val : Iir_Int64; Origin : Iir)
      return Iir_Physical_Int_Literal
    is
       Res : Iir_Physical_Int_Literal;
+      Unit_Name : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
       Location_Copy (Res, Origin);
-      Set_Unit_Name (Res, Get_Primary_Unit (Get_Type (Origin)));
+      Unit_Name := Get_Primary_Unit_Name (Get_Base_Type (Get_Type (Origin)));
+      Set_Unit_Name (Res, Unit_Name);
       Set_Value (Res, Val);
       Set_Type (Res, Get_Type (Origin));
       Set_Literal_Origin (Res, Origin);
@@ -121,14 +126,12 @@ package body Evaluation is
       return Res;
    end Build_Physical;
 
-   function Build_Discrete (Val : Iir_Int64; Origin : Iir)
-     return Iir
-   is
+   function Build_Discrete (Val : Iir_Int64; Origin : Iir) return Iir is
    begin
       case Get_Kind (Get_Type (Origin)) is
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
-            return Build_Enumeration (Iir_Index32 (Val), Origin);
+            return Build_Enumeration_Constant (Iir_Index32 (Val), Origin);
          when Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Integer_Subtype_Definition =>
             return Build_Integer (Val, Origin);
@@ -193,18 +196,17 @@ package body Evaluation is
             Res := Create_Iir (Iir_Kind_Floating_Point_Literal);
             Set_Fp_Value (Res, Get_Fp_Value (Val));
          when Iir_Kind_Enumeration_Literal =>
-            return Get_Nth_Element
-              (Get_Enumeration_Literal_List
-               (Get_Base_Type (Get_Type (Origin))),
-               Integer (Get_Enum_Pos (Val)));
+            return Build_Enumeration_Constant
+              (Iir_Index32 (Get_Enum_Pos (Val)), Origin);
          when Iir_Kind_Physical_Int_Literal =>
             declare
-               Prim : Iir;
+               Prim_Name : Iir;
             begin
                Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
-               Prim := Get_Primary_Unit (Get_Base_Type (Get_Type (Origin)));
-               Set_Unit_Name (Res, Prim);
-               if Get_Unit_Name (Val) = Prim then
+               Prim_Name := Get_Primary_Unit_Name
+                 (Get_Base_Type (Get_Type (Origin)));
+               Set_Unit_Name (Res, Prim_Name);
+               if Get_Unit_Name (Val) = Prim_Name then
                   Set_Value (Res, Get_Value (Val));
                else
                   raise Internal_Error;
@@ -215,7 +217,7 @@ package body Evaluation is
          when Iir_Kind_Unit_Declaration =>
             Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
             Set_Value (Res, Get_Physical_Value (Val));
-            Set_Unit_Name (Res, Get_Primary_Unit (Get_Type (Val)));
+            Set_Unit_Name (Res, Get_Primary_Unit_Name (Get_Type (Val)));
 
          when Iir_Kind_String_Literal =>
             Res := Create_Iir (Iir_Kind_String_Literal);
@@ -246,6 +248,50 @@ package body Evaluation is
       Set_Expr_Staticness (Res, Locally);
       return Res;
    end Build_Constant;
+
+   function Build_Boolean (Cond : Boolean) return Iir is
+   begin
+      if Cond then
+         return Boolean_True;
+      else
+         return Boolean_False;
+      end if;
+   end Build_Boolean;
+
+   function Build_Enumeration (Val : Iir_Index32; Origin : Iir)
+                              return Iir_Enumeration_Literal
+   is
+      Enum_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
+      Enum_List : constant Iir_List :=
+        Get_Enumeration_Literal_List (Enum_Type);
+   begin
+      return Get_Nth_Element (Enum_List, Integer (Val));
+   end Build_Enumeration;
+
+   function Build_Enumeration (Val : Boolean; Origin : Iir)
+                              return Iir_Enumeration_Literal
+   is
+      Enum_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
+      Enum_List : constant Iir_List :=
+        Get_Enumeration_Literal_List (Enum_Type);
+   begin
+      return Get_Nth_Element (Enum_List, Boolean'Pos (Val));
+   end Build_Enumeration;
+
+   function Build_Constant_Range (Range_Expr : Iir; Origin : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Range_Expression);
+      Location_Copy (Res, Origin);
+      Set_Type (Res, Get_Type (Range_Expr));
+      Set_Left_Limit (Res, Get_Left_Limit (Range_Expr));
+      Set_Right_Limit (Res, Get_Right_Limit (Range_Expr));
+      Set_Direction (Res, Get_Direction (Range_Expr));
+      Set_Range_Origin (Res, Origin);
+      Set_Expr_Staticness (Res, Locally);
+      return Res;
+   end Build_Constant_Range;
 
    --  A_RANGE is a range expression, whose type, location, expr_staticness,
    --  left_limit and direction are set.
@@ -367,10 +413,9 @@ package body Evaluation is
      (Base_Type : Iir; Len : Iir_Int64; Loc : Iir)
      return Iir_Array_Subtype_Definition
    is
-      Index_Type : Iir;
+      Index_Type : constant Iir := Get_Index_Type (Base_Type, 0);
       N_Index_Type : Iir;
    begin
-      Index_Type := Get_First_Element (Get_Index_Subtype_List (Base_Type));
       N_Index_Type := Create_Range_Subtype_By_Length
         (Index_Type, Len, Get_Location (Loc));
       return Create_Unidim_Array_From_Index (Base_Type, N_Index_Type, Loc);
@@ -476,8 +521,7 @@ package body Evaluation is
 
          when Iir_Predefined_Boolean_Not
            | Iir_Predefined_Bit_Not =>
-            return Build_Enumeration
-              (Boolean'Pos (Get_Enum_Pos (Operand) = 0), Orig);
+            return Build_Enumeration (Get_Enum_Pos (Operand) = 0, Orig);
 
          when Iir_Predefined_TF_Array_Not =>
             declare
@@ -528,6 +572,7 @@ package body Evaluation is
       R_Str : constant String_Fat_Acc := Get_String_Fat_Acc (Right);
       Len : Nat32;
       Id : String_Id;
+      Res : Iir;
    begin
       Len := Get_String_Length (Left);
       if Len /= Get_String_Length (Right) then
@@ -624,7 +669,11 @@ package body Evaluation is
                                Iir_Predefined_Functions'Image (Func));
          end case;
          Finish;
-         return Build_String (Id, Len, Left);
+         Res := Build_String (Id, Len, Expr);
+
+         --  The unconstrained type is replaced by the constrained one.
+         Set_Type (Res, Get_Type (Left));
+         return Res;
       end if;
    end Eval_Dyadic_Bit_Array_Operator;
 
@@ -823,21 +872,17 @@ package body Evaluation is
             --  The direction of the result is the direction of the left
             --  operand, [...]
             declare
+               Left_Index : constant Iir :=
+                 Get_Index_Type (Get_Type (Left), 0);
+               Left_Range : constant Iir :=
+                 Get_Range_Constraint (Left_Index);
+               Ret_Type : constant Iir :=
+                 Get_Return_Type (Get_Implementation (Orig));
                A_Range : Iir;
-               Left_Index : Iir;
-               Left_Range : Iir;
                Index_Type : Iir;
-               Ret_Type : Iir;
             begin
-               Left_Index := Get_Nth_Element
-                 (Get_Index_Subtype_List (Get_Type (Left)), 0);
-               Left_Range := Get_Range_Constraint (Left_Index);
-
                A_Range := Create_Iir (Iir_Kind_Range_Expression);
-               Ret_Type := Get_Return_Type (Get_Implementation (Orig));
-               Set_Type
-                 (A_Range,
-                  Get_First_Element (Get_Index_Subtype_List (Ret_Type)));
+               Set_Type (A_Range, Get_Index_Type (Ret_Type, 0));
                Set_Expr_Staticness (A_Range, Locally);
                Set_Left_Limit (A_Range, Get_Left_Limit (Left_Range));
                Set_Direction (A_Range, Get_Direction (Left_Range));
@@ -888,11 +933,12 @@ package body Evaluation is
    end Eval_Array_Equality;
 
    --  ORIG is either a dyadic operator or a function call.
-   function Eval_Dyadic_Operator (Orig : Iir; Left, Right : Iir)
+   function Eval_Dyadic_Operator (Orig : Iir; Imp : Iir; Left, Right : Iir)
      return Iir
    is
       pragma Unsuppress (Overflow_Check);
-      Func : Iir_Predefined_Functions;
+      Func : constant Iir_Predefined_Functions :=
+        Get_Implicit_Definition (Imp);
    begin
       if Get_Kind (Left) = Iir_Kind_Overflow_Literal
         or else Get_Kind (Right) = Iir_Kind_Overflow_Literal
@@ -900,7 +946,6 @@ package body Evaluation is
          return Build_Overflow (Orig);
       end if;
 
-      Func := Get_Implicit_Definition (Get_Implementation (Orig));
       case Func is
          when Iir_Predefined_Integer_Plus =>
             return Build_Integer (Get_Value (Left) + Get_Value (Right), Orig);
@@ -934,43 +979,43 @@ package body Evaluation is
               (Get_Value (Left) ** Integer (Get_Value (Right)), Orig);
 
          when Iir_Predefined_Integer_Equality =>
-            return Build_Boolean (Get_Value (Left) = Get_Value (Right), Orig);
+            return Build_Boolean (Get_Value (Left) = Get_Value (Right));
          when Iir_Predefined_Integer_Inequality =>
-            return Build_Boolean (Get_Value (Left) /= Get_Value (Right), Orig);
+            return Build_Boolean (Get_Value (Left) /= Get_Value (Right));
          when Iir_Predefined_Integer_Greater_Equal =>
-            return Build_Boolean (Get_Value (Left) >= Get_Value (Right), Orig);
+            return Build_Boolean (Get_Value (Left) >= Get_Value (Right));
          when Iir_Predefined_Integer_Greater =>
-            return Build_Boolean (Get_Value (Left) > Get_Value (Right), Orig);
+            return Build_Boolean (Get_Value (Left) > Get_Value (Right));
          when Iir_Predefined_Integer_Less_Equal =>
-            return Build_Boolean (Get_Value (Left) <= Get_Value (Right), Orig);
+            return Build_Boolean (Get_Value (Left) <= Get_Value (Right));
          when Iir_Predefined_Integer_Less =>
-            return Build_Boolean (Get_Value (Left) < Get_Value (Right), Orig);
+            return Build_Boolean (Get_Value (Left) < Get_Value (Right));
 
          when Iir_Predefined_Integer_Minimum =>
-            return Build_Integer
-              (Iir_Int64'Min (Get_Value (Left), Get_Value (Right)), Orig);
+            if Get_Value (Left) < Get_Value (Right) then
+               return Left;
+            else
+               return Right;
+            end if;
          when Iir_Predefined_Integer_Maximum =>
-            return Build_Integer
-              (Iir_Int64'Max (Get_Value (Left), Get_Value (Right)), Orig);
+            if Get_Value (Left) > Get_Value (Right) then
+               return Left;
+            else
+               return Right;
+            end if;
 
          when Iir_Predefined_Floating_Equality =>
-            return Build_Boolean
-              (Get_Fp_Value (Left) = Get_Fp_Value (Right), Orig);
+            return Build_Boolean (Get_Fp_Value (Left) = Get_Fp_Value (Right));
          when Iir_Predefined_Floating_Inequality =>
-            return Build_Boolean
-              (Get_Fp_Value (Left) /= Get_Fp_Value (Right), Orig);
+            return Build_Boolean (Get_Fp_Value (Left) /= Get_Fp_Value (Right));
          when Iir_Predefined_Floating_Greater =>
-            return Build_Boolean
-              (Get_Fp_Value (Left) > Get_Fp_Value (Right), Orig);
+            return Build_Boolean (Get_Fp_Value (Left) > Get_Fp_Value (Right));
          when Iir_Predefined_Floating_Greater_Equal =>
-            return Build_Boolean
-              (Get_Fp_Value (Left) >= Get_Fp_Value (Right), Orig);
+            return Build_Boolean (Get_Fp_Value (Left) >= Get_Fp_Value (Right));
          when Iir_Predefined_Floating_Less =>
-            return Build_Boolean
-              (Get_Fp_Value (Left) < Get_Fp_Value (Right), Orig);
+            return Build_Boolean (Get_Fp_Value (Left) < Get_Fp_Value (Right));
          when Iir_Predefined_Floating_Less_Equal =>
-            return Build_Boolean
-              (Get_Fp_Value (Left) <= Get_Fp_Value (Right), Orig);
+            return Build_Boolean (Get_Fp_Value (Left) <= Get_Fp_Value (Right));
 
          when Iir_Predefined_Floating_Minus =>
             return Build_Floating
@@ -1012,30 +1057,36 @@ package body Evaluation is
             end;
 
          when Iir_Predefined_Floating_Minimum =>
-            return Build_Floating
-              (Iir_Fp64'Min (Get_Fp_Value (Left), Get_Fp_Value (Right)), Orig);
+            if Get_Fp_Value (Left) < Get_Fp_Value (Right) then
+               return Left;
+            else
+               return Right;
+            end if;
          when Iir_Predefined_Floating_Maximum =>
-            return Build_Floating
-              (Iir_Fp64'Max (Get_Fp_Value (Left), Get_Fp_Value (Right)), Orig);
+            if Get_Fp_Value (Left) > Get_Fp_Value (Right) then
+               return Left;
+            else
+               return Right;
+            end if;
 
          when Iir_Predefined_Physical_Equality =>
             return Build_Boolean
-              (Get_Physical_Value (Left) = Get_Physical_Value (Right), Orig);
+              (Get_Physical_Value (Left) = Get_Physical_Value (Right));
          when Iir_Predefined_Physical_Inequality =>
             return Build_Boolean
-              (Get_Physical_Value (Left) /= Get_Physical_Value (Right), Orig);
+              (Get_Physical_Value (Left) /= Get_Physical_Value (Right));
          when Iir_Predefined_Physical_Greater_Equal =>
             return Build_Boolean
-              (Get_Physical_Value (Left) >= Get_Physical_Value (Right), Orig);
+              (Get_Physical_Value (Left) >= Get_Physical_Value (Right));
          when Iir_Predefined_Physical_Greater =>
             return Build_Boolean
-              (Get_Physical_Value (Left) > Get_Physical_Value (Right), Orig);
+              (Get_Physical_Value (Left) > Get_Physical_Value (Right));
          when Iir_Predefined_Physical_Less_Equal =>
             return Build_Boolean
-              (Get_Physical_Value (Left) <= Get_Physical_Value (Right), Orig);
+              (Get_Physical_Value (Left) <= Get_Physical_Value (Right));
          when Iir_Predefined_Physical_Less =>
             return Build_Boolean
-              (Get_Physical_Value (Left) < Get_Physical_Value (Right), Orig);
+              (Get_Physical_Value (Left) < Get_Physical_Value (Right));
 
          when Iir_Predefined_Physical_Physical_Div =>
             return Build_Integer
@@ -1088,65 +1139,67 @@ package body Evaluation is
 
          when Iir_Predefined_Enum_Equality
            | Iir_Predefined_Bit_Match_Equality =>
-            return Build_Boolean
+            return Build_Enumeration
               (Get_Enum_Pos (Left) = Get_Enum_Pos (Right), Orig);
          when Iir_Predefined_Enum_Inequality
            | Iir_Predefined_Bit_Match_Inequality =>
-            return Build_Boolean
+            return Build_Enumeration
               (Get_Enum_Pos (Left) /= Get_Enum_Pos (Right), Orig);
          when Iir_Predefined_Enum_Greater_Equal
            | Iir_Predefined_Bit_Match_Greater_Equal =>
-            return Build_Boolean
+            return Build_Enumeration
               (Get_Enum_Pos (Left) >= Get_Enum_Pos (Right), Orig);
          when Iir_Predefined_Enum_Greater
            | Iir_Predefined_Bit_Match_Greater =>
-            return Build_Boolean
+            return Build_Enumeration
               (Get_Enum_Pos (Left) > Get_Enum_Pos (Right), Orig);
          when Iir_Predefined_Enum_Less_Equal
            | Iir_Predefined_Bit_Match_Less_Equal =>
-            return Build_Boolean
+            return Build_Enumeration
               (Get_Enum_Pos (Left) <= Get_Enum_Pos (Right), Orig);
          when Iir_Predefined_Enum_Less
            | Iir_Predefined_Bit_Match_Less =>
-            return Build_Boolean
+            return Build_Enumeration
               (Get_Enum_Pos (Left) < Get_Enum_Pos (Right), Orig);
 
          when Iir_Predefined_Enum_Minimum =>
-            return Build_Enumeration
-              (Iir_Index32 (Iir_Int32'Min (Get_Enum_Pos (Left),
-                                           Get_Enum_Pos (Right))),
-               Orig);
+            if Get_Enum_Pos (Left) < Get_Enum_Pos (Right) then
+               return Left;
+            else
+               return Right;
+            end if;
          when Iir_Predefined_Enum_Maximum =>
-            return Build_Enumeration
-              (Iir_Index32 (Iir_Int32'Max (Get_Enum_Pos (Left),
-                                           Get_Enum_Pos (Right))),
-               Orig);
+            if Get_Enum_Pos (Left) > Get_Enum_Pos (Right) then
+               return Left;
+            else
+               return Right;
+            end if;
 
          when Iir_Predefined_Boolean_And
            | Iir_Predefined_Bit_And =>
-            return Build_Boolean
+            return Build_Enumeration
               (Get_Enum_Pos (Left) = 1 and Get_Enum_Pos (Right) = 1, Orig);
          when Iir_Predefined_Boolean_Nand
            | Iir_Predefined_Bit_Nand =>
-            return Build_Boolean
+            return Build_Enumeration
               (not (Get_Enum_Pos (Left) = 1 and Get_Enum_Pos (Right) = 1),
                Orig);
          when Iir_Predefined_Boolean_Or
            | Iir_Predefined_Bit_Or =>
-            return Build_Boolean
+            return Build_Enumeration
               (Get_Enum_Pos (Left) = 1 or Get_Enum_Pos (Right) = 1, Orig);
          when Iir_Predefined_Boolean_Nor
            | Iir_Predefined_Bit_Nor =>
-            return Build_Boolean
+            return Build_Enumeration
               (not (Get_Enum_Pos (Left) = 1 or Get_Enum_Pos (Right) = 1),
                Orig);
          when Iir_Predefined_Boolean_Xor
            | Iir_Predefined_Bit_Xor =>
-            return Build_Boolean
+            return Build_Enumeration
               (Get_Enum_Pos (Left) = 1 xor Get_Enum_Pos (Right) = 1, Orig);
          when Iir_Predefined_Boolean_Xnor
            | Iir_Predefined_Bit_Xnor =>
-            return Build_Boolean
+            return Build_Enumeration
               (not (Get_Enum_Pos (Left) = 1 xor Get_Enum_Pos (Right) = 1),
                Orig);
 
@@ -1165,10 +1218,10 @@ package body Evaluation is
               (Get_Fp_Value (Left) / Iir_Fp64 (Get_Value (Right)), Orig);
 
          when Iir_Predefined_Array_Equality =>
-            return Build_Boolean (Eval_Array_Equality (Left, Right), Orig);
+            return Build_Boolean (Eval_Array_Equality (Left, Right));
 
          when Iir_Predefined_Array_Inequality =>
-            return Build_Boolean (not Eval_Array_Equality (Left, Right), Orig);
+            return Build_Boolean (not Eval_Array_Equality (Left, Right));
 
          when Iir_Predefined_Array_Sll
            | Iir_Predefined_Array_Srl
@@ -1316,7 +1369,7 @@ package body Evaluation is
    begin
       Prefix := Get_Prefix (Attr);
       case Get_Kind (Prefix) is
-         when Iir_Kinds_Object_Declaration
+         when Iir_Kinds_Object_Declaration --  FIXME: remove
            | Iir_Kind_Selected_Element
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name
@@ -1330,6 +1383,8 @@ package body Evaluation is
               (Get_Expression (Get_Attribute_Specification (Prefix)));
          when Iir_Kinds_Subtype_Definition =>
             Prefix_Type := Prefix;
+         when Iir_Kinds_Denoting_Name =>
+            Prefix_Type := Get_Type (Prefix);
          when others =>
             Error_Kind ("eval_array_attribute", Prefix);
       end case;
@@ -1499,8 +1554,7 @@ package body Evaluation is
    function Eval_Physical_Image (Phys, Expr: Iir) return Iir
    is
       --  Reduces to the base unit (e.g. femtoseconds).
-      Value : constant String :=
-        Iir_Int64'Image (Get_Physical_Literal_Value (Phys));
+      Value : constant String := Iir_Int64'Image (Get_Physical_Value (Phys));
       Unit : constant Iir :=
         Get_Primary_Unit (Get_Base_Type (Get_Type (Phys)));
       UnitName : constant String := Image_Identifier (Unit);
@@ -1637,21 +1691,14 @@ package body Evaluation is
 
    function Eval_Array_Type_Conversion (Conv : Iir; Val : Iir) return Iir
    is
-      Conv_Type : Iir;
-      Res : Iir;
-      Val_Type : Iir;
-      Conv_Index_Type : Iir;
-      Val_Index_Type : Iir;
+      Conv_Type : constant Iir := Get_Type (Conv);
+      Val_Type : constant Iir := Get_Type (Val);
+      Conv_Index_Type : constant Iir := Get_Index_Type (Conv_Type, 0);
+      Val_Index_Type : constant Iir := Get_Index_Type (Val_Type, 0);
       Index_Type : Iir;
+      Res : Iir;
       Rng : Iir;
    begin
-      Conv_Type := Get_Type (Conv);
-      Conv_Index_Type := Get_Nth_Element
-        (Get_Index_Subtype_List (Conv_Type), 0);
-      Val_Type := Get_Type (Val);
-      Val_Index_Type := Get_Nth_Element
-        (Get_Index_Subtype_List (Val_Type), 0);
-
       --  The expression is either a simple aggregate or a (bit) string.
       Res := Build_Constant (Val, Conv);
       case Get_Kind (Conv_Type) is
@@ -1695,8 +1742,7 @@ package body Evaluation is
       Val_Type : Iir;
       Conv_Type : Iir;
    begin
-      Val := Eval_Expr (Get_Expression (Expr));
-      Set_Expression (Expr, Val);
+      Val := Eval_Static_Expr (Get_Expression (Expr));
       Val_Type := Get_Base_Type (Get_Type (Val));
       Conv_Type := Get_Base_Type (Get_Type (Expr));
       if Conv_Type = Val_Type then
@@ -1734,6 +1780,9 @@ package body Evaluation is
       Val : Iir;
    begin
       case Get_Kind (Expr) is
+         when Iir_Kinds_Denoting_Name =>
+            return Eval_Static_Expr (Get_Named_Entity (Expr));
+
          when Iir_Kind_Integer_Literal
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Floating_Point_Literal
@@ -1747,48 +1796,46 @@ package body Evaluation is
             then
                return Expr;
             else
+               --  Convert to the primary unit.
                return Build_Physical (Get_Physical_Value (Expr), Expr);
             end if;
          when Iir_Kind_Physical_Fp_Literal =>
             return Build_Physical (Get_Physical_Value (Expr), Expr);
          when Iir_Kind_Constant_Declaration =>
-            Val := Get_Default_Value (Expr);
-            Res := Build_Constant (Val, Expr);
+            Val := Eval_Static_Expr (Get_Default_Value (Expr));
             --  Type of the expression should be type of the constant
             --  declaration at least in case of array subtype.
             --  If the constant is declared as an unconstrained array, get type
             --  from the default value.
-            --  FIXME: handle this during semantisation of the declaration.
-            if Get_Kind (Get_Type (Res)) = Iir_Kind_Array_Type_Definition then
+            --  FIXME: handle this during semantisation of the declaration:
+            --    add an implicit subtype conversion node ?
+            --  FIXME: this currently creates a node at each evalation.
+            if Get_Kind (Get_Type (Val)) = Iir_Kind_Array_Type_Definition then
+               Res := Build_Constant (Val, Expr);
                Set_Type (Res, Get_Type (Val));
+               return Res;
+            else
+               return Val;
             end if;
-            return Res;
          when Iir_Kind_Object_Alias_Declaration =>
-            return Build_Constant (Eval_Static_Expr (Get_Name (Expr)), Expr);
+            return Eval_Static_Expr (Get_Name (Expr));
          when Iir_Kind_Unit_Declaration =>
             return Expr;
          when Iir_Kind_Simple_Aggregate =>
             return Expr;
 
          when Iir_Kind_Parenthesis_Expression =>
-            return Build_Constant
-              (Eval_Static_Expr (Get_Expression (Expr)), Expr);
+            return Eval_Static_Expr (Get_Expression (Expr));
          when Iir_Kind_Qualified_Expression =>
-            return Build_Constant
-              (Eval_Static_Expr (Get_Expression (Expr)), Expr);
+            return Eval_Static_Expr (Get_Expression (Expr));
          when Iir_Kind_Type_Conversion =>
             return Eval_Type_Conversion (Expr);
-         when Iir_Kind_Range_Expression =>
-            Set_Left_Limit (Expr, Eval_Static_Expr (Get_Left_Limit (Expr)));
-            Set_Right_Limit (Expr, Eval_Static_Expr (Get_Right_Limit (Expr)));
-            return Expr;
 
          when Iir_Kinds_Monadic_Operator =>
             declare
                Operand : Iir;
             begin
                Operand := Eval_Static_Expr (Get_Operand (Expr));
-               Set_Operand (Expr, Operand);
                return Eval_Monadic_Operator (Expr, Operand);
             end;
          when Iir_Kinds_Dyadic_Operator =>
@@ -1798,39 +1845,38 @@ package body Evaluation is
                Left := Eval_Static_Expr (Get_Left (Expr));
                Right := Eval_Static_Expr (Get_Right (Expr));
 
-               Set_Left (Expr, Left);
-               Set_Right (Expr, Right);
-               return Eval_Dyadic_Operator (Expr, Left, Right);
+               return Eval_Dyadic_Operator
+                 (Expr, Get_Implementation (Expr), Left, Right);
             end;
 
          when Iir_Kind_Attribute_Value =>
-            --  FIXME.
+            --  FIXME: see constant_declaration.
             --  Currently, this avoids weird nodes, such as a string literal
             --  whose type is an unconstrained array type.
             Val := Get_Expression (Get_Attribute_Specification (Expr));
-            Res := Build_Constant (Val, Expr);
+            Res := Build_Constant (Eval_Static_Expr (Val), Expr);
             Set_Type (Res, Get_Type (Val));
             return Res;
+         when Iir_Kind_Attribute_Name =>
+            return Eval_Static_Expr (Get_Named_Entity (Expr));
 
          when Iir_Kind_Pos_Attribute =>
             declare
                Val : Iir;
             begin
-               Val := Eval_Expr (Get_Parameter (Expr));
-               Set_Parameter (Expr, Val);
+               Val := Eval_Static_Expr (Get_Parameter (Expr));
+               --  FIXME: check bounds, handle overflow.
                return Build_Integer (Eval_Pos (Val), Expr);
             end;
          when Iir_Kind_Val_Attribute =>
             declare
+               Expr_Type : constant Iir := Get_Type (Expr);
                Val_Expr : Iir;
                Val : Iir_Int64;
-               Expr_Type : Iir;
             begin
-               Val_Expr := Eval_Expr (Get_Parameter (Expr));
-               Set_Parameter (Expr, Val_Expr);
+               Val_Expr := Eval_Static_Expr (Get_Parameter (Expr));
                Val := Eval_Pos (Val_Expr);
                --  Note: the type of 'val is a base type.
-               Expr_Type := Get_Type (Expr);
                --  FIXME: handle VHDL93 restrictions.
                if Get_Kind (Expr_Type) = Iir_Kind_Enumeration_Type_Definition
                  and then
@@ -1906,50 +1952,21 @@ package body Evaluation is
             end;
 
          when Iir_Kind_Left_Type_Attribute =>
-            return Build_Constant
-              (Get_Left_Limit (Eval_Range (Get_Prefix (Expr))), Expr);
+            return Eval_Static_Expr
+              (Get_Left_Limit (Eval_Static_Range (Get_Prefix (Expr))));
          when Iir_Kind_Right_Type_Attribute =>
-            return Build_Constant
-              (Get_Right_Limit (Eval_Range (Get_Prefix (Expr))), Expr);
+            return Eval_Static_Expr
+              (Get_Right_Limit (Eval_Static_Range (Get_Prefix (Expr))));
          when Iir_Kind_High_Type_Attribute =>
-            return Build_Constant
-              (Get_High_Limit (Eval_Range (Get_Prefix (Expr))), Expr);
+            return Eval_Static_Expr
+              (Get_High_Limit (Eval_Static_Range (Get_Prefix (Expr))));
          when Iir_Kind_Low_Type_Attribute =>
-            return Build_Constant
-              (Get_Low_Limit (Eval_Range (Get_Prefix (Expr))), Expr);
+            return Eval_Static_Expr
+              (Get_Low_Limit (Eval_Static_Range (Get_Prefix (Expr))));
          when Iir_Kind_Ascending_Type_Attribute =>
             return Build_Boolean
-              (Get_Direction (Eval_Range (Get_Prefix (Expr))) = Iir_To, Expr);
+              (Get_Direction (Eval_Static_Range (Get_Prefix (Expr))) = Iir_To);
 
-         when Iir_Kind_Range_Array_Attribute =>
-            declare
-               Index : Iir;
-            begin
-               Index := Eval_Array_Attribute (Expr);
-               return Get_Range_Constraint (Index);
-            end;
-         when Iir_Kind_Reverse_Range_Array_Attribute =>
-            declare
-               Res : Iir;
-               Rng : Iir;
-            begin
-               Rng := Get_Range_Constraint (Eval_Array_Attribute (Expr));
-               Res := Create_Iir (Iir_Kind_Range_Expression);
-               Location_Copy (Res, Rng);
-               Set_Type (Res, Get_Type (Rng));
-               case Get_Direction (Rng) is
-                  when Iir_To =>
-                     Set_Direction (Res, Iir_Downto);
-                  when Iir_Downto =>
-                     Set_Direction (Res, Iir_To);
-               end case;
-               Set_Left_Limit (Res, Get_Right_Limit (Rng));
-               Set_Right_Limit (Res, Get_Left_Limit (Rng));
-               -- FIXME: todo.
-               --Set_Literal_Origin (Res, Rng);
-               Set_Expr_Staticness (Res, Get_Expr_Staticness (Rng));
-               return Res;
-            end;
          when Iir_Kind_Length_Array_Attribute =>
             declare
                Index : Iir;
@@ -1962,32 +1979,32 @@ package body Evaluation is
                Index : Iir;
             begin
                Index := Eval_Array_Attribute (Expr);
-               return Build_Constant
-                 (Get_Left_Limit (Get_Range_Constraint (Index)), Expr);
+               return Eval_Static_Expr
+                 (Get_Left_Limit (Get_Range_Constraint (Index)));
             end;
          when Iir_Kind_Right_Array_Attribute =>
             declare
                Index : Iir;
             begin
                Index := Eval_Array_Attribute (Expr);
-               return Build_Constant
-                 (Get_Right_Limit (Get_Range_Constraint (Index)), Expr);
+               return Eval_Static_Expr
+                 (Get_Right_Limit (Get_Range_Constraint (Index)));
             end;
          when Iir_Kind_Low_Array_Attribute =>
             declare
                Index : Iir;
             begin
                Index := Eval_Array_Attribute (Expr);
-               return Build_Constant
-                 (Get_Low_Limit (Get_Range_Constraint (Index)), Expr);
+               return Eval_Static_Expr
+                 (Get_Low_Limit (Get_Range_Constraint (Index)));
             end;
          when Iir_Kind_High_Array_Attribute =>
             declare
                Index : Iir;
             begin
                Index := Eval_Array_Attribute (Expr);
-               return Build_Constant
-                 (Get_High_Limit (Get_Range_Constraint (Index)), Expr);
+               return Eval_Static_Expr
+                 (Get_High_Limit (Get_Range_Constraint (Index)));
             end;
          when Iir_Kind_Ascending_Array_Attribute =>
             declare
@@ -1995,16 +2012,16 @@ package body Evaluation is
             begin
                Index := Eval_Array_Attribute (Expr);
                return Build_Boolean
-                 (Get_Direction (Get_Range_Constraint (Index)) = Iir_To, Expr);
+                 (Get_Direction (Get_Range_Constraint (Index)) = Iir_To);
             end;
 
          when Iir_Kind_Pred_Attribute =>
             Res := Eval_Incdec (Eval_Static_Expr (Get_Parameter (Expr)), -1);
-            Eval_Check_Bound (Res, Get_Type_Of_Type_Mark (Get_Prefix (Expr)));
+            Eval_Check_Bound (Res, Get_Type (Get_Prefix (Expr)));
             return Res;
          when Iir_Kind_Succ_Attribute =>
             Res := Eval_Incdec (Eval_Static_Expr (Get_Parameter (Expr)), +1);
-            Eval_Check_Bound (Res, Get_Type_Of_Type_Mark (Get_Prefix (Expr)));
+            Eval_Check_Bound (Res, Get_Type (Get_Prefix (Expr)));
             return Res;
          when Iir_Kind_Leftof_Attribute
            | Iir_Kind_Rightof_Attribute =>
@@ -2014,8 +2031,8 @@ package body Evaluation is
                Prefix_Type : Iir;
                Res : Iir;
             begin
-               Prefix_Type := Get_Type_Of_Type_Mark (Get_Prefix (Expr));
-               Rng := Eval_Range (Prefix_Type);
+               Prefix_Type := Get_Type (Get_Prefix (Expr));
+               Rng := Eval_Static_Range (Prefix_Type);
                case Get_Direction (Rng) is
                   when Iir_To =>
                      N := 1;
@@ -2055,32 +2072,22 @@ package body Evaluation is
          when Iir_Kind_Function_Call =>
             declare
                Left, Right : Iir;
+               Imp : constant Iir :=
+                 Get_Named_Entity (Get_Implementation (Expr));
             begin
                --  Note: there can't be association by name.
                Left := Get_Parameter_Association_Chain (Expr);
                Right := Get_Chain (Left);
+
+               Left := Eval_Static_Expr (Get_Actual (Left));
                if Right = Null_Iir then
-                  return Eval_Monadic_Operator (Expr, Get_Actual (Left));
+                  return Eval_Monadic_Operator (Expr, Left);
                else
-                  return Eval_Dyadic_Operator
-                    (Expr, Get_Actual (Left), Get_Actual (Right));
+                  Right := Eval_Static_Expr (Get_Actual (Right));
+                  return Eval_Dyadic_Operator (Expr, Imp, Left, Right);
                end if;
             end;
 
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Character_Literal
-           | Iir_Kind_Selected_Name =>
-            declare
-               Orig : constant Iir := Get_Named_Entity (Expr);
-               Res : Iir;
-            begin
-               Res := Eval_Static_Expr (Orig);
-               if Res /= Orig then
-                  return Build_Constant (Res, Expr);
-               else
-                  return Res;
-               end if;
-            end;
          when Iir_Kind_Error =>
             return Expr;
          when others =>
@@ -2088,37 +2095,82 @@ package body Evaluation is
       end case;
    end Eval_Static_Expr;
 
+   --  If FORCE is true, always return a literal.
+   function Eval_Expr_Keep_Orig (Expr : Iir; Force : Boolean) return Iir
+   is
+      Res : Iir;
+   begin
+      case Get_Kind (Expr) is
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Character_Literal
+           | Iir_Kind_Selected_Name =>
+            declare
+               Orig : constant Iir := Get_Named_Entity (Expr);
+            begin
+               Res := Eval_Static_Expr (Orig);
+               if Res /= Orig or else Force then
+                  return Build_Constant (Res, Expr);
+               else
+                  return Expr;
+               end if;
+            end;
+         when others =>
+            Res := Eval_Static_Expr (Expr);
+            if Res /= Expr
+              and then Get_Literal_Origin (Res) /= Expr
+            then
+               return Build_Constant (Res, Expr);
+            else
+               return Res;
+            end if;
+      end case;
+   end Eval_Expr_Keep_Orig;
+
    function Eval_Expr (Expr: Iir) return Iir is
    begin
       if Get_Expr_Staticness (Expr) /= Locally then
          Error_Msg_Sem ("expression must be locally static", Expr);
          return Expr;
       else
-         return Eval_Static_Expr (Expr);
+         return Eval_Expr_Keep_Orig (Expr, False);
       end if;
    end Eval_Expr;
 
    function Eval_Expr_If_Static (Expr : Iir) return Iir is
    begin
       if Expr /= Null_Iir and then Get_Expr_Staticness (Expr) = Locally then
-         return Eval_Static_Expr (Expr);
+         return Eval_Expr_Keep_Orig (Expr, False);
       else
          return Expr;
       end if;
    end Eval_Expr_If_Static;
+
+   function Eval_Expr_Check (Expr : Iir; Sub_Type : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Eval_Expr_Keep_Orig (Expr, False);
+      Eval_Check_Bound (Res, Sub_Type);
+      return Res;
+   end Eval_Expr_Check;
 
    function Eval_Expr_Check_If_Static (Expr : Iir; Atype : Iir) return Iir
    is
       Res : Iir;
    begin
       if Expr /= Null_Iir and then Get_Expr_Staticness (Expr) = Locally then
-         Res := Eval_Expr (Expr);
+         --  Expression is static and can be evaluated.
+         Res := Eval_Expr_Keep_Orig (Expr, False);
+
          if Res /= Null_Iir
            and then Get_Type_Staticness (Atype) = Locally
            and then Get_Kind (Atype) in Iir_Kinds_Range_Type_Definition
          then
+            --  Check bounds (as this can be done).
+            --  FIXME: create overflow_expr ?
             Eval_Check_Bound (Res, Atype);
          end if;
+
          return Res;
       else
          return Expr;
@@ -2208,38 +2260,46 @@ package body Evaluation is
    end Eval_Fp_In_Range;
 
    --  Return TRUE if literal EXPR is in SUB_TYPE bounds.
-   function Eval_Is_In_Bound (Expr : Iir; Sub_Type : Iir)
-     return Boolean
+   function Eval_Is_In_Bound (Expr : Iir; Sub_Type : Iir) return Boolean
    is
       Type_Range : Iir;
+      Val : Iir;
    begin
-      if Get_Kind (Expr) = Iir_Kind_Error then
-         return True;
-      end if;
-      if Get_Kind (Expr) = Iir_Kind_Overflow_Literal then
-         return False;
-      end if;
+      case Get_Kind (Expr) is
+         when Iir_Kind_Error =>
+            --  Ignore errors.
+            return True;
+         when Iir_Kind_Overflow_Literal =>
+            --  Never within bounds
+            return False;
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Character_Literal
+           | Iir_Kind_Selected_Name =>
+            Val := Get_Named_Entity (Expr);
+         when others =>
+            Val := Expr;
+      end case;
 
       case Get_Kind (Sub_Type) is
          when Iir_Kind_Integer_Subtype_Definition =>
             Type_Range := Get_Range_Constraint (Sub_Type);
-            return Eval_Int_In_Range (Get_Value (Expr), Type_Range);
+            return Eval_Int_In_Range (Get_Value (Val), Type_Range);
          when Iir_Kind_Floating_Subtype_Definition =>
             Type_Range := Get_Range_Constraint (Sub_Type);
-            return Eval_Fp_In_Range (Get_Fp_Value (Expr), Type_Range);
+            return Eval_Fp_In_Range (Get_Fp_Value (Val), Type_Range);
          when Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
             --  A check is required for an enumeration type definition for
             --  'val attribute.
             Type_Range := Get_Range_Constraint (Sub_Type);
             return Eval_Int_In_Range
-              (Iir_Int64 (Get_Enum_Pos (Expr)), Type_Range);
+              (Iir_Int64 (Get_Enum_Pos (Val)), Type_Range);
          when Iir_Kind_Physical_Subtype_Definition =>
             Type_Range := Get_Range_Constraint (Sub_Type);
-            return Eval_Phys_In_Range (Get_Physical_Value (Expr), Type_Range);
+            return Eval_Phys_In_Range (Get_Physical_Value (Val), Type_Range);
 
          when Iir_Kind_Base_Attribute =>
-            return Eval_Is_In_Bound (Expr, Get_Type (Sub_Type));
+            return Eval_Is_In_Bound (Val, Get_Type (Sub_Type));
 
          when Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Array_Type_Definition
@@ -2247,16 +2307,8 @@ package body Evaluation is
             --  FIXME: do it.
             return True;
 
-         --when Iir_Kind_Integer_Type_Definition =>
-            --  This case should not happen but it may be called to check a
-            --  simple choice value belongs to the *type* of the case
-            --  expression.
-            --  Of course, this is always true.
-         --   return True;
-
          when others =>
             Error_Kind ("eval_is_in_bound", Sub_Type);
-            return False;
       end case;
    end Eval_Is_In_Bound;
 
@@ -2277,10 +2329,11 @@ package body Evaluation is
      return Boolean
    is
       Type_Range : Iir;
+      Range_Constraint : constant Iir := Eval_Static_Range (A_Range);
    begin
       Type_Range := Get_Range_Constraint (Sub_Type);
       if not Any_Dir
-        and then Get_Direction (Type_Range) /= Get_Direction (A_Range)
+        and then Get_Direction (Type_Range) /= Get_Direction (Range_Constraint)
       then
          return True;
       end if;
@@ -2294,9 +2347,9 @@ package body Evaluation is
                L, R : Iir_Int64;
             begin
                --  Check for null range.
-               L := Eval_Pos (Get_Left_Limit (A_Range));
-               R := Eval_Pos (Get_Right_Limit (A_Range));
-               case Get_Direction (A_Range) is
+               L := Eval_Pos (Get_Left_Limit (Range_Constraint));
+               R := Eval_Pos (Get_Right_Limit (Range_Constraint));
+               case Get_Direction (Range_Constraint) is
                   when Iir_To =>
                      if L > R then
                         return True;
@@ -2314,9 +2367,9 @@ package body Evaluation is
                L, R : Iir_Fp64;
             begin
                --  Check for null range.
-               L := Get_Fp_Value (Get_Left_Limit (A_Range));
-               R := Get_Fp_Value (Get_Right_Limit (A_Range));
-               case Get_Direction (A_Range) is
+               L := Get_Fp_Value (Get_Left_Limit (Range_Constraint));
+               R := Get_Fp_Value (Get_Right_Limit (Range_Constraint));
+               case Get_Direction (Range_Constraint) is
                   when Iir_To =>
                      if L > R then
                         return True;
@@ -2346,15 +2399,6 @@ package body Evaluation is
          Error_Msg_Sem ("static range violates bounds", A_Range);
       end if;
    end Eval_Check_Range;
-
-   function Eval_Expr_Check (Expr : Iir; Sub_Type : Iir) return Iir
-   is
-      Res : Iir;
-   begin
-      Res := Eval_Expr (Expr);
-      Eval_Check_Bound (Res, Sub_Type);
-      return Res;
-   end Eval_Expr_Check;
 
    function Eval_Discrete_Range_Length (Constraint : Iir) return Iir_Int64
    is
@@ -2407,19 +2451,32 @@ package body Evaluation is
             return Get_Physical_Value (Expr);
          when Iir_Kind_Unit_Declaration =>
             return Get_Value (Get_Physical_Unit_Value (Expr));
+         when Iir_Kinds_Denoting_Name =>
+            return Eval_Pos (Get_Named_Entity (Expr));
          when others =>
             Error_Kind ("eval_pos", Expr);
       end case;
    end Eval_Pos;
 
-   function Eval_Range (Rng : Iir) return Iir
+   function Eval_Static_Range (Rng : Iir) return Iir
    is
       Expr : Iir;
+      Kind : Iir_Kind;
    begin
       Expr := Rng;
       loop
-         case Get_Kind (Expr) is
+         Kind := Get_Kind (Expr);
+         case Kind is
             when Iir_Kind_Range_Expression =>
+               if Get_Expr_Staticness (Expr) /= Locally then
+                  return Null_Iir;
+               end if;
+
+               --  Normalize the range expression.
+               Set_Left_Limit
+                 (Expr, Eval_Expr_Keep_Orig (Get_Left_Limit (Expr), True));
+               Set_Right_Limit
+                 (Expr, Eval_Expr_Keep_Orig (Get_Right_Limit (Expr), True));
                return Expr;
             when Iir_Kind_Integer_Subtype_Definition
               | Iir_Kind_Floating_Subtype_Definition
@@ -2427,9 +2484,11 @@ package body Evaluation is
               | Iir_Kind_Enumeration_Subtype_Definition
               | Iir_Kind_Physical_Subtype_Definition =>
                Expr := Get_Range_Constraint (Expr);
-            when Iir_Kind_Range_Array_Attribute =>
+            when Iir_Kind_Range_Array_Attribute
+              | Iir_Kind_Reverse_Range_Array_Attribute =>
                declare
                   Prefix : Iir;
+                  Res : Iir;
                begin
                   Prefix := Get_Prefix (Expr);
                   if Get_Kind (Prefix) /= Iir_Kind_Array_Subtype_Definition
@@ -2444,26 +2503,68 @@ package body Evaluation is
                   Expr := Get_Nth_Element
                     (Get_Index_Subtype_List (Prefix),
                      Natural (Eval_Pos (Get_Parameter (Expr))) - 1);
+                  if Kind = Iir_Kind_Reverse_Range_Array_Attribute then
+                     Expr := Eval_Static_Range (Expr);
+
+                     Res := Create_Iir (Iir_Kind_Range_Expression);
+                     Location_Copy (Res, Expr);
+                     Set_Type (Res, Get_Type (Expr));
+                     case Get_Direction (Expr) is
+                        when Iir_To =>
+                           Set_Direction (Res, Iir_Downto);
+                        when Iir_Downto =>
+                           Set_Direction (Res, Iir_To);
+                     end case;
+                     Set_Left_Limit (Res, Get_Right_Limit (Expr));
+                     Set_Right_Limit (Res, Get_Left_Limit (Expr));
+                     Set_Range_Origin (Res, Expr);
+                     Set_Expr_Staticness (Res, Get_Expr_Staticness (Expr));
+                     return Res;
+                  end if;
                end;
+
             when Iir_Kind_Subtype_Declaration
               | Iir_Kind_Base_Attribute =>
-               return Eval_Range (Get_Type (Expr));
+               Expr := Get_Type (Expr);
             when Iir_Kind_Type_Declaration =>
-               return Eval_Range (Get_Type_Definition (Expr));
+               Expr := Get_Type_Definition (Expr);
+            when Iir_Kind_Simple_Name
+              | Iir_Kind_Selected_Name =>
+               Expr := Get_Named_Entity (Expr);
             when others =>
-               Error_Kind ("eval_range", Expr);
+               Error_Kind ("eval_static_range", Expr);
          end case;
       end loop;
+   end Eval_Static_Range;
+
+   function Eval_Range (Arange : Iir) return Iir is
+      Res : Iir;
+   begin
+      Res := Eval_Static_Range (Arange);
+      if Res /= Arange then
+         return Build_Constant_Range (Res, Arange);
+      else
+         return Res;
+      end if;
    end Eval_Range;
+
+   function Eval_Range_If_Static (Arange : Iir) return Iir is
+   begin
+      if Get_Expr_Staticness (Arange) /= Locally then
+         return Arange;
+      else
+         return Eval_Range (Arange);
+      end if;
+   end Eval_Range_If_Static;
 
    --  Return the range constraint of a discrete range.
    function Eval_Discrete_Range_Expression (Constraint : Iir) return Iir
    is
       Res : Iir;
    begin
-      Res := Eval_Range (Constraint);
+      Res := Eval_Static_Range (Constraint);
       if Res = Null_Iir then
-         Error_Kind ("eval_range_expression", Constraint);
+         Error_Kind ("eval_discrete_range_expression", Constraint);
       else
          return Res;
       end if;
@@ -2799,7 +2900,7 @@ package body Evaluation is
          end case;
       end Path_Add_Element;
 
-      Prefix : constant Iir := Get_Prefix (Attr);
+      Prefix : constant Iir := Get_Named_Entity (Get_Prefix (Attr));
       Is_Instance : constant Boolean :=
         Get_Kind (Attr) = Iir_Kind_Instance_Name_Attribute;
    begin

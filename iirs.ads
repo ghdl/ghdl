@@ -22,47 +22,47 @@ with Nodes;
 with Lists;
 
 package Iirs is
-   -- This package defines the semantic tree and functions to handle it.
-   -- The tree is roughly based on IIR (Internal Intermediate Representation),
-   -- [AIRE/CE Advanced Intermediate Representation with Extensibility,
-   --  Common Environment.  http://www.vhdl.org/aire/index.html ]
-   -- but oriented object features are not used, and sometimes, functions
-   -- or fields have changed.
+   --  This package defines the semantic tree and functions to handle it.
+   --  The tree is roughly based on IIR (Internal Intermediate Representation),
+   --  [AIRE/CE Advanced Intermediate Representation with Extensibility,
+   --   Common Environment.  http://www.vhdl.org/aire/index.html ]
+   --  but oriented object features are not used, and sometimes, functions
+   --  or fields have changed.
 
-   -- Note: this tree is also used during syntaxic analysis, but with
-   -- a little bit different meanings for the fields.
-   -- The parser (parse package) build the tree.
-   -- The semantic pass (sem, sem_expr, sem_name) transforms it into a
-   -- semantic tree.
+   --  Note: this tree is also used during syntaxic analysis, but with
+   --  a little bit different meanings for the fields.
+   --  The parser (parse package) build the tree.
+   --  The semantic pass (sem, sem_expr, sem_name) transforms it into a
+   --  semantic tree.
 
-   -- Documentation:
-   -- Only the semantic aspect is to be fully documented.
-   -- The syntaxic aspect is only used between parse and sem.
+   --  Documentation:
+   --  Only the semantic aspect is to be fully documented.
+   --  The syntaxic aspect is only used between parse and sem.
 
-   -- Each node of the tree is a record of type iir.  The record has only
-   -- one discriminent, which contains the kind of the node.  There is
-   -- currenlty no variant (but this can change, this is not public).
+   --  Each node of the tree is a record of type iir.  The record has only
+   --  one discriminent, which contains the kind of the node.  There is
+   --  currenlty no variant (but this can change, this is not public).
 
-   -- The root of a semantic tree is a library_declaration.
-   -- All the library_declarations are kept in a private list, held by
-   -- package libraries.
-   -- Exemple of a tree:
+   --  The root of a semantic tree is a library_declaration.
+   --  All the library_declarations are kept in a private list, held by
+   --  package libraries.
+   --  Exemple of a tree:
    --   library_declaration
    --   +-- design_file
    --       +-- design_unit
    --       |   +-- entity_declaration
    --       +-- design_unit
    --           +-- architecture_body
-   -- ...
+   --  ...
 
-   -- Since the tree can represent all the libraries and their contents, it
-   -- is not always loaded into memory.
-   -- When a library is loaded, only library_declaration, design_file,
-   -- design_unit and library_unit nodes are created.  When a design_unit is
-   -- really loaded, the design_unit node is not replaced but modified (ie,
-   -- access to this node are still valid).
+   --  Since the tree can represent all the libraries and their contents, it
+   --  is not always loaded into memory.
+   --  When a library is loaded, only library_declaration, design_file,
+   --  design_unit and library_unit nodes are created.  When a design_unit is
+   --  really loaded, the design_unit node is not replaced but modified (ie,
+   --  access to this node are still valid).
 
-   -- To add a new kind of node:
+   --  To add a new kind of node:
    --   the name should be of the form iir_kind_NAME
    --   add iir_kind_NAME in the definition of type iir_kind_type
    --   document the node below: grammar, methods.
@@ -75,38 +75,39 @@ package Iirs is
    -- General methods (can be used on all nodes): --
    -------------------------------------------------
 
-   -- Create a node of kind KIND.
-   --   function Create_Iir (Kind: Iir_Kind) return Iir;
+   --  Create a node of kind KIND.
+   --    function Create_Iir (Kind: Iir_Kind) return Iir;
    --
-   -- Deallocate a node.  Deallocate fields that where allocated by create_iir.
+   --  Deallocate a node.  Deallocate fields that where allocated by
+   --  create_iir.
    --   procedure Free_Iir (Target: in out Iir);
    --
-   -- Get the kind of the iir.
-   -- See below for the (public) list of kinds.
+   --  Get the kind of the iir.
+   --  See below for the (public) list of kinds.
    --   function Get_Kind (An_Iir: Iir) return Iir_Kind;
 
-   -- Get the location of the node: ie the current position in the source
-   -- file when the node was created.  This is a little bit fuzzy.
+   --  Get the location of the node: ie the current position in the source
+   --  file when the node was created.  This is a little bit fuzzy.
    --
    --   procedure Set_Location (Target: in out Iir; Location: Location_Type);
    --   function Get_Location (Target: in out Iir) return Location_Type;
    --
-   -- Copy a location from a node to another one.
+   --  Copy a location from a node to another one.
    --   procedure Location_Copy (Target: in out Iir; Src: in Iir);
 
 
-   -- The next line marks the start of the node description.
+   --  The next line marks the start of the node description.
    -- Start of Iir_Kind.
 
-   -------------------------------------------------
-   -- A set of methods are associed with a kind.  --
-   -------------------------------------------------
+   --------------------------------------------------
+   --  A set of methods are associed with a kind.  --
+   --------------------------------------------------
 
    -- Iir_Kind_Design_File (Medium)
-   -- LRM93 11
-   -- DESIGN_FILE ::= DESIGN_UNIT { DESIGN_UNIT}
+   --  LRM93 11
+   --  design_file ::= design_unit { design_unit }
    --
-   -- The library containing this design file.
+   --  The library containing this design file.
    --   Get/Set_Library (Field0)
    --   Get/Set_Parent (Alias Field0)
    --
@@ -118,73 +119,82 @@ package Iirs is
    --
    --   Get/Set_File_Time_Stamp (Field4)
    --
-   -- Get the chain of unit contained in the file.  This is a simply linked
-   -- chain, but the tail is kept to speed-up appending operation.
+   --  Get the chain of unit contained in the file.  This is a simply linked
+   --  chain, but the tail is kept to speed-up appending operation.
    --   Get/Set_First_Design_Unit (Field5)
    --
    --   Get/Set_Last_Design_Unit (Field6)
    --
-   -- Identifier for the design file file name and dirname.
+   --  Identifier for the design file file name and dirname.
    --   Get/Set_Design_File_Filename (Field12)
    --   Get/Set_Design_File_Directory (Field11)
    --
-   -- Flag used during elaboration.  Set when the file was already seen.
+   --  Flag used during elaboration.  Set when the file was already seen.
    --   Get/Set_Elab_Flag (Flag3)
 
    -- Iir_Kind_Design_Unit (Medium)
-   -- LRM93 11
-   -- DESIGN_UNIT ::= CONTEXT_CLAUSE LIBRARY_UNIT
+   --  LRM93 11
+   --  design_unit ::= context_clause library_unit
    --
-   -- The design_file containing this design unit.
+   --  The design_file containing this design unit.
    --   Get/Set_Design_File (Field0)
    --   Get/Set_Parent (Alias Field0)
    --
-   -- Get the chain of context clause.
+   --  Get the chain of context clause.
    --   Get_Context_Items (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
-   -- Get/Set the library unit, which can be an entity, an architecture,
-   -- a package, a package body or a configuration.
+   --  Get/Set the library unit, which can be an entity, an architecture,
+   --  a package, a package body or a configuration.
    --   Get/Set_Library_Unit (Field5)
    --
    --   Get/Set_End_Location (Field6)
    --
-   -- Collision chain for units.
+   --  Collision chain for units.
    --   Get/Set_Hash_Chain (Field7)
    --
-   -- Get the list of design units that must be analysed before this unit.
-   -- See LRM93 11.4 for the rules defining the order of analysis.
+   --  Get the list of design units that must be analysed before this unit.
+   --  See LRM93 11.4 for the rules defining the order of analysis.
    --   Get/Set_Dependence_List (Field8)
    --
-   -- FIXME: this field can be put in the library_unit, since it is only used
-   -- when the units have been analyzed.
+   --  FIXME: this field can be put in the library_unit, since it is only used
+   --  when the units have been analyzed.
    --   Get/Set_Analysis_Checks_List (Field9)
    --
-   -- This is a symbolic date, only used as a order of analysis of design
-   -- units.
+   --  This is a symbolic date, only used as a order of analysis of design
+   --  units.
    --   Get/Set_Date (Field10)
    --
-   -- Set the line and the offset in the line, only for the library manager.
-   -- This is valid until the file is really loaded in memory.  On loading,
-   -- location will contain all this informations.
-   -- Get/Set_Pos_Line_Off (Field1,Field11,Field12)
+   --  Set the line and the offset in the line, only for the library manager.
+   --  This is valid until the file is really loaded in memory.  On loading,
+   --  location will contain all this informations.
+   --  Get/Set_Pos_Line_Off (Field1,Field11,Field12)
    --
-   -- Get/Set the date state, which indicates whether this design unit is in
-   -- memory or not.
+   --  Get/Set the date state, which indicates whether this design unit is in
+   --  memory or not.
    --   Get/Set_Date_State (State1)
    --
-   -- Flag used during elaboration.  Set when the file was already seen.
+   --  Flag used during elaboration.  Set when the file was already seen.
    --   Get/Set_Elab_Flag (Flag3)
 
    -- Iir_Kind_Library_Clause (Short)
-   -- Note: a library_clause node is created for every logical_name.
-   -- As a consequence, the scope of the library starts after the logical_name
-   -- and not after the library_clause.  However, since an identifier
-   -- can only be used as a logical_name, and since the second occurence has
-   -- no effect, this is correct.
+   --
+   --  LRM08 13.2 Design libraries
+   --
+   --  library_clause ::= LIBRARY logical_name_list ;
+   --
+   --  logical_name_list ::= logical_name { , logical_name }
+   --
+   --  logical_name ::= identifier
+   --
+   --  Note: a library_clause node is created for every logical_name.
+   --  As a consequence, the scope of the library starts after the logical_name
+   --  and not after the library_clause.  However, since an identifier
+   --  can only be used as a logical_name, and since the second occurence has
+   --  no effect, this is correct.
    --
    --   Get/Set_Parent (Field0)
    --
@@ -193,42 +203,32 @@ package Iirs is
    --   Get/Set_Library_Declaration (Field1)
    --
    --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Has_Identifier_List (Flag7)
 
-   --------------
-   -- Literals --
-   --------------
-
-   -- Iir_Kind_Character_Literal (Short)
-   --
-   --   Get/Set_Type (Field1)
-   --
-   --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Named_Entity (Field4)
-   --
-   --   Get/Set_Base_Name (Field5)
-   --
-   --   Get/Set_Expr_Staticness (State1)
+   ---------------
+   --  Literals --
+   ---------------
 
    -- Iir_Kind_String_Literal (Short)
    -- Iir_Kind_Bit_String_Literal (Medium)
    --
    --   Get/Set_Type (Field1)
    --
-   -- Used for computed literals.  Literal_Origin contains the expression whose
-   -- value was computed during analysis and replaces the expression.
+   --  Used for computed literals.  Literal_Origin contains the expression
+   --  whose value was computed during analysis and replaces the expression.
    --   Get/Set_Literal_Origin (Field2)
    --
    --   Get/Set_String_Id (Field3)
    --
-   -- As bit-strings are expanded to '0'/'1' strings, this is the number of
-   -- characters.
+   --  As bit-strings are expanded to '0'/'1' strings, this is the number of
+   --  characters.
    --   Get/Set_String_Length (Field0)
    --
-   -- For bit string only:
-   -- Enumeration literal which correspond to '0' and '1'.
-   -- This cannot be defined only in the enumeration type definition, due to
-   -- possible aliases.
+   --  For bit string only:
+   --  Enumeration literal which correspond to '0' and '1'.
+   --  This cannot be defined only in the enumeration type definition, due to
+   --  possible aliases.
    -- Only for Iir_Kind_Bit_String_Literal:
    --   Get/Set_Bit_String_0 (Field4)
    -- Only for Iir_Kind_Bit_String_Literal:
@@ -240,9 +240,10 @@ package Iirs is
    --   Get/Set_Expr_Staticness (State1)
 
    -- Iir_Kind_Integer_Literal (Int)
+   --
    --   Get/Set_Type (Field1)
    --
-   -- Get/Set the value of the integer.
+   --  Get/Set the value of the integer.
    --   Get/Set_Value (Int64)
    --
    --   Get/Set_Literal_Origin (Field2)
@@ -250,9 +251,10 @@ package Iirs is
    --   Get/Set_Expr_Staticness (State1)
 
    -- Iir_Kind_Floating_Point_Literal (Fp)
+   --
    --   Get/Set_Type (Field1)
    --
-   -- Get/Set the value of the literal.
+   --  The value of the literal.
    --   Get/Set_Fp_Value (Fp64)
    --
    --   Get/Set_Literal_Origin (Field2)
@@ -260,7 +262,7 @@ package Iirs is
    --   Get/Set_Expr_Staticness (State1)
 
    -- Iir_Kind_Null_Literal (Short)
-   -- The null literal, which can be a disconnection or a null access.
+   --  The null literal, which can be a disconnection or a null access.
    --
    --   Get/Set_Type (Field1)
    --
@@ -273,23 +275,23 @@ package Iirs is
    --
    --   Get/Set_Literal_Origin (Field2)
    --
-   -- Get/Set the physical unit of the literal.
+   --  The physical unit of the literal.
    --   Get/Set_Unit_Name (Field3)
    --
-   -- Must be set to locally except for time literal, which is globally.
+   --  Must be set to locally except for time literal, which is globally.
    --   Get/Set_Expr_Staticness (State1)
    --
    -- Only for Iir_Kind_Physical_Int_Literal:
-   -- The multiplicand.
+   --  The multiplicand.
    --   Get/Set_Value (Int64)
    --
    -- Only for Iir_Kind_Physical_Fp_Literal:
-   -- The multiplicand.
+   --  The multiplicand.
    --   Get/Set_Fp_Value (Fp64)
 
    -- Iir_Kind_Simple_Aggregate (Short)
-   -- This node can only be generated by evaluation: it is an unidimentional
-   -- positional aggregate.
+   --  This node can only be generated by evaluation: it is an unidimentional
+   --  positional aggregate.
    --
    --   Get/Set_Type (Field1)
    --
@@ -297,12 +299,12 @@ package Iirs is
    --
    --   Get/Set_Expr_Staticness (State1)
    --
-   -- List of elements
+   --  List of elements
    --   Get/Set_Simple_Aggregate_List (Field3)
 
    -- Iir_Kind_Overflow_Literal (Short)
-   -- This node can only be generated by evaluation to represent an error: out
-   -- of range, division by zero...
+   --  This node can only be generated by evaluation to represent an error: out
+   --  of range, division by zero...
    --
    --   Get/Set_Type (Field1)
    --
@@ -310,15 +312,15 @@ package Iirs is
    --
    --   Get/Set_Expr_Staticness (State1)
 
-   ------------
-   -- Tuples --
-   ------------
+   -------------
+   --  Tuples --
+   -------------
 
    -- Iir_Kind_Association_Element_By_Expression (Short)
    -- Iir_Kind_Association_Element_Open (Short)
    -- Iir_Kind_Association_Element_By_Individual (Short)
-   -- These are used for association element of an association list with
-   -- an interface (ie subprogram call, port map, generic map).
+   --  These are used for association element of an association list with
+   --  an interface (ie subprogram call, port map, generic map).
    --
    --   Get/Set_Formal (Field1)
    --
@@ -333,34 +335,22 @@ package Iirs is
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Individual_Association_Chain (Field4)
    --
-   -- A function call or a type conversion for the association.
-   -- FIXME: should be a name ?
+   --  A function call or a type conversion for the association.
+   --  FIXME: should be a name ?
    -- Only for Iir_Kind_Association_Element_By_Expression:
    --   Get/Set_In_Conversion (Field4)
    --
    -- Only for Iir_Kind_Association_Element_By_Expression:
    --   Get/Set_Out_Conversion (Field5)
    --
-   -- Get/Set the whole association flag (true if the formal is associated in
-   -- whole and not individually, see LRM93 4.3.2.2)
+   --  Get/Set the whole association flag (true if the formal is associated in
+   --  whole and not individually, see LRM93 4.3.2.2)
    --   Get/Set_Whole_Association_Flag (Flag1)
    --
    --   Get/Set_Collapse_Signal_Flag (Flag2)
    --
    -- Only for Iir_Kind_Association_Element_Open:
    --   Get/Set_Artificial_Flag (Flag3)
-
-   -- Iir_Kind_Proxy (Short)
-   -- A proxy is used to avoid duplication of a node.
-   -- Ex: instead of copying a default value of an insterface in the subprogram
-   -- call, a proxy is used.  The default value can't be so easily aliased
-   -- due to annotation.
-   --
-   -- Create a proxy for PROXY.
-   --   function Create_Proxy (Proxy: Iir) return Iir_Proxy;
-   --
-   -- Get/Set the value of the proxy.
-   --   Get/Set_Proxy (Field1)
 
    -- Iir_Kind_Waveform_Element (Short)
    --
@@ -383,32 +373,31 @@ package Iirs is
    -- Iir_Kind_Choice_By_Range (Short)
    -- Iir_Kind_Choice_By_Name (Short)
    -- Iir_Kind_Choice_By_Expression (Short)
-   -- (Iir_Kinds_Choice)
+   --  (Iir_Kinds_Choice)
    --
    --   Get/Set_Parent (Field0)
    --
-   -- These are elements of an choice chain, which is used for
-   -- case_statement, concurrent_select_signal_assignment, aggregates.
+   --  These are elements of an choice chain, which is used for
+   --  case_statement, concurrent_select_signal_assignment, aggregates.
    --
-   -- Get/Set what is associated with the choice.  This can be:
-   -- * a waveform_chain for a concurrent_select_signal_assignment,
-   -- * an expression for an aggregate,
-   -- * a sequential statement list for a case_statement.
-   -- For a list of choices, only the first one is associated, the following
-   -- associations have the same_alternative_flag set.
+   --  Get/Set what is associated with the choice.  This can be:
+   --  * a waveform_chain for a concurrent_select_signal_assignment,
+   --  * an expression for an aggregate,
+   --  * a sequential statement list for a case_statement.
+   --  For a list of choices, only the first one is associated, the following
+   --  associations have the same_alternative_flag set.
    --   Get/Set_Associated (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
    -- Only for Iir_Kind_Choice_By_Name:
-   -- Get/Set the name.
    --   Get/Set_Name (Field4)
    --
    -- Only for Iir_Kind_Choice_By_Expression:
    --   Get/Set_Expression (Field5)
    --
    -- Only for Iir_Kind_Choice_By_Range:
-   -- Get/Set the range.
+   --  Get/Set the range.
    --   Get/Set_Expression (Field5)
    --
    --   Get/Set_Same_Alternative_Flag (Flag1)
@@ -419,21 +408,17 @@ package Iirs is
 
    -- Iir_Kind_Entity_Aspect_Entity (Short)
    --
-   -- Parse: a name
-   -- Sem: a design unit
-   --   Get/Set_Entity (Field2)
+   --   Get/Set_Entity_Name (Field2)
    --
-   -- parse: a simple name.
-   -- sem: an architecture declaration or NULL_IIR.
+   --  parse: a simple name.
+   --  sem: an architecture declaration or NULL_IIR.
    --   Get/Set_Architecture (Field3)
 
    -- Iir_Kind_Entity_Aspect_Open (Short)
 
    -- Iir_Kind_Entity_Aspect_Configuration (Short)
    --
-   -- Parse: a name
-   -- Sem: a design unit
-   --   Get/Set_Configuration (Field1)
+   --   Get/Set_Configuration_Name (Field1)
 
    -- Iir_Kind_Block_Configuration (Short)
    --
@@ -445,22 +430,22 @@ package Iirs is
    --
    --   Get/Set_Configuration_Item_Chain (Field3)
    --
-   -- Note: for default block configurations of iterative generate statement,
-   -- the block specification is a selected_name, whose identifier is others.
+   --  Note: for default block configurations of iterative generate statement,
+   --  the block specification is a selected_name, whose identifier is others.
    --   Get/Set_Block_Specification (Field5)
    --
-   -- Single linked list of block configuration that apply to the same
-   -- for scheme generate block.
+   --  Single linked list of block configuration that apply to the same
+   --  for scheme generate block.
    --   Get/Set_Prev_Block_Configuration (Field4)
 
    -- Iir_Kind_Binding_Indication (Medium)
    --
    --   Get/Set_Default_Entity_Aspect (Field1)
    --
-   -- The entity aspect.
-   -- It is a iir_kind_entity_aspect_entity, iir_kind_entity_aspect_open or
-   -- iir_kind_entity_aspect_configuration.  This may be transformed into a
-   -- declaration by semantic.
+   --  The entity aspect.
+   --  It is a iir_kind_entity_aspect_entity, iir_kind_entity_aspect_open or
+   --  iir_kind_entity_aspect_configuration.  This may be transformed into a
+   --  declaration by semantic.
    --   Get/Set_Entity_Aspect (Field3)
    --
    --   Get/Set_Default_Generic_Map_Aspect_Chain (Field6)
@@ -474,13 +459,37 @@ package Iirs is
    -- Iir_Kind_Component_Configuration (Short)
    -- Iir_Kind_Configuration_Specification (Short)
    --
-   -- The declaration containing this type declaration.
+   --  LRM08 7.3 Configuration specification
+   --
+   --  configuration_specification ::=
+   --     simple_configuration_specification
+   --   | compound_configuration_specification
+   --
+   --  simple_configuration_specification ::=
+   --     FOR component_specification binding_indication ;
+   --     [ END FOR ; ]
+   --
+   --  compound_configuration_specification ::=
+   --     FOR component_specification binding_indication ;
+   --        verification_unit_binding_indication ;
+   --        { verification_unit_binding_indication ; }
+   --     END FOR ;
+   --
+   --  component_specification ::=
+   --     instantiation_list : component_name
+   --
+   --  instantiation_list ::=
+   --     instantiation_label { , instantiation_label }
+   --   | OTHERS
+   --   | ALL
+   --
+   --  The declaration containing this type declaration.
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Component_Name (Field4)
    --
-   -- Must be one of designator_list, designator_by_others or
-   -- designator_by_all.
+   --  Must be one of designator_list, designator_by_others or
+   --  designator_by_all.
    --   Get/Set_Instantiation_List (Field1)
    --
    -- Only for Iir_Kind_Component_Configuration:
@@ -492,16 +501,29 @@ package Iirs is
 
    -- Iir_Kind_Disconnection_Specification (Short)
    --
-   -- The declaration containing this type declaration.
+   --  LRM08 7.4 Disconnection specification
+   --
+   --  disconnection_specification ::=
+   --    DISCONNECT guarded_signal_specification AFTER time_expression ;
+   --
+   --  guarded_signal_specification ::=
+   --    guarded_signal_list : type_mark
+   --
+   --  signal_list ::=
+   --       signal_name { , signal_name }
+   --     | OTHERS
+   --     | ALL
+   --
+   --  The declaration containing this type declaration.
    --   Get/Set_Parent (Field0)
    --
-   --   Get/Set_Signal_List (Field4)
+   --   Get/Set_Chain (Field2)
    --
-   --   Get/Set_Type (Field1)
+   --   Get/Set_Signal_List (Field3)
+   --
+   --   Get/Set_Type_Mark (Field4)
    --
    --   Get/Set_Expression (Field5)
-   --
-   --   Get/Set_Chain (Field2)
 
    -- Iir_Kind_Block_Header (Medium)
    --
@@ -521,6 +543,27 @@ package Iirs is
 
    -- Iir_Kind_Attribute_Specification (Medium)
    --
+   --  LRM08 7.2 Attribute specification
+   --
+   --  attribute_specification ::=
+   --     ATTRIBUTE attribute_designator OF entity_specification
+   --        IS expression ;
+   --
+   --  entity_specification ::= entity_name_list : entity_class
+   --
+   --  entity_name_list ::=
+   --       entity_designator { , entity_designator }
+   --     | OTHERS
+   --     | ALL
+   --
+   --  entity_designator ::= entity_tag [ signature ]
+   --
+   --  entity_tag ::= simple_name | character_literal | operator_symbol
+   --
+   --  LRM08 8.6 Attribute names
+   --
+   --  attribute_designator ::= /attribute/_simple_name
+   --
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Entity_Name_List (Field1)
@@ -533,18 +576,19 @@ package Iirs is
    --
    --   Get/Set_Expression (Field5)
    --
+   --  Always a simple name.
    --   Get/Set_Attribute_Designator (Field6)
    --
    --   Get/Set_Attribute_Specification_Chain (Field7)
 
    -- Iir_Kind_Attribute_Value (Short)
-   -- An attribute value is the element of the chain of attribute of an entity,
-   -- marking the entity as decorated by the attribute.
-   -- This node is built only by sem.
-   -- In fact, the node is member of the chain of attribute of an entity, and
-   -- of the chain of entity of the attribute specification.
-   -- This makes elaboration (and more precisely, expression evaluation)
-   -- easier.
+   --  An attribute value is the element of the chain of attribute of an
+   --  entity, marking the entity as decorated by the attribute.
+   --  This node is built only by sem.
+   --  In fact, the node is member of the chain of attribute of an entity, and
+   --  of the chain of entity of the attribute specification.
+   --  This makes elaboration (and more precisely, expression evaluation)
+   --  easier.
    --
    --   Get/Set_Spec_Chain (Field0)
    --
@@ -555,35 +599,6 @@ package Iirs is
    --   Get/Set_Designated_Entity (Field3)
    --
    --   Get/Set_Attribute_Specification (Field4)
-   --
-   --   Get/Set_Base_Name (Field5)
-   --
-   --   Get/Set_Expr_Staticness (State1)
-   --
-   --   Get/Set_Name_Staticness (State2)
-
-   -- Iir_Kind_Selected_Element (Short)
-   -- A record element selection.
-   --
-   --   Get/Set_Prefix (Field0)
-   --
-   --   Get/Set_Type (Field1)
-   --
-   --   Get/Set_Selected_Element (Field2)
-   --
-   --   Get/Set_Base_Name (Field5)
-   --
-   --   Get/Set_Expr_Staticness (State1)
-   --
-   --   Get/Set_Name_Staticness (State2)
-
-   -- Iir_Kind_Implicit_Dereference (Short)
-   -- Iir_Kind_Dereference (Short)
-   -- An implicit access dereference.
-   --
-   --   Get/Set_Prefix (Field0)
-   --
-   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -609,9 +624,9 @@ package Iirs is
    --
    --   Get/Set_Overload_List (Field1)
 
-   ------------------
-   -- Declarations --
-   ------------------
+   -------------------
+   --  Declarations --
+   -------------------
 
    -- Iir_Kind_Entity_Declaration (Medium)
    --
@@ -647,9 +662,8 @@ package Iirs is
    --
    --   Get_Declaration_Chain (Field1)
    --
-   -- Entity declaration for the architecture.
-   -- Before the semantic pass, it can be a name.
-   --   Get/Set_Entity (Field2)
+   --  Name of the entity declaration for the architecture.
+   --   Get/Set_Entity_Name (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
@@ -657,10 +671,8 @@ package Iirs is
    --
    --   Get/Set_Concurrent_Statement_Chain (Field5)
    --
-   -- The default configuration created by canon.  This is a design unit.
+   --  The default configuration created by canon.  This is a design unit.
    --   Get/Set_Default_Configuration_Declaration (Field6)
-   --
-   --   Get/Set_Entity_Name (Field7)
    --
    --   Get/Set_Foreign_Flag (Flag3)
    --
@@ -679,17 +691,14 @@ package Iirs is
    --
    --   Get_Declaration_Chain (Field1)
    --
-   -- Set the entity of a configuration (a design_unit)
-   -- Before the semantic pass, it can be an identifier.
-   --   Get/Set_Entity (Field2)
+   --  Name of the entity of a configuration.
+   --   Get/Set_Entity_Name (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Block_Configuration (Field5)
-   --
-   --   Get/Set_Entity_Name (Field7)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -727,8 +736,8 @@ package Iirs is
    --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Package_Body (Short)
-   -- Note: a body is not a declaration, that's the reason why there is no
-   -- _declaration suffix in the name.
+   --  Note: a body is not a declaration, that's the reason why there is no
+   --  _declaration suffix in the name.
    --
    --   Get/Set_Parent (Field0)
    --   Get/Set_Design_Unit (Alias Field0)
@@ -737,7 +746,7 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   -- The corresponding package declaration.
+   --  The corresponding package declaration.
    --   Get/Set_Package (Field4)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
@@ -765,13 +774,13 @@ package Iirs is
 
    -- Iir_Kind_Library_Declaration (Medium)
    --
-   -- Design files in the library.
+   --  Design files in the library.
    --   Get/Set_Design_File_Chain (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
-   -- This node is used to contain all a library.  Only internaly used.
-   -- Name (identifier) of the library.
+   --  This node is used to contain all a library.  Only internaly used.
+   --  Name (identifier) of the library.
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Date (Field10)
@@ -798,14 +807,31 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
+   --   Get/Set_Has_Is (Flag7)
+   --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+
+   --  LRM08 6.6 Alias declarations
+   --
+   --  alias_declaration ::=
+   --     ALIAS alias_designator [ : subtype_indication ] IS
+   --        name [ signature ] ;
+   --
+   --  alias_designator ::= identifier | character_literal | operator_symbol
+   --
+   --  Object aliases and non-object aliases are represented by two different
+   --  nodes, as their semantic is different.  The parser only creates object
+   --  alias declaration nodes, but sem_decl replaces the node for non-object
+   --  alias declarations.
 
    -- Iir_Kind_Object_Alias_Declaration (Short)
    --
    --   Get/Set_Parent (Field0)
    --
+   --  The type can be deduced from the subtype indication, but this field is
+   --  present for uniformity (and speed).
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -814,8 +840,8 @@ package Iirs is
    --
    --   Get/Set_Name (Field4)
    --
-   -- Note: base name is the alias itself.
-   --   Get/Set_Base_Name (Field5)
+   --  The subtype indication may not be present.
+   --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -837,10 +863,10 @@ package Iirs is
    --
    --   Get/Set_Name (Field4)
    --
-   --   Get/Set_Signature (Field5)
+   --   Get/Set_Alias_Signature (Field5)
    --
-   -- Set when the alias was implicitely created (by Sem) because of an
-   -- explicit alias of a type.
+   --  Set when the alias was implicitely created (by Sem) because of an
+   --  explicit alias of a type.
    --   Get/Set_Implicit_Alias_Flag (Flag1)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -855,23 +881,45 @@ package Iirs is
    --
    --   Get/Set_Chain (Field2)
    --
-   -- Used for informative purpose only.
+   --  Used for informative purpose only.
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Subtype_Definition (Field4)
 
    -- Iir_Kind_Type_Declaration (Short)
    --
+   --  LRM08 6.3 Type declarations
+   --
+   --  type_declaration ::=
+   --       full_type_declaration
+   --     | incomplete_type_declaration
+   --
+   --  full_type_declaration ::=
+   --     TYPE identifier IS type_definition ;
+   --
+   --  type_definition ::=
+   --       scalar_type_definition
+   --     | composite_type_definition
+   --     | access_type_definition
+   --     | file_type_definition
+   --     | protected_type_definition
+   --
+   --  LRM08 5.4.2 Incomplete type declarations
+   --
+   --  incomplete_type_declaration ::=
+   --       TYPE identifier ;
+   --
    --   Get/Set_Parent (Field0)
    --
-   -- Definition of the type.
-   -- Note: the type definition can be a real type (unconstrained array,
-   -- enumeration, file, record, access) or a subtype (integer, floating
-   -- point).
-   -- The parser set this field to null_iir for an incomplete type declaration.
-   -- This field is set to an incomplete_type_definition node when first
-   -- semantized.
+   --  Definition of the type.
+   --  Note: the type definition can be a real type (unconstrained array,
+   --  enumeration, file, record, access) or a subtype (integer, floating
+   --  point).
+   --  The parser set this field to null_iir for an incomplete type
+   --  declaration.  This field is set to an incomplete_type_definition node
+   --  when first semantized.
    --   Get/Set_Type_Definition (Field1)
+   --   Get/Set_Type (Alias Field1)
    --
    --   Get/Set_Chain (Field2)
    --
@@ -885,6 +933,11 @@ package Iirs is
 
    -- Iir_Kind_Subtype_Declaration (Short)
    --
+   --  LRM08 6.3 Subtype declarations
+   --
+   --  subtype_declaration ::=
+   --     SUBTYPE identifier IS subtype_indication ;
+   --
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Type (Field1)
@@ -894,6 +947,8 @@ package Iirs is
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
+   --
+   --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -936,15 +991,14 @@ package Iirs is
    -- Iir_Kind_Variable_Interface_Declaration (Medium)
    -- Iir_Kind_File_Interface_Declaration (Medium)
    --
-   -- Note: If type is an iir_kind_proxy node, then type *and* default value
-   -- (if any) must be extracted from proxy.
-   --
-   -- Get/Set the parent of an interface declaration.
-   -- The parent is an entity declaration, a subprogram specification, a
-   -- component declaration, a loop statement, a block declaration or ??
-   -- Useful to distinguish a port and an interface.
+   --  Get/Set the parent of an interface declaration.
+   --  The parent is an entity declaration, a subprogram specification, a
+   --  component declaration, a loop statement, a block declaration or ??
+   --  Useful to distinguish a port and an interface.
    --   Get/Set_Parent (Field0)
    --
+   --  The type can be deduced from the subtype indication, but this field is
+   --  present for uniformity (and speed).
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -953,9 +1007,9 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Base_Name (Field5)
+   --   Get/Set_Subtype_Indication (Field5)
    --
-   -- Must always be null_iir for iir_kind_file_interface_declaration.
+   --  Must always be null_iir for iir_kind_file_interface_declaration.
    --   Get/Set_Default_Value (Field6)
    --
    --   Get/Set_Mode (Odigit1)
@@ -987,12 +1041,36 @@ package Iirs is
    -- Iir_Kind_Function_Declaration (Medium)
    -- Iir_Kind_Procedure_Declaration (Medium)
    --
-   -- Subprogram declaration.
+   --  LRM08 4.2 Subprogram declarations
    --
-   -- The declaration containing this subrogram declaration.
+   --  subprogram_declaration ::= subprogram_specification ;
+   --
+   --  subprogram_specification ::=
+   --     procedure_specification | function_specification
+   --
+   --  procedure_specification ::=
+   --     PROCEDURE designator
+   --        subprogram_header
+   --        [ [ PARAMETER ] ( formal_parameter_list ) ]
+   --
+   --  function_specification ::=
+   --     [ PURE | IMPURE ] FUNCTION designator
+   --        subprogram_header
+   --        [ [ PARAMETER ] ( formal_parameter_list ) ] return type_mark
+   --
+   --  designator ::= identifier | operator_symbol
+   --
+   --  operator_symbol ::= string_literal
+   --
+   --  Note: the subprogram specification of a body is kept, but should be
+   --  ignored if there is a subprogram declaration.  The function
+   --  Is_Second_Subprogram_Specification returns True on such specification.
+   --
+   --  The declaration containing this subrogram declaration.
    --   Get/Set_Parent (Field0)
    --
    -- Only for Iir_Kind_Function_Declaration:
+   --  FIXME: this is a type_mark.
    --   Get/Set_Return_Type (Field1)
    --
    -- Only for Iir_Kind_Function_Declaration:
@@ -1010,7 +1088,9 @@ package Iirs is
    --
    --   Get/Set_Callees_List (Field7)
    --
-   --   Get/Set_Generic_Map_Aspect_Chain (Field8)
+   --   --Get/Set_Generic_Map_Aspect_Chain (Field8)
+   --
+   --   Get/Set_Return_Type_Mark (Field8)
    --
    --   Get/Set_Subprogram_Body (Field9)
    --
@@ -1039,6 +1119,12 @@ package Iirs is
    -- Only for Iir_Kind_Function_Declaration:
    --   Get/Set_Resolution_Function_Flag (Flag7)
    --
+   -- Only for Iir_Kind_Function_Declaration:
+   --   Get/Set_Has_Pure (Flag8)
+   --
+   --  True is the specification is immediately followed by a body.
+   --   Get/Set_Has_Body (Flag9)
+   --
    --   Get/Set_Wait_State (State1)
    --
    -- Only for Iir_Kind_Procedure_Declaration:
@@ -1049,10 +1135,21 @@ package Iirs is
    -- Iir_Kind_Function_Body (Short)
    -- Iir_Kind_Procedure_Body (Short)
    --
+   --  LRM08 4.3 Subprogram bodies
+   --
+   --  subprogram_body ::=
+   --     subprogram_specification IS
+   --        subprogram_declarative_part
+   --     BEGIN
+   --        subprogram_statement_part
+   --     END [ subprogram_kind ] [ designator ] ;
+   --
+   --  subprogram_kind ::= PROCEDURE | FUNCTION
+   --
    --   Get/Set_Parent (Field0)
    --
-   -- The parse stage always puts a declaration before a body.
-   -- Sem will remove the declaration if there is a forward declaration.
+   --  The parse stage always puts a declaration before a body.
+   --  Sem will remove the declaration if there is a forward declaration.
    --
    --   Get_Declaration_Chain (Field1)
    --
@@ -1071,9 +1168,9 @@ package Iirs is
    -- Iir_Kind_Implicit_Procedure_Declaration (Medium)
    -- Iir_Kind_Implicit_Function_Declaration (Medium)
    --
-   -- This node contains a subprogram_declaration that was implicitly defined
-   -- just after a type declaration.
-   -- This declaration is inserted by sem.
+   --  This node contains a subprogram_declaration that was implicitly defined
+   --  just after a type declaration.
+   --  This declaration is inserted by sem.
    --
    --   Get/Set_Parent (Field0)
    --
@@ -1130,14 +1227,14 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Base_Name (Field5)
+   --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Default_Value (Field6)
    --
-   -- For a non-resolved signal: null_iir if the signal has no driver, or
-   -- a process/concurrent_statement for which the signal should have a
-   -- driver.  This is used to catch at analyse time unresolved signals with
-   -- several drivers.
+   --  For a non-resolved signal: null_iir if the signal has no driver, or
+   --  a process/concurrent_statement for which the signal should have a
+   --  driver.  This is used to catch at analyse time unresolved signals with
+   --  several drivers.
    --   Get/Set_Signal_Driver (Field7)
    --
    --   Get/Set_Has_Disconnect_Flag (Flag1)
@@ -1149,6 +1246,8 @@ package Iirs is
    --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Has_Identifier_List (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1167,8 +1266,6 @@ package Iirs is
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
-   --
-   --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Guard_Sensitivity_List (Field6)
    --
@@ -1199,24 +1296,28 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Base_Name (Field5)
+   -- Only for Iir_Kind_Constant_Declaration:
+   --   Get/Set_Subtype_Indication (Field5)
+   --
+   -- Only for Iir_Kind_Iterator_Declaration:
+   --   Get/Set_Discrete_Range (Field5)
    --
    -- Only for Iir_Kind_Constant_Declaration:
-   -- Default value of a deferred constant points to the full constant
-   -- declaration.
+   --  Default value of a deferred constant points to the full constant
+   --  declaration.
    --   Get/Set_Default_Value (Field6)
    --
    -- Only for Iir_Kind_Constant_Declaration:
-   -- Summary:
-   -- | constant C1 : integer;          -- Deferred declaration (in a package)
-   -- |  constant C2 : integer := 4;     -- Declaration
-   -- |  constant C1 : integer := 3;     -- Full declaration (in a body)
-   -- | NAME   Deferred_declaration  Deferred_declaration_flag
-   -- |  C1      Null_iir or C1' (*)     True
-   -- |  C2      Null_Iir                False
-   -- |  C1'     C1                      False
-   -- |(*): Deferred_declaration is Null_Iir as long as the full declaration
-   -- |   has not been analyzed.
+   --  Summary:
+   --  | constant C1 : integer;          -- Deferred declaration (in a package)
+   --  |  constant C2 : integer := 4;     -- Declaration
+   --  |  constant C1 : integer := 3;     -- Full declaration (in a body)
+   --  | NAME   Deferred_declaration  Deferred_declaration_flag
+   --  |  C1      Null_iir or C1' (*)     True
+   --  |  C2      Null_Iir                False
+   --  |  C1'     C1                      False
+   --  |(*): Deferred_declaration is Null_Iir as long as the full declaration
+   --  |   has not been analyzed.
    --   Get/Set_Deferred_Declaration (Field7)
    --
    -- Only for Iir_Kind_Constant_Declaration:
@@ -1225,6 +1326,8 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Has_Identifier_List (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1242,22 +1345,39 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Base_Name (Field5)
+   --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Default_Value (Field6)
    --
-   -- True if the variable is a shared variable.
+   --  True if the variable is a shared variable.
    --   Get/Set_Shared_Flag (Flag2)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
    --
+   --   Get/Set_Has_Identifier_List (Flag7)
+   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_File_Declaration (Medium)
+   --
+   --  LRM08 6.4.2.5 File declarations
+   --
+   --  file_declaration ::=
+   --     FILE identifier_list : subtype_indication [ file_open_information ] ;
+   --
+   --  file_open_information ::=
+   --     [ OPEN file_open_kind_expression ] IS file_logical_name
+   --
+   --  file_logical_name ::= string_expression
+   --
+   --  LRM87
+   --
+   --  file_declaration ::=
+   --     FILE identifier : subtype_indication IS [ mode ] file_logical_name ;
    --
    --   Get/Set_Parent (Field0)
    --
@@ -1269,39 +1389,58 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Base_Name (Field5)
+   --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_File_Logical_Name (Field6)
    --
-   -- This is not used in vhdl 87.
+   --  This is not used in vhdl 87.
    --   Get/Set_File_Open_Kind (Field7)
    --
-   -- This is used only in vhdl 87.
+   --  This is used only in vhdl 87.
    --   Get/Set_Mode (Odigit1)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
    --
+   --   Get/Set_Has_Identifier_List (Flag7)
+   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Has_Mode (Flag8)
 
    -- Iir_Kind_Element_Declaration (Short)
    --
+   --  LRM08 5.3.3 Record types
+   --
+   --  element_declaration ::=
+   --     identifier_list : element_subtype_definition ;
+   --
+   --  identifier_list ::= identifier { , identifier }
+   --
+   --  element_subtype_definition ::= subtype_indication
+   --
+   --  The type can be deduced from the subtype indication, but this field is
+   --  present for uniformity (and speed).
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Identifier (Field3)
    --
-   -- Return the position of the element in the record, starting from 0 for the
-   -- first record element, increasing by one for each successive element.
+   --  Return the position of the element in the record, starting from 0 for
+   --  the first record element, increasing by one for each successive element.
    --   Get/Set_Element_Position (Field4)
    --
+   --   Get/Set_Subtype_Indication (Field5)
+   --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Has_Identifier_List (Flag7)
 
    -- Iir_Kind_Record_Element_Constraint (Short)
    --
-   -- Record subtype definition which defines this constraint.
+   --  Record subtype definition which defines this constraint.
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Type (Field1)
@@ -1310,13 +1449,18 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   -- Return the position of the element in the record, starting from 0 for the
-   -- first record element, increasing by one for each successive element.
+   --  Return the position of the element in the record, starting from 0 for
+   --  the first record element, increasing by one for each successive element.
    --   Get/Set_Element_Position (Field4)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
    -- Iir_Kind_Attribute_Declaration (Short)
+   --
+   --  LRM08 6.7 Attribute declarations
+   --
+   --  attribute_declaration ::=
+   --     ATTRIBUTE identifier : type_mark ;
    --
    --   Get/Set_Parent (Field0)
    --
@@ -1326,6 +1470,8 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --   Get/Set_Type_Mark (Field4)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
@@ -1334,9 +1480,9 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
-   -- List of entity class entry.
-   -- To handle `<>', the last element of the list can be an entity_class of
-   -- kind tok_box.
+   --  List of entity class entry.
+   --  To handle `<>', the last element of the list can be an entity_class of
+   --  kind tok_box.
    --   Get/Set_Entity_Class_Entry_Chain (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -1349,10 +1495,10 @@ package Iirs is
 
    -- Iir_Kind_Group_Declaration (Short)
    --
-   -- The declaration containing this type declaration.
+   --  The declaration containing this type declaration.
    --   Get/Set_Parent (Field0)
    --
-   -- List of constituent.
+   --  List of constituents.
    --   Get/Set_Group_Constituent_List (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -1377,10 +1523,10 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   -- Valid only for property declaration.
+   --  Valid only for property declaration.
    --   Get/Set_PSL_Clock (Field7)
    --
-   -- Valid only for property declaration without parameters.
+   --  Valid only for property declaration without parameters.
    --   Get/Set_PSL_NFA (Field8)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -1413,8 +1559,6 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Base_Name (Field5)
-   --
    --   Get/Set_Default_Value (Field6)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -1438,8 +1582,6 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Base_Name (Field5)
-   --
    --   Get/Set_Default_Value (Field6)
    --
    --   Get/Set_Tolerance (Field7)
@@ -1458,6 +1600,11 @@ package Iirs is
 
    -- Iir_Kind_Use_Clause (Short)
    --
+   --  LRM08 12.4 Use clauses
+   --
+   --  use_clause ::=
+   --     USE selected_name { , selected_name } ;
+   --
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Selected_Name (Field1)
@@ -1467,50 +1614,50 @@ package Iirs is
    --   Get/Set_Use_Clause_Chain (Field3)
 
 
-   ----------------------
-   -- type definitions --
-   ----------------------
+   -----------------------
+   --  type definitions --
+   -----------------------
 
    -- For Iir_Kinds_Type_And_Subtype_Definition:
    --
-   -- Type_Declarator:
-   -- Points to the type declaration or subtype declaration that has created
-   -- this definition. For some types, such as integer and floating point
-   -- types, both type and subtype points to the declaration.
-   -- However, there are cases where a type definition doesn't point to
-   -- a declarator: anonymous subtype created by index contraints, or
-   -- anonymous subtype created by an object declaration.
-   -- Note: a type definition cannot be anoynymous.
+   --  Type_Declarator:
+   --  Points to the type declaration or subtype declaration that has created
+   --  this definition. For some types, such as integer and floating point
+   --  types, both type and subtype points to the declaration.
+   --  However, there are cases where a type definition doesn't point to
+   --  a declarator: anonymous subtype created by index contraints, or
+   --  anonymous subtype created by an object declaration.
+   --  Note: a type definition cannot be anoynymous.
    --   Get/Set_Type_Declarator (Field3)
    --
-   -- Get/Set the base type.
-   -- For a subtype, it returns the type.
-   -- For a type, it must return the type itself.
+   --  The base type.
+   --  For a subtype, it returns the type.
+   --  For a type, it must return the type itself.
    --   Get/Set_Base_Type (Field4)
    --
-   -- Get/Set the staticness of a type, according to LRM93 7.4.1.
-   -- Note: These types definition are always locally static:
-   -- enumeration, integer, floating.
-   -- However, their subtype are not necessary locally static.
+   --  The staticness of a type, according to LRM93 7.4.1.
+   --  Note: These types definition are always locally static:
+   --  enumeration, integer, floating.
+   --  However, their subtype are not necessary locally static.
    --   Get/Set_Type_Staticness (State1)
    --
-   -- Get/Set the resolved flag of a subtype, according to LRM93 2.4
+   --  The resolved flag of a subtype, according to LRM93 2.4
    --   Get/Set_Resolved_Flag (Flag1)
    --
-   -- Get/Set the signal_type flag of a type definition.
-   -- It is true when the type can be used for a signal.
+   --  The signal_type flag of a type definition.
+   --  It is true when the type can be used for a signal.
    --   Get/Set_Signal_Type_Flag (Flag2)
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
 
    -- Iir_Kind_Enumeration_Type_Definition (Short)
    --
-   -- Get the range of the type (This is just an ascending range from the
-   -- first literal to the last declared literal).
+   --  Get the range of the type (This is just an ascending range from the
+   --  first literal to the last declared literal).
    --   Get/Set_Range_Constraint (Field1)
    --
-   -- Return the list of literals.  This list is created when the node is
-   -- created.
+   --  Return the list of literals.  This list is created when the node is
+   --  created.
    --   Get/Set_Enumeration_Literal_List (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
@@ -1529,8 +1676,9 @@ package Iirs is
 
    -- Iir_Kind_Enumeration_Literal (Medium)
    --
-   -- Nota: two literals of the same type are equal iff their value is the
-   -- same; in other words, there may be severals literals with the same value.
+   --  Nota: two literals of the same type are equal iff their value is the
+   --  same; in other words, there may be severals literals with the same
+   --  value.
    --
    --   Get/Set_Parent (Field0)
    --
@@ -1543,13 +1691,11 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Base_Name (Field5)
-   --
-   -- The declaration of the literal.  If LITERAL_ORIGIN is not set, then this
-   -- is the node itself, else this is the literal defined.
+   --  The declaration of the literal.  If LITERAL_ORIGIN is not set, then this
+   --  is the node itself, else this is the literal defined.
    --   Get/Set_Enumeration_Decl (Field6)
    --
-   -- The value of an enumeration literal is the position.
+   --  The value of an enumeration literal is the position.
    --   Get/Set_Enum_Pos (Field10)
    --
    --   Get/Set_Subprogram_Hash (Field11)
@@ -1558,8 +1704,8 @@ package Iirs is
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
-   -- Never set to true, but possible when used as a prefix of an expanded
-   -- name in a overloaded subprogram.
+   --  Never set to true, but possible when used as a prefix of an expanded
+   --  name in a overloaded subprogram.
    --   Get/Set_Is_Within_Flag (Flag5)
    --
    --   Get/Set_Expr_Staticness (State1)
@@ -1589,6 +1735,14 @@ package Iirs is
 
    -- Iir_Kind_Unit_Declaration (Medium)
    --
+   --  LRM08 5.2.4 Physical types
+   --
+   --  primary_unit_declaration ::= identifier ;
+   --
+   --  secondary_unit_declaration ::= identifier = physical_literal ;
+   --
+   --  physical_literal ::= [ abstract_literal ] /unit/_name
+   --
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -1597,23 +1751,39 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
+   --  The Physical_Literal is the expression that appear in the sources, so
+   --  this is Null_Iir for a primary unit.
    --   Get/Set_Physical_Literal (Field6)
    --
+   --  The value of the unit, computed from the primary unit.  This is always
+   --  a physical integer literal.
    --   Get/Set_Physical_Unit_Value (Field7)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
+   --   Get/Set_Name_Staticness (State2)
+   --
    --   Get/Set_Visible_Flag (Flag4)
+
+   --  LRM08 5.2 Scalar types
+   --
+   --  range_constraint ::= RANGE range
+   --
+   --  range ::=
+   --       range_attribute_name
+   --     | simple_expression direction simple_expression
+   --
+   --  direction ::= to | downto
 
    -- Iir_Kind_Integer_Type_Definition (Short)
    -- Iir_Kind_Floating_Type_Definition (Short)
    --
-   -- Get/Set the declarator that has created this integer type.
+   --  The type declarator that has created this type.
    --   Get/Set_Type_Declarator (Field3)
    --
    --   Get/Set_Base_Type (Field4)
    --
-   -- Type staticness is always locally.
+   --  Type staticness is always locally.
    --   Get/Set_Type_Staticness (State1)
    --
    --   Get/Set_Resolved_Flag (Flag1)
@@ -1623,14 +1793,22 @@ package Iirs is
    --   Get/Set_Has_Signal_Flag (Flag3)
 
    -- Iir_Kind_Array_Type_Definition (Medium)
-   -- This defines an unconstrained array type.
    --
-   --   Get/Set_Element_Subtype (Field1)
+   --  LRM08 5.3.2 Array types / LRM93 3.2.1
+   --
+   --  unbounded_array_definition ::=
+   --     ARRAY ( index_subtype_definition { , index_subtype_definition } )
+   --   ï¿¼ï¿¼ï¿¼ï¿¼OF element_subtype_indication
+   --
+   --  index_subtype_definition ::= type_mark RANGE <>
+   --
+   --   Get/Set_Element_Subtype_Indication (Field1)
    --
    --   Get/Set_Type_Declarator (Field3)
    --
    --   Get/Set_Base_Type (Field4)
    --
+   --  This is a list of type marks.
    --   Get/Set_Index_Subtype_List (Field6)
    --
    --   Get/Set_Type_Staticness (State1)
@@ -1646,6 +1824,14 @@ package Iirs is
    --   Get/Set_Index_Constraint_Flag (Flag4)
 
    -- Iir_Kind_Record_Type_Definition (Short)
+   --
+   --  LRM08 5.3.3 Record types / LRM93 3.2.2 Record types
+   --
+   --  record_type_definition ::=
+   --     RECORD
+   --        element_declaration
+   --        { element_declaration }
+   --     END RECORD [ /record_type/_simple_name ]
    --
    --   Get/Set_Elements_Declaration_List (Field1)
    --
@@ -1669,14 +1855,17 @@ package Iirs is
 
    -- Iir_Kind_Access_Type_Definition (Short)
    --
-   --   Get/Set_Designated_Type (Field2)
+   --  LRM08 5.4 Access types
+   --
+   --  access_type_definition ::= ACCESS subtype_indication
+   --
+   --   Get/Set_Designated_Type (Field1)
+   --
+   --   Get/Set_Designated_Subtype_Indication (Field5)
    --
    --   Get/Set_Type_Declarator (Field3)
    --
    --   Get/Set_Base_Type (Field4)
-   --
-   -- FIXME: Only for access_subtype.
-   -- FIXME:  Get/Set_Resolution_Function (Field5)
    --
    --   Get/Set_Resolved_Flag (Flag1)
    --
@@ -1686,7 +1875,7 @@ package Iirs is
 
    -- Iir_Kind_File_Type_Definition (Short)
    --
-   --   Get/Set_Type_Mark (Field2)
+   --   Get/Set_File_Type_Mark (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
    --
@@ -1696,20 +1885,20 @@ package Iirs is
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
    --
-   -- True if this is the std.textio.text file type, which may require special
-   -- handling.
+   --  True if this is the std.textio.text file type, which may require special
+   --  handling.
    --   Get/Set_Text_File_Flag (Flag4)
    --
    --   Get/Set_Type_Staticness (State1)
 
    -- Iir_Kind_Incomplete_Type_Definition (Short)
-   -- Type definition for an incomplete type.  This is created during the
-   -- semantisation of the incomplete type declaration.
+   --  Type definition for an incomplete type.  This is created during the
+   --  semantisation of the incomplete type declaration.
    --
    --   Get/Set_Incomplete_Type_List (Field2)
    --
-   -- Set to the incomplete type declaration when semantized, and set to the
-   -- complete type declaration when the latter one is semantized.
+   --  Set to the incomplete type declaration when semantized, and set to the
+   --  complete type declaration when the latter one is semantized.
    --   Get/Set_Type_Declarator (Field3)
    --
    --   Get/Set_Base_Type (Field4)
@@ -1758,9 +1947,80 @@ package Iirs is
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
-   -------------------------
-   -- subtype definitions --
-   -------------------------
+   --------------------------
+   --  subtype definitions --
+   --------------------------
+
+   --  LRM08 6.3 Subtype declarations
+   --
+   --  subtype_indication ::=
+   --    [ resolution_indication ] type_mark [ constraint ]
+   --
+   --  There is no uniq representation for a subtype indication.  If there is
+   --  only a type_mark, then a subtype indication is represented by a name
+   --  (a simple name or an expanded name); otherwise it is represented by one
+   --  of the subtype definition node.
+   --
+   --  resolution_indication ::=
+   --     resolution_function_name | ( element_resolution )
+   --
+   --  element_resolution ::= array_element_resolution | record_resolution
+   --
+   --  array_element_resolution ::= resolution_indication
+   --
+   --  record_resolution ::=
+   --     record_element_resolution { , record_element_resolution }
+   --
+   --  record_element_resolution ::=
+   --     record_element_simple_name resolution_indication
+   --
+   --  If there is no constraint but a resolution function name, the subtype
+   --  indication is represented by a subtype_definition (which will be
+   --  replaced by the correct subtype definition).  If there is an array
+   --  element resolution the subtype indication is represented by an array
+   --  subtype definition, and if there is a record resolution, it is
+   --  represented by a record subtype definition.
+   --
+   --  constraint ::=
+   --     range_constraint
+   --   | index_constraint
+   --   | array_constraint
+   --   | record_constraint
+   --
+   --  There is no node for constraint, it is directly represented by one of
+   --  the rhs.
+   --
+   --  element_constraint ::=
+   --     array_constraint
+   --   | record_constraint
+   --
+   --  Likewise, there is no node for element_constraint.
+   --
+   --  index_constraint ::= ( discrete_range { , discrete_range } )
+   --
+   --  An index_constraint is represented by an array_subtype_definition.
+   --
+   --  discrete_range ::= /discrete/_subtype_indication | range
+   --
+   --  array_constraint ::=
+   --     index_constraint [ array_element_constraint ]
+   --   | ( OPEN ) [ array_element_constraint ]
+   --
+   --  An array_constraint is also represented by an array_subtype_definition.
+   --
+   --  array_element_constraint ::= element_constraint
+   --
+   --  There is no node for array_element_constraint.
+   --
+   --  record_constraint ::=
+   --     ( record_element_constraint { , record_element_constraint } )
+   --
+   --  A record_constraint is represented by a record_subtype_definition.
+   --
+   --  record_element_constraint ::=
+   --     record_element_simple_name element_constraint
+   --
+   --  Represented by Record_Element_Constraint.
 
    -- Iir_Kind_Enumeration_Subtype_Definition (Short)
    -- Iir_Kind_Integer_Subtype_Definition (Short)
@@ -1768,7 +2028,7 @@ package Iirs is
    --
    --   Get/Set_Range_Constraint (Field1)
    --
-   --   Get/Set_Type_Mark (Field2)
+   --   Get/Set_Subtype_Type_Mark (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
    --
@@ -1788,7 +2048,7 @@ package Iirs is
    --
    --   Get/Set_Range_Constraint (Field1)
    --
-   --   Get/Set_Type_Mark (Field2)
+   --   Get/Set_Subtype_Type_Mark (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
    --
@@ -1808,15 +2068,19 @@ package Iirs is
 
    -- Iir_Kind_Access_Subtype_Definition (Short)
    --
-   --   Get/Set_Type_Staticness (State1)
+   --   Get/Set_Designated_Type (Field1)
    --
-   --   Get/Set_Type_Mark (Field2)
+   --   Get/Set_Subtype_Type_Mark (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
    --
    --   Get/Set_Base_Type (Field4)
    --
-   -- Note: no resolution function for access subtype.
+   --   Get/Set_Designated_Subtype_Indication (Field5)
+   --
+   --  Note: no resolution function for access subtype.
+   --
+   --   Get/Set_Type_Staticness (State1)
    --
    --   Get/Set_Resolved_Flag (Flag1)
    --
@@ -1826,7 +2090,7 @@ package Iirs is
    --
    --   Get/Set_Elements_Declaration_List (Field1)
    --
-   --   Get/Set_Type_Mark (Field2)
+   --   Get/Set_Subtype_Type_Mark (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
    --
@@ -1848,9 +2112,9 @@ package Iirs is
 
    -- Iir_Kind_Array_Subtype_Definition (Medium)
    --
-   --   Get/Set_Element_Subtype (Field1)
+   --   Get/Set_Element_Subtype_Indication (Field1)
    --
-   --   Get/Set_Type_Mark (Field2)
+   --   Get/Set_Subtype_Type_Mark (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
    --
@@ -1858,6 +2122,7 @@ package Iirs is
    --
    --   Get/Set_Resolution_Function (Field5)
    --
+   --  The index_constraint. This is a list of subtype indication.
    --   Get/Set_Index_Subtype_List (Field6)
    --
    --   Get/Set_Tolerance (Field7)
@@ -1882,45 +2147,47 @@ package Iirs is
    --
    --   Get/Set_Right_Limit (Field3)
    --
+   --   Get/Set_Range_Origin (Field4)
+   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Direction (State2)
 
    -- Iir_Kind_Subtype_Definition (Medium)
-   -- Such a node is only created by parse and transformed into the correct
-   -- kind (enumeration_subtype, integer_subtype...) by sem.
+   --  Such a node is only created by parse and transformed into the correct
+   --  kind (enumeration_subtype, integer_subtype...) by sem.
    --
    --   Get/Set_Range_Constraint (Field1)
    --
-   --   Get/Set_Type_Mark (Field2)
+   --   Get/Set_Subtype_Type_Mark (Field2)
    --
    --   Get/Set_Resolution_Function (Field5)
    --
    --   Get/Set_Tolerance (Field7)
 
-   ------------------------
-   -- Nature definitions --
-   ------------------------
+   -------------------------
+   --  Nature definitions --
+   -------------------------
 
    -- Iir_Kind_Scalar_Nature_Definition (Medium)
    --
    --   Get/Set_Reference (Field2)
    --
-   -- Get/Set the declarator that has created this nature type.
+   --  The declarator that has created this nature type.
    --   Get/Set_Nature_Declarator (Field3)
    --
-   -- C--  Get/Set_Base_Type (Field4)
+   --  C--  Get/Set_Base_Type (Field4)
    --
-   -- Type staticness is always locally.
-   -- C--  Get/Set_Type_Staticness (State1)
+   --  Type staticness is always locally.
+   --  C--  Get/Set_Type_Staticness (State1)
    --
    --   Get/Set_Across_Type (Field7)
    --
    --   Get/Set_Through_Type (Field8)
 
-   ---------------------------
-   -- concurrent statements --
-   ---------------------------
+   ----------------------------
+   --  concurrent statements --
+   ----------------------------
 
    -- Iir_Kind_Concurrent_Conditional_Signal_Assignment (Medium)
    -- Iir_Kind_Concurrent_Selected_Signal_Assignment (Medium)
@@ -1947,10 +2214,10 @@ package Iirs is
    -- Only for Iir_Kind_Concurrent_Selected_Signal_Assignment:
    --   Get/Set_Selected_Waveform_Chain (Field7)
    --
-   -- If the assignment is guarded, then get_guard must return the
-   -- declaration of the signal guard, otherwise, null_iir.
-   -- If the guard signal decl is not known, as a kludge and only to mark this
-   -- assignment guarded, the guard can be this assignment.
+   --  If the assignment is guarded, then get_guard must return the
+   --  declaration of the signal guard, otherwise, null_iir.
+   --  If the guard signal decl is not known, as a kludge and only to mark this
+   --  assignment guarded, the guard can be this assignment.
    --   Get/Set_Guard (Field8)
    --
    --   Get/Set_Delay_Mechanism (Field12)
@@ -1959,7 +2226,7 @@ package Iirs is
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
-   -- True if the target of the assignment is guarded
+   --  True if the target of the assignment is guarded
    --   Get_Guarded_Target_State (State3)
 
    -- Iir_Kind_Sensitized_Process_Statement (Medium)
@@ -1983,8 +2250,8 @@ package Iirs is
    --
    --   Get/Set_Callees_List (Field7)
    --
-   -- The concurrent statement at the origin of that process.  This is Null_Iir
-   -- for a user process.
+   --  The concurrent statement at the origin of that process.  This is
+   --  Null_Iir for a user process.
    --   Get/Set_Process_Origin (Field8)
    --
    --   Get/Set_Wait_State (State1)
@@ -1999,9 +2266,13 @@ package Iirs is
    --
    --   Get/Set_Is_Within_Flag (Flag5)
    --
+   --   Get/Set_Has_Is (Flag7)
+   --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --   Get/Set_End_Has_Postponed (Flag10)
 
    -- Iir_Kind_Concurrent_Assertion_Statement (Medium)
    --
@@ -2061,11 +2332,23 @@ package Iirs is
 
    -- Iir_Kind_Component_Instantiation_Statement (Medium)
    --
+   --  LRM08 11.7 Component instantiation statements
+   --
+   --  component_instantiation_statement ::=
+   --     instantiation_label :
+   --        instantiated_unit
+   --           [ generic_map_aspect ]
+   --           [ port_map_aspect ] ;
+   --
+   --  instantiated_unit ::=
+   --       [ COMPONENT ] component_name
+   --     | ENTITY entity_name [ ( architecture_identifier ) ]
+   --     | CONFIGURATION configuration_name
+   --
    --   Get/Set_Parent (Field0)
    --
-   -- Unit instantiated.
-   -- Parse: a name, a entity_aspect_entity or a entity_aspect_configuration
-   -- Sem: the component declaration or the design unit.
+   --  Unit instantiated.  This is a name, an entity_aspect_entity or an
+   --  entity_aspect_configuration.
    --   Get/Set_Instantiated_Unit (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -2081,17 +2364,17 @@ package Iirs is
    --
    --   Get/Set_Port_Map_Aspect_Chain (Field9)
    --
-   -- Configuration:
-   -- In case of a configuration specification, the node is put into
-   -- default configuration.  In the absence of a specification, the
-   -- default entity aspect, if any; if none, this field is null_iir.
+   --  Configuration:
+   --  In case of a configuration specification, the node is put into
+   --  default configuration.  In the absence of a specification, the
+   --  default entity aspect, if any; if none, this field is null_iir.
    --   Get/Set_Configuration_Specification (Field7)
    --
-   -- During Sem and elaboration, the configuration field can be filled by
-   -- a component configuration declaration.
+   --  During Sem and elaboration, the configuration field can be filled by
+   --  a component configuration declaration.
    --
-   -- Configuration for this component.
-   -- FIXME: must be get/set_binding_indication.
+   --  Configuration for this component.
+   --  FIXME: must be get/set_binding_indication.
    --   Get/Set_Component_Configuration (Field6)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -2115,8 +2398,8 @@ package Iirs is
    --
    --   Get/Set_Block_Header (Field7)
    --
-   -- get/set_guard_decl is used for semantic analysis, in order to add
-   -- a signal declaration.
+   --  get/set_guard_decl is used for semantic analysis, in order to add
+   --  a signal declaration.
    --   Get/Set_Guard_Decl (Field8)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -2142,12 +2425,12 @@ package Iirs is
    --
    --   Get/Set_Concurrent_Statement_Chain (Field5)
    --
-   -- The generation scheme.
-   -- A (boolean) expression for a conditionnal elaboration (if).
-   -- A (iterator) declaration for an iterative elaboration (for).
+   --  The generation scheme.
+   --  A (boolean) expression for a conditionnal elaboration (if).
+   --  A (iterator) declaration for an iterative elaboration (for).
    --   Get/Set_Generation_Scheme (Field6)
    --
-   -- The block configuration for this statement.
+   --  The block configuration for this statement.
    --   Get/Set_Generate_Block_Configuration (Field7)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -2155,6 +2438,8 @@ package Iirs is
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --   Get/Set_Has_Begin (Flag10)
 
    -- Iir_Kind_Simple_Simultaneous_Statement (Medium)
    --
@@ -2175,17 +2460,17 @@ package Iirs is
    --
    --   Get/Set_Visible_Flag (Flag4)
 
-   ---------------------------
-   -- sequential statements --
-   ---------------------------
+   ----------------------------
+   --  sequential statements --
+   ----------------------------
 
    -- Iir_Kind_If_Statement (Medium)
    -- Iir_Kind_Elsif (Medium)
    --
    --   Get/Set_Parent (Field0)
    --
-   -- May be NULL only for an iir_kind_elsif node, and then means the else
-   -- clause.
+   --  May be NULL only for an iir_kind_elsif node, and then means the else
+   --  clause.
    --   Get/Set_Condition (Field1)
    --
    -- Only for Iir_Kind_If_Statement:
@@ -2202,7 +2487,7 @@ package Iirs is
    --
    --   Get/Set_Sequential_Statement_Chain (Field5)
    --
-   -- Must be an Iir_kind_elsif node, or NULL for no more elsif clauses.
+   --  Must be an Iir_kind_elsif node, or NULL for no more elsif clauses.
    --   Get/Set_Else_Clause (Field6)
    --
    -- Only for Iir_Kind_If_Statement:
@@ -2210,11 +2495,27 @@ package Iirs is
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
+   --  LRM08 10.10 Loop statement / LRM93 8.9
+   --
+   --  loop_statement ::=
+   --     [ loop_label : ]
+   --        [ iteration_scheme ] LOOP
+   --           sequence_of_statements
+   --        END LOOP [ loop_label ] ;
+   --
+   --  iteration_scheme ::=
+   --       WHILE condition
+   --     | FOR loop_parameter_specification
+   --
+   --  parameter_specification ::=
+   --     identifier IN discrete_range
+
    -- Iir_Kind_For_Loop_Statement (Short)
    --
    --   Get/Set_Parent (Field0)
    --
-   --   Get/Set_Iterator_Scheme (Field1)
+   --  The parameters specification is represented by an Iterator_Declaration.
+   --   Get/Set_Parameter_Specification (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
@@ -2253,6 +2554,16 @@ package Iirs is
    -- Iir_Kind_Exit_Statement (Short)
    -- Iir_Kind_Next_Statement (Short)
    --
+   --  LRM08 10.11 Next statement
+   --
+   --  next_statement ::=
+   --     [ label : ] NEXT [ loop_label ] [ WHEN condition ] ;
+   --
+   --  LRM08 10.12 Exit statement
+   --
+   --  exit_statement ::=
+   --     [ label : ] exit [ loop_label ] [ when condition ] ;
+   --
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Condition (Field1)
@@ -2264,8 +2575,7 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   -- Label identifier after parse.
-   --   Get/Set_Loop (Field5)
+   --   Get/Set_Loop_Label (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -2282,10 +2592,10 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   -- The waveform.
-   -- If the waveform_chain is null_iir, then the signal assignment is a
-   -- disconnection statement, ie TARGET <= null_iir after disconection_time,
-   -- where disconnection_time is specified by a disconnection specification.
+   --  The waveform.
+   --  If the waveform_chain is null_iir, then the signal assignment is a
+   --  disconnection statement, ie TARGET <= null_iir after disconection_time,
+   --  where disconnection_time is specified by a disconnection specification.
    --   Get/Set_Waveform_Chain (Field5)
    --
    --   Get/Set_Reject_Time_Expression (Field6)
@@ -2294,7 +2604,7 @@ package Iirs is
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
-   -- True if the target of the assignment is guarded
+   --  True if the target of the assignment is guarded
    --   Get_Guarded_Target_State (State3)
 
    -- Iir_Kind_Variable_Assignment_Statement (Short)
@@ -2373,7 +2683,8 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
-   -- Type of the return value of the function.  This is a copy of return_type.
+   --  Type of the return value of the function.  This is a copy of
+   --  return_type.
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -2391,7 +2702,7 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
-   -- Chain is compose of Iir_Kind_Choice_By_XXX.
+   --  Chain is compose of Iir_Kind_Choice_By_XXX.
    --   Get/Set_Case_Statement_Alternative_Chain (Field1)
    --
    --   Get/Set_Chain (Field2)
@@ -2428,7 +2739,7 @@ package Iirs is
 
    -- Iir_Kind_Procedure_Call (Short)
    --
-   --   Get/Set_Parent (Field0)
+   --   Get/Set_Prefix (Field0)
    --
    --   Get/Set_Parameter_Association_Chain (Field2)
    --
@@ -2449,9 +2760,9 @@ package Iirs is
    --
    --   Get/Set_Visible_Flag (Flag4)
 
-   ---------------
-   -- operators --
-   ---------------
+   ----------------
+   --  operators --
+   ----------------
 
    -- Iir_Kinds_Monadic_Operator (Short)
    --
@@ -2459,20 +2770,20 @@ package Iirs is
    --
    --   Get/Set_Operand (Field2)
    --
-   -- Function declaration corresponding to the function to call.
+   --  Function declaration corresponding to the function to call.
    --   Get/Set_Implementation (Field3)
    --
-   -- Expr_staticness is defined by §7.4
+   --  Expr_staticness is defined by Â§7.4
    --   Get/Set_Expr_Staticness (State1)
 
    -- Iir_Kinds_Dyadic_Operator (Short)
    --
    --   Get/Set_Type (Field1)
    --
-   -- Left and Right operands.
+   --  Left and Right operands.
    --   Get/Set_Left (Field2)
    --
-   -- Function declaration corresponding to the function to call.
+   --  Function declaration corresponding to the function to call.
    --   Get/Set_Implementation (Field3)
    --
    --   Get/Set_Right (Field4)
@@ -2481,11 +2792,13 @@ package Iirs is
 
    -- Iir_Kind_Function_Call (Short)
    --
+   --   Get/Set_Prefix (Field0)
+   --
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Parameter_Association_Chain (Field2)
    --
-   -- Function declaration corresponding to the function to call.
+   --  Function declaration corresponding to the function to call.
    --   Get/Set_Implementation (Field3)
    --
    --   Get/Set_Method_Object (Field4)
@@ -2510,35 +2823,35 @@ package Iirs is
 
    -- Iir_Kind_Aggregate_Info (Short)
    --
-   -- Get info for the next dimension.  NULL_IIR terminated.
+   --  Get info for the next dimension.  NULL_IIR terminated.
    --   Get/Set_Sub_Aggregate_Info (Field1)
    --
-   -- For array aggregate only:
-   -- If TRUE, the choices are not locally static.
-   -- This flag is only valid when the array aggregate is constrained, ie
-   -- has no 'others' choice.
+   --  For array aggregate only:
+   --  If TRUE, the choices are not locally static.
+   --  This flag is only valid when the array aggregate is constrained, ie
+   --  has no 'others' choice.
    --   Get/Set_Aggr_Dynamic_Flag (Flag3)
    --
-   -- If TRUE, the aggregate is named, else it is positionnal.
+   --  If TRUE, the aggregate is named, else it is positionnal.
    --   Get/Set_Aggr_Named_Flag (Flag4)
    --
-   -- The following three fields are used to check bounds of an array
-   -- aggregate.
-   -- For named aggregate, low and high bounds are computed, for positionnal
-   -- aggregate, the (minimum) number of elements is computed.
-   -- Note there may be elements beyond the bounds, due to other choice.
-   -- These fields may apply for the aggregate or for the aggregate and its
-   -- brothers if the node is for a sub-aggregate.
+   --  The following three fields are used to check bounds of an array
+   --  aggregate.
+   --  For named aggregate, low and high bounds are computed, for positionnal
+   --  aggregate, the (minimum) number of elements is computed.
+   --  Note there may be elements beyond the bounds, due to other choice.
+   --  These fields may apply for the aggregate or for the aggregate and its
+   --  brothers if the node is for a sub-aggregate.
    --
-   -- The low and high index choice, if any.
+   --  The low and high index choice, if any.
    --   Get/Set_Aggr_Low_Limit (Field2)
    --
    --   Get/Set_Aggr_High_Limit (Field3)
    --
-   -- The minimum number of elements, if any.  This is a minimax.
+   --  The minimum number of elements, if any.  This is a minimax.
    --   Get/Set_Aggr_Min_Length (Field4)
    --
-   -- True if the choice list has an 'others' choice.
+   --  True if the choice list has an 'others' choice.
    --   Get/Set_Aggr_Others_Flag (Flag2)
 
    -- Iir_Kind_Parenthesis_Expression (Short)
@@ -2551,9 +2864,15 @@ package Iirs is
 
    -- Iir_Kind_Qualified_Expression (Short)
    --
+   --  LRM08 9.3.5 Qualified expressions
+   --
+   --  qualified_expression ::=
+   --       type_mark ' ( expression )
+   --     | type_mark ' aggregate
+   --
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Type_Mark (Field2)
+   --   Get/Set_Type_Mark (Field4)
    --
    --   Get/Set_Expression (Field5)
    --
@@ -2561,9 +2880,13 @@ package Iirs is
 
    -- Iir_Kind_Type_Conversion (Short)
    --
+   --  LRM08 9.3.6 Type conversions
+   --
+   --  type_conversion ::= type_mark ( expression )
+   --
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Type_Mark (Field2)
+   --   Get/Set_Type_Mark (Field4)
    --
    --   Get/Set_Expression (Field5)
    --
@@ -2572,25 +2895,37 @@ package Iirs is
    -- Iir_Kind_Allocator_By_Expression (Short)
    -- Iir_Kind_Allocator_By_Subtype (Short)
    --
+   --  LRM08 9.3.7 Allocators
+   --
+   --  allocator ::=
+   --     NEW subtype_indication
+   --   | NEW qualified_expression
+   --
    --   Get/Set_Type (Field1)
    --
-   -- To ease analysis: set to the designated type (either the type of the
-   -- expression or the subtype)
+   --  To ease analysis: set to the designated type (either the type of the
+   --  expression or the subtype)
    --   Get/Set_Allocator_Designated_Type (Field2)
    --
-   -- Contains the expression for a by expression allocator or the
-   -- subtype indication for a by subtype allocator.
+   -- Only for Iir_Kind_Allocator_By_Expression:
+   --  Contains the expression for a by expression allocator.
    --   Get/Set_Expression (Field5)
+   --
+   -- Only for Iir_Kind_Allocator_By_Subtype:
+   --  Contains the subtype indication for a by subtype allocator.
+   --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
 
-   -----------
-   -- names --
-   -----------
+   ------------
+   --  Names --
+   ------------
 
    -- Iir_Kind_Simple_Name (Short)
    --
    --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Alias_Declaration (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
@@ -2599,6 +2934,36 @@ package Iirs is
    --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
+   -- Iir_Kind_Character_Literal (Short)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Alias_Declaration (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Named_Entity (Field4)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
+   -- Iir_Kind_Operator_Symbol (Short)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Alias_Declaration (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Named_Entity (Field4)
+   --
+   --   Get/Set_Base_Name (Field5)
 
    -- Iir_Kind_Selected_Name (Short)
    --
@@ -2606,6 +2971,8 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
+   --   Get/Set_Alias_Declaration (Field2)
+   --
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
@@ -2613,6 +2980,8 @@ package Iirs is
    --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Selected_By_All_Name (Short)
    --
@@ -2626,16 +2995,8 @@ package Iirs is
    --
    --   Get/Set_Expr_Staticness (State1)
 
-   -- Iir_Kind_Operator_Symbol (Short)
-   --
-   --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Named_Entity (Field4)
-   --
-   --   Get/Set_Base_Name (Field5)
-
    -- Iir_Kind_Indexed_Name (Short)
-   -- Select the element designed with the INDEX_LIST from array PREFIX.
+   --  Select the element designed with the INDEX_LIST from array PREFIX.
    --
    --   Get/Set_Prefix (Field0)
    --
@@ -2664,22 +3025,51 @@ package Iirs is
    --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Parenthesis_Name (Short)
-   -- Created by the parser, and mutated into the correct iir node: it can be
-   -- either a function call, an indexed array, a type conversion or a slice
-   -- name.
+   --  Created by the parser, and mutated into the correct iir node: it can be
+   --  either a function call, an indexed array, a type conversion or a slice
+   --  name.
    --
    --   Get/Set_Prefix (Field0)
    --
-   -- Always returns null_iir.
+   --  Always returns null_iir.
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Association_Chain (Field2)
    --
    --   Get/Set_Named_Entity (Field4)
 
-   ----------------
-   -- attributes --
-   ----------------
+   -- Iir_Kind_Selected_Element (Short)
+   --  A record element selection.
+   --
+   --   Get/Set_Prefix (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Selected_Element (Field2)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
+   -- Iir_Kind_Implicit_Dereference (Short)
+   -- Iir_Kind_Dereference (Short)
+   --  An implicit access dereference.
+   --
+   --   Get/Set_Prefix (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
+   -----------------
+   --  Attributes --
+   -----------------
 
    -- Iir_Kind_Attribute_Name (Short)
    --
@@ -2687,13 +3077,17 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
+   --   Get/Set_Attribute_Signature (Field2)
+   --
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Named_Entity (Field4)
    --
-   --   Get/Set_Signature (Field5)
+   --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Base_Attribute (Short)
    --
@@ -2744,7 +3138,7 @@ package Iirs is
    -- Iir_Kind_Delayed_Attribute (Short)
    -- Iir_Kind_Quiet_Attribute (Short)
    -- Iir_Kind_Transaction_Attribute (Short)
-   -- (Iir_Kinds_Signal_Attribute)
+   --  (Iir_Kinds_Signal_Attribute)
    --
    --   Get/Set_Prefix (Field0)
    --
@@ -2752,16 +3146,16 @@ package Iirs is
    --
    --   Get/Set_Chain (Field2)
    --
-   -- Not used by Iir_Kind_Transaction_Attribute
+   --  Not used by Iir_Kind_Transaction_Attribute
    --   Get/Set_Parameter (Field4)
+   --
+   --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Has_Active_Flag (Flag2)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
-   --
-   --   Get/Set_Base_Name (Field5)
 
    -- Iir_Kind_Event_Attribute (Short)
    -- Iir_Kind_Last_Event_Attribute (Short)
@@ -2832,10 +3226,10 @@ package Iirs is
 
    -- Iir_Kind_Behavior_Attribute (Short)
    -- Iir_Kind_Structure_Attribute (Short)
-   -- FIXME: to describe (Short)
+   --  FIXME: to describe (Short)
 
    -- Iir_Kind_Error (Short)
-   -- Can be used instead of an expression or a type.
+   --  Can be used instead of an expression or a type.
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Error_Origin (Field2)
@@ -2854,7 +3248,6 @@ package Iirs is
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
 
-
    -- End of Iir_Kind.
 
 
@@ -2869,7 +3262,6 @@ package Iirs is
        Iir_Kind_Use_Clause,
 
    -- Literals.
-       Iir_Kind_Character_Literal,
        Iir_Kind_Integer_Literal,
        Iir_Kind_Floating_Point_Literal,
        Iir_Kind_Null_Literal,
@@ -2881,7 +3273,6 @@ package Iirs is
        Iir_Kind_Overflow_Literal,
 
    -- Tuple,
-       Iir_Kind_Proxy,
        Iir_Kind_Waveform_Element,
        Iir_Kind_Conditional_Waveform,
        Iir_Kind_Association_Element_By_Expression,
@@ -2904,7 +3295,6 @@ package Iirs is
        Iir_Kind_Signature,
        Iir_Kind_Aggregate_Info,
        Iir_Kind_Procedure_Call,
-       Iir_Kind_Operator_Symbol,
        Iir_Kind_Record_Element_Constraint,
 
        Iir_Kind_Attribute_Specification,
@@ -3043,6 +3433,8 @@ package Iirs is
        Iir_Kind_Selected_Element,
        Iir_Kind_Dereference,
        Iir_Kind_Implicit_Dereference,
+       Iir_Kind_Slice_Name,
+       Iir_Kind_Indexed_Name,
        Iir_Kind_Psl_Expression,
 
    -- Concurrent statements.
@@ -3079,10 +3471,11 @@ package Iirs is
        Iir_Kind_Elsif,
 
    -- Names
-       Iir_Kind_Simple_Name,
-       Iir_Kind_Slice_Name,
-       Iir_Kind_Indexed_Name,
-       Iir_Kind_Selected_Name,
+       Iir_Kind_Character_Literal,              --  denoting_name
+       Iir_Kind_Simple_Name,                    --  denoting_name
+       Iir_Kind_Selected_Name,                  --  denoting_name
+       Iir_Kind_Operator_Symbol,                --  denoting_name
+
        Iir_Kind_Selected_By_All_Name,
        Iir_Kind_Parenthesis_Name,
 
@@ -3166,22 +3559,24 @@ package Iirs is
    --  has_class: set if class (constant, signal, variable or file) is explicit
    --
    --  Exemple:
-   --  procedure P (A,B: integer;
-   --               C: in constant bit;
-   --               D: inout bit;
-   --               E: variable bit;
-   --               F, G: in bit;
-   --               H, I: constant bit;
-   --               J, K: in constant bit);
+   --  procedure P (         A, B:       integer;
+   --               constant C:    in    bit;
+   --                        D:    inout bit;
+   --               variable E:          bit;
+   --                        F, G: in    bit;
+   --               constant H, I:       bit;
+   --               constant J, K: in    bit);
    --  A:
-   --  B:                         has_type
-   --  C, K: has_mode, has_class, has_type
-   --  D:    has_mode,            has_type
-   --  E, I:           has_class, has_type
-   --  F:    has_mode
-   --  G:    has_mode,            has_type
-   --  H:              has_class
-   --  J:    has_mode, has_class
+   --  B:                      has_type
+   --  C, has_class, has_mode, has_type
+   --  D:            has_mode, has_type
+   --  E, has_class,           has_type
+   --  F:            has_mode
+   --  G:            has_mode, has_type
+   --  H: has_class
+   --  I: has_class,           has_type
+   --  J: has_class, has_mode
+   --  K: has_class, has_mode, has_type
    type Iir_Lexical_Layout_Type is mod 2 ** 3;
    Iir_Lexical_Has_Mode  : constant Iir_Lexical_Layout_Type := 2 ** 0;
    Iir_Lexical_Has_Class : constant Iir_Lexical_Layout_Type := 2 ** 1;
@@ -3480,10 +3875,10 @@ package Iirs is
    --Iir_Predefined_Std_Ulogic_Match_Greater
      Iir_Predefined_Std_Ulogic_Match_Greater_Equal;
 
-   -- Staticness as defined by LRM93 §6.1 and §7.4
+   -- Staticness as defined by LRM93 Â§6.1 and Â§7.4
    type Iir_Staticness is (Unknown, None, Globally, Locally);
 
-   -- Staticness as defined by LRM93 §6.1 and §7.4
+   -- Staticness as defined by LRM93 Â§6.1 and Â§7.4
    function Min (L,R: Iir_Staticness) return Iir_Staticness renames
      Iir_Staticness'Min;
 
@@ -3555,8 +3950,7 @@ package Iirs is
    --  Note: does not include iir_kind_enumeration_literal since it is
    --  considered as a declaration.
    subtype Iir_Kinds_Literal is Iir_Kind range
-     Iir_Kind_Character_Literal ..
-   --Iir_Kind_Integer_Literal
+     Iir_Kind_Integer_Literal ..
    --Iir_Kind_Floating_Point_Literal
    --Iir_Kind_Null_Literal
    --Iir_Kind_String_Literal
@@ -3618,7 +4012,6 @@ package Iirs is
    --Iir_Kind_Enumeration_Subtype_Definition
    --Iir_Kind_Enumeration_Type_Definition
      Iir_Kind_Integer_Type_Definition;
-
 
 --     subtype Iir_Kinds_Discrete_Subtype_Definition is Iir_Kind range
 --       Iir_Kind_Integer_Subtype_Definition ..
@@ -3765,11 +4158,17 @@ package Iirs is
    --Iir_Kind_Choice_By_None
      Iir_Kind_Choice_By_Name;
 
-   subtype Iir_Kinds_Name is Iir_Kind range
-     Iir_Kind_Simple_Name ..
-   --Iir_Kind_Slice_Name
-   --Iir_Kind_Indexed_Name
+   subtype Iir_Kinds_Denoting_Name is Iir_Kind range
+     Iir_Kind_Character_Literal ..
+   --Iir_Kind_Simple_Name
    --Iir_Kind_Selected_Name
+     Iir_Kind_Operator_Symbol;
+
+   subtype Iir_Kinds_Name is Iir_Kind range
+     Iir_Kind_Character_Literal ..
+   --Iir_Kind_Simple_Name
+   --Iir_Kind_Selected_Name
+   --Iir_Kind_Operator_Symbol
    --Iir_Kind_Selected_By_All_Name
      Iir_Kind_Parenthesis_Name;
 
@@ -3815,10 +4214,10 @@ package Iirs is
    --Iir_Kind_Length_Array_Attribute
      Iir_Kind_Ascending_Array_Attribute;
 
-
+   --  All the attributes.
    subtype Iir_Kinds_Attribute is Iir_Kind range
      Iir_Kind_Base_Attribute ..
-     Iir_Kind_Path_Name_Attribute;
+     Iir_Kind_Reverse_Range_Array_Attribute;
 
    subtype Iir_Kinds_Type_Attribute is Iir_Kind range
      Iir_Kind_Left_Type_Attribute ..
@@ -4129,9 +4528,6 @@ package Iirs is
    subtype Iir_Access_Subtype_Definition is Iir;
 
    subtype Iir_File_Type_Definition is Iir;
-
-   -- Tuples.
-   subtype Iir_Proxy is Iir;
 
    subtype Iir_Waveform_Element is Iir;
 
@@ -4547,13 +4943,9 @@ package Iirs is
    function Get_Literal_Origin (Lit : Iir) return Iir;
    procedure Set_Literal_Origin (Lit : Iir; Orig : Iir);
 
-   --  tuples.
-
-   function Create_Proxy (Proxy: Iir) return Iir_Proxy;
-
-   --  Field: Field1
-   function Get_Proxy (Target : Iir_Proxy) return Iir;
-   procedure Set_Proxy (Target : Iir_Proxy; Proxy : Iir);
+   --  Field: Field4
+   function Get_Range_Origin (Lit : Iir) return Iir;
+   procedure Set_Range_Origin (Lit : Iir; Orig : Iir);
 
    --  Field: Field3 (uc)
    function Get_Entity_Class (Target : Iir) return Token_Type;
@@ -4578,7 +4970,7 @@ package Iirs is
    function Get_Attribute_Specification (Val : Iir) return Iir;
    procedure Set_Attribute_Specification (Val : Iir; Attr : Iir);
 
-   --  Field: Field4 (uc)
+   --  Field: Field3 (uc)
    function Get_Signal_List (Target : Iir) return Iir_List;
    procedure Set_Signal_List (Target : Iir; List : Iir_List);
 
@@ -4694,13 +5086,8 @@ package Iirs is
    function Get_Attribute_Value_Spec_Chain (Target : Iir) return Iir;
    procedure Set_Attribute_Value_Spec_Chain (Target : Iir; Chain : Iir);
 
-   --  The entity declaration for an architecture or a configuration.
-   --  Field: Field2
-   function Get_Entity (Decl : Iir) return Iir;
-   procedure Set_Entity (Decl : Iir; Entity : Iir);
-
    --  The entity name for an architecture or a configuration.
-   --  Field: Field7
+   --  Field: Field2
    function Get_Entity_Name (Arch : Iir) return Iir;
    procedure Set_Entity_Name (Arch : Iir; Entity : Iir);
 
@@ -4744,6 +5131,14 @@ package Iirs is
    function Get_Type (Target : Iir) return Iir;
    procedure Set_Type (Target : Iir; Atype : Iir);
    pragma Inline (Get_Type);
+
+   --  Field: Field5
+   function Get_Subtype_Indication (Target : Iir) return Iir;
+   procedure Set_Subtype_Indication (Target : Iir; Atype : Iir);
+
+   --  Field: Field5
+   function Get_Discrete_Range (Target : Iir) return Iir;
+   procedure Set_Discrete_Range (Target : Iir; Rng : Iir);
 
    --  Field: Field1
    function Get_Type_Definition (Decl : Iir) return Iir;
@@ -4917,10 +5312,10 @@ package Iirs is
    function Get_Selected_Name (Target : Iir_Use_Clause) return Iir;
    procedure Set_Selected_Name (Target : Iir_Use_Clause; Name : Iir);
 
-   --  The type declarator which declares the type definition TARGET.
+   --  The type declarator which declares the type definition DEF.
    --  Field: Field3
-   function Get_Type_Declarator (Target : Iir) return Iir;
-   procedure Set_Type_Declarator (Target : Iir; Decl : Iir);
+   function Get_Type_Declarator (Def : Iir) return Iir;
+   procedure Set_Type_Declarator (Def : Iir; Decl : Iir);
 
    --  Field: Field2 (uc)
    function Get_Enumeration_Literal_List (Target : Iir) return Iir_List;
@@ -5037,17 +5432,21 @@ package Iirs is
    procedure Set_Index_List (Decl : Iir; List : Iir_List);
 
    --  Field: Field1
-   function Get_Element_Subtype (Decl : Iir) return Iir;
-   procedure Set_Element_Subtype (Decl : Iir; Sub_Type : Iir);
+   function Get_Element_Subtype_Indication (Decl : Iir) return Iir;
+   procedure Set_Element_Subtype_Indication (Decl : Iir; Sub_Type : Iir);
 
    --  Chains of elements of a record.
    --  Field: Field1 (uc)
    function Get_Elements_Declaration_List (Decl : Iir) return Iir_List;
    procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_List);
 
-   --  Field: Field2
+   --  Field: Field1
    function Get_Designated_Type (Target : Iir) return Iir;
    procedure Set_Designated_Type (Target : Iir; Dtype : Iir);
+
+   --  Field: Field5
+   function Get_Designated_Subtype_Indication (Target : Iir) return Iir;
+   procedure Set_Designated_Subtype_Indication (Target : Iir; Dtype : Iir);
 
    --  The terminal declaration for the reference (ground) of a nature
    --  Field: Field2
@@ -5240,8 +5639,8 @@ package Iirs is
 
    --  Configuration of an entity_aspect_configuration.
    --  Field: Field1
-   function Get_Configuration (Target : Iir) return Iir;
-   procedure Set_Configuration (Target : Iir; Conf : Iir);
+   function Get_Configuration_Name (Target : Iir) return Iir;
+   procedure Set_Configuration_Name (Target : Iir; Conf : Iir);
 
    --  Component configuration for a component_instantiation_statement.
    --  Field: Field6
@@ -5339,8 +5738,8 @@ package Iirs is
 
    --  Iterator of a for_loop_statement.
    --  Field: Field1
-   function Get_Iterator_Scheme (Target : Iir) return Iir;
-   procedure Set_Iterator_Scheme (Target : Iir; Iterator : Iir);
+   function Get_Parameter_Specification (Target : Iir) return Iir;
+   procedure Set_Parameter_Specification (Target : Iir; Param : Iir);
 
    --  Get/Set the statement in which TARGET appears.  This is used to check
    --  if next/exit is in a loop.
@@ -5350,8 +5749,8 @@ package Iirs is
 
    --  Loop label for an exit_statement or next_statement.
    --  Field: Field5
-   function Get_Loop (Target : Iir) return Iir;
-   procedure Set_Loop (Target : Iir; Stmt : Iir);
+   function Get_Loop_Label (Target : Iir) return Iir;
+   procedure Set_Loop_Label (Target : Iir; Stmt : Iir);
 
    --  Component name for a component_configuration or
    --  a configuration_specification.
@@ -5385,8 +5784,14 @@ package Iirs is
 
    --  The named entity designated by a name.
    --  Field: Field4
-   function Get_Named_Entity (Target : Iir) return Iir;
-   procedure Set_Named_Entity (Target : Iir; Val : Iir);
+   function Get_Named_Entity (Name : Iir) return Iir;
+   procedure Set_Named_Entity (Name : Iir; Val : Iir);
+
+   --  If a name designate a non-object alias, the designated alias.
+   --  Named_Entity will designate the aliased entity.
+   --  Field: Field2
+   function Get_Alias_Declaration (Name : Iir) return Iir;
+   procedure Set_Alias_Declaration (Name : Iir; Val : Iir);
 
    --  Expression staticness, defined by rules of LRM 7.4
    --  Field: State1 (pos)
@@ -5553,12 +5958,26 @@ package Iirs is
    function Get_Method_Object (Target : Iir) return Iir;
    procedure Set_Method_Object (Target : Iir; Object : Iir);
 
-   --  The type_mark that appeared in the subtype indication.
+   --  The type_mark that appeared in the subtype indication.  This is a name.
    --  May be null_iir if there is no type mark (as in an iterator).
-   --  May differ from base_type, if the type_mark is a subtype_name.
    --  Field: Field2
+   function Get_Subtype_Type_Mark (Target : Iir) return Iir;
+   procedure Set_Subtype_Type_Mark (Target : Iir; Mark : Iir);
+
+   --  The type_mark that appeared in qualified expressions or type
+   --  conversions.
+   --  Field: Field4
    function Get_Type_Mark (Target : Iir) return Iir;
    procedure Set_Type_Mark (Target : Iir; Mark : Iir);
+
+   --  The type of values for a type file.
+   --  Field: Field2
+   function Get_File_Type_Mark (Target : Iir) return Iir;
+   procedure Set_File_Type_Mark (Target : Iir; Mark : Iir);
+
+   --  Field: Field8
+   function Get_Return_Type_Mark (Target : Iir) return Iir;
+   procedure Set_Return_Type_Mark (Target : Iir; Mark : Iir);
 
    --  Get/set the lexical layout of an interface.
    --  Field: Odigit2 (pos)
@@ -5601,8 +6020,12 @@ package Iirs is
    procedure Set_Implicit_Alias_Flag (Decl : Iir; Flag : Boolean);
 
    --  Field: Field5
-   function Get_Signature (Target : Iir) return Iir;
-   procedure Set_Signature (Target : Iir; Value : Iir);
+   function Get_Alias_Signature (Alias : Iir) return Iir;
+   procedure Set_Alias_Signature (Alias : Iir; Signature : Iir);
+
+   --  Field: Field2
+   function Get_Attribute_Signature (Attr : Iir) return Iir;
+   procedure Set_Attribute_Signature (Attr : Iir; Signature : Iir);
 
    --  Field: Field1 (uc)
    function Get_Overload_List (Target : Iir) return Iir_List;
@@ -5653,10 +6076,43 @@ package Iirs is
    function Get_End_Has_Identifier (Decl : Iir) return Boolean;
    procedure Set_End_Has_Identifier (Decl : Iir; Flag : Boolean);
 
+   --  Layout flag: true if 'end' is followed by 'postponed'.
+   --  Field: Flag10
+   function Get_End_Has_Postponed (Decl : Iir) return Boolean;
+   procedure Set_End_Has_Postponed (Decl : Iir; Flag : Boolean);
+
    --  Layout flag: true if 'begin' is present.
    --  Field: Flag10
    function Get_Has_Begin (Decl : Iir) return Boolean;
    procedure Set_Has_Begin (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if 'is' is present.
+   --  Field: Flag7
+   function Get_Has_Is (Decl : Iir) return Boolean;
+   procedure Set_Has_Is (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if 'pure' or 'impure' is present.
+   --  Field: Flag8
+   function Get_Has_Pure (Decl : Iir) return Boolean;
+   procedure Set_Has_Pure (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if body appears just after the specification.
+   --  Field: Flag9
+   function Get_Has_Body (Decl : Iir) return Boolean;
+   procedure Set_Has_Body (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag for object declaration.  If True, the identifier of this
+   --  declaration is followed by an identifier (and separated by a comma).
+   --  This flag is set on all but the last declarations.
+   --  Eg: on 'signal A, B, C : Bit', the flag is set on A and B (but not C).
+   --  Field: Flag7
+   function Get_Has_Identifier_List (Decl : Iir) return Boolean;
+   procedure Set_Has_Identifier_List (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag for object declaration.  If True, the mode is present.
+   --  Field: Flag8
+   function Get_Has_Mode (Decl : Iir) return Boolean;
+   procedure Set_Has_Mode (Decl : Iir; Flag : Boolean);
 
    --  Field: Field1 (uc)
    function Get_Psl_Property (Decl : Iir) return PSL_Node;

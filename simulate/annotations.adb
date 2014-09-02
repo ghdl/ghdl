@@ -380,7 +380,7 @@ package body Annotations is
 
          when Iir_Kind_File_Type_Definition =>
             declare
-               Type_Name : constant Iir := Get_Type_Mark (Def);
+               Type_Name : constant Iir := Get_Type (Get_File_Type_Mark (Def));
                Res : String_Acc;
             begin
                if Get_Text_File_Flag (Def)
@@ -617,8 +617,10 @@ package body Annotations is
 
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
-            Annotate_Subprogram_Interfaces_Type (Block_Info, Decl);
-            Annotate_Subprogram_Specification (Block_Info, Decl);
+            if not Is_Second_Subprogram_Specification (Decl) then
+               Annotate_Subprogram_Interfaces_Type (Block_Info, Decl);
+               Annotate_Subprogram_Specification (Block_Info, Decl);
+            end if;
          when Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body =>
             Annotate_Subprogram_Body (Block_Info, Decl);

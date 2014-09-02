@@ -146,8 +146,16 @@ package body Sem_Psl is
    begin
       Expr := Get_HDL_Node (N);
       if Get_Kind (Expr) in Iir_Kinds_Name then
-         Sem_Name (Expr, False);
-         Name := Get_Named_Entity (Expr);
+         Sem_Name (Expr);
+         Expr := Finish_Sem_Name (Expr);
+         Set_HDL_Node (N, Expr);
+
+         if Get_Kind (Expr) in Iir_Kinds_Denoting_Name then
+            Name := Get_Named_Entity (Expr);
+         else
+            Name := Expr;
+         end if;
+
          case Get_Kind (Name) is
             when Iir_Kind_Error =>
                return N;
@@ -183,9 +191,15 @@ package body Sem_Psl is
                Free_Iir (Expr);
                return Res;
             when Iir_Kind_Psl_Expression =>
+               --  Remove the two bridge nodes: from PSL to HDL and from
+               --  HDL to PSL.
                Free_Node (N);
+               Res := Get_Psl_Expression (Name);
                Free_Iir (Expr);
-               return Get_Psl_Expression (Name);
+               if Name /= Expr then
+                  Free_Iir (Name);
+               end if;
+               return Res;
             when others =>
                Expr := Name;
          end case;

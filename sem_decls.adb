@@ -69,22 +69,32 @@ package body Sem_Decls is
                                   Interface_Kind : Interface_Kind_Type)
    is
       El, A_Type: Iir;
-      Proxy : Iir_Proxy;
       Default_Value: Iir;
+
+      --  LAST is the last interface declaration that has a type.  This is
+      --  used to set type and default value for the following declarations
+      --  that appeared in a list of identifiers.
+      Last : Iir;
    begin
+      Last := Null_Iir;
+
       El := Interface_Chain;
       while El /= Null_Iir loop
          --  Avoid the reanalysed duplicated types.
          --  This is not an optimization, since the unanalysed type must have
          --  been freed.
-         A_Type := Get_Type (El);
-         if Get_Kind (A_Type) = Iir_Kind_Proxy then
-            Proxy := A_Type;
-            A_Type := Get_Type (Get_Proxy (Proxy));
-            Default_Value := Get_Default_Value (Get_Proxy (Proxy));
-            Free_Iir (Proxy);
+         A_Type := Get_Subtype_Indication (El);
+         if A_Type = Null_Iir then
+            pragma Assert (Last /= Null_Iir);
+            Set_Subtype_Indication (El, Get_Subtype_Indication (Last));
+            A_Type := Get_Type (Last);
+            Default_Value := Get_Default_Value (Last);
          else
+            Last := El;
             A_Type := Sem_Subtype_Indication (A_Type);
+            Set_Subtype_Indication (El, A_Type);
+            A_Type := Get_Type_Of_Subtype_Indication (A_Type);
+
             Default_Value := Get_Default_Value (El);
             if Default_Value /= Null_Iir and then A_Type /= Null_Iir then
                Deferred_Constant_Allowed := True;
@@ -96,7 +106,6 @@ package body Sem_Decls is
             end if;
          end if;
 
-         Set_Base_Name (El, El);
          Set_Name_Staticness (El, Locally);
          Xref_Decl (El);
 
@@ -345,7 +354,8 @@ package body Sem_Decls is
      (Decl : Iir_Type_Declaration; Type_Definition : Iir_File_Type_Definition)
    is
       use Iir_Chains.Interface_Declaration_Chain_Handling;
-      Type_Mark: Iir;
+      Type_Mark : constant Iir := Get_File_Type_Mark (Type_Definition);
+      Type_Mark_Type : constant Iir := Get_Type (Type_Mark);
       Proc: Iir_Implicit_Procedure_Declaration;
       Func: Iir_Implicit_Function_Declaration;
       Inter: Iir;
@@ -355,7 +365,6 @@ package body Sem_Decls is
       Last : Iir;
    begin
       Last := Decl;
-      Type_Mark := Get_Type_Mark (Type_Definition);
       Loc := Get_Location (Decl);
 
       if Flags.Vhdl_Std >= Vhdl_93c then
@@ -383,7 +392,7 @@ package body Sem_Decls is
                   Set_Type (Inter,
                             Std_Package.File_Open_Status_Type_Definition);
                   Set_Mode (Inter, Iir_Out_Mode);
-                  Set_Base_Name (Inter, Inter);
+                  Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
                   Append (Last_Interface, Proc, Inter);
             end case;
             --  File F : FT
@@ -392,7 +401,7 @@ package body Sem_Decls is
             Set_Identifier (Inter, Std_Names.Name_F);
             Set_Type (Inter, Type_Definition);
             Set_Mode (Inter, Iir_Inout_Mode);
-            Set_Base_Name (Inter, Inter);
+            Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
             Append (Last_Interface, Proc, Inter);
             --  External_Name : in STRING
             Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
@@ -400,7 +409,7 @@ package body Sem_Decls is
             Set_Identifier (Inter, Std_Names.Name_External_Name);
             Set_Type (Inter, Std_Package.String_Type_Definition);
             Set_Mode (Inter, Iir_In_Mode);
-            Set_Base_Name (Inter, Inter);
+            Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
             Append (Last_Interface, Proc, Inter);
             --  Open_Kind : in File_Open_Kind := Read_Mode.
             Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
@@ -408,9 +417,9 @@ package body Sem_Decls is
             Set_Identifier (Inter, Std_Names.Name_Open_Kind);
             Set_Type (Inter, Std_Package.File_Open_Kind_Type_Definition);
             Set_Mode (Inter, Iir_In_Mode);
-            Set_Base_Name (Inter, Inter);
             Set_Default_Value (Inter,
                                Std_Package.File_Open_Kind_Read_Mode);
+            Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
             Append (Last_Interface, Proc, Inter);
             Compute_Subprogram_Hash (Proc);
             -- Add it to the list.
@@ -431,7 +440,7 @@ package body Sem_Decls is
          Set_Location (Inter, Loc);
          Set_Type (Inter, Type_Definition);
          Set_Mode (Inter, Iir_Inout_Mode);
-         Set_Base_Name (Inter, Inter);
+         Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
          Append (Last_Interface, Proc, Inter);
          Compute_Subprogram_Hash (Proc);
          -- Add it to the list.
@@ -457,24 +466,25 @@ package body Sem_Decls is
       Set_Location (Inter, Loc);
       Set_Type (Inter, Type_Definition);
       Set_Mode (Inter, Iir_In_Mode);
-      Set_Base_Name (Inter, Inter);
+      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Proc, Inter);
       Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
-      Set_Type (Inter, Type_Mark);
+      Set_Subtype_Indication (Inter, Type_Mark);
+      Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_Out_Mode);
-      Set_Base_Name (Inter, Inter);
+      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Proc, Inter);
-      if Get_Kind (Type_Mark) in Iir_Kinds_Array_Type_Definition
-        and then Get_Constraint_State (Type_Mark) /= Fully_Constrained
+      if Get_Kind (Type_Mark_Type) in Iir_Kinds_Array_Type_Definition
+        and then Get_Constraint_State (Type_Mark_Type) /= Fully_Constrained
       then
          Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
          Set_Identifier (Inter, Std_Names.Name_Length);
          Set_Location (Inter, Loc);
          Set_Type (Inter, Std_Package.Natural_Subtype_Definition);
          Set_Mode (Inter, Iir_Out_Mode);
-         Set_Base_Name (Inter, Inter);
+         Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
          Append (Last_Interface, Proc, Inter);
          Set_Implicit_Definition (Proc, Iir_Predefined_Read_Length);
       else
@@ -497,16 +507,17 @@ package body Sem_Decls is
       Set_Location (Inter, Loc);
       Set_Type (Inter, Type_Definition);
       Set_Mode (Inter, Iir_Out_Mode);
-      Set_Base_Name (Inter, Inter);
       Set_Name_Staticness (Inter, Locally);
       Set_Expr_Staticness (Inter, None);
+      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Proc, Inter);
       Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
-      Set_Type (Inter, Type_Mark);
+      Set_Subtype_Indication (Inter, Type_Mark);
+      Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_In_Mode);
-      Set_Base_Name (Inter, Inter);
+      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Proc, Inter);
       Set_Implicit_Definition (Proc, Iir_Predefined_Write);
       Compute_Subprogram_Hash (Proc);
@@ -526,9 +537,9 @@ package body Sem_Decls is
          Set_Identifier (Inter, Std_Names.Name_F);
          Set_Location (Inter, Loc);
          Set_Type (Inter, Type_Definition);
-         Set_Base_Name (Inter, Inter);
          Set_Name_Staticness (Inter, Locally);
          Set_Expr_Staticness (Inter, None);
+         Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
          Append (Last_Interface, Proc, Inter);
          Set_Implicit_Definition (Proc, Iir_Predefined_Flush);
          Compute_Subprogram_Hash (Proc);
@@ -548,7 +559,7 @@ package body Sem_Decls is
       Set_Location (Inter, Loc);
       Set_Type (Inter, Type_Definition);
       Set_Mode (Inter, Iir_In_Mode);
-      Set_Base_Name (Inter, Inter);
+      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Func, Inter);
       Set_Return_Type (Func, Std_Package.Boolean_Type_Definition);
       Set_Implicit_Definition (Func, Iir_Predefined_Endfile);
@@ -565,9 +576,9 @@ package body Sem_Decls is
       Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
       Location_Copy (Inter, Atype);
       Set_Identifier (Inter, Null_Identifier);
+      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Set_Mode (Inter, Iir_In_Mode);
       Set_Type (Inter, Atype);
-      Set_Base_Name (Inter, Inter);
       return Inter;
    end Create_Anonymous_Interface;
 
@@ -659,7 +670,7 @@ package body Sem_Decls is
          Set_Identifier (Inter_Int, Null_Identifier);
          Set_Mode (Inter_Int, Iir_In_Mode);
          Set_Type (Inter_Int, Std_Package.Integer_Subtype_Definition);
-         Set_Base_Name (Inter_Int, Inter_Int);
+         Set_Lexical_Layout (Inter_Int, Iir_Lexical_Has_Type);
 
          Set_Chain (Inter_Chain, Inter_Int);
 
@@ -995,7 +1006,7 @@ package body Sem_Decls is
                Set_Identifier (Var_Interface, Std_Names.Name_P);
                Set_Type (Var_Interface, Type_Definition);
                Set_Mode (Var_Interface, Iir_Inout_Mode);
-               Set_Base_Name (Var_Interface, Var_Interface);
+               Set_Lexical_Layout (Var_Interface, Iir_Lexical_Has_Type);
                --Set_Purity_State (Deallocate_Proc, Impure);
                Set_Wait_State (Deallocate_Proc, False);
                Set_Type_Reference (Deallocate_Proc, Decl);
@@ -1205,7 +1216,7 @@ package body Sem_Decls is
       if not Is_Std_Standard then
          return;
       end if;
-      if Decl = Std_Package.Boolean_Type then
+      if Decl = Std_Package.Boolean_Type_Declaration then
          Add_Binary (Name_And, Iir_Predefined_Boolean_And);
          Add_Binary (Name_Or, Iir_Predefined_Boolean_Or);
          Add_Binary (Name_Nand, Iir_Predefined_Boolean_Nand);
@@ -1215,7 +1226,7 @@ package body Sem_Decls is
             Add_Binary (Name_Xnor, Iir_Predefined_Boolean_Xnor);
          end if;
          Add_Unary (Name_Not, Iir_Predefined_Boolean_Not);
-      elsif Decl = Std_Package.Bit_Type then
+      elsif Decl = Std_Package.Bit_Type_Declaration then
          Add_Binary (Name_And, Iir_Predefined_Bit_And);
          Add_Binary (Name_Or, Iir_Predefined_Bit_Or);
          Add_Binary (Name_Nand, Iir_Predefined_Bit_Nand);
@@ -1246,7 +1257,7 @@ package body Sem_Decls is
                            Unary_Chain, Std_Package.Boolean_Type_Definition);
 
          end if;
-      elsif Decl = Std_Package.Universal_Real_Type then
+      elsif Decl = Std_Package.Universal_Real_Type_Declaration then
          declare
             Inter_Chain : Iir;
          begin
@@ -1323,12 +1334,15 @@ package body Sem_Decls is
          Set_Incomplete_Type_List (Def, Create_Iir_List);
          Xref_Decl (Decl);
       else
+         --  A complete type declaration.
          if Old_Decl = Null_Iir then
             Xref_Decl (Decl);
          else
             Xref_Body (Decl, Old_Decl);
          end if;
+
          Def := Sem_Type_Definition (Def, Decl);
+
          if Def /= Null_Iir then
             case Get_Kind (Def) is
                when Iir_Kind_Integer_Subtype_Definition
@@ -1423,6 +1437,7 @@ package body Sem_Decls is
    procedure Sem_Subtype_Declaration (Decl: Iir; Is_Global : Boolean)
    is
       Def: Iir;
+      Atype : Iir;
    begin
       --  Real hack to skip subtype declarations of anonymous type decls.
       if Get_Visible_Flag (Decl) then
@@ -1433,7 +1448,10 @@ package body Sem_Decls is
       Xref_Decl (Decl);
 
       -- Check the definition of the type.
-      Def := Sem_Subtype_Indication (Get_Type (Decl));
+      Atype := Get_Subtype_Indication (Decl);
+      Def := Sem_Subtype_Indication (Atype);
+      Set_Subtype_Indication (Decl, Def);
+      Def := Get_Type_Of_Subtype_Indication (Def);
       if Def = Null_Iir then
          return;
       end if;
@@ -1443,6 +1461,7 @@ package body Sem_Decls is
          -- declaration is in fact an alias of the type.
          Def := Copy_Subtype_Indication (Def);
          Location_Copy (Def, Decl);
+         Set_Subtype_Type_Mark (Def, Atype);
       end if;
 
       Set_Type (Decl, Def);
@@ -1493,25 +1512,16 @@ package body Sem_Decls is
       return Deferred_Const;
    end Get_Deferred_Constant;
 
-   procedure Sem_Object_Declaration (Decl: Iir; Parent : Iir)
+   procedure Sem_Object_Declaration (Decl: Iir; Parent : Iir; Last_Decl : Iir)
    is
+      Deferred_Const : constant Iir := Get_Deferred_Constant (Decl);
       Atype: Iir;
       Default_Value : Iir;
-      Proxy : Iir;
-      Deferred_Const : Iir;
       Staticness : Iir_Staticness;
    begin
-      Deferred_Const := Get_Deferred_Constant (Decl);
-
-      --  Semantize type and default value:
-      Atype := Get_Type (Decl);
-      if Get_Kind (Atype) /= Iir_Kind_Proxy then
-         Atype := Sem_Subtype_Indication (Atype);
-         if Atype = Null_Iir then
-            Atype := Create_Error_Type (Get_Type (Decl));
-         end if;
-      end if;
-
+      --  LRM08 12.2 Scope of declarations
+      --  Then scope of a declaration [...] extends from the beginning of the
+      --  declaration [...]
       if Deferred_Const = Null_Iir then
          Sem_Scopes.Add_Name (Decl);
          Xref_Decl (Decl);
@@ -1519,16 +1529,16 @@ package body Sem_Decls is
          Xref_Ref (Decl, Deferred_Const);
       end if;
 
-      if Get_Kind (Atype) = Iir_Kind_Proxy then
-         Proxy := Get_Proxy (Atype);
-         Default_Value := Get_Default_Value (Proxy);
-         Atype := Get_Type (Proxy);
+      --  Semantize type and default value:
+      Atype := Get_Subtype_Indication (Decl);
+      if Atype /= Null_Iir then
+         Atype := Sem_Subtype_Indication (Atype);
+         Set_Subtype_Indication (Decl, Atype);
+         Atype := Get_Type_Of_Subtype_Indication (Atype);
          if Atype = Null_Iir then
-            return;
+            Atype := Create_Error_Type (Get_Type (Decl));
          end if;
-         Proxy := Get_Type (Decl);
-         Free_Iir (Proxy);
-      else
+
          Default_Value := Get_Default_Value (Decl);
          if Default_Value /= Null_Iir then
             Default_Value := Sem_Expression (Default_Value, Atype);
@@ -1537,13 +1547,15 @@ package body Sem_Decls is
                  Create_Error_Expr (Get_Default_Value (Decl), Atype);
             end if;
             Check_Read (Default_Value);
+            Default_Value := Eval_Expr_Check_If_Static (Default_Value, Atype);
          end if;
+      else
+         Default_Value := Get_Default_Value (Last_Decl);
+         Atype := Get_Type (Last_Decl);
       end if;
 
       Set_Type (Decl, Atype);
-      Default_Value := Eval_Expr_Check_If_Static (Default_Value, Atype);
       Set_Default_Value (Decl, Default_Value);
-      Set_Base_Name (Decl, Decl);
       Set_Name_Staticness (Decl, Locally);
       Set_Visible_Flag (Decl, True);
 
@@ -1774,7 +1786,7 @@ package body Sem_Decls is
       end case;
    end Sem_Object_Declaration;
 
-   procedure Sem_File_Declaration (Decl: Iir_File_Declaration)
+   procedure Sem_File_Declaration (Decl: Iir_File_Declaration; Last_Decl : Iir)
    is
       Atype: Iir;
       Logical_Name: Iir;
@@ -1782,19 +1794,19 @@ package body Sem_Decls is
    begin
       Sem_Scopes.Add_Name (Decl);
       Set_Expr_Staticness (Decl, None);
-      Set_Base_Name (Decl, Decl);
       Xref_Decl (Decl);
 
       -- Try to find a type.
-      Atype := Get_Type (Decl);
-      if Get_Kind (Atype) = Iir_Kind_Proxy then
-         Atype := Get_Type (Get_Proxy (Atype));
-         Free_Iir (Get_Type (Decl));
-      else
-         Atype := Sem_Subtype_Indication (Get_Type (Decl));
+      Atype := Get_Subtype_Indication (Decl);
+      if Atype /= Null_Iir then
+         Atype := Sem_Subtype_Indication (Atype);
+         Set_Subtype_Indication (Decl, Atype);
+         Atype := Get_Type_Of_Subtype_Indication (Atype);
          if Atype = Null_Iir then
-            return;
+            Atype := Create_Error_Type (Get_Type (Decl));
          end if;
+      else
+         Atype := Get_Type (Last_Decl);
       end if;
       Set_Type (Decl, Atype);
 
@@ -1838,7 +1850,8 @@ package body Sem_Decls is
             if Flags.Vhdl_Std = Vhdl_87 then
                Set_Mode (Decl, Iir_In_Mode);
             else
-               Set_File_Open_Kind (Decl, File_Open_Kind_Read_Mode);
+               null;
+               --  Set_File_Open_Kind (Decl, File_Open_Kind_Read_Mode);
             end if;
          end if;
       end if;
@@ -1901,10 +1914,9 @@ package body Sem_Decls is
       Sem_Scopes.Add_Name (Decl);
       Xref_Decl (Decl);
 
-      A_Type := Sem_Subtype_Indication (Get_Type (Decl));
-      if A_Type = Null_Iir then
-         return;
-      end if;
+      A_Type := Sem_Type_Mark (Get_Type_Mark (Decl));
+      Set_Type_Mark (Decl, A_Type);
+      A_Type := Get_Type (A_Type);
       Set_Type (Decl, A_Type);
 
       --  LRM93 4.4  Attribute declarations.
@@ -1936,12 +1948,10 @@ package body Sem_Decls is
 
    procedure Sem_Object_Alias_Declaration (Alias: Iir_Object_Alias_Declaration)
    is
-      N_Type: Iir;
       N_Name: constant Iir := Get_Name (Alias);
+      N_Type: Iir;
       Name_Type : Iir;
    begin
-      Set_Base_Name (Alias, Alias); -- Get_Base_Name (N_Name));
-
       --  LRM93 4.3.3.1 Object Aliases.
       --  1. A signature may not appear in a declaration of an object alias.
       -- FIXME: todo.
@@ -1956,13 +1966,15 @@ package body Sem_Decls is
       --  the same as the base type of the type mark in the subtype indication
       --  (if the subtype indication is present);
       Name_Type := Get_Type (N_Name);
-      N_Type := Get_Type (Alias);
+      N_Type := Get_Subtype_Indication (Alias);
       if N_Type = Null_Iir then
          Set_Type (Alias, Name_Type);
          N_Type := Name_Type;
       else
          --  FIXME: must be analyzed before calling Name_Visibility.
          N_Type := Sem_Subtype_Indication (N_Type);
+         Set_Subtype_Indication (Alias, N_Type);
+         N_Type := Get_Type_Of_Subtype_Indication (N_Type);
          if N_Type /= Null_Iir then
             Set_Type (Alias, N_Type);
             if Get_Base_Type (N_Type) /= Get_Base_Type (Name_Type) then
@@ -2016,7 +2028,7 @@ package body Sem_Decls is
             --    of the subprogram equivalent to the enumeration literal,
             --    defined in Section 3.1.1
             return List = Null_Iir_List
-              and then Get_Type (N_Entity) = Get_Return_Type (Sig);
+              and then Get_Type (N_Entity) = Get_Type (Get_Return_Type (Sig));
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration =>
             --  LRM93 2.3.2  Signatures
@@ -2024,7 +2036,7 @@ package body Sem_Decls is
             --    a function and the base type of the type mark following
             --    the reserved word in the signature is the same as the base
             --    type of the return type of the function, [...]
-            if Get_Return_Type (Sig) /=
+            if Get_Type (Get_Return_Type (Sig)) /=
               Get_Base_Type (Get_Return_Type (N_Entity))
             then
                return False;
@@ -2063,7 +2075,7 @@ package body Sem_Decls is
          if El = Null_Iir or Inter = Null_Iir then
             return False;
          end if;
-         if Get_Base_Type (Get_Type (Inter)) /= El then
+         if Get_Base_Type (Get_Type (Inter)) /= Get_Type (El) then
             return False;
          end if;
          Inter := Get_Chain (Inter);
@@ -2086,20 +2098,24 @@ package body Sem_Decls is
          for I in Natural loop
             El := Get_Nth_Element (List, I);
             exit when El = Null_Iir;
-            El := Find_Declaration (El, Decl_Type);
-            if El /= Null_Iir then
-               Replace_Nth_Element (List, I, Get_Base_Type (El));
-            end if;
+            El := Sem_Type_Mark (El);
+            Replace_Nth_Element (List, I, El);
+
+            --  Reuse the Type field of the name for the base type.  This is
+            --  a deviation from the use of Type in a name, but restricted to
+            --  analysis of signatures.
+            Set_Type (El, Get_Base_Type (Get_Type (El)));
          end loop;
       end if;
       El := Get_Return_Type (Sig);
       if El /= Null_Iir then
-         El := Find_Declaration (El, Decl_Type);
-         if El /= Null_Iir then
-            Set_Return_Type (Sig, Get_Base_Type (El));
-         end if;
+         El := Sem_Type_Mark (El);
+         Set_Return_Type (Sig, El);
+         --  Likewise.
+         Set_Type (El, Get_Base_Type (Get_Type (El)));
       end if;
 
+      --  FIXME: what to do in case of error ?
       Res := Null_Iir;
       Error := False;
       if Is_Overload_List (Name) then
@@ -2134,14 +2150,15 @@ package body Sem_Decls is
          Error_Msg_Sem
            ("cannot resolve signature, no matching subprogram", Sig);
       end if;
+
       return Res;
    end Sem_Signature;
 
    --  Create implicit aliases for an alias ALIAS of a type or of a subtype.
    procedure Add_Aliases_For_Type_Alias (Alias : Iir)
    is
-      N_Entity : constant Iir := Get_Name (Alias);
-      Def : constant Iir := Get_Base_Type (Get_Type_Of_Type_Mark (N_Entity));
+      N_Entity : constant Iir := Get_Named_Entity (Get_Name (Alias));
+      Def : constant Iir := Get_Base_Type (Get_Type (N_Entity));
       Type_Decl : constant Iir := Get_Type_Declarator (Def);
       Last : Iir;
       El : Iir;
@@ -2152,10 +2169,17 @@ package body Sem_Decls is
       is
          N_Alias : constant Iir_Non_Object_Alias_Declaration :=
            Create_Iir (Iir_Kind_Non_Object_Alias_Declaration);
+         N_Name : constant Iir := Create_Iir (Iir_Kind_Simple_Name);
       begin
+         --  Create the name (can be in fact a character literal or a symbol
+         --  operator).
+         Location_Copy (N_Name, Alias);
+         Set_Identifier (N_Name, Get_Identifier (Decl));
+         Set_Named_Entity (N_Name, Decl);
+
          Location_Copy (N_Alias, Alias);
          Set_Identifier (N_Alias, Get_Identifier (Decl));
-         Set_Name (N_Alias, Decl);
+         Set_Name (N_Alias, N_Name);
          Set_Parent (N_Alias, Get_Parent (Alias));
          Set_Implicit_Alias_Flag (N_Alias, True);
 
@@ -2272,7 +2296,7 @@ package body Sem_Decls is
      (Alias : Iir_Non_Object_Alias_Declaration)
    is
       use Std_Names;
-      N_Entity : constant Iir := Get_Name (Alias);
+      N_Entity : constant Iir := Get_Named_Entity (Get_Name (Alias));
       Id : Name_Id;
    begin
       case Get_Kind (N_Entity) is
@@ -2283,11 +2307,11 @@ package body Sem_Decls is
             --  LRM93 4.3.3.2  Non-Object Aliases
             --  2.  A signature is required if the name denotes a subprogram
             --      (including an operator) or enumeration literal.
-            if Get_Signature (Alias) = Null_Iir then
+            if Get_Alias_Signature (Alias) = Null_Iir then
                Error_Msg_Sem ("signature required for subprogram", Alias);
             end if;
          when Iir_Kind_Enumeration_Literal =>
-            if Get_Signature (Alias) = Null_Iir then
+            if Get_Alias_Signature (Alias) = Null_Iir then
                Error_Msg_Sem ("signature required for enumeration literal",
                               Alias);
             end if;
@@ -2356,12 +2380,14 @@ package body Sem_Decls is
       Name := Get_Name (Alias);
       if Get_Kind (Name) = Iir_Kind_Signature then
          Sig := Name;
-         Name := Get_Prefix (Name);
+         Name := Get_Prefix (Sig);
+         Sem_Name (Name);
+         Set_Prefix (Sig, Name);
       else
+         Sem_Name (Name);
          Sig := Null_Iir;
       end if;
 
-      Sem_Name (Name, False);
       N_Entity := Get_Named_Entity (Name);
       if N_Entity = Error_Mark then
          return Alias;
@@ -2383,31 +2409,40 @@ package body Sem_Decls is
       end if;
 
       Set_Named_Entity (Name, N_Entity);
-      Xref_Name (Name);
+      Set_Name (Alias, Finish_Sem_Name (Name));
 
       if Is_Object_Name (N_Entity) then
+         --  Object alias declaration.
+
          Sem_Scopes.Add_Name (Alias);
          Name_Visible (Alias);
 
          if Sig /= Null_Iir then
-            Error_Msg_Sem
-              ("signature not allowed for object alias", Sig);
+            Error_Msg_Sem ("signature not allowed for object alias", Sig);
          end if;
          Set_Name (Alias, N_Entity);
          Sem_Object_Alias_Declaration (Alias);
          return Alias;
       else
+         --  Non object alias declaration.
+
          if Get_Type (Alias) /= Null_Iir then
             Error_Msg_Sem
               ("subtype indication not allowed for non-object alias", Alias);
          end if;
+         if Get_Subtype_Indication (Alias) /= Null_Iir then
+            Error_Msg_Sem
+              ("subtype indication shall not appear in a nonobject alias",
+               Alias);
+         end if;
+
          Res := Create_Iir (Iir_Kind_Non_Object_Alias_Declaration);
          Location_Copy (Res, Alias);
          Set_Parent (Res, Get_Parent (Alias));
          Set_Chain (Res, Get_Chain (Alias));
          Set_Identifier (Res, Get_Identifier (Alias));
-         Set_Name (Res, N_Entity);
-         Set_Signature (Res, Sig);
+         Set_Name (Res, Name);
+         Set_Alias_Signature (Res, Sig);
 
          Sem_Scopes.Add_Name (Res);
          Name_Visible (Res);
@@ -2434,6 +2469,7 @@ package body Sem_Decls is
 
       Constituent_List : Iir_Group_Constituent_List;
       Template : Iir_Group_Template_Declaration;
+      Template_Name : Iir;
       Class, Prev_Class : Token_Type;
       El : Iir;
       El_Name : Iir;
@@ -2441,18 +2477,22 @@ package body Sem_Decls is
    begin
       Sem_Scopes.Add_Name (Group);
       Xref_Decl (Group);
-      Template := Find_Declaration (Get_Group_Template_Name (Group),
-                                    Decl_Group_Template);
-      if Template = Null_Iir then
+
+      Template_Name := Sem_Denoting_Name (Get_Group_Template_Name (Group));
+      Set_Group_Template_Name (Group, Template_Name);
+      Template := Get_Named_Entity (Template_Name);
+      if Get_Kind (Template) /= Iir_Kind_Group_Template_Declaration then
+         Error_Class_Match (Template_Name, "group template");
          return;
       end if;
-      Set_Group_Template_Name (Group, Template);
       Constituent_List := Get_Group_Constituent_List (Group);
       El_Entity := Get_Entity_Class_Entry_Chain (Template);
       Prev_Class := Tok_Eof;
       for I in Natural loop
          El := Get_Nth_Element (Constituent_List, I);
          exit when El = Null_Iir;
+
+         Sem_Name (El);
 
          if El_Entity = Null_Iir then
             Error_Msg_Sem
@@ -2472,9 +2512,16 @@ package body Sem_Decls is
             El_Entity := Get_Chain (El_Entity);
          end if;
 
-         Sem_Name (El, False);
          El_Name := Get_Named_Entity (El);
-         if El_Name /= Error_Mark then
+         if Is_Error (El_Name) then
+            null;
+         elsif Is_Overload_List (El_Name) then
+            Error_Overload (El_Name);
+         else
+            El := Finish_Sem_Name (El);
+            Replace_Nth_Element (Constituent_List, I, El);
+            El_Name := Get_Named_Entity (El);
+
             --  LRM93 4.7
             --  It is an error if the class of any group constituent in the
             --  group constituent list is not the same as the class specified
@@ -2485,7 +2532,6 @@ package body Sem_Decls is
                  ("constituent not of class '" & Tokens.Image (Class) & ''',
                   El);
             end if;
-            Xref_Name (El);
          end if;
       end loop;
 
@@ -2505,8 +2551,9 @@ package body Sem_Decls is
       is
          Res : Iir;
       begin
-         Res := Find_Declaration (T, Decl_Type);
-         if Res = Null_Iir then
+         Res := Sem_Type_Mark (T);
+         Res := Get_Type (Res);
+         if Is_Error (Res) then
             return Real_Type_Definition;
          end if;
          --  LRM93 3.5.1
@@ -2570,78 +2617,73 @@ package body Sem_Decls is
       end if;
    end Sem_Nature_Declaration;
 
-   procedure Sem_Terminal_Declaration (Decl : Iir)
+   procedure Sem_Terminal_Declaration (Decl : Iir; Last_Decl : Iir)
    is
       Def, Nature : Iir;
    begin
-      Def := Get_Nature (Decl);
-      if Def /= Null_Iir then
-         Sem_Scopes.Add_Name (Decl);
-         Xref_Decl (Decl);
+      Sem_Scopes.Add_Name (Decl);
+      Xref_Decl (Decl);
 
-         if Get_Kind (Def) = Iir_Kind_Proxy then
-            Nature := Get_Nature (Get_Proxy (Def));
-            Free_Iir (Def);
-         else
-            Nature := Sem_Subnature_Indication (Def);
-         end if;
-         if Nature /= Null_Iir then
-            Set_Nature (Decl, Nature);
-            Sem_Scopes.Name_Visible (Decl);
-         end if;
+      Def := Get_Nature (Decl);
+
+      if Def = Null_Iir then
+         Nature := Get_Nature (Last_Decl);
+      else
+         Nature := Sem_Subnature_Indication (Def);
+      end if;
+
+      if Nature /= Null_Iir then
+         Set_Nature (Decl, Nature);
+         Sem_Scopes.Name_Visible (Decl);
       end if;
    end Sem_Terminal_Declaration;
 
-   procedure Sem_Branch_Quantity_Declaration (Decl : Iir)
+   procedure Sem_Branch_Quantity_Declaration (Decl : Iir; Last_Decl : Iir)
    is
-      Plus : Iir;
-      Minus : Iir;
+      Plus_Name : Iir;
+      Minus_Name : Iir;
       Branch_Type : Iir;
       Value : Iir;
-      Proxy : Iir;
+      Is_Second : Boolean;
    begin
-      Plus := Get_Plus_Terminal (Decl);
-      if Get_Kind (Plus) = Iir_Kind_Proxy then
-         Proxy := Get_Proxy (Plus);
-         Free_Iir (Plus);
-         Plus := Get_Plus_Terminal (Proxy);
-         Minus := Get_Minus_Terminal (Proxy);
-         Value := Get_Default_Value (Proxy);
+      Sem_Scopes.Add_Name (Decl);
+      Xref_Decl (Decl);
+
+      Plus_Name := Get_Plus_Terminal (Decl);
+      if Plus_Name = Null_Iir then
+         --  List of identifier.
+         Is_Second := True;
+         Plus_Name := Get_Plus_Terminal (Last_Decl);
+         Minus_Name := Get_Minus_Terminal (Last_Decl);
+         Value := Get_Default_Value (Last_Decl);
       else
-         Plus := Find_Declaration (Plus, Decl_Terminal);
-         Minus := Get_Minus_Terminal (Decl);
-         if Minus /= Null_Iir then
-            Minus := Find_Declaration (Minus, Decl_Terminal);
+         Is_Second := False;
+         Plus_Name := Sem_Terminal_Name (Plus_Name);
+         Minus_Name := Get_Minus_Terminal (Decl);
+         if Minus_Name /= Null_Iir then
+            Minus_Name := Sem_Terminal_Name (Minus_Name);
          end if;
-         Proxy := Null_Iir;
+         Value := Get_Default_Value (Decl);
       end if;
-      Set_Plus_Terminal (Decl, Plus);
-      Set_Minus_Terminal (Decl, Minus);
+      Set_Plus_Terminal (Decl, Plus_Name);
+      Set_Minus_Terminal (Decl, Minus_Name);
       case Get_Kind (Decl) is
          when Iir_Kind_Across_Quantity_Declaration =>
-            Branch_Type := Get_Across_Type (Get_Nature (Plus));
+            Branch_Type := Get_Across_Type (Get_Nature (Plus_Name));
          when Iir_Kind_Through_Quantity_Declaration =>
-            Branch_Type := Get_Through_Type (Get_Nature (Plus));
+            Branch_Type := Get_Through_Type (Get_Nature (Plus_Name));
          when others =>
             raise Program_Error;
       end case;
       Set_Type (Decl, Branch_Type);
-      Set_Base_Name (Decl, Decl);
 
-      if Proxy = Null_Iir then
-         Value := Get_Default_Value (Decl);
-         if Value /= Null_Iir then
-            Value := Sem_Expression (Value, Branch_Type);
-         end if;
-      else
-         Value := Get_Default_Value (Proxy);
+      if not Is_Second and then Value /= Null_Iir then
+         Value := Sem_Expression (Value, Branch_Type);
       end if;
       Set_Default_Value (Decl, Value);
 
       --  TODO: tolerance
 
-      Sem_Scopes.Add_Name (Decl);
-      Xref_Decl (Decl);
       Sem_Scopes.Name_Visible (Decl);
    end Sem_Branch_Quantity_Declaration;
 
@@ -2650,7 +2692,10 @@ package body Sem_Decls is
       Decl: Iir;
       Last_Decl : Iir;
       Attr_Spec_Chain : Iir;
-      Kind : Iir_Kind;
+
+      --  Used for list of identifiers in object declarations to get the type
+      --  and default value for the following declarations.
+      Last_Obj_Decl : Iir;
 
       --  If IS_GLOBAL is set, then declarations may be seen outside of unit.
       --  This must be set for entities and packages (except when
@@ -2660,7 +2705,7 @@ package body Sem_Decls is
       case Get_Kind (Parent) is
          when Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration =>
-            Is_Global :=  not Flags.Flag_Whole_Analyze;
+            Is_Global := not Flags.Flag_Whole_Analyze;
          when others =>
             Is_Global := False;
       end case;
@@ -2669,22 +2714,27 @@ package body Sem_Decls is
       Decl := Get_Declaration_Chain (Parent);
       Last_Decl := Null_Iir;
       Attr_Spec_Chain := Null_Iir;
+      Last_Obj_Decl := Null_Iir;
 
-      loop
-         << Again >> exit when Decl = Null_Iir;
-         Kind := Get_Kind (Decl);
-         case Kind is
+      while Decl /= Null_Iir loop
+         case Get_Kind (Decl) is
             when Iir_Kind_Type_Declaration
               | Iir_Kind_Anonymous_Type_Declaration =>
                Sem_Type_Declaration (Decl, Is_Global);
             when Iir_Kind_Subtype_Declaration =>
                Sem_Subtype_Declaration (Decl, Is_Global);
             when Iir_Kind_Signal_Declaration =>
-               Sem_Object_Declaration (Decl, Parent);
+               Sem_Object_Declaration (Decl, Parent, Last_Obj_Decl);
+               Last_Obj_Decl := Decl;
             when Iir_Kind_Constant_Declaration =>
-               Sem_Object_Declaration (Decl, Parent);
+               Sem_Object_Declaration (Decl, Parent, Last_Obj_Decl);
+               Last_Obj_Decl := Decl;
             when Iir_Kind_Variable_Declaration =>
-               Sem_Object_Declaration (Decl, Parent);
+               Sem_Object_Declaration (Decl, Parent, Last_Obj_Decl);
+               Last_Obj_Decl := Decl;
+            when Iir_Kind_File_Declaration =>
+               Sem_File_Declaration (Decl, Last_Obj_Decl);
+               Last_Obj_Decl := Decl;
             when Iir_Kind_Attribute_Declaration =>
                Sem_Attribute_Declaration (Decl);
             when Iir_Kind_Attribute_Specification =>
@@ -2695,31 +2745,15 @@ package body Sem_Decls is
                end if;
             when Iir_Kind_Component_Declaration =>
                Sem_Component_Declaration (Decl);
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration =>
-               declare
-                  Res : Iir;
-               begin
-                  Res := Sem_Subprogram_Declaration (Decl);
-                  if Res /= Decl then
-                     --  Replace DECL with RES.
-                     if Last_Decl = Null_Iir then
-                        Set_Declaration_Chain (Parent, Res);
-                     else
-                        Set_Chain (Last_Decl, Res);
-                     end if;
-                     Decl := Res;
-                     --  Since RES is a body, no need to check for post
-                     --  attribute specification.
-                     goto Again;
-                  end if;
-                  if Is_Global
-                    and then Kind = Iir_Kind_Function_Declaration
-                    and then Is_A_Resolution_Function (Res, Null_Iir)
-                  then
-                     Set_Resolution_Function_Flag (Res, True);
-                  end if;
-               end;
+            when Iir_Kind_Function_Declaration =>
+               Sem_Subprogram_Declaration (Decl);
+               if Is_Global
+                 and then Is_A_Resolution_Function (Decl, Null_Iir)
+               then
+                  Set_Resolution_Function_Flag (Decl, True);
+               end if;
+            when Iir_Kind_Procedure_Declaration =>
+               Sem_Subprogram_Declaration (Decl);
             when Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                Sem_Subprogram_Body (Decl);
@@ -2750,14 +2784,12 @@ package body Sem_Decls is
                      --  apply to them.
                   end if;
                end;
-            when Iir_Kind_File_Declaration =>
-               Sem_File_Declaration (Decl);
             when Iir_Kind_Use_Clause =>
                Sem_Use_Clause (Decl);
             when Iir_Kind_Configuration_Specification =>
                null;
             when Iir_Kind_Disconnection_Specification =>
-               Sem_Disconnect_Specification (Decl);
+               Sem_Disconnection_Specification (Decl);
             when Iir_Kind_Group_Template_Declaration =>
                Sem_Group_Template_Declaration (Decl);
             when Iir_Kind_Group_Declaration =>
@@ -2770,10 +2802,12 @@ package body Sem_Decls is
             when Iir_Kind_Nature_Declaration =>
                Sem_Nature_Declaration (Decl);
             when Iir_Kind_Terminal_Declaration =>
-               Sem_Terminal_Declaration (Decl);
+               Sem_Terminal_Declaration (Decl, Last_Obj_Decl);
+               Last_Obj_Decl := Decl;
             when Iir_Kind_Across_Quantity_Declaration
               | Iir_Kind_Through_Quantity_Declaration =>
-               Sem_Branch_Quantity_Declaration (Decl);
+               Sem_Branch_Quantity_Declaration (Decl, Last_Obj_Decl);
+               Last_Obj_Decl := Decl;
             when others =>
                Error_Kind ("sem_declaration_chain", Decl);
          end case;
@@ -2900,7 +2934,9 @@ package body Sem_Decls is
             case Get_Kind (El) is
                when Iir_Kind_Function_Declaration
                  | Iir_Kind_Procedure_Declaration =>
-                  if not Get_Use_Flag (El) then
+                  if not Get_Use_Flag (El)
+                    and then not Is_Second_Subprogram_Specification (El)
+                  then
                      Warning_Msg_Sem
                        (Disp_Node (El) & " is never referenced", El);
                   end if;
@@ -2916,33 +2952,22 @@ package body Sem_Decls is
    procedure Sem_Iterator (Iterator : Iir_Iterator_Declaration;
                            Staticness : Iir_Staticness)
    is
-      It_Type: Iir;
+      It_Type: constant Iir := Get_Discrete_Range (Iterator);
       A_Range: Iir;
-      Range_Type : Iir;
    begin
       Xref_Decl (Iterator);
-      It_Type := Get_Type (Iterator);
+
       A_Range := Sem_Discrete_Range_Integer (It_Type);
       if A_Range = Null_Iir then
-         Set_Type (Iterator, Create_Error_Type (Iterator));
+         Set_Type (Iterator, Create_Error_Type (It_Type));
          return;
       end if;
-      if Get_Kind (A_Range) in Iir_Kinds_Type_And_Subtype_Definition then
-         Range_Type := A_Range;
-      else
-         Range_Type := Get_Type (A_Range);
-      end if;
-      case Get_Kind (Range_Type) is
-         when Iir_Kinds_Discrete_Type_Definition =>
-            null;
-         when others =>
-            Error_Msg_Sem ("iterator is not of discrete type", A_Range);
-            Set_Type (Iterator, Null_Iir);
-            return;
-      end case;
 
-      Set_Type (Iterator, Range_To_Subtype_Definition (A_Range));
-      Set_Base_Name (Iterator, Iterator);
+      Set_Discrete_Range (Iterator, A_Range);
+
+      Set_Type (Iterator,
+                Get_Type_Of_Subtype_Indication
+                  (Range_To_Subtype_Indication (A_Range)));
       Set_Expr_Staticness (Iterator, Staticness);
    end Sem_Iterator;
 end Sem_Decls;

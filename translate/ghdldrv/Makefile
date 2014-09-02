@@ -153,10 +153,12 @@ grt.links:
 	cd ../lib; ln -sf $(GRTSRCDIR)/grt.lst .; ln -sf $(GRTSRCDIR)/libgrt.a .; ln -sf $(GRTSRCDIR)/grt.ver .
 
 install.all: install.v87 install.v93 install.standard
-install.mcode: install.v87 install.v93 install.v08
+
+install.mcode:
+	$(MAKE) GHDL=ghdl_mcode install.v87 install.v93 # install.v08
 
 install.simul:
-	$(MAKE) GHDL=ghdl_simul install.v87 install.v93
+	$(MAKE) GHDL=ghdl_simul install.v87 install.v93 install.v08
 
 install.llvm:
 	$(MAKE) GHDL=ghdl_llvm GHDL1=../ghdl1-llvm install.all

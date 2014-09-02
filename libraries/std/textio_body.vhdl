@@ -83,7 +83,7 @@ package body textio is
     end case;
   end is_Whitespace;
 
-  procedure writeline (f: out text; l: inout line) is --V87
+  procedure writeline (variable f: out text; l: inout line) is --V87
   procedure writeline (file f: text; l: inout line) is --V93
   begin
     if l = null then

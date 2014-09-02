@@ -88,8 +88,7 @@ package Sem_Expr is
                                       return Boolean;
 
    -- For a procedure call, A_TYPE must be null.
-   function Sem_Subprogram_Call (Expr: Iir; A_Type: Iir)
-     return Iir;
+   function Sem_Subprogram_Call (Expr: Iir; A_Type: Iir) return Iir;
 
    --  If EXPR is a node for an expression, then return EXPR.
    --  Otherwise, emit an error message using LOC as location
@@ -98,30 +97,31 @@ package Sem_Expr is
    function Check_Is_Expression (Expr : Iir; Loc : Iir) return Iir;
 
    --  Semantize a procedure_call or a concurrent_procedure_call_statement.
+   --  A procedure call is not an expression but because most of the code
+   --  for procedure call is common with function call, procedure calls are
+   --  handled in this package.
    procedure Sem_Procedure_Call (Call : Iir_Procedure_Call; Stmt : Iir);
 
-   --  Semantize a range.  If ANY_DIR is true, the range can't be a
-   --  null range (slice vs subtype -- used in static evaluation).
+   --  Analyze a range (ie a range attribute or a range expression).  If
+   --  ANY_DIR is true, the range can't be a null range (slice vs subtype,
+   --  used in static evaluation). A_TYPE may be Null_Iir.
+   --  Return Null_Iir in case of error, or EXPR analyzed (and evaluated if
+   --  possible).
    function Sem_Range_Expression (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
      return Iir;
 
-   --  Semantize a discrete range.  If ANY_DIR is true, the range can't be a
-   --  null range (slice vs subtype -- used in static evaluation).
+   --  Analyze a discrete range.  If ANY_DIR is true, the range can't be a
+   --  null range (slice vs subtype -- used in static evaluation). A_TYPE may
+   --  be Null_Iir. Return Null_Iir in case of error.
    function Sem_Discrete_Range_Expression
      (Expr: Iir; A_Type: Iir; Any_Dir: Boolean) return Iir;
-   function Get_Discrete_Range_Staticness (Expr : Iir) return Iir_Staticness;
 
    --  Semantize a discrete range and convert to integer if both bounds are
    --  universal integer types, according to rules of LRM 3.2.1.1
    function Sem_Discrete_Range_Integer (Expr: Iir) return Iir;
 
-   --  Convert a parenthesis_name to a slice_name or an index_name, according
-   --  to the suffix expression.
-   --  This is used in sem by generates.
-   --function Sem_Parenthesis_Name (Name : Iir_Parenthesis_Name) return Iir;
-
-   -- Transform LIT into a physical_literal.
-   -- LIT can be either a not semantized physical literal or
+   --  Transform LIT into a physical_literal.
+   --  LIT can be either a not semantized physical literal or
    --  a simple name that is a physical unit.  In the later case, a physical
    --  literal is created.
    function Sem_Physical_Literal (Lit: Iir) return Iir;

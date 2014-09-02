@@ -37,23 +37,23 @@ package Std_Package is
    Standard_Package : Iir_Package_Declaration := Null_Iir;
 
    -- Boolean values.
-   Boolean_Type: Iir_Type_Declaration := Null_Iir;
-   Boolean_Type_Definition: Iir_Enumeration_Type_Definition;
-   Boolean_False: Iir_Enumeration_Literal;
-   Boolean_True: Iir_Enumeration_Literal;
+   Boolean_Type_Declaration : Iir_Type_Declaration := Null_Iir;
+   Boolean_Type_Definition : Iir_Enumeration_Type_Definition;
+   Boolean_False : Iir_Enumeration_Literal;
+   Boolean_True : Iir_Enumeration_Literal;
 
    -- Bit values.
-   Bit_Type: Iir_Type_Declaration := Null_Iir;
-   Bit_Type_Definition: Iir_Enumeration_Type_Definition;
-   Bit_0: Iir_Enumeration_Literal;
-   Bit_1: Iir_Enumeration_Literal;
+   Bit_Type_Declaration : Iir_Type_Declaration := Null_Iir;
+   Bit_Type_Definition : Iir_Enumeration_Type_Definition;
+   Bit_0 : Iir_Enumeration_Literal;
+   Bit_1 : Iir_Enumeration_Literal;
 
    -- Predefined character.
-   Character_Type: Iir_Type_Declaration;
+   Character_Type_Declaration : Iir_Type_Declaration;
    Character_Type_Definition : Iir_Enumeration_Type_Definition;
 
    -- severity level.
-   Severity_Level_Type : Iir_Type_Declaration;
+   Severity_Level_Type_Declaration : Iir_Type_Declaration;
    Severity_Level_Type_Definition : Iir_Enumeration_Type_Definition;
    Severity_Level_Note : Iir_Enumeration_Literal;
    Severity_Level_Warning : Iir_Enumeration_Literal;
@@ -61,22 +61,22 @@ package Std_Package is
    Severity_Level_Failure : Iir_Enumeration_Literal;
 
    -- Universal types.
-   Universal_Integer_Type : Iir_Anonymous_Type_Declaration;
+   Universal_Integer_Type_Declaration : Iir_Anonymous_Type_Declaration;
    Universal_Integer_Type_Definition : constant Iir_Integer_Type_Definition;
-   Universal_Integer_Subtype : Iir_Subtype_Declaration;
+   Universal_Integer_Subtype_Declaration : Iir_Subtype_Declaration;
    Universal_Integer_Subtype_Definition : Iir_Integer_Subtype_Definition;
 
    Universal_Integer_One : Iir_Integer_Literal;
 
-   Universal_Real_Type : Iir_Anonymous_Type_Declaration;
+   Universal_Real_Type_Declaration : Iir_Anonymous_Type_Declaration;
    Universal_Real_Type_Definition : constant Iir_Floating_Type_Definition;
-   Universal_Real_Subtype : Iir_Subtype_Declaration;
+   Universal_Real_Subtype_Declaration : Iir_Subtype_Declaration;
    Universal_Real_Subtype_Definition : Iir_Floating_Subtype_Definition;
 
    -- Predefined integer type.
-   Integer_Type: Iir_Anonymous_Type_Declaration;
+   Integer_Type_Declaration : Iir_Anonymous_Type_Declaration;
    Integer_Type_Definition : Iir_Integer_Type_Definition;
-   Integer_Subtype : Iir_Subtype_Declaration;
+   Integer_Subtype_Declaration : Iir_Subtype_Declaration;
    Integer_Subtype_Definition : Iir_Integer_Subtype_Definition;
 
    --  Type used when a subtype indication cannot be semantized.
@@ -84,40 +84,40 @@ package Std_Package is
    Error_Type : Iir_Integer_Type_Definition renames Integer_Type_Definition;
 
    -- Predefined real type.
-   Real_Type: Iir_Anonymous_Type_Declaration;
+   Real_Type_Declaration : Iir_Anonymous_Type_Declaration;
    Real_Type_Definition : Iir_Floating_Type_Definition;
-   Real_Subtype : Iir_Subtype_Declaration;
+   Real_Subtype_Declaration : Iir_Subtype_Declaration;
    Real_Subtype_Definition : Iir_Floating_Subtype_Definition;
 
    -- Predefined natural subtype.
-   Natural_Subtype: Iir_Subtype_Declaration;
+   Natural_Subtype_Declaration : Iir_Subtype_Declaration;
    Natural_Subtype_Definition : Iir_Integer_Subtype_Definition;
 
    -- Predefined positive subtype.
-   Positive_Subtype: Iir_Subtype_Declaration;
+   Positive_Subtype_Declaration : Iir_Subtype_Declaration;
    Positive_Subtype_Definition : Iir_Integer_Subtype_Definition;
 
    -- Predefined positive subtype.
-   String_Type: Iir_Type_Declaration;
+   String_Type_Declaration : Iir_Type_Declaration;
    String_Type_Definition : Iir_Array_Type_Definition;
 
    -- Predefined positive subtype.
-   Bit_Vector_Type: Iir_Type_Declaration;
+   Bit_Vector_Type_Declaration : Iir_Type_Declaration;
    Bit_Vector_Type_Definition : Iir_Array_Type_Definition;
 
    -- predefined time subtype
-   Time_Type: Iir_Anonymous_Type_Declaration;
+   Time_Type_Declaration : Iir_Anonymous_Type_Declaration;
    Time_Type_Definition: Iir_Physical_Type_Definition;
    Time_Subtype_Definition: Iir_Physical_Subtype_Definition;
-   Time_Subtype : Iir_Subtype_Declaration;
+   Time_Subtype_Declaration : Iir_Subtype_Declaration;
 
    --  For VHDL-93
    Delay_Length_Subtype_Definition : Iir_Physical_Subtype_Definition;
-   Delay_Length_Subtype : Iir_Subtype_Declaration;
+   Delay_Length_Subtype_Declaration : Iir_Subtype_Declaration;
 
    --  For VHDL-93:
    --  type File_Open_Kind
-   File_Open_Kind_Type : Iir_Type_Declaration;
+   File_Open_Kind_Type_Declaration : Iir_Type_Declaration;
    File_Open_Kind_Type_Definition : Iir_Enumeration_Type_Definition;
    File_Open_Kind_Read_Mode : Iir_Enumeration_Literal;
    File_Open_Kind_Write_Mode : Iir_Enumeration_Literal;
@@ -125,7 +125,7 @@ package Std_Package is
 
    --  For VHDL-93:
    --  type File_Open_Status
-   File_Open_Status_Type : Iir_Type_Declaration;
+   File_Open_Status_Type_Declaration : Iir_Type_Declaration;
    File_Open_Status_Type_Definition : Iir_Enumeration_Type_Definition;
    File_Open_Status_Open_Ok : Iir_Enumeration_Literal;
    File_Open_Status_Status_Error : Iir_Enumeration_Literal;
@@ -138,16 +138,16 @@ package Std_Package is
 
    --  For VHDL-08
    Boolean_Vector_Type_Definition : Iir_Array_Type_Definition;
-   Boolean_Vector_Type : Iir_Type_Declaration;
+   Boolean_Vector_Type_Declaration : Iir_Type_Declaration;
 
    Integer_Vector_Type_Definition : Iir_Array_Type_Definition;
-   Integer_Vector_Type : Iir_Type_Declaration;
+   Integer_Vector_Type_Declaration : Iir_Type_Declaration;
 
    Real_Vector_Type_Definition : Iir_Array_Type_Definition;
-   Real_Vector_Type : Iir_Type_Declaration;
+   Real_Vector_Type_Declaration : Iir_Type_Declaration;
 
    Time_Vector_Type_Definition : Iir_Array_Type_Definition;
-   Time_Vector_Type : Iir_Type_Declaration;
+   Time_Vector_Type_Declaration : Iir_Type_Declaration;
 
    --  Internal use only.
    --  These types should be considered like universal types, but
@@ -155,11 +155,11 @@ package Std_Package is
    --  universal cannot.
    Convertible_Integer_Type_Definition : constant Iir_Integer_Type_Definition;
    Convertible_Real_Type_Definition : constant Iir_Floating_Type_Definition;
-   Convertible_Integer_Type : Iir_Anonymous_Type_Declaration;
-   Convertible_Real_Type : Iir_Anonymous_Type_Declaration;
+   Convertible_Integer_Type_Declaration : Iir_Anonymous_Type_Declaration;
+   Convertible_Real_Type_Declaration : Iir_Anonymous_Type_Declaration;
 
    Convertible_Integer_Subtype_Definition : Iir_Integer_Subtype_Definition;
-   Convertible_Integer_Subtype : Iir_Subtype_Declaration;
+   Convertible_Integer_Subtype_Declaration : Iir_Subtype_Declaration;
 
    --  Create the first well-known nodes.
    procedure Create_First_Nodes;

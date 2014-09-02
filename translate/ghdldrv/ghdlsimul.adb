@@ -32,6 +32,7 @@ with Std_Package;
 with Libraries;
 with Canon;
 with Configuration;
+with Iirs_Utils;
 with Annotations;
 with Elaboration;
 with Sim_Be;
@@ -109,7 +110,7 @@ package body Ghdlsimul is
          Conf_Unit : constant Iir := Get_Library_Unit (Top_Conf);
          Arch : constant Iir :=
            Get_Block_Specification (Get_Block_Configuration (Conf_Unit));
-         Entity : constant Iir := Get_Entity (Arch);
+         Entity : constant Iir := Iirs_Utils.Get_Entity (Arch);
       begin
          Configuration.Check_Entity_Declaration_Top (Entity);
          if Nbr_Errors > 0 then

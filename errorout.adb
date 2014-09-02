@@ -20,7 +20,7 @@ with Ada.Command_Line;
 with Scanner;
 with Tokens; use Tokens;
 with Name_Table;
-with Iirs_Utils;
+with Iirs_Utils; use Iirs_Utils;
 with Files_Map; use Files_Map;
 with Ada.Strings.Unbounded;
 with Std_Names;
@@ -369,12 +369,12 @@ package body Errorout is
       case Get_Kind (Node) is
          when Iir_Kind_String_Literal =>
             return "string literal """
-              & Iirs_Utils.Image_String_Lit (Node) & """";
+              & Image_String_Lit (Node) & """";
          when Iir_Kind_Bit_String_Literal =>
             return "bit string literal """
-              & Iirs_Utils.Image_String_Lit (Node) & """";
+              & Image_String_Lit (Node) & """";
          when Iir_Kind_Character_Literal =>
-            return "character literal " & Iirs_Utils.Image_Identifier (Node);
+            return "character literal " & Image_Identifier (Node);
          when Iir_Kind_Integer_Literal =>
             return "integer literal";
          when Iir_Kind_Floating_Point_Literal =>
@@ -383,7 +383,7 @@ package body Errorout is
            | Iir_Kind_Physical_Fp_Literal =>
             return "physical literal";
          when Iir_Kind_Enumeration_Literal =>
-            return "enumeration literal " & Iirs_Utils.Image_Identifier (Node);
+            return "enumeration literal " & Image_Identifier (Node);
          when Iir_Kind_Element_Declaration =>
             return Disp_Identifier (Node, "element");
          when Iir_Kind_Record_Element_Constraint =>
@@ -399,9 +399,6 @@ package body Errorout is
          when Iir_Kind_Simple_Aggregate =>
             return "locally static array literal";
 
-         --  Should never be displayed, but for completness...
-         when Iir_Kind_Proxy =>
-            return "proxy";
          when Iir_Kind_Operator_Symbol =>
             return "operator name";
          when Iir_Kind_Aggregate_Info =>
@@ -423,7 +420,7 @@ package body Errorout is
 
          when Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
-            return Iirs_Utils.Image_Identifier (Get_Type_Declarator (Node));
+            return Image_Identifier (Get_Type_Declarator (Node));
          when Iir_Kind_Array_Type_Definition =>
             return Disp_Type (Node, "array type");
          when Iir_Kind_Array_Subtype_Definition =>
@@ -459,7 +456,7 @@ package body Errorout is
             return "subtype definition";
 
          when Iir_Kind_Scalar_Nature_Definition =>
-            return Iirs_Utils.Image_Identifier (Get_Nature_Declarator (Node));
+            return Image_Identifier (Get_Nature_Declarator (Node));
 
          when Iir_Kind_Choice_By_Expression =>
             return "choice by expression";
@@ -490,8 +487,7 @@ package body Errorout is
               & ''';
          when Iir_Kind_Entity_Aspect_Entity =>
             return "aspect " & Disp_Node (Get_Entity (Node))
-              & '(' & Iirs_Utils.Image_Identifier (Get_Architecture (Node))
-              & ')';
+              & '(' & Image_Identifier (Get_Architecture (Node)) & ')';
          when Iir_Kind_Entity_Aspect_Configuration =>
             return "configuration entity aspect";
          when Iir_Kind_Entity_Aspect_Open =>
@@ -500,8 +496,7 @@ package body Errorout is
          when Iir_Kinds_Monadic_Operator
            | Iir_Kinds_Dyadic_Operator =>
             return "operator """
-              & Name_Table.Image (Iirs_Utils.Get_Operator_Name (Node))
-              & """";
+              & Name_Table.Image (Get_Operator_Name (Node)) & """";
          when Iir_Kind_Parenthesis_Expression =>
             return "expression";
          when Iir_Kind_Qualified_Expression =>
@@ -609,8 +604,8 @@ package body Errorout is
                   Arch := Get_Block_Specification
                     (Get_Block_Configuration (Node));
                   return "default configuration of "
-                    & Iirs_Utils.Image_Identifier (Ent)
-                    & '(' & Iirs_Utils.Image_Identifier (Arch) & ')';
+                    & Image_Identifier (Ent)
+                    & '(' & Image_Identifier (Arch) & ')';
                end if;
             end;
          when Iir_Kind_Package_Instantiation_Declaration =>
@@ -655,12 +650,11 @@ package body Errorout is
             return Disp_Identifier (Node, "implicit function")
               & Disp_Identifier (Get_Type_Reference (Node), " of type");
 --             return "implicit function "
---               & Iirs_Utils.Get_Predefined_Function_Name
---               (Get_Implicit_Definition (Node));
+--               & Get_Predefined_Function_Name
+--                (Get_Implicit_Definition (Node));
          when Iir_Kind_Implicit_Procedure_Declaration =>
             return "implicit procedure "
-              & Iirs_Utils.Get_Predefined_Function_Name
-              (Get_Implicit_Definition (Node));
+              & Get_Predefined_Function_Name (Get_Implicit_Definition (Node));
 
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
             return "concurrent procedure call";
@@ -1004,7 +998,6 @@ package body Errorout is
    --  Return the type name of DEF, handle anonymous subtypes.
    function Disp_Type_Name (Def : Iir) return String
    is
-      use Iirs_Utils;
       Decl : Iir;
    begin
       Decl := Get_Type_Declarator (Def);

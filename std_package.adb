@@ -54,6 +54,15 @@ package body Std_Package is
       return Res;
    end Create_Std_Decl;
 
+   function Create_Std_Type_Mark (Ref : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Iirs_Utils.Build_Simple_Name (Ref, Std_Location);
+      Set_Type (Res, Get_Type (Ref));
+      return Res;
+   end Create_Std_Type_Mark;
+
    procedure Create_First_Nodes
    is
    begin
@@ -153,7 +162,6 @@ package body Std_Package is
          Set_Type (Res, Sub_Type);
          Set_Expr_Staticness (Res, Locally);
          Set_Name_Staticness (Res, Locally);
-         Set_Base_Name (Res, Res);
          Set_Enumeration_Decl (Res, Res);
          Set_Enum_Pos (Res, Iir_Int32 (Get_Nbr_Elements (List)));
          Sem.Compute_Subprogram_Hash (Res);
@@ -247,16 +255,23 @@ package body Std_Package is
 
       --  Create an array of EL_TYPE, indexed by Natural.
       procedure Create_Array_Type
-        (Def : out Iir; Decl : out Iir; El_Type : Iir; Name : Name_Id)
+        (Def : out Iir; Decl : out Iir; El_Decl : Iir; Name : Name_Id)
       is
          Index_List : Iir_List;
+         Index : Iir;
+         Element : Iir;
       begin
+         Element := Create_Std_Type_Mark (El_Decl);
+         Index := Create_Std_Type_Mark (Natural_Subtype_Declaration);
+
          Def := Create_Std_Iir (Iir_Kind_Array_Type_Definition);
          Set_Base_Type (Def, Def);
+
          Index_List := Create_Iir_List;
          Set_Index_Subtype_List (Def, Index_List);
-         Append_Element (Index_List, Natural_Subtype_Definition);
-         Set_Element_Subtype (Def, El_Type);
+         Append_Element (Index_List, Index);
+
+         Set_Element_Subtype_Indication (Def, Element);
          Set_Type_Staticness (Def, None);
          Set_Signal_Type_Flag (Def, True);
          Set_Has_Signal_Flag (Def, not Flags.Flag_Whole_Analyze);
@@ -288,7 +303,7 @@ package body Std_Package is
          Set_Identifier (Inter, Std_Names.Name_Value);
          Set_Type (Inter, Inter_Type);
          Set_Mode (Inter, Iir_In_Mode);
-         Set_Base_Name (Inter, Inter);
+         Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
          Set_Interface_Declaration_Chain (Decl, Inter);
 
          if Inter2_Id /= Null_Identifier then
@@ -296,7 +311,7 @@ package body Std_Package is
             Set_Identifier (Inter2, Inter2_Id);
             Set_Type (Inter2, Inter2_Type);
             Set_Mode (Inter2, Iir_In_Mode);
-            Set_Base_Name (Inter2, Inter2);
+            Set_Lexical_Layout (Inter2, Iir_Lexical_Has_Type);
             Set_Chain (Inter, Inter2);
          end if;
 
@@ -322,8 +337,8 @@ package body Std_Package is
          Set_Identifier (Inter, Std_Names.Name_S);
          Set_Type (Inter, Inter_Type);
          Set_Mode (Inter, Iir_In_Mode);
-         Set_Base_Name (Inter, Inter);
          Set_Interface_Declaration_Chain (Decl, Inter);
+         Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
 
          Sem.Compute_Subprogram_Hash (Decl);
          Add_Decl (Decl);
@@ -386,11 +401,12 @@ package body Std_Package is
                               not Flags.Flag_Whole_Analyze);
 
          -- type boolean is
-         Create_Std_Type (Boolean_Type, Boolean_Type_Definition, Name_Boolean);
+         Create_Std_Type (Boolean_Type_Declaration, Boolean_Type_Definition,
+                          Name_Boolean);
 
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (Boolean_Type_Definition);
-         Add_Implicit_Operations (Boolean_Type);
+         Add_Implicit_Operations (Boolean_Type_Declaration);
       end;
 
       if Vhdl_Std >= Vhdl_08 then
@@ -422,11 +438,11 @@ package body Std_Package is
          Set_Only_Characters_Flag (Bit_Type_Definition, True);
 
          -- type bit is
-         Create_Std_Type (Bit_Type, Bit_Type_Definition, Name_Bit);
+         Create_Std_Type (Bit_Type_Declaration, Bit_Type_Definition, Name_Bit);
 
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (Bit_Type_Definition);
-         Add_Implicit_Operations (Bit_Type);
+         Add_Implicit_Operations (Bit_Type_Declaration);
       end;
 
       if Vhdl_Std >= Vhdl_08 then
@@ -473,12 +489,13 @@ package body Std_Package is
                               not Flags.Flag_Whole_Analyze);
 
          -- type character is
-         Create_Std_Type (Character_Type, Character_Type_Definition,
-                          Name_Character);
+         Create_Std_Type
+           (Character_Type_Declaration, Character_Type_Definition,
+            Name_Character);
 
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (Character_Type_Definition);
-         Add_Implicit_Operations (Character_Type);
+         Add_Implicit_Operations (Character_Type_Declaration);
       end;
 
       -- severity level.
@@ -505,28 +522,29 @@ package body Std_Package is
                               not Flags.Flag_Whole_Analyze);
 
          -- type severity_level is
-         Create_Std_Type (Severity_Level_Type, Severity_Level_Type_Definition,
-                          Name_Severity_Level);
+         Create_Std_Type
+           (Severity_Level_Type_Declaration, Severity_Level_Type_Definition,
+            Name_Severity_Level);
 
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (Severity_Level_Type_Definition);
-         Add_Implicit_Operations (Severity_Level_Type);
+         Add_Implicit_Operations (Severity_Level_Type_Declaration);
       end;
 
       -- universal integer
       begin
          Create_Integer_Type (Universal_Integer_Type_Definition,
-                              Universal_Integer_Type,
+                              Universal_Integer_Type_Declaration,
                               Name_Universal_Integer);
-         Add_Decl (Universal_Integer_Type);
+         Add_Decl (Universal_Integer_Type_Declaration);
 
          Create_Integer_Subtype (Universal_Integer_Type_Definition,
-                                 Universal_Integer_Type,
+                                 Universal_Integer_Type_Declaration,
                                  Universal_Integer_Subtype_Definition,
-                                 Universal_Integer_Subtype);
+                                 Universal_Integer_Subtype_Declaration);
 
-         Add_Decl (Universal_Integer_Subtype);
-         Set_Subtype_Definition (Universal_Integer_Type,
+         Add_Decl (Universal_Integer_Subtype_Declaration);
+         Set_Subtype_Definition (Universal_Integer_Type_Declaration,
                                  Universal_Integer_Subtype_Definition);
 
          --  Do not create implicit operations yet, since "**" needs integer
@@ -547,14 +565,14 @@ package body Std_Package is
          Set_Signal_Type_Flag (Universal_Real_Type_Definition, True);
          Set_Has_Signal_Flag (Universal_Real_Type_Definition, False);
 
-         Universal_Real_Type :=
+         Universal_Real_Type_Declaration :=
            Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
-         Set_Identifier (Universal_Real_Type, Name_Universal_Real);
-         Set_Type_Definition (Universal_Real_Type,
+         Set_Identifier (Universal_Real_Type_Declaration, Name_Universal_Real);
+         Set_Type_Definition (Universal_Real_Type_Declaration,
                               Universal_Real_Type_Definition);
          Set_Type_Declarator (Universal_Real_Type_Definition,
-                              Universal_Real_Type);
-         Add_Decl (Universal_Real_Type);
+                              Universal_Real_Type_Declaration);
+         Add_Decl (Universal_Real_Type_Declaration);
 
          Universal_Real_Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Floating_Subtype_Definition);
@@ -570,17 +588,18 @@ package body Std_Package is
          Set_Has_Signal_Flag (Universal_Real_Subtype_Definition, False);
 
          --  type is
-         Universal_Real_Subtype :=
+         Universal_Real_Subtype_Declaration :=
            Create_Std_Decl (Iir_Kind_Subtype_Declaration);
-         Set_Identifier (Universal_Real_Subtype, Name_Universal_Real);
-         Set_Type (Universal_Real_Subtype,
+         Set_Identifier (Universal_Real_Subtype_Declaration,
+                         Name_Universal_Real);
+         Set_Type (Universal_Real_Subtype_Declaration,
                    Universal_Real_Subtype_Definition);
          Set_Type_Declarator (Universal_Real_Subtype_Definition,
-                              Universal_Real_Subtype);
-         Set_Subtype_Definition (Universal_Real_Type,
+                              Universal_Real_Subtype_Declaration);
+         Set_Subtype_Definition (Universal_Real_Type_Declaration,
                                  Universal_Real_Subtype_Definition);
 
-         Add_Decl (Universal_Real_Subtype);
+         Add_Decl (Universal_Real_Subtype_Declaration);
 
          --  Do not create implicit operations yet, since "**" needs integer
          --  type.
@@ -589,12 +608,12 @@ package body Std_Package is
       -- Convertible type.
       begin
          Create_Integer_Type (Convertible_Integer_Type_Definition,
-                              Convertible_Integer_Type,
+                              Convertible_Integer_Type_Declaration,
                               Name_Convertible_Integer);
          Create_Integer_Subtype (Convertible_Integer_Type_Definition,
-                                 Convertible_Integer_Type,
+                                 Convertible_Integer_Type_Declaration,
                                  Convertible_Integer_Subtype_Definition,
-                                 Convertible_Integer_Subtype);
+                                 Convertible_Integer_Subtype_Declaration);
 
          --  Not added in std.standard.
       end;
@@ -606,13 +625,14 @@ package body Std_Package is
          Set_Signal_Type_Flag (Convertible_Real_Type_Definition, True);
          Set_Has_Signal_Flag (Convertible_Real_Type_Definition, False);
 
-         Convertible_Real_Type :=
+         Convertible_Real_Type_Declaration :=
            Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
-         Set_Identifier (Convertible_Real_Type, Name_Convertible_Real);
-         Set_Type_Definition (Convertible_Real_Type,
+         Set_Identifier (Convertible_Real_Type_Declaration,
+                         Name_Convertible_Real);
+         Set_Type_Definition (Convertible_Real_Type_Declaration,
                               Convertible_Real_Type_Definition);
          Set_Type_Declarator (Convertible_Real_Type_Definition,
-                              Convertible_Real_Type);
+                              Convertible_Real_Type_Declaration);
       end;
 
       -- integer type.
@@ -620,19 +640,19 @@ package body Std_Package is
          Integer_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Integer_Type_Definition);
          Create_Integer_Type (Integer_Type_Definition,
-                              Integer_Type,
+                              Integer_Type_Declaration,
                               Name_Integer);
-         Add_Decl (Integer_Type);
+         Add_Decl (Integer_Type_Declaration);
 
-         Add_Implicit_Operations (Integer_Type);
-         Add_Implicit_Operations (Universal_Integer_Type);
-         Add_Implicit_Operations (Universal_Real_Type);
+         Add_Implicit_Operations (Integer_Type_Declaration);
+         Add_Implicit_Operations (Universal_Integer_Type_Declaration);
+         Add_Implicit_Operations (Universal_Real_Type_Declaration);
 
          Create_Integer_Subtype (Integer_Type_Definition,
-                                 Integer_Type,
+                                 Integer_Type_Declaration,
                                  Integer_Subtype_Definition,
-                                 Integer_Subtype);
-         Add_Decl (Integer_Subtype);
+                                 Integer_Subtype_Declaration);
+         Add_Decl (Integer_Subtype_Declaration);
       end;
 
       -- Real type.
@@ -647,13 +667,14 @@ package body Std_Package is
          Set_Has_Signal_Flag (Real_Type_Definition,
                               not Flags.Flag_Whole_Analyze);
 
-         Real_Type := Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
-         Set_Identifier (Real_Type, Name_Real);
-         Set_Type_Definition (Real_Type, Real_Type_Definition);
-         Set_Type_Declarator (Real_Type_Definition, Real_Type);
-         Add_Decl (Real_Type);
+         Real_Type_Declaration :=
+           Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
+         Set_Identifier (Real_Type_Declaration, Name_Real);
+         Set_Type_Definition (Real_Type_Declaration, Real_Type_Definition);
+         Set_Type_Declarator (Real_Type_Definition, Real_Type_Declaration);
+         Add_Decl (Real_Type_Declaration);
 
-         Add_Implicit_Operations (Real_Type);
+         Add_Implicit_Operations (Real_Type_Declaration);
 
          Real_Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Floating_Subtype_Definition);
@@ -668,13 +689,16 @@ package body Std_Package is
          Set_Has_Signal_Flag (Real_Subtype_Definition,
                               not Flags.Flag_Whole_Analyze);
 
-         Real_Subtype := Create_Std_Decl (Iir_Kind_Subtype_Declaration);
-         Set_Std_Identifier (Real_Subtype, Name_Real);
-         Set_Type (Real_Subtype, Real_Subtype_Definition);
-         Set_Type_Declarator (Real_Subtype_Definition, Real_Subtype);
-         Add_Decl (Real_Subtype);
+         Real_Subtype_Declaration :=
+           Create_Std_Decl (Iir_Kind_Subtype_Declaration);
+         Set_Std_Identifier (Real_Subtype_Declaration, Name_Real);
+         Set_Type (Real_Subtype_Declaration, Real_Subtype_Definition);
+         Set_Type_Declarator
+           (Real_Subtype_Definition, Real_Subtype_Declaration);
+         Add_Decl (Real_Subtype_Declaration);
 
-         Set_Subtype_Definition (Real_Type, Real_Subtype_Definition);
+         Set_Subtype_Definition
+           (Real_Type_Declaration, Real_Subtype_Definition);
       end;
 
       -- time definition
@@ -684,13 +708,14 @@ package body Std_Package is
          use Iir_Chains.Unit_Chain_Handling;
 
          function Create_Std_Phys_Lit (Value : Iir_Int64;
-                                       Unit : Iir_Unit_Declaration)
+                                       Unit : Iir_Simple_Name)
            return Iir_Physical_Int_Literal
          is
             Lit: Iir_Physical_Int_Literal;
          begin
             Lit := Create_Std_Iir (Iir_Kind_Physical_Int_Literal);
             Set_Value (Lit, Value);
+            pragma Assert (Get_Kind (Unit) = Iir_Kind_Simple_Name);
             Set_Unit_Name (Lit, Unit);
             Set_Type (Lit, Time_Type_Definition);
             Set_Expr_Staticness (Lit, Time_Staticness);
@@ -703,12 +728,15 @@ package body Std_Package is
                                 Name : Name_Id)
          is
             Lit: Iir_Physical_Int_Literal;
+            Mul_Name : Iir;
          begin
             Unit := Create_Std_Iir (Iir_Kind_Unit_Declaration);
             Set_Std_Identifier (Unit, Name);
             Set_Type (Unit, Time_Type_Definition);
 
-            Lit := Create_Std_Phys_Lit (Multiplier_Value, Multiplier);
+            Mul_Name := Iirs_Utils.Build_Simple_Name
+              (Multiplier, Std_Location);
+            Lit := Create_Std_Phys_Lit (Multiplier_Value, Mul_Name);
             Set_Physical_Literal (Unit, Lit);
             Lit := Create_Std_Phys_Lit
               (Multiplier_Value
@@ -717,9 +745,11 @@ package body Std_Package is
             Set_Physical_Unit_Value (Unit, Lit);
 
             Set_Expr_Staticness (Unit, Time_Staticness);
+            Set_Name_Staticness (Unit, Locally);
             Append (Last_Unit, Time_Type_Definition, Unit);
          end Create_Unit;
 
+         Time_Fs_Name : Iir;
          Time_Fs_Unit: Iir_Unit_Declaration;
          Time_Ps_Unit: Iir_Unit_Declaration;
          Time_Ns_Unit: Iir_Unit_Declaration;
@@ -743,6 +773,7 @@ package body Std_Package is
          Set_Signal_Type_Flag (Time_Type_Definition, True);
          Set_Has_Signal_Flag (Time_Type_Definition,
                               not Flags.Flag_Whole_Analyze);
+         Set_End_Has_Reserved_Id (Time_Type_Definition, True);
 
          Build_Init (Last_Unit);
 
@@ -750,8 +781,11 @@ package body Std_Package is
          Set_Std_Identifier (Time_Fs_Unit, Name_Fs);
          Set_Type (Time_Fs_Unit, Time_Type_Definition);
          Set_Expr_Staticness (Time_Fs_Unit, Time_Staticness);
+         Set_Name_Staticness (Time_Fs_Unit, Locally);
+         Time_Fs_Name := Iirs_Utils.Build_Simple_Name
+           (Time_Fs_Unit, Std_Location);
          Set_Physical_Unit_Value
-           (Time_Fs_Unit, Create_Std_Phys_Lit (1, Time_Fs_Unit));
+           (Time_Fs_Unit, Create_Std_Phys_Lit (1, Time_Fs_Name));
          Append (Last_Unit, Time_Type_Definition, Time_Fs_Unit);
 
          Create_Unit (Time_Ps_Unit, 1000, Time_Fs_Unit, Name_Ps);
@@ -763,37 +797,42 @@ package body Std_Package is
          Create_Unit (Time_Hr_Unit, 60, Time_Min_Unit, Name_Hr);
 
          --  type is
-         Time_Type := Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
-         Set_Identifier (Time_Type, Name_Time);
-         Set_Type_Definition (Time_Type, Time_Type_Definition);
-         Set_Type_Declarator (Time_Type_Definition, Time_Type);
-         Add_Decl (Time_Type);
+         Time_Type_Declaration :=
+           Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
+         Set_Identifier (Time_Type_Declaration, Name_Time);
+         Set_Type_Definition (Time_Type_Declaration, Time_Type_Definition);
+         Set_Type_Declarator (Time_Type_Definition, Time_Type_Declaration);
+         Add_Decl (Time_Type_Declaration);
 
-         Add_Implicit_Operations (Time_Type);
+         Add_Implicit_Operations (Time_Type_Declaration);
 
          Time_Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Physical_Subtype_Definition);
          Constraint := Create_Std_Range_Expr
            (Create_Std_Phys_Lit (Low_Bound (Flags.Flag_Time_64),
-                                 Time_Fs_Unit),
+                                 Time_Fs_Name),
             Create_Std_Phys_Lit (High_Bound (Flags.Flag_Time_64),
-                                 Time_Fs_Unit),
+                                 Time_Fs_Name),
             Time_Type_Definition);
          Set_Range_Constraint (Time_Subtype_Definition, Constraint);
          Set_Base_Type (Time_Subtype_Definition, Time_Type_Definition);
-         --Set_Type_Mark (Time_Subtype_Definition, Time_Type_Definition);
+         --Set_Subtype_Type_Mark (Time_Subtype_Definition,
+         --                       Time_Type_Definition);
          Set_Type_Staticness (Time_Subtype_Definition, Time_Staticness);
          Set_Signal_Type_Flag (Time_Subtype_Definition, True);
          Set_Has_Signal_Flag (Time_Subtype_Definition,
                               not Flags.Flag_Whole_Analyze);
 
          --  subtype
-         Time_Subtype := Create_Std_Decl (Iir_Kind_Subtype_Declaration);
-         Set_Std_Identifier (Time_Subtype, Name_Time);
-         Set_Type (Time_Subtype, Time_Subtype_Definition);
-         Set_Type_Declarator (Time_Subtype_Definition, Time_Subtype);
-         Add_Decl (Time_Subtype);
-         Set_Subtype_Definition (Time_Type, Time_Subtype_Definition);
+         Time_Subtype_Declaration :=
+           Create_Std_Decl (Iir_Kind_Subtype_Declaration);
+         Set_Std_Identifier (Time_Subtype_Declaration, Name_Time);
+         Set_Type (Time_Subtype_Declaration, Time_Subtype_Definition);
+         Set_Type_Declarator (Time_Subtype_Definition,
+                              Time_Subtype_Declaration);
+         Add_Decl (Time_Subtype_Declaration);
+         Set_Subtype_Definition
+           (Time_Type_Declaration, Time_Subtype_Definition);
 
          -- The default time base.
          case Flags.Time_Resolution is
@@ -822,12 +861,13 @@ package body Std_Package is
          if Vhdl_Std >= Vhdl_93c then
             Delay_Length_Subtype_Definition :=
               Create_Std_Iir (Iir_Kind_Physical_Subtype_Definition);
-            Set_Type_Mark (Delay_Length_Subtype_Definition,
-                           Time_Subtype_Definition);
+            Set_Subtype_Type_Mark
+              (Delay_Length_Subtype_Definition,
+               Create_Std_Type_Mark (Time_Subtype_Declaration));
             Constraint := Create_Std_Range_Expr
-              (Create_Std_Phys_Lit (0, Time_Fs_Unit),
+              (Create_Std_Phys_Lit (0, Time_Fs_Name),
                Create_Std_Phys_Lit (High_Bound (Flags.Flag_Time_64),
-                                    Time_Fs_Unit),
+                                    Time_Fs_Name),
                Time_Type_Definition);
             Set_Range_Constraint (Delay_Length_Subtype_Definition, Constraint);
             Set_Base_Type
@@ -838,16 +878,18 @@ package body Std_Package is
             Set_Has_Signal_Flag (Delay_Length_Subtype_Definition,
                                  not Flags.Flag_Whole_Analyze);
 
-            Delay_Length_Subtype :=
+            Delay_Length_Subtype_Declaration :=
               Create_Std_Decl (Iir_Kind_Subtype_Declaration);
-            Set_Std_Identifier (Delay_Length_Subtype, Name_Delay_Length);
-            Set_Type (Delay_Length_Subtype, Delay_Length_Subtype_Definition);
-            Set_Type_Declarator
-              (Delay_Length_Subtype_Definition, Delay_Length_Subtype);
-            Add_Decl (Delay_Length_Subtype);
+            Set_Std_Identifier (Delay_Length_Subtype_Declaration,
+                                Name_Delay_Length);
+            Set_Type (Delay_Length_Subtype_Declaration,
+                      Delay_Length_Subtype_Definition);
+            Set_Type_Declarator (Delay_Length_Subtype_Definition,
+                                 Delay_Length_Subtype_Declaration);
+            Add_Decl (Delay_Length_Subtype_Declaration);
          else
             Delay_Length_Subtype_Definition := Null_Iir;
-            Delay_Length_Subtype := Null_Iir;
+            Delay_Length_Subtype_Declaration := Null_Iir;
          end if;
       end;
 
@@ -894,11 +936,13 @@ package body Std_Package is
          Set_Has_Signal_Flag (Natural_Subtype_Definition,
                               not Flags.Flag_Whole_Analyze);
 
-         Natural_Subtype := Create_Std_Decl (Iir_Kind_Subtype_Declaration);
-         Set_Std_Identifier (Natural_Subtype, Name_Natural);
-         Set_Type (Natural_Subtype, Natural_Subtype_Definition);
-         Add_Decl (Natural_Subtype);
-         Set_Type_Declarator (Natural_Subtype_Definition, Natural_Subtype);
+         Natural_Subtype_Declaration :=
+           Create_Std_Decl (Iir_Kind_Subtype_Declaration);
+         Set_Std_Identifier (Natural_Subtype_Declaration, Name_Natural);
+         Set_Type (Natural_Subtype_Declaration, Natural_Subtype_Definition);
+         Add_Decl (Natural_Subtype_Declaration);
+         Set_Type_Declarator (Natural_Subtype_Definition,
+                              Natural_Subtype_Declaration);
       end;
 
       -- positive subtype
@@ -920,45 +964,54 @@ package body Std_Package is
          Set_Has_Signal_Flag (Positive_Subtype_Definition,
                               not Flags.Flag_Whole_Analyze);
 
-         Positive_Subtype := Create_Std_Decl (Iir_Kind_Subtype_Declaration);
-         Set_Std_Identifier (Positive_Subtype, Name_Positive);
-         Set_Type (Positive_Subtype, Positive_Subtype_Definition);
-         Add_Decl (Positive_Subtype);
-         Set_Type_Declarator (Positive_Subtype_Definition, Positive_Subtype);
+         Positive_Subtype_Declaration :=
+           Create_Std_Decl (Iir_Kind_Subtype_Declaration);
+         Set_Std_Identifier (Positive_Subtype_Declaration, Name_Positive);
+         Set_Type (Positive_Subtype_Declaration, Positive_Subtype_Definition);
+         Add_Decl (Positive_Subtype_Declaration);
+         Set_Type_Declarator (Positive_Subtype_Definition,
+                              Positive_Subtype_Declaration);
       end;
 
       -- string type.
       -- type string is array (positive range <>) of character;
+      declare
+         Element : Iir;
+         Index_List : Iir_List;
       begin
+         Element := Create_Std_Type_Mark (Character_Type_Declaration);
+
          String_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Array_Type_Definition);
          Set_Base_Type (String_Type_Definition, String_Type_Definition);
-         Set_Index_Subtype_List (String_Type_Definition, Create_Iir_List);
-         Append_Element (Get_Index_Subtype_List (String_Type_Definition),
-                         Positive_Subtype_Definition);
-         Set_Element_Subtype (String_Type_Definition,
-                              Character_Type_Definition);
+         Index_List := Create_Iir_List;
+         Append_Element (Index_List,
+                         Create_Std_Type_Mark (Positive_Subtype_Declaration));
+         Set_Index_Subtype_List (String_Type_Definition, Index_List);
+         Set_Element_Subtype_Indication (String_Type_Definition, Element);
          Set_Type_Staticness (String_Type_Definition, None);
          Set_Signal_Type_Flag (String_Type_Definition, True);
          Set_Has_Signal_Flag (String_Type_Definition,
                               not Flags.Flag_Whole_Analyze);
 
-         Create_Std_Type (String_Type, String_Type_Definition, Name_String);
+         Create_Std_Type
+           (String_Type_Declaration, String_Type_Definition, Name_String);
 
-         Add_Implicit_Operations (String_Type);
+         Add_Implicit_Operations (String_Type_Declaration);
       end;
 
       if Vhdl_Std >= Vhdl_08 then
          --  type Boolean_Vector is array (Natural range <>) of Boolean;
          Create_Array_Type
-           (Boolean_Vector_Type_Definition, Boolean_Vector_Type,
-            Boolean_Type_Definition, Name_Boolean_Vector);
+           (Boolean_Vector_Type_Definition, Boolean_Vector_Type_Declaration,
+            Boolean_Type_Declaration, Name_Boolean_Vector);
       end if;
 
       -- bit_vector type.
       -- type bit_vector is array (natural range <>) of bit;
-      Create_Array_Type (Bit_Vector_Type_Definition, Bit_Vector_Type,
-                         Bit_Type_Definition, Name_Bit_Vector);
+      Create_Array_Type
+        (Bit_Vector_Type_Definition, Bit_Vector_Type_Declaration,
+         Bit_Type_Declaration, Name_Bit_Vector);
 
       --  LRM08 5.3.2.4 Predefined operations on array types
       --  The following operations are implicitly declared in package
@@ -978,18 +1031,18 @@ package body Std_Package is
       if Vhdl_Std >= Vhdl_08 then
          -- type integer_vector is array (natural range <>) of Integer;
          Create_Array_Type
-           (Integer_Vector_Type_Definition, Integer_Vector_Type,
-            Integer_Subtype_Definition, Name_Integer_Vector);
+           (Integer_Vector_Type_Definition, Integer_Vector_Type_Declaration,
+            Integer_Subtype_Declaration, Name_Integer_Vector);
 
          -- type Real_vector is array (natural range <>) of Real;
          Create_Array_Type
-           (Real_Vector_Type_Definition, Real_Vector_Type,
-            Real_Subtype_Definition, Name_Real_Vector);
+           (Real_Vector_Type_Definition, Real_Vector_Type_Declaration,
+            Real_Subtype_Declaration, Name_Real_Vector);
 
          -- type Time_vector is array (natural range <>) of Time;
          Create_Array_Type
-           (Time_Vector_Type_Definition, Time_Vector_Type,
-            Time_Subtype_Definition, Name_Time_Vector);
+           (Time_Vector_Type_Definition, Time_Vector_Type_Declaration,
+            Time_Subtype_Declaration, Name_Time_Vector);
       end if;
 
       --  VHDL93:
@@ -1014,14 +1067,15 @@ package body Std_Package is
                               not Flags.Flag_Whole_Analyze);
 
          --  type file_open_kind is
-         Create_Std_Type (File_Open_Kind_Type, File_Open_Kind_Type_Definition,
-                          Name_File_Open_Kind);
+         Create_Std_Type
+           (File_Open_Kind_Type_Declaration, File_Open_Kind_Type_Definition,
+            Name_File_Open_Kind);
 
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (File_Open_Kind_Type_Definition);
-         Add_Implicit_Operations (File_Open_Kind_Type);
+         Add_Implicit_Operations (File_Open_Kind_Type_Declaration);
       else
-         File_Open_Kind_Type := Null_Iir;
+         File_Open_Kind_Type_Declaration := Null_Iir;
          File_Open_Kind_Type_Definition := Null_Iir;
          File_Open_Kind_Read_Mode := Null_Iir;
          File_Open_Kind_Write_Mode := Null_Iir;
@@ -1053,14 +1107,14 @@ package body Std_Package is
                               not Flags.Flag_Whole_Analyze);
 
          --  type file_open_kind is
-         Create_Std_Type (File_Open_Status_Type,
+         Create_Std_Type (File_Open_Status_Type_Declaration,
                           File_Open_Status_Type_Definition,
                           Name_File_Open_Status);
          Iirs_Utils.Create_Range_Constraint_For_Enumeration_Type
            (File_Open_Status_Type_Definition);
-         Add_Implicit_Operations (File_Open_Status_Type);
+         Add_Implicit_Operations (File_Open_Status_Type_Declaration);
       else
-         File_Open_Status_Type := Null_Iir;
+         File_Open_Status_Type_Declaration := Null_Iir;
          File_Open_Status_Type_Definition := Null_Iir;
          File_Open_Status_Open_Ok := Null_Iir;
          File_Open_Status_Status_Error := Null_Iir;
@@ -1073,6 +1127,8 @@ package body Std_Package is
       if Vhdl_Std >= Vhdl_93c then
          Foreign_Attribute := Create_Std_Decl (Iir_Kind_Attribute_Declaration);
          Set_Std_Identifier (Foreign_Attribute, Name_Foreign);
+         Set_Type_Mark (Foreign_Attribute,
+                        Create_Std_Type_Mark (String_Type_Declaration));
          Set_Type (Foreign_Attribute, String_Type_Definition);
          Add_Decl (Foreign_Attribute);
       else

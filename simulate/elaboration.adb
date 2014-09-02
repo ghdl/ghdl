@@ -945,7 +945,7 @@ package body Elaboration is
          --  elaboration of the formal part and the evaluation of the actual
          --  part.
          --  FIXME:  elaboration of the formal part.
-         Inter := Get_Formal (Assoc);
+         Inter := Get_Association_Interface (Assoc);
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_Open =>
                --  The generic association list contains an implicit
@@ -1110,7 +1110,7 @@ package body Elaboration is
          --  Elaboration of a port association list consists of the elaboration
          --  of each port association element in the association list whose
          --  actual is not the reserved word OPEN.
-         Inter := Get_Formal (Assoc);
+         Inter := Get_Association_Interface (Assoc);
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Expression =>
                if Get_In_Conversion (Assoc) = Null_Iir

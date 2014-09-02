@@ -335,6 +335,7 @@ package body Sem_Expr is
          when Iir_Kind_Overload_List =>
             return Expr;
          when Iir_Kinds_Literal
+           | Iir_Kind_Character_Literal
            | Iir_Kind_Simple_Aggregate
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Enumeration_Literal =>
@@ -404,8 +405,8 @@ package body Sem_Expr is
       Targ_Indexes := Get_Index_Subtype_List (Targ_Type);
       Expr_Indexes := Get_Index_Subtype_List (Expr_Type);
       for I in Natural loop
-         Targ_Index := Get_Nth_Element (Targ_Indexes, I);
-         Expr_Index := Get_Nth_Element (Expr_Indexes, I);
+         Targ_Index := Get_Index_Type (Targ_Indexes, I);
+         Expr_Index := Get_Index_Type (Expr_Indexes, I);
          exit when Targ_Index = Null_Iir and Expr_Index = Null_Iir;
          if Targ_Index = Null_Iir or Expr_Index = Null_Iir then
             --  Types does not match.
@@ -506,115 +507,139 @@ package body Sem_Expr is
       Expr_Type : Iir;
    begin
       Expr_Type := Get_Type (Expr);
-
-      if Expr_Type = Null_Iir then
-         --  EXPR has the form: 'range L to/downto R'
-         Expr_Type := A_Type;
-      elsif Get_Kind (Expr_Type) not in Iir_Kinds_Scalar_Type_Definition then
-         --  EXPR has the form: 'NAME range L to/downto R', but NAME may
-         --  have already be analyzed.
-         Expr_Type := Find_Declaration (Expr_Type, Decl_Type);
-         if A_Type /= Null_Iir and then A_Type /= Expr_Type then
-            -- This can happend when EXPR is an array subtype index subtype
-            -- and A_TYPE is the array index type.
-            Error_Msg_Sem ("subtype " & Disp_Node (Expr_Type)
-                             & " doesn't match expected type "
-                             & Disp_Node (A_Type), Expr);
-         end if;
-      end if;
-
-      if Expr_Type /= Null_Iir then
-         Base_Type := Get_Base_Type (Expr_Type);
-      else
-         Base_Type := Null_Iir;
-      end if;
-
-      --  Analyze left and right bounds.
       Left := Get_Left_Limit (Expr);
       Right := Get_Right_Limit (Expr);
-      Right := Sem_Expression_Ov (Right, Base_Type);
-      Left := Sem_Expression_Ov (Left, Base_Type);
-      if Left = Null_Iir or else Right = Null_Iir then
-         return Null_Iir;
-      end if;
 
-      Left_Type := Get_Type (Left);
-      Right_Type := Get_Type (Right);
-      --  Check for string or aggregate literals
-      --  FIXME: improve error message
-      if Left_Type = Null_Iir then
-         Error_Msg_Sem ("bad expression for a scalar", Left);
-         return Null_Iir;
-      end if;
-      if Right_Type = Null_Iir then
-         Error_Msg_Sem ("bad expression for a scalar", Right);
-         return Null_Iir;
-      end if;
+      if Expr_Type = Null_Iir then
+         --  Pass 1.
 
-      if Is_Overload_List (Left_Type)
-        or else Is_Overload_List (Right_Type)
-      then
-         if Base_Type /= Null_Iir then
-            --  Cannot happen, since sem_expression_ov should resolved
-            --  ambiguties if a type is given.
-            raise Internal_Error;
+         if A_Type = Null_Iir then
+            Base_Type := Null_Iir;
+         else
+            Base_Type := Get_Base_Type (A_Type);
          end if;
 
-         --  Try to find a common type.
-         Base_Type := Search_Compatible_Type (Left_Type, Right_Type);
-         if Base_Type = Null_Iir then
-            if Compatibility_Types1 (Universal_Integer_Type_Definition,
-                                     Left_Type)
-              and then
-              Compatibility_Types1 (Universal_Integer_Type_Definition,
-                                    Right_Type)
-            then
-               Base_Type := Universal_Integer_Type_Definition;
-            elsif Compatibility_Types1 (Universal_Real_Type_Definition,
+         --  Analyze left and right bounds.
+         Right := Sem_Expression_Ov (Right, Base_Type);
+         Left := Sem_Expression_Ov (Left, Base_Type);
+
+         if Left = Null_Iir or else Right = Null_Iir then
+            --  Error.
+            return Null_Iir;
+         end if;
+
+         Left_Type := Get_Type (Left);
+         Right_Type := Get_Type (Right);
+         --  Check for string or aggregate literals
+         --  FIXME: improve error message
+         if Left_Type = Null_Iir then
+            Error_Msg_Sem ("bad expression for a scalar", Left);
+            return Null_Iir;
+         end if;
+         if Right_Type = Null_Iir then
+            Error_Msg_Sem ("bad expression for a scalar", Right);
+            return Null_Iir;
+         end if;
+
+         if Is_Overload_List (Left_Type)
+           or else Is_Overload_List (Right_Type)
+         then
+            if Base_Type /= Null_Iir then
+               --  Cannot happen, since sem_expression_ov should resolve
+               --  ambiguties if a type is given.
+               raise Internal_Error;
+            end if;
+
+            --  Try to find a common type.
+            Expr_Type := Search_Compatible_Type (Left_Type, Right_Type);
+            if Expr_Type = Null_Iir then
+               if Compatibility_Types1 (Universal_Integer_Type_Definition,
                                         Left_Type)
-              and then
-              Compatibility_Types1 (Universal_Real_Type_Definition,
-                                    Right_Type)
-            then
-               Base_Type := Universal_Real_Type_Definition;
-            else
+                 and then
+                 Compatibility_Types1 (Universal_Integer_Type_Definition,
+                                       Right_Type)
+               then
+                  Expr_Type := Universal_Integer_Type_Definition;
+               elsif Compatibility_Types1 (Universal_Real_Type_Definition,
+                                           Left_Type)
+                 and then
+                 Compatibility_Types1 (Universal_Real_Type_Definition,
+                                       Right_Type)
+               then
+                  Expr_Type := Universal_Real_Type_Definition;
+               else
+                  --  FIXME: handle overload
+                  Error_Msg_Sem
+                    ("left and right expressions of range are not compatible",
+                     Expr);
+                  return Null_Iir;
+               end if;
+            end if;
+            Left := Sem_Expression (Left, Expr_Type);
+            Right := Sem_Expression (Right, Expr_Type);
+            if Left = Null_Iir or else Right = Null_Iir then
+               return Null_Iir;
+            end if;
+         else
+            Expr_Type := Get_Common_Basetype (Get_Base_Type (Left_Type),
+                                              Get_Base_Type (Right_Type));
+            if Expr_Type = Null_Iir then
                Error_Msg_Sem
                  ("left and right expressions of range are not compatible",
                   Expr);
                return Null_Iir;
             end if;
          end if;
-         Base_Type := Get_Base_Type (Base_Type);
-         Left := Sem_Expression (Left, Base_Type);
-         Right := Sem_Expression (Right, Base_Type);
-         if Left = Null_Iir or else Right = Null_Iir then
-            return Null_Iir;
+
+         --  The type of the range is known, finish analysis.
+      else
+         --  Second call.
+
+         pragma Assert (A_Type /= Null_Iir);
+
+         if Is_Overload_List (Expr_Type) then
+            --  FIXME: resolve overload
+            raise Internal_Error;
+         else
+            if not Are_Types_Compatible (Expr_Type, A_Type) then
+               Error_Msg_Sem
+                 ("type of range doesn't match expected type", Expr);
+               return Null_Iir;
+            end if;
+
+            return Expr;
          end if;
       end if;
+
       Left := Eval_Expr_If_Static (Left);
       Right := Eval_Expr_If_Static (Right);
       Set_Left_Limit (Expr, Left);
       Set_Right_Limit (Expr, Right);
       Set_Expr_Staticness (Expr, Min (Get_Expr_Staticness (Left),
                                       Get_Expr_Staticness (Right)));
-      if Expr_Type /= Null_Iir then
-         Set_Type (Expr, Base_Type);
-         if Get_Expr_Staticness (Expr) = Locally
-           and then Get_Type_Staticness (Expr_Type) = Locally
-           and then Get_Kind (Expr_Type) in Iir_Kinds_Subtype_Definition
-         then
-            Eval_Check_Range (Expr, Expr_Type, Any_Dir);
-         end if;
-      else
-         Base_Type := Get_Common_Basetype (Get_Base_Type (Get_Type (Left)),
-                                           Get_Base_Type (Get_Type (Right)));
-         if Base_Type = Null_Iir then
-            Error_Msg_Sem
-              ("left and right expressions of range are not compatible", Expr);
-            return Null_Iir;
-         end if;
-         Set_Type (Expr, Base_Type);
+
+      if A_Type /= Null_Iir
+        and then not Are_Types_Compatible (Expr_Type, A_Type)
+      then
+         Error_Msg_Sem ("type of range doesn't match expected type", Expr);
+         return Null_Iir;
       end if;
+
+      Set_Type (Expr, Expr_Type);
+      if Get_Kind (Get_Base_Type (Expr_Type))
+        not in Iir_Kinds_Scalar_Type_Definition
+      then
+         Error_Msg_Sem ("type of range is not a scalar type", Expr);
+         return Null_Iir;
+      end if;
+
+      if Get_Expr_Staticness (Expr) = Locally
+        and then Get_Type_Staticness (Expr_Type) = Locally
+        and then Get_Kind (Expr_Type) in Iir_Kinds_Subtype_Definition
+      then
+         Eval_Check_Range (Expr, Expr_Type, Any_Dir);
+      end if;
+
       return Expr;
    end Sem_Simple_Range_Expression;
 
@@ -625,77 +650,70 @@ package body Sem_Expr is
    -- LRM93 3.2.1.1
    -- FIXME: avoid to run it on an already semantized node, be careful
    --  with range_type_expr.
-   function Sem_Range_Expression
-     (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
-     return Iir
+   function Sem_Range_Expression (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
+                                 return Iir
    is
       Res : Iir;
       Res_Type : Iir;
    begin
-      if Get_Kind (Expr) = Iir_Kind_Range_Expression then
-         Res := Sem_Simple_Range_Expression (Expr, A_Type, Any_Dir);
-         if Res = Null_Iir then
-            return Null_Iir;
-         end if;
-         Res_Type := Get_Type (Res);
-      else
-         if Get_Kind (Expr) in Iir_Kinds_Name
-           or else Get_Kind (Expr) = Iir_Kind_Attribute_Name
-         then
-            Sem_Name (Expr, False);
-            Maybe_Finish_Sem_Name (Expr);
-            Res := Get_Named_Entity (Expr);
+      case Get_Kind (Expr) is
+         when Iir_Kind_Range_Expression =>
+            Res := Sem_Simple_Range_Expression (Expr, A_Type, Any_Dir);
+            if Res = Null_Iir then
+               return Null_Iir;
+            end if;
+            Res_Type := Get_Type (Res);
+
+         when Iir_Kinds_Denoting_Name
+           | Iir_Kind_Attribute_Name
+           | Iir_Kind_Parenthesis_Name =>
+            if Get_Named_Entity (Expr) = Null_Iir then
+               Sem_Name (Expr);
+            end if;
+            Res := Name_To_Range (Expr);
             if Res = Error_Mark then
                return Null_Iir;
             end if;
-            Xref_Name (Expr);
-         else
-            Res := Expr;
-         end if;
 
-         case Get_Kind (Res) is
-            when Iir_Kind_Type_Declaration =>
-               Res := Get_Type_Definition (Res);
-               Res_Type := Res;
-            when Iir_Kind_Subtype_Declaration =>
-               Res := Get_Type (Res);
-               Res_Type := Res;
-            when Iir_Kind_Range_Array_Attribute
-              | Iir_Kind_Reverse_Range_Array_Attribute =>
-               Res_Type := Get_Type (Res);
-               Res := Eval_Expr_If_Static (Res);
-            when others =>
-               Error_Msg_Sem ("name must denote a range", Expr);
+            case Get_Kind (Res) is
+               when Iir_Kind_Simple_Name
+                 | Iir_Kind_Selected_Name =>
+                  pragma Assert (Get_Kind (Get_Named_Entity (Res))
+                                   in Iir_Kinds_Type_Declaration);
+                  Res_Type := Get_Type (Get_Named_Entity (Res));
+               when Iir_Kind_Range_Array_Attribute
+                 | Iir_Kind_Reverse_Range_Array_Attribute =>
+                  Res_Type := Get_Type (Res);
+               when others =>
+                  Error_Msg_Sem ("name must denote a range", Expr);
+                  return Null_Iir;
+            end case;
+            if A_Type /= Null_Iir
+              and then Get_Base_Type (Res_Type) /= Get_Base_Type (A_Type)
+            then
+               Not_Match (Expr, A_Type);
                return Null_Iir;
-         end case;
-         if A_Type /= Null_Iir
-           and then Get_Base_Type (Res_Type) /= Get_Base_Type (A_Type)
-         then
-            Not_Match (Expr, A_Type);
+            end if;
+
+         when others =>
+            Error_Msg_Sem ("range expression required", Expr);
             return Null_Iir;
-         end if;
-      end if;
+      end case;
 
       if Get_Kind (Res_Type) not in Iir_Kinds_Scalar_Type_Definition then
          Error_Msg_Sem (Disp_Node (Res) & " is not a range type", Expr);
          return Null_Iir;
       end if;
 
+      Res := Eval_Range_If_Static (Res);
+
       if A_Type /= Null_Iir
         and then Get_Type_Staticness (A_Type) = Locally
         and then Get_Kind (A_Type) in Iir_Kinds_Subtype_Definition
       then
-         case Get_Kind (Res) is
-            when Iir_Kinds_Type_And_Subtype_Definition =>
-               if Get_Type_Staticness (Res) = Locally then
-                  Eval_Check_Range
-                    (Get_Range_Constraint (Res), A_Type, Any_Dir);
-               end if;
-            when others =>
-               if Get_Expr_Staticness (Res) = Locally then
-                  Eval_Check_Range (Res, A_Type, Any_Dir);
-               end if;
-         end case;
+         if Get_Expr_Staticness (Res) = Locally then
+            Eval_Check_Range (Res, A_Type, Any_Dir);
+         end if;
       end if;
       return Res;
    end Sem_Range_Expression;
@@ -707,21 +725,45 @@ package body Sem_Expr is
       Res : Iir;
       Res_Type : Iir;
    begin
-      Res := Sem_Range_Expression (Expr, A_Type, Any_Dir);
+      if Get_Kind (Expr) = Iir_Kind_Subtype_Definition then
+         Res := Sem_Types.Sem_Subtype_Indication (Expr);
+         if Res = Null_Iir then
+            return Null_Iir;
+         end if;
 
-      if Res = Null_Iir then
-         return Null_Iir;
-      end if;
-
-      if Get_Kind (Res) in Iir_Kinds_Type_And_Subtype_Definition then
          Res_Type := Res;
+         if A_Type /= Null_Iir
+           and then (not Are_Types_Compatible
+                       (A_Type, Get_Type_Of_Subtype_Indication (Res)))
+         then
+            --  A_TYPE is known when analyzing an index_constraint within
+            --  a subtype indication.
+            Error_Msg_Sem ("subtype " & Disp_Node (Res)
+                             & " doesn't match expected type "
+                             & Disp_Node (A_Type), Expr);
+            --  FIXME: override type of RES ?
+         end if;
       else
+         Res := Sem_Range_Expression (Expr, A_Type, Any_Dir);
+
+         if Res = Null_Iir then
+            return Null_Iir;
+         end if;
+
          Res_Type := Get_Type (Res);
       end if;
 
+      --  Check the type is discrete.
       if Get_Kind (Res_Type) not in Iir_Kinds_Discrete_Type_Definition then
-         Error_Msg_Sem
-           (Disp_Node (Res) & " is not a discrete range type", Expr);
+         if Get_Kind (Res_Type) /= Iir_Kind_Error then
+            --  FIXME: avoid that test with error.
+            if Get_Kind (Res) not in Iir_Kinds_Denoting_Name then
+               Error_Msg_Sem ("range is not discrete", Res);
+            else
+               Error_Msg_Sem
+                 (Disp_Node (Res) & " is not a discrete range type", Expr);
+            end if;
+         end if;
          return Null_Iir;
       end if;
 
@@ -778,15 +820,6 @@ package body Sem_Expr is
       end if;
       return Expr;
    end Sem_Discrete_Range_Integer;
-
-   function Get_Discrete_Range_Staticness (Expr : Iir) return Iir_Staticness is
-   begin
-      if Get_Kind (Expr) in Iir_Kinds_Discrete_Type_Definition then
-         return Get_Type_Staticness (Expr);
-      else
-         return Get_Expr_Staticness (Expr);
-      end if;
-   end Get_Discrete_Range_Staticness;
 
    procedure Set_Function_Call_Staticness (Expr : Iir; Imp : Iir)
    is
@@ -1097,7 +1130,6 @@ package body Sem_Expr is
    is
       Subprg : constant Iir := Get_Current_Subprogram;
    begin
-      Set_Implementation (Expr, Imp);
       Set_Function_Call_Staticness (Expr, Imp);
       Set_Use_Flag (Imp, True);
 
@@ -1150,6 +1182,7 @@ package body Sem_Expr is
      (Expr : Iir; A_Type : Iir; Is_Func_Call : Boolean)
      return Iir
    is
+      Imp : constant Iir := Get_Implementation (Expr);
       Nbr_Inter: Natural;
       A_Func: Iir;
       Imp_List: Iir_List;
@@ -1162,7 +1195,7 @@ package body Sem_Expr is
       --  Sem_Name has gathered all the possible names for the prefix of this
       --  call.  Reduce this list to only names that match the types.
       Nbr_Inter := 0;
-      Imp_List := Get_Overload_List (Get_Implementation (Expr));
+      Imp_List := Get_Overload_List (Get_Named_Entity (Imp));
       Assoc_Chain := Get_Parameter_Association_Chain (Expr);
 
       for I in Natural loop
@@ -1215,7 +1248,7 @@ package body Sem_Expr is
          when 1 =>
             --  Simple case: no overloading.
             Inter := Get_First_Element (Imp_List);
-            Free_Iir (Get_Implementation (Expr));
+            Free_Iir (Get_Named_Entity (Imp));
             if Is_Func_Call then
                Set_Type (Expr, Get_Return_Type (Inter));
             end if;
@@ -1228,6 +1261,7 @@ package body Sem_Expr is
                raise Internal_Error;
             end if;
             Check_Subprogram_Associations (Inter_Chain, Assoc_Chain);
+            Set_Named_Entity (Imp, Inter);
             Sem_Subprogram_Call_Finish (Expr, Inter);
             return Expr;
 
@@ -1292,7 +1326,7 @@ package body Sem_Expr is
          -- NOTE: the list of possible implementations was already created
          --  during the transformation of iir_kind_parenthesis_name to
          --  iir_kind_function_call.
-         Inter_List := Get_Implementation (Expr);
+         Inter_List := Get_Named_Entity (Get_Implementation (Expr));
          if Get_Kind (Inter_List) = Iir_Kind_Error then
             return Null_Iir;
          elsif Is_Overload_List (Inter_List) then
@@ -1329,6 +1363,7 @@ package body Sem_Expr is
                Set_Type (Expr, Get_Return_Type (Inter_List));
             end if;
             Check_Subprogram_Associations (Param_Chain, Assoc_Chain);
+            Set_Named_Entity (Get_Implementation (Expr), Inter_List);
             Sem_Subprogram_Call_Finish (Expr, Inter_List);
             return Expr;
          end if;
@@ -1403,6 +1438,7 @@ package body Sem_Expr is
          return Null_Iir;
       end if;
       Check_Subprogram_Associations (Param_Chain, Assoc_Chain);
+      Set_Named_Entity (Get_Implementation (Expr), Res);
       Sem_Subprogram_Call_Finish (Expr, Res);
       return Expr;
    end Sem_Subprogram_Call;
@@ -1417,12 +1453,17 @@ package body Sem_Expr is
       Prefix : Iir;
       Inter : Iir;
    begin
-      Name := Get_Implementation (Call);
-      Sem_Name (Name, False);
+      Name := Get_Prefix (Call);
+      --  FIXME: check for denoting name.
+      Sem_Name (Name);
+      Set_Implementation (Call, Name);
+
+      --  Return now if the procedure declaration wasn't found.
       Imp := Get_Named_Entity (Name);
-      if Imp = Null_Iir then
+      if Is_Error (Imp) then
          return;
       end if;
+
       Name_To_Method_Object (Call, Name);
       Parameters_Chain := Get_Parameter_Association_Chain (Call);
       if Sem_Actual_Of_Association_Chain (Parameters_Chain) = False then
@@ -1431,14 +1472,13 @@ package body Sem_Expr is
       if Sem_Subprogram_Call (Call, Null_Iir) /= Call then
          return;
       end if;
-      Imp := Get_Implementation (Call);
+      Imp := Get_Named_Entity (Get_Implementation (Call));
       if Is_Overload_List (Imp) then
          --  Failed to resolve overload.
          return;
       end if;
       Set_Named_Entity (Name, Imp);
-      Xref_Name (Name);
-      Free_Name (Name);
+      Set_Prefix (Call, Finish_Sem_Name (Name));
 
       --  LRM 2.1.1.2 Signal Parameters
       --  A process statement contains a driver for each actual signal
@@ -1463,7 +1503,7 @@ package body Sem_Expr is
          then
             Prefix := Name_To_Object (Get_Actual (Param));
             if Prefix /= Null_Iir then
-               case Get_Kind (Get_Base_Name (Prefix)) is
+               case Get_Kind (Get_Object_Prefix (Prefix)) is
                   when Iir_Kind_Signal_Declaration
                     | Iir_Kind_Signal_Interface_Declaration =>
                      Prefix := Get_Longuest_Static_Prefix (Prefix);
@@ -1508,8 +1548,8 @@ package body Sem_Expr is
 
          if Get_Kind (El) = Iir_Kind_Implicit_Function_Declaration then
             Ref_Type := Get_Type_Reference (El);
-            if Ref_Type = Universal_Integer_Type
-              or Ref_Type = Universal_Real_Type
+            if Ref_Type = Universal_Integer_Type_Declaration
+              or Ref_Type = Universal_Real_Type_Declaration
             then
                if Res = Null_Iir then
                   Res := El;
@@ -1624,6 +1664,7 @@ package body Sem_Expr is
          end if;
          Destroy_Iir_List (Overload_List);
          if not Err then
+            Set_Implementation (Expr, Decl);
             Sem_Subprogram_Call_Finish (Expr, Decl);
             return Eval_Expr_If_Static (Expr);
          else
@@ -1917,8 +1958,7 @@ package body Sem_Expr is
 
       if Get_Constraint_State (Lit_Type) = Fully_Constrained then
          --  The type of the context is constrained.
-         Index_Type := Get_First_Element
-           (Get_Index_Subtype_List (Lit_Type));
+         Index_Type := Get_Index_Type (Lit_Type, 0);
          if Get_Type_Staticness (Index_Type) = Locally then
             if Eval_Discrete_Type_Length (Index_Type) /= Iir_Int64 (Len) then
                Error_Msg_Sem ("string length does not match that of "
@@ -2186,20 +2226,6 @@ package body Sem_Expr is
       end if;
    end Sem_String_Choices_Range;
 
-   function Is_Choice_Name (Name : Iir) return Boolean
-   is
-   begin
-      case Get_Kind (Name) is
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name
-           | Iir_Kind_Attribute_Name
-           | Iir_Kind_Parenthesis_Name =>
-            return True;
-         when others =>
-            return False;
-      end case;
-   end Is_Choice_Name;
-
    procedure Sem_Choices_Range
      (Choice_Chain : in out Iir;
       Sub_Type : Iir;
@@ -2235,69 +2261,89 @@ package body Sem_Expr is
       --  Staticness of all the choices.
       Staticness : Iir_Staticness;
 
+      function Replace_By_Range_Choice (Name : Iir; Range_Type : Iir)
+                                       return Boolean
+      is
+         N_Choice : Iir;
+         Name1 : Iir;
+      begin
+         if not Are_Types_Compatible (Range_Type, Sub_Type) then
+            Not_Match (Name, Sub_Type);
+            return False;
+         end if;
+
+         Name1 := Finish_Sem_Name (Name);
+         N_Choice := Create_Iir (Iir_Kind_Choice_By_Range);
+         Location_Copy (N_Choice, El);
+         Set_Chain (N_Choice, Get_Chain (El));
+         Set_Associated (N_Choice, Get_Associated (El));
+         Set_Same_Alternative_Flag (N_Choice, Get_Same_Alternative_Flag (El));
+         Set_Expression (N_Choice, Eval_Range_If_Static (Name1));
+         Set_Choice_Staticness (N_Choice, Get_Type_Staticness (Range_Type));
+         Free_Iir (El);
+
+         if Prev_El = Null_Iir then
+            Choice_Chain := N_Choice;
+         else
+            Set_Chain (Prev_El, N_Choice);
+         end if;
+         El := N_Choice;
+
+         return True;
+      end Replace_By_Range_Choice;
+
       --  Semantize a simple (by expression or by range) choice.
       --  Return FALSE in case of error.
       function Sem_Simple_Choice return Boolean
       is
          Expr : Iir;
+         Ent : Iir;
       begin
          Expr := Get_Expression (El);
          if Get_Kind (El) = Iir_Kind_Choice_By_Range then
             Expr := Sem_Discrete_Range_Expression (Expr, Sub_Type, True);
-         elsif Is_Choice_Name (Expr) then
-            declare
-               Name : Iir;
-               N_Choice : Iir;
-            begin
-               Sem_Name (Expr, False);
-               Name := Get_Named_Entity (Expr);
-               case Get_Kind (Name) is
-                  when Iir_Kind_Type_Declaration
-                    | Iir_Kind_Subtype_Declaration =>
-                     Xref_Name (Expr);
-                     Name := Get_Type (Name);
-                  when others =>
-                     null;
-               end case;
-               case Get_Kind (Name) is
-                  when Iir_Kinds_Type_And_Subtype_Definition
-                    | Iir_Kind_Range_Array_Attribute
-                    | Iir_Kind_Reverse_Range_Array_Attribute =>
-                     if not Are_Types_Compatible (Name, Sub_Type) then
-                        Not_Match (Name, Sub_Type);
-                        return False;
-                     end if;
-                     N_Choice := Create_Iir (Iir_Kind_Choice_By_Range);
-                     Location_Copy (N_Choice, El);
-                     Set_Chain (N_Choice, Get_Chain (El));
-                     Set_Associated (N_Choice, Get_Associated (El));
-                     Set_Same_Alternative_Flag
-                       (N_Choice, Get_Same_Alternative_Flag (El));
-                     Set_Expression (N_Choice, Eval_Range (Name));
-                     Set_Choice_Staticness
-                       (N_Choice, Get_Type_Staticness (Name));
-                     Free_Iir (El);
-                     if Prev_El = Null_Iir then
-                        Choice_Chain := N_Choice;
-                     else
-                        Set_Chain (Prev_El, N_Choice);
-                     end if;
-                     El := N_Choice;
-                     return True;
-                  when Iir_Kind_Error =>
-                     return False;
-                  when others =>
-                     Expr := Name_To_Expression
-                       (Expr, Get_Base_Type (Sub_Type));
-               end case;
-            end;
+            if Expr = Null_Iir then
+               return False;
+            end if;
+            Expr := Eval_Range_If_Static (Expr);
          else
-            Expr := Sem_Expression_Ov (Expr, Get_Base_Type (Sub_Type));
+            case Get_Kind (Expr) is
+               when Iir_Kind_Selected_Name
+                 | Iir_Kind_Simple_Name
+                 | Iir_Kind_Character_Literal
+                 | Iir_Kind_Parenthesis_Name
+                 | Iir_Kind_Selected_By_All_Name
+                 | Iir_Kind_Attribute_Name =>
+                  Sem_Name (Expr);
+                  Ent := Get_Named_Entity (Expr);
+                  if Ent = Error_Mark then
+                     return False;
+                  end if;
+
+                  --  So range or expression ?
+                  --  FIXME: share code with sem_name for slice/index.
+                  case Get_Kind (Ent) is
+                     when Iir_Kind_Range_Array_Attribute
+                       | Iir_Kind_Reverse_Range_Array_Attribute
+                       | Iir_Kind_Range_Expression =>
+                        return Replace_By_Range_Choice (Expr, Ent);
+                     when Iir_Kind_Subtype_Declaration
+                       | Iir_Kind_Type_Declaration =>
+                        Ent := Is_Type_Name (Expr);
+                        Set_Expr_Staticness (Expr, Get_Type_Staticness (Ent));
+                        return Replace_By_Range_Choice (Expr, Ent);
+                     when others =>
+                        Expr := Name_To_Expression
+                          (Expr, Get_Base_Type (Sub_Type));
+                  end case;
+               when others =>
+                  Expr := Sem_Expression_Ov (Expr, Get_Base_Type (Sub_Type));
+            end case;
+            if Expr = Null_Iir then
+               return False;
+            end if;
+            Expr := Eval_Expr_If_Static (Expr);
          end if;
-         if Expr = Null_Iir then
-            return False;
-         end if;
-         Expr := Eval_Expr_If_Static (Expr);
          Set_Expression (El, Expr);
          Set_Choice_Staticness (El, Get_Expr_Staticness (Expr));
          return True;
@@ -2954,7 +3000,7 @@ package body Sem_Expr is
       Info : Array_Aggr_Info renames Infos (Dim);
    begin
       Index_List := Get_Index_Subtype_List (A_Type);
-      Index_Type := Get_Nth_Element (Index_List, Dim - 1);
+      Index_Type := Get_Index_Type (Index_List, Dim - 1);
 
       --  Sem choices.
       case Get_Kind (Aggr) is
@@ -3119,6 +3165,7 @@ package body Sem_Expr is
             Set_Range_Constraint
               (Info.Index_Subtype, Index_Subtype_Constraint);
             Set_Type_Staticness (Info.Index_Subtype, Choice_Staticness);
+            Set_Expr_Staticness (Index_Subtype_Constraint, Choice_Staticness);
 
             --  LRM93 7.3.2.2
             --  For an aggregate that has named associations, the leftmost and
@@ -3394,39 +3441,45 @@ package body Sem_Expr is
    --  literal is created.
    function Sem_Physical_Literal (Lit: Iir) return Iir
    is
-      Decl: Iir;
-      Decl_Type : Iir;
+      Unit_Name : Iir;
+      Unit_Type : Iir;
       Res: Iir;
    begin
       case Get_Kind (Lit) is
          when Iir_Kind_Physical_Int_Literal
            | Iir_Kind_Physical_Fp_Literal =>
-            Decl := Find_Declaration (Get_Unit_Name (Lit), Decl_Unit);
+            Unit_Name := Get_Unit_Name (Lit);
             Res := Lit;
          when Iir_Kind_Unit_Declaration =>
             Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
             Location_Copy (Res, Lit);
             Set_Value (Res, 1);
-            Decl := Lit;
-         when others =>
+            Unit_Name := Null_Iir;
+            raise Program_Error;
+         when Iir_Kinds_Denoting_Name =>
             Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
             Location_Copy (Res, Lit);
             Set_Value (Res, 1);
-            Decl := Find_Declaration (Lit, Decl_Unit);
+            Unit_Name := Lit;
+         when others =>
+            Error_Kind ("sem_physical_literal", Lit);
       end case;
-      if Decl = Null_Iir then
-         return Null_Iir;
+      Unit_Name := Sem_Denoting_Name (Unit_Name);
+      if Get_Kind (Get_Named_Entity (Unit_Name)) /= Iir_Kind_Unit_Declaration
+      then
+         Error_Class_Match (Unit_Name, "unit");
+         Set_Named_Entity (Unit_Name, Create_Error_Name (Unit_Name));
       end if;
-      Set_Unit_Name (Res, Decl);
-      Decl_Type := Get_Type (Decl);
-      Set_Type (Res, Decl_Type);
+      Set_Unit_Name (Res, Unit_Name);
+      Unit_Type := Get_Type (Unit_Name);
+      Set_Type (Res, Unit_Type);
 
       -- LRM93 7.4.2
       -- 1. a literal of type TIME.
       --
       -- LRM93 7.4.1
       -- 1. a literal of any type other than type TIME;
-      Set_Expr_Staticness (Res, Get_Expr_Staticness (Decl));
+      Set_Expr_Staticness (Res, Get_Expr_Staticness (Unit_Name));
       --Eval_Check_Constraints (Res);
       return Res;
    end Sem_Physical_Literal;
@@ -3437,7 +3490,6 @@ package body Sem_Expr is
       Arg: Iir;
       Arg_Type : Iir;
    begin
-      Arg := Get_Expression (Expr);
       Set_Expr_Staticness (Expr, None);
 
       Arg_Type := Get_Allocator_Designated_Type (Expr);
@@ -3446,21 +3498,24 @@ package body Sem_Expr is
          --  Expression was not analyzed.
          case Iir_Kinds_Allocator (Get_Kind (Expr)) is
             when Iir_Kind_Allocator_By_Expression =>
-               if Get_Kind (Arg) /= Iir_Kind_Qualified_Expression then
-                  raise Internal_Error;
-               end if;
+               Arg := Get_Expression (Expr);
+               pragma Assert (Get_Kind (Arg) = Iir_Kind_Qualified_Expression);
                Arg := Sem_Expression (Arg, Null_Iir);
                if Arg = Null_Iir then
                   return Null_Iir;
                end if;
                Check_Read (Arg);
+               Set_Expression (Expr, Arg);
                Arg_Type := Get_Type (Arg);
             when Iir_Kind_Allocator_By_Subtype =>
+               Arg := Get_Subtype_Indication (Expr);
                Arg := Sem_Types.Sem_Subtype_Indication (Arg);
+               Set_Subtype_Indication (Expr, Arg);
+               Arg := Get_Type_Of_Subtype_Indication (Arg);
                if Arg = Null_Iir then
                   return Null_Iir;
                end if;
-               --  LRM93 §7.3.6
+               --  LRM93 7.3.6
                --  If an allocator includes a subtype indication and if the
                --  type of the object created is an array type, then the
                --  subtype indication must either denote a constrained
@@ -3481,7 +3536,6 @@ package body Sem_Expr is
                end if;
                Arg_Type := Arg;
          end case;
-         Set_Expression (Expr, Arg);
          Set_Allocator_Designated_Type (Expr, Arg_Type);
       end if;
 
@@ -3587,7 +3641,8 @@ package body Sem_Expr is
               | Iir_Kind_Allocator_By_Expression
               | Iir_Kind_Allocator_By_Subtype
               | Iir_Kind_Implicit_Dereference
-              | Iir_Kind_Dereference =>
+              | Iir_Kind_Dereference
+              | Iir_Kind_Attribute_Name =>
                return;
             when Iir_Kinds_Scalar_Type_Attribute
               | Iir_Kinds_Type_Attribute
@@ -3604,7 +3659,9 @@ package body Sem_Expr is
             when Iir_Kind_Indexed_Name
               | Iir_Kind_Slice_Name
               | Iir_Kind_Selected_Element =>
-               Obj := Get_Base_Name (Obj);
+               --  FIXME: speed up using Base_Name
+               --  Obj := Get_Base_Name (Obj);
+               Obj := Get_Prefix (Obj);
             when Iir_Kind_Simple_Name
               | Iir_Kind_Selected_Name =>
                Obj := Get_Named_Entity (Obj);
@@ -3707,7 +3764,7 @@ package body Sem_Expr is
             begin
                E := Get_Named_Entity (Expr);
                if E = Null_Iir then
-                  Sem_Name (Expr, False);
+                  Sem_Name (Expr);
                   E := Get_Named_Entity (Expr);
                   if E = Null_Iir then
                      raise Internal_Error;
@@ -3854,12 +3911,9 @@ package body Sem_Expr is
                N_Type: Iir;
                Res: Iir;
             begin
-               N_Type := Sem_Types.Sem_Subtype_Indication
-                 (Get_Type_Mark (Expr));
-               if N_Type = Null_Iir then
-                  return Null_Iir;
-               end if;
+               N_Type := Sem_Type_Mark (Get_Type_Mark (Expr));
                Set_Type_Mark (Expr, N_Type);
+               N_Type := Get_Type (N_Type);
                Set_Type (Expr, N_Type);
                if A_Type /= Null_Iir
                  and then not Are_Types_Compatible (A_Type, N_Type)

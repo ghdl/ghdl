@@ -149,7 +149,12 @@ package Libraries is
    --
    --  Units are always appended to the design_file.  Therefore, the order is
    --  kept.
-   procedure Add_Design_Unit_Into_Library (Unit : in Iir_Design_Unit);
+   --
+   --  If KEEP_OBSOLETE is True, obsoleted units are kept in the library.
+   --  This is used when a whole design file has to be added in the library and
+   --  then processed (without that feature, redefined units would disappear).
+   procedure Add_Design_Unit_Into_Library
+     (Unit : in Iir_Design_Unit; Keep_Obsolete : Boolean := False);
 
    --  Put all design_units of FILE into the work library, by calling
    --  Add_Design_Unit_Into_Library.
