@@ -21710,7 +21710,7 @@ package body Translation is
       begin
          Info := Add_Info (Inst, Kind_Block);
          Info.Block_Decls_Type := O_Tnode_Null;
-         if Get_Kind (Comp) in Iir_Kinds_Denoting_Name then
+         if Is_Component_Instantiation (Inst) then
             --  Via a component declaration.
             Comp_Info := Get_Info (Get_Named_Entity (Comp));
             Info.Block_Link_Field := Add_Instance_Factory_Field
@@ -22372,7 +22372,7 @@ package body Translation is
          end if;
 
          Comp := Get_Instantiated_Unit (Stmt);
-         if Get_Kind (Comp) not in Iir_Kinds_Denoting_Name then
+         if Is_Entity_Instantiation (Stmt) then
             --  This is a direct instantiation.
             Set_Component_Link (Parent_Info.Block_Decls_Type,
                                 Info.Block_Link_Field);
@@ -27287,26 +27287,16 @@ package body Translation is
                                 Info.Block_Link_Field,
                                 Ghdl_Ptr_Type));
          New_Record_Aggr_El (List, New_Rti_Address (Parent));
-         case Get_Kind (Inst) is
-            when Iir_Kinds_Denoting_Name =>
-               Val := New_Rti_Address
-                 (Get_Info (Get_Named_Entity (Inst)).Comp_Rti_Const);
-            when Iir_Kind_Entity_Aspect_Entity =>
-               declare
-                  Ent : constant Iir := Get_Entity (Inst);
-               begin
-                  Val := New_Rti_Address (Get_Info (Ent).Block_Rti_Const);
-               end;
-            when Iir_Kind_Entity_Aspect_Configuration =>
-               declare
-                  Config : constant Iir := Get_Configuration (Inst);
-                  Ent : constant Iir := Get_Entity (Config);
-               begin
-                  Val := New_Rti_Address (Get_Info (Ent).Block_Rti_Const);
-               end;
-            when others =>
-               Val := New_Null_Access (Ghdl_Rti_Access);
-         end case;
+         if Is_Component_Instantiation (Stmt) then
+            Val := New_Rti_Address
+              (Get_Info (Get_Named_Entity (Inst)).Comp_Rti_Const);
+         else
+            declare
+               Ent : constant Iir := Get_Entity_From_Entity_Aspect (Inst);
+            begin
+               Val := New_Rti_Address (Get_Info (Ent).Block_Rti_Const);
+            end;
+         end if;
 
          New_Record_Aggr_El (List, Val);
          Finish_Record_Aggr (List, Val);

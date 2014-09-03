@@ -650,6 +650,8 @@ package body Canon is
             -- FIXME:
             -- should canon concatenation.
 
+         when Iir_Kind_Parenthesis_Expression =>
+            Canon_Expression (Get_Expression (Expr));
          when Iir_Kind_Type_Conversion
            | Iir_Kind_Qualified_Expression =>
             Canon_Expression (Get_Expression (Expr));
@@ -2039,15 +2041,13 @@ package body Canon is
    is
       El : Iir;
       Comp_Conf : Iir;
-      Inst : Iir;
    begin
       El := Get_Concurrent_Statement_Chain (Parent);
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Component_Instantiation_Statement =>
-               Inst := Get_Instantiated_Unit (El);
-               if Get_Kind (Inst) in Iir_Kinds_Denoting_Name
-                 and then Get_Named_Entity (Inst) = Comp
+               if Is_Component_Instantiation (El)
+                 and then Get_Named_Entity (Get_Instantiated_Unit (El)) = Comp
                then
                   Comp_Conf := Get_Component_Configuration (El);
                   if Comp_Conf = Null_Iir then
@@ -2119,11 +2119,9 @@ package body Canon is
    --  PARENT is the parent for the chain of concurrent statements.
    procedure Canon_Component_Specification (Conf : Iir; Parent : Iir)
    is
-      Spec : Iir_List;
+      Spec : constant Iir_List := Get_Instantiation_List (Conf);
       List : Iir_Designator_List;
    begin
-      Spec := Get_Instantiation_List (Conf);
-
       if Spec = Iir_List_All or Spec = Iir_List_Others then
          List := Create_Iir_List;
          Canon_Component_Specification_All_Others
@@ -2443,7 +2441,6 @@ package body Canon is
             when Iir_Kind_Component_Instantiation_Statement =>
                declare
                   Comp_Conf : Iir;
-                  Comp : Iir;
                   Res : Iir_Component_Configuration;
                   Designator_List : Iir_List;
                   Inst_List : Iir_List;
@@ -2452,15 +2449,14 @@ package body Canon is
                begin
                   Comp_Conf := Get_Component_Configuration (El);
                   if Comp_Conf = Null_Iir then
-                     Comp := Get_Instantiated_Unit (El);
-                     if Get_Kind (Comp) in Iir_Kinds_Denoting_Name then
+                     if Is_Component_Instantiation (El) then
                         --  Create a component configuration.
                         --  FIXME: should merge all these default configuration
                         --    of the same component.
                         Res := Create_Iir (Iir_Kind_Component_Configuration);
                         Location_Copy (Res, El);
                         Set_Parent (Res, Conf);
-                        Set_Component_Name (Res, Comp);
+                        Set_Component_Name (Res, Get_Instantiated_Unit (El));
                         Designator_List := Create_Iir_List;
                         Append_Element
                           (Designator_List, Build_Simple_Name (El, El));

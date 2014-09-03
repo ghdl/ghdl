@@ -284,7 +284,6 @@ package body Annotations is
    procedure Annotate_Type_Definition (Block_Info: Sim_Info_Acc; Def: Iir)
    is
       El: Iir;
-      List: Iir_List;
    begin
       -- Happen only with universal types.
       if Def = Null_Iir then
@@ -293,7 +292,6 @@ package body Annotations is
 
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            List := Get_Enumeration_Literal_List (Def);
             if Def = Std_Package.Boolean_Type_Definition
               or else Def = Std_Package.Bit_Type_Definition
             then
@@ -353,20 +351,27 @@ package body Annotations is
             Annotate_Anonymous_Type_Definition (Block_Info, El);
 
          when Iir_Kind_Array_Subtype_Definition =>
-            List := Get_Index_Subtype_List (Def);
-            for I in Natural loop
-               El := Get_Nth_Element (List, I);
-               exit when El = Null_Iir;
-               Annotate_Anonymous_Type_Definition (Block_Info, El);
-            end loop;
+            declare
+               List : constant Iir_List := Get_Index_Subtype_List (Def);
+            begin
+               for I in Natural loop
+                  El := Get_Index_Type (List, I);
+                  exit when El = Null_Iir;
+                  Annotate_Anonymous_Type_Definition (Block_Info, El);
+               end loop;
+            end;
 
          when Iir_Kind_Record_Type_Definition =>
-            List := Get_Elements_Declaration_List (Def);
-            for I in Natural loop
-               El := Get_Nth_Element (List, I);
-               exit when El = Null_Iir;
-               Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (El));
-            end loop;
+            declare
+               List : constant Iir_List := Get_Elements_Declaration_List (Def);
+            begin
+               for I in Natural loop
+                  El := Get_Nth_Element (List, I);
+                  exit when El = Null_Iir;
+                  Annotate_Anonymous_Type_Definition
+                    (Block_Info, Get_Type (El));
+               end loop;
+            end;
 
          when Iir_Kind_Record_Subtype_Definition =>
             null;
@@ -765,7 +770,7 @@ package body Annotations is
 
             when Iir_Kind_For_Loop_Statement =>
                Annotate_Declaration
-                 (Block_Info, Get_Iterator_Scheme (El));
+                 (Block_Info, Get_Parameter_Specification (El));
                Annotate_Sequential_Statement_Chain
                  (Block_Info, Get_Sequential_Statement_Chain (El));
 

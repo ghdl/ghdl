@@ -2968,6 +2968,9 @@ package body Execution is
             Error_Msg_Constraint (Expr);
             return null;
 
+         when Iir_Kind_Parenthesis_Expression =>
+            return Execute_Expression (Block, Get_Expression (Expr));
+
          when Iir_Kind_Type_Conversion =>
             return Execute_Type_Conversion
               (Block, Expr,
@@ -4297,7 +4300,8 @@ package body Execution is
                                           Stmt : Iir)
    is
    begin
-      Destroy_Iterator_Declaration (Instance, Get_Iterator_Scheme (Stmt));
+      Destroy_Iterator_Declaration
+        (Instance, Get_Parameter_Specification (Stmt));
    end Finalize_For_Loop_Statement;
 
    procedure Finalize_Loop_Statement (Instance : Block_Instance_Acc;
@@ -4313,15 +4317,13 @@ package body Execution is
    is
       Instance : constant Block_Instance_Acc := Proc.Instance;
       Stmt : constant Iir_For_Loop_Statement := Instance.Stmt;
+      Iterator : constant Iir := Get_Parameter_Specification (Stmt);
       Bounds : Iir_Value_Literal_Acc;
-      Iterator : Iir;
       Index : Iir_Value_Literal_Acc;
       Stmt_Chain : Iir;
       Is_Nul : Boolean;
       Marker : Mark_Type;
    begin
-      Iterator := Get_Iterator_Scheme (Stmt);
-
       --  Elaborate the iterator (and its type).
       Elaborate_Declaration (Instance, Iterator);
 
@@ -4355,7 +4357,7 @@ package body Execution is
    function Finish_For_Loop_Statement (Instance : Block_Instance_Acc)
                                       return Boolean
    is
-      Iterator : constant Iir := Get_Iterator_Scheme (Instance.Stmt);
+      Iterator : constant Iir := Get_Parameter_Specification (Instance.Stmt);
       Bounds : Iir_Value_Literal_Acc;
       Index : Iir_Value_Literal_Acc;
       Marker : Mark_Type;
@@ -4459,7 +4461,7 @@ package body Execution is
    is
       Instance : constant Block_Instance_Acc := Proc.Instance;
       Stmt : constant Iir := Instance.Stmt;
-      Label : constant Iir := Get_Loop (Stmt);
+      Label : constant Iir := Get_Named_Entity (Get_Loop_Label (Stmt));
       Cond : Boolean;
       Parent : Iir;
    begin

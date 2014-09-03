@@ -1298,7 +1298,7 @@ package body Debugger is
             Add_Declarations (Get_Declaration_Chain (N), False);
          when Iir_Kind_For_Loop_Statement =>
             Open_Declarative_Region;
-            Add_Name (Get_Iterator_Scheme (N));
+            Add_Name (Get_Parameter_Specification (N));
          when Iir_Kind_Block_Statement =>
             Open_Declarative_Region;
             Add_Declarations (Get_Declaration_Chain (N), False);

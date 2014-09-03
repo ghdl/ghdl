@@ -164,6 +164,18 @@ package Iirs_Utils is
    --  Return the identifier of the entity for architecture ARCH.
    function Get_Entity_Identifier_Of_Architecture (Arch : Iir) return Name_Id;
 
+   --  Return True is component instantiation statement INST instantiate a
+   --  component.
+   function Is_Component_Instantiation
+     (Inst : Iir_Component_Instantiation_Statement)
+     return Boolean;
+
+   --  Return True is component instantiation statement INST instantiate a
+   --  design entity.
+   function Is_Entity_Instantiation
+     (Inst : Iir_Component_Instantiation_Statement)
+     return Boolean;
+
    --  Return the bound type of a string type, ie the type of the (first)
    --  dimension of a one-dimensional array type.
    function Get_String_Type_Bound_Type (Sub_Type : Iir) return Iir;

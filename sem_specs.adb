@@ -1187,7 +1187,6 @@ package body Sem_Specs is
         return Boolean
       is
          Comp : constant Iir := Get_Named_Entity (Get_Component_Name (Spec));
-         Inst : Iir;
          El : Iir;
          Res : Boolean;
       begin
@@ -1196,9 +1195,9 @@ package body Sem_Specs is
          while El /= Null_Iir loop
             case Get_Kind (El) is
                when Iir_Kind_Component_Instantiation_Statement =>
-                  Inst := Get_Instantiated_Unit (El);
-                  if Get_Kind (Inst) in Iir_Kinds_Denoting_Name
-                    and then Get_Named_Entity (Inst) = Comp
+                  if Is_Component_Instantiation (El)
+                    and then
+                    Get_Named_Entity (Get_Instantiated_Unit (El)) = Comp
                     and then
                     (not Check_Applied
                      or else Get_Component_Configuration (El) = Null_Iir)
@@ -1302,7 +1301,7 @@ package body Sem_Specs is
                   Error_Msg_Sem ("label does not denote an instantiation", El);
                else
                   Inst_Unit := Get_Instantiated_Unit (Inst);
-                  if Get_Kind (Inst_Unit) not in Iir_Kinds_Denoting_Name
+                  if Is_Entity_Instantiation (Inst)
                     or else (Get_Kind (Get_Named_Entity (Inst_Unit))
                                /= Iir_Kind_Component_Declaration)
                   then

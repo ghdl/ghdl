@@ -799,6 +799,36 @@ package body Iirs_Utils is
       end case;
    end Get_Entity_Identifier_Of_Architecture;
 
+   function Is_Component_Instantiation
+     (Inst : Iir_Component_Instantiation_Statement)
+     return Boolean is
+   begin
+      case Get_Kind (Get_Instantiated_Unit (Inst)) is
+         when Iir_Kinds_Denoting_Name =>
+            return True;
+         when Iir_Kind_Entity_Aspect_Entity
+           | Iir_Kind_Entity_Aspect_Configuration =>
+            return False;
+         when others =>
+            Error_Kind ("is_component_instantiation", Inst);
+      end case;
+   end Is_Component_Instantiation;
+
+   function Is_Entity_Instantiation
+     (Inst : Iir_Component_Instantiation_Statement)
+     return Boolean is
+   begin
+      case Get_Kind (Get_Instantiated_Unit (Inst)) is
+         when Iir_Kinds_Denoting_Name =>
+            return False;
+         when Iir_Kind_Entity_Aspect_Entity
+           | Iir_Kind_Entity_Aspect_Configuration =>
+            return True;
+         when others =>
+            Error_Kind ("is_entity_instantiation", Inst);
+      end case;
+   end Is_Entity_Instantiation;
+
    function Get_String_Type_Bound_Type (Sub_Type : Iir) return Iir is
    begin
       if Get_Kind (Sub_Type) /= Iir_Kind_Array_Subtype_Definition then

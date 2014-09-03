@@ -206,14 +206,10 @@ package body Configuration is
       while Stmt /= Null_Iir loop
          case Get_Kind (Stmt) is
             when Iir_Kind_Component_Instantiation_Statement =>
-               declare
-                  Unit : constant Iir := Get_Instantiated_Unit (Stmt);
-               begin
-                  if Get_Kind (Unit) not in Iir_Kinds_Denoting_Name then
-                     --  Entity or configuration instantiation.
-                     Add_Design_Aspect (Unit, True);
-                  end if;
-               end;
+               if Is_Entity_Instantiation (Stmt) then
+                  --  Entity or configuration instantiation.
+                  Add_Design_Aspect (Get_Instantiated_Unit (Stmt), True);
+               end if;
             when Iir_Kind_Generate_Statement
               | Iir_Kind_Block_Statement =>
                Add_Design_Concurrent_Stmts (Stmt);

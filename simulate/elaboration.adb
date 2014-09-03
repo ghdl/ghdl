@@ -734,17 +734,16 @@ package body Elaboration is
            | Iir_Kind_Record_Type_Definition =>
             Elaborate_Type_Definition (Instance, Ind);
          when Iir_Kind_Array_Subtype_Definition =>
-            --  LRM93 §12.3.1.3
+            --  LRM93 12.3.1.3
             --  The elaboration of an index constraint consists of the
             --  declaration of each of the discrete ranges in the index
             --  constraint in some order that is not defined by the language.
             declare
-               St_Indexes : Iir_List;
+               St_Indexes : constant Iir_List := Get_Index_Subtype_List (Ind);
                St_El : Iir;
             begin
-               St_Indexes := Get_Index_Subtype_List (Ind);
                for I in Natural loop
-                  St_El := Get_Nth_Element (St_Indexes, I);
+                  St_El := Get_Index_Type (St_Indexes, I);
                   exit when St_El = Null_Iir;
                   Elaborate_Subtype_Indication_If_Anonymous (Instance, St_El);
                end loop;
@@ -1396,35 +1395,38 @@ package body Elaboration is
      (Instance : Block_Instance_Acc;
       Stmt : Iir_Component_Instantiation_Statement)
    is
-      Component : constant Iir := Get_Instantiated_Unit (Stmt);
       Frame : Block_Instance_Acc;
    begin
-      if Get_Kind (Component) = Iir_Kind_Component_Declaration then
+      if Is_Component_Instantiation (Stmt) then
+         declare
+            Component : constant Iir :=
+              Get_Named_Entity (Get_Instantiated_Unit (Stmt));
+         begin
+            --  Elaboration of a component instantiation statement that
+            --  instanciates a component declaration has no effect unless the
+            --  component instance is either fully bound to a design entity
+            --  defined by an entity declaration and architecture body or is
+            --  bound to a configuration of such a design entity.
+            --  FIXME: in fact the component is created.
 
-         --  Elaboration of a component instantiation statement that
-         --  instanciates a component declaration has no effect unless the
-         --  component instance is either fully bound to a design entity
-         --  defined by an entity declaration and architecture body or is
-         --  bound to a configuration of such a design entity.
-         --  FIXME: in fact the component is created.
+            --  If a component instance is so bound, then elaboration of the
+            --  corresponding component instantiation statement consists of the
+            --  elaboration of the implied block statement representing the
+            --  component instance and [...]
+            Frame := Create_Block_Instance (Instance, Component, Stmt);
 
-         --  If a component instance is so bound, then elaboration of the
-         --  corresponding component instantiation statement consists of the
-         --  elaboration of the implied block statement representing the
-         --  component instance and [...]
-         Frame := Create_Block_Instance (Instance, Component, Stmt);
-
-         Elaborate_Generic_Clause (Frame, Get_Generic_Chain (Component));
-         Elaborate_Generic_Map_Aspect
-           (Frame, Instance, Get_Generic_Map_Aspect_Chain (Stmt));
-         Elaborate_Port_Clause (Frame, Get_Port_Chain (Component));
-         Elaborate_Port_Map_Aspect
-           (Frame, Instance,
-            Get_Port_Chain (Component), Get_Port_Map_Aspect_Chain (Stmt));
+            Elaborate_Generic_Clause (Frame, Get_Generic_Chain (Component));
+            Elaborate_Generic_Map_Aspect
+              (Frame, Instance, Get_Generic_Map_Aspect_Chain (Stmt));
+            Elaborate_Port_Clause (Frame, Get_Port_Chain (Component));
+            Elaborate_Port_Map_Aspect
+              (Frame, Instance,
+               Get_Port_Chain (Component), Get_Port_Map_Aspect_Chain (Stmt));
+         end;
       else
          --  Direct instantiation
          declare
-            Aspect : constant Iir := Component;
+            Aspect : constant Iir := Get_Instantiated_Unit (Stmt);
             Arch : Iir;
             Config : Iir;
          begin
@@ -1676,7 +1678,7 @@ package body Elaboration is
       Conf : Iir_Component_Configuration)
    is
       Component : constant Iir_Component_Declaration :=
-        Get_Instantiated_Unit (Stmt);
+        Get_Named_Entity (Get_Instantiated_Unit (Stmt));
       Entity : Iir_Entity_Declaration;
       Arch_Name : Name_Id;
       Arch_Design : Iir_Design_Unit;
@@ -1907,9 +1909,7 @@ package body Elaboration is
 
       Item : Iir;
    begin
-      if Conf = Null_Iir then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Conf /= Null_Iir);
 
       --  Associate configuration items with subinstance.  Gather items for
       --  for-generate statements.
@@ -1964,7 +1964,7 @@ package body Elaboration is
                   for I in Natural loop
                      El := Get_Nth_Element (List, I);
                      exit when El = Null_Iir;
-                     Info := Get_Info (El);
+                     Info := Get_Info (Get_Named_Entity (El));
                      if Sub_Conf (Info.Inst_Slot) /= Null_Iir then
                         raise Internal_Error;
                      end if;
@@ -2031,10 +2031,16 @@ package body Elaboration is
                   Elaborate_Block_Configuration
                     (Sub_Conf (Slot), Sub_Instances (Slot));
                when Iir_Kind_Component_Instantiation_Statement =>
-                  Info := Get_Info (Stmt);
-                  Slot := Info.Inst_Slot;
-                  Elaborate_Component_Configuration
-                    (Stmt, Sub_Instances (Slot), Sub_Conf (Slot));
+                  if Is_Component_Instantiation (Stmt) then
+                     Info := Get_Info (Stmt);
+                     Slot := Info.Inst_Slot;
+                     Elaborate_Component_Configuration
+                       (Stmt, Sub_Instances (Slot), Sub_Conf (Slot));
+                  else
+                     --  Nothing to do for entity instantiation, will be
+                     --  done during elaboration of statements.
+                     null;
+                  end if;
                when others =>
                   null;
             end case;
@@ -2287,12 +2293,13 @@ package body Elaboration is
             --  GHDL: done by sem.
 
             declare
+               Attr_Decl : constant Iir :=
+                 Get_Named_Entity (Get_Attribute_Designator (Decl));
+               Attr_Type : constant Iir := Get_Type (Attr_Decl);
                Value : Iir_Attribute_Value;
                Val : Iir_Value_Literal_Acc;
-               Attr_Type : Iir;
             begin
                Value := Get_Attribute_Value_Spec_Chain (Decl);
-               Attr_Type := Get_Type (Get_Attribute_Designator (Decl));
                while Value /= Null_Iir loop
                   --  2. The expression is evaluated to determine the value
                   --     of the attribute.
