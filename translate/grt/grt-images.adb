@@ -63,12 +63,12 @@ package body Grt.Images is
       Return_String (Res, Str (1 .. strlen (Str)));
    end Return_Enum;
 
-   procedure Ghdl_Image_B2
-     (Res : Std_String_Ptr; Val : Ghdl_B2; Rti : Ghdl_Rti_Access)
+   procedure Ghdl_Image_B1
+     (Res : Std_String_Ptr; Val : Ghdl_B1; Rti : Ghdl_Rti_Access)
    is
    begin
-      Return_Enum (Res, Rti, Ghdl_B2'Pos (Val));
-   end Ghdl_Image_B2;
+      Return_Enum (Res, Rti, Ghdl_B1'Pos (Val));
+   end Ghdl_Image_B1;
 
    procedure Ghdl_Image_E8
      (Res : Std_String_Ptr; Val : Ghdl_E8; Rti : Ghdl_Rti_Access)
@@ -149,6 +149,21 @@ package body Grt.Images is
       To_String (Str, P, Val);
       Return_String (Res, Str (1 .. P));
    end Ghdl_Image_F64;
+
+   procedure Ghdl_To_String_I32 (Res : Std_String_Ptr; Val : Ghdl_I32)
+     renames Ghdl_Image_I32;
+   procedure Ghdl_To_String_F64 (Res : Std_String_Ptr; Val : Ghdl_F64)
+     renames Ghdl_Image_F64;
+
+   procedure Ghdl_To_String_F64_Digits
+     (Res : Std_String_Ptr; Val : Ghdl_F64; Nbr_Digits : Ghdl_I32)
+   is
+      Str : String_Real_Digits;
+      P : Natural;
+   begin
+      To_String (Str, P, Val, Nbr_Digits);
+      Return_String (Res, Str (1 .. P));
+   end Ghdl_To_String_F64_Digits;
 
 --     procedure Ghdl_Image_F64 (Res : Std_String_Ptr; Val : Ghdl_F64)
 --     is

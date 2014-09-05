@@ -118,12 +118,12 @@ package body Grt.Values is
       Error_E ("'");
    end Ghdl_Value_Enum;
 
-   function Ghdl_Value_B2 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_B2
+   function Ghdl_Value_B1 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+      return Ghdl_B1
    is
    begin
-      return Ghdl_B2'Val (Ghdl_Value_Enum (Str, Rti));
-   end Ghdl_Value_B2;
+      return Ghdl_B1'Val (Ghdl_Value_Enum (Str, Rti));
+   end Ghdl_Value_B1;
 
    function Ghdl_Value_E8 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_E8

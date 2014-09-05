@@ -155,7 +155,7 @@ grt.links:
 install.all: install.v87 install.v93 install.standard
 
 install.mcode:
-	$(MAKE) GHDL=ghdl_mcode install.v87 install.v93 # install.v08
+	$(MAKE) GHDL=ghdl_mcode install.v87 install.v93 install.v08
 
 install.simul:
 	$(MAKE) GHDL=ghdl_simul install.v87 install.v93 install.v08

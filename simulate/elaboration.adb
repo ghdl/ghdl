@@ -87,7 +87,7 @@ package body Elaboration is
 
             when Iir_Value_I64
               | Iir_Value_F64
-              | Iir_Value_B2
+              | Iir_Value_B1
               | Iir_Value_E32 =>
                Res := Create_Signal_Value (null);
 
@@ -146,10 +146,10 @@ package body Elaboration is
    begin
       if Kind = Implicit_Transaction then
          T := 0;
-         Init := Create_B2_Value (False);
+         Init := Create_B1_Value (False);
       else
          T := Execute_Time_Attribute (Instance, Signal);
-         Init := Create_B2_Value (False);
+         Init := Create_B1_Value (False);
       end if;
       Sig := Create_Signal_Value (null);
       Instance.Objects (Info.Slot) := Sig;
@@ -448,8 +448,8 @@ package body Elaboration is
                Res := Bounds.Left;
             else
                case Get_Info (Get_Base_Type (Decl)).Scalar_Mode is
-                  when Iir_Value_B2 =>
-                     Res := Create_B2_Value (False);
+                  when Iir_Value_B1 =>
+                     Res := Create_B1_Value (False);
                   when Iir_Value_E32 =>
                      Res := Create_E32_Value (0);
                   when Iir_Value_I64 =>
@@ -1222,7 +1222,7 @@ package body Elaboration is
       Sig := Create_Signal_Value (null);
       Instance.Objects (Info.Slot) := Sig;
       Instance.Objects (Info.Slot + 1) :=
-        Unshare (Create_B2_Value (False), Instance_Pool);
+        Unshare (Create_B1_Value (False), Instance_Pool);
 
       Signals_Table.Append ((Kind => Guard_Signal,
                              Decl => Guard,
@@ -1473,7 +1473,7 @@ package body Elaboration is
       --  evaluates to TRUE, and no block statement otherwise.
       Scheme := Get_Generation_Scheme (Generate);
       Lit := Execute_Expression (Instance, Scheme);
-      if Lit.B2 /= True then
+      if Lit.B1 /= True then
          return;
       end if;
 

@@ -200,7 +200,7 @@ package body Grt.Stats is
       Mode_Counts : Mode_Array;
 
       type Mode_Name_Type is array (Mode_Type) of String (1 .. 4);
-      Mode_Names : constant Mode_Name_Type := (Mode_B2 => "B2: ",
+      Mode_Names : constant Mode_Name_Type := (Mode_B1 => "B1: ",
                                                Mode_E8 => "E8: ",
                                                Mode_E32 => "E32:",
                                                Mode_I32 => "I32:",

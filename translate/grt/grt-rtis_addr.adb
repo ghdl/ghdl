@@ -153,8 +153,8 @@ package body Grt.Rtis_Addr is
    is
    begin
       case Base_Type.Kind is
-         when Ghdl_Rtik_Type_B2 =>
-            return Rng.B2.Len;
+         when Ghdl_Rtik_Type_B1 =>
+            return Rng.B1.Len;
          when Ghdl_Rtik_Type_E8 =>
             return Rng.E8.Len;
          when Ghdl_Rtik_Type_E32 =>
@@ -266,7 +266,7 @@ package body Grt.Rtis_Addr is
               (To_Ghdl_Rtin_Subtype_Array_Acc (Atype).Basetype);
          when Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Type_E32
-           | Ghdl_Rtik_Type_B2 =>
+           | Ghdl_Rtik_Type_B1 =>
             return Atype;
          when others =>
             Internal_Error ("rtis_addr.get_base_type");

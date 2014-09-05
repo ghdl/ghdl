@@ -30,7 +30,7 @@ with Interfaces; use Interfaces;
 package Grt.Types is
    pragma Preelaborate (Grt.Types);
 
-   type Ghdl_B2 is new Boolean;
+   type Ghdl_B1 is new Boolean;
    type Ghdl_E8 is new Unsigned_8;
    type Ghdl_U32 is new Unsigned_32;
    subtype Ghdl_E32 is Ghdl_U32;
@@ -67,17 +67,24 @@ package Grt.Types is
    subtype Std_Character is Character;
    type Std_String_Uncons is array (Ghdl_Index_Type range <>) of Std_Character;
    subtype Std_String_Base is Std_String_Uncons (Ghdl_Index_Type);
-   type Std_String_Basep is access Std_String_Base;
+   type Std_String_Basep is access all Std_String_Base;
+   function To_Std_String_Basep is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Std_String_Basep);
 
    type Std_String_Bound is record
       Dim_1 : Std_Integer_Trt;
    end record;
-   type Std_String_Boundp is access Std_String_Bound;
+   type Std_String_Boundp is access all Std_String_Bound;
+   function To_Std_String_Boundp is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Std_String_Boundp);
 
    type Std_String is record
       Base : Std_String_Basep;
       Bounds : Std_String_Boundp;
    end record;
+   type Std_String_Ptr is access all Std_String;
+   function To_Std_String_Ptr is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Std_String_Ptr);
 
    --  An unconstrained array.
    --  It is in fact a fat pointer to the base and the bounds.
@@ -88,8 +95,6 @@ package Grt.Types is
    type Ghdl_Uc_Array_Acc is access Ghdl_Uc_Array;
    function To_Ghdl_Uc_Array_Acc is new Ada.Unchecked_Conversion
      (Source => Address, Target => Ghdl_Uc_Array_Acc);
-
-   type Std_String_Ptr is access all Std_String;
 
    --  Verilog types.
 
@@ -145,6 +150,8 @@ package Grt.Types is
       Col : Integer;
    end record;
    type Ghdl_Location_Ptr is access Ghdl_Location;
+   function To_Ghdl_Location_Ptr is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Ghdl_Location_Ptr);
 
    --  Signal index.
    type Sig_Table_Index is new Integer;
@@ -156,16 +163,16 @@ package Grt.Types is
 
    --  Simple values, used for signals.
    type Mode_Type is
-     (Mode_B2, Mode_E8, Mode_E32, Mode_I32, Mode_I64, Mode_F64);
+     (Mode_B1, Mode_E8, Mode_E32, Mode_I32, Mode_I64, Mode_F64);
 
-   type Ghdl_B2_Array is array (Ghdl_Index_Type range <>) of Ghdl_B2;
+   type Ghdl_B1_Array is array (Ghdl_Index_Type range <>) of Ghdl_B1;
    type Ghdl_E8_Array is array (Ghdl_Index_Type range <>) of Ghdl_E8;
    type Ghdl_I32_Array is array (Ghdl_Index_Type range <>) of Ghdl_I32;
 
-   type Value_Union (Mode : Mode_Type := Mode_B2) is record
+   type Value_Union (Mode : Mode_Type := Mode_B1) is record
       case Mode is
-         when Mode_B2 =>
-            B2 : Ghdl_B2;
+         when Mode_B1 =>
+            B1 : Ghdl_B1;
          when Mode_E8 =>
             E8 : Ghdl_E8;
          when Mode_E32 =>
@@ -185,9 +192,9 @@ package Grt.Types is
      (Source => Address, Target => Ghdl_Value_Ptr);
 
    --  Ranges.
-   type Ghdl_Range_B2 is record
-      Left : Ghdl_B2;
-      Right : Ghdl_B2;
+   type Ghdl_Range_B1 is record
+      Left : Ghdl_B1;
+      Right : Ghdl_B1;
       Dir : Ghdl_Dir_Type;
       Len : Ghdl_Index_Type;
    end record;
@@ -226,11 +233,10 @@ package Grt.Types is
       Dir : Ghdl_Dir_Type;
    end record;
 
-   type Ghdl_Range_Type (K : Mode_Type := Mode_B2)
-   is record
+   type Ghdl_Range_Type (K : Mode_Type := Mode_B1) is record
       case K is
-         when Mode_B2 =>
-            B2 : Ghdl_Range_B2;
+         when Mode_B1 =>
+            B1 : Ghdl_Range_B1;
          when Mode_E8 =>
             E8 : Ghdl_Range_E8;
          when Mode_E32 =>

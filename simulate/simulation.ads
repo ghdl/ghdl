@@ -54,7 +54,7 @@ package Simulation is
 
    type Guard_Instance_Acc is access Guard_Instance_Type;
 
-   function Guard_Func (Data : System.Address) return Ghdl_B2;
+   function Guard_Func (Data : System.Address) return Ghdl_B1;
    pragma Convention (C, Guard_Func);
 
    --  The entry point of the simulator.

@@ -188,8 +188,8 @@ package body Grt.Disp is
    is
    begin
       case Mode is
-         when Mode_B2 =>
-            Put (" b2");
+         when Mode_B1 =>
+            Put (" b1");
          when Mode_E8 =>
             Put (" e8");
          when Mode_E32 =>
@@ -206,8 +206,8 @@ package body Grt.Disp is
    procedure Disp_Value (Value : Value_Union; Mode : Mode_Type) is
    begin
       case Mode is
-         when Mode_B2 =>
-            if Value.B2 then
+         when Mode_B1 =>
+            if Value.B1 then
                Put ("T");
             else
                Put ("F");

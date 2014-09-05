@@ -38,8 +38,8 @@ package body Simulation is
                                return Iir_Value_Literal_Acc is
    begin
       case Mode is
-         when Mode_B2 =>
-            return Create_B2_Value (Val.B2);
+         when Mode_B1 =>
+            return Create_B1_Value (Val.B1);
          when Mode_E32 =>
             return Create_E32_Value (Val.E32);
          when Mode_I64 =>
@@ -55,8 +55,8 @@ package body Simulation is
                                  Dst : out Value_Union) is
    begin
       case Src.Kind is
-         when Iir_Value_B2 =>
-            Dst.B2 := Src.B2;
+         when Iir_Value_B1 =>
+            Dst.B1 := Src.B1;
          when Iir_Value_E32 =>
             Dst.E32 := Src.E32;
          when Iir_Value_I64 =>
@@ -181,9 +181,9 @@ package body Simulation is
                         return Create_E32_Value
                           (Grt.Signals.Ghdl_Signal_Driving_Value_E32
                              (Sig.Sig));
-                     when Mode_B2 =>
-                        return Create_B2_Value
-                          (Grt.Signals.Ghdl_Signal_Driving_Value_B2
+                     when Mode_B1 =>
+                        return Create_B1_Value
+                          (Grt.Signals.Ghdl_Signal_Driving_Value_B1
                              (Sig.Sig));
                      when others =>
                         raise Internal_Error;
@@ -403,9 +403,9 @@ package body Simulation is
 
          --  FIXME: null transaction, check constraints.
          case Iir_Value_Scalars (El.Value.Kind) is
-            when Iir_Value_B2 =>
-               Ghdl_Signal_Start_Assign_B2
-                 (Target.Sig, Transactions.Reject, El.Value.B2, El.After);
+            when Iir_Value_B1 =>
+               Ghdl_Signal_Start_Assign_B1
+                 (Target.Sig, Transactions.Reject, El.Value.B1, El.After);
             when Iir_Value_E32 =>
                Ghdl_Signal_Start_Assign_E32
                  (Target.Sig, Transactions.Reject, El.Value.E32, El.After);
@@ -423,9 +423,9 @@ package body Simulation is
             El : Transaction_El_Type renames Transactions.Els (I);
          begin
             case Iir_Value_Scalars (El.Value.Kind) is
-               when Iir_Value_B2 =>
-                  Ghdl_Signal_Next_Assign_B2
-                    (Target.Sig, El.Value.B2, El.After);
+               when Iir_Value_B1 =>
+                  Ghdl_Signal_Next_Assign_B1
+                    (Target.Sig, El.Value.B1, El.After);
                when Iir_Value_E32 =>
                   Ghdl_Signal_Next_Assign_E32
                     (Target.Sig, El.Value.E32, El.After);
@@ -796,7 +796,7 @@ package body Simulation is
       Instance_Pool := null;
    end Conversion_Proc;
 
-   function Guard_Func (Data : System.Address) return Ghdl_B2
+   function Guard_Func (Data : System.Address) return Ghdl_B1
    is
       Guard : Guard_Instance_Type;
       pragma Import (Ada, Guard);
@@ -818,7 +818,7 @@ package body Simulation is
 
       Instance_Pool := Prev_Instance_Pool;
 
-      return Ghdl_B2'Val (Boolean'Pos (Val));
+      return Ghdl_B1'Val (Boolean'Pos (Val));
    end Guard_Func;
 
    -- Add a driver for signal designed by VAL (via index field) for instance
@@ -1121,11 +1121,11 @@ package body Simulation is
                raise Internal_Error;
             end if;
             Grt.Signals.Ghdl_Signal_Associate_I64 (Port.Sig, Sig.I64);
-         when Iir_Value_B2 =>
+         when Iir_Value_B1 =>
             if Mode = Connect_Source then
                raise Internal_Error;
             end if;
-            Grt.Signals.Ghdl_Signal_Associate_B2 (Port.Sig, Sig.B2);
+            Grt.Signals.Ghdl_Signal_Associate_B1 (Port.Sig, Sig.B1);
          when others =>
             raise Internal_Error;
       end case;
@@ -1187,9 +1187,9 @@ package body Simulation is
                   return Create_Signal_Value
                     (Grt.Signals.Ghdl_Create_Signal_I64
                        (0, null, System.Null_Address));
-               when Mode_B2 =>
+               when Mode_B1 =>
                   return Create_Signal_Value
-                    (Grt.Signals.Ghdl_Create_Signal_B2
+                    (Grt.Signals.Ghdl_Create_Signal_B1
                        (False, null, System.Null_Address));
                when Mode_E32 =>
                   return Create_Signal_Value
@@ -1504,9 +1504,9 @@ package body Simulation is
             when Iir_Value_I64 =>
                Sig.Sig := Grt.Signals.Ghdl_Create_Signal_I64
                  (Lit.I64, null, System.Null_Address);
-            when Iir_Value_B2 =>
-               Sig.Sig := Grt.Signals.Ghdl_Create_Signal_B2
-                 (Lit.B2, null, System.Null_Address);
+            when Iir_Value_B1 =>
+               Sig.Sig := Grt.Signals.Ghdl_Create_Signal_B1
+                 (Lit.B1, null, System.Null_Address);
             when Iir_Value_E32 =>
                Sig.Sig := Grt.Signals.Ghdl_Create_Signal_E32
                  (Lit.E32, null, System.Null_Address);

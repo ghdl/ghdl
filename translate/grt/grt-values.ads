@@ -44,8 +44,8 @@ package Grt.Values is
                                         Lit_End : out Ghdl_Index_Type;
                                         Unit_Pos : out Ghdl_Index_Type);
 
-   function Ghdl_Value_B2 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_B2;
+   function Ghdl_Value_B1 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+      return Ghdl_B1;
    function Ghdl_Value_E8 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_E8;
    function Ghdl_Value_E32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
@@ -58,7 +58,7 @@ package Grt.Values is
    function Ghdl_Value_P32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_I32;
 private
-   pragma Export (Ada, Ghdl_Value_B2, "__ghdl_value_b2");
+   pragma Export (Ada, Ghdl_Value_B1, "__ghdl_value_b1");
    pragma Export (C, Ghdl_Value_E8, "__ghdl_value_e8");
    pragma Export (C, Ghdl_Value_E32, "__ghdl_value_e32");
    pragma Export (C, Ghdl_Value_I32, "__ghdl_value_i32");

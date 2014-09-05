@@ -90,7 +90,7 @@ package Grt.Lib is
      return Ghdl_Real;
 
    type Ghdl_Std_Ulogic_Boolean_Array_Type is array (Ghdl_E8 range 0 .. 8)
-     of Ghdl_B2;
+     of Ghdl_B1;
 
    Ghdl_Std_Ulogic_To_Boolean_Array :
      constant Ghdl_Std_Ulogic_Boolean_Array_Type := (False, --  U

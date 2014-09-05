@@ -204,8 +204,8 @@ package body Execution is
       case Mode is
          when Iir_Value_E32 =>
             return Create_E32_Value (Ghdl_E32 (Pos));
-         when Iir_Value_B2 =>
-            return Create_B2_Value (Ghdl_B2'Val (Pos));
+         when Iir_Value_B1 =>
+            return Create_B1_Value (Ghdl_B1'Val (Pos));
          when others =>
             raise Internal_Error;
       end case;
@@ -259,8 +259,8 @@ package body Execution is
                Pos : Natural;
             begin
                case Val.Kind is
-                  when Iir_Value_B2 =>
-                     Pos := Ghdl_B2'Pos (Val.B2);
+                  when Iir_Value_B1 =>
+                     Pos := Ghdl_B1'Pos (Val.B1);
                   when Iir_Value_E32 =>
                      Pos := Ghdl_E32'Pos (Val.E32);
                   when others =>
@@ -410,7 +410,7 @@ package body Execution is
       N := 1;
       Pos := Str'Last;
       for I in reverse Val.Val_Array.V'Range loop
-         V := V + Ghdl_B2'Pos (Val.Val_Array.V (I).B2) * N;
+         V := V + Ghdl_B1'Pos (Val.Val_Array.V (I).B1) * N;
          N := N * 2;
          if N = Base or else I = Val.Val_Array.V'First then
             Str (Pos) := Hex_Chars (V);
@@ -572,54 +572,54 @@ package body Execution is
 
          when Iir_Predefined_Bit_And
            | Iir_Predefined_Boolean_And =>
-            if Left.B2 = Lit_Enum_0.B2 then
+            if Left.B1 = Lit_Enum_0.B1 then
                --  Short circuit operator.
                Result := Lit_Enum_0;
             else
                Eval_Right;
-               Result := Boolean_To_Lit (Right.B2 = Lit_Enum_1.B2);
+               Result := Boolean_To_Lit (Right.B1 = Lit_Enum_1.B1);
             end if;
          when Iir_Predefined_Bit_Nand
            | Iir_Predefined_Boolean_Nand =>
-            if Left.B2 = Lit_Enum_0.B2 then
+            if Left.B1 = Lit_Enum_0.B1 then
                --  Short circuit operator.
                Result := Lit_Enum_1;
             else
                Eval_Right;
-               Result := Boolean_To_Lit (Right.B2 = Lit_Enum_0.B2);
+               Result := Boolean_To_Lit (Right.B1 = Lit_Enum_0.B1);
             end if;
          when Iir_Predefined_Bit_Or
            | Iir_Predefined_Boolean_Or =>
-            if Left.B2 = Lit_Enum_1.B2 then
+            if Left.B1 = Lit_Enum_1.B1 then
                --  Short circuit operator.
                Result := Lit_Enum_1;
             else
                Eval_Right;
-               Result := Boolean_To_Lit (Right.B2 = Lit_Enum_1.B2);
+               Result := Boolean_To_Lit (Right.B1 = Lit_Enum_1.B1);
             end if;
          when Iir_Predefined_Bit_Nor
            | Iir_Predefined_Boolean_Nor =>
-            if Left.B2 = Lit_Enum_1.B2 then
+            if Left.B1 = Lit_Enum_1.B1 then
                --  Short circuit operator.
                Result := Lit_Enum_0;
             else
                Eval_Right;
-               Result := Boolean_To_Lit (Right.B2 = Lit_Enum_0.B2);
+               Result := Boolean_To_Lit (Right.B1 = Lit_Enum_0.B1);
             end if;
          when Iir_Predefined_Bit_Xor
            | Iir_Predefined_Boolean_Xor =>
             Eval_Right;
-            Result := Boolean_To_Lit (Left.B2 /= Right.B2);
+            Result := Boolean_To_Lit (Left.B1 /= Right.B1);
          when Iir_Predefined_Bit_Xnor
            | Iir_Predefined_Boolean_Xnor =>
             Eval_Right;
-            Result := Boolean_To_Lit (Left.B2 = Right.B2);
+            Result := Boolean_To_Lit (Left.B1 = Right.B1);
          when Iir_Predefined_Bit_Not
            | Iir_Predefined_Boolean_Not =>
-            Result := Boolean_To_Lit (Operand.B2 = Lit_Enum_0.B2);
+            Result := Boolean_To_Lit (Operand.B1 = Lit_Enum_0.B1);
 
          when Iir_Predefined_Bit_Condition =>
-            Result := Boolean_To_Lit (Operand.B2 = Lit_Enum_1.B2);
+            Result := Boolean_To_Lit (Operand.B1 = Lit_Enum_1.B1);
 
          when Iir_Predefined_Array_Sll
            | Iir_Predefined_Array_Srl
@@ -691,8 +691,8 @@ package body Execution is
          when Iir_Predefined_Enum_Less =>
             Eval_Right;
             case Left.Kind is
-               when Iir_Value_B2 =>
-                  Result := Boolean_To_Lit (Left.B2 < Right.B2);
+               when Iir_Value_B1 =>
+                  Result := Boolean_To_Lit (Left.B1 < Right.B1);
                when Iir_Value_E32 =>
                   Result := Boolean_To_Lit (Left.E32 < Right.E32);
                when others =>
@@ -701,8 +701,8 @@ package body Execution is
          when Iir_Predefined_Enum_Greater =>
             Eval_Right;
             case Left.Kind is
-               when Iir_Value_B2 =>
-                  Result := Boolean_To_Lit (Left.B2 > Right.B2);
+               when Iir_Value_B1 =>
+                  Result := Boolean_To_Lit (Left.B1 > Right.B1);
                when Iir_Value_E32 =>
                   Result := Boolean_To_Lit (Left.E32 > Right.E32);
                when others =>
@@ -711,8 +711,8 @@ package body Execution is
          when Iir_Predefined_Enum_Less_Equal =>
             Eval_Right;
             case Left.Kind is
-               when Iir_Value_B2 =>
-                  Result := Boolean_To_Lit (Left.B2 <= Right.B2);
+               when Iir_Value_B1 =>
+                  Result := Boolean_To_Lit (Left.B1 <= Right.B1);
                when Iir_Value_E32 =>
                   Result := Boolean_To_Lit (Left.E32 <= Right.E32);
                when others =>
@@ -721,8 +721,8 @@ package body Execution is
          when Iir_Predefined_Enum_Greater_Equal =>
             Eval_Right;
             case Left.Kind is
-               when Iir_Value_B2 =>
-                  Result := Boolean_To_Lit (Left.B2 >= Right.B2);
+               when Iir_Value_B1 =>
+                  Result := Boolean_To_Lit (Left.B1 >= Right.B1);
                when Iir_Value_E32 =>
                   Result := Boolean_To_Lit (Left.E32 >= Right.E32);
                when others =>
@@ -928,181 +928,181 @@ package body Execution is
          when Iir_Predefined_TF_Array_And =>
             Eval_Array;
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 Result.Val_Array.V (I).B2 and Right.Val_Array.V (I).B2;
+               Result.Val_Array.V (I).B1 :=
+                 Result.Val_Array.V (I).B1 and Right.Val_Array.V (I).B1;
             end loop;
          when Iir_Predefined_TF_Array_Nand =>
             Eval_Array;
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 not (Result.Val_Array.V (I).B2 and Right.Val_Array.V (I).B2);
+               Result.Val_Array.V (I).B1 :=
+                 not (Result.Val_Array.V (I).B1 and Right.Val_Array.V (I).B1);
             end loop;
          when Iir_Predefined_TF_Array_Or =>
             Eval_Array;
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 Result.Val_Array.V (I).B2 or Right.Val_Array.V (I).B2;
+               Result.Val_Array.V (I).B1 :=
+                 Result.Val_Array.V (I).B1 or Right.Val_Array.V (I).B1;
             end loop;
          when Iir_Predefined_TF_Array_Nor =>
             Eval_Array;
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 not (Result.Val_Array.V (I).B2 or Right.Val_Array.V (I).B2);
+               Result.Val_Array.V (I).B1 :=
+                 not (Result.Val_Array.V (I).B1 or Right.Val_Array.V (I).B1);
             end loop;
          when Iir_Predefined_TF_Array_Xor =>
             Eval_Array;
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 Result.Val_Array.V (I).B2 xor Right.Val_Array.V (I).B2;
+               Result.Val_Array.V (I).B1 :=
+                 Result.Val_Array.V (I).B1 xor Right.Val_Array.V (I).B1;
             end loop;
          when Iir_Predefined_TF_Array_Xnor =>
             Eval_Array;
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 not (Result.Val_Array.V (I).B2 xor Right.Val_Array.V (I).B2);
+               Result.Val_Array.V (I).B1 :=
+                 not (Result.Val_Array.V (I).B1 xor Right.Val_Array.V (I).B1);
             end loop;
 
          when Iir_Predefined_TF_Array_Element_And =>
             Eval_Right;
             Result := Unshare (Left, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 Result.Val_Array.V (I).B2 and Right.B2;
+               Result.Val_Array.V (I).B1 :=
+                 Result.Val_Array.V (I).B1 and Right.B1;
             end loop;
          when Iir_Predefined_TF_Element_Array_And =>
             Eval_Right;
             Result := Unshare (Right, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 Result.Val_Array.V (I).B2 and Left.B2;
+               Result.Val_Array.V (I).B1 :=
+                 Result.Val_Array.V (I).B1 and Left.B1;
             end loop;
 
          when Iir_Predefined_TF_Array_Element_Or =>
             Eval_Right;
             Result := Unshare (Left, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 Result.Val_Array.V (I).B2 or Right.B2;
+               Result.Val_Array.V (I).B1 :=
+                 Result.Val_Array.V (I).B1 or Right.B1;
             end loop;
          when Iir_Predefined_TF_Element_Array_Or =>
             Eval_Right;
             Result := Unshare (Right, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 Result.Val_Array.V (I).B2 or Left.B2;
+               Result.Val_Array.V (I).B1 :=
+                 Result.Val_Array.V (I).B1 or Left.B1;
             end loop;
 
          when Iir_Predefined_TF_Array_Element_Xor =>
             Eval_Right;
             Result := Unshare (Left, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 Result.Val_Array.V (I).B2 xor Right.B2;
+               Result.Val_Array.V (I).B1 :=
+                 Result.Val_Array.V (I).B1 xor Right.B1;
             end loop;
          when Iir_Predefined_TF_Element_Array_Xor =>
             Eval_Right;
             Result := Unshare (Right, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 Result.Val_Array.V (I).B2 xor Left.B2;
+               Result.Val_Array.V (I).B1 :=
+                 Result.Val_Array.V (I).B1 xor Left.B1;
             end loop;
 
          when Iir_Predefined_TF_Array_Element_Nand =>
             Eval_Right;
             Result := Unshare (Left, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 not (Result.Val_Array.V (I).B2 and Right.B2);
+               Result.Val_Array.V (I).B1 :=
+                 not (Result.Val_Array.V (I).B1 and Right.B1);
             end loop;
          when Iir_Predefined_TF_Element_Array_Nand =>
             Eval_Right;
             Result := Unshare (Right, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 not (Result.Val_Array.V (I).B2 and Left.B2);
+               Result.Val_Array.V (I).B1 :=
+                 not (Result.Val_Array.V (I).B1 and Left.B1);
             end loop;
 
          when Iir_Predefined_TF_Array_Element_Nor =>
             Eval_Right;
             Result := Unshare (Left, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 not (Result.Val_Array.V (I).B2 or Right.B2);
+               Result.Val_Array.V (I).B1 :=
+                 not (Result.Val_Array.V (I).B1 or Right.B1);
             end loop;
          when Iir_Predefined_TF_Element_Array_Nor =>
             Eval_Right;
             Result := Unshare (Right, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 not (Result.Val_Array.V (I).B2 or Left.B2);
+               Result.Val_Array.V (I).B1 :=
+                 not (Result.Val_Array.V (I).B1 or Left.B1);
             end loop;
 
          when Iir_Predefined_TF_Array_Element_Xnor =>
             Eval_Right;
             Result := Unshare (Left, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 not (Result.Val_Array.V (I).B2 xor Right.B2);
+               Result.Val_Array.V (I).B1 :=
+                 not (Result.Val_Array.V (I).B1 xor Right.B1);
             end loop;
          when Iir_Predefined_TF_Element_Array_Xnor =>
             Eval_Right;
             Result := Unshare (Right, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 :=
-                 not (Result.Val_Array.V (I).B2 xor Left.B2);
+               Result.Val_Array.V (I).B1 :=
+                 not (Result.Val_Array.V (I).B1 xor Left.B1);
             end loop;
 
          when Iir_Predefined_TF_Array_Not =>
             --  Need to copy as the result is modified.
             Result := Unshare (Operand, Expr_Pool'Access);
             for I in Result.Val_Array.V'Range loop
-               Result.Val_Array.V (I).B2 := not Result.Val_Array.V (I).B2;
+               Result.Val_Array.V (I).B1 := not Result.Val_Array.V (I).B1;
             end loop;
 
          when Iir_Predefined_TF_Reduction_And =>
-            Result := Create_B2_Value (True);
+            Result := Create_B1_Value (True);
             for I in Operand.Val_Array.V'Range loop
-               Result.B2 := Result.B2 and Operand.Val_Array.V (I).B2;
+               Result.B1 := Result.B1 and Operand.Val_Array.V (I).B1;
             end loop;
          when Iir_Predefined_TF_Reduction_Nand =>
-            Result := Create_B2_Value (True);
+            Result := Create_B1_Value (True);
             for I in Operand.Val_Array.V'Range loop
-               Result.B2 := Result.B2 and Operand.Val_Array.V (I).B2;
+               Result.B1 := Result.B1 and Operand.Val_Array.V (I).B1;
             end loop;
-            Result.B2 := not Result.B2;
+            Result.B1 := not Result.B1;
          when Iir_Predefined_TF_Reduction_Or =>
-            Result := Create_B2_Value (False);
+            Result := Create_B1_Value (False);
             for I in Operand.Val_Array.V'Range loop
-               Result.B2 := Result.B2 or Operand.Val_Array.V (I).B2;
+               Result.B1 := Result.B1 or Operand.Val_Array.V (I).B1;
             end loop;
          when Iir_Predefined_TF_Reduction_Nor =>
-            Result := Create_B2_Value (False);
+            Result := Create_B1_Value (False);
             for I in Operand.Val_Array.V'Range loop
-               Result.B2 := Result.B2 or Operand.Val_Array.V (I).B2;
+               Result.B1 := Result.B1 or Operand.Val_Array.V (I).B1;
             end loop;
-            Result.B2 := not Result.B2;
+            Result.B1 := not Result.B1;
          when Iir_Predefined_TF_Reduction_Xor =>
-            Result := Create_B2_Value (False);
+            Result := Create_B1_Value (False);
             for I in Operand.Val_Array.V'Range loop
-               Result.B2 := Result.B2 xor Operand.Val_Array.V (I).B2;
+               Result.B1 := Result.B1 xor Operand.Val_Array.V (I).B1;
             end loop;
          when Iir_Predefined_TF_Reduction_Xnor =>
-            Result := Create_B2_Value (False);
+            Result := Create_B1_Value (False);
             for I in Operand.Val_Array.V'Range loop
-               Result.B2 := Result.B2 xor Operand.Val_Array.V (I).B2;
+               Result.B1 := Result.B1 xor Operand.Val_Array.V (I).B1;
             end loop;
-            Result.B2 := not Result.B2;
+            Result.B1 := not Result.B1;
 
          when Iir_Predefined_Bit_Rising_Edge
            | Iir_Predefined_Boolean_Rising_Edge =>
             return Boolean_To_Lit
               (Execute_Event_Attribute (Operand)
-                 and then Execute_Signal_Value (Operand).B2 = True);
+                 and then Execute_Signal_Value (Operand).B1 = True);
          when Iir_Predefined_Bit_Falling_Edge
            | Iir_Predefined_Boolean_Falling_Edge =>
             return Boolean_To_Lit
               (Execute_Event_Attribute (Operand)
-                 and then Execute_Signal_Value (Operand).B2 = False);
+                 and then Execute_Signal_Value (Operand).B1 = False);
 
          when Iir_Predefined_Array_Greater =>
             Eval_Right;
@@ -1460,21 +1460,21 @@ package body Execution is
          raise Internal_Error;
       end if;
       case Index.Kind is
-         when Iir_Value_B2 =>
+         when Iir_Value_B1 =>
             case Bounds.Dir is
                when Iir_To =>
-                  if Index.B2 >= Left_Pos.B2 and then
-                    Index.B2 <= Right_Pos.B2
+                  if Index.B1 >= Left_Pos.B1 and then
+                    Index.B1 <= Right_Pos.B1
                   then
                      -- to
-                     return Ghdl_B2'Pos (Index.B2) - Ghdl_B2'Pos (Left_Pos.B2);
+                     return Ghdl_B1'Pos (Index.B1) - Ghdl_B1'Pos (Left_Pos.B1);
                   end if;
                when Iir_Downto =>
-                  if Index.B2 <= Left_Pos.B2 and then
-                    Index.B2 >= Right_Pos.B2
+                  if Index.B1 <= Left_Pos.B1 and then
+                    Index.B1 >= Right_Pos.B1
                   then
                      -- downto
-                     return Ghdl_B2'Pos (Left_Pos.B2) - Ghdl_B2'Pos (Index.B2);
+                     return Ghdl_B1'Pos (Left_Pos.B1) - Ghdl_B1'Pos (Index.B1);
                   end if;
             end case;
          when Iir_Value_E32 =>
@@ -1582,8 +1582,8 @@ package body Execution is
          P : constant Iir_Int32 := Get_Enum_Pos (Literal);
       begin
          case Element_Mode is
-            when Iir_Value_B2 =>
-               R := Create_B2_Value (Ghdl_B2'Val (P));
+            when Iir_Value_B1 =>
+               R := Create_B1_Value (Ghdl_B1'Val (P));
             when Iir_Value_E32 =>
                R := Create_E32_Value (Ghdl_E32'Val (P));
             when others =>
@@ -2231,7 +2231,7 @@ package body Execution is
                      Error_Msg_Constraint (Conv);
                   end if;
                   Res := Create_I64_Value (Ghdl_I64 (Res.F64));
-               when Iir_Value_B2
+               when Iir_Value_B1
                  | Iir_Value_E32
                  | Iir_Value_Range
                  | Iir_Value_Array
@@ -2252,7 +2252,7 @@ package body Execution is
                   null;
                when Iir_Value_I64 =>
                   Res := Create_F64_Value (Ghdl_F64 (Res.I64));
-               when Iir_Value_B2
+               when Iir_Value_B1
                  | Iir_Value_E32
                  | Iir_Value_Range
                  | Iir_Value_Array
@@ -2298,11 +2298,11 @@ package body Execution is
       Res : Iir_Value_Literal_Acc;
    begin
       case Val.Kind is
-         when Iir_Value_B2 =>
-            if Val.B2 = False then
+         when Iir_Value_B1 =>
+            if Val.B1 = False then
                Error_Msg_Constraint (Expr);
             end if;
-            Res := Create_B2_Value (False);
+            Res := Create_B1_Value (False);
          when Iir_Value_E32 =>
             if Val.E32 = 0 then
                Error_Msg_Constraint (Expr);
@@ -2327,11 +2327,11 @@ package body Execution is
       Res : Iir_Value_Literal_Acc;
    begin
       case Val.Kind is
-         when Iir_Value_B2 =>
-            if Val.B2 = True then
+         when Iir_Value_B1 =>
+            if Val.B1 = True then
                Error_Msg_Constraint (Expr);
             end if;
-            Res := Create_B2_Value (True);
+            Res := Create_B1_Value (True);
          when Iir_Value_E32 =>
             if Val.E32 = Ghdl_E32'Last then
                Error_Msg_Constraint (Expr);
@@ -2942,8 +2942,8 @@ package body Execution is
                Lit : constant Iir_Int32 := Get_Enum_Pos (Expr);
             begin
                case Get_Info (Lit_Type).Scalar_Mode is
-                  when Iir_Value_B2 =>
-                     return Create_B2_Value (Ghdl_B2'Val (Lit));
+                  when Iir_Value_B1 =>
+                     return Create_B1_Value (Ghdl_B1'Val (Lit));
                   when Iir_Value_E32 =>
                      return Create_E32_Value (Ghdl_E32 (Lit));
                   when others =>
@@ -3081,8 +3081,8 @@ package body Execution is
                      null;
                   when Iir_Value_E32 =>
                      Res := Create_E32_Value (Ghdl_E32 (Res.I64));
-                  when Iir_Value_B2 =>
-                     Res := Create_B2_Value (Ghdl_B2'Val (Res.I64));
+                  when Iir_Value_B1 =>
+                     Res := Create_B1_Value (Ghdl_B1'Val (Res.I64));
                   when others =>
                      Error_Kind ("execute_expression(val attribute)",
                                  Prefix_Type);
@@ -3103,8 +3103,8 @@ package body Execution is
                case Mode is
                   when Iir_Value_I64 =>
                      null;
-                  when Iir_Value_B2 =>
-                     N_Res := Create_I64_Value (Ghdl_B2'Pos (Res.B2));
+                  when Iir_Value_B1 =>
+                     N_Res := Create_I64_Value (Ghdl_B1'Pos (Res.B1));
                      Res := N_Res;
                   when Iir_Value_E32 =>
                      N_Res := Create_I64_Value (Ghdl_I64 (Res.E32));
@@ -3807,8 +3807,8 @@ package body Execution is
                   if Value.F64 in Low.F64 .. High.F64 then
                      return;
                   end if;
-               when Iir_Value_B2 =>
-                  if Value.B2 in Low.B2 .. High.B2 then
+               when Iir_Value_B1 =>
+                  if Value.B1 in Low.B1 .. High.B1 then
                      return;
                   end if;
                when others =>
@@ -4253,8 +4253,8 @@ package body Execution is
       case Val.Kind is
          when Iir_Value_E32 =>
             return Val.E32 >= Min.E32 and Val.E32 <= Max.E32;
-         when Iir_Value_B2 =>
-            return Val.B2 >= Min.B2 and Val.B2 <= Max.B2;
+         when Iir_Value_B1 =>
+            return Val.B1 >= Min.B1 and Val.B1 <= Max.B1;
          when Iir_Value_I64 =>
             return Val.I64 >= Min.I64 and Val.I64 <= Max.I64;
          when others =>
@@ -4277,12 +4277,12 @@ package body Execution is
                when Iir_Downto =>
                   Val.E32 := Val.E32 - 1;
             end case;
-         when Iir_Value_B2 =>
+         when Iir_Value_B1 =>
             case Bounds.Dir is
                when Iir_To =>
-                  Val.B2 := True;
+                  Val.B1 := True;
                when Iir_Downto =>
-                  Val.B2 := False;
+                  Val.B1 := False;
             end case;
          when Iir_Value_I64 =>
             case Bounds.Dir is
@@ -4398,7 +4398,7 @@ package body Execution is
 
       Mark (Marker, Expr_Pool);
       V := Execute_Expression (Instance, Cond);
-      Res := V.B2 = True;
+      Res := V.B1 = True;
       Release (Marker, Expr_Pool);
       return Res;
    end Execute_Condition;

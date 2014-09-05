@@ -315,7 +315,7 @@ package body Grt.Vcd is
       Sig_Addr := Avhpi_Get_Address (Sig);
       Info.Kind := Vcd_Bad;
       case Rti.Kind is
-         when Ghdl_Rtik_Type_B2
+         when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Subtype_Scalar =>
             Info.Kind := Rti_To_Vcd_Kind (Rti);
@@ -499,7 +499,7 @@ package body Grt.Vcd is
 
    end Vcd_Put_Hierarchy;
 
-   procedure Vcd_Put_Bit (V : Ghdl_B2)
+   procedure Vcd_Put_Bit (V : Ghdl_B1)
    is
       C : Character;
    begin
@@ -647,7 +647,7 @@ package body Grt.Vcd is
             case V.Kind is
                when Vcd_Bit
                  | Vcd_Bool =>
-                  Vcd_Put_Bit (To_Signal_Arr_Ptr (Addr)(0).Value.B2);
+                  Vcd_Put_Bit (To_Signal_Arr_Ptr (Addr)(0).Value.B1);
                when Vcd_Stdlogic =>
                   Vcd_Put_Stdlogic (To_Signal_Arr_Ptr (Addr)(0).Value.E8);
                when Vcd_Integer32 =>
@@ -661,7 +661,7 @@ package body Grt.Vcd is
                when Vcd_Bitvector =>
                   Vcd_Putc ('b');
                   for J in 0 .. Len - 1 loop
-                     Vcd_Put_Bit (To_Signal_Arr_Ptr (Addr)(J).Value.B2);
+                     Vcd_Put_Bit (To_Signal_Arr_Ptr (Addr)(J).Value.B1);
                   end loop;
                   Vcd_Putc (' ');
                when Vcd_Stdlogic_Vector =>
@@ -678,7 +678,7 @@ package body Grt.Vcd is
                when Vcd_Bit
                  | Vcd_Bool =>
                   Vcd_Put_Bit
-                    (To_Signal_Arr_Ptr (Addr)(0).Driving_Value.B2);
+                    (To_Signal_Arr_Ptr (Addr)(0).Driving_Value.B1);
                when Vcd_Stdlogic =>
                   Vcd_Put_Stdlogic
                     (To_Signal_Arr_Ptr (Addr)(0).Driving_Value.E8);
@@ -696,7 +696,7 @@ package body Grt.Vcd is
                   Vcd_Putc ('b');
                   for J in 0 .. Len - 1 loop
                      Vcd_Put_Bit
-                       (To_Signal_Arr_Ptr (Addr)(J).Driving_Value.B2);
+                       (To_Signal_Arr_Ptr (Addr)(J).Driving_Value.B1);
                   end loop;
                   Vcd_Putc (' ');
                when Vcd_Stdlogic_Vector =>

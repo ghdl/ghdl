@@ -59,6 +59,7 @@ with Grt.Types;
 with Grt.Images;
 with Grt.Values;
 with Grt.Names;
+with Grt.Std_Logic_1164;
 
 with Ghdlcomp;
 with Foreigns;
@@ -335,8 +336,8 @@ package body Ghdlrun is
 
       Def (Trans_Decls.Ghdl_Signal_Driving,
            Grt.Signals.Ghdl_Signal_Driving'Address);
-      Def (Trans_Decls.Ghdl_Signal_Driving_Value_B2,
-           Grt.Signals.Ghdl_Signal_Driving_Value_B2'Address);
+      Def (Trans_Decls.Ghdl_Signal_Driving_Value_B1,
+           Grt.Signals.Ghdl_Signal_Driving_Value_B1'Address);
       Def (Trans_Decls.Ghdl_Signal_Driving_Value_E8,
            Grt.Signals.Ghdl_Signal_Driving_Value_E8'Address);
       Def (Trans_Decls.Ghdl_Signal_Driving_Value_E32,
@@ -366,18 +367,18 @@ package body Ghdlrun is
       Def (Trans_Decls.Ghdl_Signal_Direct_Assign,
            Grt.Signals.Ghdl_Signal_Direct_Assign'Address);
 
-      Def (Trans_Decls.Ghdl_Create_Signal_B2,
-           Grt.Signals.Ghdl_Create_Signal_B2'Address);
-      Def (Trans_Decls.Ghdl_Signal_Init_B2,
-           Grt.Signals.Ghdl_Signal_Init_B2'Address);
-      Def (Trans_Decls.Ghdl_Signal_Simple_Assign_B2,
-           Grt.Signals.Ghdl_Signal_Simple_Assign_B2'Address);
-      Def (Trans_Decls.Ghdl_Signal_Start_Assign_B2,
-           Grt.Signals.Ghdl_Signal_Start_Assign_B2'Address);
-      Def (Trans_Decls.Ghdl_Signal_Next_Assign_B2,
-           Grt.Signals.Ghdl_Signal_Next_Assign_B2'Address);
-      Def (Trans_Decls.Ghdl_Signal_Associate_B2,
-           Grt.Signals.Ghdl_Signal_Associate_B2'Address);
+      Def (Trans_Decls.Ghdl_Create_Signal_B1,
+           Grt.Signals.Ghdl_Create_Signal_B1'Address);
+      Def (Trans_Decls.Ghdl_Signal_Init_B1,
+           Grt.Signals.Ghdl_Signal_Init_B1'Address);
+      Def (Trans_Decls.Ghdl_Signal_Simple_Assign_B1,
+           Grt.Signals.Ghdl_Signal_Simple_Assign_B1'Address);
+      Def (Trans_Decls.Ghdl_Signal_Start_Assign_B1,
+           Grt.Signals.Ghdl_Signal_Start_Assign_B1'Address);
+      Def (Trans_Decls.Ghdl_Signal_Next_Assign_B1,
+           Grt.Signals.Ghdl_Signal_Next_Assign_B1'Address);
+      Def (Trans_Decls.Ghdl_Signal_Associate_B1,
+           Grt.Signals.Ghdl_Signal_Associate_B1'Address);
 
       Def (Trans_Decls.Ghdl_Create_Signal_E8,
            Grt.Signals.Ghdl_Create_Signal_E8'Address);
@@ -502,8 +503,8 @@ package body Ghdlrun is
       Def (Trans_Decls.Ghdl_File_Endfile,
            Grt.Files.Ghdl_File_Endfile'Address);
 
-      Def (Trans_Decls.Ghdl_Image_B2,
-           Grt.Images.Ghdl_Image_B2'Address);
+      Def (Trans_Decls.Ghdl_Image_B1,
+           Grt.Images.Ghdl_Image_B1'Address);
       Def (Trans_Decls.Ghdl_Image_E8,
            Grt.Images.Ghdl_Image_E8'Address);
       Def (Trans_Decls.Ghdl_Image_E32,
@@ -517,8 +518,8 @@ package body Ghdlrun is
       Def (Trans_Decls.Ghdl_Image_P32,
            Grt.Images.Ghdl_Image_P32'Address);
 
-      Def (Trans_Decls.Ghdl_Value_B2,
-           Grt.Values.Ghdl_Value_B2'Address);
+      Def (Trans_Decls.Ghdl_Value_B1,
+           Grt.Values.Ghdl_Value_B1'Address);
       Def (Trans_Decls.Ghdl_Value_E8,
            Grt.Values.Ghdl_Value_E8'Address);
       Def (Trans_Decls.Ghdl_Value_E32,
@@ -536,6 +537,22 @@ package body Ghdlrun is
            Grt.Names.Ghdl_Get_Path_Name'Address);
       Def (Trans_Decls.Ghdl_Get_Instance_Name,
            Grt.Names.Ghdl_Get_Instance_Name'Address);
+
+      Def (Trans_Decls.Ghdl_Std_Ulogic_Match_Eq,
+           Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Match_Eq'Address);
+      Def (Trans_Decls.Ghdl_Std_Ulogic_Match_Ne,
+           Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Match_Ne'Address);
+      Def (Trans_Decls.Ghdl_Std_Ulogic_Match_Lt,
+           Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Match_Lt'Address);
+      Def (Trans_Decls.Ghdl_Std_Ulogic_Match_Le,
+           Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Match_Le'Address);
+
+      Def (Trans_Decls.Ghdl_To_String_I32,
+           Grt.Images.Ghdl_To_String_I32'Address);
+      Def (Trans_Decls.Ghdl_To_String_F64,
+           Grt.Images.Ghdl_To_String_F64'Address);
+      Def (Trans_Decls.Ghdl_To_String_F64_Digits,
+           Grt.Images.Ghdl_To_String_F64_Digits'Address);
 
       --  Find untruncated_text_read, if any.
       Decl := Find_Untruncated_Text_Read;

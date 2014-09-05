@@ -429,8 +429,8 @@ package body Grt.Signals is
    is
    begin
       case Mode is
-         when Mode_B2 =>
-            Targ.B2 := Val.B2;
+         when Mode_B1 =>
+            Targ.B1 := Val.B1;
          when Mode_E8 =>
             Targ.E8 := Val.E8;
          when Mode_E32 =>
@@ -449,8 +449,8 @@ package body Grt.Signals is
    is
    begin
       case Mode is
-         when Mode_B2 =>
-            return Left.B2 = Right.B2;
+         when Mode_B1 =>
+            return Left.B1 = Right.B1;
          when Mode_E8 =>
             return Left.E8 = Right.E8;
          when Mode_E32 =>
@@ -591,8 +591,8 @@ package body Grt.Signals is
          --  FIXME: can be a bound-error too!
          if Trans.Kind = Trans_Value then
             case Sign.Mode is
-               when Mode_B2 =>
-                  Driver.Last_Trans.Val_Ptr.B2 := Trans.Val.B2;
+               when Mode_B1 =>
+                  Driver.Last_Trans.Val_Ptr.B1 := Trans.Val.B1;
                when Mode_E8 =>
                   Driver.Last_Trans.Val_Ptr.E8 := Trans.Val.E8;
                when Mode_E32 =>
@@ -902,37 +902,37 @@ package body Grt.Signals is
       Sig.Driving_Value := Val;
    end Ghdl_Signal_Associate;
 
-   function Ghdl_Create_Signal_B2
-     (Init_Val : Ghdl_B2;
+   function Ghdl_Create_Signal_B1
+     (Init_Val : Ghdl_B1;
       Resolv_Func : Resolver_Acc;
       Resolv_Inst : System.Address)
      return Ghdl_Signal_Ptr
    is
    begin
       return Create_Signal
-        (Mode_B2, Value_Union'(Mode => Mode_B2, B2 => Init_Val),
+        (Mode_B1, Value_Union'(Mode => Mode_B1, B1 => Init_Val),
          Get_Current_Mode_Signal,
          Resolv_Func, Resolv_Inst);
-   end Ghdl_Create_Signal_B2;
+   end Ghdl_Create_Signal_B1;
 
-   procedure Ghdl_Signal_Init_B2 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_B2) is
+   procedure Ghdl_Signal_Init_B1 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_B1) is
    begin
-      Ghdl_Signal_Init (Sig, Value_Union'(Mode => Mode_B2, B2 => Init_Val));
-   end Ghdl_Signal_Init_B2;
+      Ghdl_Signal_Init (Sig, Value_Union'(Mode => Mode_B1, B1 => Init_Val));
+   end Ghdl_Signal_Init_B1;
 
-   procedure Ghdl_Signal_Associate_B2 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_B2) is
+   procedure Ghdl_Signal_Associate_B1 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_B1) is
    begin
-      Ghdl_Signal_Associate (Sig, Value_Union'(Mode => Mode_B2, B2 => Val));
-   end Ghdl_Signal_Associate_B2;
+      Ghdl_Signal_Associate (Sig, Value_Union'(Mode => Mode_B1, B1 => Val));
+   end Ghdl_Signal_Associate_B1;
 
-   procedure Ghdl_Signal_Simple_Assign_B2 (Sign : Ghdl_Signal_Ptr;
-                                           Val : Ghdl_B2)
+   procedure Ghdl_Signal_Simple_Assign_B1 (Sign : Ghdl_Signal_Ptr;
+                                           Val : Ghdl_B1)
    is
       Trans : Transaction_Acc;
    begin
       if not Sign.Has_Active
         and then Sign.Net = Net_One_Driver
-        and then Val = Sign.Value.B2
+        and then Val = Sign.Value.B1
         and then Sign.S.Drivers (0).First_Trans.Next = null
       then
          return;
@@ -943,14 +943,14 @@ package body Grt.Signals is
          Line => 0,
          Time => 0,
          Next => null,
-         Val => Value_Union'(Mode => Mode_B2, B2 => Val));
+         Val => Value_Union'(Mode => Mode_B1, B1 => Val));
 
       Ghdl_Signal_Start_Assign (Sign, 0, Trans, 0);
-   end Ghdl_Signal_Simple_Assign_B2;
+   end Ghdl_Signal_Simple_Assign_B1;
 
-   procedure Ghdl_Signal_Start_Assign_B2 (Sign : Ghdl_Signal_Ptr;
+   procedure Ghdl_Signal_Start_Assign_B1 (Sign : Ghdl_Signal_Ptr;
                                           Rej : Std_Time;
-                                          Val : Ghdl_B2;
+                                          Val : Ghdl_B1;
                                           After : Std_Time)
    is
       Trans : Transaction_Acc;
@@ -960,18 +960,18 @@ package body Grt.Signals is
          Line => 0,
          Time => 0,
          Next => null,
-         Val => Value_Union'(Mode => Mode_B2, B2 => Val));
+         Val => Value_Union'(Mode => Mode_B1, B1 => Val));
       Ghdl_Signal_Start_Assign (Sign, Rej, Trans, After);
-   end Ghdl_Signal_Start_Assign_B2;
+   end Ghdl_Signal_Start_Assign_B1;
 
-   procedure Ghdl_Signal_Next_Assign_B2 (Sign : Ghdl_Signal_Ptr;
-                                         Val : Ghdl_B2;
+   procedure Ghdl_Signal_Next_Assign_B1 (Sign : Ghdl_Signal_Ptr;
+                                         Val : Ghdl_B1;
                                          After : Std_Time)
    is
    begin
       Ghdl_Signal_Next_Assign
-        (Sign, Value_Union'(Mode => Mode_B2, B2 => Val), After);
-   end Ghdl_Signal_Next_Assign_B2;
+        (Sign, Value_Union'(Mode => Mode_B1, B1 => Val), After);
+   end Ghdl_Signal_Next_Assign_B1;
 
    function Ghdl_Create_Signal_E8
      (Init_Val : Ghdl_E8;
@@ -1416,9 +1416,9 @@ package body Grt.Signals is
          when others =>
             Internal_Error ("ghdl_create_signal_attribute");
       end case;
-      --  Note: bit and boolean are both mode_b2.
+      --  Note: bit and boolean are both mode_b1.
       Res := Create_Signal
-        (Mode_B2, Value_Union'(Mode => Mode_B2, B2 => True),
+        (Mode_B1, Value_Union'(Mode => Mode_B1, B1 => True),
          Mode, null, Null_Address);
       Sig_Rti := null;
       Last_Implicit_Signal := Res;
@@ -1488,7 +1488,7 @@ package body Grt.Signals is
       Sig_Rti := To_Ghdl_Rtin_Object_Acc
         (To_Ghdl_Rti_Access (Guard_Rti'Address));
       Res := Create_Signal
-        (Mode_B2, Value_Union'(Mode => Mode_B2, B2 => Proc.all (This)),
+        (Mode_B1, Value_Union'(Mode => Mode_B1, B1 => Proc.all (This)),
          Mode_Guard, null, Null_Address);
       Sig_Rti := null;
       Res.S.Guard_Func := Proc;
@@ -1644,7 +1644,7 @@ package body Grt.Signals is
         (Func, Instance, Src, Src_Len, Dst, Dst_Len, Mode_Conv_Out);
    end Ghdl_Signal_Out_Conversion;
 
-   function Ghdl_Signal_Driving (Sig : Ghdl_Signal_Ptr) return Ghdl_B2
+   function Ghdl_Signal_Driving (Sig : Ghdl_Signal_Ptr) return Ghdl_B1
    is
       Drv : Driver_Acc;
    begin
@@ -1660,7 +1660,7 @@ package body Grt.Signals is
       end if;
    end Ghdl_Signal_Driving;
 
-   function Ghdl_Signal_Driving_Value_B2 (Sig : Ghdl_Signal_Ptr) return Ghdl_B2
+   function Ghdl_Signal_Driving_Value_B1 (Sig : Ghdl_Signal_Ptr) return Ghdl_B1
    is
       Drv : Driver_Acc;
    begin
@@ -1668,9 +1668,9 @@ package body Grt.Signals is
       if Drv = null or else Drv.First_Trans.Kind /= Trans_Value then
          Error ("'driving_value: no active driver in process for signal");
       else
-         return Drv.First_Trans.Val.B2;
+         return Drv.First_Trans.Val.B1;
       end if;
-   end Ghdl_Signal_Driving_Value_B2;
+   end Ghdl_Signal_Driving_Value_B1;
 
    function Ghdl_Signal_Driving_Value_E8 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_E8
@@ -2981,7 +2981,7 @@ package body Grt.Signals is
                Sig := Propagation.Table (I).Sig;
                Set_Guard_Activity (Sig);
                if Sig.Active then
-                  Sig.Driving_Value.B2 :=
+                  Sig.Driving_Value.B1 :=
                     Sig.S.Guard_Func.all (Sig.S.Guard_Instance);
                   Set_Effective_Value (Sig, Sig.Driving_Value);
                end if;
@@ -2991,14 +2991,14 @@ package body Grt.Signals is
                Set_Stable_Quiet_Activity (Propagation.Table (I).Kind, Sig);
                if Sig.Active then
                   Sig.Driving_Value :=
-                    Value_Union'(Mode => Mode_B2, B2 => False);
+                    Value_Union'(Mode => Mode_B1, B1 => False);
                   --  Set driver.
                   Trans := new Transaction'
                     (Kind => Trans_Value,
                      Line => 0,
                      Time => Current_Time + Sig.S.Time,
                      Next => null,
-                     Val => Value_Union'(Mode => Mode_B2, B2 => True));
+                     Val => Value_Union'(Mode => Mode_B1, B1 => True));
                   if Sig.S.Attr_Trans.Next /= null then
                      Free (Sig.S.Attr_Trans.Next);
                   end if;
@@ -3030,8 +3030,8 @@ package body Grt.Signals is
                   if Sig.Ports (I).Active then
                      Mark_Active (Sig);
                      Set_Effective_Value
-                       (Sig, Value_Union'(Mode => Mode_B2,
-                                          B2 => not Sig.Value.B2));
+                       (Sig, Value_Union'(Mode => Mode_B1,
+                                          B1 => not Sig.Value.B1));
                      exit;
                   end if;
                end loop;
@@ -3297,7 +3297,7 @@ package body Grt.Signals is
             when Imp_Guard =>
                --  Guard signal is active iff one of its dependence is active.
                Sig := Propagation.Table (I).Sig;
-               Sig.Driving_Value.B2 :=
+               Sig.Driving_Value.B1 :=
                  Sig.S.Guard_Func.all (Sig.S.Guard_Instance);
                Sig.Value := Sig.Driving_Value;
             when Imp_Stable
@@ -3356,12 +3356,12 @@ package body Grt.Signals is
 
    procedure Init is
    begin
-      Signal_End := new Ghdl_Signal'(Value => (Mode => Mode_B2,
-                                               B2 => False),
-                                     Driving_Value => (Mode => Mode_B2,
-                                                       B2 => False),
-                                     Last_Value => (Mode => Mode_B2,
-                                                    B2 => False),
+      Signal_End := new Ghdl_Signal'(Value => (Mode => Mode_B1,
+                                               B1 => False),
+                                     Driving_Value => (Mode => Mode_B1,
+                                                       B1 => False),
+                                     Last_Value => (Mode => Mode_B1,
+                                                    B1 => False),
                                      Last_Event => 0,
                                      Last_Active => 0,
                                      Event => False,
@@ -3369,7 +3369,7 @@ package body Grt.Signals is
                                      Has_Active => False,
                                      Is_Direct_Active => False,
                                      Sig_Kind => Kind_Signal_No,
-                                     Mode => Mode_B2,
+                                     Mode => Mode_B1,
 
                                      Flags => (Propag => Propag_None,
                                                Is_Dumped => False,

@@ -83,7 +83,7 @@ package Grt.Signals is
 
    --  Function access type used to evaluate the guard expression.
    type Guard_Func_Acc is access function (This : System.Address)
-                                          return Ghdl_B2;
+                                          return Ghdl_B1;
    pragma Convention (C, Guard_Func_Acc);
 
    --  Simply linked list of processes to be resumed in case of events.
@@ -544,25 +544,25 @@ package Grt.Signals is
                                             Rej : Std_Time;
                                             After : Std_Time);
 
-   function Ghdl_Signal_Driving (Sig : Ghdl_Signal_Ptr) return Ghdl_B2;
+   function Ghdl_Signal_Driving (Sig : Ghdl_Signal_Ptr) return Ghdl_B1;
 
-   function Ghdl_Create_Signal_B2 (Init_Val : Ghdl_B2;
+   function Ghdl_Create_Signal_B1 (Init_Val : Ghdl_B1;
                                    Resolv_Func : Resolver_Acc;
                                    Resolv_Inst : System.Address)
                                   return Ghdl_Signal_Ptr;
-   procedure Ghdl_Signal_Init_B2 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_B2);
-   procedure Ghdl_Signal_Associate_B2 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_B2);
-   procedure Ghdl_Signal_Simple_Assign_B2 (Sign : Ghdl_Signal_Ptr;
-                                           Val : Ghdl_B2);
-   procedure Ghdl_Signal_Start_Assign_B2 (Sign : Ghdl_Signal_Ptr;
+   procedure Ghdl_Signal_Init_B1 (Sig : Ghdl_Signal_Ptr; Init_Val : Ghdl_B1);
+   procedure Ghdl_Signal_Associate_B1 (Sig : Ghdl_Signal_Ptr; Val : Ghdl_B1);
+   procedure Ghdl_Signal_Simple_Assign_B1 (Sign : Ghdl_Signal_Ptr;
+                                           Val : Ghdl_B1);
+   procedure Ghdl_Signal_Start_Assign_B1 (Sign : Ghdl_Signal_Ptr;
                                           Rej : Std_Time;
-                                          Val : Ghdl_B2;
+                                          Val : Ghdl_B1;
                                           After : Std_Time);
-   procedure Ghdl_Signal_Next_Assign_B2 (Sign : Ghdl_Signal_Ptr;
-                                         Val : Ghdl_B2;
+   procedure Ghdl_Signal_Next_Assign_B1 (Sign : Ghdl_Signal_Ptr;
+                                         Val : Ghdl_B1;
                                          After : Std_Time);
-   function Ghdl_Signal_Driving_Value_B2 (Sig : Ghdl_Signal_Ptr)
-                                         return Ghdl_B2;
+   function Ghdl_Signal_Driving_Value_B1 (Sig : Ghdl_Signal_Ptr)
+                                         return Ghdl_B1;
 
    function Ghdl_Create_Signal_E8 (Init_Val : Ghdl_E8;
                                    Resolv_Func : Resolver_Acc;
@@ -781,20 +781,20 @@ private
    pragma Export (Ada, Ghdl_Signal_Driving,
                   "__ghdl_signal_driving");
 
-   pragma Export (Ada, Ghdl_Create_Signal_B2,
-                  "__ghdl_create_signal_b2");
-   pragma Export (Ada, Ghdl_Signal_Init_B2,
-                  "__ghdl_signal_init_b2");
-   pragma Export (Ada, Ghdl_Signal_Associate_B2,
-                  "__ghdl_signal_associate_b2");
-   pragma Export (Ada, Ghdl_Signal_Simple_Assign_B2,
-                  "__ghdl_signal_simple_assign_b2");
-   pragma Export (Ada, Ghdl_Signal_Start_Assign_B2,
-                  "__ghdl_signal_start_assign_b2");
-   pragma Export (Ada, Ghdl_Signal_Next_Assign_B2,
-                  "__ghdl_signal_next_assign_b2");
-   pragma Export (Ada, Ghdl_Signal_Driving_Value_B2,
-                  "__ghdl_signal_driving_value_b2");
+   pragma Export (Ada, Ghdl_Create_Signal_B1,
+                  "__ghdl_create_signal_b1");
+   pragma Export (Ada, Ghdl_Signal_Init_B1,
+                  "__ghdl_signal_init_b1");
+   pragma Export (Ada, Ghdl_Signal_Associate_B1,
+                  "__ghdl_signal_associate_b1");
+   pragma Export (Ada, Ghdl_Signal_Simple_Assign_B1,
+                  "__ghdl_signal_simple_assign_b1");
+   pragma Export (Ada, Ghdl_Signal_Start_Assign_B1,
+                  "__ghdl_signal_start_assign_b1");
+   pragma Export (Ada, Ghdl_Signal_Next_Assign_B1,
+                  "__ghdl_signal_next_assign_b1");
+   pragma Export (Ada, Ghdl_Signal_Driving_Value_B1,
+                  "__ghdl_signal_driving_value_b1");
 
    pragma Export (C, Ghdl_Create_Signal_E8,
                   "__ghdl_create_signal_e8");

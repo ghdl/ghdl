@@ -91,13 +91,13 @@ package Trans_Decls is
    Ghdl_Signal_Associate_E32 : O_Dnode;
    Ghdl_Signal_Driving_Value_E32 : O_Dnode;
 
-   Ghdl_Create_Signal_B2 : O_Dnode;
-   Ghdl_Signal_Init_B2 : O_Dnode;
-   Ghdl_Signal_Simple_Assign_B2 : O_Dnode;
-   Ghdl_Signal_Start_Assign_B2 : O_Dnode;
-   Ghdl_Signal_Next_Assign_B2 : O_Dnode;
-   Ghdl_Signal_Associate_B2 : O_Dnode;
-   Ghdl_Signal_Driving_Value_B2 : O_Dnode;
+   Ghdl_Create_Signal_B1 : O_Dnode;
+   Ghdl_Signal_Init_B1 : O_Dnode;
+   Ghdl_Signal_Simple_Assign_B1 : O_Dnode;
+   Ghdl_Signal_Start_Assign_B1 : O_Dnode;
+   Ghdl_Signal_Next_Assign_B1 : O_Dnode;
+   Ghdl_Signal_Associate_B1 : O_Dnode;
+   Ghdl_Signal_Driving_Value_B1 : O_Dnode;
 
    Ghdl_Create_Signal_I32 : O_Dnode;
    Ghdl_Signal_Init_I32 : O_Dnode;
@@ -196,7 +196,7 @@ package Trans_Decls is
    Ghdl_File_Endfile : O_Dnode;
 
    --  'Image attributes.
-   Ghdl_Image_B2 : O_Dnode;
+   Ghdl_Image_B1 : O_Dnode;
    Ghdl_Image_E8 : O_Dnode;
    Ghdl_Image_E32 : O_Dnode;
    Ghdl_Image_I32 : O_Dnode;
@@ -205,7 +205,7 @@ package Trans_Decls is
    Ghdl_Image_F64 : O_Dnode;
 
    --  'Value attributes
-   Ghdl_Value_B2 : O_Dnode;
+   Ghdl_Value_B1 : O_Dnode;
    Ghdl_Value_E8 : O_Dnode;
    Ghdl_Value_E32 : O_Dnode;
    Ghdl_Value_I32 : O_Dnode;
@@ -219,6 +219,17 @@ package Trans_Decls is
 
    --  For PSL.
    Ghdl_Std_Ulogic_To_Boolean_Array : O_Dnode;
+
+   --  For std_logic_1164 (vhdl 2008).
+   Ghdl_Std_Ulogic_Match_Eq : O_Dnode;
+   Ghdl_Std_Ulogic_Match_Ne : O_Dnode;
+   Ghdl_Std_Ulogic_Match_Lt : O_Dnode;
+   Ghdl_Std_Ulogic_Match_Le : O_Dnode;
+
+   --  For To_String (vhdl 2008).
+   Ghdl_To_String_I32 : O_Dnode;
+   Ghdl_To_String_F64 : O_Dnode;
+   Ghdl_To_String_F64_Digits : O_Dnode;
 
    --  Register a package
    Ghdl_Rti_Add_Package : O_Dnode;

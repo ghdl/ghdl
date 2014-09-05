@@ -186,8 +186,8 @@ package body File_Operation is
                            Value: Iir_Value_Literal_Acc) is
    begin
       case Value.Kind is
-         when Iir_Value_B2 =>
-            Ghdl_Write_Scalar (File.File, Ghdl_Ptr (Value.B2'Address), 1);
+         when Iir_Value_B1 =>
+            Ghdl_Write_Scalar (File.File, Ghdl_Ptr (Value.B1'Address), 1);
          when Iir_Value_I64 =>
             Ghdl_Write_Scalar (File.File, Ghdl_Ptr (Value.I64'Address), 8);
          when Iir_Value_E32 =>
@@ -284,8 +284,8 @@ package body File_Operation is
    is
    begin
       case Value.Kind is
-         when Iir_Value_B2 =>
-            Ghdl_Read_Scalar (File.File, Ghdl_Ptr (Value.B2'Address), 1);
+         when Iir_Value_B1 =>
+            Ghdl_Read_Scalar (File.File, Ghdl_Ptr (Value.B1'Address), 1);
          when Iir_Value_I64 =>
             Ghdl_Read_Scalar (File.File, Ghdl_Ptr (Value.I64'Address), 8);
          when Iir_Value_E32 =>

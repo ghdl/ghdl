@@ -198,7 +198,7 @@ package body Grt.Rtis_Utils is
                   Update (8);
                when Ghdl_Rtik_Type_E32 =>
                   Update (32);
-               when Ghdl_Rtik_Type_B2 =>
+               when Ghdl_Rtik_Type_B1 =>
                   Update (8);
                when Ghdl_Rtik_Type_F64 =>
                   Update (64);
@@ -238,14 +238,14 @@ package body Grt.Rtis_Utils is
                   when Dir_Downto =>
                      Val.E32 := Rng.E32.Left - Ghdl_E32 (Pos);
                end case;
-            when Ghdl_Rtik_Type_B2 =>
+            when Ghdl_Rtik_Type_B1 =>
                case Pos is
                   when 0 =>
-                     Val.B2 := Rng.B2.Left;
+                     Val.B1 := Rng.B1.Left;
                   when 1 =>
-                     Val.B2 := Rng.B2.Right;
+                     Val.B1 := Rng.B1.Right;
                   when others =>
-                     Val.B2 := False;
+                     Val.B1 := False;
                end case;
             when others =>
                Internal_Error ("grt.rtis_utils.range_pos_to_val");
@@ -274,8 +274,8 @@ package body Grt.Rtis_Utils is
                Get_Enum_Value (Vstr, Rti, Ghdl_Index_Type (V.E8));
             when Ghdl_Rtik_Type_E32 =>
                Get_Enum_Value (Vstr, Rti, Ghdl_Index_Type (V.E32));
-            when Ghdl_Rtik_Type_B2 =>
-               Get_Enum_Value (Vstr, Rti, Ghdl_B2'Pos (V.B2));
+            when Ghdl_Rtik_Type_B1 =>
+               Get_Enum_Value (Vstr, Rti, Ghdl_B1'Pos (V.B1));
             when others =>
                Append (Vstr, '?');
          end case;
@@ -363,7 +363,7 @@ package body Grt.Rtis_Utils is
             when Ghdl_Rtik_Type_I32
               | Ghdl_Rtik_Type_E8
               | Ghdl_Rtik_Type_E32
-              | Ghdl_Rtik_Type_B2 =>
+              | Ghdl_Rtik_Type_B1 =>
                Handle_Scalar (Rti);
             when Ghdl_Rtik_Type_Array =>
                Handle_Array (To_Ghdl_Rtin_Type_Array_Acc (Rti),
@@ -423,9 +423,9 @@ package body Grt.Rtis_Utils is
             Get_Enum_Value (Str, Type_Rti, Ghdl_Index_Type (Value.E8));
          when Ghdl_Rtik_Type_E32 =>
             Get_Enum_Value (Str, Type_Rti, Ghdl_Index_Type (Value.E32));
-         when Ghdl_Rtik_Type_B2 =>
+         when Ghdl_Rtik_Type_B1 =>
             Get_Enum_Value
-              (Str, Type_Rti, Ghdl_Index_Type (Ghdl_B2'Pos (Value.B2)));
+              (Str, Type_Rti, Ghdl_Index_Type (Ghdl_B1'Pos (Value.B1)));
          when Ghdl_Rtik_Type_F64 =>
             declare
                S : String (1 .. 32);
@@ -527,9 +527,9 @@ package body Grt.Rtis_Utils is
             Get_Enum_Value (Rstr, Type_Rti, Ghdl_Index_Type (Value.E8));
          when Ghdl_Rtik_Type_E32 =>
             Get_Enum_Value (Rstr, Type_Rti, Ghdl_Index_Type (Value.E32));
-         when Ghdl_Rtik_Type_B2 =>
+         when Ghdl_Rtik_Type_B1 =>
             Get_Enum_Value
-              (Rstr, Type_Rti, Ghdl_Index_Type (Ghdl_B2'Pos (Value.B2)));
+              (Rstr, Type_Rti, Ghdl_Index_Type (Ghdl_B1'Pos (Value.B1)));
          when others =>
             Internal_Error ("grt.rtis_utils.get_value(rstr)");
       end case;

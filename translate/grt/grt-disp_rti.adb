@@ -85,9 +85,9 @@ package body Grt.Disp_Rti is
             if not Is_Sig then
                Update (32);
             end if;
-         when Ghdl_Rtik_Type_B2 =>
+         when Ghdl_Rtik_Type_B1 =>
             Disp_Enum_Value (Stream, Rti,
-                             Ghdl_Index_Type (Ghdl_B2'Pos (Vptr.B2)));
+                             Ghdl_Index_Type (Ghdl_B1'Pos (Vptr.B1)));
             if not Is_Sig then
                Update (8);
             end if;
@@ -226,7 +226,7 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_Type_I32
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Type_E32
-           | Ghdl_Rtik_Type_B2 =>
+           | Ghdl_Rtik_Type_B1 =>
             Disp_Scalar_Value (Stream, Rti, Obj, Is_Sig);
          when Ghdl_Rtik_Type_Array =>
             Disp_Array_Value (Stream, To_Ghdl_Rtin_Type_Array_Acc (Rti), Ctxt,
@@ -321,8 +321,8 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_For_Generate =>
             Put ("ghdl_rtik_for_generate");
 
-         when Ghdl_Rtik_Type_B2 =>
-            Put ("ghdl_rtik_type_b2");
+         when Ghdl_Rtik_Type_B1 =>
+            Put ("ghdl_rtik_type_b1");
          when Ghdl_Rtik_Type_E8 =>
             Put ("ghdl_rtik_type_e8");
          when Ghdl_Rtik_Type_E32 =>
@@ -418,7 +418,7 @@ package body Grt.Disp_Rti is
                   Disp_Scalar_Type_Name (Rti.Basetype);
                end if;
             end;
-         when Ghdl_Rtik_Type_B2
+         when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Type_E32 =>
             Disp_Name (To_Ghdl_Rtin_Type_Enum_Acc (Def).Name);
@@ -520,7 +520,7 @@ package body Grt.Disp_Rti is
             end;
             --Disp_Scalar_Subtype_Name (To_Ghdl_Rtin_Scalsubtype_Acc (Def),
             --                          Base);
-         when Ghdl_Rtik_Type_B2
+         when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Type_E32 =>
             Disp_Name (To_Ghdl_Rtin_Type_Enum_Acc (Def).Name);
@@ -994,7 +994,7 @@ package body Grt.Disp_Rti is
             Disp_Attribute (To_Ghdl_Rtin_Object_Acc (Rti), Ctxt, Indent);
          when Ghdl_Rtik_Instance =>
             Disp_Instance (To_Ghdl_Rtin_Instance_Acc (Rti), Ctxt, Indent);
-         when Ghdl_Rtik_Type_B2
+         when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Type_E32 =>
             Disp_Type_Enum_Decl (To_Ghdl_Rtin_Type_Enum_Acc (Rti), Indent);

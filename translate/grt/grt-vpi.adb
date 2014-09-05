@@ -360,7 +360,7 @@ package body Grt.Vpi is
    -- see IEEE 1364-2001, chapter 27.14, page 675
    Tmpstring3idx : integer;
    Tmpstring3 : String (1 .. 1024);
-   procedure ii_vpi_get_value_bin_str_B2 (Val : Ghdl_B2)
+   procedure ii_vpi_get_value_bin_str_B1 (Val : Ghdl_B1)
    is
    begin
       case Val is
@@ -370,7 +370,7 @@ package body Grt.Vpi is
             Tmpstring3 (Tmpstring3idx) := '0';
       end case;
       Tmpstring3idx := Tmpstring3idx + 1;
-   end ii_vpi_get_value_bin_str_B2;
+   end ii_vpi_get_value_bin_str_B1;
 
    procedure ii_vpi_get_value_bin_str_E8 (Val : Ghdl_E8)
    is
@@ -424,8 +424,8 @@ package body Grt.Vpi is
                  | Vcd_Bool
                  | Vcd_Bitvector =>
                   for J in 0 .. Len - 1 loop
-                     ii_vpi_get_value_bin_str_B2
-                       (To_Signal_Arr_Ptr (Info.Addr)(J).Value.B2);
+                     ii_vpi_get_value_bin_str_B1
+                       (To_Signal_Arr_Ptr (Info.Addr)(J).Value.B1);
                   end loop;
                when Vcd_Stdlogic
                  | Vcd_Stdlogic_Vector =>
@@ -444,8 +444,8 @@ package body Grt.Vpi is
                  | Vcd_Bool
                  | Vcd_Bitvector =>
                   for J in 0 .. Len - 1 loop
-                     ii_vpi_get_value_bin_str_B2
-                       (To_Signal_Arr_Ptr (Info.Addr)(J).Driving_Value.B2);
+                     ii_vpi_get_value_bin_str_B1
+                       (To_Signal_Arr_Ptr (Info.Addr)(J).Driving_Value.B1);
                   end loop;
                when Vcd_Stdlogic
                  | Vcd_Stdlogic_Vector =>
@@ -519,7 +519,7 @@ package body Grt.Vpi is
    -- see IEEE 1364-2001, chapter 27.14, page 675
    -- FIXME
 
-   procedure ii_vpi_put_value_bin_str_B2 (SigPtr : Ghdl_Signal_Ptr;
+   procedure ii_vpi_put_value_bin_str_B1 (SigPtr : Ghdl_Signal_Ptr;
                                           Value : Character)
    is
       Tempval : Value_Union;
@@ -527,17 +527,17 @@ package body Grt.Vpi is
       -- use the Set_Effective_Value procedure to update the signal
       case Value is
          when '0' =>
-            Tempval.B2 := false;
+            Tempval.B1 := false;
          when '1' =>
-            Tempval.B2 := true;
+            Tempval.B1 := true;
          when others =>
-            dbgPut_Line("ii_vpi_put_value_bin_str_B2: "
+            dbgPut_Line("ii_vpi_put_value_bin_str_B1: "
                         & "wrong character - signal wont be set");
             return;
       end case;
       SigPtr.Driving_Value := Tempval;
       Set_Effective_Value (SigPtr, Tempval);
-   end ii_vpi_put_value_bin_str_B2;
+   end ii_vpi_put_value_bin_str_B1;
 
    procedure ii_vpi_put_value_bin_str_E8 (SigPtr : Ghdl_Signal_Ptr;
                                           Value : Character)
@@ -626,7 +626,7 @@ package body Grt.Vpi is
            | Vcd_Bool
            | Vcd_Bitvector =>
             for J in 0 .. Len - 1 loop
-               ii_vpi_put_value_bin_str_B2(
+               ii_vpi_put_value_bin_str_B1(
                   To_Signal_Arr_Ptr(Info.Addr)(J), ValueStr(Integer(J+1)));
             end loop;
          when Vcd_Stdlogic

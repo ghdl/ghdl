@@ -32,8 +32,8 @@ package body Iir_Values is
          raise Internal_Error;
       end if;
       case Left.Kind is
-         when Iir_Value_B2 =>
-            return Left.B2 = Right.B2;
+         when Iir_Value_B1 =>
+            return Left.B1 = Right.B1;
          when Iir_Value_E32 =>
             return Left.E32 = Right.E32;
          when Iir_Value_I64 =>
@@ -97,10 +97,10 @@ package body Iir_Values is
          raise Constraint_Error;
       end if;
       case Left.Kind is
-         when Iir_Value_B2 =>
-            if Left.B2 < Right.B2 then
+         when Iir_Value_B1 =>
+            if Left.B1 < Right.B1 then
                return Less;
-            elsif Left.B2 = Right.B2 then
+            elsif Left.B1 = Right.B1 then
                return Equal;
             else
                return Greater;
@@ -204,9 +204,9 @@ package body Iir_Values is
    procedure Increment (Val : Iir_Value_Literal_Acc) is
    begin
       case Val.Kind is
-         when Iir_Value_B2 =>
-            if Val.B2 = False then
-               Val.B2 := True;
+         when Iir_Value_B1 =>
+            if Val.B1 = False then
+               Val.B1 := True;
             else
                raise Constraint_Error;
             end if;
@@ -249,8 +249,8 @@ package body Iir_Values is
             for I in Dest.Val_Record.V'Range loop
                Store (Dest.Val_Record.V (I), Src.Val_Record.V (I));
             end loop;
-         when Iir_Value_B2 =>
-            Dest.B2 := Src.B2;
+         when Iir_Value_B1 =>
+            Dest.B1 := Src.B1;
          when Iir_Value_E32 =>
             Dest.E32 := Src.E32;
          when Iir_Value_I64 =>
@@ -306,7 +306,7 @@ package body Iir_Values is
             if Src.Kind /= Dest.Kind then
                raise Internal_Error;
             end if;
-         when Iir_Value_B2
+         when Iir_Value_B1
            | Iir_Value_E32
            | Iir_Value_I64
            | Iir_Value_F64
@@ -366,14 +366,14 @@ package body Iir_Values is
                 (Kind => Iir_Value_Protected, Prot => Prot)));
    end Create_Protected_Value;
 
-   function Create_B2_Value (Val : Ghdl_B2) return Iir_Value_Literal_Acc
+   function Create_B1_Value (Val : Ghdl_B1) return Iir_Value_Literal_Acc
    is
-      subtype B2_Value is Iir_Value_Literal (Iir_Value_B2);
-      function Alloc is new Alloc_On_Pool_Addr (B2_Value);
+      subtype B1_Value is Iir_Value_Literal (Iir_Value_B1);
+      function Alloc is new Alloc_On_Pool_Addr (B1_Value);
    begin
       return To_Iir_Value_Literal_Acc
-        (Alloc (Current_Pool, (Kind => Iir_Value_B2, B2 => Val)));
-   end Create_B2_Value;
+        (Alloc (Current_Pool, (Kind => Iir_Value_B1, B1 => Val)));
+   end Create_B1_Value;
 
    function Create_E32_Value (Val : Ghdl_E32) return Iir_Value_Literal_Acc
    is
@@ -461,9 +461,9 @@ package body Iir_Values is
       end case;
 
       case (Low.Kind) is
-         when Iir_Value_B2 =>
-            if High.B2 >= Low.B2 then
-               Len := Ghdl_B2'Pos (High.B2) - Ghdl_B2'Pos (Low.B2) + 1;
+         when Iir_Value_B1 =>
+            if High.B1 >= Low.B1 then
+               Len := Ghdl_B1'Pos (High.B1) - Ghdl_B1'Pos (Low.B1) + 1;
             else
                Len := 0;
             end if;
@@ -608,8 +608,8 @@ package body Iir_Values is
             return Create_I64_Value (Src.I64);
          when Iir_Value_F64 =>
             return Create_F64_Value (Src.F64);
-         when Iir_Value_B2 =>
-            return Create_B2_Value (Src.B2);
+         when Iir_Value_B1 =>
+            return Create_B1_Value (Src.B1);
          when Iir_Value_Access =>
             return Create_Access_Value (Src.Val_Access);
          when Iir_Value_Array =>
@@ -749,8 +749,8 @@ package body Iir_Values is
       case Val.Kind is
          when Iir_Value_E32 =>
             return Ghdl_E32'Pos (Val.E32);
-         when Iir_Value_B2 =>
-            return Ghdl_B2'Pos (Val.B2);
+         when Iir_Value_B1 =>
+            return Ghdl_B1'Pos (Val.B1);
          when others =>
             raise Internal_Error;
       end case;
@@ -773,8 +773,8 @@ package body Iir_Values is
       end if;
 
       case Value.Kind is
-         when Iir_Value_B2 =>
-            Put_Line ("b2:" & Ghdl_B2'Image (Value.B2));
+         when Iir_Value_B1 =>
+            Put_Line ("b1:" & Ghdl_B1'Image (Value.B1));
          when Iir_Value_E32 =>
             Put_Line ("e32:" & Ghdl_E32'Image (Value.E32));
          when Iir_Value_I64 =>
@@ -1016,7 +1016,7 @@ package body Iir_Values is
          when Iir_Value_F64 =>
             Put (Ghdl_F64'Image (Value.F64));
          when Iir_Value_E32
-           | Iir_Value_B2 =>
+           | Iir_Value_B1 =>
             declare
                Bt : constant Iir := Get_Base_Type (A_Type);
                Id : Name_Id;
@@ -1025,7 +1025,7 @@ package body Iir_Values is
                if Value.Kind = Iir_Value_E32 then
                   Pos := Ghdl_E32'Pos (Value.E32);
                else
-                  Pos := Ghdl_B2'Pos (Value.B2);
+                  Pos := Ghdl_B1'Pos (Value.B1);
                end if;
                Id := Get_Identifier
                  (Get_Nth_Element (Get_Enumeration_Literal_List (Bt), Pos));

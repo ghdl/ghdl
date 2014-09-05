@@ -52,7 +52,7 @@ package Grt.Rtis is
       Ghdl_Rtik_Guard,
       Ghdl_Rtik_Component, -- 20
       Ghdl_Rtik_Attribute,
-      Ghdl_Rtik_Type_B2,        --  Enum
+      Ghdl_Rtik_Type_B1,        --  Enum
       Ghdl_Rtik_Type_E8,
       Ghdl_Rtik_Type_E32,
       Ghdl_Rtik_Type_I32,       --  25 Scalar

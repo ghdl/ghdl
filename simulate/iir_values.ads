@@ -102,7 +102,7 @@ package Iir_Values is
    --  not done within the context of a process).
 
    type Iir_Value_Kind is
-     (Iir_Value_B2, Iir_Value_E32,
+     (Iir_Value_B1, Iir_Value_E32,
       Iir_Value_I64, Iir_Value_F64,
       Iir_Value_Access,
       Iir_Value_File,
@@ -120,7 +120,7 @@ package Iir_Values is
 
    --  Scalar values.  Only these ones can be signals.
    subtype Iir_Value_Scalars is
-     Iir_Value_Kind range Iir_Value_B2 .. Iir_Value_F64;
+     Iir_Value_Kind range Iir_Value_B1 .. Iir_Value_F64;
 
    type Iir_Value_Literal (Kind: Iir_Value_Kind);
 
@@ -147,8 +147,8 @@ package Iir_Values is
 
    type Iir_Value_Literal (Kind: Iir_Value_Kind) is record
       case Kind is
-         when Iir_Value_B2 =>
-            B2 : Ghdl_B2;
+         when Iir_Value_B1 =>
+            B1 : Ghdl_B1;
          when Iir_Value_E32 =>
             E32 : Ghdl_E32;
          when Iir_Value_I64 =>
@@ -202,7 +202,7 @@ package Iir_Values is
    function Create_Quantity_Value (Quantity : Quantity_Index_Type)
                                   return Iir_Value_Literal_Acc;
 
-   function Create_B2_Value (Val : Ghdl_B2) return Iir_Value_Literal_Acc;
+   function Create_B1_Value (Val : Ghdl_B1) return Iir_Value_Literal_Acc;
 
    function Create_E32_Value (Val : Ghdl_E32) return Iir_Value_Literal_Acc;
 
@@ -327,11 +327,11 @@ package Iir_Values is
    -- boolean value for vhdl.
    type Lit_Enum_Type is array (Boolean) of Iir_Value_Literal_Acc;
    Lit_Enum_0 : constant Iir_Value_Literal_Acc :=
-     new Iir_Value_Literal'(Kind => Iir_Value_B2,
-                            B2 => False);
+     new Iir_Value_Literal'(Kind => Iir_Value_B1,
+                            B1 => False);
    Lit_Enum_1 : constant Iir_Value_Literal_Acc :=
-     new Iir_Value_Literal'(Kind => Iir_Value_B2,
-                            B2 => True);
+     new Iir_Value_Literal'(Kind => Iir_Value_B1,
+                            B1 => True);
    Boolean_To_Lit: constant Lit_Enum_Type :=
      (False => Lit_Enum_0, True => Lit_Enum_1);
    Lit_Boolean_False: Iir_Value_Literal_Acc

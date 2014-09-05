@@ -297,7 +297,7 @@ package body Annotations is
             then
                Set_Info (Def,
                          new Sim_Info_Type'(Kind => Kind_Scalar_Type,
-                                            Scalar_Mode => Iir_Value_B2));
+                                            Scalar_Mode => Iir_Value_B1));
             else
                Set_Info (Def,
                          new Sim_Info_Type'(Kind => Kind_Scalar_Type,

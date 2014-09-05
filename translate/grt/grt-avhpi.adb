@@ -369,7 +369,7 @@ package body Grt.Avhpi is
             Res := (Kind => VhpiArrayTypeDeclK,
                     Ctxt => Ctxt,
                     Atype => Rti);
-         when Ghdl_Rtik_Type_B2
+         when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Type_E32 =>
             Res := (Kind => VhpiEnumTypeDeclK,
@@ -437,7 +437,7 @@ package body Grt.Avhpi is
                  | Ghdl_Rtik_Subtype_Array
                  | Ghdl_Rtik_Type_E8
                  | Ghdl_Rtik_Type_E32
-                 | Ghdl_Rtik_Type_B2
+                 | Ghdl_Rtik_Type_B1
                  | Ghdl_Rtik_Subtype_Scalar =>
                   Rti_To_Handle (Ch, Iterator.Ctxt, Res);
                   if Res.Kind /= VhpiUndefined then
@@ -637,10 +637,10 @@ package body Grt.Avhpi is
 --                         when Ghdl_Rtik_Type_E32 =>
 --                            Disp_Enum_Value
 --                              (Stream, Rti, Ghdl_Index_Type (Vptr.E32));
---                         when Ghdl_Rtik_Type_B2 =>
+--                         when Ghdl_Rtik_Type_B1 =>
 --                            Disp_Enum_Value
 --                              (Stream, Rti,
---                               Ghdl_Index_Type (Ghdl_B2'Pos (Vptr.B2)));
+--                               Ghdl_Index_Type (Ghdl_B1'Pos (Vptr.B1)));
                         when others =>
                            Add ('?');
                      end case;

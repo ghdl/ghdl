@@ -224,8 +224,8 @@ package body Grt.Waves is
    procedure Write_Value (Value : Value_Union; Mode : Mode_Type) is
    begin
       case Mode is
-         when Mode_B2 =>
-            Wave_Put_Byte (Ghdl_B2'Pos (Value.B2));
+         when Mode_B1 =>
+            Wave_Put_Byte (Ghdl_B1'Pos (Value.B1));
          when Mode_E8 =>
             Wave_Put_Byte (Ghdl_E8'Pos (Value.E8));
          when Mode_E32 =>
@@ -543,7 +543,7 @@ package body Grt.Waves is
       Depth : Ghdl_Rti_Depth;
    begin
       case Rti.Kind is
-         when Ghdl_Rtik_Type_B2
+         when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8 =>
             N_Ctxt := Null_Context;
          when Ghdl_Rtik_Port
@@ -625,7 +625,7 @@ package body Grt.Waves is
 
       --  First, create all the types it depends on.
       case Rti.Kind is
-         when Ghdl_Rtik_Type_B2
+         when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8 =>
             declare
                Enum : Ghdl_Rtin_Type_Enum_Acc;
@@ -798,8 +798,8 @@ package body Grt.Waves is
       Addr := Avhpi_Get_Address (Iter);
 
       case Get_Base_Type (Rti).Kind is
-         when Ghdl_Rtik_Type_B2 =>
-            Mode := Mode_B2;
+         when Ghdl_Rtik_Type_B1 =>
+            Mode := Mode_B1;
          when Ghdl_Rtik_Type_E8 =>
             Mode := Mode_E8;
          when Ghdl_Rtik_Type_E32 =>
@@ -1191,11 +1191,11 @@ package body Grt.Waves is
          Kind := To_Ghdl_Rtin_Subtype_Scalar_Acc (Rti).Basetype.Kind;
       end if;
       case Kind is
-         when Ghdl_Rtik_Type_B2 =>
+         when Ghdl_Rtik_Type_B1 =>
             Wave_Put_Byte (Ghdl_Rtik'Pos (Kind)
-                           + Ghdl_Dir_Type'Pos (Rng.B2.Dir) * 16#80#);
-            Wave_Put_Byte (Ghdl_B2'Pos (Rng.B2.Left));
-            Wave_Put_Byte (Ghdl_B2'Pos (Rng.B2.Right));
+                           + Ghdl_Dir_Type'Pos (Rng.B1.Dir) * 16#80#);
+            Wave_Put_Byte (Ghdl_B1'Pos (Rng.B1.Left));
+            Wave_Put_Byte (Ghdl_B1'Pos (Rng.B1.Right));
          when Ghdl_Rtik_Type_E8 =>
             Wave_Put_Byte (Ghdl_Rtik'Pos (Kind)
                            + Ghdl_Dir_Type'Pos (Rng.E8.Dir) * 16#80#);
@@ -1266,7 +1266,7 @@ package body Grt.Waves is
             --  Kind.
             Wave_Put_Byte (Ghdl_Rtik'Pos (Rti.Kind));
             case Rti.Kind is
-               when Ghdl_Rtik_Type_B2
+               when Ghdl_Rtik_Type_B1
                  | Ghdl_Rtik_Type_E8 =>
                   declare
                      Enum : Ghdl_Rtin_Type_Enum_Acc;

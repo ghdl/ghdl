@@ -61,17 +61,14 @@ package body Translation is
    Std_String_Ptr_Node : O_Tnode;
    Std_String_Node : O_Tnode;
 
-   --  Ortho type for std.integer.
-   Std_Integer_Type_Node : O_Tnode;
+   --  Ortho type for std.standard.integer.
+   Std_Integer_Otype : O_Tnode;
 
-   --  Ortho type for std.real.
-   Std_Real_Type_Node : O_Tnode;
+   --  Ortho type for std.standard.real.
+   Std_Real_Otype : O_Tnode;
 
-   --  Ortho type node for std.time.
-   Std_Time_Type : O_Tnode;
-
-   --  Ortho type for std.file_open_status.
-   Std_File_Open_Status_Type : O_Tnode;
+   --  Ortho type node for std.standard.time.
+   Std_Time_Otype : O_Tnode;
 
    --  Node for the variable containing the current filename.
    Current_Filename_Node : O_Dnode := O_Dnode_Null;
@@ -645,7 +642,7 @@ package body Translation is
       Ghdl_Rtik_Guard : O_Cnode;
       Ghdl_Rtik_Component : O_Cnode;
       Ghdl_Rtik_Attribute : O_Cnode;
-      Ghdl_Rtik_Type_B2 : O_Cnode;
+      Ghdl_Rtik_Type_B1 : O_Cnode;
       Ghdl_Rtik_Type_E8 : O_Cnode;
       Ghdl_Rtik_Type_E32 : O_Cnode;
       Ghdl_Rtik_Type_I32 : O_Cnode;
@@ -910,7 +907,7 @@ package body Translation is
       --  Unknown mode.
       Type_Mode_Unknown,
       --  Boolean type, with 2 elements.
-      Type_Mode_B2,
+      Type_Mode_B1,
       --  Enumeration with at most 256 elements.
       Type_Mode_E8,
       --  Enumeration with more than 256 elements.
@@ -941,10 +938,10 @@ package body Translation is
       Type_Mode_Fat_Array);
 
    subtype Type_Mode_Scalar is Type_Mode_Type
-     range Type_Mode_B2 .. Type_Mode_F64;
+     range Type_Mode_B1 .. Type_Mode_F64;
 
    subtype Type_Mode_Non_Composite is Type_Mode_Type
-     range Type_Mode_B2 .. Type_Mode_Fat_Acc;
+     range Type_Mode_B1 .. Type_Mode_Fat_Acc;
 
    --  Composite types, with the vhdl meaning: record and arrays.
    subtype Type_Mode_Composite is Type_Mode_Type
@@ -956,7 +953,7 @@ package body Translation is
 
    --  Thin types, ie types whose length is a scalar.
    subtype Type_Mode_Thin is Type_Mode_Type
-     range Type_Mode_B2 .. Type_Mode_Acc;
+     range Type_Mode_B1 .. Type_Mode_Acc;
 
    --  Fat types, ie types whose length is longer than a scalar.
    subtype Type_Mode_Fat is Type_Mode_Type
@@ -965,7 +962,7 @@ package body Translation is
    --  These parameters are passed by value, ie the argument of the subprogram
    --  is the value of the object.
    subtype Type_Mode_By_Value is Type_Mode_Type
-     range Type_Mode_B2 .. Type_Mode_Acc;
+     range Type_Mode_B1 .. Type_Mode_Acc;
 
    --  These parameters are passed by copy, ie a copy of the object is created
    --  and the reference of the copy is passed.  If the object is not
@@ -6093,7 +6090,7 @@ package body Translation is
            (Info.Ortho_Type (Mode_Value),
             Translate_Enumeration_Literal (False_Lit), False_Node,
             Translate_Enumeration_Literal (True_Lit), True_Node);
-         Info.Type_Mode := Type_Mode_B2;
+         Info.Type_Mode := Type_Mode_B1;
          Set_Ortho_Expr (False_Lit, False_Node);
          Set_Ortho_Expr (True_Lit, True_Node);
          Info.T.Nocheck_Low := True;
@@ -7741,7 +7738,7 @@ package body Translation is
       is
       begin
          case Mode is
-            when Type_Mode_B2 =>
+            when Type_Mode_B1 =>
                declare
                   V : Iir_Int32;
                begin
@@ -10012,8 +10009,8 @@ package body Translation is
          end if;
 
          case Type_Info.Type_Mode is
-            when Type_Mode_B2 =>
-               Create_Subprg := Ghdl_Create_Signal_B2;
+            when Type_Mode_B1 =>
+               Create_Subprg := Ghdl_Create_Signal_B1;
                Conv := Ghdl_Bool_Type;
             when Type_Mode_E8 =>
                Create_Subprg := Ghdl_Create_Signal_E8;
@@ -10348,7 +10345,7 @@ package body Translation is
               | Iir_Kind_Quiet_Attribute =>
                Param := Get_Parameter (Decl);
                if Param = Null_Iir then
-                  Val := New_Lit (New_Signed_Literal (Std_Time_Type, 0));
+                  Val := New_Lit (New_Signed_Literal (Std_Time_Otype, 0));
                else
                   Val := Chap7.Translate_Expression (Param);
                end if;
@@ -10385,7 +10382,7 @@ package body Translation is
            (Assoc,
             New_Convert_Ov (New_Value (M2Lv (Data.Pfx)), Ghdl_Signal_Ptr));
          if Data.Param = Null_Iir then
-            Val := New_Lit (New_Signed_Literal (Std_Time_Type, 0));
+            Val := New_Lit (New_Signed_Literal (Std_Time_Otype, 0));
          else
             Val := Chap7.Translate_Expression (Data.Param);
          end if;
@@ -10840,6 +10837,7 @@ package body Translation is
                Create_File_Object (Decl);
 
             when Iir_Kind_Attribute_Declaration =>
+               --  Useless as attribute declarations have a type mark.
                Chap3.Translate_Object_Subtype (Decl);
 
             when Iir_Kind_Attribute_Specification =>
@@ -12048,7 +12046,8 @@ package body Translation is
          El : Iir;
       begin
          Val := Create_Temp_Init
-           (Std_Time_Type, Chap7.Translate_Expression (Get_Expression (Spec)));
+           (Std_Time_Otype,
+            Chap7.Translate_Expression (Get_Expression (Spec)));
          for I in Natural loop
             El := Get_Nth_Element (List, I);
             exit when El = Null_Iir;
@@ -12146,8 +12145,8 @@ package body Translation is
             begin
                Type_Info := Get_Info (Formal_Type);
                case Type_Info.Type_Mode is
-                  when Type_Mode_B2 =>
-                     Subprg := Ghdl_Signal_Associate_B2;
+                  when Type_Mode_B1 =>
+                     Subprg := Ghdl_Signal_Associate_B1;
                      Conv := Ghdl_Bool_Type;
                   when Type_Mode_E8 =>
                      Subprg := Ghdl_Signal_Associate_E8;
@@ -14996,14 +14995,13 @@ package body Translation is
          Loc : Iir)
         return O_Enode
       is
+         Ret_Type : constant Iir := Get_Return_Type (Imp);
+         Kind : constant Iir_Predefined_Functions :=
+           Get_Implicit_Definition (Imp);
          Arr_El1 : O_Enode;
          Arr_El2 : O_Enode;
-         Ret_Type : Iir;
          Res : O_Enode;
-         Kind : Iir_Predefined_Functions;
       begin
-         Ret_Type := Get_Return_Type (Imp);
-         Kind := Get_Implicit_Definition (Imp);
          case Kind is
             when Iir_Predefined_Element_Array_Concat
               | Iir_Predefined_Element_Element_Concat =>
@@ -15023,6 +15021,74 @@ package body Translation is
            (Res, Ret_Type, Res_Type, Mode_Value, Loc);
       end Translate_Concat_Operator;
 
+      function Translate_Scalar_Min_Max
+        (Op : ON_Op_Kind;
+         Left, Right : Iir;
+         Res_Type : Iir)
+        return O_Enode
+      is
+         Res_Otype : constant O_Tnode :=
+           Get_Ortho_Type (Res_Type, Mode_Value);
+         Res, L, R : O_Dnode;
+         If_Blk : O_If_Block;
+      begin
+         --  Create a variable for the result.
+         Res := Create_Temp (Res_Otype);
+
+         Open_Temp;
+         L := Create_Temp_Init
+           (Res_Otype, Translate_Expression (Left, Res_Type));
+         R := Create_Temp_Init
+           (Res_Otype, Translate_Expression (Right, Res_Type));
+
+         Start_If_Stmt (If_Blk, New_Compare_Op (Op,
+                                                New_Obj_Value (L),
+                                                New_Obj_Value (R),
+                                                Ghdl_Bool_Type));
+         New_Assign_Stmt (New_Obj (Res), New_Obj_Value (L));
+         New_Else_Stmt (If_Blk);
+         New_Assign_Stmt (New_Obj (Res), New_Obj_Value (R));
+         Finish_If_Stmt (If_Blk);
+         Close_Temp;
+
+         return New_Obj_Value (Res);
+      end Translate_Scalar_Min_Max;
+
+      function Translate_Std_Ulogic_Match (Func : O_Dnode;
+                                           L, R : O_Enode;
+                                           Res_Type : O_Tnode)
+                                          return O_Enode
+      is
+         Constr : O_Assoc_List;
+      begin
+         Start_Association (Constr, Func);
+         New_Association (Constr, New_Convert_Ov (L, Ghdl_I32_Type));
+         New_Association (Constr, New_Convert_Ov (R, Ghdl_I32_Type));
+         return New_Convert_Ov (New_Function_Call (Constr), Res_Type);
+      end Translate_Std_Ulogic_Match;
+
+      function Translate_To_String
+        (Subprg : O_Dnode; Val : O_Enode; Arg2 : O_Enode)
+        return O_Enode
+      is
+         Res : O_Dnode;
+         Assoc : O_Assoc_List;
+      begin
+         Res := Create_Temp (Std_String_Node);
+         Create_Temp_Stack2_Mark;
+         Start_Association (Assoc, Subprg);
+         New_Association (Assoc,
+                          New_Address (New_Obj (Res), Std_String_Ptr_Node));
+         New_Association (Assoc, Val);
+         if Arg2 /= O_Enode_Null then
+            New_Association (Assoc, Arg2);
+         end if;
+         --New_Association
+         --(Assoc, New_Lit (Rtis.New_Rti_Address (Pinfo.Type_Rti)));
+         New_Procedure_Call (Assoc);
+         return New_Address (New_Obj (Res), Std_String_Ptr_Node);
+      end Translate_To_String;
+
       function Translate_Predefined_Operator
         (Imp : Iir_Implicit_Function_Declaration;
          Left, Right : Iir;
@@ -15030,9 +15096,10 @@ package body Translation is
          Loc : Iir)
         return O_Enode
       is
+         Kind : constant Iir_Predefined_Functions :=
+           Get_Implicit_Definition (Imp);
          Left_Tree : O_Enode;
          Right_Tree : O_Enode;
-         Kind : Iir_Predefined_Functions;
          Left_Type : Iir;
          Right_Type : Iir;
          Res_Otype : O_Tnode;
@@ -15040,11 +15107,35 @@ package body Translation is
          Inter : Iir;
          Res : O_Enode;
       begin
-         Kind := Get_Implicit_Definition (Imp);
-         if Iir_Predefined_Shortcut_P (Kind) then
-            return Translate_Shortcut_Operator (Imp, Left, Right);
-         end if;
+         case Kind is
+            when Iir_Predefined_Bit_And
+              | Iir_Predefined_Bit_Or
+              | Iir_Predefined_Bit_Nand
+              | Iir_Predefined_Bit_Nor
+              | Iir_Predefined_Boolean_And
+              | Iir_Predefined_Boolean_Or
+              | Iir_Predefined_Boolean_Nand
+              | Iir_Predefined_Boolean_Nor =>
+               --  Right operand of shortcur operators may not be evaluated.
+               return Translate_Shortcut_Operator (Imp, Left, Right);
 
+            when Iir_Predefined_Enum_Minimum
+              | Iir_Predefined_Integer_Minimum
+              | Iir_Predefined_Floating_Minimum
+              | Iir_Predefined_Physical_Minimum =>
+               --  Operands of min/max are evaluated in a declare block.
+               return Translate_Scalar_Min_Max (ON_Le, Left, Right, Res_Type);
+            when Iir_Predefined_Enum_Maximum
+              | Iir_Predefined_Integer_Maximum
+              | Iir_Predefined_Floating_Maximum
+              | Iir_Predefined_Physical_Maximum =>
+               --  Operands of min/max are evaluated in a declare block.
+               return Translate_Scalar_Min_Max (ON_Ge, Left, Right, Res_Type);
+            when others =>
+               null;
+         end case;
+
+         --  Evaluate parameters.
          Res_Otype := Get_Ortho_Type (Res_Type, Mode_Value);
          Inter := Get_Interface_Declaration_Chain (Imp);
          if Left = Null_Iir then
@@ -15100,6 +15191,10 @@ package body Translation is
               | Iir_Predefined_Boolean_Xnor =>
                return New_Monadic_Op
                  (ON_Not, New_Dyadic_Op (ON_Xor, Left_Tree, Right_Tree));
+            when Iir_Predefined_Bit_Condition =>
+               return New_Compare_Op
+                 (ON_Eq, Left_Tree, New_Lit (Get_Ortho_Expr (Bit_1)),
+                  Std_Boolean_Type_Node);
 
             when Iir_Predefined_Integer_Identity
               | Iir_Predefined_Floating_Identity
@@ -15224,12 +15319,12 @@ package body Translation is
 
             when Iir_Predefined_Floating_Exp =>
                Res := Translate_Lib_Operator
-                 (New_Convert_Ov (Left_Tree, Std_Real_Type_Node),
+                 (New_Convert_Ov (Left_Tree, Std_Real_Otype),
                   Right_Tree, Ghdl_Real_Exp);
                return New_Convert_Ov (Res, Res_Otype);
             when Iir_Predefined_Integer_Exp =>
                Res := Translate_Lib_Operator
-                 (New_Convert_Ov (Left_Tree, Std_Integer_Type_Node),
+                 (New_Convert_Ov (Left_Tree, Std_Integer_Otype),
                   Right_Tree,
                   Ghdl_Integer_Exp);
                return New_Convert_Ov (Res, Res_Otype);
@@ -15306,6 +15401,47 @@ package body Translation is
 
             when Iir_Predefined_Now_Function =>
                return New_Obj_Value (Ghdl_Now);
+
+            when Iir_Predefined_Std_Ulogic_Match_Equality =>
+               return Translate_Std_Ulogic_Match
+                 (Ghdl_Std_Ulogic_Match_Eq,
+                  Left_Tree, Right_Tree, Res_Otype);
+            when Iir_Predefined_Std_Ulogic_Match_Inequality =>
+               return Translate_Std_Ulogic_Match
+                 (Ghdl_Std_Ulogic_Match_Ne,
+                  Left_Tree, Right_Tree, Res_Otype);
+            when Iir_Predefined_Std_Ulogic_Match_Less =>
+               return Translate_Std_Ulogic_Match
+                 (Ghdl_Std_Ulogic_Match_Lt,
+                  Left_Tree, Right_Tree, Res_Otype);
+            when Iir_Predefined_Std_Ulogic_Match_Less_Equal =>
+               return Translate_Std_Ulogic_Match
+                 (Ghdl_Std_Ulogic_Match_Le,
+                  Left_Tree, Right_Tree, Res_Otype);
+            when Iir_Predefined_Std_Ulogic_Match_Greater =>
+               return Translate_Std_Ulogic_Match
+                 (Ghdl_Std_Ulogic_Match_Le,
+                  Right_Tree, Left_Tree, Res_Otype);
+            when Iir_Predefined_Std_Ulogic_Match_Greater_Equal =>
+               return Translate_Std_Ulogic_Match
+                 (Ghdl_Std_Ulogic_Match_Lt,
+                  Right_Tree, Left_Tree, Res_Otype);
+
+            when Iir_Predefined_Integer_To_String =>
+               case Get_Info (Left_Type).Type_Mode is
+                  when Type_Mode_I32 =>
+                     return Translate_To_String
+                       (Ghdl_To_String_I32,
+                        New_Convert_Ov (Left_Tree, Ghdl_I32_Type),
+                        O_Enode_Null);
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            when Iir_Predefined_Real_To_String_Digits =>
+               return Translate_To_String
+                 (Ghdl_To_String_F64_Digits,
+                  New_Convert_Ov (Left_Tree, Ghdl_Real_Type),
+                  New_Convert_Ov (Right_Tree, Ghdl_I32_Type));
 
             when others =>
                Ada.Text_IO.Put_Line
@@ -18463,7 +18599,7 @@ package body Translation is
          --  Create function.
          if Kind = Iir_Predefined_Read_Length then
             Start_Function_Decl
-              (Inter_List, Name, Global_Storage, Std_Integer_Type_Node);
+              (Inter_List, Name, Global_Storage, Std_Integer_Otype);
          else
             Start_Procedure_Decl (Inter_List, Name, Global_Storage);
          end if;
@@ -18525,7 +18661,7 @@ package body Translation is
                   Translate_Rw_Array (Chap3.Get_Array_Base (Var), Etype,
                                       Var_Len, Ghdl_Read_Scalar);
                   New_Return_Stmt (New_Convert_Ov (New_Obj_Value (Var_Len),
-                                                   Std_Integer_Type_Node));
+                                                   Std_Integer_Otype));
                   Close_Temp;
                end;
             when others =>
@@ -18553,25 +18689,132 @@ package body Translation is
       procedure Translate_Implicit_Subprogram
         (Subprg : Iir; Infos : in out Implicit_Subprogram_Infos)
       is
-         Kind : Iir_Predefined_Functions;
+         Kind : constant Iir_Predefined_Functions :=
+           Get_Implicit_Definition (Subprg);
       begin
-         Kind := Get_Implicit_Definition (Subprg);
          if Predefined_To_Onop (Kind) /= ON_Nil then
             --  Intrinsic.
             return;
          end if;
 
          case Kind is
-            when Iir_Predefined_Access_Equality
-              | Iir_Predefined_Access_Inequality =>
+            when Iir_Predefined_Error =>
+               raise Internal_Error;
+            when Iir_Predefined_Boolean_And
+              | Iir_Predefined_Boolean_Or
+              | Iir_Predefined_Boolean_Xor
+              | Iir_Predefined_Boolean_Not
+              | Iir_Predefined_Enum_Equality
+              | Iir_Predefined_Enum_Inequality
+              | Iir_Predefined_Enum_Less
+              | Iir_Predefined_Enum_Less_Equal
+              | Iir_Predefined_Enum_Greater
+              | Iir_Predefined_Enum_Greater_Equal
+              | Iir_Predefined_Bit_And
+              | Iir_Predefined_Bit_Or
+              | Iir_Predefined_Bit_Xor
+              | Iir_Predefined_Bit_Not
+              | Iir_Predefined_Integer_Equality
+              | Iir_Predefined_Integer_Inequality
+              | Iir_Predefined_Integer_Less
+              | Iir_Predefined_Integer_Less_Equal
+              | Iir_Predefined_Integer_Greater
+              | Iir_Predefined_Integer_Greater_Equal
+              | Iir_Predefined_Integer_Negation
+              | Iir_Predefined_Integer_Absolute
+              | Iir_Predefined_Integer_Plus
+              | Iir_Predefined_Integer_Minus
+              | Iir_Predefined_Integer_Mul
+              | Iir_Predefined_Integer_Div
+              | Iir_Predefined_Integer_Mod
+              | Iir_Predefined_Integer_Rem
+              | Iir_Predefined_Floating_Equality
+              | Iir_Predefined_Floating_Inequality
+              | Iir_Predefined_Floating_Less
+              | Iir_Predefined_Floating_Less_Equal
+              | Iir_Predefined_Floating_Greater
+              | Iir_Predefined_Floating_Greater_Equal
+              | Iir_Predefined_Floating_Negation
+              | Iir_Predefined_Floating_Absolute
+              | Iir_Predefined_Floating_Plus
+              | Iir_Predefined_Floating_Minus
+              | Iir_Predefined_Floating_Mul
+              | Iir_Predefined_Floating_Div
+              | Iir_Predefined_Physical_Equality
+              | Iir_Predefined_Physical_Inequality
+              | Iir_Predefined_Physical_Less
+              | Iir_Predefined_Physical_Less_Equal
+              | Iir_Predefined_Physical_Greater
+              | Iir_Predefined_Physical_Greater_Equal
+              | Iir_Predefined_Physical_Negation
+              | Iir_Predefined_Physical_Absolute
+              | Iir_Predefined_Physical_Plus
+              | Iir_Predefined_Physical_Minus =>
+               pragma Assert (Predefined_To_Onop (Kind) /= ON_Nil);
+               return;
+
+            when Iir_Predefined_Boolean_Nand
+              | Iir_Predefined_Boolean_Nor
+              | Iir_Predefined_Boolean_Xnor
+              | Iir_Predefined_Bit_Nand
+              | Iir_Predefined_Bit_Nor
+              | Iir_Predefined_Bit_Xnor
+              | Iir_Predefined_Bit_Match_Equality
+              | Iir_Predefined_Bit_Match_Inequality
+              | Iir_Predefined_Bit_Match_Less
+              | Iir_Predefined_Bit_Match_Less_Equal
+              | Iir_Predefined_Bit_Match_Greater
+              | Iir_Predefined_Bit_Match_Greater_Equal
+              | Iir_Predefined_Bit_Condition
+              | Iir_Predefined_Boolean_Rising_Edge
+              | Iir_Predefined_Boolean_Falling_Edge
+              | Iir_Predefined_Bit_Rising_Edge
+              | Iir_Predefined_Bit_Falling_Edge =>
                --  Intrinsic.
                null;
-            when Iir_Predefined_Deallocate =>
+
+            when Iir_Predefined_Enum_Minimum
+              | Iir_Predefined_Enum_Maximum
+              | Iir_Predefined_Enum_To_String =>
                --  Intrinsic.
                null;
+
             when Iir_Predefined_Integer_Identity
-              | Iir_Predefined_Integer_Exp =>
+              | Iir_Predefined_Integer_Exp
+              | Iir_Predefined_Integer_Minimum
+              | Iir_Predefined_Integer_Maximum
+              | Iir_Predefined_Integer_To_String =>
                --  Intrinsic.
+               null;
+            when Iir_Predefined_Universal_R_I_Mul
+              | Iir_Predefined_Universal_I_R_Mul
+              | Iir_Predefined_Universal_R_I_Div =>
+               --  Intrinsic
+               null;
+
+            when Iir_Predefined_Physical_Identity
+              | Iir_Predefined_Physical_Minimum
+              | Iir_Predefined_Physical_Maximum
+              | Iir_Predefined_Physical_To_String
+              | Iir_Predefined_Time_To_String_Unit =>
+               null;
+
+            when Iir_Predefined_Physical_Integer_Mul
+              | Iir_Predefined_Physical_Integer_Div
+              | Iir_Predefined_Integer_Physical_Mul
+              | Iir_Predefined_Physical_Real_Mul
+              | Iir_Predefined_Physical_Real_Div
+              | Iir_Predefined_Real_Physical_Mul
+              | Iir_Predefined_Physical_Physical_Div =>
+               null;
+
+            when Iir_Predefined_Floating_Exp
+              | Iir_Predefined_Floating_Identity
+              | Iir_Predefined_Floating_Minimum
+              | Iir_Predefined_Floating_Maximum
+              | Iir_Predefined_Floating_To_String
+              | Iir_Predefined_Real_To_String_Digits
+              | Iir_Predefined_Real_To_String_Format =>
                null;
 
             when Iir_Predefined_Record_Equality
@@ -18614,6 +18857,12 @@ package body Translation is
                   Set_Info (Subprg, Infos.Arr_Concat_Info);
                end if;
 
+            when Iir_Predefined_Array_Minimum
+              | Iir_Predefined_Array_Maximum
+              | Iir_Predefined_Vector_Minimum
+              | Iir_Predefined_Vector_Maximum =>
+               null;
+
             when Iir_Predefined_TF_Array_And
               | Iir_Predefined_TF_Array_Or
               | Iir_Predefined_TF_Array_Nand
@@ -18622,6 +18871,29 @@ package body Translation is
               | Iir_Predefined_TF_Array_Xnor
               | Iir_Predefined_TF_Array_Not =>
                Translate_Predefined_Array_Logical (Subprg);
+
+            when Iir_Predefined_TF_Reduction_And
+              | Iir_Predefined_TF_Reduction_Or
+              | Iir_Predefined_TF_Reduction_Nand
+              | Iir_Predefined_TF_Reduction_Nor
+              | Iir_Predefined_TF_Reduction_Xor
+              | Iir_Predefined_TF_Reduction_Xnor
+              | Iir_Predefined_TF_Reduction_Not
+              | Iir_Predefined_TF_Array_Element_And
+              | Iir_Predefined_TF_Element_Array_And
+              | Iir_Predefined_TF_Array_Element_Or
+              | Iir_Predefined_TF_Element_Array_Or
+              | Iir_Predefined_TF_Array_Element_Nand
+              | Iir_Predefined_TF_Element_Array_Nand
+              | Iir_Predefined_TF_Array_Element_Nor
+              | Iir_Predefined_TF_Element_Array_Nor
+              | Iir_Predefined_TF_Array_Element_Xor
+              | Iir_Predefined_TF_Element_Array_Xor
+              | Iir_Predefined_TF_Array_Element_Xnor
+              | Iir_Predefined_TF_Element_Array_Xnor
+              | Iir_Predefined_Bit_Array_Match_Equality
+              | Iir_Predefined_Bit_Array_Match_Inequality =>
+               null;
 
             when Iir_Predefined_Array_Sll
               | Iir_Predefined_Array_Srl =>
@@ -18650,25 +18922,18 @@ package body Translation is
                   Set_Info (Subprg, Infos.Arr_Rot_Info);
                end if;
 
-            when Iir_Predefined_Physical_Identity =>
+            when Iir_Predefined_Access_Equality
+              | Iir_Predefined_Access_Inequality =>
+               --  Intrinsic.
                null;
-
-            when Iir_Predefined_Physical_Integer_Mul
-              | Iir_Predefined_Physical_Integer_Div
-              | Iir_Predefined_Integer_Physical_Mul
-              | Iir_Predefined_Physical_Real_Mul
-              | Iir_Predefined_Physical_Real_Div
-              | Iir_Predefined_Real_Physical_Mul
-              | Iir_Predefined_Physical_Physical_Div =>
-               null;
-
-            when Iir_Predefined_Floating_Exp
-              | Iir_Predefined_Floating_Identity =>
+            when Iir_Predefined_Deallocate =>
+               --  Intrinsic.
                null;
 
             when Iir_Predefined_File_Open
               | Iir_Predefined_File_Open_Status
               | Iir_Predefined_File_Close
+              | Iir_Predefined_Flush
               | Iir_Predefined_Endfile =>
                --  All of them have predefined definitions.
                null;
@@ -18687,13 +18952,45 @@ package body Translation is
                   end if;
                end;
 
+            when Iir_Predefined_Attribute_Image
+              | Iir_Predefined_Attribute_Value
+              | Iir_Predefined_Attribute_Pos
+              | Iir_Predefined_Attribute_Val
+              | Iir_Predefined_Attribute_Succ
+              | Iir_Predefined_Attribute_Pred
+              | Iir_Predefined_Attribute_Leftof
+              | Iir_Predefined_Attribute_Rightof
+              | Iir_Predefined_Attribute_Left
+              | Iir_Predefined_Attribute_Right
+              | Iir_Predefined_Attribute_Event
+              | Iir_Predefined_Attribute_Active
+              | Iir_Predefined_Attribute_Last_Event
+              | Iir_Predefined_Attribute_Last_Active
+              | Iir_Predefined_Attribute_Last_Value
+              | Iir_Predefined_Attribute_Driving
+              | Iir_Predefined_Attribute_Driving_Value =>
+               raise Internal_Error;
+
+            when Iir_Predefined_Array_Char_To_String
+              | Iir_Predefined_Bit_Vector_To_Ostring
+              | Iir_Predefined_Bit_Vector_To_Hstring
+              | Iir_Predefined_Std_Ulogic_Match_Equality
+              | Iir_Predefined_Std_Ulogic_Match_Inequality
+              | Iir_Predefined_Std_Ulogic_Match_Less
+              | Iir_Predefined_Std_Ulogic_Match_Less_Equal
+              | Iir_Predefined_Std_Ulogic_Match_Greater
+              | Iir_Predefined_Std_Ulogic_Match_Greater_Equal
+              | Iir_Predefined_Std_Ulogic_Array_Match_Equality
+              | Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
+               null;
+
             when Iir_Predefined_Now_Function =>
                null;
 
-            when others =>
-               Error_Kind ("translate_implicit_subprogram ("
-                           & Iir_Predefined_Functions'Image (Kind) & ")",
-                           Subprg);
+            --  when others =>
+            --     Error_Kind ("translate_implicit_subprogram ("
+            --                 & Iir_Predefined_Functions'Image (Kind) & ")",
+            --                 Subprg);
          end case;
       end Translate_Implicit_Subprogram;
    end Chap7;
@@ -20180,15 +20477,17 @@ package body Translation is
 
             when Iir_Predefined_File_Open_Status =>
                declare
+                  Std_File_Open_Status_Otype : constant O_Tnode :=
+                    Get_Ortho_Type (File_Open_Status_Type_Definition,
+                                    Mode_Value);
                   N_Param : Iir;
-                  Status_Param : Iir;
+                  Status_Param : constant Iir := Get_Actual (Param_Chain);
                   File_Param : Iir;
                   Name_Param : Iir;
                   Kind_Param : Iir;
                   Constr : O_Assoc_List;
                   Status : Mnode;
                begin
-                  Status_Param := Get_Actual (Param_Chain);
                   Status := Chap6.Translate_Name (Status_Param);
                   N_Param := Get_Chain (Param_Chain);
                   File_Param := Get_Actual (N_Param);
@@ -20213,7 +20512,7 @@ package body Translation is
                   New_Assign_Stmt
                     (M2Lv (Status),
                      New_Convert_Ov (New_Function_Call (Constr),
-                                     Std_File_Open_Status_Type));
+                                     Std_File_Open_Status_Otype));
                end;
 
             when Iir_Predefined_File_Close =>
@@ -20739,8 +21038,8 @@ package body Translation is
       begin
          Type_Info := Get_Info (Targ_Type);
          case Type_Info.Type_Mode is
-            when Type_Mode_B2 =>
-               Subprg := Ghdl_Signal_Simple_Assign_B2;
+            when Type_Mode_B1 =>
+               Subprg := Ghdl_Signal_Simple_Assign_B1;
                Conv := Ghdl_Bool_Type;
             when Type_Mode_E8 =>
                Subprg := Ghdl_Signal_Simple_Assign_E8;
@@ -20837,8 +21136,8 @@ package body Translation is
 
          Type_Info := Get_Info (Targ_Type);
          case Type_Info.Type_Mode is
-            when Type_Mode_B2 =>
-               Subprg := Ghdl_Signal_Start_Assign_B2;
+            when Type_Mode_B1 =>
+               Subprg := Ghdl_Signal_Start_Assign_B1;
                Conv := Ghdl_Bool_Type;
             when Type_Mode_E8 =>
                Subprg := Ghdl_Signal_Start_Assign_E8;
@@ -21007,8 +21306,8 @@ package body Translation is
 
          Type_Info := Get_Info (Targ_Type);
          case Type_Info.Type_Mode is
-            when Type_Mode_B2 =>
-               Subprg := Ghdl_Signal_Next_Assign_B2;
+            when Type_Mode_B1 =>
+               Subprg := Ghdl_Signal_Next_Assign_B1;
                Conv := Ghdl_Bool_Type;
             when Type_Mode_E8 =>
                Subprg := Ghdl_Signal_Next_Assign_E8;
@@ -21424,13 +21723,13 @@ package body Translation is
                Data : Signal_Assign_Data;
             begin
                Open_Temp;
-               Reject_Time := Create_Temp (Std_Time_Type);
-               After_Time := Create_Temp (Std_Time_Type);
+               Reject_Time := Create_Temp (Std_Time_Otype);
+               After_Time := Create_Temp (Std_Time_Otype);
                Del := Get_Time (We);
                if Del = Null_Iir then
                   New_Assign_Stmt
                     (New_Obj (After_Time),
-                     New_Lit (New_Signed_Literal (Std_Time_Type, 0)));
+                     New_Lit (New_Signed_Literal (Std_Time_Otype, 0)));
                else
                   New_Assign_Stmt
                     (New_Obj (After_Time),
@@ -21440,7 +21739,7 @@ package body Translation is
                   when Iir_Transport_Delay =>
                      New_Assign_Stmt
                        (New_Obj (Reject_Time),
-                        New_Lit (New_Signed_Literal (Std_Time_Type, 0)));
+                        New_Lit (New_Signed_Literal (Std_Time_Otype, 0)));
                   when Iir_Inertial_Delay =>
                      Rej := Get_Reject_Time_Expression (Stmt);
                      if Rej = Null_Iir then
@@ -21475,7 +21774,7 @@ package body Translation is
                   Data : Signal_Assign_Data;
                begin
                   Open_Temp;
-                  After_Time := Create_Temp (Std_Time_Type);
+                  After_Time := Create_Temp (Std_Time_Otype);
                   New_Assign_Stmt
                     (New_Obj (After_Time),
                      Chap7.Translate_Expression (Get_Time (We),
@@ -23325,8 +23624,8 @@ package body Translation is
 
          if Data.Set_Init then
             case Type_Info.Type_Mode is
-               when Type_Mode_B2 =>
-                  Init_Subprg := Ghdl_Signal_Init_B2;
+               when Type_Mode_B1 =>
+                  Init_Subprg := Ghdl_Signal_Init_B1;
                   Conv := Ghdl_Bool_Type;
                when Type_Mode_E8 =>
                   Init_Subprg := Ghdl_Signal_Init_E8;
@@ -24704,7 +25003,7 @@ package body Translation is
             Op := ON_Sub_Ov;
          end if;
          case Tinfo.Type_Mode is
-            when Type_Mode_B2
+            when Type_Mode_B1
               | Type_Mode_E8
               | Type_Mode_E32 =>
                --  Should check it is not the last.
@@ -24919,7 +25218,7 @@ package body Translation is
       begin
          Open_Temp;
          Val := Create_Temp_Init
-           (Std_Time_Type,
+           (Std_Time_Otype,
             Read_Last_Time (New_Value (M2Lv (Targ)), Data.Field));
          Start_If_Stmt (If_Blk,
                         New_Compare_Op (ON_Gt,
@@ -24993,15 +25292,16 @@ package body Translation is
          Prefix_Type := Get_Type (Prefix);
          Name := Chap6.Translate_Name (Prefix);
          Info := Get_Info (Prefix_Type);
-         Var := Create_Temp (Std_Time_Type);
+         Var := Create_Temp (Std_Time_Otype);
 
          if Info.Type_Mode in Type_Mode_Scalar then
             New_Assign_Stmt (New_Obj (Var),
                              Read_Last_Time (M2E (Name), Field));
          else
             --  Init with a negative value.
-            New_Assign_Stmt (New_Obj (Var),
-                             New_Lit (New_Signed_Literal (Std_Time_Type, -1)));
+            New_Assign_Stmt
+              (New_Obj (Var),
+               New_Lit (New_Signed_Literal (Std_Time_Otype, -1)));
             Data := Last_Time_Data'(Var => Var, Field => Field);
             Translate_Last_Time (Name, Prefix_Type, Data);
          end if;
@@ -25014,13 +25314,14 @@ package body Translation is
            (If_Blk,
             New_Compare_Op (ON_Lt,
                             New_Obj_Value (Var),
-                            New_Lit (New_Signed_Literal (Std_Time_Type, 0)),
+                            New_Lit (New_Signed_Literal (Std_Time_Otype, 0)),
                             Ghdl_Bool_Type));
          --  LRM 14.1 Predefined attributes
          --   [...]; otherwise, it returns TIME'HIGH.
-         New_Assign_Stmt (New_Obj (Var),
-                          New_Lit (New_Signed_Literal
-                                   (Std_Time_Type, Integer_64 (Right_Bound))));
+         New_Assign_Stmt
+           (New_Obj (Var),
+            New_Lit (New_Signed_Literal
+                       (Std_Time_Otype, Integer_64 (Right_Bound))));
          New_Else_Stmt (If_Blk);
          --  Returns NOW - Var.
          New_Assign_Stmt (New_Obj (Var),
@@ -25139,8 +25440,8 @@ package body Translation is
       begin
          Tinfo := Get_Info (Sig_Type);
          case Tinfo.Type_Mode is
-            when Type_Mode_B2 =>
-               Subprg := Ghdl_Signal_Driving_Value_B2;
+            when Type_Mode_B1 =>
+               Subprg := Ghdl_Signal_Driving_Value_B1;
             when Type_Mode_E8 =>
                Subprg := Ghdl_Signal_Driving_Value_E8;
             when Type_Mode_E32 =>
@@ -25194,8 +25495,8 @@ package body Translation is
          Res := Create_Temp (Std_String_Node);
          Create_Temp_Stack2_Mark;
          case Pinfo.Type_Mode is
-            when Type_Mode_B2 =>
-               Subprg := Ghdl_Image_B2;
+            when Type_Mode_B1 =>
+               Subprg := Ghdl_Image_B1;
                Conv := Ghdl_Bool_Type;
             when Type_Mode_E8 =>
                Subprg := Ghdl_Image_E8;
@@ -25227,7 +25528,7 @@ package body Translation is
             (Chap7.Translate_Expression (Get_Parameter (Attr), Prefix_Type),
              Conv));
          case Pinfo.Type_Mode is
-            when Type_Mode_B2
+            when Type_Mode_B1
               | Type_Mode_E8
               | Type_Mode_E32
               | Type_Mode_P32
@@ -25253,8 +25554,8 @@ package body Translation is
          Assoc : O_Assoc_List;
       begin
          case Pinfo.Type_Mode is
-            when Type_Mode_B2 =>
-               Subprg := Ghdl_Value_B2;
+            when Type_Mode_B1 =>
+               Subprg := Ghdl_Value_B1;
             when Type_Mode_E8 =>
                Subprg := Ghdl_Value_E8;
             when Type_Mode_E32 =>
@@ -25276,7 +25577,7 @@ package body Translation is
             Chap7.Translate_Expression (Get_Parameter (Attr),
                                         String_Type_Definition));
          case Pinfo.Type_Mode is
-            when Type_Mode_B2
+            when Type_Mode_B1
               | Type_Mode_E8
               | Type_Mode_E32
               | Type_Mode_P32
@@ -25522,8 +25823,8 @@ package body Translation is
                Ghdl_Rtik_Attribute);
 
             New_Enum_Literal
-              (Constr, Get_Identifier ("__ghdl_rtik_type_b2"),
-               Ghdl_Rtik_Type_B2);
+              (Constr, Get_Identifier ("__ghdl_rtik_type_b1"),
+               Ghdl_Rtik_Type_B1);
             New_Enum_Literal
               (Constr, Get_Identifier ("__ghdl_rtik_type_e8"),
                Ghdl_Rtik_Type_E8);
@@ -26283,8 +26584,8 @@ package body Translation is
 
             Start_Const_Value (Info.Type_Rti);
             case Info.Type_Mode is
-               when Type_Mode_B2 =>
-                  Kind := Ghdl_Rtik_Type_B2;
+               when Type_Mode_B1 =>
+                  Kind := Ghdl_Rtik_Type_B1;
                when Type_Mode_E8 =>
                   Kind := Ghdl_Rtik_Type_E8;
                when Type_Mode_E32 =>
@@ -28483,11 +28784,11 @@ package body Translation is
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("reject"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("val"),
                           Val_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Start_Assign);
 
       --  procedure __ghdl_signal_next_assign_XXX (sign : __ghdl_signal_ptr;
@@ -28500,7 +28801,7 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("val"),
                           Val_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Next_Assign);
 
       --  procedure __ghdl_signal_associate_XXX (sign : __ghdl_signal_ptr;
@@ -28563,29 +28864,75 @@ package body Translation is
       Finish_Subprogram_Decl (Interfaces, Value_Subprg);
    end Create_Image_Value_Subprograms;
 
+   --  function __ghdl_std_ulogic_match_NAME (l : __ghdl_e8; r : __ghdl_e8)
+   --    return __ghdl_e8;
+   procedure Create_Std_Ulogic_Match_Subprogram (Name : String;
+                                                 Subprg : out O_Dnode)
+   is
+      Interfaces : O_Inter_List;
+      Param : O_Dnode;
+   begin
+      Start_Function_Decl
+        (Interfaces, Get_Identifier ("__ghdl_std_ulogic_match_" & Name),
+         O_Storage_External, Ghdl_I32_Type);
+      New_Interface_Decl
+        (Interfaces, Param, Wki_Left, Ghdl_I32_Type);
+      New_Interface_Decl
+        (Interfaces, Param, Wki_Right, Ghdl_I32_Type);
+      Finish_Subprogram_Decl (Interfaces, Subprg);
+   end Create_Std_Ulogic_Match_Subprogram;
+
+   --  procedure __ghdl_to_string_NAME (res : std_string_ptr_node;
+   --                                   val : VAL_TYPE;
+   --                                   ARG2_NAME : ARG2_TYPE);
+   procedure Create_To_String_Subprogram (Name : String;
+                                          Subprg : out O_Dnode;
+                                          Val_Type : O_Tnode;
+                                          Arg2_Type : O_Tnode;
+                                          Arg2_Name : String)
+   is
+      Interfaces : O_Inter_List;
+      Param : O_Dnode;
+   begin
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_to_string_" & Name),
+         O_Storage_External);
+      New_Interface_Decl
+        (Interfaces, Param, Get_Identifier ("res"), Std_String_Ptr_Node);
+      New_Interface_Decl
+        (Interfaces, Param, Get_Identifier ("val"), Val_Type);
+      if Arg2_Type /= O_Tnode_Null then
+         New_Interface_Decl
+           (Interfaces, Param, Get_Identifier (Arg2_Name), Arg2_Type);
+      end if;
+      Finish_Subprogram_Decl (Interfaces, Subprg);
+   end Create_To_String_Subprogram;
+
    --  Do internal declarations that need std.standard declarations.
    procedure Post_Initialize
    is
       Interfaces : O_Inter_List;
       Rec : O_Element_List;
       Param : O_Dnode;
-      Integer_Otype : O_Tnode;
-      Real_Otype : O_Tnode;
-      Time_Otype : O_Tnode;
       Info : Type_Info_Acc;
    begin
       New_Debug_Comment_Decl ("internal declarations, part 2");
+
+      --  Remember some pervasive types.
       Info := Get_Info (String_Type_Definition);
       Std_String_Node := Info.Ortho_Type (Mode_Value);
       Std_String_Ptr_Node := Info.Ortho_Ptr_Type (Mode_Value);
-      Integer_Otype := Get_Ortho_Type (Integer_Type_Definition, Mode_Value);
-      Real_Otype := Get_Ortho_Type (Real_Type_Definition, Mode_Value);
-      Time_Otype := Get_Ortho_Type (Time_Type_Definition, Mode_Value);
+
+      Std_Integer_Otype :=
+        Get_Ortho_Type (Integer_Type_Definition, Mode_Value);
+      Std_Real_Otype :=
+        Get_Ortho_Type (Real_Type_Definition, Mode_Value);
+      Std_Time_Otype := Get_Ortho_Type (Time_Type_Definition, Mode_Value);
 
       --  __ghdl_now : time;
       --  ??? maybe this should be a function ?
       New_Var_Decl (Ghdl_Now, Get_Identifier ("__ghdl_now"),
-                    O_Storage_External, Time_Otype);
+                    O_Storage_External, Std_Time_Otype);
 
       --  procedure __ghdl_assert_failed (str : __ghdl_array_template;
       --                                  severity : ghdl_int);
@@ -28638,7 +28985,7 @@ package body Translation is
       --     return std__standard_integer;
       Start_Function_Decl
         (Interfaces, Get_Identifier ("__ghdl_text_read_length"),
-         O_Storage_External, Integer_Otype);
+         O_Storage_External, Std_Integer_Otype);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
                           Ghdl_File_Index_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("str"),
@@ -28676,11 +29023,11 @@ package body Translation is
       --   return std__standard__real;
       Start_Function_Decl
         (Interfaces, Get_Identifier ("__ghdl_real_exp"), O_Storage_External,
-         Real_Otype);
+         Std_Real_Otype);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("left"),
-                          Real_Otype);
+                          Std_Real_Otype);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("right"),
-                          Integer_Otype);
+                          Std_Integer_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Real_Exp);
 
       --  function __ghdl_integer_exp (left : std__standard__integer;
@@ -28688,17 +29035,17 @@ package body Translation is
       --   return std__standard__integer;
       Start_Function_Decl
         (Interfaces, Get_Identifier ("__ghdl_integer_exp"), O_Storage_External,
-         Integer_Otype);
-      New_Interface_Decl (Interfaces, Param, Wki_Left, Integer_Otype);
-      New_Interface_Decl (Interfaces, Param, Wki_Right, Integer_Otype);
+         Std_Integer_Otype);
+      New_Interface_Decl (Interfaces, Param, Wki_Left, Std_Integer_Otype);
+      New_Interface_Decl (Interfaces, Param, Wki_Right, Std_Integer_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Integer_Exp);
 
 
-      --  procedure __ghdl_image_b2 (res : std_string_ptr_node;
+      --  procedure __ghdl_image_b1 (res : std_string_ptr_node;
       --                             val : ghdl_bool_type;
       --                             rti : ghdl_rti_access);
       Create_Image_Value_Subprograms
-        ("b2", Ghdl_Bool_Type, True, Ghdl_Image_B2, Ghdl_Value_B2);
+        ("b1", Ghdl_Bool_Type, True, Ghdl_Image_B1, Ghdl_Value_B1);
 
       --  procedure __ghdl_image_e8 (res : std_string_ptr_node;
       --                             val : ghdl_i32_type;
@@ -28869,10 +29216,10 @@ package body Translation is
                         Ghdl_Scalar_Bytes);
       New_Record_Field (Rec, Ghdl_Signal_Last_Event_Field,
                         Get_Identifier ("last_event"),
-                        Time_Otype);
+                        Std_Time_Otype);
       New_Record_Field (Rec, Ghdl_Signal_Last_Active_Field,
                         Get_Identifier ("last_active"),
-                        Time_Otype);
+                        Std_Time_Otype);
       New_Record_Field (Rec, Ghdl_Signal_Event_Field,
                         Get_Identifier ("event"),
                         Std_Boolean_Type_Node);
@@ -28926,7 +29273,7 @@ package body Translation is
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl
-        (Interfaces, Param, Get_Identifier ("time"), Std_Time_Type);
+        (Interfaces, Param, Get_Identifier ("time"), Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Set_Disconnect);
 
       --  procedure __ghdl_signal_disconnect (sig : __ghdl_signal_ptr);
@@ -29003,9 +29350,9 @@ package body Translation is
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("reject"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Start_Assign_Error);
@@ -29019,7 +29366,7 @@ package body Translation is
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Next_Assign_Error);
@@ -29032,9 +29379,9 @@ package body Translation is
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("reject"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Start_Assign_Null);
 
       --  procedure __ghdl_signal_next_assign_null (sig : __ghdl_signal_ptr;
@@ -29044,11 +29391,11 @@ package body Translation is
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Next_Assign_Null);
 
-      --  function __ghdl_create_signal_enum8 (init_val : ghdl_i32_type)
-      --                                       return __ghdl_signal_ptr;
+      --  function __ghdl_create_signal_e8 (init_val : ghdl_i32_type)
+      --                                    return __ghdl_signal_ptr;
       --  procedure __ghdl_signal_simple_assign_e8 (sign : __ghdl_signal_ptr;
       --                                            val : __ghdl_integer);
       Create_Signal_Subprograms ("e8", Ghdl_I32_Type,
@@ -29060,10 +29407,10 @@ package body Translation is
                                  Ghdl_Signal_Associate_E8,
                                  Ghdl_Signal_Driving_Value_E8);
 
-      --  function __ghdl_create_signal_enum8 (init_val : ghdl_i32_type)
-      --                                       return __ghdl_signal_ptr;
-      --  procedure __ghdl_signal_simple_assign_e8 (sign : __ghdl_signal_ptr;
-      --                                            val : __ghdl_integer);
+      --  function __ghdl_create_signal_e32 (init_val : ghdl_i32_type)
+      --                                     return __ghdl_signal_ptr;
+      --  procedure __ghdl_signal_simple_assign_e32 (sign : __ghdl_signal_ptr;
+      --                                             val : __ghdl_integer);
       Create_Signal_Subprograms ("e32", Ghdl_I32_Type,
                                  Ghdl_Create_Signal_E32,
                                  Ghdl_Signal_Init_E32,
@@ -29073,18 +29420,18 @@ package body Translation is
                                  Ghdl_Signal_Associate_E32,
                                  Ghdl_Signal_Driving_Value_E32);
 
-      --  function __ghdl_create_signal_b2 (init_val : ghdl_bool_type)
+      --  function __ghdl_create_signal_b1 (init_val : ghdl_bool_type)
       --                                    return __ghdl_signal_ptr;
-      --  procedure __ghdl_signal_simple_assign_b2 (sign : __ghdl_signal_ptr;
+      --  procedure __ghdl_signal_simple_assign_b1 (sign : __ghdl_signal_ptr;
       --                                            val : ghdl_bool_type);
-      Create_Signal_Subprograms ("b2", Ghdl_Bool_Type,
-                                 Ghdl_Create_Signal_B2,
-                                 Ghdl_Signal_Init_B2,
-                                 Ghdl_Signal_Simple_Assign_B2,
-                                 Ghdl_Signal_Start_Assign_B2,
-                                 Ghdl_Signal_Next_Assign_B2,
-                                 Ghdl_Signal_Associate_B2,
-                                 Ghdl_Signal_Driving_Value_B2);
+      Create_Signal_Subprograms ("b1", Ghdl_Bool_Type,
+                                 Ghdl_Create_Signal_B1,
+                                 Ghdl_Signal_Init_B1,
+                                 Ghdl_Signal_Simple_Assign_B1,
+                                 Ghdl_Signal_Start_Assign_B1,
+                                 Ghdl_Signal_Next_Assign_B1,
+                                 Ghdl_Signal_Associate_B1,
+                                 Ghdl_Signal_Driving_Value_B1);
 
       Create_Signal_Subprograms ("i32", Ghdl_I32_Type,
                                  Ghdl_Create_Signal_I32,
@@ -29190,7 +29537,7 @@ package body Translation is
             Start_Function_Decl (Interfaces, Get_Identifier (Name),
                                  O_Storage_External, Ghdl_Signal_Ptr);
             New_Interface_Decl (Interfaces, Param, Get_Identifier ("val"),
-                                Std_Time_Type);
+                                Std_Time_Otype);
             Finish_Subprogram_Decl (Interfaces, Res);
          end Create_Signal_Attribute;
       begin
@@ -29231,7 +29578,7 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("sig"),
                           Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("val"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Create_Delayed_Signal);
 
       --  function __ghdl_signal_create_guard
@@ -29268,7 +29615,7 @@ package body Translation is
         (Interfaces, Get_Identifier ("__ghdl_process_wait_timeout"),
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("time"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Timeout);
 
       --  void __ghdl_process_wait_set_timeout (time : std_time);
@@ -29276,7 +29623,7 @@ package body Translation is
         (Interfaces, Get_Identifier ("__ghdl_process_wait_set_timeout"),
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("time"),
-                          Std_Time_Type);
+                          Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Set_Timeout);
 
       --  void __ghdl_process_wait_add_sensitivity (sig : __ghdl_signal_ptr);
@@ -29348,42 +29695,54 @@ package body Translation is
       New_Interface_Decl
         (Interfaces, Param, Wki_Instance, Ghdl_Ptr_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Rti_Add_Top);
+
+      --  Create match subprograms for std_ulogic type.
+      Create_Std_Ulogic_Match_Subprogram ("eq", Ghdl_Std_Ulogic_Match_Eq);
+      Create_Std_Ulogic_Match_Subprogram ("ne", Ghdl_Std_Ulogic_Match_Ne);
+      Create_Std_Ulogic_Match_Subprogram ("lt", Ghdl_Std_Ulogic_Match_Lt);
+      Create_Std_Ulogic_Match_Subprogram ("le", Ghdl_Std_Ulogic_Match_Le);
+
+      --  Create To_String subprograms.
+      Create_To_String_Subprogram
+        ("i32", Ghdl_To_String_I32, Ghdl_I32_Type,
+         O_Tnode_Null, "");
+      Create_To_String_Subprogram
+        ("f64", Ghdl_To_String_F64, Ghdl_Real_Type,
+         O_Tnode_Null, "");
+      Create_To_String_Subprogram
+        ("f64_digits", Ghdl_To_String_F64_Digits, Ghdl_Real_Type,
+         Ghdl_I32_Type, "nbr_digits");
    end Post_Initialize;
 
-   procedure Translate_Std_Type_Declaration (Decl : Iir)
+   procedure Translate_Type_Implicit_Subprograms (Decl : in out Iir)
    is
-      Chain : Iir;
       Infos : Chap7.Implicit_Subprogram_Infos;
    begin
-      case Get_Kind (Decl) is
-         when Iir_Kind_Type_Declaration =>
-            Chap4.Translate_Type_Declaration (Decl);
-         when Iir_Kind_Anonymous_Type_Declaration =>
-            Chap4.Translate_Anonymous_Type_Declaration (Decl);
-         when others =>
-            Error_Kind ("translate_std_type_declaration", Decl);
-      end case;
+      --  Skip type declaration.
+      pragma Assert (Get_Kind (Decl) in Iir_Kinds_Type_Declaration);
+      Decl := Get_Chain (Decl);
 
-      --  Also declares the subprograms.
-      Chain := Get_Chain (Decl);
       Chap7.Init_Implicit_Subprogram_Infos (Infos);
-      while Chain /= Null_Iir loop
-         case Get_Kind (Chain) is
+      while Decl /= Null_Iir loop
+         case Get_Kind (Decl) is
             when Iir_Kind_Implicit_Function_Declaration
               | Iir_Kind_Implicit_Procedure_Declaration =>
-               Chap7.Translate_Implicit_Subprogram (Chain, Infos);
-               Chain := Get_Chain (Chain);
+               Chap7.Translate_Implicit_Subprogram (Decl, Infos);
+               Decl := Get_Chain (Decl);
             when others =>
                exit;
          end case;
       end loop;
-   end Translate_Std_Type_Declaration;
+   end Translate_Type_Implicit_Subprograms;
 
    procedure Translate_Standard (Main : Boolean)
    is
       Lib_Mark, Unit_Mark : Id_Mark_Type;
       Info : Ortho_Info_Acc;
       pragma Unreferenced (Info);
+      Decl : Iir;
+      Time_Type_Staticness : Iir_Staticness;
+      Time_Subtype_Staticness : Iir_Staticness;
    begin
       Update_Node_Infos;
 
@@ -29403,6 +29762,27 @@ package body Translation is
       Push_Identifier_Prefix
         (Unit_Mark, Get_Identifier (Standard_Package));
 
+      --  With VHDL93 and later, time type is globally static.  As a result,
+      --  it will be elaborated at run-time (and not statically).
+      --  However, there is no elaboration of std.standard.  Furthermore,
+      --  time type can be pre-elaborated without any difficulties.
+      --  There is a kludge here:  set type staticess of time type locally
+      --  and then revert it just after its translation.
+      Time_Type_Staticness := Get_Type_Staticness (Time_Type_Definition);
+      Time_Subtype_Staticness := Get_Type_Staticness (Time_Subtype_Definition);
+      if Flags.Flag_Time_64 then
+         Set_Type_Staticness (Time_Type_Definition, Locally);
+      end if;
+      Set_Type_Staticness (Time_Subtype_Definition, Locally);
+      if Flags.Vhdl_Std > Vhdl_87 then
+         Set_Type_Staticness (Delay_Length_Subtype_Definition, Locally);
+      end if;
+
+      Decl := Get_Declaration_Chain (Standard_Package);
+
+      --  The first (and one of the most important) declaration is the
+      --  boolean type declaration.
+      pragma Assert (Decl = Boolean_Type_Declaration);
       Chap4.Translate_Bool_Type_Declaration (Boolean_Type_Declaration);
       --  We need this type very early, for predefined functions.
       Std_Boolean_Type_Node :=
@@ -29414,81 +29794,69 @@ package body Translation is
         New_Array_Type (Std_Boolean_Type_Node, Ghdl_Index_Type);
       New_Type_Decl (Create_Identifier ("BOOLEAN_ARRAY"),
                      Std_Boolean_Array_Type);
+      Translate_Type_Implicit_Subprograms (Decl);
+
+      --  Second declaration: bit.
+      pragma Assert (Decl = Bit_Type_Declaration);
       Chap4.Translate_Bool_Type_Declaration (Bit_Type_Declaration);
+      Translate_Type_Implicit_Subprograms (Decl);
 
-      Chap4.Translate_Type_Declaration (Character_Type_Declaration);
+      --  Nothing special for other declarations.
+      while Decl /= Null_Iir loop
+         case Get_Kind (Decl) is
+            when Iir_Kind_Type_Declaration =>
+               Chap4.Translate_Type_Declaration (Decl);
+               Translate_Type_Implicit_Subprograms (Decl);
+            when Iir_Kind_Anonymous_Type_Declaration =>
+               Chap4.Translate_Anonymous_Type_Declaration (Decl);
+               Translate_Type_Implicit_Subprograms (Decl);
+            when Iir_Kind_Subtype_Declaration =>
+               Chap4.Translate_Subtype_Declaration (Decl);
+               Decl := Get_Chain (Decl);
+            when Iir_Kind_Attribute_Declaration =>
+               Decl := Get_Chain (Decl);
+            when Iir_Kind_Implicit_Function_Declaration =>
+               case Get_Implicit_Definition (Decl) is
+                  when Iir_Predefined_Now_Function =>
+                     null;
+                  when Iir_Predefined_Enum_To_String
+                    | Iir_Predefined_Integer_To_String
+                    | Iir_Predefined_Floating_To_String
+                    | Iir_Predefined_Real_To_String_Digits
+                    | Iir_Predefined_Real_To_String_Format
+                    | Iir_Predefined_Physical_To_String
+                    | Iir_Predefined_Time_To_String_Unit =>
+                     --  These are defined after the types.
+                     null;
+                  when others =>
+                     Error_Kind
+                       ("translate_standard ("
+                          & Iir_Predefined_Functions'Image
+                          (Get_Implicit_Definition (Decl)) & ")",
+                        Decl);
+               end case;
+               Decl := Get_Chain (Decl);
+            when others =>
+               Error_Kind ("translate_standard", Decl);
+         end case;
+         --  DECL was updated by Translate_Type_Implicit_Subprograms or
+         --  explicitly in other branches.
+      end loop;
 
-      Chap4.Translate_Type_Declaration (Severity_Level_Type_Declaration);
-
-      Chap4.Translate_Anonymous_Type_Declaration
-        (Universal_Integer_Type_Declaration);
-      Chap4.Translate_Subtype_Declaration
-        (Universal_Integer_Subtype_Declaration);
-
-      Chap4.Translate_Anonymous_Type_Declaration
-        (Universal_Real_Type_Declaration);
-      Chap4.Translate_Subtype_Declaration
-        (Universal_Real_Subtype_Declaration);
-
+      --  These types don't appear in std.standard.
       Chap4.Translate_Anonymous_Type_Declaration
         (Convertible_Integer_Type_Declaration);
       Chap4.Translate_Anonymous_Type_Declaration
         (Convertible_Real_Type_Declaration);
 
-      Translate_Std_Type_Declaration (Real_Type_Declaration);
-      Std_Real_Type_Node := Get_Ortho_Type (Real_Type_Definition, Mode_Value);
-      Chap4.Translate_Subtype_Declaration (Real_Subtype_Declaration);
-
-      Translate_Std_Type_Declaration (Integer_Type_Declaration);
-      Std_Integer_Type_Node := Get_Ortho_Type
-        (Integer_Type_Definition, Mode_Value);
-      Chap4.Translate_Subtype_Declaration (Integer_Subtype_Declaration);
-      Chap4.Translate_Subtype_Declaration (Natural_Subtype_Declaration);
-      Chap4.Translate_Subtype_Declaration (Positive_Subtype_Declaration);
-
-      Translate_Std_Type_Declaration (String_Type_Declaration);
-
-      Translate_Std_Type_Declaration (Bit_Vector_Type_Declaration);
-
-      declare
-         Type_Staticness : Iir_Staticness;
-         Subtype_Staticness : Iir_Staticness;
-      begin
-         --  With VHDL93 and later, time type is globally static.  As a result,
-         --  it will be elaborated at run-time (and not statically).
-         --  However, there is no elaboration of std.standard.  Furthermore,
-         --  time type can be pre-elaborated without any difficulties.
-         --  There is a kludge here:  set type staticess of time type locally
-         --  and then revert it just after its translation.
-         Type_Staticness := Get_Type_Staticness (Time_Type_Definition);
-         Subtype_Staticness := Get_Type_Staticness (Time_Subtype_Definition);
-         if Flags.Flag_Time_64 then
-            Set_Type_Staticness (Time_Type_Definition, Locally);
-         end if;
-         Set_Type_Staticness (Time_Subtype_Definition, Locally);
-
-         Translate_Std_Type_Declaration (Time_Type_Declaration);
-         Chap4.Translate_Subtype_Declaration (Time_Subtype_Declaration);
-
-         if Flags.Vhdl_Std > Vhdl_87 then
-            Set_Type_Staticness (Delay_Length_Subtype_Definition, Locally);
-            Chap4.Translate_Subtype_Declaration
-              (Delay_Length_Subtype_Declaration);
-            Set_Type_Staticness (Delay_Length_Subtype_Definition,
-                                 Subtype_Staticness);
-         end if;
-
-         Set_Type_Staticness (Time_Type_Definition, Type_Staticness);
-         Set_Type_Staticness (Time_Subtype_Definition, Subtype_Staticness);
-      end;
-      Std_Time_Type := Get_Ortho_Type (Time_Type_Definition, Mode_Value);
+      --  Restore time type staticness.
 
       if Flags.Vhdl_Std > Vhdl_87 then
-         Translate_Std_Type_Declaration (File_Open_Kind_Type_Declaration);
-         Translate_Std_Type_Declaration (File_Open_Status_Type_Declaration);
-         Std_File_Open_Status_Type :=
-           Get_Ortho_Type (File_Open_Status_Type_Definition, Mode_Value);
+         Set_Type_Staticness (Delay_Length_Subtype_Definition,
+                              Time_Subtype_Staticness);
       end if;
+      Set_Type_Staticness (Time_Type_Definition, Time_Type_Staticness);
+      Set_Type_Staticness (Time_Subtype_Definition, Time_Subtype_Staticness);
 
       if Flag_Rti then
          Rtis.Generate_Unit (Standard_Package);
