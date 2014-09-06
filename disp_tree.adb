@@ -349,14 +349,17 @@ package body Disp_Tree is
             Disp_Decl_Ident;
          when Iir_Kind_File_Type_Definition =>
             Put ("file_type_definition");
-            Disp_Identifier (Get_Type_Declarator (Tree));
+            Disp_Decl_Ident;
          when Iir_Kind_Subtype_Definition =>
             Put_Line ("subtype_definition");
          when Iir_Kind_Physical_Type_Definition =>
             Put ("physical_type_definition");
-            Disp_Identifier (Get_Type_Declarator (Tree));
+            Disp_Decl_Ident;
          when Iir_Kind_Physical_Subtype_Definition =>
             Put_Line ("physical_subtype_definition");
+         when Iir_Kind_Protected_Type_Declaration =>
+            Put ("protected_type_declaration");
+            Disp_Decl_Ident;
 
          when Iir_Kind_Scalar_Nature_Definition =>
             Put ("scalar_nature_definition");
@@ -1429,6 +1432,9 @@ package body Disp_Tree is
             Header ("file type mark:");
             Disp_Tree_Flat (Get_File_Type_Mark (Tree), Ntab);
          when Iir_Kind_Protected_Type_Declaration =>
+            if Flat_Decl then
+               return;
+            end if;
             Header ("staticness: ", False);
             Disp_Type_Staticness (Tree);
             Header ("declarator:");

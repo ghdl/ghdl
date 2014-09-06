@@ -27,8 +27,11 @@ with Grt.Options; use Grt.Options;
 with Grt.Main;
 with Grt.Types; use Grt.Types;
 
+--  Some files are only referenced from compiled code.  With it here so that
+--  they get compiled during build (and elaborated).
 pragma Warnings (Off);
 with Grt.Rtis_Binding;
+with Grt.Std_Logic_1164;
 pragma Warnings (On);
 
 

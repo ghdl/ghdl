@@ -3751,9 +3751,9 @@ package Iirs is
        Iir_Predefined_Array_Rol,
        Iir_Predefined_Array_Ror,
 
-    --  Predefined operators for one dimensional array.
-    --  For bit and boolean type, the operations are the same.  For a neutral
-    --  noun, we use TF (for True/False) instead of Bit, Boolean or Logic.
+   --  Predefined operators for one dimensional array.
+   --  For bit and boolean type, the operations are the same.  For a neutral
+   --  noun, we use TF (for True/False) instead of Bit, Boolean or Logic.
        Iir_Predefined_TF_Array_And,
        Iir_Predefined_TF_Array_Or,
        Iir_Predefined_TF_Array_Nand,

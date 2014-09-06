@@ -15,7 +15,7 @@
 #  along with GCC; see the file COPYING.  If not, write to the Free
 #  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #  02111-1307, USA.
-GNATFLAGS=-gnaty3befhkmr -gnata -gnatwae -aI../.. -aI.. -aI../../psl -aI../grt -aO.. -g -gnatf -gnat05
+GNATFLAGS=-gnaty3befhkmr -gnata -gnatwael -aI../.. -aI.. -aI../../psl -aI../grt -aO.. -g -gnatf -gnat05
 GRT_FLAGS=-g
 LIB_CFLAGS=-g -O2
 GNATMAKE=gnatmake
@@ -142,17 +142,31 @@ else
 	$(RM) std_standard.s
 endif
 
+$(LIB08_DIR)/std/std_standard.o: $(GHDL1)
+ifeq ($(GHDL),ghdl_llvm)
+	$(GHDL1) --std=08 -quiet $(LIB_CFLAGS)  -c -o $@ --compile-standard
+else
+	$(GHDL1) --std=08 -quiet $(LIB_CFLAGS) -o std_standard.s \
+	 --compile-standard
+	$(CC) -c -o $@ std_standard.s
+	$(RM) std_standard.s
+endif
+
 install.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
 install.v87: std.v87 ieee.v87 synopsys.v87
 install.v08: std.v08 ieee.v08
 
 install.standard: $(LIB93_DIR)/std/std_standard.o \
- $(LIB87_DIR)/std/std_standard.o
+ $(LIB87_DIR)/std/std_standard.o \
+ $(LIB08_DIR)/std/std_standard.o
 
 grt.links:
 	cd ../lib; ln -sf $(GRTSRCDIR)/grt.lst .; ln -sf $(GRTSRCDIR)/libgrt.a .; ln -sf $(GRTSRCDIR)/grt.ver .
 
 install.all: install.v87 install.v93 install.standard
+
+install.gcc:
+	$(MAKE) GHDL=ghdl_gcc install.v08 #install.v87 install.v93 install.v08
 
 install.mcode:
 	$(MAKE) GHDL=ghdl_mcode install.v87 install.v93 install.v08

@@ -230,6 +230,9 @@ package Trans_Decls is
    Ghdl_To_String_I32 : O_Dnode;
    Ghdl_To_String_F64 : O_Dnode;
    Ghdl_To_String_F64_Digits : O_Dnode;
+   Ghdl_BV_To_String : O_Dnode;
+   Ghdl_BV_To_Ostring : O_Dnode;
+   Ghdl_BV_To_Hstring : O_Dnode;
 
    --  Register a package
    Ghdl_Rti_Add_Package : O_Dnode;

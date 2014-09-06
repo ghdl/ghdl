@@ -165,6 +165,20 @@ package body Grt.Images is
       Return_String (Res, Str (1 .. P));
    end Ghdl_To_String_F64_Digits;
 
+   procedure Ghdl_BV_To_Ostring (Res : Std_String_Ptr;
+                                 Base : Std_Bit_Vector_Basep;
+                                 Len : Ghdl_Index_Type) is
+   begin
+      raise Program_Error;
+   end Ghdl_BV_To_Ostring;
+
+   procedure Ghdl_BV_To_Hstring (Res : Std_String_Ptr;
+                                 Base : Std_Bit_Vector_Basep;
+                                 Len : Ghdl_Index_Type) is
+   begin
+      raise Program_Error;
+   end Ghdl_BV_To_Hstring;
+
 --     procedure Ghdl_Image_F64 (Res : Std_String_Ptr; Val : Ghdl_F64)
 --     is
 --        --  Sign (1) + digit (1) + dot (1) + digits (15) + exp (1) + sign (1)

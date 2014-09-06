@@ -1445,11 +1445,12 @@ package body Sem is
 
    procedure Set_Subprogram_Overload_Number (Decl : Iir)
    is
+      Id : constant Name_Id := Get_Identifier (Decl);
       Inter : Name_Interpretation_Type;
       Prev : Iir;
       Num : Iir_Int32;
    begin
-      Inter := Get_Interpretation (Get_Identifier (Decl));
+      Inter := Get_Interpretation (Id);
       while Valid_Interpretation (Inter)
         and then Is_In_Current_Declarative_Region (Inter)
       loop
@@ -1479,8 +1480,11 @@ package body Sem is
                --  Implicit declarations aren't taken into account (as they
                --  are mangled differently).
                Inter := Get_Next_Interpretation (Inter);
+            when Iir_Kind_Enumeration_Literal =>
+               --  Enumeration literal are ignored for overload number.
+               Inter := Get_Next_Interpretation (Inter);
             when others =>
-               --  Can be an enumeration literal or an error.
+               --  An error ?
                Set_Overload_Number (Decl, 0);
                return;
          end case;

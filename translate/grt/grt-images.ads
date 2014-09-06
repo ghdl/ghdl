@@ -46,6 +46,12 @@ package Grt.Images is
    procedure Ghdl_To_String_F64 (Res : Std_String_Ptr; Val : Ghdl_F64);
    procedure Ghdl_To_String_F64_Digits
      (Res : Std_String_Ptr; Val : Ghdl_F64; Nbr_Digits : Ghdl_I32);
+   procedure Ghdl_BV_To_Ostring (Res : Std_String_Ptr;
+                                 Base : Std_Bit_Vector_Basep;
+                                 Len : Ghdl_Index_Type);
+   procedure Ghdl_BV_To_Hstring (Res : Std_String_Ptr;
+                                 Base : Std_Bit_Vector_Basep;
+                                 Len : Ghdl_Index_Type);
 private
    pragma Export (Ada, Ghdl_Image_B1, "__ghdl_image_b1");
    pragma Export (C, Ghdl_Image_E8, "__ghdl_image_e8");
@@ -58,4 +64,6 @@ private
    pragma Export (C, Ghdl_To_String_I32, "__ghdl_to_string_i32");
    pragma Export (C, Ghdl_To_String_F64, "__ghdl_to_string_f64");
    pragma Export (C, Ghdl_To_String_F64_Digits, "__ghdl_to_string_f64_digits");
+   pragma Export (C, Ghdl_BV_To_Ostring, "__ghdl_bv_to_ostring");
+   pragma Export (C, Ghdl_BV_To_Hstring, "__ghdl_bv_to_hstring");
 end Grt.Images;

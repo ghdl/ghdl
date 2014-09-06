@@ -2438,7 +2438,7 @@ package body Translation is
 
       --  Generate code to increment/decrement a ghdl_index_type variable V.
       procedure Inc_Var (V : O_Dnode);
-      --procedure Dec_Var (V : O_Lnode);
+      procedure Dec_Var (V : O_Dnode);
 
       --  Generate code to exit from loop LABEL iff COND is true.
       procedure Gen_Exit_When (Label : O_Snode; Cond : O_Enode);
@@ -3312,17 +3312,17 @@ package body Translation is
       begin
          New_Assign_Stmt (New_Obj (V),
                           New_Dyadic_Op (ON_Add_Ov,
-                                         New_Value (New_Obj (V)),
+                                         New_Obj_Value (V),
                                          New_Lit (Ghdl_Index_1)));
       end Inc_Var;
 
---       procedure Dec_Var (V : O_Lnode) is
---       begin
---          New_Assign_Stmt
---            (V, New_Dyadic_Op (ON_Sub_Ov,
---                               New_Value (V),
---                               New_Unsigned_Literal (Ghdl_Index_Type, 1)));
---       end Dec_Var;
+      procedure Dec_Var (V : O_Dnode) is
+      begin
+         New_Assign_Stmt (New_Obj (V),
+                          New_Dyadic_Op (ON_Sub_Ov,
+                                         New_Obj_Value (V),
+                                         New_Lit (Ghdl_Index_1)));
+      end Dec_Var;
 
       procedure Init_Var (V : O_Dnode) is
       begin
@@ -7195,12 +7195,12 @@ package body Translation is
       -----------------
       --  protected  --
       -----------------
+
       procedure Translate_Protected_Type (Def : Iir_Protected_Type_Declaration)
       is
-         Info : Type_Info_Acc;
+         Info : constant Type_Info_Acc := Get_Info (Def);
+         Mark : Id_Mark_Type;
       begin
-         Info := Get_Info (Def);
-
          New_Uncomplete_Record_Type (Info.Ortho_Type (Mode_Value));
          New_Type_Decl (Create_Identifier, Info.Ortho_Type (Mode_Value));
 
@@ -7221,22 +7221,23 @@ package body Translation is
 
          --  This is just use to set overload number on subprograms, and to
          --  translate interfaces.
+         Push_Identifier_Prefix
+           (Mark, Get_Identifier (Get_Type_Declarator (Def)));
          Chap4.Translate_Declaration_Chain (Def);
+         Pop_Identifier_Prefix (Mark);
       end Translate_Protected_Type;
 
       procedure Translate_Protected_Type_Subprograms
         (Def : Iir_Protected_Type_Declaration)
       is
+         Info : constant Type_Info_Acc := Get_Info (Def);
          El : Iir;
-         Info : Type_Info_Acc;
          Inter_List : O_Inter_List;
          Mark : Id_Mark_Type;
          Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
       begin
          Push_Identifier_Prefix
            (Mark, Get_Identifier (Get_Type_Declarator (Def)));
-
-         Info := Get_Info (Def);
 
          --  Init.
          Start_Function_Decl
@@ -7282,13 +7283,11 @@ package body Translation is
 
       procedure Translate_Protected_Type_Body (Bod : Iir)
       is
-         Decl : Iir_Protected_Type_Declaration;
+         Decl : constant Iir_Protected_Type_Declaration :=
+           Get_Protected_Type_Declaration (Bod);
+         Info : constant Type_Info_Acc := Get_Info (Decl);
          Mark : Id_Mark_Type;
-         Info : Type_Info_Acc;
       begin
-         Decl := Get_Protected_Type_Declaration (Bod);
-         Info := Get_Info (Decl);
-
          Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
 
          --  Create the object type
@@ -7328,13 +7327,13 @@ package body Translation is
 
       procedure Translate_Protected_Type_Body_Subprograms (Bod : Iir)
       is
-         Decl : Iir;
-         Info : Type_Info_Acc;
+         Mark : Id_Mark_Type;
+         Decl : constant Iir := Get_Protected_Type_Declaration (Bod);
+         Info : constant Type_Info_Acc := Get_Info (Decl);
          Final : Boolean;
          Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
       begin
-         Decl := Get_Protected_Type_Declaration (Bod);
-         Info := Get_Info (Decl);
+         Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
 
          --  Subprograms of BOD.
          Chap2.Push_Subprg_Instance (Info.Ortho_Type (Mode_Value),
@@ -7349,6 +7348,8 @@ package body Translation is
          Chap2.Finish_Prev_Subprg_Instance_Use_Via_Field
            (Prev_Subprg_Instance, Info.T.Prot_Subprg_Instance_Field);
          Chap2.Pop_Subprg_Instance (Wki_Obj, Prev_Subprg_Instance);
+
+         Pop_Identifier_Prefix (Mark);
 
          if Global_Storage = O_Storage_External then
             return;
@@ -13014,22 +13015,20 @@ package body Translation is
       function Translate_Indexed_Name_Init (Prefix_Orig : Mnode; Expr : Iir)
                                            return Indexed_Name_Data
       is
+         Prefix_Type : constant Iir := Get_Type (Get_Prefix (Expr));
+         Prefix_Info : constant Type_Info_Acc := Get_Info (Prefix_Type);
+         Index_List : constant Iir_List := Get_Index_List (Expr);
+         Type_List : constant Iir_List := Get_Index_Subtype_List (Prefix_Type);
+         Nbr_Dim : constant Natural := Get_Nbr_Elements (Index_List);
          Prefix : Mnode;
-         Prefix_Type : Iir;
          Index : Iir;
-         Index_List : Iir_List;
-         Type_List : Iir_List;
          Offset : O_Dnode;
          R : O_Enode;
          Length : O_Enode;
          Itype : Iir;
          Ibasetype : Iir;
-         Prefix_Info : Type_Info_Acc;
-         Nbr_Dim : Natural;
          Range_Ptr : Mnode;
       begin
-         Prefix_Type := Get_Type (Get_Prefix (Expr));
-         Prefix_Info := Get_Info (Prefix_Type);
          case Prefix_Info.Type_Mode is
             when Type_Mode_Fat_Array =>
                Prefix := Stabilize (Prefix_Orig);
@@ -13038,9 +13037,6 @@ package body Translation is
             when others =>
                raise Internal_Error;
          end case;
-         Index_List := Get_Index_List (Expr);
-         Type_List := Get_Index_Subtype_List (Prefix_Type);
-         Nbr_Dim := Get_Nbr_Elements (Index_List);
          Offset := Create_Temp (Ghdl_Index_Type);
          for Dim in 1 .. Nbr_Dim loop
             Index := Get_Nth_Element (Index_List, Dim - 1);
@@ -13137,23 +13133,23 @@ package body Translation is
         (Prefix : Mnode; Expr : Iir_Slice_Name; Data : out Slice_Name_Data)
       is
          --  Type of the prefix.
-         Prefix_Type : Iir;
+         Prefix_Type : constant Iir := Get_Type (Get_Prefix (Expr));
 
          --  Type info of the prefix.
          Prefix_Info : Type_Info_Acc;
 
-         --  Type of the slice.
-         Slice_Type : Iir;
-         Slice_Info : Type_Info_Acc;
-
          --  Type of the first (and only) index of the prefix array type.
-         Index_Type : Iir;
+         Index_Type : constant Iir := Get_Index_Type (Prefix_Type, 0);
+
+         --  Type of the slice.
+         Slice_Type : constant Iir := Get_Type (Expr);
+         Slice_Info : Type_Info_Acc;
 
          --  True iff the direction of the slice is known at compile time.
          Static_Range : Boolean;
 
          --  Suffix of the slice (discrete range).
-         Expr_Range : Iir;
+         Expr_Range : constant Iir := Get_Suffix (Expr);
 
          --  Variable pointing to the prefix.
          Prefix_Var : Mnode;
@@ -13169,15 +13165,10 @@ package body Translation is
          Unsigned_Diff : O_Dnode;
          If_Blk1 : O_If_Block;
       begin
-         --  Evaluate the prefix.
-         Slice_Type := Get_Type (Expr);
-         Expr_Range := Get_Suffix (Expr);
-         Prefix_Type := Get_Type (Get_Prefix (Expr));
-         Index_Type := Get_Index_Type (Prefix_Type, 0);
-
          --  Evaluate slice bounds.
          Chap3.Create_Array_Subtype (Slice_Type, True);
 
+         --  The info may have just been created.
          Prefix_Info := Get_Info (Prefix_Type);
          Slice_Info := Get_Info (Slice_Type);
 
@@ -15089,6 +15080,179 @@ package body Translation is
          return New_Address (New_Obj (Res), Std_String_Ptr_Node);
       end Translate_To_String;
 
+      function Translate_Bv_To_String
+        (Subprg : O_Dnode; Val : O_Enode; Val_Type : Iir)
+        return O_Enode
+      is
+         Arr : Mnode;
+      begin
+         Arr := Stabilize (E2M (Val, Get_Info (Val_Type), Mode_Value));
+         return Translate_To_String
+           (Subprg,
+            M2E (Chap3.Get_Array_Base (Arr)),
+            M2E (Chap3.Range_To_Length
+                   (Chap3.Get_Array_Range (Arr, Val_Type, 1))));
+      end Translate_Bv_To_String;
+
+      subtype Predefined_Boolean_Logical is Iir_Predefined_Functions range
+        Iir_Predefined_Boolean_And .. Iir_Predefined_Boolean_Xnor;
+
+      function Translate_Predefined_Logical
+        (Op : Predefined_Boolean_Logical; Left, Right : O_Enode)
+        return O_Enode is
+      begin
+         case Op is
+            when Iir_Predefined_Boolean_And =>
+               return New_Dyadic_Op (ON_And, Left, Right);
+            when Iir_Predefined_Boolean_Or =>
+               return New_Dyadic_Op (ON_Or, Left, Right);
+            when Iir_Predefined_Boolean_Nand =>
+               return New_Monadic_Op
+                 (ON_Not, New_Dyadic_Op (ON_And, Left, Right));
+            when Iir_Predefined_Boolean_Nor =>
+               return New_Monadic_Op
+                 (ON_Not, New_Dyadic_Op (ON_Or, Left, Right));
+            when Iir_Predefined_Boolean_Xor =>
+               return New_Dyadic_Op (ON_Xor, Left, Right);
+            when Iir_Predefined_Boolean_Xnor =>
+               return New_Monadic_Op
+                 (ON_Not, New_Dyadic_Op (ON_Xor, Left, Right));
+         end case;
+      end Translate_Predefined_Logical;
+
+      function Translate_Predefined_TF_Array_Element
+        (Op : Predefined_Boolean_Logical;
+         Left, Right : Iir;
+         Res_Type : Iir)
+        return O_Enode
+      is
+         Arr_Type : constant Iir := Get_Type (Left);
+         Res_Info : constant Type_Info_Acc := Get_Info (Res_Type);
+         Base_Ptr_Type : constant O_Tnode :=
+           Res_Info.T.Base_Ptr_Type (Mode_Value);
+         Arr : Mnode;
+         El : O_Dnode;
+         Base : O_Dnode;
+         Len : O_Dnode;
+         Label : O_Snode;
+         Res : Mnode;
+      begin
+         --  Translate the array.
+         Arr := Stabilize (E2M (Translate_Expression (Left),
+                                Get_Info (Arr_Type), Mode_Value));
+
+         --  Extract its length.
+         Len := Create_Temp_Init
+           (Ghdl_Index_Type,
+            M2E (Chap3.Range_To_Length
+                   (Chap3.Get_Array_Range (Arr, Arr_Type, 1))));
+
+         --  Allocate the result array.
+         Base := Create_Temp_Init
+           (Base_Ptr_Type,
+            Gen_Alloc (Alloc_Stack, New_Obj_Value (Len), Base_Ptr_Type));
+
+         Open_Temp;
+         --  Translate the element.
+         El := Create_Temp_Init (Get_Ortho_Type (Get_Type (Right), Mode_Value),
+                                 Translate_Expression (Right));
+         --  Create:
+         --    loop
+         --      exit when LEN = 0;
+         --      LEN := LEN - 1;
+         --      BASE[LEN] := EL op ARR[LEN];
+         --    end loop;
+         Start_Loop_Stmt (Label);
+         Gen_Exit_When (Label, New_Compare_Op (ON_Eq, New_Obj_Value (Len),
+                                               New_Lit (Ghdl_Index_0),
+                                               Ghdl_Bool_Type));
+         Dec_Var (Len);
+         New_Assign_Stmt
+           (New_Indexed_Acc_Value (New_Obj (Base),
+                                   New_Obj_Value (Len)),
+            Translate_Predefined_Logical
+              (Op,
+               New_Obj_Value (El),
+               M2E (Chap3.Index_Base (Chap3.Get_Array_Base (Arr),
+                                      Arr_Type, New_Obj_Value (Len)))));
+         Finish_Loop_Stmt (Label);
+         Close_Temp;
+
+         Res := Create_Temp (Res_Info, Mode_Value);
+         New_Assign_Stmt (M2Lp (Chap3.Get_Array_Base (Res)),
+                          New_Obj_Value (Base));
+         New_Assign_Stmt (M2Lp (Chap3.Get_Array_Bounds (Res)),
+                          M2Addr (Chap3.Get_Array_Bounds (Arr)));
+
+         return M2E (Res);
+      end Translate_Predefined_TF_Array_Element;
+
+      function Translate_Predefined_TF_Reduction
+        (Op : Predefined_Boolean_Logical; Operand : Iir; Res_Type : Iir)
+        return O_Enode
+      is
+         Arr_Type : constant Iir := Get_Type (Operand);
+         Enums : constant Iir_List :=
+           Get_Enumeration_Literal_List (Get_Base_Type (Res_Type));
+         Init_Enum : Iir;
+
+         Res : O_Dnode;
+         Arr_Expr : O_Enode;
+         Arr : Mnode;
+         Len : O_Dnode;
+         Label : O_Snode;
+      begin
+         case Op is
+            when Iir_Predefined_Boolean_And
+              | Iir_Predefined_Boolean_Nand =>
+               Init_Enum := Get_Nth_Element (Enums, 1);
+            when Iir_Predefined_Boolean_Or
+              | Iir_Predefined_Boolean_Nor
+              | Iir_Predefined_Boolean_Xor
+              | Iir_Predefined_Boolean_Xnor =>
+               Init_Enum := Get_Nth_Element (Enums, 0);
+         end case;
+
+         Res := Create_Temp_Init (Get_Ortho_Type (Res_Type, Mode_Value),
+                                  New_Lit (Get_Ortho_Expr (Init_Enum)));
+
+         Open_Temp;
+         --  Translate the array.  Note that Translate_Expression may create
+         --  the info for the array type, so be sure to call it before calling
+         --  Get_Info.
+         Arr_Expr := Translate_Expression (Operand);
+         Arr := Stabilize (E2M (Arr_Expr, Get_Info (Arr_Type), Mode_Value));
+
+         --  Extract its length.
+         Len := Create_Temp_Init
+           (Ghdl_Index_Type,
+            M2E (Chap3.Range_To_Length
+                   (Chap3.Get_Array_Range (Arr, Arr_Type, 1))));
+
+         --  Create:
+         --    loop
+         --      exit when LEN = 0;
+         --      LEN := LEN - 1;
+         --      RES := RES op ARR[LEN];
+         --    end loop;
+         Start_Loop_Stmt (Label);
+         Gen_Exit_When (Label, New_Compare_Op (ON_Eq, New_Obj_Value (Len),
+                                               New_Lit (Ghdl_Index_0),
+                                               Ghdl_Bool_Type));
+         Dec_Var (Len);
+         New_Assign_Stmt
+           (New_Obj (Res),
+            Translate_Predefined_Logical
+              (Op,
+               New_Obj_Value (Res),
+               M2E (Chap3.Index_Base (Chap3.Get_Array_Base (Arr),
+                                      Arr_Type, New_Obj_Value (Len)))));
+         Finish_Loop_Stmt (Label);
+         Close_Temp;
+
+         return New_Obj_Value (Res);
+      end Translate_Predefined_TF_Reduction;
+
       function Translate_Predefined_Operator
         (Imp : Iir_Implicit_Function_Declaration;
          Left, Right : Iir;
@@ -15119,18 +15283,79 @@ package body Translation is
                --  Right operand of shortcur operators may not be evaluated.
                return Translate_Shortcut_Operator (Imp, Left, Right);
 
+            --  Operands of min/max are evaluated in a declare block.
             when Iir_Predefined_Enum_Minimum
               | Iir_Predefined_Integer_Minimum
               | Iir_Predefined_Floating_Minimum
               | Iir_Predefined_Physical_Minimum =>
-               --  Operands of min/max are evaluated in a declare block.
                return Translate_Scalar_Min_Max (ON_Le, Left, Right, Res_Type);
             when Iir_Predefined_Enum_Maximum
               | Iir_Predefined_Integer_Maximum
               | Iir_Predefined_Floating_Maximum
               | Iir_Predefined_Physical_Maximum =>
-               --  Operands of min/max are evaluated in a declare block.
                return Translate_Scalar_Min_Max (ON_Ge, Left, Right, Res_Type);
+
+            --  Avoid implicit conversion of the array parameters to the
+            --  unbounded type for optimizing purpose.  FIXME: should do the
+            --  same for the result.
+            when Iir_Predefined_TF_Array_Element_And =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_And, Left, Right, Res_Type);
+            when Iir_Predefined_TF_Element_Array_And =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_And, Right, Left, Res_Type);
+            when Iir_Predefined_TF_Array_Element_Or =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_Or, Left, Right, Res_Type);
+            when Iir_Predefined_TF_Element_Array_Or =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_Or, Right, Left, Res_Type);
+            when Iir_Predefined_TF_Array_Element_Nand =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_Nand, Left, Right, Res_Type);
+            when Iir_Predefined_TF_Element_Array_Nand =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_Nand, Right, Left, Res_Type);
+            when Iir_Predefined_TF_Array_Element_Nor =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_Nor, Left, Right, Res_Type);
+            when Iir_Predefined_TF_Element_Array_Nor =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_Nor, Right, Left, Res_Type);
+            when Iir_Predefined_TF_Array_Element_Xor =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_Xor, Left, Right, Res_Type);
+            when Iir_Predefined_TF_Element_Array_Xor =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_Xor, Right, Left, Res_Type);
+            when Iir_Predefined_TF_Array_Element_Xnor =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_Xnor, Left, Right, Res_Type);
+            when Iir_Predefined_TF_Element_Array_Xnor =>
+               return Translate_Predefined_TF_Array_Element
+                 (Iir_Predefined_Boolean_Xnor, Right, Left, Res_Type);
+
+            --  Avoid implicit conversion of the array parameters to the
+            --  unbounded type for optimizing purpose.
+            when Iir_Predefined_TF_Reduction_And =>
+               return Translate_Predefined_TF_Reduction
+                 (Iir_Predefined_Boolean_And, Left, Res_Type);
+            when Iir_Predefined_TF_Reduction_Or =>
+               return Translate_Predefined_TF_Reduction
+                 (Iir_Predefined_Boolean_Or, Left, Res_Type);
+            when Iir_Predefined_TF_Reduction_Nand =>
+               return Translate_Predefined_TF_Reduction
+                 (Iir_Predefined_Boolean_Nand, Left, Res_Type);
+            when Iir_Predefined_TF_Reduction_Nor =>
+               return Translate_Predefined_TF_Reduction
+                 (Iir_Predefined_Boolean_Nor, Left, Res_Type);
+            when Iir_Predefined_TF_Reduction_Xor =>
+               return Translate_Predefined_TF_Reduction
+                 (Iir_Predefined_Boolean_Xor, Left, Res_Type);
+            when Iir_Predefined_TF_Reduction_Xnor =>
+               return Translate_Predefined_TF_Reduction
+                 (Iir_Predefined_Boolean_Xnor, Left, Res_Type);
+
             when others =>
                null;
          end case;
@@ -15189,8 +15414,8 @@ package body Translation is
          case Kind is
             when Iir_Predefined_Bit_Xnor
               | Iir_Predefined_Boolean_Xnor =>
-               return New_Monadic_Op
-                 (ON_Not, New_Dyadic_Op (ON_Xor, Left_Tree, Right_Tree));
+               return Translate_Predefined_Logical
+                 (Iir_Predefined_Boolean_Xnor, Left_Tree, Right_Tree);
             when Iir_Predefined_Bit_Condition =>
                return New_Compare_Op
                  (ON_Eq, Left_Tree, New_Lit (Get_Ortho_Expr (Bit_1)),
@@ -15442,6 +15667,12 @@ package body Translation is
                  (Ghdl_To_String_F64_Digits,
                   New_Convert_Ov (Left_Tree, Ghdl_Real_Type),
                   New_Convert_Ov (Right_Tree, Ghdl_I32_Type));
+            when Iir_Predefined_Bit_Vector_To_Ostring =>
+               return Translate_Bv_To_String
+                 (Ghdl_BV_To_Ostring, Left_Tree, Left_Type);
+            when Iir_Predefined_Bit_Vector_To_Hstring =>
+               return Translate_Bv_To_String
+                 (Ghdl_BV_To_Hstring, Left_Tree, Left_Type);
 
             when others =>
                Ada.Text_IO.Put_Line
@@ -28882,21 +29113,20 @@ package body Translation is
       Finish_Subprogram_Decl (Interfaces, Subprg);
    end Create_Std_Ulogic_Match_Subprogram;
 
-   --  procedure __ghdl_to_string_NAME (res : std_string_ptr_node;
-   --                                   val : VAL_TYPE;
-   --                                   ARG2_NAME : ARG2_TYPE);
+   --  procedure NAME (res : std_string_ptr_node;
+   --                  val : VAL_TYPE;
+   --                  ARG2_NAME : ARG2_TYPE);
    procedure Create_To_String_Subprogram (Name : String;
                                           Subprg : out O_Dnode;
                                           Val_Type : O_Tnode;
-                                          Arg2_Type : O_Tnode;
-                                          Arg2_Name : String)
+                                          Arg2_Type : O_Tnode := O_Tnode_Null;
+                                          Arg2_Name : String := "")
    is
       Interfaces : O_Inter_List;
       Param : O_Dnode;
    begin
       Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_to_string_" & Name),
-         O_Storage_External);
+        (Interfaces, Get_Identifier (Name), O_Storage_External);
       New_Interface_Decl
         (Interfaces, Param, Get_Identifier ("res"), Std_String_Ptr_Node);
       New_Interface_Decl
@@ -29704,14 +29934,23 @@ package body Translation is
 
       --  Create To_String subprograms.
       Create_To_String_Subprogram
-        ("i32", Ghdl_To_String_I32, Ghdl_I32_Type,
-         O_Tnode_Null, "");
+        ("__ghdl_to_string_i32", Ghdl_To_String_I32, Ghdl_I32_Type);
       Create_To_String_Subprogram
-        ("f64", Ghdl_To_String_F64, Ghdl_Real_Type,
-         O_Tnode_Null, "");
+        ("__ghdl_to_string_f64", Ghdl_To_String_F64, Ghdl_Real_Type);
       Create_To_String_Subprogram
-        ("f64_digits", Ghdl_To_String_F64_Digits, Ghdl_Real_Type,
-         Ghdl_I32_Type, "nbr_digits");
+        ("__ghdl_to_string_f64_digits", Ghdl_To_String_F64_Digits,
+         Ghdl_Real_Type, Ghdl_I32_Type, "nbr_digits");
+      declare
+         Bv_Base_Ptr : constant O_Tnode :=
+           Get_Info (Bit_Vector_Type_Definition).T.Base_Ptr_Type (Mode_Value);
+      begin
+         Create_To_String_Subprogram
+           ("__ghdl_bv_to_ostring", Ghdl_BV_To_Ostring,
+            Bv_Base_Ptr, Ghdl_Index_Type, "len");
+         Create_To_String_Subprogram
+           ("__ghdl_bv_to_hstring", Ghdl_BV_To_Hstring,
+            Bv_Base_Ptr, Ghdl_Index_Type, "len");
+      end;
    end Post_Initialize;
 
    procedure Translate_Type_Implicit_Subprograms (Decl : in out Iir)

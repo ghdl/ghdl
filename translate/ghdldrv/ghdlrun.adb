@@ -553,6 +553,10 @@ package body Ghdlrun is
            Grt.Images.Ghdl_To_String_F64'Address);
       Def (Trans_Decls.Ghdl_To_String_F64_Digits,
            Grt.Images.Ghdl_To_String_F64_Digits'Address);
+      Def (Trans_Decls.Ghdl_BV_To_Ostring,
+           Grt.Images.Ghdl_BV_To_Ostring'Address);
+      Def (Trans_Decls.Ghdl_BV_To_Hstring,
+           Grt.Images.Ghdl_BV_To_Hstring'Address);
 
       --  Find untruncated_text_read, if any.
       Decl := Find_Untruncated_Text_Read;

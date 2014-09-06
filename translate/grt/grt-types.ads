@@ -86,6 +86,11 @@ package Grt.Types is
    function To_Std_String_Ptr is new Ada.Unchecked_Conversion
      (Source => Address, Target => Std_String_Ptr);
 
+   type Std_Bit is ('0', '1');
+   type Std_Bit_Vector_Uncons is array (Ghdl_Index_Type range <>) of Std_Bit;
+   subtype Std_Bit_Vector_Base is Std_Bit_Vector_Uncons (Ghdl_Index_Type);
+   type Std_Bit_Vector_Basep is access all Std_Bit_Vector_Base;
+
    --  An unconstrained array.
    --  It is in fact a fat pointer to the base and the bounds.
    type Ghdl_Uc_Array is record
