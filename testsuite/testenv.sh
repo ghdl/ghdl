@@ -9,6 +9,7 @@
 
 # User defined variables (can be set to run the testsuite in some
 #  configuration, such as optimization or debugging):
+# GHDL_STD_FLAG
 # GHDL_FLAGS
 # GHDL_ELABFLAGS
 # GHDL_SIMFLAGS
@@ -25,7 +26,7 @@ set -e
 analyze ()
 {
    echo "analyze $@"
-   $GHDL -a $GHDL_FLAGS $@
+   $GHDL -a $GHDL_STD_FLAGS $GHDL_FLAGS $@
 }
 
 # Analyze files (failure expected)
@@ -33,7 +34,7 @@ analyze_failure ()
 {
    echo "try to analyze $@"
    # for arg in $@; do echo "arg: $arg"; done
-   if ! $GHDL -a --expect-failure $GHDL_FLAGS $@ ; then
+   if ! $GHDL -a --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS $@ ; then
      echo "Failure expected"
      return 1
    fi
@@ -44,7 +45,7 @@ analyze_failure ()
 elab ()
 {
    echo "elaborate $@"
-   $GHDL -e $GHDL_FLAGS $GHDL_ELABFLAGS $@
+   $GHDL -e $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
 }
 
 # Elaborate a design (failure expected)
@@ -52,7 +53,7 @@ elab ()
 elab_failure ()
 {
    echo "elaborate (failure expected) $@"
-   $GHDL -e --expect-failure $GHDL_FLAGS $GHDL_ELABFLAGS $@
+   $GHDL -e --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
 }
 
 # Simulate a design (no error expected)
@@ -60,7 +61,7 @@ elab_failure ()
 simulate ()
 {
    echo "simulate $@ ($GHDL_FLAGS $@ $GHDL_SIMFLAGS)" >&2
-   $GHDL -r $GHDL_FLAGS $@ $GHDL_SIMFLAGS
+   $GHDL -r $GHDL_STD_FLAGS $GHDL_FLAGS $@ $GHDL_SIMFLAGS
    #./$@
 }
 
@@ -69,7 +70,7 @@ simulate ()
 simulate_failure ()
 {
    echo "simulate (failure expected) $@" >&2
-   $GHDL -r $GHDL_FLAGS $@ --expect-failure
+   $GHDL -r $GHDL_STD_FLAGS $GHDL_FLAGS $@ --expect-failure
    #./$@
 }
 
@@ -77,14 +78,15 @@ simulate_failure ()
 elab_simulate ()
 {
    echo "elaborate and simulate $@"
-   $GHDL --elab-run $GHDL_FLAGS $GHDL_ELABFLAGS $@
+   $GHDL --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
 }
 
 # Elaborate and simulate a design (failure expected)
 elab_simulate_failure ()
 {
    echo "elaborate and simulate (failure expected) $@"
-   $GHDL --elab-run $GHDL_FLAGS $GHDL_ELABFLAGS $@ --expect-failure
+   $GHDL --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS \
+     $@ --expect-failure
 }
 
 # Run a program
@@ -109,9 +111,9 @@ clean ()
 {
   if [ $# -eq 0 ]; then
     echo "Remove work library"
-    $GHDL --remove
+    $GHDL --remove $GHDL_STD_FLAGS
   else
     echo "Remove $1 library"
-    $GHDL --remove --work=$1
+    $GHDL --remove $GHDL_STD_FLAGS --work=$1
   fi
 }
