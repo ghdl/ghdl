@@ -271,6 +271,8 @@ grt-zlib.ads
 grt-threads.ads
 grt-arch_none.ads
 grt-arch_none.adb
+grt-std_logic_1164.ads
+grt-std_logic_1164.adb
 grt.ads
 main.adb
 main.ads
