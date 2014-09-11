@@ -52,7 +52,7 @@ __ghdl_snprintf_nf (char *buf, unsigned int len, int ndigits, double val)
 }
 
 void
-__ghdl_snprintf_fmtf (const char *buf, unsigned int len,
+__ghdl_snprintf_fmtf (char *buf, unsigned int len,
 		      const char *format, double v)
 {
   snprintf (buf, len, format, v);

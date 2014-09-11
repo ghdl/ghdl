@@ -498,6 +498,28 @@ package body Grt.Rtis_Utils is
       end case;
    end Get_Physical_Unit_Name;
 
+   function Get_Physical_Unit_Value (Unit : Ghdl_Rti_Access;
+                                     Type_Rti : Ghdl_Rti_Access)
+                                    return Ghdl_I64 is
+   begin
+      case Unit.Kind is
+         when Ghdl_Rtik_Unit64 =>
+            return To_Ghdl_Rtin_Unit64_Acc (Unit).Value;
+         when Ghdl_Rtik_Unitptr =>
+            case Type_Rti.Kind is
+               when Ghdl_Rtik_Type_P64 =>
+                  return To_Ghdl_Rtin_Unitptr_Acc (Unit).Addr.I64;
+               when Ghdl_Rtik_Type_P32 =>
+                  return Ghdl_I64
+                    (To_Ghdl_Rtin_Unitptr_Acc (Unit).Addr.I32);
+               when others =>
+                  Internal_Error ("get_physical_unit_value(1)");
+            end case;
+         when others =>
+            Internal_Error ("get_physical_unit_value(2)");
+      end case;
+   end Get_Physical_Unit_Value;
+
    procedure Get_Enum_Value
      (Rstr : in out Rstring; Rti : Ghdl_Rti_Access; Val : Ghdl_Index_Type)
    is

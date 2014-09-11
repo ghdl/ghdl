@@ -32,35 +32,24 @@ package Grt.Lib is
      (Dest : Ghdl_Ptr; Src : Ghdl_Ptr; Size : Ghdl_Index_Type);
 
    procedure Ghdl_Assert_Failed
-     (Str : Std_String_Ptr;
-      Severity : Integer;
-      Loc : Ghdl_Location_Ptr;
-      Unit : Ghdl_Rti_Access);
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
+   procedure Ghdl_Ieee_Assert_Failed
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
 
    procedure Ghdl_Psl_Assert_Failed
      (Str : Std_String_Ptr;
       Severity : Integer;
-      Loc : Ghdl_Location_Ptr;
-      Unit : Ghdl_Rti_Access);
+      Loc : Ghdl_Location_Ptr);
 
    --  Called when a sequence is covered (in a cover directive)
    procedure Ghdl_Psl_Cover
-     (Str : Std_String_Ptr;
-      Severity : Integer;
-      Loc : Ghdl_Location_Ptr;
-      Unit : Ghdl_Rti_Access);
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
 
    procedure Ghdl_Psl_Cover_Failed
-     (Str : Std_String_Ptr;
-      Severity : Integer;
-      Loc : Ghdl_Location_Ptr;
-      Unit : Ghdl_Rti_Access);
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
 
    procedure Ghdl_Report
-     (Str : Std_String_Ptr;
-      Severity : Integer;
-      Loc : Ghdl_Location_Ptr;
-      Unit : Ghdl_Rti_Access);
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr);
 
    Note_Severity    : constant Integer := 0;
    Warning_Severity : constant Integer := 1;
@@ -103,10 +92,15 @@ package Grt.Lib is
                                                      True,  --  H
                                                      False  --  -
                                                     );
+
+   function Ghdl_Get_Resolution_Limit return Std_Time;
+   procedure Ghdl_Control_Simulation
+     (Stop : Ghdl_B1; Has_Status : Ghdl_B1; Status : Std_Integer);
 private
    pragma Export (C, Ghdl_Memcpy, "__ghdl_memcpy");
 
    pragma Export (C, Ghdl_Assert_Failed, "__ghdl_assert_failed");
+   pragma Export (C, Ghdl_Ieee_Assert_Failed, "__ghdl_ieee_assert_failed");
    pragma Export (C, Ghdl_Psl_Assert_Failed, "__ghdl_psl_assert_failed");
    pragma Export (C, Ghdl_Psl_Cover, "__ghdl_psl_cover");
    pragma Export (C, Ghdl_Psl_Cover_Failed, "__ghdl_psl_cover_failed");
@@ -125,4 +119,9 @@ private
 
    pragma Export (C, Ghdl_Std_Ulogic_To_Boolean_Array,
                   "__ghdl_std_ulogic_to_boolean_array");
+
+   pragma Export (C, Ghdl_Get_Resolution_Limit,
+                  "__ghdl_get_resolution_limit");
+   pragma Export (Ada, Ghdl_Control_Simulation,
+                  "__ghdl_control_simulation");
 end Grt.Lib;

@@ -30,7 +30,6 @@ with Ortho_Nodes; use Ortho_Nodes;
 with Interfaces;
 with System; use System;
 with Trans_Decls;
-with Types;
 with Iirs; use Iirs;
 with Flags;
 with Errorout; use Errorout;
@@ -38,7 +37,6 @@ with Libraries;
 with Canon;
 with Trans_Be;
 with Translation;
-with Std_Names;
 with Ieee.Std_Logic_1164;
 
 with Lists;
@@ -151,48 +149,6 @@ package body Ghdlrun is
       Elaborate_Proc.all;
    end Ghdl_Elaborate;
 
-   function Find_Untruncated_Text_Read return O_Dnode
-   is
-      use Types;
-      use Std_Names;
-      File, Unit, Lib, Decl : Iir;
-   begin
-      if Libraries.Std_Library = Null_Iir then
-         return O_Dnode_Null;
-      end if;
-      File := Get_Design_File_Chain (Libraries.Std_Library);
-      L1 : loop
-         if File = Null_Iir then
-            return O_Dnode_Null;
-         end if;
-         Unit := Get_First_Design_Unit (File);
-         while Unit /= Null_Iir loop
-            Lib := Get_Library_Unit (Unit);
-            if Get_Kind (Lib) = Iir_Kind_Package_Body
-              and then Get_Identifier (Lib) = Name_Textio
-            then
-               exit L1;
-            end if;
-            Unit := Get_Chain (Unit);
-         end loop;
-         File := Get_Chain (File);
-      end loop L1;
-
-      Decl := Get_Declaration_Chain (Lib);
-      while Decl /= Null_Iir loop
-         if Get_Kind (Decl) = Iir_Kind_Procedure_Declaration
-           and then Get_Identifier (Decl) = Name_Untruncated_Text_Read
-         then
-            if not Get_Foreign_Flag (Decl) then
-               raise Program_Error;
-            end if;
-            return Translation.Get_Ortho_Decl (Decl);
-         end if;
-         Decl := Get_Chain (Decl);
-      end loop;
-      return O_Dnode_Null;
-   end Find_Untruncated_Text_Read;
-
    procedure Def (Decl : O_Dnode; Addr : Address)
      renames Ortho_Jit.Set_Address;
 
@@ -219,7 +175,22 @@ package body Ghdlrun is
                end if;
             end;
          when Foreign_Intrinsic =>
-            null;
+            Name_Table.Image (Get_Identifier (Decl));
+            declare
+               Name : constant String :=
+                 Name_Table.Name_Buffer (1 .. Name_Table.Name_Length);
+            begin
+               if Name = "untruncated_text_read" then
+                  Def (Ortho, Grt.Files.Ghdl_Untruncated_Text_Read'Address);
+               elsif Name = "control_simulation" then
+                  Def (Ortho, Grt.Lib.Ghdl_Control_Simulation'Address);
+               elsif Name = "get_resolution_limit" then
+                  Def (Ortho, Grt.Lib.Ghdl_Get_Resolution_Limit'Address);
+               else
+                  Error_Msg_Sem ("unknown foreign intrinsic '" & Name & "'",
+                                 Decl);
+               end if;
+            end;
          when Foreign_Unknown =>
             null;
       end case;
@@ -252,6 +223,8 @@ package body Ghdlrun is
            Grt.Lib.Ghdl_Report'Address);
       Def (Trans_Decls.Ghdl_Assert_Failed,
            Grt.Lib.Ghdl_Assert_Failed'Address);
+      Def (Trans_Decls.Ghdl_Ieee_Assert_Failed,
+           Grt.Lib.Ghdl_Ieee_Assert_Failed'Address);
       Def (Trans_Decls.Ghdl_Psl_Assert_Failed,
            Grt.Lib.Ghdl_Psl_Assert_Failed'Address);
       Def (Trans_Decls.Ghdl_Psl_Cover,
@@ -547,22 +520,41 @@ package body Ghdlrun is
       Def (Trans_Decls.Ghdl_Std_Ulogic_Match_Le,
            Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Match_Le'Address);
 
+      Def (Trans_Decls.Ghdl_Std_Ulogic_Array_Match_Eq,
+           Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Array_Match_Eq'Address);
+      Def (Trans_Decls.Ghdl_Std_Ulogic_Array_Match_Ne,
+           Grt.Std_Logic_1164.Ghdl_Std_Ulogic_Array_Match_Ne'Address);
+
       Def (Trans_Decls.Ghdl_To_String_I32,
            Grt.Images.Ghdl_To_String_I32'Address);
       Def (Trans_Decls.Ghdl_To_String_F64,
            Grt.Images.Ghdl_To_String_F64'Address);
       Def (Trans_Decls.Ghdl_To_String_F64_Digits,
            Grt.Images.Ghdl_To_String_F64_Digits'Address);
+      Def (Trans_Decls.Ghdl_To_String_F64_Format,
+           Grt.Images.Ghdl_To_String_F64_Format'Address);
+      Def (Trans_Decls.Ghdl_To_String_B1,
+           Grt.Images.Ghdl_To_String_B1'Address);
+      Def (Trans_Decls.Ghdl_To_String_E8,
+           Grt.Images.Ghdl_To_String_E8'Address);
+      Def (Trans_Decls.Ghdl_To_String_E32,
+           Grt.Images.Ghdl_To_String_E32'Address);
+      Def (Trans_Decls.Ghdl_To_String_P32,
+           Grt.Images.Ghdl_To_String_P32'Address);
+      Def (Trans_Decls.Ghdl_To_String_P64,
+           Grt.Images.Ghdl_To_String_P64'Address);
+      Def (Trans_Decls.Ghdl_Time_To_String_Unit,
+           Grt.Images.Ghdl_Time_To_String_Unit'Address);
       Def (Trans_Decls.Ghdl_BV_To_Ostring,
            Grt.Images.Ghdl_BV_To_Ostring'Address);
       Def (Trans_Decls.Ghdl_BV_To_Hstring,
            Grt.Images.Ghdl_BV_To_Hstring'Address);
-
-      --  Find untruncated_text_read, if any.
-      Decl := Find_Untruncated_Text_Read;
-      if Decl /= O_Dnode_Null then
-         Def (Decl, Grt.Files.Ghdl_Untruncated_Text_Read'Address);
-      end if;
+      Def (Trans_Decls.Ghdl_Array_Char_To_String_B1,
+           Grt.Images.Ghdl_Array_Char_To_String_B1'Address);
+      Def (Trans_Decls.Ghdl_Array_Char_To_String_E8,
+           Grt.Images.Ghdl_Array_Char_To_String_E8'Address);
+      Def (Trans_Decls.Ghdl_Array_Char_To_String_E32,
+           Grt.Images.Ghdl_Array_Char_To_String_E32'Address);
 
       Ortho_Jit.Link (Err);
       if Err then

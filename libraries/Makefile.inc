@@ -208,8 +208,8 @@ std.v08: $(LIB08_DIR) $(STD08_SRCS) force
 	mkdir $(STD08_DIR)
 	prev=`pwd`; cd $(STD08_DIR); \
 	for i in $(STD08_SRCS); do \
-	  echo $$i; \
-	  $(ANALYZE08) --bootstrap --work=std $(REL_DIR)/$$i || exit 1; \
+	  cmd="$(ANALYZE08) --bootstrap --work=std $(REL_DIR)/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
 	done; \
 	cd $$prev
 

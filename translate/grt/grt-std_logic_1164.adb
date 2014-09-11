@@ -26,16 +26,16 @@
 with Grt.Lib;
 
 package body Grt.Std_Logic_1164 is
-   Assert_Msg : constant String :=
+   Assert_DC_Msg : constant String :=
      "STD_LOGIC_1164: '-' operand for matching ordering operator";
 
-   Assert_Msg_Bound : constant Std_String_Bound :=
-     (Dim_1 => (Left => 1, Right => Assert_Msg'Length, Dir => Dir_To,
-                Length => Assert_Msg'Length));
+   Assert_DC_Msg_Bound : constant Std_String_Bound :=
+     (Dim_1 => (Left => 1, Right => Assert_DC_Msg'Length, Dir => Dir_To,
+                Length => Assert_DC_Msg'Length));
 
-   Assert_Msg_Str : aliased constant Std_String :=
-     (Base => To_Std_String_Basep (Assert_Msg'Address),
-      Bounds => To_Std_String_Boundp (Assert_Msg_Bound'Address));
+   Assert_DC_Msg_Str : aliased constant Std_String :=
+     (Base => To_Std_String_Basep (Assert_DC_Msg'Address),
+      Bounds => To_Std_String_Boundp (Assert_DC_Msg_Bound'Address));
 
    Filename : constant String := "std_logic_1164.vhdl" & NUL;
    Loc : aliased constant Ghdl_Location :=
@@ -48,10 +48,9 @@ package body Grt.Std_Logic_1164 is
       use Grt.Lib;
    begin
       if V = '-' then
-         --  FIXME: assert disabled for ieee.
-         Ghdl_Assert_Failed
-           (To_Std_String_Ptr (Assert_Msg_Str'Address), Error_Severity,
-            To_Ghdl_Location_Ptr (Loc'Address), null);
+         Ghdl_Ieee_Assert_Failed
+           (To_Std_String_Ptr (Assert_DC_Msg_Str'Address), Error_Severity,
+            To_Ghdl_Location_Ptr (Loc'Address));
       end if;
    end Assert_Not_Match;
 
@@ -95,4 +94,53 @@ package body Grt.Std_Logic_1164 is
       return Std_Ulogic'Pos (Or_Table (Match_Lt_Table (Left, Right),
                                        Match_Eq_Table (Left, Right)));
    end Ghdl_Std_Ulogic_Match_Le;
+
+   Assert_Arr_Msg : constant String :=
+     "parameters of '?=' array operator are not of the same length";
+
+   Assert_Arr_Msg_Bound : constant Std_String_Bound :=
+     (Dim_1 => (Left => 1, Right => Assert_Arr_Msg'Length, Dir => Dir_To,
+                Length => Assert_Arr_Msg'Length));
+
+   Assert_Arr_Msg_Str : aliased constant Std_String :=
+     (Base => To_Std_String_Basep (Assert_Arr_Msg'Address),
+      Bounds => To_Std_String_Boundp (Assert_Arr_Msg_Bound'Address));
+
+
+   function Ghdl_Std_Ulogic_Array_Match_Eq (L : Ghdl_Ptr;
+                                            L_Len : Ghdl_Index_Type;
+                                            R : Ghdl_Ptr;
+                                            R_Len : Ghdl_Index_Type)
+                                           return Ghdl_I32
+   is
+      use Grt.Lib;
+      L_Arr : constant Ghdl_E8_Array_Base_Ptr :=
+        To_Ghdl_E8_Array_Base_Ptr (L);
+      R_Arr : constant Ghdl_E8_Array_Base_Ptr :=
+        To_Ghdl_E8_Array_Base_Ptr (R);
+      Res : Std_Ulogic := '1';
+   begin
+      if L_Len /= R_Len then
+         Ghdl_Ieee_Assert_Failed
+           (To_Std_String_Ptr (Assert_Arr_Msg_Str'Address), Error_Severity,
+            To_Ghdl_Location_Ptr (Loc'Address));
+      end if;
+      for I in 1 .. L_Len loop
+         Res := And_Table
+           (Res, Std_Ulogic'Val (Ghdl_Std_Ulogic_Match_Eq (L_Arr (I - 1),
+                                                           R_Arr (I - 1))));
+      end loop;
+      return Std_Ulogic'Pos (Res);
+   end Ghdl_Std_Ulogic_Array_Match_Eq;
+
+   function Ghdl_Std_Ulogic_Array_Match_Ne (L : Ghdl_Ptr;
+                                            L_Len : Ghdl_Index_Type;
+                                            R : Ghdl_Ptr;
+                                            R_Len : Ghdl_Index_Type)
+                                           return Ghdl_I32 is
+   begin
+      return Std_Ulogic'Pos
+        (Not_Table (Std_Ulogic'Val
+                      (Ghdl_Std_Ulogic_Array_Match_Eq (L, L_Len, R, R_Len))));
+   end Ghdl_Std_Ulogic_Array_Match_Ne;
 end Grt.Std_Logic_1164;

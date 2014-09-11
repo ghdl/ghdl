@@ -67,6 +67,9 @@ package Grt.Errors is
    pragma No_Return (Fatal_Error);
    pragma Export (C, Fatal_Error, "__ghdl_fatal");
 
+   Exit_Status : Integer := 0;
+   procedure Exit_Simulation;
+
    --  Hook called in case of error.
    Error_Hook : Grt.Hooks.Proc_Hook_Type := null;
 

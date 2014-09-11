@@ -20,6 +20,7 @@ with Ortho_Nodes; use Ortho_Nodes;
 package Trans_Decls is
    --  Procedures called in case of assert failed.
    Ghdl_Assert_Failed : O_Dnode;
+   Ghdl_Ieee_Assert_Failed : O_Dnode;
    Ghdl_Psl_Assert_Failed : O_Dnode;
 
    Ghdl_Psl_Cover : O_Dnode;
@@ -225,11 +226,23 @@ package Trans_Decls is
    Ghdl_Std_Ulogic_Match_Ne : O_Dnode;
    Ghdl_Std_Ulogic_Match_Lt : O_Dnode;
    Ghdl_Std_Ulogic_Match_Le : O_Dnode;
+   Ghdl_Std_Ulogic_Array_Match_Eq : O_Dnode;
+   Ghdl_Std_Ulogic_Array_Match_Ne : O_Dnode;
 
    --  For To_String (vhdl 2008).
    Ghdl_To_String_I32 : O_Dnode;
    Ghdl_To_String_F64 : O_Dnode;
    Ghdl_To_String_F64_Digits : O_Dnode;
+   Ghdl_To_String_F64_Format : O_Dnode;
+   Ghdl_To_String_B1 : O_Dnode;
+   Ghdl_To_String_E8 : O_Dnode;
+   Ghdl_To_String_E32 : O_Dnode;
+   Ghdl_To_String_P32 : O_Dnode;
+   Ghdl_To_String_P64 : O_Dnode;
+   Ghdl_Time_To_String_Unit : O_Dnode;
+   Ghdl_Array_Char_To_String_B1 : O_Dnode;
+   Ghdl_Array_Char_To_String_E8 : O_Dnode;
+   Ghdl_Array_Char_To_String_E32 : O_Dnode;
    Ghdl_BV_To_String : O_Dnode;
    Ghdl_BV_To_Ostring : O_Dnode;
    Ghdl_BV_To_Hstring : O_Dnode;

@@ -1802,6 +1802,7 @@ package Iirs is
    --
    --  index_subtype_definition ::= type_mark RANGE <>
    --
+   --  Note: Use Get_Element_Subtype to get the element subtype definition.
    --   Get/Set_Element_Subtype_Indication (Field1)
    --
    --   Get/Set_Type_Declarator (Field3)
@@ -2112,6 +2113,7 @@ package Iirs is
 
    -- Iir_Kind_Array_Subtype_Definition (Medium)
    --
+   --  Note: Use Get_Element_Subtype to get the element subtype definition.
    --   Get/Set_Element_Subtype_Indication (Field1)
    --
    --   Get/Set_Subtype_Type_Mark (Field2)

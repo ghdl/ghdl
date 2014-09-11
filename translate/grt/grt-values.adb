@@ -602,22 +602,7 @@ package body Grt.Values is
          Error_E ("'");
       end if;
 
-      case Multiple.Kind is
-         when Ghdl_Rtik_Unit64 =>
-            Mult := To_Ghdl_Rtin_Unit64_Acc (Multiple).Value;
-         when Ghdl_Rtik_Unitptr =>
-            case Rti.Kind is
-               when Ghdl_Rtik_Type_P64 =>
-                  Mult := To_Ghdl_Rtin_Unitptr_Acc (Multiple).Addr.I64;
-               when Ghdl_Rtik_Type_P32 =>
-                  Mult := Ghdl_I64
-                    (To_Ghdl_Rtin_Unitptr_Acc (Multiple).Addr.I32);
-               when others =>
-                  Internal_Error ("values.physical_type(P32/P64-1)");
-            end case;
-         when others =>
-            Internal_Error ("values.physical_type(P32/P64-2)");
-      end case;
+      Mult := Grt.Rtis_Utils.Get_Physical_Unit_Value (Multiple, Rti);
 
       if Lit_End = 0 then
          return Mult;

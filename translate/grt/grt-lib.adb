@@ -39,40 +39,14 @@ package body Grt.Lib is
       Memmove (Dest, Src, Size);
    end Ghdl_Memcpy;
 
-   Ieee_Name : constant String := "ieee" & NUL;
-
    procedure Do_Report (Msg : String;
                         Str : Std_String_Ptr;
                         Default_Str : String;
                         Severity : Integer;
-                        Loc : Ghdl_Location_Ptr;
-                        Unit : Ghdl_Rti_Access)
+                        Loc : Ghdl_Location_Ptr)
    is
-      use Grt.Options;
       Level : constant Integer := Severity mod 256;
    begin
-      --  Assertions from ieee library can be disabled.
-      if Unit /= null
-        and then Unit.Kind = Ghdl_Rtik_Package_Body
-        and then (Ieee_Asserts = Disable_Asserts
-                    or (Ieee_Asserts = Disable_Asserts_At_Time_0
-                          and Current_Time = 0))
-      then
-         declare
-            Blk : constant Ghdl_Rtin_Block_Acc :=
-              To_Ghdl_Rtin_Block_Acc (Unit);
-            Pkg : constant Ghdl_Rtin_Block_Acc :=
-              To_Ghdl_Rtin_Block_Acc (Blk.Parent);
-            Lib : constant Ghdl_Rtin_Type_Scalar_Acc :=
-              To_Ghdl_Rtin_Type_Scalar_Acc (Pkg.Parent);
-         begin
-            --  Return now if this assert comes from the ieee library.
-            if Strcmp (Lib.Name, To_Ghdl_C_String (Ieee_Name'Address)) = 0 then
-               return;
-            end if;
-         end;
-      end if;
-
       Report_H;
       Report_C (Loc.Filename);
       Report_C (":");
@@ -109,56 +83,52 @@ package body Grt.Lib is
    end Do_Report;
 
    procedure Ghdl_Assert_Failed
-     (Str : Std_String_Ptr;
-      Severity : Integer;
-      Loc : Ghdl_Location_Ptr;
-      Unit : Ghdl_Rti_Access)
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr)
    is
    begin
-      Do_Report ("assertion",
-                 Str, "Assertion violation", Severity, Loc, Unit);
+      Do_Report ("assertion", Str, "Assertion violation", Severity, Loc);
    end Ghdl_Assert_Failed;
 
-   procedure Ghdl_Psl_Assert_Failed
-     (Str : Std_String_Ptr;
-      Severity : Integer;
-      Loc : Ghdl_Location_Ptr;
-      Unit : Ghdl_Rti_Access)
+   procedure Ghdl_Ieee_Assert_Failed
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr)
    is
+      use Grt.Options;
    begin
-      Do_Report ("psl assertion",
-                 Str, "Assertion violation", Severity, Loc, Unit);
+      if Ieee_Asserts = Disable_Asserts
+        or else (Ieee_Asserts = Disable_Asserts_At_Time_0 and Current_Time = 0)
+      then
+         return;
+      else
+         Do_Report ("assertion", Str, "Assertion violation", Severity, Loc);
+      end if;
+   end Ghdl_Ieee_Assert_Failed;
+
+   procedure Ghdl_Psl_Assert_Failed
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
+   begin
+      Do_Report ("psl assertion", Str, "Assertion violation", Severity, Loc);
    end Ghdl_Psl_Assert_Failed;
 
    procedure Ghdl_Psl_Cover
-     (Str : Std_String_Ptr;
-      Severity : Integer;
-      Loc : Ghdl_Location_Ptr;
-      Unit : Ghdl_Rti_Access)
-   is
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
    begin
-      Do_Report ("psl cover", Str, "sequence covered", Severity, Loc, Unit);
+      Do_Report ("psl cover", Str, "sequence covered", Severity, Loc);
    end Ghdl_Psl_Cover;
 
    procedure Ghdl_Psl_Cover_Failed
-     (Str : Std_String_Ptr;
-      Severity : Integer;
-      Loc : Ghdl_Location_Ptr;
-      Unit : Ghdl_Rti_Access)
-   is
+     (Str : Std_String_Ptr; Severity : Integer; Loc : Ghdl_Location_Ptr) is
    begin
       Do_Report ("psl cover failure",
-                 Str, "sequence not covered", Severity, Loc, Unit);
+                 Str, "sequence not covered", Severity, Loc);
    end Ghdl_Psl_Cover_Failed;
 
    procedure Ghdl_Report
      (Str : Std_String_Ptr;
       Severity : Integer;
-      Loc : Ghdl_Location_Ptr;
-      Unit : Ghdl_Rti_Access)
+      Loc : Ghdl_Location_Ptr)
    is
    begin
-      Do_Report ("report", Str, "Assertion violation", Severity, Loc, Unit);
+      Do_Report ("report", Str, "Assertion violation", Severity, Loc);
    end Ghdl_Report;
 
    procedure Ghdl_Program_Error (Filename : Ghdl_C_String;
@@ -295,7 +265,34 @@ package body Grt.Lib is
          return 1.0 / Res;
       end if;
    end Ghdl_Real_Exp;
+
+   function Ghdl_Get_Resolution_Limit return Std_Time is
+   begin
+      return 1;
+   end Ghdl_Get_Resolution_Limit;
+
+   procedure Ghdl_Control_Simulation
+     (Stop : Ghdl_B1; Has_Status : Ghdl_B1; Status : Std_Integer) is
+   begin
+      Report_H;
+      --  Report_C (Grt.Options.Progname);
+      Report_C ("simulation ");
+      if Stop then
+         Report_C ("stopped");
+      else
+         Report_C ("finished");
+      end if;
+      Report_C (" @");
+      Report_Now_C;
+      if Has_Status then
+         Report_C (" with status ");
+         Report_C (Integer (Status));
+      end if;
+      Report_E ("");
+      if Has_Status then
+         Exit_Status := Integer (Status);
+      end if;
+      Exit_Simulation;
+   end Ghdl_Control_Simulation;
+
 end Grt.Lib;
-
-
-

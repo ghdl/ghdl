@@ -46,6 +46,12 @@ package body Grt.Errors is
    pragma Import (C, Maybe_Return_Via_Longjump,
                   "__ghdl_maybe_return_via_longjump");
 
+   procedure Exit_Simulation is
+   begin
+      Maybe_Return_Via_Longjump (-2);
+      Internal_Error ("exit_simulation");
+   end Exit_Simulation;
+
    procedure Fatal_Error is
    begin
       if Error_Hook /= null then

@@ -171,7 +171,23 @@ package Grt.Types is
      (Mode_B1, Mode_E8, Mode_E32, Mode_I32, Mode_I64, Mode_F64);
 
    type Ghdl_B1_Array is array (Ghdl_Index_Type range <>) of Ghdl_B1;
+   subtype Ghdl_B1_Array_Base is Ghdl_B1_Array (Ghdl_Index_Type);
+   type Ghdl_B1_Array_Base_Ptr is access Ghdl_B1_Array_Base;
+   function To_Ghdl_B1_Array_Base_Ptr is new Ada.Unchecked_Conversion
+     (Source => Ghdl_Ptr, Target => Ghdl_B1_Array_Base_Ptr);
+
    type Ghdl_E8_Array is array (Ghdl_Index_Type range <>) of Ghdl_E8;
+   subtype Ghdl_E8_Array_Base is Ghdl_E8_Array (Ghdl_Index_Type);
+   type Ghdl_E8_Array_Base_Ptr is access Ghdl_E8_Array_Base;
+   function To_Ghdl_E8_Array_Base_Ptr is new Ada.Unchecked_Conversion
+     (Source => Ghdl_Ptr, Target => Ghdl_E8_Array_Base_Ptr);
+
+   type Ghdl_E32_Array is array (Ghdl_Index_Type range <>) of Ghdl_E32;
+   subtype Ghdl_E32_Array_Base is Ghdl_E32_Array (Ghdl_Index_Type);
+   type Ghdl_E32_Array_Base_Ptr is access Ghdl_E32_Array_Base;
+   function To_Ghdl_E32_Array_Base_Ptr is new Ada.Unchecked_Conversion
+     (Source => Ghdl_Ptr, Target => Ghdl_E32_Array_Base_Ptr);
+
    type Ghdl_I32_Array is array (Ghdl_Index_Type range <>) of Ghdl_I32;
 
    type Value_Union (Mode : Mode_Type := Mode_B1) is record

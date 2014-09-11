@@ -995,7 +995,7 @@ package body Grt.Processes is
             Grt.Disp.Disp_Now;
          end if;
          Status := Run_Through_Longjump (Simulation_Cycle'Access);
-         exit when Status = Run_Failure;
+         exit when Status < 0;
          if Trace_Signals then
             Grt.Disp_Signals.Disp_All_Signals;
          end if;
@@ -1035,7 +1035,7 @@ package body Grt.Processes is
       if Status = Run_Failure then
          return -1;
       else
-         return 0;
+         return Exit_Status ;
       end if;
    end Simulation;
 

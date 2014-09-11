@@ -190,6 +190,8 @@ package Grt.Rtis is
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
       Nbr : Ghdl_Index_Type;
+      --  Characters are represented as 'X', identifiers are represented as is,
+      --  extended identifiers are represented as is too.
       Names : Ghdl_C_String_Array_Ptr;
    end record;
    type Ghdl_Rtin_Type_Enum_Acc is access Ghdl_Rtin_Type_Enum;

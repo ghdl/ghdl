@@ -99,9 +99,26 @@ package Grt.Std_Logic_1164 is
    function Ghdl_Std_Ulogic_Match_Lt (L, R : Ghdl_E8) return Ghdl_E8;
    function Ghdl_Std_Ulogic_Match_Le (L, R : Ghdl_E8) return Ghdl_E8;
    --  For Gt and Ge, use Lt and Le with swapped parameters.
+
+   function Ghdl_Std_Ulogic_Array_Match_Eq (L : Ghdl_Ptr;
+                                            L_Len : Ghdl_Index_Type;
+                                            R : Ghdl_Ptr;
+                                            R_Len : Ghdl_Index_Type)
+                                           return Ghdl_I32;
+   function Ghdl_Std_Ulogic_Array_Match_Ne (L : Ghdl_Ptr;
+                                            L_Len : Ghdl_Index_Type;
+                                            R : Ghdl_Ptr;
+                                            R_Len : Ghdl_Index_Type)
+                                           return Ghdl_I32;
+
 private
    pragma Export (C, Ghdl_Std_Ulogic_Match_Eq, "__ghdl_std_ulogic_match_eq");
    pragma Export (C, Ghdl_Std_Ulogic_Match_Ne, "__ghdl_std_ulogic_match_ne");
    pragma Export (C, Ghdl_Std_Ulogic_Match_Lt, "__ghdl_std_ulogic_match_lt");
    pragma Export (C, Ghdl_Std_Ulogic_Match_Le, "__ghdl_std_ulogic_match_le");
+
+   pragma Export (C, Ghdl_Std_Ulogic_Array_Match_Eq,
+                  "__ghdl_std_ulogic_array_match_eq");
+   pragma Export (C, Ghdl_Std_Ulogic_Array_Match_Ne,
+                  "__ghdl_std_ulogic_array_match_ne");
 end Grt.Std_Logic_1164;
