@@ -12854,7 +12854,7 @@ package body Translation is
 
          Diff : O_Dnode;
          Unsigned_Diff : O_Dnode;
-         If_Blk1 : O_If_Block;
+         If_Blk, If_Blk1 : O_If_Block;
       begin
          --  Evaluate slice bounds.
          Chap3.Create_Array_Subtype (Slice_Type, True);
@@ -12954,16 +12954,20 @@ package body Translation is
                Expr, 1);
          end if;
 
-         --  Check if not a null slice.
-         --  FIXME: why ?
-         --Start_If_Stmt
-         --  (If_Blk,
-         --   New_Compare_Op
-         --   (ON_Neq,
-         --    Get_Array_Bound_Length (Res, Prefix_Type, 1, Sig),
-         --    New_Unsigned_Literal (Ghdl_Index_Type, 0),
-         --    Ghdl_Bool_Type_Node));
+         Unsigned_Diff := Create_Temp (Ghdl_Index_Type);
 
+         --  Check if not a null slice.
+         --  The bounds of a null slice may be out of range.  So DIFF cannot
+         --  be computed by substraction.
+         Start_If_Stmt
+           (If_Blk,
+            New_Compare_Op
+              (ON_Eq,
+               M2E (Chap3.Range_To_Length (Slice_Range)),
+               New_Lit (Ghdl_Index_0),
+               Ghdl_Bool_Type));
+         New_Assign_Stmt (New_Obj (Unsigned_Diff), New_Lit (Ghdl_Index_0));
+         New_Else_Stmt (If_Blk);
          Diff := Create_Temp (Index_Info.Ortho_Type (Mode_Value));
 
          --  Compute the offset in the prefix.
@@ -12999,7 +13003,6 @@ package body Translation is
          end if;
 
          --  Note: this also check for overflow.
-         Unsigned_Diff := Create_Temp (Ghdl_Index_Type);
          New_Assign_Stmt
            (New_Obj (Unsigned_Diff),
             New_Convert_Ov (New_Obj_Value (Diff), Ghdl_Index_Type));
@@ -13026,6 +13029,7 @@ package body Translation is
                Ghdl_Bool_Type);
             Check_Bound_Error (New_Dyadic_Op (ON_Or, Err_1, Err_2), Expr, 1);
          end;
+         Finish_If_Stmt (If_Blk);
 
          Data.Slice_Range := Slice_Range;
          Data.Prefix_Var := Prefix_Var;
@@ -13078,9 +13082,8 @@ package body Translation is
          end if;
       end Translate_Slice_Name_Finish;
 
-      function Translate_Slice_Name
-        (Prefix : Mnode; Expr : Iir_Slice_Name)
-        return Mnode
+      function Translate_Slice_Name (Prefix : Mnode; Expr : Iir_Slice_Name)
+                                    return Mnode
       is
          Data : Slice_Name_Data;
       begin
@@ -16168,7 +16171,12 @@ package body Translation is
       procedure Translate_Array_Aggregate
         (Target : Mnode; Target_Type : Iir; Aggr : Iir)
       is
-         Aggr_Type : Iir;
+         Aggr_Type : constant Iir := Get_Type (Aggr);
+         Index_List : constant Iir_List := Get_Index_Subtype_List (Aggr_Type);
+         Targ_Index_List : constant Iir_List :=
+           Get_Index_Subtype_List (Target_Type);
+
+         Aggr_Info : Iir_Aggregate_Info;
          Base : Mnode;
          Bounds : Mnode;
          Var_Index : O_Dnode;
@@ -16201,15 +16209,11 @@ package body Translation is
          end Check_Value;
 
          Range_Ptr : Mnode;
-         Index_List : Iir_List;
-         Targ_Index_List : Iir_List;
          Subtarg_Type : Iir;
          Subaggr_Type : Iir;
          L, H : Iir;
          Min : Iir_Int32;
          Has_Others : Boolean;
-
-         Aggr_Info : Iir_Aggregate_Info;
 
          Var_Err : O_Dnode;
          E : O_Enode;
@@ -16220,12 +16224,9 @@ package body Translation is
          Targ := Stabilize (Target);
          Base := Stabilize (Chap3.Get_Array_Base (Targ));
          Bounds := Stabilize (Chap3.Get_Array_Bounds (Targ));
+         Aggr_Info := Get_Aggregate_Info (Aggr);
 
          --  Check type
-         Aggr_Type := Get_Type (Aggr);
-         Index_List := Get_Index_Subtype_List (Aggr_Type);
-         Targ_Index_List := Get_Index_Subtype_List (Target_Type);
-         Aggr_Info := Get_Aggregate_Info (Aggr);
          for I in Natural loop
             Subaggr_Type := Get_Index_Type (Index_List, I);
             exit when Subaggr_Type = Null_Iir;
@@ -16363,10 +16364,9 @@ package body Translation is
       procedure Translate_Aggregate
         (Target : Mnode; Target_Type : Iir; Aggr : Iir)
       is
-         Aggr_Type : Iir;
+         Aggr_Type : constant Iir := Get_Type (Aggr);
          El : Iir;
       begin
-         Aggr_Type := Get_Type (Aggr);
          case Get_Kind (Aggr_Type) is
             when Iir_Kind_Array_Subtype_Definition
               | Iir_Kind_Array_Type_Definition =>
@@ -16535,6 +16535,13 @@ package body Translation is
            Get_Index_Subtype_List (Res_Type);
          Expr_Indexes : constant Iir_List :=
            Get_Index_Subtype_List (Expr_Type);
+
+         Res_Base_Type : constant Iir := Get_Base_Type (Res_Type);
+         Expr_Base_Type : constant Iir := Get_Base_Type (Expr_Type);
+         Res_Base_Indexes : constant Iir_List :=
+           Get_Index_Subtype_List (Res_Base_Type);
+         Expr_Base_Indexes : constant Iir_List :=
+           Get_Index_Subtype_List (Expr_Base_Type);
          Res : Mnode;
          E : Mnode;
          Bounds : O_Dnode;
@@ -16563,21 +16570,29 @@ package body Translation is
             declare
                Rb_Ptr : Mnode;
                Eb_Ptr : Mnode;
+               Ee : O_Enode;
+               Same_Index_Type : constant Boolean :=
+                 (Get_Index_Type (Res_Base_Indexes, I)
+                    = Get_Index_Type (Expr_Base_Indexes, I));
             begin
                Open_Temp;
                Rb_Ptr := Stabilize
                  (Chap3.Get_Array_Range (Res, Res_Type, I + 1));
                Eb_Ptr := Stabilize
                  (Chap3.Get_Array_Range (E, Expr_Type, I + 1));
-               --  Convert left and right.
-               New_Assign_Stmt
-                 (M2Lv (Chap3.Range_To_Left (Rb_Ptr)),
-                  Translate_Type_Conversion
-                    (M2E (Chap3.Range_To_Left (Eb_Ptr)), E_El, R_El, Loc));
-               New_Assign_Stmt
-                 (M2Lv (Chap3.Range_To_Right (Rb_Ptr)),
-                  Translate_Type_Conversion
-                    (M2E (Chap3.Range_To_Right (Eb_Ptr)), E_El, R_El, Loc));
+               --  Convert left and right (unless they have the same type -
+               --  this is an optimization but also this deals with null
+               --  array in common cases).
+               Ee := M2E (Chap3.Range_To_Left (Eb_Ptr));
+               if not Same_Index_Type then
+                  Ee := Translate_Type_Conversion (Ee, E_El, R_El, Loc);
+               end if;
+               New_Assign_Stmt (M2Lv (Chap3.Range_To_Left (Rb_Ptr)), Ee);
+               Ee := M2E (Chap3.Range_To_Right (Eb_Ptr));
+               if not Same_Index_Type then
+                  Ee := Translate_Type_Conversion (Ee, E_El, R_El, Loc);
+               end if;
+               New_Assign_Stmt (M2Lv (Chap3.Range_To_Right (Rb_Ptr)), Ee);
                --  Copy Dir and Length.
                New_Assign_Stmt (M2Lv (Chap3.Range_To_Dir (Rb_Ptr)),
                                 M2E (Chap3.Range_To_Dir (Eb_Ptr)));
@@ -16863,20 +16878,17 @@ package body Translation is
                   Tinfo : Type_Info_Acc;
                   Mres : Mnode;
                begin
-                  if Rtype = Null_Iir then
-                     raise Internal_Error;
-                  end if;
-
-                  --  Extract the type of the aggregate.
-                  if Get_Kind (Rtype) /= Iir_Kind_Array_Type_Definition then
+                  --  Extract the type of the aggregate.  Use the type of the
+                  --  context if it is fully constrained.
+                  pragma Assert (Rtype /= Null_Iir);
+                  if Is_Fully_Constrained_Type (Rtype) then
                      Aggr_Type := Rtype;
                   else
                      Aggr_Type := Expr_Type;
-                     if Get_Kind (Expr_Type)
-                       = Iir_Kind_Array_Subtype_Definition
-                     then
-                        Chap3.Create_Array_Subtype (Expr_Type, True);
-                     end if;
+                  end if;
+                  if Get_Kind (Aggr_Type) = Iir_Kind_Array_Subtype_Definition
+                  then
+                     Chap3.Create_Array_Subtype (Aggr_Type, True);
                   end if;
 
                   --  FIXME: this may be not necessary
@@ -20712,15 +20724,25 @@ package body Translation is
 
             when Iir_Predefined_File_Close =>
                declare
-                  File_Param : Iir;
+                  File_Param : constant Iir := Get_Actual (Param_Chain);
                   Constr : O_Assoc_List;
                begin
-                  File_Param := Get_Actual (Param_Chain);
                   if Get_Text_File_Flag (Get_Type (File_Param)) then
                      Start_Association (Constr, Ghdl_Text_File_Close);
                   else
                      Start_Association (Constr, Ghdl_File_Close);
                   end if;
+                  New_Association
+                    (Constr, Chap7.Translate_Expression (File_Param));
+                  New_Procedure_Call (Constr);
+               end;
+
+            when Iir_Predefined_Flush =>
+               declare
+                  File_Param : constant Iir := Get_Actual (Param_Chain);
+                  Constr : O_Assoc_List;
+               begin
+                  Start_Association (Constr, Ghdl_File_Flush);
                   New_Association
                     (Constr, Chap7.Translate_Expression (File_Param));
                   New_Procedure_Call (Constr);
@@ -29091,7 +29113,7 @@ package body Translation is
       Param : O_Dnode;
    begin
       Start_Function_Decl
-        (Interfaces, Get_Identifier ("__ghdl_std_ulogic_match_" & Name),
+        (Interfaces, Get_Identifier ("__ghdl_std_ulogic_array_match_" & Name),
          O_Storage_External, Ghdl_I32_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Left, Ghdl_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Wki_L_Len, Ghdl_Index_Type);
@@ -29390,6 +29412,13 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
                           Ghdl_File_Index_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_File_Close);
+
+      --  procedure __ghdl_file_flush (file : file_index_type);
+      Start_Procedure_Decl (Interfaces, Get_Identifier ("__ghdl_file_flush"),
+                            O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
+                          Ghdl_File_Index_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_File_Flush);
 
       ---------------
       --  signals  --

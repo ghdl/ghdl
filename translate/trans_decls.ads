@@ -193,6 +193,7 @@ package Trans_Decls is
 
    Ghdl_Text_File_Close : O_Dnode;
    Ghdl_File_Close : O_Dnode;
+   Ghdl_File_Flush : O_Dnode;
 
    Ghdl_File_Endfile : O_Dnode;
 

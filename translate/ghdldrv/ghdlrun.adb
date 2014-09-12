@@ -468,6 +468,8 @@ package body Ghdlrun is
            Grt.Files.Ghdl_File_Open_Status'Address);
       Def (Trans_Decls.Ghdl_File_Close,
            Grt.Files.Ghdl_File_Close'Address);
+      Def (Trans_Decls.Ghdl_File_Flush,
+           Grt.Files.Ghdl_File_Flush'Address);
       Def (Trans_Decls.Ghdl_Write_Scalar,
            Grt.Files.Ghdl_Write_Scalar'Address);
       Def (Trans_Decls.Ghdl_Read_Scalar,
