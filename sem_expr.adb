@@ -3365,6 +3365,9 @@ package body Sem_Expr is
          end if;
       end loop;
       Base_Type := Get_Base_Type (Aggr_Type);
+
+      --  FIXME: should reuse AGGR_TYPE iff AGGR_TYPE is fully constrained
+      --  and statically match the subtype of the aggregate.
       if Aggr_Constrained then
          A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
          for I in Infos'Range loop
@@ -3405,12 +3408,9 @@ package body Sem_Expr is
    --  Semantize aggregate EXPR whose type is expected to be A_TYPE.
    --  A_TYPE cannot be null_iir (this case is handled in sem_expression_ov)
    function Sem_Aggregate (Expr: Iir_Aggregate; A_Type: Iir)
-     return Iir_Aggregate
-   is
+                          return Iir_Aggregate is
    begin
-      if A_Type = Null_Iir then
-         raise Internal_Error;
-      end if;
+      pragma Assert (A_Type /= Null_Iir);
 
       --  An aggregate is at most globally static.
       Set_Expr_Staticness (Expr, Globally);

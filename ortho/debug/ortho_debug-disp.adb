@@ -59,6 +59,10 @@ package body Ortho_Debug.Disp is
       procedure Put_Trim (Str : String);
 
       procedure Set_Mark;
+
+      --  Flush to disk.  Only for debugging in case of crash.
+      procedure Flush_File;
+      pragma Unreferenced (Flush_File);
    private
       type Disp_Context is record
          --  File where the info are written to.
@@ -224,6 +228,14 @@ package body Ortho_Debug.Disp is
       begin
          Ctx.Mark := Ctx.Line_Len;
       end Set_Mark;
+
+      procedure Flush_File is
+         Status : int;
+         pragma Unreferenced (Status);
+      begin
+         Flush;
+         Status := fflush (Ctx.File);
+      end Flush_File;
    end Formated_Output;
 
    use Formated_Output;

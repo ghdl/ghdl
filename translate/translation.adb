@@ -10810,7 +10810,7 @@ package body Translation is
          Data : Read_Source_Data;
       begin
          if Rinfo = null then
-            --  Not resolver for this function
+            --  No resolver for this function
             return;
          end if;
 
@@ -10962,6 +10962,10 @@ package body Translation is
          end if;
 
          --  Call the resolution function.
+         if Finfo.Use_Stack2 then
+            Create_Temp_Stack2_Mark;
+         end if;
+
          Start_Association (Assoc, Finfo.Ortho_Func);
          if Finfo.Res_Interface /= O_Dnode_Null then
             New_Association (Assoc, M2E (Res));
@@ -13593,14 +13597,12 @@ package body Translation is
       function Translate_Static_Aggregate (Aggr : Iir)
                                           return O_Cnode
       is
-         Aggr_Type : Iir;
-         El_Type : Iir;
+         Aggr_Type : constant Iir := Get_Type (Aggr);
+         El_Type : constant Iir := Get_Element_Subtype (Aggr_Type);
          List : O_Array_Aggr_List;
          Res : O_Cnode;
       begin
-         Aggr_Type := Get_Type (Aggr);
          Chap3.Translate_Anonymous_Type_Definition (Aggr_Type, True);
-         El_Type := Get_Element_Subtype (Aggr_Type);
          Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
 
          Translate_Static_Aggregate_1

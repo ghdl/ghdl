@@ -46,7 +46,10 @@ package Grt.Unithread is
    procedure Set_Current_Process (Proc : Process_Acc);
    function Get_Current_Process return Process_Acc;
 
-   --  The secondary stack for the thread.
+   --  The secondary stack for the thread.  In this implementation, there is
+   --  only one secondary stack, shared by all processes. This is allowed,
+   --  because a wait statement cannot appear within a function.  So at a wait
+   --  statement, the secondary stack must be empty.
    function Get_Stack2 return Stack2_Ptr;
    procedure Set_Stack2 (St : Stack2_Ptr);
 
