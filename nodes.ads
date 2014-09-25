@@ -101,6 +101,7 @@ package Nodes is
 
    function Create_Node (Format : Format_Type) return Node_Type;
    procedure Free_Node (N : Node_Type);
+   function Next_Node (N : Node_Type) return Node_Type;
 
    function Get_Nkind (N : Node_Type) return Kind_Type;
    pragma Inline (Get_Nkind);

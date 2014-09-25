@@ -59,6 +59,9 @@ package Libraries is
    --  for library directories.
    Name_Nil : Name_Id;
 
+   --  Chain of obsoleted design units.
+   Obsoleted_Design_Units : Iir := Null_Iir;
+
    --  Initialize library pathes table.
    --  Set the local path.
    procedure Init_Pathes;

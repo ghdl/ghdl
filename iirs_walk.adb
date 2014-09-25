@@ -76,7 +76,7 @@ package body Iirs_Walk is
             Chain := Get_Case_Statement_Alternative_Chain (Stmt);
             while Chain /= Null_Iir loop
                Status := Walk_Sequential_Stmt_Chain
-                 (Get_Associated (Chain), Cb);
+                 (Get_Associated_Chain (Chain), Cb);
                exit when Status /= Walk_Continue;
                Chain := Get_Chain (Chain);
             end loop;
@@ -102,7 +102,8 @@ package body Iirs_Walk is
          when Iir_Kind_Aggregate =>
             Chain := Get_Association_Choices_Chain (Target);
             while Chain /= Null_Iir loop
-               Status := Walk_Assignment_Target (Get_Associated (Chain), Cb);
+               Status :=
+                 Walk_Assignment_Target (Get_Associated_Expr (Chain), Cb);
                exit when Status /= Walk_Continue;
                Chain := Get_Chain (Chain);
             end loop;

@@ -359,7 +359,9 @@ package body Sem_Specs is
                begin
                   Applied := Sem_Named_Entity1 (Ent, Base);
                   --  FIXME: check the alias denotes a local entity...
-                  if Applied and then Base /= Decl then
+                  if Applied
+                    and then Base /= Strip_Denoting_Name (Decl)
+                  then
                      Error_Msg_Sem
                        (Disp_Node (Ent) & " does not denote the entire object",
                         Attr);
@@ -442,7 +444,7 @@ package body Sem_Specs is
                   begin
                      El1 := Get_Case_Statement_Alternative_Chain (El);
                      while El1 /= Null_Iir loop
-                        Sem_Named_Entity_Chain (Get_Associated (El1));
+                        Sem_Named_Entity_Chain (Get_Associated_Chain (El1));
                         El1 := Get_Chain (El1);
                      end loop;
                   end;
@@ -574,7 +576,6 @@ package body Sem_Specs is
       Prefix : Iir;
       Inter : Name_Interpretation_Type;
       List : Iir_List;
-      Ov_List : Iir_Overload_List;
       Name : Iir;
    begin
       List := Create_Iir_List;
@@ -606,10 +607,7 @@ package body Sem_Specs is
          Inter := Get_Next_Interpretation (Inter);
       end loop;
 
-      Ov_List := Create_Overload_List (List);
-      Name := Sem_Decls.Sem_Signature (Ov_List, Sig);
-      Destroy_Iir_List (List);
-      Free_Iir (Ov_List);
+      Name := Sem_Decls.Sem_Signature (Create_Overload_List (List), Sig);
       if Name = Null_Iir then
          return;
       end if;

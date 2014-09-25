@@ -81,14 +81,14 @@ package body Canon is
       if Get_Nbr_Elements (Get_Index_Subtype_List (Aggr_Type)) = Dim then
          while Assoc /= Null_Iir loop
             Canon_Extract_Sensitivity
-              (Get_Associated (Assoc), Sensitivity_List, Is_Target);
+              (Get_Associated_Expr (Assoc), Sensitivity_List, Is_Target);
             Assoc := Get_Chain (Assoc);
          end loop;
       else
          while Assoc /= Null_Iir loop
             Canon_Extract_Sensitivity_Aggregate
-              (Get_Associated (Assoc), Sensitivity_List, Is_Target, Aggr_Type,
-               Dim + 1);
+              (Get_Associated_Expr (Assoc), Sensitivity_List,
+               Is_Target, Aggr_Type, Dim + 1);
             Assoc := Get_Chain (Assoc);
          end loop;
       end if;
@@ -270,7 +270,8 @@ package body Canon is
                      El := Get_Association_Choices_Chain (Expr);
                      while El /= Null_Iir loop
                         Canon_Extract_Sensitivity
-                          (Get_Associated (El), Sensitivity_List, Is_Target);
+                          (Get_Associated_Expr (El), Sensitivity_List,
+                           Is_Target);
                         El := Get_Chain (El);
                      end loop;
                   when others =>
@@ -391,7 +392,7 @@ package body Canon is
                   Choice := Get_Case_Statement_Alternative_Chain (Stmt);
                   while Choice /= Null_Iir loop
                      Canon_Extract_Sequential_Statement_Chain_Sensitivity
-                       (Get_Associated (Choice), List);
+                       (Get_Associated_Chain (Choice), List);
                      Choice := Get_Chain (Choice);
                   end loop;
                end;
@@ -570,10 +571,10 @@ package body Canon is
               | Iir_Kind_Choice_By_Name =>
                null;
             when Iir_Kind_Choice_By_Expression =>
-               Canon_Expression (Get_Expression (Assoc));
+               Canon_Expression (Get_Choice_Expression (Assoc));
             when Iir_Kind_Choice_By_Range =>
                declare
-                  Choice : constant Iir := Get_Expression (Assoc);
+                  Choice : constant Iir := Get_Choice_Range (Assoc);
                begin
                   if Get_Kind (Choice) = Iir_Kind_Range_Expression then
                      Canon_Expression (Choice);
@@ -582,7 +583,7 @@ package body Canon is
             when others =>
                Error_Kind ("canon_aggregate_expression", Assoc);
          end case;
-         Canon_Expression (Get_Associated (Assoc));
+         Canon_Expression (Get_Associated_Expr (Assoc));
          Assoc := Get_Chain (Assoc);
       end loop;
    end Canon_Aggregate_Expression;
@@ -1053,7 +1054,7 @@ package body Canon is
                   Choice := Get_Case_Statement_Alternative_Chain (Stmt);
                   while Choice /= Null_Iir loop
                      -- FIXME: canon choice expr.
-                     Canon_Sequential_Stmts (Get_Associated (Choice));
+                     Canon_Sequential_Stmts (Get_Associated_Chain (Choice));
                      Choice := Get_Chain (Choice);
                   end loop;
                end;
@@ -1427,11 +1428,11 @@ package body Canon is
       Selected_Waveform := Get_Selected_Waveform_Chain (Conc_Stmt);
       Set_Case_Statement_Alternative_Chain (Case_Stmt, Selected_Waveform);
       while Selected_Waveform /= Null_Iir loop
-         Assoc := Get_Associated (Selected_Waveform);
+         Assoc := Get_Associated_Chain (Selected_Waveform);
          if Assoc /= Null_Iir then
             Stmt := Canon_Wave_Transform (Conc_Stmt, Assoc, Proc);
             Set_Parent (Stmt, Case_Stmt);
-            Set_Associated (Selected_Waveform, Stmt);
+            Set_Associated_Chain (Selected_Waveform, Stmt);
          end if;
          Selected_Waveform := Get_Chain (Selected_Waveform);
       end loop;
@@ -2412,12 +2413,15 @@ package body Canon is
                Canon_Component_Specification (El, Blk);
             when Iir_Kind_Block_Configuration =>
                Sub_Blk := Get_Block_Specification (El);
+               if Get_Kind (Sub_Blk) = Iir_Kind_Simple_Name then
+                  Sub_Blk := Get_Named_Entity (Sub_Blk);
+               end if;
                case Get_Kind (Sub_Blk) is
                   when Iir_Kind_Block_Statement =>
                      Set_Block_Block_Configuration (Sub_Blk, El);
                   when Iir_Kind_Indexed_Name
                     | Iir_Kind_Slice_Name =>
-                     Sub_Blk := Get_Prefix (Sub_Blk);
+                     Sub_Blk := Strip_Denoting_Name (Get_Prefix (Sub_Blk));
                      Set_Prev_Block_Configuration
                        (El, Get_Generate_Block_Configuration (Sub_Blk));
                      Set_Generate_Block_Configuration (Sub_Blk, El);
@@ -2523,6 +2527,9 @@ package body Canon is
                      Append (Last_Item, Conf, Res);
                   elsif Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
                      Blk_Spec := Get_Block_Specification (Blk_Config);
+                     if Get_Kind (Blk_Spec) = Iir_Kind_Simple_Name then
+                        Blk_Spec := Get_Named_Entity (Blk_Spec);
+                     end if;
                      if Get_Kind (Blk_Spec) /= Iir_Kind_Generate_Statement then
                         --  There are partial configurations.
                         --  Create a default block configuration.
@@ -2532,7 +2539,7 @@ package body Canon is
                         Blk_Spec := Create_Iir (Iir_Kind_Selected_Name);
                         Location_Copy (Blk_Spec, Res);
                         Set_Identifier (Blk_Spec, Std_Names.Name_Others);
-                        Set_Prefix (Blk_Spec, El);
+                        Set_Prefix (Blk_Spec, Build_Simple_Name (El, Res));
                         Set_Block_Specification (Res, Blk_Spec);
                         Append (Last_Item, Conf, Res);
                      end if;

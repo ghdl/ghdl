@@ -39,6 +39,8 @@ configuration.adb
 configuration.ads
 nodes.ads
 nodes.adb
+nodes_gc.ads
+nodes_gc.adb
 options.ads
 options.adb
 psl-errors.ads

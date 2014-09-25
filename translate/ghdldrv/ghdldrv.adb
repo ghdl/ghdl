@@ -113,6 +113,9 @@ package body Ghdldrv is
       elsif Status = 1 then
          Error ("compilation error");
          raise Compile_Error;
+      elsif Status > 127 then
+         Error ("executable killed by a signal");
+         raise Exec_Error;
       else
          Error ("exec error");
          raise Exec_Error;

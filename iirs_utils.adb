@@ -426,14 +426,6 @@ package body Iirs_Utils is
       Set_Range_Constraint (Def, Range_Expr);
    end Create_Range_Constraint_For_Enumeration_Type;
 
-   procedure Free_Old_Iir (Node: in Iir)
-   is
-      N : Iir;
-   begin
-      N := Node;
-      Free_Iir (N);
-   end Free_Old_Iir;
-
    procedure Free_Name (Node : Iir)
    is
       N : Iir;
@@ -525,7 +517,7 @@ package body Iirs_Utils is
            | Iir_Kind_Physical_Subtype_Definition =>
             return;
          when Iir_Kind_Architecture_Body =>
-            Free_Recursive (Get_Entity (N));
+            Free_Recursive (Get_Entity_Name (N));
          when Iir_Kind_Overload_List =>
             Free_Recursive_List (Get_Overload_List (N));
             if not Free_List then
@@ -760,7 +752,9 @@ package body Iirs_Utils is
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Slice_Name =>
-            return Get_Prefix (Block_Spec);
+            return Get_Named_Entity (Get_Prefix (Block_Spec));
+         when Iir_Kind_Simple_Name =>
+            return Get_Named_Entity (Block_Spec);
          when others =>
             Error_Kind ("get_block_from_block_specification", Block_Spec);
             return Null_Iir;

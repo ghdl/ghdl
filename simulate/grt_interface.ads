@@ -16,17 +16,10 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with System;
-with Ada.Unchecked_Conversion;
 with Grt.Types; use Grt.Types;
 with Iir_Values; use Iir_Values;
 
 package Grt_Interface is
-   function To_Std_String_Basep is new Ada.Unchecked_Conversion
-     (System.Address, Std_String_Basep);
-   function To_Std_String_Boundp is new Ada.Unchecked_Conversion
-     (System.Address, Std_String_Boundp);
-
    procedure Set_Std_String_From_Iir_Value (Str : Std_String;
                                             Val : Iir_Value_Literal_Acc);
 

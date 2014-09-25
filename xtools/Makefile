@@ -14,21 +14,22 @@
 #  along with GCC; see the file COPYING.  If not, write to the Free
 #  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #  02111-1307, USA.
-all: ../iirs.adb
 
-check_iirs: force
-	gnatmake -g -gnatwa check_iirs
+DEPS=../iirs.ads ../nodes.ads ./pnodes.py
 
-MODE=--generate
+all: ../iirs.adb ../disp_tree.adb ../nodes_gc.adb
 
-../iirs.adb: ../iirs.adb.in ../iirs.ads ../nodes.ads ./check_iirs
+../iirs.adb: ../iirs.adb.in $(DEPS)
 	$(RM) $@
-	./check_iirs $(MODE) > subprg.ada
-	sed -e "/^   --  Subprograms/r subprg.ada" \
-	  < ../iirs.adb.in > $@
+	./pnodes.py body > $@
 	chmod -w $@
 
-force:
+../disp_tree.adb: ../disp_tree.adb.in $(DEPS)
+	$(RM) $@
+	./pnodes.py disp_tree > $@
+	chmod -w $@
 
-clean:
-	$(RM) *.o *.ali *~ check_iirs
+../nodes_gc.adb: ../nodes_gc.adb.in $(DEPS)
+	$(RM) $@
+	./pnodes.py mark_tree > $@
+	chmod -w $@

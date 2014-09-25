@@ -1623,6 +1623,7 @@ package body Sem_Expr is
       Interpretation : Name_Interpretation_Type;
       Decl : Iir;
       Overload_List : Iir_List;
+      Overload : Iir;
       Res_Type_List : Iir;
       Full_Compat : Iir;
 
@@ -1853,7 +1854,8 @@ package body Sem_Expr is
       else
          --  Second pass
          --  Find the uniq implementation for this call.
-         Overload_List := Get_Overload_List (Get_Implementation (Expr));
+         Overload := Get_Implementation (Expr);
+         Overload_List := Get_Overload_List (Overload);
          Full_Compat := Null_Iir;
          for I in Natural loop
             Decl := Get_Nth_Element (Overload_List, I);
@@ -1868,7 +1870,9 @@ package body Sem_Expr is
                end if;
             end if;
          end loop;
-         Free_Iir (Get_Type (Expr));
+         Free_Iir (Overload);
+         Overload := Get_Type (Expr);
+         Free_Overload_List (Overload);
          return Set_Uniq_Interpretation (Full_Compat);
       end if;
    end Sem_Operator;
@@ -1939,9 +1943,10 @@ package body Sem_Expr is
       return Natural (Len);
    end Sem_String_Literal;
 
-   procedure Sem_String_Literal (Lit: Iir) is
-      Lit_Type: Iir;
-      Lit_Base_Type : Iir;
+   procedure Sem_String_Literal (Lit: Iir)
+   is
+      Lit_Type : constant Iir := Get_Type (Lit);
+      Lit_Base_Type : constant Iir := Get_Base_Type (Lit_Type);
 
       -- The subtype created for the literal.
       N_Type: Iir;
@@ -1950,9 +1955,6 @@ package body Sem_Expr is
       Len : Natural;
       El_Type : Iir;
    begin
-      Lit_Type := Get_Type (Lit);
-      Lit_Base_Type := Get_Base_Type (Lit_Type);
-
       El_Type := Get_Base_Type (Get_Element_Subtype (Lit_Base_Type));
       Len := Sem_String_Literal (Lit, El_Type);
 
@@ -1975,6 +1977,7 @@ package body Sem_Expr is
          N_Type := Create_Unidim_Array_By_Length
            (Lit_Base_Type, Iir_Int64 (Len), Lit);
          Set_Type (Lit, N_Type);
+         Set_Literal_Subtype (Lit, N_Type);
       end if;
    end Sem_String_Literal;
 
@@ -2061,15 +2064,15 @@ package body Sem_Expr is
       --  Return true iff OP1 < OP2.
       function Lt (Op1, Op2 : Natural) return Boolean is
       begin
-         return Compare_String_Literals (Get_Expression (Arr (Op1)),
-                                         Get_Expression (Arr (Op2)))
+         return Compare_String_Literals (Get_Choice_Expression (Arr (Op1)),
+                                         Get_Choice_Expression (Arr (Op2)))
            = Compare_Lt;
       end Lt;
 
       function Eq (Op1, Op2 : Natural) return Boolean is
       begin
-         return Compare_String_Literals (Get_Expression (Arr (Op1)),
-                                         Get_Expression (Arr (Op2)))
+         return Compare_String_Literals (Get_Choice_Expression (Arr (Op1)),
+                                         Get_Choice_Expression (Arr (Op2)))
            = Compare_Eq;
       end Eq;
 
@@ -2092,19 +2095,19 @@ package body Sem_Expr is
          --  In such case, each choice appearing in any of the case statement
          --  alternative must be a locally static expression whose value is of
          --  the same length as that of the case expression.
-         Expr := Sem_Expression (Get_Expression (Choice), Sel_Type);
+         Expr := Sem_Expression (Get_Choice_Expression (Choice), Sel_Type);
          if Expr = Null_Iir then
             Has_Length_Error := True;
             return;
          end if;
-         Set_Expression (Choice, Expr);
+         Set_Choice_Expression (Choice, Expr);
          if Get_Expr_Staticness (Expr) < Locally then
             Error_Msg_Sem ("choice must be locally static expression", Expr);
             Has_Length_Error := True;
             return;
          end if;
          Expr := Eval_Expr (Expr);
-         Set_Expression (Choice, Expr);
+         Set_Choice_Expression (Choice, Expr);
          if Get_Kind (Expr) = Iir_Kind_Overflow_Literal then
             Error_Msg_Sem
               ("bound error during evaluation of choice expression", Expr);
@@ -2276,9 +2279,10 @@ package body Sem_Expr is
          N_Choice := Create_Iir (Iir_Kind_Choice_By_Range);
          Location_Copy (N_Choice, El);
          Set_Chain (N_Choice, Get_Chain (El));
-         Set_Associated (N_Choice, Get_Associated (El));
+         Set_Associated_Expr (N_Choice, Get_Associated_Expr (El));
+         Set_Associated_Chain (N_Choice, Get_Associated_Chain (El));
          Set_Same_Alternative_Flag (N_Choice, Get_Same_Alternative_Flag (El));
-         Set_Expression (N_Choice, Eval_Range_If_Static (Name1));
+         Set_Choice_Range (N_Choice, Eval_Range_If_Static (Name1));
          Set_Choice_Staticness (N_Choice, Get_Type_Staticness (Range_Type));
          Free_Iir (El);
 
@@ -2299,14 +2303,16 @@ package body Sem_Expr is
          Expr : Iir;
          Ent : Iir;
       begin
-         Expr := Get_Expression (El);
          if Get_Kind (El) = Iir_Kind_Choice_By_Range then
+            Expr := Get_Choice_Range (El);
             Expr := Sem_Discrete_Range_Expression (Expr, Sub_Type, True);
             if Expr = Null_Iir then
                return False;
             end if;
             Expr := Eval_Range_If_Static (Expr);
+            Set_Choice_Range (El, Expr);
          else
+            Expr := Get_Choice_Expression (El);
             case Get_Kind (Expr) is
                when Iir_Kind_Selected_Name
                  | Iir_Kind_Simple_Name
@@ -2343,8 +2349,8 @@ package body Sem_Expr is
                return False;
             end if;
             Expr := Eval_Expr_If_Static (Expr);
+            Set_Choice_Expression (El, Expr);
          end if;
-         Set_Expression (El, Expr);
          Set_Choice_Staticness (El, Get_Expr_Staticness (Expr));
          return True;
       end Sem_Simple_Choice;
@@ -2358,17 +2364,24 @@ package body Sem_Expr is
       is
          Expr : Iir;
       begin
-         Expr := Get_Expression (Assoc);
-         case Get_Kind (Expr) is
-            when Iir_Kind_Range_Expression =>
-               case Get_Direction (Expr) is
-                  when Iir_To =>
-                     return Get_Left_Limit (Expr);
-                  when Iir_Downto =>
-                     return Get_Right_Limit (Expr);
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Choice_By_Expression =>
+               return Get_Choice_Expression (Assoc);
+            when Iir_Kind_Choice_By_Range =>
+               Expr := Get_Choice_Range (Assoc);
+               case Get_Kind (Expr) is
+                  when Iir_Kind_Range_Expression =>
+                     case Get_Direction (Expr) is
+                        when Iir_To =>
+                           return Get_Left_Limit (Expr);
+                        when Iir_Downto =>
+                           return Get_Right_Limit (Expr);
+                     end case;
+                  when others =>
+                     return Expr;
                end case;
             when others =>
-               return Expr;
+               Error_Kind ("get_low", Assoc);
          end case;
       end Get_Low;
 
@@ -2376,17 +2389,24 @@ package body Sem_Expr is
       is
          Expr : Iir;
       begin
-         Expr := Get_Expression (Assoc);
-         case Get_Kind (Expr) is
-            when Iir_Kind_Range_Expression =>
-               case Get_Direction (Expr) is
-                  when Iir_To =>
-                     return Get_Right_Limit (Expr);
-                  when Iir_Downto =>
-                     return Get_Left_Limit (Expr);
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Choice_By_Expression =>
+               return Get_Choice_Expression (Assoc);
+            when Iir_Kind_Choice_By_Range =>
+               Expr := Get_Choice_Range (Assoc);
+               case Get_Kind (Expr) is
+                  when Iir_Kind_Range_Expression =>
+                     case Get_Direction (Expr) is
+                        when Iir_To =>
+                           return Get_Right_Limit (Expr);
+                        when Iir_Downto =>
+                           return Get_Left_Limit (Expr);
+                     end case;
+                  when others =>
+                     return Expr;
                end case;
             when others =>
-               return Expr;
+               Error_Kind ("get_high", Assoc);
          end case;
       end Get_High;
 
@@ -2540,22 +2560,25 @@ package body Sem_Expr is
             Ok : Boolean;
             Expr : Iir;
          begin
-            Expr := Get_Expression (Choice);
+            Ok := True;
             if Type_Has_Bounds
-              and then Get_Expr_Staticness (Expr) = Locally
               and then Get_Type_Staticness (A_Type) = Locally
             then
                if Get_Kind (Choice) = Iir_Kind_Choice_By_Range then
-                  Ok := Eval_Is_Range_In_Bound (Expr, A_Type, True);
+                  Expr := Get_Choice_Range (Choice);
+                  if Get_Expr_Staticness (Expr) = Locally then
+                     Ok := Eval_Is_Range_In_Bound (Expr, A_Type, True);
+                  end if;
                else
-                  Ok := Eval_Is_In_Bound (Expr, A_Type);
+                  Expr := Get_Choice_Expression (Choice);
+                  if Get_Expr_Staticness (Expr) = Locally then
+                     Ok := Eval_Is_In_Bound (Expr, A_Type);
+                  end if;
                end if;
                if not Ok then
                   Error_Msg_Sem
                     (Disp_Node (Expr) & " out of index range", Choice);
                end if;
-            else
-               Ok := True;
             end if;
             if Ok then
                Index := Index + 1;
@@ -2802,7 +2825,7 @@ package body Sem_Expr is
          Expr : Iir;
          Aggr_El : Iir_Element_Declaration;
       begin
-         Expr := Get_Expression (Ass);
+         Expr := Get_Choice_Expression (Ass);
          if Get_Kind (Expr) /= Iir_Kind_Simple_Name then
             Error_Msg_Sem ("element association must be a simple name", Ass);
             Ok := False;
@@ -2819,13 +2842,15 @@ package body Sem_Expr is
 
          N_El := Create_Iir (Iir_Kind_Choice_By_Name);
          Location_Copy (N_El, Ass);
-         Set_Name (N_El, Aggr_El);
-         Set_Associated (N_El, Get_Associated (Ass));
+         Set_Choice_Name (N_El, Aggr_El);
+         Set_Associated_Expr (N_El, Get_Associated_Expr (Ass));
+         Set_Associated_Chain (N_El, Get_Associated_Chain (Ass));
          Set_Chain (N_El, Get_Chain (Ass));
          Set_Same_Alternative_Flag (N_El, Get_Same_Alternative_Flag (Ass));
 
          Xref_Ref (Expr, Aggr_El);
-         Free_Old_Iir (Ass);
+         Free_Iir (Ass);
+         Free_Iir (Expr);
          Add_Match (N_El, Aggr_El);
          return N_El;
       end Sem_Simple_Choice;
@@ -2848,7 +2873,7 @@ package body Sem_Expr is
       Prev_El := Null_Iir;
       El := Assoc_Chain;
       while El /= Null_Iir loop
-         Expr := Get_Associated (El);
+         Expr := Get_Associated_Expr (El);
 
          --  If there is an associated expression with the choice, then the
          --  choice is a new alternative, and has no expected type.
@@ -2907,7 +2932,7 @@ package body Sem_Expr is
             if El_Type /= Null_Iir then
                Expr := Sem_Expression (Expr, El_Type);
                if Expr /= Null_Iir then
-                  Set_Associated (El, Eval_Expr_If_Static (Expr));
+                  Set_Associated_Expr (El, Eval_Expr_If_Static (Expr));
                   Value_Staticness := Min (Value_Staticness,
                                            Get_Expr_Staticness (Expr));
                else
@@ -3197,14 +3222,15 @@ package body Sem_Expr is
                   Choice : Iir;
                begin
                   Choice := Assoc_Chain;
-                  Expr := Get_Expression (Choice);
                   case Get_Kind (Choice) is
                      when Iir_Kind_Choice_By_Expression =>
+                        Expr := Get_Choice_Expression (Choice);
                         Set_Direction (Index_Subtype_Constraint,
                                        Get_Direction (Index_Constraint));
                         Set_Left_Limit (Index_Subtype_Constraint, Expr);
                         Set_Right_Limit (Index_Subtype_Constraint, Expr);
                      when Iir_Kind_Choice_By_Range =>
+                        Expr := Get_Choice_Range (Choice);
                         Set_Range_Constraint (Info.Index_Subtype, Expr);
                         -- FIXME: avoid allocation-free.
                         Free_Iir (Index_Subtype_Constraint);
@@ -3269,7 +3295,7 @@ package body Sem_Expr is
                El := Assoc_Chain;
                Value_Staticness := Locally;
                while El /= Null_Iir loop
-                  Expr := Get_Associated (El);
+                  Expr := Get_Associated_Expr (El);
                   if Expr /= Null_Iir then
                      Expr := Sem_Expression (Expr, Element_Type);
                      if Expr /= Null_Iir then
@@ -3277,7 +3303,7 @@ package body Sem_Expr is
                         Set_Expr_Staticness
                           (Aggr, Min (Get_Expr_Staticness (Aggr),
                                       Expr_Staticness));
-                        Set_Associated (El, Eval_Expr_If_Static (Expr));
+                        Set_Associated_Expr (El, Eval_Expr_If_Static (Expr));
 
                         --  FIXME: handle name/others in translate.
                         --  if Get_Kind (Expr) = Iir_Kind_Aggregate then
@@ -3303,8 +3329,8 @@ package body Sem_Expr is
             Choice := Assoc_Chain;
             Value_Staticness := Locally;
             while Choice /= Null_Iir loop
-               if Get_Associated (Choice) /= Null_Iir then
-                  Assoc := Get_Associated (Choice);
+               if Get_Associated_Expr (Choice) /= Null_Iir then
+                  Assoc := Get_Associated_Expr (Choice);
                end if;
                case Get_Kind (Assoc) is
                   when Iir_Kind_Aggregate =>
@@ -3381,6 +3407,7 @@ package body Sem_Expr is
          Set_Index_Constraint_Flag (A_Subtype, True);
          Set_Constraint_State (A_Subtype, Fully_Constrained);
          Set_Type (Aggr, A_Subtype);
+         Set_Literal_Subtype (Aggr, A_Subtype);
       end if;
 
       Prev_Info := Null_Iir;

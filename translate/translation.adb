@@ -4443,6 +4443,7 @@ package body Translation is
             Type_Info := Get_Info (Get_Base_Type (Iter_Type));
             case Get_Kind (Spec) is
                when Iir_Kind_Generate_Statement
+                 | Iir_Kind_Simple_Name
                  | Iir_Kind_Selected_Name =>
                   --  Apply for all/remaining blocks.
                   declare
@@ -4618,6 +4619,9 @@ package body Translation is
                      Block_Info : Block_Info_Acc;
                   begin
                      Block := Get_Block_Specification (El);
+                     if Get_Kind (Block) = Iir_Kind_Simple_Name then
+                        Block := Get_Named_Entity (Block);
+                     end if;
                      if Get_Kind (Block) = Iir_Kind_Block_Statement then
                         Block_Info := Get_Info (Block);
                         Push_Scope (Block_Info.Block_Decls_Type,
@@ -12190,7 +12194,7 @@ package body Translation is
               | Iir_Kind_Choice_By_Name =>
                El := Assoc;
                while El /= Null_Iir loop
-                  if Inherit_Collapse_Flag (Get_Associated (Assoc)) = False
+                  if not Inherit_Collapse_Flag (Get_Associated_Expr (Assoc))
                   then
                      return False;
                   end if;
@@ -13563,7 +13567,7 @@ package body Translation is
             when Iir_Kind_Aggregate =>
                Assoc := Get_Association_Choices_Chain (Aggr);
                while Assoc /= Null_Iir loop
-                  Sub := Get_Associated (Assoc);
+                  Sub := Get_Associated_Expr (Assoc);
                   case Get_Kind (Assoc) is
                      when Iir_Kind_Choice_By_None =>
                         if N_Info = Null_Iir then
@@ -15781,7 +15785,7 @@ package body Translation is
             if Get_Kind (Chain) /= Iir_Kind_Choice_By_Others then
                return Null_Iir;
             end if;
-            Aggr1 := Get_Associated (Chain);
+            Aggr1 := Get_Associated_Expr (Chain);
             case Get_Kind (Aggr1) is
                when Iir_Kind_Aggregate =>
                   if Get_Type (Aggr1) /= Null_Iir then
@@ -15967,7 +15971,7 @@ package body Translation is
                return;
             end if;
             exit when Get_Kind (El) /= Iir_Kind_Choice_By_None;
-            Do_Assign (Get_Associated (El));
+            Do_Assign (Get_Associated_Expr (El));
             P := P + 1;
             El := Get_Chain (El);
          end loop;
@@ -15980,7 +15984,7 @@ package body Translation is
                   --  falltrough...
                   null;
                when Iir_Kind_Choice_By_Expression =>
-                  Do_Assign (Get_Associated (El));
+                  Do_Assign (Get_Associated_Expr (El));
                   return;
                when Iir_Kind_Choice_By_Range =>
                   declare
@@ -15991,7 +15995,7 @@ package body Translation is
                      Open_Temp;
                      Var_Length := Create_Temp_Init
                        (Ghdl_Index_Type,
-                        Chap7.Translate_Range_Length (Get_Expression (El)));
+                        Chap7.Translate_Range_Length (Get_Choice_Range (El)));
                      Var_I := Create_Temp (Ghdl_Index_Type);
                      Init_Var (Var_I);
                      Start_Loop_Stmt (Label);
@@ -16000,7 +16004,7 @@ package body Translation is
                                                     New_Obj_Value (Var_I),
                                                     New_Obj_Value (Var_Length),
                                                     Ghdl_Bool_Type));
-                     Do_Assign (Get_Associated (El));
+                     Do_Assign (Get_Associated_Expr (El));
                      Inc_Var (Var_I);
                      Finish_Loop_Stmt (Label);
                      Close_Temp;
@@ -16077,8 +16081,8 @@ package body Translation is
             while El /= Null_Iir loop
                Start_Choice (Case_Blk);
                Chap8.Translate_Case_Choice (El, Range_Type, Case_Blk);
-               if Get_Associated (El) /= Null_Iir then
-                  El_Assoc := Get_Associated (El);
+               if Get_Associated_Expr (El) /= Null_Iir then
+                  El_Assoc := Get_Associated_Expr (El);
                end if;
                Finish_Choice (Case_Blk);
                Do_Assign (El_Assoc);
@@ -16145,7 +16149,7 @@ package body Translation is
          El_Index := 0;
          Assoc := Get_Association_Choices_Chain (Aggr);
          while Assoc /= Null_Iir loop
-            N_El_Expr := Get_Associated (Assoc);
+            N_El_Expr := Get_Associated_Expr (Assoc);
             if N_El_Expr /= Null_Iir then
                El_Expr := N_El_Expr;
             end if;
@@ -16154,7 +16158,7 @@ package body Translation is
                   Set_El (Get_Nth_Element (El_List, El_Index));
                   El_Index := El_Index + 1;
                when Iir_Kind_Choice_By_Name =>
-                  Set_El (Get_Name (Assoc));
+                  Set_El (Get_Choice_Name (Assoc));
                   El_Index := Natural'Last;
                when Iir_Kind_Choice_By_Others =>
                   for J in Set_Array'Range loop
@@ -19679,7 +19683,7 @@ package body Translation is
                when Iir_Kind_Choice_By_None =>
                   if Final then
                      Translate_Variable_Aggregate_Assignment
-                       (Get_Associated (El), El_Type,
+                       (Get_Associated_Expr (El), El_Type,
                         Chap3.Index_Base
                         (Val, Targ_Type,
                          New_Lit (New_Unsigned_Literal
@@ -19687,7 +19691,8 @@ package body Translation is
                      Index := Index + 1;
                   else
                      Translate_Variable_Array_Aggr
-                       (Get_Associated (El), Targ_Type, Val, Index, Dim + 1);
+                       (Get_Associated_Expr (El),
+                        Targ_Type, Val, Index, Dim + 1);
                   end if;
                when others =>
                   Error_Kind ("translate_variable_array_aggr", El);
@@ -19713,12 +19718,12 @@ package body Translation is
                   Elem := Get_Nth_Element (El_List, El_Index);
                   El_Index := El_Index + 1;
                when Iir_Kind_Choice_By_Name =>
-                  Elem := Get_Name (Aggr_El);
+                  Elem := Get_Choice_Name (Aggr_El);
                when others =>
                   Error_Kind ("translate_variable_rec_aggr", Aggr_El);
             end case;
             Translate_Variable_Aggregate_Assignment
-              (Get_Associated (Aggr_El), Get_Type (Elem),
+              (Get_Associated_Expr (Aggr_El), Get_Type (Elem),
                Chap6.Translate_Selected_Element (Val, Elem));
             Aggr_El := Get_Chain (Aggr_El);
          end loop;
@@ -20010,7 +20015,7 @@ package body Translation is
             Info.Choice_Chain := null;
             Info.Choice_Assoc := Nbr_Assocs - 1;
             Info.Choice_Parent := Choice;
-            Info.Choice_Expr := Get_Expression (Choice);
+            Info.Choice_Expr := Get_Choice_Expression (Choice);
 
             Nbr_Choices := Nbr_Choices + 1;
             Choice := Get_Chain (Choice);
@@ -20252,7 +20257,8 @@ package body Translation is
                      Start_Choice (Case_Blk);
                      New_Expr_Choice (Case_Blk, Others_Lit);
                      Finish_Choice (Case_Blk);
-                     Translate_Statements_Chain (Get_Associated (Choice));
+                     Translate_Statements_Chain
+                       (Get_Associated_Chain (Choice));
                   when Iir_Kind_Choice_By_Expression =>
                      if not Get_Same_Alternative_Flag (Choice) then
                         Start_Choice (Case_Blk);
@@ -20262,7 +20268,8 @@ package body Translation is
                              (Ghdl_Index_Type,
                               Unsigned_64 (Get_Info (Choice).Choice_Assoc)));
                         Finish_Choice (Case_Blk);
-                        Translate_Statements_Chain (Get_Associated (Choice));
+                        Translate_Statements_Chain
+                          (Get_Associated_Chain (Choice));
                      end if;
                      Free_Info (Choice);
                   when others =>
@@ -20310,12 +20317,12 @@ package body Translation is
             end if;
 
             First := True;
-            Stmt_Chain := Get_Associated (Choice);
+            Stmt_Chain := Get_Associated_Chain (Choice);
             Ch := Choice;
             loop
                case Get_Kind (Ch) is
                   when Iir_Kind_Choice_By_Expression =>
-                     Ch_Expr := Get_Expression (Ch);
+                     Ch_Expr := Get_Choice_Expression (Ch);
                      Cond := Translate_Simple_String_Choice
                        (Expr_Node,
                         Chap7.Translate_Expression (Ch_Expr,
@@ -20335,7 +20342,7 @@ package body Translation is
                Ch := Get_Chain (Ch);
                exit when Ch = Null_Iir;
                exit when not Get_Same_Alternative_Flag (Ch);
-               exit when Get_Associated (Ch) /= Null_Iir;
+               exit when Get_Associated_Chain (Ch) /= Null_Iir;
                if First then
                   New_Assign_Stmt (New_Obj (Cond_Var), Cond);
                   First := False;
@@ -20371,14 +20378,14 @@ package body Translation is
             when Iir_Kind_Choice_By_Others =>
                New_Default_Choice (Blk);
             when Iir_Kind_Choice_By_Expression =>
-               Expr := Get_Expression (Choice);
+               Expr := Get_Choice_Expression (Choice);
                New_Expr_Choice
                  (Blk, Chap7.Translate_Static_Expression (Expr, Choice_Type));
             when Iir_Kind_Choice_By_Range =>
                declare
                   H, L : Iir;
                begin
-                  Expr := Get_Expression (Choice);
+                  Expr := Get_Choice_Range (Choice);
                   Get_Low_High_Limit (Expr, L, H);
                   New_Range_Choice
                     (Blk,
@@ -20431,15 +20438,13 @@ package body Translation is
          Choice := Get_Case_Statement_Alternative_Chain (Stmt);
          while Choice /= Null_Iir loop
             Start_Choice (Case_Blk);
-            Stmt_Chain := Get_Associated (Choice);
+            Stmt_Chain := Get_Associated_Chain (Choice);
             loop
                Translate_Case_Choice (Choice, Expr_Type, Case_Blk);
                Choice := Get_Chain (Choice);
                exit when Choice = Null_Iir;
                exit when not Get_Same_Alternative_Flag (Choice);
-               if Get_Associated (Choice) /= Null_Iir then
-                  raise Internal_Error;
-               end if;
+               pragma Assert (Get_Associated_Chain (Choice) = Null_Iir);
             end loop;
             Finish_Choice (Case_Blk);
             Translate_Statements_Chain (Stmt_Chain);
@@ -21628,7 +21633,7 @@ package body Translation is
                when others =>
                   Error_Kind ("translate_signal_target_array_aggr", El);
             end case;
-            Expr := Get_Associated (El);
+            Expr := Get_Associated_Expr (El);
             if Dim = Nbr_Dim then
                Translate_Signal_Target_Aggr
                  (Sub_Aggr, Expr, Get_Element_Subtype (Target_Type));
@@ -21663,14 +21668,14 @@ package body Translation is
                   Element := Get_Nth_Element (El_List, El_Index);
                   El_Index := El_Index + 1;
                when Iir_Kind_Choice_By_Name =>
-                  Element := Get_Name (Aggr_El);
+                  Element := Get_Choice_Name (Aggr_El);
                   El_Index := Natural'Last;
                when others =>
                   Error_Kind ("translate_signal_target_record_aggr", Aggr_El);
             end case;
             Translate_Signal_Target_Aggr
               (Chap6.Translate_Selected_Element (Aggr, Element),
-               Get_Associated (Aggr_El), Get_Type (Element));
+               Get_Associated_Expr (Aggr_El), Get_Type (Element));
             Aggr_El := Get_Chain (Aggr_El);
          end loop;
       end Translate_Signal_Target_Record_Aggr;

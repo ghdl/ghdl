@@ -109,6 +109,18 @@ package body Nodes is
       end if;
    end Free_Node;
 
+   function Next_Node (N : Node_Type) return Node_Type is
+   begin
+      case Nodet.Table (N).Format is
+         when Format_Medium =>
+            return N + 2;
+         when Format_Short
+           | Format_Int
+           | Format_Fp =>
+            return N + 1;
+      end case;
+   end Next_Node;
+
    function Get_Nkind (N : Node_Type) return Kind_Type is
    begin
       return Nodet.Table (N).Kind;

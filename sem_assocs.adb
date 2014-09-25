@@ -307,14 +307,11 @@ package body Sem_Assocs is
       Assoc : Iir)
      return Boolean
    is
-      Fmode : Iir_Mode;
-      Amode : Iir_Mode;
+      Fmode : constant Iir_Mode := Get_Mode (Formal);
+      Amode : constant Iir_Mode := Get_Mode (Actual);
    begin
-      Fmode := Get_Mode (Formal);
-      Amode := Get_Mode (Actual);
-      if Fmode = Iir_Unknown_Mode or Amode = Iir_Unknown_Mode then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Fmode /= Iir_Unknown_Mode);
+      pragma Assert (Amode /= Iir_Unknown_Mode);
 
       if Flags.Vhdl_Std < Vhdl_02 then
          if Vhdl93_Assocs_Map (Fmode, Amode) then
@@ -365,12 +362,14 @@ package body Sem_Assocs is
          while Choice /= Null_Iir loop
             case Get_Kind (Choice) is
                when Iir_Kind_Choice_By_Expression =>
-                  if Eval_Pos (Get_Expression (Choice)) = Eval_Pos (Index) then
+                  if Eval_Pos (Get_Choice_Expression (Choice))
+                    = Eval_Pos (Index)
+                  then
                      goto Found;
                   end if;
                when Iir_Kind_Choice_By_Range =>
                   if Eval_Int_In_Range (Eval_Pos (Index),
-                                        Get_Expression (Choice))
+                                        Get_Choice_Range (Choice))
                   then
                      --  FIXME: overlap.
                      raise Internal_Error;
@@ -384,7 +383,7 @@ package body Sem_Assocs is
 
          --  If not found, append it.
          Choice := Create_Iir (Iir_Kind_Choice_By_Expression);
-         Set_Expression (Choice, Index);
+         Set_Choice_Expression (Choice, Index);
          Location_Copy (Choice, Formal);
          if Last_Choice = Null_Iir then
             Set_Individual_Association_Chain (Sub_Assoc, Choice);
@@ -395,12 +394,12 @@ package body Sem_Assocs is
          << Found >> null;
 
          if I < Nbr - 1 then
-            Sub_Assoc := Get_Associated (Choice);
+            Sub_Assoc := Get_Associated_Expr (Choice);
             if Sub_Assoc = Null_Iir then
                Sub_Assoc := Create_Iir
                  (Iir_Kind_Association_Element_By_Individual);
                Location_Copy (Sub_Assoc, Index);
-               Set_Associated (Choice, Sub_Assoc);
+               Set_Associated_Expr (Choice, Sub_Assoc);
             end if;
          else
             Sub_Assoc := Choice;
@@ -425,7 +424,7 @@ package body Sem_Assocs is
 
       Choice := Create_Iir (Iir_Kind_Choice_By_Range);
       Location_Copy (Choice, Formal);
-      Set_Expression (Choice, Index);
+      Set_Choice_Range (Choice, Index);
       Set_Chain (Choice, Get_Individual_Association_Chain (Sub_Assoc));
       Set_Individual_Association_Chain (Sub_Assoc, Choice);
 
@@ -439,7 +438,7 @@ package body Sem_Assocs is
    begin
       Choice := Create_Iir (Iir_Kind_Choice_By_Name);
       Location_Copy (Choice, Formal);
-      Set_Name (Choice, Get_Selected_Element (Formal));
+      Set_Choice_Name (Choice, Get_Selected_Element (Formal));
       Set_Chain (Choice, Get_Individual_Association_Chain (Sub_Assoc));
       Set_Individual_Association_Chain (Sub_Assoc, Choice);
 
@@ -468,12 +467,12 @@ package body Sem_Assocs is
          when Iir_Kind_Association_Element_By_Individual =>
             null;
          when Iir_Kind_Choice_By_Expression =>
-            Sub := Get_Associated (Iassoc);
+            Sub := Get_Associated_Expr (Iassoc);
             if Sub = Null_Iir then
                Sub := Create_Iir (Iir_Kind_Association_Element_By_Individual);
                Location_Copy (Sub, Formal);
                Set_Formal (Sub, Iassoc);
-               Set_Associated (Iassoc, Sub);
+               Set_Associated_Expr (Iassoc, Sub);
                Iassoc := Sub;
             else
                case Get_Kind (Sub) is
@@ -514,14 +513,14 @@ package body Sem_Assocs is
       Formal := Get_Formal (Assoc);
       Iass := Iassoc;
       Add_Individual_Association_1 (Iass, Formal);
-      Prev := Get_Associated (Iass);
+      Prev := Get_Associated_Expr (Iass);
       if Prev /= Null_Iir then
          Error_Msg_Sem ("individual association of "
                         & Disp_Node (Get_Association_Interface (Assoc))
                         & " conflicts with that at " & Disp_Location (Prev),
                         Assoc);
       else
-         Set_Associated (Iass, Assoc);
+         Set_Associated_Expr (Iass, Assoc);
       end if;
    end Add_Individual_Association;
 
@@ -545,7 +544,7 @@ package body Sem_Assocs is
          while El /= Null_Iir loop
             pragma Assert (Get_Kind (El) = Iir_Kind_Choice_By_Expression);
             Finish_Individual_Assoc_Array_Subtype
-              (Get_Associated (El), Atype, Dim + 1);
+              (Get_Associated_Expr (El), Atype, Dim + 1);
             El := Get_Chain (El);
          end loop;
       end if;
@@ -642,7 +641,7 @@ package body Sem_Assocs is
       Matches := (others => Null_Iir);
       Ch := Get_Individual_Association_Chain (Assoc);
       while Ch /= Null_Iir loop
-         Rec_El := Get_Name (Ch);
+         Rec_El := Get_Choice_Name (Ch);
          Pos := Natural (Get_Element_Position (Rec_El));
          if Matches (Pos) /= Null_Iir then
             Error_Msg_Sem ("individual " & Disp_Node (Rec_El)
@@ -837,16 +836,15 @@ package body Sem_Assocs is
    --  return NULL_IIR.
    function Sem_Formal_Conversion (Assoc : Iir) return Iir
    is
-      Formal : Iir;
-      Assoc_Chain : Iir;
+      Formal : constant Iir := Get_Formal (Assoc);
+      Assoc_Chain : constant Iir := Get_Association_Chain (Formal);
       Res : Iir;
       Conv : Iir;
       Name : Iir;
       Conv_Func : Iir;
       Conv_Type : Iir;
    begin
-      Formal := Get_Formal (Assoc);
-      Assoc_Chain := Get_Association_Chain (Formal);
+      --  Nothing to do if the formal isn't a conversion.
       if not Is_Conversion_Function (Assoc_Chain) then
          return Null_Iir;
       end if;
@@ -1159,6 +1157,7 @@ package body Sem_Assocs is
             Res := Create_Iir (Iir_Kind_Function_Call);
             Location_Copy (Res, Conv);
             Set_Implementation (Res, Conv);
+            Set_Prefix (Res, Conv);
             Set_Base_Name (Res, Res);
             Set_Parameter_Association_Chain (Res, Null_Iir);
             Set_Type (Res, Get_Return_Type (Func));
@@ -1179,9 +1178,8 @@ package body Sem_Assocs is
       return Res;
    end Extract_Out_Conversion;
 
-
    --  Associate ASSOC with interface INTERFACE
-   --  This sets RES.
+   --  This sets MATCH.
    procedure Sem_Association
      (Assoc : Iir;
       Inter : Iir;
@@ -1311,6 +1309,8 @@ package body Sem_Assocs is
       if not Finish then
          return;
       end if;
+
+      --  At that point, the analysis is being finished.
 
       if Out_Conv = Null_Iir and then In_Conv = Null_Iir then
          Res_Type := Formal_Type;
@@ -1519,6 +1519,8 @@ package body Sem_Assocs is
                      if Assoc_1 /= Null_Iir then
                         Inter := Interface_1;
                         Pos := Pos_1;
+                        Free_Parenthesis_Name
+                          (Get_Formal (Assoc), Get_Out_Conversion (Assoc_1));
                         Set_Formal (Assoc, Get_Formal (Assoc_1));
                         Set_Out_Conversion
                           (Assoc, Get_Out_Conversion (Assoc_1));

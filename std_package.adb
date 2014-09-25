@@ -245,7 +245,7 @@ package body Std_Package is
          Set_Has_Signal_Flag (Subtype_Definition,
                               not Flags.Flag_Whole_Analyze);
 
-         --  type is
+         --  subtype is
          Subtype_Decl := Create_Std_Decl (Iir_Kind_Subtype_Declaration);
          Set_Std_Identifier (Subtype_Decl, Get_Identifier (Type_Decl));
          Set_Type (Subtype_Decl, Subtype_Definition);
@@ -730,7 +730,7 @@ package body Std_Package is
             Lit: Iir_Physical_Int_Literal;
             Mul_Name : Iir;
          begin
-            Unit := Create_Std_Iir (Iir_Kind_Unit_Declaration);
+            Unit := Create_Std_Decl (Iir_Kind_Unit_Declaration);
             Set_Std_Identifier (Unit, Name);
             Set_Type (Unit, Time_Type_Definition);
 
@@ -777,7 +777,7 @@ package body Std_Package is
 
          Build_Init (Last_Unit);
 
-         Time_Fs_Unit := Create_Std_Iir (Iir_Kind_Unit_Declaration);
+         Time_Fs_Unit := Create_Std_Decl (Iir_Kind_Unit_Declaration);
          Set_Std_Identifier (Time_Fs_Unit, Name_Fs);
          Set_Type (Time_Fs_Unit, Time_Type_Definition);
          Set_Expr_Staticness (Time_Fs_Unit, Time_Staticness);
@@ -823,7 +823,7 @@ package body Std_Package is
          Set_Has_Signal_Flag (Time_Subtype_Definition,
                               not Flags.Flag_Whole_Analyze);
 
-         --  subtype
+         --  subtype time is
          Time_Subtype_Declaration :=
            Create_Std_Decl (Iir_Kind_Subtype_Declaration);
          Set_Std_Identifier (Time_Subtype_Declaration, Name_Time);
@@ -878,6 +878,7 @@ package body Std_Package is
             Set_Has_Signal_Flag (Delay_Length_Subtype_Definition,
                                  not Flags.Flag_Whole_Analyze);
 
+            --  subtype delay_length is ...
             Delay_Length_Subtype_Declaration :=
               Create_Std_Decl (Iir_Kind_Subtype_Declaration);
             Set_Std_Identifier (Delay_Length_Subtype_Declaration,
@@ -886,6 +887,8 @@ package body Std_Package is
                       Delay_Length_Subtype_Definition);
             Set_Type_Declarator (Delay_Length_Subtype_Definition,
                                  Delay_Length_Subtype_Declaration);
+            Set_Subtype_Indication (Delay_Length_Subtype_Declaration,
+                                    Delay_Length_Subtype_Definition);
             Add_Decl (Delay_Length_Subtype_Declaration);
          else
             Delay_Length_Subtype_Definition := Null_Iir;
@@ -925,6 +928,9 @@ package body Std_Package is
          Natural_Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Integer_Subtype_Definition);
          Set_Base_Type (Natural_Subtype_Definition, Integer_Type_Definition);
+         Set_Subtype_Type_Mark
+           (Natural_Subtype_Definition,
+            Create_Std_Type_Mark (Integer_Subtype_Declaration));
          Constraint := Create_Std_Range_Expr
            (Create_Std_Integer (0, Integer_Type_Definition),
             Create_Std_Integer (High_Bound (Flags.Flag_Integer_64),
@@ -940,6 +946,8 @@ package body Std_Package is
            Create_Std_Decl (Iir_Kind_Subtype_Declaration);
          Set_Std_Identifier (Natural_Subtype_Declaration, Name_Natural);
          Set_Type (Natural_Subtype_Declaration, Natural_Subtype_Definition);
+         Set_Subtype_Indication (Natural_Subtype_Declaration,
+                                 Natural_Subtype_Definition);
          Add_Decl (Natural_Subtype_Declaration);
          Set_Type_Declarator (Natural_Subtype_Definition,
                               Natural_Subtype_Declaration);
@@ -953,6 +961,9 @@ package body Std_Package is
            Create_Std_Iir (Iir_Kind_Integer_Subtype_Definition);
          Set_Base_Type (Positive_Subtype_Definition,
                         Integer_Type_Definition);
+         Set_Subtype_Type_Mark
+           (Positive_Subtype_Definition,
+            Create_Std_Type_Mark (Integer_Subtype_Declaration));
          Constraint := Create_Std_Range_Expr
            (Create_Std_Integer (1, Integer_Type_Definition),
             Create_Std_Integer (High_Bound (Flags.Flag_Integer_64),
@@ -968,6 +979,8 @@ package body Std_Package is
            Create_Std_Decl (Iir_Kind_Subtype_Declaration);
          Set_Std_Identifier (Positive_Subtype_Declaration, Name_Positive);
          Set_Type (Positive_Subtype_Declaration, Positive_Subtype_Definition);
+         Set_Subtype_Indication (Positive_Subtype_Declaration,
+                                 Positive_Subtype_Definition);
          Add_Decl (Positive_Subtype_Declaration);
          Set_Type_Declarator (Positive_Subtype_Definition,
                               Positive_Subtype_Declaration);

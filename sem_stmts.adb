@@ -37,7 +37,7 @@ package body Sem_Stmts is
    -- be created.
    -- Note: FIRST_STMT is the first statement, which can be get by:
    --  get_sequential_statement_chain (usual)
-   --  get_associated (for case statement).
+   --  get_associated_chain (for case statement).
    procedure Sem_Sequential_Statements_Internal (First_Stmt : Iir);
 
    -- Access to the current subprogram or process.
@@ -137,7 +137,7 @@ package body Sem_Stmts is
                begin
                   El := Get_Case_Statement_Alternative_Chain (Stmt);
                   while El /= Null_Iir loop
-                     Sem_Sequential_Labels (Get_Associated (El));
+                     Sem_Sequential_Labels (Get_Associated_Chain (El));
                      El := Get_Chain (El);
                   end loop;
                end;
@@ -156,7 +156,7 @@ package body Sem_Stmts is
    begin
       El := Chain;
       while El /= Null_Iir loop
-         Ass := Get_Associated (El);
+         Ass := Get_Associated_Expr (El);
          if Get_Kind (Ass) = Iir_Kind_Aggregate then
             Fill_Array_From_Aggregate_Associated
               (Get_Association_Choices_Chain (Ass), Nbr, Arr);
@@ -308,7 +308,7 @@ package body Sem_Stmts is
                --  LRM93 9.4
                --  Such a target may not only contain locally static signal
                --  names [...]
-               Ass := Get_Associated (Choice);
+               Ass := Get_Associated_Expr (Choice);
                if Get_Kind (Ass) = Iir_Kind_Aggregate then
                   Check_Aggregate_Target (Stmt, Ass, Nbr);
                else
@@ -565,8 +565,17 @@ package body Sem_Stmts is
                   --  in ascending order with repect to time.
                   -- GHDL: this must be checked at run-time, but this is also
                   --  checked now for static expressions.
-                  Expr := Eval_Static_Expr (Expr);
-                  Time := Get_Value (Expr);
+                  if Get_Expr_Staticness (Expr) = Locally then
+                     --  The expression is static, and therefore may be
+                     --  evaluated.
+                     Expr := Eval_Expr (Expr);
+                     Set_Time (We, Expr);
+                     Time := Get_Value (Expr);
+                  else
+                     --  The expression is a physical literal (common case).
+                     --  Extract its value.
+                     Time := Get_Physical_Value (Expr);
+                  end if;
                   if Time < 0 then
                      Error_Msg_Sem
                        ("waveform time expression must be >= 0", Expr);
@@ -978,7 +987,7 @@ package body Sem_Stmts is
       -- Sem on associated.
       El := Chain;
       while El /= Null_Iir loop
-         Sem_Sequential_Statements_Internal (Get_Associated (El));
+         Sem_Sequential_Statements_Internal (Get_Associated_Chain (El));
          El := Get_Chain (El);
       end loop;
    end Sem_Case_Statement;
@@ -1698,7 +1707,7 @@ package body Sem_Stmts is
          El := Chain;
 
          while El /= Null_Iir loop
-            Assoc_El := Get_Associated (El);
+            Assoc_El := Get_Associated_Expr (El);
             exit when Assoc_El /= Null_Iir;
             El := Get_Chain (El);
          end loop;
@@ -1725,8 +1734,9 @@ package body Sem_Stmts is
       if Waveform_Type /= Null_Iir then
          El := Chain;
          while El /= Null_Iir loop
-            Sem_Waveform_Chain (Stmt, Get_Associated (El), Waveform_Type);
-            Sem_Check_Waveform_Chain (Stmt, Get_Associated (El));
+            Sem_Waveform_Chain
+              (Stmt, Get_Associated_Chain (El), Waveform_Type);
+            Sem_Check_Waveform_Chain (Stmt, Get_Associated_Chain (El));
             El := Get_Chain (El);
          end loop;
       end if;

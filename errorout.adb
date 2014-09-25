@@ -813,13 +813,10 @@ package body Errorout is
          when Iir_Kind_Binding_Indication =>
             return "binding indication";
 
-
          when Iir_Kind_Error =>
             return "error";
-
---           when others =>
---              Error_Kind ("disp_node", Node);
---              return "???";
+         when Iir_Kind_Unused =>
+            return "*unused*";
       end case;
    end Disp_Node;
 

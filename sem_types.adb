@@ -373,6 +373,9 @@ package body Sem_Types is
             Set_Range_Constraint (Sub_Type, Phys_Range);
             --  This must be locally...
             Set_Type_Staticness (Sub_Type, Get_Expr_Staticness (Range_Expr1));
+
+            --  FIXME: the original range is not used.  Reuse it ?
+            Free_Iir (Range_Expr);
          end;
       end if;
       Set_Resolved_Flag (Sub_Type, False);

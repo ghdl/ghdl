@@ -52,6 +52,17 @@ package body Iirs is
 
    function Get_Format (Kind : Iir_Kind) return Format_Type;
 
+   function Create_Iir (Kind : Iir_Kind) return Iir
+   is
+      Res : Iir;
+      Format : Format_Type;
+   begin
+      Format := Get_Format (Kind);
+      Res := Create_Node (Format);
+      Set_Nkind (Res, Iir_Kind'Pos (Kind));
+      return Res;
+   end Create_Iir;
+
    --  Statistics.
    procedure Disp_Stats
    is
@@ -141,7 +152,7 @@ package body Iirs is
    procedure Set_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
                                Pos : Source_Ptr; Line, Off: Natural) is
    begin
-      Set_Field1 (Design_Unit, Node_Type (Pos));
+      Set_Field4 (Design_Unit, Node_Type (Pos));
       Set_Field11 (Design_Unit, Node_Type (Off));
       Set_Field12 (Design_Unit, Node_Type (Line));
    end Set_Pos_Line_Off;
@@ -149,7 +160,7 @@ package body Iirs is
    procedure Get_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
                                Pos : out Source_Ptr; Line, Off: out Natural) is
    begin
-      Pos := Source_Ptr (Get_Field1 (Design_Unit));
+      Pos := Source_Ptr (Get_Field4 (Design_Unit));
       Off := Natural (Get_Field11 (Design_Unit));
       Line := Natural (Get_Field12 (Design_Unit));
    end Get_Pos_Line_Off;

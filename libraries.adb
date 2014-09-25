@@ -784,24 +784,37 @@ package body Libraries is
       end if;
    end Free_Dependence_List;
 
+   --  This procedure is called when the DESIGN_UNIT (either the stub created
+   --  when a library is read or created from a previous unit in a source
+   --  file) has been replaced by a new unit.  Free everything but DESIGN_UNIT,
+   --  has it may be referenced in other units (dependence...)
+   --  FIXME: Isn't the library unit also referenced too ?
    procedure Free_Design_Unit (Design_Unit : Iir_Design_Unit)
    is
       Lib : Iir;
       Unit : Iir_Design_Unit;
       Dep_List : Iir_List;
    begin
+      --  Free dependence list.
       Dep_List := Get_Dependence_List (Design_Unit);
       Destroy_Iir_List (Dep_List);
+      Set_Dependence_List (Design_Unit, Null_Iir_List);
+
+      --  Free default configuration of architecture (if any).
       Lib := Get_Library_Unit (Design_Unit);
       if Lib /= Null_Iir
         and then Get_Kind (Lib) = Iir_Kind_Architecture_Body
       then
+         Free_Iir (Get_Entity_Name (Lib));
          Unit := Get_Default_Configuration_Declaration (Lib);
          if Unit /= Null_Iir then
             Free_Design_Unit (Unit);
          end if;
       end if;
-      Iirs_Utils.Free_Old_Iir (Lib);
+
+      --  Free library unit.
+      Free_Iir (Lib);
+      Set_Library_Unit (Design_Unit, Null_Iir);
    end Free_Design_Unit;
 
    procedure Remove_Unit_From_File
@@ -931,6 +944,9 @@ package body Libraries is
                  or else Get_Date_State (Design_Unit) = Date_Disk
                then
                   Remove_Unit_From_File (Design_Unit, Design_File);
+
+                  Set_Chain (Design_Unit, Obsoleted_Design_Units);
+                  Obsoleted_Design_Units := Design_Unit;
                end if;
             end;
 
@@ -1024,7 +1040,11 @@ package body Libraries is
             else
                raise Internal_Error;
             end if;
+            Prev_Design_Unit := Design_Unit;
             Design_Unit := Get_Chain (Design_Unit);
+
+            Set_Chain (Prev_Design_Unit, Obsoleted_Design_Units);
+            Obsoleted_Design_Units := Prev_Design_Unit;
          end loop;
          Set_First_Design_Unit (Design_File, Null_Iir);
          Set_Last_Design_Unit (Design_File, Null_Iir);
@@ -1422,9 +1442,8 @@ package body Libraries is
       Design_File : Iir_Design_File;
       Fe : Source_File_Entry;
    begin
-      if Get_Date_State (Design_Unit) /= Date_Disk then
-         raise Internal_Error;
-      end if;
+      --  The unit must not be loaded.
+      pragma Assert (Get_Date_State (Design_Unit) = Date_Disk);
 
       --  Load and parse the unit.
       Design_File := Get_Design_File (Design_Unit);

@@ -1437,7 +1437,7 @@ package body Sem_Decls is
    procedure Sem_Subtype_Declaration (Decl: Iir; Is_Global : Boolean)
    is
       Def: Iir;
-      Atype : Iir;
+      Ind : Iir;
    begin
       --  Real hack to skip subtype declarations of anonymous type decls.
       if Get_Visible_Flag (Decl) then
@@ -1447,21 +1447,23 @@ package body Sem_Decls is
       Sem_Scopes.Add_Name (Decl);
       Xref_Decl (Decl);
 
-      -- Check the definition of the type.
-      Atype := Get_Subtype_Indication (Decl);
-      Def := Sem_Subtype_Indication (Atype);
-      Set_Subtype_Indication (Decl, Def);
-      Def := Get_Type_Of_Subtype_Indication (Def);
+      --  Analyze the definition of the type.
+      Ind := Get_Subtype_Indication (Decl);
+      Ind := Sem_Subtype_Indication (Ind);
+      Set_Subtype_Indication (Decl, Ind);
+      Def := Get_Type_Of_Subtype_Indication (Ind);
       if Def = Null_Iir then
          return;
       end if;
 
       if not Is_Anonymous_Type_Definition (Def) then
-         -- There is no added constraints and therefore the subtype
-         -- declaration is in fact an alias of the type.
+         --  There is no added constraints and therefore the subtype
+         --  declaration is in fact an alias of the type.  Create a copy so
+         --  that it has its own type declarator.
          Def := Copy_Subtype_Indication (Def);
          Location_Copy (Def, Decl);
-         Set_Subtype_Type_Mark (Def, Atype);
+         Set_Subtype_Type_Mark (Def, Ind);
+         Set_Subtype_Indication (Decl, Def);
       end if;
 
       Set_Type (Decl, Def);
@@ -2028,7 +2030,8 @@ package body Sem_Decls is
             --    of the subprogram equivalent to the enumeration literal,
             --    defined in Section 3.1.1
             return List = Null_Iir_List
-              and then Get_Type (N_Entity) = Get_Type (Get_Return_Type (Sig));
+              and then Get_Type (N_Entity)
+              = Get_Type (Get_Return_Type_Mark (Sig));
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration =>
             --  LRM93 2.3.2  Signatures
@@ -2036,7 +2039,7 @@ package body Sem_Decls is
             --    a function and the base type of the type mark following
             --    the reserved word in the signature is the same as the base
             --    type of the return type of the function, [...]
-            if Get_Type (Get_Return_Type (Sig)) /=
+            if Get_Type (Get_Return_Type_Mark (Sig)) /=
               Get_Base_Type (Get_Return_Type (N_Entity))
             then
                return False;
@@ -2046,7 +2049,7 @@ package body Sem_Decls is
             --  LRM93 2.3.2  Signatures
             --  * [...] or the reserved word RETURN is absent and the
             --    subprogram is a procedure.
-            if Get_Return_Type (Sig) /= Null_Iir then
+            if Get_Return_Type_Mark (Sig) /= Null_Iir then
                return False;
             end if;
          when others =>
@@ -2107,10 +2110,10 @@ package body Sem_Decls is
             Set_Type (El, Get_Base_Type (Get_Type (El)));
          end loop;
       end if;
-      El := Get_Return_Type (Sig);
+      El := Get_Return_Type_Mark (Sig);
       if El /= Null_Iir then
          El := Sem_Type_Mark (El);
-         Set_Return_Type (Sig, El);
+         Set_Return_Type_Mark (Sig, El);
          --  Likewise.
          Set_Type (El, Get_Base_Type (Get_Type (El)));
       end if;
@@ -2137,6 +2140,15 @@ package body Sem_Decls is
                end if;
             end if;
          end loop;
+
+         --  Free the overload list (with a workaround as only variables can
+         --  be free).
+         declare
+            Name_Ov : Iir;
+         begin
+            Name_Ov := Name;
+            Free_Overload_List (Name_Ov);
+         end;
       else
          if Signature_Match (Name, Sig) then
             Res := Name;
@@ -2420,7 +2432,6 @@ package body Sem_Decls is
          if Sig /= Null_Iir then
             Error_Msg_Sem ("signature not allowed for object alias", Sig);
          end if;
-         Set_Name (Alias, N_Entity);
          Sem_Object_Alias_Declaration (Alias);
          return Alias;
       else
@@ -2952,22 +2963,24 @@ package body Sem_Decls is
    procedure Sem_Iterator (Iterator : Iir_Iterator_Declaration;
                            Staticness : Iir_Staticness)
    is
-      It_Type: constant Iir := Get_Discrete_Range (Iterator);
+      It_Range: constant Iir := Get_Discrete_Range (Iterator);
+      It_Type : Iir;
       A_Range: Iir;
    begin
       Xref_Decl (Iterator);
 
-      A_Range := Sem_Discrete_Range_Integer (It_Type);
+      A_Range := Sem_Discrete_Range_Integer (It_Range);
       if A_Range = Null_Iir then
-         Set_Type (Iterator, Create_Error_Type (It_Type));
+         Set_Type (Iterator, Create_Error_Type (It_Range));
          return;
       end if;
 
       Set_Discrete_Range (Iterator, A_Range);
 
-      Set_Type (Iterator,
-                Get_Type_Of_Subtype_Indication
-                  (Range_To_Subtype_Indication (A_Range)));
+      It_Type := Range_To_Subtype_Indication (A_Range);
+      Set_Subtype_Indication (Iterator, It_Type);
+      Set_Type (Iterator, Get_Type_Of_Subtype_Indication (It_Type));
+
       Set_Expr_Staticness (Iterator, Staticness);
    end Sem_Iterator;
 end Sem_Decls;

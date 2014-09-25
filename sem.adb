@@ -847,7 +847,7 @@ package body Sem is
                   Block_Spec := Sem_Index_Specification
                     (Block_Spec, Get_Type (Get_Generation_Scheme (Block)));
                   if Block_Spec /= Null_Iir then
-                     Set_Prefix (Block_Spec, Block);
+                     Set_Prefix (Block_Spec, Block_Name);
                      Set_Block_Specification (Block_Conf, Block_Spec);
                      Block_Spec_Kind := Get_Kind (Block_Spec);
                   end if;
@@ -855,7 +855,7 @@ package body Sem is
 
                case Block_Spec_Kind is
                   when Iir_Kind_Simple_Name =>
-                     Set_Block_Specification (Block_Conf, Block);
+                     Set_Block_Specification (Block_Conf, Block_Name);
                   when Iir_Kind_Indexed_Name
                     | Iir_Kind_Slice_Name =>
                      null;
@@ -1369,22 +1369,30 @@ package body Sem is
 
          when Iir_Kind_Choice_By_None
               | Iir_Kind_Choice_By_Others =>
-            return Are_Trees_Equal (Get_Associated (Left),
-                                    Get_Associated (Right));
+            return Are_Trees_Equal (Get_Associated_Expr (Left),
+                                    Get_Associated_Expr (Right));
          when Iir_Kind_Choice_By_Name =>
-            if not Are_Trees_Equal (Get_Name (Left), Get_Name (Right)) then
+            if not Are_Trees_Equal (Get_Choice_Name (Left),
+                                    Get_Choice_Name (Right))
+            then
                return False;
             end if;
-            return Are_Trees_Equal (Get_Associated (Left),
-                                    Get_Associated (Right));
-         when Iir_Kind_Choice_By_Expression
-           | Iir_Kind_Choice_By_Range =>
-            if not Are_Trees_Equal (Get_Expression (Left),
-                                    Get_Expression (Right)) then
+            return Are_Trees_Equal (Get_Associated_Expr (Left),
+                                    Get_Associated_Expr (Right));
+         when Iir_Kind_Choice_By_Expression =>
+            if not Are_Trees_Equal (Get_Choice_Expression (Left),
+                                    Get_Choice_Expression (Right)) then
                return False;
             end if;
-            return Are_Trees_Equal (Get_Associated (Left),
-                                    Get_Associated (Right));
+            return Are_Trees_Equal (Get_Associated_Expr (Left),
+                                    Get_Associated_Expr (Right));
+         when Iir_Kind_Choice_By_Range =>
+            if not Are_Trees_Equal (Get_Choice_Range (Left),
+                                    Get_Choice_Range (Right)) then
+               return False;
+            end if;
+            return Are_Trees_Equal (Get_Associated_Expr (Left),
+                                    Get_Associated_Expr (Right));
          when Iir_Kind_Character_Literal =>
             return Are_Trees_Equal (Get_Named_Entity (Left),
                                     Get_Named_Entity (Right));

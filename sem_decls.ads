@@ -51,7 +51,8 @@ package Sem_Decls is
    procedure Sem_Iterator (Iterator : Iir_Iterator_Declaration;
                            Staticness : Iir_Staticness);
 
-   --  Extract from NAME the named entity whose profile matches SIG.
+   --  Extract from NAME the named entity whose profile matches SIG.  If NAME
+   --  is an overload list, it is destroyed.
    function Sem_Signature (Name : Iir; Sig : Iir_Signature) return Iir;
 
 end Sem_Decls;

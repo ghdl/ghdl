@@ -1,5 +1,5 @@
---  Tool to check the coherence of the iirs package.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Node garbage collector (for debugging).
+--  Copyright (C) 2014 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -12,27 +12,13 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GCC; see the file COPYING.  If not, write to the Free
+--  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-package Check_Iirs_Pkg is
-   --  If set, disp all Iir kind.
-   Flag_Disp_Iir : Boolean := False;
+package Nodes_GC is
+   Flag_Disp_Multiref : Boolean := False;
 
-   --  If set, disp Iir_Kinds subtype.
-   Flag_Disp_Subtype : Boolean := False;
-
-   --  If set, generate checks.
-   Flag_Checks : Boolean := True;
-
-   procedure Read_Fields;
-
-   procedure Check_Iirs;
-
-   procedure Read_Desc;
-
-   procedure Gen_Func;
-
-   procedure List_Free_Fields;
-end Check_Iirs_Pkg;
+   procedure Report_Unreferenced;
+   --  Display nodes that aren't referenced.
+end Nodes_GC;

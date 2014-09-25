@@ -52,6 +52,17 @@ package body Iirs is
 
    function Get_Format (Kind : Iir_Kind) return Format_Type;
 
+   function Create_Iir (Kind : Iir_Kind) return Iir
+   is
+      Res : Iir;
+      Format : Format_Type;
+   begin
+      Format := Get_Format (Kind);
+      Res := Create_Node (Format);
+      Set_Nkind (Res, Iir_Kind'Pos (Kind));
+      return Res;
+   end Create_Iir;
+
    --  Statistics.
    procedure Disp_Stats
    is
@@ -141,7 +152,7 @@ package body Iirs is
    procedure Set_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
                                Pos : Source_Ptr; Line, Off: Natural) is
    begin
-      Set_Field1 (Design_Unit, Node_Type (Pos));
+      Set_Field4 (Design_Unit, Node_Type (Pos));
       Set_Field11 (Design_Unit, Node_Type (Off));
       Set_Field12 (Design_Unit, Node_Type (Line));
    end Set_Pos_Line_Off;
@@ -149,7 +160,7 @@ package body Iirs is
    procedure Get_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
                                Pos : out Source_Ptr; Line, Off: out Natural) is
    begin
-      Pos := Source_Ptr (Get_Field1 (Design_Unit));
+      Pos := Source_Ptr (Get_Field4 (Design_Unit));
       Off := Natural (Get_Field11 (Design_Unit));
       Line := Natural (Get_Field12 (Design_Unit));
    end Get_Pos_Line_Off;
@@ -250,7 +261,8 @@ package body Iirs is
    function Get_Format (Kind : Iir_Kind) return Format_Type is
    begin
       case Kind is
-         when Iir_Kind_Error
+         when Iir_Kind_Unused
+           | Iir_Kind_Error
            | Iir_Kind_Library_Clause
            | Iir_Kind_Use_Clause
            | Iir_Kind_Null_Literal
@@ -274,7 +286,6 @@ package body Iirs is
            | Iir_Kind_Component_Configuration
            | Iir_Kind_Entity_Class
            | Iir_Kind_Attribute_Value
-           | Iir_Kind_Signature
            | Iir_Kind_Aggregate_Info
            | Iir_Kind_Procedure_Call
            | Iir_Kind_Record_Element_Constraint
@@ -430,6 +441,7 @@ package body Iirs is
            | Iir_Kind_Bit_String_Literal
            | Iir_Kind_Block_Header
            | Iir_Kind_Binding_Indication
+           | Iir_Kind_Signature
            | Iir_Kind_Attribute_Specification
            | Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition
@@ -490,17 +502,6 @@ package body Iirs is
             return Format_Int;
       end case;
    end Get_Format;
-
-   function Create_Iir (Kind : Iir_Kind) return Iir
-   is
-      Res : Iir;
-      Format : Format_Type;
-   begin
-      Format := Get_Format (Kind);
-      Res := Create_Node (Format);
-      Set_Nkind (Res, Iir_Kind'Pos (Kind));
-      return Res;
-   end Create_Iir;
 
    procedure Check_Kind_For_First_Design_Unit (Target : Iir) is
    begin
@@ -716,14 +717,13 @@ package body Iirs is
       end case;
    end Check_Kind_For_Design_File;
 
-   function Get_Design_File (Unit : Iir_Design_Unit) return Iir_Design_File is
+   function Get_Design_File (Unit : Iir_Design_Unit) return Iir is
    begin
       Check_Kind_For_Design_File (Unit);
       return Get_Field0 (Unit);
    end Get_Design_File;
 
-   procedure Set_Design_File (Unit : Iir_Design_Unit; File : Iir_Design_File)
-      is
+   procedure Set_Design_File (Unit : Iir_Design_Unit; File : Iir) is
    begin
       Check_Kind_For_Design_File (Unit);
       Set_Field0 (Unit, File);
@@ -739,13 +739,13 @@ package body Iirs is
       end case;
    end Check_Kind_For_Design_File_Chain;
 
-   function Get_Design_File_Chain (Library : Iir) return Iir_Design_File is
+   function Get_Design_File_Chain (Library : Iir) return Iir is
    begin
       Check_Kind_For_Design_File_Chain (Library);
       return Get_Field1 (Library);
    end Get_Design_File_Chain;
 
-   procedure Set_Design_File_Chain (Library : Iir; Chain : Iir_Design_File) is
+   procedure Set_Design_File_Chain (Library : Iir; Chain : Iir) is
    begin
       Check_Kind_For_Design_File_Chain (Library);
       Set_Field1 (Library, Chain);
@@ -1123,13 +1123,13 @@ package body Iirs is
    function Get_Bit_String_Base (Lit : Iir) return Base_Type is
    begin
       Check_Kind_For_Bit_String_Base (Lit);
-      return Base_Type'Val (Get_Field11 (Lit));
+      return Base_Type'Val (Get_Field8 (Lit));
    end Get_Bit_String_Base;
 
    procedure Set_Bit_String_Base (Lit : Iir; Base : Base_Type) is
    begin
       Check_Kind_For_Bit_String_Base (Lit);
-      Set_Field11 (Lit, Base_Type'Pos (Base));
+      Set_Field8 (Lit, Base_Type'Pos (Base));
    end Set_Bit_String_Base;
 
    procedure Check_Kind_For_Bit_String_0 (Target : Iir) is
@@ -1142,16 +1142,16 @@ package body Iirs is
       end case;
    end Check_Kind_For_Bit_String_0;
 
-   function Get_Bit_String_0 (Lit : Iir) return Iir_Enumeration_Literal is
+   function Get_Bit_String_0 (Lit : Iir) return Iir is
    begin
       Check_Kind_For_Bit_String_0 (Lit);
-      return Get_Field4 (Lit);
+      return Get_Field6 (Lit);
    end Get_Bit_String_0;
 
-   procedure Set_Bit_String_0 (Lit : Iir; El : Iir_Enumeration_Literal) is
+   procedure Set_Bit_String_0 (Lit : Iir; El : Iir) is
    begin
       Check_Kind_For_Bit_String_0 (Lit);
-      Set_Field4 (Lit, El);
+      Set_Field6 (Lit, El);
    end Set_Bit_String_0;
 
    procedure Check_Kind_For_Bit_String_1 (Target : Iir) is
@@ -1164,16 +1164,16 @@ package body Iirs is
       end case;
    end Check_Kind_For_Bit_String_1;
 
-   function Get_Bit_String_1 (Lit : Iir) return Iir_Enumeration_Literal is
+   function Get_Bit_String_1 (Lit : Iir) return Iir is
    begin
       Check_Kind_For_Bit_String_1 (Lit);
-      return Get_Field5 (Lit);
+      return Get_Field7 (Lit);
    end Get_Bit_String_1;
 
-   procedure Set_Bit_String_1 (Lit : Iir; El : Iir_Enumeration_Literal) is
+   procedure Set_Bit_String_1 (Lit : Iir; El : Iir) is
    begin
       Check_Kind_For_Bit_String_1 (Lit);
-      Set_Field5 (Lit, El);
+      Set_Field7 (Lit, El);
    end Set_Bit_String_1;
 
    procedure Check_Kind_For_Literal_Origin (Target : Iir) is
@@ -1227,6 +1227,31 @@ package body Iirs is
       Check_Kind_For_Range_Origin (Lit);
       Set_Field4 (Lit, Orig);
    end Set_Range_Origin;
+
+   procedure Check_Kind_For_Literal_Subtype (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_String_Literal
+           | Iir_Kind_Bit_String_Literal
+           | Iir_Kind_Simple_Aggregate
+           | Iir_Kind_Aggregate =>
+            null;
+         when others =>
+            Failed ("Literal_Subtype", Target);
+      end case;
+   end Check_Kind_For_Literal_Subtype;
+
+   function Get_Literal_Subtype (Lit : Iir) return Iir is
+   begin
+      Check_Kind_For_Literal_Subtype (Lit);
+      return Get_Field5 (Lit);
+   end Get_Literal_Subtype;
+
+   procedure Set_Literal_Subtype (Lit : Iir; Atype : Iir) is
+   begin
+      Check_Kind_For_Literal_Subtype (Lit);
+      Set_Field5 (Lit, Atype);
+   end Set_Literal_Subtype;
 
    procedure Check_Kind_For_Entity_Class (Target : Iir) is
    begin
@@ -1637,7 +1662,7 @@ package body Iirs is
       Set_Field3 (We, An_Iir);
    end Set_Time;
 
-   procedure Check_Kind_For_Associated (Target : Iir) is
+   procedure Check_Kind_For_Associated_Expr (Target : Iir) is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Choice_By_Others
@@ -1647,21 +1672,113 @@ package body Iirs is
            | Iir_Kind_Choice_By_Name =>
             null;
          when others =>
-            Failed ("Associated", Target);
+            Failed ("Associated_Expr", Target);
       end case;
-   end Check_Kind_For_Associated;
+   end Check_Kind_For_Associated_Expr;
 
-   function Get_Associated (Target : Iir) return Iir is
+   function Get_Associated_Expr (Target : Iir) return Iir is
    begin
-      Check_Kind_For_Associated (Target);
-      return Get_Field1 (Target);
-   end Get_Associated;
+      Check_Kind_For_Associated_Expr (Target);
+      return Get_Field3 (Target);
+   end Get_Associated_Expr;
 
-   procedure Set_Associated (Target : Iir; Associated : Iir) is
+   procedure Set_Associated_Expr (Target : Iir; Associated : Iir) is
    begin
-      Check_Kind_For_Associated (Target);
-      Set_Field1 (Target, Associated);
-   end Set_Associated;
+      Check_Kind_For_Associated_Expr (Target);
+      Set_Field3 (Target, Associated);
+   end Set_Associated_Expr;
+
+   procedure Check_Kind_For_Associated_Chain (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Choice_By_Others
+           | Iir_Kind_Choice_By_Expression
+           | Iir_Kind_Choice_By_Range
+           | Iir_Kind_Choice_By_None
+           | Iir_Kind_Choice_By_Name =>
+            null;
+         when others =>
+            Failed ("Associated_Chain", Target);
+      end case;
+   end Check_Kind_For_Associated_Chain;
+
+   function Get_Associated_Chain (Target : Iir) return Iir is
+   begin
+      Check_Kind_For_Associated_Chain (Target);
+      return Get_Field4 (Target);
+   end Get_Associated_Chain;
+
+   procedure Set_Associated_Chain (Target : Iir; Associated : Iir) is
+   begin
+      Check_Kind_For_Associated_Chain (Target);
+      Set_Field4 (Target, Associated);
+   end Set_Associated_Chain;
+
+   procedure Check_Kind_For_Choice_Name (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Choice_By_Name =>
+            null;
+         when others =>
+            Failed ("Choice_Name", Target);
+      end case;
+   end Check_Kind_For_Choice_Name;
+
+   function Get_Choice_Name (Choice : Iir) return Iir is
+   begin
+      Check_Kind_For_Choice_Name (Choice);
+      return Get_Field5 (Choice);
+   end Get_Choice_Name;
+
+   procedure Set_Choice_Name (Choice : Iir; Name : Iir) is
+   begin
+      Check_Kind_For_Choice_Name (Choice);
+      Set_Field5 (Choice, Name);
+   end Set_Choice_Name;
+
+   procedure Check_Kind_For_Choice_Expression (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Choice_By_Expression =>
+            null;
+         when others =>
+            Failed ("Choice_Expression", Target);
+      end case;
+   end Check_Kind_For_Choice_Expression;
+
+   function Get_Choice_Expression (Choice : Iir) return Iir is
+   begin
+      Check_Kind_For_Choice_Expression (Choice);
+      return Get_Field5 (Choice);
+   end Get_Choice_Expression;
+
+   procedure Set_Choice_Expression (Choice : Iir; Name : Iir) is
+   begin
+      Check_Kind_For_Choice_Expression (Choice);
+      Set_Field5 (Choice, Name);
+   end Set_Choice_Expression;
+
+   procedure Check_Kind_For_Choice_Range (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Choice_By_Range =>
+            null;
+         when others =>
+            Failed ("Choice_Range", Target);
+      end case;
+   end Check_Kind_For_Choice_Range;
+
+   function Get_Choice_Range (Choice : Iir) return Iir is
+   begin
+      Check_Kind_For_Choice_Range (Choice);
+      return Get_Field5 (Choice);
+   end Get_Choice_Range;
+
+   procedure Set_Choice_Range (Choice : Iir; Name : Iir) is
+   begin
+      Check_Kind_For_Choice_Range (Choice);
+      Set_Field5 (Choice, Name);
+   end Set_Choice_Range;
 
    procedure Check_Kind_For_Same_Alternative_Flag (Target : Iir) is
    begin
@@ -1932,14 +2049,13 @@ package body Iirs is
       end case;
    end Check_Kind_For_Package;
 
-   function Get_Package (Package_Body : Iir) return Iir_Package_Declaration is
+   function Get_Package (Package_Body : Iir) return Iir is
    begin
       Check_Kind_For_Package (Package_Body);
       return Get_Field4 (Package_Body);
    end Get_Package;
 
-   procedure Set_Package (Package_Body : Iir; Decl : Iir_Package_Declaration)
-      is
+   procedure Set_Package (Package_Body : Iir; Decl : Iir) is
    begin
       Check_Kind_For_Package (Package_Body);
       Set_Field4 (Package_Body, Decl);
@@ -1955,13 +2071,13 @@ package body Iirs is
       end case;
    end Check_Kind_For_Package_Body;
 
-   function Get_Package_Body (Pkg : Iir) return Iir_Package_Body is
+   function Get_Package_Body (Pkg : Iir) return Iir is
    begin
       Check_Kind_For_Package_Body (Pkg);
       return Get_Field2 (Pkg);
    end Get_Package_Body;
 
-   procedure Set_Package_Body (Pkg : Iir; Decl : Iir_Package_Body) is
+   procedure Set_Package_Body (Pkg : Iir; Decl : Iir) is
    begin
       Check_Kind_For_Package_Body (Pkg);
       Set_Field2 (Pkg, Decl);
@@ -2364,6 +2480,7 @@ package body Iirs is
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Constant_Declaration
+           | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Constant_Interface_Declaration
            | Iir_Kind_Variable_Interface_Declaration
            | Iir_Kind_Signal_Interface_Declaration
@@ -2400,13 +2517,13 @@ package body Iirs is
    function Get_Discrete_Range (Target : Iir) return Iir is
    begin
       Check_Kind_For_Discrete_Range (Target);
-      return Get_Field5 (Target);
+      return Get_Field6 (Target);
    end Get_Discrete_Range;
 
    procedure Set_Discrete_Range (Target : Iir; Rng : Iir) is
    begin
       Check_Kind_For_Discrete_Range (Target);
-      Set_Field5 (Target, Rng);
+      Set_Field6 (Target, Rng);
    end Set_Discrete_Range;
 
    procedure Check_Kind_For_Type_Definition (Target : Iir) is
@@ -2790,8 +2907,7 @@ package body Iirs is
    procedure Check_Kind_For_Return_Type (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Signature
-           | Iir_Kind_Enumeration_Literal
+         when Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration =>
             null;
@@ -2994,14 +3110,13 @@ package body Iirs is
       end case;
    end Check_Kind_For_Block_Statement;
 
-   function Get_Block_Statement (Target : Iir) return Iir_Block_Statement is
+   function Get_Block_Statement (Target : Iir) return Iir is
    begin
       Check_Kind_For_Block_Statement (Target);
       return Get_Field7 (Target);
    end Get_Block_Statement;
 
-   procedure Set_Block_Statement (Target : Iir; Block : Iir_Block_Statement)
-      is
+   procedure Set_Block_Statement (Target : Iir; Block : Iir) is
    begin
       Check_Kind_For_Block_Statement (Target);
       Set_Field7 (Target, Block);
@@ -3364,6 +3479,12 @@ package body Iirs is
       Check_Kind_For_Primary_Unit (Target);
       return Get_Field1 (Target);
    end Get_Primary_Unit;
+
+   procedure Set_Primary_Unit (Target : Iir; Unit : Iir) is
+   begin
+      Check_Kind_For_Primary_Unit (Target);
+      Set_Field1 (Target, Unit);
+   end Set_Primary_Unit;
 
    procedure Check_Kind_For_Identifier (Target : Iir) is
    begin
@@ -4243,14 +4364,13 @@ package body Iirs is
       end case;
    end Check_Kind_For_Waveform_Chain;
 
-   function Get_Waveform_Chain (Target : Iir) return Iir_Waveform_Element is
+   function Get_Waveform_Chain (Target : Iir) return Iir is
    begin
       Check_Kind_For_Waveform_Chain (Target);
       return Get_Field5 (Target);
    end Get_Waveform_Chain;
 
-   procedure Set_Waveform_Chain (Target : Iir; Chain : Iir_Waveform_Element)
-      is
+   procedure Set_Waveform_Chain (Target : Iir; Chain : Iir) is
    begin
       Check_Kind_For_Waveform_Chain (Target);
       Set_Field5 (Target, Chain);
@@ -5087,9 +5207,7 @@ package body Iirs is
    procedure Check_Kind_For_Expression (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Choice_By_Expression
-           | Iir_Kind_Choice_By_Range
-           | Iir_Kind_Attribute_Specification
+         when Iir_Kind_Attribute_Specification
            | Iir_Kind_Disconnection_Specification
            | Iir_Kind_Parenthesis_Expression
            | Iir_Kind_Qualified_Expression
@@ -5282,13 +5400,13 @@ package body Iirs is
       end case;
    end Check_Kind_For_Package_Header;
 
-   function Get_Package_Header (Pkg : Iir) return Iir_Package_Body is
+   function Get_Package_Header (Pkg : Iir) return Iir is
    begin
       Check_Kind_For_Package_Header (Pkg);
       return Get_Field5 (Pkg);
    end Get_Package_Header;
 
-   procedure Set_Package_Header (Pkg : Iir; Header : Iir_Package_Body) is
+   procedure Set_Package_Header (Pkg : Iir; Header : Iir) is
    begin
       Check_Kind_For_Package_Header (Pkg);
       Set_Field5 (Pkg, Header);
@@ -5420,13 +5538,13 @@ package body Iirs is
       end case;
    end Check_Kind_For_Else_Clause;
 
-   function Get_Else_Clause (Target : Iir) return Iir_Elsif is
+   function Get_Else_Clause (Target : Iir) return Iir is
    begin
       Check_Kind_For_Else_Clause (Target);
       return Get_Field6 (Target);
    end Get_Else_Clause;
 
-   procedure Set_Else_Clause (Target : Iir; Clause : Iir_Elsif) is
+   procedure Set_Else_Clause (Target : Iir; Clause : Iir) is
    begin
       Check_Kind_For_Else_Clause (Target);
       Set_Field6 (Target, Clause);
@@ -5484,6 +5602,7 @@ package body Iirs is
            | Iir_Kind_Package_Body
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Unit_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
@@ -6123,8 +6242,7 @@ package body Iirs is
    procedure Check_Kind_For_Name (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Choice_By_Name
-           | Iir_Kind_Non_Object_Alias_Declaration
+         when Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Object_Alias_Declaration =>
             null;
          when others =>
@@ -6318,6 +6436,28 @@ package body Iirs is
       Set_Field0 (Target, Prefix);
    end Set_Prefix;
 
+   procedure Check_Kind_For_Slice_Subtype (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Slice_Name =>
+            null;
+         when others =>
+            Failed ("Slice_Subtype", Target);
+      end case;
+   end Check_Kind_For_Slice_Subtype;
+
+   function Get_Slice_Subtype (Slice : Iir) return Iir is
+   begin
+      Check_Kind_For_Slice_Subtype (Slice);
+      return Get_Field3 (Slice);
+   end Get_Slice_Subtype;
+
+   procedure Set_Slice_Subtype (Slice : Iir; Atype : Iir) is
+   begin
+      Check_Kind_For_Slice_Subtype (Slice);
+      Set_Field3 (Slice, Atype);
+   end Set_Slice_Subtype;
+
    procedure Check_Kind_For_Suffix (Target : Iir) is
    begin
       case Get_Kind (Target) is
@@ -6486,13 +6626,13 @@ package body Iirs is
       end case;
    end Check_Kind_For_Aggregate_Info;
 
-   function Get_Aggregate_Info (Target : Iir) return Iir_Aggregate_Info is
+   function Get_Aggregate_Info (Target : Iir) return Iir is
    begin
       Check_Kind_For_Aggregate_Info (Target);
       return Get_Field2 (Target);
    end Get_Aggregate_Info;
 
-   procedure Set_Aggregate_Info (Target : Iir; Info : Iir_Aggregate_Info) is
+   procedure Set_Aggregate_Info (Target : Iir; Info : Iir) is
    begin
       Check_Kind_For_Aggregate_Info (Target);
       Set_Field2 (Target, Info);
@@ -6508,14 +6648,13 @@ package body Iirs is
       end case;
    end Check_Kind_For_Sub_Aggregate_Info;
 
-   function Get_Sub_Aggregate_Info (Target : Iir) return Iir_Aggregate_Info is
+   function Get_Sub_Aggregate_Info (Target : Iir) return Iir is
    begin
       Check_Kind_For_Sub_Aggregate_Info (Target);
       return Get_Field1 (Target);
    end Get_Sub_Aggregate_Info;
 
-   procedure Set_Sub_Aggregate_Info (Target : Iir; Info : Iir_Aggregate_Info)
-      is
+   procedure Set_Sub_Aggregate_Info (Target : Iir; Info : Iir) is
    begin
       Check_Kind_For_Sub_Aggregate_Info (Target);
       Set_Field1 (Target, Info);
@@ -6915,6 +7054,28 @@ package body Iirs is
       Set_Field2 (Target, Mark);
    end Set_Subtype_Type_Mark;
 
+   procedure Check_Kind_For_Type_Conversion_Subtype (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Type_Conversion =>
+            null;
+         when others =>
+            Failed ("Type_Conversion_Subtype", Target);
+      end case;
+   end Check_Kind_For_Type_Conversion_Subtype;
+
+   function Get_Type_Conversion_Subtype (Target : Iir) return Iir is
+   begin
+      Check_Kind_For_Type_Conversion_Subtype (Target);
+      return Get_Field3 (Target);
+   end Get_Type_Conversion_Subtype;
+
+   procedure Set_Type_Conversion_Subtype (Target : Iir; Atype : Iir) is
+   begin
+      Check_Kind_For_Type_Conversion_Subtype (Target);
+      Set_Field3 (Target, Atype);
+   end Set_Type_Conversion_Subtype;
+
    procedure Check_Kind_For_Type_Mark (Target : Iir) is
    begin
       case Get_Kind (Target) is
@@ -6965,7 +7126,8 @@ package body Iirs is
    procedure Check_Kind_For_Return_Type_Mark (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Function_Declaration
+         when Iir_Kind_Signature
+           | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
             null;
          when others =>
@@ -7247,6 +7409,28 @@ package body Iirs is
       Set_Field3 (Target, Name_Id_To_Iir (Ident));
    end Set_Simple_Name_Identifier;
 
+   procedure Check_Kind_For_Simple_Name_Subtype (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Simple_Name_Attribute =>
+            null;
+         when others =>
+            Failed ("Simple_Name_Subtype", Target);
+      end case;
+   end Check_Kind_For_Simple_Name_Subtype;
+
+   function Get_Simple_Name_Subtype (Target : Iir) return Iir is
+   begin
+      Check_Kind_For_Simple_Name_Subtype (Target);
+      return Get_Field4 (Target);
+   end Get_Simple_Name_Subtype;
+
+   procedure Set_Simple_Name_Subtype (Target : Iir; Atype : Iir) is
+   begin
+      Check_Kind_For_Simple_Name_Subtype (Target);
+      Set_Field4 (Target, Atype);
+   end Set_Simple_Name_Subtype;
+
    procedure Check_Kind_For_Protected_Type_Body (Target : Iir) is
    begin
       case Get_Kind (Target) is
@@ -7350,13 +7534,13 @@ package body Iirs is
    function Get_String_Length (Lit : Iir) return Int32 is
    begin
       Check_Kind_For_String_Length (Lit);
-      return Iir_To_Int32 (Get_Field0 (Lit));
+      return Iir_To_Int32 (Get_Field4 (Lit));
    end Get_String_Length;
 
    procedure Set_String_Length (Lit : Iir; Len : Int32) is
    begin
       Check_Kind_For_String_Length (Lit);
-      Set_Field0 (Lit, Int32_To_Iir (Len));
+      Set_Field4 (Lit, Int32_To_Iir (Len));
    end Set_String_Length;
 
    procedure Check_Kind_For_Use_Flag (Target : Iir) is

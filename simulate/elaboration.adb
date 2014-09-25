@@ -633,10 +633,9 @@ package body Elaboration is
       return Iir_Value_Literal_Acc
    is
       Value : Iir_Value_Literal_Acc;
-      Ref : Iir;
+      Ref : constant Iir := Get_Type (Bound);
       Res : Iir_Value_Literal_Acc;
    begin
-      Ref := Get_Type (Bound);
       Res := Create_Value_For_Type (Instance, Ref, False);
       Res := Unshare (Res, Instance_Pool);
       Value := Execute_Expression (Instance, Bound);
@@ -647,10 +646,9 @@ package body Elaboration is
    procedure Elaborate_Range_Expression
      (Instance : Block_Instance_Acc; Rc: Iir_Range_Expression)
    is
-      Range_Info : Sim_Info_Acc;
+      Range_Info : constant Sim_Info_Acc := Get_Info (Rc);
       Val : Iir_Value_Literal_Acc;
    begin
-      Range_Info := Get_Info (Rc);
       if Range_Info.Scope_Level /= Instance.Scope_Level
         or else Instance.Objects (Range_Info.Slot) /= null
       then
@@ -1850,6 +1848,9 @@ package body Elaboration is
       Item := Conf_Chain;
       while Item /= Null_Iir loop
          Spec := Get_Block_Specification (Item);
+         if Get_Kind (Spec) = Iir_Kind_Simple_Name then
+            Spec := Get_Named_Entity (Spec);
+         end if;
          Prev_Item := Get_Prev_Block_Configuration (Item);
 
          case Get_Kind (Spec) is
@@ -1923,12 +1924,15 @@ package body Elaboration is
                   Info : Sim_Info_Acc;
                begin
                   Spec := Get_Block_Specification (Item);
+                  if Get_Kind (Spec) = Iir_Kind_Simple_Name then
+                     Spec := Get_Named_Entity (Spec);
+                  end if;
                   case Get_Kind (Spec) is
                      when Iir_Kind_Slice_Name
                        | Iir_Kind_Indexed_Name
                        | Iir_Kind_Selected_Name =>
                         --  Block configuration for a generate statement.
-                        Gen := Get_Prefix (Spec);
+                        Gen := Get_Named_Entity (Get_Prefix (Spec));
                         Info := Get_Info (Gen);
                         Set_Prev_Block_Configuration
                           (Item, Sub_Conf (Info.Inst_Slot));
@@ -2180,7 +2184,9 @@ package body Elaboration is
       case Get_Kind (Decl) is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
-            Elaborate_Subprogram_Declaration (Instance, Decl);
+            if not Is_Second_Subprogram_Specification (Decl) then
+               Elaborate_Subprogram_Declaration (Instance, Decl);
+            end if;
          when Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration =>
             null;

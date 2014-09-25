@@ -1508,7 +1508,7 @@ package body Parse is
    --
    --  [ LRM93 3.1.3 ]
    --  secondary_unit_declaration ::= identifier = physical_literal ;
-   function Parse_Physical_Type_Definition
+   function Parse_Physical_Type_Definition (Parent : Iir)
      return Iir_Physical_Type_Definition
    is
       use Iir_Chains.Unit_Chain_Handling;
@@ -1528,6 +1528,7 @@ package body Parse is
       Expect (Tok_Identifier);
       Unit := Create_Iir (Iir_Kind_Unit_Declaration);
       Set_Location (Unit);
+      Set_Parent (Unit, Parent);
       Set_Identifier (Unit, Current_Identifier);
 
       --  Skip identifier
@@ -1786,29 +1787,29 @@ package body Parse is
    --  precond : TYPE
    --  postcond: a token
    --
-   --  [ §4.1 ]
+   --  [ LRM93 4.1 ]
    --  type_definition ::= scalar_type_definition
    --                    | composite_type_definition
    --                    | access_type_definition
    --                    | file_type_definition
    --                    | protected_type_definition
    --
-   --  [ §3.1 ]
+   --  [ LRM93 3.1 ]
    --  scalar_type_definition ::= enumeration_type_definition
    --                           | integer_type_definition
    --                           | floating_type_definition
    --                           | physical_type_definition
    --
-   --  [ §3.2 ]
+   --  [ LRM93 3.2 ]
    --  composite_type_definition ::= array_type_definition
    --                              | record_type_definition
    --
-   --  [ §3.1.2 ]
+   --  [ LRM93 3.1.2 ]
    --  integer_type_definition ::= range_constraint
    --
-   --  [ 3.1.4 ]
+   --  [ LRM93 3.1.4 ]
    --  floating_type_definition ::= range_constraint
-   function Parse_Type_Declaration return Iir
+   function Parse_Type_Declaration (Parent : Iir) return Iir
    is
       Def : Iir;
       Loc : Location_Type;
@@ -1867,7 +1868,7 @@ package body Parse is
                declare
                   Unit_Def : Iir;
                begin
-                  Unit_Def := Parse_Physical_Type_Definition;
+                  Unit_Def := Parse_Physical_Type_Definition (Parent);
                   if Current_Token = Tok_Identifier then
                      if Flags.Vhdl_Std = Vhdl_87 then
                         Error_Msg_Parse
@@ -2855,7 +2856,10 @@ package body Parse is
       Expect (Tok_Left_Bracket);
       Res := Create_Iir (Iir_Kind_Signature);
       Set_Location (Res);
+
+      --  Skip '['
       Scan;
+
       --  List of type_marks.
       if Current_Token = Tok_Identifier then
          List := Create_Iir_List;
@@ -2866,12 +2870,18 @@ package body Parse is
             Scan;
          end loop;
       end if;
+
       if Current_Token = Tok_Return then
+         --  Skip 'return'
          Scan;
-         Set_Return_Type (Res, Parse_Name);
+
+         Set_Return_Type_Mark (Res, Parse_Name);
       end if;
+
+      --  Skip ']'
       Expect (Tok_Right_Bracket);
       Scan;
+
       return Res;
    end Parse_Signature;
 
@@ -3313,7 +3323,7 @@ package body Parse is
             when Tok_Invalid =>
                raise Internal_Error;
             when Tok_Type =>
-               Decl := Parse_Type_Declaration;
+               Decl := Parse_Type_Declaration (Parent);
 
                --  LRM 2.5  Package declarations
                --  If a package declarative item is a type declaration that is
@@ -3519,7 +3529,10 @@ package body Parse is
          if Current_Token = Tok_Others then
             A_Choice := Create_Iir (Iir_Kind_Choice_By_Others);
             Set_Location (A_Choice);
+
+            --  Skip 'others'
             Scan;
+
             return A_Choice;
          else
             Expr1 := Parse_Expression;
@@ -3538,22 +3551,22 @@ package body Parse is
       if Is_Range_Attribute_Name (Expr1) then
          A_Choice := Create_Iir (Iir_Kind_Choice_By_Range);
          Location_Copy (A_Choice, Expr1);
-         Set_Expression (A_Choice, Expr1);
+         Set_Choice_Range (A_Choice, Expr1);
          return A_Choice;
       elsif Current_Token = Tok_To or else Current_Token = Tok_Downto then
          A_Choice := Create_Iir (Iir_Kind_Choice_By_Range);
          Location_Copy (A_Choice, Expr1);
-         Set_Expression (A_Choice, Parse_Range_Right (Expr1));
+         Set_Choice_Range (A_Choice, Parse_Range_Right (Expr1));
          return A_Choice;
       else
          A_Choice := Create_Iir (Iir_Kind_Choice_By_Expression);
          Location_Copy (A_Choice, Expr1);
-         Set_Expression (A_Choice, Expr1);
+         Set_Choice_Expression (A_Choice, Expr1);
          return A_Choice;
       end if;
    end Parse_A_Choice;
 
-   --  [ §7.3.2 ]
+   --  [ LRM93 7.3.2 ]
    --  choices ::= choice { | choice }
    --
    -- Leave tok_double_arrow as current token.
@@ -3677,7 +3690,7 @@ package body Parse is
                   Expr := Parse_Expression;
             end case;
          end if;
-         Set_Associated (Assoc, Expr);
+         Set_Associated_Expr (Assoc, Expr);
          Append_Subchain (Last, Res, Assoc);
          exit when Current_Token = Tok_Right_Paren;
          Expect (Tok_Comma);
@@ -4428,7 +4441,7 @@ package body Parse is
          Expect (Tok_When, "'when' expected after waveform");
          Scan;
          Assoc := Parse_Choices (Null_Iir);
-         Set_Associated (Assoc, Wf_Chain);
+         Set_Associated_Chain (Assoc, Wf_Chain);
          Append_Subchain (Last, Res, Assoc);
          exit when Current_Token = Tok_Semi_Colon;
          Expect (Tok_Comma, "',' (comma) expected after choice");
@@ -5019,7 +5032,7 @@ package body Parse is
                      Expect (Tok_Double_Arrow);
                      Scan;
 
-                     Set_Associated
+                     Set_Associated_Chain
                        (Assoc, Parse_Sequential_Statements (Stmt));
                      Append_Subchain (Last_Assoc, Stmt, Assoc);
                   end loop;

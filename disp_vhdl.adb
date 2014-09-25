@@ -1233,7 +1233,7 @@ package body Disp_Vhdl is
             Disp_Name (El);
          end loop;
       end if;
-      El := Get_Return_Type (Sig);
+      El := Get_Return_Type_Mark (Sig);
       if El /= Null_Iir then
          Put (" return ");
          Disp_Name (El);
@@ -1836,7 +1836,7 @@ package body Disp_Vhdl is
             Put_Line (",");
          end if;
          Set_Col (Indent + Indentation);
-         Disp_Waveform (Get_Associated (Assoc));
+         Disp_Waveform (Get_Associated_Chain (Assoc));
          Put (" when ");
          Disp_Choice (Assoc);
       end loop;
@@ -1959,7 +1959,7 @@ package body Disp_Vhdl is
       while Assoc /= Null_Iir loop
          Set_Col (Indent + Indentation);
          Put ("when ");
-         Sel_Stmt := Get_Associated (Assoc);
+         Sel_Stmt := Get_Associated_Chain (Assoc);
          Disp_Choice (Assoc);
          Put_Line (" =>");
          Set_Col (Indent + 2 * Indentation);
@@ -2337,11 +2337,11 @@ package body Disp_Vhdl is
             when Iir_Kind_Choice_By_None =>
                null;
             when Iir_Kind_Choice_By_Expression =>
-               Disp_Expression (Get_Expression (Choice));
+               Disp_Expression (Get_Choice_Expression (Choice));
             when Iir_Kind_Choice_By_Range =>
-               Disp_Range (Get_Expression (Choice));
+               Disp_Range (Get_Choice_Range (Choice));
             when Iir_Kind_Choice_By_Name =>
-               Disp_Name_Of (Get_Name (Choice));
+               Disp_Name_Of (Get_Choice_Name (Choice));
             when others =>
                Error_Kind ("disp_choice", Choice);
          end case;
@@ -2366,7 +2366,7 @@ package body Disp_Vhdl is
       Put ("(");
       Assoc := Get_Association_Choices_Chain (Aggr);
       loop
-         Expr := Get_Associated (Assoc);
+         Expr := Get_Associated_Expr (Assoc);
          if Get_Kind (Assoc) /= Iir_Kind_Choice_By_None then
             Disp_Choice (Assoc);
             Put (" => ");
@@ -3053,6 +3053,8 @@ package body Disp_Vhdl is
             Put (" (");
             Disp_Range (Get_Suffix (Spec));
             Put (")");
+         when Iir_Kind_Simple_Name =>
+            Disp_Name (Spec);
          when others =>
             Error_Kind ("disp_block_configuration", Spec);
       end case;

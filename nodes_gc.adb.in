@@ -1,0 +1,159 @@
+--  Node garbage collector (for debugging).
+--  Copyright (C) 2014 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GHDL; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
+with Ada.Text_IO;
+with Types; use Types;
+with Nodes;
+with Iirs; use Iirs;
+with Libraries;
+with Disp_Tree;
+with Std_Package;
+
+package body Nodes_GC is
+
+   type Marker_Array is array (Iir range <>) of Boolean;
+   type Marker_Array_Acc is access Marker_Array;
+
+   Markers : Marker_Array_Acc;
+
+   procedure Mark_Iir (N : Iir);
+
+   procedure Mark_Iir_List (N : Iir_List)
+   is
+      El : Iir;
+   begin
+      case N is
+         when Null_Iir_List
+           | Iir_List_All
+           | Iir_List_Others =>
+            null;
+         when others =>
+            for I in Natural loop
+               El := Get_Nth_Element (N, I);
+               exit when El = Null_Iir;
+               Mark_Iir (El);
+            end loop;
+      end case;
+   end Mark_Iir_List;
+
+   procedure Mark_PSL_Node (N : PSL_Node) is
+   begin
+      null;
+   end Mark_PSL_Node;
+
+   procedure Mark_PSL_NFA (N : PSL_NFA) is
+   begin
+      null;
+   end Mark_PSL_NFA;
+
+   procedure Report_Already_Marked (N : Iir)
+   is
+      use Ada.Text_IO;
+   begin
+      Disp_Tree.Disp_Tree (N, True);
+      return;
+   end Report_Already_Marked;
+
+   procedure Already_Marked (N : Iir) is
+   begin
+      --  An unused node mustn't be referenced.
+      if Get_Kind (N) = Iir_Kind_Unused then
+         raise Internal_Error;
+      end if;
+
+      if not Flag_Disp_Multiref then
+         return;
+      end if;
+
+      case Get_Kind (N) is
+         when Iir_Kind_Constant_Interface_Declaration =>
+            if Get_Identifier (N) = Null_Identifier then
+               --  Anonymous interfaces are shared by predefined functions.
+               return;
+            end if;
+         when Iir_Kind_Enumeration_Literal =>
+            if Get_Enum_Pos (N) = 0
+              or else N = Get_Right_Limit (Get_Range_Constraint
+                                             (Get_Type (N)))
+            then
+               return;
+            end if;
+         when others =>
+            null;
+      end case;
+
+      Report_Already_Marked (N);
+   end Already_Marked;
+
+   procedure Mark_Chain (Head : Iir)
+   is
+      El : Iir;
+   begin
+      El := Head;
+      while El /= Null_Iir loop
+         Mark_Iir (El);
+         El := Get_Chain (El);
+      end loop;
+   end Mark_Chain;
+
+   procedure Report_Unreferenced_Node (N : Iir) is
+   begin
+      Disp_Tree.Disp_Tree (N, True);
+   end Report_Unreferenced_Node;
+
+   --  Subprograms
+
+   procedure Report_Unreferenced
+   is
+      use Ada.Text_IO;
+      use Std_Package;
+      El : Iir;
+      Nbr_Unreferenced : Natural;
+   begin
+      Markers := new Marker_Array'(Null_Iir .. Iirs.Get_Last_Node => False);
+
+      if Flag_Disp_Multiref then
+         Put_Line ("** nodes already marked:");
+      end if;
+
+      Mark_Chain (Libraries.Get_Libraries_Chain);
+      Mark_Chain (Libraries.Obsoleted_Design_Units);
+      Mark_Iir (Convertible_Integer_Type_Declaration);
+      Mark_Iir (Convertible_Integer_Subtype_Declaration);
+      Mark_Iir (Convertible_Real_Type_Declaration);
+      Mark_Iir (Universal_Integer_One);
+      Mark_Iir (Error_Mark);
+
+      El := Error_Mark;
+      Nbr_Unreferenced := 0;
+      while El in Markers'Range loop
+         if not Markers (El) and then Get_Kind (El) /= Iir_Kind_Unused then
+            if Nbr_Unreferenced = 0 then
+               Put_Line ("** unreferenced nodes:");
+            end if;
+            Nbr_Unreferenced := Nbr_Unreferenced + 1;
+            Report_Unreferenced_Node (El);
+         end if;
+         El := Iir (Nodes.Next_Node (Nodes.Node_Type (El)));
+      end loop;
+
+      if Nbr_Unreferenced /= 0 then
+         raise Internal_Error;
+      end if;
+   end Report_Unreferenced;
+end Nodes_GC;

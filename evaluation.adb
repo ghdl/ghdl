@@ -167,6 +167,7 @@ package body Evaluation is
       Set_Type (Res, Stype);
       Set_Literal_Origin (Res, Origin);
       Set_Expr_Staticness (Res, Locally);
+      Set_Literal_Subtype (Res, Stype);
       return Res;
    end Build_Simple_Aggregate;
 
@@ -206,7 +207,9 @@ package body Evaluation is
                Prim_Name := Get_Primary_Unit_Name
                  (Get_Base_Type (Get_Type (Origin)));
                Set_Unit_Name (Res, Prim_Name);
-               if Get_Unit_Name (Val) = Prim_Name then
+               if Get_Named_Entity (Get_Unit_Name (Val))
+                 = Get_Named_Entity (Prim_Name)
+               then
                   Set_Value (Res, Get_Value (Val));
                else
                   raise Internal_Error;
@@ -235,6 +238,7 @@ package body Evaluation is
          when Iir_Kind_Simple_Aggregate =>
             Res := Create_Iir (Iir_Kind_Simple_Aggregate);
             Set_Simple_Aggregate_List (Res, Get_Simple_Aggregate_List (Val));
+            Set_Literal_Subtype (Res, Get_Type (Origin));
 
          when Iir_Kind_Overflow_Literal =>
             Res := Create_Iir (Iir_Kind_Overflow_Literal);
@@ -421,6 +425,13 @@ package body Evaluation is
       return Create_Unidim_Array_From_Index (Base_Type, N_Index_Type, Loc);
    end Create_Unidim_Array_By_Length;
 
+   procedure Free_Eval_Static_Expr (Res : Iir; Orig : Iir) is
+   begin
+      if Res /= Orig and then Get_Literal_Origin (Res) = Orig then
+         Free_Iir (Res);
+      end if;
+   end Free_Eval_Static_Expr;
+
    function Eval_String_Literal (Str : Iir) return Iir
    is
       Ptr : String_Fat_Acc;
@@ -451,17 +462,15 @@ package body Evaluation is
                end loop;
                return Build_Simple_Aggregate (List, Str, Get_Type (Str));
             end;
+
          when Iir_Kind_Bit_String_Literal =>
             declare
-               Str_Type : Iir;
+               Str_Type : constant Iir := Get_Type (Str);
                List : Iir_List;
-               Lit_0 : Iir;
-               Lit_1 : Iir;
+               Lit_0 : constant Iir := Get_Bit_String_0 (Str);
+               Lit_1 : constant Iir := Get_Bit_String_1 (Str);
             begin
-               Str_Type := Get_Type (Str);
                List := Create_Iir_List;
-               Lit_0 := Get_Bit_String_0 (Str);
-               Lit_1 := Get_Bit_String_1 (Str);
 
                Ptr := Get_String_Fat_Acc (Str);
                Len := Get_String_Length (Str);
@@ -478,8 +487,10 @@ package body Evaluation is
                end loop;
                return Build_Simple_Aggregate (List, Str, Str_Type);
             end;
+
          when Iir_Kind_Simple_Aggregate =>
             return Str;
+
          when others =>
             Error_Kind ("eval_string_literal", Str);
       end case;
@@ -806,7 +817,9 @@ package body Evaluation is
       L : Natural;
       Res_Type : Iir;
       Origin_Type : Iir;
+      Left_Aggr, Right_Aggr : Iir;
       Left_List, Right_List : Iir_List;
+      Left_Len : Natural;
    begin
       Res_List := Create_Iir_List;
       --  Do the concatenation.
@@ -815,14 +828,19 @@ package body Evaluation is
          when Iir_Predefined_Element_Array_Concat
            | Iir_Predefined_Element_Element_Concat =>
             Append_Element (Res_List, Left);
+            Left_Len := 1;
          when Iir_Predefined_Array_Element_Concat
            | Iir_Predefined_Array_Array_Concat =>
-            Left_List :=
-              Get_Simple_Aggregate_List (Eval_String_Literal (Left));
-            L := Get_Nbr_Elements (Left_List);
-            for I in 0 .. L - 1 loop
+            Left_Aggr := Eval_String_Literal (Left);
+            Left_List := Get_Simple_Aggregate_List (Left_Aggr);
+            Left_Len := Get_Nbr_Elements (Left_List);
+            for I in 0 .. Left_Len - 1 loop
                Append_Element (Res_List, Get_Nth_Element (Left_List, I));
             end loop;
+            if Left_Aggr /= Left then
+               Destroy_Iir_List (Left_List);
+               Free_Iir (Left_Aggr);
+            end if;
       end case;
       --  Right:
       case Func is
@@ -831,12 +849,16 @@ package body Evaluation is
             Append_Element (Res_List, Right);
          when Iir_Predefined_Element_Array_Concat
            | Iir_Predefined_Array_Array_Concat =>
-            Right_List :=
-              Get_Simple_Aggregate_List (Eval_String_Literal (Right));
+            Right_Aggr := Eval_String_Literal (Right);
+            Right_List := Get_Simple_Aggregate_List (Right_Aggr);
             L := Get_Nbr_Elements (Right_List);
             for I in 0 .. L - 1 loop
                Append_Element (Res_List, Get_Nth_Element (Right_List, I));
             end loop;
+            if Right_Aggr /= Right then
+               Destroy_Iir_List (Right_List);
+               Free_Iir (Right_Aggr);
+            end if;
       end case;
       L := Get_Nbr_Elements (Res_List);
 
@@ -844,7 +866,7 @@ package body Evaluation is
       Origin_Type := Get_Type (Orig);
       Res_Type := Null_Iir;
       if Func = Iir_Predefined_Array_Array_Concat
-        and then Get_Nbr_Elements (Left_List) = 0
+        and then Left_Len = 0
       then
          if Flags.Vhdl_Std = Vhdl_87 then
             --  LRM87 7.2.4
@@ -912,24 +934,36 @@ package body Evaluation is
 
    function Eval_Array_Equality (Left, Right : Iir) return Boolean
    is
+      Left_Val, Right_Val : Iir;
       L_List : Iir_List;
       R_List : Iir_List;
       N : Natural;
+      Res : Boolean;
    begin
-      --  FIXME: the simple aggregates are lost.
-      L_List := Get_Simple_Aggregate_List (Eval_String_Literal (Left));
-      R_List := Get_Simple_Aggregate_List (Eval_String_Literal (Right));
+      Left_Val := Eval_String_Literal (Left);
+      Right_Val := Eval_String_Literal (Right);
+
+      L_List := Get_Simple_Aggregate_List (Left_Val);
+      R_List := Get_Simple_Aggregate_List (Right_Val);
       N := Get_Nbr_Elements (L_List);
       if N /= Get_Nbr_Elements (R_List) then
-         return False;
+         --  Cannot be equal if not the same length.
+         Res := False;
+      else
+         Res := True;
+         for I in 0 .. N - 1 loop
+            --  FIXME: this is wrong: (eg: evaluated lit)
+            if Get_Nth_Element (L_List, I) /= Get_Nth_Element (R_List, I) then
+               Res := False;
+               exit;
+            end if;
+         end loop;
       end if;
-      for I in 0 .. N - 1 loop
-         --  FIXME: this is wrong: (eg: evaluated lit)
-         if Get_Nth_Element (L_List, I) /= Get_Nth_Element (R_List, I) then
-            return False;
-         end if;
-      end loop;
-      return True;
+
+      Free_Eval_Static_Expr (Left_Val, Left);
+      Free_Eval_Static_Expr (Right_Val, Right);
+
+      return Res;
    end Eval_Array_Equality;
 
    --  ORIG is either a dyadic operator or a function call.
@@ -1637,24 +1671,24 @@ package body Evaluation is
       end if;
    end Build_Physical_Value;
 
-   function Eval_Incdec (Expr : Iir; N : Iir_Int64) return Iir
+   function Eval_Incdec (Expr : Iir; N : Iir_Int64; Origin : Iir) return Iir
    is
       P : Iir_Int64;
    begin
       case Get_Kind (Expr) is
          when Iir_Kind_Integer_Literal =>
-            return Build_Integer (Get_Value (Expr) + N, Expr);
+            return Build_Integer (Get_Value (Expr) + N, Origin);
          when Iir_Kind_Enumeration_Literal =>
             P := Iir_Int64 (Get_Enum_Pos (Expr)) + N;
             if P < 0 then
                Warning_Msg_Sem ("static constant violates bounds", Expr);
-               return Build_Overflow (Expr);
+               return Build_Overflow (Origin);
             else
-               return Build_Enumeration (Iir_Index32 (P), Expr);
+               return Build_Enumeration (Iir_Index32 (P), Origin);
             end if;
          when Iir_Kind_Physical_Int_Literal
            | Iir_Kind_Unit_Declaration =>
-            return Build_Physical (Get_Physical_Value (Expr) + N, Expr);
+            return Build_Physical (Get_Physical_Value (Expr) + N, Origin);
          when others =>
             Error_Kind ("eval_incdec", Expr);
       end case;
@@ -1696,6 +1730,7 @@ package body Evaluation is
       Conv_Index_Type : constant Iir := Get_Index_Type (Conv_Type, 0);
       Val_Index_Type : constant Iir := Get_Index_Type (Val_Type, 0);
       Index_Type : Iir;
+      Res_Type : Iir;
       Res : Iir;
       Rng : Iir;
    begin
@@ -1727,9 +1762,10 @@ package body Evaluation is
                Set_Base_Type (Index_Type, Get_Base_Type (Conv_Index_Type));
                Set_Type_Staticness (Index_Type, Locally);
             end if;
-            Set_Type (Res,
-                      Create_Unidim_Array_From_Index
-                      (Get_Base_Type (Conv_Type), Index_Type, Conv));
+            Res_Type := Create_Unidim_Array_From_Index
+              (Get_Base_Type (Conv_Type), Index_Type, Conv);
+            Set_Type (Res, Res_Type);
+            Set_Type_Conversion_Subtype (Conv, Res_Type);
             return Res;
          when others =>
             Error_Kind ("eval_array_type_conversion", Conv_Type);
@@ -1791,7 +1827,7 @@ package body Evaluation is
            | Iir_Kind_Overflow_Literal =>
             return Expr;
          when Iir_Kind_Physical_Int_Literal =>
-            if Get_Unit_Name (Expr)
+            if Get_Named_Entity (Get_Unit_Name (Expr))
               = Get_Primary_Unit (Get_Base_Type (Get_Type (Expr)))
             then
                return Expr;
@@ -1820,7 +1856,7 @@ package body Evaluation is
          when Iir_Kind_Object_Alias_Declaration =>
             return Eval_Static_Expr (Get_Name (Expr));
          when Iir_Kind_Unit_Declaration =>
-            return Expr;
+            return Get_Physical_Unit_Value (Expr);
          when Iir_Kind_Simple_Aggregate =>
             return Expr;
 
@@ -1840,33 +1876,51 @@ package body Evaluation is
             end;
          when Iir_Kinds_Dyadic_Operator =>
             declare
-               Left, Right : Iir;
+               Left : constant Iir := Get_Left (Expr);
+               Right : constant Iir := Get_Right (Expr);
+               Left_Val, Right_Val : Iir;
+               Res : Iir;
             begin
-               Left := Eval_Static_Expr (Get_Left (Expr));
-               Right := Eval_Static_Expr (Get_Right (Expr));
+               Left_Val := Eval_Static_Expr (Left);
+               Right_Val := Eval_Static_Expr (Right);
 
-               return Eval_Dyadic_Operator
-                 (Expr, Get_Implementation (Expr), Left, Right);
+               Res := Eval_Dyadic_Operator
+                 (Expr, Get_Implementation (Expr), Left_Val, Right_Val);
+
+               Free_Eval_Static_Expr (Left_Val, Left);
+               Free_Eval_Static_Expr (Right_Val, Right);
+
+               return Res;
             end;
 
-         when Iir_Kind_Attribute_Value =>
-            --  FIXME: see constant_declaration.
-            --  Currently, this avoids weird nodes, such as a string literal
-            --  whose type is an unconstrained array type.
-            Val := Get_Expression (Get_Attribute_Specification (Expr));
-            Res := Build_Constant (Eval_Static_Expr (Val), Expr);
-            Set_Type (Res, Get_Type (Val));
-            return Res;
          when Iir_Kind_Attribute_Name =>
-            return Eval_Static_Expr (Get_Named_Entity (Expr));
+            --  An attribute name designates an attribute value.
+            declare
+               Attr_Val : constant Iir := Get_Named_Entity (Expr);
+               Attr_Expr : constant Iir :=
+                 Get_Expression (Get_Attribute_Specification (Attr_Val));
+               Val : Iir;
+            begin
+               Val := Eval_Static_Expr (Attr_Expr);
+               --  FIXME: see constant_declaration.
+               --  Currently, this avoids weird nodes, such as a string literal
+               --  whose type is an unconstrained array type.
+               Res := Build_Constant (Val, Expr);
+               Set_Type (Res, Get_Type (Val));
+               return Res;
+            end;
 
          when Iir_Kind_Pos_Attribute =>
             declare
+               Param : constant Iir := Get_Parameter (Expr);
                Val : Iir;
+               Res : Iir;
             begin
-               Val := Eval_Static_Expr (Get_Parameter (Expr));
+               Val := Eval_Static_Expr (Param);
                --  FIXME: check bounds, handle overflow.
-               return Build_Integer (Eval_Pos (Val), Expr);
+               Res := Build_Integer (Eval_Pos (Val), Expr);
+               Free_Eval_Static_Expr (Val, Param);
+               return Res;
             end;
          when Iir_Kind_Val_Attribute =>
             declare
@@ -2016,11 +2070,13 @@ package body Evaluation is
             end;
 
          when Iir_Kind_Pred_Attribute =>
-            Res := Eval_Incdec (Eval_Static_Expr (Get_Parameter (Expr)), -1);
+            Res := Eval_Incdec
+              (Eval_Static_Expr (Get_Parameter (Expr)), -1, Expr);
             Eval_Check_Bound (Res, Get_Type (Get_Prefix (Expr)));
             return Res;
          when Iir_Kind_Succ_Attribute =>
-            Res := Eval_Incdec (Eval_Static_Expr (Get_Parameter (Expr)), +1);
+            Res := Eval_Incdec
+              (Eval_Static_Expr (Get_Parameter (Expr)), +1, Expr);
             Eval_Check_Bound (Res, Get_Type (Get_Prefix (Expr)));
             return Res;
          when Iir_Kind_Leftof_Attribute
@@ -2047,7 +2103,8 @@ package body Evaluation is
                   when others =>
                      raise Internal_Error;
                end case;
-               Res := Eval_Incdec (Eval_Static_Expr (Get_Parameter (Expr)), N);
+               Res := Eval_Incdec
+                 (Eval_Static_Expr (Get_Parameter (Expr)), N, Expr);
                Eval_Check_Bound (Res, Prefix_Type);
                return Res;
             end;

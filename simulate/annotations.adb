@@ -761,7 +761,7 @@ package body Annotations is
                   Assoc := Get_Case_Statement_Alternative_Chain (El);
                   loop
                      Annotate_Sequential_Statement_Chain
-                       (Block_Info, Get_Associated (Assoc));
+                       (Block_Info, Get_Associated_Chain (Assoc));
                      Assoc := Get_Chain (Assoc);
                      exit when Assoc = Null_Iir;
                      Save_Nbr_Objects;

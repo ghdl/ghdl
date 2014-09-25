@@ -73,16 +73,19 @@ package body Sem_Names is
 
    -- Create an overload list.
    -- must be destroyed with free_iir.
-   function Get_Overload_List return Iir_Overload_List is
+   function Get_Overload_List return Iir_Overload_List
+   is
+      Res : Iir;
    begin
-      return Create_Iir (Iir_Kind_Overload_List);
+      Res := Create_Iir (Iir_Kind_Overload_List);
+      return Res;
    end Get_Overload_List;
 
    function Create_Overload_List (List : Iir_List) return Iir_Overload_List
    is
       Res : Iir_Overload_List;
    begin
-      Res := Create_Iir (Iir_Kind_Overload_List);
+      Res := Get_Overload_List;
       Set_Overload_List (Res, List);
       return Res;
    end Create_Overload_List;
@@ -218,11 +221,15 @@ package body Sem_Names is
             when Iir_Kind_Function_Call
               | Iir_Kind_Indexed_Name
               | Iir_Kind_Selected_Element =>
-               --  FIXME: recursion ?
+               Sem_Name_Free (Get_Prefix (El));
+               Free_Iir (El);
+            when Iir_Kind_Attribute_Name =>
                Free_Iir (El);
             when Iir_Kinds_Function_Declaration
               | Iir_Kinds_Procedure_Declaration
               | Iir_Kind_Enumeration_Literal =>
+               null;
+            when Iir_Kinds_Denoting_Name =>
                null;
             when others =>
                Error_Kind ("sem_name_free", El);
@@ -250,6 +257,20 @@ package body Sem_Names is
          Free_Iir (List);
       end if;
    end Sem_Name_Free_Result;
+
+   procedure Free_Parenthesis_Name (Name : Iir; Res : Iir)
+   is
+      Chain, Next_Chain : Iir;
+   begin
+      pragma Assert (Get_Kind (Res) /= Iir_Kind_Function_Call);
+      Chain := Get_Association_Chain (Name);
+      while Chain /= Null_Iir loop
+         Next_Chain := Get_Chain (Chain);
+         Free_Iir (Chain);
+         Chain := Next_Chain;
+      end loop;
+      Free_Iir (Name);
+   end Free_Parenthesis_Name;
 
    --  Find all named declaration whose identifier is ID in DECL_LIST and
    --  return it.
@@ -576,7 +597,6 @@ package body Sem_Names is
       Staticness : Iir_Staticness;
       Prefix_Rng : Iir;
    begin
-      --  Set a type to the prefix.
       Set_Base_Name (Name, Get_Base_Name (Prefix));
 
       --  LRM93 §6.5: the prefix of an indexed name must be appropriate
@@ -696,6 +716,7 @@ package body Sem_Names is
         (Expr_Type, Min (Get_Type_Staticness (Prefix_Type),
                          Get_Type_Staticness (Slice_Type)));
       Set_Type (Name, Expr_Type);
+      Set_Slice_Subtype (Name, Expr_Type);
       Set_Index_Constraint_Flag (Expr_Type, True);
       Set_Constraint_State (Expr_Type, Fully_Constrained);
       if Is_Signal_Object (Prefix) then
@@ -891,7 +912,8 @@ package body Sem_Names is
       Set_Expr_Staticness (Attr, Staticness);
    end Finish_Sem_Array_Attribute;
 
-   procedure Finish_Sem_Scalar_Type_Attribute (Attr : Iir; Param : Iir)
+   procedure Finish_Sem_Scalar_Type_Attribute
+     (Attr_Name : Iir; Attr : Iir; Param : Iir)
    is
       Prefix : Iir;
       Prefix_Type : Iir;
@@ -913,6 +935,7 @@ package body Sem_Names is
          Prefix := Sem_Type_Mark (Prefix);
       end if;
       Set_Prefix (Attr, Prefix);
+      Free_Iir (Attr_Name);
       Prefix_Type := Get_Type (Prefix);
       Prefix_Bt := Get_Base_Type (Prefix_Type);
 
@@ -978,6 +1001,7 @@ package body Sem_Names is
       Prefix_Name := Get_Prefix (Attr_Name);
       Prefix := Finish_Sem_Name (Prefix_Name, Get_Prefix (Attr));
       Set_Prefix (Attr, Prefix);
+      Free_Iir (Attr_Name);
 
       if Parameter = Null_Iir then
          return;
@@ -1074,6 +1098,7 @@ package body Sem_Names is
    function Sem_Type_Conversion (Loc : Iir; Type_Mark : Iir; Actual : Iir)
                                 return Iir
    is
+      Conv_Type : constant Iir := Get_Type (Type_Mark);
       Conv: Iir_Type_Conversion;
       Expr: Iir;
       Staticness : Iir_Staticness;
@@ -1081,7 +1106,7 @@ package body Sem_Names is
       Conv := Create_Iir (Iir_Kind_Type_Conversion);
       Location_Copy (Conv, Loc);
       Set_Type_Mark (Conv, Type_Mark);
-      Set_Type (Conv, Get_Type (Type_Mark));
+      Set_Type (Conv, Conv_Type);
       Set_Expression (Conv, Actual);
 
       --  Default staticness in case of error.
@@ -1128,12 +1153,25 @@ package body Sem_Names is
       --      expression.
       if Expr /= Null_Iir then
          Staticness := Get_Expr_Staticness (Expr);
+
+         --  If the type mark is not locally static, the expression cannot
+         --  be locally static.  This was clarified in VHDL 08, but a type
+         --  mark that denotes an unconstrained array type, does not prevent
+         --  the expression from being static.
+         if Get_Kind (Conv_Type) not in Iir_Kinds_Array_Type_Definition
+           or else Get_Constraint_State (Conv_Type) = Fully_Constrained
+         then
+            Staticness := Min (Staticness, Get_Type_Staticness (Conv_Type));
+         end if;
+
+         --  LRM87 7.4 Static Expressions
+         --  A type conversion is not a locally static expression.
          if Flags.Vhdl_Std = Vhdl_87 then
             Staticness := Min (Globally, Staticness);
          end if;
          Set_Expr_Staticness (Conv, Staticness);
 
-         if not Are_Types_Closely_Related (Get_Type (Conv), Get_Type (Expr))
+         if not Are_Types_Closely_Related (Conv_Type, Get_Type (Expr))
          then
             --  FIXME: should explain why the types are not closely related.
             Error_Msg_Sem
@@ -1380,7 +1418,7 @@ package body Sem_Names is
          when Iir_Kind_Type_Conversion =>
             pragma Assert (Get_Kind (Name) = Iir_Kind_Parenthesis_Name);
             Set_Type_Mark (Res, Sem_Type_Mark (Get_Prefix (Name)));
-            --  FIXME: free name
+            Free_Parenthesis_Name (Name, Res);
             return Res;
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Selected_Element
@@ -1400,7 +1438,7 @@ package body Sem_Names is
                   Prefix := Finish_Sem_Name
                     (Get_Prefix (Name), Get_Implementation (Res));
                   Finish_Sem_Function_Call (Res, Prefix);
-                  --  FIXME: free name
+                  Free_Iir (Name);
                when Iir_Kinds_Denoting_Name =>
                   Prefix := Finish_Sem_Name (Name, Get_Implementation (Res));
                   Finish_Sem_Function_Call (Res, Prefix);
@@ -1412,12 +1450,20 @@ package body Sem_Names is
             if Get_Parameter (Res) = Null_Iir then
                Finish_Sem_Array_Attribute (Name, Res, Null_Iir);
             end if;
+            if Get_Kind (Name) = Iir_Kind_Attribute_Name then
+               Free_Iir (Name);
+            else
+               Free_Iir (Get_Prefix (Name));
+               Free_Parenthesis_Name (Name, Res);
+            end if;
             return Res;
          when Iir_Kinds_Scalar_Type_Attribute
            | Iir_Kind_Image_Attribute
            | Iir_Kind_Value_Attribute =>
             if Get_Parameter (Res) = Null_Iir then
-               Finish_Sem_Scalar_Type_Attribute (Res, Null_Iir);
+               Finish_Sem_Scalar_Type_Attribute (Name, Res, Null_Iir);
+            else
+               Free_Parenthesis_Name (Name, Res);
             end if;
             return Res;
          when Iir_Kinds_Signal_Value_Attribute =>
@@ -1425,15 +1471,19 @@ package body Sem_Names is
          when Iir_Kinds_Signal_Attribute =>
             if Get_Parameter (Res) = Null_Iir then
                Finish_Sem_Signal_Attribute (Name, Res, Null_Iir);
+            else
+               Free_Parenthesis_Name (Name, Res);
             end if;
             return Res;
          when Iir_Kinds_Type_Attribute =>
+            Free_Iir (Name);
             return Res;
          when Iir_Kind_Base_Attribute =>
             return Res;
          when Iir_Kind_Simple_Name_Attribute
            | Iir_Kind_Path_Name_Attribute
            | Iir_Kind_Instance_Name_Attribute =>
+            Free_Iir (Name);
             return Res;
          when Iir_Kind_Psl_Expression =>
             return Res;
@@ -1456,17 +1506,22 @@ package body Sem_Names is
       case Get_Kind (Res) is
          when Iir_Kind_Indexed_Name =>
             Finish_Sem_Indexed_Name (Res);
+            Free_Parenthesis_Name (Name, Res);
          when Iir_Kind_Slice_Name =>
             Finish_Sem_Slice_Name (Res);
+            Free_Parenthesis_Name (Name, Res);
          when Iir_Kind_Selected_Element =>
             Xref_Ref (Res, Get_Selected_Element (Res));
             Set_Name_Staticness (Res, Get_Name_Staticness (Prefix));
             Set_Expr_Staticness (Res, Get_Expr_Staticness (Prefix));
             Set_Base_Name (Res, Get_Base_Name (Prefix));
+            Free_Iir (Name);
          when Iir_Kind_Dereference =>
+            pragma Assert (Get_Kind (Name) = Iir_Kind_Selected_By_All_Name);
             Finish_Sem_Dereference (Res);
+            Free_Iir (Name);
          when Iir_Kinds_Signal_Value_Attribute =>
-            null;
+            Sem_Name_Free_Result (Name, Res);
          when others =>
             Error_Kind ("finish_sem_name(2)", Res);
       end case;
@@ -1995,6 +2050,7 @@ package body Sem_Names is
          when others =>
             raise Internal_Error;
       end case;
+      Free_Parenthesis_Name (Name, Res);
       return Res;
    end Sem_Index_Specification;
 
@@ -2038,8 +2094,7 @@ package body Sem_Names is
 
          --  Extract type of prefix, handle possible implicit deference.
          Base_Type := Get_Base_Type (Get_Type (Sub_Name));
-         if Get_Kind (Base_Type) = Iir_Kind_Access_Type_Definition
-         then
+         if Get_Kind (Base_Type) = Iir_Kind_Access_Type_Definition then
             Ptr_Type := Base_Type;
             Base_Type := Get_Base_Type (Get_Designated_Type (Base_Type));
          else
@@ -2267,7 +2322,7 @@ package body Sem_Names is
                Add_Result
                  (Res, Sem_As_Indexed_Or_Slice_Name (Prefix, True));
             elsif Actual /= Null_Iir then
-               Finish_Sem_Scalar_Type_Attribute (Prefix, Actual);
+               Finish_Sem_Scalar_Type_Attribute (Prefix_Name, Prefix, Actual);
                Set_Named_Entity (Name, Prefix);
                return;
             else
@@ -2445,7 +2500,7 @@ package body Sem_Names is
       --  attributes 'simple_name, 'path_name, or 'instance_name.
       if Get_Kind (Prefix) = Iir_Kind_Object_Alias_Declaration then
          --  GHDL: according to 4.3.3, the name cannot be an alias.
-         Prefix := Get_Name (Prefix);
+         Prefix := Strip_Denoting_Name (Get_Name (Prefix));
       end if;
 
       --  LRM93 6.6
@@ -2746,7 +2801,7 @@ package body Sem_Names is
          when Iir_Kind_Range_Array_Attribute
            | Iir_Kind_Reverse_Range_Array_Attribute =>
             --  For names such as pfx'Range'Left.
-            Finish_Sem_Array_Attribute (Prefix_Name, Prefix, Null_Iir);
+            --  Finish_Sem_Array_Attribute (Prefix_Name, Prefix, Null_Iir);
             Prefix_Type := Get_Type (Prefix);
          when Iir_Kind_Process_Statement =>
             Error_Msg_Sem
@@ -2775,7 +2830,12 @@ package body Sem_Names is
             return Error_Mark;
       end case;
 
-      Res_Type := Prefix_Type;
+      --  Type of the attribute.  This is correct unless there is a parameter,
+      --  and furthermore 'range and 'reverse_range has to be handled
+      --  specially because the result is a range and not a value.
+      Res_Type := Get_Index_Type (Get_Index_Subtype_List (Prefix_Type), 0);
+
+      --  Create the node for the attribute.
       case Get_Identifier (Attr) is
          when Name_Left =>
             Res := Create_Iir (Iir_Kind_Left_Array_Attribute);
@@ -3032,6 +3092,7 @@ package body Sem_Names is
       Prefix_Name : constant Iir := Get_Prefix (Attr);
       Prefix: Iir;
       Res : Iir;
+      Attr_Type : Iir;
    begin
       Prefix := Get_Named_Entity (Prefix_Name);
       Set_Prefix (Attr, Finish_Sem_Name (Prefix_Name, Prefix));
@@ -3088,21 +3149,22 @@ package body Sem_Names is
             Res := Create_Iir (Iir_Kind_Simple_Name_Attribute);
             Eval_Simple_Name (Get_Identifier (Prefix));
             Set_Simple_Name_Identifier (Res, Name_Table.Get_Identifier);
-            Set_Type (Res, Create_Unidim_Array_By_Length
-                      (String_Type_Definition,
-                       Iir_Int64 (Name_Table.Name_Length),
-                       Attr));
+            Attr_Type := Create_Unidim_Array_By_Length
+              (String_Type_Definition,
+               Iir_Int64 (Name_Table.Name_Length),
+               Attr);
+            Set_Simple_Name_Subtype (Res, Attr_Type);
             Set_Expr_Staticness (Res, Locally);
 
          when Name_Path_Name =>
             Res := Create_Iir (Iir_Kind_Path_Name_Attribute);
             Set_Expr_Staticness (Res, Globally);
-            Set_Type (Res, String_Type_Definition);
+            Attr_Type := String_Type_Definition;
 
          when Name_Instance_Name =>
             Res := Create_Iir (Iir_Kind_Instance_Name_Attribute);
             Set_Expr_Staticness (Res, Globally);
-            Set_Type (Res, String_Type_Definition);
+            Attr_Type := String_Type_Definition;
 
          when others =>
             raise Internal_Error;
@@ -3110,6 +3172,7 @@ package body Sem_Names is
 
       Location_Copy (Res, Attr);
       Set_Prefix (Res, Prefix_Name);
+      Set_Type (Res, Attr_Type);
       return Res;
    end Sem_Name_Attribute;
 
@@ -3441,10 +3504,17 @@ package body Sem_Names is
                Disp_Overload_List (Get_Overload_List (Res), Name);
                return Null_Iir;
             else
+               --  Free results
                Sem_Name_Free_Result (Expr, Res);
+
+               Ret_Type := Get_Type (Name);
+               if Ret_Type /= Null_Iir then
+                  pragma Assert (Is_Overload_List (Ret_Type));
+                  Free_Overload_List (Ret_Type);
+               end if;
+
                Set_Named_Entity (Name, Res);
                Res := Finish_Sem_Name (Name);
-               Expr := Get_Named_Entity (Name);
                --  Fall through.
             end if;
          else
@@ -3463,7 +3533,7 @@ package body Sem_Names is
          end if;
       end if;
 
-      --  NAME has only one meaning, which is EXPR.
+      --  NAME has only one meaning, which is RES.
       case Get_Kind (Res) is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Character_Literal
@@ -3548,6 +3618,12 @@ package body Sem_Names is
             if Get_Parameter (Expr) = Null_Iir then
                Finish_Sem_Array_Attribute (Name, Expr, Null_Iir);
             end if;
+            if Get_Kind (Name) = Iir_Kind_Attribute_Name then
+               Free_Iir (Name);
+            else
+               Free_Iir (Get_Prefix (Name));
+               Free_Parenthesis_Name (Name, Expr);
+            end if;
             return Expr;
          when others =>
             Error_Msg_Sem ("name " & Disp_Node (Name)
@@ -3556,8 +3632,7 @@ package body Sem_Names is
       end case;
    end Name_To_Range;
 
-   function Is_Object_Name (Name : Iir) return Boolean
-   is
+   function Is_Object_Name (Name : Iir) return Boolean is
    begin
       case Get_Kind (Name) is
          when Iir_Kind_Object_Alias_Declaration
@@ -3588,8 +3663,7 @@ package body Sem_Names is
       end case;
    end Is_Object_Name;
 
-   function Name_To_Object (Name : Iir) return Iir
-   is
+   function Name_To_Object (Name : Iir) return Iir is
    begin
       case Get_Kind (Name) is
          when Iir_Kind_Object_Alias_Declaration

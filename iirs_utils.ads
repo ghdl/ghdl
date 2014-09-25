@@ -77,9 +77,6 @@ package Iirs_Utils is
    --  Free NODE and its sub-nodes.
    procedure Free_Recursive (Node : Iir; Free_List : Boolean := False);
 
-   --  Free NODE.
-   procedure Free_Old_Iir (Node: in Iir);
-
    --  Name of FUNC.
    function Get_Predefined_Function_Name (Func : Iir_Predefined_Functions)
      return String;

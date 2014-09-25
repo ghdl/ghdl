@@ -1246,7 +1246,7 @@ package body Simulation is
    is
       pragma Unreferenced (Formal_Instance);
       Formal : constant Iir := Get_Formal (Assoc);
-      Inter : constant Iir := Get_Base_Name (Formal);
+      Inter : constant Iir := Get_Association_Interface (Assoc);
    begin
       if False and Trace_Elaboration then
          Put ("connect formal ");

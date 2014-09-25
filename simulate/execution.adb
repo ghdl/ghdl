@@ -1801,7 +1801,7 @@ package body Execution is
       Assoc := Get_Association_Choices_Chain (Aggregate);
       Pos := 0;
       while Assoc /= Null_Iir loop
-         Value := Get_Associated (Assoc);
+         Value := Get_Associated_Expr (Assoc);
          loop
             case Get_Kind (Assoc) is
                when Iir_Kind_Choice_By_None =>
@@ -1811,9 +1811,9 @@ package body Execution is
                   Set_Elem (Pos);
                   Pos := Pos + 1;
                when Iir_Kind_Choice_By_Expression =>
-                  Set_Elem_By_Expr (Get_Expression (Assoc));
+                  Set_Elem_By_Expr (Get_Choice_Expression (Assoc));
                when Iir_Kind_Choice_By_Range =>
-                  Set_Elem_By_Range (Get_Expression (Assoc));
+                  Set_Elem_By_Range (Get_Choice_Range (Assoc));
                when Iir_Kind_Choice_By_Others =>
                   for J in 1 .. Length loop
                      if Res.Val_Array.V (Orig + J * Step) = null then
@@ -1884,7 +1884,7 @@ package body Execution is
       Assoc := Get_Association_Choices_Chain (Aggregate);
       Pos := 1;
       loop
-         N_Expr := Get_Associated (Assoc);
+         N_Expr := Get_Associated_Expr (Assoc);
          if N_Expr /= Null_Iir then
             Expr := N_Expr;
          end if;
@@ -1893,7 +1893,7 @@ package body Execution is
                Set_Expr (Pos);
                Pos := Pos + 1;
             when Iir_Kind_Choice_By_Name =>
-               Set_Expr (1 + Get_Element_Position (Get_Name (Assoc)));
+               Set_Expr (1 + Get_Element_Position (Get_Choice_Name (Assoc)));
             when Iir_Kind_Choice_By_Others =>
                for I in Res.Val_Record.V'Range loop
                   if Res.Val_Record.V (I) = null then
@@ -1993,7 +1993,7 @@ package body Execution is
       Bound := Res.Bounds.D (Dim);
       Pos := 0;
       while Assoc /= Null_Iir loop
-         Value := Get_Associated (Assoc);
+         Value := Get_Associated_Expr (Assoc);
          case Get_Kind (Assoc) is
             when Iir_Kind_Choice_By_None =>
                null;
@@ -2033,7 +2033,7 @@ package body Execution is
       Assoc := Get_Association_Choices_Chain (Aggregate);
       Pos := 0;
       loop
-         Expr := Get_Associated (Assoc);
+         Expr := Get_Associated_Expr (Assoc);
          if Expr = Null_Iir then
             --  List of choices is not allowed.
             raise Internal_Error;
@@ -4216,7 +4216,8 @@ package body Execution is
             declare
                Expr1: Iir_Value_Literal_Acc;
             begin
-               Expr1 := Execute_Expression (Instance, Get_Expression (Choice));
+               Expr1 := Execute_Expression
+                 (Instance, Get_Choice_Expression (Choice));
                Res := Is_Equal (Expr, Expr1);
                return Res;
             end;
@@ -4225,7 +4226,7 @@ package body Execution is
                A_Range : Iir_Value_Literal_Acc;
             begin
                A_Range := Execute_Bounds
-                 (Instance, Get_Expression (Choice));
+                 (Instance, Get_Choice_Range (Choice));
                Res := Is_In_Range (Expr, A_Range);
             end;
             return Res;
@@ -4514,7 +4515,7 @@ package body Execution is
 
       while Assoc /= Null_Iir loop
          if not Get_Same_Alternative_Flag (Assoc) then
-            Stmt_Chain := Get_Associated (Assoc);
+            Stmt_Chain := Get_Associated_Chain (Assoc);
          end if;
 
          if Is_In_Choice (Instance, Assoc, Value) then

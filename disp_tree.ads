@@ -19,14 +19,9 @@ with Types; use Types;
 with Iirs; use Iirs;
 
 package Disp_Tree is
-   --  Disp NODE as an address.  The format is "[XXXXXXXX]", where each X is
-   --  an hexadecimal digit (quotes are not displayed).
-   procedure Disp_Iir_Address (Node: Iir);
-
    --  Disp TREE recursively.
-   procedure Disp_Tree (Tree: Iir;
-                        Tab: Natural := 0;
-                        Flat_Decl: Boolean := false);
+   procedure Disp_Tree (Tree : Iir;
+                        Flat : Boolean := False);
 
    procedure Disp_Tree_For_Psl (N : Int32);
 end Disp_Tree;

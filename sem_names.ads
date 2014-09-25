@@ -111,7 +111,6 @@ package Sem_Names is
 
    --  Free the list node (and the list itself).
    procedure Free_Overload_List (N : in out Iir_Overload_List);
-   pragma Unreferenced (Free_Overload_List);
 
    --  Display an error message if the overload resolution for EXPR find more
    --  than one interpretation.
@@ -127,6 +126,10 @@ package Sem_Names is
    --  Create an overload_list if necessary.
    --  Before the first call, RES should be set to NULL_IIR.
    procedure Add_Result (Res : in out Iir; Decl : Iir);
+
+   --  Free a Parenthesis_Name.  This is a special case as in general the
+   --  Association_Chain field must be freed too.
+   procedure Free_Parenthesis_Name (Name : Iir; Res : Iir);
 
    --  Return TRUE iff TYPE1 and TYPE2 are closely related.
    function Are_Types_Closely_Related (Type1, Type2 : Iir) return Boolean;
