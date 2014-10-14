@@ -76,6 +76,9 @@ package body Ghdlrun is
 
       Translation.Foreign_Hook := Foreign_Hook'Access;
 
+      --  FIXME: add a flag to force unnesting.
+      --  Translation.Flag_Unnest_Subprograms := True;
+
       --  The design is always analyzed in whole.
       Flags.Flag_Whole_Analyze := True;
 
@@ -541,6 +544,8 @@ package body Ghdlrun is
            Grt.Images.Ghdl_To_String_E8'Address);
       Def (Trans_Decls.Ghdl_To_String_E32,
            Grt.Images.Ghdl_To_String_E32'Address);
+      Def (Trans_Decls.Ghdl_To_String_Char,
+           Grt.Images.Ghdl_To_String_Char'Address);
       Def (Trans_Decls.Ghdl_To_String_P32,
            Grt.Images.Ghdl_To_String_P32'Address);
       Def (Trans_Decls.Ghdl_To_String_P64,

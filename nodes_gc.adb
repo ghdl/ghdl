@@ -214,7 +214,7 @@ package body Nodes_GC is
             Mark_Iir (Get_Configuration_Name (N));
          when Iir_Kind_Block_Configuration =>
             Mark_Chain (Get_Declaration_Chain (N));
-            Mark_Iir (Get_Configuration_Item_Chain (N));
+            Mark_Chain (Get_Configuration_Item_Chain (N));
             Mark_Iir (Get_Block_Specification (N));
          when Iir_Kind_Block_Header =>
             Mark_Chain (Get_Generic_Chain (N));
@@ -344,6 +344,18 @@ package body Nodes_GC is
            | Iir_Kind_Subnature_Declaration =>
             Mark_Iir (Get_Nature (N));
             Mark_Iir (Get_Attribute_Value_Chain (N));
+         when Iir_Kind_Package_Declaration =>
+            Mark_Chain (Get_Declaration_Chain (N));
+            Mark_Iir (Get_Attribute_Value_Chain (N));
+            Mark_Iir (Get_Package_Header (N));
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Mark_Chain (Get_Declaration_Chain (N));
+            Mark_Iir (Get_Attribute_Value_Chain (N));
+            Mark_Iir (Get_Uninstantiated_Name (N));
+            Mark_Chain (Get_Generic_Chain (N));
+            Mark_Chain (Get_Generic_Map_Aspect_Chain (N));
+         when Iir_Kind_Package_Body =>
+            Mark_Chain (Get_Declaration_Chain (N));
          when Iir_Kind_Configuration_Declaration =>
             Mark_Chain (Get_Declaration_Chain (N));
             Mark_Iir (Get_Entity_Name (N));
@@ -355,24 +367,12 @@ package body Nodes_GC is
             Mark_Chain (Get_Concurrent_Statement_Chain (N));
             Mark_Chain (Get_Generic_Chain (N));
             Mark_Chain (Get_Port_Chain (N));
-         when Iir_Kind_Package_Declaration =>
-            Mark_Chain (Get_Declaration_Chain (N));
-            Mark_Iir (Get_Package_Body (N));
-            Mark_Iir (Get_Attribute_Value_Chain (N));
-            Mark_Iir (Get_Package_Header (N));
-         when Iir_Kind_Package_Body =>
-            Mark_Chain (Get_Declaration_Chain (N));
-            Mark_Iir (Get_Package (N));
          when Iir_Kind_Architecture_Body =>
             Mark_Chain (Get_Declaration_Chain (N));
             Mark_Iir (Get_Entity_Name (N));
             Mark_Iir (Get_Attribute_Value_Chain (N));
             Mark_Chain (Get_Concurrent_Statement_Chain (N));
             Mark_Iir (Get_Default_Configuration_Declaration (N));
-         when Iir_Kind_Package_Instantiation_Declaration =>
-            Mark_Iir (Get_Uninstantiated_Name (N));
-            Mark_Chain (Get_Generic_Chain (N));
-            Mark_Chain (Get_Generic_Map_Aspect_Chain (N));
          when Iir_Kind_Package_Header =>
             Mark_Chain (Get_Generic_Chain (N));
             Mark_Chain (Get_Generic_Map_Aspect_Chain (N));
@@ -424,7 +424,6 @@ package body Nodes_GC is
             Mark_Chain (Get_Generic_Chain (N));
             Mark_Iir_List (Get_Callees_List (N));
             Mark_Iir (Get_Return_Type_Mark (N));
-            Mark_Iir (Get_Subprogram_Body (N));
          when Iir_Kind_Implicit_Function_Declaration =>
             Mark_Iir (Get_Attribute_Value_Chain (N));
             Mark_Chain (Get_Interface_Declaration_Chain (N));
@@ -443,11 +442,9 @@ package body Nodes_GC is
             Mark_Chain (Get_Generic_Chain (N));
             Mark_Iir_List (Get_Callees_List (N));
             Mark_Iir (Get_Return_Type_Mark (N));
-            Mark_Iir (Get_Subprogram_Body (N));
          when Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body =>
             Mark_Chain (Get_Declaration_Chain (N));
-            Mark_Iir (Get_Subprogram_Specification (N));
             Mark_Chain (Get_Sequential_Statement_Chain (N));
          when Iir_Kind_Object_Alias_Declaration =>
             Mark_Iir (Get_Name (N));
@@ -559,7 +556,6 @@ package body Nodes_GC is
             Mark_Iir (Get_Subtype_Indication (N));
          when Iir_Kind_Selected_Element =>
             Mark_Iir (Get_Prefix (N));
-            Mark_Iir (Get_Selected_Element (N));
          when Iir_Kind_Dereference
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Left_Type_Attribute

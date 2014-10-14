@@ -104,7 +104,7 @@ package body Configuration is
          if El /= Null_Iir then
             Lib_Unit := Get_Library_Unit (El);
             if Flag_Build_File_Dependence
-              or else Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
+              or else Get_Kind (Lib_Unit) in Iir_Kinds_Package_Declaration
             then
                Add_Design_Unit (El, Unit);
             end if;
@@ -120,6 +120,9 @@ package body Configuration is
             --  will set the full package (and not a stub).
             Libraries.Load_Design_Unit (Unit, From);
             Lib_Unit := Get_Library_Unit (Unit);
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            --  The uninstantiated package is part of the dependency.
+            null;
          when Iir_Kind_Configuration_Declaration =>
             --  Add entity and architecture.
             --  find all sub-configuration

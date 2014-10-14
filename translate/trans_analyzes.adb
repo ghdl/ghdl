@@ -70,7 +70,7 @@ package body Trans_Analyzes is
               (Get_Target (Stmt), Extract_Driver_Target'Access);
          when Iir_Kind_Procedure_Call_Statement =>
             declare
-               Call : Iir;
+               Call : constant Iir := Get_Procedure_Call (Stmt);
                Assoc : Iir;
                Formal : Iir;
                Inter : Iir;
@@ -78,10 +78,9 @@ package body Trans_Analyzes is
                --  Very pessimist.
                Has_After := True;
 
-               Call := Get_Procedure_Call (Stmt);
                Assoc := Get_Parameter_Association_Chain (Call);
                Inter := Get_Interface_Declaration_Chain
-                 (Get_Named_Entity (Get_Implementation (Call)));
+                 (Get_Implementation (Call));
                while Assoc /= Null_Iir loop
                   Formal := Get_Formal (Assoc);
                   if Formal = Null_Iir then

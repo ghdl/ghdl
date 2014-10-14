@@ -387,10 +387,7 @@ package body Sem_Types is
          Val := Sem_Expression (Get_Physical_Literal (Unit), Def);
          if Val /= Null_Iir then
             Set_Physical_Literal (Unit, Val);
-            Val := Eval_Static_Expr (Val);
-            if Get_Kind (Val) = Iir_Kind_Unit_Declaration then
-               Val := Create_Physical_Literal (1, Val);
-            end if;
+            Val := Eval_Physical_Literal (Val);
             Set_Physical_Unit_Value (Unit, Val);
 
             --  LRM93 §3.1

@@ -149,34 +149,6 @@ package body Iirs is
       return Iir_Kind'Val (Get_Nkind (An_Iir));
    end Get_Kind;
 
-   procedure Set_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
-                               Pos : Source_Ptr; Line, Off: Natural) is
-   begin
-      Set_Field4 (Design_Unit, Node_Type (Pos));
-      Set_Field11 (Design_Unit, Node_Type (Off));
-      Set_Field12 (Design_Unit, Node_Type (Line));
-   end Set_Pos_Line_Off;
-
-   procedure Get_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
-                               Pos : out Source_Ptr; Line, Off: out Natural) is
-   begin
-      Pos := Source_Ptr (Get_Field4 (Design_Unit));
-      Off := Natural (Get_Field11 (Design_Unit));
-      Line := Natural (Get_Field12 (Design_Unit));
-   end Get_Pos_Line_Off;
-
-   -----------
-   -- Lists --
-   -----------
-
-   --  Layout of lists:
-   --  A list is stored into an IIR.
-   --  There are two bounds for a list:
-   --    the current number of elements
-   --    the maximum number of elements.
-   --  Using a maximum number of element bound (which can be increased) avoid
-   --  to reallocating memory at each insertion.
-
    function Time_Stamp_Id_To_Iir is new Ada.Unchecked_Conversion
      (Source => Time_Stamp_Id, Target => Iir);
 
@@ -224,6 +196,16 @@ package body Iirs is
 
    function Iir_Int32_To_Iir is new Ada.Unchecked_Conversion
      (Source => Iir_Int32, Target => Iir);
+
+   function Iir_To_Source_Ptr (N : Iir) return Source_Ptr is
+   begin
+      return Source_Ptr (N);
+   end Iir_To_Source_Ptr;
+
+   function Source_Ptr_To_Iir (P : Source_Ptr) return Iir is
+   begin
+      return Iir (P);
+   end Source_Ptr_To_Iir;
 
    function Iir_To_Location_Type (N : Iir) return Location_Type is
    begin

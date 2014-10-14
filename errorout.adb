@@ -589,7 +589,7 @@ package body Errorout is
             return Disp_Identifier (Node, "entity");
          when Iir_Kind_Architecture_Body =>
             return Disp_Identifier (Node, "architecture") &
-              " of" & Disp_Identifier (Get_Entity (Node), "");
+              " of" & Disp_Identifier (Get_Entity_Name (Node), "");
          when Iir_Kind_Configuration_Declaration =>
             declare
                Id : Name_Id;

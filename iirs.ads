@@ -220,7 +220,11 @@ package Iirs is
    --  Set the line and the offset in the line, only for the library manager.
    --  This is valid until the file is really loaded in memory.  On loading,
    --  location will contain all this informations.
-   --  Get/Set_Pos_Line_Off (Field4,Field11,Field12)
+   --   Get/Set_Design_Unit_Source_Pos (Field4)
+   --
+   --   Get/Set_Design_Unit_Source_Line (Field11)
+   --
+   --   Get/Set_Design_Unit_Source_Col (Field12)
    --
    --  Get/Set the date state, which indicates whether this design unit is in
    --  memory or not.
@@ -494,7 +498,7 @@ package Iirs is
    --   Get/Set_Configuration_Item_Chain (Field3)
    --
    --  Note: for default block configurations of iterative generate statement,
-   --  the block specification is a selected_name, whose identifier is others.
+   --  the block specification is an indexed_name, whose index_list is others.
    --   Get/Set_Block_Specification (Field5)
    --
    --  Single linked list of block configuration that apply to the same
@@ -825,9 +829,15 @@ package Iirs is
    --   Get/Set_Parent (Field0)
    --   Get/Set_Design_Unit (Alias Field0)
    --
-   --   Get/Set_Uninstantiated_Name (Field1)
+   --   Get/Set_Declaration_Chain (Field1)
+   --
+   --   Get/Set_Package_Body (Field2)
    --
    --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
+   --   Get/Set_Uninstantiated_Name (Field5)
    --
    --   Get/Set_Generic_Chain (Field6)
    --
@@ -1866,7 +1876,7 @@ package Iirs is
    --
    --  unbounded_array_definition ::=
    --     ARRAY ( index_subtype_definition { , index_subtype_definition } )
-   --   ￼￼￼￼OF element_subtype_indication
+   --       OF element_subtype_indication
    --
    --  index_subtype_definition ::= type_mark RANGE <>
    --
@@ -2813,6 +2823,7 @@ package Iirs is
    --
    --   Get/Set_Parameter_Association_Chain (Field2)
    --
+   --  Procedure declaration corresponding to the procedure to call.
    --   Get/Set_Implementation (Field3)
    --
    --   Get/Set_Method_Object (Field4)
@@ -3120,7 +3131,8 @@ package Iirs is
    --   Get/Set_Named_Entity (Field4)
 
    -- Iir_Kind_Selected_Element (Short)
-   --  A record element selection.
+   --  A record element selection.  This corresponds to a reffined selected
+   --  names.  The production doesn't exist in the VHDL grammar.
    --
    --   Get/Set_Prefix (Field0)
    --
@@ -3423,12 +3435,12 @@ package Iirs is
        Iir_Kind_Subtype_Declaration,
        Iir_Kind_Nature_Declaration,
        Iir_Kind_Subnature_Declaration,
-       Iir_Kind_Configuration_Declaration,      -- Library_Unit
-       Iir_Kind_Entity_Declaration,             -- Library_Unit
-       Iir_Kind_Package_Declaration,            -- Library_Unit
-       Iir_Kind_Package_Body,                   -- Library_Unit
-       Iir_Kind_Architecture_Body,              -- Library_Unit
+       Iir_Kind_Package_Declaration,
        Iir_Kind_Package_Instantiation_Declaration,
+       Iir_Kind_Package_Body,
+       Iir_Kind_Configuration_Declaration,
+       Iir_Kind_Entity_Declaration,
+       Iir_Kind_Architecture_Body,
        Iir_Kind_Package_Header,
        Iir_Kind_Unit_Declaration,
        Iir_Kind_Library_Declaration,
@@ -4026,11 +4038,15 @@ package Iirs is
 --     Iir_Kind_Callees_List;
 
    subtype Iir_Kinds_Library_Unit_Declaration is Iir_Kind range
-     Iir_Kind_Configuration_Declaration ..
-   --Iir_Kind_Entity_Declaration
-   --Iir_Kind_Package_Declaration
+     Iir_Kind_Package_Declaration ..
+   --Iir_Kind_Package_Instantiation_Declaration
    --Iir_Kind_Package_Body
-   --Iir_Kind_Architecture_Body
+   --Iir_Kind_Configuration_Declaration
+   --Iir_Kind_Entity_Declaration
+     Iir_Kind_Architecture_Body;
+
+   subtype Iir_Kinds_Package_Declaration is Iir_Kind range
+     Iir_Kind_Package_Declaration ..
      Iir_Kind_Package_Instantiation_Declaration;
 
    --  Note: does not include iir_kind_enumeration_literal since it is
@@ -4403,12 +4419,12 @@ package Iirs is
    --Iir_Kind_Subtype_Declaration
    --Iir_Kind_Nature_Declaration
    --Iir_Kind_Subnature_Declaration
+   --Iir_Kind_Package_Declaration
+   --Iir_Kind_Package_Instantiation_Declaration
+   --Iir_Kind_Package_Body
    --Iir_Kind_Configuration_Declaration
    --Iir_Kind_Entity_Declaration
-   --Iir_Kind_Package_Declaration
-   --Iir_Kind_Package_Body
    --Iir_Kind_Architecture_Body
-   --Iir_Kind_Package_Instantiation_Declaration
    --Iir_Kind_Package_Header
    --Iir_Kind_Unit_Declaration
    --Iir_Kind_Library_Declaration
@@ -4962,14 +4978,20 @@ package Iirs is
    -- Set the line and the offset in the line, only for the library manager.
    -- This is valid until the file is really loaded in memory.  On loading,
    -- location will contain all this informations.
-   -- Field: Field4
-   -- Field: Field6
-   -- Field: Field7
-   procedure Set_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
-                               Pos : Source_Ptr; Line, Off: Natural);
-   procedure Get_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
-                               Pos : out Source_Ptr; Line, Off: out Natural);
+   --  Display: Image
+   --  Field: Field4 (uc)
+   function Get_Design_Unit_Source_Pos (Design_Unit : Iir) return Source_Ptr;
+   procedure Set_Design_Unit_Source_Pos (Design_Unit : Iir; Pos : Source_Ptr);
 
+   --  Display: Image
+   --  Field: Field11 (uc)
+   function Get_Design_Unit_Source_Line (Design_Unit : Iir) return Int32;
+   procedure Set_Design_Unit_Source_Line (Design_Unit : Iir; Line : Int32);
+
+   --  Display: Image
+   --  Field: Field12 (uc)
+   function Get_Design_Unit_Source_Col (Design_Unit : Iir) return Int32;
+   procedure Set_Design_Unit_Source_Col (Design_Unit : Iir; Line : Int32);
 
    --  literals.
 
@@ -5177,7 +5199,7 @@ package Iirs is
    function Get_Prev_Block_Configuration (Target : Iir) return Iir;
    procedure Set_Prev_Block_Configuration (Target : Iir; Block : Iir);
 
-   --  Field: Field3
+   --  Field: Field3 Chain
    function Get_Configuration_Item_Chain (Target : Iir) return Iir;
    procedure Set_Configuration_Item_Chain (Target : Iir; Chain : Iir);
 
@@ -5207,12 +5229,12 @@ package Iirs is
    procedure Set_Entity_Name (Arch : Iir; Entity : Iir);
 
    --  The package declaration corresponding to the body.
-   --  Field: Field4
+   --  Field: Field4 Ref
    function Get_Package (Package_Body : Iir) return Iir;
    procedure Set_Package (Package_Body : Iir; Decl : Iir);
 
    --  The package body corresponding to the package declaration.
-   --  Field: Field2
+   --  Field: Field2 Ref
    function Get_Package_Body (Pkg : Iir) return Iir;
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir);
 
@@ -5290,7 +5312,7 @@ package Iirs is
    procedure Set_Interface_Declaration_Chain (Target : Iir; Chain : Iir);
    pragma Inline (Get_Interface_Declaration_Chain);
 
-   --  Field: Field4
+   --  Field: Field4 Ref
    function Get_Subprogram_Specification (Target : Iir) return Iir;
    procedure Set_Subprogram_Specification (Target : Iir; Spec : Iir);
 
@@ -5298,7 +5320,7 @@ package Iirs is
    function Get_Sequential_Statement_Chain (Target : Iir) return Iir;
    procedure Set_Sequential_Statement_Chain (Target : Iir; Chain : Iir);
 
-   --  Field: Field9
+   --  Field: Field9 Ref
    function Get_Subprogram_Body (Target : Iir) return Iir;
    procedure Set_Subprogram_Body (Target : Iir; A_Body : Iir);
 
@@ -5418,7 +5440,7 @@ package Iirs is
    function Get_Element_Declaration (Target : Iir) return Iir;
    procedure Set_Element_Declaration (Target : Iir; El : Iir);
 
-   --  Field: Field2
+   --  Field: Field2 Ref
    function Get_Selected_Element (Target : Iir) return Iir;
    procedure Set_Selected_Element (Target : Iir; El : Iir);
 
@@ -5833,7 +5855,7 @@ package Iirs is
    function Get_Block_Header (Target : Iir) return Iir;
    procedure Set_Block_Header (Target : Iir; Header : Iir);
 
-   --  Field: Field1
+   --  Field: Field5
    function Get_Uninstantiated_Name (Inst : Iir) return Iir;
    procedure Set_Uninstantiated_Name (Inst : Iir; Name : Iir);
 
@@ -6072,7 +6094,8 @@ package Iirs is
    function Get_Procedure_Call (Stmt : Iir) return Iir;
    procedure Set_Procedure_Call (Stmt : Iir; Call : Iir);
 
-   --  Subprogram to be called by a procedure, function call or operator.
+   --  Subprogram to be called by a procedure, function call or operator.  This
+   --  is the declaration of the subprogram (or a list of during analysis).
    --  Field: Field3 Ref
    function Get_Implementation (Target : Iir) return Iir;
    procedure Set_Implementation (Target : Iir; Decl : Iir);

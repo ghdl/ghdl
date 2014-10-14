@@ -1417,7 +1417,7 @@ package body Sem_Stmts is
       Sem_Procedure_Call (Call, Stmt);
 
       if Is_Passive then
-         Imp := Get_Named_Entity (Get_Implementation (Call));
+         Imp := Get_Implementation (Call);
          if Get_Kind (Imp) = Iir_Kind_Procedure_Declaration then
             Decl := Get_Interface_Declaration_Chain (Imp);
             while Decl /= Null_Iir loop

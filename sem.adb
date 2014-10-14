@@ -27,6 +27,7 @@ with Sem_Names; use Sem_Names;
 with Sem_Specs; use Sem_Specs;
 with Sem_Decls; use Sem_Decls;
 with Sem_Assocs; use Sem_Assocs;
+with Sem_Inst;
 with Iirs_Utils; use Iirs_Utils;
 with Flags; use Flags;
 with Name_Table;
@@ -2385,8 +2386,11 @@ package body Sem is
    --  LRM08 4.9  Package Instantiation Declaration
    procedure Sem_Package_Instantiation_Declaration (Decl : Iir)
    is
+      use Sem_Inst;
       Name : Iir;
       Pkg : Iir;
+      Header : Iir;
+      Bod : Iir_Design_Unit;
    begin
       Sem_Scopes.Add_Name (Decl);
       Set_Visible_Flag (Decl, True);
@@ -2416,7 +2420,21 @@ package body Sem is
       --  actual with each formal generic (or member thereof) in the
       --  corresponding package declaration.  Each formal generic (or member
       --  thereof) shall be associated at most once.
-      Sem_Generic_Association_Chain (Get_Package_Header (Pkg), Decl);
+      Header := Get_Package_Header (Pkg);
+      Sem_Generic_Association_Chain (Header, Decl);
+
+      Set_Generic_Chain
+        (Decl, Instantiate_Declaration_Chain (Get_Generic_Chain (Header)));
+      Set_Declaration_Chain
+        (Decl, Instantiate_Declaration_Chain (Get_Declaration_Chain (Pkg)));
+
+      --  FIXME: unless the parent is a package declaration library unit, the
+      --  design unit depends on the body.
+      Bod := Libraries.Load_Secondary_Unit
+        (Get_Design_Unit (Pkg), Null_Identifier, Decl);
+      if Bod /= Null_Iir then
+         Add_Dependence (Bod);
+      end if;
    end Sem_Package_Instantiation_Declaration;
 
    --  LRM 10.4  Use Clauses.

@@ -1183,11 +1183,29 @@ package body Sem_Scopes is
    is
       Header : constant Iir := Get_Package_Header (Decl);
    begin
+      --  LRM08 12.1 Declarative region
+      --  d) A package declaration together with the corresponding body
+      --
+      --  GHDL: the formal generic declarations are considered to be in the
+      --  same declarative region as the package declarations (and therefore
+      --  in the same scope), even if they don't occur immediately within a
+      --  package declaration.
       if Header /= Null_Iir then
          Add_Declarations (Get_Generic_Chain (Header), Potentially);
       end if;
+
       Add_Declarations (Get_Declaration_Chain (Decl), Potentially);
    end Add_Package_Declarations;
+
+   procedure Add_Package_Instantiation_Declarations
+     (Decl: Iir; Potentially : Boolean) is
+   begin
+      --  LRM08 4.9 Package instantiation declarations
+      --  The package instantiation declaration is equivalent to declaration of
+      --  a generic-mapped package, consisting of a package declaration [...]
+      Add_Declarations (Get_Generic_Chain (Decl), Potentially);
+      Add_Declarations (Get_Declaration_Chain (Decl), Potentially);
+   end Add_Package_Instantiation_Declarations;
 
    --  Add declarations from a package into the current declarative region.
    --  This is needed when a package body is analysed.
@@ -1265,14 +1283,7 @@ package body Sem_Scopes is
          when Iir_Kind_Package_Declaration =>
             Add_Package_Declarations (Name, True);
          when Iir_Kind_Package_Instantiation_Declaration =>
-            declare
-               Pkg : constant Iir :=
-                 Get_Named_Entity (Get_Uninstantiated_Name (Name));
-            begin
-               if Pkg /= Null_Iir then
-                  Add_Package_Declarations (Pkg, True);
-               end if;
-            end;
+            Add_Package_Instantiation_Declarations (Name, True);
          when Iir_Kind_Error =>
             null;
          when others =>

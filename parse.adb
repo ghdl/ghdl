@@ -933,43 +933,43 @@ package body Parse is
    --  precond : '('
    --  postcond: next token
    --
-   --  [ §4.3.2.1 ]
+   --  [ LRM93 4.3.2.1 ]
    --  interface_list ::= interface_element { ; interface_element }
    --
-   --  [ §4.3.2.1 ]
+   --  [ LRM93 4.3.2.1 ]
    --  interface_element ::= interface_declaration
    --
-   --  [ §4.3.2 ]
+   --  [ LRM93 4.3.2 ]
    --  interface_declaration ::= interface_constant_declaration
    --                          | interface_signal_declaration
    --                          | interface_variable_declaration
    --                          | interface_file_declaration
    --
    --
-   --  [ §3.2.2 ]
+   --  [ LRM93 3.2.2 ]
    --  identifier_list ::= identifier { , identifier }
    --
-   --  [ §4.3.2 ]
+   --  [ LRM93 4.3.2 ]
    --  interface_constant_declaration ::=
    --      [ CONSTANT ] identifier_list : [ IN ] subtype_indication
    --          [ := STATIC_expression ]
    --
-   --  [ §4.3.2 ]
+   --  [ LRM93 4.3.2 ]
    --  interface_file_declaration ::= FILE identifier_list : subtype_indication
    --
-   --  [ §4.3.2 ]
+   --  [ LRM93 4.3.2 ]
    --  interface_signal_declaration ::=
    --      [ SIGNAL ] identifier_list : [ mode ] subtype_indication [ BUS ]
    --          [ := STATIC_expression ]
    --
-   --  [ §4.3.2 ]
+   --  [ LRM93 4.3.2 ]
    --  interface_variable_declaration ::=
    --      [ VARIABLE ] identifier_list : [ mode ] subtype_indication
    --          [ := STATIC_expression ]
    --
    --  The default kind of interface declaration is DEFAULT.
    function Parse_Interface_Chain (Default: Iir_Kind; Parent : Iir)
-     return Iir
+                                  return Iir
    is
       Res, Last : Iir;
       First, Prev_First : Iir;
@@ -1210,12 +1210,10 @@ package body Parse is
       Res: Iir;
       El : Iir;
    begin
-      -- tok_port must have been scaned.
-      if Current_Token /= Tok_Port then
-         raise Program_Error;
-      end if;
-
+      --  Skip 'port'
+      pragma Assert (Current_Token = Tok_Port);
       Scan;
+
       Res := Parse_Interface_Chain
         (Iir_Kind_Signal_Interface_Declaration, Parent);
 
@@ -1244,12 +1242,10 @@ package body Parse is
    is
       Res: Iir;
    begin
-      -- tok_port must have been scaned.
-      if Current_Token /= Tok_Generic then
-         raise Program_Error;
-      end if;
-
+      --  Skip 'generic'
+      pragma Assert (Current_Token = Tok_Generic);
       Scan;
+
       Res := Parse_Interface_Chain
         (Iir_Kind_Constant_Interface_Declaration, Parent);
       Set_Generic_Chain (Parent, Res);

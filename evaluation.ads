@@ -62,6 +62,10 @@ package Evaluation is
    --  is locally static.
    function Eval_Expr_If_Static (Expr : Iir) return Iir;
 
+   --  Evaluate a physical literal and return a normalized literal (using
+   --  the primary unit as unit).
+   function Eval_Physical_Literal (Expr : Iir) return Iir;
+
    --  Return TRUE if literal EXPR is in SUB_TYPE bounds.
    function Eval_Is_In_Bound (Expr : Iir; Sub_Type : Iir) return Boolean;
 

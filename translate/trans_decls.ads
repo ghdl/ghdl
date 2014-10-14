@@ -238,6 +238,7 @@ package Trans_Decls is
    Ghdl_To_String_B1 : O_Dnode;
    Ghdl_To_String_E8 : O_Dnode;
    Ghdl_To_String_E32 : O_Dnode;
+   Ghdl_To_String_Char : O_Dnode;
    Ghdl_To_String_P32 : O_Dnode;
    Ghdl_To_String_P64 : O_Dnode;
    Ghdl_Time_To_String_Unit : O_Dnode;

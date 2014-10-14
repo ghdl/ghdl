@@ -19,6 +19,8 @@ sem_scopes.adb
 sem_scopes.ads
 sem_decls.ads
 sem_decls.adb
+sem_inst.ads
+sem_inst.adb
 sem_specs.ads
 sem_specs.adb
 sem_stmts.ads

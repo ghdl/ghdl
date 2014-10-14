@@ -772,16 +772,18 @@ package body Sem_Expr is
 
    function Sem_Discrete_Range_Integer (Expr: Iir) return Iir
    is
+      Res : Iir;
       Range_Type : Iir;
    begin
-      Range_Type := Sem_Discrete_Range_Expression (Expr, Null_Iir, True);
-      if Range_Type = Null_Iir then
+      Res := Sem_Discrete_Range_Expression (Expr, Null_Iir, True);
+      if Res = Null_Iir then
          return Null_Iir;
       end if;
       if Get_Kind (Expr) /= Iir_Kind_Range_Expression then
-         return Range_Type;
+         return Res;
       end if;
-      Range_Type := Get_Type (Expr);
+
+      Range_Type := Get_Type (Res);
       if Range_Type = Convertible_Integer_Type_Definition then
          --  LRM 3.2.1.1  Index constraints and discrete ranges
          --  For a discrete range used in a constrained array
@@ -792,9 +794,9 @@ package body Sem_Expr is
          --  implicit conversion) is the type universal_integer.
 
          --  FIXME: catch phys/phys.
-         Set_Type (Expr, Integer_Type_Definition);
-         if Get_Expr_Staticness (Expr) = Locally then
-            Eval_Check_Range (Expr, Integer_Subtype_Definition, True);
+         Set_Type (Res, Integer_Type_Definition);
+         if Get_Expr_Staticness (Res) = Locally then
+            Eval_Check_Range (Res, Integer_Subtype_Definition, True);
          end if;
       elsif Range_Type = Universal_Integer_Type_Definition then
          if Vhdl_Std >= Vhdl_08 then
@@ -811,14 +813,14 @@ package body Sem_Expr is
 
             --  Be tolerant.
             Warning_Msg_Sem ("universal integer bound must be numeric literal "
-                             & "or attribute", Expr);
+                             & "or attribute", Res);
          else
             Error_Msg_Sem ("universal integer bound must be numeric literal "
-                           & "or attribute", Expr);
+                           & "or attribute", Res);
          end if;
-         Set_Type (Expr, Integer_Type_Definition);
+         Set_Type (Res, Integer_Type_Definition);
       end if;
-      return Expr;
+      return Res;
    end Sem_Discrete_Range_Integer;
 
    procedure Set_Function_Call_Staticness (Expr : Iir; Imp : Iir)
@@ -1182,7 +1184,7 @@ package body Sem_Expr is
      (Expr : Iir; A_Type : Iir; Is_Func_Call : Boolean)
      return Iir
    is
-      Imp : constant Iir := Get_Implementation (Expr);
+      Imp : Iir;
       Nbr_Inter: Natural;
       A_Func: Iir;
       Imp_List: Iir_List;
@@ -1195,7 +1197,8 @@ package body Sem_Expr is
       --  Sem_Name has gathered all the possible names for the prefix of this
       --  call.  Reduce this list to only names that match the types.
       Nbr_Inter := 0;
-      Imp_List := Get_Overload_List (Get_Named_Entity (Imp));
+      Imp := Get_Implementation (Expr);
+      Imp_List := Get_Overload_List (Imp);
       Assoc_Chain := Get_Parameter_Association_Chain (Expr);
 
       for I in Natural loop
@@ -1248,7 +1251,8 @@ package body Sem_Expr is
          when 1 =>
             --  Simple case: no overloading.
             Inter := Get_First_Element (Imp_List);
-            Free_Iir (Get_Named_Entity (Imp));
+            Free_Overload_List (Imp);
+            Set_Implementation (Expr, Inter);
             if Is_Func_Call then
                Set_Type (Expr, Get_Return_Type (Inter));
             end if;
@@ -1261,7 +1265,6 @@ package body Sem_Expr is
                raise Internal_Error;
             end if;
             Check_Subprogram_Associations (Inter_Chain, Assoc_Chain);
-            Set_Named_Entity (Imp, Inter);
             Sem_Subprogram_Call_Finish (Expr, Inter);
             return Expr;
 
@@ -1326,7 +1329,7 @@ package body Sem_Expr is
          -- NOTE: the list of possible implementations was already created
          --  during the transformation of iir_kind_parenthesis_name to
          --  iir_kind_function_call.
-         Inter_List := Get_Named_Entity (Get_Implementation (Expr));
+         Inter_List := Get_Implementation (Expr);
          if Get_Kind (Inter_List) = Iir_Kind_Error then
             return Null_Iir;
          elsif Is_Overload_List (Inter_List) then
@@ -1363,7 +1366,7 @@ package body Sem_Expr is
                Set_Type (Expr, Get_Return_Type (Inter_List));
             end if;
             Check_Subprogram_Associations (Param_Chain, Assoc_Chain);
-            Set_Named_Entity (Get_Implementation (Expr), Inter_List);
+            Set_Implementation (Expr, Inter_List);
             Sem_Subprogram_Call_Finish (Expr, Inter_List);
             return Expr;
          end if;
@@ -1438,7 +1441,7 @@ package body Sem_Expr is
          return Null_Iir;
       end if;
       Check_Subprogram_Associations (Param_Chain, Assoc_Chain);
-      Set_Named_Entity (Get_Implementation (Expr), Res);
+      Set_Implementation (Expr, Res);
       Sem_Subprogram_Call_Finish (Expr, Res);
       return Expr;
    end Sem_Subprogram_Call;
@@ -1456,13 +1459,13 @@ package body Sem_Expr is
       Name := Get_Prefix (Call);
       --  FIXME: check for denoting name.
       Sem_Name (Name);
-      Set_Implementation (Call, Name);
 
       --  Return now if the procedure declaration wasn't found.
       Imp := Get_Named_Entity (Name);
       if Is_Error (Imp) then
          return;
       end if;
+      Set_Implementation (Call, Imp);
 
       Name_To_Method_Object (Call, Name);
       Parameters_Chain := Get_Parameter_Association_Chain (Call);
@@ -1472,7 +1475,7 @@ package body Sem_Expr is
       if Sem_Subprogram_Call (Call, Null_Iir) /= Call then
          return;
       end if;
-      Imp := Get_Named_Entity (Get_Implementation (Call));
+      Imp := Get_Implementation (Call);
       if Is_Overload_List (Imp) then
          --  Failed to resolve overload.
          return;
@@ -3408,6 +3411,18 @@ package body Sem_Expr is
          Set_Constraint_State (A_Subtype, Fully_Constrained);
          Set_Type (Aggr, A_Subtype);
          Set_Literal_Subtype (Aggr, A_Subtype);
+      else
+         --  Free unused indexes subtype.
+         for I in Infos'Range loop
+            declare
+               St : constant Iir := Infos (I).Index_Subtype;
+            begin
+               if St /= Null_Iir then
+                  Free_Iir (Get_Range_Constraint (St));
+                  Free_Iir (St);
+               end if;
+            end;
+         end loop;
       end if;
 
       Prev_Info := Null_Iir;

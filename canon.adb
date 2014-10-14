@@ -20,7 +20,6 @@ with Iirs_Utils; use Iirs_Utils;
 with Types; use Types;
 with Name_Table;
 with Sem;
-with Std_Names;
 with Iir_Chains; use Iir_Chains;
 with Flags; use Flags;
 with PSL.Nodes;
@@ -904,7 +903,7 @@ package body Canon is
 
    procedure Canon_Subprogram_Call (Call : Iir)
    is
-      Imp : constant Iir := Get_Named_Entity (Get_Implementation (Call));
+      Imp : constant Iir := Get_Implementation (Call);
       Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
       Assoc_Chain : Iir;
    begin
@@ -1225,7 +1224,7 @@ package body Canon is
       Call_Stmt : Iir_Procedure_Call_Statement;
       Wait_Stmt : Iir_Wait_Statement;
       Call : constant Iir_Procedure_Call := Get_Procedure_Call (El);
-      Imp : constant Iir := Get_Named_Entity (Get_Implementation (Call));
+      Imp : constant Iir := Get_Implementation (Call);
       Assoc_Chain : Iir;
       Assoc : Iir;
       Inter : Iir;
@@ -2371,10 +2370,10 @@ package body Canon is
                                         Conf : Iir_Block_Configuration)
    is
       use Iir_Chains.Configuration_Item_Chain_Handling;
+      Spec : constant Iir := Get_Block_Specification (Conf);
+      Blk : constant Iir := Get_Block_From_Block_Specification (Spec);
+      Stmts : constant Iir := Get_Concurrent_Statement_Chain (Blk);
       El : Iir;
-      Spec : Iir;
-      Stmts : Iir;
-      Blk : Iir;
       Sub_Blk : Iir;
       Last_Item : Iir;
    begin
@@ -2382,9 +2381,6 @@ package body Canon is
       --  canonicalized.
 
       --  FIXME: handle indexed/sliced name?
-      Spec := Get_Block_Specification (Conf);
-      Blk := Get_Block_From_Block_Specification (Spec);
-      Stmts := Get_Concurrent_Statement_Chain (Blk);
 
       Clear_Instantiation_Configuration (Blk, False);
 
@@ -2412,10 +2408,7 @@ package body Canon is
             when Iir_Kind_Component_Configuration =>
                Canon_Component_Specification (El, Blk);
             when Iir_Kind_Block_Configuration =>
-               Sub_Blk := Get_Block_Specification (El);
-               if Get_Kind (Sub_Blk) = Iir_Kind_Simple_Name then
-                  Sub_Blk := Get_Named_Entity (Sub_Blk);
-               end if;
+               Sub_Blk := Strip_Denoting_Name (Get_Block_Specification (El));
                case Get_Kind (Sub_Blk) is
                   when Iir_Kind_Block_Statement =>
                      Set_Block_Block_Configuration (Sub_Blk, El);
@@ -2526,19 +2519,18 @@ package body Canon is
                      Set_Block_Specification (Res, El);
                      Append (Last_Item, Conf, Res);
                   elsif Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
-                     Blk_Spec := Get_Block_Specification (Blk_Config);
-                     if Get_Kind (Blk_Spec) = Iir_Kind_Simple_Name then
-                        Blk_Spec := Get_Named_Entity (Blk_Spec);
-                     end if;
+                     Blk_Spec := Strip_Denoting_Name
+                       (Get_Block_Specification (Blk_Config));
                      if Get_Kind (Blk_Spec) /= Iir_Kind_Generate_Statement then
                         --  There are partial configurations.
                         --  Create a default block configuration.
                         Res := Create_Iir (Iir_Kind_Block_Configuration);
                         Location_Copy (Res, El);
                         Set_Parent (Res, Conf);
-                        Blk_Spec := Create_Iir (Iir_Kind_Selected_Name);
+                        Blk_Spec := Create_Iir (Iir_Kind_Indexed_Name);
                         Location_Copy (Blk_Spec, Res);
-                        Set_Identifier (Blk_Spec, Std_Names.Name_Others);
+                        Set_Index_List (Blk_Spec, Iir_List_Others);
+                        Set_Base_Name (Blk_Spec, El);
                         Set_Prefix (Blk_Spec, Build_Simple_Name (El, Res));
                         Set_Block_Specification (Res, Blk_Spec);
                         Append (Last_Item, Conf, Res);

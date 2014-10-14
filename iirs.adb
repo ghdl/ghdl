@@ -149,34 +149,6 @@ package body Iirs is
       return Iir_Kind'Val (Get_Nkind (An_Iir));
    end Get_Kind;
 
-   procedure Set_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
-                               Pos : Source_Ptr; Line, Off: Natural) is
-   begin
-      Set_Field4 (Design_Unit, Node_Type (Pos));
-      Set_Field11 (Design_Unit, Node_Type (Off));
-      Set_Field12 (Design_Unit, Node_Type (Line));
-   end Set_Pos_Line_Off;
-
-   procedure Get_Pos_Line_Off (Design_Unit: Iir_Design_Unit;
-                               Pos : out Source_Ptr; Line, Off: out Natural) is
-   begin
-      Pos := Source_Ptr (Get_Field4 (Design_Unit));
-      Off := Natural (Get_Field11 (Design_Unit));
-      Line := Natural (Get_Field12 (Design_Unit));
-   end Get_Pos_Line_Off;
-
-   -----------
-   -- Lists --
-   -----------
-
-   --  Layout of lists:
-   --  A list is stored into an IIR.
-   --  There are two bounds for a list:
-   --    the current number of elements
-   --    the maximum number of elements.
-   --  Using a maximum number of element bound (which can be increased) avoid
-   --  to reallocating memory at each insertion.
-
    function Time_Stamp_Id_To_Iir is new Ada.Unchecked_Conversion
      (Source => Time_Stamp_Id, Target => Iir);
 
@@ -224,6 +196,16 @@ package body Iirs is
 
    function Iir_Int32_To_Iir is new Ada.Unchecked_Conversion
      (Source => Iir_Int32, Target => Iir);
+
+   function Iir_To_Source_Ptr (N : Iir) return Source_Ptr is
+   begin
+      return Source_Ptr (N);
+   end Iir_To_Source_Ptr;
+
+   function Source_Ptr_To_Iir (P : Source_Ptr) return Iir is
+   begin
+      return Iir (P);
+   end Source_Ptr_To_Iir;
 
    function Iir_To_Location_Type (N : Iir) return Location_Type is
    begin
@@ -449,10 +431,10 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Header
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
@@ -953,6 +935,74 @@ package body Iirs is
       Check_Kind_For_Hash_Chain (Design_Unit);
       Set_Field7 (Design_Unit, Chain);
    end Set_Hash_Chain;
+
+   procedure Check_Kind_For_Design_Unit_Source_Pos (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Design_Unit =>
+            null;
+         when others =>
+            Failed ("Design_Unit_Source_Pos", Target);
+      end case;
+   end Check_Kind_For_Design_Unit_Source_Pos;
+
+   function Get_Design_Unit_Source_Pos (Design_Unit : Iir) return Source_Ptr
+      is
+   begin
+      Check_Kind_For_Design_Unit_Source_Pos (Design_Unit);
+      return Iir_To_Source_Ptr (Get_Field4 (Design_Unit));
+   end Get_Design_Unit_Source_Pos;
+
+   procedure Set_Design_Unit_Source_Pos (Design_Unit : Iir; Pos : Source_Ptr)
+      is
+   begin
+      Check_Kind_For_Design_Unit_Source_Pos (Design_Unit);
+      Set_Field4 (Design_Unit, Source_Ptr_To_Iir (Pos));
+   end Set_Design_Unit_Source_Pos;
+
+   procedure Check_Kind_For_Design_Unit_Source_Line (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Design_Unit =>
+            null;
+         when others =>
+            Failed ("Design_Unit_Source_Line", Target);
+      end case;
+   end Check_Kind_For_Design_Unit_Source_Line;
+
+   function Get_Design_Unit_Source_Line (Design_Unit : Iir) return Int32 is
+   begin
+      Check_Kind_For_Design_Unit_Source_Line (Design_Unit);
+      return Iir_To_Int32 (Get_Field11 (Design_Unit));
+   end Get_Design_Unit_Source_Line;
+
+   procedure Set_Design_Unit_Source_Line (Design_Unit : Iir; Line : Int32) is
+   begin
+      Check_Kind_For_Design_Unit_Source_Line (Design_Unit);
+      Set_Field11 (Design_Unit, Int32_To_Iir (Line));
+   end Set_Design_Unit_Source_Line;
+
+   procedure Check_Kind_For_Design_Unit_Source_Col (Target : Iir) is
+   begin
+      case Get_Kind (Target) is
+         when Iir_Kind_Design_Unit =>
+            null;
+         when others =>
+            Failed ("Design_Unit_Source_Col", Target);
+      end case;
+   end Check_Kind_For_Design_Unit_Source_Col;
+
+   function Get_Design_Unit_Source_Col (Design_Unit : Iir) return Int32 is
+   begin
+      Check_Kind_For_Design_Unit_Source_Col (Design_Unit);
+      return Iir_To_Int32 (Get_Field12 (Design_Unit));
+   end Get_Design_Unit_Source_Col;
+
+   procedure Set_Design_Unit_Source_Col (Design_Unit : Iir; Line : Int32) is
+   begin
+      Check_Kind_For_Design_Unit_Source_Col (Design_Unit);
+      Set_Field12 (Design_Unit, Int32_To_Iir (Line));
+   end Set_Design_Unit_Source_Col;
 
    procedure Check_Kind_For_Value (Target : Iir) is
    begin
@@ -1902,9 +1952,10 @@ package body Iirs is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Package_Declaration
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Component_Declaration
@@ -2064,7 +2115,8 @@ package body Iirs is
    procedure Check_Kind_For_Package_Body (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Package_Declaration =>
+         when Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration =>
             null;
          when others =>
             Failed ("Package_Body", Target);
@@ -2288,8 +2340,8 @@ package body Iirs is
    begin
       case Get_Kind (Target) is
          when Iir_Kind_Block_Header
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Header
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Function_Declaration
@@ -3076,12 +3128,12 @@ package body Iirs is
    procedure Check_Kind_For_Design_Unit (Target : Iir) is
    begin
       case Get_Kind (Target) is
-         when Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Package_Declaration
+         when Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Architecture_Body
-           | Iir_Kind_Package_Instantiation_Declaration =>
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Architecture_Body =>
             null;
          when others =>
             Failed ("Design_Unit", Target);
@@ -3151,10 +3203,11 @@ package body Iirs is
          when Iir_Kind_Block_Configuration
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Package_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Body
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
@@ -3498,12 +3551,12 @@ package body Iirs is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Package_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Body
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
@@ -3639,11 +3692,11 @@ package body Iirs is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Package_Declaration
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
@@ -5447,13 +5500,13 @@ package body Iirs is
    function Get_Uninstantiated_Name (Inst : Iir) return Iir is
    begin
       Check_Kind_For_Uninstantiated_Name (Inst);
-      return Get_Field1 (Inst);
+      return Get_Field5 (Inst);
    end Get_Uninstantiated_Name;
 
    procedure Set_Uninstantiated_Name (Inst : Iir; Name : Iir) is
    begin
       Check_Kind_For_Uninstantiated_Name (Inst);
-      Set_Field1 (Inst, Name);
+      Set_Field5 (Inst, Name);
    end Set_Uninstantiated_Name;
 
    procedure Check_Kind_For_Generate_Block_Configuration (Target : Iir) is
@@ -5596,12 +5649,12 @@ package body Iirs is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Package_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Body
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Attribute_Declaration
@@ -7600,12 +7653,12 @@ package body Iirs is
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Package_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Body
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
@@ -7638,12 +7691,12 @@ package body Iirs is
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Package_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Body
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body

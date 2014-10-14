@@ -266,6 +266,11 @@ package body Grt.Images is
       To_String_Enum (Res, Rti, Ghdl_E32'Pos (Val));
    end Ghdl_To_String_E32;
 
+   procedure Ghdl_To_String_Char (Res : Std_String_Ptr; Val : Std_Character) is
+   begin
+      Return_String (Res, (1 => Val));
+   end Ghdl_To_String_Char;
+
    procedure Ghdl_To_String_P32
      (Res : Std_String_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access)
      renames Ghdl_Image_P32;

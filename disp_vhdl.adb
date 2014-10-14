@@ -67,6 +67,7 @@ package body Disp_Vhdl is
 
    procedure Disp_Type (A_Type: Iir);
    procedure Disp_Nature (Nature : Iir);
+   procedure Disp_Range (Rng : Iir);
 
    procedure Disp_Concurrent_Statement (Stmt: Iir);
    procedure Disp_Concurrent_Statement_Chain (Parent: Iir; Indent : Count);
@@ -283,6 +284,9 @@ package body Disp_Vhdl is
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Group_Template_Declaration =>
             Disp_Name_Of (Name);
+         when Iir_Kind_Range_Array_Attribute
+           | Iir_Kind_Reverse_Range_Array_Attribute =>
+            Disp_Range (Name);
          when others =>
             Error_Kind ("disp_name", Name);
       end case;
@@ -2635,6 +2639,9 @@ package body Disp_Vhdl is
          when Iir_Kind_Low_Type_Attribute =>
             Disp_Name (Get_Prefix (Expr));
             Put ("'low");
+         when Iir_Kind_Ascending_Type_Attribute =>
+            Disp_Name (Get_Prefix (Expr));
+            Put ("'ascending");
 
          when Iir_Kind_Stable_Attribute =>
             Disp_Parametered_Attribute ("stable", Expr);
@@ -3039,15 +3046,18 @@ package body Disp_Vhdl is
            | Iir_Kind_Architecture_Body =>
             Disp_Name_Of (Spec);
          when Iir_Kind_Indexed_Name =>
-            Disp_Name_Of (Get_Prefix (Spec));
-            Put (" (");
-            Disp_Expression (Get_First_Element (Get_Index_List (Spec)));
-            Put (")");
-         when Iir_Kind_Selected_Name =>
-            Disp_Name_Of (Get_Prefix (Spec));
-            Put (" (");
-            Put (Iirs_Utils.Image_Identifier (Spec));
-            Put (")");
+            declare
+               Index_List : constant Iir_List := Get_Index_List (Spec);
+            begin
+               Disp_Name_Of (Get_Prefix (Spec));
+               Put (" (");
+               if Index_List = Iir_List_Others then
+                  Put ("others");
+               else
+                  Disp_Expression (Get_First_Element (Index_List));
+               end if;
+               Put (")");
+            end;
          when Iir_Kind_Slice_Name =>
             Disp_Name_Of (Get_Prefix (Spec));
             Put (" (");

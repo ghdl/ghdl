@@ -731,7 +731,7 @@ package body Sem_Names is
       Rtype : Iir;
    begin
       Set_Prefix (Call, Prefix);
-      Set_Implementation (Call, Prefix);
+      Set_Implementation (Call, Get_Named_Entity (Prefix));
 
       --  LRM08 8.1 Names
       --  The name is a simple name or seleted name that does NOT denote a
@@ -877,7 +877,12 @@ package body Sem_Names is
       pragma Assert (Get_Parameter (Attr) = Null_Iir);
 
       Set_Parameter (Attr, Parameter);
-      if Get_Kind (Prefix_Type) = Iir_Kind_Array_Subtype_Definition then
+
+      --  If the corresponding type is known, save it so that it is not
+      --  necessary to extract it from the object.
+      if Get_Kind (Prefix_Type) = Iir_Kind_Array_Subtype_Definition
+        and then Get_Constraint_State (Prefix_Type) = Fully_Constrained
+      then
          Set_Index_Subtype (Attr, Index_Type);
       end if;
 
@@ -1511,6 +1516,7 @@ package body Sem_Names is
             Finish_Sem_Slice_Name (Res);
             Free_Parenthesis_Name (Name, Res);
          when Iir_Kind_Selected_Element =>
+            pragma Assert (Get_Kind (Name) = Iir_Kind_Selected_Name);
             Xref_Ref (Res, Get_Selected_Element (Res));
             Set_Name_Staticness (Res, Get_Name_Staticness (Prefix));
             Set_Expr_Staticness (Res, Get_Expr_Staticness (Prefix));
@@ -1740,43 +1746,39 @@ package body Sem_Names is
          end if;
       end Error_Selected_Element;
 
-      procedure Sem_As_Method_Call (Sub_Name : Iir)
+      procedure Sem_As_Protected_Item (Sub_Name : Iir)
       is
-         Prot_Type : Iir;
+         Prot_Type : constant Iir := Get_Type (Sub_Name);
          Method : Iir;
-         Found : Boolean := False;
       begin
-         Prot_Type := Get_Type (Sub_Name);
-
-         -- Build overload list from all declarations in chain, matching name,
-         -- which are actually functions or procedures.
-         -- TODO: error here if there's a variable with matching name?
-         -- currently we warn...
-         -- Rather than add a "Find_nth_name_in chain" to iirs_utils I have
-         -- expanded the chain walk here.
+         --  LRM98 12.3 Visibility
+         --  s) For a subprogram declared immediately within a given protected
+         --     type declaration: at the place of the suffix in a selected
+         --     name whose prefix denotes an object of the protected type.
          Method := Get_Declaration_Chain (Prot_Type);
          while Method /= Null_Iir loop
-            if Get_Identifier (Method) = Suffix then -- found the name
-               -- Check it's a method.
-               case Get_Kind (Method) is
-                  when Iir_Kind_Function_Declaration |
-                       Iir_Kind_Procedure_Declaration =>
-                     Found := True;
+            case Get_Kind (Method) is
+               when Iir_Kind_Function_Declaration |
+                 Iir_Kind_Procedure_Declaration =>
+                  if Get_Identifier (Method) = Suffix then
                      Add_Result (Res, Method);
-                  when others =>
-                     Warning_Msg_Sem ("sem_as_method_call", Method);
-               end case;
-            end if;
+                  end if;
+               when Iir_Kind_Attribute_Specification
+                 | Iir_Kind_Use_Clause =>
+                  null;
+               when others =>
+                  Error_Kind ("sem_as_protected_item", Method);
+            end case;
             Method := Get_Chain (Method);
          end loop;
-         if not Found then
-            Error_Msg_Sem
-              ("no method " & Name_Table.Image (Suffix) & " in "
-               & Disp_Node (Prot_Type), Name);
-            return;
-         end if;
-      end Sem_As_Method_Call;
+      end Sem_As_Protected_Item;
 
+      procedure Error_Protected_Item (Prot_Type : Iir) is
+      begin
+         Error_Msg_Sem
+           ("no method " & Name_Table.Image (Suffix) & " in "
+              & Disp_Node (Prot_Type), Name);
+      end Error_Protected_Item;
    begin
       --  Analyze prefix.
       Sem_Name (Prefix_Name);
@@ -1909,7 +1911,10 @@ package body Sem_Names is
             if Get_Kind (Get_Type (Prefix))
               = Iir_Kind_Protected_Type_Declaration
             then
-               Sem_As_Method_Call (Prefix);
+               Sem_As_Protected_Item (Prefix);
+               if Res = Null_Iir then
+                  Error_Protected_Item (Prefix);
+               end if;
             else
                Sem_As_Selected_Element (Prefix);
                if Res = Null_Iir then
@@ -2189,6 +2194,18 @@ package body Sem_Names is
          end if;
       end Sem_Parenthesis_Function;
 
+      procedure Error_Parenthesis_Function (Spec : Iir)
+      is
+         Match : Boolean;
+      begin
+         Error_Msg_Sem
+           ("cannot match " & Disp_Node (Prefix) & " with actuals", Name);
+         --  Display error message.
+         Sem_Association_Chain
+           (Get_Interface_Declaration_Chain (Spec),
+            Assoc_Chain, True, Missing_Parameter, Name, Match);
+      end Error_Parenthesis_Function;
+
       Actual : Iir;
       Actual_Expr : Iir;
    begin
@@ -2280,17 +2297,7 @@ package body Sem_Names is
          when Iir_Kinds_Function_Declaration =>
             Sem_Parenthesis_Function (Prefix);
             if Res = Null_Iir then
-               Error_Msg_Sem
-                 ("cannot match " & Disp_Node (Prefix) & " with actuals",
-                  Name);
-               --  Display error message.
-               declare
-                  Match : Boolean;
-               begin
-                  Sem_Association_Chain
-                    (Get_Interface_Declaration_Chain (Prefix),
-                     Assoc_Chain, True, Missing_Parameter, Name, Match);
-               end;
+               Error_Parenthesis_Function (Prefix);
             end if;
 
          when Iir_Kinds_Object_Declaration
@@ -3735,6 +3742,7 @@ package body Sem_Names is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kinds_Subprogram_Declaration
            | Iir_Kind_Component_Declaration =>

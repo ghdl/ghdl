@@ -193,30 +193,21 @@ package body Evaluation is
          when Iir_Kind_Integer_Literal =>
             Res := Create_Iir (Iir_Kind_Integer_Literal);
             Set_Value (Res, Get_Value (Val));
+
          when Iir_Kind_Floating_Point_Literal =>
             Res := Create_Iir (Iir_Kind_Floating_Point_Literal);
             Set_Fp_Value (Res, Get_Fp_Value (Val));
+
          when Iir_Kind_Enumeration_Literal =>
             return Build_Enumeration_Constant
               (Iir_Index32 (Get_Enum_Pos (Val)), Origin);
+
          when Iir_Kind_Physical_Int_Literal =>
-            declare
-               Prim_Name : Iir;
-            begin
-               Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
-               Prim_Name := Get_Primary_Unit_Name
-                 (Get_Base_Type (Get_Type (Origin)));
-               Set_Unit_Name (Res, Prim_Name);
-               if Get_Named_Entity (Get_Unit_Name (Val))
-                 = Get_Named_Entity (Prim_Name)
-               then
-                  Set_Value (Res, Get_Value (Val));
-               else
-                  raise Internal_Error;
-                  --Set_Abstract_Literal (Res, Get_Abstract_Literal (Val)
-                  --                      * Get_Value (Get_Name (Val)));
-               end if;
-            end;
+            Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
+            Set_Unit_Name (Res, Get_Primary_Unit_Name
+                             (Get_Base_Type (Get_Type (Origin))));
+            Set_Value (Res, Get_Physical_Value (Val));
+
          when Iir_Kind_Unit_Declaration =>
             Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
             Set_Value (Res, Get_Physical_Value (Val));
@@ -431,6 +422,18 @@ package body Evaluation is
          Free_Iir (Res);
       end if;
    end Free_Eval_Static_Expr;
+
+   --  Free the result RES of Eval_String_Literal called with ORIG, if created.
+   procedure Free_Eval_String_Literal (Res : Iir; Orig : Iir)
+   is
+      L : Iir_List;
+   begin
+      if Res /= Orig then
+         L := Get_Simple_Aggregate_List (Res);
+         Destroy_Iir_List (L);
+         Free_Iir (Res);
+      end if;
+   end Free_Eval_String_Literal;
 
    function Eval_String_Literal (Str : Iir) return Iir
    is
@@ -837,10 +840,7 @@ package body Evaluation is
             for I in 0 .. Left_Len - 1 loop
                Append_Element (Res_List, Get_Nth_Element (Left_List, I));
             end loop;
-            if Left_Aggr /= Left then
-               Destroy_Iir_List (Left_List);
-               Free_Iir (Left_Aggr);
-            end if;
+            Free_Eval_String_Literal (Left_Aggr, Left);
       end case;
       --  Right:
       case Func is
@@ -855,10 +855,7 @@ package body Evaluation is
             for I in 0 .. L - 1 loop
                Append_Element (Res_List, Get_Nth_Element (Right_List, I));
             end loop;
-            if Right_Aggr /= Right then
-               Destroy_Iir_List (Right_List);
-               Free_Iir (Right_Aggr);
-            end if;
+            Free_Eval_String_Literal (Right_Aggr, Right);
       end case;
       L := Get_Nbr_Elements (Res_List);
 
@@ -1263,8 +1260,15 @@ package body Evaluation is
            | Iir_Predefined_Array_Sra
            | Iir_Predefined_Array_Rol
            | Iir_Predefined_Array_Ror =>
-            return Eval_Shift_Operator
-              (Eval_String_Literal (Left), Right, Orig, Func);
+            declare
+               Left_Aggr : Iir;
+               Res : Iir;
+            begin
+               Left_Aggr := Eval_String_Literal (Left);
+               Res := Eval_Shift_Operator (Left_Aggr, Right, Orig, Func);
+               Free_Eval_String_Literal (Left_Aggr, Left);
+               return Res;
+            end;
 
          when Iir_Predefined_Array_Less
            | Iir_Predefined_Array_Less_Equal
@@ -1810,6 +1814,32 @@ package body Evaluation is
       end case;
    end Eval_Type_Conversion;
 
+   function Eval_Physical_Literal (Expr : Iir) return Iir
+   is
+      Val : Iir;
+   begin
+      case Get_Kind (Expr) is
+         when Iir_Kind_Physical_Fp_Literal =>
+            Val := Expr;
+         when Iir_Kind_Physical_Int_Literal =>
+            if Get_Named_Entity (Get_Unit_Name (Expr))
+              = Get_Primary_Unit (Get_Base_Type (Get_Type (Expr)))
+            then
+               return Expr;
+            else
+               Val := Expr;
+            end if;
+         when Iir_Kind_Unit_Declaration =>
+            Val := Expr;
+         when Iir_Kinds_Denoting_Name =>
+            Val := Get_Named_Entity (Expr);
+            pragma Assert (Get_Kind (Val) = Iir_Kind_Unit_Declaration);
+         when others =>
+            Error_Kind ("eval_physical_literal", Expr);
+      end case;
+      return Build_Physical (Get_Physical_Value (Val), Expr);
+   end Eval_Physical_Literal;
+
    function Eval_Static_Expr (Expr: Iir) return Iir
    is
       Res : Iir;
@@ -1824,19 +1854,10 @@ package body Evaluation is
            | Iir_Kind_Floating_Point_Literal
            | Iir_Kind_String_Literal
            | Iir_Kind_Bit_String_Literal
-           | Iir_Kind_Overflow_Literal =>
+           | Iir_Kind_Overflow_Literal
+           | Iir_Kind_Physical_Int_Literal
+           | Iir_Kind_Physical_Fp_Literal =>
             return Expr;
-         when Iir_Kind_Physical_Int_Literal =>
-            if Get_Named_Entity (Get_Unit_Name (Expr))
-              = Get_Primary_Unit (Get_Base_Type (Get_Type (Expr)))
-            then
-               return Expr;
-            else
-               --  Convert to the primary unit.
-               return Build_Physical (Get_Physical_Value (Expr), Expr);
-            end if;
-         when Iir_Kind_Physical_Fp_Literal =>
-            return Build_Physical (Get_Physical_Value (Expr), Expr);
          when Iir_Kind_Constant_Declaration =>
             Val := Eval_Static_Expr (Get_Default_Value (Expr));
             --  Type of the expression should be type of the constant
@@ -2128,9 +2149,8 @@ package body Evaluation is
 
          when Iir_Kind_Function_Call =>
             declare
+               Imp : constant Iir := Get_Implementation (Expr);
                Left, Right : Iir;
-               Imp : constant Iir :=
-                 Get_Named_Entity (Get_Implementation (Expr));
             begin
                --  Note: there can't be association by name.
                Left := Get_Parameter_Association_Chain (Expr);
@@ -2158,9 +2178,7 @@ package body Evaluation is
       Res : Iir;
    begin
       case Get_Kind (Expr) is
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Character_Literal
-           | Iir_Kind_Selected_Name =>
+         when Iir_Kinds_Denoting_Name =>
             declare
                Orig : constant Iir := Get_Named_Entity (Expr);
             begin
@@ -2176,6 +2194,8 @@ package body Evaluation is
             if Res /= Expr
               and then Get_Literal_Origin (Res) /= Expr
             then
+               --  Need to build a constant if the result is a different
+               --  literal not tied to EXPR.
                return Build_Constant (Res, Expr);
             else
                return Res;
@@ -2504,10 +2524,10 @@ package body Evaluation is
             return Get_Value (Expr);
          when Iir_Kind_Enumeration_Literal =>
             return Iir_Int64 (Get_Enum_Pos (Expr));
-         when Iir_Kind_Physical_Int_Literal =>
+         when Iir_Kind_Physical_Int_Literal
+           | Iir_Kind_Physical_Fp_Literal
+           | Iir_Kind_Unit_Declaration =>
             return Get_Physical_Value (Expr);
-         when Iir_Kind_Unit_Declaration =>
-            return Get_Value (Get_Physical_Unit_Value (Expr));
          when Iir_Kinds_Denoting_Name =>
             return Eval_Pos (Get_Named_Entity (Expr));
          when others =>
@@ -2574,7 +2594,7 @@ package body Evaluation is
                      end case;
                      Set_Left_Limit (Res, Get_Right_Limit (Expr));
                      Set_Right_Limit (Res, Get_Left_Limit (Expr));
-                     Set_Range_Origin (Res, Expr);
+                     Set_Range_Origin (Res, Rng);
                      Set_Expr_Staticness (Res, Get_Expr_Staticness (Expr));
                      return Res;
                   end if;
@@ -2598,7 +2618,9 @@ package body Evaluation is
       Res : Iir;
    begin
       Res := Eval_Static_Range (Arange);
-      if Res /= Arange then
+      if Res /= Arange
+        and then Get_Range_Origin (Res) /= Arange
+      then
          return Build_Constant_Range (Res, Arange);
       else
          return Res;

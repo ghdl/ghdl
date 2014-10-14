@@ -18,6 +18,8 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.Table;
 with GNAT.OS_Lib;
+with Interfaces.C_Streams;
+with System;
 with Errorout; use Errorout;
 with Scanner;
 with Iirs_Utils; use Iirs_Utils;
@@ -337,7 +339,7 @@ package body Libraries is
 
       Design_File: Iir_Design_File;
       Library_Unit: Iir;
-      Line, Col: Natural;
+      Line, Col: Int32;
       File_Dir : Name_Id;
       Pos: Source_Ptr;
       Date: Date_Type;
@@ -511,14 +513,14 @@ package body Libraries is
             -- Scan position.
             Scan_Expect (Tok_Identifier); -- at
             Scan_Expect (Tok_Integer);
-            Line := Natural (Current_Iir_Int64);
+            Line := Int32 (Current_Iir_Int64);
             Scan_Expect (Tok_Left_Paren);
             Scan_Expect (Tok_Integer);
             Pos := Source_Ptr (Current_Iir_Int64);
             Scan_Expect (Tok_Right_Paren);
             Scan_Expect (Tok_Plus);
             Scan_Expect (Tok_Integer);
-            Col := Natural (Current_Iir_Int64);
+            Col := Int32 (Current_Iir_Int64);
             Scan_Expect (Tok_On);
             Scan_Expect (Tok_Integer);
             Date := Date_Type (Current_Iir_Int64);
@@ -536,7 +538,7 @@ package body Libraries is
             Scan;
 
             if False then
-               Put_Line ("line:" & Natural'Image (Line)
+               Put_Line ("line:" & Int32'Image (Line)
                          & ", pos:" & Source_Ptr'Image (Pos));
             end if;
 
@@ -546,7 +548,9 @@ package body Libraries is
             -- Keep the position of the design unit.
             --Set_Location (Design_Unit, Location_Type (File));
             --Set_Location (Library_Unit, Location_Type (File));
-            Set_Pos_Line_Off (Design_Unit, Pos, Line, Col);
+            Set_Design_Unit_Source_Pos (Design_Unit, Pos);
+            Set_Design_Unit_Source_Line (Design_Unit, Line);
+            Set_Design_Unit_Source_Col (Design_Unit, Col);
             Set_Date (Design_Unit, Date);
             if Date > Max_Date then
                Max_Date := Date;
@@ -1110,22 +1114,29 @@ package body Libraries is
    end Add_Design_File_Into_Library;
 
    -- Save the file map of library LIBRARY.
-   procedure Save_Library (Library: Iir_Library_Declaration) is
+   procedure Save_Library (Library: Iir_Library_Declaration)
+   is
+      use System;
+      use Interfaces.C_Streams;
       use GNAT.OS_Lib;
-      Temp_Name : String_Access;
-      FD : File_Descriptor;
+      Temp_Name: constant String := Image (Work_Directory)
+        & '_' & Back_End.Library_To_File_Name (Library) & ASCII.NUL;
+      Mode : constant String := 'w' & ASCII.NUL;
+      Stream : FILEs;
       Success : Boolean;
 
       --  Write a string to the temporary file.
-      procedure WR (S : String) is
+      procedure WR (S : String)
+      is
+         Close_Res : int;
+         pragma Unreferenced (Close_Res);
       begin
-         if Write (FD, S'Address, S'Length) /= S'Length then
+         if Integer (fwrite (S'Address, S'Length, 1, Stream)) /= 1 then
             Error_Msg
               ("cannot write library file for " & Image_Identifier (Library));
-            Close (FD);
-            Delete_File (Temp_Name.all, Success);
+            Close_Res := fclose (Stream);
+            Delete_File (Temp_Name'Address, Success);
             --  Ignore failure to delete the file.
-            Free (Temp_Name);
             raise Option_Error;
          end if;
       end WR;
@@ -1148,9 +1159,9 @@ package body Libraries is
       --  Create a temporary file so that the real library is atomically
       --  updated, and won't be corrupted in case of Control-C, or concurrent
       --  writes.
-      Create_Temp_Output_File (FD, Temp_Name);
+      Stream := fopen (Temp_Name'Address, Mode'Address);
 
-      if FD = Invalid_FD then
+      if Stream = NULL_Stream then
          Error_Msg
            ("cannot create library file for " & Image_Identifier (Library));
          raise Option_Error;
@@ -1228,7 +1239,9 @@ package body Libraries is
             end case;
 
             if Get_Date_State (Design_Unit) = Date_Disk then
-               Get_Pos_Line_Off (Design_Unit, Pos, Line, Off);
+               Pos := Get_Design_Unit_Source_Pos (Design_Unit);
+               Line := Natural (Get_Design_Unit_Source_Line (Design_Unit));
+               Off := Natural (Get_Design_Unit_Source_Col (Design_Unit));
             else
                Files_Map.Location_To_Coord (Get_Location (Design_Unit),
                                             Source_File, Pos, Line, Off);
@@ -1264,7 +1277,12 @@ package body Libraries is
          Design_File := Get_Chain (Design_File);
       end loop;
 
-      Close (FD);
+      declare
+         Fclose_Res : int;
+         pragma Unreferenced (Fclose_Res);
+      begin
+         Fclose_Res := fclose (Stream);
+      end;
 
       --  Rename the temporary file to the library file.
       --  FIXME: It may fail if they aren't on the same filesystem, but we
@@ -1272,17 +1290,21 @@ package body Libraries is
       declare
          use Files_Map;
          File_Name: constant String := Image (Work_Directory)
-           & Back_End.Library_To_File_Name (Library);
+           & Back_End.Library_To_File_Name (Library) & ASCII.NUL;
          Delete_Success : Boolean;
       begin
          --  For windows: renames doesn't overwrite destination; so first
          --  delete it. This can create races condition on Unix: if the
          --  program is killed between delete and rename, the library is lost.
-         Delete_File (File_Name, Delete_Success);
-         Rename_File (Temp_Name.all, File_Name, Success);
-         Free (Temp_Name);
+         Delete_File (File_Name'Address, Delete_Success);
+         Rename_File (Temp_Name'Address, File_Name'Address, Success);
          if not Success then
-            Error_Msg ("cannot update library file """ & File_Name & """");
+            --  Renaming may fail if the new filename is in a non-existant
+            --  directory.
+            Error_Msg ("cannot update library file """
+                         & File_Name (File_Name'First .. File_Name'Last - 1)
+                         & """");
+            Delete_File (Temp_Name'Address, Success);
             raise Option_Error;
          end if;
       end;
@@ -1472,7 +1494,9 @@ package body Libraries is
             Design_Unit);
          raise Compilation_Error;
       end if;
-      Get_Pos_Line_Off (Design_Unit, Pos, Line, Off);
+      Pos := Get_Design_Unit_Source_Pos (Design_Unit);
+      Line := Natural (Get_Design_Unit_Source_Line (Design_Unit));
+      Off := Natural (Get_Design_Unit_Source_Col (Design_Unit));
       Files_Map.File_Add_Line_Number (Get_Current_Source_File, Line, Pos);
       Set_Current_Position (Pos + Source_Ptr (Off));
       Res := Parse.Parse_Design_Unit;

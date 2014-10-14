@@ -502,23 +502,23 @@ package body Disp_Tree is
          when Iir_Kind_Subnature_Declaration =>
             Put ("subnature_declaration " &
                       Image_Name_Id (Get_Identifier (N)));
+         when Iir_Kind_Package_Declaration =>
+            Put ("package_declaration " &
+                      Image_Name_Id (Get_Identifier (N)));
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Put ("package_instantiation_declaration " &
+                      Image_Name_Id (Get_Identifier (N)));
+         when Iir_Kind_Package_Body =>
+            Put ("package_body " &
+                      Image_Name_Id (Get_Identifier (N)));
          when Iir_Kind_Configuration_Declaration =>
             Put ("configuration_declaration " &
                       Image_Name_Id (Get_Identifier (N)));
          when Iir_Kind_Entity_Declaration =>
             Put ("entity_declaration " &
                       Image_Name_Id (Get_Identifier (N)));
-         when Iir_Kind_Package_Declaration =>
-            Put ("package_declaration " &
-                      Image_Name_Id (Get_Identifier (N)));
-         when Iir_Kind_Package_Body =>
-            Put ("package_body " &
-                      Image_Name_Id (Get_Identifier (N)));
          when Iir_Kind_Architecture_Body =>
             Put ("architecture_body " &
-                      Image_Name_Id (Get_Identifier (N)));
-         when Iir_Kind_Package_Instantiation_Declaration =>
-            Put ("package_instantiation_declaration " &
                       Image_Name_Id (Get_Identifier (N)));
          when Iir_Kind_Package_Header =>
             Put ("package_header");
@@ -980,8 +980,14 @@ package body Disp_Tree is
             Disp_Chain (Get_Context_Items (N), Sub_Indent);
             Header ("date: ", Indent);
             Put_Line (Date_Type'Image (Get_Date (N)));
+            Header ("design_unit_source_line: ", Indent);
+            Put_Line (Int32'Image (Get_Design_Unit_Source_Line (N)));
+            Header ("design_unit_source_col: ", Indent);
+            Put_Line (Int32'Image (Get_Design_Unit_Source_Col (N)));
             Header ("identifier: ", Indent);
             Put_Line (Image_Name_Id (Get_Identifier (N)));
+            Header ("design_unit_source_pos: ", Indent);
+            Put_Line (Source_Ptr'Image (Get_Design_Unit_Source_Pos (N)));
             Header ("library_unit: ", Indent);
             Disp_Iir (Get_Library_Unit (N), Sub_Indent);
             Header ("end_location: ", Indent);
@@ -1211,7 +1217,7 @@ package body Disp_Tree is
             Header ("declaration_chain: ", Indent);
             Disp_Chain (Get_Declaration_Chain (N), Sub_Indent);
             Header ("configuration_item_chain: ", Indent);
-            Disp_Iir (Get_Configuration_Item_Chain (N), Sub_Indent);
+            Disp_Chain (Get_Configuration_Item_Chain (N), Sub_Indent);
             Header ("prev_block_configuration: ", Indent);
             Disp_Iir (Get_Prev_Block_Configuration (N), Sub_Indent, True);
             Header ("block_specification: ", Indent);
@@ -1709,6 +1715,63 @@ package body Disp_Tree is
             Put_Line (Image_Boolean (Get_Visible_Flag (N)));
             Header ("use_flag: ", Indent);
             Put_Line (Image_Boolean (Get_Use_Flag (N)));
+         when Iir_Kind_Package_Declaration =>
+            Header ("parent: ", Indent);
+            Disp_Iir (Get_Parent (N), Sub_Indent, True);
+            Header ("declaration_chain: ", Indent);
+            Disp_Chain (Get_Declaration_Chain (N), Sub_Indent);
+            Header ("package_body: ", Indent);
+            Disp_Iir (Get_Package_Body (N), Sub_Indent, True);
+            Header ("identifier: ", Indent);
+            Put_Line (Image_Name_Id (Get_Identifier (N)));
+            Header ("attribute_value_chain: ", Indent);
+            Disp_Iir (Get_Attribute_Value_Chain (N), Sub_Indent);
+            Header ("package_header: ", Indent);
+            Disp_Iir (Get_Package_Header (N), Sub_Indent);
+            Header ("need_body: ", Indent);
+            Put_Line (Image_Boolean (Get_Need_Body (N)));
+            Header ("visible_flag: ", Indent);
+            Put_Line (Image_Boolean (Get_Visible_Flag (N)));
+            Header ("end_has_reserved_id: ", Indent);
+            Put_Line (Image_Boolean (Get_End_Has_Reserved_Id (N)));
+            Header ("end_has_identifier: ", Indent);
+            Put_Line (Image_Boolean (Get_End_Has_Identifier (N)));
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Header ("parent: ", Indent);
+            Disp_Iir (Get_Parent (N), Sub_Indent, True);
+            Header ("declaration_chain: ", Indent);
+            Disp_Chain (Get_Declaration_Chain (N), Sub_Indent);
+            Header ("package_body: ", Indent);
+            Disp_Iir (Get_Package_Body (N), Sub_Indent, True);
+            Header ("identifier: ", Indent);
+            Put_Line (Image_Name_Id (Get_Identifier (N)));
+            Header ("attribute_value_chain: ", Indent);
+            Disp_Iir (Get_Attribute_Value_Chain (N), Sub_Indent);
+            Header ("uninstantiated_name: ", Indent);
+            Disp_Iir (Get_Uninstantiated_Name (N), Sub_Indent);
+            Header ("generic_chain: ", Indent);
+            Disp_Chain (Get_Generic_Chain (N), Sub_Indent);
+            Header ("generic_map_aspect_chain: ", Indent);
+            Disp_Chain (Get_Generic_Map_Aspect_Chain (N), Sub_Indent);
+            Header ("visible_flag: ", Indent);
+            Put_Line (Image_Boolean (Get_Visible_Flag (N)));
+            Header ("end_has_reserved_id: ", Indent);
+            Put_Line (Image_Boolean (Get_End_Has_Reserved_Id (N)));
+            Header ("end_has_identifier: ", Indent);
+            Put_Line (Image_Boolean (Get_End_Has_Identifier (N)));
+         when Iir_Kind_Package_Body =>
+            Header ("parent: ", Indent);
+            Disp_Iir (Get_Parent (N), Sub_Indent, True);
+            Header ("declaration_chain: ", Indent);
+            Disp_Chain (Get_Declaration_Chain (N), Sub_Indent);
+            Header ("identifier: ", Indent);
+            Put_Line (Image_Name_Id (Get_Identifier (N)));
+            Header ("package: ", Indent);
+            Disp_Iir (Get_Package (N), Sub_Indent, True);
+            Header ("end_has_reserved_id: ", Indent);
+            Put_Line (Image_Boolean (Get_End_Has_Reserved_Id (N)));
+            Header ("end_has_identifier: ", Indent);
+            Put_Line (Image_Boolean (Get_End_Has_Identifier (N)));
          when Iir_Kind_Configuration_Declaration =>
             Header ("parent: ", Indent);
             Disp_Iir (Get_Parent (N), Sub_Indent, True);
@@ -1753,40 +1816,6 @@ package body Disp_Tree is
             Put_Line (Image_Boolean (Get_End_Has_Reserved_Id (N)));
             Header ("end_has_identifier: ", Indent);
             Put_Line (Image_Boolean (Get_End_Has_Identifier (N)));
-         when Iir_Kind_Package_Declaration =>
-            Header ("parent: ", Indent);
-            Disp_Iir (Get_Parent (N), Sub_Indent, True);
-            Header ("declaration_chain: ", Indent);
-            Disp_Chain (Get_Declaration_Chain (N), Sub_Indent);
-            Header ("package_body: ", Indent);
-            Disp_Iir (Get_Package_Body (N), Sub_Indent);
-            Header ("identifier: ", Indent);
-            Put_Line (Image_Name_Id (Get_Identifier (N)));
-            Header ("attribute_value_chain: ", Indent);
-            Disp_Iir (Get_Attribute_Value_Chain (N), Sub_Indent);
-            Header ("package_header: ", Indent);
-            Disp_Iir (Get_Package_Header (N), Sub_Indent);
-            Header ("need_body: ", Indent);
-            Put_Line (Image_Boolean (Get_Need_Body (N)));
-            Header ("visible_flag: ", Indent);
-            Put_Line (Image_Boolean (Get_Visible_Flag (N)));
-            Header ("end_has_reserved_id: ", Indent);
-            Put_Line (Image_Boolean (Get_End_Has_Reserved_Id (N)));
-            Header ("end_has_identifier: ", Indent);
-            Put_Line (Image_Boolean (Get_End_Has_Identifier (N)));
-         when Iir_Kind_Package_Body =>
-            Header ("parent: ", Indent);
-            Disp_Iir (Get_Parent (N), Sub_Indent, True);
-            Header ("declaration_chain: ", Indent);
-            Disp_Chain (Get_Declaration_Chain (N), Sub_Indent);
-            Header ("identifier: ", Indent);
-            Put_Line (Image_Name_Id (Get_Identifier (N)));
-            Header ("package: ", Indent);
-            Disp_Iir (Get_Package (N), Sub_Indent);
-            Header ("end_has_reserved_id: ", Indent);
-            Put_Line (Image_Boolean (Get_End_Has_Reserved_Id (N)));
-            Header ("end_has_identifier: ", Indent);
-            Put_Line (Image_Boolean (Get_End_Has_Identifier (N)));
          when Iir_Kind_Architecture_Body =>
             Header ("parent: ", Indent);
             Disp_Iir (Get_Parent (N), Sub_Indent, True);
@@ -1808,23 +1837,6 @@ package body Disp_Tree is
             Put_Line (Image_Boolean (Get_Visible_Flag (N)));
             Header ("is_within_flag: ", Indent);
             Put_Line (Image_Boolean (Get_Is_Within_Flag (N)));
-            Header ("end_has_reserved_id: ", Indent);
-            Put_Line (Image_Boolean (Get_End_Has_Reserved_Id (N)));
-            Header ("end_has_identifier: ", Indent);
-            Put_Line (Image_Boolean (Get_End_Has_Identifier (N)));
-         when Iir_Kind_Package_Instantiation_Declaration =>
-            Header ("parent: ", Indent);
-            Disp_Iir (Get_Parent (N), Sub_Indent, True);
-            Header ("uninstantiated_name: ", Indent);
-            Disp_Iir (Get_Uninstantiated_Name (N), Sub_Indent);
-            Header ("identifier: ", Indent);
-            Put_Line (Image_Name_Id (Get_Identifier (N)));
-            Header ("generic_chain: ", Indent);
-            Disp_Chain (Get_Generic_Chain (N), Sub_Indent);
-            Header ("generic_map_aspect_chain: ", Indent);
-            Disp_Chain (Get_Generic_Map_Aspect_Chain (N), Sub_Indent);
-            Header ("visible_flag: ", Indent);
-            Put_Line (Image_Boolean (Get_Visible_Flag (N)));
             Header ("end_has_reserved_id: ", Indent);
             Put_Line (Image_Boolean (Get_End_Has_Reserved_Id (N)));
             Header ("end_has_identifier: ", Indent);
@@ -2074,7 +2086,7 @@ package body Disp_Tree is
             Header ("return_type_mark: ", Indent);
             Disp_Iir (Get_Return_Type_Mark (N), Sub_Indent);
             Header ("subprogram_body: ", Indent);
-            Disp_Iir (Get_Subprogram_Body (N), Sub_Indent);
+            Disp_Iir (Get_Subprogram_Body (N), Sub_Indent, True);
             Header ("seen_flag: ", Indent);
             Put_Line (Image_Boolean (Get_Seen_Flag (N)));
             Header ("pure_flag: ", Indent);
@@ -2191,7 +2203,7 @@ package body Disp_Tree is
             Header ("return_type_mark: ", Indent);
             Disp_Iir (Get_Return_Type_Mark (N), Sub_Indent);
             Header ("subprogram_body: ", Indent);
-            Disp_Iir (Get_Subprogram_Body (N), Sub_Indent);
+            Disp_Iir (Get_Subprogram_Body (N), Sub_Indent, True);
             Header ("seen_flag: ", Indent);
             Put_Line (Image_Boolean (Get_Seen_Flag (N)));
             Header ("passive_flag: ", Indent);
@@ -2221,7 +2233,7 @@ package body Disp_Tree is
             Header ("impure_depth: ", Indent);
             Put_Line (Iir_Int32'Image (Get_Impure_Depth (N)));
             Header ("subprogram_specification: ", Indent);
-            Disp_Iir (Get_Subprogram_Specification (N), Sub_Indent);
+            Disp_Iir (Get_Subprogram_Specification (N), Sub_Indent, True);
             Header ("sequential_statement_chain: ", Indent);
             Disp_Chain (Get_Sequential_Statement_Chain (N), Sub_Indent);
             Header ("end_has_reserved_id: ", Indent);
@@ -2621,7 +2633,7 @@ package body Disp_Tree is
             Header ("type: ", Indent);
             Disp_Iir (Get_Type (N), Sub_Indent, True);
             Header ("selected_element: ", Indent);
-            Disp_Iir (Get_Selected_Element (N), Sub_Indent);
+            Disp_Iir (Get_Selected_Element (N), Sub_Indent, True);
             Header ("base_name: ", Indent);
             Disp_Iir (Get_Base_Name (N), Sub_Indent, True);
             Header ("expr_staticness: ", Indent);

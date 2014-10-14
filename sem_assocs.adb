@@ -1156,7 +1156,7 @@ package body Sem_Assocs is
          when Iir_Kinds_Function_Declaration =>
             Res := Create_Iir (Iir_Kind_Function_Call);
             Location_Copy (Res, Conv);
-            Set_Implementation (Res, Conv);
+            Set_Implementation (Res, Func);
             Set_Prefix (Res, Conv);
             Set_Base_Name (Res, Res);
             Set_Parameter_Association_Chain (Res, Null_Iir);

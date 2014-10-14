@@ -292,12 +292,13 @@ package body fixed_generic_pkg is
     arg : UNRESOLVED_ufixed)            -- fixed point vector
     return STD_ULOGIC_VECTOR
   is
-    variable result : STD_ULOGIC_VECTOR (arg'length-1 downto 0);
+    subtype result_subtype is STD_ULOGIC_VECTOR (arg'length-1 downto 0);
+    variable result : result_subtype;
   begin
     if arg'length < 1 then
       return NSLV;
     end if;
-    result := STD_ULOGIC_VECTOR (arg);
+    result := result_subtype (arg);
     return result;
   end function to_sulv;
 
@@ -305,12 +306,15 @@ package body fixed_generic_pkg is
     arg : UNRESOLVED_sfixed)            -- fixed point vector
     return STD_ULOGIC_VECTOR
   is
-    variable result : STD_ULOGIC_VECTOR (arg'length-1 downto 0);
+    subtype result_subtype is STD_ULOGIC_VECTOR (arg'length-1 downto 0);
+    variable result : result_subtype;
+    --variable result : STD_ULOGIC_VECTOR (arg'length-1 downto 0);
   begin
     if arg'length < 1 then
       return NSLV;
     end if;
-    result := STD_ULOGIC_VECTOR (arg);
+    --result := STD_ULOGIC_VECTOR (arg);
+    result := result_subtype (arg);
     return result;
   end function to_sulv;
 
@@ -723,9 +727,10 @@ package body fixed_generic_pkg is
   is
     variable result     : UNRESOLVED_ufixed (minimum(l'high, r'high) downto
                                              mine(l'low, r'low));
+    constant rlow : integer := mins(r'low, r'low);
     variable lresize    : UNRESOLVED_ufixed (maximum(l'high, r'low) downto
-                                             mins(r'low, r'low)-guard_bits);
-    variable rresize    : UNRESOLVED_ufixed (r'high downto r'low-guard_bits);
+                                             rlow-guard_bits);
+    variable rresize    : UNRESOLVED_ufixed (r'high downto rlow-guard_bits);
     variable dresult    : UNRESOLVED_ufixed (rresize'range);
     variable lslv       : UNRESOLVED_UNSIGNED (lresize'length-1 downto 0);
     variable rslv       : UNRESOLVED_UNSIGNED (rresize'length-1 downto 0);
@@ -5014,7 +5019,8 @@ package body fixed_generic_pkg is
     variable c : CHARACTER;
   begin
     while L /= null and L.all'length /= 0 loop
-      if (L.all(1) = ' ' or L.all(1) = NBSP or L.all(1) = HT) then
+      c := l (l'left);
+      if (c = ' ' or c = NBSP or c = HT) then
         read (l, c, readOk);
       else
         exit;

@@ -54,6 +54,8 @@ package Grt.Images is
      (Res : Std_String_Ptr; Val : Ghdl_E8; Rti : Ghdl_Rti_Access);
    procedure Ghdl_To_String_E32
      (Res : Std_String_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access);
+   procedure Ghdl_To_String_Char
+     (Res : Std_String_Ptr; Val : Std_Character);
    procedure Ghdl_To_String_P32
      (Res : Std_String_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access);
    procedure Ghdl_To_String_P64
@@ -93,6 +95,7 @@ private
    pragma Export (Ada, Ghdl_To_String_B1, "__ghdl_to_string_b1");
    pragma Export (C, Ghdl_To_String_E8, "__ghdl_to_string_e8");
    pragma Export (C, Ghdl_To_String_E32, "__ghdl_to_string_e32");
+   pragma Export (C, Ghdl_To_String_Char, "__ghdl_to_string_char");
    pragma Export (C, Ghdl_To_String_P32, "__ghdl_to_string_p32");
    pragma Export (C, Ghdl_To_String_P64, "__ghdl_to_string_p64");
    pragma Export (C, Ghdl_Time_To_String_Unit, "__ghdl_time_to_string_unit");

@@ -1864,16 +1864,18 @@ package body Elaboration is
                     (Item, Sub_Instances (Ind + I - 1));
                end loop;
             when Iir_Kind_Indexed_Name =>
-               Expr := Execute_Expression
-                 (Instance, Get_First_Element (Get_Index_List (Spec)));
-               Ind := Instance_Slot_Type
-                 (Get_Index_Offset (Expr, Bounds, Spec));
-               Sub_Conf (Ind) := True;
-               Elaborate_Block_Configuration (Item, Sub_Instances (Ind));
-            when Iir_Kind_Selected_Name =>
-               --  Must be the only default block configuration
-               pragma Assert (Default_Item = Null_Iir);
-               Default_Item := Item;
+               if Get_Index_List (Spec) = Iir_List_Others then
+                  --  Must be the only default block configuration
+                  pragma Assert (Default_Item = Null_Iir);
+                  Default_Item := Item;
+               else
+                  Expr := Execute_Expression
+                    (Instance, Get_First_Element (Get_Index_List (Spec)));
+                  Ind := Instance_Slot_Type
+                    (Get_Index_Offset (Expr, Bounds, Spec));
+                  Sub_Conf (Ind) := True;
+                  Elaborate_Block_Configuration (Item, Sub_Instances (Ind));
+               end if;
             when Iir_Kind_Generate_Statement =>
                --  Must be the only block configuration
                pragma Assert (Item = Conf_Chain);
