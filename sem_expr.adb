@@ -209,7 +209,7 @@ package body Sem_Expr is
    begin
       --  LRM 7.3.1
       --  [...] the type of the literal must be a one-dimensional array ...
-      if not Is_Unidim_Array_Type (Base_Type) then
+      if not Is_One_Dimensional_Array_Type (Base_Type) then
          return False;
       end if;
       --  LRM 7.3.1
@@ -1133,7 +1133,7 @@ package body Sem_Expr is
       Subprg : constant Iir := Get_Current_Subprogram;
    begin
       Set_Function_Call_Staticness (Expr, Imp);
-      Set_Use_Flag (Imp, True);
+      Mark_Subprogram_Used (Imp);
 
       --  Check purity/wait/passive.
 
@@ -2130,7 +2130,7 @@ package body Sem_Expr is
       --  the expression must be one of the following:
       --  FIXME: to complete.
       Sel_Type := Get_Type (Sel);
-      if not Is_Unidim_Array_Type (Sel_Type) then
+      if not Is_One_Dimensional_Array_Type (Sel_Type) then
          Error_Msg_Sem
            ("expression must be discrete or one-dimension array subtype", Sel);
          return;
@@ -3571,7 +3571,7 @@ package body Sem_Expr is
                --  A subtype indication that is part of an allocator must
                --  not include a resolution function.
                if Is_Anonymous_Type_Definition (Arg)
-                 and then Get_Resolution_Function (Arg) /= Null_Iir
+                 and then Get_Resolution_Indication (Arg) /= Null_Iir
                then
                   Error_Msg_Sem ("subtype indication must not include"
                                    & " a resolution function", Expr);
@@ -4187,7 +4187,7 @@ package body Sem_Expr is
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
          if Get_Kind (El) in Iir_Kinds_Discrete_Type_Definition
-           or else Is_Unidim_Array_Type (El)
+           or else Is_One_Dimensional_Array_Type (El)
          then
             if Res = Null_Iir then
                Res := El;

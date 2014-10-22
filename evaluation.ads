@@ -122,6 +122,10 @@ package Evaluation is
    --  EXPR must be of a discrete subtype.
    function Eval_Pos (Expr : Iir) return Iir_Int64;
 
+   --  Replace ORIGIN (an overflow literal) with extreme positive value (if
+   --  IS_POS is true) or extreme negative value.
+   function Build_Extreme_Value (Is_Pos : Boolean; Origin : Iir) return Iir;
+
    --  Create an array subtype from LEN and BASE_TYPE, according to rules
    --  of LRM93 7.3.2.2. (which are the same as LRM93 7.2.4).
    function Create_Unidim_Array_By_Length

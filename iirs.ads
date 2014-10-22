@@ -96,11 +96,16 @@ package Iirs is
    --
    --  The methods appear after the comment: '   -- General methods.'
    --  They have the following format:
-   --    --  Field: FIELD (CONV)
+   --    --  Field: FIELD ATTR (CONV)
    --   function Get_NAME (PNAME : PTYPE) return RTYPE;
    --   procedure Set_NAME (PNAME : PTYPE; RNAME : RTYPE);
    --  'FIELD' indicate which field of the node is used to store the value.
-   --  ' (CONV)' is required if the type of the value (indicated by RTYPE) is
+   --  ATTR is optional and if present must be one of:
+   --     Ref: the field is a reference to an existing node
+   --     Chain: the field contains a chain of nodes
+   --     Chain_Next: the field contains the next element of a chain (present
+   --      only on one field: Set/Get_Chain).
+   --  ' (CONV)' is present if the type of the value (indicated by RTYPE) is
    --  different from the type of the field.  CONV can be either 'uc' or 'pos'.
    --  'uc' indicates an unchecked conversion while 'pos' a pos/val conversion.
    --
@@ -257,7 +262,7 @@ package Iirs is
    --
    --   Get/Set_Chain (Field2)
    --
-   --   Get/Set_Has_Identifier_List (Flag7)
+   --   Get/Set_Has_Identifier_List (Flag3)
 
    ---------------
    --  Literals --
@@ -685,7 +690,7 @@ package Iirs is
    --
    --  signature ::= '[' [ type_mark { , type_mark } ] [ RETURN type_mark ] ']'
    --
-   --   Get/Set_Prefix (Field0)
+   --   Get/Set_Signature_Prefix (Field1)
    --
    --   Get/Set_Type_Marks_List (Field2)
    --
@@ -929,6 +934,8 @@ package Iirs is
    --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Is_Ref (Flag7)
 
    -- Iir_Kind_Non_Object_Alias_Declaration (Short)
    --
@@ -1030,6 +1037,8 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Is_Ref (Flag7)
 
    -- Iir_Kind_Nature_Declaration (Short)
    --
@@ -1107,6 +1116,8 @@ package Iirs is
    --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Is_Ref (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1315,6 +1326,8 @@ package Iirs is
    --
    --   Get/Set_Has_Disconnect_Flag (Flag1)
    --
+   --   Get/Set_Has_Identifier_List (Flag3)
+   --
    --   Get/Set_Has_Active_Flag (Flag2)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -1323,7 +1336,7 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
-   --   Get/Set_Has_Identifier_List (Flag7)
+   --   Get/Set_Is_Ref (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1399,11 +1412,13 @@ package Iirs is
    -- Only for Iir_Kind_Constant_Declaration:
    --   Get/Set_Deferred_Declaration_Flag (Flag1)
    --
+   --   Get/Set_Has_Identifier_List (Flag3)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
    --
-   --   Get/Set_Has_Identifier_List (Flag7)
+   --   Get/Set_Is_Ref (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1428,11 +1443,13 @@ package Iirs is
    --  True if the variable is a shared variable.
    --   Get/Set_Shared_Flag (Flag2)
    --
+   --   Get/Set_Has_Identifier_List (Flag3)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
    --
-   --   Get/Set_Has_Identifier_List (Flag7)
+   --   Get/Set_Is_Ref (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1475,11 +1492,13 @@ package Iirs is
    --  This is used only in vhdl 87.
    --   Get/Set_Mode (Odigit1)
    --
+   --   Get/Set_Has_Identifier_List (Flag3)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
    --
-   --   Get/Set_Has_Identifier_List (Flag7)
+   --   Get/Set_Is_Ref (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1510,9 +1529,11 @@ package Iirs is
    --
    --   Get/Set_Subtype_Indication (Field5)
    --
+   --   Get/Set_Has_Identifier_List (Flag3)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
-   --   Get/Set_Has_Identifier_List (Flag7)
+   --   Get/Set_Is_Ref (Flag7)
 
    -- Iir_Kind_Record_Element_Constraint (Short)
    --
@@ -1880,15 +1901,19 @@ package Iirs is
    --
    --  index_subtype_definition ::= type_mark RANGE <>
    --
-   --  Note: Use Get_Element_Subtype to get the element subtype definition.
-   --   Get/Set_Element_Subtype_Indication (Field1)
+   --   Get/Set_Element_Subtype (Field1)
+   --
+   --   Get/Set_Element_Subtype_Indication (Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
    --
    --   Get/Set_Base_Type (Field4)
    --
    --  This is a list of type marks.
-   --   Get/Set_Index_Subtype_List (Field6)
+   --   Get/Set_Index_Subtype_Definition_List (Field6)
+   --
+   --  Same as the index_subtype_definition_list.
+   --   Get/Set_Index_Subtype_List (Field9)
    --
    --   Get/Set_Type_Staticness (State1)
    --
@@ -2045,14 +2070,6 @@ package Iirs is
    --
    --  element_resolution ::= array_element_resolution | record_resolution
    --
-   --  array_element_resolution ::= resolution_indication
-   --
-   --  record_resolution ::=
-   --     record_element_resolution { , record_element_resolution }
-   --
-   --  record_element_resolution ::=
-   --     record_element_simple_name resolution_indication
-   --
    --  If there is no constraint but a resolution function name, the subtype
    --  indication is represented by a subtype_definition (which will be
    --  replaced by the correct subtype definition).  If there is an array
@@ -2113,7 +2130,7 @@ package Iirs is
    --
    --   Get/Set_Base_Type (Field4)
    --
-   --   Get/Set_Resolution_Function (Field5)
+   --   Get/Set_Resolution_Indication (Field5)
    --
    --   Get/Set_Resolved_Flag (Flag1)
    --
@@ -2133,7 +2150,7 @@ package Iirs is
    --
    --   Get/Set_Base_Type (Field4)
    --
-   --   Get/Set_Resolution_Function (Field5)
+   --   Get/Set_Resolution_Indication (Field5)
    --
    --   Get/Set_Tolerance (Field7)
    --
@@ -2165,6 +2182,36 @@ package Iirs is
    --
    --   Get/Set_Signal_Type_Flag (Flag2)
 
+   -- Iir_Kind_Array_Element_Resolution (Short)
+   --
+   --  LRM08 6.3 Subtype declarations
+   --
+   --  array_element_resolution ::= resolution_indication
+   --
+   --   Get/Set_Resolution_Indication (Field5)
+
+   -- Iir_Kind_Record_Resolution (Short)
+   --
+   --  LRM08 6.3 Subtype declarations
+   --
+   --  record_resolution ::=
+   --     record_element_resolution { , record_element_resolution }
+   --
+   --   Get/Set_Record_Element_Resolution_Chain (Field1)
+
+   -- Iir_Kind_Record_Element_Resolution (Short)
+   --
+   --  LRM08 6.3 Subtype declarations
+   --
+   --  record_element_resolution ::=
+   --     /record_element/_simple_name resolution_indication
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Resolution_Indication (Field5)
+
    -- Iir_Kind_Record_Subtype_Definition (Medium)
    --
    --   Get/Set_Elements_Declaration_List (Field1)
@@ -2175,7 +2222,7 @@ package Iirs is
    --
    --   Get/Set_Base_Type (Field4)
    --
-   --   Get/Set_Resolution_Function (Field5)
+   --   Get/Set_Resolution_Indication (Field5)
    --
    --   Get/Set_Tolerance (Field7)
    --
@@ -2191,8 +2238,7 @@ package Iirs is
 
    -- Iir_Kind_Array_Subtype_Definition (Medium)
    --
-   --  Note: Use Get_Element_Subtype to get the element subtype definition.
-   --   Get/Set_Element_Subtype_Indication (Field1)
+   --   Get/Set_Element_Subtype (Field1)
    --
    --   Get/Set_Subtype_Type_Mark (Field2)
    --
@@ -2200,12 +2246,19 @@ package Iirs is
    --
    --   Get/Set_Base_Type (Field4)
    --
-   --   Get/Set_Resolution_Function (Field5)
+   --   Get/Set_Resolution_Indication (Field5)
    --
-   --  The index_constraint. This is a list of subtype indication.
-   --   Get/Set_Index_Subtype_List (Field6)
+   --  The index_constraint list as it appears in the subtype indication (if
+   --  present). This is a list of subtype indication.
+   --   Get/Set_Index_Constraint_List (Field6)
    --
    --   Get/Set_Tolerance (Field7)
+   --
+   --   Get/Set_Array_Element_Constraint (Field8)
+   --
+   --  The type of the index.  This is either the index_constraint list or the
+   --  index subtypes of the type_mark.
+   --   Get/Set_Index_Subtype_List (Field9)
    --
    --   Get/Set_Type_Staticness (State1)
    --
@@ -2241,7 +2294,7 @@ package Iirs is
    --
    --   Get/Set_Subtype_Type_Mark (Field2)
    --
-   --   Get/Set_Resolution_Function (Field5)
+   --   Get/Set_Resolution_Indication (Field5)
    --
    --   Get/Set_Tolerance (Field7)
 
@@ -3394,6 +3447,9 @@ package Iirs is
        Iir_Kind_Aggregate_Info,
        Iir_Kind_Procedure_Call,
        Iir_Kind_Record_Element_Constraint,
+       Iir_Kind_Array_Element_Resolution,
+       Iir_Kind_Record_Resolution,
+       Iir_Kind_Record_Element_Resolution,
 
        Iir_Kind_Attribute_Specification,
        Iir_Kind_Disconnection_Specification,
@@ -4088,6 +4144,12 @@ package Iirs is
    --Iir_Kind_Record_Subtype_Definition
    --Iir_Kind_Access_Subtype_Definition
    --Iir_Kind_Physical_Subtype_Definition
+   --Iir_Kind_Floating_Subtype_Definition
+   --Iir_Kind_Integer_Subtype_Definition
+     Iir_Kind_Enumeration_Subtype_Definition;
+
+   subtype Iir_Kinds_Scalar_Subtype_Definition is Iir_Kind range
+     Iir_Kind_Physical_Subtype_Definition ..
    --Iir_Kind_Floating_Subtype_Definition
    --Iir_Kind_Integer_Subtype_Definition
      Iir_Kind_Enumeration_Subtype_Definition;
@@ -4921,7 +4983,6 @@ package Iirs is
    procedure Set_Library_Directory (Library : Iir; Dir : Name_Id);
 
    -- Symbolic date, used to order design units in a library.
-   --  Display: Image
    --  Field: Field10 (pos)
    function Get_Date (Target : Iir) return Date_Type;
    procedure Set_Date (Target : Iir; Date : Date_Type);
@@ -4935,7 +4996,7 @@ package Iirs is
    --  exception: the architecture of an entity aspect (of a component
    --  instantiation) may not have been analyzed.  The Entity_Aspect_Entity
    --  is added to this list (instead of the non-existing design unit).
-   --  Field: Field8 Ref (uc)
+   --  Field: Field8 Of_Ref (uc)
    function Get_Dependence_List (Unit : Iir) return Iir_List;
    procedure Set_Dependence_List (Unit : Iir; List : Iir_List);
 
@@ -4978,17 +5039,14 @@ package Iirs is
    -- Set the line and the offset in the line, only for the library manager.
    -- This is valid until the file is really loaded in memory.  On loading,
    -- location will contain all this informations.
-   --  Display: Image
    --  Field: Field4 (uc)
    function Get_Design_Unit_Source_Pos (Design_Unit : Iir) return Source_Ptr;
    procedure Set_Design_Unit_Source_Pos (Design_Unit : Iir; Pos : Source_Ptr);
 
-   --  Display: Image
    --  Field: Field11 (uc)
    function Get_Design_Unit_Source_Line (Design_Unit : Iir) return Int32;
    procedure Set_Design_Unit_Source_Line (Design_Unit : Iir; Line : Int32);
 
-   --  Display: Image
    --  Field: Field12 (uc)
    function Get_Design_Unit_Source_Col (Design_Unit : Iir) return Int32;
    procedure Set_Design_Unit_Source_Col (Design_Unit : Iir; Line : Int32);
@@ -4996,13 +5054,11 @@ package Iirs is
    --  literals.
 
    --  Value of an integer/physical literal.
-   --  Display: Image
    --  Field: Int64
    function Get_Value (Lit : Iir) return Iir_Int64;
    procedure Set_Value (Lit : Iir; Val : Iir_Int64);
 
    --  Position (same as lit_type'pos) of an enumeration literal.
-   --  Display: Image
    --  Field: Field10 (pos)
    function Get_Enum_Pos (Lit : Iir) return Iir_Int32;
    procedure Set_Enum_Pos (Lit : Iir; Val : Iir_Int32);
@@ -5017,7 +5073,6 @@ package Iirs is
    procedure Set_Physical_Unit_Value (Unit : Iir; Lit : Iir);
 
    --  Value of a floating point literal.
-   --  Display: Image
    --  Field: Fp64
    function Get_Fp_Value (Lit : Iir) return Iir_Fp64;
    procedure Set_Fp_Value (Lit : Iir; Val : Iir_Fp64);
@@ -5035,7 +5090,6 @@ package Iirs is
    procedure Set_Simple_Aggregate_List (Target : Iir; List : Iir_List);
 
    -- The logarithm of the base (1, 3 or 4) of a bit string.
-   --  Display: Image
    --  Field: Field8 (pos)
    function Get_Bit_String_Base (Lit : Iir) return Base_Type;
    procedure Set_Bit_String_Base (Lit : Iir; Base : Base_Type);
@@ -5207,7 +5261,7 @@ package Iirs is
    --  To be used with Get/Set_Chain.
    --  There is no order, therefore, a new attribute value may be always
    --  prepended.
-   --  Field: Field4
+   --  Field: Field4 Chain
    function Get_Attribute_Value_Chain (Target : Iir) return Iir;
    procedure Set_Attribute_Value_Chain (Target : Iir; Chain : Iir);
 
@@ -5269,7 +5323,10 @@ package Iirs is
    procedure Set_Type (Target : Iir; Atype : Iir);
    pragma Inline (Get_Type);
 
-   --  Field: Field5
+   --  The subtype indication of a declaration.  Note that this node can be
+   --  shared between declarations if they are separated by comma, such as in:
+   --    variable a, b : integer := 5;
+   --  Field: Field5 Maybe_Ref
    function Get_Subtype_Indication (Target : Iir) return Iir;
    procedure Set_Subtype_Indication (Target : Iir; Atype : Iir);
 
@@ -5328,7 +5385,6 @@ package Iirs is
    --  identifier.  If the overload number is not 0, it is the rank of the
    --  subprogram.  If the overload number is 0, then the identifier is not
    --  overloaded in the declarative region.
-   --  Display: Image
    --  Field: Field12 (pos)
    function Get_Overload_Number (Target : Iir) return Iir_Int32;
    procedure Set_Overload_Number (Target : Iir; Val : Iir_Int32);
@@ -5339,7 +5395,6 @@ package Iirs is
    --  For a subprogram declared immediatly within a subprogram of level N,
    --  the depth is N + 1.
    --  Depth is used with depth of impure objects to check purity rules.
-   --  Display: Image
    --  Field: Field10 (pos)
    function Get_Subprogram_Depth (Target : Iir) return Iir_Int32;
    procedure Set_Subprogram_Depth (Target : Iir; Depth : Iir_Int32);
@@ -5347,14 +5402,12 @@ package Iirs is
    --  Hash of a subprogram profile.
    --  This is used to speed up subprogram profile comparaison, which is very
    --  often used by overload.
-   --  Display: Image
    --  Field: Field11 (pos)
    function Get_Subprogram_Hash (Target : Iir) return Iir_Int32;
    procedure Set_Subprogram_Hash (Target : Iir; Val : Iir_Int32);
    pragma Inline (Get_Subprogram_Hash);
 
    --  Depth of the deepest impure object.
-   --  Display: Image
    --  Field: Field3 (uc)
    function Get_Impure_Depth (Target : Iir) return Iir_Int32;
    procedure Set_Impure_Depth (Target : Iir; Depth : Iir_Int32);
@@ -5377,7 +5430,10 @@ package Iirs is
 
    --  Get the default value of an object declaration.
    --  Null_iir if no default value.
-   --  Field: Field6
+   --  Note that this node can be shared between declarations if they are
+   --  separated by comma, such as in:
+   --    variable a, b : integer := 5;
+   --  Field: Field6 Maybe_Ref
    function Get_Default_Value (Target : Iir) return Iir;
    procedure Set_Default_Value (Target : Iir; Value : Iir);
 
@@ -5404,8 +5460,8 @@ package Iirs is
    --  Get the design unit in which the target is declared.
    --  For a library unit, this is to get the design unit node.
    --  Field: Field0
-   function Get_Design_Unit (Target : Iir) return Iir_Design_Unit;
-   procedure Set_Design_Unit (Target : Iir; Unit : Iir_Design_Unit);
+   function Get_Design_Unit (Target : Iir) return Iir;
+   procedure Set_Design_Unit (Target : Iir; Unit : Iir);
 
    --  Field: Field7
    function Get_Block_Statement (Target : Iir) return Iir;
@@ -5431,7 +5487,6 @@ package Iirs is
    function Get_File_Open_Kind (Target : Iir_File_Declaration) return Iir;
    procedure Set_File_Open_Kind (Target : Iir_File_Declaration; Kind : Iir);
 
-   --  Display: Image
    --  Field: Field4 (pos)
    function Get_Element_Position (Target : Iir) return Iir_Index32;
    procedure Set_Element_Position (Target : Iir; Pos : Iir_Index32);
@@ -5486,7 +5541,6 @@ package Iirs is
 
    --  Get/Set the identifier of a declaration.
    --  Can also be used instead of get/set_label.
-   --  Display: Inline
    --  Field: Field3 (uc)
    function Get_Identifier (Target : Iir) return Name_Id;
    procedure Set_Identifier (Target : Iir; Identifier : Name_Id);
@@ -5525,9 +5579,15 @@ package Iirs is
    procedure Set_Base_Type (Decl : Iir; Base_Type : Iir);
    pragma Inline (Get_Base_Type);
 
+   --  Either a resolution function name, an array_element_resolution or a
+   --  record_resolution
    --  Field: Field5
-   function Get_Resolution_Function (Decl : Iir) return Iir;
-   procedure Set_Resolution_Function (Decl : Iir; Func : Iir);
+   function Get_Resolution_Indication (Decl : Iir) return Iir;
+   procedure Set_Resolution_Indication (Decl : Iir; Ind : Iir);
+
+   --  Field: Field1 Chain
+   function Get_Record_Element_Resolution_Chain (Res : Iir) return Iir;
+   procedure Set_Record_Element_Resolution_Chain (Res : Iir; Chain : Iir);
 
    --  Field: Field7
    function Get_Tolerance (Def : Iir) return Iir;
@@ -5567,17 +5627,33 @@ package Iirs is
    function Get_Constraint_State (Atype : Iir) return Iir_Constraint;
    procedure Set_Constraint_State (Atype : Iir; State : Iir_Constraint);
 
-   --  Field: Field6 (uc)
+   --  Reference either index_subtype_definition_list of array_type_definition
+   --  or index_constraint_list of array_subtype_definition.
+   --  Field: Field9 Ref (uc)
    function Get_Index_Subtype_List (Decl : Iir) return Iir_List;
    procedure Set_Index_Subtype_List (Decl : Iir; List : Iir_List);
 
-   --  Field: Field2 (uc)
-   function Get_Index_List (Decl : Iir) return Iir_List;
-   procedure Set_Index_List (Decl : Iir; List : Iir_List);
+   --  List of type marks for indexes type of array types.
+   --  Field: Field6 (uc)
+   function Get_Index_Subtype_Definition_List (Def : Iir) return Iir_List;
+   procedure Set_Index_Subtype_Definition_List (Def : Iir; Idx : Iir_List);
 
-   --  Field: Field1
+   --  The subtype_indication as it appears in a array type declaration.
+   --  Field: Field2
    function Get_Element_Subtype_Indication (Decl : Iir) return Iir;
    procedure Set_Element_Subtype_Indication (Decl : Iir; Sub_Type : Iir);
+
+   --  Field: Field1 Ref
+   function Get_Element_Subtype (Decl : Iir) return Iir;
+   procedure Set_Element_Subtype (Decl : Iir; Sub_Type : Iir);
+
+   --  Field: Field6 (uc)
+   function Get_Index_Constraint_List (Def : Iir) return Iir_List;
+   procedure Set_Index_Constraint_List (Def : Iir; List : Iir_List);
+
+   --  Field: Field8
+   function Get_Array_Element_Constraint (Def : Iir) return Iir;
+   procedure Set_Array_Element_Constraint (Def : Iir; El : Iir);
 
    --  Chains of elements of a record.
    --  Field: Field1 (uc)
@@ -5591,6 +5667,11 @@ package Iirs is
    --  Field: Field5
    function Get_Designated_Subtype_Indication (Target : Iir) return Iir;
    procedure Set_Designated_Subtype_Indication (Target : Iir; Dtype : Iir);
+
+   --  List of indexes for indexed name.
+   --  Field: Field2 (uc)
+   function Get_Index_List (Decl : Iir) return Iir_List;
+   procedure Set_Index_List (Decl : Iir; List : Iir_List);
 
    --  The terminal declaration for the reference (ground) of a nature
    --  Field: Field2
@@ -5715,7 +5796,7 @@ package Iirs is
 
    --  Get/Set the resolved flag of a subtype definition.
    --  A subtype definition may be resolved either because a
-   --  resolution_function_name is present in the subtype_indication, or
+   --  resolution_indication is present in the subtype_indication, or
    --  because all elements type are resolved.
    --  Field: Flag1
    function Get_Resolved_Flag (Atype : Iir) return Boolean;
@@ -5984,6 +6065,11 @@ package Iirs is
    function Get_Prefix (Target : Iir) return Iir;
    procedure Set_Prefix (Target : Iir; Prefix : Iir);
 
+   --  Prefix of a name signature
+   --  Field: Field1 Ref
+   function Get_Signature_Prefix (Sign : Iir) return Iir;
+   procedure Set_Signature_Prefix (Sign : Iir; Prefix : Iir);
+
    --  The subtype of a slice.  Contrary to the Type field, this is not a
    --  reference.
    --  Field: Field3
@@ -6043,7 +6129,6 @@ package Iirs is
    --  the aggregate or for the current dimension of a sub-aggregate.
    --  The real number of elements may be greater than this number if there
    --  is an 'other' choice.
-   --  Display: Image
    --  Field: Field4 (uc)
    function Get_Aggr_Min_Length (Info : Iir_Aggregate_Info) return Iir_Int32;
    procedure Set_Aggr_Min_Length (Info : Iir_Aggregate_Info; Nbr : Iir_Int32);
@@ -6183,7 +6268,7 @@ package Iirs is
    function Get_Attribute_Signature (Attr : Iir) return Iir;
    procedure Set_Attribute_Signature (Attr : Iir; Signature : Iir);
 
-   --  Field: Field1 Ref (uc)
+   --  Field: Field1 Of_Ref (uc)
    function Get_Overload_List (Target : Iir) return Iir_List;
    procedure Set_Overload_List (Target : Iir; List : Iir_List);
 
@@ -6218,7 +6303,6 @@ package Iirs is
    procedure Set_String_Id (Lit : Iir; Id : String_Id);
 
    --  For a string literal: the string length.
-   --  Display: Image
    --  Field: Field4 (uc)
    function Get_String_Length (Lit : Iir) return Int32;
    procedure Set_String_Length (Lit : Iir; Len : Int32);
@@ -6267,7 +6351,7 @@ package Iirs is
    --  declaration is followed by an identifier (and separated by a comma).
    --  This flag is set on all but the last declarations.
    --  Eg: on 'signal A, B, C : Bit', the flag is set on A and B (but not C).
-   --  Field: Flag7
+   --  Field: Flag3
    function Get_Has_Identifier_List (Decl : Iir) return Boolean;
    procedure Set_Has_Identifier_List (Decl : Iir; Flag : Boolean);
 
@@ -6275,6 +6359,15 @@ package Iirs is
    --  Field: Flag8
    function Get_Has_Mode (Decl : Iir) return Boolean;
    procedure Set_Has_Mode (Decl : Iir; Flag : Boolean);
+
+   --  Set to True if Maybe_Ref fields are references.  This cannot be shared
+   --  with Has_Identifier_List as: Is_Ref is set to True on all items but
+   --  the first, while Has_Identifier_List is set to True on all items but
+   --  the last.  Furthermore Is_Ref appears in nodes where Has_Identifier_List
+   --  is not present.
+   --  Field: Flag7
+   function Get_Is_Ref (N : Iir) return Boolean;
+   procedure Set_Is_Ref (N : Iir; Ref : Boolean);
 
    --  Field: Field1 (uc)
    function Get_Psl_Property (Decl : Iir) return PSL_Node;

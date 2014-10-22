@@ -407,7 +407,7 @@ package body Parse is
    --  postcond: next token
    function Parse_Range_Constraint_Of_Subtype_Indication
      (Type_Mark : Iir;
-      Resolution_Function : Iir := Null_Iir)
+      Resolution_Indication : Iir := Null_Iir)
      return Iir
    is
       Def : Iir;
@@ -416,7 +416,7 @@ package body Parse is
       Location_Copy (Def, Type_Mark);
       Set_Subtype_Type_Mark (Def, Type_Mark);
       Set_Range_Constraint (Def, Parse_Range_Constraint);
-      Set_Resolution_Function (Def, Resolution_Function);
+      Set_Resolution_Indication (Def, Resolution_Indication);
       Set_Tolerance (Def, Parse_Tolerance_Aspect_Opt);
 
       return Def;
@@ -791,7 +791,7 @@ package body Parse is
                --  There is a signature. They are normally followed by an
                --  attribute.
                Res := Parse_Signature;
-               Set_Prefix (Res, Prefix);
+               Set_Signature_Prefix (Res, Prefix);
 
             when Tok_Tick =>
                -- There is an attribute.
@@ -818,7 +818,7 @@ package body Parse is
                Set_Location (Res);
                if Get_Kind (Prefix) = Iir_Kind_Signature then
                   Set_Attribute_Signature (Res, Prefix);
-                  Set_Prefix (Res, Get_Prefix (Prefix));
+                  Set_Prefix (Res, Get_Signature_Prefix (Prefix));
                else
                   Set_Prefix (Res, Prefix);
                end if;
@@ -1163,21 +1163,23 @@ package body Parse is
             Default_Value := Null_Iir;
          end if;
 
+         --  Subtype_Indication and Default_Value are set only on the first
+         --  interface.
+         Set_Subtype_Indication (First, Interface_Type);
+         if Get_Kind (First) /= Iir_Kind_File_Interface_Declaration then
+            Set_Default_Value (First, Default_Value);
+         end if;
+
          Inter := First;
          while Inter /= Null_Iir loop
             Set_Mode (Inter, Interface_Mode);
             Set_Parent (Inter, Parent);
+            Set_Is_Ref (Inter, Inter /= First);
             if Inter = Last then
                Set_Lexical_Layout (Inter,
                                    Lexical_Layout or Iir_Lexical_Has_Type);
             else
                Set_Lexical_Layout (Inter, Lexical_Layout);
-            end if;
-            if Inter = First then
-               Set_Subtype_Indication (Inter, Interface_Type);
-               if Get_Kind (Inter) /= Iir_Kind_File_Interface_Declaration then
-                  Set_Default_Value (Inter, Default_Value);
-               end if;
             end if;
             if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration then
                Set_Signal_Kind (Inter, Signal_Kind);
@@ -1403,6 +1405,7 @@ package body Parse is
       Loc : Location_Type;
       Def : Iir;
       Type_Mark : Iir;
+      Element_Subtype : Iir;
    begin
       Loc := Get_Token_Location;
 
@@ -1471,20 +1474,25 @@ package body Parse is
          Scan;
       end loop;
 
-      if Array_Constrained then
-         Res_Type := Create_Iir (Iir_Kind_Array_Subtype_Definition);
-      else
-         Res_Type := Create_Iir (Iir_Kind_Array_Type_Definition);
-      end if;
-      Set_Location (Res_Type, Loc);
-      Set_Index_Subtype_List (Res_Type, Index_List);
-
       --  Skip ')' and 'of'
       Expect (Tok_Right_Paren);
       Scan_Expect (Tok_Of);
       Scan;
 
-      Set_Element_Subtype_Indication (Res_Type, Parse_Subtype_Indication);
+      Element_Subtype := Parse_Subtype_Indication;
+
+      if Array_Constrained then
+         --  Sem_Type will create the array type.
+         Res_Type := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+         Set_Element_Subtype (Res_Type, Element_Subtype);
+         Set_Index_Constraint_List (Res_Type, Index_List);
+      else
+         Res_Type := Create_Iir (Iir_Kind_Array_Type_Definition);
+         Set_Element_Subtype_Indication (Res_Type, Element_Subtype);
+         Set_Index_Subtype_Definition_List (Res_Type, Index_List);
+      end if;
+      Set_Location (Res_Type, Loc);
+
       return Res_Type;
    end Parse_Array_Definition;
 
@@ -1973,12 +1981,9 @@ package body Parse is
    --      record_element_simple_name resolution_indication
    function Parse_Resolution_Indication return Iir
    is
-      Res : Iir;
+      Ind : Iir;
       Def : Iir;
       Loc : Location_Type;
-      El_List : Iir_List;
-      El : Iir;
-      Id : Name_Id;
    begin
       if Current_Token = Tok_Identifier then
          --  Resolution function name.
@@ -1987,46 +1992,64 @@ package body Parse is
          --  Element resolution.
          Loc := Get_Token_Location;
 
-         Scan; -- Eat '('
-         Res := Parse_Resolution_Indication;
+         --  Eat '('
+         Scan;
+
+         Ind := Parse_Resolution_Indication;
          if Current_Token = Tok_Identifier
            or else Current_Token = Tok_Left_Paren
          then
-            --  This was in fact a record_resolution.
-            if Get_Kind (Res) /= Iir_Kind_Simple_Name then
-               Error_Msg_Parse ("element name expected", Res);
-               return Null_Iir;
-            end if;
-            Id := Get_Identifier (Res);
-            Free_Iir (Res);
-            Def := Create_Iir (Iir_Kind_Record_Subtype_Definition);
-            Set_Location (Def, Loc);
-            El_List := Create_Iir_List;
-            Set_Elements_Declaration_List (Def, El_List);
-            loop
-               El := Create_Iir (Iir_Kind_Record_Element_Constraint);
-               Set_Location (El, Loc);
-               Set_Identifier (El, Id);
-               Set_Element_Declaration (El, Parse_Resolution_Indication);
-               Append_Element (El_List, El);
-               exit when Current_Token = Tok_Right_Paren;
-               Expect (Tok_Comma);
-               Scan;
-               if Current_Token /= Tok_Identifier then
-                  Error_Msg_Parse ("record element identifier expected");
-                  exit;
+            declare
+               Id : Name_Id;
+               El : Iir;
+               First, Last : Iir;
+            begin
+               --  This was in fact a record_resolution.
+               if Get_Kind (Ind) = Iir_Kind_Simple_Name then
+                  Id := Get_Identifier (Ind);
+               else
+                  Error_Msg_Parse ("element name expected", Ind);
+                  Id := Null_Identifier;
                end if;
-               Id := Current_Identifier;
-               Loc := Get_Token_Location;
-               Scan;
-            end loop;
+               Free_Iir (Ind);
+
+               Def := Create_Iir (Iir_Kind_Record_Resolution);
+               Set_Location (Def, Loc);
+               Sub_Chain_Init (First, Last);
+               loop
+                  El := Create_Iir (Iir_Kind_Record_Element_Resolution);
+                  Set_Location (El, Loc);
+                  Set_Identifier (El, Id);
+                  Set_Resolution_Indication (El, Parse_Resolution_Indication);
+                  Sub_Chain_Append (First, Last, El);
+                  exit when Current_Token = Tok_Right_Paren;
+
+                  --  Eat ','
+                  Expect (Tok_Comma);
+                  Scan;
+
+                  if Current_Token /= Tok_Identifier then
+                     Error_Msg_Parse ("record element identifier expected");
+                     exit;
+                  end if;
+                  Id := Current_Identifier;
+                  Loc := Get_Token_Location;
+
+                  --  Eat identifier
+                  Scan;
+               end loop;
+               Set_Record_Element_Resolution_Chain (Def, First);
+            end;
          else
-            Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+            Def := Create_Iir (Iir_Kind_Array_Element_Resolution);
             Set_Location (Def, Loc);
-            Set_Element_Subtype_Indication (Def, Res);
+            Set_Resolution_Indication (Def, Ind);
          end if;
+
+         --  Eat ')'
          Expect (Tok_Right_Paren);
          Scan;
+
          return Def;
       else
          Error_Msg_Parse ("resolution indication expected");
@@ -2053,6 +2076,7 @@ package body Parse is
    is
       Def : Iir;
       El : Iir;
+      Index_List : Iir_List;
    begin
       --  Index_constraint.
       Def := Create_Iir (Iir_Kind_Array_Subtype_Definition);
@@ -2065,22 +2089,27 @@ package body Parse is
          --  Eat 'open'.
          Scan;
       else
-         Set_Index_Subtype_List (Def, Create_Iir_List);
-         -- index_constraint ::= (discrete_range {, discrete_range} )
+         Index_List := Create_Iir_List;
+         Set_Index_Constraint_List (Def, Index_List);
+         --  index_constraint ::= (discrete_range {, discrete_range} )
          loop
-            -- accept parenthesis or comma.
             El := Parse_Discrete_Range;
-            Append_Element (Get_Index_Subtype_List (Def), El);
+            Append_Element (Index_List, El);
+
             exit when Current_Token = Tok_Right_Paren;
+
+            --  Eat ','
             Expect (Tok_Comma);
             Scan;
          end loop;
       end if;
+
+      --  Eat ')'
       Expect (Tok_Right_Paren);
       Scan;
 
       if Current_Token = Tok_Left_Paren then
-         Set_Element_Subtype_Indication (Def, Parse_Element_Constraint);
+         Set_Element_Subtype (Def, Parse_Element_Constraint);
       end if;
       return Def;
    end Parse_Element_Constraint;
@@ -2117,19 +2146,23 @@ package body Parse is
    --
    --  constraint ::=
    --      range_constraint | array_constraint | record_constraint
+   --
+   --  NAME is the type_mark when already parsed (in range expression or
+   --   allocator by type).
    function Parse_Subtype_Indication (Name : Iir := Null_Iir)
      return Iir
    is
       Type_Mark : Iir;
       Def: Iir;
-      Resolution_Function: Iir;
+      Resolution_Indication: Iir;
       Tolerance : Iir;
    begin
       -- FIXME: location.
-      Resolution_Function := Null_Iir;
+      Resolution_Indication := Null_Iir;
       Def := Null_Iir;
 
       if Name /= Null_Iir then
+         --  The type_mark was already parsed.
          Type_Mark := Name;
          Check_Type_Mark (Name);
       else
@@ -2138,7 +2171,7 @@ package body Parse is
                Error_Msg_Parse
                  ("resolution_indication not allowed before vhdl08");
             end if;
-            Resolution_Function := Parse_Resolution_Indication;
+            Resolution_Indication := Parse_Resolution_Indication;
          end if;
          if Current_Token /= Tok_Identifier then
             Error_Msg_Parse ("type mark expected in a subtype indication");
@@ -2148,10 +2181,10 @@ package body Parse is
       end if;
 
       if Current_Token = Tok_Identifier then
-         if Resolution_Function /= Null_Iir then
+         if Resolution_Indication /= Null_Iir then
             Error_Msg_Parse ("resolution function already indicated");
          end if;
-         Resolution_Function := Type_Mark;
+         Resolution_Indication := Type_Mark;
          Type_Mark := Parse_Type_Mark (Check_Paren => False);
       end if;
 
@@ -2160,7 +2193,7 @@ package body Parse is
             --  element_constraint.
             Def := Parse_Element_Constraint;
             Set_Subtype_Type_Mark (Def, Type_Mark);
-            Set_Resolution_Function (Def, Resolution_Function);
+            Set_Resolution_Indication (Def, Resolution_Indication);
             Set_Tolerance (Def, Parse_Tolerance_Aspect_Opt);
 
          when Tok_Range =>
@@ -2169,19 +2202,21 @@ package body Parse is
             Scan;
 
             Def := Parse_Range_Constraint_Of_Subtype_Indication
-              (Type_Mark, Resolution_Function);
+              (Type_Mark, Resolution_Indication);
 
          when others =>
             Tolerance := Parse_Tolerance_Aspect_Opt;
-            if Resolution_Function /= Null_Iir
+            if Resolution_Indication /= Null_Iir
               or else Tolerance /= Null_Iir
             then
+               --  A subtype needs to be created.
                Def := Create_Iir (Iir_Kind_Subtype_Definition);
                Location_Copy (Def, Type_Mark);
                Set_Subtype_Type_Mark (Def, Type_Mark);
-               Set_Resolution_Function (Def, Resolution_Function);
+               Set_Resolution_Indication (Def, Resolution_Indication);
                Set_Tolerance (Def, Tolerance);
             else
+               --  This is just an alias.
                Def := Type_Mark;
             end if;
       end case;
@@ -2720,8 +2755,9 @@ package body Parse is
          Set_Has_Identifier_List (Object, True);
       end loop;
 
-      -- The colon was parsed.
+      -- Eat ':'
       Scan;
+
       Object_Type := Parse_Subtype_Indication;
 
       if Kind = Iir_Kind_Signal_Declaration then
@@ -2783,27 +2819,31 @@ package body Parse is
          end if;
       end if;
 
+      Set_Subtype_Indication (First, Object_Type);
+      if Kind /= Iir_Kind_File_Declaration then
+         Set_Default_Value (First, Default_Value);
+      end if;
+
       Object := First;
       while Object /= Null_Iir loop
-         if Object = First then
-            Set_Subtype_Indication (Object, Object_Type);
-         else
-            Set_Subtype_Indication (Object, Null_Iir);
-         end if;
-         if Kind = Iir_Kind_File_Declaration then
-            Set_Mode (Object, Mode);
-            Set_File_Open_Kind (Object, Open_Kind);
-            Set_File_Logical_Name (Object, Logical_Name);
-            Set_Has_Mode (Object, Has_Mode);
-         else
-            Set_Default_Value (Object, Default_Value);
-            if Kind = Iir_Kind_Signal_Declaration then
+         case Kind is
+            when Iir_Kind_File_Declaration =>
+               Set_Mode (Object, Mode);
+               Set_File_Open_Kind (Object, Open_Kind);
+               Set_File_Logical_Name (Object, Logical_Name);
+               Set_Has_Mode (Object, Has_Mode);
+            when Iir_Kind_Signal_Declaration =>
                Set_Signal_Kind (Object, Signal_Kind);
-            end if;
-         end if;
+            when others =>
+               null;
+         end case;
+         Set_Is_Ref (Object, Object /= First);
          Object := Get_Chain (Object);
       end loop;
+
+      --  ';' is not eaten.
       Expect (Tok_Semi_Colon);
+
       return First;
    end Parse_Object_Declaration;
 
@@ -3039,7 +3079,7 @@ package body Parse is
       if Current_Token = Tok_Left_Bracket then
          Name := Res;
          Res := Parse_Signature;
-         Set_Prefix (Res, Name);
+         Set_Signature_Prefix (Res, Name);
       end if;
       return Res;
    end Parse_Entity_Designator;

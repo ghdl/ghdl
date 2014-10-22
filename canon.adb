@@ -2624,9 +2624,7 @@ package body Canon is
             Set_Generic_Map_Aspect_Chain
               (El,
                Canon_Association_Chain_And_Actuals
-                 (Get_Generic_Chain
-                    (Get_Package_Header
-                       (Get_Named_Entity (Get_Uninstantiated_Name (El)))),
+                 (Get_Generic_Chain (El),
                   Get_Generic_Map_Aspect_Chain (El), El));
          when others =>
             Error_Kind ("canonicalize2", El);

@@ -122,7 +122,7 @@ package body Sem_Decls is
                      if False
                        and
                        (Get_Kind (A_Type) not in Iir_Kinds_Subtype_Definition
-                        or else Get_Resolution_Function (A_Type) = Null_Iir)
+                        or else Get_Resolution_Indication (A_Type) = Null_Iir)
                      then
                         Error_Msg_Sem
                           (Disp_Node (A_Type)
@@ -319,12 +319,6 @@ package body Sem_Decls is
       end loop;
    end Sem_Interface_Chain;
 
-   function Is_One_Dimensional (Array_Def : Iir) return Boolean
-   is
-   begin
-      return Get_Nbr_Elements (Get_Index_Subtype_List (Array_Def)) = 1;
-   end Is_One_Dimensional;
-
    --  LRM93 7.2.2
    --  A discrete array is a one-dimensional array whose elements are of a
    --  discrete type.
@@ -339,7 +333,7 @@ package body Sem_Decls is
             raise Internal_Error;
             -- return False;
       end case;
-      if not Is_One_Dimensional (Def) then
+      if not Is_One_Dimensional_Array_Type (Def) then
          return False;
       end if;
       if Get_Kind (Get_Element_Subtype (Def))
@@ -779,7 +773,7 @@ package body Sem_Decls is
 
                Element_Type := Get_Element_Subtype (Type_Definition);
 
-               if Is_One_Dimensional (Type_Definition) then
+               if Is_One_Dimensional_Array_Type (Type_Definition) then
                   --  LRM93 7.2.4 Adding operators
                   --  The concatenation operator & is predefined for any
                   --  one-dimensional array type.
@@ -1989,7 +1983,7 @@ package body Sem_Decls is
       --  LRM93 4.3.3.1
       --  This type must not be a multi-dimensional array type.
       if Get_Kind (N_Type) in Iir_Kinds_Array_Type_Definition then
-         if not Is_Unidim_Array_Type (N_Type) then
+         if not Is_One_Dimensional_Array_Type (N_Type) then
             Error_Msg_Sem
               ("aliased name must not be a multi-dimensional array type",
                Alias);
@@ -2392,9 +2386,9 @@ package body Sem_Decls is
       Name := Get_Name (Alias);
       if Get_Kind (Name) = Iir_Kind_Signature then
          Sig := Name;
-         Name := Get_Prefix (Sig);
+         Name := Get_Signature_Prefix (Sig);
          Sem_Name (Name);
-         Set_Prefix (Sig, Name);
+         Set_Signature_Prefix (Sig, Name);
       else
          Sem_Name (Name);
          Sig := Null_Iir;

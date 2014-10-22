@@ -43,6 +43,8 @@ nodes.ads
 nodes.adb
 nodes_gc.ads
 nodes_gc.adb
+nodes_meta.ads
+nodes_meta.adb
 options.ads
 options.adb
 psl-errors.ads

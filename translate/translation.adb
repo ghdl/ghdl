@@ -34,9 +34,11 @@ with Std_Names;
 with Configuration;
 with Interfaces.C_Streams;
 with Sem_Names;
+with Sem_Inst;
 with Sem;
 with Iir_Chains; use Iir_Chains;
 with Nodes;
+with Nodes_Meta;
 with GNAT.Table;
 with Ieee.Std_Logic_1164;
 with Canon;
@@ -296,7 +298,7 @@ package body Translation is
 
       --  Reset the identifier.
       type Id_Mark_Type is limited private;
-      type Local_Identifier_Type is limited private;
+      type Local_Identifier_Type is private;
 
       procedure Reset_Identifier_Prefix;
       procedure Push_Identifier_Prefix (Mark : out Id_Mark_Type;
@@ -393,6 +395,27 @@ package body Translation is
       function Is_Var_Field (Var : Var_Type) return Boolean;
       function Get_Var_Offset (Var : Var_Type; Otype : O_Tnode) return O_Cnode;
       function Get_Var_Label (Var : Var_Type) return O_Dnode;
+
+      --  For package instantiation.
+
+      --  Associate INST_SCOPE as the instantiated scope for ORIG_SCOPE.
+      procedure Push_Instantiate_Var_Scope
+        (Inst_Scope : Var_Scope_Acc; Orig_Scope : Var_Scope_Acc);
+
+      --  Remove the association for INST_SCOPE.
+      procedure Pop_Instantiate_Var_Scope
+        (Inst_Scope : Var_Scope_Acc);
+
+      --  Get the associated instantiated scope for SCOPE.
+      function Instantiated_Var_Scope (Scope : Var_Scope_Acc)
+                                      return Var_Scope_Acc;
+
+      --  Create a copy of VAR using instantiated scope (if needed).
+      function Instantiate_Var (Var : Var_Type) return Var_Type;
+
+      --  Create a copy of SCOPE using instantiated scope (if needed).
+      function Instantiate_Var_Scope (Scope : Var_Scope_Type)
+                                     return Var_Scope_Type;
    private
       type Local_Identifier_Type is new Natural;
       type Id_Mark_Type is record
@@ -483,6 +506,7 @@ package body Translation is
 
       Null_Var_Scope : constant Var_Scope_Type := (Scope_Type => O_Tnode_Null,
                                                    Kind => Var_Scope_None);
+
    end Chap10;
    use Chap10;
 
@@ -627,6 +651,9 @@ package body Translation is
 
       procedure Start_Subprg_Instance_Use (Subprg : Iir);
       procedure Finish_Subprg_Instance_Use (Subprg : Iir);
+
+      function Instantiate_Subprg_Instance (Inst : Subprg_Instance_Type)
+                                           return Subprg_Instance_Type;
    private
       type Subprg_Instance_Type is record
          Inter : O_Dnode;
@@ -840,6 +867,7 @@ package body Translation is
      (
       Kind_Type,
       Kind_Incomplete_Type,
+      Kind_Index,
       Kind_Expr,
       Kind_Subprg,
       Kind_Object,
@@ -862,8 +890,6 @@ package body Translation is
       Kind_Library
       );
 
-   type O_Fnode_Arr is array (Natural range <>) of O_Fnode;
-   type O_Fnode_Arr_Acc is access O_Fnode_Arr;
    type Ortho_Info_Type_Kind is
      (
       Kind_Type_Scalar,
@@ -914,9 +940,6 @@ package body Translation is
 
             Base_Field : O_Fnode_Array;
             Bounds_Field : O_Fnode_Array;
-
-            --  Field declaration for each dimension (1 based).
-            Bounds_Vector : O_Fnode_Arr_Acc;
 
             --  True if the array bounds are static.
             Static_Bounds : Boolean;
@@ -974,7 +997,6 @@ package body Translation is
       Bounds_Ptr_Type => O_Tnode_Null,
       Base_Field => (O_Fnode_Null, O_Fnode_Null),
       Bounds_Field => (O_Fnode_Null, O_Fnode_Null),
-      Bounds_Vector => null,
       Static_Bounds => False,
       Array_Bounds => Null_Var,
       Array_1bound => Null_Var,
@@ -1296,6 +1318,10 @@ package body Translation is
             Incomplete_Type : Iir;
             Incomplete_Array : Ortho_Info_Acc;
 
+         when Kind_Index =>
+            --  Field declaration for array dimension.
+            Index_Field : O_Fnode;
+
          when Kind_Expr =>
             --  Ortho tree which represents the expression, used for
             --  enumeration literals.
@@ -1541,6 +1567,9 @@ package body Translation is
             --  Elaboration procedure for the instance.
             Package_Instance_Elab_Subprg : O_Dnode;
 
+            Package_Instance_Spec_Scope : aliased Var_Scope_Type;
+            Package_Instance_Body_Scope : aliased Var_Scope_Type;
+
          when Kind_Assoc =>
             --  Association informations.
             Assoc_In : Assoc_Conv_Info;
@@ -1569,6 +1598,7 @@ package body Translation is
 
    subtype Type_Info_Acc is Ortho_Info_Acc (Kind_Type);
    subtype Incomplete_Type_Info_Acc is Ortho_Info_Acc (Kind_Incomplete_Type);
+   subtype Index_Info_Acc is Ortho_Info_Acc (Kind_Index);
    subtype Subprg_Info_Acc is Ortho_Info_Acc (Kind_Subprg);
    subtype Object_Info_Acc is Ortho_Info_Acc (Kind_Object);
    subtype Alias_Info_Acc is Ortho_Info_Acc (Kind_Alias);
@@ -1643,25 +1673,8 @@ package body Translation is
       end if;
    end Free_Info;
 
-   procedure Free_Type_Info (Info : in out Type_Info_Acc; Full : Boolean)
-   is
-      procedure Free is new Ada.Unchecked_Deallocation
-        (O_Fnode_Arr, O_Fnode_Arr_Acc);
+   procedure Free_Type_Info (Info : in out Type_Info_Acc) is
    begin
-      case Info.T.Kind is
-         when Kind_Type_Scalar =>
-            null;
-         when Kind_Type_Array =>
-            if Full then
-               Free (Info.T.Bounds_Vector);
-            end if;
-         when Kind_Type_Record =>
-            null;
-         when Kind_Type_File =>
-            null;
-         when Kind_Type_Protected =>
-            null;
-      end case;
       if Info.C /= null then
          Free_Complex_Type_Info (Info.C);
       end if;
@@ -1847,14 +1860,13 @@ package body Translation is
       --  for this subtype.
       --procedure Translate_Literal_Subtype (Def : Iir);
 
-      --  Translation of a type definition:
+      --  Translation of a type definition or subtype indication.
       --  1. Create corresponding Ortho type.
       --  2. Create bounds type
       --  3. Create bounds declaration
       --  4. Create bounds constructor
       --  5. Create type descriptor declaration
       --  6. Create type descriptor constructor
-
       procedure Translate_Type_Definition
         (Def : Iir; With_Vars : Boolean := True);
 
@@ -5597,6 +5609,194 @@ package body Translation is
          Finish_Subprogram_Body;
       end Elab_Package_Body;
 
+      procedure Instantiate_Iir_Info (N : Iir);
+
+      procedure Instantiate_Iir_Chain_Info (Chain : Iir)
+      is
+         N : Iir;
+      begin
+         N := Chain;
+         while N /= Null_Iir loop
+            Instantiate_Iir_Info (N);
+            N := Get_Chain (N);
+         end loop;
+      end Instantiate_Iir_Chain_Info;
+
+      procedure Instantiate_Iir_List_Info (L : Iir_List)
+      is
+         El : Iir;
+      begin
+         case L is
+            when Null_Iir_List
+              | Iir_List_All
+              | Iir_List_Others =>
+               return;
+            when others =>
+               for I in Natural loop
+                  El := Get_Nth_Element (L, I);
+                  exit when El = Null_Iir;
+                  Instantiate_Iir_Info (El);
+               end loop;
+         end case;
+      end Instantiate_Iir_List_Info;
+
+      procedure Instantiate_Iir_Info (N : Iir) is
+      begin
+         --  Nothing to do for null node.
+         if N = Null_Iir then
+            return;
+         end if;
+
+         declare
+            use Nodes_Meta;
+            Kind : constant Iir_Kind := Get_Kind (N);
+            Fields : constant Fields_Array := Get_Fields (Kind);
+            F : Fields_Enum;
+            Orig : constant Iir := Sem_Inst.Get_Origin (N);
+            pragma Assert (Orig /= Null_Iir);
+            Orig_Info : constant Ortho_Info_Acc := Get_Info (Orig);
+            Info : Ortho_Info_Acc;
+         begin
+            if Orig_Info /= null then
+               Info := Add_Info (N, Orig_Info.Kind);
+
+               case Info.Kind is
+                  when Kind_Type =>
+                     Info.all := (Kind => Kind_Type,
+                                  Type_Mode => Orig_Info.Type_Mode,
+                                  Type_Incomplete => Orig_Info.Type_Incomplete,
+                                  Type_Locally_Constrained =>
+                                    Orig_Info.Type_Locally_Constrained,
+                                  C => null,
+                                  Ortho_Type => Orig_Info.Ortho_Type,
+                                  Ortho_Ptr_Type => Orig_Info.Ortho_Ptr_Type,
+                                  Type_Transient_Chain => Null_Iir,
+                                  T => Orig_Info.T,
+                                  Type_Rti => Orig_Info.Type_Rti);
+                     pragma Assert (Orig_Info.C = null);
+                     pragma Assert (Orig_Info.Type_Transient_Chain = Null_Iir);
+                  when Kind_Object =>
+                     pragma Assert (Orig_Info.Object_Driver = Null_Var);
+                     pragma Assert (Orig_Info.Object_Function = O_Dnode_Null);
+                     Info.all :=
+                       (Kind => Kind_Object,
+                        Object_Static => Orig_Info.Object_Static,
+                        Object_Var => Instantiate_Var (Orig_Info.Object_Var),
+                        Object_Driver => Null_Var,
+                        Object_Rti => Orig_Info.Object_Rti,
+                        Object_Function => O_Dnode_Null);
+                  when Kind_Subprg =>
+                     Info.Subprg_Frame_Scope :=
+                       Instantiate_Var_Scope (Orig_Info.Subprg_Frame_Scope);
+                     Push_Instantiate_Var_Scope
+                       (Info.Subprg_Frame_Scope'Access,
+                        Orig_Info.Subprg_Frame_Scope'Access);
+                     Info.all :=
+                       (Kind => Kind_Subprg,
+                        Use_Stack2 => Orig_Info.Use_Stack2,
+                        Ortho_Func => Orig_Info.Ortho_Func,
+                        Res_Interface => Orig_Info.Res_Interface,
+                        Res_Record_Var =>
+                          Instantiate_Var (Orig_Info.Res_Record_Var),
+                        Res_Record_Type => Orig_Info.Res_Record_Type,
+                        Res_Record_Ptr => Orig_Info.Res_Record_Ptr,
+                        Subprg_Frame_Scope => Info.Subprg_Frame_Scope,
+                        Subprg_Instance => Instantiate_Subprg_Instance
+                          (Orig_Info.Subprg_Instance),
+                        Subprg_Resolv => null,
+                        Subprg_Local_Id => Orig_Info.Subprg_Local_Id,
+                        Subprg_Exit => Orig_Info.Subprg_Exit,
+                        Subprg_Result => Orig_Info.Subprg_Result);
+                  when Kind_Interface =>
+                     Info.all := (Kind => Kind_Interface,
+                                  Interface_Node => Orig_Info.Interface_Node,
+                                  Interface_Field => Orig_Info.Interface_Field,
+                                  Interface_Type => Orig_Info.Interface_Type);
+                  when Kind_Index =>
+                     Info.all := (Kind => Kind_Index,
+                                  Index_Field => Orig_Info.Index_Field);
+                  when others =>
+                     raise Internal_Error;
+               end case;
+            end if;
+
+            for I in Fields'Range loop
+               F := Fields (I);
+               case Get_Field_Type (F) is
+                  when Type_Iir =>
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Instantiate_Iir_Info (Get_Iir (N, F));
+                        when Attr_Ref =>
+                           null;
+                        when Attr_Maybe_Ref =>
+                           if not Get_Is_Ref (N) then
+                              Instantiate_Iir_Info (Get_Iir (N, F));
+                           end if;
+                        when Attr_Chain =>
+                           Instantiate_Iir_Chain_Info (Get_Iir (N, F));
+                        when Attr_Chain_Next =>
+                           null;
+                        when Attr_Of_Ref =>
+                           raise Internal_Error;
+                     end case;
+                  when Type_Iir_List =>
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Instantiate_Iir_List_Info (Get_Iir_List (N, F));
+                        when Attr_Ref =>
+                           null;
+                        when others =>
+                           raise Internal_Error;
+                     end case;
+                  when Type_PSL_NFA
+                    | Type_PSL_Node =>
+                     --  TODO
+                     raise Internal_Error;
+                  when Type_Date_Type
+                    | Type_Date_State_Type
+                    | Type_Time_Stamp_Id =>
+                     --  Can this happen ?
+                     raise Internal_Error;
+                  when Type_String_Id
+                    | Type_Source_Ptr
+                    | Type_Base_Type
+                    | Type_Iir_Constraint
+                    | Type_Iir_Mode
+                    | Type_Iir_Index32
+                    | Type_Iir_Int64
+                    | Type_Boolean
+                    | Type_Iir_Staticness
+                    | Type_Iir_All_Sensitized
+                    | Type_Iir_Signal_Kind
+                    | Type_Tri_State_Type
+                    | Type_Iir_Pure_State
+                    | Type_Iir_Delay_Mechanism
+                    | Type_Iir_Lexical_Layout_Type
+                    | Type_Iir_Predefined_Functions
+                    | Type_Iir_Direction
+                    | Type_Location_Type
+                    | Type_Iir_Int32
+                    | Type_Int32
+                    | Type_Iir_Fp64
+                    | Type_Token_Type
+                    | Type_Name_Id =>
+                     null;
+               end case;
+            end loop;
+
+            if Info /= null then
+               case Info.Kind is
+                  when Kind_Subprg =>
+                     Pop_Instantiate_Var_Scope
+                       (Info.Subprg_Frame_Scope'Access);
+                  when others =>
+                     null;
+               end case;
+            end if;
+         end;
+      end Instantiate_Iir_Info;
+
       procedure Translate_Package_Instantiation_Declaration (Inst : Iir)
       is
          Spec : constant Iir :=
@@ -5608,6 +5808,19 @@ package body Translation is
       begin
          Info := Add_Info (Inst, Kind_Package_Instance);
 
+         Push_Instantiate_Var_Scope
+           (Info.Package_Instance_Spec_Scope'Access,
+            Pkg_Info.Package_Spec_Scope'Access);
+         Push_Instantiate_Var_Scope
+           (Info.Package_Instance_Body_Scope'Access,
+            Pkg_Info.Package_Body_Scope'Access);
+         Instantiate_Iir_Chain_Info (Get_Generic_Chain (Inst));
+         Instantiate_Iir_Chain_Info (Get_Declaration_Chain (Inst));
+         Pop_Instantiate_Var_Scope
+           (Info.Package_Instance_Body_Scope'Access);
+         Pop_Instantiate_Var_Scope
+           (Info.Package_Instance_Spec_Scope'Access);
+
          --  FIXME: if the instantiation occurs within a package declaration,
          --  the variable must be declared extern (and public in the body).
          Info.Package_Instance_Var := Create_Var
@@ -5616,11 +5829,11 @@ package body Translation is
 
          --  FIXME: this is correct only for global instantiation, and only if
          --  there is only one.
-         Set_Scope_Via_Decl (Pkg_Info.Package_Body_Scope,
+         Set_Scope_Via_Decl (Info.Package_Instance_Body_Scope,
                              Get_Var_Label (Info.Package_Instance_Var));
-         Set_Scope_Via_Field (Pkg_Info.Package_Spec_Scope,
+         Set_Scope_Via_Field (Info.Package_Instance_Spec_Scope,
                               Pkg_Info.Package_Spec_Field,
-                              Pkg_Info.Package_Body_Scope'Access);
+                              Info.Package_Instance_Body_Scope'Access);
 
          --  Declare elaboration procedure
          Start_Procedure_Decl
@@ -5643,9 +5856,14 @@ package body Translation is
 
          Chap5.Elab_Generic_Map_Aspect (Inst);
 
+         --  Call the elaborator of the generic.  The generic must be
+         --  temporary associated with the instance variable.
          Start_Association (Constr, Pkg_Info.Package_Elab_Body_Subprg);
+         Set_Scope_Via_Decl (Pkg_Info.Package_Body_Scope,
+                             Get_Var_Label (Info.Package_Instance_Var));
          Add_Subprg_Instance_Assoc
            (Constr, Pkg_Info.Package_Elab_Body_Instance);
+         Clear_Scope (Pkg_Info.Package_Body_Scope);
          New_Procedure_Call (Constr);
 
          --  Chap2.Finish_Subprg_Instance_Use
@@ -5875,12 +6093,26 @@ package body Translation is
       begin
          Finish_Subprg_Instance_Use (Get_Info (Subprg).Subprg_Instance);
       end Finish_Subprg_Instance_Use;
+
+      function Instantiate_Subprg_Instance (Inst : Subprg_Instance_Type)
+                                           return Subprg_Instance_Type is
+      begin
+         return Subprg_Instance_Type'
+           (Inter => Inst.Inter,
+            Inter_Type => Inst.Inter_Type,
+            Scope => Instantiated_Var_Scope (Inst.Scope));
+      end Instantiate_Subprg_Instance;
    end Chap2;
 
    package body Chap3 is
       function Create_Static_Type_Definition_Type_Range (Def : Iir)
         return O_Cnode;
       procedure Create_Scalar_Type_Range (Def : Iir; Target : O_Lnode);
+
+      --  For scalar subtypes: creates info from the base type.
+      procedure Create_Subtype_Info_From_Type (Def : Iir;
+                                               Subtype_Info : Type_Info_Acc;
+                                               Base_Info : Type_Info_Acc);
 
       --  Finish a type definition: declare the type, define and declare a
       --   pointer to the type.
@@ -6040,6 +6272,7 @@ package body Translation is
       ------------------
       --  Enumeration --
       ------------------
+
       function Translate_Enumeration_Literal (Lit : Iir_Enumeration_Literal)
         return O_Ident
       is
@@ -6139,6 +6372,7 @@ package body Translation is
       ---------------
       --  Integer  --
       ---------------
+
       --  Return the number of bits (32 or 64) required to represent the
       --  (integer or physical) type definition DEF.
       type Type_Precision is (Precision_32, Precision_64);
@@ -6189,6 +6423,7 @@ package body Translation is
       ----------------------
       --  Floating types  --
       ----------------------
+
       procedure Translate_Floating_Type (Def : Iir_Floating_Type_Definition)
       is
          Info : Type_Info_Acc;
@@ -6207,6 +6442,7 @@ package body Translation is
       ----------------
       --  Physical  --
       ----------------
+
       procedure Translate_Physical_Type (Def : Iir_Physical_Type_Definition)
       is
          Info : Type_Info_Acc;
@@ -6245,6 +6481,7 @@ package body Translation is
       ------------
       --  File  --
       ------------
+
       procedure Translate_File_Type (Def : Iir_File_Type_Definition)
       is
          Info : Type_Info_Acc;
@@ -6350,6 +6587,7 @@ package body Translation is
       -------------
       --  Array  --
       -------------
+
       function Type_To_Last_Object_Kind (Def : Iir) return Object_Kind_Type is
       begin
          if Get_Has_Signal_Flag (Def) then
@@ -6409,32 +6647,34 @@ package body Translation is
            (Create_Identifier, Info.Ortho_Type (Mode_Value));
       end Translate_Incomplete_Array_Type;
 
+      --  Declare the bounds types for DEF.
       procedure Translate_Array_Type_Bounds
         (Def : Iir_Array_Type_Definition;
          Info : Type_Info_Acc;
          Complete : Boolean)
       is
-         Indexes_List : constant Iir_List := Get_Index_Subtype_List (Def);
+         Indexes_List : constant Iir_List :=
+           Get_Index_Subtype_Definition_List (Def);
          Constr : O_Element_List;
          Dim : String (1 .. 8);
          N : Natural;
          P : Natural;
          Index : Iir;
-         Mark : Id_Mark_Type;
+         Index_Info : Index_Info_Acc;
+         Index_Type_Mark : Iir;
       begin
          Start_Record_Type (Constr);
-         Info.T.Bounds_Vector :=
-           new O_Fnode_Arr (1 .. Get_Nbr_Elements (Indexes_List));
          for I in Natural loop
-            Index := Get_Index_Type (Indexes_List, I);
-            exit when Index = Null_Iir;
-            if Is_Anonymous_Type_Definition (Index) then
-               --  Can this happen ?  This is a type mark.
-               Push_Identifier_Prefix (Mark, "DIM", Iir_Int32 (I + 1));
-               Translate_Type_Definition (Index, True);
-               Pop_Identifier_Prefix (Mark);
-               raise Program_Error;
-            end if;
+            Index_Type_Mark := Get_Nth_Element (Indexes_List, I);
+            exit when Index_Type_Mark = Null_Iir;
+            Index := Get_Index_Type (Index_Type_Mark);
+
+            --  Index comes from a type mark.
+            pragma Assert (not Is_Anonymous_Type_Definition (Index));
+
+            Index_Info := Add_Info (Index_Type_Mark, Kind_Index);
+
+            --  Build the name
             N := I + 1;
             P := Dim'Last;
             loop
@@ -6445,7 +6685,8 @@ package body Translation is
             end loop;
             P := P - 3;
             Dim (P .. P + 3) := "dim_";
-            New_Record_Field (Constr, Info.T.Bounds_Vector (I + 1),
+
+            New_Record_Field (Constr, Index_Info.Index_Field,
                               Get_Identifier (Dim (P .. Dim'Last)),
                               Get_Info (Get_Base_Type (Index)).T.Range_Type);
          end loop;
@@ -6603,16 +6844,15 @@ package body Translation is
          Close_Temp;
       end Translate_Dynamic_Unidimensional_Array_Length_One;
 
-      procedure Translate_Array_Type (Def : Iir_Array_Type_Definition)
+      procedure Translate_Array_Type_Definition
+        (Def : Iir_Array_Type_Definition)
       is
-         Info : Type_Info_Acc;
-         El_Tinfo : Type_Info_Acc;
+         Info : constant Type_Info_Acc := Get_Info (Def);
          --  If true, INFO was already partially filled, by a previous access
          --  type definition to this incomplete array type.
-         Completion : Boolean;
+         Completion : constant Boolean := Info.Type_Mode = Type_Mode_Fat_Array;
+         El_Tinfo : Type_Info_Acc;
       begin
-         Info := Get_Info (Def);
-         Completion := Info.Type_Mode = Type_Mode_Fat_Array;
          if not Completion then
             Info.Type_Mode := Type_Mode_Fat_Array;
             Info.T := Ortho_Info_Type_Array_Init;
@@ -6642,7 +6882,7 @@ package body Translation is
             end loop;
          end if;
          Info.Type_Incomplete := False;
-      end Translate_Array_Type;
+      end Translate_Array_Type_Definition;
 
       --  Get the length of DEF, ie the number of elements.
       --  If the length is not statically defined, returns -1.
@@ -6667,18 +6907,17 @@ package body Translation is
          return Len;
       end Get_Array_Subtype_Length;
 
-      procedure Translate_Array_Subtype (Def : Iir_Array_Subtype_Definition)
+      procedure Translate_Array_Subtype_Definition
+        (Def : Iir_Array_Subtype_Definition)
       is
-         Info : Type_Info_Acc;
-         Binfo : Type_Info_Acc;
+         Info : constant Type_Info_Acc := Get_Info (Def);
+         Base_Type : constant Iir := Get_Base_Type (Def);
+         Binfo : constant Type_Info_Acc := Get_Info (Base_Type);
 
          Len : Iir_Int64;
 
          Id : O_Ident;
       begin
-         Info := Get_Info (Def);
-         Binfo := Get_Info (Get_Base_Type (Def));
-
          --  Note: info of indexes subtype are not created!
 
          Len := Get_Array_Subtype_Length (Def);
@@ -6716,7 +6955,40 @@ package body Translation is
                New_Type_Decl (Id, Info.Ortho_Type (I));
             end loop;
          end if;
-      end Translate_Array_Subtype;
+      end Translate_Array_Subtype_Definition;
+
+      procedure Translate_Array_Subtype_Element_Subtype
+        (Def : Iir_Array_Subtype_Definition)
+      is
+         El_Type : constant Iir := Get_Element_Subtype (Def);
+         Type_Mark : constant Iir := Get_Denoted_Type_Mark (Def);
+         Tm_El_Type : Iir;
+      begin
+         if Type_Mark = Null_Iir then
+            --  Array subtype for constained array definition.  Same element
+            --  subtype as the base type.
+            return;
+         end if;
+
+         Tm_El_Type := Get_Element_Subtype (Type_Mark);
+         if El_Type = Tm_El_Type then
+            --  Same element subtype as the type mark.
+            return;
+         end if;
+
+         case Get_Kind (El_Type) is
+            when Iir_Kinds_Scalar_Subtype_Definition =>
+               declare
+                  El_Info : Ortho_Info_Acc;
+               begin
+                  El_Info := Add_Info (El_Type, Kind_Type);
+                  Create_Subtype_Info_From_Type
+                    (El_Type, El_Info, Get_Info (Tm_El_Type));
+               end;
+            when others =>
+               Error_Kind ("translate_array_subtype_element_subtype", El_Type);
+         end case;
+      end Translate_Array_Subtype_Element_Subtype;
 
       function Create_Static_Array_Subtype_Bounds
         (Def : Iir_Array_Subtype_Definition)
@@ -6742,8 +7014,11 @@ package body Translation is
       procedure Create_Array_Subtype_Bounds
         (Def : Iir_Array_Subtype_Definition; Target : O_Lnode)
       is
-         Baseinfo : constant Type_Info_Acc := Get_Info (Get_Base_Type (Def));
+         Base_Type : constant Iir := Get_Base_Type (Def);
+         Baseinfo : constant Type_Info_Acc := Get_Info (Base_Type);
          Indexes_List : constant Iir_List := Get_Index_Subtype_List (Def);
+         Indexes_Def_List : constant Iir_List :=
+           Get_Index_Subtype_Definition_List (Base_Type);
          Index : Iir;
          Targ : Mnode;
       begin
@@ -6761,13 +7036,15 @@ package body Translation is
             declare
                Index_Type : constant Iir := Get_Base_Type (Index);
                Index_Info : constant Type_Info_Acc := Get_Info (Index_Type);
+               Base_Index_Info : constant Index_Info_Acc :=
+                 Get_Info (Get_Nth_Element (Indexes_Def_List, I));
                D : O_Dnode;
             begin
                Open_Temp;
                D := Create_Temp_Ptr
                  (Index_Info.T.Range_Ptr_Type,
                   New_Selected_Element (M2Lv (Targ),
-                                        Baseinfo.T.Bounds_Vector (I + 1)));
+                                        Base_Index_Info.Index_Field));
                Chap7.Translate_Discrete_Range_Ptr (D, Index);
                Close_Temp;
             end;
@@ -7512,10 +7789,7 @@ package body Translation is
       begin
          case Get_Kind (Def) is
             when Iir_Kind_Enumeration_Type_Definition
-              | Iir_Kind_Enumeration_Subtype_Definition
-              | Iir_Kind_Integer_Subtype_Definition
-              | Iir_Kind_Floating_Subtype_Definition
-              | Iir_Kind_Physical_Subtype_Definition =>
+              | Iir_Kinds_Scalar_Subtype_Definition =>
                return Create_Static_Scalar_Type_Range (Def);
 
             when Iir_Kind_Array_Subtype_Definition =>
@@ -7536,10 +7810,7 @@ package body Translation is
       begin
          case Get_Kind (Def) is
             when Iir_Kind_Enumeration_Type_Definition
-              | Iir_Kind_Enumeration_Subtype_Definition
-              | Iir_Kind_Integer_Subtype_Definition
-              | Iir_Kind_Floating_Subtype_Definition
-              | Iir_Kind_Physical_Subtype_Definition =>
+              | Iir_Kinds_Scalar_Subtype_Definition =>
                Target := Get_Var (Get_Info (Def).T.Range_Var);
                Create_Scalar_Type_Range (Def, Target);
 
@@ -7580,6 +7851,132 @@ package body Translation is
                Error_Kind ("create_type_definition_type_range", Def);
          end case;
       end Create_Type_Definition_Type_Range;
+
+      --  Return TRUE iff LIT is equal to the high (IS_HI=TRUE) or low
+      --  (IS_HI=false) limit of the base type of DEF.  MODE is the mode of
+      --  DEF.
+      function Is_Equal_Limit (Lit : Iir;
+                               Is_Hi : Boolean;
+                               Def : Iir;
+                               Mode : Type_Mode_Type) return Boolean
+      is
+      begin
+         case Mode is
+            when Type_Mode_B1 =>
+               declare
+                  V : Iir_Int32;
+               begin
+                  V := Iir_Int32 (Eval_Pos (Lit));
+                  if Is_Hi then
+                     return V = 1;
+                  else
+                     return V = 0;
+                  end if;
+               end;
+            when Type_Mode_E8 =>
+               declare
+                  V : Iir_Int32;
+                  Base_Type : Iir;
+               begin
+                  V := Iir_Int32 (Eval_Pos (Lit));
+                  if Is_Hi then
+                     Base_Type := Get_Base_Type (Def);
+                     return V = Iir_Int32
+                       (Get_Nbr_Elements
+                        (Get_Enumeration_Literal_List (Base_Type))) - 1;
+                  else
+                     return V = 0;
+                  end if;
+               end;
+            when Type_Mode_I32 =>
+               declare
+                  V : Iir_Int32;
+               begin
+                  V := Iir_Int32 (Get_Value (Lit));
+                  if Is_Hi then
+                     return V = Iir_Int32'Last;
+                  else
+                     return V = Iir_Int32'First;
+                  end if;
+               end;
+            when Type_Mode_P32 =>
+               declare
+                  V : Iir_Int32;
+               begin
+                  V := Iir_Int32 (Get_Physical_Value (Lit));
+                  if Is_Hi then
+                     return V = Iir_Int32'Last;
+                  else
+                     return V = Iir_Int32'First;
+                  end if;
+               end;
+            when Type_Mode_I64 =>
+               declare
+                  V : Iir_Int64;
+               begin
+                  V := Get_Value (Lit);
+                  if Is_Hi then
+                     return V = Iir_Int64'Last;
+                  else
+                     return V = Iir_Int64'First;
+                  end if;
+               end;
+            when Type_Mode_P64 =>
+               declare
+                  V : Iir_Int64;
+               begin
+                  V := Get_Physical_Value (Lit);
+                  if Is_Hi then
+                     return V = Iir_Int64'Last;
+                  else
+                     return V = Iir_Int64'First;
+                  end if;
+               end;
+            when Type_Mode_F64 =>
+               declare
+                  V : Iir_Fp64;
+               begin
+                  V := Get_Fp_Value (Lit);
+                  if Is_Hi then
+                     return V = Iir_Fp64'Last;
+                  else
+                     return V = Iir_Fp64'First;
+                  end if;
+               end;
+            when others =>
+               Error_Kind ("is_equal_limit " & Type_Mode_Type'Image (Mode),
+                           Lit);
+         end case;
+      end Is_Equal_Limit;
+
+      --  For scalar subtypes: creates info from the base type.
+      procedure Create_Subtype_Info_From_Type (Def : Iir;
+                                               Subtype_Info : Type_Info_Acc;
+                                               Base_Info : Type_Info_Acc)
+      is
+         Rng : Iir;
+         Lo, Hi : Iir;
+      begin
+         Subtype_Info.Ortho_Type := Base_Info.Ortho_Type;
+         Subtype_Info.Ortho_Ptr_Type := Base_Info.Ortho_Ptr_Type;
+         Subtype_Info.Type_Mode := Base_Info.Type_Mode;
+         Subtype_Info.T := Base_Info.T;
+
+         Rng := Get_Range_Constraint (Def);
+         if Get_Expr_Staticness (Rng) /= Locally then
+            --  Bounds are not known.
+            --  Do the checks.
+            Subtype_Info.T.Nocheck_Hi := False;
+            Subtype_Info.T.Nocheck_Low := False;
+         else
+            --  Bounds are locally static.
+            Get_Low_High_Limit (Rng, Lo, Hi);
+            Subtype_Info.T.Nocheck_Hi :=
+              Is_Equal_Limit (Hi, True, Def, Base_Info.Type_Mode);
+            Subtype_Info.T.Nocheck_Low :=
+              Is_Equal_Limit (Lo, False, Def, Base_Info.Type_Mode);
+         end if;
+      end Create_Subtype_Info_From_Type;
 
       procedure Create_Record_Size_Var (Def : Iir; Kind : Object_Kind_Type)
       is
@@ -7766,131 +8163,6 @@ package body Translation is
          end case;
       end Handle_Anonymous_Subtypes;
 
-      --  Return TRUE iff LIT is equal to the high (IS_HI=TRUE) or low
-      --  (IS_HI=false) limit of the base type of DEF.  MODE is the mode of
-      --  DEF.
-      function Is_Equal_Limit (Lit : Iir;
-                               Is_Hi : Boolean;
-                               Def : Iir;
-                               Mode : Type_Mode_Type) return Boolean
-      is
-      begin
-         case Mode is
-            when Type_Mode_B1 =>
-               declare
-                  V : Iir_Int32;
-               begin
-                  V := Iir_Int32 (Eval_Pos (Lit));
-                  if Is_Hi then
-                     return V = 1;
-                  else
-                     return V = 0;
-                  end if;
-               end;
-            when Type_Mode_E8 =>
-               declare
-                  V : Iir_Int32;
-                  Base_Type : Iir;
-               begin
-                  V := Iir_Int32 (Eval_Pos (Lit));
-                  if Is_Hi then
-                     Base_Type := Get_Base_Type (Def);
-                     return V = Iir_Int32
-                       (Get_Nbr_Elements
-                        (Get_Enumeration_Literal_List (Base_Type))) - 1;
-                  else
-                     return V = 0;
-                  end if;
-               end;
-            when Type_Mode_I32 =>
-               declare
-                  V : Iir_Int32;
-               begin
-                  V := Iir_Int32 (Get_Value (Lit));
-                  if Is_Hi then
-                     return V = Iir_Int32'Last;
-                  else
-                     return V = Iir_Int32'First;
-                  end if;
-               end;
-            when Type_Mode_P32 =>
-               declare
-                  V : Iir_Int32;
-               begin
-                  V := Iir_Int32 (Get_Physical_Value (Lit));
-                  if Is_Hi then
-                     return V = Iir_Int32'Last;
-                  else
-                     return V = Iir_Int32'First;
-                  end if;
-               end;
-            when Type_Mode_I64 =>
-               declare
-                  V : Iir_Int64;
-               begin
-                  V := Get_Value (Lit);
-                  if Is_Hi then
-                     return V = Iir_Int64'Last;
-                  else
-                     return V = Iir_Int64'First;
-                  end if;
-               end;
-            when Type_Mode_P64 =>
-               declare
-                  V : Iir_Int64;
-               begin
-                  V := Get_Physical_Value (Lit);
-                  if Is_Hi then
-                     return V = Iir_Int64'Last;
-                  else
-                     return V = Iir_Int64'First;
-                  end if;
-               end;
-            when Type_Mode_F64 =>
-               declare
-                  V : Iir_Fp64;
-               begin
-                  V := Get_Fp_Value (Lit);
-                  if Is_Hi then
-                     return V = Iir_Fp64'Last;
-                  else
-                     return V = Iir_Fp64'First;
-                  end if;
-               end;
-            when others =>
-               Error_Kind ("is_equal_limit " & Type_Mode_Type'Image (Mode),
-                           Lit);
-         end case;
-      end Is_Equal_Limit;
-
-      procedure Create_Subtype_Info_From_Type (Def : Iir;
-                                               Subtype_Info : Type_Info_Acc;
-                                               Base_Info : Type_Info_Acc)
-      is
-         Rng : Iir;
-         Lo, Hi : Iir;
-      begin
-         Subtype_Info.Ortho_Type := Base_Info.Ortho_Type;
-         Subtype_Info.Ortho_Ptr_Type := Base_Info.Ortho_Ptr_Type;
-         Subtype_Info.Type_Mode := Base_Info.Type_Mode;
-         Subtype_Info.T := Base_Info.T;
-
-         Rng := Get_Range_Constraint (Def);
-         if Get_Expr_Staticness (Rng) /= Locally then
-            --  Bounds are not known.
-            --  Do the checks.
-            Subtype_Info.T.Nocheck_Hi := False;
-            Subtype_Info.T.Nocheck_Low := False;
-         else
-            --  Bounds are locally static.
-            Get_Low_High_Limit (Rng, Lo, Hi);
-            Subtype_Info.T.Nocheck_Hi :=
-              Is_Equal_Limit (Hi, True, Def, Base_Info.Type_Mode);
-            Subtype_Info.T.Nocheck_Low :=
-              Is_Equal_Limit (Lo, False, Def, Base_Info.Type_Mode);
-         end if;
-      end Create_Subtype_Info_From_Type;
-
       --  Note: boolean types are translated by translate_bool_type_definition!
       procedure Translate_Type_Definition
         (Def : Iir; With_Vars : Boolean := True)
@@ -7910,9 +8182,11 @@ package body Translation is
          Info := Get_Info (Def);
          if Info /= null then
             if Info.Kind = Kind_Type then
+               --  The subtype was already translated.
                return;
             end if;
             if Info.Kind = Kind_Incomplete_Type then
+               --  Type is being completed.
                Complete_Info := Info;
                Clear_Info (Def);
                if Complete_Info.Incomplete_Array /= null then
@@ -7957,10 +8231,7 @@ package body Translation is
                Translate_Floating_Type (Def);
                Create_Scalar_Type_Range_Type (Def, False);
 
-            when Iir_Kind_Enumeration_Subtype_Definition
-              | Iir_Kind_Physical_Subtype_Definition
-              | Iir_Kind_Integer_Subtype_Definition
-              | Iir_Kind_Floating_Subtype_Definition =>
+            when Iir_Kinds_Scalar_Subtype_Definition =>
                Create_Subtype_Info_From_Type (Def, Info, Base_Info);
                if With_Vars then
                   Create_Type_Range_Var (Def);
@@ -7980,8 +8251,7 @@ package body Translation is
                      Pop_Identifier_Prefix (Mark);
                   end if;
                end;
-               Translate_Array_Type (Def);
-            -- Info.Type_Range_Type := Create_Array_Type_Bounds_Type (Def, Id);
+               Translate_Array_Type_Definition (Def);
 
             when Iir_Kind_Array_Subtype_Definition =>
                if Get_Index_Constraint_Flag (Def) then
@@ -7995,16 +8265,19 @@ package body Translation is
                         Base_Info := Get_Info (Base_Type);
                      end;
                   end if;
-                  Translate_Array_Subtype (Def);
+                  Translate_Array_Subtype_Definition (Def);
                   Info.T := Base_Info.T;
                   --Info.Type_Range_Type := Base_Info.Type_Range_Type;
                   if With_Vars then
                      Create_Array_Subtype_Bounds_Var (Def, False);
                   end if;
                else
+                  --  An unconstrained array subtype.  Use same infos as base
+                  --  type.
                   Free_Info (Def);
                   Set_Info (Def, Base_Info);
                end if;
+               Translate_Array_Subtype_Element_Subtype (Def);
 
             when Iir_Kind_Record_Type_Definition =>
                Translate_Record_Type (Def);
@@ -8196,7 +8469,7 @@ package body Translation is
          Type_Info : Type_Info_Acc;
       begin
          Type_Info := Get_Info (Atype);
-         Free_Type_Info (Type_Info, False);
+         Free_Type_Info (Type_Info);
          Clear_Info (Atype);
       end Destroy_Type_Info;
 
@@ -8256,14 +8529,18 @@ package body Translation is
       function Bounds_To_Range (B : Mnode; Atype : Iir; Dim : Positive)
         return Mnode
       is
-         Tinfo : constant Type_Info_Acc := Get_Type_Info (B);
-         Index_Type : constant Iir :=
-           Get_Index_Type (Get_Base_Type (Atype), Dim - 1);
+         Indexes_List : constant Iir_List :=
+           Get_Index_Subtype_Definition_List (Get_Base_Type (Atype));
+         Index_Type_Mark : constant Iir :=
+           Get_Nth_Element (Indexes_List, Dim - 1);
+         Index_Type : constant Iir := Get_Index_Type (Index_Type_Mark);
+         Base_Index_Info : constant Index_Info_Acc :=
+           Get_Info (Index_Type_Mark);
          Iinfo : constant Type_Info_Acc :=
            Get_Info (Get_Base_Type (Index_Type));
       begin
          return Lv2M (New_Selected_Element (M2Lv (B),
-                                            Tinfo.T.Bounds_Vector (Dim)),
+                                            Base_Index_Info.Index_Field),
                       Iinfo,
                       Get_Object_Kind (B),
                       Iinfo.T.Range_Type,
@@ -9832,10 +10109,9 @@ package body Translation is
 
       --  Add func and instance.
       procedure Add_Associations_For_Resolver
-        (Assoc : in out O_Assoc_List; Func_Name : Iir)
+        (Assoc : in out O_Assoc_List; Func_Decl : Iir)
       is
-         Func : constant Iir := Get_Named_Entity (Func_Name);
-         Func_Info : constant Subprg_Info_Acc := Get_Info (Func);
+         Func_Info : constant Subprg_Info_Acc := Get_Info (Func_Decl);
          Resolv_Info : constant Subprg_Resolv_Info_Acc :=
            Func_Info.Subprg_Resolv;
          Val : O_Enode;
@@ -9930,7 +10206,7 @@ package body Translation is
          New_Association (Assoc, New_Convert_Ov (Init_Val, Conv));
 
          if Get_Kind (Targ_Type) in Iir_Kinds_Subtype_Definition then
-            Func := Get_Resolution_Function (Targ_Type);
+            Func := Has_Resolution_Function (Targ_Type);
          else
             Func := Null_Iir;
          end if;
@@ -9963,7 +10239,7 @@ package body Translation is
       begin
          Res := Data;
          if Get_Kind (Targ_Type) in Iir_Kinds_Subtype_Definition then
-            Func := Get_Resolution_Function (Targ_Type);
+            Func := Has_Resolution_Function (Targ_Type);
             if Func /= Null_Iir and then not Data.Already_Resolved then
                if Data.Check_Null then
                   Res.If_Stmt := new O_If_Block;
@@ -10910,6 +11186,7 @@ package body Translation is
          Arr_Type : Iir;
          Base_Type : Iir;
          Base_Info : Type_Info_Acc;
+         Index_Info : Index_Info_Acc;
 
          --  Type of parameter element.
          El_Type : Iir;
@@ -10956,6 +11233,8 @@ package body Translation is
 
          Arr_Type := Get_Type (Get_Interface_Declaration_Chain (Func));
          Base_Type := Get_Base_Type (Arr_Type);
+         Index_Info := Get_Info
+           (Get_First_Element (Get_Index_Subtype_Definition_List (Base_Type)));
          Base_Info := Get_Info (Base_Type);
 
          El_Type := Get_Element_Subtype (Arr_Type);
@@ -11014,7 +11293,7 @@ package body Translation is
          New_Assign_Stmt
            (New_Obj (Var_Range_Ptr),
             New_Address (New_Selected_Element (New_Obj (Var_Bound),
-                                               Base_Info.T.Bounds_Vector (1)),
+                                               Index_Info.Index_Field),
                          Index_Tinfo.T.Range_Ptr_Type));
 
          --  Create range from length
@@ -23188,7 +23467,7 @@ package body Translation is
             then
                Info := Get_Info (Atype);
                if Info /= null then
-                  Free_Type_Info (Info, False);
+                  Free_Type_Info (Info);
                   Clear_Info (Atype);
                end if;
             end if;
@@ -24915,6 +25194,106 @@ package body Translation is
          Res.Id := Create_Uniq_Identifier;
          return Res;
       end Create_Uniq_Identifier;
+
+      type Instantiate_Var_Stack;
+      type Instantiate_Var_Stack_Acc is access Instantiate_Var_Stack;
+
+      type Instantiate_Var_Stack is record
+         Orig_Scope : Var_Scope_Acc;
+         Inst_Scope : Var_Scope_Acc;
+         Prev : Instantiate_Var_Stack_Acc;
+      end record;
+
+      Top_Instantiate_Var_Stack : Instantiate_Var_Stack_Acc := null;
+      Free_Instantiate_Var_Stack : Instantiate_Var_Stack_Acc := null;
+
+      procedure Push_Instantiate_Var_Scope
+        (Inst_Scope : Var_Scope_Acc; Orig_Scope : Var_Scope_Acc)
+      is
+         Inst : Instantiate_Var_Stack_Acc;
+      begin
+         if Free_Instantiate_Var_Stack = null then
+            Inst := new Instantiate_Var_Stack;
+         else
+            Inst := Free_Instantiate_Var_Stack;
+            Free_Instantiate_Var_Stack := Inst.Prev;
+         end if;
+         Inst.all := (Orig_Scope => Orig_Scope,
+                      Inst_Scope => Inst_Scope,
+                      Prev => Top_Instantiate_Var_Stack);
+         Top_Instantiate_Var_Stack := Inst;
+      end Push_Instantiate_Var_Scope;
+
+      procedure Pop_Instantiate_Var_Scope (Inst_Scope : Var_Scope_Acc)
+      is
+         Item : constant Instantiate_Var_Stack_Acc :=
+           Top_Instantiate_Var_Stack;
+      begin
+         pragma Assert (Item /= null);
+         pragma Assert (Item.Inst_Scope = Inst_Scope);
+         Top_Instantiate_Var_Stack := Item.Prev;
+         Item.all := (Orig_Scope => null,
+                      Inst_Scope => null,
+                      Prev => Free_Instantiate_Var_Stack);
+         Free_Instantiate_Var_Stack := Item;
+      end Pop_Instantiate_Var_Scope;
+
+      function Instantiated_Var_Scope (Scope : Var_Scope_Acc)
+                                      return Var_Scope_Acc
+      is
+         Item : Instantiate_Var_Stack_Acc;
+      begin
+         if Scope = null then
+            return null;
+         end if;
+
+         Item := Top_Instantiate_Var_Stack;
+         loop
+            pragma Assert (Item /= null);
+            if Item.Orig_Scope = Scope then
+               return Item.Inst_Scope;
+            end if;
+            Item := Item.Prev;
+         end loop;
+      end Instantiated_Var_Scope;
+
+      function Instantiate_Var (Var : Var_Type) return Var_Type is
+      begin
+         case Var.Kind is
+            when Var_None
+              | Var_Global
+              | Var_Local =>
+               return Var;
+            when Var_Scope =>
+               return Var_Type'
+                 (Kind => Var_Scope,
+                  I_Field => Var.I_Field,
+                  I_Scope => Instantiated_Var_Scope (Var.I_Scope));
+         end case;
+      end Instantiate_Var;
+
+      function Instantiate_Var_Scope (Scope : Var_Scope_Type)
+                                     return Var_Scope_Type is
+      begin
+         case Scope.Kind is
+            when Var_Scope_None
+              | Var_Scope_Ptr
+              | Var_Scope_Decl =>
+               return Scope;
+            when Var_Scope_Field =>
+               return Var_Scope_Type'
+                 (Kind => Var_Scope_Field,
+                  Scope_Type => Scope.Scope_Type,
+                  Field => Scope.Field,
+                  Up_Link => Instantiated_Var_Scope (Scope.Up_Link));
+            when Var_Scope_Field_Ptr =>
+               return Var_Scope_Type'
+                 (Kind => Var_Scope_Field_Ptr,
+                  Scope_Type => Scope.Scope_Type,
+                  Field => Scope.Field,
+                  Up_Link => Instantiated_Var_Scope (Scope.Up_Link));
+         end case;
+      end Instantiate_Var_Scope;
    end Chap10;
 
    package body Chap14 is
@@ -30174,11 +30553,11 @@ package body Translation is
                  | Iir_Kind_Floating_Subtype_Definition
                  | Iir_Kind_Physical_Subtype_Definition
                  | Iir_Kind_Enumeration_Subtype_Definition =>
-                  Free_Type_Info (Info, True);
+                  Free_Type_Info (Info);
                when Iir_Kind_Array_Subtype_Definition =>
                   if Get_Index_Constraint_Flag (I) then
                      Info.T := Ortho_Info_Type_Array_Init;
-                     Free_Type_Info (Info, True);
+                     Free_Type_Info (Info);
                   end if;
                when Iir_Kind_Implicit_Function_Declaration =>
                   case Get_Implicit_Definition (I) is

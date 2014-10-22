@@ -17,9 +17,9 @@
 --  02111-1307, USA.
 with Ada.Unchecked_Conversion;
 with Ada.Text_IO;
-with Errorout; use Errorout;
 with Nodes; use Nodes;
 with Lists; use Lists;
+with Nodes_Meta; use Nodes_Meta;
 
 package body Iirs is
    function Is_Null (Node : Iir) return Boolean is
@@ -35,20 +35,6 @@ package body Iirs is
    ---------------------------------------------------
    -- General subprograms that operate on every iir --
    ---------------------------------------------------
-
-   -- This is the procedure to call when an internal consistancy test has
-   -- failed.
-   -- The main idea is the consistancy test *MUST* have no side effect,
-   -- except calling this procedure.  To speed up, this procedure could
-   -- be a no-op.
-   procedure Failed (Func: String := ""; Node : Iir := Null_Iir)
-   is
-   begin
-      if Func /= "" then
-         Error_Kind (Func, Node);
-      end if;
-      raise Internal_Error;
-   end Failed;
 
    function Get_Format (Kind : Iir_Kind) return Format_Type;
 

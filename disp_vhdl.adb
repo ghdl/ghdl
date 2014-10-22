@@ -373,68 +373,50 @@ package body Disp_Vhdl is
    end Disp_Use_Clause;
 
    -- Disp the resolution function (if any) of type definition DEF.
-   procedure Disp_Resolution_Function (Subtype_Def: Iir)
+   procedure Disp_Resolution_Indication (Subtype_Def: Iir)
    is
-      --  Return TRUE iff subtype indication DEF has a resolution function
-      --  that differ from its type mark.
-      function Has_Own_Resolution_Function (Def : Iir) return Boolean is
+      procedure Inner (Ind : Iir) is
       begin
-         --  Only subtype indications may have their own resolution functions.
-         if Get_Kind (Def) not in Iir_Kinds_Subtype_Definition then
-            return False;
-         end if;
-
-         --  A resolution function is present.
-         if Get_Resolution_Function (Def) /= Null_Iir then
-            return True;
-         end if;
-
-         case Get_Kind (Def) is
-            when Iir_Kind_Array_Subtype_Definition =>
-               declare
-                  El_Def : constant Iir := Get_Element_Subtype (Def);
-               begin
-                  if El_Def /= Get_Element_Subtype (Get_Base_Type (Def)) then
-                     return Has_Own_Resolution_Function (El_Def);
-                  else
-                     return False;
-                  end if;
-               end;
+         case Get_Kind (Ind) is
+            when Iir_Kinds_Denoting_Name =>
+               Disp_Name (Ind);
+            when Iir_Kind_Array_Element_Resolution =>
+               Put ("(");
+               Inner (Get_Resolution_Indication (Ind));
+               Put (")");
             when others =>
-               Error_Kind ("disp_resolution_function(1)", Def);
+               Error_Kind ("disp_resolution_indication", Ind);
          end case;
-      end Has_Own_Resolution_Function;
-
-      procedure Inner (Def : Iir)
-      is
-         Decl: Iir;
-      begin
-         if Get_Kind (Def) in Iir_Kinds_Subtype_Definition then
-            Decl := Get_Resolution_Function (Def);
-            if Decl /= Null_Iir then
-               Disp_Name (Decl);
-            else
-               case Get_Kind (Def) is
-                  when Iir_Kind_Array_Subtype_Definition =>
-                     Put ('(');
-                     Inner (Get_Element_Subtype (Def));
-                     Put (')');
-                  when others =>
-                     Error_Kind ("disp_resolution_function(2)", Def);
-               end case;
-            end if;
-         end if;
       end Inner;
 
+      Ind : Iir;
    begin
-      if not Get_Resolved_Flag (Subtype_Def) then
-         return;
-      end if;
-      if Has_Own_Resolution_Function (Subtype_Def) then
-         Inner (Subtype_Def);
-         Put (' ');
-      end if;
-   end Disp_Resolution_Function;
+      case Get_Kind (Subtype_Def) is
+         when Iir_Kind_Access_Subtype_Definition =>
+            --  No resolution indication on access subtype.
+            return;
+         when others =>
+            Ind := Get_Resolution_Indication (Subtype_Def);
+            if Ind = Null_Iir then
+               --  No resolution indication.
+               return;
+            end if;
+      end case;
+
+      declare
+         Type_Mark : constant Iir := Get_Denoted_Type_Mark (Subtype_Def);
+      begin
+         if Get_Kind (Type_Mark) in Iir_Kinds_Subtype_Definition
+           and then Get_Resolution_Indication (Type_Mark) = Ind
+         then
+            --  Resolution indication was inherited from the type_mark.
+            return;
+         end if;
+      end;
+
+      Inner (Ind);
+      Put (" ");
+   end Disp_Resolution_Indication;
 
    procedure Disp_Integer_Subtype_Definition
      (Def: Iir_Integer_Subtype_Definition)
@@ -452,7 +434,7 @@ package body Disp_Vhdl is
             Put (" ");
          end if;
       end if;
-      Disp_Resolution_Function (Def);
+      Disp_Resolution_Indication (Def);
       Put ("range ");
       Disp_Expression (Get_Range_Constraint (Def));
       Put (";");
@@ -474,7 +456,7 @@ package body Disp_Vhdl is
             Put (" ");
          end if;
       end if;
-      Disp_Resolution_Function (Def);
+      Disp_Resolution_Indication (Def);
       Put ("range ");
       Disp_Expression (Get_Range_Constraint (Def));
       Put (";");
@@ -494,21 +476,19 @@ package body Disp_Vhdl is
          return;
       end if;
 
-      if Get_Constraint_State (Type_Mark) /= Fully_Constrained then
+      if Get_Constraint_State (Type_Mark) /= Fully_Constrained
+        and then Has_Index
+      then
          Put (" (");
-         if Has_Index then
-            for I in Natural loop
-               Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
-               exit when Index = Null_Iir;
-               if I /= 0 then
-                  Put (", ");
-               end if;
-               --Disp_Expression (Get_Range_Constraint (Index));
-               Disp_Range (Index);
-            end loop;
-         else
-            Put ("open");
-         end if;
+         for I in Natural loop
+            Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
+            exit when Index = Null_Iir;
+            if I /= 0 then
+               Put (", ");
+            end if;
+            --Disp_Expression (Get_Range_Constraint (Index));
+            Disp_Range (Index);
+         end loop;
          Put (")");
       end if;
 
@@ -586,7 +566,7 @@ package body Disp_Vhdl is
       end if;
 
       -- Resolution function name.
-      Disp_Resolution_Function (Def);
+      Disp_Resolution_Indication (Def);
 
       -- type mark.
       Type_Mark := Get_Subtype_Type_Mark (Def);
@@ -674,7 +654,7 @@ package body Disp_Vhdl is
      (Def: Iir_Enumeration_Subtype_Definition)
    is
    begin
-      Disp_Resolution_Function (Def);
+      Disp_Resolution_Indication (Def);
       Put ("range ");
       Disp_Range (Def);
       Put (";");
@@ -689,12 +669,11 @@ package body Disp_Vhdl is
       end if;
    end Disp_Discrete_Range;
 
-   procedure Disp_Array_Subtype_Definition
-     (Def: Iir_Array_Subtype_Definition)
+   procedure Disp_Array_Subtype_Definition (Def: Iir_Array_Subtype_Definition)
    is
       Index: Iir;
    begin
-      Disp_Resolution_Function (Def);
+      Disp_Resolution_Indication (Def);
 
       Put ("array (");
       for I in Natural loop
@@ -747,7 +726,7 @@ package body Disp_Vhdl is
    procedure Disp_Physical_Subtype_Definition
      (Def: Iir_Physical_Subtype_Definition) is
    begin
-      Disp_Resolution_Function (Def);
+      Disp_Resolution_Indication (Def);
       Put ("range ");
       Disp_Expression (Get_Range_Constraint (Def));
    end Disp_Physical_Subtype_Definition;
@@ -1141,9 +1120,8 @@ package body Disp_Vhdl is
    end Disp_Generics;
 
    procedure Disp_Entity_Declaration (Decl: Iir_Entity_Declaration) is
-      Start: Count;
+      Start: constant Count := Col;
    begin
-      Start := Col;
       Put ("entity ");
       Disp_Name_Of (Decl);
       Put_Line (" is");
@@ -1224,7 +1202,7 @@ package body Disp_Vhdl is
       List : Iir_List;
       El : Iir;
    begin
-      Disp_Name (Get_Prefix (Sig));
+      Disp_Name (Get_Signature_Prefix (Sig));
       Put (" [");
       List := Get_Type_Marks_List (Sig);
       if List /= Null_Iir_List then
@@ -2941,11 +2919,17 @@ package body Disp_Vhdl is
       end case;
    end Disp_Concurrent_Statement;
 
-   procedure Disp_Package_Declaration (Decl: Iir_Package_Declaration) is
+   procedure Disp_Package_Declaration (Decl: Iir_Package_Declaration)
+   is
+      Header : constant Iir := Get_Package_Header (Decl);
    begin
       Put ("package ");
       Disp_Identifier (Decl);
       Put_Line (" is");
+      if Header /= Null_Iir then
+         Disp_Generics (Header);
+         New_Line;
+      end if;
       Disp_Declaration_Chain (Decl, Col + Indentation);
       Disp_End (Decl, "package");
    end Disp_Package_Declaration;
@@ -2959,6 +2943,17 @@ package body Disp_Vhdl is
       Disp_Declaration_Chain (Decl, Col + Indentation);
       Disp_End (Decl, "package body");
    end Disp_Package_Body;
+
+   procedure Disp_Package_Instantiation_Declaration (Decl: Iir) is
+   begin
+      Put ("package ");
+      Disp_Identifier (Decl);
+      Put_Line (" is new ");
+      Disp_Name (Get_Uninstantiated_Name (Decl));
+      Put (" ");
+      Disp_Generic_Map_Aspect (Decl);
+      Put_Line (";");
+   end Disp_Package_Instantiation_Declaration;
 
    procedure Disp_Binding_Indication (Bind : Iir; Indent : Count)
    is
@@ -3131,6 +3126,8 @@ package body Disp_Vhdl is
             Disp_Package_Declaration (Decl);
          when Iir_Kind_Package_Body =>
             Disp_Package_Body (Decl);
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Disp_Package_Instantiation_Declaration (Decl);
          when Iir_Kind_Configuration_Declaration =>
             Disp_Configuration_Declaration (Decl);
          when others =>

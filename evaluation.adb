@@ -288,6 +288,22 @@ package body Evaluation is
       return Res;
    end Build_Constant_Range;
 
+   function Build_Extreme_Value (Is_Pos : Boolean; Origin : Iir) return Iir
+   is
+      Orig_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
+   begin
+      case Get_Kind (Orig_Type) is
+         when Iir_Kind_Integer_Type_Definition =>
+            if Is_Pos then
+               return Build_Integer (Iir_Int64'Last, Origin);
+            else
+               return Build_Integer (Iir_Int64'First, Origin);
+            end if;
+         when others =>
+            Error_Kind ("build_extreme_value", Orig_Type);
+      end case;
+   end Build_Extreme_Value;
+
    --  A_RANGE is a range expression, whose type, location, expr_staticness,
    --  left_limit and direction are set.
    --  Type of A_RANGE must have a range_constraint.

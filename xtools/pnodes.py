@@ -7,21 +7,19 @@ import argparse
 field_file = "../nodes.ads"
 spec_file = "../iirs.ads"
 template_file = "../iirs.adb.in"
-template_disp_file = "../disp_tree.adb.in"
-template_mark_file = "../nodes_gc.adb.in"
+meta_base_file = "../nodes_meta"
 prefix_name = "Iir_Kind_"
 prefix_range_name = "Iir_Kinds_"
 type_name = "Iir_Kind"
 conversions = ['uc', 'pos']
 
 class FuncDesc:
-    def __init__(self, name, field, conv, acc, display,
+    def __init__(self, name, field, conv, acc,
                  pname, ptype, rname, rtype):
         self.name = name
         self.field = field
         self.conv = conv
-        self.acc = acc
-        self.display = display # List of display attributes
+        self.acc = acc  # access: Chain, Chain_Next, Ref, Of_Ref, Maybe_Ref
         self.pname = pname # Parameter mame
         self.ptype = ptype # Parameter type
         self.rname = rname # value name (for procedure)
@@ -221,10 +219,10 @@ def read_kinds(filename):
 
     # Read functions
     funcs = []
-    pat_display = re.compile('   --  Display:(.*)\n')
-    pat_field = re.compile('   --  Field: (\w+)'
-                           + '( Ref| Chain_Next| Chain)?( .*)?\n')
-    pat_conv = re.compile(' \((\w+)\)')
+    pat_field = re.compile(
+        '   --  Field: (\w+)'
+        + '( Of_Ref| Ref| Maybe_Ref| Chain_Next| Chain)?( .*)?\n')
+    pat_conv = re.compile('^ \((\w+)\)$')
     pat_func = \
       re.compile('   function Get_(\w+) \((\w+) : (\w+)\) return (\w+);\n')
     pat_proc = \
@@ -233,16 +231,7 @@ def read_kinds(filename):
         l = lr.get()
         if l == 'end Iirs;\n':
             break
-        md = pat_display.match(l)
-        if md:
-            display = md.group(1).split()
-            l = lr.get()
-            m = pat_field.match(l)
-            if not m:
-                raise ParseError(lr, 'Field: expected after Display:')
-        else:
-            display = []
-            m = pat_field.match(l)
+        m = pat_field.match(l)
         if m:
             # Extract conversion
             acc = m.group(2)
@@ -280,7 +269,7 @@ def read_kinds(filename):
                 raise ParseError(lr, 'parameter type mismatch with function')
             if mf.group(4) != mp.group(5):
                 raise ParseError(lr, 'result type mismatch with function')
-            funcs.append(FuncDesc(mf.group(1), m.group(1), conv, acc, display,
+            funcs.append(FuncDesc(mf.group(1), m.group(1), conv, acc,
                                   mp.group(2), mp.group(3),
                                   mp.group(4), mp.group(5)))
 
@@ -424,30 +413,22 @@ def gen_get_format(formats, nodes, kinds):
     print '      end case;'
     print '   end Get_Format;'
 
-# Generate the Check_Kind_For_XXX function
-def gen_check_kind(func, nodes, kinds):
-    pname = 'Target'
-    ptype = 'Iir'
-    print '   procedure Check_Kind_For_' + func.name + ' (' + pname \
-          + ' : ' + ptype + ') is'
-    print '   begin'
-    print '      case Get_Kind (' + pname + ') is'
-    choices = [k for k in kinds if func.name in nodes[k].attrs]
-    gen_choices(choices)
-    print '            null;'
-    print '         when others =>'
-    print '            Failed ("' + func.name + '", ' + pname + ');'
-    print '      end case;'
-    print '   end Check_Kind_For_' + func.name + ';'
-    print
-
 def gen_subprg_header(decl):
     if len(decl) < 76:
         print decl + ' is'
     else:
         print decl
-        print '      is'
+        print '   is'
     print '   begin'
+
+def gen_assert(func):
+    print '      pragma Assert (' + func.pname + ' /= Null_Iir);'
+    cond = '(Has_' + func.name + ' (Get_Kind (' + func.pname + ')));'
+    if len (cond) < 60:
+        print '      pragma Assert ' + cond
+    else:
+        print '      pragma Assert'
+        print '         ' + cond
 
 # Generate Get_XXX/Set_XXX subprograms for FUNC.
 def gen_get_set(func, nodes, fields):
@@ -469,7 +450,7 @@ def gen_get_set(func, nodes, fields):
     subprg = '   function Get_' + func.name + ' (' + func.pname \
           + ' : ' + func.ptype + ') return ' + func.rtype
     gen_subprg_header(subprg)
-    print '      Check_Kind_For_' + func.name + ' (' + func.pname + ');'
+    gen_assert(func)
     print '      return ' + g + ';'
     print '   end Get_' + func.name + ';'
     print
@@ -477,170 +458,29 @@ def gen_get_set(func, nodes, fields):
           + func.pname + ' : ' + func.ptype + '; ' \
           + func.rname + ' : ' + func.rtype + ')'
     gen_subprg_header(subprg)
-    print '      Check_Kind_For_' + func.name + ' (' + func.pname + ');'
-    print '      Set_' + func.field + ' (' + func.pname + ', ' \
-          + s + ');'
+    gen_assert(func)
+    print '      Set_' + func.field + ' (' + func.pname + ', ' + s + ');'
     print '   end Set_' + func.name + ';'
-    print
-
-def gen_image_field(func, param):
-    getter = 'Get_' + func.name + ' (' + param + ')'
-    if 'Image' in func.display:
-        return func.rtype +  '\'Image (' + getter + ')'
-    else:
-        return 'Image_' + func.rtype + ' (' + getter + ')'
-
-def gen_disp_header(kinds, nodes):
-    print '   procedure Disp_Header (N : Iir) is'
-    print '   begin'
-    print '      if N = Null_Iir then'
-    print '         Put_Line ("*null*");'
-    print '         return;'
-    print '      end if;'
-    print
-    print '      case Get_Kind (N) is'
-    for k in kinds:
-        inlines = [f for f in nodes[k].attrs.values() if 'Inline' in f.display]
-        if len(inlines) > 1:
-            raise Error
-        print '         when ' + prefix_name + k + ' =>'
-        if inlines:
-            print '            Put ("' + k.lower() + ' " &'
-            print '                      ' + \
-                  gen_image_field(inlines[0], 'N') + ');'
-        else:
-            print '            Put ("' + k.lower() + '");'
-    print '      end case;'
-    print '      Put (\' \');'
-    print '      Disp_Iir_Number (N);'
-    print '      New_Line;'
-    print '   end Disp_Header;'
     print
 
 def funcs_of_node(n):
     return sorted([fv.name for fv in n.fields.values() if fv])
 
-def gen_disp(kinds, nodes):
-    print '   procedure Disp_Iir (N : Iir;'
-    print '                       Indent : Natural := 1;'
-    print '                       Flat : Boolean := False)'
-    print '   is'
-    print '      Sub_Indent : constant Natural := Indent + 1;'
-    print '   begin'
-    print '      Disp_Header (N);'
-    print
-    print '      if Flat or else N = Null_Iir then'
-    print '         return;'
-    print '      end if;'
-    print
-    print '      Header ("location: ", Indent);'
-    print '      Put_Line (Image_Location_Type (Get_Location (N)));'
-    print
-    print '      --  Protect against infinite recursions.'
-    print '      if Indent > 20 then'
-    print '         Put_Indent (Indent);'
-    print '         Put_Line ("...");'
-    print '         return;'
-    print '      end if;'
-    print
-    print '      case Get_Kind (N) is'
-    done = []
-    for k in kinds:
-        if k in done:
-            continue
-        v = nodes[k]
-        # Find other kinds with the same set of functions.
-        vfuncs = funcs_of_node(v)
-        ks = [k1 for k1 in kinds if \
-              k1 not in done and funcs_of_node(nodes[k1]) == vfuncs]
-        gen_choices(ks)
-        done += ks
-        flds = [fk for fk, fv in v.fields.items() if fv]
-        if flds:
-            for fk in sorted(flds):
-                func = v.fields[fk]
-                if func.acc == 'Chain_Next':
-                    continue
-                print '            ' + \
-                      'Header ("' + func.name.lower() + ': ", Indent);'
-                str = '            '
-                if func.acc == 'Chain':
-                    str += 'Disp_Chain (Get_' + func.name \
-                           + ' (N), Sub_Indent);'
-                    print str
-                elif func.rtype in [ 'Iir', 'Iir_List', 'PSL_Node', 'PSL_NFA' ]:
-                    str += 'Disp_' + func.rtype + \
-                          ' (Get_' + func.name + ' (N), Sub_Indent'
-                    if func.acc == 'Ref':
-                        str += ', True'
-                    str += ');'
-                    print str
-                else:
-                    str += 'Put_Line ('
-                    if len(func.rtype) <= 20:
-                        str += gen_image_field(func, 'N')
-                        print str + ');'
-                    else:
-                        # Inline version due to length
-                        str += 'Image_' + func.rtype
-                        print str
-                        print '                      (' + \
-                              'Get_' + func.name + ' (N)));'
-        else:
-            print '            null;'
-    print '      end case;'
-    print '   end Disp_Iir;'
-    print
-
-def gen_mark(kinds, nodes):
-    print '   procedure Mark_Iir (N : Iir) is'
-    print '   begin'
-    print '      if N = Null_Iir then'
-    print '         return;'
-    print '      elsif Markers (N) then'
-    print '         Already_Marked (N);'
-    print '         return;'
-    print '      else'
-    print '         Markers (N) := True;'
-    print '      end if;'
-    print
-    print '      case Get_Kind (N) is'
-    done = []
-    for k in kinds:
-        if k in done:
-            continue
-        v = nodes[k]
-        # Find other kinds with the same set of functions.
-        vfuncs = funcs_of_node(v)
-        ks = [k1 for k1 in kinds if \
-              k1 not in done and funcs_of_node(nodes[k1]) == vfuncs]
-        gen_choices(ks)
-        done += ks
-        flds = [fk for fk, fv in v.fields.items() if fv]
-        empty = True
-        for fk in sorted(flds):
-            func = v.fields[fk]
-            if func.acc in ['Ref', 'Chain_Next']:
-                continue
-            elif func.acc in [ 'Chain' ]:
-                print '            ' + \
-                      'Mark_Chain (Get_' + func.name + ' (N));'
-                empty = False
-            elif func.rtype in [ 'Iir', 'Iir_List', 'PSL_Node', 'PSL_NFA' ]:
-                print '            ' + \
-                      'Mark_' + func.rtype + ' (Get_' + func.name + ' (N));'
-                empty = False
-        if empty:
-            print '            null;'
-    print '      end case;'
-    print '   end Mark_Iir;'
-    print
+def gen_has_func_spec(name, suff):
+    spec='   function Has_' + f.name + ' (K : Iir_Kind)'
+    ret=' return Boolean' + suff;
+    if len(spec) < 60:
+        print spec + ret
+    else:
+        print spec
+        print '     ' + ret
 
 parser = argparse.ArgumentParser(description='Meta-grammar processor')
 parser.add_argument('action', choices=['disp-nodes', 'disp-kinds',
-                                       'disp-fields', 'disp-funcs',
-                                       'disp_tree', 'mark_tree',
-                                       'get_format', 'body'],
+                                       'disp-formats', 'disp-funcs',
+                                       'disp-types',
+                                       'get_format', 'body',
+                                       'meta_specs', 'meta_body'],
                     default='disp-nodes')
 args = parser.parse_args()
 
@@ -655,7 +495,7 @@ except ParseError as e:
           "in {0}:{1}:{2}".format(e.lr.filename, e.lr.lineno, e.lr.l)
     sys.exit(1)
 
-if args.action == 'disp-fields':
+if args.action == 'disp-formats':
     for fmt in fields:
         print "Fields of Format_"+fmt
         fld=fields[fmt]
@@ -668,13 +508,20 @@ elif args.action == 'disp-kinds':
 elif args.action == 'disp-funcs':
     print "Functions are:"
     for f in funcs:
-        s = '{0} ({1}'.format(f.name, f.field)
+        s = '{0} ({1}: {2}'.format(f.name, f.field, f.rtype)
         if f.acc:
             s += ' acc:' + f.acc
         if f.conv:
             s += ' conv:' + f.conv
         s += ')'
         print s
+elif args.action == 'disp-types':
+    print "Types are:"
+    s = set([])
+    for f in funcs:
+        s |= set([f.rtype])
+    for t in sorted(s):
+        print '  ' + t
 elif args.action == 'disp-nodes':
     for k in kinds:
         v = nodes[k]
@@ -693,26 +540,167 @@ elif args.action == 'body':
             gen_get_format(formats, nodes, kinds)
             print
             for f in funcs:
-                gen_check_kind(f, nodes, kinds)
                 gen_get_set(f, nodes, fields)
         if l[0:3] == 'end':
             break
-elif args.action == 'disp_tree':
-    lr = linereader(template_disp_file)
+elif args.action == 'meta_specs':
+    lr = linereader(meta_base_file + '.ads.in')
+    # Build list of types
+    s = set([])
+    for f in funcs:
+        s |= set([f.rtype])
+    types = [t for t in sorted(s)]
     while True:
         l = lr.get().rstrip()
-        print l
-        if l == '   --  Subprograms':
-            gen_disp_header(kinds, nodes)
-            gen_disp(kinds, nodes)
-        if l[0:3] == 'end':
+        if l == '      --  TYPES':
+            last = None
+            for t in types:
+                if last:
+                    print last + ','
+                last = '      Type_' + t
+            print last
+        elif l == '      --  FIELDS':
+            last = None
+            for f in funcs:
+                if last:
+                    print last + ','
+                last = '      Field_' + f.name
+            print last
+        elif l == '   --  FUNCS':
+            for t in types:
+                print '   function Get_' + t
+                print '      (N : Iir; F : Fields_Enum) return ' + t + ';'
+                print '   procedure Set_' + t
+                print '      (N : Iir; F : Fields_Enum; V: ' + t + ');'
+                print
+            for f in funcs:
+                gen_has_func_spec(f.name, ';')
+        elif l[0:3] == 'end':
+            print l
             break
-elif args.action == 'mark_tree':
-    lr = linereader(template_mark_file)
+        else:
+            print l
+elif args.action == 'meta_body':
+    lr = linereader(meta_base_file + '.adb.in')
     while True:
         l = lr.get().rstrip()
-        print l
-        if l == '   --  Subprograms':
-            gen_mark(kinds,nodes)
-        if l[0:3] == 'end':
+        if l == '      --  FIELDS_TYPE':
+            last = None
+            for f in funcs:
+                if last:
+                    print last + ','
+                last = '      Field_' + f.name + ' => Type_' + f.rtype
+            print last
+        elif l == '         --  FIELD_IMAGE':
+            for f in funcs:
+                print '         when Field_' + f.name + ' =>'
+                print '            return "' + f.name.lower() + '";'
+        elif l == '         --  IIR_IMAGE':
+            for k in kinds:
+                print '         when ' + prefix_name + k + ' =>'
+                print '            return "' + k.lower() + '";'
+        elif l == '         --  FIELD_ATTRIBUTE':
+            for f in funcs:
+                print '         when Field_' + f.name + ' =>'
+                if f.acc:
+                    attr = f.acc
+                else:
+                    attr = 'None'
+                print '            return Attr_' + attr + ';'
+        elif l == '      --  FIELDS_ARRAY':
+            last = None
+            nodes_types = ['Iir', 'Iir_List']
+            ref_names = ['Ref', 'Of_Ref', 'Maybe_Ref']
+            for k in kinds:
+                v = nodes[k]
+                if last:
+                    print last + ','
+                last = None
+                print '      --  ' + prefix_name + k
+                # Sort fields: first non Iir and non Iir_List,
+                #              then Iir and Iir_List that aren't references
+                #              then Maybe_Ref
+                #              then Ref and Ref_Of
+                flds = sorted([fk for fk, fv in v.fields.items() \
+                               if fv and fv.rtype not in nodes_types])
+                flds += sorted([fk for fk, fv in v.fields.items() \
+                                if fv and fv.rtype in nodes_types \
+                                      and fv.acc not in ref_names])
+                flds += sorted([fk for fk, fv in v.fields.items() \
+                                if fv and fv.rtype in nodes_types\
+                                      and fv.acc in ['Maybe_Ref']])
+                flds += sorted([fk for fk, fv in v.fields.items() \
+                                if fv and fv.rtype in nodes_types\
+                                      and fv.acc in ['Ref', 'Of_Ref']])
+                for fk in flds:
+                    if last:
+                        print last + ','
+                    last = '      Field_' + v.fields[fk].name
+            if last:
+                print last
+        elif l == '      --  FIELDS_ARRAY_POS':
+            pos = -1
+            last = None
+            for k in kinds:
+                v = nodes[k]
+                flds = [fk for fk, fv in v.fields.items() if fv]
+                pos += len(flds)
+                if last:
+                    print last + ','
+                last = '      ' + prefix_name + k + ' => {}'.format(pos)
+            print last
+        elif l == '   --  FUNCS_BODY':
+            # Build list of types
+            s = set([])
+            for f in funcs:
+                s |= set([f.rtype])
+            types = [t for t in sorted(s)]
+            for t in types:
+                print '   function Get_' + t
+                print '      (N : Iir; F : Fields_Enum) return ' + t + ' is'
+                print '   begin'
+                print '      pragma Assert (Fields_Type (F) = Type_' + t + ');'
+                print '      case F is'
+                for f in funcs:
+                    if f.rtype == t:
+                        print '         when Field_' + f.name + ' =>'
+                        print '            return Get_' + f.name + ' (N);';
+                print '         when others =>'
+                print '            raise Internal_Error;'
+                print '      end case;'
+                print '   end Get_' + t + ';'
+                print
+                print '   procedure Set_' + t
+                print '      (N : Iir; F : Fields_Enum; V: ' + t + ') is'
+                print '   begin'
+                print '      pragma Assert (Fields_Type (F) = Type_' + t + ');'
+                print '      case F is'
+                for f in funcs:
+                    if f.rtype == t:
+                        print '         when Field_' + f.name + ' =>'
+                        print '            Set_' + f.name + ' (N, V);';
+                print '         when others =>'
+                print '            raise Internal_Error;'
+                print '      end case;'
+                print '   end Set_' + t + ';'
+                print
+            for f in funcs:
+                gen_has_func_spec(f.name, ' is')
+                print '   begin'
+                choices = [k for k in kinds if f.name in nodes[k].attrs]
+                if len(choices) == 1:
+                    print '      return K = ' + prefix_name + choices[0] + ';'
+                else:
+                    print '      case K is'
+                    gen_choices(choices)
+                    print '            return True;'
+                    print '         when others =>'
+                    print '            return False;'
+                    print '      end case;'
+                print '   end Has_' + f.name + ';'
+                print
+        elif l[0:3] == 'end':
+            print l
             break
+        else:
+            print l

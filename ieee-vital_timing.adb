@@ -272,7 +272,7 @@ package body Ieee.Vital_Timing is
       Base_Type := Get_Base_Type (Atype);
       Type_Decl := Get_Type_Declarator (Atype);
       if Base_Type = Std_Logic_Vector_Type then
-         if Get_Resolution_Function (Atype) /= Null_Iir then
+         if Get_Resolution_Indication (Atype) /= Null_Iir then
             Error_Vital
               ("VITAL array port type cannot override resolution function",
                Decl);

@@ -582,7 +582,7 @@ package body Sem_Specs is
 
       --  Sem_Name cannot be used here (at least not directly) because only
       --  the declarations of the current scope are considered.
-      Prefix := Get_Prefix (Sig);
+      Prefix := Get_Signature_Prefix (Sig);
       Inter := Get_Interpretation (Get_Identifier (Prefix));
       while Valid_Interpretation (Inter) loop
          exit when not Is_In_Current_Declarative_Region (Inter);
@@ -614,7 +614,7 @@ package body Sem_Specs is
 
       Set_Named_Entity (Prefix, Name);
       Prefix := Finish_Sem_Name (Prefix);
-      Set_Prefix (Sig, Prefix);
+      Set_Signature_Prefix (Sig, Prefix);
 
       Attribute_A_Decl (Name, Attr, True, True);
    end Sem_Signature_Entity_Designator;

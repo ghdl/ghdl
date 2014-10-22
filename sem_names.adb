@@ -329,11 +329,12 @@ package body Sem_Names is
             null;
          when Iir_Kind_Package_Declaration =>
             null;
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Iterator_Decl_Chain (Get_Generic_Chain (Decl), Id);
          when Iir_Kind_Block_Statement =>
             declare
-               Header : Iir;
+               Header : constant Iir := Get_Block_Header (Decl);
             begin
-               Header := Get_Block_Header (Decl);
                if Header /= Null_Iir then
                   Iterator_Decl_Chain (Get_Generic_Chain (Header), Id);
                   Iterator_Decl_Chain (Get_Port_Chain (Header), Id);
@@ -362,7 +363,8 @@ package body Sem_Names is
            | Iir_Kind_Block_Statement =>
             Iterator_Decl_Chain (Get_Declaration_Chain (Decl), Id);
             Iterator_Decl_Chain (Get_Concurrent_Statement_Chain (Decl), Id);
-         when Iir_Kind_Package_Declaration =>
+         when Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration =>
             Iterator_Decl_Chain (Get_Declaration_Chain (Decl), Id);
          when Iir_Kind_Process_Statement
            | Iir_Kind_Sensitized_Process_Statement =>
@@ -511,17 +513,14 @@ package body Sem_Names is
 
    procedure Finish_Sem_Indexed_Name (Expr : Iir)
    is
-      Prefix : Iir;
-      Prefix_Type : Iir;
+      Prefix : constant Iir := Get_Prefix (Expr);
+      Prefix_Type : constant Iir := Get_Type (Prefix);
+      Index_List : constant Iir_List := Get_Index_List (Expr);
       Index_Subtype : Iir;
-      Index_List : Iir_List;
       Index : Iir;
       Expr_Staticness : Iir_Staticness;
    begin
-      Prefix := Get_Prefix (Expr);
-      Prefix_Type := Get_Type (Prefix);
       Expr_Staticness := Locally;
-      Index_List := Get_Index_List (Expr);
 
       -- LRM93 §6.4: there must be one such expression for each index
       -- position of the array and each expression must be of the
@@ -704,13 +703,12 @@ package body Sem_Names is
       Set_Signal_Type_Flag (Expr_Type,
                             Get_Signal_Type_Flag (Prefix_Base_Type));
       Append_Element (Get_Index_Subtype_List (Expr_Type), Slice_Type);
-      Set_Element_Subtype_Indication
-        (Expr_Type, Get_Element_Subtype_Indication (Prefix_Type));
-      if Get_Kind (Prefix_Type) /= Iir_Kind_Array_Type_Definition then
-         Set_Resolution_Function
-           (Expr_Type, Get_Resolution_Function (Prefix_Type));
+      Set_Element_Subtype (Expr_Type, Get_Element_Subtype (Prefix_Type));
+      if Get_Kind (Prefix_Type) = Iir_Kind_Array_Subtype_Definition then
+         Set_Resolution_Indication
+           (Expr_Type, Get_Resolution_Indication (Prefix_Type));
       else
-         Set_Resolution_Function (Expr_Type, Null_Iir);
+         Set_Resolution_Indication (Expr_Type, Null_Iir);
       end if;
       Set_Type_Staticness
         (Expr_Type, Min (Get_Type_Staticness (Prefix_Type),
@@ -1853,6 +1851,7 @@ package body Sem_Names is
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_For_Loop_Statement =>
@@ -1884,7 +1883,9 @@ package body Sem_Names is
                --  LRM93 §6.3
                --  This form of expanded name is only allowed within the
                --  construct itself.
-               if Get_Kind (Prefix) /= Iir_Kind_Package_Declaration
+               if not Kind_In (Prefix,
+                               Iir_Kind_Package_Declaration,
+                               Iir_Kind_Package_Instantiation_Declaration)
                  and then not Get_Is_Within_Flag (Prefix)
                then
                   Error_Msg_Sem

@@ -944,7 +944,7 @@ package body Sem_Stmts is
               (Chain, Choice_Type, False, True, Loc, Low, High);
          when Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Array_Type_Definition =>
-            if not Is_Unidim_Array_Type (Choice_Type) then
+            if not Is_One_Dimensional_Array_Type (Choice_Type) then
                Error_Msg_Sem
                  ("expression must be of a one-dimensional array type",
                   Choice);

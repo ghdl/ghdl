@@ -81,6 +81,10 @@ package Iirs_Utils is
    function Get_Predefined_Function_Name (Func : Iir_Predefined_Functions)
      return String;
 
+   --  Mark SUBPRG as used.  If SUBPRG is an instance, its generic is also
+   --  marked.
+   procedure Mark_Subprogram_Used (Subprg : Iir);
+
    --  Create the range_constraint node for an enumeration type.
    procedure Create_Range_Constraint_For_Enumeration_Type
      (Def : Iir_Enumeration_Type_Definition);
@@ -114,6 +118,10 @@ package Iirs_Utils is
    function Build_Simple_Name (Ref : Iir; Loc : Location_Type) return Iir;
    function Build_Simple_Name (Ref : Iir; Loc : Iir) return Iir;
 
+   --  If SUBTYP has a resolution indication that is a function name, returns
+   --  the function declaration (not the name).
+   function Has_Resolution_Function (Subtyp : Iir) return Iir;
+
    --  Return a simple name for the primary unit of physical type PHYSICAL_DEF.
    --  This is the artificial unit name for the value of the primary unit, thus
    --  its location is the location of the primary unit.  Used mainly to build
@@ -138,8 +146,8 @@ package Iirs_Utils is
    --  Likewise but for array type or subtype ARRAY_TYPE.
    function Get_Index_Type (Array_Type : Iir; Idx : Natural) return Iir;
 
-   --  Return the element type of array type or array subtype DEF.
-   function Get_Element_Subtype (Def : Iir) return Iir;
+   --  Return the type or subtype definition of the SUBTYP type mark.
+   function Get_Denoted_Type_Mark (Subtyp : Iir) return Iir;
 
    --  Return true iff L and R have the same profile.
    --  L and R must be subprograms specification (or spec_body).
@@ -184,13 +192,12 @@ package Iirs_Utils is
    function Get_High_Limit (Arange : Iir_Range_Expression) return Iir;
 
    --  Return TRUE iff type/subtype definition A_TYPE is an undim array.
-   function Is_Unidim_Array_Type (A_Type : Iir) return Boolean;
+   function Is_One_Dimensional_Array_Type (A_Type : Iir) return Boolean;
 
    --  Return TRUE iff unsemantized EXPR is a range attribute.
    function Is_Range_Attribute_Name (Expr : Iir) return Boolean;
 
-   --  Create an array subtype from array_type or unconstrained_array_subtype
-   --  ARR_TYPE.
+   --  Create an array subtype from array_type or array_subtype ARR_TYPE.
    --  All fields of the returned node are filled, except the index_list.
    --  The type_staticness is set with the type staticness of the element
    --  subtype and therefore must be updated.
@@ -225,6 +232,10 @@ package Iirs_Utils is
 
    --  Return TRUE if the base name of NAME is a signal object.
    function Is_Signal_Object (Name: Iir) return Boolean;
+
+   --  Return True IFF kind of N is K1 or K2.
+   function Kind_In (N : Iir; K1, K2 : Iir_Kind) return Boolean;
+   pragma Inline (Kind_In);
 
    --  IIR wrapper around Get_HDL_Node/Set_HDL_Node.
    function Get_HDL_Node (N : PSL_Node) return Iir;

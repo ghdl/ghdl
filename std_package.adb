@@ -268,10 +268,12 @@ package body Std_Package is
          Set_Base_Type (Def, Def);
 
          Index_List := Create_Iir_List;
+         Set_Index_Subtype_Definition_List (Def, Index_List);
          Set_Index_Subtype_List (Def, Index_List);
          Append_Element (Index_List, Index);
 
          Set_Element_Subtype_Indication (Def, Element);
+         Set_Element_Subtype (Def, Get_Type (El_Decl));
          Set_Type_Staticness (Def, None);
          Set_Signal_Type_Flag (Def, True);
          Set_Has_Signal_Flag (Def, not Flags.Flag_Whole_Analyze);
@@ -1000,8 +1002,12 @@ package body Std_Package is
          Index_List := Create_Iir_List;
          Append_Element (Index_List,
                          Create_Std_Type_Mark (Positive_Subtype_Declaration));
+         Set_Index_Subtype_Definition_List (String_Type_Definition,
+                                            Index_List);
          Set_Index_Subtype_List (String_Type_Definition, Index_List);
          Set_Element_Subtype_Indication (String_Type_Definition, Element);
+         Set_Element_Subtype (String_Type_Definition,
+                              Character_Type_Definition);
          Set_Type_Staticness (String_Type_Definition, None);
          Set_Signal_Type_Flag (String_Type_Definition, True);
          Set_Has_Signal_Flag (String_Type_Definition,

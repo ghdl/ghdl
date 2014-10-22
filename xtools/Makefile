@@ -17,19 +17,19 @@
 
 DEPS=../iirs.ads ../nodes.ads ./pnodes.py
 
-all: ../iirs.adb ../disp_tree.adb ../nodes_gc.adb
+all: ../iirs.adb ../nodes_meta.ads ../nodes_meta.adb
 
 ../iirs.adb: ../iirs.adb.in $(DEPS)
 	$(RM) $@
 	./pnodes.py body > $@
 	chmod -w $@
 
-../disp_tree.adb: ../disp_tree.adb.in $(DEPS)
+../nodes_meta.ads: ../nodes_meta.ads.in $(DEPS)
 	$(RM) $@
-	./pnodes.py disp_tree > $@
+	./pnodes.py meta_specs > $@
 	chmod -w $@
 
-../nodes_gc.adb: ../nodes_gc.adb.in $(DEPS)
+../nodes_meta.adb: ../nodes_meta.adb.in $(DEPS)
 	$(RM) $@
-	./pnodes.py mark_tree > $@
+	./pnodes.py meta_body > $@
 	chmod -w $@

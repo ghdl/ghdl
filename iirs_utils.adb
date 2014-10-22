@@ -23,6 +23,7 @@ with Str_Table;
 with Std_Names; use Std_Names;
 with Flags; use Flags;
 with PSL.Nodes;
+with Sem_Inst;
 
 package body Iirs_Utils is
    -- Transform the current token into an iir literal.
@@ -542,6 +543,20 @@ package body Iirs_Utils is
       return Iir_Predefined_Functions'Image (Func);
    end Get_Predefined_Function_Name;
 
+   procedure Mark_Subprogram_Used (Subprg : Iir)
+   is
+      N : Iir;
+   begin
+      N := Subprg;
+      loop
+         exit when Get_Use_Flag (N);
+         Set_Use_Flag (N, True);
+         N := Sem_Inst.Get_Origin (N);
+         --  The origin may also be an instance.
+         exit when N = Null_Iir;
+      end loop;
+   end Mark_Subprogram_Used;
+
    procedure Clear_Seen_Flag (Top : Iir)
    is
       Callees_List : Iir_Callees_List;
@@ -600,6 +615,19 @@ package body Iirs_Utils is
       return Build_Simple_Name (Ref, Get_Location (Loc));
    end Build_Simple_Name;
 
+   function Has_Resolution_Function (Subtyp : Iir) return Iir
+   is
+      Ind : constant Iir := Get_Resolution_Indication (Subtyp);
+   begin
+      if Ind /= Null_Iir
+        and then Get_Kind (Ind) in Iir_Kinds_Denoting_Name
+      then
+         return Get_Named_Entity (Ind);
+      else
+         return Null_Iir;
+      end if;
+   end Has_Resolution_Function;
+
    function Get_Primary_Unit_Name (Physical_Def : Iir) return Iir
    is
       Unit : constant Iir := Get_Primary_Unit (Physical_Def);
@@ -655,11 +683,18 @@ package body Iirs_Utils is
       return Get_Index_Type (Get_Index_Subtype_List (Array_Type), Idx);
    end Get_Index_Type;
 
-   function Get_Element_Subtype (Def : Iir) return Iir is
+   function Get_Denoted_Type_Mark (Subtyp : Iir) return Iir
+   is
+      Type_Mark_Name : constant Iir := Get_Subtype_Type_Mark (Subtyp);
    begin
-      return Get_Type_Of_Subtype_Indication
-        (Get_Element_Subtype_Indication (Def));
-   end Get_Element_Subtype;
+      if Type_Mark_Name = Null_Iir then
+         --  No type_mark (for array subtype created by constrained array
+         --  definition.
+         return Null_Iir;
+      else
+         return Get_Type (Get_Named_Entity (Type_Mark_Name));
+      end if;
+   end Get_Denoted_Type_Mark;
 
    function Is_Second_Subprogram_Specification (Spec : Iir) return Boolean
    is
@@ -865,7 +900,7 @@ package body Iirs_Utils is
       end case;
    end Get_High_Limit;
 
-   function Is_Unidim_Array_Type (A_Type : Iir) return Boolean
+   function Is_One_Dimensional_Array_Type (A_Type : Iir) return Boolean
    is
       Base_Type : constant Iir := Get_Base_Type (A_Type);
    begin
@@ -876,7 +911,7 @@ package body Iirs_Utils is
       else
          return False;
       end if;
-   end Is_Unidim_Array_Type;
+   end Is_One_Dimensional_Array_Type;
 
    function Is_Range_Attribute_Name (Expr : Iir) return Boolean
    is
@@ -900,20 +935,22 @@ package body Iirs_Utils is
    is
       Res : Iir_Array_Subtype_Definition;
       Base_Type : Iir;
+      List : Iir_List;
    begin
       Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Set_Location (Res, Loc);
       Base_Type := Get_Base_Type (Arr_Type);
       Set_Base_Type (Res, Base_Type);
-      Set_Element_Subtype_Indication
-        (Res, Get_Element_Subtype_Indication (Base_Type));
-      if Get_Kind (Arr_Type) /= Iir_Kind_Array_Type_Definition then
-         Set_Resolution_Function (Res, Get_Resolution_Function (Arr_Type));
+      Set_Element_Subtype (Res, Get_Element_Subtype (Base_Type));
+      if Get_Kind (Arr_Type) = Iir_Kind_Array_Subtype_Definition then
+         Set_Resolution_Indication (Res, Get_Resolution_Indication (Arr_Type));
       end if;
       Set_Resolved_Flag (Res, Get_Resolved_Flag (Arr_Type));
       Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Arr_Type));
       Set_Type_Staticness (Res, Get_Type_Staticness (Base_Type));
-      Set_Index_Subtype_List (Res, Create_Iir_List);
+      List := Create_Iir_List;
+      Set_Index_Subtype_List (Res, List);
+      Set_Index_Constraint_List (Res, List);
       return Res;
    end Create_Array_Subtype;
 
@@ -1043,6 +1080,13 @@ package body Iirs_Utils is
       return Header /= Null_Iir
         and then Get_Generic_Map_Aspect_Chain (Header) /= Null_Iir;
    end Is_Generic_Mapped_Package;
+
+   function Kind_In (N : Iir; K1, K2 : Iir_Kind) return Boolean
+   is
+      K : constant Iir_Kind := Get_Kind (N);
+   begin
+      return K = K1 or K = K2;
+   end Kind_In;
 
    function Get_HDL_Node (N : PSL_Node) return Iir is
    begin

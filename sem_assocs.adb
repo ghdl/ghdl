@@ -1162,7 +1162,7 @@ package body Sem_Assocs is
             Set_Parameter_Association_Chain (Res, Null_Iir);
             Set_Type (Res, Get_Return_Type (Func));
             Set_Expr_Staticness (Res, None);
-            Set_Use_Flag (Func, True);
+            Mark_Subprogram_Used (Func);
          when Iir_Kind_Subtype_Declaration
            | Iir_Kind_Type_Declaration =>
             Res := Create_Iir (Iir_Kind_Type_Conversion);

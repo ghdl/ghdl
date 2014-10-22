@@ -244,7 +244,7 @@ package body Sem is
 
       Obj_Type := Get_Type (Obj);
       if Get_Kind (Obj_Type) in Iir_Kinds_Subtype_Definition then
-         return Get_Resolution_Function (Obj_Type);
+         return Get_Resolution_Indication (Obj_Type);
       else
          return Null_Iir;
       end if;
@@ -1189,13 +1189,15 @@ package body Sem is
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Physical_Subtype_Definition =>
-            if Get_Base_Type (Left) /= Get_Base_Type (Right)
-              or else Get_Resolution_Function (Left)
-              /= Get_Resolution_Function (Right)
-            then
+            if Get_Base_Type (Left) /= Get_Base_Type (Right) then
                return False;
             end if;
             if Get_Type_Declarator (Left) /= Get_Type_Declarator (Right) then
+               return False;
+            end if;
+            if not Are_Trees_Equal (Get_Resolution_Indication (Left),
+                                    Get_Resolution_Indication (Right))
+            then
                return False;
             end if;
             if Are_Trees_Equal (Get_Range_Constraint (Left),
@@ -1205,9 +1207,11 @@ package body Sem is
             end if;
             return True;
          when Iir_Kind_Array_Subtype_Definition =>
-            if Get_Base_Type (Left) /= Get_Base_Type (Right)
-              or else (Get_Resolution_Function (Left)
-                       /= Get_Resolution_Function (Right))
+            if Get_Base_Type (Left) /= Get_Base_Type (Right) then
+               return False;
+            end if;
+            if not Are_Trees_Equal (Get_Resolution_Indication (Left),
+                                    Get_Resolution_Indication (Right))
             then
                return False;
             end if;
@@ -1227,9 +1231,11 @@ package body Sem is
             end;
             return True;
          when Iir_Kind_Record_Subtype_Definition =>
-            if Get_Base_Type (Left) /= Get_Base_Type (Right)
-              or else (Get_Resolution_Function (Left)
-                       /= Get_Resolution_Function (Right))
+            if Get_Base_Type (Left) /= Get_Base_Type (Right) then
+               return False;
+            end if;
+            if not Are_Trees_Equal (Get_Resolution_Indication (Left),
+                                    Get_Resolution_Indication (Right))
             then
                return False;
             end if;
@@ -2386,10 +2392,8 @@ package body Sem is
    --  LRM08 4.9  Package Instantiation Declaration
    procedure Sem_Package_Instantiation_Declaration (Decl : Iir)
    is
-      use Sem_Inst;
       Name : Iir;
       Pkg : Iir;
-      Header : Iir;
       Bod : Iir_Design_Unit;
    begin
       Sem_Scopes.Add_Name (Decl);
@@ -2420,13 +2424,12 @@ package body Sem is
       --  actual with each formal generic (or member thereof) in the
       --  corresponding package declaration.  Each formal generic (or member
       --  thereof) shall be associated at most once.
-      Header := Get_Package_Header (Pkg);
-      Sem_Generic_Association_Chain (Header, Decl);
 
-      Set_Generic_Chain
-        (Decl, Instantiate_Declaration_Chain (Get_Generic_Chain (Header)));
-      Set_Declaration_Chain
-        (Decl, Instantiate_Declaration_Chain (Get_Declaration_Chain (Pkg)));
+      --  GHDL: the generics are first instantiated (ie copied) and then
+      --  the actuals are associated with the instantiated formal.
+      --  FIXME: do it in Instantiate_Package_Declaration ?
+      Sem_Inst.Instantiate_Package_Declaration (Decl, Pkg);
+      Sem_Generic_Association_Chain (Decl, Decl);
 
       --  FIXME: unless the parent is a package declaration library unit, the
       --  design unit depends on the body.
