@@ -1,0 +1,9 @@
+I think these are the most stripped down examples I could figure out,
+and the gist of it seems to be that it has to do with splitting the
+right hand side of a port map by amounts that are not known at
+elaboration time...or something like that. In fails2.vhdl the
+variable isn't declared anywhere, but it still crashes with the
+bug notice, rather than just failing with an error message.
+
+works.vhdl is provided for contrast, i.e. generics are used
+except for the specific line that would cause it to crash.
