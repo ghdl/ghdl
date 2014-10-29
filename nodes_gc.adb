@@ -82,7 +82,7 @@ package body Nodes_GC is
       end if;
 
       case Get_Kind (N) is
-         when Iir_Kind_Constant_Interface_Declaration =>
+         when Iir_Kind_Interface_Constant_Declaration =>
             if Get_Identifier (N) = Null_Identifier then
                --  Anonymous interfaces are shared by predefined functions.
                return;

@@ -292,8 +292,8 @@ package body Std_Package is
                                   Inter2_Type : Iir := Null_Iir)
       is
          Decl : Iir_Implicit_Function_Declaration;
-         Inter : Iir_Constant_Interface_Declaration;
-         Inter2 : Iir_Constant_Interface_Declaration;
+         Inter : Iir_Interface_Constant_Declaration;
+         Inter2 : Iir_Interface_Constant_Declaration;
       begin
          Decl := Create_Std_Decl (Iir_Kind_Implicit_Function_Declaration);
          Set_Std_Identifier (Decl, Name);
@@ -301,7 +301,7 @@ package body Std_Package is
          Set_Pure_Flag (Decl, True);
          Set_Implicit_Definition (Decl, Imp);
 
-         Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+         Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
          Set_Identifier (Inter, Std_Names.Name_Value);
          Set_Type (Inter, Inter_Type);
          Set_Mode (Inter, Iir_In_Mode);
@@ -309,7 +309,7 @@ package body Std_Package is
          Set_Interface_Declaration_Chain (Decl, Inter);
 
          if Inter2_Id /= Null_Identifier then
-            Inter2 := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+            Inter2 := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
             Set_Identifier (Inter2, Inter2_Id);
             Set_Type (Inter2, Inter2_Type);
             Set_Mode (Inter2, Iir_In_Mode);
@@ -327,7 +327,7 @@ package body Std_Package is
         (Name : Name_Id; Func : Iir_Predefined_Functions; Inter_Type : Iir)
       is
          Decl : Iir_Implicit_Function_Declaration;
-         Inter : Iir_Constant_Interface_Declaration;
+         Inter : Iir_Interface_Constant_Declaration;
       begin
          Decl := Create_Std_Decl (Iir_Kind_Implicit_Function_Declaration);
          Set_Std_Identifier (Decl, Name);
@@ -335,7 +335,7 @@ package body Std_Package is
          Set_Pure_Flag (Decl, True);
          Set_Implicit_Definition (Decl, Func);
 
-         Inter := Create_Iir (Iir_Kind_Signal_Interface_Declaration);
+         Inter := Create_Iir (Iir_Kind_Interface_Signal_Declaration);
          Set_Identifier (Inter, Std_Names.Name_S);
          Set_Type (Inter, Inter_Type);
          Set_Mode (Inter, Iir_In_Mode);

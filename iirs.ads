@@ -383,6 +383,7 @@ package Iirs is
    -- Iir_Kind_Association_Element_By_Expression (Short)
    -- Iir_Kind_Association_Element_Open (Short)
    -- Iir_Kind_Association_Element_By_Individual (Short)
+   -- Iir_Kind_Association_Element_Package (Short)
    --  These are used for association element of an association list with
    --  an interface (ie subprogram call, port map, generic map).
    --
@@ -391,6 +392,7 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    -- Only for Iir_Kind_Association_Element_By_Expression:
+   -- Only for Iir_Kind_Association_Element_Package:
    --   Get/Set_Actual (Field3)
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
@@ -398,6 +400,9 @@ package Iirs is
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Individual_Association_Chain (Field4)
+   --
+   -- Only for Iir_Kind_Association_Element_Package:
+   --   Get/Set_Associated_Interface (Field4)
    --
    --  A function call or a type conversion for the association.
    --  FIXME: should be a name ?
@@ -842,7 +847,7 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Uninstantiated_Name (Field5)
+   --   Get/Set_Uninstantiated_Package_Name (Field5)
    --
    --   Get/Set_Generic_Chain (Field6)
    --
@@ -1072,10 +1077,10 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
 
-   -- Iir_Kind_Signal_Interface_Declaration (Medium)
-   -- Iir_Kind_Constant_Interface_Declaration (Medium)
-   -- Iir_Kind_Variable_Interface_Declaration (Medium)
-   -- Iir_Kind_File_Interface_Declaration (Medium)
+   -- Iir_Kind_Interface_Signal_Declaration (Medium)
+   -- Iir_Kind_Interface_Constant_Declaration (Medium)
+   -- Iir_Kind_Interface_Variable_Declaration (Medium)
+   -- Iir_Kind_Interface_File_Declaration (Medium)
    --
    --  Get/Set the parent of an interface declaration.
    --  The parent is an entity declaration, a subprogram specification, a
@@ -1095,20 +1100,20 @@ package Iirs is
    --
    --   Get/Set_Subtype_Indication (Field5)
    --
-   --  Must always be null_iir for iir_kind_file_interface_declaration.
+   --  Must always be null_iir for iir_kind_interface_file_declaration.
    --   Get/Set_Default_Value (Field6)
    --
    --   Get/Set_Mode (Odigit1)
    --
    --   Get/Set_Lexical_Layout (Odigit2)
    --
-   -- Only for Iir_Kind_Signal_Interface_Declaration:
+   -- Only for Iir_Kind_Interface_Signal_Declaration:
    --   Get/Set_Has_Disconnect_Flag (Flag1)
    --
-   -- Only for Iir_Kind_Signal_Interface_Declaration:
+   -- Only for Iir_Kind_Interface_Signal_Declaration:
    --   Get/Set_Has_Active_Flag (Flag2)
    --
-   -- Only for Iir_Kind_Signal_Interface_Declaration:
+   -- Only for Iir_Kind_Interface_Signal_Declaration:
    --   Get/Set_Open_Flag (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -1123,8 +1128,28 @@ package Iirs is
    --
    --   Get/Set_Name_Staticness (State2)
    --
-   -- Only for Iir_Kind_Signal_Interface_Declaration:
+   -- Only for Iir_Kind_Interface_Signal_Declaration:
    --   Get/Set_Signal_Kind (State3)
+
+   -- Iir_Kind_Interface_Package_Declaration (Medium)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Declaration_Chain (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
+   --   Get/Set_Uninstantiated_Package_Name (Field5)
+   --
+   --   Get/Set_Generic_Chain (Field6)
+   --
+   --   Get/Set_Generic_Map_Aspect_Chain (Field8)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
 
    -- Iir_Kind_Function_Declaration (Medium)
    -- Iir_Kind_Procedure_Declaration (Medium)
@@ -1173,8 +1198,6 @@ package Iirs is
    --
    --   Get/Set_Generic_Chain (Field6)
    --
-   --   Get/Set_Callees_List (Field7)
-   --
    --   --Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
    --   Get/Set_Return_Type_Mark (Field8)
@@ -1219,8 +1242,8 @@ package Iirs is
    --
    --   Get/Set_All_Sensitized_State (State3)
 
-   -- Iir_Kind_Function_Body (Short)
-   -- Iir_Kind_Procedure_Body (Short)
+   -- Iir_Kind_Function_Body (Medium)
+   -- Iir_Kind_Procedure_Body (Medium)
    --
    --  LRM08 4.3 Subprogram bodies
    --
@@ -1247,6 +1270,8 @@ package Iirs is
    --   Get/Set_Subprogram_Specification (Field4)
    --
    --   Get/Set_Sequential_Statement_Chain (Field5)
+   --
+   --   Get/Set_Callees_List (Field7)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
@@ -1276,8 +1301,6 @@ package Iirs is
    --   Get/Set_Interface_Declaration_Chain (Field5)
    --
    --   Get/Set_Generic_Chain (Field6)
-   --
-   --   Get/Set_Callees_List (Field7)
    --
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
@@ -3429,6 +3452,7 @@ package Iirs is
        Iir_Kind_Association_Element_By_Expression,
        Iir_Kind_Association_Element_By_Individual,
        Iir_Kind_Association_Element_Open,
+       Iir_Kind_Association_Element_Package,
        Iir_Kind_Choice_By_Others,
        Iir_Kind_Choice_By_Expression,
        Iir_Kind_Choice_By_Range,
@@ -3528,10 +3552,11 @@ package Iirs is
        Iir_Kind_Variable_Declaration,           -- object
        Iir_Kind_Constant_Declaration,           -- object
        Iir_Kind_Iterator_Declaration,           -- object
-       Iir_Kind_Constant_Interface_Declaration, -- object, interface
-       Iir_Kind_Variable_Interface_Declaration, -- object, interface
-       Iir_Kind_Signal_Interface_Declaration,   -- object, interface
-       Iir_Kind_File_Interface_Declaration,     -- object, interface
+       Iir_Kind_Interface_Constant_Declaration, -- object, interface
+       Iir_Kind_Interface_Variable_Declaration, -- object, interface
+       Iir_Kind_Interface_Signal_Declaration,   -- object, interface
+       Iir_Kind_Interface_File_Declaration,     -- object, interface
+       Iir_Kind_Interface_Package_Declaration,
 
    -- Expressions.
        Iir_Kind_Identity_Operator,
@@ -4076,6 +4101,15 @@ package Iirs is
    type Iir_Constraint is
      (Unconstrained, Partially_Constrained, Fully_Constrained);
 
+   --  The kind of an inteface list.
+   type Interface_Kind_Type is (Generic_Interface_List,
+                                Port_Interface_List,
+                                Procedure_Parameter_Interface_List,
+                                Function_Parameter_Interface_List);
+   subtype Parameter_Interface_List is Interface_Kind_Type range
+     Procedure_Parameter_Interface_List ..
+     Function_Parameter_Interface_List;
+
    ---------------
    -- subranges --
    ---------------
@@ -4270,11 +4304,11 @@ package Iirs is
      Iir_Kind_Sensitized_Process_Statement ..
      Iir_Kind_Process_Statement;
 
-   subtype Iir_Kinds_Interface_Declaration is Iir_Kind range
-     Iir_Kind_Constant_Interface_Declaration ..
-   --Iir_Kind_Variable_Interface_Declaration
-   --Iir_Kind_Signal_Interface_Declaration
-     Iir_Kind_File_Interface_Declaration;
+   subtype Iir_Kinds_Interface_Object_Declaration is Iir_Kind range
+     Iir_Kind_Interface_Constant_Declaration ..
+   --Iir_Kind_Interface_Variable_Declaration
+   --Iir_Kind_Interface_Signal_Declaration
+     Iir_Kind_Interface_File_Declaration;
 
    subtype Iir_Kinds_Object_Declaration is Iir_Kind range
      Iir_Kind_Object_Alias_Declaration ..
@@ -4284,10 +4318,10 @@ package Iirs is
    --Iir_Kind_Variable_Declaration
    --Iir_Kind_Constant_Declaration
    --Iir_Kind_Iterator_Declaration
-   --Iir_Kind_Constant_Interface_Declaration
-   --Iir_Kind_Variable_Interface_Declaration
-   --Iir_Kind_Signal_Interface_Declaration
-     Iir_Kind_File_Interface_Declaration;
+   --Iir_Kind_Interface_Constant_Declaration
+   --Iir_Kind_Interface_Variable_Declaration
+   --Iir_Kind_Interface_Signal_Declaration
+     Iir_Kind_Interface_File_Declaration;
 
    subtype Iir_Kinds_Branch_Quantity_Declaration is Iir_Kind range
      Iir_Kind_Across_Quantity_Declaration ..
@@ -4305,10 +4339,10 @@ package Iirs is
    --Iir_Kind_Variable_Declaration
    --Iir_Kind_Constant_Declaration
    --Iir_Kind_Iterator_Declaration
-   --Iir_Kind_Constant_Interface_Declaration
-   --Iir_Kind_Variable_Interface_Declaration
-   --Iir_Kind_Signal_Interface_Declaration
-     Iir_Kind_File_Interface_Declaration;
+   --Iir_Kind_Interface_Constant_Declaration
+   --Iir_Kind_Interface_Variable_Declaration
+   --Iir_Kind_Interface_Signal_Declaration
+     Iir_Kind_Interface_File_Declaration;
 
    subtype Iir_Kinds_Association_Element is Iir_Kind range
      Iir_Kind_Association_Element_By_Expression ..
@@ -4515,10 +4549,10 @@ package Iirs is
    --Iir_Kind_Variable_Declaration
    --Iir_Kind_Constant_Declaration
    --Iir_Kind_Iterator_Declaration
-   --Iir_Kind_Constant_Interface_Declaration
-   --Iir_Kind_Variable_Interface_Declaration
-   --Iir_Kind_Signal_Interface_Declaration
-     Iir_Kind_File_Interface_Declaration;
+   --Iir_Kind_Interface_Constant_Declaration
+   --Iir_Kind_Interface_Variable_Declaration
+   --Iir_Kind_Interface_Signal_Declaration
+     Iir_Kind_Interface_File_Declaration;
 
    -------------------------------------
    -- Types and subtypes declarations --
@@ -4760,7 +4794,7 @@ package Iirs is
 
    subtype Iir_Architecture_Body is Iir;
 
-   subtype Iir_Signal_Interface_Declaration is Iir;
+   subtype Iir_Interface_Signal_Declaration is Iir;
 
    subtype Iir_Configuration_Declaration is Iir;
 
@@ -4793,11 +4827,11 @@ package Iirs is
 
    subtype Iir_Iterator_Declaration is Iir;
 
-   subtype Iir_Constant_Interface_Declaration is Iir;
+   subtype Iir_Interface_Constant_Declaration is Iir;
 
-   subtype Iir_Variable_Interface_Declaration is Iir;
+   subtype Iir_Interface_Variable_Declaration is Iir;
 
-   subtype Iir_File_Interface_Declaration is Iir;
+   subtype Iir_Interface_File_Declaration is Iir;
 
    subtype Iir_Guard_Signal_Declaration is Iir;
 
@@ -5736,7 +5770,7 @@ package Iirs is
    --  from this list, since the purpose of this list is to correctly set
    --  flags for side effects (purity_state, wait_state).
    --  Can return null_iir if there is no subprogram called.
-   --  Field: Field7 (uc)
+   --  Field: Field7 Of_Ref (uc)
    function Get_Callees_List (Proc : Iir) return Iir_List;
    procedure Set_Callees_List (Proc : Iir; List : Iir_List);
 
@@ -5937,8 +5971,8 @@ package Iirs is
    procedure Set_Block_Header (Target : Iir; Header : Iir);
 
    --  Field: Field5
-   function Get_Uninstantiated_Name (Inst : Iir) return Iir;
-   procedure Set_Uninstantiated_Name (Inst : Iir; Name : Iir);
+   function Get_Uninstantiated_Package_Name (Inst : Iir) return Iir;
+   procedure Set_Uninstantiated_Package_Name (Inst : Iir; Name : Iir);
 
    --  Get/Set the block_configuration (there may be several
    --  block_configuration through the use of prev_configuration singly linked
@@ -6097,6 +6131,11 @@ package Iirs is
    --  Field: Field3
    function Get_Actual_Type (Target : Iir) return Iir;
    procedure Set_Actual_Type (Target : Iir; Atype : Iir);
+
+   --  Interface for a package association.
+   --  Field: Field4 Ref
+   function Get_Associated_Interface (Assoc : Iir) return Iir;
+   procedure Set_Associated_Interface (Assoc : Iir; Inter : Iir);
 
    --  List of individual associations for association_element_by_individual.
    --  Associations for parenthesis_name.

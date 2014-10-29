@@ -72,10 +72,10 @@ package body Sem is
       Open_Declarative_Region;
 
       -- Sem generics.
-      Sem_Interface_Chain (Get_Generic_Chain (Entity), Interface_Generic);
+      Sem_Interface_Chain (Get_Generic_Chain (Entity), Generic_Interface_List);
 
       -- Sem ports.
-      Sem_Interface_Chain (Get_Port_Chain (Entity), Interface_Port);
+      Sem_Interface_Chain (Get_Port_Chain (Entity), Port_Interface_List);
 
       --  Entity declarative part and concurrent statements.
       Sem_Block (Entity, True);
@@ -230,7 +230,7 @@ package body Sem is
                return Res;
             end if;
          when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration =>
             null;
          when Iir_Kind_Object_Alias_Declaration =>
@@ -352,6 +352,7 @@ package body Sem is
       El : Iir;
       Match : Boolean;
       Assoc_Chain : Iir;
+      Inter_Chain : Iir;
       Miss : Missing_Type;
    begin
       --  LRM08 6.5.6.2 Generic clauses
@@ -398,11 +399,17 @@ package body Sem is
       end case;
 
       --  The generics
+      Inter_Chain := Get_Generic_Chain (Inter_Parent);
       Assoc_Chain := Get_Generic_Map_Aspect_Chain (Assoc_Parent);
+
+      --  Extract non-object associations, as the actual cannot be analyzed
+      --  as an expression.
+      Assoc_Chain := Extract_Non_Object_Association (Assoc_Chain, Inter_Chain);
+      Set_Generic_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
+
       if Sem_Actual_Of_Association_Chain (Assoc_Chain) then
          Sem_Association_Chain
-           (Get_Generic_Chain (Inter_Parent), Assoc_Chain,
-            True, Miss, Assoc_Parent, Match);
+           (Inter_Chain, Assoc_Chain, True, Miss, Assoc_Parent, Match);
          Set_Generic_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
 
          --  LRM 5.2.1.2   Generic map and port map aspects
@@ -414,9 +421,9 @@ package body Sem is
                case Get_Kind (El) is
                   when Iir_Kind_Association_Element_By_Expression =>
                      Check_Read (Get_Actual (El));
-                  when Iir_Kind_Association_Element_Open =>
-                     null;
-                  when Iir_Kind_Association_Element_By_Individual =>
+                  when Iir_Kind_Association_Element_Open
+                    | Iir_Kind_Association_Element_By_Individual
+                    | Iir_Kind_Association_Element_Package =>
                      null;
                   when others =>
                      Error_Kind ("sem_generic_map_association_chain(1)", El);
@@ -522,7 +529,7 @@ package body Sem is
             end if;
             case Get_Kind (Prefix) is
                when Iir_Kind_Signal_Declaration
-                 | Iir_Kind_Signal_Interface_Declaration
+                 | Iir_Kind_Interface_Signal_Declaration
                  | Iir_Kind_Guard_Signal_Declaration
                  | Iir_Kinds_Signal_Attribute =>
                   --  Port or signal.
@@ -531,8 +538,7 @@ package body Sem is
                   if Get_Name_Staticness (Object) < Globally then
                      Error_Msg_Sem ("actual must be a static name", Actual);
                   end if;
-                  if Get_Kind (Prefix)
-                    = Iir_Kind_Signal_Interface_Declaration
+                  if Get_Kind (Prefix) = Iir_Kind_Interface_Signal_Declaration
                   then
                      declare
                         P : Boolean;
@@ -1158,10 +1164,10 @@ package body Sem is
                return False;
             end if;
             return True;
-         when Iir_Kind_Constant_Interface_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
-           | Iir_Kind_File_Interface_Declaration =>
+         when Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
             if Get_Identifier (Left) /= Get_Identifier (Right) then
                return False;
             end if;
@@ -1683,15 +1689,16 @@ package body Sem is
       Interface_Chain := Get_Interface_Declaration_Chain (Subprg);
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration =>
-            Sem_Interface_Chain (Interface_Chain, Interface_Function);
-            --  FIXME: the return type is in fact a type mark.
+            Sem_Interface_Chain
+              (Interface_Chain, Function_Parameter_Interface_List);
             Return_Type := Get_Return_Type_Mark (Subprg);
             Return_Type := Sem_Type_Mark (Return_Type);
             Set_Return_Type_Mark (Subprg, Return_Type);
             Set_Return_Type (Subprg, Get_Type (Return_Type));
             Set_All_Sensitized_State (Subprg, Unknown);
          when Iir_Kind_Procedure_Declaration =>
-            Sem_Interface_Chain (Interface_Chain, Interface_Procedure);
+            Sem_Interface_Chain
+              (Interface_Chain, Procedure_Parameter_Interface_List);
             --  Unless the body is analyzed, the procedure purity is unknown.
             Set_Purity_State (Subprg, Unknown);
             --  Check if the procedure is passive.
@@ -1702,7 +1709,7 @@ package body Sem is
             begin
                Inter := Interface_Chain;
                while Inter /= Null_Iir loop
-                  if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration
+                  if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration
                     and then Get_Mode (Inter) /= Iir_In_Mode
                   then
                      --  There is a driver for this signal interface.
@@ -1782,7 +1789,7 @@ package body Sem is
       El := Get_Interface_Declaration_Chain (Spec);
       while El /= Null_Iir loop
          Add_Name (El, Get_Identifier (El), False);
-         if Get_Kind (El) = Iir_Kind_Signal_Interface_Declaration then
+         if Get_Kind (El) = Iir_Kind_Interface_Signal_Declaration then
             Set_Has_Active_Flag (El, False);
          end if;
          El := Get_Chain (El);
@@ -1804,7 +1811,7 @@ package body Sem is
                when Impure =>
                   null;
                when Unknown =>
-                  if Get_Callees_List (Spec) = Null_Iir_List then
+                  if Get_Callees_List (Subprg) = Null_Iir_List then
                      --  Since there are no callees, purity state can
                      --  be updated.
                      if Get_Impure_Depth (Subprg) = Iir_Depth_Pure then
@@ -1822,7 +1829,7 @@ package body Sem is
                   Callee : Iir;
                   State : Tri_State_Type;
                begin
-                  Callees := Get_Callees_List (Spec);
+                  Callees := Get_Callees_List (Subprg);
                   --  Per default, has no wait.
                   Set_Wait_State (Spec, False);
                   if Callees /= Null_Iir_List then
@@ -1858,7 +1865,7 @@ package body Sem is
 
             --  Set All_Sensitized_State in trivial cases.
             if Get_All_Sensitized_State (Spec) = Unknown
-              and then Get_Callees_List (Spec) = Null_Iir_List
+              and then Get_Callees_List (Subprg) = Null_Iir_List
             then
                Set_All_Sensitized_State (Spec, No_Signal);
             end if;
@@ -1867,7 +1874,7 @@ package body Sem is
             --  generate purity/wait/all-sensitized errors by themselves.
 
          when Iir_Kind_Function_Declaration =>
-            if Get_Callees_List (Spec) /= Null_Iir_List then
+            if Get_Callees_List (Subprg) /= Null_Iir_List then
                --  Purity calls to be checked later.
                --  No wait statements in procedures called.
                Add_Analysis_Checks_List (Spec);
@@ -1904,8 +1911,10 @@ package body Sem is
       type Caller_Kind is (K_Function, K_Process, K_Procedure);
       Kind : Caller_Kind;
 
-      Callees_List : Iir_List := Get_Callees_List (Subprg);
+      Callees_List : Iir_List;
+      Callees_List_Holder : Iir;
       Callee : Iir;
+      Callee_Orig : Iir;
       Callee_Bod : Iir;
       Subprg_Depth : Iir_Int32;
       Subprg_Bod : Iir;
@@ -1921,6 +1930,7 @@ package body Sem is
             Kind := K_Function;
             Subprg_Bod := Get_Subprogram_Body (Subprg);
             Subprg_Depth := Get_Subprogram_Depth (Subprg);
+            Callees_List_Holder := Subprg_Bod;
             if Get_Pure_Flag (Subprg) then
                Depth := Iir_Depth_Pure;
             else
@@ -1929,6 +1939,7 @@ package body Sem is
 
          when Iir_Kind_Procedure_Declaration =>
             Kind := K_Procedure;
+            Subprg_Bod := Get_Subprogram_Body (Subprg);
             if Get_Purity_State (Subprg) = Impure
               and then Get_Wait_State (Subprg) /= Unknown
               and then Get_All_Sensitized_State (Subprg) /= Unknown
@@ -1937,26 +1948,29 @@ package body Sem is
                if Get_All_Sensitized_State (Subprg) = No_Signal
                  or else Vhdl_Std < Vhdl_08
                then
+                  Callees_List := Get_Callees_List (Subprg_Bod);
                   Destroy_Iir_List (Callees_List);
-                  Set_Callees_List (Subprg, Null_Iir_List);
+                  Set_Callees_List (Subprg_Bod, Null_Iir_List);
                end if;
                return Update_Pure_Done;
             end if;
-            Subprg_Bod := Get_Subprogram_Body (Subprg);
             Subprg_Depth := Get_Subprogram_Depth (Subprg);
             Depth := Get_Impure_Depth (Subprg_Bod);
+            Callees_List_Holder := Subprg_Bod;
 
          when Iir_Kind_Sensitized_Process_Statement =>
             Kind := K_Process;
             Subprg_Bod := Null_Iir;
             Subprg_Depth := Iir_Depth_Top;
             Depth := Iir_Depth_Impure;
+            Callees_List_Holder := Subprg;
 
          when others =>
             Error_Kind ("update_and_check_pure_wait(1)", Subprg);
       end case;
 
       --  If the subprogram has no callee list, there is nothing to do.
+      Callees_List := Get_Callees_List (Callees_List_Holder);
       if Callees_List = Null_Iir_List then
          --  There are two reasons why a callees_list is null:
          --  * either because SUBPRG does not call any procedure
@@ -1972,7 +1986,7 @@ package body Sem is
 
       --  This subprogram is being considered.
       --  To avoid infinite loop, suppress its callees list.
-      Set_Callees_List (Subprg, Null_Iir_List);
+      Set_Callees_List (Callees_List_Holder, Null_Iir_List);
 
       --  First loop: check without recursion.
       --  Second loop: recurse if necessary.
@@ -1988,6 +2002,17 @@ package body Sem is
 
             --  Check pure.
             Callee_Bod := Get_Subprogram_Body (Callee);
+
+            if Callee_Bod = Null_Iir then
+               --  The body of subprograms may not be set for instances.
+               --  Use the body from the generic (if any).
+               Callee_Orig := Sem_Inst.Get_Origin (Callee);
+               if Callee_Orig /= Null_Iir then
+                  Callee_Bod := Get_Subprogram_Body (Callee_Orig);
+                  Set_Subprogram_Body (Callee, Callee_Bod);
+               end if;
+            end if;
+
             if Callee_Bod = Null_Iir then
                --  No body yet for the subprogram called.
                --  Nothing can be extracted from it, postpone the checks until
@@ -2123,7 +2148,7 @@ package body Sem is
          end if;
       end loop;
 
-      Set_Callees_List (Subprg, Callees_List);
+      Set_Callees_List (Callees_List_Holder, Callees_List);
 
       return Res;
    end Update_And_Check_Pure_Wait;
@@ -2172,8 +2197,10 @@ package body Sem is
       Callee : Iir;
    begin
       if List = Null_Iir_List then
+         --  Return now if there is nothing to check.
          return;
       end if;
+
       Npos := 0;
       for I in Natural loop
          El := Get_Nth_Element (List, I);
@@ -2186,9 +2213,7 @@ package body Sem is
                   Keep := True;
                   if Emit_Warnings then
                      Callees := Get_Callees_List (El);
-                     if Callees = Null_Iir_List then
-                        raise Internal_Error;
-                     end if;
+                     pragma Assert (Callees /= Null_Iir_List);
                      Warning_Msg_Sem
                        ("can't assert that all calls in " & Disp_Node (El)
                         & " are pure or have not wait; "
@@ -2318,7 +2343,8 @@ package body Sem is
       Push_Signals_Declarative_Part (Implicit, Decl);
 
       if Header /= Null_Iir then
-         Sem_Interface_Chain (Get_Generic_Chain (Header), Interface_Generic);
+         Sem_Interface_Chain
+           (Get_Generic_Chain (Header), Generic_Interface_List);
          if Get_Generic_Map_Aspect_Chain (Header) /= Null_Iir then
             --  FIXME: todo
             raise Internal_Error;
@@ -2389,10 +2415,34 @@ package body Sem is
       Close_Declarative_Region;
    end Sem_Package_Body;
 
+   function Sem_Uninstantiated_Package_Name (Decl : Iir) return Iir
+   is
+      Name : Iir;
+      Pkg : Iir;
+   begin
+      Name := Sem_Denoting_Name (Get_Uninstantiated_Package_Name (Decl));
+      Set_Uninstantiated_Package_Name (Decl, Name);
+      Pkg := Get_Named_Entity (Name);
+      if Get_Kind (Pkg) /= Iir_Kind_Package_Declaration then
+         Error_Class_Match (Name, "package");
+
+         --  What could be done ?
+         return Null_Iir;
+      elsif not Is_Uninstantiated_Package (Pkg) then
+         Error_Msg_Sem
+           (Disp_Node (Pkg) & " is not an uninstantiated package", Name);
+
+         --  What could be done ?
+         return Null_Iir;
+      end if;
+
+      return Pkg;
+   end Sem_Uninstantiated_Package_Name;
+
    --  LRM08 4.9  Package Instantiation Declaration
    procedure Sem_Package_Instantiation_Declaration (Decl : Iir)
    is
-      Name : Iir;
+      Hdr : Iir;
       Pkg : Iir;
       Bod : Iir_Design_Unit;
    begin
@@ -2403,18 +2453,8 @@ package body Sem is
       --  LRM08 4.9
       --  The uninstantiated package name shall denote an uninstantiated
       --  package declared in a package declaration.
-      Name := Sem_Denoting_Name (Get_Uninstantiated_Name (Decl));
-      Set_Uninstantiated_Name (Decl, Name);
-      Pkg := Get_Named_Entity (Name);
-      if Get_Kind (Pkg) /= Iir_Kind_Package_Declaration then
-         Error_Class_Match (Name, "package");
-
-         --  What could be done ?
-         return;
-      elsif not Is_Uninstantiated_Package (Pkg) then
-         Error_Msg_Sem
-           (Disp_Node (Pkg) & " is not an uninstantiated package", Name);
-
+      Pkg := Sem_Uninstantiated_Package_Name (Decl);
+      if Pkg = Null_Iir then
          --  What could be done ?
          return;
       end if;
@@ -2428,8 +2468,9 @@ package body Sem is
       --  GHDL: the generics are first instantiated (ie copied) and then
       --  the actuals are associated with the instantiated formal.
       --  FIXME: do it in Instantiate_Package_Declaration ?
+      Hdr := Get_Package_Header (Pkg);
+      Sem_Generic_Association_Chain (Hdr, Decl);
       Sem_Inst.Instantiate_Package_Declaration (Decl, Pkg);
-      Sem_Generic_Association_Chain (Decl, Decl);
 
       --  FIXME: unless the parent is a package declaration library unit, the
       --  design unit depends on the body.
@@ -2489,7 +2530,8 @@ package body Sem is
          case Get_Kind (Prefix) is
             when Iir_Kind_Library_Declaration =>
                null;
-            when Iir_Kind_Package_Instantiation_Declaration =>
+            when Iir_Kind_Package_Instantiation_Declaration
+              | Iir_Kind_Interface_Package_Declaration =>
                null;
             when Iir_Kind_Package_Declaration =>
                --  LRM08 12.4 Use clauses

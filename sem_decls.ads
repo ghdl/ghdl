@@ -18,12 +18,6 @@
 with Iirs; use Iirs;
 
 package Sem_Decls is
-   --  The kind of an inteface list.
-   type Interface_Kind_Type is (Interface_Generic, Interface_Port,
-                                Interface_Procedure, Interface_Function);
-   subtype Parameter_Kind_Subtype is
-     Interface_Kind_Type range Interface_Procedure .. Interface_Function;
-
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type);
 

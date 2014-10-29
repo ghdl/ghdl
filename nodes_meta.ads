@@ -254,7 +254,7 @@ package Nodes_Meta is
       Field_Block_Block_Configuration,
       Field_Package_Header,
       Field_Block_Header,
-      Field_Uninstantiated_Name,
+      Field_Uninstantiated_Package_Name,
       Field_Generate_Block_Configuration,
       Field_Generation_Scheme,
       Field_Condition,
@@ -287,6 +287,7 @@ package Nodes_Meta is
       Field_Index_Subtype,
       Field_Parameter,
       Field_Actual_Type,
+      Field_Associated_Interface,
       Field_Association_Chain,
       Field_Individual_Association_Chain,
       Field_Aggregate_Info,
@@ -725,7 +726,7 @@ package Nodes_Meta is
    function Has_Block_Block_Configuration (K : Iir_Kind) return Boolean;
    function Has_Package_Header (K : Iir_Kind) return Boolean;
    function Has_Block_Header (K : Iir_Kind) return Boolean;
-   function Has_Uninstantiated_Name (K : Iir_Kind) return Boolean;
+   function Has_Uninstantiated_Package_Name (K : Iir_Kind) return Boolean;
    function Has_Generate_Block_Configuration (K : Iir_Kind) return Boolean;
    function Has_Generation_Scheme (K : Iir_Kind) return Boolean;
    function Has_Condition (K : Iir_Kind) return Boolean;
@@ -760,6 +761,7 @@ package Nodes_Meta is
    function Has_Index_Subtype (K : Iir_Kind) return Boolean;
    function Has_Parameter (K : Iir_Kind) return Boolean;
    function Has_Actual_Type (K : Iir_Kind) return Boolean;
+   function Has_Associated_Interface (K : Iir_Kind) return Boolean;
    function Has_Association_Chain (K : Iir_Kind) return Boolean;
    function Has_Individual_Association_Chain (K : Iir_Kind) return Boolean;
    function Has_Aggregate_Info (K : Iir_Kind) return Boolean;

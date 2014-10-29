@@ -63,6 +63,9 @@ package Iirs_Utils is
    --  an interface, even if the formal is a name.
    function Get_Association_Interface (Assoc : Iir) return Iir;
 
+   --  Duplicate enumeration literal LIT.
+   function Copy_Enumeration_Literal (Lit : Iir) return Iir;
+
    --  Make TARGETS depends on UNIT.
    --  UNIT must be either a design unit or a entity_aspect_entity.
    procedure Add_Dependence (Target: Iir_Design_Unit; Unit: Iir);
@@ -88,6 +91,10 @@ package Iirs_Utils is
    --  Create the range_constraint node for an enumeration type.
    procedure Create_Range_Constraint_For_Enumeration_Type
      (Def : Iir_Enumeration_Type_Definition);
+
+   --  Return the node containing the Callees_List (ie the subprogram body if
+   --  SUBPRG is a subprogram spec, SUBPRG if SUBPRG is a process).
+   function Get_Callees_List_Holder (Subprg : Iir) return Iir;
 
    --  Clear flag of TOP and all of its callees.
    procedure Clear_Seen_Flag (Top : Iir);

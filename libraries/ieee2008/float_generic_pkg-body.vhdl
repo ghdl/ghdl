@@ -370,12 +370,13 @@ package body float_generic_pkg is
     arg : UNRESOLVED_float)             -- fp vector
     return STD_ULOGIC_VECTOR
   is
+    subtype result_subtype is STD_ULOGIC_VECTOR (arg'length-1 downto 0);
     variable result : STD_ULOGIC_VECTOR (arg'length-1 downto 0);
   begin  -- function to_std_ulogic_vector
     if arg'length < 1 then
       return NSLV;
     end if;
-    result := STD_ULOGIC_VECTOR (arg);
+    result := result_subtype (arg);
     return result;
   end function to_sulv;
 
@@ -2739,7 +2740,7 @@ package body float_generic_pkg is
 
   -- to_float (unsigned)
   function to_float (
-    arg                     : UNSIGNED;
+    arg                     : UNRESOLVED_UNSIGNED;
     constant exponent_width : NATURAL    := float_exponent_width;  -- length of FP output exponent
     constant fraction_width : NATURAL    := float_fraction_width;  -- length of FP output fraction
     constant round_style    : round_type := float_round_style)  -- rounding option
@@ -2764,7 +2765,7 @@ package body float_generic_pkg is
 
   -- to_float (signed)
   function to_float (
-    arg                     : SIGNED;
+    arg                     : UNRESOLVED_SIGNED;
     constant exponent_width : NATURAL    := float_exponent_width;  -- length of FP output exponent
     constant fraction_width : NATURAL    := float_fraction_width;  -- length of FP output fraction
     constant round_style    : round_type := float_round_style)  -- rounding option
@@ -5073,7 +5074,8 @@ package body float_generic_pkg is
     variable c      : CHARACTER;
   begin
     while L /= null and L.all'length /= 0 loop
-      if (L.all(1) = ' ' or L.all(1) = NBSP or L.all(1) = HT) then
+      c := l (l'left);
+      if (c = ' ' or c = NBSP or c = HT) then
         read (l, c, readOk);
       else
         exit;

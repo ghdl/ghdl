@@ -33,7 +33,7 @@ package body Trans_Analyzes is
    begin
       Base := Get_Object_Prefix (Target);
       --  Assigment to subprogram interface does not create a driver.
-      if Get_Kind (Base) = Iir_Kind_Signal_Interface_Declaration
+      if Get_Kind (Base) = Iir_Kind_Interface_Signal_Declaration
         and then
         Get_Kind (Get_Parent (Base)) = Iir_Kind_Procedure_Declaration
       then
@@ -92,7 +92,7 @@ package body Trans_Analyzes is
                   if Get_Kind (Assoc)
                     = Iir_Kind_Association_Element_By_Expression
                     and then
-                    Get_Kind (Formal) = Iir_Kind_Signal_Interface_Declaration
+                    Get_Kind (Formal) = Iir_Kind_Interface_Signal_Declaration
                     and then Get_Mode (Formal) /= Iir_In_Mode
                   then
                      Status := Extract_Driver_Target (Get_Actual (Assoc));

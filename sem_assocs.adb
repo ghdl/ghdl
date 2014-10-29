@@ -26,6 +26,97 @@ with Iir_Chains; use Iir_Chains;
 with Xrefs;
 
 package body Sem_Assocs is
+   function Rewrite_Non_Object_Association (Assoc : Iir; Inter : Iir)
+                                           return Iir
+   is
+      N_Assoc : Iir;
+   begin
+      case Get_Kind (Inter) is
+         when Iir_Kind_Interface_Package_Declaration =>
+            N_Assoc := Create_Iir (Iir_Kind_Association_Element_Package);
+         when others =>
+            Error_Kind ("rewrite_non_object_association", Inter);
+      end case;
+      Location_Copy (N_Assoc, Assoc);
+      Set_Formal (N_Assoc, Get_Formal (Assoc));
+      Set_Actual (N_Assoc, Get_Actual (Assoc));
+      Set_Chain (N_Assoc, Get_Chain (Assoc));
+      Set_Associated_Interface (N_Assoc, Inter);
+      Set_Whole_Association_Flag (N_Assoc, True);
+      Free_Iir (Assoc);
+      return N_Assoc;
+   end Rewrite_Non_Object_Association;
+
+   function Extract_Non_Object_Association
+     (Assoc_Chain : Iir; Inter_Chain : Iir) return Iir
+   is
+      Inter : Iir;
+      Assoc : Iir;
+      --  N_Assoc : Iir;
+      Prev_Assoc : Iir;
+      Formal : Iir;
+      Res : Iir;
+   begin
+      Inter := Inter_Chain;
+      Assoc := Assoc_Chain;
+      Prev_Assoc := Null_Iir;
+      Res := Null_Iir;
+
+      --  Common case: only objects in interfaces.
+      while Inter /= Null_Iir loop
+         exit when Get_Kind (Inter)
+           not in Iir_Kinds_Interface_Object_Declaration;
+         Inter := Get_Chain (Inter);
+      end loop;
+      if Inter = Null_Iir then
+         return Assoc_Chain;
+      end if;
+
+      loop
+         --  Don't try to detect errors.
+         if Assoc = Null_Iir then
+            return Res;
+         end if;
+
+         Formal := Get_Formal (Assoc);
+         if Formal = Null_Iir then
+            --  Positional association.
+
+            if Inter = Null_Iir then
+               --  But after a named one.  Be silent on that error.
+               null;
+            elsif Get_Kind (Inter)
+              not in Iir_Kinds_Interface_Object_Declaration
+            then
+               Assoc := Rewrite_Non_Object_Association (Assoc, Inter);
+            end if;
+         else
+            if Get_Kind (Formal) = Iir_Kind_Simple_Name then
+               --  A candidate.  Search the corresponding interface.
+               Inter := Find_Name_In_Chain
+                 (Inter_Chain, Get_Identifier (Formal));
+               if Inter /= Null_Iir
+                 and then
+                 Get_Kind (Inter) not in Iir_Kinds_Interface_Object_Declaration
+               then
+                  Assoc := Rewrite_Non_Object_Association (Assoc, Inter);
+               end if;
+            end if;
+
+            --  No more association by position.
+            Inter := Null_Iir;
+         end if;
+
+         if Prev_Assoc = Null_Iir then
+            Res := Assoc;
+         else
+            Set_Chain (Prev_Assoc, Assoc);
+         end if;
+         Prev_Assoc := Assoc;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Extract_Non_Object_Association;
+
    --  Semantize all arguments of ASSOC_CHAIN
    --  Return TRUE if no error.
    function Sem_Actual_Of_Association_Chain (Assoc_Chain : Iir)
@@ -49,10 +140,11 @@ package body Sem_Assocs is
             Has_Named := True;
             --  FIXME: check FORMAL is well composed.
          elsif Has_Named then
+            --  FIXME: do the check in parser.
             Error_Msg_Sem ("positional argument after named argument", Assoc);
             Ok := False;
          end if;
-         if Get_Kind (Assoc) /= Iir_Kind_Association_Element_Open then
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression then
             Res := Sem_Expression_Ov (Get_Actual (Assoc), Null_Iir);
             if Res = Null_Iir then
                Ok := False;
@@ -136,13 +228,13 @@ package body Sem_Assocs is
                end if;
 
                case Get_Kind (Formal_Inter) is
-                  when Iir_Kind_Signal_Interface_Declaration =>
+                  when Iir_Kind_Interface_Signal_Declaration =>
                      --  LRM93 2.1.1
                      --  In a subprogram call, the actual designator
                      --  associated with a formal parameter of class
                      --  signal must be a signal.
                      case Get_Kind (Prefix) is
-                        when Iir_Kind_Signal_Interface_Declaration
+                        when Iir_Kind_Interface_Signal_Declaration
                           | Iir_Kind_Signal_Declaration
                           | Iir_Kind_Guard_Signal_Declaration
                           | Iir_Kinds_Signal_Attribute =>
@@ -166,7 +258,7 @@ package body Sem_Assocs is
                      end case;
 
                      case Get_Kind (Prefix) is
-                        when Iir_Kind_Signal_Interface_Declaration =>
+                        when Iir_Kind_Interface_Signal_Declaration =>
                            Check_Parameter_Association_Restriction
                              (Formal_Inter, Prefix, Assoc);
                         when Iir_Kind_Guard_Signal_Declaration =>
@@ -198,19 +290,19 @@ package body Sem_Assocs is
                         Error_Msg_Sem ("conversion are not allowed for "
                                        & "signal parameters", Assoc);
                      end if;
-                  when Iir_Kind_Variable_Interface_Declaration =>
+                  when Iir_Kind_Interface_Variable_Declaration =>
                      --  LRM93 2.1.1
                      --  The actual designator associated with a formal of
                      --  class variable must be a variable.
                      case Get_Kind (Prefix) is
-                        when Iir_Kind_Variable_Interface_Declaration =>
+                        when Iir_Kind_Interface_Variable_Declaration =>
                            Check_Parameter_Association_Restriction
                              (Formal_Inter, Prefix, Assoc);
                         when Iir_Kind_Variable_Declaration
                           | Iir_Kind_Dereference
                           | Iir_Kind_Implicit_Dereference =>
                            null;
-                        when Iir_Kind_File_Interface_Declaration
+                        when Iir_Kind_Interface_File_Declaration
                           | Iir_Kind_File_Declaration =>
                            --  LRM87 4.3.1.4
                            --  Such an object is a member of the variable
@@ -223,16 +315,16 @@ package body Sem_Assocs is
                            Error_Msg_Sem
                              ("variable parameter must be a variable", Assoc);
                      end case;
-                  when Iir_Kind_File_Interface_Declaration =>
+                  when Iir_Kind_Interface_File_Declaration =>
                      --  LRM93 2.1.1
                      --  The actual designator associated with a formal
                      --  of class file must be a file.
                      case Get_Kind (Prefix) is
-                        when Iir_Kind_File_Interface_Declaration
+                        when Iir_Kind_Interface_File_Declaration
                           | Iir_Kind_File_Declaration =>
                            null;
                         when Iir_Kind_Variable_Declaration
-                          | Iir_Kind_Variable_Interface_Declaration =>
+                          | Iir_Kind_Interface_Variable_Declaration =>
                            if Flags.Vhdl_Std >= Vhdl_93 then
                               Error_Msg_Sem ("in vhdl93, file parameter "
                                              & "must be a file", Assoc);
@@ -253,7 +345,7 @@ package body Sem_Assocs is
                         Error_Msg_Sem ("conversion are not allowed for "
                                        & "file parameters", Assoc);
                      end if;
-                  when Iir_Kind_Constant_Interface_Declaration =>
+                  when Iir_Kind_Interface_Constant_Declaration =>
                      --  LRM93 2.1.1
                      --  The actual designator associated with a formal of
                      --  class constant must be an expression.
@@ -302,8 +394,8 @@ package body Sem_Assocs is
    --  Check for restrictions in LRM 1.1.1.2
    --  Return FALSE in case of error.
    function Check_Port_Association_Restriction
-     (Formal : Iir_Signal_Interface_Declaration;
-      Actual : Iir_Signal_Interface_Declaration;
+     (Formal : Iir_Interface_Signal_Declaration;
+      Actual : Iir_Interface_Signal_Declaration;
       Assoc : Iir)
      return Boolean
    is
@@ -368,12 +460,17 @@ package body Sem_Assocs is
                      goto Found;
                   end if;
                when Iir_Kind_Choice_By_Range =>
-                  if Eval_Int_In_Range (Eval_Pos (Index),
-                                        Get_Choice_Range (Choice))
-                  then
-                     --  FIXME: overlap.
-                     raise Internal_Error;
-                  end if;
+                  declare
+                     Choice_Range : constant Iir := Get_Choice_Range (Choice);
+                  begin
+                     if Get_Expr_Staticness (Choice_Range) = Locally
+                       and then
+                       Eval_Int_In_Range (Eval_Pos (Index), Choice_Range)
+                     then
+                        --  FIXME: overlap.
+                        raise Internal_Error;
+                     end if;
+                  end;
                when others =>
                   Error_Kind ("add_individual_assoc_index_name", Choice);
             end case;
@@ -419,8 +516,10 @@ package body Sem_Assocs is
       Index := Get_Suffix (Formal);
 
       --  Evaluate index.
-      Index := Eval_Range (Index);
-      Set_Suffix (Formal, Index);
+      if Get_Expr_Staticness (Index) = Locally then
+         Index := Eval_Range (Index);
+         Set_Suffix (Formal, Index);
+      end if;
 
       Choice := Create_Iir (Iir_Kind_Choice_By_Range);
       Location_Copy (Choice, Formal);
@@ -457,7 +556,7 @@ package body Sem_Assocs is
            | Iir_Kind_Slice_Name
            | Iir_Kind_Selected_Element =>
             Add_Individual_Association_1 (Iassoc, Get_Prefix (Formal_Object));
-         when Iir_Kinds_Interface_Declaration =>
+         when Iir_Kinds_Interface_Object_Declaration =>
             return;
          when others =>
             Error_Kind ("add_individual_association_1", Formal);
@@ -1178,9 +1277,127 @@ package body Sem_Assocs is
       return Res;
    end Extract_Out_Conversion;
 
+   procedure Sem_Association_Open
+     (Assoc : Iir;
+      Inter : Iir;
+      Finish : Boolean;
+      Match : out Boolean)
+   is
+      Formal : Iir;
+      Assoc_Kind : Param_Assoc_Type;
+   begin
+      Formal := Get_Formal (Assoc);
+
+      if Formal /= Null_Iir then
+         Assoc_Kind := Sem_Formal (Formal, Inter);
+         if Assoc_Kind = None then
+            Match := False;
+            return;
+         end if;
+         Set_Whole_Association_Flag (Assoc, Assoc_Kind = Whole);
+         if Finish then
+            Sem_Name (Formal);
+            Formal := Finish_Sem_Name (Formal);
+            Set_Formal (Assoc, Formal);
+            if Get_Kind (Formal) in Iir_Kinds_Denoting_Name
+              and then Is_Error (Get_Named_Entity (Formal))
+            then
+               Match := False;
+               return;
+            end if;
+
+            --  LRM 4.3.3.2  Associations lists
+            --  It is an error if an actual of open is associated with a
+            --  formal that is associated individually.
+            if Assoc_Kind = Individual then
+               Error_Msg_Sem ("cannot associate individually with open",
+                              Assoc);
+            end if;
+         end if;
+      else
+         Set_Whole_Association_Flag (Assoc, True);
+      end if;
+      Match := True;
+   end Sem_Association_Open;
+
+   procedure Sem_Association_Package
+     (Assoc : Iir;
+      Inter : Iir;
+      Finish : Boolean;
+      Match : out Boolean)
+   is
+      Formal : constant Iir := Get_Formal (Assoc);
+      Actual : Iir;
+      Package_Inter : Iir;
+   begin
+      if not Finish then
+         Match := Get_Associated_Interface (Assoc) = Inter;
+         return;
+      end if;
+
+      --  Always match (as this is a generic association, there is no
+      --  need to resolve overload).
+      pragma Assert (Get_Associated_Interface (Assoc) = Inter);
+      Match := True;
+
+      if Formal /= Null_Iir then
+         pragma Assert (Get_Kind (Formal) = Iir_Kind_Simple_Name);
+         pragma Assert (Get_Identifier (Formal) = Get_Identifier (Inter));
+         Set_Named_Entity (Formal, Inter);
+         Set_Base_Name (Formal, Inter);
+      end if;
+
+      --  Analyze actual.
+      Actual := Get_Actual (Assoc);
+      Actual := Sem_Denoting_Name (Actual);
+      Set_Actual (Assoc, Actual);
+
+      Actual := Get_Named_Entity (Actual);
+      if Is_Error (Actual) then
+         return;
+      end if;
+
+      --  LRM08 6.5.7.2 Generic map aspects
+      --  An actual associated with a formal generic package in a
+      --  generic map aspect shall be the name that denotes an instance
+      --  of the uninstantiated package named in the formal generic
+      --  package declaration [...]
+      if Get_Kind (Actual) /= Iir_Kind_Package_Instantiation_Declaration then
+         Error_Msg_Sem
+           ("actual of association is not a package instantiation", Assoc);
+         return;
+      end if;
+
+      Package_Inter :=
+        Get_Named_Entity (Get_Uninstantiated_Package_Name (Inter));
+      if Get_Named_Entity (Get_Uninstantiated_Package_Name (Actual))
+        /= Package_Inter
+      then
+         Error_Msg_Sem
+           ("actual package name is not an instance of interface package",
+            Assoc);
+         return;
+      end if;
+
+      --  LRM08 6.5.7.2 Generic map aspects
+      --  b) If the formal generic package declaration includes an interface
+      --     generic map aspect in the form that includes the box (<>) symbol,
+      --     then the instantiaed package denotes by the actual may be any
+      --     instance of the uninstantiated package named in the formal
+      --     generic package declaration.
+      if Get_Generic_Map_Aspect_Chain (Inter) = Null_Iir then
+         null;
+      else
+         --  Other cases not yet handled.
+         raise Internal_Error;
+      end if;
+
+      return;
+   end Sem_Association_Package;
+
    --  Associate ASSOC with interface INTERFACE
    --  This sets MATCH.
-   procedure Sem_Association
+   procedure Sem_Association_By_Expression
      (Assoc : Iir;
       Inter : Iir;
       Finish : Boolean;
@@ -1195,41 +1412,6 @@ package body Sem_Assocs is
       Assoc_Kind : Param_Assoc_Type;
    begin
       Formal := Get_Formal (Assoc);
-
-      --  Handle open association.
-      if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-         if Formal /= Null_Iir then
-            Assoc_Kind := Sem_Formal (Formal, Inter);
-            if Assoc_Kind = None then
-               Match := False;
-               return;
-            end if;
-            Set_Whole_Association_Flag (Assoc, Assoc_Kind = Whole);
-            if Finish then
-               Sem_Name (Formal);
-               Formal := Finish_Sem_Name (Formal);
-               Set_Formal (Assoc, Formal);
-               if Get_Kind (Formal) in Iir_Kinds_Denoting_Name
-                 and then Is_Error (Get_Named_Entity (Formal))
-               then
-                  Match := False;
-                  return;
-               end if;
-
-               --  LRM 4.3.3.2  Associations lists
-               --  It is an error if an actual of open is associated with a
-               --  formal that is associated individually.
-               if Assoc_Kind = Individual then
-                  Error_Msg_Sem ("cannot associate individually with open",
-                                 Assoc);
-               end if;
-            end if;
-         else
-            Set_Whole_Association_Flag (Assoc, True);
-         end if;
-         Match := True;
-         return;
-      end if;
 
       --  Pre-semantize formal and extract out conversion.
       if Formal /= Null_Iir then
@@ -1252,7 +1434,7 @@ package body Sem_Assocs is
       --  Extract conversion from actual.
       Actual := Get_Actual (Assoc);
       In_Conv := Null_Iir;
-      if Get_Kind (Inter) /= Iir_Kind_Constant_Interface_Declaration then
+      if Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration then
          case Get_Kind (Actual) is
             when Iir_Kind_Function_Call =>
                Expr := Get_Parameter_Association_Chain (Actual);
@@ -1403,6 +1585,26 @@ package body Sem_Assocs is
             end if;
          end if;
       end if;
+   end Sem_Association_By_Expression;
+
+      --  Associate ASSOC with interface INTERFACE
+   --  This sets MATCH.
+   procedure Sem_Association
+     (Assoc : Iir; Inter : Iir; Finish : Boolean; Match : out Boolean) is
+   begin
+      case Get_Kind (Assoc) is
+         when Iir_Kind_Association_Element_Open =>
+            Sem_Association_Open (Assoc, Inter, Finish, Match);
+
+         when Iir_Kind_Association_Element_Package =>
+            Sem_Association_Package (Assoc, Inter, Finish, Match);
+
+         when Iir_Kind_Association_Element_By_Expression =>
+            Sem_Association_By_Expression (Assoc, Inter, Finish, Match);
+
+         when others =>
+            Error_Kind ("sem_assocation", Assoc);
+      end case;
    end Sem_Association;
 
    procedure Sem_Association_Chain
@@ -1609,7 +1811,7 @@ package body Sem_Assocs is
          return;
       end if;
 
-      --  LRM 8.6 Procedure Call Statement
+      --  LRM93 8.6 Procedure Call Statement
       --  For each formal parameter of a procedure, a procedure call must
       --  specify exactly one corresponding actual parameter.
       --  This actual parameter is specified either explicitly, by an
@@ -1617,7 +1819,7 @@ package body Sem_Assocs is
       --  list, or in the absence of such an association element, by a default
       --  expression (see Section 4.3.3.2).
 
-      --  LRM 7.3.3 Function Calls
+      --  LRM93 7.3.3 Function Calls
       --  For each formal parameter of a function, a function call must
       --  specify exactly one corresponding actual parameter.
       --  This actual parameter is specified either explicitly, by an
@@ -1625,61 +1827,77 @@ package body Sem_Assocs is
       --  list, or in the absence of such an association element, by a default
       --  expression (see Section 4.3.3.2).
 
-      --  LRM 1.1.1.2
+      --  LRM93 1.1.1.2 / LRM08 6.5.6.3 Port clauses
       --  A port of mode IN may be unconnected or unassociated only if its
       --  declaration includes a default expression.
       --  It is an error if a port of any mode other than IN is unconnected
       --  or unassociated and its type is an unconstrained array type.
 
+      --  LRM08 6.5.6.2 Generic clauses
+      --  It is an error if no such actual [instantiated package] is specified
+      --  for a given formal generic package (either because the formal generic
+      --  is unassociated or because the actual is OPEN).
+
       Inter := Interface_Chain;
       Pos := 0;
       while Inter /= Null_Iir loop
-         if Arg_Matched (Pos) <= Open
-           and then Get_Default_Value (Inter) = Null_Iir
-         then
-            case Missing is
-               when Missing_Parameter
-                 | Missing_Generic =>
-                  if Finish then
-                     Error_Msg_Sem ("no actual for " & Disp_Node (Inter), Loc);
-                  end if;
-                  Match := False;
-                  return;
-               when Missing_Port =>
-                  case Get_Mode (Inter) is
-                     when Iir_In_Mode =>
-                        if not Finish then
-                           raise Internal_Error;
-                        end if;
-                        Error_Msg_Sem (Disp_Node (Inter)
-                                       & " of mode IN must be connected", Loc);
-                        Match := False;
-                        return;
-                     when Iir_Out_Mode
-                       | Iir_Linkage_Mode
-                       | Iir_Inout_Mode
-                       | Iir_Buffer_Mode =>
-                        if not Finish then
-                           raise Internal_Error;
-                        end if;
-                        if not Is_Fully_Constrained_Type (Get_Type (Inter))
-                        then
-                           Error_Msg_Sem
-                             ("unconstrained " & Disp_Node (Inter)
-                              & " must be connected", Loc);
+         if Arg_Matched (Pos) <= Open then
+            case Get_Kind (Inter) is
+               when Iir_Kinds_Interface_Object_Declaration =>
+                  if Get_Default_Value (Inter) = Null_Iir then
+                     case Missing is
+                        when Missing_Parameter
+                          | Missing_Generic =>
+                           if Finish then
+                              Error_Msg_Sem
+                                ("no actual for " & Disp_Node (Inter), Loc);
+                           end if;
                            Match := False;
                            return;
-                        end if;
-                     when Iir_Unknown_Mode =>
-                        raise Internal_Error;
-                  end case;
-               when Missing_Allowed =>
-                  null;
+                        when Missing_Port =>
+                           case Get_Mode (Inter) is
+                              when Iir_In_Mode =>
+                                 if not Finish then
+                                    raise Internal_Error;
+                                 end if;
+                                 Error_Msg_Sem
+                                   (Disp_Node (Inter)
+                                      & " of mode IN must be connected", Loc);
+                                 Match := False;
+                                 return;
+                              when Iir_Out_Mode
+                                | Iir_Linkage_Mode
+                                | Iir_Inout_Mode
+                                | Iir_Buffer_Mode =>
+                                 if not Finish then
+                                    raise Internal_Error;
+                                 end if;
+                                 if not Is_Fully_Constrained_Type
+                                   (Get_Type (Inter))
+                                 then
+                                    Error_Msg_Sem
+                                      ("unconstrained " & Disp_Node (Inter)
+                                         & " must be connected", Loc);
+                                    Match := False;
+                                    return;
+                                 end if;
+                              when Iir_Unknown_Mode =>
+                                 raise Internal_Error;
+                           end case;
+                        when Missing_Allowed =>
+                           null;
+                     end case;
+                  end if;
+               when Iir_Kind_Interface_Package_Declaration =>
+                  Error_Msg_Sem
+                    (Disp_Node (Inter) & " must be associated", Loc);
+                  Match := False;
+               when others =>
+                  Error_Kind ("sem_association_chain", Inter);
             end case;
          end if;
          Inter := Get_Chain (Inter);
          Pos := Pos + 1;
       end loop;
-      return;
    end Sem_Association_Chain;
 end Sem_Assocs;

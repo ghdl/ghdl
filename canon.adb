@@ -211,7 +211,7 @@ package body Canon is
          when Iir_Kind_Last_Value_Attribute =>
             null;
 
-         when Iir_Kind_Signal_Interface_Declaration
+         when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Stable_Attribute
@@ -235,10 +235,10 @@ package body Canon is
               (Get_Name (Expr), Sensitivity_List, Is_Target);
 
          when Iir_Kind_Constant_Declaration
-           | Iir_Kind_Constant_Interface_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_File_Declaration =>
             null;
 
@@ -459,6 +459,7 @@ package body Canon is
      (Callees_List : Iir_List; Sensitivity_List : Iir_List)
    is
       Callee : Iir;
+      Bod : Iir;
    begin
       --  LRM08 11.3
       --  Moreover, for each subprogram for which the process is a parent
@@ -477,14 +478,20 @@ package body Canon is
             Set_Seen_Flag (Callee, True);
             case Get_All_Sensitized_State (Callee) is
                when Read_Signal =>
+                  Bod := Get_Subprogram_Body (Callee);
+
+                  --  Extract sensitivity from signals read in the body.
+                  --  FIXME: what about signals read during in declarations ?
                   Canon_Extract_Sequential_Statement_Chain_Sensitivity
-                    (Get_Sequential_Statement_Chain
-                       (Get_Subprogram_Body (Callee)),
-                     Sensitivity_List);
+                    (Get_Sequential_Statement_Chain (Bod), Sensitivity_List);
+
+                  --  Extract sensitivity from subprograms called.
                   Canon_Extract_Sensitivity_From_Callees
-                    (Get_Callees_List (Callee), Sensitivity_List);
+                    (Get_Callees_List (Bod), Sensitivity_List);
+
                when No_Signal =>
                   null;
+
                when Unknown | Invalid_Signal =>
                   raise Internal_Error;
             end case;
@@ -499,10 +506,15 @@ package body Canon is
       Res : Iir_List;
    begin
       Res := Create_Iir_List;
+
+      --  Signals read by statements.
+      --  FIXME: justify why signals read in declarations don't care.
       Canon_Extract_Sequential_Statement_Chain_Sensitivity
         (Get_Sequential_Statement_Chain (Proc), Res);
-      Canon_Extract_Sensitivity_From_Callees
-        (Get_Callees_List (Proc), Res);
+
+      --  Signals read indirectly by subprograms called.
+      Canon_Extract_Sensitivity_From_Callees (Get_Callees_List (Proc), Res);
+
       Set_Seen_Flag (Proc, True);
       Clear_Seen_Flag (Proc);
       return Res;
@@ -717,16 +729,16 @@ package body Canon is
            | Iir_Kind_Instance_Name_Attribute =>
             null;
 
-         when Iir_Kind_Signal_Interface_Declaration
+         when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Constant_Interface_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_File_Declaration
-           | Iir_Kind_File_Interface_Declaration
+           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Object_Alias_Declaration =>
             null;
 
@@ -798,9 +810,7 @@ package body Canon is
    begin
       --  No argument, so return now.
       if Interface_Chain = Null_Iir then
-         if Association_Chain /= Null_Iir then
-            raise Internal_Error;
-         end if;
+         pragma Assert (Association_Chain = Null_Iir);
          return Null_Iir;
       end if;
 
@@ -842,8 +852,10 @@ package body Canon is
                      end if;
                   when Iir_Kind_Association_Element_By_Individual =>
                      Found := True;
+                  when Iir_Kind_Association_Element_Package =>
+                     goto Done;
                   when others =>
-                     Error_Kind ("canon_association_list", Assoc_El);
+                     Error_Kind ("canon_association_chain", Assoc_El);
                end case;
             elsif Found then
                --  No more associations.
@@ -2621,11 +2633,17 @@ package body Canon is
             Canon_Declarations (Unit, El, Null_Iir);
             Canon_Block_Configuration (Unit, Get_Block_Configuration (El));
          when Iir_Kind_Package_Instantiation_Declaration =>
-            Set_Generic_Map_Aspect_Chain
-              (El,
-               Canon_Association_Chain_And_Actuals
-                 (Get_Generic_Chain (El),
-                  Get_Generic_Map_Aspect_Chain (El), El));
+            declare
+               Pkg : constant Iir :=
+                 Get_Named_Entity (Get_Uninstantiated_Package_Name (El));
+               Hdr : constant Iir := Get_Package_Header (Pkg);
+            begin
+               Set_Generic_Map_Aspect_Chain
+                 (El,
+                  Canon_Association_Chain_And_Actuals
+                    (Get_Generic_Chain (Hdr),
+                     Get_Generic_Map_Aspect_Chain (El), El));
+            end;
          when others =>
             Error_Kind ("canonicalize2", El);
       end case;

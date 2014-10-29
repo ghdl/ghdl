@@ -344,7 +344,7 @@ package body Sem_Stmts is
       Target_Prefix := Get_Object_Prefix (Target_Object);
       Targ_Obj_Kind := Get_Kind (Target_Prefix);
       case Targ_Obj_Kind is
-         when Iir_Kind_Signal_Interface_Declaration =>
+         when Iir_Kind_Interface_Signal_Declaration =>
             if not Iir_Mode_Writable (Get_Mode (Target_Prefix)) then
                Error_Msg_Sem
                  (Disp_Node (Target_Prefix) & " can't be assigned", Target);
@@ -373,7 +373,7 @@ package body Sem_Stmts is
       --   kind.  This is determined at run-time, according to the actual
       --   associated with the formal.
       --  GHDL: parent of target cannot be a function.
-      if Targ_Obj_Kind = Iir_Kind_Signal_Interface_Declaration
+      if Targ_Obj_Kind = Iir_Kind_Interface_Signal_Declaration
         and then
         Get_Kind (Get_Parent (Target_Prefix)) = Iir_Kind_Procedure_Declaration
       then
@@ -414,7 +414,7 @@ package body Sem_Stmts is
       end if;
       Target_Prefix := Get_Object_Prefix (Target_Object);
       case Get_Kind (Target_Prefix) is
-         when Iir_Kind_Variable_Interface_Declaration =>
+         when Iir_Kind_Interface_Variable_Declaration =>
             if not Iir_Mode_Writable (Get_Mode (Target_Prefix)) then
                Error_Msg_Sem (Disp_Node (Target_Prefix)
                               & " cannot be written (bad mode)", Target);
@@ -1023,7 +1023,7 @@ package body Sem_Stmts is
                  | Iir_Kind_Guard_Signal_Declaration
                  | Iir_Kinds_Signal_Attribute =>
                   null;
-               when Iir_Kind_Signal_Interface_Declaration =>
+               when Iir_Kind_Interface_Signal_Declaration =>
                   if not Iir_Mode_Readable (Get_Mode (Prefix)) then
                      Error_Msg_Sem
                        (Disp_Node (Res) & " of mode out"
@@ -1450,9 +1450,9 @@ package body Sem_Stmts is
       Header := Get_Block_Header (Stmt);
       if Header /= Null_Iir then
          Generic_Chain := Get_Generic_Chain (Header);
-         Sem_Interface_Chain (Generic_Chain, Interface_Generic);
+         Sem_Interface_Chain (Generic_Chain, Generic_Interface_List);
          Port_Chain := Get_Port_Chain (Header);
-         Sem_Interface_Chain (Port_Chain, Interface_Port);
+         Sem_Interface_Chain (Port_Chain, Port_Interface_List);
 
          --  LRM 9.1
          --  Such actuals are evaluated in the context of the enclosing
@@ -1619,7 +1619,7 @@ package body Sem_Stmts is
       -- FIXME.
       case Get_Kind (Guard) is
          when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration =>
             null;
          when others =>

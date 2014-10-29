@@ -1660,11 +1660,11 @@ package body Ghdlprint is
                      C := 'F';
                   when Iir_Kind_Procedure_Declaration =>
                      C := 'p';
-                  when Iir_Kind_Signal_Interface_Declaration =>
+                  when Iir_Kind_Interface_Signal_Declaration =>
                      C := 's';
                   when Iir_Kind_Signal_Declaration =>
                      C := 'S';
-                  when Iir_Kind_Constant_Interface_Declaration =>
+                  when Iir_Kind_Interface_Constant_Declaration =>
                      C := 'c';
                   when Iir_Kind_Constant_Declaration =>
                      C := 'C';

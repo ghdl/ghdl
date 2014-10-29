@@ -983,10 +983,11 @@ package body Sem_Scopes is
            | Iir_Kind_File_Declaration
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
-           | Iir_Kind_Constant_Interface_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
-           | Iir_Kind_File_Interface_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
@@ -1283,6 +1284,14 @@ package body Sem_Scopes is
          when Iir_Kind_Package_Declaration =>
             Add_Package_Declarations (Name, True);
          when Iir_Kind_Package_Instantiation_Declaration =>
+            Add_Package_Instantiation_Declarations (Name, True);
+         when Iir_Kind_Interface_Package_Declaration =>
+            --  LRM08 6.5.5 Interface package declarations
+            --  Within an entity declaration, an architecture body, a
+            --  component declaration, or an uninstantiated subprogram or
+            --  package declaration that declares a given interface package,
+            --  the name of the given interface package denotes an undefined
+            --  instance of the uninstantiated package.
             Add_Package_Instantiation_Declarations (Name, True);
          when Iir_Kind_Error =>
             null;

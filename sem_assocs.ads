@@ -18,6 +18,11 @@
 with Iirs; use Iirs;
 
 package Sem_Assocs is
+   --  Change the kind of association corresponding to non-object interfaces.
+   --  Such an association mustn't be handled an like association for object.
+   function Extract_Non_Object_Association
+     (Assoc_Chain : Iir; Inter_Chain : Iir) return Iir;
+
    --  Semantize actuals of ASSOC_CHAIN.
    --  Check all named associations are after positionnal one.
    --  Return TRUE if no error.
@@ -48,8 +53,8 @@ package Sem_Assocs is
    --  Check for restrictions in §1.1.1.2
    --  Return FALSE in case of error.
    function Check_Port_Association_Restriction
-     (Formal : Iir_Signal_Interface_Declaration;
-      Actual : Iir_Signal_Interface_Declaration;
+     (Formal : Iir_Interface_Signal_Declaration;
+      Actual : Iir_Interface_Signal_Declaration;
       Assoc : Iir)
      return Boolean;
 end Sem_Assocs;

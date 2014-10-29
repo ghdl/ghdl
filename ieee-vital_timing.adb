@@ -231,7 +231,7 @@ package body Ieee.Vital_Timing is
    end Check_Level0_Attribute_Specification;
 
    procedure Check_Entity_Port_Declaration
-     (Decl : Iir_Signal_Interface_Declaration)
+     (Decl : Iir_Interface_Signal_Declaration)
    is
       use Name_Table;
 
@@ -796,7 +796,7 @@ package body Ieee.Vital_Timing is
    end Check_Vital_Delay_Type;
 
    function Check_Timing_Generic_Prefix
-     (Decl : Iir_Constant_Interface_Declaration; Length : Natural)
+     (Decl : Iir_Interface_Constant_Declaration; Length : Natural)
      return Boolean
    is
       use Name_Table;
@@ -818,7 +818,7 @@ package body Ieee.Vital_Timing is
    --  <VITALPropagationDelayName> ::=
    --     TPD_<InputPort>_<OutputPort>[_<SDFSimpleConditionAndOrEdge>]
    procedure Check_Propagation_Delay_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
       Iport : Iir;
       Oport : Iir;
@@ -845,7 +845,7 @@ package body Ieee.Vital_Timing is
 
    --  tsetup
    procedure Check_Input_Setup_Time_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
    begin
       if not Check_Timing_Generic_Prefix (Decl, 7) then
@@ -856,7 +856,7 @@ package body Ieee.Vital_Timing is
 
    --  thold
    procedure Check_Input_Hold_Time_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
    begin
       if not Check_Timing_Generic_Prefix (Decl, 6) then
@@ -867,7 +867,7 @@ package body Ieee.Vital_Timing is
 
    --  trecovery
    procedure Check_Input_Recovery_Time_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
    begin
       if not Check_Timing_Generic_Prefix (Decl, 10) then
@@ -878,7 +878,7 @@ package body Ieee.Vital_Timing is
 
    --  tremoval
    procedure Check_Input_Removal_Time_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
    begin
       if not Check_Timing_Generic_Prefix (Decl, 9) then
@@ -889,7 +889,7 @@ package body Ieee.Vital_Timing is
 
    --  tperiod
    procedure Check_Input_Period_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
       Iport : Iir;
    begin
@@ -903,7 +903,7 @@ package body Ieee.Vital_Timing is
 
    --  tpw
    procedure Check_Pulse_Width_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
       Iport : Iir;
    begin
@@ -917,7 +917,7 @@ package body Ieee.Vital_Timing is
 
    --  tskew
    procedure Check_Input_Skew_Time_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
       Fport : Iir;
       Sport : Iir;
@@ -933,7 +933,7 @@ package body Ieee.Vital_Timing is
 
    --  tncsetup
    procedure Check_No_Change_Setup_Time_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
    begin
       if not Check_Timing_Generic_Prefix (Decl, 9) then
@@ -944,7 +944,7 @@ package body Ieee.Vital_Timing is
 
    --  tnchold
    procedure Check_No_Change_Hold_Time_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
    begin
       if not Check_Timing_Generic_Prefix (Decl, 8) then
@@ -955,7 +955,7 @@ package body Ieee.Vital_Timing is
 
    --  tipd
    procedure Check_Interconnect_Path_Delay_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
       Iport : Iir;
    begin
@@ -969,7 +969,7 @@ package body Ieee.Vital_Timing is
 
    --  tdevice
    procedure Check_Device_Delay_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
       Oport : Iir;
       pragma Unreferenced (Oport);
@@ -995,7 +995,7 @@ package body Ieee.Vital_Timing is
 
    --  tisd
    procedure Check_Internal_Signal_Delay_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
       Iport : Iir;
       Cport : Iir;
@@ -1012,7 +1012,7 @@ package body Ieee.Vital_Timing is
 
    --  tbpd
    procedure Check_Biased_Propagation_Delay_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
       Iport : Iir;
       Oport : Iir;
@@ -1082,7 +1082,7 @@ package body Ieee.Vital_Timing is
 
    --  ticd
    procedure Check_Internal_Clock_Delay_Generic_Name
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
       Cport : Iir;
       P_Start : Natural;
@@ -1168,7 +1168,7 @@ package body Ieee.Vital_Timing is
    end Check_Internal_Clock_Delay_Generic_Name;
 
    procedure Check_Entity_Generic_Declaration
-     (Decl : Iir_Constant_Interface_Declaration)
+     (Decl : Iir_Interface_Constant_Declaration)
    is
       use Name_Table;
       Id : Name_Id;

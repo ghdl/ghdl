@@ -171,10 +171,10 @@ package body Disp_Vhdl is
          when Iir_Kind_Component_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Constant_Interface_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
-           | Iir_Kind_File_Interface_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
@@ -276,7 +276,7 @@ package body Disp_Vhdl is
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
-           | Iir_Kinds_Interface_Declaration
+           | Iir_Kinds_Interface_Object_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration
@@ -1025,13 +1025,13 @@ package body Disp_Vhdl is
    begin
       if (Get_Lexical_Layout (Inter) and Iir_Lexical_Has_Class) /= 0 then
          case Get_Kind (Inter) is
-            when Iir_Kind_Signal_Interface_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration =>
                Put ("signal ");
-            when Iir_Kind_Variable_Interface_Declaration =>
+            when Iir_Kind_Interface_Variable_Declaration =>
                Put ("variable ");
-            when Iir_Kind_Constant_Interface_Declaration =>
+            when Iir_Kind_Interface_Constant_Declaration =>
                Put ("constant ");
-            when Iir_Kind_File_Interface_Declaration =>
+            when Iir_Kind_Interface_File_Declaration =>
                Put ("file ");
             when others =>
                Error_Kind ("disp_interface_class", Inter);
@@ -1054,7 +1054,7 @@ package body Disp_Vhdl is
       else
          Disp_Subtype_Indication (Get_Subtype_Indication (Inter));
       end if;
-      if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration then
+      if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
          Disp_Signal_Kind (Get_Signal_Kind (Inter));
       end if;
       if Default /= Null_Iir then
@@ -2536,15 +2536,15 @@ package body Disp_Vhdl is
          when Iir_Kind_Element_Declaration =>
             Disp_Name_Of (Expr);
 
-         when Iir_Kind_Signal_Interface_Declaration
+         when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Constant_Interface_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_File_Declaration
-           | Iir_Kind_File_Interface_Declaration
+           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Iterator_Declaration =>
             Disp_Name_Of (Expr);
             return;
@@ -2949,7 +2949,7 @@ package body Disp_Vhdl is
       Put ("package ");
       Disp_Identifier (Decl);
       Put_Line (" is new ");
-      Disp_Name (Get_Uninstantiated_Name (Decl));
+      Disp_Name (Get_Uninstantiated_Package_Name (Decl));
       Put (" ");
       Disp_Generic_Map_Aspect (Decl);
       Put_Line (";");
@@ -3153,7 +3153,7 @@ package body Disp_Vhdl is
             Disp_Concurrent_Conditional_Signal_Assignment (An_Iir);
          when Iir_Kinds_Dyadic_Operator =>
             Disp_Dyadic_Operator (An_Iir);
-         when Iir_Kind_Signal_Interface_Declaration
+         when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Object_Alias_Declaration =>
             Disp_Name_Of (An_Iir);

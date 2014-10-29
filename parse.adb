@@ -56,7 +56,8 @@ package body Parse is
    function Parse_Primary return Iir_Expression;
    function Parse_Use_Clause return Iir_Use_Clause;
 
-   function Parse_Association_Chain return Iir;
+   function Parse_Association_List return Iir;
+   function Parse_Association_List_In_Parenthesis return Iir;
 
    function Parse_Sequential_Statements (Parent : Iir) return Iir;
    function Parse_Configuration_Item return Iir;
@@ -838,7 +839,8 @@ package body Parse is
                Res := Create_Iir (Iir_Kind_Parenthesis_Name);
                Set_Location (Res);
                Set_Prefix (Res, Prefix);
-               Set_Association_Chain (Res, Parse_Association_Chain);
+               Set_Association_Chain
+                 (Res, Parse_Association_List_In_Parenthesis);
 
             when Tok_Dot =>
                if Get_Kind (Prefix) = Iir_Kind_String_Literal then
@@ -930,16 +932,10 @@ package body Parse is
       return Res;
    end Parse_Type_Mark;
 
-   --  precond : '('
-   --  postcond: next token
+   --  precond : CONSTANT, SIGNAL, VARIABLE. FILE or identifier
+   --  postcond: next token (';' or ')')
    --
-   --  [ LRM93 4.3.2.1 ]
-   --  interface_list ::= interface_element { ; interface_element }
-   --
-   --  [ LRM93 4.3.2.1 ]
-   --  interface_element ::= interface_declaration
-   --
-   --  [ LRM93 4.3.2 ]
+   --  [ LRM93 4.3.2 ] [ LRM08 6.5.2 ]
    --  interface_declaration ::= interface_constant_declaration
    --                          | interface_signal_declaration
    --                          | interface_variable_declaration
@@ -968,9 +964,10 @@ package body Parse is
    --          [ := STATIC_expression ]
    --
    --  The default kind of interface declaration is DEFAULT.
-   function Parse_Interface_Chain (Default: Iir_Kind; Parent : Iir)
-                                  return Iir
+   function Parse_Interface_Object_Declaration (Ctxt : Interface_Kind_Type)
+                                               return Iir
    is
+      Kind : Iir_Kind;
       Res, Last : Iir;
       First, Prev_First : Iir;
       Inter: Iir;
@@ -980,6 +977,305 @@ package body Parse is
       Signal_Kind: Iir_Signal_Kind;
       Default_Value: Iir;
       Lexical_Layout : Iir_Lexical_Layout_Type;
+   begin
+      Res := Null_Iir;
+      Last := Null_Iir;
+
+      --  LRM08 6.5.2 Interface object declarations
+      --  Interface obejcts include interface constants that appear as
+      --  generics of a design entity, a component, a block, a package or
+      --  a subprogram, or as constant parameter of subprograms; interface
+      --  signals that appear as ports of a design entity, component or
+      --  block, or as signal parameters of subprograms; interface variables
+      --  that appear as variable parameter subprograms; interface files
+      --  that appear as file parameters of subrograms.
+      case Current_Token is
+         when Tok_Identifier =>
+            --  The class of the object is unknown.  Select default
+            --  according to the above rule, assuming the mode is IN.  If
+            --  the mode is not IN, Parse_Interface_Object_Declaration will
+            --  change the class.
+            case Ctxt is
+               when Generic_Interface_List
+                 | Parameter_Interface_List =>
+                  Kind := Iir_Kind_Interface_Constant_Declaration;
+               when Port_Interface_List =>
+                  Kind := Iir_Kind_Interface_Signal_Declaration;
+            end case;
+         when Tok_Constant =>
+            Kind := Iir_Kind_Interface_Constant_Declaration;
+         when Tok_Signal =>
+            if Ctxt = Generic_Interface_List then
+               Error_Msg_Parse
+                 ("signal interface not allowed in generic clause");
+            end if;
+            Kind := Iir_Kind_Interface_Signal_Declaration;
+         when Tok_Variable =>
+            if Ctxt not in Parameter_Interface_List then
+               Error_Msg_Parse
+                 ("variable interface not allowed in generic or port clause");
+            end if;
+            Kind := Iir_Kind_Interface_Variable_Declaration;
+         when Tok_File =>
+            if Flags.Vhdl_Std = Vhdl_87 then
+               Error_Msg_Parse ("file interface not allowed in vhdl 87");
+            end if;
+            if Ctxt not in Parameter_Interface_List then
+               Error_Msg_Parse
+                 ("variable interface not allowed in generic or port clause");
+            end if;
+            Kind := Iir_Kind_Interface_File_Declaration;
+         when others =>
+            --  Fall back in case of parse error.
+            Kind := Iir_Kind_Interface_Variable_Declaration;
+      end case;
+
+      Inter := Create_Iir (Kind);
+
+      if Current_Token = Tok_Identifier then
+         Is_Default := True;
+         Lexical_Layout := 0;
+      else
+         Is_Default := False;
+         Lexical_Layout := Iir_Lexical_Has_Class;
+
+         --  Skip 'signal', 'variable', 'constant' or 'file'.
+         Scan;
+      end if;
+
+      Prev_First := Last;
+      First := Inter;
+      loop
+         if Current_Token /= Tok_Identifier then
+            Expect (Tok_Identifier);
+         end if;
+         Set_Identifier (Inter, Current_Identifier);
+         Set_Location (Inter);
+
+         if Res = Null_Iir then
+            Res := Inter;
+         else
+            Set_Chain (Last, Inter);
+         end if;
+         Last := Inter;
+
+         --  Skip identifier
+         Scan;
+
+         exit when Current_Token = Tok_Colon;
+         Expect (Tok_Comma, "',' or ':' expected after identifier");
+
+         --  Skip ','
+         Scan;
+
+         Inter := Create_Iir (Kind);
+      end loop;
+
+      Expect (Tok_Colon, "':' must follow the interface element identifier");
+
+      --  Skip ':'
+      Scan;
+
+      --  LRM93 2.1.1  LRM08 4.2.2.1
+      --  If the mode is INOUT or OUT, and no object class is explicitly
+      --  specified, variable is assumed.
+      if Is_Default
+        and then Ctxt in Parameter_Interface_List
+        and then (Current_Token = Tok_Inout or else Current_Token = Tok_Out)
+      then
+         --  Convert into variable.
+         declare
+            O_Interface : Iir_Interface_Constant_Declaration;
+            N_Interface : Iir_Interface_Variable_Declaration;
+         begin
+            O_Interface := First;
+            while O_Interface /= Null_Iir loop
+               N_Interface :=
+                 Create_Iir (Iir_Kind_Interface_Variable_Declaration);
+               Location_Copy (N_Interface, O_Interface);
+               Set_Identifier (N_Interface,
+                               Get_Identifier (O_Interface));
+               if Prev_First = Null_Iir then
+                  Res := N_Interface;
+               else
+                  Set_Chain (Prev_First, N_Interface);
+               end if;
+               Prev_First := N_Interface;
+               if O_Interface = First then
+                  First := N_Interface;
+               end if;
+               Last := N_Interface;
+               Inter := Get_Chain (O_Interface);
+               Free_Iir (O_Interface);
+               O_Interface := Inter;
+            end loop;
+            Inter := First;
+         end;
+      end if;
+
+      --  Update lexical layout if mode is present.
+      case Current_Token is
+         when Tok_In
+           | Tok_Out
+           | Tok_Inout
+           | Tok_Linkage
+           | Tok_Buffer =>
+            Lexical_Layout := Lexical_Layout or Iir_Lexical_Has_Mode;
+         when others =>
+            null;
+      end case;
+
+      --  Parse mode (and handle default mode).
+      case Get_Kind (Inter) is
+         when Iir_Kind_Interface_File_Declaration =>
+            if Parse_Mode (Iir_Unknown_Mode) /= Iir_Unknown_Mode then
+               Error_Msg_Parse
+                 ("mode can't be specified for a file interface");
+            end if;
+            Interface_Mode := Iir_Inout_Mode;
+         when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_Variable_Declaration =>
+            --  LRM93 4.3.2
+            --  If no mode is explicitly given in an interface declaration
+            --  other than an interface file declaration, mode IN is
+            --  assumed.
+            Interface_Mode := Parse_Mode (Iir_In_Mode);
+         when Iir_Kind_Interface_Constant_Declaration =>
+            Interface_Mode := Parse_Mode (Iir_In_Mode);
+            if Interface_Mode /= Iir_In_Mode then
+               Error_Msg_Parse ("mode must be 'in' for a constant");
+            end if;
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      Interface_Type := Parse_Subtype_Indication;
+
+      --  Signal kind (but only for signal).
+      if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
+         Signal_Kind := Parse_Signal_Kind;
+      else
+         Signal_Kind := Iir_No_Signal_Kind;
+      end if;
+
+      if Current_Token = Tok_Assign then
+         if Get_Kind (Inter) = Iir_Kind_Interface_File_Declaration then
+            Error_Msg_Parse
+              ("default expression not allowed for an interface file");
+         end if;
+
+         --  Skip ':='
+         Scan;
+
+         Default_Value := Parse_Expression;
+      else
+         Default_Value := Null_Iir;
+      end if;
+
+      --  Subtype_Indication and Default_Value are set only on the first
+      --  interface.
+      Set_Subtype_Indication (First, Interface_Type);
+      if Get_Kind (First) /= Iir_Kind_Interface_File_Declaration then
+         Set_Default_Value (First, Default_Value);
+      end if;
+
+      Inter := First;
+      while Inter /= Null_Iir loop
+         Set_Mode (Inter, Interface_Mode);
+         Set_Is_Ref (Inter, Inter /= First);
+         if Inter = Last then
+            Set_Lexical_Layout (Inter,
+                                Lexical_Layout or Iir_Lexical_Has_Type);
+         else
+            Set_Lexical_Layout (Inter, Lexical_Layout);
+         end if;
+         if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
+            Set_Signal_Kind (Inter, Signal_Kind);
+         end if;
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      return Res;
+   end Parse_Interface_Object_Declaration;
+
+   --  Precond : 'package'
+   --  Postcond: next token
+   --
+   --  LRM08 6.5.5 Interface package declarations
+   --  interface_package_declaration ::=
+   --    PACKAGE identifier IS NEW uninstantiated_package name
+   --      interface_package_generic_map_aspect
+   --
+   --  interface_package_generic_map_aspect ::=
+   --       generic_map_aspect
+   --     | GENERIC MAP ( <> )
+   --     | GENERIC MAP ( DEFAULT )
+   function Parse_Interface_Package_Declaration return Iir
+   is
+      Inter : Iir;
+      Map : Iir;
+   begin
+      Inter := Create_Iir (Iir_Kind_Interface_Package_Declaration);
+
+      --  Skip 'package'
+      Scan_Expect (Tok_Identifier,
+                   "an identifier is expected after ""package""");
+      Set_Identifier (Inter, Current_Identifier);
+      Set_Location (Inter);
+
+      --  Skip identifier
+      Scan_Expect (Tok_Is);
+
+      --  Skip 'is'
+      Scan_Expect (Tok_New);
+
+      --  Skip 'new'
+      Scan;
+
+      Set_Uninstantiated_Package_Name (Inter, Parse_Name (False));
+
+      Expect (Tok_Generic);
+
+      --  Skip 'generic'
+      Scan_Expect (Tok_Map);
+
+      --  Skip 'map'
+      Scan_Expect (Tok_Left_Paren);
+
+      --  Skip '('
+      Scan;
+
+      case Current_Token is
+         when Tok_Box =>
+            Map := Null_Iir;
+            --  Skip '<>'
+            Scan;
+         when others =>
+            Map := Parse_Association_List;
+      end case;
+      Set_Generic_Map_Aspect_Chain (Inter, Map);
+
+      Expect (Tok_Right_Paren);
+
+      --  Skip ')'
+      Scan;
+
+      return Inter;
+   end Parse_Interface_Package_Declaration;
+
+   --  Precond : '('
+   --  Postcond: next token
+   --
+   --  LRM08 6.5.6 Interface lists
+   --  interface_list ::= interface_element { ';' interface_element }
+   --
+   --  interface_element ::= interface_declaration
+   function Parse_Interface_List (Ctxt : Interface_Kind_Type; Parent : Iir)
+                                 return Iir
+   is
+      Res, Last : Iir;
+      Inters : Iir;
+      Next : Iir;
       Prev_Loc : Location_Type;
    begin
       Expect (Tok_Left_Paren);
@@ -993,19 +1289,22 @@ package body Parse is
          Scan;
 
          case Current_Token is
-            when Tok_Identifier =>
-               Inter := Create_Iir (Default);
-            when Tok_Signal =>
-               Inter := Create_Iir (Iir_Kind_Signal_Interface_Declaration);
-            when Tok_Variable =>
-               Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
-            when Tok_Constant =>
-               Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
-            when Tok_File =>
-               if Flags.Vhdl_Std = Vhdl_87 then
-                  Error_Msg_Parse ("file interface not allowed in vhdl 87");
+            when Tok_Identifier
+              | Tok_Signal
+              | Tok_Variable
+              | Tok_Constant
+              | Tok_File =>
+               --  An inteface object.
+               Inters := Parse_Interface_Object_Declaration (Ctxt);
+            when Tok_Package =>
+               if Ctxt /= Generic_Interface_List then
+                  Error_Msg_Parse
+                    ("package interface only allowed in generic interface");
+               elsif Flags.Vhdl_Std < Vhdl_08 then
+                  Error_Msg_Parse
+                    ("package interface not allowed before vhdl 08");
                end if;
-               Inter := Create_Iir (Iir_Kind_File_Interface_Declaration);
+               Inters := Parse_Interface_Package_Declaration;
             when Tok_Right_Paren =>
                if Res = Null_Iir then
                   Error_Msg_Parse
@@ -1020,172 +1319,25 @@ package body Parse is
                  ("'signal', 'constant', 'variable', 'file' "
                   & "or identifier expected");
                --  Use a variable interface as a fall-back.
-               Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
+               Inters := Parse_Interface_Object_Declaration (Ctxt);
          end case;
-         if Current_Token = Tok_Identifier then
-            Is_Default := True;
-            Lexical_Layout := 0;
-         else
-            Is_Default := False;
-            Lexical_Layout := Iir_Lexical_Has_Class;
 
-            --  Skip 'signal', 'variable', 'constant' or 'file'.
-            Scan;
+         --  Chain
+         if Last = Null_Iir then
+            Res := Inters;
+         else
+            Set_Chain (Last, Inters);
          end if;
 
-         Prev_First := Last;
-         First := Inter;
+         --  Set parent and set Last to the last interface.
+         Last := Inters;
          loop
-            if Current_Token /= Tok_Identifier then
-               Expect (Tok_Identifier);
-            end if;
-            Set_Identifier (Inter, Current_Identifier);
-            Set_Location (Inter);
-
-            if Res = Null_Iir then
-               Res := Inter;
-            else
-               Set_Chain (Last, Inter);
-            end if;
-            Last := Inter;
-
-            --  Skip identifier
-            Scan;
-
-            exit when Current_Token = Tok_Colon;
-            Expect (Tok_Comma, "',' or ':' expected after identifier");
-
-            --  Skip ','
-            Scan;
-
-            Inter := Create_Iir (Get_Kind (Inter));
+            Set_Parent (Last, Parent);
+            Next := Get_Chain (Last);
+            exit when Next = Null_Iir;
+            Last := Next;
          end loop;
 
-         Expect (Tok_Colon,
-                 "':' must follow the interface element identifier");
-
-         --  Skip ':'
-         Scan;
-
-         --  LRM93 2.1.1
-         --  If the mode is INOUT or OUT, and no object class is explicitly
-         --  specified, variable is assumed.
-         if Is_Default
-           and then Default /= Iir_Kind_Signal_Interface_Declaration
-           and then (Current_Token = Tok_Inout or else Current_Token = Tok_Out)
-         then
-            --  Convert into variable.
-            declare
-               O_Interface : Iir_Constant_Interface_Declaration;
-               N_Interface : Iir_Variable_Interface_Declaration;
-            begin
-               O_Interface := First;
-               while O_Interface /= Null_Iir loop
-                  N_Interface :=
-                    Create_Iir (Iir_Kind_Variable_Interface_Declaration);
-                  Location_Copy (N_Interface, O_Interface);
-                  Set_Identifier (N_Interface,
-                                  Get_Identifier (O_Interface));
-                  if Prev_First = Null_Iir then
-                     Res := N_Interface;
-                  else
-                     Set_Chain (Prev_First, N_Interface);
-                  end if;
-                  Prev_First := N_Interface;
-                  if O_Interface = First then
-                     First := N_Interface;
-                  end if;
-                  Last := N_Interface;
-                  Inter := Get_Chain (O_Interface);
-                  Free_Iir (O_Interface);
-                  O_Interface := Inter;
-               end loop;
-               Inter := First;
-            end;
-         end if;
-
-         --  Update lexical layout if mode is present.
-         case Current_Token is
-            when Tok_In
-              | Tok_Out
-              | Tok_Inout
-              | Tok_Linkage
-              | Tok_Buffer =>
-               Lexical_Layout := Lexical_Layout or Iir_Lexical_Has_Mode;
-            when others =>
-               null;
-         end case;
-
-         --  Parse mode (and handle default mode).
-         case Get_Kind (Inter) is
-            when Iir_Kind_File_Interface_Declaration =>
-               if Parse_Mode (Iir_Unknown_Mode) /= Iir_Unknown_Mode then
-                  Error_Msg_Parse
-                    ("mode can't be specified for a file interface");
-               end if;
-               Interface_Mode := Iir_Inout_Mode;
-            when Iir_Kind_Signal_Interface_Declaration
-              | Iir_Kind_Variable_Interface_Declaration =>
-               --  LRM93 4.3.2
-               --  If no mode is explicitly given in an interface declaration
-               --  other than an interface file declaration, mode IN is
-               --  assumed.
-               Interface_Mode := Parse_Mode (Iir_In_Mode);
-            when Iir_Kind_Constant_Interface_Declaration =>
-               Interface_Mode := Parse_Mode (Iir_In_Mode);
-               if Interface_Mode /= Iir_In_Mode then
-                  Error_Msg_Parse ("mode must be 'in' for a constant");
-               end if;
-            when others =>
-               raise Internal_Error;
-         end case;
-
-         Interface_Type := Parse_Subtype_Indication;
-
-         --  Signal kind (but only for signal).
-         if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration then
-            Signal_Kind := Parse_Signal_Kind;
-         else
-            Signal_Kind := Iir_No_Signal_Kind;
-         end if;
-
-         if Current_Token = Tok_Assign then
-            if Get_Kind (Inter) = Iir_Kind_File_Interface_Declaration then
-               Error_Msg_Parse
-                 ("default expression not allowed for an interface file");
-            end if;
-
-            --  Skip ':='
-            Scan;
-
-            Default_Value := Parse_Expression;
-         else
-            Default_Value := Null_Iir;
-         end if;
-
-         --  Subtype_Indication and Default_Value are set only on the first
-         --  interface.
-         Set_Subtype_Indication (First, Interface_Type);
-         if Get_Kind (First) /= Iir_Kind_File_Interface_Declaration then
-            Set_Default_Value (First, Default_Value);
-         end if;
-
-         Inter := First;
-         while Inter /= Null_Iir loop
-            Set_Mode (Inter, Interface_Mode);
-            Set_Parent (Inter, Parent);
-            Set_Is_Ref (Inter, Inter /= First);
-            if Inter = Last then
-               Set_Lexical_Layout (Inter,
-                                   Lexical_Layout or Iir_Lexical_Has_Type);
-            else
-               Set_Lexical_Layout (Inter, Lexical_Layout);
-            end if;
-            if Get_Kind (Inter) = Iir_Kind_Signal_Interface_Declaration then
-               Set_Signal_Kind (Inter, Signal_Kind);
-            end if;
-            Inter := Get_Chain (Inter);
-         end loop;
          exit when Current_Token /= Tok_Semi_Colon;
       end loop;
 
@@ -1197,7 +1349,7 @@ package body Parse is
       Scan;
 
       return Res;
-   end Parse_Interface_Chain;
+   end Parse_Interface_List;
 
    --  precond : PORT
    --  postcond: next token
@@ -1216,13 +1368,12 @@ package body Parse is
       pragma Assert (Current_Token = Tok_Port);
       Scan;
 
-      Res := Parse_Interface_Chain
-        (Iir_Kind_Signal_Interface_Declaration, Parent);
+      Res := Parse_Interface_List (Port_Interface_List, Parent);
 
       --  Check the interface are signal interfaces.
       El := Res;
       while El /= Null_Iir loop
-         if Get_Kind (El) /= Iir_Kind_Signal_Interface_Declaration then
+         if Get_Kind (El) /= Iir_Kind_Interface_Signal_Declaration then
             Error_Msg_Parse ("port must be a signal", El);
          end if;
          El := Get_Chain (El);
@@ -1248,8 +1399,7 @@ package body Parse is
       pragma Assert (Current_Token = Tok_Generic);
       Scan;
 
-      Res := Parse_Interface_Chain
-        (Iir_Kind_Constant_Interface_Declaration, Parent);
+      Res := Parse_Interface_List (Generic_Interface_List, Parent);
       Set_Generic_Chain (Parent, Res);
 
       Scan_Semi_Colon ("generic clause");
@@ -5136,6 +5286,8 @@ package body Parse is
    --  operator_symbol ::= string_literal
    function Parse_Subprogram_Declaration (Parent : Iir) return Iir
    is
+      Kind : Iir_Kind;
+      Inters : Iir;
       Subprg: Iir;
       Subprg_Body : Iir;
       Old : Iir;
@@ -5144,14 +5296,15 @@ package body Parse is
       -- Create the node.
       case Current_Token is
          when Tok_Procedure =>
-            Subprg := Create_Iir (Iir_Kind_Procedure_Declaration);
+            Kind := Iir_Kind_Procedure_Declaration;
          when Tok_Function
            | Tok_Pure
            | Tok_Impure =>
-            Subprg := Create_Iir (Iir_Kind_Function_Declaration);
+            Kind := Iir_Kind_Function_Declaration;
          when others =>
             raise Internal_Error;
       end case;
+      Subprg := Create_Iir (Kind);
       Set_Location (Subprg);
 
       case Current_Token is
@@ -5185,7 +5338,7 @@ package body Parse is
          Set_Identifier (Subprg, Current_Identifier);
          Set_Location (Subprg);
       elsif Current_Token = Tok_String then
-         if Get_Kind (Subprg) = Iir_Kind_Procedure_Declaration then
+         if Kind = Iir_Kind_Procedure_Declaration then
             --  LRM93 2.1
             --  A procedure designator is always an identifier.
             Error_Msg_Parse ("a procedure name must be an identifier");
@@ -5203,14 +5356,18 @@ package body Parse is
       Scan;
       if Current_Token = Tok_Left_Paren then
          --  Parse the interface declaration.
-         Set_Interface_Declaration_Chain
-           (Subprg,
-            Parse_Interface_Chain (Iir_Kind_Constant_Interface_Declaration,
-                                   Subprg));
+         if Kind = Iir_Kind_Function_Declaration then
+            Inters := Parse_Interface_List
+              (Function_Parameter_Interface_List, Subprg);
+         else
+            Inters := Parse_Interface_List
+              (Procedure_Parameter_Interface_List, Subprg);
+         end if;
+         Set_Interface_Declaration_Chain (Subprg, Inters);
       end if;
 
       if Current_Token = Tok_Return then
-         if Get_Kind (Subprg) = Iir_Kind_Procedure_Declaration then
+         if Kind = Iir_Kind_Procedure_Declaration then
             Error_Msg_Parse ("'return' not allowed for a procedure");
             Error_Msg_Parse ("(remove return part or define a function)");
 
@@ -5226,7 +5383,7 @@ package body Parse is
               (Subprg, Parse_Type_Mark (Check_Paren => True));
          end if;
       else
-         if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
+         if Kind = Iir_Kind_Function_Declaration then
             Error_Msg_Parse ("'return' expected");
          end if;
       end if;
@@ -5237,7 +5394,7 @@ package body Parse is
 
       --  The body.
       Set_Has_Body (Subprg, True);
-      if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
+      if Kind = Iir_Kind_Function_Declaration then
          Subprg_Body := Create_Iir (Iir_Kind_Function_Body);
       else
          Subprg_Body := Create_Iir (Iir_Kind_Procedure_Body);
@@ -5266,7 +5423,7 @@ package body Parse is
             if Flags.Vhdl_Std = Vhdl_87 then
                Error_Msg_Parse ("'function' not allowed here by vhdl 87");
             end if;
-            if Get_Kind (Subprg) = Iir_Kind_Procedure_Declaration then
+            if Kind = Iir_Kind_Procedure_Declaration then
                Error_Msg_Parse ("'procedure' expected instead of 'function'");
             end if;
             Set_End_Has_Reserved_Id (Subprg_Body, True);
@@ -5275,7 +5432,7 @@ package body Parse is
             if Flags.Vhdl_Std = Vhdl_87 then
                Error_Msg_Parse ("'procedure' not allowed here by vhdl 87");
             end if;
-            if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
+            if Kind = Iir_Kind_Function_Declaration then
                Error_Msg_Parse ("'function' expected instead of 'procedure'");
             end if;
             Set_End_Has_Reserved_Id (Subprg_Body, True);
@@ -5397,39 +5554,39 @@ package body Parse is
       return Res;
    end Parse_Process_Statement;
 
-   -- precond : '('
+   -- precond : NEXT_TOKEN
    -- postcond: NEXT_TOKEN
    --
-   --  [ §4.3.2.2 ]
+   --  [ LRM93 4.3.2.2 ]
    --  association_list ::= association_element { , association_element }
    --
-   --  [ §4.3.2.2 ]
+   --  [ LRM93 4.3.2.2 ]
    --  association_element ::= [ formal_part => ] actual_part
    --
-   --  [ §4.3.2.2 ]
+   --  [ LRM93 4.3.2.2 ]
    --  actual_part ::= actual_designator
    --                | FUNCTION_name ( actual_designator )
    --                | type_mark ( actual_designator )
    --
-   --  [ §4.3.2.2 ]
+   --  [ LRM93 4.3.2.2 ]
    --  actual_designator ::= expression
    --                      | SIGNAL_name
    --                      | VARIABLE_name
    --                      | FILE_name
    --                      | OPEN
    --
-   --  [ §4.3.2.2 ]
+   --  [ LRM93 4.3.2.2 ]
    --  formal_part ::= formal_designator
    --                | FUNCTION_name ( formal_designator )
    --                | type_mark ( formal_designator )
    --
-   --  [ §4.3.2.2 ]
+   --  [ LRM93 4.3.2.2 ]
    --  formal_designator ::= GENERIC_name
    --                      | PORT_name
    --                      | PARAMETER_name
    --
    --  Note: an actual part is parsed as an expression.
-   function Parse_Association_Chain return Iir
+   function Parse_Association_List return Iir
    is
       Res, Last: Iir;
       El: Iir;
@@ -5439,10 +5596,6 @@ package body Parse is
       Loc : Location_Type;
    begin
       Sub_Chain_Init (Res, Last);
-
-      --  Skip '('
-      Expect (Tok_Left_Paren);
-      Scan;
 
       if Current_Token = Tok_Right_Paren then
          Error_Msg_Parse ("empty association list is not allowed");
@@ -5510,11 +5663,28 @@ package body Parse is
          Nbr_Assocs := Nbr_Assocs + 1;
       end loop;
 
+      return Res;
+   end Parse_Association_List;
+
+   -- precond : NEXT_TOKEN
+   -- postcond: NEXT_TOKEN
+   --
+   -- Parse: '(' association_list ')'
+   function Parse_Association_List_In_Parenthesis return Iir
+   is
+      Res : Iir;
+   begin
+      --  Skip '('
+      Expect (Tok_Left_Paren);
+      Scan;
+
+      Res := Parse_Association_List;
+
       --  Skip ')'
       Scan;
 
       return Res;
-   end Parse_Association_Chain;
+   end Parse_Association_List_In_Parenthesis;
 
    --  precond : GENERIC
    --  postcond: next token
@@ -5526,7 +5696,7 @@ package body Parse is
       Expect (Tok_Generic);
       Scan_Expect (Tok_Map);
       Scan;
-      return Parse_Association_Chain;
+      return Parse_Association_List_In_Parenthesis;
    end Parse_Generic_Map_Aspect;
 
    --  precond : PORT
@@ -5539,7 +5709,7 @@ package body Parse is
       Expect (Tok_Port);
       Scan_Expect (Tok_Map);
       Scan;
-      return Parse_Association_Chain;
+      return Parse_Association_List_In_Parenthesis;
    end Parse_Port_Map_Aspect;
 
    --  precond : COMPONENT | ENTIY | CONFIGURATION
@@ -6800,7 +6970,7 @@ package body Parse is
       --  Skip 'new'
       Scan;
 
-      Set_Uninstantiated_Name (Res, Parse_Name (False));
+      Set_Uninstantiated_Package_Name (Res, Parse_Name (False));
 
       if Current_Token = Tok_Generic then
          Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);

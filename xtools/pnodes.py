@@ -104,41 +104,48 @@ def read_fields(file):
     pat_field_desc = re.compile('   --   (\w+) : (\w+).*\n')
     format_name = ''
     common_desc = {}
-    try:
+
+    # Read until common fields.
+    while l != '   -- Common fields are:\n':
+        l = lr.get()
+    format_name = 'Common'
+    nbr_formats = 0
+
+    while True:
+        # 1) Read field description
+        l = lr.get()
+        desc = common_desc.copy()
         while True:
-            # 1) Search for description
-            while True:
-                # The common one
-                if l == '   -- Common fields are:\n':
-                    format_name = 'Common'
-                    break
-                # One for a format
-                m = pat_fields.match(l)
-                if m != None:
-                    format_name = m.group(1)
-                    if not format_name in fields:
-                        raise ParseError(
-                            lr, 'Format ' + format_name + ' is unknown');
-                    break
-                l = lr.get()
-
-            # 2) Read field description
+            m = pat_field_desc.match(l)
+            if m == None:
+                break
+            desc[m.group(1)] = m.group(2)
             l = lr.get()
-            desc = common_desc
-            while True:
-                m = pat_field_desc.match(l)
-                if m == None:
-                    break
-                desc[m.group(1)] = m.group(2)
+            # print 'For: ' + format_name + ': ' + m.group(1)
+
+        # 2) Disp
+        if format_name == 'Common':
+            common_desc = desc
+        else:
+            fields[format_name] = desc
+
+        # 3) Read next format
+        if l == '\n':
+            if nbr_formats == len(fields):
+                break
+            else:
                 l = lr.get()
 
-            # 3) Disp
-            if format_name == 'Common':
-                common_desc = desc
-            else:
-                fields[format_name] = desc
-    except EndOfFile:
-        pass
+        # One for a format
+        m = pat_fields.match(l)
+        if m != None:
+            format_name = m.group(1)
+            if not format_name in fields:
+                raise ParseError(
+                    lr, 'Format ' + format_name + ' is unknown')
+            nbr_formats = nbr_formats + 1
+        else:
+            raise ParseError(lr, 'unhandled format line')
 
     return (formats, fields)
 
@@ -321,7 +328,8 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
                 raise ParseError(lr, 'field mismatch')
             for c in only_nodes:
                 if field not in c.fields:
-                    raise ParseError(lr, 'field does not exist in node')
+                    raise ParseError(lr, 'field ' + field + \
+                                     ' does not exist in node')
                 if not alias:
                     if c.fields[field]:
                         raise ParseError(lr, 'field already used')
@@ -335,7 +343,7 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
         l = lr.get()
 
 # Read description for all nodes
-def read_nodes(filename, kinds_ranges, fields, funcs):
+def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
     lr = linereader(filename)
     funcs_dict = {x.name:x for x in funcs}
     nodes = {}
@@ -362,6 +370,8 @@ def read_nodes(filename, kinds_ranges, fields, funcs):
             # Declaration of the first node
             while True:
                 name=m.group(1)
+                if not name in kinds:
+                    raise ParseError(lr, 'unknown node')
                 fmt=m.group(2)
                 names.append((name,fmt))
                 # There might be several nodes described at once.
@@ -487,7 +497,7 @@ args = parser.parse_args()
 try:
     (formats, fields) = read_fields(field_file)
     (kinds, kinds_ranges, funcs) = read_kinds(spec_file)
-    nodes = read_nodes(spec_file,kinds_ranges,fields,funcs)
+    nodes = read_nodes(spec_file,kinds,kinds_ranges,fields,funcs)
 
 except ParseError as e:
     print >> sys.stderr, e

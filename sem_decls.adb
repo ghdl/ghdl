@@ -32,6 +32,7 @@ with Sem_Scopes; use Sem_Scopes;
 with Sem_Names; use Sem_Names;
 with Sem_Specs; use Sem_Specs;
 with Sem_Types; use Sem_Types;
+with Sem_Inst;
 with Xrefs; use Xrefs;
 use Iir_Chains;
 
@@ -65,11 +66,255 @@ package body Sem_Decls is
       end if;
    end Check_Signal_Type;
 
+   procedure Sem_Interface_Object_Declaration
+     (Inter, Last : Iir; Interface_Kind : Interface_Kind_Type)
+   is
+      A_Type: Iir;
+      Default_Value: Iir;
+   begin
+      --  Avoid the reanalysed duplicated types.
+      --  This is not an optimization, since the unanalysed type must have
+      --  been freed.
+      A_Type := Get_Subtype_Indication (Inter);
+      if A_Type = Null_Iir then
+         pragma Assert (Last /= Null_Iir);
+         Set_Subtype_Indication (Inter, Get_Subtype_Indication (Last));
+         A_Type := Get_Type (Last);
+         Default_Value := Get_Default_Value (Last);
+      else
+         A_Type := Sem_Subtype_Indication (A_Type);
+         Set_Subtype_Indication (Inter, A_Type);
+         A_Type := Get_Type_Of_Subtype_Indication (A_Type);
+
+         Default_Value := Get_Default_Value (Inter);
+         if Default_Value /= Null_Iir and then A_Type /= Null_Iir then
+            Deferred_Constant_Allowed := True;
+            Default_Value := Sem_Expression (Default_Value, A_Type);
+            Default_Value :=
+              Eval_Expr_Check_If_Static (Default_Value, A_Type);
+            Deferred_Constant_Allowed := False;
+            Check_Read (Default_Value);
+         end if;
+      end if;
+
+      Set_Name_Staticness (Inter, Locally);
+      Xref_Decl (Inter);
+
+      if A_Type /= Null_Iir then
+         Set_Type (Inter, A_Type);
+
+         if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
+            case Get_Signal_Kind (Inter) is
+               when Iir_No_Signal_Kind =>
+                  null;
+               when Iir_Bus_Kind =>
+                  --  FIXME: where this test came from ?
+                  --  FIXME: from 4.3.1.2 ?
+                  if False
+                    and
+                    (Get_Kind (A_Type) not in Iir_Kinds_Subtype_Definition
+                       or else Get_Resolution_Indication (A_Type) = Null_Iir)
+                  then
+                     Error_Msg_Sem
+                       (Disp_Node (A_Type) & " of guarded " & Disp_Node (Inter)
+                          & " is not resolved", Inter);
+                  end if;
+
+                  --  LRM 2.1.1.2  Signal parameter
+                  --  It is an error if the declaration of a formal signal
+                  --  parameter includes the reserved word BUS.
+                  if Flags.Vhdl_Std >= Vhdl_93
+                    and then Interface_Kind in Parameter_Interface_List
+                  then
+                     Error_Msg_Sem
+                       ("signal parameter can't be of kind bus", Inter);
+                  end if;
+               when Iir_Register_Kind =>
+                  Error_Msg_Sem
+                    ("interface signal can't be of kind register", Inter);
+            end case;
+            Set_Type_Has_Signal (A_Type);
+         end if;
+
+         case Get_Kind (Inter) is
+            when Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_Signal_Declaration =>
+               --  LRM 4.3.2  Interface declarations
+               --  For an interface constant declaration or an interface
+               --  signal declaration, the subtype indication must define
+               --  a subtype that is neither a file type, an access type,
+               --  nor a protected type.  Moreover, the subtype indication
+               --  must not denote a composite type with a subelement that
+               --  is a file type, an access type, or a protected type.
+               Check_Signal_Type (Inter);
+            when Iir_Kind_Interface_Variable_Declaration =>
+               case Get_Kind (Get_Base_Type (A_Type)) is
+                  when Iir_Kind_File_Type_Definition =>
+                     if Flags.Vhdl_Std >= Vhdl_93 then
+                        Error_Msg_Sem ("variable formal type can't be a "
+                                         & "file type (vhdl 93)", Inter);
+                     end if;
+                  when Iir_Kind_Protected_Type_Declaration =>
+                     --  LRM 2.1.1.1  Constant and variable parameters
+                     --  It is an error if the mode of the parameter is
+                     --  other that INOUT.
+                     if Get_Mode (Inter) /= Iir_Inout_Mode then
+                        Error_Msg_Sem
+                          ("parameter of protected type must be inout", Inter);
+                     end if;
+                  when others =>
+                     null;
+               end case;
+            when Iir_Kind_Interface_File_Declaration =>
+               if Get_Kind (Get_Base_Type (A_Type))
+                 /= Iir_Kind_File_Type_Definition
+               then
+                  Error_Msg_Sem
+                    ("file formal type must be a file type", Inter);
+               end if;
+            when others =>
+               --  Inter is not an interface.
+               raise Internal_Error;
+         end case;
+
+         if Default_Value /= Null_Iir then
+            Set_Default_Value (Inter, Default_Value);
+
+            --  LRM 4.3.2  Interface declarations.
+            --  It is an error if a default expression appears in an
+            --  interface declaration and any of the following conditions
+            --  hold:
+            --   -  The mode is linkage
+            --   -  The interface object is a formal signal parameter
+            --   -  The interface object is a formal variable parameter of
+            --      mode other than in
+            --   -  The subtype indication of the interface declaration
+            --      denotes a protected type.
+            case Get_Kind (Inter) is
+               when Iir_Kind_Interface_Constant_Declaration =>
+                  null;
+               when Iir_Kind_Interface_Signal_Declaration =>
+                  if Get_Mode (Inter) = Iir_Linkage_Mode then
+                     Error_Msg_Sem
+                       ("default expression not allowed for linkage port",
+                        Inter);
+                  elsif Interface_Kind in Parameter_Interface_List then
+                     Error_Msg_Sem ("default expression not allowed"
+                                      & " for signal parameter", Inter);
+                  end if;
+               when Iir_Kind_Interface_Variable_Declaration =>
+                  if Get_Mode (Inter) /= Iir_In_Mode then
+                     Error_Msg_Sem
+                       ("default expression not allowed for"
+                          & " out or inout variable parameter", Inter);
+                  elsif Get_Kind (A_Type) = Iir_Kind_Protected_Type_Declaration
+                  then
+                     Error_Msg_Sem
+                       ("default expression not allowed for"
+                          & " variable parameter of protected type", Inter);
+                  end if;
+               when Iir_Kind_Interface_File_Declaration =>
+                  raise Internal_Error;
+               when others =>
+                  null;
+            end case;
+         end if;
+      else
+         Set_Type (Inter, Error_Type);
+      end if;
+
+      Sem_Scopes.Add_Name (Inter);
+
+      --  By default, interface are not static.
+      --  This may be changed just below.
+      Set_Expr_Staticness (Inter, None);
+
+      case Interface_Kind is
+         when Generic_Interface_List =>
+            --  LRM93 1.1.1
+            --  The generic list in the formal generic clause defines
+            --  generic constants whose values may be determined by the
+            --  environment.
+            if Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration then
+               Error_Msg_Sem
+                 ("generic " & Disp_Node (Inter) & " must be a constant",
+                  Inter);
+            else
+               --   LRM93 7.4.2 (Globally static primaries)
+               --   3. a generic constant.
+               Set_Expr_Staticness (Inter, Globally);
+            end if;
+         when Port_Interface_List =>
+            if Get_Kind (Inter) /= Iir_Kind_Interface_Signal_Declaration then
+               Error_Msg_Sem
+                 ("port " & Disp_Node (Inter) & " must be a signal", Inter);
+            end if;
+         when Parameter_Interface_List =>
+            if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
+              and then Interface_Kind = Function_Parameter_Interface_List
+            then
+               Error_Msg_Sem ("variable interface parameter are not "
+                                & "allowed for a function (use a constant)",
+                              Inter);
+            end if;
+
+            --  By default, we suppose a subprogram read the activity of
+            --  a signal.
+            --  This will be adjusted when the body is analyzed.
+            if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration
+              and then Get_Mode (Inter) in Iir_In_Modes
+            then
+               Set_Has_Active_Flag (Inter, True);
+            end if;
+
+            case Get_Mode (Inter) is
+               when Iir_Unknown_Mode =>
+                  raise Internal_Error;
+               when Iir_In_Mode =>
+                  null;
+               when Iir_Inout_Mode
+                 | Iir_Out_Mode =>
+                  if Interface_Kind = Function_Parameter_Interface_List
+                    and then
+                    Get_Kind (Inter) /= Iir_Kind_Interface_File_Declaration
+                  then
+                     Error_Msg_Sem ("mode of a function parameter cannot "
+                                      & "be inout or out", Inter);
+                  end if;
+               when Iir_Buffer_Mode
+                 | Iir_Linkage_Mode =>
+                  Error_Msg_Sem ("buffer or linkage mode is not allowed "
+                                   & "for a subprogram parameter", Inter);
+            end case;
+      end case;
+   end Sem_Interface_Object_Declaration;
+
+   procedure Sem_Interface_Package_Declaration (Inter : Iir)
+   is
+      Pkg : Iir;
+   begin
+      --  LRM08 6.5.5 Interface package declarations
+      --  the uninstantiated_package_name shall denote an uninstantiated
+      --  package declared in a package declaration.
+      Pkg := Sem_Uninstantiated_Package_Name (Inter);
+      if Pkg = Null_Iir then
+         return;
+      end if;
+
+      Sem_Inst.Instantiate_Package_Declaration (Inter, Pkg);
+
+      if Get_Generic_Map_Aspect_Chain (Inter) /= Null_Iir then
+         --  TODO
+         raise Internal_Error;
+      end if;
+
+      Sem_Scopes.Add_Name (Inter);
+   end Sem_Interface_Package_Declaration;
+
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type)
    is
-      El, A_Type: Iir;
-      Default_Value: Iir;
+      Inter : Iir;
 
       --  LAST is the last interface declaration that has a type.  This is
       --  used to set type and default value for the following declarations
@@ -78,227 +323,18 @@ package body Sem_Decls is
    begin
       Last := Null_Iir;
 
-      El := Interface_Chain;
-      while El /= Null_Iir loop
-         --  Avoid the reanalysed duplicated types.
-         --  This is not an optimization, since the unanalysed type must have
-         --  been freed.
-         A_Type := Get_Subtype_Indication (El);
-         if A_Type = Null_Iir then
-            pragma Assert (Last /= Null_Iir);
-            Set_Subtype_Indication (El, Get_Subtype_Indication (Last));
-            A_Type := Get_Type (Last);
-            Default_Value := Get_Default_Value (Last);
-         else
-            Last := El;
-            A_Type := Sem_Subtype_Indication (A_Type);
-            Set_Subtype_Indication (El, A_Type);
-            A_Type := Get_Type_Of_Subtype_Indication (A_Type);
-
-            Default_Value := Get_Default_Value (El);
-            if Default_Value /= Null_Iir and then A_Type /= Null_Iir then
-               Deferred_Constant_Allowed := True;
-               Default_Value := Sem_Expression (Default_Value, A_Type);
-               Default_Value :=
-                 Eval_Expr_Check_If_Static (Default_Value, A_Type);
-               Deferred_Constant_Allowed := False;
-               Check_Read (Default_Value);
-            end if;
-         end if;
-
-         Set_Name_Staticness (El, Locally);
-         Xref_Decl (El);
-
-         if A_Type /= Null_Iir then
-            Set_Type (El, A_Type);
-
-            if Get_Kind (El) = Iir_Kind_Signal_Interface_Declaration then
-               case Get_Signal_Kind (El) is
-                  when Iir_No_Signal_Kind =>
-                     null;
-                  when Iir_Bus_Kind =>
-                     --  FIXME: where this test came from ?
-                     --  FIXME: from 4.3.1.2 ?
-                     if False
-                       and
-                       (Get_Kind (A_Type) not in Iir_Kinds_Subtype_Definition
-                        or else Get_Resolution_Indication (A_Type) = Null_Iir)
-                     then
-                        Error_Msg_Sem
-                          (Disp_Node (A_Type)
-                           & " of guarded " & Disp_Node (El)
-                           & " is not resolved", El);
-                     end if;
-
-                     --  LRM 2.1.1.2  Signal parameter
-                     --  It is an error if the declaration of a formal signal
-                     --  parameter includes the reserved word BUS.
-                     if Flags.Vhdl_Std >= Vhdl_93
-                       and then Interface_Kind in Parameter_Kind_Subtype
-                     then
-                        Error_Msg_Sem ("signal parameter can't be of kind bus",
-                                       El);
-                     end if;
-                  when Iir_Register_Kind =>
-                     Error_Msg_Sem
-                       ("interface signal can't be of kind register", El);
-               end case;
-               Set_Type_Has_Signal (A_Type);
-            end if;
-
-            case Get_Kind (El) is
-               when Iir_Kind_Constant_Interface_Declaration
-                 | Iir_Kind_Signal_Interface_Declaration =>
-                  --  LRM 4.3.2  Interface declarations
-                  --  For an interface constant declaration or an interface
-                  --  signal declaration, the subtype indication must define
-                  --  a subtype that is neither a file type, an access type,
-                  --  nor a protected type.  Moreover, the subtype indication
-                  --  must not denote a composite type with a subelement that
-                  --  is a file type, an access type, or a protected type.
-                  Check_Signal_Type (El);
-               when Iir_Kind_Variable_Interface_Declaration =>
-                  case Get_Kind (Get_Base_Type (A_Type)) is
-                     when Iir_Kind_File_Type_Definition =>
-                        if Flags.Vhdl_Std >= Vhdl_93 then
-                           Error_Msg_Sem ("variable formal type can't be a "
-                                          & "file type (vhdl 93)", El);
-                        end if;
-                     when Iir_Kind_Protected_Type_Declaration =>
-                        --  LRM 2.1.1.1  Constant and variable parameters
-                        --  It is an error if the mode of the parameter is
-                        --  other that INOUT.
-                        if Get_Mode (El) /= Iir_Inout_Mode then
-                           Error_Msg_Sem
-                             ("parameter of protected type must be inout", El);
-                        end if;
-                     when others =>
-                        null;
-                  end case;
-               when Iir_Kind_File_Interface_Declaration =>
-                  if Get_Kind (Get_Base_Type (A_Type))
-                    /= Iir_Kind_File_Type_Definition
-                  then
-                     Error_Msg_Sem
-                       ("file formal type must be a file type", El);
-                  end if;
-               when others =>
-                  --  El is not an interface.
-                  raise Internal_Error;
-            end case;
-
-            if Default_Value /= Null_Iir then
-               Set_Default_Value (El, Default_Value);
-
-               --  LRM 4.3.2  Interface declarations.
-               --  It is an error if a default expression appears in an
-               --  interface declaration and any of the following conditions
-               --  hold:
-               --   -  The mode is linkage
-               --   -  The interface object is a formal signal parameter
-               --   -  The interface object is a formal variable parameter of
-               --      mode other than in
-               --   -  The subtype indication of the interface declaration
-               --      denotes a protected type.
-               case Get_Kind (El) is
-                  when Iir_Kind_Constant_Interface_Declaration =>
-                     null;
-                  when Iir_Kind_Signal_Interface_Declaration =>
-                     if Get_Mode (El) = Iir_Linkage_Mode then
-                        Error_Msg_Sem
-                          ("default expression not allowed for linkage port",
-                           El);
-                     elsif Interface_Kind in Parameter_Kind_Subtype then
-                        Error_Msg_Sem ("default expression not allowed"
-                                       & " for signal parameter", El);
-                     end if;
-                  when Iir_Kind_Variable_Interface_Declaration =>
-                     if Get_Mode (El) /= Iir_In_Mode then
-                        Error_Msg_Sem ("default expression not allowed for"
-                                       & " out/inout variable parameter", El);
-                     elsif Get_Kind (A_Type)
-                       = Iir_Kind_Protected_Type_Declaration
-                     then
-                        Error_Msg_Sem
-                          ("default expression not allowed for"
-                           & " variable parameter of protected type", El);
-                     end if;
-                  when Iir_Kind_File_Interface_Declaration =>
-                     raise Internal_Error;
-                  when others =>
-                     null;
-               end case;
-            end if;
-         else
-            Set_Type (El, Error_Type);
-         end if;
-
-         Sem_Scopes.Add_Name (El);
-
-         --  By default, interface are not static.
-         --  This may be changed just below.
-         Set_Expr_Staticness (El, None);
-
-         case Interface_Kind is
-            when Interface_Generic =>
-               --  LRM93 1.1.1
-               --  The generic list in the formal generic clause defines
-               --  generic constants whose values may be determined by the
-               --  environment.
-               if Get_Kind (El) /= Iir_Kind_Constant_Interface_Declaration then
-                  Error_Msg_Sem
-                    ("generic " & Disp_Node (El) & " must be a constant",
-                     El);
-               else
-                  --   LRM93 7.4.2 (Globally static primaries)
-                  --   3. a generic constant.
-                  Set_Expr_Staticness (El, Globally);
-               end if;
-            when Interface_Port =>
-               if Get_Kind (El) /= Iir_Kind_Signal_Interface_Declaration then
-                  Error_Msg_Sem
-                    ("port " & Disp_Node (El) & " must be a signal", El);
-               end if;
-            when Interface_Procedure
-              | Interface_Function =>
-               if Get_Kind (El) = Iir_Kind_Variable_Interface_Declaration
-                 and then Interface_Kind = Interface_Function
-               then
-                  Error_Msg_Sem ("variable interface parameter are not "
-                                 & "allowed for a function (use a constant)",
-                                 El);
-               end if;
-
-               --  By default, we suppose a subprogram read the activity of
-               --  a signal.
-               --  This will be adjusted when the body is analyzed.
-               if Get_Kind (El) = Iir_Kind_Signal_Interface_Declaration
-                 and then Get_Mode (El) in Iir_In_Modes
-               then
-                  Set_Has_Active_Flag (El, True);
-               end if;
-
-               case Get_Mode (El) is
-                  when Iir_Unknown_Mode =>
-                     raise Internal_Error;
-                  when Iir_In_Mode =>
-                     null;
-                  when Iir_Inout_Mode
-                    | Iir_Out_Mode =>
-                     if Interface_Kind = Interface_Function
-                       and then
-                       Get_Kind (El) /= Iir_Kind_File_Interface_Declaration
-                     then
-                        Error_Msg_Sem ("mode of a function parameter cannot "
-                                       & "be inout or out", El);
-                     end if;
-                  when Iir_Buffer_Mode
-                    | Iir_Linkage_Mode =>
-                     Error_Msg_Sem ("buffer or linkage mode is not allowed "
-                                    & "for a subprogram parameter", El);
-               end case;
+      Inter := Interface_Chain;
+      while Inter /= Null_Iir loop
+         case Get_Kind (Inter) is
+            when Iir_Kinds_Interface_Object_Declaration =>
+               Sem_Interface_Object_Declaration (Inter, Last, Interface_Kind);
+               Last := Inter;
+            when Iir_Kind_Interface_Package_Declaration =>
+               Sem_Interface_Package_Declaration (Inter);
+            when others =>
+               raise Internal_Error;
          end case;
-         El := Get_Chain (El);
+         Inter := Get_Chain (Inter);
       end loop;
 
       --  LRM 10.3  Visibility
@@ -312,10 +348,10 @@ package body Sem_Decls is
 
       --  GHDL: this is achieved by making the interface object visible after
       --   having analyzed the interface list.
-      El := Interface_Chain;
-      while El /= Null_Iir loop
-         Name_Visible (El);
-         El := Get_Chain (El);
+      Inter := Interface_Chain;
+      while Inter /= Null_Iir loop
+         Name_Visible (Inter);
+         Inter := Get_Chain (Inter);
       end loop;
    end Sem_Interface_Chain;
 
@@ -380,7 +416,7 @@ package body Sem_Decls is
                                            Iir_Predefined_File_Open_Status);
                   --  status : out file_open_status.
                   Inter :=
-                    Create_Iir (Iir_Kind_Variable_Interface_Declaration);
+                    Create_Iir (Iir_Kind_Interface_Variable_Declaration);
                   Set_Location (Inter, Loc);
                   Set_Identifier (Inter, Std_Names.Name_Status);
                   Set_Type (Inter,
@@ -390,7 +426,7 @@ package body Sem_Decls is
                   Append (Last_Interface, Proc, Inter);
             end case;
             --  File F : FT
-            Inter := Create_Iir (Iir_Kind_File_Interface_Declaration);
+            Inter := Create_Iir (Iir_Kind_Interface_File_Declaration);
             Set_Location (Inter, Loc);
             Set_Identifier (Inter, Std_Names.Name_F);
             Set_Type (Inter, Type_Definition);
@@ -398,7 +434,7 @@ package body Sem_Decls is
             Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
             Append (Last_Interface, Proc, Inter);
             --  External_Name : in STRING
-            Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+            Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
             Set_Location (Inter, Loc);
             Set_Identifier (Inter, Std_Names.Name_External_Name);
             Set_Type (Inter, Std_Package.String_Type_Definition);
@@ -406,7 +442,7 @@ package body Sem_Decls is
             Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
             Append (Last_Interface, Proc, Inter);
             --  Open_Kind : in File_Open_Kind := Read_Mode.
-            Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+            Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
             Set_Location (Inter, Loc);
             Set_Identifier (Inter, Std_Names.Name_Open_Kind);
             Set_Type (Inter, Std_Package.File_Open_Kind_Type_Definition);
@@ -429,7 +465,7 @@ package body Sem_Decls is
          Set_Type_Reference (Proc, Decl);
          Set_Visible_Flag (Proc, True);
          Build_Init (Last_Interface);
-         Inter := Create_Iir (Iir_Kind_File_Interface_Declaration);
+         Inter := Create_Iir (Iir_Kind_Interface_File_Declaration);
          Set_Identifier (Inter, Std_Names.Name_F);
          Set_Location (Inter, Loc);
          Set_Type (Inter, Type_Definition);
@@ -442,9 +478,9 @@ package body Sem_Decls is
       end if;
 
       if Flags.Vhdl_Std = Vhdl_87 then
-         File_Interface_Kind := Iir_Kind_Variable_Interface_Declaration;
+         File_Interface_Kind := Iir_Kind_Interface_Variable_Declaration;
       else
-         File_Interface_Kind := Iir_Kind_File_Interface_Declaration;
+         File_Interface_Kind := Iir_Kind_Interface_File_Declaration;
       end if;
 
       -- Create the implicit procedure read declaration.
@@ -462,7 +498,7 @@ package body Sem_Decls is
       Set_Mode (Inter, Iir_In_Mode);
       Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Proc, Inter);
-      Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
+      Inter := Create_Iir (Iir_Kind_Interface_Variable_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
       Set_Subtype_Indication (Inter, Type_Mark);
@@ -473,7 +509,7 @@ package body Sem_Decls is
       if Get_Kind (Type_Mark_Type) in Iir_Kinds_Array_Type_Definition
         and then Get_Constraint_State (Type_Mark_Type) /= Fully_Constrained
       then
-         Inter := Create_Iir (Iir_Kind_Variable_Interface_Declaration);
+         Inter := Create_Iir (Iir_Kind_Interface_Variable_Declaration);
          Set_Identifier (Inter, Std_Names.Name_Length);
          Set_Location (Inter, Loc);
          Set_Type (Inter, Std_Package.Natural_Subtype_Definition);
@@ -505,7 +541,7 @@ package body Sem_Decls is
       Set_Expr_Staticness (Inter, None);
       Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Proc, Inter);
-      Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+      Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
       Set_Subtype_Indication (Inter, Type_Mark);
@@ -563,11 +599,11 @@ package body Sem_Decls is
    end Create_Implicit_File_Primitives;
 
    function Create_Anonymous_Interface (Atype : Iir)
-     return Iir_Constant_Interface_Declaration
+     return Iir_Interface_Constant_Declaration
    is
-      Inter : Iir_Constant_Interface_Declaration;
+      Inter : Iir_Interface_Constant_Declaration;
    begin
-      Inter := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+      Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
       Location_Copy (Inter, Atype);
       Set_Identifier (Inter, Null_Identifier);
       Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
@@ -654,12 +690,12 @@ package body Sem_Decls is
 
       procedure Add_Shift_Operators
       is
-         Inter_Chain : Iir_Constant_Interface_Declaration;
+         Inter_Chain : Iir_Interface_Constant_Declaration;
          Inter_Int : Iir;
       begin
          Inter_Chain := Create_Anonymous_Interface (Type_Definition);
 
-         Inter_Int := Create_Iir (Iir_Kind_Constant_Interface_Declaration);
+         Inter_Int := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
          Location_Copy (Inter_Int, Decl);
          Set_Identifier (Inter_Int, Null_Identifier);
          Set_Mode (Inter_Int, Iir_In_Mode);
@@ -988,7 +1024,7 @@ package body Sem_Decls is
               (Name_Op_Inequality, Iir_Predefined_Access_Inequality);
             declare
                Deallocate_Proc: Iir_Implicit_Procedure_Declaration;
-               Var_Interface: Iir_Variable_Interface_Declaration;
+               Var_Interface: Iir_Interface_Variable_Declaration;
             begin
                Deallocate_Proc :=
                  Create_Iir (Iir_Kind_Implicit_Procedure_Declaration);
@@ -996,7 +1032,7 @@ package body Sem_Decls is
                Set_Implicit_Definition
                  (Deallocate_Proc, Iir_Predefined_Deallocate);
                Var_Interface :=
-                 Create_Iir (Iir_Kind_Variable_Interface_Declaration);
+                 Create_Iir (Iir_Kind_Interface_Variable_Declaration);
                Set_Identifier (Var_Interface, Std_Names.Name_P);
                Set_Type (Var_Interface, Type_Definition);
                Set_Mode (Var_Interface, Iir_Inout_Mode);
@@ -1934,8 +1970,10 @@ package body Sem_Decls is
       --  6. A component declaration.
       Open_Declarative_Region;
 
-      Sem_Interface_Chain (Get_Generic_Chain (Component), Interface_Generic);
-      Sem_Interface_Chain (Get_Port_Chain (Component), Interface_Port);
+      Sem_Interface_Chain
+        (Get_Generic_Chain (Component), Generic_Interface_List);
+      Sem_Interface_Chain
+        (Get_Port_Chain (Component), Port_Interface_List);
 
       Close_Declarative_Region;
 

@@ -419,7 +419,8 @@ package body Errorout is
             return "open association element";
          when Iir_Kind_Association_Element_By_Individual =>
             return "individual association element";
-         when Iir_Kind_Association_Element_By_Expression =>
+         when Iir_Kind_Association_Element_By_Expression
+           | Iir_Kind_Association_Element_Package =>
             return "association element";
          when Iir_Kind_Overload_List =>
             return "overloaded name or expression";
@@ -527,7 +528,7 @@ package body Errorout is
          when Iir_Kind_Psl_Expression =>
             return "PSL instantiation";
 
-         when Iir_Kind_Constant_Interface_Declaration =>
+         when Iir_Kind_Interface_Constant_Declaration =>
             if Get_Parent (Node) = Null_Iir then
                --  For constant interface of predefined operator.
                return "anonymous interface";
@@ -540,7 +541,7 @@ package body Errorout is
                when others =>
                   return Disp_Identifier (Node, "constant interface");
             end case;
-         when Iir_Kind_Signal_Interface_Declaration =>
+         when Iir_Kind_Interface_Signal_Declaration =>
             case Get_Kind (Get_Parent (Node)) is
                when Iir_Kind_Entity_Declaration
                  | Iir_Kind_Block_Statement
@@ -549,10 +550,12 @@ package body Errorout is
                when others =>
                   return Disp_Identifier (Node, "signal interface");
             end case;
-         when Iir_Kind_Variable_Interface_Declaration =>
+         when Iir_Kind_Interface_Variable_Declaration =>
             return Disp_Identifier (Node, "variable interface");
-         when Iir_Kind_File_Interface_Declaration =>
+         when Iir_Kind_Interface_File_Declaration =>
             return Disp_Identifier (Node, "file interface");
+         when Iir_Kind_Interface_Package_Declaration =>
+            return Disp_Identifier (Node, "package interface");
          when Iir_Kind_Signal_Declaration =>
             return Disp_Identifier (Node, "signal");
          when Iir_Kind_Variable_Declaration =>

@@ -315,7 +315,10 @@ package body Sem_Expr is
            | Iir_Kinds_Subtype_Definition
            | Iir_Kind_Design_Unit
            | Iir_Kind_Architecture_Body
+           | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kinds_Concurrent_Statement
            | Iir_Kinds_Sequential_Statement
            | Iir_Kind_Library_Declaration
@@ -885,12 +888,13 @@ package body Sem_Expr is
    --  Add CALLEE in the callees list of SUBPRG (which must be a subprg decl).
    procedure Add_In_Callees_List (Subprg : Iir; Callee : Iir)
    is
+      Holder : constant Iir := Get_Callees_List_Holder (Subprg);
       List : Iir_List;
    begin
-      List := Get_Callees_List (Subprg);
+      List := Get_Callees_List (Holder);
       if List = Null_Iir_List then
          List := Create_Iir_List;
-         Set_Callees_List (Subprg, List);
+         Set_Callees_List (Holder, List);
       end if;
       --  FIXME: May use a flag in IMP to speed up the
       --  add operation.
@@ -1010,9 +1014,8 @@ package body Sem_Expr is
          --  ("(indirect) wait statement not allowed in " & Where, Loc);
       end Error_Wait;
    begin
-      if Get_Kind (Callee) /= Iir_Kind_Procedure_Declaration then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Get_Kind (Callee) = Iir_Kind_Procedure_Declaration);
+
       case Get_Wait_State (Callee) is
          when False =>
             return;
@@ -1501,14 +1504,14 @@ package body Sem_Expr is
             Formal := Get_Base_Name (Formal);
             Inter := Null_Iir;
          end if;
-         if Get_Kind (Formal) = Iir_Kind_Signal_Interface_Declaration
+         if Get_Kind (Formal) = Iir_Kind_Interface_Signal_Declaration
            and then Get_Mode (Formal) in Iir_Out_Modes
          then
             Prefix := Name_To_Object (Get_Actual (Param));
             if Prefix /= Null_Iir then
                case Get_Kind (Get_Object_Prefix (Prefix)) is
                   when Iir_Kind_Signal_Declaration
-                    | Iir_Kind_Signal_Interface_Declaration =>
+                    | Iir_Kind_Interface_Signal_Declaration =>
                      Prefix := Get_Longuest_Static_Prefix (Prefix);
                      Sem_Stmts.Sem_Add_Driver (Prefix, Stmt);
                   when others =>
@@ -3627,7 +3630,7 @@ package body Sem_Expr is
          case Get_Kind (Obj) is
             when Iir_Kind_Signal_Declaration
               | Iir_Kind_Constant_Declaration
-              | Iir_Kind_Constant_Interface_Declaration
+              | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Variable_Declaration
               | Iir_Kind_Attribute_Value
               | Iir_Kind_Iterator_Declaration
@@ -3636,7 +3639,7 @@ package body Sem_Expr is
             when Iir_Kinds_Quantity_Declaration =>
                return;
             when Iir_Kind_File_Declaration
-              | Iir_Kind_File_Interface_Declaration =>
+              | Iir_Kind_Interface_File_Declaration =>
                --  LRM 4.3.2  Interface declarations
                --  The value of an object is said to be read [...]
                --   -  When the object is a file and a READ operation is
@@ -3644,8 +3647,8 @@ package body Sem_Expr is
                return;
             when Iir_Kind_Object_Alias_Declaration =>
                Obj := Get_Name (Obj);
-            when Iir_Kind_Signal_Interface_Declaration
-              | Iir_Kind_Variable_Interface_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Interface_Variable_Declaration =>
                case Get_Mode (Obj) is
                   when Iir_In_Mode
                     | Iir_Inout_Mode

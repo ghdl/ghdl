@@ -89,23 +89,16 @@ package body Evaluation is
    function Build_Enumeration_Constant (Val : Iir_Index32; Origin : Iir)
      return Iir_Enumeration_Literal
    is
+      Enum_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
+      Enum_List : constant Iir_List :=
+        Get_Enumeration_Literal_List (Enum_Type);
+      Lit : constant Iir_Enumeration_Literal :=
+        Get_Nth_Element (Enum_List, Integer (Val));
       Res : Iir_Enumeration_Literal;
-      Enum_Type : Iir;
-      Enum_List : Iir_List;
-      Lit : Iir_Enumeration_Literal;
    begin
-      Enum_Type := Get_Base_Type (Get_Type (Origin));
-      Enum_List := Get_Enumeration_Literal_List (Enum_Type);
-      Lit := Get_Nth_Element (Enum_List, Integer (Val));
-
-      Res := Create_Iir (Iir_Kind_Enumeration_Literal);
-      Set_Identifier (Res, Get_Identifier (Lit));
+      Res := Copy_Enumeration_Literal (Lit);
       Location_Copy (Res, Origin);
-      Set_Enum_Pos (Res, Iir_Int32 (Val));
-      Set_Type (Res, Get_Type (Origin));
       Set_Literal_Origin (Res, Origin);
-      Set_Expr_Staticness (Res, Locally);
-      Set_Enumeration_Decl (Res, Lit);
       return Res;
    end Build_Enumeration_Constant;
 
@@ -3015,14 +3008,14 @@ package body Evaluation is
       --    path, as appropriate, will not contain a local item name.
       case Get_Kind (Prefix) is
          when Iir_Kind_Constant_Declaration
-           | Iir_Kind_Constant_Interface_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_File_Declaration
-           | Iir_Kind_File_Interface_Declaration
+           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration =>
             Path_Add_Element (Get_Parent (Prefix), Is_Instance);

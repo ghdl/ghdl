@@ -74,4 +74,9 @@ package Sem is
    procedure Sem_Analysis_Checks_List (Unit : Iir_Design_Unit;
                                        Emit_Warnings : Boolean);
 
+   --  Analyze the uninstantiated package name of DECL, and return the
+   --  package declaration.  Return Null_Iir if the name doesn't denote an
+   --  uninstantiated package.
+   function Sem_Uninstantiated_Package_Name (Decl : Iir) return Iir;
+
 end Sem;

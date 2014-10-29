@@ -59,14 +59,14 @@ package body Sem_Specs is
          when Iir_Kind_Subtype_Declaration =>
             return Tok_Subtype;
          when Iir_Kind_Constant_Declaration
-           | Iir_Kind_Constant_Interface_Declaration =>
+           | Iir_Kind_Interface_Constant_Declaration =>
             return Tok_Constant;
          when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration =>
             return Tok_Signal;
          when Iir_Kind_Variable_Declaration
-           | Iir_Kind_Variable_Interface_Declaration =>
+           | Iir_Kind_Interface_Variable_Declaration =>
             return Tok_Variable;
          when Iir_Kind_Component_Declaration =>
             return Tok_Component;
@@ -100,7 +100,7 @@ package body Sem_Specs is
          when Iir_Kind_Group_Declaration =>
             return Tok_Group;
          when Iir_Kind_File_Declaration
-           | Iir_Kind_File_Interface_Declaration =>
+           | Iir_Kind_Interface_File_Declaration =>
             return Tok_File;
          when Iir_Kind_Attribute_Declaration =>
             --  Even if an attribute can't have a attribute...
@@ -898,7 +898,7 @@ package body Sem_Specs is
                --  denotes a guarded signal.
                case Get_Kind (Prefix) is
                   when Iir_Kind_Signal_Declaration
-                    | Iir_Kind_Signal_Interface_Declaration =>
+                    | Iir_Kind_Interface_Signal_Declaration =>
                      null;
                   when others =>
                      Error_Msg_Sem ("object must be a signal", El);

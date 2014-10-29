@@ -224,6 +224,9 @@ package body Translation is
 
       Null_Var_Scope : constant Var_Scope_Type;
 
+      type Var_Type is private;
+      Null_Var : constant Var_Type;
+
       --  Return the record type for SCOPE.
       function Get_Scope_Type (Scope : Var_Scope_Type) return O_Tnode;
 
@@ -277,20 +280,25 @@ package body Translation is
         (Scope : in out Var_Scope_Type;
          Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc);
 
-      --  Variables defined in SCOPE_TYPE can be accessed by dereferencing
+      --  Variables defined in SCOPE can be accessed by dereferencing
       --  field SCOPE_FIELD defined in SCOPE_PARENT.
       procedure Set_Scope_Via_Field_Ptr
         (Scope : in out Var_Scope_Type;
          Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc);
 
-      --  Variables/scopes defined in SCOPE_TYPE can be accessed via
+      --  Variables/scopes defined in SCOPE can be accessed via
       --  dereference of parameter SCOPE_PARAM.
       procedure Set_Scope_Via_Param_Ptr
         (Scope : in out Var_Scope_Type; Scope_Param : O_Dnode);
 
-      --  Variables/scopes defined in SCOPE_TYPE can be accessed via DECL.
+      --  Variables/scopes defined in SCOPE can be accessed via DECL.
       procedure Set_Scope_Via_Decl
         (Scope : in out Var_Scope_Type; Decl : O_Dnode);
+
+      --  Variables/scopes defined in SCOPE can be accessed by derefencing
+      --  VAR.
+      procedure Set_Scope_Via_Var_Ptr
+        (Scope : in out Var_Scope_Type; Var : Var_Type);
 
       --  No more accesses to SCOPE_TYPE are allowed.  Scopes must be cleared
       --  before being set.
@@ -346,9 +354,6 @@ package body Translation is
       function Create_Var_Identifier (Id : Iir; Str : String; Val : Natural)
                                      return Var_Ident_Type;
       function Create_Uniq_Identifier return Var_Ident_Type;
-
-      type Var_Type is private;
-      Null_Var : constant Var_Type;
 
       --  Create variable NAME of type VTYPE in the current scope.
       --  If the current scope is the global scope, then a variable is
@@ -549,6 +554,10 @@ package body Translation is
       procedure Translate_Package_Instantiation_Declaration (Inst : Iir);
 
       procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir);
+
+      --  Add info for an interface_package_declaration or a
+      --  package_instantiation_declaration
+      procedure Instantiate_Info_Package (Inst : Iir);
 
       --  Elaborate packages that DESIGN_UNIT depends on (except std.standard).
       procedure Elab_Dependence (Design_Unit: Iir_Design_Unit);
@@ -4873,11 +4882,11 @@ package body Translation is
          Tinfo : constant Type_Info_Acc := Get_Info (Get_Type (Inter));
       begin
          case Get_Kind (Inter) is
-            when Iir_Kind_Constant_Interface_Declaration
-              | Iir_Kind_Variable_Interface_Declaration
-              | Iir_Kind_File_Interface_Declaration =>
+            when Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_Variable_Declaration
+              | Iir_Kind_Interface_File_Declaration =>
                Mode := Mode_Value;
-            when Iir_Kind_Signal_Interface_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration =>
                Mode := Mode_Signal;
             when others =>
                Error_Kind ("translate_interface_type", Inter);
@@ -4970,7 +4979,7 @@ package body Translation is
                Arg_Info := Add_Info (Inter, Kind_Interface);
                Inter_Type := Get_Type (Inter);
                Tinfo := Get_Info (Inter_Type);
-               if Get_Kind (Inter) = Iir_Kind_Variable_Interface_Declaration
+               if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
                  and then Get_Mode (Inter) in Iir_Out_Modes
                  and then Tinfo.Type_Mode not in Type_Mode_By_Ref
                  and then Tinfo.Type_Mode /= Type_Mode_File
@@ -5296,7 +5305,7 @@ package body Translation is
          begin
             Inter := Get_Interface_Declaration_Chain (Spec);
             while Inter /= Null_Iir loop
-               if Get_Kind (Inter) = Iir_Kind_Variable_Interface_Declaration
+               if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
                  and then Get_Mode (Inter) = Iir_Out_Mode
                then
                   Inter_Type := Get_Type (Inter);
@@ -5640,6 +5649,67 @@ package body Translation is
          end case;
       end Instantiate_Iir_List_Info;
 
+      procedure Copy_Info (Dest : Ortho_Info_Acc; Src : Ortho_Info_Acc) is
+      begin
+         case Src.Kind is
+            when Kind_Type =>
+               Dest.all := (Kind => Kind_Type,
+                            Type_Mode => Src.Type_Mode,
+                            Type_Incomplete => Src.Type_Incomplete,
+                            Type_Locally_Constrained =>
+                              Src.Type_Locally_Constrained,
+                            C => null,
+                            Ortho_Type => Src.Ortho_Type,
+                            Ortho_Ptr_Type => Src.Ortho_Ptr_Type,
+                            Type_Transient_Chain => Null_Iir,
+                            T => Src.T,
+                            Type_Rti => Src.Type_Rti);
+               pragma Assert (Src.C = null);
+               pragma Assert (Src.Type_Transient_Chain = Null_Iir);
+            when Kind_Object =>
+               pragma Assert (Src.Object_Driver = Null_Var);
+               pragma Assert (Src.Object_Function = O_Dnode_Null);
+               Dest.all :=
+                 (Kind => Kind_Object,
+                  Object_Static => Src.Object_Static,
+                  Object_Var => Instantiate_Var (Src.Object_Var),
+                  Object_Driver => Null_Var,
+                  Object_Rti => Src.Object_Rti,
+                  Object_Function => O_Dnode_Null);
+            when Kind_Subprg =>
+               Dest.Subprg_Frame_Scope :=
+                 Instantiate_Var_Scope (Src.Subprg_Frame_Scope);
+               Dest.all :=
+                 (Kind => Kind_Subprg,
+                  Use_Stack2 => Src.Use_Stack2,
+                  Ortho_Func => Src.Ortho_Func,
+                  Res_Interface => Src.Res_Interface,
+                  Res_Record_Var => Instantiate_Var (Src.Res_Record_Var),
+                  Res_Record_Type => Src.Res_Record_Type,
+                  Res_Record_Ptr => Src.Res_Record_Ptr,
+                  Subprg_Frame_Scope => Dest.Subprg_Frame_Scope,
+                  Subprg_Instance => Instantiate_Subprg_Instance
+                    (Src.Subprg_Instance),
+                  Subprg_Resolv => null,
+                  Subprg_Local_Id => Src.Subprg_Local_Id,
+                  Subprg_Exit => Src.Subprg_Exit,
+                  Subprg_Result => Src.Subprg_Result);
+            when Kind_Interface =>
+               Dest.all := (Kind => Kind_Interface,
+                            Interface_Node => Src.Interface_Node,
+                            Interface_Field => Src.Interface_Field,
+                            Interface_Type => Src.Interface_Type);
+            when Kind_Index =>
+               Dest.all := (Kind => Kind_Index,
+                            Index_Field => Src.Index_Field);
+            when Kind_Expr =>
+               Dest.all := (Kind => Kind_Expr,
+                            Expr_Node => Src.Expr_Node);
+            when others =>
+               raise Internal_Error;
+         end case;
+      end Copy_Info;
+
       procedure Instantiate_Iir_Info (N : Iir) is
       begin
          --  Nothing to do for null node.
@@ -5660,63 +5730,15 @@ package body Translation is
             if Orig_Info /= null then
                Info := Add_Info (N, Orig_Info.Kind);
 
+               Copy_Info (Info, Orig_Info);
+
                case Info.Kind is
-                  when Kind_Type =>
-                     Info.all := (Kind => Kind_Type,
-                                  Type_Mode => Orig_Info.Type_Mode,
-                                  Type_Incomplete => Orig_Info.Type_Incomplete,
-                                  Type_Locally_Constrained =>
-                                    Orig_Info.Type_Locally_Constrained,
-                                  C => null,
-                                  Ortho_Type => Orig_Info.Ortho_Type,
-                                  Ortho_Ptr_Type => Orig_Info.Ortho_Ptr_Type,
-                                  Type_Transient_Chain => Null_Iir,
-                                  T => Orig_Info.T,
-                                  Type_Rti => Orig_Info.Type_Rti);
-                     pragma Assert (Orig_Info.C = null);
-                     pragma Assert (Orig_Info.Type_Transient_Chain = Null_Iir);
-                  when Kind_Object =>
-                     pragma Assert (Orig_Info.Object_Driver = Null_Var);
-                     pragma Assert (Orig_Info.Object_Function = O_Dnode_Null);
-                     Info.all :=
-                       (Kind => Kind_Object,
-                        Object_Static => Orig_Info.Object_Static,
-                        Object_Var => Instantiate_Var (Orig_Info.Object_Var),
-                        Object_Driver => Null_Var,
-                        Object_Rti => Orig_Info.Object_Rti,
-                        Object_Function => O_Dnode_Null);
                   when Kind_Subprg =>
-                     Info.Subprg_Frame_Scope :=
-                       Instantiate_Var_Scope (Orig_Info.Subprg_Frame_Scope);
                      Push_Instantiate_Var_Scope
                        (Info.Subprg_Frame_Scope'Access,
                         Orig_Info.Subprg_Frame_Scope'Access);
-                     Info.all :=
-                       (Kind => Kind_Subprg,
-                        Use_Stack2 => Orig_Info.Use_Stack2,
-                        Ortho_Func => Orig_Info.Ortho_Func,
-                        Res_Interface => Orig_Info.Res_Interface,
-                        Res_Record_Var =>
-                          Instantiate_Var (Orig_Info.Res_Record_Var),
-                        Res_Record_Type => Orig_Info.Res_Record_Type,
-                        Res_Record_Ptr => Orig_Info.Res_Record_Ptr,
-                        Subprg_Frame_Scope => Info.Subprg_Frame_Scope,
-                        Subprg_Instance => Instantiate_Subprg_Instance
-                          (Orig_Info.Subprg_Instance),
-                        Subprg_Resolv => null,
-                        Subprg_Local_Id => Orig_Info.Subprg_Local_Id,
-                        Subprg_Exit => Orig_Info.Subprg_Exit,
-                        Subprg_Result => Orig_Info.Subprg_Result);
-                  when Kind_Interface =>
-                     Info.all := (Kind => Kind_Interface,
-                                  Interface_Node => Orig_Info.Interface_Node,
-                                  Interface_Field => Orig_Info.Interface_Field,
-                                  Interface_Type => Orig_Info.Interface_Type);
-                  when Kind_Index =>
-                     Info.all := (Kind => Kind_Index,
-                                  Index_Field => Orig_Info.Index_Field);
                   when others =>
-                     raise Internal_Error;
+                     null;
                end case;
             end if;
 
@@ -5744,7 +5766,8 @@ package body Translation is
                      case Get_Field_Attribute (F) is
                         when Attr_None =>
                            Instantiate_Iir_List_Info (Get_Iir_List (N, F));
-                        when Attr_Ref =>
+                        when Attr_Ref
+                          | Attr_Of_Ref =>
                            null;
                         when others =>
                            raise Internal_Error;
@@ -5797,29 +5820,71 @@ package body Translation is
          end;
       end Instantiate_Iir_Info;
 
-      procedure Translate_Package_Instantiation_Declaration (Inst : Iir)
+      procedure Instantiate_Iir_Generic_Chain_Info (Chain : Iir)
+      is
+         Inter : Iir;
+         Orig : Iir;
+         Orig_Info : Ortho_Info_Acc;
+         Info : Ortho_Info_Acc;
+      begin
+         Inter := Chain;
+         while Inter /= Null_Iir loop
+            case Get_Kind (Inter) is
+               when Iir_Kind_Interface_Constant_Declaration =>
+                  Orig := Sem_Inst.Get_Origin (Inter);
+                  Orig_Info := Get_Info (Orig);
+
+                  Info := Add_Info (Inter, Orig_Info.Kind);
+                  Copy_Info (Info, Orig_Info);
+
+               when Iir_Kind_Interface_Package_Declaration =>
+                  null;
+
+               when others =>
+                  raise Internal_Error;
+            end case;
+
+            Inter := Get_Chain (Inter);
+         end loop;
+      end Instantiate_Iir_Generic_Chain_Info;
+
+      --  Add info for an interface_package_declaration or a
+      --  package_instantiation_declaration
+      procedure Instantiate_Info_Package (Inst : Iir)
       is
          Spec : constant Iir :=
-           Get_Named_Entity (Get_Uninstantiated_Name (Inst));
+           Get_Named_Entity (Get_Uninstantiated_Package_Name (Inst));
          Pkg_Info : constant Ortho_Info_Acc := Get_Info (Spec);
          Info : Ortho_Info_Acc;
-         Interface_List : O_Inter_List;
-         Constr : O_Assoc_List;
       begin
          Info := Add_Info (Inst, Kind_Package_Instance);
 
+         --  Create the info instances.
          Push_Instantiate_Var_Scope
            (Info.Package_Instance_Spec_Scope'Access,
             Pkg_Info.Package_Spec_Scope'Access);
          Push_Instantiate_Var_Scope
            (Info.Package_Instance_Body_Scope'Access,
             Pkg_Info.Package_Body_Scope'Access);
-         Instantiate_Iir_Chain_Info (Get_Generic_Chain (Inst));
+         Instantiate_Iir_Generic_Chain_Info (Get_Generic_Chain (Inst));
          Instantiate_Iir_Chain_Info (Get_Declaration_Chain (Inst));
          Pop_Instantiate_Var_Scope
            (Info.Package_Instance_Body_Scope'Access);
          Pop_Instantiate_Var_Scope
            (Info.Package_Instance_Spec_Scope'Access);
+      end Instantiate_Info_Package;
+
+      procedure Translate_Package_Instantiation_Declaration (Inst : Iir)
+      is
+         Spec : constant Iir :=
+           Get_Named_Entity (Get_Uninstantiated_Package_Name (Inst));
+         Pkg_Info : constant Ortho_Info_Acc := Get_Info (Spec);
+         Info : Ortho_Info_Acc;
+         Interface_List : O_Inter_List;
+         Constr : O_Assoc_List;
+      begin
+         Instantiate_Info_Package (Inst);
+         Info := Get_Info (Inst);
 
          --  FIXME: if the instantiation occurs within a package declaration,
          --  the variable must be declared extern (and public in the body).
@@ -5854,7 +5919,14 @@ package body Translation is
 
          Elab_Dependence (Get_Design_Unit (Inst));
 
+         Set_Scope_Via_Decl (Pkg_Info.Package_Body_Scope,
+                             Get_Var_Label (Info.Package_Instance_Var));
+         Set_Scope_Via_Field (Pkg_Info.Package_Spec_Scope,
+                              Pkg_Info.Package_Spec_Field,
+                              Pkg_Info.Package_Body_Scope'Access);
          Chap5.Elab_Generic_Map_Aspect (Inst);
+         Clear_Scope (Pkg_Info.Package_Spec_Scope);
+         Clear_Scope (Pkg_Info.Package_Body_Scope);
 
          --  Call the elaborator of the generic.  The generic must be
          --  temporary associated with the instance variable.
@@ -9503,7 +9575,7 @@ package body Translation is
 
          case Get_Kind (El) is
             when Iir_Kind_Variable_Declaration
-              | Iir_Kind_Constant_Interface_Declaration =>
+              | Iir_Kind_Interface_Constant_Declaration =>
                Info.Object_Var :=
                  Create_Var (Create_Var_Identifier (El), Obj_Type);
             when Iir_Kind_Constant_Declaration =>
@@ -9569,7 +9641,7 @@ package body Translation is
 
          case Get_Kind (Decl) is
             when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Signal_Interface_Declaration =>
+              | Iir_Kind_Interface_Signal_Declaration =>
                Rtis.Generate_Signal_Rti (Decl);
             when Iir_Kind_Guard_Signal_Declaration =>
                --  No name created for guard signal.
@@ -9616,6 +9688,27 @@ package body Translation is
 
          Info.Object_Var := Create_Var (Create_Var_Identifier (El), Obj_Type);
       end Create_File_Object;
+
+      procedure Create_Package_Interface (Inter : Iir)
+      is
+         Info : Ortho_Info_Acc;
+         Pkg : constant Iir := Get_Named_Entity
+           (Get_Uninstantiated_Package_Name (Inter));
+         Pkg_Info : constant Ortho_Info_Acc := Get_Info (Pkg);
+      begin
+         Chap2.Instantiate_Info_Package (Inter);
+         Info := Get_Info (Inter);
+         Info.Package_Instance_Var :=
+           Create_Var (Create_Var_Identifier (Inter),
+                       Pkg_Info.Package_Body_Ptr_Type);
+         Set_Scope_Via_Var_Ptr
+           (Info.Package_Instance_Body_Scope,
+            Info.Package_Instance_Var);
+         Set_Scope_Via_Field
+           (Info.Package_Instance_Spec_Scope,
+            Pkg_Info.Package_Spec_Field,
+            Info.Package_Instance_Body_Scope'Access);
+      end Create_Package_Interface;
 
       procedure Allocate_Complex_Object (Obj_Type : Iir;
                                          Alloc_Kind : Allocation_Kind;
@@ -10794,7 +10887,7 @@ package body Translation is
          Info := Add_Info (Decl, Kind_Alias);
          case Get_Kind (Get_Object_Prefix (Decl)) is
             when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Signal_Interface_Declaration
+              | Iir_Kind_Interface_Signal_Declaration
               | Iir_Kind_Guard_Signal_Declaration =>
                Info.Alias_Kind := Mode_Signal;
             when others =>
@@ -10915,7 +11008,14 @@ package body Translation is
       begin
          Decl := Get_Generic_Chain (Parent);
          while Decl /= Null_Iir loop
-            Create_Object (Decl);
+            case Get_Kind (Decl) is
+               when Iir_Kinds_Interface_Object_Declaration =>
+                  Create_Object (Decl);
+               when Iir_Kind_Interface_Package_Declaration =>
+                  Create_Package_Interface (Decl);
+               when others =>
+                  Error_Kind ("translate_generic_chain", Decl);
+            end case;
             Decl := Get_Chain (Decl);
          end loop;
       end Translate_Generic_Chain;
@@ -10978,7 +11078,7 @@ package body Translation is
 
             --when Iir_Kind_Implicit_Function_Declaration =>
             --when Iir_Kind_Signal_Declaration
-            --  | Iir_Kind_Signal_Interface_Declaration =>
+            --  | Iir_Kind_Interface_Signal_Declaration =>
                --   Chap4.Create_Object (Decl);
 
             when Iir_Kind_Variable_Declaration
@@ -12622,7 +12722,6 @@ package body Translation is
       is
          Assoc : Iir;
          Formal : Iir;
-         Targ : Mnode;
       begin
          --  Elab generics, and associate.
          Assoc := Get_Generic_Map_Aspect_Chain (Mapping);
@@ -12634,35 +12733,37 @@ package body Translation is
             end if;
             case Get_Kind (Assoc) is
                when Iir_Kind_Association_Element_By_Expression =>
-                  if Get_Whole_Association_Flag (Assoc) then
-                     Chap4.Elab_Object_Storage (Formal);
-                     Targ := Chap6.Translate_Name (Formal);
-                     Chap4.Elab_Object_Init (Targ, Formal, Get_Actual (Assoc));
-                  else
-                     Targ := Chap6.Translate_Name (Formal);
-                     Chap7.Translate_Assign
-                       (Targ, Get_Actual (Assoc), Get_Type (Formal));
-                  end if;
+                  declare
+                     Targ : Mnode;
+                  begin
+                     if Get_Whole_Association_Flag (Assoc) then
+                        Chap4.Elab_Object_Storage (Formal);
+                        Targ := Chap6.Translate_Name (Formal);
+                        Chap4.Elab_Object_Init
+                          (Targ, Formal, Get_Actual (Assoc));
+                     else
+                        Targ := Chap6.Translate_Name (Formal);
+                        Chap7.Translate_Assign
+                          (Targ, Get_Actual (Assoc), Get_Type (Formal));
+                     end if;
+                  end;
                when Iir_Kind_Association_Element_Open =>
                   Chap4.Elab_Object_Value (Formal, Get_Default_Value (Formal));
                when Iir_Kind_Association_Element_By_Individual =>
                   --  Create the object.
                   declare
+                     Formal_Type : constant Iir := Get_Type (Formal);
+                     Obj_Info : constant Object_Info_Acc := Get_Info (Formal);
+                     Obj_Type : constant Iir := Get_Actual_Type (Assoc);
                      Formal_Node : Mnode;
-                     Formal_Type : Iir;
-                     Obj_Info : Object_Info_Acc;
-                     Obj_Type : Iir;
                      Type_Info : Type_Info_Acc;
                      Bounds : Mnode;
                   begin
-                     Formal_Type := Get_Type (Formal);
                      Chap3.Elab_Object_Subtype (Formal_Type);
                      Type_Info := Get_Info (Formal_Type);
-                     Obj_Info := Get_Info (Formal);
                      Formal_Node := Get_Var
                        (Obj_Info.Object_Var, Type_Info, Mode_Value);
                      Stabilize (Formal_Node);
-                     Obj_Type := Get_Actual_Type (Assoc);
                      if Obj_Type = Null_Iir then
                         Chap4.Allocate_Complex_Object
                           (Formal_Type, Alloc_System, Formal_Node);
@@ -12673,8 +12774,30 @@ package body Translation is
                           (Formal_Node, Alloc_System, Formal_Type, Bounds);
                      end if;
                   end;
+               when Iir_Kind_Association_Element_Package =>
+                  pragma Assert (Get_Kind (Formal) =
+                                   Iir_Kind_Interface_Package_Declaration);
+                  declare
+                     Uninst_Pkg : constant Iir := Get_Named_Entity
+                       (Get_Uninstantiated_Package_Name (Formal));
+                     Uninst_Info : constant Ortho_Info_Acc :=
+                       Get_Info (Uninst_Pkg);
+                     Formal_Info : constant Ortho_Info_Acc :=
+                       Get_Info (Formal);
+                     Actual : constant Iir := Get_Named_Entity
+                       (Get_Actual (Assoc));
+                     Actual_Info : constant Ortho_Info_Acc :=
+                       Get_Info (Actual);
+                  begin
+                     New_Assign_Stmt
+                       (Get_Var (Formal_Info.Package_Instance_Var),
+                        New_Address
+                          (Get_Instance_Ref
+                             (Actual_Info.Package_Instance_Body_Scope),
+                           Uninst_Info.Package_Body_Ptr_Type));
+                  end;
                when others =>
-                  Error_Kind ("elab_map_aspect(1)", Assoc);
+                  Error_Kind ("elab_generic_map_aspect(1)", Assoc);
             end case;
             Close_Temp;
             Assoc := Get_Chain (Assoc);
@@ -13651,11 +13774,11 @@ package body Translation is
 --          Prefix_Name : Mnode;
 --       begin
 --          case Get_Kind (Name) is
---             when Iir_Kind_Constant_Interface_Declaration =>
+--             when Iir_Kind_Interface_Constant_Declaration =>
 --                return Translate_Formal_Interface_Name
 --                  (Scope_Type, Scope_Param, Name, Mode_Value);
 
---             when Iir_Kind_Signal_Interface_Declaration =>
+--             when Iir_Kind_Interface_Signal_Declaration =>
 --                return Translate_Formal_Interface_Name
 --                  (Scope_Type, Scope_Param, Name, Mode_Signal);
 
@@ -13739,16 +13862,16 @@ package body Translation is
               | Iir_Kind_Guard_Signal_Declaration =>
                return Get_Var (Name_Info.Object_Var, Type_Info, Mode_Signal);
 
-            when Iir_Kind_Constant_Interface_Declaration =>
+            when Iir_Kind_Interface_Constant_Declaration =>
                return Translate_Interface_Name (Name, Name_Info, Mode_Value);
 
-            when Iir_Kind_File_Interface_Declaration =>
+            when Iir_Kind_Interface_File_Declaration =>
                return Translate_Interface_Name (Name, Name_Info, Mode_Value);
 
-            when Iir_Kind_Variable_Interface_Declaration =>
+            when Iir_Kind_Interface_Variable_Declaration =>
                return Translate_Interface_Name (Name, Name_Info, Mode_Value);
 
-            when Iir_Kind_Signal_Interface_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration =>
                return Translate_Interface_Name (Name, Name_Info, Mode_Signal);
 
             when Iir_Kind_Indexed_Name =>
@@ -13825,7 +13948,7 @@ package body Translation is
             when Iir_Kind_Object_Alias_Declaration =>
                Translate_Direct_Driver (Get_Name (Name), Sig, Drv);
             when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Signal_Interface_Declaration =>
+              | Iir_Kind_Interface_Signal_Declaration =>
                Sig := Get_Var (Name_Info.Object_Var, Type_Info, Mode_Signal);
                Drv := Get_Var (Name_Info.Object_Driver, Type_Info, Mode_Value);
             when Iir_Kind_Slice_Name =>
@@ -14612,12 +14735,12 @@ package body Translation is
          end case;
 
          case Get_Kind (Formal_Base) is
-            when Iir_Kind_Constant_Interface_Declaration
-              | Iir_Kind_File_Interface_Declaration =>
+            when Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_File_Declaration =>
                return Chap3.Maybe_Insert_Scalar_Check
                  (Translate_Expression (Actual, Get_Type (Formal)),
                   Actual, Get_Type (Formal));
-            when Iir_Kind_Signal_Interface_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration =>
                return Translate_Implicit_Conv
                  (M2E (Chap6.Translate_Name (Actual)),
                   Get_Type (Actual),
@@ -17422,10 +17545,10 @@ package body Translation is
               | Iir_Kind_Signal_Declaration
               | Iir_Kind_File_Declaration
               | Iir_Kind_Object_Alias_Declaration
-              | Iir_Kind_Constant_Interface_Declaration
-              | Iir_Kind_Variable_Interface_Declaration
-              | Iir_Kind_Signal_Interface_Declaration
-              | Iir_Kind_File_Interface_Declaration
+              | Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_Variable_Declaration
+              | Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Interface_File_Declaration
               | Iir_Kind_Indexed_Name
               | Iir_Kind_Slice_Name
               | Iir_Kind_Selected_Element
@@ -21316,7 +21439,7 @@ package body Translation is
             Base_Formal := Get_Association_Interface (El);
             Formal_Type := Get_Type (Formal);
             Formal_Info := Get_Info (Base_Formal);
-            if Get_Kind (Base_Formal) = Iir_Kind_Signal_Interface_Declaration
+            if Get_Kind (Base_Formal) = Iir_Kind_Interface_Signal_Declaration
             then
                Formal_Object_Kind := Mode_Signal;
             else
@@ -21387,13 +21510,13 @@ package body Translation is
             elsif Ftype_Info.Type_Mode not in Type_Mode_By_Value then
                --  Passed by reference.
                case Get_Kind (Base_Formal) is
-                  when Iir_Kind_Constant_Interface_Declaration
-                    | Iir_Kind_File_Interface_Declaration =>
+                  when Iir_Kind_Interface_Constant_Declaration
+                    | Iir_Kind_Interface_File_Declaration =>
                      --  No conversion here.
                      E_Params (Pos) := Chap7.Translate_Expression
                        (Act, Formal_Type);
-                  when Iir_Kind_Variable_Interface_Declaration
-                    | Iir_Kind_Signal_Interface_Declaration =>
+                  when Iir_Kind_Interface_Variable_Declaration
+                    | Iir_Kind_Interface_Signal_Declaration =>
                      Param := Chap6.Translate_Name (Act);
                      --  Atype may not have been set (eg: slice).
                      if Base_Formal /= Formal then
@@ -21420,7 +21543,7 @@ package body Translation is
                   --  By value association.
                   Act := Get_Actual (El);
                   if Get_Kind (Base_Formal)
-                    = Iir_Kind_Constant_Interface_Declaration
+                    = Iir_Kind_Interface_Constant_Declaration
                   then
                      Val := Chap7.Translate_Expression (Act, Formal_Type);
                   else
@@ -21505,7 +21628,7 @@ package body Translation is
                            Error_Kind ("translate_procedure_call(2)", El);
                      end case;
                      case Get_Kind (Formal) is
-                        when Iir_Kind_Signal_Interface_Declaration =>
+                        when Iir_Kind_Interface_Signal_Declaration =>
                            Param := Chap6.Translate_Name (Act);
                            --  This is a scalar.
                            Val := M2E (Param);
@@ -21546,7 +21669,7 @@ package body Translation is
             Formal_Type := Get_Type (Formal);
             Ftype_Info := Get_Info (Formal_Type);
             Formal_Info := Get_Info (Base_Formal);
-            if Get_Kind (Base_Formal) = Iir_Kind_Variable_Interface_Declaration
+            if Get_Kind (Base_Formal) = Iir_Kind_Interface_Variable_Declaration
               and then Get_Mode (Base_Formal) in Iir_Out_Modes
               and then Params (Pos) /= Mnode_Null
             then
@@ -23454,7 +23577,7 @@ package body Translation is
                  | Iir_Kind_Transaction_Attribute =>
                   El := Get_Prefix (El);
                when Iir_Kind_Signal_Declaration
-                 | Iir_Kind_Signal_Interface_Declaration
+                 | Iir_Kind_Interface_Signal_Declaration
                  | Iir_Kind_Guard_Signal_Declaration =>
                   exit;
                when Iir_Kinds_Denoting_Name =>
@@ -24653,6 +24776,16 @@ package body Translation is
                    Kind => Var_Scope_Field_Ptr,
                    Field => Scope_Field, Up_Link => Scope_Parent);
       end Set_Scope_Via_Field_Ptr;
+
+      procedure Set_Scope_Via_Var_Ptr
+        (Scope : in out Var_Scope_Type; Var : Var_Type) is
+      begin
+         pragma Assert (Scope.Kind = Var_Scope_None);
+         pragma Assert (Var.Kind = Var_Scope);
+         Scope := (Scope_Type => Scope.Scope_Type,
+                   Kind => Var_Scope_Field_Ptr,
+                   Field => Var.I_Field, Up_Link => Var.I_Scope);
+      end Set_Scope_Via_Var_Ptr;
 
       procedure Set_Scope_Via_Param_Ptr
         (Scope : in out Var_Scope_Type; Scope_Param : O_Dnode) is
@@ -27924,14 +28057,14 @@ package body Translation is
                when Iir_Kind_Signal_Declaration =>
                   Comm := Ghdl_Rtik_Signal;
                   Var := Info.Object_Var;
-               when Iir_Kind_Signal_Interface_Declaration =>
+               when Iir_Kind_Interface_Signal_Declaration =>
                   Comm := Ghdl_Rtik_Port;
                   Var := Info.Object_Var;
                   Mode := Iir_Mode'Pos (Get_Mode (Decl));
                when Iir_Kind_Constant_Declaration =>
                   Comm := Ghdl_Rtik_Constant;
                   Var := Info.Object_Var;
-               when Iir_Kind_Constant_Interface_Declaration =>
+               when Iir_Kind_Interface_Constant_Declaration =>
                   Comm := Ghdl_Rtik_Generic;
                   Var := Info.Object_Var;
                when Iir_Kind_Variable_Declaration =>
@@ -27967,7 +28100,7 @@ package body Translation is
             end case;
             case Get_Kind (Decl) is
                when Iir_Kind_Signal_Declaration
-                 | Iir_Kind_Signal_Interface_Declaration =>
+                 | Iir_Kind_Interface_Signal_Declaration =>
                   Mode := Mode
                     + 16 * Iir_Signal_Kind'Pos (Get_Signal_Kind (Decl));
                when others =>
@@ -27975,7 +28108,7 @@ package body Translation is
             end case;
             case Get_Kind (Decl) is
                when Iir_Kind_Signal_Declaration
-                 | Iir_Kind_Signal_Interface_Declaration
+                 | Iir_Kind_Interface_Signal_Declaration
                  | Iir_Kind_Guard_Signal_Declaration
                  | Iir_Kind_Transaction_Attribute
                  | Iir_Kind_Stable_Attribute
@@ -28072,9 +28205,9 @@ package body Translation is
                   --  Eg: array subtypes.
                   null;
                when Iir_Kind_Signal_Declaration
-                 | Iir_Kind_Signal_Interface_Declaration
+                 | Iir_Kind_Interface_Signal_Declaration
                  | Iir_Kind_Constant_Declaration
-                 | Iir_Kind_Constant_Interface_Declaration
+                 | Iir_Kind_Interface_Constant_Declaration
                  | Iir_Kind_Variable_Declaration
                  | Iir_Kind_File_Declaration
                  | Iir_Kind_Transaction_Attribute
@@ -28228,8 +28361,8 @@ package body Translation is
                      end;
                   end if;
                when Iir_Kind_Signal_Declaration
-                 | Iir_Kind_Signal_Interface_Declaration
-                 | Iir_Kind_Constant_Interface_Declaration
+                 | Iir_Kind_Interface_Signal_Declaration
+                 | Iir_Kind_Interface_Constant_Declaration
                  | Iir_Kind_Variable_Declaration
                  | Iir_Kind_File_Declaration
                  | Iir_Kind_Transaction_Attribute
@@ -31077,10 +31210,9 @@ package body Translation is
             for I in Design_Units.First .. Design_Units.Last loop
                Unit := Design_Units.Table (I);
                Sem.Sem_Analysis_Checks_List (Unit, False);
-               if Get_Analysis_Checks_List (Unit) /= Null_Iir_List then
-                  --  There cannot be remaining checks to do.
-                  raise Internal_Error;
-               end if;
+               --  There cannot be remaining checks to do.
+               pragma Assert
+                 (Get_Analysis_Checks_List (Unit) = Null_Iir_List);
             end loop;
          end if;
 

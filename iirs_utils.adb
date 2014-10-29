@@ -149,14 +149,14 @@ package body Iirs_Utils is
       loop
          case Get_Kind (Adecl) is
             when Iir_Kind_Variable_Declaration
-              | Iir_Kind_Variable_Interface_Declaration =>
+              | Iir_Kind_Interface_Variable_Declaration =>
                return Adecl;
             when Iir_Kind_Constant_Declaration
-              | Iir_Kind_Constant_Interface_Declaration =>
+              | Iir_Kind_Interface_Constant_Declaration =>
                return Adecl;
             when Iir_Kind_Signal_Declaration
               | Iir_Kind_Guard_Signal_Declaration
-              | Iir_Kind_Signal_Interface_Declaration =>
+              | Iir_Kind_Interface_Signal_Declaration =>
                return Adecl;
             when Iir_Kind_Object_Alias_Declaration =>
                --  LRM 4.3.3.1 Object Aliases
@@ -190,14 +190,14 @@ package body Iirs_Utils is
       loop
          case Get_Kind (Adecl) is
             when Iir_Kind_Variable_Declaration
-              | Iir_Kind_Variable_Interface_Declaration
+              | Iir_Kind_Interface_Variable_Declaration
               | Iir_Kind_Constant_Declaration
-              | Iir_Kind_Constant_Interface_Declaration
+              | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Signal_Declaration
               | Iir_Kind_Guard_Signal_Declaration
-              | Iir_Kind_Signal_Interface_Declaration
+              | Iir_Kind_Interface_Signal_Declaration
               | Iir_Kind_File_Declaration
-              | Iir_Kind_File_Interface_Declaration
+              | Iir_Kind_Interface_File_Declaration
               | Iir_Kind_Iterator_Declaration =>
                return Adecl;
             when Iir_Kind_Object_Alias_Declaration =>
@@ -249,7 +249,7 @@ package body Iirs_Utils is
          case Get_Kind (Formal) is
             when Iir_Kind_Simple_Name =>
                return Get_Named_Entity (Formal);
-            when Iir_Kinds_Interface_Declaration =>
+            when Iir_Kinds_Interface_Object_Declaration =>
                return Formal;
             when Iir_Kind_Slice_Name
               | Iir_Kind_Indexed_Name
@@ -408,21 +408,38 @@ package body Iirs_Utils is
       return String (Ptr (1 .. Len));
    end Image_String_Lit;
 
+   function Copy_Enumeration_Literal (Lit : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Enumeration_Literal);
+      Set_Identifier (Res, Get_Identifier (Lit));
+      Location_Copy (Res, Lit);
+      Set_Parent (Res, Get_Parent (Lit));
+      Set_Type (Res, Get_Type (Lit));
+      Set_Enum_Pos (Res, Get_Enum_Pos (Lit));
+      Set_Expr_Staticness (Res, Locally);
+      Set_Enumeration_Decl (Res, Lit);
+      return Res;
+   end Copy_Enumeration_Literal;
+
    procedure Create_Range_Constraint_For_Enumeration_Type
      (Def : Iir_Enumeration_Type_Definition)
    is
       Range_Expr : Iir_Range_Expression;
-      Literal_List: Iir_List;
+      Literal_List : constant Iir_List := Get_Enumeration_Literal_List (Def);
    begin
-      Literal_List := Get_Enumeration_Literal_List (Def);
-
       --  Create a constraint.
       Range_Expr := Create_Iir (Iir_Kind_Range_Expression);
       Location_Copy (Range_Expr, Def);
       Set_Type (Range_Expr, Def);
       Set_Direction (Range_Expr, Iir_To);
-      Set_Left_Limit (Range_Expr, Get_First_Element (Literal_List));
-      Set_Right_Limit (Range_Expr, Get_Last_Element (Literal_List));
+      Set_Left_Limit
+        (Range_Expr,
+         Copy_Enumeration_Literal (Get_First_Element (Literal_List)));
+      Set_Right_Limit
+        (Range_Expr,
+         Copy_Enumeration_Literal (Get_Last_Element (Literal_List)));
       Set_Expr_Staticness (Range_Expr, Locally);
       Set_Range_Constraint (Def, Range_Expr);
    end Create_Range_Constraint_For_Enumeration_Type;
@@ -492,9 +509,9 @@ package body Iirs_Utils is
             return;
          when Iir_Kind_Selected_Name =>
             Free_Recursive (Get_Prefix (N));
-         when Iir_Kind_Constant_Interface_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
-           | Iir_Kind_Signal_Interface_Declaration =>
+         when Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration =>
             Free_Recursive (Get_Type (N));
             Free_Recursive (Get_Default_Value (N));
          when Iir_Kind_Range_Expression =>
@@ -557,6 +574,20 @@ package body Iirs_Utils is
       end loop;
    end Mark_Subprogram_Used;
 
+   function Get_Callees_List_Holder (Subprg : Iir) return Iir is
+   begin
+      case Get_Kind (Subprg) is
+         when Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Function_Declaration =>
+            return Get_Subprogram_Body (Subprg);
+         when Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Process_Statement =>
+            return Subprg;
+         when others =>
+            Error_Kind ("get_callees_list_holder", Subprg);
+      end case;
+   end Get_Callees_List_Holder;
+
    procedure Clear_Seen_Flag (Top : Iir)
    is
       Callees_List : Iir_Callees_List;
@@ -564,7 +595,7 @@ package body Iirs_Utils is
    begin
       if Get_Seen_Flag (Top) then
          Set_Seen_Flag (Top, False);
-         Callees_List := Get_Callees_List (Top);
+         Callees_List := Get_Callees_List (Get_Callees_List_Holder (Top));
          if Callees_List /= Null_Iir_List then
             for I in Natural loop
                El := Get_Nth_Element (Callees_List, I);
@@ -1040,7 +1071,7 @@ package body Iirs_Utils is
       Adecl := Get_Object_Prefix (Name, True);
       case Get_Kind (Adecl) is
          when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kinds_Signal_Attribute =>
             return True;

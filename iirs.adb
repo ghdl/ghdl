@@ -242,6 +242,7 @@ package body Iirs is
            | Iir_Kind_Association_Element_By_Expression
            | Iir_Kind_Association_Element_By_Individual
            | Iir_Kind_Association_Element_Open
+           | Iir_Kind_Association_Element_Package
            | Iir_Kind_Choice_By_Others
            | Iir_Kind_Choice_By_Expression
            | Iir_Kind_Choice_By_Range
@@ -291,8 +292,6 @@ package body Iirs is
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Terminal_Declaration
-           | Iir_Kind_Function_Body
-           | Iir_Kind_Procedure_Body
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator
@@ -437,16 +436,19 @@ package body Iirs is
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body
            | Iir_Kind_File_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
-           | Iir_Kind_Constant_Interface_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
-           | Iir_Kind_File_Interface_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
@@ -3225,19 +3227,19 @@ package body Iirs is
       Set_Field7 (Target, Header);
    end Set_Block_Header;
 
-   function Get_Uninstantiated_Name (Inst : Iir) return Iir is
+   function Get_Uninstantiated_Package_Name (Inst : Iir) return Iir is
    begin
       pragma Assert (Inst /= Null_Iir);
-      pragma Assert (Has_Uninstantiated_Name (Get_Kind (Inst)));
+      pragma Assert (Has_Uninstantiated_Package_Name (Get_Kind (Inst)));
       return Get_Field5 (Inst);
-   end Get_Uninstantiated_Name;
+   end Get_Uninstantiated_Package_Name;
 
-   procedure Set_Uninstantiated_Name (Inst : Iir; Name : Iir) is
+   procedure Set_Uninstantiated_Package_Name (Inst : Iir; Name : Iir) is
    begin
       pragma Assert (Inst /= Null_Iir);
-      pragma Assert (Has_Uninstantiated_Name (Get_Kind (Inst)));
+      pragma Assert (Has_Uninstantiated_Package_Name (Get_Kind (Inst)));
       Set_Field5 (Inst, Name);
-   end Set_Uninstantiated_Name;
+   end Set_Uninstantiated_Package_Name;
 
    function Get_Generate_Block_Configuration (Target : Iir) return Iir is
    begin
@@ -3688,6 +3690,20 @@ package body Iirs is
       pragma Assert (Has_Actual_Type (Get_Kind (Target)));
       Set_Field3 (Target, Atype);
    end Set_Actual_Type;
+
+   function Get_Associated_Interface (Assoc : Iir) return Iir is
+   begin
+      pragma Assert (Assoc /= Null_Iir);
+      pragma Assert (Has_Associated_Interface (Get_Kind (Assoc)));
+      return Get_Field4 (Assoc);
+   end Get_Associated_Interface;
+
+   procedure Set_Associated_Interface (Assoc : Iir; Inter : Iir) is
+   begin
+      pragma Assert (Assoc /= Null_Iir);
+      pragma Assert (Has_Associated_Interface (Get_Kind (Assoc)));
+      Set_Field4 (Assoc, Inter);
+   end Set_Associated_Interface;
 
    function Get_Association_Chain (Target : Iir) return Iir is
    begin

@@ -776,8 +776,6 @@ package body Sem_Types is
       Set_Type_Staticness (Def, Locally);
       Set_Signal_Type_Flag (Def, True);
 
-      Create_Range_Constraint_For_Enumeration_Type (Def);
-
       --  Makes all literal visible.
       declare
          El: Iir;
@@ -805,6 +803,8 @@ package body Sem_Types is
          Set_Only_Characters_Flag (Def, Only_Characters);
       end;
       Set_Resolved_Flag (Def, False);
+
+      Create_Range_Constraint_For_Enumeration_Type (Def);
 
       --  Identifier IEEE.Std_Logic_1164.Std_Ulogic.
       if Get_Identifier (Decl) = Std_Names.Name_Std_Ulogic
@@ -1245,7 +1245,7 @@ package body Sem_Types is
       if Decl = Null_Iir or else Get_Chain (Decl) /= Null_Iir then
          return False;
       end if;
-      if Get_Kind (Decl) /= Iir_Kind_Constant_Interface_Declaration then
+      if Get_Kind (Decl) /= Iir_Kind_Interface_Constant_Declaration then
          return False;
       end if;
       -- LRM93 2.4
@@ -1370,6 +1370,7 @@ package body Sem_Types is
       Subtype_Index_List : Iir_List;
       Resolv_Func : Iir := Null_Iir;
       Resolv_El : Iir := Null_Iir;
+      Resolv_Ind : Iir;
    begin
       if Resolution /= Null_Iir then
          --  A resolution indication is present.
@@ -1545,8 +1546,19 @@ package body Sem_Types is
          --  FIXME: may a resolution indication for a record be incomplete ?
          Set_Resolved_Flag (Res, Get_Resolved_Flag (El_Def));
       elsif Get_Kind (Type_Mark) = Iir_Kind_Array_Subtype_Definition then
-         Set_Resolution_Indication
-           (Res, Get_Resolution_Indication (Type_Mark));
+         Resolv_Ind := Get_Resolution_Indication (Type_Mark);
+         if Resolv_Ind /= Null_Iir then
+            case Get_Kind (Resolv_Ind) is
+               when Iir_Kinds_Denoting_Name =>
+                  Error_Kind ("sem_array_constraint(resolution)", Resolv_Ind);
+               when Iir_Kind_Array_Element_Resolution =>
+                  --  Already applied to the element.
+                  Resolv_Ind := Null_Iir;
+               when others =>
+                  Error_Kind ("sem_array_constraint(resolution2)", Resolv_Ind);
+            end case;
+            Set_Resolution_Indication (Res, Resolv_Ind);
+         end if;
          Set_Resolved_Flag (Res, Get_Resolved_Flag (Type_Mark));
       end if;
 

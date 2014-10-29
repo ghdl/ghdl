@@ -19,6 +19,7 @@ with Nodes;
 with Nodes_Meta;
 with Types; use Types;
 with Iirs_Utils; use Iirs_Utils;
+with Errorout; use Errorout;
 
 package body Sem_Inst is
    --  Table of origin.  This is an extension of vhdl nodes to track the
@@ -330,7 +331,7 @@ package body Sem_Inst is
       begin
          Res := Get_Instance (N);
 
-         if Kind = Iir_Kind_Constant_Interface_Declaration
+         if Kind = Iir_Kind_Interface_Constant_Declaration
            and then Get_Identifier (N) = Null_Identifier
            and then Res /= Null_Iir
          then
@@ -355,8 +356,11 @@ package body Sem_Inst is
          for I in Fields'Range loop
             F := Fields (I);
 
+            --  Fields that are handled specially.
             case F is
                when Field_Index_Subtype_List =>
+                  --  Index_Subtype_List is always a reference, so retrieve
+                  --  the instance of the referenced list.
                   declare
                      List : Iir_List;
                   begin
@@ -389,12 +393,222 @@ package body Sem_Inst is
                --  Subprogram body is a forward declaration.
                Set_Subprogram_Body (Res, Null_Iir);
             when others =>
+               --  TODO: other forward references:
+               --  incomplete constant
+               --  attribute_value
                null;
          end case;
 
          return Res;
       end;
    end Instantiate_Iir;
+
+   --  As the scope generic interfaces extends beyond the immediate scope (see
+   --  LRM08 12.2 Scope of declarations), they must be instantiated.
+   function Instantiate_Generic_Chain (Inst : Iir; Inters : Iir) return Iir
+   is
+      Inter : Iir;
+      First : Iir;
+      Last : Iir;
+      Res : Iir;
+   begin
+      First := Null_Iir;
+      Last := Null_Iir;
+
+      Inter := Inters;
+      while Inter /= Null_Iir loop
+         --  Create a copy of the interface.  FIXME: is it really needed ?
+         Res := Create_Iir (Get_Kind (Inter));
+         Set_Location (Res, Instantiate_Loc);
+         Set_Parent (Res, Inst);
+         Set_Identifier (Res, Get_Identifier (Inter));
+         Set_Visible_Flag (Res, Get_Visible_Flag (Inter));
+
+         Set_Origin (Res, Inter);
+         Set_Instance (Inter, Res);
+
+         case Get_Kind (Res) is
+            when Iir_Kind_Interface_Constant_Declaration =>
+               Set_Type (Res, Get_Type (Inter));
+               Set_Subtype_Indication (Res, Get_Subtype_Indication (Inter));
+               Set_Mode (Res, Get_Mode (Inter));
+               Set_Lexical_Layout (Res, Get_Lexical_Layout (Inter));
+               Set_Expr_Staticness (Res, Get_Expr_Staticness (Inter));
+               Set_Name_Staticness (Res, Get_Name_Staticness (Inter));
+            when Iir_Kind_Interface_Package_Declaration =>
+               Set_Uninstantiated_Package_Name
+                 (Res, Get_Uninstantiated_Package_Name (Inter));
+            when others =>
+               Error_Kind ("instantiate_generic_chain", Res);
+         end case;
+
+         --  Append
+         if First = Null_Iir then
+            First := Res;
+         else
+            Set_Chain (Last, Res);
+         end if;
+         Last := Res;
+
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      return First;
+   end Instantiate_Generic_Chain;
+
+   procedure Set_Instance_On_Chain (Chain : Iir; Inst_Chain : Iir);
+   procedure Set_Instance_On_Iir_List (N : Iir_List; Inst : Iir_List);
+
+   procedure Set_Instance_On_Iir (N : Iir; Inst : Iir) is
+   begin
+      if N = Null_Iir then
+         pragma Assert (Inst = Null_Iir);
+         return;
+      end if;
+      pragma Assert (Inst /= Null_Iir);
+
+      declare
+         use Nodes_Meta;
+         Kind : constant Iir_Kind := Get_Kind (N);
+         Fields : constant Fields_Array := Get_Fields (Kind);
+         F : Fields_Enum;
+      begin
+         pragma Assert (Get_Kind (Inst) = Kind);
+
+         if Kind = Iir_Kind_Interface_Constant_Declaration
+           and then Get_Identifier (N) = Null_Identifier
+         then
+            --  Anonymous constant interface declarations are the only nodes
+            --  that can be shared.  Handle that very special case.
+            return;
+         end if;
+
+         --  pragma Assert (Get_Instance (N) = Null_Iir);
+         Set_Instance (N, Inst);
+
+         for I in Fields'Range loop
+            F := Fields (I);
+
+            case Get_Field_Type (F) is
+               when Type_Iir =>
+                  declare
+                     S : constant Iir := Get_Iir (N, F);
+                     S_Inst : constant Iir := Get_Iir (Inst, F);
+                  begin
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Set_Instance_On_Iir (S, S_Inst);
+                        when Attr_Ref =>
+                           null;
+                        when Attr_Maybe_Ref =>
+                           if not Get_Is_Ref (N) then
+                              Set_Instance_On_Iir (S, S_Inst);
+                           end if;
+                        when Attr_Chain =>
+                           Set_Instance_On_Chain (S, S_Inst);
+                        when Attr_Chain_Next =>
+                           null;
+                        when Attr_Of_Ref =>
+                           --  Can only appear in list.
+                           raise Internal_Error;
+                     end case;
+                  end;
+               when Type_Iir_List =>
+                  declare
+                     S : constant Iir_List := Get_Iir_List (N, F);
+                     S_Inst : constant Iir_List := Get_Iir_List (Inst, F);
+                  begin
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Set_Instance_On_Iir_List (S, S_Inst);
+                        when Attr_Of_Ref
+                          | Attr_Ref =>
+                           null;
+                        when others =>
+                           --  Ref is specially handled in Instantiate_Iir.
+                           --  Others cannot appear for lists.
+                           raise Internal_Error;
+                     end case;
+                  end;
+               when others =>
+                  null;
+            end case;
+         end loop;
+      end;
+   end Set_Instance_On_Iir;
+
+   procedure Set_Instance_On_Iir_List (N : Iir_List; Inst : Iir_List)
+   is
+      El : Iir;
+      El_Inst : Iir;
+   begin
+      case N is
+         when Null_Iir_List
+           | Iir_List_All
+           | Iir_List_Others =>
+            pragma Assert (Inst = N);
+            return;
+         when others =>
+            for I in Natural loop
+               El := Get_Nth_Element (N, I);
+               El_Inst := Get_Nth_Element (Inst, I);
+               exit when El = Null_Iir;
+               pragma Assert (El_Inst /= Null_Iir);
+
+               Set_Instance_On_Iir (El, El_Inst);
+            end loop;
+            pragma Assert (El_Inst = Null_Iir);
+      end case;
+   end Set_Instance_On_Iir_List;
+
+   procedure Set_Instance_On_Chain (Chain : Iir; Inst_Chain : Iir)
+   is
+      El : Iir;
+      Inst_El : Iir;
+   begin
+      El := Chain;
+      Inst_El := Inst_Chain;
+      while El /= Null_Iir loop
+         pragma Assert (Inst_El /= Null_Iir);
+         Set_Instance_On_Iir (El, Inst_El);
+         El := Get_Chain (El);
+         Inst_El := Get_Chain (Inst_El);
+      end loop;
+      pragma Assert (Inst_El = Null_Iir);
+   end Set_Instance_On_Chain;
+
+   --  In the instance, replace references (and inner references) to interface
+   --  package declaration to the associated package.
+   procedure Instantiate_Generic_Map_Chain (Inst : Iir; Pkg : Iir)
+   is
+      pragma Unreferenced (Pkg);
+      Assoc : Iir;
+   begin
+      Assoc := Get_Generic_Map_Aspect_Chain (Inst);
+      while Assoc /= Null_Iir loop
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Association_Element_By_Expression
+              | Iir_Kind_Association_Element_By_Individual
+              | Iir_Kind_Association_Element_Open =>
+               null;
+            when Iir_Kind_Association_Element_Package =>
+               declare
+                  Sub_Inst : constant Iir :=
+                    Get_Named_Entity (Get_Actual (Assoc));
+                  Sub_Pkg : constant Iir := Get_Associated_Interface (Assoc);
+               begin
+                  Set_Instance (Sub_Pkg, Sub_Inst);
+                  Set_Instance_On_Chain (Get_Generic_Chain (Sub_Pkg),
+                                         Get_Generic_Chain (Sub_Inst));
+                  Set_Instance_On_Chain (Get_Declaration_Chain (Sub_Pkg),
+                                        Get_Declaration_Chain (Sub_Inst));
+               end;
+            when others =>
+               Error_Kind ("instantiate_generic_map_chain", Assoc);
+         end case;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Instantiate_Generic_Map_Chain;
 
    procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir)
    is
@@ -411,7 +625,8 @@ package body Sem_Inst is
       Set_Origin (Pkg, Inst);
 
       Set_Generic_Chain
-        (Inst, Instantiate_Iir_Chain (Get_Generic_Chain (Header)));
+        (Inst, Instantiate_Generic_Chain (Inst, Get_Generic_Chain (Header)));
+      Instantiate_Generic_Map_Chain (Inst, Pkg);
       Set_Declaration_Chain
         (Inst, Instantiate_Iir_Chain (Get_Declaration_Chain (Pkg)));
 

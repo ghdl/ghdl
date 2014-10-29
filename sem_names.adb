@@ -442,9 +442,8 @@ package body Sem_Names is
       Prefix := Get_Prefix (Name);
       Obj := Get_Named_Entity (Prefix);
       if Obj /= Null_Iir
-        and then
-        (Get_Kind (Obj) = Iir_Kind_Variable_Declaration
-           or Get_Kind (Obj) = Iir_Kind_Variable_Interface_Declaration)
+        and then Kind_In (Obj, Iir_Kind_Variable_Declaration,
+                          Iir_Kind_Interface_Variable_Declaration)
         and then Get_Type (Obj) /= Null_Iir
       then
          if Get_Kind (Get_Type (Obj)) /= Iir_Kind_Protected_Type_Declaration
@@ -1247,10 +1246,10 @@ package body Sem_Names is
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_File_Interface_Declaration =>
+           | Iir_Kind_Interface_File_Declaration =>
             null;
-         when Iir_Kind_Variable_Interface_Declaration
-           | Iir_Kind_Signal_Interface_Declaration =>
+         when Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration =>
             --  When referenced as a formal name (FIXME: this is an
             --  approximation), the rules don't apply.
             if not Get_Is_Within_Flag (Get_Parent (Obj)) then
@@ -1408,7 +1407,8 @@ package body Sem_Names is
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
-           | Iir_Kind_Library_Declaration =>
+           | Iir_Kind_Library_Declaration
+           | Iir_Kind_Interface_Package_Declaration =>
             Name_Res := Finish_Sem_Denoting_Name (Name, Res);
             Set_Base_Name (Name_Res, Res);
             return Name_Res;
@@ -2892,7 +2892,7 @@ package body Sem_Names is
       end if;
       Set_Base_Name (Res, Res);
 
-      if Get_Kind (Prefix) = Iir_Kind_Signal_Interface_Declaration then
+      if Get_Kind (Prefix) = Iir_Kind_Interface_Signal_Declaration then
          --  LRM93 2.1.1.2 / LRM08 4.2.2.3
          --
          --  It is an error if signal-valued attributes 'STABLE , 'QUIET,
@@ -2923,7 +2923,7 @@ package body Sem_Names is
       Base := Get_Object_Prefix (Prefix);
       case Get_Kind (Base) is
          when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kinds_Signal_Attribute =>
             null;
@@ -3032,7 +3032,7 @@ package body Sem_Names is
             case Get_Kind (Base) is
                when Iir_Kind_Signal_Declaration =>
                   null;
-               when Iir_Kind_Signal_Interface_Declaration =>
+               when Iir_Kind_Interface_Signal_Declaration =>
                   case Get_Mode (Base) is
                      when Iir_Buffer_Mode
                        | Iir_Inout_Mode
@@ -3124,7 +3124,7 @@ package body Sem_Names is
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kinds_Concurrent_Statement
@@ -3137,8 +3137,8 @@ package body Sem_Names is
            | Iir_Kind_Non_Object_Alias_Declaration =>
             null;
 
-         when Iir_Kind_Signal_Interface_Declaration
-           | Iir_Kind_Constant_Interface_Declaration =>
+         when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_Constant_Declaration =>
             if Get_Identifier (Attr) /= Name_Simple_Name
               and then Get_Kind (Get_Parent (Prefix))
               = Iir_Kind_Component_Declaration
@@ -3650,10 +3650,10 @@ package body Sem_Names is
            | Iir_Kind_File_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
-           | Iir_Kind_Constant_Interface_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
-           | Iir_Kind_File_Interface_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Slice_Name
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Selected_Element
@@ -3681,10 +3681,10 @@ package body Sem_Names is
            | Iir_Kind_File_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
-           | Iir_Kind_Constant_Interface_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
-           | Iir_Kind_Signal_Interface_Declaration
-           | Iir_Kind_File_Interface_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Slice_Name
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Selected_Element
@@ -3744,6 +3744,7 @@ package body Sem_Names is
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kinds_Subprogram_Declaration
            | Iir_Kind_Component_Declaration =>
