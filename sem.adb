@@ -346,8 +346,8 @@ package body Sem is
 
    --  INTER_PARENT contains generics interfaces;
    --  ASSOC_PARENT constains generic aspects.
-   procedure Sem_Generic_Association_Chain
-     (Inter_Parent : Iir; Assoc_Parent : Iir)
+   function Sem_Generic_Association_Chain
+     (Inter_Parent : Iir; Assoc_Parent : Iir) return Boolean
    is
       El : Iir;
       Match : Boolean;
@@ -407,31 +407,45 @@ package body Sem is
       Assoc_Chain := Extract_Non_Object_Association (Assoc_Chain, Inter_Chain);
       Set_Generic_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
 
-      if Sem_Actual_Of_Association_Chain (Assoc_Chain) then
-         Sem_Association_Chain
-           (Inter_Chain, Assoc_Chain, True, Miss, Assoc_Parent, Match);
-         Set_Generic_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
-
-         --  LRM 5.2.1.2   Generic map and port map aspects
-         --  An actual associated with a formal generic map aspect must be an
-         --  expression or the reserved word open;
-         if Match then
-            El := Assoc_Chain;
-            while El /= Null_Iir loop
-               case Get_Kind (El) is
-                  when Iir_Kind_Association_Element_By_Expression =>
-                     Check_Read (Get_Actual (El));
-                  when Iir_Kind_Association_Element_Open
-                    | Iir_Kind_Association_Element_By_Individual
-                    | Iir_Kind_Association_Element_Package =>
-                     null;
-                  when others =>
-                     Error_Kind ("sem_generic_map_association_chain(1)", El);
-               end case;
-               El := Get_Chain (El);
-            end loop;
-         end if;
+      if not Sem_Actual_Of_Association_Chain (Assoc_Chain) then
+         return False;
       end if;
+
+      Sem_Association_Chain
+        (Inter_Chain, Assoc_Chain, True, Miss, Assoc_Parent, Match);
+      Set_Generic_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
+      if not Match then
+         return False;
+      end if;
+
+      --  LRM 5.2.1.2   Generic map and port map aspects
+      --  An actual associated with a formal generic map aspect must be an
+      --  expression or the reserved word open;
+      El := Assoc_Chain;
+      while El /= Null_Iir loop
+         case Get_Kind (El) is
+            when Iir_Kind_Association_Element_By_Expression =>
+               Check_Read (Get_Actual (El));
+            when Iir_Kind_Association_Element_Open
+              | Iir_Kind_Association_Element_By_Individual
+              | Iir_Kind_Association_Element_Package =>
+               null;
+            when others =>
+               Error_Kind ("sem_generic_map_association_chain(1)", El);
+         end case;
+         El := Get_Chain (El);
+      end loop;
+
+      return True;
+   end Sem_Generic_Association_Chain;
+
+   procedure Sem_Generic_Association_Chain
+     (Inter_Parent : Iir; Assoc_Parent : Iir)
+   is
+      Res : Boolean;
+      pragma Unreferenced (Res);
+   begin
+      Res := Sem_Generic_Association_Chain (Inter_Parent, Assoc_Parent);
    end Sem_Generic_Association_Chain;
 
    --  INTER_PARENT contains ports interfaces;
@@ -601,6 +615,8 @@ package body Sem is
    procedure Sem_Generic_Port_Association_Chain
      (Inter_Parent : Iir; Assoc_Parent : Iir)
    is
+      Res : Boolean;
+      pragma Unreferenced (Res);
    begin
       Sem_Generic_Association_Chain (Inter_Parent, Assoc_Parent);
       Sem_Port_Association_Chain (Inter_Parent, Assoc_Parent);
@@ -2469,8 +2485,12 @@ package body Sem is
       --  the actuals are associated with the instantiated formal.
       --  FIXME: do it in Instantiate_Package_Declaration ?
       Hdr := Get_Package_Header (Pkg);
-      Sem_Generic_Association_Chain (Hdr, Decl);
-      Sem_Inst.Instantiate_Package_Declaration (Decl, Pkg);
+      if Sem_Generic_Association_Chain (Hdr, Decl) then
+         Sem_Inst.Instantiate_Package_Declaration (Decl, Pkg);
+      else
+         --  FIXME: stop analysis here ?
+         null;
+      end if;
 
       --  FIXME: unless the parent is a package declaration library unit, the
       --  design unit depends on the body.
