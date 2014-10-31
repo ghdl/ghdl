@@ -1081,15 +1081,39 @@ package body Disp_Vhdl is
       loop
          Next_Inter := Get_Chain (Inter);
          Set_Col (Start);
-         Disp_Interface_Class (Inter);
-         Disp_Name_Of (Inter);
-         while (Get_Lexical_Layout (Inter) and Iir_Lexical_Has_Type) = 0 loop
-            Put (", ");
-            Inter := Next_Inter;
-            Next_Inter := Get_Chain (Inter);
-            Disp_Name_Of (Inter);
-         end loop;
-         Disp_Interface_Mode_And_Type (Inter);
+
+         case Get_Kind (Inter) is
+            when Iir_Kinds_Interface_Object_Declaration =>
+               Disp_Interface_Class (Inter);
+               Disp_Name_Of (Inter);
+               while (Get_Lexical_Layout (Inter) and Iir_Lexical_Has_Type) = 0
+               loop
+                  Put (", ");
+                  Inter := Next_Inter;
+                  Next_Inter := Get_Chain (Inter);
+                  Disp_Name_Of (Inter);
+               end loop;
+               Disp_Interface_Mode_And_Type (Inter);
+            when Iir_Kind_Interface_Package_Declaration =>
+               Put ("package ");
+               Disp_Identifier (Inter);
+               Put (" is new ");
+               Disp_Name (Get_Uninstantiated_Package_Name (Inter));
+               Put (" generic map ");
+               declare
+                  Assoc_Chain : constant Iir :=
+                    Get_Generic_Map_Aspect_Chain (Inter);
+               begin
+                  if Assoc_Chain = Null_Iir then
+                     Put ("(<>)");
+                  else
+                     Disp_Association_Chain (Assoc_Chain);
+                  end if;
+               end;
+            when others =>
+               Error_Kind ("disp_interface_chain", Inter);
+         end case;
+
          if Next_Inter /= Null_Iir then
             Put (";");
             if Comment_Col /= 0 then
@@ -1102,6 +1126,7 @@ package body Disp_Vhdl is
             Put (End_Str);
             exit;
          end if;
+
          Inter := Next_Inter;
          Next_Inter := Get_Chain (Inter);
       end loop;
@@ -2183,6 +2208,8 @@ package body Disp_Vhdl is
             if Need_Comma then
                Put (", ");
             end if;
+
+            --  Formal part.
             if Get_Kind (El) = Iir_Kind_Association_Element_By_Expression then
                Conv := Get_Out_Conversion (El);
                if Conv /= Null_Iir then
@@ -2200,19 +2227,23 @@ package body Disp_Vhdl is
                end if;
                Put (" => ");
             end if;
-            if Get_Kind (El) = Iir_Kind_Association_Element_Open then
-               Put ("open");
-            else
-               Conv := Get_In_Conversion (El);
-               if Conv /= Null_Iir then
-                  Disp_Conversion (Conv);
-                  Put (" (");
-               end if;
-               Disp_Expression (Get_Actual (El));
-               if Conv /= Null_Iir then
-                  Put (")");
-               end if;
-            end if;
+
+            case Get_Kind (El) is
+               when Iir_Kind_Association_Element_Open =>
+                  Put ("open");
+               when Iir_Kind_Association_Element_Package =>
+                  Disp_Name (Get_Actual (El));
+               when others =>
+                  Conv := Get_In_Conversion (El);
+                  if Conv /= Null_Iir then
+                     Disp_Conversion (Conv);
+                     Put (" (");
+                  end if;
+                  Disp_Expression (Get_Actual (El));
+                  if Conv /= Null_Iir then
+                     Put (")");
+                  end if;
+            end case;
             Need_Comma := True;
          end if;
          El := Get_Chain (El);

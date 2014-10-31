@@ -1133,6 +1133,17 @@ package Iirs is
 
    -- Iir_Kind_Interface_Package_Declaration (Medium)
    --
+   --  LRM08 6.5.5 Interface package declarations
+   --
+   --  interface_package_declaration ::=
+   --     PACKAGE identifier IS NEW /uninstantiated_package/_name
+   --        interface_package_generic_map_aspect
+   --
+   --  interface_package_generic_map_aspect ::=
+   --       generic_map_aspect
+   --     | GENERIC MAP ( <> )                  --  Represented by Null_Iir
+   --     | GENERIC MAP ( DEFAULT )             --  Not yet implemented
+   --
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Declaration_Chain (Field1)
