@@ -58,6 +58,7 @@ package Errorout is
    -- Disp a message during scan.
    -- The current location is automatically displayed before the message.
    procedure Error_Msg_Scan (Msg: String);
+   procedure Error_Msg_Scan (Msg: String; Loc : Location_Type);
    procedure Warning_Msg_Scan (Msg: String);
 
    -- Disp a message during parse

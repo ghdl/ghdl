@@ -239,6 +239,14 @@ package body Errorout is
       Put_Line (Msg);
    end Error_Msg_Scan;
 
+   procedure Error_Msg_Scan (Msg: String; Loc : Location_Type) is
+   begin
+      Nbr_Errors := Nbr_Errors + 1;
+      Disp_Location (Loc);
+      Put (' ');
+      Put_Line (Msg);
+   end Error_Msg_Scan;
+
    -- Disp a message during scan.
    procedure Warning_Msg_Scan (Msg: String) is
    begin

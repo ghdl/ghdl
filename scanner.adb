@@ -1016,6 +1016,41 @@ package body Scanner is
       end if;
    end Scan_Underscore;
 
+   --  The Scan_Next_Line procedure must be called after each end-of-line to
+   --  register to next line number.  This is called by Scan_CR_Newline and
+   --  Scan_LF_Newline.
+   procedure Scan_Next_Line is
+   begin
+      Current_Context.Line_Number := Current_Context.Line_Number + 1;
+      Current_Context.Line_Pos := Pos;
+      File_Add_Line_Number
+        (Current_Context.Source_File, Current_Context.Line_Number, Pos);
+   end Scan_Next_Line;
+
+   --  Scan a CR end-of-line.
+   procedure Scan_CR_Newline is
+   begin
+      -- Accept CR or CR+LF as line separator.
+      if Source (Pos + 1) = LF then
+         Pos := Pos + 2;
+      else
+         Pos := Pos + 1;
+      end if;
+      Scan_Next_Line;
+   end Scan_CR_Newline;
+
+   --  Scan a LF end-of-line.
+   procedure Scan_LF_Newline is
+   begin
+      -- Accept LF or LF+CR as line separator.
+      if Source (Pos + 1) = CR then
+         Pos := Pos + 2;
+      else
+         Pos := Pos + 1;
+      end if;
+      Scan_Next_Line;
+   end Scan_LF_Newline;
+
    -- Get a new token.
    procedure Scan is
    begin
@@ -1025,7 +1060,7 @@ package body Scanner is
 
       << Again >> null;
 
-      -- Skip commonly used separators.
+      --  Skip commonly used separators.
       while Source(Pos) = ' ' or Source(Pos) = HT loop
          Pos := Pos + 1;
       end loop;
@@ -1046,19 +1081,15 @@ package body Scanner is
          when VT | FF =>
             Pos := Pos + 1;
             goto Again;
-         when LF | CR =>
-            -- Accept CR, LF, CR+LF or LF+CR as line separator.
-            if (Source (Pos) = LF and then Source (Pos + 1) = CR)
-              or else (Source (Pos) = CR and then Source (Pos + 1) = LF)
-            then
-               Pos := Pos + 2;
-            else
-               Pos := Pos + 1;
+         when LF =>
+            Scan_LF_Newline;
+            if Flag_Newline then
+               Current_Token := Tok_Newline;
+               return;
             end if;
-            Current_Context.Line_Number := Current_Context.Line_Number + 1;
-            Current_Context.Line_Pos := Pos;
-            File_Add_Line_Number
-              (Current_Context.Source_File, Current_Context.Line_Number, Pos);
+            goto Again;
+         when CR =>
+            Scan_CR_Newline;
             if Flag_Newline then
                Current_Token := Tok_Newline;
                return;
@@ -1139,6 +1170,64 @@ package body Scanner is
             if Source (Pos + 1) = '=' then
                Current_Token := Tok_Not_Equal;
                Pos := Pos + 2;
+            elsif Source (Pos + 1) = '*' then
+               --  LRM08 15.9 Comments
+               --  A delimited comment start with a solidus (slash) character
+               --  immediately followed by an asterisk character and extends up
+               --  to the first subsequent occurrence of an asterisk character
+               --  immediately followed by a solidus character.
+               if Vhdl_Std < Vhdl_08 then
+                  Error_Msg_Scan
+                    ("block comment are not allowed before vhdl 2008");
+               end if;
+
+               --  Skip '/*'.
+               Pos := Pos + 2;
+
+               loop
+                  case Source (Pos) is
+                     when '/' =>
+                        --  LRM08 15.9
+                        --  Moreover, an occurrence of a solidus character
+                        --  immediately followed by an asterisk character
+                        --  within a delimited comment is not interpreted as
+                        --  the start of a nested delimited comment.
+                        if Source (Pos + 1) = '*' then
+                           Warning_Msg_Scan
+                             ("'/*' found within a block comment");
+                        end if;
+                        Pos := Pos + 1;
+                     when '*' =>
+                        if Source (Pos + 1) = '/' then
+                           Pos := Pos + 2;
+                           exit;
+                        else
+                           Pos := Pos + 1;
+                        end if;
+                     when CR =>
+                        Scan_CR_Newline;
+                     when LF =>
+                        Scan_LF_Newline;
+                     when Files_Map.EOT =>
+                        if Pos >= Current_Context.File_Len then
+                           --  Point at the start of the comment.
+                           Error_Msg_Scan
+                             ("block comment not terminated at end of file",
+                              File_Pos_To_Location
+                                (Current_Context.Source_File,
+                                 Current_Context.Token_Pos));
+                           exit;
+                        end if;
+                        Pos := Pos + 1;
+                     when others =>
+                        Pos := Pos + 1;
+                  end case;
+               end loop;
+               if Flag_Comment then
+                  Current_Token := Tok_Comment;
+                  return;
+               end if;
+               goto Again;
             else
                Current_Token := Tok_Slash;
                Pos := Pos + 1;
