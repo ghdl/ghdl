@@ -196,7 +196,8 @@ package body Ieee.Vital_Timing is
       Expr : Iir;
    begin
       if Get_Kind (Decl) /= Iir_Kind_Attribute_Specification
-        or else Get_Attribute_Designator (Decl) /= Vital_Level0_Attribute
+        or else (Get_Named_Entity (Get_Attribute_Designator (Decl))
+                   /= Vital_Level0_Attribute)
       then
          Error_Vital
            ("first declaration must be the VITAL attribute specification",
@@ -1315,7 +1316,9 @@ package body Ieee.Vital_Timing is
       Value := Get_Attribute_Value_Chain (Unit);
       while Value /= Null_Iir loop
          Spec := Get_Attribute_Specification (Value);
-         if Get_Attribute_Designator (Spec) = Vital_Level0_Attribute then
+         if Get_Named_Entity (Get_Attribute_Designator (Spec))
+           = Vital_Level0_Attribute
+         then
             return True;
          end if;
          Value := Get_Chain (Value);

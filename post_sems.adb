@@ -56,7 +56,7 @@ package body Post_Sems is
          Value := Get_Attribute_Value_Chain (Lib_Unit);
          while Value /= Null_Iir loop
             Spec := Get_Attribute_Specification (Value);
-            Attr_Decl := Get_Attribute_Designator (Spec);
+            Attr_Decl := Get_Named_Entity (Get_Attribute_Designator (Spec));
             if Attr_Decl = Ieee.Vital_Timing.Vital_Level0_Attribute then
                Ieee.Vital_Timing.Check_Vital_Level0 (Unit);
             elsif Attr_Decl = Ieee.Vital_Timing.Vital_Level1_Attribute then
