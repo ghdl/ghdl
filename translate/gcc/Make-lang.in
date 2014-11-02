@@ -62,25 +62,24 @@ vhdl VHDL: ghdl1$(exeext) ghdl$(exeext) ghdllib
 # Tell GNU Make to ignore these, if they exist.
 .PHONY: vhdl VHDL ghdllib
 
-agcc_srcdir=$(srcdir)/vhdl
-agcc_objdir=.
+#ortho-lang.o: $(agcc_srcdir)/ortho-lang.c \
+# $(AGCC_GCCOBJ_DIR)gcc/gtype-vhdl.h \
+# $(AGCC_GCCOBJ_DIR)gcc/gt-vhdl-ortho-lang.h
+#	$(COMPILER) -c -o $@ $< $(AGCC_CFLAGS) $(INCLUDES) 
 
-AGCC_GCCSRC_DIR=$(srcdir)/..
-AGCC_GCCOBJ_DIR=../
-
-####gcc Makefile.inc
+GHDL1_OBJS = attribs.o vhdl/ortho-lang.o
 
 # The compiler proper.
 # It is compiled into the vhdl/ subdirectory to avoid file name clashes but
 # linked in in gcc directory to be able to access to gcc object files.
-ghdl1$(exeext): $(AGCC_OBJS) $(AGCC_DEPS) force $(BACKEND) $(LIBDEPS)
+ghdl1$(exeext): force $(GHDL1_OBJS) $(BACKEND) $(LIBDEPS)
 	CURDIR=`pwd`; cd $(srcdir)/vhdl; VHDLSRCDIR=`pwd`; cd $$CURDIR/vhdl; \
 	$(GNATMAKE) -c -aI$$VHDLSRCDIR ortho_gcc-main \
 	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS)
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aOvhdl ortho_gcc-main \
 	 -bargs -E -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
-	 -largs $(AGCC_OBJS) $(filter-out main.o,$(BACKEND)) \
-	 $(LIBS) $(BACKENDLIBS) -lstdc++
+	 -largs --LINK=$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GHDL1_OBJS) \
+	 $(filter-out main.o,$(BACKEND)) $(LIBS) $(BACKENDLIBS)
 
 # The driver for ghdl.
 ghdl$(exeext): force
@@ -159,7 +158,8 @@ vhdl.uninstall:
 
 vhdl.mostlyclean:
 	-$(RM) vhdl/*$(objext) vhdl/*.ali vhdl/b_*.c
-vhdl.clean: agcc-clean
+vhdl.clean:
+	-$(RM) vhdl/*$(objext)
 vhdl.distclean:
 	-$(RM) vhdl/Makefile
 	-$(RM) ghdl$(exeext)

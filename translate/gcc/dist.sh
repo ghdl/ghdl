@@ -91,8 +91,7 @@ do_Makefile ()
   sed -e "/^####libraries Makefile.inc/r ../../libraries/Makefile.inc" \
       -e "/^####grt Makefile.inc/r ../grt/Makefile.inc" \
      < Makefile.in > $VHDLDIR/Makefile.in
-  sed -e "/^####gcc Makefile.inc/r ../../ortho/gcc/Makefile.inc" \
-     < Make-lang.in > $VHDLDIR/Make-lang.in
+  cp Make-lang.in $VHDLDIR/Make-lang.in
 }
 
 # Copy (or link) sources files into $VHDLDIR
@@ -185,27 +184,27 @@ do_compile ()
   cd $GCCDISTOBJ
   export CFLAGS="-O -g"
 
-  case x86 in
-  x86)
+  case $MACHINE in
+  i?86-*-linux*)
 	  BUILD=i686-pc-linux-gnu
           # gmp location (mpfr and mpc are supposed to be at the same place)
 	  CONFIG_LIBS="--with-gmp=$PWD/../build"
 	  ;;
-  x86-64)
+  x86_64-*-linux*)
 	  BUILD=x86_64-pc-linux-gnu
 	  CONFIG_LIBS=""
 	  ;;
-  darwin)
+  x86_64-*-darwin*)
 	  BUILD=x86_64-apple-darwin10.7
-	  CONFIG_LIBS="--with-gmp=$HOME/local"
+	  CONFIG_LIBS="--with-gmp=$HOME/local --with-stage1-ldflags="
 	  ;;
   *)
 	  exit 1
 	  ;;
   esac
-  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX --disable-bootstrap --with-bugurl="<URL:http://gna.org/projects/ghdl>" --build=$BUILD $CONFIG_LIBS --disable-shared --disable-libmudflap --disable-libssp --disable-libgomp
+  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX --disable-bootstrap --with-bugurl="<URL:http://gna.org/projects/ghdl>" --build=$BUILD $CONFIG_LIBS --disable-shared --disable-libmudflap --disable-libssp --disable-libgomp --disable-libquadmatch --disable-libdecnumber
 
-  make
+  make -j4
   make -C gcc vhdl.info
   cd $CWD
 }
@@ -219,7 +218,7 @@ do_recompile ()
   do_update_gcc_sources;
   cd $GCCDISTOBJ
   export CFLAGS="-O -g"
-  make
+  make -j4
 }
 
 check_root ()
