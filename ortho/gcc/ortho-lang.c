@@ -41,11 +41,11 @@
 #include "tree-pass.h"
 #include "tree-dump.h"
 
-//#define GCC49
+/* Undefine for gcc-4.8  */
+#define GCC49
 
 #ifdef GCC49
 
-// New includes for gcc4.9 : big refactoring of tree.h, 19-Nov-2013 dnovillo
 #include "print-tree.h"
 #include "stringpool.h"
 #include "stor-layout.h"
@@ -417,9 +417,11 @@ ortho_post_options (const char **pfilename)
 extern "C" int lang_handle_option (const char *opt, const char *arg);
 
 static bool
-ortho_handle_option (size_t code, const char *arg, int value, int kind,
-                     location_t loc,
-                     const struct cl_option_handlers *handlers)
+ortho_handle_option (size_t code, const char *arg,
+		     int value ATTRIBUTE_UNUSED,
+		     int kind ATTRIBUTE_UNUSED,
+                     location_t loc ATTRIBUTE_UNUSED,
+                     const struct cl_option_handlers *handlers ATTRIBUTE_UNUSED)
 {
   const char *opt;
 
@@ -1264,8 +1266,8 @@ new_constrained_array_type (tree atype, tree length)
 
 void
 new_boolean_type (tree *res,
-		  tree false_id, tree *false_e,
-		  tree true_id, tree *true_e)
+		  tree false_id ATTRIBUTE_UNUSED, tree *false_e,
+		  tree true_id ATTRIBUTE_UNUSED, tree *true_e)
 {
   *res = make_node (BOOLEAN_TYPE);
   TYPE_PRECISION (*res) = 1;
@@ -1707,7 +1709,7 @@ new_const_decl (tree *res, tree ident, enum o_storage storage, tree atype)
 }
 
 void
-start_const_value (tree *cst)
+start_const_value (tree *cst ATTRIBUTE_UNUSED)
 {
 }
 
@@ -2042,7 +2044,7 @@ new_else_stmt (struct o_if_block *block)
 }
 
 void
-finish_if_stmt (struct o_if_block *block)
+finish_if_stmt (struct o_if_block *block ATTRIBUTE_UNUSED)
 {
   pop_stmts ();
 }
@@ -2152,7 +2154,7 @@ start_choice (struct o_case_block *block)
 }
 
 void
-new_expr_choice (struct o_case_block *block, tree expr)
+new_expr_choice (struct o_case_block *block ATTRIBUTE_UNUSED, tree expr)
 {
   tree stmt;
 
@@ -2162,7 +2164,8 @@ new_expr_choice (struct o_case_block *block, tree expr)
 }
 
 void
-new_range_choice (struct o_case_block *block, tree low, tree high)
+new_range_choice (struct o_case_block *block ATTRIBUTE_UNUSED,
+		  tree low, tree high)
 {
   tree stmt;
 
@@ -2172,7 +2175,7 @@ new_range_choice (struct o_case_block *block, tree low, tree high)
 }
 
 void
-new_default_choice (struct o_case_block *block)
+new_default_choice (struct o_case_block *block ATTRIBUTE_UNUSED)
 {
   tree stmt;
 

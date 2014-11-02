@@ -39,9 +39,9 @@
 set -e
 
 # GCC version
-GCCVERSION=4.8.2
+GCCVERSION=4.9.2
 # Machine name used by GCC
-MACHINE=i686-pc-linux-gnu
+MACHINE=${MACHINE:i686-pc-linux-gnu}
 # Directory where GCC sources (and objects) stay.
 DISTDIR=${DISTDIR:-$HOME/dist}
 # GTKWave version.
