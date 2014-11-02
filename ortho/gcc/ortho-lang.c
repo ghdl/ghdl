@@ -49,8 +49,6 @@
 #include "print-tree.h"
 #include "stringpool.h"
 #include "stor-layout.h"
-//#include "tree-dfa.h"
-#include "expr.h"
 #include "varasm.h"
 
 /* Returns the number of FIELD_DECLs in TYPE.
@@ -1494,9 +1492,6 @@ new_alignof (tree atype, tree rtype)
   return build_int_cstu (rtype, TYPE_ALIGN_UNIT (atype));
 }
 
-/* Convert the array expression EXP to a pointer.  */
-static tree array_to_pointer_conversion (tree exp);
-
 static tree
 ortho_build_addr (tree lvalue, tree atype)
 {
@@ -1509,78 +1504,22 @@ ortho_build_addr (tree lvalue, tree atype)
     }
   else
     {
+      tree ptr_type;
+
       /* &base[off] -> base+off.  */
-      if (TREE_CODE (lvalue) == ARRAY_REF
-	  || TREE_CODE (lvalue) == ARRAY_RANGE_REF)
-	{
-	  tree base = TREE_OPERAND (lvalue, 0);
-	  tree idx = TREE_OPERAND (lvalue, 1);
-	  tree offset;
-	  tree base_type;
+      ortho_mark_addressable (lvalue);
 
-	  ortho_mark_addressable (base);
-
-	  idx = fold_convert (sizetype, idx);
-	  offset = fold_build2 (MULT_EXPR, sizetype, idx,
-				array_ref_element_size (lvalue));
-
-	  base = array_to_pointer_conversion (base);
-	  base_type = TREE_TYPE (base);
-
-	  res = build2 (POINTER_PLUS_EXPR, base_type, base, offset);
-	}
+      if (TREE_TYPE (lvalue) != TREE_TYPE (atype))
+	ptr_type = build_pointer_type (TREE_TYPE (lvalue));
       else
-	{
-	  ortho_mark_addressable (lvalue);
-
-	  if (TREE_TYPE (lvalue) != TREE_TYPE (atype))
-	    {
-	      tree ptr;
-	      ptr = build_pointer_type (TREE_TYPE (lvalue));
-	      res = build1 (ADDR_EXPR, ptr, lvalue);
-	    }
-	  else
-	    res = build1 (ADDR_EXPR, atype, lvalue);
-	}
-      res = fold (res);
+	ptr_type = atype;
+      res = fold_build1 (ADDR_EXPR, ptr_type, lvalue);
     }
 
   if (TREE_TYPE (res) != atype)
     res = fold_build1 (NOP_EXPR, atype, res);
 
   return res;
-}
-
-/* Convert the array expression EXP to a pointer.  */
-static tree
-array_to_pointer_conversion (tree exp)
-{
-  tree type = TREE_TYPE (exp);
-  tree adr;
-  tree restype = TREE_TYPE (type);
-  tree ptrtype;
-
-  gcc_assert (TREE_CODE (type) == ARRAY_TYPE);
-
-  /* Create a pointer to elements.  */
-  ptrtype = build_pointer_type (restype);
-
-  switch (TREE_CODE (exp))
-    {
-    case INDIRECT_REF:
-      return convert (ptrtype, TREE_OPERAND (exp, 0));
-
-    case VAR_DECL:
-      /* Convert array to pointer to elements.  */
-      adr = build1 (ADDR_EXPR, ptrtype, exp);
-      ortho_mark_addressable (exp);
-      TREE_SIDE_EFFECTS (adr) = 0;   /* Default would be, same as EXP.  */
-      return adr;
-
-    default:
-      /* Get address.  */
-      return ortho_build_addr (exp, ptrtype);
-    }
 }
 
 tree

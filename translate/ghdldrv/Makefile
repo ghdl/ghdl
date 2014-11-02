@@ -163,19 +163,21 @@ install.standard: $(LIB93_DIR)/std/std_standard.o \
 grt.links:
 	cd ../lib; ln -sf $(GRTSRCDIR)/grt.lst .; ln -sf $(GRTSRCDIR)/libgrt.a .; ln -sf $(GRTSRCDIR)/grt.ver .
 
-install.all: install.v87 install.v93 install.standard
+install.all: install.v87 install.v93 install.v08
 
 install.gcc:
-	$(MAKE) GHDL=ghdl_gcc install.v87 install.v93 install.v08
+	$(MAKE) GHDL1=../ghdl1-gcc install.standard
+	$(MAKE) GHDL=ghdl_gcc install.all
 
 install.mcode:
-	$(MAKE) GHDL=ghdl_mcode install.v87 install.v93 install.v08
+	$(MAKE) GHDL=ghdl_mcode install.all
 
 install.simul:
-	$(MAKE) GHDL=ghdl_simul install.v87 install.v93 install.v08
+	$(MAKE) GHDL=ghdl_simul install.all
 
 install.llvm:
-	$(MAKE) GHDL=ghdl_llvm GHDL1=../ghdl1-llvm install.all
+	$(MAKE) GHDL1=../ghdl1-llvm install.standard
+	$(MAKE) GHDL=ghdl_llvm install.all
 
 clean: force
 	$(RM) -f *.o *.ali ghdl_gcc ghdl_mcode ghdl_llvm ghdl_llvm_jit
