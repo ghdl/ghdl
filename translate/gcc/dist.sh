@@ -62,7 +62,7 @@ GCCDISTOBJ=$GCCDIST-objs
 PREFIX=/usr/local
 GCCLIBDIR=$PREFIX/lib/gcc/$MACHINE/$GCCVERSION
 GCCLIBEXECDIR=$PREFIX/libexec/gcc/$MACHINE/$GCCVERSION
-bindirname=ghdl-$VERSION-i686-pc-linux
+bindirname=ghdl-$VERSION-$MACHINE
 TARINSTALL=$DISTDIR/$bindirname.tar.bz2
 VHDLDIR=$distdir/vhdl
 DOWNLOAD_HTML=../../website/download.html
@@ -166,7 +166,7 @@ do_update_gcc_sources ()
 # Extract the source, configure and make.
 do_compile ()
 {
-  set -x
+  #set -x
 
   do_update_gcc_sources;
 
@@ -186,23 +186,20 @@ do_compile ()
 
   case $MACHINE in
   i?86-*-linux*)
-	  BUILD=i686-pc-linux-gnu
           # gmp location (mpfr and mpc are supposed to be at the same place)
 	  CONFIG_LIBS="--with-gmp=$PWD/../build"
 	  ;;
   x86_64-*-linux*)
-	  BUILD=x86_64-pc-linux-gnu
 	  CONFIG_LIBS=""
 	  ;;
   x86_64-*-darwin*)
-	  BUILD=x86_64-apple-darwin10.7
 	  CONFIG_LIBS="--with-gmp=$HOME/local --with-stage1-ldflags="
 	  ;;
   *)
 	  exit 1
 	  ;;
   esac
-  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX --disable-bootstrap --with-bugurl="<URL:http://gna.org/projects/ghdl>" --build=$BUILD $CONFIG_LIBS --disable-shared --disable-libmudflap --disable-libssp --disable-libgomp --disable-libquadmatch --disable-libdecnumber
+  ../gcc-$GCCVERSION/configure --enable-languages=vhdl --prefix=$PREFIX --disable-bootstrap --with-bugurl="<URL:http://gna.org/projects/ghdl>" --build=$MACHINE $CONFIG_LIBS --disable-shared --disable-libmudflap --disable-libssp --disable-libgomp --disable-libquadmath
 
   make -j4
   make -C gcc vhdl.info
@@ -212,8 +209,6 @@ do_compile ()
 # Re-package sources, update gcc sources and recompile without reconfiguring.
 do_recompile ()
 {
-  set -x
- 
   do_sources
   do_update_gcc_sources;
   cd $GCCDISTOBJ
@@ -277,7 +272,7 @@ do_tar_dist ()
   mkdir $bindirname
   sed -e "s/@TARFILE@/$bindirname/" < INSTALL > $bindirname/INSTALL
   ln ../../COPYING $bindirname
-  ln $TARINSTALL $bindirname
+  cp $TARINSTALL $bindirname
   tar cvf $bindirname.tar $bindirname
 }
 
@@ -286,6 +281,7 @@ do_distclean_gcc ()
 {
   set -x
   rm -f ${DESTDIR}${PREFIX}/bin/cpp ${DESTDIR}${PREFIX}/bin/gcc
+  rm -f ${DESTDIR}${PREFIX}/bin/gcc-*
   rm -f ${DESTDIR}${PREFIX}/bin/gccbug ${DESTDIR}${PREFIX}/bin/gcov
   rm -f ${DESTDIR}${PREFIX}/bin/${MACHINE}-gcc*
   rm -f ${DESTDIR}${PREFIX}/info/cpp.info*
@@ -302,9 +298,13 @@ do_distclean_gcc ()
   rm -rf ${DESTDIR}${PREFIX}/include
   rm -f ${DESTDIR}${GCCLIBEXECDIR}/cc1 ${DESTDIR}${GCCLIBEXECDIR}/collect2
   rm -f ${DESTDIR}${GCCLIBEXECDIR}/cpp0 ${DESTDIR}${GCCLIBEXECDIR}/tradcpp0
+  rm -rf ${DESTDIR}${GCCLIBEXECDIR}/plugin
+  rm -rf ${DESTDIR}${GCCLIBEXECDIR}/lto-wrapper
   rm -f ${DESTDIR}${GCCLIBDIR}/*.o ${DESTDIR}$GCCLIBDIR/*.a
   rm -f ${DESTDIR}${GCCLIBDIR}/specs
+  rm -rf ${DESTDIR}${GCCLIBDIR}/plugin
   rm -rf ${DESTDIR}${GCCLIBDIR}/include
+  rm -rf ${DESTDIR}${GCCLIBDIR}/include-fixed
   rm -rf ${DESTDIR}${GCCLIBDIR}/install-tools
   rm -rf ${DESTDIR}${GCCLIBEXECDIR}/install-tools
 }

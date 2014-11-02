@@ -65,9 +65,13 @@ vhdl VHDL: ghdl1$(exeext) ghdl$(exeext) ghdllib
 #ortho-lang.o: $(agcc_srcdir)/ortho-lang.c \
 # $(AGCC_GCCOBJ_DIR)gcc/gtype-vhdl.h \
 # $(AGCC_GCCOBJ_DIR)gcc/gt-vhdl-ortho-lang.h
-#	$(COMPILER) -c -o $@ $< $(AGCC_CFLAGS) $(INCLUDES) 
+#	$(COMPILER) -c -o $@ $< $(AGCC_CFLAGS) $(INCLUDES)
 
 GHDL1_OBJS = attribs.o vhdl/ortho-lang.o
+
+# To be put in ALL_HOST_FRONTEND_OBJS, so that generated files are created
+# before.
+vhdl_OBJS=vhdl/ortho-lang.o
 
 # The compiler proper.
 # It is compiled into the vhdl/ subdirectory to avoid file name clashes but
@@ -86,8 +90,9 @@ ghdl$(exeext): force
 	$(MAKE_IN_VHDL) ../ghdl$(exeext)
 
 # Ghdl libraries.
-ghdllib: ghdl$(exeext) $(GCC_PASSES) force
-	$(MAKE_IN_VHDL) GRT_FLAGS="-O -g" ghdllib
+ghdllib: ghdl$(exeext) ghdl1$(exeext) $(GCC_PASSES) force
+	$(MAKE_IN_VHDL) GRT_FLAGS="-O -g" $(FLAGS_TO_PASS) \
+	 ADAC=$(COMPILER_FOR_BUILD) ghdllib
 
 # Build hooks:
 
@@ -97,8 +102,8 @@ vhdl.all.cross:
 	@echo "No support for building vhdl cross-compiler"
 	exit 1
 
-vhdl.start.encap: 
-vhdl.rest.encap: 
+vhdl.start.encap:
+vhdl.rest.encap:
 
 # Documentation hooks
 doc/ghdl.info: vhdl/ghdl.texi

@@ -139,6 +139,8 @@ ghdlmain.adb
 libraries_files="
 std/textio.vhdl
 std/textio_body.vhdl
+std/env.vhdl
+std/env_body.vhdl
 ieee/README.ieee
 ieee/numeric_bit-body.vhdl
 ieee/numeric_bit.vhdl

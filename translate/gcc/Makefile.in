@@ -194,8 +194,9 @@ clean: grt-clean ghdllibs-clean force
 
 # Additionnal rules
 
-LIB93_DIR:=./lib/v93
 LIB87_DIR:=./lib/v87
+LIB93_DIR:=./lib/v93
+LIB08_DIR:=./lib/v08
 LIBSRC_DIR:=$(srcdir)/libraries
 ANALYZE=../ghdl -a --GHDL1=../ghdl1 --ieee=none
 
@@ -214,10 +215,15 @@ std93_standard.o: $(GHDL1)
 	../xgcc -c -o std_standard.o std_standard.s
 	$(MV) std_standard.o $@
 
-ghdllib: std87_standard.o std93_standard.o libgrt.a
+std08_standard.o: $(GHDL1)
+	$(GHDL1) --std=08 -quiet -o std_standard.s --compile-standard
+	../xgcc -c -o std_standard.o std_standard.s
+	$(MV) std_standard.o $@
+
+ghdllib: std87_standard.o std93_standard.o std08_standard.o libgrt.a
 
 ghdllibs-clean: force
-	$(RM) -rf $(LIB87_DIR) $(LIB93_DIR)
+	$(RM) -rf $(LIB87_DIR) $(LIB93_DIR) $(LIB08_DIR)
 
 PHONY: ghdllib ghdllibs-clean
 
@@ -228,7 +234,8 @@ GRT_RANLIB=$(RANLIB)
 ####grt Makefile.inc
 
 install-ghdllib: ghdllib grt.lst $(STD93_SRCS) $(STD87_SRCS) \
-  $(IEEE93_SRCS) $(IEEE87_SRCS) $(SYNOPSYS_SRCS)
+  $(IEEE93_SRCS) $(IEEE87_SRCS) $(SYNOPSYS_SRCS) \
+  $(STD08_SRCS) $(IEEE08_SRCS)
 	$(RM) -rf $(DESTDIR)$(VHDL_LIB_DIR)
 	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)
 # Install libgrt
@@ -239,7 +246,7 @@ install-ghdllib: ghdllib grt.lst $(STD93_SRCS) $(STD87_SRCS) \
 # Install VHDL sources.
 	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src
 	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/std
-	for i in $(STD93_SRCS) $(STD87_SRCS); do \
+	for i in $(STD93_SRCS) $(STD87_SRCS) $(STD08_SRCS); do \
 	  $(INSTALL_DATA) $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/std; \
 	done
 	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/ieee
@@ -262,17 +269,26 @@ install-ghdllib: ghdllib grt.lst $(STD93_SRCS) $(STD87_SRCS) \
 	for i in $(MENTOR93_SRCS); do \
 	  $(INSTALL_DATA) $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/mentor; \
 	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/ieee2008
+	for i in $(IEEE08_SRCS); do \
+	  $(INSTALL_DATA) $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/ieee2008; \
+	done
 # Create library dirs
 	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/lib/v93
 	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/lib/v87
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/lib/v08
 # Compile in place.
 	PDIR=`pwd` && cd $(DESTDIR)$(VHDL_LIB_DIR) && \
-	$(MAKE) -f $$PDIR/Makefile REL_DIR=../../.. \
-	 LIBSRC_DIR="src" LIB93_DIR=lib/v93 LIB87_DIR=lib/v87 \
+	$(MAKE) -f $$PDIR/Makefile REL_DIR=../../.. LIBSRC_DIR="src" \
+	 LIB93_DIR=lib/v93 LIB87_DIR=lib/v87 LIB08_DIR=lib/v08 \
 	 ANALYZE="$$PDIR/../ghdl -a --GHDL1=$$PDIR/../ghdl1 --ieee=none" \
-	 std.v93 std.v87 ieee.v93 ieee.v87 synopsys.v93 synopsys.v87 mentor.v93
+	 std.v87 ieee.v87 synopsys.v87 \
+	 std.v93 ieee.v93 synopsys.v93 mentor.v93 \
+	 std.v08 ieee.v08
 # Copy std_standard (this is done after libraries, since they remove dirs).
 	$(INSTALL_DATA) std87_standard.o \
 	  $(DESTDIR)$(VHDL_LIB_DIR)/lib/v87/std/std_standard.o
 	$(INSTALL_DATA) std93_standard.o \
 	  $(DESTDIR)$(VHDL_LIB_DIR)/lib/v93/std/std_standard.o
+	$(INSTALL_DATA) std08_standard.o \
+	  $(DESTDIR)$(VHDL_LIB_DIR)/lib/v08/std/std_standard.o

@@ -166,8 +166,8 @@ grt.links:
 install.all: install.v87 install.v93 install.v08
 
 install.gcc:
-	$(MAKE) GHDL1=../ghdl1-gcc install.standard
 	$(MAKE) GHDL=ghdl_gcc install.all
+	$(MAKE) GHDL1=../ghdl1-gcc install.standard
 
 install.mcode:
 	$(MAKE) GHDL=ghdl_mcode install.all
@@ -176,8 +176,8 @@ install.simul:
 	$(MAKE) GHDL=ghdl_simul install.all
 
 install.llvm:
-	$(MAKE) GHDL1=../ghdl1-llvm install.standard
 	$(MAKE) GHDL=ghdl_llvm install.all
+	$(MAKE) GHDL1=../ghdl1-llvm install.standard
 
 clean: force
 	$(RM) -f *.o *.ali ghdl_gcc ghdl_mcode ghdl_llvm ghdl_llvm_jit
