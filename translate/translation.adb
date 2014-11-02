@@ -1396,7 +1396,7 @@ package body Translation is
             Object_Rti : O_Dnode := O_Dnode_Null;
             --  Function to compute the value of object (used for implicit
             --   guard signal declaration).
-            Object_Function : O_Dnode;
+            Object_Function : O_Dnode := O_Dnode_Null;
 
          when Kind_Alias =>
             Alias_Var : Var_Type;
