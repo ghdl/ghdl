@@ -1570,8 +1570,14 @@ package body Translation is
             Package_Local_Id : Local_Identifier_Type;
 
          when Kind_Package_Instance =>
-            --  The variable containing the instance.
-            Package_Instance_Var : Var_Type;
+            --  The variables containing the instance.  There are two variables
+            --  for interface package: one for the spec, one for the body.
+            --  For package instantiation, only the variable for the body is
+            --  used.  The variable for spec is added so that packages with
+            --  package interfaces don't need to know the body of their
+            --  interfaces.
+            Package_Instance_Spec_Var : Var_Type;
+            Package_Instance_Body_Var : Var_Type;
 
             --  Elaboration procedure for the instance.
             Package_Instance_Elab_Subprg : O_Dnode;
@@ -5888,14 +5894,14 @@ package body Translation is
 
          --  FIXME: if the instantiation occurs within a package declaration,
          --  the variable must be declared extern (and public in the body).
-         Info.Package_Instance_Var := Create_Var
+         Info.Package_Instance_Body_Var := Create_Var
            (Create_Var_Identifier (Inst),
             Get_Scope_Type (Pkg_Info.Package_Body_Scope));
 
          --  FIXME: this is correct only for global instantiation, and only if
          --  there is only one.
          Set_Scope_Via_Decl (Info.Package_Instance_Body_Scope,
-                             Get_Var_Label (Info.Package_Instance_Var));
+                             Get_Var_Label (Info.Package_Instance_Body_Var));
          Set_Scope_Via_Field (Info.Package_Instance_Spec_Scope,
                               Pkg_Info.Package_Spec_Field,
                               Info.Package_Instance_Body_Scope'Access);
@@ -5920,7 +5926,7 @@ package body Translation is
          Elab_Dependence (Get_Design_Unit (Inst));
 
          Set_Scope_Via_Decl (Pkg_Info.Package_Body_Scope,
-                             Get_Var_Label (Info.Package_Instance_Var));
+                             Get_Var_Label (Info.Package_Instance_Body_Var));
          Set_Scope_Via_Field (Pkg_Info.Package_Spec_Scope,
                               Pkg_Info.Package_Spec_Field,
                               Pkg_Info.Package_Body_Scope'Access);
@@ -5932,7 +5938,7 @@ package body Translation is
          --  temporary associated with the instance variable.
          Start_Association (Constr, Pkg_Info.Package_Elab_Body_Subprg);
          Set_Scope_Via_Decl (Pkg_Info.Package_Body_Scope,
-                             Get_Var_Label (Info.Package_Instance_Var));
+                             Get_Var_Label (Info.Package_Instance_Body_Var));
          Add_Subprg_Instance_Assoc
            (Constr, Pkg_Info.Package_Elab_Body_Instance);
          Clear_Scope (Pkg_Info.Package_Body_Scope);
@@ -9698,16 +9704,22 @@ package body Translation is
       begin
          Chap2.Instantiate_Info_Package (Inter);
          Info := Get_Info (Inter);
-         Info.Package_Instance_Var :=
-           Create_Var (Create_Var_Identifier (Inter),
+
+         --  The spec
+         Info.Package_Instance_Spec_Var :=
+           Create_Var (Create_Var_Identifier (Inter, "SPEC", 0),
+                       Pkg_Info.Package_Spec_Ptr_Type);
+         Set_Scope_Via_Var_Ptr
+           (Info.Package_Instance_Spec_Scope,
+            Info.Package_Instance_Spec_Var);
+
+         --  The body
+         Info.Package_Instance_Body_Var :=
+           Create_Var (Create_Var_Identifier (Inter, "BODY", 0),
                        Pkg_Info.Package_Body_Ptr_Type);
          Set_Scope_Via_Var_Ptr
            (Info.Package_Instance_Body_Scope,
-            Info.Package_Instance_Var);
-         Set_Scope_Via_Field
-           (Info.Package_Instance_Spec_Scope,
-            Pkg_Info.Package_Spec_Field,
-            Info.Package_Instance_Body_Scope'Access);
+            Info.Package_Instance_Body_Var);
       end Create_Package_Interface;
 
       procedure Allocate_Complex_Object (Obj_Type : Iir;
@@ -12790,7 +12802,13 @@ package body Translation is
                        Get_Info (Actual);
                   begin
                      New_Assign_Stmt
-                       (Get_Var (Formal_Info.Package_Instance_Var),
+                       (Get_Var (Formal_Info.Package_Instance_Spec_Var),
+                        New_Address
+                          (Get_Instance_Ref
+                             (Actual_Info.Package_Instance_Spec_Scope),
+                           Uninst_Info.Package_Spec_Ptr_Type));
+                     New_Assign_Stmt
+                       (Get_Var (Formal_Info.Package_Instance_Body_Var),
                         New_Address
                           (Get_Instance_Ref
                              (Actual_Info.Package_Instance_Body_Scope),

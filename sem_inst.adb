@@ -360,7 +360,8 @@ package body Sem_Inst is
             case F is
                when Field_Index_Subtype_List =>
                   --  Index_Subtype_List is always a reference, so retrieve
-                  --  the instance of the referenced list.
+                  --  the instance of the referenced list.  This is a special
+                  --  case because there is no origins for list.
                   declare
                      List : Iir_List;
                   begin
