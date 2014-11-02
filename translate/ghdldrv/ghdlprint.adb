@@ -561,16 +561,16 @@ package body Ghdlprint is
 
       function Build_File_Name_Length (Lib : Iir) return Natural
       is
+         Id : constant Name_Id := Get_Identifier (Lib);
          Len : Natural;
-         Id : Name_Id;
          Id1 : Name_Id;
       begin
-         Id := Get_Identifier (Lib);
          Len := Get_Name_Length (Id);
          case Get_Kind (Lib) is
             when Iir_Kind_Configuration_Declaration
               | Iir_Kind_Entity_Declaration
-              | Iir_Kind_Package_Declaration =>
+              | Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Instantiation_Declaration =>
                null;
             when Iir_Kind_Package_Body =>
                Len := Len + 1 + 4; -- add -body
@@ -586,7 +586,7 @@ package body Ghdlprint is
 
       procedure Build_File_Name (Lib : Iir; Res : out String)
       is
-         Id : Name_Id;
+         Id : constant Name_Id := Get_Identifier (Lib);
          P : Natural;
 
          procedure Append (Str : String) is
@@ -595,12 +595,12 @@ package body Ghdlprint is
             P := P + Str'Length;
          end Append;
       begin
-         Id := Get_Identifier (Lib);
          P := Res'First - 1;
          case Get_Kind (Lib) is
             when Iir_Kind_Configuration_Declaration
               | Iir_Kind_Entity_Declaration
-              | Iir_Kind_Package_Declaration =>
+              | Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Instantiation_Declaration =>
                Image (Id);
                Append (Name_Buffer (1 .. Name_Length));
             when Iir_Kind_Package_Body =>
@@ -614,7 +614,7 @@ package body Ghdlprint is
                Image (Id);
                Append (Name_Buffer (1 .. Name_Length));
             when others =>
-               null;
+               raise Internal_Error;
          end case;
          Append (".vhdl");
       end Build_File_Name;

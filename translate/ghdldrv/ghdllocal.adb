@@ -263,6 +263,8 @@ package body Ghdllocal is
             Put ("configuration ");
          when Iir_Kind_Package_Declaration =>
             Put ("package ");
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Put ("package instance ");
          when Iir_Kind_Package_Body =>
             Put ("package body ");
          when others =>
