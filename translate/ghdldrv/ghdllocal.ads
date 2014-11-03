@@ -35,6 +35,18 @@ package Ghdllocal is
    --  Disp detailled help.
    procedure Disp_Long_Help (Cmd : Command_Lib);
 
+   --  Value of --PREFIX
+   Switch_Prefix_Path : String_Access := null;
+
+   --  getenv ("GHDL_PREFIX").  Set by Setup_Libraries.
+   Prefix_Env : String_Access := null;
+
+   --  Installation prefix (deduced from executable path).
+   Exec_Prefix : String_Access;
+
+   --  Path prefix for libraries.
+   Lib_Prefix_Path : String_Access := null;
+
    --  Set with -v option.
    Flag_Verbose : Boolean := False;
 
@@ -52,12 +64,6 @@ package Ghdllocal is
 
    --  Prefix for elab files.
    Elab_Prefix : constant String := "e~";
-
-   --  Path prefix for libraries.
-   Prefix_Path : String_Access := null;
-
-   --  getenv ("GHDL_PREFIX").  Set by Setup_Libraries.
-   Prefix_Env : String_Access := null;
 
    Nul : constant Character := Character'Val (0);
 

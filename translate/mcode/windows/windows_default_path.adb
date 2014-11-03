@@ -10,7 +10,7 @@ package body Windows_Default_Path is
                               return DWORD;
    pragma Import (Stdcall, GetModuleFileName, "GetModuleFileNameA");
 
-   function Get_Windows_Default_Path return String
+   function Get_Windows_Exec_Path return String
    is
       File : String (1 .. 256);
       Size : DWORD;
@@ -39,7 +39,7 @@ package body Windows_Default_Path is
          end loop;
       end if;
 
-      return File (1 .. P) & "lib";
-   end Get_Windows_Default_Path;
+      return File (1 .. P);
+   end Get_Windows_Exec_Path;
 end Windows_Default_Path;
 

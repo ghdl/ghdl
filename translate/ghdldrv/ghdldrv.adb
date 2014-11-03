@@ -19,6 +19,7 @@ with Ada.Command_Line; use Ada.Command_Line;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
+with GNAT.Directory_Operations;
 with GNAT.Table;
 with GNAT.Dynamic_Tables;
 with Libraries;
@@ -275,7 +276,7 @@ package body Ghdldrv is
    --  Lines starting with a '#' are ignored (comments)
    --  Lines starting with a '>' are directory lines
    --  If first character of a line is a '@', it is replaced with
-   --    the prefix_path.
+   --    the lib_prefix_path.
    --  If TO_OBJ is true, then each file is converted to an object file name
    --   (suffix is replaced by the object file extension).
    procedure Add_File_List (Filename : String; To_Obj : Boolean)
@@ -506,8 +507,8 @@ package body Ghdldrv is
       raise Option_Error;
    end Tool_Not_Found;
 
-   procedure Set_Tools_Name
-   is
+   --  Set the compiler command according to the configuration (and swicthes).
+   procedure Set_Tools_Name is
    begin
       --  Set tools name.
       if Compiler_Cmd = null then
@@ -527,14 +528,203 @@ package body Ghdldrv is
       end if;
    end Set_Tools_Name;
 
+   function Is_Directory_Separator (C : Character) return Boolean is
+   begin
+      return C = '/' or else C = Directory_Separator;
+   end Is_Directory_Separator;
+
+   function Get_Basename_Pos (Pathname : String) return Natural is
+   begin
+      for I in reverse Pathname'Range loop
+         if Is_Directory_Separator (Pathname (I)) then
+            return I;
+         end if;
+      end loop;
+      return 0;
+   end Get_Basename_Pos;
+
+   procedure Set_Prefix_From_Program_Path (Prog_Path : String)
+   is
+      Dir_Pos : Natural;
+   begin
+      Dir_Pos := Get_Basename_Pos (Prog_Path);
+      if Dir_Pos = 0 then
+         --  No directory in Prog_Path.  This is not expected.
+         return;
+      end if;
+
+      declare
+         Pathname : String :=
+           Normalize_Pathname (Prog_Path (Dir_Pos + 1 .. Prog_Path'Last),
+                               Prog_Path (Prog_Path'First .. Dir_Pos - 1));
+         Pos : Natural;
+      begin
+         --  Stop now in case of error.
+         if Pathname'Length = 0 then
+            return;
+         end if;
+
+         --  Skip executable name
+         Dir_Pos := Get_Basename_Pos (Pathname);
+         if Dir_Pos = 0 then
+            return;
+         end if;
+
+         --  Simplify path:
+         --    /./ => /
+         --    // => /
+         Pos := Dir_Pos - 1;
+         while Pos >= Pathname'First loop
+            if Is_Directory_Separator (Pathname (Pos)) then
+               if Is_Directory_Separator (Pathname (Pos + 1)) then
+                  --  // => /
+                  Pathname (Pos .. Dir_Pos - 1) :=
+                    Pathname (Pos + 1 .. Dir_Pos);
+                  Dir_Pos := Dir_Pos - 1;
+               elsif Pos + 2 <= Dir_Pos
+                 and then Pathname (Pos + 1) = '.'
+                 and then Is_Directory_Separator (Pathname (Pos + 2))
+               then
+                  --  /./ => /
+                  Pathname (Pos .. Dir_Pos - 2) :=
+                    Pathname (Pos + 2 .. Dir_Pos);
+                  Dir_Pos := Dir_Pos - 2;
+               end if;
+            end if;
+            Pos := Pos - 1;
+         end loop;
+
+         --  Simplify path:
+         --    /xxx/../ => /
+         --  This is done after the previous simplication to avoid to deal
+         --  with cases like /xxx//../ or /xxx/./../
+         Pos := Dir_Pos - 3;
+         while Pos >= Pathname'First loop
+            if Is_Directory_Separator (Pathname (Pos))
+              and then Pathname (Pos + 1) = '.'
+              and then Pathname (Pos + 2) = '.'
+              and then Is_Directory_Separator (Pathname (Pos + 3))
+            then
+               declare
+                  Pos2 : constant Natural :=
+                    Get_Basename_Pos (Pathname (Pathname'First .. Pos - 1));
+                  --  /xxxxxxxxxx/../
+                  --  ^          ^
+                  --  Pos2       Pos
+                  Len : Natural;
+               begin
+                  if Pos2 = 0 then
+                     --  Shouldn't happen.
+                     return;
+                  end if;
+                  Len := Pos + 3 - Pos2;
+                  Pathname (Pos2 + 1 .. Dir_Pos - Len) :=
+                    Pathname (Pos + 4 .. Dir_Pos);
+                  Dir_Pos := Dir_Pos - Len;
+                  if Pos2 < Pathname'First + 3 then
+                     exit;
+                  end if;
+                  Pos := Pos2 - 3;
+               end;
+            else
+               Pos := Pos - 1;
+            end if;
+         end loop;
+
+         --  Remove last '/'
+         Dir_Pos := Dir_Pos - 1;
+
+         --  Skip directory.
+         Dir_Pos := Get_Basename_Pos (Pathname (Pathname'First .. Dir_Pos));
+         if Dir_Pos = 0 then
+            return;
+         end if;
+
+         Exec_Prefix := new String'(Pathname (Pathname'First .. Dir_Pos - 1));
+      end;
+   end Set_Prefix_From_Program_Path;
+
+   --  Extract Exec_Prefix from executable name.
+   procedure Set_Exec_Prefix
+   is
+      use GNAT.Directory_Operations;
+      Prog_Path : constant String := Ada.Command_Line.Command_Name;
+      Exec_Path : String_Access;
+   begin
+      --  If the command name is an absolute path, deduce prefix from it.
+      if Is_Absolute_Path (Prog_Path) then
+         Set_Prefix_From_Program_Path (Prog_Path);
+         return;
+      end if;
+
+      --  If the command name is a relative path, deduce prefix from it
+      --  and current path.
+      if Get_Basename_Pos (Prog_Path) /= 0 then
+         if Is_Executable_File (Prog_Path) then
+            Set_Prefix_From_Program_Path
+              (Get_Current_Dir & Directory_Separator & Prog_Path);
+         end if;
+         return;
+      end if;
+
+      --  Look for program name on the path.
+      Exec_Path := Locate_Exec_On_Path (Prog_Path);
+      if Exec_Path /= null then
+         Set_Prefix_From_Program_Path (Exec_Path.all);
+         Free (Exec_Path);
+      end if;
+   end Set_Exec_Prefix;
+
+   function Locate_Exec_Tool (Toolname : String) return String_Access is
+   begin
+      if Is_Absolute_Path (Toolname) then
+         if Is_Executable_File (Toolname) then
+            return new String'(Toolname);
+         end if;
+      else
+         --  Try from install prefix
+         if Exec_Prefix /= null then
+            declare
+               Path : constant String :=
+                 Exec_Prefix.all & Directory_Separator & Toolname;
+            begin
+               if Is_Executable_File (Path) then
+                  return new String'(Path);
+               end if;
+            end;
+         end if;
+
+         --  Try configured prefix
+         declare
+            Path : constant String :=
+              Default_Pathes.Install_Prefix & Directory_Separator & Toolname;
+         begin
+            if Is_Executable_File (Path) then
+               return new String'(Path);
+            end if;
+         end;
+      end if;
+
+      --  Search the basename on path.
+      declare
+         Pos : constant Natural := Get_Basename_Pos (Toolname);
+      begin
+         if Pos = 0 then
+            return Locate_Exec_On_Path (Toolname);
+         else
+            return Locate_Exec_On_Path (Toolname (Pos .. Toolname'Last));
+         end if;
+      end;
+   end Locate_Exec_Tool;
+
    procedure Locate_Tools is
    begin
-      Compiler_Path := Locate_Exec_On_Path (Compiler_Cmd.all);
+      Compiler_Path := Locate_Exec_Tool (Compiler_Cmd.all);
       if Compiler_Path = null then
          Tool_Not_Found (Compiler_Cmd.all);
       end if;
       if Compile_Kind >= Compile_Debug then
-         Post_Processor_Path := Locate_Exec_On_Path (Post_Processor_Cmd.all);
+         Post_Processor_Path := Locate_Exec_Tool (Post_Processor_Cmd.all);
          if Post_Processor_Path = null then
             Tool_Not_Found (Post_Processor_Cmd.all);
          end if;
@@ -556,6 +746,7 @@ package body Ghdldrv is
       use Libraries;
    begin
       Set_Tools_Name;
+      Set_Exec_Prefix;
       Locate_Tools;
       Setup_Libraries (Load);
       for I in 2 .. Get_Nbr_Pathes loop
@@ -741,6 +932,7 @@ package body Ghdldrv is
       end if;
 
       Set_Tools_Name;
+      Put_Line ("Pathes at configuration:");
       Put ("compiler command: ");
       Put_Line (Compiler_Cmd.all);
       if Compile_Kind >= Compile_Debug then
@@ -753,14 +945,16 @@ package body Ghdldrv is
       end if;
       Put ("linker command: ");
       Put_Line (Linker_Cmd);
+      Put_Line ("default lib prefix: " & Default_Pathes.Lib_Prefix);
+
+      New_Line;
 
       Put ("command line prefix (--PREFIX): ");
-      if Prefix_Path = null then
+      if Switch_Prefix_Path = null then
          Put_Line ("(not set)");
       else
-         Put_Line (Prefix_Path.all);
+         Put_Line (Switch_Prefix_Path.all);
       end if;
-      Setup_Libraries (False);
 
       Put ("environment prefix (GHDL_PREFIX): ");
       if Prefix_Env = null then
@@ -769,9 +963,19 @@ package body Ghdldrv is
          Put_Line (Prefix_Env.all);
       end if;
 
-      Put_Line ("default prefix: " & Default_Pathes.Prefix);
-      Put_Line ("actual prefix: " & Prefix_Path.all);
+      Set_Exec_Prefix;
+      Setup_Libraries (False);
 
+      Put ("exec prefix (from program name): ");
+      if Exec_Prefix = null then
+         Put_Line ("(not found)");
+      else
+         Put_Line (Exec_Prefix.all);
+      end if;
+
+      New_Line;
+
+      Put_Line ("library prefix: " & Lib_Prefix_Path.all);
       Put ("library directory: ");
       Put_Line (Get_Machine_Path_Prefix);
       Locate_Tools;
@@ -787,6 +991,9 @@ package body Ghdldrv is
       end if;
       Put ("linker path: ");
       Put_Line (Linker_Path.all);
+
+      New_Line;
+
       Put_Line ("default library pathes:");
       for I in 2 .. Get_Nbr_Pathes loop
          Put (' ');

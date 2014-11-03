@@ -94,7 +94,8 @@ default_pathes.ads: default_pathes.ads.in Makefile
 	 -e "s%@COMPILER_MCODE@%$$curdir/ghdl1-mcode%" \
 	 -e "s%@COMPILER_LLVM@%$$curdir/ghdl1-llvm%" \
 	 -e "s%@POST_PROCESSOR@%$$curdir/../ortho/oread/oread-gcc%" \
-	 -e "s%@PREFIX@%$$curdir/lib/%" < $< > $@
+	 -e "s%@INSTALL_PREFIX@%%" \
+	 -e "s%@LIB_PREFIX@%$$curdir/lib/%" < $< > $@
 
 bootstrap.old: force
 	$(RM) ../../libraries/std-obj87.cf

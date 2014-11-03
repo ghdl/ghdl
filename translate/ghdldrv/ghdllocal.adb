@@ -123,7 +123,7 @@ package body Ghdllocal is
          Flag_Verbose := True;
          Res := Option_Ok;
       elsif Opt'Length > 9 and then Opt (1 .. 9) = "--PREFIX=" then
-         Prefix_Path := new String'(Opt (10 .. Opt'Last));
+         Switch_Prefix_Path := new String'(Opt (10 .. Opt'Last));
          Res := Option_Ok;
       elsif Opt = "--ieee=synopsys" then
          Flag_Ieee := Lib_Synopsys;
@@ -190,9 +190,9 @@ package body Ghdllocal is
    function Get_Machine_Path_Prefix return String is
    begin
       if Flag_32bit then
-         return Prefix_Path.all & "32";
+         return Lib_Prefix_Path.all & "32";
       else
-         return Prefix_Path.all;
+         return Lib_Prefix_Path.all;
       end if;
    end Get_Machine_Path_Prefix;
 
@@ -216,12 +216,31 @@ package body Ghdllocal is
 
       --  Set prefix path.
       --  If not set by command line, try environment variable.
-      if Prefix_Path = null then
-         Prefix_Path := Prefix_Env;
+      if Switch_Prefix_Path /= null then
+         Lib_Prefix_Path := Switch_Prefix_Path;
+      else
+         Lib_Prefix_Path := Prefix_Env;
       end if;
       --  Else try default path.
-      if Prefix_Path = null then
-         Prefix_Path := new String'(Default_Pathes.Prefix);
+      if Lib_Prefix_Path = null then
+         if Is_Absolute_Path (Default_Pathes.Lib_Prefix) then
+            Lib_Prefix_Path := new String'(Default_Pathes.Lib_Prefix);
+         else
+            if Exec_Prefix /= null then
+               Lib_Prefix_Path := new
+                 String'(Exec_Prefix.all & Directory_Separator
+                           & Default_Pathes.Lib_Prefix);
+            end if;
+            if Lib_Prefix_Path = null
+              or else not Is_Directory (Lib_Prefix_Path.all)
+            then
+               Free (Lib_Prefix_Path);
+               Lib_Prefix_Path := new
+                 String'(Default_Pathes.Install_Prefix
+                           & Directory_Separator
+                           & Default_Pathes.Lib_Prefix);
+            end if;
+         end if;
       else
          -- Assume the user has set the correct path, so do not insert 32.
          Flag_32bit := False;

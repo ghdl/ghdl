@@ -21,11 +21,13 @@ package Default_Pathes is
    --  Accept long lines.
    pragma Style_Checks ("M999");
 
+   Install_Prefix : constant String :=
+     "@INSTALL_PREFIX@";
+   Lib_Prefix : constant String :=
+     "@LIB_PREFIX@";
+
    Compiler_Gcc : constant String :=
      "@COMPILER_GCC@";
-   Prefix : constant String :=
-     "@PREFIX@";
-
    Compiler_Mcode : constant String :=
      "@COMPILER_MCODE@";
    Compiler_Llvm : constant String :=

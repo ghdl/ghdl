@@ -225,7 +225,7 @@ check_root ()
 }
 
 #  Do a make install
-do_compile2 ()
+do_gcc_install ()
 {
   set -x
   cd $GCCDISTOBJ
@@ -325,7 +325,7 @@ do_dist_phase1 ()
 {
   do_sources;
   do_compile;
-  do_compile2;
+  do_gcc_install;
   do_distclean_gcc;
   do_tar_install;
   do_tar_dist;
@@ -439,8 +439,8 @@ else
         do_recompile;;
       update_gcc)
         do_update_gcc_sources;;
-      compile2)
-        do_compile2;;
+      gcc_install)
+        do_gcc_install;;
       tar_install)
         do_tar_install;;
       tar_dist)

@@ -127,6 +127,7 @@ objdir = .
 
 target=@target@
 target_alias=@target_alias@
+target_noncanonical:=@target_noncanonical@
 xmake_file=@dep_host_xmake_file@
 tmake_file=@dep_tmake_file@
 #version=`sed -e 's/.*\"\([^ \"]*\)[ \"].*/\1/' < $(srcdir)/version.c`
@@ -138,6 +139,8 @@ VPATH = @srcdir@
 
 # Top build directory, relative to here.
 top_builddir = ..
+
+version := $(shell cat $(srcdir)/../BASE-VER)
 
 # End of variables for you to override.
 
@@ -169,14 +172,16 @@ drvdir/default_pathes.ads: drvdir Makefile
 	echo "package Default_Pathes is" >> tmp-dpathes.ads
 	echo "   --  Accept long lines."  >> tmp-dpathes.ads
 	echo "   pragma Style_Checks (\"M999\");"  >> tmp-dpathes.ads
+	echo "   Install_Prefix : constant String :=" >> tmp-dpathes.ads
+	echo "     \"$(exec_prefix)\";" >> tmp-dpathes.ads
 	echo "   Compiler_Gcc   : constant String :=" >> tmp-dpathes.ads
-	echo "     \"$(libexecsubdir)/ghdl1$(exeext)\";" >> tmp-dpathes.ads
-	echo "   Compiler_Debug : constant String :=\"\";" >> tmp-dpathes.ads
-	echo "   Compiler_Mcode : constant String :=\"\";" >> tmp-dpathes.ads
-	echo "   Compiler_Llvm  : constant String :=\"\";" >> tmp-dpathes.ads
-	echo "   Post_Processor : constant String :=\"\";" >> tmp-dpathes.ads
-	echo "   Prefix : constant String :=">> tmp-dpathes.ads
-	echo "     \"$(libsubdir)/vhdl/lib/\";" >> tmp-dpathes.ads
+	echo "     \"libexec/gcc/$(target_noncanonical)/$(version)/ghdl1$(exeext)\";" >> tmp-dpathes.ads
+	echo "   Compiler_Debug : constant String := \"\";" >> tmp-dpathes.ads
+	echo "   Compiler_Mcode : constant String := \"\";" >> tmp-dpathes.ads
+	echo "   Compiler_Llvm  : constant String := \"\";" >> tmp-dpathes.ads
+	echo "   Post_Processor : constant String := \"\";" >> tmp-dpathes.ads
+	echo "   Lib_Prefix     : constant String :=">> tmp-dpathes.ads
+	echo "     \"lib/gcc/$(target_noncanonical)/$(version)/vhdl/lib/\";" >> tmp-dpathes.ads
 	echo "end Default_Pathes;" >> tmp-dpathes.ads
 	$(srcdir)/../../move-if-change tmp-dpathes.ads $@
 
