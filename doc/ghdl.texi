@@ -1381,12 +1381,12 @@ There are a few GHDL commands which are seldom useful.
 
 @menu
 * Help command::                
-* Dispconfig command::          
+* Disp config command::         
 * Disp standard command::       
 * Version command::             
 @end menu
 
-@node Help command, Dispconfig command, Misc commands, Misc commands
+@node Help command, Disp config command, Misc commands, Misc commands
 @subsection Help command
 @cindex @option{-h} command
 @cindex @option{--help} command
@@ -1400,20 +1400,20 @@ $ ghdl -h
 $ ghdl -h @var{command}
 @end smallexample
 
-@node Dispconfig command, Disp standard command, Help command, Misc commands
+@node Disp config command, Disp standard command, Help command, Misc commands
 @comment  node-name,  next,  previous,  up
-@subsection Dispconfig command
-@cindex @option{--dispconfig} command
+@subsection Disp config command
+@cindex @option{--disp-config} command
 @cindex display configuration
 Display the program paths and options used by GHDL.
 
 @smallexample
-$ ghdl --dispconfig [@var{options}]
+$ ghdl --disp-config [@var{options}]
 @end smallexample
 
 This may be useful to track installation errors.
 
-@node Disp standard command, Version command, Dispconfig command, Misc commands
+@node Disp standard command, Version command, Disp config command, Misc commands
 @comment  node-name,  next,  previous,  up
 @subsection Disp standard command
 @cindex @option{--disp-standard} command
@@ -1454,7 +1454,7 @@ a built-in default path.  It is a hard-coded path on GNU/Linux and the
 value of the @samp{HKLM\Software\Ghdl\Install_Dir} registry entry on Windows.
 @end enumerate
 
-You should use the @option{--dispconfig} command (@pxref{Dispconfig command} for details) to disp and debug installation problems.
+You should use the @option{--disp-config} command (@pxref{Disp config command} for details) to disp and debug installation problems.
 
 @node IEEE library pitfalls, IEEE math packages, Installation Directory, Invoking GHDL
 @comment  node-name,  next,  previous,  up

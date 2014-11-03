@@ -719,14 +719,14 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--dispconfig";
+      return Name = "--dispconfig" or else Name = "--disp-config";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Dispconfig) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--dispconfig       Disp tools path";
+      return "--disp-config      Disp tools path";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Dispconfig;
