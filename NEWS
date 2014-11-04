@@ -1,14 +1,20 @@
-NEWS for ghdl-0.32dev
+NEWS for ghdl (Dunoon Edition)
 
-None yet... but the ghdl-0.31 branch should remain stable (only essential
-changes committed to it) and development can continue on the "default" branch.
-Make "tip" default...
-
-See contributors at the end of the file
-
----------------------------------------------------------------------------
-
-NEWS for ghdl-0.31 (Dunoon Edition)
+New in 0.32 (2014-11-XX)
+* Updated to build with gcc-4.9.2.
+* Partial support of VHDL-2008 (available with --std=08):
+* support of new std.env package.
+* support of added features in std.textio package
+* support of all standard IEEE packages.
+* support of new operations (relation operators, maximum and minimum, unary
+  reduction operators)
+* support of boolean_vector, integer_vector, real_vector.
+* support of process(all).
+* support of generic packages and interface package declarations.
+* support of block comments (aka delimited comments)
+* support of implicitely defined to_string functions.
+* Support OSVVM 2014_01
+* Bugs fixed
 
 New in 0.31 (2014-01-XX)
 * Updated to build with gcc-4.8.2.
