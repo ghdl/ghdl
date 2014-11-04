@@ -69,7 +69,10 @@ package Ghdllocal is
 
    --  Return FILENAME without the extension.
    function Get_Base_Name (Filename : String; Remove_Dir : Boolean := True)
-                           return String;
+                          return String;
+
+   --  Get the position of the last directory separator or 0 if none.
+   function Get_Basename_Pos (Pathname : String) return Natural;
 
    function Append_Suffix (File : String; Suffix : String)
                           return String_Access;

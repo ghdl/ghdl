@@ -16,6 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO;
+with Ada.Command_Line; use Ada.Command_Line;
+with GNAT.Directory_Operations;
 with Types; use Types;
 with Libraries;
 with Std_Package;
@@ -170,6 +172,153 @@ package body Ghdllocal is
       P ("    none: do not use a predefined ieee library");
    end Disp_Long_Help;
 
+   function Is_Directory_Separator (C : Character) return Boolean is
+   begin
+      return C = '/' or else C = Directory_Separator;
+   end Is_Directory_Separator;
+
+   function Get_Basename_Pos (Pathname : String) return Natural is
+   begin
+      for I in reverse Pathname'Range loop
+         if Is_Directory_Separator (Pathname (I)) then
+            return I;
+         end if;
+      end loop;
+      return 0;
+   end Get_Basename_Pos;
+
+   procedure Set_Prefix_From_Program_Path (Prog_Path : String)
+   is
+      Dir_Pos : Natural;
+   begin
+      Dir_Pos := Get_Basename_Pos (Prog_Path);
+      if Dir_Pos = 0 then
+         --  No directory in Prog_Path.  This is not expected.
+         return;
+      end if;
+
+      declare
+         Pathname : String :=
+           Normalize_Pathname (Prog_Path (Dir_Pos + 1 .. Prog_Path'Last),
+                               Prog_Path (Prog_Path'First .. Dir_Pos - 1));
+         Pos : Natural;
+      begin
+         --  Stop now in case of error.
+         if Pathname'Length = 0 then
+            return;
+         end if;
+
+         --  Skip executable name
+         Dir_Pos := Get_Basename_Pos (Pathname);
+         if Dir_Pos = 0 then
+            return;
+         end if;
+
+         --  Simplify path:
+         --    /./ => /
+         --    // => /
+         Pos := Dir_Pos - 1;
+         while Pos >= Pathname'First loop
+            if Is_Directory_Separator (Pathname (Pos)) then
+               if Is_Directory_Separator (Pathname (Pos + 1)) then
+                  --  // => /
+                  Pathname (Pos .. Dir_Pos - 1) :=
+                    Pathname (Pos + 1 .. Dir_Pos);
+                  Dir_Pos := Dir_Pos - 1;
+               elsif Pos + 2 <= Dir_Pos
+                 and then Pathname (Pos + 1) = '.'
+                 and then Is_Directory_Separator (Pathname (Pos + 2))
+               then
+                  --  /./ => /
+                  Pathname (Pos .. Dir_Pos - 2) :=
+                    Pathname (Pos + 2 .. Dir_Pos);
+                  Dir_Pos := Dir_Pos - 2;
+               end if;
+            end if;
+            Pos := Pos - 1;
+         end loop;
+
+         --  Simplify path:
+         --    /xxx/../ => /
+         --  This is done after the previous simplication to avoid to deal
+         --  with cases like /xxx//../ or /xxx/./../
+         Pos := Dir_Pos - 3;
+         while Pos >= Pathname'First loop
+            if Is_Directory_Separator (Pathname (Pos))
+              and then Pathname (Pos + 1) = '.'
+              and then Pathname (Pos + 2) = '.'
+              and then Is_Directory_Separator (Pathname (Pos + 3))
+            then
+               declare
+                  Pos2 : constant Natural :=
+                    Get_Basename_Pos (Pathname (Pathname'First .. Pos - 1));
+                  --  /xxxxxxxxxx/../
+                  --  ^          ^
+                  --  Pos2       Pos
+                  Len : Natural;
+               begin
+                  if Pos2 = 0 then
+                     --  Shouldn't happen.
+                     return;
+                  end if;
+                  Len := Pos + 3 - Pos2;
+                  Pathname (Pos2 + 1 .. Dir_Pos - Len) :=
+                    Pathname (Pos + 4 .. Dir_Pos);
+                  Dir_Pos := Dir_Pos - Len;
+                  if Pos2 < Pathname'First + 3 then
+                     exit;
+                  end if;
+                  Pos := Pos2 - 3;
+               end;
+            else
+               Pos := Pos - 1;
+            end if;
+         end loop;
+
+         --  Remove last '/'
+         Dir_Pos := Dir_Pos - 1;
+
+         --  Skip directory.
+         Dir_Pos := Get_Basename_Pos (Pathname (Pathname'First .. Dir_Pos));
+         if Dir_Pos = 0 then
+            return;
+         end if;
+
+         Exec_Prefix := new String'(Pathname (Pathname'First .. Dir_Pos - 1));
+      end;
+   end Set_Prefix_From_Program_Path;
+
+   --  Extract Exec_Prefix from executable name.
+   procedure Set_Exec_Prefix
+   is
+      use GNAT.Directory_Operations;
+      Prog_Path : constant String := Ada.Command_Line.Command_Name;
+      Exec_Path : String_Access;
+   begin
+      --  If the command name is an absolute path, deduce prefix from it.
+      if Is_Absolute_Path (Prog_Path) then
+         Set_Prefix_From_Program_Path (Prog_Path);
+         return;
+      end if;
+
+      --  If the command name is a relative path, deduce prefix from it
+      --  and current path.
+      if Get_Basename_Pos (Prog_Path) /= 0 then
+         if Is_Executable_File (Prog_Path) then
+            Set_Prefix_From_Program_Path
+              (Get_Current_Dir & Directory_Separator & Prog_Path);
+         end if;
+         return;
+      end if;
+
+      --  Look for program name on the path.
+      Exec_Path := Locate_Exec_On_Path (Prog_Path);
+      if Exec_Path /= null then
+         Set_Prefix_From_Program_Path (Exec_Path.all);
+         Free (Exec_Path);
+      end if;
+   end Set_Exec_Prefix;
+
    function Get_Version_Path return String
    is
       use Flags;
@@ -213,6 +362,9 @@ package body Ghdllocal is
       if Prefix_Env = null or else Prefix_Env.all = "" then
          Prefix_Env := null;
       end if;
+
+      --  Compute Exec_Prefix.
+      Set_Exec_Prefix;
 
       --  Set prefix path.
       --  If not set by command line, try environment variable.
