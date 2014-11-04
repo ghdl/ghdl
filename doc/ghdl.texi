@@ -11,7 +11,7 @@
 @titlepage
 @title GHDL guide
 @subtitle GHDL, a VHDL compiler
-@subtitle For GHDL version 0.31 (Dunoon edition)
+@subtitle For GHDL version 0.32 (Dunoon edition)
 @author Tristan Gingold
 @c The following two commands start the copyright page.
 @page
