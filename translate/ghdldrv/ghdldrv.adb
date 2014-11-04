@@ -35,6 +35,7 @@ with Interfaces.C_Streams;
 with System;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
+with Errorout;
 with Version;
 with Options;
 
@@ -1379,7 +1380,7 @@ package body Ghdldrv is
    begin
       Disp_Long_Help (Command_Comp (Cmd));
       Put_Line (" -f             Force recompilation of work units");
-      Put_Line (" -Mu            Disp unit dependences (humna format)");
+      Put_Line (" -Mu            Disp unit dependences (human format)");
    end Disp_Long_Help;
 
    procedure Init (Cmd : in out Command_Make) is
@@ -1389,12 +1390,10 @@ package body Ghdldrv is
       Cmd.Flag_Force := False;
    end Init;
 
-
    procedure Decode_Option (Cmd : in out Command_Make;
                             Option : String;
                             Arg : String;
-                            Res : out Option_Res)
-   is
+                            Res : out Option_Res) is
    begin
       if Option = "-Mu" then
          Cmd.Flag_Depend_Unit := True;
@@ -1606,6 +1605,13 @@ package body Ghdldrv is
          Link (Add_Std => True, Disp_Only => False);
          Delete_File (Filelist_Name.all, Success);
       end if;
+   exception
+      when Errorout.Compilation_Error =>
+         if Flag_Expect_Failure then
+            return;
+         else
+            raise;
+         end if;
    end Perform_Action;
 
    --  Command Gen_Makefile.
