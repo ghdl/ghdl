@@ -702,13 +702,6 @@ type_for_size (unsigned int precision, int unsignedp)
 
   if (precision <= MAX_BITS_PER_WORD)
     signed_and_unsigned_types[precision][unsignedp] = t;
-  else
-    // Handle larger requests by returning a NULL tree and letting
-    // the back end default to another approach.
-    // the exact test is unknown : distinguishing between 32 and 64 bits
-    // may be enough for all likely platforms
-    if (MAX_BITS_PER_WORD >= 64)
-      t = NULL_TREE;
 
   return t;
 }
@@ -718,7 +711,22 @@ type_for_size (unsigned int precision, int unsignedp)
 static tree
 type_for_mode (enum machine_mode mode, int unsignedp)
 {
-  return type_for_size (GET_MODE_BITSIZE (mode), unsignedp);
+  if (SCALAR_INT_MODE_P (mode))
+    return type_for_size (GET_MODE_BITSIZE (mode), unsignedp);
+
+  if (mode == TYPE_MODE (void_type_node))
+    return void_type_node;
+
+  if (mode == TYPE_MODE (float_type_node))
+    return float_type_node;
+
+  if (mode == TYPE_MODE (double_type_node))
+    return double_type_node;
+
+  if (mode == TYPE_MODE (long_double_type_node))
+    return long_double_type_node;
+
+  return NULL_TREE;
 }
 
 #undef LANG_HOOKS_NAME
