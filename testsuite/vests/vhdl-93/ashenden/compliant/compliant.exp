@@ -491,7 +491,7 @@ build_compliant_test ch_14_fg_14_04.vhd LIBRARY=chip_lib
 #build_compliant_test ch_14_fg_14_05.vhd # array staticness
 #build_compliant_test ch_14_fg_14_05.vhd LIBRARY=cell_lib
 build_compliant_test ch_14_fg_14_06.vhd
-build_compliant_test ch_14_fg_14_08.vhd
+#build_compliant_test ch_14_fg_14_08.vhd # ghdl 0.32 - recursion
 build_compliant_test ch_14_fg_14_09.vhd
 build_compliant_test ch_14_fg_14_10.vhd
 build_compliant_test ch_14_fg_14_11.vhd
