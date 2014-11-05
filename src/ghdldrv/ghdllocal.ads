@@ -90,6 +90,9 @@ package Ghdllocal is
    -- Get Prefix_Path, but with 32 added if -m32 is requested
    function Get_Machine_Path_Prefix return String;
 
+   --  Subprocedure for --disp-config: display prefixes.
+   procedure Disp_Config_Prefixes;
+
    --  Setup standard libaries path.  If LOAD is true, then load them now.
    procedure Setup_Libraries (Load : Boolean);
 

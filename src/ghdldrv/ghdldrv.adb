@@ -801,34 +801,8 @@ package body Ghdldrv is
 
       New_Line;
 
-      Put ("command line prefix (--PREFIX): ");
-      if Switch_Prefix_Path = null then
-         Put_Line ("(not set)");
-      else
-         Put_Line (Switch_Prefix_Path.all);
-      end if;
+      Disp_Config_Prefixes;
 
-      Put ("environment prefix (GHDL_PREFIX): ");
-      if Prefix_Env = null then
-         Put_Line ("(not set)");
-      else
-         Put_Line (Prefix_Env.all);
-      end if;
-
-      Setup_Libraries (False);
-
-      Put ("exec prefix (from program name): ");
-      if Exec_Prefix = null then
-         Put_Line ("(not found)");
-      else
-         Put_Line (Exec_Prefix.all);
-      end if;
-
-      New_Line;
-
-      Put_Line ("library prefix: " & Lib_Prefix_Path.all);
-      Put ("library directory: ");
-      Put_Line (Get_Machine_Path_Prefix);
       Locate_Tools;
       Put ("compiler path: ");
       Put_Line (Compiler_Path.all);
