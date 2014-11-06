@@ -62,10 +62,12 @@ all: Makefile all.$(backend)
 
 install: install.$(backend)
 
-all.mcode: ghdl.mcode libs.vhdl.mcode
+check: check.$(backend)
 
 Makefile: $(srcdir)/Makefile.in
 	./config.status
+
+all.mcode: ghdl.mcode libs.vhdl.mcode
 
 GRTSRCDIR=$(srcdir)/src/grt
 include $(GRTSRCDIR)/Makefile.inc
@@ -208,7 +210,7 @@ install.vhdl.srcs:
 	done
 
 install.vhdl.mcode: install.dirs #libs.vhdl.mcode
-# Create library dirs
+# Copy libraries and relocate source files.
 	for d in v08/ieee v08/std v87/ieee v87/std v87/synopsys \
 	  v93/ieee v93/mentor v93/std v93/synopsys; do \
 	  $(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
@@ -221,7 +223,7 @@ install.vhdl.mcode: install.dirs #libs.vhdl.mcode
 	done
 
 install.program: install.dirs ghdl.mcode
-	$(INSTALL_PROGRAM) ghdl $(bindir)
+	$(INSTALL_PROGRAM) ghdl $(DESTDIR)$(bindir)
 
 install.mcode: install.program install.vhdl.srcs install.vhdl.mcode
 
