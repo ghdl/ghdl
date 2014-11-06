@@ -1,0 +1,35 @@
+project Ghdl is
+
+   srcdir := "@srcdir@";
+
+   for Source_Dirs use (srcdir & "/src",
+                        srcdir & "/src/vhdl",
+                        srcdir & "/src/vhdl/translate",
+                        srcdir & "/src/psl",
+                        srcdir & "/src/ghdldrv",
+                        srcdir & "/src/grt",
+                        srcdir & "/src/grt/config",
+                        srcdir & "/src/ortho",
+                        srcdir & "/src/ortho/mcode");
+
+   for Excluded_Source_Files use ("grt-cthreads.c", "win32.c", "pthread.c",
+                                  "teststack.c",
+				  "amd64.S", "sparc.S", "ppc.S", "ia64.S");
+
+   for Languages use ("Ada", "C", "Asm_Cpp");
+   for Main use ("ghdl_jit.adb");
+
+   package Builder is
+      for Executable ("ghdl_jit.adb") use "ghdl_mcode";
+   end Builder;
+
+   package Compiler is
+      for Default_Switches ("Ada") use ("-gnatwae", "-gnat05");
+      for Default_Switches ("C") use ("-DWITH_GNAT_RUN_TIME");
+   end Compiler;
+
+   package Linker is
+      for Switches ("Ada") use ("-lm", "-ldl");
+   end Linker;
+end Ghdl;
+

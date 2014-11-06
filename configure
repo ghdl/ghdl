@@ -112,6 +112,8 @@ echo '  eval vval=\$$v'
 echo '  sed_opts="$sed_opts -e s/@${v}@/$vval/g"'
 echo 'done'
 echo
+echo 'echo "Creating ghdl.gpr"'
+echo 'sed $sed_opts < $srcdir/ghdl.gpr.in > ghdl.gpr'
 echo 'echo "Creating Makefile"'
 echo 'sed $sed_opts < $srcdir/Makefile.in > Makefile'
 } > config.status || \
