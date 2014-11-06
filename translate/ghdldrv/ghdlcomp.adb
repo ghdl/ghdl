@@ -34,7 +34,6 @@ with Libraries;
 with Std_Package;
 with Files_Map;
 with Version;
-with Default_Pathes;
 
 package body Ghdlcomp is
 
@@ -451,14 +450,14 @@ package body Ghdlcomp is
    is
       pragma Unreferenced (Cmd);
    begin
-      return Name = "--dispconfig";
+      return Name = "--dispconfig" or else Name = "--disp-config";
    end Decode_Command;
 
    function Get_Short_Help (Cmd : Command_Dispconfig) return String
    is
       pragma Unreferenced (Cmd);
    begin
-      return "--dispconfig       Disp tools path";
+      return "--disp-config      Disp tools path";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Dispconfig;
@@ -469,27 +468,12 @@ package body Ghdlcomp is
       pragma Unreferenced (Cmd);
    begin
       if Args'Length /= 0 then
-         Error ("--dispconfig does not accept any argument");
+         Error ("--disp-config does not accept any argument");
          raise Errorout.Option_Error;
       end if;
 
-      Put ("command line prefix (--PREFIX): ");
-      if Prefix_Path = null then
-         Put_Line ("(not set)");
-      else
-         Put_Line (Prefix_Path.all);
-      end if;
-      Setup_Libraries (False);
+      Disp_Config_Prefixes;
 
-      Put ("environment prefix (GHDL_PREFIX): ");
-      if Prefix_Env = null then
-         Put_Line ("(not set)");
-      else
-         Put_Line (Prefix_Env.all);
-      end if;
-
-      Put_Line ("default prefix: " & Default_Pathes.Prefix);
-      Put_Line ("actual prefix: " & Prefix_Path.all);
       Put_Line ("command_name: " & Ada.Command_Line.Command_Name);
       Put_Line ("default library pathes:");
       for I in 2 .. Get_Nbr_Pathes loop
