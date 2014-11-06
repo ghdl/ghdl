@@ -140,7 +140,10 @@ synopsys.v93: $(LIB93_DIR) $(SYNOPSYS_SRCS) force
 	$(CP) ../ieee/ieee-obj93.cf .; \
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
-	  b=`basename $$i .vhdl`; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  b=`basename $$i .vhdl`; \
+	  if [ -f ../ieee/$$b.o ]; then \
+	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  fi; \
 	done; \
 	for i in $(SYNOPSYS93_BSRCS); do \
           cmd="$(ANALYZE_IEEE93) $(REL_DIR)/$(LIBSRC_DIR)/$$i"; \
@@ -155,7 +158,10 @@ mentor.v93: $(LIB93_DIR) $(MENTOR93_SRCS) force
 	$(CP) ../ieee/ieee-obj93.cf . ;\
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
-	  b=`basename $$i .vhdl`; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  b=`basename $$i .vhdl`; \
+	  if [ -f ../ieee/$$b.o ]; then \
+	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  fi; \
 	done ; \
 	for i in $(MENTOR93_BSRCS); do \
           cmd="$(ANALYZE_IEEE93) $(REL_DIR)/$(LIBSRC_DIR)/$$i";\
@@ -191,7 +197,10 @@ synopsys.v87: $(LIB87_DIR) $(SYNOPSYS_SRCS) force
 	$(CP) ../ieee/ieee-obj87.cf . ; \
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(VITAL95_SRCS); do \
-	  b=`basename $$i .vhdl`; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  b=`basename $$i .vhdl`; \
+	  if [ -f ../ieee/$$b.o ]; then \
+	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  fi; \
 	done; \
 	for i in $(SYNOPSYS87_BSRCS); do \
           cmd="$(ANALYZE_IEEE87) $(REL_DIR)/$(LIBSRC_DIR)/$$i";\

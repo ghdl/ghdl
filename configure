@@ -8,12 +8,14 @@ CC=${CC:-gcc}
 CFLAGS=${CFLAGS:--g}
 GNATMAKE=${GNATMAKE:-gnatmake}
 prefix=/usr/local
+libdirsuffix=lib/ghdl
+libdirreverse=../..
 build=
 
 show_help=no
 progname=$0
 
-subst_vars="CC GNATMAKE CFLAGS build srcdir"
+subst_vars="CC GNATMAKE CFLAGS build srcdir prefix backend libdirsuffix libdirreverse"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -110,7 +112,7 @@ echo
 echo 'sed_opts=""'
 echo 'for v in $subst_vars; do'
 echo '  eval vval=\$$v'
-echo '  sed_opts="$sed_opts -e s/@${v}@/$vval/g"'
+echo '  sed_opts="$sed_opts -e s%@${v}@%$vval%g"'
 echo 'done'
 echo
 echo 'echo "Creating ghdl.gpr"'
@@ -154,8 +156,8 @@ sed -e "s%@COMPILER_GCC@%ghdl1-gcc%" \
     -e "s%@COMPILER_MCODE@%ghdl1-mcode%" \
     -e "s%@COMPILER_LLVM@%ghdl1-llvm%" \
     -e "s%@POST_PROCESSOR@%oread-gcc%" \
-    -e "s%@INSTALL_PREFIX@%%" \
-    -e "s%@LIB_PREFIX@%$curdir/lib%" \
+    -e "s%@INSTALL_PREFIX@%$prefix%" \
+    -e "s%@LIB_PREFIX@%$libdirsuffix%" \
     < $srcdir/src/ghdldrv/default_pathes.ads.in > default_pathes.ads
 
 exit 0

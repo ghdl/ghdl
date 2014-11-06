@@ -187,6 +187,23 @@ package body Ghdllocal is
       return 0;
    end Get_Basename_Pos;
 
+   --  Simple lower case conversion, used to compare with "bin".
+   function To_Lower (S : String) return String
+   is
+      Res : String (S'Range);
+      C : Character;
+   begin
+      for I in S'Range loop
+         C := S (I);
+         if C >= 'A' and then C <= 'Z' then
+            C := Character'Val
+              (Character'Pos (C) - Character'Pos ('A') + Character'Pos ('a'));
+         end if;
+         Res (I) := C;
+      end loop;
+      return Res;
+   end To_Lower;
+
    procedure Set_Prefix_From_Program_Path (Prog_Path : String)
    is
       Dir_Pos : Natural;
@@ -278,13 +295,16 @@ package body Ghdllocal is
          --  Remove last '/'
          Dir_Pos := Dir_Pos - 1;
 
-         --  Skip directory.
-         Dir_Pos := Get_Basename_Pos (Pathname (Pathname'First .. Dir_Pos));
-         if Dir_Pos = 0 then
+         --  Skip '/bin' directory if present
+         Pos := Get_Basename_Pos (Pathname (Pathname'First .. Dir_Pos));
+         if Pos = 0 then
             return;
          end if;
+         if To_Lower (Pathname (Pos + 1 .. Dir_Pos)) = "bin" then
+            Dir_Pos := Pos - 1;
+         end if;
 
-         Exec_Prefix := new String'(Pathname (Pathname'First .. Dir_Pos - 1));
+         Exec_Prefix := new String'(Pathname (Pathname'First .. Dir_Pos));
       end;
    end Set_Prefix_From_Program_Path;
 

@@ -19,6 +19,18 @@ CC=@CC@
 build=@build@
 srcdir=@srcdir@
 GNATMAKE=@GNATMAKE@
+prefix=@prefix@
+backend=@backend@
+libdirsuffix=@libdirsuffix@
+libdirreverse=@libdirreverse@
+
+INSTALL_PROGRAM=install -m 755
+INSTALL_DATA=install -m 644
+DESTDIR=
+bindir=$(prefix)/bin
+MKDIR=mkdir
+
+VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
 
 GNATFLAGS=-gnaty3befhkmr -gnata -gnatwael -aO. -g -gnatf -gnat05
 GRT_FLAGS=-g
@@ -37,13 +49,6 @@ LIB_CFLAGS=-g -O2
 
 GNAT_BARGS=-bargs -E
 
-LLVM_CONFIG=llvm-config
-
-all: Makefile ghdl_mcode
-
-Makefile: $(srcdir)/Makefile.in
-	./config.status
-
 target=$(build)
 #target=i686-pc-linux-gnu
 #target=x86_64-pc-linux-gnu
@@ -51,12 +56,27 @@ target=$(build)
 #target=x86_64-apple-darwin
 #target=i386-pc-mingw32
 
+LLVM_CONFIG=llvm-config
+
+all: Makefile all.$(backend)
+
+install: install.$(backend)
+
+all.mcode: ghdl.mcode libs.vhdl.mcode
+
+Makefile: $(srcdir)/Makefile.in
+	./config.status
+
 GRTSRCDIR=$(srcdir)/src/grt
 include $(GRTSRCDIR)/Makefile.inc
 
-ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_mcode: $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
-	$(GNATMAKE) -o $@ -aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/vhdl/translate -aI$(srcdir)/src/ortho/mcode -aI$(srcdir)/src/ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+GHDL_MCODE_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/vhdl/translate -aI$(srcdir)/src/ortho/mcode -aI$(srcdir)/src/ortho
+
+ghdl.mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
+ghdl.mcode: $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
+	$(GNATMAKE) -o ghdl $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+
+.PHONY: ghdl.mcode
 
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
@@ -77,19 +97,19 @@ ghdl_gcc: force
 ghdl_llvm: force
 	$(GNATMAKE) $(GNATFLAGS) ghdl_llvm $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
-LIB87_DIR:=lib/v87
-LIB93_DIR:=lib/v93
-LIB08_DIR:=lib/v08
+LIB87_DIR:=$(libdirsuffix)/v87
+LIB93_DIR:=$(libdirsuffix)/v93
+LIB08_DIR:=$(libdirsuffix)/v08
 
-LIBSRC_DIR:=libraries
-REL_DIR:=../../..
+LIBSRC_DIR:=$(srcdir)/libraries
+REL_DIR:=$(libdirreverse)/../..
 GHDL=ghdl
-ANALYZE:=../../../$(GHDL) -a $(LIB_CFLAGS)
+ANALYZE:=$(REL_DIR)/$(GHDL) -a $(LIB_CFLAGS)
 LN=ln -s
 CP=cp
 
 $(LIB87_DIR) $(LIB93_DIR) $(LIB08_DIR):
-	[ -d lib ] || mkdir lib
+	[ -d $(libdirsuffix) ] || mkdir -p $(libdirsuffix)
 	[ -d $@ ] || mkdir $@
 
 include $(srcdir)/libraries/Makefile.inc
@@ -125,35 +145,88 @@ else
 	$(RM) std_standard.s
 endif
 
-install.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
-install.v87: std.v87 ieee.v87 synopsys.v87
-install.v08: std.v08 ieee.v08
+libs.vhdl.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
+libs.vhdl.v87: std.v87 ieee.v87 synopsys.v87
+libs.vhdl.v08: std.v08 ieee.v08
+libs.vhdl.all: libs.vhdl.v87 libs.vhdl.v93 libs.vhdl.v08
 
-install.standard: $(LIB93_DIR)/std/std_standard.o \
+libs.vhdl.standard: $(LIB93_DIR)/std/std_standard.o \
  $(LIB87_DIR)/std/std_standard.o \
  $(LIB08_DIR)/std/std_standard.o
 
 grt.links:
 	cd ../lib; ln -sf $(GRTSRCDIR)/grt.lst .; ln -sf $(GRTSRCDIR)/libgrt.a .; ln -sf $(GRTSRCDIR)/grt.ver .
 
-install.all: install.v87 install.v93 install.v08
+libs.vhdl.gcc:
+	$(MAKE) GHDL=ghdl_gcc libs.vhdl.all
+	$(MAKE) GHDL1=./ghdl1-gcc libs.vhdl.standard
 
-install.gcc:
-	$(MAKE) GHDL=ghdl_gcc install.all
-	$(MAKE) GHDL1=./ghdl1-gcc install.standard
+libs.vhdl.mcode: libs.vhdl.all
 
-install.mcode:
-	$(MAKE) GHDL=ghdl_mcode install.all
+libs.vhdl.simul:
+	$(MAKE) GHDL=ghdl_simul libs.vhdl.all
 
-install.simul:
-	$(MAKE) GHDL=ghdl_simul install.all
+libs.vhdl.llvm:
+	$(MAKE) GHDL=ghdl_llvm libs.vhdl.all
+	$(MAKE) GHDL1=./ghdl1-llvm lib.vhdl.standard
 
-install.llvm:
-	$(MAKE) GHDL=ghdl_llvm install.all
-	$(MAKE) GHDL1=./ghdl1-llvm install.standard
+install.dirs:
+	[ -d $(DESTDIR)$(prefix) ] || $(MKDIR) -p $(DESTDIR)$(prefix)
+	[ -d $(DESTDIR)$(bindir) ] || $(MKDIR) -p $(DESTDIR)$(bindir)
+
+install.vhdl.srcs:
+# Install VHDL sources.
+	$(RM) -rf $(DESTDIR)$(VHDL_LIB_DIR)/src
+	$(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/src
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/std
+	for i in $(STD93_SRCS) $(STD87_SRCS) $(STD08_SRCS); do \
+	  $(INSTALL_DATA) -p $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/std; \
+	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/ieee
+	for i in $(IEEE93_SRCS) $(IEEE87_SRCS); do \
+	  $(INSTALL_DATA) -p $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/ieee; \
+	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/vital95
+	for i in $(VITAL95_SRCS); do \
+	  $(INSTALL_DATA) -p $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/vital95; \
+	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/vital2000
+	for i in $(VITAL2000_SRCS); do \
+	  $(INSTALL_DATA) -p $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/vital2000; \
+	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/synopsys
+	for i in $(SYNOPSYS_SRCS); do \
+	  $(INSTALL_DATA) -p $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/synopsys; \
+	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/mentor
+	for i in $(MENTOR93_SRCS); do \
+	  $(INSTALL_DATA) -p $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/mentor; \
+	done
+	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)/src/ieee2008
+	for i in $(IEEE08_SRCS); do \
+	  $(INSTALL_DATA) -p $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/ieee2008; \
+	done
+
+install.vhdl.mcode: install.dirs #libs.vhdl.mcode
+# Create library dirs
+	for d in v08/ieee v08/std v87/ieee v87/std v87/synopsys \
+	  v93/ieee v93/mentor v93/std v93/synopsys; do \
+	  $(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
+	  $(INSTALL_DATA) -p \
+	    $(libdirsuffix)/$$d/* $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
+	  for c in $(libdirsuffix)/$$d/*.cf; do \
+	   sed -e '/file/s@".*/libraries@"../../src@g' \
+	     < $$c > $(DESTDIR)$(prefix)/$$c; \
+	  done; \
+	done
+
+install.program: install.dirs ghdl.mcode
+	$(INSTALL_PROGRAM) ghdl $(bindir)
+
+install.mcode: install.program install.vhdl.srcs install.vhdl.mcode
 
 clean: force
-	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad?
+	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.deps *.bexch
 	$(RM) -f ghdl_gcc ghdl_mcode ghdl_llvm ghdl_llvm_jit ghdl_simul
 	$(RM) -rf lib
 
@@ -166,4 +239,4 @@ clean-c: force
 
 force:
 
-.PHONY: force clean
+.PHONY: force clean distclean clean-c
