@@ -6,6 +6,7 @@ syntax:glob
 *.cf
 *.v87
 *.v93
+*.v08
 *.a
 *.lst
 *.orig
