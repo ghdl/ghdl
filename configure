@@ -47,6 +47,7 @@ for opt do
   esac
 done
 
+# Help
 if test $show_help != no; then
 cat <<EOF
 Usage: configure [options]
@@ -124,9 +125,37 @@ echo 'sed $sed_opts < $srcdir/Makefile.in > Makefile'
 
 chmod +x ./config.status
 
+# Run config.status to generate files
 if ! sh ./config.status; then
     echo "$progname: cannot execute config.status"
     exit 1
 fi
+
+# Generate ortho_code-x86-flags
+if test $backend = mcode; then
+    case "$build" in
+	*darwin*) ortho_flags="Flags_Macosx" ;;
+	*mingw32*) ortho_flags="Flags_Windows" ;;
+	*linux*) ortho_flags="Flags_Linux" ;;
+	*) echo "Unsupported $build build for mcode"; exit 1;;
+    esac
+    echo "Generate ortho_code-x86-flags.ads"
+    {
+     echo "with Ortho_Code.X86.$ortho_flags;"
+     echo "package Ortho_Code.X86.Flags renames Ortho_Code.X86.$ortho_flags;"
+    } > ortho_code-x86-flags.ads
+fi
+
+# Generate default_pathes.ads
+echo "Generate default_pathes.ads"
+curdir=`pwd`
+sed -e "s%@COMPILER_GCC@%ghdl1-gcc%" \
+    -e "s%@COMPILER_DEBUG@%ghdl1-debug%" \
+    -e "s%@COMPILER_MCODE@%ghdl1-mcode%" \
+    -e "s%@COMPILER_LLVM@%ghdl1-llvm%" \
+    -e "s%@POST_PROCESSOR@%oread-gcc%" \
+    -e "s%@INSTALL_PREFIX@%%" \
+    -e "s%@LIB_PREFIX@%$curdir/lib%" \
+    < $srcdir/src/ghdldrv/default_pathes.ads.in > default_pathes.ads
 
 exit 0

@@ -20,7 +20,7 @@ build=@build@
 srcdir=@srcdir@
 GNATMAKE=@GNATMAKE@
 
-GNATFLAGS=-gnaty3befhkmr -gnata -gnatwael -aI../.. -aI.. -aI../../psl -aI../grt -aO.. -g -gnatf -gnat05
+GNATFLAGS=-gnaty3befhkmr -gnata -gnatwael -aO. -g -gnatf -gnat05
 GRT_FLAGS=-g
 LIB_CFLAGS=-g -O2
 
@@ -54,55 +54,28 @@ target=$(build)
 GRTSRCDIR=$(srcdir)/src/grt
 include $(GRTSRCDIR)/Makefile.inc
 
-ifeq ($(filter-out i%86 linux,$(arch) $(osys)),)
-  ORTHO_X86_FLAGS=Flags_Linux
-endif
-ifeq ($(filter-out i%86 darwin%,$(arch) $(osys)),)
-  ORTHO_X86_FLAGS=Flags_Macosx
-endif
-ifeq ($(filter-out i%86 mingw32%,$(arch) $(osys)),)
-  ORTHO_X86_FLAGS=Flags_Windows
-endif
-ifdef ORTHO_X86_FLAGS
-  ORTHO_DEPS=ortho_code-x86-flags.ads
-endif
-
-ortho_code-x86-flags.ads:
-	echo "with Ortho_Code.X86.$(ORTHO_X86_FLAGS);" > $@
-	echo "package Ortho_Code.X86.Flags renames Ortho_Code.X86.$(ORTHO_X86_FLAGS);" >> $@
-
 ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
+ghdl_mcode: $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
 	$(GNATMAKE) -o $@ -aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/vhdl/translate -aI$(srcdir)/src/ortho/mcode -aI$(srcdir)/src/ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
 
 ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_llvm_jit: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
+ghdl_llvm_jit: $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
 	$(GNATMAKE) -o $@ -aI../../ortho/llvm -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
 
 llvm-cbindings.o: ../../ortho/llvm/llvm-cbindings.cpp
 	$(CXX) -c -m64 `$(LLVM_CONFIG) --includedir --cxxflags` -g -o $@ $<
 
-ghdl_simul: default_pathes.ads $(GRT_ADD_OBJS) force
+ghdl_simul: $(GRT_ADD_OBJS) force
 	$(GNATMAKE) -aI../../simulate $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
-ghdl_gcc: default_pathes.ads force
+ghdl_gcc: force
 	$(GNATMAKE) $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
-ghdl_llvm: default_pathes.ads force
+ghdl_llvm: force
 	$(GNATMAKE) $(GNATFLAGS) ghdl_llvm $(GNAT_BARGS) -largs $(GNAT_LARGS)
-
-default_pathes.ads: $(srcdir)/src/ghdldrv/default_pathes.ads.in Makefile
-	curdir=`pwd`; \
-	sed -e "s%@COMPILER_GCC@%ghdl1-gcc%" \
-	 -e "s%@COMPILER_DEBUG@%ghdl1-debug%" \
-	 -e "s%@COMPILER_MCODE@%ghdl1-mcode%" \
-	 -e "s%@COMPILER_LLVM@%ghdl1-llvm%" \
-	 -e "s%@POST_PROCESSOR@%oread-gcc%" \
-	 -e "s%@INSTALL_PREFIX@%%" \
-	 -e "s%@LIB_PREFIX@%$$curdir/lib/%" < $< > $@
 
 LIB87_DIR:=lib/v87
 LIB93_DIR:=lib/v93
@@ -180,9 +153,13 @@ install.llvm:
 	$(MAKE) GHDL1=./ghdl1-llvm install.standard
 
 clean: force
-	$(RM) -f *.o *.ali b~*.ad? ghdl_gcc ghdl_mcode ghdl_llvm ghdl_llvm_jit
-	$(RM) -f *~ default_pathes.ads ghdl_simul ortho_code-x86-flags.ads
+	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad?
+	$(RM) -f ghdl_gcc ghdl_mcode ghdl_llvm ghdl_llvm_jit ghdl_simul
 	$(RM) -rf lib
+
+distclean: clean
+	$(RM) -f default_pathes.ads ortho_code-x86-flags.ads
+	$(RM) -f Makefile config.status ghdl.gpr
 
 clean-c: force
 	$(RM) -f memsegs_c.o chkstk.o linux.o times.o grt-cbinding.o grt-cvpi.o
