@@ -335,15 +335,48 @@ grt_stack_allocate (void)
   return res;
 }
 
-#include <setjmp.h>
+/* There is a simple setjmp/longjmp mechanism used to report failures.
+   We have the choice between 3 mechanisms:
+   * USE_BUITLIN_SJLJ: gcc builtin setjmp/longjmp, very fast but gcc specific.
+   * USE__SETJMP: _setjmp/_longjmp
+   * USE_SETJMP: setjmp/longjmp, slower because signals mask is saved/restored.
+*/
+
+#ifdef __GNUC__
+#define USE_BUILTIN_SJLJ
+#else
+#define USE__SETJMP
+#endif
+/* #define USE_SETJMP */
+
+#ifdef USE_BUILTIN_SJLJ
+typedef int *JMP_BUF[5];
+static int sjlj_val;
+# define SETJMP(BUF) (__builtin_setjmp (BUF), sjlj_val)
+# define LONGJMP(BUF, VAL) \
+  do { sjlj_val = (VAL); __builtin_longjmp (BUF, 1); } while (0)
+#else
+# include <setjmp.h>
+typedef jmp_buf JMP_BUF;
+# ifdef USE__SETJMP
+#  define SETJMP _setjmp
+#  define LONGJMP _longjmp
+# elsif defined (USE_SETJMP)
+#  define SETJMP setjmp
+#  define LONGJMP longjmp
+# else
+#  error "SETJMP/LONGJMP not configued"
+# endif
+#endif
+
 static int run_env_en;
-static jmp_buf run_env;
+static JMP_BUF run_env;
 
 void
 __ghdl_maybe_return_via_longjump (int val)
 {
   if (run_env_en)
-    longjmp (run_env, val);
+    LONGJMP (run_env, val);
 }
 
 int
@@ -352,10 +385,9 @@ __ghdl_run_through_longjump (int (*func)(void))
   int res;
 
   run_env_en = 1;
-  res = setjmp (run_env);
+  res = SETJMP (run_env);
   if (res == 0)
     res = (*func)();
   run_env_en = 0;
   return res;
 }
-
