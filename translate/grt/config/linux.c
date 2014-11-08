@@ -343,7 +343,7 @@ void
 __ghdl_maybe_return_via_longjump (int val)
 {
   if (run_env_en)
-    longjmp (run_env, val);
+    _longjmp (run_env, val);
 }
 
 int
@@ -352,7 +352,7 @@ __ghdl_run_through_longjump (int (*func)(void))
   int res;
 
   run_env_en = 1;
-  res = setjmp (run_env);
+  res = _setjmp (run_env);
   if (res == 0)
     res = (*func)();
   run_env_en = 0;
