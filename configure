@@ -12,12 +12,13 @@ libdirsuffix=lib/ghdl
 libdirreverse=../..
 gcc_src_dir=
 gcc_version=unknown
+llvm_prefix=
 build=
 
 show_help=no
 progname=$0
 
-subst_vars="CC GNATMAKE CFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir"
+subst_vars="CC GNATMAKE CFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_prefix"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -49,6 +50,7 @@ for opt do
       --prefix=*) prefix="$optarg";;
       --srcdir=*) srcdir="$optarg";;
       --with-gcc=*) gcc_src_dir="$optarg"; backend=gcc;;
+      --with-llvm=*) llvm_prefix="$optarg"; backend=llvm;;
       -h|-help|--help) show_help=yes;;
       *) echo "$0: unknown option $opt; try $0 --help"
 	  exit 1
@@ -65,6 +67,7 @@ Options [defaults in brackets]:
   --prefix=PREFIX   install in PREFIX [$prefix]
   --srcdir=SRCDIR   source code path [$srcdir]
   --with-gcc=DIR    use gcc backend from DIR (needs gcc $gcc_version)
+  --with-llvm=DIR   use llvm installed in DIR
 EOF
 exit 0
 fi
@@ -101,6 +104,15 @@ if test $backend = gcc; then
     if test x$base_ver != x$gcc_version; then
 	echo "Mismatch gcc version from $gcc_src_dir"
 	echo "Need gcc version $gcc_version"
+	exit 1
+    fi
+fi
+
+# For llvm backend, check llvm-config
+if test $backend = llvm; then
+    llvm_cmd="$llvm_prefix/bin/llvm-config --version"
+    if ! $llvm_cmd 2> /dev/null; then
+	echo "cannot run $llvm_cmd"
 	exit 1
     fi
 fi

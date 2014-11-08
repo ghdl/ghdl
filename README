@@ -78,7 +78,11 @@ The configure gcc following the gcc instructions and also enable vhdl
 languages (you can use --enable-languages=c,vhdl --disable-bootstrap)
 
 * Building with the llvm backend
-TODO
+You need llvm 3.5
+
+First configure ghdl and specify where llvm is installed
+$ ./configure --with-llvm=PREFIX
+  where PREFIX/bin/llvm-config is present
 
 Notes for developpers
 *********************

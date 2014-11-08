@@ -123,7 +123,7 @@ libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files # grt-arch.ads
 	$(GRT_RANLIB) $@
 
 run-bind.adb: grt-force
-	gnatmake -c $(GNATFLAGS) -aI$(GRTSRCDIR) $(GRT_PRAGMA_FLAG) \
+	gnatmake -c -aI$(GRTSRCDIR) $(GRT_PRAGMA_FLAG) \
 	  ghdl_main $(GRT_ADAFLAGS) -cargs $(GRT_FLAGS)
 	gnatbind -Lgrt_ -o run-bind.adb -n ghdl_main.ali
 

@@ -24,6 +24,7 @@ backend=@backend@
 libdirsuffix=@libdirsuffix@
 libdirreverse=@libdirreverse@
 gcc_src_dir=@gcc_src_dir@
+llvm_prefix=@llvm_prefix@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
@@ -38,7 +39,7 @@ GRT_RANLIB=ranlib
 VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
 ADAC=$(CC)
 
-GNATFLAGS=-gnaty3befhkmr -gnatwael -aO. -g -gnatf -gnat05
+GNATFLAGS=-gnaty3befhkmr -gnata -gnatwael -aO. -g -gnatf -gnat05
 GRT_FLAGS=-g
 LIB_CFLAGS=-g -O2
 
@@ -62,8 +63,6 @@ target=$(build)
 #target=x86_64-apple-darwin
 #target=i386-pc-mingw32
 
-LLVM_CONFIG=llvm-config
-
 all: Makefile all.$(backend)
 
 install: install.$(backend)
@@ -82,7 +81,9 @@ all.mcode: ghdl.mcode libs.vhdl.mcode
 GRTSRCDIR=$(srcdir)/src/grt
 include $(GRTSRCDIR)/Makefile.inc
 
-GHDL_MCODE_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/vhdl/translate -aI$(srcdir)/src/ortho/mcode -aI$(srcdir)/src/ortho
+GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate -aI$(srcdir)/src/ortho
+
+GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho/mcode
 
 ghdl.mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl.mcode: $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
@@ -145,18 +146,33 @@ grt.links:
 
 #################### For llvm backend ##############################
 
+LLVM_CONFIG=$(llvm_prefix)/bin/llvm-config
+
+GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho/llvm
+
+all.llvm: ghdl_llvm_jit
+
 ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_llvm_jit: $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
-	$(GNATMAKE) -o $@ -aI../../ortho/llvm -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
+	$(GNATMAKE) -o $@ $(GHDL_LLVM_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
 
-llvm-cbindings.o: ../../ortho/llvm/llvm-cbindings.cpp
+llvm-cbindings.o: $(srcdir)/src/ortho/llvm/llvm-cbindings.cpp
 	$(CXX) -c -m64 `$(LLVM_CONFIG) --includedir --cxxflags` -g -o $@ $<
+
+ghdl_llvm: force
+	$(GNATMAKE) $(GHDL_LLVM_INCFLAGS) -aI$(srcdir)/src/ghdldrv $(GNATFLAGS)\
+	 ghdl_llvm $(GNAT_BARGS) -largs $(GNAT_LARGS)
+
+ghdl1-llvm: force
+	$(MAKE) -f $(srcdir)/src/ortho/llvm/Makefile \
+	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
+	 GNAT_FLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" \
+	 LLVM_CONFIG="$(LLVM_CONFIG)" all
+
+################ For simul (no code generation, interpretation) ##########
 
 ghdl_simul: $(GRT_ADD_OBJS) force
 	$(GNATMAKE) -aI../../simulate $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
-
-ghdl_llvm: force
-	$(GNATMAKE) $(GNATFLAGS) ghdl_llvm $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
 ################ Libraries ###############################################
 
@@ -224,9 +240,12 @@ libs.vhdl.mcode: libs.vhdl.all
 libs.vhdl.simul:
 	$(MAKE) GHDL=ghdl_simul libs.vhdl.all
 
+libs.vhdl.llvmjit:
+	$(MAKE) GHDL=ghdl_llvm_jit libs.vhdl.all
+
 libs.vhdl.llvm:
 	$(MAKE) GHDL=ghdl_llvm libs.vhdl.all
-	$(MAKE) GHDL1=./ghdl1-llvm lib.vhdl.standard
+	$(MAKE) GHDL1=./ghdl1-llvm libs.vhdl.standard
 
 install.dirs:
 	[ -d $(DESTDIR)$(prefix) ] || $(MKDIR) -p $(DESTDIR)$(prefix)
