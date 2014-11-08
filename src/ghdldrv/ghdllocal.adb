@@ -259,7 +259,6 @@ package body Ghdllocal is
          --  This is done after the previous simplication to avoid to deal
          --  with cases like /xxx//../ or /xxx/./../
          Pos := Pathname'First;
-         Ada.Text_IO.Put_Line (Pathname (Pathname'First .. Last));
          while Pos <= Last - 3 loop
             if Is_Directory_Separator (Pathname (Pos))
               and then Pathname (Pos + 1) = '.'
