@@ -68,8 +68,27 @@ $ make install
   To install within PREFIX
 
 * Building with the gcc backend
-TODO
+You need to download and untar the sources of
+gcc version 4.9.2 [do not modify this line as this is read by scripts].
+
+First configure ghdl and specify gcc source dir:
+$ ./configure --with-gcc=/path/to/gcc/source/dir
+
+The configure gcc following the gcc instructions and also enable vhdl
+languages (you can use --enable-languages=c,vhdl --disable-bootstrap)
 
 * Building with the llvm backend
 TODO
 
+Notes for developpers
+*********************
+
+Developping with the gcc backend:
+Once gcc (with ghdl) has been built once, it is possible to work on ghdl
+sources tree without copying them in gcc tree. Commands are:
+$ make ghdl1-gcc     	     # To build the compiler
+$ make ghdl_gcc		     # To build the driver
+$ make libs.vhdl.gcc	     # To compile the vhdl libraries
+$ make grt-all		     # To build the ghdl runtime
+$ make grt.links	     # To locally install the ghdl runtime
+TODO: gcc object dir

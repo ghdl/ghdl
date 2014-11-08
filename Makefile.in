@@ -23,16 +23,22 @@ prefix=@prefix@
 backend=@backend@
 libdirsuffix=@libdirsuffix@
 libdirreverse=@libdirreverse@
+gcc_src_dir=@gcc_src_dir@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
 DESTDIR=
 bindir=$(prefix)/bin
 MKDIR=mkdir
+LN=ln -s
+CP=cp
+SED=sed
+GRT_RANLIB=ranlib
 
 VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
+ADAC=$(CC)
 
-GNATFLAGS=-gnaty3befhkmr -gnata -gnatwael -aO. -g -gnatf -gnat05
+GNATFLAGS=-gnaty3befhkmr -gnatwael -aO. -g -gnatf -gnat05
 GRT_FLAGS=-g
 LIB_CFLAGS=-g -O2
 
@@ -64,8 +70,12 @@ install: install.$(backend)
 
 check: check.$(backend)
 
+copy-sources: copy-sources.$(backend)
+
 Makefile: $(srcdir)/Makefile.in
 	./config.status
+
+#################### For mcode backend ##############################
 
 all.mcode: ghdl.mcode libs.vhdl.mcode
 
@@ -83,6 +93,58 @@ ghdl.mcode: $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
 
+#################### For gcc backend ##############################
+
+gcc_vhdl_dir=$(gcc_src_dir)/gcc/vhdl
+
+all.gcc:
+	echo "For installing sources in gcc, do: make copy-sources"
+	echo "Then configure gcc"
+
+copy-sources.gcc:
+	$(RM) -rf $(gcc_vhdl_dir)
+	$(MKDIR) $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/vhdl/*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/vhdl/translate/*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/psl/*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/ortho/*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/ortho/gcc/*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/ortho/gcc/*.c $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/ortho/gcc/*.opt $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/doc/ghdl.texi $(srcdir)/doc/ghdl.1 $(gcc_vhdl_dir)
+	$(MKDIR) $(gcc_vhdl_dir)/grt
+	$(CP) -pR $(srcdir)/src/grt/* $(gcc_vhdl_dir)/grt
+	$(MKDIR) $(gcc_vhdl_dir)/libraries
+	$(CP) -pR $(srcdir)/libraries/* $(gcc_vhdl_dir)/libraries
+	$(MKDIR) $(gcc_vhdl_dir)/ghdldrv
+	$(CP) -pR $(srcdir)/src/ghdldrv/*.ad? $(gcc_vhdl_dir)/ghdldrv
+	$(CP) -p $(srcdir)/dist/gcc/Make-lang.in $(gcc_vhdl_dir)
+	$(SED) \
+	 -e "/^####libraries Makefile.inc/r $(srcdir)/libraries/Makefile.inc" \
+	 -e "/^####grt Makefile.inc/r $(srcdir)/src/grt/Makefile.inc" \
+	 < $(srcdir)/dist/gcc/Makefile.in > $(gcc_vhdl_dir)/Makefile.in
+	$(CP) -p $(srcdir)/dist/gcc/Makefile.in $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/dist/gcc/config-lang.in $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/dist/gcc/lang-options.h $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/dist/gcc/lang-specs.h $(gcc_vhdl_dir)
+
+GHDL_GCC_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
+
+ghdl1-gcc: force
+	$(MAKE) -f $(srcdir)/src/ortho/gcc/Makefile \
+	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
+	 GNAT_FLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" all
+
+ghdl_gcc: force
+	$(GNATMAKE) $(GHDL_GCC_INCFLAGS) -aI$(srcdir)/src/ghdldrv \
+	 $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
+
+grt.links:
+	cd $(libdirsuffix); ln -sf $(libdirreverse)/grt.lst .; ln -sf $(libdirreverse)/libgrt.a .; ln -sf $(libdirreverse)/grt.ver .
+
+#################### For llvm backend ##############################
+
 ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_llvm_jit: $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
 	$(GNATMAKE) -o $@ -aI../../ortho/llvm -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
@@ -93,11 +155,10 @@ llvm-cbindings.o: ../../ortho/llvm/llvm-cbindings.cpp
 ghdl_simul: $(GRT_ADD_OBJS) force
 	$(GNATMAKE) -aI../../simulate $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
-ghdl_gcc: force
-	$(GNATMAKE) $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
-
 ghdl_llvm: force
 	$(GNATMAKE) $(GNATFLAGS) ghdl_llvm $(GNAT_BARGS) -largs $(GNAT_LARGS)
+
+################ Libraries ###############################################
 
 LIB87_DIR:=$(libdirsuffix)/v87
 LIB93_DIR:=$(libdirsuffix)/v93
@@ -107,8 +168,6 @@ LIBSRC_DIR:=$(srcdir)/libraries
 REL_DIR:=$(libdirreverse)/../..
 GHDL=ghdl
 ANALYZE:=$(REL_DIR)/$(GHDL) -a $(LIB_CFLAGS)
-LN=ln -s
-CP=cp
 
 $(LIB87_DIR) $(LIB93_DIR) $(LIB08_DIR):
 	[ -d $(libdirsuffix) ] || mkdir -p $(libdirsuffix)
@@ -155,9 +214,6 @@ libs.vhdl.all: libs.vhdl.v87 libs.vhdl.v93 libs.vhdl.v08
 libs.vhdl.standard: $(LIB93_DIR)/std/std_standard.o \
  $(LIB87_DIR)/std/std_standard.o \
  $(LIB08_DIR)/std/std_standard.o
-
-grt.links:
-	cd ../lib; ln -sf $(GRTSRCDIR)/grt.lst .; ln -sf $(GRTSRCDIR)/libgrt.a .; ln -sf $(GRTSRCDIR)/grt.ver .
 
 libs.vhdl.gcc:
 	$(MAKE) GHDL=ghdl_gcc libs.vhdl.all
@@ -217,7 +273,7 @@ install.vhdl.mcode: install.dirs #libs.vhdl.mcode
 	  $(INSTALL_DATA) -p \
 	    $(libdirsuffix)/$$d/* $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
 	  for c in $(libdirsuffix)/$$d/*.cf; do \
-	   sed -e '/file/s@".*/libraries@"../../src@g' \
+	   $(SED) -e '/file/s@".*/libraries@"../../src@g' \
 	     < $$c > $(DESTDIR)$(prefix)/$$c; \
 	  done; \
 	done
@@ -227,9 +283,12 @@ install.program: install.dirs ghdl.mcode
 
 install.mcode: install.program install.vhdl.srcs install.vhdl.mcode
 
+####################### clean ############################################
+
 clean: force
 	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.deps *.bexch
 	$(RM) -f ghdl_gcc ghdl_mcode ghdl_llvm ghdl_llvm_jit ghdl_simul
+	$(RM) -f ghdl1-gcc run-bind.ad? grt.lst grt-files grt-files.in
 	$(RM) -rf lib
 
 distclean: clean
