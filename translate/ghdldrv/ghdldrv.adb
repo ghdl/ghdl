@@ -952,7 +952,8 @@ package body Ghdldrv is
          Add_File_List (Filelist_Name.all, True);
       end if;
       Last_File := Filelist.Last;
-      Add_File_List (Get_Machine_Path_Prefix & "grt" & List_Suffix, False);
+      Add_File_List (Get_Machine_Path_Prefix & Directory_Separator
+                       & "grt" & List_Suffix, False);
 
       --  call the linker
       declare
@@ -970,7 +971,7 @@ package body Ghdldrv is
          P := P + 3;
          if Add_Std then
             Std_File := new
-              String'(Get_Machine_Path_Prefix
+              String'(Get_Machine_Path_Prefix & Directory_Separator
                       & Get_Version_Path & Directory_Separator
                       & "std" & Directory_Separator
                       & "std_standard" & Link_Obj_Suffix.all);

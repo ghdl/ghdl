@@ -189,18 +189,18 @@ package body Ghdllocal is
 
    procedure Set_Prefix_From_Program_Path (Prog_Path : String)
    is
-      Dir_Pos : Natural;
+      Last : Natural;
    begin
-      Dir_Pos := Get_Basename_Pos (Prog_Path);
-      if Dir_Pos = 0 then
+      Last := Get_Basename_Pos (Prog_Path);
+      if Last = 0 then
          --  No directory in Prog_Path.  This is not expected.
          return;
       end if;
 
       declare
          Pathname : String :=
-           Normalize_Pathname (Prog_Path (Dir_Pos + 1 .. Prog_Path'Last),
-                               Prog_Path (Prog_Path'First .. Dir_Pos - 1));
+           Normalize_Pathname (Prog_Path (Last + 1 .. Prog_Path'Last),
+                               Prog_Path (Prog_Path'First .. Last - 1));
          Pos : Natural;
       begin
          --  Stop now in case of error.
@@ -209,30 +209,28 @@ package body Ghdllocal is
          end if;
 
          --  Skip executable name
-         Dir_Pos := Get_Basename_Pos (Pathname);
-         if Dir_Pos = 0 then
+         Last := Get_Basename_Pos (Pathname);
+         if Last = 0 then
             return;
          end if;
 
          --  Simplify path:
          --    /./ => /
          --    // => /
-         Pos := Dir_Pos - 1;
+         Pos := Last - 1;
          while Pos >= Pathname'First loop
             if Is_Directory_Separator (Pathname (Pos)) then
                if Is_Directory_Separator (Pathname (Pos + 1)) then
                   --  // => /
-                  Pathname (Pos .. Dir_Pos - 1) :=
-                    Pathname (Pos + 1 .. Dir_Pos);
-                  Dir_Pos := Dir_Pos - 1;
-               elsif Pos + 2 <= Dir_Pos
+                  Pathname (Pos .. Last - 1) := Pathname (Pos + 1 .. Last);
+                  Last := Last - 1;
+               elsif Pos + 2 <= Last
                  and then Pathname (Pos + 1) = '.'
                  and then Is_Directory_Separator (Pathname (Pos + 2))
                then
                   --  /./ => /
-                  Pathname (Pos .. Dir_Pos - 2) :=
-                    Pathname (Pos + 2 .. Dir_Pos);
-                  Dir_Pos := Dir_Pos - 2;
+                  Pathname (Pos .. Last - 2) := Pathname (Pos + 2 .. Last);
+                  Last := Last - 2;
                end if;
             end if;
             Pos := Pos - 1;
@@ -240,51 +238,59 @@ package body Ghdllocal is
 
          --  Simplify path:
          --    /xxx/../ => /
+         --  Do it forward as xxx/../../ must not be simplified as xxx/
          --  This is done after the previous simplication to avoid to deal
          --  with cases like /xxx//../ or /xxx/./../
-         Pos := Dir_Pos - 3;
-         while Pos >= Pathname'First loop
+         Pos := Pathname'First;
+         Ada.Text_IO.Put_Line (Pathname (Pathname'First .. Last));
+         while Pos <= Last - 3 loop
             if Is_Directory_Separator (Pathname (Pos))
               and then Pathname (Pos + 1) = '.'
               and then Pathname (Pos + 2) = '.'
               and then Is_Directory_Separator (Pathname (Pos + 3))
             then
                declare
-                  Pos2 : constant Natural :=
-                    Get_Basename_Pos (Pathname (Pathname'First .. Pos - 1));
-                  --  /xxxxxxxxxx/../
-                  --  ^          ^
-                  --  Pos2       Pos
+                  Last_Dir : Natural;
                   Len : Natural;
                begin
-                  if Pos2 = 0 then
-                     --  Shouldn't happen.
-                     return;
-                  end if;
-                  Len := Pos + 3 - Pos2;
-                  Pathname (Pos2 + 1 .. Dir_Pos - Len) :=
-                    Pathname (Pos + 4 .. Dir_Pos);
-                  Dir_Pos := Dir_Pos - Len;
-                  if Pos2 < Pathname'First + 3 then
-                     exit;
-                  end if;
-                  Pos := Pos2 - 3;
+                  --  Search backward
+                  Last_Dir := Pos;
+                  loop
+                     if Last_Dir = Pathname'First then
+                        Last_Dir := Pos;
+                        exit;
+                     end if;
+                     Last_Dir := Last_Dir - 1;
+                     exit when Is_Directory_Separator (Pathname (Last_Dir));
+                  end loop;
+
+                  --  /xxxxxxxxxx/../
+                  --  ^          ^
+                  --  Last_Dir   Pos
+                  Len := Pos + 3 - Last_Dir;
+                  Pathname (Last_Dir + 1 .. Last - Len) :=
+                    Pathname (Pos + 4 .. Last);
+                  Last := Last - Len;
+                  Pos := Last_Dir;
                end;
             else
-               Pos := Pos - 1;
+               Pos := Pos + 1;
             end if;
          end loop;
 
          --  Remove last '/'
-         Dir_Pos := Dir_Pos - 1;
+         Last := Last - 1;
 
-         --  Skip directory.
-         Dir_Pos := Get_Basename_Pos (Pathname (Pathname'First .. Dir_Pos));
-         if Dir_Pos = 0 then
+         --  Skip '/bin' directory if present
+         Pos := Get_Basename_Pos (Pathname (Pathname'First .. Last));
+         if Pos = 0 then
             return;
          end if;
+         if To_Lower (Pathname (Pos + 1 .. Last)) = "bin" then
+            Last := Pos - 1;
+         end if;
 
-         Exec_Prefix := new String'(Pathname (Pathname'First .. Dir_Pos - 1));
+         Exec_Prefix := new String'(Pathname (Pathname'First .. Last));
       end;
    end Set_Prefix_From_Program_Path;
 
