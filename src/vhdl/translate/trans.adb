@@ -31,10 +31,10 @@ package body Trans is
          Current_Subprg_Instance := Null_Subprg_Instance_Stack;
       end Clear_Subprg_Instance;
 
-      procedure Push_Subprg_Instance (Scope : Var_Scope_Acc;
+      procedure Push_Subprg_Instance (Scope    : Var_Scope_Acc;
                                       Ptr_Type : O_Tnode;
-                                      Ident : O_Ident;
-                                      Prev : out Subprg_Instance_Stack)
+                                      Ident    : O_Ident;
+                                      Prev     : out Subprg_Instance_Stack)
       is
       begin
          Prev := Current_Subprg_Instance;
@@ -49,7 +49,7 @@ package body Trans is
       end Has_Current_Subprg_Instance;
 
       procedure Pop_Subprg_Instance (Ident : O_Ident;
-                                     Prev : Subprg_Instance_Stack)
+                                     Prev  : Subprg_Instance_Stack)
       is
       begin
          if Is_Equal (Current_Subprg_Instance.Ident, Ident) then
@@ -88,13 +88,13 @@ package body Trans is
       end Add_Subprg_Instance_Field;
 
       function Has_Subprg_Instance (Vars : Subprg_Instance_Type)
-                                   return Boolean is
+                                    return Boolean is
       begin
          return Vars.Inter /= O_Dnode_Null;
       end Has_Subprg_Instance;
 
       function Get_Subprg_Instance (Vars : Subprg_Instance_Type)
-                                   return O_Enode is
+                                    return O_Enode is
       begin
          pragma Assert (Has_Subprg_Instance (Vars));
          return New_Address (Get_Instance_Ref (Vars.Scope.all),
@@ -151,7 +151,7 @@ package body Trans is
       end Finish_Prev_Subprg_Instance_Use_Via_Field;
 
       procedure Create_Subprg_Instance (Interfaces : in out O_Inter_List;
-                                        Subprg : Iir)
+                                        Subprg     : Iir)
       is
       begin
          Add_Subprg_Instance_Interfaces
@@ -169,7 +169,7 @@ package body Trans is
       end Finish_Subprg_Instance_Use;
 
       function Instantiate_Subprg_Instance (Inst : Subprg_Instance_Type)
-                                           return Subprg_Instance_Type is
+                                            return Subprg_Instance_Type is
       begin
          return Subprg_Instance_Type'
            (Inter => Inst.Inter,
@@ -182,9 +182,9 @@ package body Trans is
       --  Identifiers.
       --  The following functions are helpers to create ortho identifiers.
       Identifier_Buffer : String (1 .. 512);
-      Identifier_Len : Natural := 0;
-      Identifier_Start : Natural := 1;
-      Identifier_Local : Local_Identifier_Type := 0;
+      Identifier_Len    : Natural := 0;
+      Identifier_Start  : Natural := 1;
+      Identifier_Local  : Local_Identifier_Type := 0;
 
 
       Inst_Build : Inst_Build_Acc := null;
@@ -261,7 +261,7 @@ package body Trans is
       end Push_Instance_Factory;
 
       function Add_Instance_Factory_Field (Name : O_Ident; Ftype : O_Tnode)
-        return O_Fnode
+                                           return O_Fnode
       is
          Res : O_Fnode;
       begin
@@ -279,7 +279,7 @@ package body Trans is
       end Add_Scope_Field;
 
       function Get_Scope_Offset (Child : Var_Scope_Type; Otype : O_Tnode)
-                                return O_Cnode is
+                                 return O_Cnode is
       begin
          return New_Offsetof (Get_Scope_Type (Child.Up_Link.all),
                               Child.Field, Otype);
@@ -320,7 +320,7 @@ package body Trans is
             when O_Storage_Public =>
                Global_Storage := O_Storage_Private;
             when O_Storage_Private
-              | O_Storage_External =>
+               | O_Storage_External =>
                null;
             when O_Storage_Local =>
                raise Internal_Error;
@@ -335,7 +335,7 @@ package body Trans is
          end if;
          case Inst_Build.Kind is
             when Local
-              | Instance =>
+               | Instance =>
                return True;
             when Global =>
                return False;
@@ -353,7 +353,7 @@ package body Trans is
       end Pop_Local_Factory;
 
       procedure Set_Scope_Via_Field
-        (Scope : in out Var_Scope_Type;
+        (Scope       : in out Var_Scope_Type;
          Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc) is
       begin
          pragma Assert (Scope.Kind = Var_Scope_None);
@@ -363,7 +363,7 @@ package body Trans is
       end Set_Scope_Via_Field;
 
       procedure Set_Scope_Via_Field_Ptr
-        (Scope : in out Var_Scope_Type;
+        (Scope       : in out Var_Scope_Type;
          Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc) is
       begin
          pragma Assert (Scope.Kind = Var_Scope_None);
@@ -406,7 +406,7 @@ package body Trans is
 
       function Create_Global_Var
         (Name : O_Ident; Vtype : O_Tnode; Storage : O_Storage)
-        return Var_Type
+         return Var_Type
       is
          Var : O_Dnode;
       begin
@@ -415,11 +415,11 @@ package body Trans is
       end Create_Global_Var;
 
       function Create_Global_Const
-        (Name : O_Ident;
-         Vtype : O_Tnode;
-         Storage : O_Storage;
+        (Name          : O_Ident;
+         Vtype         : O_Tnode;
+         Storage       : O_Storage;
          Initial_Value : O_Cnode)
-        return Var_Type
+         return Var_Type
       is
          Res : O_Dnode;
       begin
@@ -440,14 +440,14 @@ package body Trans is
       end Define_Global_Const;
 
       function Create_Var
-        (Name : Var_Ident_Type;
-         Vtype : O_Tnode;
+        (Name    : Var_Ident_Type;
+         Vtype   : O_Tnode;
          Storage : O_Storage := Global_Storage)
-        return Var_Type
+         return Var_Type
       is
-         Res : O_Dnode;
+         Res   : O_Dnode;
          Field : O_Fnode;
-         K : Inst_Build_Kind_Type;
+         K     : Inst_Build_Kind_Type;
       begin
          if Inst_Build = null then
             K := Global;
@@ -473,21 +473,21 @@ package body Trans is
 
       --  Get a reference to scope STYPE. If IS_PTR is set, RES is an access
       --  to the scope, otherwise RES directly designates the scope.
-      procedure Find_Scope (Scope : Var_Scope_Type;
-                            Res : out O_Lnode;
+      procedure Find_Scope (Scope  : Var_Scope_Type;
+                            Res    : out O_Lnode;
                             Is_Ptr : out Boolean) is
       begin
          case Scope.Kind is
             when Var_Scope_None =>
                raise Internal_Error;
             when Var_Scope_Ptr
-              | Var_Scope_Decl =>
+               | Var_Scope_Decl =>
                Res := New_Obj (Scope.D);
                Is_Ptr := Scope.Kind = Var_Scope_Ptr;
             when Var_Scope_Field
-              | Var_Scope_Field_Ptr =>
+               | Var_Scope_Field_Ptr =>
                declare
-                  Parent : O_Lnode;
+                  Parent     : O_Lnode;
                   Parent_Ptr : Boolean;
                begin
                   Find_Scope (Scope.Up_Link.all, Parent, Parent_Ptr);
@@ -511,8 +511,8 @@ package body Trans is
 
       function Get_Instance_Access (Block : Iir) return O_Enode
       is
-         Info : constant Block_Info_Acc := Get_Info (Block);
-         Res : O_Lnode;
+         Info   : constant Block_Info_Acc := Get_Info (Block);
+         Res    : O_Lnode;
          Is_Ptr : Boolean;
       begin
          Check_Not_Building;
@@ -526,7 +526,7 @@ package body Trans is
 
       function Get_Instance_Ref (Scope : Var_Scope_Type) return O_Lnode
       is
-         Res : O_Lnode;
+         Res    : O_Lnode;
          Is_Ptr : Boolean;
       begin
          Check_Not_Building;
@@ -545,7 +545,7 @@ package body Trans is
             when Var_None =>
                raise Internal_Error;
             when Var_Local
-              | Var_Global =>
+               | Var_Global =>
                return New_Obj (Var.E);
             when Var_Scope =>
                return New_Selected_Element
@@ -554,13 +554,13 @@ package body Trans is
       end Get_Var;
 
       function Get_Alloc_Kind_For_Var (Var : Var_Type)
-                                      return Allocation_Kind is
+                                       return Allocation_Kind is
       begin
          case Var.Kind is
             when Var_Local =>
                return Alloc_Stack;
             when Var_Global
-              | Var_Scope =>
+               | Var_Scope =>
                return Alloc_System;
             when Var_None =>
                raise Internal_Error;
@@ -571,7 +571,7 @@ package body Trans is
       begin
          case Var.Kind is
             when Var_Local
-              | Var_Global =>
+               | Var_Global =>
                return True;
             when Var_Scope =>
                return False;
@@ -584,7 +584,7 @@ package body Trans is
       begin
          case Var.Kind is
             when Var_Local
-              | Var_Global =>
+               | Var_Global =>
                return False;
             when Var_Scope =>
                return True;
@@ -604,10 +604,10 @@ package body Trans is
       begin
          case Var.Kind is
             when Var_Local
-              | Var_Global =>
+               | Var_Global =>
                return Var.E;
             when Var_Scope
-              | Var_None =>
+               | Var_None =>
                raise Internal_Error;
          end case;
       end Get_Var_Label;
@@ -650,8 +650,8 @@ package body Trans is
       procedure Add_Nat (Len : in out Natural; Val : Natural)
       is
          Num : String (1 .. 10);
-         V : Natural;
-         P : Natural;
+         V   : Natural;
+         P   : Natural;
       begin
          P := Num'Last;
          V := Val;
@@ -685,8 +685,8 @@ package body Trans is
             others => True);
 
          N_Len : Natural;
-         P : Natural;
-         C : Character;
+         P     : Natural;
+         C     : Character;
       begin
          if Is_Character (Name) then
             P := Character'Pos (Name_Table.Get_Character (Name));
@@ -743,7 +743,7 @@ package body Trans is
 
       procedure Push_Identifier_Prefix (Mark : out Id_Mark_Type;
                                         Name : String;
-                                        Val : Iir_Int32 := 0)
+                                        Val  : Iir_Int32 := 0)
       is
          P : Natural;
       begin
@@ -796,7 +796,7 @@ package body Trans is
       end Create_Identifier_Without_Prefix;
 
       function Create_Identifier_Without_Prefix (Id : Name_Id; Str : String)
-        return O_Ident
+                                                 return O_Ident
       is
          use Name_Table;
       begin
@@ -807,7 +807,7 @@ package body Trans is
 
       --  Create an identifier from IIR node ID with prefix.
       function Create_Id (Id : Name_Id; Str : String; Is_Local : Boolean)
-        return O_Ident
+                          return O_Ident
       is
          L : Natural;
       begin
@@ -824,14 +824,14 @@ package body Trans is
       end Create_Id;
 
       function Create_Identifier (Id : Name_Id; Str : String := "")
-        return O_Ident
+                                  return O_Ident
       is
       begin
          return Create_Id (Id, Str, False);
       end Create_Identifier;
 
       function Create_Identifier (Id : Iir; Str : String := "")
-        return O_Ident
+                                  return O_Ident
       is
       begin
          return Create_Id (Get_Identifier (Id), Str, False);
@@ -839,7 +839,7 @@ package body Trans is
 
       function Create_Identifier
         (Id : Iir; Val : Iir_Int32; Str : String := "")
-        return O_Ident
+         return O_Ident
       is
          Len : Natural;
       begin
@@ -855,7 +855,7 @@ package body Trans is
       end Create_Identifier;
 
       function Create_Identifier (Str : String)
-        return O_Ident
+                                  return O_Ident
       is
          Len : Natural;
       begin
@@ -871,7 +871,7 @@ package body Trans is
       end Create_Identifier;
 
       function Create_Var_Identifier_From_Buffer (L : Natural)
-        return Var_Ident_Type
+                                                  return Var_Ident_Type
       is
          Start : Natural;
       begin
@@ -884,7 +884,7 @@ package body Trans is
       end Create_Var_Identifier_From_Buffer;
 
       function Create_Var_Identifier (Id : Iir)
-        return Var_Ident_Type
+                                      return Var_Ident_Type
       is
          L : Natural := Identifier_Len;
       begin
@@ -893,7 +893,7 @@ package body Trans is
       end Create_Var_Identifier;
 
       function Create_Var_Identifier (Id : String)
-        return Var_Ident_Type
+                                      return Var_Ident_Type
       is
          L : Natural := Identifier_Len;
       begin
@@ -902,7 +902,7 @@ package body Trans is
       end Create_Var_Identifier;
 
       function Create_Var_Identifier (Id : Iir; Str : String; Val : Natural)
-        return Var_Ident_Type
+                                      return Var_Ident_Type
       is
          L : Natural := Identifier_Len;
       begin
@@ -929,10 +929,10 @@ package body Trans is
       type Instantiate_Var_Stack is record
          Orig_Scope : Var_Scope_Acc;
          Inst_Scope : Var_Scope_Acc;
-         Prev : Instantiate_Var_Stack_Acc;
+         Prev       : Instantiate_Var_Stack_Acc;
       end record;
 
-      Top_Instantiate_Var_Stack : Instantiate_Var_Stack_Acc := null;
+      Top_Instantiate_Var_Stack  : Instantiate_Var_Stack_Acc := null;
       Free_Instantiate_Var_Stack : Instantiate_Var_Stack_Acc := null;
 
       procedure Push_Instantiate_Var_Scope
@@ -967,7 +967,7 @@ package body Trans is
       end Pop_Instantiate_Var_Scope;
 
       function Instantiated_Var_Scope (Scope : Var_Scope_Acc)
-                                      return Var_Scope_Acc
+                                       return Var_Scope_Acc
       is
          Item : Instantiate_Var_Stack_Acc;
       begin
@@ -989,8 +989,8 @@ package body Trans is
       begin
          case Var.Kind is
             when Var_None
-              | Var_Global
-              | Var_Local =>
+               | Var_Global
+               | Var_Local =>
                return Var;
             when Var_Scope =>
                return Var_Type'
@@ -1001,12 +1001,12 @@ package body Trans is
       end Instantiate_Var;
 
       function Instantiate_Var_Scope (Scope : Var_Scope_Type)
-                                     return Var_Scope_Type is
+                                      return Var_Scope_Type is
       begin
          case Scope.Kind is
             when Var_Scope_None
-              | Var_Scope_Ptr
-              | Var_Scope_Decl =>
+               | Var_Scope_Ptr
+               | Var_Scope_Decl =>
                return Scope;
             when Var_Scope_Field =>
                return Var_Scope_Type'
@@ -1031,10 +1031,10 @@ package body Trans is
 
    function Get_Var
      (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-     return Mnode
+      return Mnode
    is
-      L : O_Lnode;
-      D : O_Dnode;
+      L      : O_Lnode;
+      D      : O_Dnode;
       Stable : Boolean;
    begin
       --  FIXME: there may be Vv2M and Vp2M.
@@ -1046,18 +1046,18 @@ package body Trans is
       end if;
       case Vtype.Type_Mode is
          when Type_Mode_Scalar
-           | Type_Mode_Acc
-           | Type_Mode_File
-           | Type_Mode_Fat_Array
-           | Type_Mode_Fat_Acc =>
+            | Type_Mode_Acc
+            | Type_Mode_File
+            | Type_Mode_Fat_Array
+            | Type_Mode_Fat_Acc =>
             if Stable then
                return Dv2M (D, Vtype, Mode);
             else
                return Lv2M (L, Vtype, Mode);
             end if;
          when Type_Mode_Array
-           | Type_Mode_Record
-           | Type_Mode_Protected =>
+            | Type_Mode_Record
+            | Type_Mode_Protected =>
             if Is_Complex_Type (Vtype) then
                if Stable then
                   return Dp2M (D, Vtype, Mode);
@@ -1122,10 +1122,10 @@ package body Trans is
                                     Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
             end if;
          when Mstate_Dp
-           | Mstate_Dv =>
+            | Mstate_Dv =>
             return M;
          when Mstate_Bad
-           | Mstate_Null =>
+            | Mstate_Null =>
             raise Internal_Error;
       end case;
    end Stabilize;
@@ -1152,10 +1152,10 @@ package body Trans is
          when Mstate_Lv =>
             E := New_Value (M.M1.Lv);
          when Mstate_Dp
-           | Mstate_Dv =>
+            | Mstate_Dv =>
             return M;
          when Mstate_Bad
-           | Mstate_Null =>
+            | Mstate_Null =>
             raise Internal_Error;
       end case;
 
@@ -1168,7 +1168,7 @@ package body Trans is
 
    function Create_Temp (Info : Type_Info_Acc;
                          Kind : Object_Kind_Type := Mode_Value)
-                        return Mnode is
+                         return Mnode is
    begin
       if Is_Complex_Type (Info)
         and then Info.Type_Mode /= Type_Mode_Fat_Array
@@ -1182,14 +1182,14 @@ package body Trans is
    end Create_Temp;
 
    function New_Value_Selected_Acc_Value (L : O_Lnode; Field : O_Fnode)
-                                                return O_Enode is
+                                          return O_Enode is
    begin
       return New_Value
         (New_Selected_Element (New_Access_Element (New_Value (L)), Field));
    end New_Value_Selected_Acc_Value;
 
    function New_Selected_Acc_Value (L : O_Lnode; Field : O_Fnode)
-                                       return O_Lnode is
+                                    return O_Lnode is
    begin
       return New_Selected_Element
         (New_Access_Element (New_Value (L)), Field);
@@ -1253,7 +1253,7 @@ package body Trans is
    --  Create an ortho_info field of kind KIND for iir node TARGET, and
    --  return it.
    function Add_Info (Target : Iir; Kind : Ortho_Info_Kind)
-                     return Ortho_Info_Acc
+                      return Ortho_Info_Acc
    is
       Res : Ortho_Info_Acc;
    begin
@@ -1295,7 +1295,7 @@ package body Trans is
    end Get_Ortho_Expr;
 
    function Get_Ortho_Type (Target : Iir; Is_Sig : Object_Kind_Type)
-     return O_Tnode is
+                            return O_Tnode is
    begin
       return Get_Info (Target).Ortho_Type (Is_Sig);
    end Get_Ortho_Type;
@@ -1312,7 +1312,7 @@ package body Trans is
 
    procedure Free_Node_Infos
    is
-      Info : Ortho_Info_Acc;
+      Info      : Ortho_Info_Acc;
       Prev_Info : Ortho_Info_Acc;
    begin
       Prev_Info := null;
@@ -1331,14 +1331,14 @@ package body Trans is
                      Free_Info (I);
                   end if;
                when Iir_Kind_Record_Subtype_Definition
-                 | Iir_Kind_Access_Subtype_Definition =>
+                  | Iir_Kind_Access_Subtype_Definition =>
                   null;
                when Iir_Kind_Enumeration_Type_Definition
-                 | Iir_Kind_Array_Type_Definition
-                 | Iir_Kind_Integer_Subtype_Definition
-                 | Iir_Kind_Floating_Subtype_Definition
-                 | Iir_Kind_Physical_Subtype_Definition
-                 | Iir_Kind_Enumeration_Subtype_Definition =>
+                  | Iir_Kind_Array_Type_Definition
+                  | Iir_Kind_Integer_Subtype_Definition
+                  | Iir_Kind_Floating_Subtype_Definition
+                  | Iir_Kind_Physical_Subtype_Definition
+                  | Iir_Kind_Enumeration_Subtype_Definition =>
                   Free_Type_Info (Info);
                when Iir_Kind_Array_Subtype_Definition =>
                   if Get_Index_Constraint_Flag (I) then
@@ -1348,7 +1348,7 @@ package body Trans is
                when Iir_Kind_Implicit_Function_Declaration =>
                   case Get_Implicit_Definition (I) is
                      when Iir_Predefined_Bit_Array_Match_Equality
-                       |  Iir_Predefined_Bit_Array_Match_Inequality =>
+                        |  Iir_Predefined_Bit_Array_Match_Inequality =>
                         --  Not in sequence.
                         null;
                      when others =>
@@ -1374,7 +1374,7 @@ package body Trans is
    end Get_Type_Info;
 
    function E2M (E : O_Enode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-     return Mnode is
+                 return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_E,
                            Comp => T.Type_Mode in Type_Mode_Fat,
@@ -1384,7 +1384,7 @@ package body Trans is
    end E2M;
 
    function Lv2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-     return Mnode is
+                  return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Lv,
                            Comp => T.Type_Mode in Type_Mode_Fat,
@@ -1393,12 +1393,12 @@ package body Trans is
                            Ptype => T.Ortho_Ptr_Type (Kind)));
    end Lv2M;
 
-   function Lv2M (L : O_Lnode;
-                  Comp : Boolean;
+   function Lv2M (L     : O_Lnode;
+                  Comp  : Boolean;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode;
-                  T : Type_Info_Acc; Kind : Object_Kind_Type)
-     return Mnode is
+                  T     : Type_Info_Acc; Kind : Object_Kind_Type)
+                  return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Lv,
                            Comp => Comp,
@@ -1407,7 +1407,7 @@ package body Trans is
    end Lv2M;
 
    function Lp2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-     return Mnode is
+                  return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Lp,
                            Comp => T.Type_Mode in Type_Mode_Fat,
@@ -1416,12 +1416,12 @@ package body Trans is
                            Ptype => T.Ortho_Ptr_Type (Kind)));
    end Lp2M;
 
-   function Lp2M (L : O_Lnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
+   function Lp2M (L     : O_Lnode;
+                  T     : Type_Info_Acc;
+                  Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
-     return Mnode is
+                  return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Lp,
                            Comp => T.Type_Mode in Type_Mode_Fat,
@@ -1429,12 +1429,12 @@ package body Trans is
                            Vtype => Vtype, Ptype => Ptype));
    end Lp2M;
 
-   function Lv2M (L : O_Lnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
+   function Lv2M (L     : O_Lnode;
+                  T     : Type_Info_Acc;
+                  Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
-     return Mnode is
+                  return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Lv,
                            Comp => T.Type_Mode in Type_Mode_Fat,
@@ -1442,10 +1442,10 @@ package body Trans is
                            Vtype => Vtype, Ptype => Ptype));
    end Lv2M;
 
-   function Dv2M (D : O_Dnode;
-                  T : Type_Info_Acc;
+   function Dv2M (D    : O_Dnode;
+                  T    : Type_Info_Acc;
                   Kind : Object_Kind_Type)
-     return Mnode is
+                  return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Dv,
                            Comp => T.Type_Mode in Type_Mode_Fat,
@@ -1454,12 +1454,12 @@ package body Trans is
                            Ptype => T.Ortho_Ptr_Type (Kind)));
    end Dv2M;
 
-   function Dv2M (D : O_Dnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
+   function Dv2M (D     : O_Dnode;
+                  T     : Type_Info_Acc;
+                  Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
-     return Mnode is
+                  return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Dv,
                            Comp => T.Type_Mode in Type_Mode_Fat,
@@ -1468,12 +1468,12 @@ package body Trans is
                            Ptype => Ptype));
    end Dv2M;
 
-   function Dp2M (D : O_Dnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
+   function Dp2M (D     : O_Dnode;
+                  T     : Type_Info_Acc;
+                  Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
-     return Mnode is
+                  return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Dp,
                            Comp => T.Type_Mode in Type_Mode_Fat,
@@ -1481,10 +1481,10 @@ package body Trans is
                            Vtype => Vtype, Ptype => Ptype));
    end Dp2M;
 
-   function Dp2M (D : O_Dnode;
-                  T : Type_Info_Acc;
+   function Dp2M (D    : O_Dnode;
+                  T    : Type_Info_Acc;
                   Kind : Object_Kind_Type)
-     return Mnode is
+                  return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Dp,
                            Comp => T.Type_Mode in Type_Mode_Fat,
@@ -1517,7 +1517,7 @@ package body Trans is
          when Mstate_Dv =>
             return New_Obj (M.M1.Dv);
          when Mstate_Null
-           | Mstate_Bad =>
+            | Mstate_Bad =>
             raise Internal_Error;
       end case;
    end M2Lv;
@@ -1535,13 +1535,13 @@ package body Trans is
             if Get_Type_Info (M).Type_Mode in Type_Mode_Fat then
                return New_Obj
                  (Create_Temp_Init (M.M1.Ptype,
-                                    New_Address (M.M1.Lv, M.M1.Ptype)));
+                  New_Address (M.M1.Lv, M.M1.Ptype)));
             else
                raise Internal_Error;
             end if;
          when Mstate_Dv
-           | Mstate_Null
-           | Mstate_Bad =>
+            | Mstate_Null
+            | Mstate_Bad =>
             raise Internal_Error;
       end case;
    end M2Lp;
@@ -1624,7 +1624,7 @@ package body Trans is
                   return New_Address (New_Obj (M.M1.Dv), M.M1.Ptype);
             end case;
          when Mstate_Bad
-           | Mstate_Null =>
+            | Mstate_Null =>
             raise Internal_Error;
       end case;
    end M2E;
@@ -1647,58 +1647,58 @@ package body Trans is
                raise Internal_Error;
             end if;
          when Mstate_Bad
-           | Mstate_Null =>
+            | Mstate_Null =>
             raise Internal_Error;
       end case;
    end M2Addr;
 
---    function Is_Null (M : Mnode) return Boolean is
---    begin
---       return M.M1.State = Mstate_Null;
---    end Is_Null;
+   --    function Is_Null (M : Mnode) return Boolean is
+   --    begin
+   --       return M.M1.State = Mstate_Null;
+   --    end Is_Null;
 
    function Is_Stable (M : Mnode) return Boolean is
    begin
       case M.M1.State is
          when Mstate_Dp
-           | Mstate_Dv =>
+            | Mstate_Dv =>
             return True;
          when others =>
             return False;
       end case;
    end Is_Stable;
 
---    function Varv2M
---      (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
---      return Mnode is
---    begin
---       return Lv2M (Get_Var (Var), Vtype, Mode);
---    end Varv2M;
+   --    function Varv2M
+   --      (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
+   --      return Mnode is
+   --    begin
+   --       return Lv2M (Get_Var (Var), Vtype, Mode);
+   --    end Varv2M;
 
-   function Varv2M (Var : Var_Type;
+   function Varv2M (Var      : Var_Type;
                     Var_Type : Type_Info_Acc;
-                    Mode : Object_Kind_Type;
-                    Vtype : O_Tnode;
-                    Ptype : O_Tnode)
-     return Mnode is
+                    Mode     : Object_Kind_Type;
+                    Vtype    : O_Tnode;
+                    Ptype    : O_Tnode)
+                    return Mnode is
    begin
       return Lv2M (Get_Var (Var), Var_Type, Mode, Vtype, Ptype);
    end Varv2M;
 
    --  Convert a Lnode for a sub object to an MNODE.
    function Lo2M (L : O_Lnode; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-     return Mnode is
+                  return Mnode is
    begin
       case Vtype.Type_Mode is
          when Type_Mode_Scalar
-           | Type_Mode_Acc
-           | Type_Mode_File
-           | Type_Mode_Fat_Array
-           | Type_Mode_Fat_Acc =>
+            | Type_Mode_Acc
+            | Type_Mode_File
+            | Type_Mode_Fat_Array
+            | Type_Mode_Fat_Acc =>
             return Lv2M (L, Vtype, Mode);
          when Type_Mode_Array
-           | Type_Mode_Record
-           | Type_Mode_Protected =>
+            | Type_Mode_Record
+            | Type_Mode_Protected =>
             if Is_Complex_Type (Vtype) then
                return Lp2M (L, Vtype, Mode);
             else
@@ -1710,18 +1710,18 @@ package body Trans is
    end Lo2M;
 
    function Lo2M (D : O_Dnode; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-     return Mnode is
+                  return Mnode is
    begin
       case Vtype.Type_Mode is
          when Type_Mode_Scalar
-           | Type_Mode_Acc
-           | Type_Mode_File
-           | Type_Mode_Fat_Array
-           | Type_Mode_Fat_Acc =>
+            | Type_Mode_Acc
+            | Type_Mode_File
+            | Type_Mode_Fat_Array
+            | Type_Mode_Fat_Acc =>
             return Dv2M (D, Vtype, Mode);
          when Type_Mode_Array
-           | Type_Mode_Record
-           | Type_Mode_Protected =>
+            | Type_Mode_Record
+            | Type_Mode_Protected =>
             if Is_Complex_Type (Vtype) then
                return Dp2M (D, Vtype, Mode);
             else
@@ -1737,16 +1737,16 @@ package body Trans is
       begin
          New_Assign_Stmt (New_Obj (V),
                           New_Dyadic_Op (ON_Add_Ov,
-                                         New_Obj_Value (V),
-                                         New_Lit (Ghdl_Index_1)));
+                            New_Obj_Value (V),
+                            New_Lit (Ghdl_Index_1)));
       end Inc_Var;
 
       procedure Dec_Var (V : O_Dnode) is
       begin
          New_Assign_Stmt (New_Obj (V),
                           New_Dyadic_Op (ON_Sub_Ov,
-                                         New_Obj_Value (V),
-                                         New_Lit (Ghdl_Index_1)));
+                            New_Obj_Value (V),
+                            New_Lit (Ghdl_Index_1)));
       end Dec_Var;
 
       procedure Init_Var (V : O_Dnode) is
@@ -1767,11 +1767,11 @@ package body Trans is
       type Temp_Level_Type;
       type Temp_Level_Acc is access Temp_Level_Type;
       type Temp_Level_Type is record
-         Prev : Temp_Level_Acc;
-         Level : Natural;
-         Id : Natural;
-         Emitted : Boolean;
-         Stack2_Mark : O_Dnode;
+         Prev            : Temp_Level_Acc;
+         Level           : Natural;
+         Id              : Natural;
+         Emitted         : Boolean;
+         Stack2_Mark     : O_Dnode;
          Transient_Types : Iir;
       end record;
       --  Current level.
@@ -1944,7 +1944,7 @@ package body Trans is
          Str : String (1 .. 12);
          Val : Natural;
          Res : O_Dnode;
-         P : Natural;
+         P   : Natural;
       begin
          if Temp_Level = null then
             --  OPEN_TEMP was never called.
@@ -1986,7 +1986,7 @@ package body Trans is
       end Create_Temp;
 
       function Create_Temp_Init (Atype : O_Tnode; Value : O_Enode)
-        return O_Dnode
+                                 return O_Dnode
       is
          Res : O_Dnode;
       begin
@@ -1996,7 +1996,7 @@ package body Trans is
       end Create_Temp_Init;
 
       function Create_Temp_Ptr (Atype : O_Tnode; Name : O_Lnode)
-        return O_Dnode is
+                                return O_Dnode is
       begin
          return Create_Temp_Init (Atype, New_Address (Name, Atype));
       end Create_Temp_Ptr;

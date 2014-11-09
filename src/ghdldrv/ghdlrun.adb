@@ -101,7 +101,7 @@ package body Ghdlrun is
       end if;
 
       Flags.Flag_Elaborate := True;
-      Translation.Chap12.Elaborate (Prim_Name.all, Sec_Name.all, "", True);
+      Translation.Elaborate (Prim_Name.all, Sec_Name.all, "", True);
 
       if Errorout.Nbr_Errors > 0 then
          --  This may happen (bad entity for example).

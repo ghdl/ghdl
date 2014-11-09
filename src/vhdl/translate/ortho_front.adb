@@ -285,7 +285,7 @@ package body Ortho_Front is
          when Action_Elaborate =>
             Flags.Flag_Elaborate := True;
             Flags.Flag_Only_Elab_Warnings := True;
-            Translation.Chap12.Elaborate
+            Translation.Elaborate
               (Elab_Entity.all, Elab_Architecture.all,
                Elab_Filelist.all, False);
 
@@ -324,7 +324,7 @@ package body Ortho_Front is
 
             Flags.Flag_Elaborate := True;
             Flags.Flag_Only_Elab_Warnings := False;
-            Translation.Chap12.Elaborate
+            Translation.Elaborate
               (Elab_Entity.all, Elab_Architecture.all, "", True);
 
             if Errorout.Nbr_Errors > 0 then

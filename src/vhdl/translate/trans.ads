@@ -25,16 +25,16 @@ with Types; use Types;
 package Trans is
 
    --  Ortho type node for STD.BOOLEAN.
-   Std_Boolean_Type_Node : O_Tnode;
-   Std_Boolean_True_Node : O_Cnode;
-   Std_Boolean_False_Node : O_Cnode;
+   Std_Boolean_Type_Node         : O_Tnode;
+   Std_Boolean_True_Node         : O_Cnode;
+   Std_Boolean_False_Node        : O_Cnode;
    --  Array of STD.BOOLEAN.
-   Std_Boolean_Array_Type : O_Tnode;
+   Std_Boolean_Array_Type        : O_Tnode;
    --  Std_ulogic indexed array of STD.Boolean.
    Std_Ulogic_Boolean_Array_Type : O_Tnode;
    --  Ortho type node for string template pointer.
-   Std_String_Ptr_Node : O_Tnode;
-   Std_String_Node : O_Tnode;
+   Std_String_Ptr_Node           : O_Tnode;
+   Std_String_Node               : O_Tnode;
 
    --  Ortho type for std.standard.integer.
    Std_Integer_Otype : O_Tnode;
@@ -47,45 +47,45 @@ package Trans is
 
    --  Node for the variable containing the current filename.
    Current_Filename_Node : O_Dnode := O_Dnode_Null;
-   Current_Library_Unit : Iir := Null_Iir;
+   Current_Library_Unit  : Iir := Null_Iir;
 
    --  Global declarations.
-   Ghdl_Ptr_Type : O_Tnode;
-   Sizetype : O_Tnode;
-   Ghdl_I32_Type : O_Tnode;
-   Ghdl_I64_Type : O_Tnode;
-   Ghdl_Real_Type : O_Tnode;
+   Ghdl_Ptr_Type           : O_Tnode;
+   Sizetype                : O_Tnode;
+   Ghdl_I32_Type           : O_Tnode;
+   Ghdl_I64_Type           : O_Tnode;
+   Ghdl_Real_Type          : O_Tnode;
    --  Constant character.
-   Char_Type_Node : O_Tnode;
+   Char_Type_Node          : O_Tnode;
    --  Array of char.
-   Chararray_Type : O_Tnode;
+   Chararray_Type          : O_Tnode;
    --  Pointer to array of char.
-   Char_Ptr_Type : O_Tnode;
+   Char_Ptr_Type           : O_Tnode;
    --  Array of char ptr.
-   Char_Ptr_Array_Type : O_Tnode;
+   Char_Ptr_Array_Type     : O_Tnode;
    Char_Ptr_Array_Ptr_Type : O_Tnode;
 
    Ghdl_Index_Type : O_Tnode;
-   Ghdl_Index_0 : O_Cnode;
-   Ghdl_Index_1 : O_Cnode;
+   Ghdl_Index_0    : O_Cnode;
+   Ghdl_Index_1    : O_Cnode;
 
    --  Type for a file (this is in fact a index in a private table).
-   Ghdl_File_Index_Type : O_Tnode;
+   Ghdl_File_Index_Type     : O_Tnode;
    Ghdl_File_Index_Ptr_Type : O_Tnode;
 
    --  Record containing a len and string fields.
-   Ghdl_Str_Len_Type_Node : O_Tnode;
-   Ghdl_Str_Len_Type_Len_Field : O_Fnode;
-   Ghdl_Str_Len_Type_Str_Field : O_Fnode;
-   Ghdl_Str_Len_Ptr_Node : O_Tnode;
+   Ghdl_Str_Len_Type_Node       : O_Tnode;
+   Ghdl_Str_Len_Type_Len_Field  : O_Fnode;
+   Ghdl_Str_Len_Type_Str_Field  : O_Fnode;
+   Ghdl_Str_Len_Ptr_Node        : O_Tnode;
    Ghdl_Str_Len_Array_Type_Node : O_Tnode;
 
    --  Location.
-   Ghdl_Location_Type_Node : O_Tnode;
+   Ghdl_Location_Type_Node     : O_Tnode;
    Ghdl_Location_Filename_Node : O_Fnode;
-   Ghdl_Location_Line_Node : O_Fnode;
-   Ghdl_Location_Col_Node : O_Fnode;
-   Ghdl_Location_Ptr_Node : O_Tnode;
+   Ghdl_Location_Line_Node     : O_Fnode;
+   Ghdl_Location_Col_Node      : O_Fnode;
+   Ghdl_Location_Ptr_Node      : O_Tnode;
 
    --  Allocate memory for a block.
    Ghdl_Alloc_Ptr : O_Dnode;
@@ -98,65 +98,65 @@ package Trans is
    Ghdl_Bool_True_Node : O_Cnode renames Ghdl_Bool_Nodes (True);
 
    Ghdl_Bool_Array_Type : O_Tnode;
-   Ghdl_Bool_Array_Ptr : O_Tnode;
+   Ghdl_Bool_Array_Ptr  : O_Tnode;
 
    --  Comparaison type.
    Ghdl_Compare_Type : O_Tnode;
-   Ghdl_Compare_Lt : O_Cnode;
-   Ghdl_Compare_Eq : O_Cnode;
-   Ghdl_Compare_Gt : O_Cnode;
+   Ghdl_Compare_Lt   : O_Cnode;
+   Ghdl_Compare_Eq   : O_Cnode;
+   Ghdl_Compare_Gt   : O_Cnode;
 
    --  Dir type.
-   Ghdl_Dir_Type_Node : O_Tnode;
-   Ghdl_Dir_To_Node : O_Cnode;
+   Ghdl_Dir_Type_Node   : O_Tnode;
+   Ghdl_Dir_To_Node     : O_Cnode;
    Ghdl_Dir_Downto_Node : O_Cnode;
 
    --  Signals.
-   Ghdl_Scalar_Bytes : O_Tnode;
-   Ghdl_Signal_Type : O_Tnode;
-   Ghdl_Signal_Value_Field : O_Fnode;
+   Ghdl_Scalar_Bytes               : O_Tnode;
+   Ghdl_Signal_Type                : O_Tnode;
+   Ghdl_Signal_Value_Field         : O_Fnode;
    Ghdl_Signal_Driving_Value_Field : O_Fnode;
-   Ghdl_Signal_Last_Value_Field : O_Fnode;
-   Ghdl_Signal_Last_Event_Field : O_Fnode;
-   Ghdl_Signal_Last_Active_Field : O_Fnode;
-   Ghdl_Signal_Event_Field : O_Fnode;
-   Ghdl_Signal_Active_Field : O_Fnode;
-   Ghdl_Signal_Has_Active_Field : O_Fnode;
+   Ghdl_Signal_Last_Value_Field    : O_Fnode;
+   Ghdl_Signal_Last_Event_Field    : O_Fnode;
+   Ghdl_Signal_Last_Active_Field   : O_Fnode;
+   Ghdl_Signal_Event_Field         : O_Fnode;
+   Ghdl_Signal_Active_Field        : O_Fnode;
+   Ghdl_Signal_Has_Active_Field    : O_Fnode;
 
-   Ghdl_Signal_Ptr : O_Tnode;
+   Ghdl_Signal_Ptr     : O_Tnode;
    Ghdl_Signal_Ptr_Ptr : O_Tnode;
 
    type Object_Kind_Type is (Mode_Value, Mode_Signal);
 
    --  Well known identifiers.
-   Wki_This : O_Ident;
-   Wki_Size : O_Ident;
-   Wki_Res : O_Ident;
-   Wki_Dir_To : O_Ident;
-   Wki_Dir_Downto : O_Ident;
-   Wki_Left : O_Ident;
-   Wki_Right : O_Ident;
-   Wki_Dir : O_Ident;
-   Wki_Length : O_Ident;
-   Wki_I : O_Ident;
-   Wki_Instance : O_Ident;
+   Wki_This          : O_Ident;
+   Wki_Size          : O_Ident;
+   Wki_Res           : O_Ident;
+   Wki_Dir_To        : O_Ident;
+   Wki_Dir_Downto    : O_Ident;
+   Wki_Left          : O_Ident;
+   Wki_Right         : O_Ident;
+   Wki_Dir           : O_Ident;
+   Wki_Length        : O_Ident;
+   Wki_I             : O_Ident;
+   Wki_Instance      : O_Ident;
    Wki_Arch_Instance : O_Ident;
-   Wki_Name : O_Ident;
-   Wki_Sig : O_Ident;
-   Wki_Obj : O_Ident;
-   Wki_Rti : O_Ident;
-   Wki_Parent : O_Ident;
-   Wki_Filename : O_Ident;
-   Wki_Line : O_Ident;
-   Wki_Lo : O_Ident;
-   Wki_Hi : O_Ident;
-   Wki_Mid : O_Ident;
-   Wki_Cmp : O_Ident;
-   Wki_Upframe : O_Ident;
-   Wki_Frame : O_Ident;
-   Wki_Val : O_Ident;
-   Wki_L_Len : O_Ident;
-   Wki_R_Len : O_Ident;
+   Wki_Name          : O_Ident;
+   Wki_Sig           : O_Ident;
+   Wki_Obj           : O_Ident;
+   Wki_Rti           : O_Ident;
+   Wki_Parent        : O_Ident;
+   Wki_Filename      : O_Ident;
+   Wki_Line          : O_Ident;
+   Wki_Lo            : O_Ident;
+   Wki_Hi            : O_Ident;
+   Wki_Mid           : O_Ident;
+   Wki_Cmp           : O_Ident;
+   Wki_Upframe       : O_Ident;
+   Wki_Frame         : O_Ident;
+   Wki_Val           : O_Ident;
+   Wki_L_Len         : O_Ident;
+   Wki_R_Len         : O_Ident;
 
    --  ALLOCATION_KIND defines the type of memory storage.
    --  ALLOC_STACK means the object is allocated on the local stack and
@@ -223,7 +223,7 @@ package Trans is
 
       --  Manually add a field to the current instance being built.
       function Add_Instance_Factory_Field (Name : O_Ident; Ftype : O_Tnode)
-                                          return O_Fnode;
+                                           return O_Fnode;
 
       --  In the scope being built, add a field NAME that contain sub-scope
       --  CHILD.  CHILD is modified so that accesses to CHILD objects is done
@@ -233,7 +233,7 @@ package Trans is
 
       --  Return the offset of field for CHILD in its parent scope.
       function Get_Scope_Offset (Child : Var_Scope_Type; Otype : O_Tnode)
-                                return O_Cnode;
+                                 return O_Cnode;
 
       --  Finish the building of the current instance and return the type
       --  built.
@@ -250,13 +250,13 @@ package Trans is
       --  Variables defined in SCOPE can be accessed via field SCOPE_FIELD
       --  in scope SCOPE_PARENT.
       procedure Set_Scope_Via_Field
-        (Scope : in out Var_Scope_Type;
+        (Scope       : in out Var_Scope_Type;
          Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc);
 
       --  Variables defined in SCOPE can be accessed by dereferencing
       --  field SCOPE_FIELD defined in SCOPE_PARENT.
       procedure Set_Scope_Via_Field_Ptr
-        (Scope : in out Var_Scope_Type;
+        (Scope       : in out Var_Scope_Type;
          Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc);
 
       --  Variables/scopes defined in SCOPE can be accessed via
@@ -284,10 +284,10 @@ package Trans is
       procedure Reset_Identifier_Prefix;
       procedure Push_Identifier_Prefix (Mark : out Id_Mark_Type;
                                         Name : String;
-                                        Val : Iir_Int32 := 0);
+                                        Val  : Iir_Int32 := 0);
       procedure Push_Identifier_Prefix (Mark : out Id_Mark_Type;
                                         Name : Name_Id;
-                                        Val : Iir_Int32 := 0);
+                                        Val  : Iir_Int32 := 0);
       procedure Push_Identifier_Prefix_Uniq (Mark : out Id_Mark_Type);
       procedure Pop_Identifier_Prefix (Mark : in Id_Mark_Type);
 
@@ -300,21 +300,21 @@ package Trans is
 
       --  Create an identifier from IIR node ID without the prefix.
       function Create_Identifier_Without_Prefix (Id : Iir)
-        return O_Ident;
+                                                 return O_Ident;
       function Create_Identifier_Without_Prefix (Id : Name_Id; Str : String)
-        return O_Ident;
+                                                 return O_Ident;
 
       --  Create an identifier from the current prefix.
       function Create_Identifier return O_Ident;
 
       --  Create an identifier from IIR node ID with prefix.
       function Create_Identifier (Id : Iir; Str : String := "")
-        return O_Ident;
+                                  return O_Ident;
       function Create_Identifier
         (Id : Iir; Val : Iir_Int32; Str : String := "")
-        return O_Ident;
+         return O_Ident;
       function Create_Identifier (Id : Name_Id; Str : String := "")
-        return O_Ident;
+                                  return O_Ident;
       --  Create a prefixed identifier from a string.
       function Create_Identifier (Str : String) return O_Ident;
 
@@ -325,7 +325,7 @@ package Trans is
       function Create_Var_Identifier (Id : Iir) return Var_Ident_Type;
       function Create_Var_Identifier (Id : String) return Var_Ident_Type;
       function Create_Var_Identifier (Id : Iir; Str : String; Val : Natural)
-                                     return Var_Ident_Type;
+                                      return Var_Ident_Type;
       function Create_Uniq_Identifier return Var_Ident_Type;
 
       --  Create variable NAME of type VTYPE in the current scope.
@@ -334,23 +334,23 @@ package Trans is
       --  If the current scope is not the global scope, then a field is added
       --   to the current scope.
       function Create_Var
-        (Name : Var_Ident_Type;
-         Vtype : O_Tnode;
+        (Name    : Var_Ident_Type;
+         Vtype   : O_Tnode;
          Storage : O_Storage := Global_Storage)
-        return Var_Type;
+         return Var_Type;
 
       --  Create a global variable.
       function Create_Global_Var
         (Name : O_Ident; Vtype : O_Tnode; Storage : O_Storage)
-        return Var_Type;
+         return Var_Type;
 
       --  Create a global constant and initialize it to INITIAL_VALUE.
       function Create_Global_Const
-        (Name : O_Ident;
-         Vtype : O_Tnode;
-         Storage : O_Storage;
+        (Name          : O_Ident;
+         Vtype         : O_Tnode;
+         Storage       : O_Storage;
          Initial_Value : O_Cnode)
-        return Var_Type;
+         return Var_Type;
       procedure Define_Global_Const (Const : in out Var_Type; Val : O_Cnode);
 
       --  Return the (real) reference to a variable created by Create_Var.
@@ -386,18 +386,18 @@ package Trans is
 
       --  Get the associated instantiated scope for SCOPE.
       function Instantiated_Var_Scope (Scope : Var_Scope_Acc)
-                                      return Var_Scope_Acc;
+                                       return Var_Scope_Acc;
 
       --  Create a copy of VAR using instantiated scope (if needed).
       function Instantiate_Var (Var : Var_Type) return Var_Type;
 
       --  Create a copy of SCOPE using instantiated scope (if needed).
       function Instantiate_Var_Scope (Scope : Var_Scope_Type)
-                                     return Var_Scope_Type;
+                                      return Var_Scope_Type;
    private
       type Local_Identifier_Type is new Natural;
       type Id_Mark_Type is record
-         Len : Natural;
+         Len      : Natural;
          Local_Id : Local_Identifier_Type;
       end record;
 
@@ -417,7 +417,7 @@ package Trans is
       type Inst_Build_Type (Kind : Inst_Build_Kind_Type);
       type Inst_Build_Acc is access Inst_Build_Type;
       type Inst_Build_Type (Kind : Inst_Build_Kind_Type) is record
-         Prev : Inst_Build_Acc;
+         Prev          : Inst_Build_Acc;
          Prev_Id_Start : Natural;
          case Kind is
             when Local =>
@@ -426,8 +426,8 @@ package Trans is
             when Global =>
                null;
             when Instance =>
-               Scope : Var_Scope_Acc;
-               Elements : O_Element_List;
+               Scope               : Var_Scope_Acc;
+               Elements            : O_Element_List;
          end case;
       end record;
 
@@ -443,8 +443,8 @@ package Trans is
             when Var_None =>
                null;
             when Var_Global
-              | Var_Local =>
-               E : O_Dnode;
+               | Var_Local =>
+               E       : O_Dnode;
             when Var_Scope =>
                I_Field : O_Fnode;
                I_Scope : Var_Scope_Acc;
@@ -467,17 +467,17 @@ package Trans is
                --  Not set, cannot be referenced.
                null;
             when Var_Scope_Ptr
-              | Var_Scope_Decl =>
+               | Var_Scope_Decl =>
                --  Instance for entity, architecture, component, subprogram,
                --  resolver, process, guard function, PSL directive, PSL cover,
                --  PSL assert, component instantiation elaborator
-               D : O_Dnode;
+               D       : O_Dnode;
             when Var_Scope_Field
-              | Var_Scope_Field_Ptr =>
+               | Var_Scope_Field_Ptr =>
                --  For an entity: the architecture.
                --  For an architecture: ptr to a generate subblock.
                --  For a subprogram: parent frame
-               Field : O_Fnode;
+               Field   : O_Fnode;
                Up_Link : Var_Scope_Acc;
          end case;
       end record;
@@ -516,10 +516,10 @@ package Trans is
       --  Add_Subprg_Instance_Interfaces will add an interface of name IDENT
       --   and type PTR_TYPE for every instance declared by
       --   PUSH_SUBPRG_INSTANCE.
-      procedure Push_Subprg_Instance (Scope : Var_Scope_Acc;
+      procedure Push_Subprg_Instance (Scope    : Var_Scope_Acc;
                                       Ptr_Type : O_Tnode;
-                                      Ident : O_Ident;
-                                      Prev : out Subprg_Instance_Stack);
+                                      Ident    : O_Ident;
+                                      Prev     : out Subprg_Instance_Stack);
 
       --  Since local subprograms has a direct access to its father interfaces,
       --  they do not required instances interfaces.
@@ -531,7 +531,7 @@ package Trans is
       --  Revert of the previous subprogram.
       --  Instances must be removed in opposite order they are added.
       procedure Pop_Subprg_Instance (Ident : O_Ident;
-                                     Prev : Subprg_Instance_Stack);
+                                     Prev  : Subprg_Instance_Stack);
 
       --  True iff there is currently a subprogram instance.
       function Has_Current_Subprg_Instance return Boolean;
@@ -555,11 +555,11 @@ package Trans is
 
       --  Get the value to be associated to the instance interface.
       function Get_Subprg_Instance (Vars : Subprg_Instance_Type)
-                                   return O_Enode;
+                                    return O_Enode;
 
       --  True iff VARS is associated with an instance.
       function Has_Subprg_Instance (Vars : Subprg_Instance_Type)
-                                   return Boolean;
+                                    return Boolean;
 
       --  Assign the instance field FIELD of VAR.
       procedure Set_Subprg_Instance_Field
@@ -578,26 +578,26 @@ package Trans is
 
       --  Same as above, but for IIR.
       procedure Create_Subprg_Instance (Interfaces : in out O_Inter_List;
-                                        Subprg : Iir);
+                                        Subprg     : Iir);
 
       procedure Start_Subprg_Instance_Use (Subprg : Iir);
       procedure Finish_Subprg_Instance_Use (Subprg : Iir);
 
       function Instantiate_Subprg_Instance (Inst : Subprg_Instance_Type)
-                                           return Subprg_Instance_Type;
+                                            return Subprg_Instance_Type;
    private
       type Subprg_Instance_Type is record
-         Inter : O_Dnode;
+         Inter      : O_Dnode;
          Inter_Type : O_Tnode;
-         Scope : Var_Scope_Acc;
+         Scope      : Var_Scope_Acc;
       end record;
       Null_Subprg_Instance : constant Subprg_Instance_Type :=
         (O_Dnode_Null, O_Tnode_Null, null);
 
       type Subprg_Instance_Stack is record
-         Scope : Var_Scope_Acc;
+         Scope    : Var_Scope_Acc;
          Ptr_Type : O_Tnode;
-         Ident : O_Ident;
+         Ident    : O_Ident;
       end record;
 
       Null_Subprg_Instance_Stack : constant Subprg_Instance_Stack :=
@@ -632,7 +632,7 @@ package Trans is
       Kind_Str_Choice,
       Kind_Design_File,
       Kind_Library
-      );
+     );
 
    type Ortho_Info_Type_Kind is
      (
@@ -641,7 +641,7 @@ package Trans is
       Kind_Type_Record,
       Kind_Type_File,
       Kind_Type_Protected
-      );
+     );
    type O_Tnode_Array is array (Object_Kind_Type) of O_Tnode;
    type O_Fnode_Array is array (Object_Kind_Type) of O_Fnode;
 
@@ -659,7 +659,7 @@ package Trans is
             --  For scalar types:
             --  True if no need to check against low/high bound.
             Nocheck_Low : Boolean := False;
-            Nocheck_Hi : Boolean := False;
+            Nocheck_Hi  : Boolean := False;
 
             --  Ortho type for the range record type.
             Range_Type : O_Tnode;
@@ -671,18 +671,18 @@ package Trans is
             Range_Var : Var_Type;
 
             --  Fields of TYPE_RANGE_TYPE.
-            Range_Left : O_Fnode;
-            Range_Right : O_Fnode;
-            Range_Dir : O_Fnode;
+            Range_Left   : O_Fnode;
+            Range_Right  : O_Fnode;
+            Range_Dir    : O_Fnode;
             Range_Length : O_Fnode;
 
          when Kind_Type_Array =>
-            Base_Type : O_Tnode_Array;
-            Base_Ptr_Type : O_Tnode_Array;
-            Bounds_Type : O_Tnode;
+            Base_Type       : O_Tnode_Array;
+            Base_Ptr_Type   : O_Tnode_Array;
+            Bounds_Type     : O_Tnode;
             Bounds_Ptr_Type : O_Tnode;
 
-            Base_Field : O_Fnode_Array;
+            Base_Field   : O_Fnode_Array;
             Bounds_Field : O_Fnode_Array;
 
             --  True if the array bounds are static.
@@ -710,27 +710,27 @@ package Trans is
             Prot_Scope : aliased Var_Scope_Type;
 
             --  Init procedure for the protected type.
-            Prot_Init_Subprg : O_Dnode;
-            Prot_Init_Instance : Subprgs.Subprg_Instance_Type;
+            Prot_Init_Subprg           : O_Dnode;
+            Prot_Init_Instance         : Subprgs.Subprg_Instance_Type;
             --  Final procedure.
-            Prot_Final_Subprg : O_Dnode;
-            Prot_Final_Instance : Subprgs.Subprg_Instance_Type;
+            Prot_Final_Subprg          : O_Dnode;
+            Prot_Final_Instance        : Subprgs.Subprg_Instance_Type;
             --  The outer instance, if any.
             Prot_Subprg_Instance_Field : O_Fnode;
             --  The LOCK field in the object type
-            Prot_Lock_Field : O_Fnode;
+            Prot_Lock_Field            : O_Fnode;
       end case;
    end record;
 
---    Ortho_Info_Type_Scalar_Init : constant Ortho_Info_Type_Type :=
---      (Kind => Kind_Type_Scalar,
---       Range_Type => O_Tnode_Null,
---       Range_Ptr_Type => O_Tnode_Null,
---       Range_Var => null,
---       Range_Left => O_Fnode_Null,
---       Range_Right => O_Fnode_Null,
---       Range_Dir => O_Fnode_Null,
---       Range_Length => O_Fnode_Null);
+   --    Ortho_Info_Type_Scalar_Init : constant Ortho_Info_Type_Type :=
+   --      (Kind => Kind_Type_Scalar,
+   --       Range_Type => O_Tnode_Null,
+   --       Range_Ptr_Type => O_Tnode_Null,
+   --       Range_Var => null,
+   --       Range_Left => O_Fnode_Null,
+   --       Range_Right => O_Fnode_Null,
+   --       Range_Dir => O_Fnode_Null,
+   --       Range_Length => O_Fnode_Null);
 
    Ortho_Info_Type_Array_Init : constant Ortho_Info_Type_Type :=
      (Kind => Kind_Type_Array,
@@ -806,14 +806,14 @@ package Trans is
       Type_Mode_Fat_Array);
 
    subtype Type_Mode_Scalar is Type_Mode_Type
-     range Type_Mode_B1 .. Type_Mode_F64;
+   range Type_Mode_B1 .. Type_Mode_F64;
 
    subtype Type_Mode_Non_Composite is Type_Mode_Type
-     range Type_Mode_B1 .. Type_Mode_Fat_Acc;
+   range Type_Mode_B1 .. Type_Mode_Fat_Acc;
 
    --  Composite types, with the vhdl meaning: record and arrays.
    subtype Type_Mode_Composite is Type_Mode_Type
-     range Type_Mode_Record .. Type_Mode_Fat_Array;
+   range Type_Mode_Record .. Type_Mode_Fat_Array;
 
    --  Array types.
    subtype Type_Mode_Arrays is Type_Mode_Type range
@@ -821,41 +821,41 @@ package Trans is
 
    --  Thin types, ie types whose length is a scalar.
    subtype Type_Mode_Thin is Type_Mode_Type
-     range Type_Mode_B1 .. Type_Mode_Acc;
+   range Type_Mode_B1 .. Type_Mode_Acc;
 
    --  Fat types, ie types whose length is longer than a scalar.
    subtype Type_Mode_Fat is Type_Mode_Type
-     range Type_Mode_Fat_Acc .. Type_Mode_Fat_Array;
+   range Type_Mode_Fat_Acc .. Type_Mode_Fat_Array;
 
    --  These parameters are passed by value, ie the argument of the subprogram
    --  is the value of the object.
    subtype Type_Mode_By_Value is Type_Mode_Type
-     range Type_Mode_B1 .. Type_Mode_Acc;
+   range Type_Mode_B1 .. Type_Mode_Acc;
 
    --  These parameters are passed by copy, ie a copy of the object is created
    --  and the reference of the copy is passed.  If the object is not
    --  modified by the subprogram, the object could be passed by reference.
    subtype Type_Mode_By_Copy is Type_Mode_Type
-     range Type_Mode_Fat_Acc .. Type_Mode_Fat_Acc;
+   range Type_Mode_Fat_Acc .. Type_Mode_Fat_Acc;
 
    --  The parameters are passed by reference, ie the argument of the
    --  subprogram is an address to the object.
    subtype Type_Mode_By_Ref is Type_Mode_Type
-     range Type_Mode_Record .. Type_Mode_Fat_Array;
+   range Type_Mode_Record .. Type_Mode_Fat_Array;
 
    --  Additional informations for a resolving function.
    type Subprg_Resolv_Info is record
-      Resolv_Func : O_Dnode;
+      Resolv_Func  : O_Dnode;
       --  Parameter nodes.
       Var_Instance : Subprgs.Subprg_Instance_Type;
 
       --  Signals
-      Var_Vals : O_Dnode;
+      Var_Vals      : O_Dnode;
       --  Driving vector.
-      Var_Vec : O_Dnode;
+      Var_Vec       : O_Dnode;
       --  Length of Vector.
-      Var_Vlen : O_Dnode;
-      Var_Nbr_Drv : O_Dnode;
+      Var_Vlen      : O_Dnode;
+      Var_Nbr_Drv   : O_Dnode;
       Var_Nbr_Ports : O_Dnode;
    end record;
    type Subprg_Resolv_Info_Acc is access Subprg_Resolv_Info;
@@ -977,10 +977,10 @@ package Trans is
 
       --  Parameters for type builders.
       --  NOTE: this is only set for types (and *not* for subtypes).
-      Builder_Instance : Subprgs.Subprg_Instance_Type;
-      Builder_Base_Param : O_Dnode;
+      Builder_Instance    : Subprgs.Subprg_Instance_Type;
+      Builder_Base_Param  : O_Dnode;
       Builder_Bound_Param : O_Dnode;
-      Builder_Func : O_Dnode;
+      Builder_Func        : O_Dnode;
    end record;
    type Complex_Type_Arr_Info is array (Object_Kind_Type) of Complex_Type_Info;
    type Complex_Type_Info_Acc is access Complex_Type_Arr_Info;
@@ -989,19 +989,19 @@ package Trans is
 
    type Assoc_Conv_Info is record
       --  The subprogram created to do the conversion.
-      Subprg : O_Dnode;
+      Subprg              : O_Dnode;
       --  The local base block
-      Instance_Block : Iir;
+      Instance_Block      : Iir;
       --   and its address.
-      Instance_Field : O_Fnode;
+      Instance_Field      : O_Fnode;
       --  The instantiated entity (if any).
       Instantiated_Entity : Iir;
       --   and its address.
-      Instantiated_Field : O_Fnode;
-      In_Field : O_Fnode;
-      Out_Field : O_Fnode;
-      Record_Type : O_Tnode;
-      Record_Ptr_Type : O_Tnode;
+      Instantiated_Field  : O_Fnode;
+      In_Field            : O_Fnode;
+      Out_Field           : O_Fnode;
+      Record_Type         : O_Tnode;
+      Record_Ptr_Type     : O_Tnode;
    end record;
 
    type Direct_Driver_Type is record
@@ -1059,7 +1059,7 @@ package Trans is
 
          when Kind_Incomplete_Type =>
             --  The declaration of the incomplete type.
-            Incomplete_Type : Iir;
+            Incomplete_Type  : Iir;
             Incomplete_Array : Ortho_Info_Acc;
 
          when Kind_Index =>
@@ -1100,7 +1100,7 @@ package Trans is
             --    Type definition for the record.
             Res_Record_Type : O_Tnode := O_Tnode_Null;
             --    Type definition for access to the record.
-            Res_Record_Ptr : O_Tnode := O_Tnode_Null;
+            Res_Record_Ptr  : O_Tnode := O_Tnode_Null;
 
             --  Access to the declarations within this subprogram.
             Subprg_Frame_Scope : aliased Var_Scope_Type;
@@ -1117,24 +1117,24 @@ package Trans is
             --  If set, return should be converted into exit out of the
             --  SUBPRG_EXIT loop and the value should be assigned to
             --  SUBPRG_RESULT, if any.
-            Subprg_Exit : O_Snode := O_Snode_Null;
+            Subprg_Exit   : O_Snode := O_Snode_Null;
             Subprg_Result : O_Dnode := O_Dnode_Null;
 
          when Kind_Object =>
             --  For constants: set when the object is defined as a constant.
-            Object_Static : Boolean;
+            Object_Static   : Boolean;
             --  The object itself.
-            Object_Var : Var_Type;
+            Object_Var      : Var_Type;
             --  Direct driver for signal (if any).
-            Object_Driver : Var_Type := Null_Var;
+            Object_Driver   : Var_Type := Null_Var;
             --  RTI constant for the object.
-            Object_Rti : O_Dnode := O_Dnode_Null;
+            Object_Rti      : O_Dnode := O_Dnode_Null;
             --  Function to compute the value of object (used for implicit
             --   guard signal declaration).
             Object_Function : O_Dnode := O_Dnode_Null;
 
          when Kind_Alias =>
-            Alias_Var : Var_Type;
+            Alias_Var  : Var_Type;
             Alias_Kind : Object_Kind_Type;
 
          when Kind_Iterator =>
@@ -1151,12 +1151,12 @@ package Trans is
             --                                    the FRAME record.
             --   Node: null,     Field:     null: not possible
             --   Node: null,     Field: not null: field in RESULT record
-            Interface_Node : O_Dnode := O_Dnode_Null;
+            Interface_Node  : O_Dnode := O_Dnode_Null;
             --  Field of the result record for copy-out arguments of procedure.
             --  In that case, Interface_Node must be null.
             Interface_Field : O_Fnode;
             --  Type of the interface.
-            Interface_Type : O_Tnode;
+            Interface_Type  : O_Tnode;
 
          when Kind_Disconnect =>
             --  Variable which contains the time_expression of the
@@ -1179,7 +1179,7 @@ package Trans is
             Psl_Scope : aliased Var_Scope_Type;
 
             --  Procedure for the state machine.
-            Psl_Proc_Subprg : O_Dnode;
+            Psl_Proc_Subprg       : O_Dnode;
             --  Procedure for finalization.  Handles EOS.
             Psl_Proc_Final_Subprg : O_Dnode;
 
@@ -1228,7 +1228,7 @@ package Trans is
             --  For a generate block: field in the block providing a chain to
             --  the previous block (note: this may not be the parent, but
             --  is a parent).
-            Block_Origin_Field : O_Fnode;
+            Block_Origin_Field     : O_Fnode;
             --  For an iterative block: boolean field set when the block
             --  is configured.  This is used to check if the block was already
             --  configured since index and slice are not compelled to be
@@ -1236,11 +1236,11 @@ package Trans is
             Block_Configured_Field : O_Fnode;
 
             --  For iterative generate block: array of instances.
-            Block_Decls_Array_Type : O_Tnode;
+            Block_Decls_Array_Type     : O_Tnode;
             Block_Decls_Array_Ptr_Type : O_Tnode;
 
             --  Subprogram which elaborates the block (for entity or arch).
-            Block_Elab_Subprg : O_Dnode;
+            Block_Elab_Subprg   : O_Dnode;
             --  Size of the block instance.
             Block_Instance_Size : O_Dnode;
 
@@ -1257,9 +1257,9 @@ package Trans is
             Comp_Scope : aliased Var_Scope_Type;
 
             --  Instance for the component.
-            Comp_Ptr_Type : O_Tnode;
+            Comp_Ptr_Type  : O_Tnode;
             --  Field containing a pointer to the instance link.
-            Comp_Link : O_Fnode;
+            Comp_Link      : O_Fnode;
             --  RTI for the component.
             Comp_Rti_Const : O_Dnode;
 
@@ -1294,7 +1294,7 @@ package Trans is
             --  Instance type for uninstantiated package
             Package_Spec_Ptr_Type : O_Tnode;
 
-            Package_Body_Scope : aliased Var_Scope_Type;
+            Package_Body_Scope    : aliased Var_Scope_Type;
             Package_Body_Ptr_Type : O_Tnode;
 
             --  Field to the spec within the body.
@@ -1322,16 +1322,16 @@ package Trans is
 
          when Kind_Assoc =>
             --  Association informations.
-            Assoc_In : Assoc_Conv_Info;
+            Assoc_In  : Assoc_Conv_Info;
             Assoc_Out : Assoc_Conv_Info;
 
          when Kind_Str_Choice =>
             --  List of choices, used to sort them.
-            Choice_Chain : Ortho_Info_Acc;
+            Choice_Chain  : Ortho_Info_Acc;
             --  Association index.
-            Choice_Assoc : Natural;
+            Choice_Assoc  : Natural;
             --  Corresponding choice simple expression.
-            Choice_Expr : Iir;
+            Choice_Expr   : Iir;
             --  Corresponding choice.
             Choice_Parent : Iir;
 
@@ -1418,7 +1418,7 @@ package Trans is
 
       case State is
          when Mstate_E =>
-            E : O_Enode;
+            E  : O_Enode;
          when Mstate_Lv =>
             Lv : O_Lnode;
          when Mstate_Lp =>
@@ -1428,7 +1428,7 @@ package Trans is
          when Mstate_Dp =>
             Dp : O_Dnode;
          when Mstate_Bad
-           | Mstate_Null =>
+            | Mstate_Null =>
             null;
       end case;
    end record;
@@ -1453,7 +1453,7 @@ package Trans is
    --  Transform VAR to Mnode.
    function Get_Var
      (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-     return Mnode;
+      return Mnode;
 
    --  Return a stabilized node for M.
    --  The former M is not usuable anymore.
@@ -1469,7 +1469,7 @@ package Trans is
    --  Create a temporary of type INFO and kind KIND.
    function Create_Temp (Info : Type_Info_Acc;
                          Kind : Object_Kind_Type := Mode_Value)
-                        return Mnode;
+                         return Mnode;
 
    --  Return the value of field FIELD of lnode L that is contains
    --   a pointer to a record.
@@ -1500,7 +1500,7 @@ package Trans is
    --  Create an ortho_info field of kind KIND for iir node TARGET, and
    --  return it.
    function Add_Info (Target : Iir; Kind : Ortho_Info_Kind)
-                     return Ortho_Info_Acc;
+                      return Ortho_Info_Acc;
 
    procedure Free_Info (Target : Iir);
 
@@ -1511,7 +1511,7 @@ package Trans is
    function Get_Ortho_Expr (Target : Iir) return O_Cnode;
 
    function Get_Ortho_Type (Target : Iir; Is_Sig : Object_Kind_Type)
-                           return O_Tnode;
+                            return O_Tnode;
 
    --  Return true is INFO is a type info for a composite type, ie:
    --  * a record
@@ -1530,57 +1530,57 @@ package Trans is
    pragma Inline (Get_Type_Info);
 
    function E2M (E : O_Enode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-                return Mnode;
+                 return Mnode;
 
    function Lv2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-                 return Mnode;
-   function Lv2M (L : O_Lnode;
-                  Comp : Boolean;
+                  return Mnode;
+   function Lv2M (L     : O_Lnode;
+                  Comp  : Boolean;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode;
-                  T : Type_Info_Acc; Kind : Object_Kind_Type)
-     return Mnode;
+                  T     : Type_Info_Acc; Kind : Object_Kind_Type)
+                  return Mnode;
 
    function Lp2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-                 return Mnode;
+                  return Mnode;
 
-   function Lp2M (L : O_Lnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
+   function Lp2M (L     : O_Lnode;
+                  T     : Type_Info_Acc;
+                  Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
-                 return Mnode;
+                  return Mnode;
 
-   function Lv2M (L : O_Lnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
+   function Lv2M (L     : O_Lnode;
+                  T     : Type_Info_Acc;
+                  Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
-                 return Mnode;
+                  return Mnode;
 
-   function Dv2M (D : O_Dnode;
-                  T : Type_Info_Acc;
+   function Dv2M (D    : O_Dnode;
+                  T    : Type_Info_Acc;
                   Kind : Object_Kind_Type)
-                 return Mnode;
+                  return Mnode;
 
-   function Dv2M (D : O_Dnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
+   function Dv2M (D     : O_Dnode;
+                  T     : Type_Info_Acc;
+                  Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
-                 return Mnode;
+                  return Mnode;
 
-   function Dp2M (D : O_Dnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
+   function Dp2M (D     : O_Dnode;
+                  T     : Type_Info_Acc;
+                  Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
-                 return Mnode;
+                  return Mnode;
 
-   function Dp2M (D : O_Dnode;
-                  T : Type_Info_Acc;
+   function Dp2M (D    : O_Dnode;
+                  T    : Type_Info_Acc;
                   Kind : Object_Kind_Type)
-                 return Mnode;
+                  return Mnode;
 
    function M2Lv (M : Mnode) return O_Lnode;
 
@@ -1596,33 +1596,33 @@ package Trans is
 
    function M2Addr (M : Mnode) return O_Enode;
 
---    function Is_Null (M : Mnode) return Boolean is
---    begin
---       return M.M1.State = Mstate_Null;
---    end Is_Null;
+   --    function Is_Null (M : Mnode) return Boolean is
+   --    begin
+   --       return M.M1.State = Mstate_Null;
+   --    end Is_Null;
 
    function Is_Stable (M : Mnode) return Boolean;
 
---    function Varv2M
---      (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
---      return Mnode is
---    begin
---       return Lv2M (Get_Var (Var), Vtype, Mode);
---    end Varv2M;
+   --    function Varv2M
+   --      (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
+   --      return Mnode is
+   --    begin
+   --       return Lv2M (Get_Var (Var), Vtype, Mode);
+   --    end Varv2M;
 
-   function Varv2M (Var : Var_Type;
+   function Varv2M (Var      : Var_Type;
                     Var_Type : Type_Info_Acc;
-                    Mode : Object_Kind_Type;
-                    Vtype : O_Tnode;
-                    Ptype : O_Tnode)
-                   return Mnode;
+                    Mode     : Object_Kind_Type;
+                    Vtype    : O_Tnode;
+                    Ptype    : O_Tnode)
+                    return Mnode;
 
    --  Convert a Lnode for a sub object to an MNODE.
    function Lo2M (L : O_Lnode; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-     return Mnode;
+                  return Mnode;
 
    function Lo2M (D : O_Dnode; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-     return Mnode;
+                  return Mnode;
 
    package Helpers is
       --  Generate code to initialize a ghdl_index_type variable V to 0.
@@ -1641,11 +1641,11 @@ package Trans is
       function Create_Temp (Atype : O_Tnode) return O_Dnode;
       --  Create a temporary variable of ATYPE and initialize it with VALUE.
       function Create_Temp_Init (Atype : O_Tnode; Value : O_Enode)
-        return O_Dnode;
+                                 return O_Dnode;
       --  Create a temporary variable of ATYPE and initialize it with the
       --  address of NAME.
       function Create_Temp_Ptr (Atype : O_Tnode; Name : O_Lnode)
-        return O_Dnode;
+                                return O_Dnode;
       --  Create a mark in the temporary region for the stack2.
       --  FIXME: maybe a flag must be added to CLOSE_TEMP where it is known
       --   stack2 can be released.

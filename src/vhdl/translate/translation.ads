@@ -38,14 +38,14 @@ package Translation is
 
    procedure Finalize;
 
-   package Chap12 is
-      --  Primary unit + secondary unit (architecture name which may be null)
-      --  to elaborate.
-      procedure Elaborate (Primary : String;
-                           Secondary : String;
-                           Filelist : String;
-                           Whole : Boolean);
-   end Chap12;
+   procedure Gen_Filename (Design_File : Iir);
+
+   --  Primary unit + secondary unit (architecture name which may be null)
+   --  to elaborate.
+   procedure Elaborate (Primary : String;
+                        Secondary : String;
+                        Filelist : String;
+                        Whole : Boolean);
 
    --  If set, generate Run-Time Information nodes.
    Flag_Rti : Boolean := True;

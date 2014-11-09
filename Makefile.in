@@ -39,7 +39,7 @@ GRT_RANLIB=ranlib
 VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
 ADAC=$(CC)
 
-GNATFLAGS=-gnaty3befhkmr -gnata -gnatwael -aO. -g -gnatf -gnat05
+GNATFLAGS=-gnaty3befhkmr -gnata -gnatwae -aO. -g -gnatf -gnat05
 GRT_FLAGS=-g
 LIB_CFLAGS=-g -O2
 

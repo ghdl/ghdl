@@ -2,7 +2,8 @@ project Ghdl is
 
    srcdir := "@srcdir@";
 
-   for Source_Dirs use (srcdir & "/src",
+   for Source_Dirs use (srcdir,
+                        srcdir & "/src",
                         srcdir & "/src/vhdl",
                         srcdir & "/src/vhdl/translate",
                         srcdir & "/src/psl",
@@ -24,7 +25,8 @@ project Ghdl is
    end Builder;
 
    package Compiler is
-      for Default_Switches ("Ada") use ("-gnatwae", "-gnat05");
+      for Default_Switches ("Ada") use
+         ("-gnaty3befhkmr", "-gnata", "-gnatwael", "-gnatf", "-gnat05", "-g");
       for Default_Switches ("C") use ("-DWITH_GNAT_RUN_TIME");
    end Compiler;
 
