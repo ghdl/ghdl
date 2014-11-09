@@ -1,5 +1,5 @@
 --  Iir to ortho translator.
---  Copyright (C) 2002, 2003, 2004, 2005, 2006 Tristan Gingold
+--  Copyright (C) 2002 - 2014 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -37,483 +37,39 @@ with Sem_Names;
 with Sem_Inst;
 with Sem;
 with Iir_Chains; use Iir_Chains;
-with Nodes;
 with Nodes_Meta;
-with GNAT.Table;
 with Ieee.Std_Logic_1164;
 with Canon;
 with Canon_PSL;
 with PSL.Nodes;
 with PSL.NFAs;
 with PSL.NFAs.Utils;
+with Trans;
 with Trans_Decls; use Trans_Decls;
 with Trans_Analyzes;
 
 package body Translation is
-
-   --  Ortho type node for STD.BOOLEAN.
-   Std_Boolean_Type_Node : O_Tnode;
-   Std_Boolean_True_Node : O_Cnode;
-   Std_Boolean_False_Node : O_Cnode;
-   --  Array of STD.BOOLEAN.
-   Std_Boolean_Array_Type : O_Tnode;
-   --  Std_ulogic indexed array of STD.Boolean.
-   Std_Ulogic_Boolean_Array_Type : O_Tnode;
-   --  Ortho type node for string template pointer.
-   Std_String_Ptr_Node : O_Tnode;
-   Std_String_Node : O_Tnode;
-
-   --  Ortho type for std.standard.integer.
-   Std_Integer_Otype : O_Tnode;
-
-   --  Ortho type for std.standard.real.
-   Std_Real_Otype : O_Tnode;
-
-   --  Ortho type node for std.standard.time.
-   Std_Time_Otype : O_Tnode;
-
-   --  Node for the variable containing the current filename.
-   Current_Filename_Node : O_Dnode := O_Dnode_Null;
-   Current_Library_Unit : Iir := Null_Iir;
-
-   --  Global declarations.
-   Ghdl_Ptr_Type : O_Tnode;
-   Sizetype : O_Tnode;
-   Ghdl_I32_Type : O_Tnode;
-   Ghdl_I64_Type : O_Tnode;
-   Ghdl_Real_Type : O_Tnode;
-   --  Constant character.
-   Char_Type_Node : O_Tnode;
-   --  Array of char.
-   Chararray_Type : O_Tnode;
-   --  Pointer to array of char.
-   Char_Ptr_Type : O_Tnode;
-   --  Array of char ptr.
-   Char_Ptr_Array_Type : O_Tnode;
-   Char_Ptr_Array_Ptr_Type : O_Tnode;
-
-   Ghdl_Index_Type : O_Tnode;
-   Ghdl_Index_0 : O_Cnode;
-   Ghdl_Index_1 : O_Cnode;
-
-   --  Type for a file (this is in fact a index in a private table).
-   Ghdl_File_Index_Type : O_Tnode;
-   Ghdl_File_Index_Ptr_Type : O_Tnode;
-
-   --  Record containing a len and string fields.
-   Ghdl_Str_Len_Type_Node : O_Tnode;
-   Ghdl_Str_Len_Type_Len_Field : O_Fnode;
-   Ghdl_Str_Len_Type_Str_Field : O_Fnode;
-   Ghdl_Str_Len_Ptr_Node : O_Tnode;
-   Ghdl_Str_Len_Array_Type_Node : O_Tnode;
-
-   --  Location.
-   Ghdl_Location_Type_Node : O_Tnode;
-   Ghdl_Location_Filename_Node : O_Fnode;
-   Ghdl_Location_Line_Node : O_Fnode;
-   Ghdl_Location_Col_Node : O_Fnode;
-   Ghdl_Location_Ptr_Node : O_Tnode;
-
-   --  Allocate memory for a block.
-   Ghdl_Alloc_Ptr : O_Dnode;
-
-   --  bool type.
-   Ghdl_Bool_Type : O_Tnode;
-   type Enode_Boolean_Array is array (Boolean) of O_Cnode;
-   Ghdl_Bool_Nodes : Enode_Boolean_Array;
-   Ghdl_Bool_False_Node : O_Cnode renames Ghdl_Bool_Nodes (False);
-   Ghdl_Bool_True_Node : O_Cnode renames Ghdl_Bool_Nodes (True);
-
-   Ghdl_Bool_Array_Type : O_Tnode;
-   Ghdl_Bool_Array_Ptr : O_Tnode;
-
-   --  Comparaison type.
-   Ghdl_Compare_Type : O_Tnode;
-   Ghdl_Compare_Lt : O_Cnode;
-   Ghdl_Compare_Eq : O_Cnode;
-   Ghdl_Compare_Gt : O_Cnode;
-
-   --  Dir type.
-   Ghdl_Dir_Type_Node : O_Tnode;
-   Ghdl_Dir_To_Node : O_Cnode;
-   Ghdl_Dir_Downto_Node : O_Cnode;
-
-   --  Signals.
-   Ghdl_Scalar_Bytes : O_Tnode;
-   Ghdl_Signal_Type : O_Tnode;
-   Ghdl_Signal_Value_Field : O_Fnode;
-   Ghdl_Signal_Driving_Value_Field : O_Fnode;
-   Ghdl_Signal_Last_Value_Field : O_Fnode;
-   Ghdl_Signal_Last_Event_Field : O_Fnode;
-   Ghdl_Signal_Last_Active_Field : O_Fnode;
-   Ghdl_Signal_Event_Field : O_Fnode;
-   Ghdl_Signal_Active_Field : O_Fnode;
-   Ghdl_Signal_Has_Active_Field : O_Fnode;
-
-   Ghdl_Signal_Ptr : O_Tnode;
-   Ghdl_Signal_Ptr_Ptr : O_Tnode;
-
-   type Object_Kind_Type is (Mode_Value, Mode_Signal);
-
-   --  Well known identifiers.
-   Wki_This : O_Ident;
-   Wki_Size : O_Ident;
-   Wki_Res : O_Ident;
-   Wki_Dir_To : O_Ident;
-   Wki_Dir_Downto : O_Ident;
-   Wki_Left : O_Ident;
-   Wki_Right : O_Ident;
-   Wki_Dir : O_Ident;
-   Wki_Length : O_Ident;
-   Wki_I : O_Ident;
-   Wki_Instance : O_Ident;
-   Wki_Arch_Instance : O_Ident;
-   Wki_Name : O_Ident;
-   Wki_Sig : O_Ident;
-   Wki_Obj : O_Ident;
-   Wki_Rti : O_Ident;
-   Wki_Parent : O_Ident;
-   Wki_Filename : O_Ident;
-   Wki_Line : O_Ident;
-   Wki_Lo : O_Ident;
-   Wki_Hi : O_Ident;
-   Wki_Mid : O_Ident;
-   Wki_Cmp : O_Ident;
-   Wki_Upframe : O_Ident;
-   Wki_Frame : O_Ident;
-   Wki_Val : O_Ident;
-   Wki_L_Len : O_Ident;
-   Wki_R_Len : O_Ident;
-
-   --  ALLOCATION_KIND defines the type of memory storage.
-   --  ALLOC_STACK means the object is allocated on the local stack and
-   --    deallocated at the end of the function.
-   --  ALLOC_SYSTEM for object created during design elaboration and whose
-   --    life is infinite.
-   --  ALLOC_RETURN for unconstrained object returns by function.
-   --  ALLOC_HEAP for object created by new.
-   type Allocation_Kind is
-     (Alloc_Stack, Alloc_Return, Alloc_Heap, Alloc_System);
-
-   package Chap10 is
-      --  There are three data storage kind: global, local or instance.
-      --  For example, a constant can have:
-      --  * a global storage when declared inside a package.  This storage
-      --    can be accessed from any point.
-      --  * a local storage when declared in a subprogram.  This storage
-      --    can be accessed from the subprogram, is created when the subprogram
-      --    is called and destroy when the subprogram exit.
-      --  * an instance storage when declared inside a process.  This storage
-      --    can be accessed from the process via an instance pointer, is
-      --    created during elaboration.
-      --procedure Push_Global_Factory (Storage : O_Storage);
-      --procedure Pop_Global_Factory;
-      procedure Set_Global_Storage (Storage : O_Storage);
-
-      --  Set the global scope handling.
-      Global_Storage : O_Storage;
-
-      --  Scope for variables.  This is used both to build instances (so it
-      --  contains the record type that contains objects declared in that
-      --  scope) and to use instances (it contains the path to access to these
-      --  objects).
-      type Var_Scope_Type is private;
-
-      type Var_Scope_Acc is access all Var_Scope_Type;
-      for Var_Scope_Acc'Storage_Size use 0;
-
-      Null_Var_Scope : constant Var_Scope_Type;
-
-      type Var_Type is private;
-      Null_Var : constant Var_Type;
-
-      --  Return the record type for SCOPE.
-      function Get_Scope_Type (Scope : Var_Scope_Type) return O_Tnode;
-
-      --  Return the size for instances of SCOPE.
-      function Get_Scope_Size (Scope : Var_Scope_Type) return O_Cnode;
-
-      --  Return True iff SCOPE is defined.
-      function Has_Scope_Type (Scope : Var_Scope_Type) return Boolean;
-
-      --  Create an empty and incomplete scope type for SCOPE using NAME.
-      procedure Predeclare_Scope_Type (Scope : Var_Scope_Acc; Name : O_Ident);
-
-      --  Declare a pointer PTR_TYPE with NAME to scope type SCOPE.
-      procedure Declare_Scope_Acc
-        (Scope : Var_Scope_Type; Name : O_Ident; Ptr_Type : out O_Tnode);
-
-      --  Start to build an instance.
-      --  If INSTANCE_TYPE is not O_TNODE_NULL, it must be an uncompleted
-      --  record type, that will be completed.
-      procedure Push_Instance_Factory (Scope : Var_Scope_Acc);
-
-      --  Manually add a field to the current instance being built.
-      function Add_Instance_Factory_Field (Name : O_Ident; Ftype : O_Tnode)
-                                          return O_Fnode;
-
-      --  In the scope being built, add a field NAME that contain sub-scope
-      --  CHILD.  CHILD is modified so that accesses to CHILD objects is done
-      --  via SCOPE.
-      procedure Add_Scope_Field
-        (Name : O_Ident; Child : in out Var_Scope_Type);
-
-      --  Return the offset of field for CHILD in its parent scope.
-      function Get_Scope_Offset (Child : Var_Scope_Type; Otype : O_Tnode)
-                                return O_Cnode;
-
-      --  Finish the building of the current instance and return the type
-      --  built.
-      procedure Pop_Instance_Factory (Scope : Var_Scope_Acc);
-
-      --  Create a new scope, in which variable are created locally
-      --  (ie, on the stack).  Always created unlocked.
-      procedure Push_Local_Factory;
-
-      --  Destroy a local scope.
-      procedure Pop_Local_Factory;
-
-      --  Set_Scope defines how to access to variables of SCOPE.
-      --  Variables defined in SCOPE can be accessed via field SCOPE_FIELD
-      --  in scope SCOPE_PARENT.
-      procedure Set_Scope_Via_Field
-        (Scope : in out Var_Scope_Type;
-         Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc);
-
-      --  Variables defined in SCOPE can be accessed by dereferencing
-      --  field SCOPE_FIELD defined in SCOPE_PARENT.
-      procedure Set_Scope_Via_Field_Ptr
-        (Scope : in out Var_Scope_Type;
-         Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc);
-
-      --  Variables/scopes defined in SCOPE can be accessed via
-      --  dereference of parameter SCOPE_PARAM.
-      procedure Set_Scope_Via_Param_Ptr
-        (Scope : in out Var_Scope_Type; Scope_Param : O_Dnode);
-
-      --  Variables/scopes defined in SCOPE can be accessed via DECL.
-      procedure Set_Scope_Via_Decl
-        (Scope : in out Var_Scope_Type; Decl : O_Dnode);
-
-      --  Variables/scopes defined in SCOPE can be accessed by derefencing
-      --  VAR.
-      procedure Set_Scope_Via_Var_Ptr
-        (Scope : in out Var_Scope_Type; Var : Var_Type);
-
-      --  No more accesses to SCOPE_TYPE are allowed.  Scopes must be cleared
-      --  before being set.
-      procedure Clear_Scope (Scope : in out Var_Scope_Type);
-
-      --  Reset the identifier.
-      type Id_Mark_Type is limited private;
-      type Local_Identifier_Type is private;
-
-      procedure Reset_Identifier_Prefix;
-      procedure Push_Identifier_Prefix (Mark : out Id_Mark_Type;
-                                        Name : String;
-                                        Val : Iir_Int32 := 0);
-      procedure Push_Identifier_Prefix (Mark : out Id_Mark_Type;
-                                        Name : Name_Id;
-                                        Val : Iir_Int32 := 0);
-      procedure Push_Identifier_Prefix_Uniq (Mark : out Id_Mark_Type);
-      procedure Pop_Identifier_Prefix (Mark : in Id_Mark_Type);
-
-      --  Save/restore the local identifier number; this is used by package
-      --  body, which has the same prefix as the package declaration, so it
-      --  must continue local identifiers numbers.
-      --  This is used by subprogram bodies too.
-      procedure Save_Local_Identifier (Id : out Local_Identifier_Type);
-      procedure Restore_Local_Identifier (Id : Local_Identifier_Type);
-
-      --  Create an identifier from IIR node ID without the prefix.
-      function Create_Identifier_Without_Prefix (Id : Iir)
-        return O_Ident;
-      function Create_Identifier_Without_Prefix (Id : Name_Id; Str : String)
-        return O_Ident;
-
-      --  Create an identifier from the current prefix.
-      function Create_Identifier return O_Ident;
-
-      --  Create an identifier from IIR node ID with prefix.
-      function Create_Identifier (Id : Iir; Str : String := "")
-        return O_Ident;
-      function Create_Identifier
-        (Id : Iir; Val : Iir_Int32; Str : String := "")
-        return O_Ident;
-      function Create_Identifier (Id : Name_Id; Str : String := "")
-        return O_Ident;
-      --  Create a prefixed identifier from a string.
-      function Create_Identifier (Str : String) return O_Ident;
-
-      --  Create an identifier for a variable.
-      --  IE, if the variable is global, prepend the prefix,
-      --   if the variable belong to an instance, no prefix is added.
-      type Var_Ident_Type is private;
-      function Create_Var_Identifier (Id : Iir) return Var_Ident_Type;
-      function Create_Var_Identifier (Id : String) return Var_Ident_Type;
-      function Create_Var_Identifier (Id : Iir; Str : String; Val : Natural)
-                                     return Var_Ident_Type;
-      function Create_Uniq_Identifier return Var_Ident_Type;
-
-      --  Create variable NAME of type VTYPE in the current scope.
-      --  If the current scope is the global scope, then a variable is
-      --   created at the top level (using decl_global_storage).
-      --  If the current scope is not the global scope, then a field is added
-      --   to the current scope.
-      function Create_Var
-        (Name : Var_Ident_Type;
-         Vtype : O_Tnode;
-         Storage : O_Storage := Global_Storage)
-        return Var_Type;
-
-      --  Create a global variable.
-      function Create_Global_Var
-        (Name : O_Ident; Vtype : O_Tnode; Storage : O_Storage)
-        return Var_Type;
-
-      --  Create a global constant and initialize it to INITIAL_VALUE.
-      function Create_Global_Const
-        (Name : O_Ident;
-         Vtype : O_Tnode;
-         Storage : O_Storage;
-         Initial_Value : O_Cnode)
-        return Var_Type;
-      procedure Define_Global_Const (Const : in out Var_Type; Val : O_Cnode);
-
-      --  Return the (real) reference to a variable created by Create_Var.
-      function Get_Var (Var : Var_Type) return O_Lnode;
-
-      --  Return a reference to the instance of type ITYPE.
-      function Get_Instance_Ref (Scope : Var_Scope_Type) return O_Lnode;
-
-      --  Return the address of the instance for block BLOCK.
-      function Get_Instance_Access (Block : Iir) return O_Enode;
-
-      --  Return the storage for the variable VAR.
-      function Get_Alloc_Kind_For_Var (Var : Var_Type) return Allocation_Kind;
-
-      --  Return TRUE iff VAR is stable, ie get_var (VAR) can be referenced
-      --  several times.
-      function Is_Var_Stable (Var : Var_Type) return Boolean;
-
-      --  Used only to generate RTI.
-      function Is_Var_Field (Var : Var_Type) return Boolean;
-      function Get_Var_Offset (Var : Var_Type; Otype : O_Tnode) return O_Cnode;
-      function Get_Var_Label (Var : Var_Type) return O_Dnode;
-
-      --  For package instantiation.
-
-      --  Associate INST_SCOPE as the instantiated scope for ORIG_SCOPE.
-      procedure Push_Instantiate_Var_Scope
-        (Inst_Scope : Var_Scope_Acc; Orig_Scope : Var_Scope_Acc);
-
-      --  Remove the association for INST_SCOPE.
-      procedure Pop_Instantiate_Var_Scope
-        (Inst_Scope : Var_Scope_Acc);
-
-      --  Get the associated instantiated scope for SCOPE.
-      function Instantiated_Var_Scope (Scope : Var_Scope_Acc)
-                                      return Var_Scope_Acc;
-
-      --  Create a copy of VAR using instantiated scope (if needed).
-      function Instantiate_Var (Var : Var_Type) return Var_Type;
-
-      --  Create a copy of SCOPE using instantiated scope (if needed).
-      function Instantiate_Var_Scope (Scope : Var_Scope_Type)
-                                     return Var_Scope_Type;
-   private
-      type Local_Identifier_Type is new Natural;
-      type Id_Mark_Type is record
-         Len : Natural;
-         Local_Id : Local_Identifier_Type;
-      end record;
-
-      type Var_Ident_Type is record
-         Id : O_Ident;
-      end record;
-
-      --  An instance contains all the data (variable, signals, constant...)
-      --  which are declared by an entity and an architecture.
-      --  (An architecture inherits the data of its entity).
-      --
-      --  The processes and implicit guard signals of an entity/architecture
-      --  are translated into functions.  The first argument of these functions
-      --  is a pointer to the instance.
-
-      type Inst_Build_Kind_Type is (Local, Global, Instance);
-      type Inst_Build_Type (Kind : Inst_Build_Kind_Type);
-      type Inst_Build_Acc is access Inst_Build_Type;
-      type Inst_Build_Type (Kind : Inst_Build_Kind_Type) is record
-         Prev : Inst_Build_Acc;
-         Prev_Id_Start : Natural;
-         case Kind is
-            when Local =>
-               --  Previous global storage.
-               Prev_Global_Storage : O_Storage;
-            when Global =>
-               null;
-            when Instance =>
-               Scope : Var_Scope_Acc;
-               Elements : O_Element_List;
-         end case;
-      end record;
-
-      --  Kind of variable:
-      --  VAR_NONE: the variable doesn't exist.
-      --  VAR_GLOBAL: the variable is a global variable (static or not).
-      --  VAR_LOCAL: the variable is on the stack.
-      --  VAR_SCOPE: the variable is in the instance record.
-      type Var_Kind is (Var_None, Var_Global, Var_Local, Var_Scope);
-
-      type Var_Type (Kind : Var_Kind := Var_None) is record
-         case Kind is
-            when Var_None =>
-               null;
-            when Var_Global
-              | Var_Local =>
-               E : O_Dnode;
-            when Var_Scope =>
-               I_Field : O_Fnode;
-               I_Scope : Var_Scope_Acc;
-         end case;
-      end record;
-
-      Null_Var : constant Var_Type := (Kind => Var_None);
-
-      type Var_Scope_Kind is (Var_Scope_None,
-                              Var_Scope_Ptr,
-                              Var_Scope_Decl,
-                              Var_Scope_Field,
-                              Var_Scope_Field_Ptr);
-
-      type Var_Scope_Type (Kind : Var_Scope_Kind := Var_Scope_None) is record
-         Scope_Type : O_Tnode := O_Tnode_Null;
-
-         case Kind is
-            when Var_Scope_None =>
-               --  Not set, cannot be referenced.
-               null;
-            when Var_Scope_Ptr
-              | Var_Scope_Decl =>
-               --  Instance for entity, architecture, component, subprogram,
-               --  resolver, process, guard function, PSL directive, PSL cover,
-               --  PSL assert, component instantiation elaborator
-               D : O_Dnode;
-            when Var_Scope_Field
-              | Var_Scope_Field_Ptr =>
-               --  For an entity: the architecture.
-               --  For an architecture: ptr to a generate subblock.
-               --  For a subprogram: parent frame
-               Field : O_Fnode;
-               Up_Link : Var_Scope_Acc;
-         end case;
-      end record;
-
-      Null_Var_Scope : constant Var_Scope_Type := (Scope_Type => O_Tnode_Null,
-                                                   Kind => Var_Scope_None);
-
-   end Chap10;
-   use Chap10;
+   use Trans;
+   use Trans.Chap10;
+   use Trans.Helpers;
+
+   function Get_Ortho_Decl (Subprg : Iir) return O_Dnode is
+   begin
+      return Get_Info (Subprg).Ortho_Func;
+   end Get_Ortho_Decl;
+
+   function Get_Resolv_Ortho_Decl (Func : Iir) return O_Dnode
+   is
+      Info : Subprg_Resolv_Info_Acc;
+   begin
+      Info := Get_Info (Func).Subprg_Resolv;
+      if Info = null then
+         --  Maybe the resolver is not used.
+         return O_Dnode_Null;
+      else
+         return Info.Resolv_Func;
+      end if;
+   end Get_Resolv_Ortho_Decl;
 
    package Chap1 is
       --  Declare types for block BLK
@@ -566,123 +122,6 @@ package body Translation is
       --  it.  The names are respectively INSTTYPE and INSTPTR.
       procedure Declare_Inst_Type_And_Ptr (Scope : Var_Scope_Acc;
                                            Ptr_Type : out O_Tnode);
-
-      --  Subprograms instances.
-      --
-      --  Subprograms declared inside entities, architecture, blocks
-      --   or processes (but not inside packages) may access to data declared
-      --   outside the subprogram (and this with a life longer than the
-      --   subprogram life).  These data correspond to constants, variables,
-      --   files, signals or types.  However these data are not shared between
-      --   instances of the same entity, architecture...  Subprograms instances
-      --   is the way subprograms access to these data.
-      --  One subprogram instance corresponds to a record.
-
-      --  Type to save an old instance builder.  Subprograms may have at most
-      --  one instance.  If they need severals (for example a protected
-      --  subprogram), the most recent one will have a reference to the
-      --  previous one.
-      type Subprg_Instance_Stack is limited private;
-
-      --  Declare an instance to be added for subprograms.
-      --  DECL is the node for which the instance is created. This is used by
-      --   PUSH_SCOPE.
-      --  PTR_TYPE is a pointer to DECL_TYPE.
-      --  IDENT is an identifier for the interface.
-      --  The previous instance is stored to PREV.  It must be restored with
-      --  Pop_Subprg_Instance.
-      --  Add_Subprg_Instance_Interfaces will add an interface of name IDENT
-      --   and type PTR_TYPE for every instance declared by
-      --   PUSH_SUBPRG_INSTANCE.
-      procedure Push_Subprg_Instance (Scope : Var_Scope_Acc;
-                                      Ptr_Type : O_Tnode;
-                                      Ident : O_Ident;
-                                      Prev : out Subprg_Instance_Stack);
-
-      --  Since local subprograms has a direct access to its father interfaces,
-      --  they do not required instances interfaces.
-      --  These procedures are provided to temporarly disable the addition of
-      --  instances interfaces. Use Pop_Subpg_Instance to restore to the
-      --  previous state.
-      procedure Clear_Subprg_Instance (Prev : out Subprg_Instance_Stack);
-
-      --  Revert of the previous subprogram.
-      --  Instances must be removed in opposite order they are added.
-      procedure Pop_Subprg_Instance (Ident : O_Ident;
-                                     Prev : Subprg_Instance_Stack);
-
-      --  True iff there is currently a subprogram instance.
-      function Has_Current_Subprg_Instance return Boolean;
-
-      --  Contains the subprogram interface for the instance.
-      type Subprg_Instance_Type is private;
-      Null_Subprg_Instance : constant Subprg_Instance_Type;
-
-      --  Add interfaces during the creation of a subprogram.
-      procedure Add_Subprg_Instance_Interfaces
-        (Interfaces : in out O_Inter_List; Vars : out Subprg_Instance_Type);
-
-      --  Add a field in the current factory that reference the current
-      --  instance.
-      procedure Add_Subprg_Instance_Field (Field : out O_Fnode);
-
-      --  Associate values to the instance interface during invocation of a
-      --  subprogram.
-      procedure Add_Subprg_Instance_Assoc
-        (Assocs : in out O_Assoc_List; Vars : Subprg_Instance_Type);
-
-      --  Get the value to be associated to the instance interface.
-      function Get_Subprg_Instance (Vars : Subprg_Instance_Type)
-                                   return O_Enode;
-
-      --  True iff VARS is associated with an instance.
-      function Has_Subprg_Instance (Vars : Subprg_Instance_Type)
-                                   return Boolean;
-
-      --  Assign the instance field FIELD of VAR.
-      procedure Set_Subprg_Instance_Field
-        (Var : O_Dnode; Field : O_Fnode; Vars : Subprg_Instance_Type);
-
-      --  To be called at the beginning and end of a subprogram body creation.
-      --  Call PUSH_SCOPE for the subprogram intances.
-      procedure Start_Subprg_Instance_Use (Vars : Subprg_Instance_Type);
-      procedure Finish_Subprg_Instance_Use (Vars : Subprg_Instance_Type);
-
-      --  Call Push_Scope to reference instance from FIELD.
-      procedure Start_Prev_Subprg_Instance_Use_Via_Field
-        (Prev : Subprg_Instance_Stack; Field : O_Fnode);
-      procedure Finish_Prev_Subprg_Instance_Use_Via_Field
-        (Prev : Subprg_Instance_Stack; Field : O_Fnode);
-
-      --  Same as above, but for IIR.
-      procedure Create_Subprg_Instance (Interfaces : in out O_Inter_List;
-                                        Subprg : Iir);
-
-      procedure Start_Subprg_Instance_Use (Subprg : Iir);
-      procedure Finish_Subprg_Instance_Use (Subprg : Iir);
-
-      function Instantiate_Subprg_Instance (Inst : Subprg_Instance_Type)
-                                           return Subprg_Instance_Type;
-   private
-      type Subprg_Instance_Type is record
-         Inter : O_Dnode;
-         Inter_Type : O_Tnode;
-         Scope : Var_Scope_Acc;
-      end record;
-      Null_Subprg_Instance : constant Subprg_Instance_Type :=
-        (O_Dnode_Null, O_Tnode_Null, null);
-
-      type Subprg_Instance_Stack is record
-         Scope : Var_Scope_Acc;
-         Ptr_Type : O_Tnode;
-         Ident : O_Ident;
-      end record;
-
-      Null_Subprg_Instance_Stack : constant Subprg_Instance_Stack :=
-        (null, O_Tnode_Null, O_Ident_Nul);
-
-      Current_Subprg_Instance : Subprg_Instance_Stack :=
-        Null_Subprg_Instance_Stack;
    end Chap2;
 
    package Chap5 is
@@ -872,995 +311,6 @@ package body Translation is
       function Get_Context_Addr (Node : Iir) return O_Enode;
    end Rtis;
 
-   type Ortho_Info_Kind is
-     (
-      Kind_Type,
-      Kind_Incomplete_Type,
-      Kind_Index,
-      Kind_Expr,
-      Kind_Subprg,
-      Kind_Object,
-      Kind_Alias,
-      Kind_Iterator,
-      Kind_Interface,
-      Kind_Disconnect,
-      Kind_Process,
-      Kind_Psl_Directive,
-      Kind_Loop,
-      Kind_Block,
-      Kind_Component,
-      Kind_Field,
-      Kind_Package,
-      Kind_Package_Instance,
-      Kind_Config,
-      Kind_Assoc,
-      Kind_Str_Choice,
-      Kind_Design_File,
-      Kind_Library
-      );
-
-   type Ortho_Info_Type_Kind is
-     (
-      Kind_Type_Scalar,
-      Kind_Type_Array,
-      Kind_Type_Record,
-      Kind_Type_File,
-      Kind_Type_Protected
-      );
-   type O_Tnode_Array is array (Object_Kind_Type) of O_Tnode;
-   type O_Fnode_Array is array (Object_Kind_Type) of O_Fnode;
-
-   type Rti_Depth_Type is new Natural range 0 .. 255;
-
-   type Ortho_Info_Type_Type (Kind : Ortho_Info_Type_Kind := Kind_Type_Scalar)
-   is record
-      --  For all types:
-      --  This is the maximum depth of RTI, that is the max of the depth of
-      --  the type itself and every types it depends on.
-      Rti_Max_Depth : Rti_Depth_Type;
-
-      case Kind is
-         when Kind_Type_Scalar =>
-            --  For scalar types:
-            --  True if no need to check against low/high bound.
-            Nocheck_Low : Boolean := False;
-            Nocheck_Hi : Boolean := False;
-
-            --  Ortho type for the range record type.
-            Range_Type : O_Tnode;
-
-            --  Ortho type for an access to the range record type.
-            Range_Ptr_Type : O_Tnode;
-
-            --  Tree for the range record declaration.
-            Range_Var : Var_Type;
-
-            --  Fields of TYPE_RANGE_TYPE.
-            Range_Left : O_Fnode;
-            Range_Right : O_Fnode;
-            Range_Dir : O_Fnode;
-            Range_Length : O_Fnode;
-
-         when Kind_Type_Array =>
-            Base_Type : O_Tnode_Array;
-            Base_Ptr_Type : O_Tnode_Array;
-            Bounds_Type : O_Tnode;
-            Bounds_Ptr_Type : O_Tnode;
-
-            Base_Field : O_Fnode_Array;
-            Bounds_Field : O_Fnode_Array;
-
-            --  True if the array bounds are static.
-            Static_Bounds : Boolean;
-
-            --  Variable containing the bounds for a constrained array.
-            Array_Bounds : Var_Type;
-
-            --  Variable containing a 1 length bound for unidimensional
-            --  unconstrained arrays.
-            Array_1bound : Var_Type;
-
-            --  Variable containing the description for each index.
-            Array_Index_Desc : Var_Type;
-
-         when Kind_Type_Record =>
-            --  Variable containing the description for each element.
-            Record_El_Desc : Var_Type;
-
-         when Kind_Type_File =>
-            --  Constant containing the signature of the file.
-            File_Signature : O_Dnode;
-
-         when Kind_Type_Protected =>
-            Prot_Scope : aliased Var_Scope_Type;
-
-            --  Init procedure for the protected type.
-            Prot_Init_Subprg : O_Dnode;
-            Prot_Init_Instance : Chap2.Subprg_Instance_Type;
-            --  Final procedure.
-            Prot_Final_Subprg : O_Dnode;
-            Prot_Final_Instance : Chap2.Subprg_Instance_Type;
-            --  The outer instance, if any.
-            Prot_Subprg_Instance_Field : O_Fnode;
-            --  The LOCK field in the object type
-            Prot_Lock_Field : O_Fnode;
-      end case;
-   end record;
-
---    Ortho_Info_Type_Scalar_Init : constant Ortho_Info_Type_Type :=
---      (Kind => Kind_Type_Scalar,
---       Range_Type => O_Tnode_Null,
---       Range_Ptr_Type => O_Tnode_Null,
---       Range_Var => null,
---       Range_Left => O_Fnode_Null,
---       Range_Right => O_Fnode_Null,
---       Range_Dir => O_Fnode_Null,
---       Range_Length => O_Fnode_Null);
-
-   Ortho_Info_Type_Array_Init : constant Ortho_Info_Type_Type :=
-     (Kind => Kind_Type_Array,
-      Rti_Max_Depth => 0,
-      Base_Type => (O_Tnode_Null, O_Tnode_Null),
-      Base_Ptr_Type => (O_Tnode_Null, O_Tnode_Null),
-      Bounds_Type => O_Tnode_Null,
-      Bounds_Ptr_Type => O_Tnode_Null,
-      Base_Field => (O_Fnode_Null, O_Fnode_Null),
-      Bounds_Field => (O_Fnode_Null, O_Fnode_Null),
-      Static_Bounds => False,
-      Array_Bounds => Null_Var,
-      Array_1bound => Null_Var,
-      Array_Index_Desc => Null_Var);
-
-   Ortho_Info_Type_Record_Init : constant Ortho_Info_Type_Type :=
-     (Kind => Kind_Type_Record,
-      Rti_Max_Depth => 0,
-      Record_El_Desc => Null_Var);
-
-   Ortho_Info_Type_File_Init : constant Ortho_Info_Type_Type :=
-     (Kind => Kind_Type_File,
-      Rti_Max_Depth => 0,
-      File_Signature => O_Dnode_Null);
-
-   Ortho_Info_Type_Prot_Init : constant Ortho_Info_Type_Type :=
-     (Kind => Kind_Type_Protected,
-      Rti_Max_Depth => 0,
-      Prot_Scope => Null_Var_Scope,
-      Prot_Init_Subprg => O_Dnode_Null,
-      Prot_Init_Instance => Chap2.Null_Subprg_Instance,
-      Prot_Final_Subprg => O_Dnode_Null,
-      Prot_Subprg_Instance_Field => O_Fnode_Null,
-      Prot_Final_Instance => Chap2.Null_Subprg_Instance,
-      Prot_Lock_Field => O_Fnode_Null);
-
-   --  Mode of the type; roughly speaking, this corresponds to its size
-   --  (for scalars) or its layout (for composite types).
-   --  Used to select library subprograms for signals.
-   type Type_Mode_Type is
-     (
-      --  Unknown mode.
-      Type_Mode_Unknown,
-      --  Boolean type, with 2 elements.
-      Type_Mode_B1,
-      --  Enumeration with at most 256 elements.
-      Type_Mode_E8,
-      --  Enumeration with more than 256 elements.
-      Type_Mode_E32,
-      --  Integer types.
-      Type_Mode_I32,
-      Type_Mode_I64,
-      --  Physical types.
-      Type_Mode_P32,
-      Type_Mode_P64,
-      --  Floating point type.
-      Type_Mode_F64,
-      --  File type.
-      Type_Mode_File,
-      --  Thin access.
-      Type_Mode_Acc,
-
-      --  Fat access.
-      Type_Mode_Fat_Acc,
-
-      --  Record.
-      Type_Mode_Record,
-      --  Protected type
-      Type_Mode_Protected,
-      --  Constrained array type (length is known at compile-time).
-      Type_Mode_Array,
-      --  Fat array type (used for unconstrained array).
-      Type_Mode_Fat_Array);
-
-   subtype Type_Mode_Scalar is Type_Mode_Type
-     range Type_Mode_B1 .. Type_Mode_F64;
-
-   subtype Type_Mode_Non_Composite is Type_Mode_Type
-     range Type_Mode_B1 .. Type_Mode_Fat_Acc;
-
-   --  Composite types, with the vhdl meaning: record and arrays.
-   subtype Type_Mode_Composite is Type_Mode_Type
-     range Type_Mode_Record .. Type_Mode_Fat_Array;
-
-   --  Array types.
-   subtype Type_Mode_Arrays is Type_Mode_Type range
-     Type_Mode_Array .. Type_Mode_Fat_Array;
-
-   --  Thin types, ie types whose length is a scalar.
-   subtype Type_Mode_Thin is Type_Mode_Type
-     range Type_Mode_B1 .. Type_Mode_Acc;
-
-   --  Fat types, ie types whose length is longer than a scalar.
-   subtype Type_Mode_Fat is Type_Mode_Type
-     range Type_Mode_Fat_Acc .. Type_Mode_Fat_Array;
-
-   --  These parameters are passed by value, ie the argument of the subprogram
-   --  is the value of the object.
-   subtype Type_Mode_By_Value is Type_Mode_Type
-     range Type_Mode_B1 .. Type_Mode_Acc;
-
-   --  These parameters are passed by copy, ie a copy of the object is created
-   --  and the reference of the copy is passed.  If the object is not
-   --  modified by the subprogram, the object could be passed by reference.
-   subtype Type_Mode_By_Copy is Type_Mode_Type
-     range Type_Mode_Fat_Acc .. Type_Mode_Fat_Acc;
-
-   --  The parameters are passed by reference, ie the argument of the
-   --  subprogram is an address to the object.
-   subtype Type_Mode_By_Ref is Type_Mode_Type
-     range Type_Mode_Record .. Type_Mode_Fat_Array;
-
-   --  Additional informations for a resolving function.
-   type Subprg_Resolv_Info is record
-      Resolv_Func : O_Dnode;
-      --  Parameter nodes.
-      Var_Instance : Chap2.Subprg_Instance_Type;
-
-      --  Signals
-      Var_Vals : O_Dnode;
-      --  Driving vector.
-      Var_Vec : O_Dnode;
-      --  Length of Vector.
-      Var_Vlen : O_Dnode;
-      Var_Nbr_Drv : O_Dnode;
-      Var_Nbr_Ports : O_Dnode;
-   end record;
-   type Subprg_Resolv_Info_Acc is access Subprg_Resolv_Info;
-
-   --  Complex types.
-   --
-   --  A complex type is not a VHDL notion, but a translation notion.
-   --  A complex type is a composite type whose size is not known at compile
-   --  type. This happends in VHDL because a bound can be globally static.
-   --  Therefore, the length of an array may not be known at compile type,
-   --  and this propagates to composite types (record and array) if they
-   --  have such an element. This is different from unconstrained arrays.
-   --
-   --  This occurs frequently in VHDL, and could even happen within
-   --  subprograms.
-   --
-   --  Such types are always dynamically allocated (on the stack or on the
-   --  heap). They must be continuous in memory so that they could be copied
-   --  via memcpy/memmove.
-   --
-   --  At runtime, the size of such type is computed. A builder procedure
-   --  is also created to setup inner pointers. This builder procedure should
-   --  be called at initialization, but also after a copy.
-   --
-   --  Example:
-   --  1) subtype bv_type is bit_vector (l to h);
-   --     variable a : bv_type
-   --
-   --     This is represented by a pointer to an array of bit. No need for
-   --     builder procedure, as the element type is not complex. But there
-   --     is a size variable for the size of bv_type
-   --
-   --  2) type rec1_type is record
-   --       f1 : integer;
-   --       f2 : bv_type;
-   --     end record;
-   --
-   --     This is represented by a pointer to a record. The 'f2' field is
-   --     an offset to an array of bit. The size of the object is the size
-   --     of the record (with f2 as a pointer) + the size of bv_type.
-   --     The alinment of the object is the maximum alignment of its sub-
-   --     objects: rec1 and bv_type.
-   --     A builder procedure is needed to initialize the 'f2' field.
-   --     The memory layout is:
-   --     +--------------+
-   --     | rec1:     f1 |
-   --     |           f2 |---+
-   --     +--------------+   |
-   --     | bv_type      |<--+
-   --     | ...          |
-   --     +--------------+
-   --
-   --  3) type rec2_type is record
-   --      g1: rec1_type;
-   --      g2: bv_type;
-   --      g3: bv_type;
-   --    end record;
-   --
-   --    This is represented by a pointer to a record.  All the three fields
-   --    are offset (relative to rec2). Alignment is the maximum alignment of
-   --    the sub-objects (rec2, rec1, bv_type x 3).
-   --     The memory layout is:
-   --     +--------------+
-   --     | rec2:     g1 |---+
-   --     |           g2 |---|---+
-   --     |           g3 |---|---|---+
-   --     +--------------+   |   |   |
-   --     | rec1:     f1 |<--+   |   |
-   --     |           f2 |---+   |   |
-   --     +--------------+   |   |   |
-   --     | bv_type (f2) |<--+   |   |
-   --     | ...          |       |   |
-   --     +--------------+       |   |
-   --     | bv_type (g2) |<------+   |
-   --     | ...          |           |
-   --     +--------------+           |
-   --     | bv_type (g3) |<----------+
-   --     | ...          |
-   --     +--------------+
-   --
-   --  4) type bv_arr_type is array (natural range <>) of bv_type;
-   --     arr2 : bv_arr_type (1 to 4)
-   --
-   --     This should be represented by a pointer to bv_type.
-   --     The memory layout is:
-   --     +--------------+
-   --     | bv_type  (1) |
-   --     | ...          |
-   --     +--------------+
-   --     | bv_type  (2) |
-   --     | ...          |
-   --     +--------------+
-   --     | bv_type  (3) |
-   --     | ...          |
-   --     +--------------+
-   --     | bv_type  (4) |
-   --     | ...          |
-   --     +--------------+
-
-   --  Additional info for complex types.
-   type Complex_Type_Info is record
-      --  Variable containing the size of the type.
-      --  This is defined only for types whose size is only known at
-      --  running time (and not a compile-time).
-      Size_Var : Var_Type;
-
-      --  Variable containing the alignment of the type.
-      --  Only defined for recods and for Mode_Value.
-      --  Note: this is not optimal, because the alignment could be computed
-      --  at compile time, but there is no way to do that with ortho (no
-      --  operation on constants). Furthermore, the alignment is independent
-      --  of the instance, so there could be one global variable. But this
-      --  doesn't fit in the whole machinery (in particular, there is no
-      --  easy way to compute it once). As the overhead is very low, no need
-      --  to bother with this issue.
-      Align_Var : Var_Type;
-
-      Builder_Need_Func : Boolean;
-
-      --  Parameters for type builders.
-      --  NOTE: this is only set for types (and *not* for subtypes).
-      Builder_Instance : Chap2.Subprg_Instance_Type;
-      Builder_Base_Param : O_Dnode;
-      Builder_Bound_Param : O_Dnode;
-      Builder_Func : O_Dnode;
-   end record;
-   type Complex_Type_Arr_Info is array (Object_Kind_Type) of Complex_Type_Info;
-   type Complex_Type_Info_Acc is access Complex_Type_Arr_Info;
-   procedure Free_Complex_Type_Info is new Ada.Unchecked_Deallocation
-     (Complex_Type_Arr_Info, Complex_Type_Info_Acc);
-
-   type Assoc_Conv_Info is record
-      --  The subprogram created to do the conversion.
-      Subprg : O_Dnode;
-      --  The local base block
-      Instance_Block : Iir;
-      --   and its address.
-      Instance_Field : O_Fnode;
-      --  The instantiated entity (if any).
-      Instantiated_Entity : Iir;
-      --   and its address.
-      Instantiated_Field : O_Fnode;
-      In_Field : O_Fnode;
-      Out_Field : O_Fnode;
-      Record_Type : O_Tnode;
-      Record_Ptr_Type : O_Tnode;
-   end record;
-
-   type Direct_Driver_Type is record
-      Sig : Iir;
-      Var : Var_Type;
-   end record;
-   type Direct_Driver_Arr is array (Natural range <>) of Direct_Driver_Type;
-   type Direct_Drivers_Acc is access Direct_Driver_Arr;
-
-   type Ortho_Info_Type;
-   type Ortho_Info_Acc is access Ortho_Info_Type;
-
-   type Ortho_Info_Type (Kind : Ortho_Info_Kind) is record
-      case Kind is
-         when Kind_Type =>
-            --  Mode of the type.
-            Type_Mode : Type_Mode_Type := Type_Mode_Unknown;
-
-            --  If true, the type is (still) incomplete.
-            Type_Incomplete : Boolean := False;
-
-            --  For array only.  True if the type is constrained with locally
-            --  static bounds.  May have non locally-static bounds in some
-            --  of its sub-element (ie being a complex type).
-            Type_Locally_Constrained : Boolean := False;
-
-            --  Additionnal info for complex types.
-            C : Complex_Type_Info_Acc := null;
-
-            --  Ortho node which represents the type.
-            --  Type                             -> Ortho type
-            --   scalar                          ->  scalar
-            --   record (complex or not)         ->  record
-            --   constrained non-complex array   ->  constrained array
-            --   constrained complex array       ->  the element
-            --   unconstrained array             ->  fat pointer
-            --   access to unconstrained array   ->  fat pointer
-            --   access (others)                 ->  access
-            --   file                            ->  file_index_type
-            --   protected                       ->  instance
-            Ortho_Type : O_Tnode_Array;
-
-            --  Ortho pointer to the type.  This is always an access to the
-            --  ortho_type.
-            Ortho_Ptr_Type : O_Tnode_Array;
-
-            --  Chain of temporary types to be destroyed at end of scope.
-            Type_Transient_Chain : Iir := Null_Iir;
-
-            --  More info according to the type.
-            T : Ortho_Info_Type_Type;
-
-            --  Run-time information.
-            Type_Rti : O_Dnode := O_Dnode_Null;
-
-         when Kind_Incomplete_Type =>
-            --  The declaration of the incomplete type.
-            Incomplete_Type : Iir;
-            Incomplete_Array : Ortho_Info_Acc;
-
-         when Kind_Index =>
-            --  Field declaration for array dimension.
-            Index_Field : O_Fnode;
-
-         when Kind_Expr =>
-            --  Ortho tree which represents the expression, used for
-            --  enumeration literals.
-            Expr_Node : O_Cnode;
-
-         when Kind_Subprg =>
-            --  True if the function can return a value stored in the secondary
-            --  stack.  In this case, the caller must deallocate the area
-            --  allocated by the callee when the value was used.
-            Use_Stack2 : Boolean := False;
-
-            --  Subprogram declaration node.
-            Ortho_Func : O_Dnode;
-
-            --  For a function:
-            --    If the return value is not composite, then this field
-            --      must be O_DNODE_NULL.
-            --    If the return value is a composite type, then the caller must
-            --    give to the callee an area to put the result.  This area is
-            --    given via an (hidden to the user) interface.  Furthermore,
-            --    the function is translated into a procedure.
-            --  For a procedure:
-            --    If there are copy-out interfaces, they are gathered in a
-            --    record and a pointer to the record is passed to the
-            --    procedure.  RES_INTERFACE is the interface for this pointer.
-            Res_Interface : O_Dnode := O_Dnode_Null;
-
-            --  Field in the frame for a pointer to the RESULT structure.
-            Res_Record_Var : Var_Type := Null_Var;
-
-            --  For a subprogram with a result interface:
-            --    Type definition for the record.
-            Res_Record_Type : O_Tnode := O_Tnode_Null;
-            --    Type definition for access to the record.
-            Res_Record_Ptr : O_Tnode := O_Tnode_Null;
-
-            --  Access to the declarations within this subprogram.
-            Subprg_Frame_Scope : aliased Var_Scope_Type;
-
-            --  Instances for the subprograms.
-            Subprg_Instance : Chap2.Subprg_Instance_Type :=
-              Chap2.Null_Subprg_Instance;
-
-            Subprg_Resolv : Subprg_Resolv_Info_Acc := null;
-
-            --  Local identifier number, set by spec, continued by body.
-            Subprg_Local_Id : Local_Identifier_Type;
-
-            --  If set, return should be converted into exit out of the
-            --  SUBPRG_EXIT loop and the value should be assigned to
-            --  SUBPRG_RESULT, if any.
-            Subprg_Exit : O_Snode := O_Snode_Null;
-            Subprg_Result : O_Dnode := O_Dnode_Null;
-
-         when Kind_Object =>
-            --  For constants: set when the object is defined as a constant.
-            Object_Static : Boolean;
-            --  The object itself.
-            Object_Var : Var_Type;
-            --  Direct driver for signal (if any).
-            Object_Driver : Var_Type := Null_Var;
-            --  RTI constant for the object.
-            Object_Rti : O_Dnode := O_Dnode_Null;
-            --  Function to compute the value of object (used for implicit
-            --   guard signal declaration).
-            Object_Function : O_Dnode := O_Dnode_Null;
-
-         when Kind_Alias =>
-            Alias_Var : Var_Type;
-            Alias_Kind : Object_Kind_Type;
-
-         when Kind_Iterator =>
-            Iterator_Var : Var_Type;
-
-         when Kind_Interface =>
-            --  Ortho declaration for the interface. If not null, there is
-            --  a corresponding ortho parameter for the interface. While
-            --  translating nested subprograms (that are unnested),
-            --  Interface_Field may be set to the corresponding field in the
-            --  FRAME record. So:
-            --   Node: not null, Field:     null: parameter
-            --   Node: not null, Field: not null: parameter with a copy in
-            --                                    the FRAME record.
-            --   Node: null,     Field:     null: not possible
-            --   Node: null,     Field: not null: field in RESULT record
-            Interface_Node : O_Dnode := O_Dnode_Null;
-            --  Field of the result record for copy-out arguments of procedure.
-            --  In that case, Interface_Node must be null.
-            Interface_Field : O_Fnode;
-            --  Type of the interface.
-            Interface_Type : O_Tnode;
-
-         when Kind_Disconnect =>
-            --  Variable which contains the time_expression of the
-            --  disconnection specification
-            Disconnect_Var : Var_Type;
-
-         when Kind_Process =>
-            Process_Scope : aliased Var_Scope_Type;
-
-            --  Subprogram for the process.
-            Process_Subprg : O_Dnode;
-
-            --  List of drivers if Flag_Direct_Drivers.
-            Process_Drivers : Direct_Drivers_Acc := null;
-
-            --  RTI for the process.
-            Process_Rti_Const : O_Dnode := O_Dnode_Null;
-
-         when Kind_Psl_Directive =>
-            Psl_Scope : aliased Var_Scope_Type;
-
-            --  Procedure for the state machine.
-            Psl_Proc_Subprg : O_Dnode;
-            --  Procedure for finalization.  Handles EOS.
-            Psl_Proc_Final_Subprg : O_Dnode;
-
-            --  Length of the state vector.
-            Psl_Vect_Len : Natural;
-
-            --  Type of the state vector.
-            Psl_Vect_Type : O_Tnode;
-
-            --  State vector variable.
-            Psl_Vect_Var : Var_Type;
-
-            --  Boolean variable (for cover)
-            Psl_Bool_Var : Var_Type;
-
-            --  RTI for the process.
-            Psl_Rti_Const : O_Dnode := O_Dnode_Null;
-
-         when Kind_Loop =>
-            --  Labels for the loop.
-            --  Used for exit/next from while-loop, and to exit from for-loop.
-            Label_Exit : O_Snode;
-            --  Used to next from for-loop, with an exit statment.
-            Label_Next : O_Snode;
-
-         when Kind_Block =>
-            --  Access to declarations of this block.
-            Block_Scope : aliased Var_Scope_Type;
-
-            --  Instance type (ortho record) for declarations contained in the
-            --  block/entity/architecture.
-            Block_Decls_Ptr_Type : O_Tnode;
-
-            --  For Entity: field in the instance type containing link to
-            --              parent.
-            --  For an instantiation: link in the parent block to the instance.
-            Block_Link_Field : O_Fnode;
-
-            --  For an entity: must be o_fnode_null.
-            --  For an architecture: the entity field.
-            --  For a block, a component or a generate block: field in the
-            --    parent instance which contains the declarations for this
-            --    block.
-            Block_Parent_Field : O_Fnode;
-
-            --  For a generate block: field in the block providing a chain to
-            --  the previous block (note: this may not be the parent, but
-            --  is a parent).
-            Block_Origin_Field : O_Fnode;
-            --  For an iterative block: boolean field set when the block
-            --  is configured.  This is used to check if the block was already
-            --  configured since index and slice are not compelled to be
-            --  locally static.
-            Block_Configured_Field : O_Fnode;
-
-            --  For iterative generate block: array of instances.
-            Block_Decls_Array_Type : O_Tnode;
-            Block_Decls_Array_Ptr_Type : O_Tnode;
-
-            --  Subprogram which elaborates the block (for entity or arch).
-            Block_Elab_Subprg : O_Dnode;
-            --  Size of the block instance.
-            Block_Instance_Size : O_Dnode;
-
-            --  Only for an entity: procedure that elaborate the packages this
-            --  units depend on.  That must be done before elaborating the
-            --  entity and before evaluating default expressions in generics.
-            Block_Elab_Pkg_Subprg : O_Dnode;
-
-            --  RTI constant for the block.
-            Block_Rti_Const : O_Dnode := O_Dnode_Null;
-
-         when Kind_Component =>
-            --  How to access to component interfaces.
-            Comp_Scope : aliased Var_Scope_Type;
-
-            --  Instance for the component.
-            Comp_Ptr_Type : O_Tnode;
-            --  Field containing a pointer to the instance link.
-            Comp_Link : O_Fnode;
-            --  RTI for the component.
-            Comp_Rti_Const : O_Dnode;
-
-         when Kind_Config =>
-            --  Subprogram that configure the block.
-            Config_Subprg : O_Dnode;
-
-         when Kind_Field =>
-            --  Node for a record element declaration.
-            Field_Node : O_Fnode_Array := (O_Fnode_Null, O_Fnode_Null);
-
-         when Kind_Package =>
-            --  Subprogram which elaborate the package spec/body.
-            --  External units should call the body elaborator.
-            --  The spec elaborator is called only from the body elaborator.
-            Package_Elab_Spec_Subprg : O_Dnode;
-            Package_Elab_Body_Subprg : O_Dnode;
-
-            --  Instance for the elaborators.
-            Package_Elab_Spec_Instance : Chap2.Subprg_Instance_Type;
-            Package_Elab_Body_Instance : Chap2.Subprg_Instance_Type;
-
-            --  Variable set to true when the package is elaborated.
-            Package_Elab_Var : Var_Type;
-
-            --  RTI constant for the package.
-            Package_Rti_Const : O_Dnode;
-
-            --  Access to declarations of the spec.
-            Package_Spec_Scope : aliased Var_Scope_Type;
-
-            --  Instance type for uninstantiated package
-            Package_Spec_Ptr_Type : O_Tnode;
-
-            Package_Body_Scope : aliased Var_Scope_Type;
-            Package_Body_Ptr_Type : O_Tnode;
-
-            --  Field to the spec within the body.
-            Package_Spec_Field : O_Fnode;
-
-            --  Local id, set by package declaration, continued by package
-            --  body.
-            Package_Local_Id : Local_Identifier_Type;
-
-         when Kind_Package_Instance =>
-            --  The variables containing the instance.  There are two variables
-            --  for interface package: one for the spec, one for the body.
-            --  For package instantiation, only the variable for the body is
-            --  used.  The variable for spec is added so that packages with
-            --  package interfaces don't need to know the body of their
-            --  interfaces.
-            Package_Instance_Spec_Var : Var_Type;
-            Package_Instance_Body_Var : Var_Type;
-
-            --  Elaboration procedure for the instance.
-            Package_Instance_Elab_Subprg : O_Dnode;
-
-            Package_Instance_Spec_Scope : aliased Var_Scope_Type;
-            Package_Instance_Body_Scope : aliased Var_Scope_Type;
-
-         when Kind_Assoc =>
-            --  Association informations.
-            Assoc_In : Assoc_Conv_Info;
-            Assoc_Out : Assoc_Conv_Info;
-
-         when Kind_Str_Choice =>
-            --  List of choices, used to sort them.
-            Choice_Chain : Ortho_Info_Acc;
-            --  Association index.
-            Choice_Assoc : Natural;
-            --  Corresponding choice simple expression.
-            Choice_Expr : Iir;
-            --  Corresponding choice.
-            Choice_Parent : Iir;
-
-         when Kind_Design_File =>
-            Design_Filename : O_Dnode;
-
-         when Kind_Library =>
-            Library_Rti_Const : O_Dnode;
-      end case;
-   end record;
-
-   procedure Unchecked_Deallocation is new Ada.Unchecked_Deallocation
-     (Name => Ortho_Info_Acc, Object => Ortho_Info_Type);
-
-   subtype Type_Info_Acc is Ortho_Info_Acc (Kind_Type);
-   subtype Incomplete_Type_Info_Acc is Ortho_Info_Acc (Kind_Incomplete_Type);
-   subtype Index_Info_Acc is Ortho_Info_Acc (Kind_Index);
-   subtype Subprg_Info_Acc is Ortho_Info_Acc (Kind_Subprg);
-   subtype Object_Info_Acc is Ortho_Info_Acc (Kind_Object);
-   subtype Alias_Info_Acc is Ortho_Info_Acc (Kind_Alias);
-   subtype Proc_Info_Acc is Ortho_Info_Acc (Kind_Process);
-   subtype Psl_Info_Acc is Ortho_Info_Acc (Kind_Psl_Directive);
-   subtype Loop_Info_Acc is Ortho_Info_Acc (Kind_Loop);
-   subtype Block_Info_Acc is Ortho_Info_Acc (Kind_Block);
-   subtype Comp_Info_Acc is Ortho_Info_Acc (Kind_Component);
-   subtype Field_Info_Acc is Ortho_Info_Acc (Kind_Field);
-   subtype Config_Info_Acc is Ortho_Info_Acc (Kind_Config);
-   subtype Assoc_Info_Acc is Ortho_Info_Acc (Kind_Assoc);
-   subtype Inter_Info_Acc is Ortho_Info_Acc (Kind_Interface);
-   subtype Design_File_Info_Acc is Ortho_Info_Acc (Kind_Design_File);
-   subtype Library_Info_Acc is Ortho_Info_Acc (Kind_Library);
-
-   package Node_Infos is new GNAT.Table
-     (Table_Component_Type => Ortho_Info_Acc,
-      Table_Index_Type => Iir,
-      Table_Low_Bound => 0,
-      Table_Initial => 1024,
-      Table_Increment => 100);
-
-   procedure Update_Node_Infos
-   is
-      use Nodes;
-      F, L : Iir;
-   begin
-      F := Node_Infos.Last;
-      L := Nodes.Get_Last_Node;
-      Node_Infos.Set_Last (L);
-      Node_Infos.Table (F + 1 .. L) := (others => null);
-   end Update_Node_Infos;
-
-   procedure Set_Info (Target : Iir; Info : Ortho_Info_Acc) is
-   begin
-      if Node_Infos.Table (Target) /= null then
-         raise Internal_Error;
-      end if;
-      Node_Infos.Table (Target) := Info;
-   end Set_Info;
-
-   procedure Clear_Info (Target : Iir) is
-   begin
-      Node_Infos.Table (Target) := null;
-   end Clear_Info;
-
-   function Get_Info (Target : Iir) return Ortho_Info_Acc is
-   begin
-      return Node_Infos.Table (Target);
-   end Get_Info;
-
-   --  Create an ortho_info field of kind KIND for iir node TARGET, and
-   --  return it.
-   function Add_Info (Target : Iir; Kind : Ortho_Info_Kind)
-                     return Ortho_Info_Acc
-   is
-      Res : Ortho_Info_Acc;
-   begin
-      Res := new Ortho_Info_Type (Kind);
-      Set_Info (Target, Res);
-      return Res;
-   end Add_Info;
-
-   procedure Free_Info (Target : Iir)
-   is
-      Info : Ortho_Info_Acc;
-   begin
-      Info := Get_Info (Target);
-      if Info /= null then
-         Unchecked_Deallocation (Info);
-         Clear_Info (Target);
-      end if;
-   end Free_Info;
-
-   procedure Free_Type_Info (Info : in out Type_Info_Acc) is
-   begin
-      if Info.C /= null then
-         Free_Complex_Type_Info (Info.C);
-      end if;
-      Unchecked_Deallocation (Info);
-   end Free_Type_Info;
-
-   procedure Set_Ortho_Expr (Target : Iir; Expr : O_Cnode)
-   is
-      Info : Ortho_Info_Acc;
-   begin
-      Info := Add_Info (Target, Kind_Expr);
-      Info.Expr_Node := Expr;
-   end Set_Ortho_Expr;
-
-   function Get_Ortho_Expr (Target : Iir) return O_Cnode is
-   begin
-      return Get_Info (Target).Expr_Node;
-   end Get_Ortho_Expr;
-
-   function Get_Ortho_Type (Target : Iir; Is_Sig : Object_Kind_Type)
-     return O_Tnode is
-   begin
-      return Get_Info (Target).Ortho_Type (Is_Sig);
-   end Get_Ortho_Type;
-
-   function Get_Ortho_Decl (Subprg : Iir) return O_Dnode
-   is
-   begin
-      return Get_Info (Subprg).Ortho_Func;
-   end Get_Ortho_Decl;
-
-   function Get_Resolv_Ortho_Decl (Func : Iir) return O_Dnode
-   is
-      Info : Subprg_Resolv_Info_Acc;
-   begin
-      Info := Get_Info (Func).Subprg_Resolv;
-      if Info = null then
-         --  Maybe the resolver is not used.
-         return O_Dnode_Null;
-      else
-         return Info.Resolv_Func;
-      end if;
-   end Get_Resolv_Ortho_Decl;
-
-   --  Return true is INFO is a type info for a composite type, ie:
-   --  * a record
-   --  * an array (fat or thin)
-   --  * a fat pointer.
-   function Is_Composite (Info : Type_Info_Acc) return Boolean;
-   pragma Inline (Is_Composite);
-
-   function Is_Composite (Info : Type_Info_Acc) return Boolean is
-   begin
-      return Info.Type_Mode in Type_Mode_Fat;
-   end Is_Composite;
-
-   function Is_Complex_Type (Tinfo : Type_Info_Acc) return Boolean;
-   pragma Inline (Is_Complex_Type);
-
-   function Is_Complex_Type (Tinfo : Type_Info_Acc) return Boolean is
-   begin
-      return Tinfo.C /= null;
-   end Is_Complex_Type;
-
-   --  In order to simplify the handling of Enode/Lnode, let's introduce
-   --  Mnode (yes, another node).
-   --  An Mnode is a typed union, containing either an Lnode or a Enode.
-   --  See Mstate for a description of the union.
-   --  The real data is contained insisde a record, so that the discriminant
-   --  can be changed.
-   type Mnode;
-
-   --  State of an Mmode.
-   type Mstate is
-     (
-      --  The Mnode contains an Enode, which can be either a value or a
-      --  pointer.
-      --  This Mnode can be used only once.
-      Mstate_E,
-
-      --  The Mnode contains an Lnode representing a value.
-      --  This Lnode can be used only once.
-      Mstate_Lv,
-
-      --  The Mnode contains an Lnode representing a pointer.
-      --  This Lnode can be used only once.
-      Mstate_Lp,
-
-      --  The Mnode contains an Dnode for a variable representing a value.
-      --  This Dnode may be used several times.
-      Mstate_Dv,
-
-      --  The Mnode contains an Dnode for a variable representing a pointer.
-      --  This Dnode may be used several times.
-      Mstate_Dp,
-
-      --  Null Mnode.
-      Mstate_Null,
-
-      --  The Mnode is invalid (such as already used).
-      Mstate_Bad);
-
-   type Mnode1 (State : Mstate := Mstate_Bad) is record
-      --  True if the object is composite (its value cannot be read directly).
-      Comp : Boolean;
-
-      --  Additionnal informations about the objects: kind and type.
-      K : Object_Kind_Type;
-      T : Type_Info_Acc;
-
-      --  Ortho type of the object.
-      Vtype : O_Tnode;
-
-      --  Type for a pointer to the object.
-      Ptype : O_Tnode;
-
-      case State is
-         when Mstate_E =>
-            E : O_Enode;
-         when Mstate_Lv =>
-            Lv : O_Lnode;
-         when Mstate_Lp =>
-            Lp : O_Lnode;
-         when Mstate_Dv =>
-            Dv : O_Dnode;
-         when Mstate_Dp =>
-            Dp : O_Dnode;
-         when Mstate_Bad
-           | Mstate_Null =>
-            null;
-      end case;
-   end record;
-   --pragma Pack (Mnode1);
-
-   type Mnode is record
-      M1 : Mnode1;
-   end record;
-
-   --  Null Mnode.
-   Mnode_Null : constant Mnode := Mnode'(M1 => (State => Mstate_Null,
-                                                Comp => False,
-                                                K => Mode_Value,
-                                                Ptype => O_Tnode_Null,
-                                                Vtype => O_Tnode_Null,
-                                                T => null));
-
-
-   --  Object kind of a Mnode
-   function Get_Object_Kind (M : Mnode) return Object_Kind_Type;
-
-   --  Transform VAR to Mnode.
-   function Get_Var
-     (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-     return Mnode;
-
-   --  Return a stabilized node for M.
-   --  The former M is not usuable anymore.
-   function Stabilize (M : Mnode; Can_Copy : Boolean := False) return Mnode;
-
-   --  Stabilize M.
-   procedure Stabilize (M : in out Mnode);
-
-   --  If M is not stable, create a variable containing the value of M.
-   --  M must be scalar (or access).
-   function Stabilize_Value (M : Mnode) return Mnode;
-
-   --  Create a temporary of type INFO and kind KIND.
-   function Create_Temp (Info : Type_Info_Acc;
-                         Kind : Object_Kind_Type := Mode_Value)
-                        return Mnode;
-
    package Chap3 is
       --  Translate the subtype of an object, since an object can define
       --  a subtype.
@@ -1888,11 +338,6 @@ package body Translation is
       procedure Translate_Named_Type_Definition (Def : Iir; Id : Name_Id);
       procedure Translate_Anonymous_Type_Definition
         (Def : Iir; Transient : Boolean);
-
-      --  Some expressions may be evaluated several times in different
-      --  contexts.  Type info created for these expressions may not be
-      --  shared between these contexts.
-      procedure Destroy_Type_Info (Atype : Iir);
 
       --  Translate subprograms for types.
       procedure Translate_Type_Subprograms (Decl : Iir);
@@ -2470,81 +915,9 @@ package body Translation is
    end Chap14;
 
    package Helpers is
-      --  Return the value of field FIELD of lnode L that is contains
-      --   a pointer to a record.
-      --  This is equivalent to:
-      --  new_value (new_selected_element (new_access_element (new_value (l)),
-      --                                   field))
-      function New_Value_Selected_Acc_Value (L : O_Lnode; Field : O_Fnode)
-        return O_Enode;
-      function New_Selected_Acc_Value (L : O_Lnode; Field : O_Fnode)
-        return O_Lnode;
-
-      function New_Indexed_Acc_Value (L : O_Lnode; I : O_Enode) return O_Lnode;
-
-      --  Equivalent to new_access_element (new_value (l))
-      function New_Acc_Value (L : O_Lnode) return O_Lnode;
-
       --  Copy a fat pointer.
       --  D and S are stabilized fat pointers.
       procedure Copy_Fat_Pointer (D : Mnode; S: Mnode);
-
-      --  Generate code to initialize a ghdl_index_type variable V to 0.
-      procedure Init_Var (V : O_Dnode);
-
-      --  Generate code to increment/decrement a ghdl_index_type variable V.
-      procedure Inc_Var (V : O_Dnode);
-      procedure Dec_Var (V : O_Dnode);
-
-      --  Generate code to exit from loop LABEL iff COND is true.
-      procedure Gen_Exit_When (Label : O_Snode; Cond : O_Enode);
-
-      --  Create a uniq identifier.
-      subtype Uniq_Identifier_String is String (1 .. 11);
-      function Create_Uniq_Identifier return Uniq_Identifier_String;
-      function Create_Uniq_Identifier return O_Ident;
-
-      --  Create a region for temporary variables.
-      procedure Open_Temp;
-      --  Create a temporary variable.
-      function Create_Temp (Atype : O_Tnode) return O_Dnode;
-      --  Create a temporary variable of ATYPE and initialize it with VALUE.
-      function Create_Temp_Init (Atype : O_Tnode; Value : O_Enode)
-        return O_Dnode;
-      --  Create a temporary variable of ATYPE and initialize it with the
-      --  address of NAME.
-      function Create_Temp_Ptr (Atype : O_Tnode; Name : O_Lnode)
-        return O_Dnode;
-      --  Create a mark in the temporary region for the stack2.
-      --  FIXME: maybe a flag must be added to CLOSE_TEMP where it is known
-      --   stack2 can be released.
-      procedure Create_Temp_Stack2_Mark;
-      --  Add ATYPE in the chain of types to be destroyed at the end of the
-      --  temp scope.
-      procedure Add_Transient_Type_In_Temp (Atype : Iir);
-      --  Close the temporary region.
-      procedure Close_Temp;
-
-      --  Like Open_Temp, but will never create a declare region. To be used
-      --  only within a subprogram, to use the declare region of the
-      --  subprogram.
-      procedure Open_Local_Temp;
-      --  Destroy transient types created in a temporary region.
-      procedure Destroy_Local_Transient_Types;
-      procedure Close_Local_Temp;
-
-      --  Return TRUE if stack2 will be released.  Used for fine-tuning only
-      --  (return statement).
-      function Has_Stack2_Mark return Boolean;
-      --  Manually release stack2.  Used for fine-tuning only.
-      procedure Stack2_Release;
-
-      --  Free all old temp.
-      --  Used only to free memory.
-      procedure Free_Old_Temp;
-
-      --  Return a ghdl_index_type literal for NUM.
-      function New_Index_Lit (Num : Unsigned_64) return O_Cnode;
 
       --  Create a constant (of name ID) for string STR.
       --  Append a NUL terminator (to make interfaces with C easier).
@@ -2636,537 +1009,13 @@ package body Translation is
         return O_Enode;
       procedure Gen_Oenode_Finish_Data_Composite (Data : in out Mnode);
 
-      type Hexstr_Type is array (Integer range 0 .. 15) of Character;
-      N2hex : constant Hexstr_Type := "0123456789abcdef";
-
       function Get_Line_Number (Target: Iir) return Natural;
 
       procedure Assoc_Filename_Line (Assoc : in out O_Assoc_List;
                                      Line : Natural);
-   private
    end Helpers;
    use Helpers;
 
-   function Get_Type_Info (M : Mnode) return Type_Info_Acc is
-   begin
-      return M.M1.T;
-   end Get_Type_Info;
-
-   function Get_Object_Kind (M : Mnode) return Object_Kind_Type is
-   begin
-      return M.M1.K;
-   end Get_Object_Kind;
-
-   function E2M (E : O_Enode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-     return Mnode is
-   begin
-      return Mnode'(M1 => (State => Mstate_E,
-                           Comp => T.Type_Mode in Type_Mode_Fat,
-                           K => Kind, T => T, E => E,
-                           Vtype => T.Ortho_Type (Kind),
-                           Ptype => T.Ortho_Ptr_Type (Kind)));
-   end E2M;
-
-   function Lv2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-     return Mnode is
-   begin
-      return Mnode'(M1 => (State => Mstate_Lv,
-                           Comp => T.Type_Mode in Type_Mode_Fat,
-                           K => Kind, T => T, Lv => L,
-                           Vtype => T.Ortho_Type (Kind),
-                           Ptype => T.Ortho_Ptr_Type (Kind)));
-   end Lv2M;
-
-   function Lv2M (L : O_Lnode;
-                  Comp : Boolean;
-                  Vtype : O_Tnode;
-                  Ptype : O_Tnode;
-                  T : Type_Info_Acc; Kind : Object_Kind_Type)
-     return Mnode is
-   begin
-      return Mnode'(M1 => (State => Mstate_Lv,
-                           Comp => Comp,
-                           K => Kind, T => T, Lv => L,
-                           Vtype => Vtype, Ptype => Ptype));
-   end Lv2M;
-
-   function Lp2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-     return Mnode is
-   begin
-      return Mnode'(M1 => (State => Mstate_Lp,
-                           Comp => T.Type_Mode in Type_Mode_Fat,
-                           K => Kind, T => T, Lp => L,
-                           Vtype => T.Ortho_Type (Kind),
-                           Ptype => T.Ortho_Ptr_Type (Kind)));
-   end Lp2M;
-
-   function Lp2M (L : O_Lnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
-                  Vtype : O_Tnode;
-                  Ptype : O_Tnode)
-     return Mnode is
-   begin
-      return Mnode'(M1 => (State => Mstate_Lp,
-                           Comp => T.Type_Mode in Type_Mode_Fat,
-                           K => Kind, T => T, Lp => L,
-                           Vtype => Vtype, Ptype => Ptype));
-   end Lp2M;
-
-   function Lv2M (L : O_Lnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
-                  Vtype : O_Tnode;
-                  Ptype : O_Tnode)
-     return Mnode is
-   begin
-      return Mnode'(M1 => (State => Mstate_Lv,
-                           Comp => T.Type_Mode in Type_Mode_Fat,
-                           K => Kind, T => T, Lv => L,
-                           Vtype => Vtype, Ptype => Ptype));
-   end Lv2M;
-
-   function Dv2M (D : O_Dnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type)
-     return Mnode is
-   begin
-      return Mnode'(M1 => (State => Mstate_Dv,
-                           Comp => T.Type_Mode in Type_Mode_Fat,
-                           K => Kind, T => T, Dv => D,
-                           Vtype => T.Ortho_Type (Kind),
-                           Ptype => T.Ortho_Ptr_Type (Kind)));
-   end Dv2M;
-
-   function Dv2M (D : O_Dnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
-                  Vtype : O_Tnode;
-                  Ptype : O_Tnode)
-     return Mnode is
-   begin
-      return Mnode'(M1 => (State => Mstate_Dv,
-                           Comp => T.Type_Mode in Type_Mode_Fat,
-                           K => Kind, T => T, Dv => D,
-                           Vtype => Vtype,
-                           Ptype => Ptype));
-   end Dv2M;
-
-   function Dp2M (D : O_Dnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type;
-                  Vtype : O_Tnode;
-                  Ptype : O_Tnode)
-     return Mnode is
-   begin
-      return Mnode'(M1 => (State => Mstate_Dp,
-                           Comp => T.Type_Mode in Type_Mode_Fat,
-                           K => Kind, T => T, Dp => D,
-                           Vtype => Vtype, Ptype => Ptype));
-   end Dp2M;
-
-   function Dp2M (D : O_Dnode;
-                  T : Type_Info_Acc;
-                  Kind : Object_Kind_Type)
-     return Mnode is
-   begin
-      return Mnode'(M1 => (State => Mstate_Dp,
-                           Comp => T.Type_Mode in Type_Mode_Fat,
-                           K => Kind, T => T, Dp => D,
-                           Vtype => T.Ortho_Type (Kind),
-                           Ptype => T.Ortho_Ptr_Type (Kind)));
-   end Dp2M;
-
-   function M2Lv (M : Mnode) return O_Lnode is
-   begin
-      case M.M1.State is
-         when Mstate_E =>
-            case Get_Type_Info (M).Type_Mode is
-               when Type_Mode_Thin =>
-                  --  Scalar to var is not possible.
-                  --  FIXME: This is not coherent with the fact that this
-                  --  conversion is possible when M is stabilized.
-                  raise Internal_Error;
-               when Type_Mode_Fat =>
-                  return New_Access_Element (M.M1.E);
-               when Type_Mode_Unknown =>
-                  raise Internal_Error;
-            end case;
-         when Mstate_Lp =>
-            return New_Acc_Value (M.M1.Lp);
-         when Mstate_Lv =>
-            return M.M1.Lv;
-         when Mstate_Dp =>
-            return New_Acc_Value (New_Obj (M.M1.Dp));
-         when Mstate_Dv =>
-            return New_Obj (M.M1.Dv);
-         when Mstate_Null
-           | Mstate_Bad =>
-            raise Internal_Error;
-      end case;
-   end M2Lv;
-
-   function M2Lp (M : Mnode) return O_Lnode is
-   begin
-      case M.M1.State is
-         when Mstate_E =>
-            raise Internal_Error;
-         when Mstate_Lp =>
-            return M.M1.Lp;
-         when Mstate_Dp =>
-            return New_Obj (M.M1.Dp);
-         when Mstate_Lv =>
-            if Get_Type_Info (M).Type_Mode in Type_Mode_Fat then
-               return New_Obj
-                 (Create_Temp_Init (M.M1.Ptype,
-                                    New_Address (M.M1.Lv, M.M1.Ptype)));
-            else
-               raise Internal_Error;
-            end if;
-         when Mstate_Dv
-           | Mstate_Null
-           | Mstate_Bad =>
-            raise Internal_Error;
-      end case;
-   end M2Lp;
-
-   function M2Dp (M : Mnode) return O_Dnode is
-   begin
-      case M.M1.State is
-         when Mstate_Dp =>
-            return M.M1.Dp;
-         when Mstate_Dv =>
-            return Create_Temp_Init
-              (M.M1.Ptype, New_Address (New_Obj (M.M1.Dv), M.M1.Ptype));
-
-         when others =>
-            raise Internal_Error;
-      end case;
-   end M2Dp;
-
-   function M2Dv (M : Mnode) return O_Dnode is
-   begin
-      case M.M1.State is
-         when Mstate_Dv =>
-            return M.M1.Dv;
-         when others =>
-            raise Internal_Error;
-      end case;
-   end M2Dv;
-
-   function T2M (Atype : Iir; Kind : Object_Kind_Type) return Mnode
-   is
-      T : Type_Info_Acc;
-   begin
-      T := Get_Info (Atype);
-      return Mnode'(M1 => (State => Mstate_Null,
-                           Comp => T.Type_Mode in Type_Mode_Fat,
-                           K => Kind, T => T,
-                           Vtype => T.Ortho_Type (Kind),
-                           Ptype => T.Ortho_Ptr_Type (Kind)));
-   end T2M;
-
-   function Stabilize (M : Mnode; Can_Copy : Boolean := False) return Mnode
-   is
-      D : O_Dnode;
-      K : Object_Kind_Type;
-   begin
-      K := M.M1.K;
-      case M.M1.State is
-         when Mstate_E =>
-            if M.M1.Comp then
-               D := Create_Temp_Init (M.M1.Ptype, M.M1.E);
-               return Mnode'(M1 => (State => Mstate_Dp,
-                                    Comp => M.M1.Comp,
-                                    K => K, T => M.M1.T, Dp => D,
-                                    Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
-            else
-               D := Create_Temp_Init (M.M1.Vtype, M.M1.E);
-               return Mnode'(M1 => (State => Mstate_Dv,
-                                    Comp => M.M1.Comp,
-                                    K => K, T => M.M1.T, Dv => D,
-                                    Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
-            end if;
-         when Mstate_Lp =>
-            D := Create_Temp_Init (M.M1.Ptype, New_Value (M.M1.Lp));
-            return Mnode'(M1 => (State => Mstate_Dp,
-                                 Comp => M.M1.Comp,
-                                 K => K, T => M.M1.T, Dp => D,
-                                 Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
-         when Mstate_Lv =>
-            if M.M1.Ptype = O_Tnode_Null then
-               if not Can_Copy then
-                  raise Internal_Error;
-               end if;
-               D := Create_Temp_Init (M.M1.Vtype, New_Value (M.M1.Lv));
-               return Mnode'(M1 => (State => Mstate_Dv,
-                                    Comp => M.M1.Comp,
-                                    K => K, T => M.M1.T, Dv => D,
-                                    Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
-
-            else
-               D := Create_Temp_Ptr (M.M1.Ptype, M.M1.Lv);
-               return Mnode'(M1 => (State => Mstate_Dp,
-                                    Comp => M.M1.Comp,
-                                    K => K, T => M.M1.T, Dp => D,
-                                    Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
-            end if;
-         when Mstate_Dp
-           | Mstate_Dv =>
-            return M;
-         when Mstate_Bad
-           | Mstate_Null =>
-            raise Internal_Error;
-      end case;
-   end Stabilize;
-
-   procedure Stabilize (M : in out Mnode) is
-   begin
-      M := Stabilize (M);
-   end Stabilize;
-
-   function Stabilize_Value (M : Mnode) return Mnode
-   is
-      D : O_Dnode;
-      E : O_Enode;
-   begin
-      --  M must be scalar or access.
-      if M.M1.Comp then
-         raise Internal_Error;
-      end if;
-      case M.M1.State is
-         when Mstate_E =>
-            E := M.M1.E;
-         when Mstate_Lp =>
-            E := New_Value (New_Acc_Value (M.M1.Lp));
-         when Mstate_Lv =>
-            E := New_Value (M.M1.Lv);
-         when Mstate_Dp
-           | Mstate_Dv =>
-            return M;
-         when Mstate_Bad
-           | Mstate_Null =>
-            raise Internal_Error;
-      end case;
-
-      D := Create_Temp_Init (M.M1.Vtype, E);
-      return Mnode'(M1 => (State => Mstate_Dv,
-                           Comp => M.M1.Comp,
-                           K => M.M1.K, T => M.M1.T, Dv => D,
-                           Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
-   end Stabilize_Value;
-
-   function M2E (M : Mnode) return O_Enode is
-   begin
-      case M.M1.State is
-         when Mstate_E =>
-            return M.M1.E;
-         when Mstate_Lp =>
-            case M.M1.T.Type_Mode is
-               when Type_Mode_Unknown =>
-                  raise Internal_Error;
-               when Type_Mode_Thin =>
-                  return New_Value (New_Acc_Value (M.M1.Lp));
-               when Type_Mode_Fat =>
-                  return New_Value (M.M1.Lp);
-            end case;
-         when Mstate_Dp =>
-            case M.M1.T.Type_Mode is
-               when Type_Mode_Unknown =>
-                  raise Internal_Error;
-               when Type_Mode_Thin =>
-                  return New_Value (New_Acc_Value (New_Obj (M.M1.Dp)));
-               when Type_Mode_Fat =>
-                  return New_Value (New_Obj (M.M1.Dp));
-            end case;
-         when Mstate_Lv =>
-            case M.M1.T.Type_Mode is
-               when Type_Mode_Unknown =>
-                  raise Internal_Error;
-               when Type_Mode_Thin =>
-                  return New_Value (M.M1.Lv);
-               when Type_Mode_Fat =>
-                  return New_Address (M.M1.Lv, M.M1.Ptype);
-            end case;
-         when Mstate_Dv =>
-            case M.M1.T.Type_Mode is
-               when Type_Mode_Unknown =>
-                  raise Internal_Error;
-               when Type_Mode_Thin =>
-                  return New_Value (New_Obj (M.M1.Dv));
-               when Type_Mode_Fat =>
-                  return New_Address (New_Obj (M.M1.Dv), M.M1.Ptype);
-            end case;
-         when Mstate_Bad
-           | Mstate_Null =>
-            raise Internal_Error;
-      end case;
-   end M2E;
-
-   function M2Addr (M : Mnode) return O_Enode is
-   begin
-      case M.M1.State is
-         when Mstate_Lp =>
-            return New_Value (M.M1.Lp);
-         when Mstate_Dp =>
-            return New_Value (New_Obj (M.M1.Dp));
-         when Mstate_Lv =>
-            return New_Address (M.M1.Lv, M.M1.Ptype);
-         when Mstate_Dv =>
-            return New_Address (New_Obj (M.M1.Dv), M.M1.Ptype);
-         when Mstate_E =>
-            if M.M1.Comp then
-               return M.M1.E;
-            else
-               raise Internal_Error;
-            end if;
-         when Mstate_Bad
-           | Mstate_Null =>
-            raise Internal_Error;
-      end case;
-   end M2Addr;
-
---    function Is_Null (M : Mnode) return Boolean is
---    begin
---       return M.M1.State = Mstate_Null;
---    end Is_Null;
-
-   function Is_Stable (M : Mnode) return Boolean is
-   begin
-      case M.M1.State is
-         when Mstate_Dp
-           | Mstate_Dv =>
-            return True;
-         when others =>
-            return False;
-      end case;
-   end Is_Stable;
-
---    function Varv2M
---      (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
---      return Mnode is
---    begin
---       return Lv2M (Get_Var (Var), Vtype, Mode);
---    end Varv2M;
-
-   function Varv2M (Var : Var_Type;
-                    Var_Type : Type_Info_Acc;
-                    Mode : Object_Kind_Type;
-                    Vtype : O_Tnode;
-                    Ptype : O_Tnode)
-     return Mnode is
-   begin
-      return Lv2M (Get_Var (Var), Var_Type, Mode, Vtype, Ptype);
-   end Varv2M;
-
-   --  Convert a Lnode for a sub object to an MNODE.
-   function Lo2M (L : O_Lnode; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-     return Mnode is
-   begin
-      case Vtype.Type_Mode is
-         when Type_Mode_Scalar
-           | Type_Mode_Acc
-           | Type_Mode_File
-           | Type_Mode_Fat_Array
-           | Type_Mode_Fat_Acc =>
-            return Lv2M (L, Vtype, Mode);
-         when Type_Mode_Array
-           | Type_Mode_Record
-           | Type_Mode_Protected =>
-            if Is_Complex_Type (Vtype) then
-               return Lp2M (L, Vtype, Mode);
-            else
-               return Lv2M (L, Vtype, Mode);
-            end if;
-         when Type_Mode_Unknown =>
-            raise Internal_Error;
-      end case;
-   end Lo2M;
-
-   function Lo2M (D : O_Dnode; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-     return Mnode is
-   begin
-      case Vtype.Type_Mode is
-         when Type_Mode_Scalar
-           | Type_Mode_Acc
-           | Type_Mode_File
-           | Type_Mode_Fat_Array
-           | Type_Mode_Fat_Acc =>
-            return Dv2M (D, Vtype, Mode);
-         when Type_Mode_Array
-           | Type_Mode_Record
-           | Type_Mode_Protected =>
-            if Is_Complex_Type (Vtype) then
-               return Dp2M (D, Vtype, Mode);
-            else
-               return Dv2M (D, Vtype, Mode);
-            end if;
-         when Type_Mode_Unknown =>
-            raise Internal_Error;
-      end case;
-   end Lo2M;
-
-   function Get_Var
-     (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-     return Mnode
-   is
-      L : O_Lnode;
-      D : O_Dnode;
-      Stable : Boolean;
-   begin
-      --  FIXME: there may be Vv2M and Vp2M.
-      Stable := Is_Var_Stable (Var);
-      if Stable then
-         D := Get_Var_Label (Var);
-      else
-         L := Get_Var (Var);
-      end if;
-      case Vtype.Type_Mode is
-         when Type_Mode_Scalar
-           | Type_Mode_Acc
-           | Type_Mode_File
-           | Type_Mode_Fat_Array
-           | Type_Mode_Fat_Acc =>
-            if Stable then
-               return Dv2M (D, Vtype, Mode);
-            else
-               return Lv2M (L, Vtype, Mode);
-            end if;
-         when Type_Mode_Array
-           | Type_Mode_Record
-           | Type_Mode_Protected =>
-            if Is_Complex_Type (Vtype) then
-               if Stable then
-                  return Dp2M (D, Vtype, Mode);
-               else
-                  return Lp2M (L, Vtype, Mode);
-               end if;
-            else
-               if Stable then
-                  return Dv2M (D, Vtype, Mode);
-               else
-                  return Lv2M (L, Vtype, Mode);
-               end if;
-            end if;
-         when Type_Mode_Unknown =>
-            raise Internal_Error;
-      end case;
-   end Get_Var;
-
-   function Create_Temp (Info : Type_Info_Acc;
-                         Kind : Object_Kind_Type := Mode_Value)
-                        return Mnode is
-   begin
-      if Is_Complex_Type (Info)
-        and then Info.Type_Mode /= Type_Mode_Fat_Array
-      then
-         --  For a complex and constrained object, we just allocate
-         --  a pointer to the object.
-         return Dp2M (Create_Temp (Info.Ortho_Ptr_Type (Kind)), Info, Kind);
-      else
-         return Dv2M (Create_Temp (Info.Ortho_Type (Kind)), Info, Kind);
-      end if;
-   end Create_Temp;
 
    function Translate_Foreign_Id (Decl : Iir) return Foreign_Info_Type
    is
@@ -3304,31 +1153,6 @@ package body Translation is
    end Translate_Foreign_Id;
 
    package body Helpers is
-      function New_Value_Selected_Acc_Value (L : O_Lnode; Field : O_Fnode)
-        return O_Enode is
-      begin
-         return New_Value
-           (New_Selected_Element (New_Access_Element (New_Value (L)), Field));
-      end New_Value_Selected_Acc_Value;
-
-      function New_Selected_Acc_Value (L : O_Lnode; Field : O_Fnode)
-        return O_Lnode is
-      begin
-         return New_Selected_Element
-           (New_Access_Element (New_Value (L)), Field);
-      end New_Selected_Acc_Value;
-
-      function New_Indexed_Acc_Value (L : O_Lnode; I : O_Enode) return O_Lnode
-      is
-      begin
-         return New_Indexed_Element (New_Access_Element (New_Value (L)), I);
-      end New_Indexed_Acc_Value;
-
-      function New_Acc_Value (L : O_Lnode) return O_Lnode is
-      begin
-         return New_Access_Element (New_Value (L));
-      end New_Acc_Value;
-
       procedure Copy_Fat_Pointer (D : Mnode; S: Mnode)
       is
       begin
@@ -3337,290 +1161,6 @@ package body Translation is
          New_Assign_Stmt (M2Lp (Chap3.Get_Array_Bounds (D)),
                           M2Addr (Chap3.Get_Array_Bounds (S)));
       end Copy_Fat_Pointer;
-
-      procedure Inc_Var (V : O_Dnode) is
-      begin
-         New_Assign_Stmt (New_Obj (V),
-                          New_Dyadic_Op (ON_Add_Ov,
-                                         New_Obj_Value (V),
-                                         New_Lit (Ghdl_Index_1)));
-      end Inc_Var;
-
-      procedure Dec_Var (V : O_Dnode) is
-      begin
-         New_Assign_Stmt (New_Obj (V),
-                          New_Dyadic_Op (ON_Sub_Ov,
-                                         New_Obj_Value (V),
-                                         New_Lit (Ghdl_Index_1)));
-      end Dec_Var;
-
-      procedure Init_Var (V : O_Dnode) is
-      begin
-         New_Assign_Stmt (New_Obj (V), New_Lit (Ghdl_Index_0));
-      end Init_Var;
-
-      procedure Gen_Exit_When (Label : O_Snode; Cond : O_Enode)
-      is
-         If_Blk : O_If_Block;
-      begin
-         Start_If_Stmt (If_Blk, Cond);
-         New_Exit_Stmt (Label);
-         Finish_If_Stmt (If_Blk);
-      end Gen_Exit_When;
-
-      Uniq_Id : Natural := 0;
-
-      function Create_Uniq_Identifier return Uniq_Identifier_String
-      is
-         Str : Uniq_Identifier_String;
-         Val : Natural;
-      begin
-         Str (1 .. 3) := "_UI";
-         Val := Uniq_Id;
-         Uniq_Id := Uniq_Id + 1;
-         for I in reverse 4 .. 11 loop
-            Str (I) := N2hex (Val mod 16);
-            Val := Val / 16;
-         end loop;
-         return Str;
-      end Create_Uniq_Identifier;
-
-      function Create_Uniq_Identifier return O_Ident is
-      begin
-         return Get_Identifier (Create_Uniq_Identifier);
-      end Create_Uniq_Identifier;
-
-      --  Create a temporary variable.
-      type Temp_Level_Type;
-      type Temp_Level_Acc is access Temp_Level_Type;
-      type Temp_Level_Type is record
-         Prev : Temp_Level_Acc;
-         Level : Natural;
-         Id : Natural;
-         Emitted : Boolean;
-         Stack2_Mark : O_Dnode;
-         Transient_Types : Iir;
-      end record;
-      --  Current level.
-      Temp_Level : Temp_Level_Acc := null;
-
-      --  List of unused temp_level_type structures.  To be faster, they are
-      --  never deallocated.
-      Old_Level : Temp_Level_Acc := null;
-
-      --  If set, emit comments for open_temp/close_temp.
-      Flag_Debug_Temp : constant Boolean := False;
-
-      procedure Open_Temp
-      is
-         L : Temp_Level_Acc;
-      begin
-         if Old_Level /= null then
-            L := Old_Level;
-            Old_Level := L.Prev;
-         else
-            L := new Temp_Level_Type;
-         end if;
-         L.all := (Prev => Temp_Level,
-                   Level => 0,
-                   Id => 0,
-                   Emitted => False,
-                   Stack2_Mark => O_Dnode_Null,
-                   Transient_Types => Null_Iir);
-         if Temp_Level /= null then
-            L.Level := Temp_Level.Level + 1;
-         end if;
-         Temp_Level := L;
-         if Flag_Debug_Temp then
-            New_Debug_Comment_Stmt
-              ("Open_Temp level " & Natural'Image (L.Level));
-         end if;
-      end Open_Temp;
-
-      procedure Open_Local_Temp is
-      begin
-         Open_Temp;
-         Temp_Level.Emitted := True;
-      end Open_Local_Temp;
-
-      procedure Add_Transient_Type_In_Temp (Atype : Iir)
-      is
-         Type_Info : Type_Info_Acc;
-      begin
-         Type_Info := Get_Info (Atype);
-         Type_Info.Type_Transient_Chain := Temp_Level.Transient_Types;
-         Temp_Level.Transient_Types := Atype;
-      end Add_Transient_Type_In_Temp;
-
-      procedure Release_Transient_Types (Chain : in out Iir) is
-         N_Atype : Iir;
-      begin
-         while Chain /= Null_Iir loop
-            N_Atype := Get_Info (Chain).Type_Transient_Chain;
-            Chap3.Destroy_Type_Info (Chain);
-            Chain := N_Atype;
-         end loop;
-      end Release_Transient_Types;
-
-      procedure Destroy_Local_Transient_Types is
-      begin
-         Release_Transient_Types (Temp_Level.Transient_Types);
-      end Destroy_Local_Transient_Types;
-
-      function Has_Stack2_Mark return Boolean is
-      begin
-         return Temp_Level.Stack2_Mark /= O_Dnode_Null;
-      end Has_Stack2_Mark;
-
-      procedure Stack2_Release
-      is
-         Constr : O_Assoc_List;
-      begin
-         if Temp_Level.Stack2_Mark /= O_Dnode_Null then
-            Start_Association (Constr, Ghdl_Stack2_Release);
-            New_Association (Constr,
-                             New_Value (New_Obj (Temp_Level.Stack2_Mark)));
-            New_Procedure_Call (Constr);
-            Temp_Level.Stack2_Mark := O_Dnode_Null;
-         end if;
-      end Stack2_Release;
-
-      procedure Close_Temp
-      is
-         L : Temp_Level_Acc;
-      begin
-         if Temp_Level = null then
-            --  OPEN_TEMP was not called.
-            raise Internal_Error;
-         end if;
-         if Flag_Debug_Temp then
-            New_Debug_Comment_Stmt
-              ("Close_Temp level " & Natural'Image (Temp_Level.Level));
-         end if;
-
-         if Temp_Level.Stack2_Mark /= O_Dnode_Null then
-            Stack2_Release;
-         end if;
-         if Temp_Level.Emitted then
-            Finish_Declare_Stmt;
-         end if;
-
-         --  Destroy transcient types.
-         Release_Transient_Types (Temp_Level.Transient_Types);
-
-         --  Unlink temp_level.
-         L := Temp_Level;
-         Temp_Level := L.Prev;
-         L.Prev := Old_Level;
-         Old_Level := L;
-      end Close_Temp;
-
-      procedure Close_Local_Temp is
-      begin
-         Temp_Level.Emitted := False;
-         Close_Temp;
-      end Close_Local_Temp;
-
-      procedure Free_Old_Temp
-      is
-         procedure Free is new Ada.Unchecked_Deallocation
-           (Temp_Level_Type, Temp_Level_Acc);
-         T : Temp_Level_Acc;
-      begin
-         if Temp_Level /= null then
-            raise Internal_Error;
-         end if;
-         loop
-            T := Old_Level;
-            exit when T = null;
-            Old_Level := Old_Level.Prev;
-            Free (T);
-         end loop;
-      end Free_Old_Temp;
-
-      procedure Create_Temp_Stack2_Mark
-      is
-         Constr : O_Assoc_List;
-      begin
-         if Temp_Level.Stack2_Mark /= O_Dnode_Null then
-            --  Only the first mark in a region is registred.
-            --  The release operation frees the memory allocated after the
-            --  first mark.
-            return;
-         end if;
-         Temp_Level.Stack2_Mark := Create_Temp (Ghdl_Ptr_Type);
-         Start_Association (Constr, Ghdl_Stack2_Mark);
-         New_Assign_Stmt (New_Obj (Temp_Level.Stack2_Mark),
-                          New_Function_Call (Constr));
-      end Create_Temp_Stack2_Mark;
-
-      function Create_Temp (Atype : O_Tnode) return O_Dnode
-      is
-         Str : String (1 .. 12);
-         Val : Natural;
-         Res : O_Dnode;
-         P : Natural;
-      begin
-         if Temp_Level = null then
-            --  OPEN_TEMP was never called.
-            raise Internal_Error;
-            --  This is an hack, just to allow array subtype to array type
-            --  conversion.
-            --New_Var_Decl
-            --  (Res, Create_Uniq_Identifier, O_Storage_Private, Atype);
-            --return Res;
-         else
-            if not Temp_Level.Emitted then
-               Temp_Level.Emitted := True;
-               Start_Declare_Stmt;
-            end if;
-         end if;
-         Val := Temp_Level.Id;
-         Temp_Level.Id := Temp_Level.Id + 1;
-         P := Str'Last;
-         loop
-            Str (P) := Character'Val (Val mod 10 + Character'Pos ('0'));
-            Val := Val / 10;
-            P := P - 1;
-            exit when Val = 0;
-         end loop;
-         Str (P) := '_';
-         P := P - 1;
-         Val := Temp_Level.Level;
-         loop
-            Str (P) := Character'Val (Val mod 10 + Character'Pos ('0'));
-            Val := Val / 10;
-            P := P - 1;
-            exit when Val = 0;
-         end loop;
-         Str (P) := 'T';
-         --Str (12) := Nul;
-         New_Var_Decl
-           (Res, Get_Identifier (Str (P .. Str'Last)), O_Storage_Local, Atype);
-         return Res;
-      end Create_Temp;
-
-      function Create_Temp_Init (Atype : O_Tnode; Value : O_Enode)
-        return O_Dnode
-      is
-         Res : O_Dnode;
-      begin
-         Res := Create_Temp (Atype);
-         New_Assign_Stmt (New_Obj (Res), Value);
-         return Res;
-      end Create_Temp_Init;
-
-      function Create_Temp_Ptr (Atype : O_Tnode; Name : O_Lnode)
-        return O_Dnode is
-      begin
-         return Create_Temp_Init (Atype, New_Address (Name, Atype));
-      end Create_Temp_Ptr;
-
-      --  Return a ghdl_index_type literal for NUM.
-      function New_Index_Lit (Num : Unsigned_64) return O_Cnode is
-      begin
-         return New_Unsigned_Literal (Ghdl_Index_Type, Num);
-      end New_Index_Lit;
 
       --  Convert NAME into a STRING_CST.
       --  Append a NUL terminator (to make interfaces with C easier).
@@ -4039,8 +1579,8 @@ package body Translation is
       is
          Info : Block_Info_Acc;
          Interface_List : O_Inter_List;
-         Instance : Chap2.Subprg_Instance_Type;
-         Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
+         Instance : Subprgs.Subprg_Instance_Type;
+         Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       begin
          Info := Add_Info (Entity, Kind_Block);
          Chap1.Start_Block_Decl (Entity);
@@ -4058,15 +1598,15 @@ package body Translation is
 
          Pop_Instance_Factory (Info.Block_Scope'Access);
 
-         Chap2.Push_Subprg_Instance (Info.Block_Scope'Access,
-                                     Info.Block_Decls_Ptr_Type,
-                                     Wki_Instance,
-                                     Prev_Subprg_Instance);
+         Subprgs.Push_Subprg_Instance (Info.Block_Scope'Access,
+                                       Info.Block_Decls_Ptr_Type,
+                                       Wki_Instance,
+                                       Prev_Subprg_Instance);
 
          --  Entity elaborator.
          Start_Procedure_Decl (Interface_List, Create_Identifier ("ELAB"),
                                Global_Storage);
-         Chap2.Add_Subprg_Instance_Interfaces (Interface_List, Instance);
+         Subprgs.Add_Subprg_Instance_Interfaces (Interface_List, Instance);
          Finish_Subprogram_Decl (Interface_List, Info.Block_Elab_Subprg);
 
          --  Entity dependences elaborator.
@@ -4097,11 +1637,11 @@ package body Translation is
             --  Elaborator Body.
             Start_Subprogram_Body (Info.Block_Elab_Subprg);
             Push_Local_Factory;
-            Chap2.Start_Subprg_Instance_Use (Instance);
+            Subprgs.Start_Subprg_Instance_Use (Instance);
             New_Debug_Line_Stmt (Get_Line_Number (Entity));
 
             Chap9.Elab_Block_Declarations (Entity, Entity);
-            Chap2.Finish_Subprg_Instance_Use (Instance);
+            Subprgs.Finish_Subprg_Instance_Use (Instance);
             Pop_Local_Factory;
             Finish_Subprogram_Body;
 
@@ -4113,19 +1653,19 @@ package body Translation is
                   Start_Procedure_Decl
                     (Interface_List, Create_Identifier ("_INIT"),
                      Global_Storage);
-                  Chap2.Add_Subprg_Instance_Interfaces
+                  Subprgs.Add_Subprg_Instance_Interfaces
                     (Interface_List, Instance);
                   Finish_Subprogram_Decl (Interface_List, Init_Subprg);
 
                   Start_Subprogram_Body (Init_Subprg);
-                  Chap2.Start_Subprg_Instance_Use (Instance);
+                  Subprgs.Start_Subprg_Instance_Use (Instance);
                   Translate_Entity_Init (Entity);
-                  Chap2.Finish_Subprg_Instance_Use (Instance);
+                  Subprgs.Finish_Subprg_Instance_Use (Instance);
                   Finish_Subprogram_Body;
                end;
             end if;
          end if;
-         Chap2.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+         Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
       end Translate_Entity_Declaration;
 
       --  Push scope for architecture ARCH via INSTANCE, and for its
@@ -4162,7 +1702,7 @@ package body Translation is
          Constr : O_Assoc_List;
          Instance : O_Dnode;
          Var_Arch_Instance : O_Dnode;
-         Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
+         Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       begin
          if Get_Foreign_Flag (Arch) then
             Error_Msg_Sem ("FOREIGN architectures are not yet handled", Arch);
@@ -4210,10 +1750,10 @@ package body Translation is
          end if;
 
          --  Create process subprograms.
-         Chap2.Push_Subprg_Instance (Info.Block_Scope'Access,
-                                     Info.Block_Decls_Ptr_Type,
-                                     Wki_Instance,
-                                     Prev_Subprg_Instance);
+         Subprgs.Push_Subprg_Instance (Info.Block_Scope'Access,
+                                       Info.Block_Decls_Ptr_Type,
+                                       Wki_Instance,
+                                       Prev_Subprg_Instance);
          Set_Scope_Via_Field (Entity_Info.Block_Scope,
                               Info.Block_Parent_Field,
                               Info.Block_Scope'Access);
@@ -4221,7 +1761,7 @@ package body Translation is
          Chap9.Translate_Block_Subprograms (Arch, Arch);
 
          Clear_Scope (Entity_Info.Block_Scope);
-         Chap2.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+         Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
 
          --  Elaborator body.
          Start_Subprogram_Body (Info.Block_Elab_Subprg);
@@ -4805,6 +2345,8 @@ package body Translation is
    end Chap1;
 
    package body Chap2 is
+      use Trans.Subprgs;
+
       procedure Elab_Package (Spec : Iir_Package_Declaration);
 
       type Name_String_Xlat_Array is array (Name_Id range <>) of
@@ -5032,7 +2574,7 @@ package body Translation is
 
          --  Instance parameter if any.
          if not Get_Foreign_Flag (Spec) then
-            Chap2.Create_Subprg_Instance (Interface_List, Spec);
+            Subprgs.Create_Subprg_Instance (Interface_List, Spec);
          end if;
 
          --  Translate interfaces.
@@ -5152,7 +2694,7 @@ package body Translation is
 
          Has_Return : Boolean;
 
-         Prev_Subprg_Instances : Chap2.Subprg_Instance_Stack;
+         Prev_Subprg_Instances : Subprgs.Subprg_Instance_Stack;
       begin
          --  Do not translate body for foreign subprograms.
          if Get_Foreign_Flag (Spec) then
@@ -5217,20 +2759,20 @@ package body Translation is
             Rtis.Generate_Subprogram_Body (Subprg);
 
             --  Local frame
-            Chap2.Push_Subprg_Instance
+            Subprgs.Push_Subprg_Instance
               (Info.Subprg_Frame_Scope'Access, Frame_Ptr_Type,
                Wki_Upframe, Prev_Subprg_Instances);
             --  Link to previous frame
-            Chap2.Start_Prev_Subprg_Instance_Use_Via_Field
+            Subprgs.Start_Prev_Subprg_Instance_Use_Via_Field
               (Prev_Subprg_Instances, Upframe_Field);
 
             Chap4.Translate_Declaration_Chain_Subprograms (Subprg);
 
             --  Link to previous frame
-            Chap2.Finish_Prev_Subprg_Instance_Use_Via_Field
+            Subprgs.Finish_Prev_Subprg_Instance_Use_Via_Field
               (Prev_Subprg_Instances, Upframe_Field);
             --  Local frame
-            Chap2.Pop_Subprg_Instance (Wki_Upframe, Prev_Subprg_Instances);
+            Subprgs.Pop_Subprg_Instance (Wki_Upframe, Prev_Subprg_Instances);
          end if;
 
          --  Create the body
@@ -5244,7 +2786,7 @@ package body Translation is
 
          --  Code has access to local (and outer) variables.
          --  FIXME: this is not necessary if Has_Nested is set
-         Chap2.Clear_Subprg_Instance (Prev_Subprg_Instances);
+         Subprgs.Clear_Subprg_Instance (Prev_Subprg_Instances);
 
          --  There is a local scope for temporaries.
          Open_Local_Temp;
@@ -5266,7 +2808,7 @@ package body Translation is
             Set_Scope_Via_Param_Ptr (Info.Subprg_Frame_Scope, Frame_Ptr);
 
             --  Set UPFRAME.
-            Chap2.Set_Subprg_Instance_Field
+            Subprgs.Set_Subprg_Instance_Field
               (Frame_Ptr, Upframe_Field, Info.Subprg_Instance);
 
             if Info.Res_Record_Type /= O_Tnode_Null then
@@ -5393,7 +2935,7 @@ package body Translation is
             Clear_Scope (Info.Subprg_Frame_Scope);
          end if;
 
-         Chap2.Pop_Subprg_Instance (O_Ident_Nul, Prev_Subprg_Instances);
+         Subprgs.Pop_Subprg_Instance (O_Ident_Nul, Prev_Subprg_Instances);
          Close_Local_Temp;
          Pop_Local_Factory;
 
@@ -5409,7 +2951,7 @@ package body Translation is
          Header : constant Iir := Get_Package_Header (Decl);
          Info : Ortho_Info_Acc;
          Interface_List : O_Inter_List;
-         Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
+         Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       begin
          Info := Add_Info (Decl, Kind_Package);
 
@@ -5435,7 +2977,7 @@ package body Translation is
               (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type);
 
             --  Each subprogram has a body instance argument.
-            Chap2.Push_Subprg_Instance
+            Subprgs.Push_Subprg_Instance
               (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
                Wki_Instance, Prev_Subprg_Instance);
          else
@@ -5450,23 +2992,23 @@ package body Translation is
          --  Declare elaborator for the body.
          Start_Procedure_Decl
            (Interface_List, Create_Identifier ("ELAB_BODY"), Global_Storage);
-         Chap2.Add_Subprg_Instance_Interfaces
+         Subprgs.Add_Subprg_Instance_Interfaces
            (Interface_List, Info.Package_Elab_Body_Instance);
          Finish_Subprogram_Decl
            (Interface_List, Info.Package_Elab_Body_Subprg);
 
          if Is_Uninstantiated_Package (Decl) then
-            Chap2.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+            Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
 
             --  The spec elaborator has a spec instance argument.
-            Chap2.Push_Subprg_Instance
+            Subprgs.Push_Subprg_Instance
               (Info.Package_Spec_Scope'Access, Info.Package_Spec_Ptr_Type,
                Wki_Instance, Prev_Subprg_Instance);
          end if;
 
          Start_Procedure_Decl
            (Interface_List, Create_Identifier ("ELAB_SPEC"), Global_Storage);
-         Chap2.Add_Subprg_Instance_Interfaces
+         Subprgs.Add_Subprg_Instance_Interfaces
            (Interface_List, Info.Package_Elab_Spec_Instance);
          Finish_Subprogram_Decl
            (Interface_List, Info.Package_Elab_Spec_Subprg);
@@ -5482,7 +3024,7 @@ package body Translation is
          end if;
 
          if Is_Uninstantiated_Package (Decl) then
-            Chap2.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+            Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
          end if;
          Save_Local_Identifier (Info.Package_Local_Id);
       end Translate_Package_Declaration;
@@ -5491,7 +3033,7 @@ package body Translation is
       is
          Spec : constant Iir_Package_Declaration := Get_Package (Decl);
          Info : constant Ortho_Info_Acc := Get_Info (Spec);
-         Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
+         Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       begin
          --  Translate declarations.
          if Is_Uninstantiated_Package (Spec) then
@@ -5523,7 +3065,7 @@ package body Translation is
          end if;
 
          if Is_Uninstantiated_Package (Spec) then
-            Chap2.Push_Subprg_Instance
+            Subprgs.Push_Subprg_Instance
               (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
                Wki_Instance, Prev_Subprg_Instance);
             Set_Scope_Via_Field (Info.Package_Spec_Scope,
@@ -5535,7 +3077,7 @@ package body Translation is
 
          if Is_Uninstantiated_Package (Spec) then
             Clear_Scope (Info.Package_Spec_Scope);
-            Chap2.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+            Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
          end if;
 
          Elab_Package_Body (Spec, Decl);
@@ -5550,7 +3092,7 @@ package body Translation is
       begin
          Start_Subprogram_Body (Info.Package_Elab_Spec_Subprg);
          Push_Local_Factory;
-         Chap2.Start_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
+         Subprgs.Start_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
 
          Elab_Dependence (Get_Design_Unit (Spec));
 
@@ -5572,7 +3114,7 @@ package body Translation is
          Chap4.Elab_Declaration_Chain (Spec, Final);
          Close_Temp;
 
-         Chap2.Finish_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
+         Subprgs.Finish_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
          Pop_Local_Factory;
          Finish_Subprogram_Body;
       end Elab_Package;
@@ -5586,7 +3128,7 @@ package body Translation is
       begin
          Start_Subprogram_Body (Info.Package_Elab_Body_Subprg);
          Push_Local_Factory;
-         Chap2.Start_Subprg_Instance_Use (Info.Package_Elab_Body_Instance);
+         Subprgs.Start_Subprg_Instance_Use (Info.Package_Elab_Body_Instance);
 
          if Is_Uninstantiated_Package (Spec) then
             Set_Scope_Via_Field (Info.Package_Spec_Scope,
@@ -5619,7 +3161,7 @@ package body Translation is
             Clear_Scope (Info.Package_Spec_Scope);
          end if;
 
-         Chap2.Finish_Subprg_Instance_Use (Info.Package_Elab_Body_Instance);
+         Subprgs.Finish_Subprg_Instance_Use (Info.Package_Elab_Body_Instance);
          Pop_Local_Factory;
          Finish_Subprogram_Body;
       end Elab_Package_Body;
@@ -6029,157 +3571,6 @@ package body Translation is
            (Scope.all, Create_Identifier ("INSTPTR"), Ptr_Type);
       end Declare_Inst_Type_And_Ptr;
 
-      procedure Clear_Subprg_Instance (Prev : out Subprg_Instance_Stack) is
-      begin
-         Prev := Current_Subprg_Instance;
-         Current_Subprg_Instance := Null_Subprg_Instance_Stack;
-      end Clear_Subprg_Instance;
-
-      procedure Push_Subprg_Instance (Scope : Var_Scope_Acc;
-                                      Ptr_Type : O_Tnode;
-                                      Ident : O_Ident;
-                                      Prev : out Subprg_Instance_Stack)
-      is
-      begin
-         Prev := Current_Subprg_Instance;
-         Current_Subprg_Instance := (Scope => Scope,
-                                     Ptr_Type => Ptr_Type,
-                                     Ident => Ident);
-      end Push_Subprg_Instance;
-
-      function Has_Current_Subprg_Instance return Boolean is
-      begin
-         return Current_Subprg_Instance.Ptr_Type /= O_Tnode_Null;
-      end Has_Current_Subprg_Instance;
-
-      procedure Pop_Subprg_Instance (Ident : O_Ident;
-                                     Prev : Subprg_Instance_Stack)
-      is
-      begin
-         if Is_Equal (Current_Subprg_Instance.Ident, Ident) then
-            Current_Subprg_Instance := Prev;
-         else
-            --  POP does not match with a push.
-            raise Internal_Error;
-         end if;
-      end Pop_Subprg_Instance;
-
-      procedure Add_Subprg_Instance_Interfaces
-        (Interfaces : in out O_Inter_List; Vars : out Subprg_Instance_Type)
-      is
-      begin
-         if Has_Current_Subprg_Instance then
-            Vars.Scope := Current_Subprg_Instance.Scope;
-            Vars.Inter_Type := Current_Subprg_Instance.Ptr_Type;
-            New_Interface_Decl
-              (Interfaces, Vars.Inter,
-               Current_Subprg_Instance.Ident,
-               Current_Subprg_Instance.Ptr_Type);
-         else
-            Vars := Null_Subprg_Instance;
-         end if;
-      end Add_Subprg_Instance_Interfaces;
-
-      procedure Add_Subprg_Instance_Field (Field : out O_Fnode) is
-      begin
-         if Has_Current_Subprg_Instance then
-            Field := Add_Instance_Factory_Field
-              (Current_Subprg_Instance.Ident,
-               Current_Subprg_Instance.Ptr_Type);
-         else
-            Field := O_Fnode_Null;
-         end if;
-      end Add_Subprg_Instance_Field;
-
-      function Has_Subprg_Instance (Vars : Subprg_Instance_Type)
-                                   return Boolean is
-      begin
-         return Vars.Inter /= O_Dnode_Null;
-      end Has_Subprg_Instance;
-
-      function Get_Subprg_Instance (Vars : Subprg_Instance_Type)
-                                   return O_Enode is
-      begin
-         pragma Assert (Has_Subprg_Instance (Vars));
-         return New_Address (Get_Instance_Ref (Vars.Scope.all),
-                             Vars.Inter_Type);
-      end Get_Subprg_Instance;
-
-      procedure Add_Subprg_Instance_Assoc
-        (Assocs : in out O_Assoc_List; Vars : Subprg_Instance_Type) is
-      begin
-         if Has_Subprg_Instance (Vars) then
-            New_Association (Assocs, Get_Subprg_Instance (Vars));
-         end if;
-      end Add_Subprg_Instance_Assoc;
-
-      procedure Set_Subprg_Instance_Field
-        (Var : O_Dnode; Field : O_Fnode; Vars : Subprg_Instance_Type)
-      is
-      begin
-         if Has_Subprg_Instance (Vars) then
-            New_Assign_Stmt (New_Selected_Acc_Value (New_Obj (Var), Field),
-                             New_Obj_Value (Vars.Inter));
-         end if;
-      end Set_Subprg_Instance_Field;
-
-      procedure Start_Subprg_Instance_Use (Vars : Subprg_Instance_Type) is
-      begin
-         if Has_Subprg_Instance (Vars) then
-            Set_Scope_Via_Param_Ptr (Vars.Scope.all, Vars.Inter);
-         end if;
-      end Start_Subprg_Instance_Use;
-
-      procedure Finish_Subprg_Instance_Use (Vars : Subprg_Instance_Type) is
-      begin
-         if Has_Subprg_Instance (Vars) then
-            Clear_Scope (Vars.Scope.all);
-         end if;
-      end Finish_Subprg_Instance_Use;
-
-      procedure Start_Prev_Subprg_Instance_Use_Via_Field
-        (Prev : Subprg_Instance_Stack; Field : O_Fnode) is
-      begin
-         if Field /= O_Fnode_Null then
-            Set_Scope_Via_Field_Ptr (Prev.Scope.all, Field,
-                                     Current_Subprg_Instance.Scope);
-         end if;
-      end Start_Prev_Subprg_Instance_Use_Via_Field;
-
-      procedure Finish_Prev_Subprg_Instance_Use_Via_Field
-        (Prev : Subprg_Instance_Stack; Field : O_Fnode) is
-      begin
-         if Field /= O_Fnode_Null then
-            Clear_Scope (Prev.Scope.all);
-         end if;
-      end Finish_Prev_Subprg_Instance_Use_Via_Field;
-
-      procedure Create_Subprg_Instance (Interfaces : in out O_Inter_List;
-                                        Subprg : Iir)
-      is
-      begin
-         Add_Subprg_Instance_Interfaces
-           (Interfaces, Get_Info (Subprg).Subprg_Instance);
-      end Create_Subprg_Instance;
-
-      procedure Start_Subprg_Instance_Use (Subprg : Iir) is
-      begin
-         Start_Subprg_Instance_Use (Get_Info (Subprg).Subprg_Instance);
-      end Start_Subprg_Instance_Use;
-
-      procedure Finish_Subprg_Instance_Use (Subprg : Iir) is
-      begin
-         Finish_Subprg_Instance_Use (Get_Info (Subprg).Subprg_Instance);
-      end Finish_Subprg_Instance_Use;
-
-      function Instantiate_Subprg_Instance (Inst : Subprg_Instance_Type)
-                                           return Subprg_Instance_Type is
-      begin
-         return Subprg_Instance_Type'
-           (Inter => Inst.Inter,
-            Inter_Type => Inst.Inter_Type,
-            Scope => Instantiated_Var_Scope (Inst.Scope));
-      end Instantiate_Subprg_Instance;
    end Chap2;
 
    package body Chap3 is
@@ -6265,7 +3656,7 @@ package body Translation is
          --  FIXME: return the same type as its first parameter ???
          Start_Function_Decl
            (Interface_List, Ident, Global_Storage, Ghdl_Index_Type);
-         Chap2.Add_Subprg_Instance_Interfaces
+         Subprgs.Add_Subprg_Instance_Interfaces
            (Interface_List, Info.C (Kind).Builder_Instance);
          case Info.Type_Mode is
             when Type_Mode_Fat_Array =>
@@ -6298,7 +3689,7 @@ package body Translation is
       begin
          --  Build the field
          Start_Association (Assoc, Binfo.C (Kind).Builder_Func);
-         Chap2.Add_Subprg_Instance_Assoc
+         Subprgs.Add_Subprg_Instance_Assoc
            (Assoc, Binfo.C (Kind).Builder_Instance);
 
          case Tinfo.Type_Mode is
@@ -7200,7 +4591,7 @@ package body Translation is
          Label : O_Snode;
       begin
          Start_Subprogram_Body (Info.C (Kind).Builder_Func);
-         Chap2.Start_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
+         Subprgs.Start_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
 
          --  Compute length of the array.
          New_Var_Decl (Var_Length, Wki_Length, O_Storage_Local,
@@ -7257,7 +4648,7 @@ package body Translation is
 
          New_Return_Stmt (New_Obj_Value (Var_Off));
 
-         Chap2.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
+         Subprgs.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
          Finish_Subprogram_Body;
       end Create_Array_Type_Builder;
 
@@ -7406,7 +4797,7 @@ package body Translation is
          El_Tinfo : Type_Info_Acc;
       begin
          Start_Subprogram_Body (Info.C (Kind).Builder_Func);
-         Chap2.Start_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
+         Subprgs.Start_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
 
          New_Var_Decl (Off_Var, Get_Identifier ("off"), O_Storage_Local,
                        Ghdl_Index_Type);
@@ -7476,7 +4867,7 @@ package body Translation is
             end if;
          end loop;
          New_Return_Stmt (New_Value (Get_Var (Info.C (Kind).Size_Var)));
-         Chap2.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
+         Subprgs.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
          Finish_Subprogram_Body;
       end Create_Record_Type_Builder;
 
@@ -7629,7 +5020,7 @@ package body Translation is
          El : Iir;
          Inter_List : O_Inter_List;
          Mark : Id_Mark_Type;
-         Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
+         Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       begin
          Push_Identifier_Prefix
            (Mark, Get_Identifier (Get_Type_Declarator (Def)));
@@ -7638,20 +5029,20 @@ package body Translation is
          Start_Function_Decl
            (Inter_List, Create_Identifier ("INIT"), Global_Storage,
             Info.Ortho_Ptr_Type (Mode_Value));
-         Chap2.Add_Subprg_Instance_Interfaces
+         Subprgs.Add_Subprg_Instance_Interfaces
            (Inter_List, Info.T.Prot_Init_Instance);
          Finish_Subprogram_Decl (Inter_List, Info.T.Prot_Init_Subprg);
 
          --  Use the object as instance.
-         Chap2.Push_Subprg_Instance (Info.T.Prot_Scope'Unrestricted_Access,
-                                     Info.Ortho_Ptr_Type (Mode_Value),
-                                     Wki_Obj,
-                                     Prev_Subprg_Instance);
+         Subprgs.Push_Subprg_Instance (Info.T.Prot_Scope'Unrestricted_Access,
+                                       Info.Ortho_Ptr_Type (Mode_Value),
+                                       Wki_Obj,
+                                       Prev_Subprg_Instance);
 
          --  Final.
          Start_Procedure_Decl
            (Inter_List, Create_Identifier ("FINI"), Global_Storage);
-         Chap2.Add_Subprg_Instance_Interfaces
+         Subprgs.Add_Subprg_Instance_Interfaces
            (Inter_List, Info.T.Prot_Final_Instance);
          Finish_Subprogram_Decl (Inter_List, Info.T.Prot_Final_Subprg);
 
@@ -7671,7 +5062,7 @@ package body Translation is
             El := Get_Chain (El);
          end loop;
 
-         Chap2.Pop_Subprg_Instance (Wki_Obj, Prev_Subprg_Instance);
+         Subprgs.Pop_Subprg_Instance (Wki_Obj, Prev_Subprg_Instance);
 
          Pop_Identifier_Prefix (Mark);
       end Translate_Protected_Type_Subprograms;
@@ -7688,7 +5079,7 @@ package body Translation is
          --  Create the object type
          Push_Instance_Factory (Info.T.Prot_Scope'Unrestricted_Access);
          --  First, the previous instance.
-         Chap2.Add_Subprg_Instance_Field (Info.T.Prot_Subprg_Instance_Field);
+         Subprgs.Add_Subprg_Instance_Field (Info.T.Prot_Subprg_Instance_Field);
          --  Then the object lock
          Info.T.Prot_Lock_Field := Add_Instance_Factory_Field
            (Get_Identifier ("LOCK"), Ghdl_Ptr_Type);
@@ -7724,23 +5115,23 @@ package body Translation is
          Decl : constant Iir := Get_Protected_Type_Declaration (Bod);
          Info : constant Type_Info_Acc := Get_Info (Decl);
          Final : Boolean;
-         Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
+         Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       begin
          Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
 
          --  Subprograms of BOD.
-         Chap2.Push_Subprg_Instance (Info.T.Prot_Scope'Unrestricted_Access,
-                                     Info.Ortho_Ptr_Type (Mode_Value),
-                                     Wki_Obj,
-                                     Prev_Subprg_Instance);
-         Chap2.Start_Prev_Subprg_Instance_Use_Via_Field
+         Subprgs.Push_Subprg_Instance (Info.T.Prot_Scope'Unrestricted_Access,
+                                       Info.Ortho_Ptr_Type (Mode_Value),
+                                       Wki_Obj,
+                                       Prev_Subprg_Instance);
+         Subprgs.Start_Prev_Subprg_Instance_Use_Via_Field
            (Prev_Subprg_Instance, Info.T.Prot_Subprg_Instance_Field);
 
          Chap4.Translate_Declaration_Chain_Subprograms (Bod);
 
-         Chap2.Finish_Prev_Subprg_Instance_Use_Via_Field
+         Subprgs.Finish_Prev_Subprg_Instance_Use_Via_Field
            (Prev_Subprg_Instance, Info.T.Prot_Subprg_Instance_Field);
-         Chap2.Pop_Subprg_Instance (Wki_Obj, Prev_Subprg_Instance);
+         Subprgs.Pop_Subprg_Instance (Wki_Obj, Prev_Subprg_Instance);
 
          Pop_Identifier_Prefix (Mark);
 
@@ -7753,7 +5144,7 @@ package body Translation is
             Var_Obj : O_Dnode;
          begin
             Start_Subprogram_Body (Info.T.Prot_Init_Subprg);
-            Chap2.Start_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
+            Subprgs.Start_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
             New_Var_Decl (Var_Obj, Wki_Obj, O_Storage_Local,
                           Info.Ortho_Ptr_Type (Mode_Value));
 
@@ -7765,7 +5156,7 @@ package body Translation is
                                                Ghdl_Index_Type)),
                           Info.Ortho_Ptr_Type (Mode_Value)));
 
-            Chap2.Set_Subprg_Instance_Field
+            Subprgs.Set_Subprg_Instance_Field
               (Var_Obj, Info.T.Prot_Subprg_Instance_Field,
                Info.T.Prot_Init_Instance);
 
@@ -7782,7 +5173,7 @@ package body Translation is
             Clear_Scope (Info.T.Prot_Scope);
 
             New_Return_Stmt (New_Obj_Value (Var_Obj));
-            Chap2.Finish_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
+            Subprgs.Finish_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
 
             Finish_Subprogram_Body;
          end;
@@ -7790,7 +5181,7 @@ package body Translation is
          --  Fini subprogram
          begin
             Start_Subprogram_Body (Info.T.Prot_Final_Subprg);
-            Chap2.Start_Subprg_Instance_Use (Info.T.Prot_Final_Instance);
+            Subprgs.Start_Subprg_Instance_Use (Info.T.Prot_Final_Instance);
 
             --   Deallocate fields.
             if Final or True then
@@ -7800,7 +5191,7 @@ package body Translation is
             --   Destroy lock.
             Call_Ghdl_Protected_Procedure (Decl, Ghdl_Protected_Fini);
 
-            Chap2.Finish_Subprg_Instance_Use (Info.T.Prot_Final_Instance);
+            Subprgs.Finish_Subprg_Instance_Use (Info.T.Prot_Final_Instance);
             Finish_Subprogram_Body;
          end;
       end Translate_Protected_Type_Body_Subprograms;
@@ -8541,15 +5932,6 @@ package body Translation is
          end if;
          Pop_Identifier_Prefix (Mark);
       end Translate_Anonymous_Type_Definition;
-
-      procedure Destroy_Type_Info (Atype : Iir)
-      is
-         Type_Info : Type_Info_Acc;
-      begin
-         Type_Info := Get_Info (Atype);
-         Free_Type_Info (Type_Info);
-         Clear_Info (Atype);
-      end Destroy_Type_Info;
 
       procedure Translate_Object_Subtype (Decl : Iir;
                                           With_Vars : Boolean := True)
@@ -9829,7 +7211,7 @@ package body Translation is
 
          --  Call the initializer.
          Start_Association (Assoc, Info.T.Prot_Init_Subprg);
-         Chap2.Add_Subprg_Instance_Assoc (Assoc, Info.T.Prot_Init_Instance);
+         Subprgs.Add_Subprg_Instance_Assoc (Assoc, Info.T.Prot_Init_Instance);
          --  Use of M2Lp is a little bit fragile (not sure we get the
          --  variable, but should work: we didn't stabilize it).
          New_Assign_Stmt (M2Lp (Obj), New_Function_Call (Assoc));
@@ -10224,9 +7606,9 @@ package body Translation is
          New_Association
            (Assoc, New_Lit (New_Subprogram_Address (Resolv_Info.Resolv_Func,
                                                     Ghdl_Ptr_Type)));
-         if Chap2.Has_Subprg_Instance (Resolv_Info.Var_Instance) then
+         if Subprgs.Has_Subprg_Instance (Resolv_Info.Var_Instance) then
             Val := New_Convert_Ov
-              (Chap2.Get_Subprg_Instance (Resolv_Info.Var_Instance),
+              (Subprgs.Get_Subprg_Instance (Resolv_Info.Var_Instance),
                Ghdl_Ptr_Type);
          else
             Val := New_Lit (New_Null_Access (Ghdl_Ptr_Type));
@@ -11154,14 +8536,14 @@ package body Translation is
          Start_Procedure_Decl (Interface_List, Id, Global_Storage);
 
          --  The instance.
-         if Chap2.Has_Current_Subprg_Instance then
-            Chap2.Add_Subprg_Instance_Interfaces (Interface_List,
-                                                  Rinfo.Var_Instance);
+         if Subprgs.Has_Current_Subprg_Instance then
+            Subprgs.Add_Subprg_Instance_Interfaces (Interface_List,
+                                                    Rinfo.Var_Instance);
          else
             --  Create a dummy instance parameter
             New_Interface_Decl (Interface_List, Unused_Instance,
                                 Wki_Instance, Ghdl_Ptr_Type);
-            Rinfo.Var_Instance := Chap2.Null_Subprg_Instance;
+            Rinfo.Var_Instance := Subprgs.Null_Subprg_Instance;
          end if;
 
          --  The signal.
@@ -11356,8 +8738,8 @@ package body Translation is
          Index_Tinfo := Get_Info (Index_Type);
 
          Start_Subprogram_Body (Rinfo.Resolv_Func);
-         if Chap2.Has_Subprg_Instance (Rinfo.Var_Instance) then
-            Chap2.Start_Subprg_Instance_Use (Rinfo.Var_Instance);
+         if Subprgs.Has_Subprg_Instance (Rinfo.Var_Instance) then
+            Subprgs.Start_Subprg_Instance_Use (Rinfo.Var_Instance);
          end if;
          Push_Local_Factory;
 
@@ -11497,7 +8879,7 @@ package body Translation is
          if Finfo.Res_Interface /= O_Dnode_Null then
             New_Association (Assoc, M2E (Res));
          end if;
-         Chap2.Add_Subprg_Instance_Assoc (Assoc, Finfo.Subprg_Instance);
+         Subprgs.Add_Subprg_Instance_Assoc (Assoc, Finfo.Subprg_Instance);
          New_Association
            (Assoc, New_Address (New_Obj (Var_Array),
                                 Base_Info.Ortho_Ptr_Type (Mode_Value)));
@@ -11518,8 +8900,8 @@ package body Translation is
 
          Close_Temp;
          Pop_Local_Factory;
-         if Chap2.Has_Subprg_Instance (Rinfo.Var_Instance) then
-            Chap2.Finish_Subprg_Instance_Use (Rinfo.Var_Instance);
+         if Subprgs.Has_Subprg_Instance (Rinfo.Var_Instance) then
+            Subprgs.Finish_Subprg_Instance_Use (Rinfo.Var_Instance);
          end if;
          Finish_Subprogram_Body;
       end Translate_Resolution_Function_Body;
@@ -11961,7 +9343,7 @@ package body Translation is
                   New_Association (Constr, M2E (Res));
                end if;
 
-               Chap2.Add_Subprg_Instance_Assoc
+               Subprgs.Add_Subprg_Instance_Assoc
                  (Constr, Subprg_Info.Subprg_Instance);
 
                New_Association (Constr, R);
@@ -14809,7 +12191,7 @@ package body Translation is
          if Obj /= Null_Iir then
             New_Association (Constr, M2E (Chap6.Translate_Name (Obj)));
          else
-            Chap2.Add_Subprg_Instance_Assoc (Constr, Info.Subprg_Instance);
+            Subprgs.Add_Subprg_Instance_Assoc (Constr, Info.Subprg_Instance);
          end if;
 
          Assoc := Assoc_Chain;
@@ -15155,7 +12537,7 @@ package body Translation is
          Constr : O_Assoc_List;
       begin
          Start_Association (Constr, Info.Ortho_Func);
-         Chap2.Add_Subprg_Instance_Assoc (Constr, Info.Subprg_Instance);
+         Subprgs.Add_Subprg_Instance_Assoc (Constr, Info.Subprg_Instance);
          New_Association (Constr, Left);
          if Right /= O_Enode_Null then
             New_Association (Constr, Right);
@@ -15177,7 +12559,7 @@ package body Translation is
          Res := Create_Temp (Info.Ortho_Type (Mode_Value));
          Func_Info := Get_Info (Func);
          Start_Association (Constr, Func_Info.Ortho_Func);
-         Chap2.Add_Subprg_Instance_Assoc (Constr, Func_Info.Subprg_Instance);
+         Subprgs.Add_Subprg_Instance_Assoc (Constr, Func_Info.Subprg_Instance);
          New_Association (Constr,
                           New_Address (New_Obj (Res),
                                        Info.Ortho_Ptr_Type (Mode_Value)));
@@ -18326,7 +15708,7 @@ package body Translation is
          --  Create function.
          Start_Function_Decl (Interface_List, Create_Identifier (Id, "_EQ"),
                               Global_Storage, Std_Boolean_Type_Node);
-         Chap2.Create_Subprg_Instance (Interface_List, Subprg);
+         Subprgs.Create_Subprg_Instance (Interface_List, Subprg);
          New_Interface_Decl (Interface_List, Var_L, Wki_Left, Arr_Ptr_Type);
          New_Interface_Decl (Interface_List, Var_R, Wki_Right, Arr_Ptr_Type);
          Finish_Subprogram_Decl (Interface_List, F_Info.Ortho_Func);
@@ -18342,7 +15724,7 @@ package body Translation is
          Nbr_Indexes := Get_Nbr_Elements (Indexes);
 
          Start_Subprogram_Body (F_Info.Ortho_Func);
-         Chap2.Start_Subprg_Instance_Use (Subprg);
+         Subprgs.Start_Subprg_Instance_Use (Subprg);
          --  for each dimension:  if length mismatch: return false
          for I in 1 .. Nbr_Indexes loop
             Start_If_Stmt
@@ -18388,7 +15770,7 @@ package body Translation is
          Close_Temp;
          Inc_Var (Var_I);
          Finish_Loop_Stmt (Label);
-         Chap2.Finish_Subprg_Instance_Use (Subprg);
+         Subprgs.Finish_Subprg_Instance_Use (Subprg);
          Finish_Subprogram_Body;
       end Translate_Predefined_Array_Equality;
 
@@ -18419,7 +15801,7 @@ package body Translation is
          --  Create function.
          Start_Function_Decl (Interface_List, Create_Identifier (Id, "_EQ"),
                               Global_Storage, Std_Boolean_Type_Node);
-         Chap2.Create_Subprg_Instance (Interface_List, Subprg);
+         Subprgs.Create_Subprg_Instance (Interface_List, Subprg);
          New_Interface_Decl (Interface_List, Var_L, Wki_Left, Rec_Ptr_Type);
          New_Interface_Decl (Interface_List, Var_R, Wki_Right, Rec_Ptr_Type);
          Finish_Subprogram_Decl (Interface_List, F_Info.Ortho_Func);
@@ -18429,7 +15811,7 @@ package body Translation is
          end if;
 
          Start_Subprogram_Body (F_Info.Ortho_Func);
-         Chap2.Start_Subprg_Instance_Use (Subprg);
+         Subprgs.Start_Subprg_Instance_Use (Subprg);
 
          L := Dp2M (Var_L, Info, Mode_Value);
          R := Dp2M (Var_R, Info, Mode_Value);
@@ -18452,7 +15834,7 @@ package body Translation is
             Close_Temp;
          end loop;
          New_Return_Stmt (New_Lit (Std_Boolean_True_Node));
-         Chap2.Finish_Subprg_Instance_Use (Subprg);
+         Subprgs.Finish_Subprg_Instance_Use (Subprg);
          Finish_Subprogram_Body;
       end Translate_Predefined_Record_Equality;
 
@@ -18493,7 +15875,7 @@ package body Translation is
          --  Note: contrary to user function which returns composite value
          --  via a result record, a concatenation returns its value without
          --  the use of the record.
-         Chap2.Create_Subprg_Instance (Interface_List, Subprg);
+         Subprgs.Create_Subprg_Instance (Interface_List, Subprg);
          New_Interface_Decl (Interface_List, Var_Res, Wki_Res, Arr_Ptr_Type);
          New_Interface_Decl (Interface_List, Var_L, Wki_Left, Arr_Ptr_Type);
          New_Interface_Decl (Interface_List, Var_R, Wki_Right, Arr_Ptr_Type);
@@ -18508,7 +15890,7 @@ package body Translation is
          Index_Otype := Iinfo.Ortho_Type (Mode_Value);
 
          Start_Subprogram_Body (F_Info.Ortho_Func);
-         Chap2.Start_Subprg_Instance_Use (Subprg);
+         Subprgs.Start_Subprg_Instance_Use (Subprg);
          New_Var_Decl (Var_Length, Wki_Length, O_Storage_Local,
                        Ghdl_Index_Type);
          New_Var_Decl (Var_L_Len, Wki_L_Len, O_Storage_Local, Ghdl_Index_Type);
@@ -18714,7 +16096,7 @@ package body Translation is
               (Var_Arr, New_Obj_Value (Var_R), Arr_Type);
             Close_Temp;
          end;
-         Chap2.Finish_Subprg_Instance_Use (Subprg);
+         Subprgs.Finish_Subprg_Instance_Use (Subprg);
          Finish_Subprogram_Body;
       end Translate_Predefined_Array_Array_Concat;
 
@@ -19380,7 +16762,7 @@ package body Translation is
          else
             Start_Procedure_Decl (Inter_List, Name, Global_Storage);
          end if;
-         Chap2.Create_Subprg_Instance (Inter_List, Subprg);
+         Subprgs.Create_Subprg_Instance (Inter_List, Subprg);
 
          New_Interface_Decl
            (Inter_List, Var_File, Get_Identifier ("FILE"),
@@ -19395,7 +16777,7 @@ package body Translation is
          end if;
 
          Start_Subprogram_Body (F_Info.Ortho_Func);
-         Chap2.Start_Subprg_Instance_Use (Subprg);
+         Subprgs.Start_Subprg_Instance_Use (Subprg);
          Push_Local_Factory;
 
          Var := Dp2M (Var_Val, Tinfo, Mode_Value);
@@ -19444,7 +16826,7 @@ package body Translation is
             when others =>
                raise Internal_Error;
          end case;
-         Chap2.Finish_Subprg_Instance_Use (Subprg);
+         Subprgs.Finish_Subprg_Instance_Use (Subprg);
          Pop_Local_Factory;
          Finish_Subprogram_Body;
       end Translate_File_Subprogram;
@@ -20480,7 +17862,7 @@ package body Translation is
             Val);
          Func_Info := Get_Info (Func);
          Start_Association (Assoc, Func_Info.Ortho_Func);
-         Chap2.Add_Subprg_Instance_Assoc (Assoc, Func_Info.Subprg_Instance);
+         Subprgs.Add_Subprg_Instance_Assoc (Assoc, Func_Info.Subprg_Instance);
          New_Association (Assoc, New_Obj_Value (Expr));
          New_Association
            (Assoc, New_Address (New_Obj (Val_Node),
@@ -21072,7 +18454,7 @@ package body Translation is
               | Type_Mode_Fat_Array =>
                Subprg_Info := Get_Info (Imp);
                Start_Association (Assocs, Subprg_Info.Ortho_Func);
-               Chap2.Add_Subprg_Instance_Assoc
+               Subprgs.Add_Subprg_Instance_Assoc
                  (Assocs, Subprg_Info.Subprg_Instance);
                New_Association
                  (Assocs, Chap7.Translate_Expression (Get_Actual (F_Assoc)));
@@ -21126,7 +18508,7 @@ package body Translation is
               | Type_Mode_Record =>
                Subprg_Info := Get_Info (Imp);
                Start_Association (Assocs, Subprg_Info.Ortho_Func);
-               Chap2.Add_Subprg_Instance_Assoc
+               Subprgs.Add_Subprg_Instance_Assoc
                  (Assocs, Subprg_Info.Subprg_Instance);
                New_Association
                  (Assocs, Chap7.Translate_Expression (Get_Actual (F_Assoc)));
@@ -21142,7 +18524,7 @@ package body Translation is
                   Length_Assoc := Get_Chain (Value_Assoc);
                   Subprg_Info := Get_Info (Imp);
                   Start_Association (Assocs, Subprg_Info.Ortho_Func);
-                  Chap2.Add_Subprg_Instance_Assoc
+                  Subprgs.Add_Subprg_Instance_Assoc
                     (Assocs, Subprg_Info.Subprg_Instance);
                   New_Association
                     (Assocs,
@@ -21375,7 +18757,7 @@ package body Translation is
                         New_Address (New_Obj (Res), Conv_Info.Res_Record_Ptr));
                   end if;
 
-                  Chap2.Add_Subprg_Instance_Assoc
+                  Subprgs.Add_Subprg_Instance_Assoc
                     (Constr, Conv_Info.Subprg_Instance);
 
                   New_Association (Constr, M2E (Src));
@@ -21606,7 +18988,7 @@ package body Translation is
          if Obj /= Null_Iir then
             New_Association (Constr, M2E (Chap6.Translate_Name (Obj)));
          else
-            Chap2.Add_Subprg_Instance_Assoc (Constr, Info.Subprg_Instance);
+            Subprgs.Add_Subprg_Instance_Assoc (Constr, Info.Subprg_Instance);
          end if;
 
          --  Parameters.
@@ -23543,18 +20925,18 @@ package body Translation is
                when Iir_Kind_Generate_Statement =>
                   declare
                      Info : constant Block_Info_Acc := Get_Info (Stmt);
-                     Prev_Subprg_Instance : Chap2.Subprg_Instance_Stack;
+                     Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
                   begin
-                     Chap2.Push_Subprg_Instance (Info.Block_Scope'Access,
-                                                 Info.Block_Decls_Ptr_Type,
-                                                 Wki_Instance,
-                                                 Prev_Subprg_Instance);
+                     Subprgs.Push_Subprg_Instance (Info.Block_Scope'Access,
+                                                   Info.Block_Decls_Ptr_Type,
+                                                   Wki_Instance,
+                                                   Prev_Subprg_Instance);
                      Set_Scope_Via_Field_Ptr (Base_Info.Block_Scope,
                                               Info.Block_Origin_Field,
                                               Info.Block_Scope'Access);
                      Translate_Block_Subprograms (Stmt, Stmt);
                      Clear_Scope (Base_Info.Block_Scope);
-                     Chap2.Pop_Subprg_Instance
+                     Subprgs.Pop_Subprg_Instance
                        (Wki_Instance, Prev_Subprg_Instance);
                   end;
                when others =>
@@ -24601,851 +21983,6 @@ package body Translation is
       end Elab_Block_Declarations;
    end Chap9;
 
-   package body Chap10 is
-      --  Identifiers.
-      --  The following functions are helpers to create ortho identifiers.
-      Identifier_Buffer : String (1 .. 512);
-      Identifier_Len : Natural := 0;
-      Identifier_Start : Natural := 1;
-      Identifier_Local : Local_Identifier_Type := 0;
-
-
-      Inst_Build : Inst_Build_Acc := null;
-      procedure Unchecked_Deallocation is new Ada.Unchecked_Deallocation
-        (Object => Inst_Build_Type, Name => Inst_Build_Acc);
-
-      procedure Set_Global_Storage (Storage : O_Storage) is
-      begin
-         Global_Storage := Storage;
-      end Set_Global_Storage;
-
-      procedure Pop_Build_Instance
-      is
-         Old : Inst_Build_Acc;
-      begin
-         Old := Inst_Build;
-         Identifier_Start := Old.Prev_Id_Start;
-         Inst_Build := Old.Prev;
-         Unchecked_Deallocation (Old);
-      end Pop_Build_Instance;
-
-      function Get_Scope_Type (Scope : Var_Scope_Type) return O_Tnode is
-      begin
-         pragma Assert (Scope.Scope_Type /= O_Tnode_Null);
-         return Scope.Scope_Type;
-      end Get_Scope_Type;
-
-      function Get_Scope_Size (Scope : Var_Scope_Type) return O_Cnode is
-      begin
-         pragma Assert (Scope.Scope_Type /= O_Tnode_Null);
-         return New_Sizeof (Scope.Scope_Type, Ghdl_Index_Type);
-      end Get_Scope_Size;
-
-      function Has_Scope_Type (Scope : Var_Scope_Type) return Boolean is
-      begin
-         return Scope.Scope_Type /= O_Tnode_Null;
-      end Has_Scope_Type;
-
-      procedure Predeclare_Scope_Type (Scope : Var_Scope_Acc; Name : O_Ident)
-      is
-      begin
-         pragma Assert (Scope.Scope_Type = O_Tnode_Null);
-         New_Uncomplete_Record_Type (Scope.Scope_Type);
-         New_Type_Decl (Name, Scope.Scope_Type);
-      end Predeclare_Scope_Type;
-
-      procedure Declare_Scope_Acc
-        (Scope : Var_Scope_Type; Name : O_Ident; Ptr_Type : out O_Tnode) is
-      begin
-         Ptr_Type := New_Access_Type (Get_Scope_Type (Scope));
-         New_Type_Decl (Name, Ptr_Type);
-      end Declare_Scope_Acc;
-
-      procedure Push_Instance_Factory (Scope : Var_Scope_Acc)
-      is
-         Inst : Inst_Build_Acc;
-      begin
-         if Inst_Build /= null and then Inst_Build.Kind /= Instance then
-            raise Internal_Error;
-         end if;
-         Inst := new Inst_Build_Type (Instance);
-         Inst.Prev := Inst_Build;
-         Inst.Prev_Id_Start := Identifier_Start;
-         Inst.Scope := Scope;
-
-         Identifier_Start := Identifier_Len + 1;
-
-         if Scope.Scope_Type /= O_Tnode_Null then
-            Start_Uncomplete_Record_Type (Scope.Scope_Type, Inst.Elements);
-         else
-            Start_Record_Type (Inst.Elements);
-         end if;
-         Inst_Build := Inst;
-      end Push_Instance_Factory;
-
-      function Add_Instance_Factory_Field (Name : O_Ident; Ftype : O_Tnode)
-        return O_Fnode
-      is
-         Res : O_Fnode;
-      begin
-         New_Record_Field (Inst_Build.Elements, Res, Name, Ftype);
-         return Res;
-      end Add_Instance_Factory_Field;
-
-      procedure Add_Scope_Field
-        (Name : O_Ident; Child : in out Var_Scope_Type)
-      is
-         Field : O_Fnode;
-      begin
-         Field := Add_Instance_Factory_Field (Name, Get_Scope_Type (Child));
-         Set_Scope_Via_Field (Child, Field, Inst_Build.Scope);
-      end Add_Scope_Field;
-
-      function Get_Scope_Offset (Child : Var_Scope_Type; Otype : O_Tnode)
-                                return O_Cnode is
-      begin
-         return New_Offsetof (Get_Scope_Type (Child.Up_Link.all),
-                              Child.Field, Otype);
-      end Get_Scope_Offset;
-
-      procedure Pop_Instance_Factory (Scope : in Var_Scope_Acc)
-      is
-         Res : O_Tnode;
-      begin
-         if Inst_Build.Kind /= Instance then
-            --  Not matching.
-            raise Internal_Error;
-         end if;
-         Finish_Record_Type (Inst_Build.Elements, Res);
-         Pop_Build_Instance;
-         Scope.Scope_Type := Res;
-      end Pop_Instance_Factory;
-
-      procedure Push_Local_Factory
-      is
-         Inst : Inst_Build_Acc;
-      begin
-         if Inst_Build /= null
-           and then (Inst_Build.Kind /= Global and Inst_Build.Kind /= Local)
-         then
-            --  Cannot create a local factory on an instance.
-            raise Internal_Error;
-         end if;
-         Inst := new Inst_Build_Type (Kind => Local);
-         Inst.Prev := Inst_Build;
-         Inst.Prev_Global_Storage := Global_Storage;
-
-         Inst.Prev_Id_Start := Identifier_Start;
-         Identifier_Start := Identifier_Len + 1;
-
-         Inst_Build := Inst;
-         case Global_Storage is
-            when O_Storage_Public =>
-               Global_Storage := O_Storage_Private;
-            when O_Storage_Private
-              | O_Storage_External =>
-               null;
-            when O_Storage_Local =>
-               raise Internal_Error;
-         end case;
-      end Push_Local_Factory;
-
-      --  Return TRUE is the current scope is local.
-      function Is_Local_Scope return Boolean is
-      begin
-         if Inst_Build = null then
-            return False;
-         end if;
-         case Inst_Build.Kind is
-            when Local
-              | Instance =>
-               return True;
-            when Global =>
-               return False;
-         end case;
-      end Is_Local_Scope;
-
-      procedure Pop_Local_Factory is
-      begin
-         if Inst_Build.Kind /= Local then
-            --  Not matching.
-            raise Internal_Error;
-         end if;
-         Global_Storage := Inst_Build.Prev_Global_Storage;
-         Pop_Build_Instance;
-      end Pop_Local_Factory;
-
-      procedure Set_Scope_Via_Field
-        (Scope : in out Var_Scope_Type;
-         Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc) is
-      begin
-         pragma Assert (Scope.Kind = Var_Scope_None);
-         Scope := (Scope_Type => Scope.Scope_Type,
-                   Kind => Var_Scope_Field,
-                   Field => Scope_Field, Up_Link => Scope_Parent);
-      end Set_Scope_Via_Field;
-
-      procedure Set_Scope_Via_Field_Ptr
-        (Scope : in out Var_Scope_Type;
-         Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc) is
-      begin
-         pragma Assert (Scope.Kind = Var_Scope_None);
-         Scope := (Scope_Type => Scope.Scope_Type,
-                   Kind => Var_Scope_Field_Ptr,
-                   Field => Scope_Field, Up_Link => Scope_Parent);
-      end Set_Scope_Via_Field_Ptr;
-
-      procedure Set_Scope_Via_Var_Ptr
-        (Scope : in out Var_Scope_Type; Var : Var_Type) is
-      begin
-         pragma Assert (Scope.Kind = Var_Scope_None);
-         pragma Assert (Var.Kind = Var_Scope);
-         Scope := (Scope_Type => Scope.Scope_Type,
-                   Kind => Var_Scope_Field_Ptr,
-                   Field => Var.I_Field, Up_Link => Var.I_Scope);
-      end Set_Scope_Via_Var_Ptr;
-
-      procedure Set_Scope_Via_Param_Ptr
-        (Scope : in out Var_Scope_Type; Scope_Param : O_Dnode) is
-      begin
-         pragma Assert (Scope.Kind = Var_Scope_None);
-         Scope := (Scope_Type => Scope.Scope_Type,
-                   Kind => Var_Scope_Ptr, D => Scope_Param);
-      end Set_Scope_Via_Param_Ptr;
-
-      procedure Set_Scope_Via_Decl
-        (Scope : in out Var_Scope_Type; Decl : O_Dnode) is
-      begin
-         pragma Assert (Scope.Kind = Var_Scope_None);
-         Scope := (Scope_Type => Scope.Scope_Type,
-                   Kind => Var_Scope_Decl, D => Decl);
-      end Set_Scope_Via_Decl;
-
-      procedure Clear_Scope (Scope : in out Var_Scope_Type) is
-      begin
-         pragma Assert (Scope.Kind /= Var_Scope_None);
-         Scope := (Scope_Type => Scope.Scope_Type, Kind => Var_Scope_None);
-      end Clear_Scope;
-
-      function Create_Global_Var
-        (Name : O_Ident; Vtype : O_Tnode; Storage : O_Storage)
-        return Var_Type
-      is
-         Var : O_Dnode;
-      begin
-         New_Var_Decl (Var, Name, Storage, Vtype);
-         return Var_Type'(Kind => Var_Global, E => Var);
-      end Create_Global_Var;
-
-      function Create_Global_Const
-        (Name : O_Ident;
-         Vtype : O_Tnode;
-         Storage : O_Storage;
-         Initial_Value : O_Cnode)
-        return Var_Type
-      is
-         Res : O_Dnode;
-      begin
-         New_Const_Decl (Res, Name, Storage, Vtype);
-         if Storage /= O_Storage_External
-           and then Initial_Value /= O_Cnode_Null
-         then
-            Start_Const_Value (Res);
-            Finish_Const_Value (Res, Initial_Value);
-         end if;
-         return Var_Type'(Kind => Var_Global, E => Res);
-      end Create_Global_Const;
-
-      procedure Define_Global_Const (Const : in out Var_Type; Val : O_Cnode) is
-      begin
-         Start_Const_Value (Const.E);
-         Finish_Const_Value (Const.E, Val);
-      end Define_Global_Const;
-
-      function Create_Var
-        (Name : Var_Ident_Type;
-         Vtype : O_Tnode;
-         Storage : O_Storage := Global_Storage)
-        return Var_Type
-      is
-         Res : O_Dnode;
-         Field : O_Fnode;
-         K : Inst_Build_Kind_Type;
-      begin
-         if Inst_Build = null then
-            K := Global;
-         else
-            K := Inst_Build.Kind;
-         end if;
-         case K is
-            when Global =>
-               --  The global scope is in use...
-               return Create_Global_Var (Name.Id, Vtype, Storage);
-            when Local =>
-               --  It is always possible to create a variable in a local scope.
-               --  Create a var.
-               New_Var_Decl (Res, Name.Id, O_Storage_Local, Vtype);
-               return Var_Type'(Kind => Var_Local, E => Res);
-            when Instance =>
-               --  Create a field.
-               New_Record_Field (Inst_Build.Elements, Field, Name.Id, Vtype);
-               return Var_Type'(Kind => Var_Scope, I_Field => Field,
-                                I_Scope => Inst_Build.Scope);
-         end case;
-      end Create_Var;
-
-      --  Get a reference to scope STYPE. If IS_PTR is set, RES is an access
-      --  to the scope, otherwise RES directly designates the scope.
-      procedure Find_Scope (Scope : Var_Scope_Type;
-                            Res : out O_Lnode;
-                            Is_Ptr : out Boolean) is
-      begin
-         case Scope.Kind is
-            when Var_Scope_None =>
-               raise Internal_Error;
-            when Var_Scope_Ptr
-              | Var_Scope_Decl =>
-               Res := New_Obj (Scope.D);
-               Is_Ptr := Scope.Kind = Var_Scope_Ptr;
-            when Var_Scope_Field
-              | Var_Scope_Field_Ptr =>
-               declare
-                  Parent : O_Lnode;
-                  Parent_Ptr : Boolean;
-               begin
-                  Find_Scope (Scope.Up_Link.all, Parent, Parent_Ptr);
-                  if Parent_Ptr then
-                     Parent := New_Acc_Value (Parent);
-                  end if;
-                  Res := New_Selected_Element (Parent, Scope.Field);
-                  Is_Ptr := Scope.Kind = Var_Scope_Field_Ptr;
-               end;
-         end case;
-      end Find_Scope;
-
-      procedure Check_Not_Building is
-      begin
-         --  Variables cannot be referenced if there is an instance being
-         --  built.
-         if Inst_Build /= null and then Inst_Build.Kind = Instance then
-            raise Internal_Error;
-         end if;
-      end Check_Not_Building;
-
-      function Get_Instance_Access (Block : Iir) return O_Enode
-      is
-         Info : constant Block_Info_Acc := Get_Info (Block);
-         Res : O_Lnode;
-         Is_Ptr : Boolean;
-      begin
-         Check_Not_Building;
-         Find_Scope (Info.Block_Scope, Res, Is_Ptr);
-         if Is_Ptr then
-            return New_Value (Res);
-         else
-            return New_Address (Res, Info.Block_Decls_Ptr_Type);
-         end if;
-      end Get_Instance_Access;
-
-      function Get_Instance_Ref (Scope : Var_Scope_Type) return O_Lnode
-      is
-         Res : O_Lnode;
-         Is_Ptr : Boolean;
-      begin
-         Check_Not_Building;
-         Find_Scope (Scope, Res, Is_Ptr);
-         if Is_Ptr then
-            return New_Acc_Value (Res);
-         else
-            return Res;
-         end if;
-      end Get_Instance_Ref;
-
-      function Get_Var (Var : Var_Type) return O_Lnode
-      is
-      begin
-         case Var.Kind is
-            when Var_None =>
-               raise Internal_Error;
-            when Var_Local
-              | Var_Global =>
-               return New_Obj (Var.E);
-            when Var_Scope =>
-               return New_Selected_Element
-                 (Get_Instance_Ref (Var.I_Scope.all), Var.I_Field);
-         end case;
-      end Get_Var;
-
-      function Get_Alloc_Kind_For_Var (Var : Var_Type)
-                                      return Allocation_Kind is
-      begin
-         case Var.Kind is
-            when Var_Local =>
-               return Alloc_Stack;
-            when Var_Global
-              | Var_Scope =>
-               return Alloc_System;
-            when Var_None =>
-               raise Internal_Error;
-         end case;
-      end Get_Alloc_Kind_For_Var;
-
-      function Is_Var_Stable (Var : Var_Type) return Boolean is
-      begin
-         case Var.Kind is
-            when Var_Local
-              | Var_Global =>
-               return True;
-            when Var_Scope =>
-               return False;
-            when Var_None =>
-               raise Internal_Error;
-         end case;
-      end Is_Var_Stable;
-
-      function Is_Var_Field (Var : Var_Type) return Boolean is
-      begin
-         case Var.Kind is
-            when Var_Local
-              | Var_Global =>
-               return False;
-            when Var_Scope =>
-               return True;
-            when Var_None =>
-               raise Internal_Error;
-         end case;
-      end Is_Var_Field;
-
-      function Get_Var_Offset (Var : Var_Type; Otype : O_Tnode) return O_Cnode
-      is
-      begin
-         return New_Offsetof (Get_Scope_Type (Var.I_Scope.all),
-                              Var.I_Field, Otype);
-      end Get_Var_Offset;
-
-      function Get_Var_Label (Var : Var_Type) return O_Dnode is
-      begin
-         case Var.Kind is
-            when Var_Local
-              | Var_Global =>
-               return Var.E;
-            when Var_Scope
-              | Var_None =>
-               raise Internal_Error;
-         end case;
-      end Get_Var_Label;
-
-      procedure Save_Local_Identifier (Id : out Local_Identifier_Type) is
-      begin
-         Id := Identifier_Local;
-      end Save_Local_Identifier;
-
-      procedure Restore_Local_Identifier (Id : Local_Identifier_Type) is
-      begin
-         if Identifier_Local > Id then
-            --  If the value is restored with a smaller value, some identifiers
-            --  will be reused.  This is certainly an internal error.
-            raise Internal_Error;
-         end if;
-         Identifier_Local := Id;
-      end Restore_Local_Identifier;
-
-      --  Reset the identifier.
-      procedure Reset_Identifier_Prefix is
-      begin
-         if Identifier_Len /= 0 or else Identifier_Local /= 0 then
-            raise Internal_Error;
-         end if;
-      end Reset_Identifier_Prefix;
-
-      procedure Pop_Identifier_Prefix (Mark : in Id_Mark_Type) is
-      begin
-         Identifier_Len := Mark.Len;
-         Identifier_Local := Mark.Local_Id;
-      end Pop_Identifier_Prefix;
-
-      procedure Add_String (Len : in out Natural; Str : String) is
-      begin
-         Identifier_Buffer (Len + 1 .. Len + Str'Length) := Str;
-         Len := Len + Str'Length;
-      end Add_String;
-
-      procedure Add_Nat (Len : in out Natural; Val : Natural)
-      is
-         Num : String (1 .. 10);
-         V : Natural;
-         P : Natural;
-      begin
-         P := Num'Last;
-         V := Val;
-         loop
-            Num (P) := Character'Val (Character'Pos ('0') + V mod 10);
-            V := V / 10;
-            exit when V = 0;
-            P := P - 1;
-         end loop;
-         Add_String (Len, Num (P .. Num'Last));
-      end Add_Nat;
-
-      --  Convert name_id NAME to a string stored to
-      --  NAME_BUFFER (1 .. NAME_LENGTH).
-      --
-      --  This encodes extended identifiers.
-      --
-      --  Extended identifier encoding:
-      --  They start with 'X'.
-      --  Non extended character [0-9a-zA-Z] are left as is,
-      --  others are encoded to _XX, where XX is the character position in hex.
-      --  They finish with "__".
-      procedure Name_Id_To_String (Name : Name_Id)
-      is
-         use Name_Table;
-
-         type Bool_Array_Type is array (Character) of Boolean;
-         pragma Pack (Bool_Array_Type);
-         Is_Extended_Char : constant Bool_Array_Type :=
-           ('0' .. '9' | 'A' .. 'Z' | 'a' .. 'z' => False,
-            others => True);
-
-         N_Len : Natural;
-         P : Natural;
-         C : Character;
-      begin
-         if Is_Character (Name) then
-            P := Character'Pos (Name_Table.Get_Character (Name));
-            Name_Buffer (1) := 'C';
-            Name_Buffer (2) := N2hex (P / 16);
-            Name_Buffer (3) := N2hex (P mod 16);
-            Name_Length := 3;
-            return;
-         else
-            Image (Name);
-         end if;
-         if Name_Buffer (1) /= '\' then
-            return;
-         end if;
-         --  Extended identifier.
-         --  Supress trailing backslash.
-         Name_Length := Name_Length - 1;
-
-         --  Count number of characters in the extended string.
-         N_Len := Name_Length;
-         for I in 2 .. Name_Length loop
-            if Is_Extended_Char (Name_Buffer (I)) then
-               N_Len := N_Len + 2;
-            end if;
-         end loop;
-
-         --  Convert.
-         Name_Buffer (1) := 'X';
-         P := N_Len;
-         for J in reverse 2 .. Name_Length loop
-            C := Name_Buffer (J);
-            if Is_Extended_Char (C) then
-               Name_Buffer (P - 0) := N2hex (Character'Pos (C) mod 16);
-               Name_Buffer (P - 1) := N2hex (Character'Pos (C) / 16);
-               Name_Buffer (P - 2) := '_';
-               P := P - 3;
-            else
-               Name_Buffer (P) := C;
-               P := P - 1;
-            end if;
-         end loop;
-         Name_Buffer (N_Len + 1) := '_';
-         Name_Buffer (N_Len + 2) := '_';
-         Name_Length := N_Len + 2;
-      end Name_Id_To_String;
-
-      procedure Add_Name (Len : in out Natural; Name : Name_Id)
-      is
-         use Name_Table;
-      begin
-         Name_Id_To_String (Name);
-         Add_String (Len, Name_Buffer (1 .. Name_Length));
-      end Add_Name;
-
-      procedure Push_Identifier_Prefix (Mark : out Id_Mark_Type;
-                                        Name : String;
-                                        Val : Iir_Int32 := 0)
-      is
-         P : Natural;
-      begin
-         Mark.Len := Identifier_Len;
-         Mark.Local_Id := Identifier_Local;
-         Identifier_Local := 0;
-         P := Identifier_Len;
-         Add_String (P, Name);
-         if Val > 0 then
-            Add_String (P, "O");
-            Add_Nat (P, Natural (Val));
-         end if;
-         Add_String (P, "__");
-         Identifier_Len := P;
-      end Push_Identifier_Prefix;
-
-      --  Add a suffix to the prefix (!!!).
-      procedure Push_Identifier_Prefix
-        (Mark : out Id_Mark_Type; Name : Name_Id; Val : Iir_Int32 := 0)
-      is
-         use Name_Table;
-      begin
-         Name_Id_To_String (Name);
-         Push_Identifier_Prefix (Mark, Name_Buffer (1 .. Name_Length), Val);
-      end Push_Identifier_Prefix;
-
-      procedure Push_Identifier_Prefix_Uniq (Mark : out Id_Mark_Type)
-      is
-         Str : String := Local_Identifier_Type'Image (Identifier_Local);
-      begin
-         Identifier_Local := Identifier_Local + 1;
-         Str (1) := 'U';
-         Push_Identifier_Prefix (Mark, Str, 0);
-      end Push_Identifier_Prefix_Uniq;
-
-      procedure Add_Identifier (Len : in out Natural; Id : Name_Id) is
-      begin
-         if Id /= Null_Identifier then
-            Add_Name (Len, Id);
-         end if;
-      end Add_Identifier;
-
-      --  Create an identifier from IIR node ID without the prefix.
-      function Create_Identifier_Without_Prefix (Id : Iir) return O_Ident
-      is
-         use Name_Table;
-      begin
-         Name_Id_To_String (Get_Identifier (Id));
-         return Get_Identifier (Name_Buffer (1 .. Name_Length));
-      end Create_Identifier_Without_Prefix;
-
-      function Create_Identifier_Without_Prefix (Id : Name_Id; Str : String)
-        return O_Ident
-      is
-         use Name_Table;
-      begin
-         Name_Id_To_String (Id);
-         Name_Buffer (Name_Length + 1 .. Name_Length + Str'Length) := Str;
-         return Get_Identifier (Name_Buffer (1 .. Name_Length + Str'Length));
-      end Create_Identifier_Without_Prefix;
-
-      --  Create an identifier from IIR node ID with prefix.
-      function Create_Id (Id : Name_Id; Str : String; Is_Local : Boolean)
-        return O_Ident
-      is
-         L : Natural;
-      begin
-         L := Identifier_Len;
-         Add_Identifier (L, Id);
-         Add_String (L, Str);
-         --Identifier_Buffer (L + Str'Length + 1) := Nul;
-         if Is_Local then
-            return Get_Identifier
-              (Identifier_Buffer (Identifier_Start .. L));
-         else
-            return Get_Identifier (Identifier_Buffer (1 .. L));
-         end if;
-      end Create_Id;
-
-      function Create_Identifier (Id : Name_Id; Str : String := "")
-        return O_Ident
-      is
-      begin
-         return Create_Id (Id, Str, False);
-      end Create_Identifier;
-
-      function Create_Identifier (Id : Iir; Str : String := "")
-        return O_Ident
-      is
-      begin
-         return Create_Id (Get_Identifier (Id), Str, False);
-      end Create_Identifier;
-
-      function Create_Identifier
-        (Id : Iir; Val : Iir_Int32; Str : String := "")
-        return O_Ident
-      is
-         Len : Natural;
-      begin
-         Len := Identifier_Len;
-         Add_Identifier (Len, Get_Identifier (Id));
-
-         if Val > 0 then
-            Add_String (Len, "O");
-            Add_Nat (Len, Natural (Val));
-         end if;
-         Add_String (Len, Str);
-         return Get_Identifier (Identifier_Buffer (1 .. Len));
-      end Create_Identifier;
-
-      function Create_Identifier (Str : String)
-        return O_Ident
-      is
-         Len : Natural;
-      begin
-         Len := Identifier_Len;
-         Add_String (Len, Str);
-         return Get_Identifier (Identifier_Buffer (1 .. Len));
-      end Create_Identifier;
-
-      function Create_Identifier return O_Ident
-      is
-      begin
-         return Get_Identifier (Identifier_Buffer (1 .. Identifier_Len - 2));
-      end Create_Identifier;
-
-      function Create_Var_Identifier_From_Buffer (L : Natural)
-        return Var_Ident_Type
-      is
-         Start : Natural;
-      begin
-         if Is_Local_Scope then
-            Start := Identifier_Start;
-         else
-            Start := 1;
-         end if;
-         return (Id => Get_Identifier (Identifier_Buffer (Start .. L)));
-      end Create_Var_Identifier_From_Buffer;
-
-      function Create_Var_Identifier (Id : Iir)
-        return Var_Ident_Type
-      is
-         L : Natural := Identifier_Len;
-      begin
-         Add_Identifier (L, Get_Identifier (Id));
-         return Create_Var_Identifier_From_Buffer (L);
-      end Create_Var_Identifier;
-
-      function Create_Var_Identifier (Id : String)
-        return Var_Ident_Type
-      is
-         L : Natural := Identifier_Len;
-      begin
-         Add_String (L, Id);
-         return Create_Var_Identifier_From_Buffer (L);
-      end Create_Var_Identifier;
-
-      function Create_Var_Identifier (Id : Iir; Str : String; Val : Natural)
-        return Var_Ident_Type
-      is
-         L : Natural := Identifier_Len;
-      begin
-         Add_Identifier (L, Get_Identifier (Id));
-         Add_String (L, Str);
-         if Val > 0 then
-            Add_String (L, "O");
-            Add_Nat (L, Val);
-         end if;
-         return Create_Var_Identifier_From_Buffer (L);
-      end Create_Var_Identifier;
-
-      function Create_Uniq_Identifier return Var_Ident_Type
-      is
-         Res : Var_Ident_Type;
-      begin
-         Res.Id := Create_Uniq_Identifier;
-         return Res;
-      end Create_Uniq_Identifier;
-
-      type Instantiate_Var_Stack;
-      type Instantiate_Var_Stack_Acc is access Instantiate_Var_Stack;
-
-      type Instantiate_Var_Stack is record
-         Orig_Scope : Var_Scope_Acc;
-         Inst_Scope : Var_Scope_Acc;
-         Prev : Instantiate_Var_Stack_Acc;
-      end record;
-
-      Top_Instantiate_Var_Stack : Instantiate_Var_Stack_Acc := null;
-      Free_Instantiate_Var_Stack : Instantiate_Var_Stack_Acc := null;
-
-      procedure Push_Instantiate_Var_Scope
-        (Inst_Scope : Var_Scope_Acc; Orig_Scope : Var_Scope_Acc)
-      is
-         Inst : Instantiate_Var_Stack_Acc;
-      begin
-         if Free_Instantiate_Var_Stack = null then
-            Inst := new Instantiate_Var_Stack;
-         else
-            Inst := Free_Instantiate_Var_Stack;
-            Free_Instantiate_Var_Stack := Inst.Prev;
-         end if;
-         Inst.all := (Orig_Scope => Orig_Scope,
-                      Inst_Scope => Inst_Scope,
-                      Prev => Top_Instantiate_Var_Stack);
-         Top_Instantiate_Var_Stack := Inst;
-      end Push_Instantiate_Var_Scope;
-
-      procedure Pop_Instantiate_Var_Scope (Inst_Scope : Var_Scope_Acc)
-      is
-         Item : constant Instantiate_Var_Stack_Acc :=
-           Top_Instantiate_Var_Stack;
-      begin
-         pragma Assert (Item /= null);
-         pragma Assert (Item.Inst_Scope = Inst_Scope);
-         Top_Instantiate_Var_Stack := Item.Prev;
-         Item.all := (Orig_Scope => null,
-                      Inst_Scope => null,
-                      Prev => Free_Instantiate_Var_Stack);
-         Free_Instantiate_Var_Stack := Item;
-      end Pop_Instantiate_Var_Scope;
-
-      function Instantiated_Var_Scope (Scope : Var_Scope_Acc)
-                                      return Var_Scope_Acc
-      is
-         Item : Instantiate_Var_Stack_Acc;
-      begin
-         if Scope = null then
-            return null;
-         end if;
-
-         Item := Top_Instantiate_Var_Stack;
-         loop
-            pragma Assert (Item /= null);
-            if Item.Orig_Scope = Scope then
-               return Item.Inst_Scope;
-            end if;
-            Item := Item.Prev;
-         end loop;
-      end Instantiated_Var_Scope;
-
-      function Instantiate_Var (Var : Var_Type) return Var_Type is
-      begin
-         case Var.Kind is
-            when Var_None
-              | Var_Global
-              | Var_Local =>
-               return Var;
-            when Var_Scope =>
-               return Var_Type'
-                 (Kind => Var_Scope,
-                  I_Field => Var.I_Field,
-                  I_Scope => Instantiated_Var_Scope (Var.I_Scope));
-         end case;
-      end Instantiate_Var;
-
-      function Instantiate_Var_Scope (Scope : Var_Scope_Type)
-                                     return Var_Scope_Type is
-      begin
-         case Scope.Kind is
-            when Var_Scope_None
-              | Var_Scope_Ptr
-              | Var_Scope_Decl =>
-               return Scope;
-            when Var_Scope_Field =>
-               return Var_Scope_Type'
-                 (Kind => Var_Scope_Field,
-                  Scope_Type => Scope.Scope_Type,
-                  Field => Scope.Field,
-                  Up_Link => Instantiated_Var_Scope (Scope.Up_Link));
-            when Var_Scope_Field_Ptr =>
-               return Var_Scope_Type'
-                 (Kind => Var_Scope_Field_Ptr,
-                  Scope_Type => Scope.Scope_Type,
-                  Field => Scope.Field,
-                  Up_Link => Instantiated_Var_Scope (Scope.Up_Link));
-         end case;
-      end Instantiate_Var_Scope;
-   end Chap10;
 
    package body Chap14 is
       function Translate_Array_Attribute_To_Range (Expr : Iir) return Mnode
@@ -29046,10 +25583,7 @@ package body Translation is
       Interfaces : O_Inter_List;
       Param : O_Dnode;
    begin
-      --  Create the node extension for translate.
-      Node_Infos.Init;
-      Node_Infos.Set_Last (4);
-      Node_Infos.Table (0 .. 4) := (others => null);
+      Init_Node_Infos;
 
       --  Force to unnest subprograms is the code generator doesn't support
       --  nested subprograms.
@@ -30677,60 +27211,8 @@ package body Translation is
 
    procedure Finalize
    is
-      Info : Ortho_Info_Acc;
-      Prev_Info : Ortho_Info_Acc;
    begin
-      Prev_Info := null;
-      for I in Node_Infos.First .. Node_Infos.Last loop
-         Info := Get_Info (I);
-         if Info /= null and then Info /= Prev_Info then
-            case Get_Kind (I) is
-               when Iir_Kind_Constant_Declaration =>
-                  if Get_Deferred_Declaration_Flag (I) = False
-                    and then Get_Deferred_Declaration (I) /= Null_Iir
-                  then
-                     --  Info are copied from incomplete constant declaration
-                     --  to full constant declaration.
-                     Clear_Info (I);
-                  else
-                     Free_Info (I);
-                  end if;
-               when Iir_Kind_Record_Subtype_Definition
-                 | Iir_Kind_Access_Subtype_Definition =>
-                  null;
-               when Iir_Kind_Enumeration_Type_Definition
-                 | Iir_Kind_Array_Type_Definition
-                 | Iir_Kind_Integer_Subtype_Definition
-                 | Iir_Kind_Floating_Subtype_Definition
-                 | Iir_Kind_Physical_Subtype_Definition
-                 | Iir_Kind_Enumeration_Subtype_Definition =>
-                  Free_Type_Info (Info);
-               when Iir_Kind_Array_Subtype_Definition =>
-                  if Get_Index_Constraint_Flag (I) then
-                     Info.T := Ortho_Info_Type_Array_Init;
-                     Free_Type_Info (Info);
-                  end if;
-               when Iir_Kind_Implicit_Function_Declaration =>
-                  case Get_Implicit_Definition (I) is
-                     when Iir_Predefined_Bit_Array_Match_Equality
-                       |  Iir_Predefined_Bit_Array_Match_Inequality =>
-                        --  Not in sequence.
-                        null;
-                     when others =>
-                        --  By default, info are not shared.
-                        --  The exception is infos for implicit subprograms,
-                        --  but they are always consecutive and not free twice
-                        --  due to prev_info mechanism.
-                        Free_Info (I);
-                  end case;
-               when others =>
-                  --  By default, info are not shared.
-                  Free_Info (I);
-            end case;
-            Prev_Info := Info;
-         end if;
-      end loop;
-      Node_Infos.Free;
+      Free_Node_Infos;
       Free_Old_Temp;
    end Finalize;
 
