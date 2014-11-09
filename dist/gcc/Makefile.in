@@ -204,6 +204,7 @@ LIB93_DIR:=./lib/v93
 LIB08_DIR:=./lib/v08
 LIBSRC_DIR:=$(srcdir)/libraries
 ANALYZE=../ghdl -a --GHDL1=../ghdl1 --ieee=none
+ANALYZE_DEP:=../ghdl
 
 $(LIB93_DIR) $(LIB87_DIR):
 	$(srcdir)/../../mkinstalldirs $@

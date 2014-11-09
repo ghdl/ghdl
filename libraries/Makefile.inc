@@ -111,7 +111,7 @@ MENTOR93_SRCS=$(addprefix $(LIBSRC_DIR)/,$(MENTOR93_BSRCS))
 VITAL95_SRCS=$(addprefix $(LIBSRC_DIR)/,$(VITAL95_BSRCS))
 VITAL2000_SRCS=$(addprefix $(LIBSRC_DIR)/,$(VITAL2000_BSRCS))
 
-std.v93: $(LIB93_DIR) $(STD93_SRCS) force
+std.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(STD93_SRCS) force
 	$(RM) -rf $(STD93_DIR)
 	mkdir $(STD93_DIR)
 	prev=`pwd`; cd $(STD93_DIR); \
@@ -123,7 +123,7 @@ std.v93: $(LIB93_DIR) $(STD93_SRCS) force
 
 ANALYZE_IEEE93=$(ANALYZE93) -P../std --work=ieee
 
-ieee.v93: $(LIB93_DIR) $(IEEE93_SRCS) force
+ieee.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(IEEE93_SRCS) std.v93 force
 	$(RM) -rf $(IEEE93_DIR)
 	mkdir $(IEEE93_DIR)
 	prev=`pwd`; cd $(IEEE93_DIR); \
@@ -133,7 +133,7 @@ ieee.v93: $(LIB93_DIR) $(IEEE93_SRCS) force
 	done; \
 	cd $$prev
 
-synopsys.v93: $(LIB93_DIR) $(SYNOPSYS_SRCS) force
+synopsys.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(SYNOPSYS_SRCS) ieee.v93 force
 	$(RM) -rf $(SYN93_DIR)
 	mkdir $(SYN93_DIR)
 	prev=`pwd`; cd $(SYN93_DIR); \
@@ -151,7 +151,7 @@ synopsys.v93: $(LIB93_DIR) $(SYNOPSYS_SRCS) force
 	done; \
 	cd $$prev
 
-mentor.v93: $(LIB93_DIR) $(MENTOR93_SRCS) force
+mentor.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(MENTOR93_SRCS) ieee.v93 force
 	$(RM) -rf $(MENTOR93_DIR)
 	mkdir $(MENTOR93_DIR)
 	prev=`pwd`; cd $(MENTOR93_DIR); \
@@ -168,7 +168,7 @@ mentor.v93: $(LIB93_DIR) $(MENTOR93_SRCS) force
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
-std.v87: $(LIB87_DIR) $(STD87_SRCS) force
+std.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(STD87_SRCS) force
 	$(RM) -rf $(STD87_DIR)
 	mkdir $(STD87_DIR)
 	prev=`pwd`; cd $(STD87_DIR); \
@@ -180,7 +180,7 @@ std.v87: $(LIB87_DIR) $(STD87_SRCS) force
 
 ANALYZE_IEEE87=$(ANALYZE87) -P../std --work=ieee
 
-ieee.v87: $(LIB87_DIR) $(IEEE87_SRCS) force
+ieee.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(IEEE87_SRCS) std.v87 force
 	$(RM) -rf $(IEEE87_DIR)
 	mkdir $(IEEE87_DIR)
 	prev=`pwd`; cd $(IEEE87_DIR); \
@@ -190,7 +190,7 @@ ieee.v87: $(LIB87_DIR) $(IEEE87_SRCS) force
 	done; \
 	cd $$prev
 
-synopsys.v87: $(LIB87_DIR) $(SYNOPSYS_SRCS) force
+synopsys.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(SYNOPSYS_SRCS) ieee.v87 force
 	$(RM) -rf $(SYN87_DIR)
 	mkdir $(SYN87_DIR)
 	prev=`pwd`; cd $(SYN87_DIR); \
@@ -208,7 +208,7 @@ synopsys.v87: $(LIB87_DIR) $(SYNOPSYS_SRCS) force
 	done; \
 	cd $$prev
 
-std.v08: $(LIB08_DIR) $(STD08_SRCS) force
+std.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(STD08_SRCS) force
 	$(RM) -rf $(STD08_DIR)
 	mkdir $(STD08_DIR)
 	prev=`pwd`; cd $(STD08_DIR); \
@@ -220,7 +220,7 @@ std.v08: $(LIB08_DIR) $(STD08_SRCS) force
 
 ANALYZE_IEEE08=$(ANALYZE08) -P../std --work=ieee
 
-ieee.v08: $(LIB08_DIR) $(IEEE08_SRCS) force
+ieee.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(IEEE08_SRCS) std.v08 force
 	$(RM) -rf $(IEEE08_DIR)
 	mkdir $(IEEE08_DIR)
 #       FIXME: add VITAL2000 ?

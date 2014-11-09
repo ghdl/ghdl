@@ -76,7 +76,7 @@ Makefile: $(srcdir)/Makefile.in
 
 #################### For mcode backend ##############################
 
-all.mcode: ghdl.mcode libs.vhdl.mcode
+all.mcode: ghdl_mcode libs.vhdl.mcode
 
 GRTSRCDIR=$(srcdir)/src/grt
 include $(GRTSRCDIR)/Makefile.inc
@@ -85,14 +85,32 @@ GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl
 
 GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho/mcode
 
-ghdl.mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl.mcode: $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
-	$(GNATMAKE) -o ghdl $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
-
-.PHONY: ghdl.mcode
+ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
+ghdl_mcode: $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
+	$(GNATMAKE) -o $@ $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
+
+libs.vhdl.mcode: libs.vhdl.all
+
+install.vhdl.mcode: install.dirs #libs.vhdl.mcode
+# Copy libraries and relocate source files.
+	for d in v08/ieee v08/std v87/ieee v87/std v87/synopsys \
+	  v93/ieee v93/mentor v93/std v93/synopsys; do \
+	  $(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
+	  $(INSTALL_DATA) -p \
+	    $(libdirsuffix)/$$d/* $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
+	  for c in $(libdirsuffix)/$$d/*.cf; do \
+	   $(SED) -e '/file/s@".*/libraries@"../../src@g' \
+	     < $$c > $(DESTDIR)$(prefix)/$$c; \
+	  done; \
+	done
+
+install.mcode.program: install.dirs ghdl_mcode
+	$(INSTALL_PROGRAM) ghdl_mcode $(DESTDIR)$(bindir)/ghdl
+
+install.mcode: install.mcode.program install.vhdl.srcs install.vhdl.mcode
 
 #################### For gcc backend ##############################
 
@@ -144,6 +162,10 @@ ghdl_gcc: force
 grt.links:
 	cd $(libdirsuffix); ln -sf $(libdirreverse)/grt.lst .; ln -sf $(libdirreverse)/libgrt.a .; ln -sf $(libdirreverse)/grt.ver .
 
+libs.vhdl.gcc: ghdl_gcc ghdl1-gcc
+	$(MAKE) GHDL=ghdl_gcc libs.vhdl.all
+	$(MAKE) GHDL1=./ghdl1-gcc libs.vhdl.standard
+
 #################### For llvm backend ##############################
 
 LLVM_CONFIG=$(llvm_prefix)/bin/llvm-config
@@ -182,8 +204,9 @@ LIB08_DIR:=$(libdirsuffix)/v08
 
 LIBSRC_DIR:=$(srcdir)/libraries
 REL_DIR:=$(libdirreverse)/../..
-GHDL=ghdl
+GHDL=ghdl_$(backend)
 ANALYZE:=$(REL_DIR)/$(GHDL) -a $(LIB_CFLAGS)
+ANALYZE_DEP:=$(GHDL)
 
 $(LIB87_DIR) $(LIB93_DIR) $(LIB08_DIR):
 	[ -d $(libdirsuffix) ] || mkdir -p $(libdirsuffix)
@@ -230,12 +253,6 @@ libs.vhdl.all: libs.vhdl.v87 libs.vhdl.v93 libs.vhdl.v08
 libs.vhdl.standard: $(LIB93_DIR)/std/std_standard.o \
  $(LIB87_DIR)/std/std_standard.o \
  $(LIB08_DIR)/std/std_standard.o
-
-libs.vhdl.gcc:
-	$(MAKE) GHDL=ghdl_gcc libs.vhdl.all
-	$(MAKE) GHDL1=./ghdl1-gcc libs.vhdl.standard
-
-libs.vhdl.mcode: libs.vhdl.all
 
 libs.vhdl.simul:
 	$(MAKE) GHDL=ghdl_simul libs.vhdl.all
@@ -284,30 +301,13 @@ install.vhdl.srcs:
 	  $(INSTALL_DATA) -p $$i $(DESTDIR)$(VHDL_LIB_DIR)/src/ieee2008; \
 	done
 
-install.vhdl.mcode: install.dirs #libs.vhdl.mcode
-# Copy libraries and relocate source files.
-	for d in v08/ieee v08/std v87/ieee v87/std v87/synopsys \
-	  v93/ieee v93/mentor v93/std v93/synopsys; do \
-	  $(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
-	  $(INSTALL_DATA) -p \
-	    $(libdirsuffix)/$$d/* $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
-	  for c in $(libdirsuffix)/$$d/*.cf; do \
-	   $(SED) -e '/file/s@".*/libraries@"../../src@g' \
-	     < $$c > $(DESTDIR)$(prefix)/$$c; \
-	  done; \
-	done
-
-install.program: install.dirs ghdl.mcode
-	$(INSTALL_PROGRAM) ghdl $(DESTDIR)$(bindir)
-
-install.mcode: install.program install.vhdl.srcs install.vhdl.mcode
-
 ####################### clean ############################################
 
 clean: force
 	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.deps *.bexch
-	$(RM) -f ghdl_gcc ghdl_mcode ghdl_llvm ghdl_llvm_jit ghdl_simul
-	$(RM) -f ghdl1-gcc run-bind.ad? grt.lst grt-files grt-files.in
+	$(RM) -f ghdl_gcc ghdl_mcode ghdl ghdl_llvm ghdl_llvm_jit ghdl_simul
+	$(RM) -f ghdl1-gcc ghdl1-llvm
+	$(RM) -f run-bind.ad? grt.lst grt-files grt-files.in
 	$(RM) -rf lib
 
 distclean: clean

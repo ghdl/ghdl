@@ -15,8 +15,8 @@ You need GNAT for x86 (32 bits).  See below for instructions
 $ ./configure
 $ make
 
-At that place, you can already use the 'ghdl' built in the directory.
-You can also install it:
+At that place, you can already use the 'ghdl_mcode' built in the directory.
+You can also install GHDL (the executable is installed as 'ghdl'):
 $ make install
 
 That's all!
@@ -58,16 +58,20 @@ As GCC is written in Ada, you need to use the GNU Ada compiler (GNAT).
 I recommend to use GNAT GPL from http://libre.adacore.com (free).
 If you build with the mcode backend, you need an i386 version of GNAT.
 
-* Building with mcode backend.
+Building with mcode backend
+***************************
+
 This is as simple as:
 $ ./configure --prefix=PREFIX
   where PREFIX is the directory for installation
 $ make
-  This builds the ghdl executable, which can be used as is.
+  This builds the ghdl_mcode executable, which can be used as is.
 $ make install
   To install within PREFIX
 
-* Building with the gcc backend
+Building with the gcc backend
+*****************************
+
 You need to download and untar the sources of
 gcc version 4.9.2 [do not modify this line as this is read by scripts].
 
@@ -77,7 +81,9 @@ $ ./configure --with-gcc=/path/to/gcc/source/dir
 The configure gcc following the gcc instructions and also enable vhdl
 languages (you can use --enable-languages=c,vhdl --disable-bootstrap)
 
-* Building with the llvm backend
+Building with the llvm backend
+******************************
+
 You need llvm 3.5
 
 First configure ghdl and specify where llvm is installed
