@@ -38,8 +38,7 @@ with Trans.Foreach_Non_Composite;
 package body Trans.Chap7 is
    use Trans.Helpers;
 
-   function Is_Static_Constant (Decl : Iir_Constant_Declaration)
-                                   return Boolean
+   function Is_Static_Constant (Decl : Iir_Constant_Declaration) return Boolean
    is
       Expr  : constant Iir := Get_Default_Value (Decl);
       Atype : Iir;
@@ -99,21 +98,18 @@ package body Trans.Chap7 is
    end Is_Static_Constant;
 
    procedure Translate_Static_String_Literal_Inner
-     (List    : in out O_Array_Aggr_List;
+     (List : in out O_Array_Aggr_List;
       Str     : Iir;
       El_Type : Iir)
    is
       use Name_Table;
 
-      Literal_List : Iir_List;
-      Lit          : Iir;
-      Len          : Nat32;
-      Ptr          : String_Fat_Acc;
-   begin
-      Literal_List :=
+      Literal_List : constant Iir_List :=
         Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
-      Len := Get_String_Length (Str);
-      Ptr := Get_String_Fat_Acc (Str);
+      Len          : constant Nat32 := Get_String_Length (Str);
+      Ptr          : constant String_Fat_Acc := Get_String_Fat_Acc (Str);
+      Lit          : Iir;
+   begin
       for I in 1 .. Len loop
          Lit := Find_Name_In_List (Literal_List, Get_Identifier (Ptr (I)));
          New_Array_Aggr_El (List, Get_Ortho_Expr (Lit));
@@ -126,16 +122,12 @@ package body Trans.Chap7 is
       El_Type : Iir)
    is
       pragma Unreferenced (El_Type);
-      L_0 : O_Cnode;
-      L_1 : O_Cnode;
-      Ptr : String_Fat_Acc;
-      Len : Nat32;
+      L_0 : constant O_Cnode := Get_Ortho_Expr (Get_Bit_String_0 (Lit));
+      L_1 : constant O_Cnode := Get_Ortho_Expr (Get_Bit_String_1 (Lit));
+      Ptr : constant String_Fat_Acc := Get_String_Fat_Acc (Lit);
+      Len : constant Nat32 := Get_String_Length (Lit);
       V   : O_Cnode;
    begin
-      L_0 := Get_Ortho_Expr (Get_Bit_String_0 (Lit));
-      L_1 := Get_Ortho_Expr (Get_Bit_String_1 (Lit));
-      Ptr := Get_String_Fat_Acc (Lit);
-      Len := Get_String_Length (Lit);
       for I in 1 .. Len loop
          case Ptr (I) is
             when '0' =>
@@ -154,12 +146,10 @@ package body Trans.Chap7 is
                                            Info    : Iir;
                                            El_Type : Iir)
    is
+      N_Info : constant Iir := Get_Sub_Aggregate_Info (Info);
       Assoc  : Iir;
-      N_Info : Iir;
       Sub    : Iir;
    begin
-      N_Info := Get_Sub_Aggregate_Info (Info);
-
       case Get_Kind (Aggr) is
          when Iir_Kind_Aggregate =>
             Assoc := Get_Association_Choices_Chain (Aggr);
@@ -169,8 +159,7 @@ package body Trans.Chap7 is
                   when Iir_Kind_Choice_By_None =>
                      if N_Info = Null_Iir then
                         New_Array_Aggr_El
-                          (List,
-                           Translate_Static_Expression (Sub, El_Type));
+                          (List, Translate_Static_Expression (Sub, El_Type));
                      else
                         Translate_Static_Aggregate_1
                           (List, Sub, N_Info, El_Type);
@@ -195,8 +184,7 @@ package body Trans.Chap7 is
       end case;
    end Translate_Static_Aggregate_1;
 
-   function Translate_Static_Aggregate (Aggr : Iir)
-                                           return O_Cnode
+   function Translate_Static_Aggregate (Aggr : Iir) return O_Cnode
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
       El_Type   : constant Iir := Get_Element_Subtype (Aggr_Type);
@@ -212,20 +200,16 @@ package body Trans.Chap7 is
       return Res;
    end Translate_Static_Aggregate;
 
-   function Translate_Static_Simple_Aggregate (Aggr : Iir)
-                                                  return O_Cnode
+   function Translate_Static_Simple_Aggregate (Aggr : Iir) return O_Cnode
    is
-      Aggr_Type : Iir;
-      El_List   : Iir_List;
+      Aggr_Type : constant Iir := Get_Type (Aggr);
+      El_List   : constant Iir_List := Get_Simple_Aggregate_List (Aggr);
+      El_Type   : constant Iir := Get_Element_Subtype (Aggr_Type);
       El        : Iir;
-      El_Type   : Iir;
       List      : O_Array_Aggr_List;
       Res       : O_Cnode;
    begin
-      Aggr_Type := Get_Type (Aggr);
       Chap3.Translate_Anonymous_Type_Definition (Aggr_Type, True);
-      El_Type := Get_Element_Subtype (Aggr_Type);
-      El_List := Get_Simple_Aggregate_List (Aggr);
       Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
 
       for I in Natural loop
@@ -239,25 +223,20 @@ package body Trans.Chap7 is
       return Res;
    end Translate_Static_Simple_Aggregate;
 
-   function Translate_Static_String_Literal (Str : Iir)
-                                                return O_Cnode
+   function Translate_Static_String_Literal (Str : Iir) return O_Cnode
    is
       use Name_Table;
 
-      Lit_Type     : Iir;
-      Element_Type : Iir;
+      Lit_Type     : constant Iir := Get_Type (Str);
+      Element_Type : constant Iir := Get_Element_Subtype (Lit_Type);
       Arr_Type     : O_Tnode;
       List         : O_Array_Aggr_List;
       Res          : O_Cnode;
    begin
-      Lit_Type := Get_Type (Str);
-
       Chap3.Translate_Anonymous_Type_Definition (Lit_Type, True);
       Arr_Type := Get_Ortho_Type (Lit_Type, Mode_Value);
 
       Start_Array_Aggr (List, Arr_Type);
-
-      Element_Type := Get_Element_Subtype (Lit_Type);
 
       Translate_Static_String_Literal_Inner (List, Str, Element_Type);
 
@@ -269,8 +248,7 @@ package body Trans.Chap7 is
    --  The type of the literal element is ELEMENT_TYPE, and the ortho type
    --  of the string (a constrained array type) is STR_TYPE.
    function Create_String_Literal_Var_Inner
-     (Str : Iir; Element_Type : Iir; Str_Type : O_Tnode)
-         return Var_Type
+     (Str : Iir; Element_Type : Iir; Str_Type : O_Tnode) return Var_Type
    is
       use Name_Table;
 
@@ -295,7 +273,8 @@ package body Trans.Chap7 is
    end Create_String_Literal_Var_Inner;
 
    --  Create a variable (constant) for string or bit string literal STR.
-   function Create_String_Literal_Var (Str : Iir) return Var_Type is
+   function Create_String_Literal_Var (Str : Iir) return Var_Type
+   is
       use Name_Table;
 
       Str_Type : constant Iir := Get_Type (Str);
@@ -314,8 +293,7 @@ package body Trans.Chap7 is
    --  Some strings literal have an unconstrained array type,
    --  eg: 'image of constant.  Its type is not constrained
    --  because it is not so in VHDL!
-   function Translate_Non_Static_String_Literal (Str : Iir)
-                                                    return O_Enode
+   function Translate_Non_Static_String_Literal (Str : Iir) return O_Enode
    is
       use Name_Table;
 
@@ -396,7 +374,7 @@ package body Trans.Chap7 is
 
    --  Only for Strings of STD.Character.
    function Translate_Static_String (Str_Type : Iir; Str_Ident : Name_Id)
-                                        return O_Cnode
+                                    return O_Cnode
    is
       use Name_Table;
 
@@ -409,8 +387,7 @@ package body Trans.Chap7 is
 
       Start_Array_Aggr (List, Get_Ortho_Type (Str_Type, Mode_Value));
 
-      Literal_List :=
-        Get_Enumeration_Literal_List (Character_Type_Definition);
+      Literal_List := Get_Enumeration_Literal_List (Character_Type_Definition);
       Image (Str_Ident);
       for I in 1 .. Name_Length loop
          Lit := Get_Nth_Element (Literal_List,
@@ -422,15 +399,13 @@ package body Trans.Chap7 is
       return Res;
    end Translate_Static_String;
 
-   function Translate_Static_Bit_String_Literal
-     (Lit : Iir_Bit_String_Literal)
-         return O_Cnode
+   function Translate_Static_Bit_String_Literal (Lit : Iir_Bit_String_Literal)
+                                                return O_Cnode
    is
-      Lit_Type : Iir;
+      Lit_Type : constant Iir := Get_Type (Lit);
       Res      : O_Cnode;
       List     : O_Array_Aggr_List;
    begin
-      Lit_Type := Get_Type (Lit);
       Chap3.Translate_Anonymous_Type_Definition (Lit_Type, True);
       Start_Array_Aggr (List, Get_Ortho_Type (Lit_Type, Mode_Value));
       Translate_Static_Bit_String_Literal_Inner (List, Lit, Lit_Type);
@@ -447,8 +422,7 @@ package body Trans.Chap7 is
       R        : O_Enode;
    begin
       if Get_Constraint_State (Str_Type) = Fully_Constrained
-        and then
-          Get_Type_Staticness (Get_Index_Type (Str_Type, 0)) = Locally
+        and then Get_Type_Staticness (Get_Index_Type (Str_Type, 0)) = Locally
       then
          Chap3.Create_Array_Subtype (Str_Type, True);
          case Get_Kind (Str) is
@@ -523,8 +497,7 @@ package body Trans.Chap7 is
    end Translate_Static_Implicit_Conv;
 
    function Translate_Numeric_Literal (Expr : Iir; Res_Type : O_Tnode)
-                                          return O_Cnode
-   is
+                                      return O_Cnode is
    begin
       case Get_Kind (Expr) is
          when Iir_Kind_Integer_Literal =>
@@ -556,13 +529,12 @@ package body Trans.Chap7 is
    end Translate_Numeric_Literal;
 
    function Translate_Numeric_Literal (Expr : Iir; Res_Type : Iir)
-                                          return O_Cnode
+                                      return O_Cnode
    is
-      Expr_Type  : Iir;
+      Expr_Type  : constant Iir := Get_Type (Expr);
       Expr_Otype : O_Tnode;
       Tinfo      : Type_Info_Acc;
    begin
-      Expr_Type := Get_Type (Expr);
       Tinfo := Get_Info (Expr_Type);
       if Res_Type /= Null_Iir then
          Expr_Otype := Get_Ortho_Type (Res_Type, Mode_Value);
@@ -579,7 +551,7 @@ package body Trans.Chap7 is
    end Translate_Numeric_Literal;
 
    function Translate_Static_Expression (Expr : Iir; Res_Type : Iir)
-                                            return O_Cnode
+                                        return O_Cnode
    is
       Expr_Type : constant Iir := Get_Type (Expr);
    begin
@@ -616,13 +588,11 @@ package body Trans.Chap7 is
    end Translate_Static_Expression;
 
    function Translate_Static_Range_Left
-     (Expr : Iir; Range_Type : Iir := Null_Iir)
-         return O_Cnode
+     (Expr : Iir; Range_Type : Iir := Null_Iir) return O_Cnode
    is
+      Bound : constant Iir := Get_Left_Limit (Expr);
       Left  : O_Cnode;
-      Bound : Iir;
    begin
-      Bound := Get_Left_Limit (Expr);
       Left := Chap7.Translate_Static_Expression (Bound, Range_Type);
       --  if Range_Type /= Null_Iir
       --    and then Get_Type (Bound) /= Range_Type then
@@ -633,8 +603,7 @@ package body Trans.Chap7 is
    end Translate_Static_Range_Left;
 
    function Translate_Static_Range_Right
-     (Expr : Iir; Range_Type : Iir := Null_Iir)
-         return O_Cnode
+     (Expr : Iir; Range_Type : Iir := Null_Iir) return O_Cnode
    is
       Right : O_Cnode;
    begin
@@ -647,8 +616,7 @@ package body Trans.Chap7 is
       return Right;
    end Translate_Static_Range_Right;
 
-   function Translate_Static_Range_Dir (Expr : Iir) return O_Cnode
-   is
+   function Translate_Static_Range_Dir (Expr : Iir) return O_Cnode is
    begin
       case Get_Direction (Expr) is
          when Iir_To =>
@@ -666,9 +634,8 @@ package body Trans.Chap7 is
       return New_Unsigned_Literal (Ghdl_Index_Type, Ulen);
    end Translate_Static_Range_Length;
 
-   function Translate_Range_Expression_Left (Expr       : Iir;
-                                             Range_Type : Iir := Null_Iir)
-                                                return O_Enode
+   function Translate_Range_Expression_Left
+     (Expr : Iir; Range_Type : Iir := Null_Iir) return O_Enode
    is
       Left : O_Enode;
    begin
@@ -680,9 +647,8 @@ package body Trans.Chap7 is
       return Left;
    end Translate_Range_Expression_Left;
 
-   function Translate_Range_Expression_Right (Expr       : Iir;
-                                              Range_Type : Iir := Null_Iir)
-                                                 return O_Enode
+   function Translate_Range_Expression_Right
+     (Expr : Iir; Range_Type : Iir := Null_Iir) return O_Enode
    is
       Right : O_Enode;
    begin
@@ -696,21 +662,16 @@ package body Trans.Chap7 is
 
    --  Compute the length of LEFT DIR (to/downto) RIGHT.
    function Compute_Range_Length
-     (Left : O_Enode; Right : O_Enode; Dir : Iir_Direction)
-         return O_Enode
+     (Left : O_Enode; Right : O_Enode; Dir : Iir_Direction) return O_Enode
    is
-      L        : O_Enode;
-      R        : O_Enode;
+      Rng_Type : constant O_Tnode := Ghdl_I32_Type;
+      L        : constant O_Enode := New_Convert_Ov (Left, Rng_Type);
+      R        : constant O_Enode := New_Convert_Ov (Right, Rng_Type);
       Val      : O_Enode;
       Tmp      : O_Dnode;
       Res      : O_Dnode;
       If_Blk   : O_If_Block;
-      Rng_Type : O_Tnode;
    begin
-      Rng_Type := Ghdl_I32_Type;
-      L := New_Convert_Ov (Left, Rng_Type);
-      R := New_Convert_Ov (Right, Rng_Type);
-
       case Dir is
          when Iir_To =>
             Val := New_Dyadic_Op (ON_Sub_Ov, R, L);
@@ -795,9 +756,8 @@ package body Trans.Chap7 is
       end case;
    end Translate_Association;
 
-   function Translate_Function_Call
-     (Imp : Iir; Assoc_Chain : Iir; Obj : Iir)
-         return O_Enode
+   function Translate_Function_Call (Imp : Iir; Assoc_Chain : Iir; Obj : Iir)
+                                    return O_Enode
    is
       Info   : constant Subprg_Info_Acc := Get_Info (Imp);
       Constr : O_Assoc_List;
@@ -856,11 +816,9 @@ package body Trans.Chap7 is
    end Translate_Function_Call;
 
    function Translate_Operator_Function_Call
-     (Imp : Iir; Left : Iir;  Right : Iir; Res_Type : Iir)
-         return O_Enode
+     (Imp : Iir; Left : Iir;  Right : Iir; Res_Type : Iir) return O_Enode
    is
-      function Create_Assoc (Actual : Iir; Formal : Iir)
-                                return Iir
+      function Create_Assoc (Actual : Iir; Formal : Iir) return Iir
       is
          R : Iir;
       begin
@@ -898,8 +856,7 @@ package body Trans.Chap7 is
    end Translate_Operator_Function_Call;
 
    function Convert_Constrained_To_Unconstrained
-     (Expr : Mnode; Res_Type : Iir)
-         return Mnode
+     (Expr : Mnode; Res_Type : Iir) return Mnode
    is
       Type_Info   : constant Type_Info_Acc := Get_Info (Res_Type);
       Kind        : constant Object_Kind_Type := Get_Object_Kind (Expr);
@@ -918,16 +875,13 @@ package body Trans.Chap7 is
       return Res;
    end Convert_Constrained_To_Unconstrained;
 
-   function Convert_Array_To_Thin_Array (Expr      : Mnode;
-                                         Expr_Type : Iir;
-                                         Atype     : Iir;
-                                         Loc       : Iir)
-                                            return Mnode
+   function Convert_Array_To_Thin_Array
+     (Expr : Mnode; Expr_Type : Iir; Atype : Iir; Loc : Iir) return Mnode
    is
-      Expr_Indexes                 : constant Iir_List :=
-        Get_Index_Subtype_List (Expr_Type);
-      Expr_Stable                  : Mnode;
-      Success_Label, Failure_Label : O_Snode;
+      Expr_Indexes  : constant Iir_List := Get_Index_Subtype_List (Expr_Type);
+      Expr_Stable   : Mnode;
+      Success_Label : O_Snode;
+      Failure_Label : O_Snode;
    begin
       Expr_Stable := Stabilize (Expr);
 
@@ -956,8 +910,7 @@ package body Trans.Chap7 is
    end Convert_Array_To_Thin_Array;
 
    function Translate_Implicit_Array_Conversion
-     (Expr : Mnode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
-         return Mnode
+     (Expr : Mnode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir) return Mnode
    is
       Ainfo : Type_Info_Acc;
       Einfo : Type_Info_Acc;
@@ -1015,7 +968,7 @@ package body Trans.Chap7 is
                                      Atype     : Iir;
                                      Is_Sig    : Object_Kind_Type;
                                      Loc       : Iir)
-                                        return O_Enode is
+                                    return O_Enode is
    begin
       --  Same type: nothing to do.
       if Atype = Expr_Type then
@@ -1035,8 +988,8 @@ package body Trans.Chap7 is
       end if;
    end Translate_Implicit_Conv;
 
-   type Predefined_To_Onop_Type is array (Iir_Predefined_Functions)
-     of ON_Op_Kind;
+   type Predefined_To_Onop_Type is
+     array (Iir_Predefined_Functions) of ON_Op_Kind;
    Predefined_To_Onop : constant Predefined_To_Onop_Type :=
      (Iir_Predefined_Boolean_Or => ON_Or,
       Iir_Predefined_Boolean_Not => ON_Not,
@@ -1098,7 +1051,7 @@ package body Trans.Chap7 is
 
    function Translate_Shortcut_Operator
      (Imp : Iir_Implicit_Function_Declaration; Left, Right : Iir)
-         return O_Enode
+     return O_Enode
    is
       Rtype    : Iir;
       Res      : O_Dnode;
@@ -1161,7 +1114,7 @@ package body Trans.Chap7 is
    end Translate_Shortcut_Operator;
 
    function Translate_Lib_Operator (Left, Right : O_Enode; Func : O_Dnode)
-                                       return O_Enode
+                                   return O_Enode
    is
       Constr : O_Assoc_List;
    begin
@@ -1175,7 +1128,7 @@ package body Trans.Chap7 is
 
    function Translate_Predefined_Lib_Operator
      (Left, Right : O_Enode; Func : Iir_Implicit_Function_Declaration)
-         return O_Enode
+     return O_Enode
    is
       Info   : constant Subprg_Info_Acc := Get_Info (Func);
       Constr : O_Assoc_List;
@@ -1190,8 +1143,7 @@ package body Trans.Chap7 is
    end Translate_Predefined_Lib_Operator;
 
    function Translate_Predefined_Array_Operator
-     (Left, Right : O_Enode; Func : Iir)
-         return O_Enode
+     (Left, Right : O_Enode; Func : Iir) return O_Enode
    is
       Res       : O_Dnode;
       Constr    : O_Assoc_List;
@@ -1206,7 +1158,7 @@ package body Trans.Chap7 is
       Subprgs.Add_Subprg_Instance_Assoc (Constr, Func_Info.Subprg_Instance);
       New_Association (Constr,
                        New_Address (New_Obj (Res),
-                         Info.Ortho_Ptr_Type (Mode_Value)));
+                                    Info.Ortho_Ptr_Type (Mode_Value)));
       New_Association (Constr, Left);
       if Right /= O_Enode_Null then
          New_Association (Constr, Right);
@@ -1216,13 +1168,11 @@ package body Trans.Chap7 is
    end Translate_Predefined_Array_Operator;
 
    function Translate_Predefined_Array_Operator_Convert
-     (Left, Right : O_Enode; Func : Iir; Res_Type : Iir)
-         return O_Enode
+     (Left, Right : O_Enode; Func : Iir; Res_Type : Iir) return O_Enode
    is
+      Ret_Type : constant Iir := Get_Return_Type (Func);
       Res      : O_Enode;
-      Ret_Type : Iir;
    begin
-      Ret_Type := Get_Return_Type (Func);
       Res := Translate_Predefined_Array_Operator (Left, Right, Func);
       return Translate_Implicit_Conv
         (Res, Ret_Type, Res_Type, Mode_Value, Func);
@@ -1230,15 +1180,14 @@ package body Trans.Chap7 is
 
    --  Create an array aggregate containing one element, EL.
    function Translate_Element_To_Array (El : O_Enode; Arr_Type : Iir)
-                                           return O_Enode
+                                       return O_Enode
    is
+      Ainfo : constant Type_Info_Acc := Get_Info (Arr_Type);
+      Einfo : constant Type_Info_Acc :=
+        Get_Info (Get_Element_Subtype (Arr_Type));
       Res   : O_Dnode;
-      Ainfo : Type_Info_Acc;
-      Einfo : Type_Info_Acc;
       V     : O_Dnode;
    begin
-      Ainfo := Get_Info (Arr_Type);
-      Einfo := Get_Info (Get_Element_Subtype (Arr_Type));
       Res := Create_Temp (Ainfo.Ortho_Type (Mode_Value));
       if Is_Composite (Einfo) then
          New_Assign_Stmt
@@ -1262,12 +1211,11 @@ package body Trans.Chap7 is
       return New_Address (New_Obj (Res), Ainfo.Ortho_Ptr_Type (Mode_Value));
    end Translate_Element_To_Array;
 
-   function Translate_Concat_Operator
-     (Left_Tree, Right_Tree : O_Enode;
-      Imp                   : Iir_Implicit_Function_Declaration;
-      Res_Type              : Iir;
-      Loc                   : Iir)
-         return O_Enode
+   function Translate_Concat_Operator (Left_Tree, Right_Tree : O_Enode;
+                                       Imp : Iir_Implicit_Function_Declaration;
+                                       Res_Type : Iir;
+                                       Loc : Iir)
+                                      return O_Enode
    is
       Ret_Type : constant Iir := Get_Return_Type (Imp);
       Kind     : constant Iir_Predefined_Functions :=
@@ -1296,13 +1244,9 @@ package body Trans.Chap7 is
    end Translate_Concat_Operator;
 
    function Translate_Scalar_Min_Max
-     (Op          : ON_Op_Kind;
-      Left, Right : Iir;
-      Res_Type    : Iir)
-         return O_Enode
+     (Op : ON_Op_Kind; Left, Right : Iir; Res_Type : Iir) return O_Enode
    is
-      Res_Otype : constant O_Tnode :=
-        Get_Ortho_Type (Res_Type, Mode_Value);
+      Res_Otype : constant O_Tnode := Get_Ortho_Type (Res_Type, Mode_Value);
       Res, L, R : O_Dnode;
       If_Blk    : O_If_Block;
    begin
@@ -1316,9 +1260,9 @@ package body Trans.Chap7 is
         (Res_Otype, Translate_Expression (Right, Res_Type));
 
       Start_If_Stmt (If_Blk, New_Compare_Op (Op,
-                     New_Obj_Value (L),
-                     New_Obj_Value (R),
-                     Ghdl_Bool_Type));
+                                             New_Obj_Value (L),
+                                             New_Obj_Value (R),
+                                             Ghdl_Bool_Type));
       New_Assign_Stmt (New_Obj (Res), New_Obj_Value (L));
       New_Else_Stmt (If_Blk);
       New_Assign_Stmt (New_Obj (Res), New_Obj_Value (R));
@@ -1328,13 +1272,10 @@ package body Trans.Chap7 is
       return New_Obj_Value (Res);
    end Translate_Scalar_Min_Max;
 
-   function Translate_Predefined_Vector_Min_Max (Is_Min   : Boolean;
-                                                 Left     : Iir;
-                                                 Res_Type : Iir)
-                                                    return O_Enode
+   function Translate_Predefined_Vector_Min_Max
+     (Is_Min : Boolean; Left : Iir; Res_Type : Iir) return O_Enode
    is
-      Res_Otype    : constant O_Tnode :=
-        Get_Ortho_Type (Res_Type, Mode_Value);
+      Res_Otype    : constant O_Tnode := Get_Ortho_Type (Res_Type, Mode_Value);
       Left_Type    : constant Iir := Get_Type (Left);
       Res, El, Len : O_Dnode;
       Arr          : Mnode;
@@ -1361,7 +1302,7 @@ package body Trans.Chap7 is
       Len := Create_Temp_Init
         (Ghdl_Index_Type,
          M2E (Chap3.Range_To_Length
-           (Chap3.Get_Array_Range (Arr, Left_Type, 1))));
+                (Chap3.Get_Array_Range (Arr, Left_Type, 1))));
 
       --  Create:
       --    loop
@@ -1373,17 +1314,17 @@ package body Trans.Chap7 is
       --    end loop;
       Start_Loop_Stmt (Label);
       Gen_Exit_When (Label, New_Compare_Op (ON_Eq, New_Obj_Value (Len),
-                     New_Lit (Ghdl_Index_0),
-                     Ghdl_Bool_Type));
+                                            New_Lit (Ghdl_Index_0),
+                                            Ghdl_Bool_Type));
       Dec_Var (Len);
       New_Assign_Stmt
         (New_Obj (El),
          M2E (Chap3.Index_Base (Chap3.Get_Array_Base (Arr),
-           Left_Type, New_Obj_Value (Len))));
+                                Left_Type, New_Obj_Value (Len))));
       Start_If_Stmt (If_Blk, New_Compare_Op (Op,
-                     New_Obj_Value (El),
-                     New_Obj_Value (Res),
-                     Ghdl_Bool_Type));
+                                             New_Obj_Value (El),
+                                             New_Obj_Value (Res),
+                                             Ghdl_Bool_Type));
       New_Assign_Stmt (New_Obj (Res), New_Obj_Value (El));
       Finish_If_Stmt (If_Blk);
       Finish_Loop_Stmt (Label);
@@ -1393,10 +1334,8 @@ package body Trans.Chap7 is
       return New_Obj_Value (Res);
    end Translate_Predefined_Vector_Min_Max;
 
-   function Translate_Std_Ulogic_Match (Func     : O_Dnode;
-                                        L, R     : O_Enode;
-                                        Res_Type : O_Tnode)
-                                           return O_Enode
+   function Translate_Std_Ulogic_Match
+     (Func : O_Dnode; L, R : O_Enode; Res_Type : O_Tnode) return O_Enode
    is
       Constr : O_Assoc_List;
    begin
@@ -1412,7 +1351,7 @@ package body Trans.Chap7 is
                                  Val      : O_Enode;
                                  Arg2     : O_Enode := O_Enode_Null;
                                  Arg3     : O_Enode := O_Enode_Null)
-                                    return O_Enode
+                                return O_Enode
    is
       Val_Type : constant Iir := Get_Base_Type (Res_Type);
       Res      : O_Dnode;
@@ -1433,7 +1372,7 @@ package body Trans.Chap7 is
       New_Procedure_Call (Assoc);
       return M2E (Translate_Implicit_Array_Conversion
                   (Dv2M (Res, Get_Info (Val_Type), Mode_Value),
-                     Val_Type, Res_Type, Loc));
+                   Val_Type, Res_Type, Loc));
    end Translate_To_String;
 
    function Translate_Bv_To_String (Subprg   : O_Dnode;
@@ -1441,7 +1380,7 @@ package body Trans.Chap7 is
                                     Val_Type : Iir;
                                     Res_Type : Iir;
                                     Loc      : Iir)
-                                       return O_Enode
+                                   return O_Enode
    is
       Arr : Mnode;
    begin
@@ -1450,15 +1389,14 @@ package body Trans.Chap7 is
         (Subprg, Res_Type, Loc,
          M2E (Chap3.Get_Array_Base (Arr)),
          M2E (Chap3.Range_To_Length
-           (Chap3.Get_Array_Range (Arr, Val_Type, 1))));
+                (Chap3.Get_Array_Range (Arr, Val_Type, 1))));
    end Translate_Bv_To_String;
 
    subtype Predefined_Boolean_Logical is Iir_Predefined_Functions range
      Iir_Predefined_Boolean_And .. Iir_Predefined_Boolean_Xnor;
 
    function Translate_Predefined_Logical
-     (Op : Predefined_Boolean_Logical; Left, Right : O_Enode)
-         return O_Enode is
+     (Op : Predefined_Boolean_Logical; Left, Right : O_Enode) return O_Enode is
    begin
       case Op is
          when Iir_Predefined_Boolean_And =>
@@ -1480,11 +1418,11 @@ package body Trans.Chap7 is
    end Translate_Predefined_Logical;
 
    function Translate_Predefined_TF_Array_Element
-     (Op          : Predefined_Boolean_Logical;
+     (Op : Predefined_Boolean_Logical;
       Left, Right : Iir;
-      Res_Type    : Iir;
-      Loc         : Iir)
-         return O_Enode
+      Res_Type : Iir;
+      Loc : Iir)
+     return O_Enode
    is
       Arr_Type      : constant Iir := Get_Type (Left);
       Res_Btype     : constant Iir := Get_Base_Type (Res_Type);
@@ -1506,7 +1444,7 @@ package body Trans.Chap7 is
       Len := Create_Temp_Init
         (Ghdl_Index_Type,
          M2E (Chap3.Range_To_Length
-           (Chap3.Get_Array_Range (Arr, Arr_Type, 1))));
+                (Chap3.Get_Array_Range (Arr, Arr_Type, 1))));
 
       --  Allocate the result array.
       Base := Create_Temp_Init
@@ -1525,17 +1463,17 @@ package body Trans.Chap7 is
       --    end loop;
       Start_Loop_Stmt (Label);
       Gen_Exit_When (Label, New_Compare_Op (ON_Eq, New_Obj_Value (Len),
-                     New_Lit (Ghdl_Index_0),
-                     Ghdl_Bool_Type));
+                                            New_Lit (Ghdl_Index_0),
+                                            Ghdl_Bool_Type));
       Dec_Var (Len);
       New_Assign_Stmt
         (New_Indexed_Acc_Value (New_Obj (Base),
-         New_Obj_Value (Len)),
+                                New_Obj_Value (Len)),
          Translate_Predefined_Logical
            (Op,
             New_Obj_Value (El),
             M2E (Chap3.Index_Base (Chap3.Get_Array_Base (Arr),
-              Arr_Type, New_Obj_Value (Len)))));
+                                   Arr_Type, New_Obj_Value (Len)))));
       Finish_Loop_Stmt (Label);
       Close_Temp;
 
@@ -1550,8 +1488,7 @@ package body Trans.Chap7 is
    end Translate_Predefined_TF_Array_Element;
 
    function Translate_Predefined_TF_Reduction
-     (Op : ON_Op_Kind; Operand : Iir; Res_Type : Iir)
-         return O_Enode
+     (Op : ON_Op_Kind; Operand : Iir; Res_Type : Iir) return O_Enode
    is
       Arr_Type  : constant Iir := Get_Type (Operand);
       Enums     : constant Iir_List :=
@@ -1584,7 +1521,7 @@ package body Trans.Chap7 is
       Len := Create_Temp_Init
         (Ghdl_Index_Type,
          M2E (Chap3.Range_To_Length
-           (Chap3.Get_Array_Range (Arr, Arr_Type, 1))));
+                (Chap3.Get_Array_Range (Arr, Arr_Type, 1))));
 
       --  Create:
       --    loop
@@ -1594,8 +1531,8 @@ package body Trans.Chap7 is
       --    end loop;
       Start_Loop_Stmt (Label);
       Gen_Exit_When (Label, New_Compare_Op (ON_Eq, New_Obj_Value (Len),
-                     New_Lit (Ghdl_Index_0),
-                     Ghdl_Bool_Type));
+                                            New_Lit (Ghdl_Index_0),
+                                            Ghdl_Bool_Type));
       Dec_Var (Len);
       New_Assign_Stmt
         (New_Obj (Res),
@@ -1603,7 +1540,7 @@ package body Trans.Chap7 is
            (Op,
             New_Obj_Value (Res),
             M2E (Chap3.Index_Base (Chap3.Get_Array_Base (Arr),
-              Arr_Type, New_Obj_Value (Len)))));
+                                   Arr_Type, New_Obj_Value (Len)))));
       Finish_Loop_Stmt (Label);
       Close_Temp;
 
@@ -1617,7 +1554,7 @@ package body Trans.Chap7 is
       Res_Type              : Iir;
       Imp                   : Iir;
       Loc                   : Iir)
-         return O_Enode
+     return O_Enode
    is
       Arr_Type : constant Iir := Get_Base_Type (Left_Type);
       Arr_Info : constant Type_Info_Acc := Get_Info (Arr_Type);
@@ -1656,9 +1593,8 @@ package body Trans.Chap7 is
                   (Res, Arr_Type, Res_Type, Loc));
    end Translate_Predefined_Array_Min_Max;
 
-   function Translate_Predefined_TF_Edge
-     (Is_Rising : Boolean; Left : Iir)
-         return O_Enode
+   function Translate_Predefined_TF_Edge (Is_Rising : Boolean; Left : Iir)
+                                         return O_Enode
    is
       Enums : constant Iir_List :=
         Get_Enumeration_Literal_List (Get_Base_Type (Get_Type (Left)));
@@ -1667,19 +1603,17 @@ package body Trans.Chap7 is
       Name := Stabilize (Chap6.Translate_Name (Left), True);
       return New_Dyadic_Op
         (ON_And,
-         New_Value (Chap14.Get_Signal_Field
-           (Name, Ghdl_Signal_Event_Field)),
+         New_Value (Chap14.Get_Signal_Field (Name, Ghdl_Signal_Event_Field)),
          New_Compare_Op
            (ON_Eq,
             New_Value (New_Access_Element (M2E (Name))),
             New_Lit (Get_Ortho_Expr
-              (Get_Nth_Element (Enums, Boolean'Pos (Is_Rising)))),
+                       (Get_Nth_Element (Enums, Boolean'Pos (Is_Rising)))),
             Std_Boolean_Type_Node));
    end Translate_Predefined_TF_Edge;
 
    function Translate_Predefined_Std_Ulogic_Array_Match
-     (Subprg : O_Dnode; Left, Right : Iir; Res_Type : Iir)
-         return O_Enode
+     (Subprg : O_Dnode; Left, Right : Iir; Res_Type : Iir) return O_Enode
    is
       Res_Otype      : constant O_Tnode :=
         Get_Ortho_Type (Res_Type, Mode_Value);
@@ -1709,16 +1643,14 @@ package body Trans.Chap7 is
          New_Convert_Ov (M2E (Chap3.Get_Array_Base (L)), Ghdl_Ptr_Type));
       New_Association
         (Assoc,
-         M2E (Chap3.Range_To_Length
-           (Chap3.Get_Array_Range (L, L_Type, 1))));
+         M2E (Chap3.Range_To_Length (Chap3.Get_Array_Range (L, L_Type, 1))));
 
       New_Association
         (Assoc,
          New_Convert_Ov (M2E (Chap3.Get_Array_Base (R)), Ghdl_Ptr_Type));
       New_Association
         (Assoc,
-         M2E (Chap3.Range_To_Length
-           (Chap3.Get_Array_Range (R, R_Type, 1))));
+         M2E (Chap3.Range_To_Length (Chap3.Get_Array_Range (R, R_Type, 1))));
 
       New_Assign_Stmt (New_Obj (Res), New_Function_Call (Assoc));
 
@@ -1732,7 +1664,7 @@ package body Trans.Chap7 is
       Left, Right : Iir;
       Res_Type    : Iir;
       Loc         : Iir)
-         return O_Enode
+     return O_Enode
    is
       Kind       : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
@@ -2310,8 +2242,7 @@ package body Trans.Chap7 is
 
    --  Assign EXPR to TARGET.
    procedure Translate_Assign
-     (Target : Mnode;
-      Val    : O_Enode; Expr : Iir; Target_Type : Iir; Loc : Iir)
+     (Target : Mnode; Val : O_Enode; Expr : Iir; Target_Type : Iir; Loc : Iir)
    is
       T_Info : constant Type_Info_Acc := Get_Info (Target_Type);
    begin
@@ -2351,8 +2282,7 @@ package body Trans.Chap7 is
       end case;
    end Translate_Assign;
 
-   procedure Translate_Assign
-     (Target : Mnode; Expr : Iir; Target_Type : Iir)
+   procedure Translate_Assign (Target : Mnode; Expr : Iir; Target_Type : Iir)
    is
       Val : O_Enode;
    begin
@@ -2995,8 +2925,7 @@ package body Trans.Chap7 is
       end case;
    end Translate_Aggregate;
 
-   function Translate_Allocator_By_Expression (Expr : Iir)
-                                                  return O_Enode
+   function Translate_Allocator_By_Expression (Expr : Iir) return O_Enode
    is
       Val    : O_Enode;
       Val_M  : Mnode;
@@ -3033,8 +2962,7 @@ package body Trans.Chap7 is
       return New_Convert_Ov (M2Addr (R), Rtype);
    end Translate_Allocator_By_Expression;
 
-   function Translate_Allocator_By_Subtype (Expr : Iir)
-                                               return O_Enode
+   function Translate_Allocator_By_Subtype (Expr : Iir) return O_Enode
    is
       P_Type   : constant Iir := Get_Type (Expr);
       P_Info   : constant Type_Info_Acc := Get_Info (P_Type);
@@ -3071,11 +2999,11 @@ package body Trans.Chap7 is
 
    function Translate_Fat_Array_Type_Conversion
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
-         return O_Enode;
+     return O_Enode;
 
    function Translate_Array_Subtype_Conversion
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
-         return O_Enode
+     return O_Enode
    is
       Res_Info  : constant Type_Info_Acc := Get_Info (Res_Type);
       Expr_Info : constant Type_Info_Acc := Get_Info (Expr_Type);
@@ -3107,7 +3035,7 @@ package body Trans.Chap7 is
 
    function Translate_Type_Conversion
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
-         return O_Enode
+     return O_Enode
    is
       Res_Info : constant Type_Info_Acc := Get_Info (Res_Type);
       Res      : O_Enode;
@@ -3138,7 +3066,7 @@ package body Trans.Chap7 is
 
    function Translate_Fat_Array_Type_Conversion
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
-         return O_Enode
+     return O_Enode
    is
       Res_Info     : constant Type_Info_Acc := Get_Info (Res_Type);
       Expr_Info    : constant Type_Info_Acc := Get_Info (Expr_Type);
@@ -3217,8 +3145,7 @@ package body Trans.Chap7 is
    end Translate_Fat_Array_Type_Conversion;
 
    function Sig2val_Prepare_Composite
-     (Targ : Mnode; Targ_Type : Iir; Data : Mnode)
-         return Mnode
+     (Targ : Mnode; Targ_Type : Iir; Data : Mnode) return Mnode
    is
       pragma Unreferenced (Targ, Targ_Type);
    begin
@@ -3230,15 +3157,13 @@ package body Trans.Chap7 is
    end Sig2val_Prepare_Composite;
 
    function Sig2val_Update_Data_Array
-     (Val : Mnode; Targ_Type : Iir; Index : O_Dnode) return Mnode
-   is
+     (Val : Mnode; Targ_Type : Iir; Index : O_Dnode) return Mnode is
    begin
       return Chap3.Index_Base (Val, Targ_Type, New_Obj_Value (Index));
    end Sig2val_Update_Data_Array;
 
    function Sig2val_Update_Data_Record
-     (Val : Mnode; Targ_Type : Iir; El : Iir_Element_Declaration)
-         return Mnode
+     (Val : Mnode; Targ_Type : Iir; El : Iir_Element_Declaration) return Mnode
    is
       pragma Unreferenced (Targ_Type);
    begin
@@ -3272,8 +3197,7 @@ package body Trans.Chap7 is
       Finish_Data_Record => Sig2val_Finish_Data_Composite);
 
    procedure Translate_Signal_Assign_Driving_Non_Composite
-     (Targ : Mnode; Targ_Type : Iir; Data: Mnode)
-   is
+     (Targ : Mnode; Targ_Type : Iir; Data: Mnode) is
    begin
       New_Assign_Stmt
         (Chap14.Get_Signal_Value_Field (M2E (Targ), Targ_Type,
@@ -3293,13 +3217,12 @@ package body Trans.Chap7 is
       Finish_Data_Record => Sig2val_Finish_Data_Composite);
 
    function Translate_Signal_Value (Sig : O_Enode; Sig_Type : Iir)
-                                       return O_Enode
+                                   return O_Enode
    is
       procedure Translate_Signal_Non_Composite
         (Targ      : Mnode;
          Targ_Type : Iir;
-         Data      : Mnode)
-      is
+         Data      : Mnode) is
       begin
          New_Assign_Stmt (M2Lv (Targ),
                           Read_Value (M2E (Data), Targ_Type));
@@ -3360,8 +3283,7 @@ package body Trans.Chap7 is
    end Translate_Signal_Value;
 
    --  Get the effective value of a simple signal SIG.
-   function Read_Signal_Value (Sig : O_Enode; Sig_Type : Iir)
-                                  return O_Enode
+   function Read_Signal_Value (Sig : O_Enode; Sig_Type : Iir) return O_Enode
    is
       pragma Unreferenced (Sig_Type);
    begin
@@ -3377,7 +3299,7 @@ package body Trans.Chap7 is
          renames Translate_Signal;
 
    function Read_Signal_Driving_Value (Sig : O_Enode; Sig_Type : Iir)
-                                          return O_Enode is
+                                      return O_Enode is
    begin
       return New_Value (Chap14.Get_Signal_Value_Field
                         (Sig, Sig_Type, Ghdl_Signal_Driving_Value_Field));
@@ -3398,7 +3320,7 @@ package body Trans.Chap7 is
          renames Translate_Signal_Assign_Driving;
 
    function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
-                                     return O_Enode
+                                 return O_Enode
    is
       Imp       : Iir;
       Expr_Type : Iir;
@@ -3786,8 +3708,7 @@ package body Trans.Chap7 is
    --  or 0 to T'length - 1
    --  or T'Length - 1 downto 0
    --  In either of these cases, return T'Length
-   function Is_Length_Range_Expression (Rng : Iir_Range_Expression)
-                                           return Iir
+   function Is_Length_Range_Expression (Rng : Iir_Range_Expression) return Iir
    is
       --  Pattern of a bound.
       type Length_Pattern is
@@ -3952,8 +3873,7 @@ package body Trans.Chap7 is
 
    procedure Copy_Range (Dest_Ptr : O_Dnode;
                          Src_Ptr  : O_Dnode;
-                         Info     : Type_Info_Acc)
-   is
+                         Info     : Type_Info_Acc) is
    begin
       New_Assign_Stmt
         (New_Selected_Acc_Value (New_Obj (Dest_Ptr), Info.T.Range_Left),
@@ -3977,8 +3897,7 @@ package body Trans.Chap7 is
    end Copy_Range;
 
    procedure Translate_Range_Ptr
-     (Res_Ptr : O_Dnode; Arange : Iir; Range_Type : Iir)
-   is
+     (Res_Ptr : O_Dnode; Arange : Iir; Range_Type : Iir) is
    begin
       case Get_Kind (Arange) is
          when Iir_Kind_Range_Array_Attribute =>
@@ -4006,8 +3925,7 @@ package body Trans.Chap7 is
       end case;
    end Translate_Range_Ptr;
 
-   procedure Translate_Discrete_Range_Ptr (Res_Ptr : O_Dnode; Arange : Iir)
-   is
+   procedure Translate_Discrete_Range_Ptr (Res_Ptr : O_Dnode; Arange : Iir) is
    begin
       case Get_Kind (Arange) is
          when Iir_Kind_Integer_Subtype_Definition
@@ -4038,8 +3956,7 @@ package body Trans.Chap7 is
       end case;
    end Translate_Discrete_Range_Ptr;
 
-   function Translate_Range (Arange : Iir; Range_Type : Iir)
-                                return O_Lnode is
+   function Translate_Range (Arange : Iir; Range_Type : Iir) return O_Lnode is
    begin
       case Get_Kind (Arange) is
          when Iir_Kinds_Denoting_Name =>
@@ -4089,7 +4006,7 @@ package body Trans.Chap7 is
    end Translate_Range;
 
    function Translate_Static_Range (Arange : Iir; Range_Type : Iir)
-                                       return O_Cnode
+                                   return O_Cnode
    is
       Constr : O_Record_Aggr_List;
       Res    : O_Cnode;
@@ -4229,8 +4146,7 @@ package body Trans.Chap7 is
    --  Find the declaration of the predefined function IMP in type
    --  definition BASE_TYPE.
    function Find_Predefined_Function
-     (Base_Type : Iir; Imp : Iir_Predefined_Functions)
-         return Iir
+     (Base_Type : Iir; Imp : Iir_Predefined_Functions) return Iir
    is
       El : Iir;
    begin
@@ -4251,8 +4167,7 @@ package body Trans.Chap7 is
       raise Internal_Error;
    end Find_Predefined_Function;
 
-   function Translate_Equality (L, R : Mnode; Etype : Iir)
-                                   return O_Enode
+   function Translate_Equality (L, R : Mnode; Etype : Iir) return O_Enode
    is
       Tinfo : Type_Info_Acc;
    begin

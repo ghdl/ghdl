@@ -65,7 +65,7 @@ LIBS =  $(AGCC_GCCOBJ_DIR)/gcc/libcommon.a \
 	$(LIBIBERTY) $(LIBDECNUMBER) $(HOST_LIBS)
 
 $(ortho_exec): $(AGCC_DEPS) $(orthobe_srcdir)/ortho_gcc.ads force
-	$(GNATMAKE) -m -o $@ -g -aI$(ortho_srcdir) \
+	$(GNATMAKE) -o $@ -g -aI$(ortho_srcdir) \
 	 -aI$(ortho_srcdir)/gcc $(GNAT_FLAGS) ortho_gcc-main \
 	 -bargs -E -largs --LINK=$(LINKER) $(AGCC_OBJS) \
         $(BACKEND) $(LIBS) $(BACKENDLIBS)
