@@ -1145,15 +1145,13 @@ package body Trans.Chap7 is
    function Translate_Predefined_Array_Operator
      (Left, Right : O_Enode; Func : Iir) return O_Enode
    is
+      Info      : constant Type_Info_Acc := Get_Info (Get_Return_Type (Func));
+      Func_Info : constant Subprg_Info_Acc := Get_Info (Func);
       Res       : O_Dnode;
       Constr    : O_Assoc_List;
-      Info      : Type_Info_Acc;
-      Func_Info : Subprg_Info_Acc;
    begin
       Create_Temp_Stack2_Mark;
-      Info := Get_Info (Get_Return_Type (Func));
       Res := Create_Temp (Info.Ortho_Type (Mode_Value));
-      Func_Info := Get_Info (Func);
       Start_Association (Constr, Func_Info.Ortho_Func);
       Subprgs.Add_Subprg_Instance_Assoc (Constr, Func_Info.Subprg_Instance);
       New_Association (Constr,
@@ -4401,18 +4399,19 @@ package body Trans.Chap7 is
    procedure Translate_Predefined_Array_Array_Concat (Subprg : Iir)
    is
       F_Info       : Subprg_Info_Acc;
-      Arr_Type     : Iir_Array_Type_Definition;
-      Arr_Ptr_Type : O_Tnode;
+      Arr_Type     : constant Iir := Get_Return_Type (Subprg);
 
       --  Info for the array type.
-      Info : Type_Info_Acc;
+      Info : constant Type_Info_Acc := Get_Info (Arr_Type);
+      Arr_Ptr_Type : constant O_Tnode := Info.Ortho_Ptr_Type (Mode_Value);
 
       --  Info for the index type.
       Iinfo      : Type_Info_Acc;
       Index_Type : Iir;
 
+      Id : constant Name_Id := Get_Identifier (Get_Type_Declarator (Arr_Type));
+
       Index_Otype                      : O_Tnode;
-      Id                               : Name_Id;
       Interface_List                   : O_Inter_List;
       Var_Res, Var_L, Var_R            : O_Dnode;
       Res, L, R                        : Mnode;
@@ -4421,11 +4420,6 @@ package body Trans.Chap7 is
       V_Bounds                         : Mnode;
       If_Blk                           : O_If_Block;
    begin
-      Arr_Type := Get_Return_Type (Subprg);
-      Info := Get_Info (Arr_Type);
-      Id := Get_Identifier (Get_Type_Declarator (Arr_Type));
-      Arr_Ptr_Type := Info.Ortho_Ptr_Type (Mode_Value);
-
       F_Info := Add_Info (Subprg, Kind_Subprg);
       F_Info.Use_Stack2 := True;
 
@@ -4494,11 +4488,8 @@ package body Trans.Chap7 is
          end if;
 
          Start_If_Stmt
-           (If_Blk,
-            New_Compare_Op (ON_Eq,
-              Len,
-              New_Lit (Ghdl_Index_0),
-              Ghdl_Bool_Type));
+           (If_Blk, New_Compare_Op (ON_Eq, Len, New_Lit (Ghdl_Index_0),
+                                    Ghdl_Bool_Type));
          Copy_Fat_Pointer (Res, R);
          New_Return_Stmt;
          Finish_If_Stmt (If_Blk);
@@ -4519,7 +4510,7 @@ package body Trans.Chap7 is
          --  Set length.
          New_Assign_Stmt
            (M2Lv (Chap3.Range_To_Length
-            (Chap3.Bounds_To_Range (V_Bounds, Arr_Type, 1))),
+                    (Chap3.Bounds_To_Range (V_Bounds, Arr_Type, 1))),
             New_Obj_Value (Var_Length));
 
          --  Set direction, left bound and right bound.
@@ -4543,46 +4534,59 @@ package body Trans.Chap7 is
                           O_Storage_Local, Iinfo.Ortho_Type (Mode_Value));
             New_Var_Decl (Var_Length1, Get_Identifier ("length_1"),
                           O_Storage_Local, Ghdl_Index_Type);
+
+            --  Copy direction from left.
             New_Assign_Stmt
               (New_Obj (Var_Dir),
                M2E (Chap3.Range_To_Dir
-                 (Chap3.Get_Array_Range (L, Arr_Type, 1))));
+                      (Chap3.Get_Array_Range (L, Arr_Type, 1))));
             New_Assign_Stmt
               (M2Lv (Chap3.Range_To_Dir
-               (Chap3.Bounds_To_Range (V_Bounds, Arr_Type, 1))),
+                       (Chap3.Bounds_To_Range (V_Bounds, Arr_Type, 1))),
                New_Obj_Value (Var_Dir));
+
+            --  Get left bound of left parameter and copy it to result.
             New_Assign_Stmt
               (New_Obj (Var_Left),
                M2E (Chap3.Range_To_Left
-                 (Chap3.Get_Array_Range (L, Arr_Type, 1))));
+                      (Chap3.Get_Array_Range (L, Arr_Type, 1))));
+            New_Assign_Stmt
+              (M2Lv (Chap3.Range_To_Left
+                       (Chap3.Bounds_To_Range (V_Bounds, Arr_Type, 1))),
+               New_Obj_Value (Var_Left));
+
             --  Note this substraction cannot overflow, since LENGTH >= 1.
             New_Assign_Stmt
               (New_Obj (Var_Length1),
                New_Dyadic_Op (ON_Sub_Ov,
-                 New_Obj_Value (Var_Length),
-                 New_Lit (Ghdl_Index_1)));
-            New_Assign_Stmt
-              (M2Lv (Chap3.Range_To_Left
-               (Chap3.Bounds_To_Range (V_Bounds, Arr_Type, 1))),
-               New_Obj_Value (Var_Left));
+                              New_Obj_Value (Var_Length),
+                              New_Lit (Ghdl_Index_1)));
+
+            --  Compute right bound of result:
+            --    if dir = dir_to then
+            --        right := left + length_1;
+            --    else
+            --        right := left - length_1;
+            --    end if;
             Start_If_Stmt
               (If_Blk,
                New_Compare_Op (ON_Eq, New_Obj_Value (Var_Dir),
-                 New_Lit (Ghdl_Dir_To_Node), Ghdl_Bool_Type));
+                               New_Lit (Ghdl_Dir_To_Node), Ghdl_Bool_Type));
             New_Assign_Stmt
               (New_Obj (Var_Right),
                New_Dyadic_Op (ON_Add_Ov,
-                 New_Obj_Value (Var_Left),
-                 New_Convert_Ov (New_Obj_Value (Var_Length1),
-                   Index_Otype)));
+                              New_Obj_Value (Var_Left),
+                              New_Convert_Ov (New_Obj_Value (Var_Length1),
+                                              Index_Otype)));
             New_Else_Stmt (If_Blk);
             New_Assign_Stmt
               (New_Obj (Var_Right),
                New_Dyadic_Op (ON_Sub_Ov,
-                 New_Obj_Value (Var_Left),
-                 New_Convert_Ov (New_Obj_Value (Var_Length1),
-                   Index_Otype)));
+                              New_Obj_Value (Var_Left),
+                              New_Convert_Ov (New_Obj_Value (Var_Length1),
+                                              Index_Otype)));
             Finish_If_Stmt (If_Blk);
+
             --   Check the right bounds is inside the bounds of the
             --   index type.
             Chap3.Check_Range (Var_Right, Null_Iir, Index_Type, Subprg);
@@ -4599,19 +4603,9 @@ package body Trans.Chap7 is
          --  result.  The direction of the result of the concatenation is
          --  the direction of S, and the left bound of the result is
          --  S'LEFT.
-         declare
-            Var_Range_Ptr : O_Dnode;
-         begin
-            Start_Declare_Stmt;
-            New_Var_Decl (Var_Range_Ptr, Get_Identifier ("range_ptr"),
-                          O_Storage_Local, Iinfo.T.Range_Ptr_Type);
-            New_Assign_Stmt
-              (New_Obj (Var_Range_Ptr),
-               M2Addr (Chap3.Bounds_To_Range (V_Bounds, Arr_Type, 1)));
-            Chap3.Create_Range_From_Length
-              (Index_Type, Var_Length, Var_Range_Ptr, Subprg);
-            Finish_Declare_Stmt;
-         end;
+         Chap3.Create_Range_From_Length
+           (Index_Type, Var_Length,
+            Chap3.Bounds_To_Range (V_Bounds, Arr_Type, 1), Subprg);
       end if;
 
       --  Allocate array base.

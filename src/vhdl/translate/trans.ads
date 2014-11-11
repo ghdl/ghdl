@@ -1541,17 +1541,17 @@ package Trans is
                   T     : Type_Info_Acc; Kind : Object_Kind_Type)
                   return Mnode;
 
-   function Lp2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-                  return Mnode;
-
-   function Lp2M (L     : O_Lnode;
+   function Lv2M (L     : O_Lnode;
                   T     : Type_Info_Acc;
                   Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
                   return Mnode;
 
-   function Lv2M (L     : O_Lnode;
+   function Lp2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
+                  return Mnode;
+
+   function Lp2M (L     : O_Lnode;
                   T     : Type_Info_Acc;
                   Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;

@@ -1839,12 +1839,12 @@ package body Trans.Chap4 is
 
       V : Mnode;
 
-      Var_Bound     : O_Dnode;
-      Var_Range_Ptr : O_Dnode;
-      Var_Array     : O_Dnode;
-      Finfo         : constant Subprg_Info_Acc := Get_Info (Func);
-      Rinfo         : constant Subprg_Resolv_Info_Acc := Finfo.Subprg_Resolv;
-      Assoc         : O_Assoc_List;
+      Var_Bound : O_Dnode;
+      Range_Ptr : Mnode;
+      Var_Array : O_Dnode;
+      Finfo     : constant Subprg_Info_Acc := Get_Info (Func);
+      Rinfo     : constant Subprg_Resolv_Info_Acc := Finfo.Subprg_Resolv;
+      Assoc     : O_Assoc_List;
 
       Data : Read_Source_Data;
    begin
@@ -1894,9 +1894,6 @@ package body Trans.Chap4 is
       New_Var_Decl (Var_Array, Get_Identifier ("ARRAY"), O_Storage_Local,
                     Base_Info.Ortho_Type (Mode_Value));
 
-      New_Var_Decl (Var_Range_Ptr, Get_Identifier ("RANGE_PTR"),
-                    O_Storage_Local, Index_Tinfo.T.Range_Ptr_Type);
-
       Open_Temp;
 
       case El_Info.Type_Mode is
@@ -1914,16 +1911,14 @@ package body Trans.Chap4 is
                          New_Obj_Value (Rinfo.Var_Vlen),
                          New_Obj_Value (Rinfo.Var_Nbr_Ports)));
 
-      -- * range_ptr := BOUND.dim_1'address;
-      New_Assign_Stmt
-        (New_Obj (Var_Range_Ptr),
-         New_Address (New_Selected_Element (New_Obj (Var_Bound),
-           Index_Info.Index_Field),
-           Index_Tinfo.T.Range_Ptr_Type));
-
       --  Create range from length
-      Chap3.Create_Range_From_Length
-        (Index_Type, Var_Length, Var_Range_Ptr, Func);
+      Range_Ptr := Lv2M (New_Selected_Element (New_Obj (Var_Bound),
+                                               Index_Info.Index_Field),
+                         Index_Tinfo, Mode_Value,
+                         Index_Tinfo.T.Range_Type,
+                         Index_Tinfo.T.Range_Ptr_Type);
+      Chap3.Create_Range_From_Length (Index_Type, Var_Length, Range_Ptr, Func);
+
       New_Assign_Stmt
         (New_Selected_Element (New_Obj (Var_Array),
          Base_Info.T.Bounds_Field (Mode_Value)),

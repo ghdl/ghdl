@@ -1065,12 +1065,12 @@ package body Trans.Chap3 is
       New_Assign_Stmt
         (New_Obj (Var_Length),
          New_Dyadic_Op (ON_Mul_Ov,
-           New_Value (Get_Var (El_Info.C (Kind).Size_Var)),
-           Get_Bounds_Length (Dp2M (Bound, Info,
-             Mode_Value,
-             Info.T.Bounds_Type,
-             Info.T.Bounds_Ptr_Type),
-             Def)));
+                        New_Value (Get_Var (El_Info.C (Kind).Size_Var)),
+                        Get_Bounds_Length (Dp2M (Bound, Info,
+                                                 Mode_Value,
+                                                 Info.T.Bounds_Type,
+                                                 Info.T.Bounds_Ptr_Type),
+                                           Def)));
 
       --  Find the innermost non-array element.
       while El_Info.Type_Mode = Type_Mode_Array loop
@@ -3176,13 +3176,11 @@ package body Trans.Chap3 is
    end Check_Array_Match;
 
    procedure Create_Range_From_Array_Attribute_And_Length
-     (Array_Attr : Iir; Length : O_Dnode; Range_Ptr : O_Dnode)
+     (Array_Attr : Iir; Length : O_Dnode; Res : Mnode)
    is
       Attr_Kind : Iir_Kind;
       Arr_Rng   : Mnode;
       Iinfo     : Type_Info_Acc;
-
-      Res : Mnode;
 
       Dir        : O_Enode;
       Diff       : O_Dnode;
@@ -3195,10 +3193,8 @@ package body Trans.Chap3 is
       Iinfo := Get_Type_Info (Arr_Rng);
       Stabilize (Arr_Rng);
 
-      Res := Dp2M (Range_Ptr, Iinfo, Mode_Value);
-
       --  Length.
-      New_Assign_Stmt (M2Lv (Range_To_Length (Arr_Rng)),
+      New_Assign_Stmt (M2Lv (Range_To_Length (Res)),
                        New_Obj_Value (Length));
 
       --  Direction.
@@ -3227,9 +3223,9 @@ package body Trans.Chap3 is
       Start_If_Stmt
         (If_Blk,
          New_Compare_Op (ON_Eq,
-           New_Obj_Value (Length),
-           New_Lit (Ghdl_Index_0),
-           Ghdl_Bool_Type));
+                         New_Obj_Value (Length),
+                         New_Lit (Ghdl_Index_0),
+                         Ghdl_Bool_Type));
       --  Null range.
       case Attr_Kind is
          when Iir_Kind_Range_Array_Attribute =>
@@ -3290,7 +3286,7 @@ package body Trans.Chap3 is
    end Create_Range_From_Array_Attribute_And_Length;
 
    procedure Create_Range_From_Length
-     (Index_Type : Iir; Length : O_Dnode; Range_Ptr : O_Dnode; Loc : Iir)
+     (Index_Type : Iir; Length : O_Dnode; Res : Mnode; Loc : Iir)
    is
       Iinfo        : constant Type_Info_Acc := Get_Info (Index_Type);
       Range_Constr : constant Iir := Get_Range_Constraint (Index_Type);
@@ -3299,21 +3295,29 @@ package body Trans.Chap3 is
       Left_Bound   : O_Enode;
       Var_Right    : O_Dnode;
       If_Blk       : O_If_Block;
+      Res_Range    : Mnode;
    begin
       if Get_Kind (Range_Constr) /= Iir_Kind_Range_Expression then
+         Open_Temp;
+         Res_Range := Stabilize (Res);
+
          Create_Range_From_Array_Attribute_And_Length
-           (Range_Constr, Length, Range_Ptr);
+           (Range_Constr, Length, Res_Range);
+
+         Close_Temp;
          return;
       end if;
 
       Start_Declare_Stmt;
+      Open_Local_Temp;
+      Res_Range := Stabilize (Res);
+
       New_Var_Decl (Var_Right, Get_Identifier ("right_bound"),
                     O_Storage_Local, Iinfo.Ortho_Type (Mode_Value));
       New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Range_Ptr), Iinfo.T.Range_Length),
-         New_Obj_Value (Length));
+        (M2Lv (Range_To_Length (Res_Range)), New_Obj_Value (Length));
       New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Range_Ptr), Iinfo.T.Range_Dir),
+        (M2Lv (Range_To_Dir (Res_Range)),
          New_Lit (Chap7.Translate_Static_Range_Dir (Range_Constr)));
 
       case Get_Direction (Range_Constr) is
@@ -3331,15 +3335,15 @@ package body Trans.Chap3 is
            Ghdl_Bool_Type));
       --  Null range.
       New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Range_Ptr), Iinfo.T.Range_Left),
+        (M2Lv (Range_To_Left (Res_Range)),
          Chap7.Translate_Range_Expression_Right (Range_Constr, Index_Type));
       New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Range_Ptr), Iinfo.T.Range_Right),
+        (M2Lv (Range_To_Right (Res_Range)),
          Chap7.Translate_Range_Expression_Left (Range_Constr, Index_Type));
 
       New_Else_Stmt (If_Blk);
       New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Range_Ptr), Iinfo.T.Range_Left),
+        (M2Lv (Range_To_Left (Res_Range)),
          Chap7.Translate_Range_Expression_Left (Range_Constr, Index_Type));
       Left_Bound := Chap7.Translate_Range_Expression_Left
         (Range_Constr, Index_Type);
@@ -3354,9 +3358,10 @@ package body Trans.Chap3 is
       --   Check the right bounds is inside the bounds of the index type.
       Chap3.Check_Range (Var_Right, Null_Iir, Index_Type, Loc);
       New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Range_Ptr), Iinfo.T.Range_Right),
-         New_Obj_Value (Var_Right));
+        (M2Lv (Range_To_Right (Res_Range)), New_Obj_Value (Var_Right));
       Finish_If_Stmt (If_Blk);
+
+      Close_Local_Temp;
       Finish_Declare_Stmt;
    end Create_Range_From_Length;
 end Trans.Chap3;

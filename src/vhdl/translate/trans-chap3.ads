@@ -252,13 +252,12 @@ package Trans.Chap3 is
                                 R_Node : Mnode;
                                 Loc    : Iir);
 
-   --  Create a subtype range to be stored into the location pointed by
-   --  RANGE_PTR from length LENGTH, which is of type INDEX_TYPE.
+   --  Create a subtype range to be stored into RES from length LENGTH, which
+   --  is of type INDEX_TYPE.
    --  This is done according to rules 7.2.4 of LRM93, ie:
    --  direction and left bound of the range is the same of INDEX_TYPE.
-   --  LENGTH and RANGE_PTR are variables. LOC is the location in case of
-   --  error.
+   --  LENGTH is a variable. LOC is the location in case of error.
    procedure Create_Range_From_Length
-     (Index_Type : Iir; Length : O_Dnode; Range_Ptr : O_Dnode; Loc : Iir);
+     (Index_Type : Iir; Length : O_Dnode; Res : Mnode; Loc : Iir);
 
 end Trans.Chap3;
