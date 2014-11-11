@@ -1,0 +1,74 @@
+GHDL coding style
+*****************
+
+Ada subset: use only a simple (VHDL like) subset of Ada: no tasking, no
+controlled types...  VHDL users should easily understand that subset.
+Allowed Ada93 features: the standard library, child packages.
+Use assertions.
+
+We try to follow the 'GNU Coding Standards' when possible: comments before
+declarations, two spaces end of sentences...
+But: 3 spaces for indentation.
+
+No trailing spaces, not TAB (HT).
+
+* For subprograms:
+1) Declare on one line when possible:
+   function Translate_Static_Aggregate (Aggr : Iir) return O_Cnode
+
+2) If not possible, put the return on the next line:
+   function Translate_Static_String (Str_Type : Iir; Str_Ident : Name_Id)
+                                    return O_Cnode
+
+3) If not possible, put parameters and return on the next line:
+   function Create_String_Literal_Var_Inner
+     (Str : Iir; Element_Type : Iir; Str_Type : O_Tnode) return Var_Type
+
+4) If not possible, return on the next line:
+   function Translate_Shortcut_Operator
+     (Imp : Iir_Implicit_Function_Declaration; Left, Right : Iir)
+     return O_Enode
+
+5) If not possible, one parameter per line, just after subprogram name:
+   procedure Translate_Static_Aggregate_1 (List : in out O_Array_Aggr_List;
+                                           Aggr : Iir;
+                                           Info : Iir;
+                                           El_Type : Iir)
+6) If not possible, add a return after subprogram name:
+   function Translate_Predefined_TF_Array_Element
+     (Op : Predefined_Boolean_Logical;
+      Left, Right : Iir;
+      Res_Type : Iir;
+      Loc : Iir)
+     return O_Enode
+
+7) If not possible, ask yourself what is wrong!  Shorten a name.
+
+* Rule for the 'is': one a new line only if the declarative part is not empty:
+   procedure Translate_Assign (Target : Mnode; Expr : Iir; Target_Type : Iir)
+   is
+      Val : O_Enode;
+   begin
+vs
+   function Translate_Static_Range_Dir (Expr : Iir) return O_Cnode is
+   begin
+
+* For if/then statement:
+1) 'then' on the same line:
+      if Get_Expr_Staticness (Decl) = Locally then
+
+2) If not possible, 'then' aligned with the 'if':
+      if Expr = Null_Iir
+        or else Get_Kind (Expr) = Iir_Kind_Overflow_Literal
+      then
+
+* 'Local' variable declaration:
+Do not initialize variables, constants must be declared before variables:
+   is
+      N_Info : constant Iir := Get_Sub_Aggregate_Info (Info);
+      Assoc  : Iir;
+      Sub    : Iir;
+   begin
+If the initialization expression has a side effect (such as allocation), do
+not use a constant.
+
