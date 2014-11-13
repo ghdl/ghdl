@@ -143,7 +143,6 @@ copy-sources.gcc:
 	 -e "/^####libraries Makefile.inc/r $(srcdir)/libraries/Makefile.inc" \
 	 -e "/^####grt Makefile.inc/r $(srcdir)/src/grt/Makefile.inc" \
 	 < $(srcdir)/dist/gcc/Makefile.in > $(gcc_vhdl_dir)/Makefile.in
-	$(CP) -p $(srcdir)/dist/gcc/Makefile.in $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/dist/gcc/config-lang.in $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/dist/gcc/lang-options.h $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/dist/gcc/lang-specs.h $(gcc_vhdl_dir)
@@ -165,6 +164,17 @@ grt.links:
 libs.vhdl.gcc: ghdl_gcc ghdl1-gcc
 	$(MAKE) GHDL=ghdl_gcc libs.vhdl.all
 	$(MAKE) GHDL1=./ghdl1-gcc libs.vhdl.standard
+
+ghdl1-debug: force
+	$(MAKE) -f $(srcdir)/src/ortho/debug/Makefile \
+	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
+	 GNAT_FLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" \
+	 GNATMAKE="$(GNATMAKE)" all
+
+oread-gcc: force
+	$(MAKE) -f $(srcdir)/src/ortho/gcc/Makefile \
+	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
+	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" all
 
 #################### For llvm backend ##############################
 

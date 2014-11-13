@@ -23,7 +23,7 @@ orthobe_srcdir=$(ortho_srcdir)/$(BE)
 GNATMAKE=gnatmake
 CC=gcc
 CFLAGS=-g
-ALL_GNAT_FLAGS=-pipe -g -gnato -gnatwl -gnatf -gnaty3befhkmr -gnatwu
+ALL_GNAT_FLAGS=-pipe -g -gnato -gnatwaeu -gnatf -gnaty3befhkmr
 GNATMAKE_FLAGS=-m $(ALL_GNAT_FLAGS) $(GNAT_FLAGS) -aI$(ortho_srcdir) -aI$(orthobe_srcdir) -aI.
 #LARGS=-largs -static
 SED=sed
@@ -32,7 +32,7 @@ all: $(ortho_exec)
 
 
 $(ortho_exec): force $(ortho_srcdir)/$(BE)/ortho_debug.ads
-	gnatmake -o $@ $(GNATMAKE_FLAGS) ortho_debug-main -bargs -E $(LARGS)
+	$(GNATMAKE) -o $@ $(GNATMAKE_FLAGS) ortho_debug-main -bargs -E $(LARGS)
 
 clean:
 	$(RM) -f *.o *.ali *~ b~*.ad? ortho_nodes-main
