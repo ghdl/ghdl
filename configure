@@ -76,7 +76,7 @@ fi
 # Check that gnatmake exists
 if ! $GNATMAKE 2> /dev/null; then
     echo "Sorry, you need GNAT to build GHDL.  See the README"
-    echo "(gnatmake is $GNATMAKE)"
+    echo "(gnatmake executable is: $GNATMAKE)"
     exit 1
 fi
 
