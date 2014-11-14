@@ -35,12 +35,12 @@ include $(ortho_srcdir)/Makefile.inc
 AGCC_INC_FLAGS=-I$(AGCC_GCCOBJ_DIR)/gcc -I$(AGCC_GCCSRC_DIR)/include \
  -I$(AGCC_GCCSRC_DIR)/gcc -I$(AGCC_GCCSRC_DIR)/gcc/config \
  -I$(AGCC_GCCSRC_DIR)/libcpp/include $(GMPINC)
-AGCC_CFLAGS=-g -Wall -DIN_GCC $(AGCC_INC_FLAGS)
+AGCC_CFLAGS=-DIN_GCC_FRONTEND -Wall -DIN_GCC -DHAVE_CONFIG_H $(AGCC_INC_FLAGS)
 
 ortho-lang.o: $(agcc_srcdir)/ortho-lang.c \
  $(AGCC_GCCOBJ_DIR)gcc/gtype-vhdl.h \
  $(AGCC_GCCOBJ_DIR)gcc/gt-vhdl-ortho-lang.h
-	$(COMPILER) -c -o $@ $< $(AGCC_CFLAGS) $(INCLUDES)
+	$(COMPILER) -c -o $@ $< $(AGCC_CFLAGS) $(CXXFLAGS) $(INCLUDES)
 
 AGCC_LOCAL_OBJS=ortho-lang.o
 
@@ -65,7 +65,7 @@ LIBS =  $(AGCC_GCCOBJ_DIR)/gcc/libcommon.a \
 	$(LIBIBERTY) $(LIBDECNUMBER) $(HOST_LIBS)
 
 $(ortho_exec): $(AGCC_DEPS) $(orthobe_srcdir)/ortho_gcc.ads force
-	$(GNATMAKE) -o $@ -g -aI$(ortho_srcdir) \
+	$(GNATMAKE) -o $@ -aI$(ortho_srcdir) \
 	 -aI$(ortho_srcdir)/gcc $(GNAT_FLAGS) ortho_gcc-main \
 	 -bargs -E -largs --LINK=$(LINKER) $(AGCC_OBJS) \
         $(BACKEND) $(LIBS) $(BACKENDLIBS)
