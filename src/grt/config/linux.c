@@ -342,7 +342,7 @@ grt_stack_allocate (void)
    * USE_SETJMP: setjmp/longjmp, slower because signals mask is saved/restored.
 */
 
-#ifdef __GNUC__
+#if defined (__GNUC__) && !defined(__clang__)
 #define USE_BUILTIN_SJLJ
 #else
 #define USE__SETJMP
@@ -350,7 +350,7 @@ grt_stack_allocate (void)
 /* #define USE_SETJMP */
 
 #ifdef USE_BUILTIN_SJLJ
-typedef int *JMP_BUF[5];
+typedef void *JMP_BUF[5];
 static int sjlj_val;
 # define SETJMP(BUF) (__builtin_setjmp (BUF), sjlj_val)
 # define LONGJMP(BUF, VAL) \
@@ -361,7 +361,7 @@ typedef jmp_buf JMP_BUF;
 # ifdef USE__SETJMP
 #  define SETJMP _setjmp
 #  define LONGJMP _longjmp
-# elsif defined (USE_SETJMP)
+# elif defined (USE_SETJMP)
 #  define SETJMP setjmp
 #  define LONGJMP longjmp
 # else
