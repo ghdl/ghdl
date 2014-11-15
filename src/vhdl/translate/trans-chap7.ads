@@ -51,15 +51,14 @@ package Trans.Chap7 is
 
    --  Translate range and return an lvalue containing the range.
    --  The node returned can be used only one time.
-   function Translate_Range (Arange : Iir; Range_Type : Iir)
-                                return O_Lnode;
+   function Translate_Range (Arange : Iir; Range_Type : Iir) return O_Lnode;
 
    --  Translate range expression EXPR and store the result into the node
    --  pointed by RES_PTR, of type RANGE_TYPE.
    procedure Translate_Range_Ptr
      (Res_Ptr : O_Dnode; Arange : Iir; Range_Type : Iir);
    function Translate_Static_Range (Arange : Iir; Range_Type : Iir)
-                                       return O_Cnode;
+                                   return O_Cnode;
 
    --  Same as Translate_Range_Ptr, but for a discrete range (ie: ARANGE
    --  can be a discrete subtype indication).

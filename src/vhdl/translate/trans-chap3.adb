@@ -1661,14 +1661,11 @@ package body Trans.Chap3 is
    --  Create a type_range structure.
    procedure Create_Scalar_Type_Range (Def : Iir; Target : O_Lnode)
    is
-      T_Info    : Type_Info_Acc;
-      Base_Type : Iir;
-      Expr      : Iir;
+      Base_Type : constant Iir := Get_Base_Type (Def);
+      T_Info    : constant Type_Info_Acc := Get_Info (Base_Type);
+      Expr      : constant Iir := Get_Range_Constraint (Def);
       V         : O_Dnode;
    begin
-      Base_Type := Get_Base_Type (Def);
-      T_Info := Get_Info (Base_Type);
-      Expr := Get_Range_Constraint (Def);
       Open_Temp;
       V := Create_Temp_Ptr (T_Info.T.Range_Ptr_Type, Target);
       Chap7.Translate_Range_Ptr (V, Expr, Def);
