@@ -3411,12 +3411,16 @@ package body Trans.Chap7 is
             begin
                --  Extract the type of the aggregate.  Use the type of the
                --  context if it is fully constrained.
-               pragma Assert (Rtype /= Null_Iir);
-               if Is_Fully_Constrained_Type (Rtype) then
+               Aggr_Type := Expr_Type;
+               if Rtype /= Null_Iir
+                 and then Is_Fully_Constrained_Type (Rtype)
+               then
                   Aggr_Type := Rtype;
                else
-                  Aggr_Type := Expr_Type;
+                  pragma Assert (Is_Fully_Constrained_Type (Expr_Type));
+                  null;
                end if;
+
                if Get_Kind (Aggr_Type) = Iir_Kind_Array_Subtype_Definition
                then
                   Chap3.Create_Array_Subtype (Aggr_Type, True);
@@ -3439,7 +3443,7 @@ package body Trans.Chap7 is
                Translate_Aggregate (Mres, Aggr_Type, Expr);
                Res := M2E (Mres);
 
-               if Aggr_Type /= Rtype then
+               if Rtype /= Null_Iir and then Aggr_Type /= Rtype then
                   Res := Translate_Implicit_Conv
                     (Res, Aggr_Type, Rtype, Mode_Value, Expr);
                end if;
@@ -4644,8 +4648,8 @@ package body Trans.Chap7 is
          New_Assign_Stmt
            (M2Lp (Chap3.Get_Array_Base (Var_Arr)),
             M2Addr (Chap3.Slice_Base (Chap3.Get_Array_Base (Res),
-              Arr_Type,
-              New_Obj_Value (Var_L_Len))));
+                                      Arr_Type,
+                                      New_Obj_Value (Var_L_Len))));
          Chap3.Translate_Object_Copy
            (Var_Arr, New_Obj_Value (Var_R), Arr_Type);
          Close_Temp;
