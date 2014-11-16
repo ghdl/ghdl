@@ -3785,53 +3785,50 @@ package body Trans.Chap7 is
       return Null_Iir;
    end Is_Length_Range_Expression;
 
-   procedure Translate_Range_Expression_Ptr
-     (Res_Ptr : O_Dnode; Expr : Iir; Range_Type : Iir)
+   procedure Translate_Range_Expression
+     (Res : Mnode; Expr : Iir; Range_Type : Iir)
    is
       T_Info      : constant Type_Info_Acc := Get_Info (Range_Type);
       Length_Attr : Iir;
+      Res1 : Mnode;
    begin
       Open_Temp;
+      Res1 := Stabilize (Res);
       New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Res_Ptr), T_Info.T.Range_Left),
+        (M2Lv (Chap3.Range_To_Left (Res1)),
          Chap7.Translate_Range_Expression_Left (Expr, Range_Type));
       New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Res_Ptr), T_Info.T.Range_Right),
+        (M2Lv (Chap3.Range_To_Right (Res1)),
          Chap7.Translate_Range_Expression_Right (Expr, Range_Type));
       New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Res_Ptr), T_Info.T.Range_Dir),
+        (M2Lv (Chap3.Range_To_Dir (Res1)),
          New_Lit (Chap7.Translate_Static_Range_Dir (Expr)));
       if T_Info.T.Range_Length /= O_Fnode_Null then
          if Get_Expr_Staticness (Expr) = Locally then
             New_Assign_Stmt
-              (New_Selected_Acc_Value (New_Obj (Res_Ptr),
-               T_Info.T.Range_Length),
+              (M2Lv (Chap3.Range_To_Length (Res1)),
                New_Lit (Translate_Static_Range_Length (Expr)));
          else
             Length_Attr := Is_Length_Range_Expression (Expr);
             if Length_Attr = Null_Iir then
                Open_Temp;
                New_Assign_Stmt
-                 (New_Selected_Acc_Value (New_Obj (Res_Ptr),
-                  T_Info.T.Range_Length),
+                 (M2Lv (Chap3.Range_To_Length (Res1)),
                   Compute_Range_Length
-                    (New_Value_Selected_Acc_Value (New_Obj (Res_Ptr),
-                     T_Info.T.Range_Left),
-                     New_Value_Selected_Acc_Value (New_Obj (Res_Ptr),
-                       T_Info.T.Range_Right),
+                    (M2E (Chap3.Range_To_Left (Res1)),
+                     M2E (Chap3.Range_To_Right (Res1)),
                      Get_Direction (Expr)));
                Close_Temp;
             else
                New_Assign_Stmt
-                 (New_Selected_Acc_Value (New_Obj (Res_Ptr),
-                  T_Info.T.Range_Length),
+                 (M2Lv (Chap3.Range_To_Length (Res1)),
                   Chap14.Translate_Length_Array_Attribute
                     (Length_Attr, Null_Iir));
             end if;
          end if;
       end if;
       Close_Temp;
-   end Translate_Range_Expression_Ptr;
+   end Translate_Range_Expression;
 
    --  Reverse range ARANGE.
    procedure Translate_Reverse_Range
@@ -3893,14 +3890,15 @@ package body Trans.Chap7 is
    end Copy_Range;
 
    procedure Translate_Range_Ptr
-     (Res_Ptr : O_Dnode; Arange : Iir; Range_Type : Iir) is
+     (Res_Ptr : O_Dnode; Arange : Iir; Range_Type : Iir)
+   is
+      Rinfo : constant Type_Info_Acc :=
+        Get_Info (Get_Base_Type (Range_Type));
    begin
       case Get_Kind (Arange) is
          when Iir_Kind_Range_Array_Attribute =>
             declare
                Ptr   : O_Dnode;
-               Rinfo : constant Type_Info_Acc :=
-                 Get_Info (Get_Base_Type (Range_Type));
             begin
                Open_Temp;
                Ptr := Create_Temp_Ptr
@@ -3910,18 +3908,16 @@ package body Trans.Chap7 is
                Close_Temp;
             end;
          when Iir_Kind_Reverse_Range_Array_Attribute =>
-            declare
-               Rinfo : constant Type_Info_Acc :=
-                 Get_Info (Get_Base_Type (Range_Type));
-            begin
-               Translate_Reverse_Range
-                 (Dp2M (Res_Ptr, Rinfo, Mode_Value,
-                        Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type),
-                  Chap14.Translate_Range_Array_Attribute (Arange),
-                  Range_Type);
-            end;
+            Translate_Reverse_Range
+              (Dp2M (Res_Ptr, Rinfo, Mode_Value,
+                     Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type),
+               Chap14.Translate_Range_Array_Attribute (Arange),
+               Range_Type);
          when Iir_Kind_Range_Expression =>
-            Translate_Range_Expression_Ptr (Res_Ptr, Arange, Range_Type);
+            Translate_Range_Expression
+              (Dp2M (Res_Ptr, Rinfo, Mode_Value,
+                     Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type),
+               Arange, Range_Type);
          when others =>
             Error_Kind ("translate_range_ptr", Arange);
       end case;
@@ -3981,15 +3977,14 @@ package body Trans.Chap7 is
             end;
          when Iir_Kind_Range_Expression =>
             declare
+               Rinfo : constant Type_Info_Acc := Get_Info (Range_Type);
                Res    : O_Dnode;
-               Ptr    : O_Dnode;
-               T_Info : constant Type_Info_Acc := Get_Info (Range_Type);
             begin
-               Res := Create_Temp (T_Info.T.Range_Type);
-               Open_Temp;
-               Ptr := Create_Temp_Ptr (T_Info.T.Range_Ptr_Type, New_Obj (Res));
-               Translate_Range_Expression_Ptr (Ptr, Arange, Range_Type);
-               Close_Temp;
+               Res := Create_Temp (Rinfo.T.Range_Type);
+               Translate_Range_Expression
+                 (Dv2M (Res, Rinfo, Mode_Value,
+                        Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type),
+                  Arange, Range_Type);
                return New_Obj (Res);
             end;
          when others =>
