@@ -53,16 +53,15 @@ package Trans.Chap7 is
    --  The node returned can be used only one time.
    function Translate_Range (Arange : Iir; Range_Type : Iir) return O_Lnode;
 
-   --  Translate range expression EXPR and store the result into the node
-   --  pointed by RES_PTR, of type RANGE_TYPE.
-   procedure Translate_Range_Ptr
-     (Res_Ptr : O_Dnode; Arange : Iir; Range_Type : Iir);
+   --  Translate range expression ARANGE and store the result into RES, of
+   --  type RANGE_TYPE.
+   procedure Translate_Range (Res : Mnode; Arange : Iir; Range_Type : Iir);
    function Translate_Static_Range (Arange : Iir; Range_Type : Iir)
                                    return O_Cnode;
 
-   --  Same as Translate_Range_Ptr, but for a discrete range (ie: ARANGE
+   --  Same as Translate_Range, but for a discrete range (ie: ARANGE
    --  can be a discrete subtype indication).
-   procedure Translate_Discrete_Range_Ptr (Res_Ptr : O_Dnode; Arange : Iir);
+   procedure Translate_Discrete_Range (Res : Mnode; Arange : Iir);
 
    --  Return TRUE iff constant declaration DECL can be staticly defined.
    --  This is of course true if its expression is a locally static literal,

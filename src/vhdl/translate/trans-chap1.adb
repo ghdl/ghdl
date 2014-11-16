@@ -651,7 +651,6 @@ package body Trans.Chap1 is
                declare
                   Rng         : Mnode;
                   Slice       : O_Dnode;
-                  Slice_Ptr   : O_Dnode;
                   Left, Right : O_Dnode;
                   Index       : O_Dnode;
                   High        : O_Dnode;
@@ -661,10 +660,10 @@ package body Trans.Chap1 is
                   Open_Temp;
                   Rng := Stabilize (Chap3.Type_To_Range (Iter_Type));
                   Slice := Create_Temp (Type_Info.T.Range_Type);
-                  Slice_Ptr := Create_Temp_Ptr
-                    (Type_Info.T.Range_Ptr_Type, New_Obj (Slice));
-                  Chap7.Translate_Discrete_Range_Ptr
-                    (Slice_Ptr, Get_Suffix (Spec));
+                  Chap7.Translate_Discrete_Range
+                    (Dv2M (Slice, Type_Info, Mode_Value,
+                           Type_Info.T.Range_Type, Type_Info.T.Range_Ptr_Type),
+                     Get_Suffix (Spec));
                   Left := Create_Temp_Init
                     (Ghdl_Index_Type,
                      Chap6.Translate_Index_To_Offset

@@ -2778,34 +2778,26 @@ package body Trans.Chap7 is
             --  Dynamic range, must evaluate it.
             Open_Temp;
             declare
-               A_Range : O_Dnode;
-               Rng_Ptr : O_Dnode;
+               A_Range : Mnode;
             begin
                --  Evaluate the range.
                Chap3.Translate_Anonymous_Type_Definition
                  (Subaggr_Type, True);
 
-               A_Range := Create_Temp (Rinfo.T.Range_Type);
-               Rng_Ptr := Create_Temp_Ptr
-                 (Rinfo.T.Range_Ptr_Type, New_Obj (A_Range));
-               Chap7.Translate_Range_Ptr
-                 (Rng_Ptr,
-                  Get_Range_Constraint (Subaggr_Type),
-                  Subaggr_Type);
+               A_Range :=
+                 Dv2M (Create_Temp (Rinfo.T.Range_Type), Rinfo, Mode_Value,
+                       Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type);
+               Chap7.Translate_Range
+                 (A_Range, Get_Range_Constraint (Subaggr_Type), Subaggr_Type);
 
                --  Check range length VS target length.
                Chap6.Check_Bound_Error
                  (New_Compare_Op
                     (ON_Neq,
+                     M2E (Chap3.Range_To_Length (A_Range)),
                      M2E (Chap3.Range_To_Length
-                       (Dv2M (A_Range,
-                            Rinfo,
-                            Mode_Value,
-                            Rinfo.T.Range_Type,
-                            Rinfo.T.Range_Ptr_Type))),
-                     M2E (Chap3.Range_To_Length
-                       (Chap3.Bounds_To_Range
-                            (Bounds, Target_Type, I + 1))),
+                            (Chap3.Bounds_To_Range
+                               (Bounds, Target_Type, I + 1))),
                      Ghdl_Bool_Type),
                   Aggr, I);
             end;
@@ -3864,33 +3856,30 @@ package body Trans.Chap7 is
       Close_Temp;
    end Translate_Reverse_Range;
 
-   procedure Copy_Range (Dest_Ptr : O_Dnode;
-                         Src_Ptr  : O_Dnode;
-                         Info     : Type_Info_Acc) is
+   procedure Copy_Range (Dest : Mnode; Src  : Mnode)
+   is
+      Info : constant Type_Info_Acc := Get_Type_Info (Dest);
+      Dest1 : Mnode;
+      Src1 : Mnode;
    begin
-      New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Dest_Ptr), Info.T.Range_Left),
-         New_Value_Selected_Acc_Value (New_Obj (Src_Ptr),
-           Info.T.Range_Left));
-      New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Dest_Ptr), Info.T.Range_Right),
-         New_Value_Selected_Acc_Value (New_Obj (Src_Ptr),
-           Info.T.Range_Right));
-      New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Dest_Ptr), Info.T.Range_Dir),
-         New_Value_Selected_Acc_Value (New_Obj (Src_Ptr),
-           Info.T.Range_Dir));
+      Open_Temp;
+      Dest1 := Stabilize (Dest);
+      Src1 := Stabilize (Src);
+      New_Assign_Stmt (M2Lv (Chap3.Range_To_Left (Dest1)),
+                       M2E (Chap3.Range_To_Left (Src1)));
+      New_Assign_Stmt (M2Lv (Chap3.Range_To_Right (Dest1)),
+                       M2E (Chap3.Range_To_Right (Src1)));
+      New_Assign_Stmt (M2Lv (Chap3.Range_To_Dir (Dest1)),
+                       M2E (Chap3.Range_To_Dir (Src1)));
       if Info.T.Range_Length /= O_Fnode_Null then
-         New_Assign_Stmt
-           (New_Selected_Acc_Value (New_Obj (Dest_Ptr),
-            Info.T.Range_Length),
-            New_Value_Selected_Acc_Value (New_Obj (Src_Ptr),
-              Info.T.Range_Length));
+         New_Assign_Stmt (M2Lv (Chap3.Range_To_Length (Dest1)),
+                          M2E (Chap3.Range_To_Length (Src1)));
       end if;
+      Close_Temp;
    end Copy_Range;
 
-   procedure Translate_Range_Ptr
-     (Res_Ptr : O_Dnode; Arange : Iir; Range_Type : Iir)
+   procedure Translate_Range
+     (Res : Mnode; Arange : Iir; Range_Type : Iir)
    is
       Rinfo : constant Type_Info_Acc :=
         Get_Info (Get_Base_Type (Range_Type));
@@ -3904,26 +3893,23 @@ package body Trans.Chap7 is
                Ptr := Create_Temp_Ptr
                  (Rinfo.T.Range_Ptr_Type,
                   Chap14.Translate_Range_Array_Attribute (Arange));
-               Copy_Range (Res_Ptr, Ptr, Rinfo);
+               Copy_Range (Res,
+                           Dp2M (Ptr, Rinfo, Mode_Value,
+                                 Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type));
                Close_Temp;
             end;
          when Iir_Kind_Reverse_Range_Array_Attribute =>
             Translate_Reverse_Range
-              (Dp2M (Res_Ptr, Rinfo, Mode_Value,
-                     Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type),
-               Chap14.Translate_Range_Array_Attribute (Arange),
+              (Res, Chap14.Translate_Range_Array_Attribute (Arange),
                Range_Type);
          when Iir_Kind_Range_Expression =>
-            Translate_Range_Expression
-              (Dp2M (Res_Ptr, Rinfo, Mode_Value,
-                     Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type),
-               Arange, Range_Type);
+            Translate_Range_Expression (Res, Arange, Range_Type);
          when others =>
             Error_Kind ("translate_range_ptr", Arange);
       end case;
-   end Translate_Range_Ptr;
+   end Translate_Range;
 
-   procedure Translate_Discrete_Range_Ptr (Res_Ptr : O_Dnode; Arange : Iir) is
+   procedure Translate_Discrete_Range (Res : Mnode; Arange : Iir) is
    begin
       case Get_Kind (Arange) is
          when Iir_Kind_Integer_Subtype_Definition
@@ -3931,27 +3917,25 @@ package body Trans.Chap7 is
             if not Is_Anonymous_Type_Definition (Arange) then
                declare
                   Rinfo : constant Type_Info_Acc := Get_Info (Arange);
-                  Ptr   : O_Dnode;
                begin
-                  Open_Temp;
-                  Ptr := Create_Temp_Ptr
-                    (Rinfo.T.Range_Ptr_Type, Get_Var (Rinfo.T.Range_Var));
-                  Copy_Range (Res_Ptr, Ptr, Rinfo);
-                  Close_Temp;
+                  Copy_Range (Res, Lv2M (Get_Var (Rinfo.T.Range_Var),
+                                         Rinfo, Mode_Value,
+                                         Rinfo.T.Range_Type,
+                                         Rinfo.T.Range_Ptr_Type));
                end;
             else
-               Translate_Range_Ptr (Res_Ptr,
-                                    Get_Range_Constraint (Arange),
-                                    Get_Base_Type (Arange));
+               Translate_Range (Res,
+                                Get_Range_Constraint (Arange),
+                                Get_Base_Type (Arange));
             end if;
          when Iir_Kind_Range_Array_Attribute
             | Iir_Kind_Reverse_Range_Array_Attribute
             | Iir_Kind_Range_Expression =>
-            Translate_Range_Ptr (Res_Ptr, Arange, Get_Type (Arange));
+            Translate_Range (Res, Arange, Get_Type (Arange));
          when others =>
             Error_Kind ("translate_discrete_range_ptr", Arange);
       end case;
-   end Translate_Discrete_Range_Ptr;
+   end Translate_Discrete_Range;
 
    function Translate_Range (Arange : Iir; Range_Type : Iir) return O_Lnode is
    begin

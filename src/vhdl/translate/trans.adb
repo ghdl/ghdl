@@ -1913,6 +1913,7 @@ package body Trans is
          T : Temp_Level_Acc;
       begin
          if Temp_Level /= null then
+            --  Missing Close_Temp.
             raise Internal_Error;
          end if;
          loop

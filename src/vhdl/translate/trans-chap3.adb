@@ -971,8 +971,11 @@ package body Trans.Chap3 is
             D := Create_Temp_Ptr
               (Index_Info.T.Range_Ptr_Type,
                New_Selected_Element (M2Lv (Targ),
-                 Base_Index_Info.Index_Field));
-            Chap7.Translate_Discrete_Range_Ptr (D, Index);
+                                     Base_Index_Info.Index_Field));
+            Chap7.Translate_Discrete_Range
+              (Dp2M (D, Index_Info, Mode_Value,
+                     Index_Info.T.Range_Type, Index_Info.T.Range_Ptr_Type),
+               Index);
             Close_Temp;
          end;
       end loop;
@@ -1661,15 +1664,12 @@ package body Trans.Chap3 is
    --  Create a type_range structure.
    procedure Create_Scalar_Type_Range (Def : Iir; Target : O_Lnode)
    is
-      Base_Type : constant Iir := Get_Base_Type (Def);
-      T_Info    : constant Type_Info_Acc := Get_Info (Base_Type);
-      Expr      : constant Iir := Get_Range_Constraint (Def);
-      V         : O_Dnode;
+      T_Info    : constant Type_Info_Acc := Get_Info (Get_Base_Type (Def));
    begin
-      Open_Temp;
-      V := Create_Temp_Ptr (T_Info.T.Range_Ptr_Type, Target);
-      Chap7.Translate_Range_Ptr (V, Expr, Def);
-      Close_Temp;
+      Chap7.Translate_Range
+        (Lv2M (Target, T_Info, Mode_Value,
+               T_Info.T.Range_Type, T_Info.T.Range_Ptr_Type),
+         Get_Range_Constraint (Def), Def);
    end Create_Scalar_Type_Range;
 
    function Create_Static_Scalar_Type_Range (Def : Iir) return O_Cnode is
