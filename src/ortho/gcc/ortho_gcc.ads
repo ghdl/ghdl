@@ -541,6 +541,7 @@ private
    pragma Convention (C, O_Element_List);
 
    type O_Case_Block is record
+      Prev_Stmts : Tree;
       Case_Type : Tree;
       End_Label : Tree;
       Add_Break : Integer;
@@ -548,7 +549,8 @@ private
    pragma Convention (C, O_Case_Block);
 
    type O_If_Block is record
-      Stmt : Tree;
+      Prev_Stmts : Tree;
+      If_Stmt : Tree;
    end record;
    pragma Convention (C, O_If_Block);
 
