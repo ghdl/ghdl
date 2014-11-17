@@ -327,9 +327,12 @@ package body Ortho_Code.Exprs is
 
    procedure Link_Stmt (Stmt : O_Enode) is
    begin
-      if Last_Stmt = O_Enode_Null then
-         raise Program_Error;
-      end if;
+      --  Expect a real statement.
+      pragma Assert (Stmt /= O_Enode_Null);
+
+      --  Must be withint a subprogram.
+      pragma Assert (Last_Stmt /= O_Enode_Null);
+
       Set_Stmt_Link (Last_Stmt, Stmt);
       Last_Stmt := Stmt;
    end Link_Stmt;
