@@ -442,13 +442,6 @@ package body Ortho_Debug.Disp is
    is
       Known : constant Boolean := Ctype /= O_Tnode_Null;
    begin
-      --  Sanity check.
-      if Known then
-         if Ctype /= C.Ctype then
-            raise Program_Error;
-         end if;
-      end if;
-
       case C.Kind is
          when OC_Unsigned_Lit =>
             if False and then (C.U_Val >= Character'Pos(' ')
