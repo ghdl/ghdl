@@ -200,19 +200,23 @@ package body Grt.Images is
       Res_Len : constant Ghdl_Index_Type := (Len + Log_Base - 1) / Log_Base;
       Pos : Ghdl_Index_Type;
       V : Natural;
-      Sh : Natural range 0 .. 4;
+      Sh_Count : Natural range 0 .. 4;
+      Sh : Natural range 1 .. 16;
    begin
       Res.Base := To_Std_String_Basep (Ghdl_Stack2_Allocate (Res_Len));
       V := 0;
-      Sh := 0;
+      Sh_Count := 0;
+      Sh := 1;
       Pos := Res_Len - 1;
       for I in reverse 1 .. Len loop
-         V := V + Std_Bit'Pos (Val (I - 1)) * (2 ** Sh);
-         Sh := Sh + 1;
-         if Sh = Natural (Log_Base) or else I = 1 then
+         V := V + Std_Bit'Pos (Val (I - 1)) * Sh;
+         Sh_Count := Sh_Count + 1;
+         Sh := Sh * 2;
+         if Sh_Count = Natural (Log_Base) or else I = 1 then
             Res.Base (Pos) := Hex_Chars (V);
             Pos := Pos - 1;
-            Sh := 0;
+            Sh_Count := 0;
+            Sh := 1;
             V := 0;
          end if;
       end loop;
