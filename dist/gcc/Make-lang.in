@@ -73,26 +73,53 @@ GHDL1_OBJS = attribs.o vhdl/ortho-lang.o
 # before.
 vhdl_OBJS=vhdl/ortho-lang.o
 
+vhdl_srcdir := $(shell cd $(srcdir)/vhdl; pwd)
+
 # The compiler proper.
 # It is compiled into the vhdl/ subdirectory to avoid file name clashes but
 # linked in in gcc directory to be able to access to gcc object files.
 ghdl1$(exeext): force $(GHDL1_OBJS) $(BACKEND) $(LIBDEPS)
-	CURDIR=`pwd`; cd $(srcdir)/vhdl; VHDLSRCDIR=`pwd`; cd $$CURDIR/vhdl; \
-	$(GNATMAKE) -c -aI$$VHDLSRCDIR ortho_gcc-main \
+        # Create object file in vhdl/subdir
+	cd vhdl; $(GNATMAKE) -c -aI$(vhdl_srcdir) ortho_gcc-main \
 	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS)
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aOvhdl ortho_gcc-main \
 	 -bargs -E -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
 	 -largs --LINK=$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GHDL1_OBJS) \
 	 $(filter-out main.o,$(BACKEND)) $(LIBS) $(BACKENDLIBS)
 
-# The driver for ghdl.
-ghdl$(exeext): force
-	$(MAKE_IN_VHDL) ../ghdl$(exeext)
+vhdl/default_pathes.ads:
+	echo "--  DO NOT EDIT" > tmp-dpathes.ads
+	echo "--  This file is created by Makefile" >> tmp-dpathes.ads
+	echo "package Default_Pathes is" >> tmp-dpathes.ads
+	echo "   --  Accept long lines."  >> tmp-dpathes.ads
+	echo "   pragma Style_Checks (\"M999\");"  >> tmp-dpathes.ads
+	echo "   Install_Prefix : constant String :=" >> tmp-dpathes.ads
+	echo "     \"$(exec_prefix)\";" >> tmp-dpathes.ads
+	echo "   Compiler_Gcc   : constant String :=" >> tmp-dpathes.ads
+	echo "     \"libexec/gcc/$(target_noncanonical)/$(version)/ghdl1$(exeext)\";" >> tmp-dpathes.ads
+	echo "   Compiler_Debug : constant String := \"\";" >> tmp-dpathes.ads
+	echo "   Compiler_Mcode : constant String := \"\";" >> tmp-dpathes.ads
+	echo "   Compiler_Llvm  : constant String := \"\";" >> tmp-dpathes.ads
+	echo "   Post_Processor : constant String := \"\";" >> tmp-dpathes.ads
+	echo "   Lib_Prefix     : constant String :=">> tmp-dpathes.ads
+	echo "     \"lib/gcc/$(target_noncanonical)/$(version)/vhdl/lib/\";" >> tmp-dpathes.ads
+	echo "end Default_Pathes;" >> tmp-dpathes.ads
+	$(srcdir)/../move-if-change tmp-dpathes.ads $@
+
+# The driver for ghdl.  Depends on ghdl1 to use object files in vhdl/ subdir.
+ghdl$(exeext): ghdl1$(exeext) vhdl/default_pathes.ads force
+	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aI$(srcdir)/vhdl/ghdldrv \
+	 -aIvhdl -aOvhdl ghdl_gcc \
+	 -bargs -E -cargs $(ADA_CFLAGS) $(GHDL_ADAFLAGS) -largs $(LIBS)
 
 # Ghdl libraries.
-ghdllib: ghdl$(exeext) ghdl1$(exeext) $(GCC_PASSES) force
+ghdllib: ghdl$(exeext) ghdl1$(exeext) $(GCC_PASSES) vhdl/Makefile force
 	$(MAKE_IN_VHDL) GRT_FLAGS="-O -g" $(FLAGS_TO_PASS) \
 	 ADAC=$(COMPILER_FOR_BUILD) ghdllib
+
+vhdl/Makefile: config.status $(srcdir)/vhdl/Makefile.in
+	CONFIG_HEADERS= CONFIG_LINKS= CONFIG_COMMANDS= \
+	CONFIG_FILES=vhdl/Makefile $(SHELL) config.status
 
 # Build hooks:
 
@@ -129,7 +156,7 @@ vhdl.install-normal:
 vhdl.install-plugin:
 
 # Install the driver program as ghdl.
-vhdl.install-common: ghdl$(exeext)
+vhdl.install-common: ghdl$(exeext) vhdl/Makefile
 	-mkdir $(DESTDIR)$(bindir)
 	-$(RM) $(DESTDIR)$(bindir)/ghdl$(exeext)
 	$(INSTALL_PROGRAM) ghdl$(exeext) $(DESTDIR)$(bindir)/ghdl$(exeext)
@@ -138,10 +165,7 @@ vhdl.install-common: ghdl$(exeext)
 
 install-info:: $(DESTDIR)$(infodir)/ghdl.info
 
-vhdl.install-info: doc/ghdl.info
-	-rm -rf $(infodir)/ghdl.info*
-	$(INSTALL_DATA) doc/ghdl.info* $(DESTDIR)$(infodir)
-	-chmod a-x $(DESTDIR)$(infodir)/ghdl.info*
+vhdl.install-info: $(DESTDIR)$(infodir)/ghdl.info
 
 install-ghdllib:
 	$(MAKE) -f vhdl/Makefile $(FLAGS_TO_PASS) $(VHDL_FLAGS_TO_PASS) install-ghdllib
@@ -162,9 +186,11 @@ vhdl.uninstall:
 # We just have to delete files specific to us.
 
 vhdl.mostlyclean:
-	-$(RM) vhdl/*$(objext) vhdl/*.ali vhdl/b_*.c
+	-$(RM) vhdl/*$(objext) vhdl/*.ali vhdl/b~*.ad?
+	-$(RM) vhdl/default_pathes.ads
 vhdl.clean:
 	-$(RM) vhdl/*$(objext)
+	-$(RM) vhdl/default_pathes.ads
 vhdl.distclean:
 	-$(RM) vhdl/Makefile
 	-$(RM) ghdl$(exeext)

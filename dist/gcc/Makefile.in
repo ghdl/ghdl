@@ -146,56 +146,18 @@ version := $(shell cat $(srcdir)/../BASE-VER)
 
 # Definition of `all' is here so that new rules inserted by sed
 # do not specify the default target.
-all: all.indirect
+all:
 
 # This tells GNU Make version 3 not to put all variables in the environment.
 .NOEXPORT:
 
-# Now figure out from those variables how to compile and link.
-
-all.indirect: Makefile
-
-# This tells GNU make version 3 not to export all the variables
-# defined in this file into the environment.
-.NOEXPORT:
-
-Makefile: $(srcdir)/Makefile.in $(srcdir)/../configure
-	cd ..; $(SHELL) config.status
 
 force:
 
 SED=sed
 
-drvdir/default_pathes.ads: drvdir Makefile
-	echo "--  DO NOT EDIT" > tmp-dpathes.ads
-	echo "--  This file is created by Makefile" >> tmp-dpathes.ads
-	echo "package Default_Pathes is" >> tmp-dpathes.ads
-	echo "   --  Accept long lines."  >> tmp-dpathes.ads
-	echo "   pragma Style_Checks (\"M999\");"  >> tmp-dpathes.ads
-	echo "   Install_Prefix : constant String :=" >> tmp-dpathes.ads
-	echo "     \"$(exec_prefix)\";" >> tmp-dpathes.ads
-	echo "   Compiler_Gcc   : constant String :=" >> tmp-dpathes.ads
-	echo "     \"libexec/gcc/$(target_noncanonical)/$(version)/ghdl1$(exeext)\";" >> tmp-dpathes.ads
-	echo "   Compiler_Debug : constant String := \"\";" >> tmp-dpathes.ads
-	echo "   Compiler_Mcode : constant String := \"\";" >> tmp-dpathes.ads
-	echo "   Compiler_Llvm  : constant String := \"\";" >> tmp-dpathes.ads
-	echo "   Post_Processor : constant String := \"\";" >> tmp-dpathes.ads
-	echo "   Lib_Prefix     : constant String :=">> tmp-dpathes.ads
-	echo "     \"lib/gcc/$(target_noncanonical)/$(version)/vhdl/lib/\";" >> tmp-dpathes.ads
-	echo "end Default_Pathes;" >> tmp-dpathes.ads
-	$(srcdir)/../../move-if-change tmp-dpathes.ads $@
-
-../ghdl$(exeext): drvdir drvdir/default_pathes.ads force
-	CURDIR=`pwd`; cd $(srcdir); SRCDIR=`pwd`; cd $$CURDIR/drvdir; \
-	$(GNATMAKE) -o ../$@ -aI$$SRCDIR/ghdldrv -aI$$SRCDIR -aO.. ghdl_gcc \
-	 -bargs -E -cargs $(ADA_CFLAGS) $(GHDL_ADAFLAGS) -largs $(LIBS)
-
-drvdir:
-	mkdir $@
-
 clean: grt-clean ghdllibs-clean force
 	$(RM) *.o *.ali
-	$(RM) default_pathes.ads
 
 # Additionnal rules
 
@@ -288,6 +250,7 @@ install-ghdllib: ghdllib grt.lst $(STD93_SRCS) $(STD87_SRCS) \
 	$(MAKE) -f $$PDIR/Makefile REL_DIR=../../.. LIBSRC_DIR="src" \
 	 LIB93_DIR=lib/v93 LIB87_DIR=lib/v87 LIB08_DIR=lib/v08 \
 	 ANALYZE="$$PDIR/../ghdl -a --GHDL1=$$PDIR/../ghdl1 --ieee=none" \
+	 ANALYZE_DEP="$$PDIR/../ghdl1" \
 	 std.v87 ieee.v87 synopsys.v87 \
 	 std.v93 ieee.v93 synopsys.v93 mentor.v93 \
 	 std.v08 ieee.v08
