@@ -227,15 +227,13 @@ package Trans.Chap3 is
 
    --  Insert a scalar check for VALUE of type ATYPE.  EXPR may be NULL_IIR.
    function Insert_Scalar_Check
-     (Value : O_Enode; Expr : Iir; Atype : Iir; Loc : Iir)
-         return O_Enode;
+     (Value : O_Enode; Expr : Iir; Atype : Iir; Loc : Iir) return O_Enode;
 
    --  The base type of EXPR and the base type of ATYPE must be the same.
    --  If the type is a scalar type, and if a range check is needed, this
    --  function inserts the check.  Otherwise, it returns VALUE.
    function Maybe_Insert_Scalar_Check
-     (Value : O_Enode; Expr : Iir; Atype : Iir)
-         return O_Enode;
+     (Value : O_Enode; Expr : Iir; Atype : Iir) return O_Enode;
 
    --  Return True iff all indexes of L_TYPE and R_TYPE have the same
    --  length.  They must be locally static.
@@ -246,11 +244,8 @@ package Trans.Chap3 is
    --    (resp. R_NODE) are not used (and may be Mnode_Null).
    --  If L_TYPE (resp. T_TYPE) is a fat array, then L_NODE (resp. R_NODE)
    --    must designate the array.
-   procedure Check_Array_Match (L_Type : Iir;
-                                L_Node : Mnode;
-                                R_Type : Iir;
-                                R_Node : Mnode;
-                                Loc    : Iir);
+   procedure Check_Array_Match
+     (L_Type : Iir; L_Node : Mnode; R_Type : Iir; R_Node : Mnode; Loc : Iir);
 
    --  Create a subtype range to be stored into RES from length LENGTH, which
    --  is of type INDEX_TYPE.

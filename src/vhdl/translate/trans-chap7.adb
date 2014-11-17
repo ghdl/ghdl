@@ -37,6 +37,7 @@ with Trans.Foreach_Non_Composite;
 
 package body Trans.Chap7 is
    use Trans.Helpers;
+   procedure Copy_Range (Dest : Mnode; Src : Mnode);
 
    function Is_Static_Constant (Decl : Iir_Constant_Declaration) return Boolean
    is
@@ -686,8 +687,8 @@ package body Trans.Chap7 is
       Start_If_Stmt
         (If_Blk,
          New_Compare_Op (ON_Lt, New_Obj_Value (Tmp),
-           New_Lit (New_Signed_Literal (Rng_Type, 0)),
-           Ghdl_Bool_Type));
+                         New_Lit (New_Signed_Literal (Rng_Type, 0)),
+                         Ghdl_Bool_Type));
       Init_Var (Res);
       New_Else_Stmt (If_Blk);
       Val := New_Convert_Ov (New_Obj_Value (Tmp), Ghdl_Index_Type);
@@ -1176,70 +1177,525 @@ package body Trans.Chap7 is
         (Res, Ret_Type, Res_Type, Mode_Value, Func);
    end Translate_Predefined_Array_Operator_Convert;
 
-   --  Create an array aggregate containing one element, EL.
-   function Translate_Element_To_Array (El : O_Enode; Arr_Type : Iir)
-                                       return O_Enode
+   --  A somewhat complex operation...
+   --
+   --  Previously, concatenation was handled like any other operator.  This
+   --  is not efficient as for a serie of concatenation (like A & B & C & D),
+   --  this resulted in O(n**2) copies.  The current implementation handles
+   --  many concatenations in a raw.
+   function Translate_Concatenation
+     (Concat_Imp : Iir; Left, Right : Iir; Res_Type : Iir) return O_Enode
    is
-      Ainfo : constant Type_Info_Acc := Get_Info (Arr_Type);
-      Einfo : constant Type_Info_Acc :=
-        Get_Info (Get_Element_Subtype (Arr_Type));
-      Res   : O_Dnode;
-      V     : O_Dnode;
-   begin
-      Res := Create_Temp (Ainfo.Ortho_Type (Mode_Value));
-      if Is_Composite (Einfo) then
-         New_Assign_Stmt
-           (New_Selected_Element (New_Obj (Res),
-            Ainfo.T.Base_Field (Mode_Value)),
-            New_Convert_Ov (El, Ainfo.T.Base_Ptr_Type (Mode_Value)));
-      else
-         V := Create_Temp_Init (Einfo.Ortho_Type (Mode_Value), El);
-         New_Assign_Stmt
-           (New_Selected_Element (New_Obj (Res),
-            Ainfo.T.Base_Field (Mode_Value)),
-            New_Convert_Ov (New_Address (New_Obj (V),
-              Einfo.Ortho_Ptr_Type (Mode_Value)),
-              Ainfo.T.Base_Ptr_Type (Mode_Value)));
-      end if;
-      New_Assign_Stmt
-        (New_Selected_Element (New_Obj (Res),
-         Ainfo.T.Bounds_Field (Mode_Value)),
-         New_Address (Get_Var (Ainfo.T.Array_1bound),
-           Ainfo.T.Bounds_Ptr_Type));
-      return New_Address (New_Obj (Res), Ainfo.Ortho_Ptr_Type (Mode_Value));
-   end Translate_Element_To_Array;
+      Expr_Type  : constant Iir := Get_Return_Type (Concat_Imp);
+      Index_Type : constant Iir := Get_Index_Type (Expr_Type, 0);
+      Info : constant Type_Info_Acc := Get_Info (Expr_Type);
+      Static_Length : Iir_Int64 := 0;
+      Nbr_Dyn_Expr : Natural := 0;
 
-   function Translate_Concat_Operator (Left_Tree, Right_Tree : O_Enode;
-                                       Imp : Iir_Implicit_Function_Declaration;
-                                       Res_Type : Iir;
-                                       Loc : Iir)
-                                      return O_Enode
-   is
-      Ret_Type : constant Iir := Get_Return_Type (Imp);
-      Kind     : constant Iir_Predefined_Functions :=
-        Get_Implicit_Definition (Imp);
-      Arr_El1  : O_Enode;
-      Arr_El2  : O_Enode;
-      Res      : O_Enode;
+      type Handle_Acc is access procedure (E : Iir);
+      type Handlers_Type is record
+         Handle_El : Handle_Acc;
+         Handle_Arr : Handle_Acc;
+      end record;
+
+      --  Call handlers for each leaf of LEFT CONCAT_IMP RIGHT.
+      --  Handlers.Handle_Arr is called for array leaves, and
+      --  Handlers.Handle_El for element leaves.
+      procedure Walk (Handlers : Handlers_Type)
+      is
+         Walk_Handlers : Handlers_Type;
+
+         --  Call handlers for each leaf of L IMP R.
+         procedure Walk_Concat (Imp : Iir; L, R : Iir);
+
+         --  Call handlers for each leaf of E (an array expression).  First
+         --  check wether E is also a concatenation.
+         procedure Walk_Arr (E : Iir)
+         is
+            Imp : Iir;
+            Assocs : Iir;
+         begin
+            if Get_Kind (E) = Iir_Kind_Concatenation_Operator then
+               Imp := Get_Implementation (E);
+               if Get_Kind (Imp) = Iir_Kind_Implicit_Function_Declaration
+                 and then Get_Return_Type (Imp) = Expr_Type
+               then
+                  Walk_Concat (Imp, Get_Left (E), Get_Right (E));
+                  return;
+               end if;
+            elsif Get_Kind (E) = Iir_Kind_Function_Call then
+               --  Also handle "&" (A, B)
+               --  Note that associations are always 'simple': no formal, no
+               --  default expression in implicit declarations.
+               Imp := Get_Implementation (E);
+               if Get_Kind (Imp) = Iir_Kind_Implicit_Function_Declaration
+                 and then Get_Return_Type (Imp) = Expr_Type
+               then
+                  Assocs := Get_Parameter_Association_Chain (E);
+                  Walk_Concat
+                    (Imp,
+                     Get_Actual (Assocs), Get_Actual (Get_Chain (Assocs)));
+                  return;
+               end if;
+            end if;
+
+            Walk_Handlers.Handle_Arr (E);
+         end Walk_Arr;
+
+         procedure Walk_Concat (Imp : Iir; L, R : Iir) is
+         begin
+            case Get_Implicit_Definition (Imp) is
+               when Iir_Predefined_Array_Array_Concat =>
+                  Walk_Arr (L);
+                  Walk_Arr (R);
+               when Iir_Predefined_Array_Element_Concat =>
+                  Walk_Arr (L);
+                  Walk_Handlers.Handle_El (R);
+               when Iir_Predefined_Element_Array_Concat =>
+                  Walk_Handlers.Handle_El (L);
+                  Walk_Arr (R);
+               when Iir_Predefined_Element_Element_Concat =>
+                  Walk_Handlers.Handle_El (L);
+                  Walk_Handlers.Handle_El (R);
+               when others =>
+                  raise Internal_Error;
+            end case;
+         end Walk_Concat;
+      begin
+         Walk_Handlers := Handlers;
+         Walk_Concat (Concat_Imp, Left, Right);
+      end Walk;
+
+      --  Return TRUE if the bounds of E are known at analysis time.
+      function Is_Static_Arr (E : Iir) return Boolean
+      is
+         Etype : constant Iir := Get_Type (E);
+      begin
+         pragma Assert (Get_Base_Type (Etype) = Expr_Type);
+         return Is_Fully_Constrained_Type (Etype)
+           and then Get_Type_Staticness (Get_Index_Type (Etype, 0)) = Locally;
+      end Is_Static_Arr;
+
+      --  Pre_Walk: compute known static length and number of dynamic arrays.
+      procedure Pre_Walk_El (E : Iir)
+      is
+         pragma Unreferenced (E);
+      begin
+         Static_Length := Static_Length + 1;
+      end Pre_Walk_El;
+
+      procedure Pre_Walk_Arr (E : Iir)
+      is
+         Idx_Type : Iir;
+      begin
+         --  Three possibilities:
+         --  * type is fully constrained, range is static, length is known
+         --  * type is fully constrained, range is not static, length isn't
+         --  * type is not constrained
+         if Is_Static_Arr (E) then
+            Idx_Type := Get_Index_Type (Get_Type (E), 0);
+            Static_Length := Static_Length
+              + Eval_Discrete_Range_Length (Get_Range_Constraint (Idx_Type));
+         else
+            Nbr_Dyn_Expr := Nbr_Dyn_Expr + 1;
+         end if;
+      end Pre_Walk_Arr;
+
+      --  In order to declare Dyn_Mnodes (below), create a function that can
+      --  be called now (not possible with procedures).
+      function Call_Pre_Walk return Natural is
+      begin
+         Walk ((Pre_Walk_El'Access, Pre_Walk_Arr'Access));
+         return Nbr_Dyn_Expr;
+      end Call_Pre_Walk;
+
+      --  Compute now the number of dynamic expressions.
+      Nbr_Dyn_Expr1 : constant Natural := Call_Pre_Walk;
+      pragma Assert (Nbr_Dyn_Expr1 = Nbr_Dyn_Expr);
+
+      Var_Bounds : Mnode;
+      Arr_Ptr : O_Dnode;
+      Var_Arr : Mnode;
+      Var_Length : O_Dnode;
+
+      Var_Res : O_Dnode;
+      Res : Mnode;
+
+      --  Common subexpression: get the range of the result as a Mnode.
+      function Get_Res_Range return Mnode is
+      begin
+         return Chap3.Bounds_To_Range (Var_Bounds, Expr_Type, 1);
+      end Get_Res_Range;
+
+      type Mnode_Array is array (1 .. Nbr_Dyn_Expr) of Mnode;
+      Dyn_Mnodes : Mnode_Array;
+      Dyn_I : Natural;
+      E_Length : O_Enode;
+
+      procedure Nil_El (E : Iir) is
+      begin
+         null;
+      end Nil_El;
+
+      --  Evaluate a dynamic parameter.
+      procedure Eval_Dyn_Arr (E : Iir)
+      is
+         E_Val : O_Enode;
+      begin
+         if not Is_Static_Arr (E) then
+            Dyn_I := Dyn_I + 1;
+            --  First, translate expression.
+            E_Val := Translate_Expression (E, Expr_Type);
+            --  Then create Mnode (type info may be computed by
+            --  translate_expression).
+            Dyn_Mnodes (Dyn_I) :=
+              Stabilize (E2M (E_Val, Get_Info (Expr_Type), Mode_Value));
+         end if;
+      end Eval_Dyn_Arr;
+
+      --  Add contribution to length of result from a dynamic parameter.
+      procedure Len_Dyn_Arr (E : Iir)
+      is
+         Elen : O_Enode;
+      begin
+         if not Is_Static_Arr (E) then
+            Dyn_I := Dyn_I + 1;
+            Elen := Chap3.Get_Array_Length (Dyn_Mnodes (Dyn_I), Get_Type (E));
+            if E_Length = O_Enode_Null then
+               E_Length := Elen;
+            else
+               E_Length := New_Dyadic_Op (ON_Add_Ov, E_Length, Elen);
+            end if;
+         end if;
+      end Len_Dyn_Arr;
+
+      --  Offset in the result.
+      Var_Off : O_Dnode;
+
+      --  Assign: write values to the result array.
+      procedure Assign_El (E : Iir) is
+      begin
+         Chap3.Translate_Object_Copy
+           (Chap3.Index_Base (Var_Arr, Expr_Type, New_Obj_Value (Var_Off)),
+            Translate_Expression (E), Get_Type (E));
+         Inc_Var (Var_Off);
+      end Assign_El;
+
+      procedure Assign_Arr (E : Iir)
+      is
+         E_Val : O_Enode;
+         M : Mnode;
+         V_Arr   : O_Dnode;
+         Var_Sub_Arr : Mnode;
+      begin
+         Open_Temp;
+         if Is_Static_Arr (E) then
+            --  First, translate expression.
+            E_Val := Translate_Expression (E, Expr_Type);
+            --  Then create Mnode (type info may be computed by
+            --  translate_expression).
+            M := E2M (E_Val, Get_Info (Expr_Type), Mode_Value);
+            Stabilize (M);
+         else
+            Dyn_I := Dyn_I + 1;
+            M := Dyn_Mnodes (Dyn_I);
+         end if;
+
+         --  Create a slice of the result
+         V_Arr := Create_Temp (Info.Ortho_Type (Mode_Value));
+         Var_Sub_Arr := Dv2M (V_Arr, Info, Mode_Value);
+         New_Assign_Stmt
+           (M2Lp (Chap3.Get_Array_Bounds (Var_Sub_Arr)),
+            M2Addr (Chap3.Get_Array_Bounds (M)));
+         New_Assign_Stmt
+           (M2Lp (Chap3.Get_Array_Base (Var_Sub_Arr)),
+            M2Addr (Chap3.Slice_Base (Var_Arr,
+                                      Expr_Type,
+                                      New_Obj_Value (Var_Off))));
+
+         --  Copy
+         Chap3.Translate_Object_Copy (Var_Sub_Arr, M2E (M), Expr_Type);
+
+         --  Increase offset
+         New_Assign_Stmt
+           (New_Obj (Var_Off),
+            New_Dyadic_Op (ON_Add_Ov,
+                           New_Obj_Value (Var_Off),
+                           Chap3.Get_Array_Length (M, Expr_Type)));
+         Close_Temp;
+      end Assign_Arr;
+
+      --  Find last expression.  This is used to get the bounds in the case of
+      --  a null-range result.
+      Last_Expr : Iir;
+      Last_Dyn_Expr : Natural;
+
+      procedure Find_Last_Arr (E : Iir) is
+      begin
+         Last_Expr := E;
+         if Is_Static_Arr (E) then
+            Last_Dyn_Expr := 0;
+         else
+            Dyn_I := Dyn_I + 1;
+            Last_Dyn_Expr := Dyn_I;
+         end if;
+      end Find_Last_Arr;
+
+      --  Copy Left and Dir from SRC to the result.  Used for v87.
+      procedure Copy_Bounds_V87 (Src : Mnode)
+      is
+         Src1 : Mnode;
+      begin
+         Open_Temp;
+         Src1 := Stabilize (Src);
+         New_Assign_Stmt (M2Lv (Chap3.Range_To_Left (Get_Res_Range)),
+                          M2E (Chap3.Range_To_Left (Src1)));
+         New_Assign_Stmt (M2Lv (Chap3.Range_To_Dir (Get_Res_Range)),
+                          M2E (Chap3.Range_To_Dir (Src1)));
+         Close_Temp;
+      end Copy_Bounds_V87;
+
+      --  Vhdl 87 bounds: find the first non-null expression and assign
+      --  left and dir to the result.
+      Assign_Bounds_V87_Done : Boolean;
+      type O_If_Block_Array is array
+        (1 .. Nbr_Dyn_Expr * Boolean'Pos (Flags.Vhdl_Std = Vhdl_87))
+        of O_If_Block;
+      Assign_Bounds_Ifs : O_If_Block_Array;
+
+      procedure Assign_Bounds_El_V87 (E : Iir)
+      is
+         pragma Unreferenced (E);
+      begin
+         if Assign_Bounds_V87_Done then
+            return;
+         end if;
+
+         Copy_Bounds_V87 (Chap3.Type_To_Range (Get_Index_Type (Expr_Type, 0)));
+         Assign_Bounds_V87_Done := True;
+      end Assign_Bounds_El_V87;
+
+      procedure Assign_Bounds_Arr_V87 (E : Iir)
+      is
+         Idx_Rng : Iir;
+      begin
+         if Assign_Bounds_V87_Done then
+            return;
+         end if;
+
+         if Is_Static_Arr (E) then
+            Idx_Rng := Get_Range_Constraint
+              (Get_Index_Type (Get_Type (E), 0));
+            if Eval_Discrete_Range_Length (Idx_Rng) = 0 then
+               return;
+            end if;
+            New_Assign_Stmt
+              (M2Lv (Chap3.Range_To_Left (Get_Res_Range)),
+               New_Lit (Translate_Static_Range_Left (Idx_Rng, Index_Type)));
+            New_Assign_Stmt
+              (M2Lv (Chap3.Range_To_Dir (Get_Res_Range)),
+               New_Lit (Translate_Static_Range_Dir (Idx_Rng)));
+            Assign_Bounds_V87_Done := True;
+         else
+            Dyn_I := Dyn_I + 1;
+            Start_If_Stmt
+              (Assign_Bounds_Ifs (Dyn_I),
+               New_Compare_Op (ON_Neq,
+                               Chap3.Get_Array_Length (Dyn_Mnodes (Dyn_I),
+                                                       Expr_Type),
+                               New_Lit (Ghdl_Index_0),
+                               Ghdl_Bool_Type));
+            Copy_Bounds_V87
+              (Chap3.Bounds_To_Range
+                 (Chap3.Get_Array_Bounds (Dyn_Mnodes (Dyn_I)), Expr_Type, 1));
+            New_Else_Stmt (Assign_Bounds_Ifs (Dyn_I));
+         end if;
+      end Assign_Bounds_Arr_V87;
+
    begin
-      case Kind is
-         when Iir_Predefined_Element_Array_Concat
-            | Iir_Predefined_Element_Element_Concat =>
-            Arr_El1 := Translate_Element_To_Array (Left_Tree, Ret_Type);
-         when others =>
-            Arr_El1 := Left_Tree;
-      end case;
-      case Kind is
-         when Iir_Predefined_Array_Element_Concat
-            | Iir_Predefined_Element_Element_Concat =>
-            Arr_El2 := Translate_Element_To_Array (Right_Tree, Ret_Type);
-         when others =>
-            Arr_El2 := Right_Tree;
-      end case;
-      Res := Translate_Predefined_Array_Operator (Arr_El1, Arr_El2, Imp);
+      --  Bounds
+      Var_Bounds := Dv2M
+        (Create_Temp (Info.T.Bounds_Type), Info, Mode_Value,
+         Info.T.Bounds_Type, Info.T.Bounds_Ptr_Type);
+
+      --  Base
+      Arr_Ptr := Create_Temp (Info.T.Base_Ptr_Type (Mode_Value));
+      Var_Arr := Dp2M (Arr_Ptr, Info, Mode_Value,
+                       Info.T.Base_Type (Mode_Value),
+                       Info.T.Base_Ptr_Type (Mode_Value));
+
+      --  Result
+      Var_Res := Create_Temp (Info.Ortho_Type (Mode_Value));
+      Res := Dv2M (Var_Res, Info, Mode_Value);
+
+      --  Set result bounds.
+      New_Assign_Stmt
+        (M2Lp (Chap3.Get_Array_Bounds (Res)), M2Addr (Var_Bounds));
+
+      --  Evaluate all dynamic expressions
+      Dyn_I := 0;
+      Walk ((Nil_El'Access, Eval_Dyn_Arr'Access));
+      --  Check that all dynamic expressions have been handled.
+      pragma Assert (Dyn_I = Dyn_Mnodes'Last);
+
+      --  Compute length
+      if Static_Length /= 0 then
+         E_Length := New_Lit (New_Index_Lit (Unsigned_64 (Static_Length)));
+      else
+         E_Length := O_Enode_Null;
+      end if;
+      Dyn_I := 0;
+      Walk ((Nil_El'Access, Len_Dyn_Arr'Access));
+      pragma Assert (Dyn_I = Dyn_Mnodes'Last);
+      pragma Assert (E_Length /= O_Enode_Null);
+      Var_Length := Create_Temp_Init (Ghdl_Index_Type, E_Length);
+
+      --  Compute bounds.
+      declare
+         If_Blk : O_If_Block;
+      begin
+         if Static_Length = 0 then
+            --  The result may have null bounds.  Note: we haven't optimize
+            --  the case when the result is known to have null bounds.
+            Start_If_Stmt
+              (If_Blk, New_Compare_Op (ON_Neq, New_Obj_Value (Var_Length),
+                                       New_Lit (Ghdl_Index_0),
+                                       Ghdl_Bool_Type));
+         end if;
+
+         --  For a non-null bounds result.
+         if Flags.Vhdl_Std > Vhdl_87 then
+            --  Vhdl 93 case: lean and simple.
+            Chap3.Create_Range_From_Length
+              (Index_Type, Var_Length, Get_Res_Range, Left);
+         else
+            --  Vhdl 87 rules are error-prone and not very efficient:
+
+            --  LRM87 7.2.4
+            --  The left bound of this result is the left bound of the left
+            --  operand, unless the left operand is a null array, in which
+            --  case the result of the concatenation is the right operand.
+            --  The direction of the result is the direction of the left
+            --  operand, unless the left operand is a null array, in which
+            --  case the direction of the result is that of the right operand.
+
+            --  Assign length.
+            New_Assign_Stmt
+              (M2Lv (Chap3.Range_To_Length (Get_Res_Range)),
+               New_Obj_Value (Var_Length));
+
+            --  Left and direction are copied from the first expressions with
+            --  non-null range.
+            Dyn_I := 0;
+            Assign_Bounds_V87_Done := False;
+            Walk ((Assign_Bounds_El_V87'Access, Assign_Bounds_Arr_V87'Access));
+            for I in reverse 1 .. Dyn_I  loop
+               Finish_If_Stmt (Assign_Bounds_Ifs (I));
+            end loop;
+
+            --  Set right bound.
+            declare
+               Idx_Info : constant Type_Info_Acc := Get_Info (Index_Type);
+               Idx_Otype : constant O_Tnode :=
+                 Idx_Info.Ortho_Type (Mode_Value);
+               Var_Length1 : O_Dnode;
+               Var_Right   : O_Dnode;
+               If_Blk2 : O_If_Block;
+            begin
+               Open_Temp;
+               Var_Length1 := Create_Temp (Ghdl_Index_Type);
+               Var_Right := Create_Temp (Idx_Otype);
+
+               --  Note this substraction cannot overflow, since LENGTH >= 1.
+               New_Assign_Stmt
+                 (New_Obj (Var_Length1),
+                  New_Dyadic_Op (ON_Sub_Ov,
+                                 New_Obj_Value (Var_Length),
+                                 New_Lit (Ghdl_Index_1)));
+
+               --  Compute right bound of result:
+               --    if dir = dir_to then
+               --        right := left + length_1;
+               --    else
+               --        right := left - length_1;
+               --    end if;
+               Start_If_Stmt
+                 (If_Blk2,
+                  New_Compare_Op (ON_Eq,
+                                  M2E (Chap3.Range_To_Dir (Get_Res_Range)),
+                                  New_Lit (Ghdl_Dir_To_Node),
+                                  Ghdl_Bool_Type));
+               New_Assign_Stmt
+                 (New_Obj (Var_Right),
+                  New_Dyadic_Op (ON_Add_Ov,
+                                 M2E (Chap3.Range_To_Left (Get_Res_Range)),
+                                 New_Convert_Ov (New_Obj_Value (Var_Length1),
+                                                 Idx_Otype)));
+               New_Else_Stmt (If_Blk2);
+               New_Assign_Stmt
+                 (New_Obj (Var_Right),
+                  New_Dyadic_Op (ON_Sub_Ov,
+                                 M2E (Chap3.Range_To_Left (Get_Res_Range)),
+                                 New_Convert_Ov (New_Obj_Value (Var_Length1),
+                                                 Idx_Otype)));
+               Finish_If_Stmt (If_Blk2);
+
+               --   Check the right bounds is inside the bounds of the
+               --   index type.
+               Chap3.Check_Range (Var_Right, Null_Iir, Index_Type, Left);
+               New_Assign_Stmt
+                 (M2Lv (Chap3.Range_To_Right (Get_Res_Range)),
+                  New_Obj_Value (Var_Right));
+               Close_Temp;
+            end;
+         end if;
+
+         if Static_Length = 0 then
+            New_Else_Stmt (If_Blk);
+            --  For a null bound result.  Same rules for v87 and v93.
+            --  Find last expression.
+            Last_Expr := Null_Iir;
+            Last_Dyn_Expr := 0;
+            Dyn_I := 0;
+            Walk ((Nil_El'Access, Find_Last_Arr'Access));
+            pragma Assert (Dyn_I = Dyn_Mnodes'Last);
+
+            if Last_Dyn_Expr = 0 then
+               --  The last expression is not dynamic.
+               Translate_Discrete_Range
+                 (Get_Res_Range, Get_Index_Type (Get_Type (Last_Expr), 0));
+            else
+               Copy_Range
+                 (Get_Res_Range,
+                  Chap3.Bounds_To_Range
+                    (Chap3.Get_Array_Bounds (Dyn_Mnodes (Last_Dyn_Expr)),
+                     Expr_Type, 1));
+            end if;
+
+            Finish_If_Stmt (If_Blk);
+         end if;
+      end;
+
+      --  Allocate result.
+      New_Assign_Stmt
+        (New_Obj (Arr_Ptr),
+         Gen_Alloc (Alloc_Stack,
+                    Chap3.Get_Object_Size (Res, Expr_Type),
+                    Info.T.Base_Ptr_Type (Mode_Value)));
+      New_Assign_Stmt
+        (M2Lp (Chap3.Get_Array_Base (Res)), M2Addr (Var_Arr));
+
+      --  Assign expressions
+      Open_Temp;
+      Var_Off := Create_Temp_Init (Ghdl_Index_Type, New_Lit (Ghdl_Index_0));
+      Dyn_I := 0;
+      Walk ((Assign_El'Access, Assign_Arr'Access));
+      pragma Assert (Dyn_I = Dyn_Mnodes'Last);
+      Close_Temp;
+
       return Translate_Implicit_Conv
-        (Res, Ret_Type, Res_Type, Mode_Value, Loc);
-   end Translate_Concat_Operator;
+        (M2E (Res), Expr_Type, Res_Type, Mode_Value, Left);
+   end Translate_Concatenation;
 
    function Translate_Scalar_Min_Max
      (Op : ON_Op_Kind; Left, Right : Iir; Res_Type : Iir) return O_Enode
@@ -1687,6 +2143,12 @@ package body Trans.Chap7 is
             --  Right operand of shortcur operators may not be evaluated.
             return Translate_Shortcut_Operator (Imp, Left, Right);
 
+         when Iir_Predefined_Array_Array_Concat
+           | Iir_Predefined_Element_Array_Concat
+           | Iir_Predefined_Array_Element_Concat
+           | Iir_Predefined_Element_Element_Concat =>
+            return Translate_Concatenation (Imp, Left, Right, Res_Type);
+
             --  Operands of min/max are evaluated in a declare block.
          when Iir_Predefined_Enum_Minimum
             | Iir_Predefined_Integer_Minimum
@@ -2052,8 +2514,7 @@ package body Trans.Chap7 is
             | Iir_Predefined_Element_Array_Concat
             | Iir_Predefined_Array_Element_Concat
             | Iir_Predefined_Element_Element_Concat =>
-            return Translate_Concat_Operator
-              (Left_Tree, Right_Tree, Imp, Res_Type, Loc);
+            raise Internal_Error;
 
          when Iir_Predefined_Endfile =>
             return Translate_Lib_Operator
@@ -3856,7 +4317,7 @@ package body Trans.Chap7 is
       Close_Temp;
    end Translate_Reverse_Range;
 
-   procedure Copy_Range (Dest : Mnode; Src  : Mnode)
+   procedure Copy_Range (Dest : Mnode; Src : Mnode)
    is
       Info : constant Type_Info_Acc := Get_Type_Info (Dest);
       Dest1 : Mnode;
@@ -3872,22 +4333,21 @@ package body Trans.Chap7 is
       New_Assign_Stmt (M2Lv (Chap3.Range_To_Dir (Dest1)),
                        M2E (Chap3.Range_To_Dir (Src1)));
       if Info.T.Range_Length /= O_Fnode_Null then
+         --  Floating point types have no length.
          New_Assign_Stmt (M2Lv (Chap3.Range_To_Length (Dest1)),
                           M2E (Chap3.Range_To_Length (Src1)));
       end if;
       Close_Temp;
    end Copy_Range;
 
-   procedure Translate_Range
-     (Res : Mnode; Arange : Iir; Range_Type : Iir)
+   procedure Translate_Range (Res : Mnode; Arange : Iir; Range_Type : Iir)
    is
-      Rinfo : constant Type_Info_Acc :=
-        Get_Info (Get_Base_Type (Range_Type));
+      Rinfo : constant Type_Info_Acc := Get_Info (Get_Base_Type (Range_Type));
    begin
       case Get_Kind (Arange) is
          when Iir_Kind_Range_Array_Attribute =>
             declare
-               Ptr   : O_Dnode;
+               Ptr : O_Dnode;
             begin
                Open_Temp;
                Ptr := Create_Temp_Ptr
@@ -3949,8 +4409,8 @@ package body Trans.Chap7 is
             return Chap14.Translate_Range_Array_Attribute (Arange);
          when Iir_Kind_Reverse_Range_Array_Attribute =>
             declare
-               Rinfo   : constant Type_Info_Acc := Get_Info (Range_Type);
-               Res     : O_Dnode;
+               Rinfo : constant Type_Info_Acc := Get_Info (Range_Type);
+               Res   : O_Dnode;
             begin
                Res := Create_Temp (Rinfo.T.Range_Type);
                Translate_Reverse_Range
@@ -3962,7 +4422,7 @@ package body Trans.Chap7 is
          when Iir_Kind_Range_Expression =>
             declare
                Rinfo : constant Type_Info_Acc := Get_Info (Range_Type);
-               Res    : O_Dnode;
+               Res   : O_Dnode;
             begin
                Res := Create_Temp (Rinfo.T.Range_Type);
                Translate_Range_Expression
@@ -3974,7 +4434,6 @@ package body Trans.Chap7 is
          when others =>
             Error_Kind ("translate_range", Arange);
       end case;
-      return O_Lnode_Null;
    end Translate_Range;
 
    function Translate_Static_Range (Arange : Iir; Range_Type : Iir)
@@ -3982,9 +4441,8 @@ package body Trans.Chap7 is
    is
       Constr : O_Record_Aggr_List;
       Res    : O_Cnode;
-      T_Info : Type_Info_Acc;
+      T_Info : constant Type_Info_Acc := Get_Info (Range_Type);
    begin
-      T_Info := Get_Info (Range_Type);
       Start_Record_Aggr (Constr, T_Info.T.Range_Type);
       New_Record_Aggr_El
         (Constr, Chap7.Translate_Static_Range_Left (Arange, Range_Type));

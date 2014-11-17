@@ -682,95 +682,6 @@ package body Trans.Chap3 is
       end if;
    end Translate_Array_Type_Base;
 
-   --  For unidimensional arrays: create a constant bounds whose length
-   --  is 1, for concatenation with element.
-   procedure Translate_Static_Unidimensional_Array_Length_One
-     (Def : Iir_Array_Type_Definition)
-   is
-      Indexes         : constant Iir_List := Get_Index_Subtype_List (Def);
-      Index_Type      : Iir;
-      Index_Base_Type : Iir;
-      Constr          : O_Record_Aggr_List;
-      Constr1         : O_Record_Aggr_List;
-      Arr_Info        : Type_Info_Acc;
-      Tinfo           : Type_Info_Acc;
-      Irange          : Iir;
-      Res1            : O_Cnode;
-      Res             : O_Cnode;
-   begin
-      if Get_Nbr_Elements (Indexes) /= 1 then
-         --  Not a one-dimensional array.
-         return;
-      end if;
-      Index_Type := Get_Index_Type (Indexes, 0);
-      Arr_Info := Get_Info (Def);
-      if Get_Type_Staticness (Index_Type) = Locally then
-         if Global_Storage /= O_Storage_External then
-            Index_Base_Type := Get_Base_Type (Index_Type);
-            Tinfo := Get_Info (Index_Base_Type);
-            Irange := Get_Range_Constraint (Index_Type);
-            Start_Record_Aggr (Constr, Arr_Info.T.Bounds_Type);
-            Start_Record_Aggr (Constr1, Tinfo.T.Range_Type);
-            New_Record_Aggr_El
-              (Constr1,
-               Chap7.Translate_Static_Range_Left (Irange, Index_Base_Type));
-            New_Record_Aggr_El
-              (Constr1,
-               Chap7.Translate_Static_Range_Left (Irange, Index_Base_Type));
-            New_Record_Aggr_El
-              (Constr1, Chap7.Translate_Static_Range_Dir (Irange));
-            New_Record_Aggr_El
-              (Constr1, Ghdl_Index_1);
-            Finish_Record_Aggr (Constr1, Res1);
-            New_Record_Aggr_El (Constr, Res1);
-            Finish_Record_Aggr (Constr, Res);
-         else
-            Res := O_Cnode_Null;
-         end if;
-         Arr_Info.T.Array_1bound := Create_Global_Const
-           (Create_Identifier ("BR1"),
-            Arr_Info.T.Bounds_Type, Global_Storage, Res);
-      else
-         Arr_Info.T.Array_1bound := Create_Var
-           (Create_Var_Identifier ("BR1"),
-            Arr_Info.T.Bounds_Type, Global_Storage);
-      end if;
-   end Translate_Static_Unidimensional_Array_Length_One;
-
-   procedure Translate_Dynamic_Unidimensional_Array_Length_One
-     (Def : Iir_Array_Type_Definition)
-   is
-      Indexes     : constant Iir_List := Get_Index_Subtype_List (Def);
-      Index_Type  : Iir;
-      Arr_Info    : Type_Info_Acc;
-      Bound1, Rng : Mnode;
-   begin
-      if Get_Nbr_Elements (Indexes) /= 1 then
-         return;
-      end if;
-      Index_Type := Get_Index_Type (Indexes, 0);
-      if Get_Type_Staticness (Index_Type) = Locally then
-         return;
-      end if;
-      Arr_Info := Get_Info (Def);
-      Open_Temp;
-      Bound1 := Varv2M (Arr_Info.T.Array_1bound, Arr_Info, Mode_Value,
-                        Arr_Info.T.Bounds_Type, Arr_Info.T.Bounds_Ptr_Type);
-      Bound1 := Bounds_To_Range (Bound1, Def, 1);
-      Stabilize (Bound1);
-      Rng := Type_To_Range (Index_Type);
-      Stabilize (Rng);
-      New_Assign_Stmt (M2Lv (Range_To_Dir (Bound1)),
-                       M2E (Range_To_Dir (Rng)));
-      New_Assign_Stmt (M2Lv (Range_To_Left (Bound1)),
-                       M2E (Range_To_Left (Rng)));
-      New_Assign_Stmt (M2Lv (Range_To_Right (Bound1)),
-                       M2E (Range_To_Left (Rng)));
-      New_Assign_Stmt (M2Lv (Range_To_Length (Bound1)),
-                       New_Lit (Ghdl_Index_1));
-      Close_Temp;
-   end Translate_Dynamic_Unidimensional_Array_Length_One;
-
    procedure Translate_Array_Type_Definition
      (Def : Iir_Array_Type_Definition)
    is
@@ -794,8 +705,6 @@ package body Trans.Chap3 is
          Create_Array_Fat_Pointer (Info, Mode_Signal);
       end if;
       Finish_Type_Definition (Info, Completion);
-
-      Translate_Static_Unidimensional_Array_Length_One (Def);
 
       El_Tinfo := Get_Info (Get_Element_Subtype (Def));
       if Is_Complex_Type (El_Tinfo) then
@@ -1761,7 +1670,6 @@ package body Trans.Chap3 is
                   end if;
                end loop;
             end;
-            Translate_Dynamic_Unidimensional_Array_Length_One (Def);
             return;
          when Iir_Kind_Access_Type_Definition
             | Iir_Kind_Access_Subtype_Definition

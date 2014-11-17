@@ -691,10 +691,6 @@ package Trans is
             --  Variable containing the bounds for a constrained array.
             Array_Bounds : Var_Type;
 
-            --  Variable containing a 1 length bound for unidimensional
-            --  unconstrained arrays.
-            Array_1bound : Var_Type;
-
             --  Variable containing the description for each index.
             Array_Index_Desc : Var_Type;
 
@@ -743,7 +739,6 @@ package Trans is
       Bounds_Field => (O_Fnode_Null, O_Fnode_Null),
       Static_Bounds => False,
       Array_Bounds => Null_Var,
-      Array_1bound => Null_Var,
       Array_Index_Desc => Null_Var);
 
    Ortho_Info_Type_Record_Init : constant Ortho_Info_Type_Type :=
