@@ -87,7 +87,7 @@ ghdl1$(exeext): force $(GHDL1_OBJS) $(BACKEND) $(LIBDEPS)
 	 -largs --LINK=$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GHDL1_OBJS) \
 	 $(filter-out main.o,$(BACKEND)) $(LIBS) $(BACKENDLIBS)
 
-vhdl/default_pathes.ads:
+vhdl/default_pathes.ads: Makefile
 	echo "--  DO NOT EDIT" > tmp-dpathes.ads
 	echo "--  This file is created by Makefile" >> tmp-dpathes.ads
 	echo "package Default_Pathes is" >> tmp-dpathes.ads
@@ -95,8 +95,10 @@ vhdl/default_pathes.ads:
 	echo "   pragma Style_Checks (\"M999\");"  >> tmp-dpathes.ads
 	echo "   Install_Prefix : constant String :=" >> tmp-dpathes.ads
 	echo "     \"$(exec_prefix)\";" >> tmp-dpathes.ads
-	echo "   Compiler_Gcc   : constant String :=" >> tmp-dpathes.ads
-	echo "     \"libexec/gcc/$(target_noncanonical)/$(version)/ghdl1$(exeext)\";" >> tmp-dpathes.ads
+	suffix=`expr @"$(libexecdir)" : @"$(prefix)/\(.*\)"`; \
+	if test x"$$suffix" = x; then suffix="$(libexecdir)"; fi; \
+	echo "   Compiler_Gcc   : constant String :=" >> tmp-dpathes.ads; \
+	echo "     \"$$suffix/gcc/$(target_noncanonical)/$(version)/ghdl1$(exeext)\";" >> tmp-dpathes.ads
 	echo "   Compiler_Debug : constant String := \"\";" >> tmp-dpathes.ads
 	echo "   Compiler_Mcode : constant String := \"\";" >> tmp-dpathes.ads
 	echo "   Compiler_Llvm  : constant String := \"\";" >> tmp-dpathes.ads
