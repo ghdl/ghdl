@@ -47,17 +47,13 @@ package Grt.Stdio is
 
    function fopen (path: chars; mode : chars) return FILEs;
 
-   function fwrite (buffer : voids;
-                    size : size_t;
-                    count : size_t;
-                    stream : FILEs)
-                   return size_t;
+   function fwrite
+     (buffer : voids; size : size_t; count : size_t; stream : FILEs)
+     return size_t;
 
-   function fread (buffer : voids;
-                   size : size_t;
-                   count : size_t;
-                   stream : FILEs)
-                  return size_t;
+   function fread
+     (buffer : voids; size : size_t; count : size_t; stream : FILEs)
+     return size_t;
 
    function fputc (c : int; stream : FILEs) return int;
    procedure fputc (c : int; stream : FILEs);
