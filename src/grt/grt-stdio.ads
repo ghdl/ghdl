@@ -86,14 +86,14 @@ private
    pragma Import (C, fread);
 
    pragma Import (C, fputs);
-   pragma Import (C, fputc);
+   pragma Import (C, fputc, "putc_unlocked");
 
-   pragma Import (C, fgetc);
+   pragma Import (C, fgetc, "getc_unlocked");
    pragma Import (C, fgets);
    pragma Import (C, ungetc);
 
    pragma Import (C, fflush);
-   pragma Import (C, feof);
+   pragma Import (C, feof, "feof_unlocked");
    pragma Import (C, ftell);
    pragma Import (C, fclose);
 

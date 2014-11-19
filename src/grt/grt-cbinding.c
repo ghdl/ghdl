@@ -70,6 +70,30 @@ __ghdl_fprintf_clock (FILE *stream, int a, int b)
   fprintf (stream, "%3d.%03d", a, b);
 }
 
+#ifndef getc_unlocked
+int
+getc_unlocked (FILE *stream)
+{
+  return getc (stream);
+}
+#endif
+
+#ifndef putc_unlocked
+int
+putc_unlocked (int c, FILE *stream)
+{
+  return putc (c, stream);
+}
+#endif
+
+#ifndef feof_unlocked
+int
+feof_unlocked (FILE *stream)
+{
+  return feof (stream);
+}
+#endif
+
 #ifndef WITH_GNAT_RUN_TIME
 void
 __gnat_last_chance_handler (void)
