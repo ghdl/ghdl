@@ -229,30 +229,30 @@ $(LIB93_DIR)/std/std_standard.o: $(GHDL1)
 ifeq ($(GHDL),ghdl_llvm)
 	$(GHDL1) --std=93 -quiet $(LIB_CFLAGS)  -c -o $@ --compile-standard
 else
-	$(GHDL1) --std=93 -quiet $(LIB_CFLAGS)  -o std_standard.s \
+	$(GHDL1) --std=93 -quiet $(LIB_CFLAGS)  -o std_standard_93.s \
 	 --compile-standard
-	$(CC) -c -o $@ std_standard.s
-	$(RM) std_standard.s
+	$(CC) -c -o $@ std_standard_93.s
+	$(RM) std_standard_93.s
 endif
 
 $(LIB87_DIR)/std/std_standard.o: $(GHDL1)
 ifeq ($(GHDL),ghdl_llvm)
 	$(GHDL1) --std=87 -quiet $(LIB_CFLAGS)  -c -o $@ --compile-standard
 else
-	$(GHDL1) --std=87 -quiet $(LIB_CFLAGS) -o std_standard.s \
+	$(GHDL1) --std=87 -quiet $(LIB_CFLAGS) -o std_standard_87.s \
 	 --compile-standard
-	$(CC) -c -o $@ std_standard.s
-	$(RM) std_standard.s
+	$(CC) -c -o $@ std_standard_87.s
+	$(RM) std_standard_87.s
 endif
 
 $(LIB08_DIR)/std/std_standard.o: $(GHDL1)
 ifeq ($(GHDL),ghdl_llvm)
 	$(GHDL1) --std=08 -quiet $(LIB_CFLAGS)  -c -o $@ --compile-standard
 else
-	$(GHDL1) --std=08 -quiet $(LIB_CFLAGS) -o std_standard.s \
+	$(GHDL1) --std=08 -quiet $(LIB_CFLAGS) -o std_standard_08.s \
 	 --compile-standard
-	$(CC) -c -o $@ std_standard.s
-	$(RM) std_standard.s
+	$(CC) -c -o $@ std_standard_08.s
+	$(RM) std_standard_08.s
 endif
 
 libs.vhdl.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
