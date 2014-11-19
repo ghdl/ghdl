@@ -290,12 +290,27 @@ package body Grt.Processes is
       Grt.Stack2.Release (Get_Stack2, Mark);
    end Ghdl_Stack2_Release;
 
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Action_List, Action_List_Acc);
+
+   --  List of unused action_list to be recycled.
+   Old_Action_List : Action_List_Acc;
+
+
    procedure Ghdl_Process_Wait_Add_Sensitivity (Sig : Ghdl_Signal_Ptr)
    is
       Proc : constant Process_Acc := Get_Current_Process;
       El : Action_List_Acc;
    begin
-      El := new Action_List'(Dynamic => True,
+      if Old_Action_List = null then
+         El := new Action_List (Dynamic => True);
+      else
+         El := Old_Action_List;
+         Old_Action_List := El.Next;
+         pragma Assert (El.Dynamic);
+      end if;
+
+      El.all := Action_List'(Dynamic => True,
                              Next => Sig.Event_List,
                              Proc => Proc,
                              Prev => null,
@@ -395,31 +410,45 @@ package body Grt.Processes is
       return Ghdl_Process_Wait_Has_Timeout;
    end Ghdl_Process_Wait_Suspend;
 
-   procedure Free is new Ada.Unchecked_Deallocation
-     (Action_List, Action_List_Acc);
-
    procedure Ghdl_Process_Wait_Close
    is
       Proc : constant Process_Acc := Get_Current_Process;
       El : Action_List_Acc;
       N_El : Action_List_Acc;
    begin
-      --  Remove the sensitivity.
+      --  Remove the action_list for sensitivity.
       El := Proc.Sensitivity;
       Proc.Sensitivity := null;
       while El /= null loop
-         pragma Assert (El.Proc = Get_Current_Process);
+         pragma Assert (El.Proc = Proc);
+         pragma Assert (El.Dynamic);
+
+         --  Remove EL from signal Event_List.
          if El.Prev = null then
+            --  First element of the list; set list head.
             El.Sig.Event_List := El.Next;
          else
+            --  Previous elements must be dynamic ones.
             pragma Assert (El.Prev.Dynamic);
             El.Prev.Next := El.Next;
          end if;
          if El.Next /= null and then El.Next.Dynamic then
+            --  No Prev link in non-dynamic element.
             El.Next.Prev := El.Prev;
          end if;
+
          N_El := El.Chain;
-         Free (El);
+
+         --  Free element...
+         if Boolean'(True) then
+            --  ... by moving it to the recycle list.
+            El.Next := Old_Action_List;
+            Old_Action_List := El;
+         else
+            --  ... by releasing memory.
+            Free (El);
+         end if;
+
          El := N_El;
       end loop;
 
