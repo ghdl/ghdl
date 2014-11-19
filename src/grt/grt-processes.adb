@@ -301,18 +301,25 @@ package body Grt.Processes is
                              Prev => null,
                              Sig => Sig,
                              Chain => Proc.Sensitivity);
+
+      --  Put EL on SIG event list.
       if Sig.Event_List /= null and then Sig.Event_List.Dynamic then
          Sig.Event_List.Prev := El;
       end if;
       Sig.Event_List := El;
+
+      --  Put EL on PROC sensitivity list.
       Proc.Sensitivity := El;
    end Ghdl_Process_Wait_Add_Sensitivity;
 
    procedure Update_Process_First_Timeout (Proc : Process_Acc) is
    begin
+      --  Update Process_First_Timeout
       if Proc.Timeout < Process_First_Timeout then
          Process_First_Timeout := Proc.Timeout;
       end if;
+
+      --  Append PROC on Process_Timeout_Chain.
       Proc.Timeout_Chain_Next := Process_Timeout_Chain;
       Proc.Timeout_Chain_Prev := null;
       if Process_Timeout_Chain /= null then

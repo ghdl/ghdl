@@ -113,10 +113,18 @@ package Grt.Signals is
 
       case Dynamic is
          when True =>
-            --  For a non-sensitized process.
-            --  Previous action (to speed-up remove from the chain).
+            --  For a non-sensitized process.  Action_List elements are put
+            --  in two lists: the Event_List of signals (so that the process
+            --  can be resumed in case of event on the signal), and the
+            --  Sensitivity list of the process (so that the chain can be
+            --  removed once the process is resumed).
+            --  Components Next and Prev are for the Event_List of signal Sig.
+            --  Component Chain is for the Sensitivity list of process Proc.
+
+            --  Previous action (to speed-up removing from the chain).
             Prev : Action_List_Acc;
 
+            --  Signal (to remove this record from the signal event list).
             Sig : Ghdl_Signal_Ptr;
 
             --  Chain of signals for the process.

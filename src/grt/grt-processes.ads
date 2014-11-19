@@ -108,8 +108,11 @@ package Grt.Processes is
    --  Resume a process.
    procedure Resume_Process (Proc : Process_Acc);
 
+   --  Incomplete wait statement:
+
    --  Wait without timeout or sensitivity: wait;
    procedure Ghdl_Process_Wait_Exit;
+
    --  Wait for a timeout (without sensitivity): wait for X;
    procedure Ghdl_Process_Wait_Timeout (Time : Std_Time);
 

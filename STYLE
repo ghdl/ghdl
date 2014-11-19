@@ -53,6 +53,10 @@ vs
    function Translate_Static_Range_Dir (Expr : Iir) return O_Cnode is
    begin
 
+* Generic instantiation: put the generic actual part on a new line:
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Action_List, Action_List_Acc);
+
 * For if/then statement:
 1) 'then' on the same line:
       if Get_Expr_Staticness (Decl) = Locally then
