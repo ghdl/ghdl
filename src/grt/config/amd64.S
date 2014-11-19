@@ -1,4 +1,4 @@
-/*  GRT stack implementation for amd64 (x86_64)
+/*  GRT stack implementation for amd64 (x86_64) -*- asm -*-
     Copyright (C) 2005 - 2014 Tristan Gingold.
 
     GHDL is free software; you can redistribute it and/or modify it under
@@ -40,11 +40,20 @@
 #endif
 	.text
 
-	/* Function called to loop on the process.  */
+	/* Function called to loop on the process.
+	   At entry  |  Frame          |  In body
+	   ----------+-----------------+---------
+	   %rsp      |  0 (ret addr)   |  %rbp+8
+	             |  saved %rbp     |  %rbp
+	*/
 ENTRY(grt_stack_loop)
-	mov	0(%rsp),%rdi
-	call	*8(%rsp)
-	jmp	NAME(grt_stack_loop)
+	/* Standard prologue.  */
+	pushq	%rbp
+	movq	%rsp,%rbp
+	/* Body.  */
+0:	mov	%r13,%rdi
+	call	%r12
+	jmp	0b
 END(grt_stack_loop)
 
 	/* function Stack_Create (Func : Address; Arg : Address)
@@ -68,30 +77,28 @@ ENTRY(grt_stack_create)
 	/* Note: %RAX contains the address of the stack_context.  This is
 	   also the top of the stack.  */
 
-	/* Prepare stack.  */
-	/* The function to be executed.  */
-	mov	-8(%rbp), %rdi
-	mov	%rdi, -8(%rax)
-	/* The argument.  */
-	mov	-16(%rbp), %rsi
-	mov	%rsi, -16(%rax)
-	/* The return function.  Must be 8 mod 16.  */
+	/* Prepare fake frame for stack_loop.  */
+	xorq	%rsi, %rsi
+	mov	%rsi,-8(%rax)	/* Null return address (must be 8 mod 16).  */
+	/* The return function.  */
 #if __APPLE__
-	movq	_grt_stack_loop@GOTPCREL(%rip), %rsi
-	movq	%rsi, -24(%rax)
+	movq	_grt_stack_loop@GOTPCREL(%rip), %rdi
+	movq	%rdi, -16(%rax)
 #else
-	movq	$grt_stack_loop, -24(%rax)
+	movq	$grt_stack_loop, -16(%rax)
 #endif
 	/* The context.  */
-	mov	%rbp, -32(%rax)
-	mov	%rbx, -40(%rax)
-	mov	%r12, -48(%rax)
-	mov	%r13, -56(%rax)
-	mov	%r14, -64(%rax)
-	mov	%r15, -72(%rax)
+	mov	%rsi, -24(%rax)	/* %rbp <- 0 (null frame) */
+	mov	%rbx, -32(%rax)
+	mov	-8(%rbp), %rdi
+	mov	%rdi, -40(%rax) /* %r12 <- function address.  */
+	mov	-16(%rbp), %rdi
+	mov	%rdi, -48(%rax) /* %r13 <- function argument.  */
+	mov	%r14, -56(%rax)
+	mov	%r15, -64(%rax)
 
 	/* Save the new stack pointer to the stack context.  */
-	lea	-72(%rax), %rsi
+	lea	-64(%rax), %rsi
 	mov	%rsi, (%rax)
 
 .Ldone:
