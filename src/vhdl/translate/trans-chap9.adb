@@ -513,10 +513,10 @@ package body Trans.Chap9 is
       pragma Assert (Integer (S_Num) = Info.Psl_Vect_Len - 1);
       Start_If_Stmt
         (S_Blk,
-         New_Value
-           (New_Indexed_Element (New_Obj (Var_Nvec),
-            New_Lit (New_Index_Lit
-              (Unsigned_64 (S_Num))))));
+         New_Value (New_Indexed_Element (New_Obj (Var_Nvec),
+                                         New_Lit (New_Index_Lit
+                                                    (Unsigned_64 (S_Num))))));
+      Open_Temp;
       case Get_Kind (Stmt) is
          when Iir_Kind_Psl_Assert_Statement =>
             Chap8.Translate_Report
@@ -529,6 +529,7 @@ package body Trans.Chap9 is
          when others =>
             Error_Kind ("Translate_Psl_Directive_Statement", Stmt);
       end case;
+      Close_Temp;
       Finish_If_Stmt (S_Blk);
 
       --  Assign state vector.
