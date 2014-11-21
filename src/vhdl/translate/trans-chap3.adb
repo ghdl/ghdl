@@ -858,10 +858,9 @@ package body Trans.Chap3 is
       Index            : Iir;
       Targ             : Mnode;
    begin
-      Targ := Lv2M (Target, True,
+      Targ := Lv2M (Target, null, Mode_Value, True,
                     Baseinfo.T.Bounds_Type,
-                    Baseinfo.T.Bounds_Ptr_Type,
-                    null, Mode_Value);
+                    Baseinfo.T.Bounds_Ptr_Type);
       Open_Temp;
       if Get_Nbr_Elements (Indexes_List) > 1 then
          Targ := Stabilize (Targ);
@@ -2606,12 +2605,11 @@ package body Trans.Chap3 is
          return Reindex_Complex_Array (Base, Atype, Index, T_Info);
       else
          return Lv2M (New_Slice (M2Lv (Base),
+                                 T_Info.T.Base_Type (Kind),
+                                 Index),
+                      T_Info, Kind, False,
                       T_Info.T.Base_Type (Kind),
-                      Index),
-                      False,
-                      T_Info.T.Base_Type (Kind),
-                      T_Info.T.Base_Ptr_Type (Kind),
-                      T_Info, Kind);
+                      T_Info.T.Base_Ptr_Type (Kind));
       end if;
    end Slice_Base;
 

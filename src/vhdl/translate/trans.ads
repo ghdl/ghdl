@@ -168,6 +168,21 @@ package Trans is
    type Allocation_Kind is
      (Alloc_Stack, Alloc_Return, Alloc_Heap, Alloc_System);
 
+   --  Return the value of field FIELD of lnode L that is contains
+   --   a pointer to a record.
+   --  This is equivalent to:
+   --  new_value (new_selected_element (new_access_element (new_value (l)),
+   --                                   field))
+   function New_Value_Selected_Acc_Value (L : O_Lnode; Field : O_Fnode)
+                                          return O_Enode;
+   function New_Selected_Acc_Value (L : O_Lnode; Field : O_Fnode)
+                                    return O_Lnode;
+
+   function New_Indexed_Acc_Value (L : O_Lnode; I : O_Enode) return O_Lnode;
+
+   --  Equivalent to new_access_element (new_value (l))
+   function New_Acc_Value (L : O_Lnode) return O_Lnode;
+
    package Chap10 is
       --  There are three data storage kind: global, local or instance.
       --  For example, a constant can have:
@@ -1359,128 +1374,6 @@ package Trans is
    subtype Design_File_Info_Acc is Ortho_Info_Acc (Kind_Design_File);
    subtype Library_Info_Acc is Ortho_Info_Acc (Kind_Library);
 
-   --  In order to simplify the handling of Enode/Lnode, let's introduce
-   --  Mnode (yes, another node).
-   --  An Mnode is a typed union, containing either an Lnode or a Enode.
-   --  See Mstate for a description of the union.
-   --  The real data is contained insisde a record, so that the discriminant
-   --  can be changed.
-   type Mnode;
-
-   --  State of an Mmode.
-   type Mstate is
-     (
-      --  The Mnode contains an Enode, which can be either a value or a
-      --  pointer.
-      --  This Mnode can be used only once.
-      Mstate_E,
-
-      --  The Mnode contains an Lnode representing a value.
-      --  This Lnode can be used only once.
-      Mstate_Lv,
-
-      --  The Mnode contains an Lnode representing a pointer.
-      --  This Lnode can be used only once.
-      Mstate_Lp,
-
-      --  The Mnode contains an Dnode for a variable representing a value.
-      --  This Dnode may be used several times.
-      Mstate_Dv,
-
-      --  The Mnode contains an Dnode for a variable representing a pointer.
-      --  This Dnode may be used several times.
-      Mstate_Dp,
-
-      --  Null Mnode.
-      Mstate_Null,
-
-      --  The Mnode is invalid (such as already used).
-      Mstate_Bad);
-
-   type Mnode1 (State : Mstate := Mstate_Bad) is record
-      --  True if the object is composite (its value cannot be read directly).
-      Comp : Boolean;
-
-      --  Additionnal informations about the objects: kind and type.
-      K : Object_Kind_Type;
-      T : Type_Info_Acc;
-
-      --  Ortho type of the object.
-      Vtype : O_Tnode;
-
-      --  Type for a pointer to the object.
-      Ptype : O_Tnode;
-
-      case State is
-         when Mstate_E =>
-            E  : O_Enode;
-         when Mstate_Lv =>
-            Lv : O_Lnode;
-         when Mstate_Lp =>
-            Lp : O_Lnode;
-         when Mstate_Dv =>
-            Dv : O_Dnode;
-         when Mstate_Dp =>
-            Dp : O_Dnode;
-         when Mstate_Bad
-            | Mstate_Null =>
-            null;
-      end case;
-   end record;
-   --pragma Pack (Mnode1);
-
-   type Mnode is record
-      M1 : Mnode1;
-   end record;
-
-   --  Null Mnode.
-   Mnode_Null : constant Mnode := Mnode'(M1 => (State => Mstate_Null,
-                                                Comp => False,
-                                                K => Mode_Value,
-                                                Ptype => O_Tnode_Null,
-                                                Vtype => O_Tnode_Null,
-                                                T => null));
-
-
-   --  Object kind of a Mnode
-   function Get_Object_Kind (M : Mnode) return Object_Kind_Type;
-
-   --  Transform VAR to Mnode.
-   function Get_Var
-     (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-      return Mnode;
-
-   --  Return a stabilized node for M.
-   --  The former M is not usuable anymore.
-   function Stabilize (M : Mnode; Can_Copy : Boolean := False) return Mnode;
-
-   --  Stabilize M.
-   procedure Stabilize (M : in out Mnode);
-
-   --  If M is not stable, create a variable containing the value of M.
-   --  M must be scalar (or access).
-   function Stabilize_Value (M : Mnode) return Mnode;
-
-   --  Create a temporary of type INFO and kind KIND.
-   function Create_Temp (Info : Type_Info_Acc;
-                         Kind : Object_Kind_Type := Mode_Value)
-                         return Mnode;
-
-   --  Return the value of field FIELD of lnode L that is contains
-   --   a pointer to a record.
-   --  This is equivalent to:
-   --  new_value (new_selected_element (new_access_element (new_value (l)),
-   --                                   field))
-   function New_Value_Selected_Acc_Value (L : O_Lnode; Field : O_Fnode)
-                                          return O_Enode;
-   function New_Selected_Acc_Value (L : O_Lnode; Field : O_Fnode)
-                                    return O_Lnode;
-
-   function New_Indexed_Acc_Value (L : O_Lnode; I : O_Enode) return O_Lnode;
-
-   --  Equivalent to new_access_element (new_value (l))
-   function New_Acc_Value (L : O_Lnode) return O_Lnode;
-
    procedure Init_Node_Infos;
    procedure Update_Node_Infos;
    procedure Free_Node_Infos;
@@ -1521,42 +1414,155 @@ package Trans is
    type Hexstr_Type is array (Integer range 0 .. 15) of Character;
    N2hex : constant Hexstr_Type := "0123456789abcdef";
 
+   --  In order to unify and have a common handling of Enode/Lnode/Dnode,
+   --  let's introduce Mnode (yes, another node).
+   --
+   --  Mnodes can be converted to Enode/Lnode via the M2xx functions.  If
+   --  an Mnode are referenced more than once, they must be stabilized (this
+   --  will create a new variable if needed as Enode and Lnode can be
+   --  referenced only once).
+   --
+   --  An Mnode is a typed union, containing either an Lnode or a Enode.
+   --  See Mstate for a description of the union.
+   --  The real data is contained insisde a record, so that the discriminant
+   --  can be changed.
+   type Mnode;
+
+   --  State of an Mmode.
+   type Mstate is
+     (
+      --  The Mnode contains an Enode, which can be either a value or a
+      --  pointer.
+      --  This Mnode can be used only once.
+      Mstate_E,
+
+      --  The Mnode contains an Lnode representing a value.
+      --  This Lnode can be used only once.
+      Mstate_Lv,
+
+      --  The Mnode contains an Lnode representing a pointer.
+      --  This Lnode can be used only once.
+      Mstate_Lp,
+
+      --  The Mnode contains an Dnode for a variable representing a value.
+      --  This Dnode may be used several times.
+      Mstate_Dv,
+
+      --  The Mnode contains an Dnode for a variable representing a pointer.
+      --  This Dnode may be used several times.
+      Mstate_Dp,
+
+      --  Null Mnode.
+      Mstate_Null,
+
+      --  The Mnode is invalid (such as already used).
+      Mstate_Bad);
+
+   type Mnode1 (State : Mstate := Mstate_Bad) is record
+      --  True if the object is composite (its value cannot be read directly).
+      Is_Composite : Boolean;
+
+      --  Additionnal informations about the objects: kind and type.
+      K : Object_Kind_Type;
+      T : Type_Info_Acc;
+
+      --  Ortho type of the object.
+      Vtype : O_Tnode;
+
+      --  Type for a pointer to the object.
+      Ptype : O_Tnode;
+
+      case State is
+         when Mstate_E =>
+            E  : O_Enode;
+         when Mstate_Lv =>
+            Lv : O_Lnode;
+         when Mstate_Lp =>
+            Lp : O_Lnode;
+         when Mstate_Dv =>
+            Dv : O_Dnode;
+         when Mstate_Dp =>
+            Dp : O_Dnode;
+         when Mstate_Bad
+            | Mstate_Null =>
+            null;
+      end case;
+   end record;
+   --pragma Pack (Mnode1);
+
+   type Mnode is record
+      M1 : Mnode1;
+   end record;
+
+   --  Null Mnode.
+   Mnode_Null : constant Mnode := Mnode'(M1 => (State => Mstate_Null,
+                                                Is_Composite => False,
+                                                K => Mode_Value,
+                                                Ptype => O_Tnode_Null,
+                                                Vtype => O_Tnode_Null,
+                                                T => null));
+
+
+   --  Object kind of a Mnode
+   function Get_Object_Kind (M : Mnode) return Object_Kind_Type;
+
+   --  Transform VAR to Mnode.
+   function Get_Var
+     (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
+      return Mnode;
+
+   --  Return a stabilized node for M.
+   --  The former M is not usuable anymore.
+   function Stabilize (M : Mnode; Can_Copy : Boolean := False) return Mnode;
+
+   --  Stabilize M.
+   procedure Stabilize (M : in out Mnode);
+
+   --  If M is not stable, create a variable containing the value of M.
+   --  M must be scalar (or access).
+   function Stabilize_Value (M : Mnode) return Mnode;
+
+   --  Create a temporary of type INFO and kind KIND.
+   function Create_Temp (Info : Type_Info_Acc;
+                         Kind : Object_Kind_Type := Mode_Value)
+                         return Mnode;
+
    function Get_Type_Info (M : Mnode) return Type_Info_Acc;
    pragma Inline (Get_Type_Info);
 
    function E2M (E : O_Enode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-                 return Mnode;
+                return Mnode;
 
    function Lv2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-                  return Mnode;
+                 return Mnode;
+
    function Lv2M (L     : O_Lnode;
+                  T     : Type_Info_Acc;
+                  Kind  : Object_Kind_Type;
                   Comp  : Boolean;
                   Vtype : O_Tnode;
-                  Ptype : O_Tnode;
-                  T     : Type_Info_Acc; Kind : Object_Kind_Type)
-                  return Mnode;
+                  Ptype : O_Tnode)
+                 return Mnode;
 
    function Lv2M (L     : O_Lnode;
                   T     : Type_Info_Acc;
                   Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
-                  return Mnode;
+                 return Mnode;
 
    function Lp2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-                  return Mnode;
+                 return Mnode;
 
    function Lp2M (L     : O_Lnode;
                   T     : Type_Info_Acc;
                   Kind  : Object_Kind_Type;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
-                  return Mnode;
+                 return Mnode;
 
-   function Dv2M (D    : O_Dnode;
-                  T    : Type_Info_Acc;
-                  Kind : Object_Kind_Type)
-                  return Mnode;
+   function Dv2M (D : O_Dnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
+                 return Mnode;
 
    function Dv2M (D     : O_Dnode;
                   T     : Type_Info_Acc;
@@ -1572,10 +1578,8 @@ package Trans is
                   Ptype : O_Tnode)
                   return Mnode;
 
-   function Dp2M (D    : O_Dnode;
-                  T    : Type_Info_Acc;
-                  Kind : Object_Kind_Type)
-                  return Mnode;
+   function Dp2M (D : O_Dnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
+                 return Mnode;
 
    function M2Lv (M : Mnode) return O_Lnode;
 
@@ -1630,8 +1634,20 @@ package Trans is
       --  Generate code to exit from loop LABEL iff COND is true.
       procedure Gen_Exit_When (Label : O_Snode; Cond : O_Enode);
 
-      --  Create a region for temporary variables.
+      --  Create a region for temporary variables.  The region is only created
+      --  on demand (at the first Create_Temp*), so you must be careful not
+      --  to nest with control statement.  For example, the following
+      --  sequence is not correct:
+      --    Open_Temp
+      --    Start_If_Stmt
+      --    ... Create_Temp ...
+      --    Finish_If_Stmt
+      --    Close_Temp
+      --  Because the first Create_Temp is within the if statement, the
+      --  declare block will be created within the if statement, and must
+      --  have been closed before the end of the if statement.
       procedure Open_Temp;
+
       --  Create a temporary variable.
       function Create_Temp (Atype : O_Tnode) return O_Dnode;
       --  Create a temporary variable of ATYPE and initialize it with VALUE.
@@ -1648,6 +1664,7 @@ package Trans is
       --  Add ATYPE in the chain of types to be destroyed at the end of the
       --  temp scope.
       procedure Add_Transient_Type_In_Temp (Atype : Iir);
+
       --  Close the temporary region.
       procedure Close_Temp;
 
