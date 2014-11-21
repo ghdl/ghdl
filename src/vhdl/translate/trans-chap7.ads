@@ -149,7 +149,6 @@ private
       Arr_Eq_Info     : Subprg_Info_Acc;
       Rec_Eq_Info     : Subprg_Info_Acc;
       Arr_Cmp_Info    : Subprg_Info_Acc;
-      Arr_Concat_Info : Subprg_Info_Acc;
       Arr_Shl_Info    : Subprg_Info_Acc;
       Arr_Sha_Info    : Subprg_Info_Acc;
       Arr_Rot_Info    : Subprg_Info_Acc;
