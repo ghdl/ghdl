@@ -136,11 +136,9 @@ package body Trans.Chap3 is
       Finish_Subprogram_Decl (Interface_List, Info.C (Kind).Builder_Func);
    end Create_Builder_Subprogram_Decl;
 
-   function Gen_Call_Type_Builder (Var_Ptr  : O_Dnode;
-                                   Var_Type : Iir;
-                                   Kind     : Object_Kind_Type)
-                                   return O_Enode
+   function Gen_Call_Type_Builder (Var : Mnode; Var_Type : Iir) return O_Enode
    is
+      Kind  : constant Object_Kind_Type := Get_Object_Kind (Var);
       Tinfo : constant Type_Info_Acc := Get_Info (Var_Type);
       Binfo : constant Type_Info_Acc := Get_Info (Get_Base_Type (Var_Type));
       Assoc : O_Assoc_List;
@@ -153,30 +151,17 @@ package body Trans.Chap3 is
       case Tinfo.Type_Mode is
          when Type_Mode_Record
             | Type_Mode_Array =>
-            New_Association (Assoc, New_Obj_Value (Var_Ptr));
+            New_Association (Assoc, M2Addr (Var));
          when Type_Mode_Fat_Array =>
             --  Note: a fat array can only be at the top of a complex type;
             --  the bounds must have been set.
-            New_Association
-              (Assoc, New_Value_Selected_Acc_Value
-                 (New_Obj (Var_Ptr), Tinfo.T.Base_Field (Kind)));
+            New_Association (Assoc, M2Addr (Chap3.Get_Array_Base (Var)));
          when others =>
             raise Internal_Error;
       end case;
 
       if Tinfo.Type_Mode in Type_Mode_Arrays then
-         declare
-            Arr : Mnode;
-         begin
-            case Type_Mode_Arrays (Tinfo.Type_Mode) is
-               when Type_Mode_Array =>
-                  Arr := T2M (Var_Type, Kind);
-               when Type_Mode_Fat_Array =>
-                  Arr := Dp2M (Var_Ptr, Tinfo, Kind);
-            end case;
-            New_Association
-              (Assoc, M2Addr (Chap3.Get_Array_Bounds (Arr)));
-         end;
+         New_Association (Assoc, M2Addr (Chap3.Get_Array_Bounds (Var)));
       end if;
 
       return New_Function_Call (Assoc);
@@ -190,9 +175,7 @@ package body Trans.Chap3 is
       Open_Temp;
       V := Stabilize (Var);
       Mem := Create_Temp (Ghdl_Index_Type);
-      New_Assign_Stmt
-        (New_Obj (Mem),
-         Gen_Call_Type_Builder (M2Dp (V), Var_Type, Get_Object_Kind (Var)));
+      New_Assign_Stmt (New_Obj (Mem), Gen_Call_Type_Builder (V, Var_Type));
       Close_Temp;
    end Gen_Call_Type_Builder;
 
@@ -858,9 +841,8 @@ package body Trans.Chap3 is
       Index            : Iir;
       Targ             : Mnode;
    begin
-      Targ := Lv2M (Target, null, Mode_Value, True,
-                    Baseinfo.T.Bounds_Type,
-                    Baseinfo.T.Bounds_Ptr_Type);
+      Targ := Lv2M (Target, null, Mode_Value,
+                    Baseinfo.T.Bounds_Type, Baseinfo.T.Bounds_Ptr_Type);
       Open_Temp;
       if Get_Nbr_Elements (Indexes_List) > 1 then
          Targ := Stabilize (Targ);
@@ -907,8 +889,7 @@ package body Trans.Chap3 is
    end Get_Array_Bounds_Staticness;
 
    --  Create a variable containing the bounds for array subtype DEF.
-   procedure Create_Array_Subtype_Bounds_Var
-     (Def : Iir; Elab_Now : Boolean)
+   procedure Create_Array_Subtype_Bounds_Var (Def : Iir; Elab_Now : Boolean)
    is
       Info      : constant Type_Info_Acc := Get_Info (Def);
       Base_Info : Type_Info_Acc;
@@ -992,27 +973,26 @@ package body Trans.Chap3 is
       --  Set each index of the array.
       Init_Var (Var_Off);
       Start_Loop_Stmt (Label);
-      Gen_Exit_When (Label,
-                     New_Compare_Op (ON_Eq,
-                       New_Obj_Value (Var_Off),
-                       New_Obj_Value (Var_Length),
-                       Ghdl_Bool_Type));
+      Gen_Exit_When (Label, New_Compare_Op (ON_Eq,
+                                            New_Obj_Value (Var_Off),
+                                            New_Obj_Value (Var_Length),
+                                            Ghdl_Bool_Type));
 
       New_Assign_Stmt
         (New_Obj (Var_Mem),
          New_Unchecked_Address
            (New_Slice (New_Access_Element
-            (New_Convert_Ov (New_Obj_Value (Base),
-                 Char_Ptr_Type)),
-            Chararray_Type,
-            New_Obj_Value (Var_Off)),
+                         (New_Convert_Ov (New_Obj_Value (Base),
+                                          Char_Ptr_Type)),
+                       Chararray_Type,
+                       New_Obj_Value (Var_Off)),
             Info.T.Base_Ptr_Type (Kind)));
 
       New_Assign_Stmt
         (New_Obj (Var_Off),
          New_Dyadic_Op (ON_Add_Ov,
            New_Obj_Value (Var_Off),
-           Gen_Call_Type_Builder (Var_Mem, El_Type, Kind)));
+           Gen_Call_Type_Builder (Dp2M (Var_Mem, El_Info, Kind), El_Type)));
       Finish_Loop_Stmt (Label);
 
       New_Return_Stmt (New_Obj_Value (Var_Off));
@@ -1175,8 +1155,7 @@ package body Trans.Chap3 is
       --  OFF = SIZEOF (record).
       New_Assign_Stmt
         (New_Obj (Off_Var),
-         New_Lit (New_Sizeof (Info.Ortho_Type (Kind),
-           Ghdl_Index_Type)));
+         New_Lit (New_Sizeof (Info.Ortho_Type (Kind), Ghdl_Index_Type)));
 
       --  Set memory for each complex element.
       List := Get_Elements_Declaration_List (Def);
@@ -1219,9 +1198,9 @@ package body Trans.Chap3 is
                New_Assign_Stmt
                  (New_Obj (Off_Var),
                   New_Dyadic_Op (ON_Add_Ov,
-                    New_Obj_Value (Off_Var),
-                    Gen_Call_Type_Builder
-                      (Ptr_Var, El_Type, Kind)));
+                                 New_Obj_Value (Off_Var),
+                                 Gen_Call_Type_Builder
+                                   (Dp2M (Ptr_Var, El_Tinfo, Kind), El_Type)));
 
                Finish_Declare_Stmt;
             else
@@ -1243,6 +1222,7 @@ package body Trans.Chap3 is
    --------------
    --  Access  --
    --------------
+
    procedure Translate_Access_Type (Def : Iir_Access_Type_Definition)
    is
       D_Type   : constant Iir := Get_Designated_Type (Def);
@@ -2362,11 +2342,9 @@ package body Trans.Chap3 is
         Get_Info (Get_Base_Type (Index_Type));
    begin
       return Lv2M (New_Selected_Element (M2Lv (B),
-                   Base_Index_Info.Index_Field),
-                   Iinfo,
-                   Get_Object_Kind (B),
-                   Iinfo.T.Range_Type,
-                   Iinfo.T.Range_Ptr_Type);
+                                         Base_Index_Info.Index_Field),
+                   Iinfo, Mode_Value,
+                   Iinfo.T.Range_Type, Iinfo.T.Range_Ptr_Type);
    end Bounds_To_Range;
 
    function Type_To_Range (Atype : Iir) return Mnode
@@ -2607,7 +2585,7 @@ package body Trans.Chap3 is
          return Lv2M (New_Slice (M2Lv (Base),
                                  T_Info.T.Base_Type (Kind),
                                  Index),
-                      T_Info, Kind, False,
+                      T_Info, Kind,
                       T_Info.T.Base_Type (Kind),
                       T_Info.T.Base_Ptr_Type (Kind));
       end if;
@@ -2766,11 +2744,10 @@ package body Trans.Chap3 is
       else
          New_Assign_Stmt
            (M2Lp (Res),
-            Gen_Alloc
-              (Alloc_Kind,
-               Chap3.Get_Object_Size (T2M (Obj_Type, Kind),
-                 Obj_Type),
-               Dinfo.Ortho_Ptr_Type (Kind)));
+            Gen_Alloc (Alloc_Kind,
+                       Chap3.Get_Object_Size (T2M (Obj_Type, Kind),
+                                              Obj_Type),
+                       Dinfo.Ortho_Ptr_Type (Kind)));
 
          if Is_Complex_Type (Dinfo)
            and then Dinfo.C (Kind).Builder_Need_Func

@@ -1459,9 +1459,6 @@ package Trans is
       Mstate_Bad);
 
    type Mnode1 (State : Mstate := Mstate_Bad) is record
-      --  True if the object is composite (its value cannot be read directly).
-      Is_Composite : Boolean;
-
       --  Additionnal informations about the objects: kind and type.
       K : Object_Kind_Type;
       T : Type_Info_Acc;
@@ -1496,7 +1493,6 @@ package Trans is
 
    --  Null Mnode.
    Mnode_Null : constant Mnode := Mnode'(M1 => (State => Mstate_Null,
-                                                Is_Composite => False,
                                                 K => Mode_Value,
                                                 Ptype => O_Tnode_Null,
                                                 Vtype => O_Tnode_Null,
@@ -1530,30 +1526,24 @@ package Trans is
    function Get_Type_Info (M : Mnode) return Type_Info_Acc;
    pragma Inline (Get_Type_Info);
 
+   --  Creation of Mnodes.
+
    function E2M (E : O_Enode; T : Type_Info_Acc; Kind : Object_Kind_Type)
                 return Mnode;
 
+   --  From a Lnode, general form (can be used for ranges, bounds, base...)
+   function Lv2M (L     : O_Lnode;
+                  T     : Type_Info_Acc;
+                  Kind  : Object_Kind_Type;
+                  Vtype : O_Tnode;
+                  Ptype : O_Tnode)
+                 return Mnode;
+
+   --  From a Lnode, only for values.
    function Lv2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
                  return Mnode;
 
-   function Lv2M (L     : O_Lnode;
-                  T     : Type_Info_Acc;
-                  Kind  : Object_Kind_Type;
-                  Comp  : Boolean;
-                  Vtype : O_Tnode;
-                  Ptype : O_Tnode)
-                 return Mnode;
-
-   function Lv2M (L     : O_Lnode;
-                  T     : Type_Info_Acc;
-                  Kind  : Object_Kind_Type;
-                  Vtype : O_Tnode;
-                  Ptype : O_Tnode)
-                 return Mnode;
-
-   function Lp2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
-                 return Mnode;
-
+   --  From a Lnode that designates a pointer, general form.
    function Lp2M (L     : O_Lnode;
                   T     : Type_Info_Acc;
                   Kind  : Object_Kind_Type;
@@ -1561,9 +1551,11 @@ package Trans is
                   Ptype : O_Tnode)
                  return Mnode;
 
-   function Dv2M (D : O_Dnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
+   --  From a Lnode that designates a pointer to a value.
+   function Lp2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
                  return Mnode;
 
+   --  From a variable declaration, general form.
    function Dv2M (D     : O_Dnode;
                   T     : Type_Info_Acc;
                   Kind  : Object_Kind_Type;
@@ -1571,6 +1563,11 @@ package Trans is
                   Ptype : O_Tnode)
                   return Mnode;
 
+   --  From a variable for a value.
+   function Dv2M (D : O_Dnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
+                 return Mnode;
+
+   --  From a pointer variable, general form.
    function Dp2M (D     : O_Dnode;
                   T     : Type_Info_Acc;
                   Kind  : Object_Kind_Type;
@@ -1578,6 +1575,7 @@ package Trans is
                   Ptype : O_Tnode)
                   return Mnode;
 
+   --  From a pointer to a value variable.
    function Dp2M (D : O_Dnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
                  return Mnode;
 
@@ -1601,13 +1599,6 @@ package Trans is
    --    end Is_Null;
 
    function Is_Stable (M : Mnode) return Boolean;
-
-   --    function Varv2M
-   --      (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-   --      return Mnode is
-   --    begin
-   --       return Lv2M (Get_Var (Var), Vtype, Mode);
-   --    end Varv2M;
 
    function Varv2M (Var      : Var_Type;
                     Var_Type : Type_Info_Acc;

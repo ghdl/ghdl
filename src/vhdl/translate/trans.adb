@@ -1083,25 +1083,22 @@ package body Trans is
    begin
       case M.M1.State is
          when Mstate_E =>
-            if M.M1.Is_Composite then
+            if Is_Composite (M.M1.T) then
                --  Create a pointer variable.
                D := Create_Temp_Init (M.M1.Ptype, M.M1.E);
                return Mnode'(M1 => (State => Mstate_Dp,
-                                    Is_Composite => True,
                                     K => K, T => M.M1.T, Dp => D,
                                     Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
             else
                --  Create a scalar variable.
                D := Create_Temp_Init (M.M1.Vtype, M.M1.E);
                return Mnode'(M1 => (State => Mstate_Dv,
-                                    Is_Composite => False,
                                     K => K, T => M.M1.T, Dv => D,
                                     Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
             end if;
          when Mstate_Lp =>
             D := Create_Temp_Init (M.M1.Ptype, New_Value (M.M1.Lp));
             return Mnode'(M1 => (State => Mstate_Dp,
-                                 Is_Composite => M.M1.Is_Composite,
                                  K => K, T => M.M1.T, Dp => D,
                                  Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
          when Mstate_Lv =>
@@ -1111,14 +1108,12 @@ package body Trans is
                end if;
                D := Create_Temp_Init (M.M1.Vtype, New_Value (M.M1.Lv));
                return Mnode'(M1 => (State => Mstate_Dv,
-                                    Is_Composite => M.M1.Is_Composite,
                                     K => K, T => M.M1.T, Dv => D,
                                     Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
 
             else
                D := Create_Temp_Ptr (M.M1.Ptype, M.M1.Lv);
                return Mnode'(M1 => (State => Mstate_Dp,
-                                    Is_Composite => M.M1.Is_Composite,
                                     K => K, T => M.M1.T, Dp => D,
                                     Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
             end if;
@@ -1142,9 +1137,7 @@ package body Trans is
       E : O_Enode;
    begin
       --  M must be scalar or access.
-      if M.M1.Is_Composite then
-         raise Internal_Error;
-      end if;
+      pragma Assert (not Is_Composite (M.M1.T));
       case M.M1.State is
          when Mstate_E =>
             E := M.M1.E;
@@ -1162,7 +1155,6 @@ package body Trans is
 
       D := Create_Temp_Init (M.M1.Vtype, E);
       return Mnode'(M1 => (State => Mstate_Dv,
-                           Is_Composite => M.M1.Is_Composite,
                            K => M.M1.K, T => M.M1.T, Dv => D,
                            Vtype => M.M1.Vtype, Ptype => M.M1.Ptype));
    end Stabilize_Value;
@@ -1378,7 +1370,6 @@ package body Trans is
                  return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_E,
-                           Is_Composite => T.Type_Mode in Type_Mode_Fat,
                            K => Kind, T => T, E => E,
                            Vtype => T.Ortho_Type (Kind),
                            Ptype => T.Ortho_Ptr_Type (Kind)));
@@ -1388,7 +1379,6 @@ package body Trans is
                   return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Lv,
-                           Is_Composite => T.Type_Mode in Type_Mode_Fat,
                            K => Kind, T => T, Lv => L,
                            Vtype => T.Ortho_Type (Kind),
                            Ptype => T.Ortho_Ptr_Type (Kind)));
@@ -1397,13 +1387,11 @@ package body Trans is
    function Lv2M (L     : O_Lnode;
                   T     : Type_Info_Acc;
                   Kind  : Object_Kind_Type;
-                  Comp  : Boolean;
                   Vtype : O_Tnode;
                   Ptype : O_Tnode)
                   return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Lv,
-                           Is_Composite => Comp,
                            K => Kind, T => T, Lv => L,
                            Vtype => Vtype, Ptype => Ptype));
    end Lv2M;
@@ -1412,7 +1400,6 @@ package body Trans is
                   return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Lp,
-                           Is_Composite => T.Type_Mode in Type_Mode_Fat,
                            K => Kind, T => T, Lp => L,
                            Vtype => T.Ortho_Type (Kind),
                            Ptype => T.Ortho_Ptr_Type (Kind)));
@@ -1426,23 +1413,9 @@ package body Trans is
                   return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Lp,
-                           Is_Composite => T.Type_Mode in Type_Mode_Fat,
                            K => Kind, T => T, Lp => L,
                            Vtype => Vtype, Ptype => Ptype));
    end Lp2M;
-
-   function Lv2M (L     : O_Lnode;
-                  T     : Type_Info_Acc;
-                  Kind  : Object_Kind_Type;
-                  Vtype : O_Tnode;
-                  Ptype : O_Tnode)
-                  return Mnode is
-   begin
-      return Mnode'(M1 => (State => Mstate_Lv,
-                           Is_Composite => T.Type_Mode in Type_Mode_Fat,
-                           K => Kind, T => T, Lv => L,
-                           Vtype => Vtype, Ptype => Ptype));
-   end Lv2M;
 
    function Dv2M (D    : O_Dnode;
                   T    : Type_Info_Acc;
@@ -1450,7 +1423,6 @@ package body Trans is
                   return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Dv,
-                           Is_Composite => T.Type_Mode in Type_Mode_Fat,
                            K => Kind, T => T, Dv => D,
                            Vtype => T.Ortho_Type (Kind),
                            Ptype => T.Ortho_Ptr_Type (Kind)));
@@ -1464,7 +1436,6 @@ package body Trans is
                   return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Dv,
-                           Is_Composite => T.Type_Mode in Type_Mode_Fat,
                            K => Kind, T => T, Dv => D,
                            Vtype => Vtype,
                            Ptype => Ptype));
@@ -1478,7 +1449,6 @@ package body Trans is
                   return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Dp,
-                           Is_Composite => T.Type_Mode in Type_Mode_Fat,
                            K => Kind, T => T, Dp => D,
                            Vtype => Vtype, Ptype => Ptype));
    end Dp2M;
@@ -1489,7 +1459,6 @@ package body Trans is
                   return Mnode is
    begin
       return Mnode'(M1 => (State => Mstate_Dp,
-                           Is_Composite => T.Type_Mode in Type_Mode_Fat,
                            K => Kind, T => T, Dp => D,
                            Vtype => T.Ortho_Type (Kind),
                            Ptype => T.Ortho_Ptr_Type (Kind)));
@@ -1578,7 +1547,6 @@ package body Trans is
    begin
       T := Get_Info (Atype);
       return Mnode'(M1 => (State => Mstate_Null,
-                           Is_Composite => T.Type_Mode in Type_Mode_Fat,
                            K => Kind, T => T,
                            Vtype => T.Ortho_Type (Kind),
                            Ptype => T.Ortho_Ptr_Type (Kind)));
@@ -1643,11 +1611,10 @@ package body Trans is
          when Mstate_Dv =>
             return New_Address (New_Obj (M.M1.Dv), M.M1.Ptype);
          when Mstate_E =>
-            if M.M1.Is_Composite then
-               return M.M1.E;
-            else
-               raise Internal_Error;
-            end if;
+            --  For scalar, M contains the value so there is no lvalue from
+            --  which the address can be taken.
+            pragma Assert (Is_Composite (M.M1.T));
+            return M.M1.E;
          when Mstate_Bad
             | Mstate_Null =>
             raise Internal_Error;

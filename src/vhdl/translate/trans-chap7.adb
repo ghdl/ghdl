@@ -4294,8 +4294,7 @@ package body Trans.Chap7 is
    begin
       Open_Temp;
       Arange1 := Stabilize (Lv2M (Arange, Rinfo, Mode_Value,
-                                  Rinfo.T.Range_Type,
-                                  Rinfo.T.Range_Ptr_Type));
+                                  Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type));
       Res1 := Stabilize (Res);
       New_Assign_Stmt (M2Lv (Chap3.Range_To_Left (Res1)),
                        M2E (Chap3.Range_To_Right (Arange1)));
