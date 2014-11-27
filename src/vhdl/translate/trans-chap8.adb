@@ -999,7 +999,7 @@ package body Trans.Chap8 is
          New_Assign_Stmt
            (New_Obj (Var_Hi),
             New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-              Unsigned_64 (Nbr_Choices))));
+                                           Unsigned_64 (Nbr_Choices - 1))));
 
          Func := Chap7.Find_Predefined_Function
            (Get_Base_Type (Expr_Type), Iir_Predefined_Array_Greater);
