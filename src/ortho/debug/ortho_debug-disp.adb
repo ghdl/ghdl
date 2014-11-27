@@ -34,6 +34,8 @@ package body Ortho_Debug.Disp is
 
       procedure Put (Str : String);
 
+      procedure Put_Keyword (Str : String);
+
       procedure Put_Line (Str : String);
 
       --  Add a tabulation.
@@ -171,6 +173,21 @@ package body Ortho_Debug.Disp is
          Ctx.Line_Len := Ctx.Line_Len + Str'Length;
       end Put;
 
+      procedure Put_Keyword (Str : String)
+      is
+         Kw : String (Str'Range);
+      begin
+         --  Convert to uppercase
+         for I in Str'Range loop
+            pragma Assert (Str (I) in 'a' .. 'z');
+            Kw (I) := Character'Val
+              (Character'Pos ('A')
+                 + Character'Pos (Str (I)) - Character'Pos ('a'));
+         end loop;
+
+         Put (Kw);
+      end Put_Keyword;
+
       procedure Put_Trim (Str : String) is
       begin
          for I in Str'Range loop
@@ -268,7 +285,8 @@ package body Ortho_Debug.Disp is
 
    procedure Disp_Loop_Name (Stmt : O_Snode) is
    begin
-      Put ("loop" & Natural'Image (Stmt.Loop_Level));
+      Put_Keyword ("loop");
+      Put (Natural'Image (Stmt.Loop_Level));
    end Disp_Loop_Name;
 
    function Get_Enode_Name (Kind : OE_Kind) return String
@@ -322,10 +340,6 @@ package body Ortho_Debug.Disp is
             return "or";
          when OE_Xor =>
             return "xor";
-         when OE_And_Then =>
-            return "and_then";
-         when OE_Or_Else =>
-            return "or_else";
 
          when OE_Not =>
             return "not";
@@ -462,7 +476,10 @@ package body Ortho_Debug.Disp is
             Disp_Lit (C.Ctype, False, Get_String (C.B_Id));
          when OC_Null_Lit =>
             --  Always disp the type of null literals.
-            Disp_Lit (C.Ctype, False, "null");
+            Disp_Tnode_Name (C.Ctype);
+            Put ("'[");
+            Put_Keyword ("null");
+            Put (']');
          when OC_Enum_Lit =>
             --  Always disp the type of enum literals.
             Disp_Lit (C.Ctype, False, Get_String (C.E_Name));
@@ -559,7 +576,22 @@ package body Ortho_Debug.Disp is
             Put ("(");
             Disp_Enode (E.Left, O_Tnode_Null);
             Put (' ');
-            Disp_Enode_Name (E.Kind);
+            case E.Kind is
+               when OE_Rem_Ov =>
+                  Put_Keyword ("rem");
+                  Put ('#');
+               when OE_Mod_Ov =>
+                  Put_Keyword ("mod");
+                  Put ('#');
+               when OE_And =>
+                  Put_Keyword ("and");
+               when OE_Or =>
+                  Put_Keyword ("or");
+               when OE_Xor =>
+                  Put_Keyword ("xor");
+               when others =>
+                  Disp_Enode_Name (E.Kind);
+            end case;
             Put (' ');
             Disp_Enode (E.Right, E.Left.Rtype);
             Put (')');
@@ -573,7 +605,14 @@ package body Ortho_Debug.Disp is
             Disp_Enode (E.Right, E.Left.Rtype);
             Put (')');
          when OE_Monadic_Expr_Kind =>
-            Disp_Enode_Name (E.Kind);
+            case E.Kind is
+               when OE_Not =>
+                  Put_Keyword ("not");
+               when OE_Abs_Ov =>
+                  Put_Keyword ("abs");
+               when others =>
+                  Disp_Enode_Name (E.Kind);
+            end case;
             if E.Kind /= OE_Neg_Ov then
                Put (' ');
             end if;
@@ -616,7 +655,8 @@ package body Ortho_Debug.Disp is
             Disp_Dnode_Name (Node.Obj);
          when OL_Access_Element =>
             Disp_Enode (Node.Acc_Base, O_Tnode_Null);
-            Put (".all");
+            Put (".");
+            Put_Keyword ("all");
          when OL_Indexed_Element =>
             Disp_Lnode (Node.Array_Base);
             Put ('[');
@@ -662,26 +702,30 @@ package body Ortho_Debug.Disp is
       end if;
       case Atype.Kind is
          when ON_Boolean_Type =>
-            Put ("boolean {");
+            Put_Keyword ("boolean");
+            Put (" {");
             Disp_Ident (Atype.False_N.B_Id);
             Put (", ");
             Disp_Ident (Atype.True_N.B_Id);
             Put ("}");
          when ON_Unsigned_Type =>
-            Put ("unsigned (");
+            Put_Keyword ("unsigned");
+            Put (" (");
             Put_Trim (Natural'Image (Atype.Int_Size));
             Put (")");
          when ON_Signed_Type =>
-            Put ("signed (");
+            Put_Keyword ("signed");
+            Put (" (");
             Put_Trim (Natural'Image (Atype.Int_Size));
             Put (")");
          when ON_Float_Type =>
-            Put ("float");
+            Put_Keyword ("float");
          when ON_Enum_Type =>
             declare
                El : O_Cnode;
             begin
-               Put ("enum {");
+               Put_Keyword ("enum");
+               Put (" {");
                El := Atype.Literals;
                while El /= O_Cnode_Null loop
                   Set_Mark;
@@ -695,25 +739,36 @@ package body Ortho_Debug.Disp is
                Put ("}");
             end;
          when ON_Array_Type =>
-            Put ("array [");
+            Put_Keyword ("array");
+            Put (" [");
             Disp_Tnode (Atype.Index_Type, False);
-            Put ("] of ");
+            Put ("] ");
+            Put_Keyword ("of");
+            Put (" ");
             Disp_Tnode (Atype.El_Type, False);
          when ON_Access_Type =>
-            Put ("access ");
+            Put_Keyword ("access");
+            Put (" ");
             if Atype.D_Type /= O_Tnode_Null then
                Disp_Tnode (Atype.D_Type, False);
             end if;
          when ON_Record_Type =>
-            Put_Line ("record ");
+            Put_Keyword ("record");
+            Put_Line (" ");
             Disp_Fnodes (Atype.Elements);
-            Put ("end record");
+            Put_Keyword ("end");
+            Put (" ");
+            Put_Keyword ("record");
          when ON_Union_Type =>
-            Put_Line ("union ");
+            Put_Keyword ("union");
+            New_Line;
             Disp_Fnodes (Atype.Elements);
-            Put ("end union");
+            Put_Keyword ("end");
+            Put (" ");
+            Put_Keyword ("union");
          when ON_Array_Sub_Type =>
-            Put ("subarray ");
+            Put_Keyword ("subarray");
+            Put (" ");
             Disp_Tnode_Name (Atype.Base_Type);
             Put ("[");
             Disp_Cnode (Atype.Length, Atype.Base_Type.Index_Type);
@@ -725,13 +780,13 @@ package body Ortho_Debug.Disp is
    begin
       case Storage is
          when O_Storage_External =>
-            Put ("external");
+            Put_Keyword ("external");
          when O_Storage_Public =>
-            Put ("public");
+            Put_Keyword ("public");
          when O_Storage_Private =>
-            Put ("private");
+            Put_Keyword ("private");
          when O_Storage_Local =>
-            Put ("local");
+            Put_Keyword ("local");
       end case;
    end Disp_Storage_Name;
 
@@ -756,10 +811,11 @@ package body Ortho_Debug.Disp is
       Disp_Storage_Name (Decl.Storage);
       Put (" ");
       if Decl.Dtype = null then
-         Put ("procedure ");
+         Put_Keyword ("procedure");
       else
-         Put ("function ");
+         Put_Keyword ("function");
       end if;
+      Put (" ");
       Disp_Ident (Decl.Name);
       Put_Line (" (");
       Add_Tab;
@@ -779,7 +835,8 @@ package body Ortho_Debug.Disp is
       end;
       if Decl.Dtype /= null then
          New_Line;
-         Put ("return ");
+         Put_Keyword ("return");
+         Put (" ");
          Disp_Tnode (Decl.Dtype, False);
       end if;
       Rem_Tab;
@@ -789,38 +846,46 @@ package body Ortho_Debug.Disp is
    begin
       case Decl.Kind is
          when ON_Type_Decl =>
-            Put ("type ");
+            Put_Keyword ("type");
+            Put (" ");
             Disp_Ident (Decl.Name);
-            Put (" is ");
+            Put (" ");
+            Put_Keyword ("is");
+            Put (" ");
             if not Decl.Dtype.Uncomplete then
                Disp_Tnode (Decl.Dtype, True);
             else
                case Decl.Dtype.Kind is
                   when ON_Record_Type =>
-                     Put ("record");
+                     Put_Keyword ("record");
                   when ON_Access_Type =>
-                     Put ("access");
+                     Put_Keyword ("access");
                   when others =>
                      raise Program_Error;
                end case;
             end if;
             Put_Line (";");
          when ON_Completed_Type_Decl =>
-            Put ("type ");
+            Put_Keyword ("type");
+            Put (" ");
             Disp_Ident (Decl.Name);
-            Put (" is ");
+            Put (" ");
+            Put_Keyword ("is");
+            Put (" ");
             Disp_Tnode (Decl.Dtype, True);
             Put_Line (";");
          when ON_Const_Decl =>
             Disp_Storage_Name (Decl.Storage);
             Put (" ");
-            Put ("constant ");
+            Put_Keyword ("constant");
+            Put (" ");
             Disp_Ident (Decl.Name);
             Put (" : ");
             Disp_Tnode_Name (Decl.Dtype);
             Put_Line (";");
          when ON_Const_Value =>
-            Put ("constant ");
+            Put_Keyword ("constant");
+            Put (" ");
             Disp_Ident (Decl.Name);
             Put (" := ");
             Disp_Cnode (Decl.Value, Decl.Dtype);
@@ -828,7 +893,8 @@ package body Ortho_Debug.Disp is
          when ON_Var_Decl =>
             Disp_Storage_Name (Decl.Storage);
             Put (" ");
-            Put ("var ");
+            Put_Keyword ("var");
+            Put (" ");
             Disp_Ident (Decl.Name);
             Put (" : ");
             Disp_Tnode_Name (Decl.Dtype);
@@ -868,24 +934,28 @@ package body Ortho_Debug.Disp is
          --end if;
          case Stmt.Kind is
             when ON_Declare_Stmt =>
-               Put_Line ("declare");
+               Put_Keyword ("declare");
+               New_Line;
                Add_Tab;
                Disp_Decls (Stmt.Decls);
                Rem_Tab;
-               Put_Line ("begin");
+               Put_Keyword ("begin");
+               New_Line;
                Add_Tab;
                if Stmt.Stmts /= null then
                   Disp_Snode (Stmt.Stmts, null);
                end if;
                Rem_Tab;
-               Put_Line ("end;");
+               Put_Keyword ("end");
+               Put_Line (";");
             when ON_Assign_Stmt =>
                Disp_Lnode (Stmt.Target);
                Put (" := ");
                Disp_Enode (Stmt.Value, Stmt.Target.Rtype);
                Put_Line (";");
             when ON_Return_Stmt =>
-               Put ("return ");
+               Put_Keyword ("return");
+               Put (" ");
                if Stmt.Ret_Val /= null then
                   Disp_Enode (Stmt.Ret_Val, O_Tnode_Null);
                end if;
@@ -895,19 +965,26 @@ package body Ortho_Debug.Disp is
                Disp_Snode (Stmt.Next, Stmt.If_Last);
                Stmt := Stmt.If_Last;
                Rem_Tab;
-               Put_Line ("end if;");
+               Put_Keyword ("end");
+               Put (" ");
+               Put_Keyword ("if");
+               Put_Line (";");
             when ON_Elsif_Stmt =>
                Rem_Tab;
                if Stmt.Cond = null then
-                  Put_Line ("else");
+                  Put_Keyword ("else");
+                  New_Line;
                else
                   if First = Stmt then
-                     Put ("if ");
+                     Put_Keyword ("if");
                   else
-                     Put ("elsif ");
+                     Put_Keyword ("elsif");
                   end if;
+                  Put (" ");
                   Disp_Enode (Stmt.Cond, O_Tnode_Null);
-                  Put_Line (" then");
+                  Put (" ");
+                  Put_Keyword ("then");
+                  New_Line;
                end if;
                Add_Tab;
             when ON_Loop_Stmt =>
@@ -917,24 +994,35 @@ package body Ortho_Debug.Disp is
                Disp_Snode (Stmt.Next, Stmt.Loop_Last);
                Stmt := Stmt.Loop_Last;
                Rem_Tab;
-               Put_Line ("end loop;");
+               Put_Keyword ("end");
+               Put (" ");
+               Put_Keyword ("loop");
+               Put_Line (";");
             when ON_Exit_Stmt =>
-               Put ("exit ");
+               Put_Keyword ("exit");
+               Put (" ");
                Disp_Loop_Name (Stmt.Loop_Id);
                Put_Line (";");
             when ON_Next_Stmt =>
-               Put ("next ");
+               Put_Keyword ("next");
+               Put (" ");
                Disp_Loop_Name (Stmt.Loop_Id);
                Put_Line (";");
             when ON_Case_Stmt =>
-               Put ("case ");
+               Put_Keyword ("case");
+               Put (" ");
                Disp_Enode (Stmt.Selector, O_Tnode_Null);
-               Put_Line (" is");
+               Put (" ");
+               Put_Keyword ("is");
+               Put_Line ("");
                Add_Tab;
                Disp_Snode (Stmt.Next, Stmt.Case_Last);
                Stmt := Stmt.Case_Last;
                Rem_Tab;
-               Put_Line ("end case;");
+               Put_Keyword ("end");
+               Put (" ");
+               Put_Keyword ("case");
+               Put_Line (";");
             when ON_When_Stmt =>
                declare
                   Choice: O_Choice;
@@ -943,7 +1031,8 @@ package body Ortho_Debug.Disp is
                begin
                   Rem_Tab;
                   Choice := Stmt.Choice_List;
-                  Put ("when ");
+                  Put_Keyword ("when");
+                  Put (" ");
                   loop
                      case Choice.Kind is
                         when ON_Choice_Expr =>
@@ -953,7 +1042,7 @@ package body Ortho_Debug.Disp is
                            Put (" ... ");
                            Disp_Cnode (Choice.High, Choice_Type);
                         when ON_Choice_Default =>
-                           Put ("default");
+                           Put_Keyword ("default");
                      end case;
                      Choice := Choice.Next;
                      exit when Choice = null;

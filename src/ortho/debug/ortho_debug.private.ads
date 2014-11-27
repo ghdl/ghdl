@@ -202,8 +202,6 @@ private
       OE_And,                   --  OE_Dyadic_Op_Kind
       OE_Or,                    --  OE_Dyadic_Op_Kind
       OE_Xor,                   --  OE_Dyadic_Op_Kind
-      OE_And_Then,              --  OE_Dyadic_Op_Kind
-      OE_Or_Else,               --  OE_Dyadic_Op_Kind
 
       --  Monadic operations.
       OE_Not,                   --  OE_Monadic_Op_Kind
@@ -229,7 +227,7 @@ private
       OE_Nil
       );
 
-   subtype OE_Dyadic_Expr_Kind is OE_Kind range OE_Add_Ov .. OE_Or_Else;
+   subtype OE_Dyadic_Expr_Kind is OE_Kind range OE_Add_Ov .. OE_Xor;
    subtype OE_Monadic_Expr_Kind is OE_Kind range OE_Not .. OE_Abs_Ov;
    subtype OE_Compare_Expr_Kind is OE_Kind range OE_Eq .. OE_Gt;
 

@@ -846,9 +846,18 @@ package body Ortho_Front is
 
    procedure Add_Keyword (Str : String; Token : Token_Type)
    is
+      Kw : String (Str'Range);
       Ent : Syment_Acc;
    begin
-      Ent := New_Symbol (Str);
+      --  Convert to uppercase.
+      for I in Str'Range loop
+         pragma Assert (Str (I) in 'a' .. 'z');
+         Kw (I) := Character'Val
+           (Character'Pos ('A')
+                 + Character'Pos (Str (I)) - Character'Pos ('a'));
+      end loop;
+
+      Ent := New_Symbol (Kw);
       if Ent.Name /= null
         or else Scope /= null
       then
