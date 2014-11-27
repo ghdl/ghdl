@@ -2,7 +2,7 @@
 
 . ../testenv.sh
 
-common_args="--std=93c"
+common_args="--std=93c $GHDL_FLAGS"
 
 # Test number.
 test_num="1"
