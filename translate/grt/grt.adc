@@ -43,4 +43,5 @@ pragma restrictions (no_dependence => Ada.Tags);
 pragma restrictions (no_dependence => GNAT);
 pragma Restrictions (Max_Tasks => 0);
 pragma Restrictions (No_Implicit_Heap_Allocations);
+pragma Suppress (Overflow_Check);
 pragma No_Run_Time;
