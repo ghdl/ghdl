@@ -1418,7 +1418,9 @@ package body Sem_Stmts is
 
       if Is_Passive then
          Imp := Get_Implementation (Call);
-         if Get_Kind (Imp) = Iir_Kind_Procedure_Declaration then
+         if Imp /= Null_Iir
+           and then Get_Kind (Imp) = Iir_Kind_Procedure_Declaration
+         then
             Decl := Get_Interface_Declaration_Chain (Imp);
             while Decl /= Null_Iir loop
                if Get_Mode (Decl) in Iir_Out_Modes then
