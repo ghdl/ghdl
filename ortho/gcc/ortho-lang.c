@@ -1294,8 +1294,9 @@ void
 start_enum_type (struct o_enum_list *list, int size)
 {
   list->res = make_node (ENUMERAL_TYPE);
-  // as of gcc4.8, TYPE_PRECISION of 0 is rigorously enforced!
-  TYPE_PRECISION(list->res) = size;
+  /* Set precision and sign now, as this is used to normalize literals.  */
+  TYPE_PRECISION (list->res) = size;
+  TYPE_UNSIGNED (list->res) = 1;
   chain_init (&list->chain);
   list->num = 0;
   list->size = size;
@@ -1314,8 +1315,6 @@ finish_enum_type (struct o_enum_list *list, tree *res)
 {
   *res = list->res;
   TYPE_VALUES (*res) = list->chain.first;
-  TYPE_UNSIGNED (*res) = 1;
-  TYPE_PRECISION (*res) = list->size;
   set_min_and_max_values_for_integral_type (*res, list->size, 1);
   layout_type (*res);
 }
