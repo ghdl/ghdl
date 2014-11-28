@@ -303,13 +303,25 @@ global_bindings_p (void)
   return cur_binding_level->prev == NULL;
 }
 
-static tree
-builtin_function (const char *name,
-		  tree type,
-		  int function_code,
-		  enum built_in_class decl_class,
-		  const char *library_name,
-		  tree attrs ATTRIBUTE_UNUSED);
+/* Return a definition for a builtin function named NAME and whose data type
+   is TYPE.  TYPE should be a function type with argument types.
+   FUNCTION_CODE tells later passes how to compile calls to this function.
+   See tree.h for its possible values.  */
+static void
+define_builtin (const char *name,
+		tree type,
+		enum built_in_function code,
+		const char *library_name,
+		int attr)
+{
+  tree decl;
+
+  decl = add_builtin_function (name, type, code, BUILT_IN_NORMAL,
+			       library_name, NULL_TREE);
+  set_call_expr_flags (decl, attr);
+
+  set_builtin_decl (code, decl, true);
+}
 
 static REAL_VALUE_TYPE fp_const_p5; /* 0.5 */
 static REAL_VALUE_TYPE fp_const_m_p5; /* -0.5 */
@@ -340,11 +352,8 @@ ortho_init (void)
     tree args_type = tree_cons (NULL_TREE, size_type_node, void_list_node);
     tree func_type = build_function_type (ptr_type_node, args_type);
 
-    set_builtin_decl
-      (BUILT_IN_ALLOCA,
-       builtin_function
-       ("__builtin_alloca", func_type,
-	BUILT_IN_ALLOCA, BUILT_IN_NORMAL, NULL, NULL_TREE), true);
+    define_builtin ("__builtin_alloca", func_type,
+		    BUILT_IN_ALLOCA, NULL, 0);
 
     stack_alloc_function_ptr = build1
       (ADDR_EXPR,
@@ -355,26 +364,26 @@ ortho_init (void)
   {
     tree ptr_ftype = build_function_type (ptr_type_node, NULL_TREE);
 
-    set_builtin_decl
-      (BUILT_IN_STACK_SAVE,
-       builtin_function
-       ("__builtin_stack_save", ptr_ftype,
-	BUILT_IN_STACK_SAVE, BUILT_IN_NORMAL, NULL, NULL_TREE), true);
+    define_builtin ("__builtin_stack_save", ptr_ftype,
+		    BUILT_IN_STACK_SAVE, NULL, 0);
   }
 
   {
-    tree ftype_ptr;
+    tree ftype_ptr = build_function_type_list (void_type_node,
+					       ptr_type_node, NULL_TREE);
 
-    ftype_ptr = build_function_type
-      (void_type_node,
-       tree_cons (NULL_TREE, ptr_type_node, NULL_TREE));
-
-    set_builtin_decl
-      (BUILT_IN_STACK_RESTORE,
-       builtin_function
-       ("__builtin_stack_restore", ftype_ptr,
-	BUILT_IN_STACK_RESTORE, BUILT_IN_NORMAL, NULL, NULL_TREE), true);
+    define_builtin ("__builtin_stack_restore", ftype_ptr,
+		    BUILT_IN_STACK_RESTORE, NULL, 0);
   }
+
+  {
+    tree ftype_ptr = build_function_type_list (void_type_node, NULL_TREE);
+
+    define_builtin ("__builtin_trap", ftype_ptr,
+		    BUILT_IN_TRAP, NULL, ECF_NOTHROW | ECF_LEAF);
+    TREE_THIS_VOLATILE (builtin_decl_explicit (BUILT_IN_TRAP)) = 1;
+  }
+
   {
     REAL_VALUE_TYPE v;
 
@@ -651,35 +660,6 @@ convert (tree type, tree expr)
   gcc_unreachable ();
 }
 
-/* Return a definition for a builtin function named NAME and whose data type
-   is TYPE.  TYPE should be a function type with argument types.
-   FUNCTION_CODE tells later passes how to compile calls to this function.
-   See tree.h for its possible values.
-
-   If LIBRARY_NAME is nonzero, use that for DECL_ASSEMBLER_NAME,
-   the name to be called if we can't opencode the function.  If
-   ATTRS is nonzero, use that for the function's attribute list.  */
-static tree
-builtin_function (const char *name,
-		  tree type,
-		  int function_code,
-		  enum built_in_class decl_class,
-		  const char *library_name,
-		  tree attrs ATTRIBUTE_UNUSED)
-{
-  tree decl = build_decl (input_location,
-                          FUNCTION_DECL, get_identifier (name), type);
-  DECL_EXTERNAL (decl) = 1;
-  TREE_PUBLIC (decl) = 1;
-  if (library_name)
-    SET_DECL_ASSEMBLER_NAME (decl, get_identifier (library_name));
-  make_decl_rtl (decl);
-  DECL_BUILT_IN_CLASS (decl) = decl_class;
-  DECL_FUNCTION_CODE (decl) = (built_in_function) function_code;
-  DECL_SOURCE_LOCATION (decl) = input_location;
-  return decl;
-}
-
 #ifndef MAX_BITS_PER_WORD
 #define MAX_BITS_PER_WORD BITS_PER_WORD
 #endif
@@ -760,12 +740,6 @@ type_for_mode (enum machine_mode mode, int unsignedp)
 #define LANG_HOOKS_TYPE_FOR_MODE type_for_mode
 #undef LANG_HOOKS_TYPE_FOR_SIZE
 #define LANG_HOOKS_TYPE_FOR_SIZE type_for_size
-#undef LANG_HOOKS_SIGNED_TYPE
-#define LANG_HOOKS_SIGNED_TYPE signed_type
-#undef LANG_HOOKS_UNSIGNED_TYPE
-#define LANG_HOOKS_UNSIGNED_TYPE unsigned_type
-#undef LANG_HOOKS_SIGNED_OR_UNSIGNED_TYPE
-#define LANG_HOOKS_SIGNED_OR_UNSIGNED_TYPE signed_or_unsigned_type
 #undef LANG_HOOKS_PARSE_FILE
 #define LANG_HOOKS_PARSE_FILE ortho_parse_file
 
