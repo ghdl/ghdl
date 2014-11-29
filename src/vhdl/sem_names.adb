@@ -3055,7 +3055,7 @@ package body Sem_Names is
       --  since the prefix (a signal) is not a static expression.
       Set_Expr_Staticness (Res, None);
 
-      --  LRM 6.1
+      --  LRM02 6.1 / LRM08 8.1
       --  A name is said to be a static name if and only if at least one of
       --  the following conditions holds:
       --  [...]
@@ -3063,7 +3063,9 @@ package body Sem_Names is
       --     and whose suffix is one of the predefined attributes 'DELAYED,
       --     'STABLE, 'QUIET or 'TRANSACTION.
       --  According to LRM 6.1, attributes are not static names.
-      if Flags.Vhdl_Std = Vhdl_93c or Flags.Vhdl_Std >= Vhdl_02 then
+      if Flags.Vhdl_Std = Vhdl_93c or Flag_Relaxed_Rules
+        or Flags.Vhdl_Std >= Vhdl_02
+      then
          case Get_Kind (Res) is
             when Iir_Kind_Stable_Attribute
               | Iir_Kind_Quiet_Attribute

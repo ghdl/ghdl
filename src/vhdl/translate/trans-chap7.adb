@@ -1564,7 +1564,7 @@ package body Trans.Chap7 is
          end if;
 
          --  For a non-null bounds result.
-         if Flags.Vhdl_Std > Vhdl_87 then
+         if Flags.Vhdl_Std > Vhdl_87 or Flag_Relaxed_Rules then
             --  Vhdl 93 case: lean and simple.
             Chap3.Create_Range_From_Length
               (Index_Type, Var_Length, Get_Res_Range, Left);

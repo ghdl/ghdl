@@ -809,7 +809,7 @@ package body Sem_Expr is
             --  predefined type INTEGER is assumed if the type of both bounds
             --  (prior the implicit conversion) is the type universal_integer.
             null;
-         elsif Vhdl_Std = Vhdl_93c then
+         elsif Vhdl_Std = Vhdl_93c or else Flag_Relaxed_Rules then
             --  GHDL: this is not allowed, however often used:
             --  eg: for i in 0 to v'length + 1 loop
             --  eg: for i in -1 to 1 loop
