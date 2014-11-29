@@ -47,7 +47,9 @@ package Grt.Vcd is
    type Vcd_Value_Kind is (Vcd_Effective, Vcd_Driving);
 
    type Verilog_Wire_Info is record
+      --  Signal address
       Addr : Address;
+
       Irange : Ghdl_Range_Ptr;
       Kind : Vcd_Var_Kind;
       Val : Vcd_Value_Kind;

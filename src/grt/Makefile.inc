@@ -96,8 +96,10 @@ ifndef GRT_TARGET_OBJS
   GRT_EXTRA_LIB=-lpthread -ldl -lm
 endif
 
+GRT_FST_OBJS := fstapi.o lz4.o fastlz.o
+
 # Additionnal object files (C or asm files).
-GRT_ADD_OBJS:=$(GRT_TARGET_OBJS) grt-cbinding.o grt-cvpi.o
+GRT_ADD_OBJS:=$(GRT_TARGET_OBJS) grt-cbinding.o grt-cvpi.o $(GRT_FST_OBJS)
 
 #GRT_USE_PTHREADS=y
 ifeq ($(GRT_USE_PTHREADS),y)
@@ -181,6 +183,15 @@ grt-cvpi.o: $(GRTSRCDIR)/grt-cvpi.c
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
 grt-cthreads.o: $(GRTSRCDIR)/grt-cthreads.c
+	$(CC) -c $(GRT_FLAGS) -o $@ $<
+
+fstapi.o: $(GRTSRCDIR)/fst/fstapi.c
+	$(CC) -c $(GRT_FLAGS) -o $@ -I$(GRTSRCDIR)/fst $<
+
+lz4.o: $(GRTSRCDIR)/fst/lz4.c
+	$(CC) -c $(GRT_FLAGS) -o $@ $<
+
+fastlz.o: $(GRTSRCDIR)/fst/fastlz.c
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
 grt-disp-config:

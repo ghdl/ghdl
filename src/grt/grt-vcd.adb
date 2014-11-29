@@ -714,8 +714,7 @@ package body Grt.Vcd is
       Vcd_Newline;
    end Vcd_Put_Var;
 
-   function Verilog_Wire_Changed (Info : Verilog_Wire_Info;
-                                  Last : Std_Time)
+   function Verilog_Wire_Changed (Info : Verilog_Wire_Info; Last : Std_Time)
                                  return Boolean
    is
       Len : Ghdl_Index_Type;
