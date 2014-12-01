@@ -424,14 +424,12 @@ package body Grt.Vpi is
                  | Vcd_Bool
                  | Vcd_Bitvector =>
                   for J in 0 .. Len - 1 loop
-                     ii_vpi_get_value_bin_str_B1
-                       (To_Signal_Arr_Ptr (Info.Addr)(J).Value.B1);
+                     ii_vpi_get_value_bin_str_B1 (Info.Sigs (J).Value.B1);
                   end loop;
                when Vcd_Stdlogic
                  | Vcd_Stdlogic_Vector =>
                   for J in 0 .. Len - 1 loop
-                     ii_vpi_get_value_bin_str_E8
-                       (To_Signal_Arr_Ptr (Info.Addr)(J).Value.E8);
+                     ii_vpi_get_value_bin_str_E8 (Info.Sigs (J).Value.E8);
                   end loop;
             end case;
          when Vcd_Driving =>
@@ -445,13 +443,13 @@ package body Grt.Vpi is
                  | Vcd_Bitvector =>
                   for J in 0 .. Len - 1 loop
                      ii_vpi_get_value_bin_str_B1
-                       (To_Signal_Arr_Ptr (Info.Addr)(J).Driving_Value.B1);
+                       (Info.Sigs (J).Driving_Value.B1);
                   end loop;
                when Vcd_Stdlogic
                  | Vcd_Stdlogic_Vector =>
                   for J in 0 .. Len - 1 loop
                      ii_vpi_get_value_bin_str_E8
-                       (To_Signal_Arr_Ptr (Info.Addr)(J).Driving_Value.E8);
+                       (Info.Sigs (J).Driving_Value.E8);
                   end loop;
             end case;
       end case;
@@ -626,14 +624,14 @@ package body Grt.Vpi is
            | Vcd_Bool
            | Vcd_Bitvector =>
             for J in 0 .. Len - 1 loop
-               ii_vpi_put_value_bin_str_B1(
-                  To_Signal_Arr_Ptr(Info.Addr)(J), ValueStr(Integer(J+1)));
+               ii_vpi_put_value_bin_str_B1
+                 (Info.Sigs (J), ValueStr (Integer (J + 1)));
             end loop;
          when Vcd_Stdlogic
            | Vcd_Stdlogic_Vector =>
             for J in 0 .. Len - 1 loop
-               ii_vpi_put_value_bin_str_E8(
-                  To_Signal_Arr_Ptr(Info.Addr)(J), ValueStr(Integer(J+1)));
+               ii_vpi_put_value_bin_str_E8
+                 (Info.Sigs (J), ValueStr (Integer (J + 1)));
             end loop;
          when Vcd_Integer32
            | Vcd_Float64 =>

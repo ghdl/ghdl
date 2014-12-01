@@ -22,6 +22,8 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+
+with System; use System;
 with Interfaces;
 with Grt.Stdio; use Grt.Stdio;
 with System.Storage_Elements; --  Work around GNAT bug.
@@ -319,7 +321,7 @@ package body Grt.Vcd is
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Subtype_Scalar =>
             Info.Kind := Rti_To_Vcd_Kind (Rti);
-            Info.Addr := Sig_Addr;
+            Info.Sigs := To_Signal_Arr_Ptr (Sig_Addr);
             Info.Irange := null;
          when Ghdl_Rtik_Subtype_Array =>
             declare
@@ -327,7 +329,7 @@ package body Grt.Vcd is
             begin
                St := To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
                Info.Kind := Rti_To_Vcd_Kind (St.Basetype);
-               Info.Addr := Sig_Addr;
+               Info.Sigs := To_Signal_Arr_Ptr (Sig_Addr);
                Info.Irange := To_Ghdl_Range_Ptr
                  (Loc_To_Addr (St.Common.Depth, St.Bounds,
                                Avhpi_Get_Context (Sig)));
@@ -339,7 +341,7 @@ package body Grt.Vcd is
                Info.Kind := Rti_To_Vcd_Kind
                  (To_Ghdl_Rtin_Type_Array_Acc (Rti));
                Uc := To_Ghdl_Uc_Array_Acc (Sig_Addr);
-               Info.Addr := Uc.Base;
+               Info.Sigs := To_Signal_Arr_Ptr (Uc.Base);
                Info.Irange := To_Ghdl_Range_Ptr (Uc.Bounds);
             end;
          when others =>
@@ -369,6 +371,16 @@ package body Grt.Vcd is
          Info.Val := Vcd_Effective;
       end if;
    end Get_Verilog_Wire;
+
+   function Get_Wire_Length (Info : Verilog_Wire_Info)
+                            return Ghdl_Index_Type is
+   begin
+      if Info.Irange = null then
+         return 1;
+      else
+         return Info.Irange.I32.Len;
+      end if;
+   end Get_Wire_Length;
 
    procedure Add_Signal (Sig : VhpiHandleT)
    is
@@ -632,42 +644,35 @@ package body Grt.Vcd is
 
    procedure Vcd_Put_Var (I : Vcd_Index_Type)
    is
-      Addr : Address;
       V : Verilog_Wire_Info renames Vcd_Table.Table (I);
-      Len : Ghdl_Index_Type;
+      Len : constant Ghdl_Index_Type := Get_Wire_Length (V);
    begin
-      Addr := V.Addr;
-      if V.Irange = null then
-         Len := 1;
-      else
-         Len := V.Irange.I32.Len;
-      end if;
       case V.Val is
          when Vcd_Effective =>
             case V.Kind is
                when Vcd_Bit
                  | Vcd_Bool =>
-                  Vcd_Put_Bit (To_Signal_Arr_Ptr (Addr)(0).Value.B1);
+                  Vcd_Put_Bit (V.Sigs (0).Value.B1);
                when Vcd_Stdlogic =>
-                  Vcd_Put_Stdlogic (To_Signal_Arr_Ptr (Addr)(0).Value.E8);
+                  Vcd_Put_Stdlogic (V.Sigs (0).Value.E8);
                when Vcd_Integer32 =>
                   Vcd_Putc ('b');
-                  Vcd_Put_Integer32 (To_Signal_Arr_Ptr (Addr)(0).Value.E32);
+                  Vcd_Put_Integer32 (V.Sigs (0).Value.E32);
                   Vcd_Putc (' ');
                when Vcd_Float64 =>
                   Vcd_Putc ('r');
-                  Vcd_Put_Float64 (To_Signal_Arr_Ptr (Addr)(0).Value.F64);
+                  Vcd_Put_Float64 (V.Sigs (0).Value.F64);
                   Vcd_Putc (' ');
                when Vcd_Bitvector =>
                   Vcd_Putc ('b');
                   for J in 0 .. Len - 1 loop
-                     Vcd_Put_Bit (To_Signal_Arr_Ptr (Addr)(J).Value.B1);
+                     Vcd_Put_Bit (V.Sigs (J).Value.B1);
                   end loop;
                   Vcd_Putc (' ');
                when Vcd_Stdlogic_Vector =>
                   Vcd_Putc ('b');
                   for J in 0 .. Len - 1 loop
-                     Vcd_Put_Stdlogic (To_Signal_Arr_Ptr (Addr)(J).Value.E8);
+                     Vcd_Put_Stdlogic (V.Sigs (J).Value.E8);
                   end loop;
                   Vcd_Putc (' ');
                when Vcd_Bad =>
@@ -677,33 +682,27 @@ package body Grt.Vcd is
             case V.Kind is
                when Vcd_Bit
                  | Vcd_Bool =>
-                  Vcd_Put_Bit
-                    (To_Signal_Arr_Ptr (Addr)(0).Driving_Value.B1);
+                  Vcd_Put_Bit (V.Sigs (0).Driving_Value.B1);
                when Vcd_Stdlogic =>
-                  Vcd_Put_Stdlogic
-                    (To_Signal_Arr_Ptr (Addr)(0).Driving_Value.E8);
+                  Vcd_Put_Stdlogic (V.Sigs (0).Driving_Value.E8);
                when Vcd_Integer32 =>
                   Vcd_Putc ('b');
-                  Vcd_Put_Integer32
-                    (To_Signal_Arr_Ptr (Addr)(0).Driving_Value.E32);
+                  Vcd_Put_Integer32 (V.Sigs (0).Driving_Value.E32);
                   Vcd_Putc (' ');
                when Vcd_Float64 =>
                   Vcd_Putc ('r');
-                  Vcd_Put_Float64 (To_Signal_Arr_Ptr (Addr)(0)
-                                           .Driving_Value.F64);
+                  Vcd_Put_Float64 (V.Sigs (0).Driving_Value.F64);
                   Vcd_Putc (' ');
                when Vcd_Bitvector =>
                   Vcd_Putc ('b');
                   for J in 0 .. Len - 1 loop
-                     Vcd_Put_Bit
-                       (To_Signal_Arr_Ptr (Addr)(J).Driving_Value.B1);
+                     Vcd_Put_Bit (V.Sigs (J).Driving_Value.B1);
                   end loop;
                   Vcd_Putc (' ');
                when Vcd_Stdlogic_Vector =>
                   Vcd_Putc ('b');
                   for J in 0 .. Len - 1 loop
-                     Vcd_Put_Stdlogic
-                       (To_Signal_Arr_Ptr (Addr)(J).Driving_Value.E8);
+                     Vcd_Put_Stdlogic (V.Sigs (J).Driving_Value.E8);
                   end loop;
                   Vcd_Putc (' ');
                when Vcd_Bad =>
@@ -736,7 +735,7 @@ package body Grt.Vcd is
                  | Vcd_Integer32
                  | Vcd_Float64 =>
                   for J in 0 .. Len - 1 loop
-                     if To_Signal_Arr_Ptr (Info.Addr)(J).Last_Event = Last then
+                     if Info.Sigs (J).Last_Event = Last then
                         return True;
                      end if;
                   end loop;
@@ -753,8 +752,7 @@ package body Grt.Vcd is
                  | Vcd_Integer32
                  | Vcd_Float64 =>
                   for J in 0 .. Len - 1 loop
-                     if To_Signal_Arr_Ptr (Info.Addr)(J).Last_Active = Last
-                     then
+                     if Info.Sigs (J).Last_Active = Last then
                         return True;
                      end if;
                   end loop;

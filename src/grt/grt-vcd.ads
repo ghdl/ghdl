@@ -22,9 +22,10 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with System; use System;
+
 with Grt.Types; use Grt.Types;
 with Grt.Avhpi; use Grt.Avhpi;
+with Grt.Signals;
 
 package Grt.Vcd is
    --  Abstract type for IO.
@@ -47,8 +48,8 @@ package Grt.Vcd is
    type Vcd_Value_Kind is (Vcd_Effective, Vcd_Driving);
 
    type Verilog_Wire_Info is record
-      --  Signal address
-      Addr : Address;
+      --  Access to an array of signals.
+      Sigs : Grt.Signals.Signal_Arr_Ptr;
 
       Irange : Ghdl_Range_Ptr;
       Kind : Vcd_Var_Kind;
@@ -57,6 +58,9 @@ package Grt.Vcd is
 
    procedure Get_Verilog_Wire (Sig : VhpiHandleT;
                                Info : out Verilog_Wire_Info);
+
+   --  Number of signals in INFO (at least one).
+   function Get_Wire_Length (Info : Verilog_Wire_Info) return Ghdl_Index_Type;
 
    --  Return TRUE if last change time of the wire described by INFO is LAST.
    function Verilog_Wire_Changed (Info : Verilog_Wire_Info;

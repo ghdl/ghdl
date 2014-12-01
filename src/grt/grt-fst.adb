@@ -128,15 +128,10 @@ package body Grt.Fst is
    begin
       Get_Verilog_Wire (Sig, Vcd_El);
 
-      if Vcd_El.Kind = Vcd_Bad then
-         --  Not handled.
-         return;
-      end if;
-
-
       case Vcd_El.Kind is
          when Vcd_Bad =>
-            raise Program_Error;
+            --  Not handled.
+            return;
          when Vcd_Bool =>
             Vt := FST_VT_VCD_REG;
             Len := 1;
@@ -333,12 +328,11 @@ package body Grt.Fst is
       From_Bit : constant array (Ghdl_B1) of Character := "01";
       type Map_Type is array (Ghdl_E8 range 0 .. 8) of Character;
       From_Std : constant Map_Type := "UX01ZWLH-";
-      Sig : Signal_Arr_Ptr;
       V : Fst_Sig_Info renames Fst_Table.Table (I);
       Len : Ghdl_Index_Type;
       Hand : constant fstHandle := V.Hand;
+      Sig : constant Signal_Arr_Ptr := V.Wire.Sigs;
    begin
-      Sig := To_Signal_Arr_Ptr (V.Wire.Addr);
       if V.Wire.Irange = null then
          Len := 1;
       else
