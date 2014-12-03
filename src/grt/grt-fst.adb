@@ -39,9 +39,16 @@ with Grt.Hooks; use Grt.Hooks;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Types; use Grt.Rtis_Types;
 with Grt.Vstrings;
+with Ada.Unchecked_Deallocation;
 pragma Elaborate_All (Grt.Table);
 
 package body Grt.Fst is
+   --  FST format has a mechanism to declare signal aliases (if two signals
+   --  in the hierarchy are the same).  Enabling this reduce the number of
+   --  signals dumped, but weirdly it makes the FST file slightly bigger.
+   Flag_Aliases : constant Boolean := True;
+
+   --  Global FST context.  Set to non-NULL iff dumping signals to an FST file.
    Context : fstContext := Null_fstContext;
 
    --  Index type of the table of vcd variables to dump.
@@ -115,6 +122,80 @@ package body Grt.Fst is
       Put_Line ("Fst.Avhpi_Error!");
    end Avhpi_Error;
 
+   function Equal (Left, Right : Verilog_Wire_Info) return Boolean
+   is
+      Len : Ghdl_Index_Type;
+   begin
+      if Left.Kind /= Right.Kind
+        or else Left.Val /= Right.Val
+      then
+         return False;
+      end if;
+
+      --  Get length.
+      Len := Get_Wire_Length (Left);
+      if Len /= Get_Wire_Length (Right) then
+         return False;
+      end if;
+
+      --  Compare signals.
+      for I in 1 .. Len loop
+         if Left.Sigs (I - 1) /= Right.Sigs (I - 1) then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Equal;
+
+   function Hash (El : Verilog_Wire_Info) return Ghdl_Index_Type
+   is
+      Len : constant Ghdl_Index_Type := Get_Wire_Length (El);
+      Res : Ghdl_Index_Type;
+      Iaddr : Integer_Address;
+   begin
+      Res := Vcd_Var_Kind'Pos (El.Kind) * 2 + Vcd_Value_Kind'Pos (El.Val);
+      Res := Res + Len * 29;
+      for I in 1 .. Len loop
+         Iaddr := To_Integer (El.Sigs (I - 1).all'Address);
+         Res := Res +
+           Ghdl_Index_Type (Iaddr mod Integer_Address (Ghdl_Index_Type'Last));
+      end loop;
+      return Res;
+   end Hash;
+
+   --  Very simple hash table to detect aliases.
+   type Bucket_Type;
+   type Bucket_Acc is access Bucket_Type;
+
+   type Bucket_Type is record
+      El : Fst_Index_Type;
+      Next : Bucket_Acc;
+   end record;
+
+   type Hash_Table is array (Ghdl_Index_Type range <>) of Bucket_Acc;
+   type Hash_Table_Acc is access Hash_Table;
+
+   Hash_Tab : Hash_Table_Acc;
+
+   procedure Free_Hash_Tab
+   is
+      procedure Free_Hash_Table is new
+        Ada.Unchecked_Deallocation (Hash_Table, Hash_Table_Acc);
+      procedure Free_Bucket_Type is new
+        Ada.Unchecked_Deallocation (Bucket_Type, Bucket_Acc);
+      Ent, Nent : Bucket_Acc;
+   begin
+      for I in Hash_Tab'Range loop
+         Ent := Hash_Tab (I);
+         while Ent /= null loop
+            Nent := Ent.Next;
+            Free_Bucket_Type (Ent);
+            Ent := Nent;
+         end loop;
+      end loop;
+      Free_Hash_Table (Hash_Tab);
+   end Free_Hash_Tab;
+
    procedure Fst_Add_Signal (Sig : VhpiHandleT)
    is
       Vcd_El : Verilog_Wire_Info;
@@ -125,6 +206,8 @@ package body Grt.Fst is
       Name : String (1 .. 128);
       Name_Len : Natural;
       Hand : fstHandle;
+      Alias : fstHandle;
+      H : Ghdl_Index_Type;
    begin
       Get_Verilog_Wire (Sig, Vcd_El);
 
@@ -181,6 +264,25 @@ package body Grt.Fst is
          Dir := FST_VD_IMPLICIT;
       end if;
 
+      --  Try to find an alias.
+      Alias := Null_fstHandle;
+      if Flag_Aliases then
+         declare
+            Ent : Bucket_Acc;
+         begin
+            H := Hash (Vcd_El) mod (Hash_Tab'Last + 1);
+            Ent := Hash_Tab (H);
+            while Ent /= null loop
+               if Equal (Fst_Table.Table (Ent.El).Wire, Vcd_El) then
+                  Alias := Fst_Table.Table (Ent.El).Hand;
+                  exit;
+               else
+                  Ent := Ent.Next;
+               end if;
+            end loop;
+         end;
+      end if;
+
       Vhpi_Get_Str (VhpiNameP, Sig, Name, Name_Len);
       if Name_Len >= Name'Length
         or else Vcd_El.Irange /= null
@@ -217,16 +319,25 @@ package body Grt.Fst is
 
             Hand := fstWriterCreateVar2
               (Context, Vt, Dir, Len, To_Ghdl_C_String (Name2'Address),
-               Null_fstHandle, null, FST_SVT_VHDL_SIGNAL, Sdt);
+               Alias, null, FST_SVT_VHDL_SIGNAL, Sdt);
          end;
       else
          Name (Name_Len) := NUL;
          Hand := fstWriterCreateVar2
            (Context, Vt, Dir, Len, To_Ghdl_C_String (Name'Address),
-            Null_fstHandle, null, FST_SVT_VHDL_SIGNAL, Sdt);
+            Alias, null, FST_SVT_VHDL_SIGNAL, Sdt);
+      end if;
+
+      if Flag_Aliases and then Interfaces.C."/=" (Alias, Null_fstHandle) then
+         return;
       end if;
 
       Fst_Table.Append (Fst_Sig_Info'(Wire => Vcd_El, Hand => Hand));
+
+      if Flag_Aliases then
+         Hash_Tab (H) := new Bucket_Type'(El => Fst_Table.Last,
+                                          Next => Hash_Tab (H));
+      end if;
    end Fst_Add_Signal;
 
    procedure Fst_Put_Hierarchy (Inst : VhpiHandleT);
@@ -417,9 +528,18 @@ package body Grt.Fst is
       --  Be sure the RTI of std_ulogic is set.
       Search_Types_RTI;
 
+      if Flag_Aliases then
+         Hash_Tab :=
+           new Hash_Table (0 .. Ghdl_Index_Type (Sig_Table.Last / 17));
+      end if;
+
       --  Put hierarchy.
       Get_Root_Inst (Root);
       Fst_Put_Hierarchy (Root);
+
+      if Flag_Aliases then
+         Free_Hash_Tab;
+      end if;
 
       Register_Cycle_Hook (Fst_Cycle'Access);
    end Fst_Start;

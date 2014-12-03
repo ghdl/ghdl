@@ -35,11 +35,11 @@ package Textio is
 
   -- standard text files
 
-  --START-V08
+--START-V08
   function Justify (Value: String;
                     Justified : Side := Right;
                     Field: Width := 0 ) return String;
-  --END-V08
+--END-V08
 
   file input:  text is in "STD_INPUT";  --V87
   file output: text is out "STD_OUTPUT";  --V87
@@ -95,7 +95,7 @@ package Textio is
   procedure read (l: inout line; value: out time; good: out boolean);
   procedure read (l: inout line; value: out time);
 
-  --START-V08
+--START-V08
   procedure Sread (L : inout Line; Value : out String; Strlen : out Natural);
 
   alias STRING_READ is SREAD [LINE, STRING, NATURAL];
@@ -115,16 +115,16 @@ package Textio is
 
   alias HEX_READ is HREAD [LINE, BIT_VECTOR, BOOLEAN];
   alias HEX_READ is HREAD [LINE, BIT_VECTOR];
-  --END-V08
+--END-V08
 
 -- output routines for standard types
 
   procedure writeline (variable f: out text; l: inout line); --V87
   procedure writeline (file f: text; l: inout line); --V93
 
-  --START-V08
+--START-V08
   procedure Tee (file f : Text; L : inout LINE);
-  --END-V08
+--END-V08
 
   --  This implementation accept any value for all the types.
   procedure write
@@ -159,7 +159,7 @@ package Textio is
     (l: inout line; value : in time;
     justified: in side := right; field: in width := 0; unit : in TIME := ns);
 
-  --START-V08
+--START-V08
   alias Swrite is write [Line, String, Side, Width];
   alias String_Write is Write [Line, String, Side, Width];
 

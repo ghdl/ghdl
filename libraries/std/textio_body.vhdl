@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 package body textio is
-  --START-V08
+--START-V08
   --  LRM08 16.4
   --  The JUSTIFY operation formats a string value within a field that is at
   --  least at long as required to contain the value.  Parameter FIELD
@@ -49,7 +49,7 @@ package body textio is
       end case;
     end if;
   end Justify;
-  --END-V08
+--END-V08
 
   -- output routines for standard types
 
@@ -102,7 +102,7 @@ package body textio is
     end if;
   end writeline;
 
-  --START-V08
+--START-V08
   procedure Tee (file f : Text; L : inout LINE) is
   begin
     if l = null then
@@ -122,7 +122,7 @@ package body textio is
       l := new string'("");
     end if;
   end Tee;
-  --END-V08
+--END-V08
   
   procedure write
     (l: inout line; value: in string;
@@ -482,7 +482,7 @@ package body textio is
     write (l, str (1 to pos - 1), justified, field);
   end write;
 
-  --START-V08
+--START-V08
   procedure Owrite (L : inout line; value : in Bit_Vector;
                     Justified : in Side := Right; Field : in Width := 0) is
   begin
@@ -1410,7 +1410,7 @@ package body textio is
       severity failure;
   end read;
 
-  --START-V08
+--START-V08
   procedure Sread (L : inout Line; Value : out String; Strlen : out Natural)
   is
     constant maxlen : natural := Value'Length;
@@ -1682,5 +1682,5 @@ package body textio is
       report "hexa bit_vector read failure"
       severity failure;
   end Hread;
-  --END-V08
+--END-V08
 end textio;
