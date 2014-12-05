@@ -538,7 +538,8 @@ private
            | VhpiSubtypeDeclK
            | VhpiArrayTypeDeclK
            | VhpiEnumTypeDeclK
-           | VhpiPhysTypeDeclK =>
+           | VhpiPhysTypeDeclK
+           | VhpiIntTypeDeclK =>
             Atype : Ghdl_Rti_Access;
          when VhpiCompInstStmtK =>
             Inst : Ghdl_Rtin_Instance_Acc;

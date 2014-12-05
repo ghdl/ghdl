@@ -380,6 +380,11 @@ package body Grt.Avhpi is
             Res := (Kind => VhpiPhysTypeDeclK,
                     Ctxt => Ctxt,
                     Atype => Rti);
+         when Ghdl_Rtik_Type_I32
+           | Ghdl_Rtik_Type_I64 =>
+            Res := (Kind => VhpiIntTypeDeclK,
+                    Ctxt => Ctxt,
+                    Atype => Rti);
          when Ghdl_Rtik_Subtype_Scalar =>
             Res := (Kind => VhpiSubtypeDeclK,
                     Ctxt => Ctxt,
@@ -569,6 +574,9 @@ package body Grt.Avhpi is
 
       procedure Add (Str : Ghdl_C_String) is
       begin
+         if Str = null then
+            return;
+         end if;
          for I in Str'Range loop
             exit when Str (I) = NUL;
             Add (Str (I));
@@ -582,6 +590,8 @@ package body Grt.Avhpi is
             case Obj.Kind is
                when VhpiEnumTypeDeclK =>
                   Add (To_Ghdl_Rtin_Type_Enum_Acc (Obj.Atype).Name);
+               when VhpiIntTypeDeclK =>
+                  Add (To_Ghdl_Rtin_Type_Scalar_Acc (Obj.Atype).Name);
                when VhpiSubtypeDeclK =>
                   Add (To_Ghdl_Rtin_Subtype_Scalar_Acc (Obj.Atype).Name);
                when VhpiArrayTypeDeclK =>
@@ -1107,7 +1117,8 @@ package body Grt.Avhpi is
          when VhpiSubtypeIndicK
            | VhpiSubtypeDeclK
            | VhpiArrayTypeDeclK
-           | VhpiPhysTypeDeclK =>
+           | VhpiPhysTypeDeclK
+           | VhpiIntTypeDeclK =>
             return Hdl1.Atype = Hdl2.Atype;
          when others =>
             -- FIXME: todo

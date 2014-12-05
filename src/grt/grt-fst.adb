@@ -198,6 +198,8 @@ package body Grt.Fst is
 
    procedure Fst_Add_Signal (Sig : VhpiHandleT)
    is
+      Sig_Type, Sig_Base_Type : VhpiHandleT;
+      Err : AvhpiErrorT;
       Vcd_El : Verilog_Wire_Info;
       Vt : fstVarType;
       Sdt : fstSupplementalDataType;
@@ -205,6 +207,9 @@ package body Grt.Fst is
       Len : Interfaces.C.unsigned;
       Name : String (1 .. 128);
       Name_Len : Natural;
+      Type_Name : String (1 .. 32);
+      Type_Name_Len : Natural;
+      Type_C_Name : Ghdl_C_String;
       Hand : fstHandle;
       Alias : fstHandle;
       H : Ghdl_Index_Type;
@@ -283,6 +288,35 @@ package body Grt.Fst is
          end;
       end if;
 
+      --  Extract type name.
+      Vhpi_Handle (VhpiSubtype, Sig, Sig_Type, Err);
+      if Err /= AvhpiErrorOk then
+         Avhpi_Error (Err);
+      end if;
+      Vhpi_Handle (VhpiTypeMark, Sig_Type, Sig_Type, Err);
+      if Err /= AvhpiErrorOk then
+         Avhpi_Error (Err);
+      end if;
+      Vhpi_Get_Str (VhpiNameP, Sig_Type, Type_Name, Type_Name_Len);
+      if Type_Name_Len = 0 then
+         --  Try with the base type.
+         Vhpi_Handle (VhpiBaseType, Sig_Type, Sig_Base_Type, Err);
+         if Err /= AvhpiErrorOk then
+            Avhpi_Error (Err);
+         end if;
+         Vhpi_Get_Str (VhpiNameP, Sig_Base_Type, Type_Name, Type_Name_Len);
+      end if;
+      if Type_Name_Len = 0 then
+         Type_C_Name := null;
+      else
+         if Type_Name_Len >= Type_Name'Last then
+            --  Truncate name.
+            Type_Name_Len := Type_Name'Last - 1;
+         end if;
+         Type_Name (Type_Name_Len + 1) := NUL;
+         Type_C_Name := To_Ghdl_C_String (Type_Name'Address);
+      end if;
+
       Vhpi_Get_Str (VhpiNameP, Sig, Name, Name_Len);
       if Name_Len >= Name'Length
         or else Vcd_El.Irange /= null
@@ -318,14 +352,14 @@ package body Grt.Fst is
             Name_Len := Name_Len + 1;
 
             Hand := fstWriterCreateVar2
-              (Context, Vt, Dir, Len, To_Ghdl_C_String (Name2'Address),
-               Alias, null, FST_SVT_VHDL_SIGNAL, Sdt);
+              (Context, Vt, Dir, Len, To_Ghdl_C_String (Name2'Address), Alias,
+               Type_C_Name, FST_SVT_VHDL_SIGNAL, Sdt);
          end;
       else
          Name (Name_Len) := NUL;
          Hand := fstWriterCreateVar2
            (Context, Vt, Dir, Len, To_Ghdl_C_String (Name'Address),
-            Alias, null, FST_SVT_VHDL_SIGNAL, Sdt);
+            Alias, Type_C_Name, FST_SVT_VHDL_SIGNAL, Sdt);
       end if;
 
       if Flag_Aliases and then Interfaces.C."/=" (Alias, Null_fstHandle) then
