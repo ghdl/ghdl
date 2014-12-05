@@ -53,6 +53,10 @@ vs
    function Translate_Static_Range_Dir (Expr : Iir) return O_Cnode is
    begin
 
+If the parametere line is too long with the 'is', put in on a separate line:
+      procedure Predeclare_Scope_Type
+        (Scope : in out Var_Scope_Type; Name : O_Ident) is
+
 * Generic instantiation: put the generic actual part on a new line:
    procedure Free is new Ada.Unchecked_Deallocation
      (Action_List, Action_List_Acc);
