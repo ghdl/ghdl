@@ -317,6 +317,7 @@ package body Grt.Fst is
          Type_C_Name := To_Ghdl_C_String (Type_Name'Address);
       end if;
 
+      --  Extract name (avoid truncation, append verilog range for arrays).
       Vhpi_Get_Str (VhpiNameP, Sig, Name, Name_Len);
       if Name_Len >= Name'Length
         or else Vcd_El.Irange /= null
@@ -362,6 +363,7 @@ package body Grt.Fst is
             Alias, Type_C_Name, FST_SVT_VHDL_SIGNAL, Sdt);
       end if;
 
+      --  Do not put aliases in the table.
       if Flag_Aliases and then Interfaces.C."/=" (Alias, Null_fstHandle) then
          return;
       end if;
