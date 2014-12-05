@@ -223,8 +223,8 @@ package body Trans is
          return Scope.Scope_Type /= O_Tnode_Null;
       end Has_Scope_Type;
 
-      procedure Predeclare_Scope_Type (Scope : Var_Scope_Acc; Name : O_Ident)
-      is
+      procedure Predeclare_Scope_Type
+        (Scope : in out Var_Scope_Type; Name : O_Ident) is
       begin
          pragma Assert (Scope.Scope_Type = O_Tnode_Null);
          New_Uncomplete_Record_Type (Scope.Scope_Type);

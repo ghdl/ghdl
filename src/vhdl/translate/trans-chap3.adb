@@ -1336,14 +1336,17 @@ package body Trans.Chap3 is
       Info : constant Type_Info_Acc := Get_Info (Def);
       Mark : Id_Mark_Type;
    begin
-      New_Uncomplete_Record_Type (Info.Ortho_Type (Mode_Value));
-      New_Type_Decl (Create_Identifier, Info.Ortho_Type (Mode_Value));
+      --  The protected type is represented by an incomplete record, that
+      --  will be completed by the protected type body.
+      Predeclare_Scope_Type (Info.T.Prot_Scope, Create_Identifier);
+      Info.Ortho_Type (Mode_Value) := O_Tnode_Null;
 
-      Info.Ortho_Ptr_Type (Mode_Value) :=
-        New_Access_Type (Info.Ortho_Type (Mode_Value));
-      New_Type_Decl (Create_Identifier ("PTR"),
-                     Info.Ortho_Ptr_Type (Mode_Value));
+      --  Create a pointer type to that record.
+      Declare_Scope_Acc (Info.T.Prot_Scope,
+                         Create_Identifier ("PTR"),
+                         Info.Ortho_Ptr_Type (Mode_Value));
 
+      --  A protected type cannot be used for signals.
       Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
       Info.Ortho_Ptr_Type (Mode_Signal) := O_Tnode_Null;
 
@@ -1437,7 +1440,7 @@ package body Trans.Chap3 is
       Chap4.Translate_Declaration_Chain (Bod);
 
       Pop_Instance_Factory (Info.T.Prot_Scope'Unrestricted_Access);
-      Info.Ortho_Type (Mode_Value) := Get_Scope_Type (Info.T.Prot_Scope);
+      -- Info.Ortho_Type (Mode_Value) := Get_Scope_Type (Info.T.Prot_Scope);
 
       Pop_Identifier_Prefix (Mark);
    end Translate_Protected_Type_Body;
@@ -1500,10 +1503,11 @@ package body Trans.Chap3 is
          --  Allocate the object
          New_Assign_Stmt
            (New_Obj (Var_Obj),
-            Gen_Alloc (Alloc_System,
-              New_Lit (New_Sizeof (Info.Ortho_Type (Mode_Value),
-                Ghdl_Index_Type)),
-              Info.Ortho_Ptr_Type (Mode_Value)));
+            Gen_Alloc
+              (Alloc_System,
+               New_Lit (New_Sizeof (Get_Scope_Type (Info.T.Prot_Scope),
+                                    Ghdl_Index_Type)),
+               Info.Ortho_Ptr_Type (Mode_Value)));
 
          Subprgs.Set_Subprg_Instance_Field
            (Var_Obj, Info.T.Prot_Subprg_Instance_Field,
@@ -2118,8 +2122,8 @@ package body Trans.Chap3 is
             end if;
 
          when Iir_Kind_Protected_Type_Declaration =>
-            Translate_Protected_Type (Def);
             Info.T := Ortho_Info_Type_Prot_Init;
+            Translate_Protected_Type (Def);
 
          when others =>
             Error_Kind ("translate_type_definition", Def);

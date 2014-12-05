@@ -1255,7 +1255,7 @@ package body Trans.Chap2 is
    procedure Declare_Inst_Type_And_Ptr (Scope    : Var_Scope_Acc;
                                         Ptr_Type : out O_Tnode) is
    begin
-      Predeclare_Scope_Type (Scope, Create_Identifier ("INSTTYPE"));
+      Predeclare_Scope_Type (Scope.all, Create_Identifier ("INSTTYPE"));
       Declare_Scope_Acc
         (Scope.all, Create_Identifier ("INSTPTR"), Ptr_Type);
    end Declare_Inst_Type_And_Ptr;

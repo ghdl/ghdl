@@ -225,7 +225,8 @@ package Trans is
       function Has_Scope_Type (Scope : Var_Scope_Type) return Boolean;
 
       --  Create an empty and incomplete scope type for SCOPE using NAME.
-      procedure Predeclare_Scope_Type (Scope : Var_Scope_Acc; Name : O_Ident);
+      procedure Predeclare_Scope_Type
+        (Scope : in out Var_Scope_Type; Name : O_Ident);
 
       --  Declare a pointer PTR_TYPE with NAME to scope type SCOPE.
       procedure Declare_Scope_Acc
@@ -522,15 +523,14 @@ package Trans is
       type Subprg_Instance_Stack is limited private;
 
       --  Declare an instance to be added for subprograms.
-      --  DECL is the node for which the instance is created. This is used by
-      --   PUSH_SCOPE.
-      --  PTR_TYPE is a pointer to DECL_TYPE.
+      --  SCOPE is the scope to pass to the subprogram.
+      --  PTR_TYPE is a pointer to SCOPE.
       --  IDENT is an identifier for the interface.
       --  The previous instance is stored to PREV.  It must be restored with
       --  Pop_Subprg_Instance.
       --  Add_Subprg_Instance_Interfaces will add an interface of name IDENT
       --   and type PTR_TYPE for every instance declared by
-      --   PUSH_SUBPRG_INSTANCE.
+      --   Push_Subprg_Instance.
       procedure Push_Subprg_Instance (Scope    : Var_Scope_Acc;
                                       Ptr_Type : O_Tnode;
                                       Ident    : O_Ident;
