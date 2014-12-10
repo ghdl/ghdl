@@ -43,81 +43,130 @@ package body Grt.Disp_Rti is
    procedure Disp_Enum_Value
      (Stream : FILEs; Rti : Ghdl_Rti_Access; Val : Ghdl_Index_Type)
    is
-      Enum_Rti : Ghdl_Rtin_Type_Enum_Acc;
+      Enum_Rti : constant Ghdl_Rtin_Type_Enum_Acc :=
+        To_Ghdl_Rtin_Type_Enum_Acc (Rti);
    begin
-      Enum_Rti := To_Ghdl_Rtin_Type_Enum_Acc (Rti);
       Put (Stream, Enum_Rti.Names (Val));
    end Disp_Enum_Value;
 
-   procedure Disp_Scalar_Value
-     (Stream : FILEs;
-      Rti : Ghdl_Rti_Access;
-      Addr : in out Address;
-      Is_Sig : Boolean)
+   procedure Peek_Value_And_Update (Rti : Ghdl_Rti_Access;
+                                    Val : out Ghdl_Value_Ptr;
+                                    Addr : in out Address;
+                                    Is_Sig : Boolean)
    is
-      procedure Update (S : Ghdl_Index_Type) is
-      begin
-         Addr := Addr + (S / Storage_Unit);
-      end Update;
-
-      Vptr : Ghdl_Value_Ptr;
+      Sz : Ghdl_Index_Type;
    begin
       if Is_Sig then
-         Vptr := To_Ghdl_Value_Ptr (To_Addr_Acc (Addr).all);
-         Update (Address'Size);
+         Val := To_Ghdl_Value_Ptr (To_Addr_Acc (Addr).all);
+         Sz := Address'Size / Storage_Unit;
       else
-         Vptr := To_Ghdl_Value_Ptr (Addr);
+         Val := To_Ghdl_Value_Ptr (Addr);
+         case Rti.Kind is
+            when Ghdl_Rtik_Type_E8
+              | Ghdl_Rtik_Type_B1 =>
+               Sz := 1;
+            when Ghdl_Rtik_Type_I32
+              | Ghdl_Rtik_Type_E32
+              | Ghdl_Rtik_Type_P32 =>
+               Sz := 4;
+            when Ghdl_Rtik_Type_F64
+              | Ghdl_Rtik_Type_P64 =>
+               Sz := 8;
+            when others =>
+               Internal_Error ("disp_rti.peek_value_and_update");
+         end case;
       end if;
+      Addr := Addr + Sz;
+   end Peek_Value_And_Update;
+
+   procedure Disp_Scalar_Value (Stream : FILEs;
+                                Rti : Ghdl_Rti_Access;
+                                Addr : in out Address;
+                                Is_Sig : Boolean)
+   is
+      Vptr : Ghdl_Value_Ptr;
+   begin
+      Peek_Value_And_Update (Rti, Vptr, Addr, Is_Sig);
 
       case Rti.Kind is
          when Ghdl_Rtik_Type_I32 =>
             Put_I32 (Stream, Vptr.I32);
-            if not Is_Sig then
-               Update (32);
-            end if;
          when Ghdl_Rtik_Type_E8 =>
             Disp_Enum_Value (Stream, Rti, Ghdl_Index_Type (Vptr.E8));
-            if not Is_Sig then
-               Update (8);
-            end if;
          when Ghdl_Rtik_Type_E32 =>
             Disp_Enum_Value (Stream, Rti, Ghdl_Index_Type (Vptr.E32));
-            if not Is_Sig then
-               Update (32);
-            end if;
          when Ghdl_Rtik_Type_B1 =>
             Disp_Enum_Value (Stream, Rti,
                              Ghdl_Index_Type (Ghdl_B1'Pos (Vptr.B1)));
-            if not Is_Sig then
-               Update (8);
-            end if;
          when Ghdl_Rtik_Type_F64 =>
             Put_F64 (Stream, Vptr.F64);
-            if not Is_Sig then
-               Update (64);
-            end if;
          when Ghdl_Rtik_Type_P64 =>
             Put_I64 (Stream, Vptr.I64);
             Put (Stream, " ");
             Put (Stream,
                  Get_Physical_Unit_Name
                    (To_Ghdl_Rtin_Type_Physical_Acc (Rti).Units (0)));
-            if not Is_Sig then
-               Update (64);
-            end if;
          when Ghdl_Rtik_Type_P32 =>
             Put_I32 (Stream, Vptr.I32);
             Put (Stream, " ");
             Put (Stream,
                  Get_Physical_Unit_Name
                    (To_Ghdl_Rtin_Type_Physical_Acc (Rti).Units (0)));
-            if not Is_Sig then
-               Update (32);
-            end if;
          when others =>
             Internal_Error ("disp_rti.disp_scalar_value");
       end case;
    end Disp_Scalar_Value;
+
+   procedure Disp_Array_As_String (Stream : FILEs;
+                                   El_Rti : Ghdl_Rti_Access;
+                                   Length : Ghdl_Index_Type;
+                                   Obj : in out Address;
+                                   Is_Sig : Boolean)
+   is
+      Enum_Rti : constant Ghdl_Rtin_Type_Enum_Acc :=
+        To_Ghdl_Rtin_Type_Enum_Acc (El_Rti);
+      Name : Ghdl_C_String;
+
+      In_String : Boolean;
+      Val : Ghdl_Value_Ptr;
+   begin
+      In_String := False;
+
+      for I in 1 .. Length loop
+         Peek_Value_And_Update (El_Rti, Val, Obj, Is_Sig);
+         case El_Rti.Kind is
+            when Ghdl_Rtik_Type_E8 =>
+               Name := Enum_Rti.Names (Ghdl_Index_Type (Val.E8));
+            when Ghdl_Rtik_Type_B1 =>
+               Name := Enum_Rti.Names (Ghdl_B1'Pos (Val.B1));
+            when others =>
+               Internal_Error ("disp_rti.disp_array_as_string");
+         end case;
+         if Name (1) = ''' then
+            --  A character.
+            if not In_String then
+               if I /= 1 then
+                  Put (Stream, " & ");
+               end if;
+               Put (Stream, '"');
+               In_String := True;
+            end if;
+            Put (Stream, Name (2));
+         else
+            if In_String then
+               Put (Stream, '"');
+               In_String := False;
+            end if;
+            if I /= 1 then
+               Put (Stream, " & ");
+            end if;
+            Put (Stream, Name);
+         end if;
+      end loop;
+      if In_String then
+         Put (Stream, '"');
+      end if;
+   end Disp_Array_As_String;
 
 --    function Get_Scalar_Type_Kind (Rti : Ghdl_Rti_Access) return Ghdl_Rtik
 --    is
@@ -148,6 +197,16 @@ package body Grt.Disp_Rti is
       Length : Ghdl_Index_Type;
    begin
       Length := Range_To_Length (Rngs (Index), Get_Base_Type (Rtis (Index)));
+
+      if Index = Rngs'Last
+        and then (El_Rti.Kind = Ghdl_Rtik_Type_B1
+                    or else El_Rti.Kind = Ghdl_Rtik_Type_E8)
+      then
+         --  Disp as string.
+         Disp_Array_As_String (Stream, El_Rti, Length, Obj, Is_Sig);
+         return;
+      end if;
+
       Put (Stream, "(");
       for I in 1 .. Length loop
          if I /= 1 then
@@ -237,13 +296,11 @@ package body Grt.Disp_Rti is
                  To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
                Bt : constant Ghdl_Rtin_Type_Array_Acc := St.Basetype;
                Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
-               B : Address;
             begin
                Bound_To_Range
                  (Loc_To_Addr (St.Common.Depth, St.Bounds, Ctxt), Bt, Rngs);
-               B := Obj;
                Disp_Array_Value_1
-                 (Stream, Bt.Element, Ctxt, Rngs, Bt.Indexes, 0, B, Is_Sig);
+                 (Stream, Bt.Element, Ctxt, Rngs, Bt.Indexes, 0, Obj, Is_Sig);
             end;
          when Ghdl_Rtik_Type_File =>
             declare
