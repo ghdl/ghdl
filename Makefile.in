@@ -326,6 +326,7 @@ distclean: clean
 
 clean-c: force
 	$(RM) -f memsegs_c.o chkstk.o linux.o times.o grt-cbinding.o grt-cvpi.o
+	$(RM) -f fstapi.o fastlz.o lz4.o
 
 force:
 

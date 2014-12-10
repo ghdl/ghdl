@@ -338,10 +338,6 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_Architecture =>
             Put ("ghdl_rtik_architecture");
 
-         when Ghdl_Rtik_Port =>
-            Put ("ghdl_rtik_port");
-         when Ghdl_Rtik_Generic =>
-            Put ("ghdl_rtik_generic");
          when Ghdl_Rtik_Process =>
             Put ("ghdl_rtik_process");
          when Ghdl_Rtik_Component =>
@@ -368,6 +364,12 @@ package body Grt.Disp_Rti is
             Put ("ghdl_rtik_guard");
          when Ghdl_Rtik_File =>
             Put ("ghdl_rtik_file");
+         when Ghdl_Rtik_Port =>
+            Put ("ghdl_rtik_port");
+         when Ghdl_Rtik_Generic =>
+            Put ("ghdl_rtik_generic");
+         when Ghdl_Rtik_Alias =>
+            Put ("ghdl_rtik_alias");
 
          when Ghdl_Rtik_Instance =>
             Put ("ghdl_rtik_instance");
