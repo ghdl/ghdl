@@ -125,6 +125,7 @@ package Grt.Rtis is
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
       Loc : Ghdl_Rti_Loc;
+      Linecol : Ghdl_Index_Type;
       Parent : Ghdl_Rti_Access;
       Size : Ghdl_Index_Type;
       Nbr_Child : Ghdl_Index_Type;
@@ -136,11 +137,20 @@ package Grt.Rtis is
    function To_Ghdl_Rti_Access is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rtin_Block_Acc, Target => Ghdl_Rti_Access);
 
+   type Ghdl_Rtin_Block_Filename is record
+      Block : Ghdl_Rtin_Block;
+      Filename : Ghdl_C_String;
+   end record;
+   type Ghdl_Rtin_Block_Filename_Acc is access Ghdl_Rtin_Block_Filename;
+   function To_Ghdl_Rtin_Block_Filename_Acc is new Ada.Unchecked_Conversion
+     (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Block_Filename_Acc);
+
    type Ghdl_Rtin_Object is record
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
       Loc : Ghdl_Rti_Loc;
       Obj_Type : Ghdl_Rti_Access;
+      Linecol : Ghdl_Index_Type;
    end record;
    type Ghdl_Rtin_Object_Acc is access Ghdl_Rtin_Object;
    function To_Ghdl_Rtin_Object_Acc is new Ada.Unchecked_Conversion
@@ -151,9 +161,10 @@ package Grt.Rtis is
    type Ghdl_Rtin_Instance is record
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
+      Linecol : Ghdl_Index_Type;
       Loc : Ghdl_Rti_Loc;
       Parent : Ghdl_Rti_Access;
-      Instance : Ghdl_Rti_Access;
+      Instance : Ghdl_Rti_Access; --  Component or entity.
    end record;
    type Ghdl_Rtin_Instance_Acc is access Ghdl_Rtin_Instance;
    function To_Ghdl_Rtin_Instance_Acc is new Ada.Unchecked_Conversion
@@ -348,6 +359,7 @@ package Grt.Rtis is
      (Common => (Ghdl_Rtik_Top, 0, 0, 0),
       Name => null,
       Loc => Null_Rti_Loc,
+      Linecol => 0,
       Parent => null,
       Size => 0,
       Nbr_Child => 0,

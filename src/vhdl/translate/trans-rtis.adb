@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 
 with Name_Table;
+with Files_Map;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 with Configuration;
@@ -26,16 +27,21 @@ with Trans.Helpers2; use Trans.Helpers2;
 
 package body Trans.Rtis is
 
-   --  Node for package, body, entity, architecture, block, generate,
-   --   processes.
+   --  Node for block, generate, processes.
    Ghdl_Rtin_Block           : O_Tnode;
    Ghdl_Rtin_Block_Common    : O_Fnode;
    Ghdl_Rtin_Block_Name      : O_Fnode;
    Ghdl_Rtin_Block_Loc       : O_Fnode;
+   Ghdl_Rtin_Block_Linecol   : O_Fnode;
    Ghdl_Rtin_Block_Parent    : O_Fnode;
    Ghdl_Rtin_Block_Size      : O_Fnode;
    Ghdl_Rtin_Block_Nbr_Child : O_Fnode;
    Ghdl_Rtin_Block_Children  : O_Fnode;
+
+   --  A block with a filename: for package, body, entity and architecture.
+   Ghdl_Rtin_Block_File : O_Tnode;
+   Ghdl_Rtin_Block_File_Block : O_Fnode;
+   Ghdl_Rtin_Block_File_Filename : O_Fnode;
 
    --  Node for scalar type decls.
    Ghdl_Rtin_Type_Scalar        : O_Tnode;
@@ -121,14 +127,16 @@ package body Trans.Rtis is
    Ghdl_Rtin_Object_Name          : O_Fnode;
    Ghdl_Rtin_Object_Loc           : O_Fnode;
    Ghdl_Rtin_Object_Type          : O_Fnode;
+   Ghdl_Rtin_Object_Linecol       : O_Fnode;
 
    --  Node for an instance.
-   Ghdl_Rtin_Instance        : O_Tnode;
-   Ghdl_Rtin_Instance_Common : O_Fnode;
-   Ghdl_Rtin_Instance_Name   : O_Fnode;
-   Ghdl_Rtin_Instance_Loc    : O_Fnode;
-   Ghdl_Rtin_Instance_Parent : O_Fnode;
-   Ghdl_Rtin_Instance_Type   : O_Fnode;
+   Ghdl_Rtin_Instance         : O_Tnode;
+   Ghdl_Rtin_Instance_Common  : O_Fnode;
+   Ghdl_Rtin_Instance_Name    : O_Fnode;
+   Ghdl_Rtin_Instance_Linecol : O_Fnode;
+   Ghdl_Rtin_Instance_Loc     : O_Fnode;
+   Ghdl_Rtin_Instance_Parent  : O_Fnode;
+   Ghdl_Rtin_Instance_Type    : O_Fnode;
 
    --  Node for a component.
    Ghdl_Rtin_Component           : O_Tnode;
@@ -378,6 +386,8 @@ package body Trans.Rtis is
                            Get_Identifier ("name"), Char_Ptr_Type);
          New_Record_Field (Constr, Ghdl_Rtin_Block_Loc,
                            Get_Identifier ("loc"), Ghdl_Ptr_Type);
+         New_Record_Field (Constr, Ghdl_Rtin_Block_Linecol,
+                           Get_Identifier ("linecol"), Ghdl_Index_Type);
          New_Record_Field (Constr, Ghdl_Rtin_Block_Parent,
                            Wki_Parent, Ghdl_Rti_Access);
          New_Record_Field (Constr, Ghdl_Rtin_Block_Size,
@@ -389,6 +399,20 @@ package body Trans.Rtis is
          Finish_Record_Type (Constr, Ghdl_Rtin_Block);
          New_Type_Decl (Get_Identifier ("__ghdl_rtin_block"),
                         Ghdl_Rtin_Block);
+      end;
+
+      --  Create type ghdl_rtin_block_file
+      declare
+         Constr : O_Element_List;
+      begin
+         Start_Record_Type (Constr);
+         New_Record_Field (Constr, Ghdl_Rtin_Block_File_Block,
+                           Get_Identifier ("block"), Ghdl_Rtin_Block);
+         New_Record_Field (Constr, Ghdl_Rtin_Block_File_Filename,
+                           Get_Identifier ("filename"), Char_Ptr_Type);
+         Finish_Record_Type (Constr, Ghdl_Rtin_Block_File);
+         New_Type_Decl (Get_Identifier ("__ghdl_rtin_block_file"),
+                        Ghdl_Rtin_Block_File);
       end;
 
       --  type (type and subtype declarations).
@@ -601,6 +625,8 @@ package body Trans.Rtis is
                            Get_Identifier ("loc"), Ghdl_Ptr_Type);
          New_Record_Field (Constr, Ghdl_Rtin_Object_Type,
                            Get_Identifier ("obj_type"), Ghdl_Rti_Access);
+         New_Record_Field (Constr, Ghdl_Rtin_Object_Linecol,
+                           Get_Identifier ("linecol"), Ghdl_Index_Type);
          Finish_Record_Type (Constr, Ghdl_Rtin_Object);
          New_Type_Decl (Get_Identifier ("__ghdl_rtin_object"),
                         Ghdl_Rtin_Object);
@@ -615,6 +641,8 @@ package body Trans.Rtis is
                            Get_Identifier ("common"), Ghdl_Rti_Common);
          New_Record_Field (Constr, Ghdl_Rtin_Instance_Name,
                            Get_Identifier ("name"), Char_Ptr_Type);
+         New_Record_Field (Constr, Ghdl_Rtin_Instance_Linecol,
+                           Get_Identifier ("linecol"), Ghdl_Index_Type);
          New_Record_Field (Constr, Ghdl_Rtin_Instance_Loc,
                            Get_Identifier ("loc"), Ghdl_Ptr_Type);
          New_Record_Field (Constr, Ghdl_Rtin_Instance_Parent,
@@ -791,7 +819,7 @@ package body Trans.Rtis is
 
    function Generate_Common
      (Kind : O_Cnode; Var : Var_Type := Null_Var; Mode : Natural := 0)
-         return O_Cnode
+     return O_Cnode
    is
       List : O_Record_Aggr_List;
       Res  : O_Cnode;
@@ -809,11 +837,11 @@ package body Trans.Rtis is
    end Generate_Common;
 
    --  Same as Generat_Common but for types.
-   function Generate_Common_Type (Kind      : O_Cnode;
-                                  Depth     : Rti_Depth_Type;
+   function Generate_Common_Type (Kind : O_Cnode;
+                                  Depth : Rti_Depth_Type;
                                   Max_Depth : Rti_Depth_Type;
-                                  Mode      : Natural := 0)
-                                     return O_Cnode
+                                  Mode : Natural := 0)
+                                 return O_Cnode
    is
       List : O_Record_Aggr_List;
       Res  : O_Cnode;
@@ -1685,6 +1713,21 @@ package body Trans.Rtis is
                       Global_Storage, Ghdl_Rtin_Object);
    end Generate_Signal_Rti;
 
+   function Generate_Linecol (Decl : Iir) return O_Cnode
+   is
+      Line : Natural;
+      Col : Natural;
+      Name : Name_Id;
+   begin
+      Files_Map.Location_To_Position (Get_Location (Decl), Name, Line, Col);
+
+      --  Saturate col and line.
+      Col := Natural'Min (Col, 255);
+      Line := Natural'Min (Line, 2**24 - 1);
+      return Helpers.New_Index_Lit
+        (Unsigned_64 (Line) * 256 + Unsigned_64 (Col));
+   end Generate_Linecol;
+
    procedure Generate_Object (Decl : Iir; Rti : in out O_Dnode)
    is
       Decl_Type : Iir;
@@ -1818,6 +1861,7 @@ package body Trans.Rtis is
          end if;
          New_Record_Aggr_El (List, Val);
          New_Record_Aggr_El (List, New_Rti_Address (Type_Info.Type_Rti));
+         New_Record_Aggr_El (List, Generate_Linecol (Decl));
          Finish_Record_Aggr (List, Val);
          Finish_Const_Value (Rti, Val);
       end if;
@@ -1971,11 +2015,12 @@ package body Trans.Rtis is
       Start_Record_Aggr (List, Ghdl_Rtin_Instance);
       New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_Instance));
       New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
+      New_Record_Aggr_El (List, Generate_Linecol (Stmt));
       New_Record_Aggr_El
         (List, New_Offsetof (Get_Scope_Type
-         (Get_Info (Get_Parent (Stmt)).Block_Scope),
-         Info.Block_Link_Field,
-         Ghdl_Ptr_Type));
+                               (Get_Info (Get_Parent (Stmt)).Block_Scope),
+                             Info.Block_Link_Field,
+                             Ghdl_Ptr_Type));
       New_Record_Aggr_El (List, New_Rti_Address (Parent));
       if Is_Component_Instantiation (Stmt) then
          Val := New_Rti_Address
@@ -2145,7 +2190,9 @@ package body Trans.Rtis is
       Name : O_Dnode;
       Arr  : O_Dnode;
       List : O_Record_Aggr_List;
+      List_File : O_Record_Aggr_List;
 
+      Rti_Type : O_Tnode;
       Rti : O_Dnode;
 
       Kind : O_Cnode;
@@ -2160,13 +2207,12 @@ package body Trans.Rtis is
       --  The type of a generator iterator is elaborated in the parent.
       if Get_Kind (Blk) = Iir_Kind_Generate_Statement then
          declare
-            Scheme    : Iir;
+            Scheme    : constant Iir := Get_Generation_Scheme (Blk);
             Iter_Type : Iir;
             Type_Info : Type_Info_Acc;
             Mark      : Id_Mark_Type;
             Tmp       : O_Dnode;
          begin
-            Scheme := Get_Generation_Scheme (Blk);
             if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
                Iter_Type := Get_Type (Scheme);
                Type_Info := Get_Info (Iter_Type);
@@ -2180,8 +2226,14 @@ package body Trans.Rtis is
          end;
       end if;
 
+      if Get_Kind (Get_Parent (Blk)) = Iir_Kind_Design_Unit then
+         Rti_Type := Ghdl_Rtin_Block_File;
+      else
+         Rti_Type := Ghdl_Rtin_Block;
+      end if;
+
       New_Const_Decl (Rti, Create_Identifier ("RTI"),
-                      O_Storage_Public, Ghdl_Rtin_Block);
+                      O_Storage_Public, Rti_Type);
       Push_Rti_Node (Prev);
 
       Field_Off := O_Cnode_Null;
@@ -2270,6 +2322,11 @@ package body Trans.Rtis is
       Arr := Generate_Rti_Array (Create_Identifier ("RTIARRAY"));
 
       Start_Const_Value (Rti);
+
+      if Rti_Type = Ghdl_Rtin_Block_File then
+         Start_Record_Aggr (List_File, Rti_Type);
+      end if;
+
       Start_Record_Aggr (List, Ghdl_Rtin_Block);
       New_Record_Aggr_El (List, Generate_Common (Kind));
       New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
@@ -2277,6 +2334,7 @@ package body Trans.Rtis is
          Field_Off := Get_Null_Loc;
       end if;
       New_Record_Aggr_El (List, Field_Off);
+      New_Record_Aggr_El (List, Generate_Linecol (Blk));
       if Parent_Rti = O_Dnode_Null then
          Res := New_Null_Access (Ghdl_Rti_Access);
       else
@@ -2294,6 +2352,15 @@ package body Trans.Rtis is
          Unsigned_64 (Cur_Block.Nbr)));
       New_Record_Aggr_El (List, New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
       Finish_Record_Aggr (List, Res);
+
+      if Rti_Type = Ghdl_Rtin_Block_File then
+         New_Record_Aggr_El (List_File, Res);
+         New_Record_Aggr_El (List_File,
+                             New_Global_Address (Current_Filename_Node,
+                                                 Char_Ptr_Type));
+         Finish_Record_Aggr (List_File, Res);
+      end if;
+
       Finish_Const_Value (Rti, Res);
 
       Pop_Rti_Node (Prev);
@@ -2342,6 +2409,7 @@ package body Trans.Rtis is
    begin
       Info := Get_Info (Lib);
       if Info /= null then
+         --  Already generated.
          return;
       end if;
       Info := Add_Info (Lib, Kind_Library);
@@ -2378,13 +2446,13 @@ package body Trans.Rtis is
 
    procedure Generate_Unit (Lib_Unit : Iir)
    is
+      Info : constant Ortho_Info_Acc := Get_Info (Lib_Unit);
       Rti  : O_Dnode;
-      Info : Ortho_Info_Acc;
       Mark : Id_Mark_Type;
    begin
-      Info := Get_Info (Lib_Unit);
       case Get_Kind (Lib_Unit) is
          when Iir_Kind_Configuration_Declaration =>
+            --  No RTI for configurations.
             return;
          when Iir_Kind_Architecture_Body =>
             if Info.Block_Rti_Const /= O_Dnode_Null then
@@ -2427,10 +2495,12 @@ package body Trans.Rtis is
                null;
          end case;
       else
+         --  Compute parent RTI.
          case Get_Kind (Lib_Unit) is
             when Iir_Kind_Package_Declaration
                | Iir_Kind_Entity_Declaration
                | Iir_Kind_Configuration_Declaration =>
+               --  The library.
                declare
                   Lib : Iir_Library_Declaration;
                begin
@@ -2440,12 +2510,16 @@ package body Trans.Rtis is
                   Rti := Get_Info (Lib).Library_Rti_Const;
                end;
             when Iir_Kind_Package_Body =>
+               --  The package spec.
                Rti := Get_Info (Get_Package (Lib_Unit)).Package_Rti_Const;
             when Iir_Kind_Architecture_Body =>
+               --  The entity.
                Rti := Get_Info (Get_Entity (Lib_Unit)).Block_Rti_Const;
             when others =>
                raise Internal_Error;
          end case;
+
+         --  Generate RTI for Lib_Unit, using parent RTI.
          Generate_Block (Lib_Unit, Rti);
       end if;
 
@@ -2473,8 +2547,7 @@ package body Trans.Rtis is
          Lib := Get_Library (Get_Design_File (Unit));
          Generate_Library (Lib, True);
 
-         if Get_Kind (Get_Library_Unit (Unit))
-           = Iir_Kind_Package_Declaration
+         if Get_Kind (Get_Library_Unit (Unit)) = Iir_Kind_Package_Declaration
          then
             Nbr_Pkgs := Nbr_Pkgs + 1;
          end if;
@@ -2485,12 +2558,9 @@ package body Trans.Rtis is
 
    function Get_Context_Rti (Node : Iir) return O_Cnode
    is
-      Node_Info : Ortho_Info_Acc;
-
+      Node_Info : constant Ortho_Info_Acc := Get_Info (Node);
       Rti_Const : O_Dnode;
    begin
-      Node_Info := Get_Info (Node);
-
       case Get_Kind (Node) is
          when Iir_Kind_Component_Declaration =>
             Rti_Const := Node_Info.Comp_Rti_Const;

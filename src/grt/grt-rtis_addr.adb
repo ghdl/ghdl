@@ -187,15 +187,14 @@ package body Grt.Rtis_Addr is
                                    Ctxt : Rti_Context;
                                    Sub_Ctxt : out Rti_Context)
    is
-      Inst_Addr : Address;
-      Inst_Base : Address;
-   begin
       --  Address of the field containing the address of the instance.
-      Inst_Addr := Ctxt.Base + Inst.Loc;
+      Inst_Addr : constant Address := Ctxt.Base + Inst.Loc;
       --  Read sub instance address.
-      Inst_Base := To_Addr_Acc (Inst_Addr).all;
+      Inst_Base : constant Address := To_Addr_Acc (Inst_Addr).all;
+   begin
       --  Read instance RTI.
       if Inst_Base = Null_Address then
+         --  No instance.
          Sub_Ctxt := (Base => Null_Address, Block => null);
       else
          Sub_Ctxt := (Base => Inst_Base,

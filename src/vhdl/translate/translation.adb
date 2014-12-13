@@ -199,9 +199,8 @@ package body Translation is
    is
       Info : Design_File_Info_Acc;
    begin
-      if Current_Filename_Node /= O_Dnode_Null then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Current_Filename_Node = O_Dnode_Null);
+
       Info := Get_Info (Design_File);
       if Info = null then
          Info := Add_Info (Design_File, Kind_Design_File);

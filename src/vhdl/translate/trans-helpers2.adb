@@ -310,7 +310,7 @@ package body Trans.Helpers2 is
    begin
       New_Association (Assoc,
                        New_Lit (New_Global_Address (Current_Filename_Node,
-                         Char_Ptr_Type)));
+                                                    Char_Ptr_Type)));
       New_Association (Assoc, New_Lit (New_Signed_Literal
                        (Ghdl_I32_Type, Integer_64 (Line))));
    end Assoc_Filename_Line;

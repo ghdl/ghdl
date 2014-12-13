@@ -1385,6 +1385,7 @@ package body Grt.Signals is
                  Depth => 0,
                  Mode => Ghdl_Rti_Signal_Mode_None,
                  Max_Depth => 0),
+      Linecol => 0,
       Name => null,
       Loc => Null_Rti_Loc,
       Obj_Type => null);
@@ -1394,6 +1395,7 @@ package body Grt.Signals is
                  Depth => 0,
                  Mode => Ghdl_Rti_Signal_Mode_None,
                  Max_Depth => 0),
+      Linecol => 0,
       Name => null,
       Loc => Null_Rti_Loc,
       Obj_Type => null);
@@ -1475,6 +1477,7 @@ package body Grt.Signals is
                  Depth => 0,
                  Mode => Ghdl_Rti_Signal_Mode_None,
                  Max_Depth => 0),
+      Linecol => 0,
       Name => null,
       Loc => Null_Rti_Loc,
       Obj_Type => Std_Standard_Boolean_RTI_Ptr);

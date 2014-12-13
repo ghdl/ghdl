@@ -624,6 +624,16 @@ package body Grt.Disp_Rti is
       end case;
    end Disp_Subtype_Indication;
 
+   procedure Disp_Linecol (Linecol : Ghdl_Index_Type)
+   is
+      Line : constant Ghdl_U32 := Ghdl_U32 (Linecol / 256);
+      Col : constant Ghdl_U32 := Ghdl_U32 (Linecol mod 256);
+   begin
+      Put ("sloc=");
+      Put_U32 (stdout, Line);
+      Put (":");
+      Put_U32 (stdout, Col);
+   end Disp_Linecol;
 
    procedure Disp_Rti (Rti : Ghdl_Rti_Access;
                        Ctxt : Rti_Context;
@@ -649,9 +659,24 @@ package body Grt.Disp_Rti is
       Disp_Indent (Indent);
       Disp_Kind (Blk.Common.Kind);
       Disp_Depth (Blk.Common.Depth);
+      Put (", ");
+      Disp_Linecol (Blk.Linecol);
       Put (": ");
       Disp_Name (Blk.Name);
       New_Line;
+      case Blk.Common.Kind is
+         when Ghdl_Rtik_Package
+           | Ghdl_Rtik_Package_Body
+           | Ghdl_Rtik_Entity
+           | Ghdl_Rtik_Architecture =>
+            Disp_Indent (Indent);
+            Put (" filename: ");
+            Disp_Name (To_Ghdl_Rtin_Block_Filename_Acc
+                         (To_Ghdl_Rti_Access (Blk)).Filename);
+            New_Line;
+         when others =>
+            null;
+      end case;
       if Blk.Parent /= null then
          case Blk.Common.Kind is
             when Ghdl_Rtik_Architecture =>
@@ -708,6 +733,8 @@ package body Grt.Disp_Rti is
       Disp_Indent (Indent);
       Disp_Kind (Obj.Common.Kind);
       Disp_Depth (Obj.Common.Depth);
+      Put (", ");
+      Disp_Linecol (Obj.Linecol);
       Put ("; ");
       Disp_Name (Obj.Name);
       Put (": ");
@@ -767,6 +794,8 @@ package body Grt.Disp_Rti is
    begin
       Disp_Indent (Indent);
       Disp_Kind (Inst.Common.Kind);
+      Put (", ");
+      Disp_Linecol (Inst.Linecol);
       Put (": ");
       Disp_Name (Inst.Name);
       New_Line;

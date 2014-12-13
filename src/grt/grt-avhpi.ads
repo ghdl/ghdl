@@ -443,6 +443,10 @@ package Grt.Avhpi is
                            Res : out String;
                            Len : out Natural);
 
+   procedure Vhpi_Get_Str (Property : VhpiStrPropertyT;
+                           Obj : VhpiHandleT;
+                           Res : out Ghdl_C_String);
+
    subtype VhpiIntT is Ghdl_I32;
 
    procedure Vhpi_Get (Property : VhpiIntPropertyT;

@@ -551,6 +551,41 @@ package body Grt.Avhpi is
 
    procedure Vhpi_Get_Str (Property : VhpiStrPropertyT;
                            Obj : VhpiHandleT;
+                           Res : out Ghdl_C_String) is
+   begin
+      Res := null;
+
+      case Property is
+         when VhpiFileNameP =>
+            declare
+               Parent : Ghdl_Rti_Access;
+            begin
+               Parent := Obj.Ctxt.Block;
+               while Parent /= null loop
+                  case Parent.Kind is
+                     when Ghdl_Rtik_Package
+                       | Ghdl_Rtik_Package_Body
+                       | Ghdl_Rtik_Entity
+                       | Ghdl_Rtik_Architecture =>
+                        Res :=
+                          To_Ghdl_Rtin_Block_Filename_Acc (Parent).Filename;
+                        return;
+                     when Ghdl_Rtik_Block
+                       | Ghdl_Rtik_Process =>
+                        Parent :=
+                          To_Ghdl_Rtin_Block_Acc (Parent).Parent;
+                     when others =>
+                        return;
+                  end case;
+               end loop;
+            end;
+         when others =>
+            null;
+      end case;
+   end Vhpi_Get_Str;
+
+   procedure Vhpi_Get_Str (Property : VhpiStrPropertyT;
+                           Obj : VhpiHandleT;
                            Res : out String;
                            Len : out Natural)
    is
@@ -747,6 +782,13 @@ package body Grt.Avhpi is
                      when others =>
                         return;
                   end case;
+               when VhpiCompInstStmtK =>
+                  Res := (Kind => VhpiArchBodyK,
+                          Ctxt => Null_Context);
+                  Get_Instance_Context (Ref.Inst, Ref.Ctxt, Res.Ctxt);
+                  pragma Assert (Ref.Ctxt.Block.Kind = Ghdl_Rtik_Architecture);
+                  Error := AvhpiErrorOk;
+                  return;
                when others =>
                   return;
             end case;
@@ -973,6 +1015,9 @@ package body Grt.Avhpi is
                        Error : out AvhpiErrorT)
    is
    begin
+      --  Default error.
+      Error := AvhpiErrorNotImplemented;
+
       case Property is
          when VhpiLeftBoundP =>
             if Obj.Kind /= VhpiIntRangeK then
@@ -985,9 +1030,9 @@ package body Grt.Avhpi is
                when Ghdl_Rtik_Type_I32 =>
                   Res := Obj.Rng_Addr.I32.Left;
                when others =>
-                  Error := AvhpiErrorNotImplemented;
+                  null;
             end case;
-            return;
+
          when VhpiRightBoundP =>
             if Obj.Kind /= VhpiIntRangeK then
                Error := AvhpiErrorBadRel;
@@ -998,11 +1043,39 @@ package body Grt.Avhpi is
                when Ghdl_Rtik_Type_I32 =>
                   Res := Obj.Rng_Addr.I32.Right;
                when others =>
-                  Error := AvhpiErrorNotImplemented;
+                  null;
             end case;
-            return;
+
+         when VhpiLineNoP =>
+            declare
+               Linecol : Ghdl_Index_Type;
+            begin
+               case Obj.Kind is
+                  when VhpiSigDeclK
+                    | VhpiPortDeclK
+                    | VhpiGenericDeclK =>
+                     --  Objects.
+                     Linecol := Obj.Obj.Linecol;
+                  when VhpiPackInstK
+                    | VhpiArchBodyK
+                    | VhpiEntityDeclK
+                    | VhpiProcessStmtK
+                    | VhpiBlockStmtK
+                    | VhpiIfGenerateK =>
+                     --  Blocks.
+                     Linecol :=
+                       To_Ghdl_Rtin_Block_Acc (Obj.Ctxt.Block).Linecol;
+                  when VhpiCompInstStmtK =>
+                     Linecol := Obj.Inst.Linecol;
+                  when others =>
+                     return;
+               end case;
+               Res := VhpiIntT (Linecol / 256);
+               Error := AvhpiErrorOk;
+            end;
+
          when others =>
-            Error := AvhpiErrorNotImplemented;
+            null;
       end case;
    end Vhpi_Get;
 

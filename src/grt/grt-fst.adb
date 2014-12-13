@@ -288,6 +288,21 @@ package body Grt.Fst is
          end;
       end if;
 
+      --  Source (for instances ?)
+      if Boolean'(False) then
+         declare
+            Filename : Ghdl_C_String;
+            Line : VhpiIntT;
+         begin
+            Vhpi_Get_Str (VhpiFileNameP, Sig, Filename);
+            Vhpi_Get (VhpiLineNoP, Sig, Line, Err);
+            if Filename /= null and then Err = AvhpiErrorOk then
+               fstWriterSetSourceStem
+                 (Context, Filename, Interfaces.C.unsigned (Line), 0);
+            end if;
+         end;
+      end if;
+
       --  Extract type name.
       Vhpi_Handle (VhpiSubtype, Sig, Sig_Type, Err);
       if Err /= AvhpiErrorOk then
@@ -382,7 +397,43 @@ package body Grt.Fst is
    is
       Name : String (1 .. 128);
       Name_Len : Integer;
+      Err : AvhpiErrorT;
    begin
+      --  Source file and line.
+      declare
+         Filename : Ghdl_C_String;
+         Line : VhpiIntT;
+         Arch : VhpiHandleT;
+      begin
+         Vhpi_Get_Str (VhpiFileNameP, Decl, Filename);
+         Vhpi_Get (VhpiLineNoP, Decl, Line, Err);
+         if Filename /= null and then Err = AvhpiErrorOk then
+            if Vhpi_Get_Kind (Decl) /= VhpiCompInstStmtK then
+               --  For a block, a generate block: source location.
+               fstWriterSetSourceStem
+                 (Context, Filename, Interfaces.C.unsigned (Line), 0);
+            else
+               --  For a component instantiation: instance location
+               fstWriterSetSourceInstantiationStem
+                 (Context, Filename, Interfaces.C.unsigned (Line), 0);
+               --  Request DesignUnit => arch
+               Vhpi_Handle (VhpiDesignUnit, Decl, Arch, Err);
+               if Err /= AvhpiErrorOk then
+                  Avhpi_Error (Err);
+               elsif Arch /= Null_Handle then
+                  --  Request filename and line.
+                  Vhpi_Get_Str (VhpiFileNameP, Arch, Filename);
+                  Vhpi_Get (VhpiLineNoP, Arch, Line, Err);
+                  if Filename /= null and then Err = AvhpiErrorOk then
+                     --  And source location.
+                     fstWriterSetSourceStem
+                       (Context, Filename, Interfaces.C.unsigned (Line), 0);
+                  end if;
+               end if;
+            end if;
+         end if;
+      end;
+
       Vhpi_Get_Str (VhpiNameP, Decl, Name, Name_Len);
       if Name_Len < Name'Last then
          Name (Name_Len + 1) := NUL;
