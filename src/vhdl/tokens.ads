@@ -240,7 +240,6 @@ package Tokens is
        Tok_Psl_Property,
        Tok_Psl_Sequence,
        Tok_Psl_Endpoint,
-       Tok_Psl_Assert,
        Tok_Psl_Cover,
 
        Tok_Psl_Const,

@@ -6088,16 +6088,13 @@ package body Parse is
       Res : Iir;
    begin
       case Current_Token is
-         when Tok_Psl_Assert =>
+         when Tok_Assert =>
             Res := Create_Iir (Iir_Kind_Psl_Assert_Statement);
          when Tok_Psl_Cover =>
             Res := Create_Iir (Iir_Kind_Psl_Cover_Statement);
          when others =>
             raise Internal_Error;
       end case;
-
-      --  Scan extended PSL tokens.
-      Scanner.Flag_Psl := True;
 
       --  Skip 'assert'
       Scan;
@@ -6143,6 +6140,14 @@ package body Parse is
             Postponed := False;
          end if;
       end Postponed_Not_Allowed;
+
+      procedure Label_Not_Allowed is
+      begin
+         if Label /= Null_Identifier then
+            Error_Msg_Parse ("'postponed' not allowed here");
+            Label := Null_Identifier;
+         end if;
+      end Label_Not_Allowed;
    begin
       -- begin was just parsed.
       Last_Stmt := Null_Iir;
@@ -6210,9 +6215,15 @@ package body Parse is
             when Tok_Process =>
                Stmt := Parse_Process_Statement (Label, Loc, Postponed);
             when Tok_Assert =>
-               Stmt := Create_Iir (Iir_Kind_Concurrent_Assertion_Statement);
-               Parse_Assertion (Stmt);
-               Expect (Tok_Semi_Colon);
+               if Vhdl_Std >= Vhdl_08
+                 or else (Flag_Psl_Comment and then Flag_Scan_In_Comment)
+               then
+                  Stmt := Parse_Psl_Assert_Statement;
+               else
+                  Stmt := Create_Iir (Iir_Kind_Concurrent_Assertion_Statement);
+                  Parse_Assertion (Stmt);
+                  Expect (Tok_Semi_Colon);
+               end if;
             when Tok_With =>
                Stmt := Parse_Selected_Signal_Assignment;
             when Tok_Block =>
@@ -6241,14 +6252,15 @@ package body Parse is
                end;
             when Tok_Psl_Default =>
                Postponed_Not_Allowed;
+               Label_Not_Allowed;
                Stmt := Parse_Psl_Default_Clock;
             when Tok_Psl_Property
               | Tok_Psl_Sequence
               | Tok_Psl_Endpoint =>
                Postponed_Not_Allowed;
+               Label_Not_Allowed;
                Stmt := Parse_Psl_Declaration;
-            when Tok_Psl_Assert
-              | Tok_Psl_Cover =>
+            when Tok_Psl_Cover =>
                Postponed_Not_Allowed;
                Stmt := Parse_Psl_Assert_Statement;
             when others =>

@@ -405,8 +405,6 @@ package body Tokens is
             return "sequence";
          when Tok_Psl_Endpoint =>
             return "endpoint";
-         when Tok_Psl_Assert =>
-            return "assert";
          when Tok_Psl_Cover =>
             return "cover";
          when Tok_Psl_Const =>

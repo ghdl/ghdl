@@ -49,7 +49,7 @@ begin
 
 
 
-  -- psl statements
+  -- -psl statements
 
   -- psl default clock is rising_edge(s_clk);
 

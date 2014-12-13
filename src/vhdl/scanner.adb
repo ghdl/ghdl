@@ -702,6 +702,10 @@ package body Scanner is
                Current_Token := Tok_Psl_Sequence;
             when Std_Names.Name_Property =>
                Current_Token := Tok_Psl_Property;
+            when Std_Names.Name_Cover =>
+               Current_Token := Tok_Psl_Cover;
+            when Std_Names.Name_Default =>
+               Current_Token := Tok_Psl_Default;
             when Std_Names.Name_Inf =>
                Current_Token := Tok_Inf;
             when Std_Names.Name_Within =>
@@ -968,32 +972,16 @@ package body Scanner is
 
       case Id is
          when Name_Psl =>
-            --  Scan first identifier after '-- psl'.
-            if not Scan_Comment_Identifier then
-               return False;
+            --  Accept tokens after '-- psl'.
+            if Flag_Psl_Comment then
+               Flag_Psl := True;
+               Flag_Scan_In_Comment := True;
+               return True;
             end if;
-            Id := Name_Table.Get_Identifier;
-            case Id is
-               when Name_Property =>
-                  Current_Token := Tok_Psl_Property;
-               when Name_Sequence =>
-                  Current_Token := Tok_Psl_Sequence;
-               when Name_Endpoint =>
-                  Current_Token := Tok_Psl_Endpoint;
-               when Name_Assert =>
-                  Current_Token := Tok_Psl_Assert;
-               when Name_Cover =>
-                  Current_Token := Tok_Psl_Cover;
-               when Name_Default =>
-                  Current_Token := Tok_Psl_Default;
-               when others =>
-                  return False;
-            end case;
-            Flag_Scan_In_Comment := True;
-            return True;
          when others =>
-            return False;
+            null;
       end case;
+      return False;
    end Scan_Comment;
 
    function Scan_Exclam_Mark return Boolean is
@@ -1118,10 +1106,8 @@ package body Scanner is
                end if;
 
                --  Handle keywords in comment (PSL).
-               if Flag_Comment_Keyword
-                 and then Scan_Comment
-               then
-                  return;
+               if Flag_Comment_Keyword and then Scan_Comment then
+                  goto Again;
                end if;
 
                --  LRM93 13.2

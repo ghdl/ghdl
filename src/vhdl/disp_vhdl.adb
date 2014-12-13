@@ -2891,7 +2891,9 @@ package body Disp_Vhdl is
 
    procedure Disp_Psl_Assert_Statement (Stmt : Iir) is
    begin
-      Put ("--psl assert ");
+      Put ("--psl ");
+      Disp_Label (Stmt);
+      Put ("assert ");
       Disp_Psl_Expression (Get_Psl_Property (Stmt));
       Put_Line (";");
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
@@ -2899,7 +2901,9 @@ package body Disp_Vhdl is
 
    procedure Disp_Psl_Cover_Statement (Stmt : Iir) is
    begin
-      Put ("--psl cover ");
+      Put ("--psl ");
+      Disp_Label (Stmt);
+      Put ("cover ");
       Disp_Psl_Expression (Get_Psl_Property (Stmt));
       Put_Line (";");
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
