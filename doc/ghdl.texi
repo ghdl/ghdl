@@ -1758,6 +1758,12 @@ It is very unfortunate there is no standard or well-known wave file
 format supporting VHDL types.  If you are aware of such a free format,
 please mail me (@pxref{Reporting bugs}).
 
+@item --fst=@var{FILENAME}
+@cindex @option{--fst} option
+Write the waveforms into a @code{fst}, that can be displayed by
+@code{gtkwave}. The @code{fst} files are much smaller than VCD or
+@code{GHW} files, but it handles only the same signals as the VCD format.
+
 @item --wave=@var{FILENAME}
 @cindex @option{--wave} option
 Write the waveforms into a @code{ghw} (GHdl Waveform) file.  Currently, all
@@ -1765,10 +1771,7 @@ the signals are dumped into the waveform file, you cannot select a hierarchy
 of signals to be dumped.
 
 The format of this file was defined by myself and is not yet completely fixed.
-It may change slightly.
-
-There is a patch against @code{gtkwave 1.3.72} on the ghdl website at
-@uref{ghdl.free.fr}, so that it can read such files.
+It may change slightly.  The @samp{gtkwave} tool can read the GHW files.
 
 Contrary to VCD files, any VHDL type can be dumped into a GHW file.
 
