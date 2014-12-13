@@ -40,8 +40,11 @@ package Ortho_LLVM is
    Optimization : LLVM.TargetMachine.CodeGenOptLevel :=
      LLVM.TargetMachine.CodeGenLevelDefault;
 
-   --  Set by -g to generate debug info.
+   --  Set by -g to generate full debug info.
    Flag_Debug : Boolean := False;
+
+   --  Set by -g or -glines to generate line debug info.
+   Flag_Debug_Line : Boolean := False;
 
 private
    --  No support for nested subprograms in LLVM.

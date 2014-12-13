@@ -151,7 +151,12 @@ begin
                Exec_Func := new String'(Argument (Optind + 1));
                Exec_Val := Integer'Value (Argument (Optind + 2));
                Optind := Optind + 2;
+            elsif Arg = "-glines"
+              or else Arg = "-gline-tables-only"
+            then
+               Flag_Debug_Line := True;
             elsif Arg = "-g" then
+               Flag_Debug_Line := True;
                Flag_Debug := True;
             else
                --  This is really an argument.
@@ -278,7 +283,7 @@ begin
       end loop;
    end if;
 
-   if Flag_Debug then
+   if Flag_Debug_Line then
       Ortho_LLVM.Finish_Debug;
    end if;
 

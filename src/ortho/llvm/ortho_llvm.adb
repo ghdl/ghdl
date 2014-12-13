@@ -116,7 +116,7 @@ package body Ortho_LLVM is
 
    Dbg_Current_Line : unsigned := 0;
 
-   Dbg_Current_Scope : ValueRef;
+   Dbg_Current_Scope : ValueRef := Null_ValueRef;
    Scope_Uniq_Id : Unsigned_64 := 0;
 
    --  Metadata for the instruction
@@ -248,7 +248,7 @@ package body Ortho_LLVM is
    --  FIXME: check if INSN is really an instruction
    procedure Set_Insn_Dbg (Insn : ValueRef) is
    begin
-      if Flag_Debug then
+      if Flag_Debug_Line then
          if Dbg_Current_Line /= Dbg_Insn_MD_Line then
             declare
                Vals : ValueRefArray (0 .. 3);
@@ -1820,7 +1820,7 @@ package body Ortho_LLVM is
    procedure New_Debug_Filename_Decl (Filename : String) is
       Vals : ValueRefArray (1 .. 2);
    begin
-      if Flag_Debug then
+      if Flag_Debug_Line then
          Vals := (MDString (Filename),
                   MDString (Current_Directory));
          Dbg_Current_Filedir := MDNode (Vals, 2);
@@ -2130,9 +2130,10 @@ package body Ortho_LLVM is
 
       PositionBuilderAtEnd (Builder, Cur_Declare_Block.Stmt_Bb);
 
-      if Flag_Debug then
+      if Flag_Debug_Line then
          declare
             Type_Vals : ValueRefArray (0 .. Func.Nbr_Args);
+            Types : ValueRef;
             Vals : ValueRefArray (0 .. 14);
             Arg : O_Inter_Acc;
             Subprg_Type : ValueRef;
@@ -2140,17 +2141,27 @@ package body Ortho_LLVM is
             Subprg_Vals : ValueRefArray (0 .. 19);
             Name : ValueRef;
          begin
-            Arg := Func.Subprg_Inters;
-            if Func.Dtype /= O_Tnode_Null then
-               Type_Vals (0) := Func.Dtype.Dbg;
+            if Flag_Debug then
+               --  Create a full subroutine_type.
+               Arg := Func.Subprg_Inters;
+               if Func.Dtype /= O_Tnode_Null then
+                  Type_Vals (0) := Func.Dtype.Dbg;
+               else
+                  --  Void
+                  Type_Vals (0) := Null_ValueRef;
+               end if;
+               for I in 1 .. Type_Vals'Last loop
+                  Type_Vals (I) := Arg.Itype.Dbg;
+                  Arg := Arg.Next;
+               end loop;
+               Types := MDNode (Type_Vals, Type_Vals'Length);
             else
-               --  Void
-               Type_Vals (0) := Null_ValueRef;
+               --  Create a dummy subroutine_type.
+               --  FIXME: create only one subroutine_type ?
+               Type_Vals (0) := ConstInt (Int32Type, 0, 0);
+               Types := MDNode (Type_Vals, 1);
             end if;
-            for I in 1 .. Type_Vals'Last loop
-               Type_Vals (I) := Arg.Itype.Dbg;
-               Arg := Arg.Next;
-            end loop;
+
             Vals :=
               (ConstInt (Int32Type, DW_TAG_Subroutine_Type, 0),
                ConstInt (Int32Type, 0, 0),  --  1 ??
@@ -2162,7 +2173,7 @@ package body Ortho_LLVM is
                ConstInt (Int64Type, 0, 0),  --  7 offset
                ConstInt (Int32Type, 0, 0),  --  8 flags
                Null_ValueRef,               --  9 derived from
-               MDNode (Type_Vals, Type_Vals'Length), --  10 type
+               Types,                       --  10 type
                ConstInt (Int32Type, 0, 0),  --  11 runtime lang
                Null_ValueRef,               --  12 containing type
                Null_ValueRef,               --  13 template params
@@ -2198,7 +2209,9 @@ package body Ortho_LLVM is
             Append (Subprg_Nodes, Cur_Declare_Block.Dbg_Scope);
             Dbg_Current_Scope := Cur_Declare_Block.Dbg_Scope;
          end;
+      end if;
 
+      if Flag_Debug then
          --  Create local variables for arguments.
          declare
             Arg : O_Inter_Acc;
@@ -2861,7 +2874,7 @@ package body Ortho_LLVM is
         (Module, Stackrestore_Name'Address,
          FunctionType (VoidType, (1 => I8_Ptr_Type), 1, 0));
 
-      if Flag_Debug then
+      if Flag_Debug_Line then
          Debug_ID := GetMDKindID (Dbg_Str, Dbg_Str'Length);
 
          declare
