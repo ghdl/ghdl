@@ -182,7 +182,9 @@ LLVM_CONFIG=$(llvm_prefix)/bin/llvm-config
 
 GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho/llvm
 
-all.llvm: ghdl_llvm_jit
+all.llvm: ghdl1-llvm ghdl_llvm grt-all libs.vhdl.llvm
+
+all.llvm_jit: ghdl_llvm_jit
 
 ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_llvm_jit: $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
@@ -190,6 +192,13 @@ ghdl_llvm_jit: $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
 
 llvm-cbindings.o: $(srcdir)/src/ortho/llvm/llvm-cbindings.cpp
 	$(CXX) -c -m64 `$(LLVM_CONFIG) --includedir --cxxflags` -g -o $@ $<
+
+libs.vhdl.llvmjit:
+	$(MAKE) GHDL=ghdl_llvm_jit libs.vhdl.all
+
+libs.vhdl.llvm:
+	$(MAKE) GHDL=ghdl_llvm libs.vhdl.all
+	$(MAKE) GHDL1=./ghdl1-llvm libs.vhdl.standard
 
 ghdl_llvm: force
 	$(GNATMAKE) $(GHDL_LLVM_INCFLAGS) -aI$(srcdir)/src/ghdldrv $(GNATFLAGS)\
@@ -200,6 +209,31 @@ ghdl1-llvm: force
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNAT_FLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)" all
+
+install.grt.llvm: libgrt.a grt.lst install.dirs
+	$(INSTALL_DATA) libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
+	$(INSTALL_DATA) grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
+	$(INSTALL_DATA) $(GRTSRCDIR)/grt.ver $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
+
+install.vhdl.llvm: install.dirs #libs.vhdl.mcode
+# Copy libraries and relocate source files.
+	for d in v08/ieee v08/std v87/ieee v87/std v87/synopsys \
+	  v93/ieee v93/mentor v93/std v93/synopsys; do \
+	  $(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
+	  $(INSTALL_DATA) -p \
+	    $(libdirsuffix)/$$d/* $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
+	  for c in $(libdirsuffix)/$$d/*.cf; do \
+	   $(SED) -e '/file/s@".*/libraries@"../../src@g' \
+	     < $$c > $(DESTDIR)$(prefix)/$$c; \
+	  done; \
+	done
+
+install.llvm.program: install.dirs ghdl1-llvm ghdl_llvm
+	$(INSTALL_PROGRAM) ghdl_llvm $(DESTDIR)$(bindir)/ghdl
+	$(INSTALL_PROGRAM) ghdl1-llvm $(DESTDIR)$(bindir)/ghdl1-llvm
+
+install.llvm: install.llvm.program install.vhdl.srcs \
+  install.grt.llvm install.vhdl.llvm
 
 ################ For simul (no code generation, interpretation) ##########
 
@@ -266,13 +300,6 @@ libs.vhdl.standard: $(LIB93_DIR)/std/std_standard.o \
 
 libs.vhdl.simul:
 	$(MAKE) GHDL=ghdl_simul libs.vhdl.all
-
-libs.vhdl.llvmjit:
-	$(MAKE) GHDL=ghdl_llvm_jit libs.vhdl.all
-
-libs.vhdl.llvm:
-	$(MAKE) GHDL=ghdl_llvm libs.vhdl.all
-	$(MAKE) GHDL1=./ghdl1-llvm libs.vhdl.standard
 
 install.dirs:
 	[ -d $(DESTDIR)$(prefix) ] || $(MKDIR) -p $(DESTDIR)$(prefix)
