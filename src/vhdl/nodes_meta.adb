@@ -3323,8 +3323,8 @@ package body Nodes_Meta is
       Field_Parent,
       Field_Callees_List,
       --  Iir_Kind_Concurrent_Conditional_Signal_Assignment
-      Field_Delay_Mechanism,
       Field_Label,
+      Field_Delay_Mechanism,
       Field_Postponed_Flag,
       Field_Visible_Flag,
       Field_Guarded_Target_State,
@@ -3336,8 +3336,8 @@ package body Nodes_Meta is
       Field_Guard,
       Field_Parent,
       --  Iir_Kind_Concurrent_Selected_Signal_Assignment
-      Field_Delay_Mechanism,
       Field_Label,
+      Field_Delay_Mechanism,
       Field_Postponed_Flag,
       Field_Visible_Flag,
       Field_Guarded_Target_State,
@@ -3443,8 +3443,8 @@ package body Nodes_Meta is
       Field_Tolerance,
       Field_Parent,
       --  Iir_Kind_Signal_Assignment_Statement
-      Field_Delay_Mechanism,
       Field_Label,
+      Field_Delay_Mechanism,
       Field_Visible_Flag,
       Field_Guarded_Target_State,
       Field_Target,

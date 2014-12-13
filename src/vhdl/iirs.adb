@@ -203,6 +203,11 @@ package body Iirs is
       return Iir (L);
    end Location_Type_To_Iir;
 
+   function Boolean_To_Iir_Delay_Mechanism is new Ada.Unchecked_Conversion
+     (Source => Boolean, Target => Iir_Delay_Mechanism);
+   function Iir_Delay_Mechanism_To_Boolean is new Ada.Unchecked_Conversion
+     (Source => Iir_Delay_Mechanism, Target => Boolean);
+
    function Iir_To_String_Id is new Ada.Unchecked_Conversion
      (Source => Iir, Target => String_Id);
    function String_Id_To_Iir is new Ada.Unchecked_Conversion
@@ -2639,14 +2644,14 @@ package body Iirs is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Delay_Mechanism (Get_Kind (Target)));
-      return Iir_Delay_Mechanism'Val (Get_Field12 (Target));
+      return Boolean_To_Iir_Delay_Mechanism (Get_Flag1 (Target));
    end Get_Delay_Mechanism;
 
    procedure Set_Delay_Mechanism (Target : Iir; Kind : Iir_Delay_Mechanism) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Delay_Mechanism (Get_Kind (Target)));
-      Set_Field12 (Target, Iir_Delay_Mechanism'Pos (Kind));
+      Set_Flag1 (Target, Iir_Delay_Mechanism_To_Boolean (Kind));
    end Set_Delay_Mechanism;
 
    function Get_Reject_Time_Expression (Target : Iir) return Iir is

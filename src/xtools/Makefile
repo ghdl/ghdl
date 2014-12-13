@@ -15,21 +15,21 @@
 #  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #  02111-1307, USA.
 
-DEPS=../iirs.ads ../nodes.ads ./pnodes.py
+DEPS=../vhdl/iirs.ads ../vhdl/nodes.ads ./pnodes.py
 
-all: ../iirs.adb ../nodes_meta.ads ../nodes_meta.adb
+all: ../vhdl/iirs.adb ../vhdl/nodes_meta.ads ../vhdl/nodes_meta.adb
 
-../iirs.adb: ../iirs.adb.in $(DEPS)
+../vhdl/iirs.adb: ../vhdl/iirs.adb.in $(DEPS)
 	$(RM) $@
 	./pnodes.py body > $@
 	chmod -w $@
 
-../nodes_meta.ads: ../nodes_meta.ads.in $(DEPS)
+../vhdl/nodes_meta.ads: ../vhdl/nodes_meta.ads.in $(DEPS)
 	$(RM) $@
 	./pnodes.py meta_specs > $@
 	chmod -w $@
 
-../nodes_meta.adb: ../nodes_meta.adb.in $(DEPS)
+../vhdl/nodes_meta.adb: ../vhdl/nodes_meta.adb.in $(DEPS)
 	$(RM) $@
 	./pnodes.py meta_body > $@
 	chmod -w $@

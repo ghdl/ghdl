@@ -2387,7 +2387,7 @@ package Iirs is
    --  assignment guarded, the guard can be this assignment.
    --   Get/Set_Guard (Field8)
    --
-   --   Get/Set_Delay_Mechanism (Field12)
+   --   Get/Set_Delay_Mechanism (Flag1)
    --
    --   Get/Set_Postponed_Flag (Flag3)
    --
@@ -2767,7 +2767,7 @@ package Iirs is
    --
    --   Get/Set_Reject_Time_Expression (Field6)
    --
-   --   Get/Set_Delay_Mechanism (Field12)
+   --   Get/Set_Delay_Mechanism (Flag1)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -5747,7 +5747,7 @@ package Iirs is
    function Get_Guard (Target : Iir) return Iir;
    procedure Set_Guard (Target : Iir; Guard : Iir);
 
-   --  Field: Field12 (pos)
+   --  Field: Flag1 (uc)
    function Get_Delay_Mechanism (Target : Iir) return Iir_Delay_Mechanism;
    procedure Set_Delay_Mechanism (Target : Iir; Kind : Iir_Delay_Mechanism);
 

@@ -4,10 +4,10 @@ import re
 import sys
 import argparse
 
-field_file = "../nodes.ads"
-spec_file = "../iirs.ads"
-template_file = "../iirs.adb.in"
-meta_base_file = "../nodes_meta"
+field_file = "../vhdl/nodes.ads"
+spec_file = "../vhdl/iirs.ads"
+template_file = "../vhdl/iirs.adb.in"
+meta_base_file = "../vhdl/nodes_meta"
 prefix_name = "Iir_Kind_"
 prefix_range_name = "Iir_Kinds_"
 type_name = "Iir_Kind"
