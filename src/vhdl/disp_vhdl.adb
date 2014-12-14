@@ -1009,16 +1009,16 @@ package body Disp_Vhdl is
       end case;
    end Disp_Mode;
 
-   procedure Disp_Signal_Kind (Kind: Iir_Signal_Kind) is
+   procedure Disp_Signal_Kind (Sig : Iir) is
    begin
-      case Kind is
-         when Iir_No_Signal_Kind =>
-            null;
-         when Iir_Register_Kind =>
-            Put (" register");
-         when Iir_Bus_Kind =>
-            Put (" bus");
-      end case;
+      if Get_Guarded_Signal_Flag (Sig) then
+         case Get_Signal_Kind (Sig) is
+            when Iir_Register_Kind =>
+               Put (" register");
+            when Iir_Bus_Kind =>
+               Put (" bus");
+         end case;
+      end if;
    end Disp_Signal_Kind;
 
    procedure Disp_Interface_Class (Inter: Iir) is
@@ -1055,7 +1055,7 @@ package body Disp_Vhdl is
          Disp_Subtype_Indication (Get_Subtype_Indication (Inter));
       end if;
       if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
-         Disp_Signal_Kind (Get_Signal_Kind (Inter));
+         Disp_Signal_Kind (Inter);
       end if;
       if Default /= Null_Iir then
          Put (" := ");
@@ -1396,7 +1396,7 @@ package body Disp_Vhdl is
       Put (": ");
       Disp_Subtype_Indication (Get_Subtype_Indication (Decl));
       if Get_Kind (Decl) = Iir_Kind_Signal_Declaration then
-         Disp_Signal_Kind (Get_Signal_Kind (Decl));
+         Disp_Signal_Kind (Decl);
       end if;
 
       if Get_Default_Value (Decl) /= Null_Iir then

@@ -247,20 +247,29 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §4.3.1.2 ]
+   --  [ LRM 4.3.1.2 ]
    --  signal_kind ::= REGISTER | BUS
    --
    --  If there is no signal_kind, then no_signal_kind is returned.
-   function Parse_Signal_Kind return Iir_Signal_Kind is
+   procedure Parse_Signal_Kind
+     (Is_Guarded : out Boolean; Signal_Kind : out Iir_Signal_Kind) is
    begin
       if Current_Token = Tok_Bus then
+         --  Eat 'bus'
          Scan;
-         return Iir_Bus_Kind;
+
+         Is_Guarded := True;
+         Signal_Kind := Iir_Bus_Kind;
       elsif Current_Token = Tok_Register then
+         --  Eat 'register'
          Scan;
-         return Iir_Register_Kind;
+
+         Is_Guarded := True;
+         Signal_Kind := Iir_Register_Kind;
       else
-         return Iir_No_Signal_Kind;
+         Is_Guarded := False;
+         --  Avoid uninitialized variable.
+         Signal_Kind := Iir_Bus_Kind;
       end if;
    end Parse_Signal_Kind;
 
@@ -974,6 +983,7 @@ package body Parse is
       Is_Default : Boolean;
       Interface_Mode: Iir_Mode;
       Interface_Type: Iir;
+      Is_Guarded : Boolean;
       Signal_Kind: Iir_Signal_Kind;
       Default_Value: Iir;
       Lexical_Layout : Iir_Lexical_Layout_Type;
@@ -1153,9 +1163,10 @@ package body Parse is
 
       --  Signal kind (but only for signal).
       if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
-         Signal_Kind := Parse_Signal_Kind;
+         Parse_Signal_Kind (Is_Guarded, Signal_Kind);
       else
-         Signal_Kind := Iir_No_Signal_Kind;
+         Is_Guarded := False;
+         Signal_Kind := Iir_Register_Kind;
       end if;
 
       if Current_Token = Tok_Assign then
@@ -1190,6 +1201,7 @@ package body Parse is
             Set_Lexical_Layout (Inter, Lexical_Layout);
          end if;
          if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
+            Set_Guarded_Signal_Flag (Inter, Is_Guarded);
             Set_Signal_Kind (Inter, Signal_Kind);
          end if;
          Inter := Get_Chain (Inter);
@@ -2864,6 +2876,7 @@ package body Parse is
       Default_Value : Iir;
       Mode: Iir_Mode;
       Signal_Kind : Iir_Signal_Kind;
+      Is_Guarded : Boolean;
       Open_Kind : Iir;
       Logical_Name : Iir;
       Kind: Iir_Kind;
@@ -2927,7 +2940,7 @@ package body Parse is
       Object_Type := Parse_Subtype_Indication;
 
       if Kind = Iir_Kind_Signal_Declaration then
-         Signal_Kind := Parse_Signal_Kind;
+         Parse_Signal_Kind (Is_Guarded, Signal_Kind);
       end if;
 
       if Current_Token = Tok_Assign then
@@ -2999,6 +3012,7 @@ package body Parse is
                Set_File_Logical_Name (Object, Logical_Name);
                Set_Has_Mode (Object, Has_Mode);
             when Iir_Kind_Signal_Declaration =>
+               Set_Guarded_Signal_Flag (Object, Is_Guarded);
                Set_Signal_Kind (Object, Signal_Kind);
             when others =>
                null;

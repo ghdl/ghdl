@@ -104,35 +104,35 @@ package body Sem_Decls is
          Set_Type (Inter, A_Type);
 
          if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
-            case Get_Signal_Kind (Inter) is
-               when Iir_No_Signal_Kind =>
-                  null;
-               when Iir_Bus_Kind =>
-                  --  FIXME: where this test came from ?
-                  --  FIXME: from 4.3.1.2 ?
-                  if False
-                    and
-                    (Get_Kind (A_Type) not in Iir_Kinds_Subtype_Definition
-                       or else Get_Resolution_Indication (A_Type) = Null_Iir)
-                  then
-                     Error_Msg_Sem
-                       (Disp_Node (A_Type) & " of guarded " & Disp_Node (Inter)
-                          & " is not resolved", Inter);
-                  end if;
+            if Get_Guarded_Signal_Flag (Inter) then
+               case Get_Signal_Kind (Inter) is
+                  when Iir_Bus_Kind =>
+                     --  LRM93 4.3.1.2
+                     --  It is also an error if a guarded signal of a scalar
+                     --  type is neither a resolved signal nor a subelement of
+                     --  a resolved signal.
+                     if not Get_Resolved_Flag (A_Type) then
+                        Error_Msg_Sem
+                          (Disp_Node (A_Type) & " of guarded "
+                             & Disp_Node (Inter) & " is not resolved", Inter);
+                     end if;
 
-                  --  LRM 2.1.1.2  Signal parameter
-                  --  It is an error if the declaration of a formal signal
-                  --  parameter includes the reserved word BUS.
-                  if Flags.Vhdl_Std >= Vhdl_93
-                    and then Interface_Kind in Parameter_Interface_List
-                  then
+                     --  LRM 2.1.1.2  Signal parameter
+                     --  It is an error if the declaration of a formal signal
+                     --  parameter includes the reserved word BUS.
+                     if Flags.Vhdl_Std >= Vhdl_93
+                       and then Interface_Kind in Parameter_Interface_List
+                     then
+                        Error_Msg_Sem
+                          ("signal parameter can't be of kind bus", Inter);
+                     end if;
+                  when Iir_Register_Kind =>
+                     --  LRM93 4.3.2 Interface declarations
+                     --  Grammar for interface_signal_declaration.
                      Error_Msg_Sem
-                       ("signal parameter can't be of kind bus", Inter);
-                  end if;
-               when Iir_Register_Kind =>
-                  Error_Msg_Sem
-                    ("interface signal can't be of kind register", Inter);
-            end case;
+                       ("interface signal can't be of kind register", Inter);
+               end case;
+            end if;
             Set_Type_Has_Signal (A_Type);
          end if;
 
@@ -1683,10 +1683,10 @@ package body Sem_Decls is
 
          when Iir_Kind_Signal_Declaration =>
             --  LRM93 4.3.1.2
-            --  It is also an error if a guarded signal of a
-            --  scalar type is neither a resolved signal nor a
-            --  subelement of a resolved signal.
-            if Get_Signal_Kind (Decl) /= Iir_No_Signal_Kind
+            --  It is also an error if a guarded signal of a scalar type is
+            --  neither a resolved signal nor a subelement of a resolved
+            --  signal.
+            if Get_Guarded_Signal_Flag (Decl)
               and then not Get_Resolved_Flag (Atype)
             then
                Error_Msg_Sem

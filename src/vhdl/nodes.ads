@@ -39,20 +39,13 @@ package Nodes is
       Format_Int
      );
 
-   --  Future layout:    (rem)
-   --   Format: 0 bits    32
-   --   Nkind: 16 bits    16
-   --   Flags: 8*1 bits    8
-   --   State: 2*2 bits    4
-   --   Odigit is to be removed.
-
-   --  Future layout (2):(rem)
+   --  Current layout:    (rem)
    --   Format: 2 bits    30
-   --   Nkind:  8 bits    22 (vhdl: 216 nodes)
-   --   Flags: 8*1 bits   14
-   --   State: 2*2 bits   10
-   --   Lang:   2 bits     8
-   --   Odigit: 1*3 bits   5
+   --   Flags: 6*1 bits   24
+   --   Nkind:  8 bits    16 (vhdl: 216 nodes)
+   --   State: 2*2 bits   12
+   --   Flags: 6*1 bits    6
+   --   Odigit: 2*3 bits   0
 
    -- Common fields are:
    --   Flag1 : Boolean

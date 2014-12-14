@@ -2172,7 +2172,7 @@ package body Canon is
       while El /= Null_Iir loop
          if Get_Kind (El) = Iir_Kind_Signal_Declaration
            and then Get_Type (El) = Dis_Type
-           and then Get_Signal_Kind (El) /= Iir_No_Signal_Kind
+           and then Get_Guarded_Signal_Flag (El)
          then
             if not Get_Has_Disconnect_Flag (El) then
                Set_Has_Disconnect_Flag (El, True);

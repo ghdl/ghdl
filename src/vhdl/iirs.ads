@@ -1114,12 +1114,14 @@ package Iirs is
    --
    --   Get/Set_Is_Ref (Flag7)
    --
+   --   Get/Set_Guarded_Signal_Flag (Flag8)
+   --
+   -- Only for Iir_Kind_Interface_Signal_Declaration:
+   --   Get/Set_Signal_Kind (Flag9)
+   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
-   --
-   -- Only for Iir_Kind_Interface_Signal_Declaration:
-   --   Get/Set_Signal_Kind (State3)
 
    -- Iir_Kind_Interface_Package_Declaration (Medium)
    --
@@ -1324,7 +1326,7 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
 
-   -- Iir_Kind_Signal_Declaration (Medium)
+   -- Iir_Kind_Signal_Declaration (Short)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -1342,13 +1344,13 @@ package Iirs is
    --  a process/concurrent_statement for which the signal should have a
    --  driver.  This is used to catch at analyse time unresolved signals with
    --  several drivers.
-   --   Get/Set_Signal_Driver (Field7)
+   --  -- Get/Set_Signal_Driver (Field7)
    --
    --   Get/Set_Has_Disconnect_Flag (Flag1)
    --
-   --   Get/Set_Has_Identifier_List (Flag3)
-   --
    --   Get/Set_Has_Active_Flag (Flag2)
+   --
+   --   Get/Set_Has_Identifier_List (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -1358,11 +1360,13 @@ package Iirs is
    --
    --   Get/Set_Is_Ref (Flag7)
    --
+   --   Get/Set_Guarded_Signal_Flag (Flag8)
+   --
+   --   Get/Set_Signal_Kind (Flag9)
+   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
-   --
-   --   Get/Set_Signal_Kind (State3)
 
    -- Iir_Kind_Guard_Signal_Declaration (Medium)
    --
@@ -1384,11 +1388,13 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
+   --   Get/Set_Guarded_Signal_Flag (Flag8)
+   --
+   --   Get/Set_Signal_Kind (Flag9)
+   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
-   --
-   --   Get/Set_Signal_Kind (State3)
 
    -- Iir_Kind_Constant_Declaration (Medium)
    -- Iir_Kind_Iterator_Declaration (Medium)
@@ -3649,10 +3655,9 @@ package Iirs is
 
    type Iir_Signal_Kind is
       (
-       Iir_No_Signal_Kind,
        Iir_Register_Kind,
        Iir_Bus_Kind
-       );
+      );
 
    --  If the order of elements in IIR_MODE is modified, also modify the
    --  order in GRT (types and rtis).
@@ -5332,7 +5337,12 @@ package Iirs is
    function Get_Mode (Target : Iir) return Iir_Mode;
    procedure Set_Mode (Target : Iir; Mode : Iir_Mode);
 
-   --  Field: State3 (pos)
+   --  True if the signal is guarded (has a signal kind).
+   --  Field: Flag8
+   function Get_Guarded_Signal_Flag (Target : Iir) return Boolean;
+   procedure Set_Guarded_Signal_Flag (Target : Iir; Guarded : Boolean);
+
+   --  Field: Flag9 (uc)
    function Get_Signal_Kind (Target : Iir) return Iir_Signal_Kind;
    procedure Set_Signal_Kind (Target : Iir; Signal_Kind : Iir_Signal_Kind);
 

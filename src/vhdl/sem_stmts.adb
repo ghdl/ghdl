@@ -379,7 +379,7 @@ package body Sem_Stmts is
       then
          Guarded_Target := Unknown;
       else
-         if Get_Signal_Kind (Target_Prefix) /= Iir_No_Signal_Kind then
+         if Get_Guarded_Signal_Flag (Target_Prefix) then
             Guarded_Target := True;
          else
             Guarded_Target := False;

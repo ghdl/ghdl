@@ -142,6 +142,7 @@ package Nodes_Meta is
       Field_Subtype_Definition,
       Field_Nature,
       Field_Mode,
+      Field_Guarded_Signal_Flag,
       Field_Signal_Kind,
       Field_Base_Name,
       Field_Interface_Declaration_Chain,
@@ -610,6 +611,7 @@ package Nodes_Meta is
    function Has_Subtype_Definition (K : Iir_Kind) return Boolean;
    function Has_Nature (K : Iir_Kind) return Boolean;
    function Has_Mode (K : Iir_Kind) return Boolean;
+   function Has_Guarded_Signal_Flag (K : Iir_Kind) return Boolean;
    function Has_Signal_Kind (K : Iir_Kind) return Boolean;
    function Has_Base_Name (K : Iir_Kind) return Boolean;
    function Has_Interface_Declaration_Chain (K : Iir_Kind) return Boolean;

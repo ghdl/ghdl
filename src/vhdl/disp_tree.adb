@@ -226,8 +226,6 @@ package body Disp_Tree is
    function Image_Iir_Signal_Kind (Kind : Iir_Signal_Kind) return String is
    begin
       case Kind is
-         when Iir_No_Signal_Kind =>
-            return "no";
          when Iir_Register_Kind =>
             return "register";
          when Iir_Bus_Kind =>

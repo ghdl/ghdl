@@ -294,7 +294,7 @@ package body Ieee.Vital_Timing is
                       Decl);
       end if;
 
-      if Get_Signal_Kind (Decl) /= Iir_No_Signal_Kind then
+      if Get_Guarded_Signal_Flag (Decl) then
          Error_Vital ("VITAL entity port cannot be guarded", Decl);
       end if;
    end Check_Entity_Port_Declaration;

@@ -208,6 +208,11 @@ package body Iirs is
    function Iir_Delay_Mechanism_To_Boolean is new Ada.Unchecked_Conversion
      (Source => Iir_Delay_Mechanism, Target => Boolean);
 
+   function Boolean_To_Iir_Signal_Kind is new Ada.Unchecked_Conversion
+     (Source => Boolean, Target => Iir_Signal_Kind);
+   function Iir_Signal_Kind_To_Boolean is new Ada.Unchecked_Conversion
+     (Source => Iir_Signal_Kind, Target => Boolean);
+
    function Iir_To_String_Id is new Ada.Unchecked_Conversion
      (Source => Iir, Target => String_Id);
    function String_Id_To_Iir is new Ada.Unchecked_Conversion
@@ -299,6 +304,7 @@ package body Iirs is
            | Iir_Kind_Terminal_Declaration
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator
@@ -452,7 +458,6 @@ package body Iirs is
            | Iir_Kind_Procedure_Body
            | Iir_Kind_File_Declaration
            | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Signal_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Interface_Constant_Declaration
@@ -1655,18 +1660,32 @@ package body Iirs is
       Set_Odigit1 (Target, Iir_Mode'Pos (Mode));
    end Set_Mode;
 
+   function Get_Guarded_Signal_Flag (Target : Iir) return Boolean is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Guarded_Signal_Flag (Get_Kind (Target)));
+      return Get_Flag8 (Target);
+   end Get_Guarded_Signal_Flag;
+
+   procedure Set_Guarded_Signal_Flag (Target : Iir; Guarded : Boolean) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Guarded_Signal_Flag (Get_Kind (Target)));
+      Set_Flag8 (Target, Guarded);
+   end Set_Guarded_Signal_Flag;
+
    function Get_Signal_Kind (Target : Iir) return Iir_Signal_Kind is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Signal_Kind (Get_Kind (Target)));
-      return Iir_Signal_Kind'Val (Get_State3 (Target));
+      return Boolean_To_Iir_Signal_Kind (Get_Flag9 (Target));
    end Get_Signal_Kind;
 
    procedure Set_Signal_Kind (Target : Iir; Signal_Kind : Iir_Signal_Kind) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Signal_Kind (Get_Kind (Target)));
-      Set_State3 (Target, Iir_Signal_Kind'Pos (Signal_Kind));
+      Set_Flag9 (Target, Iir_Signal_Kind_To_Boolean (Signal_Kind));
    end Set_Signal_Kind;
 
    function Get_Base_Name (Target : Iir) return Iir is

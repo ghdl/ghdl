@@ -1832,9 +1832,15 @@ package body Trans.Rtis is
          end case;
          case Get_Kind (Decl) is
             when Iir_Kind_Signal_Declaration
-               | Iir_Kind_Interface_Signal_Declaration =>
-               Mode := Mode
-                 + 16 * Iir_Signal_Kind'Pos (Get_Signal_Kind (Decl));
+              | Iir_Kind_Interface_Signal_Declaration =>
+               if Get_Guarded_Signal_Flag (Decl) then
+                  case Get_Signal_Kind (Decl) is
+                     when Iir_Register_Kind =>
+                        Mode := Mode + 16;
+                     when Iir_Bus_Kind =>
+                        Mode := Mode + 32;
+                  end case;
+               end if;
             when others =>
                null;
          end case;

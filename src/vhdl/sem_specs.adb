@@ -991,7 +991,7 @@ package body Sem_Specs is
                if Get_Name_Staticness (Sig) /= Locally then
                   Error_Msg_Sem ("signal name must be locally static", El);
                end if;
-               if Get_Signal_Kind (Prefix) = Iir_No_Signal_Kind then
+               if not Get_Guarded_Signal_Flag (Prefix) then
                   Error_Msg_Sem ("signal must be a guarded signal", El);
                end if;
                Set_Has_Disconnect_Flag (Prefix, True);

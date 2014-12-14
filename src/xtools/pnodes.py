@@ -696,9 +696,13 @@ elif args.action == 'meta_body':
                 print
             for f in funcs:
                 gen_has_func_spec(f.name, ' is')
-                print '   begin'
                 choices = [k for k in kinds if f.name in nodes[k].attrs]
-                if len(choices) == 1:
+                if len(choices) == 0:
+                    print '      pragma Unreferenced (K);'
+                print '   begin'
+                if len(choices) == 0:
+                    print '      return False;'
+                elif len(choices) == 1:
                     print '      return K = ' + prefix_name + choices[0] + ';'
                 else:
                     print '      case K is'
