@@ -58,9 +58,12 @@ package Nodes is
    --   Flag8 : Boolean
    --   Flag9 : Boolean
    --   Flag10 : Boolean
+   --   Flag11 : Boolean
+   --   Flag12 : Boolean
    --   Nkind : Kind_Type
    --   State1 : Bit2_Type
    --   State2 : Bit2_Type
+   --   Odigit1 : Bit3_Type
    --   Location : Location_Type
    --   Field0 : Iir
    --   Field1 : Iir
@@ -78,7 +81,6 @@ package Nodes is
    --   Field5 : Iir
 
    -- Fields of Format_Medium:
-   --   Odigit1 : Bit3_Type
    --   Odigit2 : Bit3_Type (odigit1)
    --   State3 : Bit2_Type
    --   State4 : Bit2_Type
@@ -222,6 +224,16 @@ package Nodes is
    pragma Inline (Get_Flag10);
    procedure Set_Flag10 (N : Node_Type; V : Boolean);
    pragma Inline (Set_Flag10);
+
+   function Get_Flag11 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag11);
+   procedure Set_Flag11 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag11);
+
+   function Get_Flag12 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag12);
+   procedure Set_Flag12 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag12);
 
 
    function Get_State1 (N : Node_Type) return Bit2_Type;

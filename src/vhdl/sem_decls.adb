@@ -422,7 +422,6 @@ package body Sem_Decls is
                   Set_Type (Inter,
                             Std_Package.File_Open_Status_Type_Definition);
                   Set_Mode (Inter, Iir_Out_Mode);
-                  Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
                   Append (Last_Interface, Proc, Inter);
             end case;
             --  File F : FT
@@ -431,7 +430,6 @@ package body Sem_Decls is
             Set_Identifier (Inter, Std_Names.Name_F);
             Set_Type (Inter, Type_Definition);
             Set_Mode (Inter, Iir_Inout_Mode);
-            Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
             Append (Last_Interface, Proc, Inter);
             --  External_Name : in STRING
             Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
@@ -439,7 +437,6 @@ package body Sem_Decls is
             Set_Identifier (Inter, Std_Names.Name_External_Name);
             Set_Type (Inter, Std_Package.String_Type_Definition);
             Set_Mode (Inter, Iir_In_Mode);
-            Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
             Append (Last_Interface, Proc, Inter);
             --  Open_Kind : in File_Open_Kind := Read_Mode.
             Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
@@ -449,7 +446,6 @@ package body Sem_Decls is
             Set_Mode (Inter, Iir_In_Mode);
             Set_Default_Value (Inter,
                                Std_Package.File_Open_Kind_Read_Mode);
-            Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
             Append (Last_Interface, Proc, Inter);
             Compute_Subprogram_Hash (Proc);
             -- Add it to the list.
@@ -470,7 +466,6 @@ package body Sem_Decls is
          Set_Location (Inter, Loc);
          Set_Type (Inter, Type_Definition);
          Set_Mode (Inter, Iir_Inout_Mode);
-         Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
          Append (Last_Interface, Proc, Inter);
          Compute_Subprogram_Hash (Proc);
          -- Add it to the list.
@@ -496,7 +491,6 @@ package body Sem_Decls is
       Set_Location (Inter, Loc);
       Set_Type (Inter, Type_Definition);
       Set_Mode (Inter, Iir_In_Mode);
-      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Proc, Inter);
       Inter := Create_Iir (Iir_Kind_Interface_Variable_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
@@ -504,7 +498,6 @@ package body Sem_Decls is
       Set_Subtype_Indication (Inter, Type_Mark);
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_Out_Mode);
-      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Proc, Inter);
       if Get_Kind (Type_Mark_Type) in Iir_Kinds_Array_Type_Definition
         and then Get_Constraint_State (Type_Mark_Type) /= Fully_Constrained
@@ -514,7 +507,6 @@ package body Sem_Decls is
          Set_Location (Inter, Loc);
          Set_Type (Inter, Std_Package.Natural_Subtype_Definition);
          Set_Mode (Inter, Iir_Out_Mode);
-         Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
          Append (Last_Interface, Proc, Inter);
          Set_Implicit_Definition (Proc, Iir_Predefined_Read_Length);
       else
@@ -539,7 +531,6 @@ package body Sem_Decls is
       Set_Mode (Inter, Iir_Out_Mode);
       Set_Name_Staticness (Inter, Locally);
       Set_Expr_Staticness (Inter, None);
-      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Proc, Inter);
       Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
@@ -547,7 +538,6 @@ package body Sem_Decls is
       Set_Subtype_Indication (Inter, Type_Mark);
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_In_Mode);
-      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Proc, Inter);
       Set_Implicit_Definition (Proc, Iir_Predefined_Write);
       Compute_Subprogram_Hash (Proc);
@@ -569,7 +559,6 @@ package body Sem_Decls is
          Set_Type (Inter, Type_Definition);
          Set_Name_Staticness (Inter, Locally);
          Set_Expr_Staticness (Inter, None);
-         Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
          Append (Last_Interface, Proc, Inter);
          Set_Implicit_Definition (Proc, Iir_Predefined_Flush);
          Compute_Subprogram_Hash (Proc);
@@ -589,7 +578,6 @@ package body Sem_Decls is
       Set_Location (Inter, Loc);
       Set_Type (Inter, Type_Definition);
       Set_Mode (Inter, Iir_In_Mode);
-      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Append (Last_Interface, Func, Inter);
       Set_Return_Type (Func, Std_Package.Boolean_Type_Definition);
       Set_Implicit_Definition (Func, Iir_Predefined_Endfile);
@@ -606,7 +594,6 @@ package body Sem_Decls is
       Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
       Location_Copy (Inter, Atype);
       Set_Identifier (Inter, Null_Identifier);
-      Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
       Set_Mode (Inter, Iir_In_Mode);
       Set_Type (Inter, Atype);
       return Inter;
@@ -700,7 +687,6 @@ package body Sem_Decls is
          Set_Identifier (Inter_Int, Null_Identifier);
          Set_Mode (Inter_Int, Iir_In_Mode);
          Set_Type (Inter_Int, Std_Package.Integer_Subtype_Definition);
-         Set_Lexical_Layout (Inter_Int, Iir_Lexical_Has_Type);
 
          Set_Chain (Inter_Chain, Inter_Int);
 
@@ -1036,7 +1022,6 @@ package body Sem_Decls is
                Set_Identifier (Var_Interface, Std_Names.Name_P);
                Set_Type (Var_Interface, Type_Definition);
                Set_Mode (Var_Interface, Iir_Inout_Mode);
-               Set_Lexical_Layout (Var_Interface, Iir_Lexical_Has_Type);
                --Set_Purity_State (Deallocate_Proc, Impure);
                Set_Wait_State (Deallocate_Proc, False);
                Set_Type_Reference (Deallocate_Proc, Decl);

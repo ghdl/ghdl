@@ -306,6 +306,10 @@ package body Iirs is
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
@@ -460,10 +464,6 @@ package body Iirs is
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
-           | Iir_Kind_Interface_Constant_Declaration
-           | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
@@ -1201,14 +1201,14 @@ package body Iirs is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Open_Flag (Get_Kind (Target)));
-      return Get_Flag3 (Target);
+      return Get_Flag12 (Target);
    end Get_Open_Flag;
 
    procedure Set_Open_Flag (Target : Iir; Flag : Boolean) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Open_Flag (Get_Kind (Target)));
-      Set_Flag3 (Target, Flag);
+      Set_Flag12 (Target, Flag);
    end Set_Open_Flag;
 
    function Get_After_Drivers_Flag (Target : Iir) return Boolean is
@@ -4060,20 +4060,6 @@ package body Iirs is
       Set_Field8 (Target, Mark);
    end Set_Return_Type_Mark;
 
-   function Get_Lexical_Layout (Decl : Iir) return Iir_Lexical_Layout_Type is
-   begin
-      pragma Assert (Decl /= Null_Iir);
-      pragma Assert (Has_Lexical_Layout (Get_Kind (Decl)));
-      return Iir_Lexical_Layout_Type'Val (Get_Odigit2 (Decl));
-   end Get_Lexical_Layout;
-
-   procedure Set_Lexical_Layout (Decl : Iir; Lay : Iir_Lexical_Layout_Type) is
-   begin
-      pragma Assert (Decl /= Null_Iir);
-      pragma Assert (Has_Lexical_Layout (Get_Kind (Decl)));
-      Set_Odigit2 (Decl, Iir_Lexical_Layout_Type'Pos (Lay));
-   end Set_Lexical_Layout;
-
    function Get_Incomplete_Type_List (Target : Iir) return Iir_List is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -4428,15 +4414,29 @@ package body Iirs is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Has_Mode (Get_Kind (Decl)));
-      return Get_Flag8 (Decl);
+      return Get_Flag10 (Decl);
    end Get_Has_Mode;
 
    procedure Set_Has_Mode (Decl : Iir; Flag : Boolean) is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Has_Mode (Get_Kind (Decl)));
-      Set_Flag8 (Decl, Flag);
+      Set_Flag10 (Decl, Flag);
    end Set_Has_Mode;
+
+   function Get_Has_Class (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Class (Get_Kind (Decl)));
+      return Get_Flag11 (Decl);
+   end Get_Has_Class;
+
+   procedure Set_Has_Class (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Class (Get_Kind (Decl)));
+      Set_Flag11 (Decl, Flag);
+   end Set_Has_Class;
 
    function Get_Is_Ref (N : Iir) return Boolean is
    begin

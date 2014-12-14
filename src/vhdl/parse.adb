@@ -986,7 +986,8 @@ package body Parse is
       Is_Guarded : Boolean;
       Signal_Kind: Iir_Signal_Kind;
       Default_Value: Iir;
-      Lexical_Layout : Iir_Lexical_Layout_Type;
+      Has_Mode : Boolean;
+      Has_Class : Boolean;
    begin
       Res := Null_Iir;
       Last := Null_Iir;
@@ -1044,10 +1045,10 @@ package body Parse is
 
       if Current_Token = Tok_Identifier then
          Is_Default := True;
-         Lexical_Layout := 0;
+         Has_Class := False;
       else
          Is_Default := False;
-         Lexical_Layout := Iir_Lexical_Has_Class;
+         Has_Class := True;
 
          --  Skip 'signal', 'variable', 'constant' or 'file'.
          Scan;
@@ -1130,8 +1131,9 @@ package body Parse is
            | Tok_Inout
            | Tok_Linkage
            | Tok_Buffer =>
-            Lexical_Layout := Lexical_Layout or Iir_Lexical_Has_Mode;
+            Has_Mode := True;
          when others =>
+            Has_Mode := False;
             null;
       end case;
 
@@ -1194,12 +1196,9 @@ package body Parse is
       while Inter /= Null_Iir loop
          Set_Mode (Inter, Interface_Mode);
          Set_Is_Ref (Inter, Inter /= First);
-         if Inter = Last then
-            Set_Lexical_Layout (Inter,
-                                Lexical_Layout or Iir_Lexical_Has_Type);
-         else
-            Set_Lexical_Layout (Inter, Lexical_Layout);
-         end if;
+         Set_Has_Mode (Inter, Has_Mode);
+         Set_Has_Class (Inter, Has_Class);
+         Set_Has_Identifier_List (Inter, Inter /= Last);
          if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
             Set_Guarded_Signal_Flag (Inter, Is_Guarded);
             Set_Signal_Kind (Inter, Signal_Kind);

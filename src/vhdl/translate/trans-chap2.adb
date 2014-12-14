@@ -1032,7 +1032,6 @@ package body Trans.Chap2 is
                   | Type_Tri_State_Type
                   | Type_Iir_Pure_State
                   | Type_Iir_Delay_Mechanism
-                  | Type_Iir_Lexical_Layout_Type
                   | Type_Iir_Predefined_Functions
                   | Type_Iir_Direction
                   | Type_Location_Type

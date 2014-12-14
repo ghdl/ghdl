@@ -305,7 +305,6 @@ package body Std_Package is
          Set_Identifier (Inter, Std_Names.Name_Value);
          Set_Type (Inter, Inter_Type);
          Set_Mode (Inter, Iir_In_Mode);
-         Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
          Set_Interface_Declaration_Chain (Decl, Inter);
 
          if Inter2_Id /= Null_Identifier then
@@ -313,7 +312,6 @@ package body Std_Package is
             Set_Identifier (Inter2, Inter2_Id);
             Set_Type (Inter2, Inter2_Type);
             Set_Mode (Inter2, Iir_In_Mode);
-            Set_Lexical_Layout (Inter2, Iir_Lexical_Has_Type);
             Set_Chain (Inter, Inter2);
          end if;
 
@@ -340,7 +338,6 @@ package body Std_Package is
          Set_Type (Inter, Inter_Type);
          Set_Mode (Inter, Iir_In_Mode);
          Set_Interface_Declaration_Chain (Decl, Inter);
-         Set_Lexical_Layout (Inter, Iir_Lexical_Has_Type);
 
          Sem.Compute_Subprogram_Hash (Decl);
          Add_Decl (Decl);

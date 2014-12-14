@@ -1023,7 +1023,7 @@ package body Disp_Vhdl is
 
    procedure Disp_Interface_Class (Inter: Iir) is
    begin
-      if (Get_Lexical_Layout (Inter) and Iir_Lexical_Has_Class) /= 0 then
+      if Get_Has_Class (Inter) then
          case Get_Kind (Inter) is
             when Iir_Kind_Interface_Signal_Declaration =>
                Put ("signal ");
@@ -1045,7 +1045,7 @@ package body Disp_Vhdl is
       Ind : constant Iir := Get_Subtype_Indication (Inter);
    begin
       Put (": ");
-      if (Get_Lexical_Layout (Inter) and Iir_Lexical_Has_Mode) /= 0 then
+      if Get_Has_Mode (Inter) then
          Disp_Mode (Get_Mode (Inter));
       end if;
       if Ind = Null_Iir then
@@ -1086,8 +1086,7 @@ package body Disp_Vhdl is
             when Iir_Kinds_Interface_Object_Declaration =>
                Disp_Interface_Class (Inter);
                Disp_Name_Of (Inter);
-               while (Get_Lexical_Layout (Inter) and Iir_Lexical_Has_Type) = 0
-               loop
+               while Get_Has_Identifier_List (Inter) loop
                   Put (", ");
                   Inter := Next_Inter;
                   Next_Inter := Get_Chain (Inter);

@@ -1069,10 +1069,10 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
 
-   -- Iir_Kind_Interface_Signal_Declaration (Medium)
-   -- Iir_Kind_Interface_Constant_Declaration (Medium)
-   -- Iir_Kind_Interface_Variable_Declaration (Medium)
-   -- Iir_Kind_Interface_File_Declaration (Medium)
+   -- Iir_Kind_Interface_Signal_Declaration (Short)
+   -- Iir_Kind_Interface_Constant_Declaration (Short)
+   -- Iir_Kind_Interface_Variable_Declaration (Short)
+   -- Iir_Kind_Interface_File_Declaration (Short)
    --
    --  Get/Set the parent of an interface declaration.
    --  The parent is an entity declaration, a subprogram specification, a
@@ -1095,16 +1095,13 @@ package Iirs is
    --
    --   Get/Set_Mode (Odigit1)
    --
-   --   Get/Set_Lexical_Layout (Odigit2)
-   --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
    --   Get/Set_Has_Disconnect_Flag (Flag1)
    --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
    --   Get/Set_Has_Active_Flag (Flag2)
    --
-   -- Only for Iir_Kind_Interface_Signal_Declaration:
-   --   Get/Set_Open_Flag (Flag3)
+   --   Get/Set_Has_Identifier_List (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -1114,10 +1111,18 @@ package Iirs is
    --
    --   Get/Set_Is_Ref (Flag7)
    --
+   -- Only for Iir_Kind_Interface_Signal_Declaration:
    --   Get/Set_Guarded_Signal_Flag (Flag8)
    --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
    --   Get/Set_Signal_Kind (Flag9)
+   --
+   --   Get/Set_Has_Mode (Flag10)
+   --
+   --   Get/Set_Has_Class (Flag11)
+   --
+   -- Only for Iir_Kind_Interface_Signal_Declaration:
+   --   Get/Set_Open_Flag (Flag12)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1518,11 +1523,11 @@ package Iirs is
    --
    --   Get/Set_Is_Ref (Flag7)
    --
+   --   Get/Set_Has_Mode (Flag10)
+   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
-   --
-   --   Get/Set_Has_Mode (Flag8)
 
    -- Iir_Kind_Element_Declaration (Short)
    --
@@ -3678,14 +3683,11 @@ package Iirs is
 
    type Iir_Direction is (Iir_To, Iir_Downto);
 
-   --  Iir_Lexical_Layout_type describe the lexical token used to describe
-   --  an interface declaration.  This has no semantics meaning, but it is
-   --  necessary to keep how lexically an interface was declared due to
    --  LRM93 2.7 (conformance rules).
    --  To keep this simple, the layout is stored as a bit-string.
    --  Fields are:
-   --  Has_type: set if the interface is the last of a list.
-   --  has_mode: set if mode is explicit
+   --  Get_Has_type: set if the interface is the last of a list.
+   --  Get_Has_Mode: set if mode is explicit
    --  has_class: set if class (constant, signal, variable or file) is explicit
    --
    --  Exemple:
@@ -3707,10 +3709,6 @@ package Iirs is
    --  I: has_class,           has_type
    --  J: has_class, has_mode
    --  K: has_class, has_mode, has_type
-   type Iir_Lexical_Layout_Type is mod 2 ** 3;
-   Iir_Lexical_Has_Mode  : constant Iir_Lexical_Layout_Type := 2 ** 0;
-   Iir_Lexical_Has_Class : constant Iir_Lexical_Layout_Type := 2 ** 1;
-   Iir_Lexical_Has_Type  : constant Iir_Lexical_Layout_Type := 2 ** 2;
 
    --  List of predefined operators and functions.
    type Iir_Predefined_Functions is
@@ -5174,7 +5172,7 @@ package Iirs is
 
    --  This flag is set for a very short time during the check that no in
    --  port is unconnected.
-   --  Field: Flag3
+   --  Field: Flag12
    function Get_Open_Flag (Target : Iir) return Boolean;
    procedure Set_Open_Flag (Target : Iir; Flag : Boolean);
 
@@ -6215,11 +6213,6 @@ package Iirs is
    function Get_Return_Type_Mark (Target : Iir) return Iir;
    procedure Set_Return_Type_Mark (Target : Iir; Mark : Iir);
 
-   --  Get/set the lexical layout of an interface.
-   --  Field: Odigit2 (pos)
-   function Get_Lexical_Layout (Decl : Iir) return Iir_Lexical_Layout_Type;
-   procedure Set_Lexical_Layout (Decl : Iir; Lay : Iir_Lexical_Layout_Type);
-
    --  List of use (designated type of access types) of an incomplete type
    --  definition.  The purpose is to complete the uses with the full type
    --  definition.
@@ -6351,9 +6344,15 @@ package Iirs is
    procedure Set_Has_Identifier_List (Decl : Iir; Flag : Boolean);
 
    --  Layout flag for object declaration.  If True, the mode is present.
-   --  Field: Flag8
+   --  Field: Flag10
    function Get_Has_Mode (Decl : Iir) return Boolean;
    procedure Set_Has_Mode (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag for object declaration.  If True, the object class is
+   --  present.
+   --  Field: Flag11
+   function Get_Has_Class (Decl : Iir) return Boolean;
+   procedure Set_Has_Class (Decl : Iir; Flag : Boolean);
 
    --  Set to True if Maybe_Ref fields are references.  This cannot be shared
    --  with Has_Identifier_List as: Is_Ref is set to True on all items but

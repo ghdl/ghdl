@@ -188,23 +188,6 @@ package body Disp_Tree is
       end case;
    end Image_Iir_Delay_Mechanism;
 
-   function Image_Iir_Lexical_Layout_Type (V : Iir_Lexical_Layout_Type)
-                                          return String is
-   begin
-      if (V and Iir_Lexical_Has_Mode) /= 0 then
-         return " +mode"
-           & Image_Iir_Lexical_Layout_Type (V and not Iir_Lexical_Has_Mode);
-      elsif (V and Iir_Lexical_Has_Class) /= 0 then
-         return " +class"
-           & Image_Iir_Lexical_Layout_Type (V and not Iir_Lexical_Has_Class);
-      elsif (V and Iir_Lexical_Has_Type) /= 0 then
-         return " +type"
-           & Image_Iir_Lexical_Layout_Type (V and not Iir_Lexical_Has_Type);
-      else
-         return "";
-      end if;
-   end Image_Iir_Lexical_Layout_Type;
-
    function Image_Iir_Mode (Mode : Iir_Mode) return String is
    begin
       case Mode is
@@ -466,9 +449,6 @@ package body Disp_Tree is
                when Type_Iir_Delay_Mechanism =>
                   Put_Line (Image_Iir_Delay_Mechanism
                               (Get_Iir_Delay_Mechanism (N, F)));
-               when Type_Iir_Lexical_Layout_Type =>
-                  Put_Line (Image_Iir_Lexical_Layout_Type
-                              (Get_Iir_Lexical_Layout_Type (N, F)));
                when Type_Iir_Predefined_Functions =>
                   Put_Line (Image_Iir_Predefined_Functions
                               (Get_Iir_Predefined_Functions (N, F)));

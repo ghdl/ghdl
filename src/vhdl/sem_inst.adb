@@ -279,9 +279,6 @@ package body Sem_Inst is
             Set_Iir_Pure_State (Res, F, Get_Iir_Pure_State (N, F));
          when Type_Iir_Delay_Mechanism =>
             Set_Iir_Delay_Mechanism (Res, F, Get_Iir_Delay_Mechanism (N, F));
-         when Type_Iir_Lexical_Layout_Type =>
-            Set_Iir_Lexical_Layout_Type
-              (Res, F, Get_Iir_Lexical_Layout_Type (N, F));
          when Type_Iir_Predefined_Functions =>
             Set_Iir_Predefined_Functions
               (Res, F, Get_Iir_Predefined_Functions (N, F));
@@ -433,7 +430,9 @@ package body Sem_Inst is
                Set_Type (Res, Get_Type (Inter));
                Set_Subtype_Indication (Res, Get_Subtype_Indication (Inter));
                Set_Mode (Res, Get_Mode (Inter));
-               Set_Lexical_Layout (Res, Get_Lexical_Layout (Inter));
+               Set_Has_Mode (Res, Get_Has_Mode (Inter));
+               Set_Has_Class (Res, Get_Has_Class (Inter));
+               Set_Has_Identifier_List (Res, Get_Has_Identifier_List (Inter));
                Set_Expr_Staticness (Res, Get_Expr_Staticness (Inter));
                Set_Name_Staticness (Res, Get_Name_Staticness (Inter));
             when Iir_Kind_Interface_Package_Declaration =>

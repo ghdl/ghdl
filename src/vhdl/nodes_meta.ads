@@ -37,7 +37,6 @@ package Nodes_Meta is
       Type_Iir_Index32,
       Type_Iir_Int32,
       Type_Iir_Int64,
-      Type_Iir_Lexical_Layout_Type,
       Type_Iir_List,
       Type_Iir_Mode,
       Type_Iir_Predefined_Functions,
@@ -312,7 +311,6 @@ package Nodes_Meta is
       Field_Type_Mark,
       Field_File_Type_Mark,
       Field_Return_Type_Mark,
-      Field_Lexical_Layout,
       Field_Incomplete_Type_List,
       Field_Has_Disconnect_Flag,
       Field_Has_Active_Flag,
@@ -339,6 +337,7 @@ package Nodes_Meta is
       Field_Has_Body,
       Field_Has_Identifier_List,
       Field_Has_Mode,
+      Field_Has_Class,
       Field_Is_Ref,
       Field_Psl_Property,
       Field_Psl_Declaration,
@@ -441,11 +440,6 @@ package Nodes_Meta is
       (N : Iir; F : Fields_Enum) return Iir_Int64;
    procedure Set_Iir_Int64
       (N : Iir; F : Fields_Enum; V: Iir_Int64);
-
-   function Get_Iir_Lexical_Layout_Type
-      (N : Iir; F : Fields_Enum) return Iir_Lexical_Layout_Type;
-   procedure Set_Iir_Lexical_Layout_Type
-      (N : Iir; F : Fields_Enum; V: Iir_Lexical_Layout_Type);
 
    function Get_Iir_List
       (N : Iir; F : Fields_Enum) return Iir_List;
@@ -788,7 +782,6 @@ package Nodes_Meta is
    function Has_Type_Mark (K : Iir_Kind) return Boolean;
    function Has_File_Type_Mark (K : Iir_Kind) return Boolean;
    function Has_Return_Type_Mark (K : Iir_Kind) return Boolean;
-   function Has_Lexical_Layout (K : Iir_Kind) return Boolean;
    function Has_Incomplete_Type_List (K : Iir_Kind) return Boolean;
    function Has_Has_Disconnect_Flag (K : Iir_Kind) return Boolean;
    function Has_Has_Active_Flag (K : Iir_Kind) return Boolean;
@@ -815,6 +808,7 @@ package Nodes_Meta is
    function Has_Has_Body (K : Iir_Kind) return Boolean;
    function Has_Has_Identifier_List (K : Iir_Kind) return Boolean;
    function Has_Has_Mode (K : Iir_Kind) return Boolean;
+   function Has_Has_Class (K : Iir_Kind) return Boolean;
    function Has_Is_Ref (K : Iir_Kind) return Boolean;
    function Has_Psl_Property (K : Iir_Kind) return Boolean;
    function Has_Psl_Declaration (K : Iir_Kind) return Boolean;

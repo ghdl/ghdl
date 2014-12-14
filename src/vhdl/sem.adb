@@ -1187,7 +1187,10 @@ package body Sem is
             if Get_Identifier (Left) /= Get_Identifier (Right) then
                return False;
             end if;
-            if Get_Lexical_Layout (Left) /= Get_Lexical_Layout (Right)
+            if Get_Has_Mode (Left) /= Get_Has_Mode (Right)
+              or else Get_Has_Class (Left) /= Get_Has_Class (Right)
+              or else (Get_Has_Identifier_List (Left)
+                         /= Get_Has_Identifier_List (Right))
               or else Get_Mode (Left) /= Get_Mode (Right)
             then
                return False;
