@@ -765,7 +765,7 @@ package Iirs is
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
-   -- Iir_Kind_Configuration_Declaration (Medium)
+   -- Iir_Kind_Configuration_Declaration (Short)
    --
    --   Get/Set_Parent (Field0)
    --   Get/Set_Design_Unit (Alias Field0)
@@ -1373,7 +1373,7 @@ package Iirs is
    --
    --   Get/Set_Name_Staticness (State2)
 
-   -- Iir_Kind_Guard_Signal_Declaration (Medium)
+   -- Iir_Kind_Guard_Signal_Declaration (Short)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -1383,9 +1383,9 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Guard_Sensitivity_List (Field6)
+   --   Get/Set_Guard_Sensitivity_List (Field4)
    --
-   --   Get/Set_Block_Statement (Field7)
+   --   Get/Set_Block_Statement (Field5)
    --
    --   Get/Set_Has_Active_Flag (Flag2)
    --
@@ -1694,9 +1694,9 @@ package Iirs is
    --
    --   Get/Set_Chain (Field2)
    --
-   --   Get/Set_Default_Value (Field4)
-   --
    --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Default_Value (Field4)
    --
    --   Get/Set_Tolerance (Field7)
    --
@@ -5440,7 +5440,7 @@ package Iirs is
    function Get_Design_Unit (Target : Iir) return Iir;
    procedure Set_Design_Unit (Target : Iir; Unit : Iir);
 
-   --  Field: Field7
+   --  Field: Field5
    function Get_Block_Statement (Target : Iir) return Iir;
    procedure Set_Block_Statement (Target : Iir; Block : Iir);
 
@@ -5896,7 +5896,7 @@ package Iirs is
    procedure Set_Guard_Decl (Target : Iir_Block_Statement; Decl : Iir);
 
    --  Sensitivity list for the implicit guard signal.
-   --  Field: Field6 (uc)
+   --  Field: Field4 (uc)
    function Get_Guard_Sensitivity_List (Guard : Iir) return Iir_List;
    procedure Set_Guard_Sensitivity_List (Guard : Iir; List : Iir_List);
 

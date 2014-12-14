@@ -296,6 +296,7 @@ package body Iirs is
            | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
+           | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
@@ -306,6 +307,7 @@ package body Iirs is
            | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Interface_Constant_Declaration
@@ -445,7 +447,6 @@ package body Iirs is
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
            | Iir_Kind_Package_Instantiation_Declaration
-           | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Header
@@ -461,7 +462,6 @@ package body Iirs is
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
            | Iir_Kind_File_Declaration
-           | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Interface_Package_Declaration
@@ -1918,14 +1918,14 @@ package body Iirs is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Block_Statement (Get_Kind (Target)));
-      return Get_Field7 (Target);
+      return Get_Field5 (Target);
    end Get_Block_Statement;
 
    procedure Set_Block_Statement (Target : Iir; Block : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Block_Statement (Get_Kind (Target)));
-      Set_Field7 (Target, Block);
+      Set_Field5 (Target, Block);
    end Set_Block_Statement;
 
    function Get_Signal_Driver (Target : Iir_Signal_Declaration) return Iir is
@@ -3185,14 +3185,14 @@ package body Iirs is
    begin
       pragma Assert (Guard /= Null_Iir);
       pragma Assert (Has_Guard_Sensitivity_List (Get_Kind (Guard)));
-      return Iir_To_Iir_List (Get_Field6 (Guard));
+      return Iir_To_Iir_List (Get_Field4 (Guard));
    end Get_Guard_Sensitivity_List;
 
    procedure Set_Guard_Sensitivity_List (Guard : Iir; List : Iir_List) is
    begin
       pragma Assert (Guard /= Null_Iir);
       pragma Assert (Has_Guard_Sensitivity_List (Get_Kind (Guard)));
-      Set_Field6 (Guard, Iir_List_To_Iir (List));
+      Set_Field4 (Guard, Iir_List_To_Iir (List));
    end Set_Guard_Sensitivity_List;
 
    function Get_Block_Block_Configuration (Block : Iir) return Iir is
