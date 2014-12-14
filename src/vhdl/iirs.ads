@@ -1088,10 +1088,10 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Subtype_Indication (Field5)
-   --
    --  Must always be null_iir for iir_kind_interface_file_declaration.
-   --   Get/Set_Default_Value (Field6)
+   --   Get/Set_Default_Value (Field4)
+   --
+   --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Mode (Odigit1)
    --
@@ -1334,9 +1334,9 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Subtype_Indication (Field5)
+   --   Get/Set_Default_Value (Field4)
    --
-   --   Get/Set_Default_Value (Field6)
+   --   Get/Set_Subtype_Indication (Field5)
    --
    --  For a non-resolved signal: null_iir if the signal has no driver, or
    --  a process/concurrent_statement for which the signal should have a
@@ -1401,16 +1401,16 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
+   -- Only for Iir_Kind_Constant_Declaration:
+   --  Default value of a deferred constant points to the full constant
+   --  declaration.
+   --   Get/Set_Default_Value (Field4)
+   --
    --  For iterator, this is the reconstructed subtype indication.
    --   Get/Set_Subtype_Indication (Field5)
    --
    -- Only for Iir_Kind_Iterator_Declaration:
    --   Get/Set_Discrete_Range (Field6)
-   --
-   -- Only for Iir_Kind_Constant_Declaration:
-   --  Default value of a deferred constant points to the full constant
-   --  declaration.
-   --   Get/Set_Default_Value (Field6)
    --
    -- Only for Iir_Kind_Constant_Declaration:
    --  Summary:
@@ -1423,7 +1423,7 @@ package Iirs is
    --  |  C1'     C1                      False
    --  |(*): Deferred_declaration is Null_Iir as long as the full declaration
    --  |   has not been analyzed.
-   --   Get/Set_Deferred_Declaration (Field7)
+   --   Get/Set_Deferred_Declaration (Field6)
    --
    -- Only for Iir_Kind_Constant_Declaration:
    --   Get/Set_Deferred_Declaration_Flag (Flag1)
@@ -1440,7 +1440,7 @@ package Iirs is
    --
    --   Get/Set_Name_Staticness (State2)
 
-   -- Iir_Kind_Variable_Declaration (Medium)
+   -- Iir_Kind_Variable_Declaration (Short)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -1450,9 +1450,9 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Subtype_Indication (Field5)
+   --   Get/Set_Default_Value (Field4)
    --
-   --   Get/Set_Default_Value (Field6)
+   --   Get/Set_Subtype_Indication (Field5)
    --
    --  True if the variable is a shared variable.
    --   Get/Set_Shared_Flag (Flag2)
@@ -1654,7 +1654,7 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
 
-   -- Iir_Kind_Free_Quantity_Declaration (Medium)
+   -- Iir_Kind_Free_Quantity_Declaration (Short)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -1662,9 +1662,9 @@ package Iirs is
    --
    --   Get/Set_Chain (Field2)
    --
-   --   Get/Set_Identifier (Field3)
+   --   Get/Set_Default_Value (Field4)
    --
-   --   Get/Set_Default_Value (Field6)
+   --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -1683,9 +1683,9 @@ package Iirs is
    --
    --   Get/Set_Chain (Field2)
    --
-   --   Get/Set_Identifier (Field3)
+   --   Get/Set_Default_Value (Field4)
    --
-   --   Get/Set_Default_Value (Field6)
+   --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Tolerance (Field7)
    --
@@ -2340,10 +2340,10 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
+   --   Get/Set_Reject_Time_Expression (Field4)
+   --
    -- Only for Iir_Kind_Concurrent_Selected_Signal_Assignment:
    --   Get/Set_Expression (Field5)
-   --
-   --   Get/Set_Reject_Time_Expression (Field6)
    --
    -- Only for Iir_Kind_Concurrent_Conditional_Signal_Assignment:
    --   Get/Set_Conditional_Waveform_Chain (Field7)
@@ -2364,7 +2364,7 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --  True if the target of the assignment is guarded
-   --   Get/Set_Guarded_Target_State (State3)
+   --   Get/Set_Guarded_Target_State (State1)
 
    -- Iir_Kind_Sensitized_Process_Statement (Medium)
    -- Iir_Kind_Process_Statement (Medium)
@@ -2411,7 +2411,7 @@ package Iirs is
    --
    --   Get/Set_End_Has_Postponed (Flag10)
 
-   -- Iir_Kind_Concurrent_Assertion_Statement (Medium)
+   -- Iir_Kind_Concurrent_Assertion_Statement (Short)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -2422,9 +2422,9 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Severity_Expression (Field5)
+   --   Get/Set_Severity_Expression (Field4)
    --
-   --   Get/Set_Report_Expression (Field6)
+   --   Get/Set_Report_Expression (Field5)
    --
    --   Get/Set_Postponed_Flag (Flag3)
    --
@@ -2453,9 +2453,9 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Severity_Expression (Field5)
+   --   Get/Set_Severity_Expression (Field4)
    --
-   --   Get/Set_Report_Expression (Field6)
+   --   Get/Set_Report_Expression (Field5)
    --
    --   Get/Set_PSL_Clock (Field7)
    --
@@ -2593,8 +2593,8 @@ package Iirs is
    --  sequential statements --
    ----------------------------
 
-   -- Iir_Kind_If_Statement (Medium)
-   -- Iir_Kind_Elsif (Medium)
+   -- Iir_Kind_If_Statement (Short)
+   -- Iir_Kind_Elsif (Short)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -2608,13 +2608,13 @@ package Iirs is
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Label (Field3)
    --
+   --  Must be an Iir_kind_elsif node, or NULL for no more elsif clauses.
+   --   Get/Set_Else_Clause (Field4)
+   --
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Identifier (Alias Field3)
    --
    --   Get/Set_Sequential_Statement_Chain (Field5)
-   --
-   --  Must be an Iir_kind_elsif node, or NULL for no more elsif clauses.
-   --   Get/Set_Else_Clause (Field6)
    --
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Visible_Flag (Flag4)
@@ -2699,7 +2699,7 @@ package Iirs is
    --
    --   Get/Set_Visible_Flag (Flag4)
 
-   -- Iir_Kind_Signal_Assignment_Statement (Medium)
+   -- Iir_Kind_Signal_Assignment_Statement (Short)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -2710,20 +2710,20 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
+   --   Get/Set_Reject_Time_Expression (Field4)
+   --
    --  The waveform.
    --  If the waveform_chain is null_iir, then the signal assignment is a
    --  disconnection statement, ie TARGET <= null_iir after disconection_time,
    --  where disconnection_time is specified by a disconnection specification.
    --   Get/Set_Waveform_Chain (Field5)
    --
-   --   Get/Set_Reject_Time_Expression (Field6)
-   --
    --   Get/Set_Delay_Mechanism (Flag1)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --  True if the target of the assignment is guarded
-   --   Get/Set_Guarded_Target_State (State3)
+   --   Get/Set_Guarded_Target_State (State1)
 
    -- Iir_Kind_Variable_Assignment_Statement (Short)
    --
@@ -2740,7 +2740,7 @@ package Iirs is
    --
    --   Get/Set_Visible_Flag (Flag4)
 
-   -- Iir_Kind_Assertion_Statement (Medium)
+   -- Iir_Kind_Assertion_Statement (Short)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -2751,13 +2751,13 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Severity_Expression (Field5)
+   --   Get/Set_Severity_Expression (Field4)
    --
-   --   Get/Set_Report_Expression (Field6)
+   --   Get/Set_Report_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
-   -- Iir_Kind_Report_Statement (Medium)
+   -- Iir_Kind_Report_Statement (Short)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -2766,9 +2766,9 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Severity_Expression (Field5)
+   --   Get/Set_Severity_Expression (Field4)
    --
-   --   Get/Set_Report_Expression (Field6)
+   --   Get/Set_Report_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -5000,7 +5000,7 @@ package Iirs is
    --  target).
    --  If UNKNOWN, this is not determined at compile time but at run-time.
    --  This is the case for formal signal interfaces of subprograms.
-   --  Field: State3 (pos)
+   --  Field: State1 (pos)
    function Get_Guarded_Target_State (Stmt : Iir) return Tri_State_Type;
    procedure Set_Guarded_Target_State (Stmt : Iir; State : Tri_State_Type);
 
@@ -5413,7 +5413,7 @@ package Iirs is
    --  Note that this node can be shared between declarations if they are
    --  separated by comma, such as in:
    --    variable a, b : integer := 5;
-   --  Field: Field6 Maybe_Ref
+   --  Field: Field4 Maybe_Ref
    function Get_Default_Value (Target : Iir) return Iir;
    procedure Set_Default_Value (Target : Iir; Value : Iir);
 
@@ -5421,7 +5421,7 @@ package Iirs is
    --  declaration for a full constant declaration, or is null_iir for a
    --  usual or deferred constant declaration.
    --  Set only during sem.
-   --  Field: Field7
+   --  Field: Field6
    function Get_Deferred_Declaration (Target : Iir) return Iir;
    procedure Set_Deferred_Declaration (Target : Iir; Decl : Iir);
 
@@ -5686,7 +5686,7 @@ package Iirs is
    function Get_Delay_Mechanism (Target : Iir) return Iir_Delay_Mechanism;
    procedure Set_Delay_Mechanism (Target : Iir; Kind : Iir_Delay_Mechanism);
 
-   --  Field: Field6
+   --  Field: Field4
    function Get_Reject_Time_Expression (Target : Iir) return Iir;
    procedure Set_Reject_Time_Expression (Target : Iir; Expr : Iir);
 
@@ -5818,12 +5818,12 @@ package Iirs is
    procedure Set_Assertion_Condition (Target : Iir; Cond : Iir);
 
    --  Report expression of an assertion or report statement.
-   --  Field: Field6
+   --  Field: Field5
    function Get_Report_Expression (Target : Iir) return Iir;
    procedure Set_Report_Expression (Target : Iir; Expr : Iir);
 
    --  Severity expression of an assertion or report statement.
-   --  Field: Field5
+   --  Field: Field4
    function Get_Severity_Expression (Target : Iir) return Iir;
    procedure Set_Severity_Expression (Target : Iir; Expr : Iir);
 
@@ -5937,7 +5937,7 @@ package Iirs is
    function Get_Condition (Target : Iir) return Iir;
    procedure Set_Condition (Target : Iir; Condition : Iir);
 
-   --  Field: Field6
+   --  Field: Field4
    function Get_Else_Clause (Target : Iir) return Iir;
    procedure Set_Else_Clause (Target : Iir; Clause : Iir);
 

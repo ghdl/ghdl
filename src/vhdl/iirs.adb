@@ -297,7 +297,9 @@ package body Iirs is
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Terminal_Declaration
+           | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_Variable_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
@@ -354,9 +356,13 @@ package body Iirs is
            | Iir_Kind_Slice_Name
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Psl_Expression
+           | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Concurrent_Procedure_Call_Statement
+           | Iir_Kind_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
+           | Iir_Kind_Assertion_Statement
+           | Iir_Kind_Report_Statement
            | Iir_Kind_Variable_Assignment_Statement
            | Iir_Kind_Return_Statement
            | Iir_Kind_For_Loop_Statement
@@ -365,6 +371,8 @@ package body Iirs is
            | Iir_Kind_Exit_Statement
            | Iir_Kind_Case_Statement
            | Iir_Kind_Procedure_Call_Statement
+           | Iir_Kind_If_Statement
+           | Iir_Kind_Elsif
            | Iir_Kind_Character_Literal
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
@@ -433,7 +441,6 @@ package body Iirs is
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Psl_Declaration
-           | Iir_Kind_Free_Quantity_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Enumeration_Literal
@@ -446,7 +453,6 @@ package body Iirs is
            | Iir_Kind_File_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Variable_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Interface_Constant_Declaration
@@ -458,19 +464,13 @@ package body Iirs is
            | Iir_Kind_Process_Statement
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
-           | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Simple_Simultaneous_Statement
-           | Iir_Kind_Signal_Assignment_Statement
-           | Iir_Kind_Assertion_Statement
-           | Iir_Kind_Report_Statement
-           | Iir_Kind_Wait_Statement
-           | Iir_Kind_If_Statement
-           | Iir_Kind_Elsif =>
+           | Iir_Kind_Wait_Statement =>
             return Format_Medium;
          when Iir_Kind_Floating_Point_Literal
            | Iir_Kind_Physical_Fp_Literal =>
@@ -730,14 +730,14 @@ package body Iirs is
    begin
       pragma Assert (Stmt /= Null_Iir);
       pragma Assert (Has_Guarded_Target_State (Get_Kind (Stmt)));
-      return Tri_State_Type'Val (Get_State3 (Stmt));
+      return Tri_State_Type'Val (Get_State1 (Stmt));
    end Get_Guarded_Target_State;
 
    procedure Set_Guarded_Target_State (Stmt : Iir; State : Tri_State_Type) is
    begin
       pragma Assert (Stmt /= Null_Iir);
       pragma Assert (Has_Guarded_Target_State (Get_Kind (Stmt)));
-      Set_State3 (Stmt, Tri_State_Type'Pos (State));
+      Set_State1 (Stmt, Tri_State_Type'Pos (State));
    end Set_Guarded_Target_State;
 
    function Get_Library_Unit (Design_Unit : Iir_Design_Unit) return Iir is
@@ -1843,28 +1843,28 @@ package body Iirs is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Default_Value (Get_Kind (Target)));
-      return Get_Field6 (Target);
+      return Get_Field4 (Target);
    end Get_Default_Value;
 
    procedure Set_Default_Value (Target : Iir; Value : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Default_Value (Get_Kind (Target)));
-      Set_Field6 (Target, Value);
+      Set_Field4 (Target, Value);
    end Set_Default_Value;
 
    function Get_Deferred_Declaration (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Deferred_Declaration (Get_Kind (Target)));
-      return Get_Field7 (Target);
+      return Get_Field6 (Target);
    end Get_Deferred_Declaration;
 
    procedure Set_Deferred_Declaration (Target : Iir; Decl : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Deferred_Declaration (Get_Kind (Target)));
-      Set_Field7 (Target, Decl);
+      Set_Field6 (Target, Decl);
    end Set_Deferred_Declaration;
 
    function Get_Deferred_Declaration_Flag (Target : Iir) return Boolean is
@@ -2658,14 +2658,14 @@ package body Iirs is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Reject_Time_Expression (Get_Kind (Target)));
-      return Get_Field6 (Target);
+      return Get_Field4 (Target);
    end Get_Reject_Time_Expression;
 
    procedure Set_Reject_Time_Expression (Target : Iir; Expr : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Reject_Time_Expression (Get_Kind (Target)));
-      Set_Field6 (Target, Expr);
+      Set_Field4 (Target, Expr);
    end Set_Reject_Time_Expression;
 
    function Get_Sensitivity_List (Wait : Iir) return Iir_List is
@@ -2953,28 +2953,28 @@ package body Iirs is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Report_Expression (Get_Kind (Target)));
-      return Get_Field6 (Target);
+      return Get_Field5 (Target);
    end Get_Report_Expression;
 
    procedure Set_Report_Expression (Target : Iir; Expr : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Report_Expression (Get_Kind (Target)));
-      Set_Field6 (Target, Expr);
+      Set_Field5 (Target, Expr);
    end Set_Report_Expression;
 
    function Get_Severity_Expression (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Severity_Expression (Get_Kind (Target)));
-      return Get_Field5 (Target);
+      return Get_Field4 (Target);
    end Get_Severity_Expression;
 
    procedure Set_Severity_Expression (Target : Iir; Expr : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Severity_Expression (Get_Kind (Target)));
-      Set_Field5 (Target, Expr);
+      Set_Field4 (Target, Expr);
    end Set_Severity_Expression;
 
    function Get_Instantiated_Unit (Target : Iir) return Iir is
@@ -3292,14 +3292,14 @@ package body Iirs is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Else_Clause (Get_Kind (Target)));
-      return Get_Field6 (Target);
+      return Get_Field4 (Target);
    end Get_Else_Clause;
 
    procedure Set_Else_Clause (Target : Iir; Clause : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Else_Clause (Get_Kind (Target)));
-      Set_Field6 (Target, Clause);
+      Set_Field4 (Target, Clause);
    end Set_Else_Clause;
 
    function Get_Parameter_Specification (Target : Iir) return Iir is
