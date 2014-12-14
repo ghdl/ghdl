@@ -296,6 +296,7 @@ package body Iirs is
            | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
+           | Iir_Kind_Unit_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
@@ -303,6 +304,7 @@ package body Iirs is
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Terminal_Declaration
            | Iir_Kind_Free_Quantity_Declaration
+           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
@@ -447,13 +449,11 @@ package body Iirs is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Header
-           | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Psl_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
-           | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Implicit_Procedure_Declaration
@@ -836,42 +836,42 @@ package body Iirs is
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Enum_Pos (Get_Kind (Lit)));
-      return Iir_Int32'Val (Get_Field10 (Lit));
+      return Iir_Int32'Val (Get_Field5 (Lit));
    end Get_Enum_Pos;
 
    procedure Set_Enum_Pos (Lit : Iir; Val : Iir_Int32) is
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Enum_Pos (Get_Kind (Lit)));
-      Set_Field10 (Lit, Iir_Int32'Pos (Val));
+      Set_Field5 (Lit, Iir_Int32'Pos (Val));
    end Set_Enum_Pos;
 
    function Get_Physical_Literal (Unit : Iir) return Iir is
    begin
       pragma Assert (Unit /= Null_Iir);
       pragma Assert (Has_Physical_Literal (Get_Kind (Unit)));
-      return Get_Field6 (Unit);
+      return Get_Field4 (Unit);
    end Get_Physical_Literal;
 
    procedure Set_Physical_Literal (Unit : Iir; Lit : Iir) is
    begin
       pragma Assert (Unit /= Null_Iir);
       pragma Assert (Has_Physical_Literal (Get_Kind (Unit)));
-      Set_Field6 (Unit, Lit);
+      Set_Field4 (Unit, Lit);
    end Set_Physical_Literal;
 
    function Get_Physical_Unit_Value (Unit : Iir) return Iir is
    begin
       pragma Assert (Unit /= Null_Iir);
       pragma Assert (Has_Physical_Unit_Value (Get_Kind (Unit)));
-      return Get_Field7 (Unit);
+      return Get_Field5 (Unit);
    end Get_Physical_Unit_Value;
 
    procedure Set_Physical_Unit_Value (Unit : Iir; Lit : Iir) is
    begin
       pragma Assert (Unit /= Null_Iir);
       pragma Assert (Has_Physical_Unit_Value (Get_Kind (Unit)));
-      Set_Field7 (Unit, Lit);
+      Set_Field5 (Unit, Lit);
    end Set_Physical_Unit_Value;
 
    function Get_Fp_Value (Lit : Iir) return Iir_Fp64 is
@@ -887,20 +887,6 @@ package body Iirs is
       pragma Assert (Has_Fp_Value (Get_Kind (Lit)));
       Set_Fp64 (Lit, Val);
    end Set_Fp_Value;
-
-   function Get_Enumeration_Decl (Target : Iir) return Iir is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Enumeration_Decl (Get_Kind (Target)));
-      return Get_Field6 (Target);
-   end Get_Enumeration_Decl;
-
-   procedure Set_Enumeration_Decl (Target : Iir; Lit : Iir) is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Enumeration_Decl (Get_Kind (Target)));
-      Set_Field6 (Target, Lit);
-   end Set_Enumeration_Decl;
 
    function Get_Simple_Aggregate_List (Target : Iir) return Iir_List is
    begin
@@ -1790,14 +1776,14 @@ package body Iirs is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Subprogram_Hash (Get_Kind (Target)));
-      return Iir_Int32'Val (Get_Field11 (Target));
+      return Iir_Int32'Val (Get_Field4 (Target));
    end Get_Subprogram_Hash;
 
    procedure Set_Subprogram_Hash (Target : Iir; Val : Iir_Int32) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Subprogram_Hash (Get_Kind (Target)));
-      Set_Field11 (Target, Iir_Int32'Pos (Val));
+      Set_Field4 (Target, Iir_Int32'Pos (Val));
    end Set_Subprogram_Hash;
 
    function Get_Impure_Depth (Target : Iir) return Iir_Int32 is

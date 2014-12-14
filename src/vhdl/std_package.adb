@@ -162,7 +162,6 @@ package body Std_Package is
          Set_Type (Res, Sub_Type);
          Set_Expr_Staticness (Res, Locally);
          Set_Name_Staticness (Res, Locally);
-         Set_Enumeration_Decl (Res, Res);
          Set_Enum_Pos (Res, Iir_Int32 (Get_Nbr_Elements (List)));
          Sem.Compute_Subprogram_Hash (Res);
          Append_Element (List, Res);

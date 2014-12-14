@@ -1200,6 +1200,8 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --   Get/Set_Subprogram_Hash (Field4)
+   --
    --   Get/Set_Interface_Declaration_Chain (Field5)
    --
    --   Get/Set_Generic_Chain (Field6)
@@ -1211,8 +1213,6 @@ package Iirs is
    --   Get/Set_Subprogram_Body (Field9)
    --
    --   Get/Set_Subprogram_Depth (Field10)
-   --
-   --   Get/Set_Subprogram_Hash (Field11)
    --
    --   Get/Set_Overload_Number (Field12)
    --
@@ -1304,6 +1304,8 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --   Get/Set_Subprogram_Hash (Field4)
+   --
    --   Get/Set_Interface_Declaration_Chain (Field5)
    --
    --   Get/Set_Generic_Chain (Field6)
@@ -1313,8 +1315,6 @@ package Iirs is
    --   Get/Set_Implicit_Definition (Field9)
    --
    --   Get/Set_Type_Reference (Field10)
-   --
-   --   Get/Set_Subprogram_Hash (Field11)
    --
    --   Get/Set_Overload_Number (Field12)
    --
@@ -1788,7 +1788,7 @@ package Iirs is
    --
    --   Get/Set_Type_Staticness (State1)
 
-   -- Iir_Kind_Enumeration_Literal (Medium)
+   -- Iir_Kind_Enumeration_Literal (Short)
    --
    --  Nota: two literals of the same type are equal iff their value is the
    --  same; in other words, there may be severals literals with the same
@@ -1805,14 +1805,10 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --  The declaration of the literal.  If LITERAL_ORIGIN is not set, then this
-   --  is the node itself, else this is the literal defined.
-   --   Get/Set_Enumeration_Decl (Field6)
+   --   Get/Set_Subprogram_Hash (Field4)
    --
    --  The value of an enumeration literal is the position.
-   --   Get/Set_Enum_Pos (Field10)
-   --
-   --   Get/Set_Subprogram_Hash (Field11)
+   --   Get/Set_Enum_Pos (Field5)
    --
    --   Get/Set_Seen_Flag (Flag1)
    --
@@ -1847,7 +1843,7 @@ package Iirs is
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
-   -- Iir_Kind_Unit_Declaration (Medium)
+   -- Iir_Kind_Unit_Declaration (Short)
    --
    --  LRM08 5.2.4 Physical types
    --
@@ -1869,11 +1865,11 @@ package Iirs is
    --
    --  The Physical_Literal is the expression that appear in the sources, so
    --  this is Null_Iir for a primary unit.
-   --   Get/Set_Physical_Literal (Field6)
+   --   Get/Set_Physical_Literal (Field4)
    --
    --  The value of the unit, computed from the primary unit.  This is always
    --  a physical integer literal.
-   --   Get/Set_Physical_Unit_Value (Field7)
+   --   Get/Set_Physical_Unit_Value (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -5042,16 +5038,16 @@ package Iirs is
    procedure Set_Value (Lit : Iir; Val : Iir_Int64);
 
    --  Position (same as lit_type'pos) of an enumeration literal.
-   --  Field: Field10 (pos)
+   --  Field: Field5 (pos)
    function Get_Enum_Pos (Lit : Iir) return Iir_Int32;
    procedure Set_Enum_Pos (Lit : Iir; Val : Iir_Int32);
 
-   --  Field: Field6
+   --  Field: Field4
    function Get_Physical_Literal (Unit : Iir) return Iir;
    procedure Set_Physical_Literal (Unit : Iir; Lit : Iir);
 
    --  Value of a physical unit declaration.
-   --  Field: Field7
+   --  Field: Field5
    function Get_Physical_Unit_Value (Unit : Iir) return Iir;
    procedure Set_Physical_Unit_Value (Unit : Iir; Lit : Iir);
 
@@ -5059,13 +5055,6 @@ package Iirs is
    --  Field: Fp64
    function Get_Fp_Value (Lit : Iir) return Iir_Fp64;
    procedure Set_Fp_Value (Lit : Iir; Val : Iir_Fp64);
-
-   --  Declaration of the literal.
-   --  This is used to retrieve the genuine enumeration literal for literals
-   --  created from static expression.
-   --  Field: Field6 Ref
-   function Get_Enumeration_Decl (Target : Iir) return Iir;
-   procedure Set_Enumeration_Decl (Target : Iir; Lit : Iir);
 
    --  List of elements of a simple aggregate.
    --  Field: Field3 (uc)
@@ -5390,7 +5379,7 @@ package Iirs is
    --  Hash of a subprogram profile.
    --  This is used to speed up subprogram profile comparaison, which is very
    --  often used by overload.
-   --  Field: Field11 (pos)
+   --  Field: Field4 (pos)
    function Get_Subprogram_Hash (Target : Iir) return Iir_Int32;
    procedure Set_Subprogram_Hash (Target : Iir; Val : Iir_Int32);
    pragma Inline (Get_Subprogram_Hash);

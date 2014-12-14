@@ -789,7 +789,6 @@ package body Sem_Types is
             Set_Expr_Staticness (El, Locally);
             Set_Name_Staticness (El, Locally);
             Set_Type (El, Def);
-            Set_Enumeration_Decl (El, El);
             Sem.Compute_Subprogram_Hash (El);
             Sem_Scopes.Add_Name (El);
             Name_Visible (El);

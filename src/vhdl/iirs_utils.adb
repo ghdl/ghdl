@@ -419,7 +419,6 @@ package body Iirs_Utils is
       Set_Type (Res, Get_Type (Lit));
       Set_Enum_Pos (Res, Get_Enum_Pos (Lit));
       Set_Expr_Staticness (Res, Locally);
-      Set_Enumeration_Decl (Res, Lit);
       return Res;
    end Copy_Enumeration_Literal;
 

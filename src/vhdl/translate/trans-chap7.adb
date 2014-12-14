@@ -506,7 +506,16 @@ package body Trans.Chap7 is
               (Res_Type, Integer_64 (Get_Value (Expr)));
 
          when Iir_Kind_Enumeration_Literal =>
-            return Get_Ortho_Expr (Get_Enumeration_Decl (Expr));
+            declare
+               Enum_Type : constant Iir := Get_Base_Type (Get_Type (Expr));
+               Lit_List : Iir_List;
+               Enum : Iir;
+            begin
+               Lit_List := Get_Enumeration_Literal_List (Enum_Type);
+               Enum := Get_Nth_Element
+                 (Lit_List, Natural (Get_Enum_Pos (Expr)));
+               return Get_Ortho_Expr (Enum);
+            end;
 
          when Iir_Kind_Floating_Point_Literal =>
             return New_Float_Literal
