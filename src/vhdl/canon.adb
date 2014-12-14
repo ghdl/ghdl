@@ -1273,8 +1273,6 @@ package body Canon is
       --  word POSTPONED.
       Set_Postponed_Flag (Proc, Get_Postponed_Flag (El));
 
-      Set_Attribute_Value_Chain (Proc, Get_Attribute_Value_Chain (El));
-
       Call_Stmt := Create_Iir (Iir_Kind_Procedure_Call_Statement);
       Set_Sequential_Statement_Chain (Proc, Call_Stmt);
       Location_Copy (Call_Stmt, El);

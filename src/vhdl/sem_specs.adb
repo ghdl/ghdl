@@ -15,7 +15,6 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Types; use Types;
 with Iirs_Utils; use Iirs_Utils;
 with Sem_Expr; use Sem_Expr;
 with Sem_Names; use Sem_Names;
@@ -113,16 +112,92 @@ package body Sem_Specs is
       return Tok_Invalid;
    end Get_Entity_Class_Kind;
 
+   --  Return the node containing the attribute_value_chain field for DECL.
+   --  This is the parent of the attribute specification, so in general this
+   --  is also the parent of the declaration, but there are exceptions...
+   function Get_Attribute_Value_Chain_Parent (Decl : Iir) return Iir
+   is
+      Parent : Iir;
+   begin
+      case Get_Kind (Decl) is
+         when Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Architecture_Body
+           | Iir_Kind_Configuration_Declaration =>
+            --  LRM93 5.1
+            --  An attribute specification for an attribute of a design unit
+            --  [...] must appear immediately within the declarative part of
+            --  that design unit.
+            return Decl;
+         when Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
+            --  LRM93 5.1
+            --  Similarly, an attribute specification for an attribute of an
+            --  interface object of a design unit, subprogram, block statement
+            --  or package  must appear immediately within the declarative part
+            --  of that design unit, subprogram, block statement, or package.
+            Parent := Get_Parent (Decl);
+            case Get_Kind (Parent) is
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Block_Statement
+                 | Iir_Kind_Package_Declaration
+                 | Iir_Kind_Package_Instantiation_Declaration =>
+                  return Parent;
+               when Iir_Kind_Procedure_Declaration
+                 | Iir_Kind_Function_Declaration =>
+                  return Get_Subprogram_Body (Parent);
+               when others =>
+                  raise Internal_Error;
+            end case;
+         when Iir_Kinds_Sequential_Statement =>
+            --  Sequential statements can be nested.
+            Parent := Get_Parent (Decl);
+            loop
+               if Get_Kind (Parent) not in Iir_Kinds_Sequential_Statement then
+                  return Parent;
+               end if;
+               Parent := Get_Parent (Parent);
+            end loop;
+         when others =>
+            --  This is also true for enumeration literals and physical units.
+            return Get_Parent (Decl);
+      end case;
+   end Get_Attribute_Value_Chain_Parent;
+
+   function Find_Attribute_Value (Ent : Iir; Id : Name_Id) return Iir
+   is
+      Attr_Value_Parent : constant Iir :=
+        Get_Attribute_Value_Chain_Parent (Ent);
+      Value : Iir;
+      Spec : Iir;
+      Attr_Decl : Iir;
+   begin
+      Value := Get_Attribute_Value_Chain (Attr_Value_Parent);
+      while Value /= Null_Iir loop
+         if Get_Designated_Entity (Value) = Ent then
+            Spec := Get_Attribute_Specification (Value);
+            Attr_Decl := Get_Attribute_Designator (Spec);
+            if Get_Identifier (Attr_Decl) = Id then
+               return Value;
+            end if;
+         end if;
+         Value := Get_Chain (Value);
+      end loop;
+      return Null_Iir;
+   end Find_Attribute_Value;
+
    --  Decorate DECL with attribute ATTR.
    --  If CHECK_CLASS is true, class of DECL must be class of ATTR, otherwise
    --   returns silently.
    --  If CHECK_DEFINED is true, DECL must not have been decorated, otherwise
    --   returns silently.
-   procedure Attribute_A_Decl
-     (Decl : Iir;
-      Attr : Iir_Attribute_Specification;
-      Check_Class : Boolean;
-      Check_Defined : Boolean)
+   procedure Attribute_A_Decl (Decl : Iir;
+                               Attr : Iir_Attribute_Specification;
+                               Check_Class : Boolean;
+                               Check_Defined : Boolean)
    is
       use Tokens;
       El : Iir_Attribute_Value;
@@ -131,6 +206,8 @@ package body Sem_Specs is
       --  Due to possible error, it is not required to be an attribute decl,
       --  it may be a simple name.
       Attr_Decl : Iir;
+
+      Attr_Chain_Parent : Iir;
    begin
       --  LRM93 5.1
       --  It is an error if the class of those names is not the same as that
@@ -159,7 +236,7 @@ package body Sem_Specs is
          return;
       end if;
 
-      --  LRM93 §5.1
+      --  LRM93 5.1
       --  An attribute specification for an attribute of a design unit
       --  (ie an entity declaration, an architecture, a configuration, or a
       --  package) must appear immediately within the declarative part of
@@ -187,41 +264,44 @@ package body Sem_Specs is
       --  Similarly, it is an error if two different attributes with the
       --  same simple name (wether predefined or user-defined) are both
       --  associated with a given named entity.
-      El := Get_Attribute_Value_Chain (Decl);
+      Attr_Chain_Parent := Get_Attribute_Value_Chain_Parent (Decl);
+      El := Get_Attribute_Value_Chain (Attr_Chain_Parent);
       while El /= Null_Iir loop
-         declare
-            El_Attr : constant Iir_Attribute_Declaration :=
-              Get_Named_Entity (Get_Attribute_Designator
-                                  (Get_Attribute_Specification (El)));
-         begin
-            if El_Attr = Attr_Decl then
-               if Get_Attribute_Specification (El) = Attr then
-                  --  Was already specified with the same attribute value.
-                  --  This is possible only in one case:
-                  --
-                  --    signal S1       : real;
-                  --    alias  S1_too   : real is S1;
-                  --    attribute ATTR : T1;
-                  --    attribute ATTR of ALL : signal is '1';
+         if Get_Designated_Entity (El) = Decl then
+            declare
+               El_Attr : constant Iir_Attribute_Declaration :=
+                 Get_Named_Entity (Get_Attribute_Designator
+                                     (Get_Attribute_Specification (El)));
+            begin
+               if El_Attr = Attr_Decl then
+                  if Get_Attribute_Specification (El) = Attr then
+                     --  Was already specified with the same attribute value.
+                     --  This is possible only in one case:
+                     --
+                     --    signal S1       : real;
+                     --    alias  S1_too   : real is S1;
+                     --    attribute ATTR : T1;
+                     --    attribute ATTR of ALL : signal is '1';
+                     return;
+                  end if;
+                  if Check_Defined then
+                     Error_Msg_Sem
+                       (Disp_Node (Decl) & " has already " & Disp_Node (Attr),
+                        Attr);
+                     Error_Msg_Sem ("previous attribute specification at "
+                                      & Disp_Location (El), Attr);
+                  end if;
+                  return;
+               elsif Get_Identifier (El_Attr) = Get_Identifier (Attr_Decl) then
+                  Error_Msg_Sem
+                    (Disp_Node (Decl) & " is already decorated with an "
+                       & Disp_Node (El_Attr), Attr);
+                  Error_Msg_Sem
+                    ("(previous attribute specification was here)", El);
                   return;
                end if;
-               if Check_Defined then
-                  Error_Msg_Sem
-                    (Disp_Node (Decl) & " has already " & Disp_Node (Attr),
-                     Attr);
-                  Error_Msg_Sem ("previous attribute specification at "
-                                 & Disp_Location (El), Attr);
-               end if;
-               return;
-            elsif Get_Identifier (El_Attr) = Get_Identifier (Attr_Decl) then
-               Error_Msg_Sem
-                 (Disp_Node (Decl) & " is already decorated with an "
-                  & Disp_Node (El_Attr), Attr);
-               Error_Msg_Sem
-                 ("(previous attribute specification was here)", El);
-               return;
-            end if;
-         end;
+            end;
+         end if;
          El := Get_Chain (El);
       end loop;
 
@@ -243,11 +323,16 @@ package body Sem_Specs is
       Set_Designated_Entity (El, Decl);
       Set_Type (El, Get_Type (Attr_Decl));
       Set_Base_Name (El, El);
-      Set_Chain (El, Get_Attribute_Value_Chain (Decl));
-      Set_Attribute_Value_Chain (Decl, El);
+
+      --  Put the attribute value in the attribute_value_chain.
+      Set_Chain (El, Get_Attribute_Value_Chain (Attr_Chain_Parent));
+      Set_Attribute_Value_Chain (Attr_Chain_Parent, El);
+
+      --  Put the attribute value in the chain of the attribute specification.
       Set_Spec_Chain (El, Get_Attribute_Value_Spec_Chain (Attr));
       Set_Attribute_Value_Spec_Chain (Attr, El);
 
+      --  Special handling for 'Foreign.
       if (Flags.Vhdl_Std >= Vhdl_93c
           and then Attr_Decl = Foreign_Attribute)
         or else
@@ -620,8 +705,7 @@ package body Sem_Specs is
    end Sem_Signature_Entity_Designator;
 
    procedure Sem_Attribute_Specification
-     (Spec : Iir_Attribute_Specification;
-      Scope : Iir)
+     (Spec : Iir_Attribute_Specification; Scope : Iir)
    is
       use Tokens;
 

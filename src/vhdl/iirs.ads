@@ -827,8 +827,10 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --   Get/Set_Attribute_Value_Chain (Field4)
+   --
    --  The corresponding package declaration.
-   --   Get/Set_Package (Field4)
+   --   Get/Set_Package (Field5)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
@@ -883,8 +885,6 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Generic_Chain (Field6)
    --
@@ -1014,8 +1014,6 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
@@ -1035,8 +1033,6 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -1055,8 +1051,6 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
@@ -1070,8 +1064,6 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -1095,8 +1087,6 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Subtype_Indication (Field5)
    --
@@ -1203,8 +1193,6 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Interface_Declaration_Chain (Field5)
    --
    --   Get/Set_Generic_Chain (Field6)
@@ -1278,9 +1266,11 @@ package Iirs is
    --
    --   Get/Set_Impure_Depth (Field3)
    --
-   --   Get/Set_Subprogram_Specification (Field4)
+   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Sequential_Statement_Chain (Field5)
+   --
+   --   Get/Set_Subprogram_Specification (Field6)
    --
    --   Get/Set_Callees_List (Field7)
    --
@@ -1306,8 +1296,6 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Interface_Declaration_Chain (Field5)
    --
@@ -1345,8 +1333,6 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Subtype_Indication (Field5)
    --
@@ -1388,8 +1374,6 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Guard_Sensitivity_List (Field6)
    --
    --   Get/Set_Block_Statement (Field7)
@@ -1416,8 +1400,6 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --  For iterator, this is the reconstructed subtype indication.
    --   Get/Set_Subtype_Indication (Field5)
@@ -1468,8 +1450,6 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Default_Value (Field6)
@@ -1513,8 +1493,6 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Subtype_Indication (Field5)
    --
@@ -1636,8 +1614,6 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Group_Template_Name (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -1688,8 +1664,6 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Default_Value (Field6)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -1710,8 +1684,6 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Default_Value (Field6)
    --
@@ -1811,6 +1783,8 @@ package Iirs is
    --  same; in other words, there may be severals literals with the same
    --  value.
    --
+   --  The parent of an enumeration_literal is the same parent as the type
+   --  declaration.
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Type (Field1)
@@ -1819,8 +1793,6 @@ package Iirs is
    --   Get/Set_Literal_Origin (Field2)
    --
    --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --  The declaration of the literal.  If LITERAL_ORIGIN is not set, then this
    --  is the node itself, else this is the literal defined.
@@ -1874,6 +1846,8 @@ package Iirs is
    --
    --  physical_literal ::= [ abstract_literal ] /unit/_name
    --
+   --  The parent of a physical unit is the same parent as the type
+   --  declaration.
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Type (Field1)
@@ -1881,8 +1855,6 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --  The Physical_Literal is the expression that appear in the sources, so
    --  this is Null_Iir for a primary unit.
@@ -2368,8 +2340,6 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    -- Only for Iir_Kind_Concurrent_Selected_Signal_Assignment:
    --   Get/Set_Expression (Field5)
    --
@@ -2452,8 +2422,6 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Severity_Expression (Field5)
    --
    --   Get/Set_Report_Expression (Field6)
@@ -2484,8 +2452,6 @@ package Iirs is
    --
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Severity_Expression (Field5)
    --
@@ -2522,8 +2488,6 @@ package Iirs is
    --
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Default_Binding_Indication (Field5)
    --
@@ -2617,8 +2581,6 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Simultaneous_Left (Field5)
    --
    --   Get/Set_Simultaneous_Right (Field6)
@@ -2648,9 +2610,6 @@ package Iirs is
    --
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Identifier (Alias Field3)
-   --
-   -- Only for Iir_Kind_If_Statement:
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Sequential_Statement_Chain (Field5)
    --
@@ -2689,8 +2648,6 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Sequential_Statement_Chain (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -2709,8 +2666,6 @@ package Iirs is
    --
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Sequential_Statement_Chain (Field5)
    --
@@ -2740,8 +2695,6 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Loop_Label (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -2756,8 +2709,6 @@ package Iirs is
    --
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --  The waveform.
    --  If the waveform_chain is null_iir, then the signal assignment is a
@@ -2785,8 +2736,6 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -2802,8 +2751,6 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Severity_Expression (Field5)
    --
    --   Get/Set_Report_Expression (Field6)
@@ -2818,8 +2765,6 @@ package Iirs is
    --
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Severity_Expression (Field5)
    --
@@ -2837,8 +2782,6 @@ package Iirs is
    --
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Condition_Clause (Field5)
    --
@@ -2859,8 +2802,6 @@ package Iirs is
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
-   --   Get/Set_Attribute_Value_Chain (Field4)
-   --
    --   Get/Set_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -2876,8 +2817,6 @@ package Iirs is
    --
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Expression (Field5)
    --
@@ -2896,8 +2835,6 @@ package Iirs is
    --
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    -- Only for Iir_Kind_Concurrent_Procedure_Call_Statement:
    --   Get/Set_Postponed_Flag (Flag3)
@@ -2923,8 +2860,6 @@ package Iirs is
    --
    --   Get/Set_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
-   --
-   --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -5302,7 +5237,7 @@ package Iirs is
    function Get_Configuration_Item_Chain (Target : Iir) return Iir;
    procedure Set_Configuration_Item_Chain (Target : Iir; Chain : Iir);
 
-   --  Chain of attribute values for a named entity.
+   --  Chain of attribute values for declared items.
    --  To be used with Get/Set_Chain.
    --  There is no order, therefore, a new attribute value may be always
    --  prepended.
@@ -5328,7 +5263,7 @@ package Iirs is
    procedure Set_Entity_Name (Arch : Iir; Entity : Iir);
 
    --  The package declaration corresponding to the body.
-   --  Field: Field4 Ref
+   --  Field: Field5 Ref
    function Get_Package (Package_Body : Iir) return Iir;
    procedure Set_Package (Package_Body : Iir; Decl : Iir);
 
@@ -5414,7 +5349,7 @@ package Iirs is
    procedure Set_Interface_Declaration_Chain (Target : Iir; Chain : Iir);
    pragma Inline (Get_Interface_Declaration_Chain);
 
-   --  Field: Field4 Ref
+   --  Field: Field6 Ref
    function Get_Subprogram_Specification (Target : Iir) return Iir;
    procedure Set_Subprogram_Specification (Target : Iir; Spec : Iir);
 

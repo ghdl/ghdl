@@ -2427,7 +2427,6 @@ package body Nodes_Meta is
       Field_Use_Flag,
       Field_Type_Definition,
       Field_Chain,
-      Field_Attribute_Value_Chain,
       Field_Parent,
       --  Iir_Kind_Anonymous_Type_Declaration
       Field_Identifier,
@@ -2441,7 +2440,6 @@ package body Nodes_Meta is
       Field_Use_Flag,
       Field_Is_Ref,
       Field_Chain,
-      Field_Attribute_Value_Chain,
       Field_Subtype_Indication,
       Field_Parent,
       Field_Type,
@@ -2451,7 +2449,6 @@ package body Nodes_Meta is
       Field_Use_Flag,
       Field_Nature,
       Field_Chain,
-      Field_Attribute_Value_Chain,
       Field_Parent,
       --  Iir_Kind_Subnature_Declaration
       Field_Identifier,
@@ -2459,7 +2456,6 @@ package body Nodes_Meta is
       Field_Use_Flag,
       Field_Nature,
       Field_Chain,
-      Field_Attribute_Value_Chain,
       Field_Parent,
       --  Iir_Kind_Package_Declaration
       Field_Identifier,

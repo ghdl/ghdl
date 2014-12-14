@@ -1383,6 +1383,7 @@ package body Sem_Decls is
                   St_Decl := Create_Iir (Iir_Kind_Subtype_Declaration);
                   Location_Copy (St_Decl, Decl);
                   Set_Identifier (St_Decl, Get_Identifier (Decl));
+                  Set_Parent (St_Decl, Get_Parent (Decl));
                   Set_Type (St_Decl, Def);
                   Set_Type_Declarator (Def, St_Decl);
                   Set_Chain (St_Decl, Get_Chain (Decl));

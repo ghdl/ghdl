@@ -31,6 +31,7 @@ with Sem_Expr; use Sem_Expr;
 with Sem_Stmts; use Sem_Stmts;
 with Sem_Decls; use Sem_Decls;
 with Sem_Assocs; use Sem_Assocs;
+with Sem_Specs;
 with Sem_Types;
 with Sem_Psl;
 with Xrefs; use Xrefs;
@@ -2497,7 +2498,6 @@ package body Sem_Names is
       Prefix : Iir;
       Value : Iir;
       Attr_Id : Name_Id;
-      Spec : Iir_Attribute_Specification;
    begin
       Prefix := Get_Named_Entity (Get_Prefix (Attr));
 
@@ -2544,12 +2544,7 @@ package body Sem_Names is
       end case;
 
       Attr_Id := Get_Identifier (Attr);
-      Value := Get_Attribute_Value_Chain (Prefix);
-      while Value /= Null_Iir loop
-         Spec := Get_Attribute_Specification (Value);
-         exit when Get_Identifier (Get_Attribute_Designator (Spec)) = Attr_Id;
-         Value := Get_Chain (Value);
-      end loop;
+      Value := Sem_Specs.Find_Attribute_Value (Prefix, Attr_Id);
       if Value = Null_Iir then
          Error_Msg_Sem
            (Disp_Node (Prefix) & " was not annotated with attribute '"

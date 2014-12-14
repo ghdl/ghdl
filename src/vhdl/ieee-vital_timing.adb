@@ -23,6 +23,7 @@ with Tokens; use Tokens;
 with Name_Table;
 with Ieee.Std_Logic_1164; use Ieee.Std_Logic_1164;
 with Sem_Scopes;
+with Sem_Specs;
 with Evaluation;
 with Sem;
 with Iirs_Utils;
@@ -1313,18 +1314,14 @@ package body Ieee.Vital_Timing is
       Value : Iir_Attribute_Value;
       Spec : Iir_Attribute_Specification;
    begin
-      Value := Get_Attribute_Value_Chain (Unit);
-      while Value /= Null_Iir loop
-         Spec := Get_Attribute_Specification (Value);
-         if Get_Named_Entity (Get_Attribute_Designator (Spec))
-           = Vital_Level0_Attribute
-         then
-            return True;
-         end if;
-         Value := Get_Chain (Value);
-      end loop;
-
-      return False;
+      Value := Sem_Specs.Find_Attribute_Value
+        (Unit, Std_Names.Name_VITAL_Level0);
+      if Value = Null_Iir then
+         return False;
+      end if;
+      Spec := Get_Attribute_Specification (Value);
+      return Get_Named_Entity (Get_Attribute_Designator (Spec))
+        = Vital_Level0_Attribute;
    end Is_Vital_Level0;
 
    procedure Check_Vital_Level0_Architecture (Arch : Iir_Architecture_Body)

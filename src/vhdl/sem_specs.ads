@@ -15,10 +15,20 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Types; use Types;
 with Iirs; use Iirs;
 with Tokens;
 
 package Sem_Specs is
+   --  Return the attribute_value for named entity ENT and attribute identifier
+   --  ID.  Return Null_Iir if ENT was not decorated with attribute ID.
+   function Find_Attribute_Value (Ent : Iir; Id : Name_Id) return Iir;
+
+   --  Return the node containing the attribute_value_chain field for DECL.
+   --  This is the parent of the attribute specification, so in general this
+   --  is also the parent of the declaration, but there are exceptions...
+   function Get_Attribute_Value_Chain_Parent (Decl : Iir) return Iir;
+
    function Get_Entity_Class_Kind (Decl : Iir) return Tokens.Token_Type;
 
    procedure Sem_Attribute_Specification

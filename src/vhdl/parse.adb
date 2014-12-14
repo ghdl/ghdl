@@ -1447,31 +1447,33 @@ package body Parse is
    --  precond : a token
    --  postcond: next token
    --
-   --  [ §3.1.1 ]
+   --  [ LRM93 3.1.1 ]
    --  enumeration_type_definition ::=
    --      ( enumeration_literal { , enumeration_literal } )
    --
-   --  [ §3.1.1 ]
+   --  [ LRM93 3.1.1 ]
    --  enumeration_literal ::= identifier | character_literal
-   function Parse_Enumeration_Type_Definition
-     return Iir_Enumeration_Type_Definition
+   function Parse_Enumeration_Type_Definition (Parent : Iir)
+      return Iir_Enumeration_Type_Definition
    is
       Pos: Iir_Int32;
       Enum_Lit: Iir_Enumeration_Literal;
       Enum_Type: Iir_Enumeration_Type_Definition;
       Enum_List : Iir_List;
    begin
-      -- This is an enumeration.
+      --  This is an enumeration.
       Enum_Type := Create_Iir (Iir_Kind_Enumeration_Type_Definition);
       Set_Location (Enum_Type);
       Enum_List := Create_Iir_List;
       Set_Enumeration_Literal_List (Enum_Type, Enum_List);
 
-      -- LRM93 3.1.1
-      -- The position number of the first listed enumeration literal is zero.
+      --  LRM93 3.1.1
+      --  The position number of the first listed enumeration literal is zero.
       Pos := 0;
-      -- scan every literal.
+
+      --  Eat '('.
       Scan;
+
       if Current_Token = Tok_Right_Paren then
          Error_Msg_Parse ("at least one literal must be declared");
          Scan;
@@ -1487,8 +1489,10 @@ package body Parse is
             end if;
             Error_Msg_Parse ("identifier or character expected");
          end if;
+
          Enum_Lit := Create_Iir (Iir_Kind_Enumeration_Literal);
          Set_Identifier (Enum_Lit, Current_Identifier);
+         Set_Parent (Enum_Lit, Parent);
          Set_Location (Enum_Lit);
          Set_Enum_Pos (Enum_Lit, Pos);
 
@@ -1499,21 +1503,26 @@ package body Parse is
 
          Append_Element (Enum_List, Enum_Lit);
 
-         -- next token.
+         --  Skip identifier or character.
          Scan;
+
          exit when Current_Token = Tok_Right_Paren;
          if Current_Token /= Tok_Comma then
             Error_Msg_Parse ("')' or ',' is expected after an enum literal");
          end if;
 
-         -- scan a literal.
+         --  Skip ','.
          Scan;
+
          if Current_Token = Tok_Right_Paren then
             Error_Msg_Parse ("extra ',' ignored");
             exit;
          end if;
       end loop;
+
+      --  Skip ')'.
       Scan;
+
       return Enum_Type;
    end Parse_Enumeration_Type_Definition;
 
@@ -1697,6 +1706,7 @@ package body Parse is
       while Current_Token /= Tok_End loop
          Unit := Create_Iir (Iir_Kind_Unit_Declaration);
          Set_Location (Unit);
+         Set_Parent (Unit, Parent);
          Set_Identifier (Unit, Current_Identifier);
 
          --  Skip identifier.
@@ -2002,7 +2012,7 @@ package body Parse is
       case Current_Token is
          when Tok_Left_Paren =>
             --  This is an enumeration.
-            Def := Parse_Enumeration_Type_Definition;
+            Def := Parse_Enumeration_Type_Definition (Parent);
             Decl := Null_Iir;
 
          when Tok_Range =>
@@ -2378,7 +2388,8 @@ package body Parse is
    --
    --  [ §4.2 ]
    --  subtype_declaration ::= SUBTYPE identifier IS subtype_indication ;
-   function Parse_Subtype_Declaration return Iir_Subtype_Declaration
+   function Parse_Subtype_Declaration (Parent : Iir)
+                                      return Iir_Subtype_Declaration
    is
       Decl: Iir_Subtype_Declaration;
       Def: Iir;
@@ -2387,10 +2398,15 @@ package body Parse is
 
       Scan_Expect (Tok_Identifier);
       Set_Identifier (Decl, Current_Identifier);
+      Set_Parent (Decl, Parent);
       Set_Location (Decl);
 
+      --  Skip identifier.
       Scan_Expect (Tok_Is);
+
+      --  Skip 'is'.
       Scan;
+
       Def := Parse_Subtype_Indication;
       Set_Subtype_Indication (Decl, Def);
 
@@ -3528,7 +3544,7 @@ package body Parse is
                   end case;
                end if;
             when Tok_Subtype =>
-               Decl := Parse_Subtype_Declaration;
+               Decl := Parse_Subtype_Declaration (Parent);
             when Tok_Nature =>
                Decl := Parse_Nature_Declaration;
             when Tok_Terminal =>

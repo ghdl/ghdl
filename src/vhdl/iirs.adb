@@ -1449,14 +1449,14 @@ package body Iirs is
    begin
       pragma Assert (Package_Body /= Null_Iir);
       pragma Assert (Has_Package (Get_Kind (Package_Body)));
-      return Get_Field4 (Package_Body);
+      return Get_Field5 (Package_Body);
    end Get_Package;
 
    procedure Set_Package (Package_Body : Iir; Decl : Iir) is
    begin
       pragma Assert (Package_Body /= Null_Iir);
       pragma Assert (Has_Package (Get_Kind (Package_Body)));
-      Set_Field4 (Package_Body, Decl);
+      Set_Field5 (Package_Body, Decl);
    end Set_Package;
 
    function Get_Package_Body (Pkg : Iir) return Iir is
@@ -1701,14 +1701,14 @@ package body Iirs is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Subprogram_Specification (Get_Kind (Target)));
-      return Get_Field4 (Target);
+      return Get_Field6 (Target);
    end Get_Subprogram_Specification;
 
    procedure Set_Subprogram_Specification (Target : Iir; Spec : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Subprogram_Specification (Get_Kind (Target)));
-      Set_Field4 (Target, Spec);
+      Set_Field6 (Target, Spec);
    end Set_Subprogram_Specification;
 
    function Get_Sequential_Statement_Chain (Target : Iir) return Iir is

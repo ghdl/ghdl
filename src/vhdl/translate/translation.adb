@@ -24,6 +24,7 @@ with Errorout; use Errorout;
 with Name_Table; -- use Name_Table;
 with Iirs_Utils; use Iirs_Utils;
 with Std_Package; use Std_Package;
+with Sem_Specs;
 with Libraries;
 with Std_Names;
 with Trans;
@@ -65,21 +66,12 @@ package body Translation is
       use Name_Table;
       Attr : Iir_Attribute_Value;
       Spec : Iir_Attribute_Specification;
-      Attr_Decl : Iir;
       Expr : Iir;
    begin
       --  Look for 'FOREIGN.
-      Attr := Get_Attribute_Value_Chain (Decl);
-      while Attr /= Null_Iir loop
-         Spec := Get_Attribute_Specification (Attr);
-         Attr_Decl := Get_Attribute_Designator (Spec);
-         exit when Get_Identifier (Attr_Decl) = Std_Names.Name_Foreign;
-         Attr := Get_Chain (Attr);
-      end loop;
-      if Attr = Null_Iir then
-         --  Not found.
-         raise Internal_Error;
-      end if;
+      Attr := Sem_Specs.Find_Attribute_Value (Decl, Std_Names.Name_Foreign);
+      pragma Assert (Attr /= Null_Iir);
+
       Spec := Get_Attribute_Specification (Attr);
       Expr := Get_Expression (Spec);
       case Get_Kind (Expr) is
