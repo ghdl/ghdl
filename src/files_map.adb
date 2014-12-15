@@ -544,10 +544,8 @@ package body Files_Map is
       return Res;
    end Get_Os_Time_Stamp;
 
-   function Get_Pathname (Directory : Name_Id;
-                          Name: Name_Id;
-                          Add_Nul : Boolean)
-     return String
+   function Get_Pathname
+     (Directory : Name_Id; Name : Name_Id; Add_Nul : Boolean) return String
    is
       L : Natural;
    begin

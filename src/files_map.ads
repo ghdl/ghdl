@@ -27,15 +27,13 @@ package Files_Map is
    --  If NAME is an absolute pathname, then return NAME.
    --  Otherwise, return the concatenation of DIRECTORY and NAME.
    --  If ADD_NUL is TRUE, then a trailing '\0' is appended.
-   function Get_Pathname (Directory : Name_Id;
-                          Name: Name_Id;
-                          Add_Nul : Boolean)
-     return String;
+   function Get_Pathname
+     (Directory : Name_Id; Name : Name_Id; Add_Nul : Boolean) return String;
 
    --  Return an entry for a filename.
    --  Load the filename if necessary.
    --  Return No_Source_File_Entry if the file does not exist.
-   function Load_Source_File (Directory : Name_Id; Name: Name_Id)
+   function Load_Source_File (Directory : Name_Id; Name : Name_Id)
                               return Source_File_Entry;
 
    --  Each file in memory has two terminal EOT.
@@ -43,20 +41,19 @@ package Files_Map is
 
    --  Create a Source_File for a virtual file name.  Used for implicit,
    --  command-line and std.standard library.
-   function Create_Virtual_Source_File (Name: Name_Id)
+   function Create_Virtual_Source_File (Name : Name_Id)
                                        return Source_File_Entry;
 
    --  Create a Source_File for a possible virtual file NAME using CONTENT
    --  as content of the file.  The file must not already exist.
-   function Create_Source_File_From_String (Name: Name_Id; Content : String)
+   function Create_Source_File_From_String (Name : Name_Id; Content : String)
                                            return Source_File_Entry;
 
    -- Return a buffer (access to the contents of the file) for a file entry.
-   function Get_File_Source (File: Source_File_Entry)
-                             return File_Buffer_Acc;
+   function Get_File_Source (File : Source_File_Entry) return File_Buffer_Acc;
 
    -- Return the length of the file (which is the size of the file buffer).
-   function Get_File_Length (File: Source_File_Entry) return Source_Ptr;
+   function Get_File_Length (File : Source_File_Entry) return Source_Ptr;
 
    --  Return the entry of the last known file.
    --  This allow the user to create a table of Source_File_Entry.
@@ -68,10 +65,10 @@ package Files_Map is
    function Get_Time_Stamp_String (Ts : Time_Stamp_Id) return String;
 
    -- Return the date of the file (last modification date) as a string.
-   function Get_File_Time_Stamp (File: Source_File_Entry)
-     return Time_Stamp_Id;
+   function Get_File_Time_Stamp (File : Source_File_Entry)
+                                return Time_Stamp_Id;
    function Get_File_Time_Stamp (Filename : System.Address)
-     return Time_Stamp_Id;
+                                return Time_Stamp_Id;
 
    -- Return the current date of the system.
    function Get_Os_Time_Stamp return Time_Stamp_Id;
@@ -84,7 +81,7 @@ package Files_Map is
                                        return Name_Id;
 
    -- Return the name of the file.
-   function Get_File_Name (File: Source_File_Entry) return Name_Id;
+   function Get_File_Name (File : Source_File_Entry) return Name_Id;
 
    --  Get the path of directory DIR.
    --function Get_Directory_Path (Dir : Directory_Index) return String;
@@ -92,7 +89,7 @@ package Files_Map is
    -- Add a new entry in the lines_table.
    -- The new entry must be the next one after the last entry.
    procedure File_Add_Line_Number
-     (File: Source_File_Entry; Line: Natural; Pos: Source_Ptr);
+     (File : Source_File_Entry; Line : Natural; Pos : Source_Ptr);
 
    --  Convert LOCATION into a source file FILE and an offset POS in the
    --  file.
@@ -101,10 +98,10 @@ package Files_Map is
                                    Pos : out Source_Ptr);
    --  Convert a FILE and an offset POS in the file into a location.
    function File_Pos_To_Location (File : Source_File_Entry; Pos : Source_Ptr)
-     return Location_Type;
+                                 return Location_Type;
    --  Convert a FILE into a location.
    function Source_File_To_Location (File : Source_File_Entry)
-     return Location_Type;
+                                    return Location_Type;
 
    --  Convert a FILE+LINE into a position.
    --  Return Source_Ptr_Bad in case of error (LINE out of bounds).
@@ -117,31 +114,28 @@ package Files_Map is
    --  LINE is the line number (first line is 1),
    --  OFFSET is the offset of the location in the line (first character is 0,
    --     a tabulation is one character),
-   procedure Location_To_Coord
-     (Location : Location_Type;
-      File : out Source_File_Entry;
-      Line_Pos : out Source_Ptr;
-      Line : out Natural;
-      Offset : out Natural);
+   procedure Location_To_Coord (Location : Location_Type;
+                                File : out Source_File_Entry;
+                                Line_Pos : out Source_Ptr;
+                                Line : out Natural;
+                                Offset : out Natural);
 
    --  Translate coordinate into logical position.
    --  NAME is the name of the file,
    --  COL is the column (first character is 1, tabulation are at every 8
    --    positions).
-   procedure Coord_To_Position
-     (File : Source_File_Entry;
-      Line_Pos : Source_Ptr;
-      Offset : Natural;
-      Name : out Name_Id;
-      Col : out Natural);
+   procedure Coord_To_Position (File : Source_File_Entry;
+                                Line_Pos : Source_Ptr;
+                                Offset : Natural;
+                                Name : out Name_Id;
+                                Col : out Natural);
 
    --  Translate LOCATION to NAME, LINE and COL.
    --  It is like to two procedures above.
-   procedure Location_To_Position
-     (Location : Location_Type;
-      Name : out Name_Id;
-      Line : out Natural;
-      Col : out Natural);
+   procedure Location_To_Position (Location : Location_Type;
+                                   Name : out Name_Id;
+                                   Line : out Natural;
+                                   Col : out Natural);
 
    --  Get LINE and COL from LOCATION.
    --procedure Get_Source_File_Line_And_Column

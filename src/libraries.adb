@@ -197,12 +197,9 @@ package body Libraries is
       Prev, File, Next : Iir_Design_File;
       Unit : Iir_Design_Unit;
 
-      File_Name : Name_Id;
-      Dir_Name : Name_Id;
+      File_Name : constant Name_Id := Get_Design_File_Filename (Design_File);
+      Dir_Name : constant Name_Id := Get_Design_File_Directory (Design_File);
    begin
-      File_Name := Get_Design_File_Filename (Design_File);
-      Dir_Name := Get_Design_File_Directory (Design_File);
-
       File := Get_Design_File_Chain (Work_Library);
       Prev := Null_Iir;
       while File /= Null_Iir loop
