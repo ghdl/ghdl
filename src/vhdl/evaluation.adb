@@ -1401,6 +1401,9 @@ package body Evaluation is
            | Iir_Predefined_Std_Ulogic_Array_Match_Inequality =>
             --  TODO
             raise Internal_Error;
+
+         when Iir_Predefined_None =>
+            raise Internal_Error;
       end case;
    exception
       when Constraint_Error =>
@@ -2895,8 +2898,7 @@ package body Evaluation is
          end loop;
 
          case Get_Kind (Subprg) is
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Implicit_Function_Declaration =>
+            when Iir_Kind_Function_Declaration =>
                Path_Add (" return ");
                Path_Add_Type_Name (Get_Return_Type (Subprg));
             when others =>
@@ -2955,9 +2957,7 @@ package body Evaluation is
                Path_Add_Name (El);
                Path_Add (":");
             when Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration
-              | Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration =>
+              | Iir_Kind_Procedure_Declaration =>
                Path_Add_Element (Get_Parent (El), Is_Instance);
                Path_Add_Name (El);
                if Flags.Vhdl_Std >= Vhdl_02 then
@@ -3024,8 +3024,6 @@ package body Evaluation is
            | Iir_Kinds_Library_Unit_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Implicit_Function_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kinds_Concurrent_Statement
            | Iir_Kinds_Sequential_Statement =>
             Path_Add_Element (Prefix, Is_Instance);

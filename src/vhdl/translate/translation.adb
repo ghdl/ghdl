@@ -1810,15 +1810,17 @@ package body Translation is
       Decl := Get_Chain (Decl);
 
       Chap7.Init_Implicit_Subprogram_Infos (Infos);
+
+      --  Implicit subprograms are immediately follow the type declaration.
       while Decl /= Null_Iir loop
-         case Get_Kind (Decl) is
-            when Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration =>
-               Chap7.Translate_Implicit_Subprogram (Decl, Infos);
-               Decl := Get_Chain (Decl);
-            when others =>
-               exit;
-         end case;
+         if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration
+           and then Is_Implicit_Subprogram (Decl)
+         then
+            Chap7.Translate_Implicit_Subprogram (Decl, Infos);
+            Decl := Get_Chain (Decl);
+         else
+            exit;
+         end if;
       end loop;
    end Translate_Type_Implicit_Subprograms;
 
@@ -1902,7 +1904,7 @@ package body Translation is
                Decl := Get_Chain (Decl);
             when Iir_Kind_Attribute_Declaration =>
                Decl := Get_Chain (Decl);
-            when Iir_Kind_Implicit_Function_Declaration =>
+            when Iir_Kind_Function_Declaration =>
                case Get_Implicit_Definition (Decl) is
                   when Iir_Predefined_Now_Function =>
                      null;

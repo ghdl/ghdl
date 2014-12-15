@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with Types; use Types;
 with Std_Names; use Std_Names;
+with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Std_Package;
 
@@ -28,7 +29,8 @@ package body Ieee.Std_Logic_1164 is
       Res := Decl;
       loop
          exit when Res = Null_Iir;
-         exit when Get_Kind (Res) /= Iir_Kind_Implicit_Function_Declaration;
+         exit when not (Get_Kind (Res) = Iir_Kind_Function_Declaration
+                          and then Is_Implicit_Subprogram (Res));
          Res := Get_Chain (Res);
       end loop;
       return Res;

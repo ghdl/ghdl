@@ -650,8 +650,7 @@ package body Canon is
             Canon_Expression (Get_Right (Expr));
             if Get_Kind (Expr) = Iir_Kind_Concatenation_Operator
               and then Canon_Concatenation
-              and then Get_Kind (Get_Implementation (Expr)) =
-              Iir_Kind_Implicit_Function_Declaration
+              and then Is_Implicit_Subprogram (Get_Implementation (Expr))
             then
                --Canon_Concatenation_Operator (Expr);
                raise Internal_Error;
@@ -2302,10 +2301,6 @@ package body Canon is
             null;
 
          when Iir_Kind_Component_Declaration =>
-            null;
-
-         when Iir_Kind_Implicit_Procedure_Declaration
-           | Iir_Kind_Implicit_Function_Declaration =>
             null;
 
          when Iir_Kind_Configuration_Specification =>

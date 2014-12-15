@@ -362,14 +362,14 @@ package body Sem_Scopes is
       -- subprograms and enumeration literals.
       case Get_Kind (Decl) is
          when Iir_Kind_Enumeration_Literal
-           | Iir_Kinds_Function_Declaration
-           | Iir_Kinds_Procedure_Declaration =>
+           | Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration =>
             return True;
          when Iir_Kind_Non_Object_Alias_Declaration =>
             case Get_Kind (Get_Named_Entity (Get_Name (Decl))) is
                when Iir_Kind_Enumeration_Literal
-                 | Iir_Kinds_Function_Declaration
-                 | Iir_Kinds_Procedure_Declaration =>
+                 | Iir_Kind_Function_Declaration
+                 | Iir_Kind_Procedure_Declaration =>
                   return True;
                when Iir_Kind_Non_Object_Alias_Declaration =>
                   raise Internal_Error;
@@ -563,14 +563,13 @@ package body Sem_Scopes is
             function Is_Implicit_Declaration (D : Iir) return Boolean is
             begin
                case Get_Kind (D) is
-                  when Iir_Kinds_Implicit_Subprogram_Declaration =>
-                     return True;
                   when Iir_Kind_Non_Object_Alias_Declaration =>
                      return Get_Implicit_Alias_Flag (D);
-                  when Iir_Kind_Enumeration_Literal
-                    | Iir_Kind_Procedure_Declaration
-                    | Iir_Kind_Function_Declaration =>
+                  when Iir_Kind_Enumeration_Literal =>
                      return False;
+                  when Iir_Kind_Procedure_Declaration
+                    | Iir_Kind_Function_Declaration =>
+                     return Is_Implicit_Subprogram (D);
                   when others =>
                      Error_Kind ("is_implicit_declaration", D);
                end case;
@@ -585,8 +584,8 @@ package body Sem_Scopes is
                --  physical units.
                return Get_Kind (D) = Iir_Kind_Non_Object_Alias_Declaration
                  and then Get_Implicit_Alias_Flag (D)
-                 and then (Get_Kind (Get_Named_Entity (Get_Name (D)))
-                             in Iir_Kinds_Implicit_Subprogram_Declaration);
+                 and then Is_Implicit_Subprogram (Get_Named_Entity
+                                                    (Get_Name (D)));
             end Is_Implicit_Alias;
 
             --  Replace the homograph of DECL by DECL.
@@ -686,11 +685,9 @@ package body Sem_Scopes is
                then
                   declare
                      Implicit_Current_Decl : constant Boolean :=
-                       (Get_Kind (Current_Decl)
-                          in Iir_Kinds_Implicit_Subprogram_Declaration);
+                       Is_Implicit_Subprogram (Current_Decl);
                      Implicit_Decl : constant Boolean :=
-                       (Get_Kind (Decl)
-                          in Iir_Kinds_Implicit_Subprogram_Declaration);
+                       Is_Implicit_Subprogram (Decl);
                   begin
                      if Implicit_Current_Decl and not Implicit_Decl then
                         --  Note: no need to save previous interpretation, as
@@ -753,12 +750,9 @@ package body Sem_Scopes is
                      begin
                         if Flags.Vhdl_Std >= Vhdl_08 then
                            Is_Current_Decl_Implicit :=
-                             (Get_Kind (Current_Decl) in
-                                Iir_Kinds_Implicit_Subprogram_Declaration)
+                             Is_Implicit_Subprogram (Current_Decl)
                              or else Is_Implicit_Alias (Current_Decl);
-                           Is_Decl_Implicit :=
-                             (Get_Kind (Decl) in
-                                Iir_Kinds_Implicit_Subprogram_Declaration)
+                           Is_Decl_Implicit := Is_Implicit_Subprogram (Decl)
                              or else Is_Implicit_Alias (Decl);
 
                            --  If they denote the same entity, they aren't
@@ -789,12 +783,9 @@ package body Sem_Scopes is
                            --  Can an implicit subprogram declaration appears
                            --  after an explicit one in vhdl 93?  I don't
                            --  think so.
-                           Is_Decl_Implicit :=
-                             (Get_Kind (Decl)
-                                in Iir_Kinds_Implicit_Subprogram_Declaration);
+                           Is_Decl_Implicit := Is_Implicit_Subprogram (Decl);
                            Is_Current_Decl_Implicit :=
-                             (Get_Kind (Current_Decl)
-                                in Iir_Kinds_Implicit_Subprogram_Declaration);
+                             Is_Implicit_Subprogram (Current_Decl);
                         end if;
 
                         if not (Is_Decl_Implicit xor Is_Current_Decl_Implicit)
@@ -973,9 +964,7 @@ package body Sem_Scopes is
    is
    begin
       case Get_Kind (Decl) is
-         when Iir_Kind_Implicit_Procedure_Declaration
-           | Iir_Kind_Implicit_Function_Declaration
-           | Iir_Kind_Subtype_Declaration
+         when Iir_Kind_Subtype_Declaration
            | Iir_Kind_Enumeration_Literal --  By use clause
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Signal_Declaration

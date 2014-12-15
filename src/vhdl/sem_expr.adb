@@ -324,7 +324,7 @@ package body Sem_Expr is
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Library_Clause
            | Iir_Kind_Component_Declaration
-           | Iir_Kinds_Procedure_Declaration
+           | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Range_Array_Attribute
            | Iir_Kind_Reverse_Range_Array_Attribute
            | Iir_Kind_Element_Declaration
@@ -333,7 +333,7 @@ package body Sem_Expr is
             Error_Msg_Sem (Disp_Node (Expr)
                            & " not allowed in an expression", Loc);
             return Null_Iir;
-         when Iir_Kinds_Function_Declaration =>
+         when Iir_Kind_Function_Declaration =>
             return Expr;
          when Iir_Kind_Overload_List =>
             return Expr;
@@ -865,22 +865,22 @@ package body Sem_Expr is
          when others =>
             Error_Kind ("set_function_call_staticness (1)", Expr);
       end case;
-      case Get_Kind (Imp) is
-         when Iir_Kind_Implicit_Function_Declaration =>
-            if Get_Implicit_Definition (Imp)
-              not in Iir_Predefined_Pure_Functions
-            then
-               --  Predefined functions such as Now, Endfile are not static.
-               Staticness := None;
-            end if;
-         when Iir_Kind_Function_Declaration =>
+
+      --  Staticness.
+      case Get_Implicit_Definition (Imp) is
+         when Iir_Predefined_Error =>
+            raise Internal_Error;
+         when Iir_Predefined_Pure_Functions =>
+            null;
+         when Iir_Predefined_Impure_Functions =>
+            --  Predefined functions such as Now, Endfile are not static.
+            Staticness := None;
+         when Iir_Predefined_Explicit =>
             if Get_Pure_Flag (Imp) then
                Staticness := Min (Staticness, Globally);
             else
                Staticness := None;
             end if;
-         when others =>
-            Error_Kind ("set_function_call_staticness (2)", Imp);
       end case;
       Set_Expr_Staticness (Expr, Staticness);
    end Set_Function_Call_Staticness;
@@ -1149,20 +1149,14 @@ package body Sem_Expr is
          return;
       end if;
 
-      case Get_Kind (Imp) is
-         when Iir_Kind_Implicit_Procedure_Declaration
-           | Iir_Kind_Implicit_Function_Declaration =>
-            if Get_Implicit_Definition (Imp) in Iir_Predefined_Pure_Functions
-            then
-               return;
-            end if;
-         when Iir_Kind_Function_Declaration =>
-            Sem_Call_Purity_Check (Subprg, Imp, Expr);
-            Sem_Call_All_Sensitized_Check (Subprg, Imp, Expr);
-         when Iir_Kind_Procedure_Declaration =>
-            Sem_Call_Purity_Check (Subprg, Imp, Expr);
+      if Is_Implicit_Subprogram (Imp) then
+         --  FIXME: impure predefined functions.
+         null;
+      else
+         Sem_Call_Purity_Check (Subprg, Imp, Expr);
+         Sem_Call_All_Sensitized_Check (Subprg, Imp, Expr);
+         if Get_Kind (Imp) = Iir_Kind_Procedure_Declaration then
             Sem_Call_Wait_Check (Subprg, Imp, Expr);
-            Sem_Call_All_Sensitized_Check (Subprg, Imp, Expr);
             --  Check passive.
             if Get_Passive_Flag (Imp) = False then
                case Get_Kind (Subprg) is
@@ -1177,9 +1171,8 @@ package body Sem_Expr is
                      null;
                end case;
             end if;
-         when others =>
-            raise Internal_Error;
-      end case;
+         end if;
+      end if;
    end Sem_Subprogram_Call_Finish;
 
    --  EXPR is a function or procedure call.
@@ -1215,7 +1208,7 @@ package body Sem_Expr is
                   --  an enumeration literal.
                   goto Continue;
                end if;
-            when Iir_Kinds_Procedure_Declaration =>
+            when Iir_Kind_Procedure_Declaration =>
                if Is_Func_Call then
                   --  The identifier of a procedure call must be a procedure.
                   goto Continue;
@@ -1341,14 +1334,12 @@ package body Sem_Expr is
          else
             --  Only one interpretation for the subprogram name.
             if Is_Func then
-               if Get_Kind (Inter_List) not in Iir_Kinds_Function_Declaration
-               then
+               if Get_Kind (Inter_List) /= Iir_Kind_Function_Declaration then
                   Error_Msg_Sem ("name does not designate a function", Expr);
                   return Null_Iir;
                end if;
             else
-               if Get_Kind (Inter_List) not in Iir_Kinds_Procedure_Declaration
-               then
+               if Get_Kind (Inter_List) /= Iir_Kind_Procedure_Declaration then
                   Error_Msg_Sem ("name does not designate a procedure", Expr);
                   return Null_Iir;
                end if;
@@ -1552,7 +1543,7 @@ package body Sem_Expr is
             return Null_Iir;
          end if;
 
-         if Get_Kind (El) = Iir_Kind_Implicit_Function_Declaration then
+         if Is_Implicit_Subprogram (El) then
             Ref_Type := Get_Type_Reference (El);
             if Ref_Type = Universal_Integer_Type_Declaration
               or Ref_Type = Universal_Real_Type_Declaration
@@ -1587,18 +1578,18 @@ package body Sem_Expr is
 
       --  One must be an implicit declaration, the other must be an explicit
       --  declaration.
-      if Get_Kind (Sub1) = Iir_Kind_Implicit_Function_Declaration then
-         if Get_Kind (Sub2) /= Iir_Kind_Function_Declaration then
+      pragma Assert (Get_Kind (Sub1) = Iir_Kind_Function_Declaration);
+      pragma Assert (Get_Kind (Sub2) = Iir_Kind_Function_Declaration);
+      if Is_Implicit_Subprogram (Sub1) then
+         if Is_Implicit_Subprogram (Sub2) then
             return Null_Iir;
          end if;
          Res := Sub2;
-      elsif Get_Kind (Sub1) = Iir_Kind_Function_Declaration then
-         if Get_Kind (Sub2) /= Iir_Kind_Implicit_Function_Declaration then
+      else
+         if not Is_Implicit_Subprogram (Sub2) then
             return Null_Iir;
          end if;
          Res := Sub1;
-      else
-         Error_Kind ("get_explicit_subprogram", Sub1);
       end if;
 
       --  They must have the same profile.
@@ -1730,7 +1721,7 @@ package body Sem_Expr is
             Decl := Get_Non_Alias_Declaration (Interpretation);
 
             --  It is compatible with operand types ?
-            if Get_Kind (Decl) not in Iir_Kinds_Function_Declaration then
+            if Get_Kind (Decl) /= Iir_Kind_Function_Declaration then
                raise Internal_Error;
             end if;
 
@@ -3981,7 +3972,7 @@ package body Sem_Expr is
            | Iir_Kind_Allocator_By_Subtype =>
             return Sem_Allocator (Expr, A_Type);
 
-         when Iir_Kinds_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration =>
             Error_Msg_Sem
               (Disp_Node (Expr) & " cannot be used as an expression", Expr);
             return Null_Iir;

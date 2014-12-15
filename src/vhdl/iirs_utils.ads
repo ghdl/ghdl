@@ -117,6 +117,11 @@ package Iirs_Utils is
    --  is to match the body with its declaration.
    function Is_Second_Subprogram_Specification (Spec : Iir) return Boolean;
 
+   --  Return True iif SPEC is the specification of an implicit subprogram.
+   --  False for explicit subprograms.
+   function Is_Implicit_Subprogram (Spec : Iir) return Boolean;
+   pragma Inline (Is_Implicit_Subprogram);
+
    --  If NAME is a simple or an expanded name, return the denoted declaration.
    --  Otherwise, return NAME.
    function Strip_Denoting_Name (Name : Iir) return Iir;

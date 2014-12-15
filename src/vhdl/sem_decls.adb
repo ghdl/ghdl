@@ -386,8 +386,8 @@ package body Sem_Decls is
       use Iir_Chains.Interface_Declaration_Chain_Handling;
       Type_Mark : constant Iir := Get_File_Type_Mark (Type_Definition);
       Type_Mark_Type : constant Iir := Get_Type (Type_Mark);
-      Proc: Iir_Implicit_Procedure_Declaration;
-      Func: Iir_Implicit_Function_Declaration;
+      Proc: Iir_Procedure_Declaration;
+      Func: Iir_Function_Declaration;
       Inter: Iir;
       Loc : Location_Type;
       File_Interface_Kind : Iir_Kind;
@@ -401,12 +401,13 @@ package body Sem_Decls is
          for I in 1 .. 2 loop
             --  Create the implicit file_open (form 1) declaration.
             --  Create the implicit file_open (form 2) declaration.
-            Proc := Create_Iir (Iir_Kind_Implicit_Procedure_Declaration);
+            Proc := Create_Iir (Iir_Kind_Procedure_Declaration);
             Set_Location (Proc, Loc);
             Set_Parent (Proc, Get_Parent (Decl));
             Set_Identifier (Proc, Std_Names.Name_File_Open);
             Set_Type_Reference (Proc, Decl);
             Set_Visible_Flag (Proc, True);
+            Set_Wait_State (Proc, False);
             Build_Init (Last_Interface);
             case I is
                when 1 =>
@@ -453,13 +454,14 @@ package body Sem_Decls is
          end loop;
 
          --  Create the implicit file_close declaration.
-         Proc := Create_Iir (Iir_Kind_Implicit_Procedure_Declaration);
+         Proc := Create_Iir (Iir_Kind_Procedure_Declaration);
          Set_Identifier (Proc, Std_Names.Name_File_Close);
          Set_Location (Proc, Loc);
          Set_Parent (Proc, Get_Parent (Decl));
          Set_Implicit_Definition (Proc, Iir_Predefined_File_Close);
          Set_Type_Reference (Proc, Decl);
          Set_Visible_Flag (Proc, True);
+         Set_Wait_State (Proc, False);
          Build_Init (Last_Interface);
          Inter := Create_Iir (Iir_Kind_Interface_File_Declaration);
          Set_Identifier (Inter, Std_Names.Name_F);
@@ -479,12 +481,13 @@ package body Sem_Decls is
       end if;
 
       -- Create the implicit procedure read declaration.
-      Proc := Create_Iir (Iir_Kind_Implicit_Procedure_Declaration);
+      Proc := Create_Iir (Iir_Kind_Procedure_Declaration);
       Set_Identifier (Proc, Std_Names.Name_Read);
       Set_Location (Proc, Loc);
       Set_Parent (Proc, Get_Parent (Decl));
       Set_Type_Reference (Proc, Decl);
       Set_Visible_Flag (Proc, True);
+      Set_Wait_State (Proc, False);
       Build_Init (Last_Interface);
       Inter := Create_Iir (File_Interface_Kind);
       Set_Identifier (Inter, Std_Names.Name_F);
@@ -517,12 +520,13 @@ package body Sem_Decls is
       Insert_Incr (Last, Proc);
 
       -- Create the implicit procedure write declaration.
-      Proc := Create_Iir (Iir_Kind_Implicit_Procedure_Declaration);
+      Proc := Create_Iir (Iir_Kind_Procedure_Declaration);
       Set_Identifier (Proc, Std_Names.Name_Write);
       Set_Location (Proc, Loc);
       Set_Parent (Proc, Get_Parent (Decl));
       Set_Type_Reference (Proc, Decl);
       Set_Visible_Flag (Proc, True);
+      Set_Wait_State (Proc, False);
       Build_Init (Last_Interface);
       Inter := Create_Iir (File_Interface_Kind);
       Set_Identifier (Inter, Std_Names.Name_F);
@@ -546,12 +550,13 @@ package body Sem_Decls is
 
       --  Create the implicit procedure flush declaration
       if Flags.Vhdl_Std >= Vhdl_08 then
-         Proc := Create_Iir (Iir_Kind_Implicit_Procedure_Declaration);
+         Proc := Create_Iir (Iir_Kind_Procedure_Declaration);
          Set_Identifier (Proc, Std_Names.Name_Flush);
          Set_Location (Proc, Loc);
          Set_Parent (Proc, Get_Parent (Decl));
          Set_Type_Reference (Proc, Decl);
          Set_Visible_Flag (Proc, True);
+         Set_Wait_State (Proc, False);
          Build_Init (Last_Interface);
          Inter := Create_Iir (File_Interface_Kind);
          Set_Identifier (Inter, Std_Names.Name_F);
@@ -566,7 +571,7 @@ package body Sem_Decls is
          Insert_Incr (Last, Proc);
       end if;
       -- Create the implicit function endfile declaration.
-      Func := Create_Iir (Iir_Kind_Implicit_Function_Declaration);
+      Func := Create_Iir (Iir_Kind_Function_Declaration);
       Set_Identifier (Func, Std_Names.Name_Endfile);
       Set_Location (Func, Loc);
       Set_Parent (Func, Get_Parent (Decl));
@@ -608,15 +613,14 @@ package body Sem_Decls is
       Type_Definition : Iir;
       Last : Iir;
 
-      procedure Add_Operation
-        (Name : Name_Id;
-         Def : Iir_Predefined_Functions;
-         Interface_Chain : Iir;
-         Return_Type : Iir)
+      procedure Add_Operation (Name : Name_Id;
+                               Def : Iir_Predefined_Functions;
+                               Interface_Chain : Iir;
+                               Return_Type : Iir)
       is
-         Operation : Iir_Implicit_Function_Declaration;
+         Operation : Iir_Function_Declaration;
       begin
-         Operation := Create_Iir (Iir_Kind_Implicit_Function_Declaration);
+         Operation := Create_Iir (Iir_Kind_Function_Declaration);
          Location_Copy (Operation, Decl);
          Set_Parent (Operation, Get_Parent (Decl));
          Set_Interface_Declaration_Chain (Operation, Interface_Chain);
@@ -1009,11 +1013,11 @@ package body Sem_Decls is
             Add_Relational
               (Name_Op_Inequality, Iir_Predefined_Access_Inequality);
             declare
-               Deallocate_Proc: Iir_Implicit_Procedure_Declaration;
+               Deallocate_Proc: Iir_Procedure_Declaration;
                Var_Interface: Iir_Interface_Variable_Declaration;
             begin
                Deallocate_Proc :=
-                 Create_Iir (Iir_Kind_Implicit_Procedure_Declaration);
+                 Create_Iir (Iir_Kind_Procedure_Declaration);
                Set_Identifier (Deallocate_Proc, Std_Names.Name_Deallocate);
                Set_Implicit_Definition
                  (Deallocate_Proc, Iir_Predefined_Deallocate);
@@ -2050,8 +2054,7 @@ package body Sem_Decls is
             return List = Null_Iir_List
               and then Get_Type (N_Entity)
               = Get_Type (Get_Return_Type_Mark (Sig));
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Implicit_Function_Declaration =>
+         when Iir_Kind_Function_Declaration =>
             --  LRM93 2.3.2  Signatures
             --  * if the reserved word RETURN is present, the subprogram is
             --    a function and the base type of the type mark following
@@ -2062,8 +2065,7 @@ package body Sem_Decls is
             then
                return False;
             end if;
-         when Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration =>
             --  LRM93 2.3.2  Signatures
             --  * [...] or the reserved word RETURN is absent and the
             --    subprogram is a procedure.
@@ -2310,15 +2312,14 @@ package body Sem_Decls is
       --      the implicit operation being aliased.
       El := Get_Chain (Type_Decl);
       while El /= Null_Iir loop
-         case Get_Kind (El) is
-            when Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration =>
-               exit when Get_Type_Reference (El) /= Type_Decl;
-            when others =>
-               exit;
-         end case;
-         Add_Implicit_Alias (El);
-         El := Get_Chain (El);
+         if Is_Implicit_Subprogram (El)
+           and then Get_Type_Reference (El) = Type_Decl
+         then
+            Add_Implicit_Alias (El);
+            El := Get_Chain (El);
+         else
+            exit;
+         end if;
       end loop;
    end Add_Aliases_For_Type_Alias;
 
@@ -2331,9 +2332,7 @@ package body Sem_Decls is
    begin
       case Get_Kind (N_Entity) is
          when Iir_Kind_Function_Declaration
-           | Iir_Kind_Implicit_Function_Declaration
-           | Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration =>
+           | Iir_Kind_Procedure_Declaration =>
             --  LRM93 4.3.3.2  Non-Object Aliases
             --  2.  A signature is required if the name denotes a subprogram
             --      (including an operator) or enumeration literal.
@@ -2386,7 +2385,7 @@ package body Sem_Decls is
             --  overloads the operator symbol.  In this latter case,
             --  the operator symbol and the function both must meet the
             --  requirements of 2.3.1.
-            if Get_Kind (N_Entity) not in Iir_Kinds_Function_Declaration then
+            if Get_Kind (N_Entity) /= Iir_Kind_Function_Declaration then
                Error_Msg_Sem
                  ("alias of an operator must denote a function", Alias);
                return;
@@ -2774,22 +2773,23 @@ package body Sem_Decls is
                end if;
             when Iir_Kind_Component_Declaration =>
                Sem_Component_Declaration (Decl);
-            when Iir_Kind_Function_Declaration =>
-               Sem_Subprogram_Declaration (Decl);
-               if Is_Global
-                 and then Is_A_Resolution_Function (Decl, Null_Iir)
-               then
-                  Set_Resolution_Function_Flag (Decl, True);
+            when Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration =>
+               if Is_Implicit_Subprogram (Decl) then
+                  Sem_Scopes.Add_Name (Decl);
+                  --  Implicit subprogram are already visible.
+               else
+                  Sem_Subprogram_Declaration (Decl);
+                  if Is_Global
+                    and then Get_Kind (Decl) = Iir_Kind_Function_Declaration
+                    and then Is_A_Resolution_Function (Decl, Null_Iir)
+                  then
+                     Set_Resolution_Function_Flag (Decl, True);
+                  end if;
                end if;
-            when Iir_Kind_Procedure_Declaration =>
-               Sem_Subprogram_Declaration (Decl);
             when Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                Sem_Subprogram_Body (Decl);
-            when Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration =>
-               Sem_Scopes.Add_Name (Decl);
-               --  Implicit subprogram are already visible.
             when Iir_Kind_Non_Object_Alias_Declaration =>
                --  Added by Sem_Alias_Declaration.  Need to check that no
                --  existing attribute specification apply to them.
@@ -2929,7 +2929,9 @@ package body Sem_Decls is
                end if;
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
-               if Get_Subprogram_Body (El) = Null_Iir then
+               if not Is_Implicit_Subprogram (El)
+                 and then Get_Subprogram_Body (El) = Null_Iir
+               then
                   Error_Msg_Sem ("missing body for " & Disp_Node (El)
                                  & " declared at "
                                  & Disp_Location (El), Decl);
@@ -2964,6 +2966,7 @@ package body Sem_Decls is
                when Iir_Kind_Function_Declaration
                  | Iir_Kind_Procedure_Declaration =>
                   if not Get_Use_Flag (El)
+                    and then not Is_Implicit_Subprogram (El)
                     and then not Is_Second_Subprogram_Specification (El)
                   then
                      Warning_Msg_Sem

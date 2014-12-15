@@ -47,11 +47,9 @@ package body Sem_Specs is
             return Tok_Configuration;
          when Iir_Kind_Package_Declaration =>
             return Tok_Package;
-         when Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration =>
             return Tok_Procedure;
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Implicit_Function_Declaration =>
+         when Iir_Kind_Function_Declaration =>
             return Tok_Function;
          when Iir_Kind_Type_Declaration =>
             return Tok_Type;
@@ -415,8 +413,6 @@ package body Sem_Specs is
          case Get_Kind (Ent) is
             when Iir_Kinds_Library_Unit_Declaration
               | Iir_Kinds_Concurrent_Statement
-              | Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration
               | Iir_Kinds_Sequential_Statement
               | Iir_Kinds_Non_Alias_Object_Declaration
               | Iir_Kind_Type_Declaration
@@ -679,9 +675,7 @@ package body Sem_Specs is
             --  literals.
             case Get_Kind (Name) is
                when Iir_Kind_Function_Declaration
-                 | Iir_Kind_Implicit_Function_Declaration
                  | Iir_Kind_Procedure_Declaration
-                 | Iir_Kind_Implicit_Procedure_Declaration
                  | Iir_Kind_Enumeration_Literal =>
                   Append_Element (List, Name);
                when others =>

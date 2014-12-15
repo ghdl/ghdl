@@ -663,15 +663,6 @@ package body Errorout is
             return "configuration specification";
          when Iir_Kind_Component_Configuration =>
             return "component configuration";
-         when Iir_Kind_Implicit_Function_Declaration =>
-            return Disp_Identifier (Node, "implicit function")
-              & Disp_Identifier (Get_Type_Reference (Node), " of type");
---             return "implicit function "
---               & Get_Predefined_Function_Name
---                (Get_Implicit_Definition (Node));
-         when Iir_Kind_Implicit_Procedure_Declaration =>
-            return "implicit procedure "
-              & Get_Predefined_Function_Name (Get_Implicit_Definition (Node));
 
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
             return "concurrent procedure call";
@@ -940,10 +931,6 @@ package body Errorout is
       case Get_Kind (Subprg) is
          when Iir_Kind_Enumeration_Literal =>
             Append (Res, "enumeration literal ");
-         when Iir_Kind_Implicit_Function_Declaration =>
-            Append (Res, "implicit function ");
-         when Iir_Kind_Implicit_Procedure_Declaration =>
-            Append (Res, "implicit procedure ");
          when Iir_Kind_Function_Declaration =>
             Append (Res, "function ");
          when Iir_Kind_Procedure_Declaration =>
@@ -974,9 +961,7 @@ package body Errorout is
       Append (Res, " [");
 
       case Get_Kind (Subprg) is
-         when Iir_Kind_Implicit_Function_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration
-           | Iir_Kind_Function_Declaration
+         when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
             declare
                El : Iir;
@@ -994,8 +979,7 @@ package body Errorout is
       end case;
 
       case Get_Kind (Subprg) is
-         when Iir_Kind_Implicit_Function_Declaration
-           | Iir_Kind_Function_Declaration
+         when Iir_Kind_Function_Declaration
            | Iir_Kind_Enumeration_Literal =>
             Append (Res, " return ");
             Append_Type (Get_Return_Type (Subprg));

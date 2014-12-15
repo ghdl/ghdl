@@ -2912,8 +2912,7 @@ package body Trans.Chap8 is
                Imp  : constant Iir := Get_Implementation (Call);
             begin
                Canon.Canon_Subprogram_Call (Call);
-               if Get_Kind (Imp) = Iir_Kind_Implicit_Procedure_Declaration
-               then
+               if Is_Implicit_Subprogram (Imp) then
                   Translate_Implicit_Procedure_Call (Call);
                else
                   Translate_Procedure_Call (Call);

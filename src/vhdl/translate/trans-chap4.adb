@@ -2041,9 +2041,10 @@ package body Trans.Chap4 is
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Procedure_Declaration
-               | Iir_Kind_Function_Declaration =>
+              | Iir_Kind_Function_Declaration =>
                --  Translate interfaces.
-               if (not Flag_Discard_Unused or else Get_Use_Flag (El))
+               if not Is_Implicit_Subprogram (El)
+                 and then (not Flag_Discard_Unused or else Get_Use_Flag (El))
                  and then not Is_Second_Subprogram_Specification (El)
                then
                   Info := Add_Info (El, Kind_Subprg);
@@ -2056,9 +2057,6 @@ package body Trans.Chap4 is
                end if;
             when Iir_Kind_Function_Body
                | Iir_Kind_Procedure_Body =>
-               null;
-            when Iir_Kind_Implicit_Function_Declaration
-               | Iir_Kind_Implicit_Procedure_Declaration =>
                null;
             when others =>
                Translate_Declaration (El);
@@ -2076,11 +2074,30 @@ package body Trans.Chap4 is
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Procedure_Declaration
-               | Iir_Kind_Function_Declaration =>
-               --  Translate only if used.
-               if Get_Info (El) /= null then
-                  Chap2.Translate_Subprogram_Declaration (El);
-                  Translate_Resolution_Function (El);
+              | Iir_Kind_Function_Declaration =>
+               if Is_Implicit_Subprogram (El) then
+                  if Flag_Discard_Unused_Implicit
+                    and then not Get_Use_Flag (El)
+                  then
+                     case Get_Implicit_Definition (El) is
+                        when Iir_Predefined_Array_Equality
+                          | Iir_Predefined_Array_Greater
+                          | Iir_Predefined_Record_Equality =>
+                           --  Used implicitly in case statement or other
+                           --  predefined equality.
+                           Chap7.Translate_Implicit_Subprogram (El, Infos);
+                        when others =>
+                           null;
+                     end case;
+                  else
+                     Chap7.Translate_Implicit_Subprogram (El, Infos);
+                  end if;
+               else
+                  --  Translate only if used.
+                  if Get_Info (El) /= null then
+                     Chap2.Translate_Subprogram_Declaration (El);
+                     Translate_Resolution_Function (El);
+                  end if;
                end if;
             when Iir_Kind_Function_Body
                | Iir_Kind_Procedure_Body =>
@@ -2103,24 +2120,6 @@ package body Trans.Chap4 is
             when Iir_Kind_Protected_Type_Body =>
                Chap3.Translate_Protected_Type_Body (El);
                Chap3.Translate_Protected_Type_Body_Subprograms (El);
-            when Iir_Kind_Implicit_Function_Declaration
-               | Iir_Kind_Implicit_Procedure_Declaration =>
-               if Flag_Discard_Unused_Implicit
-                 and then not Get_Use_Flag (El)
-               then
-                  case Get_Implicit_Definition (El) is
-                     when Iir_Predefined_Array_Equality
-                        | Iir_Predefined_Array_Greater
-                        | Iir_Predefined_Record_Equality =>
-                        --  Used implicitly in case statement or other
-                        --  predefined equality.
-                        Chap7.Translate_Implicit_Subprogram (El, Infos);
-                     when others =>
-                        null;
-                  end case;
-               else
-                  Chap7.Translate_Implicit_Subprogram (El, Infos);
-               end if;
             when others =>
                null;
          end case;
@@ -2186,15 +2185,13 @@ package body Trans.Chap4 is
 
             when Iir_Kind_Function_Declaration
                | Iir_Kind_Procedure_Declaration =>
-               if Get_Info (Decl) /= null then
+               if not Is_Implicit_Subprogram (Decl)
+                 and then Get_Info (Decl) /= null
+               then
                   Chap2.Elab_Subprogram_Interfaces (Decl);
                end if;
             when Iir_Kind_Function_Body
                | Iir_Kind_Procedure_Body =>
-               null;
-
-            when Iir_Kind_Implicit_Function_Declaration
-               | Iir_Kind_Implicit_Procedure_Declaration =>
                null;
 
             when Iir_Kind_Stable_Attribute

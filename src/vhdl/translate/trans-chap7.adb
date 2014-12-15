@@ -1060,8 +1060,7 @@ package body Trans.Chap7 is
       others => ON_Nil);
 
    function Translate_Shortcut_Operator
-     (Imp : Iir_Implicit_Function_Declaration; Left, Right : Iir)
-     return O_Enode
+     (Imp : Iir_Function_Declaration; Left, Right : Iir) return O_Enode
    is
       Rtype    : Iir;
       Res      : O_Dnode;
@@ -1137,8 +1136,7 @@ package body Trans.Chap7 is
    end Translate_Lib_Operator;
 
    function Translate_Predefined_Lib_Operator
-     (Left, Right : O_Enode; Func : Iir_Implicit_Function_Declaration)
-     return O_Enode
+     (Left, Right : O_Enode; Func : Iir_Function_Declaration) return O_Enode
    is
       Info   : constant Subprg_Info_Acc := Get_Info (Func);
       Constr : O_Assoc_List;
@@ -1226,7 +1224,8 @@ package body Trans.Chap7 is
          begin
             if Get_Kind (E) = Iir_Kind_Concatenation_Operator then
                Imp := Get_Implementation (E);
-               if Get_Kind (Imp) = Iir_Kind_Implicit_Function_Declaration
+               if (Get_Implicit_Definition (Imp)
+                     in Iir_Predefined_Concat_Functions)
                  and then Get_Return_Type (Imp) = Expr_Type
                then
                   Walk_Concat (Imp, Get_Left (E), Get_Right (E));
@@ -1237,7 +1236,8 @@ package body Trans.Chap7 is
                --  Note that associations are always 'simple': no formal, no
                --  default expression in implicit declarations.
                Imp := Get_Implementation (E);
-               if Get_Kind (Imp) = Iir_Kind_Implicit_Function_Declaration
+               if (Get_Implicit_Definition (Imp)
+                     in Iir_Predefined_Concat_Functions)
                  and then Get_Return_Type (Imp) = Expr_Type
                then
                   Assocs := Get_Parameter_Association_Chain (E);
@@ -2123,7 +2123,7 @@ package body Trans.Chap7 is
    end Translate_Predefined_Std_Ulogic_Array_Match;
 
    function Translate_Predefined_Operator
-     (Imp         : Iir_Implicit_Function_Declaration;
+     (Imp         : Iir_Function_Declaration;
       Left, Right : Iir;
       Res_Type    : Iir;
       Loc         : Iir)
@@ -4018,7 +4018,7 @@ package body Trans.Chap7 is
 
          when Iir_Kinds_Dyadic_Operator =>
             Imp := Get_Implementation (Expr);
-            if Get_Kind (Imp) = Iir_Kind_Implicit_Function_Declaration then
+            if Is_Implicit_Subprogram (Imp) then
                return Translate_Predefined_Operator
                  (Imp, Get_Left (Expr), Get_Right (Expr), Res_Type, Expr);
             else
@@ -4027,7 +4027,7 @@ package body Trans.Chap7 is
             end if;
          when Iir_Kinds_Monadic_Operator =>
             Imp := Get_Implementation (Expr);
-            if Get_Kind (Imp) = Iir_Kind_Implicit_Function_Declaration then
+            if Is_Implicit_Subprogram (Imp) then
                return Translate_Predefined_Operator
                  (Imp, Get_Operand (Expr), Null_Iir, Res_Type, Expr);
             else
@@ -4039,8 +4039,7 @@ package body Trans.Chap7 is
             declare
                Assoc_Chain : Iir;
             begin
-               if Get_Kind (Imp) = Iir_Kind_Implicit_Function_Declaration
-               then
+               if Is_Implicit_Subprogram (Imp) then
                   declare
                      Left, Right : Iir;
                   begin
@@ -4590,17 +4589,12 @@ package body Trans.Chap7 is
    begin
       El := Get_Chain (Get_Type_Declarator (Base_Type));
       while El /= Null_Iir loop
-         case Get_Kind (El) is
-            when Iir_Kind_Implicit_Function_Declaration
-               | Iir_Kind_Implicit_Procedure_Declaration =>
-               if Get_Implicit_Definition (El) = Imp then
-                  return El;
-               else
-                  El := Get_Chain (El);
-               end if;
-            when others =>
-               raise Internal_Error;
-         end case;
+         pragma Assert (Is_Implicit_Subprogram (El));
+         if Get_Implicit_Definition (El) = Imp then
+            return El;
+         else
+            El := Get_Chain (El);
+         end if;
       end loop;
       raise Internal_Error;
    end Find_Predefined_Function;
@@ -5594,7 +5588,8 @@ package body Trans.Chap7 is
       end if;
 
       case Kind is
-         when Iir_Predefined_Error =>
+         when Iir_Predefined_Error
+           | Iir_Predefined_None =>
             raise Internal_Error;
          when Iir_Predefined_Boolean_And
             | Iir_Predefined_Boolean_Or

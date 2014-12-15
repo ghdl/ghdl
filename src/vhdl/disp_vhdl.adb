@@ -202,11 +202,9 @@ package body Disp_Vhdl is
             Put ('<');
             Disp_Ident (Get_Identifier (Decl));
             Put ('>');
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Implicit_Function_Declaration =>
+         when Iir_Kind_Function_Declaration =>
             Disp_Function_Name (Decl);
-         when Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration =>
             Disp_Identifier (Decl);
          when Iir_Kind_Physical_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition
@@ -274,8 +272,6 @@ package body Disp_Vhdl is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Unit_Declaration
-           | Iir_Kind_Implicit_Function_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kinds_Interface_Object_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Function_Declaration
@@ -1417,8 +1413,7 @@ package body Disp_Vhdl is
    procedure Disp_Subprogram_Declaration (Subprg: Iir)
    is
       Start : constant Count := Col;
-      Implicit : constant Boolean :=
-        Get_Kind (Subprg) in Iir_Kinds_Implicit_Subprogram_Declaration;
+      Implicit : constant Boolean := Is_Implicit_Subprogram (Subprg);
       Inter : Iir;
    begin
       if Implicit
@@ -1435,10 +1430,7 @@ package body Disp_Vhdl is
                Put (' ');
             end if;
             Put ("function");
-         when Iir_Kind_Implicit_Function_Declaration =>
-            Put ("function");
-         when Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration =>
             Put ("procedure");
          when others =>
             raise Internal_Error;
@@ -1455,16 +1447,14 @@ package body Disp_Vhdl is
       end if;
 
       case Get_Kind (Subprg) is
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Implicit_Function_Declaration =>
+         when Iir_Kind_Function_Declaration =>
             Put (" return ");
             if Implicit then
                Disp_Type (Get_Return_Type (Subprg));
             else
                Disp_Name (Get_Return_Type_Mark (Subprg));
             end if;
-         when Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration =>
             null;
          when others =>
             raise Internal_Error;
@@ -1704,10 +1694,6 @@ package body Disp_Vhdl is
                Disp_Nature_Declaration (Decl);
             when Iir_Kind_Non_Object_Alias_Declaration =>
                Disp_Non_Object_Alias_Declaration (Decl);
-            when Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration =>
-               Disp_Subprogram_Declaration (Decl);
-               Put_Line (";");
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
                Disp_Subprogram_Declaration (Decl);

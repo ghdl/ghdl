@@ -1208,11 +1208,15 @@ package Iirs is
    --
    --   --Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
+   --   Get/Set_Implicit_Definition (Field7)
+   --
    --   Get/Set_Return_Type_Mark (Field8)
    --
    --   Get/Set_Subprogram_Body (Field9)
    --
    --   Get/Set_Subprogram_Depth (Field10)
+   --
+   --   Get/Set_Type_Reference (Field11)
    --
    --   Get/Set_Overload_Number (Field12)
    --
@@ -1284,52 +1288,6 @@ package Iirs is
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
-
-   -- Iir_Kind_Implicit_Procedure_Declaration (Medium)
-   -- Iir_Kind_Implicit_Function_Declaration (Medium)
-   --
-   --  This node contains a subprogram_declaration that was implicitly defined
-   --  just after a type declaration.
-   --  This declaration is inserted by sem.
-   --
-   --   Get/Set_Parent (Field0)
-   --
-   -- Only for Iir_Kind_Implicit_Function_Declaration:
-   --   Get/Set_Return_Type (Field1)
-   --
-   -- Only for Iir_Kind_Implicit_Function_Declaration:
-   --   Get/Set_Type (Alias Field1)
-   --
-   --   Get/Set_Chain (Field2)
-   --
-   --   Get/Set_Identifier (Field3)
-   --
-   --   Get/Set_Subprogram_Hash (Field4)
-   --
-   --   Get/Set_Interface_Declaration_Chain (Field5)
-   --
-   --   Get/Set_Generic_Chain (Field6)
-   --
-   --   Get/Set_Generic_Map_Aspect_Chain (Field8)
-   --
-   --   Get/Set_Implicit_Definition (Field9)
-   --
-   --   Get/Set_Type_Reference (Field10)
-   --
-   --   Get/Set_Overload_Number (Field12)
-   --
-   --   Get/Set_Wait_State (State1)
-   --
-   --   Get/Set_Seen_Flag (Flag1)
-   --
-   -- Only for Iir_Kind_Implicit_Function_Declaration:
-   --   Get/Set_Pure_Flag (Flag2)
-   --
-   --   Get/Set_Visible_Flag (Flag4)
-   --
-   --   Get/Set_Is_Within_Flag (Flag5)
-   --
-   --   Get/Set_Use_Flag (Flag6)
 
    -- Iir_Kind_Signal_Declaration (Short)
    --
@@ -3492,8 +3450,6 @@ package Iirs is
 
        Iir_Kind_Enumeration_Literal,
        Iir_Kind_Function_Declaration,            --  Subprg, Func
-       Iir_Kind_Implicit_Function_Declaration,   --  Subprg, Func, Imp_Subprg
-       Iir_Kind_Implicit_Procedure_Declaration,  --  Subprg, Proc, Imp_Subprg
        Iir_Kind_Procedure_Declaration,           --  Subprg, Proc
        Iir_Kind_Function_Body,
        Iir_Kind_Procedure_Body,
@@ -3711,7 +3667,7 @@ package Iirs is
       (
        Iir_Predefined_Error,
 
-   --  Predefined operators for BOOLEAN type.
+       --  Predefined operators for BOOLEAN type.
        Iir_Predefined_Boolean_And,
        Iir_Predefined_Boolean_Or,
        Iir_Predefined_Boolean_Nand,
@@ -3723,7 +3679,7 @@ package Iirs is
        Iir_Predefined_Boolean_Rising_Edge,
        Iir_Predefined_Boolean_Falling_Edge,
 
-   --  Predefined operators for any enumeration type.
+       --  Predefined operators for any enumeration type.
        Iir_Predefined_Enum_Equality,
        Iir_Predefined_Enum_Inequality,
        Iir_Predefined_Enum_Less,
@@ -3735,7 +3691,7 @@ package Iirs is
        Iir_Predefined_Enum_Maximum,
        Iir_Predefined_Enum_To_String,
 
-   --  Predefined operators for BIT type.
+       --  Predefined operators for BIT type.
        Iir_Predefined_Bit_And,
        Iir_Predefined_Bit_Or,
        Iir_Predefined_Bit_Nand,
@@ -3756,7 +3712,7 @@ package Iirs is
        Iir_Predefined_Bit_Rising_Edge,
        Iir_Predefined_Bit_Falling_Edge,
 
-   --  Predefined operators for any integer type.
+       --  Predefined operators for any integer type.
        Iir_Predefined_Integer_Equality,
        Iir_Predefined_Integer_Inequality,
        Iir_Predefined_Integer_Less,
@@ -3781,7 +3737,7 @@ package Iirs is
        Iir_Predefined_Integer_Maximum,
        Iir_Predefined_Integer_To_String,
 
-   --  Predefined operators for any floating type.
+       --  Predefined operators for any floating type.
        Iir_Predefined_Floating_Equality,
        Iir_Predefined_Floating_Inequality,
        Iir_Predefined_Floating_Less,
@@ -3807,12 +3763,12 @@ package Iirs is
        Iir_Predefined_Real_To_String_Digits,
        Iir_Predefined_Real_To_String_Format,
 
-   --  Predefined operator for universal types.
+       --  Predefined operator for universal types.
        Iir_Predefined_Universal_R_I_Mul,
        Iir_Predefined_Universal_I_R_Mul,
        Iir_Predefined_Universal_R_I_Div,
 
-   --  Predefined operators for physical types.
+       --  Predefined operators for physical types.
        Iir_Predefined_Physical_Equality,
        Iir_Predefined_Physical_Inequality,
        Iir_Predefined_Physical_Less,
@@ -3841,15 +3797,15 @@ package Iirs is
 
        Iir_Predefined_Time_To_String_Unit,
 
-   --  Predefined operators for access.
+       --  Predefined operators for access.
        Iir_Predefined_Access_Equality,
        Iir_Predefined_Access_Inequality,
 
-   --  Predefined operators for record.
+       --  Predefined operators for record.
        Iir_Predefined_Record_Equality,
        Iir_Predefined_Record_Inequality,
 
-   --  Predefined operators for array.
+       --  Predefined operators for array.
        Iir_Predefined_Array_Equality,
        Iir_Predefined_Array_Inequality,
        Iir_Predefined_Array_Less,
@@ -3867,7 +3823,7 @@ package Iirs is
        Iir_Predefined_Vector_Minimum,
        Iir_Predefined_Vector_Maximum,
 
-   --  Predefined shift operators.
+       --  Predefined shift operators.
        Iir_Predefined_Array_Sll,
        Iir_Predefined_Array_Srl,
        Iir_Predefined_Array_Sla,
@@ -3875,9 +3831,10 @@ package Iirs is
        Iir_Predefined_Array_Rol,
        Iir_Predefined_Array_Ror,
 
-   --  Predefined operators for one dimensional array.
-   --  For bit and boolean type, the operations are the same.  For a neutral
-   --  noun, we use TF (for True/False) instead of Bit, Boolean or Logic.
+       --  Predefined operators for one dimensional array.
+       --  For bit and boolean type, the operations are the same.  To be
+       --  neutral, we use TF (for True/False) instead of Bit, Boolean or
+       --  Logic.
        Iir_Predefined_TF_Array_And,
        Iir_Predefined_TF_Array_Or,
        Iir_Predefined_TF_Array_Nand,
@@ -3929,25 +3886,12 @@ package Iirs is
        Iir_Predefined_Attribute_Driving,
        Iir_Predefined_Attribute_Driving_Value,
 
-   --  Access procedure
-       Iir_Predefined_Deallocate,
-
-   --  file function / procedures.
-       Iir_Predefined_File_Open,
-       Iir_Predefined_File_Open_Status,
-       Iir_Predefined_File_Close,
-       Iir_Predefined_Read,
-       Iir_Predefined_Read_Length,
-       Iir_Predefined_Flush,
-       Iir_Predefined_Write,
-       Iir_Predefined_Endfile,
-
-   --  To_String
+       --  To_String
        Iir_Predefined_Array_Char_To_String,
        Iir_Predefined_Bit_Vector_To_Ostring,
        Iir_Predefined_Bit_Vector_To_Hstring,
 
-   --  IEEE.Std_Logic_1164.Std_Ulogic
+       --  IEEE.Std_Logic_1164.Std_Ulogic
        Iir_Predefined_Std_Ulogic_Match_Equality,
        Iir_Predefined_Std_Ulogic_Match_Inequality,
        Iir_Predefined_Std_Ulogic_Match_Less,
@@ -3958,16 +3902,39 @@ package Iirs is
        Iir_Predefined_Std_Ulogic_Array_Match_Equality,
        Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
 
-   --  Predefined function.
-       Iir_Predefined_Now_Function
-       );
+       --  Impure subprograms.
+
+       --  Access procedure
+       Iir_Predefined_Deallocate,
+
+       --  File function / procedures.
+       Iir_Predefined_File_Open,
+       Iir_Predefined_File_Open_Status,
+       Iir_Predefined_File_Close,
+       Iir_Predefined_Read,
+       Iir_Predefined_Read_Length,
+       Iir_Predefined_Flush,
+       Iir_Predefined_Write,
+       Iir_Predefined_Endfile,
+
+       --  Misc impure functions.
+       Iir_Predefined_Now_Function,
+
+       --  A not predefined and not known function.  User function.
+       Iir_Predefined_None
+      );
 
    --  Return TRUE iff FUNC is a short-cut predefined function.
    function Iir_Predefined_Shortcut_P (Func : Iir_Predefined_Functions)
      return Boolean;
 
+   --  Pure and impure functions form a partition of implicit functions.
    subtype Iir_Predefined_Pure_Functions is Iir_Predefined_Functions range
-     Iir_Predefined_Boolean_And .. Iir_Predefined_Attribute_Driving_Value;
+     Iir_Predefined_Boolean_And ..
+     Iir_Predefined_Functions'Pred (Iir_Predefined_Deallocate);
+   subtype Iir_Predefined_Impure_Functions is Iir_Predefined_Functions range
+     Iir_Predefined_Deallocate ..
+     Iir_Predefined_Functions'Pred (Iir_Predefined_None);
 
    subtype Iir_Predefined_Dyadic_TF_Array_Functions
    is Iir_Predefined_Functions range
@@ -3999,7 +3966,19 @@ package Iirs is
    --Iir_Predefined_Std_Ulogic_Match_Greater
      Iir_Predefined_Std_Ulogic_Match_Greater_Equal;
 
-   -- Staticness as defined by LRM93 §6.1 and §7.4
+   --  Subtype for implicit subprograms.  These have no corresponding bodies.
+   --  Implicit and explicit subprograms are partitions: they are disjoint
+   --  and cover all the cases.
+   subtype Iir_Predefined_Implicit is Iir_Predefined_Functions range
+     Iir_Predefined_Error ..
+     Iir_Predefined_Functions'Pred (Iir_Predefined_None);
+
+   --  Subtype for exlicit subprograms.  These require a corresponding body.
+   subtype Iir_Predefined_Explicit is Iir_Predefined_Functions range
+     Iir_Predefined_None ..
+     Iir_Predefined_Functions'Last;
+
+   --  Staticness as defined by LRM93 §6.1 and §7.4
    type Iir_Staticness is (Unknown, None, Globally, Locally);
 
    -- Staticness as defined by LRM93 §6.1 and §7.4
@@ -4222,28 +4201,13 @@ package Iirs is
    --Iir_Kind_Remainder_Operator
      Iir_Kind_Exponentiation_Operator;
 
-   subtype Iir_Kinds_Function_Declaration is Iir_Kind range
-     Iir_Kind_Function_Declaration ..
-     Iir_Kind_Implicit_Function_Declaration;
-
    subtype Iir_Kinds_Functions_And_Literals is Iir_Kind range
      Iir_Kind_Enumeration_Literal ..
-   --Iir_Kind_Function_Declaration
-     Iir_Kind_Implicit_Function_Declaration;
-
-   subtype Iir_Kinds_Procedure_Declaration is Iir_Kind range
-     Iir_Kind_Implicit_Procedure_Declaration ..
-     Iir_Kind_Procedure_Declaration;
+     Iir_Kind_Function_Declaration;
 
    subtype Iir_Kinds_Subprogram_Declaration is Iir_Kind range
      Iir_Kind_Function_Declaration ..
-   --Iir_Kind_Implicit_Function_Declaration
-   --Iir_Kind_Implicit_Procedure_Declaration
      Iir_Kind_Procedure_Declaration;
-
-   subtype Iir_Kinds_Implicit_Subprogram_Declaration is Iir_Kind range
-     Iir_Kind_Implicit_Function_Declaration ..
-     Iir_Kind_Implicit_Procedure_Declaration;
 
    subtype Iir_Kinds_Process_Statement is Iir_Kind range
      Iir_Kind_Sensitized_Process_Statement ..
@@ -4482,8 +4446,6 @@ package Iirs is
    --Iir_Kind_Through_Quantity_Declaration
    --Iir_Kind_Enumeration_Literal
    --Iir_Kind_Function_Declaration
-   --Iir_Kind_Implicit_Function_Declaration
-   --Iir_Kind_Implicit_Procedure_Declaration
    --Iir_Kind_Procedure_Declaration
    --Iir_Kind_Function_Body
    --Iir_Kind_Procedure_Body
@@ -4761,10 +4723,6 @@ package Iirs is
    subtype Iir_Procedure_Declaration is Iir;
 
    subtype Iir_Procedure_Body is Iir;
-
-   subtype Iir_Implicit_Function_Declaration is Iir;
-
-   subtype Iir_Implicit_Procedure_Declaration is Iir;
 
    subtype Iir_Use_Clause is Iir;
 
@@ -5395,13 +5353,13 @@ package Iirs is
    pragma Inline (Get_Return_Type);
 
    --  Code of an implicit subprogram definition.
-   --  Field: Field9 (pos)
+   --  Field: Field7 (pos)
    function Get_Implicit_Definition (D : Iir) return Iir_Predefined_Functions;
    procedure Set_Implicit_Definition (D : Iir; Def : Iir_Predefined_Functions);
 
    --  For an implicit subprogram, the type_reference is the type declaration
    --  for which the implicit subprogram was defined.
-   --  Field: Field10 Ref
+   --  Field: Field11 Ref
    function Get_Type_Reference (Target : Iir) return Iir;
    procedure Set_Type_Reference (Target : Iir; Decl : Iir);
 

@@ -889,7 +889,7 @@ package body Sem_Assocs is
       function Extract_Type_Of_Conversion (Func : Iir) return Iir is
       begin
          case Get_Kind (Func) is
-            when Iir_Kinds_Function_Declaration =>
+            when Iir_Kind_Function_Declaration =>
                if Is_Chain_Length_One (Get_Interface_Declaration_Chain (Func))
                then
                   return Get_Type (Func);
@@ -1136,7 +1136,7 @@ package body Sem_Assocs is
       P_Type : Iir;
    begin
       case Get_Kind (Func) is
-         when Iir_Kinds_Function_Declaration =>
+         when Iir_Kind_Function_Declaration =>
             R_Type := Get_Type (Func);
             P_Type := Get_Type (Get_Interface_Declaration_Chain (Func));
             if Get_Base_Type (R_Type) = Res_Base_Type
@@ -1252,7 +1252,7 @@ package body Sem_Assocs is
       Set_Named_Entity (Conv, Func);
 
       case Get_Kind (Func) is
-         when Iir_Kinds_Function_Declaration =>
+         when Iir_Kind_Function_Declaration =>
             Res := Create_Iir (Iir_Kind_Function_Call);
             Location_Copy (Res, Conv);
             Set_Implementation (Res, Func);

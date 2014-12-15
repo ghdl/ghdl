@@ -456,8 +456,6 @@ package body Iirs is
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Function_Declaration
-           | Iir_Kind_Implicit_Function_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
@@ -1819,7 +1817,7 @@ package body Iirs is
    begin
       pragma Assert (D /= Null_Iir);
       pragma Assert (Has_Implicit_Definition (Get_Kind (D)));
-      return Iir_Predefined_Functions'Val (Get_Field9 (D));
+      return Iir_Predefined_Functions'Val (Get_Field7 (D));
    end Get_Implicit_Definition;
 
    procedure Set_Implicit_Definition (D : Iir; Def : Iir_Predefined_Functions)
@@ -1827,21 +1825,21 @@ package body Iirs is
    begin
       pragma Assert (D /= Null_Iir);
       pragma Assert (Has_Implicit_Definition (Get_Kind (D)));
-      Set_Field9 (D, Iir_Predefined_Functions'Pos (Def));
+      Set_Field7 (D, Iir_Predefined_Functions'Pos (Def));
    end Set_Implicit_Definition;
 
    function Get_Type_Reference (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Type_Reference (Get_Kind (Target)));
-      return Get_Field10 (Target);
+      return Get_Field11 (Target);
    end Get_Type_Reference;
 
    procedure Set_Type_Reference (Target : Iir; Decl : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Type_Reference (Get_Kind (Target)));
-      Set_Field10 (Target, Decl);
+      Set_Field11 (Target, Decl);
    end Set_Type_Reference;
 
    function Get_Default_Value (Target : Iir) return Iir is

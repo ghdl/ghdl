@@ -670,9 +670,7 @@ package body Sem_Types is
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Procedure_Declaration
-              | Iir_Kind_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration
-              | Iir_Kind_Implicit_Function_Declaration =>
+              | Iir_Kind_Function_Declaration =>
                null;
             when Iir_Kind_Procedure_Body
               | Iir_Kind_Function_Body =>
@@ -1235,7 +1233,7 @@ package body Sem_Types is
    begin
       -- LRM93 2.4
       --  A resolution function must be a [pure] function;
-      if Get_Kind (Func) not in Iir_Kinds_Function_Declaration then
+      if Get_Kind (Func) /= Iir_Kind_Function_Declaration then
          return False;
       end if;
       Decl := Get_Interface_Declaration_Chain (Func);

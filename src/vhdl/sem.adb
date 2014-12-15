@@ -1160,11 +1160,11 @@ package body Sem is
       end if;
 
       case Get_Kind (Left) is
-         when Iir_Kinds_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration =>
             return Are_Trees_Chain_Equal
               (Get_Interface_Declaration_Chain (Left),
                Get_Interface_Declaration_Chain (Right));
-         when Iir_Kinds_Function_Declaration =>
+         when Iir_Kind_Function_Declaration =>
             if not Are_Trees_Equal (Get_Return_Type (Left),
                                     Get_Return_Type (Right))
             then
@@ -1452,7 +1452,6 @@ package body Sem is
       Interpretation : Name_Interpretation_Type;
       Decl1: Iir;
       Hash : Iir_Int32;
-      Kind : Iir_Kind;
    begin
       Hash := Get_Subprogram_Hash (Decl);
       Interpretation := Get_Interpretation (Get_Identifier (Decl));
@@ -1464,14 +1463,12 @@ package body Sem is
             return Null_Iir;
          end if;
          Decl1 := Get_Declaration (Interpretation);
-         Kind := Get_Kind (Decl1);
          --  Should be sure DECL1 and DECL belongs to the same declarative
          --  region, ie DECL1 was not made visible via a USE clause.
          --
          --  Also, only check for explicitly subprograms (and not
          --  implicit one).
-         if (Kind = Iir_Kind_Function_Declaration
-             or Kind = Iir_Kind_Procedure_Declaration)
+         if not Is_Implicit_Subprogram (Decl1)
            and then not Is_Potentially_Visible (Interpretation)
            and then Get_Subprogram_Hash (Decl1) = Hash
            and then Is_Same_Profile (Decl, Decl1)
@@ -1500,26 +1497,27 @@ package body Sem is
          case Get_Kind (Prev) is
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
-               --  The previous declaration is a user subprogram.
-               Num := Get_Overload_Number (Prev) + 1;
-               if Num = 1
-                 and then Get_Parent (Prev) = Get_Parent (Decl)
-               then
-                  --  The previous was not (yet) overloaded.  Mark it as
-                  --  overloaded.
-                  --  Do not mark it if it is not in the same declarative part.
-                  --  (ie, do not change a subprogram declaration in the
-                  --   package while analyzing the body).
-                  Set_Overload_Number (Prev, 1);
-                  Num := 2;
+               if Is_Implicit_Subprogram (Prev) then
+                  --  Implicit declarations aren't taken into account (as they
+                  --  are mangled differently).
+                  Inter := Get_Next_Interpretation (Inter);
+               else
+                  --  The previous declaration is a user subprogram.
+                  Num := Get_Overload_Number (Prev) + 1;
+                  if Num = 1
+                    and then Get_Parent (Prev) = Get_Parent (Decl)
+                  then
+                     --  The previous was not (yet) overloaded.  Mark it as
+                     --  overloaded.
+                     --  Do not mark it if it is not in the same declarative
+                     --  part (ie, do not change a subprogram declaration in
+                     -- the package while analyzing the body).
+                     Set_Overload_Number (Prev, 1);
+                     Num := 2;
+                  end if;
+                  Set_Overload_Number (Decl, Num);
+                  return;
                end if;
-               Set_Overload_Number (Decl, Num);
-               return;
-            when Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration =>
-               --  Implicit declarations aren't taken into account (as they
-               --  are mangled differently).
-               Inter := Get_Next_Interpretation (Inter);
             when Iir_Kind_Enumeration_Literal =>
                --  Enumeration literal are ignored for overload number.
                Inter := Get_Next_Interpretation (Inter);
@@ -1648,7 +1646,7 @@ package body Sem is
       Itype : Iir;
    begin
       Kind := Get_Kind (Subprg);
-      if Kind in Iir_Kinds_Function_Declaration
+      if Kind = Iir_Kind_Function_Declaration
         or else Kind = Iir_Kind_Enumeration_Literal
       then
          Itype := Get_Base_Type (Get_Return_Type (Subprg));
@@ -1856,7 +1854,7 @@ package body Sem is
                         Callee := Get_Nth_Element (Callees, I);
                         exit when Callee = Null_Iir;
                         case Get_Kind (Callee) is
-                           when Iir_Kinds_Function_Declaration =>
+                           when Iir_Kind_Function_Declaration =>
                               null;
                            when Iir_Kind_Procedure_Declaration =>
                               State := Get_Wait_State (Callee);
@@ -1872,8 +1870,6 @@ package body Sem is
                                     --Set_Wait_State (Spec, True);
                                     --exit;
                               end case;
-                           when Iir_Kind_Implicit_Procedure_Declaration =>
-                              null;
                            when others =>
                               Error_Kind ("sem_subprogram_body(2)", Callee);
                         end case;
@@ -2284,7 +2280,9 @@ package body Sem is
          case Get_Kind (El) is
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
-               return True;
+               if not Is_Implicit_Subprogram (El) then
+                  return True;
+               end if;
             when Iir_Kind_Constant_Declaration =>
                if Get_Default_Value (El) = Null_Iir then
                   return True;
@@ -2306,9 +2304,6 @@ package body Sem is
                end if;
             when Iir_Kind_Anonymous_Type_Declaration
               | Iir_Kind_Subtype_Declaration =>
-               null;
-            when Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration =>
                null;
             when Iir_Kind_Attribute_Declaration
               | Iir_Kind_Attribute_Specification =>

@@ -998,8 +998,7 @@ package body Trans.Chap6 is
                Obj         : Iir;
                Assoc_Chain : Iir;
             begin
-               if Get_Kind (Imp) = Iir_Kind_Implicit_Function_Declaration
-               then
+               if Is_Implicit_Subprogram (Imp) then
                   --  FIXME : to be done
                   raise Internal_Error;
                else

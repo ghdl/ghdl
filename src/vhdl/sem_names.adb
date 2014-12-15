@@ -59,9 +59,7 @@ package body Sem_Names is
          exit when El = Null_Iir;
          case Get_Kind (El) is
             when Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration
-              | Iir_Kind_Implicit_Function_Declaration
-              | Iir_Kind_Implicit_Procedure_Declaration =>
+              | Iir_Kind_Procedure_Declaration =>
                Error_Msg_Sem (Disp_Subprg (El), El);
             when Iir_Kind_Function_Call =>
                El := Get_Implementation (El);
@@ -144,7 +142,7 @@ package body Sem_Names is
          Decl := Get_Nth_Element (List, I);
          exit when Decl = Null_Iir;
          case Get_Kind (Decl) is
-            when Iir_Kinds_Function_Declaration =>
+            when Iir_Kind_Function_Declaration =>
                Add_Element (Res_List, Get_Return_Type (Decl));
             when Iir_Kind_Enumeration_Literal
               | Iir_Kind_Function_Call
@@ -226,8 +224,8 @@ package body Sem_Names is
                Free_Iir (El);
             when Iir_Kind_Attribute_Name =>
                Free_Iir (El);
-            when Iir_Kinds_Function_Declaration
-              | Iir_Kinds_Procedure_Declaration
+            when Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration
               | Iir_Kind_Enumeration_Literal =>
                null;
             when Iir_Kinds_Denoting_Name =>
@@ -418,7 +416,7 @@ package body Sem_Names is
    is
       Inter : Iir;
    begin
-      if Get_Kind (Prefix) not in Iir_Kinds_Function_Declaration then
+      if Get_Kind (Prefix) /= Iir_Kind_Function_Declaration then
          return True;
       end if;
       Inter := Get_Interface_Declaration_Chain (Prefix);
@@ -486,7 +484,7 @@ package body Sem_Names is
    function Maybe_Insert_Function_Call (Name : Iir; Spec : Iir) return Iir
    is
    begin
-      if Get_Kind (Spec) in Iir_Kinds_Function_Declaration then
+      if Get_Kind (Spec) = Iir_Kind_Function_Declaration then
          return Sem_As_Function_Call (Name, Spec, Null_Iir);
       else
          return Spec;
@@ -1413,11 +1411,11 @@ package body Sem_Names is
             Name_Res := Finish_Sem_Denoting_Name (Name, Res);
             Set_Base_Name (Name_Res, Res);
             return Name_Res;
-         when Iir_Kinds_Function_Declaration =>
+         when Iir_Kind_Function_Declaration =>
             Name_Res := Finish_Sem_Denoting_Name (Name, Res);
             Set_Type (Name_Res, Get_Return_Type (Res));
             return Name_Res;
-         when Iir_Kinds_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration =>
             return Finish_Sem_Denoting_Name (Name, Res);
          when Iir_Kind_Type_Conversion =>
             pragma Assert (Get_Kind (Name) = Iir_Kind_Parenthesis_Name);
@@ -2090,7 +2088,7 @@ package body Sem_Names is
          --  Only values can be indexed or sliced.
          --  Catch errors such as slice of a type conversion.
          if not Is_Object_Name (Sub_Name)
-           and then Get_Kind (Sub_Name) not in Iir_Kinds_Function_Declaration
+           and then Get_Kind (Sub_Name) /= Iir_Kind_Function_Declaration
          then
             if Finish then
                Error_Msg_Sem ("prefix is not an array value (found "
@@ -2173,7 +2171,7 @@ package body Sem_Names is
          Match : Boolean;
       begin
          Used := False;
-         if Get_Kind (Sub_Name) in Iir_Kinds_Function_Declaration then
+         if Get_Kind (Sub_Name) = Iir_Kind_Function_Declaration then
             Sem_Association_Chain
               (Get_Interface_Declaration_Chain (Sub_Name),
                Assoc_Chain, False, Missing_Parameter, Name, Match);
@@ -2184,7 +2182,7 @@ package body Sem_Names is
                Used := True;
             end if;
          end if;
-         if Get_Kind (Sub_Name) not in Iir_Kinds_Procedure_Declaration then
+         if Get_Kind (Sub_Name) /= Iir_Kind_Procedure_Declaration then
             R := Sem_As_Indexed_Or_Slice_Name (Sub_Name, False);
             if R /= Null_Iir then
                Add_Result (Res, R);
@@ -2296,7 +2294,7 @@ package body Sem_Names is
                  ("no overloaded function found matching "
                     & Disp_Node (Prefix_Name), Name);
             end if;
-         when Iir_Kinds_Function_Declaration =>
+         when Iir_Kind_Function_Declaration =>
             Sem_Parenthesis_Function (Prefix);
             if Res = Null_Iir then
                Error_Parenthesis_Function (Prefix);
@@ -2357,7 +2355,7 @@ package body Sem_Names is
             end if;
             return;
 
-         when Iir_Kinds_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration =>
             Error_Msg_Sem ("function name is a procedure", Name);
 
          when Iir_Kinds_Process_Statement
@@ -2442,7 +2440,7 @@ package body Sem_Names is
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Function_Call =>
             Sem_As_Selected_By_All_Name (Prefix);
-         when Iir_Kinds_Function_Declaration =>
+         when Iir_Kind_Function_Declaration =>
             Prefix := Sem_As_Function_Call (Name => Prefix_Name,
                                             Spec => Prefix,
                                             Assoc_Chain => Null_Iir);
@@ -2529,8 +2527,8 @@ package body Sem_Names is
          when Iir_Kinds_Object_Declaration
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
-           | Iir_Kinds_Function_Declaration
-           | Iir_Kinds_Procedure_Declaration
+           | Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Unit_Declaration
            | Iir_Kinds_Sequential_Statement
@@ -3113,9 +3111,7 @@ package body Sem_Names is
       --       of a component declaration.
       case Get_Kind (Prefix) is
          when Iir_Kind_Procedure_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration
            | Iir_Kind_Function_Declaration
-           | Iir_Kind_Implicit_Function_Declaration
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Constant_Declaration
@@ -3415,9 +3411,9 @@ package body Sem_Names is
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
          case Get_Kind (El) is
-            when Iir_Kinds_Procedure_Declaration =>
+            when Iir_Kind_Procedure_Declaration =>
                null;
-            when Iir_Kinds_Function_Declaration =>
+            when Iir_Kind_Function_Declaration =>
                if Maybe_Function_Call (El) then
                   Replace_Nth_Element (List, P, El);
                   P := P + 1;
@@ -3545,8 +3541,7 @@ package body Sem_Names is
            | Iir_Kind_Selected_Name =>
             Expr := Get_Named_Entity (Res);
             case Get_Kind (Expr) is
-               when Iir_Kind_Implicit_Function_Declaration
-                 | Iir_Kind_Function_Declaration =>
+               when Iir_Kind_Function_Declaration =>
                   if Maybe_Function_Call (Expr) then
                      Expr := Sem_As_Function_Call (Res, Expr, Null_Iir);
                      if Get_Kind (Expr) /= Iir_Kind_Function_Call then

@@ -1338,7 +1338,7 @@ package body Trans is
                      Info.T := Ortho_Info_Type_Array_Init;
                      Free_Type_Info (Info);
                   end if;
-               when Iir_Kind_Implicit_Function_Declaration =>
+               when Iir_Kind_Function_Declaration =>
                   case Get_Implicit_Definition (I) is
                      when Iir_Predefined_Bit_Array_Match_Equality
                         |  Iir_Predefined_Bit_Array_Match_Inequality =>

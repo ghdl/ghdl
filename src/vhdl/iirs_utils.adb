@@ -734,6 +734,12 @@ package body Iirs_Utils is
         and then Get_Subprogram_Specification (Bod) /= Spec;
    end Is_Second_Subprogram_Specification;
 
+   function Is_Implicit_Subprogram (Spec : Iir) return Boolean is
+   begin
+      return Get_Kind (Spec) in Iir_Kinds_Subprogram_Declaration
+        and then Get_Implicit_Definition (Spec) in Iir_Predefined_Implicit;
+   end Is_Implicit_Subprogram;
+
    function Is_Same_Profile (L, R: Iir) return Boolean
    is
       L1, R1 : Iir;
@@ -757,16 +763,16 @@ package body Iirs_Utils is
 
       --  Check L and R are both of the same 'kind'.
       --  Also the return profile for functions.
-      if L_Kind in Iir_Kinds_Function_Declaration
-        and then R_Kind in Iir_Kinds_Function_Declaration
+      if L_Kind = Iir_Kind_Function_Declaration
+        and then R_Kind = Iir_Kind_Function_Declaration
       then
          if Get_Base_Type (Get_Return_Type (L1)) /=
            Get_Base_Type (Get_Return_Type (R1))
          then
             return False;
          end if;
-      elsif L_Kind in Iir_Kinds_Procedure_Declaration
-        and then R_Kind in Iir_Kinds_Procedure_Declaration
+      elsif L_Kind = Iir_Kind_Procedure_Declaration
+        and then R_Kind = Iir_Kind_Procedure_Declaration
       then
          null;
       elsif L_Kind = Iir_Kind_Enumeration_Literal

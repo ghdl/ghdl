@@ -290,11 +290,11 @@ package body Std_Package is
                                   Inter2_Id : Name_Id := Null_Identifier;
                                   Inter2_Type : Iir := Null_Iir)
       is
-         Decl : Iir_Implicit_Function_Declaration;
+         Decl : Iir_Function_Declaration;
          Inter : Iir_Interface_Constant_Declaration;
          Inter2 : Iir_Interface_Constant_Declaration;
       begin
-         Decl := Create_Std_Decl (Iir_Kind_Implicit_Function_Declaration);
+         Decl := Create_Std_Decl (Iir_Kind_Function_Declaration);
          Set_Std_Identifier (Decl, Name);
          Set_Return_Type (Decl, String_Type_Definition);
          Set_Pure_Flag (Decl, True);
@@ -323,10 +323,10 @@ package body Std_Package is
       procedure Create_Edge_Function
         (Name : Name_Id; Func : Iir_Predefined_Functions; Inter_Type : Iir)
       is
-         Decl : Iir_Implicit_Function_Declaration;
+         Decl : Iir_Function_Declaration;
          Inter : Iir_Interface_Constant_Declaration;
       begin
-         Decl := Create_Std_Decl (Iir_Kind_Implicit_Function_Declaration);
+         Decl := Create_Std_Decl (Iir_Kind_Function_Declaration);
          Set_Std_Identifier (Decl, Name);
          Set_Return_Type (Decl, Boolean_Type_Definition);
          Set_Pure_Flag (Decl, True);
@@ -899,10 +899,9 @@ package body Std_Package is
       --
       --  impure function NOW return DELAY_LENGTH.
       declare
-         Function_Now : Iir_Implicit_Function_Declaration;
+         Function_Now : Iir_Function_Declaration;
       begin
-         Function_Now :=
-           Create_Std_Decl (Iir_Kind_Implicit_Function_Declaration);
+         Function_Now := Create_Std_Decl (Iir_Kind_Function_Declaration);
          Set_Std_Identifier (Function_Now, Std_Names.Name_Now);
          if Vhdl_Std = Vhdl_87 then
             Set_Return_Type (Function_Now, Time_Subtype_Definition);

@@ -5322,7 +5322,7 @@ package body Parse is
       Old : Iir;
       pragma Unreferenced (Old);
    begin
-      -- Create the node.
+      --  Create the node.
       case Current_Token is
          when Tok_Procedure =>
             Kind := Iir_Kind_Procedure_Declaration;
@@ -5335,6 +5335,7 @@ package body Parse is
       end case;
       Subprg := Create_Iir (Kind);
       Set_Location (Subprg);
+      Set_Implicit_Definition (Subprg, Iir_Predefined_None);
 
       case Current_Token is
          when Tok_Procedure =>
@@ -5353,14 +5354,16 @@ package body Parse is
             end if;
             Set_Has_Pure (Subprg, True);
             --  FIXME: what to do in case of error ??
-            --  Eat PURE or IMPURE.
+
+            --  Eat 'pure' or 'impure'.
             Scan;
+
             Expect (Tok_Function, "'function' must follow 'pure' or 'impure'");
          when others =>
             raise Internal_Error;
       end case;
 
-      --  Eat PROCEDURE or FUNCTION.
+      --  Eat 'procedure' or 'function'.
       Scan;
 
       if Current_Token = Tok_Identifier then
@@ -5382,7 +5385,9 @@ package body Parse is
          Expect (Tok_Identifier);
       end if;
 
+      --  Eat designator (identifier or string).
       Scan;
+
       if Current_Token = Tok_Left_Paren then
          --  Parse the interface declaration.
          if Kind = Iir_Kind_Function_Declaration then

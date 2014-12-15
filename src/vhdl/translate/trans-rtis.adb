@@ -1961,9 +1961,7 @@ package body Trans.Rtis is
                null;
             when Iir_Kind_Component_Declaration =>
                null;
-            when Iir_Kind_Implicit_Function_Declaration
-               | Iir_Kind_Implicit_Procedure_Declaration
-               | Iir_Kind_Function_Declaration
+            when Iir_Kind_Function_Declaration
                | Iir_Kind_Procedure_Declaration =>
                --  FIXME: to be added (for foreign).
                null;
@@ -2128,9 +2126,7 @@ package body Trans.Rtis is
                end;
             when Iir_Kind_Component_Declaration =>
                Generate_Component_Declaration (Decl);
-            when Iir_Kind_Implicit_Function_Declaration
-               | Iir_Kind_Implicit_Procedure_Declaration
-               | Iir_Kind_Function_Declaration
+            when Iir_Kind_Function_Declaration
                | Iir_Kind_Procedure_Declaration =>
                --  FIXME: to be added (for foreign).
                null;

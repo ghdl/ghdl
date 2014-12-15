@@ -1061,25 +1061,25 @@ package body Sem_Stmts is
       case Get_Kind (Current_Subprogram) is
          when Iir_Kind_Process_Statement =>
             null;
-         when Iir_Kinds_Function_Declaration =>
-            --  LRM93 §8.2
+         when Iir_Kind_Function_Declaration =>
+            --  LRM93 8.2
             --  It is an error if a wait statement appears in a function
             --  subprogram [...]
             Error_Msg_Sem
               ("wait statement not allowed in a function subprogram", Stmt);
             return;
-         when Iir_Kinds_Procedure_Declaration =>
-            --  LRM93 §8.2
+         when Iir_Kind_Procedure_Declaration =>
+            --  LRM93 8.2
             --  [It is an error ...] or in a procedure that has a parent that
             --  is a function subprogram.
-            --  LRM93 §8.2
+            --  LRM93 8.2
             --  [...] or in a procedure that has a parent that is such a
             --  process statement.
             -- GHDL: this is checked at the end of analysis or during
             --  elaboration.
             Set_Wait_State (Current_Subprogram, True);
          when Iir_Kind_Sensitized_Process_Statement =>
-            --  LRM93 §8.2
+            --  LRM93 8.2
             --  Furthermore, it is an error if a wait statement appears in an
             --  explicit process statement that includes a sensitivity list,
             --  [...]
