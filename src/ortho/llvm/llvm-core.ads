@@ -77,21 +77,21 @@ package LLVM.Core is
    NestAttribute            : constant Attribute := 2**8;
    ReadNoneAttribute        : constant Attribute := 2**9;
    ReadOnlyAttribute        : constant Attribute := 2**10;
-   NoInlineAttribute        : constant Attribute := 1**11;
-   AlwaysInlineAttribute    : constant Attribute := 1**12;
-   OptimizeForSizeAttribute : constant Attribute := 1**13;
-   StackProtectAttribute    : constant Attribute := 1**14;
-   StackProtectReqAttribute : constant Attribute := 1**15;
-   Alignment                : constant Attribute := 31**16;
-   NoCaptureAttribute       : constant Attribute := 1**21;
-   NoRedZoneAttribute       : constant Attribute := 1**22;
-   NoImplicitFloatAttribute : constant Attribute := 1**23;
-   NakedAttribute           : constant Attribute := 1**24;
-   InlineHintAttribute      : constant Attribute := 1**25;
-   StackAlignment           : constant Attribute := 7**26;
-   ReturnsTwice             : constant Attribute := 1**29;
-   UWTable                  : constant Attribute := 1**30;
-   NonLazyBind              : constant Attribute := 1**31;
+   NoInlineAttribute        : constant Attribute := 2**11;
+   AlwaysInlineAttribute    : constant Attribute := 2**12;
+   OptimizeForSizeAttribute : constant Attribute := 2**13;
+   StackProtectAttribute    : constant Attribute := 2**14;
+   StackProtectReqAttribute : constant Attribute := 2**15;
+   Alignment                : constant Attribute := 31 * 2**16;
+   NoCaptureAttribute       : constant Attribute := 2**21;
+   NoRedZoneAttribute       : constant Attribute := 2**22;
+   NoImplicitFloatAttribute : constant Attribute := 2**23;
+   NakedAttribute           : constant Attribute := 2**24;
+   InlineHintAttribute      : constant Attribute := 2**25;
+   StackAlignment           : constant Attribute := 7 * 2**26;
+   ReturnsTwice             : constant Attribute := 2**29;
+   UWTable                  : constant Attribute := 2**30;
+   NonLazyBind              : constant Attribute := 2**31;
 
    type TypeKind is
      (
