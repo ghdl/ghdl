@@ -248,7 +248,7 @@ package body Ortho_LLVM is
    --  FIXME: check if INSN is really an instruction
    procedure Set_Insn_Dbg (Insn : ValueRef) is
    begin
-      if Flag_Debug_Line then
+      if Flag_Debug_Line and then IsAInstruction (Insn) /= Null_ValueRef then
          if Dbg_Current_Line /= Dbg_Insn_MD_Line then
             declare
                Vals : ValueRefArray (0 .. 3);
@@ -1249,7 +1249,7 @@ package body Ortho_LLVM is
 
       if Build /= null then
          pragma Assert (Res = Null_ValueRef);
-         Res := Build.all (Builder,  Left.LLVM, Right.LLVM, Empty_Cstring);
+         Res := Build.all (Builder, Left.LLVM, Right.LLVM, Empty_Cstring);
       end if;
 
       if Res = Null_ValueRef then
