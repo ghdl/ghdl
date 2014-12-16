@@ -22,6 +22,7 @@ with Ada.Text_IO;
 with Types; use Types;
 with Errorout; use Errorout;
 with Name_Table; -- use Name_Table;
+with Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Std_Package; use Std_Package;
 with Sem_Specs;
@@ -270,8 +271,14 @@ package body Translation is
          Set_Global_Storage (O_Storage_External);
       end if;
 
-      New_Debug_Filename_Decl
-        (Name_Table.Image (Get_Design_File_Filename (Design_File)));
+      declare
+         Pathname : constant String := Files_Map.Get_Pathname
+           (Get_Design_File_Directory (Design_File),
+            Get_Design_File_Filename (Design_File),
+            False);
+      begin
+         New_Debug_Filename_Decl (Pathname);
+      end;
 
       Current_Library_Unit := El;
 
