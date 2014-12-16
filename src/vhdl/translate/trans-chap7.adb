@@ -5589,7 +5589,7 @@ package body Trans.Chap7 is
 
       case Kind is
          when Iir_Predefined_Error
-           | Iir_Predefined_None =>
+           | Iir_Predefined_Explicit =>
             raise Internal_Error;
          when Iir_Predefined_Boolean_And
             | Iir_Predefined_Boolean_Or

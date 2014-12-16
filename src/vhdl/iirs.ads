@@ -1198,6 +1198,7 @@ package Iirs is
    --
    --   Get/Set_Chain (Field2)
    --
+   -- For string, the identifier is the corresponding reserved word.
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Subprogram_Hash (Field4)
@@ -3921,7 +3922,28 @@ package Iirs is
        Iir_Predefined_Now_Function,
 
        --  A not predefined and not known function.  User function.
-       Iir_Predefined_None
+       Iir_Predefined_None,
+
+       --  Defined in package ieee.std_logic_1164
+
+       --  Std_Ulogic operations.
+       Iir_Predefined_Ieee_1164_Scalar_And,
+       Iir_Predefined_Ieee_1164_Scalar_Nand,
+       Iir_Predefined_Ieee_1164_Scalar_Or,
+       Iir_Predefined_Ieee_1164_Scalar_Nor,
+       Iir_Predefined_Ieee_1164_Scalar_Xor,
+       Iir_Predefined_Ieee_1164_Scalar_Xnor,
+       Iir_Predefined_Ieee_1164_Scalar_Not,
+
+       --  Std_Logic_Vector or Std_Ulogic_Vector operations.
+       --  Length of the result is the length of the left operand.
+       Iir_Predefined_Ieee_1164_Vector_And,
+       Iir_Predefined_Ieee_1164_Vector_Nand,
+       Iir_Predefined_Ieee_1164_Vector_Or,
+       Iir_Predefined_Ieee_1164_Vector_Nor,
+       Iir_Predefined_Ieee_1164_Vector_Xor,
+       Iir_Predefined_Ieee_1164_Vector_Xnor,
+       Iir_Predefined_Ieee_1164_Vector_Not
       );
 
    --  Return TRUE iff FUNC is a short-cut predefined function.

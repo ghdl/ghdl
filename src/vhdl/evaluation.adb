@@ -1402,7 +1402,7 @@ package body Evaluation is
             --  TODO
             raise Internal_Error;
 
-         when Iir_Predefined_None =>
+         when Iir_Predefined_Explicit =>
             raise Internal_Error;
       end case;
    exception
