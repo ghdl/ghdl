@@ -210,6 +210,12 @@ ghdl1-llvm: force
 	 GNAT_FLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)" all
 
+oread-llvm: force
+	$(MAKE) -f $(srcdir)/src/ortho/llvm/Makefile \
+	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
+	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" \
+	 LLVM_CONFIG="$(LLVM_CONFIG)"
+
 install.grt.llvm: libgrt.a grt.lst install.dirs
 	$(INSTALL_DATA) libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
 	$(INSTALL_DATA) grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
