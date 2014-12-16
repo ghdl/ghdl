@@ -2086,6 +2086,7 @@ package body Ortho_LLVM is
       end if;
       if Decl = Null_ValueRef then
          Decl := AddFunction (Module, Id, Ftype);
+         AddFunctionAttr (Decl, NoUnwindAttribute + UWTable);
       end if;
 
       Res := (Kind => ON_Subprg_Decl,
