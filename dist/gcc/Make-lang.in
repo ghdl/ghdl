@@ -46,6 +46,7 @@ GNATBIND = gnatbind
 GNATMAKE = gnatmake
 VHDL_FLAGS_TO_PASS = \
 	"GHDL_ADAFLAGS=$(GHDL_ADAFLAGS)" \
+	"GRT_FLAGS=-O -g" \
 	"GNATMAKE=$(GNATMAKE)" \
 	"GNATBIND=$(GNATBIND)" \
 	"CFLAGS=$(CFLAGS)" \
@@ -54,7 +55,9 @@ VHDL_FLAGS_TO_PASS = \
 	"INSTALL_PROGRAM=$(INSTALL_PROGRAM)" \
         "libexecsubdir=$(libexecsubdir)"
 
-MAKE_IN_VHDL=$(MAKE) -C vhdl $(FLAGS_TO_PASS) $(VHDL_FLAGS_TO_PASS)
+# Command to run the Makefile in vhdl subdir.  Don't forget the dependency on
+#  vhdl/Makefile
+MAKE_IN_VHDL=$(MAKE) -C vhdl $(FLAGS_TO_PASS) $(VHDL_FLAGS_TO_PASS) ADAC="$(CC)" CC="$(CC)"
 
 # Define the names for selecting vhdl in LANGUAGES.
 vhdl VHDL: ghdl1$(exeext) ghdl$(exeext) ghdllib
@@ -104,7 +107,7 @@ vhdl/default_pathes.ads: Makefile
 	echo "   Compiler_Llvm  : constant String := \"\";" >> tmp-dpathes.ads
 	echo "   Post_Processor : constant String := \"\";" >> tmp-dpathes.ads
 	echo "   Lib_Prefix     : constant String :=">> tmp-dpathes.ads
-	echo "     \"lib/gcc/$(target_noncanonical)/$(version)/vhdl/lib/\";" >> tmp-dpathes.ads
+	echo "     \"lib/gcc/$(target_noncanonical)/$(version)/vhdl/\";" >> tmp-dpathes.ads
 	echo "end Default_Pathes;" >> tmp-dpathes.ads
 	$(srcdir)/../move-if-change tmp-dpathes.ads $@
 
@@ -116,8 +119,7 @@ ghdl$(exeext): ghdl1$(exeext) vhdl/default_pathes.ads force
 
 # Ghdl libraries.
 ghdllib: ghdl$(exeext) ghdl1$(exeext) $(GCC_PASSES) vhdl/Makefile force
-	$(MAKE_IN_VHDL) GRT_FLAGS="-O -g" $(FLAGS_TO_PASS) \
-	 ADAC=$(COMPILER_FOR_BUILD) ghdllib
+	$(MAKE_IN_VHDL) ghdllib
 
 vhdl/Makefile: config.status $(srcdir)/vhdl/Makefile.in
 	CONFIG_HEADERS= CONFIG_LINKS= CONFIG_COMMANDS= \
@@ -169,8 +171,8 @@ install-info:: $(DESTDIR)$(infodir)/ghdl.info
 
 vhdl.install-info: $(DESTDIR)$(infodir)/ghdl.info
 
-install-ghdllib:
-	$(MAKE) -f vhdl/Makefile $(FLAGS_TO_PASS) $(VHDL_FLAGS_TO_PASS) install-ghdllib
+install-ghdllib: ghdl$(exeext) ghdl1$(exeext) vhdl/Makefile
+	$(MAKE_IN_VHDL) install-ghdllib
 
 vhdl.install-man: $(DESTDIR)$(man1dir)/ghdl$(man1ext)
 

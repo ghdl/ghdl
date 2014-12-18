@@ -17,18 +17,23 @@
 #  02111-1307, USA.
 
 # Variable to be defined:
-# LIB08_DIR
-# LIB93_DIR
-# LIB87_DIR
-# REL_DIR
-# LIBSRC_DIR
+# LIBSRC_DIR: path to the libraries sources
+# LIBDST_DIR: path to the build/destination dir.
 # ANALYZE
 # LN
 # CP
-# VHDLLIBS_COPY_OBJS
-#
-# Note: the source files are analyzed in the LIBxx_DIR.  So LIBSRC_DIR must be
-# relative to the target directory.
+# VHDLLIBS_COPY_OBJS: must be set to 'no' for jit
+
+vhdl.libs.all: vhdl.libs.v87 vhdl.libs.v93 vhdl.libs.v08
+
+vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
+vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
+vhdl.libs.v08: std.v08 ieee.v08
+
+VHDLLIB_SUBDIRS= src/std src/ieee src/vital95 src/vital2000 src/synopsys src/mentor src/ieee2008 \
+  v87/std v87/ieee v87/synopsys \
+  v93/std v93/ieee v93/mentor v93/synopsys \
+  v08/std v08/ieee v08/std \
 
 STD_SRCS := std/textio.vhdl std/textio_body.vhdl
 IEEE_SRCS := ieee/std_logic_1164.vhdl ieee/std_logic_1164_body.vhdl \
@@ -72,26 +77,26 @@ MENTOR93_BSRCS := $(MENTOR_BSRCS)
 
 .PREFIXES: .vhdl .v93 .v87 .v08
 
-%.v93: %.vhdl
-	sed -e '/--V87/s/^/  --/' \
-	  -e '/--START-V08/,/--END-V08/s/^/--/' < $< > $@
+SED_V93 := sed -e '/--V87/s/^/  --/' \
+	  -e '/--START-V08/,/--END-V08/s/^/--/'
 
-%.v08: %.vhdl
-	sed -e '/--V87/s/^/  --/' < $< > $@
+SED_V87 := sed -e '/--V93/s/^/  --/' -e '/--START-V93/,/--END-V93/s/^/--/' \
+	  -e '/--START-V08/,/--END-V08/s/^/--/'
 
-%.v87: %.vhdl
-	sed -e '/--V93/s/^/  --/' -e '/--START-V93/,/--END-V93/s/^/--/' \
-	  -e '/--START-V08/,/--END-V08/s/^/--/' < $< > $@
+SED_V08 := sed -e '/--V87/s/^/  --/'
 
+LIB87_DIR:=$(LIBDST_DIR)/v87
 STD87_DIR:=$(LIB87_DIR)/std
 IEEE87_DIR:=$(LIB87_DIR)/ieee
 SYN87_DIR:=$(LIB87_DIR)/synopsys
 
+LIB93_DIR:=$(LIBDST_DIR)/v93
 STD93_DIR:=$(LIB93_DIR)/std
 IEEE93_DIR:=$(LIB93_DIR)/ieee
 SYN93_DIR:=$(LIB93_DIR)/synopsys
 MENTOR93_DIR:=$(LIB93_DIR)/mentor
 
+LIB08_DIR:=$(LIBDST_DIR)/v08
 STD08_DIR:=$(LIB08_DIR)/std
 IEEE08_DIR:=$(LIB08_DIR)/ieee
 
@@ -99,98 +104,60 @@ ANALYZE87:=$(ANALYZE) --std=87
 ANALYZE93:=$(ANALYZE) --std=93
 ANALYZE08:=$(ANALYZE) --std=08
 
-STD87_SRCS=$(addprefix $(LIBSRC_DIR)/,$(STD87_BSRCS))
-STD93_SRCS=$(addprefix $(LIBSRC_DIR)/,$(STD93_BSRCS))
-STD08_SRCS=$(addprefix $(LIBSRC_DIR)/,$(STD08_BSRCS))
+STD87_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(STD87_BSRCS))
+STD93_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(STD93_BSRCS))
+STD08_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(STD08_BSRCS))
 
-IEEE93_SRCS=$(addprefix $(LIBSRC_DIR)/,$(IEEE93_BSRCS))
-IEEE87_SRCS=$(addprefix $(LIBSRC_DIR)/,$(IEEE87_BSRCS))
-IEEE08_SRCS=$(addprefix $(LIBSRC_DIR)/,$(IEEE08_BSRCS))
-SYNOPSYS_SRCS=$(addprefix $(LIBSRC_DIR)/,$(SYNOPSYS_BSRCS))
-MENTOR93_SRCS=$(addprefix $(LIBSRC_DIR)/,$(MENTOR93_BSRCS))
-VITAL95_SRCS=$(addprefix $(LIBSRC_DIR)/,$(VITAL95_BSRCS))
-VITAL2000_SRCS=$(addprefix $(LIBSRC_DIR)/,$(VITAL2000_BSRCS))
+IEEE93_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(IEEE93_BSRCS))
+IEEE87_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(IEEE87_BSRCS))
+IEEE08_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(IEEE08_BSRCS))
+SYNOPSYS_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(SYNOPSYS_BSRCS))
+MENTOR93_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(MENTOR93_BSRCS))
+VITAL95_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(VITAL95_BSRCS))
+VITAL2000_SRCS=$(addprefix $(LIBDST_DIR)/src/,$(VITAL2000_BSRCS))
 
-std.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(STD93_SRCS) force
-	$(RM) -rf $(STD93_DIR)
-	mkdir $(STD93_DIR)
-	prev=`pwd`; cd $(STD93_DIR); \
-	for i in $(STD93_SRCS); do \
-	  cmd="$(ANALYZE93) --bootstrap --work=std $(REL_DIR)/$$i"; \
-	  echo $$cmd; eval $$cmd || exit 1; \
-	done; \
-	cd $$prev
+$(LIBDST_DIR)/src/std $(LIBDST_DIR)/src/ieee $(LIBDST_DIR)/src/ieee2008 $(LIBDST_DIR)/src/vital95 $(LIBDST_DIR)/src/vital2000 $(LIBDST_DIR)/src/synopsys $(LIBDST_DIR)/src/mentor:
+	-mkdir -p $@
 
-ANALYZE_IEEE93=$(ANALYZE93) -P../std --work=ieee
+### V87 ###############################################################
 
-ieee.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(IEEE93_SRCS) std.v93 force
-	$(RM) -rf $(IEEE93_DIR)
-	mkdir $(IEEE93_DIR)
-	prev=`pwd`; cd $(IEEE93_DIR); \
-	for i in $(IEEE93_BSRCS) $(VITAL2000_BSRCS); do \
-          cmd="$(ANALYZE_IEEE93) $(REL_DIR)/$(LIBSRC_DIR)/$$i"; \
-	  echo $$cmd; eval $$cmd || exit 1; \
-	done; \
-	cd $$prev
+$(LIB87_DIR):
+	mkdir -p $@
 
-synopsys.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(SYNOPSYS_SRCS) ieee.v93 force
-	$(RM) -rf $(SYN93_DIR)
-	mkdir $(SYN93_DIR)
-	prev=`pwd`; cd $(SYN93_DIR); \
-	$(CP) ../ieee/ieee-obj93.cf .; \
-	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
-	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
-	  b=`basename $$i .vhdl`; \
-	  if [ -f ../ieee/$$b.o ]; then \
-	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \
-	  fi; \
-	done; \
-	for i in $(SYNOPSYS93_BSRCS); do \
-          cmd="$(ANALYZE_IEEE93) $(REL_DIR)/$(LIBSRC_DIR)/$$i"; \
-	  echo $$cmd; eval $$cmd || exit 1; \
-	done; \
-	cd $$prev
+$(LIBDST_DIR)/src/std/%.v87: $(LIBSRC_DIR)/std/%.vhdl
+	$(SED_V87) < $< > $@
 
-mentor.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(MENTOR93_SRCS) ieee.v93 force
-	$(RM) -rf $(MENTOR93_DIR)
-	mkdir $(MENTOR93_DIR)
-	prev=`pwd`; cd $(MENTOR93_DIR); \
-	$(CP) ../ieee/ieee-obj93.cf . ;\
-	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
-	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
-	  b=`basename $$i .vhdl`; \
-	  if [ -f ../ieee/$$b.o ]; then \
-	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \
-	  fi; \
-	done ; \
-	for i in $(MENTOR93_BSRCS); do \
-          cmd="$(ANALYZE_IEEE93) $(REL_DIR)/$(LIBSRC_DIR)/$$i";\
-	  echo $$cmd; eval $$cmd || exit 1; \
-	done
-
-std.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(STD87_SRCS) force
+std.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/std $(STD87_SRCS) force
 	$(RM) -rf $(STD87_DIR)
 	mkdir $(STD87_DIR)
 	prev=`pwd`; cd $(STD87_DIR); \
-	for i in $(STD87_SRCS); do \
-	  cmd="$(ANALYZE87) --bootstrap --work=std $(REL_DIR)/$$i"; \
+	for i in $(STD87_BSRCS); do \
+	  cmd="$(ANALYZE87) --bootstrap --work=std ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done; \
 	cd $$prev
+
+$(LIBDST_DIR)/src/ieee/%.v87: $(LIBSRC_DIR)/ieee/%.vhdl
+	$(SED_V87) < $< > $@
+
+$(LIBDST_DIR)/src/vital95/%.vhdl: $(LIBSRC_DIR)/vital95/%.vhdl
+	$(CP) $< $@
 
 ANALYZE_IEEE87=$(ANALYZE87) -P../std --work=ieee
 
-ieee.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(IEEE87_SRCS) std.v87 force
-	$(RM) -rf $(IEEE87_DIR)
-	mkdir $(IEEE87_DIR)
+ieee.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/ieee $(IEEE87_SRCS) $(LIBDST_DIR)/src/vital95 $(VITAL95_SRCS) std.v87 force
+	$(RM) -rf $(IEEE87_DIR); mkdir $(IEEE87_DIR)
 	prev=`pwd`; cd $(IEEE87_DIR); \
 	for i in $(IEEE87_BSRCS) $(VITAL95_BSRCS); do \
-          cmd="$(ANALYZE_IEEE87) $(REL_DIR)/$(LIBSRC_DIR)/$$i";\
+          cmd="$(ANALYZE_IEEE87) ../../src/$$i";\
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done; \
 	cd $$prev
 
-synopsys.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(SYNOPSYS_SRCS) ieee.v87 force
+$(LIBDST_DIR)/src/synopsys/%.vhdl: $(LIBSRC_DIR)/synopsys/%.vhdl
+	$(CP) $< $@
+
+synopsys.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/synopsys $(SYNOPSYS_SRCS) ieee.v87 force
 	$(RM) -rf $(SYN87_DIR)
 	mkdir $(SYN87_DIR)
 	prev=`pwd`; cd $(SYN87_DIR); \
@@ -203,30 +170,121 @@ synopsys.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(SYNOPSYS_SRCS) ieee.v87 force
 	  fi; \
 	done; \
 	for i in $(SYNOPSYS87_BSRCS); do \
-          cmd="$(ANALYZE_IEEE87) $(REL_DIR)/$(LIBSRC_DIR)/$$i";\
+          cmd="$(ANALYZE_IEEE87) ../../src/$$i";\
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done; \
 	cd $$prev
 
-std.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(STD08_SRCS) force
+### V93 ###############################################################
+
+$(LIB93_DIR):
+	mkdir -p $@
+
+$(LIBDST_DIR)/src/std/%.v93: $(LIBSRC_DIR)/std/%.vhdl
+	$(SED_V93) < $< > $@
+
+std.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/std $(STD93_SRCS) force
+	$(RM) -rf $(STD93_DIR)
+	mkdir $(STD93_DIR)
+	prev=`pwd`; cd $(STD93_DIR); \
+	for i in $(STD93_BSRCS); do \
+	  cmd="$(ANALYZE93) --bootstrap --work=std ../../src/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
+	done; \
+	cd $$prev
+
+$(LIBDST_DIR)/src/ieee/%.v93: $(LIBSRC_DIR)/ieee/%.vhdl
+	$(SED_V93) < $< > $@
+
+$(LIBDST_DIR)/src/ieee/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
+	$(CP) $< $@
+
+$(LIBDST_DIR)/src/vital2000/%.vhdl: $(LIBSRC_DIR)/vital2000/%.vhdl
+	$(CP) $< $@
+
+ANALYZE_IEEE93=$(ANALYZE93) -P../std --work=ieee
+
+ieee.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/ieee $(IEEE93_SRCS) $(LIBDST_DIR)/src/vital2000 $(VITAL2000_SRCS) std.v93 force
+	$(RM) -rf $(IEEE93_DIR)
+	mkdir $(IEEE93_DIR)
+	prev=`pwd`; cd $(IEEE93_DIR); \
+	for i in $(IEEE93_BSRCS) $(VITAL2000_BSRCS); do \
+          cmd="$(ANALYZE_IEEE93) ../../src/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
+	done; \
+	cd $$prev
+
+synopsys.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/synopsys $(SYNOPSYS_SRCS) ieee.v93 force
+	$(RM) -rf $(SYN93_DIR)
+	mkdir $(SYN93_DIR)
+	prev=`pwd`; cd $(SYN93_DIR); \
+	$(CP) ../ieee/ieee-obj93.cf .; \
+	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
+	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
+	  b=`basename $$i .vhdl`; \
+	  if [ -f ../ieee/$$b.o ]; then \
+	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  fi; \
+	done; \
+	for i in $(SYNOPSYS93_BSRCS); do \
+          cmd="$(ANALYZE_IEEE93) ../../src/$$i"; \
+	  echo $$cmd; eval $$cmd || exit 1; \
+	done; \
+	cd $$prev
+
+$(LIBDST_DIR)/src/mentor/%.vhdl: $(LIBSRC_DIR)/mentor/%.vhdl
+	$(CP) $< $@
+
+mentor.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/mentor $(MENTOR93_SRCS) ieee.v93 force
+	$(RM) -rf $(MENTOR93_DIR)
+	mkdir $(MENTOR93_DIR)
+	prev=`pwd`; cd $(MENTOR93_DIR); \
+	$(CP) ../ieee/ieee-obj93.cf . ;\
+	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
+	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
+	  b=`basename $$i .vhdl`; \
+	  if [ -f ../ieee/$$b.o ]; then \
+	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  fi; \
+	done ; \
+	for i in $(MENTOR93_BSRCS); do \
+          cmd="$(ANALYZE_IEEE93) ../../src/$$i";\
+	  echo $$cmd; eval $$cmd || exit 1; \
+	done
+
+### V08 ###############################################################
+
+$(LIB08_DIR):
+	mkdir -p $@
+
+$(LIBDST_DIR)/src/std/%.v08: $(LIBSRC_DIR)/std/%.vhdl
+	$(SED_V08) < $< > $@
+
+$(LIBDST_DIR)/src/std/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl
+	$(CP) $< $@
+
+std.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(LIBDST_DIR)/src/std $(STD08_SRCS) force
 	$(RM) -rf $(STD08_DIR)
 	mkdir $(STD08_DIR)
 	prev=`pwd`; cd $(STD08_DIR); \
-	for i in $(STD08_SRCS); do \
-	  cmd="$(ANALYZE08) --bootstrap --work=std $(REL_DIR)/$$i"; \
+	for i in $(STD08_BSRCS); do \
+	  cmd="$(ANALYZE08) --bootstrap --work=std ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done; \
 	cd $$prev
 
+$(LIBDST_DIR)/src/ieee2008/%.vhdl: $(LIBSRC_DIR)/ieee2008/%.vhdl
+	$(CP) $< $@
+
 ANALYZE_IEEE08=$(ANALYZE08) -P../std --work=ieee
 
-ieee.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(IEEE08_SRCS) std.v08 force
+ieee.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(LIBDST_DIR)/src/ieee2008 $(IEEE08_SRCS) std.v08 force
 	$(RM) -rf $(IEEE08_DIR)
 	mkdir $(IEEE08_DIR)
 #       FIXME: add VITAL2000 ?
 	prev=`pwd`; cd $(IEEE08_DIR); \
 	for i in $(IEEE08_BSRCS); do \
-          cmd="$(ANALYZE_IEEE08) $(REL_DIR)/$(LIBSRC_DIR)/$$i"; \
+          cmd="$(ANALYZE_IEEE08) ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done; \
 	cd $$prev
