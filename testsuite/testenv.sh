@@ -22,6 +22,11 @@ GET_ENTITIES=../get_entities
 # Exit in case of failure in shell scripts.
 set -e
 
+if [ x$GHDL = x ]; then
+    echo "error: GHDL environment variable is not defined"
+    exit 4
+fi
+
 # Analyze files (no error expected)
 analyze ()
 {

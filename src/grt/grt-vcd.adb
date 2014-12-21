@@ -315,6 +315,10 @@ package body Grt.Vcd is
 
       Rti := Avhpi_Get_Rti (Sig_Type);
       Sig_Addr := Avhpi_Get_Address (Sig);
+      if Rti_Complex_Type (Rti) then
+         Sig_Addr := To_Addr_Acc (Sig_Addr).all;
+      end if;
+
       Info.Kind := Vcd_Bad;
       case Rti.Kind is
          when Ghdl_Rtik_Type_B1
