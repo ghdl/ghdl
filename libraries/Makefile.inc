@@ -77,13 +77,13 @@ MENTOR93_BSRCS := $(MENTOR_BSRCS)
 
 .PREFIXES: .vhdl .v93 .v87 .v08
 
-SED_V93 := sed -e '/--V87/s/^/  --/' \
-	  -e '/--START-V08/,/--END-V08/s/^/--/'
+SED_V93:= sed -e '/--V87/s/^/  --/' \
+ -e '/--START-V08/,/--END-V08/s/^/--/'
 
-SED_V87 := sed -e '/--V93/s/^/  --/' -e '/--START-V93/,/--END-V93/s/^/--/' \
-	  -e '/--START-V08/,/--END-V08/s/^/--/'
+SED_V87:= sed -e '/--!V87/s/^/  --/' -e '/--START-!V87/,/--END-!V87/s/^/--/' \
+ -e '/--START-V08/,/--END-V08/s/^/--/'
 
-SED_V08 := sed -e '/--V87/s/^/  --/'
+SED_V08:= sed -e '/--V87/s/^/  --/'
 
 LIB87_DIR:=$(LIBDST_DIR)/v87
 STD87_DIR:=$(LIB87_DIR)/std

@@ -68,14 +68,14 @@ package body textio is
     ((fs, "fs "), (ps, "ps "), (ns, "ns "), (us, "us "),
      (ms, "ms "), (sec, "sec"), (min, "min"), (hr, "hr "));
 
-  --  Non breaking space character.                     --V93
-  constant nbsp : character := character'val (160);	--V93
+  --  Non breaking space character.                     --!V87
+  constant nbsp : character := character'val (160);	--!V87
 
   function is_whitespace (c : character) return Boolean is
   begin
     case c is
       when ' '
-        | NBSP --V93
+        | NBSP --!V87
 	| HT =>
         return True;
       when others =>
@@ -84,7 +84,7 @@ package body textio is
   end is_Whitespace;
 
   procedure writeline (variable f: out text; l: inout line) is --V87
-  procedure writeline (file f: text; l: inout line) is --V93
+  procedure writeline (file f: text; l: inout line) is --!V87
   begin
     if l = null then
       -- LRM93 14.3
@@ -498,21 +498,21 @@ package body textio is
   
   procedure untruncated_text_read                              --V87
     (variable f : text; str : out string; len : out natural);  --V87
-  procedure untruncated_text_read                              --V93
-    (file f : text; str : out string; len : out natural);      --V93
+  procedure untruncated_text_read                              --!V87
+    (file f : text; str : out string; len : out natural);      --!V87
 
   attribute foreign : string;                                  --V87
   attribute foreign of untruncated_text_read : procedure is "GHDL intrinsic";
 
   procedure untruncated_text_read
     (variable f : text; str : out string; len : out natural) is    --V87
-    (file f : text; str : out string; len : out natural) is    --V93
+    (file f : text; str : out string; len : out natural) is    --!V87
   begin
     assert false report "must not be called" severity failure;
   end untruncated_text_read;
 
   procedure readline (variable f: in text; l: inout line) --V87
-  procedure readline (file f: text; l: inout line) --V93
+  procedure readline (file f: text; l: inout line) --!V87
   is
     variable len, nlen, posn : natural;
     variable nl, old_l : line;
@@ -649,7 +649,7 @@ package body textio is
     for i in l'range loop
       case l(i) is
 	when ' '
-	  | NBSP --V93
+	  | NBSP --!V87
 	  | HT =>
 	  null;
 	when '1' =>
@@ -708,7 +708,7 @@ package body textio is
     for i in l'range loop
       case l(i) is
 	when ' '
-	  | NBSP --V93
+	  | NBSP --!V87
 	  | HT =>
 	  case state is
 	    when leading =>
@@ -861,7 +861,7 @@ package body textio is
 	when leading =>
 	  case l(i) is
 	    when ' '
-	      | NBSP	--V93
+	      | NBSP	--!V87
 	      | ht =>
 	      null;
 	    when '+' =>
@@ -985,7 +985,7 @@ package body textio is
 	when leading =>
 	  case l(i) is
 	    when ' '
-	      | NBSP	--V93
+	      | NBSP	--!V87
 	      | ht =>
 	      null;
 	    when '+' =>
@@ -1172,7 +1172,7 @@ package body textio is
     for i in l'range loop
       case l (i) is
 	when ' '
-	  | NBSP  --V93
+	  | NBSP  --!V87
 	  | HT =>
 	  case state is
 	    when leading | unit_blank =>
@@ -1313,7 +1313,7 @@ package body textio is
     for i in l'range loop
       case l (i) is
 	when ' '
-	  | NBSP  --V93
+	  | NBSP  --!V87
 	  | HT =>
 	  if has_digits then
 	    exit;

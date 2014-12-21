@@ -43,13 +43,13 @@ package Textio is
 
   file input:  text is in "STD_INPUT";  --V87
   file output: text is out "STD_OUTPUT";  --V87
-  file input : text open read_mode is "STD_INPUT";  --V93
-  file output : text open write_mode is "STD_OUTPUT";  --V93
+  file input : text open read_mode is "STD_INPUT";  --!V87
+  file output : text open write_mode is "STD_OUTPUT";  --!V87
 
 -- input routines for standard types
 
   procedure readline (variable f: in text; l: inout line); --V87
-  procedure readline (file f: text; l: inout line); --V93
+  procedure readline (file f: text; l: inout line); --!V87
 
   --  For READ procedures:
   --  In this implementation, any L is accepted (ie, there is no constraints
@@ -120,7 +120,7 @@ package Textio is
 -- output routines for standard types
 
   procedure writeline (variable f: out text; l: inout line); --V87
-  procedure writeline (file f: text; l: inout line); --V93
+  procedure writeline (file f: text; l: inout line); --!V87
 
 --START-V08
   procedure Tee (file f : Text; L : inout LINE);
