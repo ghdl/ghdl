@@ -46,7 +46,7 @@ package body Grt.Fst is
    --  FST format has a mechanism to declare signal aliases (if two signals
    --  in the hierarchy are the same).  Enabling this reduce the number of
    --  signals dumped, but weirdly it makes the FST file slightly bigger.
-   Flag_Aliases : constant Boolean := True;
+   Flag_Aliases : constant Boolean := False;
 
    --  Global FST context.  Set to non-NULL iff dumping signals to an FST file.
    Context : fstContext := Null_fstContext;
