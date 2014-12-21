@@ -621,6 +621,13 @@ package body Grt.Avhpi is
       Len := 0;
 
       case Property is
+         when VhpiFileNameP =>
+            declare
+               Str : Ghdl_C_String;
+            begin
+               Vhpi_Get_Str (Property, Obj, Str);
+               Add (Str);
+            end;
          when VhpiNameP =>
             case Obj.Kind is
                when VhpiEnumTypeDeclK =>
