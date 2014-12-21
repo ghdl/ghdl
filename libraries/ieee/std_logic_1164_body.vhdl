@@ -162,12 +162,12 @@ PACKAGE BODY std_logic_1164 IS
         RETURN (xor_table(l, r));
     END "xor";
 
---START-V93
+--START-!V87
     FUNCTION "xnor"  ( l : std_ulogic; r : std_ulogic ) RETURN UX01 IS
     BEGIN
         RETURN not_table(xor_table(l, r));
     END "xnor";
---END-V93
+--END-!V87
 
     FUNCTION "not"  ( l : std_ulogic ) RETURN UX01 IS
     BEGIN
@@ -366,7 +366,7 @@ PACKAGE BODY std_logic_1164 IS
 --  the intent of this effort to provide such a function once it becomes
 --  available in the VHDL standard.
 --  -----------------------------------------------------------------------
---START-V93
+--START-!V87
     FUNCTION "xnor"  ( l,r : std_logic_vector ) RETURN std_logic_vector IS
         ALIAS lv : std_logic_vector ( 1 TO l'LENGTH ) IS l;
         ALIAS rv : std_logic_vector ( 1 TO r'LENGTH ) IS r;
@@ -400,7 +400,7 @@ PACKAGE BODY std_logic_1164 IS
         END IF;
         RETURN result;
     END "xnor";
---END-V93
+--END-!V87
     -------------------------------------------------------------------
     -- not
     -------------------------------------------------------------------

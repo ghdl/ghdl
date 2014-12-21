@@ -85,7 +85,7 @@ PACKAGE std_logic_1164 IS
     FUNCTION "or"   ( l : std_ulogic; r : std_ulogic ) RETURN UX01;
     FUNCTION "nor"  ( l : std_ulogic; r : std_ulogic ) RETURN UX01;
     FUNCTION "xor"  ( l : std_ulogic; r : std_ulogic ) RETURN UX01;
-    FUNCTION "xnor" ( l : std_ulogic; r : std_ulogic ) RETURN UX01; --V93
+    FUNCTION "xnor" ( l : std_ulogic; r : std_ulogic ) RETURN UX01; --!V87
     FUNCTION "not"  ( l : std_ulogic                 ) RETURN UX01;
 
     -------------------------------------------------------------------
@@ -115,8 +115,8 @@ PACKAGE std_logic_1164 IS
 --  the intent of this effort to provide such a function once it becomes
 --  available in the VHDL standard.
 --  -----------------------------------------------------------------------
-    FUNCTION "xnor" ( l, r : std_logic_vector  ) RETURN std_logic_vector; --V93
-    FUNCTION "xnor" ( l, r : std_ulogic_vector ) RETURN std_ulogic_vector;--V93
+    FUNCTION "xnor" ( l, r : std_logic_vector  ) RETURN std_logic_vector; --!V87
+    FUNCTION "xnor" ( l, r : std_ulogic_vector ) RETURN std_ulogic_vector;--!V87
 
     FUNCTION "not"  ( l : std_logic_vector  ) RETURN std_logic_vector;
     FUNCTION "not"  ( l : std_ulogic_vector ) RETURN std_ulogic_vector;

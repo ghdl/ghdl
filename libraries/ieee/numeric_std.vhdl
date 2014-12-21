@@ -606,7 +606,7 @@ package NUMERIC_STD is
   --   out the function (declaration and body) for VHDL 1076-1987 compatibility.
   ------------------------------------------------------------------------------
   -- Id: S.9
-  function "sll" (ARG: UNSIGNED; COUNT: INTEGER) return UNSIGNED; --V93
+  function "sll" (ARG: UNSIGNED; COUNT: INTEGER) return UNSIGNED; --!V87
   -- Result subtype: UNSIGNED(ARG'LENGTH-1 downto 0)
   -- Result: SHIFT_LEFT(ARG, COUNT)
 
@@ -615,7 +615,7 @@ package NUMERIC_STD is
   --   out the function (declaration and body) for VHDL 1076-1987 compatibility.
   ------------------------------------------------------------------------------
   -- Id: S.10
-  function "sll" (ARG: SIGNED; COUNT: INTEGER) return SIGNED; --V93
+  function "sll" (ARG: SIGNED; COUNT: INTEGER) return SIGNED; --!V87
   -- Result subtype: SIGNED(ARG'LENGTH-1 downto 0)
   -- Result: SHIFT_LEFT(ARG, COUNT)
 
@@ -624,7 +624,7 @@ package NUMERIC_STD is
   --   out the function (declaration and body) for VHDL 1076-1987 compatibility.
   ------------------------------------------------------------------------------
   -- Id: S.11
-  function "srl" (ARG: UNSIGNED; COUNT: INTEGER) return UNSIGNED; --V93
+  function "srl" (ARG: UNSIGNED; COUNT: INTEGER) return UNSIGNED; --!V87
   -- Result subtype: UNSIGNED(ARG'LENGTH-1 downto 0)
   -- Result: SHIFT_RIGHT(ARG, COUNT)
 
@@ -633,7 +633,7 @@ package NUMERIC_STD is
   --   out the function (declaration and body) for VHDL 1076-1987 compatibility.
   ------------------------------------------------------------------------------
   -- Id: S.12
-  function "srl" (ARG: SIGNED; COUNT: INTEGER) return SIGNED; --V93
+  function "srl" (ARG: SIGNED; COUNT: INTEGER) return SIGNED; --!V87
   -- Result subtype: SIGNED(ARG'LENGTH-1 downto 0)
   -- Result: SIGNED(SHIFT_RIGHT(UNSIGNED(ARG), COUNT))
 
@@ -642,7 +642,7 @@ package NUMERIC_STD is
   -- out the function (declaration and body) for VHDL 1076-1987 compatibility.
   ------------------------------------------------------------------------------
   -- Id: S.13
-  function "rol" (ARG: UNSIGNED; COUNT: INTEGER) return UNSIGNED; --V93
+  function "rol" (ARG: UNSIGNED; COUNT: INTEGER) return UNSIGNED; --!V87
   -- Result subtype: UNSIGNED(ARG'LENGTH-1 downto 0)
   -- Result: ROTATE_LEFT(ARG, COUNT)
 
@@ -651,7 +651,7 @@ package NUMERIC_STD is
   --   out the function (declaration and body) for VHDL 1076-1987 compatibility.
   ------------------------------------------------------------------------------
   -- Id: S.14
-  function "rol" (ARG: SIGNED; COUNT: INTEGER) return SIGNED; --V93
+  function "rol" (ARG: SIGNED; COUNT: INTEGER) return SIGNED; --!V87
   -- Result subtype: SIGNED(ARG'LENGTH-1 downto 0)
   -- Result: ROTATE_LEFT(ARG, COUNT)
 
@@ -660,7 +660,7 @@ package NUMERIC_STD is
   --   out the function (declaration and body) for VHDL 1076-1987 compatibility.
   ------------------------------------------------------------------------------
   -- Id: S.15
-  function "ror" (ARG: UNSIGNED; COUNT: INTEGER) return UNSIGNED; --V93
+  function "ror" (ARG: UNSIGNED; COUNT: INTEGER) return UNSIGNED; --!V87
   -- Result subtype: UNSIGNED(ARG'LENGTH-1 downto 0)
   -- Result: ROTATE_RIGHT(ARG, COUNT)
 
@@ -669,7 +669,7 @@ package NUMERIC_STD is
   --   out the function (declaration and body) for VHDL 1076-1987 compatibility.
   ------------------------------------------------------------------------------
   -- Id: S.16
-  function "ror" (ARG: SIGNED; COUNT: INTEGER) return SIGNED; --V93
+  function "ror" (ARG: SIGNED; COUNT: INTEGER) return SIGNED; --!V87
   -- Result subtype: SIGNED(ARG'LENGTH-1 downto 0)
   -- Result: ROTATE_RIGHT(ARG, COUNT)
 
@@ -758,7 +758,7 @@ package NUMERIC_STD is
   -- out the function (declaration and body) for VHDL 1076-1987 compatibility.
   -- ---------------------------------------------------------------------------
   -- Id: L.7
-  function "xnor" (L, R: UNSIGNED) return UNSIGNED; --V93
+  function "xnor" (L, R: UNSIGNED) return UNSIGNED; --!V87
   -- Result subtype: UNSIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector XNOR operation
 
@@ -797,7 +797,7 @@ package NUMERIC_STD is
   -- out the function (declaration and body) for VHDL 1076-1987 compatibility.
   -- ---------------------------------------------------------------------------
   -- Id: L.14
-  function "xnor" (L, R: SIGNED) return SIGNED; --V93
+  function "xnor" (L, R: SIGNED) return SIGNED; --!V87
   -- Result subtype: SIGNED(L'LENGTH-1 downto 0)
   -- Result: Vector XNOR operation
 

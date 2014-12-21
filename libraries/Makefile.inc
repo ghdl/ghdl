@@ -80,7 +80,7 @@ MENTOR93_BSRCS := $(MENTOR_BSRCS)
 	sed -e '/--V87/s/^/  --/' < $< > $@
 
 %.v87: %.vhdl
-	sed -e '/--V93/s/^/  --/' -e '/--START-V93/,/--END-V93/s/^/--/' \
+	sed -e '/--!V87/s/^/  --/' -e '/--START-!V87/,/--END-!V87/s/^/--/' \
 	  -e '/--START-V08/,/--END-V08/s/^/--/' < $< > $@
 
 STD87_DIR:=$(LIB87_DIR)/std

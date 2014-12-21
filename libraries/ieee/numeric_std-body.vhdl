@@ -1963,7 +1963,7 @@ package body NUMERIC_STD is
   end ROTATE_RIGHT;
 
   --============================================================================
---START-V93
+--START-!V87
 
   ------------------------------------------------------------------------------
   -- Note : Function S.9 is not compatible with VHDL 1076-1987. Comment
@@ -2077,7 +2077,7 @@ package body NUMERIC_STD is
     end if;
   end "ror";
 
---END-V93
+--END-!V87
   --============================================================================
 
   -- Id: D.1
@@ -2271,7 +2271,7 @@ package body NUMERIC_STD is
     return RESULT;
   end "xor";
 
---START-V93
+--START-!V87
   ------------------------------------------------------------------------------
   -- Note : Function L.7 is not compatible with VHDL 1076-1987. Comment
   -- out the function (declaration and body) for VHDL 1076-1987 compatibility.
@@ -2283,7 +2283,7 @@ package body NUMERIC_STD is
     RESULT := UNSIGNED(STD_LOGIC_VECTOR(L) xnor STD_LOGIC_VECTOR(R));
     return RESULT;
   end "xnor";
---END-V93
+--END-!V87
 
   -- Id: L.8
   function "not" (L: SIGNED) return SIGNED is
@@ -2333,7 +2333,7 @@ package body NUMERIC_STD is
     return RESULT;
   end "xor";
 
---START-V93
+--START-!V87
   ------------------------------------------------------------------------------
   -- Note : Function L.14 is not compatible with VHDL 1076-1987. Comment
   --   out the function (declaration and body) for VHDL 1076-1987 compatibility.
@@ -2345,7 +2345,7 @@ package body NUMERIC_STD is
     RESULT := SIGNED(STD_LOGIC_VECTOR(L) xnor STD_LOGIC_VECTOR(R));
     return RESULT;
   end "xnor";
---END-V93
+--END-!V87
 
   --============================================================================
 
