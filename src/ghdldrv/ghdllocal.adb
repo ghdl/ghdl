@@ -1207,6 +1207,7 @@ package body Ghdllocal is
       Work_Library := Old_Work;
    end Load_All_Libraries_And_Files;
 
+   --  Check the Elab_Flag is not set on design units of LIB.
    procedure Check_No_Elab_Flag (Lib : Iir_Library_Declaration)
    is
       File : Iir_Design_File;
@@ -1271,6 +1272,7 @@ package body Ghdllocal is
       end if;
 
       if True then
+         --  Load the world.
          Load_All_Libraries_And_Files;
       else
          --  Re-parse modified files in order configure could find all design
@@ -1313,11 +1315,11 @@ package body Ghdllocal is
 
       Top := Configure (Primary_Id, Secondary_Id);
       if Top = Null_Iir then
-         --Error ("cannot find primary unit " & Prim.all);
+         --  Error during configuration (primary unit not found).
          raise Option_Error;
       end if;
 
-      --  Add unused design units.
+      --  Add unused design units (and their dependencies).
       declare
          N : Natural;
       begin
@@ -1339,7 +1341,8 @@ package body Ghdllocal is
          end loop;
       end;
 
-      --  Clear elab flag on design files.
+      --  Clear elab flag on design files (as it is used by below by
+      --  Build_Dependence_List).
       for I in reverse Design_Units.First .. Design_Units.Last loop
          Unit := Design_Units.Table (I);
          File := Get_Design_File (Unit);

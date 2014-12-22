@@ -1470,6 +1470,8 @@ package body Ghdldrv is
             Unit := Get_First_Design_Unit (File);
             while Unit /= Null_Iir loop
                Lib_Unit := Get_Library_Unit (Unit);
+               --  Check if the unit is outdated (except for default
+               --  configurations).
                if not (Get_Kind (Lib_Unit) = Iir_Kind_Configuration_Declaration
                        and then Get_Identifier (Lib_Unit) = Null_Identifier)
                then

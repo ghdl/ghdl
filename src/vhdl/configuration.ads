@@ -45,6 +45,7 @@ package Configuration is
    --  If set, all design units (even package bodies) are loaded.
    Flag_Load_All_Design_Units : Boolean := True;
 
+   --  If set, compute the File_Dependence_List of design files.
    Flag_Build_File_Dependence : Boolean := False;
 
    --  Check if ENTITY can be at the top of a hierarchy, ie:

@@ -43,8 +43,10 @@ package body Configuration is
       Prev_File_Dependence : Iir_List;
    begin
       if Flag_Build_File_Dependence then
+         --  The current file depends on unit.
          File := Get_Design_File (Unit);
          if Current_File_Dependence /= Null_Iir_List then
+            --  (There is no dependency for default configuration).
             Add_Element (Current_File_Dependence, File);
          end if;
       end if;
@@ -69,6 +71,7 @@ package body Configuration is
       Lib_Unit := Get_Library_Unit (Unit);
 
       if Flag_Build_File_Dependence then
+         --  Switch current_file_dependence to the design file of Unit.
          Prev_File_Dependence := Current_File_Dependence;
 
          if Get_Kind (Lib_Unit) = Iir_Kind_Configuration_Declaration
@@ -505,7 +508,9 @@ package body Configuration is
    --  For each element of the list:
    --  add direct dependences (packages, entity, arch) if not in the list
    --  for architectures and configuration: find instantiations and add
-   --  corresponding configurations
+   --  corresponding configurations.
+   --
+   --  Return the configuration declaration for the design.
    function Configure (Primary_Id : Name_Id; Secondary_Id : Name_Id)
      return Iir
    is
