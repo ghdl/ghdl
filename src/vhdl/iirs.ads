@@ -201,6 +201,10 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
+   --  This is a symbolic date, only used as a order of analysis of design
+   --  units.
+   --   Get/Set_Date (Field4)
+   --
    --  Get/Set the library unit, which can be an entity, an architecture,
    --  a package, a package body or a configuration.
    --   Get/Set_Library_Unit (Field5)
@@ -218,14 +222,10 @@ package Iirs is
    --  when the units have been analyzed.
    --   Get/Set_Analysis_Checks_List (Field9)
    --
-   --  This is a symbolic date, only used as a order of analysis of design
-   --  units.
-   --   Get/Set_Date (Field10)
-   --
    --  Set the line and the offset in the line, only for the library manager.
    --  This is valid until the file is really loaded in memory.  On loading,
    --  location will contain all this informations.
-   --   Get/Set_Design_Unit_Source_Pos (Field4)
+   --   Get/Set_Design_Unit_Source_Pos (Field10)
    --
    --   Get/Set_Design_Unit_Source_Line (Field11)
    --
@@ -861,7 +861,7 @@ package Iirs is
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
-   -- Iir_Kind_Library_Declaration (Medium)
+   -- Iir_Kind_Library_Declaration (Short)
    --
    --  Design files in the library.
    --   Get/Set_Design_File_Chain (Field1)
@@ -872,9 +872,10 @@ package Iirs is
    --  Name (identifier) of the library.
    --   Get/Set_Identifier (Field3)
    --
-   --   Get/Set_Date (Field10)
+   --  Most recent date in this library.
+   --   Get/Set_Date (Field4)
    --
-   --   Get/Set_Library_Directory (Field11)
+   --   Get/Set_Library_Directory (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -4559,10 +4560,11 @@ package Iirs is
    --  A date is used for analysis order.  All design units from a library
    --  are ordered according to the date.
    type Date_Type is new Nat32;
-   --  The unit is obseleted (ie replaced) by a more recently analyzed design
+
+   --  The unit is obsoleted (ie replaced) by a more recently analyzed design
    --  unit.another design unit.
    --  If another design unit depends (directly or not) on an obseleted design
-   --  unit, it is also obselete, and cannot be defined.
+   --  unit, it is also obsolete, and cannot be defined.
    Date_Obsolete      : constant Date_Type := 0;
    --  The unit was not analyzed.
    Date_Not_Analyzed  : constant Date_Type := 1;
@@ -4937,12 +4939,12 @@ package Iirs is
    procedure Set_Design_File_Chain (Library : Iir; Chain : Iir);
 
    --  System directory where the library is stored.
-   --  Field: Field11 (pos)
+   --  Field: Field5 (pos)
    function Get_Library_Directory (Library : Iir) return Name_Id;
    procedure Set_Library_Directory (Library : Iir; Dir : Name_Id);
 
    -- Symbolic date, used to order design units in a library.
-   --  Field: Field10 (pos)
+   --  Field: Field4 (pos)
    function Get_Date (Target : Iir) return Date_Type;
    procedure Set_Date (Target : Iir; Date : Date_Type);
 
@@ -4998,7 +5000,7 @@ package Iirs is
    -- Set the line and the offset in the line, only for the library manager.
    -- This is valid until the file is really loaded in memory.  On loading,
    -- location will contain all this informations.
-   --  Field: Field4 (uc)
+   --  Field: Field10 (uc)
    function Get_Design_Unit_Source_Pos (Design_Unit : Iir) return Source_Ptr;
    procedure Set_Design_Unit_Source_Pos (Design_Unit : Iir; Pos : Source_Ptr);
 

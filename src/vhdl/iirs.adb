@@ -298,6 +298,7 @@ package body Iirs is
            | Iir_Kind_Package_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Unit_Declaration
+           | Iir_Kind_Library_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
@@ -450,7 +451,6 @@ package body Iirs is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Header
-           | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Psl_Declaration
            | Iir_Kind_Across_Quantity_Declaration
@@ -648,28 +648,28 @@ package body Iirs is
    begin
       pragma Assert (Library /= Null_Iir);
       pragma Assert (Has_Library_Directory (Get_Kind (Library)));
-      return Name_Id'Val (Get_Field11 (Library));
+      return Name_Id'Val (Get_Field5 (Library));
    end Get_Library_Directory;
 
    procedure Set_Library_Directory (Library : Iir; Dir : Name_Id) is
    begin
       pragma Assert (Library /= Null_Iir);
       pragma Assert (Has_Library_Directory (Get_Kind (Library)));
-      Set_Field11 (Library, Name_Id'Pos (Dir));
+      Set_Field5 (Library, Name_Id'Pos (Dir));
    end Set_Library_Directory;
 
    function Get_Date (Target : Iir) return Date_Type is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Date (Get_Kind (Target)));
-      return Date_Type'Val (Get_Field10 (Target));
+      return Date_Type'Val (Get_Field4 (Target));
    end Get_Date;
 
    procedure Set_Date (Target : Iir; Date : Date_Type) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Date (Get_Kind (Target)));
-      Set_Field10 (Target, Date_Type'Pos (Date));
+      Set_Field4 (Target, Date_Type'Pos (Date));
    end Set_Date;
 
    function Get_Context_Items (Design_Unit : Iir) return Iir is
@@ -777,7 +777,7 @@ package body Iirs is
    begin
       pragma Assert (Design_Unit /= Null_Iir);
       pragma Assert (Has_Design_Unit_Source_Pos (Get_Kind (Design_Unit)));
-      return Iir_To_Source_Ptr (Get_Field4 (Design_Unit));
+      return Iir_To_Source_Ptr (Get_Field10 (Design_Unit));
    end Get_Design_Unit_Source_Pos;
 
    procedure Set_Design_Unit_Source_Pos (Design_Unit : Iir; Pos : Source_Ptr)
@@ -785,7 +785,7 @@ package body Iirs is
    begin
       pragma Assert (Design_Unit /= Null_Iir);
       pragma Assert (Has_Design_Unit_Source_Pos (Get_Kind (Design_Unit)));
-      Set_Field4 (Design_Unit, Source_Ptr_To_Iir (Pos));
+      Set_Field10 (Design_Unit, Source_Ptr_To_Iir (Pos));
    end Set_Design_Unit_Source_Pos;
 
    function Get_Design_Unit_Source_Line (Design_Unit : Iir) return Int32 is
