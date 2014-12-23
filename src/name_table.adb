@@ -26,27 +26,24 @@ package body Name_Table is
 
    type Hash_Value_Type is mod 2**32;
 
-   -- An entry in the name table.
+   --  An entry in the name table.
    type Identifier is record
-      Hash: Hash_Value_Type;
-      Next: Name_Id;
-
-      --  FIXME: to be removed (compute from name of next identifier).
-      Length: Natural;
+      Hash : Hash_Value_Type;
+      Next : Name_Id;
 
       --  Index in strings_table.
-      Name: Natural;
+      Name : Natural;
 
       --  User infos.
-      Info: Int32;
+      Info : Int32;
    end record;
 
-   -- Hash table.
-   -- Number of entry points.
+   --  Hash table.
+   --  Number of entry points.
    Hash_Table_Size: constant Hash_Value_Type := 1024;
    Hash_Table: array (0 .. Hash_Table_Size - 1) of Name_Id;
 
-   -- The table to store all the strings.
+   --  The table to store all the strings.
    package Strings_Table is new GNAT.Table
      (Table_Index_Type => Natural,
       Table_Component_Type => Character,
@@ -54,13 +51,14 @@ package body Name_Table is
       Table_Initial => 4096,
       Table_Increment => 100);
 
-   -- A NUL character is stored after each word in the strings_table.
-   -- This is used for compatibility with C.
-   NUL: constant Character := Character'Val (0);
+   --  A NUL character is stored after each word in the strings_table.
+   --  This is used for compatibility with C.
+   NUL : constant Character := Character'Val (0);
 
-   -- Allocate place in the strings_table, and store the name_buffer into it.
-   -- Also append a NUL.
-   function Store return Natural is
+   --  Allocate place in the strings_table, and store the name_buffer into it.
+   --  Also append a NUL.
+   function Store return Natural
+   is
       Res: Natural;
    begin
       Res := Strings_Table.Allocate (Name_Length + 1);
@@ -77,99 +75,121 @@ package body Name_Table is
       Table_Initial => 1024,
       Table_Increment => 100);
 
-   -- Initialize this package
-   -- This must be called once and only once before any use.
+   procedure Append_Terminator is
+   begin
+      Names_Table.Append ((Hash => 0,
+                           Name => Strings_Table.Last + 1,
+                           Next => Null_Identifier,
+                           Info => 0));
+   end Append_Terminator;
+
+   --  Initialize this package
+   --  This must be called once and only once before any use.
    procedure Initialize is
-      Pos: Natural;
-      Id: Name_Id;
    begin
       Strings_Table.Init;
       Names_Table.Init;
-      -- Reserve entry 0.
-      if Names_Table.Allocate /= Null_Identifier then
-         raise Program_Error;
-      end if;
+
+      --  Reserve entry 0.
+      pragma Assert (Names_Table.Allocate = Null_Identifier);
+
       Strings_Table.Set_Last (1);
-      Names_Table.Table (Null_Identifier) := (Length => 0,
-                                              Hash => 0,
-                                              Name => 1,
+      Names_Table.Table (Null_Identifier) := (Hash => 0,
+                                              Name => Strings_Table.Last,
                                               Next => Null_Identifier,
                                               Info => 0);
-      -- Store characters.
+      Strings_Table.Append (NUL);
+
+      --  Store characters.
       for C in Character loop
-         Pos := Strings_Table.Allocate;
-         Strings_Table.Table (Pos) := C;
-         Id := Names_Table.Allocate;
-         Names_Table.Table (Id) := (Length => 1,
-                                    Hash => 0,
-                                    Name => Pos,
-                                    Next => Null_Identifier,
-                                    Info => 0);
+         Names_Table.Append ((Hash => 0,
+                              Name => Strings_Table.Last,
+                              Next => Null_Identifier,
+                              Info => 0));
+
+         Strings_Table.Append (C);
+         Strings_Table.Append (NUL);
       end loop;
+
+      Append_Terminator;
+
       Hash_Table := (others => Null_Identifier);
    end Initialize;
 
-   -- Compute the hash value of a string.
-   function Hash return Hash_Value_Type is
-      Res: Hash_Value_Type := 0;
+   --  Compute the hash value of a string.
+   function Hash return Hash_Value_Type
+   is
+      Res : Hash_Value_Type;
    begin
+      Res := 0;
       for I in 1 .. Name_Length loop
-         Res := Res * 7 + Character'Pos(Name_Buffer(I));
+         Res := Res * 7 + Character'Pos (Name_Buffer (I));
          Res := Res + Res / 2**28;
       end loop;
       return Res;
    end Hash;
 
-   -- Get the string associed to an identifier.
-   function Image (Id: Name_Id) return String is
-      Name_Entry: Identifier renames Names_Table.Table(Id);
-      subtype Result_Type is String (1 .. Name_Entry.Length);
+   --  Get the string associed to an identifier.
+   function Image (Id : Name_Id) return String
+   is
+      Ent : Identifier renames Names_Table.Table (Id);
    begin
       if Is_Character (Id) then
-         return ''' & Strings_Table.Table (Name_Entry.Name) & ''';
+         return ''' & Strings_Table.Table (Ent.Name) & ''';
       else
-         return Result_Type
-           (Strings_Table.Table
-            (Name_Entry.Name .. Name_Entry.Name + Name_Entry.Length - 1));
+         declare
+            Len : constant Natural := Get_Name_Length (Id);
+            subtype Result_Type is String (1 .. Len);
+         begin
+            return Result_Type
+              (Strings_Table.Table (Ent.Name .. Ent.Name + Len - 1));
+         end;
       end if;
    end Image;
 
    procedure Image (Id : Name_Id)
    is
-      Name_Entry: Identifier renames Names_Table.Table(Id);
+      Name_Entry : Identifier renames Names_Table.Table (Id);
    begin
       if Is_Character (Id) then
          Name_Buffer (1) := Get_Character (Id);
          Name_Length := 1;
       else
-         Name_Length := Name_Entry.Length;
-         Name_Buffer (1 .. Name_Entry.Length) := String
+         Name_Length := Get_Name_Length (Id);
+         Name_Buffer (1 .. Name_Length) := String
            (Strings_Table.Table
-            (Name_Entry.Name .. Name_Entry.Name + Name_Entry.Length - 1));
+            (Name_Entry.Name .. Name_Entry.Name + Name_Length - 1));
       end if;
    end Image;
 
-   -- Get the address of the first character of ID.
-   -- The string is NUL-terminated (this is done by get_identifier).
-   function Get_Address (Id: Name_Id) return System.Address is
+   --  Get the address of the first character of ID.
+   --  The string is NUL-terminated (this is done by get_identifier).
+   function Get_Address (Id : Name_Id) return System.Address
+   is
       Name_Entry: Identifier renames Names_Table.Table(Id);
    begin
       return Strings_Table.Table (Name_Entry.Name)'Address;
    end Get_Address;
 
-   function Get_Name_Length (Id: Name_Id) return Natural is
+   function Get_Name_Length (Id : Name_Id) return Natural
+   is
+      pragma Assert (Id < Names_Table.Last);
+      Id_Name : constant Natural := Names_Table.Table (Id).Name;
+      Id1_Name : constant Natural := Names_Table.Table (Id + 1).Name;
    begin
-      return Names_Table.Table(Id).Length;
+      --  Do not count NUL terminator.
+      return Id1_Name - Id_Name - 1;
    end Get_Name_Length;
 
-   function Is_Character (Id: Name_Id) return Boolean is
+   function Is_Character (Id : Name_Id) return Boolean is
    begin
-      return Id >= First_Character_Name_Id and then
+      return Id >= First_Character_Name_Id
+        and then
         Id <= First_Character_Name_Id + Character'Pos (Character'Last);
    end Is_Character;
 
    -- Get the character associed to an identifier.
-   function Get_Character (Id: Name_Id) return Character is
+   function Get_Character (Id : Name_Id) return Character is
    begin
       pragma Assert (Is_Character (Id));
       return Character'Val (Id - First_Character_Name_Id);
@@ -177,21 +197,24 @@ package body Name_Table is
 
    -- Get and set the info field associated with each identifier.
    -- Used to store interpretations of the name.
-   function Get_Info (Id: Name_Id) return Int32 is
+   function Get_Info (Id : Name_Id) return Int32 is
    begin
       return Names_Table.Table (Id).Info;
    end Get_Info;
 
-   procedure Set_Info (Id: Name_Id; Info: Int32) is
+   procedure Set_Info (Id : Name_Id; Info : Int32) is
    begin
       Names_Table.Table (Id).Info := Info;
    end Set_Info;
 
+   --  Compare ID with Name_Buffer / Name_Length.  Length of ID must be equal
+   --  to Name_Length.
    function Compare_Name_Buffer_With_Name (Id : Name_Id) return Boolean
    is
-      Ne: Identifier renames Names_Table.Table(Id);
+      Ne: Identifier renames Names_Table.Table (Id);
    begin
-      return String (Strings_Table.Table (Ne.Name .. Ne.Name + Ne.Length - 1))
+      return String
+        (Strings_Table.Table (Ne.Name .. Ne.Name + Name_Length - 1))
         = Name_Buffer (1 .. Name_Length);
    end Compare_Name_Buffer_With_Name;
 
@@ -199,11 +222,12 @@ package body Name_Table is
    -- The string is taken from NAME_BUFFER and NAME_LENGTH.
    function Get_Identifier return Name_Id
    is
-      Hash_Value, Hash_Index: Hash_Value_Type;
-      Res: Name_Id;
+      Hash_Value : Hash_Value_Type;
+      Hash_Index : Hash_Value_Type;
+      Res : Name_Id;
    begin
       Hash_Value := Hash;
-      Hash_Index := Hash_Value mod Hash_Table_Size;
+      Hash_Index := Hash_Value and (Hash_Table_Size - 1);
 
       if Debug_Name_Table then
          Put_Line ("get_identifier " & Name_Buffer (1 .. Name_Length));
@@ -213,7 +237,7 @@ package body Name_Table is
       while Res /= Null_Identifier loop
          --Put_Line ("compare with " & Get_String (Res));
          if Names_Table.Table (Res).Hash = Hash_Value
-           and then Names_Table.Table (Res).Length = Name_Length
+           and then Get_Name_Length (Res) = Name_Length
            and then Compare_Name_Buffer_With_Name (Res)
          then
             --Put_Line ("found");
@@ -221,29 +245,33 @@ package body Name_Table is
          end if;
          Res := Names_Table.Table (Res).Next;
       end loop;
-      Res := Names_Table.Allocate;
-      Names_Table.Table (Res) := (Length => Name_Length,
-                                  Hash => Hash_Value,
+
+      Res := Names_Table.Last;
+      Names_Table.Table (Res) := (Hash => Hash_Value,
                                   Name => Store,
                                   Next => Hash_Table (Hash_Index),
                                   Info => 0);
       Hash_Table (Hash_Index) := Res;
+      Append_Terminator;
+
       --Put_Line ("created");
+
       return Res;
    end Get_Identifier;
 
    function Get_Identifier_No_Create return Name_Id
    is
-      Hash_Value, Hash_Index: Hash_Value_Type;
+      Hash_Value : Hash_Value_Type;
+      Hash_Index : Hash_Value_Type;
       Res: Name_Id;
    begin
       Hash_Value := Hash;
-      Hash_Index := Hash_Value mod Hash_Table_Size;
+      Hash_Index := Hash_Value and (Hash_Table_Size - 1);
 
       Res := Hash_Table (Hash_Index);
       while Res /= Null_Identifier loop
          if Names_Table.Table (Res).Hash = Hash_Value
-           and then Names_Table.Table (Res).Length = Name_Length
+           and then Get_Name_Length (Res) = Name_Length
            and then Compare_Name_Buffer_With_Name (Res)
          then
             return Res;
@@ -253,22 +281,23 @@ package body Name_Table is
       return Null_Identifier;
    end Get_Identifier_No_Create;
 
-   -- Get or create an entry in the name table.
-   function Get_Identifier (Str: String) return Name_Id is
+   --  Get or create an entry in the name table.
+   function Get_Identifier (Str : String) return Name_Id is
    begin
       Name_Length := Str'Length;
       Name_Buffer (1 .. Name_Length) := Str;
       return Get_Identifier;
    end Get_Identifier;
 
-   function Get_Identifier (Char: Character) return Name_Id is
+   function Get_Identifier (Char : Character) return Name_Id is
    begin
       return First_Character_Name_Id + Character'Pos (Char);
    end Get_Identifier;
 
-   -- Be sure all info fields have their default value.
-   procedure Assert_No_Infos is
-      Err: Boolean := False;
+   --  Be sure all info fields have their default value.
+   procedure Assert_No_Infos
+   is
+      Err : Boolean := False;
    begin
       for I in Names_Table.First .. Names_Table.Last loop
          if Get_Info (I) /= 0 then
@@ -283,15 +312,15 @@ package body Name_Table is
       end if;
    end Assert_No_Infos;
 
-   -- Return the latest name_id used.
-   -- kludge, use only for debugging.
+   --  Return the latest name_id used.
+   --  kludge, use only for debugging.
    function Last_Name_Id return Name_Id is
    begin
       return Names_Table.Last;
    end Last_Name_Id;
 
-   -- Used to debug.
-   -- Disp the strings table, one word per line.
+   --  Used to debug.
+   --  Disp the strings table, one word per line.
    procedure Dump;
    pragma Unreferenced (Dump);
 
