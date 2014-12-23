@@ -39,20 +39,25 @@ GRT_RANLIB=ranlib
 VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
 ADAC=$(CC)
 
-GNATFLAGS=-gnaty3befhkmr -gnata -gnatwae -aO. -g -gnatf -gnat05
-GRT_FLAGS=-g
-LIB_CFLAGS=-g -O2
+# Debug
+ADA_FLAGS=-g -gnata
 
 # Optimize, do not forget to use MODE=--genfast for iirs.adb.
-#GNATFLAGS+=-O -gnatn
+#ADA_FLAGS+=-O -gnatpn
 #GRT_FLAGS+=-O
 
 # Profiling.
-#GNATFLAGS+=-pg -gnatn -O
+#ADA_FLAGS+=-pg -gnatn -O
 #GRT_FLAGS+=-pg -O
 
 # Coverage
-#GNATFLAGS+=-fprofile-arcs -ftest-coverage
+#ADA_FLAGS+=-fprofile-arcs -ftest-coverage
+
+GRT_FLAGS=-g
+LIB_CFLAGS=-g -O2
+
+GNATFLAGS=-gnaty3befhkmr -gnatwae -aO. -gnatf -gnat05 $(ADA_FLAGS)
+
 
 GNAT_BARGS=-bargs -E
 
