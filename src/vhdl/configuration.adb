@@ -55,6 +55,7 @@ package body Configuration is
       if Get_Elab_Flag (Unit) then
          return;
       end if;
+      Set_Elab_Flag (Unit, True);
 
       --  May be enabled to debug dependency construction.
       if False then
@@ -65,8 +66,6 @@ package body Configuration is
               (Disp_Node (Unit) & " added by " & Disp_Node (From), From);
          end if;
       end if;
-
-      Set_Elab_Flag (Unit, True);
 
       Lib_Unit := Get_Library_Unit (Unit);
 
