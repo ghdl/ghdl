@@ -364,130 +364,6 @@ package body Ghdldrv is
         & Get_Object_Suffix.all;
    end Get_Object_Filename;
 
-   Last_Stamp : Time_Stamp_Id;
-   Last_Stamp_File : Iir;
-
-   function Is_File_Outdated (Design_File : Iir_Design_File) return Boolean
-   is
-      use Files_Map;
-
-      Name : Name_Id;
-
-      File : Source_File_Entry;
-   begin
-      --  Std.Standard is never outdated.
-      if Design_File = Std_Package.Std_Standard_File then
-         return False;
-      end if;
-
-      Name := Get_Design_File_Filename (Design_File);
-      declare
-         Obj_Pathname : String := Get_Object_Filename (Design_File) & Nul;
-         Stamp : Time_Stamp_Id;
-      begin
-         Stamp := Get_File_Time_Stamp (Obj_Pathname'Address);
-
-         --  If the object file does not exist, recompile the file.
-         if Stamp = Null_Time_Stamp then
-            if Flag_Verbose then
-               Put_Line ("no object file for " & Image (Name));
-            end if;
-            return True;
-         end if;
-
-         --  Keep the time stamp of the most recently analyzed unit.
-         if Last_Stamp = Null_Time_Stamp
-           or else Is_Gt (Stamp, Last_Stamp)
-         then
-            Last_Stamp := Stamp;
-            Last_Stamp_File := Design_File;
-         end if;
-      end;
-
-      --  2) file has been modified.
-      File := Load_Source_File (Get_Design_File_Directory (Design_File),
-                                Get_Design_File_Filename (Design_File));
-      if not Is_Eq (Get_File_Time_Stamp (File),
-                    Get_File_Time_Stamp (Design_File))
-      then
-         if Flag_Verbose then
-            Put_Line ("file " & Image (Get_File_Name (File))
-                 & " has been modified");
-         end if;
-         return True;
-      end if;
-
-      return False;
-   end Is_File_Outdated;
-
-   function Is_Unit_Outdated (Unit : Iir_Design_Unit) return Boolean
-   is
-      Design_File : Iir_Design_File;
-   begin
-      --  Std.Standard is never outdated.
-      if Unit = Std_Package.Std_Standard_Unit then
-         return False;
-      end if;
-
-      Design_File := Get_Design_File (Unit);
-
-      --  1) not yet analyzed:
-      if Get_Date (Unit) not in Date_Valid then
-         if Flag_Verbose then
-            Disp_Library_Unit (Get_Library_Unit (Unit));
-            Put_Line (" was not analyzed");
-         end if;
-         return True;
-      end if;
-
-      --  3) the object file does not exist.
-      --  Already checked.
-
-      --  4) one of the dependence is newer
-      declare
-         Depends : Iir_List;
-         El : Iir;
-         Dep : Iir_Design_Unit;
-         Stamp : Time_Stamp_Id;
-         Dep_File : Iir_Design_File;
-      begin
-         Depends := Get_Dependence_List (Unit);
-         Stamp := Get_Analysis_Time_Stamp (Design_File);
-         if Depends /= Null_Iir_List then
-            for I in Natural loop
-               El := Get_Nth_Element (Depends, I);
-               exit when El = Null_Iir;
-               Dep := Libraries.Find_Design_Unit (El);
-               if Dep = Null_Iir then
-                  if Flag_Verbose then
-                     Disp_Library_Unit (Unit);
-                     Put (" depends on an unknown unit ");
-                     Disp_Library_Unit (El);
-                     New_Line;
-                  end if;
-                  return True;
-               end if;
-               Dep_File := Get_Design_File (Dep);
-               if Dep /= Std_Package.Std_Standard_Unit
-                 and then Files_Map.Is_Gt (Get_Analysis_Time_Stamp (Dep_File),
-                                           Stamp)
-               then
-                  if Flag_Verbose then
-                     Disp_Library_Unit (Get_Library_Unit (Unit));
-                     Put (" depends on: ");
-                     Disp_Library_Unit (Get_Library_Unit (Dep));
-                     Put (" (more recently analyzed)");
-                     New_Line;
-                  end if;
-                  return True;
-               end if;
-            end loop;
-         end if;
-      end;
-
-      return False;
-   end Is_Unit_Outdated;
-
    procedure Add_Argument (Inst : in out Instance; Arg : String_Access)
    is
    begin
@@ -1381,6 +1257,40 @@ package body Ghdldrv is
       end if;
    end Decode_Option;
 
+   Last_Stamp : Time_Stamp_Id;
+   Last_Stamp_File : Iir;
+
+   function Missing_Object_File (Design_File : Iir_Design_File) return Boolean
+   is
+      use Files_Map;
+
+      Name : constant Name_Id := Get_Design_File_Filename (Design_File);
+      Obj_Pathname : constant String :=
+        Get_Object_Filename (Design_File) & Nul;
+      Stamp : Time_Stamp_Id;
+      File : Source_File_Entry;
+   begin
+      Stamp := Get_File_Time_Stamp (Obj_Pathname'Address);
+
+      --  If the object file does not exist, recompile the file.
+      if Stamp = Null_Time_Stamp then
+         if Flag_Verbose then
+            Put_Line ("no object file for " & Image (Name));
+         end if;
+         return True;
+      end if;
+
+      --  Keep the time stamp of the most recently analyzed unit.
+      if Last_Stamp = Null_Time_Stamp
+        or else Is_Gt (Stamp, Last_Stamp)
+      then
+         Last_Stamp := Stamp;
+         Last_Stamp_File := Design_File;
+      end if;
+
+      return False;
+   end Missing_Object_File;
+
    procedure Perform_Action (Cmd : in out Command_Make; Args : Argument_List)
    is
       use Configuration;
@@ -1463,25 +1373,15 @@ package body Ghdldrv is
          File := Get_Nth_Element (Files_List, I);
          exit when File = Null_Iir;
 
-         Need_Analyze := False;
-         if Is_File_Outdated (File) then
+         if File = Std_Package.Std_Standard_File then
+            Need_Analyze := False;
+         elsif Missing_Object_File (File)
+           or else Source_File_Modified (File)
+           or else Is_File_Outdated (File)
+         then
             Need_Analyze := True;
          else
-            Unit := Get_First_Design_Unit (File);
-            while Unit /= Null_Iir loop
-               Lib_Unit := Get_Library_Unit (Unit);
-               --  Check if the unit is outdated (except for default
-               --  configurations).
-               if not (Get_Kind (Lib_Unit) = Iir_Kind_Configuration_Declaration
-                       and then Get_Identifier (Lib_Unit) = Null_Identifier)
-               then
-                  if Is_Unit_Outdated (Unit) then
-                     Need_Analyze := True;
-                     exit;
-                  end if;
-               end if;
-               Unit := Get_Chain (Unit);
-            end loop;
+            Need_Analyze := False;
          end if;
 
          Lib := Get_Library (File);

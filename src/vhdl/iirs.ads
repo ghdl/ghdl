@@ -877,6 +877,9 @@ package Iirs is
    --
    --   Get/Set_Library_Directory (Field5)
    --
+   --  Used to compute dependences.
+   --   Get/Set_Elab_Flag (Flag3)
+   --
    --   Get/Set_Visible_Flag (Flag4)
 
    -- Iir_Kind_Component_Declaration (Medium)

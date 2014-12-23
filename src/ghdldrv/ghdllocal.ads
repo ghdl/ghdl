@@ -108,6 +108,14 @@ package Ghdllocal is
    function Build_Dependence (Prim : String_Access; Sec : String_Access)
      return Iir_List;
 
+   --  Return True iff file FILE has been modified (the file time stamp does
+   --  no correspond to what was recorded in the library).
+   function Source_File_Modified (File : Iir_Design_File) return Boolean;
+
+   --  Return True iff FILE need to be analyzed because one of its dependences
+   --  has been analyzed more recently.
+   function Is_File_Outdated (File : Iir_Design_File) return Boolean;
+
    Prim_Name : String_Access;
    Sec_Name : String_Access;
 

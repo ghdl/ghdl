@@ -15,7 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Text_IO;
+with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Command_Line; use Ada.Command_Line;
 with GNAT.Directory_Operations;
 with Types; use Types;
@@ -52,7 +52,6 @@ package body Ghdllocal is
      (Unit : Iir_Design_Unit; Main : Boolean := False)
    is
       use Errorout;
-      use Ada.Text_IO;
       Config : Iir_Design_Unit;
       Lib : Iir;
    begin
@@ -157,7 +156,6 @@ package body Ghdllocal is
    procedure Disp_Long_Help (Cmd : Command_Lib)
    is
       pragma Unreferenced (Cmd);
-      use Ada.Text_IO;
       procedure P (Str : String) renames Put_Line;
    begin
       P ("Main options (try --options-help for details):");
@@ -440,9 +438,7 @@ package body Ghdllocal is
       end if;
    end Setup_Libraries;
 
-   procedure Disp_Config_Prefixes
-   is
-      use Ada.Text_IO;
+   procedure Disp_Config_Prefixes is
    begin
       Put ("command line prefix (--PREFIX): ");
       if Switch_Prefix_Path = null then
@@ -476,7 +472,6 @@ package body Ghdllocal is
 
    procedure Disp_Library_Unit (Unit : Iir)
    is
-      use Ada.Text_IO;
       use Name_Table;
       Id : Name_Id;
    begin
@@ -518,7 +513,6 @@ package body Ghdllocal is
 
    procedure Disp_Library (Name : Name_Id)
    is
-      use Ada.Text_IO;
       use Libraries;
       Lib : Iir_Library_Declaration;
       File : Iir_Design_File;
@@ -665,7 +659,6 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
 
-      use Ada.Text_IO;
       use Name_Table;
       Id : Name_Id;
       Design_File : Iir_Design_File;
@@ -727,7 +720,6 @@ package body Ghdllocal is
    procedure Perform_Action (Cmd : in out Command_Import; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Ada.Text_IO;
       Id : Name_Id;
       Design_File : Iir_Design_File;
       Unit : Iir;
@@ -812,7 +804,6 @@ package body Ghdllocal is
 
    procedure Analyze_One_File (File_Name : String)
    is
-      use Ada.Text_IO;
       Id : Name_Id;
       Design_File : Iir_Design_File;
       Unit : Iir;
@@ -896,7 +887,6 @@ package body Ghdllocal is
 
    procedure Delete (Str : String)
    is
-      use Ada.Text_IO;
       Status : Boolean;
    begin
       Delete_File (Str'Address, Status);
@@ -1359,6 +1349,98 @@ package body Ghdllocal is
 
       return Files_List;
    end Build_Dependence;
+
+   function Source_File_Modified (File : Iir_Design_File) return Boolean
+   is
+      use Files_Map;
+
+      Fe : Source_File_Entry;
+   begin
+      --  2) file has been modified.
+      Fe := Load_Source_File (Get_Design_File_Directory (File),
+                              Get_Design_File_Filename (File));
+      if not Is_Eq (Get_File_Time_Stamp (Fe),
+                    Get_File_Time_Stamp (File))
+      then
+         if Flag_Verbose then
+            Put_Line ("file " & Name_Table.Image (Get_File_Name (Fe))
+                        & " has been modified");
+         end if;
+         return True;
+      else
+         return False;
+      end if;
+   end Source_File_Modified;
+
+   function Is_File_Outdated (File : Iir_Design_File) return Boolean
+   is
+      Unit : Iir;
+      Lib_Unit : Iir;
+   begin
+      Unit := Get_First_Design_Unit (File);
+      while Unit /= Null_Iir loop
+         Lib_Unit := Get_Library_Unit (Unit);
+         if Get_Kind (Lib_Unit) = Iir_Kind_Configuration_Declaration
+           and then Get_Identifier (Lib_Unit) = Null_Identifier
+         then
+            --  Do not consider default configurations (there is no user code
+            --  for them).
+            null;
+         elsif Get_Date (Unit) not in Date_Valid then
+            --  Unit not yet analyzed:
+            if Flag_Verbose then
+               Disp_Library_Unit (Get_Library_Unit (Unit));
+               Put_Line (" was not analyzed");
+            end if;
+            return True;
+         else
+            --  Check if one of the dependence is newer
+            declare
+               Depends : constant Iir_List := Get_Dependence_List (Unit);
+               Stamp : constant Time_Stamp_Id :=
+                 Get_Analysis_Time_Stamp (File);
+               El : Iir;
+               Dep : Iir_Design_Unit;
+               Dep_File : Iir_Design_File;
+            begin
+               if Depends /= Null_Iir_List then
+                  for I in Natural loop
+                     El := Get_Nth_Element (Depends, I);
+                     exit when El = Null_Iir;
+                     Dep := Libraries.Find_Design_Unit (El);
+                     if Dep = Null_Iir then
+                        if Flag_Verbose then
+                           Disp_Library_Unit (Unit);
+                           Put (" depends on an unknown unit ");
+                           Disp_Library_Unit (El);
+                           New_Line;
+                        end if;
+                        return True;
+                     end if;
+                     Dep_File := Get_Design_File (Dep);
+                     if Dep /= Std_Package.Std_Standard_Unit
+                       and then
+                       Files_Map.Is_Gt (Get_Analysis_Time_Stamp (Dep_File),
+                                        Stamp)
+                     then
+                        if Flag_Verbose then
+                           Disp_Library_Unit (Get_Library_Unit (Unit));
+                           Put (" depends on: ");
+                           Disp_Library_Unit (Get_Library_Unit (Dep));
+                           Put (" (more recently analyzed)");
+                           New_Line;
+                        end if;
+                        return True;
+                     end if;
+                  end loop;
+               end if;
+            end;
+         end if;
+         Unit := Get_Chain (Unit);
+      end loop;
+
+      return False;
+   end Is_File_Outdated;
 
    --  Convert NAME to lower cases, unless it is an extended identifier.
    function Convert_Name (Name : String_Access) return String_Access

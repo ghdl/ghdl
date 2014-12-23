@@ -516,6 +516,7 @@ package body Ghdlcomp is
       Next_Arg : Natural;
       Date : Date_Type;
       Unit : Iir_Design_Unit;
+      Lib : Iir_Library_Declaration;
    begin
       Extract_Elab_Unit ("-m", Args, Next_Arg);
       Setup_Libraries (True);
@@ -523,12 +524,26 @@ package body Ghdlcomp is
       --  Create list of files.
       Files_List := Build_Dependence (Prim_Name, Sec_Name);
 
+      --  Unmark all libraries.
+      Lib := Libraries.Std_Library;
+      while Lib /= Null_Iir loop
+         Set_Elab_Flag (Lib, False);
+         Lib := Get_Chain (Lib);
+      end loop;
+
       Date := Get_Date (Libraries.Work_Library);
       for I in Natural loop
          File := Get_Nth_Element (Files_List, I);
          exit when File = Null_Iir;
 
-         if Get_Library (File) = Libraries.Work_Library then
+         if File = Std_Package.Std_Standard_File then
+            null;
+         elsif Source_File_Modified (File)
+           or else Is_File_Outdated (File)
+         then
+            Lib := Get_Library (File);
+            Date := Get_Date (Lib);
+
             --  Mark this file as analyzed.
             Set_Analysis_Time_Stamp (File, Files_Map.Get_Os_Time_Stamp);
 
@@ -542,10 +557,45 @@ package body Ghdlcomp is
                end if;
                Unit := Get_Chain (Unit);
             end loop;
+
+            Set_Date (Lib, Date);
+
+            --  Need to be written to disk.
+            Set_Elab_Flag (Lib, True);
          end if;
       end loop;
-      Set_Date (Libraries.Work_Library, Date);
-      Libraries.Save_Work_Library;
+
+      --  Save modified libraries.
+      if Get_Elab_Flag (Libraries.Work_Library) then
+         Libraries.Save_Work_Library;
+         Set_Elab_Flag (Libraries.Work_Library, False);
+      end if;
+
+      declare
+         use Libraries;
+         Old_Work_Library : constant Iir_Library_Declaration := Work_Library;
+         Old_Work_Library_Name : constant Name_Id := Work_Library_Name;
+         Old_Work_Directory : constant Name_Id := Work_Directory;
+      begin
+         Lib := Libraries.Std_Library;
+         while Lib /= Null_Iir loop
+            if Get_Elab_Flag (Lib) then
+               if Lib = Std_Library then
+                  Error ("need to rebuild std library");
+                  raise Compile_Error;
+               end if;
+               Work_Library := Lib;
+               Work_Library_Name := Get_Identifier (Lib);
+               Work_Directory := Get_Library_Directory (Lib);
+               Libraries.Save_Work_Library;
+               Set_Elab_Flag (Lib, False);
+            end if;
+            Lib := Get_Chain (Lib);
+         end loop;
+         Work_Library := Old_Work_Library;
+         Work_Library_Name := Old_Work_Library_Name;
+         Work_Directory := Old_Work_Directory;
+      end;
    exception
       when Compilation_Error =>
          if Flag_Expect_Failure then
