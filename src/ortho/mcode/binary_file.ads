@@ -154,6 +154,7 @@ private
    type Byte_Array_Base is array (Pc_Type range <>) of Byte;
    subtype Byte_Array is Byte_Array_Base (Pc_Type);
    type Byte_Array_Acc is access Byte_Array;
+   pragma No_Strict_Aliasing (Byte_Array_Acc);
    type String_Acc is access String;
    --type Section_Flags is new Unsigned_32;
 

@@ -30,8 +30,8 @@ package body Str_Table is
    Nul : constant Character := Character'Val (0);
 
    In_String : Boolean := False;
-   function Start return String_Id
-   is
+
+   function Start return String_Id is
    begin
       pragma Assert (In_String = False);
       In_String := True;

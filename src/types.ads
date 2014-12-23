@@ -56,6 +56,7 @@ package Types is
 
    type String_Fat is array (Pos32) of Character;
    type String_Fat_Acc is access String_Fat;
+   pragma No_Strict_Aliasing (String_Fat_Acc);
 
    -- Type of a name table element.
    -- The name table is defined in the name_table package.

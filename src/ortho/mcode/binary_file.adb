@@ -31,8 +31,7 @@ package body Binary_File is
      (Source => System.Address, Target => Byte_Array_Acc);
 
    --  Resize a section to SIZE bytes.
-   procedure Resize (Sect : Section_Acc; Size : Pc_Type)
-   is
+   procedure Resize (Sect : Section_Acc; Size : Pc_Type) is
    begin
       Sect.Data_Max := Size;
       Memsegs.Resize (Sect.Seg, Natural (Size));
