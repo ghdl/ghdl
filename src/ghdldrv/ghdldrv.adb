@@ -1268,7 +1268,6 @@ package body Ghdldrv is
       Obj_Pathname : constant String :=
         Get_Object_Filename (Design_File) & Nul;
       Stamp : Time_Stamp_Id;
-      File : Source_File_Entry;
    begin
       Stamp := Get_File_Time_Stamp (Obj_Pathname'Address);
 
@@ -1297,7 +1296,6 @@ package body Ghdldrv is
 
       File : Iir_Design_File;
       Unit : Iir;
-      Lib_Unit : Iir;
       Lib : Iir_Library_Declaration;
       In_Work : Boolean;
 
