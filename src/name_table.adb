@@ -17,37 +17,46 @@
 --  02111-1307, USA.
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
+with Interfaces;
 with GNAT.Table;
 
 package body Name_Table is
-   -- A flag that creates verbosity.
-   Debug_Name_Table: constant Boolean := False;
-
+   --  Id of the first character (NUL).
    First_Character_Name_Id : constant Name_Id := 1;
 
+   --  Type for the hash value.
    type Hash_Value_Type is mod 2**32;
 
    --  An entry in the name table.
    type Identifier is record
+      --  Hash value of the identifier.
       Hash : Hash_Value_Type;
+
+      --  Simply linked collision chain.
       Next : Name_Id;
 
-      --  Index in strings_table.
+      --  Index in Strings_Table of the first character of the identifier.
+      --  The name is always NUL terminated, but the length can be computed
+      --  from the name of the next identifier.  Indeed, names are put in
+      --  Strings_Table in the same order as identifiers.
       Name : Natural;
 
       --  User infos.
       Info : Int32;
    end record;
 
-   --  Hash table.
-   --  Number of entry points.
+   --  Size of the hash table.  Must be a power of 2, so that bit masked can be
+   --  used to get the entry number from the hash value.
    Hash_Table_Size : Hash_Value_Type := 1024;
 
    type Hash_Array is array (Hash_Value_Type range <>) of Name_Id;
    type Hash_Array_Acc is access Hash_Array;
 
+   --  Hash table.  Lower bound is always 0, upper bound is always
+   --  Hash_Table_Size - 1.
    Hash_Table: Hash_Array_Acc;
 
+   --  Table of identifiers.
    package Names_Table is new GNAT.Table
      (Table_Index_Type => Name_Id,
       Table_Component_Type => Identifier,
@@ -80,6 +89,9 @@ package body Name_Table is
       return Res;
    end Store;
 
+   --  Append the terminator in Names_Table.  This is required so that the
+   --  length of the last identifier can be computed (like any other
+   --  identifiers).
    procedure Append_Terminator is
    begin
       Names_Table.Append ((Hash => 0,
@@ -105,7 +117,7 @@ package body Name_Table is
                            Info => 0));
       pragma Assert (Names_Table.Last = Null_Identifier);
 
-      --  Store characters.
+      --  Store characters.  They aren't put in the hash table.
       for C in Character loop
          Strings_Table.Append (C);
          Names_Table.Append ((Hash => 0,
@@ -122,17 +134,18 @@ package body Name_Table is
         new Hash_Array'(0 .. Hash_Table_Size - 1 => Null_Identifier);
    end Initialize;
 
-   --  Compute the hash value of a string.
+   --  Compute the hash value of a string.  In case of algorithm change, check
+   --  the performance using Disp_Stats.
    function Hash return Hash_Value_Type
    is
-      Res : Hash_Value_Type;
+      use Interfaces;
+      Res : Unsigned_32;
    begin
-      Res := 0;
+      Res := Unsigned_32 (Name_Length);
       for I in 1 .. Name_Length loop
-         Res := Res * 7 + Character'Pos (Name_Buffer (I));
-         Res := Res + Res / 2**28;
+         Res := Rotate_Left (Res, 4) + Res + Character'Pos (Name_Buffer (I));
       end loop;
-      return Res;
+      return Hash_Value_Type (Res);
    end Hash;
 
    --  Get the string associed to an identifier.
@@ -270,19 +283,13 @@ package body Name_Table is
       Hash_Value := Hash;
       Hash_Index := Hash_Value and (Hash_Table_Size - 1);
 
-      if Debug_Name_Table then
-         Put_Line ("get_identifier " & Name_Buffer (1 .. Name_Length));
-      end if;
-
       --  Find the name.
       Res := Hash_Table (Hash_Index);
       while Res /= Null_Identifier loop
-         --Put_Line ("compare with " & Get_String (Res));
          if Names_Table.Table (Res).Hash = Hash_Value
            and then Get_Name_Length (Res) = Name_Length
            and then Compare_Name_Buffer_With_Name (Res)
          then
-            --Put_Line ("found");
             return Res;
          end if;
          Res := Names_Table.Table (Res).Next;
@@ -411,6 +418,8 @@ package body Name_Table is
       Put_Line ("Name table statistics:");
       Put_Line (" number of identifiers: " & Name_Id'Image (Last_Name_Id));
       Put_Line (" size of strings: " & Natural'Image (Strings_Table.Last));
+      Put_Line (" hash array length: "
+                  & Hash_Value_Type'Image (Hash_Table_Size));
       Put_Line (" hash distribution (number of entries per length):");
       Min := Natural'Last;
       Max := Natural'First;
