@@ -1572,16 +1572,16 @@ package body Evaluation is
       return Res;
    end Eval_Floating_Image;
 
-   function Eval_Enumeration_Image (Enum, Expr : Iir) return Iir
+   function Eval_Enumeration_Image (Lit : Iir; Orig : Iir) return Iir
    is
-      Name : constant String := Image_Identifier (Enum);
+      Name : constant String := Image_Identifier (Lit);
       Image_Id : constant String_Id := Str_Table.Start;
    begin
-      for i in Name'range loop
-         Str_Table.Append(Name(i));
+      for I in Name'range loop
+         Str_Table.Append (Name (I));
       end loop;
       Str_Table.Finish;
-      return Build_String (Image_Id, Nat32(Name'Length), Expr);
+      return Build_String (Image_Id, Name'Length, Orig);
    end Eval_Enumeration_Image;
 
    function Build_Enumeration_Value (Val : String; Enum, Expr : Iir) return Iir
