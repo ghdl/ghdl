@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Unchecked_Deallocation;
 with GNAT.Table;
 
 package body Name_Table is
@@ -40,20 +41,31 @@ package body Name_Table is
 
    --  Hash table.
    --  Number of entry points.
-   Hash_Table_Size: constant Hash_Value_Type := 1024;
-   Hash_Table: array (0 .. Hash_Table_Size - 1) of Name_Id;
+   Hash_Table_Size : Hash_Value_Type := 1024;
 
-   --  The table to store all the strings.
+   type Hash_Array is array (Hash_Value_Type range <>) of Name_Id;
+   type Hash_Array_Acc is access Hash_Array;
+
+   Hash_Table: Hash_Array_Acc;
+
+   package Names_Table is new GNAT.Table
+     (Table_Index_Type => Name_Id,
+      Table_Component_Type => Identifier,
+      Table_Low_Bound => Name_Id'First,
+      Table_Initial => 1024,
+      Table_Increment => 100);
+
+   --  A NUL character is stored after each word in the strings_table.
+   --  This is used for compatibility with C.
+   NUL : constant Character := Character'Val (0);
+
+   --  The table to store all the strings.  Strings are always NUL terminated.
    package Strings_Table is new GNAT.Table
      (Table_Index_Type => Natural,
       Table_Component_Type => Character,
       Table_Low_Bound => Natural'First,
       Table_Initial => 4096,
       Table_Increment => 100);
-
-   --  A NUL character is stored after each word in the strings_table.
-   --  This is used for compatibility with C.
-   NUL : constant Character := Character'Val (0);
 
    --  Allocate place in the strings_table, and store the name_buffer into it.
    --  Also append a NUL.
@@ -67,13 +79,6 @@ package body Name_Table is
       Strings_Table.Table (Res + Name_Length) := NUL;
       return Res;
    end Store;
-
-   package Names_Table is new GNAT.Table
-     (Table_Index_Type => Name_Id,
-      Table_Component_Type => Identifier,
-      Table_Low_Bound => Name_Id'First,
-      Table_Initial => 1024,
-      Table_Increment => 100);
 
    procedure Append_Terminator is
    begin
@@ -90,30 +95,31 @@ package body Name_Table is
       Strings_Table.Init;
       Names_Table.Init;
 
-      --  Reserve entry 0.
-      pragma Assert (Names_Table.Allocate = Null_Identifier);
-
       Strings_Table.Set_Last (1);
-      Names_Table.Table (Null_Identifier) := (Hash => 0,
-                                              Name => Strings_Table.Last,
-                                              Next => Null_Identifier,
-                                              Info => 0);
+
+      --  Reserve entry 0.
       Strings_Table.Append (NUL);
+      Names_Table.Append ((Hash => 0,
+                           Name => Strings_Table.Last,
+                           Next => Null_Identifier,
+                           Info => 0));
+      pragma Assert (Names_Table.Last = Null_Identifier);
 
       --  Store characters.
       for C in Character loop
+         Strings_Table.Append (C);
          Names_Table.Append ((Hash => 0,
                               Name => Strings_Table.Last,
                               Next => Null_Identifier,
                               Info => 0));
 
-         Strings_Table.Append (C);
          Strings_Table.Append (NUL);
       end loop;
 
       Append_Terminator;
 
-      Hash_Table := (others => Null_Identifier);
+      Hash_Table :=
+        new Hash_Array'(0 .. Hash_Table_Size - 1 => Null_Identifier);
    end Initialize;
 
    --  Compute the hash value of a string.
@@ -188,15 +194,15 @@ package body Name_Table is
         Id <= First_Character_Name_Id + Character'Pos (Character'Last);
    end Is_Character;
 
-   -- Get the character associed to an identifier.
+   --  Get the character associed to an identifier.
    function Get_Character (Id : Name_Id) return Character is
    begin
       pragma Assert (Is_Character (Id));
       return Character'Val (Id - First_Character_Name_Id);
    end Get_Character;
 
-   -- Get and set the info field associated with each identifier.
-   -- Used to store interpretations of the name.
+   --  Get and set the info field associated with each identifier.
+   --  Used to store interpretations of the name.
    function Get_Info (Id : Name_Id) return Int32 is
    begin
       return Names_Table.Table (Id).Info;
@@ -218,8 +224,43 @@ package body Name_Table is
         = Name_Buffer (1 .. Name_Length);
    end Compare_Name_Buffer_With_Name;
 
-   -- Get or create an entry in the name table.
-   -- The string is taken from NAME_BUFFER and NAME_LENGTH.
+   --  Expand the hash table (double the size).
+   procedure Expand
+   is
+      procedure Deallocate is new Ada.Unchecked_Deallocation
+        (Hash_Array, Hash_Array_Acc);
+
+      Old_Hash_Table : Hash_Array_Acc;
+      Id : Name_Id;
+   begin
+      Old_Hash_Table := Hash_Table;
+      Hash_Table_Size := Hash_Table_Size * 2;
+      Hash_Table :=
+        new Hash_Array'(0 .. Hash_Table_Size - 1 => Null_Identifier);
+
+      --  Rehash.
+      for I in Old_Hash_Table'Range loop
+         Id := Old_Hash_Table (I);
+         while Id /= Null_Identifier loop
+            --  Note: collisions are put in reverse order.
+            declare
+               Ent : Identifier renames Names_Table.Table (Id);
+               Hash_Index : constant Hash_Value_Type :=
+                 Ent.Hash and (Hash_Table_Size - 1);
+               Next_Id : constant Name_Id := Ent.Next;
+            begin
+               Ent.Next := Hash_Table (Hash_Index);
+               Hash_Table (Hash_Index) := Id;
+               Id := Next_Id;
+            end;
+         end loop;
+      end loop;
+
+      Deallocate (Old_Hash_Table);
+   end Expand;
+
+   --  Get or create an entry in the name table.
+   --  The string is taken from NAME_BUFFER and NAME_LENGTH.
    function Get_Identifier return Name_Id
    is
       Hash_Value : Hash_Value_Type;
@@ -233,6 +274,7 @@ package body Name_Table is
          Put_Line ("get_identifier " & Name_Buffer (1 .. Name_Length));
       end if;
 
+      --  Find the name.
       Res := Hash_Table (Hash_Index);
       while Res /= Null_Identifier loop
          --Put_Line ("compare with " & Get_String (Res));
@@ -246,6 +288,14 @@ package body Name_Table is
          Res := Names_Table.Table (Res).Next;
       end loop;
 
+      --  Maybe expand Hash_Table.
+      if Hash_Value_Type (Names_Table.Last) > 2 * Hash_Table_Size then
+         Expand;
+         --  The Hash_Index has certainly changed.
+         Hash_Index := Hash_Value and (Hash_Table_Size - 1);
+      end if;
+
+      --  Insert new entry.
       Res := Names_Table.Last;
       Names_Table.Table (Res) := (Hash => Hash_Value,
                                   Name => Store,
