@@ -8,12 +8,12 @@ BE=llvm
 all: $(ortho_exec)
 
 $(ortho_exec): $(ortho_srcdir)/llvm/ortho_llvm.ads force llvm-cbindings.o
-	gnatmake -m -o $@ -g -aI$(ortho_srcdir)/llvm -aI$(ortho_srcdir) \
+	gnatmake -o $@ -aI$(ortho_srcdir)/llvm -aI$(ortho_srcdir) \
 	$(GNAT_FLAGS) ortho_code_main -bargs -E \
 	-largs llvm-cbindings.o `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++ #-static
 
 llvm-cbindings.o: $(ortho_srcdir)/llvm/llvm-cbindings.cpp
-	$(CXX) -c  -I`$(LLVM_CONFIG) --includedir --cflags` -g -o $@ $<
+	$(CXX) -c  -I`$(LLVM_CONFIG) --includedir --cflags` -o $@ $<
 
 clean:
 	$(RM) -f *.o *.ali ortho_code_main

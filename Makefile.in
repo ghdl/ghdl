@@ -40,24 +40,23 @@ VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
 ADAC=$(CC)
 
 # Debug
-ADA_FLAGS=-g -gnata
+OPT_FLAGS=-g
+ADA_FLAGS=-gnata
 
 # Optimize, do not forget to use MODE=--genfast for iirs.adb.
-#ADA_FLAGS+=-O -gnatpn
-#GRT_FLAGS+=-O
+#ADA_FLAGS+=-gnatpn
+#OPT_FLAGS+=-O
 
 # Profiling.
-#ADA_FLAGS+=-pg -gnatn -O
-#GRT_FLAGS+=-pg -O
+#ADA_FLAGS+=-gnatn
+#OPT_FLAGS+=-pg -O
 
 # Coverage
-#ADA_FLAGS+=-fprofile-arcs -ftest-coverage
+#OPT_FLAGS+=-fprofile-arcs -ftest-coverage
 
-GRT_FLAGS=-g
-LIB_CFLAGS=-g -O2
-
-GNATFLAGS=-gnaty3befhkmr -gnatwae -aO. -gnatf -gnat05 $(ADA_FLAGS)
-
+GNATFLAGS=-gnaty3befhkmr -gnatwae -aO. -gnatf -gnat05 $(OPT_FLAGS) $(ADA_FLAGS)
+GRT_FLAGS=$(OPT_FLAGS)
+LIB_CFLAGS=$(OPT_FLAGS)
 
 GNAT_BARGS=-bargs -E
 
@@ -95,7 +94,7 @@ ghdl_mcode: $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
 	$(GNATMAKE) -o $@ $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
-	$(CC) -c -g -o $@ $<
+	$(CC) -c $(OPT_FLAGS) -o $@ $<
 
 libs.vhdl.mcode: vhdl.libs.all
 
@@ -183,7 +182,8 @@ ghdl_llvm_jit: $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
 	$(GNATMAKE) -o $@ $(GHDL_LLVM_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
 
 llvm-cbindings.o: $(srcdir)/src/ortho/llvm/llvm-cbindings.cpp
-	$(CXX) -c -m64 `$(LLVM_CONFIG) --includedir --cxxflags` -g -o $@ $<
+	$(CXX) -c `$(LLVM_CONFIG) --includedir --cxxflags` \
+	  $(OPT_FLAGS) -o $@ $<
 
 libs.vhdl.llvmjit:
 	$(MAKE) GHDL=ghdl_llvm_jit vhdl.libs.all
