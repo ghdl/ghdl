@@ -72,28 +72,12 @@ package Sem_Scopes is
                                  return Boolean;
    pragma Inline (Valid_Interpretation);
 
-   --  This pseudo interpretation marks the end of the interpretation chain,
-   --  and means there is no (more) interpretations for the name.
-   --  Unless you need to discriminate between an absence of declaration and
-   --  a conflict between potential declarations, you should use the
-   --  VALID_INTERPRETATION function.
-   No_Name_Interpretation : constant Name_Interpretation_Type;
-
-   --  This pseudo interpretation means the name has only conflicting potential
-   --  declarations, and also terminates the chain of interpretations.
-   --  Unless you need to discriminate between an absence of declaration and
-   --  a conflict between potential declarations, you should use the
-   --  VALID_INTERPRETATION function.
-   Conflict_Interpretation : constant Name_Interpretation_Type;
-
    -- Get the first interpretation of identifier ID.
    function Get_Interpretation (Id: Name_Id) return Name_Interpretation_Type;
-   pragma Inline (Get_Interpretation);
 
    -- Get the next interpretation from an interpretation.
    function Get_Next_Interpretation (Ni: Name_Interpretation_Type)
                                      return Name_Interpretation_Type;
-   pragma Inline (Get_Next_Interpretation);
 
    --  Get a declaration associated with an interpretation.
    function Get_Declaration (Ni: Name_Interpretation_Type) return Iir;
@@ -211,7 +195,13 @@ package Sem_Scopes is
 
 private
    type Name_Interpretation_Type is new Int32 range 0 .. (2 ** 30) - 1;
+
+   --  This pseudo interpretation marks the end of the interpretation chain,
+   --  and means there is no (more) interpretations for the name.
+   --  Unless you need to discriminate between an absence of declaration and
+   --  a conflict between potential declarations, you should use the
+   --  VALID_INTERPRETATION function.
    No_Name_Interpretation : constant Name_Interpretation_Type := 0;
-   Conflict_Interpretation : constant Name_Interpretation_Type := 1;
-   First_Valid_Interpretation : constant Name_Interpretation_Type := 2;
+
+   First_Valid_Interpretation : constant Name_Interpretation_Type := 1;
 end Sem_Scopes;

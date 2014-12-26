@@ -1289,7 +1289,7 @@ package body Ieee.Vital_Timing is
       end if;
 
       --  Check ports.
-      Name_Table.Assert_No_Infos;
+      Push_Interpretations;
       Open_Declarative_Region;
       Decl := Get_Port_Chain (Ent);
       while Decl /= Null_Iir loop
@@ -1306,6 +1306,7 @@ package body Ieee.Vital_Timing is
          Decl := Get_Chain (Decl);
       end loop;
       Close_Declarative_Region;
+      Pop_Interpretations;
    end Check_Vital_Level0_Entity;
 
    --  Return TRUE if UNIT was decorated with attribute VITAL_Level0.

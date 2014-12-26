@@ -309,6 +309,7 @@ package body Sem_Decls is
       end if;
 
       Sem_Scopes.Add_Name (Inter);
+      Xref_Decl (Inter);
    end Sem_Interface_Package_Declaration;
 
    procedure Sem_Interface_Chain (Interface_Chain: Iir;

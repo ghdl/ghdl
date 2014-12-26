@@ -2674,9 +2674,8 @@ package body Sem is
       Current_Design_Unit := Design_Unit;
       Push_Signals_Declarative_Part (Implicit, Null_Iir);
 
-      --  Be sure the name table is empty.
-      --  It is empty at start-up, or saved before recursing.
-      pragma Debug (Name_Table.Assert_No_Infos);
+      --  Have a clean and empty state for scopes.
+      Push_Interpretations;
 
       --  LRM02 10.1 Declarative Region.
       --  In addition to the above declarative region, there is a root
@@ -2731,6 +2730,8 @@ package body Sem is
       end case;
 
       Close_Declarative_Region;
+
+      Pop_Interpretations;
 
       if Get_Date (Design_Unit) = Date_Analyzing then
          Set_Date (Design_Unit, Date_Analyzed);

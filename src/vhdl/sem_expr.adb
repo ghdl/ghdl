@@ -3802,9 +3802,7 @@ package body Sem_Expr is
                if E = Null_Iir then
                   Sem_Name (Expr);
                   E := Get_Named_Entity (Expr);
-                  if E = Null_Iir then
-                     raise Internal_Error;
-                  end if;
+                  pragma Assert (E /= Null_Iir);
                end if;
                if E = Error_Mark then
                   return Null_Iir;

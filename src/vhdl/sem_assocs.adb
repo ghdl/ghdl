@@ -1345,6 +1345,7 @@ package body Sem_Assocs is
          pragma Assert (Get_Identifier (Formal) = Get_Identifier (Inter));
          Set_Named_Entity (Formal, Inter);
          Set_Base_Name (Formal, Inter);
+         Xrefs.Xref_Ref (Formal, Inter);
       end if;
 
       --  Analyze actual.

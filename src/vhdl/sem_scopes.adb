@@ -23,31 +23,71 @@ with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 
 package body Sem_Scopes is
-   -- FIXME: names:
-   -- scopes => regions ?
-
-   --  Debugging subprograms.
-   procedure Disp_All_Names;
-   pragma Unreferenced (Disp_All_Names);
-
-   procedure Disp_Scopes;
-   pragma Unreferenced (Disp_Scopes);
-
-   procedure Disp_Detailed_Interpretations (Ident : Name_Id);
-   pragma Unreferenced (Disp_Detailed_Interpretations);
-
-   -- An interpretation cell is the element of the simply linked list
-   -- of interpratation for an identifier.
-   -- DECL is visible declaration;
-   -- NEXT is the next element of the list.
-   -- Interpretation cells are stored in a stack, Interpretations.
+   --  An interpretation cell is the element of the simply linked list
+   --  of interpretation for an identifier.
+   --  Interpretation cells are stored in table Interpretations.
    type Interpretation_Cell is record
+      --  The declaration for this interpretation.
       Decl: Iir;
+
+      --  If True, the declaration is potentially visible (ie visible via a
+      --  use clause).
       Is_Potential : Boolean;
-      Pad_0 : Boolean;
-      Next: Name_Interpretation_Type;
+
+      --  If True, previous declarations in PREV chain are hidden and shouldn't
+      --  be considered.
+      Prev_Hidden : Boolean;
+
+      --  Previous interpretation for this identifier.
+      --  If No_Name_Interpretation, this (not PREV) interpretation is the last
+      --  one. If Prev_Hidden is True, PREV must be ignored.  If Prev_Hidden is
+      --  false, the identifier is overloaded.
+      Prev: Name_Interpretation_Type;
+
+      --  Previous added identifier in the declarative region.  This forms a
+      --  linked list used to remove interpretations when a declarative
+      --  region is closed.
+      Prev_In_Region : Name_Id;
    end record;
    pragma Pack (Interpretation_Cell);
+
+   package Interpretations is new GNAT.Table
+     (Table_Component_Type => Interpretation_Cell,
+      Table_Index_Type => Name_Interpretation_Type,
+      Table_Low_Bound => First_Valid_Interpretation,
+      Table_Initial => 1024,
+      Table_Increment => 100);
+
+   --  Cached value of Prev_In_Region of current region.
+   Last_In_Region : Name_Id := Null_Identifier;
+
+   --  First interpretation in the current declarative region.
+   Current_Region_Start : Name_Interpretation_Type :=
+     First_Valid_Interpretation;
+
+   --  First valid interpretation.  All interpretations smaller than this
+   --  value are part of a previous (and nested) analysis and must not be
+   --  considered.
+   First_Interpretation : Name_Interpretation_Type :=
+     First_Valid_Interpretation;
+
+   --  List of non-local hidden declarations.
+   type Hide_Index is new Nat32;
+   No_Hide_Index : constant Hide_Index := 0;
+
+   package Hidden_Decls is new GNAT.Table
+     (Table_Component_Type => Name_Interpretation_Type,
+      Table_Index_Type => Hide_Index,
+      Table_Low_Bound => No_Hide_Index + 1,
+      Table_Initial => 32,
+      Table_Increment => 100);
+
+   --  First non-local hidden declarations.  In VHDL, it is possible to hide
+   --  an overloaded declaration (by declaring a subprogram with the same
+   --  profile).   If the overloaded declaration is local, the interpretation
+   --  can simply be modified.  But if it is not local, the interpretation is
+   --  removed from the chain and saved in the Hidden_Decls table.
+   First_Hide_Index : Hide_Index := No_Hide_Index;
 
    -- To manage the list of interpretation and to add informations to this
    -- list, a stack is used.
@@ -55,8 +95,8 @@ package body Sem_Scopes is
    -- Save_Cell:
    --   the element contains the interpretation INTER for the indentifier ID
    --   for the outer declarative region.
-   --   A save cell is always each time a declaration is added to save the
-   --   previous interpretation.
+   --   A save cell is always created each time a declaration is added to save
+   --   the previous interpretation.
    -- Region_Start:
    --   A new declarative region start at interpretation INTER.  Here, INTER
    --   is used as an index in the interpretations stack (table).
@@ -65,99 +105,72 @@ package body Sem_Scopes is
    --   All currents interpretations are saved between both INTER, and
    --   are cleared.  This is used to call semantic during another semantic.
 
-   type Scope_Cell_Kind_Type is
-     (Save_Cell, Hide_Cell, Region_Start, Barrier_Start, Barrier_End);
+   type Scope_Cell_Kind_Type is (Scope_Start, Scope_Region);
 
    type Scope_Cell is record
       Kind: Scope_Cell_Kind_Type;
 
-      --  Usage of Inter:
-      --  Save_Cell: previous value of name_table (id).info
-      --  Hide_Cell: interpretation hidden.
-      --  Region_Start: previous value of Current_Scope_Start.
-      --  Barrier_Start: previous value of current_scope_start.
-      --  Barrier_End: last index of interpretations table.
-      Inter: Name_Interpretation_Type;
-
-      --  Usage of Id:
-      --  Save_Cell: ID whose interpretations are saved.
-      --  Hide_Cell: not used.
-      --  Region_Start: previous value of the last index of visible_types.
-      --  Barrier_Start: previous value of CURRENT_BARRIER.
-      --  Barrier_End: previous value of Current_composite_types_start.
-      Id: Name_Id;
+      --  Values for the previous scope.
+      Saved_Last_In_Region : Name_Id;
+      Saved_Region_Start : Name_Interpretation_Type;
+      Saved_First_Hide_Index : Hide_Index;
+      Saved_First_Interpretation : Name_Interpretation_Type;
    end record;
-
-   package Interpretations is new GNAT.Table
-     (Table_Component_Type => Interpretation_Cell,
-      Table_Index_Type => Name_Interpretation_Type,
-      Table_Low_Bound => First_Valid_Interpretation,
-      Table_Initial => 128,
-      Table_Increment => 50);
 
    package Scopes is new GNAT.Table
      (Table_Component_Type => Scope_Cell,
       Table_Index_Type => Natural,
-      Table_Low_Bound => 0,
-      Table_Initial => 128,
-      Table_Increment => 50);
-
-   -- Index into Interpretations marking the last interpretation of
-   -- the previous (immediate) declarative region.
-   Current_Scope_Start: Name_Interpretation_Type := No_Name_Interpretation;
+      Table_Low_Bound => 1,
+      Table_Initial => 64,
+      Table_Increment => 100);
 
    function Valid_Interpretation (Inter : Name_Interpretation_Type)
                                  return Boolean is
    begin
-      return Inter >= First_Valid_Interpretation;
+      return Inter >= First_Interpretation;
    end Valid_Interpretation;
 
-   -- Get and Set the info field of the table table for a
-   -- name_interpretation.
-   function Get_Interpretation (Id: Name_Id) return Name_Interpretation_Type is
+   --  Return True iff NI means there is a conflict for the identifier: no
+   --  valid interpretation due to potentially visible homoraph.
+   function Is_Conflict_Declaration (Ni : Name_Interpretation_Type)
+                                    return Boolean is
+   begin
+      pragma Assert (Valid_Interpretation (Ni));
+      return Interpretations.Table (Ni).Decl = Null_Iir;
+   end Is_Conflict_Declaration;
+
+   --  Get the current interpretation for ID.  The result is raw: it may not
+   --  be valid.
+   function Get_Interpretation_Raw (Id : Name_Id)
+                                   return Name_Interpretation_Type is
    begin
       return Name_Interpretation_Type (Name_Table.Get_Info (Id));
-   end Get_Interpretation;
+   end Get_Interpretation_Raw;
 
-   procedure Set_Interpretation (Id: Name_Id; Inter: Name_Interpretation_Type)
-   is
+   procedure Set_Interpretation
+     (Id : Name_Id; Inter : Name_Interpretation_Type) is
    begin
       Name_Table.Set_Info (Id, Int32 (Inter));
    end Set_Interpretation;
 
-   function Get_Under_Interpretation (Id : Name_Id)
-     return Name_Interpretation_Type
-   is
-      Inter : Name_Interpretation_Type;
+   function Get_Interpretation_From_Raw (Inter : Name_Interpretation_Type)
+                                        return Name_Interpretation_Type is
    begin
-      Inter := Name_Interpretation_Type (Name_Table.Get_Info (Id));
-
-      --  ID has no interpretation.
-      --  So, there is no 'under' interpretation (FIXME: prove it).
-      if not Valid_Interpretation (Inter) then
+      if Valid_Interpretation (Inter)
+        and then not Is_Conflict_Declaration (Inter)
+      then
+         --  In the current scopes set and not a conflict.
+         return Inter;
+      else
          return No_Name_Interpretation;
       end if;
-      for I in reverse Scopes.First .. Scopes.Last loop
-         declare
-            S : Scope_Cell renames Scopes.Table (I);
-         begin
-            case S.Kind is
-               when Save_Cell =>
-                  if S.Id = Id then
-                     --  This is the previous one, return it.
-                     return S.Inter;
-                  end if;
-               when Region_Start
-                 | Hide_Cell =>
-                  null;
-               when Barrier_Start
-                 | Barrier_End =>
-                  return No_Name_Interpretation;
-            end case;
-         end;
-      end loop;
-      return No_Name_Interpretation;
-   end Get_Under_Interpretation;
+   end Get_Interpretation_From_Raw;
+
+   function Get_Interpretation (Id : Name_Id)
+                               return Name_Interpretation_Type is
+   begin
+      return Get_Interpretation_From_Raw (Get_Interpretation_Raw (Id));
+   end Get_Interpretation;
 
    procedure Check_Interpretations;
    pragma Unreferenced (Check_Interpretations);
@@ -165,10 +178,9 @@ package body Sem_Scopes is
    procedure Check_Interpretations
    is
       Inter: Name_Interpretation_Type;
-      Last : Name_Interpretation_Type;
+      Last : constant Name_Interpretation_Type := Interpretations.Last;
       Err : Boolean;
    begin
-      Last := Interpretations.Last;
       Err := False;
       for I in 0 .. Name_Table.Last_Name_Id loop
          Inter := Get_Interpretation (I);
@@ -183,74 +195,147 @@ package body Sem_Scopes is
       end if;
    end Check_Interpretations;
 
-   -- Create a new declarative region.
-   -- Simply push a region_start cell and update current_scope_start.
+   procedure Push_Interpretations is
+   begin
+      Scopes.Append ((Kind => Scope_Start,
+                      Saved_Last_In_Region => Last_In_Region,
+                      Saved_Region_Start => Current_Region_Start,
+                      Saved_First_Hide_Index => First_Hide_Index,
+                      Saved_First_Interpretation => First_Interpretation));
+      Last_In_Region := Null_Identifier;
+      Current_Region_Start := Interpretations.Last + 1;
+      First_Hide_Index := Hidden_Decls.Last + 1;
+      First_Interpretation := Interpretations.Last + 1;
+   end Push_Interpretations;
+
+   procedure Pop_Interpretations
+   is
+      Cell : Scope_Cell renames Scopes.Table (Scopes.Last);
+   begin
+      pragma Assert (Scopes.Table (Scopes.Last).Kind = Scope_Start);
+
+      --  All the declarative regions must have been removed.
+      pragma Assert (Last_In_Region = Null_Identifier);
+      pragma Assert (Current_Region_Start = Interpretations.Last + 1);
+      pragma Assert (First_Hide_Index = Hidden_Decls.Last + 1);
+      pragma Assert (First_Interpretation = Interpretations.Last + 1);
+
+      Last_In_Region := Cell.Saved_Last_In_Region;
+      Current_Region_Start := Cell.Saved_Region_Start;
+      First_Hide_Index := Cell.Saved_First_Hide_Index;
+      First_Interpretation := Cell.Saved_First_Interpretation;
+
+      Scopes.Decrement_Last;
+   end Pop_Interpretations;
+
+   --  Create a new declarative region.
+   --  Simply push a region_start cell and update current_scope_start.
    procedure Open_Declarative_Region is
    begin
-      Scopes.Increment_Last;
-      Scopes.Table (Scopes.Last) := (Kind => Region_Start,
-                                     Inter => Current_Scope_Start,
-                                     Id => Null_Identifier);
-      Current_Scope_Start := Interpretations.Last;
+      Scopes.Append ((Kind => Scope_Region,
+                      Saved_Last_In_Region => Last_In_Region,
+                      Saved_Region_Start => Current_Region_Start,
+                      Saved_First_Hide_Index => First_Hide_Index,
+                      Saved_First_Interpretation => No_Name_Interpretation));
+      Last_In_Region := Null_Identifier;
+      Current_Region_Start := Interpretations.Last + 1;
+      First_Hide_Index := Hidden_Decls.Last + 1;
    end Open_Declarative_Region;
 
-   -- Close a declarative region.
-   -- Update interpretation of identifiers.
-   procedure Close_Declarative_Region is
+   --  Close a declarative region.
+   --  Update interpretation of identifiers.
+   procedure Close_Declarative_Region
+   is
+      Cell : Scope_Cell renames Scopes.Table (Scopes.Last);
+      Id : Name_Id;
    begin
-      loop
-         case Scopes.Table (Scopes.Last).Kind is
-            when Region_Start =>
-               --  Discard interpretations cells added in this scopes.
-               Interpretations.Set_Last (Current_Scope_Start);
-               --  Restore Current_Scope_Start.
-               Current_Scope_Start := Scopes.Table (Scopes.Last).Inter;
-               Scopes.Decrement_Last;
-               return;
-            when Save_Cell =>
-               --  Restore a previous interpretation.
-               Set_Interpretation (Scopes.Table (Scopes.Last).Id,
-                                   Scopes.Table (Scopes.Last).Inter);
-            when Hide_Cell =>
-               --  Unhide previous interpretation.
-               declare
-                  H, S : Name_Interpretation_Type;
-               begin
-                  H := Scopes.Table (Scopes.Last).Inter;
-                  S := Interpretations.Table (H).Next;
-                  Interpretations.Table (H).Next :=
-                    Interpretations.Table (S).Next;
-                  Interpretations.Table (S).Next := H;
-               end;
-            when Barrier_Start
-              | Barrier_End =>
-               --  Barrier cannot exist inside a declarative region.
-               raise Internal_Error;
-         end case;
-         Scopes.Decrement_Last;
+      pragma Assert (Cell.Kind = Scope_Region);
+
+      --  Restore hidden declarations.
+      for I in reverse First_Hide_Index .. Hidden_Decls.Last loop
+         declare
+            Inter : constant Name_Interpretation_Type :=
+              Hidden_Decls.Table (I);
+            Prev_Inter, Next_Inter : Name_Interpretation_Type;
+         begin
+            Prev_Inter := Interpretations.Table (Inter).Prev;
+            Next_Inter := Interpretations.Table (Prev_Inter).Prev;
+            Interpretations.Table (Inter).Prev := Next_Inter;
+            Interpretations.Table (Prev_Inter).Prev := Inter;
+         end;
       end loop;
+      Hidden_Decls.Set_Last (First_Hide_Index - 1);
+
+      --  Remove interpretations of that region.
+      Id := Last_In_Region;
+      if Id /= Null_Identifier then
+         declare
+            Inter : Name_Interpretation_Type;
+         begin
+            loop
+               Inter := Get_Interpretation_Raw (Id);
+               pragma Assert (Inter >= Current_Region_Start);
+               Set_Interpretation (Id, Interpretations.Table (Inter).Prev);
+               Id := Interpretations.Table (Inter).Prev_In_Region;
+               exit when Id = Null_Identifier;
+            end loop;
+            pragma Assert (Inter = Current_Region_Start);
+         end;
+         Interpretations.Set_Last (Current_Region_Start - 1);
+      end if;
+
+      Last_In_Region := Cell.Saved_Last_In_Region;
+      Current_Region_Start := Cell.Saved_Region_Start;
+      First_Hide_Index := Cell.Saved_First_Hide_Index;
+
+      Scopes.Decrement_Last;
    end Close_Declarative_Region;
 
    procedure Open_Scope_Extension renames Open_Declarative_Region;
    procedure Close_Scope_Extension renames Close_Declarative_Region;
 
-   function Get_Next_Interpretation (Ni: Name_Interpretation_Type)
-                                     return Name_Interpretation_Type is
+   function Get_Next_Interpretation (Ni : Name_Interpretation_Type)
+                                    return Name_Interpretation_Type
+   is
+      pragma Assert (Valid_Interpretation (Ni));
+      Cell : Interpretation_Cell renames Interpretations.Table (Ni);
    begin
-      if not Valid_Interpretation (Ni) then
-         raise Internal_Error;
+      if Cell.Prev_Hidden
+        or else not Valid_Interpretation (Cell.Prev)
+      then
+         return No_Name_Interpretation;
+      else
+         return Cell.Prev;
       end if;
-      return Interpretations.Table (Ni).Next;
    end Get_Next_Interpretation;
 
-   function Get_Declaration (Ni: Name_Interpretation_Type)
-                             return Iir is
+   function Get_Declaration (Ni : Name_Interpretation_Type) return Iir is
    begin
-      if not Valid_Interpretation (Ni) then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Valid_Interpretation (Ni));
       return Interpretations.Table (Ni).Decl;
    end Get_Declaration;
+
+   function Get_Under_Interpretation (Id : Name_Id)
+                                     return Name_Interpretation_Type
+   is
+      Inter : constant Name_Interpretation_Type := Get_Interpretation (Id);
+   begin
+      --  ID has no interpretation.
+      --  So, there is no 'under' interpretation (FIXME: prove it).
+      pragma Assert (Valid_Interpretation (Inter));
+
+      declare
+         Cell : Interpretation_Cell renames Interpretations.Table (Inter);
+         Prev : constant Name_Interpretation_Type := Cell.Prev;
+      begin
+         pragma Assert (Cell.Prev_Hidden);
+         if Valid_Interpretation (Prev) then
+            return Prev;
+         else
+            return No_Name_Interpretation;
+         end if;
+      end;
+   end Get_Under_Interpretation;
 
    function Strip_Non_Object_Alias (Decl : Iir) return Iir
    is
@@ -263,103 +348,25 @@ package body Sem_Scopes is
       return Res;
    end Strip_Non_Object_Alias;
 
-   function Get_Non_Alias_Declaration (Ni: Name_Interpretation_Type)
+   function Get_Non_Alias_Declaration (Ni : Name_Interpretation_Type)
                                       return Iir is
    begin
       return Strip_Non_Object_Alias (Get_Declaration (Ni));
    end Get_Non_Alias_Declaration;
 
-   -- Pointer just past the last barrier_end in the scopes stack.
-   Current_Barrier : Integer := 0;
-
-   procedure Push_Interpretations is
-   begin
-      -- Add a barrier_start.
-      -- Save current_scope_start and current_barrier.
-      Scopes.Increment_Last;
-      Scopes.Table (Scopes.Last) := (Kind => Barrier_Start,
-                                     Inter => Current_Scope_Start,
-                                     Id => Name_Id (Current_Barrier));
-
-      -- Save all the current name interpretations.
-      --  (For each name that have interpretations, there is a save_cell
-      --   containing the interpretations for the outer scope).
-      -- FIXME: maybe we should only save the name_table info.
-      for I in Current_Barrier .. Scopes.Last - 1 loop
-         if Scopes.Table (I).Kind = Save_Cell then
-            Scopes.Increment_Last;
-            Scopes.Table (Scopes.Last) :=
-              (Kind => Save_Cell,
-               Inter => Get_Interpretation (Scopes.Table (I).Id),
-               Id => Scopes.Table (I).Id);
-            Set_Interpretation (Scopes.Table (I).Id, No_Name_Interpretation);
-         end if;
-      end loop;
-
-      -- Add a barrier_end.
-      -- Save interpretations.last.
-      Scopes.Increment_Last;
-      Scopes.Table (Scopes.Last) :=
-        (Kind => Barrier_End,
-         Inter => Interpretations.Last,
-         Id => Null_Identifier);
-
-      -- Start a completly new scope.
-      Current_Scope_Start := Interpretations.Last + 1;
-
-      -- Keep the last barrier.
-      Current_Barrier := Scopes.Last + 1;
-
-      pragma Debug (Name_Table.Assert_No_Infos);
-   end Push_Interpretations;
-
-   procedure Pop_Interpretations is
-   begin
-      -- clear all name interpretations set by the current barrier.
-      for I in Current_Barrier .. Scopes.Last loop
-         if Scopes.Table (I).Kind = Save_Cell then
-            Set_Interpretation (Scopes.Table (I).Id, No_Name_Interpretation);
-         end if;
-      end loop;
-      Scopes.Set_Last (Current_Barrier - 1);
-      if Scopes.Table (Scopes.Last).Kind /= Barrier_End then
-         raise Internal_Error;
-      end if;
-
-      pragma Debug (Name_Table.Assert_No_Infos);
-
-      -- Restore the stack pointer of interpretations.
-      Interpretations.Set_Last (Scopes.Table (Scopes.Last).Inter);
-      Scopes.Decrement_Last;
-
-      -- Restore all name interpretations.
-      while Scopes.Table (Scopes.Last).Kind /= Barrier_Start loop
-         Set_Interpretation (Scopes.Table (Scopes.Last).Id,
-                             Scopes.Table (Scopes.Last).Inter);
-         Scopes.Decrement_Last;
-      end loop;
-
-      -- Restore current_scope_start and current_barrier.
-      Current_Scope_Start := Scopes.Table (Scopes.Last).Inter;
-      Current_Barrier := Natural (Scopes.Table (Scopes.Last).Id);
-
-      Scopes.Decrement_Last;
-   end Pop_Interpretations;
-
-   -- Return TRUE if INTER was made directly visible via a use clause.
-   function Is_Potentially_Visible (Inter: Name_Interpretation_Type)
-     return Boolean
-   is
+   --  Return TRUE if INTER was made directly visible via a use clause.
+   function Is_Potentially_Visible (Inter : Name_Interpretation_Type)
+                                   return Boolean is
    begin
       return Interpretations.Table (Inter).Is_Potential;
    end Is_Potentially_Visible;
 
-   -- Return TRUE iif DECL can be overloaded.
-   function Is_Overloadable (Decl: Iir) return Boolean is
+   --  Return TRUE iif DECL can be overloaded.
+   function Is_Overloadable (Decl : Iir) return Boolean is
    begin
-      -- LRM93 §10.3:
-      -- The overloaded declarations considered in this chapter are those for
-      -- subprograms and enumeration literals.
+      --  LRM93 10.3:
+      --  The overloaded declarations considered in this chapter are those for
+      --  subprograms and enumeration literals.
       case Get_Kind (Decl) is
          when Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
@@ -381,107 +388,67 @@ package body Sem_Scopes is
       end case;
    end Is_Overloadable;
 
-   -- Return TRUE if INTER was made direclty visible in the current
-   -- declarative region.
-   function Is_In_Current_Declarative_Region (Inter: Name_Interpretation_Type)
+   --  Return TRUE if INTER was made direclty visible in the current
+   --  declarative region.
+   function Is_In_Current_Declarative_Region (Inter : Name_Interpretation_Type)
                                              return Boolean is
    begin
-      return Inter > Current_Scope_Start;
+      return Inter >= Current_Region_Start;
    end Is_In_Current_Declarative_Region;
 
-   --  Called when CURR is being declared in the same declarative region as
-   --  PREV, using the same identifier.
-   --  The function assumes CURR and PREV are both overloadable.
-   --  Return TRUE if this redeclaration is allowed.
---    function Redeclaration_Allowed (Prev, Curr : Iir) return Boolean is
---    begin
---       case Get_Kind (Curr) is
---          when Iir_Kinds_Function_Specification
---            | Iir_Kinds_Procedure_Specification =>
---             if ((Get_Kind (Prev) in Iir_Kinds_User_Function_Specification
---               and then
---               Get_Kind (Curr) in Iir_Kinds_User_Function_Specification)
---               or else
---               (Get_Kind (Prev) in Iir_Kinds_User_Procedure_Specification
---                and then
---               Get_Kind (Curr) in Iir_Kinds_User_Procedure_Specification))
---             then
---                return not Iirs_Utils.Is_Same_Profile (Prev, Curr);
---             else
---                return True;
---             end if;
---          when Iir_Kind_Enumeration_Literal =>
---             if Get_Kind (Prev) /= Get_Kind (Curr) then
---                --  FIXME: PREV may be a function returning the type of the
---                --  literal.
---                return True;
---             end if;
---             return Get_Type (Prev) /= Get_Type (Curr);
---          when others =>
---             return False;
---       end case;
---    end Redeclaration_Allowed;
-
-   -- Add interpretation DECL to the identifier of DECL.
-   -- POTENTIALLY is true if the identifier comes from a use clause.
-   procedure Add_Name (Decl: Iir; Ident: Name_Id; Potentially: Boolean)
+   --  Add interpretation DECL to the identifier of DECL.
+   --  POTENTIALLY is true if the identifier comes from a use clause.
+   procedure Add_Name (Decl : Iir; Ident : Name_Id; Potentially : Boolean)
    is
       -- Current interpretation of ID.  This is the one before DECL is
       -- added (if so).
-      Current_Inter: Name_Interpretation_Type;
+      Raw_Inter : constant Name_Interpretation_Type :=
+        Get_Interpretation_Raw (Ident);
+      Current_Inter : constant Name_Interpretation_Type :=
+        Get_Interpretation_From_Raw (Raw_Inter);
       Current_Decl : Iir;
 
-      --  Before adding a new interpretation, the current interpretation
-      --  must be saved so that it could be restored when the current scope
-      --  is removed.  That must be done only once per scope and per
-      --  interpretation.  Note that the saved interpretation is not removed
-      --  from the chain of interpretations.
-      procedure Save_Current_Interpretation is
-      begin
-         Scopes.Increment_Last;
-         Scopes.Table (Scopes.Last) :=
-           (Kind => Save_Cell, Id => Ident, Inter => Current_Inter);
-      end Save_Current_Interpretation;
-
       --  Add DECL in the chain of interpretation for the identifier.
-      procedure Add_New_Interpretation is
+      procedure Add_New_Interpretation (Hid_Prev : Boolean; D : Iir := Decl) is
       begin
-         Interpretations.Increment_Last;
-         Interpretations.Table (Interpretations.Last) :=
-           (Decl => Decl, Next => Current_Inter,
-            Is_Potential => Potentially, Pad_0 => False);
+         Interpretations.Append ((Decl => D,
+                                  Prev => Raw_Inter,
+                                  Is_Potential => Potentially,
+                                  Prev_Hidden => Hid_Prev,
+                                  Prev_In_Region => Last_In_Region));
          Set_Interpretation (Ident, Interpretations.Last);
+         Last_In_Region := Ident;
       end Add_New_Interpretation;
    begin
-      Current_Inter := Get_Interpretation (Ident);
-
-      if Current_Inter = No_Name_Interpretation
-        or else (Current_Inter = Conflict_Interpretation and not Potentially)
-      then
+      if not Valid_Interpretation (Current_Inter) then
          --  Very simple: no hidding, no overloading.
-         --  (current interpretation is Conflict_Interpretation if there is
-         --   only potentially visible declarations that are not made directly
-         --   visible).
-         --  Note: in case of conflict interpretation, it may be unnecessary
-         --  to save the current interpretation (but it is simpler to always
-         --  save it).
-         Save_Current_Interpretation;
-         Add_New_Interpretation;
+         Add_New_Interpretation (True);
          return;
       end if;
 
-      if Potentially then
-         if Current_Inter = Conflict_Interpretation then
+      if Is_Conflict_Declaration (Current_Inter) then
+         if Potentially then
             --  Yet another conflicting interpretation.
             return;
+         else
+            --  Very simple: no hidding, no overloading.
+            --  (current interpretation is Conflict_Interpretation if there is
+            --   only potentially visible declarations that are not made
+            --   directly visible).
+            --  Note: in case of conflict interpretation, it may be unnecessary
+            --  to keep the current interpretation (but it is simpler as is).
+            Add_New_Interpretation (True);
+            return;
          end if;
+      end if;
 
+      if Potentially then
          --  Do not re-add a potential decl.  This handles cases like:
          --  'use p.all; use p.all;'.
          --  FIXME: add a flag (or reuse Visible_Flag) to avoid walking all
          --  the interpretations.
          declare
-            Inter: Name_Interpretation_Type := Current_Inter;
+            Inter : Name_Interpretation_Type := Current_Inter;
          begin
             while Valid_Interpretation (Inter) loop
                if Get_Declaration (Inter) = Decl then
@@ -518,16 +485,6 @@ package body Sem_Scopes is
             Homograph : Name_Interpretation_Type;
             Prev_Homograph : Name_Interpretation_Type;
 
-            --  Add DECL in the chain of interpretation, and save the current
-            --  one if necessary.
-            procedure Maybe_Save_And_Add_New_Interpretation is
-            begin
-               if not Is_In_Current_Declarative_Region (Current_Inter) then
-                  Save_Current_Interpretation;
-               end if;
-               Add_New_Interpretation;
-            end Maybe_Save_And_Add_New_Interpretation;
-
             --  Hide HOMOGRAPH (ie unlink it from the chain of interpretation).
             procedure Hide_Homograph
             is
@@ -536,21 +493,18 @@ package body Sem_Scopes is
                if Prev_Homograph = No_Name_Interpretation then
                   Prev_Homograph := Interpretations.Last;
                end if;
-               if Interpretations.Table (Prev_Homograph).Next /= Homograph
-               then
-                  --  PREV_HOMOGRAPH must be the interpretation just before
-                  --  HOMOGRAPH.
-                  raise Internal_Error;
-               end if;
+
+               --  PREV_HOMOGRAPH must be the interpretation just before
+               --  HOMOGRAPH.
+               pragma Assert
+                 (Interpretations.Table (Prev_Homograph).Prev = Homograph);
 
                --  Hide previous interpretation.
-               S := Interpretations.Table (Homograph).Next;
-               Interpretations.Table (Homograph).Next := Prev_Homograph;
-               Interpretations.Table (Prev_Homograph).Next := S;
-               Scopes.Increment_Last;
-               Scopes.Table (Scopes.Last) :=
-                 (Kind => Hide_Cell,
-                  Id => Null_Identifier, Inter => Homograph);
+               Hidden_Decls.Append (Homograph);
+
+               S := Interpretations.Table (Homograph).Prev;
+               Interpretations.Table (Homograph).Prev := Prev_Homograph;
+               Interpretations.Table (Prev_Homograph).Prev := S;
             end Hide_Homograph;
 
             function Get_Hash_Non_Alias (D : Iir) return Iir_Int32 is
@@ -598,10 +552,8 @@ package body Sem_Scopes is
             Hash : Iir_Int32;
          begin
             Decl_Hash := Get_Hash_Non_Alias (Decl);
-            if Decl_Hash = 0 then
-               --  The hash must have been computed.
-               raise Internal_Error;
-            end if;
+            --  The hash must have been computed.
+            pragma Assert (Decl_Hash /= 0);
 
             --  Find an homograph of this declaration (and also keep the
             --  interpretation just before it in the chain),
@@ -618,7 +570,7 @@ package body Sem_Scopes is
 
             if Homograph = No_Name_Interpretation then
                --  Simple case: no homograph.
-               Maybe_Save_And_Add_New_Interpretation;
+               Add_New_Interpretation (False);
                return;
             end if;
 
@@ -654,8 +606,8 @@ package body Sem_Scopes is
                         if Is_In_Current_Declarative_Region (Homograph) then
                            Replace_Homograph;
                         else
-                           --  Hide homoraph and insert decl.
-                           Maybe_Save_And_Add_New_Interpretation;
+                           --  Insert DECL and hide homograph.
+                           Add_New_Interpretation (False);
                            Hide_Homograph;
                         end if;
                         return;
@@ -706,7 +658,7 @@ package body Sem_Scopes is
 
                --  The homograph was made visible in an outer declarative
                --  region.  Therefore, it must not be hidden.
-               Maybe_Save_And_Add_New_Interpretation;
+               Add_New_Interpretation (False);
 
                return;
             else
@@ -811,7 +763,7 @@ package body Sem_Scopes is
                   --  GHDL: hide the potentially visible declaration.
                   null;
                end if;
-               Maybe_Save_And_Add_New_Interpretation;
+               Add_New_Interpretation (False);
 
                Hide_Homograph;
                return;
@@ -852,25 +804,18 @@ package body Sem_Scopes is
                   end if;
                end if;
 
-               Save_Current_Interpretation;
-               Set_Interpretation (Ident, Conflict_Interpretation);
+               --  Conflict.
+               Add_New_Interpretation (True, Null_Iir);
                return;
             else
-               -- LRM93 §10.4 item #1
+               --  LRM93 10.4 item #1
                --  A potentially visible declaration is not made directly
                --  visible if the place considered is within the immediate
                --  scope of a homograph of the declaration.
-               -- GHDL: Discard the current potentially visible declaration,
-               --  only if it is not an entity declaration, since it is used
-               --  to find default binding.
-               if Get_Kind (Current_Decl) = Iir_Kind_Design_Unit
-                 and then Get_Kind (Get_Library_Unit (Current_Decl))
-                 = Iir_Kind_Entity_Declaration
-               then
-                  Save_Current_Interpretation;
-               end if;
-               Current_Inter := No_Name_Interpretation;
-               Add_New_Interpretation;
+               --  GHDL: Could directly replace the previous interpretation
+               --  (added in same scope), but don't do that for entity
+               --  declarations, since it is used to find default binding.
+               Add_New_Interpretation (True);
                return;
             end if;
          else
@@ -923,9 +868,7 @@ package body Sem_Scopes is
       -- declarative region if the inner region contains an homograph
       -- of this declaration; the outer declaration is the hidden
       -- within the immediate scope of the inner homograph.
-      Save_Current_Interpretation;
-      Current_Inter := No_Name_Interpretation;  -- Hid.
-      Add_New_Interpretation;
+      Add_New_Interpretation (True);
    end Add_Name;
 
    procedure Add_Name (Decl: Iir) is
@@ -941,22 +884,16 @@ package body Sem_Scopes is
       loop
          exit when Get_Declaration (Inter) = Old;
          Inter := Get_Next_Interpretation (Inter);
-         if not Valid_Interpretation (Inter) then
-            raise Internal_Error;
-         end if;
+         pragma Assert (Valid_Interpretation (Inter));
       end loop;
       Interpretations.Table (Inter).Decl := Decl;
-      if Get_Next_Interpretation (Inter) /= No_Name_Interpretation then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Get_Next_Interpretation (Inter) = No_Name_Interpretation);
    end Replace_Name;
 
    procedure Name_Visible (Decl : Iir) is
    begin
-      if Get_Visible_Flag (Decl) then
-         --  A name can be made visible only once.
-         raise Internal_Error;
-      end if;
+      --  A name can be made visible only once.
+      pragma Assert (not Get_Visible_Flag (Decl));
       Set_Visible_Flag (Decl, True);
    end Name_Visible;
 
@@ -1307,7 +1244,19 @@ package body Sem_Scopes is
       end loop;
    end Add_Use_Clause;
 
-   -- Debugging
+   --  Debugging subprograms.
+   procedure Disp_All_Names;
+   pragma Unreferenced (Disp_All_Names);
+
+   procedure Disp_Scopes;
+   pragma Unreferenced (Disp_Scopes);
+
+   procedure Disp_Detailed_Interpretations (Ident : Name_Id);
+   pragma Unreferenced (Disp_Detailed_Interpretations);
+
+   procedure Dump_Current_Scope;
+   pragma Unreferenced (Dump_Current_Scope);
+
    procedure Disp_Detailed_Interpretations (Ident : Name_Id)
    is
       use Ada.Text_IO;
@@ -1368,9 +1317,64 @@ package body Sem_Scopes is
       end loop;
       Put_Line ("interprations.last = "
                 & Name_Interpretation_Type'Image (Interpretations.Last));
-      Put_Line ("current_scope_start ="
-                & Name_Interpretation_Type'Image (Current_Scope_Start));
+      Put_Line ("current_region_start ="
+                & Name_Interpretation_Type'Image (Current_Region_Start));
    end Disp_All_Names;
+
+   procedure Dump_Interpretation (Inter : Name_Interpretation_Type)
+   is
+      use Ada.Text_IO;
+      use Name_Table;
+
+      Decl : Iir;
+   begin
+      Put (Name_Interpretation_Type'Image (Inter));
+      if Is_Potentially_Visible (Inter) then
+         Put (" (use)");
+      end if;
+      Put (": ");
+      Decl := Get_Declaration (Inter);
+      Put (Iir_Kind'Image (Get_Kind (Decl)));
+      Put_Line (", loc: " & Get_Location_Str (Get_Location (Decl)));
+      if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration then
+         Put_Line ("   " & Disp_Subprg (Decl));
+      end if;
+   end Dump_Interpretation;
+
+   procedure Dump_A_Scope (First, Last : Name_Interpretation_Type)
+   is
+      use Ada.Text_IO;
+   begin
+      if First > Last then
+         Put_Line ("scope is empty");
+         return;
+      end if;
+
+      for Inter in reverse First .. Last loop
+         declare
+            Cell : Interpretation_Cell renames Interpretations.Table (Inter);
+         begin
+            Dump_Interpretation (Inter);
+            if Cell.Prev_Hidden then
+               Put ("  [prev:");
+               Put (Name_Interpretation_Type'Image (Cell.Prev));
+               if Cell.Prev_Hidden then
+                  Put (" hidden");
+               end if;
+               Put_Line ("]");
+            else
+               if Cell.Prev < First then
+                  Put_Line (" [last in scope]");
+               end if;
+            end if;
+         end;
+      end loop;
+   end Dump_A_Scope;
+
+   procedure Dump_Current_Scope is
+   begin
+      Dump_A_Scope (Current_Region_Start, Interpretations.Last);
+   end Dump_Current_Scope;
 
    procedure Disp_Scopes
    is
@@ -1381,20 +1385,12 @@ package body Sem_Scopes is
             S : Scope_Cell renames Scopes.Table (I);
          begin
             case S.Kind is
-               when Save_Cell =>
-                  Put ("save_cell: '");
-                  Put (Name_Table.Image (S.Id));
-                  Put ("', old inter:");
-               when Hide_Cell =>
-                  Put ("hide_cell: to be inserted after ");
-               when Region_Start =>
-                  Put ("region_start at");
-               when Barrier_Start =>
-                  Put ("barrier_start at");
-               when Barrier_End =>
-                  Put ("barrier_end at");
+               when Scope_Start =>
+                  Put ("scope_start at");
+               when Scope_Region =>
+                  Put ("scope_region at");
             end case;
-            Put_Line (Name_Interpretation_Type'Image (S.Inter));
+            Put_Line (Name_Interpretation_Type'Image (S.Saved_Region_Start));
          end;
       end loop;
    end Disp_Scopes;

@@ -27,7 +27,6 @@ with Parse;
 with Back_End;
 with Name_Table; use Name_Table;
 with Str_Table;
-with Sem_Scopes;
 with Tokens;
 with Files_Map;
 with Flags;
@@ -1535,10 +1534,7 @@ package body Libraries is
          --  Avoid infinite recursion, if the unit is self-referenced.
          Set_Date_State (Design_Unit, Date_Analyze);
 
-         Sem_Scopes.Push_Interpretations;
          Back_End.Finish_Compilation (Design_Unit);
-         Sem_Scopes.Pop_Interpretations;
-
       end if;
 
       case Get_Date (Design_Unit) is
