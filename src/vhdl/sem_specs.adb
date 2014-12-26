@@ -1749,6 +1749,7 @@ package body Sem_Specs is
       Inter := Get_Interpretation (Name);
 
       if Valid_Interpretation (Inter) then
+         --  LRM93 5.2.2 Default binding indication
          --  A visible entity declaration is either:
          --
          --  a) An entity declaration that has the same simple name as that of

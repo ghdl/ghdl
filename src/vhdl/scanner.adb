@@ -572,8 +572,8 @@ package body Scanner is
       -- This is an identifier or a key word.
       Len := 0;
       loop
-         -- source (pos) is correct.
-         -- LRM93 13.3.1
+         --  Source (pos) is correct.
+         --  LRM93 13.3.1
          --   All characters if a basic identifier are signifiant, including
          --   any underline character inserted between a letter or digit and
          --   an adjacent letter or digit.
@@ -584,33 +584,41 @@ package body Scanner is
          -- The opposite (converting in lower case letters) is not possible,
          -- because two characters have no upper-case equivalent.
          C := Source (Pos);
-         case Characters_Kind (C) is
-            when Upper_Case_Letter =>
-               if Vhdl_Std = Vhdl_87 and C > 'Z' then
-                  Error_8bit;
+         case C is
+            when 'A' .. 'Z' =>
+               C := Character'Val
+                 (Character'Pos (C)
+                    + Character'Pos ('a') - Character'Pos ('A'));
+            when 'a' .. 'z' | '0' .. '9' =>
+               null;
+            when '_' =>
+               if Source (Pos + 1) = '_' then
+                  Error_Msg_Scan ("two underscores can't be consecutive");
                end if;
-               Len := Len + 1;
-               Name_Buffer (Len) := Ada.Characters.Handling.To_Lower (C);
-            when Lower_Case_Letter | Digit =>
-               if Vhdl_Std = Vhdl_87 and C > 'z' then
-                  Error_8bit;
-               end if;
-               Len := Len + 1;
-               Name_Buffer (Len) := C;
-            when Special_Character =>
-               -- The current character is legal in an identifier.
-               if C = '_' then
-                  if Source (Pos + 1) = '_' then
-                     Error_Msg_Scan ("two underscores can't be consecutive");
-                  end if;
-                  Len := Len + 1;
-                  Name_Buffer (Len) := C;
-               else
-                  exit;
-               end if;
-            when others =>
+            when ' ' | ')' | '.' | ';' | ':' =>
                exit;
+            when others =>
+               --  Non common case.
+               case Characters_Kind (C) is
+                  when Upper_Case_Letter | Lower_Case_Letter =>
+                     if Vhdl_Std = Vhdl_87 then
+                        Error_8bit;
+                     end if;
+                     Len := Len + 1;
+                     C := Ada.Characters.Handling.To_Lower (C);
+                  when Digit =>
+                     raise Internal_Error;
+                  when others =>
+                     exit;
+               end case;
          end case;
+
+         --  Put character in name buffer.  FIXME: compute the hash at the same
+         --  time ?
+         Len := Len + 1;
+         Name_Buffer (Len) := C;
+
+         --  Next character.
          Pos := Pos + 1;
       end loop;
 

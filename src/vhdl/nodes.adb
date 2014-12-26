@@ -83,7 +83,17 @@ package body Nodes is
          end if;
          case Format is
             when Format_Short =>
-               Nodet.Table (Res) := Init_Short;
+               --  Inline initialization for speed.
+               Nodet.Table (Res) := Node_Record'
+                 (Format => Format_Short,
+                  Kind => 0,
+                  State1 | State2 => 0,
+                  Odigit1 => 0,
+                  Unused_Odigit2 => 0,
+                  Location => Location_Nil,
+                  Field0 | Field1 | Field2 | Field3  => Null_Node,
+                  Field4 | Field5 => Null_Node,
+                  others => False);
             when Format_Medium =>
                raise Program_Error;
             when Format_Fp =>
