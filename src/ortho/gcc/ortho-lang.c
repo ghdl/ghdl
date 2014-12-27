@@ -474,13 +474,23 @@ static void
 ortho_parse_file (void)
 {
   const char *filename;
+  const char *dbg_filename;
 
   if (num_in_fnames == 0)
     filename = NULL;
   else
     filename = in_fnames[0];
 
-  linemap_add (line_table, LC_ENTER, 0, filename ? filename :"*no-file*", 1);
+  /* Use absolute filenames for debug info.  Works better than relative
+     filenames with some debuggers/tools.  */
+  if (filename == NULL)
+    dbg_filename = "*stdin*";
+  else if (IS_ABSOLUTE_PATH (filename))
+    dbg_filename = filename;
+  else
+    dbg_filename = concat (getpwd (), "/", filename, NULL);
+
+  linemap_add (line_table, LC_ENTER, 0, dbg_filename, 1);
   input_location = linemap_line_start (line_table, 1, 252);
 
   if (!lang_parse_file (filename))
