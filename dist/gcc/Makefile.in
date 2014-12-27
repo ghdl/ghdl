@@ -168,22 +168,24 @@ ANALYZE_DEP:=
 
 ####libraries Makefile.inc
 
+ANALYZE_STD=$(GHDL1) -quiet --compile-standard $(LIB_CFLAGS)
+
 std87_standard.o: $(GHDL1)
-	$(GHDL1) --std=87 -quiet -o std87_standard.s --compile-standard
+	$(ANALYZE_STD) --std=87 -o std87_standard.s
 	../xgcc -c -o $@ std87_standard.s
 	$(RM) -f std87_standard.s
 
 std93_standard.o: $(GHDL1)
-	$(GHDL1) --std=93 -quiet -o std93_standard.s --compile-standard
+	$(ANALYZE_STD) --std=93 -o std93_standard.s
 	../xgcc -c -o $@ std93_standard.s
 	$(RM) -f std93_standard.s
 
 std08_standard.o: $(GHDL1)
-	$(GHDL1) --std=08 -quiet -o std08_standard.s --compile-standard
+	$(ANALYZE_STD) --std=08 -o std08_standard.s
 	../xgcc -c -o $@ std08_standard.s
 	$(RM) -f std08_standard.s
 
-ghdllib: libgrt.a std87_standard.o std93_standard.o std08_standard.o vhdl.libs.all
+ghdllib: std87_standard.o std93_standard.o std08_standard.o vhdl.libs.all
 
 ghdllibs-clean: force
 	$(RM) -rf $(LIB87_DIR) $(LIB93_DIR) $(LIB08_DIR)
@@ -196,7 +198,7 @@ GRT_RANLIB=$(RANLIB)
 
 ####grt Makefile.inc
 
-install-ghdllib: ghdllib grt.lst
+install-ghdllib:
 	$(RM) -rf $(DESTDIR)$(VHDL_LIB_DIR)
 	$(MKDIR) $(DESTDIR)$(VHDL_LIB_DIR)
 # Install libgrt
