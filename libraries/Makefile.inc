@@ -130,12 +130,11 @@ $(LIBDST_DIR)/src/std/%.v87: $(LIBSRC_DIR)/std/%.vhdl
 std.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/std $(STD87_SRCS) force
 	$(RM) -rf $(STD87_DIR)
 	mkdir $(STD87_DIR)
-	prev=`pwd`; cd $(STD87_DIR); \
+	cd $(STD87_DIR); \
 	for i in $(STD87_BSRCS); do \
 	  cmd="$(ANALYZE87) --bootstrap --work=std ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
-	done; \
-	cd $$prev
+	done
 
 $(LIBDST_DIR)/src/ieee/%.v87: $(LIBSRC_DIR)/ieee/%.vhdl
 	$(SED_V87) < $< > $@
@@ -147,12 +146,11 @@ ANALYZE_IEEE87=$(ANALYZE87) -P../std --work=ieee
 
 ieee.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/ieee $(IEEE87_SRCS) $(LIBDST_DIR)/src/vital95 $(VITAL95_SRCS) std.v87 force
 	$(RM) -rf $(IEEE87_DIR); mkdir $(IEEE87_DIR)
-	prev=`pwd`; cd $(IEEE87_DIR); \
+	cd $(IEEE87_DIR); \
 	for i in $(IEEE87_BSRCS) $(VITAL95_BSRCS); do \
           cmd="$(ANALYZE_IEEE87) ../../src/$$i";\
 	  echo $$cmd; eval $$cmd || exit 1; \
-	done; \
-	cd $$prev
+	done
 
 $(LIBDST_DIR)/src/synopsys/%.vhdl: $(LIBSRC_DIR)/synopsys/%.vhdl
 	$(CP) $< $@
@@ -160,7 +158,7 @@ $(LIBDST_DIR)/src/synopsys/%.vhdl: $(LIBSRC_DIR)/synopsys/%.vhdl
 synopsys.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/synopsys $(SYNOPSYS_SRCS) ieee.v87 force
 	$(RM) -rf $(SYN87_DIR)
 	mkdir $(SYN87_DIR)
-	prev=`pwd`; cd $(SYN87_DIR); \
+	cd $(SYN87_DIR); \
 	$(CP) ../ieee/ieee-obj87.cf . ; \
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(VITAL95_SRCS); do \
@@ -172,8 +170,7 @@ synopsys.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/synopsys $(SYNOPSYS_
 	for i in $(SYNOPSYS87_BSRCS); do \
           cmd="$(ANALYZE_IEEE87) ../../src/$$i";\
 	  echo $$cmd; eval $$cmd || exit 1; \
-	done; \
-	cd $$prev
+	done
 
 ### V93 ###############################################################
 
@@ -186,12 +183,11 @@ $(LIBDST_DIR)/src/std/%.v93: $(LIBSRC_DIR)/std/%.vhdl
 std.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/std $(STD93_SRCS) force
 	$(RM) -rf $(STD93_DIR)
 	mkdir $(STD93_DIR)
-	prev=`pwd`; cd $(STD93_DIR); \
+	cd $(STD93_DIR); \
 	for i in $(STD93_BSRCS); do \
 	  cmd="$(ANALYZE93) --bootstrap --work=std ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
-	done; \
-	cd $$prev
+	done
 
 $(LIBDST_DIR)/src/ieee/%.v93: $(LIBSRC_DIR)/ieee/%.vhdl
 	$(SED_V93) < $< > $@
@@ -207,17 +203,16 @@ ANALYZE_IEEE93=$(ANALYZE93) -P../std --work=ieee
 ieee.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/ieee $(IEEE93_SRCS) $(LIBDST_DIR)/src/vital2000 $(VITAL2000_SRCS) std.v93 force
 	$(RM) -rf $(IEEE93_DIR)
 	mkdir $(IEEE93_DIR)
-	prev=`pwd`; cd $(IEEE93_DIR); \
+	cd $(IEEE93_DIR); \
 	for i in $(IEEE93_BSRCS) $(VITAL2000_BSRCS); do \
           cmd="$(ANALYZE_IEEE93) ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
-	done; \
-	cd $$prev
+	done
 
 synopsys.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/synopsys $(SYNOPSYS_SRCS) ieee.v93 force
 	$(RM) -rf $(SYN93_DIR)
 	mkdir $(SYN93_DIR)
-	prev=`pwd`; cd $(SYN93_DIR); \
+	cd $(SYN93_DIR); \
 	$(CP) ../ieee/ieee-obj93.cf .; \
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
@@ -229,8 +224,7 @@ synopsys.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/synopsys $(SYNOPSYS_
 	for i in $(SYNOPSYS93_BSRCS); do \
           cmd="$(ANALYZE_IEEE93) ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
-	done; \
-	cd $$prev
+	done
 
 $(LIBDST_DIR)/src/mentor/%.vhdl: $(LIBSRC_DIR)/mentor/%.vhdl
 	$(CP) $< $@
@@ -238,7 +232,7 @@ $(LIBDST_DIR)/src/mentor/%.vhdl: $(LIBSRC_DIR)/mentor/%.vhdl
 mentor.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/mentor $(MENTOR93_SRCS) ieee.v93 force
 	$(RM) -rf $(MENTOR93_DIR)
 	mkdir $(MENTOR93_DIR)
-	prev=`pwd`; cd $(MENTOR93_DIR); \
+	cd $(MENTOR93_DIR); \
 	$(CP) ../ieee/ieee-obj93.cf . ;\
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
@@ -266,12 +260,11 @@ $(LIBDST_DIR)/src/std/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl
 std.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(LIBDST_DIR)/src/std $(STD08_SRCS) force
 	$(RM) -rf $(STD08_DIR)
 	mkdir $(STD08_DIR)
-	prev=`pwd`; cd $(STD08_DIR); \
+	cd $(STD08_DIR); \
 	for i in $(STD08_BSRCS); do \
 	  cmd="$(ANALYZE08) --bootstrap --work=std ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
-	done; \
-	cd $$prev
+	done
 
 $(LIBDST_DIR)/src/ieee2008/%.vhdl: $(LIBSRC_DIR)/ieee2008/%.vhdl
 	$(CP) $< $@
@@ -282,9 +275,8 @@ ieee.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(LIBDST_DIR)/src/ieee2008 $(IEEE08_SRCS) 
 	$(RM) -rf $(IEEE08_DIR)
 	mkdir $(IEEE08_DIR)
 #       FIXME: add VITAL2000 ?
-	prev=`pwd`; cd $(IEEE08_DIR); \
+	cd $(IEEE08_DIR); \
 	for i in $(IEEE08_BSRCS); do \
           cmd="$(ANALYZE_IEEE08) ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
-	done; \
-	cd $$prev
+	done
