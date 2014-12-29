@@ -27,10 +27,6 @@ package Iirs_Utils is
    function Image_Identifier (Node : Iir) return String;
    function Image_String_Lit (Str : Iir) return String;
 
-   --  Easier function for string literals.
-   function Get_String_Fat_Acc (Str : Iir) return String_Fat_Acc;
-   pragma Inline (Get_String_Fat_Acc);
-
    --  Return True iff N is an error node.
    function Is_Error (N : Iir) return Boolean;
    pragma Inline (Is_Error);

@@ -1351,28 +1351,22 @@ package body Sem is
            | Iir_Kind_Ascending_Type_Attribute =>
             return Are_Trees_Equal (Get_Prefix (Left), Get_Prefix (Right));
 
-         when Iir_Kind_String_Literal
-           | Iir_Kind_Bit_String_Literal =>
-            if Get_Kind (Left) = Iir_Kind_Bit_String_Literal
-              and then Get_Bit_String_Base (Left)
-              /= Get_Bit_String_Base (Right)
-            then
+         when Iir_Kind_String_Literal8 =>
+            if Get_Bit_String_Base (Left) /= Get_Bit_String_Base (Right) then
                return False;
             end if;
             declare
                use Str_Table;
-               Len : Nat32;
-               L_Ptr : String_Fat_Acc;
-               R_Ptr : String_Fat_Acc;
+               Len : constant Nat32 := Get_String_Length (Left);
+               L_Id : constant String8_Id := Get_String8_Id (Left);
+               R_Id : constant String8_Id := Get_String8_Id (Right);
             begin
-               Len := Get_String_Length (Left);
                if Get_String_Length (Right) /= Len then
                   return False;
                end if;
-               L_Ptr := Get_String_Fat_Acc (Get_String_Id (Left));
-               R_Ptr := Get_String_Fat_Acc (Get_String_Id (Right));
                for I in 1 .. Len loop
-                  if L_Ptr (I) /= R_Ptr (I) then
+                  if Element_String8 (L_Id, I) /= Element_String8 (R_Id, I)
+                  then
                      return False;
                   end if;
                end loop;

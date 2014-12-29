@@ -49,7 +49,7 @@ package Nodes_Meta is
       Type_PSL_NFA,
       Type_PSL_Node,
       Type_Source_Ptr,
-      Type_String_Id,
+      Type_String8_Id,
       Type_Time_Stamp_Id,
       Type_Token_Type,
       Type_Tri_State_Type
@@ -88,8 +88,6 @@ package Nodes_Meta is
       Field_Fp_Value,
       Field_Simple_Aggregate_List,
       Field_Bit_String_Base,
-      Field_Bit_String_0,
-      Field_Bit_String_1,
       Field_Literal_Origin,
       Field_Range_Origin,
       Field_Literal_Subtype,
@@ -324,7 +322,7 @@ package Nodes_Meta is
       Field_Protected_Type_Body,
       Field_Protected_Type_Declaration,
       Field_End_Location,
-      Field_String_Id,
+      Field_String8_Id,
       Field_String_Length,
       Field_Use_Flag,
       Field_End_Has_Reserved_Id,
@@ -500,10 +498,10 @@ package Nodes_Meta is
    procedure Set_Source_Ptr
       (N : Iir; F : Fields_Enum; V: Source_Ptr);
 
-   function Get_String_Id
-      (N : Iir; F : Fields_Enum) return String_Id;
-   procedure Set_String_Id
-      (N : Iir; F : Fields_Enum; V: String_Id);
+   function Get_String8_Id
+      (N : Iir; F : Fields_Enum) return String8_Id;
+   procedure Set_String8_Id
+      (N : Iir; F : Fields_Enum; V: String8_Id);
 
    function Get_Time_Stamp_Id
       (N : Iir; F : Fields_Enum) return Time_Stamp_Id;
@@ -550,8 +548,6 @@ package Nodes_Meta is
    function Has_Fp_Value (K : Iir_Kind) return Boolean;
    function Has_Simple_Aggregate_List (K : Iir_Kind) return Boolean;
    function Has_Bit_String_Base (K : Iir_Kind) return Boolean;
-   function Has_Bit_String_0 (K : Iir_Kind) return Boolean;
-   function Has_Bit_String_1 (K : Iir_Kind) return Boolean;
    function Has_Literal_Origin (K : Iir_Kind) return Boolean;
    function Has_Range_Origin (K : Iir_Kind) return Boolean;
    function Has_Literal_Subtype (K : Iir_Kind) return Boolean;
@@ -794,7 +790,7 @@ package Nodes_Meta is
    function Has_Protected_Type_Body (K : Iir_Kind) return Boolean;
    function Has_Protected_Type_Declaration (K : Iir_Kind) return Boolean;
    function Has_End_Location (K : Iir_Kind) return Boolean;
-   function Has_String_Id (K : Iir_Kind) return Boolean;
+   function Has_String8_Id (K : Iir_Kind) return Boolean;
    function Has_String_Length (K : Iir_Kind) return Boolean;
    function Has_Use_Flag (K : Iir_Kind) return Boolean;
    function Has_End_Has_Reserved_Id (K : Iir_Kind) return Boolean;

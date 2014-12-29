@@ -1124,8 +1124,7 @@ package body Sem_Names is
       case Get_Kind (Actual) is
          when Iir_Kind_Null_Literal
            | Iir_Kind_Aggregate
-           | Iir_Kind_String_Literal
-           | Iir_Kind_Bit_String_Literal =>
+           | Iir_Kind_String_Literal8 =>
             Error_Msg_Sem
               (Disp_Node (Actual) & " cannot be a type conversion operand",
                Actual);

@@ -213,10 +213,10 @@ package body Iirs is
    function Iir_Signal_Kind_To_Boolean is new Ada.Unchecked_Conversion
      (Source => Iir_Signal_Kind, Target => Boolean);
 
-   function Iir_To_String_Id is new Ada.Unchecked_Conversion
-     (Source => Iir, Target => String_Id);
-   function String_Id_To_Iir is new Ada.Unchecked_Conversion
-     (Source => String_Id, Target => Iir);
+   function Iir_To_String8_Id is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => String8_Id);
+   function String8_Id_To_Iir is new Ada.Unchecked_Conversion
+     (Source => String8_Id, Target => Iir);
 
    function Iir_To_Int32 is new Ada.Unchecked_Conversion
      (Source => Iir, Target => Int32);
@@ -244,7 +244,7 @@ package body Iirs is
            | Iir_Kind_Library_Clause
            | Iir_Kind_Use_Clause
            | Iir_Kind_Null_Literal
-           | Iir_Kind_String_Literal
+           | Iir_Kind_String_Literal8
            | Iir_Kind_Simple_Aggregate
            | Iir_Kind_Overflow_Literal
            | Iir_Kind_Waveform_Element
@@ -436,7 +436,6 @@ package body Iirs is
             return Format_Short;
          when Iir_Kind_Design_File
            | Iir_Kind_Design_Unit
-           | Iir_Kind_Bit_String_Literal
            | Iir_Kind_Block_Header
            | Iir_Kind_Binding_Indication
            | Iir_Kind_Signature
@@ -890,57 +889,29 @@ package body Iirs is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Simple_Aggregate_List (Get_Kind (Target)));
-      return Iir_To_Iir_List (Get_Field3 (Target));
+      return Iir_To_Iir_List (Get_Field4 (Target));
    end Get_Simple_Aggregate_List;
 
    procedure Set_Simple_Aggregate_List (Target : Iir; List : Iir_List) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Simple_Aggregate_List (Get_Kind (Target)));
-      Set_Field3 (Target, Iir_List_To_Iir (List));
+      Set_Field4 (Target, Iir_List_To_Iir (List));
    end Set_Simple_Aggregate_List;
 
    function Get_Bit_String_Base (Lit : Iir) return Base_Type is
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Bit_String_Base (Get_Kind (Lit)));
-      return Base_Type'Val (Get_Field8 (Lit));
+      return Base_Type'Val (Get_State2 (Lit));
    end Get_Bit_String_Base;
 
    procedure Set_Bit_String_Base (Lit : Iir; Base : Base_Type) is
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Bit_String_Base (Get_Kind (Lit)));
-      Set_Field8 (Lit, Base_Type'Pos (Base));
+      Set_State2 (Lit, Base_Type'Pos (Base));
    end Set_Bit_String_Base;
-
-   function Get_Bit_String_0 (Lit : Iir) return Iir is
-   begin
-      pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_Bit_String_0 (Get_Kind (Lit)));
-      return Get_Field6 (Lit);
-   end Get_Bit_String_0;
-
-   procedure Set_Bit_String_0 (Lit : Iir; El : Iir) is
-   begin
-      pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_Bit_String_0 (Get_Kind (Lit)));
-      Set_Field6 (Lit, El);
-   end Set_Bit_String_0;
-
-   function Get_Bit_String_1 (Lit : Iir) return Iir is
-   begin
-      pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_Bit_String_1 (Get_Kind (Lit)));
-      return Get_Field7 (Lit);
-   end Get_Bit_String_1;
-
-   procedure Set_Bit_String_1 (Lit : Iir; El : Iir) is
-   begin
-      pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_Bit_String_1 (Get_Kind (Lit)));
-      Set_Field7 (Lit, El);
-   end Set_Bit_String_1;
 
    function Get_Literal_Origin (Lit : Iir) return Iir is
    begin
@@ -974,14 +945,14 @@ package body Iirs is
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Literal_Subtype (Get_Kind (Lit)));
-      return Get_Field5 (Lit);
+      return Get_Field3 (Lit);
    end Get_Literal_Subtype;
 
    procedure Set_Literal_Subtype (Lit : Iir; Atype : Iir) is
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Literal_Subtype (Get_Kind (Lit)));
-      Set_Field5 (Lit, Atype);
+      Set_Field3 (Lit, Atype);
    end Set_Literal_Subtype;
 
    function Get_Entity_Class (Target : Iir) return Token_Type is
@@ -4240,19 +4211,19 @@ package body Iirs is
       Set_Field6 (Target, Location_Type_To_Iir (Loc));
    end Set_End_Location;
 
-   function Get_String_Id (Lit : Iir) return String_Id is
+   function Get_String8_Id (Lit : Iir) return String8_Id is
    begin
       pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_String_Id (Get_Kind (Lit)));
-      return Iir_To_String_Id (Get_Field3 (Lit));
-   end Get_String_Id;
+      pragma Assert (Has_String8_Id (Get_Kind (Lit)));
+      return Iir_To_String8_Id (Get_Field5 (Lit));
+   end Get_String8_Id;
 
-   procedure Set_String_Id (Lit : Iir; Id : String_Id) is
+   procedure Set_String8_Id (Lit : Iir; Id : String8_Id) is
    begin
       pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_String_Id (Get_Kind (Lit)));
-      Set_Field3 (Lit, String_Id_To_Iir (Id));
-   end Set_String_Id;
+      pragma Assert (Has_String8_Id (Get_Kind (Lit)));
+      Set_Field5 (Lit, String8_Id_To_Iir (Id));
+   end Set_String8_Id;
 
    function Get_String_Length (Lit : Iir) return Int32 is
    begin

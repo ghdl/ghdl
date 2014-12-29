@@ -37,7 +37,7 @@ package Scanner is
    pragma Inline (Current_Identifier);
 
    -- Get current string identifier and length.
-   function Current_String_Id return String_Id;
+   function Current_String_Id return String8_Id;
    function Current_String_Length return Nat32;
    pragma Inline (Current_String_Id);
    pragma Inline (Current_String_Length);
@@ -48,7 +48,7 @@ package Scanner is
    pragma Inline (Invalidate_Current_Identifier);
 
    -- When CURRENT_TOKEN is tok_integer, returns the value.
-   -- When CURRENT_TOKEN is tok_bit_string, returns the base.
+   -- When CURRENT_TOKEN is tok_bit_string, returns the log of the base.
    function Current_Iir_Int64 return Iir_Int64;
    pragma Inline (Current_Iir_Int64);
 

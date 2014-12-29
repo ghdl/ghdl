@@ -18,25 +18,37 @@
 with Types; use Types;
 
 package Str_Table is
-   --  Create a new entry in the string table and returns a number to it.
-   function Start return String_Id;
-   pragma Inline (Start);
+   --  String8 are arrays (or strings) of Nat8 elements.  They are used to
+   --  store analyzed string or bit string literals.  The elements are the
+   --  position of literals, so it is possible to use them for enumerated types
+   --  containing at most 256 elements (which is the case of standard.bit and
+   --  std_logic_1164.std_ulogic).
+   --  It is not possible to free a string8.
 
-   --  Add a new character in the current entry.
-   procedure Append (C : Character);
-   pragma Inline (Append);
+   --  Create a new string8; this also close the previous string8.
+   --  Initial length is 0.
+   function Create_String8 return String8_Id;
 
-   --  Finish the current entry.
-   procedure Finish;
-   pragma Inline (Finish);
+   --  Append a new element to the being created string8.
+   procedure Append_String8 (El : Nat8);
+   procedure Append_String8_Char (El : Character);
+   pragma Inline (Append_String8_Char);
 
-   --  Get a fat access to the string ID.
-   function Get_String_Fat_Acc (Id : String_Id) return String_Fat_Acc;
-   pragma Inline (Get_String_Fat_Acc);
+   --  Resize (reduce or expand) the current string8.  When expanded, new
+   --  elements are uninitialized.
+   procedure Resize_String8 (Len : Nat32);
 
-   --  Get ID as a string.
-   --  This function is slow, to be used only for debugging.
-   function Image (Id : String_Id) return String;
+   --  Get/Set N-th element of String8 ID.  There is no bound checking.
+   function Element_String8 (Id : String8_Id; N : Pos32) return Nat8;
+   procedure Set_Element_String8 (Id : String8_Id; N : Pos32; Val : Nat8);
+
+   --  Utility function: get N-th element of ID as a character.  Valid only
+   --  if the elements of ID are Latin-1 codes.
+   function Char_String8 (Id : String8_Id; N : Pos32) return Character;
+   pragma Inline (Char_String8);
+
+   --  Utility function: get the LEN elements as a string.
+   function String_String8 (Id : String8_Id; Len : Nat32) return String;
 
    --  Free all the memory and reinitialize the package.
    procedure Initialize;

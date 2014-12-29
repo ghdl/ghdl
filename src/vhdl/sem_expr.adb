@@ -22,6 +22,7 @@ with Sem_Scopes; use Sem_Scopes;
 with Sem_Names; use Sem_Names;
 with Sem;
 with Name_Table;
+with Str_Table;
 with Iirs_Utils; use Iirs_Utils;
 with Evaluation; use Evaluation;
 with Iir_Chains; use Iir_Chains;
@@ -221,7 +222,7 @@ package body Sem_Expr is
       --  LRM87 7.3.1
       --  ... (for string literals) or of type BIT (for bit string literals).
       if Flags.Vhdl_Std = Vhdl_87
-        and then Get_Kind (Expr) = Iir_Kind_Bit_String_Literal
+        and then Get_Bit_String_Base (Expr) /= Base_None
         and then El_Bt /= Bit_Type_Definition
       then
          return False;
@@ -286,8 +287,7 @@ package body Sem_Expr is
       case Get_Kind (Expr) is
          when Iir_Kind_Aggregate =>
             return Is_Aggregate_Type (A_Type);
-         when Iir_Kind_String_Literal
-           | Iir_Kind_Bit_String_Literal =>
+         when Iir_Kind_String_Literal8 =>
             return Is_String_Literal_Type (A_Type, Expr);
          when Iir_Kind_Null_Literal =>
             return Is_Null_Literal_Type (A_Type);
@@ -1877,17 +1877,16 @@ package body Sem_Expr is
    --  Semantize LIT whose elements must be of type EL_TYPE, and return
    --  the length.
    --  FIXME: the errors are reported, but there is no mark of that.
-   function Sem_String_Literal (Lit: Iir; El_Type : Iir) return Natural
+   function Sem_String_Literal (Str : Iir; El_Type : Iir) return Natural
    is
       function Find_Literal (Etype : Iir_Enumeration_Type_Definition;
                              C : Character)
-        return Iir_Enumeration_Literal
+                            return Iir_Enumeration_Literal
       is
+         Id : constant Name_Id := Name_Table.Get_Identifier (C);
          Inter : Name_Interpretation_Type;
-         Id : Name_Id;
          Decl : Iir;
       begin
-         Id := Name_Table.Get_Identifier (C);
          Inter := Get_Interpretation (Id);
          while Valid_Interpretation (Inter) loop
             Decl := Get_Declaration (Inter);
@@ -1905,37 +1904,71 @@ package body Sem_Expr is
             --  ... because it is not defined.
             Error_Msg_Sem
               ("type " & Disp_Node (Etype) & " does not define character '"
-               & C & "'", Lit);
+               & C & "'", Str);
          else
             --  ... because it is not visible.
             Error_Msg_Sem ("character '" & C & "' of type "
-                           & Disp_Node (Etype) & " is not visible", Lit);
+                           & Disp_Node (Etype) & " is not visible", Str);
          end if;
          return Null_Iir;
       end Find_Literal;
 
-      Ptr : String_Fat_Acc;
+      type Characters_Pos is array (Character range <>) of Nat8;
+      Len : constant Nat32 := Get_String_Length (Str);
+      Id : constant String8_Id := Get_String8_Id (Str);
       El : Iir;
-      pragma Unreferenced (El);
-      Len : Nat32;
+      Enum_Pos : Iir_Int32;
+      Ch : Character;
    begin
-      Len := Get_String_Length (Lit);
+      if Get_Bit_String_Base (Str) /= Base_None then
+         --  A bit string.
+         declare
+            Map : Characters_Pos ('0' .. '1');
+         begin
+            for C in Character range '0' .. '1' loop
+               El := Find_Literal (El_Type, C);
+               if El = Null_Iir then
+                  Enum_Pos := 0;
+               else
+                  Enum_Pos := Get_Enum_Pos (El);
+               end if;
+               Map (C) := Nat8 (Enum_Pos);
+            end loop;
 
-      if Get_Kind (Lit) = Iir_Kind_Bit_String_Literal then
-         Set_Bit_String_0 (Lit, Find_Literal (El_Type, '0'));
-         Set_Bit_String_1 (Lit, Find_Literal (El_Type, '1'));
+            for I in 1 .. Len loop
+               Ch := Str_Table.Char_String8 (Id, I);
+               pragma Assert (Ch in Map'Range);
+               Str_Table.Set_Element_String8 (Id, I, Map (Ch));
+            end loop;
+         end;
       else
-         Ptr := Get_String_Fat_Acc (Lit);
-
-         --  For a string_literal, check all characters of the string is a
-         --  literal of the type.
-         --  Always check, for visibility.
-         for I in 1 .. Len loop
-            El := Find_Literal (El_Type, Ptr (I));
-         end loop;
+         --  A string.
+         declare
+            --  Create a cache of literals, to speed-up a little bit the
+            --  search.
+            No_Pos : constant Nat8 := Nat8'Last;
+            Map : Characters_Pos (' ' .. Character'Last) := (others => No_Pos);
+            Res : Nat8;
+         begin
+            for I in 1 .. Len loop
+               Ch := Str_Table.Char_String8 (Id, I);
+               Res := Map (Ch);
+               if Res = No_Pos then
+                  El := Find_Literal (El_Type, Ch);
+                  if El = Null_Iir then
+                     Res := 0;
+                  else
+                     Enum_Pos := Get_Enum_Pos (El);
+                     Res := Nat8 (Enum_Pos);
+                     Map (Ch) := Res;
+                  end if;
+               end if;
+               Str_Table.Set_Element_String8 (Id, I, Res);
+            end loop;
+         end;
       end if;
 
-      Set_Expr_Staticness (Lit, Locally);
+      Set_Expr_Staticness (Str, Locally);
 
       return Natural (Len);
    end Sem_String_Literal;
@@ -3103,8 +3136,7 @@ package body Sem_Expr is
                return;
             end if;
 
-         when Iir_Kind_String_Literal
-           | Iir_Kind_Bit_String_Literal =>
+         when Iir_Kind_String_Literal8 =>
             Len := Sem_String_Literal
               (Aggr, Get_Base_Type (Get_Element_Subtype (A_Type)));
             Assoc_Chain := Null_Iir;
@@ -3335,8 +3367,7 @@ package body Sem_Expr is
                        (Assoc, A_Type, Infos, Constrained, Dim + 1);
                      Value_Staticness := Min (Value_Staticness,
                                               Get_Value_Staticness (Assoc));
-                  when Iir_Kind_String_Literal
-                    | Iir_Kind_Bit_String_Literal =>
+                  when Iir_Kind_String_Literal8 =>
                      if Dim + 1 = Get_Nbr_Elements (Index_List) then
                         Sem_Array_Aggregate_Type_1
                           (Assoc, A_Type, Infos, Constrained, Dim + 1);
@@ -3655,8 +3686,7 @@ package body Sem_Expr is
             when Iir_Kind_Enumeration_Literal
               | Iir_Kind_Physical_Int_Literal
               | Iir_Kind_Physical_Fp_Literal
-              | Iir_Kind_String_Literal
-              | Iir_Kind_Bit_String_Literal
+              | Iir_Kind_String_Literal8
               | Iir_Kind_Character_Literal
               | Iir_Kind_Integer_Literal
               | Iir_Kind_Floating_Point_Literal
@@ -3880,8 +3910,7 @@ package body Sem_Expr is
                return Res;
             end;
 
-         when Iir_Kind_String_Literal
-           | Iir_Kind_Bit_String_Literal =>
+         when Iir_Kind_String_Literal8 =>
             --  LRM93 7.3.1 Literals
             --  The type of a string or bit string literal must be
             --  determinable solely from the context in whcih the literal
@@ -4019,8 +4048,7 @@ package body Sem_Expr is
       case Get_Kind (Expr) is
          when Iir_Kind_Aggregate =>
             Res := Sem_Aggregate (Expr, A_Type);
-         when Iir_Kind_String_Literal
-           | Iir_Kind_Bit_String_Literal =>
+         when Iir_Kind_String_Literal8 =>
             if A_Type = Null_Iir then
                Res := Sem_Expression_Ov (Expr, Null_Iir);
             else

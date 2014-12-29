@@ -15,78 +15,67 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with System;
-with Ada.Unchecked_Conversion;
 with GNAT.Table;
 
 package body Str_Table is
-   package String_Table is new GNAT.Table
-     (Table_Index_Type => String_Id,
-      Table_Component_Type => Character,
-      Table_Low_Bound => Null_String + 1,
-      Table_Initial => 4096,
+   package String8_Table is new GNAT.Table
+     (Table_Index_Type => String8_Id,
+      Table_Component_Type => Nat8,
+      Table_Low_Bound => Null_String8 + 1,
+      Table_Initial => 1024,
       Table_Increment => 100);
 
-   Nul : constant Character := Character'Val (0);
+   Cur_String8 : String8_Id := 0;
 
-   In_String : Boolean := False;
-
-   function Start return String_Id is
+   function Create_String8 return String8_Id is
    begin
-      pragma Assert (In_String = False);
-      In_String := True;
-      return String_Table.Last + 1;
-   end Start;
+      Cur_String8 := String8_Table.Last + 1;
+      return Cur_String8;
+   end Create_String8;
 
-   procedure Append (C : Character) is
+   procedure Append_String8 (El : Nat8) is
    begin
-      pragma Assert (In_String);
-      String_Table.Append (C);
-   end Append;
+      String8_Table.Append (El);
+   end Append_String8;
 
-   procedure Finish is
+   procedure Append_String8_Char (El : Character) is
    begin
-      pragma Assert (In_String);
-      String_Table.Append (Nul);
-      In_String := False;
-   end Finish;
+      Append_String8 (Character'Pos (El));
+   end Append_String8_Char;
 
-   function Get_String_Fat_Acc (Id : String_Id) return String_Fat_Acc
+   procedure Resize_String8 (Len : Nat32) is
+   begin
+      String8_Table.Set_Last (Cur_String8 + String8_Id (Len) - 1);
+   end Resize_String8;
+
+   function Element_String8 (Id : String8_Id; N : Pos32) return Nat8 is
+   begin
+      return String8_Table.Table (Id + String8_Id (N - 1));
+   end Element_String8;
+
+   procedure Set_Element_String8 (Id : String8_Id; N : Pos32; Val : Nat8) is
+   begin
+      String8_Table.Table (Id + String8_Id (N - 1)) := Val;
+   end Set_Element_String8;
+
+   function Char_String8 (Id : String8_Id; N : Pos32) return Character is
+   begin
+      return Character'Val (Element_String8 (Id, N));
+   end Char_String8;
+
+   function String_String8 (Id : String8_Id; Len : Nat32) return String
    is
-      function To_String_Fat_Acc is new Ada.Unchecked_Conversion
-        (Source => System.Address, Target => String_Fat_Acc);
+      Res : String (1 .. Natural (Len));
    begin
-      return To_String_Fat_Acc (String_Table.Table (Id)'Address);
-   end Get_String_Fat_Acc;
-
-   function Get_Length (Id : String_Id) return Natural
-   is
-      Ptr : String_Fat_Acc;
-      Len : Nat32;
-   begin
-      Ptr := Get_String_Fat_Acc (Id);
-      Len := 1;
-      loop
-         if Ptr (Len) = Nul then
-            return Natural (Len - 1);
-         end if;
-         Len := Len + 1;
+      for I in 1 .. Len loop
+         Res (Natural (I)) := Char_String8 (Id, I);
       end loop;
-   end Get_Length;
-
-   function Image (Id : String_Id) return String
-   is
-      Ptr : String_Fat_Acc;
-      Len : Nat32;
-   begin
-      Len := Nat32 (Get_Length (Id));
-      Ptr := Get_String_Fat_Acc (Id);
-      return String (Ptr (1 .. Len));
-   end Image;
+      return Res;
+   end String_String8;
 
    procedure Initialize is
    begin
-      String_Table.Free;
-      String_Table.Init;
+      String8_Table.Free;
+      String8_Table.Init;
    end Initialize;
 end Str_Table;

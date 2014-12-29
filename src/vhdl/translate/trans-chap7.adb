@@ -18,6 +18,7 @@
 
 with Ada.Text_IO;
 with Name_Table;
+with Str_Table;
 with Iirs_Utils; use Iirs_Utils;
 with Iir_Chains; use Iir_Chains;
 with Std_Package; use Std_Package;
@@ -98,7 +99,7 @@ package body Trans.Chap7 is
       return True;
    end Is_Static_Constant;
 
-   procedure Translate_Static_String_Literal_Inner
+   procedure Translate_Static_String_Literal8_Inner
      (List : in out O_Array_Aggr_List;
       Str     : Iir;
       El_Type : Iir)
@@ -108,39 +109,15 @@ package body Trans.Chap7 is
       Literal_List : constant Iir_List :=
         Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
       Len          : constant Nat32 := Get_String_Length (Str);
-      Ptr          : constant String_Fat_Acc := Get_String_Fat_Acc (Str);
+      Id           : constant String8_Id := Get_String8_Id (Str);
       Lit          : Iir;
    begin
       for I in 1 .. Len loop
-         Lit := Find_Name_In_List (Literal_List, Get_Identifier (Ptr (I)));
+         Lit := Get_Nth_Element
+           (Literal_List, Natural (Str_Table.Element_String8 (Id, Pos32 (I))));
          New_Array_Aggr_El (List, Get_Ortho_Expr (Lit));
       end loop;
-   end Translate_Static_String_Literal_Inner;
-
-   procedure Translate_Static_Bit_String_Literal_Inner
-     (List    : in out O_Array_Aggr_List;
-      Lit     : Iir_Bit_String_Literal;
-      El_Type : Iir)
-   is
-      pragma Unreferenced (El_Type);
-      L_0 : constant O_Cnode := Get_Ortho_Expr (Get_Bit_String_0 (Lit));
-      L_1 : constant O_Cnode := Get_Ortho_Expr (Get_Bit_String_1 (Lit));
-      Ptr : constant String_Fat_Acc := Get_String_Fat_Acc (Lit);
-      Len : constant Nat32 := Get_String_Length (Lit);
-      V   : O_Cnode;
-   begin
-      for I in 1 .. Len loop
-         case Ptr (I) is
-            when '0' =>
-               V := L_0;
-            when '1' =>
-               V := L_1;
-            when others =>
-               raise Internal_Error;
-         end case;
-         New_Array_Aggr_El (List, V);
-      end loop;
-   end Translate_Static_Bit_String_Literal_Inner;
+   end Translate_Static_String_Literal8_Inner;
 
    procedure Translate_Static_Aggregate_1 (List    : in out O_Array_Aggr_List;
                                            Aggr    : Iir;
@@ -170,16 +147,11 @@ package body Trans.Chap7 is
                end case;
                Assoc := Get_Chain (Assoc);
             end loop;
-         when Iir_Kind_String_Literal =>
+         when Iir_Kind_String_Literal8 =>
             if N_Info /= Null_Iir then
                raise Internal_Error;
             end if;
-            Translate_Static_String_Literal_Inner (List, Aggr, El_Type);
-         when Iir_Kind_Bit_String_Literal =>
-            if N_Info /= Null_Iir then
-               raise Internal_Error;
-            end if;
-            Translate_Static_Bit_String_Literal_Inner (List, Aggr, El_Type);
+            Translate_Static_String_Literal8_Inner (List, Aggr, El_Type);
          when others =>
             Error_Kind ("translate_static_aggregate_1", Aggr);
       end case;
@@ -224,7 +196,7 @@ package body Trans.Chap7 is
       return Res;
    end Translate_Static_Simple_Aggregate;
 
-   function Translate_Static_String_Literal (Str : Iir) return O_Cnode
+   function Translate_Static_String_Literal8 (Str : Iir) return O_Cnode
    is
       use Name_Table;
 
@@ -239,11 +211,11 @@ package body Trans.Chap7 is
 
       Start_Array_Aggr (List, Arr_Type);
 
-      Translate_Static_String_Literal_Inner (List, Str, Element_Type);
+      Translate_Static_String_Literal8_Inner (List, Str, Element_Type);
 
       Finish_Array_Aggr (List, Res);
       return Res;
-   end Translate_Static_String_Literal;
+   end Translate_Static_String_Literal8;
 
    --  Create a variable (constant) for string or bit string literal STR.
    --  The type of the literal element is ELEMENT_TYPE, and the ortho type
@@ -258,11 +230,8 @@ package body Trans.Chap7 is
    begin
       Start_Array_Aggr (Val_Aggr, Str_Type);
       case Get_Kind (Str) is
-         when Iir_Kind_String_Literal =>
-            Translate_Static_String_Literal_Inner
-              (Val_Aggr, Str, Element_Type);
-         when Iir_Kind_Bit_String_Literal =>
-            Translate_Static_Bit_String_Literal_Inner
+         when Iir_Kind_String_Literal8 =>
+            Translate_Static_String_Literal8_Inner
               (Val_Aggr, Str, Element_Type);
          when others =>
             raise Internal_Error;
@@ -298,6 +267,7 @@ package body Trans.Chap7 is
    is
       use Name_Table;
 
+      Len             : constant Nat32 := Get_String_Length (Str);
       Lit_Type        : constant Iir := Get_Type (Str);
       Type_Info       : constant Type_Info_Acc := Get_Info (Lit_Type);
       Index_Type      : constant Iir := Get_Index_Type (Lit_Type, 0);
@@ -306,13 +276,11 @@ package body Trans.Chap7 is
       Index_Aggr      : O_Record_Aggr_List;
       Res_Aggr        : O_Record_Aggr_List;
       Res             : O_Cnode;
-      Len             : Int32;
       Val             : Var_Type;
       Bound           : Var_Type;
       R               : O_Enode;
    begin
       --  Create the string value.
-      Len := Get_String_Length (Str);
       Val := Create_String_Literal_Var (Str);
 
       if Type_Info.Type_Mode = Type_Mode_Fat_Array then
@@ -400,20 +368,6 @@ package body Trans.Chap7 is
       return Res;
    end Translate_Static_String;
 
-   function Translate_Static_Bit_String_Literal (Lit : Iir_Bit_String_Literal)
-                                                return O_Cnode
-   is
-      Lit_Type : constant Iir := Get_Type (Lit);
-      Res      : O_Cnode;
-      List     : O_Array_Aggr_List;
-   begin
-      Chap3.Translate_Anonymous_Type_Definition (Lit_Type, True);
-      Start_Array_Aggr (List, Get_Ortho_Type (Lit_Type, Mode_Value));
-      Translate_Static_Bit_String_Literal_Inner (List, Lit, Lit_Type);
-      Finish_Array_Aggr (List, Res);
-      return Res;
-   end Translate_Static_Bit_String_Literal;
-
    function Translate_String_Literal (Str : Iir) return O_Enode
    is
       Str_Type : constant Iir := Get_Type (Str);
@@ -427,10 +381,8 @@ package body Trans.Chap7 is
       then
          Chap3.Create_Array_Subtype (Str_Type, True);
          case Get_Kind (Str) is
-            when Iir_Kind_String_Literal =>
-               Res := Translate_Static_String_Literal (Str);
-            when Iir_Kind_Bit_String_Literal =>
-               Res := Translate_Static_Bit_String_Literal (Str);
+            when Iir_Kind_String_Literal8 =>
+               Res := Translate_Static_String_Literal8 (Str);
             when Iir_Kind_Simple_Aggregate =>
                Res := Translate_Static_Simple_Aggregate (Str);
             when Iir_Kind_Simple_Name_Attribute =>
@@ -574,13 +526,9 @@ package body Trans.Chap7 is
             | Iir_Kind_Physical_Fp_Literal =>
             return Translate_Numeric_Literal (Expr, Res_Type);
 
-         when Iir_Kind_String_Literal =>
+         when Iir_Kind_String_Literal8 =>
             return Translate_Static_Implicit_Conv
-              (Translate_Static_String_Literal (Expr), Expr_Type, Res_Type);
-         when Iir_Kind_Bit_String_Literal =>
-            return Translate_Static_Implicit_Conv
-              (Translate_Static_Bit_String_Literal (Expr),
-               Expr_Type, Res_Type);
+              (Translate_Static_String_Literal8 (Expr), Expr_Type, Res_Type);
          when Iir_Kind_Simple_Aggregate =>
             return Translate_Static_Implicit_Conv
               (Translate_Static_Simple_Aggregate (Expr),
@@ -2795,8 +2743,7 @@ package body Trans.Chap7 is
                   --  Stop when a sub-aggregate is in fact an aggregate.
                   return Aggr1;
                end if;
-            when Iir_Kind_String_Literal
-               | Iir_Kind_Bit_String_Literal =>
+            when Iir_Kind_String_Literal8 =>
                return Null_Iir;
                --Error_Kind ("is_aggregate_others", Aggr1);
             when others =>
@@ -2894,8 +2841,7 @@ package body Trans.Chap7 is
          when Iir_Kind_Aggregate =>
             --  Continue below.
             null;
-         when Iir_Kind_String_Literal
-            | Iir_Kind_Bit_String_Literal =>
+         when Iir_Kind_String_Literal8 =>
             declare
                Len : constant Nat32 := Get_String_Length (Aggr);
 
@@ -3859,8 +3805,7 @@ package body Trans.Chap7 is
                end if;
             end;
 
-         when Iir_Kind_String_Literal
-            | Iir_Kind_Bit_String_Literal
+         when Iir_Kind_String_Literal8
             | Iir_Kind_Simple_Aggregate
             | Iir_Kind_Simple_Name_Attribute =>
             Res := Translate_String_Literal (Expr);

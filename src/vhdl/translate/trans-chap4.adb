@@ -509,7 +509,7 @@ package body Trans.Chap4 is
                Name_Node := Stabilize (Name);
                S := Stabilize (E2M (Value_Node, Type_Info, Mode_Value));
 
-               if Get_Kind (Value) = Iir_Kind_String_Literal
+               if Get_Kind (Value) = Iir_Kind_String_Literal8
                  and then Get_Kind (Obj) = Iir_Kind_Constant_Declaration
                then
                   --  No need to allocate space for the object.

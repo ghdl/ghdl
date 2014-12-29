@@ -20,7 +20,6 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Name_Table;
-with Str_Table;
 with Tokens;
 with Errorout;
 with Files_Map;
@@ -292,9 +291,6 @@ package body Disp_Tree is
       return Iir_Predefined_Functions'Image (F);
    end Image_Iir_Predefined_Functions;
 
-   function Image_String_Id (S : String_Id) return String
-     renames Str_Table.Image;
-
    procedure Disp_PSL_Node (N : PSL_Node; Indent : Natural) is
    begin
       Put_Indent (Indent);
@@ -406,8 +402,8 @@ package body Disp_Tree is
                                  Get_Field_Attribute (F) = Attr_Of_Ref);
                when Type_PSL_NFA =>
                   Disp_PSL_NFA (Get_PSL_NFA (N, F), Sub_Indent);
-               when Type_String_Id =>
-                  Put_Line (Image_String_Id (Get_String_Id (N, F)));
+               when Type_String8_Id =>
+                  Put_Line ("<string8>");
                when Type_PSL_Node =>
                   Disp_PSL_Node (Get_PSL_Node (N, F), Sub_Indent);
                when Type_Source_Ptr =>

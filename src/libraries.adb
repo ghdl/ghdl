@@ -295,13 +295,12 @@ package body Libraries is
 
       function String_To_Name_Id return Name_Id
       is
-         Len : Int32;
-         Ptr : String_Fat_Acc;
+         Len : constant Nat32 := Current_String_Length;
+         Str_Id : constant String8_Id := Current_String_Id;
       begin
-         Len := Current_String_Length;
-         Ptr := Str_Table.Get_String_Fat_Acc (Current_String_Id);
          for I in 1 .. Len loop
-            Name_Table.Name_Buffer (Natural (I)) := Ptr (I);
+            Name_Table.Name_Buffer (Natural (I)) :=
+              Str_Table.Char_String8 (Str_Id, I);
          end loop;
          Name_Table.Name_Length := Natural (Len);
          --  FIXME: should remove last string.

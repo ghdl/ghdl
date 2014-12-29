@@ -457,7 +457,7 @@ package body Parse is
 
    --  Convert the STR (0 .. LEN - 1) into a operator symbol identifier.
    --  Emit an error message if the name is not an operator name.
-   function Str_To_Operator_Name (Str : String_Fat_Acc;
+   function Str_To_Operator_Name (Str_Id : String8_Id;
                                   Len : Nat32;
                                   Loc : Location_Type) return Name_Id
    is
@@ -472,14 +472,14 @@ package body Parse is
 
       procedure Bad_Operator_Symbol is
       begin
-         Error_Msg_Parse ("""" & String (Str (1 .. Len))
+         Error_Msg_Parse ("""" & Str_Table.String_String8 (Str_Id, Len)
                           & """ is not an operator symbol", Loc);
       end Bad_Operator_Symbol;
 
       procedure Check_Vhdl93 is
       begin
          if Flags.Vhdl_Std = Vhdl_87 then
-            Error_Msg_Parse ("""" & String (Str (1 .. Len))
+            Error_Msg_Parse ("""" & Str_Table.String_String8 (Str_Id, Len)
                              & """ is not a vhdl87 operator symbol", Loc);
          end if;
       end Check_Vhdl93;
@@ -487,7 +487,7 @@ package body Parse is
       Id : Name_Id;
       C1, C2, C3, C4 : Character;
    begin
-      C1 := Str (1);
+      C1 := Str_Table.Char_String8 (Str_Id, 1);
       case Len is
          when 1 =>
             --  =, <, >, +, -, *, /, &
@@ -514,7 +514,7 @@ package body Parse is
             end case;
          when 2 =>
             --  or, /=, <=, >=, **
-            C2 := Str (2);
+            C2 := Str_Table.Char_String8 (Str_Id, 2);
             case C1 is
                when 'o' | 'O' =>
                   Id := Name_Or;
@@ -564,8 +564,8 @@ package body Parse is
          when 3 =>
             --  mod, rem, and, xor, nor, abs, not, sll, sla, sra, srl, rol
             --  ror
-            C2 := Str (2);
-            C3 := Str (3);
+            C2 := Str_Table.Char_String8 (Str_Id, 2);
+            C3 := Str_Table.Char_String8 (Str_Id, 3);
             case C1 is
                when 'm' | 'M' =>
                   Id := Name_Mod;
@@ -674,9 +674,9 @@ package body Parse is
             end case;
          when 4 =>
             --  nand, xnor
-            C2 := Str (2);
-            C3 := Str (3);
-            C4 := Str (4);
+            C2 := Str_Table.Char_String8 (Str_Id, 2);
+            C3 := Str_Table.Char_String8 (Str_Id, 3);
+            C4 := Str_Table.Char_String8 (Str_Id, 4);
             if (C1 = 'n' or C1 = 'N')
               and (C2 = 'a' or C2 = 'A')
               and (C3 = 'n' or C3 = 'N')
@@ -704,24 +704,19 @@ package body Parse is
    function Scan_To_Operator_Name (Loc : Location_Type) return Name_Id is
    begin
       return Str_To_Operator_Name
-        (Str_Table.Get_String_Fat_Acc (Current_String_Id),
-         Current_String_Length,
-         Loc);
+        (Current_String_Id, Current_String_Length, Loc);
    end Scan_To_Operator_Name;
    pragma Inline (Scan_To_Operator_Name);
 
    --  Convert string literal STR to an operator symbol.
    --  Emit an error message if the string is not an operator name.
-   function String_To_Operator_Symbol (Str : Iir_String_Literal)
-     return Iir
+   function String_To_Operator_Symbol (Str : Iir) return Iir
    is
       Id : Name_Id;
       Res : Iir;
    begin
       Id := Str_To_Operator_Name
-        (Str_Table.Get_String_Fat_Acc (Get_String_Id (Str)),
-         Get_String_Length (Str),
-         Get_Location (Str));
+        (Get_String8_Id (Str), Get_String_Length (Str), Get_Location (Str));
       Res := Create_Iir (Iir_Kind_Operator_Symbol);
       Location_Copy (Res, Str);
       Set_Identifier (Res, Id);
@@ -794,7 +789,7 @@ package body Parse is
 
          case Current_Token is
             when Tok_Left_Bracket =>
-               if Get_Kind (Prefix) = Iir_Kind_String_Literal then
+               if Get_Kind (Prefix) = Iir_Kind_String_Literal8 then
                   Prefix := String_To_Operator_Symbol (Prefix);
                end if;
 
@@ -805,7 +800,7 @@ package body Parse is
 
             when Tok_Tick =>
                -- There is an attribute.
-               if Get_Kind (Prefix) = Iir_Kind_String_Literal then
+               if Get_Kind (Prefix) = Iir_Kind_String_Literal8 then
                   Prefix := String_To_Operator_Symbol (Prefix);
                end if;
 
@@ -841,7 +836,7 @@ package body Parse is
                   return Res;
                end if;
 
-               if Get_Kind (Prefix) = Iir_Kind_String_Literal then
+               if Get_Kind (Prefix) = Iir_Kind_String_Literal8 then
                   Prefix := String_To_Operator_Symbol (Prefix);
                end if;
 
@@ -852,7 +847,7 @@ package body Parse is
                  (Res, Parse_Association_List_In_Parenthesis);
 
             when Tok_Dot =>
-               if Get_Kind (Prefix) = Iir_Kind_String_Literal then
+               if Get_Kind (Prefix) = Iir_Kind_String_Literal8 then
                   Prefix := String_To_Operator_Symbol (Prefix);
                end if;
 
@@ -894,8 +889,9 @@ package body Parse is
             Set_Identifier (Res, Current_Identifier);
             Set_Location (Res);
          when Tok_String =>
-            Res := Create_Iir (Iir_Kind_String_Literal);
-            Set_String_Id (Res, Current_String_Id);
+            --  For operator symbol, such as: "+" (A, B).
+            Res := Create_Iir (Iir_Kind_String_Literal8);
+            Set_String8_Id (Res, Current_String_Id);
             Set_String_Length (Res, Current_String_Length);
             Set_Location (Res);
          when others =>
@@ -3950,7 +3946,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §7.1 ]
+   --  [ LRM93 7.1 ]
    --  primary ::= name
    --            | literal
    --            | aggregate
@@ -3960,21 +3956,21 @@ package body Parse is
    --            | allocator
    --            | ( expression )
    --
-   --  [ §7.3.1 ]
+   --  [ LRM93 7.3.1 ]
    --  literal ::= numeric_literal
    --            | enumeration_literal
    --            | string_literal
    --            | bit_string_literal
    --            | NULL
    --
-   --  [ §7.3.1 ]
+   --  [ LRM93 7.3.1 ]
    --  numeric_literal ::= abstract_literal
    --                    | physical_literal
    --
-   --  [ §13.4 ]
+   --  [ LRM93 13.4 ]
    --  abstract_literal ::= decimal_literal | based_literal
    --
-   --  [ §3.1.3 ]
+   --  [ LRM93 3.1.3 ]
    --  physical_literal ::= [ abstract_literal ] UNIT_name
    function Parse_Primary return Iir_Expression
    is
@@ -4048,9 +4044,9 @@ package body Parse is
          when Tok_New =>
             return Parse_Allocator;
          when Tok_Bit_String =>
-            Res := Create_Iir (Iir_Kind_Bit_String_Literal);
+            Res := Create_Iir (Iir_Kind_String_Literal8);
             Set_Location (Res);
-            Set_String_Id (Res, Current_String_Id);
+            Set_String8_Id (Res, Current_String_Id);
             Set_String_Length (Res, Current_String_Length);
             case Current_Iir_Int64 is
                when 1 =>

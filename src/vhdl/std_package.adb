@@ -354,11 +354,10 @@ package body Std_Package is
            "20020601000000.000";
          Id : Time_Stamp_Id;
       begin
-         Id := Time_Stamp_Id (Str_Table.Start);
+         Id := Time_Stamp_Id (Str_Table.Create_String8);
          for I in Time_Stamp_String'Range loop
-            Str_Table.Append (Std_Time_Stamp (I));
+            Str_Table.Append_String8_Char (Std_Time_Stamp (I));
          end loop;
-         Str_Table.Finish;
          Set_Analysis_Time_Stamp (Std_Standard_File, Id);
       end;
 

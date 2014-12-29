@@ -22,6 +22,7 @@ with Ada.Text_IO;
 with Types; use Types;
 with Errorout; use Errorout;
 with Name_Table; -- use Name_Table;
+with Str_Table;
 with Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Std_Package; use Std_Package;
@@ -76,14 +77,13 @@ package body Translation is
       Spec := Get_Attribute_Specification (Attr);
       Expr := Get_Expression (Spec);
       case Get_Kind (Expr) is
-         when Iir_Kind_String_Literal =>
+         when Iir_Kind_String_Literal8 =>
             declare
-               Ptr : String_Fat_Acc;
+               Id : constant String8_Id := Get_String8_Id (Expr);
             begin
-               Ptr := Get_String_Fat_Acc (Expr);
                Name_Length := Natural (Get_String_Length (Expr));
                for I in 1 .. Name_Length loop
-                  Name_Buffer (I) := Ptr (Nat32 (I));
+                  Name_Buffer (I) := Str_Table.Char_String8 (Id, Pos32 (I));
                end loop;
             end;
          when Iir_Kind_Simple_Aggregate =>
@@ -104,10 +104,6 @@ package body Translation is
                     Character'Val (Get_Enum_Pos (El));
                end loop;
             end;
-         when Iir_Kind_Bit_String_Literal =>
-            Error_Msg_Sem
-              ("value of FOREIGN attribute cannot be a bit string", Expr);
-            Name_Length := 0;
          when others =>
             if Get_Expr_Staticness (Expr) /= Locally then
                Error_Msg_Sem

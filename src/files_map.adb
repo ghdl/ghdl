@@ -440,26 +440,25 @@ package body Files_Map is
       Second: Second_Type;
    begin
       GM_Split (Time, Year, Month, Day, Hour, Minute, Second);
-      Res := Time_Stamp_Id (Start);
-      Append (Digit_To_Char (Year / 1000));
-      Append (Digit_To_Char (Year / 100));
-      Append (Digit_To_Char (Year / 10));
-      Append (Digit_To_Char (Year / 1));
-      Append (Digit_To_Char (Month / 10));
-      Append (Digit_To_Char (Month / 1));
-      Append (Digit_To_Char (Day / 10));
-      Append (Digit_To_Char (Day / 1));
-      Append (Digit_To_Char (Hour / 10));
-      Append (Digit_To_Char (Hour / 1));
-      Append (Digit_To_Char (Minute / 10));
-      Append (Digit_To_Char (Minute / 1));
-      Append (Digit_To_Char (Second / 10));
-      Append (Digit_To_Char (Second / 1));
-      Append ('.');
-      Append ('0');
-      Append ('0');
-      Append ('0');
-      Finish;
+      Res := Time_Stamp_Id (Create_String8);
+      Append_String8_Char (Digit_To_Char (Year / 1000));
+      Append_String8_Char (Digit_To_Char (Year / 100));
+      Append_String8_Char (Digit_To_Char (Year / 10));
+      Append_String8_Char (Digit_To_Char (Year / 1));
+      Append_String8_Char (Digit_To_Char (Month / 10));
+      Append_String8_Char (Digit_To_Char (Month / 1));
+      Append_String8_Char (Digit_To_Char (Day / 10));
+      Append_String8_Char (Digit_To_Char (Day / 1));
+      Append_String8_Char (Digit_To_Char (Hour / 10));
+      Append_String8_Char (Digit_To_Char (Hour / 1));
+      Append_String8_Char (Digit_To_Char (Minute / 10));
+      Append_String8_Char (Digit_To_Char (Minute / 1));
+      Append_String8_Char (Digit_To_Char (Second / 10));
+      Append_String8_Char (Digit_To_Char (Second / 1));
+      Append_String8_Char ('.');
+      Append_String8_Char ('0');
+      Append_String8_Char ('0');
+      Append_String8_Char ('0');
       return Res;
    end Os_Time_To_Time_Stamp_Id;
 
@@ -506,41 +505,40 @@ package body Files_Map is
       --  Use UTC time (like file time stamp).
       Split (Now_UTC, Year, Month, Day, Sec);
 
-      Res := Time_Stamp_Id (Start);
-      Append (Digit_To_Char (Year / 1000));
-      Append (Digit_To_Char (Year / 100));
-      Append (Digit_To_Char (Year / 10));
-      Append (Digit_To_Char (Year / 1));
-      Append (Digit_To_Char (Month / 10));
-      Append (Digit_To_Char (Month / 1));
-      Append (Digit_To_Char (Day / 10));
-      Append (Digit_To_Char (Day / 1));
+      Res := Time_Stamp_Id (Create_String8);
+      Append_String8_Char (Digit_To_Char (Year / 1000));
+      Append_String8_Char (Digit_To_Char (Year / 100));
+      Append_String8_Char (Digit_To_Char (Year / 10));
+      Append_String8_Char (Digit_To_Char (Year / 1));
+      Append_String8_Char (Digit_To_Char (Month / 10));
+      Append_String8_Char (Digit_To_Char (Month / 1));
+      Append_String8_Char (Digit_To_Char (Day / 10));
+      Append_String8_Char (Digit_To_Char (Day / 1));
       S := Integer (Sec);
       if Day_Duration (S) > Sec then
          --  We need a truncation.
          S := S - 1;
       end if;
       S1 := S / 3600;
-      Append (Digit_To_Char (S1 / 10));
-      Append (Digit_To_Char (S1));
+      Append_String8_Char (Digit_To_Char (S1 / 10));
+      Append_String8_Char (Digit_To_Char (S1));
       S1 := (S / 60) mod 60;
-      Append (Digit_To_Char (S1 / 10));
-      Append (Digit_To_Char (S1));
+      Append_String8_Char (Digit_To_Char (S1 / 10));
+      Append_String8_Char (Digit_To_Char (S1));
       S1 := S mod 60;
-      Append (Digit_To_Char (S1 / 10));
-      Append (Digit_To_Char (S1));
+      Append_String8_Char (Digit_To_Char (S1 / 10));
+      Append_String8_Char (Digit_To_Char (S1));
 
-      Append ('.');
+      Append_String8_Char ('.');
       Sec := Sec - Day_Duration (S);
       M := Integer (Sec * 1000);
       if M = 1000 then
          --  We need truncation.
          M := 999;
       end if;
-      Append (Digit_To_Char (M / 100));
-      Append (Digit_To_Char (M / 10));
-      Append (Digit_To_Char (M));
-      Finish;
+      Append_String8_Char (Digit_To_Char (M / 100));
+      Append_String8_Char (Digit_To_Char (M / 10));
+      Append_String8_Char (Digit_To_Char (M));
       return Res;
    end Get_Os_Time_Stamp;
 
@@ -771,21 +769,32 @@ package body Files_Map is
    function Is_Eq (L : Time_Stamp_Id; R : Time_Stamp_Id) return Boolean
    is
       use Str_Table;
-      L_Str : constant String_Fat_Acc := Get_String_Fat_Acc (String_Id (L));
-      R_Str : constant String_Fat_Acc := Get_String_Fat_Acc (String_Id (R));
+      L_Str : constant String8_Id := String8_Id (L);
+      R_Str : constant String8_Id := String8_Id (R);
    begin
-      return L_Str (1 .. Time_Stamp_String'Length)
-        = R_Str (1 .. Time_Stamp_String'Length);
+      for I in 1 .. Nat32 (Time_Stamp_String'Length) loop
+         if Element_String8 (L_Str, I) /= Element_String8 (R_Str, I) then
+            return False;
+         end if;
+      end loop;
+      return True;
    end Is_Eq;
 
    function Is_Gt (L : Time_Stamp_Id; R : Time_Stamp_Id) return Boolean
    is
       use Str_Table;
-      L_Str : constant String_Fat_Acc := Get_String_Fat_Acc (String_Id (L));
-      R_Str : constant String_Fat_Acc := Get_String_Fat_Acc (String_Id (R));
+      L_Str : constant String8_Id := String8_Id (L);
+      R_Str : constant String8_Id := String8_Id (R);
+      E_L, E_R : Nat8;
    begin
-      return L_Str (1 .. Time_Stamp_String'Length)
-        > R_Str (1 .. Time_Stamp_String'Length);
+      for I in 1 .. Nat32 (Time_Stamp_String'Length) loop
+         E_L := Element_String8 (L_Str, I);
+         E_R := Element_String8 (R_Str, I);
+         if E_L /= E_R then
+            return E_L > E_R;
+         end if;
+      end loop;
+      return False;
    end Is_Gt;
 
    function Get_Time_Stamp_String (Ts : Time_Stamp_Id) return String is
@@ -793,8 +802,8 @@ package body Files_Map is
       if Ts = Null_Time_Stamp then
          return "NULL_TS";
       else
-         return String (Str_Table.Get_String_Fat_Acc (String_Id (Ts))
-                          (1 .. Time_Stamp_String'Length));
+         return Str_Table.String_String8
+           (String8_Id (Ts), Time_Stamp_String'Length);
       end if;
    end Get_Time_Stamp_String;
 

@@ -387,25 +387,16 @@ package body Iirs_Utils is
       end if;
    end Clear_Instantiation_Configuration;
 
-   function Get_String_Fat_Acc (Str : Iir) return String_Fat_Acc is
-   begin
-      return Str_Table.Get_String_Fat_Acc (Get_String_Id (Str));
-   end Get_String_Fat_Acc;
-
    --  Get identifier of NODE as a string.
    function Image_Identifier (Node : Iir) return String is
    begin
       return Name_Table.Image (Iirs.Get_Identifier (Node));
    end Image_Identifier;
 
-   function Image_String_Lit (Str : Iir) return String
-   is
-      Ptr : String_Fat_Acc;
-      Len : Nat32;
+   function Image_String_Lit (Str : Iir) return String is
    begin
-      Ptr := Get_String_Fat_Acc (Str);
-      Len := Get_String_Length (Str);
-      return String (Ptr (1 .. Len));
+      return Str_Table.String_String8
+        (Get_String8_Id (Str), Get_String_Length (Str));
    end Image_String_Lit;
 
    function Copy_Enumeration_Literal (Lit : Iir) return Iir
@@ -455,7 +446,7 @@ package body Iirs_Utils is
       case Get_Kind (N) is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Character_Literal
-           | Iir_Kind_String_Literal
+           | Iir_Kind_String_Literal8
            | Iir_Kind_Subtype_Definition =>
             Free_Iir (N);
          when Iir_Kind_Selected_Name

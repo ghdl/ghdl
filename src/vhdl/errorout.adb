@@ -375,12 +375,8 @@ package body Errorout is
 
    begin
       case Get_Kind (Node) is
-         when Iir_Kind_String_Literal =>
-            return "string literal """
-              & Image_String_Lit (Node) & """";
-         when Iir_Kind_Bit_String_Literal =>
-            return "bit string literal """
-              & Image_String_Lit (Node) & """";
+         when Iir_Kind_String_Literal8 =>
+            return "string literal";
          when Iir_Kind_Character_Literal =>
             return "character literal " & Image_Identifier (Node);
          when Iir_Kind_Integer_Literal =>

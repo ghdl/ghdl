@@ -318,9 +318,9 @@ private
       Location: Location_Type := Location_Nil;
 
       Field0 : Node_Type := Null_Node;
-      Field1: Node_Type := Null_Node;
-      Field2: Node_Type := Null_Node;
-      Field3: Node_Type := Null_Node;
+      Field1 : Node_Type := Null_Node;
+      Field2 : Node_Type := Null_Node;
+      Field3 : Node_Type := Null_Node;
 
       case Format is
          when Format_Short

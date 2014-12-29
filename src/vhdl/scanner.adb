@@ -144,7 +144,7 @@ package body Scanner is
       File_Name: Name_Id;
       Token: Token_Type;
       Prev_Token: Token_Type;
-      Str_Id : String_Id;
+      Str_Id : String8_Id;
       Str_Len : Nat32;
       Identifier: Name_Id;
       Int64: Iir_Int64;
@@ -164,7 +164,7 @@ package body Scanner is
                                      Token => Tok_Invalid,
                                      Prev_Token => Tok_Invalid,
                                      Identifier => Null_Identifier,
-                                     Str_Id => Null_String,
+                                     Str_Id => Null_String8,
                                      Str_Len => 0,
                                      Int64 => 0,
                                      Fp64 => 0.0);
@@ -193,7 +193,7 @@ package body Scanner is
       end if;
    end Invalidate_Current_Token;
 
-   function Current_String_Id return String_Id is
+   function Current_String_Id return String8_Id is
    begin
       return Current_Context.Str_Id;
    end Current_String_Id;
@@ -275,22 +275,21 @@ package body Scanner is
          raise Internal_Error;
       end if;
       N_Source := Get_File_Source (Source_File);
-      Current_Context :=
-        (Source => N_Source,
-         Source_File => Source_File,
-         Line_Number => 1,
-         Line_Pos => 0,
-         Pos => N_Source'First,
-         Token_Pos => 0, -- should be invalid,
-         File_Len => Get_File_Length (Source_File),
-         File_Name => Get_File_Name (Source_File),
-         Token => Tok_Invalid,
-         Prev_Token => Tok_Invalid,
-         Identifier => Null_Identifier,
-         Str_Id => Null_String,
-         Str_Len => 0,
-         Int64 => -1,
-         Fp64 => 0.0);
+      Current_Context := (Source => N_Source,
+                          Source_File => Source_File,
+                          Line_Number => 1,
+                          Line_Pos => 0,
+                          Pos => N_Source'First,
+                          Token_Pos => 0, -- should be invalid,
+                          File_Len => Get_File_Length (Source_File),
+                          File_Name => Get_File_Name (Source_File),
+                          Token => Tok_Invalid,
+                          Prev_Token => Tok_Invalid,
+                          Identifier => Null_Identifier,
+                          Str_Id => Null_String8,
+                          Str_Len => 0,
+                          Int64 => -1,
+                          Fp64 => 0.0);
       Current_Token := Tok_Invalid;
    end Set_File;
 
@@ -341,16 +340,16 @@ package body Scanner is
    -- BASE ::= INTEGER
    procedure Scan_Literal is separate;
 
-   -- Scan a string literal.
+   --  Scan a string literal.
    --
-   -- LRM93 13.6
-   -- A string literal is formed by a sequence of graphic characters
-   -- (possibly none) enclosed between two quotation marks used as string
-   -- brackets.
-   -- STRING_LITERAL ::= " { GRAPHIC_CHARACTER } "
+   --  LRM93 13.6 / LRM08 15.7
+   --  A string literal is formed by a sequence of graphic characters
+   --  (possibly none) enclosed between two quotation marks used as string
+   --  brackets.
+   --  STRING_LITERAL ::= " { GRAPHIC_CHARACTER } "
    --
-   -- IN: for a string, at the call of this procedure, the current character
-   -- must be either '"' or '%'.
+   --  IN: for a string, at the call of this procedure, the current character
+   --  must be either '"' or '%'.
    procedure Scan_String
    is
       -- The quotation character (can be " or %).
@@ -360,27 +359,27 @@ package body Scanner is
       --  Current length.
       Length : Nat32;
    begin
+      --  String delimiter.
       Mark := Source (Pos);
-      if Mark /= Quotation and then Mark /= '%' then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Mark = Quotation or else Mark = '%');
+
       Pos := Pos + 1;
       Length := 0;
-      Current_Context.Str_Id := Str_Table.Start;
+      Current_Context.Str_Id := Str_Table.Create_String8;
       loop
          C := Source (Pos);
          if C = Mark then
-            -- LRM93 13.6
-            -- If a quotation mark value is to be represented in the sequence
-            -- of character values, then a pair of adjacent quoatation
-            -- characters marks must be written at the corresponding place
-            -- within the string literal.
-            -- LRM93 13.10
-            -- Any pourcent sign within the sequence of characters must then
-            -- be doubled, and each such doubled percent sign is interpreted
-            -- as a single percent sign value.
-            -- The same replacement is allowed for a bit string literal,
-            -- provieded that both bit string brackets are replaced.
+            --  LRM93 13.6
+            --  If a quotation mark value is to be represented in the sequence
+            --  of character values, then a pair of adjacent quoatation
+            --  characters marks must be written at the corresponding place
+            --  within the string literal.
+            --  LRM93 13.10
+            --  Any pourcent sign within the sequence of characters must then
+            --  be doubled, and each such doubled percent sign is interpreted
+            --  as a single percent sign value.
+            --  The same replacement is allowed for a bit string literal,
+            --  provieded that both bit string brackets are replaced.
             Pos := Pos + 1;
             exit when Source (Pos) /= Mark;
          end if;
@@ -399,41 +398,39 @@ package body Scanner is
          end case;
 
          if C = Quotation and Mark = '%' then
-            -- LRM93 13.10
-            -- The quotation marks (") used as string brackets at both ends of
-            -- a string literal can be replaced by percent signs (%), provided
-            -- that the enclosed sequence of characters constains no quotation
-            -- marks, and provided that both string brackets are replaced.
+            --  LRM93 13.10
+            --  The quotation marks (") used as string brackets at both ends of
+            --  a string literal can be replaced by percent signs (%), provided
+            --  that the enclosed sequence of characters constains no quotation
+            --  marks, and provided that both string brackets are replaced.
             Error_Msg_Scan
               ("'""' cannot be used in a string delimited with '%'");
          end if;
 
          Length := Length + 1;
-         Str_Table.Append (C);
+         Str_Table.Append_String8 (Character'Pos (C));
          Pos := Pos + 1;
       end loop;
-
-      Str_Table.Finish;
 
       Current_Token := Tok_String;
       Current_Context.Str_Len := Length;
    end Scan_String;
 
-   -- Scan a bit string literal.
+   --  Scan a bit string literal.
    --
-   -- LRM93 13.7
-   -- A bit string literal is formed by a sequence of extended digits
-   -- (possibly none) enclosed between two quotations used as bit string
-   -- brackets, preceded by a base specifier.
-   -- BIT_STRING_LITERAL ::= BASE_SPECIFIER " [ BIT_VALUE ] "
-   -- BIT_VALUE ::= EXTENDED_DIGIT { [ UNDERLINE ] EXTENDED_DIGIT }
+   --  LRM93 13.7
+   --  A bit string literal is formed by a sequence of extended digits
+   --  (possibly none) enclosed between two quotations used as bit string
+   --  brackets, preceded by a base specifier.
+   --  BIT_STRING_LITERAL ::= BASE_SPECIFIER " [ BIT_VALUE ] "
+   --  BIT_VALUE ::= EXTENDED_DIGIT { [ UNDERLINE ] EXTENDED_DIGIT }
    --
-   -- The current character must be a base specifier, followed by '"' or '%'.
-   -- The base must be valid.
+   --  The current character must be a base specifier, followed by '"' or '%'.
+   --  The base must be valid.
    procedure Scan_Bit_String
    is
       -- The base specifier.
-      Base_Len : Nat32 range 1 .. 4;
+      Base_Log : Nat32 range 1 .. 4;
       -- The quotation character (can be " or %).
       Mark: Character;
       -- Current character.
@@ -441,26 +438,32 @@ package body Scanner is
       --  Current length.
       Length : Nat32;
       --  Digit value.
-      V : Natural;
+      V, D : Nat8;
+      --  Position of character '0'.
+      Pos_0 : constant Nat8 := Character'Pos ('0');
    begin
+      --  LRM93 13.7
+      --  A letter in a bit string literal (... or the base specificer) can be
+      --  written either in lowercase or in upper case, with the same meaning.
+      --
+      --  LRM08 15.8 Bit string literals
+      --  Not present!
       case Source (Pos) is
          when 'x' | 'X' =>
-            Base_Len := 4;
+            Base_Log := 4;
          when 'o' | 'O' =>
-            Base_Len := 3;
+            Base_Log := 3;
          when 'b' | 'B' =>
-            Base_Len := 1;
+            Base_Log := 1;
          when others =>
             raise Internal_Error;
       end case;
       Pos := Pos + 1;
       Mark := Source (Pos);
-      if Mark /= Quotation and then Mark /= '%' then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Mark = Quotation or else Mark = '%');
       Pos := Pos + 1;
       Length := 0;
-      Current_Context.Str_Id := Str_Table.Start;
+      Current_Context.Str_Id := Str_Table.Create_String8;
       loop
          << Again >> null;
          C := Source (Pos);
@@ -481,6 +484,9 @@ package body Scanner is
             when 'A' .. 'F' =>
                V := Character'Pos (C) - Character'Pos ('A') + 10;
             when 'a' .. 'f' =>
+               --  LRM93 13.7
+               --  A letter in a bit string literal (...) can be written either
+               --  in lowercase or in upper case, with the same meaning.
                V := Character'Pos (C) - Character'Pos ('a') + 10;
             when '_' =>
                if Source (Pos) = '_' then
@@ -511,46 +517,40 @@ package body Scanner is
                exit;
          end case;
 
-         case Base_Len is
+         case Base_Log is
             when 1 =>
                if V > 1 then
                   Error_Msg_Scan ("invalid character in a binary bit string");
+                  V := 1;
                end if;
-               Str_Table.Append (C);
+               Str_Table.Append_String8 (Pos_0 + V);
             when 2 =>
                raise Internal_Error;
             when 3 =>
                if V > 7 then
                   Error_Msg_Scan ("invalid character in a octal bit string");
+                  V := 7;
                end if;
                for I in 1 .. 3 loop
-                  if (V / 4) = 1 then
-                     Str_Table.Append ('1');
-                  else
-                     Str_Table.Append ('0');
-                  end if;
-                  V := (V mod 4) * 2;
+                  D := V / 4;
+                  Str_Table.Append_String8 (Pos_0 + D);
+                  V := (V - 4 * D) * 2;
                end loop;
             when 4 =>
                for I in 1 .. 4 loop
-                  if (V / 8) = 1 then
-                     Str_Table.Append ('1');
-                  else
-                     Str_Table.Append ('0');
-                  end if;
-                  V := (V mod 8) * 2;
+                  D := V / 8;
+                  Str_Table.Append_String8 (Pos_0 + D);
+                  V := (V - 8 * D) * 2;
                end loop;
          end case;
-         Length := Length + Base_Len;
+         Length := Length + Base_Log;
       end loop;
-
-      Str_Table.Finish;
 
       if Length = 0 then
          Error_Msg_Scan ("empty bit string is not allowed");
       end if;
       Current_Token := Tok_Bit_String;
-      Current_Context.Int64 := Iir_Int64 (Base_Len);
+      Current_Context.Int64 := Iir_Int64 (Base_Log);
       Current_Context.Str_Len := Length;
    end Scan_Bit_String;
 

@@ -26,6 +26,7 @@ with Flags; use Flags;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 with Name_Table;
+with Str_Table;
 with Std_Names;
 with Tokens;
 with PSL.Nodes;
@@ -2372,7 +2373,7 @@ package body Disp_Vhdl is
             Assoc := Get_Chain (Assoc);
          end if;
          if Get_Kind (Expr) = Iir_Kind_Aggregate
-           or else Get_Kind (Expr) = Iir_Kind_String_Literal then
+           or else Get_Kind (Expr) = Iir_Kind_String_Literal8 then
             Set_Col (Indent);
          end if;
          Disp_Expression (Expr);
@@ -2440,14 +2441,22 @@ package body Disp_Vhdl is
 
    procedure Disp_String_Literal (Str : Iir)
    is
-      Ptr : constant String_Fat_Acc := Get_String_Fat_Acc (Str);
-      Len : constant Int32 := Get_String_Length (Str);
+      Id : constant String8_Id := Get_String8_Id (Str);
+      Len : constant Nat32 := Get_String_Length (Str);
+      El_Type : constant Iir := Get_Element_Subtype (Get_Type (Str));
+      Literal_List : constant Iir_List :=
+        Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
+      Lit : Iir;
+      C : Character;
    begin
       for I in 1 .. Len loop
-         if Ptr (I) = '"' then
+         Lit := Get_Nth_Element
+           (Literal_List, Natural (Str_Table.Element_String8 (Id, Pos32 (I))));
+         C := Character'Val (Get_Enum_Pos (Lit));
+         if C = '"' then
             Put ('"');
          end if;
-         Put (Ptr (I));
+         Put (C);
       end loop;
    end Disp_String_Literal;
 
@@ -2470,7 +2479,7 @@ package body Disp_Vhdl is
             else
                Disp_Fp64 (Get_Fp_Value (Expr));
             end if;
-         when Iir_Kind_String_Literal =>
+         when Iir_Kind_String_Literal8 =>
             Orig := Get_Literal_Origin (Expr);
             if Orig /= Null_Iir then
                Disp_Expression (Orig);
@@ -2483,25 +2492,6 @@ package body Disp_Vhdl is
                   Disp_Type (Get_Type (Expr));
                   Put ("]");
                end if;
-            end if;
-         when Iir_Kind_Bit_String_Literal =>
-            Orig := Get_Literal_Origin (Expr);
-            if Orig /= Null_Iir then
-               Disp_Expression (Orig);
-            else
-               if False then
-                  case Get_Bit_String_Base (Expr) is
-                     when Base_2 =>
-                        Put ('B');
-                     when Base_8 =>
-                        Put ('O');
-                     when Base_16 =>
-                        Put ('X');
-                  end case;
-               end if;
-               Put ("B""");
-               Disp_String_Literal (Expr);
-               Put ("""");
             end if;
          when Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Physical_Int_Literal =>

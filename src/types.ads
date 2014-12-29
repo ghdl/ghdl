@@ -30,6 +30,8 @@ package Types is
    subtype Nat32 is Int32 range 0 .. Int32'Last;
    subtype Pos32 is Nat32 range 1 .. Nat32'Last;
 
+   subtype Nat8 is Nat32 range 0 .. 255;
+
    type Uns32 is new Interfaces.Unsigned_32;
 
    type Fp64 is new Interfaces.IEEE_Float_64;
@@ -39,9 +41,6 @@ package Types is
 
    -- iir_int64 is aimed at containing units values.
    type Iir_Int64 is new Interfaces.Integer_64;
-
-   -- iir_fp32 is aimed at containing floating point values.
-   type Iir_Fp32 is new Interfaces.IEEE_Float_32;
 
    -- iir_fp64 is aimed at containing floating point values.
    subtype Iir_Fp64 is Fp64;
@@ -54,10 +53,6 @@ package Types is
    type String_Cst is access constant String;
    type String_Acc_Array is array (Natural range <>) of String_Acc;
 
-   type String_Fat is array (Pos32) of Character;
-   type String_Fat_Acc is access String_Fat;
-   pragma No_Strict_Aliasing (String_Fat_Acc);
-
    -- Type of a name table element.
    -- The name table is defined in the name_table package.
    type Name_Id is new Nat32;
@@ -66,11 +61,10 @@ package Types is
    -- It is sure that this entry is never allocated.
    Null_Identifier: constant Name_Id := 0;
 
-   --  Type of a string stored into the string table.
-   type String_Id is new Nat32;
-   for String_Id'Size use 32;
+   type String8_Id is new Nat32;
+   for String8_Id'Size use 32;
 
-   Null_String : constant String_Id := 0;
+   Null_String8 : constant String8_Id := 0;
 
    -- Index type is the source file table.
    -- This table is defined in the files_map package.
@@ -114,7 +108,7 @@ package Types is
 
    --  String representing a date/time (format is YYYYMMDDHHmmSS.sss).
    subtype Time_Stamp_String is String (1 .. 18);
-   type Time_Stamp_Id is new String_Id;
+   type Time_Stamp_Id is new String8_Id;
    Null_Time_Stamp : constant Time_Stamp_Id := 0;
 
    --  Self-explaining: raised when an internal error (such as consistency)

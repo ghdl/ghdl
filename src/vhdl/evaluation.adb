@@ -133,14 +133,14 @@ package body Evaluation is
       end case;
    end Build_Discrete;
 
-   function Build_String (Val : String_Id; Len : Nat32; Origin : Iir)
-     return Iir_String_Literal
+   function Build_String (Val : String8_Id; Len : Nat32; Origin : Iir)
+                         return Iir
    is
-      Res : Iir_String_Literal;
+      Res : Iir;
    begin
-      Res := Create_Iir (Iir_Kind_String_Literal);
+      Res := Create_Iir (Iir_Kind_String_Literal8);
       Location_Copy (Res, Origin);
-      Set_String_Id (Res, Val);
+      Set_String8_Id (Res, Val);
       Set_String_Length (Res, Len);
       Set_Type (Res, Get_Type (Origin));
       Set_Literal_Origin (Res, Origin);
@@ -206,18 +206,10 @@ package body Evaluation is
             Set_Value (Res, Get_Physical_Value (Val));
             Set_Unit_Name (Res, Get_Primary_Unit_Name (Get_Type (Val)));
 
-         when Iir_Kind_String_Literal =>
-            Res := Create_Iir (Iir_Kind_String_Literal);
-            Set_String_Id (Res, Get_String_Id (Val));
+         when Iir_Kind_String_Literal8 =>
+            Res := Create_Iir (Iir_Kind_String_Literal8);
+            Set_String8_Id (Res, Get_String8_Id (Val));
             Set_String_Length (Res, Get_String_Length (Val));
-
-         when Iir_Kind_Bit_String_Literal =>
-            Res := Create_Iir (Iir_Kind_Bit_String_Literal);
-            Set_String_Id (Res, Get_String_Id (Val));
-            Set_String_Length (Res, Get_String_Length (Val));
-            Set_Bit_String_Base (Res, Get_Bit_String_Base (Val));
-            Set_Bit_String_0 (Res, Get_Bit_String_0 (Val));
-            Set_Bit_String_1 (Res, Get_Bit_String_1 (Val));
 
          when Iir_Kind_Simple_Aggregate =>
             Res := Create_Iir (Iir_Kind_Simple_Aggregate);
@@ -446,58 +438,33 @@ package body Evaluation is
 
    function Eval_String_Literal (Str : Iir) return Iir
    is
-      Ptr : String_Fat_Acc;
       Len : Nat32;
    begin
       case Get_Kind (Str) is
-         when Iir_Kind_String_Literal =>
+         when Iir_Kind_String_Literal8 =>
             declare
                Element_Type : Iir;
                Literal_List : Iir_List;
                Lit : Iir;
 
                List : Iir_List;
+               Id : String8_Id;
             begin
                Element_Type := Get_Base_Type
                  (Get_Element_Subtype (Get_Base_Type (Get_Type (Str))));
                Literal_List := Get_Enumeration_Literal_List (Element_Type);
                List := Create_Iir_List;
 
-               Ptr := Get_String_Fat_Acc (Str);
+               Id := Get_String8_Id (Str);
                Len := Get_String_Length (Str);
 
                for I in 1 .. Len loop
-                  Lit := Find_Name_In_List
+                  Lit := Get_Nth_Element
                     (Literal_List,
-                     Name_Table.Get_Identifier (Ptr (I)));
+                     Natural (Str_Table.Element_String8 (Id, I)));
                   Append_Element (List, Lit);
                end loop;
                return Build_Simple_Aggregate (List, Str, Get_Type (Str));
-            end;
-
-         when Iir_Kind_Bit_String_Literal =>
-            declare
-               Str_Type : constant Iir := Get_Type (Str);
-               List : Iir_List;
-               Lit_0 : constant Iir := Get_Bit_String_0 (Str);
-               Lit_1 : constant Iir := Get_Bit_String_1 (Str);
-            begin
-               List := Create_Iir_List;
-
-               Ptr := Get_String_Fat_Acc (Str);
-               Len := Get_String_Length (Str);
-
-               for I in 1 .. Len loop
-                  case Ptr (I) is
-                     when '0' =>
-                        Append_Element (List, Lit_0);
-                     when '1' =>
-                        Append_Element (List, Lit_1);
-                     when others =>
-                        raise Internal_Error;
-                  end case;
-               end loop;
-               return Build_Simple_Aggregate (List, Str, Str_Type);
             end;
 
          when Iir_Kind_Simple_Aggregate =>
@@ -591,10 +558,10 @@ package body Evaluation is
      return Iir
    is
       use Str_Table;
-      L_Str : constant String_Fat_Acc := Get_String_Fat_Acc (Left);
-      R_Str : constant String_Fat_Acc := Get_String_Fat_Acc (Right);
+      L_Str : constant String8_Id := Get_String8_Id (Left);
+      R_Str : constant String8_Id := Get_String8_Id (Right);
       Len : Nat32;
-      Id : String_Id;
+      Id : String8_Id;
       Res : Iir;
    begin
       Len := Get_String_Length (Left);
@@ -602,30 +569,30 @@ package body Evaluation is
          Warning_Msg_Sem ("length of left and right operands mismatch", Expr);
          return Build_Overflow (Expr);
       else
-         Id := Start;
+         Id := Create_String8;
          case Func is
             when Iir_Predefined_TF_Array_And =>
                for I in 1 .. Len loop
-                  case L_Str (I) is
-                     when '0' =>
-                        Append ('0');
-                     when '1' =>
-                        Append (R_Str (I));
+                  case Element_String8 (L_Str, I) is
+                     when 0 =>
+                        Append_String8 (0);
+                     when 1 =>
+                        Append_String8 (Element_String8 (R_Str, I));
                      when others =>
                         raise Internal_Error;
                   end case;
                end loop;
             when Iir_Predefined_TF_Array_Nand =>
                for I in 1 .. Len loop
-                  case L_Str (I) is
-                     when '0' =>
-                        Append ('1');
-                     when '1' =>
-                        case R_Str (I) is
-                           when '0' =>
-                              Append ('1');
-                           when '1' =>
-                              Append ('0');
+                  case Element_String8 (L_Str, I) is
+                     when 0 =>
+                        Append_String8 (1);
+                     when 1 =>
+                        case Element_String8 (R_Str, I) is
+                           when 0 =>
+                              Append_String8 (1);
+                           when 1 =>
+                              Append_String8 (0);
                            when others =>
                               raise Internal_Error;
                         end case;
@@ -635,26 +602,26 @@ package body Evaluation is
                end loop;
             when Iir_Predefined_TF_Array_Or =>
                for I in 1 .. Len loop
-                  case L_Str (I) is
-                     when '1' =>
-                        Append ('1');
-                     when '0' =>
-                        Append (R_Str (I));
+                  case Element_String8 (L_Str, I) is
+                     when 1 =>
+                        Append_String8 (1);
+                     when 0 =>
+                        Append_String8 (Element_String8 (R_Str, I));
                      when others =>
                         raise Internal_Error;
                   end case;
                end loop;
             when Iir_Predefined_TF_Array_Nor =>
                for I in 1 .. Len loop
-                  case L_Str (I) is
-                     when '1' =>
-                        Append ('0');
-                     when '0' =>
-                        case R_Str (I) is
-                           when '0' =>
-                              Append ('1');
-                           when '1' =>
-                              Append ('0');
+                  case Element_String8 (L_Str, I) is
+                     when 1 =>
+                        Append_String8 (0);
+                     when 0 =>
+                        case Element_String8 (R_Str, I) is
+                           when 0 =>
+                              Append_String8 (1);
+                           when 1 =>
+                              Append_String8 (0);
                            when others =>
                               raise Internal_Error;
                         end case;
@@ -664,25 +631,18 @@ package body Evaluation is
                end loop;
             when Iir_Predefined_TF_Array_Xor =>
                for I in 1 .. Len loop
-                  case L_Str (I) is
-                     when '1' =>
-                        case R_Str (I) is
-                           when '0' =>
-                              Append ('1');
-                           when '1' =>
-                              Append ('0');
+                  case Element_String8 (L_Str, I) is
+                     when 1 =>
+                        case Element_String8 (R_Str, I) is
+                           when 0 =>
+                              Append_String8 (1);
+                           when 1 =>
+                              Append_String8 (0);
                            when others =>
                               raise Internal_Error;
                         end case;
-                     when '0' =>
-                        case R_Str (I) is
-                           when '0' =>
-                              Append ('0');
-                           when '1' =>
-                              Append ('1');
-                           when others =>
-                              raise Internal_Error;
-                        end case;
+                     when 0 =>
+                        Append_String8 (Element_String8 (R_Str, I));
                      when others =>
                         raise Internal_Error;
                   end case;
@@ -691,7 +651,6 @@ package body Evaluation is
                Error_Internal (Expr, "eval_dyadic_bit_array_functions: " &
                                Iir_Predefined_Functions'Image (Func));
          end case;
-         Finish;
          Res := Build_String (Id, Len, Expr);
 
          --  The unconstrained type is replaced by the constrained one.
@@ -1451,7 +1410,7 @@ package body Evaluation is
       Img : String (1 .. 24); --  23 is enough, 24 is rounded.
       L : Natural;
       V : Iir_Int64;
-      Id : String_Id;
+      Id : String8_Id;
    begin
       V := Val;
       L := Img'Last;
@@ -1465,18 +1424,17 @@ package body Evaluation is
          Img (L) := '-';
          L := L - 1;
       end if;
-      Id := Start;
+      Id := Create_String8;
       for I in L + 1 .. Img'Last loop
-         Append (Img (I));
+         Append_String8_Char (Img (I));
       end loop;
-      Finish;
-      return Build_String (Id, Int32 (Img'Last - L), Orig);
+      return Build_String (Id, Nat32 (Img'Last - L), Orig);
    end Eval_Integer_Image;
 
    function Eval_Floating_Image (Val : Iir_Fp64; Orig : Iir) return Iir
    is
       use Str_Table;
-      Id : String_Id;
+      Id : String8_Id;
 
       --  Sign (1) + digit (1) + dot (1) + digits (15) + exp (1) + sign (1)
       --  + exp_digits (4) -> 24.
@@ -1560,11 +1518,10 @@ package body Evaluation is
          end loop;
       end if;
 
-      Id := Start;
+      Id := Create_String8;
       for I in 1 .. P loop
-         Append (Str (I));
+         Append_String8_Char (Str (I));
       end loop;
-      Finish;
       Res := Build_String (Id, Int32 (P), Orig);
       --  FIXME: this is not correct since the type is *not* constrained.
       Set_Type (Res, Create_Unidim_Array_By_Length
@@ -1574,13 +1531,13 @@ package body Evaluation is
 
    function Eval_Enumeration_Image (Lit : Iir; Orig : Iir) return Iir
    is
+      use Str_Table;
       Name : constant String := Image_Identifier (Lit);
-      Image_Id : constant String_Id := Str_Table.Start;
+      Image_Id : constant String8_Id := Str_Table.Create_String8;
    begin
       for I in Name'range loop
-         Str_Table.Append (Name (I));
+         Append_String8_Char (Name (I));
       end loop;
-      Str_Table.Finish;
       return Build_String (Image_Id, Name'Length, Orig);
    end Eval_Enumeration_Image;
 
@@ -1608,22 +1565,21 @@ package body Evaluation is
       Unit : constant Iir :=
         Get_Primary_Unit (Get_Base_Type (Get_Type (Phys)));
       UnitName : constant String := Image_Identifier (Unit);
-      Image_Id : constant String_Id := Str_Table.Start;
+      Image_Id : constant String8_Id := Str_Table.Create_String8;
       Length : Nat32 := Value'Length + UnitName'Length + 1;
    begin
       for I in Value'range loop
          -- Suppress the Ada +ve integer'image leading space
          if I > Value'first or else Value (I) /= ' ' then
-            Str_Table.Append (Value (I));
+            Str_Table.Append_String8_Char (Value (I));
          else
             Length := Length - 1;
          end if;
       end loop;
-      Str_Table.Append (' ');
+      Str_Table.Append_String8_Char (' ');
       for I in UnitName'range loop
-         Str_Table.Append (UnitName (I));
+         Str_Table.Append_String8_Char (UnitName (I));
       end loop;
-      Str_Table.Finish;
 
       return Build_String (Image_Id, Length, Expr);
    end Eval_Physical_Image;
@@ -1864,8 +1820,7 @@ package body Evaluation is
          when Iir_Kind_Integer_Literal
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Floating_Point_Literal
-           | Iir_Kind_String_Literal
-           | Iir_Kind_Bit_String_Literal
+           | Iir_Kind_String_Literal8
            | Iir_Kind_Overflow_Literal
            | Iir_Kind_Physical_Int_Literal
            | Iir_Kind_Physical_Fp_Literal =>
@@ -2011,7 +1966,7 @@ package body Evaluation is
                Param := Get_Parameter (Expr);
                Param := Eval_Static_Expr (Param);
                Set_Parameter (Expr, Param);
-               if Get_Kind (Param) /= Iir_Kind_String_Literal then
+               if Get_Kind (Param) /= Iir_Kind_String_Literal8 then
                   --  FIXME: Isn't it an implementation restriction.
                   Warning_Msg_Sem ("'value argument not a string", Expr);
                   return Build_Overflow (Expr);
@@ -2145,14 +2100,13 @@ package body Evaluation is
          when Iir_Kind_Simple_Name_Attribute =>
             declare
                use Str_Table;
-               Id : String_Id;
+               Id : String8_Id;
             begin
-               Id := Start;
+               Id := Create_String8;
                Image (Get_Simple_Name_Identifier (Expr));
                for I in 1 .. Name_Length loop
-                  Append (Name_Buffer (I));
+                  Append_String8_Char (Name_Buffer (I));
                end loop;
-               Finish;
                return Build_String (Id, Nat32 (Name_Length), Expr);
             end;
 
@@ -2732,10 +2686,8 @@ package body Evaluation is
    is
       type Str_Info is record
          El : Iir;
-         Ptr : String_Fat_Acc;
+         Id : String8_Id;
          Len : Nat32;
-         Lit_0 : Iir;
-         Lit_1 : Iir;
          List : Iir_List;
       end record;
 
@@ -2747,23 +2699,14 @@ package body Evaluation is
          case Get_Kind (Expr) is
             when Iir_Kind_Simple_Aggregate =>
                Res := Str_Info'(El => Expr,
-                                Ptr => null,
+                                Id => Null_String8,
                                 Len => 0,
-                                Lit_0 | Lit_1 => Null_Iir,
                                 List => Get_Simple_Aggregate_List (Expr));
                Res.Len := Nat32 (Get_Nbr_Elements (Res.List));
-            when Iir_Kind_Bit_String_Literal =>
+            when Iir_Kind_String_Literal8 =>
                Res := Str_Info'(El => Expr,
-                                Ptr => Get_String_Fat_Acc (Expr),
+                                Id => Get_String8_Id (Expr),
                                 Len => Get_String_Length (Expr),
-                                Lit_0 => Get_Bit_String_0 (Expr),
-                                Lit_1 => Get_Bit_String_1 (Expr),
-                                List => Null_Iir_List);
-            when Iir_Kind_String_Literal =>
-               Res := Str_Info'(El => Expr,
-                                Ptr => Get_String_Fat_Acc (Expr),
-                                Len => Get_String_Length (Expr),
-                                Lit_0 | Lit_1 => Null_Iir,
                                 List => Null_Iir_List);
             when others =>
                Error_Kind ("sem_string_choice_range.get_info", Expr);
@@ -2774,30 +2717,14 @@ package body Evaluation is
       function Get_Pos (Str : Str_Info; Idx : Nat32) return Iir_Int32
       is
          S : Iir;
-         C : Character;
+         P : Nat32;
       begin
          case Get_Kind (Str.El) is
             when Iir_Kind_Simple_Aggregate =>
                S := Get_Nth_Element (Str.List, Natural (Idx));
-            when Iir_Kind_String_Literal =>
-               C := Str.Ptr (Idx + 1);
-               --  FIXME: build a table from character to position.
-               --  This linear search is O(n)!
-               S := Find_Name_In_List (Literal_List,
-                                       Name_Table.Get_Identifier (C));
-               if S = Null_Iir then
-                  return -1;
-               end if;
-            when Iir_Kind_Bit_String_Literal =>
-               C := Str.Ptr (Idx + 1);
-               case C is
-                  when '0' =>
-                     S := Str.Lit_0;
-                  when '1' =>
-                     S := Str.Lit_1;
-                  when others =>
-                     raise Internal_Error;
-               end case;
+            when Iir_Kind_String_Literal8 =>
+               P := Str_Table.Element_String8 (Str.Id, Idx + 1);
+               S := Get_Nth_Element (Literal_List, Natural (P));
             when others =>
                Error_Kind ("sem_string_choice_range.get_pos", Str.El);
          end case;

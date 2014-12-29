@@ -246,8 +246,8 @@ package body Sem_Inst is
            | Type_PSL_Node =>
             --  TODO
             raise Internal_Error;
-         when Type_String_Id =>
-            Set_String_Id (Res, F, Get_String_Id (N, F));
+         when Type_String8_Id =>
+            Set_String8_Id (Res, F, Get_String8_Id (N, F));
          when Type_Source_Ptr =>
             Set_Source_Ptr (Res, F, Get_Source_Ptr (N, F));
          when Type_Date_Type
