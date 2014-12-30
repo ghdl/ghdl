@@ -674,7 +674,7 @@ package body Sem_Expr is
                Sem_Name (Expr);
             end if;
             Res := Name_To_Range (Expr);
-            if Res = Error_Mark then
+            if Is_Error (Res) then
                return Null_Iir;
             end if;
 

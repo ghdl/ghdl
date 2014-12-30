@@ -748,7 +748,8 @@ package body Sem_Specs is
                null;
          end case;
       else
-         Set_Expression (Spec, Error_Mark);
+         Set_Expression
+           (Spec, Create_Error_Expr (Get_Expression (Spec), Get_Type (Attr)));
       end if;
 
       --  LRM 5.1
