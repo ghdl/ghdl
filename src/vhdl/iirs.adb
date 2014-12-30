@@ -903,15 +903,57 @@ package body Iirs is
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Bit_String_Base (Get_Kind (Lit)));
-      return Base_Type'Val (Get_State2 (Lit));
+      return Base_Type'Val (Get_Odigit1 (Lit));
    end Get_Bit_String_Base;
 
    procedure Set_Bit_String_Base (Lit : Iir; Base : Base_Type) is
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Bit_String_Base (Get_Kind (Lit)));
-      Set_State2 (Lit, Base_Type'Pos (Base));
+      Set_Odigit1 (Lit, Base_Type'Pos (Base));
    end Set_Bit_String_Base;
+
+   function Get_Has_Signed (Lit : Iir) return Boolean is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Has_Signed (Get_Kind (Lit)));
+      return Get_Flag1 (Lit);
+   end Get_Has_Signed;
+
+   procedure Set_Has_Signed (Lit : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Has_Signed (Get_Kind (Lit)));
+      Set_Flag1 (Lit, Flag);
+   end Set_Has_Signed;
+
+   function Get_Has_Sign (Lit : Iir) return Boolean is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Has_Sign (Get_Kind (Lit)));
+      return Get_Flag2 (Lit);
+   end Get_Has_Sign;
+
+   procedure Set_Has_Sign (Lit : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Has_Sign (Get_Kind (Lit)));
+      Set_Flag2 (Lit, Flag);
+   end Set_Has_Sign;
+
+   function Get_Has_Length (Lit : Iir) return Boolean is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Has_Length (Get_Kind (Lit)));
+      return Get_Flag3 (Lit);
+   end Get_Has_Length;
+
+   procedure Set_Has_Length (Lit : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Has_Length (Get_Kind (Lit)));
+      Set_Flag3 (Lit, Flag);
+   end Set_Has_Length;
 
    function Get_Literal_Origin (Lit : Iir) return Iir is
    begin

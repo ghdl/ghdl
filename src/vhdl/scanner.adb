@@ -361,7 +361,7 @@ package body Scanner is
    begin
       --  String delimiter.
       Mark := Source (Pos);
-      pragma Assert (Mark = Quotation or else Mark = '%');
+      pragma Assert (Mark = '"' or else Mark = '%');
 
       Pos := Pos + 1;
       Length := 0;
@@ -427,40 +427,25 @@ package body Scanner is
    --
    --  The current character must be a base specifier, followed by '"' or '%'.
    --  The base must be valid.
-   procedure Scan_Bit_String
+   procedure Scan_Bit_String (Base_Log : Nat32)
    is
-      -- The base specifier.
-      Base_Log : Nat32 range 1 .. 4;
+      --  Position of character '0'.
+      Pos_0 : constant Nat8 := Character'Pos ('0');
+
+      --  Used for the base.
+      subtype Nat4 is Natural range 1 .. 4;
+      Base : constant Nat32 := 2 ** Nat4 (Base_Log);
+
       -- The quotation character (can be " or %).
-      Mark: Character;
+      Mark : constant Character := Source (Pos);
       -- Current character.
       C : Character;
       --  Current length.
       Length : Nat32;
       --  Digit value.
       V, D : Nat8;
-      --  Position of character '0'.
-      Pos_0 : constant Nat8 := Character'Pos ('0');
    begin
-      --  LRM93 13.7
-      --  A letter in a bit string literal (... or the base specificer) can be
-      --  written either in lowercase or in upper case, with the same meaning.
-      --
-      --  LRM08 15.8 Bit string literals
-      --  Not present!
-      case Source (Pos) is
-         when 'x' | 'X' =>
-            Base_Log := 4;
-         when 'o' | 'O' =>
-            Base_Log := 3;
-         when 'b' | 'B' =>
-            Base_Log := 1;
-         when others =>
-            raise Internal_Error;
-      end case;
-      Pos := Pos + 1;
-      Mark := Source (Pos);
-      pragma Assert (Mark = Quotation or else Mark = '%');
+      pragma Assert (Mark = '"' or else Mark = '%');
       Pos := Pos + 1;
       Length := 0;
       Current_Context.Str_Id := Str_Table.Create_String8;
@@ -512,37 +497,59 @@ package body Scanner is
                  ("'%' cannot close a bit string opened by '""'");
                exit;
             when others =>
-               Error_Msg_Scan ("bit string not terminated");
-               Pos := Pos - 1;
-               exit;
+               if Characters_Kind (C) in Graphic_Character then
+                  if Vhdl_Std >= Vhdl_08 then
+                     V := Nat8'Last;
+                  else
+                     Error_Msg_Scan ("invalid character in bit string");
+                     --  Continue the bit string
+                     V := 0;
+                  end if;
+               else
+                  Error_Msg_Scan ("bit string not terminated");
+                  Pos := Pos - 1;
+                  exit;
+               end if;
          end case;
 
-         case Base_Log is
-            when 1 =>
-               if V > 1 then
-                  Error_Msg_Scan ("invalid character in a binary bit string");
-                  V := 1;
-               end if;
-               Str_Table.Append_String8 (Pos_0 + V);
-            when 2 =>
-               raise Internal_Error;
-            when 3 =>
-               if V > 7 then
-                  Error_Msg_Scan ("invalid character in a octal bit string");
-                  V := 7;
-               end if;
-               for I in 1 .. 3 loop
-                  D := V / 4;
-                  Str_Table.Append_String8 (Pos_0 + D);
-                  V := (V - 4 * D) * 2;
-               end loop;
-            when 4 =>
-               for I in 1 .. 4 loop
-                  D := V / 8;
-                  Str_Table.Append_String8 (Pos_0 + D);
-                  V := (V - 8 * D) * 2;
-               end loop;
-         end case;
+         --  Expand bit value.
+         if Vhdl_Std >= Vhdl_08 and V > Base then
+            --  Expand as graphic character.
+            for I in 1 .. Base_Log loop
+               Str_Table.Append_String8_Char (C);
+            end loop;
+         else
+            --  Expand as extended digits.
+            case Base_Log is
+               when 1 =>
+                  if V > 1 then
+                     Error_Msg_Scan
+                       ("invalid character in a binary bit string");
+                     V := 1;
+                  end if;
+                  Str_Table.Append_String8 (Pos_0 + V);
+               when 3 =>
+                  if V > 7 then
+                     Error_Msg_Scan
+                       ("invalid character in a octal bit string");
+                     V := 7;
+                  end if;
+                  for I in 1 .. 3 loop
+                     D := V / 4;
+                     Str_Table.Append_String8 (Pos_0 + D);
+                     V := (V - 4 * D) * 2;
+                  end loop;
+               when 4 =>
+                  for I in 1 .. 4 loop
+                     D := V / 8;
+                     Str_Table.Append_String8 (Pos_0 + D);
+                     V := (V - 8 * D) * 2;
+                  end loop;
+               when others =>
+                  raise Internal_Error;
+            end case;
+         end if;
+
          Length := Length + Base_Log;
       end loop;
 
@@ -550,9 +557,152 @@ package body Scanner is
          Error_Msg_Scan ("empty bit string is not allowed");
       end if;
       Current_Token := Tok_Bit_String;
-      Current_Context.Int64 := Iir_Int64 (Base_Log);
       Current_Context.Str_Len := Length;
    end Scan_Bit_String;
+
+   procedure Scan_Dec_Bit_String
+   is
+      use Str_Table;
+
+      Id : String8_Id;
+
+      --  Position of character '0'.
+      Pos_0 : constant Nat8 := Character'Pos ('0');
+
+      -- Current character.
+      C : Character;
+      --  Current length.
+      Length : Nat32;
+      --  Digit value.
+      V, D : Nat8;
+
+      type Carries_Type is array (0 .. 3) of Nat8;
+      Carries : Carries_Type;
+      No_Carries : constant Carries_Type := (others => Pos_0);
+
+      --  Shift right carries.  Note the Carries (0) is the LSB.
+      procedure Shr_Carries is
+      begin
+         Carries := (Carries (1), Carries (2), Carries (3), Pos_0);
+      end Shr_Carries;
+
+      procedure Append_Carries is
+      begin
+         --  Expand the bit string.  Note that position 1 of the string8 is
+         --  the MSB.
+         while Carries /= No_Carries loop
+            Append_String8 (Pos_0);
+            Length := Length + 1;
+            for I in reverse 2 .. Length loop
+               Set_Element_String8 (Id, I, Element_String8 (Id, I - 1));
+            end loop;
+            Set_Element_String8 (Id, 1, Carries (0));
+            Shr_Carries;
+         end loop;
+      end Append_Carries;
+
+      procedure Add_One_To_Carries is
+      begin
+         for I in Carries'Range loop
+            if Carries (I) = Pos_0 then
+               Carries (I) := Pos_0 + 1;
+               --  End of propagation.
+               exit;
+            else
+               Carries (I) := Pos_0;
+               --  Continue propagation.
+            end if;
+         end loop;
+      end Add_One_To_Carries;
+   begin
+      pragma Assert (Source (Pos) = '"');
+      Pos := Pos + 1;
+      Length := 0;
+      Id := Create_String8;
+      Current_Context.Str_Id := Id;
+      loop
+         << Again >> null;
+         C := Source (Pos);
+         Pos := Pos + 1;
+         exit when C = '"';
+
+         if C in '0' .. '9' then
+            V := Character'Pos (C) - Character'Pos ('0');
+         elsif C = '_' then
+            if Source (Pos) = '_' then
+               Error_Msg_Scan
+                 ("double underscore not allowed in a bit string");
+            end if;
+            if Source (Pos - 2) = '"' then
+               Error_Msg_Scan
+                 ("underscore not allowed at the start of a bit string");
+            elsif Source (Pos) = '"' then
+               Error_Msg_Scan
+                 ("underscore not allowed at the end of a bit string");
+            end if;
+            goto Again;
+         else
+            if Characters_Kind (C) in Graphic_Character then
+               Error_Msg_Scan
+                 ("graphic character not allowed in decimal bit string");
+               --  Continue the bit string
+               V := 0;
+            else
+               Error_Msg_Scan ("bit string not terminated");
+               Pos := Pos - 1;
+               exit;
+            end if;
+         end if;
+
+         --  Multiply by 10.
+         Carries := (others => Pos_0);
+         for I in reverse 1 .. Length loop
+            --  Shift by 1 (*2).
+            D := Element_String8 (Id, I);
+            Set_Element_String8 (Id, I, Carries (0));
+            Shr_Carries;
+            --  Add D and D * 4.
+            if D /= Pos_0 then
+               Add_One_To_Carries;
+               --  Add_Four_To_Carries:
+               for I in 2 .. 3 loop
+                  if Carries (I) = Pos_0 then
+                     Carries (I) := Pos_0 + 1;
+                     --  End of propagation.
+                     exit;
+                  else
+                     Carries (I) := Pos_0;
+                     --  Continue propagation.
+                  end if;
+               end loop;
+            end if;
+         end loop;
+         Append_Carries;
+
+         --  Add V.
+         for I in Carries'Range loop
+            D := V / 2;
+            Carries (I) := Pos_0 + (V - 2 * D);
+            V := D;
+         end loop;
+         for I in reverse 1 .. Length loop
+            D := Element_String8 (Id, I);
+            if D /= Pos_0 then
+               Add_One_To_Carries;
+            end if;
+            Set_Element_String8 (Id, I, Carries (0));
+            Shr_Carries;
+            exit when Carries = No_Carries;
+         end loop;
+         Append_Carries;
+      end loop;
+
+      if Length = 0 then
+         Error_Msg_Scan ("empty bit string is not allowed");
+      end if;
+      Current_Token := Tok_Bit_String;
+      Current_Context.Str_Len := Length;
+   end Scan_Dec_Bit_String;
 
    -- LRM93 13.3.1
    -- Basic Identifiers
@@ -632,6 +782,7 @@ package body Scanner is
          Len := Len - 1;
          C := '_';
       end if;
+      Name_Length := Len;
 
       -- LRM93 13.2
       -- At least one separator is required between an identifier or an
@@ -641,17 +792,63 @@ package body Scanner is
            | Upper_Case_Letter
            | Lower_Case_Letter =>
             raise Internal_Error;
-         when Other_Special_Character =>
-            if Vhdl_Std /= Vhdl_87 and then C = '\' then
+         when Other_Special_Character | Special_Character =>
+            if (C = '"' or C = '%') and then Len <= 2 then
+               --  Good candidate for bit string.
+
+               --  LRM93 13.7
+               --  BASE_SPECIFIER ::= B | O | X
+               --
+               --  A letter in a bit string literal (either an extended digit
+               --  or the base specifier) can be written either in lower case
+               --  or in upper case, with the same meaning.
+               --
+               --  LRM08 15.8 Bit string literals
+               --  BASE_SPECICIER ::=
+               --     B | O | X | UB | UO | UX | SB | SO | SX | D
+               --
+               --  An extended digit and the base specifier in a bit string
+               --  literal can be written either in lowercase or in uppercase,
+               --  with the same meaning.
+               declare
+                  Base : Nat32;
+                  Cl : constant Character := Name_Buffer (Len);
+                  Cf : constant Character := Name_Buffer (1);
+               begin
+                  if Cl = 'b' then
+                     Base := 1;
+                  elsif Cl = 'o' then
+                     Base := 3;
+                  elsif Cl = 'x' then
+                     Base := 4;
+                  elsif Vhdl_Std >= Vhdl_08 and Len = 1 and Cf = 'd' then
+                     Scan_Dec_Bit_String;
+                     return;
+                  else
+                     Base := 0;
+                  end if;
+                  if Base > 0 then
+                     if Len = 1 then
+                        Scan_Bit_String (Base);
+                        return;
+                     elsif Vhdl_Std >= Vhdl_08
+                       and then (Cf = 's' or Cf = 'u')
+                     then
+                        Scan_Bit_String (Base);
+                        return;
+                     end if;
+                  end if;
+               end;
+            end if;
+            if Vhdl_Std > Vhdl_87 and then C = '\' then
+               --  Start of extended identifier.  Cannot follow an identifier.
                Error_Separator;
             end if;
          when Invalid
            | Format_Effector
-           | Space_Character
-           | Special_Character =>
+           | Space_Character =>
             null;
       end case;
-      Name_Length := Len;
 
       -- Hash it.
       Current_Context.Identifier := Name_Table.Get_Identifier;
@@ -1379,7 +1576,7 @@ package body Scanner is
          when '0' .. '9' =>
             Scan_Literal;
 
-            --  LRM 13.2
+            --  LRM93 13.2
             --  At least one separator is required between an identifier or
             --  an abstract literal and an adjacent identifier or abstract
             --  literal.
@@ -1390,13 +1587,19 @@ package body Scanner is
                  | Lower_Case_Letter =>
                   --  Could call Error_Separator, but use a clearer message
                   --  for this common case.
-                  --  Note: the term "unit name" is not correct here, since it
-                  --  can be any identifier or even a keyword; however it is
-                  --  probably the most common case (eg 10ns).
-                  Error_Msg_Scan
-                    ("space is required between number and unit name");
+                  --  Note: the term "unit name" is not correct here, since
+                  --  it can be any identifier or even a keyword; however it
+                  --  is probably the most common case (eg 10ns).
+                  if Vhdl_Std >= Vhdl_08 and then Current_Token = Tok_Integer
+                  then
+                     Current_Token := Tok_Integer_Letter;
+                  else
+                     Error_Msg_Scan
+                       ("space is required between number and unit name");
+                  end if;
                when Other_Special_Character =>
-                  if Vhdl_Std /= Vhdl_87 and then Source (Pos) = '\' then
+                  if Vhdl_Std > Vhdl_87 and then Source (Pos) = '\' then
+                     --  Start of extended identifier.
                      Error_Separator;
                   end if;
                when Invalid
@@ -1555,20 +1758,7 @@ package body Scanner is
             Error_Msg_Scan ("an identifier can't start with '_'");
             Pos := Pos + 1;
             goto Again;
-         when 'B' | 'b' | 'O' | 'o' | 'X' | 'x' =>
-            if Source (Pos + 1) = Quotation or else Source (Pos + 1) = '%' then
-               -- LRM93 13.7
-               -- BASE_SPECIFIER ::= B | O | X
-               -- A letter in a bit string literal (either an extended digit or
-               -- the base specifier) can be written either in lower case or
-               -- in upper case, with the same meaning.
-               Scan_Bit_String;
-            else
-               Scan_Identifier;
-            end if;
-            return;
-         when 'A' | 'C' .. 'N' | 'P' .. 'W' | 'Y'| 'Z'
-           | 'a' | 'c' .. 'n' | 'p' .. 'w' | 'y'| 'z' =>
+         when 'A' .. 'Z' | 'a' .. 'z' =>
             Scan_Identifier;
             return;
          when UC_A_Grave .. UC_O_Diaeresis

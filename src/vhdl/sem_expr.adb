@@ -1897,6 +1897,12 @@ package body Sem_Expr is
             end if;
             Inter := Get_Next_Interpretation (Inter);
          end loop;
+
+         --  LRM08 9.3 Operands
+         --  The character literals corresponding to the graphic characters
+         --  contained within a string literal or a bit string literal shall
+         --  be visible at the place of the string literal.
+
          --  Character C is not visible...
          if Find_Name_In_List (Get_Enumeration_Literal_List (Etype), Id)
            = Null_Iir
@@ -1919,55 +1925,31 @@ package body Sem_Expr is
       El : Iir;
       Enum_Pos : Iir_Int32;
       Ch : Character;
+
+      --  Create a cache of literals, to speed-up a little bit the
+      --  search.
+      No_Pos : constant Nat8 := Nat8'Last;
+      Map : Characters_Pos (' ' .. Character'Last) := (others => No_Pos);
+      Res : Nat8;
    begin
-      if Get_Bit_String_Base (Str) /= Base_None then
-         --  A bit string.
-         declare
-            Map : Characters_Pos ('0' .. '1');
-         begin
-            for C in Character range '0' .. '1' loop
-               El := Find_Literal (El_Type, C);
-               if El = Null_Iir then
-                  Enum_Pos := 0;
-               else
-                  Enum_Pos := Get_Enum_Pos (El);
-               end if;
-               Map (C) := Nat8 (Enum_Pos);
-            end loop;
+      for I in 1 .. Len loop
+         Ch := Str_Table.Char_String8 (Id, I);
+         Res := Map (Ch);
+         if Res = No_Pos then
+            El := Find_Literal (El_Type, Ch);
+            if El = Null_Iir then
+               Res := 0;
+            else
+               Enum_Pos := Get_Enum_Pos (El);
+               Res := Nat8 (Enum_Pos);
+               Map (Ch) := Res;
+            end if;
+         end if;
+         Str_Table.Set_Element_String8 (Id, I, Res);
+      end loop;
 
-            for I in 1 .. Len loop
-               Ch := Str_Table.Char_String8 (Id, I);
-               pragma Assert (Ch in Map'Range);
-               Str_Table.Set_Element_String8 (Id, I, Map (Ch));
-            end loop;
-         end;
-      else
-         --  A string.
-         declare
-            --  Create a cache of literals, to speed-up a little bit the
-            --  search.
-            No_Pos : constant Nat8 := Nat8'Last;
-            Map : Characters_Pos (' ' .. Character'Last) := (others => No_Pos);
-            Res : Nat8;
-         begin
-            for I in 1 .. Len loop
-               Ch := Str_Table.Char_String8 (Id, I);
-               Res := Map (Ch);
-               if Res = No_Pos then
-                  El := Find_Literal (El_Type, Ch);
-                  if El = Null_Iir then
-                     Res := 0;
-                  else
-                     Enum_Pos := Get_Enum_Pos (El);
-                     Res := Nat8 (Enum_Pos);
-                     Map (Ch) := Res;
-                  end if;
-               end if;
-               Str_Table.Set_Element_String8 (Id, I, Res);
-            end loop;
-         end;
-      end if;
-
+      --  LRM08 9.4.2 Locally static primaries
+      --  a) A literal of any type other than type TIME
       Set_Expr_Staticness (Str, Locally);
 
       return Natural (Len);

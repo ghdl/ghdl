@@ -61,7 +61,8 @@ package body Tokens is
             return "<character>";
          when Tok_Identifier =>
             return "<identifier>";
-         when Tok_Integer =>
+         when Tok_Integer
+           | Tok_Integer_Letter =>
             return "<integer>";
          when Tok_Real =>
             return "<real>";

@@ -3943,6 +3943,176 @@ package body Parse is
       return Res;
    end Parse_Allocator;
 
+   --  precond : tok_bit_string
+   --  postcond: tok_bit_string
+   --
+   --  Simply create the node for a bit string.
+   function Parse_Bit_String return Iir
+   is
+      Res : Iir;
+      C : Character;
+      B : Base_Type;
+   begin
+      Res := Create_Iir (Iir_Kind_String_Literal8);
+      Set_Location (Res);
+      Set_String8_Id (Res, Current_String_Id);
+      Set_String_Length (Res, Current_String_Length);
+      if Name_Table.Name_Buffer (1) = 's' then
+         Set_Has_Sign (Res, True);
+         Set_Has_Signed (Res, True);
+         pragma Assert (Name_Table.Name_Length = 2);
+         C := Name_Table.Name_Buffer (2);
+      elsif Name_Table.Name_Buffer (1) = 'u' then
+         Set_Has_Sign (Res, True);
+         Set_Has_Signed (Res, False);
+         pragma Assert (Name_Table.Name_Length = 2);
+         C := Name_Table.Name_Buffer (2);
+      else
+         Set_Has_Sign (Res, False);
+         Set_Has_Signed (Res, False);
+         pragma Assert (Name_Table.Name_Length = 1);
+         C := Name_Table.Name_Buffer (1);
+      end if;
+
+      case C is
+         when 'b' =>
+            B := Base_2;
+         when 'o' =>
+            B := Base_8;
+         when 'd' =>
+            B := Base_10;
+         when 'x' =>
+            B := Base_16;
+         when others =>
+            raise Internal_Error;
+      end case;
+      Set_Bit_String_Base (Res, B);
+
+      return Res;
+   end Parse_Bit_String;
+
+   --  Scan returns an expanded bit value.  Adjust the expanded bit value as
+   --  required by the length.
+   procedure Resize_Bit_String (Lit : Iir; Nlen : Nat32)
+   is
+      use Str_Table;
+
+      Old_Len : constant Nat32 := Get_String_Length (Lit);
+      Is_Signed : constant Boolean := Get_Has_Signed (Lit);
+      Id : constant String8_Id := Get_String8_Id (Lit);
+      C : Nat8;
+   begin
+      if Nlen > Old_Len then
+         --  Extend.
+
+         --  LRM08 15.8
+         --  -- If the length is greater than the number of characters in the
+         --     expanded bit value and the base specifier is B, UB, O, UO, X,
+         --     UX or D, the bit string value is obtained by concatenating a
+         --     string of 0 digits to the left of the expanded bit value.  The
+         --     number of 0 digits in the string is such that the number of
+         --     characters in the result of the concatenation is the length of
+         --     the bit string literal.
+         --
+         --  -- If the length is greater than the number of characters in the
+         --     expanded bit value and the base specifier is SB, SO or SX, the
+         --     bit string value is obtained by concatenating the the left of
+         --     the expanded bit value a string, each of whose characters is
+         --     the leftmost character of the expanded bit value.  The number
+         --     of characters in the string is such that the number of
+         --     characters in the result of the concatenation is the length of
+         --     the bit string literal.
+         if Is_Signed then
+            if Old_Len = 0 then
+               Error_Msg_Parse
+                 ("cannot expand an empty signed bit string", Lit);
+               C := Character'Pos ('0');
+            else
+               C := Element_String8 (Id, 1);
+            end if;
+         else
+            C := Character'Pos ('0');
+         end if;
+         Resize_String8 (Nlen);
+         --  Shift (position 1 is the MSB).
+         for I in reverse 1 .. Old_Len loop
+            Set_Element_String8 (Id, I + Nlen - Old_Len,
+                                 Element_String8 (Id, I));
+         end loop;
+         for I in 1 .. Nlen - Old_Len loop
+            Set_Element_String8 (Id, I, C);
+         end loop;
+         Set_String_Length (Lit, Nlen);
+
+      elsif Nlen < Old_Len then
+         --  Reduce.
+
+         --  LRM08 15.8
+         --  -- If the length is less than the number of characters in the
+         --     expanded bit value and the base specifier is B, UB, O, UO, X,
+         --     UX or D, the bit string value is obtained by deleting
+         --     sufficient characters from the left of the expanded bit value
+         --     to yield a string whose length is the length of the bit string
+         --     literal.  It is an error if any of the character so deleted is
+         --     other than the digit 0.
+         --
+         --  -- If the length is less than the number of characters in the
+         --     expanded bit value and the base specifier is SB, SO or SX, the
+         --     bit string value is obtained by deleting sufficient characters
+         --     from the left of the expanded bit value to yield a string whose
+         --     length is the length of the bit string literal.  It is an error
+         --     if any of the characters so deleted differs from the leftmost
+         --     remaining character.
+         if Is_Signed then
+            C := Element_String8 (Id, 1 + Old_Len - Nlen);
+         else
+            C := Character'Pos ('0');
+         end if;
+         for I in 1 .. Old_Len - Nlen loop
+            if Element_String8 (Id, I) /= C then
+               Error_Msg_Parse
+                 ("truncation of bit string changes the value", Lit);
+               --  Avoid error storm.
+               exit;
+            end if;
+         end loop;
+         --  Shift (position 1 is the MSB).
+         for I in 1 .. Nlen loop
+            Set_Element_String8 (Id, I,
+                                 Element_String8 (Id, I + Old_Len - Nlen));
+         end loop;
+         Resize_String8 (Nlen);
+         Set_String_Length (Lit, Nlen);
+
+      else
+         --  LRM08 15.8
+         --  -- If the length is equal to the number of characters in the
+         --     expanded bit value, the string literal value is the expanded
+         --     bit value itself.
+         null;
+      end if;
+   end Resize_Bit_String;
+
+   --  Precond : next token after tok_integer
+   --  postcond: likewise
+   --
+   --  Return an integer_literal or a physical_literal.
+   function Parse_Integer_Literal (Val : Iir_Int64) return Iir
+   is
+      Res : Iir;
+   begin
+      if Current_Token = Tok_Identifier then
+         -- physical literal
+         Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
+         Set_Unit_Name (Res, Parse_Name (Allow_Indexes => False));
+      else
+         -- integer literal
+         Res := Create_Iir (Iir_Kind_Integer_Literal);
+      end if;
+      Set_Value (Res, Val);
+      return Res;
+   end Parse_Integer_Literal;
+
    --  precond : next token
    --  postcond: next token
    --
@@ -3987,16 +4157,8 @@ package body Parse is
             --  Skip integer
             Scan;
 
-            if Current_Token = Tok_Identifier then
-               -- physical literal
-               Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
-               Set_Unit_Name (Res, Parse_Name (Allow_Indexes => False));
-            else
-               -- integer literal
-               Res := Create_Iir (Iir_Kind_Integer_Literal);
-            end if;
+            Res := Parse_Integer_Literal (Int);
             Set_Location (Res, Loc);
-            Set_Value (Res, Int);
             return Res;
 
          when Tok_Real =>
@@ -4043,23 +4205,39 @@ package body Parse is
             return Res;
          when Tok_New =>
             return Parse_Allocator;
-         when Tok_Bit_String =>
-            Res := Create_Iir (Iir_Kind_String_Literal8);
-            Set_Location (Res);
-            Set_String8_Id (Res, Current_String_Id);
-            Set_String_Length (Res, Current_String_Length);
-            case Current_Iir_Int64 is
-               when 1 =>
-                  Set_Bit_String_Base (Res, Base_2);
-               when 3 =>
-                  Set_Bit_String_Base (Res, Base_8);
-               when 4 =>
-                  Set_Bit_String_Base (Res, Base_16);
-               when others =>
-                  raise Internal_Error;
-            end case;
+
+         when Tok_Integer_Letter =>
+            Int := Current_Iir_Int64;
+            Loc := Get_Token_Location;
+
+            --  Skip integer
             Scan;
+
+            if Current_Token = Tok_Bit_String then
+               Res := Parse_Bit_String;
+
+               --  Skip bit string
+               Scan;
+
+               --  Resize.
+               Resize_Bit_String (Res, Nat32 (Int));
+            else
+               Error_Msg_Parse
+                 ("space is required between number and unit name",
+                  Get_Token_Location);
+               Res := Parse_Integer_Literal (Int);
+            end if;
+            Set_Location (Res, Loc);
             return Res;
+
+         when Tok_Bit_String =>
+            Res := Parse_Bit_String;
+
+            --  Skip bit string
+            Scan;
+
+            return Res;
+
          when Tok_Minus
            | Tok_Plus =>
             Error_Msg_Parse

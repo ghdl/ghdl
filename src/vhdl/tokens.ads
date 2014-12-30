@@ -47,7 +47,16 @@ package Tokens is
        Tok_Integer,
        Tok_Real,
        Tok_String,
+
+       --  This token corresponds to a base specifier followed by bit_value.
+       --  The base specifier is stored in Name_Buffer/Name_Length like an
+       --  identifier (in lowercase), the String8_Id contains the expanded bit
+       --  value.
        Tok_Bit_String,
+
+       --  An integer immediately followed by a letter.  This is used by to
+       --  scan vhdl 2008 (and later) bit string with a length.
+       Tok_Integer_Letter,
 
    -- relational_operator
        Tok_Equal,               -- =

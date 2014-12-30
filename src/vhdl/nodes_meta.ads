@@ -88,6 +88,9 @@ package Nodes_Meta is
       Field_Fp_Value,
       Field_Simple_Aggregate_List,
       Field_Bit_String_Base,
+      Field_Has_Signed,
+      Field_Has_Sign,
+      Field_Has_Length,
       Field_Literal_Origin,
       Field_Range_Origin,
       Field_Literal_Subtype,
@@ -548,6 +551,9 @@ package Nodes_Meta is
    function Has_Fp_Value (K : Iir_Kind) return Boolean;
    function Has_Simple_Aggregate_List (K : Iir_Kind) return Boolean;
    function Has_Bit_String_Base (K : Iir_Kind) return Boolean;
+   function Has_Has_Signed (K : Iir_Kind) return Boolean;
+   function Has_Has_Sign (K : Iir_Kind) return Boolean;
+   function Has_Has_Length (K : Iir_Kind) return Boolean;
    function Has_Literal_Origin (K : Iir_Kind) return Boolean;
    function Has_Range_Origin (K : Iir_Kind) return Boolean;
    function Has_Literal_Subtype (K : Iir_Kind) return Boolean;

@@ -434,6 +434,7 @@ package body Ghdlprint is
               | Tok_Comma .. Tok_Dot
               | Tok_Equal_Equal
               | Tok_Integer
+              | Tok_Integer_Letter
               | Tok_Real
               | Tok_Equal .. Tok_Slash
               | Tok_Invalid =>
