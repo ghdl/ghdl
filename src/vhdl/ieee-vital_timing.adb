@@ -59,45 +59,45 @@ package body Ieee.Vital_Timing is
       VitalDelayArrayType01ZX_Id : Name_Id;
    begin
       --  Get Vital delay type identifiers.
-      Name_Buffer (1 .. 18) := "vitaldelaytype01zx";
-      Name_Length := 14;
+      Nam_Buffer (1 .. 18) := "vitaldelaytype01zx";
+      Nam_Length := 14;
       VitalDelayType_Id := Get_Identifier_No_Create;
       if VitalDelayType_Id = Null_Identifier then
          raise Ill_Formed;
       end if;
-      Name_Length := 16;
+      Nam_Length := 16;
       VitalDelayType01_Id := Get_Identifier_No_Create;
       if VitalDelayType01_Id = Null_Identifier then
          raise Ill_Formed;
       end if;
-      Name_Length := 17;
+      Nam_Length := 17;
       VitalDelayType01Z_Id := Get_Identifier_No_Create;
       if VitalDelayType01Z_Id = Null_Identifier then
          raise Ill_Formed;
       end if;
-      Name_Length := 18;
+      Nam_Length := 18;
       VitalDelayType01ZX_Id := Get_Identifier_No_Create;
       if VitalDelayType01ZX_Id = Null_Identifier then
          raise Ill_Formed;
       end if;
 
-      Name_Buffer (1 .. 23) := "vitaldelayarraytype01zx";
-      Name_Length := 19;
+      Nam_Buffer (1 .. 23) := "vitaldelayarraytype01zx";
+      Nam_Length := 19;
       VitalDelayArrayType_Id := Get_Identifier_No_Create;
       if VitalDelayArrayType_Id = Null_Identifier then
          raise Ill_Formed;
       end if;
-      Name_Length := 21;
+      Nam_Length := 21;
       VitalDelayArrayType01_Id := Get_Identifier_No_Create;
       if VitalDelayArrayType01_Id = Null_Identifier then
          raise Ill_Formed;
       end if;
-      Name_Length := 22;
+      Nam_Length := 22;
       VitalDelayArrayType01Z_Id := Get_Identifier_No_Create;
       if VitalDelayArrayType01Z_Id = Null_Identifier then
          raise Ill_Formed;
       end if;
-      Name_Length := 23;
+      Nam_Length := 23;
       VitalDelayArrayType01ZX_Id := Get_Identifier_No_Create;
       if VitalDelayArrayType01ZX_Id = Null_Identifier then
          raise Ill_Formed;
@@ -245,12 +245,12 @@ package body Ieee.Vital_Timing is
       --  The identifiers in an entity port declaration shall not contain
       --  underscore characters.
       Image (Get_Identifier (Decl));
-      if Name_Buffer (1) = '/' then
+      if Nam_Buffer (1) = '/' then
          Error_Vital ("VITAL entity port shall not be an extended identifier",
                       Decl);
       end if;
-      for I in 1 .. Name_Length loop
-         if Name_Buffer (I) = '_' then
+      for I in 1 .. Nam_Length loop
+         if Nam_Buffer (I) = '_' then
             Error_Vital
               ("VITAL entity port shall not contain underscore", Decl);
             exit;
@@ -330,16 +330,16 @@ package body Ieee.Vital_Timing is
       Id : Name_Id;
       Inter : Name_Interpretation_Type;
    begin
-      Name_Length := 0;
+      Nam_Length := 0;
       while Gen_Name_Pos <= Gen_Name_Length loop
-         C := Name_Buffer (Gen_Name_Pos);
+         C := Nam_Buffer (Gen_Name_Pos);
          Gen_Name_Pos := Gen_Name_Pos + 1;
          exit when C = '_';
-         Name_Length := Name_Length + 1;
-         Name_Buffer (Name_Length) := C;
+         Nam_Length := Nam_Length + 1;
+         Nam_Buffer (Nam_Length) := C;
       end loop;
 
-      if Name_Length = 0 then
+      if Nam_Length = 0 then
          Error_Vital_Name ("port expected in VITAL generic name");
          return Null_Iir;
       end if;
@@ -353,7 +353,7 @@ package body Ieee.Vital_Timing is
          end if;
       end if;
       if Res = Null_Iir then
-         Warning_Vital ("'" & Name_Buffer (1 .. Name_Length)
+         Warning_Vital ("'" & Nam_Buffer (1 .. Nam_Length)
                         & "' is not a port name (in VITAL generic name)",
                         Gen_Decl);
       end if;
@@ -376,7 +376,7 @@ package body Ieee.Vital_Timing is
               | Iir_Inout_Mode =>
                null;
             when others =>
-               Error_Vital ("'" & Name_Buffer (1 .. Name_Length)
+               Error_Vital ("'" & Nam_Buffer (1 .. Nam_Length)
                             & "' must be an input port", Gen_Decl);
          end case;
       end if;
@@ -400,7 +400,7 @@ package body Ieee.Vital_Timing is
               | Iir_Buffer_Mode =>
                null;
             when others =>
-               Error_Vital ("'" & Name_Buffer (1 .. Name_Length)
+               Error_Vital ("'" & Nam_Buffer (1 .. Nam_Length)
                             & "' must be an output port", Gen_Decl);
          end case;
       end if;
@@ -427,7 +427,7 @@ package body Ieee.Vital_Timing is
    begin
       Len := 0;
       while Gen_Name_Pos <= Gen_Name_Length loop
-         C := Name_Buffer (Gen_Name_Pos);
+         C := Nam_Buffer (Gen_Name_Pos);
          Gen_Name_Pos := Gen_Name_Pos + 1;
          exit when C = '_';
          Len := Len + 1;
@@ -436,18 +436,18 @@ package body Ieee.Vital_Timing is
          return Suffix_Eon;
       end if;
 
-      case Name_Buffer (P) is
+      case Nam_Buffer (P) is
          when '0' =>
-            if Len = 2 and then (Name_Buffer (P + 1) = '1'
-                                 or Name_Buffer (P + 1) = 'z')
+            if Len = 2 and then (Nam_Buffer (P + 1) = '1'
+                                 or Nam_Buffer (P + 1) = 'z')
             then
                return Suffix_Edge;
             else
                return Suffix_Num_Name;
             end if;
          when '1' =>
-            if Len = 2 and then (Name_Buffer (P + 1) = '0'
-                                 or Name_Buffer (P + 1) = 'z')
+            if Len = 2 and then (Nam_Buffer (P + 1) = '0'
+                                 or Nam_Buffer (P + 1) = 'z')
             then
                return Suffix_Edge;
             else
@@ -456,23 +456,23 @@ package body Ieee.Vital_Timing is
          when '2' .. '9' =>
             return Suffix_Num_Name;
          when 'z' =>
-            if Len = 2 and then (Name_Buffer (P + 1) = '0'
-                                 or Name_Buffer (P + 1) = '1')
+            if Len = 2 and then (Nam_Buffer (P + 1) = '0'
+                                 or Nam_Buffer (P + 1) = '1')
             then
                return Suffix_Edge;
             else
                return Suffix_Name;
             end if;
          when 'p' =>
-            if Len = 7 and then Name_Buffer (P .. P + 6) = "posedge" then
+            if Len = 7 and then Nam_Buffer (P .. P + 6) = "posedge" then
                return Suffix_Edge;
             else
                return Suffix_Name;
             end if;
          when 'n' =>
-            if Len = 7 and then Name_Buffer (P .. P + 6) = "negedge" then
+            if Len = 7 and then Nam_Buffer (P .. P + 6) = "negedge" then
                return Suffix_Edge;
-            elsif Len = 6 and then Name_Buffer (P .. P + 5) = "noedge" then
+            elsif Len = 6 and then Nam_Buffer (P .. P + 5) = "noedge" then
                return Suffix_Edge;
             else
                return Suffix_Name;
@@ -806,12 +806,12 @@ package body Ieee.Vital_Timing is
       --  IEEE 1076.4 4.3.1
       --  It is an error for a model to use a timing generic prefix to begin
       --  the simple name of an entity generic that is not a timing generic.
-      if Name_Length < Length or Name_Buffer (Length) /= '_' then
+      if Nam_Length < Length or Nam_Buffer (Length) /= '_' then
          Error_Vital ("invalid use of a VITAL timing generic prefix", Decl);
          return False;
       end if;
       Gen_Name_Pos := Length + 1;
-      Gen_Name_Length := Name_Length;
+      Gen_Name_Length := Nam_Length;
       Gen_Decl := Decl;
       return True;
    end Check_Timing_Generic_Prefix;
@@ -1049,16 +1049,16 @@ package body Ieee.Vital_Timing is
          Image (Get_Identifier (Decl));
          Tpd_Name (1) := 't';
          --  The part before '_<ClockPort>'.
-         Tpd_Name (2 .. Clock_Start - 2) := Name_Buffer (3 .. Clock_Start - 1);
+         Tpd_Name (2 .. Clock_Start - 2) := Nam_Buffer (3 .. Clock_Start - 1);
          Tpd_Name (Clock_Start - 1 .. Tpd_Name'Last) :=
-           Name_Buffer (Clock_End .. Name_Length);
+           Nam_Buffer (Clock_End .. Nam_Length);
 
          Tpd_Decl := Gen_Chain;
          loop
             exit when Tpd_Decl = Null_Iir;
             Image (Get_Identifier (Tpd_Decl));
-            exit when Name_Length = Tpd_Name'Length
-              and then Name_Buffer (1 .. Name_Length) = Tpd_Name;
+            exit when Nam_Length = Tpd_Name'Length
+              and then Nam_Buffer (1 .. Nam_Length) = Tpd_Name;
             Tpd_Decl := Get_Chain (Tpd_Decl);
          end loop;
 
@@ -1115,7 +1115,7 @@ package body Ieee.Vital_Timing is
       end if;
       declare
          use Name_Table;
-         Port : String (1 .. Name_Length);
+         Port : String (1 .. Nam_Length);
          El : Iir;
          Offset : Natural;
 
@@ -1126,39 +1126,39 @@ package body Ieee.Vital_Timing is
             S := Offset;
             loop
                Offset := Offset + 1;
-               exit when Offset > Name_Length
-                 or else Name_Buffer (Offset) = '_';
+               exit when Offset > Nam_Length
+                 or else Nam_Buffer (Offset) = '_';
             end loop;
             if Offset - S = Port'Length
-              and then Name_Buffer (S .. Offset - 1) = Port
+              and then Nam_Buffer (S .. Offset - 1) = Port
             then
                Error_Vital ("clock port name of 'ticd' VITAL generic must not"
                             & " appear here", El);
             end if;
          end Check_Not_Clock;
       begin
-         Port := Name_Buffer (P_Start .. Gen_Name_Length);
+         Port := Nam_Buffer (P_Start .. Gen_Name_Length);
 
          El := Gen_Chain;
          while El /= Null_Iir loop
             Image (Get_Identifier (El));
-            if Name_Length > 5
-              and then Name_Buffer (1) = 't'
+            if Nam_Length > 5
+              and then Nam_Buffer (1) = 't'
             then
-               if Name_Buffer (2 .. 5) = "bpd_" then
+               if Nam_Buffer (2 .. 5) = "bpd_" then
                   Offset := 6;
                   Check_Not_Clock; -- input
                   Check_Not_Clock; -- output
-               elsif Name_Buffer (2 .. 5) = "isd_" then
+               elsif Nam_Buffer (2 .. 5) = "isd_" then
                   Offset := 6;
                   Check_Not_Clock; -- input
-               elsif Name_Length > 10
-                 and then Name_Buffer (2 .. 10) = "recovery_"
+               elsif Nam_Length > 10
+                 and then Nam_Buffer (2 .. 10) = "recovery_"
                then
                   Offset := 11;
                   Check_Not_Clock; -- test port
-               elsif Name_Length > 9
-                 and then Name_Buffer (2 .. 9) = "removal_"
+               elsif Nam_Length > 9
+                 and then Nam_Buffer (2 .. 9) = "removal_"
                then
                   Offset := 10;
                   Check_Not_Clock;
@@ -1179,60 +1179,60 @@ package body Ieee.Vital_Timing is
       Image (Id);
 
       --  Extract prefix.
-      if Name_Buffer (1) = 't' and Name_Length >= 3 then
+      if Nam_Buffer (1) = 't' and Nam_Length >= 3 then
          --  Timing generic names.
-         if Name_Buffer (2) = 'p' then
-            if Name_Buffer (3) = 'd' then
+         if Nam_Buffer (2) = 'p' then
+            if Nam_Buffer (3) = 'd' then
                Check_Propagation_Delay_Name (Decl); --  tpd
                return;
-            elsif Name_Buffer (3) = 'w' then
+            elsif Nam_Buffer (3) = 'w' then
                Check_Pulse_Width_Name (Decl); -- tpw
                return;
-            elsif Name_Length >= 7
-              and then Name_Buffer (3 .. 7) = "eriod"
+            elsif Nam_Length >= 7
+              and then Nam_Buffer (3 .. 7) = "eriod"
             then
                Check_Input_Period_Name (Decl); --  tperiod
                return;
             end if;
-         elsif Name_Buffer (2) = 'i'
-           and then Name_Length >= 4
-           and then Name_Buffer (4) = 'd'
+         elsif Nam_Buffer (2) = 'i'
+           and then Nam_Length >= 4
+           and then Nam_Buffer (4) = 'd'
          then
-            if Name_Buffer (3) = 'p' then
+            if Nam_Buffer (3) = 'p' then
                Check_Interconnect_Path_Delay_Name (Decl); --  tipd
                return;
-            elsif Name_Buffer (3) = 's' then
+            elsif Nam_Buffer (3) = 's' then
                Check_Internal_Signal_Delay_Name (Decl); --  tisd
                return;
-            elsif Name_Buffer (3) = 'c' then
+            elsif Nam_Buffer (3) = 'c' then
                Check_Internal_Clock_Delay_Generic_Name (Decl); --  ticd
                return;
             end if;
-         elsif Name_Length >= 6 and then Name_Buffer (2 .. 6) = "setup" then
+         elsif Nam_Length >= 6 and then Nam_Buffer (2 .. 6) = "setup" then
             Check_Input_Setup_Time_Name (Decl); --  tsetup
             return;
-         elsif Name_Length >= 5 and then Name_Buffer (2 .. 5) = "hold" then
+         elsif Nam_Length >= 5 and then Nam_Buffer (2 .. 5) = "hold" then
             Check_Input_Hold_Time_Name (Decl); -- thold
             return;
-         elsif Name_Length >= 9 and then Name_Buffer (2 .. 9) = "recovery" then
+         elsif Nam_Length >= 9 and then Nam_Buffer (2 .. 9) = "recovery" then
             Check_Input_Recovery_Time_Name (Decl); -- trecovery
             return;
-         elsif Name_Length >= 8 and then Name_Buffer (2 .. 8) = "removal" then
+         elsif Nam_Length >= 8 and then Nam_Buffer (2 .. 8) = "removal" then
             Check_Input_Removal_Time_Name (Decl); -- tremoval
             return;
-         elsif Name_Length >= 5 and then Name_Buffer (2 .. 5) = "skew" then
+         elsif Nam_Length >= 5 and then Nam_Buffer (2 .. 5) = "skew" then
             Check_Input_Skew_Time_Name (Decl); -- tskew
             return;
-         elsif Name_Length >= 8 and then Name_Buffer (2 .. 8) = "ncsetup" then
+         elsif Nam_Length >= 8 and then Nam_Buffer (2 .. 8) = "ncsetup" then
             Check_No_Change_Setup_Time_Name (Decl); -- tncsetup
             return;
-         elsif Name_Length >= 7 and then Name_Buffer (2 .. 7) = "nchold" then
+         elsif Nam_Length >= 7 and then Nam_Buffer (2 .. 7) = "nchold" then
             Check_No_Change_Hold_Time_Name (Decl); -- tnchold
             return;
-         elsif Name_Length >= 7 and then Name_Buffer (2 .. 7) = "device" then
+         elsif Nam_Length >= 7 and then Nam_Buffer (2 .. 7) = "device" then
             Check_Device_Delay_Name (Decl); -- tdevice
             return;
-         elsif Name_Length >= 4 and then Name_Buffer (2 .. 4) = "bpd" then
+         elsif Nam_Length >= 4 and then Nam_Buffer (2 .. 4) = "bpd" then
             Check_Biased_Propagation_Delay_Name (Decl); -- tbpd
             return;
          end if;

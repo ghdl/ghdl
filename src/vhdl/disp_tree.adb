@@ -147,7 +147,7 @@ package body Disp_Tree is
    begin
       if Ident /= Null_Identifier then
          Image (Ident);
-         return ''' & Name_Buffer (1 .. Name_Length) & ''';
+         return ''' & Nam_Buffer (1 .. Nam_Length) & ''';
       else
          return "<anonymous>";
       end if;

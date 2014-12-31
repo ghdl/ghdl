@@ -82,10 +82,10 @@ package body Name_Table is
    is
       Res: Natural;
    begin
-      Res := Strings_Table.Allocate (Name_Length + 1);
-      Strings_Table.Table (Res .. Res + Name_Length - 1) :=
-        Strings_Table.Table_Type (Name_Buffer (1 .. Name_Length));
-      Strings_Table.Table (Res + Name_Length) := NUL;
+      Res := Strings_Table.Allocate (Nam_Length + 1);
+      Strings_Table.Table (Res .. Res + Nam_Length - 1) :=
+        Strings_Table.Table_Type (Nam_Buffer (1 .. Nam_Length));
+      Strings_Table.Table (Res + Nam_Length) := NUL;
       return Res;
    end Store;
 
@@ -141,9 +141,9 @@ package body Name_Table is
       use Interfaces;
       Res : Unsigned_32;
    begin
-      Res := Unsigned_32 (Name_Length);
-      for I in 1 .. Name_Length loop
-         Res := Rotate_Left (Res, 4) + Res + Character'Pos (Name_Buffer (I));
+      Res := Unsigned_32 (Nam_Length);
+      for I in 1 .. Nam_Length loop
+         Res := Rotate_Left (Res, 4) + Res + Character'Pos (Nam_Buffer (I));
       end loop;
       return Hash_Value_Type (Res);
    end Hash;
@@ -171,13 +171,13 @@ package body Name_Table is
       Name_Entry : Identifier renames Names_Table.Table (Id);
    begin
       if Is_Character (Id) then
-         Name_Buffer (1) := Get_Character (Id);
-         Name_Length := 1;
+         Nam_Buffer (1) := Get_Character (Id);
+         Nam_Length := 1;
       else
-         Name_Length := Get_Name_Length (Id);
-         Name_Buffer (1 .. Name_Length) := String
+         Nam_Length := Get_Name_Length (Id);
+         Nam_Buffer (1 .. Nam_Length) := String
            (Strings_Table.Table
-            (Name_Entry.Name .. Name_Entry.Name + Name_Length - 1));
+            (Name_Entry.Name .. Name_Entry.Name + Nam_Length - 1));
       end if;
    end Image;
 
@@ -233,8 +233,8 @@ package body Name_Table is
       Ne: Identifier renames Names_Table.Table (Id);
    begin
       return String
-        (Strings_Table.Table (Ne.Name .. Ne.Name + Name_Length - 1))
-        = Name_Buffer (1 .. Name_Length);
+        (Strings_Table.Table (Ne.Name .. Ne.Name + Nam_Length - 1))
+        = Nam_Buffer (1 .. Nam_Length);
    end Compare_Name_Buffer_With_Name;
 
    --  Expand the hash table (double the size).
@@ -287,7 +287,7 @@ package body Name_Table is
       Res := Hash_Table (Hash_Index);
       while Res /= Null_Identifier loop
          if Names_Table.Table (Res).Hash = Hash_Value
-           and then Get_Name_Length (Res) = Name_Length
+           and then Get_Name_Length (Res) = Nam_Length
            and then Compare_Name_Buffer_With_Name (Res)
          then
             return Res;
@@ -328,7 +328,7 @@ package body Name_Table is
       Res := Hash_Table (Hash_Index);
       while Res /= Null_Identifier loop
          if Names_Table.Table (Res).Hash = Hash_Value
-           and then Get_Name_Length (Res) = Name_Length
+           and then Get_Name_Length (Res) = Nam_Length
            and then Compare_Name_Buffer_With_Name (Res)
          then
             return Res;
@@ -341,8 +341,8 @@ package body Name_Table is
    --  Get or create an entry in the name table.
    function Get_Identifier (Str : String) return Name_Id is
    begin
-      Name_Length := Str'Length;
-      Name_Buffer (1 .. Name_Length) := Str;
+      Nam_Length := Str'Length;
+      Nam_Buffer (1 .. Nam_Length) := Str;
       return Get_Identifier;
    end Get_Identifier;
 

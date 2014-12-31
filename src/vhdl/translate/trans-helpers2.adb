@@ -97,7 +97,7 @@ package body Trans.Helpers2 is
          raise Internal_Error;
       end if;
       Image (Str);
-      return Create_String (Name_Buffer (1 .. Name_Length), Id, Storage);
+      return Create_String (Nam_Buffer (1 .. Nam_Length), Id, Storage);
    end Create_String;
 
    function Create_String_Len (Str : String; Id : O_Ident) return O_Cnode

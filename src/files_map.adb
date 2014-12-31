@@ -89,7 +89,7 @@ package body Files_Map is
    function Get_Home_Directory return Name_Id is
    begin
       if Home_Dir = Null_Identifier then
-         GNAT.Directory_Operations.Get_Current_Dir (Name_Buffer, Name_Length);
+         GNAT.Directory_Operations.Get_Current_Dir (Nam_Buffer, Nam_Length);
          Home_Dir := Get_Identifier;
       end if;
       return Home_Dir;
@@ -548,17 +548,17 @@ package body Files_Map is
       L : Natural;
    begin
       Image (Name);
-      if not GNAT.OS_Lib.Is_Absolute_Path (Name_Buffer (1 .. Name_Length)) then
-         L := Name_Length;
+      if not GNAT.OS_Lib.Is_Absolute_Path (Nam_Buffer (1 .. Nam_Length)) then
+         L := Nam_Length;
          Image (Directory);
-         Name_Buffer (Name_Length + 1 .. Name_Length + L) := Image (Name);
-         Name_Length := Name_Length + L;
+         Nam_Buffer (Nam_Length + 1 .. Nam_Length + L) := Image (Name);
+         Nam_Length := Nam_Length + L;
       end if;
       if Add_Nul then
-         Name_Length := Name_Length + 1;
-         Name_Buffer (Name_Length) := Character'Val (0);
+         Nam_Length := Nam_Length + 1;
+         Nam_Buffer (Nam_Length) := Character'Val (0);
       end if;
-      return Name_Buffer (1 .. Name_Length);
+      return Nam_Buffer (1 .. Nam_Length);
    end Get_Pathname;
 
    --  Find a source_file by DIRECTORY and NAME.

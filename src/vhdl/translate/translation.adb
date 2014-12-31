@@ -81,9 +81,9 @@ package body Translation is
             declare
                Id : constant String8_Id := Get_String8_Id (Expr);
             begin
-               Name_Length := Natural (Get_String_Length (Expr));
-               for I in 1 .. Name_Length loop
-                  Name_Buffer (I) := Str_Table.Char_String8 (Id, Pos32 (I));
+               Nam_Length := Natural (Get_String_Length (Expr));
+               for I in 1 .. Nam_Length loop
+                  Nam_Buffer (I) := Str_Table.Char_String8 (Id, Pos32 (I));
                end loop;
             end;
          when Iir_Kind_Simple_Aggregate =>
@@ -92,15 +92,15 @@ package body Translation is
                El : Iir;
             begin
                List := Get_Simple_Aggregate_List (Expr);
-               Name_Length := 0;
+               Nam_Length := 0;
                for I in Natural loop
                   El := Get_Nth_Element (List, I);
                   exit when El = Null_Iir;
                   if Get_Kind (El) /= Iir_Kind_Enumeration_Literal then
                      raise Internal_Error;
                   end if;
-                  Name_Length := Name_Length + 1;
-                  Name_Buffer (Name_Length) :=
+                  Nam_Length := Nam_Length + 1;
+                  Nam_Buffer (Nam_Length) :=
                     Character'Val (Get_Enum_Pos (El));
                end loop;
             end;
@@ -108,19 +108,19 @@ package body Translation is
             if Get_Expr_Staticness (Expr) /= Locally then
                Error_Msg_Sem
                  ("value of FOREIGN attribute must be locally static", Expr);
-               Name_Length := 0;
+               Nam_Length := 0;
             else
                raise Internal_Error;
             end if;
       end case;
 
-      if Name_Length = 0 then
+      if Nam_Length = 0 then
          return Foreign_Bad;
       end if;
 
       --  Only 'VHPIDIRECT' is recognized.
-      if Name_Length >= 10
-        and then Name_Buffer (1 .. 10) = "VHPIDIRECT"
+      if Nam_Length >= 10
+        and then Nam_Buffer (1 .. 10) = "VHPIDIRECT"
       then
          declare
             P : Natural;
@@ -130,35 +130,35 @@ package body Translation is
             P := 11;
 
             --  Skip spaces.
-            while P <= Name_Length and then Name_Buffer (P) = ' ' loop
+            while P <= Nam_Length and then Nam_Buffer (P) = ' ' loop
                P := P + 1;
             end loop;
-            if P > Name_Length then
+            if P > Nam_Length then
                Error_Msg_Sem
                  ("missing subprogram/library name after VHPIDIRECT", Spec);
             end if;
             --  Extract library.
             Lf := P;
-            while P < Name_Length and then Name_Buffer (P) /= ' ' loop
+            while P < Nam_Length and then Nam_Buffer (P) /= ' ' loop
                P := P + 1;
             end loop;
             Ll := P;
             --  Extract subprogram.
             P := P + 1;
-            while P <= Name_Length and then Name_Buffer (P) = ' ' loop
+            while P <= Nam_Length and then Nam_Buffer (P) = ' ' loop
                P := P + 1;
             end loop;
             Sf := P;
-            while P < Name_Length and then Name_Buffer (P) /= ' ' loop
+            while P < Nam_Length and then Nam_Buffer (P) /= ' ' loop
                P := P + 1;
             end loop;
             Sl := P;
-            if P < Name_Length then
+            if P < Nam_Length then
                Error_Msg_Sem ("garbage at end of VHPIDIRECT", Spec);
             end if;
 
             --  Accept empty library.
-            if Sf > Name_Length then
+            if Sf > Nam_Length then
                Sf := Lf;
                Sl := Ll;
                Lf := 0;
@@ -172,8 +172,8 @@ package body Translation is
                Subprg_First => Sf,
                Subprg_Last => Sl);
          end;
-      elsif Name_Length = 14
-        and then Name_Buffer (1 .. 14) = "GHDL intrinsic"
+      elsif Nam_Length = 14
+        and then Nam_Buffer (1 .. 14) = "GHDL intrinsic"
       then
          return Foreign_Info_Type'(Kind => Foreign_Intrinsic);
       else

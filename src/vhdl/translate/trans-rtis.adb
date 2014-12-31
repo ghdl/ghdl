@@ -867,14 +867,14 @@ package body Trans.Rtis is
    begin
       Id := Get_Identifier (Node);
       if Is_Character (Id) then
-         Name_Buffer (1) := ''';
-         Name_Buffer (2) := Get_Character (Id);
-         Name_Buffer (3) := ''';
-         Name_Length := 3;
+         Nam_Buffer (1) := ''';
+         Nam_Buffer (2) := Get_Character (Id);
+         Nam_Buffer (3) := ''';
+         Nam_Length := 3;
       else
          Image (Id);
       end if;
-      return Create_String (Name_Buffer (1 .. Name_Length),
+      return Create_String (Nam_Buffer (1 .. Nam_Length),
                             Create_Identifier ("RTISTR"));
    end Generate_Name;
 
@@ -2435,7 +2435,7 @@ package body Trans.Rtis is
       if Public then
          Image (Id);
          Name := Create_String
-           (Name_Buffer (1 .. Name_Length),
+           (Nam_Buffer (1 .. Nam_Length),
             Create_Identifier_Without_Prefix (Id, "__RTISTR"));
          Start_Const_Value (Info.Library_Rti_Const);
          Start_Record_Aggr (Aggr, Ghdl_Rtin_Type_Scalar);

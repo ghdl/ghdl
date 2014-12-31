@@ -2104,10 +2104,10 @@ package body Evaluation is
             begin
                Id := Create_String8;
                Image (Get_Simple_Name_Identifier (Expr));
-               for I in 1 .. Name_Length loop
-                  Append_String8_Char (Name_Buffer (I));
+               for I in 1 .. Nam_Length loop
+                  Append_String8_Char (Nam_Buffer (I));
                end loop;
-               return Build_String (Id, Nat32 (Name_Length), Expr);
+               return Build_String (Id, Nat32 (Nam_Length), Expr);
             end;
 
          when Iir_Kind_Null_Literal =>
@@ -2627,10 +2627,10 @@ package body Evaluation is
    is
    begin
       Image (Id);
-      Name_Buffer (2 .. Name_Length + 1) := Name_Buffer (1 .. Name_Length);
-      Name_Buffer (1) := '"'; --"
-      Name_Length := Name_Length + 2;
-      Name_Buffer (Name_Length) := '"'; --"
+      Nam_Buffer (2 .. Nam_Length + 1) := Nam_Buffer (1 .. Nam_Length);
+      Nam_Buffer (1) := '"'; --"
+      Nam_Length := Nam_Length + 2;
+      Nam_Buffer (Nam_Length) := '"'; --"
    end Eval_Operator_Symbol_Name;
 
    procedure Eval_Simple_Name (Id : Name_Id)
@@ -2641,10 +2641,10 @@ package body Evaluation is
       --    Result: [...] but with apostrophes (in the case of a character
       --            literal)
       if Is_Character (Id) then
-         Name_Buffer (1) := ''';
-         Name_Buffer (2) := Get_Character (Id);
-         Name_Buffer (3) := ''';
-         Name_Length := 3;
+         Nam_Buffer (1) := ''';
+         Nam_Buffer (2) := Get_Character (Id);
+         Nam_Buffer (3) := ''';
+         Nam_Length := 3;
          return;
       end if;
       case Id is
@@ -2807,7 +2807,7 @@ package body Evaluation is
       begin
          Adecl := Get_Type_Declarator (Atype);
          Image (Get_Identifier (Adecl));
-         Path_Add (Name_Buffer (1 .. Name_Length));
+         Path_Add (Nam_Buffer (1 .. Nam_Length));
       end Path_Add_Type_Name;
 
       procedure Path_Add_Signature (Subprg : Iir)
@@ -2837,9 +2837,9 @@ package body Evaluation is
       procedure Path_Add_Name (N : Iir) is
       begin
          Eval_Simple_Name (Get_Identifier (N));
-         if Name_Buffer (1) /= 'P' then
+         if Nam_Buffer (1) /= 'P' then
             --  Skip anonymous processes.
-            Path_Add (Name_Buffer (1 .. Name_Length));
+            Path_Add (Nam_Buffer (1 .. Nam_Length));
          end if;
       end Path_Add_Name;
 

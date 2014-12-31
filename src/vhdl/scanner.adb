@@ -78,7 +78,7 @@ package body Scanner is
       '0' .. '9' => Digit,
 
       -- 3. special characters
-      Quotation | '#' | '&' | ''' | '(' | ')' | '+' | ',' | '-' | '.' | '/'
+      '"' | '#' | '&' | ''' | '(' | ')' | '+' | ',' | '-' | '.' | '/'
         | ':' | ';' | '<' | '=' | '>' | '[' | ']'
         | '_' | '|' | '*' => Special_Character,
 
@@ -397,7 +397,7 @@ package body Scanner is
                end if;
          end case;
 
-         if C = Quotation and Mark = '%' then
+         if C = '"' and Mark = '%' then
             --  LRM93 13.10
             --  The quotation marks (") used as string brackets at both ends of
             --  a string literal can be replaced by percent signs (%), provided
@@ -553,13 +553,15 @@ package body Scanner is
          Length := Length + Base_Log;
       end loop;
 
-      if Length = 0 then
-         Error_Msg_Scan ("empty bit string is not allowed");
-      end if;
+      --  Note: the length of the bit string may be 0.
+
       Current_Token := Tok_Bit_String;
       Current_Context.Str_Len := Length;
    end Scan_Bit_String;
 
+   --  Scan a decimal bit string literal.  For base specifier D the algorithm
+   --  is rather different: all the graphic characters shall be digits, and we
+   --  need to use a (not very efficient) arbitrary precision multiplication.
    procedure Scan_Dec_Bit_String
    is
       use Str_Table;
@@ -601,6 +603,8 @@ package body Scanner is
          end loop;
       end Append_Carries;
 
+      --  Add 1 to Carries.  Overflow is not allowed and should be prevented by
+      --  construction.
       procedure Add_One_To_Carries is
       begin
          for I in Carries'Range loop
@@ -611,6 +615,7 @@ package body Scanner is
             else
                Carries (I) := Pos_0;
                --  Continue propagation.
+               pragma Assert (I < Carries'Last);
             end if;
          end loop;
       end Add_One_To_Carries;
@@ -697,9 +702,6 @@ package body Scanner is
          Append_Carries;
       end loop;
 
-      if Length = 0 then
-         Error_Msg_Scan ("empty bit string is not allowed");
-      end if;
       Current_Token := Tok_Bit_String;
       Current_Context.Str_Len := Length;
    end Scan_Dec_Bit_String;
@@ -766,7 +768,7 @@ package body Scanner is
          --  Put character in name buffer.  FIXME: compute the hash at the same
          --  time ?
          Len := Len + 1;
-         Name_Buffer (Len) := C;
+         Nam_Buffer (Len) := C;
 
          --  Next character.
          Pos := Pos + 1;
@@ -782,7 +784,7 @@ package body Scanner is
          Len := Len - 1;
          C := '_';
       end if;
-      Name_Length := Len;
+      Nam_Length := Len;
 
       -- LRM93 13.2
       -- At least one separator is required between an identifier or an
@@ -794,6 +796,12 @@ package body Scanner is
             raise Internal_Error;
          when Other_Special_Character | Special_Character =>
             if (C = '"' or C = '%') and then Len <= 2 then
+               if C = '%' and Vhdl_Std >= Vhdl_08 then
+                  Error_Msg_Scan ("'%' not allowed in vhdl 2008 "
+                                    & "(was replacement character)");
+                  --  Continue as a bit string.
+               end if;
+
                --  Good candidate for bit string.
 
                --  LRM93 13.7
@@ -812,8 +820,8 @@ package body Scanner is
                --  with the same meaning.
                declare
                   Base : Nat32;
-                  Cl : constant Character := Name_Buffer (Len);
-                  Cf : constant Character := Name_Buffer (1);
+                  Cl : constant Character := Nam_Buffer (Len);
+                  Cf : constant Character := Nam_Buffer (1);
                begin
                   if Cl = 'b' then
                      Base := 1;
@@ -865,7 +873,7 @@ package body Scanner is
                if not AMS_Vhdl then
                   if Flags.Warn_Reserved_Word then
                      Warning_Msg_Scan
-                       ("using """ & Name_Buffer (1 .. Name_Length)
+                       ("using """ & Nam_Buffer (1 .. Nam_Length)
                           & """ AMS-VHDL reserved word as an identifier");
                   end if;
                   Current_Token := Tok_Identifier;
@@ -874,7 +882,7 @@ package body Scanner is
                if Vhdl_Std < Vhdl_00 then
                   if Flags.Warn_Reserved_Word then
                      Warning_Msg_Scan
-                       ("using """ & Name_Buffer (1 .. Name_Length)
+                       ("using """ & Nam_Buffer (1 .. Nam_Length)
                           & """ vhdl00 reserved word as an identifier");
                   end if;
                   Current_Token := Tok_Identifier;
@@ -883,7 +891,7 @@ package body Scanner is
                if Vhdl_Std = Vhdl_87 then
                   if Flags.Warn_Reserved_Word then
                      Warning_Msg_Scan
-                       ("using """ & Name_Buffer (1 .. Name_Length)
+                       ("using """ & Nam_Buffer (1 .. Nam_Length)
                           & """ vhdl93 reserved word as a vhdl87 identifier");
                      Warning_Msg_Scan
                        ("(use option --std=93 to compile as vhdl93)");
@@ -962,8 +970,8 @@ package body Scanner is
       --   Moreover, every extended identifiers is distinct from any basic
       --   identifier.
       -- This is satisfied by storing '\' in the name table.
-      Name_Length := 1;
-      Name_Buffer (1) := '\';
+      Nam_Length := 1;
+      Nam_Buffer (1) := '\';
       loop
          --  Next character.
          Pos := Pos + 1;
@@ -974,8 +982,8 @@ package body Scanner is
             -- of an extended literal, it must be doubled.
             -- LRM93 13.3.2
             -- (a doubled backslash couting as one character)
-            Name_Length := Name_Length + 1;
-            Name_Buffer (Name_Length) := '\';
+            Nam_Length := Nam_Length + 1;
+            Nam_Buffer (Nam_Length) := '\';
 
             Pos := Pos + 1;
 
@@ -992,14 +1000,14 @@ package body Scanner is
             when Invalid =>
                Error_Msg_Scan ("invalid character in extended identifier");
          end case;
-         Name_Length := Name_Length + 1;
+         Nam_Length := Nam_Length + 1;
          -- LRM93 13.3.2
          -- Extended identifiers differing only in the use of corresponding
          -- upper and lower case letters are distinct.
-         Name_Buffer (Name_Length) := Source (Pos);
+         Nam_Buffer (Nam_Length) := Source (Pos);
       end loop;
 
-      if Name_Length <= 2 then
+      if Nam_Length <= 2 then
          Error_Msg_Scan ("empty extended identifier is not allowed");
       end if;
 
@@ -1039,36 +1047,36 @@ package body Scanner is
       use Name_Table;
       C : Character;
    begin
-      if Name_Length = 0 then
+      if Nam_Length = 0 then
          Error_Msg_Option ("identifier required");
          return;
       end if;
 
-      if Name_Buffer (1) = '\' then
+      if Nam_Buffer (1) = '\' then
          --  Extended identifier.
          if Vhdl_Std = Vhdl_87 then
             Error_Msg_Option ("extended identifiers not allowed in vhdl87");
             return;
          end if;
 
-         if Name_Length < 3 then
+         if Nam_Length < 3 then
             Error_Msg_Option ("extended identifier is too short");
             return;
          end if;
-         if Name_Buffer (Name_Length) /= '\' then
+         if Nam_Buffer (Nam_Length) /= '\' then
             Error_Msg_Option ("extended identifier must finish with a '\'");
             return;
          end if;
-         for I in 2 .. Name_Length - 1 loop
-            C := Name_Buffer (I);
+         for I in 2 .. Nam_Length - 1 loop
+            C := Nam_Buffer (I);
             case Characters_Kind (C) is
                when Format_Effector =>
                   Error_Msg_Option ("format effector in extended identifier");
                   return;
                when Graphic_Character =>
                   if C = '\' then
-                     if Name_Buffer (I + 1) /= '\'
-                       or else I = Name_Length - 1
+                     if Nam_Buffer (I + 1) /= '\'
+                       or else I = Nam_Length - 1
                      then
                         Error_Msg_Option ("anti-slash must be doubled "
                                           & "in extended identifier");
@@ -1081,14 +1089,14 @@ package body Scanner is
          end loop;
       else
          --  Identifier
-         for I in 1 .. Name_Length loop
-            C := Name_Buffer (I);
+         for I in 1 .. Nam_Length loop
+            C := Nam_Buffer (I);
             case Characters_Kind (C) is
                when Upper_Case_Letter =>
                   if Vhdl_Std = Vhdl_87 and C > 'Z' then
                      Error_8bit;
                   end if;
-                  Name_Buffer (I) := Ada.Characters.Handling.To_Lower (C);
+                  Nam_Buffer (I) := Ada.Characters.Handling.To_Lower (C);
                when Lower_Case_Letter | Digit =>
                   if Vhdl_Std = Vhdl_87 and C > 'z' then
                      Error_8bit;
@@ -1101,12 +1109,12 @@ package body Scanner is
                           ("identifier cannot start with an underscore");
                         return;
                      end if;
-                     if Name_Buffer (I - 1) = '_' then
+                     if Nam_Buffer (I - 1) = '_' then
                         Error_Msg_Option
                           ("two underscores can't be consecutive");
                         return;
                      end if;
-                     if I = Name_Length then
+                     if I = Nam_Length then
                         Error_Msg_Option
                           ("identifier cannot finish with an underscore");
                         return;
@@ -1145,7 +1153,7 @@ package body Scanner is
          C := Source (Pos);
          exit when C not in 'a' .. 'z' and C /= '_';
          Len := Len + 1;
-         Name_Buffer (Len) := C;
+         Nam_Buffer (Len) := C;
          Pos := Pos + 1;
       end loop;
 
@@ -1157,7 +1165,7 @@ package body Scanner is
             return False;
       end case;
 
-      Name_Length := Len;
+      Nam_Length := Len;
       return True;
    end Scan_Comment_Identifier;
 
@@ -1614,7 +1622,15 @@ package body Scanner is
                             & "must be preceded by a base");
             -- Cannot easily continue.
             raise Compilation_Error;
-         when Quotation | '%' =>
+         when '"' =>
+            Scan_String;
+            return;
+         when '%' =>
+            if Vhdl_Std >= Vhdl_08 then
+               Error_Msg_Scan
+                 ("'%' not allowed in vhdl 2008 (was replacement character)");
+               --  Continue as a string.
+            end if;
             Scan_String;
             return;
          when '[' =>

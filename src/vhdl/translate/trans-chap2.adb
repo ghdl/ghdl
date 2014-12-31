@@ -171,7 +171,7 @@ package body Trans.Chap2 is
                Id := Create_Identifier;
             when Foreign_Vhpidirect =>
                Id := Get_Identifier
-                 (Name_Table.Name_Buffer (Foreign.Subprg_First
+                 (Name_Table.Nam_Buffer (Foreign.Subprg_First
                   .. Foreign.Subprg_Last));
          end case;
          Storage := O_Storage_External;

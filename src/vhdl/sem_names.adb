@@ -3151,7 +3151,7 @@ package body Sem_Names is
             Set_Simple_Name_Identifier (Res, Name_Table.Get_Identifier);
             Attr_Type := Create_Unidim_Array_By_Length
               (String_Type_Definition,
-               Iir_Int64 (Name_Table.Name_Length),
+               Iir_Int64 (Name_Table.Nam_Length),
                Attr);
             Set_Simple_Name_Subtype (Res, Attr_Type);
             Set_Expr_Staticness (Res, Locally);

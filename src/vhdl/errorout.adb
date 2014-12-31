@@ -489,12 +489,12 @@ package body Errorout is
          when Iir_Kind_Selected_Name =>
             Name_Table.Image (Get_Identifier (Node));
             return '''
-              & Name_Table.Name_Buffer (1 .. Name_Table.Name_Length)
+              & Name_Table.Nam_Buffer (1 .. Name_Table.Nam_Length)
               & ''';
          when Iir_Kind_Simple_Name =>
             Name_Table.Image (Get_Identifier (Node));
             return '''
-              & Name_Table.Name_Buffer (1 .. Name_Table.Name_Length)
+              & Name_Table.Nam_Buffer (1 .. Name_Table.Nam_Length)
               & ''';
          when Iir_Kind_Entity_Aspect_Entity =>
             return "aspect " & Disp_Node (Get_Entity (Node))
@@ -920,7 +920,7 @@ package body Errorout is
             Decl := Get_Type_Declarator (Get_Base_Type (Def));
          end if;
          Image (Get_Identifier (Decl));
-         Append (Res, Name_Buffer (1 .. Name_Length));
+         Append (Res, Nam_Buffer (1 .. Nam_Length));
       end Append_Type;
 
    begin
@@ -947,10 +947,10 @@ package body Errorout is
               | Std_Names.Name_Xnor
               | Std_Names.Name_Shift_Operators =>
                Append (Res, """");
-               Append (Res, Name_Buffer (1 .. Name_Length));
+               Append (Res, Nam_Buffer (1 .. Nam_Length));
                Append (Res, """");
             when others =>
-               Append (Res, Name_Buffer (1 .. Name_Length));
+               Append (Res, Nam_Buffer (1 .. Nam_Length));
          end case;
       end;
 

@@ -494,17 +494,17 @@ package body Ghdllocal is
             return;
       end case;
       Image (Id);
-      Put (Name_Buffer (1 .. Name_Length));
+      Put (Nam_Buffer (1 .. Nam_Length));
       case Get_Kind (Unit) is
          when Iir_Kind_Architecture_Body =>
             Put (" of ");
             Image (Get_Entity_Identifier_Of_Architecture (Unit));
-            Put (Name_Buffer (1 .. Name_Length));
+            Put (Nam_Buffer (1 .. Nam_Length));
          when Iir_Kind_Configuration_Declaration =>
             if Id = Null_Identifier then
                Put ("<default> of entity ");
                Image (Get_Entity_Identifier_Of_Architecture (Unit));
-               Put (Name_Buffer (1 .. Name_Length));
+               Put (Nam_Buffer (1 .. Nam_Length));
             end if;
          when others =>
             null;
@@ -565,12 +565,12 @@ package body Ghdllocal is
       Basename : constant String := Get_Base_Name (File);
    begin
       Image (Libraries.Work_Directory);
-      Name_Buffer (Name_Length + 1 .. Name_Length + Basename'Length) :=
+      Nam_Buffer (Nam_Length + 1 .. Nam_Length + Basename'Length) :=
         Basename;
-      Name_Length := Name_Length + Basename'Length;
-      Name_Buffer (Name_Length + 1 .. Name_Length + Suffix'Length) := Suffix;
-      Name_Length := Name_Length + Suffix'Length;
-      return new String'(Name_Buffer (1 .. Name_Length));
+      Nam_Length := Nam_Length + Basename'Length;
+      Nam_Buffer (Nam_Length + 1 .. Nam_Length + Suffix'Length) := Suffix;
+      Nam_Length := Nam_Length + Suffix'Length;
+      return new String'(Nam_Buffer (1 .. Nam_Length));
    end Append_Suffix;
 
 
@@ -1449,18 +1449,18 @@ package body Ghdllocal is
 
       function Is_Bad_Unit_Name return Boolean is
       begin
-         if Name_Length = 0 then
+         if Nam_Length = 0 then
             return True;
          end if;
          --  Don't try to handle extended identifier.
-         if Name_Buffer (1) = '\' then
+         if Nam_Buffer (1) = '\' then
             return False;
          end if;
          --  Look for suspicious characters.
          --  Do not try to be exhaustive as the correct check will be done
          --  by convert_identifier.
-         for I in 1 .. Name_Length loop
-            case Name_Buffer (I) is
+         for I in 1 .. Nam_Length loop
+            case Nam_Buffer (I) is
                when '.' | '/' | '\' =>
                   return True;
                when others =>
@@ -1473,26 +1473,26 @@ package body Ghdllocal is
       function Is_A_File_Name return Boolean is
       begin
          --  Check .vhd
-         if Name_Length > 4
-           and then Name_Buffer (Name_Length - 3 .. Name_Length) = ".vhd"
+         if Nam_Length > 4
+           and then Nam_Buffer (Nam_Length - 3 .. Nam_Length) = ".vhd"
          then
             return True;
          end if;
          --  Check .vhdl
-         if Name_Length > 5
-           and then Name_Buffer (Name_Length - 4 .. Name_Length) = ".vhdl"
+         if Nam_Length > 5
+           and then Nam_Buffer (Nam_Length - 4 .. Nam_Length) = ".vhdl"
          then
             return True;
          end if;
          --  Check ../
-         if Name_Length > 3
-           and then Name_Buffer (1 .. 3) = "../"
+         if Nam_Length > 3
+           and then Nam_Buffer (1 .. 3) = "../"
          then
             return True;
          end if;
          --  Check ..\
-         if Name_Length > 3
-           and then Name_Buffer (1 .. 3) = "..\"
+         if Nam_Length > 3
+           and then Nam_Buffer (1 .. 3) = "..\"
          then
             return True;
          end if;
@@ -1500,8 +1500,8 @@ package body Ghdllocal is
          return False;
       end Is_A_File_Name;
    begin
-      Name_Length := Name'Length;
-      Name_Buffer (1 .. Name_Length) := Name.all;
+      Nam_Length := Name'Length;
+      Nam_Buffer (1 .. Nam_Length) := Name.all;
 
       --  Try to identifier bad names (such as file names), so that
       --  friendly message can be displayed.
@@ -1514,7 +1514,7 @@ package body Ghdllocal is
          raise Option_Error;
       end if;
       Scanner.Convert_Identifier;
-      return new String'(Name_Buffer (1 .. Name_Length));
+      return new String'(Nam_Buffer (1 .. Nam_Length));
    end Convert_Name;
 
    procedure Extract_Elab_Unit

@@ -602,17 +602,17 @@ package body Ghdlprint is
               | Iir_Kind_Package_Declaration
               | Iir_Kind_Package_Instantiation_Declaration =>
                Image (Id);
-               Append (Name_Buffer (1 .. Name_Length));
+               Append (Nam_Buffer (1 .. Nam_Length));
             when Iir_Kind_Package_Body =>
                Image (Id);
-               Append (Name_Buffer (1 .. Name_Length));
+               Append (Nam_Buffer (1 .. Nam_Length));
                Append ("-body");
             when Iir_Kind_Architecture_Body =>
                Image (Get_Entity_Identifier_Of_Architecture (Lib));
-               Append (Name_Buffer (1 .. Name_Length));
+               Append (Nam_Buffer (1 .. Nam_Length));
                Append ("-");
                Image (Id);
-               Append (Name_Buffer (1 .. Name_Length));
+               Append (Nam_Buffer (1 .. Nam_Length));
             when others =>
                raise Internal_Error;
          end case;
@@ -1631,10 +1631,10 @@ package body Ghdlprint is
                   Dir := Get_Source_File_Directory (Cur_File);
                   if Dir /= Null_Identifier then
                      Image (Dir);
-                     Put (Name_Buffer (1 .. Name_Length));
+                     Put (Nam_Buffer (1 .. Nam_Length));
                   end if;
                   Image (Get_File_Name (Cur_File));
-                  Put (Name_Buffer (1 .. Name_Length));
+                  Put (Nam_Buffer (1 .. Nam_Length));
                   New_Line;
                end if;
 
@@ -1696,7 +1696,7 @@ package body Ghdlprint is
                      null;
                   when others =>
                      Image (Get_Identifier (N));
-                     Put (Name_Buffer (1 .. Name_Length));
+                     Put (Nam_Buffer (1 .. Nam_Length));
                end case;
             end Emit_Decl;
 

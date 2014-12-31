@@ -3949,6 +3949,7 @@ package body Parse is
    --  Simply create the node for a bit string.
    function Parse_Bit_String return Iir
    is
+      use Name_Table;
       Res : Iir;
       C : Character;
       B : Base_Type;
@@ -3957,21 +3958,21 @@ package body Parse is
       Set_Location (Res);
       Set_String8_Id (Res, Current_String_Id);
       Set_String_Length (Res, Current_String_Length);
-      if Name_Table.Name_Buffer (1) = 's' then
+      if Nam_Buffer (1) = 's' then
          Set_Has_Sign (Res, True);
          Set_Has_Signed (Res, True);
-         pragma Assert (Name_Table.Name_Length = 2);
-         C := Name_Table.Name_Buffer (2);
-      elsif Name_Table.Name_Buffer (1) = 'u' then
+         pragma Assert (Nam_Length = 2);
+         C := Name_Table.Nam_Buffer (2);
+      elsif Nam_Buffer (1) = 'u' then
          Set_Has_Sign (Res, True);
          Set_Has_Signed (Res, False);
-         pragma Assert (Name_Table.Name_Length = 2);
-         C := Name_Table.Name_Buffer (2);
+         pragma Assert (Nam_Length = 2);
+         C := Nam_Buffer (2);
       else
          Set_Has_Sign (Res, False);
          Set_Has_Signed (Res, False);
-         pragma Assert (Name_Table.Name_Length = 1);
-         C := Name_Table.Name_Buffer (1);
+         pragma Assert (Nam_Length = 1);
+         C := Nam_Buffer (1);
       end if;
 
       case C is

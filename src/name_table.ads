@@ -86,11 +86,13 @@ package Name_Table is
    procedure Assert_No_Infos;
 
    --  This buffer is used by get_token to set the name.
-   --  This can be seen as a copy buffer but this is necessary for two reasons:
-   --   names case must be 'normalized', because VHDL is case insensitive.
-   Name_Buffer : String (1 .. 1024);
+   --  This can be seen as a copy buffer but this is necessary because names
+   --  case is 'normalized' as VHDL is case insensitive.
+   --  To avoid name clash with std_names, Nam_Buffer and Nam_Length are used
+   --  instead of Name_Buffer and Name_Length.
+   Nam_Buffer : String (1 .. 1024);
    --  The length of the name string.
-   Name_Length: Natural;
+   Nam_Length: Natural;
 
    --  Disp statistics.
    --  Used for debugging.

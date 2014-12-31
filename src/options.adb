@@ -103,8 +103,8 @@ package body Options is
          declare
             use Name_Table;
          begin
-            Name_Length := Opt'Last - (Beg + 7) + 1;
-            Name_Buffer (1 .. Name_Length) := Opt (Beg + 7 .. Opt'Last);
+            Nam_Length := Opt'Last - (Beg + 7) + 1;
+            Nam_Buffer (1 .. Nam_Length) := Opt (Beg + 7 .. Opt'Last);
             Scanner.Convert_Identifier;
             Libraries.Work_Library_Name := Get_Identifier;
          end;

@@ -358,9 +358,9 @@ package body Trans.Chap7 is
 
       Literal_List := Get_Enumeration_Literal_List (Character_Type_Definition);
       Image (Str_Ident);
-      for I in 1 .. Name_Length loop
+      for I in 1 .. Nam_Length loop
          Lit := Get_Nth_Element (Literal_List,
-                                 Character'Pos (Name_Buffer (I)));
+                                 Character'Pos (Nam_Buffer (I)));
          New_Array_Aggr_El (List, Get_Ortho_Expr (Lit));
       end loop;
 

@@ -75,7 +75,7 @@ package body Libraries is
          return;
       end if;
       --  Nice message instead of constraint_error.
-      if Path'Length + 2 >= Name_Buffer'Length then
+      if Path'Length + 2 >= Nam_Buffer'Length then
          Error_Msg ("argument of -P is too long");
          return;
       end if;
@@ -299,10 +299,10 @@ package body Libraries is
          Str_Id : constant String8_Id := Current_String_Id;
       begin
          for I in 1 .. Len loop
-            Name_Table.Name_Buffer (Natural (I)) :=
+            Name_Table.Nam_Buffer (Natural (I)) :=
               Str_Table.Char_String8 (Str_Id, I);
          end loop;
-         Name_Table.Name_Length := Natural (Len);
+         Name_Table.Nam_Length := Natural (Len);
          --  FIXME: should remove last string.
          return Get_Identifier;
       end String_To_Name_Id;
@@ -363,10 +363,10 @@ package body Libraries is
          begin
             for I in Pathes.First .. Pathes.Last loop
                Image (Pathes.Table (I));
-               L := Name_Length + File_Name'Length;
-               Name_Buffer (Name_Length + 1 .. L) := File_Name;
-               Name_Buffer (L + 1) := Character'Val (0);
-               if GNAT.OS_Lib.Is_Regular_File (Name_Buffer'Address) then
+               L := Nam_Length + File_Name'Length;
+               Nam_Buffer (Nam_Length + 1 .. L) := File_Name;
+               Nam_Buffer (L + 1) := Character'Val (0);
+               if GNAT.OS_Lib.Is_Regular_File (Nam_Buffer'Address) then
                   Dir := Pathes.Table (I);
                   Set_Library_Directory (Library, Dir);
                   exit;
@@ -386,7 +386,7 @@ package body Libraries is
       --  Parse header.
       Scan;
       if Current_Token /= Tok_Identifier
-        or else Name_Length /= 1 or else Name_Buffer (1) /= 'v'
+        or else Nam_Length /= 1 or else Nam_Buffer (1) /= 'v'
       then
          Bad_Library_Format;
          raise Compilation_Error;
@@ -901,7 +901,7 @@ package body Libraries is
          New_Lib_Time_Stamp := Files_Map.Get_File_Time_Stamp (File);
          File_Name := Files_Map.Get_File_Name (File);
          Image (File_Name);
-         if GNAT.OS_Lib.Is_Absolute_Path (Name_Buffer (1 .. Name_Length)) then
+         if GNAT.OS_Lib.Is_Absolute_Path (Nam_Buffer (1 .. Nam_Length)) then
             Dir_Name := Null_Identifier;
          else
             Dir_Name := Files_Map.Get_Home_Directory;
@@ -1189,12 +1189,12 @@ package body Libraries is
             else
                Image (Dir);
                WR ("""");
-               WR (Name_Buffer (1 .. Name_Length));
+               WR (Nam_Buffer (1 .. Nam_Length));
                WR ("""");
             end if;
             WR (" """);
             Image (Get_Design_File_Filename (Design_File));
-            WR (Name_Buffer (1 .. Name_Length));
+            WR (Nam_Buffer (1 .. Nam_Length));
             WR (""" """);
             WR (Files_Map.Get_Time_Stamp_String
                   (Get_File_Time_Stamp (Design_File)));
