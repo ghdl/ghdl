@@ -10,6 +10,7 @@ project Ghdl is
                         srcdir & "/src/ghdldrv",
                         srcdir & "/src/grt",
                         srcdir & "/src/grt/config",
+                        srcdir & "/src/grt/fst",
                         srcdir & "/src/ortho",
                         srcdir & "/src/ortho/mcode");
 
@@ -26,7 +27,7 @@ project Ghdl is
 
    package Compiler is
       for Default_Switches ("Ada") use
-         ("-gnaty3befhkmr", "-gnata", "-gnatwael", "-gnatf", "-gnat05", "-g");
+         ("-gnaty3befhkmr", "-gnata", "-gnatwae", "-gnatf", "-gnat05", "-g");
       for Default_Switches ("C") use ("-DWITH_GNAT_RUN_TIME");
    end Compiler;
 
