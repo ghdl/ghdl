@@ -1638,7 +1638,7 @@ package body Ghdlprint is
                   New_Line;
                end if;
 
-               --  Letters:
+               --  Unused letters:
                --   b d fgh jk  no qr  uvwxyz
                --     D   H JK MNO QR  U WXYZ
                case Get_Kind (N) is

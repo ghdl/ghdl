@@ -1330,7 +1330,7 @@ package body Ghdldrv is
 --             Put (" file: ");
 --             File := Get_Design_File (Unit);
 --             Image (Get_Design_File_Filename (File));
---             Put_Line (Name_Buffer (1 .. Name_Length));
+--             Put_Line (Nam_Buffer (1 .. Nam_Length));
          end loop;
       end if;
       if Cmd.Flag_Depend_Unit then
@@ -1340,7 +1340,7 @@ package body Ghdldrv is
             exit when File = Null_Iir;
             Image (Get_Design_File_Filename (File));
             Put ("  ");
-            Put (Name_Buffer (1 .. Name_Length));
+            Put (Nam_Buffer (1 .. Nam_Length));
             if Flag_Verbose then
                Put_Line (":");
                declare
@@ -1354,7 +1354,7 @@ package body Ghdldrv is
                         exit when Dep_File = Null_Iir;
                         Image (Get_Design_File_Filename (Dep_File));
                         Put ("    ");
-                        Put_Line (Name_Buffer (1 .. Name_Length));
+                        Put_Line (Nam_Buffer (1 .. Nam_Length));
                      end loop;
                   end if;
                end;
