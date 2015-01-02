@@ -125,7 +125,7 @@ ghdl$(exeext): ghdl1$(exeext) vhdl/default_pathes.ads force
 	if test $@ -nt s-ghdllib; then $(RM) -f s-ghdllib; fi
 
 # Ghdl libraries.
-s-ghdllib: ghdl1$(exeext)
+s-ghdllib: ghdl$(exeext) ghdl1$(exeext)
 	$(MAKE_IN_VHDL) ghdllib
 	touch $@
 
