@@ -21,7 +21,6 @@ with Types; use Types;
 with Name_Table;
 with Sem;
 with Iir_Chains; use Iir_Chains;
-with Flags; use Flags;
 with PSL.Nodes;
 with PSL.Rewrites;
 with PSL.Build;
@@ -37,6 +36,8 @@ package body Canon is
                                 Decl : Iir;
                                 Parent : Iir;
                                 Decl_Parent : Iir);
+
+   procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir);
 
    --  Canon on expressions, mainly for function calls.
    procedure Canon_Expression (Expr: Iir);
@@ -1446,6 +1447,13 @@ package body Canon is
       end loop;
    end Canon_Selected_Concurrent_Signal_Assignment;
 
+   procedure Canon_Generate_Statement_Body
+     (Top : Iir_Design_Unit; Bod : Iir) is
+   begin
+      Canon_Declarations (Top, Bod, Bod);
+      Canon_Concurrent_Stmts (Top, Bod);
+   end Canon_Generate_Statement_Body;
+
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir)
    is
       --  Current element in the chain of concurrent statements.
@@ -1651,19 +1659,30 @@ package body Canon is
                   Canon_Concurrent_Stmts (Top, El);
                end;
 
-            when Iir_Kind_Generate_Statement =>
+            when Iir_Kind_If_Generate_Statement =>
                declare
-                  Scheme : Iir;
+                  Clause : Iir;
+                  Cond : Iir;
                begin
-                  Scheme := Get_Generation_Scheme (El);
-                  if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
-                     Canon_Declaration (Top, Scheme, Null_Iir, Null_Iir);
-                  elsif Canon_Flag_Expressions then
-                     Canon_Expression (Scheme);
-                  end if;
-                  Canon_Declarations (Top, El, El);
-                  Canon_Concurrent_Stmts (Top, El);
+                  Clause := El;
+                  while Clause /= Null_Iir loop
+                     if Canon_Flag_Expressions then
+                        Cond := Get_Condition (El);
+                        if Cond /= Null_Iir then
+                           Canon_Expression (Cond);
+                        end if;
+                     end if;
+                     Canon_Generate_Statement_Body
+                       (Top, Get_Generate_Statement_Body (Clause));
+                     Clause := Get_Generate_Else_Clause (Clause);
+                  end loop;
                end;
+
+            when Iir_Kind_For_Generate_Statement =>
+               Canon_Declaration
+                 (Top, Get_Parameter_Specification (El), Null_Iir, Null_Iir);
+               Canon_Generate_Statement_Body
+                 (Top, Get_Generate_Statement_Body (El));
 
             when Iir_Kind_Psl_Assert_Statement
               | Iir_Kind_Psl_Cover_Statement =>
@@ -2084,15 +2103,6 @@ package body Canon is
                      end if;
                   end if;
                end if;
-            when Iir_Kind_Generate_Statement =>
-               if False
-                 and then Vhdl_Std = Vhdl_87
-                 and then
-                 Get_Kind (Conf) = Iir_Kind_Configuration_Specification
-               then
-                  Canon_Component_Specification_All_Others
-                    (Conf, El, Spec, List, Comp);
-               end if;
             when others =>
                null;
          end case;
@@ -2381,6 +2391,26 @@ package body Canon is
       El : Iir;
       Sub_Blk : Iir;
       Last_Item : Iir;
+
+      procedure Create_Default_Block_Configuration (Targ : Iir)
+      is
+         Res : Iir;
+         Spec : Iir;
+      begin
+         Res := Create_Iir (Iir_Kind_Block_Configuration);
+         Location_Copy (Res, Targ);
+         Set_Parent (Res, Conf);
+         if True then
+            --  For debugging.  Display as user block configuration.
+            Spec := Build_Simple_Name (Targ, Targ);
+         else
+            --  To reduce size, it is possible to refer directly to the block
+            --  itself, without using a name.
+            Spec := El;
+         end if;
+         Set_Block_Specification (Res, Spec);
+         Append (Last_Item, Conf, Res);
+      end Create_Default_Block_Configuration;
    begin
       --  Note: the only allowed declarations are use clauses, which are not
       --  canonicalized.
@@ -2423,7 +2453,7 @@ package body Canon is
                      Set_Prev_Block_Configuration
                        (El, Get_Generate_Block_Configuration (Sub_Blk));
                      Set_Generate_Block_Configuration (Sub_Blk, El);
-                  when Iir_Kind_Generate_Statement =>
+                  when Iir_Kind_Generate_Statement_Body =>
                      Set_Generate_Block_Configuration (Sub_Blk, El);
                   when others =>
                      Error_Kind ("canon_block_configuration(0)", Sub_Blk);
@@ -2495,40 +2525,37 @@ package body Canon is
                   end if;
                end;
             when Iir_Kind_Block_Statement =>
+               if Get_Block_Block_Configuration (El) = Null_Iir then
+                  Create_Default_Block_Configuration (El);
+               end if;
+            when Iir_Kind_If_Generate_Statement =>
                declare
-                  Res : Iir_Block_Configuration;
+                  Bod : constant Iir := Get_Generate_Statement_Body (El);
+                  Blk_Config : constant Iir_Block_Configuration :=
+                    Get_Generate_Block_Configuration (Bod);
                begin
-                  if Get_Block_Block_Configuration (El) = Null_Iir then
-                     Res := Create_Iir (Iir_Kind_Block_Configuration);
-                     Location_Copy (Res, El);
-                     Set_Parent (Res, Conf);
-                     Set_Block_Specification (Res, El);
-                     Append (Last_Item, Conf, Res);
+                  if Blk_Config = Null_Iir then
+                     Create_Default_Block_Configuration (Bod);
                   end if;
                end;
-            when Iir_Kind_Generate_Statement =>
+            when Iir_Kind_For_Generate_Statement =>
                declare
+                  Bod : constant Iir := Get_Generate_Statement_Body (El);
+                  Blk_Config : constant Iir_Block_Configuration :=
+                    Get_Generate_Block_Configuration (Bod);
                   Res : Iir_Block_Configuration;
-                  Scheme : Iir;
-                  Blk_Config : Iir_Block_Configuration;
                   Blk_Spec : Iir;
                begin
-                  Scheme := Get_Generation_Scheme (El);
-                  Blk_Config := Get_Generate_Block_Configuration (El);
                   if Blk_Config = Null_Iir then
-                     --  No block configuration for the (implicit) internal
-                     --  block.  Create one.
-                     Res := Create_Iir (Iir_Kind_Block_Configuration);
-                     Location_Copy (Res, El);
-                     Set_Parent (Res, Conf);
-                     Set_Block_Specification (Res, El);
-                     Append (Last_Item, Conf, Res);
-                  elsif Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
+                     Create_Default_Block_Configuration (Bod);
+                  else
                      Blk_Spec := Strip_Denoting_Name
                        (Get_Block_Specification (Blk_Config));
-                     if Get_Kind (Blk_Spec) /= Iir_Kind_Generate_Statement then
-                        --  There are partial configurations.
-                        --  Create a default block configuration.
+                     if Get_Kind (Blk_Spec) /= Iir_Kind_For_Generate_Statement
+                     then
+                        --  There are generate specification with range or
+                        --  expression.  Create a default block configuration
+                        --  for the (possible) non-covered values.
                         Res := Create_Iir (Iir_Kind_Block_Configuration);
                         Location_Copy (Res, El);
                         Set_Parent (Res, Conf);
@@ -2536,7 +2563,7 @@ package body Canon is
                         Location_Copy (Blk_Spec, Res);
                         Set_Index_List (Blk_Spec, Iir_List_Others);
                         Set_Base_Name (Blk_Spec, El);
-                        Set_Prefix (Blk_Spec, Build_Simple_Name (El, Res));
+                        Set_Prefix (Blk_Spec, Build_Simple_Name (Bod, Res));
                         Set_Block_Specification (Res, Blk_Spec);
                         Append (Last_Item, Conf, Res);
                      end if;

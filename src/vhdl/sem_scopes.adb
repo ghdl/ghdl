@@ -1160,7 +1160,7 @@ package body Sem_Scopes is
          when Iir_Kind_Architecture_Body =>
             Add_Context_Clauses (Get_Design_Unit (Decl));
          when Iir_Kind_Block_Statement
-           | Iir_Kind_Generate_Statement =>
+           | Iir_Kind_Generate_Statement_Body =>
             --  FIXME: formal, iterator ?
             null;
          when others =>

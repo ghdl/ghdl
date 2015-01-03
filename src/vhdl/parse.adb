@@ -153,6 +153,8 @@ package body Parse is
             Xrefs.Xref_End (Get_Token_Location, Decl);
          end if;
       end if;
+
+      --  Skip identifier (the label).
       Scan;
    end Check_End_Name;
 
@@ -899,6 +901,7 @@ package body Parse is
             raise Parse_Error;
       end case;
 
+      --  Skip identifier or string.
       Scan;
 
       return Parse_Name_Suffix (Res, Allow_Indexes);
@@ -6079,47 +6082,30 @@ package body Parse is
       return Res;
    end Parse_Block_Statement;
 
-   --  precond : IF or FOR
-   --  postcond: ';'
+   --  Precond : next token
+   --  Postcond: next token after 'end'
    --
-   --  [ LRM93 9.7 ]
-   --  generate_statement ::=
-   --      GENERATE_label : generation_scheme GENERATE
-   --          [ { block_declarative_item }
-   --      BEGIN ]
-   --          { concurrent_statement }
-   --      END GENERATE [ GENERATE_label ] ;
+   --  [ LRM08 11.8 ] Generate statements
+   --  generate_statement_body ::=
+   --        [ block_declarative_part
+   --     BEGIN ]
+   --        { concurrent_statement }
+   --     [ END [ alternative_label ] ; ]
    --
-   --  [ LRM93 9.7 ]
-   --  generation_scheme ::=
-   --      FOR GENERATE_parameter_specification
-   --      | IF condition
-   --
-   --  FIXME: block_declarative item.
-   function Parse_Generate_Statement (Label : Name_Id; Loc : Location_Type)
-     return Iir_Generate_Statement
+   --  This corresponds to the following part of LRM93 9.7:
+   --        [ { block_declarative_item }
+   --     BEGIN ]
+   --        { concurrent_statement }
+   --  Note there is no END.  This part is followed by:
+   --     END GENERATE [ /generate/_label ] ;
+   function Parse_Generate_Statement_Body (Parent : Iir) return Iir
    is
-      Res : Iir_Generate_Statement;
+      Bod : Iir;
    begin
-      if Label = Null_Identifier then
-         Error_Msg_Parse ("a generate statement must have a label");
-      end if;
-      Res := Create_Iir (Iir_Kind_Generate_Statement);
-      Set_Location (Res, Loc);
-      Set_Label (Res, Label);
-      case Current_Token is
-         when Tok_For =>
-            Scan;
-            Set_Generation_Scheme (Res, Parse_Parameter_Specification (Res));
-         when Tok_If =>
-            Scan;
-            Set_Generation_Scheme (Res, Parse_Expression);
-         when others =>
-            raise Internal_Error;
-      end case;
-      Expect (Tok_Generate);
+      Bod := Create_Iir (Iir_Kind_Generate_Statement_Body);
+      Set_Location (Bod);
+      Set_Parent (Bod, Parent);
 
-      Scan;
       --  Check for a block declarative item.
       case Current_Token is
          when
@@ -6163,20 +6149,86 @@ package body Parse is
                Error_Msg_Parse
                  ("declarations not allowed in a generate in vhdl87");
             end if;
-            Parse_Declarative_Part (Res);
+            Parse_Declarative_Part (Bod);
             Expect (Tok_Begin);
-            Set_Has_Begin (Res, True);
+            Set_Has_Begin (Bod, True);
+
+            --  Skip 'begin'
             Scan;
          when others =>
             null;
       end case;
 
-      Parse_Concurrent_Statements (Res);
+      Parse_Concurrent_Statements (Bod);
 
       Expect (Tok_End);
 
       --  Skip 'end'
-      Scan_Expect (Tok_Generate);
+      Scan;
+
+      if Vhdl_Std >= Vhdl_08 and then Current_Token /= Tok_Generate then
+         --  This is the 'end' of the generate_statement_body.
+         Check_End_Name (Null_Identifier, Bod);
+         Scan_Semi_Colon ("generate statement body");
+
+         Expect (Tok_End);
+
+         --  Skip 'end'
+         Scan;
+      end if;
+
+      return Bod;
+   end Parse_Generate_Statement_Body;
+
+   --  precond : FOR
+   --  postcond: ';'
+   --
+   --  [ LRM93 9.7 ]
+   --  generate_statement ::=
+   --      GENERATE_label : generation_scheme GENERATE
+   --          [ { block_declarative_item }
+   --      BEGIN ]
+   --          { concurrent_statement }
+   --      END GENERATE [ GENERATE_label ] ;
+   --
+   --  [ LRM93 9.7 ]
+   --  generation_scheme ::=
+   --      FOR GENERATE_parameter_specification
+   --      | IF condition
+   --
+   --  [ LRM08 11.8 ]
+   --  for_generate_statement ::=
+   --     /generate/_label :
+   --        FOR /generate/_parameter_specification GENERATE
+   --           generate_statement_body
+   --        END GENERATE [ /generate/_label ] ;
+   --
+   --  FIXME: block_declarative item.
+   function Parse_For_Generate_Statement (Label : Name_Id; Loc : Location_Type)
+                                         return Iir
+   is
+      Res : Iir;
+   begin
+      if Label = Null_Identifier then
+         Error_Msg_Parse ("a generate statement must have a label");
+      end if;
+      Res := Create_Iir (Iir_Kind_For_Generate_Statement);
+      Set_Location (Res, Loc);
+      Set_Label (Res, Label);
+
+      --  Skip 'for'
+      Scan;
+
+      Set_Parameter_Specification (Res, Parse_Parameter_Specification (Res));
+
+      --  Skip 'generate'
+      Expect (Tok_Generate);
+      Scan;
+
+      Set_Generate_Statement_Body
+        (Res, Parse_Generate_Statement_Body (Res));
+
+      Expect (Tok_Generate);
       Set_End_Has_Reserved_Id (Res, True);
 
       --  Skip 'generate'
@@ -6188,7 +6240,62 @@ package body Parse is
       Check_End_Name (Res);
       Expect (Tok_Semi_Colon);
       return Res;
-   end Parse_Generate_Statement;
+   end Parse_For_Generate_Statement;
+
+   --  precond : IF
+   --  postcond: ';'
+   --
+   --  [ LRM93 9.7 ]
+   --  generate_statement ::=
+   --      GENERATE_label : generation_scheme GENERATE
+   --          [ { block_declarative_item }
+   --      BEGIN ]
+   --          { concurrent_statement }
+   --      END GENERATE [ GENERATE_label ] ;
+   --
+   --  [ LRM93 9.7 ]
+   --  generation_scheme ::=
+   --      FOR GENERATE_parameter_specification
+   --      | IF condition
+   --
+   --  FIXME: block_declarative item.
+   function Parse_If_Generate_Statement (Label : Name_Id; Loc : Location_Type)
+     return Iir_Generate_Statement
+   is
+      Res : Iir_Generate_Statement;
+   begin
+      if Label = Null_Identifier then
+         Error_Msg_Parse ("a generate statement must have a label");
+      end if;
+      Res := Create_Iir (Iir_Kind_If_Generate_Statement);
+      Set_Location (Res, Loc);
+      Set_Label (Res, Label);
+
+      --  Skip 'if'.
+      Scan;
+
+      Set_Condition (Res, Parse_Expression);
+
+      --  Skip 'generate'
+      Expect (Tok_Generate);
+      Scan;
+
+      Set_Generate_Statement_Body
+        (Res, Parse_Generate_Statement_Body (Res));
+
+      Expect (Tok_Generate);
+      Set_End_Has_Reserved_Id (Res, True);
+
+      --  Skip 'generate'
+      Scan;
+
+      --  LRM93 9.7
+      --  If a label appears at the end of a generate statement, it must repeat
+      --  the generate label.
+      Check_End_Name (Res);
+      Expect (Tok_Semi_Colon);
+      return Res;
+   end Parse_If_Generate_Statement;
 
    --  precond : first token
    --  postcond: END
@@ -6438,14 +6545,12 @@ package body Parse is
             when Tok_Block =>
                Postponed_Not_Allowed;
                Stmt := Parse_Block_Statement (Label, Loc);
-            when Tok_If
-              | Tok_For =>
-               if Postponed then
-                  Error_Msg_Parse
-                    ("'postponed' not allowed before a generate statement");
-                  Postponed := False;
-               end if;
-               Stmt := Parse_Generate_Statement (Label, Loc);
+            when Tok_If =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_If_Generate_Statement (Label, Loc);
+            when Tok_For =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_For_Generate_Statement (Label, Loc);
             when Tok_Eof =>
                Error_Msg_Parse ("unexpected end of file, 'END;' expected");
                return;

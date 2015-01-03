@@ -87,6 +87,8 @@ package Nodes_Meta is
       Field_Physical_Unit_Value,
       Field_Fp_Value,
       Field_Simple_Aggregate_List,
+      Field_String8_Id,
+      Field_String_Length,
       Field_Bit_String_Base,
       Field_Has_Signed,
       Field_Has_Sign,
@@ -256,7 +258,9 @@ package Nodes_Meta is
       Field_Block_Header,
       Field_Uninstantiated_Package_Name,
       Field_Generate_Block_Configuration,
-      Field_Generation_Scheme,
+      Field_Generate_Statement_Body,
+      Field_Alternative_Label,
+      Field_Generate_Else_Clause,
       Field_Condition,
       Field_Else_Clause,
       Field_Parameter_Specification,
@@ -325,13 +329,12 @@ package Nodes_Meta is
       Field_Protected_Type_Body,
       Field_Protected_Type_Declaration,
       Field_End_Location,
-      Field_String8_Id,
-      Field_String_Length,
       Field_Use_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
       Field_End_Has_Postponed,
       Field_Has_Begin,
+      Field_Has_End,
       Field_Has_Is,
       Field_Has_Pure,
       Field_Has_Body,
@@ -550,6 +553,8 @@ package Nodes_Meta is
    function Has_Physical_Unit_Value (K : Iir_Kind) return Boolean;
    function Has_Fp_Value (K : Iir_Kind) return Boolean;
    function Has_Simple_Aggregate_List (K : Iir_Kind) return Boolean;
+   function Has_String8_Id (K : Iir_Kind) return Boolean;
+   function Has_String_Length (K : Iir_Kind) return Boolean;
    function Has_Bit_String_Base (K : Iir_Kind) return Boolean;
    function Has_Has_Signed (K : Iir_Kind) return Boolean;
    function Has_Has_Sign (K : Iir_Kind) return Boolean;
@@ -724,7 +729,9 @@ package Nodes_Meta is
    function Has_Block_Header (K : Iir_Kind) return Boolean;
    function Has_Uninstantiated_Package_Name (K : Iir_Kind) return Boolean;
    function Has_Generate_Block_Configuration (K : Iir_Kind) return Boolean;
-   function Has_Generation_Scheme (K : Iir_Kind) return Boolean;
+   function Has_Generate_Statement_Body (K : Iir_Kind) return Boolean;
+   function Has_Alternative_Label (K : Iir_Kind) return Boolean;
+   function Has_Generate_Else_Clause (K : Iir_Kind) return Boolean;
    function Has_Condition (K : Iir_Kind) return Boolean;
    function Has_Else_Clause (K : Iir_Kind) return Boolean;
    function Has_Parameter_Specification (K : Iir_Kind) return Boolean;
@@ -796,13 +803,12 @@ package Nodes_Meta is
    function Has_Protected_Type_Body (K : Iir_Kind) return Boolean;
    function Has_Protected_Type_Declaration (K : Iir_Kind) return Boolean;
    function Has_End_Location (K : Iir_Kind) return Boolean;
-   function Has_String8_Id (K : Iir_Kind) return Boolean;
-   function Has_String_Length (K : Iir_Kind) return Boolean;
    function Has_Use_Flag (K : Iir_Kind) return Boolean;
    function Has_End_Has_Reserved_Id (K : Iir_Kind) return Boolean;
    function Has_End_Has_Identifier (K : Iir_Kind) return Boolean;
    function Has_End_Has_Postponed (K : Iir_Kind) return Boolean;
    function Has_Has_Begin (K : Iir_Kind) return Boolean;
+   function Has_Has_End (K : Iir_Kind) return Boolean;
    function Has_Has_Is (K : Iir_Kind) return Boolean;
    function Has_Has_Pure (K : Iir_Kind) return Boolean;
    function Has_Has_Body (K : Iir_Kind) return Boolean;

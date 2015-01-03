@@ -725,6 +725,7 @@ package body Trans.Rtis is
          return;
       end if;
       if Cur_Block.Last_Nbr = Rti_Array'Last then
+         --  Append a new block.
          declare
             N : Rti_Array_List_Acc;
          begin
@@ -2164,7 +2165,8 @@ package body Trans.Rtis is
             when Iir_Kind_Process_Statement
                | Iir_Kind_Sensitized_Process_Statement
                | Iir_Kind_Block_Statement
-               | Iir_Kind_Generate_Statement =>
+               | Iir_Kind_If_Generate_Statement
+               | Iir_Kind_For_Generate_Statement =>
                Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
                Generate_Block (Stmt, Parent_Rti);
                Pop_Identifier_Prefix (Mark);
@@ -2207,28 +2209,27 @@ package body Trans.Rtis is
       Inst      : O_Tnode;
    begin
       --  The type of a generator iterator is elaborated in the parent.
-      if Get_Kind (Blk) = Iir_Kind_Generate_Statement then
+      if Get_Kind (Blk) = Iir_Kind_For_Generate_Statement then
          declare
-            Scheme    : constant Iir := Get_Generation_Scheme (Blk);
-            Iter_Type : Iir;
-            Type_Info : Type_Info_Acc;
+            Param : constant Iir := Get_Parameter_Specification (Blk);
+            Iter_Type : constant Iir := Get_Type (Param);
+            Type_Info : constant Type_Info_Acc := Get_Info (Iter_Type);
             Mark      : Id_Mark_Type;
-            Tmp       : O_Dnode;
+            Iter_Rti : O_Dnode;
          begin
-            if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
-               Iter_Type := Get_Type (Scheme);
-               Type_Info := Get_Info (Iter_Type);
-               if Type_Info.Type_Rti = O_Dnode_Null then
-                  Push_Identifier_Prefix (Mark, "ITERATOR");
-                  Tmp := Generate_Type_Definition (Iter_Type);
-                  Add_Rti_Node (Tmp);
-                  Pop_Identifier_Prefix (Mark);
-               end if;
+            if Type_Info.Type_Rti = O_Dnode_Null then
+               Push_Identifier_Prefix (Mark, "ITERATOR");
+               Iter_Rti := Generate_Type_Definition (Iter_Type);
+               --  The RTIs for the parent are being defined, so append to the
+               --  parent.
+               Add_Rti_Node (Iter_Rti);
+               Pop_Identifier_Prefix (Mark);
             end if;
          end;
       end if;
 
       if Get_Kind (Get_Parent (Blk)) = Iir_Kind_Design_Unit then
+         --  Also include filename for units.
          Rti_Type := Ghdl_Rtin_Block_File;
       else
          Rti_Type := Ghdl_Rtin_Block;
@@ -2295,26 +2296,37 @@ package body Trans.Rtis is
               (Get_Concurrent_Statement_Chain (Blk), Rti);
             Field_Off := Get_Scope_Offset (Info.Block_Scope, Ghdl_Ptr_Type);
             Inst := Get_Scope_Type (Info.Block_Scope);
-         when Iir_Kind_Generate_Statement =>
+         when Iir_Kind_If_Generate_Statement =>
+            Kind := Ghdl_Rtik_If_Generate;
             declare
-               Scheme     : constant Iir := Get_Generation_Scheme (Blk);
-               Scheme_Rti : O_Dnode := O_Dnode_Null;
+               Bod : constant Iir := Get_Generate_Statement_Body (Blk);
+               Bod_Info : constant Block_Info_Acc := Get_Info (Bod);
             begin
-               if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
-                  Generate_Object (Scheme, Scheme_Rti);
-                  Add_Rti_Node (Scheme_Rti);
-                  Kind := Ghdl_Rtik_For_Generate;
-               else
-                  Kind := Ghdl_Rtik_If_Generate;
-               end if;
+               Generate_Declaration_Chain (Get_Declaration_Chain (Bod));
+               Generate_Concurrent_Statement_Chain
+                 (Get_Concurrent_Statement_Chain (Bod), Rti);
+               Field_Off := New_Offsetof
+                 (Get_Scope_Type (Get_Info (Get_Parent (Blk)).Block_Scope),
+                  Bod_Info.Block_Parent_Field, Ghdl_Ptr_Type);
             end;
-            Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
-            Generate_Concurrent_Statement_Chain
-              (Get_Concurrent_Statement_Chain (Blk), Rti);
-            Inst := Get_Scope_Type (Info.Block_Scope);
-            Field_Off := New_Offsetof
-              (Get_Scope_Type (Get_Info (Get_Parent (Blk)).Block_Scope),
-               Info.Block_Parent_Field, Ghdl_Ptr_Type);
+         when Iir_Kind_For_Generate_Statement =>
+            Kind := Ghdl_Rtik_For_Generate;
+            declare
+               Bod : constant Iir := Get_Generate_Statement_Body (Blk);
+               Bod_Info : constant Block_Info_Acc := Get_Info (Bod);
+               Param : constant Iir := Get_Parameter_Specification (Blk);
+               Param_Rti : O_Dnode := O_Dnode_Null;
+            begin
+               Generate_Object (Param, Param_Rti);
+               Add_Rti_Node (Param_Rti);
+               Generate_Declaration_Chain (Get_Declaration_Chain (Bod));
+               Generate_Concurrent_Statement_Chain
+                 (Get_Concurrent_Statement_Chain (Bod), Rti);
+               Inst := Get_Scope_Type (Bod_Info.Block_Scope);
+               Field_Off := New_Offsetof
+                 (Get_Scope_Type (Get_Info (Get_Parent (Blk)).Block_Scope),
+                  Bod_Info.Block_Parent_Field, Ghdl_Ptr_Type);
+            end;
          when others =>
             Error_Kind ("rti.generate_block", Blk);
       end case;
@@ -2346,6 +2358,8 @@ package body Trans.Rtis is
       if Inst = O_Tnode_Null then
          Res := Ghdl_Index_0;
       else
+         --  For for-generate: size of instance, which gives the stride in the
+         --  sub-blocks array.
          Res := New_Sizeof (Inst, Ghdl_Index_Type);
       end if;
       New_Record_Aggr_El (List, Res);
@@ -2370,7 +2384,8 @@ package body Trans.Rtis is
       --  Put children in the parent list.
       case Get_Kind (Blk) is
          when Iir_Kind_Block_Statement
-            | Iir_Kind_Generate_Statement
+            | Iir_Kind_For_Generate_Statement
+            | Iir_Kind_If_Generate_Statement
             | Iir_Kind_Process_Statement
             | Iir_Kind_Sensitized_Process_Statement =>
             Add_Rti_Node (Rti);
@@ -2382,9 +2397,16 @@ package body Trans.Rtis is
       case Get_Kind (Blk) is
          when Iir_Kind_Entity_Declaration
             | Iir_Kind_Architecture_Body
-            | Iir_Kind_Block_Statement
-            | Iir_Kind_Generate_Statement =>
+            | Iir_Kind_Block_Statement =>
             Info.Block_Rti_Const := Rti;
+         when Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement =>
+            declare
+               Bod : constant Iir := Get_Generate_Statement_Body (Blk);
+               Bod_Info : constant Block_Info_Acc := Get_Info (Bod);
+            begin
+               Bod_Info.Block_Rti_Const := Rti;
+            end;
          when Iir_Kind_Process_Statement
             | Iir_Kind_Sensitized_Process_Statement =>
             Info.Process_Rti_Const := Rti;
@@ -2571,8 +2593,16 @@ package body Trans.Rtis is
          when Iir_Kind_Entity_Declaration
             | Iir_Kind_Architecture_Body
             | Iir_Kind_Block_Statement
-            | Iir_Kind_Generate_Statement =>
+            | Iir_Kind_Generate_Statement_Body =>
             Rti_Const := Node_Info.Block_Rti_Const;
+         when Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement =>
+            declare
+               Bod : constant Iir := Get_Generate_Statement_Body (Node);
+               Bod_Info : constant Block_Info_Acc := Get_Info (Bod);
+            begin
+               Rti_Const := Bod_Info.Block_Rti_Const;
+            end;
          when Iir_Kind_Package_Declaration
             | Iir_Kind_Package_Body =>
             Rti_Const := Node_Info.Package_Rti_Const;
@@ -2599,8 +2629,16 @@ package body Trans.Rtis is
          when Iir_Kind_Entity_Declaration
             | Iir_Kind_Architecture_Body
             | Iir_Kind_Block_Statement
-            | Iir_Kind_Generate_Statement =>
+            | Iir_Kind_Generate_Statement_Body =>
             Ref := Get_Instance_Ref (Node_Info.Block_Scope);
+         when Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement =>
+            declare
+               Bod : constant Iir := Get_Generate_Statement_Body (Node);
+               Bod_Info : constant Block_Info_Acc := Get_Info (Bod);
+            begin
+               Ref := Get_Instance_Ref (Bod_Info.Block_Scope);
+            end;
          when Iir_Kind_Package_Declaration
             | Iir_Kind_Package_Body =>
             return New_Lit (New_Null_Access (Ghdl_Ptr_Type));

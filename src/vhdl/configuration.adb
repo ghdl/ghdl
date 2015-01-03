@@ -215,9 +215,22 @@ package body Configuration is
                   --  Entity or configuration instantiation.
                   Add_Design_Aspect (Get_Instantiated_Unit (Stmt), True);
                end if;
-            when Iir_Kind_Generate_Statement
-              | Iir_Kind_Block_Statement =>
+            when Iir_Kind_Block_Statement =>
                Add_Design_Concurrent_Stmts (Stmt);
+            when Iir_Kind_For_Generate_Statement =>
+               Add_Design_Concurrent_Stmts
+                 (Get_Generate_Statement_Body (Stmt));
+            when Iir_Kind_If_Generate_Statement =>
+               declare
+                  Clause : Iir;
+               begin
+                  Clause := Stmt;
+                  while Clause /= Null_Iir loop
+                     Add_Design_Concurrent_Stmts
+                       (Get_Generate_Statement_Body (Clause));
+                     Clause := Get_Generate_Else_Clause (Clause);
+                  end loop;
+               end;
             when Iir_Kind_Process_Statement
               | Iir_Kind_Sensitized_Process_Statement
               | Iir_Kind_Psl_Assert_Statement

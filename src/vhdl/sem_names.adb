@@ -324,7 +324,8 @@ package body Sem_Names is
             Iterator_Decl_Chain (Get_Port_Chain (Decl), Id);
          when Iir_Kind_Architecture_Body =>
             null;
-         when Iir_Kind_Generate_Statement =>
+         when Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement =>
             null;
          when Iir_Kind_Package_Declaration =>
             null;
@@ -358,10 +359,30 @@ package body Sem_Names is
               (Get_Sequential_Statement_Chain (Decl_Body), Id);
          when Iir_Kind_Architecture_Body
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Generate_Statement
            | Iir_Kind_Block_Statement =>
             Iterator_Decl_Chain (Get_Declaration_Chain (Decl), Id);
             Iterator_Decl_Chain (Get_Concurrent_Statement_Chain (Decl), Id);
+         when Iir_Kind_For_Generate_Statement =>
+            declare
+               Bod : constant Iir := Get_Generate_Block_Configuration (Decl);
+            begin
+               Iterator_Decl_Chain (Get_Declaration_Chain (Bod), Id);
+               Iterator_Decl_Chain (Get_Concurrent_Statement_Chain (Bod), Id);
+            end;
+         when Iir_Kind_If_Generate_Statement =>
+            declare
+               Bod : constant Iir := Get_Generate_Statement_Body (Decl);
+            begin
+               if Get_Alternative_Label (Bod) = Null_Identifier then
+                  Iterator_Decl_Chain
+                    (Get_Declaration_Chain (Bod), Id);
+                  Iterator_Decl_Chain
+                    (Get_Concurrent_Statement_Chain (Bod), Id);
+               else
+                  --  Error in LRM08
+                  raise Internal_Error;
+               end if;
+            end;
          when Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration =>
             Iterator_Decl_Chain (Get_Declaration_Chain (Decl), Id);
@@ -1294,7 +1315,8 @@ package body Sem_Names is
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Block_Statement
-           | Iir_Kind_Generate_Statement
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kinds_Process_Statement
            | Iir_Kind_Protected_Type_Body =>
             --  The procedure is impure.
@@ -1850,7 +1872,8 @@ package body Sem_Names is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
-           | Iir_Kind_Generate_Statement
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_For_Loop_Statement =>
             --  LRM93 §6.3

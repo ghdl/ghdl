@@ -501,19 +501,22 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
+   --  Only use_clause are allowed here.
    --   Get/Set_Declaration_Chain (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Configuration_Item_Chain (Field3)
    --
-   --  Note: for default block configurations of iterative generate statement,
-   --  the block specification is an indexed_name, whose index_list is others.
-   --   Get/Set_Block_Specification (Field5)
-   --
    --  Single linked list of block configuration that apply to the same
    --  for scheme generate block.
    --   Get/Set_Prev_Block_Configuration (Field4)
+   --
+   --  Note: for default block configurations of iterative generate statement,
+   --  the block specification is an indexed_name, whose index_list is others.
+   --  The name designates either a block statement or a generate statement
+   --  body.
+   --   Get/Set_Block_Specification (Field5)
 
    -- Iir_Kind_Binding_Indication (Medium)
    --
@@ -2511,36 +2514,89 @@ package Iirs is
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
-   -- Iir_Kind_Generate_Statement (Medium)
+   -- Iir_Kind_Generate_Statement_Body (Short)
+   --  LRM08 11.8 Generate statements
+   --
+   --  generate_statement_body ::=
+   --        [ block_declarative_part
+   --     BEGIN ]
+   --        { concurrent_statement }
+   --     [ END [ alternative_label ] ; ]
    --
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Declaration_Chain (Field1)
    --
-   --   Get/Set_Chain (Field2)
+   --  The block configuration for this statement body.
+   --   Get/Set_Generate_Block_Configuration (Field2)
    --
-   --   Get/Set_Label (Field3)
+   --   Get/Set_Alternative_Label (Field3)
    --   Get/Set_Identifier (Alias Field3)
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
    --   Get/Set_Concurrent_Statement_Chain (Field5)
    --
-   --  The generation scheme.
-   --  A (boolean) expression for a conditionnal elaboration (if).
-   --  A (iterator) declaration for an iterative elaboration (for).
-   --   Get/Set_Generation_Scheme (Field6)
+   --   Get/Set_End_Has_Identifier (Flag9)
    --
-   --  The block configuration for this statement.
-   --   Get/Set_Generate_Block_Configuration (Field7)
+   --   Get/Set_Has_Begin (Flag10)
+   --
+   --   Get/Set_Has_End (Flag11)
+
+   -- Iir_Kind_For_Generate_Statement (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --  The parameters specification is represented by an Iterator_Declaration.
+   --   Get/Set_Parameter_Specification (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   --   Get/Set_Generate_Statement_Body (Field4)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+
+   -- Iir_Kind_If_Generate_Else_Clause (Short)
    --
-   --   Get/Set_Has_Begin (Flag10)
+   --   Get/Set_Parent (Field0)
+   --
+   --  Null_Iir for the else clause.
+   --   Get/Set_Condition (Field1)
+   --
+   --   Get/Set_Generate_Statement_Body (Field4)
+   --
+   --   Get/Set_Generate_Else_Clause (Field5)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+
+   -- Iir_Kind_If_Generate_Statement (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --  Null_Iir for the else clause.
+   --   Get/Set_Condition (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   --   Get/Set_Generate_Statement_Body (Field4)
+   --
+   --   Get/Set_Generate_Else_Clause (Field5)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
 
    -- Iir_Kind_Simple_Simultaneous_Statement (Medium)
    --
@@ -2578,11 +2634,11 @@ package Iirs is
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Label (Field3)
    --
-   --  Must be an Iir_kind_elsif node, or NULL for no more elsif clauses.
-   --   Get/Set_Else_Clause (Field4)
-   --
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Identifier (Alias Field3)
+   --
+   --  Must be an Iir_kind_elsif node, or NULL for no more elsif clauses.
+   --   Get/Set_Else_Clause (Field4)
    --
    --   Get/Set_Sequential_Statement_Chain (Field5)
    --
@@ -3540,10 +3596,14 @@ package Iirs is
        Iir_Kind_Psl_Cover_Statement,
        Iir_Kind_Concurrent_Procedure_Call_Statement,
        Iir_Kind_Block_Statement,
-       Iir_Kind_Generate_Statement,
+       Iir_Kind_If_Generate_Statement,
+       Iir_Kind_For_Generate_Statement,
        Iir_Kind_Component_Instantiation_Statement,
 
        Iir_Kind_Simple_Simultaneous_Statement,
+
+       Iir_Kind_Generate_Statement_Body,
+       Iir_Kind_If_Generate_Else_Clause,
 
    -- Iir_Kind_Sequential_Statement
        Iir_Kind_Signal_Assignment_Statement,
@@ -4406,7 +4466,8 @@ package Iirs is
    --Iir_Kind_Psl_Cover_Statement
    --Iir_Kind_Concurrent_Procedure_Call_Statement
    --Iir_Kind_Block_Statement
-   --Iir_Kind_Generate_Statement
+   --Iir_Kind_If_Generate_Statement
+   --Iir_Kind_For_Generate_Statement
      Iir_Kind_Component_Instantiation_Statement;
 
    subtype Iir_Kinds_Concurrent_Signal_Assignment is Iir_Kind range
@@ -5915,13 +5976,21 @@ package Iirs is
    --  Get/Set the block_configuration (there may be several
    --  block_configuration through the use of prev_configuration singly linked
    --  list) that apply to this generate statement.
-   --  Field: Field7
+   --  Field: Field2
    function Get_Generate_Block_Configuration (Target : Iir) return Iir;
    procedure Set_Generate_Block_Configuration (Target : Iir; Conf : Iir);
 
-   --  Field: Field6
-   function Get_Generation_Scheme (Target : Iir) return Iir;
-   procedure Set_Generation_Scheme (Target : Iir; Scheme : Iir);
+   --  Field: Field4
+   function Get_Generate_Statement_Body (Target : Iir) return Iir;
+   procedure Set_Generate_Statement_Body (Target : Iir; Bod : Iir);
+
+   --  Field: Field3 (uc)
+   function Get_Alternative_Label (Target : Iir) return Name_Id;
+   procedure Set_Alternative_Label (Target : Iir; Label : Name_Id);
+
+   --  Field: Field5
+   function Get_Generate_Else_Clause (Target : Iir) return Iir;
+   procedure Set_Generate_Else_Clause (Target : Iir; Clause : Iir);
 
    --  Condition of a conditionam_waveform, if_statement, elsif,
    --  while_loop_statement, next_statement or exit_statement.
@@ -6293,6 +6362,11 @@ package Iirs is
    --  Field: Flag10
    function Get_Has_Begin (Decl : Iir) return Boolean;
    procedure Set_Has_Begin (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if 'end' is present (only for generate body).
+   --  Field: Flag11
+   function Get_Has_End (Decl : Iir) return Boolean;
+   procedure Set_Has_End (Decl : Iir; Flag : Boolean);
 
    --  Layout flag: true if 'is' is present.
    --  Field: Flag7

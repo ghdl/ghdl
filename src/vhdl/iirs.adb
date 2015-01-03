@@ -374,6 +374,10 @@ package body Iirs is
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Concurrent_Procedure_Call_Statement
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Generate_Statement_Body
+           | Iir_Kind_If_Generate_Else_Clause
            | Iir_Kind_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
@@ -469,7 +473,6 @@ package body Iirs is
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
            | Iir_Kind_Block_Statement
-           | Iir_Kind_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Wait_Statement =>
@@ -898,6 +901,34 @@ package body Iirs is
       pragma Assert (Has_Simple_Aggregate_List (Get_Kind (Target)));
       Set_Field4 (Target, Iir_List_To_Iir (List));
    end Set_Simple_Aggregate_List;
+
+   function Get_String8_Id (Lit : Iir) return String8_Id is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_String8_Id (Get_Kind (Lit)));
+      return Iir_To_String8_Id (Get_Field5 (Lit));
+   end Get_String8_Id;
+
+   procedure Set_String8_Id (Lit : Iir; Id : String8_Id) is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_String8_Id (Get_Kind (Lit)));
+      Set_Field5 (Lit, String8_Id_To_Iir (Id));
+   end Set_String8_Id;
+
+   function Get_String_Length (Lit : Iir) return Int32 is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_String_Length (Get_Kind (Lit)));
+      return Iir_To_Int32 (Get_Field4 (Lit));
+   end Get_String_Length;
+
+   procedure Set_String_Length (Lit : Iir; Len : Int32) is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_String_Length (Get_Kind (Lit)));
+      Set_Field4 (Lit, Int32_To_Iir (Len));
+   end Set_String_Length;
 
    function Get_Bit_String_Base (Lit : Iir) return Base_Type is
    begin
@@ -3266,29 +3297,57 @@ package body Iirs is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Generate_Block_Configuration (Get_Kind (Target)));
-      return Get_Field7 (Target);
+      return Get_Field2 (Target);
    end Get_Generate_Block_Configuration;
 
    procedure Set_Generate_Block_Configuration (Target : Iir; Conf : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Generate_Block_Configuration (Get_Kind (Target)));
-      Set_Field7 (Target, Conf);
+      Set_Field2 (Target, Conf);
    end Set_Generate_Block_Configuration;
 
-   function Get_Generation_Scheme (Target : Iir) return Iir is
+   function Get_Generate_Statement_Body (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Generation_Scheme (Get_Kind (Target)));
-      return Get_Field6 (Target);
-   end Get_Generation_Scheme;
+      pragma Assert (Has_Generate_Statement_Body (Get_Kind (Target)));
+      return Get_Field4 (Target);
+   end Get_Generate_Statement_Body;
 
-   procedure Set_Generation_Scheme (Target : Iir; Scheme : Iir) is
+   procedure Set_Generate_Statement_Body (Target : Iir; Bod : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Generation_Scheme (Get_Kind (Target)));
-      Set_Field6 (Target, Scheme);
-   end Set_Generation_Scheme;
+      pragma Assert (Has_Generate_Statement_Body (Get_Kind (Target)));
+      Set_Field4 (Target, Bod);
+   end Set_Generate_Statement_Body;
+
+   function Get_Alternative_Label (Target : Iir) return Name_Id is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Alternative_Label (Get_Kind (Target)));
+      return Iir_To_Name_Id (Get_Field3 (Target));
+   end Get_Alternative_Label;
+
+   procedure Set_Alternative_Label (Target : Iir; Label : Name_Id) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Alternative_Label (Get_Kind (Target)));
+      Set_Field3 (Target, Name_Id_To_Iir (Label));
+   end Set_Alternative_Label;
+
+   function Get_Generate_Else_Clause (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Generate_Else_Clause (Get_Kind (Target)));
+      return Get_Field5 (Target);
+   end Get_Generate_Else_Clause;
+
+   procedure Set_Generate_Else_Clause (Target : Iir; Clause : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Generate_Else_Clause (Get_Kind (Target)));
+      Set_Field5 (Target, Clause);
+   end Set_Generate_Else_Clause;
 
    function Get_Condition (Target : Iir) return Iir is
    begin
@@ -4253,34 +4312,6 @@ package body Iirs is
       Set_Field6 (Target, Location_Type_To_Iir (Loc));
    end Set_End_Location;
 
-   function Get_String8_Id (Lit : Iir) return String8_Id is
-   begin
-      pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_String8_Id (Get_Kind (Lit)));
-      return Iir_To_String8_Id (Get_Field5 (Lit));
-   end Get_String8_Id;
-
-   procedure Set_String8_Id (Lit : Iir; Id : String8_Id) is
-   begin
-      pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_String8_Id (Get_Kind (Lit)));
-      Set_Field5 (Lit, String8_Id_To_Iir (Id));
-   end Set_String8_Id;
-
-   function Get_String_Length (Lit : Iir) return Int32 is
-   begin
-      pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_String_Length (Get_Kind (Lit)));
-      return Iir_To_Int32 (Get_Field4 (Lit));
-   end Get_String_Length;
-
-   procedure Set_String_Length (Lit : Iir; Len : Int32) is
-   begin
-      pragma Assert (Lit /= Null_Iir);
-      pragma Assert (Has_String_Length (Get_Kind (Lit)));
-      Set_Field4 (Lit, Int32_To_Iir (Len));
-   end Set_String_Length;
-
    function Get_Use_Flag (Decl : Iir) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);
@@ -4350,6 +4381,20 @@ package body Iirs is
       pragma Assert (Has_Has_Begin (Get_Kind (Decl)));
       Set_Flag10 (Decl, Flag);
    end Set_Has_Begin;
+
+   function Get_Has_End (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_End (Get_Kind (Decl)));
+      return Get_Flag11 (Decl);
+   end Get_Has_End;
+
+   procedure Set_Has_End (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_End (Get_Kind (Decl)));
+      Set_Flag11 (Decl, Flag);
+   end Set_Has_End;
 
    function Get_Has_Is (Decl : Iir) return Boolean is
    begin

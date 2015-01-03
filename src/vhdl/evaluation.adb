@@ -2895,19 +2895,14 @@ package body Evaluation is
             when Iir_Kind_Procedure_Body =>
                Path_Add_Element (Get_Subprogram_Specification (El),
                                  Is_Instance);
-            when Iir_Kind_Generate_Statement =>
-               declare
-                  Scheme : Iir;
-               begin
-                  Scheme := Get_Generation_Scheme (El);
-                  if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
-                     Path_Instance := El;
-                  else
-                     Path_Add_Element (Get_Parent (El), Is_Instance);
-                     Path_Add_Name (El);
-                     Path_Add (":");
-                  end if;
-               end;
+            when Iir_Kind_For_Generate_Statement =>
+               Path_Instance := El;
+            when Iir_Kind_If_Generate_Statement =>
+               Path_Add_Element (Get_Parent (El), Is_Instance);
+               Path_Add_Name (El);
+               Path_Add (":");
+            when Iir_Kind_Generate_Statement_Body =>
+               Path_Add_Element (Get_Parent (El), Is_Instance);
             when Iir_Kinds_Sequential_Statement =>
                Path_Add_Element (Get_Parent (El), Is_Instance);
             when others =>

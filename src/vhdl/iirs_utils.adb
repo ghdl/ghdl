@@ -349,7 +349,7 @@ package body Iirs_Utils is
                else
                   Set_Component_Configuration (El, Null_Iir);
                end if;
-            when Iir_Kind_Generate_Statement =>
+            when Iir_Kind_For_Generate_Statement =>
                Set_Generate_Block_Configuration (El, Null_Iir);
                --  Clear inside a generate statement.
                Clear_Instantiation_Configuration_Vhdl87 (El, True, Full);
@@ -368,15 +368,31 @@ package body Iirs_Utils is
    begin
       if False and then Flags.Vhdl_Std = Vhdl_87 then
          Clear_Instantiation_Configuration_Vhdl87
-           (Parent, Get_Kind (Parent) = Iir_Kind_Generate_Statement, Full);
+           (Parent, Get_Kind (Parent) = Iir_Kind_For_Generate_Statement, Full);
       else
          El := Get_Concurrent_Statement_Chain (Parent);
          while El /= Null_Iir loop
             case Get_Kind (El) is
                when Iir_Kind_Component_Instantiation_Statement =>
                   Set_Component_Configuration (El, Null_Iir);
-               when Iir_Kind_Generate_Statement =>
-                  Set_Generate_Block_Configuration (El, Null_Iir);
+               when Iir_Kind_For_Generate_Statement =>
+                  declare
+                     Bod : constant Iir := Get_Generate_Statement_Body (El);
+                  begin
+                     Set_Generate_Block_Configuration (Bod, Null_Iir);
+                  end;
+               when Iir_Kind_If_Generate_Statement =>
+                  declare
+                     Clause : Iir;
+                     Bod : Iir;
+                  begin
+                     Clause := El;
+                     while Clause /= Null_Iir loop
+                        Bod := Get_Generate_Statement_Body (Clause);
+                        Set_Generate_Block_Configuration (Bod, Null_Iir);
+                        Clause := Get_Generate_Else_Clause (Clause);
+                     end loop;
+                  end;
                when Iir_Kind_Block_Statement =>
                   Set_Block_Block_Configuration (El, Null_Iir);
                when others =>
@@ -809,7 +825,8 @@ package body Iirs_Utils is
             return Res;
          when Iir_Kind_Block_Statement
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Generate_Statement =>
+           | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_If_Generate_Statement =>
             return Block_Spec;
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Selected_Name

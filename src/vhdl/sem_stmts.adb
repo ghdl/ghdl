@@ -1511,46 +1511,68 @@ package body Sem_Stmts is
       Close_Declarative_Region;
    end Sem_Block_Statement;
 
-   procedure Sem_Generate_Statement (Stmt : Iir_Generate_Statement)
+   procedure Sem_Generate_Statement_Body (Parent : Iir)
    is
-      Scheme : Iir;
+      Bod : constant Iir := Get_Generate_Statement_Body (Parent);
+   begin
+      Sem_Block (Bod, True); -- Flags.Vhdl_Std /= Vhdl_87);
+   end Sem_Generate_Statement_Body;
+
+   procedure Sem_For_Generate_Statement (Stmt : Iir)
+   is
+      Param : Iir;
    begin
       --  LRM93 10.1 Declarative region.
       --  12. A generate statement.
       Open_Declarative_Region;
 
-      Scheme := Get_Generation_Scheme (Stmt);
-      if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
-         Sem_Scopes.Add_Name (Scheme);
-         --  LRM93 §7.4.2 (Globally Static Primaries)
-         --   4. a generate parameter;
-         Sem_Iterator (Scheme, Globally);
-         Set_Visible_Flag (Scheme, True);
-         --  LRM93 §9.7
-         --  The discrete range in a generation scheme of the first form must
-         --  be a static discrete range;
-         if Get_Type (Scheme) /= Null_Iir
-           and then Get_Type_Staticness (Get_Type (Scheme)) < Globally
-         then
-            Error_Msg_Sem ("range must be a static discrete range", Stmt);
-         end if;
-      else
-         Scheme := Sem_Condition (Scheme);
-         --  LRM93 §9.7
-         --  the condition in a generation scheme of the second form must be
-         --  a static expression.
-         if Scheme /= Null_Iir
-           and then Get_Expr_Staticness (Scheme) < Globally
-         then
-            Error_Msg_Sem ("condition must be a static expression", Stmt);
-         else
-            Set_Generation_Scheme (Stmt, Scheme);
-         end if;
+      Param := Get_Parameter_Specification (Stmt);
+      Sem_Scopes.Add_Name (Param);
+      --  LRM93 7.4.2 (Globally Static Primaries)
+      --   4. a generate parameter;
+      Sem_Iterator (Param, Globally);
+      Set_Visible_Flag (Param, True);
+      --  LRM93 9.7
+      --  The discrete range in a generation scheme of the first form must
+      --  be a static discrete range;
+      if Get_Type (Param) /= Null_Iir
+        and then Get_Type_Staticness (Get_Type (Param)) < Globally
+      then
+         Error_Msg_Sem ("range must be a static discrete range", Stmt);
       end if;
 
-      Sem_Block (Stmt, True); -- Flags.Vhdl_Std /= Vhdl_87);
+      --  In the same declarative region.
+      Sem_Generate_Statement_Body (Stmt);
+
       Close_Declarative_Region;
-   end Sem_Generate_Statement;
+   end Sem_For_Generate_Statement;
+
+   procedure Sem_If_Generate_Statement (Stmt : Iir)
+   is
+      Condition : Iir;
+   begin
+      --  LRM93 10.1 Declarative region.
+      --  12. A generate statement.
+      Open_Declarative_Region;
+
+      Condition := Get_Condition (Stmt);
+      Condition := Sem_Condition (Condition);
+      --  LRM93 9.7
+      --  the condition in a generation scheme of the second form must be
+      --  a static expression.
+      if Condition /= Null_Iir
+        and then Get_Expr_Staticness (Condition) < Globally
+      then
+         Error_Msg_Sem ("condition must be a static expression", Condition);
+      else
+         Set_Condition (Stmt, Condition);
+      end if;
+
+      --  In the same declarative region.
+      Sem_Generate_Statement_Body (Stmt);
+
+      Close_Declarative_Region;
+   end Sem_If_Generate_Statement;
 
    procedure Sem_Process_Statement (Proc: Iir) is
    begin
@@ -1786,6 +1808,14 @@ package body Sem_Stmts is
       Is_Passive : constant Boolean :=
         Get_Kind (Parent) = Iir_Kind_Entity_Declaration;
       El: Iir;
+
+      procedure No_Generate_Statement is
+      begin
+         if Is_Passive then
+            Error_Msg_Sem ("generate statement forbidden in entity", El);
+         end if;
+      end No_Generate_Statement;
+
       Prev_El : Iir;
       Prev_Concurrent_Statement : Iir;
       Prev_Psl_Default_Clock : Iir;
@@ -1826,11 +1856,12 @@ package body Sem_Stmts is
                   Error_Msg_Sem ("block forbidden in entity", El);
                end if;
                Sem_Block_Statement (El);
-            when Iir_Kind_Generate_Statement =>
-               if Is_Passive then
-                  Error_Msg_Sem ("generate statement forbidden in entity", El);
-               end if;
-               Sem_Generate_Statement (El);
+            when Iir_Kind_If_Generate_Statement =>
+               No_Generate_Statement;
+               Sem_If_Generate_Statement (El);
+            when Iir_Kind_For_Generate_Statement =>
+               No_Generate_Statement;
+               Sem_For_Generate_Statement (El);
             when Iir_Kind_Concurrent_Procedure_Call_Statement =>
                declare
                   Next_El : Iir;
@@ -1898,7 +1929,9 @@ package body Sem_Stmts is
          --  implicit declarative part.
          if False
            and then Flags.Vhdl_Std = Vhdl_87
-           and then Get_Kind (Stmt) = Iir_Kind_Generate_Statement
+           and then
+           (Get_Kind (Stmt) = Iir_Kind_For_Generate_Statement
+              or else Get_Kind (Stmt) = Iir_Kind_If_Generate_Statement)
          then
             Sem_Labels_Chain (Stmt);
          end if;

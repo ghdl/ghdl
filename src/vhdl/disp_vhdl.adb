@@ -222,7 +222,8 @@ package body Disp_Vhdl is
            | Iir_Kind_Simple_Name =>
             Disp_Identifier (Decl);
          when Iir_Kind_Block_Statement
-           | Iir_Kind_Generate_Statement =>
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement =>
             declare
                Ident : constant Name_Id := Get_Label (Decl);
             begin
@@ -2797,32 +2798,58 @@ package body Disp_Vhdl is
       Disp_End (Block, "block");
    end Disp_Block_Statement;
 
-   procedure Disp_Generate_Statement (Stmt : Iir_Generate_Statement)
+   procedure Disp_Generate_Statement_Body (Parent : Iir; Indent : Count)
    is
-      Indent : Count;
-      Scheme : Iir;
+      Bod : constant Iir := Get_Generate_Statement_Body (Parent);
    begin
-      Indent := Col;
-      Disp_Label (Stmt);
-      Scheme := Get_Generation_Scheme (Stmt);
-      case Get_Kind (Scheme) is
-         when Iir_Kind_Iterator_Declaration =>
-            Put ("for ");
-            Disp_Parameter_Specification (Scheme);
-         when others =>
-            Put ("if ");
-            Disp_Expression (Scheme);
-      end case;
-      Put_Line (" generate");
-      Disp_Declaration_Chain (Stmt, Indent);
-      if Get_Has_Begin (Stmt) then
+      Disp_Declaration_Chain (Bod, Indent);
+      if Get_Has_Begin (Bod) then
          Set_Col (Indent);
          Put_Line ("begin");
       end if;
-      Disp_Concurrent_Statement_Chain (Stmt, Indent + Indentation);
+      Disp_Concurrent_Statement_Chain (Bod, Indent + Indentation);
+   end Disp_Generate_Statement_Body;
+
+   procedure Disp_For_Generate_Statement (Stmt : Iir)
+   is
+      Indent : constant Count := Col;
+   begin
+      Disp_Label (Stmt);
+      Put ("for ");
+      Disp_Parameter_Specification (Get_Parameter_Specification (Stmt));
+      Put_Line (" generate");
+      Disp_Generate_Statement_Body (Stmt, Indent);
       Set_Col (Indent);
       Disp_End (Stmt, "generate");
-   end Disp_Generate_Statement;
+   end Disp_For_Generate_Statement;
+
+   procedure Disp_If_Generate_Statement (Stmt : Iir)
+   is
+      Indent : constant Count := Col;
+      Clause : Iir;
+      Cond : Iir;
+   begin
+      Disp_Label (Stmt);
+      Put ("if ");
+      Disp_Expression (Get_Condition (Stmt));
+      Clause := Stmt;
+      loop
+         Put_Line (" generate");
+         Disp_Generate_Statement_Body (Clause, Indent);
+         Clause := Get_Generate_Else_Clause (Stmt);
+         exit when Clause = Null_Iir;
+         Cond := Get_Condition (Clause);
+         Set_Col (Indent);
+         if Cond = Null_Iir then
+            Put ("else");
+         else
+            Put ("elsif ");
+            Disp_Expression (Cond);
+         end if;
+      end loop;
+      Set_Col (Indent);
+      Disp_End (Stmt, "generate");
+   end Disp_If_Generate_Statement;
 
    procedure Disp_Psl_Default_Clock (Stmt : Iir) is
    begin
@@ -2914,8 +2941,10 @@ package body Disp_Vhdl is
             Disp_Procedure_Call (Get_Procedure_Call (Stmt));
          when Iir_Kind_Block_Statement =>
             Disp_Block_Statement (Stmt);
-         when Iir_Kind_Generate_Statement =>
-            Disp_Generate_Statement (Stmt);
+         when Iir_Kind_If_Generate_Statement =>
+            Disp_If_Generate_Statement (Stmt);
+         when Iir_Kind_For_Generate_Statement =>
+            Disp_For_Generate_Statement (Stmt);
          when Iir_Kind_Psl_Default_Clock =>
             Disp_Psl_Default_Clock (Stmt);
          when Iir_Kind_Psl_Assert_Statement =>
@@ -3047,7 +3076,8 @@ package body Disp_Vhdl is
       Spec := Get_Block_Specification (Block);
       case Get_Kind (Spec) is
          when Iir_Kind_Block_Statement
-           | Iir_Kind_Generate_Statement
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Architecture_Body =>
             Disp_Name_Of (Spec);
          when Iir_Kind_Indexed_Name =>

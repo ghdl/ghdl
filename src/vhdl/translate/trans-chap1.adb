@@ -448,7 +448,7 @@ package body Trans.Chap1 is
                begin
                   Push_Identifier_Prefix (Mark, Get_Identifier (Blk));
                   case Get_Kind (Blk) is
-                     when Iir_Kind_Generate_Statement =>
+                     when Iir_Kind_Generate_Statement_Body =>
                         Set_Scope_Via_Field_Ptr
                           (Base_Info.Block_Scope,
                            Blk_Info.Block_Origin_Field,
@@ -531,17 +531,19 @@ package body Trans.Chap1 is
       Base_Block   : Iir;
       Base_Info    : Block_Info_Acc);
 
-   procedure Translate_Generate_Block_Configuration_Calls
+   procedure Translate_For_Generate_Block_Configuration_Calls
      (Block_Config : Iir_Block_Configuration;
       Parent_Info  : Block_Info_Acc)
    is
       Spec   : constant Iir := Get_Block_Specification (Block_Config);
-      Block  : constant Iir := Get_Block_From_Block_Specification (Spec);
-      Info   : constant Block_Info_Acc := Get_Info (Block);
-      Scheme : constant Iir := Get_Generation_Scheme (Block);
+      Bod    : constant Iir := Get_Block_From_Block_Specification (Spec);
+      Block  : constant Iir := Get_Parent (Bod);
+      Info   : constant Block_Info_Acc := Get_Info (Bod);
 
-      Type_Info : Type_Info_Acc;
-      Iter_Type : Iir;
+      Iter : constant Iir := Get_Parameter_Specification (Block);
+      Iter_Type : constant Iir := Get_Type (Iter);
+      Type_Info : constant Type_Info_Acc :=
+        Get_Info (Get_Base_Type (Iter_Type));
 
       --  Generate a call for a iterative generate block whose index is
       --  INDEX.
@@ -578,7 +580,7 @@ package body Trans.Chap1 is
             Info.Block_Configured_Field),
             New_Lit (Ghdl_Bool_True_Node));
          Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var_Inst);
-         Translate_Block_Configuration_Calls (Block_Config, Block, Info);
+         Translate_Block_Configuration_Calls (Block_Config, Bod, Info);
          Clear_Scope (Info.Block_Scope);
 
          if Fails then
@@ -620,135 +622,137 @@ package body Trans.Chap1 is
          Finish_Declare_Stmt;
       end Apply_To_All_Others_Blocks;
    begin
-      if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
-         Iter_Type := Get_Type (Scheme);
-         Type_Info := Get_Info (Get_Base_Type (Iter_Type));
-         case Get_Kind (Spec) is
-            when Iir_Kind_Generate_Statement
-               | Iir_Kind_Simple_Name =>
-               Apply_To_All_Others_Blocks (True);
-            when Iir_Kind_Indexed_Name =>
-               declare
-                  Index_List : constant Iir_List := Get_Index_List (Spec);
-                  Rng        : Mnode;
-               begin
-                  if Index_List = Iir_List_Others then
-                     Apply_To_All_Others_Blocks (False);
-                  else
-                     Open_Temp;
-                     Rng := Stabilize (Chap3.Type_To_Range (Iter_Type));
-                     Gen_Subblock_Call
-                       (Chap6.Translate_Index_To_Offset
-                          (Rng,
-                           Chap7.Translate_Expression
-                             (Get_Nth_Element (Index_List, 0), Iter_Type),
-                           Scheme, Iter_Type, Spec),
-                        True);
-                     Close_Temp;
-                  end if;
-               end;
-            when Iir_Kind_Slice_Name =>
-               declare
-                  Rng         : Mnode;
-                  Slice       : O_Dnode;
-                  Left, Right : O_Dnode;
-                  Index       : O_Dnode;
-                  High        : O_Dnode;
-                  If_Blk      : O_If_Block;
-                  Label       : O_Snode;
-               begin
+      case Get_Kind (Spec) is
+         when Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Simple_Name =>
+            Apply_To_All_Others_Blocks (True);
+         when Iir_Kind_Indexed_Name =>
+            declare
+               Index_List : constant Iir_List := Get_Index_List (Spec);
+               Rng        : Mnode;
+            begin
+               if Index_List = Iir_List_Others then
+                  Apply_To_All_Others_Blocks (False);
+               else
                   Open_Temp;
                   Rng := Stabilize (Chap3.Type_To_Range (Iter_Type));
-                  Slice := Create_Temp (Type_Info.T.Range_Type);
-                  Chap7.Translate_Discrete_Range
-                    (Dv2M (Slice, Type_Info, Mode_Value,
-                           Type_Info.T.Range_Type, Type_Info.T.Range_Ptr_Type),
-                     Get_Suffix (Spec));
-                  Left := Create_Temp_Init
-                    (Ghdl_Index_Type,
-                     Chap6.Translate_Index_To_Offset
+                  Gen_Subblock_Call
+                    (Chap6.Translate_Index_To_Offset
                        (Rng,
-                        New_Value (New_Selected_Element
-                          (New_Obj (Slice), Type_Info.T.Range_Left)),
-                        Spec, Iter_Type, Spec));
-                  Right := Create_Temp_Init
-                    (Ghdl_Index_Type,
-                     Chap6.Translate_Index_To_Offset
-                       (Rng,
-                        New_Value (New_Selected_Element
-                          (New_Obj (Slice),
-                               Type_Info.T.Range_Right)),
-                        Spec, Iter_Type, Spec));
-                  Index := Create_Temp (Ghdl_Index_Type);
-                  High := Create_Temp (Ghdl_Index_Type);
-                  Start_If_Stmt
-                    (If_Blk,
-                     New_Compare_Op (ON_Eq,
-                       M2E (Chap3.Range_To_Dir (Rng)),
-                       New_Value
-                         (New_Selected_Element
-                            (New_Obj (Slice),
-                             Type_Info.T.Range_Dir)),
-                       Ghdl_Bool_Type));
-                  --  Same direction, so left to right.
-                  New_Assign_Stmt (New_Obj (Index),
-                                   New_Value (New_Obj (Left)));
-                  New_Assign_Stmt (New_Obj (High),
-                                   New_Value (New_Obj (Right)));
-                  New_Else_Stmt (If_Blk);
-                  --  Opposite direction, so right to left.
-                  New_Assign_Stmt (New_Obj (Index),
-                                   New_Value (New_Obj (Right)));
-                  New_Assign_Stmt (New_Obj (High),
-                                   New_Value (New_Obj (Left)));
-                  Finish_If_Stmt (If_Blk);
+                        Chap7.Translate_Expression
+                          (Get_Nth_Element (Index_List, 0), Iter_Type),
+                        Iter, Iter_Type, Spec),
+                     True);
+                  Close_Temp;
+               end if;
+            end;
+         when Iir_Kind_Slice_Name =>
+            declare
+               Rng         : Mnode;
+               Slice       : O_Dnode;
+               Left, Right : O_Dnode;
+               Index       : O_Dnode;
+               High        : O_Dnode;
+               If_Blk      : O_If_Block;
+               Label       : O_Snode;
+            begin
+               Open_Temp;
+               Rng := Stabilize (Chap3.Type_To_Range (Iter_Type));
+               Slice := Create_Temp (Type_Info.T.Range_Type);
+               Chap7.Translate_Discrete_Range
+                 (Dv2M (Slice, Type_Info, Mode_Value,
+                        Type_Info.T.Range_Type, Type_Info.T.Range_Ptr_Type),
+                  Get_Suffix (Spec));
+               Left := Create_Temp_Init
+                 (Ghdl_Index_Type,
+                  Chap6.Translate_Index_To_Offset
+                    (Rng,
+                     New_Value (New_Selected_Element
+                                  (New_Obj (Slice), Type_Info.T.Range_Left)),
+                     Spec, Iter_Type, Spec));
+               Right := Create_Temp_Init
+                 (Ghdl_Index_Type,
+                  Chap6.Translate_Index_To_Offset
+                    (Rng,
+                     New_Value (New_Selected_Element
+                                  (New_Obj (Slice),
+                                   Type_Info.T.Range_Right)),
+                     Spec, Iter_Type, Spec));
+               Index := Create_Temp (Ghdl_Index_Type);
+               High := Create_Temp (Ghdl_Index_Type);
+               Start_If_Stmt
+                 (If_Blk,
+                  New_Compare_Op (ON_Eq,
+                                  M2E (Chap3.Range_To_Dir (Rng)),
+                                  New_Value
+                                    (New_Selected_Element
+                                       (New_Obj (Slice),
+                                        Type_Info.T.Range_Dir)),
+                                  Ghdl_Bool_Type));
+               --  Same direction, so left to right.
+               New_Assign_Stmt (New_Obj (Index),
+                                New_Value (New_Obj (Left)));
+               New_Assign_Stmt (New_Obj (High),
+                                New_Value (New_Obj (Right)));
+               New_Else_Stmt (If_Blk);
+               --  Opposite direction, so right to left.
+               New_Assign_Stmt (New_Obj (Index),
+                                New_Value (New_Obj (Right)));
+               New_Assign_Stmt (New_Obj (High),
+                                New_Value (New_Obj (Left)));
+               Finish_If_Stmt (If_Blk);
 
-                  --  Loop.
-                  Start_Loop_Stmt (Label);
-                  Gen_Exit_When
-                    (Label, New_Compare_Op (ON_Gt,
-                     New_Value (New_Obj (Index)),
-                     New_Value (New_Obj (High)),
-                     Ghdl_Bool_Type));
-                  Open_Temp;
-                  Gen_Subblock_Call (New_Value (New_Obj (Index)), True);
-                  Close_Temp;
-                  Inc_Var (Index);
-                  Finish_Loop_Stmt (Label);
-                  Close_Temp;
-               end;
-            when others =>
-               Error_Kind
-                 ("translate_generate_block_configuration_calls", Spec);
-         end case;
-      else
-         --  Conditional generate statement.
-         declare
-            Var    : O_Dnode;
-            If_Blk : O_If_Block;
-         begin
-            --  Configure the block only if it was created.
-            Open_Temp;
-            Var := Create_Temp_Init
-              (Info.Block_Decls_Ptr_Type,
-               New_Value (New_Selected_Element
-                 (Get_Instance_Ref (Parent_Info.Block_Scope),
-                      Info.Block_Parent_Field)));
-            Start_If_Stmt
-              (If_Blk,
-               New_Compare_Op
-                 (ON_Neq,
-                  New_Obj_Value (Var),
-                  New_Lit (New_Null_Access (Info.Block_Decls_Ptr_Type)),
-                  Ghdl_Bool_Type));
-            Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var);
-            Translate_Block_Configuration_Calls (Block_Config, Block, Info);
-            Clear_Scope (Info.Block_Scope);
-            Finish_If_Stmt (If_Blk);
-            Close_Temp;
-         end;
-      end if;
-   end Translate_Generate_Block_Configuration_Calls;
+               --  Loop.
+               Start_Loop_Stmt (Label);
+               Gen_Exit_When
+                 (Label, New_Compare_Op (ON_Gt,
+                                         New_Value (New_Obj (Index)),
+                                         New_Value (New_Obj (High)),
+                                         Ghdl_Bool_Type));
+               Open_Temp;
+               Gen_Subblock_Call (New_Value (New_Obj (Index)), True);
+               Close_Temp;
+               Inc_Var (Index);
+               Finish_Loop_Stmt (Label);
+               Close_Temp;
+            end;
+         when others =>
+            Error_Kind
+              ("translate_for_generate_block_configuration_calls", Spec);
+      end case;
+   end Translate_For_Generate_Block_Configuration_Calls;
+
+   procedure Translate_If_Generate_Block_Configuration_Calls
+     (Block_Config : Iir_Block_Configuration;
+      Parent_Info  : Block_Info_Acc)
+   is
+      Spec   : constant Iir := Get_Block_Specification (Block_Config);
+      Block  : constant Iir := Get_Block_From_Block_Specification (Spec);
+      Info   : constant Block_Info_Acc := Get_Info (Block);
+      Var    : O_Dnode;
+      If_Blk : O_If_Block;
+
+   begin
+      --  Configure the block only if it was created.
+      Open_Temp;
+      Var := Create_Temp_Init
+        (Info.Block_Decls_Ptr_Type,
+         New_Value (New_Selected_Element
+                      (Get_Instance_Ref (Parent_Info.Block_Scope),
+                       Info.Block_Parent_Field)));
+      Start_If_Stmt
+        (If_Blk,
+         New_Compare_Op
+           (ON_Neq,
+            New_Obj_Value (Var),
+            New_Lit (New_Null_Access (Info.Block_Decls_Ptr_Type)),
+            Ghdl_Bool_Type));
+      Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var);
+      Translate_Block_Configuration_Calls (Block_Config, Block, Info);
+      Clear_Scope (Info.Block_Scope);
+      Finish_If_Stmt (If_Blk);
+      Close_Temp;
+   end Translate_If_Generate_Block_Configuration_Calls;
 
    procedure Translate_Block_Configuration_Calls
      (Block_Config : Iir_Block_Configuration;
@@ -766,16 +770,40 @@ package body Trans.Chap1 is
                  (El, Base_Block, Base_Info);
             when Iir_Kind_Block_Configuration =>
                declare
-                  Block : constant Iir := Strip_Denoting_Name
-                    (Get_Block_Specification (El));
+                  Block : Iir;
                begin
-                  if Get_Kind (Block) = Iir_Kind_Block_Statement then
-                     Translate_Block_Configuration_Calls
-                       (El, Base_Block, Get_Info (Block));
-                  else
-                     Translate_Generate_Block_Configuration_Calls
-                       (El, Base_Info);
-                  end if;
+                  Block := Get_Block_Specification (El);
+                  case Get_Kind (Block) is
+                     when Iir_Kind_Indexed_Name
+                       | Iir_Kind_Slice_Name =>
+                        Block := Get_Named_Entity (Get_Prefix (Block));
+                     when Iir_Kinds_Denoting_Name =>
+                        Block := Get_Named_Entity (Block);
+                     when others =>
+                        null;
+                  end case;
+
+                  case Get_Kind (Block) is
+                     when Iir_Kind_Block_Statement =>
+                        Translate_Block_Configuration_Calls
+                          (El, Base_Block, Get_Info (Block));
+                     when Iir_Kind_Generate_Statement_Body =>
+                        case Get_Kind (Get_Parent (Block)) is
+                           when Iir_Kind_If_Generate_Statement =>
+                              Translate_If_Generate_Block_Configuration_Calls
+                                (El, Base_Info);
+                           when Iir_Kind_For_Generate_Statement =>
+                              Translate_For_Generate_Block_Configuration_Calls
+                                (El, Base_Info);
+                           when others =>
+                              Error_Kind
+                                ("translate_block_configuration_calls(3)",
+                                 Get_Parent (Block));
+                        end case;
+                     when others =>
+                        Error_Kind
+                          ("translate_block_configuration_calls(4)", Block);
+                  end case;
                end;
             when others =>
                Error_Kind ("translate_block_configuration_calls(2)", El);

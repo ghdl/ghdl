@@ -662,7 +662,12 @@ package body Errorout is
 
          when Iir_Kind_Concurrent_Procedure_Call_Statement =>
             return "concurrent procedure call";
-         when Iir_Kind_Generate_Statement =>
+         when Iir_Kind_For_Generate_Statement =>
+            return "for generate statement";
+         when Iir_Kind_If_Generate_Statement
+           | Iir_Kind_If_Generate_Else_Clause =>
+            return "if generate statement";
+         when Iir_Kind_Generate_Statement_Body =>
             return "generate statement";
 
          when Iir_Kind_Simple_Simultaneous_Statement =>

@@ -1702,7 +1702,7 @@ package body Sem_Decls is
                  | Iir_Kind_Package_Declaration
                  | Iir_Kind_Package_Body
                  | Iir_Kind_Block_Statement
-                 | Iir_Kind_Generate_Statement =>
+                 | Iir_Kind_Generate_Statement_Body =>
                   if not Get_Shared_Flag (Decl) then
                      Error_Msg_Sem
                        ("non shared variable declaration not allowed here",
@@ -2890,10 +2890,12 @@ package body Sem_Decls is
                --  May be used in architecture.
                null;
             when Iir_Kind_Architecture_Body
-              | Iir_Kind_Block_Statement
-              | Iir_Kind_Generate_Statement =>
+              | Iir_Kind_Block_Statement =>
                --  Might be used in a configuration.
                --  FIXME: create a second level of warning.
+               null;
+            when  Iir_Kind_Generate_Statement_Body =>
+               --  Might be used in a configuration.
                null;
             when Iir_Kind_Package_Body
               | Iir_Kind_Protected_Type_Body =>

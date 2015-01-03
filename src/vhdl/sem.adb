@@ -669,6 +669,107 @@ package body Sem is
       Close_Declarative_Region;
    end Sem_Configuration_Declaration;
 
+   --  Analyze the block specification of a block statement or of a generate
+   --  statement.  Return the corresponding block statement, generate
+   --  statement body, or Null_Iir in case of error.
+   function Sem_Block_Specification_Of_Statement
+     (Block_Conf : Iir_Block_Configuration; Father : Iir) return Iir
+   is
+      Block_Spec : Iir;
+      Block_Name : Iir;
+      Block_Stmts : Iir;
+      Prev : Iir_Block_Configuration;
+      Block : Iir;
+      Res : Iir;
+   begin
+      Block_Spec := Get_Block_Specification (Block_Conf);
+      case Get_Kind (Block_Spec) is
+         when Iir_Kind_Simple_Name =>
+            Block_Name := Block_Spec;
+         when Iir_Kind_Parenthesis_Name
+           | Iir_Kind_Slice_Name =>
+            Block_Name := Get_Prefix (Block_Spec);
+         when others =>
+            Error_Msg_Sem ("label expected", Block_Spec);
+            return Null_Iir;
+      end case;
+
+      --  Analyze the label.
+      Block_Name := Sem_Denoting_Name (Block_Name);
+      Block := Get_Named_Entity (Block_Name);
+      case Get_Kind (Block) is
+         when Iir_Kind_Block_Statement =>
+            if Get_Kind (Block_Spec) /= Iir_Kind_Simple_Name then
+               Error_Msg_Sem ("label does not denote a generate statement",
+                              Block_Spec);
+            end if;
+            Prev := Get_Block_Block_Configuration (Block);
+            if Prev /= Null_Iir then
+               Error_Msg_Sem
+                 (Disp_Node (Block) & " was already configured at "
+                    & Disp_Location (Prev),
+                  Block_Conf);
+               return Null_Iir;
+            end if;
+            Set_Block_Block_Configuration (Block, Block_Conf);
+            Res := Block;
+         when Iir_Kind_For_Generate_Statement
+           | Iir_Kind_If_Generate_Statement =>
+            if Get_Kind (Block_Spec) /= Iir_Kind_Simple_Name
+              and then
+              Get_Kind (Block) /= Iir_Kind_For_Generate_Statement
+            then
+               --  LRM93 1.3
+               --  If the block specification of a block configuration
+               --  contains a generate statement label, and if this
+               --  label contains an index specification, then it is
+               --  an error if the generate statement denoted by the
+               --  label does not have a generation scheme including
+               --  the reserved word for.
+               Error_Msg_Sem ("generate statement does not has a for",
+                              Block_Spec);
+               return Null_Iir;
+            end if;
+
+            Res := Get_Generate_Statement_Body (Block);
+            Set_Named_Entity (Block_Name, Res);
+            Set_Prev_Block_Configuration
+              (Block_Conf, Get_Generate_Block_Configuration (Res));
+            Set_Generate_Block_Configuration (Res, Block_Conf);
+         when others =>
+            Error_Msg_Sem ("block statement label expected", Block_Conf);
+            return Null_Iir;
+      end case;
+
+      --  LRM93 1.3.1 / LRM08 3.4.2 Block configuration
+      --  [...], and the label must denote a block statement or generate
+      --  statement that is contained immediatly within the block denoted by
+      --  the block specification of the containing block configuration.
+      Block_Stmts := Get_Concurrent_Statement_Chain
+        (Get_Block_From_Block_Specification
+           (Get_Block_Specification (Father)));
+      if not Is_In_Chain (Block_Stmts, Block) then
+         Error_Msg_Sem ("label does not denotes an inner block statement",
+                        Block_Conf);
+         return Null_Iir;
+      end if;
+
+      case Get_Kind (Block_Spec) is
+         when Iir_Kind_Simple_Name =>
+            Set_Block_Specification (Block_Conf, Block_Name);
+         when Iir_Kind_Parenthesis_Name =>
+            Block_Spec := Sem_Index_Specification
+              (Block_Spec, Get_Type (Get_Parameter_Specification (Block)));
+            if Block_Spec /= Null_Iir then
+               Set_Prefix (Block_Spec, Block_Name);
+               Set_Block_Specification (Block_Conf, Block_Spec);
+            end if;
+         when others =>
+            raise Internal_Error;
+      end case;
+      return Res;
+   end Sem_Block_Specification_Of_Statement;
+
    --  LRM 1.3.1  Block Configuration.
    --  FATHER is the block_configuration, configuration_declaration,
    --  component_configuration containing the block_configuration BLOCK_CONF.
@@ -784,7 +885,7 @@ package body Sem is
             end;
 
          when Iir_Kind_Block_Configuration =>
-            --  LRM93 1.3.1
+            --  LRM93 1.3.1 / LRM08 3.4.2 Block configuration
             --  If a block configuration appears immediately within another
             --  block configuration, then the block specification of the
             --  contained block configuration must be a block statement or
@@ -792,102 +893,10 @@ package body Sem is
             --  statement or generate statement that is contained immediatly
             --  within the block denoted by the block specification of the
             --  containing block configuration.
-            declare
-               Block_Spec : Iir;
-               Block_Name : Iir;
-               Block_Stmts : Iir;
-               Block_Spec_Kind : Iir_Kind;
-               Prev : Iir_Block_Configuration;
-            begin
-               Block_Spec := Get_Block_Specification (Block_Conf);
-               --  Remember the kind of BLOCK_SPEC, since the node can be free
-               --  by find_declaration if it is a simple name.
-               Block_Spec_Kind := Get_Kind (Block_Spec);
-               case Block_Spec_Kind is
-                  when Iir_Kind_Simple_Name =>
-                     Block_Name := Block_Spec;
-                  when Iir_Kind_Parenthesis_Name =>
-                     Block_Name := Get_Prefix (Block_Spec);
-                  when Iir_Kind_Slice_Name =>
-                     Block_Name := Get_Prefix (Block_Spec);
-                  when others =>
-                     Error_Msg_Sem ("label expected", Block_Spec);
-                     return;
-               end case;
-               Block_Name := Sem_Denoting_Name (Block_Name);
-               Block := Get_Named_Entity (Block_Name);
-               case Get_Kind (Block) is
-                  when Iir_Kind_Block_Statement =>
-                     if Block_Spec_Kind /= Iir_Kind_Simple_Name then
-                        Error_Msg_Sem
-                          ("label does not denote a generate statement",
-                           Block_Spec);
-                     end if;
-                     Prev := Get_Block_Block_Configuration (Block);
-                     if Prev /= Null_Iir then
-                        Error_Msg_Sem
-                          (Disp_Node (Block) & " was already configured at "
-                           & Disp_Location (Prev),
-                           Block_Conf);
-                        return;
-                     end if;
-                     Set_Block_Block_Configuration (Block, Block_Conf);
-                  when Iir_Kind_Generate_Statement =>
-                     if Block_Spec_Kind /= Iir_Kind_Simple_Name
-                       and then Get_Kind (Get_Generation_Scheme (Block))
-                       /= Iir_Kind_Iterator_Declaration
-                     then
-                        --  LRM93 1.3
-                        --  If the block specification of a block configuration
-                        --  contains a generate statement label, and if this
-                        --  label contains an index specification, then it is
-                        --  an error if the generate statement denoted by the
-                        --  label does not have a generation scheme including
-                        --  the reserved word for.
-                        Error_Msg_Sem ("generate statement does not has a for",
-                                       Block_Spec);
-                        return;
-                     end if;
-                     Set_Prev_Block_Configuration
-                       (Block_Conf, Get_Generate_Block_Configuration (Block));
-                     Set_Generate_Block_Configuration (Block, Block_Conf);
-                  when others =>
-                     Error_Msg_Sem ("block statement label expected",
-                                    Block_Conf);
-                     return;
-               end case;
-               Block_Stmts := Get_Concurrent_Statement_Chain
-                 (Get_Block_From_Block_Specification
-                  (Get_Block_Specification (Father)));
-               if not Is_In_Chain (Block_Stmts, Block) then
-                  Error_Msg_Sem
-                    ("label does not denotes an inner block statement",
-                     Block_Conf);
-                  return;
-               end if;
-
-               if Block_Spec_Kind = Iir_Kind_Parenthesis_Name then
-                  Block_Spec := Sem_Index_Specification
-                    (Block_Spec, Get_Type (Get_Generation_Scheme (Block)));
-                  if Block_Spec /= Null_Iir then
-                     Set_Prefix (Block_Spec, Block_Name);
-                     Set_Block_Specification (Block_Conf, Block_Spec);
-                     Block_Spec_Kind := Get_Kind (Block_Spec);
-                  end if;
-               end if;
-
-               case Block_Spec_Kind is
-                  when Iir_Kind_Simple_Name =>
-                     Set_Block_Specification (Block_Conf, Block_Name);
-                  when Iir_Kind_Indexed_Name
-                    | Iir_Kind_Slice_Name =>
-                     null;
-                  when Iir_Kind_Parenthesis_Name =>
-                     null;
-                  when others =>
-                     raise Internal_Error;
-               end case;
-            end;
+            Block := Sem_Block_Specification_Of_Statement (Block_Conf, Father);
+            if Block = Null_Iir then
+               return;
+            end if;
 
          when others =>
             Error_Kind ("sem_block_configuration", Father);

@@ -1682,7 +1682,8 @@ package body Ghdlprint is
                      C := 'm';
                   when Iir_Kind_Component_Instantiation_Statement =>
                      C := 'I';
-                  when Iir_Kind_Generate_Statement =>
+                  when Iir_Kind_If_Generate_Statement
+                     | Iir_Kind_For_Generate_Statement =>
                      C := 'G';
                   when others =>
                      C := '?';

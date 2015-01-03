@@ -74,7 +74,8 @@ package body Sem_Specs is
            | Iir_Kind_Concurrent_Assertion_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Block_Statement
-           | Iir_Kind_Generate_Statement
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_For_Loop_Statement
            | Iir_Kind_While_Loop_Statement
@@ -530,7 +531,8 @@ package body Sem_Specs is
                      end loop;
                   end;
 
-               when Iir_Kind_Generate_Statement =>
+               when Iir_Kind_If_Generate_Statement
+                 | Iir_Kind_For_Generate_Statement =>
                   --  INT-1991/issue 27
                   --  Generate statements represent declarative region and
                   --  have implicit declarative parts.
@@ -619,7 +621,7 @@ package body Sem_Specs is
       case Get_Kind (Scope) is
          when Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Generate_Statement =>
+           | Iir_Kind_Generate_Statement_Body =>
             Sem_Named_Entity_Chain (Get_Declaration_Chain (Scope));
             Sem_Named_Entity_Chain (Get_Concurrent_Statement_Chain (Scope));
          when Iir_Kind_Block_Statement =>
@@ -1283,7 +1285,8 @@ package body Sem_Specs is
                        (El, Spec, Primary_Entity_Aspect);
                      Res := True;
                   end if;
-               when Iir_Kind_Generate_Statement =>
+               when Iir_Kind_For_Generate_Statement
+                 | Iir_Kind_If_Generate_Statement =>
                   if False and then Flags.Vhdl_Std = Vhdl_87 then
                      Res := Res
                        or Apply_Component_Specification (El, Check_Applied);
