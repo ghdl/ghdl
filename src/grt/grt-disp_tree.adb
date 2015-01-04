@@ -112,13 +112,15 @@ package body Grt.Disp_Tree is
             end;
          when Ghdl_Rtik_For_Generate =>
             declare
-               Blk : constant Ghdl_Rtin_Block_Acc :=
-                 To_Ghdl_Rtin_Block_Acc (Rti);
-               Iter : Ghdl_Rtin_Object_Acc;
+               Gen : constant Ghdl_Rtin_Generate_Acc :=
+                 To_Ghdl_Rtin_Generate_Acc (Rti);
+               Bod : constant Ghdl_Rtin_Block_Acc :=
+                 To_Ghdl_Rtin_Block_Acc (Gen.Child);
+               Iter : constant Ghdl_Rtin_Object_Acc :=
+                 To_Ghdl_Rtin_Object_Acc (Bod.Children (0));
                Addr : Address;
             begin
-               Disp_Name (Blk.Name);
-               Iter := To_Ghdl_Rtin_Object_Acc (Blk.Children (0));
+               Disp_Name (Gen.Name);
                Addr := Loc_To_Addr (Iter.Common.Depth, Iter.Loc, Ctxt);
                Put ('(');
                Disp_Value (stdout, Iter.Obj_Type, Ctxt, Addr, False);
@@ -251,24 +253,25 @@ package body Grt.Disp_Tree is
                end;
             when Ghdl_Rtik_For_Generate =>
                declare
-                  Nblk : constant Ghdl_Rtin_Block_Acc :=
-                    To_Ghdl_Rtin_Block_Acc (Child);
+                  Gen : constant Ghdl_Rtin_Generate_Acc :=
+                    To_Ghdl_Rtin_Generate_Acc (Child);
                   Nctxt : Rti_Context;
                   Length : Ghdl_Index_Type;
                   Old_Child2 : Ghdl_Rti_Access;
                begin
-                  Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc).all,
-                            Block => Child);
-                  Length := Get_For_Generate_Length (Nblk, Ctxt);
+                  Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Gen.Loc).all,
+                            Block => Gen.Child);
+                  Length := Get_For_Generate_Length (Gen, Ctxt);
                   Disp_Header (Nctxt, Length > 1);
                   Old_Child2 := Child2;
                   if Length > 1 then
                      Child2 := Child;
                   end if;
                   for I in 1 .. Length loop
-                     Disp_Sub_Block (Nblk, Nctxt);
+                     Disp_Sub_Block
+                       (To_Ghdl_Rtin_Block_Acc (Gen.Child), Nctxt);
                      if I /= Length then
-                        Nctxt.Base := Nctxt.Base + Nblk.Size;
+                        Nctxt.Base := Nctxt.Base + Gen.Size;
                         if I = Length - 1 then
                            Child2 := Old_Child2;
                         end if;
@@ -279,15 +282,16 @@ package body Grt.Disp_Tree is
                end;
             when Ghdl_Rtik_If_Generate =>
                declare
-                  Nblk : constant Ghdl_Rtin_Block_Acc :=
-                    To_Ghdl_Rtin_Block_Acc (Child);
+                  Gen : constant Ghdl_Rtin_Generate_Acc :=
+                    To_Ghdl_Rtin_Generate_Acc (Child);
                   Nctxt : Rti_Context;
                begin
-                  Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc).all,
-                            Block => Child);
+                  Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Gen.Loc).all,
+                            Block => Gen.Child);
                   Disp_Header (Nctxt);
                   if Nctxt.Base /= Null_Address then
-                     Disp_Sub_Block (Nblk, Nctxt);
+                     Disp_Sub_Block
+                       (To_Ghdl_Rtin_Block_Acc (Gen.Child), Nctxt);
                   end if;
                end;
             when Ghdl_Rtik_Instance =>

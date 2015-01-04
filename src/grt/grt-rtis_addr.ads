@@ -70,8 +70,8 @@ package Grt.Rtis_Addr is
                          Ctxt : Rti_Context)
                         return Address;
 
-   --  Get the length of for_generate BLK.
-   function Get_For_Generate_Length (Blk : Ghdl_Rtin_Block_Acc;
+   --  Get the length of for_generate GEN.
+   function Get_For_Generate_Length (Gen : Ghdl_Rtin_Generate_Acc;
                                      Ctxt : Rti_Context)
                                     return Ghdl_Index_Type;
 

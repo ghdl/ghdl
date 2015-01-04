@@ -29,6 +29,7 @@ package Trans.Rtis is
    Ghdl_Rtik_Block                       : O_Cnode;
    Ghdl_Rtik_If_Generate                 : O_Cnode;
    Ghdl_Rtik_For_Generate                : O_Cnode;
+   Ghdl_Rtik_Generate_Body               : O_Cnode;
    Ghdl_Rtik_Instance                    : O_Cnode;
    Ghdl_Rtik_Constant                    : O_Cnode;
    Ghdl_Rtik_Iterator                    : O_Cnode;

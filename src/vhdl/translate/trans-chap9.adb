@@ -708,7 +708,8 @@ package body Trans.Chap9 is
                   Chap1.Start_Block_Decl (Bod);
                   Push_Instance_Factory (Info.Block_Scope'Access);
 
-                  --  Add a parent field in the current instance.
+                  --  Add a parent field in the current instance.  This is
+                  --  the first field (known by GRT).
                   Info.Block_Origin_Field := Add_Instance_Factory_Field
                     (Get_Identifier ("ORIGIN"),
                      Get_Info (Origin).Block_Decls_Ptr_Type);

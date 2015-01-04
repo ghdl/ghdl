@@ -264,10 +264,12 @@ package body Grt.Avhpi is
                goto Again;
             else
                declare
+                  Gen : constant Ghdl_Rtin_Generate_Acc :=
+                    To_Ghdl_Rtin_Generate_Acc (Nblk.Parent);
                   Base : Address;
                begin
                   Base := To_Addr_Acc (Iterator.Ctxt.Base + Nblk.Loc).all;
-                  Base := Base + Iterator.It2 * Nblk.Size;
+                  Base := Base + Iterator.It2 * Gen.Size;
                   Res := (Kind => VhpiForGenerateK,
                           Ctxt => (Base => Base,
                                    Block => Ch));
@@ -295,28 +297,39 @@ package body Grt.Avhpi is
                Error := AvhpiErrorOk;
                return;
             when Ghdl_Rtik_If_Generate =>
-               Res := (Kind => VhpiIfGenerateK,
-                       Ctxt => (Base => To_Addr_Acc (Iterator.Ctxt.Base
-                                                     + Nblk.Loc).all,
-                                Block => Ch));
-               --  Return only if the condition is true.
-               if Res.Ctxt.Base /= Null_Address then
-                  Error := AvhpiErrorOk;
-                  return;
-               end if;
+               declare
+                  Gen : constant Ghdl_Rtin_Generate_Acc :=
+                    To_Ghdl_Rtin_Generate_Acc (Ch);
+               begin
+                  Res := (Kind => VhpiIfGenerateK,
+                          Ctxt => (Base => To_Addr_Acc (Iterator.Ctxt.Base
+                                                          + Gen.Loc).all,
+                                   Block => Gen.Child));
+                  --  Return only if the condition is true.
+                  if Res.Ctxt.Base /= Null_Address then
+                     Error := AvhpiErrorOk;
+                     return;
+                  end if;
+               end;
             when Ghdl_Rtik_For_Generate =>
-               Res := (Kind => VhpiForGenerateK,
-                       Ctxt => (Base => To_Addr_Acc (Iterator.Ctxt.Base
-                                                     + Nblk.Loc).all,
-                                Block => Ch));
-               Iterator.Max2 := Get_For_Generate_Length (Nblk, Iterator.Ctxt);
-               Iterator.It2 := 0;
-               if Iterator.Max2 > 0 then
-                  Iterator.It_Cur := Iterator.It_Cur - 1;
-                  Error := AvhpiErrorOk;
-                  return;
-               end if;
-               --  If the iterator range is nul, then continue to scan.
+               declare
+                  Gen : constant Ghdl_Rtin_Generate_Acc :=
+                    To_Ghdl_Rtin_Generate_Acc (Ch);
+               begin
+                  Res := (Kind => VhpiForGenerateK,
+                          Ctxt => (Base => To_Addr_Acc (Iterator.Ctxt.Base
+                                                          + Gen.Loc).all,
+                                   Block => Gen.Child));
+                  Iterator.Max2 :=
+                    Get_For_Generate_Length (Gen, Iterator.Ctxt);
+                  Iterator.It2 := 0;
+                  if Iterator.Max2 > 0 then
+                     Iterator.It_Cur := Iterator.It_Cur - 1;
+                     Error := AvhpiErrorOk;
+                     return;
+                  end if;
+                  --  If the iterator range is nul, then continue to scan.
+               end;
             when Ghdl_Rtik_Instance =>
                Res := (Kind => VhpiCompInstStmtK,
                        Ctxt => Iterator.Ctxt,

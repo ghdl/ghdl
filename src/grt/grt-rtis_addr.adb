@@ -53,9 +53,9 @@ package body Grt.Rtis_Addr is
 
    function Get_Parent_Context (Ctxt : Rti_Context) return Rti_Context
    is
-      Blk : Ghdl_Rtin_Block_Acc;
+      Blk : constant Ghdl_Rtin_Block_Acc :=
+        To_Ghdl_Rtin_Block_Acc (Ctxt.Block);
    begin
-      Blk := To_Ghdl_Rtin_Block_Acc (Ctxt.Block);
       case Ctxt.Block.Kind is
          when Ghdl_Rtik_Process
            | Ghdl_Rtik_Block =>
@@ -67,35 +67,50 @@ package body Grt.Rtis_Addr is
             end if;
             return (Base => Ctxt.Base + Blk.Loc,
                     Block => Blk.Parent);
-         when Ghdl_Rtik_For_Generate
-           | Ghdl_Rtik_If_Generate =>
+         when Ghdl_Rtik_Generate_Body =>
             declare
                Nbase : Address;
+               Nblk : Ghdl_Rti_Access;
                Parent : Ghdl_Rti_Access;
-               Blk1 : Ghdl_Rtin_Block_Acc;
             begin
                --  Read the pointer to the parent.
                --  This is the first field.
                Nbase := To_Addr_Acc (Ctxt.Base).all;
+               --  Parent (by default).
+               Nblk := Blk.Parent;
                --  Since the parent may be a grant-parent, adjust
-               --  the base.
+               --  the base (so that the substraction above will work).
                Parent := Blk.Parent;
                loop
                   case Parent.Kind is
                      when Ghdl_Rtik_Architecture
-                       | Ghdl_Rtik_For_Generate
-                       | Ghdl_Rtik_If_Generate =>
+                       | Ghdl_Rtik_Generate_Body =>
                         exit;
                      when Ghdl_Rtik_Block =>
-                        Blk1 := To_Ghdl_Rtin_Block_Acc (Parent);
-                        Nbase := Nbase + Blk1.Loc;
-                        Parent := Blk1.Parent;
+                        declare
+                           Blk1 : constant Ghdl_Rtin_Block_Acc :=
+                             To_Ghdl_Rtin_Block_Acc (Parent);
+                        begin
+                           Nbase := Nbase + Blk1.Loc;
+                           Parent := Blk1.Parent;
+                        end;
+                     when Ghdl_Rtik_For_Generate
+                       | Ghdl_Rtik_If_Generate =>
+                        declare
+                           Gen : constant Ghdl_Rtin_Generate_Acc :=
+                             To_Ghdl_Rtin_Generate_Acc (Parent);
+                        begin
+                           Parent := Gen.Parent;
+                           --  For/If generate statement are not blocks.  Skip
+                           --  them.
+                           Nblk := Gen.Parent;
+                        end;
                      when others =>
                         Internal_Error ("get_parent_context(2)");
                   end case;
                end loop;
                return (Base => Nbase,
-                       Block => Blk.Parent);
+                       Block => Nblk);
             end;
          when others =>
             Internal_Error ("get_parent_context(1)");
@@ -166,15 +181,17 @@ package body Grt.Rtis_Addr is
       end case;
    end Range_To_Length;
 
-   function Get_For_Generate_Length (Blk : Ghdl_Rtin_Block_Acc;
+   function Get_For_Generate_Length (Gen : Ghdl_Rtin_Generate_Acc;
                                      Ctxt : Rti_Context)
                                     return Ghdl_Index_Type
    is
+      Bod : constant Ghdl_Rtin_Block_Acc :=
+        To_Ghdl_Rtin_Block_Acc (Gen.Child);
       Iter_Type : Ghdl_Rtin_Subtype_Scalar_Acc;
       Rng : Ghdl_Range_Ptr;
    begin
       Iter_Type := To_Ghdl_Rtin_Subtype_Scalar_Acc
-        (To_Ghdl_Rtin_Object_Acc (Blk.Children (0)).Obj_Type);
+        (To_Ghdl_Rtin_Object_Acc (Bod.Children (0)).Obj_Type);
       if Iter_Type.Common.Kind /= Ghdl_Rtik_Subtype_Scalar then
          Internal_Error ("get_for_generate_length(1)");
       end if;

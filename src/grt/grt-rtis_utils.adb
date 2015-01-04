@@ -63,28 +63,26 @@ package body Grt.Rtis_Utils is
                   end;
                when Ghdl_Rtik_For_Generate =>
                   declare
-                     Nblk : Ghdl_Rtin_Block_Acc;
+                     Gen : constant Ghdl_Rtin_Generate_Acc :=
+                       To_Ghdl_Rtin_Generate_Acc (Child);
                      Length : Ghdl_Index_Type;
                   begin
-                     Nblk := To_Ghdl_Rtin_Block_Acc (Child);
-                     Nctxt :=
-                       (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc).all,
-                        Block => Child);
-                     Length := Get_For_Generate_Length (Nblk, Ctxt);
+                     Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Gen.Loc).all,
+                               Block => Gen.Child);
+                     Length := Get_For_Generate_Length (Gen, Ctxt);
                      for I in 1 .. Length loop
                         Res := Traverse_Blocks_1 (Nctxt);
                         exit when Res = Traverse_Stop;
-                        Nctxt.Base := Nctxt.Base + Nblk.Size;
+                        Nctxt.Base := Nctxt.Base + Gen.Size;
                      end loop;
                   end;
                when Ghdl_Rtik_If_Generate =>
                   declare
-                     Nblk : Ghdl_Rtin_Block_Acc;
+                     Gen : constant Ghdl_Rtin_Generate_Acc :=
+                       To_Ghdl_Rtin_Generate_Acc (Child);
                   begin
-                     Nblk := To_Ghdl_Rtin_Block_Acc (Child);
-                     Nctxt :=
-                       (Base => To_Addr_Acc (Ctxt.Base + Nblk.Loc).all,
-                        Block => Child);
+                     Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Gen.Loc).all,
+                               Block => Gen.Child);
                      if Nctxt.Base /= Null_Address then
                         Res := Traverse_Blocks_1 (Nctxt);
                      end if;

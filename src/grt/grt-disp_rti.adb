@@ -379,6 +379,8 @@ package body Grt.Disp_Rti is
             Put ("ghdl_rtik_if_generate");
          when Ghdl_Rtik_For_Generate =>
             Put ("ghdl_rtik_for_generate");
+         when Ghdl_Rtik_Generate_Body =>
+            Put ("ghdl_rtik_generate_body");
 
          when Ghdl_Rtik_Type_B1 =>
             Put ("ghdl_rtik_type_b1");
@@ -697,30 +699,53 @@ package body Grt.Disp_Rti is
                       Block => To_Ghdl_Rti_Access (Blk));
             Disp_Rti_Arr (Blk.Nbr_Child, Blk.Children,
                           Nctxt, Indent + 1);
-         when Ghdl_Rtik_For_Generate =>
-            declare
-               Length : Ghdl_Index_Type;
-            begin
-               Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Blk.Loc).all,
-                         Block => To_Ghdl_Rti_Access (Blk));
-               Length := Get_For_Generate_Length (Blk, Ctxt);
-               for I in 1 .. Length loop
-                  Disp_Rti_Arr (Blk.Nbr_Child, Blk.Children,
-                                Nctxt, Indent + 1);
-                  Nctxt.Base := Nctxt.Base + Blk.Size;
-               end loop;
-            end;
-         when Ghdl_Rtik_If_Generate =>
-            Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Blk.Loc).all,
-                      Block => To_Ghdl_Rti_Access (Blk));
-            if Nctxt.Base /= Null_Address then
-               Disp_Rti_Arr (Blk.Nbr_Child, Blk.Children,
-                             Nctxt, Indent + 1);
-            end if;
+         when Ghdl_Rtik_Generate_Body =>
+            Disp_Rti_Arr (Blk.Nbr_Child, Blk.Children,
+                          Ctxt, Indent + 1);
          when others =>
             Internal_Error ("disp_block");
       end case;
    end Disp_Block;
+
+   procedure Disp_Generate (Gen : Ghdl_Rtin_Generate_Acc;
+                            Ctxt : Rti_Context;
+                            Indent : Natural)
+   is
+      Nctxt : Rti_Context;
+   begin
+      Disp_Indent (Indent);
+      Disp_Kind (Gen.Common.Kind);
+      Disp_Depth (Gen.Common.Depth);
+      Put (", ");
+      Disp_Linecol (Gen.Linecol);
+      Put (": ");
+      Disp_Name (Gen.Name);
+      New_Line;
+      case Gen.Common.Kind is
+         when Ghdl_Rtik_For_Generate =>
+            declare
+               Length : Ghdl_Index_Type;
+            begin
+               Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Gen.Loc).all,
+                         Block => Gen.Child);
+               Length := Get_For_Generate_Length (Gen, Ctxt);
+               for I in 1 .. Length loop
+                  Disp_Block (To_Ghdl_Rtin_Block_Acc (Gen.Child),
+                              Nctxt, Indent + 1);
+                  Nctxt.Base := Nctxt.Base + Gen.Size;
+               end loop;
+            end;
+         when Ghdl_Rtik_If_Generate =>
+            Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Gen.Loc).all,
+                      Block => Gen.Child);
+            if Nctxt.Base /= Null_Address then
+               Disp_Block (To_Ghdl_Rtin_Block_Acc (Gen.Child),
+                           Nctxt, Indent + 1);
+            end if;
+         when others =>
+            Internal_Error ("disp_generate");
+      end case;
+   end Disp_Generate;
 
    procedure Disp_Object (Obj : Ghdl_Rtin_Object_Acc;
                           Is_Sig : Boolean;
@@ -1056,10 +1081,11 @@ package body Grt.Disp_Rti is
            | Ghdl_Rtik_Architecture
            | Ghdl_Rtik_Package
            | Ghdl_Rtik_Process
-           | Ghdl_Rtik_Block
-           | Ghdl_Rtik_If_Generate
-           | Ghdl_Rtik_For_Generate =>
+           | Ghdl_Rtik_Block =>
             Disp_Block (To_Ghdl_Rtin_Block_Acc (Rti), Ctxt, Indent);
+         when Ghdl_Rtik_If_Generate
+           | Ghdl_Rtik_For_Generate =>
+            Disp_Generate (To_Ghdl_Rtin_Generate_Acc (Rti), Ctxt, Indent);
          when Ghdl_Rtik_Package_Body =>
             Disp_Rti (To_Ghdl_Rtin_Block_Acc (Rti).Parent, Ctxt, Indent);
             Disp_Block (To_Ghdl_Rtin_Block_Acc (Rti), Ctxt, Indent);
