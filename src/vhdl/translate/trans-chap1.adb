@@ -727,31 +727,39 @@ package body Trans.Chap1 is
       Parent_Info  : Block_Info_Acc)
    is
       Spec   : constant Iir := Get_Block_Specification (Block_Config);
-      Block  : constant Iir := Get_Block_From_Block_Specification (Spec);
-      Info   : constant Block_Info_Acc := Get_Info (Block);
+      Bod    : constant Iir := Get_Block_From_Block_Specification (Spec);
+      Gen    : constant Iir := Get_Parent (Bod);
+      Gen_Info : constant Generate_Info_Acc := Get_Info (Gen);
+      Bod_Info : constant Block_Info_Acc := Get_Info (Bod);
       Var    : O_Dnode;
       If_Blk : O_If_Block;
 
    begin
-      --  Configure the block only if it was created.
-      Open_Temp;
-      Var := Create_Temp_Init
-        (Info.Block_Decls_Ptr_Type,
-         New_Value (New_Selected_Element
-                      (Get_Instance_Ref (Parent_Info.Block_Scope),
-                       Info.Block_Parent_Field)));
+      --  Configure the block only if block id matches.
       Start_If_Stmt
         (If_Blk,
          New_Compare_Op
-           (ON_Neq,
-            New_Obj_Value (Var),
-            New_Lit (New_Null_Access (Info.Block_Decls_Ptr_Type)),
+           (ON_Eq,
+            New_Value (New_Selected_Element
+                         (Get_Instance_Ref (Parent_Info.Block_Scope),
+                          Gen_Info.Generate_Body_Id)),
+            New_Lit (New_Index_Lit (Unsigned_64 (Bod_Info.Block_Id))),
             Ghdl_Bool_Type));
-      Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var);
-      Translate_Block_Configuration_Calls (Block_Config, Block, Info);
-      Clear_Scope (Info.Block_Scope);
-      Finish_If_Stmt (If_Blk);
+
+      Open_Temp;
+      Var := Create_Temp_Init
+        (Bod_Info.Block_Decls_Ptr_Type,
+         New_Convert_Ov
+           (New_Value (New_Selected_Element
+                         (Get_Instance_Ref (Parent_Info.Block_Scope),
+                          Gen_Info.Generate_Parent_Field)),
+            Bod_Info.Block_Decls_Ptr_Type));
+      Set_Scope_Via_Param_Ptr (Bod_Info.Block_Scope, Var);
+      Translate_Block_Configuration_Calls (Block_Config, Bod, Bod_Info);
+      Clear_Scope (Bod_Info.Block_Scope);
       Close_Temp;
+
+      Finish_If_Stmt (If_Blk);
    end Translate_If_Generate_Block_Configuration_Calls;
 
    procedure Translate_Block_Configuration_Calls

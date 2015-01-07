@@ -633,6 +633,149 @@ package body Trans.Chap9 is
       end case;
    end Translate_Psl_Directive_Statement;
 
+   procedure Translate_If_Generate_Statement (Stmt : Iir; Origin : Iir)
+   is
+      Clause : Iir;
+      Bod : Iir;
+      Info : Block_Info_Acc;
+      Stmt_Info : Ortho_Info_Acc;
+      Mark : Id_Mark_Type;
+      Mark2 : Id_Mark_Type;
+      Num : Int32;
+   begin
+      Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+
+      Stmt_Info := Add_Info (Stmt, Kind_Generate);
+      Stmt_Info.Generate_Parent_Field := Add_Instance_Factory_Field
+        (Create_Identifier_Without_Prefix (Stmt), Ghdl_Ptr_Type);
+      Stmt_Info.Generate_Body_Id := Add_Instance_Factory_Field
+        (Create_Identifier_Without_Prefix (Get_Identifier (Stmt), "_ID"),
+         Ghdl_Index_Type);
+
+      --  Translate generate statement body.
+      Num := 0;
+      Clause := Stmt;
+      while Clause /= Null_Iir loop
+         Bod := Get_Generate_Statement_Body (Clause);
+         Info := Add_Info (Bod, Kind_Block);
+
+         Push_Identifier_Prefix (Mark2, Get_Alternative_Label (Bod));
+
+         Chap1.Start_Block_Decl (Bod);
+         Push_Instance_Factory (Info.Block_Scope'Access);
+
+         --  Add a parent field in the current instance.
+         Info.Block_Origin_Field := Add_Instance_Factory_Field
+           (Get_Identifier ("ORIGIN"),
+            Get_Info (Origin).Block_Decls_Ptr_Type);
+
+         Info.Block_Id := Num;
+
+         Chap9.Translate_Block_Declarations (Bod, Bod);
+
+         Pop_Instance_Factory (Info.Block_Scope'Access);
+
+         Pop_Identifier_Prefix (Mark2);
+         Clause := Get_Generate_Else_Clause (Clause);
+         Num := Num + 1;
+      end loop;
+
+      Pop_Identifier_Prefix (Mark);
+   end Translate_If_Generate_Statement;
+
+   procedure Translate_For_Generate_Statement (Stmt : Iir; Origin : Iir)
+   is
+      Bod : constant Iir := Get_Generate_Statement_Body (Stmt);
+      Param : constant Iir := Get_Parameter_Specification (Stmt);
+      Iter_Type : constant Iir := Get_Type (Param);
+      Info      : Block_Info_Acc;
+      Mark      : Id_Mark_Type;
+      It_Info   : Ortho_Info_Acc;
+   begin
+      Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+
+      Chap3.Translate_Object_Subtype (Param, True);
+
+      Info := Add_Info (Bod, Kind_Block);
+      Chap1.Start_Block_Decl (Bod);
+      Push_Instance_Factory (Info.Block_Scope'Access);
+
+      --  Add a parent field in the current instance.  This is
+      --  the first field (known by GRT).
+      Info.Block_Origin_Field := Add_Instance_Factory_Field
+        (Get_Identifier ("ORIGIN"),
+         Get_Info (Origin).Block_Decls_Ptr_Type);
+
+      --  Flag (if block was configured).
+      Info.Block_Configured_Field := Add_Instance_Factory_Field
+        (Get_Identifier ("CONFIGURED"), Ghdl_Bool_Type);
+
+                  --  Iterator.
+      It_Info := Add_Info (Param, Kind_Iterator);
+      It_Info.Iterator_Var := Create_Var
+        (Create_Var_Identifier (Param),
+         Get_Info (Get_Base_Type (Iter_Type)).Ortho_Type (Mode_Value));
+
+      Chap9.Translate_Block_Declarations (Bod, Bod);
+
+      Pop_Instance_Factory (Info.Block_Scope'Access);
+
+      --  Create array type of block_decls_type
+      Info.Block_Decls_Array_Type := New_Array_Type
+        (Get_Scope_Type (Info.Block_Scope), Ghdl_Index_Type);
+      New_Type_Decl (Create_Identifier ("INSTARRTYPE"),
+                     Info.Block_Decls_Array_Type);
+      --  Create access to the array type.
+      Info.Block_Decls_Array_Ptr_Type := New_Access_Type
+        (Info.Block_Decls_Array_Type);
+      New_Type_Decl (Create_Identifier ("INSTARRPTR"),
+                     Info.Block_Decls_Array_Ptr_Type);
+
+      --  Add a field in the parent instance (Pop_Instance_Factory
+      --  has already been called).  This is a pointer INSTARRPTR
+      --  to an array INSTARRTYPE of instace.  The size of each
+      --  element is stored in the RTI.
+      Info.Block_Parent_Field := Add_Instance_Factory_Field
+        (Create_Identifier_Without_Prefix (Stmt),
+         Info.Block_Decls_Array_Ptr_Type);
+
+      Pop_Identifier_Prefix (Mark);
+   end Translate_For_Generate_Statement;
+
+   procedure Translate_Block_Statement (Stmt : Iir; Origin : Iir)
+   is
+      Hdr   : constant Iir_Block_Header := Get_Block_Header (Stmt);
+      Guard : constant Iir := Get_Guard_Decl (Stmt);
+      Info  : Block_Info_Acc;
+      Mark  : Id_Mark_Type;
+   begin
+      Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+
+      Info := Add_Info (Stmt, Kind_Block);
+      Chap1.Start_Block_Decl (Stmt);
+      Push_Instance_Factory (Info.Block_Scope'Access);
+
+      --  Implicit guard signal.
+      if Guard /= Null_Iir then
+         Chap4.Translate_Declaration (Guard);
+      end if;
+
+      --  generics, ports.
+      if Hdr /= Null_Iir then
+         Chap4.Translate_Generic_Chain (Hdr);
+         Chap4.Translate_Port_Chain (Hdr);
+      end if;
+
+      Chap9.Translate_Block_Declarations (Stmt, Origin);
+
+      Pop_Instance_Factory (Info.Block_Scope'Access);
+      Pop_Identifier_Prefix (Mark);
+
+      --  Create a field in the parent record.
+      Add_Scope_Field (Create_Identifier_Without_Prefix (Stmt),
+                       Info.Block_Scope);
+   end Translate_Block_Statement;
+
    --  Create the instance for block BLOCK.
    --  ORIGIN can be either an entity, an architecture or a block statement.
    procedure Translate_Block_Declarations (Block : Iir; Origin : Iir)
@@ -657,128 +800,11 @@ package body Trans.Chap9 is
             when Iir_Kind_Component_Instantiation_Statement =>
                Translate_Component_Instantiation_Statement (El);
             when Iir_Kind_Block_Statement =>
-               declare
-                  Info  : Block_Info_Acc;
-                  Hdr   : Iir_Block_Header;
-                  Guard : Iir;
-                  Mark  : Id_Mark_Type;
-               begin
-                  Push_Identifier_Prefix (Mark, Get_Identifier (El));
-
-                  Info := Add_Info (El, Kind_Block);
-                  Chap1.Start_Block_Decl (El);
-                  Push_Instance_Factory (Info.Block_Scope'Access);
-
-                  Guard := Get_Guard_Decl (El);
-                  if Guard /= Null_Iir then
-                     Chap4.Translate_Declaration (Guard);
-                  end if;
-
-                  --  generics, ports.
-                  Hdr := Get_Block_Header (El);
-                  if Hdr /= Null_Iir then
-                     Chap4.Translate_Generic_Chain (Hdr);
-                     Chap4.Translate_Port_Chain (Hdr);
-                  end if;
-
-                  Chap9.Translate_Block_Declarations (El, Origin);
-
-                  Pop_Instance_Factory (Info.Block_Scope'Access);
-                  Pop_Identifier_Prefix (Mark);
-
-                  --  Create a field in the parent record.
-                  Add_Scope_Field
-                    (Create_Identifier_Without_Prefix (El),
-                     Info.Block_Scope);
-               end;
+               Translate_Block_Statement (El, Origin);
             when Iir_Kind_For_Generate_Statement =>
-               declare
-                  Bod : constant Iir := Get_Generate_Statement_Body (El);
-                  Param : constant Iir := Get_Parameter_Specification (El);
-                  Info      : Block_Info_Acc;
-                  Mark      : Id_Mark_Type;
-                  Iter_Type : constant Iir := Get_Type (Param);
-                  It_Info   : Ortho_Info_Acc;
-               begin
-                  Push_Identifier_Prefix (Mark, Get_Identifier (El));
-
-                  Chap3.Translate_Object_Subtype (Param, True);
-
-                  Info := Add_Info (Bod, Kind_Block);
-                  Chap1.Start_Block_Decl (Bod);
-                  Push_Instance_Factory (Info.Block_Scope'Access);
-
-                  --  Add a parent field in the current instance.  This is
-                  --  the first field (known by GRT).
-                  Info.Block_Origin_Field := Add_Instance_Factory_Field
-                    (Get_Identifier ("ORIGIN"),
-                     Get_Info (Origin).Block_Decls_Ptr_Type);
-
-                  --  Flag (if block was configured).
-                  Info.Block_Configured_Field :=
-                    Add_Instance_Factory_Field
-                    (Get_Identifier ("CONFIGURED"), Ghdl_Bool_Type);
-
-                  --  Iterator.
-                  It_Info := Add_Info (Param, Kind_Iterator);
-                  It_Info.Iterator_Var := Create_Var
-                    (Create_Var_Identifier (Param),
-                     Get_Info (Get_Base_Type (Iter_Type)).Ortho_Type
-                       (Mode_Value));
-
-                  Chap9.Translate_Block_Declarations (Bod, Bod);
-
-                  Pop_Instance_Factory (Info.Block_Scope'Access);
-
-                  --  Create array type of block_decls_type
-                  Info.Block_Decls_Array_Type := New_Array_Type
-                    (Get_Scope_Type (Info.Block_Scope), Ghdl_Index_Type);
-                  New_Type_Decl (Create_Identifier ("INSTARRTYPE"),
-                                 Info.Block_Decls_Array_Type);
-                  --  Create access to the array type.
-                  Info.Block_Decls_Array_Ptr_Type := New_Access_Type
-                    (Info.Block_Decls_Array_Type);
-                  New_Type_Decl (Create_Identifier ("INSTARRPTR"),
-                                 Info.Block_Decls_Array_Ptr_Type);
-
-                  --  Add a field in the parent instance (Pop_Instance_Factory
-                  --  has already been called).  This is a pointer INSTARRPTR
-                  --  to an array INSTARRTYPE of instace.  The size of each
-                  --  element is stored in the RTI.
-                  Info.Block_Parent_Field := Add_Instance_Factory_Field
-                    (Create_Identifier_Without_Prefix (El),
-                     Info.Block_Decls_Array_Ptr_Type);
-
-                  Pop_Identifier_Prefix (Mark);
-               end;
+               Translate_For_Generate_Statement (El, Origin);
             when Iir_Kind_If_Generate_Statement =>
-               declare
-                  Bod : constant Iir := Get_Generate_Statement_Body (El);
-                  Info : Block_Info_Acc;
-                  Mark : Id_Mark_Type;
-               begin
-                  Push_Identifier_Prefix (Mark, Get_Identifier (El));
-
-                  Info := Add_Info (Bod, Kind_Block);
-                  Chap1.Start_Block_Decl (Bod);
-                  Push_Instance_Factory (Info.Block_Scope'Access);
-
-                  --  Add a parent field in the current instance.
-                  Info.Block_Origin_Field := Add_Instance_Factory_Field
-                    (Get_Identifier ("ORIGIN"),
-                     Get_Info (Origin).Block_Decls_Ptr_Type);
-
-                  Chap9.Translate_Block_Declarations (Bod, Bod);
-
-                  Pop_Instance_Factory (Info.Block_Scope'Access);
-
-                  --  Create an access field in the parent record.
-                  Info.Block_Parent_Field := Add_Instance_Factory_Field
-                    (Create_Identifier_Without_Prefix (El),
-                     Info.Block_Decls_Ptr_Type);
-
-                  Pop_Identifier_Prefix (Mark);
-               end;
+               Translate_If_Generate_Statement (El, Origin);
             when others =>
                Error_Kind ("translate_block_declarations", El);
          end case;
@@ -863,6 +889,24 @@ package body Trans.Chap9 is
       Finish_Subprogram_Body;
    end Translate_Component_Instantiation_Subprogram;
 
+   procedure Translate_Generate_Statement_Body_Subprograms
+     (Bod : Iir; Base_Info : Block_Info_Acc)
+   is
+      Info : constant Block_Info_Acc := Get_Info (Bod);
+      Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+   begin
+      Subprgs.Push_Subprg_Instance (Info.Block_Scope'Access,
+                                    Info.Block_Decls_Ptr_Type,
+                                    Wki_Instance,
+                                    Prev_Subprg_Instance);
+      Set_Scope_Via_Field_Ptr (Base_Info.Block_Scope,
+                               Info.Block_Origin_Field,
+                               Info.Block_Scope'Access);
+      Translate_Block_Subprograms (Bod, Bod);
+      Clear_Scope (Base_Info.Block_Scope);
+      Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+   end Translate_Generate_Statement_Body_Subprograms;
+
    --  Translate concurrent statements into subprograms.
    procedure Translate_Block_Subprograms (Block : Iir; Base_Block : Iir)
    is
@@ -916,24 +960,25 @@ package body Trans.Chap9 is
                   end if;
                   Translate_Block_Subprograms (Stmt, Base_Block);
                end;
-            when Iir_Kind_For_Generate_Statement
-              | Iir_Kind_If_Generate_Statement =>
+            when Iir_Kind_For_Generate_Statement =>
+               Translate_Generate_Statement_Body_Subprograms
+                 (Get_Generate_Statement_Body (Stmt), Base_Info);
+            when Iir_Kind_If_Generate_Statement =>
                declare
-                  Bod : constant Iir := Get_Generate_Statement_Body (Stmt);
-                  Info : constant Block_Info_Acc := Get_Info (Bod);
-                  Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+                  Clause : Iir;
+                  Bod : Iir;
+                  Mark2 : Id_Mark_Type;
                begin
-                  Subprgs.Push_Subprg_Instance (Info.Block_Scope'Access,
-                                                Info.Block_Decls_Ptr_Type,
-                                                Wki_Instance,
-                                                Prev_Subprg_Instance);
-                  Set_Scope_Via_Field_Ptr (Base_Info.Block_Scope,
-                                           Info.Block_Origin_Field,
-                                           Info.Block_Scope'Access);
-                  Translate_Block_Subprograms (Bod, Bod);
-                  Clear_Scope (Base_Info.Block_Scope);
-                  Subprgs.Pop_Subprg_Instance
-                    (Wki_Instance, Prev_Subprg_Instance);
+                  Clause := Stmt;
+                  while Clause /= Null_Iir loop
+                     Bod := Get_Generate_Statement_Body (Clause);
+                     Push_Identifier_Prefix
+                       (Mark2, Get_Alternative_Label (Bod));
+                     Translate_Generate_Statement_Body_Subprograms
+                       (Bod, Base_Info);
+                     Pop_Identifier_Prefix (Mark2);
+                     Clause := Get_Generate_Else_Clause (Clause);
+                  end loop;
                end;
             when others =>
                Error_Kind ("translate_block_subprograms", Stmt);
@@ -1522,51 +1567,78 @@ package body Trans.Chap9 is
    procedure Elab_If_Generate_Statement
      (Stmt : Iir_Generate_Statement; Parent : Iir; Base_Block : Iir)
    is
-      Condition   : constant Iir := Get_Condition (Stmt);
-      Bod         : constant Iir := Get_Generate_Statement_Body (Stmt);
-      Info        : constant Block_Info_Acc := Get_Info (Bod);
       Parent_Info : constant Block_Info_Acc := Get_Info (Parent);
-      Var         : O_Dnode;
-      Blk         : O_If_Block;
-      V           : O_Lnode;
+
+      --  Used to get Block_Parent_Field, set in the first generate statement
+      --  body.
+      Stmt_Info : constant Generate_Info_Acc := Get_Info (Stmt);
+
+      --  Set the instance field in the parent.
+      procedure Set_Parent_Field (Val : O_Enode; Num : Nat32)
+      is
+         V : O_Lnode;
+      begin
+         V := Get_Instance_Ref (Parent_Info.Block_Scope);
+         V := New_Selected_Element (V, Stmt_Info.Generate_Parent_Field);
+         New_Assign_Stmt (V, Val);
+
+         V := Get_Instance_Ref (Parent_Info.Block_Scope);
+         V := New_Selected_Element (V, Stmt_Info.Generate_Body_Id);
+         New_Assign_Stmt (V, New_Lit (New_Index_Lit (Unsigned_64 (Num))));
+      end Set_Parent_Field;
+
+      procedure Elab_If_Clause (Clause : Iir)
+      is
+         Condition   : constant Iir := Get_Condition (Clause);
+         Bod         : constant Iir := Get_Generate_Statement_Body (Clause);
+         Info        : constant Block_Info_Acc := Get_Info (Bod);
+         Var         : O_Dnode;
+         Blk         : O_If_Block;
+         N_Clause : Iir;
+      begin
+         Open_Temp;
+
+         Var := Create_Temp (Info.Block_Decls_Ptr_Type);
+         if Condition /= Null_Iir then
+            Start_If_Stmt (Blk, Chap7.Translate_Expression (Condition));
+         end if;
+         New_Assign_Stmt
+           (New_Obj (Var),
+            Gen_Alloc (Alloc_System,
+                       New_Lit (Get_Scope_Size (Info.Block_Scope)),
+                       Info.Block_Decls_Ptr_Type));
+
+         --  Add a link to child in parent.  This must be done before
+         --  elaboration, in case of use.
+         Set_Parent_Field
+           (New_Convert_Ov (New_Obj_Value (Var), Ghdl_Ptr_Type),
+            Info.Block_Id);
+
+         --  Add a link to parent in child.
+         New_Assign_Stmt
+           (New_Selected_Acc_Value (New_Obj (Var), Info.Block_Origin_Field),
+            Get_Instance_Access (Base_Block));
+         --  Elaborate block
+         Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var);
+         Elab_Block_Declarations (Bod, Bod);
+         Clear_Scope (Info.Block_Scope);
+
+         if Condition /= Null_Iir then
+            New_Else_Stmt (Blk);
+            N_Clause := Get_Generate_Else_Clause (Clause);
+            if N_Clause /= Null_Iir then
+               Elab_If_Clause (N_Clause);
+            else
+               Set_Parent_Field
+                 (New_Lit (New_Null_Access (Ghdl_Ptr_Type)),
+                  Info.Block_Id + 1);
+            end if;
+            Finish_If_Stmt (Blk);
+         end if;
+         Close_Temp;
+      end Elab_If_Clause;
    begin
-      Open_Temp;
-
-      Var := Create_Temp (Info.Block_Decls_Ptr_Type);
-      Start_If_Stmt (Blk, Chap7.Translate_Expression (Condition));
-      New_Assign_Stmt
-        (New_Obj (Var),
-         Gen_Alloc (Alloc_System,
-           New_Lit (Get_Scope_Size (Info.Block_Scope)),
-           Info.Block_Decls_Ptr_Type));
-      New_Else_Stmt (Blk);
-      New_Assign_Stmt
-        (New_Obj (Var),
-         New_Lit (New_Null_Access (Info.Block_Decls_Ptr_Type)));
-      Finish_If_Stmt (Blk);
-
-      --  Add a link to child in parent.
-      V := Get_Instance_Ref (Parent_Info.Block_Scope);
-      V := New_Selected_Element (V, Info.Block_Parent_Field);
-      New_Assign_Stmt (V, New_Obj_Value (Var));
-
-      Start_If_Stmt
-        (Blk,
-         New_Compare_Op
-           (ON_Neq,
-            New_Obj_Value (Var),
-            New_Lit (New_Null_Access (Info.Block_Decls_Ptr_Type)),
-            Ghdl_Bool_Type));
-      --  Add a link to parent in child.
-      New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Var), Info.Block_Origin_Field),
-         Get_Instance_Access (Base_Block));
-      --  Elaborate block
-      Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var);
-      Elab_Block_Declarations (Bod, Bod);
-      Clear_Scope (Info.Block_Scope);
-      Finish_If_Stmt (Blk);
-      Close_Temp;
+      Elab_If_Clause (Stmt);
    end Elab_If_Generate_Statement;
 
    procedure Elab_For_Generate_Statement

@@ -77,16 +77,10 @@ package body Grt.Rtis_Utils is
                      end loop;
                   end;
                when Ghdl_Rtik_If_Generate =>
-                  declare
-                     Gen : constant Ghdl_Rtin_Generate_Acc :=
-                       To_Ghdl_Rtin_Generate_Acc (Child);
-                  begin
-                     Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Gen.Loc).all,
-                               Block => Gen.Child);
-                     if Nctxt.Base /= Null_Address then
-                        Res := Traverse_Blocks_1 (Nctxt);
-                     end if;
-                  end;
+                  Nctxt := Get_If_Generate_Child (Ctxt, Child);
+                  if Nctxt.Base /= Null_Address then
+                     Res := Traverse_Blocks_1 (Nctxt);
+                  end if;
                when Ghdl_Rtik_Instance =>
                   Res := Process (Ctxt, Child);
                   if Res = Traverse_Ok then
@@ -567,12 +561,6 @@ package body Grt.Rtis_Utils is
       loop
          Blk := To_Ghdl_Rtin_Block_Acc (Ctxt.Block);
          case Ctxt.Block.Kind is
-            when Ghdl_Rtik_Process
-              | Ghdl_Rtik_Block
-              | Ghdl_Rtik_If_Generate =>
-               Prepend (Rstr, Blk.Name);
-               Prepend (Rstr, Sep);
-               Ctxt := Get_Parent_Context (Ctxt);
             when Ghdl_Rtik_Entity =>
                declare
                   Link : Ghdl_Entity_Link_Acc;
@@ -626,20 +614,30 @@ package body Grt.Rtis_Utils is
                      Prepend (Rstr, Sep);
                   end if;
                end;
-            when Ghdl_Rtik_For_Generate =>
-               declare
-                  Iter : Ghdl_Rtin_Object_Acc;
-                  Addr : Address;
-               begin
-                  Prepend (Rstr, ')');
-                  Iter := To_Ghdl_Rtin_Object_Acc (Blk.Children (0));
-                  Addr := Loc_To_Addr (Iter.Common.Depth, Iter.Loc, Ctxt);
-                  Get_Value (Rstr, Addr, Get_Base_Type (Iter.Obj_Type));
-                  Prepend (Rstr, '(');
-                  Prepend (Rstr, Blk.Name);
-                  Prepend (Rstr, Sep);
-                  Ctxt := Get_Parent_Context (Ctxt);
-               end;
+            when Ghdl_Rtik_Process
+              | Ghdl_Rtik_Block
+              | Ghdl_Rtik_If_Generate =>
+               Prepend (Rstr, Blk.Name);
+               Prepend (Rstr, Sep);
+               Ctxt := Get_Parent_Context (Ctxt);
+            when Ghdl_Rtik_Generate_Body =>
+               if Blk.Parent.Kind = Ghdl_Rtik_For_Generate then
+                  declare
+                     Gen : constant Ghdl_Rtin_Generate_Acc :=
+                       To_Ghdl_Rtin_Generate_Acc (Blk.Parent);
+                     Iter : Ghdl_Rtin_Object_Acc;
+                     Addr : Address;
+                  begin
+                     Prepend (Rstr, ')');
+                     Iter := To_Ghdl_Rtin_Object_Acc (Blk.Children (0));
+                     Addr := Loc_To_Addr (Iter.Common.Depth, Iter.Loc, Ctxt);
+                     Get_Value (Rstr, Addr, Get_Base_Type (Iter.Obj_Type));
+                     Prepend (Rstr, '(');
+                     Prepend (Rstr, Gen.Name);
+                     Prepend (Rstr, Sep);
+                  end;
+               end if;
+               Ctxt := Get_Parent_Context (Ctxt);
             when others =>
                Internal_Error ("grt.rtis_utils.get_path_name");
          end case;

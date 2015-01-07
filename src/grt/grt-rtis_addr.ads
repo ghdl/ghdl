@@ -64,6 +64,11 @@ package Grt.Rtis_Addr is
                                 Ctxt : out Rti_Context;
                                 Stmt : out Ghdl_Rti_Access);
 
+   --  Get the child context of if-generate statement GEN.  Return Null_Context
+   --  if there is no child.
+   function Get_If_Generate_Child (Ctxt : Rti_Context; Gen : Ghdl_Rti_Access)
+                                  return Rti_Context;
+
    --  Convert a location to an address.
    function Loc_To_Addr (Depth : Ghdl_Rti_Depth;
                          Loc : Ghdl_Rti_Loc;

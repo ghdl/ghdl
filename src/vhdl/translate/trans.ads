@@ -315,8 +315,7 @@ package Trans is
       procedure Restore_Local_Identifier (Id : Local_Identifier_Type);
 
       --  Create an identifier from IIR node ID without the prefix.
-      function Create_Identifier_Without_Prefix (Id : Iir)
-                                                 return O_Ident;
+      function Create_Identifier_Without_Prefix (Id : Iir) return O_Ident;
       function Create_Identifier_Without_Prefix (Id : Name_Id; Str : String)
                                                  return O_Ident;
 
@@ -638,6 +637,7 @@ package Trans is
       Kind_Psl_Directive,
       Kind_Loop,
       Kind_Block,
+      Kind_Generate,
       Kind_Component,
       Kind_Field,
       Kind_Package,
@@ -1249,6 +1249,11 @@ package Trans is
             Block_Decls_Array_Type     : O_Tnode;
             Block_Decls_Array_Ptr_Type : O_Tnode;
 
+            --  For if-generate generate statement body: the identifier of the
+            --  body.  Used to know which block_configuration applies to the
+            --  block.
+            Block_Id : Nat32;
+
             --  Subprogram which elaborates the block (for entity or arch).
             Block_Elab_Subprg   : O_Dnode;
             --  Size of the block instance.
@@ -1261,6 +1266,19 @@ package Trans is
 
             --  RTI constant for the block.
             Block_Rti_Const : O_Dnode := O_Dnode_Null;
+
+         when Kind_Generate =>
+            --  Like Block_Parent_Field: field in the instance for the
+            --  sub-block.  Always a Ghdl_Ptr_Type, as there are many possible
+            --  types for the sub-block instance (if/case generate).
+            Generate_Parent_Field : O_Fnode;
+
+            --  Identifier number of the generate statement body.  Used for
+            --  configuring sub-block, and for grt to index the rti.
+            Generate_Body_Id : O_Fnode;
+
+            --  RTI for the generate statement.
+            Generate_Rti_Const : O_Dnode := O_Dnode_Null;
 
          when Kind_Component =>
             --  How to access to component interfaces.
@@ -1366,6 +1384,7 @@ package Trans is
    subtype Psl_Info_Acc is Ortho_Info_Acc (Kind_Psl_Directive);
    subtype Loop_Info_Acc is Ortho_Info_Acc (Kind_Loop);
    subtype Block_Info_Acc is Ortho_Info_Acc (Kind_Block);
+   subtype Generate_Info_Acc is Ortho_Info_Acc (Kind_Generate);
    subtype Comp_Info_Acc is Ortho_Info_Acc (Kind_Component);
    subtype Field_Info_Acc is Ortho_Info_Acc (Kind_Field);
    subtype Config_Info_Acc is Ortho_Info_Acc (Kind_Config);

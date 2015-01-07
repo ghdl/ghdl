@@ -154,8 +154,8 @@ package body Trans.Rtis is
    Ghdl_Rtin_Component_Nbr_Child : O_Fnode;
    Ghdl_Rtin_Component_Children  : O_Fnode;
 
-   procedure Rti_Initialize
-   is
+   --  Create all the declarations for RTIs.
+   procedure Rti_Initialize is
    begin
       --  Create type ghdl_rti_kind is (ghdl_rtik_typedef_bool, ...)
       declare
@@ -708,149 +708,221 @@ package body Trans.Rtis is
 
    end Rti_Initialize;
 
-   type Rti_Array is array (1 .. 8) of O_Dnode;
-   type Rti_Array_List;
-   type Rti_Array_List_Acc is access Rti_Array_List;
-   type Rti_Array_List is record
-      Rtis : Rti_Array;
-      Next : Rti_Array_List_Acc;
-   end record;
+   package Rti_Builders is
+      type Rti_Block is limited private;
 
-   type Rti_Block is record
-      Depth     : Rti_Depth_Type;
-      Nbr       : Integer;
-      List      : Rti_Array_List;
-      Last_List : Rti_Array_List_Acc;
-      Last_Nbr  : Integer;
-   end record;
+      function Get_Depth_From_Var (Var : Var_Type) return Rti_Depth_Type;
 
-   Cur_Block : Rti_Block := (Depth => 0,
-                             Nbr => 0,
-                             List => (Rtis => (others => O_Dnode_Null),
-                                      Next => null),
-                             Last_List => null,
-                             Last_Nbr => 0);
+      procedure Push_Rti_Node (Prev : out Rti_Block; Deeper : Boolean := True);
 
-   Free_List : Rti_Array_List_Acc := null;
+      --  Save NODE in a list.
+      procedure Add_Rti_Node (Node : O_Dnode);
 
-   procedure Push_Rti_Node (Prev : out Rti_Block; Deeper : Boolean := True)
-   is
-      Ndepth : Rti_Depth_Type;
-   begin
-      if Deeper then
-         Ndepth := Cur_Block.Depth + 1;
-      else
-         Ndepth := Cur_Block.Depth;
-      end if;
-      Prev := Cur_Block;
-      Cur_Block := (Depth => Ndepth,
-                    Nbr => 0,
-                    List => (Rtis => (others => O_Dnode_Null),
-                             Next => null),
-                    Last_List => null,
-                    Last_Nbr => 0);
-   end Push_Rti_Node;
+      --  Convert the list of nodes into a null-terminated array, declared
+      --  using ID.
+      function Generate_Rti_Array (Id : O_Ident) return O_Dnode;
 
-   procedure Add_Rti_Node (Node : O_Dnode)
-   is
-   begin
-      if Node = O_Dnode_Null then
-         --  FIXME: temporary for not yet handled types.
-         return;
-      end if;
-      if Cur_Block.Last_Nbr = Rti_Array'Last then
-         --  Append a new block.
-         declare
-            N : Rti_Array_List_Acc;
-         begin
-            if Free_List = null then
-               N := new Rti_Array_List;
-            else
-               N := Free_List;
-               Free_List := N.Next;
-            end if;
-            N.Next := null;
-            if Cur_Block.Last_List = null then
-               Cur_Block.List.Next := N;
-            else
-               Cur_Block.Last_List.Next := N;
-            end if;
-            Cur_Block.Last_List := N;
-         end;
-         Cur_Block.Last_Nbr := 1;
-      else
-         Cur_Block.Last_Nbr := Cur_Block.Last_Nbr + 1;
-      end if;
-      if Cur_Block.Last_List = null then
-         Cur_Block.List.Rtis (Cur_Block.Last_Nbr) := Node;
-      else
-         Cur_Block.Last_List.Rtis (Cur_Block.Last_Nbr) := Node;
-      end if;
-      Cur_Block.Nbr := Cur_Block.Nbr + 1;
-   end Add_Rti_Node;
+      --  Get the number of nodes in the array (without the last null entry).
+      function Get_Rti_Array_Length return Unsigned_64;
 
-   function Generate_Rti_Array (Id : O_Ident) return O_Dnode
-   is
-      Arr_Type : O_Tnode;
-      List     : O_Array_Aggr_List;
-      L        : Rti_Array_List_Acc;
-      Nbr      : Integer;
-      Val      : O_Cnode;
-      Res      : O_Dnode;
-   begin
-      Arr_Type := New_Constrained_Array_Type
-        (Ghdl_Rti_Array,
-         New_Unsigned_Literal (Ghdl_Index_Type,
-           Unsigned_64 (Cur_Block.Nbr + 1)));
-      New_Const_Decl (Res, Id, O_Storage_Private, Arr_Type);
-      Start_Const_Value (Res);
-      Start_Array_Aggr (List, Arr_Type);
-      Nbr := Cur_Block.Nbr;
-      for I in Cur_Block.List.Rtis'Range loop
-         exit when I > Nbr;
-         New_Array_Aggr_El
-           (List, New_Global_Unchecked_Address (Cur_Block.List.Rtis (I),
-            Ghdl_Rti_Access));
-      end loop;
-      L := Cur_Block.List.Next;
-      while L /= null loop
-         Nbr := Nbr - Cur_Block.List.Rtis'Length;
-         for I in L.Rtis'Range loop
+      procedure Pop_Rti_Node (Prev : Rti_Block);
+
+   private
+      type Rti_Array is array (1 .. 8) of O_Dnode;
+      type Rti_Array_List;
+      type Rti_Array_List_Acc is access Rti_Array_List;
+      type Rti_Array_List is record
+         Rtis : Rti_Array;
+         Next : Rti_Array_List_Acc;
+      end record;
+
+      type Rti_Block is record
+         --  Depth of the block.
+         Depth     : Rti_Depth_Type;
+
+         --  Number of children.
+         Nbr       : Integer;
+
+         --  Array for the fist children.
+         List      : Rti_Array_List;
+
+         --  Linked list for the following children.
+         Last_List : Rti_Array_List_Acc;
+
+         --  Number of entries used in the last array.  Used to detect if a
+         --  new array has to be allocated.
+         Last_Nbr  : Integer;
+      end record;
+   end Rti_Builders;
+
+   package body Rti_Builders is
+      Cur_Block : Rti_Block := (Depth => 0,
+                                Nbr => 0,
+                                List => (Rtis => (others => O_Dnode_Null),
+                                         Next => null),
+                                Last_List => null,
+                                Last_Nbr => 0);
+
+      Free_List : Rti_Array_List_Acc := null;
+
+      function Get_Depth_From_Var (Var : Var_Type) return Rti_Depth_Type is
+      begin
+         if Var = Null_Var or else Is_Var_Field (Var) then
+            return Cur_Block.Depth;
+         else
+            --  Global variable.  No depth.
+            return 0;
+         end if;
+      end Get_Depth_From_Var;
+
+      procedure Push_Rti_Node (Prev : out Rti_Block; Deeper : Boolean := True)
+      is
+         Ndepth : Rti_Depth_Type;
+      begin
+         --  Save current state.
+         Prev := Cur_Block;
+
+         if Deeper then
+            --  Increase depth for nested declarations (usual case).
+            Ndepth := Cur_Block.Depth + 1;
+         else
+            --  Same depth for non-semantically nested declarations (but
+            --  lexically nested), eg: physical literals, record elements.
+            Ndepth := Cur_Block.Depth;
+         end if;
+
+         --  Create new empty state.
+         Cur_Block := (Depth => Ndepth,
+                       Nbr => 0,
+                       List => (Rtis => (others => O_Dnode_Null),
+                                Next => null),
+                       Last_List => null,
+                       Last_Nbr => 0);
+      end Push_Rti_Node;
+
+      procedure Add_Rti_Node (Node : O_Dnode) is
+      begin
+         if Node = O_Dnode_Null then
+            --  FIXME: temporary for not yet handled types.
+            return;
+         end if;
+
+         if Cur_Block.Last_Nbr = Rti_Array'Last then
+            --  Append a new block.
+            declare
+               N : Rti_Array_List_Acc;
+            begin
+               if Free_List = null then
+                  --  Create a new one.
+                  N := new Rti_Array_List;
+               else
+                  --  Recycle from the free list.
+                  N := Free_List;
+                  Free_List := N.Next;
+               end if;
+
+               --  Initialize.
+               N.Next := null;
+
+               --  Link.
+               if Cur_Block.Last_List = null then
+                  Cur_Block.List.Next := N;
+               else
+                  Cur_Block.Last_List.Next := N;
+               end if;
+               Cur_Block.Last_List := N;
+            end;
+
+            --  Use first entry.
+            Cur_Block.Last_Nbr := 1;
+         else
+
+            --  Allocate new entry in the block.
+            Cur_Block.Last_Nbr := Cur_Block.Last_Nbr + 1;
+         end if;
+
+         if Cur_Block.Last_List = null then
+            --  Entry in the first block.
+            Cur_Block.List.Rtis (Cur_Block.Last_Nbr) := Node;
+         else
+            --  More than one block.
+            Cur_Block.Last_List.Rtis (Cur_Block.Last_Nbr) := Node;
+         end if;
+
+         --  An entry was added.
+         Cur_Block.Nbr := Cur_Block.Nbr + 1;
+      end Add_Rti_Node;
+
+      function Generate_Rti_Array (Id : O_Ident) return O_Dnode
+      is
+         Arr_Type : O_Tnode;
+         List     : O_Array_Aggr_List;
+         L        : Rti_Array_List_Acc;
+         Nbr      : Integer;
+         Val      : O_Cnode;
+         Res      : O_Dnode;
+      begin
+         Arr_Type := New_Constrained_Array_Type
+           (Ghdl_Rti_Array,
+            New_Unsigned_Literal (Ghdl_Index_Type,
+                                  Unsigned_64 (Cur_Block.Nbr + 1)));
+         New_Const_Decl (Res, Id, O_Storage_Private, Arr_Type);
+         Start_Const_Value (Res);
+         Start_Array_Aggr (List, Arr_Type);
+         Nbr := Cur_Block.Nbr;
+
+         --  First chunk.
+         for I in Cur_Block.List.Rtis'Range loop
             exit when I > Nbr;
             New_Array_Aggr_El
-              (List, New_Global_Unchecked_Address (L.Rtis (I),
-               Ghdl_Rti_Access));
+              (List, New_Global_Unchecked_Address (Cur_Block.List.Rtis (I),
+                                                   Ghdl_Rti_Access));
          end loop;
-         L := L.Next;
-      end loop;
-      New_Array_Aggr_El (List, New_Null_Access (Ghdl_Rti_Access));
-      Finish_Array_Aggr (List, Val);
-      Finish_Const_Value (Res, Val);
-      return Res;
-   end Generate_Rti_Array;
 
-   procedure Pop_Rti_Node (Prev : Rti_Block)
-   is
-      L : Rti_Array_List_Acc;
-   begin
-      L := Cur_Block.List.Next;
-      if L /= null then
-         Cur_Block.Last_List.Next := Free_List;
-         Free_List := Cur_Block.List.Next;
-         Cur_Block.List.Next := null;
-      end if;
-      Cur_Block := Prev;
-   end Pop_Rti_Node;
+         --  Next chunks.
+         L := Cur_Block.List.Next;
+         while L /= null loop
+            Nbr := Nbr - Cur_Block.List.Rtis'Length;
+            for I in L.Rtis'Range loop
+               exit when I > Nbr;
+               New_Array_Aggr_El
+                 (List, New_Global_Unchecked_Address (L.Rtis (I),
+                                                      Ghdl_Rti_Access));
+            end loop;
+            L := L.Next;
+         end loop;
 
-   function Get_Depth_From_Var (Var : Var_Type) return Rti_Depth_Type
-   is
-   begin
-      if Var = Null_Var or else Is_Var_Field (Var) then
-         return Cur_Block.Depth;
-      else
-         return 0;
-      end if;
-   end Get_Depth_From_Var;
+         --  Append a null entry.
+         New_Array_Aggr_El (List, New_Null_Access (Ghdl_Rti_Access));
+
+         Finish_Array_Aggr (List, Val);
+         Finish_Const_Value (Res, Val);
+         return Res;
+      end Generate_Rti_Array;
+
+      function Get_Rti_Array_Length return Unsigned_64 is
+      begin
+         return Unsigned_64 (Cur_Block.Nbr);
+      end Get_Rti_Array_Length;
+
+      procedure Pop_Rti_Node (Prev : Rti_Block)
+      is
+         L : Rti_Array_List_Acc;
+      begin
+         --  Put chunks to Free_List.
+         L := Cur_Block.List.Next;
+         if L /= null then
+            Cur_Block.Last_List.Next := Free_List;
+            Free_List := Cur_Block.List.Next;
+            Cur_Block.List.Next := null;
+         end if;
+
+         --  Restore context.
+         Cur_Block := Prev;
+      end Pop_Rti_Node;
+   end Rti_Builders;
+
+   use Rti_Builders;
 
    function Generate_Common
      (Kind : O_Cnode; Var : Var_Type := Null_Var; Mode : Natural := 0)
@@ -1910,7 +1982,8 @@ package body Trans.Rtis is
    end Generate_Object;
 
    procedure Generate_Block (Blk : Iir; Parent_Rti : O_Dnode);
-   procedure Generate_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode);
+   procedure Generate_If_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode);
+   procedure Generate_For_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode);
    procedure Generate_Declaration_Chain (Chain : Iir);
 
    procedure Generate_Component_Declaration (Comp : Iir)
@@ -1946,7 +2019,7 @@ package body Trans.Rtis is
                              New_Global_Address (Name, Char_Ptr_Type));
          New_Record_Aggr_El
            (List, New_Unsigned_Literal (Ghdl_Index_Type,
-            Unsigned_64 (Cur_Block.Nbr)));
+                                        Get_Rti_Array_Length));
          New_Record_Aggr_El (List,
                              New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
          Finish_Record_Aggr (List, Res);
@@ -2205,7 +2278,7 @@ package body Trans.Rtis is
                Pop_Identifier_Prefix (Mark);
             when Iir_Kind_If_Generate_Statement =>
                Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
-               Generate_Generate_Statement (Stmt, Parent_Rti);
+               Generate_If_Generate_Statement (Stmt, Parent_Rti);
                Pop_Identifier_Prefix (Mark);
             when Iir_Kind_For_Generate_Statement =>
                Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
@@ -2227,7 +2300,7 @@ package body Trans.Rtis is
                      Pop_Identifier_Prefix (Mark);
                   end if;
                end;
-               Generate_Generate_Statement (Stmt, Parent_Rti);
+               Generate_For_Generate_Statement (Stmt, Parent_Rti);
                Pop_Identifier_Prefix (Mark);
             when Iir_Kind_Component_Instantiation_Statement =>
                Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
@@ -2248,21 +2321,89 @@ package body Trans.Rtis is
       end loop;
    end Generate_Concurrent_Statement_Chain;
 
-   procedure Generate_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode)
+   procedure Generate_If_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode)
+   is
+      Info : constant Generate_Info_Acc := Get_Info (Blk);
+      Clause : Iir;
+      Bod : Iir;
+
+      Name : O_Dnode;
+      List : O_Record_Aggr_List;
+      Num : Natural;
+
+      Rti : O_Dnode;
+      Arr       : O_Dnode;
+
+      Prev : Rti_Block;
+
+      Field_Off : O_Cnode;
+      Res       : O_Cnode;
+
+      Mark : Id_Mark_Type;
+   begin
+      New_Const_Decl (Rti, Create_Identifier ("RTI"),
+                      O_Storage_Public, Ghdl_Rtin_Block);
+      Push_Rti_Node (Prev);
+
+      Clause := Blk;
+      Num := 0;
+      while Clause /= Null_Iir loop
+         Bod := Get_Generate_Statement_Body (Clause);
+         Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
+         Generate_Block (Bod, Rti);
+         Pop_Identifier_Prefix (Mark);
+         Clause := Get_Generate_Else_Clause (Clause);
+         Num := Num + 1;
+      end loop;
+
+      Name := Generate_Name (Blk);
+
+      Arr := Generate_Rti_Array (Create_Identifier ("RTIARRAY"));
+
+      Start_Const_Value (Rti);
+
+      Start_Record_Aggr (List, Ghdl_Rtin_Block);
+      New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_If_Generate));
+      New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
+
+      --  Field Loc: offset in the instance of the entity.
+      Field_Off := New_Offsetof
+        (Get_Scope_Type (Get_Info (Get_Parent (Blk)).Block_Scope),
+         Get_Info (Blk).Generate_Parent_Field, Ghdl_Ptr_Type);
+      New_Record_Aggr_El (List, Field_Off);
+
+      New_Record_Aggr_El (List, Generate_Linecol (Blk));
+
+      --  Field Parent: RTI of the parent.
+      New_Record_Aggr_El (List, New_Rti_Address (Parent_Rti));
+
+      --  Fields Nbr_Child and Children.
+      New_Record_Aggr_El
+        (List, New_Unsigned_Literal (Ghdl_Index_Type, Get_Rti_Array_Length));
+      New_Record_Aggr_El (List, New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
+      Finish_Record_Aggr (List, Res);
+
+      Finish_Const_Value (Rti, Res);
+
+      Pop_Rti_Node (Prev);
+
+      --  Put the result in the parent list.
+      Add_Rti_Node (Rti);
+
+      --  Store the RTI.
+      Info.Generate_Rti_Const := Rti;
+   end Generate_If_Generate_Statement;
+
+   procedure Generate_For_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode)
    is
       Info : constant Ortho_Info_Acc := Get_Info (Blk);
       Bod : constant Iir := Get_Generate_Statement_Body (Blk);
       Bod_Info : constant Block_Info_Acc := Get_Info (Bod);
 
-      Child : Iir;
-      Child_Rti : O_Cnode;
       Name : O_Dnode;
       List : O_Record_Aggr_List;
 
       Rti : O_Dnode;
-
-      Kind : O_Cnode;
-      Size : O_Cnode;
 
       Prev : Rti_Block;
 
@@ -2275,43 +2416,22 @@ package body Trans.Rtis is
                       O_Storage_Public, Ghdl_Rtin_Generate);
       Push_Rti_Node (Prev);
 
-      Field_Off := New_Offsetof
-        (Get_Scope_Type (Get_Info (Get_Parent (Blk)).Block_Scope),
-         Bod_Info.Block_Parent_Field, Ghdl_Ptr_Type);
-
-      case Get_Kind (Blk) is
-         when Iir_Kind_If_Generate_Statement =>
-            Push_Identifier_Prefix (Mark, "BOD");
-            Generate_Block (Bod, Rti);
-            Pop_Identifier_Prefix (Mark);
-            Kind := Ghdl_Rtik_If_Generate;
-            Size := Ghdl_Index_0;
-            if Get_Generate_Else_Clause (Blk) = Null_Iir then
-               Child := Bod;
-            else
-               Child := Null_Iir;
-            end if;
-         when Iir_Kind_For_Generate_Statement =>
-            Push_Identifier_Prefix (Mark, "BOD");
-            Generate_Block (Bod, Rti);
-            Pop_Identifier_Prefix (Mark);
-            Kind := Ghdl_Rtik_For_Generate;
-            Size := New_Sizeof (Get_Scope_Type (Bod_Info.Block_Scope),
-                                Ghdl_Index_Type);
-            Child := Bod;
-         when others =>
-            Error_Kind ("rti.generate_generate", Blk);
-      end case;
+      Push_Identifier_Prefix (Mark, "BOD");
+      Generate_Block (Bod, Rti);
+      Pop_Identifier_Prefix (Mark);
 
       Name := Generate_Name (Blk);
 
       Start_Const_Value (Rti);
 
       Start_Record_Aggr (List, Ghdl_Rtin_Generate);
-      New_Record_Aggr_El (List, Generate_Common (Kind));
+      New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_For_Generate));
       New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
 
       --  Field Loc: offset in the instance of the entity.
+      Field_Off := New_Offsetof
+        (Get_Scope_Type (Get_Info (Get_Parent (Blk)).Block_Scope),
+         Bod_Info.Block_Parent_Field, Ghdl_Ptr_Type);
       New_Record_Aggr_El (List, Field_Off);
 
       New_Record_Aggr_El (List, Generate_Linecol (Blk));
@@ -2322,15 +2442,12 @@ package body Trans.Rtis is
       --  Field Size: size of the instance.
       --  For for-generate: size of instance, which gives the stride in the
       --  sub-blocks array.
-      New_Record_Aggr_El (List, Size);
+      New_Record_Aggr_El
+        (List, New_Sizeof (Get_Scope_Type (Bod_Info.Block_Scope),
+                           Ghdl_Index_Type));
 
       --  Child.
-      if Child = Null_Iir then
-         Child_Rti := New_Null_Access (Ghdl_Rti_Access);
-      else
-         Child_Rti := Get_Context_Rti (Child);
-      end if;
-      New_Record_Aggr_El (List, Child_Rti);
+      New_Record_Aggr_El (List, Get_Context_Rti (Bod));
 
       Finish_Record_Aggr (List, Res);
 
@@ -2347,7 +2464,7 @@ package body Trans.Rtis is
          --  Not sure we need to store it (except maybe for 'path_name ?)
          Info.Block_Rti_Const := Rti;
       end if;
-   end Generate_Generate_Statement;
+   end Generate_For_Generate_Statement;
 
    procedure Generate_Block (Blk : Iir; Parent_Rti : O_Dnode)
    is
@@ -2483,8 +2600,7 @@ package body Trans.Rtis is
 
       --  Fields Nbr_Child and Children.
       New_Record_Aggr_El
-        (List, New_Unsigned_Literal (Ghdl_Index_Type,
-         Unsigned_64 (Cur_Block.Nbr)));
+        (List, New_Unsigned_Literal (Ghdl_Index_Type, Get_Rti_Array_Length));
       New_Record_Aggr_El (List, New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
       Finish_Record_Aggr (List, Res);
 

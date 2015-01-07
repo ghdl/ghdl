@@ -135,6 +135,25 @@ package body Grt.Rtis_Addr is
       end if;
    end Get_Instance_Link;
 
+   function Get_If_Generate_Child (Ctxt : Rti_Context; Gen : Ghdl_Rti_Access)
+                                  return Rti_Context
+   is
+      pragma Assert (Gen.Kind = Ghdl_Rtik_If_Generate);
+      Blk : constant Ghdl_Rtin_Block_Acc := To_Ghdl_Rtin_Block_Acc (Gen);
+      Base_Addr : constant Address := Ctxt.Base + Blk.Loc;
+
+      --  Address of the block_id field.  It is just after the instance field.
+      --  Assume alignment is ok (it is on 32 and 64 bit platforms).
+      Id_Addr : constant Address :=
+        Base_Addr + Ghdl_Index_Type'(Address'Size / Storage_Unit);
+      Id : Ghdl_Index_Type;
+      pragma Import (Ada, Id);
+      for Id'Address use Id_Addr;
+   begin
+      return (Base => To_Addr_Acc (Base_Addr).all,
+              Block => Blk.Children (Id));
+   end Get_If_Generate_Child;
+
    function Loc_To_Addr (Depth : Ghdl_Rti_Depth;
                          Loc : Ghdl_Rti_Loc;
                          Ctxt : Rti_Context)

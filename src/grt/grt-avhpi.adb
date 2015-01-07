@@ -297,20 +297,13 @@ package body Grt.Avhpi is
                Error := AvhpiErrorOk;
                return;
             when Ghdl_Rtik_If_Generate =>
-               declare
-                  Gen : constant Ghdl_Rtin_Generate_Acc :=
-                    To_Ghdl_Rtin_Generate_Acc (Ch);
-               begin
-                  Res := (Kind => VhpiIfGenerateK,
-                          Ctxt => (Base => To_Addr_Acc (Iterator.Ctxt.Base
-                                                          + Gen.Loc).all,
-                                   Block => Gen.Child));
-                  --  Return only if the condition is true.
-                  if Res.Ctxt.Base /= Null_Address then
-                     Error := AvhpiErrorOk;
-                     return;
-                  end if;
-               end;
+               Res := (Kind => VhpiIfGenerateK,
+                       Ctxt => Get_If_Generate_Child (Iterator.Ctxt, Ch));
+               --  Return only if the condition is true.
+               if Res.Ctxt.Base /= Null_Address then
+                  Error := AvhpiErrorOk;
+                  return;
+               end if;
             when Ghdl_Rtik_For_Generate =>
                declare
                   Gen : constant Ghdl_Rtin_Generate_Acc :=

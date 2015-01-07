@@ -1549,28 +1549,41 @@ package body Sem_Stmts is
 
    procedure Sem_If_Generate_Statement (Stmt : Iir)
    is
+      Clause : Iir;
       Condition : Iir;
    begin
       --  LRM93 10.1 Declarative region.
       --  12. A generate statement.
       Open_Declarative_Region;
 
-      Condition := Get_Condition (Stmt);
-      Condition := Sem_Condition (Condition);
-      --  LRM93 9.7
-      --  the condition in a generation scheme of the second form must be
-      --  a static expression.
-      if Condition /= Null_Iir
-        and then Get_Expr_Staticness (Condition) < Globally
-      then
-         Error_Msg_Sem ("condition must be a static expression", Condition);
-      else
-         Set_Condition (Stmt, Condition);
-      end if;
+      Clause := Stmt;
+      while Clause /= Null_Iir loop
+         Condition := Get_Condition (Clause);
 
-      --  In the same declarative region.
-      Sem_Generate_Statement_Body (Stmt);
+         if Condition /= Null_Iir then
+            Condition := Sem_Condition (Condition);
+            --  LRM93 9.7
+            --  the condition in a generation scheme of the second form must be
+            --  a static expression.
+            if Condition /= Null_Iir
+              and then Get_Expr_Staticness (Condition) < Globally
+            then
+               Error_Msg_Sem
+                 ("condition must be a static expression", Condition);
+            else
+               Set_Condition (Clause, Condition);
+            end if;
+         else
+            --  No condition for the last 'else' part.
+            pragma Assert (Get_Generate_Else_Clause (Clause) = Null_Iir);
+            null;
+         end if;
 
+         --  In the same declarative region.
+         Sem_Generate_Statement_Body (Clause);
+
+         Clause := Get_Generate_Else_Clause (Clause);
+      end loop;
       Close_Declarative_Region;
    end Sem_If_Generate_Statement;
 

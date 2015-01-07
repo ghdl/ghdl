@@ -1662,19 +1662,38 @@ package body Canon is
             when Iir_Kind_If_Generate_Statement =>
                declare
                   Clause : Iir;
+                  Bod : Iir;
                   Cond : Iir;
+                  Alt_Num : Natural;
                begin
                   Clause := El;
+                  Alt_Num := 1;
                   while Clause /= Null_Iir loop
+                     Bod := Get_Generate_Statement_Body (Clause);
+                     if Canon_Flag_Add_Labels
+                       and then Get_Alternative_Label (Bod) = Null_Identifier
+                     then
+                        declare
+                           Str : String := Natural'Image (Alt_Num);
+                        begin
+                           --  Note: the label starts with a capitalized
+                           --  letter, to avoid any clash with user's
+                           --  identifiers.
+                           Str (1) := 'B';
+                           Set_Alternative_Label
+                             (Bod, Name_Table.Get_Identifier (Str));
+                        end;
+                     end if;
+
                      if Canon_Flag_Expressions then
                         Cond := Get_Condition (El);
                         if Cond /= Null_Iir then
                            Canon_Expression (Cond);
                         end if;
                      end if;
-                     Canon_Generate_Statement_Body
-                       (Top, Get_Generate_Statement_Body (Clause));
+                     Canon_Generate_Statement_Body (Top, Bod);
                      Clause := Get_Generate_Else_Clause (Clause);
+                     Alt_Num := Alt_Num + 1;
                   end loop;
                end;
 

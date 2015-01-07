@@ -154,10 +154,11 @@ package body Grt.Disp_Tree is
          when Ghdl_Rtik_If_Generate =>
             Put (" [if-generate ");
             if Ctxt.Base = Null_Address then
-               Put ("false]");
+               Put ("false");
             else
-               Put ("true]");
+               Put ("true");
             end if;
+            Put ("]");
          when Ghdl_Rtik_Signal =>
             Put (" [signal]");
          when Ghdl_Rtik_Port =>
@@ -282,16 +283,13 @@ package body Grt.Disp_Tree is
                end;
             when Ghdl_Rtik_If_Generate =>
                declare
-                  Gen : constant Ghdl_Rtin_Generate_Acc :=
-                    To_Ghdl_Rtin_Generate_Acc (Child);
-                  Nctxt : Rti_Context;
+                  Nctxt : constant Rti_Context :=
+                    Get_If_Generate_Child (Ctxt, Child);
                begin
-                  Nctxt := (Base => To_Addr_Acc (Ctxt.Base + Gen.Loc).all,
-                            Block => Gen.Child);
                   Disp_Header (Nctxt);
                   if Nctxt.Base /= Null_Address then
                      Disp_Sub_Block
-                       (To_Ghdl_Rtin_Block_Acc (Gen.Child), Nctxt);
+                       (To_Ghdl_Rtin_Block_Acc (Nctxt.Block), Nctxt);
                   end if;
                end;
             when Ghdl_Rtik_Instance =>

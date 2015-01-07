@@ -6098,13 +6098,15 @@ package body Parse is
    --        { concurrent_statement }
    --  Note there is no END.  This part is followed by:
    --     END GENERATE [ /generate/_label ] ;
-   function Parse_Generate_Statement_Body (Parent : Iir) return Iir
+   function Parse_Generate_Statement_Body (Parent : Iir; Label : Name_Id)
+                                          return Iir
    is
       Bod : Iir;
    begin
       Bod := Create_Iir (Iir_Kind_Generate_Statement_Body);
       Set_Location (Bod);
       Set_Parent (Bod, Parent);
+      Set_Alternative_Label (Bod, Label);
 
       --  Check for a block declarative item.
       case Current_Token is
@@ -6161,6 +6163,18 @@ package body Parse is
 
       Parse_Concurrent_Statements (Bod);
 
+      case Current_Token is
+         when Tok_Elsif
+           | Tok_Else =>
+            if Get_Kind (Parent) = Iir_Kind_If_Generate_Statement
+              or else Get_Kind (Parent) = Iir_Kind_If_Generate_Else_Clause
+            then
+               return Bod;
+            end if;
+         when others =>
+            null;
+      end case;
+
       Expect (Tok_End);
 
       --  Skip 'end'
@@ -6168,7 +6182,7 @@ package body Parse is
 
       if Vhdl_Std >= Vhdl_08 and then Current_Token /= Tok_Generate then
          --  This is the 'end' of the generate_statement_body.
-         Check_End_Name (Null_Identifier, Bod);
+         Check_End_Name (Label, Bod);
          Scan_Semi_Colon ("generate statement body");
 
          Expect (Tok_End);
@@ -6226,7 +6240,7 @@ package body Parse is
       Scan;
 
       Set_Generate_Statement_Body
-        (Res, Parse_Generate_Statement_Body (Res));
+        (Res, Parse_Generate_Statement_Body (Res, Null_Identifier));
 
       Expect (Tok_Generate);
       Set_End_Has_Reserved_Id (Res, True);
@@ -6247,22 +6261,35 @@ package body Parse is
    --
    --  [ LRM93 9.7 ]
    --  generate_statement ::=
-   --      GENERATE_label : generation_scheme GENERATE
+   --      /generate/_label : generation_scheme GENERATE
    --          [ { block_declarative_item }
    --      BEGIN ]
    --          { concurrent_statement }
-   --      END GENERATE [ GENERATE_label ] ;
+   --      END GENERATE [ /generate/_label ] ;
    --
    --  [ LRM93 9.7 ]
    --  generation_scheme ::=
    --      FOR GENERATE_parameter_specification
    --      | IF condition
    --
-   --  FIXME: block_declarative item.
+   --  [ LRM08 11.8 ]
+   --  if_generate_statement ::=
+   --     /generate/_label :
+   --     IF [ /alternative/_label : ] condition GENERATE
+   --        generate_statement_body
+   --     { ELSIF [ /alternative/_label : ] condition GENERATE
+   --        generate_statement_body }
+   --     [ ELSE [ /alternative/_label : ] GENERATE
+   --        generate_statement_body ]
+   --     END GENERATE [ /generate/_label ] ;
    function Parse_If_Generate_Statement (Label : Name_Id; Loc : Location_Type)
-     return Iir_Generate_Statement
+                                        return Iir_Generate_Statement
    is
       Res : Iir_Generate_Statement;
+      Alt_Label : Name_Id;
+      Cond : Iir;
+      Clause : Iir;
+      Last : Iir;
    begin
       if Label = Null_Identifier then
          Error_Msg_Parse ("a generate statement must have a label");
@@ -6274,14 +6301,75 @@ package body Parse is
       --  Skip 'if'.
       Scan;
 
-      Set_Condition (Res, Parse_Expression);
+      Clause := Res;
+      Last := Null_Iir;
+      loop
+         Cond := Parse_Expression;
 
-      --  Skip 'generate'
-      Expect (Tok_Generate);
-      Scan;
+         Alt_Label := Null_Identifier;
+         if Current_Token = Tok_Colon then
+            if Get_Kind (Cond) = Iir_Kind_Simple_Name then
+               --  In fact the parsed condition was an alternate label.
+               Alt_Label := Get_Identifier (Cond);
+               Free_Iir (Cond);
+            else
+               Error_Msg_Parse ("alternative label must be an identifier");
+               Free_Iir (Cond);
+            end if;
 
-      Set_Generate_Statement_Body
-        (Res, Parse_Generate_Statement_Body (Res));
+            --  Skip ':'
+            Scan;
+
+            Cond := Parse_Expression;
+         end if;
+
+         Set_Condition (Clause, Cond);
+
+         --  Skip 'generate'
+         Expect (Tok_Generate);
+         Scan;
+
+         Set_Generate_Statement_Body
+           (Clause, Parse_Generate_Statement_Body (Clause, Alt_Label));
+
+         if Last /= Null_Iir then
+            Set_Generate_Else_Clause (Last, Clause);
+         end if;
+         Last := Clause;
+
+         exit when Current_Token /= Tok_Elsif;
+      end loop;
+
+      if Current_Token = Tok_Else then
+         Clause := Create_Iir (Iir_Kind_If_Generate_Else_Clause);
+         Set_Location (Clause);
+
+         --  Skip 'else'
+         Scan;
+
+         if Current_Token = Tok_Identifier then
+            Alt_Label := Current_Identifier;
+
+            --  Skip identifier
+            Scan;
+
+            Expect (Tok_Colon);
+
+            --  Skip ':'
+            Scan;
+         else
+            Alt_Label := Null_Identifier;
+         end if;
+
+         --  Skip 'generate'
+         Expect (Tok_Generate);
+         Scan;
+
+         Set_Generate_Statement_Body
+           (Clause, Parse_Generate_Statement_Body (Clause, Alt_Label));
+
+         Set_Generate_Else_Clause (Last, Clause);
+      end if;
 
       Expect (Tok_Generate);
       Set_End_Has_Reserved_Id (Res, True);
@@ -6476,17 +6564,23 @@ package body Parse is
          -- Try to find a label.
          if Current_Token = Tok_Identifier then
             Label := Current_Identifier;
+
+            --  Skip identifier
             Scan;
+
             if Current_Token = Tok_Colon then
-               -- The identifier is really a label.
+               --  The identifier is really a label.
+
+               --  Skip ':'
                Scan;
             else
-               -- This is not a label.
+               --  This is not a label.  Assume a concurrent assignment.
                Target := Create_Iir (Iir_Kind_Simple_Name);
                Set_Location (Target, Loc);
                Set_Identifier (Target, Label);
                Label := Null_Identifier;
                Target := Parse_Name_Suffix (Target);
+
                Stmt := Parse_Concurrent_Assignment (Target);
                goto Has_Stmt;
             end if;
@@ -6498,15 +6592,18 @@ package body Parse is
             else
                Postponed := True;
             end if;
+
+            --  Skip 'postponed'
             Scan;
          end if;
 
          case Current_Token is
-            when Tok_End =>
+            when Tok_End | Tok_Else | Tok_Elsif | Tok_When =>
+               --  End of list.  'else', 'elseif' and 'when' can be used to
+               --  separate statements in a generate statement.
                Postponed_Not_Allowed;
                if Label /= Null_Identifier then
-                  Error_Msg_Parse
-                    ("no label is allowed before the 'end' keyword");
+                  Error_Msg_Parse ("label is not allowed here");
                end if;
                return;
             when Tok_Identifier =>
@@ -6587,7 +6684,7 @@ package body Parse is
 
          << Has_Stmt >> null;
 
-         -- stmt can be null in case of error.
+         --  Stmt can be null in case of error.
          if Stmt /= Null_Iir then
             Set_Location (Stmt, Loc);
             if Label /= Null_Identifier then
