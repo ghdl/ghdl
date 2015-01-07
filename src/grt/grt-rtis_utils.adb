@@ -615,29 +615,28 @@ package body Grt.Rtis_Utils is
                   end if;
                end;
             when Ghdl_Rtik_Process
-              | Ghdl_Rtik_Block
-              | Ghdl_Rtik_If_Generate =>
+              | Ghdl_Rtik_Block =>
                Prepend (Rstr, Blk.Name);
                Prepend (Rstr, Sep);
                Ctxt := Get_Parent_Context (Ctxt);
             when Ghdl_Rtik_Generate_Body =>
-               if Blk.Parent.Kind = Ghdl_Rtik_For_Generate then
-                  declare
-                     Gen : constant Ghdl_Rtin_Generate_Acc :=
-                       To_Ghdl_Rtin_Generate_Acc (Blk.Parent);
-                     Iter : Ghdl_Rtin_Object_Acc;
-                     Addr : Address;
-                  begin
+               declare
+                  Gen : constant Ghdl_Rtin_Generate_Acc :=
+                    To_Ghdl_Rtin_Generate_Acc (Blk.Parent);
+                  Iter : Ghdl_Rtin_Object_Acc;
+                  Addr : Address;
+               begin
+                  if Blk.Parent.Kind = Ghdl_Rtik_For_Generate then
                      Prepend (Rstr, ')');
                      Iter := To_Ghdl_Rtin_Object_Acc (Blk.Children (0));
                      Addr := Loc_To_Addr (Iter.Common.Depth, Iter.Loc, Ctxt);
                      Get_Value (Rstr, Addr, Get_Base_Type (Iter.Obj_Type));
                      Prepend (Rstr, '(');
-                     Prepend (Rstr, Gen.Name);
-                     Prepend (Rstr, Sep);
-                  end;
-               end if;
-               Ctxt := Get_Parent_Context (Ctxt);
+                  end if;
+                  Prepend (Rstr, Gen.Name);
+                  Prepend (Rstr, Sep);
+                  Ctxt := Get_Parent_Context (Ctxt);
+               end;
             when others =>
                Internal_Error ("grt.rtis_utils.get_path_name");
          end case;
