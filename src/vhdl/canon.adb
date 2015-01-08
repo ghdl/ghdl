@@ -1511,7 +1511,6 @@ package body Canon is
                  (El, Proc, Sub_Chain);
 
                Replace_Stmt (Proc);
-               Free_Iir (El);
                El := Proc;
 
             when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
@@ -1521,7 +1520,6 @@ package body Canon is
                  (El, Proc, Sub_Chain);
 
                Replace_Stmt (Proc);
-               Free_Iir (El);
                El := Proc;
 
             when Iir_Kind_Concurrent_Assertion_Statement =>
