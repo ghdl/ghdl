@@ -54,6 +54,7 @@ package Grt.Sdf is
       Timingcheck_Setup,
       Timingcheck_Hold,
       Timingcheck_Recovery,
+      Timingcheck_Removal,
       Timingcheck_Skew,
       Timingcheck_Nochange,
       Timingcheck_Setuphold

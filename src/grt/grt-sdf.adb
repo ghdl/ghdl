@@ -231,8 +231,10 @@ package body Grt.Sdf is
    function Scan_Number return Sdf_Token_Type
    is
       Has_Dot : Boolean;
+      Is_Negative : Boolean;
    begin
       Has_Dot := False;
+      Is_Negative := False;
       Scan_Int := 0;
       Scan_Exp := 0;
       loop
@@ -252,6 +254,14 @@ package body Grt.Sdf is
                   Has_Dot := True;
                end if;
                Pos := Pos + 1;
+            when '-' =>
+               if Is_Negative then
+                  Error_Bad_Character;
+                  return Tok_Error;
+               else
+                  Is_Negative := True;
+               end if;
+               Pos := Pos + 1;
             when EOT =>
                if Pos /= Buf_Len then
                   Error_Bad_Character;
@@ -264,6 +274,9 @@ package body Grt.Sdf is
                exit;
          end case;
       end loop;
+      if Is_Negative then
+         Scan_Int := -Scan_Int;
+      end if;
       if Has_Dot then
          return Tok_Rnumber;
       else
@@ -385,7 +398,8 @@ package body Grt.Sdf is
            | 'A' .. 'Z' =>
             Scan_Identifier;
             return Tok_Identifier;
-         when '0' .. '9' =>
+         when '0' .. '9'
+           | '-' =>
             return Scan_Number;
          when others =>
             Error_Bad_Character;
@@ -972,6 +986,8 @@ package body Grt.Sdf is
             Start ("tsetup");
          when Timingcheck_Recovery =>
             Start ("trecovery");
+         when Timingcheck_Removal =>
+            Start ("tremoval");
          when Timingcheck_Skew =>
             Start ("tskew");
          when Timingcheck_Width =>
@@ -1280,6 +1296,8 @@ package body Grt.Sdf is
                      Start_Generic_Name (Timingcheck_Setuphold);
                   elsif Is_Ident ("RECOVERY") then
                      Start_Generic_Name (Timingcheck_Recovery);
+                  elsif Is_Ident ("REMOVAL") then
+                     Start_Generic_Name (Timingcheck_Removal);
                   elsif Is_Ident ("SKEW") then
                      Start_Generic_Name (Timingcheck_Skew);
                   elsif Is_Ident ("WIDTH") then
@@ -1304,6 +1322,7 @@ package body Grt.Sdf is
                      when Timingcheck_Setup
                        | Timingcheck_Hold
                        | Timingcheck_Recovery
+                       | Timingcheck_Removal
                        | Timingcheck_Skew
                        | Timingcheck_Setuphold
                        | Timingcheck_Nochange =>

@@ -432,6 +432,7 @@ package body Grt.Vital_Annotate is
       if Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01)
         or else Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01Z)
         or else Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType01ZX)
+        or else Vhpi_Compare_Handles (Gen_Basetype, VitalDelayType)
       then
          Ok := Write_Td_Delay_Generic (Context, Gen);
       elsif Vhpi_Compare_Handles (Gen_Basetype, VitalDelayArrayType01)
