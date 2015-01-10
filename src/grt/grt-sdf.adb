@@ -177,6 +177,7 @@ package body Grt.Sdf is
                Ident_End := Pos - 1;
                return;
             when EOT =>
+               --  Continue to read.
                Read_Append;
                Pos := Pos - 1;
             when others =>
@@ -208,7 +209,9 @@ package body Grt.Sdf is
          Pos := Pos + 1;
          case Buf (Pos) is
             when EOT =>
+               --  Continue to read.
                Read_Append;
+               Pos := Pos - 1;
             when NUL .. Character'Val (3)
               | Character'Val (5) .. Character'Val (31)
               | Character'Val (127) .. Character'Val (255) =>
