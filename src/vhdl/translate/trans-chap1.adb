@@ -785,7 +785,8 @@ package body Trans.Chap1 is
                      when Iir_Kind_Indexed_Name
                        | Iir_Kind_Slice_Name =>
                         Block := Get_Named_Entity (Get_Prefix (Block));
-                     when Iir_Kinds_Denoting_Name =>
+                     when Iir_Kinds_Denoting_Name
+                       | Iir_Kind_Parenthesis_Name =>
                         Block := Get_Named_Entity (Block);
                      when others =>
                         null;
@@ -797,7 +798,8 @@ package body Trans.Chap1 is
                           (El, Base_Block, Get_Info (Block));
                      when Iir_Kind_Generate_Statement_Body =>
                         case Get_Kind (Get_Parent (Block)) is
-                           when Iir_Kind_If_Generate_Statement =>
+                           when Iir_Kind_If_Generate_Statement
+                             | Iir_Kind_If_Generate_Else_Clause =>
                               Translate_If_Generate_Block_Configuration_Calls
                                 (El, Base_Info);
                            when Iir_Kind_For_Generate_Statement =>

@@ -6166,9 +6166,7 @@ package body Parse is
       case Current_Token is
          when Tok_Elsif
            | Tok_Else =>
-            if Get_Kind (Parent) = Iir_Kind_If_Generate_Statement
-              or else Get_Kind (Parent) = Iir_Kind_If_Generate_Else_Clause
-            then
+            if Get_Kind (Parent) = Iir_Kind_If_Generate_Statement then
                return Bod;
             end if;
          when others =>
@@ -6309,6 +6307,11 @@ package body Parse is
          Alt_Label := Null_Identifier;
          if Current_Token = Tok_Colon then
             if Get_Kind (Cond) = Iir_Kind_Simple_Name then
+               if Vhdl_Std < Vhdl_08 then
+                  Error_Msg_Parse
+                    ("alternative label not allowed before vhdl08");
+               end if;
+
                --  In fact the parsed condition was an alternate label.
                Alt_Label := Get_Identifier (Cond);
                Free_Iir (Cond);
@@ -6330,7 +6333,7 @@ package body Parse is
          Scan;
 
          Set_Generate_Statement_Body
-           (Clause, Parse_Generate_Statement_Body (Clause, Alt_Label));
+           (Clause, Parse_Generate_Statement_Body (Res, Alt_Label));
 
          if Last /= Null_Iir then
             Set_Generate_Else_Clause (Last, Clause);
@@ -6341,6 +6344,10 @@ package body Parse is
       end loop;
 
       if Current_Token = Tok_Else then
+         if Vhdl_Std < Vhdl_08 then
+            Error_Msg_Parse ("else generate not allowed before vhdl08");
+         end if;
+
          Clause := Create_Iir (Iir_Kind_If_Generate_Else_Clause);
          Set_Location (Clause);
 
@@ -6366,7 +6373,7 @@ package body Parse is
          Scan;
 
          Set_Generate_Statement_Body
-           (Clause, Parse_Generate_Statement_Body (Clause, Alt_Label));
+           (Clause, Parse_Generate_Statement_Body (Res, Alt_Label));
 
          Set_Generate_Else_Clause (Last, Clause);
       end if;
@@ -7005,14 +7012,14 @@ package body Parse is
    --  precond : FOR
    --  postcond: ';'
    --
-   --  [ §1.3.1 ]
+   --  [ 1.3.1 ]
    --  block_configuration ::=
    --      FOR block_specification
    --          { use_clause }
    --          { configuration_item }
    --      END FOR ;
    --
-   --  [ §1.3.1 ]
+   --  [ 1.3.1 ]
    --  block_specification ::=
    --      ARCHITECTURE_name
    --    | BLOCK_STATEMENT_label

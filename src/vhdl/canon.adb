@@ -2470,6 +2470,11 @@ package body Canon is
                      Set_Prev_Block_Configuration
                        (El, Get_Generate_Block_Configuration (Sub_Blk));
                      Set_Generate_Block_Configuration (Sub_Blk, El);
+                  when Iir_Kind_Parenthesis_Name =>
+                     Sub_Blk := Get_Named_Entity (Sub_Blk);
+                     Set_Prev_Block_Configuration
+                       (El, Get_Generate_Block_Configuration (Sub_Blk));
+                     Set_Generate_Block_Configuration (Sub_Blk, El);
                   when Iir_Kind_Generate_Statement_Body =>
                      Set_Generate_Block_Configuration (Sub_Blk, El);
                   when others =>
@@ -2547,13 +2552,19 @@ package body Canon is
                end if;
             when Iir_Kind_If_Generate_Statement =>
                declare
-                  Bod : constant Iir := Get_Generate_Statement_Body (El);
-                  Blk_Config : constant Iir_Block_Configuration :=
-                    Get_Generate_Block_Configuration (Bod);
+                  Clause : Iir;
+                  Bod : Iir;
+                  Blk_Config : Iir_Block_Configuration;
                begin
-                  if Blk_Config = Null_Iir then
-                     Create_Default_Block_Configuration (Bod);
-                  end if;
+                  Clause := El;
+                  while Clause /= Null_Iir loop
+                     Bod := Get_Generate_Statement_Body (Clause);
+                     Blk_Config := Get_Generate_Block_Configuration (Bod);
+                     if Blk_Config = Null_Iir then
+                        Create_Default_Block_Configuration (Bod);
+                     end if;
+                     Clause := Get_Generate_Else_Clause (Clause);
+                  end loop;
                end;
             when Iir_Kind_For_Generate_Statement =>
                declare

@@ -834,6 +834,9 @@ package body Iirs_Utils is
             return Get_Named_Entity (Get_Prefix (Block_Spec));
          when Iir_Kind_Simple_Name =>
             return Get_Named_Entity (Block_Spec);
+         when Iir_Kind_Parenthesis_Name =>
+            --  An alternative label.
+            return Get_Named_Entity (Block_Spec);
          when others =>
             Error_Kind ("get_block_from_block_specification", Block_Spec);
             return Null_Iir;

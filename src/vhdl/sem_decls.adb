@@ -1495,9 +1495,9 @@ package body Sem_Decls is
       end if;
    end Sem_Subtype_Declaration;
 
-   --  If DECL is a constant declaration, and there is already a constant
-   --  declaration in the current scope with the same name, then return it.
-   --  Otherwise, return NULL.
+   --  If DECL is a constant declaration, and there is already a incomplete
+   --  constant declaration in the current scope with the same name, then
+   --  return it. Otherwise, return NULL.
    function Get_Deferred_Constant (Decl : Iir) return Iir
    is
       Deferred_Const : Iir;
@@ -1521,6 +1521,10 @@ package body Sem_Decls is
 
       Deferred_Const := Get_Declaration (Interp);
       if Get_Kind (Deferred_Const) /= Iir_Kind_Constant_Declaration then
+         return Null_Iir;
+      end if;
+      if not Get_Deferred_Declaration_Flag (Deferred_Const) then
+         --  Just a 'normal' duplicate declaration
          return Null_Iir;
       end if;
       --  LRM93 4.3.1.1

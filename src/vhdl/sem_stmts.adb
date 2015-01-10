@@ -1511,9 +1511,7 @@ package body Sem_Stmts is
       Close_Declarative_Region;
    end Sem_Block_Statement;
 
-   procedure Sem_Generate_Statement_Body (Parent : Iir)
-   is
-      Bod : constant Iir := Get_Generate_Statement_Body (Parent);
+   procedure Sem_Generate_Statement_Body (Bod : Iir) is
    begin
       Sem_Block (Bod, True); -- Flags.Vhdl_Std /= Vhdl_87);
    end Sem_Generate_Statement_Body;
@@ -1542,7 +1540,7 @@ package body Sem_Stmts is
       end if;
 
       --  In the same declarative region.
-      Sem_Generate_Statement_Body (Stmt);
+      Sem_Generate_Statement_Body (Get_Generate_Statement_Body (Stmt));
 
       Close_Declarative_Region;
    end Sem_For_Generate_Statement;
@@ -1550,7 +1548,9 @@ package body Sem_Stmts is
    procedure Sem_If_Generate_Statement (Stmt : Iir)
    is
       Clause : Iir;
+      Bod : Iir;
       Condition : Iir;
+      Alt_Label : Name_Id;
    begin
       --  LRM93 10.1 Declarative region.
       --  12. A generate statement.
@@ -1579,8 +1579,21 @@ package body Sem_Stmts is
             null;
          end if;
 
-         --  In the same declarative region.
-         Sem_Generate_Statement_Body (Clause);
+         Bod := Get_Generate_Statement_Body (Clause);
+         Alt_Label := Get_Alternative_Label (Bod);
+         if Alt_Label /= Null_Identifier then
+            --  Declare label.  This doesn't appear in the LRM (bug ?), but
+            --  used here to detect duplicated labels.
+            Sem_Scopes.Add_Name (Bod);
+            Xref_Decl (Bod);
+         end if;
+
+         --  Contrary to the LRM, a new declarative region is declared.  This
+         --  is required so that declarations in a generate statement body are
+         --  not in the scope of the following generate bodies.
+         Open_Declarative_Region;
+         Sem_Generate_Statement_Body (Bod);
+         Close_Declarative_Region;
 
          Clause := Get_Generate_Else_Clause (Clause);
       end loop;
