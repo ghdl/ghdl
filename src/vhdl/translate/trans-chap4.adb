@@ -543,7 +543,7 @@ package body Trans.Chap4 is
    --  Create code to elaborate OBJ.
    procedure Elab_Object (Obj : Iir)
    is
-      Value : Iir;
+      Value : constant Iir := Get_Default_Value (Obj);
       Obj1  : Iir;
    begin
       --  A locally static constant is pre-elaborated.
@@ -551,6 +551,9 @@ package body Trans.Chap4 is
       if Get_Expr_Staticness (Obj) = Locally
         and then Get_Deferred_Declaration (Obj) = Null_Iir
       then
+         if Get_Kind (Value) = Iir_Kind_Overflow_Literal then
+            Chap6.Gen_Bound_Error (Obj);
+         end if;
          return;
       end if;
 
@@ -575,7 +578,6 @@ package body Trans.Chap4 is
 
       --  Still use the default value of the not deferred constant.
       --  FIXME: what about composite types.
-      Value := Get_Default_Value (Obj);
       Elab_Object_Value (Obj1, Value);
    end Elab_Object;
 

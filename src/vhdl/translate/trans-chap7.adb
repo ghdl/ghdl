@@ -3894,9 +3894,11 @@ package body Trans.Chap7 is
                --  Generate the error message
                Chap6.Gen_Bound_Error (Expr);
 
-               --  Create a dummy value
+               --  Create a dummy value, for type checking.  But never
+               --  executed.
                L := Create_Temp (Otype);
-               if Tinfo.Type_Mode = Type_Mode_Fat_Acc then
+               if Tinfo.Type_Mode in Type_Mode_Fat then
+                  --  For fat pointers or arrays.
                   return New_Address (New_Obj (L),
                                       Tinfo.Ortho_Ptr_Type (Mode_Value));
                else

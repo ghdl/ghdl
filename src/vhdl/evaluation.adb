@@ -164,16 +164,21 @@ package body Evaluation is
       return Res;
    end Build_Simple_Aggregate;
 
-   function Build_Overflow (Origin : Iir) return Iir
+   function Build_Overflow (Origin : Iir; Expr_Type : Iir) return Iir
    is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Overflow_Literal);
       Location_Copy (Res, Origin);
-      Set_Type (Res, Get_Type (Origin));
+      Set_Type (Res, Expr_Type);
       Set_Literal_Origin (Res, Origin);
       Set_Expr_Staticness (Res, Locally);
       return Res;
+   end Build_Overflow;
+
+   function Build_Overflow (Origin : Iir) return Iir is
+   begin
+      return Build_Overflow (Origin, Get_Type (Origin));
    end Build_Overflow;
 
    function Build_Constant (Val : Iir; Origin : Iir) return Iir
@@ -1749,37 +1754,48 @@ package body Evaluation is
       Val : Iir;
       Val_Type : Iir;
       Conv_Type : Iir;
+      Res : Iir;
    begin
       Val := Eval_Static_Expr (Get_Expression (Expr));
       Val_Type := Get_Base_Type (Get_Type (Val));
       Conv_Type := Get_Base_Type (Get_Type (Expr));
       if Conv_Type = Val_Type then
-         return Build_Constant (Val, Expr);
+         Res := Build_Constant (Val, Expr);
+      else
+         case Get_Kind (Conv_Type) is
+            when Iir_Kind_Integer_Type_Definition =>
+               case Get_Kind (Val_Type) is
+                  when Iir_Kind_Integer_Type_Definition =>
+                     Res := Build_Integer (Get_Value (Val), Expr);
+                  when Iir_Kind_Floating_Type_Definition =>
+                     Res := Build_Integer
+                       (Iir_Int64 (Get_Fp_Value (Val)), Expr);
+                  when others =>
+                     Error_Kind ("eval_type_conversion(1)", Val_Type);
+               end case;
+            when Iir_Kind_Floating_Type_Definition =>
+               case Get_Kind (Val_Type) is
+                  when Iir_Kind_Integer_Type_Definition =>
+                     Res := Build_Floating (Iir_Fp64 (Get_Value (Val)), Expr);
+                  when Iir_Kind_Floating_Type_Definition =>
+                     Res := Build_Floating (Get_Fp_Value (Val), Expr);
+                  when others =>
+                     Error_Kind ("eval_type_conversion(2)", Val_Type);
+               end case;
+            when Iir_Kind_Array_Type_Definition =>
+               --  Not a scalar, do not check bounds.
+               return Eval_Array_Type_Conversion (Expr, Val);
+            when others =>
+               Error_Kind ("eval_type_conversion(3)", Conv_Type);
+         end case;
       end if;
-      case Get_Kind (Conv_Type) is
-         when Iir_Kind_Integer_Type_Definition =>
-            case Get_Kind (Val_Type) is
-               when Iir_Kind_Integer_Type_Definition =>
-                  return Build_Integer (Get_Value (Val), Expr);
-               when Iir_Kind_Floating_Type_Definition =>
-                  return Build_Integer (Iir_Int64 (Get_Fp_Value (Val)), Expr);
-               when others =>
-                  Error_Kind ("eval_type_conversion(1)", Val_Type);
-            end case;
-         when Iir_Kind_Floating_Type_Definition =>
-            case Get_Kind (Val_Type) is
-               when Iir_Kind_Integer_Type_Definition =>
-                  return Build_Floating (Iir_Fp64 (Get_Value (Val)), Expr);
-               when Iir_Kind_Floating_Type_Definition =>
-                  return Build_Floating (Get_Fp_Value (Val), Expr);
-               when others =>
-                  Error_Kind ("eval_type_conversion(2)", Val_Type);
-            end case;
-         when Iir_Kind_Array_Type_Definition =>
-            return Eval_Array_Type_Conversion (Expr, Val);
-         when others =>
-            Error_Kind ("eval_type_conversion(3)", Conv_Type);
-      end case;
+      if not Eval_Is_In_Bound (Res, Get_Type (Expr)) then
+         if Get_Kind (Res) /= Iir_Kind_Overflow_Literal then
+            Warning_Msg_Sem ("result of conversion out of bounds", Expr);
+            Res := Build_Overflow (Res);
+         end if;
+      end if;
+      return Res;
    end Eval_Type_Conversion;
 
    function Eval_Physical_Literal (Expr : Iir) return Iir
@@ -1944,6 +1960,12 @@ package body Evaluation is
                Param := Get_Parameter (Expr);
                Param := Eval_Static_Expr (Param);
                Set_Parameter (Expr, Param);
+
+               --  Special case for overflow.
+               if Get_Kind (Param) = Iir_Kind_Overflow_Literal then
+                  return Build_Overflow (Expr);
+               end if;
+
                Param_Type := Get_Base_Type (Get_Type (Param));
                case Get_Kind (Param_Type) is
                   when Iir_Kind_Integer_Type_Definition =>
