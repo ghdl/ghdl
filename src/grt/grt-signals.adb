@@ -68,6 +68,25 @@ package body Grt.Signals is
       return Sig_Mode;
    end Get_Current_Mode_Signal;
 
+   procedure Assign
+     (Targ : out Value_Union; Val : Value_Union; Mode : Mode_Type) is
+   begin
+      case Mode is
+         when Mode_B1 =>
+            Targ.B1 := Val.B1;
+         when Mode_E8 =>
+            Targ.E8 := Val.E8;
+         when Mode_E32 =>
+            Targ.E32 := Val.E32;
+         when Mode_I32 =>
+            Targ.I32 := Val.I32;
+         when Mode_I64 =>
+            Targ.I64 := Val.I64;
+         when Mode_F64 =>
+            Targ.F64 := Val.F64;
+      end case;
+   end Assign;
+
    procedure Ghdl_Signal_Name_Rti (Sig : Ghdl_Rti_Access;
                                    Ctxt : Ghdl_Rti_Access;
                                    Addr : Address)
@@ -361,6 +380,9 @@ package body Grt.Signals is
                                  Val_Ptr => Drv);
       Sign.S.Drivers (Sign.S.Nbr_Drivers - 1).Last_Trans := Trans1;
       Trans.Next := Trans1;
+
+      --  Initialize driver value.
+      Assign (Drv.all, Sign.Value, Sign.Mode);
    end Ghdl_Signal_Add_Direct_Driver;
 
    procedure Append_Port (Targ : Ghdl_Signal_Ptr; Src : Ghdl_Signal_Ptr)
