@@ -1222,6 +1222,9 @@ package body Grt.Avhpi is
          when VhpiIndexedNameK =>
             Vptr := To_Ghdl_Value_Ptr (Obj.N_Addr);
             Atype := Obj.N_Type;
+         when VhpiGenericDeclK =>
+            Vptr := To_Ghdl_Value_Ptr (Avhpi_Get_Address (Obj));
+            Atype := Obj.Obj.Obj_Type;
          when others =>
             return AvhpiErrorNotImplemented;
       end case;
