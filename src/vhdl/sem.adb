@@ -743,7 +743,22 @@ package body Sem is
                   --    generate is an if generate statement and if the first
                   --    condition after IF evaluates to TRUE.
                   Res := Get_Generate_Statement_Body (Block);
+
+                  --  LRM08 3.4.2 Block configuration
+                  --  If the block specification of a block configuration
+                  --  contains a generate statement label that denotes an if
+                  --  generate statement, and if the first condition after IF
+                  --  has an alternative label, then it is an error if the
+                  --  generate statement label does not contain a generate
+                  --  specification that is an alternative label.
+                  if Get_Has_Label (Res) then
+                     Error_Msg_Sem
+                       ("alternative label required in block specification",
+                        Block_Spec);
+                  end if;
+
                   Set_Block_Specification (Block_Conf, Block_Name);
+
                when Iir_Kind_Parenthesis_Name =>
                   if Vhdl_Std < Vhdl_08 then
                      Error_Msg_Sem ("alternative label only allowed by vhdl08",

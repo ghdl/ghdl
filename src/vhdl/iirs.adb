@@ -4368,6 +4368,20 @@ package body Iirs is
       Set_Flag10 (Decl, Flag);
    end Set_End_Has_Postponed;
 
+   function Get_Has_Label (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Label (Get_Kind (Decl)));
+      return Get_Flag6 (Decl);
+   end Get_Has_Label;
+
+   procedure Set_Has_Label (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Label (Get_Kind (Decl)));
+      Set_Flag6 (Decl, Flag);
+   end Set_Has_Label;
+
    function Get_Has_Begin (Decl : Iir) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);

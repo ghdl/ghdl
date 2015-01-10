@@ -5692,24 +5692,31 @@ package body Parse is
       Res: Iir;
       Sensitivity_List : Iir_List;
    begin
-      -- The PROCESS keyword was just scaned.
+      --  Skip 'process'
       Scan;
 
       if Current_Token = Tok_Left_Paren then
          Res := Create_Iir (Iir_Kind_Sensitized_Process_Statement);
+
+         --  Skip '('
          Scan;
+
          if Current_Token = Tok_All then
             if Vhdl_Std < Vhdl_08 then
                Error_Msg_Parse
                  ("all sensitized process allowed only in vhdl 08");
             end if;
             Sensitivity_List := Iir_List_All;
+
+            --  Skip 'all'
             Scan;
          else
             Sensitivity_List := Create_Iir_List;
             Parse_Sensitivity_List (Sensitivity_List);
          end if;
          Set_Sensitivity_List (Res, Sensitivity_List);
+
+         --  Skip ')'
          Expect (Tok_Right_Paren);
          Scan;
       else
@@ -5718,12 +5725,15 @@ package body Parse is
 
       Set_Location (Res, Loc);
       Set_Label (Res, Label);
+      Set_Has_Label (Res, Label /= Null_Identifier);
 
       if Current_Token = Tok_Is then
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("""is"" not allowed here by vhdl 87");
          end if;
          Set_Has_Is (Res, True);
+
+         --  Skip 'is'
          Scan;
       end if;
 
@@ -6107,6 +6117,7 @@ package body Parse is
       Set_Location (Bod);
       Set_Parent (Bod, Parent);
       Set_Alternative_Label (Bod, Label);
+      Set_Has_Label (Bod, Label /= Null_Identifier);
 
       --  Check for a block declarative item.
       case Current_Token is
