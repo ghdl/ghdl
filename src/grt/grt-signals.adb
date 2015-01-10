@@ -446,26 +446,6 @@ package body Grt.Signals is
       Sign.S.Resolv.Disconnect_Time := Time;
    end Ghdl_Signal_Set_Disconnect;
 
-   procedure Direct_Assign
-     (Targ : out Value_Union; Val : Ghdl_Value_Ptr; Mode : Mode_Type)
-   is
-   begin
-      case Mode is
-         when Mode_B1 =>
-            Targ.B1 := Val.B1;
-         when Mode_E8 =>
-            Targ.E8 := Val.E8;
-         when Mode_E32 =>
-            Targ.E32 := Val.E32;
-         when Mode_I32 =>
-            Targ.I32 := Val.I32;
-         when Mode_I64 =>
-            Targ.I64 := Val.I64;
-         when Mode_F64 =>
-            Targ.F64 := Val.F64;
-      end case;
-   end Direct_Assign;
-
    function Value_Equal (Left, Right : Value_Union; Mode : Mode_Type)
      return Boolean
    is
@@ -612,20 +592,7 @@ package body Grt.Signals is
          end if;
          --  FIXME: can be a bound-error too!
          if Trans.Kind = Trans_Value then
-            case Sign.Mode is
-               when Mode_B1 =>
-                  Driver.Last_Trans.Val_Ptr.B1 := Trans.Val.B1;
-               when Mode_E8 =>
-                  Driver.Last_Trans.Val_Ptr.E8 := Trans.Val.E8;
-               when Mode_E32 =>
-                  Driver.Last_Trans.Val_Ptr.E32 := Trans.Val.E32;
-               when Mode_I32 =>
-                  Driver.Last_Trans.Val_Ptr.I32 := Trans.Val.I32;
-               when Mode_I64 =>
-                  Driver.Last_Trans.Val_Ptr.I64 := Trans.Val.I64;
-               when Mode_F64 =>
-                  Driver.Last_Trans.Val_Ptr.F64 := Trans.Val.F64;
-            end case;
+            Assign (Driver.Last_Trans.Val_Ptr.all, Trans.Val, Sign.Mode);
             Free_In (Trans);
          elsif Trans.Kind = Trans_Error then
             Error_Trans_Error (Trans);
@@ -2745,8 +2712,8 @@ package body Grt.Signals is
          Trans := Sig.S.Drivers (J - 1).First_Trans.Next;
          if Trans /= null then
             if Trans.Kind = Trans_Direct then
-               Direct_Assign (Sig.S.Drivers (J - 1).First_Trans.Val,
-                              Trans.Val_Ptr, Sig.Mode);
+               Assign (Sig.S.Drivers (J - 1).First_Trans.Val,
+                       Trans.Val_Ptr.all, Sig.Mode);
                --  In fact we knew the signal was active!
                Res := True;
             elsif Trans.Time = Current_Time then
@@ -2874,8 +2841,7 @@ package body Grt.Signals is
                      --  Note: already or will be marked as active in
                      --    update_signals.
                      Mark_Active (Sig);
-                     Direct_Assign (First_Trans.Val,
-                                    Trans.Val_Ptr, Sig.Mode);
+                     Assign (First_Trans.Val, Trans.Val_Ptr.all, Sig.Mode);
                      Sig.Driving_Value := First_Trans.Val;
                   elsif Trans.Time = Current_Time then
                      Mark_Active (Sig);
@@ -3151,7 +3117,7 @@ package body Grt.Signals is
                Sig.Is_Direct_Active := False;
 
                Trans := Sig.S.Drivers (0).Last_Trans;
-               Direct_Assign (Sig.Driving_Value, Trans.Val_Ptr, Sig.Mode);
+               Assign (Sig.Driving_Value, Trans.Val_Ptr.all, Sig.Mode);
                Sig.S.Drivers (0).First_Trans.Val := Sig.Driving_Value;
                Set_Effective_Value (Sig, Sig.Driving_Value);
 
@@ -3164,8 +3130,8 @@ package body Grt.Signals is
                   Trans := Sig.S.Drivers (J - 1).First_Trans.Next;
                   if Trans /= null then
                      if Trans.Kind = Trans_Direct then
-                        Direct_Assign (Sig.S.Drivers (J - 1).First_Trans.Val,
-                                       Trans.Val_Ptr, Sig.Mode);
+                        Assign (Sig.S.Drivers (J - 1).First_Trans.Val,
+                                Trans.Val_Ptr.all, Sig.Mode);
                      elsif Trans.Time = Current_Time then
                         Free (Sig.S.Drivers (J - 1).First_Trans);
                         Sig.S.Drivers (J - 1).First_Trans := Trans;
