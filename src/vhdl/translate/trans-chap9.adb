@@ -154,11 +154,12 @@ package body Trans.Chap9 is
       Info      : Block_Info_Acc;
       Comp_Info : Comp_Info_Acc;
 
-      Mark2                : Id_Mark_Type;
+      Mark, Mark2 : Id_Mark_Type;
       Assoc, Conv, In_Type : Iir;
       Has_Conv_Record      : Boolean := False;
    begin
       Info := Add_Info (Inst, Kind_Block);
+      Push_Identifier_Prefix (Mark, Get_Label (Inst));
 
       if Is_Component_Instantiation (Inst) then
          --  Via a component declaration.
@@ -214,6 +215,7 @@ package body Trans.Chap9 is
             "__CONVS"),
             Get_Scope_Type (Info.Block_Scope));
       end if;
+      Pop_Identifier_Prefix (Mark);
    end Translate_Component_Instantiation_Statement;
 
    procedure Translate_Process_Declarations (Proc : Iir)
