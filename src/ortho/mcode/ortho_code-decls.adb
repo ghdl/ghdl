@@ -22,6 +22,7 @@ with Ortho_Code.Debug; use Ortho_Code.Debug;
 with Ortho_Code.Exprs;
 with Ortho_Code.Abi; use Ortho_Code.Abi;
 with Ortho_Code.Flags;
+with Ortho_Code.Types;
 
 package body Ortho_Code.Decls is
    --  Common fields:
@@ -659,6 +660,8 @@ package body Ortho_Code.Decls is
             Disp_Decl_Name (Decl);
             Put (": ");
             Put (Int32 (Get_Decl_Type (Decl)), 0);
+            Put (", ");
+            Disp_Mode (Types.Get_Type_Mode (Get_Decl_Type (Decl)));
             Put (", offset=");
             Put (Get_Inter_Offset (Decl), 0);
          when OD_Const =>

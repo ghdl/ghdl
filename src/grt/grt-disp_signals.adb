@@ -425,6 +425,14 @@ package body Grt.Disp_Signals is
          if Sig.S.Mode_Sig in Mode_Signal_User then
             Put (" #drv: ");
             Put_I32 (stdout, Ghdl_I32 (Sig.S.Nbr_Drivers));
+            case Sig.Sig_Kind is
+               when Kind_Signal_No =>
+                  Put ("  ");
+               when Kind_Signal_Register =>
+                  Put (" reg");
+               when Kind_Signal_Bus =>
+                  Put (" bus");
+            end case;
             if Sig.S.Effective /= null then
                Put (" eff: ");
                Put (stdout, Sig.S.Effective.all'Address);

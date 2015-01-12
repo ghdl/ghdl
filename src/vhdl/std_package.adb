@@ -225,17 +225,19 @@ package body Std_Package is
       procedure Create_Integer_Subtype (Type_Definition : Iir;
                                         Type_Decl : Iir;
                                         Subtype_Definition : out Iir;
-                                        Subtype_Decl : out Iir)
+                                        Subtype_Decl : out Iir;
+                                        Force_64 : Boolean := False)
       is
+         Is_64 : constant Boolean := Force_64 or Flags.Flag_Integer_64;
          Constraint : Iir;
       begin
          Subtype_Definition :=
            Create_Std_Iir (Iir_Kind_Integer_Subtype_Definition);
          Set_Base_Type (Subtype_Definition, Type_Definition);
          Constraint := Create_Std_Range_Expr
-           (Create_Std_Integer (Low_Bound (Flags.Flag_Integer_64),
+           (Create_Std_Integer (Low_Bound (Is_64),
                                 Universal_Integer_Type_Definition),
-            Create_Std_Integer (High_Bound (Flags.Flag_Integer_64),
+            Create_Std_Integer (High_Bound (Is_64),
                                 Universal_Integer_Type_Definition),
             Universal_Integer_Type_Definition);
          Set_Range_Constraint (Subtype_Definition, Constraint);
@@ -538,7 +540,8 @@ package body Std_Package is
          Create_Integer_Subtype (Universal_Integer_Type_Definition,
                                  Universal_Integer_Type_Declaration,
                                  Universal_Integer_Subtype_Definition,
-                                 Universal_Integer_Subtype_Declaration);
+                                 Universal_Integer_Subtype_Declaration,
+                                 False);
 
          Add_Decl (Universal_Integer_Subtype_Declaration);
          Set_Subtype_Definition (Universal_Integer_Type_Declaration,
@@ -610,7 +613,8 @@ package body Std_Package is
          Create_Integer_Subtype (Convertible_Integer_Type_Definition,
                                  Convertible_Integer_Type_Declaration,
                                  Convertible_Integer_Subtype_Definition,
-                                 Convertible_Integer_Subtype_Declaration);
+                                 Convertible_Integer_Subtype_Declaration,
+                                 False);
 
          --  Not added in std.standard.
       end;

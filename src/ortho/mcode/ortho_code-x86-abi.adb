@@ -196,6 +196,8 @@ package body Ortho_Code.X86.Abi is
       Put (Get_Local_Offset (Obj), 0);
       Put (" {");
       Disp_Decl_Name (Obj);
+      Put (":");
+      Debug.Disp_Mode (Types.Get_Type_Mode (Get_Decl_Type (Obj)));
       Put ("}");
    end Disp_Local;
 
