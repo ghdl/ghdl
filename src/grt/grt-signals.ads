@@ -33,6 +33,10 @@ pragma Elaborate_All (Grt.Table);
 package Grt.Signals is
    pragma Suppress (All_Checks);
 
+   --  Kind of a signal.
+   type Kind_Signal_Type is
+     (Kind_Signal_No, Kind_Signal_Register, Kind_Signal_Bus);
+
    --  Kind of transaction.
    type Transaction_Kind is
      (

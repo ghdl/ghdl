@@ -337,7 +337,11 @@ package body Sem is
       --  If the formal can have sources and is guarded, but the actual is
       --  not guarded (or has not the same kind of guard), signals cannot
       --  be collapsed.
-      if Get_Signal_Kind (Formal_Base) /= Get_Signal_Kind (Actual_Base) then
+      if (Get_Guarded_Signal_Flag (Formal_Base)
+            /= Get_Guarded_Signal_Flag (Actual_Base))
+        or else (Get_Signal_Kind (Formal_Base)
+                   /= Get_Signal_Kind (Actual_Base))
+      then
          return False;
       end if;
 

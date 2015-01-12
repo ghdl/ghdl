@@ -2620,6 +2620,7 @@ package body Grt.Signals is
               (Resolv.Resolv_Proc
                  = To_Resolver_Acc (Ieee_Std_Logic_1164_Resolved_Resolv_Ptr))
               and then Sig.S.Nbr_Drivers + Sig.Nbr_Ports <= 1
+              and then Sig.Sig_Kind = Kind_Signal_No
             then
                --  Optimization: remove resolver if there is at most one
                --  source.
