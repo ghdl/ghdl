@@ -311,10 +311,8 @@ package body Sem_Names is
       procedure Iterator_Decl_Chain is new Sem_Scopes.Iterator_Decl_Chain
         (Arg_Type => Name_Id, Handle_Decl => Iterator_Decl);
 
-      Id : Name_Id;
-      Decl_Body : Iir;
+      Id : constant Name_Id := Get_Identifier (Name);
    begin
-      Id := Get_Identifier (Name);
       case Get_Kind (Decl) is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
@@ -352,11 +350,14 @@ package body Sem_Names is
       case Get_Kind (Decl) is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
-            Decl_Body := Get_Subprogram_Body (Decl);
-            Iterator_Decl_Chain
-              (Get_Declaration_Chain (Decl_Body), Id);
-            Iterator_Decl_Chain
-              (Get_Sequential_Statement_Chain (Decl_Body), Id);
+            declare
+               Decl_Body : constant Iir := Get_Subprogram_Body (Decl);
+            begin
+               Iterator_Decl_Chain
+                 (Get_Declaration_Chain (Decl_Body), Id);
+               Iterator_Decl_Chain
+                 (Get_Sequential_Statement_Chain (Decl_Body), Id);
+            end;
          when Iir_Kind_Architecture_Body
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Block_Statement =>
@@ -364,7 +365,7 @@ package body Sem_Names is
             Iterator_Decl_Chain (Get_Concurrent_Statement_Chain (Decl), Id);
          when Iir_Kind_For_Generate_Statement =>
             declare
-               Bod : constant Iir := Get_Generate_Block_Configuration (Decl);
+               Bod : constant Iir := Get_Generate_Statement_Body (Decl);
             begin
                Iterator_Decl_Chain (Get_Declaration_Chain (Bod), Id);
                Iterator_Decl_Chain (Get_Concurrent_Statement_Chain (Bod), Id);

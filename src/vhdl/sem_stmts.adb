@@ -1525,6 +1525,7 @@ package body Sem_Stmts is
       --  LRM93 10.1 Declarative region.
       --  12. A generate statement.
       Open_Declarative_Region;
+      Set_Is_Within_Flag (Stmt, True);
 
       Param := Get_Parameter_Specification (Stmt);
       Sem_Scopes.Add_Name (Param);
@@ -1544,6 +1545,7 @@ package body Sem_Stmts is
       --  In the same declarative region.
       Sem_Generate_Statement_Body (Get_Generate_Statement_Body (Stmt));
 
+      Set_Is_Within_Flag (Stmt, True);
       Close_Declarative_Region;
    end Sem_For_Generate_Statement;
 

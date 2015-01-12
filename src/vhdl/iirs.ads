@@ -2565,6 +2565,8 @@ package Iirs is
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
+   --   Get/Set_Is_Within_Flag (Flag5)
+   --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
