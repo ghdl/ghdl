@@ -433,12 +433,15 @@ def gen_subprg_header(decl):
 
 def gen_assert(func):
     print '      pragma Assert (' + func.pname + ' /= Null_Iir);'
-    cond = '(Has_' + func.name + ' (Get_Kind (' + func.pname + ')));'
+    cond = '(Has_' + func.name + ' (Get_Kind (' + func.pname + ')),'
+    msg  = '"no field ' + func.name + '");'
     if len (cond) < 60:
         print '      pragma Assert ' + cond
+        print '                     ' + msg
     else:
         print '      pragma Assert'
         print '         ' + cond
+        print '          ' + msg
 
 # Generate Get_XXX/Set_XXX subprograms for FUNC.
 def gen_get_set(func, nodes, fields):
