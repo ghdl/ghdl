@@ -467,6 +467,15 @@ package body Ortho_Code.X86.Emits is
       End_Insn;
    end Gen_Cdq;
 
+   procedure Gen_Clear_Edx is
+   begin
+      --  Xorl edx, edx
+      Start_Insn;
+      Gen_B8 (2#0011_0001#);
+      Gen_B8 (2#11_010_010#);
+      End_Insn;
+   end Gen_Clear_Edx;
+
    procedure Gen_Mono_Op (Op : Byte; Val : O_Enode; Sz : Insn_Size) is
    begin
       Start_Insn;
@@ -1131,6 +1140,12 @@ package body Ortho_Code.X86.Emits is
             end if;
             Emit_Tst (Reg_Res, Sz_32l);
             Gen_Ov_Check (R_Sge);
+         when Mode_I64 =>
+            if Reg_Res /= R_Edx_Eax or Reg_Op /= R_Ax then
+               raise Program_Error;
+            end if;
+            --  Clear edx.
+            Gen_Clear_Edx;
          when Mode_U8
            | Mode_B2 =>
             if Reg_Res not in Regs_R32 then
@@ -1562,11 +1577,7 @@ package body Ortho_Code.X86.Emits is
            | OE_Div_Ov =>
             case Mode is
                when Mode_U32 =>
-                  --  Xorl edx, edx
-                  Start_Insn;
-                  Gen_B8 (2#0011_0001#);
-                  Gen_B8 (2#11_010_010#);
-                  End_Insn;
+                  Gen_Clear_Edx;
                   Gen_Mono_Op (2#110_000#, Get_Expr_Right (Stmt), Sz_32l);
                when Mode_I32 =>
                   if Kind = OE_Mod then

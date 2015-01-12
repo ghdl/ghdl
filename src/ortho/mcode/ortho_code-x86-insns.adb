@@ -1798,8 +1798,9 @@ package body Ortho_Code.X86.Insns is
                      end case;
                   when Mode_I64 =>
                      case O_Mode is
-                        when Mode_I32 =>
-                           --  Sign extend.
+                        when Mode_I32
+                          | Mode_U32 =>
+                           --  Zero or Sign extend.
                            Num := Get_Insn_Num;
                            Left := Gen_Insn (Left, R_Ax, Num);
                            Set_Expr_Operand (Stmt, Left);
