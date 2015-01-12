@@ -2539,6 +2539,8 @@ package Iirs is
    --
    --   Get/Set_Concurrent_Statement_Chain (Field5)
    --
+   --   Get/Set_Is_Within_Flag (Flag5)
+   --
    --   Get/Set_Has_Label (Flag6)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
@@ -2597,6 +2599,8 @@ package Iirs is
    --   Get/Set_Generate_Else_Clause (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Within_Flag (Flag5)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --

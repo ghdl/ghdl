@@ -371,17 +371,22 @@ package body Sem_Names is
             end;
          when Iir_Kind_If_Generate_Statement =>
             declare
-               Bod : constant Iir := Get_Generate_Statement_Body (Decl);
+               Clause : Iir;
+               Bod : Iir;
             begin
-               if Get_Alternative_Label (Bod) = Null_Identifier then
-                  Iterator_Decl_Chain
-                    (Get_Declaration_Chain (Bod), Id);
-                  Iterator_Decl_Chain
-                    (Get_Concurrent_Statement_Chain (Bod), Id);
-               else
-                  --  Error in LRM08
-                  raise Internal_Error;
-               end if;
+               --  Look only in the current generate_statement_body
+               Clause := Decl;
+               while Clause /= Null_Iir loop
+                  Bod := Get_Generate_Statement_Body (Clause);
+                  if Get_Is_Within_Flag (Bod) then
+                     Iterator_Decl_Chain
+                       (Get_Declaration_Chain (Bod), Id);
+                     Iterator_Decl_Chain
+                       (Get_Concurrent_Statement_Chain (Bod), Id);
+                     exit;
+                  end if;
+                  Clause := Get_Generate_Else_Clause (Clause);
+               end loop;
             end;
          when Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration =>

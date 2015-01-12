@@ -1513,7 +1513,9 @@ package body Sem_Stmts is
 
    procedure Sem_Generate_Statement_Body (Bod : Iir) is
    begin
+      Set_Is_Within_Flag (Bod, True);
       Sem_Block (Bod, True); -- Flags.Vhdl_Std /= Vhdl_87);
+      Set_Is_Within_Flag (Bod, False);
    end Sem_Generate_Statement_Body;
 
    procedure Sem_For_Generate_Statement (Stmt : Iir)
@@ -1555,6 +1557,7 @@ package body Sem_Stmts is
       --  LRM93 10.1 Declarative region.
       --  12. A generate statement.
       Open_Declarative_Region;
+      Set_Is_Within_Flag (Stmt, True);
 
       Clause := Stmt;
       while Clause /= Null_Iir loop
@@ -1597,6 +1600,8 @@ package body Sem_Stmts is
 
          Clause := Get_Generate_Else_Clause (Clause);
       end loop;
+
+      Set_Is_Within_Flag (Stmt, False);
       Close_Declarative_Region;
    end Sem_If_Generate_Statement;
 
