@@ -486,6 +486,7 @@ package body Ortho_Code.X86.Insns is
             end if;
             Free_R32 (Reg);
          when Regs_R64 =>
+            --  The pair was spilled, so the pair is free.
             Free_R32 (Get_R64_High (Reg_Orig));
             Free_R32 (Get_R64_Low (Reg_Orig));
          when others =>
@@ -1090,10 +1091,11 @@ package body Ortho_Code.X86.Insns is
    function Gen_Insn (Stmt : O_Enode; Reg : O_Reg; Pnum : O_Inum)
                      return O_Enode
    is
-      Kind : OE_Kind;
+      Kind : constant OE_Kind := Get_Expr_Kind (Stmt);
 
       Left : O_Enode;
       Right : O_Enode;
+      Res : O_Enode;
 
       Reg1 : O_Reg;
       --      P_Reg : O_Reg;
@@ -1102,7 +1104,6 @@ package body Ortho_Code.X86.Insns is
 
       Num : O_Inum;
    begin
-      Kind := Get_Expr_Kind (Stmt);
       case Kind is
          when OE_Addrl =>
             Right := Get_Addrl_Frame (Stmt);
@@ -1382,13 +1383,17 @@ package body Ortho_Code.X86.Insns is
                   return Stmt;
                when R_Any8
                  | Regs_R8 =>
-                  Reg_Res := Alloc_Reg (Reg, Stmt, Pnum);
-                  return Insert_Move (Stmt, Reg_Res);
+                  Res := Insert_Move (Stmt, R_Any8);
+                  Reg_Res := Alloc_Reg (Reg, Res, Pnum);
+                  Set_Expr_Reg (Res, Reg_Res);
+                  return Res;
                when R_Irm
                  | R_Ir
                  | R_Rm =>
-                  Reg_Res := Alloc_Reg (R_Any8, Stmt, Pnum);
-                  return Insert_Move (Stmt, Reg_Res);
+                  Res := Insert_Move (Stmt, R_Any32);
+                  Reg_Res := Alloc_Reg (R_Any8, Res, Pnum);
+                  Set_Expr_Reg (Res, Reg_Res);
+                  return Res;
                when others =>
                   Error_Gen_Insn (Stmt, Reg);
             end case;
