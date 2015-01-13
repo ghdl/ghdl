@@ -263,16 +263,17 @@ package body Grt.Avhpi is
                Iterator.It_Cur := Iterator.It_Cur + 1;
                goto Again;
             else
+               pragma Assert (Ch.Kind = Ghdl_Rtik_For_Generate);
                declare
                   Gen : constant Ghdl_Rtin_Generate_Acc :=
-                    To_Ghdl_Rtin_Generate_Acc (Nblk.Parent);
+                    To_Ghdl_Rtin_Generate_Acc (Ch);
                   Base : Address;
                begin
-                  Base := To_Addr_Acc (Iterator.Ctxt.Base + Nblk.Loc).all;
+                  Base := To_Addr_Acc (Iterator.Ctxt.Base + Gen.Loc).all;
                   Base := Base + Iterator.It2 * Gen.Size;
                   Res := (Kind => VhpiForGenerateK,
                           Ctxt => (Base => Base,
-                                   Block => Ch));
+                                   Block => Gen.Child));
 
                   Error := AvhpiErrorOk;
                   return;
@@ -826,10 +827,10 @@ package body Grt.Avhpi is
             case Ref.Kind is
                when VhpiForGenerateK =>
                   declare
-                     Blk : Ghdl_Rtin_Block_Acc;
+                     Blk : constant Ghdl_Rtin_Block_Acc :=
+                       To_Ghdl_Rtin_Block_Acc (Ref.Ctxt.Block);
                      Iter : Ghdl_Rtin_Object_Acc;
                   begin
-                     Blk := To_Ghdl_Rtin_Block_Acc (Ref.Ctxt.Block);
                      Iter := To_Ghdl_Rtin_Object_Acc (Blk.Children (0));
                      Res := (Kind => VhpiConstDeclK,
                              Ctxt => Ref.Ctxt,
