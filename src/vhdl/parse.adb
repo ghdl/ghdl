@@ -6298,8 +6298,10 @@ package body Parse is
    is
       Res : Iir_Generate_Statement;
       Alt_Label : Name_Id;
+      Alt_Loc : Location_Type;
       Cond : Iir;
       Clause : Iir;
+      Bod : Iir;
       Last : Iir;
    begin
       if Label = Null_Identifier then
@@ -6327,6 +6329,7 @@ package body Parse is
 
                --  In fact the parsed condition was an alternate label.
                Alt_Label := Get_Identifier (Cond);
+               Alt_Loc := Get_Location (Cond);
                Free_Iir (Cond);
             else
                Error_Msg_Parse ("alternative label must be an identifier");
@@ -6345,8 +6348,14 @@ package body Parse is
          Expect (Tok_Generate);
          Scan;
 
-         Set_Generate_Statement_Body
-           (Clause, Parse_Generate_Statement_Body (Res, Alt_Label));
+         Bod := Parse_Generate_Statement_Body (Res, Alt_Label);
+
+         if Alt_Label /= Null_Identifier then
+            --  Set location on the label, for xrefs.
+            Set_Location (Bod, Alt_Loc);
+         end if;
+
+         Set_Generate_Statement_Body (Clause, Bod);
 
          if Last /= Null_Iir then
             Set_Generate_Else_Clause (Last, Clause);
@@ -6369,6 +6378,7 @@ package body Parse is
 
          if Current_Token = Tok_Identifier then
             Alt_Label := Current_Identifier;
+            Alt_Loc := Get_Token_Location;
 
             --  Skip identifier
             Scan;
@@ -6385,8 +6395,13 @@ package body Parse is
          Expect (Tok_Generate);
          Scan;
 
-         Set_Generate_Statement_Body
-           (Clause, Parse_Generate_Statement_Body (Res, Alt_Label));
+         Bod := Parse_Generate_Statement_Body (Res, Alt_Label);
+         if Alt_Label /= Null_Identifier then
+            --  Set location on the label, for xrefs.
+            Set_Location (Bod, Alt_Loc);
+         end if;
+
+         Set_Generate_Statement_Body (Clause, Bod);
 
          Set_Generate_Else_Clause (Last, Clause);
       end if;

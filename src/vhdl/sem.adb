@@ -795,6 +795,7 @@ package body Sem is
                      return Null_Iir;
                   end if;
                   Set_Named_Entity (Block_Spec, Res);
+                  Xref_Ref (Gen_Spec, Res);
                   Set_Prefix (Block_Spec, Block_Name);
                   Set_Block_Specification (Block_Conf, Block_Spec);
                when others =>
