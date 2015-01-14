@@ -4219,6 +4219,7 @@ package body Parse is
 
             if Current_Token = Tok_Bit_String then
                Res := Parse_Bit_String;
+               Set_Has_Length (Res, True);
 
                --  Skip bit string
                Scan;
@@ -6191,6 +6192,7 @@ package body Parse is
 
       if Vhdl_Std >= Vhdl_08 and then Current_Token /= Tok_Generate then
          --  This is the 'end' of the generate_statement_body.
+         Set_Has_End (Bod, True);
          Check_End_Name (Label, Bod);
          Scan_Semi_Colon ("generate statement body");
 

@@ -55,7 +55,7 @@ package body Disp_Vhdl is
    Flag_Parenthesis : constant Boolean := False;
 
    -- If set, disp after a string literal the type enclosed into brackets.
-   Disp_String_Literal_Type: constant Boolean := False;
+   Flag_Disp_String_Literal_Type: constant Boolean := False;
 
    -- If set, disp position number of associations
    --Disp_Position_Number: constant Boolean := False;
@@ -83,6 +83,7 @@ package body Disp_Vhdl is
    procedure Disp_Binding_Indication (Bind : Iir; Indent : Count);
    procedure Disp_Subtype_Indication (Def : Iir; Full_Decl : Boolean := False);
    procedure Disp_Parametered_Attribute (Name : String; Expr : Iir);
+   procedure Disp_String_Literal (Str : Iir; El_Type : Iir);
 
    procedure Put (Str : String)
    is
@@ -2353,13 +2354,15 @@ package body Disp_Vhdl is
       end loop;
    end Disp_Choice;
 
-   procedure Disp_Aggregate (Aggr: Iir_Aggregate)
+   --  EL_TYPE is Null_Iir for record aggregates.
+   procedure Disp_Aggregate_1
+     (Aggr: Iir_Aggregate; Index : Positive; El_Type : Iir)
    is
       Indent: Count;
       Assoc: Iir;
       Expr : Iir;
    begin
-      Indent := Col;
+      Indent := Col + 1;
       if Indent > Line_Length - 10 then
          Indent := 2 * Indentation;
       end if;
@@ -2373,15 +2376,40 @@ package body Disp_Vhdl is
          else
             Assoc := Get_Chain (Assoc);
          end if;
-         if Get_Kind (Expr) = Iir_Kind_Aggregate
-           or else Get_Kind (Expr) = Iir_Kind_String_Literal8 then
+         if Index > 1 then
             Set_Col (Indent);
+            if Get_Kind (Expr) = Iir_Kind_String_Literal8 then
+               Disp_String_Literal (Expr, El_Type);
+            else
+               Disp_Aggregate_1 (Expr, Index - 1, El_Type);
+            end if;
+         else
+            if Get_Kind (Expr) = Iir_Kind_Aggregate then
+               Set_Col (Indent);
+            end if;
+            Disp_Expression (Expr);
          end if;
-         Disp_Expression (Expr);
          exit when Assoc = Null_Iir;
          Put (", ");
       end loop;
       Put (")");
+   end Disp_Aggregate_1;
+
+   procedure Disp_Aggregate (Aggr: Iir_Aggregate)
+   is
+      Aggr_Type : constant Iir := Get_Type (Aggr);
+      Base_Type : Iir;
+   begin
+      if Aggr_Type /= Null_Iir
+        and then Get_Kind (Aggr_Type) in Iir_Kinds_Array_Type_Definition
+      then
+         Base_Type := Get_Base_Type (Aggr_Type);
+         Disp_Aggregate_1
+           (Aggr, Get_Nbr_Elements (Get_Index_Subtype_List (Base_Type)),
+            Get_Element_Subtype (Base_Type));
+      else
+         Disp_Aggregate_1 (Aggr, 1, Null_Iir);
+      end if;
    end Disp_Aggregate;
 
    procedure Disp_Simple_Aggregate (Aggr: Iir_Simple_Aggregate)
@@ -2440,25 +2468,39 @@ package body Disp_Vhdl is
       Put (")");
    end Disp_Parametered_Type_Attribute;
 
-   procedure Disp_String_Literal (Str : Iir)
+   procedure Disp_String_Literal (Str : Iir; El_Type : Iir)
    is
-      Id : constant String8_Id := Get_String8_Id (Str);
+      Str_Id : constant String8_Id := Get_String8_Id (Str);
       Len : constant Nat32 := Get_String_Length (Str);
-      El_Type : constant Iir := Get_Element_Subtype (Get_Type (Str));
       Literal_List : constant Iir_List :=
         Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
+      Pos : Nat8;
       Lit : Iir;
+      Id : Name_Id;
       C : Character;
    begin
+      if Get_Bit_String_Base (Str) /= Base_None then
+         if Get_Has_Length (Str) then
+            Disp_Int32 (Iir_Int32 (Get_String_Length (Str)));
+         end if;
+         Put ("b");
+      end if;
+
+      Put ("""");
+
       for I in 1 .. Len loop
-         Lit := Get_Nth_Element
-           (Literal_List, Natural (Str_Table.Element_String8 (Id, Pos32 (I))));
-         C := Character'Val (Get_Enum_Pos (Lit));
+         Pos := Str_Table.Element_String8 (Str_Id, Pos32 (I));
+         Lit := Get_Nth_Element (Literal_List, Natural (Pos));
+         Id := Get_Identifier (Lit);
+         pragma Assert (Name_Table.Is_Character (Id));
+         C := Name_Table.Get_Character (Id);
          if C = '"' then
             Put ('"');
          end if;
          Put (C);
       end loop;
+
+      Put ("""");
    end Disp_String_Literal;
 
    procedure Disp_Expression (Expr: Iir)
@@ -2485,10 +2527,9 @@ package body Disp_Vhdl is
             if Orig /= Null_Iir then
                Disp_Expression (Orig);
             else
-               Put ("""");
-               Disp_String_Literal (Expr);
-               Put ("""");
-               if Disp_String_Literal_Type or Flags.List_Verbose then
+               Disp_String_Literal
+                 (Expr, Get_Element_Subtype (Get_Type (Expr)));
+               if Flag_Disp_String_Literal_Type or Flags.List_Verbose then
                   Put ("[type: ");
                   Disp_Type (Get_Type (Expr));
                   Put ("]");
@@ -2798,9 +2839,7 @@ package body Disp_Vhdl is
       Disp_End (Block, "block");
    end Disp_Block_Statement;
 
-   procedure Disp_Generate_Statement_Body (Parent : Iir; Indent : Count)
-   is
-      Bod : constant Iir := Get_Generate_Statement_Body (Parent);
+   procedure Disp_Generate_Statement_Body (Bod : Iir; Indent : Count) is
    begin
       Disp_Declaration_Chain (Bod, Indent);
       if Get_Has_Begin (Bod) then
@@ -2808,6 +2847,16 @@ package body Disp_Vhdl is
          Put_Line ("begin");
       end if;
       Disp_Concurrent_Statement_Chain (Bod, Indent + Indentation);
+      if Get_Has_End (Bod) then
+         Set_Col (Indent);
+         Put ("end");
+         if Get_End_Has_Identifier (Bod) then
+            Put (' ');
+            Disp_Ident (Get_Alternative_Label (Bod));
+         end if;
+         Put (';');
+         New_Line;
+      end if;
    end Disp_Generate_Statement_Body;
 
    procedure Disp_For_Generate_Statement (Stmt : Iir)
@@ -2818,7 +2867,8 @@ package body Disp_Vhdl is
       Put ("for ");
       Disp_Parameter_Specification (Get_Parameter_Specification (Stmt));
       Put_Line (" generate");
-      Disp_Generate_Statement_Body (Stmt, Indent);
+      Disp_Generate_Statement_Body
+        (Get_Generate_Statement_Body (Stmt), Indent);
       Set_Col (Indent);
       Disp_End (Stmt, "generate");
    end Disp_For_Generate_Statement;
@@ -2826,25 +2876,36 @@ package body Disp_Vhdl is
    procedure Disp_If_Generate_Statement (Stmt : Iir)
    is
       Indent : constant Count := Col;
+      Bod : Iir;
       Clause : Iir;
       Cond : Iir;
    begin
       Disp_Label (Stmt);
       Put ("if ");
-      Disp_Expression (Get_Condition (Stmt));
+      Cond := Get_Condition (Stmt);
       Clause := Stmt;
       loop
-         Put_Line (" generate");
-         Disp_Generate_Statement_Body (Clause, Indent);
-         Clause := Get_Generate_Else_Clause (Stmt);
+         Bod := Get_Generate_Statement_Body (Clause);
+         if Get_Has_Label (Bod) then
+            Disp_Ident (Get_Alternative_Label (Bod));
+            Put (": ");
+         end if;
+         if Cond /= Null_Iir then
+            Disp_Expression (Cond);
+            Put (" ");
+         end if;
+         Put_Line ("generate");
+         Disp_Generate_Statement_Body (Bod, Indent);
+
+         Clause := Get_Generate_Else_Clause (Clause);
          exit when Clause = Null_Iir;
+
          Cond := Get_Condition (Clause);
          Set_Col (Indent);
          if Cond = Null_Iir then
-            Put ("else");
+            Put ("else ");
          else
             Put ("elsif ");
-            Disp_Expression (Cond);
          end if;
       end loop;
       Set_Col (Indent);
@@ -3098,7 +3159,8 @@ package body Disp_Vhdl is
             Put (" (");
             Disp_Range (Get_Suffix (Spec));
             Put (")");
-         when Iir_Kind_Simple_Name =>
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Parenthesis_Name =>
             Disp_Name (Spec);
          when others =>
             Error_Kind ("disp_block_configuration", Spec);
@@ -3225,7 +3287,7 @@ package body Disp_Vhdl is
    is
       Str: constant String := Iir_Int64'Image (Val);
    begin
-      if Str(Str'First) = ' ' then
+      if Str (Str'First) = ' ' then
          Put (Str (Str'First + 1 .. Str'Last));
       else
          Put (Str);
@@ -3236,7 +3298,7 @@ package body Disp_Vhdl is
    is
       Str: constant String := Iir_Int32'Image (Val);
    begin
-      if Str(Str'First) = ' ' then
+      if Str (Str'First) = ' ' then
          Put (Str (Str'First + 1 .. Str'Last));
       else
          Put (Str);
@@ -3247,7 +3309,7 @@ package body Disp_Vhdl is
    is
       Str: constant String := Iir_Fp64'Image (Val);
    begin
-      if Str(Str'First) = ' ' then
+      if Str (Str'First) = ' ' then
          Put (Str (Str'First + 1 .. Str'Last));
       else
          Put (Str);

@@ -1079,7 +1079,7 @@ package body Ghdlprint is
                exit when Current_Token = Tok_Eof;
             end loop;
          else
-            --  Scane file
+            --  Scan file
             Tok_Idx := Ref_Tokens.First;
             loop
                Scan;
