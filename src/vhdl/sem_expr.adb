@@ -3612,6 +3612,43 @@ package body Sem_Expr is
       end if;
    end Sem_Allocator;
 
+   function Sem_Qualified_Expression (Expr : Iir; A_Type : Iir) return Iir
+   is
+      N_Type: Iir;
+      Res: Iir;
+   begin
+      N_Type := Sem_Type_Mark (Get_Type_Mark (Expr));
+      Set_Type_Mark (Expr, N_Type);
+      N_Type := Get_Type (N_Type);
+      Set_Type (Expr, N_Type);
+      if A_Type /= Null_Iir
+        and then not Are_Types_Compatible (A_Type, N_Type)
+      then
+         Not_Match (Expr, A_Type);
+         return Null_Iir;
+      end if;
+      Res := Sem_Expression (Get_Expression (Expr), N_Type);
+      if Res = Null_Iir then
+         return Null_Iir;
+      end if;
+      Check_Read (Res);
+      Set_Expression (Expr, Res);
+
+      --  LRM93 7.4.1 Locally static primaries
+      --  h) A qualified expression whose operand is a locally static
+      --     expression.
+      --
+      --  LRM08 9.4.2 Locally static primaries
+      --  i) A qualified expression whose type mark denotes a locally static
+      --     subtype and whose operand is a locally static expression.
+      --
+      --  We always use the vhdl08, because it is weird to have locally
+      --  static expression with a non-locally static subtype.
+      Set_Expr_Staticness (Expr, Min (Get_Expr_Staticness (Res),
+                                      Get_Type_Staticness (N_Type)));
+      return Expr;
+   end Sem_Qualified_Expression;
+
    procedure Check_Read_Aggregate (Aggr : Iir)
    is
       pragma Unreferenced (Aggr);
@@ -3952,30 +3989,7 @@ package body Sem_Expr is
             end;
 
          when Iir_Kind_Qualified_Expression =>
-            declare
-               N_Type: Iir;
-               Res: Iir;
-            begin
-               N_Type := Sem_Type_Mark (Get_Type_Mark (Expr));
-               Set_Type_Mark (Expr, N_Type);
-               N_Type := Get_Type (N_Type);
-               Set_Type (Expr, N_Type);
-               if A_Type /= Null_Iir
-                 and then not Are_Types_Compatible (A_Type, N_Type)
-               then
-                  Not_Match (Expr, A_Type);
-                  return Null_Iir;
-               end if;
-               Res := Sem_Expression (Get_Expression (Expr), N_Type);
-               if Res = Null_Iir then
-                  return Null_Iir;
-               end if;
-               Check_Read (Res);
-               Set_Expression (Expr, Res);
-               Set_Expr_Staticness (Expr, Min (Get_Expr_Staticness (Res),
-                                               Get_Type_Staticness (N_Type)));
-               return Expr;
-            end;
+            return Sem_Qualified_Expression (Expr, A_Type);
 
          when Iir_Kind_Allocator_By_Expression
            | Iir_Kind_Allocator_By_Subtype =>
