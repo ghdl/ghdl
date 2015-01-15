@@ -234,6 +234,7 @@ package body Evaluation is
       return Res;
    end Build_Constant;
 
+   --  FIXME: origin ?
    function Build_Boolean (Cond : Boolean) return Iir is
    begin
       if Cond then
@@ -902,39 +903,89 @@ package body Evaluation is
       return Build_Simple_Aggregate (Res_List, Orig, Res_Type);
    end Eval_Concatenation;
 
-   function Eval_Array_Equality (Left, Right : Iir) return Boolean
-   is
-      Left_Val, Right_Val : Iir;
-      L_List : Iir_List;
-      R_List : Iir_List;
-      N : Natural;
-      Res : Boolean;
+   function Eval_Array_Compare (Left, Right : Iir) return Compare_Type is
    begin
-      Left_Val := Eval_String_Literal (Left);
-      Right_Val := Eval_String_Literal (Right);
-
-      L_List := Get_Simple_Aggregate_List (Left_Val);
-      R_List := Get_Simple_Aggregate_List (Right_Val);
-      N := Get_Nbr_Elements (L_List);
-      if N /= Get_Nbr_Elements (R_List) then
-         --  Cannot be equal if not the same length.
-         Res := False;
-      else
-         Res := True;
-         for I in 0 .. N - 1 loop
-            --  FIXME: this is wrong: (eg: evaluated lit)
-            if Get_Nth_Element (L_List, I) /= Get_Nth_Element (R_List, I) then
-               Res := False;
-               exit;
+      if Get_Kind (Left) = Iir_Kind_String_Literal8
+        and then Get_Kind (Right) = Iir_Kind_String_Literal8
+      then
+         --  Common case: both parameters are strings.
+         declare
+            L_Id : constant String8_Id := Get_String8_Id (Left);
+            R_Id : constant String8_Id := Get_String8_Id (Right);
+            L_Len : constant Int32 := Get_String_Length (Left);
+            R_Len : constant Int32 := Get_String_Length (Right);
+            L_El, R_El : Nat8;
+            P : Nat32;
+         begin
+            P := 1;
+            while P <= L_Len and P <= R_Len loop
+               L_El := Str_Table.Element_String8 (L_Id, P);
+               R_El := Str_Table.Element_String8 (R_Id, P);
+               if L_El /= R_El then
+                  if L_El < R_El then
+                     return Compare_Lt;
+                  else
+                     return Compare_Gt;
+                  end if;
+               end if;
+               P := P + 1;
+            end loop;
+            if L_Len = R_Len then
+               return Compare_Eq;
+            elsif L_Len < R_Len then
+               return Compare_Lt;
+            else
+               return Compare_Gt;
             end if;
-         end loop;
+         end;
+      else
+         --  General case.
+         declare
+            Left_Val, Right_Val : Iir;
+            R_List, L_List : Iir_List;
+            R_Len, L_Len : Natural;
+            R_Pos, L_Pos : Iir_Int32;
+            P : Natural;
+            Res : Compare_Type;
+         begin
+            Left_Val := Eval_String_Literal (Left);
+            Right_Val := Eval_String_Literal (Right);
+
+            L_List := Get_Simple_Aggregate_List (Left_Val);
+            R_List := Get_Simple_Aggregate_List (Right_Val);
+            L_Len := Get_Nbr_Elements (L_List);
+            R_Len := Get_Nbr_Elements (R_List);
+
+            Res := Compare_Eq;
+            P := 0;
+            while P < L_Len and P < R_Len loop
+               L_Pos := Get_Enum_Pos (Get_Nth_Element (L_List, P));
+               R_Pos := Get_Enum_Pos (Get_Nth_Element (R_List, P));
+               if L_Pos /= R_Pos then
+                  if L_Pos < R_Pos then
+                     Res := Compare_Lt;
+                  else
+                     Res := Compare_Gt;
+                  end if;
+                  exit;
+               end if;
+               P := P + 1;
+            end loop;
+            if Res = Compare_Eq then
+               if L_Len < R_Len then
+                  Res := Compare_Lt;
+               elsif L_Len > R_Len then
+                  Res := Compare_Gt;
+               end if;
+            end if;
+
+            Free_Eval_Static_Expr (Left_Val, Left);
+            Free_Eval_Static_Expr (Right_Val, Right);
+
+            return Res;
+         end;
       end if;
-
-      Free_Eval_Static_Expr (Left_Val, Left);
-      Free_Eval_Static_Expr (Right_Val, Right);
-
-      return Res;
-   end Eval_Array_Equality;
+   end Eval_Array_Compare;
 
    --  ORIG is either a dyadic operator or a function call.
    function Eval_Dyadic_Operator (Orig : Iir; Imp : Iir; Left, Right : Iir)
@@ -1221,12 +1272,6 @@ package body Evaluation is
             return Build_Floating
               (Get_Fp_Value (Left) / Iir_Fp64 (Get_Value (Right)), Orig);
 
-         when Iir_Predefined_Array_Equality =>
-            return Build_Boolean (Eval_Array_Equality (Left, Right));
-
-         when Iir_Predefined_Array_Inequality =>
-            return Build_Boolean (not Eval_Array_Equality (Left, Right));
-
          when Iir_Predefined_Array_Sll
            | Iir_Predefined_Array_Srl
            | Iir_Predefined_Array_Sla
@@ -1243,13 +1288,24 @@ package body Evaluation is
                return Res;
             end;
 
-         when Iir_Predefined_Array_Less
-           | Iir_Predefined_Array_Less_Equal
-           | Iir_Predefined_Array_Greater
-           | Iir_Predefined_Array_Greater_Equal =>
-            --  FIXME: todo.
-            Error_Internal (Orig, "eval_dyadic_operator: " &
-                            Iir_Predefined_Functions'Image (Func));
+         when Iir_Predefined_Array_Equality =>
+            return Build_Boolean
+              (Eval_Array_Compare (Left, Right) = Compare_Eq);
+         when Iir_Predefined_Array_Inequality =>
+            return Build_Boolean
+              (Eval_Array_Compare (Left, Right) /= Compare_Eq);
+         when Iir_Predefined_Array_Less =>
+            return Build_Boolean
+              (Eval_Array_Compare (Left, Right) = Compare_Lt);
+         when Iir_Predefined_Array_Less_Equal =>
+            return Build_Boolean
+              (Eval_Array_Compare (Left, Right) <= Compare_Eq);
+         when Iir_Predefined_Array_Greater =>
+            return Build_Boolean
+              (Eval_Array_Compare (Left, Right) = Compare_Gt);
+         when Iir_Predefined_Array_Greater_Equal =>
+            return Build_Boolean
+              (Eval_Array_Compare (Left, Right) >= Compare_Eq);
 
          when Iir_Predefined_Boolean_Not
            | Iir_Predefined_Boolean_Rising_Edge
