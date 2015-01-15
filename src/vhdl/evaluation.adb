@@ -903,6 +903,49 @@ package body Evaluation is
       return Build_Simple_Aggregate (Res_List, Orig, Res_Type);
    end Eval_Concatenation;
 
+   function Eval_Discrete_Compare (Left, Right : Iir) return Compare_Type
+   is
+      Ltype : constant Iir := Get_Base_Type (Get_Type (Left));
+   begin
+      pragma Assert
+        (Get_Kind (Ltype) = Get_Kind (Get_Base_Type (Get_Type (Right))));
+
+      case Get_Kind (Ltype) is
+         when Iir_Kind_Enumeration_Type_Definition =>
+            declare
+               L_Pos : constant Iir_Int32 := Get_Enum_Pos (Left);
+               R_Pos : constant Iir_Int32 := Get_Enum_Pos (Right);
+            begin
+               if L_Pos = R_Pos then
+                  return Compare_Eq;
+               else
+                  if L_Pos < R_Pos then
+                     return Compare_Lt;
+                  else
+                     return Compare_Gt;
+                  end if;
+               end if;
+            end;
+         when Iir_Kind_Integer_Type_Definition =>
+            declare
+               L_Val : constant Iir_Int64 := Get_Value (Left);
+               R_Val : constant Iir_Int64 := Get_Value (Right);
+            begin
+               if L_Val = R_Val then
+                  return Compare_Eq;
+               else
+                  if L_Val < R_Val then
+                     return Compare_Lt;
+                  else
+                     return Compare_Gt;
+                  end if;
+               end if;
+            end;
+         when others =>
+            Error_Kind ("eval_discrete_compare", Ltype);
+      end case;
+   end Eval_Discrete_Compare;
+
    function Eval_Array_Compare (Left, Right : Iir) return Compare_Type is
    begin
       if Get_Kind (Left) = Iir_Kind_String_Literal8
@@ -944,7 +987,6 @@ package body Evaluation is
             Left_Val, Right_Val : Iir;
             R_List, L_List : Iir_List;
             R_Len, L_Len : Natural;
-            R_Pos, L_Pos : Iir_Int32;
             P : Natural;
             Res : Compare_Type;
          begin
@@ -959,16 +1001,9 @@ package body Evaluation is
             Res := Compare_Eq;
             P := 0;
             while P < L_Len and P < R_Len loop
-               L_Pos := Get_Enum_Pos (Get_Nth_Element (L_List, P));
-               R_Pos := Get_Enum_Pos (Get_Nth_Element (R_List, P));
-               if L_Pos /= R_Pos then
-                  if L_Pos < R_Pos then
-                     Res := Compare_Lt;
-                  else
-                     Res := Compare_Gt;
-                  end if;
-                  exit;
-               end if;
+               Res := Eval_Discrete_Compare (Get_Nth_Element (L_List, P),
+                                             Get_Nth_Element (R_List, P));
+               exit when Res /= Compare_Eq;
                P := P + 1;
             end loop;
             if Res = Compare_Eq then
