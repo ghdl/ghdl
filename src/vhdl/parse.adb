@@ -2951,6 +2951,13 @@ package body Parse is
          Scan;
 
          Default_Value := Parse_Expression;
+      elsif Current_Token = Tok_Equal then
+         Error_Msg_Parse ("= should be := for initial value");
+
+         --  Skip '='
+         Scan;
+
+         Default_Value := Parse_Expression;
       else
          Default_Value := Null_Iir;
       end if;
