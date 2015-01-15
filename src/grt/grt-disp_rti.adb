@@ -704,8 +704,11 @@ package body Grt.Disp_Rti is
                           Ctxt, Indent + 1);
          when Ghdl_Rtik_If_Generate =>
             Nctxt := Get_If_Generate_Child (Ctxt, To_Ghdl_Rti_Access (Blk));
-            Disp_Block
-              (To_Ghdl_Rtin_Block_Acc (Nctxt.Block), Nctxt, Indent + 1);
+            if Nctxt /= Null_Context then
+               --  There might be no blocks.
+               Disp_Block
+                 (To_Ghdl_Rtin_Block_Acc (Nctxt.Block), Nctxt, Indent + 1);
+            end if;
          when others =>
             Internal_Error ("disp_block");
       end case;
