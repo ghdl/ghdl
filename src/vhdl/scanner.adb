@@ -915,6 +915,8 @@ package body Scanner is
                Current_Token := Tok_Psl_Sequence;
             when Std_Names.Name_Property =>
                Current_Token := Tok_Psl_Property;
+            when Std_Names.Name_Endpoint =>
+               Current_Token := Tok_Psl_Endpoint;
             when Std_Names.Name_Cover =>
                Current_Token := Tok_Psl_Cover;
             when Std_Names.Name_Default =>

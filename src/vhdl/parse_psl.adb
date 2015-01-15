@@ -203,19 +203,23 @@ package body Parse_Psl is
       end loop;
    end Parse_SERE;
 
-   --  precond: '{'
+   --  precond : '{'
+   --  postcond: next token after '}'
    function Parse_Braced_SERE return Node is
       Res : Node;
    begin
-      if Current_Token /= Tok_Left_Curly then
-         raise Program_Error;
-      end if;
+      pragma Assert (Current_Token = Tok_Left_Curly);
       Res := Create_Node_Loc (N_Braced_SERE);
+
+      --  Skip '{'
       Scan;
+
       Set_SERE (Res, Parse_SERE (Prio_Lowest));
+
       if Current_Token /= Tok_Right_Curly then
          Error_Msg_Parse ("missing '}' after braced SERE");
       else
+         --  Skip '}'
          Scan;
       end if;
       return Res;
@@ -651,6 +655,7 @@ package body Parse_Psl is
       if Current_Token /= Tok_Is then
          Error_Msg_Parse ("'is' expected after identifier");
       else
+         --  Skip 'is'.
          Scan;
       end if;
       case Kind is

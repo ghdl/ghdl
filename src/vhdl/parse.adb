@@ -6515,17 +6515,22 @@ package body Parse is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Psl_Declaration);
+
+      --  Skip 'property', 'sequence' or 'endpoint'.
       Scan;
+
       if Current_Token /= Tok_Identifier then
          Error_Msg_Parse ("property name expected here");
       else
          Set_Identifier (Res, Current_Identifier);
       end if;
+
       Scanner.Flag_Psl := True;
       Set_Psl_Declaration (Res, Parse_Psl.Parse_Psl_Declaration (Tok));
       Expect (Tok_Semi_Colon);
       Scanner.Flag_Scan_In_Comment := False;
       Scanner.Flag_Psl := False;
+
       return Res;
    end Parse_Psl_Declaration;
 
