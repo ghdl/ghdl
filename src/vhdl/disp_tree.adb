@@ -33,6 +33,11 @@ package body Disp_Tree is
    --  function Is_Anonymous_Type_Definition (Def : Iir) return Boolean
    --    renames Iirs_Utils.Is_Anonymous_Type_Definition;
 
+   --  Max depth for Disp_Iir.  Can be modified from a debugger.
+   pragma Warnings (Off);
+   Max_Depth : Natural := 10;
+   pragma Warnings (On);
+
    procedure Disp_Iir (N : Iir;
                        Indent : Natural := 1;
                        Flat : Boolean := False);
@@ -366,7 +371,7 @@ package body Disp_Tree is
       Put_Line (Image_Location_Type (Get_Location (N)));
 
       --  Protect against infinite recursions.
-      if Indent > 20 then
+      if Indent > Max_Depth then
          Put_Indent (Indent);
          Put_Line ("...");
          return;
