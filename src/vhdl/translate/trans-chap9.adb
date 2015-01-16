@@ -1384,8 +1384,8 @@ package body Trans.Chap9 is
          when Iir_Kind_Entity_Aspect_Configuration =>
             Config := Get_Configuration (Aspect);
             Entity := Get_Entity (Config);
-            Arch := Get_Block_Specification
-              (Get_Block_Configuration (Config));
+            Arch := Strip_Denoting_Name
+              (Get_Block_Specification (Get_Block_Configuration (Config)));
          when Iir_Kind_Entity_Aspect_Open =>
             return;
          when others =>

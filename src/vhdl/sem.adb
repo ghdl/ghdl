@@ -910,9 +910,8 @@ package body Sem is
                   return;
                end if;
                Arch := Get_Library_Unit (Design);
+               Set_Named_Entity (Block_Spec, Arch);
                Xref_Ref (Block_Spec, Arch);
-               Free_Iir (Block_Spec);
-               Set_Block_Specification (Block_Conf, Arch);
                Block := Arch;
                Add_Dependence (Design);
             end;
@@ -973,9 +972,8 @@ package body Sem is
                   return;
                end if;
                Arch := Get_Library_Unit (Design);
+               Set_Named_Entity (Block_Spec, Arch);
                Xref_Ref (Block_Spec, Arch);
-               Free_Iir (Block_Spec);
-               Set_Block_Specification (Block_Conf, Arch);
                Block := Arch;
             end;
 

@@ -2772,7 +2772,7 @@ package body Canon is
       Blk_Cfg := Create_Iir (Iir_Kind_Block_Configuration);
       Set_Location (Blk_Cfg, Loc);
       Set_Parent (Blk_Cfg, Config);
-      Set_Block_Specification (Blk_Cfg, Arch);
+      Set_Block_Specification (Blk_Cfg, Build_Simple_Name (Arch, Blk_Cfg));
       Set_Block_Configuration (Config, Blk_Cfg);
 
       Canon_Block_Configuration (Res, Blk_Cfg);

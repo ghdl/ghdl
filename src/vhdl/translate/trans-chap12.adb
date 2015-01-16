@@ -36,620 +36,616 @@ with Translation; use Translation;
 with Trans_Decls; use Trans_Decls;
 
 package body Trans.Chap12 is
-      --  Create __ghdl_ELABORATE
-      procedure Gen_Main (Entity : Iir_Entity_Declaration;
-                          Arch : Iir_Architecture_Body;
-                          Config_Subprg : O_Dnode;
-                          Nbr_Pkgs : Natural)
-      is
-         Entity_Info : Block_Info_Acc;
-         Arch_Info : Block_Info_Acc;
-         Inter_List : O_Inter_List;
-         Assoc : O_Assoc_List;
-         Instance : O_Dnode;
-         Arch_Instance : O_Dnode;
-         Mark : Id_Mark_Type;
-         Arr_Type : O_Tnode;
-         Arr : O_Dnode;
-      begin
-         Arch_Info := Get_Info (Arch);
-         Entity_Info := Get_Info (Entity);
+   --  Create __ghdl_ELABORATE
+   procedure Gen_Main (Entity : Iir_Entity_Declaration;
+                       Arch : Iir_Architecture_Body;
+                       Config_Subprg : O_Dnode;
+                       Nbr_Pkgs : Natural)
+   is
+      Entity_Info : Block_Info_Acc;
+      Arch_Info : Block_Info_Acc;
+      Inter_List : O_Inter_List;
+      Assoc : O_Assoc_List;
+      Instance : O_Dnode;
+      Arch_Instance : O_Dnode;
+      Mark : Id_Mark_Type;
+      Arr_Type : O_Tnode;
+      Arr : O_Dnode;
+   begin
+      Arch_Info := Get_Info (Arch);
+      Entity_Info := Get_Info (Entity);
 
-         --  We need to create code.
-         Set_Global_Storage (O_Storage_Private);
+      --  We need to create code.
+      Set_Global_Storage (O_Storage_Private);
 
-         --  Create the array of RTIs for packages (as a variable, initialized
-         --  during elaboration).
-         Arr_Type := New_Constrained_Array_Type
-           (Rtis.Ghdl_Rti_Array,
-            New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Pkgs)));
-         New_Var_Decl (Arr, Get_Identifier ("__ghdl_top_RTIARRAY"),
-                       O_Storage_Private, Arr_Type);
+      --  Create the array of RTIs for packages (as a variable, initialized
+      --  during elaboration).
+      Arr_Type := New_Constrained_Array_Type
+        (Rtis.Ghdl_Rti_Array,
+         New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Pkgs)));
+      New_Var_Decl (Arr, Get_Identifier ("__ghdl_top_RTIARRAY"),
+                    O_Storage_Private, Arr_Type);
 
-         --  The elaboration entry point.
-         Start_Procedure_Decl (Inter_List, Get_Identifier ("__ghdl_ELABORATE"),
-                               O_Storage_Public);
-         Finish_Subprogram_Decl (Inter_List, Ghdl_Elaborate);
+      --  The elaboration entry point.
+      Start_Procedure_Decl (Inter_List, Get_Identifier ("__ghdl_ELABORATE"),
+                            O_Storage_Public);
+      Finish_Subprogram_Decl (Inter_List, Ghdl_Elaborate);
 
-         Start_Subprogram_Body (Ghdl_Elaborate);
-         New_Var_Decl (Arch_Instance, Wki_Arch_Instance,
-                       O_Storage_Local, Arch_Info.Block_Decls_Ptr_Type);
+      Start_Subprogram_Body (Ghdl_Elaborate);
+      New_Var_Decl (Arch_Instance, Wki_Arch_Instance,
+                    O_Storage_Local, Arch_Info.Block_Decls_Ptr_Type);
 
-         New_Var_Decl (Instance, Wki_Instance, O_Storage_Local,
-                       Entity_Info.Block_Decls_Ptr_Type);
+      New_Var_Decl (Instance, Wki_Instance, O_Storage_Local,
+                    Entity_Info.Block_Decls_Ptr_Type);
 
-         --  Create instance for the architecture.
-         New_Assign_Stmt
-           (New_Obj (Arch_Instance),
-            Gen_Alloc (Alloc_System,
-                       New_Lit (Get_Scope_Size (Arch_Info.Block_Scope)),
-                       Arch_Info.Block_Decls_Ptr_Type));
+      --  Create instance for the architecture.
+      New_Assign_Stmt
+        (New_Obj (Arch_Instance),
+         Gen_Alloc (Alloc_System,
+                    New_Lit (Get_Scope_Size (Arch_Info.Block_Scope)),
+                    Arch_Info.Block_Decls_Ptr_Type));
 
-         --  Set the top instance.
-         New_Assign_Stmt
-           (New_Obj (Instance),
-            New_Address (New_Selected_Acc_Value (New_Obj (Arch_Instance),
-                                                 Arch_Info.Block_Parent_Field),
-                         Entity_Info.Block_Decls_Ptr_Type));
+      --  Set the top instance.
+      New_Assign_Stmt
+        (New_Obj (Instance),
+         New_Address (New_Selected_Acc_Value (New_Obj (Arch_Instance),
+                                              Arch_Info.Block_Parent_Field),
+                      Entity_Info.Block_Decls_Ptr_Type));
 
-         --  Clear parent field of entity link.
-         New_Assign_Stmt
-           (New_Selected_Element
-            (New_Selected_Acc_Value (New_Obj (Instance),
-                                     Entity_Info.Block_Link_Field),
-             Rtis.Ghdl_Entity_Link_Parent),
-            New_Lit (New_Null_Access (Rtis.Ghdl_Component_Link_Acc)));
+      --  Clear parent field of entity link.
+      New_Assign_Stmt
+        (New_Selected_Element
+           (New_Selected_Acc_Value (New_Obj (Instance),
+                                    Entity_Info.Block_Link_Field),
+            Rtis.Ghdl_Entity_Link_Parent),
+         New_Lit (New_Null_Access (Rtis.Ghdl_Component_Link_Acc)));
 
-         --  Set top instances and RTI.
-         --  Do it before the elaboration code, since it may be used to
-         --  diagnose errors.
-         --  Call ghdl_rti_add_top
-         Start_Association (Assoc, Ghdl_Rti_Add_Top);
-         New_Association
-           (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                                  Unsigned_64 (Nbr_Pkgs))));
-         New_Association
-           (Assoc, New_Lit (New_Global_Address (Arr, Rtis.Ghdl_Rti_Arr_Acc)));
-         New_Association
-           (Assoc,
-            New_Lit (Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const)));
-         New_Association
-           (Assoc, New_Convert_Ov (New_Obj_Value (Arch_Instance),
-                                   Ghdl_Ptr_Type));
-         New_Procedure_Call (Assoc);
+      --  Set top instances and RTI.
+      --  Do it before the elaboration code, since it may be used to
+      --  diagnose errors.
+      --  Call ghdl_rti_add_top
+      Start_Association (Assoc, Ghdl_Rti_Add_Top);
+      New_Association
+        (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
+                                               Unsigned_64 (Nbr_Pkgs))));
+      New_Association
+        (Assoc, New_Lit (New_Global_Address (Arr, Rtis.Ghdl_Rti_Arr_Acc)));
+      New_Association
+        (Assoc,
+         New_Lit (Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const)));
+      New_Association
+        (Assoc, New_Convert_Ov (New_Obj_Value (Arch_Instance), Ghdl_Ptr_Type));
+      New_Procedure_Call (Assoc);
 
-         --  Add std.standard rti
-         Start_Association (Assoc, Ghdl_Rti_Add_Package);
-         New_Association
-           (Assoc,
-            New_Lit (Rtis.New_Rti_Address
-                       (Get_Info (Standard_Package).Package_Rti_Const)));
-         New_Procedure_Call (Assoc);
+      --  Add std.standard rti
+      Start_Association (Assoc, Ghdl_Rti_Add_Package);
+      New_Association
+        (Assoc,
+         New_Lit (Rtis.New_Rti_Address
+                    (Get_Info (Standard_Package).Package_Rti_Const)));
+      New_Procedure_Call (Assoc);
 
-         Gen_Filename (Get_Design_File (Get_Design_Unit (Entity)));
+      Gen_Filename (Get_Design_File (Get_Design_Unit (Entity)));
 
-         --  Elab package dependences of top entity (so that default
-         --  expressions can be evaluated).
-         Start_Association (Assoc, Entity_Info.Block_Elab_Pkg_Subprg);
-         New_Procedure_Call (Assoc);
+      --  Elab package dependences of top entity (so that default
+      --  expressions can be evaluated).
+      Start_Association (Assoc, Entity_Info.Block_Elab_Pkg_Subprg);
+      New_Procedure_Call (Assoc);
 
-         --  init instance
-         Set_Scope_Via_Param_Ptr (Entity_Info.Block_Scope, Instance);
-         Push_Identifier_Prefix (Mark, "");
-         Chap1.Translate_Entity_Init (Entity);
+      --  init instance
+      Set_Scope_Via_Param_Ptr (Entity_Info.Block_Scope, Instance);
+      Push_Identifier_Prefix (Mark, "");
+      Chap1.Translate_Entity_Init (Entity);
 
-         --  elab instance
-         Start_Association (Assoc, Arch_Info.Block_Elab_Subprg);
-         New_Association (Assoc, New_Obj_Value (Instance));
-         New_Procedure_Call (Assoc);
+      --  elab instance
+      Start_Association (Assoc, Arch_Info.Block_Elab_Subprg);
+      New_Association (Assoc, New_Obj_Value (Instance));
+      New_Procedure_Call (Assoc);
 
-         --Chap6.Link_Instance_Name (Null_Iir, Entity);
+      --Chap6.Link_Instance_Name (Null_Iir, Entity);
 
-         --  configure instance.
-         Start_Association (Assoc, Config_Subprg);
-         New_Association (Assoc, New_Obj_Value (Arch_Instance));
-         New_Procedure_Call (Assoc);
+      --  configure instance.
+      Start_Association (Assoc, Config_Subprg);
+      New_Association (Assoc, New_Obj_Value (Arch_Instance));
+      New_Procedure_Call (Assoc);
 
-         Pop_Identifier_Prefix (Mark);
-         Clear_Scope (Entity_Info.Block_Scope);
-         Finish_Subprogram_Body;
+      Pop_Identifier_Prefix (Mark);
+      Clear_Scope (Entity_Info.Block_Scope);
+      Finish_Subprogram_Body;
 
-         Current_Filename_Node := O_Dnode_Null;
-      end Gen_Main;
+      Current_Filename_Node := O_Dnode_Null;
+   end Gen_Main;
 
-      procedure Gen_Setup_Info
-      is
-         Cst : O_Dnode;
-         pragma Unreferenced (Cst);
-      begin
-         Cst := Create_String (Flags.Flag_String,
-                               Get_Identifier ("__ghdl_flag_string"),
-                               O_Storage_Public);
-      end Gen_Setup_Info;
+   procedure Gen_Setup_Info
+   is
+      Cst : O_Dnode;
+      pragma Unreferenced (Cst);
+   begin
+      Cst := Create_String (Flags.Flag_String,
+                            Get_Identifier ("__ghdl_flag_string"),
+                            O_Storage_Public);
+   end Gen_Setup_Info;
 
-      procedure Gen_Last_Arch (Entity : Iir_Entity_Declaration)
-      is
-         Entity_Info : Block_Info_Acc;
+   procedure Gen_Last_Arch (Entity : Iir_Entity_Declaration)
+   is
+      Entity_Info : Block_Info_Acc;
 
-         Arch : Iir_Architecture_Body;
-         Arch_Info : Block_Info_Acc;
+      Arch : Iir_Architecture_Body;
+      Arch_Info : Block_Info_Acc;
 
-         Lib : Iir_Library_Declaration;
-         Lib_Mark, Entity_Mark, Arch_Mark : Id_Mark_Type;
+      Lib : Iir_Library_Declaration;
+      Lib_Mark, Entity_Mark, Arch_Mark : Id_Mark_Type;
 
-         Config : Iir_Configuration_Declaration;
-         Config_Info : Config_Info_Acc;
+      Config : Iir_Configuration_Declaration;
+      Config_Info : Config_Info_Acc;
 
-         Const : O_Dnode;
-         Instance : O_Dnode;
-         Inter_List : O_Inter_List;
-         Constr : O_Assoc_List;
-         Subprg : O_Dnode;
-      begin
-         Arch := Libraries.Get_Latest_Architecture (Entity);
-         if Arch = Null_Iir then
-            Error_Msg_Elab ("no architecture for " & Disp_Node (Entity));
-         end if;
-         Arch_Info := Get_Info (Arch);
-         if Arch_Info = null then
-            --  Nothing to do here, since the architecture is not used.
-            return;
-         end if;
-         Entity_Info := Get_Info (Entity);
+      Const : O_Dnode;
+      Instance : O_Dnode;
+      Inter_List : O_Inter_List;
+      Constr : O_Assoc_List;
+      Subprg : O_Dnode;
+   begin
+      Arch := Libraries.Get_Latest_Architecture (Entity);
+      if Arch = Null_Iir then
+         Error_Msg_Elab ("no architecture for " & Disp_Node (Entity));
+      end if;
+      Arch_Info := Get_Info (Arch);
+      if Arch_Info = null then
+         --  Nothing to do here, since the architecture is not used.
+         return;
+      end if;
+      Entity_Info := Get_Info (Entity);
 
-         --  Create trampoline for elab, default_architecture
-         --  re-create instsize.
-         Reset_Identifier_Prefix;
-         Lib := Get_Library (Get_Design_File (Get_Design_Unit (Entity)));
-         Push_Identifier_Prefix (Lib_Mark, Get_Identifier (Lib));
-         Push_Identifier_Prefix (Entity_Mark, Get_Identifier (Entity));
-         Push_Identifier_Prefix (Arch_Mark, "LASTARCH");
+      --  Create trampoline for elab, default_architecture
+      --  re-create instsize.
+      Reset_Identifier_Prefix;
+      Lib := Get_Library (Get_Design_File (Get_Design_Unit (Entity)));
+      Push_Identifier_Prefix (Lib_Mark, Get_Identifier (Lib));
+      Push_Identifier_Prefix (Entity_Mark, Get_Identifier (Entity));
+      Push_Identifier_Prefix (Arch_Mark, "LASTARCH");
 
-         --  Instance size.
-         New_Const_Decl
-           (Const, Create_Identifier ("INSTSIZE"), O_Storage_Public,
-            Ghdl_Index_Type);
-         Start_Const_Value (Const);
-         Finish_Const_Value (Const, Get_Scope_Size (Arch_Info.Block_Scope));
+      --  Instance size.
+      New_Const_Decl
+        (Const, Create_Identifier ("INSTSIZE"), O_Storage_Public,
+         Ghdl_Index_Type);
+      Start_Const_Value (Const);
+      Finish_Const_Value (Const, Get_Scope_Size (Arch_Info.Block_Scope));
 
-         --  Elaborator.
-         Start_Procedure_Decl
-           (Inter_List, Create_Identifier ("ELAB"), O_Storage_Public);
-         New_Interface_Decl
-           (Inter_List, Instance, Wki_Instance,
-            Entity_Info.Block_Decls_Ptr_Type);
-         Finish_Subprogram_Decl (Inter_List, Subprg);
+      --  Elaborator.
+      Start_Procedure_Decl
+        (Inter_List, Create_Identifier ("ELAB"), O_Storage_Public);
+      New_Interface_Decl
+        (Inter_List, Instance, Wki_Instance,
+         Entity_Info.Block_Decls_Ptr_Type);
+      Finish_Subprogram_Decl (Inter_List, Subprg);
 
-         Start_Subprogram_Body (Subprg);
-         Start_Association (Constr, Arch_Info.Block_Elab_Subprg);
-         New_Association (Constr, New_Obj_Value (Instance));
-         New_Procedure_Call (Constr);
-         Finish_Subprogram_Body;
+      Start_Subprogram_Body (Subprg);
+      Start_Association (Constr, Arch_Info.Block_Elab_Subprg);
+      New_Association (Constr, New_Obj_Value (Instance));
+      New_Procedure_Call (Constr);
+      Finish_Subprogram_Body;
 
-         --  Default config.
-         Config := Get_Library_Unit
-           (Get_Default_Configuration_Declaration (Arch));
-         Config_Info := Get_Info (Config);
-         if Config_Info /= null then
-            --  Do not create a trampoline for the default_config if it is not
-            --  used.
-            Start_Procedure_Decl
-              (Inter_List, Create_Identifier ("DEFAULT_CONFIG"),
-               O_Storage_Public);
-            New_Interface_Decl (Inter_List, Instance, Wki_Instance,
-                                Arch_Info.Block_Decls_Ptr_Type);
-            Finish_Subprogram_Decl (Inter_List, Subprg);
-
-            Start_Subprogram_Body (Subprg);
-            Start_Association (Constr, Config_Info.Config_Subprg);
-            New_Association (Constr, New_Obj_Value (Instance));
-            New_Procedure_Call (Constr);
-            Finish_Subprogram_Body;
-         end if;
-
-         Pop_Identifier_Prefix (Arch_Mark);
-         Pop_Identifier_Prefix (Entity_Mark);
-         Pop_Identifier_Prefix (Lib_Mark);
-      end Gen_Last_Arch;
-
-      procedure Gen_Dummy_Default_Config (Arch : Iir_Architecture_Body)
-      is
-         Entity : Iir_Entity_Declaration;
-         Lib : Iir_Library_Declaration;
-         Lib_Mark, Entity_Mark, Sep_Mark, Arch_Mark : Id_Mark_Type;
-
-         Inter_List : O_Inter_List;
-
-         Subprg : O_Dnode;
-      begin
-         Reset_Identifier_Prefix;
-         Entity := Get_Entity (Arch);
-         Lib := Get_Library (Get_Design_File (Get_Design_Unit (Arch)));
-         Push_Identifier_Prefix (Lib_Mark, Get_Identifier (Lib));
-         Push_Identifier_Prefix (Entity_Mark, Get_Identifier (Entity));
-         Push_Identifier_Prefix (Sep_Mark, "ARCH");
-         Push_Identifier_Prefix (Arch_Mark, Get_Identifier (Arch));
-
-         --  Elaborator.
+      --  Default config.
+      Config := Get_Library_Unit
+        (Get_Default_Configuration_Declaration (Arch));
+      Config_Info := Get_Info (Config);
+      if Config_Info /= null then
+         --  Do not create a trampoline for the default_config if it is not
+         --  used.
          Start_Procedure_Decl
            (Inter_List, Create_Identifier ("DEFAULT_CONFIG"),
             O_Storage_Public);
+         New_Interface_Decl (Inter_List, Instance, Wki_Instance,
+                             Arch_Info.Block_Decls_Ptr_Type);
          Finish_Subprogram_Decl (Inter_List, Subprg);
 
          Start_Subprogram_Body (Subprg);
-         Chap6.Gen_Program_Error (Arch, Chap6.Prg_Err_Dummy_Config);
+         Start_Association (Constr, Config_Info.Config_Subprg);
+         New_Association (Constr, New_Obj_Value (Instance));
+         New_Procedure_Call (Constr);
          Finish_Subprogram_Body;
+      end if;
 
-         Pop_Identifier_Prefix (Arch_Mark);
-         Pop_Identifier_Prefix (Sep_Mark);
-         Pop_Identifier_Prefix (Entity_Mark);
-         Pop_Identifier_Prefix (Lib_Mark);
-      end Gen_Dummy_Default_Config;
+      Pop_Identifier_Prefix (Arch_Mark);
+      Pop_Identifier_Prefix (Entity_Mark);
+      Pop_Identifier_Prefix (Lib_Mark);
+   end Gen_Last_Arch;
 
-      procedure Gen_Dummy_Package_Declaration (Unit : Iir_Design_Unit)
-      is
-         Pkg : Iir_Package_Declaration;
-         Lib : Iir_Library_Declaration;
-         Lib_Mark, Pkg_Mark : Id_Mark_Type;
+   procedure Gen_Dummy_Default_Config (Arch : Iir_Architecture_Body)
+   is
+      Entity : Iir_Entity_Declaration;
+      Lib : Iir_Library_Declaration;
+      Lib_Mark, Entity_Mark, Sep_Mark, Arch_Mark : Id_Mark_Type;
 
-         Decl : Iir;
-      begin
-         Libraries.Load_Design_Unit (Unit, Null_Iir);
-         Pkg := Get_Library_Unit (Unit);
-         Reset_Identifier_Prefix;
-         Lib := Get_Library (Get_Design_File (Get_Design_Unit (Pkg)));
-         Push_Identifier_Prefix (Lib_Mark, Get_Identifier (Lib));
-         Push_Identifier_Prefix (Pkg_Mark, Get_Identifier (Pkg));
+      Inter_List : O_Inter_List;
 
-         if Get_Need_Body (Pkg) then
-            Decl := Get_Declaration_Chain (Pkg);
-            while Decl /= Null_Iir loop
-               case Get_Kind (Decl) is
-                  when Iir_Kind_Function_Declaration
-                    | Iir_Kind_Procedure_Declaration =>
-                     --  Generate empty body.
+      Subprg : O_Dnode;
+   begin
+      Reset_Identifier_Prefix;
+      Entity := Get_Entity (Arch);
+      Lib := Get_Library (Get_Design_File (Get_Design_Unit (Arch)));
+      Push_Identifier_Prefix (Lib_Mark, Get_Identifier (Lib));
+      Push_Identifier_Prefix (Entity_Mark, Get_Identifier (Entity));
+      Push_Identifier_Prefix (Sep_Mark, "ARCH");
+      Push_Identifier_Prefix (Arch_Mark, Get_Identifier (Arch));
 
-                     --  Never a second spec, as this is within a package
-                     --  declaration.
-                     pragma Assert
-                       (not Is_Second_Subprogram_Specification (Decl));
+      --  Elaborator.
+      Start_Procedure_Decl
+        (Inter_List, Create_Identifier ("DEFAULT_CONFIG"),
+         O_Storage_Public);
+      Finish_Subprogram_Decl (Inter_List, Subprg);
 
-                     if not Get_Foreign_Flag (Decl) then
-                        declare
-                           Mark : Id_Mark_Type;
-                           Inter_List : O_Inter_List;
-                           Proc : O_Dnode;
-                        begin
-                           Chap2.Push_Subprg_Identifier (Decl, Mark);
-                           Start_Procedure_Decl
-                             (Inter_List, Create_Identifier, O_Storage_Public);
-                           Finish_Subprogram_Decl (Inter_List, Proc);
-                           Start_Subprogram_Body (Proc);
-                           Finish_Subprogram_Body;
-                           Pop_Identifier_Prefix (Mark);
-                        end;
-                     end if;
-                  when others =>
-                     null;
-               end case;
-               Decl := Get_Chain (Decl);
-            end loop;
-         end if;
+      Start_Subprogram_Body (Subprg);
+      Chap6.Gen_Program_Error (Arch, Chap6.Prg_Err_Dummy_Config);
+      Finish_Subprogram_Body;
 
-         --  Create the body elaborator.
-         declare
-            Inter_List : O_Inter_List;
-            Proc : O_Dnode;
-         begin
-            Start_Procedure_Decl
-              (Inter_List, Create_Identifier ("ELAB_BODY"), O_Storage_Public);
-            Finish_Subprogram_Decl (Inter_List, Proc);
-            Start_Subprogram_Body (Proc);
-            Finish_Subprogram_Body;
-         end;
+      Pop_Identifier_Prefix (Arch_Mark);
+      Pop_Identifier_Prefix (Sep_Mark);
+      Pop_Identifier_Prefix (Entity_Mark);
+      Pop_Identifier_Prefix (Lib_Mark);
+   end Gen_Dummy_Default_Config;
 
-         Pop_Identifier_Prefix (Pkg_Mark);
-         Pop_Identifier_Prefix (Lib_Mark);
-      end Gen_Dummy_Package_Declaration;
+   procedure Gen_Dummy_Package_Declaration (Unit : Iir_Design_Unit)
+   is
+      Pkg : Iir_Package_Declaration;
+      Lib : Iir_Library_Declaration;
+      Lib_Mark, Pkg_Mark : Id_Mark_Type;
 
-      procedure Write_File_List (Filelist : String)
-      is
-         use Interfaces.C_Streams;
-         use System;
-         use Configuration;
-         use Name_Table;
+      Decl : Iir;
+   begin
+      Libraries.Load_Design_Unit (Unit, Null_Iir);
+      Pkg := Get_Library_Unit (Unit);
+      Reset_Identifier_Prefix;
+      Lib := Get_Library (Get_Design_File (Get_Design_Unit (Pkg)));
+      Push_Identifier_Prefix (Lib_Mark, Get_Identifier (Lib));
+      Push_Identifier_Prefix (Pkg_Mark, Get_Identifier (Pkg));
 
-         --  Add all dependences of UNIT.
-         --  UNIT is not used, but added during link.
-         procedure Add_Unit_Dependences (Unit : Iir_Design_Unit)
-         is
-            Dep_List : Iir_List;
-            Dep : Iir;
-            Dep_Unit : Iir_Design_Unit;
-            Lib_Unit : Iir;
-         begin
-            --  Load the unit in memory to compute the dependence list.
-            Libraries.Load_Design_Unit (Unit, Null_Iir);
-            Update_Node_Infos;
+      if Get_Need_Body (Pkg) then
+         Decl := Get_Declaration_Chain (Pkg);
+         while Decl /= Null_Iir loop
+            case Get_Kind (Decl) is
+               when Iir_Kind_Function_Declaration
+                 | Iir_Kind_Procedure_Declaration =>
+                  --  Generate empty body.
 
-            Set_Elab_Flag (Unit, True);
-            Design_Units.Append (Unit);
+                  --  Never a second spec, as this is within a package
+                  --  declaration.
+                  pragma Assert
+                    (not Is_Second_Subprogram_Specification (Decl));
 
-            if Flag_Rti then
-               Rtis.Generate_Library
-                 (Get_Library (Get_Design_File (Unit)), True);
-            end if;
-
-            Lib_Unit := Get_Library_Unit (Unit);
-            case Get_Kind (Lib_Unit) is
-               when Iir_Kind_Package_Declaration =>
-                  --  The body may be required due to incomplete constant
-                  --  declarations, or to call to a subprogram.
-                  declare
-                     Pack_Body : Iir;
-                  begin
-                     Pack_Body := Libraries.Find_Secondary_Unit
-                       (Unit, Null_Identifier);
-                     if Pack_Body /= Null_Iir then
-                        Add_Unit_Dependences (Pack_Body);
-                     else
-                        Gen_Dummy_Package_Declaration (Unit);
-                     end if;
-                  end;
-               when Iir_Kind_Architecture_Body =>
-                  Gen_Dummy_Default_Config (Lib_Unit);
+                  if not Get_Foreign_Flag (Decl) then
+                     declare
+                        Mark : Id_Mark_Type;
+                        Inter_List : O_Inter_List;
+                        Proc : O_Dnode;
+                     begin
+                        Chap2.Push_Subprg_Identifier (Decl, Mark);
+                        Start_Procedure_Decl
+                          (Inter_List, Create_Identifier, O_Storage_Public);
+                        Finish_Subprogram_Decl (Inter_List, Proc);
+                        Start_Subprogram_Body (Proc);
+                        Finish_Subprogram_Body;
+                        Pop_Identifier_Prefix (Mark);
+                     end;
+                  end if;
                when others =>
                   null;
             end case;
+            Decl := Get_Chain (Decl);
+         end loop;
+      end if;
 
-            Dep_List := Get_Dependence_List (Unit);
-            for I in Natural loop
-               Dep := Get_Nth_Element (Dep_List, I);
-               exit when Dep = Null_Iir;
-               Dep_Unit := Libraries.Find_Design_Unit (Dep);
-               if Dep_Unit = Null_Iir then
-                  Error_Msg_Elab
-                    ("could not find design unit " & Disp_Node (Dep));
-               elsif not Get_Elab_Flag (Dep_Unit) then
-                  Add_Unit_Dependences (Dep_Unit);
-               end if;
-            end loop;
-         end Add_Unit_Dependences;
-
-         --  Add not yet added units of FILE.
-         procedure Add_File_Units (File : Iir_Design_File)
-         is
-            Unit : Iir_Design_Unit;
-         begin
-            Unit := Get_First_Design_Unit (File);
-            while Unit /= Null_Iir loop
-               if not Get_Elab_Flag (Unit) then
-                  --  Unit not used.
-                  Add_Unit_Dependences (Unit);
-               end if;
-               Unit := Get_Chain (Unit);
-            end loop;
-         end Add_File_Units;
-
-         Nul : constant Character := Character'Val (0);
-         Fname : String := Filelist & Nul;
-         Mode : constant String := "wt" & Nul;
-         F : FILEs;
-         R : int;
-         S : size_t;
-         pragma Unreferenced (R, S); -- FIXME
-         Id : Name_Id;
-         Lib : Iir_Library_Declaration;
-         File : Iir_Design_File;
-         Unit : Iir_Design_Unit;
-         J : Natural;
+      --  Create the body elaborator.
+      declare
+         Inter_List : O_Inter_List;
+         Proc : O_Dnode;
       begin
-         F := fopen (Fname'Address, Mode'Address);
-         if F = NULL_Stream then
-            Error_Msg_Elab ("cannot open " & Filelist);
+         Start_Procedure_Decl
+           (Inter_List, Create_Identifier ("ELAB_BODY"), O_Storage_Public);
+         Finish_Subprogram_Decl (Inter_List, Proc);
+         Start_Subprogram_Body (Proc);
+         Finish_Subprogram_Body;
+      end;
+
+      Pop_Identifier_Prefix (Pkg_Mark);
+      Pop_Identifier_Prefix (Lib_Mark);
+   end Gen_Dummy_Package_Declaration;
+
+   procedure Write_File_List (Filelist : String)
+   is
+      use Interfaces.C_Streams;
+      use System;
+      use Configuration;
+      use Name_Table;
+
+      --  Add all dependences of UNIT.
+      --  UNIT is not used, but added during link.
+      procedure Add_Unit_Dependences (Unit : Iir_Design_Unit)
+      is
+         Dep_List : Iir_List;
+         Dep : Iir;
+         Dep_Unit : Iir_Design_Unit;
+         Lib_Unit : Iir;
+      begin
+         --  Load the unit in memory to compute the dependence list.
+         Libraries.Load_Design_Unit (Unit, Null_Iir);
+         Update_Node_Infos;
+
+         Set_Elab_Flag (Unit, True);
+         Design_Units.Append (Unit);
+
+         if Flag_Rti then
+            Rtis.Generate_Library
+              (Get_Library (Get_Design_File (Unit)), True);
          end if;
 
-         --  Set elab flags on units, and remove it on design files.
+         Lib_Unit := Get_Library_Unit (Unit);
+         case Get_Kind (Lib_Unit) is
+            when Iir_Kind_Package_Declaration =>
+               --  The body may be required due to incomplete constant
+               --  declarations, or to call to a subprogram.
+               declare
+                  Pack_Body : Iir;
+               begin
+                  Pack_Body := Libraries.Find_Secondary_Unit
+                    (Unit, Null_Identifier);
+                  if Pack_Body /= Null_Iir then
+                     Add_Unit_Dependences (Pack_Body);
+                  else
+                     Gen_Dummy_Package_Declaration (Unit);
+                  end if;
+               end;
+            when Iir_Kind_Architecture_Body =>
+               Gen_Dummy_Default_Config (Lib_Unit);
+            when others =>
+               null;
+         end case;
+
+         Dep_List := Get_Dependence_List (Unit);
+         for I in Natural loop
+            Dep := Get_Nth_Element (Dep_List, I);
+            exit when Dep = Null_Iir;
+            Dep_Unit := Libraries.Find_Design_Unit (Dep);
+            if Dep_Unit = Null_Iir then
+               Error_Msg_Elab
+                 ("could not find design unit " & Disp_Node (Dep));
+            elsif not Get_Elab_Flag (Dep_Unit) then
+               Add_Unit_Dependences (Dep_Unit);
+            end if;
+         end loop;
+      end Add_Unit_Dependences;
+
+      --  Add not yet added units of FILE.
+      procedure Add_File_Units (File : Iir_Design_File)
+      is
+         Unit : Iir_Design_Unit;
+      begin
+         Unit := Get_First_Design_Unit (File);
+         while Unit /= Null_Iir loop
+            if not Get_Elab_Flag (Unit) then
+               --  Unit not used.
+               Add_Unit_Dependences (Unit);
+            end if;
+            Unit := Get_Chain (Unit);
+         end loop;
+      end Add_File_Units;
+
+      Nul : constant Character := Character'Val (0);
+      Fname : String := Filelist & Nul;
+      Mode : constant String := "wt" & Nul;
+      F : FILEs;
+      R : int;
+      S : size_t;
+      pragma Unreferenced (R, S); -- FIXME
+      Id : Name_Id;
+      Lib : Iir_Library_Declaration;
+      File : Iir_Design_File;
+      Unit : Iir_Design_Unit;
+      J : Natural;
+   begin
+      F := fopen (Fname'Address, Mode'Address);
+      if F = NULL_Stream then
+         Error_Msg_Elab ("cannot open " & Filelist);
+      end if;
+
+      --  Set elab flags on units, and remove it on design files.
+      for I in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (I);
+         Set_Elab_Flag (Unit, True);
+         File := Get_Design_File (Unit);
+         Set_Elab_Flag (File, False);
+      end loop;
+
+      J := Design_Units.First;
+      while J <= Design_Units.Last loop
+         Unit := Design_Units.Table (J);
+         File := Get_Design_File (Unit);
+         if not Get_Elab_Flag (File) then
+            Set_Elab_Flag (File, True);
+
+            --  Add dependences of unused design units, otherwise the object
+            --  link case failed.
+            Add_File_Units (File);
+
+            Lib := Get_Library (File);
+            R := fputc (Character'Pos ('>'), F);
+            Id := Get_Library_Directory (Lib);
+            S := fwrite (Get_Address (Id),
+                         size_t (Get_Name_Length (Id)), 1, F);
+            R := fputc (10, F);
+
+            Id := Get_Design_File_Filename (File);
+            S := fwrite (Get_Address (Id),
+                         size_t (Get_Name_Length (Id)), 1, F);
+            R := fputc (10, F);
+         end if;
+         J := J + 1;
+      end loop;
+   end Write_File_List;
+
+   procedure Elaborate (Primary : String;
+                        Secondary : String;
+                        Filelist : String;
+                        Whole : Boolean)
+   is
+      use Name_Table;
+      use Configuration;
+
+      Primary_Id : Name_Id;
+      Secondary_Id : Name_Id;
+      Unit : Iir_Design_Unit;
+      Lib_Unit : Iir;
+      Config : Iir_Design_Unit;
+      Config_Lib : Iir_Configuration_Declaration;
+      Entity : Iir_Entity_Declaration;
+      Arch : Iir_Architecture_Body;
+      Conf_Info : Config_Info_Acc;
+      Last_Design_Unit : Natural;
+      Nbr_Pkgs : Natural;
+   begin
+      Primary_Id := Get_Identifier (Primary);
+      if Secondary /= "" then
+         Secondary_Id := Get_Identifier (Secondary);
+      else
+         Secondary_Id := Null_Identifier;
+      end if;
+      Config := Configure (Primary_Id, Secondary_Id);
+      if Config = Null_Iir then
+         return;
+      end if;
+      Config_Lib := Get_Library_Unit (Config);
+      Entity := Get_Entity (Config_Lib);
+      Arch := Strip_Denoting_Name
+        (Get_Block_Specification (Get_Block_Configuration (Config_Lib)));
+
+      --  Be sure the entity can be at the top of a design.
+      Check_Entity_Declaration_Top (Entity);
+
+      --  If all design units are loaded, late semantic checks can be
+      --  performed.
+      if Flag_Load_All_Design_Units then
          for I in Design_Units.First .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
-            Set_Elab_Flag (Unit, True);
-            File := Get_Design_File (Unit);
-            Set_Elab_Flag (File, False);
+            Sem.Sem_Analysis_Checks_List (Unit, False);
+            --  There cannot be remaining checks to do.
+            pragma Assert
+              (Get_Analysis_Checks_List (Unit) = Null_Iir_List);
          end loop;
+      end if;
 
-         J := Design_Units.First;
-         while J <= Design_Units.Last loop
-            Unit := Design_Units.Table (J);
-            File := Get_Design_File (Unit);
-            if not Get_Elab_Flag (File) then
-               Set_Elab_Flag (File, True);
+      --  Return now in case of errors.
+      if Nbr_Errors /= 0 then
+         return;
+      end if;
 
-               --  Add dependences of unused design units, otherwise the object
-               --  link case failed.
-               Add_File_Units (File);
-
-               Lib := Get_Library (File);
-               R := fputc (Character'Pos ('>'), F);
-               Id := Get_Library_Directory (Lib);
-               S := fwrite (Get_Address (Id),
-                            size_t (Get_Name_Length (Id)), 1, F);
-               R := fputc (10, F);
-
-               Id := Get_Design_File_Filename (File);
-               S := fwrite (Get_Address (Id),
-                            size_t (Get_Name_Length (Id)), 1, F);
-               R := fputc (10, F);
-            end if;
-            J := J + 1;
+      if Flags.Verbose then
+         Ada.Text_IO.Put_Line ("List of units in the hierarchy design:");
+         for I in Design_Units.First .. Design_Units.Last loop
+            Unit := Design_Units.Table (I);
+            Lib_Unit := Get_Library_Unit (Unit);
+            Ada.Text_IO.Put_Line (' ' & Disp_Node (Lib_Unit));
          end loop;
-      end Write_File_List;
+      end if;
 
-      procedure Elaborate
-        (Primary : String;
-         Secondary : String;
-         Filelist : String;
-         Whole : Boolean)
-      is
-         use Name_Table;
-         use Configuration;
+      if Whole then
+         --  In compile-and-elaborate mode, do not generate code for
+         --  unused subprograms.
+         --  FIXME: should be improved by creating a span-tree.
+         Flag_Discard_Unused := True;
+         Flag_Discard_Unused_Implicit := True;
+      end if;
 
-         Primary_Id : Name_Id;
-         Secondary_Id : Name_Id;
-         Unit : Iir_Design_Unit;
-         Lib_Unit : Iir;
-         Config : Iir_Design_Unit;
-         Config_Lib : Iir_Configuration_Declaration;
-         Entity : Iir_Entity_Declaration;
-         Arch : Iir_Architecture_Body;
-         Conf_Info : Config_Info_Acc;
-         Last_Design_Unit : Natural;
-         Nbr_Pkgs : Natural;
-      begin
-         Primary_Id := Get_Identifier (Primary);
-         if Secondary /= "" then
-            Secondary_Id := Get_Identifier (Secondary);
-         else
-            Secondary_Id := Null_Identifier;
-         end if;
-         Config := Configure (Primary_Id, Secondary_Id);
-         if Config = Null_Iir then
-            return;
-         end if;
-         Config_Lib := Get_Library_Unit (Config);
-         Entity := Get_Entity (Config_Lib);
-         Arch := Get_Block_Specification
-           (Get_Block_Configuration (Config_Lib));
+      --  Generate_Library add infos, therefore the info array must be
+      --  adjusted.
+      Update_Node_Infos;
+      Rtis.Generate_Library (Libraries.Std_Library, True);
+      Translate_Standard (Whole);
 
-         --  Be sure the entity can be at the top of a design.
-         Check_Entity_Declaration_Top (Entity);
-
-         --  If all design units are loaded, late semantic checks can be
-         --  performed.
-         if Flag_Load_All_Design_Units then
-            for I in Design_Units.First .. Design_Units.Last loop
-               Unit := Design_Units.Table (I);
-               Sem.Sem_Analysis_Checks_List (Unit, False);
-               --  There cannot be remaining checks to do.
-               pragma Assert
-                 (Get_Analysis_Checks_List (Unit) = Null_Iir_List);
-            end loop;
-         end if;
-
-         --  Return now in case of errors.
-         if Nbr_Errors /= 0 then
-            return;
-         end if;
-
-         if Flags.Verbose then
-            Ada.Text_IO.Put_Line ("List of units in the hierarchy design:");
-            for I in Design_Units.First .. Design_Units.Last loop
-               Unit := Design_Units.Table (I);
-               Lib_Unit := Get_Library_Unit (Unit);
-               Ada.Text_IO.Put_Line (' ' & Disp_Node (Lib_Unit));
-            end loop;
-         end if;
+      --  Translate all configurations needed.
+      --  Also, set the ELAB_FLAG on package with body.
+      for I in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (I);
+         Lib_Unit := Get_Library_Unit (Unit);
 
          if Whole then
-            --  In compile-and-elaborate mode, do not generate code for
-            --  unused subprograms.
-            --  FIXME: should be improved by creating a span-tree.
-            Flag_Discard_Unused := True;
-            Flag_Discard_Unused_Implicit := True;
+            --  In whole compilation mode, force to generate RTIS of
+            --  libraries.
+            Rtis.Generate_Library (Get_Library (Get_Design_File (Unit)), True);
          end if;
 
-         --  Generate_Library add infos, therefore the info array must be
-         --  adjusted.
-         Update_Node_Infos;
-         Rtis.Generate_Library (Libraries.Std_Library, True);
-         Translate_Standard (Whole);
+         case Get_Kind (Lib_Unit) is
+            when Iir_Kind_Configuration_Declaration =>
+               --  Always generate code for configuration.
+               --  Because default binding may be changed between analysis
+               --  and elaboration.
+               Translate (Unit, True);
+            when Iir_Kind_Entity_Declaration
+              | Iir_Kind_Architecture_Body
+              | Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Instantiation_Declaration =>
+               --  For package spec, mark it as 'body is not present', this
+               --  flag will be set below when the body is translated.
+               Set_Elab_Flag (Unit, False);
+               Translate (Unit, Whole);
+            when Iir_Kind_Package_Body =>
+               --  Mark the spec with 'body is present' flag.
+               Set_Elab_Flag (Get_Design_Unit (Get_Package (Lib_Unit)), True);
+               Translate (Unit, Whole);
+            when others =>
+               Error_Kind ("elaborate", Lib_Unit);
+         end case;
+      end loop;
 
-         --  Translate all configurations needed.
-         --  Also, set the ELAB_FLAG on package with body.
-         for I in Design_Units.First .. Design_Units.Last loop
+      --  Generate code to elaboration body-less package.
+      --
+      --  When a package is analyzed, we don't know wether there is body
+      --  or not.  Therefore, we assume there is always a body, and will
+      --  elaborate the body (which elaborates its spec).  If a package
+      --  has no body, create the body elaboration procedure.
+      for I in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (I);
+         Lib_Unit := Get_Library_Unit (Unit);
+         case Get_Kind (Lib_Unit) is
+            when Iir_Kind_Package_Declaration =>
+               if not Get_Elab_Flag (Unit) then
+                  Chap2.Elab_Package_Body (Lib_Unit, Null_Iir);
+               end if;
+            when Iir_Kind_Entity_Declaration =>
+               Gen_Last_Arch (Lib_Unit);
+            when Iir_Kind_Architecture_Body
+              | Iir_Kind_Package_Body
+              | Iir_Kind_Configuration_Declaration
+              | Iir_Kind_Package_Instantiation_Declaration =>
+               null;
+            when others =>
+               Error_Kind ("elaborate(2)", Lib_Unit);
+         end case;
+      end loop;
+
+      Rtis.Generate_Top (Nbr_Pkgs);
+
+      --  Create main code.
+      Conf_Info := Get_Info (Config_Lib);
+      Gen_Main (Entity, Arch, Conf_Info.Config_Subprg, Nbr_Pkgs);
+
+      Gen_Setup_Info;
+
+      --  Index of the last design unit, required by the design.
+      Last_Design_Unit := Design_Units.Last;
+
+      --  Disp list of files needed.
+      --  FIXME: extract the link completion part of WRITE_FILE_LIST.
+      if Filelist /= "" then
+         Write_File_List (Filelist);
+      end if;
+
+      if Flags.Verbose then
+         Ada.Text_IO.Put_Line ("List of units not used:");
+         for I in Last_Design_Unit + 1 .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
             Lib_Unit := Get_Library_Unit (Unit);
-
-            if Whole then
-               --  In whole compilation mode, force to generate RTIS of
-               --  libraries.
-               Rtis.Generate_Library
-                 (Get_Library (Get_Design_File (Unit)), True);
-            end if;
-
-            case Get_Kind (Lib_Unit) is
-               when Iir_Kind_Configuration_Declaration =>
-                  --  Always generate code for configuration.
-                  --  Because default binding may be changed between analysis
-                  --  and elaboration.
-                  Translate (Unit, True);
-               when Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Architecture_Body
-                 | Iir_Kind_Package_Declaration
-                 | Iir_Kind_Package_Instantiation_Declaration =>
-                  --  For package spec, mark it as 'body is not present', this
-                  --  flag will be set below when the body is translated.
-                  Set_Elab_Flag (Unit, False);
-                  Translate (Unit, Whole);
-               when Iir_Kind_Package_Body =>
-                  --  Mark the spec with 'body is present' flag.
-                  Set_Elab_Flag
-                    (Get_Design_Unit (Get_Package (Lib_Unit)), True);
-                  Translate (Unit, Whole);
-               when others =>
-                  Error_Kind ("elaborate", Lib_Unit);
-            end case;
+            Ada.Text_IO.Put_Line (' ' & Disp_Node (Lib_Unit));
          end loop;
-
-         --  Generate code to elaboration body-less package.
-         --
-         --  When a package is analyzed, we don't know wether there is body
-         --  or not.  Therefore, we assume there is always a body, and will
-         --  elaborate the body (which elaborates its spec).  If a package
-         --  has no body, create the body elaboration procedure.
-         for I in Design_Units.First .. Design_Units.Last loop
-            Unit := Design_Units.Table (I);
-            Lib_Unit := Get_Library_Unit (Unit);
-            case Get_Kind (Lib_Unit) is
-               when Iir_Kind_Package_Declaration =>
-                  if not Get_Elab_Flag (Unit) then
-                     Chap2.Elab_Package_Body (Lib_Unit, Null_Iir);
-                  end if;
-               when Iir_Kind_Entity_Declaration =>
-                  Gen_Last_Arch (Lib_Unit);
-               when Iir_Kind_Architecture_Body
-                 | Iir_Kind_Package_Body
-                 | Iir_Kind_Configuration_Declaration
-                 | Iir_Kind_Package_Instantiation_Declaration =>
-                  null;
-               when others =>
-                  Error_Kind ("elaborate(2)", Lib_Unit);
-            end case;
-         end loop;
-
-         Rtis.Generate_Top (Nbr_Pkgs);
-
-         --  Create main code.
-         Conf_Info := Get_Info (Config_Lib);
-         Gen_Main (Entity, Arch, Conf_Info.Config_Subprg, Nbr_Pkgs);
-
-         Gen_Setup_Info;
-
-         --  Index of the last design unit, required by the design.
-         Last_Design_Unit := Design_Units.Last;
-
-         --  Disp list of files needed.
-         --  FIXME: extract the link completion part of WRITE_FILE_LIST.
-         if Filelist /= "" then
-            Write_File_List (Filelist);
-         end if;
-
-         if Flags.Verbose then
-            Ada.Text_IO.Put_Line ("List of units not used:");
-            for I in Last_Design_Unit + 1 .. Design_Units.Last loop
-               Unit := Design_Units.Table (I);
-               Lib_Unit := Get_Library_Unit (Unit);
-               Ada.Text_IO.Put_Line (' ' & Disp_Node (Lib_Unit));
-            end loop;
-         end if;
-      end Elaborate;
+      end if;
+   end Elaborate;
 end Trans.Chap12;

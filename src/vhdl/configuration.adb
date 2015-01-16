@@ -139,9 +139,9 @@ package body Configuration is
                Prev_Configuration := Current_Configuration;
                Current_Configuration := Lib_Unit;
                Blk := Get_Block_Configuration (Lib_Unit);
-               Arch := Get_Block_Specification (Blk);
                Add_Design_Block_Configuration (Blk);
                Current_Configuration := Prev_Configuration;
+               Arch := Strip_Denoting_Name (Get_Block_Specification (Blk));
                Add_Design_Unit (Get_Design_Unit (Arch), Unit);
             end;
          when Iir_Kind_Architecture_Body =>

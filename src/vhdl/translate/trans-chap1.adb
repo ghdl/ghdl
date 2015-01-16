@@ -827,7 +827,7 @@ package body Trans.Chap1 is
       Block_Config   : constant Iir_Block_Configuration :=
         Get_Block_Configuration (Config);
       Arch           : constant Iir_Architecture_Body :=
-        Get_Block_Specification (Block_Config);
+        Strip_Denoting_Name (Get_Block_Specification (Block_Config));
       Arch_Info      : constant Block_Info_Acc := Get_Info (Arch);
       Interface_List : O_Inter_List;
       Config_Info    : Config_Info_Acc;
