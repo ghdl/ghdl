@@ -2579,7 +2579,7 @@ package body Canon is
                   else
                      Blk_Spec := Strip_Denoting_Name
                        (Get_Block_Specification (Blk_Config));
-                     if Get_Kind (Blk_Spec) /= Iir_Kind_For_Generate_Statement
+                     if Get_Kind (Blk_Spec) /= Iir_Kind_Generate_Statement_Body
                      then
                         --  There are generate specification with range or
                         --  expression.  Create a default block configuration
