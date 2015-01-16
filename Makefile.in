@@ -103,6 +103,11 @@ install.mcode.program: install.dirs ghdl_mcode
 
 install.mcode: install.mcode.program install.vhdllib
 
+oread-mcode: force
+	$(MAKE) -f $(srcdir)/src/ortho/mcode/Makefile \
+	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
+	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" all
+
 #################### For gcc backend ##############################
 
 gcc_vhdl_dir=$(gcc_src_dir)/gcc/vhdl
@@ -221,8 +226,10 @@ install.llvm: install.llvm.program install.vhdllib install.grt.llvm
 
 ################ For simul (no code generation, interpretation) ##########
 
+GHDL_SIMUL_INCFLAGS=-aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt -aI$(srcdir)/src/vhdl/translate
+
 ghdl_simul: $(GRT_ADD_OBJS) force
-	$(GNATMAKE) -aI../../simulate $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 libs.vhdl.simul:
 	$(MAKE) GHDL=ghdl_simul vhdl.libs.all

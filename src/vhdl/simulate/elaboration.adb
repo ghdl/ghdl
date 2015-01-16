@@ -877,7 +877,7 @@ package body Elaboration is
    procedure Elaborate_Generic_Clause
      (Instance : Block_Instance_Acc; Generic_Chain : Iir)
    is
-      Decl : Iir_Constant_Interface_Declaration;
+      Decl : Iir_Interface_Constant_Declaration;
    begin
       --  Elaboration of a generic clause consists of the elaboration of each
       --  of the equivalent single generic declarations contained in the
@@ -902,7 +902,7 @@ package body Elaboration is
    procedure Elaborate_Port_Clause
      (Instance : Block_Instance_Acc; Port_Chain : Iir)
    is
-      Decl : Iir_Signal_Interface_Declaration;
+      Decl : Iir_Interface_Signal_Declaration;
    begin
       Decl := Port_Chain;
       while Decl /= Null_Iir loop
@@ -925,7 +925,7 @@ package body Elaboration is
       Map : Iir)
    is
       Assoc : Iir;
-      Inter : Iir_Constant_Interface_Declaration;
+      Inter : Iir_Interface_Constant_Declaration;
       Value : Iir;
       Val : Iir_Value_Literal_Acc;
       Last_Individual : Iir_Value_Literal_Acc;
@@ -1025,7 +1025,7 @@ package body Elaboration is
    --  LRM93 12.2.3  The Port Clause
    procedure Elaborate_Port_Declaration
      (Instance : Block_Instance_Acc;
-      Decl : Iir_Signal_Interface_Declaration;
+      Decl : Iir_Interface_Signal_Declaration;
       Default_Value : Iir_Value_Literal_Acc)
    is
       Val : Iir_Value_Literal_Acc;
@@ -1076,7 +1076,7 @@ package body Elaboration is
       Map : Iir)
    is
       Assoc : Iir;
-      Inter : Iir_Signal_Interface_Declaration;
+      Inter : Iir_Interface_Signal_Declaration;
       Actual_Expr : Iir_Value_Literal_Acc;
       Init_Expr : Iir_Value_Literal_Acc;
       Actual : Iir;
@@ -1457,10 +1457,12 @@ package body Elaboration is
    end Elaborate_Component_Instantiation;
 
    --  LRM93 12.4.2 Generate Statements
-   procedure Elaborate_Conditional_Generate_Statement
+   procedure Elaborate_If_Generate_Statement
      (Instance : Block_Instance_Acc; Generate : Iir_Generate_Statement)
    is
-      Scheme : Iir;
+      Clause : Iir;
+      Cond : Iir;
+      Bod : Iir;
       Ninstance : Block_Instance_Acc;
       Lit : Iir_Value_Literal_Acc;
    begin
@@ -1469,32 +1471,41 @@ package body Elaboration is
       --  consists of the evaluation of the boolean expression, followed by
       --  the generation of exactly one block statement if the expression
       --  evaluates to TRUE, and no block statement otherwise.
-      Scheme := Get_Generation_Scheme (Generate);
-      Lit := Execute_Expression (Instance, Scheme);
-      if Lit.B1 /= True then
-         return;
-      end if;
+      Clause := Generate;
+      while Clause /= Null_Iir loop
+         Cond := Get_Condition (Generate);
+         if Cond /= Null_Iir then
+            Lit := Execute_Expression (Instance, Cond);
+         end if;
+         if Cond = Null_Iir or else Lit.B1 = True then
+            --  LRM93 12.4.2
+            --  If generated, the block statement has the following form:
+            --  1.  The block label is the same as the label of the generate
+            --      statement.
+            --  2.  The block declarative part consists of a copy of the
+            --      declarative items contained within the generate statement.
+            --  3.  The block statement part consists of a copy of the
+            --      concurrent statement contained within the generate
+            --      statement.
+            Bod := Get_Generate_Statement_Body (Clause);
+            Ninstance := Create_Block_Instance (Instance, Bod, Bod);
+            Elaborate_Declarative_Part
+              (Ninstance, Get_Declaration_Chain (Bod));
+            Elaborate_Statement_Part
+              (Ninstance, Get_Concurrent_Statement_Chain (Bod));
 
-      --  LRM93 12.4.2
-      --  If generated, the block statement has the following form:
-      --  1.  The block label is the same as the label of the generate
-      --      statement.
-      --  2.  The block declarative part consists of a copy of the declarative
-      --      items contained within the generate statement.
-      --  3.  The block statement part consists of a copy of the concurrent
-      --      statement contained within the generate statement.
-      Ninstance := Create_Block_Instance (Instance, Generate, Generate);
-      Elaborate_Declarative_Part (Ninstance, Get_Declaration_Chain (Generate));
-      Elaborate_Statement_Part
-        (Ninstance, Get_Concurrent_Statement_Chain (Generate));
-   end Elaborate_Conditional_Generate_Statement;
+            exit;
+         end if;
+         Clause := Get_Generate_Else_Clause (Clause);
+      end loop;
+   end Elaborate_If_Generate_Statement;
 
    --  LRM93 12.4.2 Generate Statements
-   procedure Elaborate_Iterative_Generate_Statement
+   procedure Elaborate_For_Generate_Statement
      (Instance : Block_Instance_Acc; Generate : Iir_Generate_Statement)
    is
-      Scheme : constant Iir_Iterator_Declaration :=
-        Get_Generation_Scheme (Generate);
+      Iter : constant Iir := Get_Parameter_Specification (Generate);
+      Bod : constant Iir := Get_Generate_Statement_Body (Generate);
       Ninstance : Block_Instance_Acc;
       Sub_Instance : Block_Instance_Acc;
       Bound, Index : Iir_Value_Literal_Acc;
@@ -1503,12 +1514,12 @@ package body Elaboration is
       --  For a generate statement with a for generation scheme, elaboration
       --  consists of the elaboration of the discrete range
 
-      Ninstance := Create_Block_Instance (Instance, Generate, Generate);
-      Elaborate_Declaration (Ninstance, Scheme);
-      Bound := Execute_Bounds (Ninstance, Get_Type (Scheme));
+      Ninstance := Create_Block_Instance (Instance, Bod, Bod);
+      Elaborate_Declaration (Ninstance, Iter);
+      Bound := Execute_Bounds (Ninstance, Get_Type (Iter));
 
       --  Index is the iterator value.
-      Index := Unshare (Ninstance.Objects (Get_Info (Scheme).Slot),
+      Index := Unshare (Ninstance.Objects (Get_Info (Iter).Slot),
                         Current_Pool);
 
       --  Initialize the iterator.
@@ -1522,38 +1533,25 @@ package body Elaboration is
       end if;
 
       loop
-         Sub_Instance := Create_Block_Instance (Ninstance, Generate, Scheme);
+         Sub_Instance := Create_Block_Instance (Ninstance, Bod, Iter);
 
          --  FIXME: this is needed to copy iterator type (if any).  But this
          --  elaborates the subtype several times (what about side effects).
-         Elaborate_Declaration (Sub_Instance, Scheme);
+         Elaborate_Declaration (Sub_Instance, Iter);
 
          --  Store index.
-         Store (Sub_Instance.Objects (Get_Info (Scheme).Slot), Index);
+         Store (Sub_Instance.Objects (Get_Info (Iter).Slot), Index);
 
          Elaborate_Declarative_Part
-           (Sub_Instance, Get_Declaration_Chain (Generate));
+           (Sub_Instance, Get_Declaration_Chain (Bod));
          Elaborate_Statement_Part
-           (Sub_Instance, Get_Concurrent_Statement_Chain (Generate));
+           (Sub_Instance, Get_Concurrent_Statement_Chain (Bod));
 
          Update_Loop_Index (Index, Bound);
          exit when not Is_In_Range (Index, Bound);
       end loop;
       --  FIXME: destroy index ?
-   end Elaborate_Iterative_Generate_Statement;
-
-   procedure Elaborate_Generate_Statement
-     (Instance : Block_Instance_Acc; Generate : Iir_Generate_Statement)
-   is
-      Scheme : Iir;
-   begin
-      Scheme := Get_Generation_Scheme (Generate);
-      if Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration then
-         Elaborate_Iterative_Generate_Statement (Instance, Generate);
-      else
-         Elaborate_Conditional_Generate_Statement (Instance, Generate);
-      end if;
-   end Elaborate_Generate_Statement;
+   end Elaborate_For_Generate_Statement;
 
    procedure Elaborate_Process_Statement
      (Instance : Block_Instance_Acc; Stmt : Iir)
@@ -1591,8 +1589,11 @@ package body Elaboration is
             when Iir_Kind_Component_Instantiation_Statement =>
                Elaborate_Component_Instantiation (Instance, Stmt);
 
-            when Iir_Kind_Generate_Statement =>
-               Elaborate_Generate_Statement (Instance, Stmt);
+            when Iir_Kind_If_Generate_Statement =>
+               Elaborate_If_Generate_Statement (Instance, Stmt);
+
+            when Iir_Kind_For_Generate_Statement =>
+               Elaborate_For_Generate_Statement (Instance, Stmt);
 
             when Iir_Kind_Simple_Simultaneous_Statement =>
                Add_Characteristic_Expression
@@ -1640,10 +1641,10 @@ package body Elaboration is
       Inter := Inter_Chain;
       while Inter /= Null_Iir loop
          case Get_Kind (Inter) is
-            when Iir_Kind_Signal_Interface_Declaration
-              | Iir_Kind_Variable_Interface_Declaration
-              | Iir_Kind_Constant_Interface_Declaration
-              | Iir_Kind_File_Interface_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Interface_Variable_Declaration
+              | Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_File_Declaration =>
                Elaborate_Subtype_Indication_If_Anonymous
                  (Instance, Get_Type (Inter));
             when others =>
@@ -1814,7 +1815,7 @@ package body Elaboration is
    procedure Apply_Block_Configuration_To_Iterative_Generate
      (Stmt : Iir; Conf_Chain : Iir; Instance : Block_Instance_Acc)
    is
-      Scheme : constant Iir := Get_Generation_Scheme (Stmt);
+      Scheme : constant Iir := Get_Parameter_Specification (Stmt);
       Bounds : constant Iir_Value_Literal_Acc :=
         Execute_Bounds (Instance, Get_Type (Scheme));
 
@@ -1834,7 +1835,7 @@ package body Elaboration is
       Expr : Iir_Value_Literal_Acc;
       Ind : Instance_Slot_Type;
    begin
-      --  Gather children
+      --  Gather children (were prepended, so in reverse order).
       Child := Instance.Children;
       for I in reverse Sub_Instances'Range loop
          Sub_Instances (I) := Child;
@@ -1847,10 +1848,7 @@ package body Elaboration is
       --  Apply configuration items
       Item := Conf_Chain;
       while Item /= Null_Iir loop
-         Spec := Get_Block_Specification (Item);
-         if Get_Kind (Spec) = Iir_Kind_Simple_Name then
-            Spec := Get_Named_Entity (Spec);
-         end if;
+         Spec := Strip_Denoting_Name (Get_Block_Specification (Item));
          Prev_Item := Get_Prev_Block_Configuration (Item);
 
          case Get_Kind (Spec) is
@@ -1876,7 +1874,7 @@ package body Elaboration is
                   Sub_Conf (Ind) := True;
                   Elaborate_Block_Configuration (Item, Sub_Instances (Ind));
                end if;
-            when Iir_Kind_Generate_Statement =>
+            when Iir_Kind_Generate_Statement_Body =>
                --  Must be the only block configuration
                pragma Assert (Item = Conf_Chain);
                pragma Assert (Prev_Item = Null_Iir);
@@ -1939,7 +1937,7 @@ package body Elaboration is
                         Set_Prev_Block_Configuration
                           (Item, Sub_Conf (Info.Inst_Slot));
                         Sub_Conf (Info.Inst_Slot) := Item;
-                     when Iir_Kind_Generate_Statement =>
+                     when Iir_Kind_Generate_Statement_Body =>
                         Info := Get_Info (Spec);
                         if Sub_Conf (Info.Inst_Slot) /= Null_Iir then
                            raise Internal_Error;
@@ -1996,9 +1994,7 @@ package body Elaboration is
             begin
                if Slot /= Invalid_Instance_Slot then
                   --  Processes have no slot.
-                  if Sub_Instances (Slot) /= null then
-                     raise Internal_Error;
-                  end if;
+                  pragma Assert (Sub_Instances (Slot) = null);
                   Sub_Instances (Slot) := Child;
                end if;
             end;
@@ -2007,52 +2003,44 @@ package body Elaboration is
       end;
 
       --  Configure sub instances.
-      declare
-         Stmt : Iir;
-         Info : Sim_Info_Acc;
-         Slot : Instance_Slot_Type;
-      begin
-         Stmt := Get_Concurrent_Statement_Chain (Instance.Stmt);
-         while Stmt /= Null_Iir loop
-            case Get_Kind (Stmt) is
-               when Iir_Kind_Generate_Statement =>
-                  Info := Get_Info (Stmt);
-                  Slot := Info.Inst_Slot;
-                  if Get_Kind (Get_Generation_Scheme (Stmt))
-                    = Iir_Kind_Iterator_Declaration
-                  then
-                     --  Iterative generate: apply to all instances
-                     Apply_Block_Configuration_To_Iterative_Generate
-                       (Stmt, Sub_Conf (Slot), Sub_Instances (Slot));
-                  else
-                     --  Conditional generate: may not be instantiated
-                     if Sub_Instances (Slot) /= null then
-                        Elaborate_Block_Configuration
-                          (Sub_Conf (Slot), Sub_Instances (Slot));
-                     end if;
-                  end if;
+      for I in Sub_Instances'Range loop
+         declare
+            Sub_Inst : constant Block_Instance_Acc := Sub_Instances (I);
+            Stmt : Iir;
+         begin
+            if Sub_Inst /= null then
+               Stmt := Sub_Inst.Label;
+               case Get_Kind (Stmt) is
+                  when Iir_Kind_Generate_Statement_Body =>
+                     Stmt := Get_Parent (Stmt);
+                     case Get_Kind (Stmt) is
+                        when Iir_Kind_For_Generate_Statement =>
+                           Apply_Block_Configuration_To_Iterative_Generate
+                             (Stmt, Sub_Conf (I), Sub_Inst);
+                        when Iir_Kind_If_Generate_Statement
+                          | Iir_Kind_If_Generate_Else_Clause =>
+                           Elaborate_Block_Configuration
+                             (Sub_Conf (I), Sub_Inst);
+                        when others =>
+                           raise Internal_Error;
+                     end case;
                when Iir_Kind_Block_Statement =>
-                  Info := Get_Info (Stmt);
-                  Slot := Info.Inst_Slot;
-                  Elaborate_Block_Configuration
-                    (Sub_Conf (Slot), Sub_Instances (Slot));
+                  Elaborate_Block_Configuration (Sub_Conf (I), Sub_Inst);
                when Iir_Kind_Component_Instantiation_Statement =>
                   if Is_Component_Instantiation (Stmt) then
-                     Info := Get_Info (Stmt);
-                     Slot := Info.Inst_Slot;
                      Elaborate_Component_Configuration
-                       (Stmt, Sub_Instances (Slot), Sub_Conf (Slot));
+                       (Stmt, Sub_Inst, Sub_Conf (I));
                   else
                      --  Nothing to do for entity instantiation, will be
                      --  done during elaboration of statements.
                      null;
                   end if;
                when others =>
-                  null;
-            end case;
-            Stmt := Get_Chain (Stmt);
-         end loop;
-      end;
+                  Error_Kind ("elaborate_block_configuration", Stmt);
+               end case;
+            end if;
+         end;
+      end loop;
    end Elaborate_Block_Configuration;
 
    procedure Elaborate_Alias_Declaration
@@ -2186,12 +2174,11 @@ package body Elaboration is
       case Get_Kind (Decl) is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
-            if not Is_Second_Subprogram_Specification (Decl) then
+            if Get_Implicit_Definition (Decl) in Iir_Predefined_Explicit
+              and then not Is_Second_Subprogram_Specification (Decl)
+            then
                Elaborate_Subprogram_Declaration (Instance, Decl);
             end if;
-         when Iir_Kind_Implicit_Function_Declaration
-           | Iir_Kind_Implicit_Procedure_Declaration =>
-            null;
          when Iir_Kind_Anonymous_Type_Declaration =>
             Elaborate_Type_Definition (Instance, Get_Type_Definition (Decl));
          when Iir_Kind_Type_Declaration =>

@@ -122,7 +122,7 @@ package body Debugger is
                Put_Line (Standard_Error, " in the ""-"" operation");
             when Iir_Kind_Integer_Literal =>
                Put_Line (Standard_Error, ", literal out of range");
-            when Iir_Kind_Signal_Interface_Declaration
+            when Iir_Kind_Interface_Signal_Declaration
               | Iir_Kind_Signal_Declaration =>
                Put_Line (Standard_Error, " for " & Disp_Node (Expr));
             when others =>
@@ -144,7 +144,8 @@ package body Debugger is
 
       case Get_Kind (Name) is
          when Iir_Kind_Block_Statement
-           | Iir_Kind_Generate_Statement
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Procedure_Declaration
            | Iir_Kinds_Process_Statement =>
@@ -204,7 +205,8 @@ package body Debugger is
       case Get_Kind (Inst.Label) is
          when Iir_Kind_Block_Statement =>
             Put ("[block]");
-         when Iir_Kind_Generate_Statement =>
+         when Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement =>
             Put ("[generate]");
          when Iir_Kind_Iterator_Declaration =>
             Put ("[iterator]");
@@ -357,7 +359,7 @@ package body Debugger is
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Signal_Declaration
-              | Iir_Kind_Signal_Interface_Declaration =>
+              | Iir_Kind_Interface_Signal_Declaration =>
                Disp_Instance_Signal (Instance, El);
             when others =>
                null;
@@ -391,10 +393,13 @@ package body Debugger is
             --  FIXME: ports.
             Disp_Instance_Signals_Of_Chain
               (Instance, Get_Declaration_Chain (Blk));
-         when Iir_Kind_Generate_Statement =>
+
+         when Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement =>
             Disp_Instance_Name (Instance);
             Put_Line (" [generate]:");
 
+         when Iir_Kind_Generate_Statement_Body =>
             Disp_Instance_Signals_Of_Chain
               (Instance, Get_Declaration_Chain (Blk));
          when Iir_Kind_Component_Instantiation_Statement =>
@@ -463,14 +468,14 @@ package body Debugger is
          case Get_Kind (El) is
             when Iir_Kind_Constant_Declaration
               | Iir_Kind_Variable_Declaration
-              | Iir_Kind_Variable_Interface_Declaration
-              | Iir_Kind_Constant_Interface_Declaration
-              | Iir_Kind_File_Interface_Declaration
+              | Iir_Kind_Interface_Variable_Declaration
+              | Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_File_Declaration
               | Iir_Kind_Object_Alias_Declaration =>
                Put (Disp_Node (El));
                Put (" = ");
                Disp_Value_Tab (Instance.Objects (Get_Info (El).Slot), 3);
-            when Iir_Kind_Signal_Interface_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration =>
                declare
                   Sig : Iir_Value_Literal_Acc;
                begin
@@ -484,8 +489,6 @@ package body Debugger is
               | Iir_Kind_Anonymous_Type_Declaration
               | Iir_Kind_Subtype_Declaration =>
                --  FIXME: disp ranges
-               null;
-            when Iir_Kind_Implicit_Function_Declaration =>
                null;
             when others =>
                Error_Kind ("disp_declaration_objects", El);
@@ -1149,7 +1152,7 @@ package body Debugger is
       Decl := Chain;
       while Decl /= Null_Iir loop
          case Get_Kind (Decl) is
-            when Iir_Kind_Signal_Interface_Declaration
+            when Iir_Kind_Interface_Signal_Declaration
               | Iir_Kind_Signal_Declaration =>
                Put_Line (" " & Name_Table.Image (Get_Identifier (Decl)));
             when others =>
@@ -1243,7 +1246,9 @@ package body Debugger is
 
          when Iir_Kind_For_Loop_Statement
            | Iir_Kind_Block_Statement
-           | Iir_Kind_Generate_Statement =>
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Generate_Statement_Body =>
             Foreach_Scopes (Get_Parent (N), Handler);
             Handler.all (N);
 
@@ -1296,14 +1301,15 @@ package body Debugger is
            | Iir_Kind_Sensitized_Process_Statement =>
             Open_Declarative_Region;
             Add_Declarations (Get_Declaration_Chain (N), False);
-         when Iir_Kind_For_Loop_Statement =>
+         when Iir_Kind_For_Loop_Statement
+           | Iir_Kind_For_Generate_Statement =>
             Open_Declarative_Region;
             Add_Name (Get_Parameter_Specification (N));
          when Iir_Kind_Block_Statement =>
             Open_Declarative_Region;
             Add_Declarations (Get_Declaration_Chain (N), False);
             Add_Declarations_Of_Concurrent_Statement (N);
-         when Iir_Kind_Generate_Statement =>
+         when Iir_Kind_Generate_Statement_Body =>
             Open_Declarative_Region;
             Add_Declarations (Get_Declaration_Chain (N), False);
             Add_Declarations_Of_Concurrent_Statement (N);
@@ -1342,7 +1348,9 @@ package body Debugger is
            | Iir_Kind_Function_Body
            | Iir_Kind_For_Loop_Statement
            | Iir_Kind_Block_Statement
-           | Iir_Kind_Generate_Statement =>
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Generate_Statement_Body =>
             Close_Declarative_Region;
          when others =>
             Error_Kind ("Decl_Decls_For", N);

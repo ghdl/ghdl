@@ -1447,6 +1447,7 @@ package body Simulation is
                                  Default : Iir_Value_Literal_Acc)
    is
       use Grt.Rtis;
+      use Grt.Signals;
 
       procedure Create_Signal (Lit: Iir_Value_Literal_Acc;
                                Sig : Iir_Value_Literal_Acc;
@@ -1460,7 +1461,7 @@ package body Simulation is
          if not Already_Resolved
            and then Get_Kind (Sig_Type) in Iir_Kinds_Subtype_Definition
          then
-            Resolv_Func := Get_Resolution_Function (Sig_Type);
+            Resolv_Func := Get_Resolution_Indication (Sig_Type);
          else
             Resolv_Func := Null_Iir;
          end if;
@@ -1542,12 +1543,11 @@ package body Simulation is
       type Iir_Kind_To_Kind_Signal_Type is
         array (Iir_Signal_Kind) of Kind_Signal_Type;
       Iir_Kind_To_Kind_Signal : constant Iir_Kind_To_Kind_Signal_Type :=
-        (Iir_No_Signal_Kind => Kind_Signal_No,
-         Iir_Register_Kind  => Kind_Signal_Register,
+        (Iir_Register_Kind  => Kind_Signal_Register,
          Iir_Bus_Kind       => Kind_Signal_Bus);
    begin
       case Get_Kind (Signal) is
-         when Iir_Kind_Signal_Interface_Declaration =>
+         when Iir_Kind_Interface_Signal_Declaration =>
             Mode := Iir_Mode_To_Mode_Signal (Get_Mode (Signal));
          when Iir_Kind_Signal_Declaration =>
             Mode := Mode_Signal;
@@ -1555,7 +1555,11 @@ package body Simulation is
             Error_Kind ("elaborate_signal", Signal);
       end case;
 
-      Kind := Iir_Kind_To_Kind_Signal (Get_Signal_Kind (Signal));
+      if Get_Guarded_Signal_Flag (Signal) then
+         Kind := Iir_Kind_To_Kind_Signal (Get_Signal_Kind (Signal));
+      else
+         Kind := Kind_Signal_No;
+      end if;
 
       Grt.Signals.Ghdl_Signal_Set_Mode (Mode, Kind, True);
 

@@ -429,11 +429,11 @@ package body Annotations is
       El := Decl_Chain;
       while El /= Null_Iir loop
          case Get_Kind (El) is
-            when Iir_Kind_Signal_Interface_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration =>
                Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (El));
-            when Iir_Kind_Variable_Interface_Declaration
-              | Iir_Kind_Constant_Interface_Declaration
-              | Iir_Kind_File_Interface_Declaration =>
+            when Iir_Kind_Interface_Variable_Declaration
+              | Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_File_Declaration =>
                Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (El));
             when others =>
                Error_Kind ("annotate_interface_list", El);
@@ -455,11 +455,11 @@ package body Annotations is
          end if;
          Assert_No_Info (Decl);
          case Get_Kind (Decl) is
-            when Iir_Kind_Signal_Interface_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration =>
                Add_Signal_Info (Block_Info, Decl);
-            when Iir_Kind_Variable_Interface_Declaration
-              | Iir_Kind_Constant_Interface_Declaration
-              | Iir_Kind_File_Interface_Declaration =>
+            when Iir_Kind_Interface_Variable_Declaration
+              | Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_File_Declaration =>
                Create_Object_Info (Block_Info, Decl);
             when others =>
                Error_Kind ("annotate_create_interface_list", Decl);
@@ -483,7 +483,7 @@ package body Annotations is
       --  of the interfaces are elaborated in the outer context.
       Annotate_Interface_List_Subtype (Block_Info, Interfaces);
 
-      if Get_Kind (Subprg) in Iir_Kinds_Function_Declaration then
+      if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
          --  FIXME: can this create a new annotation ?
          Annotate_Anonymous_Type_Definition
            (Block_Info, Get_Return_Type (Subprg));
@@ -622,7 +622,9 @@ package body Annotations is
 
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
-            if not Is_Second_Subprogram_Specification (Decl) then
+            if Get_Implicit_Definition (Decl) in Iir_Predefined_Explicit
+              and then not Is_Second_Subprogram_Specification (Decl)
+            then
                Annotate_Subprogram_Interfaces_Type (Block_Info, Decl);
                Annotate_Subprogram_Specification (Block_Info, Decl);
             end if;
@@ -652,8 +654,6 @@ package body Annotations is
          when Iir_Kind_Disconnection_Specification =>
             null;
 
-         when Iir_Kind_Implicit_Procedure_Declaration =>
-            null;
          when Iir_Kind_Group_Template_Declaration =>
             null;
          when Iir_Kind_Group_Declaration =>
@@ -675,9 +675,6 @@ package body Annotations is
 --                    Add_Signal_Info (Block_Info, Nsig);
 --                 end loop;
 --              end;
-
-         when Iir_Kind_Implicit_Function_Declaration =>
-            null;
 
          when Iir_Kind_Nature_Declaration =>
             null;
@@ -827,15 +824,12 @@ package body Annotations is
       Current_Scope_Level := Current_Scope_Level - 1;
    end Annotate_Block_Statement;
 
-   procedure Annotate_Generate_Statement
-     (Block_Info : Sim_Info_Acc; Stmt : Iir)
+   procedure Annotate_Generate_Statement_Body
+     (Block_Info : Sim_Info_Acc; Bod : Iir; It : Iir)
    is
       Info : Sim_Info_Acc;
-      Scheme : constant Iir := Get_Generation_Scheme (Stmt);
-      Is_Iterative : constant Boolean :=
-        Get_Kind (Scheme) = Iir_Kind_Iterator_Declaration;
    begin
-      Assert_No_Info (Stmt);
+      Assert_No_Info (Bod);
 
       Increment_Current_Scope_Level;
 
@@ -844,19 +838,41 @@ package body Annotations is
                                  Frame_Scope_Level => Current_Scope_Level,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 0);
-      Set_Info (Stmt, Info);
+      Set_Info (Bod, Info);
 
       Block_Info.Nbr_Instances := Block_Info.Nbr_Instances + 1;
 
-      if Is_Iterative then
-         Annotate_Declaration (Info, Scheme);
+      if It /= Null_Iir then
+         Annotate_Declaration (Info, It);
       end if;
-      Annotate_Declaration_List (Info, Get_Declaration_Chain (Stmt));
+      Annotate_Declaration_List (Info, Get_Declaration_Chain (Bod));
       Annotate_Concurrent_Statements_List
-        (Info, Get_Concurrent_Statement_Chain (Stmt));
+        (Info, Get_Concurrent_Statement_Chain (Bod));
 
       Current_Scope_Level := Current_Scope_Level - 1;
-   end Annotate_Generate_Statement;
+   end Annotate_Generate_Statement_Body;
+
+   procedure Annotate_If_Generate_Statement
+     (Block_Info : Sim_Info_Acc; Stmt : Iir)
+   is
+      Clause : Iir;
+   begin
+      Clause := Stmt;
+      while Clause /= Null_Iir loop
+         Annotate_Generate_Statement_Body
+           (Block_Info, Get_Generate_Statement_Body (Clause), Null_Iir);
+         Clause := Get_Generate_Else_Clause (Clause);
+      end loop;
+   end Annotate_If_Generate_Statement;
+
+   procedure Annotate_For_Generate_Statement
+     (Block_Info : Sim_Info_Acc; Stmt : Iir) is
+   begin
+      Annotate_Generate_Statement_Body
+        (Block_Info,
+         Get_Generate_Statement_Body (Stmt),
+         Get_Parameter_Specification (Stmt));
+   end Annotate_For_Generate_Statement;
 
    procedure Annotate_Component_Instantiation_Statement
      (Block_Info : Sim_Info_Acc; Stmt : Iir)
@@ -917,8 +933,10 @@ package body Annotations is
             when Iir_Kind_Block_Statement =>
                Annotate_Block_Statement (Block_Info, El);
 
-            when Iir_Kind_Generate_Statement =>
-               Annotate_Generate_Statement (Block_Info, El);
+            when Iir_Kind_If_Generate_Statement =>
+               Annotate_If_Generate_Statement (Block_Info, El);
+            when Iir_Kind_For_Generate_Statement =>
+               Annotate_For_Generate_Statement (Block_Info, El);
 
             when Iir_Kind_Simple_Simultaneous_Statement =>
                null;

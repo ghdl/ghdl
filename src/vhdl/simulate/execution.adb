@@ -1354,8 +1354,7 @@ package body Execution is
    procedure Execute_Implicit_Procedure
      (Block: Block_Instance_Acc; Stmt: Iir_Procedure_Call)
    is
-      Imp : constant Iir_Implicit_Procedure_Declaration :=
-        Get_Named_Entity (Get_Implementation (Stmt));
+      Imp : constant Iir := Get_Implementation (Stmt);
       Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Stmt);
       Assoc: Iir;
       Args: Iir_Value_Literal_Array (0 .. 3);
@@ -1417,8 +1416,7 @@ package body Execution is
    procedure Execute_Foreign_Procedure
      (Block: Block_Instance_Acc; Stmt: Iir_Procedure_Call)
    is
-      Imp : constant Iir_Implicit_Procedure_Declaration :=
-        Get_Implementation (Stmt);
+      Imp : constant Iir := Get_Implementation (Stmt);
       Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Stmt);
       Assoc: Iir;
       Args: Iir_Value_Literal_Array (0 .. 3) := (others => null);
@@ -1572,81 +1570,35 @@ package body Execution is
    function String_To_Enumeration_Array_1 (Str: Iir; El_Type : Iir)
                                           return Iir_Value_Literal_Acc
    is
-      Lit: Iir_Value_Literal_Acc;
-      Element_Mode : Iir_Value_Scalars;
-
-      procedure Create_Lit_El
-        (Index : Iir_Index32; Literal: Iir_Enumeration_Literal)
-      is
-         R : Iir_Value_Literal_Acc;
-         P : constant Iir_Int32 := Get_Enum_Pos (Literal);
-      begin
-         case Element_Mode is
-            when Iir_Value_B1 =>
-               R := Create_B1_Value (Ghdl_B1'Val (P));
-            when Iir_Value_E32 =>
-               R := Create_E32_Value (Ghdl_E32'Val (P));
-            when others =>
-               raise Internal_Error;
-         end case;
-         Lit.Val_Array.V (Index) := R;
-      end Create_Lit_El;
+      pragma Assert (Get_Kind (Str) = Iir_Kind_String_Literal8);
+      Id : constant String8_Id := Get_String8_Id (Str);
+      Len : constant Iir_Index32 := Iir_Index32 (Get_String_Length (Str));
 
       El_Btype : constant Iir := Get_Base_Type (El_Type);
-      Literal_List: constant Iir_List :=
-        Get_Enumeration_Literal_List (El_Btype);
-      Len: Iir_Index32;
-      Str_As_Str: constant String := Iirs_Utils.Image_String_Lit (Str);
-      El : Iir;
+
+      Lit: Iir_Value_Literal_Acc;
+      El : Iir_Value_Literal_Acc;
+      Element_Mode : Iir_Value_Scalars;
+
+      Pos : Nat8;
    begin
       Element_Mode := Get_Info (El_Btype).Scalar_Mode;
 
-      case Get_Kind (Str) is
-         when Iir_Kind_String_Literal =>
-            Len := Iir_Index32 (Str_As_Str'Length);
-            Lit := Create_Array_Value (Len, 1);
+      Lit := Create_Array_Value (Len, 1);
 
-            for I in Lit.Val_Array.V'Range loop
-               -- FIXME: use literal from type ??
-               El := Find_Name_In_List
-                  (Literal_List,
-                   Name_Table.Get_Identifier (Str_As_Str (Natural (I))));
-               if El = Null_Iir then
-                  -- FIXME: could free what was already built.
-                  return null;
-               end if;
-               Create_Lit_El (I, El);
-            end loop;
-
-         when Iir_Kind_Bit_String_Literal =>
-            declare
-               Lit_0, Lit_1 : Iir;
-               Buf : String_Fat_Acc;
-               Len1 : Int32;
-            begin
-               Lit_0 := Get_Bit_String_0 (Str);
-               Lit_1 := Get_Bit_String_1 (Str);
-               Buf := Str_Table.Get_String_Fat_Acc (Get_String_Id (Str));
-               Len1 := Get_String_Length (Str);
-               Lit := Create_Array_Value (Iir_Index32 (Len1), 1);
-
-               if Lit_0 = Null_Iir or Lit_1 = Null_Iir then
-                  raise Internal_Error;
-               end if;
-               for I in 1 .. Len1 loop
-                  case Buf (I) is
-                     when '0' =>
-                        Create_Lit_El (Iir_Index32 (I), Lit_0);
-                     when '1' =>
-                        Create_Lit_El (Iir_Index32 (I), Lit_1);
-                     when others =>
-                        raise Internal_Error;
-                  end case;
-               end loop;
-            end;
-         when others =>
-            raise Internal_Error;
-      end case;
+      for I in Lit.Val_Array.V'Range loop
+         -- FIXME: use literal from type ??
+         Pos := Str_Table.Element_String8 (Id, Pos32 (I));
+         case Element_Mode is
+            when Iir_Value_B1 =>
+               El := Create_B1_Value (Ghdl_B1'Val (Pos));
+            when Iir_Value_E32 =>
+               El := Create_E32_Value (Ghdl_E32'Val (Pos));
+            when others =>
+               raise Internal_Error;
+         end case;
+         Lit.Val_Array.V (I) := El;
+      end loop;
 
       return Lit;
    end String_To_Enumeration_Array_1;
@@ -1742,8 +1694,7 @@ package body Execution is
                                           Orig + Pos * Step,
                                           Step / Res.Bounds.D (Dim + 1).Length,
                                           Dim + 1, Nbr_Dim, El_Type);
-               when Iir_Kind_String_Literal
-                 | Iir_Kind_Bit_String_Literal =>
+               when Iir_Kind_String_Literal8 =>
                   pragma Assert (Dim + 1 = Nbr_Dim);
                   Val := String_To_Enumeration_Array_1 (Value, El_Type);
                   if Val.Val_Array.Len /= Res.Bounds.D (Nbr_Dim).Length then
@@ -2397,7 +2348,7 @@ package body Execution is
       Is_Sig := False;
 
       case Get_Kind (Expr) is
-         when Iir_Kind_Signal_Interface_Declaration
+         when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Stable_Attribute
@@ -2417,7 +2368,7 @@ package body Execution is
             --  FIXME: add a flag ?
             case Get_Kind (Get_Object_Prefix (Expr)) is
                when Iir_Kind_Signal_Declaration
-                 | Iir_Kind_Signal_Interface_Declaration
+                 | Iir_Kind_Interface_Signal_Declaration
                  | Iir_Kind_Guard_Signal_Declaration =>
                   Is_Sig := True;
                when others =>
@@ -2426,11 +2377,11 @@ package body Execution is
             Slot_Block := Get_Instance_For_Slot (Block, Expr);
             Res := Slot_Block.Objects (Get_Info (Expr).Slot);
 
-         when Iir_Kind_Constant_Interface_Declaration
+         when Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_File_Interface_Declaration
+           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Iterator_Declaration
@@ -2790,8 +2741,8 @@ package body Execution is
                   Prepend (Rstr, '(');
                end;
                Instance := Instance.Parent;
-            when Iir_Kind_Generate_Statement =>
-               Prepend (Rstr, Image (Get_Label (Instance.Label)));
+            when Iir_Kind_Generate_Statement_Body =>
+               Prepend (Rstr, Image (Get_Label (Get_Parent (Instance.Label))));
                Prepend (Rstr, ':');
                Instance := Instance.Parent;
             when Iir_Kind_Component_Instantiation_Statement =>
@@ -2836,7 +2787,7 @@ package body Execution is
       Res: Iir_Value_Literal_Acc;
    begin
       case Get_Kind (Expr) is
-         when Iir_Kind_Signal_Interface_Declaration
+         when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Stable_Attribute
@@ -2847,11 +2798,11 @@ package body Execution is
             Res := Execute_Name (Block, Expr);
             return Res;
 
-         when Iir_Kind_Constant_Interface_Declaration
+         when Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Variable_Interface_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_File_Interface_Declaration
+           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Iterator_Declaration
@@ -2874,10 +2825,9 @@ package body Execution is
          when Iir_Kinds_Dyadic_Operator
            | Iir_Kinds_Monadic_Operator =>
             declare
-               Imp : Iir;
+               Imp : constant Iir := Get_Implementation (Expr);
             begin
-               Imp := Get_Implementation (Expr);
-               if Get_Kind (Imp) = Iir_Kind_Function_Declaration then
+               if Get_Implicit_Definition (Imp) in Iir_Predefined_Explicit then
                   return Execute_Function_Call (Block, Expr, Imp);
                else
                   if Get_Kind (Expr) in Iir_Kinds_Dyadic_Operator then
@@ -2895,12 +2845,11 @@ package body Execution is
 
          when Iir_Kind_Function_Call =>
             declare
-               Imp : constant Iir :=
-                 Get_Named_Entity (Get_Implementation (Expr));
+               Imp : constant Iir := Get_Implementation (Expr);
                Assoc : Iir;
                Args : Iir_Array (0 .. 1);
             begin
-               if Get_Kind (Imp) = Iir_Kind_Function_Declaration then
+               if Get_Implicit_Definition (Imp) in Iir_Predefined_Explicit then
                   return Execute_Function_Call (Block, Expr, Imp);
                else
                   Assoc := Get_Parameter_Association_Chain (Expr);
@@ -2957,8 +2906,7 @@ package body Execution is
             return Create_I64_Value
               (Ghdl_I64 (Evaluation.Get_Physical_Value (Expr)));
 
-         when Iir_Kind_String_Literal
-           | Iir_Kind_Bit_String_Literal =>
+         when Iir_Kind_String_Literal8 =>
             return String_To_Enumeration_Array (Block, Expr);
 
          when Iir_Kind_Null_Literal =>
@@ -3337,12 +3285,13 @@ package body Execution is
          when Iir_Kind_Function_Call =>
             --  FIXME: shouldn't CONV always be a denoting_name ?
             return Execute_Assoc_Function_Conversion
-              (Block, Get_Named_Entity (Get_Implementation (Conv)), Val);
+              (Block, Get_Implementation (Conv), Val);
          when Iir_Kind_Type_Conversion =>
             --  FIXME: shouldn't CONV always be a denoting_name ?
             return Execute_Type_Conversion (Block, Conv, Val);
-         when Iir_Kinds_Denoting_Name =>
-            Ent := Get_Named_Entity (Conv);
+         when Iir_Kinds_Denoting_Name
+           | Iir_Kind_Function_Declaration =>
+            Ent := Strip_Denoting_Name (Conv);
             if Get_Kind (Ent) = Iir_Kind_Function_Declaration then
                return Execute_Assoc_Function_Conversion (Block, Ent, Val);
             elsif Get_Kind (Ent) in Iir_Kinds_Type_Declaration then
@@ -3395,7 +3344,7 @@ package body Execution is
             when Iir_Kind_Association_Element_By_Individual =>
                --  FIXME: signals ?
                pragma Assert
-                 (Get_Kind (Inter) /= Iir_Kind_Signal_Interface_Declaration);
+                 (Get_Kind (Inter) /= Iir_Kind_Interface_Signal_Declaration);
                Last_Individual := Create_Value_For_Type
                  (Out_Block, Get_Actual_Type (Assoc), False);
                Last_Individual := Unshare (Last_Individual, Instance_Pool);
@@ -3409,17 +3358,17 @@ package body Execution is
 
          --  Compute actual value.
          case Get_Kind (Inter) is
-            when Iir_Kind_Constant_Interface_Declaration
-              | Iir_Kind_File_Interface_Declaration =>
+            when Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_File_Declaration =>
                Val := Execute_Expression (Out_Block, Actual);
                Implicit_Array_Conversion
                  (Subprg_Block, Val, Get_Type (Formal), Assoc);
                Check_Constraints (Subprg_Block, Val, Get_Type (Formal), Assoc);
-            when Iir_Kind_Signal_Interface_Declaration =>
+            when Iir_Kind_Interface_Signal_Declaration =>
                Val := Execute_Name (Out_Block, Actual, True);
                Implicit_Array_Conversion
                  (Subprg_Block, Val, Get_Type (Formal), Assoc);
-            when Iir_Kind_Variable_Interface_Declaration =>
+            when Iir_Kind_Interface_Variable_Declaration =>
                Mode := Get_Mode (Inter);
                if Mode = Iir_In_Mode then
                   --  FIXME: Ref ?
@@ -3490,14 +3439,14 @@ package body Execution is
 
          if Get_Whole_Association_Flag (Assoc) then
             case Get_Kind (Inter) is
-               when Iir_Kind_Constant_Interface_Declaration
-                 | Iir_Kind_Variable_Interface_Declaration
-                 | Iir_Kind_File_Interface_Declaration =>
+               when Iir_Kind_Interface_Constant_Declaration
+                 | Iir_Kind_Interface_Variable_Declaration
+                 | Iir_Kind_Interface_File_Declaration =>
                   --  FIXME: Arguments are passed by copy.
                   Elaboration.Create_Object (Subprg_Block, Inter);
                   Subprg_Block.Objects (Get_Info (Inter).Slot) :=
                     Unshare (Val, Instance_Pool);
-               when Iir_Kind_Signal_Interface_Declaration =>
+               when Iir_Kind_Interface_Signal_Declaration =>
                   Elaboration.Create_Signal (Subprg_Block, Inter);
                   Subprg_Block.Objects (Get_Info (Inter).Slot) :=
                     Unshare_Bounds (Val, Instance_Pool);
@@ -3539,7 +3488,7 @@ package body Execution is
             Formal := Get_Formal (Assoc);
             Inter := Get_Association_Interface (Assoc);
             case Get_Kind (Inter) is
-               when Iir_Kind_Variable_Interface_Declaration =>
+               when Iir_Kind_Interface_Variable_Declaration =>
                   if Get_Mode (Inter) /= Iir_In_Mode
                     and then Get_Kind (Get_Type (Inter)) /=
                     Iir_Kind_File_Type_Definition
@@ -3572,10 +3521,10 @@ package body Execution is
                         Release (Expr_Mark, Expr_Pool);
                      end;
                   end if;
-               when Iir_Kind_File_Interface_Declaration =>
+               when Iir_Kind_Interface_File_Declaration =>
                   null;
-               when Iir_Kind_Signal_Interface_Declaration
-                 | Iir_Kind_Constant_Interface_Declaration =>
+               when Iir_Kind_Interface_Signal_Declaration
+                 | Iir_Kind_Interface_Constant_Declaration =>
                   null;
                when others =>
                   Error_Kind ("execute_back_association", Inter);
@@ -4540,12 +4489,12 @@ package body Execution is
       Instance : constant Block_Instance_Acc := Proc.Instance;
       Stmt : constant Iir := Instance.Stmt;
       Call : constant Iir := Get_Procedure_Call (Stmt);
-      Imp  : constant Iir := Get_Named_Entity (Get_Implementation (Call));
+      Imp  : constant Iir := Get_Implementation (Call);
       Subprg_Instance : Block_Instance_Acc;
       Assoc_Chain: Iir;
       Subprg_Body : Iir;
    begin
-      if Get_Kind (Imp) = Iir_Kind_Implicit_Procedure_Declaration then
+      if Get_Implicit_Definition (Imp) in Iir_Predefined_Implicit then
          Execute_Implicit_Procedure (Instance, Call);
          Update_Next_Statement (Proc);
       elsif Get_Foreign_Flag (Imp) then
