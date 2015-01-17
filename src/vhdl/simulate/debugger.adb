@@ -49,6 +49,22 @@ package body Debugger is
    --  to the prompt.
    Command_Error : exception;
 
+   --  For the list command: current file and current line.
+   List_Current_File : Source_File_Entry := No_Source_File_Entry;
+   List_Current_Line : Natural := 0;
+   List_Current_Line_Pos : Source_Ptr := 0;
+
+   --  Set List_Current_* from a location.  To be called after program break
+   --  to indicate current location.
+   procedure Set_List_Current (Loc : Location_Type)
+   is
+      Offset : Natural;
+   begin
+      Files_Map.Location_To_Coord
+        (Loc, List_Current_File, List_Current_Line_Pos,
+         List_Current_Line, Offset);
+   end Set_List_Current;
+
    Dbg_Top_Frame : Block_Instance_Acc;
    Dbg_Cur_Frame : Block_Instance_Acc;
 
@@ -838,6 +854,89 @@ package body Debugger is
       New_Line;
    end Disp_A_Frame;
 
+   procedure Disp_Current_Lines
+   is
+      use Files_Map;
+      --  Number of lines to display before and after the current line.
+      Radius : constant := 5;
+
+      Buf : File_Buffer_Acc;
+
+      Pos : Source_Ptr;
+      Line : Natural;
+      Len : Source_Ptr;
+      C : Character;
+   begin
+      if List_Current_Line > Radius then
+         Line := List_Current_Line - Radius;
+      else
+         Line := 1;
+      end if;
+
+      Pos := Line_To_Position (List_Current_File, Line);
+      Buf := Get_File_Source (List_Current_File);
+
+      while Line < List_Current_Line + Radius loop
+         --  Compute line length.
+         Len := 0;
+         loop
+            C := Buf (Pos + Len);
+            exit when C = ASCII.CR or C = ASCII.LF or C = ASCII.NUL;
+            Len := Len + 1;
+         end loop;
+
+         --  Disp line number.
+         declare
+            Str : constant String := Natural'Image (Line);
+         begin
+            if Line = List_Current_Line then
+               Put ('*');
+            else
+               Put (' ');
+            end if;
+            Put ((Str'Length .. 5 => ' '));
+            Put (Str (Str'First + 1 .. Str'Last));
+            Put (' ');
+         end;
+
+         --  Disp line.
+         Put_Line (String (Buf (Pos .. Pos + Len - 1)));
+
+         --  Skip EOL.
+         exit when C = ASCII.NUL;
+         Pos := Pos + Len + 1;
+         if C = ASCII.CR then
+            if Buf (Pos) = ASCII.LF then
+               Pos := Pos + 1;
+            end if;
+         else
+            pragma Assert (C = ASCII.LF);
+            if Buf (Pos) = ASCII.CR then
+               Pos := Pos + 1;
+            end if;
+         end if;
+
+         Line := Line + 1;
+      end loop;
+   end Disp_Current_Lines;
+
+   procedure Disp_Source_Line (Loc : Location_Type)
+   is
+      use Files_Map;
+
+      File : Source_File_Entry;
+      Line_Pos : Source_Ptr;
+      Line : Natural;
+      Offset : Natural;
+      Buf : File_Buffer_Acc;
+      Next_Line_Pos : Source_Ptr;
+   begin
+      Location_To_Coord (Loc, File, Line_Pos, Line, Offset);
+      Buf := Get_File_Source (File);
+      Next_Line_Pos := Line_To_Position (File, Line + 1);
+      Put (String (Buf (Line_Pos .. Next_Line_Pos - 1)));
+   end Disp_Source_Line;
+
    type Menu_Kind is (Menu_Command, Menu_Submenu);
    type Menu_Entry (Kind : Menu_Kind);
    type Menu_Entry_Acc is access all Menu_Entry;
@@ -902,6 +1001,13 @@ package body Debugger is
          end if;
       end loop;
    end Ps_Proc;
+
+   procedure List_Proc (Line : String)
+   is
+      pragma Unreferenced (Line);
+   begin
+      Disp_Current_Lines;
+   end List_Proc;
 
    procedure Up_Proc (Line : String)
    is
@@ -1515,10 +1621,16 @@ package body Debugger is
       Next => Menu_Info_Signals'Access,
       Proc => Info_Proc_Proc'Access);
 
+   Menu_List : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("l*list"),
+      Next => null,
+      Proc => List_Proc'Access);
+
    Menu_Down : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("down"),
-      Next => null,
+      Next => Menu_List'Access,
       Proc => Down_Proc'Access);
 
    Menu_Up : aliased Menu_Entry :=
@@ -1696,23 +1808,6 @@ package body Debugger is
       end loop;
    end Help_Proc;
 
-   procedure Disp_Source_Line (Loc : Location_Type)
-   is
-      use Files_Map;
-
-      File : Source_File_Entry;
-      Line_Pos : Source_Ptr;
-      Line : Natural;
-      Offset : Natural;
-      Buf : File_Buffer_Acc;
-      Next_Line_Pos : Source_Ptr;
-   begin
-      Location_To_Coord (Loc, File, Line_Pos, Line, Offset);
-      Buf := Get_File_Source (File);
-      Next_Line_Pos := Line_To_Position (File, Line + 1);
-      Put (String (Buf (Line_Pos .. Next_Line_Pos - 1)));
-   end Disp_Source_Line;
-
    function Breakpoint_Hit return Natural
    is
       Stmt : constant Iir := Current_Process.Instance.Stmt;
@@ -1793,6 +1888,10 @@ package body Debugger is
             Prompt := Prompt_Crash'Address;
             Put_Line ("error occurred, enterring in debugger");
       end case;
+
+      if Dbg_Cur_Frame /= null then
+         Set_List_Current (Get_Location (Dbg_Cur_Frame.Stmt));
+      end if;
 
       Command_Status := Status_Default;
 

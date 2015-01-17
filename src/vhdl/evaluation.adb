@@ -3015,7 +3015,15 @@ package body Evaluation is
                Path_Add_Name (El);
                Path_Add (":");
             when Iir_Kind_Generate_Statement_Body =>
-               Path_Add_Element (Get_Parent (El), Is_Instance);
+               declare
+                  Parent : constant Iir := Get_Parent (El);
+               begin
+                  if Get_Kind (Parent) = Iir_Kind_For_Generate_Statement then
+                     Path_Instance := El;
+                  else
+                     Path_Add_Element (Parent, Is_Instance);
+                  end if;
+               end;
             when Iir_Kinds_Sequential_Statement =>
                Path_Add_Element (Get_Parent (El), Is_Instance);
             when others =>
