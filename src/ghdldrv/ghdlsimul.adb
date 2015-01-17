@@ -108,8 +108,8 @@ package body Ghdlsimul is
       --  hierarchy.
       declare
          Conf_Unit : constant Iir := Get_Library_Unit (Top_Conf);
-         Arch : constant Iir :=
-           Get_Block_Specification (Get_Block_Configuration (Conf_Unit));
+         Arch : constant Iir := Get_Named_Entity
+           (Get_Block_Specification (Get_Block_Configuration (Conf_Unit)));
          Entity : constant Iir := Iirs_Utils.Get_Entity (Arch);
       begin
          Configuration.Check_Entity_Declaration_Top (Entity);

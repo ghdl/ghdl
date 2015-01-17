@@ -2526,7 +2526,8 @@ package body Elaboration is
             Conf_Unit := Get_Default_Configuration_Declaration (Unit);
          when Iir_Kind_Configuration_Declaration =>
             Conf_Unit := Design;
-            Arch := Get_Block_Specification (Get_Block_Configuration (Unit));
+            Arch := Get_Named_Entity
+              (Get_Block_Specification (Get_Block_Configuration (Unit)));
             Elaborate_Dependence (Design);
          when others =>
             Error_Kind ("elaborate_design", Unit);
