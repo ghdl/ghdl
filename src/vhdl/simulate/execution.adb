@@ -20,6 +20,7 @@ with Ada.Unchecked_Conversion;
 with Ada.Text_IO; use Ada.Text_IO;
 with System;
 with Grt.Types; use Grt.Types;
+with Flags; use Flags;
 with Errorout; use Errorout;
 with Std_Package;
 with Evaluation;
@@ -94,6 +95,42 @@ package body Execution is
                                           Get_Info (Decl).Scope_Level);
    end Get_Instance_For_Slot;
 
+   procedure Create_Right_Bound_From_Length
+     (Bounds : Iir_Value_Literal_Acc; Len : Iir_Index32)
+   is
+   begin
+      pragma Assert (Bounds.Right = null);
+
+      case Bounds.Left.Kind is
+         when Iir_Value_E32 =>
+            declare
+               R : Ghdl_E32;
+            begin
+               case Bounds.Dir is
+                  when Iir_To =>
+                     R := Bounds.Left.E32 + Ghdl_E32 (Len - 1);
+                  when Iir_Downto =>
+                     R := Bounds.Left.E32 - Ghdl_E32 (Len - 1);
+               end case;
+               Bounds.Right := Create_E32_Value (R);
+            end;
+         when Iir_Value_I64 =>
+            declare
+               R : Ghdl_I64;
+            begin
+               case Bounds.Dir is
+                  when Iir_To =>
+                     R := Bounds.Left.I64 + Ghdl_I64 (Len - 1);
+                  when Iir_Downto =>
+                     R := Bounds.Left.I64 - Ghdl_I64 (Len - 1);
+               end case;
+               Bounds.Right := Create_I64_Value (R);
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Create_Right_Bound_From_Length;
+
    function Create_Bounds_From_Length (Block : Block_Instance_Acc;
                                        Atype : Iir;
                                        Len : Iir_Index32)
@@ -124,34 +161,7 @@ package body Execution is
                raise Internal_Error;
          end case;
       else
-         case Res.Left.Kind is
-            when Iir_Value_E32 =>
-               declare
-                  R : Ghdl_E32;
-               begin
-                  case Index_Bounds.Dir is
-                     when Iir_To =>
-                        R := Res.Left.E32 + Ghdl_E32 (Len - 1);
-                     when Iir_Downto =>
-                        R := Res.Left.E32 - Ghdl_E32 (Len - 1);
-                  end case;
-                  Res.Right := Create_E32_Value (R);
-               end;
-            when Iir_Value_I64 =>
-               declare
-                  R : Ghdl_I64;
-               begin
-                  case Index_Bounds.Dir is
-                     when Iir_To =>
-                        R := Res.Left.I64 + Ghdl_I64 (Len - 1);
-                     when Iir_Downto =>
-                        R := Res.Left.I64 - Ghdl_I64 (Len - 1);
-                  end case;
-                  Res.Right := Create_I64_Value (R);
-               end;
-            when others =>
-               raise Internal_Error;
-         end case;
+         Create_Right_Bound_From_Length (Res, Len);
       end if;
       return Res;
    end Create_Bounds_From_Length;
@@ -521,20 +531,43 @@ package body Execution is
                      raise Program_Error;
                end case;
 
-               -- LRM93 7.2.4
-               -- If both operands are null arrays, then the result of the
-               -- concatenation is the right operand.
-               if Len = 0 then
-                  --  Note: this return is allowed since LEFT is free, and
-                  --  RIGHT must not be free.
-                  return Right;
-               end if;
+               if Flags.Vhdl_Std = Vhdl_87 then
+                  --  LRM87 7.2.3 Adding Operators
+                  --  The left bound if this result is the left bound of the
+                  --  left operand, unless the left operand is a null array,
+                  --  in which case of result of the concatenation is the
+                  --  right operand.  The direction of the result is the
+                  --  direction of the left operand, unless the left operand
+                  --  is a null array, in which case the direction of the
+                  --  result is that of the right operand.
+                  if (Func = Iir_Predefined_Array_Array_Concat
+                        or Func = Iir_Predefined_Array_Element_Concat)
+                    and then Left.Val_Array.Len = 0
+                  then
+                     return Right;
+                  end if;
 
-               -- Create the array result.
-               Result := Create_Array_Value (Len, 1);
-               Result.Bounds.D (1) := Create_Bounds_From_Length
-                 (Block, Get_First_Element (Get_Index_Subtype_List (Res_Type)),
-                  Len);
+                  Result := Create_Array_Value (Len, 1);
+                  Result.Bounds.D (1) := Create_Range_Value
+                    (Left.Bounds.D (1).Left, null, Left.Bounds.D (1).Dir, Len);
+                  Create_Right_Bound_From_Length (Result.Bounds.D (1), Len);
+               else
+                  -- LRM93 7.2.4
+                  -- If both operands are null arrays, then the result of the
+                  -- concatenation is the right operand.
+                  if Len = 0 then
+                     --  Note: this return is allowed since LEFT is free, and
+                     --  RIGHT must not be free.
+                     return Right;
+                  end if;
+
+                  --  Create the array result.
+                  Result := Create_Array_Value (Len, 1);
+                  Result.Bounds.D (1) := Create_Bounds_From_Length
+                    (Block,
+                     Get_First_Element (Get_Index_Subtype_List (Res_Type)),
+                     Len);
+               end if;
 
                -- Fill the result: left.
                case Func is
