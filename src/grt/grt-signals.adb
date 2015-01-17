@@ -87,6 +87,27 @@ package body Grt.Signals is
       end case;
    end Assign;
 
+   --  For direct drivers, only a pointer is available and it may not be
+   --  aligned.  Hence this version of Assign.
+   procedure Assign
+     (Targ : Ghdl_Value_Ptr; Val : Value_Union; Mode : Mode_Type) is
+   begin
+      case Mode is
+         when Mode_B1 =>
+            Targ.B1 := Val.B1;
+         when Mode_E8 =>
+            Targ.E8 := Val.E8;
+         when Mode_E32 =>
+            Targ.E32 := Val.E32;
+         when Mode_I32 =>
+            Targ.I32 := Val.I32;
+         when Mode_I64 =>
+            Targ.I64 := Val.I64;
+         when Mode_F64 =>
+            Targ.F64 := Val.F64;
+      end case;
+   end Assign;
+
    procedure Ghdl_Signal_Name_Rti (Sig : Ghdl_Rti_Access;
                                    Ctxt : Ghdl_Rti_Access;
                                    Addr : Address)
@@ -382,7 +403,7 @@ package body Grt.Signals is
       Trans.Next := Trans1;
 
       --  Initialize driver value.
-      Assign (Drv.all, Sign.Value, Sign.Mode);
+      Assign (Drv, Sign.Value, Sign.Mode);
    end Ghdl_Signal_Add_Direct_Driver;
 
    procedure Append_Port (Targ : Ghdl_Signal_Ptr; Src : Ghdl_Signal_Ptr)
@@ -592,7 +613,7 @@ package body Grt.Signals is
          end if;
          --  FIXME: can be a bound-error too!
          if Trans.Kind = Trans_Value then
-            Assign (Driver.Last_Trans.Val_Ptr.all, Trans.Val, Sign.Mode);
+            Assign (Driver.Last_Trans.Val_Ptr, Trans.Val, Sign.Mode);
             Free_In (Trans);
          elsif Trans.Kind = Trans_Error then
             Error_Trans_Error (Trans);
