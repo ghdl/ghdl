@@ -78,16 +78,16 @@ copy-sources: copy-sources.$(backend)
 Makefile: $(srcdir)/Makefile.in
 	./config.status
 
-#################### For mcode backend ##############################
-
-all.mcode: ghdl_mcode libs.vhdl.mcode
+GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
 
 GRTSRCDIR=$(srcdir)/src/grt
 include $(GRTSRCDIR)/Makefile.inc
 
-GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate -aI$(srcdir)/src/ortho
+#################### For mcode backend ##############################
 
-GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho/mcode
+all.mcode: ghdl_mcode libs.vhdl.mcode
+
+GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/mcode
 
 ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode: $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
@@ -143,7 +143,7 @@ copy-sources.gcc:
 	$(CP) -p $(srcdir)/dist/gcc/lang-options.h $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/dist/gcc/lang-specs.h $(gcc_vhdl_dir)
 
-GHDL_GCC_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
+GHDL_GCC_INCFLAGS=$(GHDL_COMMON_INCFLAGS)
 
 ghdl1-gcc: force
 	$(MAKE) -f $(srcdir)/src/ortho/gcc/Makefile \
@@ -176,7 +176,7 @@ oread-gcc: force
 
 LLVM_CONFIG=$(llvm_prefix)/bin/llvm-config
 
-GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho/llvm
+GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/llvm
 
 all.llvm: ghdl1-llvm ghdl_llvm grt-all libs.vhdl.llvm
 
@@ -226,7 +226,7 @@ install.llvm: install.llvm.program install.vhdllib install.grt.llvm
 
 ################ For simul (no code generation, interpretation) ##########
 
-GHDL_SIMUL_INCFLAGS=-aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt -aI$(srcdir)/src/vhdl/translate
+GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt
 
 ghdl_simul: $(GRT_ADD_OBJS) force
 	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
