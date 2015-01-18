@@ -1473,7 +1473,7 @@ package body Elaboration is
       --  evaluates to TRUE, and no block statement otherwise.
       Clause := Generate;
       while Clause /= Null_Iir loop
-         Cond := Get_Condition (Generate);
+         Cond := Get_Condition (Clause);
          if Cond /= Null_Iir then
             Lit := Execute_Expression (Instance, Cond);
          end if;
@@ -1751,7 +1751,7 @@ package body Elaboration is
             begin
                Entity := Get_Entity (Conf);
                Sub_Conf := Get_Block_Configuration (Conf);
-               Arch := Get_Block_Specification (Sub_Conf);
+               Arch := Get_Named_Entity (Get_Block_Specification (Sub_Conf));
             end;
          when others =>
             Error_Kind ("elaborate_component_declaration0", Aspect);
@@ -1841,9 +1841,8 @@ package body Elaboration is
          Sub_Instances (I) := Child;
          Child := Child.Brother;
       end loop;
-      if Child /= null then
-         raise Internal_Error;
-      end if;
+      --  All children must have been handled.
+      pragma Assert (Child = null);
 
       --  Apply configuration items
       Item := Conf_Chain;
@@ -1888,6 +1887,7 @@ package body Elaboration is
          Item := Prev_Item;
       end loop;
 
+      --  Default configuration.
       if Default_Item /= Null_Iir then
          for I in Sub_Instances'Range loop
             if not Sub_Conf (I) then
@@ -1910,7 +1910,25 @@ package body Elaboration is
 
       Item : Iir;
    begin
-      pragma Assert (Conf /= Null_Iir);
+      --  Gather children.
+      declare
+         Child : Block_Instance_Acc;
+      begin
+         Child := Instance.Children;
+         while Child /= null loop
+            declare
+               Slot : constant Instance_Slot_Type :=
+                 Get_Info (Child.Label).Inst_Slot;
+            begin
+               --  Skip processes (they have no slot).
+               if Slot /= Invalid_Instance_Slot then
+                  pragma Assert (Sub_Instances (Slot) = null);
+                  Sub_Instances (Slot) := Child;
+               end if;
+            end;
+            Child := Child.Brother;
+         end loop;
+      end;
 
       --  Associate configuration items with subinstance.  Gather items for
       --  for-generate statements.
@@ -1923,10 +1941,7 @@ package body Elaboration is
                   Gen : Iir_Generate_Statement;
                   Info : Sim_Info_Acc;
                begin
-                  Spec := Get_Block_Specification (Item);
-                  if Get_Kind (Spec) = Iir_Kind_Simple_Name then
-                     Spec := Get_Named_Entity (Spec);
-                  end if;
+                  Spec := Strip_Denoting_Name (Get_Block_Specification (Item));
                   case Get_Kind (Spec) is
                      when Iir_Kind_Slice_Name
                        | Iir_Kind_Indexed_Name
@@ -1937,18 +1952,24 @@ package body Elaboration is
                         Set_Prev_Block_Configuration
                           (Item, Sub_Conf (Info.Inst_Slot));
                         Sub_Conf (Info.Inst_Slot) := Item;
+                     when Iir_Kind_Parenthesis_Name =>
+                        Gen := Get_Named_Entity (Spec);
+                        Info := Get_Info (Gen);
+                        if Sub_Instances (Info.Inst_Slot) /= null
+                          and then Sub_Instances (Info.Inst_Slot).Label = Gen
+                        then
+                           pragma Assert
+                             (Sub_Conf (Info.Inst_Slot) = Null_Iir);
+                           Sub_Conf (Info.Inst_Slot) := Item;
+                        end if;
                      when Iir_Kind_Generate_Statement_Body =>
                         Info := Get_Info (Spec);
-                        if Sub_Conf (Info.Inst_Slot) /= Null_Iir then
-                           raise Internal_Error;
-                        end if;
+                        pragma Assert (Sub_Conf (Info.Inst_Slot) = Null_Iir);
                         Sub_Conf (Info.Inst_Slot) := Item;
                      when Iir_Kind_Block_Statement =>
                         --  Block configuration for a block statement.
                         Info := Get_Info (Spec);
-                        if Sub_Conf (Info.Inst_Slot) /= Null_Iir then
-                           raise Internal_Error;
-                        end if;
+                        pragma Assert (Sub_Conf (Info.Inst_Slot) = Null_Iir);
                         Sub_Conf (Info.Inst_Slot) := Item;
                      when others =>
                         Error_Kind ("elaborate_block_configuration1", Spec);
@@ -1969,9 +1990,7 @@ package body Elaboration is
                      El := Get_Nth_Element (List, I);
                      exit when El = Null_Iir;
                      Info := Get_Info (Get_Named_Entity (El));
-                     if Sub_Conf (Info.Inst_Slot) /= Null_Iir then
-                        raise Internal_Error;
-                     end if;
+                     pragma Assert (Sub_Conf (Info.Inst_Slot) = Null_Iir);
                      Sub_Conf (Info.Inst_Slot) := Item;
                   end loop;
                end;
@@ -1981,26 +2000,6 @@ package body Elaboration is
          end case;
          Item := Get_Chain (Item);
       end loop;
-
-      --  Gather children.
-      declare
-         Child : Block_Instance_Acc;
-      begin
-         Child := Instance.Children;
-         while Child /= null loop
-            declare
-               Slot : constant Instance_Slot_Type :=
-                 Get_Info (Child.Label).Inst_Slot;
-            begin
-               if Slot /= Invalid_Instance_Slot then
-                  --  Processes have no slot.
-                  pragma Assert (Sub_Instances (Slot) = null);
-                  Sub_Instances (Slot) := Child;
-               end if;
-            end;
-            Child := Child.Brother;
-         end loop;
-      end;
 
       --  Configure sub instances.
       for I in Sub_Instances'Range loop
