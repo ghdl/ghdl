@@ -261,8 +261,7 @@ package body Libraries is
    --       DATE is the symbolic date of analysis (order).
    --
    -- Return TRUE if the library was found.
-   function Load_Library (Library: Iir_Library_Declaration)
-     return Boolean
+   function Load_Library (Library: Iir_Library_Declaration) return Boolean
    is
       use Scanner;
       use Tokens;
@@ -308,7 +307,7 @@ package body Libraries is
       end String_To_Name_Id;
 
       Design_Unit, Last_Design_Unit : Iir_Design_Unit;
-      Lib_Ident : Name_Id;
+      Lib_Ident : constant Name_Id := Get_Identifier (Library);
 
       function Scan_Unit_List return Iir_List is
       begin
@@ -341,15 +340,11 @@ package body Libraries is
       Max_Date: Date_Type := Date_Valid'First;
       Dir : Name_Id;
    begin
-      Lib_Ident := Get_Identifier (Library);
+      -- Check the library was not already loaded.
+      pragma Assert (Get_Design_File_Chain (Library) = Null_Iir);
 
       if False then
          Ada.Text_IO.Put_Line ("Load library " & Image (Lib_Ident));
-      end if;
-
-      -- Check the library was not already loaded.
-      if Get_Design_File_Chain (Library) /= Null_Iir then
-         raise Internal_Error;
       end if;
 
       -- Try to open the library file map.

@@ -1008,7 +1008,8 @@ package body Annotations is
         (Arch_Info, Get_Concurrent_Statement_Chain (Decl));
    end Annotate_Architecture;
 
-   procedure Annotate_Package (Decl: Iir_Package_Declaration) is
+   procedure Annotate_Package (Decl: Iir_Package_Declaration)
+   is
       Package_Info: Sim_Info_Acc;
    begin
       Assert_No_Info (Decl);
