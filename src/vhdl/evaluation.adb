@@ -840,7 +840,7 @@ package body Evaluation is
         and then Left_Len = 0
       then
          if Flags.Vhdl_Std = Vhdl_87 then
-            --  LRM87 7.2.4
+            --  LRM87 7.2.3
             --  [...], unless the left operand is a null array, in which case
             --  the result of the concatenation is the right operand.
             Res_Type := Get_Type (Right);
@@ -858,10 +858,10 @@ package body Evaluation is
            and then (Func = Iir_Predefined_Array_Array_Concat
                      or Func = Iir_Predefined_Array_Element_Concat)
          then
-            --  LRM87 7.2.4
+            --  LRM87 7.2.3
             --  The left bound of the result is the left operand, [...]
             --
-            --  LRM87 7.2.4
+            --  LRM87 7.2.3
             --  The direction of the result is the direction of the left
             --  operand, [...]
             declare

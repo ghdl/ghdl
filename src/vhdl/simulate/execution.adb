@@ -531,36 +531,40 @@ package body Execution is
                      raise Program_Error;
                end case;
 
-               if Flags.Vhdl_Std = Vhdl_87 then
+               if Func = Iir_Predefined_Array_Array_Concat
+                 and then Left.Val_Array.Len = 0
+               then
+                  if Flags.Vhdl_Std = Vhdl_87 then
+                     --  LRM87 7.2.3
+                     --  [...], unless the left operand is a null array, in
+                     --  which case the result of the concatenation is the
+                     --  right operand.
+                     return Right;
+                  else
+                     --  LRM93 7.2.4
+                     --  If both operands are null arrays, then the result of
+                     --  the concatenation is the right operand.
+                     if Right.Val_Array.Len = 0 then
+                        return Right;
+                     end if;
+                  end if;
+               end if;
+
+               if Flags.Vhdl_Std = Vhdl_87
+                 and then (Func = Iir_Predefined_Array_Array_Concat
+                             or Func = Iir_Predefined_Array_Element_Concat)
+               then
                   --  LRM87 7.2.3 Adding Operators
                   --  The left bound if this result is the left bound of the
-                  --  left operand, unless the left operand is a null array,
-                  --  in which case of result of the concatenation is the
-                  --  right operand.  The direction of the result is the
+                  --  left operand, [...].  The direction of the result is the
                   --  direction of the left operand, unless the left operand
                   --  is a null array, in which case the direction of the
                   --  result is that of the right operand.
-                  if (Func = Iir_Predefined_Array_Array_Concat
-                        or Func = Iir_Predefined_Array_Element_Concat)
-                    and then Left.Val_Array.Len = 0
-                  then
-                     return Right;
-                  end if;
-
                   Result := Create_Array_Value (Len, 1);
                   Result.Bounds.D (1) := Create_Range_Value
                     (Left.Bounds.D (1).Left, null, Left.Bounds.D (1).Dir, Len);
                   Create_Right_Bound_From_Length (Result.Bounds.D (1), Len);
                else
-                  -- LRM93 7.2.4
-                  -- If both operands are null arrays, then the result of the
-                  -- concatenation is the right operand.
-                  if Len = 0 then
-                     --  Note: this return is allowed since LEFT is free, and
-                     --  RIGHT must not be free.
-                     return Right;
-                  end if;
-
                   --  Create the array result.
                   Result := Create_Array_Value (Len, 1);
                   Result.Bounds.D (1) := Create_Bounds_From_Length
