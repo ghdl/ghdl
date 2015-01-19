@@ -1,0 +1,18 @@
+(DELAYFILE
+  (SDFVERSION "3.0")
+  (DESIGN "test_vital_scalar_generic")
+  (DATE "Fri Dec 12 17:46:29 2014")
+  (VENDOR "GHDL")
+  (PROGRAM "GHDL")
+  (VERSION "20141231")
+  (DIVIDER /)
+  (VOLTAGE :0.95:)
+  (TEMPERATURE :85:)
+  (TIMESCALE 1 ps)
+  (CELL (CELLTYPE "numeric_tb")
+    (INSTANCE )
+      (TIMINGCHECK
+        (PERIOD (posedge CLK) ( -44:-45:-64 ))
+      )
+  )
+)
