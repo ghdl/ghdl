@@ -22,3 +22,6 @@ translate/grt/grt-files
 translate/grt/grt-files.in
 translate/grt/run-bind.adb
 translate/grt/run-bind.ads
+syntax: glob
+dist/mcode/lib
+dist/mcode/build
