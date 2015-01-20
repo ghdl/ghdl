@@ -41,7 +41,8 @@ package Evaluation is
    --  expression that was evaluation.  The original expression is kept so that
    --  it is possible to print the original tree.
 
-   --  Get the value of a physical integer literal or unit.
+   --  Get the value of a physical integer literal or unit.  May propagate
+   --  Constraint_Error.
    function Get_Physical_Value (Expr : Iir) return Iir_Int64;
 
    --  Evaluate the locally static expression EXPR (without checking that EXPR

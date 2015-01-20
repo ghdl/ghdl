@@ -52,10 +52,6 @@ package body Evaluation is
          when others =>
             Error_Kind ("get_physical_value", Expr);
       end case;
-   exception
-      when Constraint_Error =>
-         Error_Msg_Sem ("arithmetic overflow in physical expression", Expr);
-         return Get_Value (Expr);
    end Get_Physical_Value;
 
    function Build_Integer (Val : Iir_Int64; Origin : Iir)

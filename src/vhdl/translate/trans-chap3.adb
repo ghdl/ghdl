@@ -355,9 +355,8 @@ package body Trans.Chap3 is
 
    procedure Translate_Physical_Type (Def : Iir_Physical_Type_Definition)
    is
-      Info : Type_Info_Acc;
+      Info : constant Type_Info_Acc := Get_Info (Def);
    begin
-      Info := Get_Info (Def);
       case Get_Type_Precision (Def) is
          when Precision_32 =>
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (32);

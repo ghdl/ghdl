@@ -484,8 +484,7 @@ package body Trans.Chap7 is
       end case;
    exception
       when Constraint_Error =>
-         --  Can be raised by Get_Physical_Unit_Value because of the kludge
-         --  on staticness.
+         --  Can be raised by Get_Physical_Value.
          Error_Msg_Elab ("numeric literal not in range", Expr);
          return New_Signed_Literal (Res_Type, 0);
    end Translate_Numeric_Literal;
@@ -3725,6 +3724,28 @@ package body Trans.Chap7 is
      (Sig : Mnode; Sig_Type : Iir; Val : Mnode)
          renames Translate_Signal_Assign_Driving;
 
+   function Translate_Overflow_Literal (Expr : Iir) return O_Enode
+   is
+      Expr_Type : constant Iir := Get_Type (Expr);
+      Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
+      Otype : constant O_Tnode := Tinfo.Ortho_Type (Mode_Value);
+      L     : O_Dnode;
+   begin
+      --  Generate the error message
+      Chap6.Gen_Bound_Error (Expr);
+
+      --  Create a dummy value, for type checking.  But never
+      --  executed.
+      L := Create_Temp (Otype);
+      if Tinfo.Type_Mode in Type_Mode_Fat then
+         --  For fat pointers or arrays.
+         return New_Address (New_Obj (L),
+                             Tinfo.Ortho_Ptr_Type (Mode_Value));
+      else
+         return New_Obj_Value (L);
+      end if;
+   end Translate_Overflow_Literal;
+
    function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
                                  return O_Enode
    is
@@ -3745,64 +3766,20 @@ package body Trans.Chap7 is
             | Iir_Kind_Floating_Point_Literal =>
             return New_Lit (Translate_Static_Expression (Expr, Rtype));
 
-         when Iir_Kind_Physical_Int_Literal =>
+         when Iir_Kind_Physical_Int_Literal
+           | Iir_Kind_Physical_Fp_Literal
+           | Iir_Kind_Unit_Declaration =>
             declare
-               Unit      : Iir;
-               Unit_Info : Object_Info_Acc;
+               Otype : constant O_Tnode :=
+                 Get_Ortho_Type (Expr_Type, Mode_Value);
+               Val : Iir_Int64;
             begin
-               Unit := Get_Unit_Name (Expr);
-               Unit_Info := Get_Info (Unit);
-               if Unit_Info = null then
-                  return New_Lit
-                    (Translate_Static_Expression (Expr, Rtype));
-               else
-                  --  Time units might be not locally static.
-                  return New_Dyadic_Op
-                    (ON_Mul_Ov,
-                     New_Lit (New_Signed_Literal
-                       (Get_Ortho_Type (Expr_Type, Mode_Value),
-                            Integer_64 (Get_Value (Expr)))),
-                     New_Value (Get_Var (Unit_Info.Object_Var)));
-               end if;
-            end;
-
-         when Iir_Kind_Physical_Fp_Literal =>
-            declare
-               Unit      : Iir;
-               Unit_Info : Object_Info_Acc;
-               L, R      : O_Enode;
-            begin
-               Unit := Get_Unit_Name (Expr);
-               Unit_Info := Get_Info (Unit);
-               if Unit_Info = null then
-                  return New_Lit
-                    (Translate_Static_Expression (Expr, Rtype));
-               else
-                  --  Time units might be not locally static.
-                  L := New_Lit
-                    (New_Float_Literal
-                       (Ghdl_Real_Type, IEEE_Float_64 (Get_Fp_Value (Expr))));
-                  R := New_Convert_Ov
-                    (New_Value (Get_Var (Unit_Info.Object_Var)),
-                     Ghdl_Real_Type);
-                  return New_Convert_Ov
-                    (New_Dyadic_Op (ON_Mul_Ov, L, R),
-                     Get_Ortho_Type (Expr_Type, Mode_Value));
-               end if;
-            end;
-
-         when Iir_Kind_Unit_Declaration =>
-            declare
-               Unit_Info : Object_Info_Acc;
-            begin
-               Unit_Info := Get_Info (Expr);
-               if Unit_Info = null then
-                  return New_Lit
-                    (Translate_Static_Expression (Expr, Rtype));
-               else
-                  --  Time units might be not locally static.
-                  return New_Value (Get_Var (Unit_Info.Object_Var));
-               end if;
+               Val := Get_Physical_Value (Expr);
+               return New_Lit (New_Signed_Literal (Otype, Integer_64 (Val)));
+            exception
+               when Constraint_Error =>
+                  Warning_Msg_Elab ("physical literal out of range", Expr);
+                  return Translate_Overflow_Literal (Expr);
             end;
 
          when Iir_Kind_String_Literal8
@@ -3886,25 +3863,7 @@ package body Trans.Chap7 is
             end;
 
          when Iir_Kind_Overflow_Literal =>
-            declare
-               Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
-               Otype : constant O_Tnode := Tinfo.Ortho_Type (Mode_Value);
-               L     : O_Dnode;
-            begin
-               --  Generate the error message
-               Chap6.Gen_Bound_Error (Expr);
-
-               --  Create a dummy value, for type checking.  But never
-               --  executed.
-               L := Create_Temp (Otype);
-               if Tinfo.Type_Mode in Type_Mode_Fat then
-                  --  For fat pointers or arrays.
-                  return New_Address (New_Obj (L),
-                                      Tinfo.Ortho_Ptr_Type (Mode_Value));
-               else
-                  return New_Obj_Value (L);
-               end if;
-            end;
+            return Translate_Overflow_Literal (Expr);
 
          when Iir_Kind_Parenthesis_Expression =>
             return Translate_Expression (Get_Expression (Expr), Rtype);
