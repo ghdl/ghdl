@@ -1391,6 +1391,19 @@ package body Sem_Names is
       end case;
    end Finish_Sem_Denoting_Name;
 
+
+   --  Free overload list of NAME but keep RES interpretation.
+   procedure Free_Old_Entity_Name (Name : Iir; Res : Iir)
+   is
+      Old_Res : constant Iir := Get_Named_Entity (Name);
+   begin
+      if Old_Res /= Null_Iir and then Old_Res /= Res then
+         pragma Assert (Is_Overload_List (Old_Res));
+         Sem_Name_Free_Result (Old_Res, Res);
+      end if;
+      Set_Named_Entity (Name, Res);
+   end Free_Old_Entity_Name;
+
    function Finish_Sem_Name_1 (Name : Iir; Res : Iir) return Iir
    is
       Prefix : Iir;
@@ -1457,18 +1470,20 @@ package body Sem_Names is
             null;
          when Iir_Kind_Implicit_Dereference =>
             --  The name may not have a prefix.
-            Prefix := Finish_Sem_Name (Name, Get_Prefix (Res));
+            Prefix := Finish_Sem_Name_1 (Name, Get_Prefix (Res));
             Set_Prefix (Res, Prefix);
             Finish_Sem_Dereference (Res);
             return Res;
          when Iir_Kind_Function_Call =>
             case Get_Kind (Name) is
                when Iir_Kind_Parenthesis_Name =>
+                  --  Usual case.
                   Prefix := Finish_Sem_Name
                     (Get_Prefix (Name), Get_Implementation (Res));
                   Finish_Sem_Function_Call (Res, Prefix);
                   Free_Iir (Name);
                when Iir_Kinds_Denoting_Name =>
+                  --  Call without association list.
                   Prefix := Finish_Sem_Name (Name, Get_Implementation (Res));
                   Finish_Sem_Function_Call (Res, Prefix);
                when others =>
@@ -1558,18 +1573,15 @@ package body Sem_Names is
       return Res;
    end Finish_Sem_Name_1;
 
-   function Finish_Sem_Name (Name : Iir; Res : Iir) return Iir
-   is
-      Old_Res : Iir;
+   function Finish_Sem_Name (Name : Iir; Res : Iir) return Iir is
    begin
       if Get_Kind (Res) /= Iir_Kind_Implicit_Dereference then
-         Old_Res := Get_Named_Entity (Name);
-         if Old_Res /= Null_Iir and then Old_Res /= Res then
-            pragma Assert (Is_Overload_List (Old_Res));
-            Sem_Name_Free_Result (Old_Res, Res);
-         end if;
-         Set_Named_Entity (Name, Res);
+         --  There is no corresponding name for implicit_dereference (because
+         --  it is implicit).
+         --  Free overload list (but keep RES interpretation) for other cases.
+         Free_Old_Entity_Name (Name, Res);
       end if;
+
       return Finish_Sem_Name_1 (Name, Res);
    end Finish_Sem_Name;
 

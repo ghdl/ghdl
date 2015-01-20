@@ -3774,6 +3774,7 @@ package body Trans.Chap7 is
                  Get_Ortho_Type (Expr_Type, Mode_Value);
                Val : Iir_Int64;
             begin
+               --  Get the value now, as it may generate a constraint_error.
                Val := Get_Physical_Value (Expr);
                return New_Lit (New_Signed_Literal (Otype, Integer_64 (Val)));
             exception
