@@ -268,12 +268,8 @@ package body Scanner is
    is
       N_Source: File_Buffer_Acc;
    begin
-      if Current_Context.Source /= null then
-         raise Internal_Error;
-      end if;
-      if Source_File = No_Source_File_Entry then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Current_Context.Source = null);
+      pragma Assert (Source_File /= No_Source_File_Entry);
       N_Source := Get_File_Source (Source_File);
       Current_Context := (Source => N_Source,
                           Source_File => Source_File,
@@ -292,6 +288,47 @@ package body Scanner is
                           Fp64 => 0.0);
       Current_Token := Tok_Invalid;
    end Set_File;
+
+   function Detect_Encoding_Errors return Boolean
+   is
+      C : constant Character := Source (Pos);
+   begin
+      --  No need to check further if first character is plain ASCII-7
+      if C >= ' ' and C < Character'Val (127) then
+         return False;
+      end if;
+
+      --  UTF-8 BOM is EF BB BF
+      if Source (Pos + 0) = Character'Val (16#ef#)
+        and then Source (Pos + 1) = Character'Val (16#bb#)
+        and then Source (Pos + 2) = Character'Val (16#bf#)
+      then
+         Error_Msg_Scan
+           ("source encoding must be latin-1 (UTF-8 BOM detected)");
+         return True;
+      end if;
+
+      --  UTF-16 BE BOM is FE FF
+      if Source (Pos + 0) = Character'Val (16#fe#)
+        and then Source (Pos + 1) = Character'Val (16#ff#)
+      then
+         Error_Msg_Scan
+           ("source encoding must be latin-1 (UTF-16 BE BOM detected)");
+         return True;
+      end if;
+
+      --  UTF-16 LE BOM is FF FE
+      if Source (Pos + 0) = Character'Val (16#ff#)
+        and then Source (Pos + 1) = Character'Val (16#fe#)
+      then
+         Error_Msg_Scan
+           ("source encoding must be latin-1 (UTF-16 LE BOM detected)");
+         return True;
+      end if;
+
+      --  Certainly weird, but scanner/parser will catch it.
+      return False;
+   end Detect_Encoding_Errors;
 
    procedure Set_Current_Position (Position: Source_Ptr)
    is

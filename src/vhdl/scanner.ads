@@ -62,6 +62,11 @@ package Scanner is
    -- Initialize the scanner with file SOURCE_FILE.
    procedure Set_File (Source_File : Source_File_Entry);
 
+   --  This function can be called just after Set_File to detect UTF BOM
+   --  patterns.  It reports an error if a BOM is present and return True.
+   --  Silently return False if no error detected.
+   function Detect_Encoding_Errors return Boolean;
+
    procedure Set_Current_Position (Position: Source_Ptr);
 
    -- Finalize the scanner.

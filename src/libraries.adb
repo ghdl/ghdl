@@ -1353,8 +1353,15 @@ package body Libraries is
       Res : Iir_Design_File;
    begin
       Scanner.Set_File (File);
-      Res := Parse.Parse_Design_File;
+      if Scanner.Detect_Encoding_Errors then
+         --  Don't even try to parse such a file.  The BOM will be interpreted
+         --  as an identifier, which is not valid at the beginning of a file.
+         Res := Null_Iir;
+      else
+         Res := Parse.Parse_Design_File;
+      end if;
       Scanner.Close_File;
+
       if Res /= Null_Iir then
          Set_Parent (Res, Work_Library);
          Set_Design_File_Filename (Res, Files_Map.Get_File_Name (File));
