@@ -1106,7 +1106,7 @@ package Trans is
             --  Field in the frame for a pointer to the RESULT structure.
             Res_Record_Var : Var_Type := Null_Var;
 
-            --  For a subprogram with a result interface:
+            --  For a procedure: record containing inout/out scalar parameters.
             --    Type definition for the record.
             Res_Record_Type : O_Tnode := O_Tnode_Null;
             --    Type definition for access to the record.

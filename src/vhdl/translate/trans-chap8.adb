@@ -1606,13 +1606,8 @@ package body Trans.Chap8 is
       end case;
    end Translate_Implicit_Procedure_Call;
 
-   function Do_Conversion (Conv : Iir; Expr : Iir; Src : Mnode)
-                              return O_Enode
+   function Do_Conversion (Conv : Iir; Expr : Iir; Src : Mnode) return O_Enode
    is
-      Constr    : O_Assoc_List;
-      Conv_Info : Subprg_Info_Acc;
-      Res       : O_Dnode;
-      Imp       : Iir;
    begin
       if Conv = Null_Iir then
          return M2E (Src);
@@ -1628,31 +1623,39 @@ package body Trans.Chap8 is
          case Get_Kind (Conv) is
             when Iir_Kind_Function_Call =>
                --  Call conversion function.
-               Imp := Get_Implementation (Conv);
-               Conv_Info := Get_Info (Imp);
-               Start_Association (Constr, Conv_Info.Ortho_Func);
+               declare
+                  Imp : constant Iir := Get_Implementation (Conv);
+                  Conv_Info : constant Subprg_Info_Acc := Get_Info (Imp);
+                  Constr : O_Assoc_List;
+                  Res_Otype : Type_Info_Acc;
+                  Res : O_Dnode;
+               begin
+                  Start_Association (Constr, Conv_Info.Ortho_Func);
 
-               if Conv_Info.Res_Interface /= O_Dnode_Null then
-                  Res := Create_Temp (Conv_Info.Res_Record_Type);
-                  --  Composite result.
-                  New_Association
-                    (Constr,
-                     New_Address (New_Obj (Res), Conv_Info.Res_Record_Ptr));
-               end if;
+                  if Conv_Info.Res_Interface /= O_Dnode_Null then
+                     Res_Otype := Get_Info (Get_Return_Type (Imp));
+                     Res := Create_Temp (Res_Otype.Ortho_Type (Mode_Value));
+                     --  Composite result.
+                     New_Association
+                       (Constr,
+                        New_Address (New_Obj (Res),
+                                     Res_Otype.Ortho_Ptr_Type (Mode_Value)));
+                  end if;
 
-               Subprgs.Add_Subprg_Instance_Assoc
-                 (Constr, Conv_Info.Subprg_Instance);
+                  Subprgs.Add_Subprg_Instance_Assoc
+                    (Constr, Conv_Info.Subprg_Instance);
 
-               New_Association (Constr, M2E (Src));
+                  New_Association (Constr, M2E (Src));
 
-               if Conv_Info.Res_Interface /= O_Dnode_Null then
-                  --  Composite result.
-                  New_Procedure_Call (Constr);
-                  return New_Address (New_Obj (Res),
-                                      Conv_Info.Res_Record_Ptr);
-               else
-                  return New_Function_Call (Constr);
-               end if;
+                  if Conv_Info.Res_Interface /= O_Dnode_Null then
+                     --  Composite result.
+                     New_Procedure_Call (Constr);
+                     return New_Address
+                       (New_Obj (Res), Res_Otype.Ortho_Ptr_Type (Mode_Value));
+                  else
+                     return New_Function_Call (Constr);
+                  end if;
+               end;
             when Iir_Kind_Type_Conversion =>
                return Chap7.Translate_Type_Conversion
                  (M2E (Src), Get_Type (Expr),
