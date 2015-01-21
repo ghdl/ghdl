@@ -254,8 +254,8 @@ elseif ($Compile)
 				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
 					{	Write-Host "      file: v87\$SourceFile.v87"
 						if ($Script_EnableVerbose) {	Write-Host "        ghdlfilter (-v87)"	}
-						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw
-							| & $GHDLFilterExecutable @('-v87')
+						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw `
+							| & $GHDLFilterExecutable @('-v87') `
 							| Out-File "$SourceFile.v87" -Encoding Ascii
 						
 						#Write-Host "Press any key to continue..."
@@ -296,7 +296,9 @@ elseif ($Compile)
 				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
 					{	Write-Host "      file: v87\$SourceFile.v87"
 						if ($Script_EnableVerbose) {	Write-Host "        ghdlfilter (-v87)"	}
-						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw | & $GHDLFilterExecutable @('-v87') | Out-File "$SourceFile.v87" -Encoding Ascii
+						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw `
+							| & $GHDLFilterExecutable @('-v87') `
+							| Out-File "$SourceFile.v87" -Encoding Ascii
 						
 						$GHDLParameters = @("-a", "-C", "--std=87", "-P..\std", "--work=$VHDLDestLibrary", "$SourceFile.v87")
 						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
@@ -341,7 +343,9 @@ elseif ($Compile)
 				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
 					{	Write-Host "      file: v87\$SourceFile.v87"
 						if ($Script_EnableVerbose) {	Write-Host "        ghdlfilter (-v87)"	}
-						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw | & $GHDLFilterExecutable @('-v87') | Out-File "$SourceFile.v87" -Encoding Ascii
+						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw `
+							| & $GHDLFilterExecutable @('-v87') `
+							| Out-File "$SourceFile.v87" -Encoding Ascii
 						
 						$GHDLParameters = @("-a", "-C", "--std=87", "-P..\std", "--work=$VHDLDestLibrary", "$SourceFile.v87")
 						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
@@ -412,7 +416,9 @@ elseif ($Compile)
 				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
 					{	Write-Host "      file: v93\$SourceFile.v93"
 						if ($Script_EnableVerbose) {	Write-Host "        ghdlfilter (-v93)"	}
-						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw | & $GHDLFilterExecutable @('-v93') | Out-File "$SourceFile.v93" -Encoding Ascii
+						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw `
+							| & $GHDLFilterExecutable @('-v93') `
+							| Out-File "$SourceFile.v93" -Encoding Ascii
 						
 						$GHDLParameters = @("-a", "-C", "--std=93", "--bootstrap", "--work=$VHDLDestLibrary", "$SourceFile.v93")
 						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
@@ -446,7 +452,9 @@ elseif ($Compile)
 				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
 					{	Write-Host "      file: v93\$SourceFile.v93"
 						if ($Script_EnableVerbose) {	Write-Host "        ghdlfilter (-v93)"	}
-						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw | & $GHDLFilterExecutable @('-v93') | Out-File "$SourceFile.v93" -Encoding Ascii
+						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw `
+							| & $GHDLFilterExecutable @('-v93') `
+							| Out-File "$SourceFile.v93" -Encoding Ascii
 						
 						$GHDLParameters = @("-a", "-C", "--std=93", "-P..\std", "--work=$VHDLDestLibrary", "$SourceFile.v93")
 						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
@@ -502,7 +510,9 @@ elseif ($Compile)
 				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
 					{	Write-Host "      file: v93\$SourceFile.v93"
 						if ($Script_EnableVerbose) {	Write-Host "        ghdlfilter (-v93)"	}
-						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw | & $GHDLFilterExecutable @('-v93') | Out-File "$SourceFile.v93" -Encoding Ascii
+						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw `
+							| & $GHDLFilterExecutable @('-v93') `
+							| Out-File "$SourceFile.v93" -Encoding Ascii
 						
 						$GHDLParameters = @("-a", "-C", "--std=93", "-P..\std", "--work=$VHDLDestLibrary", "$SourceFile.v93")
 						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
@@ -569,7 +579,9 @@ elseif ($Compile)
 				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
 					{	Write-Host "      file: v93\$SourceFile.v93"
 						if ($Script_EnableVerbose) {	Write-Host "        ghdlfilter (-v93)"	}
-						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw | & $GHDLFilterExecutable @('-v93') | Out-File "$SourceFile.v93" -Encoding Ascii
+						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw `
+							| & $GHDLFilterExecutable @('-v93') `
+							| Out-File "$SourceFile.v93" -Encoding Ascii
 						
 						$GHDLParameters = @("-a", "-C", "--std=93", "-P..\std", "--work=$VHDLDestLibrary", "$SourceFile.v93")
 						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
@@ -651,7 +663,9 @@ elseif ($Compile)
 				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
 					{	Write-Host "      file: v08\$SourceFile.v08"
 						if ($Script_EnableVerbose) {	Write-Host "        ghdlfilter (-v08)"	}
-						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw | & $GHDLFilterExecutable @('-v08') | Out-File "$SourceFile.v08" -Encoding Ascii
+						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw `
+							| & $GHDLFilterExecutable @('-v08') `
+							| Out-File "$SourceFile.v08" -Encoding Ascii
 						
 						$GHDLParameters = @("-a", "-C", "--std=08", "--bootstrap", "--work=$VHDLDestLibrary", "$SourceFile.v08")
 						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
@@ -685,7 +699,9 @@ elseif ($Compile)
 				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
 					{	Write-Host "      file: v08\$SourceFile.v08"
 						if ($Script_EnableVerbose) {	Write-Host "        ghdlfilter (-v08)"	}
-						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw | & $GHDLFilterExecutable @('-v08') | Out-File "$SourceFile.v08" -Encoding Ascii
+						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw `
+							| & $GHDLFilterExecutable @('-v08') `
+							| Out-File "$SourceFile.v08" -Encoding Ascii
 						
 						$GHDLParameters = @("-a", "-C", "--std=08", "-P..\std", "--work=$VHDLDestLibrary", "$SourceFile.v08")
 						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
