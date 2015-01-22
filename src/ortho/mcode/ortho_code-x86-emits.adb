@@ -1123,34 +1123,26 @@ package body Ortho_Code.X86.Emits is
    --  Convert U32 to xx.
    procedure Gen_Conv_U32 (Stmt : O_Enode)
    is
-      Op : O_Enode;
-      Reg_Op : O_Reg;
-      Reg_Res : O_Reg;
+      Op : constant O_Enode := Get_Expr_Operand (Stmt);
+      Reg_Op : constant O_Reg := Get_Expr_Reg (Op);
+      Reg_Res : constant O_Reg := Get_Expr_Reg (Stmt);
    begin
-      Op := Get_Expr_Operand (Stmt);
-      Reg_Op := Get_Expr_Reg (Op);
-      Reg_Res := Get_Expr_Reg (Stmt);
       case Get_Expr_Mode (Stmt) is
          when Mode_I32 =>
-            if Reg_Res not in Regs_R32 then
-               raise Program_Error;
-            end if;
+            pragma Assert (Reg_Res in Regs_R32);
             if Reg_Op /= Reg_Res then
                Emit_Load (Reg_Res, Op, Sz_32l);
             end if;
             Emit_Tst (Reg_Res, Sz_32l);
             Gen_Ov_Check (R_Sge);
          when Mode_I64 =>
-            if Reg_Res /= R_Edx_Eax or Reg_Op /= R_Ax then
-               raise Program_Error;
-            end if;
+            pragma Assert (Reg_Res = R_Edx_Eax);
+            pragma Assert (Reg_Op = R_Ax);
             --  Clear edx.
             Gen_Clear_Edx;
          when Mode_U8
            | Mode_B2 =>
-            if Reg_Res not in Regs_R32 then
-               raise Program_Error;
-            end if;
+            pragma Assert (Reg_Res in Regs_R32);
             if Reg_Op /= Reg_Res then
                Emit_Load (Reg_Res, Op, Sz_32l);
             end if;
@@ -1169,23 +1161,17 @@ package body Ortho_Code.X86.Emits is
    --  Convert I32 to xxx
    procedure Gen_Conv_I32 (Stmt : O_Enode)
    is
-      Op : O_Enode;
-      Reg_Op : O_Reg;
-      Reg_Res : O_Reg;
+      Op : constant O_Enode := Get_Expr_Operand (Stmt);
+      Reg_Op : constant O_Reg := Get_Expr_Reg (Op);
+      Reg_Res : constant O_Reg := Get_Expr_Reg (Stmt);
    begin
-      Op := Get_Expr_Operand (Stmt);
-      Reg_Op := Get_Expr_Reg (Op);
-      Reg_Res := Get_Expr_Reg (Stmt);
       case Get_Expr_Mode (Stmt) is
          when Mode_I64 =>
-            if Reg_Res /= R_Edx_Eax or Reg_Op /= R_Ax then
-               raise Program_Error;
-            end if;
+            pragma Assert (Reg_Res = R_Edx_Eax);
+            pragma Assert (Reg_Op = R_Ax);
             Gen_Cdq;
          when Mode_U32 =>
-            if Reg_Res not in Regs_R32 then
-               raise Program_Error;
-            end if;
+            pragma Assert (Reg_Res in Regs_R32);
             if Reg_Op /= Reg_Res then
                Emit_Load (Reg_Res, Op, Sz_32l);
             end if;
@@ -1225,20 +1211,24 @@ package body Ortho_Code.X86.Emits is
    --  Convert U8 to xxx
    procedure Gen_Conv_U8 (Stmt : O_Enode)
    is
-      Op : O_Enode;
-      Reg_Res : O_Reg;
+      Op : constant O_Enode := Get_Expr_Operand (Stmt);
+      Reg_Res : constant O_Reg := Get_Expr_Reg (Stmt);
+      Reg_Op : constant O_Reg := Get_Expr_Reg (Op);
    begin
-      Op := Get_Expr_Operand (Stmt);
-      Reg_Res := Get_Expr_Reg (Stmt);
       case Get_Expr_Mode (Stmt) is
          when Mode_U32
            | Mode_I32
            | Mode_U16
            | Mode_I16 =>
-            if Reg_Res not in Regs_R32 then
-               raise Program_Error;
-            end if;
+            pragma Assert (Reg_Res in Regs_R32);
             Gen_Movzx (Reg_Res, Op, Sz_8);
+         when Mode_I64
+           | Mode_U64 =>
+            pragma Assert (Reg_Res = R_Edx_Eax);
+            pragma Assert (Reg_Op = R_Ax);
+            Gen_Movzx (R_Ax, Op, Sz_8);
+            --  Sign-extend, but we know the sign is positive.
+            Gen_Cdq;
          when others =>
             Error_Emit ("gen_conv_U8", Stmt);
       end case;
@@ -1247,17 +1237,23 @@ package body Ortho_Code.X86.Emits is
    --  Convert B2 to xxx
    procedure Gen_Conv_B2 (Stmt : O_Enode)
    is
-      Op : O_Enode;
-      Reg_Res : O_Reg;
+      Op : constant O_Enode := Get_Expr_Operand (Stmt);
+      Reg_Op : constant O_Reg := Get_Expr_Reg (Op);
+      Reg_Res : constant O_Reg := Get_Expr_Reg (Stmt);
    begin
-      Op := Get_Expr_Operand (Stmt);
-      Reg_Res := Get_Expr_Reg (Stmt);
       case Get_Expr_Mode (Stmt) is
          when Mode_U32
            | Mode_I32
            | Mode_U16
            | Mode_I16 =>
+            pragma Assert (Reg_Res in Regs_R32);
             Gen_Movzx (Reg_Res, Op, Sz_8);
+         when Mode_I64 =>
+            pragma Assert (Reg_Res = R_Edx_Eax);
+            pragma Assert (Reg_Op = R_Ax);
+            Gen_Movzx (R_Ax, Op, Sz_8);
+            --  Sign-extend, but we know the sign is positive.
+            Gen_Cdq;
          when others =>
             Error_Emit ("gen_conv_B2", Stmt);
       end case;
@@ -1266,23 +1262,50 @@ package body Ortho_Code.X86.Emits is
    --  Convert I64 to xxx
    procedure Gen_Conv_I64 (Stmt : O_Enode)
    is
-      Op : O_Enode;
+      Op : constant O_Enode := Get_Expr_Operand (Stmt);
+      Reg_Op : constant O_Reg := Get_Expr_Reg (Op);
+      Reg_Res : constant O_Reg := Get_Expr_Reg (Stmt);
    begin
-      Op := Get_Expr_Operand (Stmt);
       case Get_Expr_Mode (Stmt) is
          when Mode_I32 =>
+            pragma Assert (Reg_Op = R_Edx_Eax);
+            pragma Assert (Reg_Res = R_Ax);
             --  move dx to reg_helper
             Start_Insn;
             Gen_B8 (2#1000_1001#);
             Gen_B8 (2#11_010_000# + To_Reg32 (Reg_Helper));
             End_Insn;
+            --  Sign extend eax.
             Gen_Cdq;
             --  cmp reg_helper, dx
             Start_Insn;
             Gen_B8 (2#0011_1001#);
             Gen_B8 (2#11_010_000# + To_Reg32 (Reg_Helper));
             End_Insn;
+            --  Overflow if extended value is different from initial value.
             Gen_Ov_Check (R_Eq);
+         when Mode_U8 =>
+            pragma Assert (Reg_Op in Regs_R64);
+            --  Check MSB = 0
+            Emit_Tst (Reg_Op, Sz_32h);
+            Gen_Ov_Check (R_Eq);
+            --  Check LSB <= 255
+            if Reg_Op /= Reg_Res then
+               Emit_Load (Reg_Res, Op, Sz_32l);
+            end if;
+            Gen_Cmp_Imm (Reg_Res, 16#Ff#, Sz_32l);
+            Gen_Ov_Check (R_Ule);
+         when Mode_B2 =>
+            pragma Assert (Reg_Op in Regs_R64);
+            --  Check MSB = 0
+            Emit_Tst (Reg_Op, Sz_32h);
+            Gen_Ov_Check (R_Eq);
+            --  Check LSB <= 1
+            if Reg_Op /= Reg_Res then
+               Emit_Load (Reg_Res, Op, Sz_32l);
+            end if;
+            Gen_Cmp_Imm (Reg_Res, 16#1#, Sz_32l);
+            Gen_Ov_Check (R_Ule);
          when Mode_F64 =>
             Emit_Push_32 (Op, Sz_32h);
             Emit_Push_32 (Op, Sz_32l);
@@ -1775,6 +1798,7 @@ package body Ortho_Code.X86.Emits is
             end case;
 
          when OE_Conv =>
+            --  Call Gen_Conv_FROM
             case Get_Expr_Mode (Get_Expr_Operand (Stmt)) is
                when Mode_U32 =>
                   Gen_Conv_U32 (Stmt);

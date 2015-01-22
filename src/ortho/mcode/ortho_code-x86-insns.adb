@@ -1719,40 +1719,56 @@ package body Ortho_Code.X86.Insns is
             Link_Stmt (Stmt);
             return Stmt;
          when OE_Conv =>
+            Left := Get_Expr_Operand (Stmt);
             declare
-               O_Mode : Mode_Type;      --  Operand mode
-               R_Mode : Mode_Type;      --  Result mode
+               --  Operand mode
+               O_Mode : constant Mode_Type := Get_Expr_Mode (Left);
+
+               --  Result mode
+               R_Mode : constant Mode_Type := Get_Expr_Mode (Stmt);
+
+               Reg_Op : O_Reg;
             begin
-               Left := Get_Expr_Operand (Stmt);
-               O_Mode := Get_Expr_Mode (Left);
-               R_Mode := Get_Expr_Mode (Stmt);
                --  Simple case: no conversion.
                --  FIXME: should be handled by EXPR and convert to NOP.
                if Get_Expr_Mode (Left) = Get_Expr_Mode (Stmt) then
                   --  A no-op.
                   return Gen_Insn (Left, Reg, Pnum);
                end if;
+
+               --  By default, can work on reg or memory.
+               Reg_Op := R_Rm;
+
                case R_Mode is
                   when Mode_B2 =>
+                     --  To B2
                      case O_Mode is
                         when Mode_U32
                           | Mode_I32 =>
                            --  Detect for bound.
                            null;
+                        when Mode_I64 =>
+                           --  Work on registers.
+                           Reg_Op := R_Any64;
                         when others =>
                            Error_Gen_Insn (Stmt, O_Mode);
                      end case;
                   when Mode_U8 =>
+                     --  To U8
                      case O_Mode is
                         when Mode_U16
                           | Mode_U32
                           | Mode_I32 =>
                            --  Detect for bound.
                            null;
+                        when Mode_I64 =>
+                           --  Work on registers.
+                           Reg_Op := R_Any64;
                         when others =>
                            Error_Gen_Insn (Stmt, O_Mode);
                      end case;
                   when Mode_U32 =>
+                     --  To U32
                      case O_Mode is
                         when Mode_I32 =>
                            --  Detect for bound.
@@ -1766,6 +1782,7 @@ package body Ortho_Code.X86.Insns is
                            Error_Gen_Insn (Stmt, O_Mode);
                      end case;
                   when Mode_I32 =>
+                     --  To I32
                      case O_Mode is
                         when Mode_U8
                           | Mode_I8
@@ -1802,9 +1819,12 @@ package body Ortho_Code.X86.Insns is
                            Error_Gen_Insn (Stmt, O_Mode);
                      end case;
                   when Mode_I64 =>
+                     --  To I64
                      case O_Mode is
                         when Mode_I32
-                          | Mode_U32 =>
+                          | Mode_U32
+                          | Mode_U8
+                          | Mode_B2 =>
                            --  Zero or Sign extend.
                            Num := Get_Insn_Num;
                            Left := Gen_Insn (Left, R_Ax, Num);
@@ -1830,6 +1850,7 @@ package body Ortho_Code.X86.Insns is
                            Error_Gen_Insn (Stmt, O_Mode);
                      end case;
                   when Mode_F64 =>
+                     --  To F64
                      case O_Mode is
                         when Mode_I32
                           | Mode_I64 =>
@@ -1840,7 +1861,7 @@ package body Ortho_Code.X86.Insns is
                   when others =>
                      Error_Gen_Insn (Stmt, O_Mode);
                end case;
-               Left := Gen_Insn (Left, R_Rm, Pnum);
+               Left := Gen_Insn (Left, Reg_Op, Pnum);
                Set_Expr_Operand (Stmt, Left);
                case Reg is
                   when R_Irm
