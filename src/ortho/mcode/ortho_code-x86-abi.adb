@@ -471,6 +471,25 @@ package body Ortho_Code.X86.Abi is
             New_Line;
          when OE_Intrinsic =>
             Disp_Reg_Op_Name ("intrinsic");
+            Put (" ");
+            case Get_Intrinsic_Operation (Stmt) is
+               when Intrinsic_Mul_Ov_U64 =>
+                  Put ("mul_ov_U64");
+               when Intrinsic_Div_Ov_U64 =>
+                  Put ("div_ov_U64");
+               when Intrinsic_Mod_Ov_U64 =>
+                  Put ("mod_ov_U64");
+               when Intrinsic_Mul_Ov_I64 =>
+                  Put ("mul_ov_I64");
+               when Intrinsic_Div_Ov_I64 =>
+                  Put ("div_ov_I64");
+               when Intrinsic_Mod_Ov_I64 =>
+                  Put ("mod_ov_I64");
+               when Intrinsic_Rem_Ov_I64 =>
+                  Put ("rem_ov_I64");
+               when others =>
+                  Put ("??");
+            end case;
             --Disp_Decl_Name (Get_Call_Subprg (Stmt));
             New_Line;
          when OE_Conv =>
