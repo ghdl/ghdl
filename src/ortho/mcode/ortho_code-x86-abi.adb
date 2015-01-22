@@ -761,6 +761,9 @@ package body Ortho_Code.X86.Abi is
    function Muldi3 (A, B : Long_Integer) return Long_Integer;
    pragma Import (C, Muldi3, "__muldi3");
 
+   function Moddi3 (A, B : Long_Integer) return Long_Integer;
+   pragma Import (C, Moddi3, "__moddi3");
+
    procedure Chkstk (Sz : Integer);
    pragma Import (C, Chkstk, "__chkstk");
 
@@ -775,6 +778,10 @@ package body Ortho_Code.X86.Abi is
         (Ortho_Code.X86.Emits.Intrinsics_Symbol
          (Ortho_Code.X86.Intrinsic_Div_Ov_I64),
          Divdi3'Address);
+      Binary_File.Memory.Set_Symbol_Address
+        (Ortho_Code.X86.Emits.Intrinsics_Symbol
+         (Ortho_Code.X86.Intrinsic_Mod_Ov_I64),
+         Moddi3'Address);
       if X86.Flags.Flag_Alloca_Call then
          Binary_File.Memory.Set_Symbol_Address
            (Ortho_Code.X86.Emits.Chkstk_Symbol, Chkstk'Address);
