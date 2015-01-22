@@ -226,9 +226,8 @@ package body Std_Package is
                                         Type_Decl : Iir;
                                         Subtype_Definition : out Iir;
                                         Subtype_Decl : out Iir;
-                                        Force_64 : Boolean := False)
+                                        Is_64 : Boolean)
       is
-         Is_64 : constant Boolean := Force_64 or Flags.Flag_Integer_64;
          Constraint : Iir;
       begin
          Subtype_Definition :=
@@ -541,7 +540,7 @@ package body Std_Package is
                                  Universal_Integer_Type_Declaration,
                                  Universal_Integer_Subtype_Definition,
                                  Universal_Integer_Subtype_Declaration,
-                                 False);
+                                 Flags.Flag_Time_64 or Flags.Flag_Integer_64);
 
          Add_Decl (Universal_Integer_Subtype_Declaration);
          Set_Subtype_Definition (Universal_Integer_Type_Declaration,
@@ -614,7 +613,7 @@ package body Std_Package is
                                  Convertible_Integer_Type_Declaration,
                                  Convertible_Integer_Subtype_Definition,
                                  Convertible_Integer_Subtype_Declaration,
-                                 False);
+                                 Flags.Flag_Time_64 or Flags.Flag_Integer_64);
 
          --  Not added in std.standard.
       end;
@@ -652,7 +651,8 @@ package body Std_Package is
          Create_Integer_Subtype (Integer_Type_Definition,
                                  Integer_Type_Declaration,
                                  Integer_Subtype_Definition,
-                                 Integer_Subtype_Declaration);
+                                 Integer_Subtype_Declaration,
+                                 Flags.Flag_Integer_64);
          Add_Decl (Integer_Subtype_Declaration);
       end;
 
