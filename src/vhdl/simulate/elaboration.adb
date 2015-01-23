@@ -265,7 +265,7 @@ package body Elaboration is
          Actuals_Ref => null,
          Result => null);
 
-      Package_Instances (Package_Info.Inst_Slot) := Instance;
+      Package_Instances (Package_Info.Frame_Scope_Level.Pkg_Index) := Instance;
 
       if Trace_Elaboration then
          Ada.Text_IO.Put_Line ("elaborating " & Disp_Node (Decl));
@@ -280,8 +280,7 @@ package body Elaboration is
       Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
       Instance : Block_Instance_Acc;
    begin
-      Instance := Package_Instances
-        (Instance_Slot_Type (-Package_Info.Frame_Scope_Level));
+      Instance := Package_Instances (Package_Info.Frame_Scope_Level.Pkg_Index);
 
       if Trace_Elaboration then
          Ada.Text_IO.Put_Line ("elaborating " & Disp_Node (Decl));
@@ -323,7 +322,9 @@ package body Elaboration is
                   Info : constant Sim_Info_Acc := Get_Info (Library_Unit);
                   Body_Design: Iir_Design_Unit;
                begin
-                  if Package_Instances (Info.Inst_Slot) = null then
+                  if Package_Instances (Info.Frame_Scope_Level.Pkg_Index)
+                    = null
+                  then
                      --  Package not yet elaborated.
 
                      --  Load the body now, as it can add objects in the
@@ -1100,8 +1101,6 @@ package body Elaboration is
          return;
       end if;
 
-      Current_Component := Formal_Instance;
-
       Assoc := Map;
       while Assoc /= Null_Iir loop
          --  Elaboration of a port association list consists of the elaboration
@@ -1188,8 +1187,6 @@ package body Elaboration is
          end case;
          Assoc := Get_Chain (Assoc);
       end loop;
-
-      Current_Component := null;
    end Elaborate_Port_Map_Aspect;
 
    --  LRM93 §12.2  Elaboration of a block header
@@ -1413,6 +1410,7 @@ package body Elaboration is
             --  component instance and [...]
             Frame := Create_Block_Instance (Instance, Component, Stmt);
 
+            Current_Component := Frame;
             Elaborate_Generic_Clause (Frame, Get_Generic_Chain (Component));
             Elaborate_Generic_Map_Aspect
               (Frame, Instance, Get_Generic_Map_Aspect_Chain (Stmt));
@@ -1420,6 +1418,7 @@ package body Elaboration is
             Elaborate_Port_Map_Aspect
               (Frame, Instance,
                Get_Port_Chain (Component), Get_Port_Map_Aspect_Chain (Stmt));
+            Current_Component := null;
          end;
       else
          --  Direct instantiation
@@ -2478,11 +2477,13 @@ package body Elaboration is
       --  block.
       Elaborate_Dependence (Get_Design_Unit (Arch));
 
+      Current_Component := Parent_Instance;
       Elaborate_Generic_Clause (Instance, Get_Generic_Chain (Entity));
       Elaborate_Generic_Map_Aspect (Instance, Parent_Instance, Generic_Map);
       Elaborate_Port_Clause (Instance, Get_Port_Chain (Entity));
       Elaborate_Port_Map_Aspect (Instance, Parent_Instance,
                                  Get_Port_Chain (Entity), Port_Map);
+      Current_Component := null;
 
       Elaborate_Declarative_Part
         (Instance, Get_Declaration_Chain (Entity));
@@ -2512,8 +2513,7 @@ package body Elaboration is
       Generic_Map : Iir;
       Port_Map : Iir;
    begin
-      Package_Instances :=
-        new Block_Instance_Acc_Array (1 .. Instance_Slot_Type (Nbr_Packages));
+      Package_Instances := new Package_Instances_Array (1 .. Nbr_Packages);
 
       --  Use a 'fake' process to execute code during elaboration.
       Current_Process := No_Process;

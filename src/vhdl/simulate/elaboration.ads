@@ -128,7 +128,10 @@ package Elaboration is
      Block_Instance_Acc;
    type Block_Instance_Acc_Array_Acc is access Block_Instance_Acc_Array;
 
-   Package_Instances : Block_Instance_Acc_Array_Acc;
+   type Package_Instances_Array is array (Pkg_Index_Type range <>) of
+     Block_Instance_Acc;
+   type Package_Instances_Array_Acc is access Package_Instances_Array;
+   Package_Instances : Package_Instances_Array_Acc;
 
    --  Disconnections.  For each disconnection specification, the elaborator
    --  adds an entry in the table.

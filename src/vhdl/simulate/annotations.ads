@@ -30,6 +30,12 @@ package Annotations is
    procedure Disp_Vhdl_Info (Node: Iir);
    procedure Disp_Tree_Info (Node: Iir);
 
+   type Object_Slot_Type is new Natural;
+   subtype Parameter_Slot_Type is Object_Slot_Type range 0 .. 2**15;
+
+   type Pkg_Index_Type is new Natural;
+   Nbr_Packages : Pkg_Index_Type := 0;
+
    -- Annotations are used to collect informations for elaboration and to
    -- locate iir_value_literal for signals, variables or constants.
 
@@ -46,16 +52,34 @@ package Annotations is
    --
    --  Scope_Level_Component is set to a maximum, since there is at
    --  most one scope after it (the next one is an entity).
-   type Scope_Level_Type is new Integer;
-   Scope_Level_Global: constant Scope_Level_Type := 0;
-   Scope_Level_Entity: constant Scope_Level_Type := 1;
-   Scope_Level_Component : constant Scope_Level_Type :=
-     Scope_Level_Type'Last - 1;
+   type Scope_Level_Kind is
+     (
+      --  For a package, the depth is
+      Scope_Kind_Package,
+      Scope_Kind_Component,
+      Scope_Kind_Frame,
+      Scope_Kind_Pkg_Inst,
+      Scope_Kind_None
+     );
+   type Scope_Depth_Type is range 0 .. 2**15;
+   type Scope_Level_Type (Kind : Scope_Level_Kind := Scope_Kind_None) is
+      record
+         case Kind is
+            when Scope_Kind_Package =>
+               Pkg_Index : Pkg_Index_Type;
+            when Scope_Kind_Component =>
+               null;
+            when Scope_Kind_Frame =>
+               Depth : Scope_Depth_Type;
+            when Scope_Kind_Pkg_Inst =>
+               Pkg_Inst : Parameter_Slot_Type;
+            when Scope_Kind_None =>
+               null;
+         end case;
+      end record;
 
    type Instance_Slot_Type is new Integer;
    Invalid_Instance_Slot : constant Instance_Slot_Type := -1;
-
-   type Object_Slot_Type is new Integer;
 
    -- The annotation depends on the kind of the node.
    type Sim_Info_Kind is
@@ -106,8 +130,6 @@ package Annotations is
       end case;
    end record;
 
-   Nbr_Packages : Iir_Index32 := 0;
-
    -- Get/Set annotation fied from/to an iir.
    procedure Set_Info (Target: Iir; Info: Sim_Info_Acc);
    pragma Inline (Set_Info);
@@ -117,4 +139,7 @@ package Annotations is
    --  Expand the annotation table.  This is automatically done by Annotate,
    --  to be used only by debugger.
    procedure Annotate_Expand_Table;
+
+   --  For debugging.
+   function Image (Scope : Scope_Level_Type) return String;
 end Annotations;

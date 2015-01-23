@@ -66,30 +66,30 @@ package body Execution is
    is
       Current: Block_Instance_Acc := Instance;
    begin
-      while Current /= null loop
-         if Current.Scope_Level = Scope_Level then
-            return Current;
-         end if;
-         Current := Current.Up_Block;
-      end loop;
-      --  Global scope (packages)
-      if Scope_Level < Scope_Level_Global then
-         return Package_Instances (Instance_Slot_Type (-Scope_Level));
-      end if;
-      if Current_Component /= null
-        and then Current_Component.Scope_Level = Scope_Level
-      then
-         return Current_Component;
-      end if;
-      if Scope_Level = Scope_Level_Global then
-         return null;
-      end if;
-      raise Internal_Error;
+      case Scope_Level.Kind is
+         when Scope_Kind_Frame =>
+            while Current /= null loop
+               if Current.Scope_Level = Scope_Level then
+                  return Current;
+               end if;
+               Current := Current.Up_Block;
+            end loop;
+            raise Internal_Error;
+         when Scope_Kind_Package =>
+            --  Global scope (packages)
+            return Package_Instances (Scope_Level.Pkg_Index);
+         when Scope_Kind_Component =>
+            pragma Assert (Current_Component /= null);
+            return Current_Component;
+         when Scope_Kind_None =>
+            raise Internal_Error;
+         when Scope_Kind_Pkg_Inst =>
+            raise Internal_Error;
+      end case;
    end Get_Instance_By_Scope_Level;
 
    function Get_Instance_For_Slot (Instance: Block_Instance_Acc; Decl: Iir)
-                                  return Block_Instance_Acc
-   is
+                                  return Block_Instance_Acc is
    begin
       return Get_Instance_By_Scope_Level (Instance,
                                           Get_Info (Decl).Scope_Level);
@@ -3223,8 +3223,10 @@ package body Execution is
       Up_Block: Block_Instance_Acc;
       Res : Block_Instance_Acc;
    begin
+      pragma Assert (Get_Kind (Imp) in Iir_Kinds_Subprogram_Declaration
+                    or else Get_Kind (Imp) = Iir_Kind_Protected_Type_Body);
       Up_Block := Get_Instance_By_Scope_Level
-        (Instance, Func_Info.Frame_Scope_Level - 1);
+        (Instance, Get_Info (Get_Parent (Imp)).Frame_Scope_Level);
 
       Res := To_Block_Instance_Acc
         (Alloc_Block_Instance

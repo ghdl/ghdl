@@ -24,7 +24,7 @@ with Iirs_Utils; use Iirs_Utils;
 
 package body Annotations is
    -- Current scope level.
-   Current_Scope_Level: Scope_Level_Type := Scope_Level_Global;
+   Current_Scope_Level: Scope_Level_Type := (Kind => Scope_Kind_None);
 
    procedure Annotate_Declaration_List
      (Block_Info: Sim_Info_Acc; Decl_Chain: Iir);
@@ -45,22 +45,20 @@ package body Annotations is
    procedure Annotate_Anonymous_Type_Definition
      (Block_Info: Sim_Info_Acc; Def: Iir);
 
-   -- Be sure the node contains no informations.
-   procedure Assert_No_Info (Node: in Iir) is
-   begin
-      if Get_Info (Node) /= null then
-         raise Internal_Error;
-      end if;
-   end Assert_No_Info;
-
    procedure Increment_Current_Scope_Level is
    begin
-      if Current_Scope_Level < Scope_Level_Global then
-         --  For a subprogram in a package
-         Current_Scope_Level := Scope_Level_Global + 1;
-      else
-         Current_Scope_Level := Current_Scope_Level + 1;
-      end if;
+      case Current_Scope_Level.Kind is
+         when Scope_Kind_None
+           | Scope_Kind_Package
+           | Scope_Kind_Pkg_Inst =>
+            --  For a subprogram in a package
+            Current_Scope_Level := (Scope_Kind_Frame, Scope_Depth_Type'First);
+         when Scope_Kind_Frame =>
+            Current_Scope_Level := (Scope_Kind_Frame,
+                                    Current_Scope_Level.Depth + 1);
+         when Scope_Kind_Component =>
+            raise Internal_Error;
+      end case;
    end Increment_Current_Scope_Level;
 
    -- Add an annotation to object OBJ.
@@ -126,7 +124,6 @@ package body Annotations is
       if Get_Info (Expr) /= null then
          return;
       end if;
-      Assert_No_Info (Expr);
 --       if Expr = null or else Get_Info (Expr) /= null then
 --          return;
 --       end if;
@@ -218,6 +215,7 @@ package body Annotations is
    is
       Prev_Scope_Level : constant Scope_Level_Type := Current_Scope_Level;
       Decl : Iir;
+      Prot_Info: Sim_Info_Acc;
    begin
       --  First the interfaces type (they are elaborated in their context).
       Decl := Get_Declaration_Chain (Prot);
@@ -238,6 +236,14 @@ package body Annotations is
       --  Then the interfaces object.  Increment the scope to reserve a scope
       --  for the protected object.
       Increment_Current_Scope_Level;
+
+      Prot_Info :=
+        new Sim_Info_Type'(Kind => Kind_Frame,
+                           Inst_Slot => 0,
+                           Frame_Scope_Level => Current_Scope_Level,
+                           Nbr_Objects => 0,
+                           Nbr_Instances => 0);
+      Set_Info (Prot, Prot_Info);
 
       Decl := Get_Declaration_Chain (Prot);
       while Decl /= Null_Iir loop
@@ -263,17 +269,10 @@ package body Annotations is
       Prot_Info: Sim_Info_Acc;
       Prev_Scope_Level : constant Scope_Level_Type := Current_Scope_Level;
    begin
-      Increment_Current_Scope_Level;
-
-      Assert_No_Info (Prot);
-
-      Prot_Info :=
-        new Sim_Info_Type'(Kind => Kind_Frame,
-                           Inst_Slot => 0,
-                           Frame_Scope_Level => Current_Scope_Level,
-                           Nbr_Objects => 0,
-                           Nbr_Instances => 0);
+      Prot_Info := Get_Info (Get_Protected_Type_Declaration (Prot));
       Set_Info (Prot, Prot_Info);
+
+      Current_Scope_Level := Prot_Info.Frame_Scope_Level;
 
       Annotate_Declaration_List
         (Prot_Info, Get_Declaration_Chain (Prot));
@@ -453,7 +452,6 @@ package body Annotations is
          if With_Types then
             Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
          end if;
-         Assert_No_Info (Decl);
          case Get_Kind (Decl) is
             when Iir_Kind_Interface_Signal_Declaration =>
                Add_Signal_Info (Block_Info, Decl);
@@ -500,8 +498,6 @@ package body Annotations is
    begin
       Increment_Current_Scope_Level;
 
-      Assert_No_Info (Subprg);
-
       Subprg_Info :=
         new Sim_Info_Type'(Kind => Kind_Frame,
                            Inst_Slot => 0,
@@ -528,6 +524,8 @@ package body Annotations is
          return;
       end if;
 
+      Set_Info (Subprg, Subprg_Info);
+
       Current_Scope_Level := Subprg_Info.Frame_Scope_Level;
 
       Annotate_Declaration_List
@@ -543,12 +541,9 @@ package body Annotations is
      (Comp: Iir_Component_Declaration)
    is
       Info: Sim_Info_Acc;
-      Prev_Scope_Level : Scope_Level_Type;
+      Prev_Scope_Level : constant Scope_Level_Type := Current_Scope_Level;
    begin
-      Prev_Scope_Level := Current_Scope_Level;
-      Current_Scope_Level := Scope_Level_Component;
-
-      Assert_No_Info (Comp);
+      Current_Scope_Level := (Kind => Scope_Kind_Component);
 
       Info := new Sim_Info_Type'(Kind => Kind_Frame,
                                  Inst_Slot => Invalid_Instance_Slot,
@@ -571,13 +566,11 @@ package body Annotations is
            | Iir_Kind_Quiet_Attribute
            | Iir_Kind_Transaction_Attribute
            | Iir_Kind_Signal_Declaration =>
-            Assert_No_Info (Decl);
             Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
             Add_Signal_Info (Block_Info, Decl);
 
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Iterator_Declaration =>
-            Assert_No_Info (Decl);
             Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
             Create_Object_Info (Block_Info, Decl);
 
@@ -587,7 +580,6 @@ package body Annotations is
             then
                --  Create the slot only if the constant is not a full constant
                --  declaration.
-               Assert_No_Info (Decl);
                Annotate_Anonymous_Type_Definition
                  (Block_Info, Get_Type (Decl));
                Create_Object_Info (Block_Info, Decl);
@@ -596,15 +588,12 @@ package body Annotations is
             end if;
 
          when Iir_Kind_File_Declaration =>
-            Assert_No_Info (Decl);
             Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
             Create_Object_Info (Block_Info, Decl, Kind_File);
 
          when Iir_Kind_Terminal_Declaration =>
-            Assert_No_Info (Decl);
             Add_Terminal_Info (Block_Info, Decl);
          when Iir_Kinds_Branch_Quantity_Declaration =>
-            Assert_No_Info (Decl);
             Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
             Add_Quantity_Info (Block_Info, Decl);
 
@@ -792,9 +781,8 @@ package body Annotations is
       Info : Sim_Info_Acc;
       Header : Iir_Block_Header;
       Guard : Iir;
+      Prev_Scope_Level : constant Scope_Level_Type := Current_Scope_Level;
    begin
-      Assert_No_Info (Block);
-
       Increment_Current_Scope_Level;
 
       Info := new Sim_Info_Type'(Kind => Kind_Block,
@@ -821,16 +809,15 @@ package body Annotations is
       Annotate_Concurrent_Statements_List
         (Info, Get_Concurrent_Statement_Chain (Block));
 
-      Current_Scope_Level := Current_Scope_Level - 1;
+      Current_Scope_Level := Prev_Scope_Level;
    end Annotate_Block_Statement;
 
    procedure Annotate_Generate_Statement_Body
      (Block_Info : Sim_Info_Acc; Bod : Iir; It : Iir)
    is
       Info : Sim_Info_Acc;
+      Prev_Scope_Level : constant Scope_Level_Type := Current_Scope_Level;
    begin
-      Assert_No_Info (Bod);
-
       Increment_Current_Scope_Level;
 
       Info := new Sim_Info_Type'(Kind => Kind_Block,
@@ -849,7 +836,7 @@ package body Annotations is
       Annotate_Concurrent_Statements_List
         (Info, Get_Concurrent_Statement_Chain (Bod));
 
-      Current_Scope_Level := Current_Scope_Level - 1;
+      Current_Scope_Level := Prev_Scope_Level;
    end Annotate_Generate_Statement_Body;
 
    procedure Annotate_If_Generate_Statement
@@ -878,27 +865,29 @@ package body Annotations is
      (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
       Info: Sim_Info_Acc;
+      Prev_Scope_Level : constant Scope_Level_Type := Current_Scope_Level;
    begin
+      Increment_Current_Scope_Level;
+
       --  Add a slot just to put the instance.
-      Assert_No_Info (Stmt);
       Info := new Sim_Info_Type'(Kind => Kind_Block,
                                  Inst_Slot => Block_Info.Nbr_Instances,
-                                 Frame_Scope_Level => Current_Scope_Level + 1,
+                                 Frame_Scope_Level => Current_Scope_Level,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 1);
       Set_Info (Stmt, Info);
       Block_Info.Nbr_Instances := Block_Info.Nbr_Instances + 1;
+
+      Current_Scope_Level := Prev_Scope_Level;
    end Annotate_Component_Instantiation_Statement;
 
    procedure Annotate_Process_Statement (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
       pragma Unreferenced (Block_Info);
       Info: Sim_Info_Acc;
+      Prev_Scope_Level : constant Scope_Level_Type := Current_Scope_Level;
    begin
       Increment_Current_Scope_Level;
-
-      --  Add a slot just to put the instance.
-      Assert_No_Info (Stmt);
 
       Info := new Sim_Info_Type'(Kind => Kind_Process,
                                  Inst_Slot => Invalid_Instance_Slot,
@@ -912,7 +901,7 @@ package body Annotations is
       Annotate_Sequential_Statement_Chain
         (Info, Get_Sequential_Statement_Chain (Stmt));
 
-      Current_Scope_Level := Current_Scope_Level - 1;
+      Current_Scope_Level := Prev_Scope_Level;
    end Annotate_Process_Statement;
 
    procedure Annotate_Concurrent_Statements_List
@@ -948,12 +937,12 @@ package body Annotations is
       end loop;
    end Annotate_Concurrent_Statements_List;
 
-   procedure Annotate_Entity (Decl: Iir_Entity_Declaration) is
+   procedure Annotate_Entity (Decl: Iir_Entity_Declaration)
+   is
       Entity_Info: Sim_Info_Acc;
    begin
-      Assert_No_Info (Decl);
-
-      Current_Scope_Level := Scope_Level_Entity;
+      pragma Assert (Current_Scope_Level.Kind = Scope_Kind_None);
+      Increment_Current_Scope_Level;
 
       Entity_Info :=
         new Sim_Info_Type'(Kind => Kind_Block,
@@ -977,18 +966,17 @@ package body Annotations is
       -- processes.
       Annotate_Concurrent_Statements_List
         (Entity_Info, Get_Concurrent_Statement_Chain (Decl));
+
+      Current_Scope_Level := (Kind => Scope_Kind_None);
    end Annotate_Entity;
 
    procedure Annotate_Architecture (Decl: Iir_Architecture_Body)
    is
-      Entity_Info: Sim_Info_Acc;
+      Entity_Info : constant Sim_Info_Acc := Get_Info (Get_Entity (Decl));
       Arch_Info: Sim_Info_Acc;
    begin
-      Assert_No_Info (Decl);
-
-      Current_Scope_Level := Scope_Level_Entity;
-
-      Entity_Info := Get_Info (Get_Entity (Decl));
+      pragma Assert (Current_Scope_Level.Kind = Scope_Kind_None);
+      Current_Scope_Level := Entity_Info.Frame_Scope_Level;
 
       Arch_Info := new Sim_Info_Type'
         (Kind => Kind_Block,
@@ -1006,16 +994,18 @@ package body Annotations is
       -- processes.
       Annotate_Concurrent_Statements_List
         (Arch_Info, Get_Concurrent_Statement_Chain (Decl));
+
+      Current_Scope_Level := (Kind => Scope_Kind_None);
    end Annotate_Architecture;
 
    procedure Annotate_Package (Decl: Iir_Package_Declaration)
    is
       Package_Info: Sim_Info_Acc;
    begin
-      Assert_No_Info (Decl);
+      pragma Assert (Current_Scope_Level.Kind = Scope_Kind_None);
 
       Nbr_Packages := Nbr_Packages + 1;
-      Current_Scope_Level := Scope_Level_Type (-Nbr_Packages);
+      Current_Scope_Level := (Scope_Kind_Package, Nbr_Packages);
 
       Package_Info := new Sim_Info_Type'
         (Kind => Kind_Block,
@@ -1029,14 +1019,14 @@ package body Annotations is
       -- declarations
       Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
 
-      Current_Scope_Level := Scope_Level_Global;
+      Current_Scope_Level := (Kind => Scope_Kind_None);
    end Annotate_Package;
 
    procedure Annotate_Package_Body (Decl: Iir)
    is
       Package_Info: Sim_Info_Acc;
    begin
-      Assert_No_Info (Decl);
+      pragma Assert (Current_Scope_Level.Kind = Scope_Kind_None);
 
       -- Set info field of package body declaration.
       Package_Info := Get_Info (Get_Package (Decl));
@@ -1046,6 +1036,8 @@ package body Annotations is
 
       -- declarations
       Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
+
+      Current_Scope_Level := (Kind => Scope_Kind_None);
    end Annotate_Package_Body;
 
    procedure Annotate_Component_Configuration
@@ -1063,7 +1055,6 @@ package body Annotations is
       if Block = Null_Iir then
          return;
       end if;
-      Assert_No_Info (Block);
 
       --  Declaration are use_clause only.
       El := Get_Configuration_Item_Chain (Block);
@@ -1085,19 +1076,20 @@ package body Annotations is
    is
       Config_Info: Sim_Info_Acc;
    begin
-      Assert_No_Info (Decl);
+      pragma Assert (Current_Scope_Level.Kind = Scope_Kind_None);
+      Increment_Current_Scope_Level;
 
       Config_Info := new Sim_Info_Type'
         (Kind => Kind_Block,
          Inst_Slot => Invalid_Instance_Slot,
-         Frame_Scope_Level => Scope_Level_Global,
+         Frame_Scope_Level => Current_Scope_Level,
          Nbr_Objects => 0,
          Nbr_Instances => 0);
 
-      Current_Scope_Level := Scope_Level_Global;
-
       Annotate_Declaration_List (Config_Info, Get_Declaration_Chain (Decl));
       Annotate_Block_Configuration (Get_Block_Configuration (Decl));
+
+      Current_Scope_Level := (Kind => Scope_Kind_None);
    end Annotate_Configuration_Declaration;
 
    package Info_Node is new GNAT.Table
@@ -1158,6 +1150,22 @@ package body Annotations is
       end case;
    end Annotate;
 
+   function Image (Scope : Scope_Level_Type) return String is
+   begin
+      case Scope.Kind is
+         when Scope_Kind_None =>
+            return "none";
+         when Scope_Kind_Component =>
+            return "component";
+         when Scope_Kind_Frame =>
+            return "frame" & Scope_Depth_Type'Image (Scope.Depth);
+         when Scope_Kind_Package =>
+            return "package" & Pkg_Index_Type'Image (Scope.Pkg_Index);
+         when Scope_Kind_Pkg_Inst =>
+            return "pkg inst" & Parameter_Slot_Type'Image (Scope.Pkg_Inst);
+      end case;
+   end Image;
+
    -- Disp annotations for an iir node.
    procedure Disp_Vhdl_Info (Node: Iir) is
       use Ada.Text_IO;
@@ -1172,8 +1180,7 @@ package body Annotations is
               ("-- nbr objects:" & Object_Slot_Type'Image (Info.Nbr_Objects));
 
          when Kind_Frame | Kind_Process  =>
-            Put_Line ("-- scope level:" &
-                      Scope_Level_Type'Image (Info.Frame_Scope_Level));
+            Put_Line ("-- scope:" & Image (Info.Frame_Scope_Level));
             Set_Col (Indent);
             Put_Line
               ("-- nbr objects:" & Object_Slot_Type'Image (Info.Nbr_Objects));
@@ -1181,8 +1188,7 @@ package body Annotations is
          when Kind_Object | Kind_Signal | Kind_File
            | Kind_Terminal | Kind_Quantity =>
             Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot)
-                      & ", scope:"
-                      & Scope_Level_Type'Image (Info.Scope_Level));
+                      & ", scope:" & Image (Info.Scope_Level));
          when Kind_Scalar_Type
            | Kind_File_Type =>
             null;
@@ -1206,8 +1212,7 @@ package body Annotations is
       end if;
       case Info.Kind is
          when Kind_Block | Kind_Frame | Kind_Process =>
-            Put_Line ("scope level:" &
-                      Scope_Level_Type'Image (Info.Frame_Scope_Level));
+            Put_Line ("scope:" & Image (Info.Frame_Scope_Level));
             Set_Col (Indent);
             Put_Line ("inst_slot:"
                         & Instance_Slot_Type'Image (Info.Inst_Slot));
@@ -1220,8 +1225,7 @@ package body Annotations is
          when Kind_Object | Kind_Signal | Kind_File
            | Kind_Terminal | Kind_Quantity =>
             Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot)
-                      & ", scope:"
-                      & Scope_Level_Type'Image (Info.Scope_Level));
+                      & ", scope:" & Image (Info.Scope_Level));
          when Kind_Range =>
             Put_Line ("range slot:" & Object_Slot_Type'Image (Info.Slot));
          when Kind_Scalar_Type =>
@@ -1245,6 +1249,7 @@ package body Annotations is
 
    procedure Set_Info (Target: Iir; Info: Sim_Info_Acc) is
    begin
+      pragma Assert (Info_Node.Table (Target) = null);
       Info_Node.Table (Target) := Info;
    end Set_Info;
 

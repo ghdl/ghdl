@@ -274,8 +274,7 @@ package body Debugger is
    --  Used to debug.
    procedure Disp_Block_Instance (Instance: Block_Instance_Acc) is
    begin
-      Put_Line ("scope level:"
-                  & Scope_Level_Type'Image (Instance.Scope_Level));
+      Put_Line ("scope:" & Image (Instance.Scope_Level));
       Put_Line ("Objects:");
       for I in Instance.Objects'Range loop
          Put (Object_Slot_Type'Image (I) & ": ");
