@@ -251,7 +251,7 @@ package body Elaboration is
    begin
       Instance := new Block_Instance_Type'
         (Max_Objs => Package_Info.Nbr_Objects,
-         Scope_Level => Package_Info.Frame_Scope_Level,
+         Block_Scope => Package_Info.Frame_Scope,
          Up_Block => null,
          Label => Decl,
          Stmt => Null_Iir,
@@ -265,7 +265,7 @@ package body Elaboration is
          Actuals_Ref => null,
          Result => null);
 
-      Package_Instances (Package_Info.Frame_Scope_Level.Pkg_Index) := Instance;
+      Package_Instances (Package_Info.Frame_Scope.Pkg_Index) := Instance;
 
       if Trace_Elaboration then
          Ada.Text_IO.Put_Line ("elaborating " & Disp_Node (Decl));
@@ -280,7 +280,7 @@ package body Elaboration is
       Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
       Instance : Block_Instance_Acc;
    begin
-      Instance := Package_Instances (Package_Info.Frame_Scope_Level.Pkg_Index);
+      Instance := Package_Instances (Package_Info.Frame_Scope.Pkg_Index);
 
       if Trace_Elaboration then
          Ada.Text_IO.Put_Line ("elaborating " & Disp_Node (Decl));
@@ -322,8 +322,7 @@ package body Elaboration is
                   Info : constant Sim_Info_Acc := Get_Info (Library_Unit);
                   Body_Design: Iir_Design_Unit;
                begin
-                  if Package_Instances (Info.Frame_Scope_Level.Pkg_Index)
-                    = null
+                  if Package_Instances (Info.Frame_Scope.Pkg_Index) = null
                   then
                      --  Package not yet elaborated.
 
@@ -380,7 +379,7 @@ package body Elaboration is
    begin
       Res := new Block_Instance_Type'
         (Max_Objs => Obj_Info.Nbr_Objects,
-         Scope_Level => Obj_Info.Frame_Scope_Level,
+         Block_Scope => Obj_Info.Frame_Scope,
          Up_Block => Father,
          Label => Stmt,
          Stmt => Obj,
@@ -527,7 +526,7 @@ package body Elaboration is
       Slot : constant Object_Slot_Type := Info.Slot;
    begin
       if Slot /= Instance.Elab_Objects
-        or else Info.Scope_Level /= Instance.Scope_Level
+        or else Info.Obj_Scope /= Instance.Block_Scope
       then
          Error_Msg_Elab ("bad destroy order");
          raise Internal_Error;
@@ -650,7 +649,7 @@ package body Elaboration is
       Range_Info : constant Sim_Info_Acc := Get_Info (Rc);
       Val : Iir_Value_Literal_Acc;
    begin
-      if Range_Info.Scope_Level /= Instance.Scope_Level
+      if Range_Info.Obj_Scope /= Instance.Block_Scope
         or else Instance.Objects (Range_Info.Slot) /= null
       then
          --  A range expression may have already been created, for example
@@ -659,7 +658,7 @@ package body Elaboration is
          return;
       end if;
       if False
-        and then (Range_Info.Scope_Level /= Instance.Scope_Level
+        and then (Range_Info.Obj_Scope /= Instance.Block_Scope
                     or else Range_Info.Slot < Instance.Elab_Objects)
       then
          --  FIXME: the test is wrong for packages.
@@ -2381,7 +2380,7 @@ package body Elaboration is
          return;
       end if;
       Cons_Info := Get_Info (Constraint);
-      if Cons_Info.Scope_Level = Instance.Scope_Level
+      if Cons_Info.Obj_Scope = Instance.Block_Scope
         and then Cons_Info.Slot = Instance.Elab_Objects
       then
          Destroy_Object (Instance, Constraint);

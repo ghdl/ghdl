@@ -47,8 +47,8 @@ package Elaboration is
 
       -- Useful informations for a dynamic block (ie, a frame).
       -- The scope level and an access to the block of upper scope level.
-      Scope_Level: Scope_Level_Type;
-      Up_Block: Block_Instance_Acc;
+      Block_Scope : Scope_Type;
+      Up_Block : Block_Instance_Acc;
 
       --  Block, architecture, package, process, component instantiation for
       --  this instance.

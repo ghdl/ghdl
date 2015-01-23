@@ -40,19 +40,7 @@ package Annotations is
    -- locate iir_value_literal for signals, variables or constants.
 
    -- Scope corresponding to an object.
-   -- Scope_level_global is for objects that can be instancied only one
-   -- time, ie shared signals or constants declared in a package.
-   --
-   -- Scope_Level_Process is for objects declared in an entity, architecture,
-   -- process, bloc (but not generated bloc).  These are static objects, that
-   -- can be instancied several times.
-   --
-   -- Scope_Level_First_Function and above are for dynamic objects declared
-   -- in a subprogram.  The level is also the nest level.
-   --
-   --  Scope_Level_Component is set to a maximum, since there is at
-   --  most one scope after it (the next one is an entity).
-   type Scope_Level_Kind is
+   type Scope_Kind_Type is
      (
       --  For a package, the depth is
       Scope_Kind_Package,
@@ -62,21 +50,20 @@ package Annotations is
       Scope_Kind_None
      );
    type Scope_Depth_Type is range 0 .. 2**15;
-   type Scope_Level_Type (Kind : Scope_Level_Kind := Scope_Kind_None) is
-      record
-         case Kind is
-            when Scope_Kind_Package =>
-               Pkg_Index : Pkg_Index_Type;
-            when Scope_Kind_Component =>
-               null;
-            when Scope_Kind_Frame =>
-               Depth : Scope_Depth_Type;
-            when Scope_Kind_Pkg_Inst =>
-               Pkg_Inst : Parameter_Slot_Type;
-            when Scope_Kind_None =>
-               null;
-         end case;
-      end record;
+   type Scope_Type (Kind : Scope_Kind_Type := Scope_Kind_None) is record
+      case Kind is
+         when Scope_Kind_Package =>
+            Pkg_Index : Pkg_Index_Type;
+         when Scope_Kind_Component =>
+            null;
+         when Scope_Kind_Frame =>
+            Depth : Scope_Depth_Type;
+         when Scope_Kind_Pkg_Inst =>
+            Pkg_Inst : Parameter_Slot_Type;
+         when Scope_Kind_None =>
+            null;
+      end case;
+   end record;
 
    type Instance_Slot_Type is new Integer;
    Invalid_Instance_Slot : constant Instance_Slot_Type := -1;
@@ -102,7 +89,7 @@ package Annotations is
             Inst_Slot : Instance_Slot_Type;
 
             -- scope level for this frame.
-            Frame_Scope_Level: Scope_Level_Type;
+            Frame_Scope : Scope_Type;
 
             -- Number of objects/signals.
             Nbr_Objects : Object_Slot_Type;
@@ -116,10 +103,10 @@ package Annotations is
            | Kind_File
            | Kind_Terminal
            | Kind_Quantity =>
-            -- block considered (hierarchy).
-            Scope_Level: Scope_Level_Type;
+            --  Block in which this object is declared in.
+            Obj_Scope : Scope_Type;
 
-            -- Variable index.
+            --  Variable index in the block.
             Slot: Object_Slot_Type;
 
          when Kind_Scalar_Type =>
@@ -141,5 +128,5 @@ package Annotations is
    procedure Annotate_Expand_Table;
 
    --  For debugging.
-   function Image (Scope : Scope_Level_Type) return String;
+   function Image (Scope : Scope_Type) return String;
 end Annotations;

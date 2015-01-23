@@ -60,16 +60,16 @@ package body Execution is
                                        Severity : Natural;
                                        Stmt: Iir);
 
-   function Get_Instance_By_Scope_Level
-     (Instance: Block_Instance_Acc; Scope_Level: Scope_Level_Type)
+   function Get_Instance_By_Scope
+     (Instance: Block_Instance_Acc; Scope: Scope_Type)
       return Block_Instance_Acc
    is
       Current: Block_Instance_Acc := Instance;
    begin
-      case Scope_Level.Kind is
+      case Scope.Kind is
          when Scope_Kind_Frame =>
             while Current /= null loop
-               if Current.Scope_Level = Scope_Level then
+               if Current.Block_Scope = Scope then
                   return Current;
                end if;
                Current := Current.Up_Block;
@@ -77,7 +77,7 @@ package body Execution is
             raise Internal_Error;
          when Scope_Kind_Package =>
             --  Global scope (packages)
-            return Package_Instances (Scope_Level.Pkg_Index);
+            return Package_Instances (Scope.Pkg_Index);
          when Scope_Kind_Component =>
             pragma Assert (Current_Component /= null);
             return Current_Component;
@@ -86,13 +86,12 @@ package body Execution is
          when Scope_Kind_Pkg_Inst =>
             raise Internal_Error;
       end case;
-   end Get_Instance_By_Scope_Level;
+   end Get_Instance_By_Scope;
 
    function Get_Instance_For_Slot (Instance: Block_Instance_Acc; Decl: Iir)
                                   return Block_Instance_Acc is
    begin
-      return Get_Instance_By_Scope_Level (Instance,
-                                          Get_Info (Decl).Scope_Level);
+      return Get_Instance_By_Scope (Instance, Get_Info (Decl).Obj_Scope);
    end Get_Instance_For_Slot;
 
    procedure Create_Right_Bound_From_Length
@@ -2366,7 +2365,7 @@ package body Execution is
       Res : Iir_Value_Literal_Acc;
       Is_Sig : Boolean;
    begin
-      Bblk := Get_Instance_By_Scope_Level (Block, Info.Scope_Level);
+      Bblk := Get_Instance_By_Scope (Block, Info.Obj_Scope);
       Base_Val := Bblk.Objects (Info.Slot + 1);
       Execute_Name_With_Base (Block, Expr, Base_Val, Res, Is_Sig);
       pragma Assert (Is_Sig);
@@ -2430,8 +2429,7 @@ package body Execution is
                declare
                   Info : constant Sim_Info_Acc := Get_Info (Expr);
                begin
-                  Slot_Block :=
-                    Get_Instance_By_Scope_Level (Block, Info.Scope_Level);
+                  Slot_Block := Get_Instance_By_Scope (Block, Info.Obj_Scope);
                   Res := Slot_Block.Objects (Info.Slot);
                end;
             end if;
@@ -2735,8 +2733,8 @@ package body Execution is
          return String_To_Iir_Value (Name.Suffix);
       end if;
 
-      Instance := Get_Instance_By_Scope_Level
-        (Block, Get_Info (Name.Path_Instance).Frame_Scope_Level);
+      Instance := Get_Instance_By_Scope
+        (Block, Get_Info (Name.Path_Instance).Frame_Scope);
 
       loop
          case Get_Kind (Instance.Label) is
@@ -3225,14 +3223,14 @@ package body Execution is
    begin
       pragma Assert (Get_Kind (Imp) in Iir_Kinds_Subprogram_Declaration
                     or else Get_Kind (Imp) = Iir_Kind_Protected_Type_Body);
-      Up_Block := Get_Instance_By_Scope_Level
-        (Instance, Get_Info (Get_Parent (Imp)).Frame_Scope_Level);
+      Up_Block := Get_Instance_By_Scope
+        (Instance, Get_Info (Get_Parent (Imp)).Frame_Scope);
 
       Res := To_Block_Instance_Acc
         (Alloc_Block_Instance
            (Instance_Pool,
             Block_Instance_Type'(Max_Objs => Func_Info.Nbr_Objects,
-                                 Scope_Level => Func_Info.Frame_Scope_Level,
+                                 Block_Scope => Func_Info.Frame_Scope,
                                  Up_Block => Up_Block,
                                  Label => Imp,
                                  Stmt => Null_Iir,
