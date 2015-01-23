@@ -1284,15 +1284,12 @@ package body Sem_Stmts is
    --  ports and generics (either a entity_declaration or a component
    --  declaration).
    function Sem_Instantiated_Unit
-     (Stmt : Iir_Component_Instantiation_Statement)
-     return Iir
+     (Stmt : Iir_Component_Instantiation_Statement) return Iir
    is
-      Inst : Iir;
+      Inst : constant Iir := Get_Instantiated_Unit (Stmt);
       Comp_Name : Iir;
       Comp : Iir;
    begin
-      Inst := Get_Instantiated_Unit (Stmt);
-
       if Get_Kind (Inst) in Iir_Kinds_Denoting_Name then
          Comp := Get_Named_Entity (Inst);
          if Comp /= Null_Iir then
