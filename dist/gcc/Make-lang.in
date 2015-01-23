@@ -124,8 +124,8 @@ ghdl$(exeext): ghdl1$(exeext) vhdl/default_pathes.ads force
 	 -bargs -E -cargs $(ADA_CFLAGS) $(GHDL_ADAFLAGS) -largs $(LIBS)
 	if test $@ -nt s-ghdllib; then $(RM) -f s-ghdllib; fi
 
-# Ghdl libraries.
-s-ghdllib: ghdl$(exeext) ghdl1$(exeext)
+# Ghdl libraries. Also depends on xgcc to build std_standard.o
+s-ghdllib: ghdl$(exeext) ghdl1$(exeext) $(GCC_PASSES)
 	$(MAKE_IN_VHDL) ghdllib
 	touch $@
 
