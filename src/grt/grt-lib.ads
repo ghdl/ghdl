@@ -121,7 +121,7 @@ private
                   "__ghdl_std_ulogic_to_boolean_array");
 
    pragma Export (C, Ghdl_Get_Resolution_Limit,
-                  "__ghdl_get_resolution_limit");
+                  "std__env__get_resolution_limit");
    pragma Export (Ada, Ghdl_Control_Simulation,
-                  "__ghdl_control_simulation");
+                  "std__env__control_simulation");
 end Grt.Lib;

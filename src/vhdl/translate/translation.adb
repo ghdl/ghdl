@@ -1786,7 +1786,7 @@ package body Translation is
         ("__ghdl_to_string_p64", Ghdl_To_String_P64, Ghdl_I64_Type,
          Rtis.Ghdl_Rti_Access, Wki_Rti);
       Create_To_String_Subprogram
-        ("__ghdl_timue_to_string_unit", Ghdl_Time_To_String_Unit,
+        ("__ghdl_time_to_string_unit", Ghdl_Time_To_String_Unit,
          Std_Time_Otype, Std_Time_Otype, Get_Identifier ("unit"),
          Rtis.Ghdl_Rti_Access, Wki_Rti);
       Create_To_String_Subprogram
