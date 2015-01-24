@@ -4,10 +4,10 @@ import re
 import sys
 import argparse
 
-field_file = "../vhdl/nodes.ads"
-spec_file = "../vhdl/iirs.ads"
-template_file = "../vhdl/iirs.adb.in"
-meta_base_file = "../vhdl/nodes_meta"
+field_file = "nodes.ads"
+spec_file = "iirs.ads"
+template_file = "iirs.adb.in"
+meta_base_file = "nodes_meta"
 prefix_name = "Iir_Kind_"
 prefix_range_name = "Iir_Kinds_"
 type_name = "Iir_Kind"
@@ -157,16 +157,16 @@ def read_kinds(filename):
     while lr.get() != '   type ' + type_name + ' is\n':
         pass
     # Skip '('
-    if lr.get() != '      (\n':
+    if lr.get() != '     (\n':
         raise ParseError(lr,
                          'no open parenthesis after "type ' + type_name +'"')
 
     # Read literals
-    pat_node = re.compile('       ' + prefix_name + '(\w+),?( +-- .*)?\n')
+    pat_node = re.compile('      ' + prefix_name + '(\w+),?( +-- .*)?\n')
     pat_comment = re.compile('( +-- .*)?\n')
     while True:
         l = lr.get()
-        if l == '      );\n':
+        if l == '     );\n':
             break
         m = pat_node.match(l)
         if m:
@@ -234,9 +234,10 @@ def read_kinds(filename):
       re.compile('   function Get_(\w+) \((\w+) : (\w+)\) return (\w+);\n')
     pat_proc = \
       re.compile('   procedure Set_(\w+) \((\w+) : (\w+); (\w+) : (\w+)\);\n')
+    pat_end = re.compile('end [A-Za-z.]+;\n')
     while True:
         l = lr.get()
-        if l == 'end Iirs;\n':
+        if pat_end.match(l):
             break
         m = pat_field.match(l)
         if m:
@@ -495,7 +496,28 @@ parser.add_argument('action', choices=['disp-nodes', 'disp-kinds',
                                        'get_format', 'body',
                                        'meta_specs', 'meta_body'],
                     default='disp-nodes')
+parser.add_argument('--field-file', dest='field_file',
+                    default='nodes.ads',
+                    help='specify file which defines fields')
+parser.add_argument('--spec-file', dest='spec_file',
+                    default='iirs.ads',
+                    help='specify file which defines nodes')
+parser.add_argument('--template-file', dest='template_file',
+                    default='iirs.adb.in',
+                    help='specify template body file')
+parser.add_argument('--kind-type', dest='kind_type',
+                    default='Iir_Kind',
+                    help='name of kind type')
+parser.add_argument('--kind-prefix', dest='kind_prefix',
+                    default='Iir_Kind_',
+                    help='prefix for kind literals')
 args = parser.parse_args()
+
+field_file=args.field_file
+spec_file=args.spec_file
+type_name=args.kind_type
+prefix_name=args.kind_prefix
+template_file=args.template_file
 
 try:
     (formats, fields) = read_fields(field_file)

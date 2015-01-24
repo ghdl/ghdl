@@ -3408,281 +3408,281 @@ package Iirs is
 
 
    type Iir_Kind is
-      (
-       Iir_Kind_Unused,
-       Iir_Kind_Error,
+     (
+      Iir_Kind_Unused,
+      Iir_Kind_Error,
 
-       Iir_Kind_Design_File,
-       Iir_Kind_Design_Unit,
-       Iir_Kind_Library_Clause,
-       Iir_Kind_Use_Clause,
+      Iir_Kind_Design_File,
+      Iir_Kind_Design_Unit,
+      Iir_Kind_Library_Clause,
+      Iir_Kind_Use_Clause,
 
    -- Literals.
-       Iir_Kind_Integer_Literal,
-       Iir_Kind_Floating_Point_Literal,
-       Iir_Kind_Null_Literal,
-       Iir_Kind_String_Literal8,
-       Iir_Kind_Physical_Int_Literal,
-       Iir_Kind_Physical_Fp_Literal,
-       Iir_Kind_Simple_Aggregate,
-       Iir_Kind_Overflow_Literal,
+      Iir_Kind_Integer_Literal,
+      Iir_Kind_Floating_Point_Literal,
+      Iir_Kind_Null_Literal,
+      Iir_Kind_String_Literal8,
+      Iir_Kind_Physical_Int_Literal,
+      Iir_Kind_Physical_Fp_Literal,
+      Iir_Kind_Simple_Aggregate,
+      Iir_Kind_Overflow_Literal,
 
    -- Tuple,
-       Iir_Kind_Waveform_Element,
-       Iir_Kind_Conditional_Waveform,
-       Iir_Kind_Association_Element_By_Expression,
-       Iir_Kind_Association_Element_By_Individual,
-       Iir_Kind_Association_Element_Open,
-       Iir_Kind_Association_Element_Package,
-       Iir_Kind_Choice_By_Others,
-       Iir_Kind_Choice_By_Expression,
-       Iir_Kind_Choice_By_Range,
-       Iir_Kind_Choice_By_None,
-       Iir_Kind_Choice_By_Name,
-       Iir_Kind_Entity_Aspect_Entity,
-       Iir_Kind_Entity_Aspect_Configuration,
-       Iir_Kind_Entity_Aspect_Open,
-       Iir_Kind_Block_Configuration,
-       Iir_Kind_Block_Header,
-       Iir_Kind_Component_Configuration,
-       Iir_Kind_Binding_Indication,
-       Iir_Kind_Entity_Class,
-       Iir_Kind_Attribute_Value,
-       Iir_Kind_Signature,
-       Iir_Kind_Aggregate_Info,
-       Iir_Kind_Procedure_Call,
-       Iir_Kind_Record_Element_Constraint,
-       Iir_Kind_Array_Element_Resolution,
-       Iir_Kind_Record_Resolution,
-       Iir_Kind_Record_Element_Resolution,
+      Iir_Kind_Waveform_Element,
+      Iir_Kind_Conditional_Waveform,
+      Iir_Kind_Association_Element_By_Expression,
+      Iir_Kind_Association_Element_By_Individual,
+      Iir_Kind_Association_Element_Open,
+      Iir_Kind_Association_Element_Package,
+      Iir_Kind_Choice_By_Others,
+      Iir_Kind_Choice_By_Expression,
+      Iir_Kind_Choice_By_Range,
+      Iir_Kind_Choice_By_None,
+      Iir_Kind_Choice_By_Name,
+      Iir_Kind_Entity_Aspect_Entity,
+      Iir_Kind_Entity_Aspect_Configuration,
+      Iir_Kind_Entity_Aspect_Open,
+      Iir_Kind_Block_Configuration,
+      Iir_Kind_Block_Header,
+      Iir_Kind_Component_Configuration,
+      Iir_Kind_Binding_Indication,
+      Iir_Kind_Entity_Class,
+      Iir_Kind_Attribute_Value,
+      Iir_Kind_Signature,
+      Iir_Kind_Aggregate_Info,
+      Iir_Kind_Procedure_Call,
+      Iir_Kind_Record_Element_Constraint,
+      Iir_Kind_Array_Element_Resolution,
+      Iir_Kind_Record_Resolution,
+      Iir_Kind_Record_Element_Resolution,
 
-       Iir_Kind_Attribute_Specification,
-       Iir_Kind_Disconnection_Specification,
-       Iir_Kind_Configuration_Specification,
+      Iir_Kind_Attribute_Specification,
+      Iir_Kind_Disconnection_Specification,
+      Iir_Kind_Configuration_Specification,
 
    -- Type definitions.
    -- iir_kinds_type_and_subtype_definition
    -- kinds: disc: discrete, st: subtype.
-       Iir_Kind_Access_Type_Definition,
-       Iir_Kind_Incomplete_Type_Definition,
-       Iir_Kind_File_Type_Definition,
-       Iir_Kind_Protected_Type_Declaration,
-       Iir_Kind_Record_Type_Definition,           -- composite
-       Iir_Kind_Array_Type_Definition,            -- composite, array
-       Iir_Kind_Array_Subtype_Definition,         -- composite, array, st
-       Iir_Kind_Record_Subtype_Definition,        -- composite, st
-       Iir_Kind_Access_Subtype_Definition,        -- st
-       Iir_Kind_Physical_Subtype_Definition,      -- scalar, st, rng
-       Iir_Kind_Floating_Subtype_Definition,      -- scalar, st, rng
-       Iir_Kind_Integer_Subtype_Definition,       -- scalar, disc, st, rng
-       Iir_Kind_Enumeration_Subtype_Definition,   -- scalar, disc, st, rng
-       Iir_Kind_Enumeration_Type_Definition,      -- scalar, disc, rng
-       Iir_Kind_Integer_Type_Definition,          -- scalar, disc
-       Iir_Kind_Floating_Type_Definition,         -- scalar
-       Iir_Kind_Physical_Type_Definition,         -- scalar
-       Iir_Kind_Range_Expression,
-       Iir_Kind_Protected_Type_Body,
-       Iir_Kind_Subtype_Definition,  -- temporary (must not appear after sem).
+      Iir_Kind_Access_Type_Definition,
+      Iir_Kind_Incomplete_Type_Definition,
+      Iir_Kind_File_Type_Definition,
+      Iir_Kind_Protected_Type_Declaration,
+      Iir_Kind_Record_Type_Definition,           -- composite
+      Iir_Kind_Array_Type_Definition,            -- composite, array
+      Iir_Kind_Array_Subtype_Definition,         -- composite, array, st
+      Iir_Kind_Record_Subtype_Definition,        -- composite, st
+      Iir_Kind_Access_Subtype_Definition,        -- st
+      Iir_Kind_Physical_Subtype_Definition,      -- scalar, st, rng
+      Iir_Kind_Floating_Subtype_Definition,      -- scalar, st, rng
+      Iir_Kind_Integer_Subtype_Definition,       -- scalar, disc, st, rng
+      Iir_Kind_Enumeration_Subtype_Definition,   -- scalar, disc, st, rng
+      Iir_Kind_Enumeration_Type_Definition,      -- scalar, disc, rng
+      Iir_Kind_Integer_Type_Definition,          -- scalar, disc
+      Iir_Kind_Floating_Type_Definition,         -- scalar
+      Iir_Kind_Physical_Type_Definition,         -- scalar
+      Iir_Kind_Range_Expression,
+      Iir_Kind_Protected_Type_Body,
+      Iir_Kind_Subtype_Definition,  -- temporary (must not appear after sem).
 
    -- Nature definition
-       Iir_Kind_Scalar_Nature_Definition,
+      Iir_Kind_Scalar_Nature_Definition,
 
    -- Lists.
-       Iir_Kind_Overload_List,  -- used internally by sem_expr.
+      Iir_Kind_Overload_List,  -- used internally by sem_expr.
 
    -- Declarations.
-       Iir_Kind_Type_Declaration,
-       Iir_Kind_Anonymous_Type_Declaration,
-       Iir_Kind_Subtype_Declaration,
-       Iir_Kind_Nature_Declaration,
-       Iir_Kind_Subnature_Declaration,
-       Iir_Kind_Package_Declaration,
-       Iir_Kind_Package_Instantiation_Declaration,
-       Iir_Kind_Package_Body,
-       Iir_Kind_Configuration_Declaration,
-       Iir_Kind_Entity_Declaration,
-       Iir_Kind_Architecture_Body,
-       Iir_Kind_Package_Header,
-       Iir_Kind_Unit_Declaration,
-       Iir_Kind_Library_Declaration,
-       Iir_Kind_Component_Declaration,
-       Iir_Kind_Attribute_Declaration,
-       Iir_Kind_Group_Template_Declaration,
-       Iir_Kind_Group_Declaration,
-       Iir_Kind_Element_Declaration,
-       Iir_Kind_Non_Object_Alias_Declaration,
+      Iir_Kind_Type_Declaration,
+      Iir_Kind_Anonymous_Type_Declaration,
+      Iir_Kind_Subtype_Declaration,
+      Iir_Kind_Nature_Declaration,
+      Iir_Kind_Subnature_Declaration,
+      Iir_Kind_Package_Declaration,
+      Iir_Kind_Package_Instantiation_Declaration,
+      Iir_Kind_Package_Body,
+      Iir_Kind_Configuration_Declaration,
+      Iir_Kind_Entity_Declaration,
+      Iir_Kind_Architecture_Body,
+      Iir_Kind_Package_Header,
+      Iir_Kind_Unit_Declaration,
+      Iir_Kind_Library_Declaration,
+      Iir_Kind_Component_Declaration,
+      Iir_Kind_Attribute_Declaration,
+      Iir_Kind_Group_Template_Declaration,
+      Iir_Kind_Group_Declaration,
+      Iir_Kind_Element_Declaration,
+      Iir_Kind_Non_Object_Alias_Declaration,
 
-       Iir_Kind_Psl_Declaration,
-       Iir_Kind_Terminal_Declaration,
-       Iir_Kind_Free_Quantity_Declaration,
-       Iir_Kind_Across_Quantity_Declaration,
-       Iir_Kind_Through_Quantity_Declaration,
+      Iir_Kind_Psl_Declaration,
+      Iir_Kind_Terminal_Declaration,
+      Iir_Kind_Free_Quantity_Declaration,
+      Iir_Kind_Across_Quantity_Declaration,
+      Iir_Kind_Through_Quantity_Declaration,
 
-       Iir_Kind_Enumeration_Literal,
-       Iir_Kind_Function_Declaration,            --  Subprg, Func
-       Iir_Kind_Procedure_Declaration,           --  Subprg, Proc
-       Iir_Kind_Function_Body,
-       Iir_Kind_Procedure_Body,
+      Iir_Kind_Enumeration_Literal,
+      Iir_Kind_Function_Declaration,            --  Subprg, Func
+      Iir_Kind_Procedure_Declaration,           --  Subprg, Proc
+      Iir_Kind_Function_Body,
+      Iir_Kind_Procedure_Body,
 
-       Iir_Kind_Object_Alias_Declaration,       -- object
-       Iir_Kind_File_Declaration,               -- object
-       Iir_Kind_Guard_Signal_Declaration,       -- object
-       Iir_Kind_Signal_Declaration,             -- object
-       Iir_Kind_Variable_Declaration,           -- object
-       Iir_Kind_Constant_Declaration,           -- object
-       Iir_Kind_Iterator_Declaration,           -- object
-       Iir_Kind_Interface_Constant_Declaration, -- object, interface
-       Iir_Kind_Interface_Variable_Declaration, -- object, interface
-       Iir_Kind_Interface_Signal_Declaration,   -- object, interface
-       Iir_Kind_Interface_File_Declaration,     -- object, interface
-       Iir_Kind_Interface_Package_Declaration,
+      Iir_Kind_Object_Alias_Declaration,       -- object
+      Iir_Kind_File_Declaration,               -- object
+      Iir_Kind_Guard_Signal_Declaration,       -- object
+      Iir_Kind_Signal_Declaration,             -- object
+      Iir_Kind_Variable_Declaration,           -- object
+      Iir_Kind_Constant_Declaration,           -- object
+      Iir_Kind_Iterator_Declaration,           -- object
+      Iir_Kind_Interface_Constant_Declaration, -- object, interface
+      Iir_Kind_Interface_Variable_Declaration, -- object, interface
+      Iir_Kind_Interface_Signal_Declaration,   -- object, interface
+      Iir_Kind_Interface_File_Declaration,     -- object, interface
+      Iir_Kind_Interface_Package_Declaration,
 
    -- Expressions.
-       Iir_Kind_Identity_Operator,
-       Iir_Kind_Negation_Operator,
-       Iir_Kind_Absolute_Operator,
-       Iir_Kind_Not_Operator,
-       Iir_Kind_Condition_Operator,
-       Iir_Kind_Reduction_And_Operator,
-       Iir_Kind_Reduction_Or_Operator,
-       Iir_Kind_Reduction_Nand_Operator,
-       Iir_Kind_Reduction_Nor_Operator,
-       Iir_Kind_Reduction_Xor_Operator,
-       Iir_Kind_Reduction_Xnor_Operator,
-       Iir_Kind_And_Operator,
-       Iir_Kind_Or_Operator,
-       Iir_Kind_Nand_Operator,
-       Iir_Kind_Nor_Operator,
-       Iir_Kind_Xor_Operator,
-       Iir_Kind_Xnor_Operator,
-       Iir_Kind_Equality_Operator,
-       Iir_Kind_Inequality_Operator,
-       Iir_Kind_Less_Than_Operator,
-       Iir_Kind_Less_Than_Or_Equal_Operator,
-       Iir_Kind_Greater_Than_Operator,
-       Iir_Kind_Greater_Than_Or_Equal_Operator,
-       Iir_Kind_Match_Equality_Operator,
-       Iir_Kind_Match_Inequality_Operator,
-       Iir_Kind_Match_Less_Than_Operator,
-       Iir_Kind_Match_Less_Than_Or_Equal_Operator,
-       Iir_Kind_Match_Greater_Than_Operator,
-       Iir_Kind_Match_Greater_Than_Or_Equal_Operator,
-       Iir_Kind_Sll_Operator,
-       Iir_Kind_Sla_Operator,
-       Iir_Kind_Srl_Operator,
-       Iir_Kind_Sra_Operator,
-       Iir_Kind_Rol_Operator,
-       Iir_Kind_Ror_Operator,
-       Iir_Kind_Addition_Operator,
-       Iir_Kind_Substraction_Operator,
-       Iir_Kind_Concatenation_Operator,
-       Iir_Kind_Multiplication_Operator,
-       Iir_Kind_Division_Operator,
-       Iir_Kind_Modulus_Operator,
-       Iir_Kind_Remainder_Operator,
-       Iir_Kind_Exponentiation_Operator,
-       Iir_Kind_Function_Call,
-       Iir_Kind_Aggregate,
-       Iir_Kind_Parenthesis_Expression,
-       Iir_Kind_Qualified_Expression,
-       Iir_Kind_Type_Conversion,
-       Iir_Kind_Allocator_By_Expression,
-       Iir_Kind_Allocator_By_Subtype,
-       Iir_Kind_Selected_Element,
-       Iir_Kind_Dereference,
-       Iir_Kind_Implicit_Dereference,
-       Iir_Kind_Slice_Name,
-       Iir_Kind_Indexed_Name,
-       Iir_Kind_Psl_Expression,
+      Iir_Kind_Identity_Operator,
+      Iir_Kind_Negation_Operator,
+      Iir_Kind_Absolute_Operator,
+      Iir_Kind_Not_Operator,
+      Iir_Kind_Condition_Operator,
+      Iir_Kind_Reduction_And_Operator,
+      Iir_Kind_Reduction_Or_Operator,
+      Iir_Kind_Reduction_Nand_Operator,
+      Iir_Kind_Reduction_Nor_Operator,
+      Iir_Kind_Reduction_Xor_Operator,
+      Iir_Kind_Reduction_Xnor_Operator,
+      Iir_Kind_And_Operator,
+      Iir_Kind_Or_Operator,
+      Iir_Kind_Nand_Operator,
+      Iir_Kind_Nor_Operator,
+      Iir_Kind_Xor_Operator,
+      Iir_Kind_Xnor_Operator,
+      Iir_Kind_Equality_Operator,
+      Iir_Kind_Inequality_Operator,
+      Iir_Kind_Less_Than_Operator,
+      Iir_Kind_Less_Than_Or_Equal_Operator,
+      Iir_Kind_Greater_Than_Operator,
+      Iir_Kind_Greater_Than_Or_Equal_Operator,
+      Iir_Kind_Match_Equality_Operator,
+      Iir_Kind_Match_Inequality_Operator,
+      Iir_Kind_Match_Less_Than_Operator,
+      Iir_Kind_Match_Less_Than_Or_Equal_Operator,
+      Iir_Kind_Match_Greater_Than_Operator,
+      Iir_Kind_Match_Greater_Than_Or_Equal_Operator,
+      Iir_Kind_Sll_Operator,
+      Iir_Kind_Sla_Operator,
+      Iir_Kind_Srl_Operator,
+      Iir_Kind_Sra_Operator,
+      Iir_Kind_Rol_Operator,
+      Iir_Kind_Ror_Operator,
+      Iir_Kind_Addition_Operator,
+      Iir_Kind_Substraction_Operator,
+      Iir_Kind_Concatenation_Operator,
+      Iir_Kind_Multiplication_Operator,
+      Iir_Kind_Division_Operator,
+      Iir_Kind_Modulus_Operator,
+      Iir_Kind_Remainder_Operator,
+      Iir_Kind_Exponentiation_Operator,
+      Iir_Kind_Function_Call,
+      Iir_Kind_Aggregate,
+      Iir_Kind_Parenthesis_Expression,
+      Iir_Kind_Qualified_Expression,
+      Iir_Kind_Type_Conversion,
+      Iir_Kind_Allocator_By_Expression,
+      Iir_Kind_Allocator_By_Subtype,
+      Iir_Kind_Selected_Element,
+      Iir_Kind_Dereference,
+      Iir_Kind_Implicit_Dereference,
+      Iir_Kind_Slice_Name,
+      Iir_Kind_Indexed_Name,
+      Iir_Kind_Psl_Expression,
 
    -- Concurrent statements.
-       Iir_Kind_Sensitized_Process_Statement,
-       Iir_Kind_Process_Statement,
-       Iir_Kind_Concurrent_Conditional_Signal_Assignment,
-       Iir_Kind_Concurrent_Selected_Signal_Assignment,
-       Iir_Kind_Concurrent_Assertion_Statement,
-       Iir_Kind_Psl_Default_Clock,
-       Iir_Kind_Psl_Assert_Statement,
-       Iir_Kind_Psl_Cover_Statement,
-       Iir_Kind_Concurrent_Procedure_Call_Statement,
-       Iir_Kind_Block_Statement,
-       Iir_Kind_If_Generate_Statement,
-       Iir_Kind_For_Generate_Statement,
-       Iir_Kind_Component_Instantiation_Statement,
+      Iir_Kind_Sensitized_Process_Statement,
+      Iir_Kind_Process_Statement,
+      Iir_Kind_Concurrent_Conditional_Signal_Assignment,
+      Iir_Kind_Concurrent_Selected_Signal_Assignment,
+      Iir_Kind_Concurrent_Assertion_Statement,
+      Iir_Kind_Psl_Default_Clock,
+      Iir_Kind_Psl_Assert_Statement,
+      Iir_Kind_Psl_Cover_Statement,
+      Iir_Kind_Concurrent_Procedure_Call_Statement,
+      Iir_Kind_Block_Statement,
+      Iir_Kind_If_Generate_Statement,
+      Iir_Kind_For_Generate_Statement,
+      Iir_Kind_Component_Instantiation_Statement,
 
-       Iir_Kind_Simple_Simultaneous_Statement,
+      Iir_Kind_Simple_Simultaneous_Statement,
 
-       Iir_Kind_Generate_Statement_Body,
-       Iir_Kind_If_Generate_Else_Clause,
+      Iir_Kind_Generate_Statement_Body,
+      Iir_Kind_If_Generate_Else_Clause,
 
    -- Iir_Kind_Sequential_Statement
-       Iir_Kind_Signal_Assignment_Statement,
-       Iir_Kind_Null_Statement,
-       Iir_Kind_Assertion_Statement,
-       Iir_Kind_Report_Statement,
-       Iir_Kind_Wait_Statement,
-       Iir_Kind_Variable_Assignment_Statement,
-       Iir_Kind_Return_Statement,
-       Iir_Kind_For_Loop_Statement,
-       Iir_Kind_While_Loop_Statement,
-       Iir_Kind_Next_Statement,
-       Iir_Kind_Exit_Statement,
-       Iir_Kind_Case_Statement,
-       Iir_Kind_Procedure_Call_Statement,
-       Iir_Kind_If_Statement,
-       Iir_Kind_Elsif,
+      Iir_Kind_Signal_Assignment_Statement,
+      Iir_Kind_Null_Statement,
+      Iir_Kind_Assertion_Statement,
+      Iir_Kind_Report_Statement,
+      Iir_Kind_Wait_Statement,
+      Iir_Kind_Variable_Assignment_Statement,
+      Iir_Kind_Return_Statement,
+      Iir_Kind_For_Loop_Statement,
+      Iir_Kind_While_Loop_Statement,
+      Iir_Kind_Next_Statement,
+      Iir_Kind_Exit_Statement,
+      Iir_Kind_Case_Statement,
+      Iir_Kind_Procedure_Call_Statement,
+      Iir_Kind_If_Statement,
+      Iir_Kind_Elsif,
 
    -- Names
-       Iir_Kind_Character_Literal,              --  denoting_name
-       Iir_Kind_Simple_Name,                    --  denoting_name
-       Iir_Kind_Selected_Name,                  --  denoting_name
-       Iir_Kind_Operator_Symbol,                --  denoting_name
+      Iir_Kind_Character_Literal,              --  denoting_name
+      Iir_Kind_Simple_Name,                    --  denoting_name
+      Iir_Kind_Selected_Name,                  --  denoting_name
+      Iir_Kind_Operator_Symbol,                --  denoting_name
 
-       Iir_Kind_Selected_By_All_Name,
-       Iir_Kind_Parenthesis_Name,
+      Iir_Kind_Selected_By_All_Name,
+      Iir_Kind_Parenthesis_Name,
 
    -- Attributes
-       Iir_Kind_Base_Attribute,
-       Iir_Kind_Left_Type_Attribute,            --  type_attribute
-       Iir_Kind_Right_Type_Attribute,           --  type_attribute
-       Iir_Kind_High_Type_Attribute,            --  type_attribute
-       Iir_Kind_Low_Type_Attribute,             --  type_attribute
-       Iir_Kind_Ascending_Type_Attribute,       --  type_attribute
-       Iir_Kind_Image_Attribute,
-       Iir_Kind_Value_Attribute,
-       Iir_Kind_Pos_Attribute,                  --  scalar_type_attribute
-       Iir_Kind_Val_Attribute,                  --  scalar_type_attribute
-       Iir_Kind_Succ_Attribute,                 --  scalar_type_attribute
-       Iir_Kind_Pred_Attribute,                 --  scalar_type_attribute
-       Iir_Kind_Leftof_Attribute,               --  scalar_type_attribute
-       Iir_Kind_Rightof_Attribute,              --  scalar_type_attribute
-       Iir_Kind_Delayed_Attribute,              --  signal_attribute
-       Iir_Kind_Stable_Attribute,               --  signal_attribute
-       Iir_Kind_Quiet_Attribute,                --  signal_attribute
-       Iir_Kind_Transaction_Attribute,          --  signal_attribute
-       Iir_Kind_Event_Attribute,                --  signal_value_attribute
-       Iir_Kind_Active_Attribute,               --  signal_value_attribute
-       Iir_Kind_Last_Event_Attribute,           --  signal_value_attribute
-       Iir_Kind_Last_Active_Attribute,          --  signal_value_attribute
-       Iir_Kind_Last_Value_Attribute,           --  signal_value_attribute
-       Iir_Kind_Driving_Attribute,              --  signal_value_attribute
-       Iir_Kind_Driving_Value_Attribute,        --  signal_value_attribute
-       Iir_Kind_Behavior_Attribute,
-       Iir_Kind_Structure_Attribute,
-       Iir_Kind_Simple_Name_Attribute,
-       Iir_Kind_Instance_Name_Attribute,
-       Iir_Kind_Path_Name_Attribute,
-       Iir_Kind_Left_Array_Attribute,           --  array_attribute
-       Iir_Kind_Right_Array_Attribute,          --  array_attribute
-       Iir_Kind_High_Array_Attribute,           --  array_attribute
-       Iir_Kind_Low_Array_Attribute,            --  array_attribute
-       Iir_Kind_Length_Array_Attribute,         --  array_attribute
-       Iir_Kind_Ascending_Array_Attribute,      --  array_attribute
-       Iir_Kind_Range_Array_Attribute,          --  array_attribute
-       Iir_Kind_Reverse_Range_Array_Attribute,  --  array_attribute
+      Iir_Kind_Base_Attribute,
+      Iir_Kind_Left_Type_Attribute,            --  type_attribute
+      Iir_Kind_Right_Type_Attribute,           --  type_attribute
+      Iir_Kind_High_Type_Attribute,            --  type_attribute
+      Iir_Kind_Low_Type_Attribute,             --  type_attribute
+      Iir_Kind_Ascending_Type_Attribute,       --  type_attribute
+      Iir_Kind_Image_Attribute,
+      Iir_Kind_Value_Attribute,
+      Iir_Kind_Pos_Attribute,                  --  scalar_type_attribute
+      Iir_Kind_Val_Attribute,                  --  scalar_type_attribute
+      Iir_Kind_Succ_Attribute,                 --  scalar_type_attribute
+      Iir_Kind_Pred_Attribute,                 --  scalar_type_attribute
+      Iir_Kind_Leftof_Attribute,               --  scalar_type_attribute
+      Iir_Kind_Rightof_Attribute,              --  scalar_type_attribute
+      Iir_Kind_Delayed_Attribute,              --  signal_attribute
+      Iir_Kind_Stable_Attribute,               --  signal_attribute
+      Iir_Kind_Quiet_Attribute,                --  signal_attribute
+      Iir_Kind_Transaction_Attribute,          --  signal_attribute
+      Iir_Kind_Event_Attribute,                --  signal_value_attribute
+      Iir_Kind_Active_Attribute,               --  signal_value_attribute
+      Iir_Kind_Last_Event_Attribute,           --  signal_value_attribute
+      Iir_Kind_Last_Active_Attribute,          --  signal_value_attribute
+      Iir_Kind_Last_Value_Attribute,           --  signal_value_attribute
+      Iir_Kind_Driving_Attribute,              --  signal_value_attribute
+      Iir_Kind_Driving_Value_Attribute,        --  signal_value_attribute
+      Iir_Kind_Behavior_Attribute,
+      Iir_Kind_Structure_Attribute,
+      Iir_Kind_Simple_Name_Attribute,
+      Iir_Kind_Instance_Name_Attribute,
+      Iir_Kind_Path_Name_Attribute,
+      Iir_Kind_Left_Array_Attribute,           --  array_attribute
+      Iir_Kind_Right_Array_Attribute,          --  array_attribute
+      Iir_Kind_High_Array_Attribute,           --  array_attribute
+      Iir_Kind_Low_Array_Attribute,            --  array_attribute
+      Iir_Kind_Length_Array_Attribute,         --  array_attribute
+      Iir_Kind_Ascending_Array_Attribute,      --  array_attribute
+      Iir_Kind_Range_Array_Attribute,          --  array_attribute
+      Iir_Kind_Reverse_Range_Array_Attribute,  --  array_attribute
 
-       Iir_Kind_Attribute_Name
-      );
+      Iir_Kind_Attribute_Name
+     );
 
    type Iir_Signal_Kind is
       (
