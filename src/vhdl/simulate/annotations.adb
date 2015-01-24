@@ -240,7 +240,7 @@ package body Annotations is
 
       Prot_Info :=
         new Sim_Info_Type'(Kind => Kind_Frame,
-                           Inst_Slot => 0,
+                           Inst_Slot => Invalid_Instance_Slot,
                            Frame_Scope => Current_Scope,
                            Nbr_Objects => 0,
                            Nbr_Instances => 0);
@@ -501,7 +501,7 @@ package body Annotations is
 
       Subprg_Info :=
         new Sim_Info_Type'(Kind => Kind_Frame,
-                           Inst_Slot => 0,
+                           Inst_Slot => Invalid_Instance_Slot,
                            Frame_Scope => Current_Scope,
                            Nbr_Objects => 0,
                            Nbr_Instances => 0);
@@ -1010,7 +1010,7 @@ package body Annotations is
 
       Package_Info := new Sim_Info_Type'
         (Kind => Kind_Block,
-         Inst_Slot => Instance_Slot_Type (Nbr_Packages),
+         Inst_Slot => Invalid_Instance_Slot,
          Frame_Scope => Current_Scope,
          Nbr_Objects => 0,
          Nbr_Instances => 0);

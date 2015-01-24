@@ -85,7 +85,7 @@ package Annotations is
          when Kind_Block
            | Kind_Frame
            | Kind_Process =>
-            --  Slot number.
+            --  Slot number in the parent (for blocks).
             Inst_Slot : Instance_Slot_Type;
 
             -- scope level for this frame.
