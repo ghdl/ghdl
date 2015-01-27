@@ -11,6 +11,7 @@ meta_base_file = "nodes_meta"
 prefix_name = "Iir_Kind_"
 prefix_range_name = "Iir_Kinds_"
 type_name = "Iir_Kind"
+node_type = "Iir"
 conversions = ['uc', 'pos']
 
 class FuncDesc:
@@ -433,7 +434,7 @@ def gen_subprg_header(decl):
     print '   begin'
 
 def gen_assert(func):
-    print '      pragma Assert (' + func.pname + ' /= Null_Iir);'
+    print '      pragma Assert (' + func.pname + ' /= Null_' + node_type + ');'
     cond = '(Has_' + func.name + ' (Get_Kind (' + func.pname + ')),'
     msg  = '"no field ' + func.name + '");'
     if len (cond) < 60:
@@ -481,7 +482,7 @@ def funcs_of_node(n):
     return sorted([fv.name for fv in n.fields.values() if fv])
 
 def gen_has_func_spec(name, suff):
-    spec='   function Has_' + f.name + ' (K : Iir_Kind)'
+    spec='   function Has_' + f.name + ' (K : ' + type_name + ')'
     ret=' return Boolean' + suff;
     if len(spec) < 60:
         print spec + ret
@@ -505,12 +506,18 @@ parser.add_argument('--spec-file', dest='spec_file',
 parser.add_argument('--template-file', dest='template_file',
                     default='iirs.adb.in',
                     help='specify template body file')
+parser.add_argument('--meta-basename', dest='meta_basename',
+                    default='nodes_meta',
+                    help='specify base name of meta files')
 parser.add_argument('--kind-type', dest='kind_type',
                     default='Iir_Kind',
                     help='name of kind type')
 parser.add_argument('--kind-prefix', dest='kind_prefix',
                     default='Iir_Kind_',
                     help='prefix for kind literals')
+parser.add_argument('--node-type', dest='node_type',
+                    default='Iir',
+                    help='name of the node type')
 args = parser.parse_args()
 
 field_file=args.field_file
@@ -518,6 +525,8 @@ spec_file=args.spec_file
 type_name=args.kind_type
 prefix_name=args.kind_prefix
 template_file=args.template_file
+node_type=args.node_type
+meta_base_file=args.meta_basename
 
 try:
     (formats, fields) = read_fields(field_file)
@@ -604,9 +613,11 @@ elif args.action == 'meta_specs':
         elif l == '   --  FUNCS':
             for t in types:
                 print '   function Get_' + t
-                print '      (N : Iir; F : Fields_Enum) return ' + t + ';'
+                print '      (N : ' + node_type + '; F : Fields_Enum) return ' \
+                      + t + ';'
                 print '   procedure Set_' + t
-                print '      (N : Iir; F : Fields_Enum; V: ' + t + ');'
+                print '      (N : ' + node_type + '; F : Fields_Enum; V: ' \
+                      + t + ');'
                 print
             for f in funcs:
                 gen_has_func_spec(f.name, ';')
@@ -644,7 +655,7 @@ elif args.action == 'meta_body':
                 print '            return Attr_' + attr + ';'
         elif l == '      --  FIELDS_ARRAY':
             last = None
-            nodes_types = ['Iir', 'Iir_List']
+            nodes_types = [node_type, node_type + '_List']
             ref_names = ['Ref', 'Of_Ref', 'Maybe_Ref']
             for k in kinds:
                 v = nodes[k]
@@ -692,7 +703,8 @@ elif args.action == 'meta_body':
             types = [t for t in sorted(s)]
             for t in types:
                 print '   function Get_' + t
-                print '      (N : Iir; F : Fields_Enum) return ' + t + ' is'
+                print '      (N : ' + node_type + '; F : Fields_Enum) return ' \
+                      + t + ' is'
                 print '   begin'
                 print '      pragma Assert (Fields_Type (F) = Type_' + t + ');'
                 print '      case F is'
@@ -706,7 +718,8 @@ elif args.action == 'meta_body':
                 print '   end Get_' + t + ';'
                 print
                 print '   procedure Set_' + t
-                print '      (N : Iir; F : Fields_Enum; V: ' + t + ') is'
+                print '      (N : ' + node_type + '; F : Fields_Enum; V: ' \
+                      + t + ') is'
                 print '   begin'
                 print '      pragma Assert (Fields_Type (F) = Type_' + t + ');'
                 print '      case F is'
