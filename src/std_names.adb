@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Name_Table;
-with Tokens; use Tokens;
 with Ada.Exceptions;
 
 package body Std_Names is
@@ -31,12 +30,143 @@ package body Std_Names is
    begin
       Name_Table.Initialize;
 
-      -- Create reserved words.
-      for I in Tok_Mod .. Tok_Tolerance loop
-         Def (Image (I),
-              Name_First_Keyword +
-                Token_Type'Pos (I) - Token_Type'Pos (Tok_First_Keyword));
-      end loop;
+      Def ("mod", Name_Mod);
+      Def ("rem", Name_Rem);
+
+      Def ("and", Name_And);
+      Def ("or", Name_Or);
+      Def ("xor", Name_Xor);
+      Def ("nand", Name_Nand);
+      Def ("nor", Name_Nor);
+
+      Def ("abs", Name_Abs);
+      Def ("not", Name_Not);
+
+      Def ("access", Name_Access);
+      Def ("after", Name_After);
+      Def ("alias", Name_Alias);
+      Def ("all", Name_All);
+      Def ("architecture", Name_Architecture);
+      Def ("array", Name_Array);
+      Def ("assert", Name_Assert);
+      Def ("attribute", Name_Attribute);
+
+      Def ("begin", Name_Begin);
+      Def ("block", Name_Block);
+      Def ("body", Name_Body);
+      Def ("buffer", Name_Buffer);
+      Def ("bus", Name_Bus);
+
+      Def ("case", Name_Case);
+      Def ("component", Name_Component);
+      Def ("configuration", Name_Configuration);
+      Def ("constant", Name_Constant);
+
+      Def ("disconnect", Name_Disconnect);
+      Def ("downto", Name_Downto);
+
+      Def ("else", Name_Else);
+      Def ("elsif", Name_Elsif);
+      Def ("end", Name_End);
+      Def ("entity", Name_Entity);
+      Def ("exit", Name_Exit);
+
+      Def ("file", Name_File);
+      Def ("for", Name_For);
+      Def ("function", Name_Function);
+
+      Def ("generate", Name_Generate);
+      Def ("generic", Name_Generic);
+      Def ("guarded", Name_Guarded);
+
+      Def ("if", Name_If);
+      Def ("in", Name_In);
+      Def ("inout", Name_Inout);
+      Def ("is", Name_Is);
+
+      Def ("label", Name_Label);
+      Def ("library", Name_Library);
+      Def ("linkage", Name_Linkage);
+      Def ("loop", Name_Loop);
+
+      Def ("map", Name_Map);
+
+      Def ("new", Name_New);
+      Def ("next", Name_Next);
+      Def ("null", Name_Null);
+
+      Def ("of", Name_Of);
+      Def ("on", Name_On);
+      Def ("open", Name_Open);
+      Def ("others", Name_Others);
+      Def ("out", Name_Out);
+
+      Def ("package", Name_Package);
+      Def ("port", Name_Port);
+      Def ("procedure", Name_Procedure);
+      Def ("process", Name_Process);
+
+      Def ("range", Name_Range);
+      Def ("record", Name_Record);
+      Def ("register", Name_Register);
+      Def ("report", Name_Report);
+      Def ("return", Name_Return);
+
+      Def ("select", Name_Select);
+      Def ("severity", Name_Severity);
+      Def ("signal", Name_Signal);
+      Def ("subtype", Name_Subtype);
+
+      Def ("then", Name_Then);
+      Def ("to", Name_To);
+      Def ("transport", Name_Transport);
+      Def ("type", Name_Type);
+
+      Def ("units", Name_Units);
+      Def ("until", Name_Until);
+      Def ("use", Name_Use);
+
+      Def ("variable", Name_Variable);
+
+      Def ("wait", Name_Wait);
+      Def ("when", Name_When);
+      Def ("while", Name_While);
+      Def ("with", Name_With);
+
+   -- VHDL93 reserved words.
+      Def ("xnor", Name_Xnor);
+      Def ("group", Name_Group);
+      Def ("impure", Name_Impure);
+      Def ("inertial", Name_Inertial);
+      Def ("literal", Name_Literal);
+      Def ("postponed", Name_Postponed);
+      Def ("pure", Name_Pure);
+      Def ("reject", Name_Reject);
+      Def ("shared", Name_Shared);
+      Def ("unaffected", Name_Unaffected);
+
+      Def ("sll", Name_Sll);
+      Def ("sla", Name_Sla);
+      Def ("sra", Name_Sra);
+      Def ("srl", Name_Srl);
+      Def ("rol", Name_Rol);
+      Def ("ror", Name_Ror);
+
+      Def ("protected", Name_Protected);
+
+      Def ("across", Name_Across);
+      Def ("break", Name_Break);
+      Def ("limit", Name_Limit);
+      Def ("nature", Name_Nature);
+      Def ("noise", Name_Noise);
+      Def ("procedural", Name_Procedural);
+      Def ("quantity", Name_Quantity);
+      Def ("reference", Name_Reference);
+      Def ("spectrum", Name_Spectrum);
+      Def ("subnature", Name_Subnature);
+      Def ("terminal", Name_Terminal);
+      Def ("through", Name_Through);
+      Def ("tolerance", Name_Tolerance);
 
       -- Create operators.
       Def ("=",  Name_Op_Equality);
