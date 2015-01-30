@@ -564,14 +564,20 @@ package body Grt.Processes is
    is
       Lock : constant Object_Lock_Acc := To_Lock_Acc_Acc (Obj).all;
    begin
-      if Lock.Process = null then
-         if Lock.Count /= 0 then
+      if Lock.Count = 0 then
+         --  Protected object not locked.
+         if Lock.Process /= null then
+            --  Sanity check failed: count must be 0.
             Internal_Error ("protected_enter");
          end if;
+
+         --  Note: during elaboration, there is no current process.
          Lock.Process := Get_Current_Process;
          Lock.Count := 1;
       else
+         --  Protected object already locked.
          if Lock.Process /= Get_Current_Process then
+            --  Should be locked by the current process.
             Internal_Error ("protected_enter(2)");
          end if;
          Lock.Count := Lock.Count + 1;

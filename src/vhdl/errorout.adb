@@ -53,7 +53,7 @@ package body Errorout is
    is
       Str: constant String := Natural'Image (Val);
    begin
-      Put (Str(Str'First + 1 .. Str'Last));
+      Put (Str (Str'First + 1 .. Str'Last));
    end Disp_Natural;
 
    procedure Error_Msg (Msg: String) is
