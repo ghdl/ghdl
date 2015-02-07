@@ -194,7 +194,7 @@ libs.vhdl.llvmjit:
 	$(MAKE) GHDL=ghdl_llvm_jit vhdl.libs.all
 
 libs.vhdl.llvm:
-	$(MAKE) GHDL=ghdl_llvm vhdl.libs.all
+	$(MAKE) GHDL=ghdl_llvm ANALYZE_OPTS="--GHDL1=ghdl1-llvm" vhdl.libs.all
 	$(MAKE) GHDL1=./ghdl1-llvm libs.vhdl.standard
 
 ghdl_llvm: force
@@ -240,7 +240,8 @@ LIBSRC_DIR:=$(srcdir)/libraries
 LIBDST_DIR:=$(libdirsuffix)
 
 GHDL=ghdl_$(backend)
-ANALYZE:=$(libdirreverse)/../../$(GHDL) -a $(LIB_CFLAGS)
+ANALYZE_OPTS:=
+ANALYZE:=$(libdirreverse)/../../$(GHDL) -a $(ANALYZE_OPTS) $(LIB_CFLAGS)
 ANALYZE_DEP:=$(GHDL)
 
 include $(srcdir)/libraries/Makefile.inc
