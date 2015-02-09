@@ -212,10 +212,10 @@ elseif ($Compile)
 		if ($Script_ExitCode -eq 0)
 			{	# 
 				Write-Host "  stripping executable..."
-				#& $StripExecutable $GHDLExecutable
+				& $StripExecutable $GHDLExecutable
 			}
 
-		if ($true)	#$Script_ExitCode -eq 0)
+		if ($Script_ExitCode -eq 0)
 			{	# compile with GNAT
 				$Parameters = @()
 				$Parameters += $CFlags
