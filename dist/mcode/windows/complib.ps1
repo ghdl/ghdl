@@ -660,7 +660,8 @@ elseif ($Compile)
 				Set-Location $LocalDir2
 
 				$VHDLSrcLibrary = "std"
-				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
+				$VHDLSrcLibraryFiles = "std08"
+				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibraryFiles])
 					{	Write-Host "      file: v08\$SourceFile.v08"
 						if ($Script_EnableVerbose) {	Write-Host "        ghdlfilter (-v08)"	}
 						Get-Content "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" -Encoding Ascii -Raw `
