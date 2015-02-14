@@ -18,9 +18,13 @@
 with GNAT.Table;
 
 package body Str_Table is
+   --  Be sure the elements are packed.
+   type El_Nat8 is new Nat8;
+   for El_Nat8'Size use 8;
+
    package String8_Table is new GNAT.Table
      (Table_Index_Type => String8_Id,
-      Table_Component_Type => Nat8,
+      Table_Component_Type => El_Nat8,
       Table_Low_Bound => Null_String8 + 1,
       Table_Initial => 1024,
       Table_Increment => 100);
@@ -35,7 +39,7 @@ package body Str_Table is
 
    procedure Append_String8 (El : Nat8) is
    begin
-      String8_Table.Append (El);
+      String8_Table.Append (El_Nat8 (El));
    end Append_String8;
 
    procedure Append_String8_Char (El : Character) is
@@ -50,12 +54,12 @@ package body Str_Table is
 
    function Element_String8 (Id : String8_Id; N : Pos32) return Nat8 is
    begin
-      return String8_Table.Table (Id + String8_Id (N - 1));
+      return Nat8 (String8_Table.Table (Id + String8_Id (N - 1)));
    end Element_String8;
 
    procedure Set_Element_String8 (Id : String8_Id; N : Pos32; Val : Nat8) is
    begin
-      String8_Table.Table (Id + String8_Id (N - 1)) := Val;
+      String8_Table.Table (Id + String8_Id (N - 1)) := El_Nat8 (Val);
    end Set_Element_String8;
 
    function Char_String8 (Id : String8_Id; N : Pos32) return Character is
@@ -72,6 +76,11 @@ package body Str_Table is
       end loop;
       return Res;
    end String_String8;
+
+   function String8_Address (Id : String8_Id) return System.Address is
+   begin
+      return String8_Table.Table (Id)'Address;
+   end String8_Address;
 
    procedure Initialize is
    begin

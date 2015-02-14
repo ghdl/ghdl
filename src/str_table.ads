@@ -15,6 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with System;
 with Types; use Types;
 
 package Str_Table is
@@ -49,6 +50,12 @@ package Str_Table is
 
    --  Utility function: get the LEN elements as a string.
    function String_String8 (Id : String8_Id; Len : Nat32) return String;
+
+   --  Utility function: get the address of string8 ID.  Note that as soon
+   --  as a character is appended (using Append_String8) or a string8 is
+   --  resized (using Resize_String8), an address previously returned is not
+   --  valid anymore.
+   function String8_Address (Id : String8_Id) return System.Address;
 
    --  Free all the memory and reinitialize the package.
    procedure Initialize;
