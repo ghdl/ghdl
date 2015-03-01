@@ -42,8 +42,8 @@ package body Trans.Chap12 is
                        Config_Subprg : O_Dnode;
                        Nbr_Pkgs : Natural)
    is
-      Entity_Info : Block_Info_Acc;
-      Arch_Info : Block_Info_Acc;
+      Entity_Info : constant Block_Info_Acc := Get_Info (Entity);
+      Arch_Info : constant Block_Info_Acc := Get_Info (Arch);
       Inter_List : O_Inter_List;
       Assoc : O_Assoc_List;
       Instance : O_Dnode;
@@ -52,9 +52,6 @@ package body Trans.Chap12 is
       Arr_Type : O_Tnode;
       Arr : O_Dnode;
    begin
-      Arch_Info := Get_Info (Arch);
-      Entity_Info := Get_Info (Entity);
-
       --  We need to create code.
       Set_Global_Storage (O_Storage_Private);
 
@@ -78,7 +75,7 @@ package body Trans.Chap12 is
       New_Var_Decl (Instance, Wki_Instance, O_Storage_Local,
                     Entity_Info.Block_Decls_Ptr_Type);
 
-      --  Create instance for the architecture.
+      --  Allocate instance for the architecture.
       New_Assign_Stmt
         (New_Obj (Arch_Instance),
          Gen_Alloc (Alloc_System,
@@ -132,19 +129,21 @@ package body Trans.Chap12 is
       Start_Association (Assoc, Entity_Info.Block_Elab_Pkg_Subprg);
       New_Procedure_Call (Assoc);
 
-      --  init instance
+      --  Init instance: assign default values to generic and create ports.
+      --  Allow user override of generics.
       Set_Scope_Via_Param_Ptr (Entity_Info.Block_Scope, Instance);
       Push_Identifier_Prefix (Mark, "");
-      Chap1.Translate_Entity_Init (Entity);
+      Chap1.Translate_Entity_Init_Generics (Entity);
+      Start_Association (Assoc, Ghdl_Init_Top_Generics);
+      New_Procedure_Call (Assoc);
+      Chap1.Translate_Entity_Init_Ports (Entity);
 
-      --  elab instance
+      --  Elab instance.
       Start_Association (Assoc, Arch_Info.Block_Elab_Subprg);
       New_Association (Assoc, New_Obj_Value (Instance));
       New_Procedure_Call (Assoc);
 
-      --Chap6.Link_Instance_Name (Null_Iir, Entity);
-
-      --  configure instance.
+      --  Configure instance.
       Start_Association (Assoc, Config_Subprg);
       New_Association (Assoc, New_Obj_Value (Arch_Instance));
       New_Procedure_Call (Assoc);

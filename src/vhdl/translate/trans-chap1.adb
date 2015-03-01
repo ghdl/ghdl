@@ -39,14 +39,12 @@ package body Trans.Chap1 is
         (Info.Block_Scope'Access, Info.Block_Decls_Ptr_Type);
    end Start_Block_Decl;
 
-   procedure Translate_Entity_Init (Entity : Iir)
+   procedure Translate_Entity_Init_Generics (Entity : Iir)
    is
       El      : Iir;
-      El_Type : Iir;
    begin
       Push_Local_Factory;
 
-      --  Generics.
       El := Get_Generic_Chain (Entity);
       while El /= Null_Iir loop
          Open_Temp;
@@ -55,7 +53,16 @@ package body Trans.Chap1 is
          El := Get_Chain (El);
       end loop;
 
-      --  Ports.
+      Pop_Local_Factory;
+   end Translate_Entity_Init_Generics;
+
+   procedure Translate_Entity_Init_Ports (Entity : Iir)
+   is
+      El      : Iir;
+      El_Type : Iir;
+   begin
+      Push_Local_Factory;
+
       El := Get_Port_Chain (Entity);
       while El /= Null_Iir loop
          Open_Temp;
@@ -71,7 +78,7 @@ package body Trans.Chap1 is
       end loop;
 
       Pop_Local_Factory;
-   end Translate_Entity_Init;
+   end Translate_Entity_Init_Ports;
 
    procedure Translate_Entity_Declaration (Entity : Iir_Entity_Declaration)
    is
@@ -142,26 +149,6 @@ package body Trans.Chap1 is
          Subprgs.Finish_Subprg_Instance_Use (Instance);
          Pop_Local_Factory;
          Finish_Subprogram_Body;
-
-         --  Default value if any.
-         if False then --Is_Entity_Declaration_Top (Entity) then
-            declare
-               Init_Subprg : O_Dnode;
-            begin
-               Start_Procedure_Decl
-                 (Interface_List, Create_Identifier ("_INIT"),
-                  Global_Storage);
-               Subprgs.Add_Subprg_Instance_Interfaces
-                 (Interface_List, Instance);
-               Finish_Subprogram_Decl (Interface_List, Init_Subprg);
-
-               Start_Subprogram_Body (Init_Subprg);
-               Subprgs.Start_Subprg_Instance_Use (Instance);
-               Translate_Entity_Init (Entity);
-               Subprgs.Finish_Subprg_Instance_Use (Instance);
-               Finish_Subprogram_Body;
-            end;
-         end if;
       end if;
       Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
    end Translate_Entity_Declaration;

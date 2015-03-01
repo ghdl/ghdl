@@ -1734,6 +1734,12 @@ package body Translation is
         (Interfaces, Param, Wki_Instance, Ghdl_Ptr_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Rti_Add_Top);
 
+      --  procedure __ghdl_init_top_generics();
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_init_top_generics"),
+         O_Storage_External);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Init_Top_Generics);
+
       --  Create match subprograms for std_ulogic type.
       Create_Std_Ulogic_Match_Subprogram ("eq", Ghdl_Std_Ulogic_Match_Eq);
       Create_Std_Ulogic_Match_Subprogram ("ne", Ghdl_Std_Ulogic_Match_Ne);

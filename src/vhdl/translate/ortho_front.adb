@@ -189,7 +189,7 @@ package body Ortho_Front is
             end if;
             Anaelab_Files_Last := L;
          end;
-         return 2;
+         return 1;
       elsif Opt.all = "-l" then
          if Arg = null then
             Error_Msg_Option ("filename required after -l");

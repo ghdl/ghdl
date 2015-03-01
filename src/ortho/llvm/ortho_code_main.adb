@@ -169,11 +169,17 @@ begin
                   Opt_Arg : String_Acc;
                   Res : Natural;
                begin
+                  Opt_Arg := null;
                   if Optind < Argument_Count then
-                     Opt_Arg := new String'(Argument (Optind + 1));
-                  else
-                     Opt_Arg := null;
+                     declare
+                        Arg1 : constant String := Argument (Optind + 1);
+                     begin
+                        if Arg1 (Arg1'First) /= '-' then
+                           Opt_Arg := new String'(Arg1);
+                        end if;
+                     end;
                   end if;
+
                   Res := Ortho_Front.Decode_Option (Opt, Opt_Arg);
                   case Res is
                      when 0 =>

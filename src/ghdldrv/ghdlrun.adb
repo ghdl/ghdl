@@ -437,6 +437,9 @@ package body Ghdlrun is
       Def (Trans_Decls.Ghdl_Rti_Add_Top,
            Grt.Rtis.Ghdl_Rti_Add_Top'Address);
 
+      Def (Trans_Decls.Ghdl_Init_Top_Generics,
+           Grt.Main.Ghdl_Init_Top_Generics'Address);
+
       Def (Trans_Decls.Ghdl_Protected_Enter,
            Grt.Processes.Ghdl_Protected_Enter'Address);
       Def (Trans_Decls.Ghdl_Protected_Leave,

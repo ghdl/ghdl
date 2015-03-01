@@ -60,6 +60,11 @@ package body Grt.Main is
       return 0;
    end Ghdl_Elaborate_Wrapper;
 
+   procedure Ghdl_Init_Top_Generics is
+   begin
+      null;
+   end Ghdl_Init_Top_Generics;
+
    procedure Disp_Stats_Hook (Code : Integer);
    pragma Convention (C, Disp_Stats_Hook);
 

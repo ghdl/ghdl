@@ -253,5 +253,7 @@ package Trans_Decls is
    Ghdl_Rti_Add_Package : O_Dnode;
    Ghdl_Rti_Add_Top : O_Dnode;
 
+   Ghdl_Init_Top_Generics : O_Dnode;
+
    Ghdl_Elaborate : O_Dnode;
 end Trans_Decls;

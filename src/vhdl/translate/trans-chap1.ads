@@ -25,7 +25,10 @@ package Trans.Chap1  is
    --  Generate code to initialize generics of instance INSTANCE of ENTITY
    --  using the default values.
    --  This is used when ENTITY is at the top of a design hierarchy.
-   procedure Translate_Entity_Init (Entity : Iir);
+   procedure Translate_Entity_Init_Generics (Entity : Iir);
+
+   --  Likewise, but for ports.
+   procedure Translate_Entity_Init_Ports (Entity : Iir);
 
    procedure Translate_Architecture_Body (Arch : Iir);
 

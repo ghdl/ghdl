@@ -26,4 +26,9 @@
 package Grt.Main is
    --  Elaborate and simulate the design.
    procedure Run;
+
+   --  This function is called by elaboration code once default values have
+   --  been assigned to generics, but before being used.
+   procedure Ghdl_Init_Top_Generics;
+   pragma Export (C, Ghdl_Init_Top_Generics, "__ghdl_init_top_generics");
 end Grt.Main;
