@@ -61,7 +61,7 @@ package body Grt.Values is
    --  Convert C to lowercase.
    function To_LC (C : in Character) return Character is
    begin
-      if C >= 'A' and then C <= 'Z' then
+      if C in 'A' .. 'Z' then
          return Character'Val
            (Character'Pos (C) + Character'Pos ('a') - Character'Pos ('A'));
       else

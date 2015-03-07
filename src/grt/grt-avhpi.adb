@@ -1166,7 +1166,8 @@ package body Grt.Avhpi is
            | VhpiEnumTypeDeclK =>
             return Obj.Atype;
          when VhpiSigDeclK
-           | VhpiPortDeclK =>
+           | VhpiPortDeclK
+           | VhpiGenericDeclK =>
             return To_Ghdl_Rti_Access (Obj.Obj);
          when others =>
             return null;

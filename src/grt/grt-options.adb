@@ -470,6 +470,52 @@ package body Grt.Options is
                Nbr_Threads := Integer (Val);
             end if;
          end;
+      elsif Len > 4 and then Option (1 .. 2) = "-g" then
+         if Option (3) = '=' then
+            Error_C ("missing generic name in '");
+            Error_C (Option);
+            Error_E ("'");
+            return;
+         end if;
+         declare
+            Eq_Pos : Natural;
+            Over : Generic_Override_Acc;
+            Name : String_Access;
+         begin
+            if Option (3) = '\' then
+               --  Extended identifier (not yet handled).
+               raise Program_Error;
+            else
+               --  Search for '='.
+               Eq_Pos := 0;
+               for I in 3 .. Option'Last loop
+                  if Option (I) = '=' then
+                     Eq_Pos := I;
+                     exit;
+                  end if;
+               end loop;
+               if Eq_Pos = 0 then
+                  Error_C ("missing '=' after generic name in '");
+                  Error_C (Option);
+                  Error_E ("'");
+               end if;
+               Name := new String (1 .. Eq_Pos - 3);
+               for I in 3 .. Eq_Pos - 1 loop
+                  Name (I - 2) := To_Lower (Option (I));
+               end loop;
+            end if;
+            Over := new Generic_Override_Type'
+              (Name => Name,
+               Value => new String'(Option (Eq_Pos + 1 .. Option'Last)),
+               Next => null);
+            --  Append.
+            if Last_Generic_Override /= null then
+               Last_Generic_Override.Next := Over;
+            else
+               First_Generic_Override := Over;
+            end if;
+            Last_Generic_Override := Over;
+         end;
       elsif not Grt.Hooks.Call_Option_Hooks (Option) then
          Error_C ("unknown option '");
          Error_C (Option);

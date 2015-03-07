@@ -28,6 +28,7 @@ with Grt.Astdio; use Grt.Astdio;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Options;
 with Grt.Avhpi; use Grt.Avhpi;
+with Grt.Avhpi_Utils; use Grt.Avhpi_Utils;
 with Grt.Errors; use Grt.Errors;
 
 package body Grt.Vital_Annotate is
@@ -39,22 +40,6 @@ package body Grt.Vital_Annotate is
 
    Flag_Dump : Boolean := False;
    Flag_Verbose : constant Boolean := False;
-
-   function Name_Compare (Handle : VhpiHandleT;
-                          Name : String;
-                          Property : VhpiStrPropertyT := VhpiNameP)
-                         return Boolean
-   is
-      Obj_Name : String (1 .. Name'Length);
-      Len : Natural;
-   begin
-      Vhpi_Get_Str (Property, Handle, Obj_Name, Len);
-      if Len = Name'Length and then Obj_Name = Name then
-         return True;
-      else
-         return False;
-      end if;
-   end Name_Compare;
 
    --  Note: RES may alias CUR.
    procedure Find_Instance (Cur : VhpiHandleT;
@@ -204,24 +189,8 @@ package body Grt.Vital_Annotate is
          when VhpiRootInstK =>
             declare
                Hdl : VhpiHandleT;
-               Error : AvhpiErrorT;
             begin
-               Status := False;
-               Vhpi_Handle (VhpiDesignUnit, Sdf_Inst, Hdl, Error);
-               if Error /= AvhpiErrorOk then
-                  Internal_Error ("VhpiDesignUnit");
-                  return;
-               end if;
-               case Vhpi_Get_Kind (Hdl) is
-                  when VhpiArchBodyK =>
-                     Vhpi_Handle (VhpiPrimaryUnit, Hdl, Hdl, Error);
-                     if Error /= AvhpiErrorOk then
-                        Internal_Error ("VhpiPrimaryUnit");
-                        return;
-                     end if;
-                  when others =>
-                     Internal_Error ("sdf_instance_end");
-               end case;
+               Hdl := Get_Root_Entity (Sdf_Inst);
                Status := Name_Compare
                  (Hdl, Context.Celltype (1 .. Context.Celltype_Len));
             end;
@@ -482,7 +451,6 @@ package body Grt.Vital_Annotate is
          Errors.Error_E (Name);
       end if;
    end Sdf_Generic;
-
 
    procedure Annotate (Arg : String)
    is

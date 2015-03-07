@@ -35,6 +35,7 @@ with Grt.Hooks;
 with Grt.Disp_Signals;
 with Grt.Disp;
 with Grt.Modules;
+with Grt.Change_Generics;
 
 --  The following packages are not referenced in this package.
 --  These are subprograms called only from GHDL generated code.
@@ -62,7 +63,7 @@ package body Grt.Main is
 
    procedure Ghdl_Init_Top_Generics is
    begin
-      null;
+      Grt.Change_Generics.Change_All_Generics;
    end Ghdl_Init_Top_Generics;
 
    procedure Disp_Stats_Hook (Code : Integer);
