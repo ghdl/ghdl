@@ -234,6 +234,19 @@ ghdl_simul: $(GRT_ADD_OBJS) force
 libs.vhdl.simul:
 	$(MAKE) GHDL=ghdl_simul vhdl.libs.all
 
+################ ghwdump #################################################
+
+GHWDUMP_OBJS=ghwdump.o ghwlib.o
+
+ghwdump: $(GHWDUMP_OBJS)
+	$(CC) -o $@ $(GHWDUMP_OBJS)
+
+ghwdump.o: $(srcdir)/src/grt/ghwdump.c $(srcdir)/src/grt/ghwlib.h
+	$(CC) -c -o $@ $< $(OPT_FLAGS)
+
+ghwlib.o: $(srcdir)/src/grt/ghwlib.c $(srcdir)/src/grt/ghwlib.h
+	$(CC) -c -o $@ $< $(OPT_FLAGS)
+
 ################ Libraries ###############################################
 
 LIBSRC_DIR:=$(srcdir)/libraries
