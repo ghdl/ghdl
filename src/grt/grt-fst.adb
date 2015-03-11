@@ -372,7 +372,7 @@ package body Grt.Fst is
                Type_C_Name, FST_SVT_VHDL_SIGNAL, Sdt);
          end;
       else
-         Name (Name_Len) := NUL;
+         Name (Name_Len + 1) := NUL;
          Hand := fstWriterCreateVar2
            (Context, Vt, Dir, Len, To_Ghdl_C_String (Name'Address),
             Alias, Type_C_Name, FST_SVT_VHDL_SIGNAL, Sdt);
