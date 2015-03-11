@@ -29,6 +29,7 @@ with Ada.Unchecked_Conversion;
 package Grt.Rtis is
    pragma Preelaborate (Grt.Rtis);
 
+   --  Must be synchronized with trans-rtis.ads
    type Ghdl_Rtik is
      (Ghdl_Rtik_Top,
       Ghdl_Rtik_Library,        -- use scalar

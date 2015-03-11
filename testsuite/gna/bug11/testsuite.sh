@@ -3,8 +3,10 @@
 . ../../testenv.sh
 
 analyze phonybench.vhdl
-elab_simulate phonybench --fst=pb.fst
+elab_simulate phonybench --stop-time=1sec --fst=pb.fst
 
-#clean
+rm -f pb.fst pb.ghw
+
+clean
 
 echo "Test successful"

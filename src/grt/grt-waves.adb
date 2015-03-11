@@ -72,6 +72,23 @@ package body Grt.Waves is
    pragma Unreferenced (Ghw_Hie_Design);
    pragma Unreferenced (Ghw_Hie_Generic);
 
+   --  Type kind was initially ghdl_rtik, but to avoid coupling, we are now
+   --  using Ghw_Rtik (with old values).
+   type Ghw_Rtik is new Unsigned_8;
+   Ghw_Rtik_Error : constant Ghw_Rtik := 0;
+   Ghw_Rtik_Type_B2  : constant Ghw_Rtik := 22;
+   Ghw_Rtik_Type_E8  : constant Ghw_Rtik := 23;
+   --  Ghw_Rtik_Type_E32 : constant Ghw_Rtik := 24;  --  Not used
+   Ghw_Rtik_Type_I32 : constant Ghw_Rtik := 25;
+   Ghw_Rtik_Type_I64 : constant Ghw_Rtik := 26;
+   Ghw_Rtik_Type_F64 : constant Ghw_Rtik := 27;
+   Ghw_Rtik_Type_P32 : constant Ghw_Rtik := 28;
+   Ghw_Rtik_Type_P64 : constant Ghw_Rtik := 29;
+   Ghw_Rtik_Type_Array     : constant Ghw_Rtik := 31;
+   Ghw_Rtik_Type_Record    : constant Ghw_Rtik := 32;
+   Ghw_Rtik_Subtype_Scalar : constant Ghw_Rtik := 34;
+   Ghw_Rtik_Subtype_Array  : constant Ghw_Rtik := 35;
+
    --  Return TRUE if OPT is an option for wave.
    function Wave_Option (Opt : String) return Boolean
    is
@@ -1182,40 +1199,68 @@ package body Grt.Waves is
       Wave_Put ("EOS" & NUL);
    end Write_Strings_Compress;
 
+   --  Convert rtik (for types).
+   function Ghdl_Rtik_To_Ghw_Rtik (Kind : Ghdl_Rtik) return Ghw_Rtik is
+   begin
+      case Kind is
+         when Ghdl_Rtik_Type_B1 =>
+            return Ghw_Rtik_Type_B2;
+         when Ghdl_Rtik_Type_E8 =>
+            return Ghw_Rtik_Type_E8;
+         when Ghdl_Rtik_Subtype_Array =>
+            return Ghw_Rtik_Subtype_Array;
+         when Ghdl_Rtik_Type_Array =>
+            return Ghw_Rtik_Type_Array;
+         when Ghdl_Rtik_Type_Record =>
+            return Ghw_Rtik_Type_Record;
+         when Ghdl_Rtik_Subtype_Scalar =>
+            return Ghw_Rtik_Subtype_Scalar;
+         when Ghdl_Rtik_Type_I32 =>
+            return Ghw_Rtik_Type_I32;
+         when Ghdl_Rtik_Type_I64 =>
+            return Ghw_Rtik_Type_I64;
+         when Ghdl_Rtik_Type_F64 =>
+            return Ghw_Rtik_Type_F64;
+         when Ghdl_Rtik_Type_P32 =>
+            return Ghw_Rtik_Type_P32;
+         when Ghdl_Rtik_Type_P64 =>
+            return Ghw_Rtik_Type_P64;
+         when others =>
+            return Ghw_Rtik_Error;
+      end case;
+   end Ghdl_Rtik_To_Ghw_Rtik;
+
    procedure Write_Range (Rti : Ghdl_Rti_Access; Rng : Ghdl_Range_Ptr)
    is
       Kind : Ghdl_Rtik;
+      K : Unsigned_8;
    begin
       Kind := Rti.Kind;
       if Kind = Ghdl_Rtik_Subtype_Scalar then
          Kind := To_Ghdl_Rtin_Subtype_Scalar_Acc (Rti).Basetype.Kind;
       end if;
+      K := Ghw_Rtik'Pos (Ghdl_Rtik_To_Ghw_Rtik (Kind));
       case Kind is
          when Ghdl_Rtik_Type_B1 =>
-            Wave_Put_Byte (Ghdl_Rtik'Pos (Kind)
-                           + Ghdl_Dir_Type'Pos (Rng.B1.Dir) * 16#80#);
+            Wave_Put_Byte (K + Ghdl_Dir_Type'Pos (Rng.B1.Dir) * 16#80#);
             Wave_Put_Byte (Ghdl_B1'Pos (Rng.B1.Left));
             Wave_Put_Byte (Ghdl_B1'Pos (Rng.B1.Right));
          when Ghdl_Rtik_Type_E8 =>
-            Wave_Put_Byte (Ghdl_Rtik'Pos (Kind)
-                           + Ghdl_Dir_Type'Pos (Rng.E8.Dir) * 16#80#);
+            Wave_Put_Byte (K + Ghdl_Dir_Type'Pos (Rng.E8.Dir) * 16#80#);
             Wave_Put_Byte (Unsigned_8 (Rng.E8.Left));
             Wave_Put_Byte (Unsigned_8 (Rng.E8.Right));
          when Ghdl_Rtik_Type_I32
            | Ghdl_Rtik_Type_P32 =>
-            Wave_Put_Byte (Ghdl_Rtik'Pos (Kind)
-                           + Ghdl_Dir_Type'Pos (Rng.I32.Dir) * 16#80#);
+            Wave_Put_Byte (K + Ghdl_Dir_Type'Pos (Rng.I32.Dir) * 16#80#);
             Wave_Put_SLEB128 (Rng.I32.Left);
             Wave_Put_SLEB128 (Rng.I32.Right);
          when Ghdl_Rtik_Type_P64
            | Ghdl_Rtik_Type_I64 =>
-            Wave_Put_Byte (Ghdl_Rtik'Pos (Kind)
-                           + Ghdl_Dir_Type'Pos (Rng.P64.Dir) * 16#80#);
+            Wave_Put_Byte (K + Ghdl_Dir_Type'Pos (Rng.P64.Dir) * 16#80#);
             Wave_Put_LSLEB128 (Rng.P64.Left);
             Wave_Put_LSLEB128 (Rng.P64.Right);
          when Ghdl_Rtik_Type_F64 =>
-            Wave_Put_Byte (Ghdl_Rtik'Pos (Kind)
-                           + Ghdl_Dir_Type'Pos (Rng.F64.Dir) * 16#80#);
+            Wave_Put_Byte (K + Ghdl_Dir_Type'Pos (Rng.F64.Dir) * 16#80#);
             Wave_Put_F64 (Rng.F64.Left);
             Wave_Put_F64 (Rng.F64.Right);
          when others =>
@@ -1248,7 +1293,7 @@ package body Grt.Waves is
                  To_Ghdl_Rtin_Type_Array_Acc (Obj_Rti.Obj_Type);
                Addr : Ghdl_Uc_Array_Acc;
             begin
-               Wave_Put_Byte (Ghdl_Rtik'Pos (Ghdl_Rtik_Subtype_Array));
+               Wave_Put_Byte (Ghw_Rtik'Pos (Ghw_Rtik_Subtype_Array));
                Write_String_Id (null);
                Write_Type_Id (Obj_Rti.Obj_Type, Ctxt);
                Addr := To_Ghdl_Uc_Array_Acc
@@ -1264,7 +1309,8 @@ package body Grt.Waves is
             end;
          else
             --  Kind.
-            Wave_Put_Byte (Ghdl_Rtik'Pos (Rti.Kind));
+            Wave_Put_Byte (Ghw_Rtik'Pos (Ghdl_Rtik_To_Ghw_Rtik (Rti.Kind)));
+
             case Rti.Kind is
                when Ghdl_Rtik_Type_B1
                  | Ghdl_Rtik_Type_E8 =>
