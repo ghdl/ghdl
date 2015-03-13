@@ -31,15 +31,21 @@ with Grt.Avhpi_Utils; use Grt.Avhpi_Utils;
 with Grt.Errors; use Grt.Errors;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
+with Grt.Values;
 
 package body Grt.Change_Generics is
    procedure Error_Override (Msg : String; Over : Generic_Override_Acc) is
    begin
       Error_C (Msg);
-      Error_E (" '");
+      Error_C (" '");
       Error_C (Over.Name.all);
       Error_E ("'");
    end Error_Override;
+
+   procedure Error_Range (Over : Generic_Override_Acc) is
+   begin
+      Error_Override ("value not in range for generic", Over);
+   end Error_Range;
 
    --  Convert C to E8 values
    procedure Ghdl_Value_E8_Char (Res : out Ghdl_E8;
@@ -141,6 +147,43 @@ package body Grt.Change_Generics is
                        Bounds => Rng.all'Address);
    end Override_Generic_Array;
 
+   procedure Override_Generic_I32 (Obj_Rti : Ghdl_Rtin_Object_Acc;
+                                     Ctxt : Rti_Context;
+                                     Over : Generic_Override_Acc)
+   is
+      Subtype_Rti : constant Ghdl_Rtin_Subtype_Scalar_Acc :=
+        To_Ghdl_Rtin_Subtype_Scalar_Acc (Obj_Rti.Obj_Type);
+      Rng : Ghdl_Range_Ptr;
+      Res : Ghdl_I64;
+      Ptr : Ghdl_Value_Ptr;
+   begin
+      Res := Grt.Values.Value_I64
+        (To_Std_String_Basep (Over.Value.all'Address), Over.Value'Length, 0);
+
+      --  Check range.
+      Rng := To_Ghdl_Range_Ptr
+        (Loc_To_Addr (Subtype_Rti.Common.Depth, Subtype_Rti.Range_Loc, Ctxt));
+      case Rng.I32.Dir is
+         when Dir_To =>
+            if Res < Ghdl_I64 (Rng.I32.Left)
+              or else Res > Ghdl_I64 (Rng.I32.Right)
+            then
+               Error_Range (Over);
+            end if;
+         when Dir_Downto =>
+            if Res > Ghdl_I64 (Rng.I32.Left)
+              or else Res < Ghdl_I64 (Rng.I32.Right)
+            then
+               Error_Range (Over);
+            end if;
+      end case;
+
+      --  Assign.
+      Ptr := To_Ghdl_Value_Ptr
+        (Loc_To_Addr (Obj_Rti.Common.Depth, Obj_Rti.Loc, Ctxt));
+      Ptr.I32 := Ghdl_I32 (Res);
+   end Override_Generic_I32;
+
    --  Override DECL with OVER.  Dispatch according to generic type.
    procedure Override_Generic_Value (Decl : VhpiHandleT;
                                      Over : Generic_Override_Acc)
@@ -155,6 +198,19 @@ package body Grt.Change_Generics is
       case Type_Rti.Kind is
          when Ghdl_Rtik_Type_Array =>
             Override_Generic_Array (Obj_Rti, Ctxt, Over);
+         when Ghdl_Rtik_Subtype_Scalar =>
+            declare
+               Subtype_Rti : constant Ghdl_Rtin_Subtype_Scalar_Acc :=
+                 To_Ghdl_Rtin_Subtype_Scalar_Acc (Type_Rti);
+            begin
+               case Subtype_Rti.Basetype.Kind is
+                  when Ghdl_Rtik_Type_I32 =>
+                     Override_Generic_I32 (Obj_Rti, Ctxt, Over);
+                  when others =>
+                     Error_Override
+                       ("unhandled type for generic override of", Over);
+               end case;
+            end;
          when others =>
             Error_Override ("unhandled type for generic override of", Over);
       end case;

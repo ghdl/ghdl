@@ -56,7 +56,13 @@ package Grt.Values is
    function Ghdl_Value_P64 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
       return Ghdl_I64;
    function Ghdl_Value_P32 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
-      return Ghdl_I32;
+                           return Ghdl_I32;
+
+   --  Convert S (INIT_POS .. LEN) to a signed integer.
+   function Value_I64
+     (S : Std_String_Basep; Len : Ghdl_Index_Type; Init_Pos : Ghdl_Index_Type)
+     return Ghdl_I64;
+
 private
    pragma Export (Ada, Ghdl_Value_B1, "__ghdl_value_b1");
    pragma Export (C, Ghdl_Value_E8, "__ghdl_value_e8");

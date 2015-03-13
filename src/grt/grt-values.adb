@@ -140,29 +140,42 @@ package body Grt.Values is
    end Ghdl_Value_E32;
 
    --  Convert S (INIT_POS .. LEN) to a signed integer.
-   function Ghdl_Value_I64 (S : Std_String_Basep;
-                            Len : Ghdl_Index_Type;
-                            Init_Pos : Ghdl_Index_Type)
-                           return Ghdl_I64
+   function Value_I64
+     (S : Std_String_Basep; Len : Ghdl_Index_Type; Init_Pos : Ghdl_Index_Type)
+     return Ghdl_I64
    is
       Pos : Ghdl_Index_Type := Init_Pos;
       C : Character;
       Sep : Character;
       Val, D, Base : Ghdl_I64;
       Exp : Integer;
+      Is_Neg : Boolean;
    begin
       C := S (Pos);
 
-      --  Be user friendly.
-      --  FIXME: reference.
-      if C = '-' or C = '+' then
-         Error_E ("'value: leading sign +/- not allowed");
+      --  LRM02 14.1 Predefined attributes
+      --  Restrictions: It is an error is the parameter is not a valid string
+      --  representation of a literal ot type T.
+      --
+      --  Apparently there is no definition of 'string representation', the
+      --  closest is:
+      --
+      --  LRM02 14.3 Package TEXTIO
+      --  The representation of both INTEGER and REAL values [...]
+      Is_Neg := False;
+      if C = '+' or C = '-' then
+         if Pos = Len then
+            Error_E ("'value: missing digit after +/-");
+         end if;
+         Pos := Pos + 1;
+         Is_Neg := C = '-';
+         C := S (Pos);
       end if;
 
       Val := 0;
       loop
          if C in '0' .. '9' then
-            Val := Val * 10 + Character'Pos (C) - Character'Pos ('0');
+            Val := Val * 10 - (Character'Pos (C) - Character'Pos ('0'));
             Pos := Pos + 1;
             exit when Pos >= Len;
             C := S (Pos);
@@ -192,6 +205,9 @@ package body Grt.Values is
       end loop;
 
       if Pos >= Len then
+         if not Is_Neg then
+            Val := -Val;
+         end if;
          return Val;
       end if;
 
@@ -221,7 +237,7 @@ package body Grt.Values is
             if D >= Base then
                Error_E ("'value: digit >= base");
             end if;
-            Val := Val * Base + D;
+            Val := Val * Base - D;
             Pos := Pos + 1;
             if Pos >= Len then
                Error_E ("'value: missing end sign number");
@@ -300,8 +316,12 @@ package body Grt.Values is
          Error_E ("'value: trailing characters after blank");
       end if;
 
+      if not Is_Neg then
+         Val := -Val;
+      end if;
+
       return Val;
-   end Ghdl_Value_I64;
+   end Value_I64;
 
    function Ghdl_Value_I64 (Str : Std_String_Ptr) return Ghdl_I64
    is
@@ -315,7 +335,7 @@ package body Grt.Values is
       --  GHDL: allow several leading whitespace.
       Remove_Whitespaces (S, Len, Pos);
 
-      return Ghdl_Value_I64 (S, Len, Pos);
+      return Value_I64 (S, Len, Pos);
    end Ghdl_Value_I64;
 
    function Ghdl_Value_I32 (Str : Std_String_Ptr) return Ghdl_I32
@@ -611,7 +631,7 @@ package body Grt.Values is
             return Ghdl_I64
               (Ghdl_Value_F64 (S, Lit_End, Lit_Pos) * Ghdl_F64 (Mult));
          else
-            return Ghdl_Value_I64 (S, Lit_End, Lit_Pos) * Mult;
+            return Value_I64 (S, Lit_End, Lit_Pos) * Mult;
          end if;
       end if;
    end Ghdl_Value_Physical_Type;
