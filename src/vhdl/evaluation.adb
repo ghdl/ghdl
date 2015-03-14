@@ -2554,6 +2554,8 @@ package body Evaluation is
 
    function Eval_Discrete_Range_Length (Constraint : Iir) return Iir_Int64
    is
+      --  We don't want to deal with very large ranges here.
+      pragma Suppress (Overflow_Check);
       Res : Iir_Int64;
       Left, Right : Iir_Int64;
    begin
