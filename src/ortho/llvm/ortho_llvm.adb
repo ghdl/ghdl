@@ -1474,6 +1474,9 @@ package body Ortho_LLVM is
          --  Same underlying LLVM type: nothing to do.
          return Val;
       end if;
+      if Unreach then
+         return O_Enode'(LLVM => Val.LLVM, Etype => Rtype);
+      end if;
 
       case Rtype.Kind is
          when ON_Integer_Types =>
