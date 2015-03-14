@@ -212,7 +212,7 @@ package body Grt.Values is
       end if;
 
       if C = '#' or C = ':' then
-         Base := Val;
+         Base := -Val;
          Val := 0;
          Sep := C;
          Pos := Pos + 1;
