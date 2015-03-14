@@ -63,6 +63,10 @@ package Grt.Values is
      (S : Std_String_Basep; Len : Ghdl_Index_Type; Init_Pos : Ghdl_Index_Type)
      return Ghdl_I64;
 
+   --  Return the value of STR for enumerated type RTI.
+   function Value_Enum
+     (S : Std_String_Basep; Len : Ghdl_Index_Type; Rti : Ghdl_Rti_Access)
+     return Ghdl_Index_Type;
 private
    pragma Export (Ada, Ghdl_Value_B1, "__ghdl_value_b1");
    pragma Export (C, Ghdl_Value_E8, "__ghdl_value_e8");

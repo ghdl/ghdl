@@ -77,17 +77,22 @@ package body Grt.Values is
                           Len : Ghdl_Index_Type;
                           Ref : Ghdl_C_String) return Boolean
    is
+      Is_Char : constant Boolean := S (Pos) = ''';
       P : Ghdl_Index_Type;
-      C : Character;
+      C_Ref, C_S : Character;
    begin
       P := 0;
       loop
-         C := Ref (Natural (P + 1));
+         C_Ref := Ref (Natural (P + 1));
          if Pos + P = Len then
             --  End of string.
-            return C = ASCII.NUL;
+            return C_Ref = ASCII.NUL;
          end if;
-         if To_LC (S (Pos + P)) /= C or else C = ASCII.NUL then
+         C_S := S (Pos + P);
+         if not Is_Char then
+            C_S := To_LC (C_S);
+         end if;
+         if C_S /= C_Ref or else C_Ref = ASCII.NUL then
             return False;
          end if;
          P := P + 1;
@@ -95,27 +100,35 @@ package body Grt.Values is
    end String_Match;
 
    --  Return the value of STR for enumerated type RTI.
-   function Ghdl_Value_Enum (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+   function Value_Enum
+     (S : Std_String_Basep; Len : Ghdl_Index_Type; Rti : Ghdl_Rti_Access)
       return Ghdl_Index_Type
    is
       Enum_Rti : constant Ghdl_Rtin_Type_Enum_Acc :=
         To_Ghdl_Rtin_Type_Enum_Acc (Rti);
-      S     : constant Std_String_Basep := Str.Base;
-      Len   : Ghdl_Index_Type  := Str.Bounds.Dim_1.Length;
-      Pos   : Ghdl_Index_Type := 0;
+      Pos : Ghdl_Index_Type;
+      L : Ghdl_Index_Type;
    begin
-      Remove_Whitespaces (S, Len, Pos);
+      Pos := 0;
+      L := Len;
+      Remove_Whitespaces (S, L, Pos);
 
       for I in 0 .. Enum_Rti.Nbr - 1 loop
-         if String_Match (S, Pos, Len, Enum_Rti.Names (I)) then
+         if String_Match (S, Pos, L, Enum_Rti.Names (I)) then
             return I;
          end if;
       end loop;
       Error_C ("'value: '");
-      Error_C_Std (S (Pos .. Len));
+      Error_C_Std (S (Pos .. L));
       Error_C ("' not in enumeration '");
       Error_C (Enum_Rti.Name);
       Error_E ("'");
+   end Value_Enum;
+
+   function Ghdl_Value_Enum (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)
+      return Ghdl_Index_Type is
+   begin
+      return Value_Enum (Str.Base, Str.Bounds.Dim_1.Length, Rti);
    end Ghdl_Value_Enum;
 
    function Ghdl_Value_B1 (Str : Std_String_Ptr; Rti : Ghdl_Rti_Access)

@@ -66,7 +66,7 @@ elab_failure ()
 simulate ()
 {
    echo "simulate $@ ($GHDL_FLAGS $@ $GHDL_SIMFLAGS)" >&2
-   $GHDL -r $GHDL_STD_FLAGS $GHDL_FLAGS $@ $GHDL_SIMFLAGS
+   $GHDL -r $GHDL_STD_FLAGS $GHDL_FLAGS "$@" $GHDL_SIMFLAGS
    #./$@
 }
 

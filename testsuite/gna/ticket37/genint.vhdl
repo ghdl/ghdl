@@ -12,4 +12,3 @@ architecture behav of genint is
 begin
   assert val = -159 or val = 9 severity failure;
 end behav;
-  

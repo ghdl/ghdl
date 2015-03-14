@@ -148,8 +148,8 @@ package body Grt.Change_Generics is
    end Override_Generic_Array;
 
    procedure Override_Generic_I32 (Obj_Rti : Ghdl_Rtin_Object_Acc;
-                                     Ctxt : Rti_Context;
-                                     Over : Generic_Override_Acc)
+                                   Ctxt : Rti_Context;
+                                   Over : Generic_Override_Acc)
    is
       Subtype_Rti : constant Ghdl_Rtin_Subtype_Scalar_Acc :=
         To_Ghdl_Rtin_Subtype_Scalar_Acc (Obj_Rti.Obj_Type);
@@ -184,6 +184,62 @@ package body Grt.Change_Generics is
       Ptr.I32 := Ghdl_I32 (Res);
    end Override_Generic_I32;
 
+   procedure Override_Generic_Enum (Obj_Rti : Ghdl_Rtin_Object_Acc;
+                                    Ctxt : Rti_Context;
+                                    Over : Generic_Override_Acc;
+                                    Type_Rti : Ghdl_Rti_Access)
+   is
+      Res : Ghdl_Index_Type;
+      Ptr : Ghdl_Value_Ptr;
+   begin
+      Res := Grt.Values.Value_Enum
+        (To_Std_String_Basep (Over.Value.all'Address),
+         Over.Value'Length, Type_Rti);
+
+      --  Assign.
+      Ptr := To_Ghdl_Value_Ptr
+        (Loc_To_Addr (Obj_Rti.Common.Depth, Obj_Rti.Loc, Ctxt));
+
+      case Obj_Rti.Obj_Type.Kind is
+         when Ghdl_Rtik_Type_E8 =>
+            Ptr.E8 := Ghdl_E8 (Res);
+         when Ghdl_Rtik_Type_B1 =>
+            Ptr.B1 := Ghdl_B1'Val (Res);
+         when Ghdl_Rtik_Subtype_Scalar =>
+            declare
+               Subtype_Rti : constant Ghdl_Rtin_Subtype_Scalar_Acc :=
+                 To_Ghdl_Rtin_Subtype_Scalar_Acc (Obj_Rti.Obj_Type);
+               Rng : Ghdl_Range_Ptr;
+            begin
+               Rng := To_Ghdl_Range_Ptr
+                 (Loc_To_Addr (Subtype_Rti.Common.Depth,
+                               Subtype_Rti.Range_Loc, Ctxt));
+               case Subtype_Rti.Basetype.Kind is
+                  when Ghdl_Rtik_Type_E8 =>
+                     case Rng.E8.Dir is
+                        when Dir_To =>
+                           if Res < Ghdl_Index_Type (Rng.E8.Left)
+                             or else Res > Ghdl_Index_Type (Rng.E8.Right)
+                           then
+                              Error_Range (Over);
+                           end if;
+                        when Dir_Downto =>
+                           if Res > Ghdl_Index_Type (Rng.E8.Left)
+                             or else Res < Ghdl_Index_Type (Rng.E8.Right)
+                           then
+                              Error_Range (Over);
+                           end if;
+                     end case;
+                     Ptr.E8 := Ghdl_E8 (Res);
+                  when others =>
+                     Internal_Error ("override_generic_enum");
+               end case;
+            end;
+         when others =>
+            Internal_Error ("override_generic_enum");
+      end case;
+   end Override_Generic_Enum;
+
    --  Override DECL with OVER.  Dispatch according to generic type.
    procedure Override_Generic_Value (Decl : VhpiHandleT;
                                      Over : Generic_Override_Acc)
@@ -198,6 +254,9 @@ package body Grt.Change_Generics is
       case Type_Rti.Kind is
          when Ghdl_Rtik_Type_Array =>
             Override_Generic_Array (Obj_Rti, Ctxt, Over);
+         when Ghdl_Rtik_Type_B1
+           | Ghdl_Rtik_Type_E8 =>
+            Override_Generic_Enum (Obj_Rti, Ctxt, Over, Type_Rti);
          when Ghdl_Rtik_Subtype_Scalar =>
             declare
                Subtype_Rti : constant Ghdl_Rtin_Subtype_Scalar_Acc :=
@@ -206,6 +265,9 @@ package body Grt.Change_Generics is
                case Subtype_Rti.Basetype.Kind is
                   when Ghdl_Rtik_Type_I32 =>
                      Override_Generic_I32 (Obj_Rti, Ctxt, Over);
+                  when Ghdl_Rtik_Type_E8 =>
+                     Override_Generic_Enum
+                       (Obj_Rti, Ctxt, Over, Subtype_Rti.Basetype);
                   when others =>
                      Error_Override
                        ("unhandled type for generic override of", Over);
