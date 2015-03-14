@@ -1487,27 +1487,32 @@ package body Sem_Expr is
       Param := Parameters_Chain;
       Inter := Get_Interface_Declaration_Chain (Imp);
       while Param /= Null_Iir loop
-         Formal := Get_Formal (Param);
-         if Formal = Null_Iir then
-            Formal := Inter;
-            Inter := Get_Chain (Inter);
-         else
-            Formal := Get_Base_Name (Formal);
-            Inter := Null_Iir;
-         end if;
-         if Get_Kind (Formal) = Iir_Kind_Interface_Signal_Declaration
-           and then Get_Mode (Formal) in Iir_Out_Modes
+         --  Association_Element_By_Individual duplicates existing
+         --  associations.
+         if Get_Kind (Param) /= Iir_Kind_Association_Element_By_Individual
          then
-            Prefix := Name_To_Object (Get_Actual (Param));
-            if Prefix /= Null_Iir then
-               case Get_Kind (Get_Object_Prefix (Prefix)) is
-                  when Iir_Kind_Signal_Declaration
-                    | Iir_Kind_Interface_Signal_Declaration =>
-                     Prefix := Get_Longuest_Static_Prefix (Prefix);
-                     Sem_Stmts.Sem_Add_Driver (Prefix, Stmt);
-                  when others =>
-                     null;
-               end case;
+            Formal := Get_Formal (Param);
+            if Formal = Null_Iir then
+               Formal := Inter;
+               Inter := Get_Chain (Inter);
+            else
+               Formal := Get_Base_Name (Formal);
+               Inter := Null_Iir;
+            end if;
+            if Get_Kind (Formal) = Iir_Kind_Interface_Signal_Declaration
+              and then Get_Mode (Formal) in Iir_Out_Modes
+            then
+               Prefix := Name_To_Object (Get_Actual (Param));
+               if Prefix /= Null_Iir then
+                  case Get_Kind (Get_Object_Prefix (Prefix)) is
+                     when Iir_Kind_Signal_Declaration
+                       | Iir_Kind_Interface_Signal_Declaration =>
+                        Prefix := Get_Longuest_Static_Prefix (Prefix);
+                        Sem_Stmts.Sem_Add_Driver (Prefix, Stmt);
+                     when others =>
+                        null;
+                  end case;
+               end if;
             end if;
          end if;
          Param := Get_Chain (Param);
