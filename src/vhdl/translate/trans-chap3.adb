@@ -1277,10 +1277,9 @@ package body Trans.Chap3 is
    ------------------------
    --  Incomplete types  --
    ------------------------
+
    procedure Translate_Incomplete_Type (Def : Iir)
    is
-      --         Ftype : Iir;
-      --         Info : Type_Info_Acc;
       Info  : Incomplete_Type_Info_Acc;
       Ctype : Iir;
    begin
@@ -1290,6 +1289,8 @@ package body Trans.Chap3 is
          --  types not used before the full type declaration).
          return;
       end if;
+
+      --  Get the complete type definition.
       Ctype := Get_Type (Get_Type_Declarator (Def));
       Info := Add_Info (Ctype, Kind_Incomplete_Type);
       Info.Incomplete_Type := Def;
@@ -1300,20 +1301,20 @@ package body Trans.Chap3 is
    procedure Translate_Complete_Type
      (Incomplete_Info : in out Incomplete_Type_Info_Acc; Ctype : Iir)
    is
+      C_Info   : constant Type_Info_Acc := Get_Info (Ctype);
       List     : Iir_List;
       Atype    : Iir;
       Def_Info : Type_Info_Acc;
-      C_Info   : Type_Info_Acc;
       Dtype    : O_Tnode;
    begin
-      C_Info := Get_Info (Ctype);
       List := Get_Incomplete_Type_List (Incomplete_Info.Incomplete_Type);
       for I in Natural loop
          Atype := Get_Nth_Element (List, I);
          exit when Atype = Null_Iir;
-         if Get_Kind (Atype) /= Iir_Kind_Access_Type_Definition then
-            raise Internal_Error;
-         end if;
+
+         --  Only access type can be completed.
+         pragma Assert (Get_Kind (Atype) = Iir_Kind_Access_Type_Definition);
+
          Def_Info := Get_Info (Atype);
          case C_Info.Type_Mode is
             when Type_Mode_Arrays =>

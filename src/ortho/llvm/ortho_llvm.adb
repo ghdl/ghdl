@@ -460,7 +460,8 @@ package body Ortho_LLVM is
 
    procedure New_Uncomplete_Record_Type (Res : out O_Tnode) is
    begin
-      --  LLVM type will be created when the type is declared.
+      --  LLVM type will be created when the type is declared, as the name
+      --  is required (for unification).
       Res := new O_Tnode_Type'(Kind => ON_Incomplete_Record_Type,
                                LLVM => Null_TypeRef,
                                Dbg => Null_ValueRef);
@@ -608,7 +609,10 @@ package body Ortho_LLVM is
       Atype.Acc_Type := Dtype;
 
       --  Debug.
-      --  FIXME.
+      if Atype.Dbg /= Null_ValueRef then
+         pragma Assert (GetMDNodeNumOperands (Atype.Dbg) = 10);
+         MDNodeReplaceOperandWith (Atype.Dbg, 9, Dtype.Dbg);
+      end if;
    end Finish_Access_Type;
 
    --------------------
@@ -1719,13 +1723,12 @@ package body Ortho_LLVM is
       return MDNode (Vals, Vals'Length);
    end Add_Dbg_Enum_Type;
 
-   function Add_Dbg_Pointer_Type (Id : O_Ident; Ptype : O_Tnode)
-                                 return ValueRef
+   function Add_Dbg_Pointer_Type
+     (Id : O_Ident; Ptype : O_Tnode; Designated_Dbg : ValueRef)
+     return ValueRef
    is
       Vals : ValueRefArray (0 .. 9);
    begin
-      pragma Assert (Ptype.Acc_Type.Dbg /= Null_ValueRef);
-
       Vals := (ConstInt (Int32Type, DW_TAG_Pointer_Type, 0),
                Dbg_Current_Filedir,
                Null_ValueRef,           --  context
@@ -1735,9 +1738,23 @@ package body Ortho_LLVM is
                Dbg_Align (Ptype.LLVM),
                ConstInt (Int32Type, 0, 0),    --  Offset
                ConstInt (Int32Type, 1024, 0),    --  Flags
-               Ptype.Acc_Type.Dbg);
+               Designated_Dbg);
       return MDNode (Vals, Vals'Length);
    end Add_Dbg_Pointer_Type;
+
+   function Add_Dbg_Pointer_Type (Id : O_Ident; Ptype : O_Tnode)
+                                 return ValueRef is
+   begin
+      pragma Assert (Ptype.Acc_Type /= null);
+      pragma Assert (Ptype.Acc_Type.Dbg /= Null_ValueRef);
+      return Add_Dbg_Pointer_Type (Id, Ptype, Ptype.Acc_Type.Dbg);
+   end Add_Dbg_Pointer_Type;
+
+   function Add_Dbg_Incomplete_Pointer_Type (Id : O_Ident; Ptype : O_Tnode)
+                                            return ValueRef is
+   begin
+      return Add_Dbg_Pointer_Type (Id, Ptype, Null_ValueRef);
+   end Add_Dbg_Incomplete_Pointer_Type;
 
    function Add_Dbg_Record_Type (Id : O_Ident; Rtype : O_Tnode)
                                 return ValueRef
@@ -1770,6 +1787,8 @@ package body Ortho_LLVM is
 
    procedure New_Type_Decl (Ident : O_Ident; Atype : O_Tnode) is
    begin
+      --  Create the incomplete structure.  This is the only way in LLVM to
+      --  build recursive types.
       case Atype.Kind is
          when ON_Incomplete_Record_Type =>
             Atype.LLVM :=
@@ -1781,7 +1800,7 @@ package body Ortho_LLVM is
             null;
       end case;
 
-      --  Emit debug info
+      --  Emit debug info.
       if Flag_Debug then
          case Atype.Kind is
             when ON_Unsigned_Type =>
@@ -1796,6 +1815,8 @@ package body Ortho_LLVM is
                Atype.Dbg := Add_Dbg_Enum_Type (Ident, Atype);
             when ON_Access_Type =>
                Atype.Dbg := Add_Dbg_Pointer_Type (Ident, Atype);
+            when ON_Incomplete_Access_Type =>
+               Atype.Dbg := Add_Dbg_Incomplete_Pointer_Type (Ident, Atype);
             when ON_Record_Type =>
                Atype.Dbg := Add_Dbg_Record_Type (Ident, Atype);
             when ON_Incomplete_Record_Type =>
@@ -1803,9 +1824,6 @@ package body Ortho_LLVM is
             when ON_Array_Type
               | ON_Array_Sub_Type =>
                --  FIXME: typedef
-               null;
-            when ON_Incomplete_Access_Type =>
-               --  FIXME: todo
                null;
             when ON_Union_Type =>
                --  FIXME: todo
@@ -2212,6 +2230,9 @@ package body Ortho_LLVM is
               MDNode (Subprg_Vals, Subprg_Vals'Length);
             Append (Subprg_Nodes, Cur_Declare_Block.Dbg_Scope);
             Dbg_Current_Scope := Cur_Declare_Block.Dbg_Scope;
+
+            --  Kill current debug metadata, as it is not upto date.
+            Dbg_Insn_MD := Null_ValueRef;
          end;
       end if;
 
@@ -2265,6 +2286,7 @@ package body Ortho_LLVM is
 
       Cur_Func := Null_ValueRef;
       Dbg_Current_Scope := Null_ValueRef;
+      Dbg_Insn_MD := Null_ValueRef;
    end Finish_Subprogram_Body;
 
    -------------------------
