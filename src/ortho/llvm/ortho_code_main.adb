@@ -132,7 +132,7 @@ begin
                Codegen := ObjectFile;
             elsif Arg = "-O0" then
                Optimization := CodeGenLevelNone;
-            elsif Arg = "-O1" then
+            elsif Arg = "-O1" or else Arg = "-O" then
                Optimization := CodeGenLevelLess;
             elsif Arg = "-O2" then
                Optimization := CodeGenLevelDefault;
