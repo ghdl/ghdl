@@ -1670,11 +1670,25 @@ package body Ortho_LLVM is
            and then Cur_Declare_Block.Prev /= null
          then
             --  Save stack pointer at entry of block
-            PositionBuilderBefore
-              (Extra_Builder, GetFirstInstruction (Cur_Declare_Block.Stmt_Bb));
-            Cur_Declare_Block.Stack_Value :=
-              BuildCall (Extra_Builder, Stacksave_Fun,
-                         (1 .. 0 => Null_ValueRef), 0, Empty_Cstring);
+            declare
+               First_Insn : ValueRef;
+               Bld : BuilderRef;
+            begin
+               First_Insn := GetFirstInstruction (Cur_Declare_Block.Stmt_Bb);
+               if First_Insn = Null_ValueRef then
+                  --  Alloca is the first instruction, save the stack now.
+                  Bld := Builder;
+               else
+                  --  There are instructions before alloca, insert the save
+                  --  at the beginning.
+                  PositionBuilderBefore (Extra_Builder, First_Insn);
+                  Bld := Extra_Builder;
+               end if;
+
+               Cur_Declare_Block.Stack_Value :=
+                 BuildCall (Bld, Stacksave_Fun,
+                            (1 .. 0 => Null_ValueRef), 0, Empty_Cstring);
+            end;
          end if;
 
          Res := BuildArrayAlloca
