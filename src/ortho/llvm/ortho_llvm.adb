@@ -81,6 +81,9 @@ package body Ortho_LLVM is
    Stacksave_Name : constant String := "llvm.stacksave" & ASCII.NUL;
    Stackrestore_Fun : ValueRef;
    Stackrestore_Name : constant String := "llvm.stackrestore" & ASCII.NUL;
+   Copysign_Fun : ValueRef;
+   Copysign_Name : constant String := "llvm.copysign.f64" & ASCII.NUL;
+   Fp_0_5 : ValueRef;
 
    --  For debugging
 
@@ -1512,9 +1515,17 @@ package body Ortho_LLVM is
                when ON_Float_Type =>
                   --  Float to Int
                   if Rtype.Kind = ON_Signed_Type then
-                     Res := BuildFPToSI
-                       (Builder, Val.LLVM, Get_LLVM_Type (Rtype),
-                        Empty_Cstring);
+                     --  FPtoSI rounds toward zero, so we need to add
+                     --  copysign (0.5, x).
+                     declare
+                        V : ValueRef;
+                     begin
+                        V := BuildCall (Builder, Copysign_Fun,
+                                        (Fp_0_5, Val.LLVM), 2, Empty_Cstring);
+                        V := BuildFAdd (Builder, Val.LLVM, V, Empty_Cstring);
+                        Res := BuildFPToSI
+                          (Builder, V, Get_LLVM_Type (Rtype), Empty_Cstring);
+                     end;
                   end if;
 
                when others =>
@@ -2899,6 +2910,13 @@ package body Ortho_LLVM is
       Stackrestore_Fun := AddFunction
         (Module, Stackrestore_Name'Address,
          FunctionType (VoidType, (1 => I8_Ptr_Type), 1, 0));
+
+      --  Create intrinsic 'double llvm.copysign.f64 (double, double)'.
+      Copysign_Fun := AddFunction
+        (Module, Copysign_Name'Address,
+         FunctionType (DoubleType, (0 .. 1 => DoubleType), 2, 0));
+
+      Fp_0_5 := ConstReal (DoubleType, 0.5);
 
       if Flag_Debug_Line then
          Debug_ID := GetMDKindID (Dbg_Str, Dbg_Str'Length);
