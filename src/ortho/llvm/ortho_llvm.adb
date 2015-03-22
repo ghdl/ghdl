@@ -1280,6 +1280,10 @@ package body Ortho_LLVM is
    is
       Res : ValueRef;
    begin
+      if Unreach then
+         return O_Enode'(LLVM => Null_ValueRef, Etype => Operand.Etype);
+      end if;
+
       case Operand.Etype.Kind is
          when ON_Integer_Types =>
             case Kind is
@@ -1355,6 +1359,10 @@ package body Ortho_LLVM is
    is
       Res : ValueRef;
    begin
+      if Unreach then
+         return O_Enode'(LLVM => Null_ValueRef, Etype => Ntype);
+      end if;
+
       case Left.Etype.Kind is
          when ON_Unsigned_Type
            | ON_Boolean_Type
@@ -2515,7 +2523,11 @@ package body Ortho_LLVM is
       Res : ValueRef;
       Bb_Then : BasicBlockRef;
    begin
-      --  FIXME: check Unreach
+      if Unreach then
+         Block := (Bb => Null_BasicBlockRef);
+         return;
+      end if;
+
       Bb_Then := AppendBasicBlock (Cur_Func, Empty_Cstring);
       Block := (Bb => AppendBasicBlock (Cur_Func, Empty_Cstring));
       Res := BuildCondBr (Builder, Cond.LLVM, Bb_Then, Block.Bb);
@@ -2537,6 +2549,11 @@ package body Ortho_LLVM is
          Bb_Next := AppendBasicBlock (Cur_Func, Empty_Cstring);
          Res := BuildBr (Builder, Bb_Next);
       else
+         if Block.Bb = Null_BasicBlockRef then
+            --  The IF statement was unreachable.  Else part is also
+            --  unreachable.
+            return;
+         end if;
          Bb_Next := Null_BasicBlockRef;
       end if;
 
