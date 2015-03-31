@@ -733,6 +733,14 @@ package body Trans is
          Nam_Length := N_Len + 2;
       end Name_Id_To_String;
 
+      function Identifier_To_String (N : Iir) return String
+      is
+         use Name_Table;
+      begin
+         Name_Id_To_String (Get_Identifier (N));
+         return Nam_Buffer (1 .. Nam_Length);
+      end Identifier_To_String;
+
       procedure Add_Name (Len : in out Natural; Name : Name_Id)
       is
          use Name_Table;

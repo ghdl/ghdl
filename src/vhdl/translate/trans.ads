@@ -408,7 +408,13 @@ package Trans is
 
       --  Create a copy of SCOPE using instantiated scope (if needed).
       function Instantiate_Var_Scope (Scope : Var_Scope_Type)
-                                      return Var_Scope_Type;
+                                     return Var_Scope_Type;
+
+      --  Utility function: convert identifier of N to a string, encoding
+      --  extended characters in extended identifiers (this is different from
+      --  image_identifier that simply returns the identifier, without special
+      --  handling of extended identifiers).
+      function Identifier_To_String (N : Iir) return String;
    private
       type Local_Identifier_Type is new Natural;
       type Id_Mark_Type is record

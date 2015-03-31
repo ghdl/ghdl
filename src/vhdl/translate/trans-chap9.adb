@@ -1420,15 +1420,17 @@ package body Trans.Chap9 is
             function Get_Arch_Name return String is
             begin
                if Arch /= Null_Iir then
-                  return "ARCH__" & Image_Identifier (Arch);
+                  return "ARCH__" & Identifier_To_String (Arch);
                else
                   return "LASTARCH";
                end if;
             end Get_Arch_Name;
 
+            Entity_Library : constant Iir :=
+              Get_Library (Get_Design_File (Entity_Unit));
             Str       : constant String :=
-              Image_Identifier (Get_Library (Get_Design_File (Entity_Unit)))
-              & "__" & Image_Identifier (Entity) & "__"
+              Identifier_To_String (Entity_Library) & "__"
+              & Identifier_To_String (Entity) & "__"
               & Get_Arch_Name & "__";
             Sub_Inter : O_Inter_List;
             Arg       : O_Dnode;
