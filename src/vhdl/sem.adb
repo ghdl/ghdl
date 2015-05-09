@@ -1565,6 +1565,7 @@ package body Sem is
          --  Also, only check for explicitly subprograms (and not
          --  implicit one).
          if not Is_Implicit_Subprogram (Decl1)
+           and then Get_Kind (Decl1) in Iir_Kinds_Subprogram_Declaration
            and then not Is_Potentially_Visible (Interpretation)
            and then Get_Subprogram_Hash (Decl1) = Hash
            and then Is_Same_Profile (Decl, Decl1)
