@@ -31,7 +31,8 @@ class NodeDesc:
         self.name = name
         self.format = format
         self.fields = fields # {field: FuncDesc} dict, defined for all fields
-        self.attrs = attrs # A {attr: FuncDesc} dict
+        self.attrs = attrs   # A {attr: FuncDesc} dict
+        self.order = []      # List of fields name, in order of appearance.
 
 class line:
     def __init__(self, string, no):
@@ -285,6 +286,8 @@ def read_kinds(filename):
     return (kinds, kinds_ranges, funcs)
 
 # Read description for one node
+# LR is the line reader.  NAMES is the list of (node name, format)
+#  (one description may describe several nodes).
 def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
     pat_only = re.compile('   -- Only for ' + prefix_name + '(\w+):\n')
     pat_field = re.compile('   --   Get/Set_(\w+) \((Alias )?(\w+)\)\n')
@@ -316,7 +319,7 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
                 only_nodes = []
             only_nodes.append(nodes[name])
             l = lr.get()
-        # Handle field
+        # Handle field: '--  Get/Set_FUNC (Alias? FIELD)'
         m = pat_field.match(l)
         if m:
             # 1) Check the function exists
@@ -336,6 +339,7 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
                     if c.fields[field]:
                         raise ParseError(lr, 'field already used')
                     c.fields[field] = func
+                    c.order.append(field)
                 c.attrs[func.name] = func
             only_nodes = cur_nodes
         elif pat_start.match(l):
@@ -518,6 +522,10 @@ parser.add_argument('--kind-prefix', dest='kind_prefix',
 parser.add_argument('--node-type', dest='node_type',
                     default='Iir',
                     help='name of the node type')
+parser.add_argument('--keep-order', dest='flag_keep_order',
+                    action='store_true',
+                    help='keep field order of nodes')
+parser.set_defaults(flag_keep_order=False)
 args = parser.parse_args()
 
 field_file=args.field_file
@@ -527,6 +535,7 @@ prefix_name=args.kind_prefix
 template_file=args.template_file
 node_type=args.node_type
 meta_base_file=args.meta_basename
+flag_keep_order=args.flag_keep_order
 
 try:
     (formats, fields) = read_fields(field_file)
@@ -663,21 +672,24 @@ elif args.action == 'meta_body':
                     print last + ','
                 last = None
                 print '      --  ' + prefix_name + k
-                # Sort fields: first non Iir and non Iir_List,
-                #              then Iir and Iir_List that aren't references
-                #              then Maybe_Ref
-                #              then Ref and Ref_Of
-                flds = sorted([fk for fk, fv in v.fields.items() \
-                               if fv and fv.rtype not in nodes_types])
-                flds += sorted([fk for fk, fv in v.fields.items() \
-                                if fv and fv.rtype in nodes_types \
-                                      and fv.acc not in ref_names])
-                flds += sorted([fk for fk, fv in v.fields.items() \
-                                if fv and fv.rtype in nodes_types\
-                                      and fv.acc in ['Maybe_Ref']])
-                flds += sorted([fk for fk, fv in v.fields.items() \
-                                if fv and fv.rtype in nodes_types\
-                                      and fv.acc in ['Ref', 'Of_Ref']])
+                if flag_keep_order:
+                    flds = v.order
+                else:
+                    # Sort fields: first non Iir and non Iir_List,
+                    #              then Iir and Iir_List that aren't references
+                    #              then Maybe_Ref
+                    #              then Ref and Ref_Of
+                    flds = sorted([fk for fk, fv in v.fields.items() \
+                                   if fv and fv.rtype not in nodes_types])
+                    flds += sorted([fk for fk, fv in v.fields.items() \
+                                    if fv and fv.rtype in nodes_types \
+                                    and fv.acc not in ref_names])
+                    flds += sorted([fk for fk, fv in v.fields.items() \
+                                    if fv and fv.rtype in nodes_types\
+                                    and fv.acc in ['Maybe_Ref']])
+                    flds += sorted([fk for fk, fv in v.fields.items() \
+                                    if fv and fv.rtype in nodes_types\
+                                    and fv.acc in ['Ref', 'Of_Ref']])
                 for fk in flds:
                     if last:
                         print last + ','
