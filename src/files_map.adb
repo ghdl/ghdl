@@ -807,6 +807,33 @@ package body Files_Map is
       end if;
    end Get_Time_Stamp_String;
 
+   function Image (Loc : Location_Type; Filename : Boolean := True)
+                  return string
+   is
+      Line, Col : Natural;
+      Name : Name_Id;
+   begin
+      if Loc = Location_Nil then
+         --  Avoid a crash.
+         return "??:??:??";
+      else
+         Location_To_Position (Loc, Name, Line, Col);
+         declare
+            Line_Str : constant String := Natural'Image (Line);
+            Col_Str : constant String := Natural'Image (Col);
+         begin
+            if Filename then
+               return Name_Table.Image (Name)
+                 & ':' & Line_Str (Line_Str'First + 1 .. Line_Str'Last)
+                 & ':' & Col_Str (Col_Str'First + 1 .. Col_Str'Last);
+            else
+               return Line_Str (Line_Str'First + 1 .. Line_Str'Last)
+                 & ':' & Col_Str (Col_Str'First + 1 .. Col_Str'Last);
+            end if;
+         end;
+      end if;
+   end Image;
+
    -- Debug procedures.
    procedure Debug_Source_Lines (File: Source_File_Entry);
    pragma Unreferenced (Debug_Source_Lines);

@@ -19,6 +19,7 @@ with Ada.Text_IO;
 with GNAT.Table;
 with Flags; use Flags;
 with Name_Table; -- use Name_Table;
+with Files_Map; use Files_Map;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 
@@ -1277,7 +1278,7 @@ package body Sem_Scopes is
          Put (": ");
          Decl := Get_Declaration (Inter);
          Put (Iir_Kind'Image (Get_Kind (Decl)));
-         Put_Line (", loc: " & Get_Location_Str (Get_Location (Decl)));
+         Put_Line (", loc: " & Image (Get_Location (Decl)));
          if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration then
             Put_Line ("   " & Disp_Subprg (Decl));
          end if;
@@ -1335,7 +1336,7 @@ package body Sem_Scopes is
       Put (": ");
       Decl := Get_Declaration (Inter);
       Put (Iir_Kind'Image (Get_Kind (Decl)));
-      Put_Line (", loc: " & Get_Location_Str (Get_Location (Decl)));
+      Put_Line (", loc: " & Image (Get_Location (Decl)));
       if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration then
          Put_Line ("   " & Disp_Subprg (Decl));
       end if;

@@ -27,6 +27,7 @@ with Flags; use Flags;
 with Parse_Psl;
 with Name_Table;
 with Str_Table;
+with Files_Map; use Files_Map;
 with Xrefs;
 
 --  Recursive descendant parser.
@@ -3874,7 +3875,7 @@ package body Parse is
                --  FIXME: in case of multiple missing parenthesises, several
                --    messages will be displayed
                Error_Msg_Parse ("missing ')' for opening parenthesis at "
-                                & Get_Location_Str (Loc, Filename => False));
+                                & Image (Loc, Filename => False));
                return Expr;
             when others =>
                --  Surely a parse error...

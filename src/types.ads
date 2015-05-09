@@ -119,4 +119,7 @@ package Types is
    --  (e.g eval_pos).  In this case it is easier to raise an exception and
    --  let upper level subprograms handle the case.
    Node_Error : exception;
+
+   --  Result of a comparaison of two numeric values.
+   type Order_Type is (Less, Equal, Greater);
 end Types;

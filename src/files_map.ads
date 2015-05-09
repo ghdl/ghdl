@@ -137,9 +137,10 @@ package Files_Map is
                                    Line : out Natural;
                                    Col : out Natural);
 
-   --  Get LINE and COL from LOCATION.
-   --procedure Get_Source_File_Line_And_Column
-   --  (Location: Location_Type; Line, Col: out Natural; Name : out Name_Id);
+   --  Return the image of LOC using the "FILENAME:LINE:COL" format or
+   --  "LINE:COL" format if FILENAME is false;
+   function Image (Loc : Location_Type; Filename : Boolean := True)
+                  return String;
 
    --  Free all memory and reinitialize.
    procedure Initialize;

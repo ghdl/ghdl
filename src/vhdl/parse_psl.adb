@@ -348,7 +348,7 @@ package body Parse_Psl is
          Res := Parse_FL_Property (Prio_Lowest);
          if Current_Token /= Tok_Right_Paren then
             Error_Msg_Parse ("missing matching ')' for '(' at line "
-                               & Get_Location_Str (Loc, False));
+                               & Image (Loc, False));
          else
             Scan;
          end if;

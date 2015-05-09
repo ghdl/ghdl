@@ -21,7 +21,6 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Name_Table;
 with Tokens;
-with Errorout;
 with Files_Map;
 with PSL.Dump_Tree;
 with Nodes_Meta;
@@ -309,7 +308,7 @@ package body Disp_Tree is
 
    function Image_Location_Type (Loc : Location_Type) return String is
    begin
-      return Errorout.Get_Location_Str (Loc);
+      return Files_Map.Image (Loc);
    end Image_Location_Type;
 
    function Image_Iir_Direction (Dir : Iir_Direction) return String is

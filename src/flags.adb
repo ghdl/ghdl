@@ -40,14 +40,17 @@ package body Flags is
       else
          Flag_String (4) := 't';
       end if;
-      if not Flag_Time_64 and Vhdl_Std = Vhdl_87 then
+
+      if Flag_Time_64 then
+         --  Time_Resolution is always fs.
+         Flag_String (5) := '-';
+      elsif Vhdl_Std = Vhdl_87 then
+         --  Time_Resolution is fixed in vhdl87, as time expressions are
+         --  locally static.
          Flag_String (5) := Time_Resolution;
       else
-         if Flag_Time_64 then
-            Flag_String (5) := '-';
-         else
-            Flag_String (5) := '?';
-         end if;
+         --  Time_Resolution can be changed at simulation time.
+         Flag_String (5) := '?';
       end if;
    end Create_Flag_String;
 end Flags;

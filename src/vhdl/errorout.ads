@@ -92,10 +92,8 @@ package Errorout is
    -- Disp a node location.
    -- Used for output of message.
    function Disp_Location (Node: Iir) return String;
-   function Get_Location_Str (Loc : Location_Type; Filename : Boolean := True)
-     return String;
 
-   -- Disp non-terminal name from KIND.
+   --  Disp non-terminal name from KIND.
    function Disp_Name (Kind : Iir_Kind) return String;
 
    --  SUBPRG must be a subprogram declaration or an enumeration literal
