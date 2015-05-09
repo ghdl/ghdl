@@ -3692,8 +3692,10 @@ package body Sem_Names is
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Dereference
            | Iir_Kind_Attribute_Value
-           | Iir_Kind_Function_Call
-           | Iir_Kinds_Attribute =>
+           | Iir_Kind_Function_Call =>
+            return True;
+         when Iir_Kinds_Expression_Attribute =>
+            --  All expression attributes are a name.
             return True;
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>

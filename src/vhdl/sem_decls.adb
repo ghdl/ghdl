@@ -2364,6 +2364,9 @@ package body Sem_Decls is
             null;
          when Iir_Kind_Terminal_Declaration =>
             null;
+         when Iir_Kind_Base_Attribute =>
+            Error_Msg_Sem ("base attribute not allowed in alias", Alias);
+            return;
          when others =>
             Error_Kind ("sem_non_object_alias_declaration", N_Entity);
       end case;
