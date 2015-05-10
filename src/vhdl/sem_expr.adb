@@ -132,8 +132,7 @@ package body Sem_Expr is
       return Get_Common_Basetype (Left, Right) /= Null_Iir;
    end Are_Basetypes_Compatible;
 
-   function Are_Types_Compatible (Left: Iir; Right: Iir)
-     return Boolean is
+   function Are_Types_Compatible (Left: Iir; Right: Iir) return Boolean is
    begin
       return Get_Common_Basetype (Get_Base_Type (Left),
                                   Get_Base_Type (Right)) /= Null_Iir;
@@ -4247,19 +4246,49 @@ package body Sem_Expr is
          --  context including the expression, then the condition operator is
          --  not applied.
 
-         --  GHDL: what does the second alternative mean ?  Any example ?
-
          Res := Sem_Expression_Ov (Cond, Null_Iir);
 
          if Res = Null_Iir then
+            --  Error occured.
             return Res;
          end if;
 
-         if not Is_Overloaded (Res)
-           and then Get_Base_Type (Get_Type (Res)) = Boolean_Type_Definition
-         then
-            Check_Read (Res);
-            return Res;
+         if not Is_Overloaded (Res) then
+            --  Only one result.  Operator "??" is not applied if the result
+            --  is of type boolean.
+            if Are_Types_Compatible (Get_Type (Res), Boolean_Type_Definition)
+            then
+               Check_Read (Res);
+               return Res;
+            end if;
+         else
+            --  Many interpretations.
+            declare
+               El : Iir;
+               Res_List : constant Iir_List :=
+                 Get_Overload_List (Get_Type (Res));
+               Nbr_Booleans : Natural;
+            begin
+               Nbr_Booleans := 0;
+
+               --  Extract boolean interpretations.
+               for I in Natural loop
+                  El := Get_Nth_Element (Res_List, I);
+                  exit when El = Null_Iir;
+                  if Are_Types_Compatible (El, Boolean_Type_Definition) then
+                     Nbr_Booleans := Nbr_Booleans + 1;
+                  end if;
+               end loop;
+
+               if Nbr_Booleans >= 1 then
+                  --  There is one or more boolean interpretations: keep them.
+                  --  In case of multiple boolean interpretations, an error
+                  --  message will be generated.
+                  Res := Sem_Expression_Ov (Cond, Boolean_Type_Definition);
+                  Check_Read (Res);
+                  return Res;
+               end if;
+            end;
          end if;
 
          --  LRM08 9.2.9
