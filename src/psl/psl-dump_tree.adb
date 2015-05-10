@@ -3,13 +3,14 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
 with Name_Table;
 with PSL.Errors;
+with PSL.Nodes_Meta;
 
 package body PSL.Dump_Tree is
 
-   procedure Disp_Indent (Indent : Natural) is
+   procedure Put_Indent (Indent : Natural) is
    begin
       Put (String'(1 .. 2 * Indent => ' '));
-   end Disp_Indent;
+   end Put_Indent;
 
    Hex_Digits : constant array (Integer range 0 .. 15) of Character
      := "0123456789abcdef";
@@ -38,6 +39,15 @@ package body PSL.Dump_Tree is
       Put (Res);
    end Disp_Int32;
 
+   function Image_Boolean (Bool : Boolean) return String is
+   begin
+      if Bool then
+         return "true";
+      else
+         return "false";
+      end if;
+   end Image_Boolean;
+
    procedure Disp_HDL_Node (Val : HDL_Node)
    is
    begin
@@ -62,43 +72,23 @@ package body PSL.Dump_Tree is
 
    procedure Disp_Header (Msg : String; Indent : Natural) is
    begin
-      Disp_Indent (Indent);
+      Put_Indent (Indent);
       Put (Msg);
       Put (": ");
    end Disp_Header;
 
-   procedure Disp_Identifier (N : Node) is
-   begin
-      Put (Name_Table.Image (Get_Identifier (N)));
-      New_Line;
-   end Disp_Identifier;
-
-   procedure Disp_Label (N : Node) is
-   begin
-      Put (Name_Table.Image (Get_Label (N)));
-      New_Line;
-   end Disp_Label;
-
-   procedure Disp_Boolean (Val : Boolean) is
-   begin
-      if Val then
-         Put ("true");
-      else
-         Put ("false");
-      end if;
-   end Disp_Boolean;
-
-   procedure Disp_PSL_Presence_Kind (Pres : PSL_Presence_Kind) is
+   function Image_PSL_Presence_Kind (Pres : PSL_Presence_Kind) return String
+   is
    begin
       case Pres is
          when Present_Pos =>
-            Put ('+');
+            return "+";
          when Present_Neg =>
-            Put ('-');
+            return "-";
          when Present_Unknown =>
-            Put ('?');
+            return "?";
       end case;
-   end Disp_PSL_Presence_Kind;
+   end Image_PSL_Presence_Kind;
 
    procedure Disp_Location (Loc : Location_Type) is
    begin
@@ -113,643 +103,112 @@ package body PSL.Dump_Tree is
 --        New_Line;
 --     end Disp_String_Id;
 
-   --  Subprograms.
-   procedure Disp_Tree (N : Node; Indent : Natural; Full : boolean := False) is
-      Chain : Node;
+   procedure Disp_Header (N : Node)
+   is
+      use Nodes_Meta;
+      K : Nkind;
    begin
-      Disp_Node_Number (N);
-      Put (": ");
       if N = Null_Node then
-         Put_Line ("*NULL*");
+         Put_Line ("*null*");
          return;
       end if;
-      Put_Line (Nkind'Image (Get_Kind (N)));
-      Disp_Indent (Indent);
-      Put ("  loc: ");
+
+      K := Get_Kind (N);
+      Put (Get_Nkind_Image (K));
+      if Has_Identifier (K) then
+         Put (' ');
+         Put (Name_Table.Image (Get_Identifier (N)));
+      end if;
+
+      Put (' ');
+      Disp_Node_Number (N);
+
+      New_Line;
+   end Disp_Header;
+
+   procedure Disp_Tree (N : Node; Indent : Natural; Depth : Natural);
+
+   procedure Disp_Chain (Tree_Chain: Node; Indent: Natural; Depth : Natural)
+   is
+      El: Node;
+   begin
+      New_Line;
+      El := Tree_Chain;
+      while El /= Null_Node loop
+         Put_Indent (Indent);
+         Disp_Tree (El, Indent + 1, Depth);
+         El := Get_Chain (El);
+      end loop;
+   end Disp_Chain;
+
+   procedure Disp_Tree (N : Node; Indent : Natural; Depth : Natural) is
+   begin
+      Disp_Header (N);
+
+      if Depth <= 1 or else N = Null_Node then
+         return;
+      end if;
+
+      Disp_Header ("location", Indent);
       Disp_Location (Get_Location (N));
       New_Line;
-      case Get_Kind (N) is
-         when N_Error =>
-            if not Full then
-               return;
-            end if;
-         when N_Vmode =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Instance", Indent + 1);
-            Disp_Tree (Get_Instance (N), Indent + 1, Full);
-            Disp_Header ("Item_Chain", Indent + 1);
-            Disp_Tree (Get_Item_Chain (N), Indent + 1, Full);
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Vunit =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Instance", Indent + 1);
-            Disp_Tree (Get_Instance (N), Indent + 1, Full);
-            Disp_Header ("Item_Chain", Indent + 1);
-            Disp_Tree (Get_Item_Chain (N), Indent + 1, Full);
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Vprop =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Instance", Indent + 1);
-            Disp_Tree (Get_Instance (N), Indent + 1, Full);
-            Disp_Header ("Item_Chain", Indent + 1);
-            Disp_Tree (Get_Item_Chain (N), Indent + 1, Full);
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Hdl_Mod_Name =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Prefix", Indent + 1);
-            Disp_Tree (Get_Prefix (N), Indent + 1, Full);
-         when N_Assert_Directive =>
-            Disp_Header ("Label", Indent + 1);
-            Disp_Label (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("String", Indent + 1);
-            Disp_Tree (Get_String (N), Indent + 1, Full);
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("NFA", Indent + 1);
-            Disp_NFA (Get_NFA (N));
-            New_Line;
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Property_Declaration =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("Global_Clock", Indent + 1);
-            Disp_Tree (Get_Global_Clock (N), Indent + 1, Full);
-            Disp_Header ("Parameter_List", Indent + 1);
-            Disp_Tree (Get_Parameter_List (N), Indent + 1, Full);
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Sequence_Declaration =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Parameter_List", Indent + 1);
-            Disp_Tree (Get_Parameter_List (N), Indent + 1, Full);
-            Disp_Header ("Sequence", Indent + 1);
-            Disp_Tree (Get_Sequence (N), Indent + 1, Full);
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Endpoint_Declaration =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Parameter_List", Indent + 1);
-            Disp_Tree (Get_Parameter_List (N), Indent + 1, Full);
-            Disp_Header ("Sequence", Indent + 1);
-            Disp_Tree (Get_Sequence (N), Indent + 1, Full);
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Const_Parameter =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Actual", Indent + 1);
-            Disp_Tree (Get_Actual (N), Indent + 1, Full);
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Boolean_Parameter =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Actual", Indent + 1);
-            Disp_Tree (Get_Actual (N), Indent + 1, Full);
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Property_Parameter =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Actual", Indent + 1);
-            Disp_Tree (Get_Actual (N), Indent + 1, Full);
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Sequence_Parameter =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Actual", Indent + 1);
-            Disp_Tree (Get_Actual (N), Indent + 1, Full);
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Sequence_Instance =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Declaration", Indent + 1);
-            Disp_Tree (Get_Declaration (N), Indent + 1, False);
-            Disp_Header ("Association_Chain", Indent + 1);
-            Disp_Tree (Get_Association_Chain (N), Indent + 1, Full);
-         when N_Endpoint_Instance =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Declaration", Indent + 1);
-            Disp_Tree (Get_Declaration (N), Indent + 1, False);
-            Disp_Header ("Association_Chain", Indent + 1);
-            Disp_Tree (Get_Association_Chain (N), Indent + 1, Full);
-         when N_Property_Instance =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Declaration", Indent + 1);
-            Disp_Tree (Get_Declaration (N), Indent + 1, False);
-            Disp_Header ("Association_Chain", Indent + 1);
-            Disp_Tree (Get_Association_Chain (N), Indent + 1, Full);
-         when N_Actual =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Actual", Indent + 1);
-            Disp_Tree (Get_Actual (N), Indent + 1, Full);
-            Disp_Header ("Formal", Indent + 1);
-            Disp_Tree (Get_Formal (N), Indent + 1, Full);
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Clock_Event =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("Boolean", Indent + 1);
-            Disp_Tree (Get_Boolean (N), Indent + 1, Full);
-         when N_Always =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-         when N_Never =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-         when N_Eventually =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-         when N_Strong =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-         when N_Imp_Seq =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("Sequence", Indent + 1);
-            Disp_Tree (Get_Sequence (N), Indent + 1, Full);
-         when N_Overlap_Imp_Seq =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("Sequence", Indent + 1);
-            Disp_Tree (Get_Sequence (N), Indent + 1, Full);
-         when N_Log_Imp_Prop =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-         when N_Next =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("Strong_Flag", Indent + 1);
-            Disp_Boolean (Get_Strong_Flag (N));
-            New_Line;
-            Disp_Header ("Number", Indent + 1);
-            Disp_Tree (Get_Number (N), Indent + 1, Full);
-         when N_Next_A =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("Strong_Flag", Indent + 1);
-            Disp_Boolean (Get_Strong_Flag (N));
-            New_Line;
-            Disp_Header ("Low_Bound", Indent + 1);
-            Disp_Tree (Get_Low_Bound (N), Indent + 1, Full);
-            Disp_Header ("High_Bound", Indent + 1);
-            Disp_Tree (Get_High_Bound (N), Indent + 1, Full);
-         when N_Next_E =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("Strong_Flag", Indent + 1);
-            Disp_Boolean (Get_Strong_Flag (N));
-            New_Line;
-            Disp_Header ("Low_Bound", Indent + 1);
-            Disp_Tree (Get_Low_Bound (N), Indent + 1, Full);
-            Disp_Header ("High_Bound", Indent + 1);
-            Disp_Tree (Get_High_Bound (N), Indent + 1, Full);
-         when N_Next_Event =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("Boolean", Indent + 1);
-            Disp_Tree (Get_Boolean (N), Indent + 1, Full);
-            Disp_Header ("Strong_Flag", Indent + 1);
-            Disp_Boolean (Get_Strong_Flag (N));
-            New_Line;
-            Disp_Header ("Number", Indent + 1);
-            Disp_Tree (Get_Number (N), Indent + 1, Full);
-         when N_Next_Event_A =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("Boolean", Indent + 1);
-            Disp_Tree (Get_Boolean (N), Indent + 1, Full);
-            Disp_Header ("Strong_Flag", Indent + 1);
-            Disp_Boolean (Get_Strong_Flag (N));
-            New_Line;
-            Disp_Header ("Low_Bound", Indent + 1);
-            Disp_Tree (Get_Low_Bound (N), Indent + 1, Full);
-            Disp_Header ("High_Bound", Indent + 1);
-            Disp_Tree (Get_High_Bound (N), Indent + 1, Full);
-         when N_Next_Event_E =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("Boolean", Indent + 1);
-            Disp_Tree (Get_Boolean (N), Indent + 1, Full);
-            Disp_Header ("Strong_Flag", Indent + 1);
-            Disp_Boolean (Get_Strong_Flag (N));
-            New_Line;
-            Disp_Header ("Low_Bound", Indent + 1);
-            Disp_Tree (Get_Low_Bound (N), Indent + 1, Full);
-            Disp_Header ("High_Bound", Indent + 1);
-            Disp_Tree (Get_High_Bound (N), Indent + 1, Full);
-         when N_Abort =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Property", Indent + 1);
-            Disp_Tree (Get_Property (N), Indent + 1, Full);
-            Disp_Header ("Boolean", Indent + 1);
-            Disp_Tree (Get_Boolean (N), Indent + 1, Full);
-         when N_Until =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Strong_Flag", Indent + 1);
-            Disp_Boolean (Get_Strong_Flag (N));
-            New_Line;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-            Disp_Header ("Inclusive_Flag", Indent + 1);
-            Disp_Boolean (Get_Inclusive_Flag (N));
-            New_Line;
-         when N_Before =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Strong_Flag", Indent + 1);
-            Disp_Boolean (Get_Strong_Flag (N));
-            New_Line;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-            Disp_Header ("Inclusive_Flag", Indent + 1);
-            Disp_Boolean (Get_Inclusive_Flag (N));
-            New_Line;
-         when N_Or_Prop =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-         when N_And_Prop =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-         when N_Braced_SERE =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("SERE", Indent + 1);
-            Disp_Tree (Get_SERE (N), Indent + 1, Full);
-         when N_Concat_SERE =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-         when N_Fusion_SERE =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-         when N_Within_SERE =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-         when N_Match_And_Seq =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-         when N_And_Seq =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-         when N_Or_Seq =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-         when N_Star_Repeat_Seq =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Sequence", Indent + 1);
-            Disp_Tree (Get_Sequence (N), Indent + 1, Full);
-            Disp_Header ("Low_Bound", Indent + 1);
-            Disp_Tree (Get_Low_Bound (N), Indent + 1, Full);
-            Disp_Header ("High_Bound", Indent + 1);
-            Disp_Tree (Get_High_Bound (N), Indent + 1, Full);
-         when N_Goto_Repeat_Seq =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Sequence", Indent + 1);
-            Disp_Tree (Get_Sequence (N), Indent + 1, Full);
-            Disp_Header ("Low_Bound", Indent + 1);
-            Disp_Tree (Get_Low_Bound (N), Indent + 1, Full);
-            Disp_Header ("High_Bound", Indent + 1);
-            Disp_Tree (Get_High_Bound (N), Indent + 1, Full);
-         when N_Plus_Repeat_Seq =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Sequence", Indent + 1);
-            Disp_Tree (Get_Sequence (N), Indent + 1, Full);
-         when N_Equal_Repeat_Seq =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Sequence", Indent + 1);
-            Disp_Tree (Get_Sequence (N), Indent + 1, Full);
-            Disp_Header ("Low_Bound", Indent + 1);
-            Disp_Tree (Get_Low_Bound (N), Indent + 1, Full);
-            Disp_Header ("High_Bound", Indent + 1);
-            Disp_Tree (Get_High_Bound (N), Indent + 1, Full);
-         when N_Not_Bool =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Boolean", Indent + 1);
-            Disp_Tree (Get_Boolean (N), Indent + 1, Full);
-            Disp_Header ("Presence", Indent + 1);
-            Disp_PSL_Presence_Kind (Get_Presence (N));
-            New_Line;
-            Disp_Header ("Hash", Indent + 1);
-            Disp_Uns32 (Get_Hash (N));
-            New_Line;
-            Disp_Header ("Hash_Link", Indent + 1);
-            Disp_Tree (Get_Hash_Link (N), Indent + 1, Full);
-         when N_And_Bool =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-            Disp_Header ("Presence", Indent + 1);
-            Disp_PSL_Presence_Kind (Get_Presence (N));
-            New_Line;
-            Disp_Header ("Hash", Indent + 1);
-            Disp_Uns32 (Get_Hash (N));
-            New_Line;
-            Disp_Header ("Hash_Link", Indent + 1);
-            Disp_Tree (Get_Hash_Link (N), Indent + 1, Full);
-         when N_Or_Bool =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-            Disp_Header ("Presence", Indent + 1);
-            Disp_PSL_Presence_Kind (Get_Presence (N));
-            New_Line;
-            Disp_Header ("Hash", Indent + 1);
-            Disp_Uns32 (Get_Hash (N));
-            New_Line;
-            Disp_Header ("Hash_Link", Indent + 1);
-            Disp_Tree (Get_Hash_Link (N), Indent + 1, Full);
-         when N_Imp_Bool =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Left", Indent + 1);
-            Disp_Tree (Get_Left (N), Indent + 1, Full);
-            Disp_Header ("Right", Indent + 1);
-            Disp_Tree (Get_Right (N), Indent + 1, Full);
-            Disp_Header ("Presence", Indent + 1);
-            Disp_PSL_Presence_Kind (Get_Presence (N));
-            New_Line;
-            Disp_Header ("Hash", Indent + 1);
-            Disp_Uns32 (Get_Hash (N));
-            New_Line;
-            Disp_Header ("Hash_Link", Indent + 1);
-            Disp_Tree (Get_Hash_Link (N), Indent + 1, Full);
-         when N_HDL_Expr =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Presence", Indent + 1);
-            Disp_PSL_Presence_Kind (Get_Presence (N));
-            New_Line;
-            Disp_Header ("HDL_Node", Indent + 1);
-            Disp_HDL_Node (Get_HDL_Node (N));
-            New_Line;
-            Disp_Header ("HDL_Index", Indent + 1);
-            Disp_Int32 (Get_HDL_Index (N));
-            New_Line;
-            Disp_Header ("Hash", Indent + 1);
-            Disp_Uns32 (Get_Hash (N));
-            New_Line;
-            Disp_Header ("Hash_Link", Indent + 1);
-            Disp_Tree (Get_Hash_Link (N), Indent + 1, Full);
-         when N_False =>
-            if not Full then
-               return;
-            end if;
-         when N_True =>
-            if not Full then
-               return;
-            end if;
-         when N_EOS =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("HDL_Index", Indent + 1);
-            Disp_Int32 (Get_HDL_Index (N));
-            New_Line;
-            Disp_Header ("Hash", Indent + 1);
-            Disp_Uns32 (Get_Hash (N));
-            New_Line;
-            Disp_Header ("Hash_Link", Indent + 1);
-            Disp_Tree (Get_Hash_Link (N), Indent + 1, Full);
-         when N_Name =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Decl", Indent + 1);
-            Disp_Tree (Get_Decl (N), Indent + 1, Full);
-         when N_Name_Decl =>
-            Disp_Header ("Identifier", Indent + 1);
-            Disp_Identifier (N);
-            if not Full then
-               return;
-            end if;
-            Chain := Get_Chain (N);
-            if Chain /= Null_Node then
-               Disp_Indent (Indent);
-               Disp_Tree (Chain, Indent, Full);
-            end if;
-         when N_Number =>
-            if not Full then
-               return;
-            end if;
-            Disp_Header ("Value", Indent + 1);
-            Disp_Uns32 (Get_Value (N));
-            New_Line;
-      end case;
+
+      declare
+         use Nodes_Meta;
+         Sub_Indent : constant Natural := Indent + 1;
+
+         Fields : constant Fields_Array := Get_Fields (Get_Kind (N));
+         F : Fields_Enum;
+      begin
+         for I in Fields'Range loop
+            F := Fields (I);
+            Disp_Header (Get_Field_Image (F), Indent);
+            case Get_Field_Type (F) is
+               when Type_Node =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Disp_Tree (Get_Node (N, F), Sub_Indent, Depth - 1);
+                     when Attr_Ref =>
+                        Disp_Tree (Get_Node (N, F), Sub_Indent, 0);
+                     when Attr_Chain =>
+                        Disp_Chain (Get_Node (N, F), Sub_Indent, Depth - 1);
+                     when Attr_Chain_Next =>
+                        Disp_Node_Number (Get_Node (N, F));
+                        New_Line;
+                     when Attr_Maybe_Ref | Attr_Of_Ref =>
+                        raise Internal_Error;
+                  end case;
+               when Type_Boolean =>
+                  Put_Line (Image_Boolean (Get_Boolean (N, F)));
+               when Type_Int32 =>
+                  Disp_Int32 (Get_Int32 (N, F));
+                  New_Line;
+               when Type_Uns32 =>
+                  Disp_Uns32 (Get_Uns32 (N, F));
+                  New_Line;
+               when Type_Name_Id =>
+                  Put_Line (Name_Table.Image (Get_Name_Id (N, F)));
+               when Type_HDL_Node =>
+                  Disp_HDL_Node (Get_HDL_Node (N, F));
+                  New_Line;
+               when Type_NFA =>
+                  Disp_NFA (Get_NFA (N, F));
+                  New_Line;
+               when Type_PSL_Presence_Kind =>
+                  Put (Image_PSL_Presence_Kind (Get_PSL_Presence_Kind (N, F)));
+                  New_Line;
+            end case;
+         end loop;
+      end;
    end Disp_Tree;
 
    procedure Dump_Tree (N : Node; Full : Boolean := False) is
    begin
-      Disp_Tree (N, 0, Full);
+      if Full then
+         Disp_Tree (N, 0, 20);
+      else
+         Disp_Tree (N, 0, 0);
+      end if;
    end Dump_Tree;
 
 end PSL.Dump_Tree;

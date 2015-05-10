@@ -3,6 +3,7 @@ with Ada.Unchecked_Conversion;
 with GNAT.Table;
 with PSL.Errors;
 with PSL.Hash;
+with PSL.Nodes_Meta; use PSL.Nodes_Meta;
 
 package body PSL.Nodes is
    --  Suppress the access check of the table base.  This is really safe to
@@ -16,11 +17,8 @@ package body PSL.Nodes is
 
    type Format_Type is
      (
-      Format_Short,
-      Format_Medium
+      Format_Short
      );
-
-   pragma Unreferenced (Format_Type, Format_Short, Format_Medium);
 
    -- Common fields are:
    --   Flag1 : Boolean
@@ -33,28 +31,14 @@ package body PSL.Nodes is
    --   State1 : Bit2_Type
    --   State2 : Bit2_Type
    --   Location : Int32
-   --   Field1 : Int32
-   --   Field2 : Int32
-   --   Field3 : Int32
-   --   Field4 : Int32
+   --   Field1 : Node
+   --   Field2 : Node
+   --   Field3 : Node
+   --   Field4 : Node
 
    -- Fields of Format_Short:
-   --   Field5 : Int32
-   --   Field6 : Int32
-
-   -- Fields of Format_Medium:
-   --   Odigit1 : Bit3_Type
-   --   Odigit2 : Bit3_Type
-   --   State3 : Bit2_Type
-   --   State4 : Bit2_Type
-   --   Field5 : Int32
-   --   Field6 : Int32
-   --   Field7 : Int32 (location)
-   --   Field8 : Int32 (field1)
-   --   Field9 : Int32 (field2)
-   --   Field10 : Int32 (field3)
-   --   Field11 : Int32 (field4)
-   --   Field12 : Int32 (field5)
+   --   Field5 : Node
+   --   Field6 : Node
 
    type State_Type is range 0 .. 3;
    type Bit3_Type is range 0 .. 7;
@@ -84,12 +68,12 @@ package body PSL.Nodes is
       Flag19 : Boolean;
 
       Location : Int32;
-      Field1 : Int32;
-      Field2 : Int32;
-      Field3 : Int32;
-      Field4 : Int32;
-      Field5 : Int32;
-      Field6 : Int32;
+      Field1 : Node;
+      Field2 : Node;
+      Field3 : Node;
+      Field4 : Node;
+      Field5 : Node;
+      Field6 : Node;
    end record;
    pragma Pack (Node_Record);
    for Node_Record'Size use 8 * 32;
@@ -123,17 +107,29 @@ package body PSL.Nodes is
       return Nodet.Last;
    end Get_Last_Node;
 
-   function Int32_To_Uns32 is new Ada.Unchecked_Conversion
-     (Source => Int32, Target => Uns32);
+   function Node_To_Uns32 is new Ada.Unchecked_Conversion
+     (Source => Node, Target => Uns32);
 
-   function Uns32_To_Int32 is new Ada.Unchecked_Conversion
-     (Source => Uns32, Target => Int32);
+   function Uns32_To_Node is new Ada.Unchecked_Conversion
+     (Source => Uns32, Target => Node);
 
-   function Int32_To_NFA is new Ada.Unchecked_Conversion
-     (Source => Int32, Target => NFA);
+   function Node_To_Int32 is new Ada.Unchecked_Conversion
+     (Source => Node, Target => Int32);
 
-   function NFA_To_Int32 is new Ada.Unchecked_Conversion
-     (Source => NFA, Target => Int32);
+   function Int32_To_Node is new Ada.Unchecked_Conversion
+     (Source => Int32, Target => Node);
+
+   function Node_To_NFA is new Ada.Unchecked_Conversion
+     (Source => Node, Target => NFA);
+
+   function NFA_To_Node is new Ada.Unchecked_Conversion
+     (Source => NFA, Target => Node);
+
+   function Node_To_HDL_Node is new Ada.Unchecked_Conversion
+     (Source => Node, Target => HDL_Node);
+
+   function HDL_Node_To_Node is new Ada.Unchecked_Conversion
+     (Source => HDL_Node, Target => Node);
 
    procedure Set_Kind (N : Node; K : Nkind) is
    begin
@@ -189,81 +185,74 @@ package body PSL.Nodes is
    end Set_Location;
 
 
-   procedure Set_Field1 (N : Node; V : Int32) is
+   procedure Set_Field1 (N : Node; V : Node) is
    begin
       Nodet.Table (N).Field1 := V;
    end Set_Field1;
 
-   function Get_Field1 (N : Node) return Int32 is
+   function Get_Field1 (N : Node) return Node is
    begin
       return Nodet.Table (N).Field1;
    end Get_Field1;
 
 
-   procedure Set_Field2 (N : Node; V : Int32) is
+   procedure Set_Field2 (N : Node; V : Node) is
    begin
       Nodet.Table (N).Field2 := V;
    end Set_Field2;
 
-   function Get_Field2 (N : Node) return Int32 is
+   function Get_Field2 (N : Node) return Node is
    begin
       return Nodet.Table (N).Field2;
    end Get_Field2;
 
 
-   function Get_Field3 (N : Node) return Int32 is
+   function Get_Field3 (N : Node) return Node is
    begin
       return Nodet.Table (N).Field3;
    end Get_Field3;
 
-   procedure Set_Field3 (N : Node; V : Int32) is
+   procedure Set_Field3 (N : Node; V : Node) is
    begin
       Nodet.Table (N).Field3 := V;
    end Set_Field3;
 
 
-   function Get_Field4 (N : Node) return Int32 is
+   function Get_Field4 (N : Node) return Node is
    begin
       return Nodet.Table (N).Field4;
    end Get_Field4;
 
-   procedure Set_Field4 (N : Node; V : Int32) is
+   procedure Set_Field4 (N : Node; V : Node) is
    begin
       Nodet.Table (N).Field4 := V;
    end Set_Field4;
 
 
-   function Get_Field5 (N : Node) return Int32 is
+   function Get_Field5 (N : Node) return Node is
    begin
       return Nodet.Table (N).Field5;
    end Get_Field5;
 
-   procedure Set_Field5 (N : Node; V : Int32) is
+   procedure Set_Field5 (N : Node; V : Node) is
    begin
       Nodet.Table (N).Field5 := V;
    end Set_Field5;
 
 
-   function Get_Field6 (N : Node) return Int32 is
+   function Get_Field6 (N : Node) return Node is
    begin
       return Nodet.Table (N).Field6;
    end Get_Field6;
 
-   procedure Set_Field6 (N : Node; V : Int32) is
+   procedure Set_Field6 (N : Node; V : Node) is
    begin
       Nodet.Table (N).Field6 := V;
    end Set_Field6;
 
-   procedure Set_Field7 (N : Node; V : Int32) is
-   begin
-      Nodet.Table (N + 1).Field1 := V;
-   end Set_Field7;
 
-   function Get_Field7 (N : Node) return Int32 is
-   begin
-      return Nodet.Table (N + 1).Field1;
-   end Get_Field7;
-
+   function Get_Format (Kind : Nkind) return Format_Type;
+   pragma Unreferenced (Get_Format);
 
    function Create_Node (Kind : Nkind) return Node
    is
@@ -271,7 +260,7 @@ package body PSL.Nodes is
    begin
       if Free_Nodes /= Null_Node then
          Res := Free_Nodes;
-         Free_Nodes := Node (Get_Field1 (Res));
+         Free_Nodes := Get_Field1 (Res);
       else
          Nodet.Increment_Last;
          Res := Nodet.Last;
@@ -285,7 +274,7 @@ package body PSL.Nodes is
    is
    begin
       Set_Kind (N, N_Error);
-      Set_Field1 (N, Int32 (Free_Nodes));
+      Set_Field1 (N, Free_Nodes);
       Free_Nodes := N;
    end Free_Node;
 
@@ -393,48 +382,15 @@ package body PSL.Nodes is
    end Reference_Failed;
    pragma Unreferenced (Reference_Failed);
 
-   pragma Unreferenced (Set_Field7, Get_Field7);
-   --  Subprograms.
-   procedure Check_Kind_For_Identifier (N : Node) is
+   --  Subprograms
+   function Get_Format (Kind : Nkind) return Format_Type is
    begin
-      case Get_Kind (N) is
-         when N_Vmode
+      case Kind is
+         when N_Error
+           | N_Vmode
            | N_Vunit
            | N_Vprop
            | N_Hdl_Mod_Name
-           | N_Property_Declaration
-           | N_Sequence_Declaration
-           | N_Endpoint_Declaration
-           | N_Const_Parameter
-           | N_Boolean_Parameter
-           | N_Property_Parameter
-           | N_Sequence_Parameter
-           | N_Name
-           | N_Name_Decl =>
-            null;
-         when others =>
-            Failed ("Get/Set_Identifier", N);
-      end case;
-   end Check_Kind_For_Identifier;
-
-   function Get_Identifier (N : Node) return Name_Id is
-   begin
-      Check_Kind_For_Identifier (N);
-      return Name_Id (Get_Field1 (N));
-   end Get_Identifier;
-
-   procedure Set_Identifier (N : Node; Id : Name_Id) is
-   begin
-      Check_Kind_For_Identifier (N);
-      Set_Field1 (N, Int32 (Id));
-   end Set_Identifier;
-
-   procedure Check_Kind_For_Chain (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Vmode
-           | N_Vunit
-           | N_Vprop
            | N_Assert_Directive
            | N_Property_Declaration
            | N_Sequence_Declaration
@@ -443,145 +399,10 @@ package body PSL.Nodes is
            | N_Boolean_Parameter
            | N_Property_Parameter
            | N_Sequence_Parameter
+           | N_Sequence_Instance
+           | N_Endpoint_Instance
+           | N_Property_Instance
            | N_Actual
-           | N_Name_Decl =>
-            null;
-         when others =>
-            Failed ("Get/Set_Chain", N);
-      end case;
-   end Check_Kind_For_Chain;
-
-   function Get_Chain (N : Node) return Node is
-   begin
-      Check_Kind_For_Chain (N);
-      return Node (Get_Field2 (N));
-   end Get_Chain;
-
-   procedure Set_Chain (N : Node; Chain : Node) is
-   begin
-      Check_Kind_For_Chain (N);
-      Set_Field2 (N, Int32 (Chain));
-   end Set_Chain;
-
-   procedure Check_Kind_For_Instance (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Vmode
-           | N_Vunit
-           | N_Vprop =>
-            null;
-         when others =>
-            Failed ("Get/Set_Instance", N);
-      end case;
-   end Check_Kind_For_Instance;
-
-   function Get_Instance (N : Node) return Node is
-   begin
-      Check_Kind_For_Instance (N);
-      return Node (Get_Field3 (N));
-   end Get_Instance;
-
-   procedure Set_Instance (N : Node; Instance : Node) is
-   begin
-      Check_Kind_For_Instance (N);
-      Set_Field3 (N, Int32 (Instance));
-   end Set_Instance;
-
-   procedure Check_Kind_For_Item_Chain (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Vmode
-           | N_Vunit
-           | N_Vprop =>
-            null;
-         when others =>
-            Failed ("Get/Set_Item_Chain", N);
-      end case;
-   end Check_Kind_For_Item_Chain;
-
-   function Get_Item_Chain (N : Node) return Node is
-   begin
-      Check_Kind_For_Item_Chain (N);
-      return Node (Get_Field4 (N));
-   end Get_Item_Chain;
-
-   procedure Set_Item_Chain (N : Node; Item : Node) is
-   begin
-      Check_Kind_For_Item_Chain (N);
-      Set_Field4 (N, Int32 (Item));
-   end Set_Item_Chain;
-
-   procedure Check_Kind_For_Prefix (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Hdl_Mod_Name =>
-            null;
-         when others =>
-            Failed ("Get/Set_Prefix", N);
-      end case;
-   end Check_Kind_For_Prefix;
-
-   function Get_Prefix (N : Node) return Node is
-   begin
-      Check_Kind_For_Prefix (N);
-      return Node (Get_Field2 (N));
-   end Get_Prefix;
-
-   procedure Set_Prefix (N : Node; Prefix : Node) is
-   begin
-      Check_Kind_For_Prefix (N);
-      Set_Field2 (N, Int32 (Prefix));
-   end Set_Prefix;
-
-   procedure Check_Kind_For_Label (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Assert_Directive =>
-            null;
-         when others =>
-            Failed ("Get/Set_Label", N);
-      end case;
-   end Check_Kind_For_Label;
-
-   function Get_Label (N : Node) return Name_Id is
-   begin
-      Check_Kind_For_Label (N);
-      return Name_Id (Get_Field1 (N));
-   end Get_Label;
-
-   procedure Set_Label (N : Node; Id : Name_Id) is
-   begin
-      Check_Kind_For_Label (N);
-      Set_Field1 (N, Int32 (Id));
-   end Set_Label;
-
-   procedure Check_Kind_For_String (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Assert_Directive =>
-            null;
-         when others =>
-            Failed ("Get/Set_String", N);
-      end case;
-   end Check_Kind_For_String;
-
-   function Get_String (N : Node) return Node is
-   begin
-      Check_Kind_For_String (N);
-      return Node (Get_Field3 (N));
-   end Get_String;
-
-   procedure Set_String (N : Node; Str : Node) is
-   begin
-      Check_Kind_For_String (N);
-      Set_Field3 (N, Int32 (Str));
-   end Set_String;
-
-   procedure Check_Kind_For_Property (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Assert_Directive
-           | N_Property_Declaration
            | N_Clock_Event
            | N_Always
            | N_Never
@@ -589,643 +410,555 @@ package body PSL.Nodes is
            | N_Strong
            | N_Imp_Seq
            | N_Overlap_Imp_Seq
+           | N_Log_Imp_Prop
            | N_Next
            | N_Next_A
            | N_Next_E
            | N_Next_Event
            | N_Next_Event_A
            | N_Next_Event_E
-           | N_Abort =>
-            null;
-         when others =>
-            Failed ("Get/Set_Property", N);
+           | N_Abort
+           | N_Until
+           | N_Before
+           | N_Or_Prop
+           | N_And_Prop
+           | N_Braced_SERE
+           | N_Concat_SERE
+           | N_Fusion_SERE
+           | N_Within_SERE
+           | N_Match_And_Seq
+           | N_And_Seq
+           | N_Or_Seq
+           | N_Star_Repeat_Seq
+           | N_Goto_Repeat_Seq
+           | N_Plus_Repeat_Seq
+           | N_Equal_Repeat_Seq
+           | N_Not_Bool
+           | N_And_Bool
+           | N_Or_Bool
+           | N_Imp_Bool
+           | N_HDL_Expr
+           | N_False
+           | N_True
+           | N_EOS
+           | N_Name
+           | N_Name_Decl
+           | N_Number =>
+            return Format_Short;
       end case;
-   end Check_Kind_For_Property;
+   end Get_Format;
+
+   function Get_Identifier (N : Node) return Name_Id is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Identifier (Get_Kind (N)),
+                     "no field Identifier");
+      return Name_Id'Val (Get_Field1 (N));
+   end Get_Identifier;
+
+   procedure Set_Identifier (N : Node; Id : Name_Id) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Identifier (Get_Kind (N)),
+                     "no field Identifier");
+      Set_Field1 (N, Name_Id'Pos (Id));
+   end Set_Identifier;
+
+   function Get_Label (N : Node) return Name_Id is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Label (Get_Kind (N)),
+                     "no field Label");
+      return Name_Id'Val (Get_Field1 (N));
+   end Get_Label;
+
+   procedure Set_Label (N : Node; Id : Name_Id) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Label (Get_Kind (N)),
+                     "no field Label");
+      Set_Field1 (N, Name_Id'Pos (Id));
+   end Set_Label;
+
+   function Get_Chain (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Chain (Get_Kind (N)),
+                     "no field Chain");
+      return Get_Field2 (N);
+   end Get_Chain;
+
+   procedure Set_Chain (N : Node; Chain : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Chain (Get_Kind (N)),
+                     "no field Chain");
+      Set_Field2 (N, Chain);
+   end Set_Chain;
+
+   function Get_Instance (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Instance (Get_Kind (N)),
+                     "no field Instance");
+      return Get_Field3 (N);
+   end Get_Instance;
+
+   procedure Set_Instance (N : Node; Instance : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Instance (Get_Kind (N)),
+                     "no field Instance");
+      Set_Field3 (N, Instance);
+   end Set_Instance;
+
+   function Get_Prefix (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Prefix (Get_Kind (N)),
+                     "no field Prefix");
+      return Get_Field2 (N);
+   end Get_Prefix;
+
+   procedure Set_Prefix (N : Node; Prefix : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Prefix (Get_Kind (N)),
+                     "no field Prefix");
+      Set_Field2 (N, Prefix);
+   end Set_Prefix;
+
+   function Get_Item_Chain (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Item_Chain (Get_Kind (N)),
+                     "no field Item_Chain");
+      return Get_Field4 (N);
+   end Get_Item_Chain;
+
+   procedure Set_Item_Chain (N : Node; Item : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Item_Chain (Get_Kind (N)),
+                     "no field Item_Chain");
+      Set_Field4 (N, Item);
+   end Set_Item_Chain;
 
    function Get_Property (N : Node) return Node is
    begin
-      Check_Kind_For_Property (N);
-      return Node (Get_Field4 (N));
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Property (Get_Kind (N)),
+                     "no field Property");
+      return Get_Field4 (N);
    end Get_Property;
 
    procedure Set_Property (N : Node; Property : Node) is
    begin
-      Check_Kind_For_Property (N);
-      Set_Field4 (N, Int32 (Property));
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Property (Get_Kind (N)),
+                     "no field Property");
+      Set_Field4 (N, Property);
    end Set_Property;
 
-   procedure Check_Kind_For_NFA (N : Node) is
+   function Get_String (N : Node) return Node is
    begin
-      case Get_Kind (N) is
-         when N_Assert_Directive =>
-            null;
-         when others =>
-            Failed ("Get/Set_NFA", N);
-      end case;
-   end Check_Kind_For_NFA;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_String (Get_Kind (N)),
+                     "no field String");
+      return Get_Field3 (N);
+   end Get_String;
 
-   function Get_NFA (N : Node) return NFA is
+   procedure Set_String (N : Node; Str : Node) is
    begin
-      Check_Kind_For_NFA (N);
-      return Int32_To_NFA (Get_Field5 (N));
-   end Get_NFA;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_String (Get_Kind (N)),
+                     "no field String");
+      Set_Field3 (N, Str);
+   end Set_String;
 
-   procedure Set_NFA (N : Node; P : NFA) is
+   function Get_SERE (N : Node) return Node is
    begin
-      Check_Kind_For_NFA (N);
-      Set_Field5 (N, NFA_To_Int32 (P));
-   end Set_NFA;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_SERE (Get_Kind (N)),
+                     "no field SERE");
+      return Get_Field1 (N);
+   end Get_SERE;
 
-   procedure Check_Kind_For_Global_Clock (N : Node) is
+   procedure Set_SERE (N : Node; S : Node) is
    begin
-      case Get_Kind (N) is
-         when N_Property_Declaration =>
-            null;
-         when others =>
-            Failed ("Get/Set_Global_Clock", N);
-      end case;
-   end Check_Kind_For_Global_Clock;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_SERE (Get_Kind (N)),
+                     "no field SERE");
+      Set_Field1 (N, S);
+   end Set_SERE;
 
-   function Get_Global_Clock (N : Node) return Node is
+   function Get_Left (N : Node) return Node is
    begin
-      Check_Kind_For_Global_Clock (N);
-      return Node (Get_Field3 (N));
-   end Get_Global_Clock;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Left (Get_Kind (N)),
+                     "no field Left");
+      return Get_Field1 (N);
+   end Get_Left;
 
-   procedure Set_Global_Clock (N : Node; Clock : Node) is
+   procedure Set_Left (N : Node; S : Node) is
    begin
-      Check_Kind_For_Global_Clock (N);
-      Set_Field3 (N, Int32 (Clock));
-   end Set_Global_Clock;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Left (Get_Kind (N)),
+                     "no field Left");
+      Set_Field1 (N, S);
+   end Set_Left;
 
-   procedure Check_Kind_For_Parameter_List (N : Node) is
+   function Get_Right (N : Node) return Node is
    begin
-      case Get_Kind (N) is
-         when N_Property_Declaration
-           | N_Sequence_Declaration
-           | N_Endpoint_Declaration =>
-            null;
-         when others =>
-            Failed ("Get/Set_Parameter_List", N);
-      end case;
-   end Check_Kind_For_Parameter_List;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Right (Get_Kind (N)),
+                     "no field Right");
+      return Get_Field2 (N);
+   end Get_Right;
 
-   function Get_Parameter_List (N : Node) return Node is
+   procedure Set_Right (N : Node; S : Node) is
    begin
-      Check_Kind_For_Parameter_List (N);
-      return Node (Get_Field5 (N));
-   end Get_Parameter_List;
-
-   procedure Set_Parameter_List (N : Node; E : Node) is
-   begin
-      Check_Kind_For_Parameter_List (N);
-      Set_Field5 (N, Int32 (E));
-   end Set_Parameter_List;
-
-   procedure Check_Kind_For_Sequence (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Sequence_Declaration
-           | N_Endpoint_Declaration
-           | N_Imp_Seq
-           | N_Overlap_Imp_Seq
-           | N_Star_Repeat_Seq
-           | N_Goto_Repeat_Seq
-           | N_Plus_Repeat_Seq
-           | N_Equal_Repeat_Seq =>
-            null;
-         when others =>
-            Failed ("Get/Set_Sequence", N);
-      end case;
-   end Check_Kind_For_Sequence;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Right (Get_Kind (N)),
+                     "no field Right");
+      Set_Field2 (N, S);
+   end Set_Right;
 
    function Get_Sequence (N : Node) return Node is
    begin
-      Check_Kind_For_Sequence (N);
-      return Node (Get_Field3 (N));
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Sequence (Get_Kind (N)),
+                     "no field Sequence");
+      return Get_Field3 (N);
    end Get_Sequence;
 
    procedure Set_Sequence (N : Node; S : Node) is
    begin
-      Check_Kind_For_Sequence (N);
-      Set_Field3 (N, Int32 (S));
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Sequence (Get_Kind (N)),
+                     "no field Sequence");
+      Set_Field3 (N, S);
    end Set_Sequence;
-
-   procedure Check_Kind_For_Actual (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Const_Parameter
-           | N_Boolean_Parameter
-           | N_Property_Parameter
-           | N_Sequence_Parameter
-           | N_Actual =>
-            null;
-         when others =>
-            Failed ("Get/Set_Actual", N);
-      end case;
-   end Check_Kind_For_Actual;
-
-   function Get_Actual (N : Node) return Node is
-   begin
-      Check_Kind_For_Actual (N);
-      return Node (Get_Field3 (N));
-   end Get_Actual;
-
-   procedure Set_Actual (N : Node; E : Node) is
-   begin
-      Check_Kind_For_Actual (N);
-      Set_Field3 (N, Int32 (E));
-   end Set_Actual;
-
-   procedure Check_Kind_For_Declaration (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Sequence_Instance
-           | N_Endpoint_Instance
-           | N_Property_Instance =>
-            null;
-         when others =>
-            Failed ("Get/Set_Declaration", N);
-      end case;
-   end Check_Kind_For_Declaration;
-
-   function Get_Declaration (N : Node) return Node is
-   begin
-      Check_Kind_For_Declaration (N);
-      return Node (Get_Field1 (N));
-   end Get_Declaration;
-
-   procedure Set_Declaration (N : Node; Decl : Node) is
-   begin
-      Check_Kind_For_Declaration (N);
-      Set_Field1 (N, Int32 (Decl));
-   end Set_Declaration;
-
-   procedure Check_Kind_For_Association_Chain (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Sequence_Instance
-           | N_Endpoint_Instance
-           | N_Property_Instance =>
-            null;
-         when others =>
-            Failed ("Get/Set_Association_Chain", N);
-      end case;
-   end Check_Kind_For_Association_Chain;
-
-   function Get_Association_Chain (N : Node) return Node is
-   begin
-      Check_Kind_For_Association_Chain (N);
-      return Node (Get_Field2 (N));
-   end Get_Association_Chain;
-
-   procedure Set_Association_Chain (N : Node; Chain : Node) is
-   begin
-      Check_Kind_For_Association_Chain (N);
-      Set_Field2 (N, Int32 (Chain));
-   end Set_Association_Chain;
-
-   procedure Check_Kind_For_Formal (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Actual =>
-            null;
-         when others =>
-            Failed ("Get/Set_Formal", N);
-      end case;
-   end Check_Kind_For_Formal;
-
-   function Get_Formal (N : Node) return Node is
-   begin
-      Check_Kind_For_Formal (N);
-      return Node (Get_Field4 (N));
-   end Get_Formal;
-
-   procedure Set_Formal (N : Node; E : Node) is
-   begin
-      Check_Kind_For_Formal (N);
-      Set_Field4 (N, Int32 (E));
-   end Set_Formal;
-
-   procedure Check_Kind_For_Boolean (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Clock_Event
-           | N_Next_Event
-           | N_Next_Event_A
-           | N_Next_Event_E
-           | N_Abort
-           | N_Not_Bool =>
-            null;
-         when others =>
-            Failed ("Get/Set_Boolean", N);
-      end case;
-   end Check_Kind_For_Boolean;
-
-   function Get_Boolean (N : Node) return Node is
-   begin
-      Check_Kind_For_Boolean (N);
-      return Node (Get_Field3 (N));
-   end Get_Boolean;
-
-   procedure Set_Boolean (N : Node; B : Node) is
-   begin
-      Check_Kind_For_Boolean (N);
-      Set_Field3 (N, Int32 (B));
-   end Set_Boolean;
-
-   procedure Check_Kind_For_Strong_Flag (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Next
-           | N_Next_A
-           | N_Next_E
-           | N_Next_Event
-           | N_Next_Event_A
-           | N_Next_Event_E
-           | N_Until
-           | N_Before =>
-            null;
-         when others =>
-            Failed ("Get/Set_Strong_Flag", N);
-      end case;
-   end Check_Kind_For_Strong_Flag;
 
    function Get_Strong_Flag (N : Node) return Boolean is
    begin
-      Check_Kind_For_Strong_Flag (N);
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Strong_Flag (Get_Kind (N)),
+                     "no field Strong_Flag");
       return Get_Flag1 (N);
    end Get_Strong_Flag;
 
    procedure Set_Strong_Flag (N : Node; B : Boolean) is
    begin
-      Check_Kind_For_Strong_Flag (N);
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Strong_Flag (Get_Kind (N)),
+                     "no field Strong_Flag");
       Set_Flag1 (N, B);
    end Set_Strong_Flag;
 
-   procedure Check_Kind_For_Number (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Next
-           | N_Next_Event =>
-            null;
-         when others =>
-            Failed ("Get/Set_Number", N);
-      end case;
-   end Check_Kind_For_Number;
-
-   function Get_Number (N : Node) return Node is
-   begin
-      Check_Kind_For_Number (N);
-      return Node (Get_Field1 (N));
-   end Get_Number;
-
-   procedure Set_Number (N : Node; S : Node) is
-   begin
-      Check_Kind_For_Number (N);
-      Set_Field1 (N, Int32 (S));
-   end Set_Number;
-
-   procedure Check_Kind_For_Decl (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Name =>
-            null;
-         when others =>
-            Failed ("Get/Set_Decl", N);
-      end case;
-   end Check_Kind_For_Decl;
-
-   function Get_Decl (N : Node) return Node is
-   begin
-      Check_Kind_For_Decl (N);
-      return Node (Get_Field2 (N));
-   end Get_Decl;
-
-   procedure Set_Decl (N : Node; D : Node) is
-   begin
-      Check_Kind_For_Decl (N);
-      Set_Field2 (N, Int32 (D));
-   end Set_Decl;
-
-   procedure Check_Kind_For_Value (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Number =>
-            null;
-         when others =>
-            Failed ("Get/Set_Value", N);
-      end case;
-   end Check_Kind_For_Value;
-
-   function Get_Value (N : Node) return Uns32 is
-   begin
-      Check_Kind_For_Value (N);
-      return Int32_To_Uns32 (Get_Field1 (N));
-   end Get_Value;
-
-   procedure Set_Value (N : Node; Val : Uns32) is
-   begin
-      Check_Kind_For_Value (N);
-      Set_Field1 (N, Uns32_To_Int32 (Val));
-   end Set_Value;
-
-   procedure Check_Kind_For_SERE (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Braced_SERE =>
-            null;
-         when others =>
-            Failed ("Get/Set_SERE", N);
-      end case;
-   end Check_Kind_For_SERE;
-
-   function Get_SERE (N : Node) return Node is
-   begin
-      Check_Kind_For_SERE (N);
-      return Node (Get_Field1 (N));
-   end Get_SERE;
-
-   procedure Set_SERE (N : Node; S : Node) is
-   begin
-      Check_Kind_For_SERE (N);
-      Set_Field1 (N, Int32 (S));
-   end Set_SERE;
-
-   procedure Check_Kind_For_Left (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Log_Imp_Prop
-           | N_Until
-           | N_Before
-           | N_Or_Prop
-           | N_And_Prop
-           | N_Concat_SERE
-           | N_Fusion_SERE
-           | N_Within_SERE
-           | N_Match_And_Seq
-           | N_And_Seq
-           | N_Or_Seq
-           | N_And_Bool
-           | N_Or_Bool
-           | N_Imp_Bool =>
-            null;
-         when others =>
-            Failed ("Get/Set_Left", N);
-      end case;
-   end Check_Kind_For_Left;
-
-   function Get_Left (N : Node) return Node is
-   begin
-      Check_Kind_For_Left (N);
-      return Node (Get_Field1 (N));
-   end Get_Left;
-
-   procedure Set_Left (N : Node; S : Node) is
-   begin
-      Check_Kind_For_Left (N);
-      Set_Field1 (N, Int32 (S));
-   end Set_Left;
-
-   procedure Check_Kind_For_Right (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Log_Imp_Prop
-           | N_Until
-           | N_Before
-           | N_Or_Prop
-           | N_And_Prop
-           | N_Concat_SERE
-           | N_Fusion_SERE
-           | N_Within_SERE
-           | N_Match_And_Seq
-           | N_And_Seq
-           | N_Or_Seq
-           | N_And_Bool
-           | N_Or_Bool
-           | N_Imp_Bool =>
-            null;
-         when others =>
-            Failed ("Get/Set_Right", N);
-      end case;
-   end Check_Kind_For_Right;
-
-   function Get_Right (N : Node) return Node is
-   begin
-      Check_Kind_For_Right (N);
-      return Node (Get_Field2 (N));
-   end Get_Right;
-
-   procedure Set_Right (N : Node; S : Node) is
-   begin
-      Check_Kind_For_Right (N);
-      Set_Field2 (N, Int32 (S));
-   end Set_Right;
-
-   procedure Check_Kind_For_Low_Bound (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Next_A
-           | N_Next_E
-           | N_Next_Event_A
-           | N_Next_Event_E
-           | N_Star_Repeat_Seq
-           | N_Goto_Repeat_Seq
-           | N_Equal_Repeat_Seq =>
-            null;
-         when others =>
-            Failed ("Get/Set_Low_Bound", N);
-      end case;
-   end Check_Kind_For_Low_Bound;
-
-   function Get_Low_Bound (N : Node) return Node is
-   begin
-      Check_Kind_For_Low_Bound (N);
-      return Node (Get_Field1 (N));
-   end Get_Low_Bound;
-
-   procedure Set_Low_Bound (N : Node; S : Node) is
-   begin
-      Check_Kind_For_Low_Bound (N);
-      Set_Field1 (N, Int32 (S));
-   end Set_Low_Bound;
-
-   procedure Check_Kind_For_High_Bound (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Next_A
-           | N_Next_E
-           | N_Next_Event_A
-           | N_Next_Event_E
-           | N_Star_Repeat_Seq
-           | N_Goto_Repeat_Seq
-           | N_Equal_Repeat_Seq =>
-            null;
-         when others =>
-            Failed ("Get/Set_High_Bound", N);
-      end case;
-   end Check_Kind_For_High_Bound;
-
-   function Get_High_Bound (N : Node) return Node is
-   begin
-      Check_Kind_For_High_Bound (N);
-      return Node (Get_Field2 (N));
-   end Get_High_Bound;
-
-   procedure Set_High_Bound (N : Node; S : Node) is
-   begin
-      Check_Kind_For_High_Bound (N);
-      Set_Field2 (N, Int32 (S));
-   end Set_High_Bound;
-
-   procedure Check_Kind_For_Inclusive_Flag (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Until
-           | N_Before =>
-            null;
-         when others =>
-            Failed ("Get/Set_Inclusive_Flag", N);
-      end case;
-   end Check_Kind_For_Inclusive_Flag;
-
    function Get_Inclusive_Flag (N : Node) return Boolean is
    begin
-      Check_Kind_For_Inclusive_Flag (N);
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Inclusive_Flag (Get_Kind (N)),
+                     "no field Inclusive_Flag");
       return Get_Flag2 (N);
    end Get_Inclusive_Flag;
 
    procedure Set_Inclusive_Flag (N : Node; B : Boolean) is
    begin
-      Check_Kind_For_Inclusive_Flag (N);
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Inclusive_Flag (Get_Kind (N)),
+                     "no field Inclusive_Flag");
       Set_Flag2 (N, B);
    end Set_Inclusive_Flag;
 
-   procedure Check_Kind_For_Presence (N : Node) is
+   function Get_Low_Bound (N : Node) return Node is
    begin
-      case Get_Kind (N) is
-         when N_Not_Bool
-           | N_And_Bool
-           | N_Or_Bool
-           | N_Imp_Bool
-           | N_HDL_Expr =>
-            null;
-         when others =>
-            Failed ("Get/Set_Presence", N);
-      end case;
-   end Check_Kind_For_Presence;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Low_Bound (Get_Kind (N)),
+                     "no field Low_Bound");
+      return Get_Field1 (N);
+   end Get_Low_Bound;
 
-   function Get_Presence (N : Node) return PSL_Presence_Kind is
+   procedure Set_Low_Bound (N : Node; S : Node) is
    begin
-      Check_Kind_For_Presence (N);
-      return PSL_Presence_Kind'Val(Get_State1 (N));
-   end Get_Presence;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Low_Bound (Get_Kind (N)),
+                     "no field Low_Bound");
+      Set_Field1 (N, S);
+   end Set_Low_Bound;
 
-   procedure Set_Presence (N : Node; P : PSL_Presence_Kind) is
+   function Get_High_Bound (N : Node) return Node is
    begin
-      Check_Kind_For_Presence (N);
-      Set_State1 (N, PSL_Presence_Kind'pos (P));
-   end Set_Presence;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_High_Bound (Get_Kind (N)),
+                     "no field High_Bound");
+      return Get_Field2 (N);
+   end Get_High_Bound;
 
-   procedure Check_Kind_For_HDL_Node (N : Node) is
+   procedure Set_High_Bound (N : Node; S : Node) is
    begin
-      case Get_Kind (N) is
-         when N_HDL_Expr =>
-            null;
-         when others =>
-            Failed ("Get/Set_HDL_Node", N);
-      end case;
-   end Check_Kind_For_HDL_Node;
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_High_Bound (Get_Kind (N)),
+                     "no field High_Bound");
+      Set_Field2 (N, S);
+   end Set_High_Bound;
+
+   function Get_Number (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Number (Get_Kind (N)),
+                     "no field Number");
+      return Get_Field1 (N);
+   end Get_Number;
+
+   procedure Set_Number (N : Node; S : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Number (Get_Kind (N)),
+                     "no field Number");
+      Set_Field1 (N, S);
+   end Set_Number;
+
+   function Get_Value (N : Node) return Uns32 is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Value (Get_Kind (N)),
+                     "no field Value");
+      return Node_To_Uns32 (Get_Field1 (N));
+   end Get_Value;
+
+   procedure Set_Value (N : Node; Val : Uns32) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Value (Get_Kind (N)),
+                     "no field Value");
+      Set_Field1 (N, Uns32_To_Node (Val));
+   end Set_Value;
+
+   function Get_Boolean (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Boolean (Get_Kind (N)),
+                     "no field Boolean");
+      return Get_Field3 (N);
+   end Get_Boolean;
+
+   procedure Set_Boolean (N : Node; B : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Boolean (Get_Kind (N)),
+                     "no field Boolean");
+      Set_Field3 (N, B);
+   end Set_Boolean;
+
+   function Get_Decl (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Decl (Get_Kind (N)),
+                     "no field Decl");
+      return Get_Field2 (N);
+   end Get_Decl;
+
+   procedure Set_Decl (N : Node; D : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Decl (Get_Kind (N)),
+                     "no field Decl");
+      Set_Field2 (N, D);
+   end Set_Decl;
 
    function Get_HDL_Node (N : Node) return HDL_Node is
    begin
-      Check_Kind_For_HDL_Node (N);
-      return Get_Field1 (N);
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_HDL_Node (Get_Kind (N)),
+                     "no field HDL_Node");
+      return Node_To_HDL_Node (Get_Field1 (N));
    end Get_HDL_Node;
 
    procedure Set_HDL_Node (N : Node; H : HDL_Node) is
    begin
-      Check_Kind_For_HDL_Node (N);
-      Set_Field1 (N, H);
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_HDL_Node (Get_Kind (N)),
+                     "no field HDL_Node");
+      Set_Field1 (N, HDL_Node_To_Node (H));
    end Set_HDL_Node;
-
-   procedure Check_Kind_For_HDL_Index (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_HDL_Expr
-           | N_EOS =>
-            null;
-         when others =>
-            Failed ("Get/Set_HDL_Index", N);
-      end case;
-   end Check_Kind_For_HDL_Index;
-
-   function Get_HDL_Index (N : Node) return Int32 is
-   begin
-      Check_Kind_For_HDL_Index (N);
-      return Get_Field2 (N);
-   end Get_HDL_Index;
-
-   procedure Set_HDL_Index (N : Node; Idx : Int32) is
-   begin
-      Check_Kind_For_HDL_Index (N);
-      Set_Field2 (N, Idx);
-   end Set_HDL_Index;
-
-   procedure Check_Kind_For_Hash (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Not_Bool
-           | N_And_Bool
-           | N_Or_Bool
-           | N_Imp_Bool
-           | N_HDL_Expr
-           | N_EOS =>
-            null;
-         when others =>
-            Failed ("Get/Set_Hash", N);
-      end case;
-   end Check_Kind_For_Hash;
 
    function Get_Hash (N : Node) return Uns32 is
    begin
-      Check_Kind_For_Hash (N);
-      return Int32_To_Uns32 (Get_Field5 (N));
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Hash (Get_Kind (N)),
+                     "no field Hash");
+      return Node_To_Uns32 (Get_Field5 (N));
    end Get_Hash;
 
    procedure Set_Hash (N : Node; E : Uns32) is
    begin
-      Check_Kind_For_Hash (N);
-      Set_Field5 (N, Uns32_To_Int32 (E));
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Hash (Get_Kind (N)),
+                     "no field Hash");
+      Set_Field5 (N, Uns32_To_Node (E));
    end Set_Hash;
-
-   procedure Check_Kind_For_Hash_Link (N : Node) is
-   begin
-      case Get_Kind (N) is
-         when N_Not_Bool
-           | N_And_Bool
-           | N_Or_Bool
-           | N_Imp_Bool
-           | N_HDL_Expr
-           | N_EOS =>
-            null;
-         when others =>
-            Failed ("Get/Set_Hash_Link", N);
-      end case;
-   end Check_Kind_For_Hash_Link;
 
    function Get_Hash_Link (N : Node) return Node is
    begin
-      Check_Kind_For_Hash_Link (N);
-      return Node (Get_Field6 (N));
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Hash_Link (Get_Kind (N)),
+                     "no field Hash_Link");
+      return Get_Field6 (N);
    end Get_Hash_Link;
 
    procedure Set_Hash_Link (N : Node; E : Node) is
    begin
-      Check_Kind_For_Hash_Link (N);
-      Set_Field6 (N, Int32 (E));
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Hash_Link (Get_Kind (N)),
+                     "no field Hash_Link");
+      Set_Field6 (N, E);
    end Set_Hash_Link;
+
+   function Get_HDL_Index (N : Node) return Int32 is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_HDL_Index (Get_Kind (N)),
+                     "no field HDL_Index");
+      return Node_To_Int32 (Get_Field2 (N));
+   end Get_HDL_Index;
+
+   procedure Set_HDL_Index (N : Node; Idx : Int32) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_HDL_Index (Get_Kind (N)),
+                     "no field HDL_Index");
+      Set_Field2 (N, Int32_To_Node (Idx));
+   end Set_HDL_Index;
+
+   function Get_Presence (N : Node) return PSL_Presence_Kind is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Presence (Get_Kind (N)),
+                     "no field Presence");
+      return PSL_Presence_Kind'Val (Get_State1 (N));
+   end Get_Presence;
+
+   procedure Set_Presence (N : Node; P : PSL_Presence_Kind) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Presence (Get_Kind (N)),
+                     "no field Presence");
+      Set_State1 (N, PSL_Presence_Kind'Pos (P));
+   end Set_Presence;
+
+   function Get_NFA (N : Node) return NFA is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_NFA (Get_Kind (N)),
+                     "no field NFA");
+      return Node_To_NFA (Get_Field5 (N));
+   end Get_NFA;
+
+   procedure Set_NFA (N : Node; P : NFA) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_NFA (Get_Kind (N)),
+                     "no field NFA");
+      Set_Field5 (N, NFA_To_Node (P));
+   end Set_NFA;
+
+   function Get_Parameter_List (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Parameter_List (Get_Kind (N)),
+                     "no field Parameter_List");
+      return Get_Field5 (N);
+   end Get_Parameter_List;
+
+   procedure Set_Parameter_List (N : Node; E : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Parameter_List (Get_Kind (N)),
+                     "no field Parameter_List");
+      Set_Field5 (N, E);
+   end Set_Parameter_List;
+
+   function Get_Actual (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Actual (Get_Kind (N)),
+                     "no field Actual");
+      return Get_Field3 (N);
+   end Get_Actual;
+
+   procedure Set_Actual (N : Node; E : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Actual (Get_Kind (N)),
+                     "no field Actual");
+      Set_Field3 (N, E);
+   end Set_Actual;
+
+   function Get_Formal (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Formal (Get_Kind (N)),
+                     "no field Formal");
+      return Get_Field4 (N);
+   end Get_Formal;
+
+   procedure Set_Formal (N : Node; E : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Formal (Get_Kind (N)),
+                     "no field Formal");
+      Set_Field4 (N, E);
+   end Set_Formal;
+
+   function Get_Declaration (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Declaration (Get_Kind (N)),
+                     "no field Declaration");
+      return Get_Field1 (N);
+   end Get_Declaration;
+
+   procedure Set_Declaration (N : Node; Decl : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Declaration (Get_Kind (N)),
+                     "no field Declaration");
+      Set_Field1 (N, Decl);
+   end Set_Declaration;
+
+   function Get_Association_Chain (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Association_Chain (Get_Kind (N)),
+                     "no field Association_Chain");
+      return Get_Field2 (N);
+   end Get_Association_Chain;
+
+   procedure Set_Association_Chain (N : Node; Chain : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Association_Chain (Get_Kind (N)),
+                     "no field Association_Chain");
+      Set_Field2 (N, Chain);
+   end Set_Association_Chain;
+
+   function Get_Global_Clock (N : Node) return Node is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Global_Clock (Get_Kind (N)),
+                     "no field Global_Clock");
+      return Get_Field3 (N);
+   end Get_Global_Clock;
+
+   procedure Set_Global_Clock (N : Node; Clock : Node) is
+   begin
+      pragma Assert (N /= Null_Node);
+      pragma Assert (Has_Global_Clock (Get_Kind (N)),
+                     "no field Global_Clock");
+      Set_Field3 (N, Clock);
+   end Set_Global_Clock;
 
 
 end PSL.Nodes;
-
