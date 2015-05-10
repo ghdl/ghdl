@@ -4256,7 +4256,7 @@ package body Sem_Expr is
          end if;
 
          if not Is_Overloaded (Res)
-           and then Get_Type (Res) = Boolean_Type_Definition
+           and then Get_Base_Type (Get_Type (Res)) = Boolean_Type_Definition
          then
             Check_Read (Res);
             return Res;
