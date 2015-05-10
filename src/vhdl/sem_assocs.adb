@@ -1129,8 +1129,7 @@ package body Sem_Assocs is
    end Sem_Formal;
 
    function Is_Valid_Conversion
-     (Func : Iir; Res_Base_Type : Iir; Param_Base_Type : Iir)
-     return Boolean
+     (Func : Iir; Res_Base_Type : Iir; Param_Base_Type : Iir) return Boolean
    is
       R_Type : Iir;
       P_Type : Iir;
@@ -1171,8 +1170,7 @@ package body Sem_Assocs is
    end Is_Valid_Conversion;
 
    function Extract_Conversion
-     (Conv : Iir; Res_Type : Iir; Param_Type : Iir; Loc : Iir)
-     return Iir
+     (Conv : Iir; Res_Type : Iir; Param_Type : Iir; Loc : Iir) return Iir
    is
       List : Iir_List;
       Res_Base_Type : Iir;
@@ -1211,9 +1209,8 @@ package body Sem_Assocs is
       return Res;
    end Extract_Conversion;
 
-   function Extract_In_Conversion (Conv : Iir;
-                                   Res_Type : Iir; Param_Type : Iir)
-                                  return Iir
+   function Extract_In_Conversion
+     (Conv : Iir; Res_Type : Iir; Param_Type : Iir) return Iir
    is
       Func : Iir;
    begin
@@ -1233,9 +1230,8 @@ package body Sem_Assocs is
       end case;
    end Extract_In_Conversion;
 
-   function Extract_Out_Conversion (Conv : Iir;
-                                    Res_Type : Iir; Param_Type : Iir)
-                                   return Iir
+   function Extract_Out_Conversion
+     (Conv : Iir; Res_Type : Iir; Param_Type : Iir) return Iir
    is
       Func : Iir;
       Res : Iir;
@@ -1588,7 +1584,7 @@ package body Sem_Assocs is
       end if;
    end Sem_Association_By_Expression;
 
-      --  Associate ASSOC with interface INTERFACE
+   --  Associate ASSOC with interface INTERFACE
    --  This sets MATCH.
    procedure Sem_Association
      (Assoc : Iir; Inter : Iir; Finish : Boolean; Match : out Boolean) is
@@ -1755,9 +1751,9 @@ package body Sem_Assocs is
                      if Finish then
                         Error_Msg_Sem
                           (Disp_Node (Inter) & " already associated", Assoc);
-                        Match := False;
-                        return;
                      end if;
+                     Match := False;
+                     return;
                   end if;
                else
                   --  Individual association.

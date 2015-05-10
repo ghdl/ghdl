@@ -1176,8 +1176,7 @@ package body Sem_Expr is
 
    --  EXPR is a function or procedure call.
    function Sem_Subprogram_Call_Stage1
-     (Expr : Iir; A_Type : Iir; Is_Func_Call : Boolean)
-     return Iir
+     (Expr : Iir; A_Type : Iir; Is_Func_Call : Boolean) return Iir
    is
       Imp : Iir;
       Nbr_Inter: Natural;
