@@ -1,0 +1,76 @@
+--  Meta description of nodes.
+--  Copyright (C) 2015 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GHDL; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
+package body PSL.Nodes_Meta is
+   Fields_Type : constant array (Fields_Enum) of Types_Enum :=
+     (
+      --  FIELDS_TYPE
+     );
+
+   function Get_Field_Type (F : Fields_Enum) return Types_Enum is
+   begin
+      return Fields_Type (F);
+   end Get_Field_Type;
+
+   function Get_Field_Image (F : Fields_Enum) return String is
+   begin
+      case F is
+         --  FIELD_IMAGE
+      end case;
+   end Get_Field_Image;
+
+   function Get_Nkind_Image (K : Nkind) return String is
+   begin
+      case K is
+         --  IIR_IMAGE
+      end case;
+   end Get_Nkind_Image;
+
+   function Get_Field_Attribute (F : Fields_Enum) return Field_Attribute is
+   begin
+      case F is
+         --  FIELD_ATTRIBUTE
+      end case;
+   end Get_Field_Attribute;
+
+   Fields_Of_Nodes : constant Fields_Array :=
+     (
+      --  FIELDS_ARRAY
+     );
+
+   Fields_Of_Nodes_Last : constant array (Nkind) of Integer :=
+     (
+      --  FIELDS_ARRAY_POS
+     );
+
+   function Get_Fields (K : Nkind) return Fields_Array
+   is
+      First : Natural;
+      Last : Integer;
+   begin
+      if K = Nkind'First then
+         First := Fields_Of_Nodes'First;
+      else
+         First := Fields_Of_Nodes_Last (Nkind'Pred (K)) + 1;
+      end if;
+      Last := Fields_Of_Nodes_Last (K);
+      return Fields_Of_Nodes (First .. Last);
+   end Get_Fields;
+
+   --  FUNCS_BODY
+end PSL.Nodes_Meta;

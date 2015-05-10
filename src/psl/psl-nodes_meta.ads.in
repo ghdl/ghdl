@@ -1,0 +1,65 @@
+--  Meta description of nodes.
+--  Copyright (C) 2015 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GHDL; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
+with Types; use Types;
+with PSL.Nodes; use PSL.Nodes;
+
+package PSL.Nodes_Meta is
+   --  The enumeration of all possible types in the nodes.
+   type Types_Enum is
+     (
+      --  TYPES
+     );
+
+   --  The enumeration of all fields defined in iirs.
+   type Fields_Enum is
+     (
+      --  FIELDS
+     );
+   pragma Discard_Names (Fields_Enum);
+
+   --  Return the type of field F.
+   function Get_Field_Type (F : Fields_Enum) return Types_Enum;
+
+   --  Get the name of a field.
+   function Get_Field_Image (F : Fields_Enum) return String;
+
+   --  Get the name of a kind.
+   function Get_Nkind_Image (K : Nkind) return String;
+
+   --  Possible attributes of a field.
+   type Field_Attribute is
+     (
+      Attr_None,
+      Attr_Ref, Attr_Maybe_Ref, Attr_Of_Ref,
+      Attr_Chain, Attr_Chain_Next
+     );
+
+   --  Get the attribute of a field.
+   function Get_Field_Attribute (F : Fields_Enum) return Field_Attribute;
+
+   type Fields_Array is array (Natural range <>) of Fields_Enum;
+
+   --  Return the list of fields for node K.  The fields are sorted: first
+   --  the non nodes/list of nodes, then the nodes/lists that aren't reference,
+   --  and then the reference.
+   function Get_Fields (K : Nkind) return Fields_Array;
+
+   --  Get/Set a field.
+   --  FUNCS
+end PSL.Nodes_Meta;
