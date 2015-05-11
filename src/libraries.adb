@@ -236,7 +236,7 @@ package body Libraries is
    -- design_file_format ::=
    --      filename_format { design_unit_format  }
    -- filename_format ::=
-   --      FILE directory "FILENAME" file_time_stamp analyze_time_stamp:
+   --      FILE directory "filename" "file_time_stamp" "analyze_time_stamp":
    -- design_unit_format ::= entity_format
    --                        | architecture_format
    --                        | package_format

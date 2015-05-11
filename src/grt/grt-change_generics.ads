@@ -26,4 +26,8 @@
 package Grt.Change_Generics is
    --  Override top entity generics, using Generic_Override list from Options.
    procedure Change_All_Generics;
+
+   --  Emit an error if a generic that required override (unconstrained array)
+   --  wasn't overriden.
+   procedure Check_Required_Generic_Override;
 end Grt.Change_Generics;

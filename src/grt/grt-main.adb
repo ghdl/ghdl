@@ -64,6 +64,7 @@ package body Grt.Main is
    procedure Ghdl_Init_Top_Generics is
    begin
       Grt.Change_Generics.Change_All_Generics;
+      Grt.Change_Generics.Check_Required_Generic_Override;
    end Ghdl_Init_Top_Generics;
 
    procedure Disp_Stats_Hook (Code : Integer);

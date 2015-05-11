@@ -595,6 +595,49 @@ package body Configuration is
    is
       Has_Error : Boolean := False;
 
+      --  Return TRUE if GRT supports override of generic GEN.
+      function Allow_Generic_Override (Gen : Iir) return Boolean
+      is
+         Gen_Type : constant Iir := Get_Type (Gen);
+      begin
+         case Get_Kind (Gen_Type) is
+            when Iir_Kind_Integer_Type_Definition
+              | Iir_Kind_Integer_Subtype_Definition
+              | Iir_Kind_Enumeration_Type_Definition
+              | Iir_Kind_Enumeration_Subtype_Definition =>
+               return True;
+            when Iir_Kind_Array_Type_Definition
+              | Iir_Kind_Array_Subtype_Definition =>
+               --  Only one-dimensional arrays of enumeration are allowed.
+               --  If unconstrained, the index must be of integer type.
+               if Get_Kind (Get_Base_Type (Get_Element_Subtype (Gen_Type)))
+                 /= Iir_Kind_Enumeration_Type_Definition
+               then
+                  --  Not an array of enumeration type.
+                  return False;
+               end if;
+               declare
+                  Indexes : constant Iir_List :=
+                    Get_Index_Subtype_List (Gen_Type);
+               begin
+                  if Get_Nbr_Elements (Indexes) /= 1 then
+                     --  Not a one-dimensional array.
+                     return False;
+                  end if;
+                  if Get_Constraint_State (Gen_Type) /= Fully_Constrained
+                    and then (Get_Kind (Get_Index_Type (Indexes, 0))
+                                /= Iir_Kind_Integer_Subtype_Definition)
+                  then
+                     --  Index not constrained or not of integer subtype.
+                     return False;
+                  end if;
+               end;
+               return True;
+            when others =>
+               return False;
+         end case;
+      end Allow_Generic_Override;
+
       procedure Error (Msg : String; Loc : Iir) is
       begin
          if not Has_Error then
@@ -611,7 +654,9 @@ package body Configuration is
       El := Get_Generic_Chain (Entity);
       while El /= Null_Iir loop
          if Get_Default_Value (El) = Null_Iir then
-            Error ("(" & Disp_Node (El) & " has no default value)", El);
+            if not Allow_Generic_Override (El) then
+               Error ("(" & Disp_Node (El) & " has no default value)", El);
+            end if;
          end if;
          El := Get_Chain (El);
       end loop;

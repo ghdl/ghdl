@@ -41,14 +41,29 @@ package body Trans.Chap1 is
 
    procedure Translate_Entity_Init_Generics (Entity : Iir)
    is
-      El      : Iir;
+      El : Iir;
    begin
       Push_Local_Factory;
 
       El := Get_Generic_Chain (Entity);
       while El /= Null_Iir loop
          Open_Temp;
-         Chap4.Elab_Object_Value (El, Get_Default_Value (El));
+
+         declare
+            Val : constant Iir := Get_Default_Value (El);
+            El_Type : constant Iir := Get_Type (El);
+         begin
+            if Val = Null_Iir
+              and then Get_Kind (El_Type) in Iir_Kinds_Array_Type_Definition
+              and then Get_Constraint_State (El_Type) /= Fully_Constrained
+            then
+               --  Do not initialize unconstrained array.  They will have
+               --  to be overriden by user.
+               null;
+            else
+               Chap4.Elab_Object_Value (El, Val);
+            end if;
+         end;
          Close_Temp;
          El := Get_Chain (El);
       end loop;

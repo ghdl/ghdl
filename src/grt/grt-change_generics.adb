@@ -23,6 +23,7 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+with System;
 with Grt.Types; use Grt.Types;
 with Grt.Lib; use Grt.Lib;
 with Grt.Options; use Grt.Options;
@@ -322,4 +323,55 @@ package body Grt.Change_Generics is
          Over := Over.Next;
       end loop;
    end Change_All_Generics;
+
+   procedure Check_Required_Generic_Override
+   is
+      Root, It, Decl : VhpiHandleT;
+      Error : AvhpiErrorT;
+   begin
+      Get_Root_Inst (Root);
+
+      --  Find generic.
+      Vhpi_Iterator (VhpiDecls, Root, It, Error);
+      if Error /= AvhpiErrorOk then
+         Internal_Error ("override_generic(1)");
+         return;
+      end if;
+
+      --  Look for the generic.
+      loop
+         Vhpi_Scan (It, Decl, Error);
+         exit when Error = AvhpiErrorIteratorEnd;
+         if Error /= AvhpiErrorOk then
+            Internal_Error ("override_generic(2)");
+            return;
+         end if;
+         exit when Vhpi_Get_Kind (Decl) /= VhpiGenericDeclK;
+
+         declare
+            use System;
+            Rti : constant Ghdl_Rti_Access := Avhpi_Get_Rti (Decl);
+            Obj_Rti : constant Ghdl_Rtin_Object_Acc :=
+              To_Ghdl_Rtin_Object_Acc (Rti);
+            Type_Rti : constant Ghdl_Rti_Access := Obj_Rti.Obj_Type;
+            Ctxt : constant Rti_Context := Avhpi_Get_Context (Decl);
+         begin
+            pragma Assert (Rti.Kind = Ghdl_Rtik_Generic);
+            if Type_Rti.Kind = Ghdl_Rtik_Type_Array then
+               declare
+                  Uc_Array : Ghdl_Uc_Array_Acc;
+               begin
+                  Uc_Array := To_Ghdl_Uc_Array_Acc
+                    (Loc_To_Addr (Obj_Rti.Common.Depth, Obj_Rti.Loc, Ctxt));
+                  if Uc_Array.Base = Null_Address then
+                     Error_C ("top-level generic '");
+                     Error_C (Obj_Rti.Name);
+                     Error_E ("' must be overriden (use -gGEN=VAL)");
+                  end if;
+               end;
+            end if;
+         end;
+      end loop;
+   end Check_Required_Generic_Override;
+
 end Grt.Change_Generics;
