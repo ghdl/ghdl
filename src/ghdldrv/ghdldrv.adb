@@ -1003,7 +1003,7 @@ package body Ghdldrv is
       Success : Boolean;
       Run_Arg : Natural;
    begin
-      Set_Elab_Units ("-elab-run", Args, Run_Arg);
+      Set_Elab_Units ("--elab-run", Args, Run_Arg);
       Setup_Compiler (False);
 
       Bind;
@@ -1012,8 +1012,12 @@ package body Ghdldrv is
       else
          Link (Add_Std => True, Disp_Only => False);
          Delete_File (Filelist_Name.all, Success);
-         My_Spawn ('.' & Directory_Separator & Output_File.all,
-                   Args (Run_Arg .. Args'Last));
+         if Is_Absolute_Path (Output_File.all) then
+            My_Spawn (Output_File.all, Args (Run_Arg .. Args'Last));
+         else
+            My_Spawn ('.' & Directory_Separator & Output_File.all,
+                      Args (Run_Arg .. Args'Last));
+         end if;
       end if;
    end Perform_Action;
 
