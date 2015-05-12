@@ -3584,9 +3584,7 @@ package body Sem_Names is
                when Iir_Kind_Function_Declaration =>
                   if Maybe_Function_Call (Expr) then
                      Expr := Sem_As_Function_Call (Res, Expr, Null_Iir);
-                     if Get_Kind (Expr) /= Iir_Kind_Function_Call then
-                        raise Internal_Error;
-                     end if;
+                     pragma Assert (Get_Kind (Expr) = Iir_Kind_Function_Call);
                      Finish_Sem_Function_Call (Expr, Res);
                      return Expr;
                   else
@@ -3594,6 +3592,8 @@ package body Sem_Names is
                        (Disp_Node (Expr) & " requires parameters", Res);
                      Set_Type (Res, Get_Type (Expr));
                      Set_Expr_Staticness (Res, None);
+                     Set_Named_Entity
+                       (Res, Create_Error_Expr (Expr, Get_Type (Expr)));
                      return Res;
                   end if;
                when others =>
