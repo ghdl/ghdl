@@ -169,6 +169,8 @@ package Iirs is
    --
    --   Get/Set_Chain (Field2)
    --
+   --  Time when the whole file has been analyzed.  This allows ordering
+   --  analysis and detecting obsolete units across libraries.
    --   Get/Set_Analysis_Time_Stamp (Field3)
    --
    --   Get/Set_File_Time_Stamp (Field4)

@@ -64,7 +64,8 @@ ieee2008/fixed_float_types.vhdl \
 ieee2008/fixed_generic_pkg.vhdl ieee2008/fixed_generic_pkg-body.vhdl \
 ieee2008/fixed_pkg.vhdl \
 ieee2008/float_generic_pkg.vhdl ieee2008/float_generic_pkg-body.vhdl \
-ieee2008/float_pkg.vhdl
+ieee2008/float_pkg.vhdl \
+ieee2008/ieee_bit_context.vhdl ieee2008/ieee_std_context.vhdl
 
 STD87_BSRCS := $(STD_SRCS:.vhdl=.v87)
 STD93_BSRCS := $(STD_SRCS:.vhdl=.v93)
