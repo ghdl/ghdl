@@ -325,6 +325,9 @@ package body Translation is
             else
                Chap1.Translate_Configuration_Declaration (El);
             end if;
+         when Iir_Kind_Context_Declaration =>
+            New_Debug_Comment_Decl ("context " & Image_Identifier (El));
+            null;
          when others =>
             Error_Kind ("translate", El);
       end case;
