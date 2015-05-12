@@ -33,10 +33,14 @@ package body Post_Sems is
       Spec : Iir_Attribute_Specification;
       Attr_Decl : Iir_Attribute_Declaration;
    begin
-      --  No checks on package bodies.
-      if Get_Kind (Lib_Unit) = Iir_Kind_Package_Body then
-         return;
-      end if;
+      --  No checks on package bodies or context declaration
+      case Get_Kind (Lib_Unit) is
+         when Iir_Kind_Package_Body
+           | Iir_Kind_Context_Declaration =>
+            return;
+         when others =>
+            null;
+      end case;
 
       Id := Get_Identifier (Lib_Unit);
       Lib := Get_Library (Get_Design_File (Unit));

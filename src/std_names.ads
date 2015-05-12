@@ -172,19 +172,26 @@ package Std_Names is
    subtype Name_Id_Vhdl00_Reserved_Words is
      Name_Id range Name_Protected .. Name_Protected;
 
-   Name_Across :         constant Name_Id := Name_First_Keyword + 098;
-   Name_Break :          constant Name_Id := Name_First_Keyword + 099;
-   Name_Limit :          constant Name_Id := Name_First_Keyword + 100;
-   Name_Nature :         constant Name_Id := Name_First_Keyword + 101;
-   Name_Noise :          constant Name_Id := Name_First_Keyword + 102;
-   Name_Procedural :     constant Name_Id := Name_First_Keyword + 103;
-   Name_Quantity :       constant Name_Id := Name_First_Keyword + 104;
-   Name_Reference :      constant Name_Id := Name_First_Keyword + 105;
-   Name_Spectrum :       constant Name_Id := Name_First_Keyword + 106;
-   Name_Subnature :      constant Name_Id := Name_First_Keyword + 107;
-   Name_Terminal :       constant Name_Id := Name_First_Keyword + 108;
-   Name_Through :        constant Name_Id := Name_First_Keyword + 109;
-   Name_Tolerance :      constant Name_Id := Name_First_Keyword + 110;
+   Name_Context :      constant Name_Id := Name_First_Keyword + 098;
+
+   Name_Last_Vhdl08 :    constant Name_Id := Name_Context;
+   subtype Name_Id_Vhdl08_Reserved_Words is
+     Name_Id range Name_Context .. Name_Context;
+
+   Name_First_Ams_Keyword : constant Name_Id := Name_Last_Vhdl08 + 1;
+   Name_Across :         constant Name_Id := Name_First_Ams_Keyword + 000;
+   Name_Break :          constant Name_Id := Name_First_Ams_Keyword + 001;
+   Name_Limit :          constant Name_Id := Name_First_Ams_Keyword + 002;
+   Name_Nature :         constant Name_Id := Name_First_Ams_Keyword + 003;
+   Name_Noise :          constant Name_Id := Name_First_Ams_Keyword + 004;
+   Name_Procedural :     constant Name_Id := Name_First_Ams_Keyword + 005;
+   Name_Quantity :       constant Name_Id := Name_First_Ams_Keyword + 006;
+   Name_Reference :      constant Name_Id := Name_First_Ams_Keyword + 007;
+   Name_Spectrum :       constant Name_Id := Name_First_Ams_Keyword + 008;
+   Name_Subnature :      constant Name_Id := Name_First_Ams_Keyword + 009;
+   Name_Terminal :       constant Name_Id := Name_First_Ams_Keyword + 010;
+   Name_Through :        constant Name_Id := Name_First_Ams_Keyword + 011;
+   Name_Tolerance :      constant Name_Id := Name_First_Ams_Keyword + 012;
 
    Name_Last_AMS_Vhdl :  constant Name_Id := Name_Tolerance;
 

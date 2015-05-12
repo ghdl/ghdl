@@ -38,7 +38,7 @@ with Xrefs; use Xrefs;
 
 package body Sem is
    -- Forward declarations.
-   procedure Sem_Context_Clauses (Design_Unit: Iir_Design_Unit);
+   procedure Sem_Context_Clauses (Unit: Iir);
    procedure Sem_Block_Configuration
      (Block_Conf : Iir_Block_Configuration; Father: Iir);
    procedure Sem_Component_Configuration
@@ -2721,24 +2721,155 @@ package body Sem is
       end if;
    end Sem_Library_Clause;
 
+   --  LRM08 13.4 Context clauses.
+   procedure Sem_One_Context_Reference (Ref : Iir)
+   is
+      Name : Iir;
+      Ent : Iir;
+   begin
+      Name := Get_Selected_Name (Ref);
+      if Get_Kind (Name) /= Iir_Kind_Selected_Name then
+         Error_Msg_Sem
+           ("context reference only allows selected names", Name);
+         return;
+      end if;
+
+      Name := Sem_Denoting_Name (Name);
+      Set_Selected_Name (Ref, Name);
+      Ent := Get_Named_Entity (Name);
+      if Is_Error (Ent) then
+         return;
+      end if;
+
+      --  LRM08 13.4 Context clauses
+      --  It is an error if a selected name in a context reference does not
+      --  denote a context declaration.
+      if Get_Kind (Ent) /= Iir_Kind_Context_Declaration then
+         Error_Msg_Sem ("name must denote a context declaration", Name);
+         Set_Named_Entity (Name, Null_Iir);
+         return;
+      end if;
+   end Sem_One_Context_Reference;
+
+   --  LRM08 13.4 Context clauses.
+   procedure Sem_Context_Reference (Ctxt : Iir)
+   is
+      Ref : Iir;
+   begin
+      Ref := Ctxt;
+      loop
+         Sem_One_Context_Reference (Ref);
+         Ref := Get_Context_Reference_Chain (Ref);
+         exit when Ref = Null_Iir;
+      end loop;
+
+      --  FIXME: must be done clause after clause ?
+      Add_Context_Reference (Ctxt);
+   end Sem_Context_Reference;
+
    --  LRM 11.3  Context Clauses.
-   procedure Sem_Context_Clauses (Design_Unit: Iir_Design_Unit)
+   procedure Sem_Context_Clauses (Unit: Iir)
    is
       El: Iir;
    begin
-      El := Get_Context_Items (Design_Unit);
+      El := Get_Context_Items (Unit);
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Use_Clause =>
                Sem_Use_Clause (El);
             when Iir_Kind_Library_Clause =>
                Sem_Library_Clause (El);
+            when Iir_Kind_Context_Reference =>
+               Sem_Context_Reference (El);
             when others =>
                Error_Kind ("sem_context_clauses", El);
          end case;
          El := Get_Chain (El);
       end loop;
    end Sem_Context_Clauses;
+
+   --  LRM08 13.3 Context declarations
+   procedure Sem_Context_Declaration (Decl: Iir)
+   is
+      --  Return TRUE iff the first prefix of NAME denotes library WORK.
+      function Has_Work_Library_Prefix (Name : Iir) return Boolean
+      is
+         Prefix : Iir;
+      begin
+         Prefix := Name;
+         while Get_Kind (Prefix) = Iir_Kind_Selected_Name
+           or else Get_Kind (Prefix) = Iir_Kind_Selected_By_All_Name
+         loop
+            Prefix := Get_Prefix (Prefix);
+         end loop;
+         return Get_Kind (Prefix) = Iir_Kind_Simple_Name
+           and then Get_Identifier (Prefix) = Std_Names.Name_Work
+           and then (Get_Kind (Get_Named_Entity (Prefix))
+                       = Iir_Kind_Library_Declaration);
+      end Has_Work_Library_Prefix;
+
+      procedure Error_Work_Prefix (Loc : Iir) is
+      begin
+         Error_Msg_Sem
+           ("'work' not allowed as prefix in context declaration", Loc);
+      end Error_Work_Prefix;
+
+      El : Iir;
+      El1 : Iir;
+   begin
+      Sem_Scopes.Add_Name (Decl);
+      Xref_Decl (Decl);
+
+      Sem_Context_Clauses (Decl);
+
+      El := Get_Context_Items (Decl);
+      while El /= Null_Iir loop
+         case Get_Kind (El) is
+            when Iir_Kind_Library_Clause =>
+               --  LRM08 13.3 Context declarations
+               --  It is an error if a library clause in a context declaration
+               --  defines the library logical name WORK, [...]
+               if Get_Identifier (El) = Std_Names.Name_Work then
+                  Error_Msg_Sem
+                    ("'library work' not allowed in context declaration", El);
+               end if;
+            when Iir_Kind_Use_Clause =>
+               --  LRM08 13.3 Context declarations
+               --  [...] or if a selected name in a use clause [or a context
+               --  reference] in a context declaration has the library logic
+               --  name WORK as a prefix.
+               El1 := El;
+               while El1 /= Null_Iir loop
+                  if Has_Work_Library_Prefix (Get_Selected_Name (El1)) then
+                     Error_Work_Prefix (El1);
+                     exit;
+                  end if;
+                  El1 := Get_Use_Clause_Chain (El1);
+               end loop;
+            when Iir_Kind_Context_Reference =>
+               --  LRM08 13.3 Context declarations
+               --  [...] or if a selected name in [a use clause or] a context
+               --  reference in a context declaration has the library logic
+               --  name WORK as a prefix.
+               El1 := El;
+               while El1 /= Null_Iir loop
+                  if Has_Work_Library_Prefix (Get_Selected_Name (El1)) then
+                     Error_Work_Prefix (El1);
+                     exit;
+                  end if;
+                  El1 := Get_Context_Reference_Chain (El1);
+               end loop;
+            when others =>
+               raise Internal_Error;
+         end case;
+         El := Get_Chain (El);
+      end loop;
+
+      --  GHDL: forbid self-reference by making declaration visible at the end.
+      --  This violates LRM08 12.3 Visibility:  A declaration is visible only
+      --  within a certain part of its scope; ...
+      Set_Visible_Flag (Decl, True);
+   end Sem_Context_Declaration;
 
    -- Access to the current design unit.  This is set, saved, restored, cleared
    -- by the procedure semantic.
@@ -2827,6 +2958,8 @@ package body Sem is
             Sem_Configuration_Declaration (El);
          when Iir_Kind_Package_Instantiation_Declaration =>
             Sem_Package_Instantiation_Declaration (El);
+         when Iir_Kind_Context_Declaration =>
+            Sem_Context_Declaration (El);
          when others =>
             Error_Kind ("semantic", El);
       end case;

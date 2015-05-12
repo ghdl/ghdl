@@ -154,6 +154,8 @@ package body Std_Names is
 
       Def ("protected", Name_Protected);
 
+      Def ("context", Name_Context);
+
       Def ("across", Name_Across);
       Def ("break", Name_Break);
       Def ("limit", Name_Limit);

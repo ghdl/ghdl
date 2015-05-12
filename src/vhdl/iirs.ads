@@ -864,6 +864,22 @@ package Iirs is
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
+   -- Iir_Kind_Context_Declaration (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --   Get/Set_Design_Unit (Alias Field0)
+   --
+   --  Get the chain of context clause.
+   --   Get/Set_Context_Items (Field1)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
+
    -- Iir_Kind_Library_Declaration (Short)
    --
    --  Design files in the library.
@@ -1692,6 +1708,21 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Use_Clause_Chain (Field3)
+
+   -- Iir_Kind_Context_Reference (Short)
+   --
+   --  LRM08 13.4 Context clauses
+   --
+   --  context_reference ::=
+   --     CONTEXT selected_name { , selected_name }
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Selected_Name (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Context_Reference_Chain (Field3)
 
 
    -----------------------
@@ -3416,6 +3447,7 @@ package Iirs is
       Iir_Kind_Design_Unit,
       Iir_Kind_Library_Clause,
       Iir_Kind_Use_Clause,
+      Iir_Kind_Context_Reference,
 
    -- Literals.
       Iir_Kind_Integer_Literal,
@@ -3502,6 +3534,7 @@ package Iirs is
       Iir_Kind_Configuration_Declaration,
       Iir_Kind_Entity_Declaration,
       Iir_Kind_Architecture_Body,
+      Iir_Kind_Context_Declaration,
       Iir_Kind_Package_Header,
       Iir_Kind_Unit_Declaration,
       Iir_Kind_Library_Declaration,
@@ -4152,7 +4185,8 @@ package Iirs is
    --Iir_Kind_Package_Body
    --Iir_Kind_Configuration_Declaration
    --Iir_Kind_Entity_Declaration
-     Iir_Kind_Architecture_Body;
+   --Iir_Kind_Architecture_Body
+     Iir_Kind_Context_Declaration;
 
    subtype Iir_Kinds_Package_Declaration is Iir_Kind range
      Iir_Kind_Package_Declaration ..
@@ -4506,7 +4540,8 @@ package Iirs is
 
    subtype Iir_Kinds_Clause is Iir_Kind range
      Iir_Kind_Library_Clause ..
-     Iir_Kind_Use_Clause;
+   --Iir_Kind_Use_Clause
+     Iir_Kind_Context_Reference;
 
    subtype Iir_Kinds_Specification is Iir_Kind range
      Iir_Kind_Attribute_Specification ..
@@ -4525,6 +4560,7 @@ package Iirs is
    --Iir_Kind_Configuration_Declaration
    --Iir_Kind_Entity_Declaration
    --Iir_Kind_Architecture_Body
+   --Iir_Kind_Context_Declaration
    --Iir_Kind_Package_Header
    --Iir_Kind_Unit_Declaration
    --Iir_Kind_Library_Declaration
@@ -4962,7 +4998,7 @@ package Iirs is
    procedure Set_Last_Design_Unit (Design : Iir; Chain : Iir);
 
    --  Library declaration of a library clause.
-   --  Field: Field1
+   --  Field: Field1 Ref
    function Get_Library_Declaration (Design : Iir) return Iir;
    procedure Set_Library_Declaration (Design : Iir; Library : Iir);
 
@@ -5547,10 +5583,15 @@ package Iirs is
    function Get_Use_Clause_Chain (Target : Iir) return Iir;
    procedure Set_Use_Clause_Chain (Target : Iir; Chain : Iir);
 
-   --  Selected name of an use_clause.
+   --  Selected names of a context_reference are chained.
+   --  Field: Field3
+   function Get_Context_Reference_Chain (Target : Iir) return Iir;
+   procedure Set_Context_Reference_Chain (Target : Iir; Chain : Iir);
+
+   --  Selected name of an use_clause or context_reference
    --  Field: Field1
-   function Get_Selected_Name (Target : Iir_Use_Clause) return Iir;
-   procedure Set_Selected_Name (Target : Iir_Use_Clause; Name : Iir);
+   function Get_Selected_Name (Target : Iir) return Iir;
+   procedure Set_Selected_Name (Target : Iir; Name : Iir);
 
    --  The type declarator which declares the type definition DEF.
    --  Field: Field3 Ref

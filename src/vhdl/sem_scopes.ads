@@ -121,6 +121,9 @@ package Sem_Scopes is
    --  Achieves visibility of the selected_name of use clause CLAUSE.
    procedure Add_Use_Clause (Clause : Iir_Use_Clause);
 
+   --  Add declarations for context clause in REF.
+   procedure Add_Context_Reference (Ref : Iir);
+
    --  Add declarations for a context clause into the current declarative
    --  regions.
    procedure Add_Context_Clauses (Unit : Iir_Design_Unit);

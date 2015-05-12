@@ -1244,6 +1244,9 @@ package body Trans.Chap2 is
                when Iir_Kind_Package_Body =>
                   --  A package instantiation depends on the body.
                   null;
+               when Iir_Kind_Context_Declaration =>
+                  --  Elab referenced packages.
+                  Elab_Dependence (Design);
                when others =>
                   Error_Kind ("elab_dependence", Library_Unit);
             end case;

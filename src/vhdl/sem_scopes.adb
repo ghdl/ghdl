@@ -927,6 +927,7 @@ package body Sem_Scopes is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kinds_Concurrent_Statement
            | Iir_Kinds_Sequential_Statement =>
             Handle_Decl (Decl, Arg);
@@ -976,7 +977,8 @@ package body Sem_Scopes is
                   end loop;
                end if;
             end;
-         when Iir_Kind_Use_Clause =>
+         when Iir_Kind_Use_Clause
+           | Iir_Kind_Context_Reference =>
             Handle_Decl (Decl, Arg);
          when Iir_Kind_Library_Clause =>
             Handle_Decl (Decl, Arg);
@@ -1007,6 +1009,48 @@ package body Sem_Scopes is
       end case;
    end Iterator_Decl;
 
+   --  Handle context_clause of context reference CTXT.
+   procedure Add_One_Context_Reference (Ctxt : Iir)
+   is
+      Name : constant Iir := Get_Selected_Name (Ctxt);
+      Ent : constant Iir := Get_Named_Entity (Name);
+      Item : Iir;
+   begin
+      if Ent = Null_Iir or else Is_Error (Ent) then
+         --  Stop now in case of error.
+         return;
+      end if;
+      pragma Assert (Get_Kind (Ent) = Iir_Kind_Context_Declaration);
+
+      Item := Get_Context_Items (Ent);
+      while Item /= Null_Iir loop
+         case Get_Kind (Item) is
+            when Iir_Kind_Use_Clause =>
+               Add_Use_Clause (Item);
+            when Iir_Kind_Library_Clause =>
+               Add_Name (Get_Library_Declaration (Item),
+                         Get_Identifier (Item), False);
+            when Iir_Kind_Context_Reference =>
+               Add_Context_Reference (Item);
+            when others =>
+               Error_Kind ("add_context_reference", Item);
+         end case;
+         Item := Get_Chain (Item);
+      end loop;
+   end Add_One_Context_Reference;
+
+   procedure Add_Context_Reference (Ref : Iir)
+   is
+      Ctxt : Iir;
+   begin
+      Ctxt := Ref;
+      loop
+         Add_One_Context_Reference (Ctxt);
+         Ctxt := Get_Context_Reference_Chain (Ctxt);
+         exit when Ctxt = Null_Iir;
+      end loop;
+   end Add_Context_Reference;
+
    --  Make POTENTIALLY (or not) visible DECL.
    procedure Add_Name_Decl (Decl : Iir; Potentially : Boolean) is
    begin
@@ -1015,6 +1059,9 @@ package body Sem_Scopes is
             if not Potentially then
                Add_Use_Clause (Decl);
             end if;
+         when Iir_Kind_Context_Reference =>
+            pragma Assert (not Potentially);
+            Add_Context_Reference (Decl);
          when Iir_Kind_Library_Clause =>
             Add_Name (Get_Library_Declaration (Decl),
                       Get_Identifier (Decl), Potentially);

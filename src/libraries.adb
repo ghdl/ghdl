@@ -144,7 +144,8 @@ package body Libraries is
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Package_Instantiation_Declaration =>
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Context_Declaration =>
             Id := Get_Identifier (Lib_Unit);
          when Iir_Kind_Architecture_Body =>
             --  Architectures are put with the entity identifier.
@@ -242,6 +243,7 @@ package body Libraries is
    --                        | package_format
    --                        | package_body_format
    --                        | configuration_format
+   --                        | context_format
    -- position_format ::= LINE(POS) + OFF on DATE
    -- entity_format ::=
    --      ENTITY identifier AT position_format ;
@@ -253,6 +255,8 @@ package body Libraries is
    --      PACKAGE BODY identifier AT position_format ;
    -- configuration_format ::=
    --      CONFIGURATION identifier AT position_format ;
+   -- context_format ::=
+   --      CONTEXT identifier AT position_format ;
    --
    -- The position_format meaning is:
    --       LINE is the line number (first line is number 1),
@@ -481,6 +485,10 @@ package body Libraries is
                   Scan;
                   Set_Dependence_List (Design_Unit, Scan_Unit_List);
                   goto Next_Line;
+               when Tok_Context =>
+                  Library_Unit :=
+                    Create_Iir (Iir_Kind_Context_Declaration);
+                  Scan;
                when others =>
                   Put_Line
                     ("load_library: line must start with " &
@@ -1224,6 +1232,9 @@ package body Libraries is
                when Iir_Kind_Configuration_Declaration =>
                   WR ("configuration ");
                   WR (Image_Identifier (Library_Unit));
+               when Iir_Kind_Context_Declaration =>
+                  WR ("context ");
+                  WR (Image_Identifier (Library_Unit));
                when others =>
                   Error_Kind ("save_library", Library_Unit);
             end case;
@@ -1585,7 +1596,8 @@ package body Libraries is
                when Iir_Kind_Package_Declaration
                  | Iir_Kind_Package_Instantiation_Declaration
                  | Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Configuration_Declaration =>
+                 | Iir_Kind_Configuration_Declaration
+                 | Iir_Kind_Context_Declaration =>
                   --  Only return a primary unit.
                   return Unit;
                when Iir_Kind_Package_Body

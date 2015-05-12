@@ -341,6 +341,10 @@ package body Tokens is
          when Tok_Protected =>
             return "protected";
 
+         --  VHDL 08
+         when Tok_Context =>
+            return "context";
+
          --  AMS-VHDL
          when Tok_Across =>
             return "across";

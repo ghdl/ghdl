@@ -105,10 +105,16 @@ package body Configuration is
          El := Libraries.Find_Design_Unit (El);
          if El /= Null_Iir then
             Lib_Unit := Get_Library_Unit (El);
-            if Flag_Build_File_Dependence
-              or else Get_Kind (Lib_Unit) in Iir_Kinds_Package_Declaration
-            then
+            if Flag_Build_File_Dependence then
                Add_Design_Unit (El, Unit);
+            else
+               case Get_Kind (Lib_Unit) is
+                  when Iir_Kinds_Package_Declaration
+                    | Iir_Kind_Context_Declaration =>
+                     Add_Design_Unit (El, Unit);
+                  when others =>
+                     null;
+               end case;
             end if;
          end if;
       end loop;
@@ -152,6 +158,8 @@ package body Configuration is
          when Iir_Kind_Entity_Declaration =>
             null;
          when Iir_Kind_Package_Body =>
+            null;
+         when Iir_Kind_Context_Declaration =>
             null;
          when others =>
             Error_Kind ("add_design_unit", Lib_Unit);

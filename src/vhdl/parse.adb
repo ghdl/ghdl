@@ -7495,18 +7495,173 @@ package body Parse is
       end if;
    end Parse_Package;
 
+   procedure Parse_Context_Declaration_Or_Reference
+     (Unit : Iir_Design_Unit; Clause : out Iir);
+
+   --  Precond:  next token
+   --  Postcond: next token
+   --
+   --  LRM93 11.3
+   --  LRM08 13.4 Context clauses
+   --  context_clause ::= { context_item }
+   --
+   --  context_item ::= library_clause | use_clause | context_reference
+   procedure Parse_Context_Clause (Unit : Iir)
+   is
+      use Context_Items_Chain_Handling;
+      Last : Iir;
+      Els : Iir;
+   begin
+      Build_Init (Last);
+
+      loop
+         case Current_Token is
+            when Tok_Library =>
+               Els := Parse_Library_Clause;
+            when Tok_Use =>
+               Els := Parse_Use_Clause;
+               Scan;
+            when Tok_Context =>
+               Parse_Context_Declaration_Or_Reference (Unit, Els);
+               if Els = Null_Iir then
+                  --  This was a context declaration.  No more clause.
+
+                  --  LRM08 13.1 Design units
+                  --  It is an error if the context clause preceding a library
+                  --  unit that is a context declaration is not empty.
+                  if Get_Context_Items (Unit) /= Null_Iir then
+                     Error_Msg_Sem
+                       ("context declaration does not allow context "
+                          & "clauses before it", Get_Context_Items (Unit));
+                  end if;
+
+                  return;
+               else
+                  --  Skip ';'.
+                  Scan;
+               end if;
+            when Tok_With =>
+               --  Be Ada friendly.
+               Error_Msg_Parse ("'with' not allowed in context clause "
+                                  & "(try 'use' or 'library')");
+               Els := Parse_Use_Clause;
+               Scan;
+            when others =>
+               exit;
+         end case;
+         Append_Subchain (Last, Unit, Els);
+      end loop;
+   end Parse_Context_Clause;
+
+   --  Precond:  IS
+   --
+   --  LRM08 13.13 Context declarations
+   --  context_declaration ::=
+   --    CONTEXT identifier IS
+   --       context_clause
+   --    END [ CONTEXT ] [ /context/_simple_name ] ;
+   procedure Parse_Context_Declaration (Unit : Iir; Decl : Iir) is
+   begin
+      Set_Library_Unit (Unit, Decl);
+
+      --  Skip 'is'
+      Scan;
+
+      Parse_Context_Clause (Decl);
+
+      Expect (Tok_End);
+      Set_End_Location (Unit);
+
+      --  Skip 'end'
+      Scan;
+
+      if Current_Token = Tok_Context then
+         Set_End_Has_Reserved_Id (Decl, True);
+
+         --  Skip 'context'.
+         Scan;
+      end if;
+
+      Check_End_Name (Decl);
+      Expect (Tok_Semi_Colon);
+   end Parse_Context_Declaration;
+
+   --  Precond:  next token after selected_name.
+   --  Postcond: ;
+   --
+   --  LRM08 13.4 Context clauses
+   --
+   --  context_reference ::=
+   --     CONTEXT selected_name { , selected_name }
+   function Parse_Context_Reference
+     (Loc : Location_Type; Name : Iir) return Iir
+   is
+      Ref : Iir;
+      First, Last : Iir;
+   begin
+      Ref := Create_Iir (Iir_Kind_Context_Reference);
+      Set_Location (Ref, Loc);
+      Set_Selected_Name (Ref, Name);
+      First := Ref;
+      Last := Ref;
+
+      loop
+         exit when Current_Token = Tok_Semi_Colon;
+         Expect (Tok_Comma);
+
+         --  Skip ','.
+         Scan;
+
+         Ref := Create_Iir (Iir_Kind_Context_Reference);
+         Set_Location (Ref, Loc);
+         Set_Selected_Name (Ref, Parse_Name);
+
+         Set_Context_Reference_Chain (Last, Ref);
+         Last := Ref;
+      end loop;
+
+      return First;
+   end Parse_Context_Reference;
+
+   --  Precond:  CONTEXT
+   --
+   procedure Parse_Context_Declaration_Or_Reference
+     (Unit : Iir_Design_Unit; Clause : out Iir)
+   is
+      Loc : Location_Type;
+      Name : Iir;
+      Res : Iir;
+   begin
+      Loc := Get_Token_Location;
+
+      --  Skip 'context'.
+      Scan;
+
+      Name := Parse_Name;
+
+      if Current_Token = Tok_Is then
+         Res := Create_Iir (Iir_Kind_Context_Declaration);
+         Set_Location (Res, Loc);
+         if Get_Kind (Name) = Iir_Kind_Simple_Name then
+            Set_Identifier (Res, Get_Identifier (Name));
+         else
+            Error_Msg_Parse ("identifier for context expected", Name);
+         end if;
+         Free_Iir (Name);
+
+         Parse_Context_Declaration (Unit, Res);
+         Clause := Null_Iir;
+      else
+         Clause := Parse_Context_Reference (Loc, Name);
+      end if;
+   end Parse_Context_Declaration_Or_Reference;
+
    -- Parse a design_unit.
    -- The lexical scanner must have been initialized, but without a
    -- current_token.
    --
    --  [ §11.1 ]
    --  design_unit ::= context_clause library_unit
-   --
-   --  [ §11.3 ]
-   --  context_clause ::= { context_item }
-   --
-   --  [ §11.3 ]
-   --  context_item ::= library_clause | use_clause
    function Parse_Design_Unit return Iir_Design_Unit
    is
       Res: Iir_Design_Unit;
@@ -7526,49 +7681,27 @@ package body Parse is
       Set_Location (Res);
       Set_Date_State (Res, Date_Extern);
 
-      -- Parse context clauses
-      declare
-         use Context_Items_Chain_Handling;
-         Last : Iir;
-         Els : Iir;
-      begin
-         Build_Init (Last);
+      Parse_Context_Clause (Res);
 
-         loop
-            case Current_Token is
-               when Tok_Library =>
-                  Els := Parse_Library_Clause;
-               when Tok_Use =>
-                  Els := Parse_Use_Clause;
-                  Scan;
-               when Tok_With =>
-                  --  Be Ada friendly.
-                  Error_Msg_Parse ("'with' not allowed in context clause "
-                                   & "(try 'use' or 'library')");
-                  Els := Parse_Use_Clause;
-                  Scan;
-               when others =>
-                  exit;
-            end case;
-            Append_Subchain (Last, Res, Els);
-         end loop;
-      end;
+      if Get_Library_Unit (Res) = Null_Iir then
+         --  Parse library unit.  Context declaration are already parsed.
+         case Current_Token is
+            when Tok_Entity =>
+               Parse_Entity_Declaration (Res);
+            when Tok_Architecture =>
+               Parse_Architecture_Body (Res);
+            when Tok_Package =>
+               Parse_Package (Res);
+            when Tok_Configuration =>
+               Parse_Configuration_Declaration (Res);
+            when others =>
+               Error_Msg_Parse
+                 ("entity, architecture, package or configuration "
+                    & "keyword expected");
+               return Null_Iir;
+         end case;
+      end if;
 
-      -- Parse library unit
-      case Current_Token is
-         when Tok_Entity =>
-            Parse_Entity_Declaration (Res);
-         when Tok_Architecture =>
-            Parse_Architecture_Body (Res);
-         when Tok_Package =>
-            Parse_Package (Res);
-         when Tok_Configuration =>
-            Parse_Configuration_Declaration (Res);
-         when others =>
-            Error_Msg_Parse ("entity, architecture, package or configuration "
-                             & "keyword expected");
-            return Null_Iir;
-      end case;
       Unit := Get_Library_Unit (Res);
       Set_Design_Unit (Unit, Res);
       Set_Identifier (Res, Get_Identifier (Unit));
@@ -7595,6 +7728,8 @@ package body Parse is
          Design := Parse.Parse_Design_Unit;
          exit when Design = Null_Iir;
          Set_Design_File (Design, Res);
+
+         --  Append unit to the design file.
          if Last_Design = Null_Iir then
             Set_First_Design_Unit (Res, Design);
          else
@@ -7603,9 +7738,11 @@ package body Parse is
          Last_Design := Design;
          Set_Last_Design_Unit (Res, Last_Design);
       end loop;
+
       if Last_Design = Null_Iir then
          Error_Msg_Parse ("design file is empty (no design unit found)");
       end if;
+
       return Res;
    exception
       when Parse_Error =>

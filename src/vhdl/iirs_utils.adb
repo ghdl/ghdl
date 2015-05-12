@@ -530,7 +530,8 @@ package body Iirs_Utils is
          when Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Configuration_Declaration =>
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration =>
             null;
          when Iir_Kind_File_Type_Definition
            | Iir_Kind_Access_Type_Definition

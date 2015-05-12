@@ -621,6 +621,8 @@ package body Errorout is
                     & '(' & Image_Identifier (Arch) & ')';
                end if;
             end;
+         when Iir_Kind_Context_Declaration =>
+            return Disp_Identifier (Node, "context");
          when Iir_Kind_Package_Instantiation_Declaration =>
             return Disp_Identifier (Node, "instantiation package");
 
@@ -634,6 +636,8 @@ package body Errorout is
             return Disp_Node (Get_Library_Unit (Node));
          when Iir_Kind_Use_Clause =>
             return "use clause";
+         when Iir_Kind_Context_Reference =>
+            return "context reference";
          when Iir_Kind_Disconnection_Specification =>
             return "disconnection specification";
 

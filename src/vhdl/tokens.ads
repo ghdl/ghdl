@@ -225,8 +225,11 @@ package Tokens is
        Tok_Rol,
        Tok_Ror,
 
-   -- Added by Vhdl 2000:
+   --  Added by Vhdl 2000:
        Tok_Protected,
+
+   --  Added by vhdl 2008:
+       Tok_Context,
 
    --  AMS reserved words
        Tok_Across,

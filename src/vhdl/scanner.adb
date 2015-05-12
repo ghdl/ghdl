@@ -915,6 +915,15 @@ package body Scanner is
                   end if;
                   Current_Token := Tok_Identifier;
                end if;
+            when Std_Names.Name_Id_Vhdl08_Reserved_Words =>
+               if Vhdl_Std < Vhdl_08 then
+                  if Flags.Warn_Reserved_Word then
+                     Warning_Msg_Scan
+                       ("using """ & Nam_Buffer (1 .. Nam_Length)
+                          & """ vhdl-2008 reserved word as an identifier");
+                  end if;
+                  Current_Token := Tok_Identifier;
+               end if;
             when Std_Names.Name_Id_Vhdl00_Reserved_Words =>
                if Vhdl_Std < Vhdl_00 then
                   if Flags.Warn_Reserved_Word then

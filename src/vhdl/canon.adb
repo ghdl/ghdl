@@ -2652,9 +2652,9 @@ package body Canon is
          El := Get_Context_Items (Unit);
          while El /= Null_Iir loop
             case Get_Kind (El) is
-               when Iir_Kind_Use_Clause =>
-                  null;
-               when Iir_Kind_Library_Clause =>
+               when Iir_Kind_Use_Clause
+                 | Iir_Kind_Library_Clause
+                 | Iir_Kind_Context_Reference =>
                   null;
                when others =>
                   Error_Kind ("canonicalize1", El);
@@ -2692,6 +2692,8 @@ package body Canon is
                     (Get_Generic_Chain (Hdr),
                      Get_Generic_Map_Aspect_Chain (El), El));
             end;
+         when Iir_Kind_Context_Declaration =>
+            null;
          when others =>
             Error_Kind ("canonicalize2", El);
       end case;

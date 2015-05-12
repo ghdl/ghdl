@@ -386,6 +386,8 @@ package body Ghdlprint is
                Disp_Reserved;
             when Tok_Protected =>
                Disp_Reserved;
+            when Tok_Context =>
+               Disp_Reserved;
             when Tok_Across .. Tok_Tolerance =>
                Disp_Reserved;
             when Tok_Psl_Default

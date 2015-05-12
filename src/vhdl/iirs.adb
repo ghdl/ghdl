@@ -243,6 +243,7 @@ package body Iirs is
            | Iir_Kind_Error
            | Iir_Kind_Library_Clause
            | Iir_Kind_Use_Clause
+           | Iir_Kind_Context_Reference
            | Iir_Kind_Null_Literal
            | Iir_Kind_String_Literal8
            | Iir_Kind_Simple_Aggregate
@@ -297,6 +298,7 @@ package body Iirs is
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Attribute_Declaration
@@ -2311,7 +2313,23 @@ package body Iirs is
       Set_Field3 (Target, Chain);
    end Set_Use_Clause_Chain;
 
-   function Get_Selected_Name (Target : Iir_Use_Clause) return Iir is
+   function Get_Context_Reference_Chain (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Context_Reference_Chain (Get_Kind (Target)),
+                     "no field Context_Reference_Chain");
+      return Get_Field3 (Target);
+   end Get_Context_Reference_Chain;
+
+   procedure Set_Context_Reference_Chain (Target : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Context_Reference_Chain (Get_Kind (Target)),
+                     "no field Context_Reference_Chain");
+      Set_Field3 (Target, Chain);
+   end Set_Context_Reference_Chain;
+
+   function Get_Selected_Name (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Selected_Name (Get_Kind (Target)),
@@ -2319,7 +2337,7 @@ package body Iirs is
       return Get_Field1 (Target);
    end Get_Selected_Name;
 
-   procedure Set_Selected_Name (Target : Iir_Use_Clause; Name : Iir) is
+   procedure Set_Selected_Name (Target : Iir; Name : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Selected_Name (Get_Kind (Target)),

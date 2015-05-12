@@ -590,6 +590,8 @@ package body Trans.Chap12 is
                --  Mark the spec with 'body is present' flag.
                Set_Elab_Flag (Get_Design_Unit (Get_Package (Lib_Unit)), True);
                Translate (Unit, Whole);
+            when Iir_Kind_Context_Declaration =>
+               null;
             when others =>
                Error_Kind ("elaborate", Lib_Unit);
          end case;
@@ -614,7 +616,8 @@ package body Trans.Chap12 is
             when Iir_Kind_Architecture_Body
               | Iir_Kind_Package_Body
               | Iir_Kind_Configuration_Declaration
-              | Iir_Kind_Package_Instantiation_Declaration =>
+              | Iir_Kind_Package_Instantiation_Declaration
+              | Iir_Kind_Context_Declaration =>
                null;
             when others =>
                Error_Kind ("elaborate(2)", Lib_Unit);

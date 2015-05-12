@@ -3777,6 +3777,7 @@ package body Sem_Names is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Package_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Library_Declaration
