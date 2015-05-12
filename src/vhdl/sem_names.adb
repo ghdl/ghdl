@@ -1235,7 +1235,7 @@ package body Sem_Names is
       procedure Error_Pure (Subprg : Iir; Obj : Iir)
       is
       begin
-         Error_Msg_Sem
+         Error_Msg_Sem_Relaxed
            ("reference to " & Disp_Node (Obj) & " violate pure rule for "
             & Disp_Node (Subprg), Loc);
       end Error_Pure;
@@ -1288,14 +1288,12 @@ package body Sem_Names is
             --
             --  A pure function must not contain a reference to an explicitly
             --  declared file.
-            if Flags.Vhdl_Std > Vhdl_93c then
-               if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
-                  Error_Pure (Subprg, Obj);
-               else
-                  Set_Purity_State (Subprg, Impure);
-                  Set_Impure_Depth (Get_Subprogram_Body (Subprg),
-                                    Iir_Depth_Impure);
-               end if;
+            if Get_Kind (Subprg) = Iir_Kind_Function_Declaration then
+               Error_Pure (Subprg, Obj);
+            else
+               Set_Purity_State (Subprg, Impure);
+               Set_Impure_Depth (Get_Subprogram_Body (Subprg),
+                                 Iir_Depth_Impure);
             end if;
             return;
          when others =>

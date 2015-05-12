@@ -74,6 +74,9 @@ package Errorout is
    procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node);
    procedure Error_Msg_Sem (Msg: String; Loc: Location_Type);
 
+   --  Like Error_Msg_Sem, but a warning if -frelaxed or --std=93c.
+   procedure Error_Msg_Sem_Relaxed (Msg : String; Loc : Iir);
+
    -- Disp a message during elaboration (or configuration).
    procedure Error_Msg_Elab (Msg: String);
    procedure Error_Msg_Elab (Msg: String; Loc: Iir);

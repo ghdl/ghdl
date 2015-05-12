@@ -1894,31 +1894,29 @@ package body Sem_Decls is
 
       --  Note: this check is also performed when a file is referenced.
       --    But a file can be declared without being explicitly referenced.
-      if Flags.Vhdl_Std > Vhdl_93c then
-         declare
-            Parent : Iir;
-            Spec : Iir;
-         begin
-            Parent := Get_Parent (Decl);
-            case Get_Kind (Parent) is
-               when Iir_Kind_Function_Body =>
-                  Spec := Get_Subprogram_Specification (Parent);
-                  if Get_Pure_Flag (Spec) then
-                     Error_Msg_Sem
-                       ("cannot declare a file in a pure function", Decl);
-                  end if;
-               when Iir_Kind_Procedure_Body =>
-                  Spec := Get_Subprogram_Specification (Parent);
-                  Set_Purity_State (Spec, Impure);
-                  Set_Impure_Depth (Parent, Iir_Depth_Impure);
-               when Iir_Kind_Function_Declaration
-                 | Iir_Kind_Procedure_Declaration =>
-                  Error_Kind ("sem_file_declaration", Parent);
-               when others =>
-                  null;
-            end case;
-         end;
-      end if;
+      declare
+         Parent : Iir;
+         Spec : Iir;
+      begin
+         Parent := Get_Parent (Decl);
+         case Get_Kind (Parent) is
+            when Iir_Kind_Function_Body =>
+               Spec := Get_Subprogram_Specification (Parent);
+               if Get_Pure_Flag (Spec) then
+                  Error_Msg_Sem_Relaxed
+                    ("cannot declare a file in a pure function", Decl);
+               end if;
+            when Iir_Kind_Procedure_Body =>
+               Spec := Get_Subprogram_Specification (Parent);
+               Set_Purity_State (Spec, Impure);
+               Set_Impure_Depth (Parent, Iir_Depth_Impure);
+            when Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration =>
+               Error_Kind ("sem_file_declaration", Parent);
+            when others =>
+               null;
+         end case;
+      end;
    end Sem_File_Declaration;
 
    procedure Sem_Attribute_Declaration (Decl: Iir_Attribute_Declaration)

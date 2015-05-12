@@ -311,6 +311,17 @@ package body Errorout is
       Put_Line (Msg);
    end Error_Msg_Sem;
 
+   procedure Error_Msg_Sem_Relaxed (Msg : String; Loc : Iir)
+   is
+      use Flags;
+   begin
+      if Flag_Relaxed_Rules or Vhdl_Std = Vhdl_93c then
+         Warning_Msg_Sem (Msg, Loc);
+      else
+         Error_Msg_Sem (Msg, Loc);
+      end if;
+   end Error_Msg_Sem_Relaxed;
+
    -- Disp a message during elaboration.
    procedure Error_Msg_Elab (Msg: String) is
    begin
