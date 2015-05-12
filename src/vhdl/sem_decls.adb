@@ -2056,6 +2056,9 @@ package body Sem_Decls is
             --    the signature matches the parameter and result type profile
             --    of the subprogram equivalent to the enumeration literal,
             --    defined in Section 3.1.1
+            if Get_Return_Type_Mark (Sig) = Null_Iir then
+               return False;
+            end if;
             return List = Null_Iir_List
               and then Get_Type (N_Entity)
               = Get_Type (Get_Return_Type_Mark (Sig));
@@ -2065,6 +2068,9 @@ package body Sem_Decls is
             --    a function and the base type of the type mark following
             --    the reserved word in the signature is the same as the base
             --    type of the return type of the function, [...]
+            if Get_Return_Type_Mark (Sig) = Null_Iir then
+               return False;
+            end if;
             if Get_Type (Get_Return_Type_Mark (Sig)) /=
               Get_Base_Type (Get_Return_Type (N_Entity))
             then
