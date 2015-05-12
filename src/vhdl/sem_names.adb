@@ -1849,7 +1849,13 @@ package body Sem_Names is
                for I in Natural loop
                   El := Get_Nth_Element (Prefix_List, I);
                   exit when El = Null_Iir;
-                  Sem_As_Expanded_Name (El);
+                  case Get_Kind (El) is
+                     when Iir_Kind_Function_Call =>
+                        --  Not an expanded name.
+                        null;
+                     when others =>
+                        Sem_As_Expanded_Name (El);
+                  end case;
                end loop;
 
                --  If no expanded name are found, try as selected element.
