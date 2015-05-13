@@ -289,6 +289,9 @@ package body Disp_Tree is
    function Image_Time_Stamp_Id (Id : Time_Stamp_Id) return String
      renames Files_Map.Get_Time_Stamp_String;
 
+   function Image_File_Checksum_Id (Id : File_Checksum_Id) return String
+     renames Files_Map.Get_File_Checksum_String;
+
    function Image_Iir_Predefined_Functions (F : Iir_Predefined_Functions)
                                            return String is
    begin
@@ -467,6 +470,9 @@ package body Disp_Tree is
                when Type_Time_Stamp_Id =>
                   Put_Line (Image_Time_Stamp_Id
                               (Get_Time_Stamp_Id (N, F)));
+               when Type_File_Checksum_Id =>
+                  Put_Line (Image_File_Checksum_Id
+                              (Get_File_Checksum_Id (N, F)));
                when Type_Token_Type =>
                   Put_Line (Image_Token_Type (Get_Token_Type (N, F)));
                when Type_Name_Id =>

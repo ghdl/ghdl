@@ -141,6 +141,12 @@ package body Iirs is
    function Iir_To_Time_Stamp_Id is new Ada.Unchecked_Conversion
      (Source => Iir, Target => Time_Stamp_Id);
 
+   function File_Checksum_Id_To_Iir is new Ada.Unchecked_Conversion
+     (Source => File_Checksum_Id, Target => Iir);
+
+   function Iir_To_File_Checksum_Id is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => File_Checksum_Id);
+
    function Iir_To_Iir_List is new Ada.Unchecked_Conversion
      (Source => Iir, Target => Iir_List);
    function Iir_List_To_Iir is new Ada.Unchecked_Conversion

@@ -252,7 +252,8 @@ package body Sem_Inst is
             Set_Source_Ptr (Res, F, Get_Source_Ptr (N, F));
          when Type_Date_Type
            | Type_Date_State_Type
-           | Type_Time_Stamp_Id =>
+           | Type_Time_Stamp_Id
+           | Type_File_Checksum_Id =>
             --  Can this happen ?
             raise Internal_Error;
          when Type_Base_Type =>

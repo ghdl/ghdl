@@ -272,10 +272,15 @@ package body Libraries is
 
       File : Source_File_Entry;
 
+      --  Report an error message and abort.
+      procedure Bad_Library_Format;
+      pragma No_Return (Bad_Library_Format);
+
       procedure Bad_Library_Format is
       begin
          Error_Msg (Image (Files_Map.Get_File_Name (File)) &
-                    ": bad library format");
+                      ": bad library format");
+         raise Compilation_Error;
       end Bad_Library_Format;
 
       procedure Scan_Expect (Tok: Token_Type) is
@@ -283,7 +288,6 @@ package body Libraries is
          Scan;
          if Current_Token /= Tok then
             Bad_Library_Format;
-            raise Compilation_Error;
          end if;
       end Scan_Expect;
 
@@ -291,7 +295,6 @@ package body Libraries is
       begin
          if Current_String_Length /= Time_Stamp_String'Length then
             Bad_Library_Format;
-            raise Compilation_Error;
          end if;
          return Time_Stamp_Id (Current_String_Id);
       end Current_Time_Stamp;
@@ -388,12 +391,10 @@ package body Libraries is
         or else Nam_Length /= 1 or else Nam_Buffer (1) /= 'v'
       then
          Bad_Library_Format;
-         raise Compilation_Error;
       end if;
       Scan_Expect (Tok_Integer);
-      if Current_Iir_Int64 not in 1 .. 3 then
+      if Current_Iir_Int64 /= 4 then
          Bad_Library_Format;
-         raise Compilation_Error;
       end if;
       Scan;
 
@@ -415,16 +416,9 @@ package body Libraries is
                --  The filename is an absolute file.
                File_Dir := Null_Identifier;
             elsif Current_Token = Tok_String then
-               --  Be compatible with version 1: an empty directory for
-               --  an absolute filename.
-               if Current_String_Length = 0 then
-                  File_Dir := Null_Identifier;
-               else
-                  File_Dir := String_To_Name_Id;
-               end if;
+               File_Dir := String_To_Name_Id;
             else
                Bad_Library_Format;
-               raise Compilation_Error;
             end if;
 
             Set_Design_File_Directory (Design_File, File_Dir);
@@ -441,7 +435,11 @@ package body Libraries is
             Set_Design_File_Chain (Library, Design_File);
 
             Scan_Expect (Tok_String);
-            Set_File_Time_Stamp (Design_File, Current_Time_Stamp);
+            if Current_String_Length /= File_Checksum_String'Length then
+               Bad_Library_Format;
+            end if;
+            Set_File_Checksum
+              (Design_File, File_Checksum_Id (Current_String_Id));
 
             Scan_Expect (Tok_String);
             Set_Analysis_Time_Stamp (Design_File, Current_Time_Stamp);
@@ -861,7 +859,7 @@ package body Libraries is
       New_Library_Unit: Iir;
       Unit_Id : Name_Id;
       Date: Date_Type;
-      New_Lib_Time_Stamp : Time_Stamp_Id;
+      New_Lib_Checksum : File_Checksum_Id;
       Id : Hash_Id;
 
       --  File name and dir name of DECL.
@@ -901,7 +899,7 @@ package body Libraries is
       begin
          Files_Map.Location_To_File_Pos (Get_Location (New_Library_Unit),
                                          File, Pos);
-         New_Lib_Time_Stamp := Files_Map.Get_File_Time_Stamp (File);
+         New_Lib_Checksum := Files_Map.Get_File_Checksum (File);
          File_Name := Files_Map.Get_File_Name (File);
          Image (File_Name);
          if GNAT.OS_Lib.Is_Absolute_Path (Nam_Buffer (1 .. Nam_Length)) then
@@ -1024,15 +1022,15 @@ package body Libraries is
       end if;
 
       if Design_File /= Null_Iir
-        and then not Files_Map.Is_Eq (New_Lib_Time_Stamp,
-                                      Get_File_Time_Stamp (Design_File))
+        and then not Files_Map.Is_Eq (New_Lib_Checksum,
+                                      Get_File_Checksum (Design_File))
       then
          -- FIXME: this test is not enough: what about reanalyzing
          --  unmodified files (this works only because the order is not
          --  changed).
          -- Design file is updated.
          -- Outdate all other units, overwrite the design_file.
-         Set_File_Time_Stamp (Design_File, New_Lib_Time_Stamp);
+         Set_File_Checksum (Design_File, New_Lib_Checksum);
          Design_Unit := Get_First_Design_Unit (Design_File);
          while Design_Unit /= Null_Iir loop
             if Design_Unit /= Unit then
@@ -1060,7 +1058,7 @@ package body Libraries is
          Set_Design_File_Filename (Design_File, File_Name);
          Set_Design_File_Directory (Design_File, Dir_Name);
 
-         Set_File_Time_Stamp (Design_File, New_Lib_Time_Stamp);
+         Set_File_Checksum (Design_File, New_Lib_Checksum);
          Set_Parent (Design_File, Work_Library);
          Set_Chain (Design_File, Get_Design_File_Chain (Work_Library));
          Set_Design_File_Chain (Work_Library, Design_File);
@@ -1166,7 +1164,7 @@ package body Libraries is
       end if;
 
       --  Header: version.
-      WR ("v 3");
+      WR ("v 4");
       WR_LF;
 
       Design_File := Get_Design_File_Chain (Library);
@@ -1199,8 +1197,8 @@ package body Libraries is
             Image (Get_Design_File_Filename (Design_File));
             WR (Nam_Buffer (1 .. Nam_Length));
             WR (""" """);
-            WR (Files_Map.Get_Time_Stamp_String
-                  (Get_File_Time_Stamp (Design_File)));
+            WR (Files_Map.Get_File_Checksum_String
+                  (Get_File_Checksum (Design_File)));
             WR (""" """);
             WR (Files_Map.Get_Time_Stamp_String
                   (Get_Analysis_Time_Stamp (Design_File)));
@@ -1488,8 +1486,8 @@ package body Libraries is
       Set_File (Fe);
 
       if not Files_Map.Is_Eq
-        (Files_Map.Get_File_Time_Stamp (Get_Current_Source_File),
-         Get_File_Time_Stamp (Design_File))
+        (Files_Map.Get_File_Checksum (Get_Current_Source_File),
+         Get_File_Checksum (Design_File))
       then
          Error_Msg_Sem
            ("file " & Image (Get_Design_File_Filename (Design_File))

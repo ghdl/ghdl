@@ -1,5 +1,5 @@
 --  Common types.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Copyright (C) 2002 - 2015 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -48,26 +48,34 @@ package Types is
    --  iir_index32 is aimed at containing an array index.
    type Iir_Index32 is new Nat32;
 
-   -- Useful type.
+   --  Useful types.
    type String_Acc is access String;
    type String_Cst is access constant String;
    type String_Acc_Array is array (Natural range <>) of String_Acc;
 
-   -- Type of a name table element.
-   -- The name table is defined in the name_table package.
+   --  The name table is defined in Name_Table package.  This is an hash table
+   --  that associate a uniq Name_Id to a string.  Name_Id are allocated in
+   --  increasing numbers, so it is possible to create a parallel table
+   --  indexed on Name_Id to associate additional data to the names.
    type Name_Id is new Nat32;
 
-   -- null entry in the name table.
-   -- It is sure that this entry is never allocated.
+   --  Null entry in the name table.
+   --  It is sure that this entry is never allocated.
    Null_Identifier: constant Name_Id := 0;
 
+   --  A String8_Id represents a string stored in a dedicated table.  Contrary
+   --  to Name_Id, String8 aren't uniq: two different String8_Id can correspond
+   --  to a same String.  The purpose of an integer number for string is to
+   --  have a 32 bit type to represent a string (contrary to pointers that
+   --  could be 32 or 64 bit - in general - or to an access type which can be
+   --  even wider in Ada).
    type String8_Id is new Nat32;
    for String8_Id'Size use 32;
 
    Null_String8 : constant String8_Id := 0;
 
-   -- Index type is the source file table.
-   -- This table is defined in the files_map package.
+   --  Index type is the source file table.
+   --  This table is defined in the files_map package.
    type Source_File_Entry is new Nat32;
    No_Source_File_Entry: constant Source_File_Entry := 0;
 
@@ -92,7 +100,7 @@ package Types is
    for Location_Type'Size use 32;
    Location_Nil : constant Location_Type := 0;
 
-   -- Type of a file buffer.
+   --  Type of a file buffer.
    type File_Buffer is array (Source_Ptr range <>) of Character;
    type File_Buffer_Acc is access File_Buffer;
 
@@ -102,14 +110,24 @@ package Types is
    --  PSL NFA
    type PSL_NFA is new Int32;
 
-   -- Indentation.
-   -- This is used by all packages that display vhdl code or informations.
+   --  Indentation.
+   --  This is used by all packages that display vhdl code or informations.
    Indentation : constant := 2;
 
    --  String representing a date/time (format is YYYYMMDDHHmmSS.sss).
    subtype Time_Stamp_String is String (1 .. 18);
    type Time_Stamp_Id is new String8_Id;
    Null_Time_Stamp : constant Time_Stamp_Id := 0;
+
+   --  In order to detect file changes, a checksum of the content is computed.
+   --  Currently SHA1 is used, but the cryptographic aspect is not a strong
+   --  requirement.
+   type File_Checksum_Id is new String8_Id;
+   No_File_Checksum_Id : constant File_Checksum_Id := 0;
+
+   --  String image of a File_Hash_Id.  SHA1 digests are 5 * 32 bytes long, so
+   --  the hexadecimal image is 40 characters.
+   subtype File_Checksum_String is String (1 .. 40);
 
    --  Self-explaining: raised when an internal error (such as consistency)
    --  is detected.

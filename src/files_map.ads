@@ -63,9 +63,16 @@ package Files_Map is
    function Is_Gt (L : Time_Stamp_Id; R : Time_Stamp_Id) return Boolean;
    function Get_Time_Stamp_String (Ts : Time_Stamp_Id) return String;
 
-   -- Return the date of the file (last modification date) as a string.
-   function Get_File_Time_Stamp (File : Source_File_Entry)
-                                return Time_Stamp_Id;
+   --  Return the checksum of the content of FILE.
+   function Get_File_Checksum (File : Source_File_Entry)
+                              return File_Checksum_Id;
+
+   --  True if two file checksums are identical.
+   function Is_Eq (L, R : File_Checksum_Id) return Boolean;
+
+   --  String image of CHECKSUM.
+   function Get_File_Checksum_String (Checksum : File_Checksum_Id)
+                                     return String;
 
    -- Return the current date of the system.
    function Get_Os_Time_Stamp return Time_Stamp_Id;

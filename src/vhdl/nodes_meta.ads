@@ -28,6 +28,7 @@ package Nodes_Meta is
       Type_Boolean,
       Type_Date_State_Type,
       Type_Date_Type,
+      Type_File_Checksum_Id,
       Type_Iir,
       Type_Iir_All_Sensitized,
       Type_Iir_Constraint,
@@ -61,7 +62,7 @@ package Nodes_Meta is
       Field_First_Design_Unit,
       Field_Last_Design_Unit,
       Field_Library_Declaration,
-      Field_File_Time_Stamp,
+      Field_File_Checksum,
       Field_Analysis_Time_Stamp,
       Field_Library,
       Field_File_Dependence_List,
@@ -401,6 +402,11 @@ package Nodes_Meta is
    procedure Set_Date_Type
       (N : Iir; F : Fields_Enum; V: Date_Type);
 
+   function Get_File_Checksum_Id
+      (N : Iir; F : Fields_Enum) return File_Checksum_Id;
+   procedure Set_File_Checksum_Id
+      (N : Iir; F : Fields_Enum; V: File_Checksum_Id);
+
    function Get_Iir
       (N : Iir; F : Fields_Enum) return Iir;
    procedure Set_Iir
@@ -529,7 +535,7 @@ package Nodes_Meta is
    function Has_First_Design_Unit (K : Iir_Kind) return Boolean;
    function Has_Last_Design_Unit (K : Iir_Kind) return Boolean;
    function Has_Library_Declaration (K : Iir_Kind) return Boolean;
-   function Has_File_Time_Stamp (K : Iir_Kind) return Boolean;
+   function Has_File_Checksum (K : Iir_Kind) return Boolean;
    function Has_Analysis_Time_Stamp (K : Iir_Kind) return Boolean;
    function Has_Library (K : Iir_Kind) return Boolean;
    function Has_File_Dependence_List (K : Iir_Kind) return Boolean;

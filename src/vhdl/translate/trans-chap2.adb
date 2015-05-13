@@ -1015,7 +1015,8 @@ package body Trans.Chap2 is
                   raise Internal_Error;
                when Type_Date_Type
                   | Type_Date_State_Type
-                  | Type_Time_Stamp_Id =>
+                  | Type_Time_Stamp_Id
+                  | Type_File_Checksum_Id =>
                   --  Can this happen ?
                   raise Internal_Error;
                when Type_String8_Id

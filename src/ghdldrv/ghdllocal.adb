@@ -1155,8 +1155,8 @@ package body Ghdllocal is
             if Fe = No_Source_File_Entry then
                --  FIXME: should remove all the design file from the library.
                null;
-            elsif Is_Eq (Get_File_Time_Stamp (Fe),
-                         Get_File_Time_Stamp (File))
+            elsif Is_Eq (Get_File_Checksum (Fe),
+                         Get_File_Checksum (File))
             then
                --  File has not been modified.
                --  Extract libraries.
@@ -1283,8 +1283,8 @@ package body Ghdllocal is
                   --  the library.
                   null;
                else
-                  if not Is_Eq (Get_File_Time_Stamp (Fe),
-                                Get_File_Time_Stamp (File))
+                  if not Is_Eq (Get_File_Checksum (Fe),
+                                Get_File_Checksum (File))
                   then
                      --  FILE has been modified.
                      Design_File := Libraries.Load_File (Fe);
@@ -1359,8 +1359,8 @@ package body Ghdllocal is
       --  2) file has been modified.
       Fe := Load_Source_File (Get_Design_File_Directory (File),
                               Get_Design_File_Filename (File));
-      if not Is_Eq (Get_File_Time_Stamp (Fe),
-                    Get_File_Time_Stamp (File))
+      if not Is_Eq (Get_File_Checksum (Fe),
+                    Get_File_Checksum (File))
       then
          if Flag_Verbose then
             Put_Line ("file " & Name_Table.Image (Get_File_Name (Fe))

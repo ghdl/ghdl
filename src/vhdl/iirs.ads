@@ -173,7 +173,7 @@ package Iirs is
    --  analysis and detecting obsolete units across libraries.
    --   Get/Set_Analysis_Time_Stamp (Field3)
    --
-   --   Get/Set_File_Time_Stamp (Field4)
+   --   Get/Set_File_Checksum (Field4)
    --
    --  Get the chain of unit contained in the file.  This is a simply linked
    --  chain, but the tail is kept to speed-up appending operation.
@@ -5006,8 +5006,8 @@ package Iirs is
 
    -- File time stamp is the system time of the file last modification.
    --  Field: Field4 (uc)
-   function Get_File_Time_Stamp (Design : Iir) return Time_Stamp_Id;
-   procedure Set_File_Time_Stamp (Design : Iir; Stamp : Time_Stamp_Id);
+   function Get_File_Checksum (Design : Iir) return File_Checksum_Id;
+   procedure Set_File_Checksum (Design : Iir; Checksum : File_Checksum_Id);
 
    -- Time stamp of the last analysis system time.
    --  Field: Field3 (uc)

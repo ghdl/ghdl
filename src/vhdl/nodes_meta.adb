@@ -22,7 +22,7 @@ package body Nodes_Meta is
       Field_First_Design_Unit => Type_Iir,
       Field_Last_Design_Unit => Type_Iir,
       Field_Library_Declaration => Type_Iir,
-      Field_File_Time_Stamp => Type_Time_Stamp_Id,
+      Field_File_Checksum => Type_File_Checksum_Id,
       Field_Analysis_Time_Stamp => Type_Time_Stamp_Id,
       Field_Library => Type_Iir,
       Field_File_Dependence_List => Type_Iir_List,
@@ -327,8 +327,8 @@ package body Nodes_Meta is
             return "last_design_unit";
          when Field_Library_Declaration =>
             return "library_declaration";
-         when Field_File_Time_Stamp =>
-            return "file_time_stamp";
+         when Field_File_Checksum =>
+            return "file_checksum";
          when Field_Analysis_Time_Stamp =>
             return "analysis_time_stamp";
          when Field_Library =>
@@ -1407,7 +1407,7 @@ package body Nodes_Meta is
             return Attr_Ref;
          when Field_Library_Declaration =>
             return Attr_Ref;
-         when Field_File_Time_Stamp =>
+         when Field_File_Checksum =>
             return Attr_None;
          when Field_Analysis_Time_Stamp =>
             return Attr_None;
@@ -2004,7 +2004,7 @@ package body Nodes_Meta is
       Field_Design_File_Directory,
       Field_Design_File_Filename,
       Field_Analysis_Time_Stamp,
-      Field_File_Time_Stamp,
+      Field_File_Checksum,
       Field_Elab_Flag,
       Field_File_Dependence_List,
       Field_Chain,
@@ -4415,6 +4415,30 @@ package body Nodes_Meta is
       end case;
    end Set_Date_Type;
 
+   function Get_File_Checksum_Id
+      (N : Iir; F : Fields_Enum) return File_Checksum_Id is
+   begin
+      pragma Assert (Fields_Type (F) = Type_File_Checksum_Id);
+      case F is
+         when Field_File_Checksum =>
+            return Get_File_Checksum (N);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_File_Checksum_Id;
+
+   procedure Set_File_Checksum_Id
+      (N : Iir; F : Fields_Enum; V: File_Checksum_Id) is
+   begin
+      pragma Assert (Fields_Type (F) = Type_File_Checksum_Id);
+      case F is
+         when Field_File_Checksum =>
+            Set_File_Checksum (N, V);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Set_File_Checksum_Id;
+
    function Get_Iir
       (N : Iir; F : Fields_Enum) return Iir is
    begin
@@ -5804,8 +5828,6 @@ package body Nodes_Meta is
    begin
       pragma Assert (Fields_Type (F) = Type_Time_Stamp_Id);
       case F is
-         when Field_File_Time_Stamp =>
-            return Get_File_Time_Stamp (N);
          when Field_Analysis_Time_Stamp =>
             return Get_Analysis_Time_Stamp (N);
          when others =>
@@ -5818,8 +5840,6 @@ package body Nodes_Meta is
    begin
       pragma Assert (Fields_Type (F) = Type_Time_Stamp_Id);
       case F is
-         when Field_File_Time_Stamp =>
-            Set_File_Time_Stamp (N, V);
          when Field_Analysis_Time_Stamp =>
             Set_Analysis_Time_Stamp (N, V);
          when others =>
@@ -5894,10 +5914,10 @@ package body Nodes_Meta is
       return K = Iir_Kind_Library_Clause;
    end Has_Library_Declaration;
 
-   function Has_File_Time_Stamp (K : Iir_Kind) return Boolean is
+   function Has_File_Checksum (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Design_File;
-   end Has_File_Time_Stamp;
+   end Has_File_Checksum;
 
    function Has_Analysis_Time_Stamp (K : Iir_Kind) return Boolean is
    begin

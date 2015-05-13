@@ -22,6 +22,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 with GNAT.Table;
 with GNAT.OS_Lib;
+with GNAT.SHA1;
 with GNAT.Directory_Operations;
 with Name_Table; use Name_Table;
 with Str_Table;
@@ -55,7 +56,7 @@ package body Files_Map is
       -- Length of the file, which is also the length of the buffer.
       File_Length: Natural;
 
-      Time_Stamp: Time_Stamp_Id;
+      Checksum : File_Checksum_Id;
 
       --  Current number of line in Lines_Table.
       Nbr_Lines: Natural;
@@ -425,51 +426,6 @@ package body Files_Map is
       return Character'Val (Character'Pos ('0') + Val mod 10);
    end Digit_To_Char;
 
-   -- Format: YYYYMMDDHHmmsscc
-   -- Y: year, M: month, D: day, H: hour, m: minute, s: second, cc:100th sec
-   function Os_Time_To_Time_Stamp_Id (Time: GNAT.OS_Lib.OS_Time)
-     return Time_Stamp_Id
-   is
-      use GNAT.OS_Lib;
-      use Str_Table;
-      Res: Time_Stamp_Id;
-      Year: Year_Type;
-      Month: Month_Type;
-      Day: Day_Type;
-      Hour: Hour_Type;
-      Minute: Minute_Type;
-      Second: Second_Type;
-   begin
-      GM_Split (Time, Year, Month, Day, Hour, Minute, Second);
-      Res := Time_Stamp_Id (Create_String8);
-      Append_String8_Char (Digit_To_Char (Year / 1000));
-      Append_String8_Char (Digit_To_Char (Year / 100));
-      Append_String8_Char (Digit_To_Char (Year / 10));
-      Append_String8_Char (Digit_To_Char (Year / 1));
-      Append_String8_Char (Digit_To_Char (Month / 10));
-      Append_String8_Char (Digit_To_Char (Month / 1));
-      Append_String8_Char (Digit_To_Char (Day / 10));
-      Append_String8_Char (Digit_To_Char (Day / 1));
-      Append_String8_Char (Digit_To_Char (Hour / 10));
-      Append_String8_Char (Digit_To_Char (Hour / 1));
-      Append_String8_Char (Digit_To_Char (Minute / 10));
-      Append_String8_Char (Digit_To_Char (Minute / 1));
-      Append_String8_Char (Digit_To_Char (Second / 10));
-      Append_String8_Char (Digit_To_Char (Second / 1));
-      Append_String8_Char ('.');
-      Append_String8_Char ('0');
-      Append_String8_Char ('0');
-      Append_String8_Char ('0');
-      return Res;
-   end Os_Time_To_Time_Stamp_Id;
-
-   function Get_File_Time_Stamp (FD : GNAT.OS_Lib.File_Descriptor)
-                                return Time_Stamp_Id
-   is
-   begin
-      return Os_Time_To_Time_Stamp_Id (GNAT.OS_Lib.File_Time_Stamp (FD));
-   end Get_File_Time_Stamp;
-
    function Get_Os_Time_Stamp return Time_Stamp_Id
    is
       use Ada.Calendar;
@@ -579,7 +535,7 @@ package body Files_Map is
                                    Last_Location => Next_Location,
                                    File_Name => Name,
                                    Directory => Directory,
-                                   Time_Stamp => Null_Time_Stamp,
+                                   Checksum => No_File_Checksum_Id,
                                    Source => null,
                                    File_Length => 0,
                                    Nbr_Lines => 0,
@@ -650,7 +606,7 @@ package body Files_Map is
       declare
          Filename : String := Get_Pathname (Directory, Name, True);
       begin
-         if not Is_Regular_File(Filename) then
+         if not Is_Regular_File (Filename) then
             return No_Source_File_Entry;
          end if;
          Fd := Open_Read (Filename'Address, Binary);
@@ -660,8 +616,6 @@ package body Files_Map is
       end;
 
       Res := Create_Source_File_Entry (Directory, Name);
-
-      Source_Files.Table (Res).Time_Stamp := Get_File_Time_Stamp (Fd);
 
       Length := Source_Ptr (File_Length (Fd));
 
@@ -674,13 +628,29 @@ package body Files_Map is
          Close (Fd);
          raise Internal_Error;
       end if;
-      Buffer (Length) := EOT;
-      Buffer (Length + 1) := EOT;
+      Buffer (Source_Ptr_Org + Length) := EOT;
+      Buffer (Source_Ptr_Org + Length + 1) := EOT;
 
       if Source_Files.Table (Res).First_Location /= Next_Location then
          --  Load_Source_File call must follow its Create_Source_File.
          raise Internal_Error;
       end if;
+
+      declare
+         use GNAT.SHA1;
+         use Str_Table;
+
+         subtype Buffer_String is String (1 .. Buffer'Length - 2);
+         Buffer_Digest : constant Message_Digest :=
+           Digest (Buffer_String
+                     (Buffer (Source_Ptr_Org .. Source_Ptr_Org + Length - 1)));
+      begin
+         Source_Files.Table (Res).Checksum :=
+           File_Checksum_Id (Create_String8);
+         for I in Buffer_Digest'Range loop
+            Append_String8_Char (Buffer_Digest (I));
+         end loop;
+      end;
 
       Source_Files.Table (Res).Last_Location :=
         Next_Location + Location_Type (Length) + 1;
@@ -724,13 +694,12 @@ package body Files_Map is
       return Source_Files.Table (File).File_Name;
    end Get_File_Name;
 
-   -- Return the date of the file (last modification date) as a string.
-   function Get_File_Time_Stamp (File: Source_File_Entry)
-     return Time_Stamp_Id is
+   function Get_File_Checksum (File : Source_File_Entry)
+                              return File_Checksum_Id is
    begin
       Check_File (File);
-      return Source_Files.Table (File).Time_Stamp;
-   end Get_File_Time_Stamp;
+      return Source_Files.Table (File).Checksum;
+   end Get_File_Checksum;
 
    function Get_Source_File_Directory (File : Source_File_Entry)
                                        return Name_Id is
@@ -765,6 +734,21 @@ package body Files_Map is
       return True;
    end Is_Eq;
 
+   function Is_Eq (L, R : File_Checksum_Id) return Boolean
+   is
+      use Str_Table;
+      L_Str : constant String8_Id := String8_Id (L);
+      R_Str : constant String8_Id := String8_Id (R);
+   begin
+      for I in 1 .. Nat32 (File_Checksum_String'Length) loop
+         if Element_String8 (L_Str, I) /= Element_String8 (R_Str, I) then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Is_Eq;
+
+
    function Is_Gt (L : Time_Stamp_Id; R : Time_Stamp_Id) return Boolean
    is
       use Str_Table;
@@ -791,6 +775,17 @@ package body Files_Map is
            (String8_Id (Ts), Time_Stamp_String'Length);
       end if;
    end Get_Time_Stamp_String;
+
+   function Get_File_Checksum_String (Checksum : File_Checksum_Id)
+                                     return String is
+   begin
+      if Checksum = No_File_Checksum_Id then
+         return "NO_CHECKSUM";
+      else
+         return Str_Table.String_String8
+           (String8_Id (Checksum), File_Checksum_String'Length);
+      end if;
+   end Get_File_Checksum_String;
 
    function Image (Loc : Location_Type; Filename : Boolean := True)
                   return string
@@ -848,8 +843,8 @@ package body Files_Map is
             Put (" dir:" & Image (F.Directory));
             Put (" length:" & Natural'Image (F.File_Length));
             New_Line;
-            if F.Time_Stamp /= Null_Time_Stamp then
-               Put (" time_stamp: " & Get_Time_Stamp_String (F.Time_Stamp));
+            if F.Checksum /= No_File_Checksum_Id then
+               Put (" checksum: " & Get_File_Checksum_String (F.Checksum));
             end if;
             Put (" nbr lines:" & Natural'Image (F.Nbr_Lines));
             Put (" lines_table_max:" & Natural'Image (F.Lines_Table_Max));

@@ -141,6 +141,12 @@ package body Iirs is
    function Iir_To_Time_Stamp_Id is new Ada.Unchecked_Conversion
      (Source => Iir, Target => Time_Stamp_Id);
 
+   function File_Checksum_Id_To_Iir is new Ada.Unchecked_Conversion
+     (Source => File_Checksum_Id, Target => Iir);
+
+   function Iir_To_File_Checksum_Id is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => File_Checksum_Id);
+
    function Iir_To_Iir_List is new Ada.Unchecked_Conversion
      (Source => Iir, Target => Iir_List);
    function Iir_List_To_Iir is new Ada.Unchecked_Conversion
@@ -536,21 +542,21 @@ package body Iirs is
       Set_Field1 (Design, Library);
    end Set_Library_Declaration;
 
-   function Get_File_Time_Stamp (Design : Iir) return Time_Stamp_Id is
+   function Get_File_Checksum (Design : Iir) return File_Checksum_Id is
    begin
       pragma Assert (Design /= Null_Iir);
-      pragma Assert (Has_File_Time_Stamp (Get_Kind (Design)),
-                     "no field File_Time_Stamp");
-      return Iir_To_Time_Stamp_Id (Get_Field4 (Design));
-   end Get_File_Time_Stamp;
+      pragma Assert (Has_File_Checksum (Get_Kind (Design)),
+                     "no field File_Checksum");
+      return Iir_To_File_Checksum_Id (Get_Field4 (Design));
+   end Get_File_Checksum;
 
-   procedure Set_File_Time_Stamp (Design : Iir; Stamp : Time_Stamp_Id) is
+   procedure Set_File_Checksum (Design : Iir; Checksum : File_Checksum_Id) is
    begin
       pragma Assert (Design /= Null_Iir);
-      pragma Assert (Has_File_Time_Stamp (Get_Kind (Design)),
-                     "no field File_Time_Stamp");
-      Set_Field4 (Design, Time_Stamp_Id_To_Iir (Stamp));
-   end Set_File_Time_Stamp;
+      pragma Assert (Has_File_Checksum (Get_Kind (Design)),
+                     "no field File_Checksum");
+      Set_Field4 (Design, File_Checksum_Id_To_Iir (Checksum));
+   end Set_File_Checksum;
 
    function Get_Analysis_Time_Stamp (Design : Iir) return Time_Stamp_Id is
    begin
