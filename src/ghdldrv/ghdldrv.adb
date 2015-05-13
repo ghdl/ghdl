@@ -1261,7 +1261,7 @@ package body Ghdldrv is
       end if;
    end Decode_Option;
 
-   Last_Stamp : Time_Stamp_Id;
+   Last_Stamp : OS_Time;
    Last_Stamp_File : Iir;
 
    function Missing_Object_File (Design_File : Iir_Design_File) return Boolean
@@ -1269,14 +1269,13 @@ package body Ghdldrv is
       use Files_Map;
 
       Name : constant Name_Id := Get_Design_File_Filename (Design_File);
-      Obj_Pathname : constant String :=
-        Get_Object_Filename (Design_File) & Nul;
-      Stamp : Time_Stamp_Id;
+      Obj_Pathname : constant String := Get_Object_Filename (Design_File);
+      Stamp : OS_Time;
    begin
-      Stamp := Get_File_Time_Stamp (Obj_Pathname'Address);
+      Stamp := File_Time_Stamp (Obj_Pathname);
 
       --  If the object file does not exist, recompile the file.
-      if Stamp = Null_Time_Stamp then
+      if Stamp = Invalid_Time then
          if Flag_Verbose then
             Put_Line ("no object file for " & Image (Name));
          end if;
@@ -1284,9 +1283,7 @@ package body Ghdldrv is
       end if;
 
       --  Keep the time stamp of the most recently analyzed unit.
-      if Last_Stamp = Null_Time_Stamp
-        or else Is_Gt (Stamp, Last_Stamp)
-      then
+      if Last_Stamp = Invalid_Time or else Stamp > Last_Stamp then
          Last_Stamp := Stamp;
          Last_Stamp_File := Design_File;
       end if;
@@ -1312,7 +1309,7 @@ package body Ghdldrv is
 
       Need_Elaboration : Boolean;
 
-      Stamp : Time_Stamp_Id;
+      Stamp : OS_Time;
       File_Id : Name_Id;
 
       Nil_Args : Argument_List (2 .. 1);
@@ -1369,7 +1366,7 @@ package body Ghdldrv is
       end if;
 
       Has_Compiled := False;
-      Last_Stamp := Null_Time_Stamp;
+      Last_Stamp := Invalid_Time;
 
       for I in Natural loop
          File := Get_Nth_Element (Files_List, I);
@@ -1445,28 +1442,19 @@ package body Ghdldrv is
          end if;
          Need_Elaboration := True;
       else
-         declare
-            Exec_File : String := Output_File.all & Nul;
-         begin
-            Stamp := Files_Map.Get_File_Time_Stamp (Exec_File'Address);
-         end;
+         Stamp := File_Time_Stamp (Output_File.all);
 
-         if Stamp = Null_Time_Stamp then
+         if Stamp = Invalid_Time then
             if Flag_Verbose then
                Put_Line ("link due to no binary file");
             end if;
             Need_Elaboration := True;
          else
-            if Files_Map.Is_Gt (Last_Stamp, Stamp) then
+            if Last_Stamp > Stamp then
                --  if a file is more recent than the executable.
                if Flag_Verbose then
                   Put ("link due to outdated binary file: ");
                   Put (Image (Get_Design_File_Filename (Last_Stamp_File)));
-                  Put (" (");
-                  Put (Files_Map.Get_Time_Stamp_String (Last_Stamp));
-                  Put (" > ");
-                  Put (Files_Map.Get_Time_Stamp_String (Stamp));
-                  Put (")");
                   New_Line;
                end if;
                Need_Elaboration := True;

@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
-with System;
 
 package Files_Map is
 
@@ -66,8 +65,6 @@ package Files_Map is
 
    -- Return the date of the file (last modification date) as a string.
    function Get_File_Time_Stamp (File : Source_File_Entry)
-                                return Time_Stamp_Id;
-   function Get_File_Time_Stamp (Filename : System.Address)
                                 return Time_Stamp_Id;
 
    -- Return the current date of the system.

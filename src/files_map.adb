@@ -15,6 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with System;
 with Interfaces.C;
 with Ada.Characters.Latin_1;
 with Ada.Text_IO; use Ada.Text_IO;
@@ -461,22 +462,6 @@ package body Files_Map is
       Append_String8_Char ('0');
       return Res;
    end Os_Time_To_Time_Stamp_Id;
-
-   function Get_File_Time_Stamp (Filename : System.Address)
-     return Time_Stamp_Id
-   is
-      use GNAT.OS_Lib;
-      Fd : File_Descriptor;
-      Res : Time_Stamp_Id;
-   begin
-      Fd := Open_Read (Filename, Binary);
-      if Fd = Invalid_FD then
-         return Null_Time_Stamp;
-      end if;
-      Res :=  Os_Time_To_Time_Stamp_Id (File_Time_Stamp (Fd));
-      Close (Fd);
-      return Res;
-   end Get_File_Time_Stamp;
 
    function Get_File_Time_Stamp (FD : GNAT.OS_Lib.File_Descriptor)
                                 return Time_Stamp_Id
