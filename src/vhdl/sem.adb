@@ -1813,8 +1813,46 @@ package body Sem is
             Return_Type := Get_Return_Type_Mark (Subprg);
             Return_Type := Sem_Type_Mark (Return_Type);
             Set_Return_Type_Mark (Subprg, Return_Type);
-            Set_Return_Type (Subprg, Get_Type (Return_Type));
+            Return_Type := Get_Type (Return_Type);
+            Set_Return_Type (Subprg, Return_Type);
             Set_All_Sensitized_State (Subprg, Unknown);
+
+            --  LRM08 4.2 Subprogram declarations
+            --  It is an error if the result subtype of a function denotes
+            --  either a file type or a protected type.  Moreover, it is an
+            --  error if the result subtype of a pure function denotes an
+            --  access type or a subtype that has a subelement of an access
+            --  type.
+
+            --  GHDL: this was added by VHDL 2008, but vital packages don't
+            --  follow that rule.  So, it is not retroactive.
+            case Get_Kind (Return_Type) is
+               when Iir_Kind_File_Type_Definition =>
+                  Error_Msg_Sem
+                    ("result subtype cannot denote a file type", Subprg);
+               when Iir_Kind_Protected_Type_Declaration =>
+                  Error_Msg_Sem
+                    ("result subtype cannot denote a protected type", Subprg);
+               when Iir_Kind_Access_Type_Definition
+                 | Iir_Kind_Access_Subtype_Definition =>
+                  if Vhdl_Std >= Vhdl_08
+                    and then Get_Pure_Flag (Subprg)
+                  then
+                     Error_Msg_Sem_Relaxed
+                       ("result subtype of a pure function cannot denote an"
+                          & " access type", Subprg);
+                  end if;
+               when others =>
+                  if  Vhdl_Std >= Vhdl_08
+                    and then not Get_Signal_Type_Flag (Return_Type)
+                    and then Get_Pure_Flag (Subprg)
+                  then
+                     Error_Msg_Sem_Relaxed
+                       ("result subtype of a pure function cannot have"
+                          & " access subelements", Subprg);
+                  end if;
+            end case;
+
          when Iir_Kind_Procedure_Declaration =>
             Sem_Interface_Chain
               (Interface_Chain, Procedure_Parameter_Interface_List);
