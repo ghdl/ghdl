@@ -21,6 +21,10 @@ with Types; use Types;
 --  A very simple name table. This is an hash table, so that
 --  id1 = id2 <=> get_string (id1) = get_string (id2).
 
+--  Note: for VHDL, extended names are represented as they appear in the
+--  sources: with a leading and trailing backslash; internal backslashes are
+--  doubled.
+
 package Name_Table is
    --  Initialize the package, ie create tables.
    procedure Initialize;

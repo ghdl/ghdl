@@ -34,6 +34,7 @@ package Str_Table is
    procedure Append_String8 (El : Nat8);
    procedure Append_String8_Char (El : Character);
    pragma Inline (Append_String8_Char);
+   procedure Append_String8_String (S : String);
 
    --  Resize (reduce or expand) the current string8.  When expanded, new
    --  elements are uninitialized.

@@ -47,6 +47,13 @@ package body Str_Table is
       Append_String8 (Character'Pos (El));
    end Append_String8_Char;
 
+   procedure Append_String8_String (S : String) is
+   begin
+      for I in S'Range loop
+         Append_String8_Char (S (I));
+      end loop;
+   end Append_String8_String;
+
    procedure Resize_String8 (Len : Nat32) is
    begin
       String8_Table.Set_Last (Cur_String8 + String8_Id (Len) - 1);

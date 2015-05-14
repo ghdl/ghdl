@@ -26,6 +26,9 @@ with Std_Names;
 with Ada.Characters.Handling;
 
 package body Evaluation is
+   function Eval_Enum_To_String (Lit : Iir; Orig : Iir) return Iir;
+   function Eval_Integer_Image (Val : Iir_Int64; Orig : Iir) return Iir;
+
    function Get_Physical_Value (Expr : Iir) return Iir_Int64
    is
       pragma Unsuppress (Overflow_Check);
@@ -542,6 +545,12 @@ package body Evaluation is
                return Build_Simple_Aggregate
                  (R_List, Orig, Get_Type (Operand));
             end;
+
+         when Iir_Predefined_Enum_To_String =>
+            return Eval_Enum_To_String (Operand, Orig);
+         when Iir_Predefined_Integer_To_String =>
+            return Eval_Integer_Image (Get_Value (Operand), Orig);
+
          when others =>
             Error_Internal (Orig, "eval_monadic_operator: " &
                             Iir_Predefined_Functions'Image (Func));
@@ -1627,9 +1636,7 @@ package body Evaluation is
       Name : constant String := Image_Identifier (Lit);
       Image_Id : constant String8_Id := Str_Table.Create_String8;
    begin
-      for I in Name'range loop
-         Append_String8_Char (Name (I));
-      end loop;
+      Append_String8_String (Name);
       return Build_String (Image_Id, Name'Length, Orig);
    end Eval_Enumeration_Image;
 
@@ -1734,6 +1741,58 @@ package body Evaluation is
            (Iir_Int64'Value (Val (Val'First .. Sep)) * Mult, Expr);
       end if;
    end Build_Physical_Value;
+
+   function Eval_Enum_To_String (Lit : Iir; Orig : Iir) return Iir
+   is
+      use Str_Table;
+      Id : constant Name_Id := Get_Identifier (Lit);
+      Image_Id : constant String8_Id := Str_Table.Create_String8;
+      Len : Natural;
+   begin
+      if Get_Base_Type (Get_Type (Lit)) = Character_Type_Definition then
+         --  LRM08 5.7 String representations
+         --  - For a given value of type CHARACTER, the string representation
+         --    contains one element that is the given value.
+         Append_String8 (Nat8 (Get_Enum_Pos (Lit)));
+         Len := 1;
+      elsif Is_Character (Id) then
+         --  LRM08 5.7 String representations
+         --  - For a given value of an enumeration type other than CHARACTER,
+         --    if the value is a character literal, the string representation
+         --    contains a single element that is the character literal; [...]
+         Append_String8_Char (Get_Character (Id));
+         Len := 1;
+      else
+         --  LRM08 5.7 String representations
+         --  - [...] otherwise, the string representation is the sequence of
+         --    characters in the identifier that is the given value.
+         --  FIXME: extended identifier.
+         Image (Id);
+         if Nam_Buffer (1) /= '\' then
+            Append_String8_String (Nam_Buffer (1 .. Nam_Length));
+            Len := Nam_Length;
+         else
+            declare
+               Skip : Boolean;
+               C : Character;
+            begin
+               Len := 0;
+               Skip := False;
+               for I in 2 .. Nam_Length - 1 loop
+                  if Skip then
+                     Skip := False;
+                  else
+                     C := Nam_Buffer (I);
+                     Append_String8_Char (C);
+                     Skip := C = '\';
+                     Len := Len + 1;
+                  end if;
+               end loop;
+            end;
+         end if;
+      end if;
+      return Build_String (Image_Id, Nat32 (Len), Orig);
+   end Eval_Enum_To_String;
 
    function Eval_Incdec (Expr : Iir; N : Iir_Int64; Origin : Iir) return Iir
    is

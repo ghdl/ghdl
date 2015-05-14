@@ -242,13 +242,47 @@ package body Grt.Images is
    is
       Enum_Rti : Ghdl_Rtin_Type_Enum_Acc;
       Str : Ghdl_C_String;
+      Len : Natural;
    begin
       Enum_Rti := To_Ghdl_Rtin_Type_Enum_Acc (Rti);
       Str := Enum_Rti.Names (Index);
       if Str (1) = ''' then
          Return_String (Res, Str (2 .. 2));
       else
-         Return_String (Res, Str (1 .. strlen (Str)));
+         Len := strlen (Str);
+         if Str (1) /= '\' then
+            Return_String (Res, Str (1 .. Len));
+         else
+            --  Extended string.  Compute length.
+            declare
+               Skip : Boolean;
+               Elen : Ghdl_Index_Type;
+               Epos : Ghdl_Index_Type;
+            begin
+               Skip := False;
+               Elen := 0;
+               for I in 2 .. Len - 1 loop
+                  if Skip then
+                     Skip := False;
+                  else
+                     Elen := Elen + 1;
+                     Skip := Str (I) = '\';
+                  end if;
+               end loop;
+               Res.Base := To_Std_String_Basep (Ghdl_Stack2_Allocate (Elen));
+               Epos := 0;
+               for I in 2 .. Len - 1 loop
+                  if Skip then
+                     Skip := False;
+                  else
+                     Res.Base (Epos) := Str (I);
+                     Epos := Epos + 1;
+                     Skip := Str (I) = '\';
+                  end if;
+               end loop;
+               Set_String_Bounds (Res, Elen);
+            end;
+         end if;
       end if;
    end To_String_Enum;
 
