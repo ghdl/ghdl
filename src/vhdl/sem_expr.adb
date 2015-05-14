@@ -3697,9 +3697,31 @@ package body Sem_Expr is
                   when Iir_In_Mode
                     | Iir_Inout_Mode
                     | Iir_Buffer_Mode =>
+                     --  LRM08 6.5.3 Interface object declarations
+                     --  - in. The value of the interface object is allowed
+                     --     to be read, [...]
+                     --  - inout or buffer.  Reading and updating the value of
+                     --     the interface object is allowed. [...]
                      null;
-                  when Iir_Out_Mode
-                    | Iir_Linkage_Mode =>
+                  when Iir_Out_Mode =>
+                     --  LRM08 6.5.3 Interface object declarations
+                     --  - out. The value of the interface object is allowed
+                     --    [to be updated and,]  provided it is not a signal
+                     --    parameter, read.
+                     if Vhdl_Std < Vhdl_08
+                       or else (Get_Kind (Get_Parent (Obj)) in
+                                  Iir_Kinds_Subprogram_Declaration)
+                     then
+                        Error_Msg_Sem
+                          (Disp_Node (Obj) & " cannot be read", Expr);
+                     end if;
+                  when Iir_Linkage_Mode =>
+                     --  LRM08 6.5.3 Interface object declarations
+                     --  - linkage.  Reading and updating the value of the
+                     --    interface object is allowed, but only by appearing
+                     --    as an actual corresponding to an interface object
+                     --    of mode LINKAGE.  No other reading or updating is
+                     --    permitted.
                      Error_Msg_Sem (Disp_Node (Obj) & " cannot be read", Expr);
                   when Iir_Unknown_Mode =>
                      raise Internal_Error;

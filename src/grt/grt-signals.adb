@@ -1954,10 +1954,10 @@ package body Grt.Signals is
    begin
       case Sig.S.Mode_Sig is
          when Mode_Signal
-           | Mode_Buffer =>
-            return True;
-         when Mode_Linkage
+           | Mode_Buffer
            | Mode_Out =>
+            return True;
+         when Mode_Linkage =>
             --  No effective value.
             return False;
          when Mode_Inout
@@ -2150,11 +2150,11 @@ package body Grt.Signals is
 
       case Sig.S.Mode_Sig is
          when Mode_Signal
-           | Mode_Buffer =>
+           | Mode_Buffer
+           | Mode_Out =>
             --  Effective value is driving value.
             Sig.Flags.Propag := Propag_Done;
-         when Mode_Linkage
-           | Mode_Out =>
+         when Mode_Linkage =>
             --  No effective value.
             Sig.Flags.Propag := Propag_Done;
          when Mode_Inout
