@@ -3564,7 +3564,7 @@ package body Sem_Expr is
                Arg := Sem_Types.Sem_Subtype_Indication (Arg);
                Set_Subtype_Indication (Expr, Arg);
                Arg := Get_Type_Of_Subtype_Indication (Arg);
-               if Arg = Null_Iir then
+               if Arg = Null_Iir or else Is_Error (Arg) then
                   return Null_Iir;
                end if;
                --  LRM93 7.3.6
