@@ -4005,7 +4005,9 @@ package body Trans.Chap7 is
             return Chap14.Translate_Pos_Attribute (Expr, Res_Type);
 
          when Iir_Kind_Succ_Attribute
-            | Iir_Kind_Pred_Attribute =>
+           | Iir_Kind_Pred_Attribute
+           | Iir_Kind_Leftof_Attribute
+           | Iir_Kind_Rightof_Attribute =>
             return Chap14.Translate_Succ_Pred_Attribute (Expr);
 
          when Iir_Kind_Image_Attribute =>

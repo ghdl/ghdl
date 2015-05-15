@@ -1803,7 +1803,12 @@ package body Evaluation is
             return Build_Integer (Get_Value (Expr) + N, Origin);
          when Iir_Kind_Enumeration_Literal =>
             P := Iir_Int64 (Get_Enum_Pos (Expr)) + N;
-            if P < 0 then
+            if P < 0
+              or else (P >= Iir_Int64
+                         (Get_Nbr_Elements
+                            (Get_Enumeration_Literal_List
+                               (Get_Base_Type (Get_Type (Expr))))))
+            then
                Warning_Msg_Sem ("static constant violates bounds", Expr);
                return Build_Overflow (Origin);
             else
@@ -2240,10 +2245,9 @@ package body Evaluation is
             declare
                Rng : Iir;
                N : Iir_Int64;
-               Prefix_Type : Iir;
+               Prefix_Type : constant Iir := Get_Type (Get_Prefix (Expr));
                Res : Iir;
             begin
-               Prefix_Type := Get_Type (Get_Prefix (Expr));
                Rng := Eval_Static_Range (Prefix_Type);
                case Get_Direction (Rng) is
                   when Iir_To =>

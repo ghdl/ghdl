@@ -18,6 +18,7 @@
 
 with Evaluation; use Evaluation;
 with Std_Package; use Std_Package;
+with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 with Trans_Decls; use Trans_Decls;
 with Trans.Chap3;
@@ -287,22 +288,32 @@ package body Trans.Chap14 is
 
    function Translate_Succ_Pred_Attribute (Attr : Iir) return O_Enode
    is
-      Expr_Type : Iir;
-      Tinfo     : Type_Info_Acc;
+      Expr_Type : constant Iir := Get_Type (Attr);
+      Tinfo     : constant Type_Info_Acc := Get_Info (Expr_Type);
       Ttype     : O_Tnode;
       Expr      : O_Enode;
-      List      : Iir_List;
-      Limit     : Iir;
-      Is_Succ   : Boolean;
+      Is_Inc    : Boolean;
       Op        : ON_Op_Kind;
    begin
       --  FIXME: should check bounds.
-      Expr_Type := Get_Type (Attr);
-      Tinfo := Get_Info (Expr_Type);
       Expr := Chap7.Translate_Expression (Get_Parameter (Attr), Expr_Type);
       Ttype := Tinfo.Ortho_Type (Mode_Value);
-      Is_Succ := Get_Kind (Attr) = Iir_Kind_Succ_Attribute;
-      if Is_Succ then
+      case Get_Kind (Attr) is
+         when Iir_Kind_Succ_Attribute =>
+            Is_Inc := True;
+         when Iir_Kind_Pred_Attribute =>
+            Is_Inc := False;
+         when Iir_Kind_Leftof_Attribute =>
+            Is_Inc :=
+              Get_Direction (Get_Range_Constraint (Expr_Type)) = Iir_Downto;
+         when Iir_Kind_Rightof_Attribute =>
+            Is_Inc :=
+              Get_Direction (Get_Range_Constraint (Expr_Type)) = Iir_To;
+         when others =>
+            Error_Kind ("translate_succ_pred_attribute", Attr);
+      end case;
+
+      if Is_Inc then
          Op := ON_Add_Ov;
       else
          Op := ON_Sub_Ov;
@@ -313,12 +324,13 @@ package body Trans.Chap14 is
             | Type_Mode_E32 =>
             --  Should check it is not the last.
             declare
+               List : constant Iir_List := Get_Enumeration_Literal_List
+                 (Get_Base_Type (Expr_Type));
+               Limit : Iir;
                L : O_Dnode;
             begin
-               List := Get_Enumeration_Literal_List (Get_Base_Type
-                                                     (Expr_Type));
                L := Create_Temp_Init (Ttype, Expr);
-               if Is_Succ then
+               if Is_Inc then
                   Limit := Get_Last_Element (List);
                else
                   Limit := Get_First_Element (List);
