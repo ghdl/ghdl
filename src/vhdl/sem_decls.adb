@@ -1746,7 +1746,7 @@ package body Sem_Decls is
                   --  The base type of the subtype indication of a
                   --  shared variable declaration must be a protected type.
                   if Get_Shared_Flag (Decl) and not Is_Protected then
-                     Error_Msg_Sem
+                     Error_Msg_Sem_Relaxed
                        ("type of a shared variable must be a protected type",
                         Decl);
                   end if;
