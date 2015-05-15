@@ -1036,17 +1036,17 @@ package body Errorout is
 
    procedure Error_Pure (Caller : Iir; Callee : Iir; Loc : Iir)
    is
-      L : Location_Type;
+      L : Iir;
    begin
       if Loc = Null_Iir then
-         L := Get_Location (Caller);
+         L := Caller;
       else
-         L := Get_Location (Loc);
+         L := Loc;
       end if;
-      Error_Msg_Sem
+      Error_Msg_Sem_Relaxed
         ("pure " & Disp_Node (Caller) & " cannot call (impure) "
          & Disp_Node (Callee), L);
-      Error_Msg_Sem
+      Error_Msg_Sem_Relaxed
         ("(" & Disp_Node (Callee) & " is defined here)", Callee);
    end Error_Pure;
 
