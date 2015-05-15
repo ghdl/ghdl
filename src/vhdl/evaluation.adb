@@ -1864,40 +1864,37 @@ package body Evaluation is
    begin
       --  The expression is either a simple aggregate or a (bit) string.
       Res := Build_Constant (Val, Conv);
-      case Get_Kind (Conv_Type) is
-         when Iir_Kind_Array_Subtype_Definition =>
-            Set_Type (Res, Conv_Type);
-            if Eval_Discrete_Type_Length (Conv_Index_Type)
-              /= Eval_Discrete_Type_Length (Val_Index_Type)
-            then
-               Warning_Msg_Sem
-                 ("non matching length in type conversion", Conv);
-               return Build_Overflow (Conv);
-            end if;
-            return Res;
-         when Iir_Kind_Array_Type_Definition =>
-            if Get_Base_Type (Conv_Index_Type) = Get_Base_Type (Val_Index_Type)
-            then
-               Index_Type := Val_Index_Type;
-            else
-               --  Convert the index range.
-               --  It is an integer type.
-               Rng := Convert_Range (Get_Range_Constraint (Val_Index_Type),
-                                     Conv_Index_Type, Conv);
-               Index_Type := Create_Iir (Iir_Kind_Integer_Subtype_Definition);
-               Location_Copy (Index_Type, Conv);
-               Set_Range_Constraint (Index_Type, Rng);
-               Set_Base_Type (Index_Type, Get_Base_Type (Conv_Index_Type));
-               Set_Type_Staticness (Index_Type, Locally);
-            end if;
-            Res_Type := Create_Unidim_Array_From_Index
-              (Get_Base_Type (Conv_Type), Index_Type, Conv);
-            Set_Type (Res, Res_Type);
-            Set_Type_Conversion_Subtype (Conv, Res_Type);
-            return Res;
-         when others =>
-            Error_Kind ("eval_array_type_conversion", Conv_Type);
-      end case;
+      if Get_Constraint_State (Conv_Type) = Fully_Constrained then
+         Set_Type (Res, Conv_Type);
+         if Eval_Discrete_Type_Length (Conv_Index_Type)
+           /= Eval_Discrete_Type_Length (Val_Index_Type)
+         then
+            Warning_Msg_Sem
+              ("non matching length in type conversion", Conv);
+            return Build_Overflow (Conv);
+         end if;
+         return Res;
+      else
+         if Get_Base_Type (Conv_Index_Type) = Get_Base_Type (Val_Index_Type)
+         then
+            Index_Type := Val_Index_Type;
+         else
+            --  Convert the index range.
+            --  It is an integer type.
+            Rng := Convert_Range (Get_Range_Constraint (Val_Index_Type),
+                                  Conv_Index_Type, Conv);
+            Index_Type := Create_Iir (Iir_Kind_Integer_Subtype_Definition);
+            Location_Copy (Index_Type, Conv);
+            Set_Range_Constraint (Index_Type, Rng);
+            Set_Base_Type (Index_Type, Get_Base_Type (Conv_Index_Type));
+            Set_Type_Staticness (Index_Type, Locally);
+         end if;
+         Res_Type := Create_Unidim_Array_From_Index
+           (Get_Base_Type (Conv_Type), Index_Type, Conv);
+         Set_Type (Res, Res_Type);
+         Set_Type_Conversion_Subtype (Conv, Res_Type);
+         return Res;
+      end if;
    end Eval_Array_Type_Conversion;
 
    function Eval_Type_Conversion (Expr : Iir) return Iir
