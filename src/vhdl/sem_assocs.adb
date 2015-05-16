@@ -21,7 +21,6 @@ with Flags; use Flags;
 with Types; use Types;
 with Iirs_Utils; use Iirs_Utils;
 with Sem_Names; use Sem_Names;
-with Sem_Expr; use Sem_Expr;
 with Iir_Chains; use Iir_Chains;
 with Xrefs;
 
@@ -1277,7 +1276,7 @@ package body Sem_Assocs is
      (Assoc : Iir;
       Inter : Iir;
       Finish : Boolean;
-      Match : out Boolean)
+      Match : out Compatibility_Level)
    is
       Formal : Iir;
       Assoc_Kind : Param_Assoc_Type;
@@ -1287,7 +1286,7 @@ package body Sem_Assocs is
       if Formal /= Null_Iir then
          Assoc_Kind := Sem_Formal (Formal, Inter);
          if Assoc_Kind = None then
-            Match := False;
+            Match := Not_Compatible;
             return;
          end if;
          Set_Whole_Association_Flag (Assoc, Assoc_Kind = Whole);
@@ -1298,7 +1297,7 @@ package body Sem_Assocs is
             if Get_Kind (Formal) in Iir_Kinds_Denoting_Name
               and then Is_Error (Get_Named_Entity (Formal))
             then
-               Match := False;
+               Match := Not_Compatible;
                return;
             end if;
 
@@ -1313,28 +1312,32 @@ package body Sem_Assocs is
       else
          Set_Whole_Association_Flag (Assoc, True);
       end if;
-      Match := True;
+      Match := Fully_Compatible;
    end Sem_Association_Open;
 
    procedure Sem_Association_Package
      (Assoc : Iir;
       Inter : Iir;
       Finish : Boolean;
-      Match : out Boolean)
+      Match : out Compatibility_Level)
    is
       Formal : constant Iir := Get_Formal (Assoc);
       Actual : Iir;
       Package_Inter : Iir;
    begin
       if not Finish then
-         Match := Get_Associated_Interface (Assoc) = Inter;
+         if Get_Associated_Interface (Assoc) = Inter then
+            Match := Fully_Compatible;
+         else
+            Match := Not_Compatible;
+         end if;
          return;
       end if;
 
       --  Always match (as this is a generic association, there is no
       --  need to resolve overload).
       pragma Assert (Get_Associated_Interface (Assoc) = Inter);
-      Match := True;
+      Match := Fully_Compatible;
 
       if Formal /= Null_Iir then
          pragma Assert (Get_Kind (Formal) = Iir_Kind_Simple_Name);
@@ -1398,7 +1401,7 @@ package body Sem_Assocs is
      (Assoc : Iir;
       Inter : Iir;
       Finish : Boolean;
-      Match : out Boolean)
+      Match : out Compatibility_Level)
    is
       Formal : Iir;
       Formal_Type : Iir;
@@ -1414,7 +1417,7 @@ package body Sem_Assocs is
       if Formal /= Null_Iir then
          Assoc_Kind := Sem_Formal (Formal, Inter);
          if Assoc_Kind = None then
-            Match := False;
+            Match := Not_Compatible;
             return;
          end if;
          Set_Whole_Association_Flag (Assoc, Assoc_Kind = Whole);
@@ -1457,20 +1460,18 @@ package body Sem_Assocs is
       if Out_Conv = Null_Iir and then In_Conv = Null_Iir then
          Match := Is_Expr_Compatible (Formal_Type, Actual);
       else
-         Match := True;
+         Match := Fully_Compatible;
          if In_Conv /= Null_Iir then
-            if not Is_Expr_Compatible (Formal_Type, In_Conv) then
-               Match := False;
-            end if;
+            Match := Compatibility_Level'Min
+              (Match, Is_Expr_Compatible (Formal_Type, In_Conv));
          end if;
          if Out_Conv /= Null_Iir then
-            if not Is_Expr_Compatible (Get_Type (Out_Conv), Actual) then
-               Match := False;
-            end if;
+            Match := Compatibility_Level'Min
+              (Match, Is_Expr_Compatible (Get_Type (Out_Conv), Actual));
          end if;
       end if;
 
-      if not Match then
+      if Match = Not_Compatible then
          if Finish then
             Error_Msg_Sem
               ("can't associate " & Disp_Node (Actual) & " with "
@@ -1512,7 +1513,7 @@ package body Sem_Assocs is
 
       if Res_Type = Null_Iir then
          --  In case of error, do not go farther.
-         Match := False;
+         Match := Not_Compatible;
          return;
       end if;
 
@@ -1586,8 +1587,10 @@ package body Sem_Assocs is
 
    --  Associate ASSOC with interface INTERFACE
    --  This sets MATCH.
-   procedure Sem_Association
-     (Assoc : Iir; Inter : Iir; Finish : Boolean; Match : out Boolean) is
+   procedure Sem_Association (Assoc : Iir;
+                              Inter : Iir;
+                              Finish : Boolean;
+                              Match : out Compatibility_Level) is
    begin
       case Get_Kind (Assoc) is
          when Iir_Kind_Association_Element_Open =>
@@ -1610,14 +1613,14 @@ package body Sem_Assocs is
       Finish: Boolean;
       Missing : Missing_Type;
       Loc : Iir;
-      Match : out Boolean)
+      Match : out Compatibility_Level)
    is
       --  Set POS and INTERFACE to *the* matching interface if any of ASSOC.
       procedure Search_Interface (Assoc : Iir;
                                   Inter : out Iir;
                                   Pos : out Integer)
       is
-         I_Match : Boolean;
+         I_Match : Compatibility_Level;
       begin
          Inter := Interface_Chain;
          Pos := 0;
@@ -1626,7 +1629,7 @@ package body Sem_Assocs is
             -- be a conversion function, or even an indexed or
             -- selected name.
             Sem_Association (Assoc, Inter, False, I_Match);
-            if I_Match then
+            if I_Match /= Not_Compatible then
                return;
             end if;
             Inter := Get_Chain (Inter);
@@ -1650,7 +1653,7 @@ package body Sem_Assocs is
       Pos_1 : Integer;
       Assoc_1 : Iir;
    begin
-      Match := True;
+      Match := Fully_Compatible;
       Has_Individual := False;
 
       -- Loop on every assoc element, try to match it.
@@ -1668,7 +1671,7 @@ package body Sem_Assocs is
                --  Sem_Actual_Of_Association_Chain (because it is called only
                --  once, while sem_association_chain may be called several
                --  times).
-               Match := False;
+               Match := Not_Compatible;
                return;
             end if;
             -- Try to match actual of ASSOC with the interface.
@@ -1677,11 +1680,11 @@ package body Sem_Assocs is
                   Error_Msg_Sem
                     ("too many actuals for " & Disp_Node (Loc), Assoc);
                end if;
-               Match := False;
+               Match := Not_Compatible;
                return;
             end if;
             Sem_Association (Assoc, Inter, Finish, Match);
-            if not Match then
+            if Match = Not_Compatible then
                return;
             end if;
             if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
@@ -1752,7 +1755,7 @@ package body Sem_Assocs is
                         Error_Msg_Sem
                           (Disp_Node (Inter) & " already associated", Assoc);
                      end if;
-                     Match := False;
+                     Match := Not_Compatible;
                      return;
                   end if;
                else
@@ -1766,7 +1769,7 @@ package body Sem_Assocs is
                         Error_Msg_Sem
                           ("non consecutive individual association for "
                            & Disp_Node (Inter), Assoc);
-                        Match := False;
+                        Match := Not_Compatible;
                         return;
                      end if;
                      Last_Individual := Inter;
@@ -1775,14 +1778,14 @@ package body Sem_Assocs is
                      if Finish then
                         Error_Msg_Sem
                           (Disp_Node (Inter) & " already associated", Assoc);
-                        Match := False;
+                        Match := Not_Compatible;
                         return;
                      end if;
                   end if;
                end if;
                if Finish then
                   Sem_Association (Assoc, Inter, True, Match);
-                  --  MATCH can be false du to errors.
+                  --  MATCH can be Not_Compatible due to errors.
                end if;
             else
                -- Not found.
@@ -1793,7 +1796,7 @@ package body Sem_Assocs is
                     ("no interface for " & Disp_Node (Get_Formal (Assoc))
                      & " in association", Assoc);
                end if;
-               Match := False;
+               Match := Not_Compatible;
                return;
             end if;
          end if;
@@ -1849,7 +1852,7 @@ package body Sem_Assocs is
                               Error_Msg_Sem
                                 ("no actual for " & Disp_Node (Inter), Loc);
                            end if;
-                           Match := False;
+                           Match := Not_Compatible;
                            return;
                         when Missing_Port =>
                            case Get_Mode (Inter) is
@@ -1860,7 +1863,7 @@ package body Sem_Assocs is
                                  Error_Msg_Sem
                                    (Disp_Node (Inter)
                                       & " of mode IN must be connected", Loc);
-                                 Match := False;
+                                 Match := Not_Compatible;
                                  return;
                               when Iir_Out_Mode
                                 | Iir_Linkage_Mode
@@ -1875,7 +1878,7 @@ package body Sem_Assocs is
                                     Error_Msg_Sem
                                       ("unconstrained " & Disp_Node (Inter)
                                          & " must be connected", Loc);
-                                    Match := False;
+                                    Match := Not_Compatible;
                                     return;
                                  end if;
                               when Iir_Unknown_Mode =>
@@ -1888,7 +1891,7 @@ package body Sem_Assocs is
                when Iir_Kind_Interface_Package_Declaration =>
                   Error_Msg_Sem
                     (Disp_Node (Inter) & " must be associated", Loc);
-                  Match := False;
+                  Match := Not_Compatible;
                when others =>
                   Error_Kind ("sem_association_chain", Inter);
             end case;

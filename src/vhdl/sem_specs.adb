@@ -1590,7 +1590,7 @@ package body Sem_Specs is
             Assoc := Create_Iir (Iir_Kind_Association_Element_Open);
             Location_Copy (Assoc, Parent);
          else
-            if not Are_Nodes_Compatible (Comp_El, Ent_El) then
+            if Are_Nodes_Compatible (Comp_El, Ent_El) = Not_Compatible then
                if not Error then
                   Error_Msg_Sem
                     ("for default port binding of " & Disp_Node (Parent)

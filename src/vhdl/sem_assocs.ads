@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Iirs; use Iirs;
+with Sem_Expr; use Sem_Expr;
 
 package Sem_Assocs is
    --  Change the kind of association corresponding to non-object interfaces.
@@ -44,7 +45,7 @@ package Sem_Assocs is
       Finish: Boolean;
       Missing : Missing_Type;
       Loc : Iir;
-      Match : out Boolean);
+      Match : out Compatibility_Level);
 
    --  Do port Sem_Association_Chain checks for subprograms.
    procedure Check_Subprogram_Associations

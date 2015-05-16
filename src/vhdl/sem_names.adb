@@ -2212,14 +2212,14 @@ package body Sem_Names is
       procedure Sem_Parenthesis_Function (Sub_Name : Iir) is
          Used : Boolean;
          R : Iir;
-         Match : Boolean;
+         Match : Compatibility_Level;
       begin
          Used := False;
          if Get_Kind (Sub_Name) = Iir_Kind_Function_Declaration then
             Sem_Association_Chain
               (Get_Interface_Declaration_Chain (Sub_Name),
                Assoc_Chain, False, Missing_Parameter, Name, Match);
-            if Match then
+            if Match /= Not_Compatible then
                Add_Result
                  (Res,
                   Sem_As_Function_Call (Prefix_Name, Sub_Name, Assoc_Chain));
@@ -2240,7 +2240,7 @@ package body Sem_Names is
 
       procedure Error_Parenthesis_Function (Spec : Iir)
       is
-         Match : Boolean;
+         Match : Compatibility_Level;
       begin
          Error_Msg_Sem
            ("cannot match " & Disp_Node (Prefix) & " with actuals", Name);
@@ -3518,7 +3518,8 @@ package body Sem_Names is
             if Res_Type = Null_Iir then
                return Null_Iir;
             end if;
-            if not Are_Basetypes_Compatible (Get_Base_Type (Res_Type), A_Type)
+            if Are_Basetypes_Compatible (Get_Base_Type (Res_Type), A_Type)
+              = Not_Compatible
             then
                Error_Not_Match (Res, A_Type, Name);
                return Null_Iir;
@@ -3537,6 +3538,7 @@ package body Sem_Names is
                exit when El = Null_Iir;
                if Are_Basetypes_Compatible (Get_Base_Type (Get_Type (El)),
                                             A_Type)
+                 /= Not_Compatible
                then
                   Add_Result (Res, El);
                end if;

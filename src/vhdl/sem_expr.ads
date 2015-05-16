@@ -160,16 +160,20 @@ package Sem_Expr is
    --  one-dimensional character array type.
    procedure Sem_String_Choices_Range (Choice_Chain : Iir; Sel : Iir);
 
+   type Compatibility_Level is
+     (Not_Compatible, Via_Conversion, Fully_Compatible);
+
    -- LEFT are RIGHT must be really a type (not a subtype).
    function Are_Basetypes_Compatible (Left: Iir; Right: Iir)
-     return Boolean;
+     return Compatibility_Level;
 
    --  Return TRUE iif types of LEFT and RIGHT are compatible.
    function Are_Nodes_Compatible (Left: Iir; Right: Iir)
-     return Boolean;
+     return Compatibility_Level;
 
    --  Return TRUE iff the type of EXPR is compatible with A_TYPE
-   function Is_Expr_Compatible (A_Type : Iir; Expr : Iir) return Boolean;
+   function Is_Expr_Compatible (A_Type : Iir; Expr : Iir)
+                               return Compatibility_Level;
 
    --  LIST1, LIST2 are either a type node or an overload list of types.
    --  Return THE type which is compatible with LIST1 are LIST2.

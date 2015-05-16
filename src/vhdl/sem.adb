@@ -354,7 +354,7 @@ package body Sem is
      (Inter_Parent : Iir; Assoc_Parent : Iir) return Boolean
    is
       El : Iir;
-      Match : Boolean;
+      Match : Compatibility_Level;
       Assoc_Chain : Iir;
       Inter_Chain : Iir;
       Miss : Missing_Type;
@@ -418,7 +418,7 @@ package body Sem is
       Sem_Association_Chain
         (Inter_Chain, Assoc_Chain, True, Miss, Assoc_Parent, Match);
       Set_Generic_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
-      if not Match then
+      if Match = Not_Compatible then
          return False;
       end if;
 
@@ -461,7 +461,7 @@ package body Sem is
       Actual : Iir;
       Prefix : Iir;
       Object : Iir;
-      Match : Boolean;
+      Match : Compatibility_Level;
       Assoc_Chain : Iir;
       Miss : Missing_Type;
       Inter : Iir;
@@ -506,7 +506,7 @@ package body Sem is
       Sem_Association_Chain (Get_Port_Chain (Inter_Parent), Assoc_Chain,
                              True, Miss, Assoc_Parent, Match);
       Set_Port_Map_Aspect_Chain (Assoc_Parent, Assoc_Chain);
-      if not Match then
+      if Match = Not_Compatible then
          return;
       end if;
 

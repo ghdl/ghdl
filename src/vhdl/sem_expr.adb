@@ -127,19 +127,43 @@ package body Sem_Expr is
 
    -- LEFT are RIGHT must be really a type (not a subtype).
    function Are_Basetypes_Compatible (Left: Iir; Right: Iir)
-     return Boolean is
+     return Compatibility_Level is
    begin
-      return Get_Common_Basetype (Left, Right) /= Null_Iir;
+      if Left = Right then
+         return Fully_Compatible;
+      end if;
+      case Get_Kind (Left) is
+         when Iir_Kind_Integer_Type_Definition =>
+            if Right = Convertible_Integer_Type_Definition then
+               return Via_Conversion;
+            elsif Left = Convertible_Integer_Type_Definition
+              and then Get_Kind (Right) = Iir_Kind_Integer_Type_Definition
+            then
+               return Via_Conversion;
+            end if;
+         when Iir_Kind_Floating_Type_Definition =>
+            if Right = Convertible_Real_Type_Definition then
+               return Via_Conversion;
+            elsif Left = Convertible_Real_Type_Definition
+              and then Get_Kind (Right) = Iir_Kind_Floating_Type_Definition
+            then
+               return Via_Conversion;
+            end if;
+         when others =>
+            null;
+      end case;
+      return Not_Compatible;
    end Are_Basetypes_Compatible;
 
-   function Are_Types_Compatible (Left: Iir; Right: Iir) return Boolean is
+   function Are_Types_Compatible (Left: Iir; Right: Iir)
+                                 return Compatibility_Level is
    begin
-      return Get_Common_Basetype (Get_Base_Type (Left),
-                                  Get_Base_Type (Right)) /= Null_Iir;
+      return Are_Basetypes_Compatible (Get_Base_Type (Left),
+                                       Get_Base_Type (Right));
    end Are_Types_Compatible;
 
    function Are_Nodes_Compatible (Left: Iir; Right: Iir)
-     return Boolean is
+                                 return Compatibility_Level is
    begin
       return Are_Types_Compatible (Get_Type (Left), Get_Type (Right));
    end Are_Nodes_Compatible;
@@ -147,23 +171,27 @@ package body Sem_Expr is
    --  Return TRUE iif LEFT_TYPE and RIGHT_TYPES are compatible. RIGHT_TYPES
    --  may be an overload list.
    function Compatibility_Types1 (Left_Type : Iir; Right_Types : Iir)
-                                 return Boolean
+                                 return Compatibility_Level
    is
       El : Iir;
       Right_List : Iir_List;
+      Level : Compatibility_Level;
    begin
       pragma Assert (not Is_Overload_List (Left_Type));
 
       if Is_Overload_List (Right_Types) then
          Right_List := Get_Overload_List (Right_Types);
+         Level := Not_Compatible;
          for I in Natural loop
             El := Get_Nth_Element (Right_List, I);
             exit when El = Null_Iir;
-            if Are_Types_Compatible (Left_Type, El) then
-               return True;
+            Level := Compatibility_Level'Max
+              (Level, Are_Types_Compatible (Left_Type, El));
+            if Level = Fully_Compatible then
+               return Fully_Compatible;
             end if;
          end loop;
-         return False;
+         return Level;
       else
          return Are_Types_Compatible (Left_Type, Right_Types);
       end if;
@@ -174,7 +202,7 @@ package body Sem_Expr is
    --  Type of RIGHT can be an overload_list
    --  RIGHT might be implicitly converted to LEFT.
    function Compatibility_Nodes (Left : Iir; Right : Iir)
-     return Boolean
+     return Compatibility_Level
    is
       Left_Type, Right_Type : Iir;
    begin
@@ -275,9 +303,11 @@ package body Sem_Expr is
    end Is_Allocator_Type;
 
    --  Return TRUE iff the type of EXPR is compatible with A_TYPE
-   function Is_Expr_Compatible (A_Type : Iir; Expr : Iir) return Boolean
+   function Is_Expr_Compatible (A_Type : Iir; Expr : Iir)
+                               return Compatibility_Level
    is
       Expr_Type : constant Iir := Get_Type (Expr);
+      Is_Compatible : Boolean;
    begin
       if Expr_Type /= Null_Iir then
          return Compatibility_Types1 (A_Type, Expr_Type);
@@ -285,21 +315,26 @@ package body Sem_Expr is
 
       case Get_Kind (Expr) is
          when Iir_Kind_Aggregate =>
-            return Is_Aggregate_Type (A_Type);
+            Is_Compatible := Is_Aggregate_Type (A_Type);
          when Iir_Kind_String_Literal8 =>
-            return Is_String_Literal_Type (A_Type, Expr);
+            Is_Compatible := Is_String_Literal_Type (A_Type, Expr);
          when Iir_Kind_Null_Literal =>
-            return Is_Null_Literal_Type (A_Type);
+            Is_Compatible := Is_Null_Literal_Type (A_Type);
          when Iir_Kind_Allocator_By_Expression
            | Iir_Kind_Allocator_By_Subtype =>
-            return Is_Allocator_Type (A_Type, Expr);
+            Is_Compatible := Is_Allocator_Type (A_Type, Expr);
          when Iir_Kind_Parenthesis_Expression =>
             return Is_Expr_Compatible (A_Type, Get_Expression (Expr));
          when others =>
             --  Error while EXPR was typed.  FIXME: should create an ERROR
             --  node?
-            return False;
+            Is_Compatible := False;
       end case;
+      if Is_Compatible then
+         return Fully_Compatible;
+      else
+         return Not_Compatible;
+      end if;
    end Is_Expr_Compatible;
 
    function Check_Is_Expression (Expr : Iir; Loc : Iir) return Iir
@@ -556,17 +591,17 @@ package body Sem_Expr is
             Expr_Type := Search_Compatible_Type (Left_Type, Right_Type);
             if Expr_Type = Null_Iir then
                if Compatibility_Types1 (Universal_Integer_Type_Definition,
-                                        Left_Type)
+                                        Left_Type) /= Not_Compatible
                  and then
                  Compatibility_Types1 (Universal_Integer_Type_Definition,
-                                       Right_Type)
+                                       Right_Type) /= Not_Compatible
                then
                   Expr_Type := Universal_Integer_Type_Definition;
                elsif Compatibility_Types1 (Universal_Real_Type_Definition,
-                                           Left_Type)
+                                           Left_Type) /= Not_Compatible
                  and then
                  Compatibility_Types1 (Universal_Real_Type_Definition,
-                                       Right_Type)
+                                       Right_Type) /= Not_Compatible
                then
                   Expr_Type := Universal_Real_Type_Definition;
                else
@@ -603,7 +638,7 @@ package body Sem_Expr is
             --  FIXME: resolve overload
             raise Internal_Error;
          else
-            if not Are_Types_Compatible (Expr_Type, A_Type) then
+            if Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible then
                Error_Msg_Sem
                  ("type of range doesn't match expected type", Expr);
                return Null_Iir;
@@ -621,7 +656,7 @@ package body Sem_Expr is
                                       Get_Expr_Staticness (Right)));
 
       if A_Type /= Null_Iir
-        and then not Are_Types_Compatible (Expr_Type, A_Type)
+        and then Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible
       then
          Error_Msg_Sem ("type of range doesn't match expected type", Expr);
          return Null_Iir;
@@ -735,8 +770,9 @@ package body Sem_Expr is
 
          Res_Type := Res;
          if A_Type /= Null_Iir
-           and then (not Are_Types_Compatible
-                       (A_Type, Get_Type_Of_Subtype_Indication (Res)))
+           and then (Are_Types_Compatible
+                       (A_Type, Get_Type_Of_Subtype_Indication (Res))
+                       = Not_Compatible)
          then
             --  A_TYPE is known when analyzing an index_constraint within
             --  a subtype indication.
@@ -1186,7 +1222,7 @@ package body Sem_Expr is
       Inter_Chain : Iir;
       Res_Type: Iir_List;
       Inter: Iir;
-      Match : Boolean;
+      Match : Compatibility_Level;
    begin
       --  Sem_Name has gathered all the possible names for the prefix of this
       --  call.  Reduce this list to only names that match the types.
@@ -1217,12 +1253,13 @@ package body Sem_Expr is
 
          --  Keep this interpretation only if compatible.
          if A_Type = Null_Iir
-           or else Compatibility_Nodes (A_Type, Get_Return_Type (A_Func))
+           or else (Compatibility_Nodes (A_Type, Get_Return_Type (A_Func))
+                      /= Not_Compatible)
          then
             Sem_Association_Chain
               (Get_Interface_Declaration_Chain (A_Func),
                Assoc_Chain, False, Missing_Parameter, Expr, Match);
-            if Match then
+            if Match /= Not_Compatible then
                Replace_Nth_Element (Imp_List, Nbr_Inter, A_Func);
                Nbr_Inter := Nbr_Inter + 1;
             end if;
@@ -1255,9 +1292,7 @@ package body Sem_Expr is
               (Inter_Chain, Assoc_Chain,
                True, Missing_Parameter, Expr, Match);
             Set_Parameter_Association_Chain (Expr, Assoc_Chain);
-            if not Match then
-               raise Internal_Error;
-            end if;
+            pragma Assert (Match /= Not_Compatible);
             Check_Subprogram_Associations (Inter_Chain, Assoc_Chain);
             Sem_Subprogram_Call_Finish (Expr, Inter);
             return Expr;
@@ -1308,7 +1343,7 @@ package body Sem_Expr is
       Param_Chain : Iir;
       Inter: Iir;
       Assoc_Chain : Iir;
-      Match : Boolean;
+      Match : Compatibility_Level;
    begin
       if Is_Func then
          Res_Type := Get_Type (Expr);
@@ -1349,7 +1384,7 @@ package body Sem_Expr is
               (Param_Chain, Assoc_Chain,
                True, Missing_Parameter, Expr, Match);
             Set_Parameter_Association_Chain (Expr, Assoc_Chain);
-            if not Match then
+            if Match = Not_Compatible then
                --  No need to disp an error message, this is done by
                --  sem_subprogram_arguments.
                return Null_Iir;
@@ -1384,6 +1419,7 @@ package body Sem_Expr is
             exit when Inter = Null_Iir;
             if Are_Basetypes_Compatible
               (A_Type, Get_Base_Type (Get_Return_Type (Inter)))
+              /= Not_Compatible
             then
                if Res /= Null_Iir then
                   Error_Overload (Expr);
@@ -1397,6 +1433,7 @@ package body Sem_Expr is
       else
          if Are_Basetypes_Compatible
            (A_Type, Get_Base_Type (Get_Return_Type (Inter_List)))
+           /= Not_Compatible
          then
             Res := Inter_List;
          end if;
@@ -1429,7 +1466,7 @@ package body Sem_Expr is
       Sem_Association_Chain
         (Param_Chain, Assoc_Chain, True, Missing_Parameter, Expr, Match);
       Set_Parameter_Association_Chain (Expr, Assoc_Chain);
-      if not Match then
+      if Match = Not_Compatible then
          return Null_Iir;
       end if;
       Check_Subprogram_Associations (Param_Chain, Assoc_Chain);
@@ -1738,8 +1775,8 @@ package body Sem_Expr is
 
             --  Check return type.
             if Res_Type /= Null_Iir
-              and then
-              not Are_Types_Compatible (Res_Type, Get_Return_Type (Decl))
+              and then (Are_Types_Compatible (Res_Type, Get_Return_Type (Decl))
+                          = Not_Compatible)
             then
                goto Next;
             end if;
@@ -1761,12 +1798,15 @@ package body Sem_Expr is
             end if;
 
             -- Check operands.
-            if not Is_Expr_Compatible (Get_Type (Interface_Chain), Left) then
+            if Is_Expr_Compatible (Get_Type (Interface_Chain), Left)
+              = Not_Compatible
+            then
                goto Next;
             end if;
             if Arity = 2 then
-               if not Is_Expr_Compatible
-                 (Get_Type (Get_Chain (Interface_Chain)), Right)
+               if Is_Expr_Compatible (Get_Type (Get_Chain (Interface_Chain)),
+                                      Right)
+                 = Not_Compatible
                then
                   goto Next;
                end if;
@@ -1861,7 +1901,9 @@ package body Sem_Expr is
             Decl := Get_Nth_Element (Overload_List, I);
             exit when Decl = Null_Iir;
             --  FIXME: wrong: compatibilty with return type and args.
-            if Are_Types_Compatible (Get_Return_Type (Decl), Res_Type) then
+            if Are_Types_Compatible (Get_Return_Type (Decl), Res_Type)
+              /= Not_Compatible
+            then
                if Full_Compat /= Null_Iir then
                   Error_Operator_Overload (Overload_List);
                   return Null_Iir;
@@ -2285,7 +2327,7 @@ package body Sem_Expr is
          N_Choice : Iir;
          Name1 : Iir;
       begin
-         if not Are_Types_Compatible (Range_Type, Sub_Type) then
+         if Are_Types_Compatible (Range_Type, Sub_Type) = Not_Compatible then
             Not_Match (Name, Sub_Type);
             return False;
          end if;
@@ -2825,7 +2867,7 @@ package body Sem_Expr is
          Ass_Type := Get_Type (Rec_El);
          if El_Type = Null_Iir then
             El_Type := Ass_Type;
-         elsif not Are_Types_Compatible (El_Type, Ass_Type) then
+         elsif Are_Types_Compatible (El_Type, Ass_Type) = Not_Compatible then
             Error_Msg_Sem ("elements are not of the same type", El);
             Ok := False;
          end if;
@@ -3625,7 +3667,7 @@ package body Sem_Expr is
       N_Type := Get_Type (N_Type);
       Set_Type (Expr, N_Type);
       if A_Type /= Null_Iir
-        and then not Are_Types_Compatible (A_Type, N_Type)
+        and then Are_Types_Compatible (A_Type, N_Type) = Not_Compatible
       then
          Not_Match (Expr, A_Type);
          return Null_Iir;
@@ -3903,8 +3945,8 @@ package body Sem_Expr is
                return Null_Iir;
             end if;
             if A_Type /= Null_Iir
-              and then not Are_Basetypes_Compatible
-              (A_Type, Get_Base_Type (Get_Type (Expr)))
+              and then Are_Basetypes_Compatible
+              (A_Type, Get_Base_Type (Get_Type (Expr))) = Not_Compatible
             then
                Not_Match (Expr, A_Type);
                return Null_Iir;
@@ -4051,7 +4093,7 @@ package body Sem_Expr is
          --  with A_TYPE set to NULL_IIR and results in setting the type of
          --  EXPR.
          if A_Type /= Null_Iir
-           and then not Are_Types_Compatible (Expr_Type, A_Type)
+           and then Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible
          then
             Not_Match (Expr, A_Type);
             return Null_Iir;
@@ -4278,6 +4320,7 @@ package body Sem_Expr is
             --  Only one result.  Operator "??" is not applied if the result
             --  is of type boolean.
             if Are_Types_Compatible (Get_Type (Res), Boolean_Type_Definition)
+              /= Not_Compatible
             then
                Check_Read (Res);
                return Res;
@@ -4296,7 +4339,9 @@ package body Sem_Expr is
                for I in Natural loop
                   El := Get_Nth_Element (Res_List, I);
                   exit when El = Null_Iir;
-                  if Are_Types_Compatible (El, Boolean_Type_Definition) then
+                  if Are_Types_Compatible (El, Boolean_Type_Definition)
+                    /= Not_Compatible
+                  then
                      Nbr_Booleans := Nbr_Booleans + 1;
                   end if;
                end loop;
