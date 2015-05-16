@@ -211,7 +211,8 @@ package body Sem_Names is
       end if;
    end Add_Result_List;
 
-   --  Free interpretations of LIST except KEEP.
+   --  Free interpretations of LIST except KEEP (which can be Null_Iir to free
+   --  the whole list).
    procedure Sem_Name_Free_Result (List : Iir; Keep : Iir)
    is
       procedure Sem_Name_Free (El : Iir) is
@@ -2209,10 +2210,12 @@ package body Sem_Names is
       --  Sem parenthesis name when the prefix is a function declaration.
       --  Can be either a function call (and the expression is the actual) or
       --  a slice/index of the result of a call without actual.
-      procedure Sem_Parenthesis_Function (Sub_Name : Iir) is
+      procedure Sem_Parenthesis_Function (Sub_Name : Iir)
+      is
          Used : Boolean;
          R : Iir;
          Match : Compatibility_Level;
+         Call : Iir;
       begin
          Used := False;
          if Get_Kind (Sub_Name) = Iir_Kind_Function_Declaration then
@@ -2220,9 +2223,10 @@ package body Sem_Names is
               (Get_Interface_Declaration_Chain (Sub_Name),
                Assoc_Chain, False, Missing_Parameter, Name, Match);
             if Match /= Not_Compatible then
-               Add_Result
-                 (Res,
-                  Sem_As_Function_Call (Prefix_Name, Sub_Name, Assoc_Chain));
+               Call := Sem_As_Function_Call
+                 (Prefix_Name, Sub_Name, Assoc_Chain);
+               Set_Has_Implicit_Conversion (Call, Match = Via_Conversion);
+               Add_Result (Res, Call);
                Used := True;
             end if;
          end if;
@@ -3532,38 +3536,61 @@ package body Sem_Names is
 
          if A_Type /= Null_Iir then
             --  Find the name returning A_TYPE.
-            Res := Null_Iir;
-            for I in Natural loop
-               El := Get_Nth_Element (Expr_List, I);
-               exit when El = Null_Iir;
-               if Are_Basetypes_Compatible (Get_Base_Type (Get_Type (El)),
-                                            A_Type)
-                 /= Not_Compatible
-               then
-                  Add_Result (Res, El);
+            declare
+               Only_Calls : Boolean;
+               Full_Compat_Call : Iir;
+               Nbr_Full_Compat : Natural;
+            begin
+               Res := Null_Iir;
+               Only_Calls := True;
+               Full_Compat_Call := Null_Iir;
+               Nbr_Full_Compat := 0;
+               for I in Natural loop
+                  El := Get_Nth_Element (Expr_List, I);
+                  exit when El = Null_Iir;
+                  if Are_Basetypes_Compatible (Get_Base_Type (Get_Type (El)),
+                                               A_Type)
+                    /= Not_Compatible
+                  then
+                     if Get_Kind (El) = Iir_Kind_Function_Call then
+                        if not Get_Has_Implicit_Conversion (El) then
+                           Full_Compat_Call := El;
+                           Nbr_Full_Compat := Nbr_Full_Compat + 1;
+                        end if;
+                     else
+                        Only_Calls := False;
+                     end if;
+                     Add_Result (Res, El);
+                  end if;
+               end loop;
+               if Res = Null_Iir then
+                  Error_Not_Match (Name, A_Type, Name);
+                  return Null_Iir;
+               elsif Is_Overload_List (Res) then
+                  if Only_Calls and then Nbr_Full_Compat = 1 then
+                     Free_Iir (Res);
+                     Res := Full_Compat_Call;
+                  else
+                     Error_Overload (Name);
+                     Disp_Overload_List (Get_Overload_List (Res), Name);
+                     Free_Iir (Res);
+                     return Null_Iir;
+                  end if;
                end if;
-            end loop;
-            if Res = Null_Iir then
-               Error_Not_Match (Name, A_Type, Name);
-               return Null_Iir;
-            elsif Is_Overload_List (Res) then
-               Error_Overload (Name);
-               Disp_Overload_List (Get_Overload_List (Res), Name);
-               return Null_Iir;
-            else
-               --  Free results
-               Sem_Name_Free_Result (Expr, Res);
+            end;
 
-               Ret_Type := Get_Type (Name);
-               if Ret_Type /= Null_Iir then
-                  pragma Assert (Is_Overload_List (Ret_Type));
-                  Free_Overload_List (Ret_Type);
-               end if;
+            --  Free results
+            Sem_Name_Free_Result (Expr, Res);
 
-               Set_Named_Entity (Name, Res);
-               Res := Finish_Sem_Name (Name);
-               --  Fall through.
+            Ret_Type := Get_Type (Name);
+            if Ret_Type /= Null_Iir then
+               pragma Assert (Is_Overload_List (Ret_Type));
+               Free_Overload_List (Ret_Type);
             end if;
+
+            Set_Named_Entity (Name, Res);
+            Res := Finish_Sem_Name (Name);
+            --  Fall through.
          else
             --  Create a list of type.
             Ret_Type := Create_List_Of_Types (Expr_List);

@@ -135,19 +135,35 @@ package body Sem_Expr is
       case Get_Kind (Left) is
          when Iir_Kind_Integer_Type_Definition =>
             if Right = Convertible_Integer_Type_Definition then
-               return Via_Conversion;
+               if Left = Universal_Integer_Type_Definition then
+                  return Fully_Compatible;
+               else
+                  return Via_Conversion;
+               end if;
             elsif Left = Convertible_Integer_Type_Definition
               and then Get_Kind (Right) = Iir_Kind_Integer_Type_Definition
             then
-               return Via_Conversion;
+               if Right = Universal_Integer_Type_Definition then
+                  return Fully_Compatible;
+               else
+                  return Via_Conversion;
+               end if;
             end if;
          when Iir_Kind_Floating_Type_Definition =>
             if Right = Convertible_Real_Type_Definition then
-               return Via_Conversion;
+               if Left = Universal_Real_Type_Definition then
+                  return Fully_Compatible;
+               else
+                  return Via_Conversion;
+               end if;
             elsif Left = Convertible_Real_Type_Definition
               and then Get_Kind (Right) = Iir_Kind_Floating_Type_Definition
             then
-               return Via_Conversion;
+               if Right = Universal_Real_Type_Definition then
+                  return Fully_Compatible;
+               else
+                  return Via_Conversion;
+               end if;
             end if;
          when others =>
             null;
@@ -1223,6 +1239,7 @@ package body Sem_Expr is
       Res_Type: Iir_List;
       Inter: Iir;
       Match : Compatibility_Level;
+      Match_Max : Compatibility_Level;
    begin
       --  Sem_Name has gathered all the possible names for the prefix of this
       --  call.  Reduce this list to only names that match the types.
@@ -1230,6 +1247,7 @@ package body Sem_Expr is
       Imp := Get_Implementation (Expr);
       Imp_List := Get_Overload_List (Imp);
       Assoc_Chain := Get_Parameter_Association_Chain (Expr);
+      Match_Max := Via_Conversion;
 
       for I in Natural loop
          A_Func := Get_Nth_Element (Imp_List, I);
@@ -1259,7 +1277,14 @@ package body Sem_Expr is
             Sem_Association_Chain
               (Get_Interface_Declaration_Chain (A_Func),
                Assoc_Chain, False, Missing_Parameter, Expr, Match);
-            if Match /= Not_Compatible then
+            if Match >= Match_Max then
+               --  Only previous interpretations were only Via_Conversion
+               --  compatible, and this one is fully compatible, discard
+               --  previous and future Via_Conversion interpretations.
+               if Match > Match_Max then
+                  Nbr_Inter := 0;
+                  Match_Max := Match;
+               end if;
                Replace_Nth_Element (Imp_List, Nbr_Inter, A_Func);
                Nbr_Inter := Nbr_Inter + 1;
             end if;

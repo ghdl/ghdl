@@ -2980,6 +2980,8 @@ package Iirs is
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
+   --
+   --   Get/Set_Has_Implicit_Conversion (Flag1)
 
    -- Iir_Kind_Aggregate (Short)
    --
@@ -6116,6 +6118,13 @@ package Iirs is
    --  Field: State1 (pos)
    function Get_Expr_Staticness (Target : Iir) return Iir_Staticness;
    procedure Set_Expr_Staticness (Target : Iir; Static : Iir_Staticness);
+
+   --  Set when EXPR has implicit conversion in its sub-tree.  This is used
+   --  only during analysis for overload resolution (see LRM08 9.3.6 Type
+   --  conversions).
+   --  Field: Flag1
+   function Get_Has_Implicit_Conversion (Expr : Iir) return Boolean;
+   procedure Set_Has_Implicit_Conversion (Expr : Iir; Flag : Boolean);
 
    --  Node which couldn't be correctly analyzed.
    --  Field: Field2

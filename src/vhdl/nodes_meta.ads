@@ -278,6 +278,7 @@ package Nodes_Meta is
       Field_Named_Entity,
       Field_Alias_Declaration,
       Field_Expr_Staticness,
+      Field_Has_Implicit_Conversion,
       Field_Error_Origin,
       Field_Operand,
       Field_Left,
@@ -758,6 +759,7 @@ package Nodes_Meta is
    function Has_Named_Entity (K : Iir_Kind) return Boolean;
    function Has_Alias_Declaration (K : Iir_Kind) return Boolean;
    function Has_Expr_Staticness (K : Iir_Kind) return Boolean;
+   function Has_Has_Implicit_Conversion (K : Iir_Kind) return Boolean;
    function Has_Error_Origin (K : Iir_Kind) return Boolean;
    function Has_Operand (K : Iir_Kind) return Boolean;
    function Has_Left (K : Iir_Kind) return Boolean;
