@@ -48,6 +48,18 @@ package body Libraries is
       Table_Initial => 4,
       Table_Increment => 100);
 
+   --  Report an error message.
+   procedure Error_Lib_Msg (Msg : String) is
+   begin
+      Report_Msg (Error, Library, No_Location, Msg);
+   end Error_Lib_Msg;
+
+   --  Report a warning message.
+   procedure Warning_Lib_Msg (Msg : String) is
+   begin
+      Report_Msg (Warning, Library, No_Location, Msg);
+   end Warning_Lib_Msg;
+
    --  Initialize pathes table.
    --  Set the local path.
    procedure Init_Pathes
@@ -76,7 +88,7 @@ package body Libraries is
       end if;
       --  Nice message instead of constraint_error.
       if Path'Length + 2 >= Nam_Buffer'Length then
-         Error_Msg ("argument of -P is too long");
+         Error_Lib_Msg ("argument of -P is too long");
          return;
       end if;
       Pathes.Append (Path_To_Id (Path));
@@ -102,7 +114,7 @@ package body Libraries is
       if not GNAT.OS_Lib.Is_Directory (Get_Address (Work_Directory)) then
          --  This is a warning, since 'clean' action should not fail in
          --  this cases.
-         Warning_Msg
+         Warning_Lib_Msg
            ("directory '" & Path & "' set by --workdir= does not exist");
          --  raise Option_Error;
       end if;
@@ -278,8 +290,8 @@ package body Libraries is
 
       procedure Bad_Library_Format is
       begin
-         Error_Msg (Image (Files_Map.Get_File_Name (File)) &
-                      ": bad library format");
+         Error_Lib_Msg (Image (Files_Map.Get_File_Name (File)) &
+                          ": bad library format");
          raise Compilation_Error;
       end Bad_Library_Format;
 
@@ -980,11 +992,12 @@ package body Libraries is
                if Flags.Warn_Library then
                   if Get_Kind (Library_Unit) /= Get_Kind (New_Library_Unit)
                   then
-                     Warning_Msg ("changing definition of a library unit:");
-                     Warning_Msg (Disp_Node (Library_Unit) & " is now "
-                                  & Disp_Node (New_Library_Unit));
+                     Warning_Lib_Msg
+                       ("changing definition of a library unit:");
+                     Warning_Lib_Msg (Disp_Node (Library_Unit) & " is now "
+                                        & Disp_Node (New_Library_Unit));
                   end if;
-                  Warning_Msg
+                  Warning_Lib_Msg
                     ("library unit '"
                      & Iirs_Utils.Image_Identifier (Library_Unit)
                      & "' was also defined in file '"
@@ -1128,7 +1141,7 @@ package body Libraries is
          pragma Unreferenced (Close_Res);
       begin
          if Integer (fwrite (S'Address, S'Length, 1, Stream)) /= 1 then
-            Error_Msg
+            Error_Lib_Msg
               ("cannot write library file for " & Image_Identifier (Library));
             Close_Res := fclose (Stream);
             Delete_File (Temp_Name'Address, Success);
@@ -1158,7 +1171,7 @@ package body Libraries is
       Stream := fopen (Temp_Name'Address, Mode'Address);
 
       if Stream = NULL_Stream then
-         Error_Msg
+         Error_Lib_Msg
            ("cannot create library file for " & Image_Identifier (Library));
          raise Option_Error;
       end if;
@@ -1300,9 +1313,10 @@ package body Libraries is
          if not Success then
             --  Renaming may fail if the new filename is in a non-existant
             --  directory.
-            Error_Msg ("cannot update library file """
-                         & File_Name (File_Name'First .. File_Name'Last - 1)
-                         & """");
+            Error_Lib_Msg
+              ("cannot update library file """
+                 & File_Name (File_Name'First .. File_Name'Last - 1)
+                 & """");
             Delete_File (Temp_Name'Address, Success);
             raise Option_Error;
          end if;
@@ -1479,7 +1493,7 @@ package body Libraries is
         (Get_Design_File_Directory (Design_File),
          Get_Design_File_Filename (Design_File));
       if Fe = No_Source_File_Entry then
-         Error_Msg
+         Error_Lib_Msg
            ("cannot load " & Disp_Node (Get_Library_Unit (Design_Unit)));
          raise Compilation_Error;
       end if;

@@ -18,7 +18,6 @@
 with Ada.Text_IO;
 with Ada.Command_Line;
 with Scanner;
-with Tokens; use Tokens;
 with Name_Table;
 with Iirs_Utils; use Iirs_Utils;
 with Files_Map; use Files_Map;
@@ -56,13 +55,6 @@ package body Errorout is
       Put (Str (Str'First + 1 .. Str'Last));
    end Disp_Natural;
 
-   procedure Error_Msg (Msg: String) is
-   begin
-      Put (Ada.Command_Line.Command_Name);
-      Put (": ");
-      Put_Line (Msg);
-   end Error_Msg;
-
    procedure Error_Kind (Msg : String; An_Iir : Iir) is
    begin
       Put_Line (Msg & ": cannot handle "
@@ -85,19 +77,6 @@ package body Errorout is
       Put_Line (PSL.Nodes.Nkind'Image (PSL.Nodes.Get_Kind (N)));
       raise Internal_Error;
    end Error_Kind;
-
-   procedure Error_Msg_Option_NR (Msg: String) is
-   begin
-      Put (Ada.Command_Line.Command_Name);
-      Put (": ");
-      Put_Line (Msg);
-   end Error_Msg_Option_NR;
-
-   procedure Error_Msg_Option (Msg: String) is
-   begin
-      Error_Msg_Option_NR (Msg);
-      raise Option_Error;
-   end Error_Msg_Option;
 
    procedure Disp_Location
      (File: Name_Id; Line: Natural; Col: Natural) is
@@ -139,6 +118,62 @@ package body Errorout is
       end if;
    end Disp_Location;
 
+   procedure Report_Msg (Level : Report_Level;
+                         Origin : Report_Origin;
+                         Loc : Location_Type;
+                         Msg : String) is
+   begin
+      case Origin is
+         when Option
+           | Library =>
+            Put (Ada.Command_Line.Command_Name);
+         when Scan =>
+            if Loc = No_Location then
+               Disp_Current_Location;
+            else
+               Disp_Location (Loc);
+            end if;
+         when Parse =>
+            if Loc = No_Location then
+               Disp_Token_Location;
+            else
+               Disp_Location (Loc);
+            end if;
+         when Semantic
+           | Elaboration =>
+            Disp_Location (Loc);
+      end case;
+
+      case Level is
+         when Note =>
+            Put ("note");
+         when Warning =>
+            if Flags.Warn_Error then
+               Nbr_Errors := Nbr_Errors + 1;
+            else
+               Put ("warning");
+            end if;
+         when Error =>
+            Nbr_Errors := Nbr_Errors + 1;
+         when Fatal =>
+            Put ("fatal");
+      end case;
+
+      Put (": ");
+      Put_Line (Msg);
+   end Report_Msg;
+
+   procedure Error_Msg_Option_NR (Msg: String) is
+   begin
+      Report_Msg (Error, Option, No_Location, Msg);
+   end Error_Msg_Option_NR;
+
+   procedure Error_Msg_Option (Msg: String) is
+   begin
+      Error_Msg_Option_NR (Msg);
+      raise Option_Error;
+   end Error_Msg_Option;
+
    function Get_Location_Safe (N : Iir) return Location_Type is
    begin
       if N = Null_Iir then
@@ -153,45 +188,12 @@ package body Errorout is
       Disp_Location (Get_Location_Safe (An_Iir));
    end Disp_Iir_Location;
 
-   procedure Disp_PSL_Location (N : PSL_Node) is
-   begin
-      Disp_Location (PSL.Nodes.Get_Location (N));
-   end Disp_PSL_Location;
-
-   procedure Warning_Msg (Msg: String) is
-   begin
-      Put ("warning: ");
-      Put_Line (Msg);
-   end Warning_Msg;
-
-   procedure Warning_Msg_Parse (Msg: String) is
-   begin
-      if Flags.Flag_Only_Elab_Warnings then
-         return;
-      end if;
-      Disp_Token_Location;
-      if Flags.Warn_Error then
-         Nbr_Errors := Nbr_Errors + 1;
-         Put (" ");
-      else
-         Put ("warning: ");
-      end if;
-      Put_Line (Msg);
-   end Warning_Msg_Parse;
-
    procedure Warning_Msg_Sem (Msg: String; Loc : Location_Type) is
    begin
       if Flags.Flag_Only_Elab_Warnings then
          return;
       end if;
-      Disp_Location (Loc);
-      if Flags.Warn_Error then
-         Nbr_Errors := Nbr_Errors + 1;
-         Put (" ");
-      else
-         Put ("warning: ");
-      end if;
-      Put_Line (Msg);
+      Report_Msg (Warning, Semantic, Loc, Msg);
    end Warning_Msg_Sem;
 
    procedure Warning_Msg_Sem (Msg: String; Loc : Iir) is
@@ -201,14 +203,7 @@ package body Errorout is
 
    procedure Warning_Msg_Elab (Msg: String; Loc : Location_Type) is
    begin
-      Disp_Location (Loc);
-      if Flags.Warn_Error then
-         Nbr_Errors := Nbr_Errors + 1;
-         Put (" ");
-      else
-         Put ("warning: ");
-      end if;
-      Put_Line (Msg);
+      Report_Msg (Warning, Elaboration, Loc, Msg);
    end Warning_Msg_Elab;
 
    procedure Warning_Msg_Elab (Msg: String; Loc : Iir) is
@@ -216,126 +211,92 @@ package body Errorout is
       Warning_Msg_Elab (Msg, Get_Location_Safe (Loc));
    end Warning_Msg_Elab;
 
-   procedure Disp_Current_Token;
-   pragma Unreferenced (Disp_Current_Token);
-
-   procedure Disp_Current_Token is
-   begin
-      case Scanner.Current_Token is
-         when Tok_Identifier =>
-            Put ("identifier """
-                 & Name_Table.Image (Scanner.Current_Identifier) & """");
-         when others =>
-            Put (Token_Type'Image (Scanner.Current_Token));
-      end case;
-   end Disp_Current_Token;
-
    -- Disp a message during scan.
    procedure Error_Msg_Scan (Msg: String) is
    begin
-      Nbr_Errors := Nbr_Errors + 1;
-      Disp_Current_Location;
-      Put (' ');
-      Put_Line (Msg);
+      Report_Msg (Error, Scan, No_Location, Msg);
    end Error_Msg_Scan;
 
    procedure Error_Msg_Scan (Msg: String; Loc : Location_Type) is
    begin
-      Nbr_Errors := Nbr_Errors + 1;
-      Disp_Location (Loc);
-      Put (' ');
-      Put_Line (Msg);
+      Report_Msg (Error, Scan, Loc, Msg);
    end Error_Msg_Scan;
 
    -- Disp a message during scan.
    procedure Warning_Msg_Scan (Msg: String) is
    begin
-      Disp_Current_Location;
-      Put ("warning: ");
-      Put_Line (Msg);
+      Report_Msg (Warning, Scan, No_Location, Msg);
    end Warning_Msg_Scan;
 
    -- Disp a message during scan.
    procedure Error_Msg_Parse (Msg: String) is
    begin
-      Nbr_Errors := Nbr_Errors + 1;
-      Disp_Token_Location;
-      Put (' ');
-      Put_Line (Msg);
+      Report_Msg (Error, Parse, No_Location, Msg);
    end Error_Msg_Parse;
 
    procedure Error_Msg_Parse (Msg: String; Loc : Iir) is
    begin
-      Nbr_Errors := Nbr_Errors + 1;
-      Disp_Iir_Location (Loc);
-      Put (' ');
-      Put_Line (Msg);
+      Report_Msg (Error, Parse, Get_Location_Safe (Loc), Msg);
    end Error_Msg_Parse;
 
    procedure Error_Msg_Parse (Msg: String; Loc : Location_Type) is
    begin
-      Nbr_Errors := Nbr_Errors + 1;
-      Disp_Location (Loc);
-      Put (' ');
-      Put_Line (Msg);
+      Report_Msg (Error, Parse, Loc, Msg);
    end Error_Msg_Parse;
 
    -- Disp a message during semantic analysis.
    -- LOC is used for location and current token.
    procedure Error_Msg_Sem (Msg: String; Loc: in Iir) is
    begin
-      Nbr_Errors := Nbr_Errors + 1;
-      if Loc /= Null_Iir then
-         Disp_Iir_Location (Loc);
-         Put (' ');
-      end if;
-      Put_Line (Msg);
+      Report_Msg (Error, Semantic, Get_Location_Safe (Loc), Msg);
    end Error_Msg_Sem;
 
-   procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node) is
+   procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node)
+   is
       use PSL.Nodes;
+      L : Location_Type;
    begin
-      Nbr_Errors := Nbr_Errors + 1;
-      if Loc /= Null_Node then
-         Disp_PSL_Location (Loc);
-         Put (' ');
+      if Loc = Null_Node then
+         L := No_Location;
+      else
+         L := PSL.Nodes.Get_Location (Loc);
       end if;
-      Put_Line (Msg);
+      Report_Msg (Error, Semantic, L, Msg);
    end Error_Msg_Sem;
 
    procedure Error_Msg_Sem (Msg: String; Loc : Location_Type) is
    begin
-      Nbr_Errors := Nbr_Errors + 1;
-      Disp_Location (Loc);
-      Put (' ');
-      Put_Line (Msg);
+      Report_Msg (Error, Semantic, Loc, Msg);
    end Error_Msg_Sem;
 
-   procedure Error_Msg_Sem_Relaxed (Msg : String; Loc : Iir)
+   procedure Error_Msg_Relaxed
+     (Origin : Report_Origin; Msg : String; Loc : Iir)
    is
       use Flags;
+      Level : Report_Level;
    begin
       if Flag_Relaxed_Rules or Vhdl_Std = Vhdl_93c then
-         Warning_Msg_Sem (Msg, Loc);
+         Level := Warning;
       else
-         Error_Msg_Sem (Msg, Loc);
+         Level := Error;
       end if;
+      Report_Msg (Level, Origin, Get_Location_Safe (Loc), Msg);
+   end Error_Msg_Relaxed;
+
+   procedure Error_Msg_Sem_Relaxed (Msg : String; Loc : Iir) is
+   begin
+      Error_Msg_Relaxed (Semantic, Msg, Loc);
    end Error_Msg_Sem_Relaxed;
 
    -- Disp a message during elaboration.
    procedure Error_Msg_Elab (Msg: String) is
    begin
-      Nbr_Errors := Nbr_Errors + 1;
-      Put ("error: ");
-      Put_Line (Msg);
+      Report_Msg (Error, Elaboration, No_Location, Msg);
    end Error_Msg_Elab;
 
    procedure Error_Msg_Elab (Msg: String; Loc : Iir) is
    begin
-      Nbr_Errors := Nbr_Errors + 1;
-      Disp_Iir_Location (Loc);
-      Put (' ');
-      Put_Line (Msg);
+      Report_Msg (Error, Elaboration, Get_Location_Safe (Loc), Msg);
    end Error_Msg_Elab;
 
    -- Disp a bug message.
@@ -1034,7 +995,8 @@ package body Errorout is
       end if;
    end Disp_Type_Of;
 
-   procedure Error_Pure (Caller : Iir; Callee : Iir; Loc : Iir)
+   procedure Error_Pure
+     (Origin : Report_Origin; Caller : Iir; Callee : Iir; Loc : Iir)
    is
       L : Iir;
    begin
@@ -1043,11 +1005,11 @@ package body Errorout is
       else
          L := Loc;
       end if;
-      Error_Msg_Sem_Relaxed
-        ("pure " & Disp_Node (Caller) & " cannot call (impure) "
+      Error_Msg_Relaxed
+        (Origin, "pure " & Disp_Node (Caller) & " cannot call (impure) "
          & Disp_Node (Callee), L);
-      Error_Msg_Sem_Relaxed
-        ("(" & Disp_Node (Callee) & " is defined here)", Callee);
+      Error_Msg_Relaxed
+        (Origin, "(" & Disp_Node (Callee) & " is defined here)", Callee);
    end Error_Pure;
 
    procedure Error_Not_Match (Expr: Iir; A_Type: Iir; Loc : Iir)

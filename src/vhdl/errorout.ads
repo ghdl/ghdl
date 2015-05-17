@@ -33,12 +33,21 @@ package Errorout is
    -- The number of errors (ie, number of calls to error_msg*).
    Nbr_Errors: Natural := 0;
 
-   -- Disp an error, prepended with program name.
-   procedure Error_Msg (Msg: String);
+   type Report_Level is (Note, Warning, Error, Fatal);
+   type Report_Origin is
+     (Option, Library, Scan, Parse, Semantic, Elaboration);
 
-   -- Disp an error, prepended with program name, and raise option_error.
-   -- This is used for errors before initialisation, such as bad option or
-   -- bad filename.
+   --  Generic report message.  LOC maybe No_Location.
+   --  If ORIGIN is Option or Library, LOC must be No_Location and the program
+   --  name is displayed.
+   procedure Report_Msg (Level : Report_Level;
+                         Origin : Report_Origin;
+                         Loc : Location_Type;
+                         Msg : String);
+
+   --  Disp an error, prepended with program name, and raise option_error.
+   --  This is used for errors before initialisation, such as bad option or
+   --  bad filename.
    procedure Error_Msg_Option (Msg: String);
    pragma No_Return (Error_Msg_Option);
 
@@ -50,8 +59,6 @@ package Errorout is
    procedure Disp_Iir_Location (An_Iir: Iir);
 
    -- Disp a warning.
-   procedure Warning_Msg (Msg: String);
-   procedure Warning_Msg_Parse (Msg: String);
    procedure Warning_Msg_Sem (Msg: String; Loc : Iir);
    procedure Warning_Msg_Sem (Msg: String; Loc : Location_Type);
 
@@ -118,7 +125,8 @@ package Errorout is
    function Disp_Type_Of (Node : Iir) return String;
 
    --  Disp an error message when a pure function CALLER calls impure CALLEE.
-   procedure Error_Pure (Caller : Iir; Callee : Iir; Loc : Iir);
+   procedure Error_Pure
+     (Origin : Report_Origin; Caller : Iir; Callee : Iir; Loc : Iir);
 
    --  Report an error message as type of EXPR does not match A_TYPE.
    --  Location is LOC.

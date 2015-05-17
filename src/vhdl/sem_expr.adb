@@ -987,7 +987,7 @@ package body Sem_Expr is
             --  CALLEE is impure.
             case Get_Kind (Subprg) is
                when Iir_Kind_Function_Declaration =>
-                  Error_Pure (Subprg, Callee, Loc);
+                  Error_Pure (Semantic, Subprg, Callee, Loc);
                when Iir_Kind_Procedure_Declaration =>
                   Set_Purity_State (Subprg, Impure);
                when others =>
@@ -996,11 +996,9 @@ package body Sem_Expr is
          when Iir_Kind_Procedure_Declaration =>
             declare
                Depth : Iir_Int32;
-               Callee_Body : Iir;
-               Subprg_Body : Iir;
+               Callee_Body : constant Iir := Get_Subprogram_Body (Callee);
+               Subprg_Body : constant Iir := Get_Subprogram_Body (Subprg);
             begin
-               Callee_Body := Get_Subprogram_Body (Callee);
-               Subprg_Body := Get_Subprogram_Body (Subprg);
                --  Get purity depth of callee, if possible.
                case Get_Purity_State (Callee) is
                   when Pure =>
@@ -1026,10 +1024,10 @@ package body Sem_Expr is
                case Get_Kind (Subprg) is
                   when Iir_Kind_Function_Declaration =>
                      if Depth = Iir_Depth_Impure then
-                        Error_Pure (Subprg, Callee, Loc);
+                        Error_Pure (Semantic, Subprg, Callee, Loc);
                      else
                         if Depth < Get_Subprogram_Depth (Subprg) then
-                           Error_Pure (Subprg, Callee, Loc);
+                           Error_Pure (Semantic, Subprg, Callee, Loc);
                         end if;
                      end if;
                   when Iir_Kind_Procedure_Declaration =>

@@ -5073,7 +5073,7 @@ package Iirs is
    --  complete.
    --  These elements have direct or indirect calls to procedure whose body is
    --  not yet analyzed.  Therefore, purity or wait checks are not complete.
-   --  Field: Field9 (uc)
+   --  Field: Field9 Of_Ref (uc)
    function Get_Analysis_Checks_List (Unit : Iir) return Iir_List;
    procedure Set_Analysis_Checks_List (Unit : Iir; List : Iir_List);
 

@@ -1435,7 +1435,7 @@ package body Nodes_Meta is
          when Field_Dependence_List =>
             return Attr_Of_Ref;
          when Field_Analysis_Checks_List =>
-            return Attr_None;
+            return Attr_Of_Ref;
          when Field_Date_State =>
             return Attr_None;
          when Field_Guarded_Target_State =>
@@ -2028,10 +2028,10 @@ package body Nodes_Meta is
       Field_Context_Items,
       Field_Chain,
       Field_Library_Unit,
-      Field_Analysis_Checks_List,
       Field_Design_File,
       Field_Hash_Chain,
       Field_Dependence_List,
+      Field_Analysis_Checks_List,
       --  Iir_Kind_Library_Clause
       Field_Identifier,
       Field_Has_Identifier_List,

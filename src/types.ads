@@ -99,6 +99,7 @@ package Types is
    type Location_Type is new Nat32;
    for Location_Type'Size use 32;
    Location_Nil : constant Location_Type := 0;
+   No_Location : constant Location_Type := 0;
 
    --  Type of a file buffer.
    type File_Buffer is array (Source_Ptr range <>) of Character;

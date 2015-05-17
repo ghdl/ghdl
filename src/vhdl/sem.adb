@@ -2200,7 +2200,7 @@ package body Sem is
                      Depth_Callee := Iir_Depth_Impure;
                      if Kind = K_Function then
                         --  FIXME: report call location
-                        Error_Pure (Subprg_Bod, Callee, Null_Iir);
+                        Error_Pure (Elaboration, Subprg_Bod, Callee, Null_Iir);
                      end if;
                   end if;
 
