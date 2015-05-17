@@ -177,6 +177,38 @@ package body Sem_Names is
       end if;
    end Add_Result;
 
+   --  Extract from overload list RES the function call without implicit
+   --  conversion.  Return Null_Iir if there is no function call, or if there
+   --  is an expressions that isn't a function call, or if there is more than
+   --  one function call without implicit conversion.
+   function Extract_Call_Without_Implicit_Conversion (Res : Iir) return Iir
+   is
+      pragma Assert (Is_Overload_List (Res));
+      List : constant Iir_List := Get_Overload_List (Res);
+      Call : Iir;
+      El : Iir;
+   begin
+      Call := Null_Iir;
+      for I in Natural loop
+         El := Get_Nth_Element (List, I);
+         exit when El = Null_Iir;
+         if Get_Kind (El) = Iir_Kind_Function_Call then
+            if not Get_Has_Implicit_Conversion (El) then
+               if Call /= Null_Iir then
+                  --  More than one call without implicit conversion.
+                  return Null_Iir;
+               else
+                  Call := El;
+               end if;
+            end if;
+         else
+            return Null_Iir;
+         end if;
+      end loop;
+
+      return Call;
+   end Extract_Call_Without_Implicit_Conversion;
+
    --  Move elements of result list LIST to result list RES.
    --  Destroy LIST if necessary.
    procedure Add_Result_List (Res : in out Iir; List : Iir);
@@ -3495,6 +3527,7 @@ package body Sem_Names is
       Expr : Iir;
       Expr_List : Iir_List;
       Res : Iir;
+      Res1 : Iir;
       El : Iir;
    begin
       Expr := Get_Named_Entity (Name);
@@ -3536,48 +3569,32 @@ package body Sem_Names is
 
          if A_Type /= Null_Iir then
             --  Find the name returning A_TYPE.
-            declare
-               Only_Calls : Boolean;
-               Full_Compat_Call : Iir;
-               Nbr_Full_Compat : Natural;
-            begin
-               Res := Null_Iir;
-               Only_Calls := True;
-               Full_Compat_Call := Null_Iir;
-               Nbr_Full_Compat := 0;
-               for I in Natural loop
-                  El := Get_Nth_Element (Expr_List, I);
-                  exit when El = Null_Iir;
-                  if Are_Basetypes_Compatible (Get_Base_Type (Get_Type (El)),
-                                               A_Type)
-                    /= Not_Compatible
-                  then
-                     if Get_Kind (El) = Iir_Kind_Function_Call then
-                        if not Get_Has_Implicit_Conversion (El) then
-                           Full_Compat_Call := El;
-                           Nbr_Full_Compat := Nbr_Full_Compat + 1;
-                        end if;
-                     else
-                        Only_Calls := False;
-                     end if;
-                     Add_Result (Res, El);
-                  end if;
-               end loop;
-               if Res = Null_Iir then
-                  Error_Not_Match (Name, A_Type, Name);
-                  return Null_Iir;
-               elsif Is_Overload_List (Res) then
-                  if Only_Calls and then Nbr_Full_Compat = 1 then
-                     Free_Iir (Res);
-                     Res := Full_Compat_Call;
-                  else
-                     Error_Overload (Name);
-                     Disp_Overload_List (Get_Overload_List (Res), Name);
-                     Free_Iir (Res);
-                     return Null_Iir;
-                  end if;
+            Res := Null_Iir;
+            for I in Natural loop
+               El := Get_Nth_Element (Expr_List, I);
+               exit when El = Null_Iir;
+               if Are_Basetypes_Compatible (Get_Base_Type (Get_Type (El)),
+                                            A_Type)
+                 /= Not_Compatible
+               then
+                  Add_Result (Res, El);
                end if;
-            end;
+            end loop;
+            if Res = Null_Iir then
+               Error_Not_Match (Name, A_Type, Name);
+               return Null_Iir;
+            elsif Is_Overload_List (Res) then
+               Res1 := Extract_Call_Without_Implicit_Conversion (Res);
+               if Res1 /= Null_Iir then
+                  Free_Iir (Res);
+                  Res := Res1;
+               else
+                  Error_Overload (Name);
+                  Disp_Overload_List (Get_Overload_List (Res), Name);
+                  Free_Iir (Res);
+                  return Null_Iir;
+               end if;
+            end if;
 
             --  Free results
             Sem_Name_Free_Result (Expr, Res);
@@ -3587,24 +3604,32 @@ package body Sem_Names is
                pragma Assert (Is_Overload_List (Ret_Type));
                Free_Overload_List (Ret_Type);
             end if;
-
-            Set_Named_Entity (Name, Res);
-            Res := Finish_Sem_Name (Name);
             --  Fall through.
          else
             --  Create a list of type.
             Ret_Type := Create_List_Of_Types (Expr_List);
             if Ret_Type = Null_Iir or else not Is_Overload_List (Ret_Type) then
-               --  There is either no types or one type for
-               --  several meanings.
-               Error_Overload (Name);
-               Disp_Overload_List (Expr_List, Name);
-               --Free_Iir (Ret_Type);
-               return Null_Iir;
+               Res1 := Extract_Call_Without_Implicit_Conversion (Expr);
+               if Res1 /= Null_Iir then
+                  --  Found it.
+                  Res := Res1;
+                  --  Fall through
+               else
+                  --  There is either no types or one type for
+                  --  several meanings.
+                  Error_Overload (Name);
+                  Disp_Overload_List (Expr_List, Name);
+                  --Free_Iir (Ret_Type);
+                  return Null_Iir;
+               end if;
+            else
+               Set_Type (Name, Ret_Type);
+               return Name;
             end if;
-            Set_Type (Name, Ret_Type);
-            return Name;
          end if;
+
+         Set_Named_Entity (Name, Res);
+         Res := Finish_Sem_Name (Name);
       end if;
 
       --  NAME has only one meaning, which is RES.
