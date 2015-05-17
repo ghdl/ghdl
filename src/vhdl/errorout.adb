@@ -146,20 +146,20 @@ package body Errorout is
 
       case Level is
          when Note =>
-            Put ("note");
+            Put ("note:");
          when Warning =>
             if Flags.Warn_Error then
                Nbr_Errors := Nbr_Errors + 1;
             else
-               Put ("warning");
+               Put ("warning:");
             end if;
          when Error =>
             Nbr_Errors := Nbr_Errors + 1;
          when Fatal =>
-            Put ("fatal");
+            Put ("fatal:");
       end case;
 
-      Put (": ");
+      Put (' ');
       Put_Line (Msg);
    end Report_Msg;
 
