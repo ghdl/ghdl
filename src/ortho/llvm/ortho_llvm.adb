@@ -1486,8 +1486,9 @@ package body Ortho_LLVM is
          return Val;
       end if;
       if Rtype.LLVM = Val.Etype.LLVM then
-         --  Same underlying LLVM type: nothing to do.
-         return Val;
+         --  Same underlying LLVM type: no conversion but keep new type in
+         --  case of change of sign.
+         return O_Enode'(LLVM => Val.LLVM, Etype => Rtype);
       end if;
       if Unreach then
          return O_Enode'(LLVM => Val.LLVM, Etype => Rtype);
