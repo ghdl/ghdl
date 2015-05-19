@@ -1687,6 +1687,7 @@ package body Trans.Chap8 is
       Base_Formal : Iir;
       Formal_Type : Iir;
       Ftype_Info : Type_Info_Acc;
+      Ftype_Binfo : Type_Info_Acc;
       Formal_Info : Ortho_Info_Acc;
       Val : O_Enode;
       Param : Mnode;
@@ -1732,6 +1733,7 @@ package body Trans.Chap8 is
             Formal_Object_Kind := Mode_Value;
          end if;
          Ftype_Info := Get_Info (Formal_Type);
+         Ftype_Binfo := Get_Info (Get_Base_Type (Formal_Type));
 
          case Get_Kind (El) is
             when Iir_Kind_Association_Element_Open =>
@@ -1744,10 +1746,10 @@ package body Trans.Chap8 is
                Out_Conv := Get_Out_Conversion (El);
             when Iir_Kind_Association_Element_By_Individual =>
                Actual_Type := Get_Actual_Type (El);
-               if Formal_Info.Interface_Field /= O_Fnode_Null then
-                  --  A non-composite type cannot be associated by element.
-                  raise Internal_Error;
-               end if;
+
+               --  A non-composite type cannot be associated by element.
+               pragma Assert (Formal_Info.Interface_Field = O_Fnode_Null);
+
                if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
                   Chap3.Create_Array_Subtype (Actual_Type, True);
                   Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
@@ -1771,9 +1773,7 @@ package body Trans.Chap8 is
             --  Copy-out argument.
             --  This is not a composite type.
             Param := Chap6.Translate_Name (Act);
-            if Get_Object_Kind (Param) /= Mode_Value then
-               raise Internal_Error;
-            end if;
+            pragma Assert (Get_Object_Kind (Param) = Mode_Value);
             Params (Pos) := Stabilize (Param);
             if In_Conv /= Null_Iir
               or else Get_Mode (Formal) = Iir_Inout_Mode
@@ -1793,7 +1793,7 @@ package body Trans.Chap8 is
                   In_Expr,
                   Formal_Type, El);
             end if;
-         elsif Ftype_Info.Type_Mode not in Type_Mode_By_Value then
+         elsif Ftype_Binfo.Type_Mode not in Type_Mode_By_Value then
             --  Passed by reference.
             case Get_Kind (Base_Formal) is
                when Iir_Kind_Interface_Constant_Declaration
@@ -1822,7 +1822,7 @@ package body Trans.Chap8 is
          end if;
          if Base_Formal /= Formal then
             --  Individual association.
-            if Ftype_Info.Type_Mode not in Type_Mode_By_Value then
+            if Ftype_Binfo.Type_Mode not in Type_Mode_By_Value then
                --  Not by-value actual already translated.
                Val := E_Params (Pos);
             else
