@@ -804,6 +804,25 @@ package body Sem_Names is
       end if;
    end Finish_Sem_Function_Call;
 
+   function Function_Declaration_To_Call (Name : Iir) return Iir
+   is
+      Expr : Iir;
+   begin
+      Expr := Get_Named_Entity (Name);
+      if Maybe_Function_Call (Expr) then
+         Expr := Sem_As_Function_Call (Name, Expr, Null_Iir);
+         pragma Assert (Get_Kind (Expr) = Iir_Kind_Function_Call);
+         Finish_Sem_Function_Call (Expr, Name);
+         return Expr;
+      else
+         Error_Msg_Sem (Disp_Node (Expr) & " requires parameters", Name);
+         Set_Type (Name, Get_Type (Expr));
+         Set_Expr_Staticness (Name, None);
+         Set_Named_Entity (Name, Create_Error_Expr (Expr, Get_Type (Expr)));
+         return Name;
+      end if;
+   end Function_Declaration_To_Call;
+
    function Sem_Type_Mark (Name : Iir; Incomplete : Boolean := False)
                           return Iir
    is
@@ -885,6 +904,7 @@ package body Sem_Names is
          end if;
       end if;
 
+      --  See Sem_Array_Attribute_Name for comments about the prefix.
       Prefix_Name := Get_Prefix (Attr_Name);
       if Is_Type_Name (Prefix_Name) /= Null_Iir then
          Prefix := Sem_Type_Mark (Prefix_Name);
@@ -942,6 +962,12 @@ package body Sem_Names is
          Set_Index_Subtype (Attr, Index_Type);
       end if;
 
+      --  LRM08 9.4.2 Locally static primaries
+      --  g) A predefined attribute that is a function, [other than ... and
+      --     other than ...], whose prefix is either a locally static subtype
+      --     or is an object that is of a locally static subtype, and whose
+      --     actual parameter (if any) is a locally static expression.
+
       --  LRM 7.4.1
       --  A locally static range is either [...], or a range of the first form
       --  whose prefix denotes either a locally static subtype or an object
@@ -959,14 +985,7 @@ package body Sem_Names is
       --  formed by imposing on an unconstrained array type a globally static
       --  index constraint.
       Staticness := Get_Type_Staticness (Prefix_Type);
-      if Flags.Vhdl_Std = Vhdl_93c
-        and then Get_Kind (Prefix) not in Iir_Kinds_Type_Declaration
-      then
-         --  For 93c:
-         --  if the prefix is a static expression, the staticness of the
-         --   expression may be higher than the staticness of the type
-         --   (eg: generic whose type is an unconstrained array).
-         --   Also consider expression staticness.
+      if Is_Type_Name (Prefix_Name) = Null_Iir then
          Staticness := Iir_Staticness'Max (Staticness,
                                            Get_Expr_Staticness (Prefix));
       end if;
@@ -2841,10 +2860,28 @@ package body Sem_Names is
       --  LRM93 14.1
       --  Prefix: Any prefix A that is appropriate for an array object, or an
       --  alias thereof, or that denotes a constrained array subtype.
+      --
+      --  LRM08 16.2 Predefined attributes.
+      --  Prefix of A'Left[(N)], A'Right[(N)]... :
+      --  Any prefix A that is appropriate for an array object, or an alias
+      --  thereof, or that denotes a constrained an array subtype whose index
+      --  ranges are defined by a constraint.
+      --
+      --  GHDL: the prefix cannot be a function call, as the result is not
+      --  an object and it doesn't denote a subtype.  References are:
+      --
+      --  LRM08 6.4 Objects:
+      --  An object is a named entity [...]
+      --  In addition the following are objects, but are not named
+      --  entities[...]
+      --
+      --  LRM08 6 Declarations
+      --  the name is said to denote the associated entity.
       case Get_Kind (Prefix) is
          when Iir_Kind_Dereference
            | Iir_Kinds_Object_Declaration
            | Iir_Kind_Function_Call
+           | Iir_Kind_Function_Declaration
            | Iir_Kind_Selected_Element
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name
@@ -3638,30 +3675,15 @@ package body Sem_Names is
            | Iir_Kind_Character_Literal
            | Iir_Kind_Selected_Name =>
             Expr := Get_Named_Entity (Res);
-            case Get_Kind (Expr) is
-               when Iir_Kind_Function_Declaration =>
-                  if Maybe_Function_Call (Expr) then
-                     Expr := Sem_As_Function_Call (Res, Expr, Null_Iir);
-                     pragma Assert (Get_Kind (Expr) = Iir_Kind_Function_Call);
-                     Finish_Sem_Function_Call (Expr, Res);
-                     return Expr;
-                  else
-                     Error_Msg_Sem
-                       (Disp_Node (Expr) & " requires parameters", Res);
-                     Set_Type (Res, Get_Type (Expr));
-                     Set_Expr_Staticness (Res, None);
-                     Set_Named_Entity
-                       (Res, Create_Error_Expr (Expr, Get_Type (Expr)));
-                     return Res;
-                  end if;
-               when others =>
-                  null;
-            end case;
-            Set_Type (Res, Get_Type (Expr));
-            Set_Expr_Staticness (Res, Get_Expr_Staticness (Expr));
-            --Set_Name_Staticness (Name, Get_Name_Staticness (Expr));
-            --Set_Base_Name (Name, Get_Base_Name (Expr));
-            return Res;
+            if Get_Kind (Expr) = Iir_Kind_Function_Declaration then
+               return Function_Declaration_To_Call (Res);
+            else
+               Set_Type (Res, Get_Type (Expr));
+               Set_Expr_Staticness (Res, Get_Expr_Staticness (Expr));
+               --Set_Name_Staticness (Name, Get_Name_Staticness (Expr));
+               --Set_Base_Name (Name, Get_Base_Name (Expr));
+               return Res;
+            end if;
          when Iir_Kind_Function_Call
            | Iir_Kind_Selected_Element
            | Iir_Kind_Indexed_Name
