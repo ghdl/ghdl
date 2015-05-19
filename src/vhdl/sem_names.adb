@@ -331,7 +331,9 @@ package body Sem_Names is
                   end if;
                end if;
             when others =>
-               if Get_Identifier (Decl) = Id then
+               --  Consider only visible declarations (case of an implicit
+               --  declaration that is overriden by explicit one).
+               if Get_Identifier (Decl) = Id and Get_Visible_Flag (Decl) then
                   Add_Result (Res, Decl);
                end if;
          end case;
@@ -790,7 +792,7 @@ package body Sem_Names is
       Set_Implementation (Call, Get_Named_Entity (Prefix));
 
       --  LRM08 8.1 Names
-      --  The name is a simple name or seleted name that does NOT denote a
+      --  The name is a simple name or selected name that does NOT denote a
       --  function call [...]
       --
       --  GHDL: so function calls are never static names.

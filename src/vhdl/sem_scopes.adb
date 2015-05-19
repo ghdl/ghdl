@@ -749,6 +749,22 @@ package body Sem_Scopes is
                               Decl);
                            return;
                         end if;
+
+                        if not Is_Decl_Implicit and Is_Current_Decl_Implicit
+                        then
+                           --  DECL 'overrides' the predefined current
+                           --  declaration.
+
+                           --  LRM93 10.3 Visibility
+                           --  In such cases, a predefined operation is always
+                           --  hidden by the other homograph.  Where hidden in
+                           --  this manner, an implicit declaration is hidden
+                           --  within the entire scope of the other declaration
+                           --  (regardless of which declaration occurs first);
+                           --  the implicit declaration is visible neither by
+                           --  selected nor directly.
+                           Set_Visible_Flag (Current_Decl, False);
+                        end if;
                      end;
                   else
                      --  GHDL: hide directly visible declaration declared in
