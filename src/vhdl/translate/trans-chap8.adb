@@ -701,7 +701,9 @@ package body Trans.Chap8 is
       end if;
 
       Expr := Get_Assertion_Condition (Stmt);
-      if Get_Expr_Staticness (Expr) = Locally then
+      if Get_Expr_Staticness (Expr) = Locally
+        and then not Is_Overflow_Literal (Expr)
+      then
          if Eval_Pos (Expr) = 1 then
             --  Assert TRUE is a noop.
             --  FIXME: generate a noop ?

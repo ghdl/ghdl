@@ -51,6 +51,11 @@ package body Iirs_Utils is
       return Get_Kind (N) = Iir_Kind_Error;
    end Is_Error;
 
+   function Is_Overflow_Literal (N : Iir) return Boolean is
+   begin
+      return Get_Kind (N) = Iir_Kind_Overflow_Literal;
+   end Is_Overflow_Literal;
+
    function Get_Operator_Name (Op : Iir) return Name_Id is
    begin
       case Get_Kind (Op) is

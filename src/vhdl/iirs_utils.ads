@@ -31,6 +31,10 @@ package Iirs_Utils is
    function Is_Error (N : Iir) return Boolean;
    pragma Inline (Is_Error);
 
+   --  Return True iff N is an overflow_literal node.
+   function Is_Overflow_Literal (N : Iir) return Boolean;
+   pragma Inline (Is_Overflow_Literal);
+
    --  Find LIT in the list of identifiers or characters LIST.
    --  Return the literal (whose name is LIT) or null_iir if not found.
    function Find_Name_In_Chain (Chain: Iir; Lit: Name_Id) return Iir;

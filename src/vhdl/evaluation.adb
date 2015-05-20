@@ -1651,7 +1651,8 @@ package body Evaluation is
             return Build_Enumeration (Iir_Index32 (I), Expr);
          end if;
       end loop;
-      Warning_Msg_Sem ("value """ & Value & """ not in enumeration", Expr);
+      Warning_Msg_Sem ("value """ & Value & """ not in enumeration "
+                         & Disp_Node (Enum), Expr);
       return Build_Overflow (Expr);
    end Build_Enumeration_Value;
 
