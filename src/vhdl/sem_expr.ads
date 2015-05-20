@@ -74,6 +74,14 @@ package Sem_Expr is
    --  target is an aggregate.
    function Sem_Composite_Expression (Expr : Iir) return Iir;
 
+   --  Return True iif INTER is allowed to be read.  Follow rules of
+   --  LRM08 6.5.2 Interface object declarations.
+   function Can_Interface_Be_Read (Inter : Iir) return Boolean;
+
+   --  Return True iif INTER is allowed to be updated.  Follow rules of
+   --  LRM08 6.5.2 Interface object declarations.
+   function Can_Interface_Be_Updated (Inter : Iir) return Boolean;
+
    --  Check EXPR can be read.
    procedure Check_Read (Expr : Iir);
 

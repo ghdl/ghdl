@@ -157,33 +157,29 @@ package body Sem_Assocs is
    end Sem_Actual_Of_Association_Chain;
 
    procedure Check_Parameter_Association_Restriction
-     (Inter : Iir; Base_Actual : Iir; Loc : Iir)
-   is
-      Act_Mode : Iir_Mode;
-      For_Mode : Iir_Mode;
+     (Inter : Iir; Base_Actual : Iir; Loc : Iir) is
    begin
-      Act_Mode := Get_Mode (Base_Actual);
-      For_Mode := Get_Mode (Inter);
       case Get_Mode (Inter) is
          when Iir_In_Mode =>
-            if Act_Mode in Iir_In_Modes or Act_Mode = Iir_Buffer_Mode then
+            if Can_Interface_Be_Read (Base_Actual) then
                return;
             end if;
          when Iir_Out_Mode =>
-            --  FIXME: should buffer also be accepted ?
-            if Act_Mode in Iir_Out_Modes or Act_Mode = Iir_Buffer_Mode then
+            if Can_Interface_Be_Updated (Base_Actual) then
                return;
             end if;
          when Iir_Inout_Mode =>
-            if Act_Mode = Iir_Inout_Mode then
+            if Can_Interface_Be_Read (Base_Actual)
+              and then Can_Interface_Be_Updated (Base_Actual)
+            then
                return;
             end if;
          when others =>
             Error_Kind ("check_parameter_association_restriction", Inter);
       end case;
       Error_Msg_Sem
-        ("cannot associate an " & Get_Mode_Name (Act_Mode)
-         & " object with " & Get_Mode_Name (For_Mode) & " "
+        ("cannot associate an " & Get_Mode_Name (Get_Mode (Base_Actual))
+         & " object with " & Get_Mode_Name (Get_Mode (Inter)) & " "
          & Disp_Node (Inter), Loc);
    end Check_Parameter_Association_Restriction;
 

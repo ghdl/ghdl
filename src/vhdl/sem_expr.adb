@@ -3717,6 +3717,83 @@ package body Sem_Expr is
       return Expr;
    end Sem_Qualified_Expression;
 
+   function Is_Signal_Parameter (Obj : Iir) return Boolean is
+   begin
+      return Get_Kind (Obj) = Iir_Kind_Interface_Signal_Declaration
+        and then
+        Get_Kind (Get_Parent (Obj)) in Iir_Kinds_Subprogram_Declaration;
+   end Is_Signal_Parameter;
+
+   function Can_Interface_Be_Read (Inter : Iir) return Boolean is
+   begin
+      case Get_Mode (Inter) is
+         when Iir_In_Mode
+           | Iir_Inout_Mode
+           | Iir_Buffer_Mode =>
+            --  LRM08 6.5.3 Interface object declarations
+            --  - in. The value of the interface object is allowed
+            --     to be read, [...]
+            --  - inout or buffer.  Reading and updating the value of
+            --     the interface object is allowed. [...]
+            null;
+         when Iir_Out_Mode =>
+            --  LRM93 4.3.2 Interface declarations
+            --  - out. The value of the interface object is allowed to be
+            --    updated, but it must not be read.
+            --
+            --  LRM08 6.5.3 Interface object declarations
+            --  - out. The value of the interface object is allowed
+            --    [to be updated and,]  provided it is not a signal
+            --    parameter, read.
+            if Vhdl_Std < Vhdl_08 or else Is_Signal_Parameter (Inter) then
+               return False;
+            end if;
+         when Iir_Linkage_Mode =>
+            --  LRM08 6.5.3 Interface object declarations
+            --  - linkage.  Reading and updating the value of the
+            --    interface object is allowed, but only by appearing
+            --    as an actual corresponding to an interface object
+            --    of mode LINKAGE.  No other reading or updating is
+            --    permitted.
+            return False;
+         when Iir_Unknown_Mode =>
+            raise Internal_Error;
+      end case;
+      return True;
+   end Can_Interface_Be_Read;
+
+   function Can_Interface_Be_Updated (Inter : Iir) return Boolean is
+   begin
+      case Get_Mode (Inter) is
+         when Iir_In_Mode =>
+            --  LRM08 6.5.3 Interface object declarations
+            --  - in. The value of the interface object is allowed to be read,
+            --    but it shall not be updated.
+            return False;
+         when Iir_Out_Mode =>
+            --  LRM08 6.5.3 Interface object declarations
+            --  - out. The value of the interface object is allowed
+            --    to be updated [and, ...]
+            return True;
+         when Iir_Inout_Mode
+           | Iir_Buffer_Mode =>
+            --  LRM08 6.5.3 Interface object declarations
+            --  - inout or buffer.  Reading and updating the value of the
+            --    interface is allowed.
+            return True;
+         when Iir_Linkage_Mode =>
+            --  LRM08 6.5.3 Interface object declarations
+            --  - linkage.  Reading and updating the value of the
+            --    interface object is allowed, but only by appearing
+            --    as an actual corresponding to an interface object
+            --    of mode LINKAGE.  No other reading or updating is
+            --    permitted.
+            return False;
+         when Iir_Unknown_Mode =>
+            raise Internal_Error;
+      end case;
+   end Can_Interface_Be_Updated;
+
    procedure Check_Read_Aggregate (Aggr : Iir)
    is
       pragma Unreferenced (Aggr);
@@ -3758,39 +3835,9 @@ package body Sem_Expr is
                Obj := Get_Name (Obj);
             when Iir_Kind_Interface_Signal_Declaration
               | Iir_Kind_Interface_Variable_Declaration =>
-               case Get_Mode (Obj) is
-                  when Iir_In_Mode
-                    | Iir_Inout_Mode
-                    | Iir_Buffer_Mode =>
-                     --  LRM08 6.5.3 Interface object declarations
-                     --  - in. The value of the interface object is allowed
-                     --     to be read, [...]
-                     --  - inout or buffer.  Reading and updating the value of
-                     --     the interface object is allowed. [...]
-                     null;
-                  when Iir_Out_Mode =>
-                     --  LRM08 6.5.3 Interface object declarations
-                     --  - out. The value of the interface object is allowed
-                     --    [to be updated and,]  provided it is not a signal
-                     --    parameter, read.
-                     if Vhdl_Std < Vhdl_08
-                       or else (Get_Kind (Get_Parent (Obj)) in
-                                  Iir_Kinds_Subprogram_Declaration)
-                     then
-                        Error_Msg_Sem
-                          (Disp_Node (Obj) & " cannot be read", Expr);
-                     end if;
-                  when Iir_Linkage_Mode =>
-                     --  LRM08 6.5.3 Interface object declarations
-                     --  - linkage.  Reading and updating the value of the
-                     --    interface object is allowed, but only by appearing
-                     --    as an actual corresponding to an interface object
-                     --    of mode LINKAGE.  No other reading or updating is
-                     --    permitted.
-                     Error_Msg_Sem (Disp_Node (Obj) & " cannot be read", Expr);
-                  when Iir_Unknown_Mode =>
-                     raise Internal_Error;
-               end case;
+               if not Can_Interface_Be_Read (Obj) then
+                  Error_Msg_Sem (Disp_Node (Obj) & " cannot be read", Expr);
+               end if;
                return;
             when Iir_Kind_Enumeration_Literal
               | Iir_Kind_Physical_Int_Literal
