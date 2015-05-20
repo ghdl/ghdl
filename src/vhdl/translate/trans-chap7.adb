@@ -2443,6 +2443,10 @@ package body Trans.Chap7 is
                   return Translate_To_String
                     (Ghdl_To_String_I32, Res_Type, Loc,
                      New_Convert_Ov (Left_Tree, Ghdl_I32_Type));
+               when Type_Mode_I64 =>
+                  return Translate_To_String
+                    (Ghdl_To_String_I64, Res_Type, Loc,
+                     New_Convert_Ov (Left_Tree, Ghdl_I64_Type));
                when others =>
                   raise Internal_Error;
             end case;

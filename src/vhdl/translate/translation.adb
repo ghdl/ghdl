@@ -1758,6 +1758,8 @@ package body Translation is
       Create_To_String_Subprogram
         ("__ghdl_to_string_i32", Ghdl_To_String_I32, Ghdl_I32_Type);
       Create_To_String_Subprogram
+        ("__ghdl_to_string_i64", Ghdl_To_String_I64, Ghdl_I64_Type);
+      Create_To_String_Subprogram
         ("__ghdl_to_string_f64", Ghdl_To_String_F64, Ghdl_Real_Type);
       Create_To_String_Subprogram
         ("__ghdl_to_string_f64_digits", Ghdl_To_String_F64_Digits,

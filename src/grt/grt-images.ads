@@ -36,6 +36,7 @@ package Grt.Images is
    procedure Ghdl_Image_E32
      (Res : Std_String_Ptr; Val : Ghdl_E32; Rti : Ghdl_Rti_Access);
    procedure Ghdl_Image_I32 (Res : Std_String_Ptr; Val : Ghdl_I32);
+   procedure Ghdl_Image_I64 (Res : Std_String_Ptr; Val : Ghdl_I64);
    procedure Ghdl_Image_F64 (Res : Std_String_Ptr; Val : Ghdl_F64);
    procedure Ghdl_Image_P64
      (Res : Std_String_Ptr; Val : Ghdl_I64; Rti : Ghdl_Rti_Access);
@@ -43,6 +44,7 @@ package Grt.Images is
      (Res : Std_String_Ptr; Val : Ghdl_I32; Rti : Ghdl_Rti_Access);
 
    procedure Ghdl_To_String_I32 (Res : Std_String_Ptr; Val : Ghdl_I32);
+   procedure Ghdl_To_String_I64 (Res : Std_String_Ptr; Val : Ghdl_I64);
    procedure Ghdl_To_String_F64 (Res : Std_String_Ptr; Val : Ghdl_F64);
    procedure Ghdl_To_String_F64_Digits
      (Res : Std_String_Ptr; Val : Ghdl_F64; Nbr_Digits : Ghdl_I32);
@@ -84,11 +86,13 @@ private
    pragma Export (C, Ghdl_Image_E8, "__ghdl_image_e8");
    pragma Export (C, Ghdl_Image_E32, "__ghdl_image_e32");
    pragma Export (C, Ghdl_Image_I32, "__ghdl_image_i32");
+   pragma Export (C, Ghdl_Image_I64, "__ghdl_image_i64");
    pragma Export (C, Ghdl_Image_F64, "__ghdl_image_f64");
    pragma Export (C, Ghdl_Image_P64, "__ghdl_image_p64");
    pragma Export (C, Ghdl_Image_P32, "__ghdl_image_p32");
 
    pragma Export (C, Ghdl_To_String_I32, "__ghdl_to_string_i32");
+   pragma Export (C, Ghdl_To_String_I64, "__ghdl_to_string_i64");
    pragma Export (C, Ghdl_To_String_F64, "__ghdl_to_string_f64");
    pragma Export (C, Ghdl_To_String_F64_Digits, "__ghdl_to_string_f64_digits");
    pragma Export (C, Ghdl_To_String_F64_Format, "__ghdl_to_string_f64_format");

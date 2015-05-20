@@ -232,6 +232,7 @@ package Trans_Decls is
 
    --  For To_String (vhdl 2008).
    Ghdl_To_String_I32 : O_Dnode;
+   Ghdl_To_String_I64 : O_Dnode;
    Ghdl_To_String_F64 : O_Dnode;
    Ghdl_To_String_F64_Digits : O_Dnode;
    Ghdl_To_String_F64_Format : O_Dnode;

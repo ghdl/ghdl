@@ -100,6 +100,16 @@ package body Grt.Images is
       Return_String (Res, Str (First .. Str'Last));
    end Ghdl_Image_I32;
 
+   procedure Ghdl_Image_I64 (Res : Std_String_Ptr; Val : Ghdl_I64)
+   is
+      --  biggest number is: 18446744073709551615 (20 digits)
+      Str : String (1 .. 21);
+      First : Natural;
+   begin
+      To_String (Str, First, Val);
+      Return_String (Res, Str (First .. Str'Last));
+   end Ghdl_Image_I64;
+
    procedure Ghdl_Image_P64
      (Res : Std_String_Ptr; Val : Ghdl_I64; Rti : Ghdl_Rti_Access)
    is
@@ -159,6 +169,8 @@ package body Grt.Images is
 
    procedure Ghdl_To_String_I32 (Res : Std_String_Ptr; Val : Ghdl_I32)
      renames Ghdl_Image_I32;
+   procedure Ghdl_To_String_I64 (Res : Std_String_Ptr; Val : Ghdl_I64)
+     renames Ghdl_Image_I64;
    procedure Ghdl_To_String_F64 (Res : Std_String_Ptr; Val : Ghdl_F64)
      renames Ghdl_Image_F64;
 

@@ -535,6 +535,8 @@ package body Ghdlrun is
 
       Def (Trans_Decls.Ghdl_To_String_I32,
            Grt.Images.Ghdl_To_String_I32'Address);
+      Def (Trans_Decls.Ghdl_To_String_I64,
+           Grt.Images.Ghdl_To_String_I64'Address);
       Def (Trans_Decls.Ghdl_To_String_F64,
            Grt.Images.Ghdl_To_String_F64'Address);
       Def (Trans_Decls.Ghdl_To_String_F64_Digits,
