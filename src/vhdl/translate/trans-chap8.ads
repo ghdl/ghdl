@@ -36,5 +36,7 @@ package Trans.Chap8 is
                                   Itype    : Iir);
 
    procedure Translate_Report (Stmt : Iir; Subprg : O_Dnode; Level : Iir);
-end Trans.Chap8;
 
+   function Translate_Subprogram_Call (Imp : Iir; Assoc_Chain : Iir; Obj : Iir)
+                                      return O_Enode;
+end Trans.Chap8;

@@ -1666,18 +1666,21 @@ package body Trans.Chap8 is
       end if;
    end Do_Conversion;
 
-   procedure Translate_Procedure_Call (Stmt : Iir_Procedure_Call)
+   function Translate_Subprogram_Call (Imp : Iir; Assoc_Chain : Iir; Obj : Iir)
+                                      return O_Enode
    is
+      Is_Procedure : constant Boolean :=
+        Get_Kind (Imp) = Iir_Kind_Procedure_Declaration;
+      Is_Function : constant Boolean := not Is_Procedure;
       type Mnode_Array is array (Natural range <>) of Mnode;
       type O_Enode_Array is array (Natural range <>) of O_Enode;
-      Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Stmt);
       Nbr_Assoc : constant Natural :=
         Iir_Chains.Get_Chain_Length (Assoc_Chain);
       Params : Mnode_Array (0 .. Nbr_Assoc - 1);
       E_Params : O_Enode_Array (0 .. Nbr_Assoc - 1);
-      Imp : constant Iir := Get_Implementation (Stmt);
       Info : constant Subprg_Info_Acc := Get_Info (Imp);
-      Res : O_Dnode;
+      Copy_Out : O_Dnode;
+      Res : Mnode;
       El : Iir;
       Pos : Natural;
       Constr : O_Assoc_List;
@@ -1699,14 +1702,32 @@ package body Trans.Chap8 is
       Out_Expr : Iir;
       Formal_Object_Kind : Object_Kind_Type;
       Bounds : Mnode;
-      Obj : Iir;
    begin
+      --  For functions returning an unconstrained object: save the mark.
+      if Is_Function and then Info.Use_Stack2 then
+         Create_Temp_Stack2_Mark;
+      end if;
+
+      if Is_Function and then Info.Res_Interface /= O_Dnode_Null then
+         --  Composite result.
+         --  If we need to allocate, do it before starting the call!
+         declare
+            Res_Type : constant Iir := Get_Return_Type (Imp);
+            Res_Info : constant Type_Info_Acc := Get_Info (Res_Type);
+         begin
+            Res := Create_Temp (Res_Info);
+            if Res_Info.Type_Mode /= Type_Mode_Fat_Array then
+               Chap4.Allocate_Complex_Object (Res_Type, Alloc_Stack, Res);
+            end if;
+         end;
+      end if;
+
       --  Create an in-out result record for in-out arguments passed by
       --  value.
-      if Info.Res_Record_Type /= O_Tnode_Null then
-         Res := Create_Temp (Info.Res_Record_Type);
+      if Is_Procedure and then Info.Res_Record_Type /= O_Tnode_Null then
+         Copy_Out := Create_Temp (Info.Res_Record_Type);
       else
-         Res := O_Dnode_Null;
+         Copy_Out := O_Dnode_Null;
       end if;
 
       --  Evaluate in-out parameters and parameters passed by ref, since
@@ -1780,7 +1801,7 @@ package body Trans.Chap8 is
             then
                --  Arguments may be assigned if there is an in conversion.
                Ptr := New_Selected_Element
-                 (New_Obj (Res), Formal_Info.Interface_Field);
+                 (New_Obj (Copy_Out), Formal_Info.Interface_Field);
                Param := Lv2M (Ptr, Ftype_Info, Mode_Value);
                if In_Conv /= Null_Iir then
                   In_Expr := In_Conv;
@@ -1799,8 +1820,8 @@ package body Trans.Chap8 is
                when Iir_Kind_Interface_Constant_Declaration
                   | Iir_Kind_Interface_File_Declaration =>
                   --  No conversion here.
-                  E_Params (Pos) := Chap7.Translate_Expression
-                    (Act, Formal_Type);
+                  E_Params (Pos) :=
+                    Chap7.Translate_Expression (Act, Formal_Type);
                when Iir_Kind_Interface_Variable_Declaration
                   | Iir_Kind_Interface_Signal_Declaration =>
                   Param := Chap6.Translate_Name (Act);
@@ -1814,7 +1835,7 @@ package body Trans.Chap8 is
                      --  Implicit array conversion or subtype check.
                      E_Params (Pos) := Chap7.Translate_Implicit_Conv
                        (E_Params (Pos), Actual_Type, Formal_Type,
-                        Get_Object_Kind (Param), Stmt);
+                        Get_Object_Kind (Param), Act);
                   end if;
                when others =>
                   Error_Kind ("translate_procedure_call(2)", Formal);
@@ -1865,12 +1886,17 @@ package body Trans.Chap8 is
 
       --  Second stage:  really perform the call.
       Start_Association (Constr, Info.Ortho_Func);
-      if Res /= O_Dnode_Null then
-         New_Association (Constr,
-                          New_Address (New_Obj (Res), Info.Res_Record_Ptr));
+
+      if Is_Function and then Info.Res_Interface /= O_Dnode_Null then
+         --  Composite result.
+         New_Association (Constr, M2E (Res));
       end if;
 
-      Obj := Get_Method_Object (Stmt);
+      if Copy_Out /= O_Dnode_Null then
+         New_Association
+           (Constr, New_Address (New_Obj (Copy_Out), Info.Res_Record_Ptr));
+      end if;
+
       if Obj /= Null_Iir then
          New_Association (Constr, M2E (Chap6.Translate_Name (Obj)));
       else
@@ -1922,6 +1948,8 @@ package body Trans.Chap8 is
                         if In_Conv = Null_Iir then
                            Val := Chap7.Translate_Expression
                              (Act, Formal_Type);
+                           Val := Chap3.Maybe_Insert_Scalar_Check
+                             (Val, Act, Formal_Type);
                         else
                            Actual_Type := Get_Type (Act);
                            Val := Do_Conversion
@@ -1944,7 +1972,17 @@ package body Trans.Chap8 is
          Pos := Pos + 1;
       end loop;
 
-      New_Procedure_Call (Constr);
+      if Is_Procedure then
+         New_Procedure_Call (Constr);
+      else
+         if Info.Res_Interface /= O_Dnode_Null then
+            --  Composite result.
+            New_Procedure_Call (Constr);
+            return M2E (Res);
+         else
+            return New_Function_Call (Constr);
+         end if;
+      end if;
 
       --  Copy-out non-composite parameters.
       El := Assoc_Chain;
@@ -1968,7 +2006,7 @@ package body Trans.Chap8 is
                   Out_Expr := Out_Conv;
                end if;
                Ptr := New_Selected_Element
-                 (New_Obj (Res), Formal_Info.Interface_Field);
+                 (New_Obj (Copy_Out), Formal_Info.Interface_Field);
                Param := Lv2M (Ptr, Ftype_Info, Mode_Value);
                Chap7.Translate_Assign (Params (Pos),
                                        Do_Conversion (Out_Conv, Formal,
@@ -1997,6 +2035,19 @@ package body Trans.Chap8 is
          El := Get_Chain (El);
          Pos := Pos + 1;
       end loop;
+
+      return O_Enode_Null;
+   end Translate_Subprogram_Call;
+
+   procedure Translate_Procedure_Call (Stmt : Iir_Procedure_Call)
+   is
+      Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Stmt);
+      Imp : constant Iir := Get_Implementation (Stmt);
+      Obj : constant Iir := Get_Method_Object (Stmt);
+      Res : O_Enode;
+   begin
+      Res := Translate_Subprogram_Call (Imp, Assoc_Chain, Obj);
+      pragma Assert (Res = O_Enode_Null);
    end Translate_Procedure_Call;
 
    procedure Translate_Wait_Statement (Stmt : Iir)

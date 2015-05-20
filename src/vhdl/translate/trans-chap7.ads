@@ -42,13 +42,6 @@ package Trans.Chap7 is
    function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
                                      return O_Enode;
 
-   --  Translate call to function IMP.
-   --  ASSOC_CHAIN is the chain of a associations for this call.
-   --  OBJ, if not NULL_IIR is the protected object.
-   function Translate_Function_Call
-     (Imp : Iir; Assoc_Chain : Iir; Obj : Iir)
-         return O_Enode;
-
    --  Translate range and return an lvalue containing the range.
    --  The node returned can be used only one time.
    function Translate_Range (Arange : Iir; Range_Type : Iir) return O_Lnode;

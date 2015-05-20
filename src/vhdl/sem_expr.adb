@@ -903,7 +903,9 @@ package body Sem_Expr is
             begin
                Assoc := Get_Parameter_Association_Chain (Expr);
                while Assoc /= Null_Iir loop
-                  if Get_Kind (Assoc) /= Iir_Kind_Association_Element_Open then
+                  if Get_Kind (Assoc)
+                    = Iir_Kind_Association_Element_By_Expression
+                  then
                      Staticness := Min
                        (Get_Expr_Staticness (Get_Actual (Assoc)),
                         Staticness);

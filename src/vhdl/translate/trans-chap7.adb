@@ -681,97 +681,6 @@ package body Trans.Chap7 is
       end case;
    end Translate_Range_Length;
 
-   function Translate_Association (Assoc : Iir) return O_Enode
-   is
-      Formal      : constant Iir := Get_Formal (Assoc);
-      Formal_Base : constant Iir := Get_Association_Interface (Assoc);
-      Actual      : Iir;
-   begin
-      case Get_Kind (Assoc) is
-         when Iir_Kind_Association_Element_By_Expression =>
-            Actual := Get_Actual (Assoc);
-         when Iir_Kind_Association_Element_Open =>
-            Actual := Get_Default_Value (Formal);
-         when others =>
-            Error_Kind ("translate_association", Assoc);
-      end case;
-
-      case Get_Kind (Formal_Base) is
-         when Iir_Kind_Interface_Constant_Declaration
-            | Iir_Kind_Interface_File_Declaration =>
-            return Chap3.Maybe_Insert_Scalar_Check
-              (Translate_Expression (Actual, Get_Type (Formal)),
-               Actual, Get_Type (Formal));
-         when Iir_Kind_Interface_Signal_Declaration =>
-            return Translate_Implicit_Conv
-              (M2E (Chap6.Translate_Name (Actual)),
-               Get_Type (Actual),
-               Get_Type (Formal_Base),
-               Mode_Signal, Assoc);
-         when others =>
-            Error_Kind ("translate_association", Formal);
-      end case;
-   end Translate_Association;
-
-   function Translate_Function_Call (Imp : Iir; Assoc_Chain : Iir; Obj : Iir)
-                                    return O_Enode
-   is
-      Info   : constant Subprg_Info_Acc := Get_Info (Imp);
-      Constr : O_Assoc_List;
-      Assoc  : Iir;
-      Res    : Mnode;
-   begin
-      if Info.Use_Stack2 then
-         Create_Temp_Stack2_Mark;
-      end if;
-
-      if Info.Res_Interface /= O_Dnode_Null then
-         --  Composite result.
-         --  If we need to allocate, do it before starting the call!
-         declare
-            Res_Type : Iir;
-            Res_Info : Type_Info_Acc;
-         begin
-            Res_Type := Get_Return_Type (Imp);
-            Res_Info := Get_Info (Res_Type);
-            Res := Create_Temp (Res_Info);
-            if Res_Info.Type_Mode /= Type_Mode_Fat_Array then
-               Chap4.Allocate_Complex_Object (Res_Type, Alloc_Stack, Res);
-            end if;
-         end;
-      end if;
-
-      Start_Association (Constr, Info.Ortho_Func);
-
-      if Info.Res_Interface /= O_Dnode_Null then
-         --  Composite result.
-         New_Association (Constr, M2E (Res));
-      end if;
-
-      --  If the subprogram is a method, pass the protected object.
-      if Obj /= Null_Iir then
-         New_Association (Constr, M2E (Chap6.Translate_Name (Obj)));
-      else
-         Subprgs.Add_Subprg_Instance_Assoc (Constr, Info.Subprg_Instance);
-      end if;
-
-      Assoc := Assoc_Chain;
-      while Assoc /= Null_Iir loop
-         --  FIXME: evaluate expression before, because we
-         --  may allocate objects.
-         New_Association (Constr, Translate_Association (Assoc));
-         Assoc := Get_Chain (Assoc);
-      end loop;
-
-      if Info.Res_Interface /= O_Dnode_Null then
-         --  Composite result.
-         New_Procedure_Call (Constr);
-         return M2E (Res);
-      else
-         return New_Function_Call (Constr);
-      end if;
-   end Translate_Function_Call;
-
    function Translate_Operator_Function_Call
      (Imp : Iir; Left : Iir;  Right : Iir; Res_Type : Iir) return O_Enode
    is
@@ -801,7 +710,7 @@ package body Trans.Chap7 is
          Set_Chain (El_L, El_R);
       end if;
 
-      Res := Translate_Function_Call (Imp, El_L, Null_Iir);
+      Res := Chap8.Translate_Subprogram_Call (Imp, El_L, Null_Iir);
 
       Free_Iir (El_L);
       if Right /= Null_Iir then
@@ -3969,7 +3878,7 @@ package body Trans.Chap7 is
                else
                   Canon.Canon_Subprogram_Call (Expr);
                   Assoc_Chain := Get_Parameter_Association_Chain (Expr);
-                  Res := Translate_Function_Call
+                  Res := Chap8.Translate_Subprogram_Call
                     (Imp, Assoc_Chain, Get_Method_Object (Expr));
                   Expr_Type := Get_Return_Type (Imp);
                end if;
