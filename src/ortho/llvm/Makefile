@@ -1,6 +1,6 @@
 ortho_srcdir=..
 GNAT_FLAGS=-gnaty3befhkmr -gnata -gnatf -gnatwael -gnat05
-CXX=clang++ --std=c++11
+CXX=clang++
 LLVM_CONFIG=llvm-config
 SED=sed
 BE=llvm
@@ -10,7 +10,8 @@ all: $(ortho_exec)
 $(ortho_exec): $(ortho_srcdir)/llvm/ortho_llvm.ads force llvm-cbindings.o
 	gnatmake -o $@ -aI$(ortho_srcdir)/llvm -aI$(ortho_srcdir) \
 	$(GNAT_FLAGS) ortho_code_main -bargs -E \
-	-largs llvm-cbindings.o `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++ #-static
+	-largs llvm-cbindings.o --LINK=$(CXX) \
+	`$(LLVM_CONFIG) --ldflags --libs --system-libs`
 
 llvm-cbindings.o: $(ortho_srcdir)/llvm/llvm-cbindings.cpp
 	$(CXX) -c  -I`$(LLVM_CONFIG) --includedir --cflags` -o $@ $<

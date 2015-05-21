@@ -184,7 +184,10 @@ all.llvm_jit: ghdl_llvm_jit
 
 ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_llvm_jit: $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
-	$(GNATMAKE) -o $@ $(GHDL_LLVM_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
+	$(GNATMAKE) -o $@ $(GHDL_LLVM_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb \
+	 $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) \
+	 $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) --LINK=$(CXX) \
+	 `$(LLVM_CONFIG) --ldflags --libs --system-libs`
 
 llvm-cbindings.o: $(srcdir)/src/ortho/llvm/llvm-cbindings.cpp
 	$(CXX) -c `$(LLVM_CONFIG) --includedir --cxxflags` \
