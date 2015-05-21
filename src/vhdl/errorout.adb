@@ -118,6 +118,12 @@ package body Errorout is
       end if;
    end Disp_Location;
 
+   procedure Disp_Program_Name is
+   begin
+      Put (Ada.Command_Line.Command_Name);
+      Put (':');
+   end Disp_Program_Name;
+
    procedure Report_Msg (Level : Report_Level;
                          Origin : Report_Origin;
                          Loc : Location_Type;
@@ -126,7 +132,13 @@ package body Errorout is
       case Origin is
          when Option
            | Library =>
-            Put (Ada.Command_Line.Command_Name);
+            Disp_Program_Name;
+         when Elaboration =>
+            if Loc = No_Location then
+               Disp_Program_Name;
+            else
+               Disp_Location (Loc);
+            end if;
          when Scan =>
             if Loc = No_Location then
                Disp_Current_Location;
@@ -139,8 +151,7 @@ package body Errorout is
             else
                Disp_Location (Loc);
             end if;
-         when Semantic
-           | Elaboration =>
+         when Semantic =>
             Disp_Location (Loc);
       end case;
 
