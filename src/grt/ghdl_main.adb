@@ -32,6 +32,7 @@ with Grt.Types; use Grt.Types;
 pragma Warnings (Off);
 with Grt.Rtis_Binding;
 with Grt.Std_Logic_1164;
+with Grt.Errors;
 pragma Warnings (On);
 
 
@@ -57,5 +58,5 @@ begin
 
    Grt_Init;
    Grt.Main.Run;
-   return 0;
+   return Grt.Errors.Exit_Status;
 end Ghdl_Main;

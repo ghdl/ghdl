@@ -58,6 +58,7 @@ with Grt.Images;
 with Grt.Values;
 with Grt.Names;
 with Grt.Std_Logic_1164;
+with Grt.Errors;
 
 with Ghdlcomp;
 with Foreigns;
@@ -605,7 +606,9 @@ package body Ghdlrun is
       end if;
 
       Grt.Main.Run;
-      --V := Ghdl_Main (1, Gnat_Argv);
+
+      Ada.Command_Line.Set_Exit_Status
+        (Ada.Command_Line.Exit_Status (Grt.Errors.Exit_Status));
    end Run;
 
 

@@ -38,7 +38,9 @@ package Grt.Processes is
    procedure Init;
 
    --  Do the VHDL simulation.
-   --  Return 0 in case of success (end of time reached).
+   --  Return simulation status:
+   --  >= 0 in case of success (end of time reached).
+   --  < 0 in case of failure or stop request.
    function Simulation return Integer;
 
    --  Number of delta cycles.

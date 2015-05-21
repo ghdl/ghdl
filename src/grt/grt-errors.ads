@@ -67,6 +67,7 @@ package Grt.Errors is
    pragma No_Return (Fatal_Error);
    pragma Export (C, Fatal_Error, "__ghdl_fatal");
 
+   --  Stop or finish simulation (for VHPI or std.env).
    Exit_Status : Integer := 0;
    procedure Exit_Simulation;
 

@@ -48,6 +48,7 @@ package body Grt.Errors is
 
    procedure Exit_Simulation is
    begin
+      --  -2 is Grt.Errors.Run_Stop
       Maybe_Return_Via_Longjump (-2);
       Internal_Error ("exit_simulation");
    end Exit_Simulation;

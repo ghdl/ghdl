@@ -95,10 +95,9 @@ package body Ghdldrv is
    Linker_Args : Argument_Table_Pkg.Instance;
 
    --  Display the program spawned in Flag_Disp_Commands is TRUE.
-   --  Raise COMPILE_ERROR in case of failure.
-   procedure My_Spawn (Program_Name : String; Args : Argument_List)
-   is
-      Status : Integer;
+   --  Return the exit status.
+   function My_Spawn_Status (Program_Name : String; Args : Argument_List)
+                            return Integer is
    begin
       if Flag_Disp_Commands then
          Put (Program_Name);
@@ -108,7 +107,16 @@ package body Ghdldrv is
          end loop;
          New_Line;
       end if;
-      Status := Spawn (Program_Name, Args);
+      return Spawn (Program_Name, Args);
+   end My_Spawn_Status;
+
+   --  Display the program spawned in Flag_Disp_Commands is TRUE.
+   --  Raise COMPILE_ERROR in case of failure.
+   procedure My_Spawn (Program_Name : String; Args : Argument_List)
+   is
+      Status : Integer;
+   begin
+      Status := My_Spawn_Status (Program_Name, Args);
       if Status = 0 then
          return;
       elsif Status = 1 then
@@ -953,6 +961,19 @@ package body Ghdldrv is
       return "-r UNIT [ARCH] [OPTS]      Run UNIT";
    end Get_Short_Help;
 
+   procedure Run_Design (Exec : String_Access; Args : Argument_List)
+   is
+      Status : Integer;
+   begin
+      if Is_Absolute_Path (Exec.all) then
+         Status := My_Spawn_Status (Exec.all, Args);
+      else
+         Status := My_Spawn_Status
+           ('.' & Directory_Separator & Exec.all, Args);
+      end if;
+      Set_Exit_Status (Exit_Status (Status));
+   end Run_Design;
+
    procedure Perform_Action (Cmd : in out Command_Run; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -969,8 +990,7 @@ package body Ghdldrv is
          Error ("Please elaborate your design.");
          raise Exec_Error;
       end if;
-      My_Spawn ('.' & Directory_Separator & Base_Name.all,
-                Args (Opt_Arg .. Args'Last));
+      Run_Design (Base_Name, Args (Opt_Arg .. Args'Last));
    end Perform_Action;
 
    --  Command Elab_Run.
@@ -1012,12 +1032,7 @@ package body Ghdldrv is
       else
          Link (Add_Std => True, Disp_Only => False);
          Delete_File (Filelist_Name.all, Success);
-         if Is_Absolute_Path (Output_File.all) then
-            My_Spawn (Output_File.all, Args (Run_Arg .. Args'Last));
-         else
-            My_Spawn ('.' & Directory_Separator & Output_File.all,
-                      Args (Run_Arg .. Args'Last));
-         end if;
+         Run_Design (Output_File, Args (Run_Arg .. Args'Last));
       end if;
    end Perform_Action;
 

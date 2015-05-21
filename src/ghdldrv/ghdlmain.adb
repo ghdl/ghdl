@@ -321,6 +321,9 @@ package body Ghdlmain is
          First_Arg := Argument_Count + 1;
       end if;
 
+      --  Set before running the action, so that it can be changed.
+      Set_Exit_Status (Success);
+
       declare
          Args : Argument_List (1 .. Argument_Count - First_Arg + 1);
       begin
@@ -336,7 +339,6 @@ package body Ghdlmain is
       --   Name_Table.Disp_Stats;
       --   Iirs.Disp_Stats;
       --end if;
-      Set_Exit_Status (Success);
    exception
       when Option_Error
         | Compile_Error

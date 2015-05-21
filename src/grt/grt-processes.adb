@@ -707,6 +707,9 @@ package body Grt.Processes is
    Run_Finished : constant Integer := 3;
    --  Failure, simulation should stop.
    Run_Failure : constant Integer := -1;
+   --  Stop/finish request from user (via std.env).
+   Run_Stop : constant Integer := -2;
+   pragma Unreferenced (Run_Stop);
 
    Mt_Last : Natural;
    Mt_Table : Process_Acc_Array_Acc;
@@ -1015,7 +1018,7 @@ package body Grt.Processes is
 
       Status := Run_Through_Longjump (Initialization_Phase'Access);
       if Status /= Run_Resumed then
-         return -1;
+         return Status;
       end if;
 
       Nbr_Delta_Cycles := 0;
@@ -1074,11 +1077,7 @@ package body Grt.Processes is
 
       Grt.Hooks.Call_Finish_Hooks;
 
-      if Status = Run_Failure then
-         return -1;
-      else
-         return Exit_Status ;
-      end if;
+      return Status;
    end Simulation;
 
 end Grt.Processes;
