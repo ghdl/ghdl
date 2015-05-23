@@ -406,6 +406,13 @@ package body Iirs is
            | Iir_Kind_Operator_Symbol
            | Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Parenthesis_Name
+           | Iir_Kind_External_Constant_Name
+           | Iir_Kind_External_Signal_Name
+           | Iir_Kind_External_Variable_Name
+           | Iir_Kind_Package_Pathname
+           | Iir_Kind_Absolute_Pathname
+           | Iir_Kind_Relative_Pathname
+           | Iir_Kind_Pathname_Element
            | Iir_Kind_Base_Attribute
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
@@ -4194,6 +4201,54 @@ package body Iirs is
                      "no field Signature_Prefix");
       Set_Field1 (Sign, Prefix);
    end Set_Signature_Prefix;
+
+   function Get_External_Pathname (Name : Iir) return Iir is
+   begin
+      pragma Assert (Name /= Null_Iir);
+      pragma Assert (Has_External_Pathname (Get_Kind (Name)),
+                     "no field External_Pathname");
+      return Get_Field3 (Name);
+   end Get_External_Pathname;
+
+   procedure Set_External_Pathname (Name : Iir; Path : Iir) is
+   begin
+      pragma Assert (Name /= Null_Iir);
+      pragma Assert (Has_External_Pathname (Get_Kind (Name)),
+                     "no field External_Pathname");
+      Set_Field3 (Name, Path);
+   end Set_External_Pathname;
+
+   function Get_Pathname_Suffix (Path : Iir) return Iir is
+   begin
+      pragma Assert (Path /= Null_Iir);
+      pragma Assert (Has_Pathname_Suffix (Get_Kind (Path)),
+                     "no field Pathname_Suffix");
+      return Get_Field2 (Path);
+   end Get_Pathname_Suffix;
+
+   procedure Set_Pathname_Suffix (Path : Iir; Suffix : Iir) is
+   begin
+      pragma Assert (Path /= Null_Iir);
+      pragma Assert (Has_Pathname_Suffix (Get_Kind (Path)),
+                     "no field Pathname_Suffix");
+      Set_Field2 (Path, Suffix);
+   end Set_Pathname_Suffix;
+
+   function Get_Pathname_Expression (Path : Iir) return Iir is
+   begin
+      pragma Assert (Path /= Null_Iir);
+      pragma Assert (Has_Pathname_Expression (Get_Kind (Path)),
+                     "no field Pathname_Expression");
+      return Get_Field5 (Path);
+   end Get_Pathname_Expression;
+
+   procedure Set_Pathname_Expression (Path : Iir; Expr : Iir) is
+   begin
+      pragma Assert (Path /= Null_Iir);
+      pragma Assert (Has_Pathname_Expression (Get_Kind (Path)),
+                     "no field Pathname_Expression");
+      Set_Field5 (Path, Expr);
+   end Set_Pathname_Expression;
 
    function Get_Slice_Subtype (Slice : Iir) return Iir is
    begin

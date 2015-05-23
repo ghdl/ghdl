@@ -393,6 +393,8 @@ package body Sem_Expr is
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Enumeration_Literal =>
             return Expr;
+         when Iir_Kinds_External_Name =>
+            return Expr;
          when Iir_Kinds_Object_Declaration
            | Iir_Kind_Aggregate
            | Iir_Kind_Allocator_By_Expression
@@ -3826,6 +3828,8 @@ package body Sem_Expr is
                return;
             when Iir_Kinds_Quantity_Declaration =>
                return;
+            when Iir_Kinds_External_Name =>
+               return;
             when Iir_Kind_File_Declaration
               | Iir_Kind_Interface_File_Declaration =>
                --  LRM 4.3.2  Interface declarations
@@ -4003,6 +4007,10 @@ package body Sem_Expr is
                E := Name_To_Expression (Expr, A_Type);
                return E;
             end;
+
+         when Iir_Kinds_External_Name =>
+            Sem_External_Name (Expr);
+            return Expr;
 
          when Iir_Kinds_Monadic_Operator =>
             return Sem_Operator (Expr, A_Type, 1);

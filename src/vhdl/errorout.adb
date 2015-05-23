@@ -479,6 +479,22 @@ package body Errorout is
             return '''
               & Name_Table.Nam_Buffer (1 .. Name_Table.Nam_Length)
               & ''';
+         when Iir_Kind_External_Constant_Name =>
+            return "external constant name";
+         when Iir_Kind_External_Signal_Name =>
+            return "external signal name";
+         when Iir_Kind_External_Variable_Name =>
+            return "external variable name";
+
+         when Iir_Kind_Package_Pathname =>
+            return "package pathname";
+         when Iir_Kind_Absolute_Pathname =>
+            return "absolute pathname";
+         when Iir_Kind_Relative_Pathname =>
+            return "relative pathname";
+         when Iir_Kind_Pathname_Element =>
+            return "pathname element";
+
          when Iir_Kind_Entity_Aspect_Entity =>
             return "aspect " & Disp_Node (Get_Entity (Node))
               & '(' & Image_Identifier (Get_Architecture (Node)) & ')';

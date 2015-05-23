@@ -1310,7 +1310,7 @@ package body Scanner is
       << Again >> null;
 
       --  Skip commonly used separators.
-      while Source(Pos) = ' ' or Source(Pos) = HT loop
+      while Source (Pos) = ' ' or Source (Pos) = HT loop
          Pos := Pos + 1;
       end loop;
 
@@ -1561,25 +1561,33 @@ package body Scanner is
             end if;
             return;
          when '<' =>
-            if Source (Pos + 1) = '=' then
-               Current_Token := Tok_Less_Equal;
-               Pos := Pos + 2;
-            elsif Source (Pos + 1) = '>' then
-               Current_Token := Tok_Box;
-               Pos := Pos + 2;
-            else
-               Current_Token := Tok_Less;
-               Pos := Pos + 1;
-            end if;
+            case Source (Pos + 1) is
+               when '=' =>
+                  Current_Token := Tok_Less_Equal;
+                  Pos := Pos + 2;
+               when '>' =>
+                  Current_Token := Tok_Box;
+                  Pos := Pos + 2;
+               when '<' =>
+                  Current_Token := Tok_Double_Less;
+                  Pos := Pos + 2;
+               when others =>
+                  Current_Token := Tok_Less;
+                  Pos := Pos + 1;
+            end case;
             return;
          when '>' =>
-            if Source (Pos + 1) = '=' then
-               Current_Token := Tok_Greater_Equal;
-               Pos := Pos + 2;
-            else
-               Current_Token := Tok_Greater;
-               Pos := Pos + 1;
-            end if;
+            case Source (Pos + 1) is
+               when '=' =>
+                  Current_Token := Tok_Greater_Equal;
+                  Pos := Pos + 2;
+               when '>' =>
+                  Current_Token := Tok_Double_Greater;
+                  Pos := Pos + 2;
+               when others =>
+                  Current_Token := Tok_Greater;
+                  Pos := Pos + 1;
+            end case;
             return;
          when '=' =>
             if Source (Pos + 1) = '=' then
@@ -1750,9 +1758,13 @@ package body Scanner is
             Scan_Extended_Identifier;
             return;
          when '^' =>
-            Error_Msg_Scan ("'^' is not a VHDL operator, use 'xor'");
+            if Vhdl_Std >= Vhdl_08 then
+               Current_Token := Tok_Caret;
+            else
+               Current_Token := Tok_Xor;
+               Error_Msg_Scan ("'^' is not a VHDL operator, use 'xor'");
+            end if;
             Pos := Pos + 1;
-            Current_Token := Tok_Xor;
             return;
          when '~' =>
             Error_Msg_Scan ("'~' is not a VHDL operator, use 'not'");
@@ -1807,7 +1819,7 @@ package body Scanner is
             Pos := Pos + 1;
             goto Again;
          when '@' =>
-            if Flag_Psl then
+            if Vhdl_Std >= Vhdl_08 or Flag_Psl then
                Current_Token := Tok_Arobase;
                Pos := Pos + 1;
                return;

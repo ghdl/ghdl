@@ -113,6 +113,13 @@ package body Tokens is
          when Tok_Condition =>
             return "??";
 
+         when Tok_Double_Less =>
+            return "<<";
+         when Tok_Double_Greater =>
+            return ">>";
+         when Tok_Caret =>
+            return "^";
+
          -- multiplying operator
          when Tok_Star =>
             return "*";

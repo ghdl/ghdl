@@ -289,6 +289,9 @@ package Nodes_Meta is
       Field_Name_Staticness,
       Field_Prefix,
       Field_Signature_Prefix,
+      Field_External_Pathname,
+      Field_Pathname_Suffix,
+      Field_Pathname_Expression,
       Field_Slice_Subtype,
       Field_Suffix,
       Field_Index_Subtype,
@@ -770,6 +773,9 @@ package Nodes_Meta is
    function Has_Name_Staticness (K : Iir_Kind) return Boolean;
    function Has_Prefix (K : Iir_Kind) return Boolean;
    function Has_Signature_Prefix (K : Iir_Kind) return Boolean;
+   function Has_External_Pathname (K : Iir_Kind) return Boolean;
+   function Has_Pathname_Suffix (K : Iir_Kind) return Boolean;
+   function Has_Pathname_Expression (K : Iir_Kind) return Boolean;
    function Has_Slice_Subtype (K : Iir_Kind) return Boolean;
    function Has_Suffix (K : Iir_Kind) return Boolean;
    function Has_Index_Subtype (K : Iir_Kind) return Boolean;

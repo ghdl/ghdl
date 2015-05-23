@@ -3253,6 +3253,59 @@ package Iirs is
    --
    --   Get/Set_Name_Staticness (State2)
 
+   -- Iir_Kind_External_Constant_Name (Short)
+   -- Iir_Kind_External_Signal_Name (Short)
+   -- Iir_Kind_External_Variable_Name (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_External_Pathname (Field3)
+   --
+   --   Get/Set_Subtype_Indication (Field5)
+   --
+   --  Only for Iir_Kind_External_Variable_Name:
+   --   Get/Set_Shared_Flag (Flag2)
+   --
+   --   Get/Set_Is_Ref (Flag7)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
+   -- Iir_Kind_Package_Pathname (Short)
+   --  This node represents only the library_logical_name. Package and object
+   --  simple_names are represented by Selected_Name.
+   --
+   --   Get/Set_Pathname_Suffix (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Named_Entity (Field4)
+
+   -- Iir_Kind_Absolute_Pathname (Short)
+   --  Represents only the '.'.
+   --
+   --   Get/Set_Pathname_Suffix (Field2)
+
+   -- Iir_Kind_Relative_Pathname (Short)
+   --  Represents only one '^.'
+   --
+   --   Get/Set_Pathname_Suffix (Field2)
+
+   -- Iir_Kind_Pathname_Element (Short)
+   --
+   --   Get/Set_Pathname_Suffix (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Named_Entity (Field4)
+   --
+   --   Get/Set_Pathname_Expression (Field5)
+
    -----------------
    --  Attributes --
    -----------------
@@ -3677,6 +3730,15 @@ package Iirs is
 
       Iir_Kind_Selected_By_All_Name,
       Iir_Kind_Parenthesis_Name,
+
+      Iir_Kind_External_Constant_Name,
+      Iir_Kind_External_Signal_Name,
+      Iir_Kind_External_Variable_Name,
+
+      Iir_Kind_Package_Pathname,
+      Iir_Kind_Absolute_Pathname,
+      Iir_Kind_Relative_Pathname,
+      Iir_Kind_Pathname_Element,
 
    -- Attributes
       Iir_Kind_Base_Attribute,
@@ -4415,6 +4477,11 @@ package Iirs is
      Iir_Kind_Dereference ..
      Iir_Kind_Implicit_Dereference;
 
+   subtype Iir_Kinds_External_Name is Iir_Kind range
+     Iir_Kind_External_Constant_Name ..
+   --Iir_Kind_External_Signal_Name
+     Iir_Kind_External_Variable_Name;
+
    --  Any attribute that is an expression.
    subtype Iir_Kinds_Expression_Attribute is Iir_Kind range
      Iir_Kind_Left_Type_Attribute ..
@@ -4551,50 +4618,6 @@ package Iirs is
      Iir_Kind_Attribute_Specification ..
    --Iir_Kind_Disconnection_Specification
      Iir_Kind_Configuration_Specification;
-
-   subtype Iir_Kinds_Declaration is Iir_Kind range
-     Iir_Kind_Type_Declaration ..
-   --Iir_Kind_Anonymous_Type_Declaration
-   --Iir_Kind_Subtype_Declaration
-   --Iir_Kind_Nature_Declaration
-   --Iir_Kind_Subnature_Declaration
-   --Iir_Kind_Package_Declaration
-   --Iir_Kind_Package_Instantiation_Declaration
-   --Iir_Kind_Package_Body
-   --Iir_Kind_Configuration_Declaration
-   --Iir_Kind_Entity_Declaration
-   --Iir_Kind_Architecture_Body
-   --Iir_Kind_Context_Declaration
-   --Iir_Kind_Package_Header
-   --Iir_Kind_Unit_Declaration
-   --Iir_Kind_Library_Declaration
-   --Iir_Kind_Component_Declaration
-   --Iir_Kind_Attribute_Declaration
-   --Iir_Kind_Group_Template_Declaration
-   --Iir_Kind_Group_Declaration
-   --Iir_Kind_Element_Declaration
-   --Iir_Kind_Non_Object_Alias_Declaration
-   --Iir_Kind_Psl_Declaration
-   --Iir_Kind_Terminal_Declaration
-   --Iir_Kind_Free_Quantity_Declaration
-   --Iir_Kind_Across_Quantity_Declaration
-   --Iir_Kind_Through_Quantity_Declaration
-   --Iir_Kind_Enumeration_Literal
-   --Iir_Kind_Function_Declaration
-   --Iir_Kind_Procedure_Declaration
-   --Iir_Kind_Function_Body
-   --Iir_Kind_Procedure_Body
-   --Iir_Kind_Object_Alias_Declaration
-   --Iir_Kind_File_Declaration
-   --Iir_Kind_Guard_Signal_Declaration
-   --Iir_Kind_Signal_Declaration
-   --Iir_Kind_Variable_Declaration
-   --Iir_Kind_Constant_Declaration
-   --Iir_Kind_Iterator_Declaration
-   --Iir_Kind_Interface_Constant_Declaration
-   --Iir_Kind_Interface_Variable_Declaration
-   --Iir_Kind_Interface_Signal_Declaration
-     Iir_Kind_Interface_File_Declaration;
 
    -------------------------------------
    -- Types and subtypes declarations --
@@ -6172,6 +6195,19 @@ package Iirs is
    --  Field: Field1 Ref
    function Get_Signature_Prefix (Sign : Iir) return Iir;
    procedure Set_Signature_Prefix (Sign : Iir; Prefix : Iir);
+
+   --  External pathname for an external name.
+   --  Field: Field3
+   function Get_External_Pathname (Name : Iir) return Iir;
+   procedure Set_External_Pathname (Name : Iir; Path : Iir);
+
+   --  Field: Field2
+   function Get_Pathname_Suffix (Path : Iir) return Iir;
+   procedure Set_Pathname_Suffix (Path : Iir; Suffix : Iir);
+
+   --  Field: Field5
+   function Get_Pathname_Expression (Path : Iir) return Iir;
+   procedure Set_Pathname_Expression (Path : Iir; Expr : Iir);
 
    --  The subtype of a slice.  Contrary to the Type field, this is not a
    --  reference.

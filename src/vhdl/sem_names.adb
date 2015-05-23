@@ -2415,6 +2415,7 @@ package body Sem_Names is
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Selected_Element
            | Iir_Kind_Attribute_Value
+           | Iir_Kind_Simple_Name_Attribute
            | Iir_Kind_Function_Call =>
             Add_Result (Res, Sem_As_Indexed_Or_Slice_Name (Prefix, True));
 
@@ -3882,6 +3883,24 @@ package body Sem_Names is
             Error_Kind ("sem_denoting_name", Res);
       end case;
    end Sem_Denoting_Name;
+
+   procedure Sem_External_Name (Name : Iir)
+   is
+      Atype : Iir;
+   begin
+      pragma Assert (Get_Type (Name) = Null_Iir);
+
+      Atype := Get_Subtype_Indication (Name);
+
+      Atype := Sem_Types.Sem_Subtype_Indication (Atype);
+      Set_Subtype_Indication (Name, Atype);
+      Atype := Get_Type_Of_Subtype_Indication (Atype);
+      if Atype = Null_Iir then
+         Atype := Create_Error_Type (Null_Iir);
+      end if;
+
+      Set_Type (Name, Atype);
+   end Sem_External_Name;
 
    function Sem_Terminal_Name (Name : Iir) return Iir
    is

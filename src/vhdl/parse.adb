@@ -882,6 +882,221 @@ package body Parse is
       end loop;
    end Parse_Name_Suffix;
 
+   --  Precond:  next token
+   --  Postcond: next token
+   --
+   --  LRM08 8.7 External names
+   --
+   --  external_pathname ::=
+   --      package_pathname
+   --    | absolute_pathname
+   --    | relative_pathname
+   --
+   --  package_pathname ::=
+   --    @ library_logical_name . package_simple_name .
+   --      { package_simple_name . } object_simple_name
+   --
+   --  absolute_pathname ::=
+   --    . partial_pathname
+   --
+   --  relative_pathname ::=
+   --    { ^ . } partial_pathname
+   --
+   --  partial_pathname ::= { pathname_element . } object_simple_name
+   --
+   --  pathname_element ::=
+   --      entity_simple_name
+   --    | component_instantiation_label
+   --    | block_label
+   --    | generate_statement_label [ ( static_expression ) ]
+   --    | package_simple_name
+   function Parse_External_Pathname return Iir
+   is
+      Res : Iir;
+      Last : Iir;
+      El : Iir;
+   begin
+      case Current_Token is
+         when Tok_Arobase =>
+            Res := Create_Iir (Iir_Kind_Package_Pathname);
+            Set_Location (Res);
+            Last := Res;
+
+            --  Skip '@'
+            Scan;
+
+            if Current_Token /= Tok_Identifier then
+               Error_Msg_Parse ("library name expected after '@'");
+            else
+               Set_Identifier (Res, Current_Identifier);
+
+               --  Skip ident
+               Scan;
+            end if;
+
+            if Current_Token /= Tok_Dot then
+               Error_Msg_Parse ("'.' expected after library name");
+            else
+               --  Skip '.'
+               Scan;
+            end if;
+
+         when Tok_Dot =>
+            Res := Create_Iir (Iir_Kind_Absolute_Pathname);
+            Set_Location (Res);
+            Last := Res;
+
+            --  Skip '.'
+            Scan;
+
+         when Tok_Caret =>
+            Last := Null_Iir;
+            loop
+               El := Create_Iir (Iir_Kind_Relative_Pathname);
+               Set_Location (El);
+
+               --  Skip '^'
+               Scan;
+
+               if Current_Token /= Tok_Dot then
+                  Error_Msg_Parse ("'.' expected after '^'");
+               else
+                  --  Skip '.'
+                  Scan;
+               end if;
+
+               if Last = Null_Iir then
+                  Res := El;
+               else
+                  Set_Pathname_Suffix (Last, El);
+               end if;
+               Last := El;
+
+               exit when Current_Token /= Tok_Caret;
+            end loop;
+
+         when Tok_Identifier =>
+            Last := Null_Iir;
+
+         when others =>
+            Last := Null_Iir;
+            --  Error is handled just below.
+      end case;
+
+      --  Parse pathname elements.
+      loop
+         if Current_Token /= Tok_Identifier then
+            Error_Msg_Parse ("pathname element expected");
+            --  FIXME: resync.
+            return Res;
+         end if;
+
+         El := Create_Iir (Iir_Kind_Pathname_Element);
+         Set_Location (El);
+         Set_Identifier (El, Current_Identifier);
+         if Last = Null_Iir then
+            Res := El;
+         else
+            Set_Pathname_Suffix (Last, El);
+         end if;
+         Last := El;
+
+         --  Skip identifier
+         Scan;
+
+         exit when Current_Token /= Tok_Dot;
+
+         --  Skip '.'
+         Scan;
+      end loop;
+
+      return Res;
+   end Parse_External_Pathname;
+
+   --  Precond:  '<<'
+   --  Postcond: next token
+   --
+   --  LRM08 8.7 External names
+   --  external_name ::=
+   --      external_constant_name
+   --    | external_signal_name
+   --    | external_variable_name
+   --
+   --  external_constant_name ::=
+   --    << CONSTANT external_pathname : subtype_indication >>
+   --
+   --  external_signal_name ::=
+   --   << SIGNAL external_pathname : subtype_indication >>
+   --
+   --  external_variable_name ::=
+   --   << VARIABLE external_pathname : subtype_indication >>
+   function Parse_External_Name return Iir
+   is
+      Loc : Location_Type;
+      Res : Iir;
+      Kind : Iir_Kind;
+   begin
+      Loc := Get_Token_Location;
+
+      --  Skip '<<'
+      Scan;
+
+      case Current_Token is
+         when Tok_Constant =>
+            Kind := Iir_Kind_External_Constant_Name;
+            --  Skip 'constant'
+            Scan;
+         when Tok_Signal =>
+            Kind := Iir_Kind_External_Signal_Name;
+            --  Skip 'signal'
+            Scan;
+         when Tok_Variable =>
+            Kind := Iir_Kind_External_Variable_Name;
+            --  Skip 'variable'
+            Scan;
+         when others =>
+            Error_Msg_Parse
+              ("constant, signal or variable expected after <<");
+            Kind := Iir_Kind_External_Signal_Name;
+      end case;
+
+      Res := Create_Iir (Kind);
+      Set_Location (Res, Loc);
+
+      Set_External_Pathname (Res, Parse_External_Pathname);
+
+      if Current_Token /= Tok_Colon then
+         Error_Msg_Parse ("':' expected after external pathname");
+      else
+         --  Skip ':'
+         Scan;
+      end if;
+
+      Set_Subtype_Indication (Res, Parse_Subtype_Indication);
+
+      if Current_Token /= Tok_Double_Greater then
+         Error_Msg_Parse ("'>>' expected at end of external name");
+      else
+         --  Skip '>>'
+         Scan;
+      end if;
+
+      return Res;
+   end Parse_External_Name;
+
+   --  Precond: next token (identifier, string or '<<')
+   --  Postcond: next token
+   --
+   --  LRM08 8. Names
+   --  name ::=
+   --     simple_name
+   --   | operator_symbol
+   --   | character_literal    --  FIXME: not handled.
+   --   | selected_name
+   --   | indexed_name
+   --   | slice_name
+   --   | attribute_name
+   --   | external_name
    function Parse_Name (Allow_Indexes: Boolean := True) return Iir
    is
       Res: Iir;
@@ -891,19 +1106,28 @@ package body Parse is
             Res := Create_Iir (Iir_Kind_Simple_Name);
             Set_Identifier (Res, Current_Identifier);
             Set_Location (Res);
+
+            --  Skip identifier
+            Scan;
+
          when Tok_String =>
             --  For operator symbol, such as: "+" (A, B).
             Res := Create_Iir (Iir_Kind_String_Literal8);
             Set_String8_Id (Res, Current_String_Id);
             Set_String_Length (Res, Current_String_Length);
             Set_Location (Res);
+
+            --  Skip string
+            Scan;
+         when Tok_Double_Less =>
+            if Vhdl_Std < Vhdl_08 then
+               Error_Msg_Parse ("external name not allowed before vhdl 08");
+            end if;
+            Res := Parse_External_Name;
          when others =>
             Error_Msg_Parse ("identifier expected here");
             raise Parse_Error;
       end case;
-
-      --  Skip identifier or string.
-      Scan;
 
       return Parse_Name_Suffix (Res, Allow_Indexes);
    end Parse_Name;
@@ -4192,7 +4416,8 @@ package body Parse is
             Set_Fp_Value (Res, Fp);
             return Res;
 
-         when Tok_Identifier =>
+         when Tok_Identifier
+           | Tok_Double_Less =>
             return Parse_Name (Allow_Indexes => True);
          when Tok_Character =>
             Res := Current_Text;

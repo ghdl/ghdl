@@ -79,7 +79,11 @@ package Tokens is
    -- and adding_operator
        Tok_Ampersand,           -- &
 
+   --  VHDL 2008
        Tok_Condition,           -- ??
+       Tok_Double_Less,         -- <<
+       Tok_Double_Greater,      -- >>
+       Tok_Caret,               -- ^
 
    --  PSL
        Tok_And_And,             -- &&

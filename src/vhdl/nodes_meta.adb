@@ -249,6 +249,9 @@ package body Nodes_Meta is
       Field_Name_Staticness => Type_Iir_Staticness,
       Field_Prefix => Type_Iir,
       Field_Signature_Prefix => Type_Iir,
+      Field_External_Pathname => Type_Iir,
+      Field_Pathname_Suffix => Type_Iir,
+      Field_Pathname_Expression => Type_Iir,
       Field_Slice_Subtype => Type_Iir,
       Field_Suffix => Type_Iir,
       Field_Index_Subtype => Type_Iir,
@@ -782,6 +785,12 @@ package body Nodes_Meta is
             return "prefix";
          when Field_Signature_Prefix =>
             return "signature_prefix";
+         when Field_External_Pathname =>
+            return "external_pathname";
+         when Field_Pathname_Suffix =>
+            return "pathname_suffix";
+         when Field_Pathname_Expression =>
+            return "pathname_expression";
          when Field_Slice_Subtype =>
             return "slice_subtype";
          when Field_Suffix =>
@@ -1320,6 +1329,20 @@ package body Nodes_Meta is
             return "selected_by_all_name";
          when Iir_Kind_Parenthesis_Name =>
             return "parenthesis_name";
+         when Iir_Kind_External_Constant_Name =>
+            return "external_constant_name";
+         when Iir_Kind_External_Signal_Name =>
+            return "external_signal_name";
+         when Iir_Kind_External_Variable_Name =>
+            return "external_variable_name";
+         when Iir_Kind_Package_Pathname =>
+            return "package_pathname";
+         when Iir_Kind_Absolute_Pathname =>
+            return "absolute_pathname";
+         when Iir_Kind_Relative_Pathname =>
+            return "relative_pathname";
+         when Iir_Kind_Pathname_Element =>
+            return "pathname_element";
          when Iir_Kind_Base_Attribute =>
             return "base_attribute";
          when Iir_Kind_Left_Type_Attribute =>
@@ -1864,6 +1887,12 @@ package body Nodes_Meta is
             return Attr_None;
          when Field_Signature_Prefix =>
             return Attr_Ref;
+         when Field_External_Pathname =>
+            return Attr_None;
+         when Field_Pathname_Suffix =>
+            return Attr_None;
+         when Field_Pathname_Expression =>
+            return Attr_None;
          when Field_Slice_Subtype =>
             return Attr_None;
          when Field_Suffix =>
@@ -3620,6 +3649,50 @@ package body Nodes_Meta is
       Field_Association_Chain,
       Field_Type,
       Field_Named_Entity,
+      --  Iir_Kind_External_Constant_Name
+      Field_Shared_Flag,
+      Field_Is_Ref,
+      Field_Expr_Staticness,
+      Field_Name_Staticness,
+      Field_Chain,
+      Field_External_Pathname,
+      Field_Subtype_Indication,
+      Field_Parent,
+      Field_Type,
+      --  Iir_Kind_External_Signal_Name
+      Field_Shared_Flag,
+      Field_Is_Ref,
+      Field_Expr_Staticness,
+      Field_Name_Staticness,
+      Field_Chain,
+      Field_External_Pathname,
+      Field_Subtype_Indication,
+      Field_Parent,
+      Field_Type,
+      --  Iir_Kind_External_Variable_Name
+      Field_Shared_Flag,
+      Field_Is_Ref,
+      Field_Expr_Staticness,
+      Field_Name_Staticness,
+      Field_Chain,
+      Field_External_Pathname,
+      Field_Subtype_Indication,
+      Field_Parent,
+      Field_Type,
+      --  Iir_Kind_Package_Pathname
+      Field_Identifier,
+      Field_Pathname_Suffix,
+      Field_Named_Entity,
+      Field_Base_Name,
+      --  Iir_Kind_Absolute_Pathname
+      Field_Pathname_Suffix,
+      --  Iir_Kind_Relative_Pathname
+      Field_Pathname_Suffix,
+      --  Iir_Kind_Pathname_Element
+      Field_Identifier,
+      Field_Pathname_Suffix,
+      Field_Pathname_Expression,
+      Field_Named_Entity,
       --  Iir_Kind_Base_Attribute
       Field_Prefix,
       Field_Type,
@@ -4082,45 +4155,52 @@ package body Nodes_Meta is
       Iir_Kind_Operator_Symbol => 1412,
       Iir_Kind_Selected_By_All_Name => 1417,
       Iir_Kind_Parenthesis_Name => 1421,
-      Iir_Kind_Base_Attribute => 1423,
-      Iir_Kind_Left_Type_Attribute => 1428,
-      Iir_Kind_Right_Type_Attribute => 1433,
-      Iir_Kind_High_Type_Attribute => 1438,
-      Iir_Kind_Low_Type_Attribute => 1443,
-      Iir_Kind_Ascending_Type_Attribute => 1448,
-      Iir_Kind_Image_Attribute => 1454,
-      Iir_Kind_Value_Attribute => 1460,
-      Iir_Kind_Pos_Attribute => 1466,
-      Iir_Kind_Val_Attribute => 1472,
-      Iir_Kind_Succ_Attribute => 1478,
-      Iir_Kind_Pred_Attribute => 1484,
-      Iir_Kind_Leftof_Attribute => 1490,
-      Iir_Kind_Rightof_Attribute => 1496,
-      Iir_Kind_Delayed_Attribute => 1504,
-      Iir_Kind_Stable_Attribute => 1512,
-      Iir_Kind_Quiet_Attribute => 1520,
-      Iir_Kind_Transaction_Attribute => 1528,
-      Iir_Kind_Event_Attribute => 1532,
-      Iir_Kind_Active_Attribute => 1536,
-      Iir_Kind_Last_Event_Attribute => 1540,
-      Iir_Kind_Last_Active_Attribute => 1544,
-      Iir_Kind_Last_Value_Attribute => 1548,
-      Iir_Kind_Driving_Attribute => 1552,
-      Iir_Kind_Driving_Value_Attribute => 1556,
-      Iir_Kind_Behavior_Attribute => 1556,
-      Iir_Kind_Structure_Attribute => 1556,
-      Iir_Kind_Simple_Name_Attribute => 1563,
-      Iir_Kind_Instance_Name_Attribute => 1568,
-      Iir_Kind_Path_Name_Attribute => 1573,
-      Iir_Kind_Left_Array_Attribute => 1580,
-      Iir_Kind_Right_Array_Attribute => 1587,
-      Iir_Kind_High_Array_Attribute => 1594,
-      Iir_Kind_Low_Array_Attribute => 1601,
-      Iir_Kind_Length_Array_Attribute => 1608,
-      Iir_Kind_Ascending_Array_Attribute => 1615,
-      Iir_Kind_Range_Array_Attribute => 1622,
-      Iir_Kind_Reverse_Range_Array_Attribute => 1629,
-      Iir_Kind_Attribute_Name => 1637
+      Iir_Kind_External_Constant_Name => 1430,
+      Iir_Kind_External_Signal_Name => 1439,
+      Iir_Kind_External_Variable_Name => 1448,
+      Iir_Kind_Package_Pathname => 1452,
+      Iir_Kind_Absolute_Pathname => 1453,
+      Iir_Kind_Relative_Pathname => 1454,
+      Iir_Kind_Pathname_Element => 1458,
+      Iir_Kind_Base_Attribute => 1460,
+      Iir_Kind_Left_Type_Attribute => 1465,
+      Iir_Kind_Right_Type_Attribute => 1470,
+      Iir_Kind_High_Type_Attribute => 1475,
+      Iir_Kind_Low_Type_Attribute => 1480,
+      Iir_Kind_Ascending_Type_Attribute => 1485,
+      Iir_Kind_Image_Attribute => 1491,
+      Iir_Kind_Value_Attribute => 1497,
+      Iir_Kind_Pos_Attribute => 1503,
+      Iir_Kind_Val_Attribute => 1509,
+      Iir_Kind_Succ_Attribute => 1515,
+      Iir_Kind_Pred_Attribute => 1521,
+      Iir_Kind_Leftof_Attribute => 1527,
+      Iir_Kind_Rightof_Attribute => 1533,
+      Iir_Kind_Delayed_Attribute => 1541,
+      Iir_Kind_Stable_Attribute => 1549,
+      Iir_Kind_Quiet_Attribute => 1557,
+      Iir_Kind_Transaction_Attribute => 1565,
+      Iir_Kind_Event_Attribute => 1569,
+      Iir_Kind_Active_Attribute => 1573,
+      Iir_Kind_Last_Event_Attribute => 1577,
+      Iir_Kind_Last_Active_Attribute => 1581,
+      Iir_Kind_Last_Value_Attribute => 1585,
+      Iir_Kind_Driving_Attribute => 1589,
+      Iir_Kind_Driving_Value_Attribute => 1593,
+      Iir_Kind_Behavior_Attribute => 1593,
+      Iir_Kind_Structure_Attribute => 1593,
+      Iir_Kind_Simple_Name_Attribute => 1600,
+      Iir_Kind_Instance_Name_Attribute => 1605,
+      Iir_Kind_Path_Name_Attribute => 1610,
+      Iir_Kind_Left_Array_Attribute => 1617,
+      Iir_Kind_Right_Array_Attribute => 1624,
+      Iir_Kind_High_Array_Attribute => 1631,
+      Iir_Kind_Low_Array_Attribute => 1638,
+      Iir_Kind_Length_Array_Attribute => 1645,
+      Iir_Kind_Ascending_Array_Attribute => 1652,
+      Iir_Kind_Range_Array_Attribute => 1659,
+      Iir_Kind_Reverse_Range_Array_Attribute => 1666,
+      Iir_Kind_Attribute_Name => 1674
      );
 
    function Get_Fields (K : Iir_Kind) return Fields_Array
@@ -4748,6 +4828,12 @@ package body Nodes_Meta is
             return Get_Prefix (N);
          when Field_Signature_Prefix =>
             return Get_Signature_Prefix (N);
+         when Field_External_Pathname =>
+            return Get_External_Pathname (N);
+         when Field_Pathname_Suffix =>
+            return Get_Pathname_Suffix (N);
+         when Field_Pathname_Expression =>
+            return Get_Pathname_Expression (N);
          when Field_Slice_Subtype =>
             return Get_Slice_Subtype (N);
          when Field_Suffix =>
@@ -5108,6 +5194,12 @@ package body Nodes_Meta is
             Set_Prefix (N, V);
          when Field_Signature_Prefix =>
             Set_Signature_Prefix (N, V);
+         when Field_External_Pathname =>
+            Set_External_Pathname (N, V);
+         when Field_Pathname_Suffix =>
+            Set_Pathname_Suffix (N, V);
+         when Field_Pathname_Expression =>
+            Set_Pathname_Expression (N, V);
          when Field_Slice_Subtype =>
             Set_Slice_Subtype (N, V);
          when Field_Suffix =>
@@ -6540,6 +6632,9 @@ package body Nodes_Meta is
            | Iir_Kind_Case_Statement
            | Iir_Kind_Procedure_Call_Statement
            | Iir_Kind_If_Statement
+           | Iir_Kind_External_Constant_Name
+           | Iir_Kind_External_Signal_Name
+           | Iir_Kind_External_Variable_Name
            | Iir_Kind_Delayed_Attribute
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -6678,6 +6773,9 @@ package body Nodes_Meta is
            | Iir_Kind_Operator_Symbol
            | Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Parenthesis_Name
+           | Iir_Kind_External_Constant_Name
+           | Iir_Kind_External_Signal_Name
+           | Iir_Kind_External_Variable_Name
            | Iir_Kind_Base_Attribute
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
@@ -6736,7 +6834,10 @@ package body Nodes_Meta is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
-           | Iir_Kind_Allocator_By_Subtype =>
+           | Iir_Kind_Allocator_By_Subtype
+           | Iir_Kind_External_Constant_Name
+           | Iir_Kind_External_Signal_Name
+           | Iir_Kind_External_Variable_Name =>
             return True;
          when others =>
             return False;
@@ -6829,6 +6930,7 @@ package body Nodes_Meta is
            | Iir_Kind_Selected_Name
            | Iir_Kind_Operator_Symbol
            | Iir_Kind_Selected_By_All_Name
+           | Iir_Kind_Package_Pathname
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
            | Iir_Kind_High_Type_Attribute
@@ -7023,7 +7125,15 @@ package body Nodes_Meta is
 
    function Has_Shared_Flag (K : Iir_Kind) return Boolean is
    begin
-      return K = Iir_Kind_Variable_Declaration;
+      case K is
+         when Iir_Kind_Variable_Declaration
+           | Iir_Kind_External_Constant_Name
+           | Iir_Kind_External_Signal_Name
+           | Iir_Kind_External_Variable_Name =>
+            return True;
+         when others =>
+            return False;
+      end case;
    end Has_Shared_Flag;
 
    function Has_Design_Unit (K : Iir_Kind) return Boolean is
@@ -7263,6 +7373,8 @@ package body Nodes_Meta is
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Operator_Symbol
+           | Iir_Kind_Package_Pathname
+           | Iir_Kind_Pathname_Element
            | Iir_Kind_Attribute_Name =>
             return True;
          when others =>
@@ -8300,7 +8412,10 @@ package body Nodes_Meta is
            | Iir_Kind_Case_Statement
            | Iir_Kind_Procedure_Call_Statement
            | Iir_Kind_If_Statement
-           | Iir_Kind_Elsif =>
+           | Iir_Kind_Elsif
+           | Iir_Kind_External_Constant_Name
+           | Iir_Kind_External_Signal_Name
+           | Iir_Kind_External_Variable_Name =>
             return True;
          when others =>
             return False;
@@ -8382,6 +8497,8 @@ package body Nodes_Meta is
            | Iir_Kind_Operator_Symbol
            | Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Parenthesis_Name
+           | Iir_Kind_Package_Pathname
+           | Iir_Kind_Pathname_Element
            | Iir_Kind_Attribute_Name =>
             return True;
          when others =>
@@ -8491,6 +8608,9 @@ package body Nodes_Meta is
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Selected_By_All_Name
+           | Iir_Kind_External_Constant_Name
+           | Iir_Kind_External_Signal_Name
+           | Iir_Kind_External_Variable_Name
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
            | Iir_Kind_High_Type_Attribute
@@ -8701,6 +8821,9 @@ package body Nodes_Meta is
            | Iir_Kind_Character_Literal
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
+           | Iir_Kind_External_Constant_Name
+           | Iir_Kind_External_Signal_Name
+           | Iir_Kind_External_Variable_Name
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
            | Iir_Kind_High_Type_Attribute
@@ -8803,6 +8926,36 @@ package body Nodes_Meta is
    begin
       return K = Iir_Kind_Signature;
    end Has_Signature_Prefix;
+
+   function Has_External_Pathname (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_External_Constant_Name
+           | Iir_Kind_External_Signal_Name
+           | Iir_Kind_External_Variable_Name =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_External_Pathname;
+
+   function Has_Pathname_Suffix (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Package_Pathname
+           | Iir_Kind_Absolute_Pathname
+           | Iir_Kind_Relative_Pathname
+           | Iir_Kind_Pathname_Element =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Pathname_Suffix;
+
+   function Has_Pathname_Expression (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Pathname_Element;
+   end Has_Pathname_Expression;
 
    function Has_Slice_Subtype (K : Iir_Kind) return Boolean is
    begin
@@ -9415,7 +9568,10 @@ package body Nodes_Meta is
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_File_Declaration =>
+           | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_External_Constant_Name
+           | Iir_Kind_External_Signal_Name
+           | Iir_Kind_External_Variable_Name =>
             return True;
          when others =>
             return False;

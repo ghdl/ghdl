@@ -151,6 +151,9 @@ package Sem_Names is
    --  Like Sem_Denoting_Name but expect a terminal name.
    function Sem_Terminal_Name (Name : Iir) return Iir;
 
+   --  Analyze an external name.
+   procedure Sem_External_Name (Name : Iir);
+
    --  Emit an error for NAME that doesn't match its class CLASS_NAME.
    procedure Error_Class_Match (Name : Iir; Class_Name : String);
 
