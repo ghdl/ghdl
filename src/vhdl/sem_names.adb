@@ -187,13 +187,25 @@ package body Sem_Names is
       List : constant Iir_List := Get_Overload_List (Res);
       Call : Iir;
       El : Iir;
+      Imp : Iir;
+      Inter : Iir;
    begin
       Call := Null_Iir;
       for I in Natural loop
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
          if Get_Kind (El) = Iir_Kind_Function_Call then
-            if not Get_Has_Implicit_Conversion (El) then
+            Imp := Get_Implementation (El);
+            Inter := Get_Interface_Declaration_Chain (Imp);
+            if Get_Type (Inter) = Universal_Integer_Type_Definition
+              or else Get_Type (Inter) = Universal_Real_Type_Definition
+            then
+               --  The type of the first interface is a universal type.  So,
+               --  there were no implicit conversions.  Once there is an
+               --  implicit conversion, the only way to 'convert' to a
+               --  universal type is through T'Pos, which has to be resolved.
+               --  Note: there are no interface of convertible types.
+               --  GHDL: this is not proven...
                if Call /= Null_Iir then
                   --  More than one call without implicit conversion.
                   return Null_Iir;
@@ -2285,7 +2297,6 @@ package body Sem_Names is
             if Match /= Not_Compatible then
                Call := Sem_As_Function_Call
                  (Prefix_Name, Sub_Name, Assoc_Chain);
-               Set_Has_Implicit_Conversion (Call, Match = Via_Conversion);
                Add_Result (Res, Call);
                Used := True;
             end if;

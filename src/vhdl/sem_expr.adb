@@ -1587,11 +1587,7 @@ package body Sem_Expr is
    --
    --  If there are two functions, one primitive of a universal
    --  type and the other not, return the primitive of the universal type.
-   --  This rule is *not* from LRM (but from Ada) and allows to resolve
-   --  common cases such as:
-   --    constant c1 : integer := - 4; -- or '+', 'abs'
-   --    constant c2 : integer := 2 ** 3;
-   --    constant c3 : integer := 3 - 2; -- or '+', '*', '/'...
+   --  This implements implicit type conversions rules.
    function Get_Non_Implicit_Subprogram (List : Iir_List) return Iir
    is
       El : Iir;

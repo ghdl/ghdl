@@ -4026,22 +4026,6 @@ package body Iirs is
       Set_State1 (Target, Iir_Staticness'Pos (Static));
    end Set_Expr_Staticness;
 
-   function Get_Has_Implicit_Conversion (Expr : Iir) return Boolean is
-   begin
-      pragma Assert (Expr /= Null_Iir);
-      pragma Assert (Has_Has_Implicit_Conversion (Get_Kind (Expr)),
-                     "no field Has_Implicit_Conversion");
-      return Get_Flag1 (Expr);
-   end Get_Has_Implicit_Conversion;
-
-   procedure Set_Has_Implicit_Conversion (Expr : Iir; Flag : Boolean) is
-   begin
-      pragma Assert (Expr /= Null_Iir);
-      pragma Assert (Has_Has_Implicit_Conversion (Get_Kind (Expr)),
-                     "no field Has_Implicit_Conversion");
-      Set_Flag1 (Expr, Flag);
-   end Set_Has_Implicit_Conversion;
-
    function Get_Error_Origin (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
