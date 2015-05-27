@@ -2771,12 +2771,10 @@ package body Sem_Decls is
    procedure Sem_Declaration_Chain (Parent : Iir)
    is
       Decl : Iir;
-      Next_Decl : Iir;
       Attr_Spec_Chain : Iir;
 
       --  New declaration chain (declarations like implicit signals may be
       --  added, some like aliases may mutate).
-      First_Decl : Iir;
       Last_Decl : Iir;
 
       --  Used for list of identifiers in object declarations to get the type
@@ -2798,7 +2796,7 @@ package body Sem_Decls is
 
       --  Due to implicit declarations, the list can grow during sem.
       Decl := Get_Declaration_Chain (Parent);
-      Sub_Chain_Init (First_Decl, Last_Decl);
+      Last_Decl := Null_Iir;
       Attr_Spec_Chain := Null_Iir;
       Last_Obj_Decl := Null_Iir;
 
@@ -2892,18 +2890,27 @@ package body Sem_Decls is
            and then Current_Signals_Region.First_Implicit_Decl /= Null_Iir
          then
             --  Add pending implicit declarations before the current one.
-            Sub_Chain_Append_Chain (First_Decl, Last_Decl,
-                                    Current_Signals_Region.First_Implicit_Decl,
-                                    Current_Signals_Region.Last_Implicit_Decl);
+            if Last_Decl = Null_Iir then
+               Set_Declaration_Chain
+                 (Parent, Current_Signals_Region.First_Implicit_Decl);
+            else
+               Set_Chain
+                 (Last_Decl, Current_Signals_Region.First_Implicit_Decl);
+            end if;
+            Last_Decl := Current_Signals_Region.Last_Implicit_Decl;
             Sub_Chain_Init (Current_Signals_Region.First_Implicit_Decl,
                             Current_Signals_Region.Last_Implicit_Decl);
          end if;
 
-         Next_Decl := Get_Chain (Decl);
-         Sub_Chain_Append (First_Decl, Last_Decl, Decl);
-         Decl := Next_Decl;
+         if Last_Decl = Null_Iir then
+            --  Append now to handle expand names.
+            Set_Declaration_Chain (Parent, Decl);
+         else
+            Set_Chain (Last_Decl, Decl);
+         end if;
+         Last_Decl := Decl;
+         Decl := Get_Chain (Decl);
       end loop;
-      Set_Declaration_Chain (Parent, First_Decl);
 
       if Current_Signals_Region.Decls_Parent = Parent then
          --  All declarations have been analyzed, new implicit declarations
