@@ -1588,6 +1588,7 @@ package body Sem_Expr is
    --  If there are two functions, one primitive of a universal
    --  type and the other not, return the primitive of the universal type.
    --  This implements implicit type conversions rules.
+   --  Cf Sem_Names.Extract_Call_Without_Implicit_Conversion
    function Get_Non_Implicit_Subprogram (List : Iir_List) return Iir
    is
       El : Iir;

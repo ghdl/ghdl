@@ -181,6 +181,7 @@ package body Sem_Names is
    --  conversion.  Return Null_Iir if there is no function call, or if there
    --  is an expressions that isn't a function call, or if there is more than
    --  one function call without implicit conversion.
+   --  Cf Sem_Expr.Get_Non_Implicit_Subprogram
    function Extract_Call_Without_Implicit_Conversion (Res : Iir) return Iir
    is
       pragma Assert (Is_Overload_List (Res));
