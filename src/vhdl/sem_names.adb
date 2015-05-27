@@ -3040,7 +3040,7 @@ package body Sem_Names is
                null;
          end case;
       end if;
-      Sem_Stmts.Add_Declaration_For_Implicit_Signal (Res);
+      Sem_Decls.Add_Declaration_For_Implicit_Signal (Res);
       return Res;
    end Sem_Signal_Signal_Attribute;
 

@@ -27,28 +27,6 @@ package Sem_Stmts is
    --  Analyze the concurrent statements of PARENT.
    procedure Sem_Concurrent_Statement_Chain (Parent : Iir);
 
-   --  Some signals are implicitly declared.  This is the case for signals
-   --  declared by an attribute ('stable, 'quiet and 'transaction).
-   --  Note: guard signals are also implicitly declared, but with a guard
-   --   expression, which is located.
-   --  Since these signals need resources and are not easily located (can be
-   --  nearly in every expression), it is useful to add a node into a
-   --  declaration list to declare them.
-   --  However, only a few declaration_list can declare signals.  These
-   --  declarations lists must register and unregister themselves with
-   --  push_declarative_region_with_signals and
-   --  pop_declarative_region_with_signals.
-   type Implicit_Signal_Declaration_Type is private;
-
-   procedure Push_Signals_Declarative_Part
-     (Cell: out Implicit_Signal_Declaration_Type; Decls_Parent : Iir);
-
-   procedure Pop_Signals_Declarative_Part
-     (Cell: in Implicit_Signal_Declaration_Type);
-
-   -- Declare an implicit signal.
-   procedure Add_Declaration_For_Implicit_Signal (Sig : Iir);
-
    --  Semantize declaration chain and sequential statement chain
    --  of BODY_PARENT.
    --  DECL is the declaration for these chains (DECL is the declaration, which
@@ -78,10 +56,4 @@ package Sem_Stmts is
    --    The current statement list does not belong to a process,
    --    SIG is a formal signal interface.
    procedure Sem_Add_Driver (Sig : Iir; Stmt : Iir);
-private
-   type Implicit_Signal_Declaration_Type is record
-      Decls_Parent : Iir;
-      Last_Decl : Iir;
-   end record;
-
 end Sem_Stmts;

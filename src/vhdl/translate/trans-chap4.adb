@@ -172,22 +172,17 @@ package body Trans.Chap4 is
 
    procedure Create_Implicit_Signal (Decl : Iir)
    is
-      Sig_Type     : O_Tnode;
-      Type_Info    : Type_Info_Acc;
+      Sig_Type_Def : constant Iir := Get_Type (Decl);
+      Type_Info    : constant Type_Info_Acc := Get_Info (Sig_Type_Def);
+      Sig_Type     : constant O_Tnode := Type_Info.Ortho_Type (Mode_Signal);
       Info         : Ortho_Info_Acc;
-      Sig_Type_Def : Iir;
    begin
-      Sig_Type_Def := Get_Type (Decl);
       --  This has been disabled since DECL can have an anonymous subtype,
       --  and DECL has no identifiers, which causes translate_object_subtype
       --  to crash.
       --  Note: DECL can only be a iir_kind_delayed_attribute.
       --Chap3.Translate_Object_Subtype (Decl);
-      Type_Info := Get_Info (Sig_Type_Def);
-      Sig_Type := Type_Info.Ortho_Type (Mode_Signal);
-      if Sig_Type = O_Tnode_Null then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Sig_Type /= O_Tnode_Null);
 
       Info := Add_Info (Decl, Kind_Object);
 
@@ -1401,21 +1396,19 @@ package body Trans.Chap4 is
    procedure Translate_Object_Alias_Declaration
      (Decl : Iir_Object_Alias_Declaration)
    is
-      Decl_Type : Iir;
+      Decl_Type : constant Iir := Get_Type (Decl);
       Info      : Alias_Info_Acc;
       Tinfo     : Type_Info_Acc;
       Atype     : O_Tnode;
    begin
-      Decl_Type := Get_Type (Decl);
-
-      Chap3.Translate_Named_Type_Definition
-        (Decl_Type, Get_Identifier (Decl));
+      Chap3.Translate_Named_Type_Definition (Decl_Type, Get_Identifier (Decl));
 
       Info := Add_Info (Decl, Kind_Alias);
       case Get_Kind (Get_Object_Prefix (Decl)) is
          when Iir_Kind_Signal_Declaration
-            | Iir_Kind_Interface_Signal_Declaration
-            | Iir_Kind_Guard_Signal_Declaration =>
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kinds_Signal_Attribute =>
             Info.Alias_Kind := Mode_Signal;
          when others =>
             Info.Alias_Kind := Mode_Value;
@@ -1454,24 +1447,18 @@ package body Trans.Chap4 is
    procedure Elab_Object_Alias_Declaration
      (Decl : Iir_Object_Alias_Declaration)
    is
-      Decl_Type  : Iir;
-      Name       : Iir;
+      Decl_Type  : constant Iir := Get_Type (Decl);
+      Tinfo      : constant Type_Info_Acc := Get_Info (Decl_Type);
+      Name       : constant Iir := Get_Name (Decl);
+      Name_Type  : constant Iir := Get_Type (Name);
+      Alias_Info : constant Alias_Info_Acc := Get_Info (Decl);
       Name_Node  : Mnode;
       Alias_Node : Mnode;
-      Alias_Info : Alias_Info_Acc;
-      Name_Type  : Iir;
-      Tinfo      : Type_Info_Acc;
       Kind       : Object_Kind_Type;
    begin
       New_Debug_Line_Stmt (Get_Line_Number (Decl));
 
-      Decl_Type := Get_Type (Decl);
-      Tinfo := Get_Info (Decl_Type);
-
-      Alias_Info := Get_Info (Decl);
       Chap3.Elab_Object_Subtype (Decl_Type);
-      Name := Get_Name (Decl);
-      Name_Type := Get_Type (Name);
       Name_Node := Chap6.Translate_Name (Name);
       Kind := Get_Object_Kind (Name_Node);
 

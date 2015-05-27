@@ -36,6 +36,7 @@ package body Iir_Chains is
 
    procedure Sub_Chain_Append (First, Last : in out Iir; El : Iir) is
    begin
+      pragma Assert (El /= Null_Iir);
       if First = Null_Iir then
          First := El;
       else
@@ -43,6 +44,18 @@ package body Iir_Chains is
       end if;
       Last := El;
    end Sub_Chain_Append;
+
+   procedure Sub_Chain_Append_Chain (First, Last : in out Iir;
+                                     First_Sub, Last_Sub : Iir) is
+   begin
+      pragma Assert (First_Sub /= Null_Iir);
+      if First = Null_Iir then
+         First := First_Sub;
+      else
+         Set_Chain (Last, First_Sub);
+      end if;
+      Last := Last_Sub;
+   end Sub_Chain_Append_Chain;
 
    function Is_Chain_Length_One (Chain : Iir) return Boolean is
    begin

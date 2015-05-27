@@ -100,6 +100,11 @@ package Iir_Chains is
    procedure Sub_Chain_Append (First, Last : in out Iir; El : Iir);
    pragma Inline (Sub_Chain_Append);
 
+   --  Append chain to the sub-chain.  FIRST_SUB and LAST_SUB must not be
+   --  Null_Iir.
+   procedure Sub_Chain_Append_Chain (First, Last : in out Iir;
+                                     First_Sub, Last_Sub : Iir);
+
    --  Return TRUE iff CHAIN is of length one, ie CHAIN is not NULL_IIR
    --  and chain (CHAIN) is NULL_IIR.
    function Is_Chain_Length_One (Chain : Iir) return Boolean;

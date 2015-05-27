@@ -37,6 +37,47 @@ with Xrefs; use Xrefs;
 use Iir_Chains;
 
 package body Sem_Decls is
+   --  Region that can declare signals.  Used to add implicit declarations.
+   Current_Signals_Region : Implicit_Signal_Declaration_Type :=
+     (Null_Iir, False, Null_Iir, Null_Iir);
+
+   procedure Push_Signals_Declarative_Part
+     (Cell: out Implicit_Signal_Declaration_Type; Decls_Parent : Iir) is
+   begin
+      Cell := Current_Signals_Region;
+      Current_Signals_Region := (Decls_Parent, False, Null_Iir, Null_Iir);
+   end Push_Signals_Declarative_Part;
+
+   procedure Pop_Signals_Declarative_Part
+     (Cell: in Implicit_Signal_Declaration_Type) is
+   begin
+      Current_Signals_Region := Cell;
+   end Pop_Signals_Declarative_Part;
+
+   procedure Add_Declaration_For_Implicit_Signal (Sig : Iir) is
+   begin
+      --  There must be a declarative part for implicit signals.
+      pragma Assert (Current_Signals_Region.Decls_Parent /= Null_Iir);
+
+      --  Chain must be empty.
+      pragma Assert (Get_Chain (Sig) = Null_Iir);
+
+      if Current_Signals_Region.Decls_Analyzed then
+         --  Just append.
+         if Current_Signals_Region.Last_Implicit_Decl = Null_Iir then
+            --  No declarations.
+            Set_Declaration_Chain (Current_Signals_Region.Decls_Parent, Sig);
+         else
+            --  Append to the last declaration.
+            Set_Chain (Current_Signals_Region.Last_Implicit_Decl, Sig);
+         end if;
+         Current_Signals_Region.Last_Implicit_Decl := Sig;
+      else
+         Sub_Chain_Append (Current_Signals_Region.First_Implicit_Decl,
+                           Current_Signals_Region.Last_Implicit_Decl, Sig);
+      end if;
+   end Add_Declaration_For_Implicit_Signal;
+
    --  Emit an error if the type of DECL is a file type, access type,
    --  protected type or if a subelement of DECL is an access type.
    procedure Check_Signal_Type (Decl : Iir)
@@ -2729,9 +2770,14 @@ package body Sem_Decls is
 
    procedure Sem_Declaration_Chain (Parent : Iir)
    is
-      Decl: Iir;
-      Last_Decl : Iir;
+      Decl : Iir;
+      Next_Decl : Iir;
       Attr_Spec_Chain : Iir;
+
+      --  New declaration chain (declarations like implicit signals may be
+      --  added, some like aliases may mutate).
+      First_Decl : Iir;
+      Last_Decl : Iir;
 
       --  Used for list of identifiers in object declarations to get the type
       --  and default value for the following declarations.
@@ -2752,7 +2798,7 @@ package body Sem_Decls is
 
       --  Due to implicit declarations, the list can grow during sem.
       Decl := Get_Declaration_Chain (Parent);
-      Last_Decl := Null_Iir;
+      Sub_Chain_Init (First_Decl, Last_Decl);
       Attr_Spec_Chain := Null_Iir;
       Last_Obj_Decl := Null_Iir;
 
@@ -2807,24 +2853,10 @@ package body Sem_Decls is
                --  existing attribute specification apply to them.
                null;
             when Iir_Kind_Object_Alias_Declaration =>
-               declare
-                  Res : Iir;
-               begin
-                  Res := Sem_Alias_Declaration (Decl);
-                  if Res /= Decl then
-                     --  Replace DECL with RES.
-                     if Last_Decl = Null_Iir then
-                        Set_Declaration_Chain (Parent, Res);
-                     else
-                        Set_Chain (Last_Decl, Res);
-                     end if;
-                     Decl := Res;
-
-                     --  An alias may add new alias declarations. Do not skip
-                     --  them: check that no existing attribute specifications
-                     --  apply to them.
-                  end if;
-               end;
+               Decl := Sem_Alias_Declaration (Decl);
+               --  An alias may add new alias declarations. Do not skip
+               --  them: check that no existing attribute specifications
+               --  apply to them.
             when Iir_Kind_Use_Clause =>
                Sem_Use_Clause (Decl);
             when Iir_Kind_Configuration_Specification =>
@@ -2855,9 +2887,30 @@ package body Sem_Decls is
          if Attr_Spec_Chain /= Null_Iir then
             Check_Post_Attribute_Specification (Attr_Spec_Chain, Decl);
          end if;
-         Last_Decl := Decl;
-         Decl := Get_Chain (Decl);
-      end  loop;
+
+         if Current_Signals_Region.Decls_Parent = Parent
+           and then Current_Signals_Region.First_Implicit_Decl /= Null_Iir
+         then
+            --  Add pending implicit declarations before the current one.
+            Sub_Chain_Append_Chain (First_Decl, Last_Decl,
+                                    Current_Signals_Region.First_Implicit_Decl,
+                                    Current_Signals_Region.Last_Implicit_Decl);
+            Sub_Chain_Init (Current_Signals_Region.First_Implicit_Decl,
+                            Current_Signals_Region.Last_Implicit_Decl);
+         end if;
+
+         Next_Decl := Get_Chain (Decl);
+         Sub_Chain_Append (First_Decl, Last_Decl, Decl);
+         Decl := Next_Decl;
+      end loop;
+      Set_Declaration_Chain (Parent, First_Decl);
+
+      if Current_Signals_Region.Decls_Parent = Parent then
+         --  All declarations have been analyzed, new implicit declarations
+         --  will be appended.
+         Current_Signals_Region.Decls_Analyzed := True;
+         Current_Signals_Region.Last_Implicit_Decl := Last_Decl;
+      end if;
    end Sem_Declaration_Chain;
 
    procedure Check_Full_Declaration (Decls_Parent : Iir; Decl: Iir)
