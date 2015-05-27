@@ -2725,9 +2725,8 @@ package body Sem_Expr is
          Pos_Max : Iir_Int64;
          E_Pos : Iir_Int64;
 
-         Bt : Iir;
+         Bt : constant Iir := Get_Base_Type (Sub_Type);
       begin
-         Bt := Get_Base_Type (Sub_Type);
          if not Is_Sub_Range
            and then Get_Type_Staticness (Sub_Type) = Locally
            and then Type_Has_Bounds
@@ -2736,6 +2735,11 @@ package body Sem_Expr is
          else
             Lb := Low;
             Hb := High;
+         end if;
+         if Lb = Null_Iir or else Hb = Null_Iir then
+            --  Return now in case of error.
+            Free (Arr);
+            return;
          end if;
          --  Checks all values between POS and POS_MAX are handled.
          Pos := Eval_Pos (Lb);
