@@ -25,6 +25,7 @@ libdirsuffix=@libdirsuffix@
 libdirreverse=@libdirreverse@
 gcc_src_dir=@gcc_src_dir@
 llvm_prefix=@llvm_prefix@
+LDFLAGS=@LDFLAGS@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
@@ -187,7 +188,7 @@ ghdl_llvm_jit: $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
 	$(GNATMAKE) -o $@ $(GHDL_LLVM_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb \
 	 $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) \
 	 $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) --LINK=$(CXX) \
-	 `$(LLVM_CONFIG) --ldflags --libs --system-libs`
+	 `$(LLVM_CONFIG) --ldflags --libs --system-libs` $(LDFLAGS)
 
 llvm-cbindings.o: $(srcdir)/src/ortho/llvm/llvm-cbindings.cpp
 	$(CXX) -c `$(LLVM_CONFIG) --includedir --cxxflags` \
@@ -207,7 +208,7 @@ ghdl_llvm: force
 ghdl1-llvm: force
 	$(MAKE) -f $(srcdir)/src/ortho/llvm/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNAT_FLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" \
+	 GNAT_FLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" LDFLAGS="$(LDFLAGS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)" all
 
 oread-llvm: force
