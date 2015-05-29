@@ -73,6 +73,8 @@ Param(
 	[switch]$Install,
 		# Installation directory
 		[string]$InstallPath,
+		# update files
+		[switch]$Update,
 	
 	# uninstall all files from a directory
 	[switch]$Uninstall,
@@ -227,7 +229,8 @@ else
 							}
 						else
 							{	Write-Host "--------------------------------------------------------------------------------"
-								Write-Host "Completed [SUCCESSFUL]"
+								Write-Host "Completed " -NoNewline
+								Write-Host "[SUCCESSFUL]" -ForegroundColor Green
 								Write-Host
 							}
 					}
@@ -249,7 +252,8 @@ else
 							}
 						else
 							{	Write-Host "--------------------------------------------------------------------------------"
-								Write-Host "Completed [SUCCESSFUL]"
+								Write-Host "Completed " -NoNewline
+								Write-Host "[SUCCESSFUL]" -ForegroundColor Green
 								Write-Host
 							}
 					}
@@ -292,7 +296,8 @@ else
 							}
 						else
 							{	Write-Host "--------------------------------------------------------------------------------"
-								Write-Host "Completed [SUCCESSFUL]"
+								Write-Host "Completed " -NoNewline
+								Write-Host "[SUCCESSFUL]" -ForegroundColor Green
 								Write-Host
 							}
 					}
@@ -314,7 +319,8 @@ else
 							}
 						else
 							{	Write-Host "--------------------------------------------------------------------------------"
-								Write-Host "Completed [SUCCESSFUL]"
+								Write-Host "Completed " -NoNewline
+								Write-Host "[SUCCESSFUL]" -ForegroundColor Green
 								Write-Host
 							}
 					}
@@ -395,9 +401,18 @@ else
 					}
 				else
 					{	if (Test-Path -Path $InstallPath)
-							{	$Script_ExitCode = 1
-								Write-Host "  Directory '$InstallPath' already exists." -ForegroundColor Red
+							{	if ($Update)
+									{	Remove-Item	-Path "$InstallPath\*" -Recurse -Force	}
+								else
+									{	Write-Host "  Directory '$InstallPath' already exists." -ForegroundColor Red
+										Write-Host
+										$Script_ExitCode = 1
+									}
+							}
+						elseif ($Update)
+							{	Write-Host "  Directory '$InstallPath' does not exists." -ForegroundColor Red
 								Write-Host
+								$Script_ExitCode = 1
 							}
 					}
 					

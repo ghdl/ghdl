@@ -180,7 +180,9 @@ elseif ($Compile)
 				"fixed_pkg",
 				"float_generic_pkg",
 				"float_generic_pkg-body",
-				"float_pkg"
+				"float_pkg",
+				"ieee_std_context",
+				"ieee_bit_context"
 			);
 			"vital95" = @(
 				"vital_timing",
@@ -238,7 +240,7 @@ elseif ($Compile)
 				$LocalDir2Name = $VHDLDestLibrary
 				$LocalDir2 = $LocalDir + "\" + $LocalDir2Name
 				
-				Write-Host "    compiling library $VHDLDestLibrary"
+				Write-Host "    compiling library $VHDLDestLibrary" -ForegroundColor DarkCyan
 				if (Test-Path -Path $LocalDir2)
 					{	if ($Script_EnableVerbose) {	Write-Host "      Directory '$LocalDir2Name' already exists."		}	}
 				else
@@ -280,7 +282,7 @@ elseif ($Compile)
 				$LocalDir2Name = $VHDLDestLibrary
 				$LocalDir2 = $LocalDir + "\" + $LocalDir2Name
 				
-				Write-Host "    compiling library $VHDLDestLibrary"
+				Write-Host "    compiling library $VHDLDestLibrary" -ForegroundColor DarkCyan
 				if (Test-Path -Path $LocalDir2)
 					{		if ($Script_EnableVerbose) {	Write-Host "      Directory '$LocalDir2Name' already exists."		}	}
 				else
@@ -327,7 +329,7 @@ elseif ($Compile)
 				$LocalDir2Name = "synopsys"
 				$LocalDir2 = $LocalDir + "\" + $LocalDir2Name
 				
-				Write-Host "    compiling library $VHDLDestLibrary"
+				Write-Host "    compiling library $VHDLDestLibrary" -ForegroundColor DarkCyan
 				if (Test-Path -Path $LocalDir2)
 					{		if ($Script_EnableVerbose) {	Write-Host "      Directory '$LocalDir2Name' already exists."		}	}
 				else
@@ -400,7 +402,7 @@ elseif ($Compile)
 				$LocalDir2Name = $VHDLDestLibrary
 				$LocalDir2 = $LocalDir + "\" + $LocalDir2Name
 				
-				Write-Host "    compiling library $VHDLDestLibrary"
+				Write-Host "    compiling library $VHDLDestLibrary" -ForegroundColor DarkCyan
 				if (Test-Path -Path $LocalDir2)
 					{		if ($Script_EnableVerbose) {	Write-Host "      Directory '$LocalDir2Name' already exists."		}	}
 				else
@@ -436,7 +438,7 @@ elseif ($Compile)
 				$LocalDir2Name = $VHDLDestLibrary
 				$LocalDir2 = $LocalDir + "\" + $LocalDir2Name
 				
-				Write-Host "    compiling library $VHDLDestLibrary"
+				Write-Host "    compiling library $VHDLDestLibrary" -ForegroundColor DarkCyan
 				if (Test-Path -Path $LocalDir2)
 					{		if ($Script_EnableVerbose) {	Write-Host "      Directory '$LocalDir2Name' already exists."		}	}
 				else
@@ -494,7 +496,7 @@ elseif ($Compile)
 				$LocalDir2Name = "synopsys"
 				$LocalDir2 = $LocalDir + "\" + $LocalDir2Name
 				
-				Write-Host "    compiling library $VHDLDestLibrary"
+				Write-Host "    compiling library $VHDLDestLibrary" -ForegroundColor DarkCyan
 				if (Test-Path -Path $LocalDir2)
 					{		if ($Script_EnableVerbose) {	Write-Host "      Directory '$LocalDir2Name' already exists."		}	}
 				else
@@ -563,7 +565,7 @@ elseif ($Compile)
 				$LocalDir2Name = "mentor"
 				$LocalDir2 = $LocalDir + "\" + $LocalDir2Name
 				
-				Write-Host "    compiling library $VHDLDestLibrary"
+				Write-Host "    compiling library $VHDLDestLibrary" -ForegroundColor DarkCyan
 				if (Test-Path -Path $LocalDir2)
 					{		if ($Script_EnableVerbose) {	Write-Host "      Directory '$LocalDir2Name' already exists."		}	}
 				else
@@ -647,7 +649,7 @@ elseif ($Compile)
 				$LocalDir2Name = $VHDLDestLibrary
 				$LocalDir2 = $LocalDir + "\" + $LocalDir2Name
 				
-				Write-Host "    compiling library $VHDLDestLibrary"
+				Write-Host "    compiling library $VHDLDestLibrary" -ForegroundColor DarkCyan
 				if (Test-Path -Path $LocalDir2)
 					{		if ($Script_EnableVerbose) {	Write-Host "      Directory '$LocalDir2Name' already exists."		}	}
 				else
@@ -684,7 +686,7 @@ elseif ($Compile)
 				$LocalDir2Name = $VHDLDestLibrary
 				$LocalDir2 = $LocalDir + "\" + $LocalDir2Name
 				
-				Write-Host "    compiling library $VHDLDestLibrary"
+				Write-Host "    compiling library $VHDLDestLibrary" -ForegroundColor DarkCyan
 				if (Test-Path -Path $LocalDir2)
 					{		if ($Script_EnableVerbose) {	Write-Host "      Directory '$LocalDir2Name' already exists."		}	}
 				else
@@ -705,17 +707,6 @@ elseif ($Compile)
 							| Out-File "$SourceFile.v08" -Encoding Ascii
 						
 						$GHDLParameters = @("-a", "-C", "--std=08", "-P..\std", "--work=$VHDLDestLibrary", "$SourceFile.v08")
-						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
-						& $GHDLExecutable $GHDLParameters
-					}
-				
-				$VHDLSrcLibrary = "vital2000"
-				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
-					{	Write-Host "      file: v08\$SourceFile.v08"
-						if ($Script_EnableVerbose) {	Write-Host "        copy: $SourceFile"	}
-						Copy-Item "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" "$SourceFile.vhd"
-						
-						$GHDLParameters = @("-a", "-C", "--std=08", "-P..\std", "--work=$VHDLDestLibrary", "$SourceFile.vhd")
 						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
 						& $GHDLExecutable $GHDLParameters
 					}
