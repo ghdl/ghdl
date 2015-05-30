@@ -307,8 +307,6 @@ package body Grt.Files is
       R := fwrite (Str.Base (0)'Address,
                    size_t (Str.Bounds.Dim_1.Length), 1, Res);
       --  FIXME: check r
-      --  Write '\n'.
-      R1 := fputc (Character'Pos (Nl), Res);
       if Auto_Flush then
          fflush (Res);
       end if;

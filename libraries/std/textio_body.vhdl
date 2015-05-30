@@ -90,7 +90,7 @@ package body textio is
       -- LRM93 14.3
       -- If parameter L contains a null access value at the start of the call,
       -- the a null string is written to the file.
-      write (f, "");
+      null;
     else
       -- LRM93 14.3
       -- Procedure WRITELINE causes the current line designated by parameter L
@@ -100,27 +100,25 @@ package body textio is
       deallocate (l);
       l := new string'("");
     end if;
+    write (f, (1 => LF));
   end writeline;
 
 --START-V08
   procedure Tee (file f : Text; L : inout LINE) is
   begin
+    --  LRM08 16.4 Package TEXTIO
+    --  The procedure TEE additionally causes the current line to be written
+    --  to the file OUTPUT.
     if l = null then
-      -- LRM93 14.3
-      -- If parameter L contains a null access value at the start of the call,
-      -- the a null string is written to the file.
-      write (f, "");
-      write (Output, "");
+      null;
     else
-      -- LRM93 14.3
-      -- Procedure WRITELINE causes the current line designated by parameter L
-      -- to be written to the file and returns with the value of parameter L
-      -- designating a null string.
       write (f, l.all);
       write (Output, l.all);
       deallocate (l);
       l := new string'("");
     end if;
+    write (f, (1 => LF));
+    write (output, (1 => LF));
   end Tee;
 --END-V08
   
