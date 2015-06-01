@@ -194,10 +194,10 @@ llvm-cbindings.o: $(srcdir)/src/ortho/llvm/llvm-cbindings.cpp
 	$(CXX) -c `$(LLVM_CONFIG) --includedir --cxxflags` \
 	  $(OPT_FLAGS) -o $@ $<
 
-libs.vhdl.llvmjit:
+libs.vhdl.llvmjit: ghdl_llvm_jit
 	$(MAKE) GHDL=ghdl_llvm_jit vhdl.libs.all
 
-libs.vhdl.llvm:
+libs.vhdl.llvm: ghdl_llvm ghdl1-llvm
 	$(MAKE) GHDL=ghdl_llvm ANALYZE_OPTS="--GHDL1=ghdl1-llvm" vhdl.libs.all
 	$(MAKE) GHDL1=./ghdl1-llvm libs.vhdl.standard
 
@@ -235,7 +235,7 @@ GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir
 ghdl_simul: $(GRT_ADD_OBJS) force
 	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
-libs.vhdl.simul:
+libs.vhdl.simul: ghdl_simul
 	$(MAKE) GHDL=ghdl_simul vhdl.libs.all
 
 ################ ghwdump #################################################
