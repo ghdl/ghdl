@@ -343,7 +343,8 @@ package body Trans.Chap2 is
                   when Iir_Kind_File_Type_Definition =>
                      return True;
                   when Iir_Kind_Protected_Type_Declaration =>
-                     raise Internal_Error;
+                     --  We suppose there is at least one method.
+                     return True;
                   when Iir_Kinds_Composite_Type_Definition =>
                      --  At least for "=".
                      return True;

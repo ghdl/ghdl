@@ -242,9 +242,6 @@ package body Trans is
       is
          Inst : Inst_Build_Acc;
       begin
-         if Inst_Build /= null and then Inst_Build.Kind /= Instance then
-            raise Internal_Error;
-         end if;
          Inst := new Inst_Build_Type (Instance);
          Inst.Prev := Inst_Build;
          Inst.Prev_Id_Start := Identifier_Start;
