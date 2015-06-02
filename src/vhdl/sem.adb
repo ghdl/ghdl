@@ -20,6 +20,7 @@ with Errorout; use Errorout;
 with Std_Package; use Std_Package;
 with Ieee.Std_Logic_1164;
 with Libraries;
+with Files_Map;
 with Std_Names;
 with Sem_Scopes; use Sem_Scopes;
 with Sem_Expr; use Sem_Expr;
@@ -1901,11 +1902,20 @@ package body Sem is
 
       if Spec /= Null_Iir then
          -- SUBPRG is the body of the specification SPEC.
-         Check_Conformance_Rules (Subprg, Spec);
-         Xref_Body (Subprg, Spec);
-         Set_Subprogram_Body (Subprg, Subprg_Body);
-         Set_Subprogram_Specification (Subprg_Body, Spec);
-         Set_Subprogram_Body (Spec, Subprg_Body);
+         if Get_Subprogram_Body (Spec) /= Null_Iir then
+            Error_Msg_Sem
+              (Disp_Node (Spec) & " body already defined at "
+                 & Files_Map.Image (Get_Location (Get_Subprogram_Body (Spec))),
+               Subprg);
+            --  Kill warning.
+            Set_Use_Flag (Subprg, True);
+         else
+            Check_Conformance_Rules (Subprg, Spec);
+            Xref_Body (Subprg, Spec);
+            Set_Subprogram_Body (Subprg, Subprg_Body);
+            Set_Subprogram_Specification (Subprg_Body, Spec);
+            Set_Subprogram_Body (Spec, Subprg_Body);
+         end if;
       else
          --  Forward declaration or specification followed by body.
          Set_Subprogram_Overload_Number (Subprg);
