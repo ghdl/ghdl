@@ -46,6 +46,10 @@ package Name_Table is
    --  If the name is a character, then single quote are added.
    function Image (Id: Name_Id) return String;
 
+   --  Set NAME_BUFFER/NAME_LENGTH with the image of ID.  Characters aren't
+   --  quoted.
+   procedure Image (Id : Name_Id);
+
    --  Get the address of the first character of ID.  The address is valid
    --  until the next call to Get_Identifier (which may reallocate the string
    --  table).
@@ -72,10 +76,6 @@ package Name_Table is
    --  is not found (and do not create an entry for it).
    function Get_Identifier_No_Create return Name_Id;
 
-   --  Set NAME_BUFFER/NAME_LENGTH with the image of ID.  Characters aren't
-   --  quoted.
-   procedure Image (Id : Name_Id);
-
    --  Get and set the info field associated with each identifier.
    --  Used to store interpretations of the name.
    function Get_Info (Id: Name_Id) return Int32;
@@ -94,9 +94,11 @@ package Name_Table is
    --  case is 'normalized' as VHDL is case insensitive.
    --  To avoid name clash with std_names, Nam_Buffer and Nam_Length are used
    --  instead of Name_Buffer and Name_Length.
-   Nam_Buffer : String (1 .. 1024);
+   Max_Nam_Length : constant Natural := 1024;
+   Nam_Buffer : String (1 .. Max_Nam_Length);
+
    --  The length of the name string.
-   Nam_Length: Natural;
+   Nam_Length: Natural range 0 .. Max_Nam_Length;
 
    --  Disp statistics.
    --  Used for debugging.

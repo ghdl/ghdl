@@ -29,7 +29,13 @@ package Files_Map is
    function Get_Pathname
      (Directory : Name_Id; Name : Name_Id; Add_Nul : Boolean) return String;
 
-   --  Return an entry for a filename.
+   --  If NAME contains a directory separator, move it to the DIRECTORY name.
+   --  At the return point, NAME has no directory components.
+   procedure Normalize_Pathname
+     (Directory : in out Name_Id; Name : in out Name_Id);
+
+   --  Return an entry for a filename.  Null_Identifier for DIRECTORY means
+   --  current directory.
    --  Load the filename if necessary.
    --  Return No_Source_File_Entry if the file does not exist.
    function Load_Source_File (Directory : Name_Id; Name : Name_Id)
@@ -53,6 +59,13 @@ package Files_Map is
 
    -- Return the length of the file (which is the size of the file buffer).
    function Get_File_Length (File : Source_File_Entry) return Source_Ptr;
+
+   -- Return the name of the file.
+   function Get_File_Name (File : Source_File_Entry) return Name_Id;
+
+   -- Return the directory of the file.
+   function Get_Source_File_Directory (File : Source_File_Entry)
+                                      return Name_Id;
 
    --  Return the entry of the last known file.
    --  This allow the user to create a table of Source_File_Entry.
@@ -79,13 +92,6 @@ package Files_Map is
 
    -- Return the home directory (current directory).
    function Get_Home_Directory return Name_Id;
-
-   -- Return the directory of the file.
-   function Get_Source_File_Directory (File : Source_File_Entry)
-                                      return Name_Id;
-
-   -- Return the name of the file.
-   function Get_File_Name (File : Source_File_Entry) return Name_Id;
 
    --  Get the path of directory DIR.
    --function Get_Directory_Path (Dir : Directory_Index) return String;

@@ -502,6 +502,37 @@ package body Files_Map is
       return Nam_Buffer (1 .. Nam_Length);
    end Get_Pathname;
 
+   procedure Normalize_Pathname
+     (Directory : in out Name_Id; Name : in out Name_Id)
+   is
+      Separator_Pos : Natural;
+      Filename : constant String := Image (Name);
+   begin
+      --  Find a directory part in NAME, return now if none.
+      Separator_Pos := 0;
+      for I in Filename'Range loop
+         if Filename (I) = '/' or Filename (I) = '\' then
+            Separator_Pos := I;
+         end if;
+      end loop;
+      if Separator_Pos = 0 then
+         return;
+      end if;
+
+      --  Move the directory part to DIRECTORY.
+      if Directory /= Null_Identifier then
+         Image (Directory);
+      else
+         Nam_Length := 0;
+      end if;
+      for I in Filename'First .. Separator_Pos loop
+         Nam_Length := Nam_Length + 1;
+         Nam_Buffer (Nam_Length) := Filename (I);
+      end loop;
+      Directory := Get_Identifier;
+      Name := Get_Identifier (Filename (Separator_Pos + 1 .. Filename'Last));
+   end Normalize_Pathname;
+
    --  Find a source_file by DIRECTORY and NAME.
    --  Return NO_SOURCE_FILE_ENTRY if not already opened.
    function Find_Source_File (Directory : Name_Id; Name: Name_Id)
