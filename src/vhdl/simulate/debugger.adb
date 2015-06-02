@@ -848,7 +848,7 @@ package body Debugger is
       Put (Disp_Node (Instance.Label));
       if Instance.Stmt /= Null_Iir then
          Put (" at ");
-         Put (Get_Location_Str (Get_Location (Instance.Stmt)));
+         Put (Files_Map.Image (Get_Location (Instance.Stmt)));
       end if;
       New_Line;
    end Disp_A_Frame;
@@ -975,7 +975,7 @@ package body Debugger is
    procedure Disp_Process_Loc (Proc : Process_State_Type) is
    begin
       Disp_Instance_Name (Proc.Top_Instance);
-      Put (" (" & Get_Location_Str (Get_Location (Proc.Proc)) & ")");
+      Put (" (" & Files_Map.Image (Get_Location (Proc.Proc)) & ")");
       New_Line;
    end Disp_Process_Loc;
 
@@ -1039,8 +1039,7 @@ package body Debugger is
 
    procedure Set_Breakpoint (Stmt : Iir) is
    begin
-      Put_Line
-        ("set breakpoint at: " & Get_Location_Str (Get_Location (Stmt)));
+      Put_Line ("set breakpoint at: " & Files_Map.Image (Get_Location (Stmt)));
       Breakpoints.Append (Breakpoint_Entry'(Stmt => Stmt));
       Flag_Need_Debug := True;
    end Set_Breakpoint;

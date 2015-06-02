@@ -1701,7 +1701,7 @@ package body Elaboration is
       --  declaration and architecture body or is bound to a configuration of
       --  such a design entity.
       if not Is_Fully_Bound (Conf) then
-         Warning_Msg (Disp_Node (Stmt) & " not bound");
+         Warning_Msg_Elab (Disp_Node (Stmt) & " not bound", Stmt);
          return;
       end if;
 

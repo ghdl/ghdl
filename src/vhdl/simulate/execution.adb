@@ -264,7 +264,7 @@ package body Execution is
            | Iir_Kind_Enumeration_Subtype_Definition =>
             declare
                Lits : constant Iir_List :=
-                 Get_Enumeration_Literal_List (Expr_Type);
+                 Get_Enumeration_Literal_List (Get_Base_Type (Expr_Type));
                Pos : Natural;
             begin
                case Val.Kind is
@@ -1377,8 +1377,8 @@ package body Execution is
             end;
 
          when others =>
-            Error_Msg ("execute_implicit_function: unimplemented " &
-                       Iir_Predefined_Functions'Image (Func));
+            Error_Msg_Elab ("execute_implicit_function: unimplemented " &
+                              Iir_Predefined_Functions'Image (Func), Expr);
             raise Internal_Error;
       end case;
       return Result;
@@ -2672,6 +2672,7 @@ package body Execution is
                Enums : constant Iir_List :=
                  Get_Enumeration_Literal_List (Get_Base_Type (Expr_Type));
                Enum : Iir;
+               Lit_Id : Name_Id;
                Enum_Id : Name_Id;
             begin
                --  Remove leading and trailing blanks
@@ -2688,22 +2689,40 @@ package body Execution is
                   end if;
                end loop;
 
-               --  Convert to lower case.
-               for I in Lit_Start .. Lit_End loop
-                  Str_Str (I) := Grt.Values.To_LC (Str_Str (I));
-               end loop;
+               if Str_Str (Lit_Start) = '''
+                 and then Str_Str (Lit_End) = '''
+                 and then Lit_End = Lit_Start + 2
+               then
+                  --  Enumeration literal.
+                  Lit_Id := Get_Identifier (Str_Str (Lit_Start + 1));
 
-               for I in Natural loop
-                  Enum := Get_Nth_Element (Enums, I);
-                  if Enum = Null_Iir then
-                     Error_Msg_Exec ("incorrect unit name", Expr);
-                  end if;
-                  Enum_Id := Get_Identifier (Enum);
-                  exit when (Get_Name_Length (Enum_Id) =
-                               Natural (Lit_End - Lit_Start + 1))
-                    and then (Image (Enum_Id) =
-                                String (Str_Str (Lit_Start .. Lit_End)));
-               end loop;
+                  for I in Natural loop
+                     Enum := Get_Nth_Element (Enums, I);
+                     exit when Enum = Null_Iir;
+                     exit when Get_Identifier (Enum) = Lit_Id;
+                  end loop;
+               else
+                  --  Literal identifier.
+                  --  Convert to lower case.
+                  for I in Lit_Start .. Lit_End loop
+                     Str_Str (I) := Grt.Values.To_LC (Str_Str (I));
+                  end loop;
+
+                  for I in Natural loop
+                     Enum := Get_Nth_Element (Enums, I);
+                     exit when Enum = Null_Iir;
+                     Enum_Id := Get_Identifier (Enum);
+                     exit when (Get_Name_Length (Enum_Id) =
+                                  Natural (Lit_End - Lit_Start + 1))
+                       and then (Image (Enum_Id) =
+                                   String (Str_Str (Lit_Start .. Lit_End)));
+                  end loop;
+               end if;
+
+               if Enum = Null_Iir then
+                  Error_Msg_Exec
+                    ("incorrect enumeration literal for 'value", Expr);
+               end if;
 
                return Create_Enum_Value
                  (Natural (Get_Enum_Pos (Enum)), Expr_Type);

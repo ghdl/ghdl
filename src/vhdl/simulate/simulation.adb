@@ -1616,7 +1616,7 @@ package body Simulation is
       end loop;
 
       if In_Signals /= 0 then
-         Error_Msg ("top entity should not have inputs signals");
+         Error_Msg_Elab ("top entity should not have inputs signals", Entity);
          -- raise Simulation_Error;
       end if;
 
