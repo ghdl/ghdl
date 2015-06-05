@@ -1575,6 +1575,10 @@ package body Ortho_Debug is
    is
       N : O_Anode;
    begin
+      if Assocs.Interfaces = null then
+         --  Too many arguments.
+         raise Syntax_Error;
+      end if;
       Check_Type (Assocs.Interfaces.Dtype, Val.Rtype);
       Check_Ref (Val);
       N := new O_Anode_Type'(Next => null,
