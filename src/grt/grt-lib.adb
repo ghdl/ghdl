@@ -272,25 +272,25 @@ package body Grt.Lib is
    end Ghdl_Get_Resolution_Limit;
 
    procedure Ghdl_Control_Simulation
-     (Stop : Ghdl_B1; Has_Status : Ghdl_B1; Status : Std_Integer) is
+     (Params : Ghdl_Control_Simulation_Params_Ptr) is
    begin
       Report_H;
       --  Report_C (Grt.Options.Progname);
       Report_C ("simulation ");
-      if Stop then
+      if Params.Stop then
          Report_C ("stopped");
       else
          Report_C ("finished");
       end if;
       Report_C (" @");
       Report_Now_C;
-      if Has_Status then
+      if Params.Has_Status then
          Report_C (" with status ");
-         Report_C (Integer (Status));
+         Report_C (Integer (Params.Status));
       end if;
       Report_E ("");
-      if Has_Status then
-         Exit_Status := Integer (Status);
+      if Params.Has_Status then
+         Exit_Status := Integer (Params.Status);
       end if;
       Exit_Simulation;
    end Ghdl_Control_Simulation;

@@ -1608,11 +1608,11 @@ package body Trans.Chap8 is
       end case;
    end Translate_Implicit_Procedure_Call;
 
-   function Do_Conversion (Conv : Iir; Expr : Iir; Src : Mnode) return O_Enode
-   is
+   function Do_Conversion (Conv : Iir; Expr : Iir; Src : O_Enode)
+                          return O_Enode is
    begin
       if Conv = Null_Iir then
-         return M2E (Src);
+         return Src;
          --  case Get_Type_Info (Dest).Type_Mode is
          --     when Type_Mode_Thin =>
          --        New_Assign_Stmt (M2Lv (Dest), M2E (Src));
@@ -1647,7 +1647,7 @@ package body Trans.Chap8 is
                   Subprgs.Add_Subprg_Instance_Assoc
                     (Constr, Conv_Info.Subprg_Instance);
 
-                  New_Association (Constr, M2E (Src));
+                  New_Association (Constr, Src);
 
                   if Conv_Info.Res_Interface /= O_Dnode_Null then
                      --  Composite result.
@@ -1660,13 +1660,43 @@ package body Trans.Chap8 is
                end;
             when Iir_Kind_Type_Conversion =>
                return Chap7.Translate_Type_Conversion
-                 (M2E (Src), Get_Type (Expr),
-                  Get_Type (Conv), Null_Iir);
+                 (Src, Get_Type (Expr), Get_Type (Conv), Null_Iir);
             when others =>
                Error_Kind ("do_conversion", Conv);
          end case;
       end if;
    end Do_Conversion;
+
+   --  Translate the formal name FORMAL_NAME of an individual association but
+   --  replace the interface name by INTER_VAR.  FORMAL_INFO is the info of
+   --  the interface.  This is used to access to a sub-element of the variable
+   --  representing the whole actual.
+   function Translate_Individual_Association_Formal
+     (Formal_Name : Iir;
+      Formal_Info : Ortho_Info_Acc;
+      Inter_Var : Mnode)
+     return Mnode
+   is
+      Prev_Node : O_Dnode;
+      Prev_Field : O_Fnode;
+      Res : Mnode;
+   begin
+      --  Change the formal variable so that it is the local variable
+      --  that will be passed to the subprogram.
+      Prev_Node := Formal_Info.Interface_Node;
+      Prev_Field := Formal_Info.Interface_Field;
+
+      --  We need a pointer since the interface is by reference.
+      Formal_Info.Interface_Node := M2Dp (Inter_Var);
+      Formal_Info.Interface_Field := O_Fnode_Null;
+
+      Res := Chap6.Translate_Name (Formal_Name);
+
+      Formal_Info.Interface_Node := Prev_Node;
+      Formal_Info.Interface_Field := Prev_Field;
+
+      return Res;
+   end Translate_Individual_Association_Formal;
 
    function Translate_Subprogram_Call (Imp : Iir; Assoc_Chain : Iir; Obj : Iir)
                                       return O_Enode
@@ -1674,14 +1704,21 @@ package body Trans.Chap8 is
       Is_Procedure : constant Boolean :=
         Get_Kind (Imp) = Iir_Kind_Procedure_Declaration;
       Is_Function : constant Boolean := not Is_Procedure;
+      Info : constant Subprg_Info_Acc := Get_Info (Imp);
+
       type Mnode_Array is array (Natural range <>) of Mnode;
       type O_Enode_Array is array (Natural range <>) of O_Enode;
       Nbr_Assoc : constant Natural :=
         Iir_Chains.Get_Chain_Length (Assoc_Chain);
+
+      --  References to the formals (for copy-out), and variables for whole
+      --  actual of individual associations.
       Params : Mnode_Array (0 .. Nbr_Assoc - 1);
+
+      --  The values of actuals.
       E_Params : O_Enode_Array (0 .. Nbr_Assoc - 1);
-      Info : constant Subprg_Info_Acc := Get_Info (Imp);
-      Copy_Out : O_Dnode;
+
+      Params_Var : O_Dnode;
       Res : Mnode;
       El : Iir;
       Pos : Natural;
@@ -1689,17 +1726,17 @@ package body Trans.Chap8 is
       Act : Iir;
       Actual_Type : Iir;
       Formal : Iir;
+      Mode : Iir_Mode;
       Base_Formal : Iir;
       Formal_Type : Iir;
       Ftype_Info : Type_Info_Acc;
-      Ftype_Binfo : Type_Info_Acc;
       Formal_Info : Ortho_Info_Acc;
       Val : O_Enode;
       Param : Mnode;
+      Param_Type : Iir;
       Last_Individual : Natural;
       Ptr : O_Lnode;
       In_Conv : Iir;
-      In_Expr : Iir;
       Out_Conv : Iir;
       Out_Expr : Iir;
       Formal_Object_Kind : Object_Kind_Type;
@@ -1724,12 +1761,11 @@ package body Trans.Chap8 is
          end;
       end if;
 
-      --  Create an in-out result record for in-out arguments passed by
-      --  value.
-      if Is_Procedure and then Info.Res_Record_Type /= O_Tnode_Null then
-         Copy_Out := Create_Temp (Info.Res_Record_Type);
+      --  Create the variable containing the parameters (only for procedures).
+      if Is_Procedure and then Info.Subprg_Params_Type /= O_Tnode_Null then
+         Params_Var := Create_Temp (Info.Subprg_Params_Type);
       else
-         Copy_Out := O_Dnode_Null;
+         Params_Var := O_Dnode_Null;
       end if;
 
       --  Evaluate in-out parameters and parameters passed by ref, since
@@ -1742,145 +1778,138 @@ package body Trans.Chap8 is
          Params (Pos) := Mnode_Null;
          E_Params (Pos) := O_Enode_Null;
 
-         Formal := Get_Formal (El);
-         if Get_Kind (Formal) in Iir_Kinds_Denoting_Name then
-            Formal := Get_Named_Entity (Formal);
-         end if;
+         Formal := Strip_Denoting_Name (Get_Formal (El));
          Base_Formal := Get_Association_Interface (El);
          Formal_Type := Get_Type (Formal);
          Formal_Info := Get_Info (Base_Formal);
+         Ftype_Info := Get_Info (Formal_Type);
+
          if Get_Kind (Base_Formal) = Iir_Kind_Interface_Signal_Declaration
          then
             Formal_Object_Kind := Mode_Signal;
          else
             Formal_Object_Kind := Mode_Value;
          end if;
-         Ftype_Info := Get_Info (Formal_Type);
-         Ftype_Binfo := Get_Info (Get_Base_Type (Formal_Type));
 
          case Get_Kind (El) is
             when Iir_Kind_Association_Element_Open =>
                Act := Get_Default_Value (Formal);
                In_Conv := Null_Iir;
-               Out_Conv := Null_Iir;
             when Iir_Kind_Association_Element_By_Expression =>
                Act := Get_Actual (El);
                In_Conv := Get_In_Conversion (El);
-               Out_Conv := Get_Out_Conversion (El);
             when Iir_Kind_Association_Element_By_Individual =>
                Actual_Type := Get_Actual_Type (El);
 
-               --  A non-composite type cannot be associated by element.
-               pragma Assert (Formal_Info.Interface_Field = O_Fnode_Null);
-
                if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                  --  Create the constraints and then the object.
                   Chap3.Create_Array_Subtype (Actual_Type, True);
                   Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
                   Param := Create_Temp (Ftype_Info, Formal_Object_Kind);
                   Chap3.Translate_Object_Allocation
                     (Param, Alloc_Stack, Formal_Type, Bounds);
                else
+                  --  Create the object.
                   Param := Create_Temp (Ftype_Info, Formal_Object_Kind);
                   Chap4.Allocate_Complex_Object
                     (Formal_Type, Alloc_Stack, Param);
                end if;
+
+               --  Save the object as it will be used by the following
+               --  associations.
                Last_Individual := Pos;
                Params (Pos) := Param;
+
+               if Formal_Info.Interface_Field /= O_Fnode_Null then
+                  --  Set the PARAMS field.
+                  Ptr := New_Selected_Element
+                    (New_Obj (Params_Var), Formal_Info.Interface_Field);
+                  New_Assign_Stmt (Ptr, M2E (Param));
+               end if;
+
                goto Continue;
             when others =>
                Error_Kind ("translate_procedure_call", El);
          end case;
          Actual_Type := Get_Type (Act);
 
-         if Formal_Info.Interface_Field /= O_Fnode_Null then
-            --  Copy-out argument.
-            --  This is not a composite type.
-            Param := Chap6.Translate_Name (Act);
-            pragma Assert (Get_Object_Kind (Param) = Mode_Value);
-            Params (Pos) := Stabilize (Param);
-            if In_Conv /= Null_Iir
-              or else Get_Mode (Formal) = Iir_Inout_Mode
-            then
-               --  Arguments may be assigned if there is an in conversion.
-               Ptr := New_Selected_Element
-                 (New_Obj (Copy_Out), Formal_Info.Interface_Field);
-               Param := Lv2M (Ptr, Ftype_Info, Mode_Value);
-               if In_Conv /= Null_Iir then
-                  In_Expr := In_Conv;
+         --  Evaluate the actual.
+         Param_Type := Actual_Type;
+         case Get_Kind (Base_Formal) is
+            when Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_File_Declaration =>
+               --  No conversion here.
+               pragma Assert (In_Conv = Null_Iir);
+               Val := Chap7.Translate_Expression (Act, Formal_Type);
+               Param_Type := Formal_Type;
+            when Iir_Kind_Interface_Signal_Declaration =>
+               --  No conversion.
+               Param := Chap6.Translate_Name (Act);
+               Val := M2E (Param);
+            when Iir_Kind_Interface_Variable_Declaration =>
+               Mode := Get_Mode (Base_Formal);
+               if Mode = Iir_In_Mode then
+                  Val := Chap7.Translate_Expression (Act);
                else
-                  In_Expr := Act;
-               end if;
-               Chap7.Translate_Assign
-                 (Param,
-                  Do_Conversion (In_Conv, Act, Params (Pos)),
-                  In_Expr,
-                  Formal_Type, El);
-            end if;
-         elsif Ftype_Binfo.Type_Mode not in Type_Mode_By_Value then
-            --  Passed by reference.
-            case Get_Kind (Base_Formal) is
-               when Iir_Kind_Interface_Constant_Declaration
-                  | Iir_Kind_Interface_File_Declaration =>
-                  --  No conversion here.
-                  E_Params (Pos) :=
-                    Chap7.Translate_Expression (Act, Formal_Type);
-               when Iir_Kind_Interface_Variable_Declaration
-                  | Iir_Kind_Interface_Signal_Declaration =>
                   Param := Chap6.Translate_Name (Act);
-                  --  Atype may not have been set (eg: slice).
-                  if Base_Formal /= Formal then
+                  if Base_Formal /= Formal
+                    or else Ftype_Info.Type_Mode in Type_Mode_By_Value
+                  then
+                     --  For out/inout, we need to keep the reference for the
+                     --  copy-out.
                      Stabilize (Param);
                      Params (Pos) := Param;
                   end if;
-                  E_Params (Pos) := M2E (Param);
-                  if Formal_Type /= Actual_Type then
-                     --  Implicit array conversion or subtype check.
-                     E_Params (Pos) := Chap7.Translate_Implicit_Conv
-                       (E_Params (Pos), Actual_Type, Formal_Type,
-                        Get_Object_Kind (Param), Act);
+                  if In_Conv = Null_Iir
+                    and then Mode = Iir_Out_Mode
+                    and then Ftype_Info.Type_Mode in Type_Mode_Thin
+                    and then Ftype_Info.Type_Mode /= Type_Mode_File
+                  then
+                     --  Scalar OUT interface.  Just give an initial value.
+                     --  FIXME: individual association ??
+                     Val := Chap4.Get_Scalar_Initial_Value (Formal_Type);
+                     Param_Type := Formal_Type;
+                  else
+                     Val := M2E (Param);
                   end if;
-               when others =>
-                  Error_Kind ("translate_procedure_call(2)", Formal);
-            end case;
-         end if;
-         if Base_Formal /= Formal then
-            --  Individual association.
-            if Ftype_Binfo.Type_Mode not in Type_Mode_By_Value then
-               --  Not by-value actual already translated.
-               Val := E_Params (Pos);
-            else
-               --  By value association.
-               Act := Get_Actual (El);
-               if Get_Kind (Base_Formal)
-                 = Iir_Kind_Interface_Constant_Declaration
-               then
-                  Val := Chap7.Translate_Expression (Act, Formal_Type);
-               else
-                  Params (Pos) := Chap6.Translate_Name (Act);
-                  --  Since signals are passed by reference, they are not
-                  --  copied back, so do not stabilize them (furthermore,
-                  --  it is not possible to stabilize them).
-                  if Formal_Object_Kind = Mode_Value then
-                     Params (Pos) := Stabilize (Params (Pos));
-                  end if;
-                  Val := M2E (Params (Pos));
                end if;
-            end if;
-            --  Assign formal.
-            --  Change the formal variable so that it is the local variable
-            --  that will be passed to the subprogram.
-            declare
-               Prev_Node : O_Dnode;
-            begin
-               Prev_Node := Formal_Info.Interface_Node;
-               --  We need a pointer since the interface is by reference.
-               Formal_Info.Interface_Node :=
-                 M2Dp (Params (Last_Individual));
-               Param := Chap6.Translate_Name (Formal);
-               Formal_Info.Interface_Node := Prev_Node;
-            end;
-            Chap7.Translate_Assign (Param, Val, Act, Formal_Type, El);
+               if In_Conv /= Null_Iir then
+                  Val := Do_Conversion (In_Conv, Act, Val);
+                  Act := In_Conv;
+                  Param_Type := Get_Type (In_Conv);
+               end if;
+            when others =>
+               Error_Kind ("translate_procedure_call(2)", Formal);
+         end case;
+
+         --  Implicit conversion to formal type.
+         if Param_Type /= Formal_Type then
+            --  Implicit array conversion or subtype check.
+            Val := Chap7.Translate_Implicit_Conv
+              (Val, Param_Type, Formal_Type, Formal_Object_Kind, Act);
          end if;
+         if Get_Kind (Base_Formal) /= Iir_Kind_Interface_Signal_Declaration
+         then
+            Val := Chap3.Maybe_Insert_Scalar_Check (Val, Act, Formal_Type);
+         end if;
+
+         --  Assign actual, if needed.
+         if Base_Formal /= Formal then
+            --  Individual association: assign the individual actual to the
+            --  whole actual.
+            Param := Translate_Individual_Association_Formal
+              (Formal, Formal_Info, Params (Last_Individual));
+            Chap7.Translate_Assign
+              (Param, Val, Act, Formal_Type, El);
+         elsif Formal_Info.Interface_Field /= O_Fnode_Null then
+            --  Set the PARAMS field.
+            Ptr := New_Selected_Element
+              (New_Obj (Params_Var), Formal_Info.Interface_Field);
+            New_Assign_Stmt (Ptr, Val);
+         else
+            E_Params (Pos) := Val;
+         end if;
+
          << Continue >> null;
          El := Get_Chain (El);
          Pos := Pos + 1;
@@ -1894,14 +1923,17 @@ package body Trans.Chap8 is
          New_Association (Constr, M2E (Res));
       end if;
 
-      if Copy_Out /= O_Dnode_Null then
-         New_Association
-           (Constr, New_Address (New_Obj (Copy_Out), Info.Res_Record_Ptr));
+      if Params_Var /= O_Dnode_Null then
+         --  Parameters record (for procedures).
+         New_Association (Constr, New_Address (New_Obj (Params_Var),
+                                               Info.Subprg_Params_Ptr));
       end if;
 
       if Obj /= Null_Iir then
+         --  Protected object.
          New_Association (Constr, M2E (Chap6.Translate_Name (Obj)));
       else
+         --  Instance.
          Subprgs.Add_Subprg_Instance_Assoc (Constr, Info.Subprg_Instance);
       end if;
 
@@ -1909,64 +1941,17 @@ package body Trans.Chap8 is
       El := Assoc_Chain;
       Pos := 0;
       while El /= Null_Iir loop
-         Formal := Get_Formal (El);
-         if Get_Kind (Formal) in Iir_Kinds_Denoting_Name then
-            Formal := Get_Named_Entity (Formal);
-         end if;
+         Formal := Strip_Denoting_Name (Get_Formal (El));
          Base_Formal := Get_Association_Interface (El);
          Formal_Info := Get_Info (Base_Formal);
-         Formal_Type := Get_Type (Formal);
-         Ftype_Info := Get_Info (Formal_Type);
 
-         if Get_Kind (El) = Iir_Kind_Association_Element_By_Individual then
-            Last_Individual := Pos;
-            New_Association (Constr, M2E (Params (Pos)));
-         elsif Base_Formal /= Formal then
-            --  Individual association.
-            null;
-         elsif Formal_Info.Interface_Field = O_Fnode_Null then
-            if Ftype_Info.Type_Mode in Type_Mode_By_Value then
-               --  Parameter passed by value.
-               if E_Params (Pos) /= O_Enode_Null then
-                  Val := E_Params (Pos);
-                  raise Internal_Error;
-               else
-                  case Get_Kind (El) is
-                     when Iir_Kind_Association_Element_Open =>
-                        Act := Get_Default_Value (Formal);
-                        In_Conv := Null_Iir;
-                     when Iir_Kind_Association_Element_By_Expression =>
-                        Act := Get_Actual (El);
-                        In_Conv := Get_In_Conversion (El);
-                     when others =>
-                        Error_Kind ("translate_procedure_call(2)", El);
-                  end case;
-                  case Get_Kind (Formal) is
-                     when Iir_Kind_Interface_Signal_Declaration =>
-                        Param := Chap6.Translate_Name (Act);
-                        --  This is a scalar.
-                        Val := M2E (Param);
-                     when others =>
-                        if In_Conv = Null_Iir then
-                           Val := Chap7.Translate_Expression
-                             (Act, Formal_Type);
-                           Val := Chap3.Maybe_Insert_Scalar_Check
-                             (Val, Act, Formal_Type);
-                        else
-                           Actual_Type := Get_Type (Act);
-                           Val := Do_Conversion
-                             (In_Conv,
-                              Act,
-                              E2M (Chap7.Translate_Expression (Act,
-                                Actual_Type),
-                                Get_Info (Actual_Type),
-                                Mode_Value));
-                        end if;
-                  end case;
-               end if;
-               New_Association (Constr, Val);
-            else
-               --  Parameter passed by ref, which was already computed.
+         if Formal_Info.Interface_Field = O_Fnode_Null then
+            --  Not a PARAMS field.
+            if Get_Kind (El) = Iir_Kind_Association_Element_By_Individual then
+               --  Pass the whole data for an individual association.
+               New_Association (Constr, M2E (Params (Pos)));
+            elsif Base_Formal = Formal then
+               --  Whole association.
                New_Association (Constr, E_Params (Pos));
             end if;
          end if;
@@ -1974,6 +1959,7 @@ package body Trans.Chap8 is
          Pos := Pos + 1;
       end loop;
 
+      --  Subprogram call.
       if Is_Procedure then
          New_Procedure_Call (Constr);
       else
@@ -1990,49 +1976,43 @@ package body Trans.Chap8 is
       El := Assoc_Chain;
       Pos := 0;
       while El /= Null_Iir loop
-         Formal := Get_Formal (El);
-         Base_Formal := Get_Association_Interface (El);
-         Formal_Type := Get_Type (Formal);
-         Ftype_Info := Get_Info (Formal_Type);
-         Formal_Info := Get_Info (Base_Formal);
-         if Get_Kind (Base_Formal) = Iir_Kind_Interface_Variable_Declaration
-           and then Get_Mode (Base_Formal) in Iir_Out_Modes
-           and then Params (Pos) /= Mnode_Null
-         then
-            if Formal_Info.Interface_Field /= O_Fnode_Null then
-               --  OUT parameters.
-               Out_Conv := Get_Out_Conversion (El);
-               if Out_Conv = Null_Iir then
-                  Out_Expr := Formal;
-               else
-                  Out_Expr := Out_Conv;
-               end if;
+         if Get_Kind (El) = Iir_Kind_Association_Element_By_Individual then
+            Last_Individual := Pos;
+         elsif Params (Pos) /= Mnode_Null then
+            Formal := Strip_Denoting_Name (Get_Formal (El));
+            Base_Formal := Get_Association_Interface (El);
+
+            pragma Assert (Get_Kind (Base_Formal)
+                             = Iir_Kind_Interface_Variable_Declaration);
+            pragma Assert (Get_Mode (Base_Formal) in Iir_Out_Modes);
+
+            Formal_Type := Get_Type (Formal);
+            Ftype_Info := Get_Info (Formal_Type);
+            Formal_Info := Get_Info (Base_Formal);
+
+            --  Extract the value
+            if Base_Formal /= Formal then
+               --  By individual, copy back.
+               Param := Translate_Individual_Association_Formal
+                 (Formal, Formal_Info, Params (Last_Individual));
+            else
+               pragma Assert (Formal_Info.Interface_Field /= O_Fnode_Null);
                Ptr := New_Selected_Element
-                 (New_Obj (Copy_Out), Formal_Info.Interface_Field);
+                 (New_Obj (Params_Var), Formal_Info.Interface_Field);
                Param := Lv2M (Ptr, Ftype_Info, Mode_Value);
-               Chap7.Translate_Assign (Params (Pos),
-                                       Do_Conversion (Out_Conv, Formal,
-                                         Param),
-                                       Out_Expr,
-                                       Get_Type (Get_Actual (El)), El);
-            elsif Base_Formal /= Formal then
-               --  By individual.
-               --  Copy back.
-               Act := Get_Actual (El);
-               declare
-                  Prev_Node : O_Dnode;
-               begin
-                  Prev_Node := Formal_Info.Interface_Node;
-                  --  We need a pointer since the interface is by reference.
-                  Formal_Info.Interface_Node :=
-                    M2Dp (Params (Last_Individual));
-                  Val := Chap7.Translate_Expression
-                    (Formal, Get_Type (Act));
-                  Formal_Info.Interface_Node := Prev_Node;
-               end;
-               Chap7.Translate_Assign
-                 (Params (Pos), Val, Formal, Get_Type (Act), El);
             end if;
+
+            Out_Conv := Get_Out_Conversion (El);
+            if Out_Conv = Null_Iir then
+               Out_Expr := Formal;
+               Val := M2E (Param);
+            else
+               Out_Expr := Out_Conv;
+               Val := Do_Conversion (Out_Conv, Formal, M2E (Param));
+            end if;
+
+            Chap7.Translate_Assign
+              (Params (Pos), Val, Out_Expr, Get_Type (Get_Actual (El)), El);
          end if;
          El := Get_Chain (El);
          Pos := Pos + 1;

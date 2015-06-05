@@ -38,8 +38,8 @@ package body Trans.Chap2 is
 
    procedure Elab_Package (Spec : Iir_Package_Declaration);
 
-   type Name_String_Xlat_Array is array (Name_Id range <>) of
-     String (1 .. 4);
+   type Name_String_Xlat_Array is array (Name_Id range <>) of String (1 .. 4);
+
    Operator_String_Xlat : constant
      Name_String_Xlat_Array (Std_Names.Name_Id_Operators) :=
      (Std_Names.Name_Op_Equality => "OPEq",
@@ -66,11 +66,10 @@ package body Trans.Chap2 is
    --  overload number if any.
    procedure Push_Subprg_Identifier (Spec : Iir; Mark : out Id_Mark_Type)
    is
-      Id : Name_Id;
+      Id : constant Name_Id := Get_Identifier (Spec);
    begin
       --  FIXME: name_shift_operators, name_logical_operators,
       --   name_word_operators, name_mod, name_rem
-      Id := Get_Identifier (Spec);
       if Id in Std_Names.Name_Id_Operators then
          Push_Identifier_Prefix
            (Mark, Operator_String_Xlat (Id), Get_Overload_Number (Spec));
@@ -109,7 +108,6 @@ package body Trans.Chap2 is
       end loop;
    end Elab_Subprogram_Interfaces;
 
-
    --  Return the type of a subprogram interface.
    --  Return O_Tnode_Null if the parameter is passed through the
    --  interface record.
@@ -141,21 +139,19 @@ package body Trans.Chap2 is
 
    procedure Translate_Subprogram_Declaration (Spec : Iir)
    is
-      Info              : constant Subprg_Info_Acc := Get_Info (Spec);
-      Is_Func           : constant Boolean :=
+      Info : constant Subprg_Info_Acc := Get_Info (Spec);
+      Is_Func : constant Boolean :=
         Get_Kind (Spec) = Iir_Kind_Function_Declaration;
-      Inter             : Iir;
-      Inter_Type        : Iir;
-      Arg_Info          : Ortho_Info_Acc;
-      Tinfo             : Type_Info_Acc;
-      Interface_List    : O_Inter_List;
-      Has_Result_Record : Boolean;
-      El_List           : O_Element_List;
-      Mark              : Id_Mark_Type;
-      Rtype             : Iir;
-      Id                : O_Ident;
-      Storage           : O_Storage;
-      Foreign           : Foreign_Info_Type := Foreign_Bad;
+      Inter : Iir;
+      Arg_Info : Ortho_Info_Acc;
+      Tinfo : Type_Info_Acc;
+      Interface_List : O_Inter_List;
+      El_List : O_Element_List;
+      Mark : Id_Mark_Type;
+      Rtype : Iir;
+      Id : O_Ident;
+      Storage : O_Storage;
+      Foreign : Foreign_Info_Type := Foreign_Bad;
    begin
       --  Set the identifier prefix with the subprogram identifier and
       --  overload number if any.
@@ -210,54 +206,37 @@ package body Trans.Chap2 is
          --  For parameters passed via copy and that needs a copy-out,
          --  gather them in a record.  An access to the record is then
          --  passed to the procedure.
-         Has_Result_Record := False;
          Inter := Get_Interface_Declaration_Chain (Spec);
-         while Inter /= Null_Iir loop
-            Arg_Info := Add_Info (Inter, Kind_Interface);
-            Inter_Type := Get_Type (Inter);
-            Tinfo := Get_Info (Inter_Type);
-            if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
-              and then Get_Mode (Inter) in Iir_Out_Modes
-              and then Tinfo.Type_Mode not in Type_Mode_By_Ref
-              and then Tinfo.Type_Mode /= Type_Mode_File
-            then
-               --  This interface is done via the result record.
-               --  Note: file passed through variables are vhdl87 files,
-               --        which are initialized at elaboration and thus
-               --        behave like an IN parameter.
-               if not Has_Result_Record then
-                  --  Create the record.
-                  Start_Record_Type (El_List);
-                  Has_Result_Record := True;
-               end if;
-               --  Add a field to the record.
+         if Inter /= Null_Iir then
+            Start_Record_Type (El_List);
+            while Inter /= Null_Iir loop
+               Arg_Info := Add_Info (Inter, Kind_Interface);
                New_Record_Field (El_List, Arg_Info.Interface_Field,
                                  Create_Identifier_Without_Prefix (Inter),
-                                 Tinfo.Ortho_Type (Mode_Value));
-            else
-               Arg_Info.Interface_Field := O_Fnode_Null;
-            end if;
-            Inter := Get_Chain (Inter);
-         end loop;
-         if Has_Result_Record then
+                                 Translate_Interface_Type (Inter));
+               Inter := Get_Chain (Inter);
+            end loop;
             --  Declare the record type and an access to the record.
-            Finish_Record_Type (El_List, Info.Res_Record_Type);
-            New_Type_Decl (Create_Identifier ("RESTYPE"),
-                           Info.Res_Record_Type);
-            Info.Res_Record_Ptr := New_Access_Type (Info.Res_Record_Type);
-            New_Type_Decl (Create_Identifier ("RESPTR"),
-                           Info.Res_Record_Ptr);
+            Finish_Record_Type (El_List, Info.Subprg_Params_Type);
+            New_Type_Decl (Create_Identifier ("PARAMSTYPE"),
+                           Info.Subprg_Params_Type);
+            Info.Subprg_Params_Ptr :=
+              New_Access_Type (Info.Subprg_Params_Type);
+            New_Type_Decl (Create_Identifier ("PARAMSPTR"),
+                           Info.Subprg_Params_Ptr);
          else
-            Info.Res_Interface := O_Dnode_Null;
+            Info.Subprg_Params_Type := O_Tnode_Null;
+            Info.Subprg_Params_Ptr := O_Tnode_Null;
          end if;
 
          Start_Procedure_Decl (Interface_List, Id, Storage);
 
-         if Has_Result_Record then
-            --  Add the record parameter.
+         if Info.Subprg_Params_Type /= O_Tnode_Null then
             New_Interface_Decl (Interface_List, Info.Res_Interface,
-                                Get_Identifier ("RESULT"),
-                                Info.Res_Record_Ptr);
+                                Get_Identifier ("PARAMS"),
+                                Info.Subprg_Params_Ptr);
+         else
+            Info.Res_Interface := O_Dnode_Null;
          end if;
       end if;
 
@@ -267,27 +246,21 @@ package body Trans.Chap2 is
       end if;
 
       --  Translate interfaces.
-      Inter := Get_Interface_Declaration_Chain (Spec);
-      while Inter /= Null_Iir loop
-         if Is_Func then
+      if Is_Func then
+         Inter := Get_Interface_Declaration_Chain (Spec);
+         while Inter /= Null_Iir loop
             --  Create the info.
             Arg_Info := Add_Info (Inter, Kind_Interface);
             Arg_Info.Interface_Field := O_Fnode_Null;
-         else
-            --  The info was already created (just above)
-            Arg_Info := Get_Info (Inter);
-         end if;
 
-         if Arg_Info.Interface_Field = O_Fnode_Null then
-            --  Not via the RESULT parameter.
             Arg_Info.Interface_Type := Translate_Interface_Type (Inter);
             New_Interface_Decl
               (Interface_List, Arg_Info.Interface_Node,
                Create_Identifier_Without_Prefix (Inter),
                Arg_Info.Interface_Type);
-         end if;
-         Inter := Get_Chain (Inter);
-      end loop;
+            Inter := Get_Chain (Inter);
+         end loop;
+      end if;
       Finish_Subprogram_Decl (Interface_List, Info.Ortho_Func);
 
       --  Call the hook for foreign subprograms.
@@ -411,10 +384,10 @@ package body Trans.Chap2 is
          Push_Instance_Factory (Info.Subprg_Frame_Scope'Access);
          Add_Subprg_Instance_Field (Upframe_Field);
 
-         if Info.Res_Record_Ptr /= O_Tnode_Null then
-            Info.Res_Record_Var :=
+         if Info.Subprg_Params_Ptr /= O_Tnode_Null then
+            Info.Subprg_Params_Var :=
               Create_Var (Create_Var_Identifier ("RESULT"),
-                          Info.Res_Record_Ptr);
+                          Info.Subprg_Params_Ptr);
          end if;
 
          --  Create fields for parameters.
@@ -501,14 +474,14 @@ package body Trans.Chap2 is
          Subprgs.Set_Subprg_Instance_Field
            (Frame_Ptr, Upframe_Field, Info.Subprg_Instance);
 
-         if Info.Res_Record_Type /= O_Tnode_Null then
+         if Info.Subprg_Params_Type /= O_Tnode_Null then
             --  Initialize the RESULT field
-            New_Assign_Stmt (Get_Var (Info.Res_Record_Var),
+            New_Assign_Stmt (Get_Var (Info.Subprg_Params_Var),
                              New_Obj_Value (Info.Res_Interface));
             --  Do not reference the RESULT field in the subprogram body,
             --  directly reference the RESULT parameter.
             --  FIXME: has a flag (see below for parameters).
-            Info.Res_Record_Var := Null_Var;
+            Info.Subprg_Params_Var := Null_Var;
          end if;
 
          --  Copy parameters to FRAME.
@@ -534,31 +507,6 @@ package body Trans.Chap2 is
             end loop;
          end;
       end if;
-
-      --  Init out parameters passed by value/copy.
-      declare
-         Inter      : Iir;
-         Inter_Type : Iir;
-         Type_Info  : Type_Info_Acc;
-      begin
-         Inter := Get_Interface_Declaration_Chain (Spec);
-         while Inter /= Null_Iir loop
-            if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
-              and then Get_Mode (Inter) = Iir_Out_Mode
-            then
-               Inter_Type := Get_Type (Inter);
-               Type_Info := Get_Info (Inter_Type);
-               if (Type_Info.Type_Mode in Type_Mode_By_Value
-                   or Type_Info.Type_Mode in Type_Mode_By_Copy)
-                 and then Type_Info.Type_Mode /= Type_Mode_File
-               then
-                  Chap4.Init_Object
-                    (Chap6.Translate_Name (Inter), Inter_Type);
-               end if;
-            end if;
-            Inter := Get_Chain (Inter);
-         end loop;
-      end;
 
       Chap4.Elab_Declaration_Chain (Subprg, Final);
 
@@ -922,9 +870,9 @@ package body Trans.Chap2 is
                Use_Stack2 => Src.Use_Stack2,
                Ortho_Func => Src.Ortho_Func,
                Res_Interface => Src.Res_Interface,
-               Res_Record_Var => Instantiate_Var (Src.Res_Record_Var),
-               Res_Record_Type => Src.Res_Record_Type,
-               Res_Record_Ptr => Src.Res_Record_Ptr,
+               Subprg_Params_Var => Instantiate_Var (Src.Subprg_Params_Var),
+               Subprg_Params_Type => Src.Subprg_Params_Type,
+               Subprg_Params_Ptr => Src.Subprg_Params_Ptr,
                Subprg_Frame_Scope => Dest.Subprg_Frame_Scope,
                Subprg_Instance => Instantiate_Subprg_Instance
                  (Src.Subprg_Instance),

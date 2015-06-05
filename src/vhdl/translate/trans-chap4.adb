@@ -358,19 +358,28 @@ package body Trans.Chap4 is
       New_Procedure_Call (Assoc);
    end Fini_Protected_Object;
 
-   procedure Init_Object (Obj : Mnode; Obj_Type : Iir)
+   function Get_Scalar_Initial_Value (Atype : Iir) return O_Enode
    is
-      Tinfo : Type_Info_Acc;
+      Tinfo : constant Type_Info_Acc := Get_Info (Atype);
    begin
-      Tinfo := Get_Type_Info (Obj);
       case Tinfo.Type_Mode is
          when Type_Mode_Scalar =>
-            New_Assign_Stmt
-              (M2Lv (Obj), Chap14.Translate_Left_Type_Attribute (Obj_Type));
+            return Chap14.Translate_Left_Type_Attribute (Atype);
          when Type_Mode_Acc =>
-            New_Assign_Stmt
-              (M2Lv (Obj),
-               New_Lit (New_Null_Access (Tinfo.Ortho_Type (Mode_Value))));
+            return New_Lit (New_Null_Access (Tinfo.Ortho_Type (Mode_Value)));
+         when others =>
+            Error_Kind ("get_scalar_initial_value", Atype);
+      end case;
+   end Get_Scalar_Initial_Value;
+
+   procedure Init_Object (Obj : Mnode; Obj_Type : Iir)
+   is
+      Tinfo : constant Type_Info_Acc := Get_Type_Info (Obj);
+   begin
+      case Tinfo.Type_Mode is
+         when Type_Mode_Scalar
+           | Type_Mode_Acc =>
+            New_Assign_Stmt (M2Lv (Obj), Get_Scalar_Initial_Value (Obj_Type));
          when Type_Mode_Fat_Acc =>
             declare
                Dinfo : Type_Info_Acc;
@@ -814,7 +823,7 @@ package body Trans.Chap4 is
       if Data.Has_Val then
          Init_Val := M2E (Data.Val);
       else
-         Init_Val := Chap14.Translate_Left_Type_Attribute (Targ_Type);
+         Init_Val := Get_Scalar_Initial_Value (Targ_Type);
       end if;
 
       Start_Association (Assoc, Create_Subprg);

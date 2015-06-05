@@ -94,8 +94,18 @@ package Grt.Lib is
                                                     );
 
    function Ghdl_Get_Resolution_Limit return Std_Time;
+
+   type Ghdl_Control_Simulation_Params is record
+      Stop : Ghdl_B1;
+      Has_Status : Ghdl_B1;
+      Status : Std_Integer;
+   end record;
+
+   type Ghdl_Control_Simulation_Params_Ptr is access
+     Ghdl_Control_Simulation_Params;
+
    procedure Ghdl_Control_Simulation
-     (Stop : Ghdl_B1; Has_Status : Ghdl_B1; Status : Std_Integer);
+     (Params : Ghdl_Control_Simulation_Params_Ptr);
 private
    pragma Export (C, Ghdl_Memcpy, "__ghdl_memcpy");
 

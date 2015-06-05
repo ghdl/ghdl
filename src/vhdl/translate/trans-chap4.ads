@@ -87,6 +87,9 @@ package Trans.Chap4 is
    --  Allocate the storage for OBJ, if necessary.
    procedure Elab_Object_Storage (Obj : Iir);
 
+   --  For a scalar or access type ATYPE, return the default initial value.
+   function Get_Scalar_Initial_Value (Atype : Iir) return O_Enode;
+
    --  Initialize NAME/OBJ with VALUE.
    procedure Elab_Object_Init (Name : Mnode; Obj : Iir; Value : Iir);
 

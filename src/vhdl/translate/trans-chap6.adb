@@ -771,18 +771,17 @@ package body Trans.Chap6 is
                   Linter      : O_Lnode;
                begin
                   if Info.Interface_Node = O_Dnode_Null then
-                     --  The parameter is passed via a field of the RESULT
+                     --  The parameter is passed via a field of the PARAMS
                      --  record parameter.
-                     if Subprg_Info.Res_Record_Var = Null_Var then
+                     if Subprg_Info.Subprg_Params_Var = Null_Var then
+                        --  Direct access to the parameter.
                         Linter := New_Obj (Subprg_Info.Res_Interface);
                      else
-                        --  Unnesting case.
-                        Linter := Get_Var (Subprg_Info.Res_Record_Var);
+                        --  Unnesting case: upscope access.
+                        Linter := Get_Var (Subprg_Info.Subprg_Params_Var);
                      end if;
-                     return Lv2M (New_Selected_Element
-                                  (New_Acc_Value (Linter),
-                                     Info.Interface_Field),
-                                  Type_Info, Kind);
+                     Linter := New_Selected_Element
+                       (New_Acc_Value (Linter), Info.Interface_Field);
                   else
                      --  Unnesting case: the parameter was copied in the
                      --  subprogram frame so that nested subprograms can
@@ -790,17 +789,17 @@ package body Trans.Chap6 is
                      Linter := New_Selected_Element
                        (Get_Instance_Ref (Subprg_Info.Subprg_Frame_Scope),
                         Info.Interface_Field);
-                     case Type_Info.Type_Mode is
-                        when Type_Mode_Unknown =>
-                           raise Internal_Error;
-                        when Type_Mode_By_Value =>
-                           return Lv2M (Linter, Type_Info, Kind);
-                        when Type_Mode_By_Copy
-                           | Type_Mode_By_Ref =>
-                           --  Parameter is passed by reference.
-                           return Lp2M (Linter, Type_Info, Kind);
-                     end case;
                   end if;
+                  case Type_Info.Type_Mode is
+                     when Type_Mode_Unknown =>
+                        raise Internal_Error;
+                     when Type_Mode_By_Value =>
+                        return Lv2M (Linter, Type_Info, Kind);
+                     when Type_Mode_By_Copy
+                       | Type_Mode_By_Ref =>
+                        --  Parameter is passed by reference.
+                        return Lp2M (Linter, Type_Info, Kind);
+                  end case;
                end;
             end if;
          when others =>

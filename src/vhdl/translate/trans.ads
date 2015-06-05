@@ -1104,19 +1104,17 @@ package Trans is
             --    given via an (hidden to the user) interface.  Furthermore,
             --    the function is translated into a procedure.
             --  For a procedure:
-            --    If there are copy-out interfaces, they are gathered in a
-            --    record and a pointer to the record is passed to the
-            --    procedure.  RES_INTERFACE is the interface for this pointer.
+            --    Interface for parameters.
             Res_Interface : O_Dnode := O_Dnode_Null;
 
-            --  Field in the frame for a pointer to the RESULT structure.
-            Res_Record_Var : Var_Type := Null_Var;
+            --  Field in the frame for a pointer to the PARAMS structure.  This
+            --  is necessary when nested subprograms need to access to
+            --  paramters. of this subprogram.
+            Subprg_Params_Var : Var_Type := Null_Var;
 
-            --  For a procedure: record containing inout/out scalar parameters.
-            --    Type definition for the record.
-            Res_Record_Type : O_Tnode := O_Tnode_Null;
-            --    Type definition for access to the record.
-            Res_Record_Ptr  : O_Tnode := O_Tnode_Null;
+            --  For a procedure, record containing the parameters.
+            Subprg_Params_Type : O_Tnode := O_Tnode_Null;
+            Subprg_Params_Ptr  : O_Tnode := O_Tnode_Null;
 
             --  Access to the declarations within this subprogram.
             Subprg_Frame_Scope : aliased Var_Scope_Type;
@@ -1168,7 +1166,7 @@ package Trans is
             --   Node: null,     Field:     null: not possible
             --   Node: null,     Field: not null: field in RESULT record
             Interface_Node  : O_Dnode := O_Dnode_Null;
-            --  Field of the result record for copy-out arguments of procedure.
+            --  Field of the PARAMS record for arguments of procedure.
             --  In that case, Interface_Node must be null.
             Interface_Field : O_Fnode;
             --  Type of the interface.

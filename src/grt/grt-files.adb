@@ -384,16 +384,15 @@ package body Grt.Files is
    end Ghdl_Text_Read_Length;
 
    procedure Ghdl_Untruncated_Text_Read
-     (Res : Ghdl_Untruncated_Text_Read_Result_Acc;
-      File : Ghdl_File_Index;
-      Str : Std_String_Ptr)
+     (Params : Ghdl_Untruncated_Text_Read_Params_Acc)
    is
+      Str : constant Std_String_Ptr := Params.Str;
       Stream : C_Files;
       Len : int;
       Idx : Ghdl_Index_Type;
    begin
-      Stream := Get_File (File);
-      Check_File_Mode (File, True);
+      Stream := Get_File (Params.File);
+      Check_File_Mode (Params.File, True);
       Len := int (Str.Bounds.Dim_1.Length);
       if fgets (Str.Base (0)'Address, Len, Stream) = Null_Address then
          Internal_Error ("ghdl_untruncated_text_read: end of file");
@@ -405,7 +404,7 @@ package body Grt.Files is
             exit;
          end if;
       end loop;
-      Res.Len := Std_Integer (Idx);
+      Params.Len := Std_Integer (Idx);
    end Ghdl_Untruncated_Text_Read;
 
    procedure File_Close (File : Ghdl_File_Index; Is_Text : Boolean)
@@ -447,4 +446,3 @@ package body Grt.Files is
       fflush (Stream);
    end Ghdl_File_Flush;
 end Grt.Files;
-

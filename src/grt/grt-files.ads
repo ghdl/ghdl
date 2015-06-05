@@ -75,17 +75,17 @@ package Grt.Files is
    function Ghdl_Text_Read_Length
      (File : Ghdl_File_Index; Str : Std_String_Ptr) return Std_Integer;
 
-   type Ghdl_Untruncated_Text_Read_Result is record
+   type Ghdl_Untruncated_Text_Read_Params is record
+      File : Ghdl_File_Index;
+      Str : Std_String_Ptr;
       Len : Std_Integer;
    end record;
 
-   type Ghdl_Untruncated_Text_Read_Result_Acc is
-     access Ghdl_Untruncated_Text_Read_Result;
+   type Ghdl_Untruncated_Text_Read_Params_Acc is
+     access Ghdl_Untruncated_Text_Read_Params;
 
    procedure Ghdl_Untruncated_Text_Read
-     (Res : Ghdl_Untruncated_Text_Read_Result_Acc;
-      File : Ghdl_File_Index;
-      Str : Std_String_Ptr);
+     (Params : Ghdl_Untruncated_Text_Read_Params_Acc);
 
    procedure Ghdl_Text_File_Close (File : Ghdl_File_Index);
    procedure Ghdl_File_Close (File : Ghdl_File_Index);

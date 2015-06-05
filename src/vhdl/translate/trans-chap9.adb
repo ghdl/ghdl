@@ -35,7 +35,6 @@ with Trans.Chap5;
 with Trans.Chap6;
 with Trans.Chap7;
 with Trans.Chap8;
-with Trans.Chap14;
 with Trans.Rtis;
 with Translation; use Translation;
 with Trans_Decls; use Trans_Decls;
@@ -1826,7 +1825,7 @@ package body Trans.Chap9 is
          if Data.Has_Val then
             Init_Val := M2E (Data.Val);
          else
-            Init_Val := Chap14.Translate_Left_Type_Attribute (Targ_Type);
+            Init_Val := Chap4.Get_Scalar_Initial_Value (Targ_Type);
          end if;
          New_Association (Assoc, New_Convert_Ov (Init_Val, Conv));
          New_Procedure_Call (Assoc);
