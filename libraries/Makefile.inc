@@ -125,10 +125,10 @@ $(LIBDST_DIR)/src/std $(LIBDST_DIR)/src/ieee $(LIBDST_DIR)/src/ieee2008 $(LIBDST
 $(LIB87_DIR):
 	mkdir -p $@
 
-$(LIBDST_DIR)/src/std/%.v87: $(LIBSRC_DIR)/std/%.vhdl
+$(LIBDST_DIR)/src/std/%.v87: $(LIBSRC_DIR)/std/%.vhdl $(LIBDST_DIR)/src/std
 	$(SED_V87) < $< > $@
 
-std.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/std $(STD87_SRCS) force
+std.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(STD87_SRCS) force
 	$(RM) -rf $(STD87_DIR)
 	mkdir $(STD87_DIR)
 	cd $(STD87_DIR); \
@@ -137,15 +137,15 @@ std.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/std $(STD87_SRCS) force
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
-$(LIBDST_DIR)/src/ieee/%.v87: $(LIBSRC_DIR)/ieee/%.vhdl
+$(LIBDST_DIR)/src/ieee/%.v87: $(LIBSRC_DIR)/ieee/%.vhdl $(LIBDST_DIR)/src/ieee
 	$(SED_V87) < $< > $@
 
-$(LIBDST_DIR)/src/vital95/%.vhdl: $(LIBSRC_DIR)/vital95/%.vhdl
+$(LIBDST_DIR)/src/vital95/%.vhdl: $(LIBSRC_DIR)/vital95/%.vhdl $(LIBDST_DIR)/src/vital95
 	$(CP) $< $@
 
 ANALYZE_IEEE87=$(ANALYZE87) -P../std --work=ieee
 
-ieee.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/ieee $(IEEE87_SRCS) $(LIBDST_DIR)/src/vital95 $(VITAL95_SRCS) std.v87 force
+ieee.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(IEEE87_SRCS) $(VITAL95_SRCS) std.v87 force
 	$(RM) -rf $(IEEE87_DIR); mkdir $(IEEE87_DIR)
 	cd $(IEEE87_DIR); \
 	for i in $(IEEE87_BSRCS) $(VITAL95_BSRCS); do \
@@ -153,10 +153,10 @@ ieee.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/ieee $(IEEE87_SRCS) $(LI
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
-$(LIBDST_DIR)/src/synopsys/%.vhdl: $(LIBSRC_DIR)/synopsys/%.vhdl
+$(LIBDST_DIR)/src/synopsys/%.vhdl: $(LIBSRC_DIR)/synopsys/%.vhdl $(LIBDST_DIR)/src/synopsys
 	$(CP) $< $@
 
-synopsys.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/synopsys $(SYNOPSYS_SRCS) ieee.v87 force
+synopsys.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(SYNOPSYS_SRCS) ieee.v87 force
 	$(RM) -rf $(SYN87_DIR)
 	mkdir $(SYN87_DIR)
 	cd $(SYN87_DIR); \
@@ -178,10 +178,10 @@ synopsys.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(LIBDST_DIR)/src/synopsys $(SYNOPSYS_
 $(LIB93_DIR):
 	mkdir -p $@
 
-$(LIBDST_DIR)/src/std/%.v93: $(LIBSRC_DIR)/std/%.vhdl
+$(LIBDST_DIR)/src/std/%.v93: $(LIBSRC_DIR)/std/%.vhdl $(LIBDST_DIR)/src/std
 	$(SED_V93) < $< > $@
 
-std.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/std $(STD93_SRCS) force
+std.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(STD93_SRCS) force
 	$(RM) -rf $(STD93_DIR)
 	mkdir $(STD93_DIR)
 	cd $(STD93_DIR); \
@@ -190,18 +190,18 @@ std.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/std $(STD93_SRCS) force
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
-$(LIBDST_DIR)/src/ieee/%.v93: $(LIBSRC_DIR)/ieee/%.vhdl
+$(LIBDST_DIR)/src/ieee/%.v93: $(LIBSRC_DIR)/ieee/%.vhdl $(LIBDST_DIR)/src/ieee
 	$(SED_V93) < $< > $@
 
-$(LIBDST_DIR)/src/ieee/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
+$(LIBDST_DIR)/src/ieee/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl $(LIBDST_DIR)/src/ieee
 	$(CP) $< $@
 
-$(LIBDST_DIR)/src/vital2000/%.vhdl: $(LIBSRC_DIR)/vital2000/%.vhdl
+$(LIBDST_DIR)/src/vital2000/%.vhdl: $(LIBSRC_DIR)/vital2000/%.vhdl $(LIBDST_DIR)/src/vital2000
 	$(CP) $< $@
 
 ANALYZE_IEEE93=$(ANALYZE93) -P../std --work=ieee
 
-ieee.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/ieee $(IEEE93_SRCS) $(LIBDST_DIR)/src/vital2000 $(VITAL2000_SRCS) std.v93 force
+ieee.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(IEEE93_SRCS) $(VITAL2000_SRCS) std.v93 force
 	$(RM) -rf $(IEEE93_DIR)
 	mkdir $(IEEE93_DIR)
 	cd $(IEEE93_DIR); \
@@ -210,7 +210,7 @@ ieee.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/ieee $(IEEE93_SRCS) $(LI
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
-synopsys.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/synopsys $(SYNOPSYS_SRCS) ieee.v93 force
+synopsys.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(SYNOPSYS_SRCS) ieee.v93 force
 	$(RM) -rf $(SYN93_DIR)
 	mkdir $(SYN93_DIR)
 	cd $(SYN93_DIR); \
@@ -227,10 +227,10 @@ synopsys.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/synopsys $(SYNOPSYS_
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
-$(LIBDST_DIR)/src/mentor/%.vhdl: $(LIBSRC_DIR)/mentor/%.vhdl
+$(LIBDST_DIR)/src/mentor/%.vhdl: $(LIBSRC_DIR)/mentor/%.vhdl $(LIBDST_DIR)/src/mentor
 	$(CP) $< $@
 
-mentor.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/mentor $(MENTOR93_SRCS) ieee.v93 force
+mentor.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(MENTOR93_SRCS) ieee.v93 force
 	$(RM) -rf $(MENTOR93_DIR)
 	mkdir $(MENTOR93_DIR)
 	cd $(MENTOR93_DIR); \
@@ -252,13 +252,13 @@ mentor.v93: $(ANALYZE_DEP) $(LIB93_DIR) $(LIBDST_DIR)/src/mentor $(MENTOR93_SRCS
 $(LIB08_DIR):
 	mkdir -p $@
 
-$(LIBDST_DIR)/src/std/%.v08: $(LIBSRC_DIR)/std/%.vhdl
+$(LIBDST_DIR)/src/std/%.v08: $(LIBSRC_DIR)/std/%.vhdl $(LIBDST_DIR)/src/std
 	$(SED_V08) < $< > $@
 
-$(LIBDST_DIR)/src/std/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl
+$(LIBDST_DIR)/src/std/%.vhdl: $(LIBSRC_DIR)/std/%.vhdl $(LIBDST_DIR)/src/std
 	$(CP) $< $@
 
-std.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(LIBDST_DIR)/src/std $(STD08_SRCS) force
+std.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(STD08_SRCS) force
 	$(RM) -rf $(STD08_DIR)
 	mkdir $(STD08_DIR)
 	cd $(STD08_DIR); \
@@ -267,12 +267,12 @@ std.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(LIBDST_DIR)/src/std $(STD08_SRCS) force
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
-$(LIBDST_DIR)/src/ieee2008/%.vhdl: $(LIBSRC_DIR)/ieee2008/%.vhdl
+$(LIBDST_DIR)/src/ieee2008/%.vhdl: $(LIBSRC_DIR)/ieee2008/%.vhdl $(LIBDST_DIR)/src/ieee2008
 	$(CP) $< $@
 
 ANALYZE_IEEE08=$(ANALYZE08) -P../std --work=ieee
 
-ieee.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(LIBDST_DIR)/src/ieee2008 $(IEEE08_SRCS) std.v08 force
+ieee.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(IEEE08_SRCS) std.v08 force
 	$(RM) -rf $(IEEE08_DIR)
 	mkdir $(IEEE08_DIR)
 #       FIXME: add VITAL2000 ?
