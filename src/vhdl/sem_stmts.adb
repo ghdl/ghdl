@@ -1012,6 +1012,33 @@ package body Sem_Stmts is
       end loop;
    end Sem_Sensitivity_List;
 
+   --  Mark STMT and its parents as suspendable.
+   procedure Mark_Suspendable (Stmt : Iir)
+   is
+      Parent : Iir;
+   begin
+      Parent := Get_Parent (Stmt);
+      loop
+         case Get_Kind (Parent) is
+            when Iir_Kind_Function_Body
+              | Iir_Kind_Sensitized_Process_Statement =>
+               exit;
+            when Iir_Kind_Process_Statement
+              | Iir_Kind_Procedure_Body =>
+               Set_Suspend_Flag (Parent, True);
+               exit;
+            when Iir_Kind_If_Statement
+              | Iir_Kind_While_Loop_Statement
+              | Iir_Kind_For_Loop_Statement
+              | Iir_Kind_Case_Statement =>
+               Set_Suspend_Flag (Parent, True);
+               Parent := Get_Parent (Parent);
+            when others =>
+               Error_Kind ("mark_suspendable", Parent);
+         end case;
+      end loop;
+   end Mark_Suspendable;
+
    procedure Sem_Wait_Statement (Stmt: Iir_Wait_Statement)
    is
       Expr: Iir;
@@ -1054,11 +1081,13 @@ package body Sem_Stmts is
       if Sensitivity_List /= Null_Iir_List then
          Sem_Sensitivity_List (Sensitivity_List);
       end if;
+
       Expr := Get_Condition_Clause (Stmt);
       if Expr /= Null_Iir then
          Expr := Sem_Condition (Expr);
          Set_Condition_Clause (Stmt, Expr);
       end if;
+
       Expr := Get_Timeout_Clause (Stmt);
       if Expr /= Null_Iir then
          Expr := Sem_Expression (Expr, Time_Type_Definition);
@@ -1073,6 +1102,8 @@ package body Sem_Stmts is
             end if;
          end if;
       end if;
+
+      Mark_Suspendable (Stmt);
    end Sem_Wait_Statement;
 
    procedure Sem_Exit_Next_Statement (Stmt : Iir)
@@ -1208,7 +1239,22 @@ package body Sem_Stmts is
             when Iir_Kind_Wait_Statement =>
                Sem_Wait_Statement (Stmt);
             when Iir_Kind_Procedure_Call_Statement =>
-               Sem_Procedure_Call (Get_Procedure_Call (Stmt), Stmt);
+               declare
+                  Call : constant Iir := Get_Procedure_Call (Stmt);
+                  Imp : Iir;
+               begin
+                  Sem_Procedure_Call (Call, Stmt);
+
+                  --  Set suspend flag.
+                  Imp := Get_Implementation (Call);
+                  if Imp /= Null_Iir
+                    and then Get_Kind (Imp) = Iir_Kind_Procedure_Declaration
+                    and then Get_Suspend_Flag (Imp)
+                  then
+                     Set_Suspend_Flag (Stmt, True);
+                     Mark_Suspendable (Stmt);
+                  end if;
+               end;
             when Iir_Kind_Next_Statement
               | Iir_Kind_Exit_Statement =>
                Sem_Exit_Next_Statement (Stmt);

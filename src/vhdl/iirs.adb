@@ -5139,6 +5139,22 @@ package body Iirs is
       Set_Flag11 (Decl, Flag);
    end Set_Has_Class;
 
+   function Get_Suspend_Flag (Stmt : Iir) return Boolean is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Suspend_Flag (Get_Kind (Stmt)),
+                     "no field Suspend_Flag");
+      return Get_Flag11 (Stmt);
+   end Get_Suspend_Flag;
+
+   procedure Set_Suspend_Flag (Stmt : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Stmt /= Null_Iir);
+      pragma Assert (Has_Suspend_Flag (Get_Kind (Stmt)),
+                     "no field Suspend_Flag");
+      Set_Flag11 (Stmt, Flag);
+   end Set_Suspend_Flag;
+
    function Get_Is_Ref (N : Iir) return Boolean is
    begin
       pragma Assert (N /= Null_Iir);

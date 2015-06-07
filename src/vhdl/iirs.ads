@@ -1271,6 +1271,9 @@ package Iirs is
    --  True is the specification is immediately followed by a body.
    --   Get/Set_Has_Body (Flag9)
    --
+   -- Only for Iir_Kind_Procedure_Declaration:
+   --   Get/Set_Suspend_Flag (Flag11)
+   --
    --   Get/Set_Wait_State (State1)
    --
    -- Only for Iir_Kind_Procedure_Declaration:
@@ -1314,6 +1317,9 @@ package Iirs is
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   -- Only for Iir_Kind_Procedure_Body:
+   --   Get/Set_Suspend_Flag (Flag11)
 
    -- Iir_Kind_Signal_Declaration (Short)
    --
@@ -2418,6 +2424,9 @@ package Iirs is
    --   Get/Set_End_Has_Identifier (Flag9)
    --
    --   Get/Set_End_Has_Postponed (Flag10)
+   --
+   -- Only for Iir_Kind_Process_Statement:
+   --   Get/Set_Suspend_Flag (Flag11)
 
    -- Iir_Kind_Concurrent_Assertion_Statement (Short)
    --
@@ -2689,6 +2698,9 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   -- Only for Iir_Kind_If_Statement:
+   --   Get/Set_Suspend_Flag (Flag11)
 
    --  LRM08 10.10 Loop statement / LRM93 8.9
    --
@@ -2724,6 +2736,8 @@ package Iirs is
    --   Get/Set_Is_Within_Flag (Flag5)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --   Get/Set_Suspend_Flag (Flag11)
 
    -- Iir_Kind_While_Loop_Statement (Short)
    --
@@ -2741,6 +2755,8 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --   Get/Set_Suspend_Flag (Flag11)
 
    -- Iir_Kind_Exit_Statement (Short)
    -- Iir_Kind_Next_Statement (Short)
@@ -2892,6 +2908,8 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --   Get/Set_Suspend_Flag (Flag11)
 
    -- Iir_Kind_Procedure_Call_Statement (Short)
    -- Iir_Kind_Concurrent_Procedure_Call_Statement (Short)
@@ -2909,6 +2927,8 @@ package Iirs is
    --   Get/Set_Postponed_Flag (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Suspend_Flag (Flag11)
 
    -- Iir_Kind_Procedure_Call (Short)
    --
@@ -6495,6 +6515,15 @@ package Iirs is
    --  Field: Flag11
    function Get_Has_Class (Decl : Iir) return Boolean;
    procedure Set_Has_Class (Decl : Iir; Flag : Boolean);
+
+   --  Set on wait, procedure call and composite statements when there is a
+   --  sub-statement that can suspend a procedure or a process.  Also set
+   --  on procedure declaration.  Note that the flag is conservative: it must
+   --  be true if the node contains directly or indirectly a wait statement,
+   --  but need not to be false otherwise.
+   --  Field: Flag11
+   function Get_Suspend_Flag (Stmt : Iir) return Boolean;
+   procedure Set_Suspend_Flag (Stmt : Iir; Flag : Boolean);
 
    --  Set to True if Maybe_Ref fields are references.  This cannot be shared
    --  with Has_Identifier_List as: Is_Ref is set to True on all items but

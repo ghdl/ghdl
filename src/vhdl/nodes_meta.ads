@@ -347,6 +347,7 @@ package Nodes_Meta is
       Field_Has_Identifier_List,
       Field_Has_Mode,
       Field_Has_Class,
+      Field_Suspend_Flag,
       Field_Is_Ref,
       Field_Psl_Property,
       Field_Psl_Declaration,
@@ -831,6 +832,7 @@ package Nodes_Meta is
    function Has_Has_Identifier_List (K : Iir_Kind) return Boolean;
    function Has_Has_Mode (K : Iir_Kind) return Boolean;
    function Has_Has_Class (K : Iir_Kind) return Boolean;
+   function Has_Suspend_Flag (K : Iir_Kind) return Boolean;
    function Has_Is_Ref (K : Iir_Kind) return Boolean;
    function Has_Psl_Property (K : Iir_Kind) return Boolean;
    function Has_Psl_Declaration (K : Iir_Kind) return Boolean;

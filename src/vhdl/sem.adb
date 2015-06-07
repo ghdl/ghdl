@@ -1776,29 +1776,27 @@ package body Sem is
    --  LRM 2.1  Subprogram Declarations.
    procedure Sem_Subprogram_Declaration (Subprg: Iir)
    is
+      Parent : constant Iir := Get_Parent (Subprg);
       Spec: Iir;
       Interface_Chain : Iir;
       Subprg_Body : Iir;
       Return_Type : Iir;
    begin
       --  Set depth.
-      declare
-         Parent : constant Iir := Get_Parent (Subprg);
-      begin
-         case Get_Kind (Parent) is
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration =>
-               raise Internal_Error;
-            when Iir_Kind_Function_Body
-              | Iir_Kind_Procedure_Body =>
-               Set_Subprogram_Depth
-                 (Subprg,
-                  Get_Subprogram_Depth
-                  (Get_Subprogram_Specification (Parent)) + 1);
-            when others =>
-               Set_Subprogram_Depth (Subprg, 0);
-         end case;
-      end;
+      case Get_Kind (Parent) is
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration =>
+            raise Internal_Error;
+         when Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body =>
+            Set_Subprogram_Depth
+              (Subprg,
+               Get_Subprogram_Depth
+                 (Get_Subprogram_Specification (Parent)) + 1);
+         when others =>
+            --  FIXME: protected type ?
+            Set_Subprogram_Depth (Subprg, 0);
+      end case;
 
       --  LRM 10.1 Declarative Region
       --  3. A subprogram declaration, together with the corresponding
@@ -1877,6 +1875,14 @@ package body Sem is
                   Inter := Get_Chain (Inter);
                end loop;
             end;
+
+            --  Mark the procedure as suspendable, unless in a std packages.
+            --  This is a minor optimization.
+            if Get_Library (Get_Design_File (Get_Current_Design_Unit))
+              /= Libraries.Std_Library
+            then
+               Set_Suspend_Flag (Subprg, True);
+            end if;
          when others =>
             Error_Kind ("sem_subprogram_declaration", Subprg);
       end case;
@@ -1940,10 +1946,9 @@ package body Sem is
 
    procedure Sem_Subprogram_Body (Subprg : Iir)
    is
-      Spec : Iir;
+      Spec : constant Iir := Get_Subprogram_Specification (Subprg);
       El : Iir;
    begin
-      Spec := Get_Subprogram_Specification (Subprg);
       Set_Impure_Depth (Subprg, Iir_Depth_Pure);
 
       --  LRM 10.1  Declarative regions
@@ -1969,6 +1974,14 @@ package body Sem is
 
       case Get_Kind (Spec) is
          when Iir_Kind_Procedure_Declaration =>
+            if Get_Suspend_Flag (Subprg)
+              and then not Get_Suspend_Flag (Spec)
+            then
+               --  Incoherence: procedures declared in std library are not
+               --  expected to suspend.  This is an internal check.
+               Error_Msg_Sem ("unexpected suspendable procedure", Subprg);
+            end if;
+
             --  Update purity state of procedure if there are no callees.
             case Get_Purity_State (Spec) is
                when Pure
