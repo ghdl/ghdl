@@ -1072,7 +1072,9 @@ package body Sem_Specs is
                  Sem_Denoting_Name (Get_Configuration_Name (Aspect));
                Set_Configuration_Name (Aspect, Conf_Name);
                Conf := Get_Named_Entity (Conf_Name);
-               if Get_Kind (Conf) /= Iir_Kind_Configuration_Declaration then
+               if Is_Error (Conf) then
+                  return Null_Iir;
+               elsif Get_Kind (Conf) /= Iir_Kind_Configuration_Declaration then
                   Error_Class_Match (Conf, "configuration");
                   return Null_Iir;
                end if;
