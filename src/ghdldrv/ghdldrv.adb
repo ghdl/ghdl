@@ -771,12 +771,17 @@ package body Ghdldrv is
          Unit_Name := new String'(Prim_Name.all & '(' & Sec_Name.all & ')');
       end if;
 
-      Elab_Name := new String'(Elab_Prefix & Base_Name.all);
       Filelist_Name := null;
 
+      --  Choose a default name for the executable.
       if Output_File = null then
          Output_File := new String'(Base_Name.all);
       end if;
+
+      --  Set a name for the elaboration files.  Use the basename of the
+      --  output file, so that parallel builds with different output files
+      --  are allowed.
+      Elab_Name := new String'(Elab_Prefix & Get_Base_Name (Output_File.all));
    end Set_Elab_Units;
 
    procedure Set_Elab_Units (Cmd_Name : String; Args : Argument_List)
