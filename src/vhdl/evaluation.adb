@@ -199,7 +199,8 @@ package body Evaluation is
             return Build_Enumeration_Constant
               (Iir_Index32 (Get_Enum_Pos (Val)), Origin);
 
-         when Iir_Kind_Physical_Int_Literal =>
+         when Iir_Kind_Physical_Int_Literal
+           | Iir_Kind_Physical_Fp_Literal =>
             Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
             Set_Unit_Name (Res, Get_Primary_Unit_Name
                              (Get_Base_Type (Get_Type (Origin))));
