@@ -132,7 +132,8 @@ package body Ghdldrv is
    end My_Spawn;
 
    --  Compile FILE with additional argument OPTS.
-   procedure Do_Compile (Options : Argument_List; File : String)
+   procedure Do_Compile
+     (Options : Argument_List; File : String; In_Work : Boolean)
    is
       Obj_File : String_Access;
       Asm_File : String_Access;
@@ -142,7 +143,7 @@ package body Ghdldrv is
       --  Create post file.
       case Compile_Kind is
          when Compile_Debug =>
-            Post_File := Append_Suffix (File, Post_Suffix);
+            Post_File := Append_Suffix (File, Post_Suffix, In_Work);
          when others =>
             null;
       end case;
@@ -151,14 +152,14 @@ package body Ghdldrv is
       case Compile_Kind is
          when Compile_Gcc
            | Compile_Debug =>
-            Asm_File := Append_Suffix (File, Asm_Suffix);
+            Asm_File := Append_Suffix (File, Asm_Suffix, In_Work);
          when Compile_Llvm
            | Compile_Mcode =>
             null;
       end case;
 
       --  Create obj file (may not be used, but the condition isn't simple).
-      Obj_File := Append_Suffix (File, Get_Object_Suffix.all);
+      Obj_File := Append_Suffix (File, Get_Object_Suffix.all, In_Work);
 
       --  Compile.
       declare
@@ -746,7 +747,7 @@ package body Ghdldrv is
       Setup_Compiler (False);
 
       for I in Args'Range loop
-         Do_Compile (Nil_Opt, Args (I).all);
+         Do_Compile (Nil_Opt, Args (I).all, True);
       end loop;
    end Perform_Action;
 
@@ -781,7 +782,13 @@ package body Ghdldrv is
       --  Set a name for the elaboration files.  Use the basename of the
       --  output file, so that parallel builds with different output files
       --  are allowed.
-      Elab_Name := new String'(Elab_Prefix & Get_Base_Name (Output_File.all));
+      declare
+         Dir_Pos : constant Natural := Get_Basename_Pos (Output_File.all);
+      begin
+         Elab_Name := new String'
+           (Output_File (Output_File'First .. Dir_Pos)
+              & Elab_Prefix & Output_File (Dir_Pos + 1 .. Output_File'Last));
+      end;
    end Set_Elab_Units;
 
    procedure Set_Elab_Units (Cmd_Name : String; Args : Argument_List)
@@ -805,7 +812,7 @@ package body Ghdldrv is
       Comp_List (2) := Unit_Name;
       Comp_List (3) := new String'("-l");
       Comp_List (4) := Filelist_Name;
-      Do_Compile (Comp_List, Elab_Name.all);
+      Do_Compile (Comp_List, Elab_Name.all, False);
       Free (Comp_List (3));
       Free (Comp_List (1));
    end Bind;
@@ -822,15 +829,14 @@ package body Ghdldrv is
          Comp_List (Index) := new String'("--ghdl-source=" & Files (I).all);
          Index := Index + 1;
       end loop;
-      Do_Compile (Comp_List, Elab_Name.all);
+      Do_Compile (Comp_List, Elab_Name.all, False);
       Free (Comp_List (1));
       for I in 3 .. Comp_List'Last loop
          Free (Comp_List (I));
       end loop;
    end Bind_Anaelab;
 
-   procedure Link (Add_Std : Boolean;
-                   Disp_Only : Boolean)
+   procedure Link (Add_Std : Boolean; Disp_Only : Boolean)
    is
       Last_File : Natural;
    begin
@@ -852,7 +858,7 @@ package body Ghdldrv is
          Obj_File : String_Access;
          Std_File : String_Access;
       begin
-         Obj_File := Append_Suffix (Elab_Name.all, Link_Obj_Suffix.all);
+         Obj_File := Append_Suffix (Elab_Name.all, Link_Obj_Suffix.all, False);
          P := 0;
          Args (P + 1) := Dash_o;
          Args (P + 2) := Output_File;
@@ -1416,7 +1422,7 @@ package body Ghdldrv is
             end if;
 
             if In_Work then
-               Do_Compile (Nil_Args, Image (File_Id));
+               Do_Compile (Nil_Args, Image (File_Id), True);
             else
                declare
                   use Libraries;
@@ -1437,7 +1443,7 @@ package body Ghdldrv is
                      Lib_Args (2) := new String'
                        ("--workdir=" & Image (Work_Directory));
                   end if;
-                  Do_Compile (Lib_Args, Image (File_Id));
+                  Do_Compile (Lib_Args, Image (File_Id), True);
 
                   Work_Directory := Prev_Workdir;
 

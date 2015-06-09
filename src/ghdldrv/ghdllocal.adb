@@ -182,7 +182,7 @@ package body Ghdllocal is
             return I;
          end if;
       end loop;
-      return 0;
+      return Pathname'First - 1;
    end Get_Basename_Pos;
 
    --  Simple lower case conversion, used to compare with "bin".
@@ -207,7 +207,7 @@ package body Ghdllocal is
       Last : Natural;
    begin
       Last := Get_Basename_Pos (Prog_Path);
-      if Last = 0 then
+      if Last < Prog_Path'First then
          --  No directory in Prog_Path.  This is not expected.
          return;
       end if;
@@ -225,7 +225,7 @@ package body Ghdllocal is
 
          --  Skip executable name
          Last := Get_Basename_Pos (Pathname);
-         if Last = 0 then
+         if Last < Pathname'First then
             return;
          end if;
 
@@ -297,7 +297,7 @@ package body Ghdllocal is
 
          --  Skip '/bin' directory if present
          Pos := Get_Basename_Pos (Pathname (Pathname'First .. Last));
-         if Pos = 0 then
+         if Pos < Pathname'First then
             return;
          end if;
          if To_Lower (Pathname (Pos + 1 .. Last)) = "bin" then
@@ -323,7 +323,7 @@ package body Ghdllocal is
 
       --  If the command name is a relative path, deduce prefix from it
       --  and current path.
-      if Get_Basename_Pos (Prog_Path) /= 0 then
+      if Get_Basename_Pos (Prog_Path) >= Prog_Path'First then
          if Is_Executable_File (Prog_Path) then
             Set_Prefix_From_Program_Path
               (Get_Current_Dir & Directory_Separator & Prog_Path);
@@ -559,12 +559,18 @@ package body Ghdllocal is
       return Filename (First .. Last);
    end Get_Base_Name;
 
-   function Append_Suffix (File : String; Suffix : String) return String_Access
+   function Append_Suffix
+     (File : String; Suffix : String; In_Work : Boolean := True)
+     return String_Access
    is
       use Name_Table;
       Basename : constant String := Get_Base_Name (File);
    begin
-      Image (Libraries.Work_Directory);
+      if In_Work then
+         Image (Libraries.Work_Directory);
+      else
+         Nam_Length := Nam_Buffer'First - 1;
+      end if;
       Nam_Buffer (Nam_Length + 1 .. Nam_Length + Basename'Length) :=
         Basename;
       Nam_Length := Nam_Length + Basename'Length;

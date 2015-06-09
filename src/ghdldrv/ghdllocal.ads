@@ -71,11 +71,15 @@ package Ghdllocal is
    function Get_Base_Name (Filename : String; Remove_Dir : Boolean := True)
                           return String;
 
-   --  Get the position of the last directory separator or 0 if none.
+   --  Get the position of the last directory separator or Pathname'First - 1
+   --  if none.
    function Get_Basename_Pos (Pathname : String) return Natural;
 
-   function Append_Suffix (File : String; Suffix : String)
-                          return String_Access;
+   --  Build a filename based on FILE: append SUFFIX as extension, and
+   --  if IN_WORK is true prepend the workdir.
+   function Append_Suffix
+     (File : String; Suffix : String; In_Work : Boolean := True)
+     return String_Access;
 
    --  Return TRUE is UNIT can be at the apex of a design hierarchy.
    function Is_Top_Entity (Unit : Iir) return Boolean;
