@@ -75,8 +75,9 @@ package Ghdllocal is
    --  if none.
    function Get_Basename_Pos (Pathname : String) return Natural;
 
-   --  Build a filename based on FILE: append SUFFIX as extension, and
-   --  if IN_WORK is true prepend the workdir.
+   --  Build a filename based on FILE. If IN_WORK is true, the result is
+   --  the concatenation of the workdir, the basename of FILE and SUFFIX.
+   --  If IN_WORK is false, the result is the concatenation of FILE and SUFFIX.
    function Append_Suffix
      (File : String; Suffix : String; In_Work : Boolean := True)
      return String_Access;

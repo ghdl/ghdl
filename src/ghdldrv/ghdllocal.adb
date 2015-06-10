@@ -564,19 +564,13 @@ package body Ghdllocal is
      return String_Access
    is
       use Name_Table;
-      Basename : constant String := Get_Base_Name (File);
    begin
       if In_Work then
-         Image (Libraries.Work_Directory);
+         return new String'(Image (Libraries.Work_Directory)
+                              & Get_Base_Name (File) & Suffix);
       else
-         Nam_Length := Nam_Buffer'First - 1;
+         return new String'(File & Suffix);
       end if;
-      Nam_Buffer (Nam_Length + 1 .. Nam_Length + Basename'Length) :=
-        Basename;
-      Nam_Length := Nam_Length + Basename'Length;
-      Nam_Buffer (Nam_Length + 1 .. Nam_Length + Suffix'Length) := Suffix;
-      Nam_Length := Nam_Length + Suffix'Length;
-      return new String'(Nam_Buffer (1 .. Nam_Length));
    end Append_Suffix;
 
 
