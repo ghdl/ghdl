@@ -1979,8 +1979,7 @@ package body Trans.Chap3 is
    end Handle_Anonymous_Subtypes;
 
    --  Note: boolean types are translated by translate_bool_type_definition!
-   procedure Translate_Type_Definition
-     (Def : Iir; With_Vars : Boolean := True)
+   procedure Translate_Type_Definition (Def : Iir; With_Vars : Boolean := True)
    is
       Info          : Ortho_Info_Acc;
       Base_Info     : Type_Info_Acc;
@@ -2264,10 +2263,9 @@ package body Trans.Chap3 is
    procedure Translate_Anonymous_Type_Definition
      (Def : Iir; Transient : Boolean)
    is
+      Type_Info : constant Type_Info_Acc := Get_Info (Def);
       Mark      : Id_Mark_Type;
-      Type_Info : Type_Info_Acc;
    begin
-      Type_Info := Get_Info (Def);
       if Type_Info /= null then
          return;
       end if;
@@ -2282,11 +2280,10 @@ package body Trans.Chap3 is
    procedure Translate_Object_Subtype (Decl      : Iir;
                                        With_Vars : Boolean := True)
    is
+      Def : constant Iir := Get_Type (Decl);
       Mark  : Id_Mark_Type;
       Mark2 : Id_Mark_Type;
-      Def   : Iir;
    begin
-      Def := Get_Type (Decl);
       if Is_Anonymous_Type_Definition (Def) then
          Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
          Push_Identifier_Prefix (Mark2, "OT");

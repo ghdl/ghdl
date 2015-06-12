@@ -290,8 +290,8 @@ package Ortho_Gcc is
    function New_Slice (Arr : O_Lnode; Res_Type : O_Tnode; Index : O_Enode)
      return O_Lnode;
 
-   --  Get an element of a record.
-   --  Type of REC must be a record type.
+   --  Get an element of a record or a union.
+   --  Type of REC must be a record or a union type.
    function New_Selected_Element (Rec : O_Lnode; El : O_Fnode)
      return O_Lnode;
 

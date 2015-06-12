@@ -967,7 +967,9 @@ package body Ortho_Debug is
    is
       subtype O_Lnode_Selected_Element is O_Lnode_Type (OL_Selected_Element);
    begin
-      if Rec.Rtype.Kind /= ON_Record_Type then
+      if Rec.Rtype.Kind /= ON_Record_Type
+        and then Rec.Rtype.Kind /= ON_Union_Type
+      then
          raise Type_Error;
       end if;
       if Rec.Rtype /= El.Parent then
