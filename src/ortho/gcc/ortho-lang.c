@@ -1409,7 +1409,7 @@ new_selected_element (tree rec, tree el)
 {
   tree res;
 
-  gcc_assert (TREE_CODE (TREE_TYPE (rec)) == RECORD_TYPE);
+  gcc_assert (RECORD_OR_UNION_TYPE_P (TREE_TYPE (rec)));
 
   res = build3 (COMPONENT_REF, TREE_TYPE (el), rec, el, NULL_TREE);
   return res;

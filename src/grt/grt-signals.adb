@@ -2773,23 +2773,25 @@ package body Grt.Signals is
 
    procedure Delayed_Implicit_Process (Sig : Ghdl_Signal_Ptr)
    is
-      Pfx : Ghdl_Signal_Ptr;
+      Pfx : constant Ghdl_Signal_Ptr := Sig.Ports (0);
       Trans : Transaction_Acc;
       Last : Transaction_Acc;
       Prev : Transaction_Acc;
    begin
-      Pfx := Sig.Ports (0);
       if Pfx.Event then
          --  LRM 14.1
          --  P: process (S)
          --  begin
          --     R <= transport S after T;
          --  end process;
+
+         --  Create the transaction.
          Trans := new Transaction'(Kind => Trans_Value,
                                    Line => 0,
                                    Time => Current_Time + Sig.S.Time,
                                    Next => null,
                                    Val => Pfx.Value);
+
          --  Find the last transaction.
          Last := Sig.S.Attr_Trans;
          Prev := Last;
@@ -2797,22 +2799,11 @@ package body Grt.Signals is
             Prev := Last;
             Last := Last.Next;
          end loop;
-         --  Maybe, remove it.
-         if Last.Time > Trans.Time then
-            Internal_Error ("delayed time");
-         elsif Last.Time = Trans.Time then
-            if Prev /= Last then
-               Free (Last);
-            else
-               --  No transaction.
-               if Last.Time /= 0 then
-                  --  This can happen only at time = 0.
-                  Internal_Error ("delayed");
-               end if;
-            end if;
-         else
-            Prev := Last;
-         end if;
+
+         --  The transaction are scheduled after the last one.
+         pragma Assert (Last.Time <= Trans.Time);
+         pragma Assert (Last.Time /= Trans.Time or else Prev = Last);
+
          --  Append the transaction.
          Prev.Next := Trans;
          if Sig.S.Time = 0 then
