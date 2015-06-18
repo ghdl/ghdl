@@ -1,0 +1,8 @@
+IEEE Proposed - Overview of Versions and Changes
+==============================================================
+
+NOTE: The source for this library originates from IEEE. We do 
+      not have an original version number for this code. The 
+      version numbers used are Bitvis-specific.
+
+--------------------------------------------------------------

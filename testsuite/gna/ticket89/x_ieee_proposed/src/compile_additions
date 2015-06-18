@@ -1,0 +1,24 @@
+#! /bin/csh -f
+#
+# Script to compile MTI
+\rm -rf ieee_proposed.lib
+vlib ieee_proposed.lib
+vmap IEEE_PROPOSED ieee_proposed.lib
+if ($MTI_VERSION == "mti5.7") then
+  set VERSION = "-93"
+else
+  set VERSION = "-2002"
+endif
+#set up some compile options
+set OPTIONS = "$VERSION -nologo"
+if ($1 == "quiet") then
+  set OPTIONS = "$OPTIONS -nowarn 3"
+endif
+vcom $OPTIONS -work IEEE_PROPOSED standard_additions_c.vhdl
+vcom $OPTIONS -work IEEE_PROPOSED standard_textio_additions_c.vhdl
+vcom $OPTIONS -work IEEE_PROPOSED std_logic_1164_additions.vhdl
+vcom $OPTIONS -work IEEE_PROPOSED numeric_std_additions.vhdl
+vcom $OPTIONS -work IEEE_PROPOSED numeric_std_unsigned_c.vhdl
+vcom $OPTIONS -work IEEE_PROPOSED fixed_float_types_c.vhdl
+vcom $OPTIONS -work IEEE_PROPOSED fixed_pkg_c.vhdl
+vcom $OPTIONS -work IEEE_PROPOSED float_pkg_c.vhdl

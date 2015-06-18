@@ -1,0 +1,5 @@
+This project uses the following versions:
+  bitvis_util, version v2.5.1
+  bitvis_irqc, version v0.1.5
+  bitvis_vip_sbi, version v0.1.6
+  x_ieee_proposed, version v0.1.4

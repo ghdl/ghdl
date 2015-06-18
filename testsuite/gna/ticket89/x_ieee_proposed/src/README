@@ -1,0 +1,173 @@
+
+   This is the "ieee_proposed" library.  This is a compatability library,
+which is designed to provide all of the functionality of the VHDL-200X-FT
+packages in VHDL-93.  The "_c" after the package name is used to denote
+that this is a 1993 compliant version of this package.  Otherwise, the
+name of the file and the name of the package are the same.
+
+Please compile the following files into a library named "ieee_proposed":
+standard_additions_c.vhdl
+env_c.vhdl
+standard_textio_additions_c.vhdl
+std_logic_1164_additions.vhdl
+numeric_std_additions.vhdl
+numeric_std_unsigned_c.vhdl
+fixed_pkg_c.vhdl
+float_pkg_c.vhdl
+
+
+New/Updated functions
+A) standard_additions -- Additions to the package "std.standard"
+   Use model:
+   use ieee_proposed.standard_additions.all;
+   Dependancies: None.
+   Notes:  The functions "rising_edge" and "falling_edge" are defined in
+   this package.  If you use "numeric_bit" they are ALSO defined in that
+   package, causing a conflict.  The VHDL-2008 version of numeric_bit
+   has these functions commented out, as well as the "sll", "srl", "ror"
+   and "rol" functions which are implicit.
+   New types defined in this package:
+      REAL_VECTOR
+      TIME_VECTOR
+      INTEGER_VECTOR
+      BOOLEAN_VECTOR
+   New constants defined in this package:
+      SIM_RESOLUTION : TIME - returns the simulator's resolution (1 ns default)
+   1) "maximum" and "minimum" are defined for all default datatypes
+   2) _reduce functions (and_reduce, nand_reduce, or_reduce ...) are defined
+      These functions reduce a bit_vector to a single bit.  Example:
+      or_reduce ("0101") = '1'.  In VHDL-2008 syntax these will be "or".
+   3) "vector" and "bit" operations are defined.  These will perform a
+      boolean operation of a vector.  Example:
+      "1" xor "1010" = "0101";
+   5) /??/ function is defined for "bit" ("??" operator is release)
+      if (/??/('1')) then -- will return a "true".
+   6) rising_edge and falling_edge functions are defined (see Notes).
+   7) to_string function - Converts any of the base types into a string.
+      Example: 
+      assert (bv = "101") report "result was " & to_string(bv) severity note;
+   8) to_hstring and to_ostring function (bit_vector to hex or octal string)
+B) standard_textio_additions  - Additions to the package "std.textio"
+   Use model:
+   use ieee_proposed.standard_textio_additions.all;
+   Dependencies: std.textio, ieee_proposed.standard_additions
+   1) tee - Echos the string to BOTH the file and the screen
+   2) SREAD and SWRITE - String read and write routines (so you no longer
+      need to do write (L, string'("ABCEDFG"));
+   3) HREAD and HWRITE (Hex read and write) for bit_vector
+   4) OREAD and OWRITE (octal read and write) for bit_vector
+   5) BREAD and BWRITE (binary read and write, same as "READ" and "WRITE" for
+      bit_vector
+   6) justify - Justify a string left or right with a width.  Example:
+      justify ("ABCD", left, 6); will result in "ABCD  "
+C) std_logic_1164_additions - Additions to the package "ieee.std_logic_1164"
+   Usage model:
+   use ieee.std_logic_1164.all;
+   -- use ieee.std_logic_textio.all; -- Comment out, included in "_additions".
+   use ieee_proposed.std_logic_1164_additions.all;
+   Dependencies: ieee.std_logic_1164
+   Note:  The contents of the "std_logic_textio" package have now been
+   included in the "std_logic_1164" package, and an EMPTY "std_logic_textio"
+   package is provided in the new release.
+   1) Short had aliases:
+      a) to_bv - calls "to_BitVector"
+      b) to_slv - calls "to_StdLogicVector"
+      c) to_sulv - calls "to_stdULogicVector"
+   2) Long hand aliases:
+      a) to_bit_vector - calls "to_BitVector"
+      b) to_std_logic_vector - calls "to_StdLogicVector"
+      c) to_std_ulogic_vector - calls "to_StdULogicVector"
+   3) _reduce functions (and_reduce, nand_reduce, or_reduce ...) are defined
+      These functions reduce a std_logic_vector (or ulogic) to a single bit.
+      In vhdl-2006 these will be unary "or", example "or "11011" = '1'"
+   4) "vector" and "std_ulogic" operations are defined.  These will perform a
+      boolean operation of a vector.  Example:
+      "1" xor "1010" = "0101";
+   5) "std_ulogic" and "boolean" operations are defined.  Thus:
+      if '1' and true then  -- returns a "true".
+   6) "\??\" function is defined for "std_ulogic" ("??" operator is release)
+      if (bool('1')) then -- will return a "true".
+   7) READ and WRITE procedures for "std_logic_vector", "std_ulogic_vector"
+      and "std_ulogic" are defined.
+   8) HREAD and HWRITE (Hex read and write) for std_logic_vector
+      and std_ulogic_vector.  These are more "forgiving" than the ones
+      originally from "std_logic_textio"
+   9) OREAD and OWRITE (octal read and write) for std_logic_vector
+      and std_ulogic_vector.  These are more "forgiving" than the ones
+      originally from "std_logic_textio"
+   10) BREAD and BWRITE (binary read and write, same as "READ" and "WRITE" for
+      std_logic_vector and std_ulogic_vector.
+   11) to_string function - Converts a "std_ulogic", "std_logic_vector" or
+      "std_ulogic_vector" types into a string.
+      Example: 
+      assert (slv = "101") report "result was " & to_string(slv) severity note;
+   12) to_hstring and to_ostring function (std_(u)logic_vector to hex or octal
+      string)
+D) numeric_std_additions - additions the the package "ieee.numeric_std"
+   Usage Model:
+   use ieee.std_logic_1164.all;
+   use ieee.numeric_std.all;
+   use ieee_proposed.numeric_std_additions.all;
+   Dependencies: ieee.std_logic_1164, ieee.numeric_std
+   1) SIGNED or UNSIGNED + std_ulogic operators
+   2) SIGNED or UNSIGNED - std_ulogic operators
+   3) type UNRESOLVED_UNSIGNED (aliased to U_UNSIGNED) is an unresolved
+      verion of UNSIGNED.  It is aliased to "UNSIGNED" for compatability.
+   4) type UNRESOLVED_SIGNED (aliased to U_SIGNED) is an unresolved
+      verion of SIGNED.  It is aliased to "SIGNED" for compatability.
+   5) \?=\, \?/=\ - similar to "std_match", but return std_ulogic values.
+      \?<\, \?<=\, \?>\, \?>=\ - compare functions which retrun std_ulogic.
+      (these will be "?="... operators in the release)
+   7) To_X01, To_X01Z, To_U01X, Is_X - same as std_logic_1164 functions,
+      but overloaded for SIGNED and UNSIGNED.
+   8) "sla" and "sra" - Mathmetically correct versions of these functions.
+   9) minimum and maximum - smaller or larger of two SIGNED or UNSIGNED values.
+   10) find_rightmost and find_leftmost - finds the first bit in a string.
+       Example:
+     find_leftmost (c12, '1'); -- returns the Log2 of "c12".
+     returns -1 if not found.
+   11) _reduce functions (and_reduce, nand_reduce, or_reduce ...) are defined
+      These functions reduce a SIGNED or an UNSIGNED to a single bit.
+      (will overload the "or" and "and", ... operators in the release)
+   12) SIGNED or UNSIGNED and "std_ulogic" operations are defined. 
+      These will perform a boolean operation of a vector.  Example:
+      "1" xor "1010" = "0101";
+   13) READ and WRITE procedures for "SIGNED", and "UNSIGNED" are defined.
+   14) HREAD and HWRITE (Hex read and write) for SIGNED and UNSIGNED.
+      These are more "forgiving" than the ones
+      originally from "std_logic_textio"
+   15) OREAD and OWRITE (octal read and write) for "SIGNED" and "UNSIGNED.
+      These are more "forgiving" than the ones
+      originally from "std_logic_textio"
+   16) BREAD and BWRITE (binary read and write, same as "READ" and "WRITE" for
+      SIGNED and UNSIGNED.
+   17) to_string function - Converts a "SIGNED" or "UNSIGNED" types into a
+      string.  Example: 
+      assert (UNS = "101") report "result was " & to_string(UNS) severity note;
+   18) to_hstring and to_ostring function (SIGNED or UNSIGNED to hex or octal
+      string)
+E) numeric_std_unsigned  - Simular to the "std_logic_unsigned" packages, but
+   with all of the functionality of the "numeric_std" package.
+   use model:
+   use ieee.std_logic_1164.all;
+   use ieee_proposed.numeric_std_unsigned.all;
+   dependencies: ieee.numeric_std, ieee_proposed.numeric_std_additions
+
+F) For fixed point package:
+use model:
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee_proposed.math_utility_pkg.all;
+use ieee_proposed.fixed_pkg.all;
+See fixed point package documentation
+http://www.vhdl.org/vhdl-200x/vhdl-200x-ft/packages/Fixed_ug.pdf
+
+G) For floating point package:
+use model:
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee_proposed.math_utility_pkg.all;
+use ieee_proposed.fixed_pkg.all;
+use ieee_proposed.float_pkg.all;
+See floating point package documentation
+http://www.vhdl.org/vhdl-200x/vhdl-200x-ft/packages/Float_ug.pdf
