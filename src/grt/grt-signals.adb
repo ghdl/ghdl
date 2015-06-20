@@ -2774,6 +2774,7 @@ package body Grt.Signals is
    procedure Delayed_Implicit_Process (Sig : Ghdl_Signal_Ptr)
    is
       Pfx : constant Ghdl_Signal_Ptr := Sig.Ports (0);
+      Ntime : Std_Time;
       Trans : Transaction_Acc;
       Last : Transaction_Acc;
       Prev : Transaction_Acc;
@@ -2785,12 +2786,7 @@ package body Grt.Signals is
          --     R <= transport S after T;
          --  end process;
 
-         --  Create the transaction.
-         Trans := new Transaction'(Kind => Trans_Value,
-                                   Line => 0,
-                                   Time => Current_Time + Sig.S.Time,
-                                   Next => null,
-                                   Val => Pfx.Value);
+         Ntime := Current_Time + Sig.S.Time;
 
          --  Find the last transaction.
          Last := Sig.S.Attr_Trans;
@@ -2801,11 +2797,23 @@ package body Grt.Signals is
          end loop;
 
          --  The transaction are scheduled after the last one.
-         pragma Assert (Last.Time <= Trans.Time);
-         pragma Assert (Last.Time /= Trans.Time or else Prev = Last);
+         pragma Assert (Last.Time <= Ntime);
 
-         --  Append the transaction.
-         Prev.Next := Trans;
+         if Last.Time = Ntime then
+            --  Change the projected value.
+            Last.Val := Pfx.Value;
+         else
+            --  Create the transaction.
+            Trans := new Transaction'(Kind => Trans_Value,
+                                      Line => 0,
+                                      Time => Ntime,
+                                      Next => null,
+                                      Val => Pfx.Value);
+
+            --  Append the transaction.
+            Prev.Next := Trans;
+         end if;
+
          if Sig.S.Time = 0 then
             Add_Active_Chain (Sig);
          end if;
