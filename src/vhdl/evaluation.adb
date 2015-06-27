@@ -1866,9 +1866,7 @@ package body Evaluation is
       Res := Build_Constant (Val, Conv);
       if Get_Constraint_State (Conv_Type) = Fully_Constrained then
          Set_Type (Res, Conv_Type);
-         if Eval_Discrete_Type_Length (Conv_Index_Type)
-           /= Eval_Discrete_Type_Length (Val_Index_Type)
-         then
+         if not Eval_Is_In_Bound (Val, Conv_Type) then
             Warning_Msg_Sem
               ("non matching length in type conversion", Conv);
             return Build_Overflow (Conv);
@@ -2471,7 +2469,7 @@ package body Evaluation is
       return True;
    end Eval_Fp_In_Range;
 
-   --  Return TRUE if literal EXPR is in SUB_TYPE bounds.
+   --  Return FALSE if literal EXPR is not in SUB_TYPE bounds.
    function Eval_Is_In_Bound (Expr : Iir; Sub_Type : Iir) return Boolean
    is
       Type_Range : Iir;
@@ -2494,28 +2492,91 @@ package body Evaluation is
 
       case Get_Kind (Sub_Type) is
          when Iir_Kind_Integer_Subtype_Definition =>
+            if Get_Expr_Staticness (Expr) /= Locally
+              or else Get_Type_Staticness (Sub_Type) /= Locally
+            then
+               return True;
+            end if;
             Type_Range := Get_Range_Constraint (Sub_Type);
             return Eval_Int_In_Range (Get_Value (Val), Type_Range);
          when Iir_Kind_Floating_Subtype_Definition =>
+            if Get_Expr_Staticness (Expr) /= Locally
+              or else Get_Type_Staticness (Sub_Type) /= Locally
+            then
+               return True;
+            end if;
             Type_Range := Get_Range_Constraint (Sub_Type);
             return Eval_Fp_In_Range (Get_Fp_Value (Val), Type_Range);
          when Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
+            if Get_Expr_Staticness (Expr) /= Locally
+              or else Get_Type_Staticness (Sub_Type) /= Locally
+            then
+               return True;
+            end if;
             --  A check is required for an enumeration type definition for
             --  'val attribute.
             Type_Range := Get_Range_Constraint (Sub_Type);
             return Eval_Int_In_Range
               (Iir_Int64 (Get_Enum_Pos (Val)), Type_Range);
          when Iir_Kind_Physical_Subtype_Definition =>
+            if Get_Expr_Staticness (Expr) /= Locally
+              or else Get_Type_Staticness (Sub_Type) /= Locally
+            then
+               return True;
+            end if;
             Type_Range := Get_Range_Constraint (Sub_Type);
             return Eval_Phys_In_Range (Get_Physical_Value (Val), Type_Range);
 
          when Iir_Kind_Base_Attribute =>
+            if Get_Expr_Staticness (Expr) /= Locally
+              or else Get_Type_Staticness (Sub_Type) /= Locally
+            then
+               return True;
+            end if;
             return Eval_Is_In_Bound (Val, Get_Type (Sub_Type));
 
-         when Iir_Kind_Array_Subtype_Definition
-           | Iir_Kind_Array_Type_Definition
-           | Iir_Kind_Record_Type_Definition =>
+         when Iir_Kind_Array_Subtype_Definition =>
+            declare
+               Val_Type : constant Iir := Get_Type (Val);
+            begin
+               if Get_Constraint_State (Sub_Type) /= Fully_Constrained
+                 or else
+                 Get_Kind (Val_Type) /= Iir_Kind_Array_Subtype_Definition
+                 or else
+                 Get_Constraint_State (Val_Type) /= Fully_Constrained
+               then
+                  --  Cannot say no.
+                  return True;
+               end if;
+               declare
+                  E_Indexes : constant Iir_List :=
+                    Get_Index_Subtype_List (Val_Type);
+                  T_Indexes : constant Iir_List :=
+                    Get_Index_Subtype_List (Sub_Type);
+                  E_El : Iir;
+                  T_El : Iir;
+               begin
+                  for I in Natural loop
+                     E_El := Get_Index_Type (E_Indexes, I);
+                     T_El := Get_Index_Type (T_Indexes, I);
+                     exit when E_El = Null_Iir and T_El = Null_Iir;
+
+                     if Get_Type_Staticness (E_El) = Locally
+                       and then Get_Type_Staticness (T_El) = Locally
+                       and then (Eval_Discrete_Type_Length (E_El)
+                                   /= Eval_Discrete_Type_Length (T_El))
+                     then
+                        return False;
+                     end if;
+                  end loop;
+                  return True;
+               end;
+            end;
+
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
             --  FIXME: do it.
             return True;
 

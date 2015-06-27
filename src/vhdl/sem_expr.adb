@@ -547,10 +547,10 @@ package body Sem_Expr is
       end if;
    end Search_Compatible_Type;
 
-   -- Semantize the range expression EXPR.
+   -- Analyze the range expression EXPR.
    -- If A_TYPE is not null_iir, EXPR is expected to be of type A_TYPE.
    -- LRM93 3.2.1.1
-   -- FIXME: avoid to run it on an already semantized node, be careful
+   -- FIXME: avoid to run it on an already analyzed node, be careful
    --  with range_type_expr.
    function Sem_Simple_Range_Expression
      (Expr: Iir_Range_Expression; A_Type: Iir; Any_Dir : Boolean)
@@ -703,7 +703,7 @@ package body Sem_Expr is
    --  a range attribute
    --  a range type definition
    -- LRM93 3.2.1.1
-   -- FIXME: avoid to run it on an already semantized node, be careful
+   -- FIXME: avoid to run it on an already analyzed node, be careful
    --  with range_type_expr.
    function Sem_Range_Expression (Expr: Iir; A_Type: Iir; Any_Dir : Boolean)
                                  return Iir
@@ -1360,7 +1360,7 @@ package body Sem_Expr is
    end Sem_Subprogram_Call_Stage1;
 
    -- For a procedure call, A_TYPE must be null.
-   --  Associations must have already been semantized by sem_association_list.
+   --  Associations must have already been analyzed by sem_association_list.
    function Sem_Subprogram_Call (Expr: Iir; A_Type: Iir) return Iir
    is
       Is_Func: constant Boolean := Get_Kind (Expr) = Iir_Kind_Function_Call;
@@ -1755,8 +1755,8 @@ package body Sem_Expr is
 
       if Get_Type (Expr) = Null_Iir then
          --  First pass.
-         --  Semantize operands.
-         --  FIXME: should try to semantize right operand even if semantization
+         --  Analyze operands.
+         --  FIXME: should try to analyze right operand even if analyze
          --  of left operand has failed ??
          if Get_Type (Left) = Null_Iir then
             Left := Sem_Expression_Ov (Left, Null_Iir);
@@ -1943,7 +1943,7 @@ package body Sem_Expr is
       end if;
    end Sem_Operator;
 
-   --  Semantize LIT whose elements must be of type EL_TYPE, and return
+   --  Analyze LIT whose elements must be of type EL_TYPE, and return
    --  the length.
    --  FIXME: the errors are reported, but there is no mark of that.
    function Sem_String_Literal (Str : Iir; El_Type : Iir) return Natural
@@ -2377,7 +2377,7 @@ package body Sem_Expr is
          return True;
       end Replace_By_Range_Choice;
 
-      --  Semantize a simple (by expression or by range) choice.
+      --  Analyze a simple (by expression or by range) choice.
       --  Return FALSE in case of error.
       function Sem_Simple_Choice return Boolean
       is
@@ -2515,7 +2515,7 @@ package body Sem_Expr is
       High := Null_Iir;
 
       --  First:
-      --  semantize the choices
+      --  Analyze the choices
       --  compute the range of positionnal choices
       --  compute the number of choice elements (extracted from lists).
       --  check for others presence.
@@ -2901,7 +2901,7 @@ package body Sem_Expr is
          end if;
       end Add_Match;
 
-      --  Semantize a simple choice: extract the record element corresponding
+      --  Analyze a simple choice: extract the record element corresponding
       --  to the expression, and create a choice_by_name.
       --  FIXME: should mutate the node.
       function Sem_Simple_Choice (Ass : Iir) return Iir
@@ -3012,7 +3012,7 @@ package body Sem_Expr is
                Error_Kind ("sem_record_aggregate", El);
          end case;
 
-         --  Semantize the expression associated.
+         --  Analyze the expression associated.
          if Expr /= Null_Iir then
             if El_Type /= Null_Iir then
                Expr := Sem_Expression (Expr, El_Type);
@@ -3075,11 +3075,14 @@ package body Sem_Expr is
 
       --  True if there is an error.
       Error : Boolean := False;
+
+      --  True if one element doesn't match the bounds.
+      Has_Bound_Error : Boolean := False;
    end record;
 
    type Array_Aggr_Info_Arr is array (Natural range <>) of Array_Aggr_Info;
 
-   --  Semantize an array aggregate AGGR of *base type* A_TYPE.
+   --  Analyze an array aggregate AGGR of *base type* A_TYPE.
    --  The type of the array is computed into A_SUBTYPE.
    --  DIM is the dimension index in A_TYPE.
    --  Return FALSE in case of error.
@@ -3089,29 +3092,26 @@ package body Sem_Expr is
                                          Constrained : Boolean;
                                          Dim: Natural)
    is
+      Index_List : constant Iir_List := Get_Index_Subtype_List (A_Type);
+
+      --  Type of the index (this is also the type of the choices).
+      Index_Type : constant Iir := Get_Index_Type (Index_List, Dim - 1);
+
       Assoc_Chain : Iir;
       Choice: Iir;
       Is_Positional: Tri_State_Type;
       Has_Positional_Choice: Boolean;
       Low, High : Iir;
-      Index_List : Iir_List;
       Has_Others : Boolean;
 
       Len : Natural;
 
-      --  Type of the index (this is also the type of the choices).
-      Index_Type : Iir;
-
-      --Index_Subtype : Iir;
       Index_Subtype_Constraint : Iir_Range_Expression;
       Index_Constraint : Iir_Range_Expression; -- FIXME: 'range.
       Choice_Staticness : Iir_Staticness;
 
       Info : Array_Aggr_Info renames Infos (Dim);
    begin
-      Index_List := Get_Index_Subtype_List (A_Type);
-      Index_Type := Get_Index_Type (Index_List, Dim - 1);
-
       --  Sem choices.
       case Get_Kind (Aggr) is
          when Iir_Kind_Aggregate =>
@@ -3359,51 +3359,59 @@ package body Sem_Expr is
          end if;
       end if;
 
-      --  Semantize aggregate elements.
+      --  Analyze aggregate elements.
       if Dim = Get_Nbr_Elements (Index_List) then
-         --  A type has been found for AGGR, semantize AGGR as if it was
-         --  an aggregate with a subtype.
+         --  A type has been found for AGGR, analyze AGGR as if it was
+         --  an aggregate with a subtype (and not a string).
 
-         if Get_Kind (Aggr) = Iir_Kind_Aggregate then
-            -- LRM93 7.3.2.2:
-            --   the expression of each element association must be of the
-            --   element type.
-            declare
-               El : Iir;
-               Element_Type : Iir;
-               Expr : Iir;
-               Value_Staticness : Iir_Staticness;
-               Expr_Staticness : Iir_Staticness;
-            begin
-               Element_Type := Get_Element_Subtype (A_Type);
-               El := Assoc_Chain;
-               Value_Staticness := Locally;
-               while El /= Null_Iir loop
-                  Expr := Get_Associated_Expr (El);
-                  if Expr /= Null_Iir then
-                     Expr := Sem_Expression (Expr, Element_Type);
-                     if Expr /= Null_Iir then
-                        Expr_Staticness := Get_Expr_Staticness (Expr);
-                        Set_Expr_Staticness
-                          (Aggr, Min (Get_Expr_Staticness (Aggr),
-                                      Expr_Staticness));
-                        Set_Associated_Expr (El, Eval_Expr_If_Static (Expr));
-
-                        --  FIXME: handle name/others in translate.
-                        --  if Get_Kind (Expr) = Iir_Kind_Aggregate then
-                        --     Expr_Staticness := Get_Value_Staticness (Expr);
-                        --  end if;
-                        Value_Staticness := Min (Value_Staticness,
-                                                 Expr_Staticness);
-                     else
-                        Info.Error := True;
-                     end if;
-                  end if;
-                  El := Get_Chain (El);
-               end loop;
-               Set_Value_Staticness (Aggr, Value_Staticness);
-            end;
+         if Get_Kind (Aggr) /= Iir_Kind_Aggregate then
+            return;
          end if;
+
+         -- LRM93 7.3.2.2:
+         --   the expression of each element association must be of the
+         --   element type.
+         declare
+            Element_Type : constant Iir := Get_Element_Subtype (A_Type);
+            El : Iir;
+            Expr : Iir;
+            Value_Staticness : Iir_Staticness;
+            Expr_Staticness : Iir_Staticness;
+         begin
+            El := Assoc_Chain;
+            Value_Staticness := Locally;
+            while El /= Null_Iir loop
+               Expr := Get_Associated_Expr (El);
+               if Expr /= Null_Iir then
+                  Expr := Sem_Expression (Expr, Element_Type);
+                  if Expr /= Null_Iir then
+                     Expr_Staticness := Get_Expr_Staticness (Expr);
+                     Set_Expr_Staticness (Aggr,
+                                          Min (Get_Expr_Staticness (Aggr),
+                                               Expr_Staticness));
+                     Expr := Eval_Expr_If_Static (Expr);
+                     Set_Associated_Expr (El, Expr);
+
+                     if not Eval_Is_In_Bound (Expr, Element_Type)
+                     then
+                        Info.Has_Bound_Error := True;
+                        Warning_Msg_Sem ("element is out of the bounds", Expr);
+                     end if;
+
+                     --  FIXME: handle name/others in translate.
+                     --  if Get_Kind (Expr) = Iir_Kind_Aggregate then
+                     --     Expr_Staticness := Get_Value_Staticness (Expr);
+                     --  end if;
+                     Value_Staticness := Min (Value_Staticness,
+                                              Expr_Staticness);
+                  else
+                     Info.Error := True;
+                  end if;
+               end if;
+               El := Get_Chain (El);
+            end loop;
+            Set_Value_Staticness (Aggr, Value_Staticness);
+         end;
       else
          declare
             Assoc : Iir;
@@ -3442,15 +3450,14 @@ package body Sem_Expr is
       end if;
    end Sem_Array_Aggregate_Type_1;
 
-   --  Semantize an array aggregate whose type is AGGR_TYPE.
+   --  Analyze an array aggregate whose type is AGGR_TYPE.
    --  If CONSTRAINED is true, then the aggregate appears in one of the
    --  context and can have an 'others' choice.
    --  If CONSTRAINED is false, the aggregate can not have an 'others' choice.
    --  Create a subtype for this aggregate.
    --  Return NULL_IIR in case of error, or AGGR if not.
    function Sem_Array_Aggregate_Type
-     (Aggr : Iir; Aggr_Type : Iir; Constrained : Boolean)
-     return Iir
+     (Aggr : Iir; Aggr_Type : Iir; Constrained : Boolean) return Iir
    is
       A_Subtype: Iir;
       Base_Type : Iir;
@@ -3460,7 +3467,7 @@ package body Sem_Expr is
       Aggr_Constrained : Boolean;
       Info, Prev_Info : Iir_Aggregate_Info;
    begin
-      --  Semantize the aggregate.
+      --  Analyze the aggregate.
       Sem_Array_Aggregate_Type_1 (Aggr, Aggr_Type, Infos, Constrained, 1);
 
       Aggr_Constrained := True;
@@ -3503,6 +3510,10 @@ package body Sem_Expr is
                end if;
             end;
          end loop;
+      end if;
+
+      if Infos (Nbr_Dim).Has_Bound_Error then
+         return Build_Overflow (Aggr, Get_Type (Aggr));
       end if;
 
       Prev_Info := Null_Iir;

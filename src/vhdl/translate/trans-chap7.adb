@@ -40,6 +40,68 @@ package body Trans.Chap7 is
    use Trans.Helpers;
    procedure Copy_Range (Dest : Mnode; Src : Mnode);
 
+   function Translate_Static_Implicit_Conv
+     (Expr : O_Cnode; Expr_Type : Iir; Res_Type : Iir)
+     return O_Cnode
+   is
+      Expr_Info : Type_Info_Acc;
+      Res_Info  : Type_Info_Acc;
+      Val       : Var_Type;
+      Res       : O_Cnode;
+      List      : O_Record_Aggr_List;
+      Bound     : Var_Type;
+   begin
+      if Res_Type = Expr_Type then
+         return Expr;
+      end if;
+
+      --  EXPR must be already constrained.
+      pragma Assert (Get_Kind (Expr_Type) = Iir_Kind_Array_Subtype_Definition);
+      if Get_Kind (Res_Type) = Iir_Kind_Array_Subtype_Definition
+        and then Get_Constraint_State (Res_Type) = Fully_Constrained
+      then
+         --  constrained to constrained.
+         if not Chap3.Locally_Array_Match (Expr_Type, Res_Type) then
+            --  Sem should have replaced the expression by an overflow.
+            raise Internal_Error;
+            --  Chap6.Gen_Bound_Error (Loc);
+         end if;
+
+         --  Constrained to constrained should be OK, as already checked by
+         --  sem.
+         return Expr;
+      end if;
+
+      --  Handle only constrained to unconstrained conversion.
+      pragma Assert (Get_Kind (Res_Type) in Iir_Kinds_Array_Type_Definition);
+      pragma Assert (Get_Constraint_State (Res_Type) = Unconstrained);
+
+      Expr_Info := Get_Info (Expr_Type);
+      Res_Info := Get_Info (Res_Type);
+      Val := Create_Global_Const
+        (Create_Uniq_Identifier, Expr_Info.Ortho_Type (Mode_Value),
+         O_Storage_Private, Expr);
+      Bound := Expr_Info.T.Array_Bounds;
+      if Bound = Null_Var then
+         Bound := Create_Global_Const
+           (Create_Uniq_Identifier, Expr_Info.T.Bounds_Type,
+            O_Storage_Private,
+            Chap3.Create_Static_Array_Subtype_Bounds (Expr_Type));
+         Expr_Info.T.Array_Bounds := Bound;
+      end if;
+
+      Start_Record_Aggr (List, Res_Info.Ortho_Type (Mode_Value));
+      New_Record_Aggr_El
+        (List, New_Global_Address (Get_Var_Label (Val),
+         Res_Info.T.Base_Ptr_Type (Mode_Value)));
+      New_Record_Aggr_El
+        (List, New_Global_Address (Get_Var_Label (Bound),
+         Expr_Info.T.Bounds_Ptr_Type));
+      Finish_Record_Aggr (List, Res);
+
+      return Res;
+   end Translate_Static_Implicit_Conv;
+
    function Is_Static_Constant (Decl : Iir_Constant_Declaration) return Boolean
    is
       Expr  : constant Iir := Get_Default_Value (Decl);
@@ -368,7 +430,7 @@ package body Trans.Chap7 is
       return Res;
    end Translate_Static_String;
 
-   function Translate_String_Literal (Str : Iir) return O_Enode
+   function Translate_String_Literal (Str : Iir; Res_Type : Iir) return O_Enode
    is
       Str_Type : constant Iir := Get_Type (Str);
       Var      : Var_Type;
@@ -391,63 +453,19 @@ package body Trans.Chap7 is
             when others =>
                raise Internal_Error;
          end case;
-         Info := Get_Info (Str_Type);
+         Res := Translate_Static_Implicit_Conv (Res, Str_Type, Res_Type);
+         Info := Get_Info (Res_Type);
          Var := Create_Global_Const
            (Create_Uniq_Identifier, Info.Ortho_Type (Mode_Value),
             O_Storage_Private, Res);
          R := New_Address (Get_Var (Var), Info.Ortho_Ptr_Type (Mode_Value));
          return R;
       else
-         return Translate_Non_Static_String_Literal (Str);
+         return Translate_Implicit_Conv
+           (Translate_Non_Static_String_Literal (Str), Str_Type, Res_Type,
+            Mode_Value, Str);
       end if;
    end Translate_String_Literal;
-
-   function Translate_Static_Implicit_Conv
-     (Expr : O_Cnode; Expr_Type : Iir; Res_Type : Iir) return O_Cnode
-   is
-      Expr_Info : Type_Info_Acc;
-      Res_Info  : Type_Info_Acc;
-      Val       : Var_Type;
-      Res       : O_Cnode;
-      List      : O_Record_Aggr_List;
-      Bound     : Var_Type;
-   begin
-      if Res_Type = Expr_Type then
-         return Expr;
-      end if;
-      if Get_Kind (Expr_Type) /= Iir_Kind_Array_Subtype_Definition then
-         raise Internal_Error;
-      end if;
-      if Get_Kind (Res_Type) = Iir_Kind_Array_Subtype_Definition then
-         return Expr;
-      end if;
-      if Get_Kind (Res_Type) /= Iir_Kind_Array_Type_Definition then
-         raise Internal_Error;
-      end if;
-      Expr_Info := Get_Info (Expr_Type);
-      Res_Info := Get_Info (Res_Type);
-      Val := Create_Global_Const
-        (Create_Uniq_Identifier, Expr_Info.Ortho_Type (Mode_Value),
-         O_Storage_Private, Expr);
-      Bound := Expr_Info.T.Array_Bounds;
-      if Bound = Null_Var then
-         Bound := Create_Global_Const
-           (Create_Uniq_Identifier, Expr_Info.T.Bounds_Type,
-            O_Storage_Private,
-            Chap3.Create_Static_Array_Subtype_Bounds (Expr_Type));
-         Expr_Info.T.Array_Bounds := Bound;
-      end if;
-
-      Start_Record_Aggr (List, Res_Info.Ortho_Type (Mode_Value));
-      New_Record_Aggr_El
-        (List, New_Global_Address (Get_Var_Label (Val),
-         Res_Info.T.Base_Ptr_Type (Mode_Value)));
-      New_Record_Aggr_El
-        (List, New_Global_Address (Get_Var_Label (Bound),
-         Expr_Info.T.Bounds_Ptr_Type));
-      Finish_Record_Aggr (List, Res);
-      return Res;
-   end Translate_Static_Implicit_Conv;
 
    function Translate_Numeric_Literal (Expr : Iir; Res_Type : O_Tnode)
                                       return O_Cnode is
@@ -527,7 +545,8 @@ package body Trans.Chap7 is
 
          when Iir_Kind_String_Literal8 =>
             return Translate_Static_Implicit_Conv
-              (Translate_Static_String_Literal8 (Expr), Expr_Type, Res_Type);
+              (Translate_Static_String_Literal8 (Expr),
+               Expr_Type, Res_Type);
          when Iir_Kind_Simple_Aggregate =>
             return Translate_Static_Implicit_Conv
               (Translate_Static_Simple_Aggregate (Expr),
@@ -3699,7 +3718,7 @@ package body Trans.Chap7 is
          when Iir_Kind_String_Literal8
             | Iir_Kind_Simple_Aggregate
             | Iir_Kind_Simple_Name_Attribute =>
-            Res := Translate_String_Literal (Expr);
+            return Translate_String_Literal (Expr, Res_Type);
 
          when Iir_Kind_Aggregate =>
             declare

@@ -127,6 +127,9 @@ package Evaluation is
    --  IS_POS is true) or extreme negative value.
    function Build_Extreme_Value (Is_Pos : Boolean; Origin : Iir) return Iir;
 
+   --  Create a Iir_Kind_Overflow node of type EXPR_TYPE for ORIGIN.
+   function Build_Overflow (Origin : Iir; Expr_Type : Iir) return Iir;
+
    --  Create an array subtype from LEN and BASE_TYPE, according to rules
    --  of LRM93 7.3.2.2. (which are the same as LRM93 7.2.4).
    function Create_Unidim_Array_By_Length
