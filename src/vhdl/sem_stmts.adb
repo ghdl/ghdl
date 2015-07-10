@@ -1845,6 +1845,8 @@ package body Sem_Stmts is
       Is_Passive : constant Boolean :=
         Get_Kind (Parent) = Iir_Kind_Entity_Declaration;
       El: Iir;
+      New_El : Iir;
+      Next_El : Iir;
 
       procedure No_Generate_Statement is
       begin
@@ -1864,6 +1866,8 @@ package body Sem_Stmts is
       Prev_El := Null_Iir;
       while El /= Null_Iir loop
          Current_Concurrent_Statement := El;
+         New_El := El;
+         Next_El := Get_Chain (El);
 
          case Get_Kind (El) is
             when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
@@ -1900,29 +1904,13 @@ package body Sem_Stmts is
                No_Generate_Statement;
                Sem_For_Generate_Statement (El);
             when Iir_Kind_Concurrent_Procedure_Call_Statement =>
-               declare
-                  Next_El : Iir;
-                  N_Stmt : Iir;
-               begin
-                  Next_El := Get_Chain (El);
-                  N_Stmt := Sem_Concurrent_Procedure_Call_Statement
-                    (El, Is_Passive);
-                  if N_Stmt /= El then
-                     --  Replace this node.
-                     El := N_Stmt;
-                     if Prev_El = Null_Iir then
-                        Set_Concurrent_Statement_Chain (Parent, El);
-                     else
-                        Set_Chain (Prev_El, El);
-                     end if;
-                     Set_Chain (El, Next_El);
-                  end if;
-               end;
+               New_El := Sem_Concurrent_Procedure_Call_Statement
+                 (El, Is_Passive);
             when Iir_Kind_Psl_Declaration =>
                Sem_Psl.Sem_Psl_Declaration (El);
             when Iir_Kind_Psl_Assert_Statement
               | Iir_Kind_Psl_Cover_Statement =>
-               Sem_Psl.Sem_Psl_Assert_Statement (El);
+               New_El := Sem_Psl.Sem_Psl_Assert_Statement (El);
             when Iir_Kind_Psl_Default_Clock =>
                Sem_Psl.Sem_Psl_Default_Clock (El);
             when Iir_Kind_Simple_Simultaneous_Statement =>
@@ -1930,8 +1918,21 @@ package body Sem_Stmts is
             when others =>
                Error_Kind ("sem_concurrent_statement_chain", El);
          end case;
-         Prev_El := El;
-         El := Get_Chain (El);
+
+         if New_El /= El then
+            --  Replace this node.
+            if Prev_El = Null_Iir then
+               Set_Concurrent_Statement_Chain (Parent, New_El);
+            else
+               Set_Chain (Prev_El, New_El);
+            end if;
+            Set_Chain (New_El, Next_El);
+            Prev_El := New_El;
+         else
+            Prev_El := El;
+         end if;
+
+         El := Next_El;
       end loop;
 
       Current_Concurrent_Statement := Prev_Concurrent_Statement;

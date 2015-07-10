@@ -20,7 +20,7 @@ with Iirs; use Iirs;
 
 package Sem_Psl is
    procedure Sem_Psl_Declaration (Stmt : Iir);
-   procedure Sem_Psl_Assert_Statement (Stmt : Iir);
+   function Sem_Psl_Assert_Statement (Stmt : Iir) return Iir;
    procedure Sem_Psl_Default_Clock (Stmt : Iir);
    function Sem_Psl_Name (Name : Iir) return Iir;
 end Sem_Psl;

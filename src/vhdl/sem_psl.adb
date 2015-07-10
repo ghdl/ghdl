@@ -478,18 +478,37 @@ package body Sem_Psl is
       Close_Declarative_Region;
    end Sem_Psl_Declaration;
 
-   procedure Sem_Psl_Assert_Statement (Stmt : Iir)
+   function Sem_Psl_Assert_Statement (Stmt : Iir) return Iir
    is
       Prop : Node;
       Clk : Node;
+      Res : Iir;
    begin
       Prop := Get_Psl_Property (Stmt);
       Prop := Sem_Property (Prop, True);
       Extract_Clock (Prop, Clk);
-      Set_Psl_Property (Stmt, Prop);
 
       --  Sem report and severity expressions.
       Sem_Report_Statement (Stmt);
+
+      if Get_Kind (Prop) = N_HDL_Expr
+        and then Get_Kind (Stmt) = Iir_Kind_Psl_Assert_Statement
+      then
+         --  This is a simple assertion.  Convert to a non-PSL statement, as
+         --  the handling is simpler (and the assertion doesn't need a clock).
+         Res := Create_Iir (Iir_Kind_Concurrent_Assertion_Statement);
+         Set_Location (Res, Get_Location (Stmt));
+         Set_Assertion_Condition (Res, Get_HDL_Node (Prop));
+         Set_Label (Res, Get_Label (Stmt));
+         Set_Severity_Expression (Res, Get_Severity_Expression (Stmt));
+         Set_Report_Expression (Res, Get_Report_Expression (Stmt));
+         Set_Postponed_Flag (Res, False);
+         Free_Iir (Stmt);
+         pragma Assert (Clk = Null_Node);
+         return Res;
+      else
+         Set_Psl_Property (Stmt, Prop);
+      end if;
 
       --  Properties must be clocked.
       if Clk = Null_Node then
@@ -504,6 +523,8 @@ package body Sem_Psl is
 
       --  Check simple subset restrictions.
       PSL.Subsets.Check_Simple (Prop);
+
+      return Stmt;
    end Sem_Psl_Assert_Statement;
 
    procedure Sem_Psl_Default_Clock (Stmt : Iir)
