@@ -171,7 +171,7 @@ package Iirs_Utils is
      return Iir;
 
    --  Wrapper around Get_Entity_Name: return the entity declaration of the
-   --  entity name of DECL.
+   --  entity name of DECL, or Null_Iir in case of error.
    function Get_Entity (Decl : Iir) return Iir;
 
    --  Wrapper around get_Configuration_Name: return the configuration

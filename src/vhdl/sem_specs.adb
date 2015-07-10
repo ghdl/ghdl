@@ -1039,6 +1039,9 @@ package body Sem_Specs is
                Entity_Name := Sem_Denoting_Name (Get_Entity_Name (Aspect));
                Set_Entity_Name (Aspect, Entity_Name);
                Entity := Get_Named_Entity (Entity_Name);
+               if Entity = Error_Mark then
+                  return Null_Iir;
+               end if;
                if Get_Kind (Entity) /= Iir_Kind_Entity_Declaration then
                   Error_Class_Match (Entity_Name, "entity");
                   return Null_Iir;
