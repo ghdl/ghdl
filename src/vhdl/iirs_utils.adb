@@ -21,6 +21,7 @@ with Errorout; use Errorout;
 with Name_Table;
 with Str_Table;
 with Std_Names; use Std_Names;
+with Std_Package;
 with Flags; use Flags;
 with PSL.Nodes;
 with Sem_Inst;
@@ -854,6 +855,10 @@ package body Iirs_Utils is
       Name : constant Iir := Get_Entity_Name (Decl);
       Res : constant Iir := Get_Named_Entity (Name);
    begin
+      if Res = Std_Package.Error_Mark then
+         return Null_Iir;
+      end if;
+
       pragma Assert (Res = Null_Iir
                        or else Get_Kind (Res) = Iir_Kind_Entity_Declaration);
       return Res;

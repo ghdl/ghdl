@@ -930,6 +930,7 @@ package body Sem is
                Arch : Iir_Architecture_Body;
                Design: Iir_Design_Unit;
                Entity_Aspect : Iir;
+               Entity : Iir;
                Comp_Arch : Iir;
             begin
                Entity_Aspect :=
@@ -962,8 +963,13 @@ package body Sem is
                   end if;
                end if;
 
+               Entity := Get_Entity (Entity_Aspect);
+               if Entity = Null_Iir then
+                  return;
+               end if;
+
                Design := Libraries.Load_Secondary_Unit
-                 (Get_Design_Unit (Get_Entity (Entity_Aspect)),
+                 (Get_Design_Unit (Entity),
                   Get_Identifier (Block_Spec),
                   Block_Conf);
                if Design = Null_Iir then
