@@ -1927,9 +1927,11 @@ package body Sem_Stmts is
                Set_Chain (Prev_El, New_El);
             end if;
             Set_Chain (New_El, Next_El);
+            Set_Parent (New_El, Parent);
             Prev_El := New_El;
          else
             Prev_El := El;
+            pragma Assert (Get_Parent (El) = Parent);
          end if;
 
          El := Next_El;
