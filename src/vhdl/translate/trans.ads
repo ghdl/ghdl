@@ -1675,6 +1675,16 @@ package Trans is
       --  FIXME: maybe a flag must be added to CLOSE_TEMP where it is known
       --   stack2 can be released.
       procedure Create_Temp_Stack2_Mark;
+
+      --  Some constructs (slices, aggregates) implicitly define a subtype.
+      --  This subtype (and its bounds) is created dynamically and its life
+      --  is short.
+      --  However, in some cases (default expression, target of signal
+      --  assignment) the construct may be evaluated several time (eg: to
+      --  compute the drivers).  In that case, bounds are created many times
+      --  and therefore must be forgotten at the end of its life to avoid any
+      --  incorrect reuse.
+      --
       --  Add ATYPE in the chain of types to be destroyed at the end of the
       --  temp scope.
       procedure Add_Transient_Type_In_Temp (Atype : Iir);

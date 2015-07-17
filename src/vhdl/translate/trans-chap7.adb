@@ -41,8 +41,7 @@ package body Trans.Chap7 is
    procedure Copy_Range (Dest : Mnode; Src : Mnode);
 
    function Translate_Static_Implicit_Conv
-     (Expr : O_Cnode; Expr_Type : Iir; Res_Type : Iir)
-     return O_Cnode
+     (Expr : O_Cnode; Expr_Type : Iir; Res_Type : Iir) return O_Cnode
    is
       Expr_Info : Type_Info_Acc;
       Res_Info  : Type_Info_Acc;
@@ -226,7 +225,7 @@ package body Trans.Chap7 is
       List      : O_Array_Aggr_List;
       Res       : O_Cnode;
    begin
-      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type, True);
+      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type, False);
       Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
 
       Translate_Static_Aggregate_1
@@ -244,7 +243,7 @@ package body Trans.Chap7 is
       List      : O_Array_Aggr_List;
       Res       : O_Cnode;
    begin
-      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type, True);
+      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type, False);
       Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
 
       for I in Natural loop
@@ -441,7 +440,7 @@ package body Trans.Chap7 is
       if Get_Constraint_State (Str_Type) = Fully_Constrained
         and then Get_Type_Staticness (Get_Index_Type (Str_Type, 0)) = Locally
       then
-         Chap3.Create_Array_Subtype (Str_Type, True);
+         Chap3.Create_Array_Subtype (Str_Type, False);
          case Get_Kind (Str) is
             when Iir_Kind_String_Literal8 =>
                Res := Translate_Static_String_Literal8 (Str);
