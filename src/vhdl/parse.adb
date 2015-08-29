@@ -214,11 +214,9 @@ package body Parse is
    --  mode ::= IN | OUT | INOUT | BUFFER | LINKAGE
    --
    --  If there is no mode, DEFAULT is returned.
-   function Parse_Mode (Default: Iir_Mode) return Iir_Mode is
+   function Parse_Mode return Iir_Mode is
    begin
       case Current_Token is
-         when Tok_Identifier =>
-            return Default;
          when Tok_In =>
             Scan;
             if Current_Token = Tok_Out then
@@ -1311,12 +1309,26 @@ package body Parse is
       --  Skip ':'
       Scan;
 
+      --  Parse mode.
+      case Current_Token is
+         when Tok_In
+           | Tok_Out
+           | Tok_Inout
+           | Tok_Linkage
+           | Tok_Buffer =>
+            Interface_Mode := Parse_Mode;
+            Has_Mode := True;
+         when others =>
+            Interface_Mode := Iir_Unknown_Mode;
+            Has_Mode := False;
+      end case;
+
       --  LRM93 2.1.1  LRM08 4.2.2.1
       --  If the mode is INOUT or OUT, and no object class is explicitly
       --  specified, variable is assumed.
       if Is_Default
         and then Ctxt in Parameter_Interface_List
-        and then (Current_Token = Tok_Inout or else Current_Token = Tok_Out)
+        and then Interface_Mode in Iir_Out_Modes
       then
          --  Convert into variable.
          declare
@@ -1348,23 +1360,10 @@ package body Parse is
          end;
       end if;
 
-      --  Update lexical layout if mode is present.
-      case Current_Token is
-         when Tok_In
-           | Tok_Out
-           | Tok_Inout
-           | Tok_Linkage
-           | Tok_Buffer =>
-            Has_Mode := True;
-         when others =>
-            Has_Mode := False;
-            null;
-      end case;
-
       --  Parse mode (and handle default mode).
-      case Get_Kind (Inter) is
+      case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
          when Iir_Kind_Interface_File_Declaration =>
-            if Parse_Mode (Iir_Unknown_Mode) /= Iir_Unknown_Mode then
+            if Interface_Mode /= Iir_Unknown_Mode then
                Error_Msg_Parse
                  ("mode can't be specified for a file interface");
             end if;
@@ -1375,14 +1374,16 @@ package body Parse is
             --  If no mode is explicitly given in an interface declaration
             --  other than an interface file declaration, mode IN is
             --  assumed.
-            Interface_Mode := Parse_Mode (Iir_In_Mode);
-         when Iir_Kind_Interface_Constant_Declaration =>
-            Interface_Mode := Parse_Mode (Iir_In_Mode);
-            if Interface_Mode /= Iir_In_Mode then
-               Error_Msg_Parse ("mode must be 'in' for a constant");
+            if Interface_Mode = Iir_Unknown_Mode then
+               Interface_Mode := Iir_In_Mode;
             end if;
-         when others =>
-            raise Internal_Error;
+         when Iir_Kind_Interface_Constant_Declaration =>
+            if Interface_Mode = Iir_Unknown_Mode then
+               Interface_Mode := Iir_In_Mode;
+            elsif Interface_Mode /= Iir_In_Mode then
+               Error_Msg_Parse ("mode must be 'in' for a constant");
+               Interface_Mode := Iir_In_Mode;
+            end if;
       end case;
 
       Interface_Type := Parse_Subtype_Indication;
@@ -3214,7 +3215,7 @@ package body Parse is
                   if Flags.Vhdl_Std >= Vhdl_93 then
                      Error_Msg_Parse ("mode allowed only in vhdl 87");
                   end if;
-                  Mode := Parse_Mode (Iir_In_Mode);
+                  Mode := Parse_Mode;
                   if Mode = Iir_Inout_Mode then
                      Error_Msg_Parse ("inout mode not allowed for file");
                   end if;

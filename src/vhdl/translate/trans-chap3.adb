@@ -255,18 +255,15 @@ package body Trans.Chap3 is
 
    procedure Translate_Bool_Type (Def : Iir_Enumeration_Type_Definition)
    is
-      Info                  : Type_Info_Acc;
-      El_List               : Iir_List;
-      True_Lit, False_Lit   : Iir_Enumeration_Literal;
+      Info    : constant Type_Info_Acc := Get_Info (Def);
+      El_List : constant Iir_List := Get_Enumeration_Literal_List (Def);
+      pragma Assert (Get_Nbr_Elements (El_List) = 2);
+
+      False_Lit : constant Iir := Get_Nth_Element (El_List, 0);
+      True_Lit  : constant Iir := Get_Nth_Element (El_List, 1);
+
       False_Node, True_Node : O_Cnode;
    begin
-      Info := Get_Info (Def);
-      El_List := Get_Enumeration_Literal_List (Def);
-      if Get_Nbr_Elements (El_List) /= 2 then
-         raise Internal_Error;
-      end if;
-      False_Lit := Get_Nth_Element (El_List, 0);
-      True_Lit := Get_Nth_Element (El_List, 1);
       New_Boolean_Type
         (Info.Ortho_Type (Mode_Value),
          Translate_Enumeration_Literal (False_Lit), False_Node,
@@ -513,54 +510,18 @@ package body Trans.Chap3 is
    begin
       Start_Record_Type (Constr);
       New_Record_Field
-        (Constr, Info.T.Base_Field (Kind), Get_Identifier ("BASE"),
+        (Constr, Info.T.Base_Field (Kind), Wki_Base,
          Info.T.Base_Ptr_Type (Kind));
       New_Record_Field
-        (Constr, Info.T.Bounds_Field (Kind), Get_Identifier ("BOUNDS"),
+        (Constr, Info.T.Bounds_Field (Kind), Wki_Bounds,
          Info.T.Bounds_Ptr_Type);
       Finish_Record_Type (Constr, Info.Ortho_Type (Kind));
    end Create_Array_Fat_Pointer;
 
-   procedure Translate_Incomplete_Array_Type
-     (Def : Iir_Array_Type_Definition)
-   is
-      Arr_Info : Incomplete_Type_Info_Acc;
-      Info     : Type_Info_Acc;
-   begin
-      Arr_Info := Get_Info (Def);
-      if Arr_Info.Incomplete_Array /= null then
-         --  This (incomplete) array type was already translated.
-         --  This is the case for a second access type definition to this
-         --   still incomplete array type.
-         return;
-      end if;
-      Info := new Ortho_Info_Type (Kind_Type);
-      Info.Type_Mode := Type_Mode_Fat_Array;
-      Info.Type_Incomplete := True;
-      Arr_Info.Incomplete_Array := Info;
-
-      Info.T := Ortho_Info_Type_Array_Init;
-      Info.T.Bounds_Type := O_Tnode_Null;
-
-      Info.T.Bounds_Ptr_Type := New_Access_Type (Info.T.Bounds_Type);
-      New_Type_Decl (Create_Identifier ("BOUNDP"),
-                     Info.T.Bounds_Ptr_Type);
-
-      Info.T.Base_Ptr_Type (Mode_Value) := New_Access_Type (O_Tnode_Null);
-      New_Type_Decl (Create_Identifier ("BASEP"),
-                     Info.T.Base_Ptr_Type (Mode_Value));
-
-      Create_Array_Fat_Pointer (Info, Mode_Value);
-
-      New_Type_Decl
-        (Create_Identifier, Info.Ortho_Type (Mode_Value));
-   end Translate_Incomplete_Array_Type;
-
    --  Declare the bounds types for DEF.
    procedure Translate_Array_Type_Bounds
      (Def      : Iir_Array_Type_Definition;
-      Info     : Type_Info_Acc;
-      Complete : Boolean)
+      Info     : Type_Info_Acc)
    is
       Indexes_List    : constant Iir_List :=
         Get_Index_Subtype_Definition_List (Def);
@@ -602,25 +563,20 @@ package body Trans.Chap3 is
       Finish_Record_Type (Constr, Info.T.Bounds_Type);
       New_Type_Decl (Create_Identifier ("BOUND"),
                      Info.T.Bounds_Type);
-      if Complete then
-         Finish_Access_Type (Info.T.Bounds_Ptr_Type, Info.T.Bounds_Type);
-      else
-         Info.T.Bounds_Ptr_Type := New_Access_Type (Info.T.Bounds_Type);
-         New_Type_Decl (Create_Identifier ("BOUNDP"),
-                        Info.T.Bounds_Ptr_Type);
-      end if;
+      Info.T.Bounds_Ptr_Type := New_Access_Type (Info.T.Bounds_Type);
+      New_Type_Decl (Create_Identifier ("BOUNDP"),
+                     Info.T.Bounds_Ptr_Type);
    end Translate_Array_Type_Bounds;
 
    procedure Translate_Array_Type_Base
      (Def      : Iir_Array_Type_Definition;
-      Info     : Type_Info_Acc;
-      Complete : Boolean)
+      Info     : Type_Info_Acc)
    is
-      El_Type   : Iir;
+      El_Type   : constant Iir := Get_Element_Subtype (Def);
       El_Tinfo  : Type_Info_Acc;
       Id, Idptr : O_Ident;
    begin
-      El_Type := Get_Element_Subtype (Def);
+      --  Be sure the element type is translated.
       Translate_Type_Definition (El_Type, True);
       El_Tinfo := Get_Info (El_Type);
 
@@ -637,12 +593,8 @@ package body Trans.Chap3 is
             case Kind is
                when Mode_Value =>
                   --  For the values.
-                  Id := Create_Identifier ("BASE");
-                  if not Complete then
-                     Idptr := Create_Identifier ("BASEP");
-                  else
-                     Idptr := O_Ident_Nul;
-                  end if;
+                  Id := Wki_Base;
+                  Idptr := Create_Identifier ("BASEP");
                when Mode_Signal =>
                   --  For the signals
                   Id := Create_Identifier ("SIGBASE");
@@ -652,14 +604,9 @@ package body Trans.Chap3 is
               New_Array_Type (El_Tinfo.Ortho_Type (Kind),
                               Ghdl_Index_Type);
             New_Type_Decl (Id, Info.T.Base_Type (Kind));
-            if Is_Equal (Idptr, O_Ident_Nul) then
-               Finish_Access_Type (Info.T.Base_Ptr_Type (Kind),
-                                   Info.T.Base_Type (Kind));
-            else
-               Info.T.Base_Ptr_Type (Kind) :=
-                 New_Access_Type (Info.T.Base_Type (Kind));
-               New_Type_Decl (Idptr, Info.T.Base_Ptr_Type (Kind));
-            end if;
+            Info.T.Base_Ptr_Type (Kind) :=
+              New_Access_Type (Info.T.Base_Type (Kind));
+            New_Type_Decl (Idptr, Info.T.Base_Ptr_Type (Kind));
          end loop;
       end if;
    end Translate_Array_Type_Base;
@@ -668,25 +615,18 @@ package body Trans.Chap3 is
      (Def : Iir_Array_Type_Definition)
    is
       Info       : constant Type_Info_Acc := Get_Info (Def);
-      --  If true, INFO was already partially filled, by a previous access
-      --  type definition to this incomplete array type.
-      Completion : constant Boolean := Info.Type_Mode = Type_Mode_Fat_Array;
       El_Tinfo   : Type_Info_Acc;
    begin
-      if not Completion then
-         Info.Type_Mode := Type_Mode_Fat_Array;
-         Info.T := Ortho_Info_Type_Array_Init;
-      end if;
-      Translate_Array_Type_Base (Def, Info, Completion);
-      Translate_Array_Type_Bounds (Def, Info, Completion);
+      Info.Type_Mode := Type_Mode_Fat_Array;
+      Info.T := Ortho_Info_Type_Array_Init;
+      Translate_Array_Type_Base (Def, Info);
+      Translate_Array_Type_Bounds (Def, Info);
       Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
-      if not Completion then
-         Create_Array_Fat_Pointer (Info, Mode_Value);
-      end if;
+      Create_Array_Fat_Pointer (Info, Mode_Value);
       if Get_Has_Signal_Flag (Def) then
          Create_Array_Fat_Pointer (Info, Mode_Signal);
       end if;
-      Finish_Type_Definition (Info, Completion);
+      Finish_Type_Definition (Info, False);
 
       El_Tinfo := Get_Info (Get_Element_Subtype (Def));
       if Is_Complex_Type (El_Tinfo) then
@@ -1017,9 +957,7 @@ package body Trans.Chap3 is
    function Get_Type_Alignmask (Info : Type_Info_Acc) return O_Enode is
    begin
       if Is_Complex_Type (Info) then
-         if Info.Type_Mode /= Type_Mode_Record then
-            raise Internal_Error;
-         end if;
+         pragma Assert (Info.Type_Mode = Type_Mode_Record);
          return New_Value (Get_Var (Info.C (Mode_Value).Align_Var));
       else
          return Get_Type_Alignmask (Info.Ortho_Type (Mode_Value));
@@ -1222,56 +1160,56 @@ package body Trans.Chap3 is
    --  Access  --
    --------------
 
+   --  Get the ortho designated type for access type DEF.
+   function Get_Ortho_Designated_Type (Def : Iir_Access_Type_Definition)
+                                      return O_Tnode
+   is
+      D_Type   : constant Iir := Get_Designated_Type (Def);
+      D_Info   : constant Type_Info_Acc := Get_Info (D_Type);
+   begin
+      if not Is_Fully_Constrained_Type (D_Type) then
+         return D_Info.T.Bounds_Type;
+      else
+         if D_Info.Type_Mode in Type_Mode_Arrays then
+            --  The designated type cannot be a sub array inside ortho.
+            --  FIXME: lift this restriction.
+            return D_Info.T.Base_Type (Mode_Value);
+         else
+            return D_Info.Ortho_Type (Mode_Value);
+         end if;
+      end if;
+   end Get_Ortho_Designated_Type;
+
    procedure Translate_Access_Type (Def : Iir_Access_Type_Definition)
    is
       D_Type   : constant Iir := Get_Designated_Type (Def);
+      --  Info for designated type may not be a type info: it may be an
+      --  incomplete type.
       D_Info   : constant Ortho_Info_Acc := Get_Info (D_Type);
       Def_Info : constant Type_Info_Acc := Get_Info (Def);
       Dtype    : O_Tnode;
-      Arr_Info : Type_Info_Acc;
    begin
+      --  No access types for signals.
+      Def_Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
+
       if not Is_Fully_Constrained_Type (D_Type) then
-         --  An access type to an unconstrained type definition is a fat
-         --  pointer.
-         Def_Info.Type_Mode := Type_Mode_Fat_Acc;
-         if D_Info.Kind = Kind_Incomplete_Type then
-            Translate_Incomplete_Array_Type (D_Type);
-            Arr_Info := D_Info.Incomplete_Array;
-            Def_Info.Ortho_Type := Arr_Info.Ortho_Type;
-            Def_Info.T := Arr_Info.T;
-         else
-            Def_Info.Ortho_Type := D_Info.Ortho_Type;
-            Def_Info.T := D_Info.T;
-         end if;
-         Def_Info.Ortho_Ptr_Type (Mode_Value) :=
-           New_Access_Type (Def_Info.Ortho_Type (Mode_Value));
-         New_Type_Decl (Create_Identifier ("PTR"),
-                        Def_Info.Ortho_Ptr_Type (Mode_Value));
+         --  An access type to an unconstrained type definition is a pointer
+         --  to bounds and base.
+         Def_Info.Type_Mode := Type_Mode_Bounds_Acc;
       else
          --  Otherwise, it is a thin pointer.
          Def_Info.Type_Mode := Type_Mode_Acc;
-         --  No access types for signals.
-         Def_Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
-
-         if D_Info.Kind = Kind_Incomplete_Type then
-            Dtype := O_Tnode_Null;
-         elsif Is_Complex_Type (D_Info) then
-            --  FIXME: clean here when the ortho_type of a array
-            --  complex_type is correctly set (not a pointer).
-            Def_Info.Ortho_Type (Mode_Value) :=
-              D_Info.Ortho_Ptr_Type (Mode_Value);
-            Finish_Type_Definition (Def_Info, True);
-            return;
-         elsif D_Info.Type_Mode in Type_Mode_Arrays then
-            --  The designated type cannot be a sub array inside ortho.
-            --  FIXME: lift this restriction.
-            Dtype := D_Info.T.Base_Type (Mode_Value);
-         else
-            Dtype := D_Info.Ortho_Type (Mode_Value);
-         end if;
-         Def_Info.Ortho_Type (Mode_Value) := New_Access_Type (Dtype);
-         Finish_Type_Definition (Def_Info);
       end if;
+
+      if D_Info.Kind = Kind_Incomplete_Type then
+         --  Incomplete access.
+         Dtype := O_Tnode_Null;
+      else
+         Dtype := Get_Ortho_Designated_Type (Def);
+      end if;
+
+      Def_Info.Ortho_Type (Mode_Value) := New_Access_Type (Dtype);
+      Finish_Type_Definition (Def_Info);
    end Translate_Access_Type;
 
    ------------------------
@@ -1294,20 +1232,16 @@ package body Trans.Chap3 is
       Ctype := Get_Type (Get_Type_Declarator (Def));
       Info := Add_Info (Ctype, Kind_Incomplete_Type);
       Info.Incomplete_Type := Def;
-      Info.Incomplete_Array := null;
    end Translate_Incomplete_Type;
 
-   --  CTYPE is the type which has been completed.
    procedure Translate_Complete_Type
-     (Incomplete_Info : in out Incomplete_Type_Info_Acc; Ctype : Iir)
+     (Incomplete_Info : in out Incomplete_Type_Info_Acc)
    is
-      C_Info   : constant Type_Info_Acc := Get_Info (Ctype);
-      List     : Iir_List;
+      List     : constant Iir_List :=
+        Get_Incomplete_Type_List (Incomplete_Info.Incomplete_Type);
       Atype    : Iir;
       Def_Info : Type_Info_Acc;
-      Dtype    : O_Tnode;
    begin
-      List := Get_Incomplete_Type_List (Incomplete_Info.Incomplete_Type);
       for I in Natural loop
          Atype := Get_Nth_Element (List, I);
          exit when Atype = Null_Iir;
@@ -1316,13 +1250,9 @@ package body Trans.Chap3 is
          pragma Assert (Get_Kind (Atype) = Iir_Kind_Access_Type_Definition);
 
          Def_Info := Get_Info (Atype);
-         case C_Info.Type_Mode is
-            when Type_Mode_Arrays =>
-               Dtype := C_Info.T.Base_Type (Mode_Value);
-            when others =>
-               Dtype := C_Info.Ortho_Type (Mode_Value);
-         end case;
-         Finish_Access_Type (Def_Info.Ortho_Type (Mode_Value), Dtype);
+         Finish_Access_Type
+           (Def_Info.Ortho_Type (Mode_Value),
+            Get_Ortho_Designated_Type (Atype));
       end loop;
       Unchecked_Deallocation (Incomplete_Info);
    end Translate_Complete_Type;
@@ -1995,24 +1925,18 @@ package body Trans.Chap3 is
       --  If the definition is already translated, return now.
       Info := Get_Info (Def);
       if Info /= null then
-         if Info.Kind = Kind_Type then
-            --  The subtype was already translated.
-            return;
-         end if;
-         if Info.Kind = Kind_Incomplete_Type then
-            --  Type is being completed.
-            Complete_Info := Info;
-            Clear_Info (Def);
-            if Complete_Info.Incomplete_Array /= null then
-               Info := Complete_Info.Incomplete_Array;
-               Set_Info (Def, Info);
-               Unchecked_Deallocation (Complete_Info);
-            else
+         case Info.Kind is
+            when Kind_Type =>
+               --  The subtype was already translated.
+               return;
+            when Kind_Incomplete_Type =>
+               --  Type is being completed.
+               Complete_Info := Info;
+               Clear_Info (Def);
                Info := Add_Info (Def, Kind_Type);
-            end if;
-         else
-            raise Internal_Error;
-         end if;
+            when others =>
+               raise Internal_Error;
+         end case;
       else
          Complete_Info := null;
          Info := Add_Info (Def, Kind_Type);
@@ -2129,25 +2053,23 @@ package body Trans.Chap3 is
       end case;
 
       if Complete_Info /= null then
-         Translate_Complete_Type (Complete_Info, Def);
+         Translate_Complete_Type (Complete_Info);
       end if;
    end Translate_Type_Definition;
 
    procedure Translate_Bool_Type_Definition (Def : Iir)
    is
       Info : Type_Info_Acc;
+      pragma Unreferenced (Info);
    begin
-      --  If the definition is already translated, return now.
-      Info := Get_Info (Def);
-      if Info /= null then
-         raise Internal_Error;
-      end if;
+      --  Not already translated.
+      pragma Assert (Get_Info (Def) = null);
+
+      --  A boolean type is an enumerated type.
+      pragma Assert (Get_Kind (Def) = Iir_Kind_Enumeration_Type_Definition);
 
       Info := Add_Info (Def, Kind_Type);
 
-      if Get_Kind (Def) /= Iir_Kind_Enumeration_Type_Definition then
-         raise Internal_Error;
-      end if;
       Translate_Bool_Type (Def);
 
       --  This is usually done in translate_type_definition, but boolean
@@ -2168,10 +2090,9 @@ package body Trans.Chap3 is
          --  been declared by the same type declarator.  This avoids several
          --  elaboration of the same type.
          Def := Get_Base_Type (Def);
-         if Get_Type_Declarator (Def) /= Decl then
-            --  Can this happen ??
-            raise Internal_Error;
-         end if;
+
+         --  Consistency check.
+         pragma Assert (Get_Type_Declarator (Def) = Decl);
       elsif Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition then
          return;
       end if;
@@ -2232,9 +2153,9 @@ package body Trans.Chap3 is
                Final : Boolean;
             begin
                Chap4.Elab_Declaration_Chain (Def, Final);
-               if Final then
-                  raise Internal_Error;
-               end if;
+
+               --  No finalizer in protected types (only subprograms).
+               pragma Assert (Final = False);
             end;
             return;
          when others =>
@@ -2425,15 +2346,13 @@ package body Trans.Chap3 is
       Info : constant Type_Info_Acc := Get_Type_Info (Arr);
    begin
       case Info.Type_Mode is
-         when Type_Mode_Fat_Array
-            | Type_Mode_Fat_Acc =>
+         when Type_Mode_Fat_Array =>
             declare
-               Kind : Object_Kind_Type;
+               Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
             begin
-               Kind := Get_Object_Kind (Arr);
                return Lp2M
                  (New_Selected_Element (M2Lv (Arr),
-                  Info.T.Bounds_Field (Kind)),
+                                        Info.T.Bounds_Field (Kind)),
                   Info,
                   Mode_Value,
                   Info.T.Bounds_Type,
@@ -2441,6 +2360,8 @@ package body Trans.Chap3 is
             end;
          when Type_Mode_Array =>
             return Get_Array_Type_Bounds (Info);
+         when Type_Mode_Bounds_Acc =>
+            return Lp2M (M2Lv (Arr), Info, Mode_Value);
          when others =>
             raise Internal_Error;
       end case;
@@ -2508,21 +2429,18 @@ package body Trans.Chap3 is
 
    function Get_Array_Base (Arr : Mnode) return Mnode
    is
-      Info : Type_Info_Acc;
+      Info : constant Type_Info_Acc := Get_Type_Info (Arr);
    begin
-      Info := Get_Type_Info (Arr);
       case Info.Type_Mode is
-         when Type_Mode_Fat_Array
-            | Type_Mode_Fat_Acc =>
+         when Type_Mode_Fat_Array =>
             declare
-               Kind : Object_Kind_Type;
+               Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
             begin
-               Kind := Get_Object_Kind (Arr);
                return Lp2M
                  (New_Selected_Element (M2Lv (Arr),
-                  Info.T.Base_Field (Kind)),
+                                        Info.T.Base_Field (Kind)),
                   Info,
-                  Get_Object_Kind (Arr),
+                  Kind,
                   Info.T.Base_Type (Kind),
                   Info.T.Base_Ptr_Type (Kind));
             end;
@@ -2533,6 +2451,17 @@ package body Trans.Chap3 is
       end case;
    end Get_Array_Base;
 
+   function Get_Bounds_Acc_Base
+     (Acc : O_Enode; D_Type : Iir) return O_Enode
+   is
+      D_Info : constant Type_Info_Acc := Get_Info (D_Type);
+   begin
+      return Add_Pointer
+        (Acc,
+         New_Lit (New_Sizeof (D_Info.T.Bounds_Type, Ghdl_Index_Type)),
+         D_Info.T.Base_Ptr_Type (Mode_Value));
+   end Get_Bounds_Acc_Base;
+
    function Reindex_Complex_Array
      (Base : Mnode; Atype : Iir; Index : O_Enode; Res_Info : Type_Info_Acc)
       return Mnode
@@ -2542,19 +2471,14 @@ package body Trans.Chap3 is
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Base);
    begin
       pragma Assert (Is_Complex_Type (El_Tinfo));
-      return
-        E2M
-          (New_Unchecked_Address
-             (New_Slice
-                (New_Access_Element
-                     (New_Convert_Ov (M2E (Base), Char_Ptr_Type)),
-                 Chararray_Type,
-                 New_Dyadic_Op (ON_Mul_Ov,
-                   New_Value
-                     (Get_Var (El_Tinfo.C (Kind).Size_Var)),
-                   Index)),
-              El_Tinfo.Ortho_Ptr_Type (Kind)),
-           Res_Info, Kind);
+      return E2M
+        (Add_Pointer
+           (M2E (Base),
+            New_Dyadic_Op (ON_Mul_Ov,
+                           New_Value (Get_Var (El_Tinfo.C (Kind).Size_Var)),
+                           Index),
+            El_Tinfo.Ortho_Ptr_Type (Kind)),
+         Res_Info, Kind);
    end Reindex_Complex_Array;
 
    function Index_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
@@ -2592,6 +2516,22 @@ package body Trans.Chap3 is
       end if;
    end Slice_Base;
 
+   procedure Maybe_Call_Type_Builder (Obj : Mnode; Obj_Type : Iir)
+   is
+      Dinfo  : constant Type_Info_Acc :=
+        Get_Info (Get_Base_Type (Obj_Type));
+      Kind   : constant Object_Kind_Type := Get_Object_Kind (Obj);
+   begin
+      if Is_Complex_Type (Dinfo)
+        and then Dinfo.C (Kind).Builder_Need_Func
+      then
+         Open_Temp;
+         --  Build the type.
+         Chap3.Gen_Call_Type_Builder (Obj, Obj_Type);
+         Close_Temp;
+      end if;
+   end Maybe_Call_Type_Builder;
+
    procedure Allocate_Fat_Array_Base (Alloc_Kind : Allocation_Kind;
                                       Res        : Mnode;
                                       Arr_Type   : Iir)
@@ -2608,14 +2548,7 @@ package body Trans.Chap3 is
         (M2Lp (Chap3.Get_Array_Base (Res)),
          Gen_Alloc (Alloc_Kind, Length, Dinfo.T.Base_Ptr_Type (Kind)));
 
-      if Is_Complex_Type (Dinfo)
-        and then Dinfo.C (Kind).Builder_Need_Func
-      then
-         Open_Temp;
-         --  Build the type.
-         Chap3.Gen_Call_Type_Builder (Res, Arr_Type);
-         Close_Temp;
-      end if;
+      Maybe_Call_Type_Builder (Res, Arr_Type);
    end Allocate_Fat_Array_Base;
 
    procedure Create_Array_Subtype (Sub_Type : Iir; Transient : Boolean)
@@ -2648,14 +2581,11 @@ package body Trans.Chap3 is
    begin
       case Info.Type_Mode is
          when Type_Mode_Scalar
-            | Type_Mode_Acc
+           | Type_Mode_Acc
+           | Type_Mode_Bounds_Acc
             | Type_Mode_File =>
             --  Scalar or thin pointer.
             New_Assign_Stmt (M2Lv (Dest), Src);
-         when Type_Mode_Fat_Acc =>
-            --  a fat pointer.
-            D := Stabilize (Dest);
-            Copy_Fat_Pointer (D, Stabilize (E2M (Src, Info, Kind)));
          when Type_Mode_Fat_Array =>
             --  a fat array.
             D := Stabilize (Dest);
@@ -2672,17 +2602,19 @@ package body Trans.Chap3 is
       end case;
    end Translate_Object_Copy;
 
-   function Get_Object_Size (Obj : Mnode; Obj_Type : Iir)
-                             return O_Enode
+   function Get_Subtype_Size
+     (Atype : Iir; Bounds : Mnode; Kind : Object_Kind_Type) return O_Enode
    is
-      Type_Info : constant Type_Info_Acc := Get_Type_Info (Obj);
-      Kind      : constant Object_Kind_Type := Get_Object_Kind (Obj);
+      Type_Info : constant Type_Info_Acc := Get_Info (Atype);
    begin
+      --  The length is pre-computed for a complex type (except for unbounded
+      --  types).
       if Is_Complex_Type (Type_Info)
         and then Type_Info.C (Kind).Size_Var /= Null_Var
       then
          return New_Value (Get_Var (Type_Info.C (Kind).Size_Var));
       end if;
+
       case Type_Info.Type_Mode is
          when Type_Mode_Non_Composite
             | Type_Mode_Array
@@ -2691,29 +2623,30 @@ package body Trans.Chap3 is
                             Ghdl_Index_Type));
          when Type_Mode_Fat_Array =>
             declare
-               El_Type  : Iir;
-               El_Tinfo : Type_Info_Acc;
-               Obj_Bt   : Iir;
-               Sz       : O_Enode;
+               El_Type  : constant Iir := Get_Element_Subtype (Atype);
+               El_Sz    : O_Enode;
             begin
-               Obj_Bt := Get_Base_Type (Obj_Type);
-               El_Type := Get_Element_Subtype (Obj_Bt);
-               El_Tinfo := Get_Info (El_Type);
-               --  See create_type_definition_size_var.
-               Sz := Get_Object_Size (T2M (El_Type, Kind), El_Type);
-               if Is_Complex_Type (El_Tinfo) then
-                  Sz := New_Dyadic_Op
-                    (ON_Add_Ov,
-                     Sz,
-                     New_Lit (New_Sizeof (El_Tinfo.Ortho_Ptr_Type (Kind),
-                       Ghdl_Index_Type)));
-               end if;
+               --  See create_array_size_var.
+               El_Sz := Get_Subtype_Size (El_Type, Mnode_Null, Kind);
                return New_Dyadic_Op
-                 (ON_Mul_Ov, Chap3.Get_Array_Length (Obj, Obj_Bt), Sz);
+                 (ON_Mul_Ov, Chap3.Get_Bounds_Length (Bounds, Atype), El_Sz);
             end;
          when others =>
             raise Internal_Error;
       end case;
+   end Get_Subtype_Size;
+
+   function Get_Object_Size (Obj : Mnode; Obj_Type : Iir)
+                            return O_Enode
+   is
+      Type_Info : constant Type_Info_Acc := Get_Type_Info (Obj);
+      Kind      : constant Object_Kind_Type := Get_Object_Kind (Obj);
+   begin
+      if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+         return Get_Subtype_Size (Obj_Type, Get_Array_Bounds (Obj), Kind);
+      else
+         return Get_Subtype_Size (Obj_Type, Mnode_Null, Kind);
+      end if;
    end Get_Object_Size;
 
    procedure Translate_Object_Allocation
@@ -2730,9 +2663,9 @@ package body Trans.Chap3 is
          New_Assign_Stmt
            (M2Lp (Chap3.Get_Array_Bounds (Res)),
             Gen_Alloc (Alloc_Kind,
-              New_Lit (New_Sizeof (Dinfo.T.Bounds_Type,
-                Ghdl_Index_Type)),
-              Dinfo.T.Bounds_Ptr_Type));
+                       New_Lit (New_Sizeof (Dinfo.T.Bounds_Type,
+                                            Ghdl_Index_Type)),
+                       Dinfo.T.Bounds_Ptr_Type));
 
          --  Copy bounds to the allocated area.
          Gen_Memcpy
@@ -2746,19 +2679,10 @@ package body Trans.Chap3 is
          New_Assign_Stmt
            (M2Lp (Res),
             Gen_Alloc (Alloc_Kind,
-                       Chap3.Get_Object_Size (T2M (Obj_Type, Kind),
-                                              Obj_Type),
+                       Chap3.Get_Object_Size (T2M (Obj_Type, Kind), Obj_Type),
                        Dinfo.Ortho_Ptr_Type (Kind)));
 
-         if Is_Complex_Type (Dinfo)
-           and then Dinfo.C (Kind).Builder_Need_Func
-         then
-            Open_Temp;
-            --  Build the type.
-            Chap3.Gen_Call_Type_Builder (Res, Obj_Type);
-            Close_Temp;
-         end if;
-
+         Maybe_Call_Type_Builder (Res, Obj_Type);
       end if;
    end Translate_Object_Allocation;
 
@@ -2774,59 +2698,21 @@ package body Trans.Chap3 is
    --  Performs deallocation of PARAM (the parameter of a deallocate call).
    procedure Translate_Object_Deallocation (Param : Iir)
    is
-      --  Performs deallocation of field FIELD of type FTYPE of PTR.
-      --  If FIELD is O_FNODE_NULL, deallocate PTR (of type FTYPE).
-      --  Here, deallocate means freeing memory and clearing to null.
-      procedure Deallocate_1
-        (Ptr : Mnode; Field : O_Fnode; Ftype : O_Tnode)
-      is
-         L : O_Lnode;
-      begin
-         for I in 0 .. 1 loop
-            L := M2Lv (Ptr);
-            if Field /= O_Fnode_Null then
-               L := New_Selected_Element (L, Field);
-            end if;
-            case I is
-               when 0 =>
-                  --  Call deallocator.
-                  Gen_Deallocate (New_Value (L));
-               when 1 =>
-                  --  set the value to 0.
-                  New_Assign_Stmt (L, New_Lit (New_Null_Access (Ftype)));
-            end case;
-         end loop;
-      end Deallocate_1;
-
-      Param_Type : Iir;
+      Param_Type : constant Iir := Get_Type (Param);
+      Info       : constant Type_Info_Acc := Get_Info (Param_Type);
       Val        : Mnode;
-      Info       : Type_Info_Acc;
-      Binfo      : Type_Info_Acc;
    begin
       --  Compute parameter
       Val := Chap6.Translate_Name (Param);
-      if Get_Object_Kind (Val) = Mode_Signal then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Get_Object_Kind (Val) = Mode_Value);
       Stabilize (Val);
-      Param_Type := Get_Type (Param);
-      Info := Get_Info (Param_Type);
-      case Info.Type_Mode is
-         when Type_Mode_Fat_Acc =>
-            --  This is a fat pointer.
-            --  Deallocate base and bounds.
-            Binfo := Get_Info (Get_Designated_Type (Param_Type));
-            Deallocate_1 (Val, Binfo.T.Base_Field (Mode_Value),
-                          Binfo.T.Base_Ptr_Type (Mode_Value));
-            Deallocate_1 (Val, Binfo.T.Bounds_Field (Mode_Value),
-                          Binfo.T.Bounds_Ptr_Type);
-         when Type_Mode_Acc =>
-            --  This is a thin pointer.
-            Deallocate_1 (Val, O_Fnode_Null,
-                          Info.Ortho_Type (Mode_Value));
-         when others =>
-            raise Internal_Error;
-      end case;
+
+      --  Call deallocator.
+      Gen_Deallocate (New_Value (M2Lv (Val)));
+
+      --  Set the value to null.
+      New_Assign_Stmt
+        (M2Lv (Val), New_Lit (New_Null_Access (Info.Ortho_Type (Mode_Value))));
    end Translate_Object_Deallocation;
 
    function Not_In_Range (Value : O_Dnode; Atype : Iir) return O_Enode

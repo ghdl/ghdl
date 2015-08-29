@@ -172,6 +172,10 @@ package Trans.Chap3 is
    --  Get array bounds for type ATYPE.
    function Get_Array_Type_Bounds (Atype : Iir) return Mnode;
 
+   --  Return a pointer to the base from bounds_acc ACC.
+   function Get_Bounds_Acc_Base
+     (Acc : O_Enode; D_Type : Iir) return O_Enode;
+
    --  Deallocate OBJ.
    procedure Gen_Deallocate (Obj : O_Enode);
 
@@ -188,16 +192,24 @@ package Trans.Chap3 is
       Obj_Type   : Iir;
       Bounds     : Mnode);
 
-   --  Copy SRC to DEST.
-   --  Both have the same type, OTYPE.
-   --  Furthermore, arrays are of the same length.
+   --  Low level copy of SRC to DEST.  Both have the same type, OBJ_TYPE.
+   --  There is no length check, so arrays must be of the same length.
    procedure Translate_Object_Copy
      (Dest : Mnode; Src : O_Enode; Obj_Type : Iir);
 
+   --  Get size (in bytes with type ghdl_index_type) of subtype ATYPE.
+   --  For an unconstrained array, BOUNDS must be set, otherwise it may be a
+   --  null_mnode.
+   function Get_Subtype_Size
+     (Atype : Iir; Bounds : Mnode; Kind : Object_Kind_Type) return O_Enode;
+
    --  Get size (in bytes with type ghdl_index_type) of object OBJ.
    --  For an unconstrained array, OBJ must be really an object, otherwise,
-   --  it may be a null_mnode, created by T2M.
+   --  it may be the result of T2M.
    function Get_Object_Size (Obj : Mnode; Obj_Type : Iir) return O_Enode;
+
+   --  If needed call the procedure to build OBJ.
+   procedure Maybe_Call_Type_Builder (Obj : Mnode; Obj_Type : Iir);
 
    --  Allocate the base of a fat array, whose length is determined from
    --  the bounds.

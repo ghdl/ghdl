@@ -157,6 +157,8 @@ package Trans is
    Wki_Val           : O_Ident;
    Wki_L_Len         : O_Ident;
    Wki_R_Len         : O_Ident;
+   Wki_Base          : O_Ident;
+   Wki_Bounds        : O_Ident;
 
    --  ALLOCATION_KIND defines the type of memory storage.
    --  ALLOC_STACK means the object is allocated on the local stack and
@@ -182,6 +184,12 @@ package Trans is
 
    --  Equivalent to new_access_element (new_value (l))
    function New_Acc_Value (L : O_Lnode) return O_Lnode;
+
+   --  Return PTR + OFFSET as a RES_PTR value.  The offset is the number of
+   --  bytes.  RES_PTR must be an access type and the type of PTR must be an
+   --  access.
+   function Add_Pointer
+     (Ptr : O_Enode; Offset : O_Enode; Res_Ptr : O_Tnode) return O_Enode;
 
    package Chap10 is
       --  There are three data storage kind: global, local or instance.
@@ -635,6 +643,7 @@ package Trans is
       Kind_Expr,
       Kind_Subprg,
       Kind_Object,
+      Kind_Signal,
       Kind_Alias,
       Kind_Iterator,
       Kind_Interface,
@@ -790,6 +799,7 @@ package Trans is
      (
       --  Unknown mode.
       Type_Mode_Unknown,
+
       --  Boolean type, with 2 elements.
       Type_Mode_B1,
       --  Enumeration with at most 256 elements.
@@ -809,8 +819,8 @@ package Trans is
       --  Thin access.
       Type_Mode_Acc,
 
-      --  Fat access.
-      Type_Mode_Fat_Acc,
+      --  Access to an unbounded type.
+      Type_Mode_Bounds_Acc,
 
       --  Record.
       Type_Mode_Record,
@@ -821,43 +831,72 @@ package Trans is
       --  Fat array type (used for unconstrained array).
       Type_Mode_Fat_Array);
 
-   subtype Type_Mode_Scalar is Type_Mode_Type
-   range Type_Mode_B1 .. Type_Mode_F64;
+   subtype Type_Mode_Valid is Type_Mode_Type range
+     Type_Mode_B1 .. Type_Mode_Type'Last;
 
-   subtype Type_Mode_Non_Composite is Type_Mode_Type
-   range Type_Mode_B1 .. Type_Mode_Fat_Acc;
+   subtype Type_Mode_Scalar is Type_Mode_Type range
+     Type_Mode_B1 .. Type_Mode_F64;
 
    --  Composite types, with the vhdl meaning: record and arrays.
-   subtype Type_Mode_Composite is Type_Mode_Type
-   range Type_Mode_Record .. Type_Mode_Fat_Array;
+   subtype Type_Mode_Composite is Type_Mode_Type range
+     Type_Mode_Record .. Type_Mode_Fat_Array;
+
+   subtype Type_Mode_Non_Composite is Type_Mode_Type range
+     Type_Mode_B1 .. Type_Mode_Bounds_Acc;
 
    --  Array types.
    subtype Type_Mode_Arrays is Type_Mode_Type range
      Type_Mode_Array .. Type_Mode_Fat_Array;
 
    --  Thin types, ie types whose length is a scalar.
-   subtype Type_Mode_Thin is Type_Mode_Type
-   range Type_Mode_B1 .. Type_Mode_Acc;
+   subtype Type_Mode_Thin is Type_Mode_Type range
+     Type_Mode_B1 .. Type_Mode_Bounds_Acc;
 
    --  Fat types, ie types whose length is longer than a scalar.
-   subtype Type_Mode_Fat is Type_Mode_Type
-   range Type_Mode_Fat_Acc .. Type_Mode_Fat_Array;
+   subtype Type_Mode_Fat is Type_Mode_Type range
+     Type_Mode_Record .. Type_Mode_Fat_Array;
 
-   --  These parameters are passed by value, ie the argument of the subprogram
+   --  Subprogram call argument mechanism.
+   --  In VHDL, the evaluation is strict: actual parameters are evaluated
+   --  before the call.  This is the usual strategy of most compiled languages
+   --  (the main exception being Algol-68 call by name).
+   --
+   --  Call semantic is described in
+   --  LRM08 4.2.2.2 Constant and variable parameters.
+   --
+   --  At the semantic (and LRM level), there are two call convention: either
+   --  call by value or call by reference.  That vocabulary should be used in
+   --  trans for the semantic level: call convention and call-by.  According to
+   --  the LRM, all scalars use the call by value convention.  It is possible
+   --  to change the actual after the call for inout parameters, using
+   --  pass-by value mechanism and copy-in/copy-out.
+   --
+   --  At the low-level (generated code), there are two mechanisms: either
+   --  pass by copy or pass by address.  Again, that vocabulary should be used
+   --  in trans for the low-level: mechanism and pass-by.
+   --
+   --  A call by reference is always passed by address; while a call by value
+   --  can use a pass-by address to a copy of the value.  The later being
+   --  used for fat accesses.  With Ortho, only scalars and pointers can be
+   --  passed by copy.
+
+   --  In GHDL, all non-composite types use the call-by value convention, and
+   --  composite types use the call-by reference convention.  For fat accesses,
+   --  a copy of the value is passed by address.
+
+   --  These parameters are passed by copy, ie the argument of the subprogram
    --  is the value of the object.
-   subtype Type_Mode_By_Value is Type_Mode_Type
-   range Type_Mode_B1 .. Type_Mode_Acc;
+   subtype Type_Mode_Pass_By_Copy is Type_Mode_Type range
+     Type_Mode_B1 .. Type_Mode_Bounds_Acc;
 
-   --  These parameters are passed by copy, ie a copy of the object is created
-   --  and the reference of the copy is passed.  If the object is not
-   --  modified by the subprogram, the object could be passed by reference.
-   subtype Type_Mode_By_Copy is Type_Mode_Type
-   range Type_Mode_Fat_Acc .. Type_Mode_Fat_Acc;
-
-   --  The parameters are passed by reference, ie the argument of the
+   --  The parameters are passed by address, ie the argument of the
    --  subprogram is an address to the object.
-   subtype Type_Mode_By_Ref is Type_Mode_Type
-   range Type_Mode_Record .. Type_Mode_Fat_Array;
+   subtype Type_Mode_Pass_By_Address is Type_Mode_Type range
+     Type_Mode_Record .. Type_Mode_Fat_Array;
+
+   --  Call conventions.
+   subtype Type_Mode_Call_By_Value is Type_Mode_Non_Composite;
+   subtype Type_Mode_Call_By_Reference is Type_Mode_Composite;
 
    --  Additional informations for a resolving function.
    type Subprg_Resolv_Info is record
@@ -1076,7 +1115,6 @@ package Trans is
          when Kind_Incomplete_Type =>
             --  The declaration of the incomplete type.
             Incomplete_Type  : Iir;
-            Incomplete_Array : Ortho_Info_Acc;
 
          when Kind_Index =>
             --  Field declaration for array dimension.
@@ -1139,13 +1177,21 @@ package Trans is
             Object_Static   : Boolean;
             --  The object itself.
             Object_Var      : Var_Type;
-            --  Direct driver for signal (if any).
-            Object_Driver   : Var_Type := Null_Var;
             --  RTI constant for the object.
             Object_Rti      : O_Dnode := O_Dnode_Null;
+
+         when Kind_Signal =>
+            --  The current value of the signal.
+            Signal_Value    : Var_Type := Null_Var;
+            --  A pointer to the signal (contains meta data).
+            Signal_Sig      : Var_Type;
+            --  Direct driver for signal (if any).
+            Signal_Driver   : Var_Type := Null_Var;
+            --  RTI constant for the object.
+            Signal_Rti      : O_Dnode := O_Dnode_Null;
             --  Function to compute the value of object (used for implicit
             --   guard signal declaration).
-            Object_Function : O_Dnode := O_Dnode_Null;
+            Signal_Function : O_Dnode := O_Dnode_Null;
 
          when Kind_Alias =>
             Alias_Var  : Var_Type;
@@ -1383,6 +1429,7 @@ package Trans is
    subtype Index_Info_Acc is Ortho_Info_Acc (Kind_Index);
    subtype Subprg_Info_Acc is Ortho_Info_Acc (Kind_Subprg);
    subtype Object_Info_Acc is Ortho_Info_Acc (Kind_Object);
+   subtype Signal_Info_Acc is Ortho_Info_Acc (Kind_Signal);
    subtype Alias_Info_Acc is Ortho_Info_Acc (Kind_Alias);
    subtype Proc_Info_Acc is Ortho_Info_Acc (Kind_Process);
    subtype Psl_Info_Acc is Ortho_Info_Acc (Kind_Psl_Directive);

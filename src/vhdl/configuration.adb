@@ -18,7 +18,6 @@
 with Libraries;
 with Errorout; use Errorout;
 with Std_Package;
-with Sem_Names;
 with Name_Table; use Name_Table;
 with Flags;
 with Iirs_Utils; use Iirs_Utils;
@@ -434,7 +433,7 @@ package body Configuration is
                   Actual := Null_Iir;
                else
                   Actual := Get_Actual (Assoc);
-                  Actual := Sem_Names.Name_To_Object (Actual);
+                  Actual := Name_To_Object (Actual);
                   if Actual /= Null_Iir then
                      Actual := Get_Object_Prefix (Actual);
                   end if;

@@ -2598,10 +2598,9 @@ package body Trans.Chap7 is
               (M2Lv (Target),
                Chap3.Maybe_Insert_Scalar_Check (Val, Expr, Target_Type));
          when Type_Mode_Acc
-            | Type_Mode_File =>
+           | Type_Mode_Bounds_Acc
+           | Type_Mode_File =>
             New_Assign_Stmt (M2Lv (Target), Val);
-         when Type_Mode_Fat_Acc =>
-            Chap3.Translate_Object_Copy (Target, Val, Target_Type);
          when Type_Mode_Fat_Array =>
             declare
                T : Mnode;
@@ -3263,74 +3262,161 @@ package body Trans.Chap7 is
 
    function Translate_Allocator_By_Expression (Expr : Iir) return O_Enode
    is
-      Val    : O_Enode;
-      Val_M  : Mnode;
       A_Type : constant Iir := Get_Type (Expr);
       A_Info : constant Type_Info_Acc := Get_Info (A_Type);
       D_Type : constant Iir := Get_Designated_Type (A_Type);
       D_Info : constant Type_Info_Acc := Get_Info (D_Type);
+      Val    : O_Enode;
       R      : Mnode;
-      Rtype  : O_Tnode;
    begin
       --  Compute the expression.
       Val := Translate_Expression (Get_Expression (Expr), D_Type);
+
       --  Allocate memory for the object.
       case A_Info.Type_Mode is
-         when Type_Mode_Fat_Acc =>
-            R := Dv2M (Create_Temp (D_Info.Ortho_Type (Mode_Value)),
-                       D_Info, Mode_Value);
-            Val_M := Stabilize (E2M (Val, D_Info, Mode_Value));
-            Chap3.Translate_Object_Allocation
-              (R, Alloc_Heap, D_Type,
-               Chap3.Get_Array_Bounds (Val_M));
-            Val := M2E (Val_M);
-            Rtype := A_Info.Ortho_Ptr_Type (Mode_Value);
+         when Type_Mode_Bounds_Acc =>
+            declare
+               Res : O_Dnode;
+               Val_Size : O_Dnode;
+               Bounds_Size : O_Cnode;
+               Val_M  : Mnode;
+            begin
+               Res := Create_Temp (A_Info.Ortho_Type (Mode_Value));
+               Val_M := Stabilize (E2M (Val, D_Info, Mode_Value));
+
+               --  Size of the value (object without the bounds).
+               Val_Size := Create_Temp_Init
+                 (Ghdl_Index_Type,
+                  Chap3.Get_Subtype_Size
+                    (D_Type, Chap3.Get_Array_Bounds (Val_M), Mode_Value));
+
+               --  Size of the bounds.
+               Bounds_Size :=
+                 New_Sizeof (D_Info.T.Bounds_Type, Ghdl_Index_Type);
+
+               --  Allocate the object.
+               New_Assign_Stmt
+                 (New_Obj (Res),
+                  Gen_Alloc (Alloc_Heap,
+                             New_Dyadic_Op
+                               (ON_Add_Ov,
+                                New_Lit (Bounds_Size),
+                                New_Obj_Value (Val_Size)),
+                             A_Info.Ortho_Type (Mode_Value)));
+
+               --  Copy bounds.
+               Gen_Memcpy
+                 (New_Obj_Value (Res), M2Addr (Chap3.Get_Array_Bounds (Val_M)),
+                  New_Lit (Bounds_Size));
+
+               --  Copy values.
+               Gen_Memcpy
+                 (Chap3.Get_Bounds_Acc_Base (New_Obj_Value (Res), D_Type),
+                  M2Addr (Chap3.Get_Array_Base (Val_M)),
+                  New_Obj_Value (Val_Size));
+
+               return New_Obj_Value (Res);
+            end;
          when Type_Mode_Acc =>
             R := Dp2M (Create_Temp (D_Info.Ortho_Ptr_Type (Mode_Value)),
                        D_Info, Mode_Value);
             Chap3.Translate_Object_Allocation
               (R, Alloc_Heap, D_Type, Mnode_Null);
-            Rtype := A_Info.Ortho_Type (Mode_Value);
+            Chap3.Translate_Object_Copy (R, Val, D_Type);
+            return New_Convert_Ov (M2Addr (R), A_Info.Ortho_Type (Mode_Value));
          when others =>
             raise Internal_Error;
       end case;
-      Chap3.Translate_Object_Copy (R, Val, D_Type);
-      return New_Convert_Ov (M2Addr (R), Rtype);
    end Translate_Allocator_By_Expression;
+
+   function Bounds_Acc_To_Fat_Pointer (Ptr : O_Dnode; Acc_Type : Iir)
+                                      return Mnode
+   is
+      D_Type   : constant Iir := Get_Designated_Type (Acc_Type);
+      D_Info   : constant Type_Info_Acc := Get_Info (D_Type);
+      Res : Mnode;
+   begin
+      Res := Dv2M (Create_Temp (D_Info.Ortho_Type (Mode_Value)),
+                   D_Info, Mode_Value);
+
+      New_Assign_Stmt
+        (M2Lp (Chap3.Get_Array_Bounds (Res)),
+         New_Convert_Ov (New_Obj_Value (Ptr), D_Info.T.Bounds_Ptr_Type));
+      New_Assign_Stmt
+        (M2Lp (Chap3.Get_Array_Base (Res)),
+         Chap3.Get_Bounds_Acc_Base (New_Obj_Value (Ptr), D_Type));
+      return Res;
+   end Bounds_Acc_To_Fat_Pointer;
 
    function Translate_Allocator_By_Subtype (Expr : Iir) return O_Enode
    is
-      P_Type   : constant Iir := Get_Type (Expr);
-      P_Info   : constant Type_Info_Acc := Get_Info (P_Type);
-      D_Type   : constant Iir := Get_Designated_Type (P_Type);
+      A_Type   : constant Iir := Get_Type (Expr);
+      A_Info   : constant Type_Info_Acc := Get_Info (A_Type);
+      D_Type   : constant Iir := Get_Designated_Type (A_Type);
       D_Info   : constant Type_Info_Acc := Get_Info (D_Type);
-      Sub_Type : Iir;
       Bounds   : Mnode;
       Res      : Mnode;
-      Rtype    : O_Tnode;
    begin
-      case P_Info.Type_Mode is
-         when Type_Mode_Fat_Acc =>
-            Res := Dv2M (Create_Temp (D_Info.Ortho_Type (Mode_Value)),
-                         D_Info, Mode_Value);
-            --  FIXME: should allocate bounds, and directly set bounds
-            --  from the range.
-            Sub_Type := Get_Subtype_Indication (Expr);
-            Sub_Type := Get_Type_Of_Subtype_Indication (Sub_Type);
-            Chap3.Create_Array_Subtype (Sub_Type, True);
-            Bounds := Chap3.Get_Array_Type_Bounds (Sub_Type);
-            Rtype := P_Info.Ortho_Ptr_Type (Mode_Value);
+      case A_Info.Type_Mode is
+         when Type_Mode_Bounds_Acc =>
+            declare
+               Sub_Type : Iir;
+               Ptr : O_Dnode;
+               Val_Size : O_Dnode;
+               Bounds_Size : O_Cnode;
+            begin
+               Sub_Type := Get_Subtype_Indication (Expr);
+               Sub_Type := Get_Type_Of_Subtype_Indication (Sub_Type);
+               Chap3.Create_Array_Subtype (Sub_Type, True);
+
+               Ptr := Create_Temp (A_Info.Ortho_Type (Mode_Value));
+
+               --  Size of the value (object without the bounds).
+               Val_Size := Create_Temp_Init
+                 (Ghdl_Index_Type,
+                  Chap3.Get_Subtype_Size
+                    (D_Type, Chap3.Get_Array_Type_Bounds (Sub_Type),
+                     Mode_Value));
+
+               --  Size of the bounds.
+               Bounds_Size :=
+                 New_Sizeof (D_Info.T.Bounds_Type, Ghdl_Index_Type);
+
+               --  Allocate the object.
+               New_Assign_Stmt
+                 (New_Obj (Ptr),
+                  Gen_Alloc (Alloc_Heap,
+                             New_Dyadic_Op
+                               (ON_Add_Ov,
+                                New_Lit (Bounds_Size),
+                                New_Obj_Value (Val_Size)),
+                             A_Info.Ortho_Type (Mode_Value)));
+
+               --  Copy bounds.
+               Gen_Memcpy
+                 (New_Obj_Value (Ptr),
+                  M2Addr (Chap3.Get_Array_Type_Bounds (Sub_Type)),
+                  New_Lit (Bounds_Size));
+
+               --  Create a fat pointer to initialize the object.
+               Res := Bounds_Acc_To_Fat_Pointer (Ptr, A_Type);
+               Chap3.Maybe_Call_Type_Builder (Res, D_Type);
+               Chap4.Init_Object (Res, D_Type);
+
+               return New_Obj_Value (Ptr);
+            end;
          when Type_Mode_Acc =>
             Res := Dp2M (Create_Temp (D_Info.Ortho_Ptr_Type (Mode_Value)),
                          D_Info, Mode_Value);
             Bounds := Mnode_Null;
-            Rtype := P_Info.Ortho_Type (Mode_Value);
+            Chap3.Translate_Object_Allocation
+              (Res, Alloc_Heap, D_Type, Bounds);
+            Chap4.Init_Object (Res, D_Type);
+            return New_Convert_Ov
+              (M2Addr (Res), A_Info.Ortho_Type (Mode_Value));
          when others =>
             raise Internal_Error;
       end case;
-      Chap3.Translate_Object_Allocation (Res, Alloc_Heap, D_Type, Bounds);
-      Chap4.Init_Object (Res, D_Type);
-      return New_Convert_Ov (M2Addr (Res), Rtype);
    end Translate_Allocator_By_Subtype;
 
    function Translate_Fat_Array_Type_Conversion
@@ -3770,28 +3856,8 @@ package body Trans.Chap7 is
             declare
                Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
                Otype : constant O_Tnode := Tinfo.Ortho_Type (Mode_Value);
-               L     : O_Dnode;
-               B     : Type_Info_Acc;
             begin
-               if Tinfo.Type_Mode = Type_Mode_Fat_Acc then
-                  --  Create a fat null pointer.
-                  --  FIXME: should be optimized!!
-                  L := Create_Temp (Otype);
-                  B := Get_Info (Get_Designated_Type (Expr_Type));
-                  New_Assign_Stmt
-                    (New_Selected_Element (New_Obj (L),
-                     B.T.Base_Field (Mode_Value)),
-                     New_Lit
-                       (New_Null_Access (B.T.Base_Ptr_Type (Mode_Value))));
-                  New_Assign_Stmt
-                    (New_Selected_Element
-                       (New_Obj (L), B.T.Bounds_Field (Mode_Value)),
-                     New_Lit (New_Null_Access (B.T.Bounds_Ptr_Type)));
-                  return New_Address (New_Obj (L),
-                                      Tinfo.Ortho_Ptr_Type (Mode_Value));
-               else
-                  return New_Lit (New_Null_Access (Otype));
-               end if;
+               return New_Lit (New_Null_Access (Otype));
             end;
 
          when Iir_Kind_Overflow_Literal =>
@@ -4446,35 +4512,10 @@ package body Trans.Chap7 is
       Tinfo := Get_Type_Info (L);
       case Tinfo.Type_Mode is
          when Type_Mode_Scalar
-            | Type_Mode_Acc =>
+           | Type_Mode_Bounds_Acc
+           | Type_Mode_Acc =>
             return New_Compare_Op (ON_Eq, M2E (L), M2E (R),
                                    Ghdl_Bool_Type);
-         when Type_Mode_Fat_Acc =>
-            --  a fat pointer.
-            declare
-               B      : Type_Info_Acc;
-               Ln, Rn : Mnode;
-               V1, V2 : O_Enode;
-            begin
-               B := Get_Info (Get_Designated_Type (Etype));
-               Ln := Stabilize (L);
-               Rn := Stabilize (R);
-               V1 := New_Compare_Op
-                 (ON_Eq,
-                  New_Value (New_Selected_Element
-                    (M2Lv (Ln), B.T.Base_Field (Mode_Value))),
-                  New_Value (New_Selected_Element
-                    (M2Lv (Rn), B.T.Base_Field (Mode_Value))),
-                  Std_Boolean_Type_Node);
-               V2 := New_Compare_Op
-                 (ON_Eq,
-                  New_Value (New_Selected_Element
-                    (M2Lv (Ln), B.T.Bounds_Field (Mode_Value))),
-                  New_Value (New_Selected_Element
-                    (M2Lv (Rn), B.T.Bounds_Field (Mode_Value))),
-                  Std_Boolean_Type_Node);
-               return New_Dyadic_Op (ON_And, V1, V2);
-            end;
 
          when Type_Mode_Array =>
             declare
@@ -5280,7 +5321,7 @@ package body Trans.Chap7 is
             when Type_Mode_Unknown
                | Type_Mode_File
                | Type_Mode_Acc
-               | Type_Mode_Fat_Acc
+               | Type_Mode_Bounds_Acc
                | Type_Mode_Fat_Array
                | Type_Mode_Protected =>
                raise Internal_Error;

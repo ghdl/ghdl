@@ -75,15 +75,6 @@ package Sem_Names is
    --  To be used only for names (weakly) semantized by sem_name_soft.
    procedure Sem_Name_Clean (Name : Iir);
 
-   --  Return TRUE if NAME is a name that designate an object (ie a constant,
-   --  a variable, a signal or a file).
-   function Is_Object_Name (Name : Iir) return Boolean;
-
-   --  Return an object node if NAME designates an object (ie either is an
-   --  object or a name for an object).
-   --  Otherwise, returns NULL_IIR.
-   function Name_To_Object (Name : Iir) return Iir;
-
    --  If NAME is a selected name whose prefix is a protected variable, set
    --  method_object of CALL.
    procedure Name_To_Method_Object (Call : Iir; Name : Iir);

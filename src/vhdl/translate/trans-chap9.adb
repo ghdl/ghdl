@@ -58,8 +58,8 @@ package body Trans.Chap9 is
             Sig := Get_Object_Prefix (Drivers (I).Sig);
             Info := Get_Info (Sig);
             case Info.Kind is
-               when Kind_Object =>
-                  Info.Object_Driver := Var;
+               when Kind_Signal =>
+                  Info.Signal_Driver := Var;
                when Kind_Alias =>
                   null;
                when others =>
@@ -83,8 +83,8 @@ package body Trans.Chap9 is
             Sig := Get_Object_Prefix (Drivers (I).Sig);
             Info := Get_Info (Sig);
             case Info.Kind is
-               when Kind_Object =>
-                  Info.Object_Driver := Null_Var;
+               when Kind_Signal =>
+                  Info.Signal_Driver := Null_Var;
                when Kind_Alias =>
                   null;
                when others =>
@@ -122,21 +122,19 @@ package body Trans.Chap9 is
    procedure Translate_Implicit_Guard_Signal
      (Guard : Iir; Base : Block_Info_Acc)
    is
-      Info       : Object_Info_Acc;
+      Guard_Expr : constant Iir := Get_Guard_Expression (Guard);
+      Info       : constant Signal_Info_Acc := Get_Info (Guard);
       Inter_List : O_Inter_List;
       Instance   : O_Dnode;
-      Guard_Expr : Iir;
    begin
-      Guard_Expr := Get_Guard_Expression (Guard);
       --  Create the subprogram to compute the value of GUARD.
-      Info := Get_Info (Guard);
       Start_Function_Decl (Inter_List, Create_Identifier ("_GUARD_PROC"),
                            O_Storage_Private, Std_Boolean_Type_Node);
       New_Interface_Decl (Inter_List, Instance, Wki_Instance,
                           Base.Block_Decls_Ptr_Type);
-      Finish_Subprogram_Decl (Inter_List, Info.Object_Function);
+      Finish_Subprogram_Decl (Inter_List, Info.Signal_Function);
 
-      Start_Subprogram_Body (Info.Object_Function);
+      Start_Subprogram_Body (Info.Signal_Function);
       Push_Local_Factory;
       Set_Scope_Via_Param_Ptr (Base.Block_Scope, Instance);
       Open_Temp;
@@ -1325,27 +1323,24 @@ package body Trans.Chap9 is
    procedure Elab_Implicit_Guard_Signal
      (Block : Iir_Block_Statement; Block_Info : Block_Info_Acc)
    is
-      Guard     : Iir;
-      Type_Info : Type_Info_Acc;
-      Info      : Object_Info_Acc;
+      Guard     : constant Iir := Get_Guard_Decl (Block);
+      Info      : constant Signal_Info_Acc := Get_Info (Guard);
+      Type_Info : constant Type_Info_Acc := Get_Info (Get_Type (Guard));
       Constr    : O_Assoc_List;
    begin
       --  Create the guard signal.
-      Guard := Get_Guard_Decl (Block);
-      Info := Get_Info (Guard);
-      Type_Info := Get_Info (Get_Type (Guard));
       Start_Association (Constr, Ghdl_Signal_Create_Guard);
       New_Association
         (Constr, New_Unchecked_Address
            (Get_Instance_Ref (Block_Info.Block_Scope), Ghdl_Ptr_Type));
       New_Association
         (Constr,
-         New_Lit (New_Subprogram_Address (Info.Object_Function,
-           Ghdl_Ptr_Type)));
+         New_Lit (New_Subprogram_Address (Info.Signal_Function,
+                                          Ghdl_Ptr_Type)));
       --         New_Association (Constr, Chap6.Get_Instance_Name_Ref (Block));
-      New_Assign_Stmt (Get_Var (Info.Object_Var),
+      New_Assign_Stmt (Get_Var (Info.Signal_Sig),
                        New_Convert_Ov (New_Function_Call (Constr),
-                         Type_Info.Ortho_Type (Mode_Signal)));
+                                       Type_Info.Ortho_Type (Mode_Signal)));
 
       --  Register sensitivity list of the guard signal.
       Register_Signal_List (Get_Guard_Sensitivity_List (Guard),
@@ -1840,16 +1835,15 @@ package body Trans.Chap9 is
       New_Association
         (Assoc,
          New_Lit (New_Global_Unchecked_Address
-           (Get_Info (Data.Sig).Object_Rti,
-                Rtis.Ghdl_Rti_Access)));
+                    (Get_Info (Data.Sig).Signal_Rti,
+                     Rtis.Ghdl_Rti_Access)));
       New_Procedure_Call (Assoc);
       Close_Temp;
    end Merge_Signals_Rti_Non_Composite;
 
-   function Merge_Signals_Rti_Prepare (Targ      : Mnode;
-                                       Targ_Type : Iir;
-                                       Data      : Merge_Signals_Data)
-                                          return Merge_Signals_Data
+   function Merge_Signals_Rti_Prepare
+     (Targ : Mnode; Targ_Type : Iir; Data : Merge_Signals_Data)
+     return Merge_Signals_Data
    is
       pragma Unreferenced (Targ);
       pragma Unreferenced (Targ_Type);
@@ -1934,25 +1928,26 @@ package body Trans.Chap9 is
       while Port /= Null_Iir loop
          Port_Type := Get_Type (Port);
          Data.Sig := Port;
+         Open_Temp;
+
          case Get_Mode (Port) is
             when Iir_Buffer_Mode
                | Iir_Out_Mode
                | Iir_Inout_Mode =>
                Data.Set_Init := True;
+               Val := Get_Default_Value (Port);
+               if Val = Null_Iir then
+                  Data.Has_Val := False;
+               else
+                  Data.Has_Val := True;
+                  Data.Val := E2M (Chap7.Translate_Expression (Val, Port_Type),
+                                   Get_Info (Port_Type),
+                                   Mode_Value);
+               end if;
             when others =>
                Data.Set_Init := False;
+               Data.Has_Val := False;
          end case;
-
-         Open_Temp;
-         Val := Get_Default_Value (Port);
-         if Val = Null_Iir then
-            Data.Has_Val := False;
-         else
-            Data.Has_Val := True;
-            Data.Val := E2M (Chap7.Translate_Expression (Val, Port_Type),
-                             Get_Info (Port_Type),
-                             Mode_Value);
-         end if;
 
          Merge_Signals_Rti (Chap6.Translate_Name (Port), Port_Type, Data);
          Close_Temp;

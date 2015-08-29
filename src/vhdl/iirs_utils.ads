@@ -59,6 +59,23 @@ package Iirs_Utils is
                               return Iir;
 
 
+   --  Return TRUE if NAME is a name that designate an object (ie a constant,
+   --  a variable, a signal or a file).
+   function Is_Object_Name (Name : Iir) return Boolean;
+
+   --  Return an object node if NAME designates an object (ie either is an
+   --  object or a name for an object).
+   --  Otherwise, returns NULL_IIR.
+   --  For the definition of an object, see LRM08 6.4 Objects.
+   function Name_To_Object (Name : Iir) return Iir;
+
+   --  Return the value designated by NAME.  This is often an object, but can
+   --  also be an expression like a function call or an attribute.
+   function Name_To_Value (Name : Iir) return Iir;
+
+   --  Return TRUE if EXPR is a signal name.
+   function Is_Signal_Name (Expr : Iir) return Boolean;
+
    --  Get the interface associated by the association ASSOC.  This is always
    --  an interface, even if the formal is a name.
    function Get_Association_Interface (Assoc : Iir) return Iir;
@@ -223,6 +240,9 @@ package Iirs_Utils is
 
    --  Return the protected type for method SPEC.
    function Get_Method_Type (Spec : Iir) return Iir;
+
+   --  Create an error node for node ORIG.
+   function Create_Error (Orig : Iir) return Iir;
 
    --  Create an error node for node ORIG, and set its type to ATYPE.
    --  Set its staticness to locally.

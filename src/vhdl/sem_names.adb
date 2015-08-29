@@ -2205,7 +2205,7 @@ package body Sem_Names is
 
          --  Only values can be indexed or sliced.
          --  Catch errors such as slice of a type conversion.
-         if not Is_Object_Name (Sub_Name)
+         if Name_To_Value (Sub_Name) = Null_Iir
            and then Get_Kind (Sub_Name) /= Iir_Kind_Function_Declaration
          then
             if Finish then
@@ -2491,6 +2491,10 @@ package body Sem_Names is
 
          when Iir_Kinds_Library_Unit_Declaration =>
             Error_Msg_Sem ("function name is a design unit", Name);
+
+         when Iir_Kind_Error =>
+            --  Continue with the error.
+            Res := Prefix;
 
          when others =>
             Error_Kind ("sem_parenthesis_name", Prefix);
@@ -3773,70 +3777,6 @@ package body Sem_Names is
             return Error_Mark;
       end case;
    end Name_To_Range;
-
-   function Is_Object_Name (Name : Iir) return Boolean is
-   begin
-      case Get_Kind (Name) is
-         when Iir_Kind_Object_Alias_Declaration
-           | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Variable_Declaration
-           | Iir_Kind_File_Declaration
-           | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Iterator_Declaration
-           | Iir_Kind_Interface_Constant_Declaration
-           | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_File_Declaration
-           | Iir_Kind_Slice_Name
-           | Iir_Kind_Indexed_Name
-           | Iir_Kind_Selected_Element
-           | Iir_Kind_Implicit_Dereference
-           | Iir_Kind_Dereference
-           | Iir_Kind_Attribute_Value
-           | Iir_Kind_Function_Call =>
-            return True;
-         when Iir_Kinds_Expression_Attribute =>
-            --  All expression attributes are a name.
-            return True;
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name =>
-            return False;
-         when others =>
-            return False;
-      end case;
-   end Is_Object_Name;
-
-   function Name_To_Object (Name : Iir) return Iir is
-   begin
-      case Get_Kind (Name) is
-         when Iir_Kind_Object_Alias_Declaration
-           | Iir_Kind_Signal_Declaration
-           | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Variable_Declaration
-           | Iir_Kind_File_Declaration
-           | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Iterator_Declaration
-           | Iir_Kind_Interface_Constant_Declaration
-           | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_File_Declaration
-           | Iir_Kind_Slice_Name
-           | Iir_Kind_Indexed_Name
-           | Iir_Kind_Selected_Element
-           | Iir_Kind_Implicit_Dereference
-           | Iir_Kind_Dereference
-           | Iir_Kind_Attribute_Value
-           | Iir_Kind_Function_Call
-           | Iir_Kinds_Signal_Attribute =>
-            return Name;
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Selected_Name =>
-            return Name_To_Object (Get_Named_Entity (Name));
-         when others =>
-            return Null_Iir;
-      end case;
-   end Name_To_Object;
 
    function Create_Error_Name (Orig : Iir) return Iir
    is

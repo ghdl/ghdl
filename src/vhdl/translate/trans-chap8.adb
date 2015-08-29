@@ -97,8 +97,9 @@ package body Trans.Chap8 is
                   Gen_Return_Value (R);
                end if;
             end;
-         when Type_Mode_Acc =>
-            --  * access: thin and no range.
+         when Type_Mode_Acc
+           | Type_Mode_Bounds_Acc =>
+            --  * access: no range.
             declare
                Res : O_Enode;
             begin
@@ -126,8 +127,7 @@ package body Trans.Chap8 is
                Gen_Return;
             end;
          when Type_Mode_Record
-            | Type_Mode_Array
-            | Type_Mode_Fat_Acc =>
+            | Type_Mode_Array =>
             --  * if the return type is a constrained composite type, copy
             --    it to the result area.
             --  Create a temporary area so that if the expression use
@@ -1351,7 +1351,7 @@ package body Trans.Chap8 is
          when Type_Mode_Unknown
             | Type_Mode_File
             | Type_Mode_Acc
-            | Type_Mode_Fat_Acc
+            | Type_Mode_Bounds_Acc
             | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
@@ -1424,7 +1424,7 @@ package body Trans.Chap8 is
          when Type_Mode_Unknown
             | Type_Mode_File
             | Type_Mode_Acc
-            | Type_Mode_Fat_Acc
+            | Type_Mode_Bounds_Acc
             | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
@@ -1704,6 +1704,7 @@ package body Trans.Chap8 is
       Is_Procedure : constant Boolean :=
         Get_Kind (Imp) = Iir_Kind_Procedure_Declaration;
       Is_Function : constant Boolean := not Is_Procedure;
+      Is_Foreign : constant Boolean := Get_Foreign_Flag (Imp);
       Info : constant Subprg_Info_Acc := Get_Info (Imp);
 
       type Mnode_Array is array (Natural range <>) of Mnode;
@@ -1717,6 +1718,10 @@ package body Trans.Chap8 is
 
       --  The values of actuals.
       E_Params : O_Enode_Array (0 .. Nbr_Assoc - 1);
+
+      --  Only for inout/out variables passed by copy of foreign procedures:
+      --  the copy of the scalar.
+      Inout_Params : Mnode_Array (0 .. Nbr_Assoc - 1);
 
       Params_Var : O_Dnode;
       Res : Mnode;
@@ -1777,6 +1782,7 @@ package body Trans.Chap8 is
       while El /= Null_Iir loop
          Params (Pos) := Mnode_Null;
          E_Params (Pos) := O_Enode_Null;
+         Inout_Params (Pos) := Mnode_Null;
 
          Formal := Strip_Denoting_Name (Get_Formal (El));
          Base_Formal := Get_Association_Interface (El);
@@ -1853,7 +1859,7 @@ package body Trans.Chap8 is
                else
                   Param := Chap6.Translate_Name (Act);
                   if Base_Formal /= Formal
-                    or else Ftype_Info.Type_Mode in Type_Mode_By_Value
+                    or else Ftype_Info.Type_Mode in Type_Mode_Pass_By_Copy
                   then
                      --  For out/inout, we need to keep the reference for the
                      --  copy-out.
@@ -1871,6 +1877,16 @@ package body Trans.Chap8 is
                      Param_Type := Formal_Type;
                   else
                      Val := M2E (Param);
+                  end if;
+
+                  if Is_Foreign
+                    and then Ftype_Info.Type_Mode in Type_Mode_Pass_By_Copy
+                  then
+                     --  Scalar parameters of foreign procedures (of mode out
+                     --  or inout) are passed by address, create a copy of the
+                     --  value.
+                     Inout_Params (Pos) :=
+                       Create_Temp (Ftype_Info, Mode_Value);
                   end if;
                end if;
                if In_Conv /= Null_Iir then
@@ -1906,6 +1922,8 @@ package body Trans.Chap8 is
             Ptr := New_Selected_Element
               (New_Obj (Params_Var), Formal_Info.Interface_Field);
             New_Assign_Stmt (Ptr, Val);
+         elsif Inout_Params (Pos) /= Mnode_Null then
+            Chap3.Translate_Object_Copy (Inout_Params (Pos), Val, Formal_Type);
          else
             E_Params (Pos) := Val;
          end if;
@@ -1952,7 +1970,12 @@ package body Trans.Chap8 is
                New_Association (Constr, M2E (Params (Pos)));
             elsif Base_Formal = Formal then
                --  Whole association.
-               New_Association (Constr, E_Params (Pos));
+               if Inout_Params (Pos) /= Mnode_Null then
+                  Val := M2Addr (Inout_Params (Pos));
+               else
+                  Val := E_Params (Pos);
+               end if;
+               New_Association (Constr, Val);
             end if;
          end if;
          El := Get_Chain (El);
@@ -1995,6 +2018,8 @@ package body Trans.Chap8 is
                --  By individual, copy back.
                Param := Translate_Individual_Association_Formal
                  (Formal, Formal_Info, Params (Last_Individual));
+            elsif Inout_Params (Pos) /= Mnode_Null then
+               Param := Inout_Params (Pos);
             else
                pragma Assert (Formal_Info.Interface_Field /= O_Fnode_Null);
                Ptr := New_Selected_Element

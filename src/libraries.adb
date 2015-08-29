@@ -1435,7 +1435,11 @@ package body Libraries is
       procedure Error_Obsolete (Msg : String) is
       begin
          if not Flags.Flag_Elaborate_With_Outdated then
-            Error_Msg_Sem (Msg, Loc);
+            if Loc = Null_Iir then
+               Error_Msg_Sem (Msg, Command_Line_Location);
+            else
+               Error_Msg_Sem (Msg, Loc);
+            end if;
          end if;
       end Error_Obsolete;
 

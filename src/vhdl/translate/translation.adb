@@ -390,6 +390,8 @@ package body Translation is
       Wki_Val := Get_Identifier ("val");
       Wki_L_Len := Get_Identifier ("l_len");
       Wki_R_Len := Get_Identifier ("r_len");
+      Wki_Base := Get_Identifier ("BASE");
+      Wki_Bounds := Get_Identifier ("BOUNDS");
 
       Sizetype := New_Unsigned_Type (32);
       New_Type_Decl (Get_Identifier ("__ghdl_size_type"), Sizetype);

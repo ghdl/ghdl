@@ -444,6 +444,34 @@ package body Ortho_Code.Disps is
       end case;
    end Disp_Type;
 
+   procedure Debug_Tnode (Atype : O_Tnode)
+   is
+      Decl : O_Dnode;
+   begin
+      Decl := Decls.Get_Type_Decl (Atype);
+      if Decl /= O_Dnode_Null then
+         Decls.Disp_Decl_Name (Decl);
+         Put (": ");
+      end if;
+      Disp_Type (Atype, True);
+      New_Line;
+   end Debug_Tnode;
+   pragma Unreferenced (Debug_Tnode);
+
+   procedure Debug_Enode (Expr : O_Enode) is
+   begin
+      Disp_Expr (Expr);
+      New_Line;
+   end Debug_Enode;
+   pragma Unreferenced (Debug_Enode);
+
+   procedure Debug_Lnode (Expr : O_Lnode) is
+   begin
+      Disp_Expr (O_Enode (Expr));
+      New_Line;
+   end Debug_Lnode;
+   pragma Unreferenced (Debug_Lnode);
+
    procedure Disp_Decl_Storage (Decl : O_Dnode) is
    begin
       Disp_Storage (Decls.Get_Decl_Storage (Decl));

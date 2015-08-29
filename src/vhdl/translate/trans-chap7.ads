@@ -114,6 +114,10 @@ package Trans.Chap7 is
    procedure Translate_Aggregate
      (Target : Mnode; Target_Type : Iir; Aggr : Iir);
 
+   --  Convert bounds access PTR to a fat pointer.
+   function Bounds_Acc_To_Fat_Pointer (Ptr : O_Dnode; Acc_Type : Iir)
+                                      return Mnode;
+
    --  Translate implicit functions defined by a type.
    type Implicit_Subprogram_Infos is private;
    procedure Init_Implicit_Subprogram_Infos

@@ -3117,6 +3117,9 @@ package Iirs is
    --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   -- Only for Iir_Kind_Allocator_By_Subtype:
+   --   Get/Set_Is_Ref (Flag7)
 
    ------------
    --  Names --

@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 
 with Errorout; use Errorout;
-with Sem_Names;
 with Iirs_Utils; use Iirs_Utils;
 with Trans.Chap3;
 with Trans.Chap4;
@@ -336,13 +335,12 @@ package body Trans.Chap5 is
 
    procedure Elab_Unconstrained_Port (Port : Iir; Actual : Iir)
    is
+      Actual_Type : constant Iir := Get_Type (Actual);
       Act_Node    : Mnode;
       Bounds      : Mnode;
       Tinfo       : Type_Info_Acc;
       Bound_Var   : O_Dnode;
-      Actual_Type : Iir;
    begin
-      Actual_Type := Get_Type (Actual);
       Open_Temp;
       if Is_Fully_Constrained_Type (Actual_Type) then
          Chap3.Create_Array_Subtype (Actual_Type, False);
@@ -354,13 +352,13 @@ package body Trans.Chap5 is
             New_Assign_Stmt
               (New_Obj (Bound_Var),
                Gen_Alloc (Alloc_System,
-                 New_Lit (New_Sizeof (Tinfo.T.Bounds_Type,
-                   Ghdl_Index_Type)),
-                 Tinfo.T.Bounds_Ptr_Type));
+                          New_Lit (New_Sizeof (Tinfo.T.Bounds_Type,
+                                               Ghdl_Index_Type)),
+                          Tinfo.T.Bounds_Ptr_Type));
             Gen_Memcpy (New_Obj_Value (Bound_Var),
                         M2Addr (Bounds),
                         New_Lit (New_Sizeof (Tinfo.T.Bounds_Type,
-                          Ghdl_Index_Type)));
+                                             Ghdl_Index_Type)));
             Bounds := Dp2M (Bound_Var, Tinfo, Mode_Value,
                             Tinfo.T.Bounds_Type,
                             Tinfo.T.Bounds_Ptr_Type);
@@ -377,19 +375,6 @@ package body Trans.Chap5 is
          M2Addr (Bounds));
       Close_Temp;
    end Elab_Unconstrained_Port;
-
-   --  Return TRUE if EXPR is a signal name.
-   function Is_Signal (Expr : Iir) return Boolean
-   is
-      Obj : Iir;
-   begin
-      Obj := Sem_Names.Name_To_Object (Expr);
-      if Obj /= Null_Iir then
-         return Is_Signal_Object (Obj);
-      else
-         return False;
-      end if;
-   end Is_Signal;
 
    procedure Elab_Port_Map_Aspect_Assoc (Assoc : Iir; By_Copy : Boolean)
    is
@@ -412,10 +397,8 @@ package body Trans.Chap5 is
         and then Get_Out_Conversion (Assoc) = Null_Iir
       then
          Formal_Node := Chap6.Translate_Name (Formal);
-         if Get_Object_Kind (Formal_Node) /= Mode_Signal then
-            raise Internal_Error;
-         end if;
-         if Is_Signal (Actual) then
+         pragma Assert (Get_Object_Kind (Formal_Node) = Mode_Signal);
+         if Is_Signal_Name (Actual) then
             --  LRM93 4.3.1.2
             --  For a signal of a scalar type, each source is either
             --  a driver or an OUT, INOUT, BUFFER or LINKAGE port of

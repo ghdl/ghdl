@@ -745,20 +745,21 @@ package body Trans.Chap6 is
    begin
       case Info.Kind is
          when Kind_Object =>
-            --  For a generic or a port.
+            --  For a generic.
+            pragma Assert (Kind = Mode_Value);
             return Get_Var (Info.Object_Var, Type_Info, Kind);
+         when Kind_Signal =>
+            --  For a port.
+            return Get_Var (Info.Signal_Sig, Type_Info, Kind);
          when Kind_Interface =>
             --  For a parameter.
             if Info.Interface_Field = O_Fnode_Null then
                --  Normal case: the parameter was translated as an ortho
                --  interface.
-               case Type_Info.Type_Mode is
-                  when Type_Mode_Unknown =>
-                     raise Internal_Error;
-                  when Type_Mode_By_Value =>
+               case Type_Mode_Valid (Type_Info.Type_Mode) is
+                  when Type_Mode_Pass_By_Copy =>
                      return Dv2M (Info.Interface_Node, Type_Info, Kind);
-                  when Type_Mode_By_Copy
-                     | Type_Mode_By_Ref =>
+                  when Type_Mode_Pass_By_Address =>
                      --  Parameter is passed by reference.
                      return Dp2M (Info.Interface_Node, Type_Info, Kind);
                end case;
@@ -790,14 +791,10 @@ package body Trans.Chap6 is
                        (Get_Instance_Ref (Subprg_Info.Subprg_Frame_Scope),
                         Info.Interface_Field);
                   end if;
-                  case Type_Info.Type_Mode is
-                     when Type_Mode_Unknown =>
-                        raise Internal_Error;
-                     when Type_Mode_By_Value =>
+                  case Type_Mode_Valid (Type_Info.Type_Mode) is
+                     when Type_Mode_Pass_By_Copy =>
                         return Lv2M (Linter, Type_Info, Kind);
-                     when Type_Mode_By_Copy
-                       | Type_Mode_By_Ref =>
-                        --  Parameter is passed by reference.
+                     when Type_Mode_Pass_By_Address =>
                         return Lp2M (Linter, Type_Info, Kind);
                   end case;
                end;
@@ -931,7 +928,7 @@ package body Trans.Chap6 is
                   when Type_Mode_Array
                      | Type_Mode_Record
                      | Type_Mode_Acc
-                     | Type_Mode_Fat_Acc =>
+                     | Type_Mode_Bounds_Acc =>
                      R := Get_Var (Name_Info.Alias_Var);
                      return Lp2M (R, Type_Info, Name_Info.Alias_Kind);
                   when Type_Mode_Scalar =>
@@ -952,7 +949,7 @@ package body Trans.Chap6 is
             | Iir_Kind_Delayed_Attribute
             | Iir_Kind_Transaction_Attribute
             | Iir_Kind_Guard_Signal_Declaration =>
-            return Get_Var (Name_Info.Object_Var, Type_Info, Mode_Signal);
+            return Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
 
          when Iir_Kind_Interface_Constant_Declaration =>
             return Translate_Interface_Name (Name, Name_Info, Mode_Value);
@@ -977,12 +974,25 @@ package body Trans.Chap6 is
          when Iir_Kind_Dereference
             | Iir_Kind_Implicit_Dereference =>
             declare
+               Prefix : constant Iir := Get_Prefix (Name);
+               Prefix_Type : constant Iir := Get_Type (Prefix);
+               Pt_Info : constant Type_Info_Acc := Get_Info (Prefix_Type);
                Pfx : O_Enode;
+               Pfx_Var : O_Dnode;
             begin
-               Pfx := Chap7.Translate_Expression (Get_Prefix (Name));
-               --  FIXME: what about fat pointer ??
-               return Lv2M (New_Access_Element (Pfx),
-                            Type_Info, Mode_Value);
+               Pfx := Chap7.Translate_Expression (Prefix);
+               if Pt_Info.Type_Mode = Type_Mode_Bounds_Acc then
+                  Pfx_Var := Create_Temp_Init
+                    (Pt_Info.Ortho_Type (Mode_Value), Pfx);
+                  return Chap7.Bounds_Acc_To_Fat_Pointer
+                    (Pfx_Var, Prefix_Type);
+               else
+                  return Lv2M
+                    (New_Access_Element
+                       (New_Convert_Ov
+                          (Pfx, Type_Info.Ortho_Ptr_Type (Mode_Value))),
+                     Type_Info, Mode_Value);
+               end if;
             end;
 
          when Iir_Kind_Selected_Element =>
@@ -1040,8 +1050,8 @@ package body Trans.Chap6 is
             Translate_Direct_Driver (Get_Name (Name), Sig, Drv);
          when Iir_Kind_Signal_Declaration
             | Iir_Kind_Interface_Signal_Declaration =>
-            Sig := Get_Var (Name_Info.Object_Var, Type_Info, Mode_Signal);
-            Drv := Get_Var (Name_Info.Object_Driver, Type_Info, Mode_Value);
+            Sig := Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
+            Drv := Get_Var (Name_Info.Signal_Driver, Type_Info, Mode_Value);
          when Iir_Kind_Slice_Name =>
             declare
                Data    : Slice_Name_Data;

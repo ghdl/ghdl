@@ -37,9 +37,7 @@ package body Disp_Tree is
    Max_Depth : Natural := 10;
    pragma Warnings (On);
 
-   procedure Disp_Iir (N : Iir;
-                       Indent : Natural := 1;
-                       Flat : Boolean := False);
+   procedure Disp_Iir (N : Iir; Indent : Natural; Depth : Natural);
    procedure Disp_Header (N : Iir);
 
    procedure Disp_Tree_List_Flat (Tree_List: Iir_List; Tab: Natural);
@@ -70,13 +68,8 @@ package body Disp_Tree is
 
    -- For iir.
 
-   procedure Disp_Tree_Flat (Tree: Iir; Tab: Natural) is
-   begin
-      Disp_Iir (Tree, Tab, True);
-   end Disp_Tree_Flat;
-
    procedure Disp_Iir_List
-     (Tree_List : Iir_List; Tab : Natural := 0; Flat : Boolean := False)
+     (Tree_List : Iir_List; Tab : Natural; Depth : Natural)
    is
       El: Iir;
    begin
@@ -92,13 +85,12 @@ package body Disp_Tree is
             El := Get_Nth_Element (Tree_List, I);
             exit when El = Null_Iir;
             Put_Indent (Tab);
-            Disp_Iir (El, Tab + 1, Flat);
+            Disp_Iir (El, Tab + 1, Depth);
          end loop;
       end if;
    end Disp_Iir_List;
 
-   procedure Disp_Chain
-     (Tree_Chain: Iir; Indent: Natural; Flat : Boolean := False)
+   procedure Disp_Chain (Tree_Chain: Iir; Indent: Natural; Depth : Natural)
    is
       El: Iir;
    begin
@@ -106,7 +98,7 @@ package body Disp_Tree is
       El := Tree_Chain;
       while El /= Null_Iir loop
          Put_Indent (Indent);
-         Disp_Iir (El, Indent + 1, Flat);
+         Disp_Iir (El, Indent + 1, Depth);
          El := Get_Chain (El);
       end loop;
    end Disp_Chain;
@@ -117,7 +109,7 @@ package body Disp_Tree is
    begin
       El := Tree_Chain;
       while El /= Null_Iir loop
-         Disp_Iir (El, Tab, True);
+         Disp_Iir (El, Tab, 0);
          El := Get_Chain (El);
       end loop;
    end Disp_Tree_Flat_Chain;
@@ -140,7 +132,7 @@ package body Disp_Tree is
          for I in Natural loop
             El := Get_Nth_Element (Tree_List, I);
             exit when El = Null_Iir;
-            Disp_Tree_Flat (El, Tab);
+            Disp_Iir (El, Tab, 0);
          end loop;
       end if;
    end Disp_Tree_List_Flat;
@@ -357,27 +349,19 @@ package body Disp_Tree is
       New_Line;
    end Disp_Header;
 
-   procedure Disp_Iir (N : Iir;
-                       Indent : Natural := 1;
-                       Flat : Boolean := False)
+   procedure Disp_Iir (N : Iir; Indent : Natural; Depth : Natural)
    is
       Sub_Indent : constant Natural := Indent + 1;
+      Ndepth : Natural;
    begin
       Disp_Header (N);
 
-      if Flat or else N = Null_Iir then
+      if Depth = 0 or else N = Null_Iir then
          return;
       end if;
 
       Header ("location", Indent);
       Put_Line (Image_Location_Type (Get_Location (N)));
-
-      --  Protect against infinite recursions.
-      if Indent > Max_Depth then
-         Put_Indent (Indent);
-         Put_Line ("...");
-         return;
-      end if;
 
       declare
          use Nodes_Meta;
@@ -391,13 +375,18 @@ package body Disp_Tree is
                when Type_Iir =>
                   case Get_Field_Attribute (F) is
                      when Attr_None =>
-                        Disp_Iir (Get_Iir (N, F), Sub_Indent);
+                        Disp_Iir (Get_Iir (N, F), Sub_Indent, Depth - 1);
                      when Attr_Ref =>
-                        Disp_Iir (Get_Iir (N, F), Sub_Indent, True);
+                        Disp_Iir (Get_Iir (N, F), Sub_Indent, 0);
                      when Attr_Maybe_Ref =>
-                        Disp_Iir (Get_Iir (N, F), Sub_Indent, Get_Is_Ref (N));
+                        if Get_Is_Ref (N) then
+                           Ndepth := 0;
+                        else
+                           Ndepth := Depth - 1;
+                        end if;
+                        Disp_Iir (Get_Iir (N, F), Sub_Indent, Ndepth);
                      when Attr_Chain =>
-                        Disp_Chain (Get_Iir (N, F), Sub_Indent);
+                        Disp_Chain (Get_Iir (N, F), Sub_Indent, Depth - 1);
                      when Attr_Chain_Next =>
                         Disp_Iir_Number (Get_Iir (N, F));
                         New_Line;
@@ -405,8 +394,12 @@ package body Disp_Tree is
                         raise Internal_Error;
                   end case;
                when Type_Iir_List =>
-                  Disp_Iir_List (Get_Iir_List (N, F), Sub_Indent,
-                                 Get_Field_Attribute (F) = Attr_Of_Ref);
+                  if Get_Field_Attribute (F) = Attr_Of_Ref then
+                     Ndepth := 0;
+                  else
+                     Ndepth := Depth - 1;
+                  end if;
+                  Disp_Iir_List (Get_Iir_List (N, F), Sub_Indent, Ndepth);
                when Type_PSL_NFA =>
                   Disp_PSL_NFA (Get_PSL_NFA (N, F), Sub_Indent);
                when Type_String8_Id =>
@@ -484,12 +477,16 @@ package body Disp_Tree is
 
    procedure Disp_Tree_For_Psl (N : Int32) is
    begin
-      Disp_Tree_Flat (Iir (N), 1);
+      Disp_Iir (Iir (N), 1, 0);
    end Disp_Tree_For_Psl;
 
    procedure Disp_Tree (Tree : Iir;
                         Flat : Boolean := false) is
    begin
-      Disp_Iir (Tree, 1, Flat);
+      if Flat then
+         Disp_Iir (Tree, 1, 0);
+      else
+         Disp_Iir (Tree, 1, Max_Depth);
+      end if;
    end Disp_Tree;
 end Disp_Tree;

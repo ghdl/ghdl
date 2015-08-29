@@ -153,10 +153,9 @@ package body Trans.Chap4 is
       Sig_Type := Get_Object_Type (Type_Info, Mode_Signal);
       pragma Assert (Sig_Type /= O_Tnode_Null);
 
-      Info := Add_Info (Decl, Kind_Object);
+      Info := Add_Info (Decl, Kind_Signal);
 
-      Info.Object_Var :=
-        Create_Var (Create_Var_Identifier (Decl), Sig_Type);
+      Info.Signal_Sig := Create_Var (Create_Var_Identifier (Decl), Sig_Type);
 
       case Get_Kind (Decl) is
          when Iir_Kind_Signal_Declaration
@@ -184,9 +183,9 @@ package body Trans.Chap4 is
       --Chap3.Translate_Object_Subtype (Decl);
       pragma Assert (Sig_Type /= O_Tnode_Null);
 
-      Info := Add_Info (Decl, Kind_Object);
+      Info := Add_Info (Decl, Kind_Signal);
 
-      Info.Object_Var := Create_Var (Create_Uniq_Identifier, Sig_Type);
+      Info.Signal_Sig := Create_Var (Create_Uniq_Identifier, Sig_Type);
    end Create_Implicit_Signal;
 
    procedure Create_File_Object (El : Iir_File_Declaration)
@@ -238,10 +237,8 @@ package body Trans.Chap4 is
       Kind      : constant Object_Kind_Type := Get_Object_Kind (Var);
       Targ      : Mnode;
    begin
-      if Type_Info.Type_Mode = Type_Mode_Fat_Array then
-         --  Cannot allocate unconstrained object (since size is unknown).
-         raise Internal_Error;
-      end if;
+      --  Cannot allocate unconstrained object (since size is unknown).
+      pragma Assert (Type_Info.Type_Mode /= Type_Mode_Fat_Array);
 
       if not Is_Complex_Type (Type_Info) then
          --  Object is not complex.
@@ -257,11 +254,10 @@ package body Trans.Chap4 is
       end if;
 
       --  Allocate variable.
-      New_Assign_Stmt
-        (M2Lp (Targ),
-         Gen_Alloc (Alloc_Kind,
-           Chap3.Get_Object_Size (Var, Obj_Type),
-           Type_Info.Ortho_Ptr_Type (Kind)));
+      New_Assign_Stmt (M2Lp (Targ),
+                       Gen_Alloc (Alloc_Kind,
+                                  Chap3.Get_Object_Size (Var, Obj_Type),
+                                  Type_Info.Ortho_Ptr_Type (Kind)));
 
       if Type_Info.C (Kind).Builder_Need_Func then
          --  Build the type.
@@ -277,10 +273,10 @@ package body Trans.Chap4 is
    --  FIXME: should use translate_aggregate_others.
    procedure Init_Array_Object (Obj : Mnode; Obj_Type : Iir)
    is
-      Sobj : Mnode;
-
       --  Type of the object.
-      Type_Info : Type_Info_Acc;
+      Type_Info : constant Type_Info_Acc := Get_Info (Obj_Type);
+
+      Sobj : Mnode;
 
       --  Iterator for the elements.
       Index : O_Dnode;
@@ -290,8 +286,6 @@ package body Trans.Chap4 is
 
       Label : O_Snode;
    begin
-      Type_Info := Get_Info (Obj_Type);
-
       --  Iterate on all elements of the object.
       Open_Temp;
 
@@ -330,11 +324,9 @@ package body Trans.Chap4 is
 
    procedure Init_Protected_Object (Obj : Mnode; Obj_Type : Iir)
    is
+      Info  : constant Type_Info_Acc := Get_Info (Obj_Type);
       Assoc : O_Assoc_List;
-      Info  : Type_Info_Acc;
    begin
-      Info := Get_Info (Obj_Type);
-
       --  Call the initializer.
       Start_Association (Assoc, Info.T.Prot_Init_Subprg);
       Subprgs.Add_Subprg_Instance_Assoc (Assoc, Info.T.Prot_Init_Instance);
@@ -345,12 +337,10 @@ package body Trans.Chap4 is
 
    procedure Fini_Protected_Object (Decl : Iir)
    is
+      Info  : constant Type_Info_Acc := Get_Info (Get_Type (Decl));
       Obj   : Mnode;
       Assoc : O_Assoc_List;
-      Info  : Type_Info_Acc;
    begin
-      Info := Get_Info (Get_Type (Decl));
-
       Obj := Chap6.Translate_Name (Decl);
       --  Call the Finalizator.
       Start_Association (Assoc, Info.T.Prot_Final_Subprg);
@@ -365,7 +355,8 @@ package body Trans.Chap4 is
       case Tinfo.Type_Mode is
          when Type_Mode_Scalar =>
             return Chap14.Translate_Left_Type_Attribute (Atype);
-         when Type_Mode_Acc =>
+         when Type_Mode_Acc
+           | Type_Mode_Bounds_Acc =>
             return New_Lit (New_Null_Access (Tinfo.Ortho_Type (Mode_Value)));
          when others =>
             Error_Kind ("get_scalar_initial_value", Atype);
@@ -378,27 +369,9 @@ package body Trans.Chap4 is
    begin
       case Tinfo.Type_Mode is
          when Type_Mode_Scalar
-           | Type_Mode_Acc =>
+           | Type_Mode_Acc
+           | Type_Mode_Bounds_Acc =>
             New_Assign_Stmt (M2Lv (Obj), Get_Scalar_Initial_Value (Obj_Type));
-         when Type_Mode_Fat_Acc =>
-            declare
-               Dinfo : Type_Info_Acc;
-               Sobj  : Mnode;
-            begin
-               Open_Temp;
-               Sobj := Stabilize (Obj);
-               Dinfo := Get_Info (Get_Designated_Type (Obj_Type));
-               New_Assign_Stmt
-                 (New_Selected_Element (M2Lv (Sobj),
-                  Dinfo.T.Bounds_Field (Mode_Value)),
-                  New_Lit (New_Null_Access (Dinfo.T.Bounds_Ptr_Type)));
-               New_Assign_Stmt
-                 (New_Selected_Element (M2Lv (Sobj),
-                  Dinfo.T.Base_Field (Mode_Value)),
-                  New_Lit (New_Null_Access
-                    (Dinfo.T.Base_Ptr_Type (Mode_Value))));
-               Close_Temp;
-            end;
          when Type_Mode_Arrays =>
             Init_Array_Object (Obj, Obj_Type);
          when Type_Mode_Record =>
@@ -587,11 +560,9 @@ package body Trans.Chap4 is
 
    procedure Fini_Object (Obj : Iir)
    is
-      Obj_Type  : Iir;
-      Type_Info : Type_Info_Acc;
+      Obj_Type  : constant Iir := Get_Type (Obj);
+      Type_Info : constant Type_Info_Acc := Get_Info (Obj_Type);
    begin
-      Obj_Type := Get_Type (Obj);
-      Type_Info := Get_Info (Obj_Type);
       if Type_Info.Type_Mode = Type_Mode_Fat_Array then
          declare
             V : Mnode;
@@ -629,11 +600,13 @@ package body Trans.Chap4 is
                Len := Create_Temp_Init
                  (Ghdl_Index_Type,
                   Chap3.Get_Array_Length (Ssig, Sig_Type));
+               --  Can dereference the first index only if the array is not a
+               --  null array.
                Start_If_Stmt (If_Blk,
                               New_Compare_Op (ON_Neq,
-                                New_Obj_Value (Len),
-                                New_Lit (Ghdl_Index_0),
-                                Ghdl_Bool_Type));
+                                              New_Obj_Value (Len),
+                                              New_Lit (Ghdl_Index_0),
+                                              Ghdl_Bool_Type));
                New_Assign_Stmt
                  (New_Obj (Len),
                   New_Dyadic_Op
@@ -650,15 +623,14 @@ package body Trans.Chap4 is
             end;
          when Type_Mode_Record =>
             declare
-               List   : Iir_List;
+               List   : constant Iir_List :=
+                 Get_Elements_Declaration_List (Get_Base_Type (Sig_Type));
                El     : Iir;
                Res    : O_Enode;
                E      : O_Enode;
                Sig_El : Mnode;
                Ssig   : Mnode;
             begin
-               List :=
-                 Get_Elements_Declaration_List (Get_Base_Type (Sig_Type));
                Ssig := Stabilize (Sig);
                Res := O_Enode_Null;
                for I in Natural loop
@@ -681,7 +653,7 @@ package body Trans.Chap4 is
          when Type_Mode_Unknown
             | Type_Mode_File
             | Type_Mode_Acc
-            | Type_Mode_Fat_Acc
+            | Type_Mode_Bounds_Acc
             | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
@@ -724,7 +696,7 @@ package body Trans.Chap4 is
             when Type_Mode_Unknown
                | Type_Mode_File
                | Type_Mode_Acc
-               | Type_Mode_Fat_Acc
+               | Type_Mode_Bounds_Acc
                | Type_Mode_Protected =>
                raise Internal_Error;
          end case;
@@ -790,9 +762,9 @@ package body Trans.Chap4 is
          Start_If_Stmt
            (If_Stmt,
             New_Compare_Op (ON_Eq,
-              New_Value (New_Acc_Value (New_Obj (Targ_Ptr))),
-              New_Lit (New_Null_Access (Ghdl_Signal_Ptr)),
-              Ghdl_Bool_Type));
+                            New_Value (New_Acc_Value (New_Obj (Targ_Ptr))),
+                            New_Lit (New_Null_Access (Ghdl_Signal_Ptr)),
+                            Ghdl_Bool_Type));
       end if;
 
       case Type_Info.Type_Mode is
@@ -872,8 +844,8 @@ package body Trans.Chap4 is
                   New_Compare_Op
                     (ON_Eq,
                      New_Convert_Ov (M2E (Get_Leftest_Signal (Targ,
-                       Targ_Type)),
-                       Ghdl_Signal_Ptr),
+                                                              Targ_Type)),
+                                     Ghdl_Signal_Ptr),
                      New_Lit (New_Null_Access (Ghdl_Signal_Ptr)),
                      Ghdl_Bool_Type));
                --Res.Check_Null := False;
@@ -961,7 +933,7 @@ package body Trans.Chap4 is
    --  Elaborate signal subtypes and allocate the storage for the object.
    procedure Elab_Signal_Declaration_Storage (Decl : Iir)
    is
-      Sig_Type  : Iir;
+      Sig_Type  : constant Iir := Get_Type (Decl);
       Type_Info : Type_Info_Acc;
       Name_Node : Mnode;
    begin
@@ -969,7 +941,6 @@ package body Trans.Chap4 is
 
       Open_Temp;
 
-      Sig_Type := Get_Type (Decl);
       Chap3.Elab_Object_Subtype (Sig_Type);
       Type_Info := Get_Info (Sig_Type);
 
@@ -987,11 +958,11 @@ package body Trans.Chap4 is
 
    function Has_Direct_Driver (Sig : Iir) return Boolean
    is
-      Info : Ortho_Info_Acc;
+      Info : constant Ortho_Info_Acc := Get_Info (Get_Object_Prefix (Sig));
    begin
-      Info := Get_Info (Get_Object_Prefix (Sig));
-      return Info.Kind = Kind_Object
-        and then Info.Object_Driver /= Null_Var;
+      --  Can be an alias ?
+      return Info.Kind = Kind_Signal
+        and then Info.Signal_Driver /= Null_Var;
    end Has_Direct_Driver;
 
    procedure Elab_Direct_Driver_Declaration_Storage (Decl : Iir)
@@ -1004,8 +975,7 @@ package body Trans.Chap4 is
       Open_Temp;
 
       if Type_Info.Type_Mode = Type_Mode_Fat_Array then
-         Name_Node := Get_Var (Sig_Info.Object_Driver,
-                               Type_Info, Mode_Value);
+         Name_Node := Get_Var (Sig_Info.Signal_Driver, Type_Info, Mode_Value);
          Name_Node := Stabilize (Name_Node);
          --  Copy bounds from signal.
          New_Assign_Stmt
@@ -1014,8 +984,7 @@ package body Trans.Chap4 is
          --  Allocate base.
          Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Node, Sig_Type);
       elsif Is_Complex_Type (Type_Info) then
-         Name_Node := Get_Var (Sig_Info.Object_Driver,
-                               Type_Info, Mode_Value);
+         Name_Node := Get_Var (Sig_Info.Signal_Driver, Type_Info, Mode_Value);
          Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Node);
       end if;
 
@@ -1049,16 +1018,15 @@ package body Trans.Chap4 is
          New_Association
            (Assoc,
             New_Lit (New_Global_Unchecked_Address
-              (Get_Info (Base_Decl).Object_Rti,
-                   Rtis.Ghdl_Rti_Access)));
+                       (Get_Info (Base_Decl).Signal_Rti,
+                        Rtis.Ghdl_Rti_Access)));
          Rtis.Associate_Rti_Context (Assoc, Parent);
          New_Procedure_Call (Assoc);
       end;
 
       Name_Node := Chap6.Translate_Name (Decl);
-      if Get_Object_Kind (Name_Node) /= Mode_Signal then
-         raise Internal_Error;
-      end if;
+      --  Consistency check: a signal name is a signal.
+      pragma Assert (Get_Object_Kind (Name_Node) = Mode_Signal);
 
       if Decl = Base_Decl then
          Data.Already_Resolved := False;
@@ -1095,10 +1063,10 @@ package body Trans.Chap4 is
 
    procedure Elab_Signal_Attribute (Decl : Iir)
    is
+      Info        : constant Signal_Info_Acc := Get_Info (Decl);
+      Dtype       : constant Iir := Get_Type (Decl);
+      Type_Info   : constant Type_Info_Acc := Get_Info (Dtype);
       Assoc       : O_Assoc_List;
-      Dtype       : Iir;
-      Type_Info   : Type_Info_Acc;
-      Info        : Object_Info_Acc;
       Prefix      : Iir;
       Prefix_Node : Mnode;
       Res         : O_Enode;
@@ -1108,9 +1076,6 @@ package body Trans.Chap4 is
    begin
       New_Debug_Line_Stmt (Get_Line_Number (Decl));
 
-      Info := Get_Info (Decl);
-      Dtype := Get_Type (Decl);
-      Type_Info := Get_Info (Dtype);
       --  Create the signal (with the time)
       case Get_Kind (Decl) is
          when Iir_Kind_Stable_Attribute =>
@@ -1138,7 +1103,7 @@ package body Trans.Chap4 is
       end case;
       Res := New_Convert_Ov (New_Function_Call (Assoc),
                              Type_Info.Ortho_Type (Mode_Signal));
-      New_Assign_Stmt (Get_Var (Info.Object_Var), Res);
+      New_Assign_Stmt (Get_Var (Info.Signal_Sig), Res);
 
       --  Register all signals this depends on.
       Prefix := Get_Prefix (Decl);
@@ -1238,15 +1203,13 @@ package body Trans.Chap4 is
 
    procedure Elab_Signal_Delayed_Attribute (Decl : Iir)
    is
+      Sig_Type  : constant Iir := Get_Type (Decl);
+      Type_Info : constant Type_Info_Acc := Get_Info (Sig_Type);
       Name_Node : Mnode;
-      Sig_Type  : Iir;
-      Type_Info : Type_Info_Acc;
       Pfx_Node  : Mnode;
       Data      : Delayed_Signal_Data;
    begin
       Name_Node := Chap6.Translate_Name (Decl);
-      Sig_Type := Get_Type (Decl);
-      Type_Info := Get_Info (Sig_Type);
 
       if Is_Complex_Type (Type_Info) then
          Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Node);
@@ -1264,21 +1227,19 @@ package body Trans.Chap4 is
 
    procedure Elab_File_Declaration (Decl : Iir_File_Declaration)
    is
+      Is_Text   : constant Boolean := Get_Text_File_Flag (Get_Type (Decl));
+      File_Name : constant Iir := Get_File_Logical_Name (Decl);
       Constr    : O_Assoc_List;
       Name      : Mnode;
-      File_Name : Iir;
       Open_Kind : Iir;
       Mode_Val  : O_Enode;
       Str       : O_Enode;
-      Is_Text   : Boolean;
       Info      : Type_Info_Acc;
    begin
       --  Elaborate the file.
       Name := Chap6.Translate_Name (Decl);
-      if Get_Object_Kind (Name) /= Mode_Value then
-         raise Internal_Error;
-      end if;
-      Is_Text := Get_Text_File_Flag (Get_Type (Decl));
+      pragma Assert (Get_Object_Kind (Name) = Mode_Value);
+
       if Is_Text then
          Start_Association (Constr, Ghdl_Text_File_Elaborate);
       else
@@ -1296,7 +1257,6 @@ package body Trans.Chap4 is
       New_Assign_Stmt (M2Lv (Name), New_Function_Call (Constr));
 
       --  If file_open_information is present, open the file.
-      File_Name := Get_File_Logical_Name (Decl);
       if File_Name = Null_Iir then
          return;
       end if;
@@ -1304,9 +1264,11 @@ package body Trans.Chap4 is
       Name := Chap6.Translate_Name (Decl);
       Open_Kind := Get_File_Open_Kind (Decl);
       if Open_Kind /= Null_Iir then
+         --  VHDL 93 and later.
          Mode_Val := New_Convert_Ov
            (Chap7.Translate_Expression (Open_Kind), Ghdl_I32_Type);
       else
+         --  VHDL 87.
          case Get_Mode (Decl) is
             when Iir_In_Mode =>
                Mode_Val := New_Lit (New_Signed_Literal (Ghdl_I32_Type, 0));
@@ -1332,12 +1294,10 @@ package body Trans.Chap4 is
 
    procedure Final_File_Declaration (Decl : Iir_File_Declaration)
    is
+      Is_Text : constant Boolean := Get_Text_File_Flag (Get_Type (Decl));
       Constr  : O_Assoc_List;
       Name    : Mnode;
-      Is_Text : Boolean;
    begin
-      Is_Text := Get_Text_File_Flag (Get_Type (Decl));
-
       Open_Temp;
       Name := Chap6.Translate_Name (Decl);
       Stabilize (Name);
@@ -1367,8 +1327,7 @@ package body Trans.Chap4 is
       Close_Temp;
    end Final_File_Declaration;
 
-   procedure Translate_Type_Declaration (Decl : Iir)
-   is
+   procedure Translate_Type_Declaration (Decl : Iir) is
    begin
       Chap3.Translate_Named_Type_Definition (Get_Type_Definition (Decl),
                                              Get_Identifier (Decl));
@@ -1432,7 +1391,7 @@ package body Trans.Chap4 is
             Atype := Get_Ortho_Type (Decl_Type, Info.Alias_Kind);
          when Type_Mode_Array
             | Type_Mode_Acc
-            | Type_Mode_Fat_Acc =>
+            | Type_Mode_Bounds_Acc =>
             --  Create an object pointer.
             --  At elaboration: copy base from name.
             Atype := Tinfo.Ortho_Ptr_Type (Info.Alias_Kind);
@@ -1491,7 +1450,7 @@ package body Trans.Chap4 is
                                      Decl);
             Close_Temp;
          when Type_Mode_Acc
-            | Type_Mode_Fat_Acc =>
+            | Type_Mode_Bounds_Acc =>
             New_Assign_Stmt (Get_Var (Alias_Info.Alias_Var),
                              M2Addr (Name_Node));
          when Type_Mode_Scalar =>
@@ -1645,12 +1604,12 @@ package body Trans.Chap4 is
 
    procedure Translate_Resolution_Function (Func : Iir)
    is
+      Finfo           : constant Subprg_Info_Acc := Get_Info (Func);
+      Rinfo           : constant Subprg_Resolv_Info_Acc := Finfo.Subprg_Resolv;
       --  Type of the resolution function parameter.
       El_Type         : Iir;
       El_Info         : Type_Info_Acc;
-      Finfo           : constant Subprg_Info_Acc := Get_Info (Func);
       Interface_List  : O_Inter_List;
-      Rinfo           : constant Subprg_Resolv_Info_Acc := Finfo.Subprg_Resolv;
       Id              : O_Ident;
       Itype           : O_Tnode;
       Unused_Instance : O_Dnode;
@@ -1717,11 +1676,10 @@ package body Trans.Chap4 is
    procedure Read_Source_Non_Composite
      (Targ : Mnode; Targ_Type : Iir; Data : Read_Source_Data)
    is
+      Targ_Info : constant Type_Info_Acc := Get_Info (Targ_Type);
       Assoc     : O_Assoc_List;
-      Targ_Info : Type_Info_Acc;
       E         : O_Enode;
    begin
-      Targ_Info := Get_Info (Targ_Type);
       case Data.Kind is
          when Read_Port =>
             Start_Association (Assoc, Ghdl_Signal_Read_Port);
@@ -1760,8 +1718,7 @@ package body Trans.Chap4 is
 
    function Read_Source_Update_Data_Array
      (Data : Read_Source_Data; Targ_Type : Iir; Index : O_Dnode)
-         return Read_Source_Data
-   is
+     return Read_Source_Data is
    begin
       return Read_Source_Data'
         (Sig => Chap3.Index_Base (Data.Sig, Targ_Type,
@@ -1774,7 +1731,7 @@ package body Trans.Chap4 is
      (Data      : Read_Source_Data;
       Targ_Type : Iir;
       El        : Iir_Element_Declaration)
-         return Read_Source_Data
+     return Read_Source_Data
    is
       pragma Unreferenced (Targ_Type);
    begin

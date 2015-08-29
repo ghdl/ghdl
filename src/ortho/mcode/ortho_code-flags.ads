@@ -22,6 +22,7 @@ package Ortho_Code.Flags is
    Flag_Debug : Debug_Type := Debug_None;
 
    --  If set, generate a map from type to type declaration.
+   --  Set with --be-debug=t
    Flag_Type_Name : Boolean := False;
 
    --  If set, enable optimiztions.

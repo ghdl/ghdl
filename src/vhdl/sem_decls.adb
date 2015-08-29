@@ -2491,7 +2491,8 @@ package body Sem_Decls is
       end if;
 
       Set_Named_Entity (Name, N_Entity);
-      Set_Name (Alias, Finish_Sem_Name (Name));
+      Name := Finish_Sem_Name (Name);
+      Set_Name (Alias, Name);
 
       if Is_Object_Name (N_Entity) then
          --  Object alias declaration.
@@ -2507,10 +2508,6 @@ package body Sem_Decls is
       else
          --  Non object alias declaration.
 
-         if Get_Type (Alias) /= Null_Iir then
-            Error_Msg_Sem
-              ("subtype indication not allowed for non-object alias", Alias);
-         end if;
          if Get_Subtype_Indication (Alias) /= Null_Iir then
             Error_Msg_Sem
               ("subtype indication shall not appear in a nonobject alias",
@@ -2522,7 +2519,7 @@ package body Sem_Decls is
          Set_Parent (Res, Get_Parent (Alias));
          Set_Chain (Res, Get_Chain (Alias));
          Set_Identifier (Res, Get_Identifier (Alias));
-         Set_Name (Res, Name);
+         Set_Name (Res, Get_Name (Alias));
          Set_Alias_Signature (Res, Sig);
 
          Sem_Scopes.Add_Name (Res);
@@ -2530,7 +2527,22 @@ package body Sem_Decls is
 
          Free_Iir (Alias);
 
-         Sem_Non_Object_Alias_Declaration (Res);
+         if Get_Kind (Name) in Iir_Kinds_Denoting_Name then
+            Sem_Non_Object_Alias_Declaration (Res);
+         else
+            Error_Msg_Sem
+              ("name of nonobject alias is not a declaration", Name);
+
+            --  Create a simple name to an error node.
+            N_Entity := Create_Error (Name);
+            Name := Create_Iir (Iir_Kind_Simple_Name);
+            Location_Copy (Name, N_Entity);
+            Set_Identifier (Name, Get_Identifier (Res));  --  Better idea ?
+            Set_Named_Entity (Name, N_Entity);
+            Set_Base_Name (Name, Name);
+            Set_Name (Res, Name);
+         end if;
+
          return Res;
       end if;
    end Sem_Alias_Declaration;

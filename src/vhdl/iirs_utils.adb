@@ -246,6 +246,110 @@ package body Iirs_Utils is
       end loop;
    end Get_Object_Prefix;
 
+   function Is_Object_Name (Name : Iir) return Boolean
+   is
+      Obj : constant Iir := Name_To_Object (Name);
+   begin
+      return Obj /= Null_Iir;
+   end Is_Object_Name;
+
+   function Name_To_Object (Name : Iir) return Iir is
+   begin
+      --  LRM08 6.4 Objects
+      --  An object is a named entity that contains (has) a value of a type.
+      --  An object is obe of the following:
+      case Get_Kind (Name) is
+         --  An object declared by an object declaration (see 6.4.2)
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Variable_Declaration
+           | Iir_Kind_File_Declaration
+           | Iir_Kind_Constant_Declaration =>
+            return Name;
+
+         --  A loop of generate parameter.
+         when Iir_Kind_Iterator_Declaration =>
+            return Name;
+
+         --  A formal parameter of a subprogram
+         --  A formal port
+         --  A formal generic constant
+         --  A local port
+         --  A local generic constant
+         when Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
+            return Name;
+
+         --  An implicit signak GUARD defined by the guard expression of a
+         --   block statement
+         when Iir_Kind_Guard_Signal_Declaration =>
+            return Name;
+
+         --  In addition, the following are objects [ but are not named
+         --   entities]:
+         --  An implicit signal defined by any of the predefined attributes
+         --  'DELAYED, 'STABLE, 'QUIET, and 'TRANSACTION
+         when Iir_Kinds_Signal_Attribute =>
+            return Name;
+
+         --  An element or a slice of another object
+         when Iir_Kind_Slice_Name
+           | Iir_Kind_Indexed_Name
+           | Iir_Kind_Selected_Element =>
+            return Name;
+
+         --  An object designated by a value of an access type
+         when Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Dereference =>
+            return Name;
+
+         --  LRM08 6.6 Alias declarations
+         --  An object alias is an alias whose alias designatore denotes an
+         --  object.
+         when Iir_Kind_Object_Alias_Declaration =>
+            return Name;
+
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name =>
+            --  LRM08 8 Names
+            --  Names can denote declared entities [...]
+            --  GHDL: in particular, names can denote objects.
+            return Name_To_Object (Get_Named_Entity (Name));
+
+         when others =>
+            return Null_Iir;
+      end case;
+   end Name_To_Object;
+
+   function Name_To_Value (Name : Iir) return Iir is
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Attribute_Value
+           | Iir_Kind_Function_Call
+           | Iir_Kinds_Expression_Attribute =>
+            return Name;
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name =>
+            return Name_To_Value (Get_Named_Entity (Name));
+         when others =>
+            return Name_To_Object (Name);
+      end case;
+   end Name_To_Value;
+
+   --  Return TRUE if EXPR is a signal name.
+   function Is_Signal_Name (Expr : Iir) return Boolean
+   is
+      Obj : Iir;
+   begin
+      Obj := Name_To_Object (Expr);
+      if Obj /= Null_Iir then
+         return Is_Signal_Object (Obj);
+      else
+         return False;
+      end if;
+   end Is_Signal_Name;
+
    function Get_Association_Interface (Assoc : Iir) return Iir
    is
       Formal : Iir;
@@ -1038,15 +1142,23 @@ package body Iirs_Utils is
       end case;
    end Get_Method_Type;
 
-   function Create_Error_Expr (Orig : Iir; Atype : Iir) return Iir
+   function Create_Error (Orig : Iir) return Iir
    is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Error);
-      Set_Expr_Staticness (Res, None);
-      Set_Type (Res, Atype);
       Set_Error_Origin (Res, Orig);
       Location_Copy (Res, Orig);
+      return Res;
+   end Create_Error;
+
+   function Create_Error_Expr (Orig : Iir; Atype : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Error (Orig);
+      Set_Expr_Staticness (Res, None);
+      Set_Type (Res, Atype);
       return Res;
    end Create_Error_Expr;
 
@@ -1054,11 +1166,9 @@ package body Iirs_Utils is
    is
       Res : Iir;
    begin
-      Res := Create_Iir (Iir_Kind_Error);
+      Res := Create_Error (Orig);
       --Set_Expr_Staticness (Res, Locally);
       Set_Base_Type (Res, Res);
-      Set_Error_Origin (Res, Orig);
-      Location_Copy (Res, Orig);
       Set_Type_Declarator (Res, Null_Iir);
       Set_Resolved_Flag (Res, True);
       Set_Signal_Type_Flag (Res, True);

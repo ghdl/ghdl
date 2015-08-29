@@ -1054,7 +1054,7 @@ package body Trans is
             | Type_Mode_Acc
             | Type_Mode_File
             | Type_Mode_Fat_Array
-            | Type_Mode_Fat_Acc =>
+            | Type_Mode_Bounds_Acc =>
             if Stable then
                return Dv2M (D, Vtype, Mode);
             else
@@ -1203,6 +1203,17 @@ package body Trans is
    begin
       return New_Access_Element (New_Value (L));
    end New_Acc_Value;
+
+   function Add_Pointer
+     (Ptr : O_Enode; Offset : O_Enode; Res_Ptr : O_Tnode) return O_Enode is
+   begin
+      return New_Unchecked_Address
+        (New_Slice
+           (New_Access_Element (New_Convert_Ov (Ptr, Char_Ptr_Type)),
+            Chararray_Type,
+            Offset),
+         Res_Ptr);
+   end Add_Pointer;
 
    package Node_Infos is new GNAT.Table
      (Table_Component_Type => Ortho_Info_Acc,
@@ -1668,7 +1679,7 @@ package body Trans is
             | Type_Mode_Acc
             | Type_Mode_File
             | Type_Mode_Fat_Array
-            | Type_Mode_Fat_Acc =>
+            | Type_Mode_Bounds_Acc =>
             return Lv2M (L, Vtype, Mode);
          when Type_Mode_Array
             | Type_Mode_Record
@@ -1691,7 +1702,7 @@ package body Trans is
             | Type_Mode_Acc
             | Type_Mode_File
             | Type_Mode_Fat_Array
-            | Type_Mode_Fat_Acc =>
+            | Type_Mode_Bounds_Acc =>
             return Dv2M (D, Vtype, Mode);
          when Type_Mode_Array
             | Type_Mode_Record
@@ -1741,11 +1752,24 @@ package body Trans is
       type Temp_Level_Type;
       type Temp_Level_Acc is access Temp_Level_Type;
       type Temp_Level_Type is record
+         --  Link to the outer record.
          Prev            : Temp_Level_Acc;
+
+         --  Nested level.  'Top' level is 0.
          Level           : Natural;
+
+         --  Generated variable id, starts from 0.
          Id              : Natural;
+
+         --  True if a scope was created, as it is created dynamically at the
+         --  first use.
          Emitted         : Boolean;
+
+         --  Declaration of the variable for the stack2 mark.  The stack2 will
+         --  be released at the end of the scope (if used).
          Stack2_Mark     : O_Dnode;
+
+         --  List of transient types to be removed at the end of the scope.
          Transient_Types : Iir;
       end record;
       --  Current level.

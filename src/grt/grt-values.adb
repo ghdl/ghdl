@@ -119,7 +119,7 @@ package body Grt.Values is
          end if;
       end loop;
       Error_C ("'value: '");
-      Error_C_Std (S (Pos .. L));
+      Error_C_Std (S (Pos .. L - 1));
       Error_C ("' not in enumeration '");
       Error_C (Enum_Rti.Name);
       Error_E ("'");

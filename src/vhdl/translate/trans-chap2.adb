@@ -111,30 +111,38 @@ package body Trans.Chap2 is
    --  Return the type of a subprogram interface.
    --  Return O_Tnode_Null if the parameter is passed through the
    --  interface record.
-   function Translate_Interface_Type (Inter : Iir) return O_Tnode
+   function Translate_Interface_Type (Inter : Iir; Is_Foreign : Boolean)
+                                     return O_Tnode
    is
-      Mode  : Object_Kind_Type;
       Tinfo : constant Type_Info_Acc := Get_Info (Get_Type (Inter));
+      Mode  : Object_Kind_Type;
+      By_Addr : Boolean;
    begin
-      case Get_Kind (Inter) is
+      --  Mechanism.
+      case Type_Mode_Valid (Tinfo.Type_Mode) is
+         when Type_Mode_Pass_By_Copy =>
+            By_Addr := False;
+         when Type_Mode_Pass_By_Address =>
+            By_Addr := True;
+      end case;
+
+      case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
          when Iir_Kind_Interface_Constant_Declaration
-            | Iir_Kind_Interface_Variable_Declaration
             | Iir_Kind_Interface_File_Declaration =>
             Mode := Mode_Value;
+         when Iir_Kind_Interface_Variable_Declaration =>
+            Mode := Mode_Value;
+            if Is_Foreign and then Get_Mode (Inter) in Iir_Out_Modes then
+               By_Addr := True;
+            end if;
          when Iir_Kind_Interface_Signal_Declaration =>
             Mode := Mode_Signal;
-         when others =>
-            Error_Kind ("translate_interface_type", Inter);
       end case;
-      case Tinfo.Type_Mode is
-         when Type_Mode_Unknown =>
-            raise Internal_Error;
-         when Type_Mode_By_Value =>
-            return Tinfo.Ortho_Type (Mode);
-         when Type_Mode_By_Copy
-            | Type_Mode_By_Ref =>
-            return Tinfo.Ortho_Ptr_Type (Mode);
-      end case;
+      if By_Addr then
+         return Tinfo.Ortho_Ptr_Type (Mode);
+      else
+         return Tinfo.Ortho_Type (Mode);
+      end if;
    end Translate_Interface_Type;
 
    procedure Translate_Subprogram_Declaration (Spec : Iir)
@@ -142,6 +150,7 @@ package body Trans.Chap2 is
       Info : constant Subprg_Info_Acc := Get_Info (Spec);
       Is_Func : constant Boolean :=
         Get_Kind (Spec) = Iir_Kind_Function_Declaration;
+      Is_Foreign : constant Boolean := Get_Foreign_Flag (Spec);
       Inter : Iir;
       Arg_Info : Ortho_Info_Acc;
       Tinfo : Type_Info_Acc;
@@ -151,13 +160,14 @@ package body Trans.Chap2 is
       Rtype : Iir;
       Id : O_Ident;
       Storage : O_Storage;
-      Foreign : Foreign_Info_Type := Foreign_Bad;
+      Foreign : Foreign_Info_Type;
    begin
       --  Set the identifier prefix with the subprogram identifier and
       --  overload number if any.
       Push_Subprg_Identifier (Spec, Mark);
 
-      if Get_Foreign_Flag (Spec) then
+      --  Create the subprogram identifier.
+      if Is_Foreign then
          --  Special handling for foreign subprograms.
          Foreign := Translate_Foreign_Id (Spec);
          case Foreign.Kind is
@@ -172,6 +182,7 @@ package body Trans.Chap2 is
          end case;
          Storage := O_Storage_External;
       else
+         Foreign := Foreign_Bad;
          Id := Create_Identifier;
          Storage := Global_Storage;
       end if;
@@ -207,13 +218,13 @@ package body Trans.Chap2 is
          --  gather them in a record.  An access to the record is then
          --  passed to the procedure.
          Inter := Get_Interface_Declaration_Chain (Spec);
-         if Inter /= Null_Iir then
+         if Inter /= Null_Iir and then not Is_Foreign then
             Start_Record_Type (El_List);
             while Inter /= Null_Iir loop
                Arg_Info := Add_Info (Inter, Kind_Interface);
                New_Record_Field (El_List, Arg_Info.Interface_Field,
                                  Create_Identifier_Without_Prefix (Inter),
-                                 Translate_Interface_Type (Inter));
+                                 Translate_Interface_Type (Inter, False));
                Inter := Get_Chain (Inter);
             end loop;
             --  Declare the record type and an access to the record.
@@ -241,19 +252,20 @@ package body Trans.Chap2 is
       end if;
 
       --  Instance parameter if any.
-      if not Get_Foreign_Flag (Spec) then
+      if not Is_Foreign then
          Subprgs.Create_Subprg_Instance (Interface_List, Spec);
       end if;
 
       --  Translate interfaces.
-      if Is_Func then
+      if Is_Func or else Is_Foreign then
          Inter := Get_Interface_Declaration_Chain (Spec);
          while Inter /= Null_Iir loop
             --  Create the info.
             Arg_Info := Add_Info (Inter, Kind_Interface);
             Arg_Info.Interface_Field := O_Fnode_Null;
 
-            Arg_Info.Interface_Type := Translate_Interface_Type (Inter);
+            Arg_Info.Interface_Type :=
+              Translate_Interface_Type (Inter, Is_Foreign);
             New_Interface_Decl
               (Interface_List, Arg_Info.Interface_Node,
                Create_Identifier_Without_Prefix (Inter),
@@ -264,7 +276,7 @@ package body Trans.Chap2 is
       Finish_Subprogram_Decl (Interface_List, Info.Ortho_Func);
 
       --  Call the hook for foreign subprograms.
-      if Get_Foreign_Flag (Spec) and then Foreign_Hook /= null then
+      if Is_Foreign and then Foreign_Hook /= null then
          Foreign_Hook.all (Spec, Foreign, Info.Ortho_Func);
       end if;
 
@@ -853,15 +865,21 @@ package body Trans.Chap2 is
             pragma Assert (Src.C = null);
             pragma Assert (Src.Type_Transient_Chain = Null_Iir);
          when Kind_Object =>
-            pragma Assert (Src.Object_Driver = Null_Var);
-            pragma Assert (Src.Object_Function = O_Dnode_Null);
             Dest.all :=
               (Kind => Kind_Object,
                Object_Static => Src.Object_Static,
                Object_Var => Instantiate_Var (Src.Object_Var),
-               Object_Driver => Null_Var,
-               Object_Rti => Src.Object_Rti,
-               Object_Function => O_Dnode_Null);
+               Object_Rti => Src.Object_Rti);
+         when Kind_Signal =>
+            pragma Assert (Src.Signal_Driver = Null_Var);
+            pragma Assert (Src.Signal_Function = O_Dnode_Null);
+            Dest.all :=
+              (Kind => Kind_Signal,
+               Signal_Value => Instantiate_Var (Src.Signal_Value),
+               Signal_Sig => Instantiate_Var (Src.Signal_Sig),
+               Signal_Driver => Null_Var,
+               Signal_Rti => Src.Signal_Rti,
+               Signal_Function => O_Dnode_Null);
          when Kind_Subprg =>
             Dest.Subprg_Frame_Scope :=
               Instantiate_Var_Scope (Src.Subprg_Frame_Scope);

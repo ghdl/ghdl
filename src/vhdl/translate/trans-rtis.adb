@@ -1813,10 +1813,9 @@ package body Trans.Rtis is
 
    procedure Generate_Signal_Rti (Sig : Iir)
    is
-      Info : Object_Info_Acc;
+      Info : constant Signal_Info_Acc := Get_Info (Sig);
    begin
-      Info := Get_Info (Sig);
-      New_Const_Decl (Info.Object_Rti, Create_Identifier (Sig, "__RTI"),
+      New_Const_Decl (Info.Signal_Rti, Create_Identifier (Sig, "__RTI"),
                       Global_Storage, Ghdl_Rtin_Object);
    end Generate_Signal_Rti;
 
@@ -1895,10 +1894,10 @@ package body Trans.Rtis is
          case Get_Kind (Decl) is
             when Iir_Kind_Signal_Declaration =>
                Comm := Ghdl_Rtik_Signal;
-               Var := Info.Object_Var;
+               Var := Info.Signal_Sig;
             when Iir_Kind_Interface_Signal_Declaration =>
                Comm := Ghdl_Rtik_Port;
-               Var := Info.Object_Var;
+               Var := Info.Signal_Sig;
                Mode := Iir_Mode'Pos (Get_Mode (Decl));
             when Iir_Kind_Constant_Declaration =>
                Comm := Ghdl_Rtik_Constant;
@@ -1911,7 +1910,7 @@ package body Trans.Rtis is
                Var := Info.Object_Var;
             when Iir_Kind_Guard_Signal_Declaration =>
                Comm := Ghdl_Rtik_Guard;
-               Var := Info.Object_Var;
+               Var := Info.Signal_Sig;
             when Iir_Kind_Iterator_Declaration =>
                Comm := Ghdl_Rtik_Iterator;
                Var := Info.Iterator_Var;
@@ -1923,13 +1922,13 @@ package body Trans.Rtis is
                Var := Null_Var;
             when Iir_Kind_Transaction_Attribute =>
                Comm := Ghdl_Rtik_Attribute_Transaction;
-               Var := Info.Object_Var;
+               Var := Info.Signal_Sig;
             when Iir_Kind_Quiet_Attribute =>
                Comm := Ghdl_Rtik_Attribute_Quiet;
-               Var := Info.Object_Var;
+               Var := Info.Signal_Sig;
             when Iir_Kind_Stable_Attribute =>
                Comm := Ghdl_Rtik_Attribute_Stable;
-               Var := Info.Object_Var;
+               Var := Info.Signal_Sig;
             when Iir_Kind_Object_Alias_Declaration =>
                Comm := Ghdl_Rtik_Alias;
                Var := Info.Alias_Var;
@@ -2207,20 +2206,25 @@ package body Trans.Rtis is
                      Add_Rti_Node (Info.Object_Rti);
                   end;
                end if;
+            when Iir_Kind_Interface_Constant_Declaration
+               | Iir_Kind_Variable_Declaration
+               | Iir_Kind_File_Declaration =>
+               declare
+                  Info : constant Object_Info_Acc := Get_Info (Decl);
+               begin
+                  Generate_Object (Decl, Info.Object_Rti);
+                  Add_Rti_Node (Info.Object_Rti);
+               end;
             when Iir_Kind_Signal_Declaration
                | Iir_Kind_Interface_Signal_Declaration
-               | Iir_Kind_Interface_Constant_Declaration
-               | Iir_Kind_Variable_Declaration
-               | Iir_Kind_File_Declaration
                | Iir_Kind_Transaction_Attribute
                | Iir_Kind_Quiet_Attribute
                | Iir_Kind_Stable_Attribute =>
                declare
-                  Info : Object_Info_Acc;
+                  Info : constant Signal_Info_Acc := Get_Info (Decl);
                begin
-                  Info := Get_Info (Decl);
-                  Generate_Object (Decl, Info.Object_Rti);
-                  Add_Rti_Node (Info.Object_Rti);
+                  Generate_Object (Decl, Info.Signal_Rti);
+                  Add_Rti_Node (Info.Signal_Rti);
                end;
             when Iir_Kind_Delayed_Attribute =>
                --  FIXME: to be added.
@@ -2530,12 +2534,12 @@ package body Trans.Rtis is
             declare
                Guard      : constant Iir := Get_Guard_Decl (Blk);
                Header     : constant Iir := Get_Block_Header (Blk);
-               Guard_Info : Object_Info_Acc;
+               Guard_Info : Signal_Info_Acc;
             begin
                if Guard /= Null_Iir then
                   Guard_Info := Get_Info (Guard);
-                  Generate_Object (Guard, Guard_Info.Object_Rti);
-                  Add_Rti_Node (Guard_Info.Object_Rti);
+                  Generate_Object (Guard, Guard_Info.Signal_Rti);
+                  Add_Rti_Node (Guard_Info.Signal_Rti);
                end if;
                if Header /= Null_Iir then
                   Generate_Declaration_Chain (Get_Generic_Chain (Header));
