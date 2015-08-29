@@ -894,6 +894,10 @@ package body Errorout is
       begin
          if Decl = Null_Iir then
             Decl := Get_Type_Declarator (Get_Base_Type (Def));
+            if Decl = Null_Iir then
+               Append (Res, "*unknown*");
+               return;
+            end if;
          end if;
          Image (Get_Identifier (Decl));
          Append (Res, Nam_Buffer (1 .. Nam_Length));

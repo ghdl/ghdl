@@ -2577,7 +2577,7 @@ package body Sem_Names is
             Error_Kind ("sem_selected_by_all_name", Prefix);
       end case;
       if Res = Null_Iir then
-         Error_Msg_Sem ("prefix is not an access", Name);
+         Error_Msg_Sem ("prefix type is not an access type", Name);
          Res := Error_Mark;
       end if;
       Set_Named_Entity (Name, Res);
