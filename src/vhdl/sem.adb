@@ -1531,6 +1531,12 @@ package body Sem is
          when Iir_Kind_Character_Literal =>
             return Are_Trees_Equal (Get_Named_Entity (Left),
                                     Get_Named_Entity (Right));
+         when Iir_Kind_Allocator_By_Subtype =>
+            return Are_Trees_Equal (Get_Subtype_Indication (Left),
+                                    Get_Subtype_Indication (Right));
+         when Iir_Kind_Allocator_By_Expression =>
+            return Are_Trees_Equal (Get_Expression (Left),
+                                    Get_Expression (Right));
          when others =>
             Error_Kind ("are_trees_equal", Left);
       end case;

@@ -29,6 +29,7 @@ with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap6;
 with Trans.Chap7;
+with Trans.Chap9;
 with Trans.Chap14;
 with Trans_Decls; use Trans_Decls;
 with Translation; use Translation;
@@ -1978,6 +1979,12 @@ package body Trans.Chap8 is
                New_Association (Constr, Val);
             end if;
          end if;
+
+         if Get_Kind (El) = Iir_Kind_Association_Element_Open then
+            --  Do not share nodes for default values: clean them.
+            Chap9.Destroy_Types (Get_Default_Value (Base_Formal));
+         end if;
+
          El := Get_Chain (El);
          Pos := Pos + 1;
       end loop;

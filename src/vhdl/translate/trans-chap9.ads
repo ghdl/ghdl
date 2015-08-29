@@ -30,5 +30,12 @@ package Trans.Chap9 is
    procedure Translate_Entity_Instantiation
      (Aspect : Iir; Mapping : Iir; Parent : Iir; Config_Override : Iir);
 
+   --  Remove anonymous and implicit type definitions in a list of names.
+   --  Such type definitions are created during slice translations, however
+   --  variables created are defined in the translation scope.
+   --  If the type is referenced again, the variables must be reachable.
+   --  This is not the case for elaborator subprogram (which may references
+   --  slices in the sensitivity or driver list) and the process subprg.
+   procedure Destroy_Types (N : Iir);
 end Trans.Chap9;
 

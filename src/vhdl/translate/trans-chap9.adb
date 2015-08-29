@@ -24,6 +24,7 @@ with Libraries;
 with Canon;
 with Canon_PSL;
 with Trans_Analyzes;
+with Nodes_Meta;
 with PSL.Nodes;
 with PSL.NFAs;
 with PSL.NFAs.Utils;
@@ -993,63 +994,130 @@ package body Trans.Chap9 is
    --  If the type is referenced again, the variables must be reachable.
    --  This is not the case for elaborator subprogram (which may references
    --  slices in the sensitivity or driver list) and the process subprg.
-   procedure Destroy_Types_In_Name (Name : Iir)
+   procedure Destroy_Types_In_Chain (Chain : Iir)
    is
-      El    : Iir;
-      Atype : Iir;
-      Info  : Type_Info_Acc;
+      N : Iir;
    begin
-      El := Name;
-      loop
-         Atype := Null_Iir;
-         case Get_Kind (El) is
-            when Iir_Kind_Selected_Element
-               | Iir_Kind_Indexed_Name =>
-               El := Get_Prefix (El);
-            when Iir_Kind_Slice_Name =>
-               Atype := Get_Type (El);
-               El := Get_Prefix (El);
-            when Iir_Kind_Object_Alias_Declaration =>
-               El := Get_Name (El);
-            when Iir_Kind_Stable_Attribute
-               | Iir_Kind_Quiet_Attribute
-               | Iir_Kind_Delayed_Attribute
-               | Iir_Kind_Transaction_Attribute =>
-               El := Get_Prefix (El);
-            when Iir_Kind_Signal_Declaration
-               | Iir_Kind_Interface_Signal_Declaration
-               | Iir_Kind_Guard_Signal_Declaration =>
-               exit;
-            when Iir_Kinds_Denoting_Name =>
-               El := Get_Named_Entity (El);
-            when others =>
-               Error_Kind ("destroy_types_in_name", El);
-         end case;
-         if Atype /= Null_Iir
-           and then Is_Anonymous_Type_Definition (Atype)
-         then
-            Info := Get_Info (Atype);
-            if Info /= null then
-               Free_Type_Info (Info);
-               Clear_Info (Atype);
-            end if;
-         end if;
+      N := Chain;
+      while N /= Null_Iir loop
+         Destroy_Types (N);
+         N := Get_Chain (N);
       end loop;
-   end Destroy_Types_In_Name;
+   end Destroy_Types_In_Chain;
 
-   procedure Destroy_Types_In_List (List : Iir_List)
+   procedure Destroy_Types_In_List (L : Iir_List)
    is
       El : Iir;
    begin
-      if List = Null_Iir_List then
+      case L is
+         when Null_Iir_List
+            | Iir_List_All
+            | Iir_List_Others =>
+            return;
+         when others =>
+            for I in Natural loop
+               El := Get_Nth_Element (L, I);
+               exit when El = Null_Iir;
+               Destroy_Types (El);
+            end loop;
+      end case;
+   end Destroy_Types_In_List;
+
+   procedure Destroy_Types (N : Iir) is
+   begin
+      --  Nothing to do for null node.
+      if N = Null_Iir then
          return;
       end if;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
-         Destroy_Types_In_Name (El);
-      end loop;
-   end Destroy_Types_In_List;
+
+      declare
+         use Nodes_Meta;
+         Kind      : constant Iir_Kind := Get_Kind (N);
+         Fields    : constant Fields_Array := Get_Fields (Kind);
+         F         : Fields_Enum;
+      begin
+         for I in Fields'Range loop
+            F := Fields (I);
+            case F is
+               when Field_Literal_Subtype
+                 | Field_Slice_Subtype =>
+                  declare
+                     T : constant Iir := Get_Iir (N, F);
+                     Info : Type_Info_Acc;
+                  begin
+                     Info := Get_Info (T);
+                     if Info /= null then
+                        Free_Type_Info (Info);
+                        Clear_Info (T);
+                     end if;
+                  end;
+               when others =>
+                  null;
+            end case;
+
+            case Get_Field_Type (F) is
+               when Type_Iir =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Destroy_Types (Get_Iir (N, F));
+                     when Attr_Ref =>
+                        null;
+                     when Attr_Maybe_Ref =>
+                        if not Get_Is_Ref (N) then
+                           Destroy_Types (Get_Iir (N, F));
+                        end if;
+                     when Attr_Chain =>
+                        Destroy_Types_In_Chain (Get_Iir (N, F));
+                     when Attr_Chain_Next =>
+                        null;
+                     when Attr_Of_Ref =>
+                        raise Internal_Error;
+                  end case;
+               when Type_Iir_List =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Destroy_Types_In_List (Get_Iir_List (N, F));
+                     when Attr_Ref
+                        | Attr_Of_Ref =>
+                        null;
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+               when Type_PSL_NFA
+                  | Type_PSL_Node =>
+                  --  TODO
+                  raise Internal_Error;
+               when Type_Date_Type
+                 | Type_Date_State_Type
+                 | Type_Time_Stamp_Id
+                 | Type_File_Checksum_Id
+                 | Type_String8_Id
+                 | Type_Source_Ptr
+                 | Type_Base_Type
+                 | Type_Iir_Constraint
+                 | Type_Iir_Mode
+                 | Type_Iir_Index32
+                 | Type_Iir_Int64
+                 | Type_Boolean
+                 | Type_Iir_Staticness
+                 | Type_Iir_All_Sensitized
+                 | Type_Iir_Signal_Kind
+                 | Type_Tri_State_Type
+                 | Type_Iir_Pure_State
+                 | Type_Iir_Delay_Mechanism
+                 | Type_Iir_Predefined_Functions
+                 | Type_Iir_Direction
+                 | Type_Location_Type
+                 | Type_Iir_Int32
+                 | Type_Int32
+                 | Type_Iir_Fp64
+                 | Type_Token_Type
+                 | Type_Name_Id =>
+                  null;
+            end case;
+         end loop;
+      end;
+   end Destroy_Types;
 
    procedure Gen_Register_Direct_Driver_Non_Composite
      (Targ : Mnode; Targ_Type : Iir; Drv : Mnode)

@@ -284,6 +284,55 @@ package body Trans.Chap12 is
       Pop_Identifier_Prefix (Lib_Mark);
    end Gen_Dummy_Default_Config;
 
+   procedure Gen_Dummy_Entity_Declaration (Entity : Iir_Entity_Declaration)
+   is
+      Lib : Iir_Library_Declaration;
+      Lib_Mark, Entity_Mark, Arch_Mark : Id_Mark_Type;
+
+      Const : O_Dnode;
+      Instance : O_Dnode;
+      Inter_List : O_Inter_List;
+      Subprg : O_Dnode;
+   begin
+      --  Create trampoline for elab, default_architecture
+      --  re-create instsize.
+      Reset_Identifier_Prefix;
+      Lib := Get_Library (Get_Design_File (Get_Design_Unit (Entity)));
+      Push_Identifier_Prefix (Lib_Mark, Get_Identifier (Lib));
+      Push_Identifier_Prefix (Entity_Mark, Get_Identifier (Entity));
+      Push_Identifier_Prefix (Arch_Mark, "LASTARCH");
+
+      --  Instance size.
+      New_Const_Decl
+        (Const, Create_Identifier ("INSTSIZE"), O_Storage_Public,
+         Ghdl_Index_Type);
+      Start_Const_Value (Const);
+      Finish_Const_Value (Const, Ghdl_Index_0);
+
+      --  Elaborator.
+      Start_Procedure_Decl
+        (Inter_List, Create_Identifier ("ELAB"), O_Storage_Public);
+      New_Interface_Decl (Inter_List, Instance, Wki_Instance, Ghdl_Ptr_Type);
+      Finish_Subprogram_Decl (Inter_List, Subprg);
+
+      Start_Subprogram_Body (Subprg);
+      Finish_Subprogram_Body;
+
+      --  Default config.
+      Start_Procedure_Decl
+        (Inter_List, Create_Identifier ("DEFAULT_CONFIG"), O_Storage_Public);
+      New_Interface_Decl (Inter_List, Instance, Wki_Instance, Ghdl_Ptr_Type);
+      Finish_Subprogram_Decl (Inter_List, Subprg);
+
+      Start_Subprogram_Body (Subprg);
+      Finish_Subprogram_Body;
+
+      Pop_Identifier_Prefix (Arch_Mark);
+      Pop_Identifier_Prefix (Entity_Mark);
+      Pop_Identifier_Prefix (Lib_Mark);
+   end Gen_Dummy_Entity_Declaration;
+
+   --  Generate dummy subprograms for a package declaration.
    procedure Gen_Dummy_Package_Declaration (Unit : Iir_Design_Unit)
    is
       Pkg : Iir_Package_Declaration;
@@ -350,6 +399,7 @@ package body Trans.Chap12 is
       Pop_Identifier_Prefix (Lib_Mark);
    end Gen_Dummy_Package_Declaration;
 
+   --  Write to file FILELIST all the files that are needed to link the design.
    procedure Write_File_List (Filelist : String)
    is
       use Interfaces.C_Streams;
@@ -394,6 +444,8 @@ package body Trans.Chap12 is
                      Gen_Dummy_Package_Declaration (Unit);
                   end if;
                end;
+            when Iir_Kind_Entity_Declaration =>
+               Gen_Dummy_Entity_Declaration (Lib_Unit);
             when Iir_Kind_Architecture_Body =>
                Gen_Dummy_Default_Config (Lib_Unit);
             when others =>
@@ -422,7 +474,9 @@ package body Trans.Chap12 is
          Unit := Get_First_Design_Unit (File);
          while Unit /= Null_Iir loop
             if not Get_Elab_Flag (Unit) then
-               --  Unit not used.
+               --  Unit is not used for the design, but is present in the final
+               --  link.  As it may import dependencies, generate dummy
+               --  subprograms and variables for these dependencies.
                Add_Unit_Dependences (Unit);
             end if;
             Unit := Get_Chain (Unit);
@@ -466,6 +520,7 @@ package body Trans.Chap12 is
             --  link case failed.
             Add_File_Units (File);
 
+            --  Write '>LIBRARY_DIRECTORY'.
             Lib := Get_Library (File);
             R := fputc (Character'Pos ('>'), F);
             Id := Get_Library_Directory (Lib);
@@ -473,6 +528,7 @@ package body Trans.Chap12 is
                          size_t (Get_Name_Length (Id)), 1, F);
             R := fputc (10, F);
 
+            --  Write 'FILENAME'.
             Id := Get_Design_File_Filename (File);
             S := fwrite (Get_Address (Id),
                          size_t (Get_Name_Length (Id)), 1, F);
