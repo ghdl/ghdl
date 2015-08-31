@@ -1557,10 +1557,13 @@ package body Ortho_Code.X86.Insns is
               and then Get_Expr_Kind (Right) = OE_Const
               and then Get_Expr_Low (Right) in 0 .. 3
             then
+               --  Becomes the index of the SIB.
                Set_Expr_Reg (Stmt, R_I);
             else
+               Reg_Res := Get_Expr_Reg (Left);
+               Set_Expr_Reg (Stmt, Reg_Res);
+               Renum_Reg (Reg_Res, Stmt, Pnum);
                Link_Stmt (Stmt);
-               Set_Expr_Reg (Stmt, Get_Expr_Reg (Left));
                Free_Insn_Regs (Right);
             end if;
             return Stmt;
