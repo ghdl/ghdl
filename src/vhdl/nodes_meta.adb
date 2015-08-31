@@ -1636,7 +1636,7 @@ package body Nodes_Meta is
          when Field_Design_Unit =>
             return Attr_None;
          when Field_Block_Statement =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_Signal_Driver =>
             return Attr_None;
          when Field_Declaration_Chain =>
@@ -2846,9 +2846,9 @@ package body Nodes_Meta is
       Field_Name_Staticness,
       Field_Guard_Expression,
       Field_Guard_Sensitivity_List,
-      Field_Block_Statement,
       Field_Parent,
       Field_Type,
+      Field_Block_Statement,
       --  Iir_Kind_Signal_Declaration
       Field_Identifier,
       Field_Has_Disconnect_Flag,

@@ -5590,7 +5590,8 @@ package Iirs is
    function Get_Design_Unit (Target : Iir) return Iir;
    procedure Set_Design_Unit (Target : Iir; Unit : Iir);
 
-   --  Field: Field5
+   --  Corresponding block statement for an implicit guard signal.
+   --  Field: Field5 Ref
    function Get_Block_Statement (Target : Iir) return Iir;
    procedure Set_Block_Statement (Target : Iir; Block : Iir);
 
