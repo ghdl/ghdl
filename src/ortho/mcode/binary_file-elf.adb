@@ -16,12 +16,11 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Characters.Latin_1;
 with Elf_Common;
 with Elf32;
 
 package body Binary_File.Elf is
-   NUL : Character renames Ada.Characters.Latin_1.NUL;
+   NUL : Character renames ASCII.NUL;
 
    type Arch_Bool is array (Arch_Kind) of Boolean;
    Is_Rela : constant Arch_Bool := (Arch_Unknown => False,
@@ -29,7 +28,7 @@ package body Binary_File.Elf is
                                     Arch_Sparc => True,
                                     Arch_Ppc => True);
 
-   procedure Write_Elf (Fd : GNAT.OS_Lib.File_Descriptor)
+   procedure Write (Fd : GNAT.OS_Lib.File_Descriptor)
    is
       use Elf_Common;
       use Elf32;
@@ -674,6 +673,6 @@ package body Binary_File.Elf is
             end case;
          end loop;
       end;
-   end Write_Elf;
+   end Write;
 
 end Binary_File.Elf;

@@ -15,13 +15,12 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Characters.Latin_1;
 with Coff; use Coff;
 
 package body Binary_File.Coff is
-   NUL : Character renames Ada.Characters.Latin_1.NUL;
+   NUL : Character renames ASCII.NUL;
 
-   procedure Write_Coff (Fd : GNAT.OS_Lib.File_Descriptor)
+   procedure Write (Fd : GNAT.OS_Lib.File_Descriptor)
    is
       use GNAT.OS_Lib;
 
@@ -402,6 +401,6 @@ package body Binary_File.Coff is
             raise Program_Error;
          end if;
       end;
-   end Write_Coff;
+   end Write;
 
 end Binary_File.Coff;

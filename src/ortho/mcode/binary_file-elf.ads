@@ -18,5 +18,5 @@
 with GNAT.OS_Lib;
 
 package Binary_File.Elf is
-   procedure Write_Elf (Fd : GNAT.OS_Lib.File_Descriptor);
+   procedure Write (Fd : GNAT.OS_Lib.File_Descriptor);
 end Binary_File.Elf;

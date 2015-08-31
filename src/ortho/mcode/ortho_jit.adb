@@ -76,7 +76,7 @@ package body Ortho_Jit is
                Status := False;
                return;
             else
-               Binary_File.Elf.Write_Elf (Fd);
+               Binary_File.Elf.Write (Fd);
                Close (Fd);
             end if;
          end;

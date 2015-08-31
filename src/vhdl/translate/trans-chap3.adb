@@ -593,7 +593,7 @@ package body Trans.Chap3 is
             case Kind is
                when Mode_Value =>
                   --  For the values.
-                  Id := Wki_Base;
+                  Id := Create_Identifier ("BASE");
                   Idptr := Create_Identifier ("BASEP");
                when Mode_Signal =>
                   --  For the signals
@@ -1979,10 +1979,9 @@ package body Trans.Chap3 is
 
          when Iir_Kind_Array_Type_Definition =>
             declare
-               El_Type : Iir;
+               El_Type : constant Iir := Get_Element_Subtype (Def);
                Mark    : Id_Mark_Type;
             begin
-               El_Type := Get_Element_Subtype (Def);
                if Get_Info (El_Type) = null then
                   Push_Identifier_Prefix (Mark, "ET");
                   Translate_Type_Definition (El_Type);

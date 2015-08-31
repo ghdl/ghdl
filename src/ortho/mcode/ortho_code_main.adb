@@ -155,9 +155,9 @@ begin
       if Fd /= Invalid_FD then
          case Format is
             when Format_Elf =>
-               Binary_File.Elf.Write_Elf (Fd);
+               Binary_File.Elf.Write (Fd);
             when Format_Coff =>
-               Binary_File.Coff.Write_Coff (Fd);
+               Binary_File.Coff.Write (Fd);
          end case;
          Close (Fd);
       end if;

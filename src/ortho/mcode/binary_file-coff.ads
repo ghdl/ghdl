@@ -18,6 +18,6 @@
 with GNAT.OS_Lib;
 
 package Binary_File.Coff is
-   procedure Write_Coff (Fd : GNAT.OS_Lib.File_Descriptor);
+   procedure Write (Fd : GNAT.OS_Lib.File_Descriptor);
 end Binary_File.Coff;
 
