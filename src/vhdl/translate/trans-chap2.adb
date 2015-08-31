@@ -684,6 +684,7 @@ package body Trans.Chap2 is
       Spec : constant Iir_Package_Declaration := Get_Package (Decl);
       Info : constant Ortho_Info_Acc := Get_Info (Spec);
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+      Prev_Storage : constant O_Storage := Global_Storage;
    begin
       --  Translate declarations.
       if Is_Uninstantiated_Package (Spec) then
@@ -692,6 +693,7 @@ package body Trans.Chap2 is
            (Get_Identifier ("SPEC"),
             Get_Scope_Type (Info.Package_Spec_Scope));
 
+         --  Translate the specifications.
          Chap4.Translate_Declaration_Chain (Decl);
 
          Pop_Instance_Factory (Info.Package_Body_Scope'Access);
@@ -710,11 +712,14 @@ package body Trans.Chap2 is
          Chap4.Translate_Declaration_Chain (Decl);
       end if;
 
+      Global_Storage := O_Storage_Private;
+
       if Flag_Rti then
          Rtis.Generate_Unit (Decl);
       end if;
 
       if Is_Uninstantiated_Package (Spec) then
+         --  Add access to the specs.
          Subprgs.Push_Subprg_Instance
            (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
             Wki_Instance, Prev_Subprg_Instance);
@@ -731,6 +736,8 @@ package body Trans.Chap2 is
       end if;
 
       Elab_Package_Body (Spec, Decl);
+
+      Global_Storage := Prev_Storage;
    end Translate_Package_Body;
 
    procedure Elab_Package (Spec : Iir_Package_Declaration)
