@@ -1846,7 +1846,7 @@ package body Trans.Chap4 is
 
       New_Var_Decl (Var_Bound, Get_Identifier ("BOUND"), O_Storage_Local,
                     Base_Info.T.Bounds_Type);
-      New_Var_Decl (Var_Array, Get_Identifier ("ARRAY"), O_Storage_Local,
+      New_Var_Decl (Var_Array, Get_Identifier ("VARRAY"), O_Storage_Local,
                     Base_Info.Ortho_Type (Mode_Value));
 
       Open_Temp;

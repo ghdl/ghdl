@@ -22,6 +22,7 @@ with Trans.Chap3;
 with Trans.Chap4;
 with Trans.Chap6;
 with Trans.Chap7;
+with Trans.Chap9;
 with Trans_Decls; use Trans_Decls;
 with Trans.Helpers2; use Trans.Helpers2;
 with Trans.Foreach_Non_Composite;
@@ -388,9 +389,8 @@ package body Trans.Chap5 is
       Data        : Connect_Data;
       Mode        : Connect_Mode;
    begin
-      if Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Expression then
-         raise Internal_Error;
-      end if;
+      pragma Assert
+        (Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression);
 
       Open_Temp;
       if Get_In_Conversion (Assoc) = Null_Iir
@@ -531,10 +531,7 @@ package body Trans.Chap5 is
       Assoc := Get_Generic_Map_Aspect_Chain (Mapping);
       while Assoc /= Null_Iir loop
          Open_Temp;
-         Formal := Get_Formal (Assoc);
-         if Get_Kind (Formal) in Iir_Kinds_Denoting_Name then
-            Formal := Get_Named_Entity (Formal);
-         end if;
+         Formal := Strip_Denoting_Name (Get_Formal (Assoc));
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Expression =>
                declare
@@ -552,7 +549,12 @@ package body Trans.Chap5 is
                   end if;
                end;
             when Iir_Kind_Association_Element_Open =>
-               Chap4.Elab_Object_Value (Formal, Get_Default_Value (Formal));
+               declare
+                  Value : constant Iir := Get_Default_Value (Formal);
+               begin
+                  Chap4.Elab_Object_Value (Formal, Value);
+                  Chap9.Destroy_Types (Value);
+               end;
             when Iir_Kind_Association_Element_By_Individual =>
                --  Create the object.
                declare
