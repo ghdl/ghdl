@@ -1040,7 +1040,8 @@ package body Trans.Chap9 is
             F := Fields (I);
             case F is
                when Field_Literal_Subtype
-                 | Field_Slice_Subtype =>
+                 | Field_Slice_Subtype
+                 | Field_Allocator_Subtype =>
                   declare
                      T : constant Iir := Get_Iir (N, F);
                      Info : Type_Info_Acc;
@@ -1280,6 +1281,7 @@ package body Trans.Chap9 is
                                    Get_Type (Sig),
                                    Ghdl_Process_Add_Driver);
                end if;
+               Chap9.Destroy_Types (Sig);
                Close_Temp;
             end loop;
          end;
@@ -1302,6 +1304,8 @@ package body Trans.Chap9 is
          else
             List := List_Orig;
          end if;
+         --  For extracted sensitivity, any signal can appear in the list.
+         --  Remove transient types now.
          Destroy_Types_In_List (List);
          Register_Signal_List (List, Ghdl_Process_Add_Sensitivity);
          if List_Orig = Iir_List_All then

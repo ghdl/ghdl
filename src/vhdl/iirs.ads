@@ -3108,6 +3108,10 @@ package Iirs is
    --  expression or the subtype)
    --   Get/Set_Allocator_Designated_Type (Field2)
    --
+   -- Only for Iir_Kind_Allocator_By_Subtype:
+   --  Same as subtype indication but set to own the subtype.
+   --   Get/Set_Allocator_Subtype (Field3)
+   --
    -- Only for Iir_Kind_Allocator_By_Expression:
    --  Contains the expression for a by expression allocator.
    --   Get/Set_Expression (Field5)
@@ -5242,6 +5246,10 @@ package Iirs is
    --  Field: Field3
    function Get_Literal_Subtype (Lit : Iir) return Iir;
    procedure Set_Literal_Subtype (Lit : Iir; Atype : Iir);
+
+   --  Field: Field3
+   function Get_Allocator_Subtype (Lit : Iir) return Iir;
+   procedure Set_Allocator_Subtype (Lit : Iir; Atype : Iir);
 
    --  Field: Field3 (uc)
    function Get_Entity_Class (Target : Iir) return Token_Type;

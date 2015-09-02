@@ -503,7 +503,7 @@ package body Trans.Chap6 is
       If_Blk, If_Blk1 : O_If_Block;
    begin
       --  Evaluate slice bounds.
-      Chap3.Create_Array_Subtype (Slice_Type, True);
+      Chap3.Create_Array_Subtype (Slice_Type);
 
       --  The info may have just been created.
       Prefix_Info := Get_Info (Prefix_Type);

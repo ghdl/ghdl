@@ -464,7 +464,7 @@ package body Trans.Chap4 is
                Aggr_Type : Iir;
             begin
                Aggr_Type := Get_Type (Value);
-               Chap3.Create_Array_Subtype (Aggr_Type, True);
+               Chap3.Create_Array_Subtype (Aggr_Type);
                Name_Node := Stabilize (Name);
                New_Assign_Stmt
                  (M2Lp (Chap3.Get_Array_Bounds (Name_Node)),
@@ -502,7 +502,6 @@ package body Trans.Chap4 is
          else
             Chap3.Translate_Object_Copy (Name, Value_Node, Obj_Type);
          end if;
-         Destroy_Local_Transient_Types;
       end if;
    end Elab_Object_Init;
 
@@ -2264,8 +2263,8 @@ package body Trans.Chap4 is
         (Mark3, Get_Identifier (Get_Association_Interface (Assoc)));
 
       --  Handle anonymous subtypes.
-      Chap3.Translate_Anonymous_Type_Definition (Out_Type, False);
-      Chap3.Translate_Anonymous_Type_Definition (In_Type, False);
+      Chap3.Translate_Anonymous_Type_Definition (Out_Type);
+      Chap3.Translate_Anonymous_Type_Definition (In_Type);
       Out_Info := Get_Info (Out_Type);
       In_Info := Get_Info (In_Type);
 

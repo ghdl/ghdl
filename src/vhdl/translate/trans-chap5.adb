@@ -344,7 +344,7 @@ package body Trans.Chap5 is
    begin
       Open_Temp;
       if Is_Fully_Constrained_Type (Actual_Type) then
-         Chap3.Create_Array_Subtype (Actual_Type, False);
+         Chap3.Create_Array_Subtype (Actual_Type);
          Tinfo := Get_Info (Actual_Type);
          Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
          if Get_Alloc_Kind_For_Var (Tinfo.T.Array_Bounds) = Alloc_Stack then
@@ -574,7 +574,7 @@ package body Trans.Chap5 is
                      Chap4.Allocate_Complex_Object
                        (Formal_Type, Alloc_System, Formal_Node);
                   else
-                     Chap3.Create_Array_Subtype (Obj_Type, False);
+                     Chap3.Create_Array_Subtype (Obj_Type);
                      Bounds := Chap3.Get_Array_Type_Bounds (Obj_Type);
                      Chap3.Translate_Object_Allocation
                        (Formal_Node, Alloc_System, Formal_Type, Bounds);
@@ -649,7 +649,7 @@ package body Trans.Chap5 is
                   begin
                      Actual_Type :=
                        Get_Type (Get_Default_Value (Formal_Base));
-                     Chap3.Create_Array_Subtype (Actual_Type, True);
+                     Chap3.Create_Array_Subtype (Actual_Type);
                      Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
                      Formal_Node := Chap6.Translate_Name (Formal);
                      New_Assign_Stmt
@@ -663,7 +663,7 @@ package body Trans.Chap5 is
                      Formal_Node : Mnode;
                   begin
                      Actual_Type := Get_Actual_Type (Assoc);
-                     Chap3.Create_Array_Subtype (Actual_Type, False);
+                     Chap3.Create_Array_Subtype (Actual_Type);
                      Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
                      Formal_Node := Chap6.Translate_Name (Formal);
                      New_Assign_Stmt

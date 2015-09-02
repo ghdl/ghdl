@@ -866,11 +866,9 @@ package body Trans.Chap2 is
                          C => null,
                          Ortho_Type => Src.Ortho_Type,
                          Ortho_Ptr_Type => Src.Ortho_Ptr_Type,
-                         Type_Transient_Chain => Null_Iir,
                          T => Src.T,
                          Type_Rti => Src.Type_Rti);
             pragma Assert (Src.C = null);
-            pragma Assert (Src.Type_Transient_Chain = Null_Iir);
          when Kind_Object =>
             Dest.all :=
               (Kind => Kind_Object,

@@ -614,7 +614,7 @@ package body Trans.Chap8 is
             E    : O_Enode;
             Temp : Mnode;
          begin
-            Chap3.Translate_Anonymous_Type_Definition (Targ_Type, True);
+            Chap3.Translate_Anonymous_Type_Definition (Targ_Type);
 
             --  Use a temporary variable, to avoid overlap.
             Temp := Create_Temp (Get_Info (Targ_Type));
@@ -1810,7 +1810,7 @@ package body Trans.Chap8 is
 
                if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
                   --  Create the constraints and then the object.
-                  Chap3.Create_Array_Subtype (Actual_Type, True);
+                  Chap3.Create_Array_Subtype (Actual_Type);
                   Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
                   Param := Create_Temp (Ftype_Info, Formal_Object_Kind);
                   Chap3.Translate_Object_Allocation
@@ -2066,16 +2066,15 @@ package body Trans.Chap8 is
 
    procedure Translate_Wait_Statement (Stmt : Iir)
    is
+      Cond        : constant Iir := Get_Condition_Clause (Stmt);
+      Timeout     : constant Iir := Get_Timeout_Clause (Stmt);
       Sensitivity : Iir_List;
-      Cond        : Iir;
-      Timeout     : Iir;
       Constr      : O_Assoc_List;
    begin
       Sensitivity := Get_Sensitivity_List (Stmt);
-      Cond := Get_Condition_Clause (Stmt);
-      Timeout := Get_Timeout_Clause (Stmt);
 
       if Sensitivity = Null_Iir_List and Cond /= Null_Iir then
+         --  Extract sensitivity list.
          Sensitivity := Create_Iir_List;
          Canon.Canon_Extract_Sensitivity (Cond, Sensitivity);
          Set_Sensitivity_List (Stmt, Sensitivity);
@@ -2111,6 +2110,7 @@ package body Trans.Chap8 is
       if Sensitivity /= Null_Iir_List then
          Register_Signal_List
            (Sensitivity, Ghdl_Process_Wait_Add_Sensitivity);
+         Chap9.Destroy_Types_In_List (Sensitivity);
       end if;
 
       if Cond = Null_Iir then
@@ -2770,20 +2770,19 @@ package body Trans.Chap8 is
                        Get_Info (Target_Type), Mode_Value);
       Arg.Expr_Node := We;
       Gen_Signal_Direct_Assign (Targ_Sig, Target_Type, Arg);
+      Chap9.Destroy_Types (Target);
    end Translate_Direct_Signal_Assignment;
 
    procedure Translate_Signal_Assignment_Statement (Stmt : Iir)
    is
-      Target      : Iir;
-      Target_Type : Iir;
+      Target      : constant Iir := Get_Target (Stmt);
+      Target_Type : constant Iir := Get_Type (Target);
       We          : Iir_Waveform_Element;
       Targ        : Mnode;
       Val         : O_Enode;
       Value       : Iir;
       Is_Simple   : Boolean;
    begin
-      Target := Get_Target (Stmt);
-      Target_Type := Get_Type (Target);
       We := Get_Waveform_Chain (Stmt);
 
       if We /= Null_Iir
@@ -2800,7 +2799,7 @@ package body Trans.Chap8 is
       end if;
 
       if Get_Kind (Target) = Iir_Kind_Aggregate then
-         Chap3.Translate_Anonymous_Type_Definition (Target_Type, True);
+         Chap3.Translate_Anonymous_Type_Definition (Target_Type);
          Targ := Create_Temp (Get_Info (Target_Type), Mode_Signal);
          Chap4.Allocate_Complex_Object (Target_Type, Alloc_Stack, Targ);
          Translate_Signal_Target_Aggr (Targ, Target, Target_Type);
@@ -2813,14 +2812,13 @@ package body Trans.Chap8 is
             return;
          end if;
          Targ := Chap6.Translate_Name (Target);
-         if Get_Object_Kind (Targ) /= Mode_Signal then
-            raise Internal_Error;
-         end if;
+         pragma Assert (Get_Object_Kind (Targ) = Mode_Signal);
       end if;
 
       if We = Null_Iir then
          --  Implicit disconnect statment.
          Register_Signal (Targ, Target_Type, Ghdl_Signal_Disconnect);
+         Chap9.Destroy_Types (Target);
          return;
       end if;
 
@@ -2836,6 +2834,7 @@ package body Trans.Chap8 is
       then
          Val := Chap7.Translate_Expression (Value, Target_Type);
          Gen_Simple_Signal_Assign (Targ, Target_Type, Val);
+         Chap9.Destroy_Types (Target);
          return;
       end if;
 
@@ -2934,6 +2933,7 @@ package body Trans.Chap8 is
 
          Close_Temp;
       end;
+      Chap9.Destroy_Types (Target);
    end Translate_Signal_Assignment_Statement;
 
    procedure Translate_Statement (Stmt : Iir)

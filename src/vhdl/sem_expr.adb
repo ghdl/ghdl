@@ -3640,7 +3640,9 @@ package body Sem_Expr is
                Check_Read (Arg);
                Set_Expression (Expr, Arg);
                Arg_Type := Get_Type (Arg);
+
             when Iir_Kind_Allocator_By_Subtype =>
+               --  Analyze subtype indication.
                Arg := Get_Subtype_Indication (Expr);
                Arg := Sem_Types.Sem_Subtype_Indication (Arg);
                Set_Subtype_Indication (Expr, Arg);
@@ -3648,6 +3650,10 @@ package body Sem_Expr is
                if Arg = Null_Iir or else Is_Error (Arg) then
                   return Null_Iir;
                end if;
+               if Is_Anonymous_Type_Definition (Arg) then
+                  Set_Allocator_Subtype (Expr, Get_Subtype_Indication (Expr));
+               end if;
+
                --  LRM93 7.3.6
                --  If an allocator includes a subtype indication and if the
                --  type of the object created is an array type, then the

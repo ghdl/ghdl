@@ -2180,8 +2180,7 @@ package body Trans.Chap3 is
       Pop_Identifier_Prefix (Mark);
    end Translate_Named_Type_Definition;
 
-   procedure Translate_Anonymous_Type_Definition
-     (Def : Iir; Transient : Boolean)
+   procedure Translate_Anonymous_Type_Definition (Def : Iir)
    is
       Type_Info : constant Type_Info_Acc := Get_Info (Def);
       Mark      : Id_Mark_Type;
@@ -2191,9 +2190,6 @@ package body Trans.Chap3 is
       end if;
       Push_Identifier_Prefix_Uniq (Mark);
       Chap3.Translate_Type_Definition (Def, False);
-      if Transient then
-         Add_Transient_Type_In_Temp (Def);
-      end if;
       Pop_Identifier_Prefix (Mark);
    end Translate_Anonymous_Type_Definition;
 
@@ -2550,7 +2546,7 @@ package body Trans.Chap3 is
       Maybe_Call_Type_Builder (Res, Arr_Type);
    end Allocate_Fat_Array_Base;
 
-   procedure Create_Array_Subtype (Sub_Type : Iir; Transient : Boolean)
+   procedure Create_Array_Subtype (Sub_Type : Iir)
    is
       Mark : Id_Mark_Type;
    begin
@@ -2558,9 +2554,6 @@ package body Trans.Chap3 is
       if Get_Info (Sub_Type) = null then
          --  Minimal subtype creation.
          Translate_Type_Definition (Sub_Type, False);
-         if Transient then
-            Add_Transient_Type_In_Temp (Sub_Type);
-         end if;
       end if;
       --  Force creation of variables.
       Chap3.Create_Array_Subtype_Bounds_Var (Sub_Type, True);

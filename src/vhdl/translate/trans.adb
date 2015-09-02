@@ -1768,9 +1768,6 @@ package body Trans is
          --  Declaration of the variable for the stack2 mark.  The stack2 will
          --  be released at the end of the scope (if used).
          Stack2_Mark     : O_Dnode;
-
-         --  List of transient types to be removed at the end of the scope.
-         Transient_Types : Iir;
       end record;
       --  Current level.
       Temp_Level : Temp_Level_Acc := null;
@@ -1796,8 +1793,7 @@ package body Trans is
                    Level => 0,
                    Id => 0,
                    Emitted => False,
-                   Stack2_Mark => O_Dnode_Null,
-                   Transient_Types => Null_Iir);
+                   Stack2_Mark => O_Dnode_Null);
          if Temp_Level /= null then
             L.Level := Temp_Level.Level + 1;
          end if;
@@ -1813,42 +1809,6 @@ package body Trans is
          Open_Temp;
          Temp_Level.Emitted := True;
       end Open_Local_Temp;
-
-      procedure Add_Transient_Type_In_Temp (Atype : Iir)
-      is
-         Type_Info : Type_Info_Acc;
-      begin
-         Type_Info := Get_Info (Atype);
-         Type_Info.Type_Transient_Chain := Temp_Level.Transient_Types;
-         Temp_Level.Transient_Types := Atype;
-      end Add_Transient_Type_In_Temp;
-
-      --  Some expressions may be evaluated several times in different
-      --  contexts.  Type info created for these expressions may not be
-      --  shared between these contexts.
-      procedure Destroy_Type_Info (Atype : Iir)
-      is
-         Type_Info : Type_Info_Acc;
-      begin
-         Type_Info := Get_Info (Atype);
-         Free_Type_Info (Type_Info);
-         Clear_Info (Atype);
-      end Destroy_Type_Info;
-
-      procedure Release_Transient_Types (Chain : in out Iir) is
-         N_Atype : Iir;
-      begin
-         while Chain /= Null_Iir loop
-            N_Atype := Get_Info (Chain).Type_Transient_Chain;
-            Destroy_Type_Info (Chain);
-            Chain := N_Atype;
-         end loop;
-      end Release_Transient_Types;
-
-      procedure Destroy_Local_Transient_Types is
-      begin
-         Release_Transient_Types (Temp_Level.Transient_Types);
-      end Destroy_Local_Transient_Types;
 
       function Has_Stack2_Mark return Boolean is
       begin
@@ -1887,9 +1847,6 @@ package body Trans is
          if Temp_Level.Emitted then
             Finish_Declare_Stmt;
          end if;
-
-         --  Destroy transcient types.
-         Release_Transient_Types (Temp_Level.Transient_Types);
 
          --  Unlink temp_level.
          L := Temp_Level;

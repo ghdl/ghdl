@@ -37,5 +37,6 @@ package Trans.Chap9 is
    --  This is not the case for elaborator subprogram (which may references
    --  slices in the sensitivity or driver list) and the process subprg.
    procedure Destroy_Types (N : Iir);
+   procedure Destroy_Types_In_List (L : Iir_List);
 end Trans.Chap9;
 

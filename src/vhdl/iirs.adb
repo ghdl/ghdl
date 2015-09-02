@@ -1119,6 +1119,22 @@ package body Iirs is
       Set_Field3 (Lit, Atype);
    end Set_Literal_Subtype;
 
+   function Get_Allocator_Subtype (Lit : Iir) return Iir is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Allocator_Subtype (Get_Kind (Lit)),
+                     "no field Allocator_Subtype");
+      return Get_Field3 (Lit);
+   end Get_Allocator_Subtype;
+
+   procedure Set_Allocator_Subtype (Lit : Iir; Atype : Iir) is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Allocator_Subtype (Get_Kind (Lit)),
+                     "no field Allocator_Subtype");
+      Set_Field3 (Lit, Atype);
+   end Set_Allocator_Subtype;
+
    function Get_Entity_Class (Target : Iir) return Token_Type is
    begin
       pragma Assert (Target /= Null_Iir);

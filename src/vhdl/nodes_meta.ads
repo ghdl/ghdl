@@ -97,6 +97,7 @@ package Nodes_Meta is
       Field_Literal_Origin,
       Field_Range_Origin,
       Field_Literal_Subtype,
+      Field_Allocator_Subtype,
       Field_Entity_Class,
       Field_Entity_Name_List,
       Field_Attribute_Designator,
@@ -574,6 +575,7 @@ package Nodes_Meta is
    function Has_Literal_Origin (K : Iir_Kind) return Boolean;
    function Has_Range_Origin (K : Iir_Kind) return Boolean;
    function Has_Literal_Subtype (K : Iir_Kind) return Boolean;
+   function Has_Allocator_Subtype (K : Iir_Kind) return Boolean;
    function Has_Entity_Class (K : Iir_Kind) return Boolean;
    function Has_Entity_Name_List (K : Iir_Kind) return Boolean;
    function Has_Attribute_Designator (K : Iir_Kind) return Boolean;

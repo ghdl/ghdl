@@ -225,7 +225,7 @@ package body Trans.Chap7 is
       List      : O_Array_Aggr_List;
       Res       : O_Cnode;
    begin
-      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type, False);
+      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type);
       Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
 
       Translate_Static_Aggregate_1
@@ -243,7 +243,7 @@ package body Trans.Chap7 is
       List      : O_Array_Aggr_List;
       Res       : O_Cnode;
    begin
-      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type, False);
+      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type);
       Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
 
       for I in Natural loop
@@ -267,7 +267,7 @@ package body Trans.Chap7 is
       List         : O_Array_Aggr_List;
       Res          : O_Cnode;
    begin
-      Chap3.Translate_Anonymous_Type_Definition (Lit_Type, True);
+      Chap3.Translate_Anonymous_Type_Definition (Lit_Type);
       Arr_Type := Get_Ortho_Type (Lit_Type, Mode_Value);
 
       Start_Array_Aggr (List, Arr_Type);
@@ -413,7 +413,7 @@ package body Trans.Chap7 is
       List         : O_Array_Aggr_List;
       Res          : O_Cnode;
    begin
-      Chap3.Translate_Anonymous_Type_Definition (Str_Type, True);
+      Chap3.Translate_Anonymous_Type_Definition (Str_Type);
 
       Start_Array_Aggr (List, Get_Ortho_Type (Str_Type, Mode_Value));
 
@@ -440,7 +440,7 @@ package body Trans.Chap7 is
       if Get_Constraint_State (Str_Type) = Fully_Constrained
         and then Get_Type_Staticness (Get_Index_Type (Str_Type, 0)) = Locally
       then
-         Chap3.Create_Array_Subtype (Str_Type, False);
+         Chap3.Create_Array_Subtype (Str_Type);
          case Get_Kind (Str) is
             when Iir_Kind_String_Literal8 =>
                Res := Translate_Static_String_Literal8 (Str);
@@ -3126,8 +3126,7 @@ package body Trans.Chap7 is
                A_Range : Mnode;
             begin
                --  Evaluate the range.
-               Chap3.Translate_Anonymous_Type_Definition
-                 (Subaggr_Type, True);
+               Chap3.Translate_Anonymous_Type_Definition (Subaggr_Type);
 
                A_Range :=
                  Dv2M (Create_Temp (Rinfo.T.Range_Type), Rinfo, Mode_Value,
@@ -3234,7 +3233,7 @@ package body Trans.Chap7 is
 
       --  FIXME: creating aggregate subtype is expensive and rarely used.
       --  (one of the current use - only ? - is check_array_match).
-      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type, False);
+      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type);
    end Translate_Array_Aggregate;
 
    procedure Translate_Aggregate
@@ -3367,7 +3366,7 @@ package body Trans.Chap7 is
             begin
                Sub_Type := Get_Subtype_Indication (Expr);
                Sub_Type := Get_Type_Of_Subtype_Indication (Sub_Type);
-               Chap3.Create_Array_Subtype (Sub_Type, True);
+               Chap3.Create_Array_Subtype (Sub_Type);
 
                Ptr := Create_Temp (A_Info.Ortho_Type (Mode_Value));
 
@@ -3825,7 +3824,7 @@ package body Trans.Chap7 is
 
                if Get_Kind (Aggr_Type) = Iir_Kind_Array_Subtype_Definition
                then
-                  Chap3.Create_Array_Subtype (Aggr_Type, True);
+                  Chap3.Create_Array_Subtype (Aggr_Type);
                end if;
 
                --  FIXME: this may be not necessary

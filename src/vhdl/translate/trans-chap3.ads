@@ -41,16 +41,14 @@ package Trans.Chap3 is
      (Def : Iir; With_Vars : Boolean := True);
 
    procedure Translate_Named_Type_Definition (Def : Iir; Id : Name_Id);
-   procedure Translate_Anonymous_Type_Definition
-     (Def : Iir; Transient : Boolean);
+   procedure Translate_Anonymous_Type_Definition (Def : Iir);
 
    --  Translate subprograms for types.
    procedure Translate_Type_Subprograms (Decl : Iir);
 
    procedure Create_Type_Definition_Type_Range (Def : Iir);
    function Create_Static_Array_Subtype_Bounds
-     (Def : Iir_Array_Subtype_Definition)
-         return O_Cnode;
+     (Def : Iir_Array_Subtype_Definition) return O_Cnode;
 
    --  Same as Translate_type_definition only for std.standard.boolean and
    --  std.standard.bit.
@@ -222,7 +220,7 @@ package Trans.Chap3 is
 
    --  Create the bounds for SUB_TYPE.
    --  SUB_TYPE is expected to be a non-static, anonymous array type.
-   procedure Create_Array_Subtype (Sub_Type : Iir; Transient : Boolean);
+   procedure Create_Array_Subtype (Sub_Type : Iir);
 
    --  Return TRUE if VALUE is not is the range specified by ATYPE.
    --  VALUE must be stable.

@@ -1103,9 +1103,6 @@ package Trans is
             --  ortho_type.
             Ortho_Ptr_Type : O_Tnode_Array;
 
-            --  Chain of temporary types to be destroyed at end of scope.
-            Type_Transient_Chain : Iir := Null_Iir;
-
             --  More info according to the type.
             T : Ortho_Info_Type_Type;
 
@@ -1723,19 +1720,6 @@ package Trans is
       --   stack2 can be released.
       procedure Create_Temp_Stack2_Mark;
 
-      --  Some constructs (slices, aggregates) implicitly define a subtype.
-      --  This subtype (and its bounds) is created dynamically and its life
-      --  is short.
-      --  However, in some cases (default expression, target of signal
-      --  assignment) the construct may be evaluated several time (eg: to
-      --  compute the drivers).  In that case, bounds are created many times
-      --  and therefore must be forgotten at the end of its life to avoid any
-      --  incorrect reuse.
-      --
-      --  Add ATYPE in the chain of types to be destroyed at the end of the
-      --  temp scope.
-      procedure Add_Transient_Type_In_Temp (Atype : Iir);
-
       --  Close the temporary region.
       procedure Close_Temp;
 
@@ -1743,8 +1727,6 @@ package Trans is
       --  only within a subprogram, to use the declare region of the
       --  subprogram.
       procedure Open_Local_Temp;
-      --  Destroy transient types created in a temporary region.
-      procedure Destroy_Local_Transient_Types;
       procedure Close_Local_Temp;
 
       --  Return TRUE if stack2 will be released.  Used for fine-tuning only
