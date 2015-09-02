@@ -621,9 +621,9 @@ package body Ortho_Code.Types is
      (Elements : in out O_Element_List; Res : out O_Tnode)
    is
    begin
+      Tnodes.Table (Elements.Res).Align := Elements.Align;
       Tnodes.Table (Elements.Res).Size := Do_Align (Elements.Off,
                                                     Elements.Res);
-      Tnodes.Table (Elements.Res).Align := Elements.Align;
       Tnodes.Table (Elements.Res + 1) := To_Tnode_Common
         (Tnode_Record'(Fields => Elements.First_Field,
                        Nbr_Fields => Elements.Nbr));

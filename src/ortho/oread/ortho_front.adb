@@ -1040,6 +1040,9 @@ package body Ortho_Front is
             begin
                Next_Token;
                Base_Node := Parse_Type;
+               if Base_Node.Kind /= Type_Array then
+                  Parse_Error ("subarray base type is not an array type");
+               end if;
                Expect (Tok_Left_Brack);
                Next_Token;
                Res_Type := New_Constrained_Array_Type
