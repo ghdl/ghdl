@@ -643,18 +643,18 @@ package body Trans.Chap5 is
                   end if;
                when Iir_Kind_Association_Element_Open =>
                   declare
-                     Actual_Type : Iir;
+                     Value : constant Iir := Get_Default_Value (Formal_Base);
+                     Actual_Type : constant Iir := Get_Type (Value);
                      Bounds      : Mnode;
                      Formal_Node : Mnode;
                   begin
-                     Actual_Type :=
-                       Get_Type (Get_Default_Value (Formal_Base));
                      Chap3.Create_Array_Subtype (Actual_Type);
                      Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
                      Formal_Node := Chap6.Translate_Name (Formal);
                      New_Assign_Stmt
                        (M2Lp (Chap3.Get_Array_Bounds (Formal_Node)),
                         M2Addr (Bounds));
+                     Chap9.Destroy_Types (Value);
                   end;
                when Iir_Kind_Association_Element_By_Individual =>
                   declare

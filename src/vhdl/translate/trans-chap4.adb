@@ -26,6 +26,7 @@ with Trans.Chap3;
 with Trans.Chap5;
 with Trans.Chap6;
 with Trans.Chap7;
+with Trans.Chap9;
 with Trans.Chap14;
 with Trans.Rtis;
 with Trans.Helpers2; use Trans.Helpers2;
@@ -1002,7 +1003,7 @@ package body Trans.Chap4 is
       Sig_Type  : constant Iir := Get_Type (Sig);
       Base_Decl : constant Iir := Get_Object_Prefix (Sig);
       Name_Node : Mnode;
-      Val       : Iir;
+      Value     : Iir;
       Data      : Elab_Signal_Data;
    begin
       New_Debug_Line_Stmt (Get_Line_Number (Sig));
@@ -1030,12 +1031,12 @@ package body Trans.Chap4 is
       if Decl = Base_Decl then
          Data.Already_Resolved := False;
          Data.Check_Null := Check_Null;
-         Val := Get_Default_Value (Base_Decl);
-         if Val = Null_Iir then
+         Value := Get_Default_Value (Base_Decl);
+         if Value = Null_Iir then
             Data.Has_Val := False;
          else
             Data.Has_Val := True;
-            Data.Val := E2M (Chap7.Translate_Expression (Val, Sig_Type),
+            Data.Val := E2M (Chap7.Translate_Expression (Value, Sig_Type),
                              Get_Info (Sig_Type),
                              Mode_Value);
          end if;
@@ -1046,10 +1047,15 @@ package body Trans.Chap4 is
          Data.Already_Resolved := True;
          Data.Has_Val := False;
          Data.Check_Null := False;
+         Value := Null_Iir;
       end if;
       Elab_Signal (Name_Node, Sig_Type, Data);
 
       Close_Temp;
+
+      if Value /= Null_Iir then
+         Chap9.Destroy_Types (Value);
+      end if;
    end Elab_Signal_Declaration_Object;
 
    procedure Elab_Signal_Declaration
