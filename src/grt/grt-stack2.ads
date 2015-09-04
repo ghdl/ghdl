@@ -26,18 +26,41 @@ with System;
 with Grt.Types; use Grt.Types;
 
 --  Secondary stack management.
+--  The secondary stack is used by vhdl to return object from function whose
+--  type is unconstrained.  This is less efficient than returning the object
+--  on the stack, but compatible with any ABI.
+--
+--  The management is very simple: mark and release.  Allocate reserved a
+--  chunk of memory from the secondary stack, Release deallocate all the
+--  memory allocated since the mark.
+
 package Grt.Stack2 is
+   --  Designate a secondary stack.
+   type Stack2_Ptr is private;
+
+   --  Indicator for a non-existing secondary stack.  Create never return that
+   --  value.
+   Null_Stack2_Ptr : constant Stack2_Ptr;
+
+   --  Type of a mark.
+   type Mark_Id is private;
+
+   --  Get the current mark, which indicate a current amount of allocated
+   --  memory.
+   function Mark (S : Stack2_Ptr) return Mark_Id;
+
+   --  Deallocate (free) all the memory allocated since MARK.
+   procedure Release (S : Stack2_Ptr; Mark : Mark_Id);
+
+   --  Allocate SIZE bytes (aligned on the maximum alignment) on stack S.
+   function Allocate (S : Stack2_Ptr; Size : Ghdl_Index_Type)
+                     return System.Address;
+
+   --  Create a secondary stack.
+   function Create return Stack2_Ptr;
+private
    type Stack2_Ptr is new System.Address;
    Null_Stack2_Ptr : constant Stack2_Ptr := Stack2_Ptr (System.Null_Address);
 
    type Mark_Id is new Integer_Address;
-
-   function Mark (S : Stack2_Ptr) return Mark_Id;
-   procedure Release (S : Stack2_Ptr; Mark : Mark_Id);
-   function Allocate (S : Stack2_Ptr; Size : Ghdl_Index_Type)
-     return System.Address;
-   function Create return Stack2_Ptr;
-
-   --  Check S is empty.
-   procedure Check_Empty (S : Stack2_Ptr);
 end Grt.Stack2;

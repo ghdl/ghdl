@@ -125,12 +125,6 @@ package Grt.Options is
    --  Set by --stop-delta=XXX to stop the simulation after XXX delta cycles.
    Stop_Delta : Natural := 5000;
 
-   --  The default stack size for non-sensitized processes.
-   Stack_Size : Natural := 8 * 1024;
-
-   --  The maximum stack size for non-sensitized processes.
-   Stack_Max_Size : Natural := 128 * 1024;
-
    --  Set by --no-run
    --  If set, do not simulate, only elaborate.
    Flag_No_Run : Boolean := False;
@@ -166,7 +160,5 @@ package Grt.Options is
    First_Generic_Override : Generic_Override_Acc;
    Last_Generic_Override : Generic_Override_Acc;
 private
-   pragma Export (C, Stack_Size);
-   pragma Export (C, Stack_Max_Size);
    pragma Export (C, Nbr_Threads, "grt_nbr_threads");
 end Grt.Options;

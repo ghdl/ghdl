@@ -80,27 +80,10 @@ package body Grt.Unithread is
       return Current_Process;
    end Get_Current_Process;
 
-   Stack2 : Stack2_Ptr;
+   Common_Stack2 : constant Stack2_Ptr := Create;
 
-   function Get_Stack2 return Stack2_Ptr is
+   function Get_Common_Stack2 return Stack2_Ptr is
    begin
-      return Stack2;
-   end Get_Stack2;
-
-   procedure Set_Stack2 (St : Stack2_Ptr) is
-   begin
-      Stack2 := St;
-   end Set_Stack2;
-
-   Main_Stack : Stack_Type;
-
-   function Get_Main_Stack return Stack_Type is
-   begin
-      return Main_Stack;
-   end Get_Main_Stack;
-
-   procedure Set_Main_Stack (St : Stack_Type) is
-   begin
-      Main_Stack := St;
-   end Set_Main_Stack;
+      return Common_Stack2;
+   end Get_Common_Stack2;
 end Grt.Unithread;

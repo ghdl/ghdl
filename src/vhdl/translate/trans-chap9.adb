@@ -97,7 +97,10 @@ package body Trans.Chap9 is
 
    procedure Translate_Process_Statement (Proc : Iir; Base : Block_Info_Acc)
    is
+      use Trans.Chap8;
       Info       : constant Proc_Info_Acc := Get_Info (Proc);
+      Is_Non_Sensitized : constant Boolean :=
+        Get_Kind (Proc) = Iir_Kind_Process_Statement;
       Inter_List : O_Inter_List;
       Instance   : O_Dnode;
    begin
@@ -112,8 +115,17 @@ package body Trans.Chap9 is
       --  Push scope for architecture declarations.
       Set_Scope_Via_Param_Ptr (Base.Block_Scope, Instance);
 
+      if Is_Non_Sensitized then
+         Chap8.State_Entry (Info);
+      end if;
+
       Chap8.Translate_Statements_Chain
         (Get_Sequential_Statement_Chain (Proc));
+
+      if Is_Non_Sensitized then
+         Chap8.State_Jump (State_Init);
+         Chap8.State_Leave (Proc);
+      end if;
 
       Clear_Scope (Base.Block_Scope);
       Pop_Local_Factory;
@@ -231,6 +243,19 @@ package body Trans.Chap9 is
       Push_Identifier_Prefix (Mark, Get_Identifier (Proc));
       Push_Instance_Factory (Info.Process_Scope'Access);
       Chap4.Translate_Declaration_Chain (Proc);
+
+      if Get_Kind (Proc) = Iir_Kind_Process_Statement then
+         --  The state variable.
+         Info.Process_State := Create_Var (Create_Var_Identifier ("STATE"),
+                                           Ghdl_Index_Type, O_Storage_Local);
+
+         --  Add declarations for statements (iterator, call) and state.
+         Chap4.Translate_Statements_Chain_State_Declaration
+           (Get_Sequential_Statement_Chain (Proc),
+            Info.Process_Locvar_Scope'Access);
+
+         Add_Scope_Field (Wki_Locvars, Info.Process_Locvar_Scope);
+      end if;
 
       if Flag_Direct_Drivers then
          --  Create direct drivers.
@@ -1311,6 +1336,10 @@ package body Trans.Chap9 is
          if List_Orig = Iir_List_All then
             Destroy_Iir_List (List);
          end if;
+      else
+         --  Initialize state.
+         New_Assign_Stmt
+           (Get_Var (Info.Process_State), New_Lit (Ghdl_Index_0));
       end if;
    end Elab_Process;
 

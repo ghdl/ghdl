@@ -160,8 +160,6 @@ package body Grt.Options is
       P ("       X is expressed as a time value, without spaces: 1ns, ps...");
       P (" --stop-delta=X    stop the simulation cycle after X delta");
       P (" --expect-failure  invert exit status");
-      P (" --stack-size=X    set the stack size of non-sensitized processes");
-      P (" --stack-max-size=X  set the maximum stack size");
       P (" --no-run          do not simulate, only elaborate");
       --  P (" --threads=N       use N threads for simulation");
       Grt.Hooks.Call_Help_Hooks;
@@ -209,39 +207,6 @@ package body Grt.Options is
          Pos := Pos + 1;
       end loop;
    end Extract_Integer;
-
-   function Extract_Size (Str : String; Option_Name : String) return Natural
-   is
-      Ok : Boolean;
-      Val : Integer_64;
-      Pos : Natural;
-   begin
-      Extract_Integer (Str, Ok, Val, Pos);
-      if not Ok then
-         Val := 1;
-      end if;
-      if Pos > Str'Last then
-         --  No suffix.
-         if Val > Integer_64(Natural'Last) then
-            Error_C ("Size exceeds limit for option ");
-            Error_E (Option_Name);
-         else
-            return Natural (Val);
-         end if;
-      end if;
-      if Pos = Str'Last
-        or else (Pos + 1 = Str'Last
-                 and then (Str (Pos + 1) = 'b' or Str (Pos + 1) = 'o'))
-      then
-         if Str (Pos) = 'k' or Str (Pos) = 'K' then
-            return Natural (Val) * 1024;
-         elsif Str (Pos) = 'm' or Str (Pos) = 'M' then
-            return Natural (Val) * 1024 * 1024;
-         end if;
-      end if;
-      Error_C ("bad memory unit for option ");
-      Error_E (Option_Name);
-   end Extract_Size;
 
    function To_Lower (C : Character) return Character is
    begin
@@ -434,17 +399,9 @@ package body Grt.Options is
       elsif Option = "--expect-failure" then
          Expect_Failure := True;
       elsif Len >= 13 and then Option (1 .. 13) = "--stack-size=" then
-         Stack_Size := Extract_Size
-           (Option (14 .. Len), "--stack-size");
-         if Stack_Size > Stack_Max_Size then
-            Stack_Max_Size := Stack_Size;
-         end if;
+         Warning ("option --stack-size is deprecated");
       elsif Len >= 17 and then Option (1 .. 17) = "--stack-max-size=" then
-         Stack_Max_Size := Extract_Size
-           (Option (18 .. Len), "--stack-size");
-         if Stack_Size > Stack_Max_Size then
-            Stack_Size := Stack_Max_Size;
-         end if;
+         Warning ("option --stack-max-size is deprecated");
       elsif Len >= 11 and then Option (1 .. 11) = "--activity=" then
          if Option (12 .. Len) = "none" then
             Flag_Activity := Activity_None;

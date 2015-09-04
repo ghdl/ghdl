@@ -26,8 +26,7 @@ with Trans.Foreach_Non_Composite;
 package body Trans.Helpers2 is
    use Trans.Helpers;
 
-   procedure Copy_Fat_Pointer (D : Mnode; S: Mnode)
-   is
+   procedure Copy_Fat_Pointer (D : Mnode; S: Mnode) is
    begin
       New_Assign_Stmt (M2Lp (Chap3.Get_Array_Base (D)),
                        M2Addr (Chap3.Get_Array_Base (S)));

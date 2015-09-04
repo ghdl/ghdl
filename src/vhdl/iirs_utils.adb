@@ -350,6 +350,25 @@ package body Iirs_Utils is
       end if;
    end Is_Signal_Name;
 
+   function Is_Signal_Object (Name : Iir) return Boolean
+   is
+      Adecl: Iir;
+   begin
+      Adecl := Get_Object_Prefix (Name, True);
+      case Get_Kind (Adecl) is
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kinds_Signal_Attribute =>
+            return True;
+         when Iir_Kind_Object_Alias_Declaration =>
+            --  Must have been handled by Get_Object_Prefix.
+            raise Internal_Error;
+         when others =>
+            return False;
+      end case;
+   end Is_Signal_Object;
+
    function Get_Association_Interface (Assoc : Iir) return Iir
    is
       Formal : Iir;
@@ -1200,24 +1219,6 @@ package body Iirs_Utils is
             Error_Kind ("get_entity_from_entity_aspect", Aspect);
       end case;
    end Get_Entity_From_Entity_Aspect;
-
-   function Is_Signal_Object (Name : Iir) return Boolean
-   is
-      Adecl: Iir;
-   begin
-      Adecl := Get_Object_Prefix (Name, True);
-      case Get_Kind (Adecl) is
-         when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kinds_Signal_Attribute =>
-            return True;
-         when Iir_Kind_Object_Alias_Declaration =>
-            raise Internal_Error;
-         when others =>
-            return False;
-      end case;
-   end Is_Signal_Object;
 
    --  LRM08 4.7 Package declarations
    --  If the package header is empty, the package declared by a package

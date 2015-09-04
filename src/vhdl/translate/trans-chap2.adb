@@ -29,6 +29,7 @@ with Trans.Chap5;
 with Trans.Chap6;
 with Trans.Chap8;
 with Trans.Rtis;
+with Trans.Helpers2;
 with Trans_Decls; use Trans_Decls;
 with Translation; use Translation;
 
@@ -78,36 +79,6 @@ package body Trans.Chap2 is
       end if;
    end Push_Subprg_Identifier;
 
-   procedure Translate_Subprogram_Interfaces (Spec : Iir)
-   is
-      Inter : Iir;
-      Mark  : Id_Mark_Type;
-   begin
-      --  Set the identifier prefix with the subprogram identifier and
-      --  overload number if any.
-      Push_Subprg_Identifier (Spec, Mark);
-
-      --  Translate interface types.
-      Inter := Get_Interface_Declaration_Chain (Spec);
-      while Inter /= Null_Iir loop
-         Chap3.Translate_Object_Subtype (Inter);
-         Inter := Get_Chain (Inter);
-      end loop;
-      Pop_Identifier_Prefix (Mark);
-   end Translate_Subprogram_Interfaces;
-
-   procedure Elab_Subprogram_Interfaces (Spec : Iir)
-   is
-      Inter : Iir;
-   begin
-      --  Translate interface types.
-      Inter := Get_Interface_Declaration_Chain (Spec);
-      while Inter /= Null_Iir loop
-         Chap3.Elab_Object_Subtype (Get_Type (Inter));
-         Inter := Get_Chain (Inter);
-      end loop;
-   end Elab_Subprogram_Interfaces;
-
    --  Return the type of a subprogram interface.
    --  Return O_Tnode_Null if the parameter is passed through the
    --  interface record.
@@ -145,6 +116,76 @@ package body Trans.Chap2 is
       end if;
    end Translate_Interface_Type;
 
+   procedure Translate_Subprogram_Interfaces (Spec : Iir)
+   is
+      Inter : Iir;
+      Mark  : Id_Mark_Type;
+      Info  : Subprg_Info_Acc;
+      El_List : O_Element_List;
+      Arg_Info : Ortho_Info_Acc;
+   begin
+      --  Set the identifier prefix with the subprogram identifier and
+      --  overload number if any.
+      Push_Subprg_Identifier (Spec, Mark);
+
+      --  Translate interface types.
+      Inter := Get_Interface_Declaration_Chain (Spec);
+      while Inter /= Null_Iir loop
+         Chap3.Translate_Object_Subtype (Inter);
+         Inter := Get_Chain (Inter);
+      end loop;
+
+      if Get_Kind (Spec) = Iir_Kind_Procedure_Declaration then
+         --  Create the param record (except for foreign subprogram).
+         Info := Get_Info (Spec);
+         Inter := Get_Interface_Declaration_Chain (Spec);
+         if (Inter /= Null_Iir or else Get_Suspend_Flag (Spec))
+           and then not Get_Foreign_Flag (Spec)
+         then
+            Start_Record_Type (El_List);
+            while Inter /= Null_Iir loop
+               Arg_Info := Add_Info (Inter, Kind_Interface);
+               New_Record_Field (El_List, Arg_Info.Interface_Field,
+                                 Create_Identifier_Without_Prefix (Inter),
+                                 Translate_Interface_Type (Inter, False));
+               Inter := Get_Chain (Inter);
+            end loop;
+
+            if Get_Suspend_Flag (Spec) then
+               New_Record_Field (El_List, Info.Subprg_State_Field,
+                                 Get_Identifier ("STATE"), Ghdl_Index_Type);
+               New_Record_Field (El_List, Info.Subprg_Locvars_Field,
+                                 Get_Identifier ("FRAME"), Ghdl_Ptr_Type);
+            end if;
+
+            --  Declare the record type and an access to the record.
+            Finish_Record_Type (El_List, Info.Subprg_Params_Type);
+            New_Type_Decl (Create_Identifier ("PARAMSTYPE"),
+                           Info.Subprg_Params_Type);
+            Info.Subprg_Params_Ptr :=
+              New_Access_Type (Info.Subprg_Params_Type);
+            New_Type_Decl (Create_Identifier ("PARAMSPTR"),
+                           Info.Subprg_Params_Ptr);
+         else
+            Info.Subprg_Params_Type := O_Tnode_Null;
+            Info.Subprg_Params_Ptr := O_Tnode_Null;
+         end if;
+      end if;
+      Pop_Identifier_Prefix (Mark);
+   end Translate_Subprogram_Interfaces;
+
+   procedure Elab_Subprogram_Interfaces (Spec : Iir)
+   is
+      Inter : Iir;
+   begin
+      --  Translate interface types.
+      Inter := Get_Interface_Declaration_Chain (Spec);
+      while Inter /= Null_Iir loop
+         Chap3.Elab_Object_Subtype (Get_Type (Inter));
+         Inter := Get_Chain (Inter);
+      end loop;
+   end Elab_Subprogram_Interfaces;
+
    procedure Translate_Subprogram_Declaration (Spec : Iir)
    is
       Info : constant Subprg_Info_Acc := Get_Info (Spec);
@@ -155,7 +196,6 @@ package body Trans.Chap2 is
       Arg_Info : Ortho_Info_Acc;
       Tinfo : Type_Info_Acc;
       Interface_List : O_Inter_List;
-      El_List : O_Element_List;
       Mark : Id_Mark_Type;
       Rtype : Iir;
       Id : O_Ident;
@@ -213,33 +253,6 @@ package body Trans.Chap2 is
             Info.Res_Interface := O_Dnode_Null;
          end if;
       else
-         --  Create info for each interface of the procedure.
-         --  For parameters passed via copy and that needs a copy-out,
-         --  gather them in a record.  An access to the record is then
-         --  passed to the procedure.
-         Inter := Get_Interface_Declaration_Chain (Spec);
-         if Inter /= Null_Iir and then not Is_Foreign then
-            Start_Record_Type (El_List);
-            while Inter /= Null_Iir loop
-               Arg_Info := Add_Info (Inter, Kind_Interface);
-               New_Record_Field (El_List, Arg_Info.Interface_Field,
-                                 Create_Identifier_Without_Prefix (Inter),
-                                 Translate_Interface_Type (Inter, False));
-               Inter := Get_Chain (Inter);
-            end loop;
-            --  Declare the record type and an access to the record.
-            Finish_Record_Type (El_List, Info.Subprg_Params_Type);
-            New_Type_Decl (Create_Identifier ("PARAMSTYPE"),
-                           Info.Subprg_Params_Type);
-            Info.Subprg_Params_Ptr :=
-              New_Access_Type (Info.Subprg_Params_Type);
-            New_Type_Decl (Create_Identifier ("PARAMSPTR"),
-                           Info.Subprg_Params_Ptr);
-         else
-            Info.Subprg_Params_Type := O_Tnode_Null;
-            Info.Subprg_Params_Ptr := O_Tnode_Null;
-         end if;
-
          Start_Procedure_Decl (Interface_List, Id, Storage);
 
          if Info.Subprg_Params_Type /= O_Tnode_Null then
@@ -349,6 +362,12 @@ package body Trans.Chap2 is
       Spec : constant Iir := Get_Subprogram_Specification (Subprg);
       Info : constant Ortho_Info_Acc := Get_Info (Spec);
 
+      --  True if the subprogram is suspendable (can be true only for
+      --  procedures).
+      Has_Suspend : constant Boolean :=
+        Get_Kind (Spec) = Iir_Kind_Procedure_Declaration
+        and then Get_Suspend_Flag (Spec);
+
       Old_Subprogram : Iir;
       Mark           : Id_Mark_Type;
       Final          : Boolean;
@@ -390,39 +409,49 @@ package body Trans.Chap2 is
       Push_Subprg_Identifier (Spec, Mark);
       Restore_Local_Identifier (Info.Subprg_Local_Id);
 
-      if Has_Nested then
+      if Has_Nested or else Has_Suspend then
          --  Unnest subprograms.
          --  Create an instance for the local declarations.
          Push_Instance_Factory (Info.Subprg_Frame_Scope'Access);
          Add_Subprg_Instance_Field (Upframe_Field);
 
          if Info.Subprg_Params_Ptr /= O_Tnode_Null then
+            --  Field for the parameters structure
             Info.Subprg_Params_Var :=
-              Create_Var (Create_Var_Identifier ("RESULT"),
+              Create_Var (Create_Var_Identifier ("PARAMS"),
                           Info.Subprg_Params_Ptr);
+         else
+            --  Create fields for parameters.
+            --  FIXME: do it only if they are referenced in nested
+            --  subprograms.
+            declare
+               Inter      : Iir;
+               Inter_Info : Inter_Info_Acc;
+            begin
+               Inter := Get_Interface_Declaration_Chain (Spec);
+               while Inter /= Null_Iir loop
+                  Inter_Info := Get_Info (Inter);
+                  if Inter_Info.Interface_Node /= O_Dnode_Null then
+                     Inter_Info.Interface_Field :=
+                       Add_Instance_Factory_Field
+                       (Create_Identifier_Without_Prefix (Inter),
+                        Inter_Info.Interface_Type);
+                  end if;
+                  Inter := Get_Chain (Inter);
+               end loop;
+            end;
          end if;
 
-         --  Create fields for parameters.
-         --  FIXME: do it only if they are referenced in nested
-         --  subprograms.
-         declare
-            Inter      : Iir;
-            Inter_Info : Inter_Info_Acc;
-         begin
-            Inter := Get_Interface_Declaration_Chain (Spec);
-            while Inter /= Null_Iir loop
-               Inter_Info := Get_Info (Inter);
-               if Inter_Info.Interface_Node /= O_Dnode_Null then
-                  Inter_Info.Interface_Field :=
-                    Add_Instance_Factory_Field
-                      (Create_Identifier_Without_Prefix (Inter),
-                       Inter_Info.Interface_Type);
-               end if;
-               Inter := Get_Chain (Inter);
-            end loop;
-         end;
-
          Chap4.Translate_Declaration_Chain (Subprg);
+
+         if Has_Suspend then
+            --  Add declarations for statements (iterator, call) and state.
+            Chap4.Translate_Statements_Chain_State_Declaration
+              (Get_Sequential_Statement_Chain (Subprg),
+               Info.Subprg_Locvars_Scope'Access);
+            Add_Scope_Field (Wki_Locvars, Info.Subprg_Locvars_Scope);
+         end if;
+
          Pop_Instance_Factory (Info.Subprg_Frame_Scope'Access);
 
          New_Type_Decl (Create_Identifier ("_FRAMETYPE"),
@@ -466,18 +495,52 @@ package body Trans.Chap2 is
       --  There is a local scope for temporaries.
       Open_Local_Temp;
 
-      if not Has_Nested then
+      if not Has_Suspend and not Has_Nested then
          Chap4.Translate_Declaration_Chain (Subprg);
          Rtis.Generate_Subprogram_Body (Subprg);
          Chap4.Translate_Declaration_Chain_Subprograms (Subprg);
       else
-         New_Var_Decl (Frame, Wki_Frame, O_Storage_Local,
-                       Get_Scope_Type (Info.Subprg_Frame_Scope));
-
          New_Var_Decl (Frame_Ptr, Get_Identifier ("FRAMEPTR"),
                        O_Storage_Local, Frame_Ptr_Type);
-         New_Assign_Stmt (New_Obj (Frame_Ptr),
-                          New_Address (New_Obj (Frame), Frame_Ptr_Type));
+
+         if Has_Suspend then
+            New_Assign_Stmt
+              (New_Obj (Frame_Ptr),
+               New_Convert_Ov (New_Value_Selected_Acc_Value
+                                 (New_Obj (Info.Res_Interface),
+                                  Info.Subprg_Locvars_Field),
+                               Frame_Ptr_Type));
+
+            Chap8.State_Entry (Info);
+
+            --  Initial state: allocate frame.
+            New_Assign_Stmt
+              (New_Obj (Frame_Ptr),
+               Helpers2.Gen_Alloc
+                 (Alloc_Return,
+                  New_Lit
+                    (New_Sizeof (Get_Scope_Type (Info.Subprg_Frame_Scope),
+                                 Ghdl_Index_Type)),
+                  Frame_Ptr_Type));
+            New_Assign_Stmt
+              (New_Selected_Acc_Value (New_Obj (Info.Res_Interface),
+                                       Info.Subprg_Locvars_Field),
+               New_Convert_Ov (New_Obj_Value (Frame_Ptr),
+                               Ghdl_Ptr_Type));
+
+            --  Allocate the return state.  This IS NOT AN ASSERTION as the
+            --  State_Allocate function has a side-effect.
+            if Chap8.State_Allocate /= Chap8.State_Return then
+               raise Internal_Error;
+            end if;
+         else
+            --  Allocate the frame by declaring a local variable.
+            New_Var_Decl (Frame, Wki_Frame, O_Storage_Local,
+                          Get_Scope_Type (Info.Subprg_Frame_Scope));
+
+            New_Assign_Stmt (New_Obj (Frame_Ptr),
+                             New_Address (New_Obj (Frame), Frame_Ptr_Type));
+         end if;
 
          --  FIXME: use direct reference (ie Frame instead of Frame_Ptr)
          Set_Scope_Via_Param_Ptr (Info.Subprg_Frame_Scope, Frame_Ptr);
@@ -487,7 +550,7 @@ package body Trans.Chap2 is
            (Frame_Ptr, Upframe_Field, Info.Subprg_Instance);
 
          if Info.Subprg_Params_Type /= O_Tnode_Null then
-            --  Initialize the RESULT field
+            --  Initialize the PARAMS field
             New_Assign_Stmt (Get_Var (Info.Subprg_Params_Var),
                              New_Obj_Value (Info.Res_Interface));
             --  Do not reference the RESULT field in the subprogram body,
@@ -497,42 +560,43 @@ package body Trans.Chap2 is
          end if;
 
          --  Copy parameters to FRAME.
-         declare
-            Inter      : Iir;
-            Inter_Info : Inter_Info_Acc;
-         begin
-            Inter := Get_Interface_Declaration_Chain (Spec);
-            while Inter /= Null_Iir loop
-               Inter_Info := Get_Info (Inter);
-               if Inter_Info.Interface_Node /= O_Dnode_Null then
-                  New_Assign_Stmt
-                    (New_Selected_Element (New_Obj (Frame),
-                     Inter_Info.Interface_Field),
-                     New_Obj_Value (Inter_Info.Interface_Node));
+         if Info.Subprg_Params_Ptr = O_Tnode_Null then
+            declare
+               Inter      : Iir;
+               Inter_Info : Inter_Info_Acc;
+            begin
+               Inter := Get_Interface_Declaration_Chain (Spec);
+               while Inter /= Null_Iir loop
+                  Inter_Info := Get_Info (Inter);
+                  if Inter_Info.Interface_Node /= O_Dnode_Null then
+                     New_Assign_Stmt
+                       (New_Selected_Element (New_Obj (Frame),
+                                              Inter_Info.Interface_Field),
+                        New_Obj_Value (Inter_Info.Interface_Node));
 
-                  --  Forget the reference to the field in FRAME, so that
-                  --  this subprogram will directly reference the parameter
-                  --  (and not its copy in the FRAME).
-                  Inter_Info.Interface_Field := O_Fnode_Null;
-               end if;
-               Inter := Get_Chain (Inter);
-            end loop;
-         end;
+                     --  Forget the reference to the field in FRAME, so that
+                     --  this subprogram will directly reference the parameter
+                     --  (and not its copy in the FRAME).
+                     Inter_Info.Interface_Field := O_Fnode_Null;
+                  end if;
+                  Inter := Get_Chain (Inter);
+               end loop;
+            end;
+         end if;
+      end if;
+
+      Is_Prot := Is_Subprogram_Method (Spec);
+      if Is_Prot then
+         --  Lock the object.
+         Chap3.Call_Ghdl_Protected_Procedure (Get_Method_Type (Spec),
+                                              Ghdl_Protected_Enter);
       end if;
 
       Chap4.Elab_Declaration_Chain (Subprg, Final);
 
-      --  If finalization is required, create a dummy loop around the
-      --  body and convert returns into exit out of this loop.
-      --  If the subprogram is a function, also create a variable for the
-      --  result.
-      Is_Prot := Is_Subprogram_Method (Spec);
+      --  If finalization is required and if the subprogram is a function,
+      --  create a variable for the result.
       if Final or Is_Prot then
-         if Is_Prot then
-            --  Lock the object.
-            Chap3.Call_Ghdl_Protected_Procedure (Get_Method_Type (Spec),
-                                                 Ghdl_Protected_Enter);
-         end if;
          Is_Ortho_Func := Is_Subprogram_Ortho_Function (Spec);
          if Is_Ortho_Func then
             New_Var_Decl
@@ -540,6 +604,11 @@ package body Trans.Chap2 is
                O_Storage_Local,
                Get_Ortho_Type (Get_Return_Type (Spec), Mode_Value));
          end if;
+      end if;
+
+      --  If finalization is required, create a dummy loop around the
+      --  body and convert returns into exit out of this loop.
+      if not Has_Suspend and then (Final or Is_Prot) then
          Start_Loop_Stmt (Info.Subprg_Exit);
       end if;
 
@@ -549,10 +618,14 @@ package body Trans.Chap2 is
         (Get_Sequential_Statement_Chain (Subprg));
       Current_Subprogram := Old_Subprogram;
 
-      if Final or Is_Prot then
+      if Has_Suspend or Final or Is_Prot then
          --  Create a barrier to catch missing return statement.
          if Get_Kind (Spec) = Iir_Kind_Procedure_Declaration then
-            New_Exit_Stmt (Info.Subprg_Exit);
+            if Has_Suspend then
+               Chap8.State_Jump (Chap8.State_Return);
+            else
+               New_Exit_Stmt (Info.Subprg_Exit);
+            end if;
          else
             if not Has_Return then
                --  Missing return
@@ -560,7 +633,11 @@ package body Trans.Chap2 is
                  (Subprg, Chap6.Prg_Err_Missing_Return);
             end if;
          end if;
-         Finish_Loop_Stmt (Info.Subprg_Exit);
+         if Has_Suspend then
+            Chap8.State_Start (Chap8.State_Return);
+         else
+            Finish_Loop_Stmt (Info.Subprg_Exit);
+         end if;
          Chap4.Final_Declaration_Chain (Subprg, False);
 
          if Is_Prot then
@@ -568,6 +645,12 @@ package body Trans.Chap2 is
             Chap3.Call_Ghdl_Protected_Procedure (Get_Method_Type (Spec),
                                                  Ghdl_Protected_Leave);
          end if;
+
+         if Has_Suspend then
+            Chap8.State_Suspend (Chap8.State_Return);
+            Chap8.State_Leave (Spec);
+         end if;
+
          if Is_Ortho_Func then
             New_Return_Stmt (New_Obj_Value (Info.Subprg_Result));
          end if;
@@ -896,6 +979,9 @@ package body Trans.Chap2 is
                Subprg_Params_Var => Instantiate_Var (Src.Subprg_Params_Var),
                Subprg_Params_Type => Src.Subprg_Params_Type,
                Subprg_Params_Ptr => Src.Subprg_Params_Ptr,
+               Subprg_State_Field => Src.Subprg_State_Field,
+               Subprg_Locvars_Field => Src.Subprg_Locvars_Field,
+               Subprg_Locvars_Scope => Src.Subprg_Locvars_Scope,
                Subprg_Frame_Scope => Dest.Subprg_Frame_Scope,
                Subprg_Instance => Instantiate_Subprg_Instance
                  (Src.Subprg_Instance),

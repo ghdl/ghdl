@@ -45,63 +45,22 @@ endif
 GRT_ELF_OPTS:=-Wl,--version-script=@/grt.ver -Wl,--export-dynamic
 
 # Set target files.
-ifeq ($(filter-out i%86 linux,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=i386.o linux.o times.o
-  GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
-endif
-ifeq ($(filter-out x86_64 linux,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=amd64.o linux.o times.o
-  GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
-endif
-ifeq ($(filter-out i%86 netbsd,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=i386.o linux.o times.o
-  GRT_EXTRA_LIB=-lm $(GRT_ELF_OPTS)
-endif
-ifeq ($(filter-out x86_64 netbsd,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=amd64.o linux.o times.o
-  GRT_EXTRA_LIB=-lm $(GRT_ELF_OPTS)
-endif
-ifeq ($(filter-out i%86 freebsd%,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=i386.o linux.o times.o
-  GRT_EXTRA_LIB=-lm $(GRT_ELF_OPTS)
-  ADAC=ada
-endif
-ifeq ($(filter-out x86_64 freebsd% dragonfly%,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=amd64.o linux.o times.o
-  GRT_EXTRA_LIB=-lm $(GRT_ELF_OPTS)
-  ADAC=ada
-endif
-ifeq ($(filter-out i%86 darwin%,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=i386.o linux.o times.o
-  GRT_EXTRA_LIB=
-endif
-ifeq ($(filter-out x86_64 darwin%,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=amd64.o linux.o times.o
-  GRT_EXTRA_LIB=
-endif
-ifeq ($(filter-out sparc solaris%,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=sparc.o linux.o times.o
-  GRT_EXTRA_LIB=-ldl -lm
-endif
-ifeq ($(filter-out powerpc linux%,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=ppc.o linux.o times.o
-  GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
-endif
-ifeq ($(filter-out ia64 linux,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=ia64.o linux.o times.o
-  GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
-endif
-ifeq ($(filter-out i%86 mingw32,$(arch) $(osys)),)
-  GRT_TARGET_OBJS=win32.o clock.o
-endif
-# Doesn't work for unknown reasons.
-#ifeq ($(filter-out i%86 cygwin,$(arch) $(osys)),)
-#  GRT_TARGET_OBJS=win32.o clock.o
-#endif
-# Fall-back: use a generic implementation based on pthreads.
-ifndef GRT_TARGET_OBJS
-  GRT_TARGET_OBJS=pthread.o times.o
-  GRT_EXTRA_LIB=-lpthread -ldl -lm
+ifeq ($(filter-out mingw32,$(arch) $(osys)),)
+  GRT_TARGET_OBJS=jumps.o math.o clock.o
+else
+  GRT_TARGET_OBJS=jumps.o times.o
+  ifeq ($(filter-out linux,$(arch) $(osys)),)
+    GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
+  endif
+  ifeq ($(filter-out netbsd freebsd% dragonfly%,$(arch) $(osys)),)
+    GRT_EXTRA_LIB=-lm $(GRT_ELF_OPTS)
+  endif
+  ifeq ($(filter-out solaris%,$(arch) $(osys)),)
+    GRT_EXTRA_LIB=-ldl -lm
+  endif
+  ifeq ($(filter-out darwin%,$(arch) $(osys)),)
+    GRT_EXTRA_LIB=
+  endif
 endif
 
 GRT_FST_OBJS := fstapi.o lz4.o fastlz.o
@@ -148,34 +107,13 @@ run-bind.o: run-bind.adb
 main.o: $(GRTSRCDIR)/main.adb
 	$(GRT_ADACOMPILE)
 
-i386.o: $(GRTSRCDIR)/config/i386.S
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
-
-chkstk.o: $(GRTSRCDIR)/config/chkstk.S
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
-
-sparc.o: $(GRTSRCDIR)/config/sparc.S
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
-
-ppc.o: $(GRTSRCDIR)/config/ppc.S
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
-
-ia64.o: $(GRTSRCDIR)/config/ia64.S
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
-
-amd64.o: $(GRTSRCDIR)/config/amd64.S
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
-
-linux.o: $(GRTSRCDIR)/config/linux.c
+jumps.o: $(GRTSRCDIR)/config/jumps.c
 	$(CC) -c $(GRT_FLAGS) $(GRT_CFLAGS) -o $@ $<
 
 win32.o: $(GRTSRCDIR)/config/win32.c
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
-win32thr.o: $(GRTSRCDIR)/config/win32thr.c
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
-
-pthread.o: $(GRTSRCDIR)/config/pthread.c
+math.o: $(GRTSRCDIR)/config/math.c
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
 times.o : $(GRTSRCDIR)/config/times.c
@@ -200,6 +138,9 @@ lz4.o: $(GRTSRCDIR)/fst/lz4.c
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
 fastlz.o: $(GRTSRCDIR)/fst/fastlz.c
+	$(CC) -c $(GRT_FLAGS) -o $@ $<
+
+chkstk.o: $(GRTSRCDIR)/config/chkstk.S
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
 grt-disp-config:

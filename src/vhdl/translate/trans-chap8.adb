@@ -39,6 +39,134 @@ with Trans.Foreach_Non_Composite;
 package body Trans.Chap8 is
    use Trans.Helpers;
 
+   --  The LOCAL_STATE is a local variable read from the frame at entry and
+   --  written before return.  The value INITIAL_STATE (0) is the initial
+   --  state.  For processes, this is the state for the first statement.  For
+   --  subprograms, this is the state at call, before dynamic elaboration of
+   --  local declarations.
+   --  Subprograms have more special values:
+   --   1: The return state.  Finalization is performed.
+   Local_State : O_Dnode := O_Dnode_Null;
+
+   Initial_State : constant State_Type := 0;
+   --  Return_State  : constant State_Value_Type := 1;
+
+   --  Next value available.
+   State_Next : State_Type := Initial_State;
+
+   --  Info node to which the state variable is attached.  Used to set and save
+   --  the state variable.
+   State_Info : Ortho_Info_Acc := null;
+
+   --  Statements construct for the state machine.  The generated code is:
+   --    local var STATE: index_type;
+   --  begin
+   --    STATE := FRAME.all.STATE;
+   --    loop
+   --       case STATE is
+   --         when 0 => ...
+   --         when 1 => ...
+   --         ...
+   --       end case;
+   --    end loop;
+   --   end;
+   State_Case : Ortho_Nodes.O_Case_Block;
+   State_Loop : Ortho_Nodes.O_Snode;
+
+   function Get_State_Var (Info : Ortho_Info_Acc) return O_Lnode is
+   begin
+      case Info.Kind is
+         when Kind_Process =>
+            return Get_Var (Info.Process_State);
+         when Kind_Subprg =>
+            return New_Selected_Acc_Value
+              (New_Obj (Info.Res_Interface), Info.Subprg_State_Field);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_State_Var;
+
+   procedure State_Entry (Info : Ortho_Info_Acc) is
+   begin
+      --  Not reentrant.
+      pragma Assert (not State_Enabled);
+
+      State_Info := Info;
+
+      --  For optimization, create a copy of the STATE variable.
+      New_Var_Decl (Local_State, Get_Identifier ("STATE"),
+                    O_Storage_Local, Ghdl_Index_Type);
+
+      --  Initialize it from the frame.
+      New_Assign_Stmt (New_Obj (Local_State),
+                       New_Value (Get_State_Var (Info)));
+
+      Start_Loop_Stmt (State_Loop);
+      Start_Case_Stmt (State_Case, New_Obj_Value (Local_State));
+
+      State_Start (0);
+      State_Next := 0;
+   end State_Entry;
+
+   procedure State_Leave (Parent : Iir) is
+   begin
+      pragma Assert (State_Enabled);
+      pragma Assert (Get_Info (Parent) = State_Info);
+
+      if State_Debug then
+         Start_Choice (State_Case);
+         New_Default_Choice (State_Case);
+         Finish_Choice (State_Case);
+         Chap6.Gen_Program_Error (Parent, Chap6.Prg_Err_Unreach_State);
+      end if;
+
+      Finish_Case_Stmt (State_Case);
+      Finish_Loop_Stmt (State_Loop);
+      Local_State := O_Dnode_Null;
+      State_Info := null;
+   end State_Leave;
+
+   function State_Enabled return Boolean is
+   begin
+      return Local_State /= O_Dnode_Null;
+   end State_Enabled;
+
+   function State_Allocate return State_Type is
+   begin
+      State_Next := State_Next + 1;
+      return State_Next;
+   end State_Allocate;
+
+   function State_To_Lit (State : State_Type) return O_Cnode is
+   begin
+      return New_Index_Lit (Unsigned_64 (State));
+   end State_To_Lit;
+
+   procedure State_Start (State : State_Type) is
+   begin
+      Start_Choice (State_Case);
+      New_Expr_Choice (State_Case, State_To_Lit (State));
+      Finish_Choice (State_Case);
+   end State_Start;
+
+   procedure State_Jump (Next_State : State_Type) is
+   begin
+      New_Assign_Stmt (New_Obj (Local_State),
+                       New_Lit (State_To_Lit (Next_State)));
+   end State_Jump;
+
+   procedure State_Jump_Force is
+   begin
+      New_Next_Stmt (State_Loop);
+   end State_Jump_Force;
+
+   procedure State_Suspend (Next_State : State_Type) is
+   begin
+      New_Assign_Stmt (Get_State_Var (State_Info),
+                       New_Lit (State_To_Lit (Next_State)));
+      New_Return_Stmt;
+   end State_Suspend;
+
    procedure Translate_Return_Statement (Stmt : Iir_Return_Statement)
    is
       Subprg_Info : constant Ortho_Info_Acc :=
@@ -68,7 +196,13 @@ package body Trans.Chap8 is
    begin
       if Expr = Null_Iir then
          --  Return in a procedure.
-         Gen_Return;
+         if Get_Suspend_Flag (Chap2.Current_Subprogram) then
+            State_Jump (State_Return);
+            State_Jump_Force;
+         else
+            Gen_Return;
+         end if;
+
          return;
       end if;
 
@@ -83,7 +217,8 @@ package body Trans.Chap8 is
                R : O_Enode;
             begin
                --  Always uses a temporary in case of the return expression
-               --  uses secondary stack.
+               --  uses secondary stack.  This can happen in constructs like:
+               --    return my_func (param)(index);
                --  FIXME: don't use the temp if not required.
                R := Chap7.Translate_Expression (Expr, Ret_Type);
                if Has_Stack2_Mark
@@ -144,16 +279,68 @@ package body Trans.Chap8 is
                Close_Temp;
                Gen_Return;
             end;
-         when Type_Mode_File =>
-            --  FIXME: Is it possible ?
-            Error_Kind ("translate_return_statement", Ret_Type);
-         when Type_Mode_Unknown
+         when Type_Mode_File
+            | Type_Mode_Unknown
             | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
    end Translate_Return_Statement;
 
-   procedure Translate_If_Statement (Stmt : Iir)
+   procedure Translate_If_Statement_State_Jumps
+     (Stmt : Iir; Fall_State : State_Type)
+   is
+      Blk         : O_If_Block;
+      Else_Clause : Iir;
+   begin
+      Start_If_Stmt
+        (Blk, Chap7.Translate_Expression (Get_Condition (Stmt)));
+      State_Jump (State_Allocate);
+      New_Else_Stmt (Blk);
+      Else_Clause := Get_Else_Clause (Stmt);
+      if Else_Clause = Null_Iir then
+         State_Jump (Fall_State);
+      else
+         if Get_Condition (Else_Clause) = Null_Iir then
+            State_Jump (State_Allocate);
+         else
+            Open_Temp;
+            Translate_If_Statement_State_Jumps (Else_Clause, Fall_State);
+            Close_Temp;
+         end if;
+      end if;
+      Finish_If_Stmt (Blk);
+   end Translate_If_Statement_State_Jumps;
+
+   procedure Translate_If_Statement_State (Stmt : Iir)
+   is
+      Fall_State : State_Type;
+      Next_State : State_Type;
+      Branch : Iir;
+   begin
+      Fall_State := State_Allocate;
+      Next_State := Fall_State;
+
+      --  Generate the jumps.
+      Open_Temp;
+      Translate_If_Statement_State_Jumps (Stmt, Fall_State);
+      Close_Temp;
+
+      --  Generate statements.
+      Branch := Stmt;
+      loop
+         Next_State := Next_State + 1;
+         State_Start (Next_State);
+         Translate_Statements_Chain (Get_Sequential_Statement_Chain (Branch));
+         State_Jump (Fall_State);
+
+         Branch := Get_Else_Clause (Branch);
+         exit when Branch = Null_Iir;
+      end loop;
+
+      State_Start (Fall_State);
+   end Translate_If_Statement_State;
+
+   procedure Translate_If_Statement_Direct (Stmt : Iir)
    is
       Blk         : O_If_Block;
       Else_Clause : Iir;
@@ -171,11 +358,20 @@ package body Trans.Chap8 is
               (Get_Sequential_Statement_Chain (Else_Clause));
          else
             Open_Temp;
-            Translate_If_Statement (Else_Clause);
+            Translate_If_Statement_Direct (Else_Clause);
             Close_Temp;
          end if;
       end if;
       Finish_If_Stmt (Blk);
+   end Translate_If_Statement_Direct;
+
+   procedure Translate_If_Statement (Stmt : Iir) is
+   begin
+      if Get_Suspend_Flag (Stmt) then
+         Translate_If_Statement_State (Stmt);
+      else
+         Translate_If_Statement_Direct (Stmt);
+      end if;
    end Translate_If_Statement;
 
    function Get_Range_Ptr_Field_Value (O_Range : O_Lnode; Field : O_Fnode)
@@ -187,22 +383,12 @@ package body Trans.Chap8 is
    end Get_Range_Ptr_Field_Value;
 
    --  Inc or dec ITERATOR according to DIR.
-   procedure Gen_Update_Iterator (Iterator : O_Dnode;
-                                  Dir      : Iir_Direction;
-                                  Val      : Unsigned_64;
-                                  Itype    : Iir)
+   procedure Gen_Update_Iterator_Common (Val      : Unsigned_64;
+                                         Itype    : Iir;
+                                         V : out O_Enode)
    is
-      Op        : ON_Op_Kind;
-      Base_Type : Iir;
-      V         : O_Enode;
+      Base_Type : constant Iir := Get_Base_Type (Itype);
    begin
-      case Dir is
-         when Iir_To =>
-            Op := ON_Add_Ov;
-         when Iir_Downto =>
-            Op := ON_Sub_Ov;
-      end case;
-      Base_Type := Get_Base_Type (Itype);
       case Get_Kind (Base_Type) is
          when Iir_Kind_Integer_Type_Definition =>
             V := New_Lit
@@ -224,59 +410,99 @@ package body Trans.Chap8 is
          when others =>
             Error_Kind ("gen_update_iterator", Base_Type);
       end case;
+   end Gen_Update_Iterator_Common;
+
+   procedure Gen_Update_Iterator (Iterator : O_Dnode;
+                                  Dir      : Iir_Direction;
+                                  Val      : Unsigned_64;
+                                  Itype    : Iir)
+   is
+      Op        : ON_Op_Kind;
+      V         : O_Enode;
+   begin
+      case Dir is
+         when Iir_To =>
+            Op := ON_Add_Ov;
+         when Iir_Downto =>
+            Op := ON_Sub_Ov;
+      end case;
+      Gen_Update_Iterator_Common (Val, Itype, V);
       New_Assign_Stmt (New_Obj (Iterator),
                        New_Dyadic_Op (Op, New_Obj_Value (Iterator), V));
    end Gen_Update_Iterator;
 
-   type For_Loop_Data is record
-      Iterator               : Iir_Iterator_Declaration;
-      Stmt                   : Iir_For_Loop_Statement;
-      --  If around the loop, to check if the loop must be executed.
-      If_Blk                 : O_If_Block;
-      Label_Next, Label_Exit : O_Snode;
-      --  Right bound of the iterator, used only if the iterator is a
-      --  range expression.
-      O_Right                : O_Dnode;
-      --  Range variable of the iterator, used only if the iterator is not
-      --  a range expression.
-      O_Range                : O_Dnode;
-   end record;
+   procedure Gen_Update_Iterator (Iterator : Var_Type;
+                                  Dir      : Iir_Direction;
+                                  Val      : Unsigned_64;
+                                  Itype    : Iir)
+   is
+      Op        : ON_Op_Kind;
+      V         : O_Enode;
+   begin
+      case Dir is
+         when Iir_To =>
+            Op := ON_Add_Ov;
+         when Iir_Downto =>
+            Op := ON_Sub_Ov;
+      end case;
+      Gen_Update_Iterator_Common (Val, Itype, V);
+      New_Assign_Stmt (Get_Var (Iterator),
+                       New_Dyadic_Op (Op, New_Value (Get_Var (Iterator)), V));
+   end Gen_Update_Iterator;
+
+   procedure Translate_For_Loop_Statement_Declaration (Stmt : Iir)
+   is
+      Iterator : constant Iir := Get_Parameter_Specification (Stmt);
+      Iter_Type : constant Iir := Get_Type (Iterator);
+      Iter_Type_Info : constant Type_Info_Acc :=
+        Get_Info (Get_Base_Type (Iter_Type));
+      Constraint     : constant Iir := Get_Range_Constraint (Iter_Type);
+      It_Info : Ortho_Info_Acc;
+   begin
+      --  Iterator range.
+      Chap3.Translate_Object_Subtype (Iterator, False);
+
+      --  Iterator variable.
+      It_Info := Add_Info (Iterator, Kind_Iterator);
+      It_Info.Iterator_Var := Create_Var
+        (Create_Var_Identifier (Iterator),
+         Iter_Type_Info.Ortho_Type (Mode_Value),
+         O_Storage_Local);
+
+      if Get_Kind (Constraint) = Iir_Kind_Range_Expression then
+         It_Info.Iterator_Right := Create_Var
+           (Create_Var_Identifier ("IT_RIGHT"),
+            Iter_Type_Info.Ortho_Type (Mode_Value),
+            O_Storage_Local);
+      else
+         It_Info.Iterator_Range := Create_Var
+           (Create_Var_Identifier ("IT_RANGE"),
+            Iter_Type_Info.T.Range_Ptr_Type,
+            O_Storage_Local);
+      end if;
+   end Translate_For_Loop_Statement_Declaration;
 
    procedure Start_For_Loop (Iterator : Iir_Iterator_Declaration;
-                             Stmt     : Iir_For_Loop_Statement;
-                             Data     : out For_Loop_Data)
+                             Cond     : out O_Enode)
    is
-      Iter_Type      : Iir;
-      Iter_Base_Type : Iir;
-      Var_Iter       : Var_Type;
-      Constraint     : Iir;
-      Cond           : O_Enode;
+      Iter_Type      : constant Iir := Get_Type (Iterator);
+      Iter_Base_Type : constant Iir := Get_Base_Type (Iter_Type);
+      Iter_Type_Info : constant Ortho_Info_Acc := Get_Info (Iter_Base_Type);
+      It_Info        : constant Ortho_Info_Acc := Get_Info (Iterator);
+      Constraint     : constant Iir := Get_Range_Constraint (Iter_Type);
       Dir            : Iir_Direction;
-      Iter_Type_Info : Ortho_Info_Acc;
       Op             : ON_Op_Kind;
    begin
-      --  Initialize DATA.
-      Data.Iterator := Iterator;
-      Data.Stmt := Stmt;
-
-      Iter_Type := Get_Type (Iterator);
-      Iter_Base_Type := Get_Base_Type (Iter_Type);
-      Iter_Type_Info := Get_Info (Iter_Base_Type);
-      Var_Iter := Get_Info (Iterator).Iterator_Var;
-
-      Open_Temp;
-
-      Constraint := Get_Range_Constraint (Iter_Type);
       if Get_Kind (Constraint) = Iir_Kind_Range_Expression then
          New_Assign_Stmt
-           (Get_Var (Var_Iter), Chap7.Translate_Range_Expression_Left
-            (Constraint, Iter_Base_Type));
+           (Get_Var (It_Info.Iterator_Var),
+            Chap7.Translate_Range_Expression_Left (Constraint,
+                                                   Iter_Base_Type));
          Dir := Get_Direction (Constraint);
-         Data.O_Right := Create_Temp
-           (Iter_Type_Info.Ortho_Type (Mode_Value));
          New_Assign_Stmt
-           (New_Obj (Data.O_Right), Chap7.Translate_Range_Expression_Right
-            (Constraint, Iter_Base_Type));
+           (Get_Var (It_Info.Iterator_Right),
+            Chap7.Translate_Range_Expression_Right (Constraint,
+                                                    Iter_Base_Type));
          case Dir is
             when Iir_To =>
                Op := ON_Le;
@@ -285,181 +511,278 @@ package body Trans.Chap8 is
          end case;
          --  Check for at least one iteration.
          Cond := New_Compare_Op
-           (Op, New_Value (Get_Var (Var_Iter)),
-            New_Obj_Value (Data.O_Right),
+           (Op, New_Value (Get_Var (It_Info.Iterator_Var)),
+            New_Value (Get_Var (It_Info.Iterator_Right)),
             Ghdl_Bool_Type);
       else
-         Data.O_Range := Create_Temp (Iter_Type_Info.T.Range_Ptr_Type);
-         New_Assign_Stmt (New_Obj (Data.O_Range),
+         New_Assign_Stmt (Get_Var (It_Info.Iterator_Range),
                           New_Address (Chap7.Translate_Range
-                            (Constraint, Iter_Base_Type),
-                            Iter_Type_Info.T.Range_Ptr_Type));
+                                         (Constraint, Iter_Base_Type),
+                                       Iter_Type_Info.T.Range_Ptr_Type));
          New_Assign_Stmt
-           (Get_Var (Var_Iter), Get_Range_Ptr_Field_Value
-            (New_Obj (Data.O_Range), Iter_Type_Info.T.Range_Left));
-         --  Before starting the loop, check wether there will be at least
+           (Get_Var (It_Info.Iterator_Var),
+            Get_Range_Ptr_Field_Value (Get_Var (It_Info.Iterator_Range),
+                                       Iter_Type_Info.T.Range_Left));
+         --  Before starting the loop, check whether there will be at least
          --  one iteration.
          Cond := New_Compare_Op
            (ON_Gt,
-            Get_Range_Ptr_Field_Value (New_Obj (Data.O_Range),
-              Iter_Type_Info.T.Range_Length),
+            Get_Range_Ptr_Field_Value (Get_Var (It_Info.Iterator_Range),
+                                       Iter_Type_Info.T.Range_Length),
             New_Lit (Ghdl_Index_0),
             Ghdl_Bool_Type);
       end if;
-
-      Start_If_Stmt (Data.If_Blk, Cond);
-
-      --  Start loop.
-      --  There are two blocks: one for the exit, one for the next.
-      Start_Loop_Stmt (Data.Label_Exit);
-      Start_Loop_Stmt (Data.Label_Next);
-
-      if Stmt /= Null_Iir then
-         declare
-            Loop_Info : Loop_Info_Acc;
-         begin
-            Loop_Info := Add_Info (Stmt, Kind_Loop);
-            Loop_Info.Label_Exit := Data.Label_Exit;
-            Loop_Info.Label_Next := Data.Label_Next;
-         end;
-      end if;
    end Start_For_Loop;
 
-   procedure Finish_For_Loop (Data : in out For_Loop_Data)
+   procedure Exit_Cond_For_Loop (Iterator : Iir; Cond : out O_Enode)
    is
-      Cond           : O_Enode;
+      Iter_Type      : constant Iir := Get_Type (Iterator);
+      Iter_Base_Type : constant Iir := Get_Base_Type (Iter_Type);
+      Iter_Type_Info : constant Ortho_Info_Acc := Get_Info (Iter_Base_Type);
+      It_Info        : constant Ortho_Info_Acc := Get_Info (Iterator);
+      Constraint     : constant Iir := Get_Range_Constraint (Iter_Type);
+      Val            : O_Enode;
+   begin
+      --  Check end of loop.
+      --  Equality is necessary and enough.
+
+      if Get_Kind (Constraint) = Iir_Kind_Range_Expression then
+         Val := New_Value (Get_Var (It_Info.Iterator_Right));
+      else
+         Val := Get_Range_Ptr_Field_Value
+           (Get_Var (It_Info.Iterator_Range), Iter_Type_Info.T.Range_Right);
+      end if;
+      Cond := New_Compare_Op (ON_Eq,
+                              New_Value (Get_Var (It_Info.Iterator_Var)), Val,
+                              Ghdl_Bool_Type);
+   end Exit_Cond_For_Loop;
+
+   procedure Update_For_Loop (Iterator : Iir)
+   is
+      Iter_Type      : constant Iir := Get_Type (Iterator);
+      Iter_Base_Type : constant Iir := Get_Base_Type (Iter_Type);
+      Iter_Type_Info : constant Ortho_Info_Acc := Get_Info (Iter_Base_Type);
+      It_Info        : constant Ortho_Info_Acc := Get_Info (Iterator);
       If_Blk1        : O_If_Block;
-      Iter_Type      : Iir;
-      Iter_Base_Type : Iir;
-      Iter_Type_Info : Type_Info_Acc;
-      Var_Iter       : Var_Type;
-      Constraint     : Iir;
       Deep_Rng       : Iir;
       Deep_Reverse   : Boolean;
    begin
-      New_Exit_Stmt (Data.Label_Next);
-      Finish_Loop_Stmt (Data.Label_Next);
-
-      --  Check end of loop.
-      --  Equality is necessary and enough.
-      Iter_Type := Get_Type (Data.Iterator);
-      Iter_Base_Type := Get_Base_Type (Iter_Type);
-      Iter_Type_Info := Get_Info (Iter_Base_Type);
-      Var_Iter := Get_Info (Data.Iterator).Iterator_Var;
-
-      Constraint := Get_Range_Constraint (Iter_Type);
-
-      if Get_Kind (Constraint) = Iir_Kind_Range_Expression then
-         Cond := New_Obj_Value (Data.O_Right);
-      else
-         Cond := Get_Range_Ptr_Field_Value
-           (New_Obj (Data.O_Range), Iter_Type_Info.T.Range_Right);
-      end if;
-      Gen_Exit_When (Data.Label_Exit,
-                     New_Compare_Op (ON_Eq, New_Value (Get_Var (Var_Iter)),
-                       Cond, Ghdl_Bool_Type));
-
       --  Update the iterator.
       Chap6.Get_Deep_Range_Expression (Iter_Type, Deep_Rng, Deep_Reverse);
       if Deep_Rng /= Null_Iir then
          if Get_Direction (Deep_Rng) = Iir_To xor Deep_Reverse then
-            Gen_Update_Iterator
-              (Get_Var_Label (Var_Iter), Iir_To, 1, Iter_Base_Type);
+            Gen_Update_Iterator (It_Info.Iterator_Var,
+                                 Iir_To, 1, Iter_Base_Type);
          else
-            Gen_Update_Iterator
-              (Get_Var_Label (Var_Iter), Iir_Downto, 1, Iter_Base_Type);
+            Gen_Update_Iterator (It_Info.Iterator_Var,
+                                 Iir_Downto, 1, Iter_Base_Type);
          end if;
       else
          Start_If_Stmt
            (If_Blk1, New_Compare_Op
               (ON_Eq,
-               Get_Range_Ptr_Field_Value (New_Obj (Data.O_Range),
-                 Iter_Type_Info.T.Range_Dir),
+               Get_Range_Ptr_Field_Value (Get_Var (It_Info.Iterator_Range),
+                                          Iter_Type_Info.T.Range_Dir),
                New_Lit (Ghdl_Dir_To_Node),
                Ghdl_Bool_Type));
-         Gen_Update_Iterator
-           (Get_Var_Label (Var_Iter), Iir_To, 1, Iter_Base_Type);
+         Gen_Update_Iterator (It_Info.Iterator_Var,
+                              Iir_To, 1, Iter_Base_Type);
          New_Else_Stmt (If_Blk1);
-         Gen_Update_Iterator
-           (Get_Var_Label (Var_Iter), Iir_Downto, 1, Iter_Base_Type);
+         Gen_Update_Iterator (It_Info.Iterator_Var,
+                              Iir_Downto, 1, Iter_Base_Type);
          Finish_If_Stmt (If_Blk1);
       end if;
-
-      Finish_Loop_Stmt (Data.Label_Exit);
-      Finish_If_Stmt (Data.If_Blk);
-      Close_Temp;
-
-      if Data.Stmt /= Null_Iir then
-         Free_Info (Data.Stmt);
-      end if;
-   end Finish_For_Loop;
+   end Update_For_Loop;
 
    Current_Loop : Iir := Null_Iir;
 
-   procedure Translate_For_Loop_Statement (Stmt : Iir_For_Loop_Statement)
+   procedure Translate_For_Loop_Statement_State
+     (Stmt : Iir_For_Loop_Statement)
    is
       Iterator       : constant Iir := Get_Parameter_Specification (Stmt);
-      Iter_Type      : constant Iir := Get_Type (Iterator);
-      Iter_Base_Type : constant Iir := Get_Base_Type (Iter_Type);
-      Iter_Type_Info : constant Type_Info_Acc := Get_Info (Iter_Base_Type);
-      Data           : For_Loop_Data;
-      It_Info        : Ortho_Info_Acc;
-      Var_Iter       : Var_Type;
-      Prev_Loop      : Iir;
+      It_Info        : constant Ortho_Info_Acc := Get_Info (Iterator);
+      Info           : constant Loop_State_Info_Acc := Get_Info (Stmt);
+      Loop_If : O_If_Block;
+      Cond : O_Enode;
    begin
-      Prev_Loop := Current_Loop;
-      Current_Loop := Stmt;
+      pragma Assert (It_Info /= null);
+
+      Info.Loop_State_Next := State_Allocate;
+      Info.Loop_State_Exit := State_Allocate;
+      Info.Loop_State_Body := State_Allocate;
+
+      --  Loop header: initialize iterator, skip the whole body in case of
+      --  null range.
+      Open_Temp;
+      Start_For_Loop (Iterator, Cond);
+      Start_If_Stmt (Loop_If, Cond);
+      State_Jump (Info.Loop_State_Body);
+      New_Else_Stmt (Loop_If);
+      State_Jump (Info.Loop_State_Exit);
+      Finish_If_Stmt (Loop_If);
+      Close_Temp;
+
+      --  Loop body.
+      State_Start (Info.Loop_State_Body);
+      Translate_Statements_Chain (Get_Sequential_Statement_Chain (Stmt));
+      State_Jump (Info.Loop_State_Next);
+
+      --  Loop next.
+      State_Start (Info.Loop_State_Next);
+      Exit_Cond_For_Loop (Iterator, Cond);
+      Start_If_Stmt (Loop_If, Cond);
+      State_Jump (Info.Loop_State_Exit);
+      New_Else_Stmt (Loop_If);
+      Update_For_Loop (Iterator);
+      State_Jump (Info.Loop_State_Body);
+      Finish_If_Stmt (Loop_If);
+
+      --  Exit state, after loop.
+      State_Start (Info.Loop_State_Exit);
+
+      Free_Info (Iterator);
+   end Translate_For_Loop_Statement_State;
+
+   procedure Translate_For_Loop_Statement_Direct
+     (Stmt : Iir_For_Loop_Statement)
+   is
+      Iterator : constant Iir := Get_Parameter_Specification (Stmt);
+      Loop_Info : Loop_Info_Acc;
+
+      --  If around the loop, to check if the loop must be executed.
+      Loop_If                 : O_If_Block;
+      Cond : O_Enode;
+   begin
       Start_Declare_Stmt;
 
-      Chap3.Translate_Object_Subtype (Iterator, False);
+      Open_Temp;
 
-      --  Create info for the iterator.
-      It_Info := Add_Info (Iterator, Kind_Iterator);
-      Var_Iter := Create_Var
-        (Create_Var_Identifier (Iterator),
-         Iter_Type_Info.Ortho_Type (Mode_Value),
-         O_Storage_Local);
-      It_Info.Iterator_Var := Var_Iter;
+      Translate_For_Loop_Statement_Declaration (Stmt);
 
-      Start_For_Loop (Iterator, Stmt, Data);
+      --  Loop header: initialize iterator.
+      Start_For_Loop (Iterator, Cond);
 
+      --  Skip the whole loop in case of null range.
+      Start_If_Stmt (Loop_If, Cond);
+
+      --  Start loop.
+      --  There are two blocks: one for the exit, one for the next.
+
+      Loop_Info := Add_Info (Stmt, Kind_Loop);
+      Start_Loop_Stmt (Loop_Info.Label_Exit);
+      Start_Loop_Stmt (Loop_Info.Label_Next);
+
+      --  Loop body.
       Translate_Statements_Chain (Get_Sequential_Statement_Chain (Stmt));
 
-      Finish_For_Loop (Data);
+      --  Fake 'next' statement.
+      New_Exit_Stmt (Loop_Info.Label_Next);
+      Finish_Loop_Stmt (Loop_Info.Label_Next);
+
+      --  Exit loop if right bound reached.
+      Exit_Cond_For_Loop (Iterator, Cond);
+      Gen_Exit_When (Loop_Info.Label_Exit, Cond);
+
+      Update_For_Loop (Iterator);
+
+      Finish_Loop_Stmt (Loop_Info.Label_Exit);
+      Finish_If_Stmt (Loop_If);
+      Close_Temp;
+
+      Free_Info (Stmt);
 
       Finish_Declare_Stmt;
 
       Free_Info (Iterator);
+   end Translate_For_Loop_Statement_Direct;
+
+   procedure Translate_For_Loop_Statement (Stmt : Iir_For_Loop_Statement)
+   is
+      Prev_Loop      : Iir;
+   begin
+      Prev_Loop := Current_Loop;
+      Current_Loop := Stmt;
+
+      if Get_Suspend_Flag (Stmt) then
+         Translate_For_Loop_Statement_State (Stmt);
+      else
+         Translate_For_Loop_Statement_Direct (Stmt);
+      end if;
+
       Current_Loop := Prev_Loop;
    end Translate_For_Loop_Statement;
 
-   procedure Translate_While_Loop_Statement
-     (Stmt : Iir_While_Loop_Statement)
+   procedure Translate_While_Loop_Statement (Stmt : Iir_While_Loop_Statement)
    is
-      Info      : Loop_Info_Acc;
-      Cond      : Iir;
+      Cond : constant Iir := Get_Condition (Stmt);
       Prev_Loop : Iir;
    begin
       Prev_Loop := Current_Loop;
       Current_Loop := Stmt;
 
-      Info := Add_Info (Stmt, Kind_Loop);
+      if Get_Suspend_Flag (Stmt) then
+         declare
+            Info : constant Loop_State_Info_Acc := Get_Info (Stmt);
+            Blk : O_If_Block;
+         begin
+            Info.Loop_State_Next := State_Allocate;
+            Info.Loop_State_Exit := State_Allocate;
 
-      Start_Loop_Stmt (Info.Label_Exit);
-      Info.Label_Next := O_Snode_Null;
+            --  NEXT_STATE:
+            State_Jump (Info.Loop_State_Next);
+            State_Start (Info.Loop_State_Next);
 
-      Open_Temp;
-      Cond := Get_Condition (Stmt);
-      if Cond /= Null_Iir then
-         Gen_Exit_When
-           (Info.Label_Exit,
-            New_Monadic_Op (ON_Not, Chap7.Translate_Expression (Cond)));
+            if Cond /= Null_Iir then
+               Info.Loop_State_Body := State_Allocate;
+
+               --  if COND then
+               --    goto BODY_STATE;
+               --  else
+               --    goto EXIT_STATE;
+               --  end if;
+               Open_Temp;
+               Start_If_Stmt (Blk, Chap7.Translate_Expression (Cond));
+               State_Jump (Info.Loop_State_Body);
+               New_Else_Stmt (Blk);
+               State_Jump (Info.Loop_State_Exit);
+               Finish_If_Stmt (Blk);
+               Close_Temp;
+
+               --  BODY_STATE:
+               State_Start (Info.Loop_State_Body);
+            end if;
+
+            Translate_Statements_Chain (Get_Sequential_Statement_Chain (Stmt));
+
+            --  goto NEXT_STATE
+            State_Jump (Info.Loop_State_Next);
+
+            --  EXIT_STATE:
+            State_Start (Info.Loop_State_Exit);
+         end;
+      else
+         declare
+            Info : Loop_Info_Acc;
+         begin
+            Info := Add_Info (Stmt, Kind_Loop);
+
+            Start_Loop_Stmt (Info.Label_Exit);
+            Info.Label_Next := O_Snode_Null;
+
+            Open_Temp;
+            if Cond /= Null_Iir then
+               Gen_Exit_When
+                 (Info.Label_Exit,
+                  New_Monadic_Op (ON_Not, Chap7.Translate_Expression (Cond)));
+            end if;
+            Close_Temp;
+
+            Translate_Statements_Chain (Get_Sequential_Statement_Chain (Stmt));
+
+            Finish_Loop_Stmt (Info.Label_Exit);
+         end;
       end if;
-      Close_Temp;
 
-      Translate_Statements_Chain (Get_Sequential_Statement_Chain (Stmt));
-
-      Finish_Loop_Stmt (Info.Label_Exit);
       Free_Info (Stmt);
       Current_Loop := Prev_Loop;
    end Translate_While_Loop_Statement;
@@ -468,14 +791,10 @@ package body Trans.Chap8 is
    is
       Cond       : constant Iir := Get_Condition (Stmt);
       If_Blk     : O_If_Block;
-      Info       : Loop_Info_Acc;
+      Info       : Ortho_Info_Acc;
       Loop_Label : Iir;
       Loop_Stmt  : Iir;
    begin
-      if Cond /= Null_Iir then
-         Start_If_Stmt (If_Blk, Chap7.Translate_Expression (Cond));
-      end if;
-
       Loop_Label := Get_Loop_Label (Stmt);
       if Loop_Label = Null_Iir then
          Loop_Stmt := Current_Loop;
@@ -484,22 +803,58 @@ package body Trans.Chap8 is
       end if;
 
       Info := Get_Info (Loop_Stmt);
-      case Get_Kind (Stmt) is
-         when Iir_Kind_Exit_Statement =>
-            New_Exit_Stmt (Info.Label_Exit);
-         when Iir_Kind_Next_Statement =>
-            if Info.Label_Next /= O_Snode_Null then
-               --  For-loop.
-               New_Exit_Stmt (Info.Label_Next);
-            else
-               --  While-loop.
-               New_Next_Stmt (Info.Label_Exit);
-            end if;
-         when others =>
-            raise Internal_Error;
-      end case;
+
+      --  Common part.
       if Cond /= Null_Iir then
-         Finish_If_Stmt (If_Blk);
+         Start_If_Stmt (If_Blk, Chap7.Translate_Expression (Cond));
+      end if;
+
+      if Get_Suspend_Flag (Loop_Stmt) then
+         --  The corresponding loop is state based.  Jump to the right state.
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Exit_Statement =>
+               State_Jump (Info.Loop_State_Exit);
+            when Iir_Kind_Next_Statement =>
+               State_Jump (Info.Loop_State_Next);
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         --  Force the jump, so that it would work even if the next/exit is
+         --  not immediately within a state construct.  Example:
+         --    loop
+         --      if cond then
+         --        exit;
+         --      else
+         --        i := i + 1;
+         --      end if;
+         --      wait for 1 ns;
+         --    end loop;
+         --  A new state cannot be created here, as the outer construct is the
+         --  if statement and not the case statement for the state machine.
+         State_Jump_Force;
+
+         if Cond /= Null_Iir then
+            Finish_If_Stmt (If_Blk);
+         end if;
+      else
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Exit_Statement =>
+               New_Exit_Stmt (Info.Label_Exit);
+            when Iir_Kind_Next_Statement =>
+               if Info.Label_Next /= O_Snode_Null then
+                  --  For-loop.
+                  New_Exit_Stmt (Info.Label_Next);
+               else
+                  --  While-loop.
+                  New_Next_Stmt (Info.Label_Exit);
+               end if;
+            when others =>
+               raise Internal_Error;
+         end case;
+         if Cond /= Null_Iir then
+            Finish_If_Stmt (If_Blk);
+         end if;
       end if;
    end Translate_Exit_Next_Statement;
 
@@ -737,22 +1092,20 @@ package body Trans.Chap8 is
       Val_Node : O_Dnode;
       Tinfo    : Type_Info_Acc;
       Func     : Iir)
-         return O_Enode
+     return O_Enode
    is
       Assoc     : O_Assoc_List;
       Func_Info : Subprg_Info_Acc;
    begin
-      New_Assign_Stmt
-        (New_Selected_Element (New_Obj (Val_Node),
-         Tinfo.T.Base_Field (Mode_Value)),
-         Val);
+      New_Assign_Stmt (New_Selected_Element (New_Obj (Val_Node),
+                                             Tinfo.T.Base_Field (Mode_Value)),
+                       Val);
       Func_Info := Get_Info (Func);
       Start_Association (Assoc, Func_Info.Ortho_Func);
       Subprgs.Add_Subprg_Instance_Assoc (Assoc, Func_Info.Subprg_Instance);
       New_Association (Assoc, New_Obj_Value (Expr));
-      New_Association
-        (Assoc, New_Address (New_Obj (Val_Node),
-         Tinfo.Ortho_Ptr_Type (Mode_Value)));
+      New_Association (Assoc, New_Address (New_Obj (Val_Node),
+                                           Tinfo.Ortho_Ptr_Type (Mode_Value)));
       return New_Function_Call (Assoc);
    end Translate_Simple_String_Choice;
 
@@ -764,13 +1117,12 @@ package body Trans.Chap8 is
       Expr_Node : out O_Dnode;
       C_Node    : out O_Dnode)
    is
-      Expr      : Iir;
+      Expr      : constant Iir := Get_Expression (Stmt);
       Base_Type : Iir;
    begin
       --  Translate into if/elsif statements.
       --  FIXME: if the number of literals ** length of the array < 256,
       --   use a case statement.
-      Expr := Get_Expression (Stmt);
       Expr_Type := Get_Type (Expr);
       Base_Type := Get_Base_Type (Expr_Type);
       Tinfo := Get_Info (Base_Type);
@@ -789,28 +1141,75 @@ package body Trans.Chap8 is
            (New_Obj (Expr_Node), Tinfo.T.Bounds_Field (Mode_Value)));
    end Translate_String_Case_Statement_Common;
 
-   --  Translate a string case statement using a dichotomy.
-   procedure Translate_String_Case_Statement_Dichotomy
-     (Stmt : Iir_Case_Statement)
+   --  Translate only the statements in choice.  The state after the whole case
+   --  statement is NEXT_STATE, the state for the choices are NEXT_STATE + 1 ..
+   --  NEXT_STATE + nbr_choices.
+   procedure Translate_Case_Statement_State
+     (Stmt : Iir_Case_Statement; Next_State : State_Type)
    is
+      Choice     : Iir;
+      Choice_State  : State_Type;
+   begin
+      Choice_State := Next_State;
+      Choice := Get_Case_Statement_Alternative_Chain (Stmt);
+      while Choice /= Null_Iir loop
+         if not Get_Same_Alternative_Flag (Choice) then
+            Choice_State := Choice_State + 1;
+            State_Start (Choice_State);
+            Translate_Statements_Chain
+              (Get_Associated_Chain (Choice));
+            State_Jump (Next_State);
+         end if;
+         Choice := Get_Chain (Choice);
+      end loop;
+      State_Start (Next_State);
+   end Translate_Case_Statement_State;
+
+   --  Translate a string case statement using a dichotomy.
+   --  NBR_CHOICES is the number of non-others choices.
+   procedure Translate_String_Case_Statement_Dichotomy
+     (Stmt : Iir_Case_Statement; Nbr_Choices : Positive)
+   is
+      Has_Suspend : constant Boolean := Get_Suspend_Flag (Stmt);
+      Choices_Chain : constant Iir :=
+        Get_Case_Statement_Alternative_Chain (Stmt);
+
+      type Choice_Id is new Integer;
+      subtype Valid_Choice_Id is Choice_Id
+        range 0 .. Choice_Id (Nbr_Choices - 1);
+      No_Choice_Id : constant Choice_Id := -1;
+
+      type Choice_Info_Type is record
+         --  List of choices, used to sort them.
+         Choice_Chain  : Choice_Id;
+         --  Association index.
+         Choice_Assoc  : Natural;
+         --  Corresponding choice simple expression.
+         Choice_Expr   : Iir;
+         --  Corresponding choice.
+         Choice_Parent : Iir;
+      end record;
+
+      type Choice_Info_Arr is array (Valid_Choice_Id) of Choice_Info_Type;
+      Choices_Info : Choice_Info_Arr;
+      First, Last : Choice_Id;
+      El : Choice_Id;
+
       --  Selector.
       Expr_Type : Iir;
       Tinfo     : Type_Info_Acc;
       Expr_Node : O_Dnode;
       C_Node    : O_Dnode;
+      Var_Idx   : O_Dnode;
+      Others_Lit : O_Cnode;
 
-      Choices_Chain : Iir;
       Choice        : Iir;
       Has_Others    : Boolean;
       Func          : Iir;
 
-      --  Number of non-others choices.
-      Nbr_Choices : Natural;
       --  Number of associations.
       Nbr_Assocs  : Natural;
 
-      Info        : Ortho_Info_Acc;
-      First, Last : Ortho_Info_Acc;
       Sel_Length  : Iir_Int64;
 
       --  Dichotomy table (table of choices).
@@ -829,53 +1228,44 @@ package body Trans.Chap8 is
       Assoc_Table_Type      : O_Tnode;
       Assoc_Table           : O_Dnode;
    begin
-      Choices_Chain := Get_Case_Statement_Alternative_Chain (Stmt);
-
-      --  Count number of choices and number of associations.
-      Nbr_Choices := 0;
+      --  Fill Choices_Info array, and count number of associations.
+      Last := No_Choice_Id;
       Nbr_Assocs := 0;
-      Choice := Choices_Chain;
-      First := null;
-      Last := null;
       Has_Others := False;
+      Choice := Choices_Chain;
       while Choice /= Null_Iir loop
-         case Get_Kind (Choice) is
-            when Iir_Kind_Choice_By_Others =>
-               Has_Others := True;
-               exit;
-            when Iir_Kind_Choice_By_Expression =>
-               null;
-            when others =>
-               raise Internal_Error;
-         end case;
+         if Get_Kind (Choice) = Iir_Kind_Choice_By_Others then
+            Has_Others := True;
+            exit;
+         end if;
+         pragma Assert (Get_Kind (Choice) = Iir_Kind_Choice_By_Expression);
          if not Get_Same_Alternative_Flag (Choice) then
             Nbr_Assocs := Nbr_Assocs + 1;
          end if;
-         Info := Add_Info (Choice, Kind_Str_Choice);
-         if First = null then
-            First := Info;
-         else
-            Last.Choice_Chain := Info;
-         end if;
-         Last := Info;
-         Info.Choice_Chain := null;
-         Info.Choice_Assoc := Nbr_Assocs - 1;
-         Info.Choice_Parent := Choice;
-         Info.Choice_Expr := Get_Choice_Expression (Choice);
-
-         Nbr_Choices := Nbr_Choices + 1;
+         Last := Last + 1;
+         Choices_Info (Last) :=
+           (Choice_Chain => Last + 1,
+            Choice_Assoc => Nbr_Assocs - 1,
+            Choice_Parent => Choice,
+            Choice_Expr => Get_Choice_Expression (Choice));
          Choice := Get_Chain (Choice);
       end loop;
 
+      --  There is at most one choice (otherwise the linear algorithm must
+      --  have been used).
+      pragma Assert (Last /= No_Choice_Id);
+      First := 0;
+      Choices_Info (Last).Choice_Chain := No_Choice_Id;
+
       --  Sort choices.
       declare
-         procedure Merge_Sort (Head : Ortho_Info_Acc;
+         procedure Merge_Sort (Head : Choice_Id;
                                Nbr  : Natural;
-                               Res  : out Ortho_Info_Acc;
-                               Next : out Ortho_Info_Acc)
+                               Res  : out Choice_Id;
+                               Next : out Choice_Id)
          is
-            L, R, L_End, R_End : Ortho_Info_Acc;
-            E, Last            : Ortho_Info_Acc;
+            L, R, L_End, R_End : Choice_Id;
+            E, Last            : Choice_Id;
             Half               : constant Natural := Nbr / 2;
          begin
             --  Sorting less than 2 elements is easy!
@@ -884,54 +1274,57 @@ package body Trans.Chap8 is
                if Nbr = 0 then
                   Next := Head;
                else
-                  Next := Head.Choice_Chain;
+                  Next := Choices_Info (Head).Choice_Chain;
                end if;
                return;
             end if;
 
+            --  Split in two and sort.
             Merge_Sort (Head, Half, L, L_End);
             Merge_Sort (L_End, Nbr - Half, R, R_End);
             Next := R_End;
 
             --  Merge
-            Last := null;
+            Last := No_Choice_Id;
             loop
                if L /= L_End
                  and then
                    (R = R_End
                     or else
-                    Compare_String_Literals (L.Choice_Expr, R.Choice_Expr)
-                    = Compare_Lt)
+                      Compare_String_Literals (Choices_Info (L).Choice_Expr,
+                                               Choices_Info (R).Choice_Expr)
+                      = Compare_Lt)
                then
+                  --  Pick L.
                   E := L;
-                  L := L.Choice_Chain;
+                  L := Choices_Info (L).Choice_Chain;
                elsif R /= R_End then
+                  --  Pick R.
                   E := R;
-                  R := R.Choice_Chain;
+                  R := Choices_Info (R).Choice_Chain;
                else
                   exit;
                end if;
-               if Last = null then
+               --  Append.
+               if Last = No_Choice_Id then
                   Res := E;
                else
-                  Last.Choice_Chain := E;
+                  Choices_Info (Last).Choice_Chain := E;
                end if;
                Last := E;
             end loop;
-            Last.Choice_Chain := R_End;
+            Choices_Info (Last).Choice_Chain := R_End;
          end Merge_Sort;
-         Next               : Ortho_Info_Acc;
       begin
-         Merge_Sort (First, Nbr_Choices, First, Next);
-         if Next /= null then
-            raise Internal_Error;
-         end if;
+         Merge_Sort (First, Nbr_Choices, First, Last);
+         pragma Assert (Last = No_Choice_Id);
       end;
 
+      Open_Temp;
       Translate_String_Case_Statement_Common
         (Stmt, Expr_Type, Tinfo, Expr_Node, C_Node);
 
-      --  Generate choices table.
+      --  Generate the sorted array of choices.
       Sel_Length := Eval_Discrete_Type_Length
         (Get_String_Type_Bound_Type (Expr_Type));
       String_Type := New_Constrained_Array_Type
@@ -947,16 +1340,17 @@ package body Trans.Chap8 is
                       Table_Type);
       Start_Const_Value (Table);
       Start_Array_Aggr (List, Table_Type);
-      Info := First;
-      while Info /= null loop
+
+      El := First;
+      while El /= No_Choice_Id loop
          New_Array_Aggr_El (List, Chap7.Translate_Static_Expression
-                            (Info.Choice_Expr, Expr_Type));
-         Info := Info.Choice_Chain;
+                              (Choices_Info (El).Choice_Expr, Expr_Type));
+         El := Choices_Info (El).Choice_Chain;
       end loop;
       Finish_Array_Aggr (List, Table_Cst);
       Finish_Const_Value (Table, Table_Cst);
 
-      --  Generate assoc table.
+      --  Generate table from choice to statements block.
       Assoc_Table_Base_Type :=
         New_Array_Type (Ghdl_Index_Type, Ghdl_Index_Type);
       New_Type_Decl (Create_Uniq_Identifier, Assoc_Table_Base_Type);
@@ -968,12 +1362,13 @@ package body Trans.Chap8 is
                       O_Storage_Private, Assoc_Table_Type);
       Start_Const_Value (Assoc_Table);
       Start_Array_Aggr (List, Assoc_Table_Type);
-      Info := First;
-      while Info /= null loop
+      El := First;
+      while El /= No_Choice_Id loop
          New_Array_Aggr_El
-           (List, New_Unsigned_Literal (Ghdl_Index_Type,
-            Unsigned_64 (Info.Choice_Assoc)));
-         Info := Info.Choice_Chain;
+           (List, New_Unsigned_Literal
+              (Ghdl_Index_Type,
+               Unsigned_64 (Choices_Info (El).Choice_Assoc)));
+         El := Choices_Info (El).Choice_Chain;
       end loop;
       Finish_Array_Aggr (List, Table_Cst);
       Finish_Const_Value (Assoc_Table, Table_Cst);
@@ -982,14 +1377,12 @@ package body Trans.Chap8 is
       declare
          Var_Lo, Var_Hi, Var_Mid : O_Dnode;
          Var_Cmp                 : O_Dnode;
-         Var_Idx                 : O_Dnode;
          Label                   : O_Snode;
-         Others_Lit              : O_Cnode;
          If_Blk1, If_Blk2        : O_If_Block;
-         Case_Blk                : O_Case_Block;
       begin
          Var_Idx := Create_Temp (Ghdl_Index_Type);
 
+         --  Declare Lo, Hi, Mid, Cmp.
          Start_Declare_Stmt;
 
          New_Var_Decl (Var_Lo, Wki_Lo, O_Storage_Local, Ghdl_Index_Type);
@@ -998,6 +1391,9 @@ package body Trans.Chap8 is
          New_Var_Decl (Var_Cmp, Wki_Cmp,
                        O_Storage_Local, Ghdl_Compare_Type);
 
+         --  Generate:
+         --    Lo := 0;
+         --    Hi := Nbr_Choices - 1;
          New_Assign_Stmt (New_Obj (Var_Lo), New_Lit (Ghdl_Index_0));
          New_Assign_Stmt
            (New_Obj (Var_Hi),
@@ -1012,48 +1408,75 @@ package body Trans.Chap8 is
               (Ghdl_Index_Type, Unsigned_64 (Nbr_Assocs));
          end if;
 
+         --  Generate:
+         --    loop
+         --       Mid := (Lo + Hi) / 2;
+         --       Cmp := COMPARE (Expr, Table[Mid]);
          Start_Loop_Stmt (Label);
          New_Assign_Stmt
            (New_Obj (Var_Mid),
             New_Dyadic_Op (ON_Div_Ov,
-              New_Dyadic_Op (ON_Add_Ov,
-                New_Obj_Value (Var_Lo),
-                New_Obj_Value (Var_Hi)),
-              New_Lit (New_Unsigned_Literal
-                (Ghdl_Index_Type, 2))));
+                           New_Dyadic_Op (ON_Add_Ov,
+                                          New_Obj_Value (Var_Lo),
+                                          New_Obj_Value (Var_Hi)),
+                           New_Lit (New_Unsigned_Literal
+                                      (Ghdl_Index_Type, 2))));
          New_Assign_Stmt
            (New_Obj (Var_Cmp),
             Translate_Simple_String_Choice
               (Expr_Node,
                New_Address (New_Indexed_Element (New_Obj (Table),
-                 New_Obj_Value (Var_Mid)),
-                 Tinfo.T.Base_Ptr_Type (Mode_Value)),
+                                                 New_Obj_Value (Var_Mid)),
+                            Tinfo.T.Base_Ptr_Type (Mode_Value)),
                C_Node, Tinfo, Func));
+
+         --  Generate:
+         --       if Cmp = Eq then
+         --         Idx := Mid;
+         --         exit;
+         --       end if;
          Start_If_Stmt
            (If_Blk1,
             New_Compare_Op (ON_Eq,
-              New_Obj_Value (Var_Cmp),
-              New_Lit (Ghdl_Compare_Eq),
-              Ghdl_Bool_Type));
+                            New_Obj_Value (Var_Cmp),
+                            New_Lit (Ghdl_Compare_Eq),
+                            Ghdl_Bool_Type));
          New_Assign_Stmt
            (New_Obj (Var_Idx),
             New_Value (New_Indexed_Element (New_Obj (Assoc_Table),
-              New_Obj_Value (Var_Mid))));
+                                            New_Obj_Value (Var_Mid))));
          New_Exit_Stmt (Label);
          Finish_If_Stmt (If_Blk1);
 
+         --  Generate:
+         --       if Cmp = Lt then
+         --         if Mid < Lo then
+         --           Idx := others;
+         --           exit;
+         --         else
+         --           Hi := Mid - 1;
+         --         end if;
+         --       else
+         --         if Mid > Hi then
+         --           Idx := others;
+         --           exit;
+         --         else
+         --           Lo := Mid + 1;
+         --         end if;
+         --       end if;
+         --    end loop;
          Start_If_Stmt
            (If_Blk1,
             New_Compare_Op (ON_Eq,
-              New_Obj_Value (Var_Cmp),
-              New_Lit (Ghdl_Compare_Lt),
-              Ghdl_Bool_Type));
+                            New_Obj_Value (Var_Cmp),
+                            New_Lit (Ghdl_Compare_Lt),
+                            Ghdl_Bool_Type));
          Start_If_Stmt
            (If_Blk2,
             New_Compare_Op (ON_Le,
-              New_Obj_Value (Var_Mid),
-              New_Obj_Value (Var_Lo),
-              Ghdl_Bool_Type));
+                            New_Obj_Value (Var_Mid),
+                            New_Obj_Value (Var_Lo),
+                            Ghdl_Bool_Type));
          if not Has_Others then
             Chap6.Gen_Program_Error (Stmt, Chap6.Prg_Err_Bad_Choice);
          else
@@ -1063,8 +1486,8 @@ package body Trans.Chap8 is
          New_Else_Stmt (If_Blk2);
          New_Assign_Stmt (New_Obj (Var_Hi),
                           New_Dyadic_Op (ON_Sub_Ov,
-                            New_Obj_Value (Var_Mid),
-                            New_Lit (Ghdl_Index_1)));
+                                         New_Obj_Value (Var_Mid),
+                                         New_Lit (Ghdl_Index_1)));
          Finish_If_Stmt (If_Blk2);
 
          New_Else_Stmt (If_Blk1);
@@ -1072,9 +1495,9 @@ package body Trans.Chap8 is
          Start_If_Stmt
            (If_Blk2,
             New_Compare_Op (ON_Ge,
-              New_Obj_Value (Var_Mid),
-              New_Obj_Value (Var_Hi),
-              Ghdl_Bool_Type));
+                            New_Obj_Value (Var_Mid),
+                            New_Obj_Value (Var_Hi),
+                            Ghdl_Bool_Type));
          if not Has_Others then
             Chap6.Gen_Program_Error (Stmt, Chap6.Prg_Err_No_Choice);
          else
@@ -1084,8 +1507,8 @@ package body Trans.Chap8 is
          New_Else_Stmt (If_Blk2);
          New_Assign_Stmt (New_Obj (Var_Lo),
                           New_Dyadic_Op (ON_Add_Ov,
-                            New_Obj_Value (Var_Mid),
-                            New_Lit (Ghdl_Index_1)));
+                                         New_Obj_Value (Var_Mid),
+                                         New_Lit (Ghdl_Index_1)));
          Finish_If_Stmt (If_Blk2);
 
          Finish_If_Stmt (If_Blk1);
@@ -1093,9 +1516,27 @@ package body Trans.Chap8 is
          Finish_Loop_Stmt (Label);
 
          Finish_Declare_Stmt;
+      end;
+
+      --  Generate:
+      --    case Idx is
+      --      when ch1
+      --         | ch2 => stmt_list1;
+      --      when ch3 => stmt_list2;
+      --      ...
+      --    end case;
+      declare
+         Case_Blk                : O_Case_Block;
+         Next_State : State_Type;
+         Choice_State  : State_Type;
+      begin
+         if Has_Suspend then
+            Next_State := State_Allocate;
+         end if;
 
          Start_Case_Stmt (Case_Blk, New_Obj_Value (Var_Idx));
 
+         Nbr_Assocs := 0;
          Choice := Choices_Chain;
          while Choice /= Null_Iir loop
             case Get_Kind (Choice) is
@@ -1103,21 +1544,32 @@ package body Trans.Chap8 is
                   Start_Choice (Case_Blk);
                   New_Expr_Choice (Case_Blk, Others_Lit);
                   Finish_Choice (Case_Blk);
-                  Translate_Statements_Chain
-                    (Get_Associated_Chain (Choice));
+                  if Has_Suspend then
+                     Choice_State := State_Allocate;
+                     State_Jump (Choice_State);
+                  else
+                     Translate_Statements_Chain
+                       (Get_Associated_Chain (Choice));
+                  end if;
                when Iir_Kind_Choice_By_Expression =>
                   if not Get_Same_Alternative_Flag (Choice) then
                      Start_Choice (Case_Blk);
                      New_Expr_Choice
                        (Case_Blk,
                         New_Unsigned_Literal
-                          (Ghdl_Index_Type,
-                           Unsigned_64 (Get_Info (Choice).Choice_Assoc)));
+                          (Ghdl_Index_Type, Unsigned_64 (Nbr_Assocs)));
                      Finish_Choice (Case_Blk);
-                     Translate_Statements_Chain
-                       (Get_Associated_Chain (Choice));
+                     if Has_Suspend then
+                        Choice_State := State_Allocate;
+                        State_Jump (Choice_State);
+                     else
+                        Translate_Statements_Chain
+                          (Get_Associated_Chain (Choice));
+                     end if;
+                     if not Get_Same_Alternative_Flag (Choice) then
+                        Nbr_Assocs := Nbr_Assocs + 1;
+                     end if;
                   end if;
-                  Free_Info (Choice);
                when others =>
                   raise Internal_Error;
             end case;
@@ -1130,6 +1582,11 @@ package body Trans.Chap8 is
          Chap6.Gen_Program_Error (Stmt, Chap6.Prg_Err_No_Choice);
 
          Finish_Case_Stmt (Case_Blk);
+         Close_Temp;
+
+         if Has_Suspend then
+            Translate_Case_Statement_State (Stmt, Next_State);
+         end if;
       end;
    end Translate_String_Case_Statement_Dichotomy;
 
@@ -1138,6 +1595,10 @@ package body Trans.Chap8 is
    procedure Translate_String_Case_Statement_Linear
      (Stmt : Iir_Case_Statement)
    is
+      Has_Suspend : constant Boolean := Get_Suspend_Flag (Stmt);
+      Next_State : State_Type;
+      Choice_State  : State_Type;
+
       Expr_Type : Iir;
       --  Node containing the address of the selector.
       Expr_Node : O_Dnode;
@@ -1172,10 +1633,15 @@ package body Trans.Chap8 is
                   Cond := Translate_Simple_String_Choice
                     (Expr_Node,
                      Chap7.Translate_Expression (Ch_Expr,
-                       Get_Type (Ch_Expr)),
+                                                 Get_Type (Ch_Expr)),
                      Val_Node, Tinfo, Func);
                when Iir_Kind_Choice_By_Others =>
-                  Translate_Statements_Chain (Stmt_Chain);
+                  if Has_Suspend then
+                     Choice_State := State_Allocate;
+                     State_Jump (Choice_State);
+                  else
+                     Translate_Statements_Chain (Stmt_Chain);
+                  end if;
                   return;
                when others =>
                   Error_Kind ("translate_string_choice", Ch);
@@ -1198,12 +1664,18 @@ package body Trans.Chap8 is
             Cond := New_Obj_Value (Cond_Var);
          end if;
          Start_If_Stmt (If_Blk, Cond);
-         Translate_Statements_Chain (Stmt_Chain);
+         if Has_Suspend then
+            Choice_State := State_Allocate;
+            State_Jump (Choice_State);
+         else
+            Translate_Statements_Chain (Stmt_Chain);
+         end if;
          New_Else_Stmt (If_Blk);
          Translate_String_Choice (Ch);
          Finish_If_Stmt (If_Blk);
       end Translate_String_Choice;
    begin
+      Open_Temp;
       Translate_String_Case_Statement_Common
         (Stmt, Expr_Type, Tinfo, Expr_Node, Val_Node);
 
@@ -1212,7 +1684,16 @@ package body Trans.Chap8 is
 
       Cond_Var := Create_Temp (Std_Boolean_Type_Node);
 
+      if Has_Suspend then
+         Next_State := State_Allocate;
+      end if;
+
       Translate_String_Choice (Get_Case_Statement_Alternative_Chain (Stmt));
+      Close_Temp;
+
+      if Has_Suspend then
+         Translate_Case_Statement_State (Stmt, Next_State);
+      end if;
    end Translate_String_Case_Statement_Linear;
 
    procedure Translate_Case_Choice
@@ -1245,19 +1726,16 @@ package body Trans.Chap8 is
 
    procedure Translate_Case_Statement (Stmt : Iir_Case_Statement)
    is
-      Expr       : Iir;
-      Expr_Type  : Iir;
-      Case_Blk   : O_Case_Block;
-      Choice     : Iir;
-      Stmt_Chain : Iir;
+      Expr : constant Iir := Get_Expression (Stmt);
+      Expr_Type : constant Iir := Get_Type (Expr);
    begin
-      Expr := Get_Expression (Stmt);
-      Expr_Type := Get_Type (Expr);
       if Get_Kind (Expr_Type) = Iir_Kind_Array_Subtype_Definition then
+         --  Expression is a one-dimensional array.
          declare
             Nbr_Choices : Natural := 0;
             Choice      : Iir;
          begin
+            --  Count number of choices.
             Choice := Get_Case_Statement_Alternative_Chain (Stmt);
             while Choice /= Null_Iir loop
                case Get_Kind (Choice) is
@@ -1272,30 +1750,53 @@ package body Trans.Chap8 is
                Choice := Get_Chain (Choice);
             end loop;
 
+            --  Select the strategy according to the number of choices.
             if Nbr_Choices < 3 then
                Translate_String_Case_Statement_Linear (Stmt);
             else
-               Translate_String_Case_Statement_Dichotomy (Stmt);
+               Translate_String_Case_Statement_Dichotomy (Stmt, Nbr_Choices);
             end if;
          end;
-         return;
+      else
+         --  Normal case statement: expression is discrete.
+         declare
+            Has_Suspend : constant Boolean := Get_Suspend_Flag (Stmt);
+            Case_Blk   : O_Case_Block;
+            Choice     : Iir;
+            Stmt_Chain : Iir;
+            Next_State : State_Type;
+            Choice_State  : State_Type;
+         begin
+            Start_Case_Stmt (Case_Blk, Chap7.Translate_Expression (Expr));
+            Choice := Get_Case_Statement_Alternative_Chain (Stmt);
+            if Has_Suspend then
+               Next_State := State_Allocate;
+            end if;
+            while Choice /= Null_Iir loop
+               Start_Choice (Case_Blk);
+               Stmt_Chain := Get_Associated_Chain (Choice);
+               loop
+                  Translate_Case_Choice (Choice, Expr_Type, Case_Blk);
+                  Choice := Get_Chain (Choice);
+                  exit when Choice = Null_Iir;
+                  exit when not Get_Same_Alternative_Flag (Choice);
+                  pragma Assert (Get_Associated_Chain (Choice) = Null_Iir);
+               end loop;
+               Finish_Choice (Case_Blk);
+               if Has_Suspend then
+                  Choice_State := State_Allocate;
+                  State_Jump (Choice_State);
+               else
+                  Translate_Statements_Chain (Stmt_Chain);
+               end if;
+            end loop;
+            Finish_Case_Stmt (Case_Blk);
+
+            if Has_Suspend then
+               Translate_Case_Statement_State (Stmt, Next_State);
+            end if;
+         end;
       end if;
-      Start_Case_Stmt (Case_Blk, Chap7.Translate_Expression (Expr));
-      Choice := Get_Case_Statement_Alternative_Chain (Stmt);
-      while Choice /= Null_Iir loop
-         Start_Choice (Case_Blk);
-         Stmt_Chain := Get_Associated_Chain (Choice);
-         loop
-            Translate_Case_Choice (Choice, Expr_Type, Case_Blk);
-            Choice := Get_Chain (Choice);
-            exit when Choice = Null_Iir;
-            exit when not Get_Same_Alternative_Flag (Choice);
-            pragma Assert (Get_Associated_Chain (Choice) = Null_Iir);
-         end loop;
-         Finish_Choice (Case_Blk);
-         Translate_Statements_Chain (Stmt_Chain);
-      end loop;
-      Finish_Case_Stmt (Case_Blk);
    end Translate_Case_Statement;
 
    procedure Translate_Write_Procedure_Call (Imp : Iir; Param_Chain : Iir)
@@ -1531,7 +2032,7 @@ package body Trans.Chap8 is
                New_Association
                  (Constr,
                   Chap7.Translate_Expression (Name_Param,
-                    String_Type_Definition));
+                                              String_Type_Definition));
                New_Procedure_Call (Constr);
             end;
 
@@ -1608,6 +2109,268 @@ package body Trans.Chap8 is
             raise Internal_Error;
       end case;
    end Translate_Implicit_Procedure_Call;
+
+   function Get_Interface_Kind (Formal : Iir) return Object_Kind_Type is
+   begin
+      if Get_Kind (Formal) = Iir_Kind_Interface_Signal_Declaration then
+         return Mode_Signal;
+      else
+         return Mode_Value;
+      end if;
+   end Get_Interface_Kind;
+
+   procedure Translate_Procedure_Call_State (Call : Iir)
+   is
+      Imp : constant Iir := Get_Implementation (Call);
+      Info : constant Call_Info_Acc := Get_Info (Call);
+
+      Assoc : Iir;
+      Num : Natural;
+   begin
+      Push_Instance_Factory (Info.Call_State_Scope'Access);
+
+      --  Variable for the frame.
+      Info.Call_Frame_Var := Create_Var (Create_Var_Identifier ("FRAME"),
+                                         Get_Info (Imp).Subprg_Params_Type,
+                                         O_Storage_Local);
+      Info.Call_State_Mark := Create_Var (Create_Var_Identifier ("MARK"),
+                                          Ghdl_Ptr_Type, O_Storage_Local);
+
+      Assoc := Get_Parameter_Association_Chain (Call);
+      Num := 0;
+      while Assoc /= Null_Iir loop
+         declare
+            Formal : constant Iir := Strip_Denoting_Name (Get_Formal (Assoc));
+            Ftype : constant Iir := Get_Type (Formal);
+            Ftype_Info : constant Type_Info_Acc := Get_Info (Ftype);
+            Inter : constant Iir := Get_Association_Interface (Assoc);
+            Call_Assoc_Info : Call_Assoc_Info_Acc;
+            Actual : Iir;
+            Act_Type : Iir;
+            Atype_Info : Type_Info_Acc;
+            Has_Bounds_Field : Boolean;
+            Has_Fat_Pointer_Field : Boolean;
+            Has_Value_Field : Boolean;
+            Has_Ref_Field : Boolean;
+            Object_Kind : Object_Kind_Type;
+            Val_Type : O_Tnode;
+
+            --  For unconstrained interfaces:
+            --  * create a field for the fat pointer, unless
+            --    - the expression is locally static
+            function Need_Fat_Pointer_Field return Boolean is
+            begin
+               return not Is_Fully_Constrained_Type (Ftype)
+                 and then (Actual = Null_Iir
+                             or else Get_Expr_Staticness (Actual) /= Locally);
+            end Need_Fat_Pointer_Field;
+
+            --  For unconstrained interfaces:
+            --  * create a field for the bounds, unless
+            --    - the expression is locally static
+            --    - the expression/name type is locally static
+            --    - expression is a call to an unconstrained function
+            --    - expression is an object name that is not a slice
+            function Need_Bounds_Field return Boolean
+            is
+               Kind : Iir_Kind;
+            begin
+               if Is_Fully_Constrained_Type (Ftype) then
+                  return False;
+               end if;
+               if Act_Type /= Null_Iir
+                 and then Get_Type_Staticness (Act_Type) = Locally
+               then
+                  return False;
+               end if;
+               if Actual /= Null_Iir then
+                  if Get_Expr_Staticness (Actual) = Locally then
+                     return False;
+                  end if;
+                  Kind := Get_Kind (Actual);
+                  if (Kind = Iir_Kind_Function_Call
+                        or else Kind in Iir_Kinds_Dyadic_Operator
+                        or else Kind in Iir_Kinds_Monadic_Operator)
+                    and then Is_Fully_Constrained_Type (Get_Type (Actual))
+                  then
+                     return False;
+                  end if;
+                  if Is_Object_Name (Actual)
+                    and then Kind /= Iir_Kind_Slice_Name
+                  then
+                     return False;
+                  end if;
+               end if;
+               return True;
+            end Need_Bounds_Field;
+
+            --  Helper for Need_Value_Field.  Any expression whose result is
+            --  on stack2 doesn't need to be copied (again) on stack2.  This is
+            --  an optimization and the result can be conservative.
+            --  FIXME: also consider attributes (like 'image) and implicit
+            --   functions (like to_string).
+            function Is_Result_On_Stack2_Expression (Expr : Iir) return Boolean
+            is
+               Info : Ortho_Info_Acc;
+               Imp : Iir;
+            begin
+               case Get_Kind (Expr) is
+                  when Iir_Kind_Function_Call =>
+                     Imp := Get_Implementation (Expr);
+                     Info := Get_Info (Imp);
+                     --  Note: Implicit functions don't have info.  A few of
+                     --  them (like to_string) return the result on stack2.
+                     return Info /= null
+                       and then Info.Use_Stack2;
+                  when Iir_Kinds_Monadic_Operator
+                    | Iir_Kinds_Dyadic_Operator =>
+                     return False;
+                  when others =>
+                     return False;
+               end case;
+            end Is_Result_On_Stack2_Expression;
+
+            --  If the associated expression is not a name of an object (never
+            --  the case for a signal interface and variable interface):
+            --  * create a field for the value, unless
+            --    - expression is locally static
+            --    - expression is scalar
+            --    - expression is a call to an unconstrained function
+            --  If the actual is a name of an object, create a field for the
+            --  value only if the object is a signal and the interface is
+            --  a constant (we need to capture the value of the signal).
+            function Need_Value_Field return Boolean
+            is
+               pragma Assert (Actual /= Null_Iir);
+               Act_Obj : constant Iir := Name_To_Object (Actual);
+            begin
+               if Act_Obj /= Null_Iir then
+                  --  Actual is an object.
+                  if (Get_Kind (Formal)
+                        = Iir_Kind_Interface_Constant_Declaration)
+                    and then Is_Signal_Object (Act_Obj)
+                  then
+                     --  The value of the signal needs to be captured.
+                     return True;
+                  end if;
+                  return False;
+               end if;
+
+               if Get_Expr_Staticness (Actual) = Locally
+                 or else (Get_Kind (Act_Type)
+                            in Iir_Kinds_Scalar_Type_Definition)
+                 or else Get_Kind (Ftype) = Iir_Kind_File_Type_Definition
+                 or else Is_Result_On_Stack2_Expression (Actual)
+               then
+                  return False;
+               end if;
+               return True;
+            end Need_Value_Field;
+         begin
+            Call_Assoc_Info := null;
+            Has_Bounds_Field := False;
+            Has_Fat_Pointer_Field := False;
+            Has_Value_Field := False;
+            Has_Ref_Field := False;
+
+            case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+               when Iir_Kind_Association_Element_By_Individual =>
+                  --  Create a field for the whole formal.
+                  Has_Value_Field := True;
+                  Actual := Null_Iir;
+                  Act_Type := Get_Actual_Type (Assoc);
+               when Iir_Kind_Association_Element_By_Expression =>
+                  Actual := Get_Actual (Assoc);
+                  Act_Type := Get_Type (Actual);
+               when Iir_Kind_Association_Element_Open =>
+                  Actual := Get_Default_Value (Inter);
+                  Act_Type := Get_Type (Actual);
+            end case;
+
+            --  For out or inout scalar variable, create a field for the
+            --  value.
+            if Actual /= Null_Iir
+              and then (Get_Kind (Inter)
+                          = Iir_Kind_Interface_Variable_Declaration)
+              and then Get_Mode (Inter) /= Iir_In_Mode
+              and then
+              (Formal /= Inter
+                 or else Ftype_Info.Type_Mode in Type_Mode_Call_By_Value)
+            then
+               Has_Ref_Field := True;
+            end if;
+
+            if Formal = Inter
+              and then Ftype_Info.Type_Mode not in Type_Mode_Thin
+            then
+               --  For whole association: create field according to the above
+               --  predicates.
+               --  For thin modes, there is no bounds, no fat pointers and the
+               --  value is directly passed in the parameters.
+               Has_Bounds_Field := Need_Bounds_Field;
+               Has_Fat_Pointer_Field := Need_Fat_Pointer_Field;
+               Has_Value_Field := Has_Value_Field or else Need_Value_Field;
+            end if;
+
+            if Has_Bounds_Field
+              or Has_Fat_Pointer_Field
+              or Has_Value_Field
+              or Has_Ref_Field
+            then
+               --  Create the info and the variables.
+               Call_Assoc_Info := Add_Info (Assoc, Kind_Call_Assoc);
+               Object_Kind := Get_Interface_Kind (Inter);
+               if Has_Ref_Field then
+                  --  Reference to the actual.  Therefore the type of the
+                  --  actual must be used (due to a possible conversion or
+                  --  function call).
+                  Atype_Info := Get_Info (Act_Type);
+                  Call_Assoc_Info.Call_Assoc_Ref := Create_Var
+                    (Create_Var_Identifier (Inter, "__REF", Num),
+                     Atype_Info.Ortho_Ptr_Type (Object_Kind),
+                     O_Storage_Local);
+               end if;
+               if Has_Value_Field then
+                  if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                     --  For unconstrained arrays/records:
+                     --   - the array (if the actual is constrained and not
+                     --                complex) - TODO
+                     --   - a pointer to the base.
+                     Val_Type := Ftype_Info.T.Base_Ptr_Type (Object_Kind);
+                  else
+                     --  For constrained arrays/records:
+                     --   - the base if not complex
+                     --   - a pointer to the base, if complex
+                     if Is_Complex_Type (Ftype_Info) then
+                        Val_Type := Ftype_Info.Ortho_Ptr_Type (Object_Kind);
+                     else
+                        Val_Type := Ftype_Info.Ortho_Type (Object_Kind);
+                     end if;
+                  end if;
+                  Call_Assoc_Info.Call_Assoc_Value := Create_Var
+                    (Create_Var_Identifier (Inter, "__VAL", Num),
+                     Val_Type, O_Storage_Local);
+               end if;
+               if Has_Bounds_Field then
+                  Call_Assoc_Info.Call_Assoc_Bounds := Create_Var
+                    (Create_Var_Identifier (Inter, "__BND", Num),
+                     Ftype_Info.T.Bounds_Type, O_Storage_Local);
+               end if;
+               if Has_Fat_Pointer_Field then
+                  Call_Assoc_Info.Call_Assoc_Fat := Create_Var
+                    (Create_Var_Identifier (Inter, "__FAT", Num),
+                     Ftype_Info.Ortho_Type (Object_Kind));
+               end if;
+               Num := Num + 1;
+            end if;
+         end;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+
+      Pop_Instance_Factory (Info.Call_State_Scope'Access);
+      New_Type_Decl (Create_Identifier ("CALLERTYPE"),
+                     Get_Scope_Type (Info.Call_State_Scope));
+   end Translate_Procedure_Call_State;
 
    function Do_Conversion (Conv : Iir; Expr : Iir; Src : O_Enode)
                           return O_Enode is
@@ -1699,14 +2462,26 @@ package body Trans.Chap8 is
       return Res;
    end Translate_Individual_Association_Formal;
 
-   function Translate_Subprogram_Call (Imp : Iir; Assoc_Chain : Iir; Obj : Iir)
-                                      return O_Enode
+   function Translate_Subprogram_Call
+     (Call : Iir; Assoc_Chain : Iir; Obj : Iir) return O_Enode
    is
+      Imp : constant Iir := Get_Implementation (Call);
+
       Is_Procedure : constant Boolean :=
         Get_Kind (Imp) = Iir_Kind_Procedure_Declaration;
       Is_Function : constant Boolean := not Is_Procedure;
       Is_Foreign : constant Boolean := Get_Foreign_Flag (Imp);
       Info : constant Subprg_Info_Acc := Get_Info (Imp);
+
+      --  True if the callee is suspendable.
+      Does_Callee_Suspend : constant Boolean := Is_Procedure
+        and then Get_Suspend_Flag (Imp);
+
+      Call_Info : constant Ortho_Info_Acc := Get_Info (Call);
+
+      --  True if the caller is suspendable.  The callee can still be
+      --  suspendable, but cannot suspend.
+      Is_Suspendable : constant Boolean := Call_Info /= null;
 
       type Mnode_Array is array (Natural range <>) of Mnode;
       type O_Enode_Array is array (Natural range <>) of O_Enode;
@@ -1724,29 +2499,17 @@ package body Trans.Chap8 is
       --  the copy of the scalar.
       Inout_Params : Mnode_Array (0 .. Nbr_Assoc - 1);
 
-      Params_Var : O_Dnode;
+      Params_Var : Var_Type;
       Res : Mnode;
       El : Iir;
       Pos : Natural;
       Constr : O_Assoc_List;
-      Act : Iir;
-      Actual_Type : Iir;
-      Formal : Iir;
-      Mode : Iir_Mode;
-      Base_Formal : Iir;
-      Formal_Type : Iir;
-      Ftype_Info : Type_Info_Acc;
-      Formal_Info : Ortho_Info_Acc;
-      Val : O_Enode;
-      Param : Mnode;
-      Param_Type : Iir;
       Last_Individual : Natural;
-      Ptr : O_Lnode;
-      In_Conv : Iir;
-      Out_Conv : Iir;
-      Out_Expr : Iir;
-      Formal_Object_Kind : Object_Kind_Type;
-      Bounds : Mnode;
+      Mark_Var : Var_Type;
+
+      Call_State : State_Type;
+      Next_State : State_Type;
+      If_Blk : O_If_Block;
    begin
       --  For functions returning an unconstrained object: save the mark.
       if Is_Function and then Info.Use_Stack2 then
@@ -1767,11 +2530,33 @@ package body Trans.Chap8 is
          end;
       end if;
 
-      --  Create the variable containing the parameters (only for procedures).
-      if Is_Procedure and then Info.Subprg_Params_Type /= O_Tnode_Null then
-         Params_Var := Create_Temp (Info.Subprg_Params_Type);
+      if Is_Function or else Info.Subprg_Params_Type = O_Tnode_Null then
+         --  Standard call, like a C function (no parameters struct).
+         pragma Assert (not Does_Callee_Suspend);
+         Params_Var := Null_Var;
+         Mark_Var := Null_Var;
       else
-         Params_Var := O_Dnode_Null;
+         --  Create the variable containing the parameters.
+         --  Save Stack2 mark.  Callee allocate its frame on stack2.
+         if Is_Suspendable then
+            --  The caller is suspendable.
+            Params_Var := Call_Info.Call_Frame_Var;
+            Mark_Var := Call_Info.Call_State_Mark;
+            --  There might be temporary variables created before the
+            --  suspension, eg for range checks.
+            --  Create a scope that will be closed just before the suspension.
+            Open_Temp;
+            Disable_Stack2_Release;
+         else
+            --  Caller does not suspend; create the frame variable.
+            Start_Declare_Stmt;
+            Mark_Var := Create_Var (Create_Var_Identifier ("CMARK"),
+                                    Ghdl_Ptr_Type, O_Storage_Local);
+            Params_Var := Create_Var (Create_Var_Identifier ("CPARAMS"),
+                                      Info.Subprg_Params_Type,
+                                      O_Storage_Local);
+         end if;
+         Set_Stack2_Mark (Get_Var (Mark_Var));
       end if;
 
       --  Evaluate in-out parameters and parameters passed by ref, since
@@ -1785,156 +2570,304 @@ package body Trans.Chap8 is
          E_Params (Pos) := O_Enode_Null;
          Inout_Params (Pos) := Mnode_Null;
 
-         Formal := Strip_Denoting_Name (Get_Formal (El));
-         Base_Formal := Get_Association_Interface (El);
-         Formal_Type := Get_Type (Formal);
-         Formal_Info := Get_Info (Base_Formal);
-         Ftype_Info := Get_Info (Formal_Type);
+         declare
+            Assoc_Info : Call_Assoc_Info_Acc;
+            Base_Formal : constant Iir := Get_Association_Interface (El);
+            Formal : constant Iir := Strip_Denoting_Name (Get_Formal (El));
+            Formal_Type : constant Iir := Get_Type (Formal);
+            Ftype_Info : constant Type_Info_Acc := Get_Info (Formal_Type);
+            Formal_Info : constant Ortho_Info_Acc := Get_Info (Base_Formal);
+            Formal_Object_Kind : constant Object_Kind_Type :=
+              Get_Interface_Kind (Base_Formal);
+            Act : Iir;
+            Actual_Type : Iir;
+            In_Conv : Iir;
+            Param : Mnode;
+            Param_Type : Iir;
+            Val : O_Enode;
+            Mval : Mnode;
+            Mode : Iir_Mode;
+            Ptr : O_Lnode;
+            Bounds : Mnode;
+         begin
+            --  To translate user redefined operators,
+            --  translate_operator_function_call creates associations, that
+            --  have not corresponding infos.  Do not try to get assoc info
+            --  for non-suspendable procedures.
+            --  FIXME: either transform operator to a function call in canon,
+            --    or directly translate function call.
+            if Does_Callee_Suspend then
+               Assoc_Info := Get_Info (El);
+            else
+               Assoc_Info := null;
+            end if;
 
-         if Get_Kind (Base_Formal) = Iir_Kind_Interface_Signal_Declaration
-         then
-            Formal_Object_Kind := Mode_Signal;
-         else
-            Formal_Object_Kind := Mode_Value;
-         end if;
+            case Get_Kind (El) is
+               when Iir_Kind_Association_Element_Open =>
+                  Act := Get_Default_Value (Formal);
+                  In_Conv := Null_Iir;
+               when Iir_Kind_Association_Element_By_Expression =>
+                  Act := Get_Actual (El);
+                  In_Conv := Get_In_Conversion (El);
+               when Iir_Kind_Association_Element_By_Individual =>
+                  Actual_Type := Get_Actual_Type (El);
 
-         case Get_Kind (El) is
-            when Iir_Kind_Association_Element_Open =>
-               Act := Get_Default_Value (Formal);
-               In_Conv := Null_Iir;
-            when Iir_Kind_Association_Element_By_Expression =>
-               Act := Get_Actual (El);
-               In_Conv := Get_In_Conversion (El);
-            when Iir_Kind_Association_Element_By_Individual =>
-               Actual_Type := Get_Actual_Type (El);
-
-               if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
-                  --  Create the constraints and then the object.
-                  Chap3.Create_Array_Subtype (Actual_Type);
-                  Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
-                  Param := Create_Temp (Ftype_Info, Formal_Object_Kind);
-                  Chap3.Translate_Object_Allocation
-                    (Param, Alloc_Stack, Formal_Type, Bounds);
-               else
-                  --  Create the object.
-                  Param := Create_Temp (Ftype_Info, Formal_Object_Kind);
-                  Chap4.Allocate_Complex_Object
-                    (Formal_Type, Alloc_Stack, Param);
-               end if;
-
-               --  Save the object as it will be used by the following
-               --  associations.
-               Last_Individual := Pos;
-               Params (Pos) := Param;
-
-               if Formal_Info.Interface_Field /= O_Fnode_Null then
-                  --  Set the PARAMS field.
-                  Ptr := New_Selected_Element
-                    (New_Obj (Params_Var), Formal_Info.Interface_Field);
-                  New_Assign_Stmt (Ptr, M2E (Param));
-               end if;
-
-               goto Continue;
-            when others =>
-               Error_Kind ("translate_procedure_call", El);
-         end case;
-         Actual_Type := Get_Type (Act);
-
-         --  Evaluate the actual.
-         Param_Type := Actual_Type;
-         case Get_Kind (Base_Formal) is
-            when Iir_Kind_Interface_Constant_Declaration
-              | Iir_Kind_Interface_File_Declaration =>
-               --  No conversion here.
-               pragma Assert (In_Conv = Null_Iir);
-               Val := Chap7.Translate_Expression (Act, Formal_Type);
-               Param_Type := Formal_Type;
-            when Iir_Kind_Interface_Signal_Declaration =>
-               --  No conversion.
-               Param := Chap6.Translate_Name (Act);
-               Val := M2E (Param);
-            when Iir_Kind_Interface_Variable_Declaration =>
-               Mode := Get_Mode (Base_Formal);
-               if Mode = Iir_In_Mode then
-                  Val := Chap7.Translate_Expression (Act);
-               else
-                  Param := Chap6.Translate_Name (Act);
-                  if Base_Formal /= Formal
-                    or else Ftype_Info.Type_Mode in Type_Mode_Pass_By_Copy
-                  then
-                     --  For out/inout, we need to keep the reference for the
-                     --  copy-out.
-                     Stabilize (Param);
-                     Params (Pos) := Param;
-                  end if;
-                  if In_Conv = Null_Iir
-                    and then Mode = Iir_Out_Mode
-                    and then Ftype_Info.Type_Mode in Type_Mode_Thin
-                    and then Ftype_Info.Type_Mode /= Type_Mode_File
-                  then
-                     --  Scalar OUT interface.  Just give an initial value.
-                     --  FIXME: individual association ??
-                     Val := Chap4.Get_Scalar_Initial_Value (Formal_Type);
-                     Param_Type := Formal_Type;
+                  if Assoc_Info = null then
+                     Param := Create_Temp (Ftype_Info, Formal_Object_Kind);
                   else
-                     Val := M2E (Param);
+                     declare
+                        Param_Var : Var_Type;
+                     begin
+                        if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                           Param_Var := Assoc_Info.Call_Assoc_Fat;
+                        else
+                           Param_Var := Assoc_Info.Call_Assoc_Value;
+                        end if;
+                        Param := Stabilize (Get_Var (Param_Var, Ftype_Info,
+                                                     Formal_Object_Kind));
+                     end;
                   end if;
 
-                  if Is_Foreign
-                    and then Ftype_Info.Type_Mode in Type_Mode_Pass_By_Copy
-                  then
-                     --  Scalar parameters of foreign procedures (of mode out
-                     --  or inout) are passed by address, create a copy of the
-                     --  value.
-                     Inout_Params (Pos) :=
-                       Create_Temp (Ftype_Info, Mode_Value);
+                  declare
+                     Alloc : Allocation_Kind;
+                  begin
+                     if Does_Callee_Suspend then
+                        Alloc := Alloc_Return;
+                     else
+                        Alloc := Alloc_Stack;
+                     end if;
+
+                     if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                        --  Create the constraints and then the object.
+                        --  FIXME: do not allocate bounds.
+                        Chap3.Create_Array_Subtype (Actual_Type);
+                        Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
+                        Chap3.Translate_Object_Allocation
+                          (Param, Alloc, Formal_Type, Bounds);
+                     else
+                        --  Create the object.
+                        Chap4.Allocate_Complex_Object
+                          (Formal_Type, Alloc, Param);
+                     end if;
+                  end;
+
+                  --  Save the object as it will be used by the following
+                  --  associations.
+                  Last_Individual := Pos;
+                  Params (Pos) := Param;
+
+                  if Formal_Info.Interface_Field /= O_Fnode_Null then
+                     --  Set the PARAMS field.
+                     Ptr := New_Selected_Element
+                       (Get_Var (Params_Var), Formal_Info.Interface_Field);
+                     New_Assign_Stmt (Ptr, M2E (Param));
                   end if;
+
+                  goto Continue;
+               when others =>
+                  Error_Kind ("translate_procedure_call", El);
+            end case;
+            Actual_Type := Get_Type (Act);
+
+            --  Evaluate the actual.
+            Param_Type := Actual_Type;
+            case Get_Kind (Base_Formal) is
+               when Iir_Kind_Interface_Constant_Declaration
+                 | Iir_Kind_Interface_File_Declaration =>
+                  --  No conversion here.
+                  pragma Assert (In_Conv = Null_Iir);
+                  Val := Chap7.Translate_Expression (Act, Formal_Type);
+                  Param_Type := Formal_Type;
+               when Iir_Kind_Interface_Signal_Declaration =>
+                  --  No conversion.
+                  Param := Chap6.Translate_Name (Act);
+                  Val := M2E (Param);
+               when Iir_Kind_Interface_Variable_Declaration =>
+                  Mode := Get_Mode (Base_Formal);
+                  if Mode = Iir_In_Mode then
+                     Val := Chap7.Translate_Expression (Act);
+                  else
+                     Param := Chap6.Translate_Name (Act);
+                     if Base_Formal /= Formal
+                       or else Ftype_Info.Type_Mode in Type_Mode_Call_By_Value
+                     then
+                        --  For out/inout, we need to keep the reference
+                        --  for the copy-out.
+                        Stabilize (Param);
+                        Params (Pos) := Param;
+
+                        if Assoc_Info /= null then
+                           --  Save reference in local frame.
+                           New_Assign_Stmt
+                             (Get_Var (Assoc_Info.Call_Assoc_Ref),
+                              M2Addr (Param));
+                        end if;
+                     end if;
+                     if In_Conv = Null_Iir
+                       and then Mode = Iir_Out_Mode
+                       and then Ftype_Info.Type_Mode in Type_Mode_Thin
+                       and then Ftype_Info.Type_Mode /= Type_Mode_File
+                     then
+                        --  Scalar OUT interface.  Just give an initial value.
+                        --  FIXME: individual association ??
+                        Val := Chap4.Get_Scalar_Initial_Value (Formal_Type);
+                        Param_Type := Formal_Type;
+                     else
+                        Val := M2E (Param);
+                     end if;
+                     if Is_Foreign
+                       and then Ftype_Info.Type_Mode in Type_Mode_Pass_By_Copy
+                     then
+                        --  Scalar parameters of foreign procedures (of mode
+                        --  out or inout) are passed by address, create a copy
+                        --  of the value.
+                        Inout_Params (Pos) :=
+                          Create_Temp (Ftype_Info, Mode_Value);
+                     end if;
+                  end if;
+                  if In_Conv /= Null_Iir then
+                     Val := Do_Conversion (In_Conv, Act, Val);
+                     Act := In_Conv;
+                     Param_Type := Get_Type (In_Conv);
+                  end if;
+               when others =>
+                  Error_Kind ("translate_procedure_call(2)", Formal);
+            end case;
+
+            --  Implicit conversion to formal type.
+            if Param_Type /= Formal_Type then
+               --  Implicit array conversion or subtype check.
+               Val := Chap7.Translate_Implicit_Conv
+                 (Val, Param_Type, Formal_Type, Formal_Object_Kind, Act);
+            end if;
+            if Get_Kind (Base_Formal) /= Iir_Kind_Interface_Signal_Declaration
+            then
+               Val := Chap3.Maybe_Insert_Scalar_Check (Val, Act, Formal_Type);
+            end if;
+
+            --  Assign actual, if needed.
+            if Base_Formal /= Formal then
+               --  Individual association: assign the individual actual to
+               --  the whole actual.
+               Param := Translate_Individual_Association_Formal
+                 (Formal, Formal_Info, Params (Last_Individual));
+               Chap7.Translate_Assign
+                 (Param, Val, Act, Formal_Type, El);
+
+            elsif Assoc_Info /= null then
+               --  Only for whole association.
+               pragma Assert (Base_Formal = Formal);
+
+               Mval := Stabilize
+                 (E2M (Val, Ftype_Info, Formal_Object_Kind), True);
+
+               if Assoc_Info.Call_Assoc_Fat /= Null_Var then
+                  --  Fat pointer.  VAL is a pointer to a fat pointer, so copy
+                  --  the fat pointer to the FAT field, and set the PARAM
+                  --  field to FAT field.
+                  declare
+                     Fat : Mnode;
+                  begin
+                     Fat := Stabilize
+                       (Get_Var (Assoc_Info.Call_Assoc_Fat,
+                                 Ftype_Info, Formal_Object_Kind));
+                     Copy_Fat_Pointer (Fat, Mval);
+
+                     --  Set PARAM field to the address of the FAT field.
+                     pragma Assert
+                       (Formal_Info.Interface_Field /= O_Fnode_Null);
+                     New_Assign_Stmt
+                       (New_Selected_Element (Get_Var (Params_Var),
+                                              Formal_Info.Interface_Field),
+                        M2E (Fat));
+                  end;
                end if;
-               if In_Conv /= Null_Iir then
-                  Val := Do_Conversion (In_Conv, Act, Val);
-                  Act := In_Conv;
-                  Param_Type := Get_Type (In_Conv);
+
+               if Assoc_Info.Call_Assoc_Bounds /= Null_Var then
+                  --  Copy the bounds.
+                  pragma Assert (Assoc_Info.Call_Assoc_Fat /= Null_Var);
+                  Chap3.Copy_Bounds
+                    (New_Address (Get_Var (Assoc_Info.Call_Assoc_Bounds),
+                                  Ftype_Info.T.Bounds_Ptr_Type),
+                     M2Addr (Chap3.Get_Array_Bounds (Mval)),
+                     Formal_Type);
                end if;
-            when others =>
-               Error_Kind ("translate_procedure_call(2)", Formal);
-         end case;
 
-         --  Implicit conversion to formal type.
-         if Param_Type /= Formal_Type then
-            --  Implicit array conversion or subtype check.
-            Val := Chap7.Translate_Implicit_Conv
-              (Val, Param_Type, Formal_Type, Formal_Object_Kind, Act);
-         end if;
-         if Get_Kind (Base_Formal) /= Iir_Kind_Interface_Signal_Declaration
-         then
-            Val := Chap3.Maybe_Insert_Scalar_Check (Val, Act, Formal_Type);
-         end if;
+               if Assoc_Info.Call_Assoc_Value /= Null_Var then
+                  if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                     pragma Assert (Assoc_Info.Call_Assoc_Fat /= Null_Var);
+                     --  Allocate array base
+                     Param := Stabilize
+                       (Get_Var (Assoc_Info.Call_Assoc_Fat,
+                                 Ftype_Info, Formal_Object_Kind));
+                     Chap3.Allocate_Fat_Array_Base
+                       (Alloc_Return, Param, Formal_Type);
+                     --  NOTE: Call_Assoc_Value is not used, the base is
+                     --  directly allocated in the fat pointer.
+                  else
+                     Param := Get_Var (Assoc_Info.Call_Assoc_Value,
+                                       Ftype_Info, Formal_Object_Kind);
+                     Stabilize (Param);
+                     Chap4.Allocate_Complex_Object
+                       (Formal_Type, Alloc_Return, Param);
+                     New_Assign_Stmt
+                       (New_Selected_Element
+                          (Get_Var (Params_Var), Formal_Info.Interface_Field),
+                        M2Addr (Param));
+                  end if;
+                  Chap3.Translate_Object_Copy
+                    (Param, M2E (Mval), Formal_Type);
+               end if;
 
-         --  Assign actual, if needed.
-         if Base_Formal /= Formal then
-            --  Individual association: assign the individual actual to the
-            --  whole actual.
-            Param := Translate_Individual_Association_Formal
-              (Formal, Formal_Info, Params (Last_Individual));
-            Chap7.Translate_Assign
-              (Param, Val, Act, Formal_Type, El);
-         elsif Formal_Info.Interface_Field /= O_Fnode_Null then
-            --  Set the PARAMS field.
-            Ptr := New_Selected_Element
-              (New_Obj (Params_Var), Formal_Info.Interface_Field);
-            New_Assign_Stmt (Ptr, Val);
-         elsif Inout_Params (Pos) /= Mnode_Null then
-            Chap3.Translate_Object_Copy (Inout_Params (Pos), Val, Formal_Type);
-         else
-            E_Params (Pos) := Val;
-         end if;
+               if Assoc_Info.Call_Assoc_Value = Null_Var
+                 and then Assoc_Info.Call_Assoc_Fat = Null_Var
+               then
+                  --  Set the PARAMS field.
+                  New_Assign_Stmt
+                    (New_Selected_Element
+                       (Get_Var (Params_Var), Formal_Info.Interface_Field),
+                     M2E (Mval));
+               end if;
+            elsif Formal_Info.Interface_Field /= O_Fnode_Null then
+               --  Set the PARAMS field.
+               Ptr := New_Selected_Element
+                 (Get_Var (Params_Var), Formal_Info.Interface_Field);
+               New_Assign_Stmt (Ptr, Val);
+            elsif Inout_Params (Pos) /= Mnode_Null then
+               Chap3.Translate_Object_Copy
+                 (Inout_Params (Pos), Val, Formal_Type);
+               E_Params (Pos) := M2Addr (Inout_Params (Pos));
+            else
+               E_Params (Pos) := Val;
+            end if;
 
-         << Continue >> null;
+            << Continue >> null;
+         end;
+
          El := Get_Chain (El);
          Pos := Pos + 1;
       end loop;
 
       --  Second stage:  really perform the call.
+      if Does_Callee_Suspend then
+         --  Set initial state.
+         New_Assign_Stmt
+           (New_Selected_Element (Get_Var (Params_Var),
+                                  Info.Subprg_State_Field),
+            New_Lit (Ghdl_Index_0));
+      end if;
+      if Is_Suspendable then
+         --  Close the scope created at the beginning.
+         Close_Temp;
+
+         Call_State := State_Allocate;
+         Next_State := State_Allocate;
+
+         --  Call state.
+         State_Jump (Call_State);
+         State_Start (Call_State);
+      end if;
+
       Start_Association (Constr, Info.Ortho_Func);
 
       if Is_Function and then Info.Res_Interface /= O_Dnode_Null then
@@ -1942,10 +2875,11 @@ package body Trans.Chap8 is
          New_Association (Constr, M2E (Res));
       end if;
 
-      if Params_Var /= O_Dnode_Null then
+      if Params_Var /= Null_Var then
          --  Parameters record (for procedures).
-         New_Association (Constr, New_Address (New_Obj (Params_Var),
-                                               Info.Subprg_Params_Ptr));
+         New_Association
+           (Constr, New_Address (Get_Var (Params_Var),
+                                 Info.Subprg_Params_Ptr));
       end if;
 
       if Obj /= Null_Iir then
@@ -1960,30 +2894,28 @@ package body Trans.Chap8 is
       El := Assoc_Chain;
       Pos := 0;
       while El /= Null_Iir loop
-         Formal := Strip_Denoting_Name (Get_Formal (El));
-         Base_Formal := Get_Association_Interface (El);
-         Formal_Info := Get_Info (Base_Formal);
-
-         if Formal_Info.Interface_Field = O_Fnode_Null then
-            --  Not a PARAMS field.
-            if Get_Kind (El) = Iir_Kind_Association_Element_By_Individual then
-               --  Pass the whole data for an individual association.
-               New_Association (Constr, M2E (Params (Pos)));
-            elsif Base_Formal = Formal then
-               --  Whole association.
-               if Inout_Params (Pos) /= Mnode_Null then
-                  Val := M2Addr (Inout_Params (Pos));
-               else
-                  Val := E_Params (Pos);
+         declare
+            Formal : constant Iir := Strip_Denoting_Name (Get_Formal (El));
+            Base_Formal : constant Iir := Get_Association_Interface (El);
+            Formal_Info : constant Ortho_Info_Acc := Get_Info (Base_Formal);
+         begin
+            if Formal_Info.Interface_Field = O_Fnode_Null then
+               --  Not a PARAMS field.
+               if Get_Kind (El) = Iir_Kind_Association_Element_By_Individual
+               then
+                  --  Pass the whole data for an individual association.
+                  New_Association (Constr, M2E (Params (Pos)));
+               elsif Base_Formal = Formal then
+                  --  Whole association.
+                  New_Association (Constr, E_Params (Pos));
                end if;
-               New_Association (Constr, Val);
             end if;
-         end if;
 
-         if Get_Kind (El) = Iir_Kind_Association_Element_Open then
-            --  Do not share nodes for default values: clean them.
-            Chap9.Destroy_Types (Get_Default_Value (Base_Formal));
-         end if;
+            if Get_Kind (El) = Iir_Kind_Association_Element_Open then
+               --  Do not share nodes for default values: clean them.
+               Chap9.Destroy_Types (Get_Default_Value (Base_Formal));
+            end if;
+         end;
 
          El := Get_Chain (El);
          Pos := Pos + 1;
@@ -2002,53 +2934,133 @@ package body Trans.Chap8 is
          end if;
       end if;
 
+      if Is_Suspendable then
+         Start_If_Stmt
+           (If_Blk,
+            New_Compare_Op (ON_Neq,
+                            New_Value (New_Selected_Element
+                                         (Get_Var (Params_Var),
+                                          Info.Subprg_State_Field)),
+                            New_Lit (Ghdl_Index_1),
+                            Ghdl_Bool_Type));
+         State_Suspend (Call_State);
+         New_Else_Stmt (If_Blk);
+         --  Return state.
+         Open_Temp;
+      end if;
+
       --  Copy-out non-composite parameters.
       El := Assoc_Chain;
       Pos := 0;
       while El /= Null_Iir loop
          if Get_Kind (El) = Iir_Kind_Association_Element_By_Individual then
             Last_Individual := Pos;
+            declare
+               Assoc_Info : constant Call_Assoc_Info_Acc := Get_Info (El);
+               Formal_Type : Iir;
+               Base_Formal : Iir;
+               Ftype_Info : Type_Info_Acc;
+               Formal_Object_Kind : Object_Kind_Type;
+            begin
+               if Assoc_Info /= null then
+                  Formal_Type := Get_Type (Get_Formal (El));
+                  Ftype_Info := Get_Info (Formal_Type);
+                  Base_Formal := Get_Association_Interface (El);
+                  Formal_Object_Kind := Get_Interface_Kind (Base_Formal);
+                  declare
+                     Param_Var : Var_Type;
+                  begin
+                     if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                        Param_Var := Assoc_Info.Call_Assoc_Fat;
+                     else
+                        Param_Var := Assoc_Info.Call_Assoc_Value;
+                     end if;
+                     Params (Pos) := Stabilize
+                       (Get_Var (Param_Var, Ftype_Info, Formal_Object_Kind));
+                  end;
+               end if;
+            end;
          elsif Params (Pos) /= Mnode_Null then
-            Formal := Strip_Denoting_Name (Get_Formal (El));
-            Base_Formal := Get_Association_Interface (El);
+            declare
+               Assoc_Info : constant Call_Assoc_Info_Acc := Get_Info (El);
+               Formal : constant Iir := Strip_Denoting_Name (Get_Formal (El));
+               Base_Formal : constant Iir := Get_Association_Interface (El);
+               Formal_Type : constant Iir := Get_Type (Formal);
+               Ftype_Info : constant Type_Info_Acc := Get_Info (Formal_Type);
+               Formal_Info : constant Ortho_Info_Acc := Get_Info (Base_Formal);
+               Act : Iir;
+               Actual_Type : Iir;
+               Param : Mnode;
+               Val : O_Enode;
+               Ptr : O_Lnode;
+               Out_Conv : Iir;
+               Out_Expr : Iir;
+            begin
+               pragma Assert (Get_Kind (Base_Formal)
+                                = Iir_Kind_Interface_Variable_Declaration);
+               pragma Assert (Get_Mode (Base_Formal) in Iir_Out_Modes);
 
-            pragma Assert (Get_Kind (Base_Formal)
-                             = Iir_Kind_Interface_Variable_Declaration);
-            pragma Assert (Get_Mode (Base_Formal) in Iir_Out_Modes);
+               --  Extract the value
+               if Base_Formal /= Formal then
+                  --  By individual, copy back.
+                  Param := Translate_Individual_Association_Formal
+                    (Formal, Formal_Info, Params (Last_Individual));
+               elsif Inout_Params (Pos) /= Mnode_Null then
+                  Param := Inout_Params (Pos);
+               else
+                  pragma Assert (Formal_Info.Interface_Field /= O_Fnode_Null);
+                  Ptr := New_Selected_Element
+                    (Get_Var (Params_Var), Formal_Info.Interface_Field);
+                  case Type_Mode_Valid (Ftype_Info.Type_Mode) is
+                     when Type_Mode_Pass_By_Copy =>
+                        Param := Lv2M (Ptr, Ftype_Info, Mode_Value);
+                     when Type_Mode_Pass_By_Address =>
+                        Param := Lp2M (Ptr, Ftype_Info, Mode_Value);
+                  end case;
+               end if;
 
-            Formal_Type := Get_Type (Formal);
-            Ftype_Info := Get_Info (Formal_Type);
-            Formal_Info := Get_Info (Base_Formal);
+               Out_Conv := Get_Out_Conversion (El);
+               if Out_Conv = Null_Iir then
+                  Out_Expr := Formal;
+                  Val := M2E (Param);
+               else
+                  Out_Expr := Out_Conv;
+                  Val := Do_Conversion (Out_Conv, Formal, M2E (Param));
+               end if;
 
-            --  Extract the value
-            if Base_Formal /= Formal then
-               --  By individual, copy back.
-               Param := Translate_Individual_Association_Formal
-                 (Formal, Formal_Info, Params (Last_Individual));
-            elsif Inout_Params (Pos) /= Mnode_Null then
-               Param := Inout_Params (Pos);
-            else
-               pragma Assert (Formal_Info.Interface_Field /= O_Fnode_Null);
-               Ptr := New_Selected_Element
-                 (New_Obj (Params_Var), Formal_Info.Interface_Field);
-               Param := Lv2M (Ptr, Ftype_Info, Mode_Value);
-            end if;
-
-            Out_Conv := Get_Out_Conversion (El);
-            if Out_Conv = Null_Iir then
-               Out_Expr := Formal;
-               Val := M2E (Param);
-            else
-               Out_Expr := Out_Conv;
-               Val := Do_Conversion (Out_Conv, Formal, M2E (Param));
-            end if;
-
-            Chap7.Translate_Assign
-              (Params (Pos), Val, Out_Expr, Get_Type (Get_Actual (El)), El);
+               Act := Get_Actual (El);
+               Actual_Type := Get_Type (Act);
+               if Assoc_Info = null then
+                  Param := Params (Pos);
+               else
+                  Param := Lp2M (Get_Var (Assoc_Info.Call_Assoc_Ref),
+                                 Get_Info (Actual_Type), Mode_Value);
+               end if;
+               Chap7.Translate_Assign (Param, Val, Out_Expr, Actual_Type, El);
+            end;
          end if;
          El := Get_Chain (El);
          Pos := Pos + 1;
       end loop;
+
+      if Is_Function or else Info.Subprg_Params_Type = O_Tnode_Null then
+         null;
+      else
+         if Is_Suspendable then
+            Close_Temp;
+
+            --  Release stack2 memory.
+            Release_Stack2 (Get_Var (Call_Info.Call_State_Mark));
+
+            --  End of call.
+            State_Jump (Next_State);
+            Finish_If_Stmt (If_Blk);
+            State_Start (Next_State);
+         else
+            Release_Stack2 (Get_Var (Mark_Var));
+            Finish_Declare_Stmt;
+         end if;
+      end if;
 
       return O_Enode_Null;
    end Translate_Subprogram_Call;
@@ -2056,11 +3068,10 @@ package body Trans.Chap8 is
    procedure Translate_Procedure_Call (Stmt : Iir_Procedure_Call)
    is
       Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Stmt);
-      Imp : constant Iir := Get_Implementation (Stmt);
       Obj : constant Iir := Get_Method_Object (Stmt);
       Res : O_Enode;
    begin
-      Res := Translate_Subprogram_Call (Imp, Assoc_Chain, Obj);
+      Res := Translate_Subprogram_Call (Stmt, Assoc_Chain, Obj);
       pragma Assert (Res = O_Enode_Null);
    end Translate_Procedure_Call;
 
@@ -2070,15 +3081,20 @@ package body Trans.Chap8 is
       Timeout     : constant Iir := Get_Timeout_Clause (Stmt);
       Sensitivity : Iir_List;
       Constr      : O_Assoc_List;
+      Resume_State : State_Type;
    begin
       Sensitivity := Get_Sensitivity_List (Stmt);
-
       if Sensitivity = Null_Iir_List and Cond /= Null_Iir then
-         --  Extract sensitivity list.
+         --  Extract sensitivity from condition.
          Sensitivity := Create_Iir_List;
          Canon.Canon_Extract_Sensitivity (Cond, Sensitivity);
          Set_Sensitivity_List (Stmt, Sensitivity);
       end if;
+
+      --  The wait statement must be within a suspendable process/subprogram.
+      pragma Assert (State_Enabled);
+
+      Resume_State := State_Allocate;
 
       --  Check for simple cases.
       if Sensitivity = Null_Iir_List
@@ -2090,11 +3106,26 @@ package body Trans.Chap8 is
             New_Procedure_Call (Constr);
          else
             --  Wait for a timeout.
+            Open_Temp;
             Start_Association (Constr, Ghdl_Process_Wait_Timeout);
             New_Association (Constr, Chap7.Translate_Expression
                              (Timeout, Time_Type_Definition));
             New_Procedure_Call (Constr);
+            Close_Temp;
          end if;
+
+         --  Suspend.
+         State_Suspend (Resume_State);
+
+         --  Resume point.
+         State_Start (Resume_State);
+
+         if State_Debug and then Timeout = Null_Iir then
+            --  A process exit must not resume!
+            Chap6.Gen_Program_Error (Stmt, Chap6.Prg_Err_Unreach_State);
+         end if;
+
+         --  End of simple cases.
          return;
       end if;
 
@@ -2113,49 +3144,57 @@ package body Trans.Chap8 is
          Chap9.Destroy_Types_In_List (Sensitivity);
       end if;
 
+      --  suspend ();
+      --  FIXME: this just sets the state, could be done in Add_Sensitivity
+      --  or Set_Timeout.
+      Start_Association (Constr, Ghdl_Process_Wait_Suspend);
+      New_Procedure_Call (Constr);
+
       if Cond = Null_Iir then
-         declare
-            V : O_Dnode;
-         begin
-            --  declare
-            --     v : __ghdl_bool_type_node;
-            --  begin
-            --     v := suspend ();
-            --  end;
-            Open_Temp;
-            V := Create_Temp (Ghdl_Bool_Type);
-            Start_Association (Constr, Ghdl_Process_Wait_Suspend);
-            New_Assign_Stmt (New_Obj (V), New_Function_Call (Constr));
-            Close_Temp;
-         end;
+         State_Suspend (Resume_State);
       else
          declare
-            Label : O_Snode;
+            Eval_State : State_Type;
+            If_Blk1, If_Blk2 : O_If_Block;
          begin
-            --  start loop
-            Start_Loop_Stmt (Label);
+            Eval_State := State_Allocate;
 
-            --    if suspend() then        --  return true if timeout.
-            --      exit;
-            --    end if;
-            Start_Association (Constr, Ghdl_Process_Wait_Suspend);
-            Gen_Exit_When (Label, New_Function_Call (Constr));
+            State_Suspend (Eval_State);
 
-            --    if condition then
-            --      exit;
-            --    end if;
+            --  EVAL_STATE:
+            State_Start (Eval_State);
+
+            --    if timed_out() then
+            --      GOTO RESUME_STATE;
+            --    else
+            Start_Association (Constr, Ghdl_Process_Wait_Timed_Out);
+            Start_If_Stmt (If_Blk1, New_Function_Call (Constr));
+            State_Jump (Resume_State);
+            New_Else_Stmt (If_Blk1);
+
+            --      if condition then
+            --        GOTO RESUME_STATE;
+            --      else
+            --        SUSPEND EVAL_STATE;
+            --      end if;
             Open_Temp;
-            Gen_Exit_When
-              (Label,
+            Start_If_Stmt
+              (If_Blk2,
                Chap7.Translate_Expression (Cond, Boolean_Type_Definition));
+            State_Jump (Resume_State);
+            New_Else_Stmt (If_Blk2);
+            State_Suspend (Eval_State);
+            Finish_If_Stmt (If_Blk2);
             Close_Temp;
 
-            --  end loop;
-            Finish_Loop_Stmt (Label);
+            --    end if;
+            Finish_If_Stmt (If_Blk1);
          end;
       end if;
 
-      --  wait_close;
+      --  RESUME_STATE:
+      --    wait_close;
+      State_Start (Resume_State);
       Start_Association (Constr, Ghdl_Process_Wait_Close);
       New_Procedure_Call (Constr);
    end Translate_Wait_Statement;
@@ -2979,7 +4018,12 @@ package body Trans.Chap8 is
                Call : constant Iir := Get_Procedure_Call (Stmt);
                Imp  : constant Iir := Get_Implementation (Call);
             begin
-               Canon.Canon_Subprogram_Call (Call);
+               if not Get_Suspend_Flag (Stmt) then
+                  --  Suspendable calls were already canonicalized.
+                  Canon.Canon_Subprogram_Call (Call);
+                  Trans.Update_Node_Infos;
+               end if;
+
                if Is_Implicit_Subprogram (Imp) then
                   Translate_Implicit_Procedure_Call (Call);
                else

@@ -31,6 +31,10 @@ package Trans.Chap4 is
    --  Translate declarations, except subprograms spec and bodies.
    procedure Translate_Declaration_Chain (Parent : Iir);
 
+   --  Create declarations for statements STMTS to support resume.
+   procedure Translate_Statements_Chain_State_Declaration
+     (Stmts : Iir; State_Scope : Var_Scope_Acc);
+
    --  Translate subprograms in declaration chain of PARENT.
    procedure Translate_Declaration_Chain_Subprograms (Parent : Iir);
 

@@ -12,6 +12,7 @@ call6
 call7
 call8
 call9
+call10
 for1
 if1
 if2
@@ -19,6 +20,9 @@ if3
 if4
 loop1
 loop2
+case1
+case3
+case4
 ret1
 wait1
 wait2

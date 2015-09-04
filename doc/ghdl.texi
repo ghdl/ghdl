@@ -1793,33 +1793,6 @@ the annotator use the typical delay.
 
 @xref{Backannotation}, for more details.
 
-@item --stack-max-size=@var{SIZE}
-@cindex @option{--stack-max-size} option
-Set the maximum size in bytes of the non-sensitized processes stacks.
-
-If the value @var{SIZE} is followed (without any space) by the @samp{k},
-@samp{K}, @samp{kb}, @samp{Kb}, @samp{ko} or @samp{Ko} multiplier, then
-the size is the numeric value multiplied by 1024.
-
-If the value @var{SIZE} is followed (without any space) by the @samp{m},
-@samp{M}, @samp{mb}, @samp{Mb}, @samp{mo} or @samp{Mo} multiplier, then
-the size is the numeric value multiplied by 1024 * 1024 = 1048576.
-
-Each non-sensitized process has its own stack, while the sensitized processes
-share the same and main stack.  This stack is the stack created by the
-operating system.
-
-Using too small stacks may result in simulation failure due to lack of memory.
-Using too big stacks may reduce the maximum number of processes.
-
-@item --stack-size=@var{SIZE}
-@cindex @option{--stack-size} option
-Set the initial size in bytes of the non-sensitized processes stack.
-The @var{SIZE} value has the same format as the previous option.
-
-The stack of the non-sensitized processes grows until reaching the
-maximum size limit.
-
 @item --help
 Display a short description of the options accepted by the runtime library.
 @end table

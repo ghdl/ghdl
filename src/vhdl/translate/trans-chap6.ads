@@ -57,6 +57,7 @@ package Trans.Chap6 is
    Prg_Err_Dummy_Config     : constant Natural := 3;
    Prg_Err_No_Choice        : constant Natural := 4;
    Prg_Err_Bad_Choice       : constant Natural := 5;
+   Prg_Err_Unreach_State    : constant Natural := 6;
    procedure Gen_Program_Error (Loc : Iir; Code : Natural);
 
    --  Generate code to emit a failure if COND is TRUE, indicating an

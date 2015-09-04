@@ -26,7 +26,6 @@ with System.Storage_Elements; --  Work around GNAT bug.
 pragma Unreferenced (System.Storage_Elements);
 with Grt.Signals; use Grt.Signals;
 with Grt.Stack2; use Grt.Stack2;
-with Grt.Stacks; use Grt.Stacks;
 
 package Grt.Unithread is
    procedure Init;
@@ -46,28 +45,17 @@ package Grt.Unithread is
    procedure Set_Current_Process (Proc : Process_Acc);
    function Get_Current_Process return Process_Acc;
 
-   --  The secondary stack for the thread.  In this implementation, there is
-   --  only one secondary stack, shared by all processes. This is allowed,
-   --  because a wait statement cannot appear within a function.  So at a wait
-   --  statement, the secondary stack must be empty.
-   function Get_Stack2 return Stack2_Ptr;
-   procedure Set_Stack2 (St : Stack2_Ptr);
-
-   --  The main stack.  This is initialized by STACK_INIT.
-   --  The return point.
-   function Get_Main_Stack return Stack_Type;
-   procedure Set_Main_Stack (St : Stack_Type);
+   --  The stack2 for all sensitized process.  Since they cannot have
+   --  wait statements, the stack2 is always empty when the process is
+   --  suspended.
+   function Get_Common_Stack2 return Stack2_Ptr;
 private
    pragma Inline (Run_Parallel);
    pragma Inline (Atomic_Insert);
    pragma Inline (Atomic_Inc);
-   pragma Inline (Get_Stack2);
-   pragma Inline (Set_Stack2);
-
-   pragma Inline (Get_Main_Stack);
-   pragma Export (C, Set_Main_Stack, "grt_set_main_stack");
 
    pragma Inline (Set_Current_Process);
    pragma Inline (Get_Current_Process);
 
+   pragma Inline (Get_Common_Stack2);
 end Grt.Unithread;

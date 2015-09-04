@@ -31,4 +31,11 @@ package Grt.Main is
    --  been assigned to generics, but before being used.
    procedure Ghdl_Init_Top_Generics;
    pragma Export (C, Ghdl_Init_Top_Generics, "__ghdl_init_top_generics");
+
+   type Run_Handler is access function return Integer;
+
+   --  Run HAND through a wrapper that catch some errors (in particular on
+   --  windows).  Returns < 0 in case of error.
+   function Run_Through_Longjump (Hand : Run_Handler) return Integer;
+   pragma Import (Ada, Run_Through_Longjump, "__ghdl_run_through_longjump");
 end Grt.Main;

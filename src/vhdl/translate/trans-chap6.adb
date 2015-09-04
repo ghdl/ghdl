@@ -739,7 +739,7 @@ package body Trans.Chap6 is
 
    function Translate_Interface_Name
      (Inter : Iir; Info : Ortho_Info_Acc; Kind : Object_Kind_Type)
-         return Mnode
+     return Mnode
    is
       Type_Info : constant Type_Info_Acc := Get_Info (Get_Type (Inter));
    begin
@@ -1016,7 +1016,7 @@ package body Trans.Chap6 is
                   Assoc_Chain := Get_Parameter_Association_Chain (Name);
                   Obj := Get_Method_Object (Name);
                   return E2M
-                    (Chap8.Translate_Subprogram_Call (Imp, Assoc_Chain, Obj),
+                    (Chap8.Translate_Subprogram_Call (Name, Assoc_Chain, Obj),
                      Type_Info, Mode_Value);
                end if;
             end;

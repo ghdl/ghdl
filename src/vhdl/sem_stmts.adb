@@ -1246,11 +1246,16 @@ package body Sem_Stmts is
                begin
                   Sem_Procedure_Call (Call, Stmt);
 
-                  --  Set suspend flag.
+                  --  Set suspend flag, if calling a suspendable procedure
+                  --  from a procedure or from a process.
                   Imp := Get_Implementation (Call);
                   if Imp /= Null_Iir
                     and then Get_Kind (Imp) = Iir_Kind_Procedure_Declaration
                     and then Get_Suspend_Flag (Imp)
+                    and then (Get_Kind (Get_Current_Subprogram)
+                                /= Iir_Kind_Function_Declaration)
+                    and then (Get_Kind (Get_Current_Subprogram)
+                                /= Iir_Kind_Sensitized_Process_Statement)
                   then
                      Set_Suspend_Flag (Stmt, True);
                      Mark_Suspendable (Stmt);

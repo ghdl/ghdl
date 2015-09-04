@@ -44,6 +44,7 @@ package Trans_Decls is
    Ghdl_Process_Wait_Set_Timeout : O_Dnode;
    Ghdl_Process_Wait_Add_Sensitivity : O_Dnode;
    Ghdl_Process_Wait_Suspend : O_Dnode;
+   Ghdl_Process_Wait_Timed_Out : O_Dnode;
    Ghdl_Process_Wait_Close : O_Dnode;
 
    --  Register a sensitivity for a process.

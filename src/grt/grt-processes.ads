@@ -23,10 +23,10 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with System;
+with Ada.Unchecked_Conversion;
 with Grt.Stack2; use Grt.Stack2;
 with Grt.Types; use Grt.Types;
 with Grt.Signals; use Grt.Signals;
-with Grt.Stacks; use Grt.Stacks;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr;
 with Grt.Stdio;
@@ -51,10 +51,6 @@ package Grt.Processes is
    --  If true, the simulation should be stopped.
    Break_Simulation : Boolean;
 
-   --  If true, there is one stack for all processes.  Non-sensitized
-   --  processes must save their state.
-   One_Stack : Boolean := False;
-
    type Process_Type is private;
    --  type Process_Acc is access all Process_Type;
 
@@ -73,6 +69,21 @@ package Grt.Processes is
 
    --  Disp the name of process PROC.
    procedure Disp_Process_Name (Stream : Grt.Stdio.FILEs; Proc : Process_Acc);
+
+   --  Instance is the parameter of the process procedure.
+   --  This is in fact a fully opaque type whose content is private to the
+   --  process.
+   type Instance is limited private;
+   type Instance_Acc is access all Instance;
+   pragma Convention (C, Instance_Acc);
+
+   --  A process is identified by a procedure having a single private
+   --  parameter (its instance).
+   type Proc_Acc is access procedure (Self : Instance_Acc);
+   pragma Convention (C, Proc_Acc);
+
+   function To_Address is new Ada.Unchecked_Conversion
+     (Instance_Acc, System.Address);
 
    --  Register a process during elaboration.
    --  This procedure is called by vhdl elaboration code.
@@ -131,15 +142,11 @@ package Grt.Processes is
    --  Add a sensitivity for a wait.
    procedure Ghdl_Process_Wait_Add_Sensitivity (Sig : Ghdl_Signal_Ptr);
    --  Wait until timeout or sensitivity.
-   --  Return TRUE in case of timeout.
-   function Ghdl_Process_Wait_Suspend return Boolean;
+   procedure Ghdl_Process_Wait_Suspend;
+   --  Return TRUE if woken up by a timeout.
+   function Ghdl_Process_Wait_Timed_Out return Boolean;
    --  Finish a wait statement.
    procedure Ghdl_Process_Wait_Close;
-
-   --  For one stack setups, wait_suspend is decomposed into the suspension
-   --  procedure and the function to get resume status.
-   procedure Ghdl_Process_Wait_Wait;
-   function Ghdl_Process_Wait_Has_Timeout return Boolean;
 
    --  Verilog.
    procedure Ghdl_Process_Delay (Del : Ghdl_U32);
@@ -156,14 +163,9 @@ package Grt.Processes is
    procedure Ghdl_Protected_Init (Obj : System.Address);
    procedure Ghdl_Protected_Fini (Obj : System.Address);
 
-   type Run_Handler is access function return Integer;
-
-   --  Run HAND through a wrapper that catch some errors (in particular on
-   --  windows).  Returns < 0 in case of error.
-   function Run_Through_Longjump (Hand : Run_Handler) return Integer;
-   pragma Import (Ada, Run_Through_Longjump, "__ghdl_run_through_longjump");
-
 private
+   type Instance is null record;
+
    --  State of a process.
    type Process_State is
      (
@@ -173,10 +175,11 @@ private
       --  Non-sensitized process, ready to run.
       State_Ready,
 
-      --  Verilog process, being suspended.
+      --  Non-sensitized process being suspended on a timeout (without
+      --  sensitivity).
       State_Delayed,
 
-      --  Non-sensitized process being suspended.
+      --  Non-sensitized process being suspended, with sensitivity.
       State_Wait,
 
       --  Non-sensitized process being awaked by a wait timeout.  This state
@@ -189,20 +192,11 @@ private
       State_Dead);
 
    type Process_Type is record
-      --  Stack for the process.
-      --  This must be the first field of the record (and this is the only
-      --  part visible).
-      --  Must be NULL_STACK for sensitized processes.
-      Stack : Stacks.Stack_Type;
-
       --  Subprogram containing process code.
       Subprg : Proc_Acc;
 
       --  Instance (THIS parameter) for the subprogram.
       This : Instance_Acc;
-
-      --  Name of the process.
-      Rti : Rtis_Addr.Rti_Context;
 
       --  True if the process is resumed and will be run at next cycle.
       Resumed : Boolean;
@@ -210,13 +204,20 @@ private
       --  True if the process is postponed.
       Postponed : Boolean;
 
+      --  State of the process.
       State : Process_State;
 
-      --  Timeout value for wait.
-      Timeout : Std_Time;
+      --  Secondary stack for this process.
+      Stack2 : Stack2_Ptr;
 
       --  Sensitivity list while the (non-sensitized) process is waiting.
       Sensitivity : Action_List_Acc;
+
+      --  Name of the process.
+      Rti : Rtis_Addr.Rti_Context;
+
+      --  Timeout value for wait.
+      Timeout : Std_Time;
 
       Timeout_Chain_Next : Process_Acc;
       Timeout_Chain_Prev : Process_Acc;
@@ -249,6 +250,8 @@ private
                   "__ghdl_process_wait_set_timeout");
    pragma Export (Ada, Ghdl_Process_Wait_Suspend,
                   "__ghdl_process_wait_suspend");
+   pragma Export (Ada, Ghdl_Process_Wait_Timed_Out,
+                  "__ghdl_process_wait_timed_out");
    pragma Export (C, Ghdl_Process_Wait_Close,
                   "__ghdl_process_wait_close");
 

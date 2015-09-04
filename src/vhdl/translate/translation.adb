@@ -392,6 +392,7 @@ package body Translation is
       Wki_R_Len := Get_Identifier ("r_len");
       Wki_Base := Get_Identifier ("BASE");
       Wki_Bounds := Get_Identifier ("BOUNDS");
+      Wki_Locvars := Get_Identifier ("LOCVARS");
 
       Sizetype := New_Unsigned_Type (32);
       New_Type_Decl (Get_Identifier ("__ghdl_size_type"), Sizetype);
@@ -1676,11 +1677,17 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Add_Sensitivity);
 
-      --  function __ghdl_process_wait_suspend return __ghdl_bool_type;
-      Start_Function_Decl
+      --  procedure __ghdl_process_wait_suspend (void);
+      Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_process_wait_suspend"),
-         O_Storage_External, Ghdl_Bool_Type);
+         O_Storage_External);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Suspend);
+
+      --  function __ghdl_process_wait_timed_out return __ghdl_bool_type;
+      Start_Function_Decl
+        (Interfaces, Get_Identifier ("__ghdl_process_wait_timed_out"),
+         O_Storage_External, Ghdl_Bool_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Timed_Out);
 
       --  void __ghdl_process_wait_close (void);
       Start_Procedure_Decl

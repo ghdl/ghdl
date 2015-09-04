@@ -267,6 +267,8 @@ package body Ghdlrun is
            Grt.Processes.Ghdl_Process_Wait_Exit'Address);
       Def (Trans_Decls.Ghdl_Process_Wait_Suspend,
            Grt.Processes.Ghdl_Process_Wait_Suspend'Address);
+      Def (Trans_Decls.Ghdl_Process_Wait_Timed_Out,
+           Grt.Processes.Ghdl_Process_Wait_Timed_Out'Address);
       Def (Trans_Decls.Ghdl_Process_Wait_Timeout,
            Grt.Processes.Ghdl_Process_Wait_Timeout'Address);
       Def (Trans_Decls.Ghdl_Process_Wait_Set_Timeout,

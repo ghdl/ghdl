@@ -2641,6 +2641,20 @@ package body Trans.Chap3 is
       end if;
    end Get_Object_Size;
 
+   procedure Copy_Bounds (Dest : O_Enode; Src : O_Enode; Obj_Type : Iir)
+   is
+      Tinfo : constant Type_Info_Acc := Get_Info (Obj_Type);
+   begin
+      Gen_Memcpy
+        (Dest, Src,
+         New_Lit (New_Sizeof (Tinfo.T.Bounds_Type, Ghdl_Index_Type)));
+   end Copy_Bounds;
+
+   procedure Copy_Bounds (Dest : Mnode; Src : Mnode; Obj_Type : Iir) is
+   begin
+      Copy_Bounds (M2Addr (Dest), M2Addr (Src), Obj_Type);
+   end Copy_Bounds;
+
    procedure Translate_Object_Allocation
      (Res        : in out Mnode;
       Alloc_Kind : Allocation_Kind;
@@ -2660,10 +2674,7 @@ package body Trans.Chap3 is
                        Dinfo.T.Bounds_Ptr_Type));
 
          --  Copy bounds to the allocated area.
-         Gen_Memcpy
-           (M2Addr (Chap3.Get_Array_Bounds (Res)),
-            M2Addr (Bounds),
-            New_Lit (New_Sizeof (Dinfo.T.Bounds_Type, Ghdl_Index_Type)));
+         Copy_Bounds (Chap3.Get_Array_Bounds (Res), Bounds, Obj_Type);
 
          --  Allocate base.
          Allocate_Fat_Array_Base (Alloc_Kind, Res, Obj_Type);

@@ -26,7 +26,6 @@ with System.Storage_Elements; --  Work around GNAT bug.
 pragma Unreferenced (System.Storage_Elements);
 with Grt.Types; use Grt.Types;
 with Grt.Errors;
-with Grt.Stacks;
 with Grt.Processes;
 with Grt.Signals;
 with Grt.Options; use Grt.Options;
@@ -133,8 +132,6 @@ package body Grt.Main is
       end if;
 
       --  Internal initializations.
-      Grt.Stacks.Stack_Init;
-
       Grt.Hooks.Call_Init_Hooks;
 
       Grt.Processes.Init;
@@ -146,8 +143,7 @@ package body Grt.Main is
       end if;
 
       --  Elaboration.  Run through longjump to catch errors.
-      if Grt.Processes.Run_Through_Longjump (Ghdl_Elaborate_Wrapper'Access) < 0
-      then
+      if Run_Through_Longjump (Ghdl_Elaborate_Wrapper'Access) < 0 then
          Grt.Errors.Error ("error during elaboration");
          return;
       end if;
@@ -175,7 +171,7 @@ package body Grt.Main is
          end if;
 
          --  Do the simulation.
-         Status := Grt.Processes.Simulation;
+         Status := Run_Through_Longjump (Grt.Processes.Simulation'Access);
       end if;
 
       if Flag_Stats then

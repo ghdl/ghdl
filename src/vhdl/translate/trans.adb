@@ -349,6 +349,14 @@ package body Trans is
          Pop_Build_Instance;
       end Pop_Local_Factory;
 
+      procedure Create_Union_Scope
+        (Scope : out Var_Scope_Type; Stype : O_Tnode) is
+      begin
+         pragma Assert (Scope.Scope_Type = O_Tnode_Null);
+         pragma Assert (Scope.Kind = Var_Scope_None);
+         Scope.Scope_Type := Stype;
+      end Create_Union_Scope;
+
       procedure Set_Scope_Via_Field
         (Scope       : in out Var_Scope_Type;
          Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc) is
@@ -1748,6 +1756,23 @@ package body Trans is
          Finish_If_Stmt (If_Blk);
       end Gen_Exit_When;
 
+      procedure Set_Stack2_Mark (Var : O_Lnode)
+      is
+         Constr : O_Assoc_List;
+      begin
+         Start_Association (Constr, Ghdl_Stack2_Mark);
+         New_Assign_Stmt (Var, New_Function_Call (Constr));
+      end Set_Stack2_Mark;
+
+      procedure Release_Stack2 (Var : O_Lnode)
+      is
+         Constr : O_Assoc_List;
+      begin
+         Start_Association (Constr, Ghdl_Stack2_Release);
+         New_Association (Constr, New_Value (Var));
+         New_Procedure_Call (Constr);
+      end Release_Stack2;
+
       --  Create a temporary variable.
       type Temp_Level_Type;
       type Temp_Level_Acc is access Temp_Level_Type;
@@ -1764,6 +1789,9 @@ package body Trans is
          --  True if a scope was created, as it is created dynamically at the
          --  first use.
          Emitted         : Boolean;
+
+         --  If true, do not mark/release stack2.
+         No_Stack2_Mark : Boolean;
 
          --  Declaration of the variable for the stack2 mark.  The stack2 will
          --  be released at the end of the scope (if used).
@@ -1783,26 +1811,38 @@ package body Trans is
       is
          L : Temp_Level_Acc;
       begin
+         --  Allocate a new record.
          if Old_Level /= null then
+            --  From unused ones.
             L := Old_Level;
             Old_Level := L.Prev;
          else
+            --  No unused, create a new one.
             L := new Temp_Level_Type;
          end if;
+
          L.all := (Prev => Temp_Level,
                    Level => 0,
                    Id => 0,
                    Emitted => False,
+                   No_Stack2_Mark => False,
                    Stack2_Mark => O_Dnode_Null);
          if Temp_Level /= null then
             L.Level := Temp_Level.Level + 1;
          end if;
          Temp_Level := L;
+
          if Flag_Debug_Temp then
             New_Debug_Comment_Stmt
               ("Open_Temp level " & Natural'Image (L.Level));
          end if;
       end Open_Temp;
+
+      procedure Disable_Stack2_Release is
+      begin
+         pragma Assert (not Temp_Level.No_Stack2_Mark);
+         Temp_Level.No_Stack2_Mark := True;
+      end Disable_Stack2_Release;
 
       procedure Open_Local_Temp is
       begin
@@ -1815,15 +1855,10 @@ package body Trans is
          return Temp_Level.Stack2_Mark /= O_Dnode_Null;
       end Has_Stack2_Mark;
 
-      procedure Stack2_Release
-      is
-         Constr : O_Assoc_List;
+      procedure Stack2_Release is
       begin
          if Temp_Level.Stack2_Mark /= O_Dnode_Null then
-            Start_Association (Constr, Ghdl_Stack2_Release);
-            New_Association (Constr,
-                             New_Value (New_Obj (Temp_Level.Stack2_Mark)));
-            New_Procedure_Call (Constr);
+            Release_Stack2 (New_Obj (Temp_Level.Stack2_Mark));
             Temp_Level.Stack2_Mark := O_Dnode_Null;
          end if;
       end Stack2_Release;
@@ -1832,10 +1867,9 @@ package body Trans is
       is
          L : Temp_Level_Acc;
       begin
-         if Temp_Level = null then
-            --  OPEN_TEMP was not called.
-            raise Internal_Error;
-         end if;
+         --  Check that OPEN_TEMP was called.
+         pragma Assert (Temp_Level /= null);
+
          if Flag_Debug_Temp then
             New_Debug_Comment_Stmt
               ("Close_Temp level " & Natural'Image (Temp_Level.Level));
@@ -1879,9 +1913,7 @@ package body Trans is
          end loop;
       end Free_Old_Temp;
 
-      procedure Create_Temp_Stack2_Mark
-      is
-         Constr : O_Assoc_List;
+      procedure Create_Temp_Stack2_Mark is
       begin
          if Temp_Level.Stack2_Mark /= O_Dnode_Null then
             --  Only the first mark in a region is registred.
@@ -1889,10 +1921,14 @@ package body Trans is
             --  first mark.
             return;
          end if;
+
+         if Temp_Level.No_Stack2_Mark then
+            --  Stack2 mark and release was explicitely disabled.
+            return;
+         end if;
+
          Temp_Level.Stack2_Mark := Create_Temp (Ghdl_Ptr_Type);
-         Start_Association (Constr, Ghdl_Stack2_Mark);
-         New_Assign_Stmt (New_Obj (Temp_Level.Stack2_Mark),
-                          New_Function_Call (Constr));
+         Set_Stack2_Mark (New_Obj (Temp_Level.Stack2_Mark));
       end Create_Temp_Stack2_Mark;
 
       function Create_Temp (Atype : O_Tnode) return O_Dnode

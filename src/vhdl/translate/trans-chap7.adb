@@ -700,8 +700,10 @@ package body Trans.Chap7 is
    end Translate_Range_Length;
 
    function Translate_Operator_Function_Call
-     (Imp : Iir; Left : Iir;  Right : Iir; Res_Type : Iir) return O_Enode
+     (Call : Iir; Left : Iir;  Right : Iir; Res_Type : Iir) return O_Enode
    is
+      Imp : constant Iir := Get_Implementation (Call);
+
       function Create_Assoc (Actual : Iir; Formal : Iir) return Iir
       is
          R : Iir;
@@ -728,7 +730,7 @@ package body Trans.Chap7 is
          Set_Chain (El_L, El_R);
       end if;
 
-      Res := Chap8.Translate_Subprogram_Call (Imp, El_L, Null_Iir);
+      Res := Chap8.Translate_Subprogram_Call (Call, El_L, Null_Iir);
 
       Free_Iir (El_L);
       if Right /= Null_Iir then
@@ -1997,13 +1999,11 @@ package body Trans.Chap7 is
    end Translate_Predefined_Std_Ulogic_Array_Match;
 
    function Translate_Predefined_Operator
-     (Imp         : Iir_Function_Declaration;
-      Left, Right : Iir;
-      Res_Type    : Iir;
-      Loc         : Iir)
+     (Expr : Iir_Function_Declaration; Left, Right : Iir; Res_Type : Iir)
      return O_Enode
    is
-      Kind       : constant Iir_Predefined_Functions :=
+      Imp : constant Iir := Get_Implementation (Expr);
+      Kind : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
       Left_Tree  : O_Enode;
       Right_Tree : O_Enode;
@@ -2049,40 +2049,40 @@ package body Trans.Chap7 is
             --  same for the result.
          when Iir_Predefined_TF_Array_Element_And =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_And, Left, Right, Res_Type, Loc);
+              (Iir_Predefined_Boolean_And, Left, Right, Res_Type, Expr);
          when Iir_Predefined_TF_Element_Array_And =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_And, Right, Left, Res_Type, Loc);
+              (Iir_Predefined_Boolean_And, Right, Left, Res_Type, Expr);
          when Iir_Predefined_TF_Array_Element_Or =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_Or, Left, Right, Res_Type, Loc);
+              (Iir_Predefined_Boolean_Or, Left, Right, Res_Type, Expr);
          when Iir_Predefined_TF_Element_Array_Or =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_Or, Right, Left, Res_Type, Loc);
+              (Iir_Predefined_Boolean_Or, Right, Left, Res_Type, Expr);
          when Iir_Predefined_TF_Array_Element_Nand =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_Nand, Left, Right, Res_Type, Loc);
+              (Iir_Predefined_Boolean_Nand, Left, Right, Res_Type, Expr);
          when Iir_Predefined_TF_Element_Array_Nand =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_Nand, Right, Left, Res_Type, Loc);
+              (Iir_Predefined_Boolean_Nand, Right, Left, Res_Type, Expr);
          when Iir_Predefined_TF_Array_Element_Nor =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_Nor, Left, Right, Res_Type, Loc);
+              (Iir_Predefined_Boolean_Nor, Left, Right, Res_Type, Expr);
          when Iir_Predefined_TF_Element_Array_Nor =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_Nor, Right, Left, Res_Type, Loc);
+              (Iir_Predefined_Boolean_Nor, Right, Left, Res_Type, Expr);
          when Iir_Predefined_TF_Array_Element_Xor =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_Xor, Left, Right, Res_Type, Loc);
+              (Iir_Predefined_Boolean_Xor, Left, Right, Res_Type, Expr);
          when Iir_Predefined_TF_Element_Array_Xor =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_Xor, Right, Left, Res_Type, Loc);
+              (Iir_Predefined_Boolean_Xor, Right, Left, Res_Type, Expr);
          when Iir_Predefined_TF_Array_Element_Xnor =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_Xnor, Left, Right, Res_Type, Loc);
+              (Iir_Predefined_Boolean_Xnor, Left, Right, Res_Type, Expr);
          when Iir_Predefined_TF_Element_Array_Xnor =>
             return Translate_Predefined_TF_Array_Element
-              (Iir_Predefined_Boolean_Xnor, Right, Left, Res_Type, Loc);
+              (Iir_Predefined_Boolean_Xnor, Right, Left, Res_Type, Expr);
 
             --  Avoid implicit conversion of the array parameters to the
             --  unbounded type for optimizing purpose.
@@ -2180,7 +2180,7 @@ package body Trans.Chap7 is
                raise Internal_Error;
          end case;
          Res := Translate_Implicit_Conv
-           (Res, Get_Return_Type (Imp), Res_Type, Mode_Value, Loc);
+           (Res, Get_Return_Type (Imp), Res_Type, Mode_Value, Expr);
          return Res;
       end if;
 
@@ -2205,7 +2205,7 @@ package body Trans.Chap7 is
             | Iir_Predefined_Floating_Identity
             | Iir_Predefined_Physical_Identity =>
             return Translate_Implicit_Conv
-              (Left_Tree, Left_Type, Res_Type, Mode_Value, Loc);
+              (Left_Tree, Left_Type, Res_Type, Mode_Value, Expr);
 
          when Iir_Predefined_Access_Equality
             | Iir_Predefined_Access_Inequality =>
@@ -2449,21 +2449,21 @@ package body Trans.Chap7 is
          when Iir_Predefined_Array_Minimum =>
             return Translate_Predefined_Array_Min_Max
               (True, Left_Tree, Right_Tree, Left_Type, Right_Type,
-               Res_Type, Imp, Loc);
+               Res_Type, Imp, Expr);
          when Iir_Predefined_Array_Maximum =>
             return Translate_Predefined_Array_Min_Max
               (False, Left_Tree, Right_Tree, Left_Type, Right_Type,
-               Res_Type, Imp, Loc);
+               Res_Type, Imp, Expr);
 
          when Iir_Predefined_Integer_To_String =>
             case Get_Info (Left_Type).Type_Mode is
                when Type_Mode_I32 =>
                   return Translate_To_String
-                    (Ghdl_To_String_I32, Res_Type, Loc,
+                    (Ghdl_To_String_I32, Res_Type, Expr,
                      New_Convert_Ov (Left_Tree, Ghdl_I32_Type));
                when Type_Mode_I64 =>
                   return Translate_To_String
-                    (Ghdl_To_String_I64, Res_Type, Loc,
+                    (Ghdl_To_String_I64, Res_Type, Expr,
                      New_Convert_Ov (Left_Tree, Ghdl_I64_Type));
                when others =>
                   raise Internal_Error;
@@ -2475,7 +2475,7 @@ package body Trans.Chap7 is
             --  So special case for character.
             if Get_Base_Type (Left_Type) = Character_Type_Definition then
                return Translate_To_String
-                 (Ghdl_To_String_Char, Res_Type, Loc, Left_Tree);
+                 (Ghdl_To_String_Char, Res_Type, Expr, Left_Tree);
             end if;
 
             --  LRM08 5.7 String representations
@@ -2498,23 +2498,23 @@ package body Trans.Chap7 is
                      raise Internal_Error;
                end case;
                return Translate_To_String
-                 (Subprg, Res_Type, Loc,
+                 (Subprg, Res_Type, Expr,
                   New_Convert_Ov (Left_Tree, Conv),
                   New_Lit (Rtis.New_Rti_Address
                     (Get_Info (Left_Type).Type_Rti)));
             end;
          when Iir_Predefined_Floating_To_String =>
             return Translate_To_String
-              (Ghdl_To_String_F64, Res_Type, Loc,
+              (Ghdl_To_String_F64, Res_Type, Expr,
                New_Convert_Ov (Left_Tree, Ghdl_Real_Type));
          when Iir_Predefined_Real_To_String_Digits =>
             return Translate_To_String
-              (Ghdl_To_String_F64_Digits, Res_Type, Loc,
+              (Ghdl_To_String_F64_Digits, Res_Type, Expr,
                New_Convert_Ov (Left_Tree, Ghdl_Real_Type),
                New_Convert_Ov (Right_Tree, Ghdl_I32_Type));
          when Iir_Predefined_Real_To_String_Format =>
             return Translate_To_String
-              (Ghdl_To_String_F64_Format, Res_Type, Loc,
+              (Ghdl_To_String_F64_Format, Res_Type, Expr,
                New_Convert_Ov (Left_Tree, Ghdl_Real_Type),
                Right_Tree);
          when Iir_Predefined_Physical_To_String =>
@@ -2533,23 +2533,23 @@ package body Trans.Chap7 is
                      raise Internal_Error;
                end case;
                return Translate_To_String
-                 (Subprg, Res_Type, Loc,
+                 (Subprg, Res_Type, Expr,
                   New_Convert_Ov (Left_Tree, Conv),
                   New_Lit (Rtis.New_Rti_Address
                     (Get_Info (Left_Type).Type_Rti)));
             end;
          when Iir_Predefined_Time_To_String_Unit =>
             return Translate_To_String
-              (Ghdl_Time_To_String_Unit, Res_Type, Loc,
+              (Ghdl_Time_To_String_Unit, Res_Type, Expr,
                Left_Tree, Right_Tree,
                New_Lit (Rtis.New_Rti_Address
                  (Get_Info (Left_Type).Type_Rti)));
          when Iir_Predefined_Bit_Vector_To_Ostring =>
             return Translate_Bv_To_String
-              (Ghdl_BV_To_Ostring, Left_Tree, Left_Type, Res_Type, Loc);
+              (Ghdl_BV_To_Ostring, Left_Tree, Left_Type, Res_Type, Expr);
          when Iir_Predefined_Bit_Vector_To_Hstring =>
             return Translate_Bv_To_String
-              (Ghdl_BV_To_Hstring, Left_Tree, Left_Type, Res_Type, Loc);
+              (Ghdl_BV_To_Hstring, Left_Tree, Left_Type, Res_Type, Expr);
          when Iir_Predefined_Array_Char_To_String =>
             declare
                El_Type : constant Iir := Get_Element_Subtype (Left_Type);
@@ -2569,7 +2569,7 @@ package body Trans.Chap7 is
                      raise Internal_Error;
                end case;
                return Translate_To_String
-                 (Subprg, Res_Type, Loc,
+                 (Subprg, Res_Type, Expr,
                   New_Convert_Ov (M2E (Chap3.Get_Array_Base (Arg)),
                     Ghdl_Ptr_Type),
                   Chap3.Get_Array_Length (Arg, Left_Type),
@@ -3923,19 +3923,19 @@ package body Trans.Chap7 is
             Imp := Get_Implementation (Expr);
             if Is_Implicit_Subprogram (Imp) then
                return Translate_Predefined_Operator
-                 (Imp, Get_Left (Expr), Get_Right (Expr), Res_Type, Expr);
+                 (Expr, Get_Left (Expr), Get_Right (Expr), Res_Type);
             else
                return Translate_Operator_Function_Call
-                 (Imp, Get_Left (Expr), Get_Right (Expr), Res_Type);
+                 (Expr, Get_Left (Expr), Get_Right (Expr), Res_Type);
             end if;
          when Iir_Kinds_Monadic_Operator =>
             Imp := Get_Implementation (Expr);
             if Is_Implicit_Subprogram (Imp) then
                return Translate_Predefined_Operator
-                 (Imp, Get_Operand (Expr), Null_Iir, Res_Type, Expr);
+                 (Expr, Get_Operand (Expr), Null_Iir, Res_Type);
             else
                return Translate_Operator_Function_Call
-                 (Imp, Get_Operand (Expr), Null_Iir, Res_Type);
+                 (Expr, Get_Operand (Expr), Null_Iir, Res_Type);
             end if;
          when Iir_Kind_Function_Call =>
             Imp := Get_Implementation (Expr);
@@ -3960,13 +3960,14 @@ package body Trans.Chap7 is
                         end if;
                      end if;
                      return Translate_Predefined_Operator
-                       (Imp, Left, Right, Res_Type, Expr);
+                       (Expr, Left, Right, Res_Type);
                   end;
                else
                   Canon.Canon_Subprogram_Call (Expr);
+                  Trans.Update_Node_Infos;
                   Assoc_Chain := Get_Parameter_Association_Chain (Expr);
                   Res := Chap8.Translate_Subprogram_Call
-                    (Imp, Assoc_Chain, Get_Method_Object (Expr));
+                    (Expr, Assoc_Chain, Get_Method_Object (Expr));
                   Expr_Type := Get_Return_Type (Imp);
                end if;
             end;

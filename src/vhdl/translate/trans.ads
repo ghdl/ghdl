@@ -159,6 +159,7 @@ package Trans is
    Wki_R_Len         : O_Ident;
    Wki_Base          : O_Ident;
    Wki_Bounds        : O_Ident;
+   Wki_Locvars       : O_Ident;
 
    --  ALLOCATION_KIND defines the type of memory storage.
    --  ALLOC_STACK means the object is allocated on the local stack and
@@ -270,9 +271,14 @@ package Trans is
       --  Destroy a local scope.
       procedure Pop_Local_Factory;
 
+      --  Create a special scope for declarations in statements.  The scope
+      --  structure is opaque (typically a union).
+      procedure Create_Union_Scope
+        (Scope : out Var_Scope_Type; Stype : O_Tnode);
+
       --  Set_Scope defines how to access to variables of SCOPE.
       --  Variables defined in SCOPE can be accessed via field SCOPE_FIELD
-      --  in scope SCOPE_PARENT.
+      --  of scope SCOPE_PARENT.
       procedure Set_Scope_Via_Field
         (Scope       : in out Var_Scope_Type;
          Scope_Field : O_Fnode; Scope_Parent : Var_Scope_Acc);
@@ -642,6 +648,8 @@ package Trans is
       Kind_Index,
       Kind_Expr,
       Kind_Subprg,
+      Kind_Call,
+      Kind_Call_Assoc,
       Kind_Object,
       Kind_Signal,
       Kind_Alias,
@@ -651,6 +659,8 @@ package Trans is
       Kind_Process,
       Kind_Psl_Directive,
       Kind_Loop,
+      Kind_Loop_State,
+      Kind_Locvar_State,
       Kind_Block,
       Kind_Generate,
       Kind_Component,
@@ -659,7 +669,6 @@ package Trans is
       Kind_Package_Instance,
       Kind_Config,
       Kind_Assoc,
-      Kind_Str_Choice,
       Kind_Design_File,
       Kind_Library
      );
@@ -915,6 +924,12 @@ package Trans is
    end record;
    type Subprg_Resolv_Info_Acc is access Subprg_Resolv_Info;
 
+   --  In order to support resume feature of non-sensitized processes and
+   --  procedure, a state variable is added to encode vertices of the control
+   --  flow graph (only suspendable vertices are considered: an inner loop
+   --  that doesn't suspend is not decomposed by this mechanism).
+   type State_Type is new Nat32;
+
    --  Complex types.
    --
    --  A complex type is not a VHDL notion, but a translation notion.
@@ -1151,6 +1166,15 @@ package Trans is
             Subprg_Params_Type : O_Tnode := O_Tnode_Null;
             Subprg_Params_Ptr  : O_Tnode := O_Tnode_Null;
 
+            --  Field in the parameter struct for the suspend state. Also the
+            --  suspend state is not a parameter, it is initialized by the
+            --  caller.
+            Subprg_State_Field : O_Fnode := O_Fnode_Null;
+
+            --  Field in the parameter struct for local variables.
+            Subprg_Locvars_Field : O_Fnode := O_Fnode_Null;
+            Subprg_Locvars_Scope : aliased Var_Scope_Type;
+
             --  Access to the declarations within this subprogram.
             Subprg_Frame_Scope : aliased Var_Scope_Type;
 
@@ -1168,6 +1192,21 @@ package Trans is
             --  SUBPRG_RESULT, if any.
             Subprg_Exit   : O_Snode := O_Snode_Null;
             Subprg_Result : O_Dnode := O_Dnode_Null;
+
+         when Kind_Call =>
+            Call_State_Scope : aliased Var_Scope_Type;
+            Call_State_Mark : Var_Type := Null_Var;
+            Call_Frame_Var : Var_Type := Null_Var;
+
+         when Kind_Call_Assoc =>
+            --  Variable containing a reference to the actual, for scalar
+            --  copyout.  The value is passed in the parameter.
+            Call_Assoc_Ref : Var_Type := Null_Var;
+
+            --  Variable containing the value, the bounds and the fat vector.
+            Call_Assoc_Value : Var_Type := Null_Var;
+            Call_Assoc_Bounds : Var_Type := Null_Var;
+            Call_Assoc_Fat : Var_Type := Null_Var;
 
          when Kind_Object =>
             --  For constants: set when the object is defined as a constant.
@@ -1195,7 +1234,14 @@ package Trans is
             Alias_Kind : Object_Kind_Type;
 
          when Kind_Iterator =>
+            --  Iterator variable.
             Iterator_Var : Var_Type;
+            --  Iterator right bound (used only if the iterator is a range
+            --  expression).
+            Iterator_Right : Var_Type;
+            --  Iterator range pointer (used only if the iterator is not a
+            --  range expression).
+            Iterator_Range : Var_Type;
 
          when Kind_Interface =>
             --  Ortho declaration for the interface. If not null, there is
@@ -1225,6 +1271,13 @@ package Trans is
 
             --  Subprogram for the process.
             Process_Subprg : O_Dnode;
+
+            --  Variable (in the frame) containing the current state (a
+            --  number) used to resume the process.
+            Process_State : Var_Type := Null_Var;
+
+            --  Union containing local declarations for statements.
+            Process_Locvar_Scope : aliased Var_Scope_Type;
 
             --  List of drivers if Flag_Direct_Drivers.
             Process_Drivers : Direct_Drivers_Acc := null;
@@ -1261,6 +1314,22 @@ package Trans is
             Label_Exit : O_Snode;
             --  Used to next from for-loop, with an exit statment.
             Label_Next : O_Snode;
+
+         when Kind_Loop_State =>
+            --  Likewise but for a suspendable loop.
+            --  State next: evaluate condition for a while-loop, update
+            --  iterator for a for-loop.
+            Loop_State_Next : State_Type;
+            --  Body of a for-loop, not used for a while-loop.
+            Loop_State_Body: State_Type;
+            --  State after the loop.
+            Loop_State_Exit  : State_Type;
+            --  Access to declarations of the iterator.
+            Loop_State_Scope : aliased Var_Scope_Type;
+            Loop_Locvar_Scope : aliased Var_Scope_Type;
+
+         when Kind_Locvar_State =>
+            Locvar_Scope : aliased Var_Scope_Type;
 
          when Kind_Block =>
             --  Access to declarations of this block.
@@ -1400,16 +1469,6 @@ package Trans is
             Assoc_In  : Assoc_Conv_Info;
             Assoc_Out : Assoc_Conv_Info;
 
-         when Kind_Str_Choice =>
-            --  List of choices, used to sort them.
-            Choice_Chain  : Ortho_Info_Acc;
-            --  Association index.
-            Choice_Assoc  : Natural;
-            --  Corresponding choice simple expression.
-            Choice_Expr   : Iir;
-            --  Corresponding choice.
-            Choice_Parent : Iir;
-
          when Kind_Design_File =>
             Design_Filename : O_Dnode;
 
@@ -1425,12 +1484,15 @@ package Trans is
    subtype Incomplete_Type_Info_Acc is Ortho_Info_Acc (Kind_Incomplete_Type);
    subtype Index_Info_Acc is Ortho_Info_Acc (Kind_Index);
    subtype Subprg_Info_Acc is Ortho_Info_Acc (Kind_Subprg);
+   subtype Call_Info_Acc is Ortho_Info_Acc (Kind_Call);
+   subtype Call_Assoc_Info_Acc is Ortho_Info_Acc (Kind_Call_Assoc);
    subtype Object_Info_Acc is Ortho_Info_Acc (Kind_Object);
    subtype Signal_Info_Acc is Ortho_Info_Acc (Kind_Signal);
    subtype Alias_Info_Acc is Ortho_Info_Acc (Kind_Alias);
    subtype Proc_Info_Acc is Ortho_Info_Acc (Kind_Process);
    subtype Psl_Info_Acc is Ortho_Info_Acc (Kind_Psl_Directive);
    subtype Loop_Info_Acc is Ortho_Info_Acc (Kind_Loop);
+   subtype Loop_State_Info_Acc is Ortho_Info_Acc (Kind_Loop_State);
    subtype Block_Info_Acc is Ortho_Info_Acc (Kind_Block);
    subtype Generate_Info_Acc is Ortho_Info_Acc (Kind_Generate);
    subtype Comp_Info_Acc is Ortho_Info_Acc (Kind_Component);
@@ -1692,6 +1754,10 @@ package Trans is
       --  Generate code to exit from loop LABEL iff COND is true.
       procedure Gen_Exit_When (Label : O_Snode; Cond : O_Enode);
 
+      --  Low-level stack2 mark and release.
+      procedure Set_Stack2_Mark (Var : O_Lnode);
+      procedure Release_Stack2 (Var : O_Lnode);
+
       --  Create a region for temporary variables.  The region is only created
       --  on demand (at the first Create_Temp*), so you must be careful not
       --  to nest with control statement.  For example, the following
@@ -1734,6 +1800,11 @@ package Trans is
       function Has_Stack2_Mark return Boolean;
       --  Manually release stack2.  Used for fine-tuning only.
       procedure Stack2_Release;
+
+      --  Used only in procedure calls to disable the release of stack2, as
+      --  it might be part of the state of the call.  Must be called just after
+      --  Open_Temp.
+      procedure Disable_Stack2_Release;
 
       --  Free all old temp.
       --  Used only to free memory.

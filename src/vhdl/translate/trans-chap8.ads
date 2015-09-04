@@ -17,11 +17,49 @@
 --  02111-1307, USA.
 
 package Trans.Chap8 is
+   --  If TRUE, generate extra-code to catch at run-time incoherent state
+   --  issues.
+   State_Debug : constant Boolean := True;
+
+   --  The initial state.  Used in process to loop.
+   State_Init : constant State_Type := 0;
+
+   --  The state for 'return' in a subprogram.
+   State_Return : constant State_Type := 1;
+
+   --  Called at the entry of the generated procedure to setup the state
+   --  machinery: set the local state variable, create the state machine
+   --  (loop, case, first choice).  The current position in the graph is
+   --  vertex 0 (initial state): there is an implicit State_Allocate and a
+   --  State_Start.  This is not reentrant (does not nest).
+   procedure State_Entry (Info : Ortho_Info_Acc);
+
+   --  Last action of the generated procedure: close the case and the loop.
+   --  Destroy the state machinery.
+   procedure State_Leave (Parent : Iir);
+
+   --  True if the current process or subprogram is state based.
+   function State_Enabled return Boolean;
+
+   --  Create a new state.
+   function State_Allocate return State_Type;
+
+   --  Start statements for STATE.
+   procedure State_Start (State : State_Type);
+
+   --  Jump to state NEXT_STATE.  Note: this doesn't modify the control flow,
+   --  so there must be no statements after State_Jump until the next
+   --  State_Start.
+   procedure State_Jump (Next_State : State_Type);
+
+   --  Suspend the current process or subprogram.  It will resume to
+   --  NEXT_STATE.
+   procedure State_Suspend (Next_State : State_Type);
+
    procedure Translate_Statements_Chain (First : Iir);
 
    --  Return true if there is a return statement in the chain.
-   function Translate_Statements_Chain_Has_Return (First : Iir)
-                                                      return Boolean;
+   function Translate_Statements_Chain_Has_Return (First : Iir) return Boolean;
 
    --  Create a case branch for CHOICE.
    --  Used by case statement and aggregates.
@@ -35,8 +73,14 @@ package Trans.Chap8 is
                                   Val      : Unsigned_64;
                                   Itype    : Iir);
 
+   --  Create declarations for a for-loop statement.
+   procedure Translate_For_Loop_Statement_Declaration (Stmt : Iir);
+
    procedure Translate_Report (Stmt : Iir; Subprg : O_Dnode; Level : Iir);
 
-   function Translate_Subprogram_Call (Imp : Iir; Assoc_Chain : Iir; Obj : Iir)
-                                      return O_Enode;
+   --  Create the state record for the CALL procedure call.
+   procedure Translate_Procedure_Call_State (Call : Iir);
+
+   function Translate_Subprogram_Call
+     (Call : Iir; Assoc_Chain : Iir; Obj : Iir) return O_Enode;
 end Trans.Chap8;

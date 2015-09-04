@@ -51,6 +51,9 @@ package Grt.Errors is
    --  Complete error message.
    procedure Error (Str : String);
 
+   --  Warning message.
+   procedure Warning (Str : String);
+
    --  Internal error.  The message must contain the subprogram name which
    --  has called this procedure.
    procedure Internal_Error (Msg : String);

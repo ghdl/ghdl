@@ -238,6 +238,14 @@ package body Grt.Errors is
       Newline_Err;
    end Info;
 
+   procedure Warning (Str : String) is
+   begin
+      Put_Err (Progname);
+      Put_Err (":warning: ");
+      Put_Err (Str);
+      Newline_Err;
+   end Warning;
+
    procedure Internal_Error (Msg : String) is
    begin
       Put_Err (Progname);

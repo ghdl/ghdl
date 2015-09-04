@@ -149,16 +149,6 @@ package body Grt.Stack2 is
       return To_Addr (Res);
    end Create;
 
-   procedure Check_Empty (S : Stack2_Ptr)
-   is
-      S2 : Stack2_Acc;
-   begin
-      S2 := To_Acc (S);
-      if S2 /= null and then S2.Top /= S2.First_Chunk.First then
-         Internal_Error ("stack2.check_empty: stack is not empty");
-      end if;
-   end Check_Empty;
-
    --  May be used to debug.
    procedure Dump_Stack2 (S : Stack2_Ptr);
    pragma Unreferenced (Dump_Stack2);

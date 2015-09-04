@@ -20,12 +20,14 @@ with Errorout; use Errorout;
 with Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Std_Package; use Std_Package;
+with Canon;
 with Translation; use Translation;
 with Trans.Chap2;
 with Trans.Chap3;
 with Trans.Chap5;
 with Trans.Chap6;
 with Trans.Chap7;
+with Trans.Chap8;
 with Trans.Chap9;
 with Trans.Chap14;
 with Trans.Rtis;
@@ -462,9 +464,8 @@ package body Trans.Chap4 is
          if Type_Info.Type_Mode = Type_Mode_Fat_Array then
             --  Allocate.
             declare
-               Aggr_Type : Iir;
+               Aggr_Type : constant Iir := Get_Type (Value);
             begin
-               Aggr_Type := Get_Type (Value);
                Chap3.Create_Array_Subtype (Aggr_Type);
                Name_Node := Stabilize (Name);
                New_Assign_Stmt
@@ -2024,6 +2025,157 @@ package body Trans.Chap4 is
          El := Get_Chain (El);
       end loop;
    end Translate_Declaration_Chain;
+
+   procedure Translate_Statements_Chain_State_Declaration
+     (Stmts : Iir; State_Scope : Var_Scope_Acc)
+   is
+      Num : Nat32;
+      Mark : Id_Mark_Type;
+      Locvar_Id : O_Ident;
+      Els : O_Element_List;
+
+      procedure Push_Prefix (Really_Push : Boolean := True)
+      is
+         Num_Img : String := Nat32'Image (Num);
+      begin
+         Num_Img (Num_Img'First) := 'S';
+         Locvar_Id := Get_Identifier (Num_Img);
+         Num := Num + 1;
+         if Really_Push then
+            Push_Identifier_Prefix (Mark, Num_Img);
+         end if;
+      end Push_Prefix;
+
+      procedure Pop_Prefix (Scope : in out Var_Scope_Type;
+                            Really_Push : Boolean := True)
+      is
+         Locvar_Field : O_Fnode;
+      begin
+         if Really_Push then
+            Pop_Identifier_Prefix (Mark);
+         end if;
+
+         New_Union_Field
+           (Els, Locvar_Field, Locvar_Id, Get_Scope_Type (Scope));
+         Set_Scope_Via_Field (Scope, Locvar_Field, State_Scope);
+      end Pop_Prefix;
+
+      Info : Ortho_Info_Acc;
+      Stmt : Iir;
+      Chain : Iir;
+      Scope_Type : O_Tnode;
+   begin
+      Stmt := Stmts;
+
+      Start_Union_Type (Els);
+      Num := 0;
+
+      while Stmt /= Null_Iir loop
+         case Get_Kind (Stmt) is
+            when Iir_Kind_If_Statement =>
+               if Get_Suspend_Flag (Stmt) then
+                  Chain := Stmt;
+                  while Chain /= Null_Iir loop
+                     Push_Prefix;
+
+                     Info := Add_Info (Chain, Kind_Locvar_State);
+
+                     Translate_Statements_Chain_State_Declaration
+                       (Get_Sequential_Statement_Chain (Chain),
+                        Info.Locvar_Scope'Access);
+
+                     Pop_Prefix (Info.Locvar_Scope);
+
+                     Chain := Get_Else_Clause (Chain);
+                  end loop;
+               end if;
+
+            when Iir_Kind_Case_Statement =>
+               if Get_Suspend_Flag (Stmt) then
+                  Chain := Get_Case_Statement_Alternative_Chain (Stmt);
+                  while Chain /= Null_Iir loop
+                     if not Get_Same_Alternative_Flag (Chain) then
+                        Push_Prefix;
+
+                        Info := Add_Info (Chain, Kind_Locvar_State);
+
+                        Translate_Statements_Chain_State_Declaration
+                          (Get_Associated_Chain (Chain),
+                           Info.Locvar_Scope'Access);
+
+                        Pop_Prefix (Info.Locvar_Scope);
+                     end if;
+                     Chain := Get_Chain (Chain);
+                  end loop;
+               end if;
+
+            when Iir_Kind_While_Loop_Statement =>
+               if Get_Suspend_Flag (Stmt) then
+                  Push_Prefix;
+
+                  Info := Add_Info (Stmt, Kind_Loop_State);
+
+                  Translate_Statements_Chain_State_Declaration
+                    (Get_Sequential_Statement_Chain (Stmt),
+                     Info.Loop_Locvar_Scope'Access);
+
+                  Pop_Prefix (Info.Loop_Locvar_Scope);
+               end if;
+
+            when Iir_Kind_For_Loop_Statement =>
+               if Get_Suspend_Flag (Stmt) then
+                  Push_Prefix;
+
+                  Info := Add_Info (Stmt, Kind_Loop_State);
+
+                  Push_Instance_Factory (Info.Loop_State_Scope'Access);
+
+                  Chap8.Translate_For_Loop_Statement_Declaration (Stmt);
+
+                  Translate_Statements_Chain_State_Declaration
+                    (Get_Sequential_Statement_Chain (Stmt),
+                     Info.Loop_Locvar_Scope'Access);
+
+                  Add_Scope_Field (Wki_Locvars, Info.Loop_Locvar_Scope);
+
+                  Pop_Instance_Factory (Info.Loop_State_Scope'Access);
+
+                  New_Type_Decl (Create_Identifier ("FORTYPE"),
+                                 Get_Scope_Type (Info.Loop_State_Scope));
+
+                  Pop_Prefix (Info.Loop_State_Scope);
+               end if;
+
+            when Iir_Kind_Procedure_Call_Statement =>
+               declare
+                  Call : constant Iir := Get_Procedure_Call (Stmt);
+                  Imp : constant Iir := Get_Implementation (Call);
+               begin
+                  Canon.Canon_Subprogram_Call (Call);
+                  Update_Node_Infos;
+
+                  if Get_Suspend_Flag (Imp) then
+                     Push_Prefix;
+
+                     Info := Add_Info (Call, Kind_Call);
+
+                     Chap8.Translate_Procedure_Call_State (Call);
+
+                     Pop_Prefix (Info.Call_State_Scope);
+                  end if;
+               end;
+            when others =>
+               null;
+         end case;
+         Stmt := Get_Chain (Stmt);
+      end loop;
+
+      Finish_Union_Type (Els, Scope_Type);
+
+      New_Type_Decl
+        (Create_Identifier ("LOCVARTYPE"), Scope_Type);
+      Create_Union_Scope (State_Scope.all, Scope_Type);
+   end Translate_Statements_Chain_State_Declaration;
 
    procedure Translate_Declaration_Chain_Subprograms (Parent : Iir)
    is
