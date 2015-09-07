@@ -96,6 +96,7 @@ package body Ortho_LLVM is
    DW_TAG_Compile_Unit     : constant := DW_Version + 16#11#;
    DW_TAG_Structure_Type   : constant := DW_Version + 16#13#;
    DW_TAG_Subroutine_Type  : constant := DW_Version + 16#15#;
+   DW_TAG_Union_Type       : constant := DW_Version + 16#17#;
    DW_TAG_Subrange_Type    : constant := DW_Version + 16#21#;
    DW_TAG_Base_Type        : constant := DW_Version + 16#24#;
    DW_TAG_Enumerator       : constant := DW_Version + 16#28#;
@@ -340,7 +341,8 @@ package body Ortho_LLVM is
 
    procedure Start_Record_Type (Elements : out O_Element_List) is
    begin
-      Elements := (Nbr_Elements => 0,
+      Elements := (Kind => OF_Record,
+                   Nbr_Elements => 0,
                    Rec_Type => O_Tnode_Null,
                    Size => 0,
                    Align => 0,
@@ -353,17 +355,11 @@ package body Ortho_LLVM is
    -- New_Record_Field --
    ----------------------
 
-   procedure New_Record_Field
-     (Elements : in out O_Element_List;
-      El : out O_Fnode;
-      Ident : O_Ident;
-      Etype : O_Tnode)
+   procedure Add_Field
+     (Elements : in out O_Element_List; Ident : O_Ident; Etype : O_Tnode)
    is
       O_El : O_Element_Acc;
    begin
-      El := (Kind => OF_Record,
-             Index => Elements.Nbr_Elements,
-             Ftype => Etype);
       Elements.Nbr_Elements := Elements.Nbr_Elements + 1;
       O_El := new O_Element'(Next => null,
                              Etype => Etype,
@@ -374,22 +370,96 @@ package body Ortho_LLVM is
          Elements.Last_Elem.Next := O_El;
       end if;
       Elements.Last_Elem := O_El;
+   end Add_Field;
+
+   procedure New_Record_Field
+     (Elements : in out O_Element_List;
+      El : out O_Fnode;
+      Ident : O_Ident;
+      Etype : O_Tnode) is
+   begin
+      El := (Kind => OF_Record,
+             Index => Elements.Nbr_Elements,
+             Ftype => Etype);
+      Add_Field (Elements, Ident, Etype);
    end New_Record_Field;
 
    ------------------------
    -- Finish_Record_Type --
    ------------------------
 
-   procedure Finish_Record_Type
-     (Elements : in out O_Element_List;
-      Res : out O_Tnode)
+   procedure Add_Dbg_Fields
+     (Elements : in out O_Element_List; Res : O_Tnode)
+   is
+      Count : constant unsigned := unsigned (Elements.Nbr_Elements);
+      Fields : ValueRefArray (1 .. Count);
+      Vals : ValueRefArray (0 .. 9);
+      Ftype : TypeRef;
+      Fields_Arr : ValueRef;
+      Off : Unsigned_64;
+      El : O_Element_Acc;
+   begin
+      El := Elements.First_Elem;
+      for I in Fields'Range loop
+         Ftype := Get_LLVM_Type (El.Etype);
+         case Elements.Kind is
+            when OF_Record =>
+               Off := 8 * OffsetOfElement (Target_Data,
+                                           Res.LLVM, Unsigned_32 (I - 1));
+            when OF_Union =>
+               Off := 0;
+            when OF_None =>
+               raise Program_Error;
+         end case;
+         Vals :=
+           (ConstInt (Int32Type, DW_TAG_Member, 0),
+            Dbg_Current_File,
+            Null_ValueRef,
+            MDString (El.Ident),
+            ConstInt (Int32Type, 0, 0),    -- linenum
+            Dbg_Size (Ftype),
+            Dbg_Align (Ftype),
+            ConstInt (Int32Type, Off, 0),
+            ConstInt (Int32Type, 0, 0),    --  Flags
+            El.Etype.Dbg);
+         Fields (I) := MDNode (Vals, Vals'Length);
+         El := El.Next;
+      end loop;
+      Fields_Arr := MDNode (Fields, Fields'Length);
+      if Elements.Rec_Type /= null then
+         --  Completion
+         MDNodeReplaceOperandWith (Res.Dbg, 10, Fields_Arr);
+         MDNodeReplaceOperandWith (Res.Dbg, 5, Dbg_Size (Res.LLVM));
+         MDNodeReplaceOperandWith (Res.Dbg, 6, Dbg_Align (Res.LLVM));
+      else
+         --  Temporary borrowed.
+         Res.Dbg := Fields_Arr;
+      end if;
+   end Add_Dbg_Fields;
+
+   procedure Free_Elements (Elements : in out O_Element_List)
    is
       procedure Free is new Ada.Unchecked_Deallocation
         (O_Element, O_Element_Acc);
-
-      Count : constant unsigned := unsigned (Elements.Nbr_Elements);
       El : O_Element_Acc;
       Next_El : O_Element_Acc;
+   begin
+      --  Free elements
+      El := Elements.First_Elem;
+      while El /= null loop
+         Next_El := El.Next;
+         Free (El);
+         El := Next_El;
+      end loop;
+      Elements.First_Elem := null;
+      Elements.Last_Elem := null;
+   end Free_Elements;
+
+   procedure Finish_Record_Type
+     (Elements : in out O_Element_List; Res : out O_Tnode)
+   is
+      Count : constant unsigned := unsigned (Elements.Nbr_Elements);
+      El : O_Element_Acc;
       Types : TypeRefArray (1 .. Count);
    begin
       El := Elements.First_Elem;
@@ -409,52 +479,10 @@ package body Ortho_LLVM is
       end if;
 
       if Flag_Debug then
-         declare
-            Fields : ValueRefArray (1 .. Count);
-            Vals : ValueRefArray (0 .. 9);
-            Ftype : TypeRef;
-            Fields_Arr : ValueRef;
-         begin
-            El := Elements.First_Elem;
-            for I in Fields'Range loop
-               Ftype := Get_LLVM_Type (El.Etype);
-               Vals :=
-                 (ConstInt (Int32Type, DW_TAG_Member, 0),
-                  Dbg_Current_File,
-                  Null_ValueRef,
-                  MDString (El.Ident),
-                  ConstInt (Int32Type, 0, 0),    -- linenum
-                  Dbg_Size (Ftype),
-                  Dbg_Align (Ftype),
-                  ConstInt
-                    (Int32Type,
-                     8 * OffsetOfElement (Target_Data,
-                                          Res.LLVM, Unsigned_32 (I - 1)), 0),
-                  ConstInt (Int32Type, 0, 0),    --  Flags
-                  El.Etype.Dbg);
-               Fields (I) := MDNode (Vals, Vals'Length);
-               El := El.Next;
-            end loop;
-            Fields_Arr := MDNode (Fields, Fields'Length);
-            if Elements.Rec_Type /= null then
-               --  Completion
-               MDNodeReplaceOperandWith (Res.Dbg, 10, Fields_Arr);
-               MDNodeReplaceOperandWith (Res.Dbg, 5, Dbg_Size (Res.LLVM));
-               MDNodeReplaceOperandWith (Res.Dbg, 6, Dbg_Align (Res.LLVM));
-            else
-               --  Temporary borrowed.
-               Res.Dbg := Fields_Arr;
-            end if;
-         end;
+         Add_Dbg_Fields (Elements, Res);
       end if;
 
-      --  Free elements
-      El := Elements.First_Elem;
-      for I in Types'Range loop
-         Next_El := El.Next;
-         Free (El);
-         El := Next_El;
-      end loop;
+      Free_Elements (Elements);
    end Finish_Record_Type;
 
    --------------------------------
@@ -482,7 +510,8 @@ package body Ortho_LLVM is
       if Res.Kind /= ON_Incomplete_Record_Type then
          raise Program_Error;
       end if;
-      Elements := (Nbr_Elements => 0,
+      Elements := (Kind => OF_Record,
+                   Nbr_Elements => 0,
                    Rec_Type => Res,
                    Size => 0,
                    Align => 0,
@@ -497,7 +526,8 @@ package body Ortho_LLVM is
 
    procedure Start_Union_Type (Elements : out O_Element_List) is
    begin
-      Elements := (Nbr_Elements => 0,
+      Elements := (Kind => OF_Union,
+                   Nbr_Elements => 0,
                    Rec_Type => O_Tnode_Null,
                    Size => 0,
                    Align => 0,
@@ -516,15 +546,16 @@ package body Ortho_LLVM is
       Ident : O_Ident;
       Etype : O_Tnode)
    is
-      pragma Unreferenced (Ident);
-
       El_Type : constant TypeRef := Get_LLVM_Type (Etype);
       Size : constant unsigned :=
         unsigned (ABISizeOfType (Target_Data, El_Type));
       Align : constant Unsigned_32 :=
         ABIAlignmentOfType (Target_Data, El_Type);
    begin
-      El := (Kind => OF_Union, Utype => El_Type, Ftype => Etype);
+      El := (Kind => OF_Union,
+             Ftype => Etype,
+             Utype => El_Type,
+             Ptr_Type => PointerType (El_Type));
       if Size > Elements.Size then
          Elements.Size := Size;
       end if;
@@ -532,6 +563,7 @@ package body Ortho_LLVM is
          Elements.Align := Align;
          Elements.Align_Type := El_Type;
       end if;
+      Add_Field (Elements, Ident, Etype);
    end New_Union_Field;
 
    -----------------------
@@ -567,6 +599,11 @@ package body Ortho_LLVM is
                                Dbg => Null_ValueRef,
                                Un_Size => Elements.Size,
                                Un_Main_Field => Elements.Align_Type);
+
+      if Flag_Debug then
+         Add_Dbg_Fields (Elements, Res);
+      end if;
+      Free_Elements (Elements);
    end Finish_Union_Type;
 
    ---------------------
@@ -1435,13 +1472,21 @@ package body Ortho_LLVM is
       if Unreach then
          Res := Null_ValueRef;
       else
-         declare
-            Idx : constant ValueRefArray (1 .. 2) :=
-              (ConstInt (Int32Type, 0, 0),
-               ConstInt (Int32Type, Unsigned_64 (El.Index), 0));
-         begin
-            Res := BuildGEP (Builder, Rec.LLVM, Idx, 2, Empty_Cstring);
-         end;
+         case El.Kind is
+            when OF_Record =>
+               declare
+                  Idx : constant ValueRefArray (1 .. 2) :=
+                    (ConstInt (Int32Type, 0, 0),
+                     ConstInt (Int32Type, Unsigned_64 (El.Index), 0));
+               begin
+                  Res := BuildGEP (Builder, Rec.LLVM, Idx, 2, Empty_Cstring);
+               end;
+            when OF_Union =>
+               Res := BuildBitCast (Builder,
+                                    Rec.LLVM, El.Ptr_Type, Empty_Cstring);
+            when OF_None =>
+               raise Program_Error;
+         end case;
       end if;
       return O_Lnode'(Direct => False, LLVM => Res, Ltype => El.Ftype);
    end New_Selected_Element;
@@ -1790,12 +1835,12 @@ package body Ortho_LLVM is
       return Add_Dbg_Pointer_Type (Id, Ptype, Null_ValueRef);
    end Add_Dbg_Incomplete_Pointer_Type;
 
-   function Add_Dbg_Record_Type (Id : O_Ident; Rtype : O_Tnode)
-                                return ValueRef
+   function Add_Dbg_Record_Type
+     (Id : O_Ident; Rtype : O_Tnode; Tag : Unsigned_64) return ValueRef
    is
       Vals : ValueRefArray (0 .. 14);
    begin
-      Vals := (ConstInt (Int32Type, DW_TAG_Structure_Type, 0),
+      Vals := (ConstInt (Int32Type, Tag, 0),
                Dbg_Current_Filedir,
                Null_ValueRef,           --  context
                MDString (Id),
@@ -1852,16 +1897,18 @@ package body Ortho_LLVM is
             when ON_Incomplete_Access_Type =>
                Atype.Dbg := Add_Dbg_Incomplete_Pointer_Type (Ident, Atype);
             when ON_Record_Type =>
-               Atype.Dbg := Add_Dbg_Record_Type (Ident, Atype);
+               Atype.Dbg := Add_Dbg_Record_Type
+                 (Ident, Atype, DW_TAG_Structure_Type);
             when ON_Incomplete_Record_Type =>
-               Atype.Dbg := Add_Dbg_Record_Type (Ident, O_Tnode_Null);
+               Atype.Dbg := Add_Dbg_Record_Type
+                 (Ident, O_Tnode_Null, DW_TAG_Structure_Type);
             when ON_Array_Type
               | ON_Array_Sub_Type =>
                --  FIXME: typedef
                null;
             when ON_Union_Type =>
-               --  FIXME: todo
-               null;
+               Atype.Dbg := Add_Dbg_Record_Type
+                 (Ident, Atype, DW_TAG_Union_Type);
             when ON_No_Type =>
                raise Program_Error;
          end case;

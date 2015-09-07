@@ -134,14 +134,17 @@ private
 
    type OF_Kind is (OF_None, OF_Record, OF_Union);
    type O_Fnode (Kind : OF_Kind := OF_None) is record
+      --  Type of the field.
       Ftype : O_Tnode;
       case Kind is
          when OF_None =>
             null;
          when OF_Record =>
+            --  Field index (starting from 0).
             Index : Natural;
          when OF_Union =>
             Utype : TypeRef;
+            Ptr_Type : TypeRef;
       end case;
    end record;
 
@@ -216,6 +219,9 @@ private
 
    --  Record and union builder.
    type O_Element_List is record
+      Kind : OF_Kind;
+
+      --  Number of fields.
       Nbr_Elements : Natural;
 
       --  For record: the access to the incomplete (but named) type.
