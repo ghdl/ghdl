@@ -1786,8 +1786,10 @@ package body Ortho_Debug is
    is
       N : O_Snode;
    begin
-      if Current_Stmt_Scope.Kind /= Stmt_Case then
-         --  You are adding a branch outside a case statment.
+      if Current_Stmt_Scope.Kind /= Stmt_Case
+        or else Current_Stmt_Scope.Parent /= Block.Case_Stmt
+      then
+         --  You are adding a branch outside a the case statment.
          raise Syntax_Error;
       end if;
       if Current_Stmt_Scope.Last_Choice /= null then
@@ -1812,12 +1814,12 @@ package body Ortho_Debug is
       Add_Stmt (N);
    end Start_Choice;
 
-   procedure Add_Choice (Block : in out O_Case_Block; Choice : O_Choice)
-   is
-      pragma Unreferenced (Block);
+   procedure Add_Choice (Block : in out O_Case_Block; Choice : O_Choice) is
    begin
-      if Current_Stmt_Scope.Kind /= Stmt_Case then
-         --  You are adding a choice not inside a case statement.
+      if Current_Stmt_Scope.Kind /= Stmt_Case
+        or else Current_Stmt_Scope.Parent /= Block.Case_Stmt
+      then
+         --  You are adding a branch outside a the case statment.
          raise Syntax_Error;
       end if;
       if Current_Stmt_Scope.Last_Branch = null then
@@ -1840,8 +1842,10 @@ package body Ortho_Debug is
    is
       N : O_Choice;
    begin
-      if Current_Stmt_Scope.Kind /= Stmt_Case then
-         --  You are creating a choice not inside a case statement.
+      if Current_Stmt_Scope.Kind /= Stmt_Case
+        or else Current_Stmt_Scope.Parent /= Block.Case_Stmt
+      then
+         --  You are adding a branch outside a the case statment.
          raise Syntax_Error;
       end if;
       if Current_Stmt_Scope.Case_Type /= Expr.Ctype then
@@ -1861,8 +1865,10 @@ package body Ortho_Debug is
    is
       N : O_Choice;
    begin
-      if Current_Stmt_Scope.Kind /= Stmt_Case then
-         --  You are creating a choice not inside a case statement.
+      if Current_Stmt_Scope.Kind /= Stmt_Case
+        or else Current_Stmt_Scope.Parent /= Block.Case_Stmt
+      then
+         --  You are adding a branch outside a the case statment.
          raise Syntax_Error;
       end if;
       if Current_Stmt_Scope.Case_Type /= Low.Ctype
@@ -1884,8 +1890,10 @@ package body Ortho_Debug is
    is
       N : O_Choice;
    begin
-      if Current_Stmt_Scope.Kind /= Stmt_Case then
-         --  You are creating a choice not inside a case statement.
+      if Current_Stmt_Scope.Kind /= Stmt_Case
+        or else Current_Stmt_Scope.Parent /= Block.Case_Stmt
+      then
+         --  You are adding a branch outside a the case statment.
          raise Syntax_Error;
       end if;
 
@@ -1895,12 +1903,12 @@ package body Ortho_Debug is
       Add_Choice (Block, N);
    end New_Default_Choice;
 
-   procedure Finish_Choice (Block : in out O_Case_Block)
-   is
-      pragma Unreferenced (Block);
+   procedure Finish_Choice (Block : in out O_Case_Block) is
    begin
-      if Current_Stmt_Scope.Kind /= Stmt_Case then
-         --  You are adding a choice not inside a case statement.
+      if Current_Stmt_Scope.Kind /= Stmt_Case
+        or else Current_Stmt_Scope.Parent /= Block.Case_Stmt
+      then
+         --  You are adding a branch outside a the case statment.
          raise Syntax_Error;
       end if;
       if Current_Stmt_Scope.Last_Branch = null then
@@ -1916,9 +1924,14 @@ package body Ortho_Debug is
 
    procedure Finish_Case_Stmt (Block : in out O_Case_Block)
    is
-      pragma Unreferenced (Block);
       Parent : O_Snode;
    begin
+      if Current_Stmt_Scope.Kind /= Stmt_Case
+        or else Current_Stmt_Scope.Parent /= Block.Case_Stmt
+      then
+         --  You are adding a branch outside a the case statment.
+         raise Syntax_Error;
+      end if;
       Parent := Current_Stmt_Scope.Parent;
       Pop_Stmt_Scope (Stmt_Case);
       Parent.Case_Last := Current_Decl_Scope.Last_Stmt;
