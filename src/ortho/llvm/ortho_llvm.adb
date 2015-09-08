@@ -2492,11 +2492,15 @@ package body Ortho_LLVM is
       Res : ValueRef;
       Old_Vals : ValueRefArray_Acc;
    begin
-      Res := BuildCall (Builder, Assocs.Subprg.LLVM,
-                        Assocs.Vals.all, Assocs.Vals'Last, Empty_Cstring);
-      Old_Vals := Assocs.Vals;
-      Free (Old_Vals);
-      Set_Insn_Dbg (Res);
+      if not Unreach then
+         Res := BuildCall (Builder, Assocs.Subprg.LLVM,
+                           Assocs.Vals.all, Assocs.Vals'Last, Empty_Cstring);
+         Old_Vals := Assocs.Vals;
+         Free (Old_Vals);
+         Set_Insn_Dbg (Res);
+      else
+         Res := Null_ValueRef;
+      end if;
       return O_Enode'(LLVM => Res, Etype => Assocs.Subprg.Dtype);
    end New_Function_Call;
 
