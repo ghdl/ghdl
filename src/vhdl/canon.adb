@@ -18,6 +18,7 @@
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 with Types; use Types;
+with Flags;
 with Name_Table;
 with Sem;
 with Iir_Chains; use Iir_Chains;
@@ -1244,8 +1245,11 @@ package body Canon is
       Is_Sensitized : Boolean;
    begin
       --  Optimization: the process is a sensitized process only if the
-      --  procedure is known not to have wait statement.
-      Is_Sensitized := Get_Wait_State (Imp) = False;
+      --  procedure is known not to have wait statement.  This is possible only
+      --  when generating code at once for the whole design, otherwise this
+      --  may create discrepencies in translate structures due to states.
+      Is_Sensitized :=
+        (Get_Wait_State (Imp) = False) and Flags.Flag_Whole_Analyze;
 
       --  LRM93 9.3
       --  The equivalent process statement has also no sensitivity list, an

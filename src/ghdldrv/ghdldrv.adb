@@ -27,7 +27,6 @@ with Std_Package;
 with Types; use Types;
 with Iirs; use Iirs;
 with Files_Map;
-with Flags;
 with Configuration;
 --with Disp_Tree;
 with Default_Pathes;
@@ -447,11 +446,7 @@ package body Ghdldrv is
       declare
          Pos : constant Natural := Get_Basename_Pos (Toolname);
       begin
-         if Pos = 0 then
-            return Locate_Exec_On_Path (Toolname);
-         else
-            return Locate_Exec_On_Path (Toolname (Pos .. Toolname'Last));
-         end if;
+         return Locate_Exec_On_Path (Toolname (Pos + 1 .. Toolname'Last));
       end;
    end Locate_Exec_Tool;
 
@@ -1209,7 +1204,6 @@ package body Ghdldrv is
       if Elab_Index < 0 then
          Analyze_Files (Args, True);
       else
-         Flags.Flag_Whole_Analyze := True;
          Set_Elab_Units ("-c", Args (Elab_Index + 1 .. Args'Last));
          Setup_Compiler (False);
 
