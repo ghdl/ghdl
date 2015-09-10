@@ -1,0 +1,38 @@
+# general file excludes
+~*.tmp
+~*.docx
+*.fmt
+*~
+*.o
+~$*
+
+# ignore Python caches
+__pycache__
+
+# ignore files in netlist/
+/netlist/
+!/netlist/configuration.ini
+!/netlist/netlist.ps1
+!/netlist/netlist.sh
+!/netlist/template.cgc
+
+# ignore folders
+temp/
+vSim/
+
+# ignore files from PoC
+/tb/common/my_project.vhdl
+/py/config.private.ini
+
+# ignore Quartus files
+other/quartus/*/db/
+other/quartus/*/incremental_db/
+other/quartus/*/output_files/
+other/quartus/*/simulation/
+other/quartus/*/*.rpt
+other/quartus/*/*.qws
+other/quartus/*/*.bak
+
+# general whitelist
+!.publish
+!.git*
