@@ -15,19 +15,18 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with GNAT.Table;
+with Tables;
 
 package body Str_Table is
    --  Be sure the elements are packed.
    type El_Nat8 is new Nat8;
    for El_Nat8'Size use 8;
 
-   package String8_Table is new GNAT.Table
+   package String8_Table is new Tables
      (Table_Index_Type => String8_Id,
       Table_Component_Type => El_Nat8,
       Table_Low_Bound => Null_String8 + 1,
-      Table_Initial => 1024,
-      Table_Increment => 100);
+      Table_Initial => 1024);
 
    Cur_String8 : String8_Id := 0;
 

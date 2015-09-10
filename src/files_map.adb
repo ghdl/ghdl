@@ -20,7 +20,7 @@ with Interfaces.C;
 with Ada.Characters.Latin_1;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
-with GNAT.Table;
+with Tables;
 with GNAT.OS_Lib;
 with GNAT.SHA1;
 with GNAT.Directory_Operations;
@@ -74,12 +74,11 @@ package body Files_Map is
    --  Next location to use.
    Next_Location : Location_Type := Location_Nil + 1;
 
-   package Source_Files is new GNAT.Table
+   package Source_Files is new Tables
      (Table_Index_Type => Source_File_Entry,
       Table_Component_Type => Source_File_Record,
       Table_Low_Bound => No_Source_File_Entry + 1,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
    function Get_Last_Source_File_Entry return Source_File_Entry is
    begin

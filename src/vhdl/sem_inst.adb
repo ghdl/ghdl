@@ -14,7 +14,7 @@
 --  package to its duplicated node.  Links from instantiated declaration to
 --  the original declaration are also stored in that table.
 
-with GNAT.Table;
+with Tables;
 with Nodes;
 with Nodes_Meta;
 with Types; use Types;
@@ -38,12 +38,11 @@ package body Sem_Inst is
    --  The origin of Nat1 is Nat and this is true forever.  During
    --  instantiation, the instance of Nat is Nat1, so that the type of N will
    --  be set to Nat1.
-   package Origin_Table is new GNAT.Table
+   package Origin_Table is new Tables
      (Table_Component_Type => Iir,
       Table_Index_Type => Iir,
       Table_Low_Bound => 2,
-      Table_Initial => 1024,
-      Table_Increment => 100);
+      Table_Initial => 1024);
 
    procedure Expand_Origin_Table
    is
@@ -109,12 +108,11 @@ package body Sem_Inst is
    --  have uninstantiated packages in instantiated packages.  In that case,
    --  the slot in Origin_Table cannot be the origin and the instance at the
    --  same time.
-   package Prev_Instance_Table is new GNAT.Table
+   package Prev_Instance_Table is new Tables
      (Table_Component_Type => Instance_Entry_Type,
       Table_Index_Type => Instance_Index_Type,
       Table_Low_Bound => 1,
-      Table_Initial => 256,
-      Table_Increment => 100);
+      Table_Initial => 256);
 
    procedure Set_Instance (Orig : Iir; N : Iir)
    is

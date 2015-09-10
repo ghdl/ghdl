@@ -19,7 +19,7 @@ with System;
 with Interfaces; use Interfaces;
 with Ada.Unchecked_Deallocation;
 with Ortho_Ident; use Ortho_Ident;
-with GNAT.Table;
+with Tables;
 with Memsegs;
 
 package Binary_File is
@@ -250,12 +250,11 @@ private
    Section_Chain : Section_Acc := null;
    Section_Last : Section_Acc := null;
 
-   package Symbols is new GNAT.Table
+   package Symbols is new Tables
      (Table_Component_Type => Symbol_Type,
       Table_Index_Type => Symbol,
       Table_Low_Bound => 2,
-      Table_Initial => 1024,
-      Table_Increment => 100);
+      Table_Initial => 1024);
 
    function Pow_Align (V : Pc_Type; Align : Natural) return Pc_Type;
 

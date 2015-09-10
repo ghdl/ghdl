@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Ada.Text_IO;
 with Ada.Unchecked_Conversion;
-with GNAT.Table;
+with Tables;
 with Ortho_Code.Consts; use Ortho_Code.Consts;
 with Ortho_Code.Debug;
 with Ortho_Code.Abi; use Ortho_Code.Abi;
@@ -69,12 +69,11 @@ package body Ortho_Code.Types is
       Lit_True : O_Cnode;
    end record;
 
-   package Tnodes is new GNAT.Table
+   package Tnodes is new Tables
      (Table_Component_Type => Tnode_Common,
       Table_Index_Type => O_Tnode,
       Table_Low_Bound => O_Tnode_First,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    type Field_Type is record
       Parent : O_Tnode;
@@ -84,12 +83,11 @@ package body Ortho_Code.Types is
       Next : O_Fnode;
    end record;
 
-   package Fnodes is new GNAT.Table
+   package Fnodes is new Tables
      (Table_Component_Type => Field_Type,
       Table_Index_Type => O_Fnode,
       Table_Low_Bound => 2,
-      Table_Initial => 64,
-      Table_Increment => 100);
+      Table_Initial => 64);
 
    function Get_Type_Kind (Atype : O_Tnode) return OT_Kind is
    begin

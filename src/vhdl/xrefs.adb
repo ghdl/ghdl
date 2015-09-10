@@ -15,7 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with GNAT.Table;
+with Tables;
 with GNAT.Heap_Sort_A;
 with Flags;
 with Std_Package;
@@ -34,12 +34,11 @@ package body Xrefs is
       Kind : Xref_Kind;
    end record;
 
-   package Xref_Table is new GNAT.Table
+   package Xref_Table is new Tables
      (Table_Index_Type => Natural,
       Table_Component_Type => Xref_Type,
       Table_Low_Bound => 0,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    function Get_Xref_Location (N : Xref) return Location_Type is
    begin

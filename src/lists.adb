@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with System;
-with GNAT.Table;
+with Tables;
 
 package body Lists is
    type Node_Array_Fat is array (Natural) of Node_Type;
@@ -29,12 +29,11 @@ package body Lists is
       Els : Node_Array_Fat_Acc;
    end record;
 
-   package Listt is new GNAT.Table
+   package Listt is new Tables
      (Table_Component_Type => List_Record,
       Table_Index_Type => List_Type,
       Table_Low_Bound => 4,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    --function Get_Max_Nbr_Elements (List : List_Type) return Natural;
    --pragma Inline (Get_Max_Nbr_Elements);

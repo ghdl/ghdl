@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO;
-with GNAT.Table;
+with Tables;
 with Flags; use Flags;
 with Name_Table; -- use Name_Table;
 with Files_Map; use Files_Map;
@@ -52,12 +52,11 @@ package body Sem_Scopes is
    end record;
    pragma Pack (Interpretation_Cell);
 
-   package Interpretations is new GNAT.Table
+   package Interpretations is new Tables
      (Table_Component_Type => Interpretation_Cell,
       Table_Index_Type => Name_Interpretation_Type,
       Table_Low_Bound => First_Valid_Interpretation,
-      Table_Initial => 1024,
-      Table_Increment => 100);
+      Table_Initial => 1024);
 
    --  Cached value of Prev_In_Region of current region.
    Last_In_Region : Name_Id := Null_Identifier;
@@ -76,12 +75,11 @@ package body Sem_Scopes is
    type Hide_Index is new Nat32;
    No_Hide_Index : constant Hide_Index := 0;
 
-   package Hidden_Decls is new GNAT.Table
+   package Hidden_Decls is new Tables
      (Table_Component_Type => Name_Interpretation_Type,
       Table_Index_Type => Hide_Index,
       Table_Low_Bound => No_Hide_Index + 1,
-      Table_Initial => 32,
-      Table_Increment => 100);
+      Table_Initial => 32);
 
    --  First non-local hidden declarations.  In VHDL, it is possible to hide
    --  an overloaded declaration (by declaring a subprogram with the same
@@ -118,12 +116,11 @@ package body Sem_Scopes is
       Saved_First_Interpretation : Name_Interpretation_Type;
    end record;
 
-   package Scopes is new GNAT.Table
+   package Scopes is new Tables
      (Table_Component_Type => Scope_Cell,
       Table_Index_Type => Natural,
       Table_Low_Bound => 1,
-      Table_Initial => 64,
-      Table_Increment => 100);
+      Table_Initial => 64);
 
    function Valid_Interpretation (Inter : Name_Interpretation_Type)
                                  return Boolean is

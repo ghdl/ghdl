@@ -19,7 +19,7 @@ with Ada.Command_Line; use Ada.Command_Line;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
-with GNAT.Table;
+with Tables;
 with GNAT.Dynamic_Tables;
 with Libraries;
 with Name_Table; use Name_Table;
@@ -271,12 +271,11 @@ package body Ghdldrv is
       Free (Obj_File);
    end Do_Compile;
 
-   package Filelist is new GNAT.Table
+   package Filelist is new Tables
      (Table_Component_Type => String_Access,
       Table_Index_Type => Natural,
       Table_Low_Bound => 1,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
    Link_Obj_Suffix : String_Access;
 

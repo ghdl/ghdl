@@ -16,22 +16,20 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO;
-with GNAT.Table;
+with Tables;
 
 package body Ortho_Ident is
-   package Ids is new GNAT.Table
+   package Ids is new Tables
      (Table_Component_Type => Natural,
       Table_Index_Type => O_Ident,
       Table_Low_Bound => 2,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
-   package Strs is new GNAT.Table
+   package Strs is new Tables
      (Table_Component_Type => Character,
       Table_Index_Type => Natural,
       Table_Low_Bound => 2,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    function Get_Identifier (Str : String) return O_Ident
    is

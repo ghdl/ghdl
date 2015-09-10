@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
-with GNAT.Table;
+with Tables;
 with Ortho_Code.Types; use Ortho_Code.Types;
 with Ortho_Code.Consts; use Ortho_Code.Consts;
 with Ortho_Code.Decls; use Ortho_Code.Decls;
@@ -48,12 +48,11 @@ package body Ortho_Code.Exprs is
    for Enode_Common'Size use 4*32;
    for Enode_Common'Alignment use 4;
 
-   package Enodes is new GNAT.Table
+   package Enodes is new Tables
      (Table_Component_Type => Enode_Common,
       Table_Index_Type => O_Enode,
       Table_Low_Bound => 2,
-      Table_Initial => 1024,
-      Table_Increment => 100);
+      Table_Initial => 1024);
 
    function Get_Expr_Kind (Enode : O_Enode) return OE_Kind is
    begin

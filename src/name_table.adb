@@ -18,7 +18,7 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 with Interfaces;
-with GNAT.Table;
+with Tables;
 
 package body Name_Table is
    --  Id of the first character (NUL).
@@ -57,24 +57,22 @@ package body Name_Table is
    Hash_Table: Hash_Array_Acc;
 
    --  Table of identifiers.
-   package Names_Table is new GNAT.Table
+   package Names_Table is new Tables
      (Table_Index_Type => Name_Id,
       Table_Component_Type => Identifier,
       Table_Low_Bound => Name_Id'First,
-      Table_Initial => 1024,
-      Table_Increment => 100);
+      Table_Initial => 1024);
 
    --  A NUL character is stored after each word in the strings_table.
    --  This is used for compatibility with C.
    NUL : constant Character := Character'Val (0);
 
    --  The table to store all the strings.  Strings are always NUL terminated.
-   package Strings_Table is new GNAT.Table
+   package Strings_Table is new Tables
      (Table_Index_Type => Natural,
       Table_Component_Type => Character,
       Table_Low_Bound => Natural'First,
-      Table_Initial => 4096,
-      Table_Increment => 100);
+      Table_Initial => 4096);
 
    --  Allocate place in the strings_table, and store the name_buffer into it.
    --  Also append a NUL.
@@ -107,7 +105,7 @@ package body Name_Table is
       Strings_Table.Init;
       Names_Table.Init;
 
-      Strings_Table.Set_Last (1);
+      Strings_Table.Append (NUL);
 
       --  Reserve entry 0.
       Strings_Table.Append (NUL);

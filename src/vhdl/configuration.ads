@@ -17,15 +17,14 @@
 --  02111-1307, USA.
 with Types; use Types;
 with Iirs; use Iirs;
-with GNAT.Table;
+with Tables;
 
 package Configuration is
-   package Design_Units is new GNAT.Table
+   package Design_Units is new Tables
      (Table_Component_Type => Iir_Design_Unit,
       Table_Index_Type => Natural,
       Table_Low_Bound => 1,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
    --  Get the top configuration to build a design hierarchy whose top is
    --  PRIMARY + SECONDARY.

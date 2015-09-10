@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with GNAT.Directory_Operations;
-with GNAT.Table;
+with Tables;
 with Interfaces; use Interfaces;
 with Binary_File; use Binary_File;
 with Dwarf; use Dwarf;
@@ -523,12 +523,11 @@ package body Ortho_Code.Dwarf is
    Abbrev_Enum_Name : Unsigned_32 := 0;
    Abbrev_Enumerator : Unsigned_32 := 0;
 
-   package TOnodes is new GNAT.Table
+   package TOnodes is new Tables
      (Table_Component_Type => Pc_Type,
       Table_Index_Type => O_Tnode,
       Table_Low_Bound => O_Tnode_First,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
    procedure Emit_Type_Ref (Atype : O_Tnode)
    is

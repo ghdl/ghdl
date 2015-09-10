@@ -15,7 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with GNAT.Table;
+with Tables;
 
 package body Nodes is
    --  Suppress the access check of the table base.  This is really safe to
@@ -31,12 +31,11 @@ package body Nodes is
    --  iirs do their own checks.
    pragma Suppress (Discriminant_Check);
 
-   package Nodet is new GNAT.Table
+   package Nodet is new Tables
      (Table_Component_Type => Node_Record,
       Table_Index_Type => Node_Type,
       Table_Low_Bound => 2,
-      Table_Initial => 1024,
-      Table_Increment => 100);
+      Table_Initial => 1024);
 
    function Get_Last_Node return Node_Type is
    begin

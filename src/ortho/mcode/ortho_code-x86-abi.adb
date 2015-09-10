@@ -139,7 +139,9 @@ package body Ortho_Code.X86.Abi is
             Release (Decls_Mark);
             Consts.Release (Consts_Mark);
             Release (Types_Mark);
-            Dwarf.Release (Dwarf_Mark);
+            if Flag_Debug = Debug_Dwarf then
+               Dwarf.Release (Dwarf_Mark);
+            end if;
          end if;
       end if;
    end Finish_Body;

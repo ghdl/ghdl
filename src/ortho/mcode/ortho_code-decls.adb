@@ -15,7 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with GNAT.Table;
+with Tables;
 with Ada.Text_IO;
 with Ortho_Ident;
 with Ortho_Code.Debug; use Ortho_Code.Debug;
@@ -103,19 +103,17 @@ package body Ortho_Code.Decls is
 
    pragma Pack (Dnode_Common);
 
-   package Dnodes is new GNAT.Table
+   package Dnodes is new Tables
      (Table_Component_Type => Dnode_Common,
       Table_Index_Type => O_Dnode,
       Table_Low_Bound => O_Dnode_First,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
-   package TDnodes is new GNAT.Table
+   package TDnodes is new Tables
      (Table_Component_Type => O_Dnode,
       Table_Index_Type => O_Tnode,
       Table_Low_Bound => O_Tnode_First,
-      Table_Initial => 1,
-      Table_Increment => 100);
+      Table_Initial => 8);
 
    Context : O_Dnode := O_Dnode_Null;
 

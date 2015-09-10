@@ -19,7 +19,7 @@ with Ada.Characters.Latin_1;
 with Ada.Text_IO; use Ada.Text_IO;
 with GNAT.Directory_Operations;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
-with GNAT.Table;
+with Tables;
 with Types; use Types;
 with Flags;
 with Name_Table; use Name_Table;
@@ -1044,12 +1044,11 @@ package body Ghdlprint is
       use Tokens;
       use Scanner;
 
-      package Ref_Tokens is new GNAT.Table
+      package Ref_Tokens is new Tables
         (Table_Component_Type => Token_Type,
          Table_Index_Type => Integer,
          Table_Low_Bound => 0,
-         Table_Initial => 1024,
-         Table_Increment => 100);
+         Table_Initial => 1024);
 
       Id : Name_Id;
       Fe : Source_File_Entry;

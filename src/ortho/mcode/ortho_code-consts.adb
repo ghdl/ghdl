@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Unchecked_Conversion;
-with GNAT.Table;
+with Tables;
 with Ada.Text_IO;
 with Ortho_Code.Types; use Ortho_Code.Types;
 with Ortho_Code.Debug;
@@ -77,12 +77,11 @@ package body Ortho_Code.Consts is
    end record;
    for Cnode_Union'Size use 64;
 
-   package Cnodes is new GNAT.Table
+   package Cnodes is new Tables
      (Table_Component_Type => Cnode_Common,
       Table_Index_Type => O_Cnode,
       Table_Low_Bound => 2,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    function Get_Const_Kind (Cst : O_Cnode) return OC_Kind is
    begin
@@ -315,12 +314,11 @@ package body Ortho_Code.Consts is
       return L + 2;
    end Get_Lit_Chain;
 
-   package Els is new GNAT.Table
+   package Els is new Tables
      (Table_Component_Type => O_Cnode,
       Table_Index_Type => Int32,
       Table_Low_Bound => 2,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    function To_Cnode_Common is new Ada.Unchecked_Conversion
      (Source => Cnode_Aggr, Target => Cnode_Common);

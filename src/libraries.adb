@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO; use Ada.Text_IO;
-with GNAT.Table;
+with Tables;
 with GNAT.OS_Lib;
 with Interfaces.C_Streams;
 with System;
@@ -41,12 +41,11 @@ package body Libraries is
    Implicit_Location: Location_Type;
 
    --  Table of library pathes.
-   package Pathes is new GNAT.Table
+   package Pathes is new Tables
      (Table_Index_Type => Integer,
       Table_Component_Type => Name_Id,
       Table_Low_Bound => 1,
-      Table_Initial => 4,
-      Table_Increment => 100);
+      Table_Initial => 4);
 
    --  Report an error message.
    procedure Error_Lib_Msg (Msg : String) is
