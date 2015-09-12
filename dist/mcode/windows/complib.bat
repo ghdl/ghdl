@@ -15,7 +15,7 @@ set IEEE_SRCS=      std_logic_1164 std_logic_1164_body numeric_std numeric_std-b
 set MATH_SRCS=      math_real math_real-body math_complex math_complex-body
 
 set STD08_SRCS=     textio textio_body env env_body
-set IEEE08_SRCS=    std_logic_1164 std_logic_1164-body std_logic_textio math_real math_real-body math_complex math_complex-body numeric_bit numeric_bit-body numeric_bit_unsigned numeric_bit_unsigned-body numeric_std numeric_std-body numeric_std_unsigned numeric_std_unsigned-body fixed_float_types fixed_generic_pkg fixed_generic_pkg-body fixed_pkg float_generic_pkg float_generic_pkg-body float_pkg
+set IEEE08_SRCS=    std_logic_1164 std_logic_1164-body std_logic_textio math_real math_real-body math_complex math_complex-body numeric_bit numeric_bit-body numeric_bit_unsigned numeric_bit_unsigned-body numeric_std numeric_std-body numeric_std_unsigned numeric_std_unsigned-body fixed_float_types fixed_generic_pkg fixed_generic_pkg-body fixed_pkg float_generic_pkg float_generic_pkg-body float_pkg ieee_bit_context ieee_std_context
 
 set VITAL95_SRCS=   vital_timing vital_timing_body vital_primitives vital_primitives_body
 set VITAL2000_SRCS= timing_p timing_b prmtvs_p prmtvs_b memory_p memory_b
@@ -112,9 +112,7 @@ echo ieee
 mkdir ieee
 cd ieee
 for %%F in (%IEEE08_SRCS%)    do %REL%\build\ghdlfilter -v08 < %LIBSRC%\ieee2008\%%F.vhdl > %%F.v08 && %REL%\build\%GHDL% -a --std=08 -P..\std --work=ieee %%F.v08
-for %%F in (%VITAL2000_SRCS%) do copy %LIBSRC%\vital2000\%%F.vhdl %%F.vhd                       && %REL%\build\%GHDL% -a --std=08 -P..\std --work=ieee %%F.vhd
 cd ..
-
 
 :::::::::::::::::
 

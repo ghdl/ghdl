@@ -35,6 +35,7 @@ static jmp_buf run_env;
 
 extern void grt_overflow_error (void);
 extern void grt_null_access_error (void);
+void __ghdl_maybe_return_via_longjump (int val);
 
 static EXCEPTION_DISPOSITION
 ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
