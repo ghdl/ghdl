@@ -73,7 +73,7 @@ Building with the gcc backend
 *****************************
 
 You need to download and untar the sources of
-gcc version 4.9.2 [do not modify this line as this is read by scripts].
+gcc version 4.9 [do not modify this line as this is read by scripts].
 
 First configure ghdl and specify gcc source dir:
 $ ./configure --with-gcc=/path/to/gcc/source/dir
@@ -88,7 +88,8 @@ enable the vhdl language (you can use --enable-languages=c,vhdl
 Building with the llvm backend
 ******************************
 
-You need llvm 3.5
+You need to build and install
+llvm version 3.5 [do not modify this line as this is read by scripts].
 
 First configure ghdl and specify where llvm is installed
 $ ./configure --with-llvm=PREFIX

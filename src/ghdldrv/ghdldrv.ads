@@ -17,9 +17,8 @@
 --  02111-1307, USA.
 package Ghdldrv is
    --  Compiler to use.
-   type Compile_Kind_Type is
-     (Compile_Mcode, Compile_Llvm, Compile_Gcc, Compile_Debug);
-   Compile_Kind : Compile_Kind_Type := Compile_Gcc;
+   type Backend_Type is (Backend_Mcode, Backend_Llvm, Backend_Gcc);
+   Backend : Backend_Type;
 
    procedure Register_Commands;
 end Ghdldrv;

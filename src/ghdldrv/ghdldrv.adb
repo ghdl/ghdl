@@ -64,6 +64,9 @@ package body Ghdldrv is
    --  "-quiet" option.
    Dash_Quiet : constant String_Access := new String'("-quiet");
 
+   --  True if --post is present.
+   Flag_Postprocess : Boolean := False;
+
    --  If set, do not assmble
    Flag_Asm : Boolean;
 
@@ -140,20 +143,16 @@ package body Ghdldrv is
       Success : Boolean;
    begin
       --  Create post file.
-      case Compile_Kind is
-         when Compile_Debug =>
-            Post_File := Append_Suffix (File, Post_Suffix, In_Work);
-         when others =>
-            null;
-      end case;
+      if Flag_Postprocess then
+         Post_File := Append_Suffix (File, Post_Suffix, In_Work);
+      end if;
 
       --  Create asm file.
-      case Compile_Kind is
-         when Compile_Gcc
-           | Compile_Debug =>
+      case Backend is
+         when Backend_Gcc =>
             Asm_File := Append_Suffix (File, Asm_Suffix, In_Work);
-         when Compile_Llvm
-           | Compile_Mcode =>
+         when Backend_Llvm
+           | Backend_Mcode =>
             null;
       end case;
 
@@ -177,31 +176,35 @@ package body Ghdldrv is
             Args (P) := Options (I);
          end loop;
 
-         --  Add -quiet.
-         case Compile_Kind is
-            when Compile_Gcc =>
-               if not Flag_Not_Quiet then
+         --  Add -quiet for gcc, add -c for llvm
+         if not Flag_Postprocess then
+            case Backend is
+               when Backend_Gcc =>
+                  if not Flag_Not_Quiet then
+                     P := P + 1;
+                     Args (P) := Dash_Quiet;
+                  end if;
+               when Backend_Llvm =>
                   P := P + 1;
-                  Args (P) := Dash_Quiet;
-               end if;
-            when Compile_Llvm =>
-               P := P + 1;
-               Args (P) := Dash_c;
-            when Compile_Debug
-              | Compile_Mcode =>
-               null;
-         end case;
+                  Args (P) := Dash_c;
+               when Backend_Mcode =>
+                  null;
+            end case;
+         end if;
 
+         --  Object file (or assembly file).
          Args (P + 1) := Dash_o;
-         case Compile_Kind is
-            when Compile_Debug =>
-               Args (P + 2) := Post_File;
-            when Compile_Gcc =>
-               Args (P + 2) := Asm_File;
-            when Compile_Mcode
-              | Compile_Llvm =>
-               Args (P + 2) := Obj_File;
-         end case;
+         if Flag_Postprocess then
+            Args (P + 2) := Post_File;
+         else
+            case Backend is
+               when Backend_Gcc =>
+                  Args (P + 2) := Asm_File;
+               when Backend_Mcode
+                 | Backend_Llvm =>
+                  Args (P + 2) := Obj_File;
+            end case;
+         end if;
          Args (P + 3) := new String'(File);
 
          My_Spawn (Compiler_Path.all, Args (1 .. P + 3));
@@ -215,10 +218,10 @@ package body Ghdldrv is
       end;
 
       --  Post-process.
-      if Compile_Kind = Compile_Debug then
+      if Flag_Postprocess then
          declare
             P : Natural;
-            Nbr_Args : constant Natural := Last (Postproc_Args) + 4;
+            Nbr_Args : constant Natural := Last (Postproc_Args) + 5;
             Args : Argument_List (1 .. Nbr_Args);
          begin
             P := 0;
@@ -227,13 +230,26 @@ package body Ghdldrv is
                Args (P) := Postproc_Args.Table (I);
             end loop;
 
-            if not Flag_Not_Quiet then
-               P := P + 1;
-               Args (P) := Dash_Quiet;
-            end if;
+            case Backend is
+               when Backend_Gcc =>
+                  if not Flag_Not_Quiet then
+                     P := P + 1;
+                     Args (P) := Dash_Quiet;
+                  end if;
+               when Backend_Llvm =>
+                  null;
+               when Backend_Mcode =>
+                  null;
+            end case;
 
             Args (P + 1) := Dash_o;
-            Args (P + 2) := Asm_File;
+            case Backend is
+               when Backend_Gcc =>
+                  Args (P + 2) := Asm_File;
+               when Backend_Llvm
+                 | Backend_Mcode =>
+                  Args (P + 2) := Obj_File;
+            end case;
             Args (P + 3) := Post_File;
             My_Spawn (Post_Processor_Path.all, Args (1 .. P + 3));
          end;
@@ -242,30 +258,34 @@ package body Ghdldrv is
       end if;
 
       --  Assemble.
-      if Compile_Kind >= Compile_Gcc then
-         if Flag_Expect_Failure then
-            Delete_File (Asm_File.all, Success);
-         elsif not Flag_Asm then
-            declare
-               P : Natural;
-               Nbr_Args : constant Natural := Last (Assembler_Args) + 4;
-               Args : Argument_List (1 .. Nbr_Args);
-               Success : Boolean;
-            begin
-               P := 0;
-               for I in First .. Last (Assembler_Args) loop
-                  P := P + 1;
-                  Args (P) := Assembler_Args.Table (I);
-               end loop;
-
-               Args (P + 1) := Dash_o;
-               Args (P + 2) := Obj_File;
-               Args (P + 3) := Asm_File;
-               My_Spawn (Assembler_Path.all, Args (1 .. P + 3));
+      case Backend is
+         when Backend_Gcc =>
+            if Flag_Expect_Failure then
                Delete_File (Asm_File.all, Success);
-            end;
-         end if;
-      end if;
+            elsif not Flag_Asm then
+               declare
+                  P : Natural;
+                  Nbr_Args : constant Natural := Last (Assembler_Args) + 4;
+                  Args : Argument_List (1 .. Nbr_Args);
+                  Success : Boolean;
+               begin
+                  P := 0;
+                  for I in First .. Last (Assembler_Args) loop
+                     P := P + 1;
+                     Args (P) := Assembler_Args.Table (I);
+                  end loop;
+
+                  Args (P + 1) := Dash_o;
+                  Args (P + 2) := Obj_File;
+                  Args (P + 3) := Asm_File;
+                  My_Spawn (Assembler_Path.all, Args (1 .. P + 3));
+                  Delete_File (Asm_File.all, Success);
+               end;
+            end if;
+         when Backend_Mcode
+           | Backend_Llvm =>
+            null;
+      end case;
 
       Free (Asm_File);
       Free (Obj_File);
@@ -395,16 +415,18 @@ package body Ghdldrv is
    begin
       --  Set tools name.
       if Compiler_Cmd = null then
-         case Compile_Kind is
-            when Compile_Debug =>
-               Compiler_Cmd := new String'(Default_Pathes.Compiler_Debug);
-            when Compile_Gcc =>
-               Compiler_Cmd := new String'(Default_Pathes.Compiler_Gcc);
-            when Compile_Mcode =>
-               Compiler_Cmd := new String'(Default_Pathes.Compiler_Mcode);
-            when Compile_Llvm =>
-               Compiler_Cmd := new String'(Default_Pathes.Compiler_Llvm);
-         end case;
+         if Flag_Postprocess then
+            Compiler_Cmd := new String'(Default_Pathes.Compiler_Debug);
+         else
+            case Backend is
+               when Backend_Gcc =>
+                  Compiler_Cmd := new String'(Default_Pathes.Compiler_Gcc);
+               when Backend_Mcode =>
+                  Compiler_Cmd := new String'(Default_Pathes.Compiler_Mcode);
+               when Backend_Llvm =>
+                  Compiler_Cmd := new String'(Default_Pathes.Compiler_Llvm);
+            end case;
+         end if;
       end if;
       if Post_Processor_Cmd = null then
          Post_Processor_Cmd := new String'(Default_Pathes.Post_Processor);
@@ -451,22 +473,33 @@ package body Ghdldrv is
 
    procedure Locate_Tools is
    begin
+      --  Compiler.
       Compiler_Path := Locate_Exec_Tool (Compiler_Cmd.all);
       if Compiler_Path = null then
          Tool_Not_Found (Compiler_Cmd.all);
       end if;
-      if Compile_Kind >= Compile_Debug then
+
+      --  Postprocessor.
+      if Flag_Postprocess then
          Post_Processor_Path := Locate_Exec_Tool (Post_Processor_Cmd.all);
          if Post_Processor_Path = null then
             Tool_Not_Found (Post_Processor_Cmd.all);
          end if;
       end if;
-      if Compile_Kind >= Compile_Gcc then
-         Assembler_Path := Locate_Exec_On_Path (Assembler_Cmd);
-         if Assembler_Path = null and not Flag_Asm then
-            Tool_Not_Found (Assembler_Cmd);
-         end if;
-      end if;
+
+      --  Assembler.
+      case Backend is
+         when Backend_Gcc =>
+            Assembler_Path := Locate_Exec_On_Path (Assembler_Cmd);
+            if Assembler_Path = null and not Flag_Asm then
+               Tool_Not_Found (Assembler_Cmd);
+            end if;
+         when Backend_Llvm
+           | Backend_Mcode =>
+            null;
+      end case;
+
+      --  Linker.
       Linker_Path := Locate_Exec_On_Path (Linker_Cmd);
       if Linker_Path = null then
          Tool_Not_Found (Linker_Cmd);
@@ -542,13 +575,7 @@ package body Ghdldrv is
          Flag_Asm := True;
          Res := Option_Ok;
       elsif Opt = "--post" then
-         Compile_Kind := Compile_Debug;
-         Res := Option_Ok;
-      elsif Opt = "--mcode" then
-         Compile_Kind := Compile_Mcode;
-         Res := Option_Ok;
-      elsif Opt = "--llvm" then
-         Compile_Kind := Compile_Llvm;
+         Flag_Postprocess := True;
          Res := Option_Ok;
       elsif Opt = "-o" then
          if Arg'Length = 0 then
@@ -666,14 +693,18 @@ package body Ghdldrv is
       Put_Line ("Pathes at configuration:");
       Put ("compiler command: ");
       Put_Line (Compiler_Cmd.all);
-      if Compile_Kind >= Compile_Debug then
+      if Flag_Postprocess then
          Put ("post-processor command: ");
          Put_Line (Post_Processor_Cmd.all);
       end if;
-      if Compile_Kind >= Compile_Gcc then
-         Put ("assembler command: ");
-         Put_Line (Assembler_Cmd);
-      end if;
+      case Backend is
+         when Backend_Gcc =>
+            Put ("assembler command: ");
+            Put_Line (Assembler_Cmd);
+         when Backend_Llvm
+           | Backend_Mcode =>
+            null;
+      end case;
       Put ("linker command: ");
       Put_Line (Linker_Cmd);
       Put_Line ("default lib prefix: " & Default_Pathes.Lib_Prefix);
@@ -685,14 +716,18 @@ package body Ghdldrv is
       Locate_Tools;
       Put ("compiler path: ");
       Put_Line (Compiler_Path.all);
-      if Compile_Kind >= Compile_Debug then
+      if Flag_Postprocess then
          Put ("post-processor path: ");
          Put_Line (Post_Processor_Path.all);
       end if;
-      if Compile_Kind >= Compile_Gcc then
-         Put ("assembler path: ");
-         Put_Line (Assembler_Path.all);
-      end if;
+      case Backend is
+         when Backend_Gcc =>
+            Put ("assembler path: ");
+            Put_Line (Assembler_Path.all);
+         when Backend_Llvm
+           | Backend_Mcode =>
+            null;
+      end case;
       Put ("linker path: ");
       Put_Line (Linker_Path.all);
 
