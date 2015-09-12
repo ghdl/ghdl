@@ -36,7 +36,6 @@ package Grt.Errors is
    procedure Error_C_Std (Str : Std_String_Uncons);
    --procedure Error_C (Inst : Ghdl_Instance_Name_Acc);
    procedure Error_E (Str : String := "");
-   -- procedure Error_E_Std (Str : Std_String_Uncons);
    pragma No_Return (Error_E);
 
    --  Multi-call report procedure.  Do not exit at end.
@@ -50,6 +49,7 @@ package Grt.Errors is
 
    --  Complete error message.
    procedure Error (Str : String);
+   pragma No_Return (Error);
 
    --  Warning message.
    procedure Warning (Str : String);
@@ -64,6 +64,11 @@ package Grt.Errors is
 
    --  Display an error message for an overflow.
    procedure Grt_Overflow_Error;
+   pragma No_Return (Grt_Overflow_Error);
+
+   --  Display an error message for a NULL access dereference.
+   procedure Grt_Null_Access_Error;
+   pragma No_Return (Grt_Null_Access_Error);
 
    --  Called at end of error message.  Central point for failures.
    procedure Fatal_Error;
@@ -82,7 +87,6 @@ package Grt.Errors is
 
 private
    pragma Export (C, Grt_Overflow_Error, "grt_overflow_error");
-
-   pragma No_Return (Error);
+   pragma Export (C, Grt_Null_Access_Error, "grt_null_access_error");
 end Grt.Errors;
 

@@ -259,4 +259,9 @@ package body Grt.Errors is
    begin
       Error ("overflow detected");
    end Grt_Overflow_Error;
+
+   procedure Grt_Null_Access_Error is
+   begin
+      Error ("NULL access dereferenced");
+   end Grt_Null_Access_Error;
 end Grt.Errors;

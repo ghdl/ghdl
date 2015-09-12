@@ -30,6 +30,12 @@
 #include <assert.h>
 #include <excpt.h>
 
+static int run_env_en;
+static jmp_buf run_env;
+
+extern void grt_overflow_error (void);
+extern void grt_null_access_error (void);
+
 static EXCEPTION_DISPOSITION
 ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
 		  void *EstablisherFrame,
@@ -42,119 +48,6 @@ struct exception_registration
   void *handler;
 };
 
-struct stack_type
-{
-  LPVOID fiber; //  Win fiber.
-  void (*func)(void *);  // Function
-  void *arg; //  Function argument.
-};
-
-static struct stack_type main_stack_context;
-static struct stack_type *current;
-extern void grt_set_main_stack (struct stack_type *stack);
-
-void grt_stack_init(void)
-{
-  main_stack_context.fiber = ConvertThreadToFiber (NULL);
-  if (main_stack_context.fiber == NULL)
-    {
-      fprintf (stderr, "convertThreadToFiber failed (err=%lu)\n",
-	       GetLastError ());
-      abort ();
-    }
-  grt_set_main_stack (&main_stack_context);
-  current = &main_stack_context;
-}
-
-static VOID __stdcall
-grt_stack_loop (void *v_stack)
-{
-  struct stack_type *stack = (struct stack_type *)v_stack;
-  struct exception_registration er;
-  struct exception_registration *prev;
-
-  /* Get current handler.  */
-  asm ("mov %%fs:(0),%0" : "=r" (prev));
-
-  /* Build regisration.  */
-  er.prev = prev;
-  er.handler = ghdl_SEH_handler;
-
-  /* Register.  */
-  asm ("mov %0,%%fs:(0)" : : "r" (&er));
-
-  while (1)
-    {
-      (*stack->func)(stack->arg);
-    }
-}
-
-struct stack_type *
-grt_stack_create (void (*func)(void *), void *arg) 
-{
-  struct stack_type *res;
-
-  res = malloc (sizeof (struct stack_type));
-  if (res == NULL)
-    return NULL;
-  res->func = func;
-  res->arg = arg;
-  res->fiber = CreateFiber (0, &grt_stack_loop, res);
-  if (res->fiber == NULL)
-    {
-      free (res);
-      return NULL;
-    }
-  return res;
-}
-
-static int run_env_en;
-static jmp_buf run_env;
-static int need_longjmp;
-
-void
-grt_stack_switch (struct stack_type *to, struct stack_type *from)
-{
-  assert (current == from);
-  current = to;
-  SwitchToFiber (to->fiber);
-  if (from == &main_stack_context && need_longjmp)
-    {
-      /* We returned to do the longjump.  */
-      current = &main_stack_context;
-      longjmp (run_env, need_longjmp);
-    }
-}
-
-void
-grt_stack_delete (struct stack_type *stack)
-{
-  DeleteFiber (stack->fiber);
-  stack->fiber = NULL;
-}
-
-void
-__ghdl_maybe_return_via_longjump (int val)
-{
-  if (!run_env_en)
-    return;
-
-  if (current != &main_stack_context)
-    {
-      /* We are allowed to jump only in the same stack.
-	 First switch back to the main thread.  */
-      need_longjmp = val;
-      SwitchToFiber (main_stack_context.fiber);
-    }
-  else
-    longjmp (run_env, val);
-}
-
-extern void grt_stack_error_grow_failed (void);
-extern void grt_stack_error_null_access (void);
-extern void grt_stack_error_memory_access (void);
-extern void grt_overflow_error (void);
-
 static EXCEPTION_DISPOSITION
 ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
 		  void *EstablisherFrame,
@@ -166,12 +59,9 @@ ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
   switch (ExceptionRecord->ExceptionCode)
     {
     case EXCEPTION_ACCESS_VIOLATION:
-      if (ExceptionRecord->ExceptionInformation[1] == 0)
-	grt_stack_error_null_access ();
-      else
-	grt_stack_error_memory_access ();
+      grt_null_access_error ();
       break;
-          
+
     case EXCEPTION_FLT_DENORMAL_OPERAND:
     case EXCEPTION_FLT_DIVIDE_BY_ZERO:
     case EXCEPTION_FLT_INVALID_OPERATION:
@@ -180,19 +70,19 @@ ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
     case EXCEPTION_FLT_UNDERFLOW:
       msg = "floating point error";
       break;
-     
+
     case EXCEPTION_INT_DIVIDE_BY_ZERO:
       msg = "division by 0";
       break;
-     
+
     case EXCEPTION_INT_OVERFLOW:
       grt_overflow_error ();
       break;
-           
+
     case EXCEPTION_STACK_OVERFLOW:
       msg = "stack overflow";
       break;
-     
+
     default:
       msg = "unknown reason";
       break;
@@ -203,6 +93,13 @@ ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
 
   __ghdl_maybe_return_via_longjump (1);
   return 0; /* This is never reached, avoid compiler warning  */
+}
+
+void
+__ghdl_maybe_return_via_longjump (int val)
+{
+  if (run_env_en)
+    longjmp (run_env, val);
 }
 
 int

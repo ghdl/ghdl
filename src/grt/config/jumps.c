@@ -67,28 +67,24 @@ static int run_env_en;
 static JMP_BUF run_env;
 
 extern void grt_overflow_error (void);
+extern void grt_null_access_error (void);
 
 #ifdef __APPLE__
 #define NEED_SIGFPE_HANDLER
 #endif
-#if defined (__linux__) && defined (__i386__)
-#define NEED_SIGSEGV_HANDLER
-#endif
 
-#ifdef NEED_SIGFPE_HANDLER
 static struct sigaction prev_sigfpe_act;
 
-/* Handler for SIGFPE signal, raised in case of overflow (i386).  */
+/* Handler for SIGFPE signal.
+   It is also raised in case of overflow (i386 linux).  */
 static void grt_overflow_handler (int signo, siginfo_t *info, void *ptr)
 {
   grt_overflow_error ();
 }
-#endif
 
-#ifdef NEED_SIGSEGV_HANDLER
 static struct sigaction prev_sigsegv_act;
 
-/* Linux handler for overflow.  This is used only by mcode.  */
+/* Posix handler for overflow.  This is used only by mcode.  */
 static void grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
 {
 #if defined (__linux__) && defined (__i386__)
@@ -100,12 +96,11 @@ static void grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
 #endif
 
   /* We loose.  */
+  grt_null_access_error ();
 }
-#endif /* __linux__ && __i386__ */
 
 static void grt_signal_setup (void)
 {
-#ifdef NEED_SIGSEGV_HANDLER
   {
     struct sigaction sigsegv_act;
 
@@ -122,7 +117,6 @@ static void grt_signal_setup (void)
        If the handler is not installed, then some feature are lost.  */
     sigaction (SIGSEGV, &sigsegv_act, &prev_sigsegv_act);
   }
-#endif
 
 #ifdef NEED_SIGFPE_HANDLER
   {
@@ -139,9 +133,7 @@ static void grt_signal_setup (void)
 
 static void grt_signal_restore (void)
 {
-#ifdef NEED_SIGSEGV_HANDLER
   sigaction (SIGSEGV, &prev_sigsegv_act, NULL);
-#endif
 
 #ifdef NEED_SIGFPE_HANDLER
   sigaction (SIGFPE, &prev_sigfpe_act, NULL);

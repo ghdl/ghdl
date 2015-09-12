@@ -75,7 +75,7 @@ fi
 
 # Sanity checks
 # Check that gnatmake exists
-if ! $GNATMAKE 2> /dev/null; then
+if ! $GNATMAKE --version 2> /dev/null; then
     echo "Sorry, you need GNAT to build GHDL.  See the README"
     echo "(gnatmake executable is: $GNATMAKE)"
     exit 1
@@ -149,7 +149,7 @@ for v in $subst_vars; do
     eval vval=\$$v
     echo $v=\"$vval\"
 done
-sed_opts=`echo $subst_vars | sed -e "s/\\([a-zA-Z_]*\\)/-e \"s%@\1@%\$\1%g\"/g"`
+sed_opts=`echo $subst_vars | sed -e "s/\\([a-zA-Z_]*\\)/ -e \"s%@\1@%\$\1%g\"/g"`
 echo 'echo "Creating ghdl.gpr"'
 echo sed $sed_opts '< $srcdir/ghdl.gpr.in > ghdl.gpr'
 echo 'echo "Creating Makefile"'
