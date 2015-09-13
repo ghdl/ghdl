@@ -10,8 +10,13 @@ terms; see the individual source files for details.
 Building GHDL (Short instructions)
 **********************************
 
-You need GNAT for x86 (32 bits).  See below for instructions
+If you aren't on linux, see below for full instructions.
 
+You need GNAT GPL 2014 (or later) for x86 (32 bits).  GNAT is the GNU Ada
+compiler and GNAT GPL is very easy to install (just untar and run the
+doinstall script).
+
+In the GHDL source directory, configure and build:
 $ ./configure
 $ make
 
@@ -56,6 +61,7 @@ Here is a short comparaison:
 
 As GCC is written in Ada, you need to use the GNU Ada compiler (GNAT).
 I recommend to use GNAT GPL from http://libre.adacore.com (free).
+GHDL was tested with GNAT GPL 2014.  Any later version should work.
 If you build with the mcode backend, you need an i386 version of GNAT.
 
 Building with mcode backend
