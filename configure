@@ -45,11 +45,15 @@ llvm_version=`grep '^llvm version' $srcdir/README |
  sed -e 's/llvm version \([0-9.]*\) \[.*\]\.$/\1/'`
 
 # Check $1 is a prefix of $2
-function check_version()
+check_version()
 {
   exp_ver=`echo $1 | sed 's/\./v/g'`
   tool_ver=`echo $2 | sed 's/\./v/g'`
-  echo $tool_ver | grep -q "^$exp_ver"
+  if echo $tool_ver | grep -q "^$exp_ver"; then
+      return 0
+  else
+      return 1
+  fi
 }
 
 # Decode options
