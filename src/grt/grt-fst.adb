@@ -662,7 +662,8 @@ package body Grt.Fst is
    end Fst_End;
 
    Fst_Hooks : aliased constant Hooks_Type :=
-     (Option => Fst_Option'Access,
+     (Desc => new String'("fst: dump waveform in fst file format"),
+      Option => Fst_Option'Access,
       Help => Fst_Help'Access,
       Init => Fst_Init'Access,
       Start => Fst_Start'Access,

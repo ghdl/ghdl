@@ -449,7 +449,9 @@ package body Grt.Disp_Tree is
    end Disp_Tree_Help;
 
    Disp_Tree_Hooks : aliased constant Hooks_Type :=
-     (Option => Disp_Tree_Option'Access,
+     (Desc => new String'
+        ("disp-tree: display design hierarchy (--disp-tree)"),
+      Option => Disp_Tree_Option'Access,
       Help => Disp_Tree_Help'Access,
       Init => null,
       Start => Disp_Hierarchy'Access,

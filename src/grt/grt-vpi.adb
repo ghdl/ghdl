@@ -973,7 +973,8 @@ package body Grt.Vpi is
    end Vpi_End;
 
    Vpi_Hooks : aliased constant Hooks_Type :=
-     (Option => Vpi_Option'Access,
+     (Desc => new String'("vpi: vpi compatible API"),
+      Option => Vpi_Option'Access,
       Help => Vpi_Help'Access,
       Init => Vpi_Init'Access,
       Start => Vpi_Start'Access,

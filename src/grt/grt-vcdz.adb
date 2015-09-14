@@ -103,7 +103,8 @@ package body Grt.Vcdz is
    end Vcdz_Help;
 
    Vcdz_Hooks : aliased constant Hooks_Type :=
-     (Option => Vcdz_Option'Access,
+     (Desc => new String'("vcdz: save waveforms in gzipped vcf file format"),
+      Option => Vcdz_Option'Access,
       Help => Vcdz_Help'Access,
       Init => Proc_Hook_Nil'Access,
       Start => Proc_Hook_Nil'Access,

@@ -833,7 +833,8 @@ package body Grt.Vcd is
    end Vcd_End;
 
    Vcd_Hooks : aliased constant Hooks_Type :=
-     (Option => Vcd_Option'Access,
+     (Desc => new String'("vcd: save waveforms in vcf file format"),
+      Option => Vcd_Option'Access,
       Help => Vcd_Help'Access,
       Init => Vcd_Init'Access,
       Start => Vcd_Start'Access,

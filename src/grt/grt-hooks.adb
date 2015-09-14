@@ -22,6 +22,7 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+with Grt.Astdio;
 
 package body Grt.Hooks is
    type Hooks_Cell;
@@ -156,6 +157,43 @@ package body Grt.Hooks is
    begin
       null;
    end Proc_Hook_Nil;
+
+   procedure Display_Hooks_Desc
+   is
+      Cell : Hooks_Cell_Acc;
+   begin
+      Cell := First_Hooks;
+      while Cell /= null loop
+         if Cell.Hooks.Desc /= null then
+            Grt.Astdio.Put_Line (Cell.Hooks.Desc.all);
+         end if;
+         Cell := Cell.Next;
+      end loop;
+   end Display_Hooks_Desc;
+
+   function Has_Feature (Name : String) return Boolean
+   is
+      Len : constant Natural := Name'Length;
+      Cell : Hooks_Cell_Acc;
+   begin
+      Cell := First_Hooks;
+      while Cell /= null loop
+         if Cell.Hooks.Desc /= null then
+            declare
+               F : String renames Cell.Hooks.Desc.all;
+            begin
+               if F'Length > Len
+                 and then F (F'First .. F'First + Len - 1) = Name
+                 and then F (F'First + Len) = ':'
+               then
+                  return True;
+               end if;
+            end;
+         end if;
+         Cell := Cell.Next;
+      end loop;
+      return False;
+   end Has_Feature;
 end Grt.Hooks;
 
 

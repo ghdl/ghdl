@@ -123,13 +123,13 @@ package body Grt.Main is
       --  Decode options.
       Grt.Options.Decode (Stop);
 
-      --  Check coherency between GRT and GHDL generated code.
-      Check_Flag_String;
-
       --  Early stop (for options such as --help).
       if Stop then
          return;
       end if;
+
+      --  Check coherency between GRT and GHDL generated code.
+      Check_Flag_String;
 
       --  Internal initializations.
       Grt.Hooks.Call_Init_Hooks;

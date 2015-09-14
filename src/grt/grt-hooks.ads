@@ -28,7 +28,15 @@ package Grt.Hooks is
    type Option_Hook_Type is access function (Opt : String) return Boolean;
    type Proc_Hook_Type is access procedure;
 
+   type Cst_String_Acc is access constant String;
+
    type Hooks_Type is record
+      --  A one-line description of the hook.  The format is:
+      --  "NAME: description".  NAME should be uniq and is tested by the
+      --  switch --has-feature=NAME.
+      --  DESC can be null if there is no interesting feature added.
+      Desc : Cst_String_Acc;
+
       --  Called for every unknown command line argument.
       --  Return TRUE if handled.
       Option : Option_Hook_Type;
@@ -53,6 +61,12 @@ package Grt.Hooks is
 
    --  Register an hook which will call PROC after every non-delta cycles.
    procedure Register_Cycle_Hook (Proc : Proc_Hook_Type);
+
+   --  Display the description of the hooks.
+   procedure Display_Hooks_Desc;
+
+   --  Return True if NAME is present in the list of modules.
+   function Has_Feature (Name : String) return Boolean;
 
    --  Call hooks.
    function Call_Option_Hooks (Opt : String) return Boolean;

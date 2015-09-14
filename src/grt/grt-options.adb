@@ -162,6 +162,9 @@ package body Grt.Options is
       P (" --expect-failure  invert exit status");
       P (" --no-run          do not simulate, only elaborate");
       --  P (" --threads=N       use N threads for simulation");
+      P ("Additional features:");
+      P (" --has-feature=X   test presence of feature X");
+      P (" --list-features   display the list of features");
       Grt.Hooks.Call_Help_Hooks;
       P ("trace options:");
       P (" --disp-time       disp time as simulation advances");
@@ -228,7 +231,17 @@ package body Grt.Options is
          Status := Decode_Option_Last;
       elsif Option = "--help" or else Option = "-h" then
          Help;
-         Status := Decode_Option_Help;
+         Status := Decode_Option_Stop;
+      elsif Option = "--list-features" then
+         Grt.Hooks.Display_Hooks_Desc;
+         Status := Decode_Option_Stop;
+      elsif Len > 14 and then Option (1 .. 14) = "--has-feature=" then
+         if Grt.Hooks.Has_Feature (Option (15 .. Len)) then
+            Grt.Errors.Exit_Status := 0;
+         else
+            Grt.Errors.Exit_Status := 1;
+         end if;
+         Status := Decode_Option_Stop;
       elsif Option = "--disp-time" then
          Disp_Time := True;
       elsif Option = "--trace-signals" then
@@ -499,7 +512,7 @@ package body Grt.Options is
                when Decode_Option_Last =>
                   Last_Opt := I;
                   exit;
-               when Decode_Option_Help =>
+               when Decode_Option_Stop =>
                   Stop := True;
                when Decode_Option_Ok =>
                   null;

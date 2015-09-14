@@ -65,8 +65,8 @@ package Grt.Options is
       --  Last option, next arguments aren't options.
       Decode_Option_Last,
 
-      --  --help option, program shouldn't run.
-      Decode_Option_Help,
+      --  For options like --help: program shouldn't run.
+      Decode_Option_Stop,
 
       --  Option was successfuly decoded.
       Decode_Option_Ok);

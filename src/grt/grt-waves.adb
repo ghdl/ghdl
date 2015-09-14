@@ -1665,7 +1665,8 @@ package body Grt.Waves is
    end Wave_End;
 
    Wave_Hooks : aliased constant Hooks_Type :=
-     (Option => Wave_Option'Access,
+     (Desc => new String'("ghw: save waveforms in ghw file format"),
+      Option => Wave_Option'Access,
       Help => Wave_Help'Access,
       Init => Wave_Init'Access,
       Start => Wave_Start'Access,

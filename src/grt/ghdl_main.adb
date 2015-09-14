@@ -35,9 +35,7 @@ with Grt.Std_Logic_1164;
 with Grt.Errors;
 pragma Warnings (On);
 
-
-function Ghdl_Main (Argc : Integer; Argv : System.Address)
-                   return Integer
+function Ghdl_Main (Argc : Integer; Argv : System.Address) return Integer
 is
    --  Grt_Init corresponds to the 'adainit' subprogram for grt.
    procedure Grt_Init;
@@ -48,6 +46,7 @@ is
 
    Default_Progname : constant String := "ghdl_design" & NUL;
 begin
+   --  Set program name.
    if Argc > 0 then
       Grt.Options.Progname := To_Argv_Type (Argv)(0);
    else

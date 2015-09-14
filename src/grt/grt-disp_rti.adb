@@ -1170,11 +1170,12 @@ package body Grt.Disp_Rti is
    is
       procedure P (Str : String) renames Put_Line;
    begin
-      P (" --dump-rti        dump Run Time Information");
+      P (" --dump-rti         dump Run Time Information");
    end Disp_Rti_Help;
 
    Disp_Rti_Hooks : aliased constant Hooks_Type :=
-     (Option => Disp_Rti_Option'Access,
+     (Desc => new String'("dump-rti: implement --dump-rti"),
+      Option => Disp_Rti_Option'Access,
       Help => Disp_Rti_Help'Access,
       Init => null,
       Start => Disp_All'Access,

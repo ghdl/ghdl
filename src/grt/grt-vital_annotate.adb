@@ -644,7 +644,9 @@ package body Grt.Vital_Annotate is
    end Sdf_Help;
 
    Sdf_Hooks : aliased constant Hooks_Type :=
-     (Option => Sdf_Option'Access,
+     (Desc => new String'
+        ("sdf-annotate: annotate vital generics from an sdf file"),
+      Option => Sdf_Option'Access,
       Help => Sdf_Help'Access,
       Init => Proc_Hook_Nil'Access,
       Start => Sdf_Start'Access,
