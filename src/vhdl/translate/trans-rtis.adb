@@ -1306,8 +1306,8 @@ package body Trans.Rtis is
       Start_Record_Aggr (Aggr, Ghdl_Rtin_Subtype_Scalar);
       New_Record_Aggr_El
         (Aggr, Generate_Common_Type (Ghdl_Rtik_Subtype_Scalar,
-         Info.T.Rti_Max_Depth,
-         Info.T.Rti_Max_Depth));
+                                     Info.T.Rti_Max_Depth,
+                                     Info.T.Rti_Max_Depth));
 
       New_Record_Aggr_El (Aggr, New_Name_Address (Name));
       New_Record_Aggr_El (Aggr, New_Rti_Address (Base_Info.Type_Rti));
@@ -1318,7 +1318,7 @@ package body Trans.Rtis is
 
    procedure Generate_Fileacc_Type_Definition (Atype : Iir)
    is
-      Info      : Type_Info_Acc;
+      Info      : constant Type_Info_Acc := Get_Info (Atype);
       Kind      : O_Cnode;
       Val       : O_Cnode;
       List      : O_Record_Aggr_List;
@@ -1326,11 +1326,10 @@ package body Trans.Rtis is
       Base      : O_Dnode;
       Base_Type : Iir;
    begin
-      Info := Get_Info (Atype);
-
       Generate_Type_Rti (Info, Ghdl_Rtin_Type_Fileacc);
 
       if Global_Storage = O_Storage_External then
+         Info.T.Rti_Max_Depth := 0;
          return;
       end if;
 
@@ -1440,8 +1439,7 @@ package body Trans.Rtis is
       return Res;
    end Type_To_Mode;
 
-   procedure Generate_Array_Type_Definition
-     (Atype : Iir_Array_Type_Definition)
+   procedure Generate_Array_Type_Definition (Atype : Iir_Array_Type_Definition)
    is
       Info      : Type_Info_Acc;
       Aggr      : O_Record_Aggr_List;
@@ -1595,12 +1593,12 @@ package body Trans.Rtis is
 
    procedure Generate_Record_Type_Definition (Atype : Iir)
    is
+      Info      : constant Type_Info_Acc := Get_Info (Atype);
       El_List   : Iir_List;
       El        : Iir;
       Prev      : Rti_Block;
       El_Arr    : O_Dnode;
       Res       : O_Cnode;
-      Info      : constant Type_Info_Acc := Get_Info (Atype);
       Max_Depth : Rti_Depth_Type;
    begin
       Generate_Type_Rti (Info, Ghdl_Rtin_Type_Record);
@@ -1617,11 +1615,11 @@ package body Trans.Rtis is
          El := Get_Nth_Element (El_List, I);
          exit when El = Null_Iir;
          declare
+            El_Type    : constant Iir := Get_Type (El);
+            Field_Info : constant Field_Info_Acc := Get_Info (El);
             Type_Rti   : O_Dnode;
             El_Name    : O_Dnode;
-            El_Type    : constant Iir := Get_Type (El);
             Aggr       : O_Record_Aggr_List;
-            Field_Info : constant Field_Info_Acc := Get_Info (El);
             Val        : O_Cnode;
             El_Const   : O_Dnode;
             Mark       : Id_Mark_Type;
