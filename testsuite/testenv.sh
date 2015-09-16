@@ -94,6 +94,12 @@ elab_simulate_failure ()
      $@ --expect-failure
 }
 
+# Check if a feature is present
+ghdl_has_feature ()
+{
+  $GHDL -r $GHDL_STD_FLAGS $GHDL_FLAGS $1 --has-feature=$2
+}
+
 # Run a program
 run ()
 {
