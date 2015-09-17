@@ -45,24 +45,25 @@ endif
 GRT_ELF_OPTS:=-Wl,--version-script=@/grt.ver -Wl,--export-dynamic
 
 # Set target files.
-ifeq ($(filter-out mingw32,$(arch) $(osys)),)
+ifeq ($(filter-out mingw32,$(osys)),)
   GRT_TARGET_OBJS=jumps.o math.o clock.o
 else
   GRT_TARGET_OBJS=jumps.o times.o
-  ifeq ($(filter-out linux,$(arch) $(osys)),)
+  ifeq ($(filter-out linux,$(osys)),)
     GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
   endif
-  ifeq ($(filter-out netbsd freebsd% dragonfly%,$(arch) $(osys)),)
+  ifeq ($(filter-out netbsd freebsd% dragonfly%,$(osys)),)
     GRT_EXTRA_LIB=-lm $(GRT_ELF_OPTS)
   endif
-  ifeq ($(filter-out solaris%,$(arch) $(osys)),)
+  ifeq ($(filter-out solaris%,$(osys)),)
     GRT_EXTRA_LIB=-ldl -lm
   endif
-  ifeq ($(filter-out darwin%,$(arch) $(osys)),)
+  ifeq ($(filter-out darwin%,$(osys)),)
     GRT_EXTRA_LIB=
   endif
 endif
 
+# Object files (from C) for fst
 GRT_FST_OBJS := fstapi.o lz4.o fastlz.o
 
 # Additionnal object files (C or asm files).
@@ -75,8 +76,6 @@ ifeq ($(GRT_USE_PTHREADS),y)
  GRT_EXTRA_LIB+=-lpthread
 endif
 
-GRT_ARCH?=None
-
 # Configuration pragmas.
 GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnat05
 
@@ -85,7 +84,7 @@ GRT_ADACOMPILE=$(ADAC) -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG) -o $@ $<
 
 grt-all: libgrt.a grt.lst
 
-libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files # grt-arch.ads
+libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files
 	$(RM) -f $@
 	$(AR) rcv $@ `sed -e "/^-/d" < grt-files` $(GRT_ADD_OBJS) \
 	 run-bind.o main.o
@@ -152,10 +151,6 @@ grt-disp-config:
 grt-files: run-bind.adb
 	sed -e "1,/-- *BEGIN/d" -e "/-- *END/,\$$d" \
 	  -e "s/   --   //" < $< > $@
-
-grt-arch.ads:
-	echo "With Grt.Arch_$(GRT_ARCH);" > $@
-	echo "Package Grt.Arch renames Grt.Arch_$(GRT_ARCH);" >> $@
 
 # Remove local files (they are now in the libgrt library).
 # Also, remove the -shared option, in order not to build a shared library
