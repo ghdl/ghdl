@@ -13,11 +13,11 @@ Building GHDL (Short instructions)
 If you aren't on linux, see below for full instructions.
 
 You need GNAT GPL 2014 (or later) for x86 (32 bits).  GNAT is the GNU Ada
-compiler and GNAT GPL is very easy to install (just untar and run the
-doinstall script).
+compiler and GNAT GPL is very easy to install (download anonymously from
+libre.adacore.com, untar and run the doinstall script).
 
 In the GHDL source directory, configure and build:
-$ ./configure
+$ ./configure --prefix=/usr/local
 $ make
 
 At that place, you can already use the 'ghdl_mcode' built in the directory.
@@ -47,7 +47,7 @@ Here is a short comparaison:
 - build is more complex
 
 * mcode
-+ easy to build
++ very easy to build
 - but i386 only
 + very quick analysis time
 + can analyze very big designs
@@ -55,7 +55,6 @@ Here is a short comparaison:
 - no executable created
 
 * llvm
-- still experimental
 + same advantages of gcc (good generated code, debuggable)
 + easier to build than gcc
 
@@ -87,9 +86,30 @@ $ ./configure --with-gcc=/path/to/gcc/source/dir
 Then invoke make to copy ghdl sources in the source dir:
 $ make copy-sources
 
-Finally configure gcc following the gcc instructions and don't forget to
-enable the vhdl language (you can use --enable-languages=c,vhdl
---disable-bootstrap)
+To build gcc, you must first compile gmp, mpfr and mpc (replace /usr/local
+ by your prefix directory):
+$ mkdir gmp-objs; cd gmp-objs
+$ ../gmp-4.3.2/configure --prefix=/usr/local --disable-shared
+$ make; make install
+$ cd ..; mkdir mpfr-objs; cd mpfr-objs
+$ ../mpfr-2.4.2/configure --prefix=/usr/local --disable-shared \
+  --with-gmp=/usr/local
+$ make; make install
+$ cd ..; mkdir mpc-objs; cd mpc-objs
+$ ../mpc-0.8.1/configure --prefix=/usr/local --disable-shared \
+  --with-gmp=/usr/local
+$ make; make install
+
+Then configure gcc:
+$ mkdir gcc-objs; cd gcc-objs
+$ ../gcc-4.9.3/configure --prefix=/usr/local --enable-languages=c,vhdl \
+  --disable-bootstrap --with-gmp=/usr/local --disable-lto --disable-multilib
+$ make -j2
+
+Finally install:
+$ make install
+or if you don't want to install makeinfo:
+$ make install MAKEINFO=true
 
 Building with the llvm backend
 ******************************
