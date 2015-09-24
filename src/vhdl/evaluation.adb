@@ -2574,6 +2574,10 @@ package body Evaluation is
                end;
             end;
 
+         when Iir_Kind_Access_Type_Definition
+           | Iir_Kind_Access_Subtype_Definition =>
+            return True;
+
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
