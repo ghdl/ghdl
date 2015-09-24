@@ -1671,18 +1671,29 @@ package body Sem_Specs is
    function Get_Visible_Entity_Declaration (Comp: Iir_Component_Declaration)
      return Iir_Design_Unit
    is
-      function Is_Entity_Declaration (Decl : Iir) return Boolean is
+      --  Return the design_unit if DECL is an entity declaration or the
+      --  design unit of an entity declaration.  Otherwise return Null_Iir.
+      --  This double check is needed as the interpretation may be both.
+      function Is_Entity_Declaration (Decl : Iir) return Iir is
       begin
-         return Get_Kind (Decl) = Iir_Kind_Design_Unit and then
-           Get_Kind (Get_Library_Unit (Decl)) = Iir_Kind_Entity_Declaration;
+         if Get_Kind (Decl) = Iir_Kind_Entity_Declaration then
+            return Get_Design_Unit (Decl);
+         elsif Get_Kind (Decl) = Iir_Kind_Design_Unit
+           and then
+           Get_Kind (Get_Library_Unit (Decl)) = Iir_Kind_Entity_Declaration
+         then
+            return Decl;
+         else
+            return Null_Iir;
+         end if;
       end Is_Entity_Declaration;
 
+      Name : constant Name_Id := Get_Identifier (Comp);
       Inter : Name_Interpretation_Type;
-      Name : Name_Id;
       Decl : Iir;
+      Res : Iir;
       Target_Lib : Iir;
    begin
-      Name := Get_Identifier (Comp);
       Inter := Get_Interpretation (Name);
 
       if Valid_Interpretation (Inter) then
@@ -1693,8 +1704,9 @@ package body Sem_Specs is
          --     the instantiated component and that is directly visible
          --     (see 10.3),
          Decl := Get_Declaration (Inter);
-         if Is_Entity_Declaration (Decl) then
-            return Decl;
+         Res := Is_Entity_Declaration (Decl);
+         if Res /= Null_Iir then
+            return Res;
          end if;
 
          --  b)  An entity declaration that has the same simple name that of
@@ -1706,8 +1718,9 @@ package body Sem_Specs is
             Inter := Get_Under_Interpretation (Name);
             if Valid_Interpretation (Inter) then
                Decl := Get_Declaration (Inter);
-               if Is_Entity_Declaration (Decl) then
-                  return Decl;
+               Res := Is_Entity_Declaration (Decl);
+               if Res /= Null_Iir then
+                  return Res;
                end if;
             end if;
          end if;
@@ -1730,8 +1743,11 @@ package body Sem_Specs is
          end loop;
 
          Decl := Libraries.Find_Primary_Unit (Target_Lib, Name);
-         if Decl /= Null_Iir and then Is_Entity_Declaration (Decl) then
-            return Decl;
+         if Decl /= Null_Iir then
+            Res := Is_Entity_Declaration (Decl);
+            if Res /= Null_Iir then
+               return Res;
+            end if;
          end if;
       end if;
 
