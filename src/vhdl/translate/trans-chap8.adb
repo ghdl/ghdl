@@ -2761,17 +2761,18 @@ package body Trans.Chap8 is
                Mval := Stabilize
                  (E2M (Val, Ftype_Info, Formal_Object_Kind), True);
 
-               if Assoc_Info.Call_Assoc_Fat /= Null_Var then
-                  --  Fat pointer.  VAL is a pointer to a fat pointer, so copy
-                  --  the fat pointer to the FAT field, and set the PARAM
-                  --  field to FAT field.
-                  declare
-                     Fat : Mnode;
-                  begin
+               declare
+                  Fat : Mnode;
+                  Bnd : Mnode;
+               begin
+
+                  if Assoc_Info.Call_Assoc_Fat /= Null_Var then
+                     --  Fat pointer.  VAL is a pointer to a fat pointer, so
+                     --  copy the fat pointer to the FAT field, and set the
+                     --  PARAM field to FAT field.
                      Fat := Stabilize
                        (Get_Var (Assoc_Info.Call_Assoc_Fat,
                                  Ftype_Info, Formal_Object_Kind));
-                     Copy_Fat_Pointer (Fat, Mval);
 
                      --  Set PARAM field to the address of the FAT field.
                      pragma Assert
@@ -2780,44 +2781,51 @@ package body Trans.Chap8 is
                        (New_Selected_Element (Get_Var (Params_Var),
                                               Formal_Info.Interface_Field),
                         M2E (Fat));
-                  end;
-               end if;
 
-               if Assoc_Info.Call_Assoc_Bounds /= Null_Var then
-                  --  Copy the bounds.
-                  pragma Assert (Assoc_Info.Call_Assoc_Fat /= Null_Var);
-                  Chap3.Copy_Bounds
-                    (New_Address (Get_Var (Assoc_Info.Call_Assoc_Bounds),
-                                  Ftype_Info.T.Bounds_Ptr_Type),
-                     M2Addr (Chap3.Get_Array_Bounds (Mval)),
-                     Formal_Type);
-               end if;
-
-               if Assoc_Info.Call_Assoc_Value /= Null_Var then
-                  if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
-                     pragma Assert (Assoc_Info.Call_Assoc_Fat /= Null_Var);
-                     --  Allocate array base
-                     Param := Stabilize
-                       (Get_Var (Assoc_Info.Call_Assoc_Fat,
-                                 Ftype_Info, Formal_Object_Kind));
-                     Chap3.Allocate_Fat_Array_Base
-                       (Alloc_Return, Param, Formal_Type);
-                     --  NOTE: Call_Assoc_Value is not used, the base is
-                     --  directly allocated in the fat pointer.
-                  else
-                     Param := Get_Var (Assoc_Info.Call_Assoc_Value,
-                                       Ftype_Info, Formal_Object_Kind);
-                     Stabilize (Param);
-                     Chap4.Allocate_Complex_Object
-                       (Formal_Type, Alloc_Return, Param);
-                     New_Assign_Stmt
-                       (New_Selected_Element
-                          (Get_Var (Params_Var), Formal_Info.Interface_Field),
-                        M2Addr (Param));
+                     if Assoc_Info.Call_Assoc_Bounds = Null_Var then
+                        Copy_Fat_Pointer (Fat, Mval);
+                     else
+                        --  Copy the bounds.
+                        Bnd := Stabilize
+                          (Lv2M (Get_Var (Assoc_Info.Call_Assoc_Bounds),
+                                 Ftype_Info, Formal_Object_Kind,
+                                 Ftype_Info.T.Bounds_Type,
+                                 Ftype_Info.T.Bounds_Ptr_Type));
+                        Chap3.Copy_Bounds (Bnd, Chap3.Get_Array_Bounds (Mval),
+                                           Formal_Type);
+                        New_Assign_Stmt
+                          (M2Lp (Chap3.Get_Array_Bounds (Fat)),
+                           M2Addr (Bnd));
+                        New_Assign_Stmt
+                          (M2Lp (Chap3.Get_Array_Base (Fat)),
+                           M2Addr (Chap3.Get_Array_Base (Mval)));
+                     end if;
                   end if;
-                  Chap3.Translate_Object_Copy
-                    (Param, M2E (Mval), Formal_Type);
-               end if;
+
+                  if Assoc_Info.Call_Assoc_Value /= Null_Var then
+                     if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                        pragma Assert (Assoc_Info.Call_Assoc_Fat /= Null_Var);
+                        --  Allocate array base
+                        Param := Fat;
+                        Chap3.Allocate_Fat_Array_Base
+                          (Alloc_Return, Fat, Formal_Type);
+                        --  NOTE: Call_Assoc_Value is not used, the base is
+                        --  directly allocated in the fat pointer.
+                     else
+                        Param := Get_Var (Assoc_Info.Call_Assoc_Value,
+                                          Ftype_Info, Formal_Object_Kind);
+                        Stabilize (Param);
+                        Chap4.Allocate_Complex_Object
+                          (Formal_Type, Alloc_Return, Param);
+                        New_Assign_Stmt
+                          (New_Selected_Element (Get_Var (Params_Var),
+                                                 Formal_Info.Interface_Field),
+                           M2Addr (Param));
+                     end if;
+                     Chap3.Translate_Object_Copy
+                       (Param, M2E (Mval), Formal_Type);
+                  end if;
+               end;
 
                if Assoc_Info.Call_Assoc_Value = Null_Var
                  and then Assoc_Info.Call_Assoc_Fat = Null_Var
