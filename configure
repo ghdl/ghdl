@@ -120,7 +120,7 @@ fi
 # For gcc backend, check version
 if test $backend = gcc; then
     if ! test -f $gcc_src_dir/gcc/BASE-VER; then
-	echo "cannot found gcc/BASE-VER in $gcc_src_dir"
+	echo "cannot find gcc/BASE-VER in $gcc_src_dir"
 	exit 1
     fi
     base_ver=`cat $gcc_src_dir/gcc/BASE-VER`
