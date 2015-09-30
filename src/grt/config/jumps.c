@@ -24,10 +24,15 @@
     covered by the GNU Public License.
 */
 
+#define _GNU_SOURCE
 #include <stddef.h>
 #include <signal.h>
 #include <fcntl.h>
+
+#if defined (__linux__) && defined (__i386__)
+/* On i386/Linux, the context must be inspected.  */
 #include <sys/ucontext.h>
+#endif
 
 /* There is a simple setjmp/longjmp mechanism used to report failures.
    We have the choice between 3 mechanisms:
@@ -37,11 +42,10 @@
 */
 
 #if defined (__GNUC__) && !defined (__clang__)
-#define USE_BUILTIN_SJLJ
+# define USE_BUILTIN_SJLJ
 #else
-#define USE__SETJMP
+# define USE__SETJMP
 #endif
-/* #define USE_SETJMP */
 
 #ifdef USE_BUILTIN_SJLJ
 typedef void *JMP_BUF[5];
@@ -88,6 +92,8 @@ static struct sigaction prev_sigsegv_act;
 static void grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
 {
 #if defined (__linux__) && defined (__i386__)
+  ucontext_t *uctxt = (ucontext_t *)ptr;
+
   /* Linux generates a SIGSEGV (!) for an overflow exception.  */
   if (uctxt->uc_mcontext.gregs[REG_TRAPNO] == 4)
     {
