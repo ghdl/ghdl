@@ -368,10 +368,13 @@ package body Trans.Chap2 is
         Get_Kind (Spec) = Iir_Kind_Procedure_Declaration
         and then Get_Suspend_Flag (Spec);
 
+      --  True if the subprogram is translated to a function in ortho.
+      Is_Ortho_Func  : constant Boolean := Is_Subprogram_Ortho_Function (Spec);
+
       Old_Subprogram : Iir;
       Mark           : Id_Mark_Type;
       Final          : Boolean;
-      Is_Ortho_Func  : Boolean;
+
 
       --  Set for a public method.  In this case, the lock must be acquired
       --  and retained.
@@ -596,14 +599,11 @@ package body Trans.Chap2 is
 
       --  If finalization is required and if the subprogram is a function,
       --  create a variable for the result.
-      if Final or Is_Prot then
-         Is_Ortho_Func := Is_Subprogram_Ortho_Function (Spec);
-         if Is_Ortho_Func then
-            New_Var_Decl
-              (Info.Subprg_Result, Get_Identifier ("RESULT"),
-               O_Storage_Local,
-               Get_Ortho_Type (Get_Return_Type (Spec), Mode_Value));
-         end if;
+      if (Final or Is_Prot) and Is_Ortho_Func then
+         New_Var_Decl
+           (Info.Subprg_Result, Get_Identifier ("RESULT"),
+            O_Storage_Local,
+            Get_Ortho_Type (Get_Return_Type (Spec), Mode_Value));
       end if;
 
       --  If finalization is required, create a dummy loop around the
