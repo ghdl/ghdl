@@ -22,7 +22,7 @@ GET_ENTITIES=../get_entities
 # Exit in case of failure in shell scripts.
 set -e
 
-if [ x$GHDL = x ]; then
+if [ x"$GHDL" = x ]; then
     echo "error: GHDL environment variable is not defined"
     exit 4
 fi
@@ -31,7 +31,7 @@ fi
 analyze ()
 {
    echo "analyze $@"
-   $GHDL -a $GHDL_STD_FLAGS $GHDL_FLAGS $@
+   "$GHDL" -a $GHDL_STD_FLAGS $GHDL_FLAGS $@
 }
 
 # Analyze files (failure expected)
@@ -39,7 +39,7 @@ analyze_failure ()
 {
    echo "try to analyze $@"
    # for arg in $@; do echo "arg: $arg"; done
-   if ! $GHDL -a --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS $@ ; then
+   if ! "$GHDL" -a --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS $@ ; then
      echo "Failure expected"
      return 1
    fi
@@ -50,7 +50,7 @@ analyze_failure ()
 elab ()
 {
    echo "elaborate $@"
-   $GHDL -e $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
+   "$GHDL" -e $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
 }
 
 # Elaborate a design (failure expected)
@@ -58,7 +58,7 @@ elab ()
 elab_failure ()
 {
    echo "elaborate (failure expected) $@"
-   $GHDL -e --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
+   "$GHDL" -e --expect-failure $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
 }
 
 # Simulate a design (no error expected)
@@ -66,7 +66,7 @@ elab_failure ()
 simulate ()
 {
    echo "simulate $@ ($GHDL_FLAGS $@ $GHDL_SIMFLAGS)" >&2
-   $GHDL -r $GHDL_STD_FLAGS $GHDL_FLAGS "$@" $GHDL_SIMFLAGS
+   "$GHDL" -r $GHDL_STD_FLAGS $GHDL_FLAGS "$@" $GHDL_SIMFLAGS
    #./$@
 }
 
@@ -75,7 +75,7 @@ simulate ()
 simulate_failure ()
 {
    echo "simulate (failure expected) $@" >&2
-   $GHDL -r $GHDL_STD_FLAGS $GHDL_FLAGS $@ --expect-failure
+   "$GHDL" -r $GHDL_STD_FLAGS $GHDL_FLAGS $@ --expect-failure
    #./$@
 }
 
@@ -83,21 +83,21 @@ simulate_failure ()
 elab_simulate ()
 {
    echo "elaborate and simulate $@"
-   $GHDL --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
+   "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS $@
 }
 
 # Elaborate and simulate a design (failure expected)
 elab_simulate_failure ()
 {
    echo "elaborate and simulate (failure expected) $@"
-   $GHDL --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS \
+   "$GHDL" --elab-run $GHDL_STD_FLAGS $GHDL_FLAGS $GHDL_ELABFLAGS \
      $@ --expect-failure
 }
 
 # Check if a feature is present
 ghdl_has_feature ()
 {
-  $GHDL -r $GHDL_STD_FLAGS $GHDL_FLAGS $1 --has-feature=$2
+  "$GHDL" -r $GHDL_STD_FLAGS $GHDL_FLAGS $1 --has-feature=$2
 }
 
 # Run a program
@@ -122,9 +122,9 @@ clean ()
 {
   if [ $# -eq 0 ]; then
     echo "Remove work library"
-    $GHDL --remove $GHDL_STD_FLAGS
+    "$GHDL" --remove $GHDL_STD_FLAGS
   else
     echo "Remove $1 library"
-    $GHDL --remove $GHDL_STD_FLAGS --work=$1
+    "$GHDL" --remove $GHDL_STD_FLAGS --work=$1
   fi
 }

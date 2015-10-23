@@ -11,7 +11,7 @@ analyze_elab_simulate_status()
   analyze $file
   set +e
   echo "elaborate and simulate $ent"
-  $GHDL --elab-run $GHDL_STD_FLAGS $ent
+  "$GHDL" --elab-run $GHDL_STD_FLAGS $ent
   if [ $? -ne $status ]; then
     echo "Exit status $status expected"
     exit 1
