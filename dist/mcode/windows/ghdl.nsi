@@ -138,6 +138,8 @@ Section "VHDL standard and ieee libraries"
   File /r ..\lib\v87\std ..\lib\v87\ieee
   SetOutPath $INSTDIR\lib\v93
   File /r ..\lib\v93\std ..\lib\v93\ieee
+  SetOutPath $INSTDIR\lib\v08
+  File /r ..\lib\v08\std ..\lib\v08\ieee
 SectionEnd
 
 Section "Synopsys libraries (Recommended)"
@@ -187,6 +189,7 @@ path_not_set:
 
   ; Remove files and uninstaller
   Delete $INSTDIR\bin\ghdl.exe
+  Delete $INSTDIR\bin\ghdl.htm
   Delete $INSTDIR\uninst-ghdl.exe
   Delete $INSTDIR\COPYING.txt
   RMDir $INSTDIR\bin

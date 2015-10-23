@@ -5,7 +5,7 @@ call windows\complib
 if errorlevel 1 goto end
 
 gnatmake windows/ghdlversion -o windows/ghdlversion.exe
-windows\ghdlversion < ../../version.ads > windows/version.nsi
+windows\ghdlversion < ..\..\src\version.ads > windows\version.nsi
 
 "c:\Program Files\NSIS\makensis" windows\ghdl.nsi
 if errorlevel 1 goto end
