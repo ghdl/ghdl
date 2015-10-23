@@ -2,6 +2,6 @@
 
 . ../../testenv.sh
 
-$GHDL --lines adder.vhdl
+"$GHDL" --lines adder.vhdl
 
 echo "Test successful"
