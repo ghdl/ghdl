@@ -313,9 +313,6 @@ package Grt.Types is
 
    --  The NOW value.
    Current_Time : Std_Time;
-   --  Copy of Current_Time before updating it.
-   --  To be used by hooks.
-   Cycle_Time : Std_Time;
    --  The current delta cycle number.
    Current_Delta : Integer;
 private

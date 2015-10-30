@@ -118,10 +118,6 @@ package Grt.Options is
    --  Handling of assertions from IEEE library.
    Ieee_Asserts : Assert_Handling := Enable_Asserts;
 
-   --  Set by --stop-time=XXX to stop the simulation at or just after XXX.
-   --  (unit is fs in fact).
-   Stop_Time : Std_Time := Std_Time'Last;
-
    --  Set by --stop-delta=XXX to stop the simulation after XXX delta cycles.
    Stop_Delta : Natural := 5000;
 
@@ -131,6 +127,9 @@ package Grt.Options is
 
    type Activity_Mode is (Activity_All, Activity_Minimal, Activity_None);
    Flag_Activity : Activity_Mode := Activity_Minimal;
+
+   --  If true, the simulation should be stopped.
+   Break_Simulation : Boolean;
 
    --  Set by --thread=
    --  Number of threads used to do the simulation.

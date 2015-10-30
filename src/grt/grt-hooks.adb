@@ -195,5 +195,3 @@ package body Grt.Hooks is
       return False;
    end Has_Feature;
 end Grt.Hooks;
-
-

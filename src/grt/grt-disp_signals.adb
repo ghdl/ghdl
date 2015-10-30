@@ -425,7 +425,7 @@ package body Grt.Disp_Signals is
          if Sig.S.Mode_Sig in Mode_Signal_User then
             Put (" #drv: ");
             Put_I32 (stdout, Ghdl_I32 (Sig.S.Nbr_Drivers));
-            case Sig.Sig_Kind is
+            case Sig.Flags.Sig_Kind is
                when Kind_Signal_No =>
                   Put ("  ");
                when Kind_Signal_Register =>
@@ -460,6 +460,7 @@ package body Grt.Disp_Signals is
    procedure Disp_A_Signal (Sig : Ghdl_Signal_Ptr)
    is
    begin
+      Put_Signal_Name (stdout, Sig);
       Disp_Simple_Signal (Sig, null, True);
    end Disp_A_Signal;
 

@@ -137,7 +137,7 @@ package body Grt.Signals is
 
    function Is_Signal_Guarded (Sig : Ghdl_Signal_Ptr) return Boolean is
    begin
-      return Sig.Sig_Kind /= Kind_Signal_No;
+      return Sig.Flags.Sig_Kind /= Kind_Signal_No;
    end Is_Signal_Guarded;
 
    function To_Address is new Ada.Unchecked_Conversion
@@ -211,13 +211,13 @@ package body Grt.Signals is
                               Event => False,
                               Active => False,
                               Has_Active => False,
-                              Sig_Kind => Sig_Kind,
 
-                              Is_Direct_Active => False,
                               Mode => Mode,
                               Flags => (Propag => Propag_None,
+                                        Sig_Kind => Sig_Kind,
+                                        Is_Direct_Active => False,
                                         Is_Dumped => False,
-                                        Cyc_Event => False,
+                                        RO_Event => False,
                                         Seen => False),
 
                               Net => No_Signal_Net,
@@ -536,7 +536,7 @@ package body Grt.Signals is
    function Has_Transaction_In_Next_Delta (Sig : Ghdl_Signal_Ptr)
                                           return Boolean  is
    begin
-      if Sig.Is_Direct_Active then
+      if Sig.Flags.Is_Direct_Active then
          return True;
       end if;
 
@@ -562,6 +562,14 @@ package body Grt.Signals is
    --  be used to quickly check if a signal is in the list.
    --  This signal is not in the signal table.
    Signal_End : Ghdl_Signal_Ptr;
+
+   --  List of signals that will be active in the next delta cycle.
+   Ghdl_Signal_Active_Chain : aliased Ghdl_Signal_Ptr;
+
+   --  List of implicit signals that will be active in the next cycle.
+   --  They are put in a different chain (other than ghdl_signal_active_chain),
+   --  because their handling is different.  FIXME: try to merge them ?
+   Ghdl_Implicit_Signal_Active_Chain : Ghdl_Signal_Ptr;
 
    --  List of signals which have projected waveforms in the future (beyond
    --  the next delta cycle).
@@ -812,7 +820,7 @@ package body Grt.Signals is
       end if;
 
       --  Must be always set (as Sign.Link may be set by a regular driver).
-      Sign.Is_Direct_Active := True;
+      Sign.Flags.Is_Direct_Active := True;
    end Ghdl_Signal_Direct_Assign;
 
    procedure Ghdl_Signal_Simple_Assign_Error (Sign : Ghdl_Signal_Ptr;
@@ -1750,31 +1758,102 @@ package body Grt.Signals is
       end if;
    end Ghdl_Signal_Driving_Value_F64;
 
-   Ghdl_Implicit_Signal_Active_Chain : Ghdl_Signal_Ptr;
+   type Force_Value_Kind is (Force_Driving, Force_Effective);
+   --  To add: Release_Driving, Release_Effective
 
-   procedure Flush_Active_List
+   type Force_Value (Kind : Force_Value_Kind);
+   type Force_Value_Acc is access Force_Value;
+
+   type Force_Value (Kind : Force_Value_Kind) is record
+      Next : Force_Value_Acc;
+      Sig : Ghdl_Signal_Ptr;
+      Val : Value_Union;
+   end record;
+
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Force_Value, Force_Value_Acc);
+
+   --  Chain of forced values for the next cycle.
+   Force_Value_First : Force_Value_Acc;
+   Force_Value_Last : Force_Value_Acc;
+
+   procedure Append_Force_Value (F : Force_Value_Acc) is
+   begin
+      if Force_Value_First = null then
+         Force_Value_First := F;
+      else
+         Force_Value_Last.Next := F;
+      end if;
+      Force_Value_Last := F;
+   end Append_Force_Value;
+
+   procedure Ghdl_Signal_Force_Driving_B1 (Sig : Ghdl_Signal_Ptr;
+                                           Val : Ghdl_B1) is
+   begin
+      Append_Force_Value (new Force_Value'(Kind => Force_Driving,
+                                           Next => null,
+                                           Sig => Sig,
+                                           Val => (Mode => Mode_B1,
+                                                   B1 => Val)));
+   end Ghdl_Signal_Force_Driving_B1;
+
+   procedure Ghdl_Signal_Force_Effective_B1 (Sig : Ghdl_Signal_Ptr;
+                                             Val : Ghdl_B1) is
+   begin
+      Append_Force_Value (new Force_Value'(Kind => Force_Effective,
+                                           Next => null,
+                                           Sig => Sig,
+                                           Val => (Mode => Mode_B1,
+                                                   B1 => Val)));
+   end Ghdl_Signal_Force_Effective_B1;
+
+   procedure Ghdl_Signal_Force_Driving_E8 (Sig : Ghdl_Signal_Ptr;
+                                           Val : Ghdl_E8) is
+   begin
+      Append_Force_Value (new Force_Value'(Kind => Force_Driving,
+                                           Next => null,
+                                           Sig => Sig,
+                                           Val => (Mode => Mode_E8,
+                                                   E8 => Val)));
+   end Ghdl_Signal_Force_Driving_E8;
+
+   procedure Ghdl_Signal_Force_Effective_E8 (Sig : Ghdl_Signal_Ptr;
+                                             Val : Ghdl_E8) is
+   begin
+      Append_Force_Value (new Force_Value'(Kind => Force_Effective,
+                                           Next => null,
+                                           Sig => Sig,
+                                           Val => (Mode => Mode_E8,
+                                                   E8 => Val)));
+   end Ghdl_Signal_Force_Effective_E8;
+
+   --  Updated by Find_Next_Time to the list of signal that would be active
+   --  at the time returned (if not current_time).
+   Next_Signal_Active_Chain : Ghdl_Signal_Ptr;
+
+   --  Remove all (but Signal_End) signals in the active chain.
+   procedure Flush_Active_Chain
    is
       Sig : Ghdl_Signal_Ptr;
       Next_Sig : Ghdl_Signal_Ptr;
    begin
       --  Free active_chain.
-      Sig := Ghdl_Signal_Active_Chain;
+      Sig := Next_Signal_Active_Chain;
       loop
          Next_Sig := Sig.Link;
          exit when Next_Sig = null;
          Sig.Link := null;
          Sig := Next_Sig;
       end loop;
-      Ghdl_Signal_Active_Chain := Sig;
-   end Flush_Active_List;
+      Next_Signal_Active_Chain := Sig;
+   end Flush_Active_Chain;
 
-   function Find_Next_Time return Std_Time
+   function Find_Next_Time (Tn : Std_Time) return Std_Time
    is
       Res : Std_Time;
       Sig : Ghdl_Signal_Ptr;
 
-      procedure Check_Transaction (Trans : Transaction_Acc)
-      is
+      procedure Check_Transaction (Trans : Transaction_Acc) is
       begin
          if Trans = null or else Trans.Kind = Trans_Direct then
             --  Activity of direct drivers is done through link.
@@ -1782,14 +1861,15 @@ package body Grt.Signals is
          end if;
 
          if Trans.Time = Res and Sig.Link = null then
-            Sig.Link := Ghdl_Signal_Active_Chain;
-            Ghdl_Signal_Active_Chain := Sig;
+            --  Put to active list.
+            Sig.Link := Next_Signal_Active_Chain;
+            Next_Signal_Active_Chain := Sig;
          elsif Trans.Time < Res then
-            Flush_Active_List;
+            Flush_Active_Chain;
 
             --  Put sig on the list.
-            Sig.Link := Ghdl_Signal_Active_Chain;
-            Ghdl_Signal_Active_Chain := Sig;
+            Sig.Link := Next_Signal_Active_Chain;
+            Next_Signal_Active_Chain := Sig;
 
             Res := Trans.Time;
          end if;
@@ -1799,16 +1879,20 @@ package body Grt.Signals is
          end if;
       end Check_Transaction;
    begin
+      pragma Assert (Tn >= Current_Time);
       --  If there is signals in the active list, then next cycle is a delta
       --  cycle, so next time is current_time.
       if Ghdl_Signal_Active_Chain.Link /= null then
          return Current_Time;
       end if;
+      if Force_Value_First /= null then
+         return Current_Time;
+      end if;
       if Ghdl_Implicit_Signal_Active_Chain.Link /= null then
          return Current_Time;
       end if;
-      Res := Std_Time'Last;
 
+      Res := Tn;
       Sig := Future_List;
       while Sig.Flink /= null loop
          case Sig.S.Mode_Sig is
@@ -1827,6 +1911,13 @@ package body Grt.Signals is
       end loop;
       return Res;
    end Find_Next_Time;
+
+   procedure Update_Active_Chain is
+   begin
+      pragma Assert (Ghdl_Signal_Active_Chain.Link = null);
+      Ghdl_Signal_Active_Chain := Next_Signal_Active_Chain;
+      Next_Signal_Active_Chain := Signal_End;
+   end Update_Active_Chain;
 
 --    function Get_Nbr_Non_Null_Source (Sig : Ghdl_Signal_Ptr)
 --                                     return Natural
@@ -1889,7 +1980,7 @@ package body Grt.Signals is
       --  if no driving sources and register, exit.
       if Length = 0
         and then Sig.Nbr_Ports = 0
-        and then Sig.Sig_Kind = Kind_Signal_Register
+        and then Sig.Flags.Sig_Kind = Kind_Signal_Register
       then
          return;
       end if;
@@ -2641,7 +2732,7 @@ package body Grt.Signals is
               (Resolv.Resolv_Proc
                  = To_Resolver_Acc (Ieee_Std_Logic_1164_Resolved_Resolv_Ptr))
               and then Sig.S.Nbr_Drivers + Sig.Nbr_Ports <= 1
-              and then Sig.Sig_Kind = Kind_Signal_No
+              and then Sig.Flags.Sig_Kind = Kind_Signal_No
             then
                --  Optimization: remove resolver if there is at most one
                --  source.
@@ -2831,7 +2922,7 @@ package body Grt.Signals is
          Sig.Value := Val;
          Sig.Event := True;
          Sig.Last_Event := Current_Time;
-         Sig.Flags.Cyc_Event := True;
+         Sig.Flags.RO_Event := True;
 
          El := Sig.Event_List;
          while El /= null loop
@@ -3106,6 +3197,35 @@ package body Grt.Signals is
       --  1) Reset active flag.
       Reset_Active_Flag;
 
+      --  Forced signals.
+      if Force_Value_First /= null then
+         declare
+            Fv : Force_Value_Acc;
+            Next_Fv : Force_Value_Acc;
+         begin
+            Fv := Force_Value_First;
+            while Fv /= null loop
+               Sig := Fv.Sig;
+               --  FIXME: Implement the full semantic of force: really force,
+               --  only set driving/effective value, release...
+               case Fv.Kind is
+                  when Force_Driving =>
+                     Mark_Active (Sig);
+                     Sig.Driving_Value := Fv.Val;
+                     Set_Effective_Value (Sig, Sig.Driving_Value);
+                  when Force_Effective =>
+                     Mark_Active (Sig);
+                     Set_Effective_Value (Sig, Fv.Val);
+               end case;
+               Next_Fv := Fv.Next;
+               Free (Fv);
+               Fv := Next_Fv;
+            end loop;
+            Force_Value_First := null;
+            Force_Value_Last := null;
+         end;
+      end if;
+
       --  For each active signals
       Sig := Ghdl_Signal_Active_Chain;
       Ghdl_Signal_Active_Chain := Signal_End;
@@ -3135,7 +3255,7 @@ package body Grt.Signals is
 
             when Net_One_Direct =>
                Mark_Active (Sig);
-               Sig.Is_Direct_Active := False;
+               Sig.Flags.Is_Direct_Active := False;
 
                Trans := Sig.S.Drivers (0).Last_Trans;
                Assign (Sig.Driving_Value, Trans.Val_Ptr.all, Sig.Mode);
@@ -3145,7 +3265,7 @@ package body Grt.Signals is
             when Net_One_Resolved =>
                --  This signal is active.
                Mark_Active (Sig);
-               Sig.Is_Direct_Active := False;
+               Sig.Flags.Is_Direct_Active := False;
 
                for J in 1 .. Sig.S.Nbr_Drivers loop
                   Trans := Sig.S.Drivers (J - 1).First_Trans.Next;
@@ -3166,7 +3286,7 @@ package body Grt.Signals is
                Internal_Error ("update_signals: no_signal_net");
 
             when others =>
-               Sig.Is_Direct_Active := False;
+               Sig.Flags.Is_Direct_Active := False;
                if not Propagation.Table (Sig.Net).Updated then
                   Propagation.Table (Sig.Net).Updated := True;
                   Run_Propagation (Sig.Net + 1);
@@ -3379,13 +3499,13 @@ package body Grt.Signals is
                                      Event => False,
                                      Active => False,
                                      Has_Active => False,
-                                     Is_Direct_Active => False,
-                                     Sig_Kind => Kind_Signal_No,
                                      Mode => Mode_B1,
 
                                      Flags => (Propag => Propag_None,
+                                               Sig_Kind => Kind_Signal_No,
+                                               Is_Direct_Active => False,
                                                Is_Dumped => False,
-                                               Cyc_Event => False,
+                                               RO_Event => False,
                                                Seen => False),
 
                                      Net => No_Signal_Net,
@@ -3404,6 +3524,7 @@ package body Grt.Signals is
       Ghdl_Signal_Active_Chain := Signal_End;
       Ghdl_Implicit_Signal_Active_Chain := Signal_End;
       Future_List := Signal_End;
+      Next_Signal_Active_Chain := Signal_End;
 
       Boolean_Signal_Rti.Obj_Type := Std_Standard_Boolean_RTI_Ptr;
       Bit_Signal_Rti.Obj_Type := Std_Standard_Bit_RTI_Ptr;

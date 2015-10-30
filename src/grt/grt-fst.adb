@@ -635,9 +635,9 @@ package body Grt.Fst is
    procedure Fst_Cycle is
    begin
       --  Disp values.
-      fstWriterEmitTimeChange (Context, Unsigned_64 (Cycle_Time));
+      fstWriterEmitTimeChange (Context, Unsigned_64 (Current_Time));
 
-      if Cycle_Time = 0 then
+      if Current_Time = 0 then
          --  Disp all values.
          for I in Fst_Table.First .. Fst_Table.Last loop
             Fst_Put_Var (I);
@@ -645,7 +645,8 @@ package body Grt.Fst is
       else
          --  Disp only values changed.
          for I in Fst_Table.First .. Fst_Table.Last loop
-            if Verilog_Wire_Changed (Fst_Table.Table (I).Wire, Cycle_Time) then
+            if Verilog_Wire_Changed (Fst_Table.Table (I).Wire, Current_Time)
+            then
                Fst_Put_Var (I);
             end if;
          end loop;

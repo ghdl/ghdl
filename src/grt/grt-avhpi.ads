@@ -154,7 +154,11 @@ package Grt.Avhpi is
       VhpiWhileLoopK,
 
       --  Iterator, but on a name.
-      AvhpiNameIteratorK
+      AvhpiNameIteratorK,
+
+      --  Root scope that contains the top entity.  For vpi.
+      AvhpiRootScopeK,
+      AvhpiRootScopeIteratorK
      );
 
    type VhpiOneToOneT is
@@ -416,6 +420,9 @@ package Grt.Avhpi is
    --  Get the root instance.
    procedure Get_Root_Inst (Res : out VhpiHandleT);
 
+   --  For vpi: the scope that contains the root instance.
+   procedure Get_Root_Scope (Res : out VhpiHandleT);
+
    --  Get the instanciated packages.
    procedure Get_Package_Inst (Res : out VhpiHandleT);
 
@@ -522,7 +529,8 @@ private
       Ctxt : Rti_Context;
 
       case Kind is
-         when VhpiIteratorK =>
+         when VhpiIteratorK
+           | AvhpiRootScopeIteratorK =>
             Rel : VhpiOneToManyT;
             It_Cur : Ghdl_Index_Type;
             It2 : Ghdl_Index_Type;

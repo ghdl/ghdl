@@ -1559,7 +1559,7 @@ package body Grt.Waves is
       Wave_Put_Byte (0);
       Wave_Put_Byte (0);
       Wave_Put_Byte (0);
-      Wave_Put_I64 (Ghdl_I64 (Cycle_Time));
+      Wave_Put_I64 (Ghdl_I64 (Current_Time));
 
       for I in Dump_Table.First .. Dump_Table.Last loop
          Write_Signal_Value (Dump_Table.Table (I));
@@ -1629,23 +1629,23 @@ package body Grt.Waves is
    begin
       if not In_Cyc then
          Wave_Section ("CYC" & NUL);
-         Wave_Put_I64 (Ghdl_I64 (Cycle_Time));
+         Wave_Put_I64 (Ghdl_I64 (Current_Time));
          In_Cyc := True;
       else
-         Diff := Cycle_Time - Wave_Time;
+         Diff := Current_Time - Wave_Time;
          Wave_Put_LSLEB128 (Ghdl_I64 (Diff));
       end if;
-      Wave_Time := Cycle_Time;
+      Wave_Time := Current_Time;
 
       --  Dump signals.
       Last := 0;
       for I in Dump_Table.First .. Dump_Table.Last loop
          Sig := Dump_Table.Table (I);
-         if Sig.Flags.Cyc_Event then
+         if Sig.Flags.RO_Event then
             Wave_Put_ULEB128 (Ghdl_U32 (I - Last));
             Last := I;
             Write_Signal_Value (Sig);
-            Sig.Flags.Cyc_Event := False;
+            Sig.Flags.RO_Event := False;
          end if;
       end loop;
       Wave_Put_Byte (0);

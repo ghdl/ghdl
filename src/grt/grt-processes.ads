@@ -48,9 +48,6 @@ package Grt.Processes is
    --  Number of non-delta cycles.
    Nbr_Cycles : Integer;
 
-   --  If true, the simulation should be stopped.
-   Break_Simulation : Boolean;
-
    type Process_Type is private;
    --  type Process_Acc is access all Process_Type;
 

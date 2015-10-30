@@ -308,15 +308,13 @@ package body Grt.Rtis_Addr is
       end case;
    end Get_Base_Type;
 
-   function Rti_Complex_Type (Atype : Ghdl_Rti_Access) return Boolean
-   is
+   function Rti_Complex_Type (Atype : Ghdl_Rti_Access) return Boolean is
    begin
       return (Atype.Mode and Ghdl_Rti_Type_Complex_Mask)
         = Ghdl_Rti_Type_Complex;
    end Rti_Complex_Type;
 
-   function Rti_Anonymous_Type (Atype : Ghdl_Rti_Access) return Boolean
-   is
+   function Rti_Anonymous_Type (Atype : Ghdl_Rti_Access) return Boolean is
    begin
       return (Atype.Mode and Ghdl_Rti_Type_Anonymous_Mask)
         = Ghdl_Rti_Type_Anonymous;

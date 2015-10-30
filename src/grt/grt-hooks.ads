@@ -22,6 +22,8 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+with Grt.Callbacks;
+
 package Grt.Hooks is
    pragma Preelaborate (Grt.Hooks);
 
@@ -81,4 +83,24 @@ package Grt.Hooks is
 
    --  Nil procedure.
    procedure Proc_Hook_Nil;
+
+   --  Callbacks.
+
+   --  Called at the beginning of the cycle at time T.
+   Cb_After_Delay : Callbacks.Callback_Time_List;
+
+   --  Called at the beginning of a non-delta cycle.
+   Cb_Next_Time_Step : Callbacks.Callback_List;
+
+   --  Called after updating the signals.  For value change detection.
+   Cb_Signals_Updated : Callbacks.Callback_List;
+
+   --  Called at the last known delta cycle of a timestep, before execution
+   --  of postponed processes.
+   --  The callback may change signals and therefore generating new delta
+   --  cycle.
+   Cb_Last_Known_Delta : Callbacks.Callback_List;
+
+   Cb_End_Of_Time_Step : Callbacks.Callback_List;
+
 end Grt.Hooks;

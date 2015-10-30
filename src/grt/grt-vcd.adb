@@ -767,13 +767,42 @@ package body Grt.Vcd is
       return False;
    end Verilog_Wire_Changed;
 
+   function Verilog_Wire_Event (Info : Verilog_Wire_Info) return Boolean
+   is
+      Len : Ghdl_Index_Type;
+   begin
+      if Info.Irange = null then
+         Len := 1;
+      else
+         Len := Info.Irange.I32.Len;
+      end if;
+
+      case Info.Kind is
+         when Vcd_Bit
+           | Vcd_Bool
+           | Vcd_Stdlogic
+           | Vcd_Bitvector
+           | Vcd_Stdlogic_Vector
+           | Vcd_Integer32
+           | Vcd_Float64 =>
+            for J in 0 .. Len - 1 loop
+               if Info.Sigs (J).Event then
+                  return True;
+               end if;
+            end loop;
+         when Vcd_Bad =>
+            null;
+      end case;
+      return False;
+   end Verilog_Wire_Event;
+
    procedure Vcd_Put_Time
    is
       Str : String (1 .. 21);
       First : Natural;
    begin
       Vcd_Putc ('#');
-      Vstrings.To_String (Str, First, Ghdl_I64 (Cycle_Time));
+      Vstrings.To_String (Str, First, Ghdl_I64 (Current_Time));
       Vcd_Put (Str (First .. Str'Last));
       Vcd_Newline;
    end Vcd_Put_Time;
@@ -809,7 +838,7 @@ package body Grt.Vcd is
    begin
       --  Disp values.
       Vcd_Put_Time;
-      if Cycle_Time = 0 then
+      if Current_Time = 0 then
          --  Disp all values.
          for I in Vcd_Table.First .. Vcd_Table.Last loop
             Vcd_Put_Var (I);
@@ -817,7 +846,7 @@ package body Grt.Vcd is
       else
          --  Disp only values changed.
          for I in Vcd_Table.First .. Vcd_Table.Last loop
-            if Verilog_Wire_Changed (Vcd_Table.Table (I), Cycle_Time) then
+            if Verilog_Wire_Changed (Vcd_Table.Table (I), Current_Time) then
                Vcd_Put_Var (I);
             end if;
          end loop;

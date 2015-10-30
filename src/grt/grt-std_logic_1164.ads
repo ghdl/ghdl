@@ -26,7 +26,7 @@
 with Grt.Types; use Grt.Types;
 
 package Grt.Std_Logic_1164 is
-   type Std_Ulogic is ('U', 'X', '0', '1', 'Z', 'W','L', 'H', '-');
+   type Std_Ulogic is ('U', 'X', '0', '1', 'Z', 'W', 'L', 'H', '-');
 
    type Stdlogic_Table_2d is array (Std_Ulogic, Std_Ulogic) of Std_Ulogic;
    type Stdlogic_Table_1d is array (Std_Ulogic) of Std_Ulogic;

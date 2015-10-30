@@ -178,10 +178,6 @@ package body Grt.Main is
          Disp_Stats_Hook (0);
       end if;
 
-      if Status = -2 then
-         return;
-      end if;
-
       if Expect_Failure then
          if Status >= 0 then
             Expect_Failure := False;

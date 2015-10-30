@@ -33,6 +33,7 @@ with Grt.Options;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Utils;
 with Grt.Hooks;
+with Grt.Callbacks; use Grt.Callbacks;
 with Grt.Disp_Signals;
 with Grt.Stats;
 with Grt.Threads; use Grt.Threads;
@@ -316,12 +317,12 @@ package body Grt.Processes is
    --  List of unused action_list to be recycled.
    Old_Action_List : Action_List_Acc;
 
-
    procedure Ghdl_Process_Wait_Add_Sensitivity (Sig : Ghdl_Signal_Ptr)
    is
       Proc : constant Process_Acc := Get_Current_Process;
       El : Action_List_Acc;
    begin
+      --  Allocate a structure.
       if Old_Action_List = null then
          El := new Action_List (Dynamic => True);
       else
@@ -620,21 +621,23 @@ package body Grt.Processes is
       --     1) TIME'HIGH
       Res := Std_Time'Last;
 
-      --     2) The next time at which a driver becomes active, or
-      Res := Std_Time'Min (Res, Grt.Signals.Find_Next_Time);
+      --     3) The next time at which a process resumes.
+      Res := Std_Time'Min (Res, Process_First_Timeout);
+
+      --  LRM08 14.7.5.1 Model execution
+      --    d) The next time at which a registered and enabled vhpiCbAfterDelay
+      --    [...] callback is to occur.
+      Res := Std_Time'Min (Res, Get_First_Time (Hooks.Cb_After_Delay));
 
       if Res = Current_Time then
          return Res;
       end if;
 
-      --     3) The next time at which a process resumes.
-      if Process_First_Timeout < Res then
-         --  No signals to be updated.
-         Grt.Signals.Flush_Active_List;
+      --     2) The next time at which a driver becomes active, or [...]
+      Res := Grt.Signals.Find_Next_Time (Res);
 
-         Res := Process_First_Timeout;
-      end if;
-
+      --  Note that Find_Next_Time has a side effect: it updates the
+      --  active_chain.  That's the reason why it is the last.
       return Res;
    end Compute_Next_Time;
 
@@ -688,16 +691,6 @@ package body Grt.Processes is
    --  Run resumed processes.
    --  If POSTPONED is true, resume postponed processes, else resume
    --  non-posponed processes.
-   --  Returns one of these values:
-   --  No process has been run.
-   Run_None : constant Integer := 1;
-   --  At least one process was run.
-   Run_Resumed : constant Integer := 2;
-   --  Simulation is finished.
-   Run_Finished : constant Integer := 3;
-   --  Stop/finish request from user (via std.env).
-   Run_Stop : constant Integer := -2;
-   pragma Unreferenced (Run_Stop);
 
    Mt_Last : Natural;
    Mt_Table : Process_Acc_Array_Acc;
@@ -736,7 +729,7 @@ package body Grt.Processes is
       end loop;
    end Run_Processes_Threads;
 
-   function Run_Processes (Postponed : Boolean) return Natural
+   function Run_Processes (Postponed : Boolean) return Integer
    is
       Table : Process_Acc_Array_Acc;
       Last : Natural;
@@ -795,9 +788,13 @@ package body Grt.Processes is
       end if;
    end Run_Processes;
 
+   --  Updated by Initialization_Phase and Simulation_Cycle to the time of the
+   --  next cycle.  Unchanged in case of delta-cycle.
+   Next_Time : Std_Time;
+
    procedure Initialization_Phase
    is
-      Status : Natural;
+      Status : Integer;
       pragma Unreferenced (Status);
    begin
       --  Allocate processes arrays.
@@ -843,7 +840,10 @@ package body Grt.Processes is
       --  - The time of the next simulation cycle (which in this case is the
       --    first simulation cycle), Tn, is calculated according to the rules
       --    of step f of the simulation cycle, below.
-      Current_Time := Compute_Next_Time;
+      Next_Time := Compute_Next_Time;
+      if Next_Time /= 0 then
+         Update_Active_Chain;
+      end if;
 
       --  Clear current_delta, will be set by Simulation_Cycle.
       Current_Delta := 0;
@@ -856,7 +856,7 @@ package body Grt.Processes is
       Tn : Std_Time;
       Status : Integer;
    begin
-      --  LRM93 12.6.4
+      --  LRM08 14.7.5.3 Simulation cycle (ex LRM93 12.6.4)
       --  A simulation cycle consists of the following steps:
       --
       --  a) The current time, Tc is set equal to Tn.  Simulation is complete
@@ -865,22 +865,53 @@ package body Grt.Processes is
       --  GHDL: this is done at the last step of the cycle.
       null;
 
-      --  b) Each active explicit signal in the model is updated.  (Events
-      --     may occur on signals as a result).
-      --  c) Each implicit signal in the model is updated.  (Events may occur
-      --     on signals as a result.)
+      --  b) The following actions occur in the indicated order:
+      --     1) If the current simulation cycle is not a delta cycle, each
+      --        registered and enabled vhpiCbNextTimeStep and
+      --        vhpiCbRepNextTimeStep callback is executed [TODO]
+      if Current_Delta = 0 then
+         Call_Callbacks (Hooks.Cb_Next_Time_Step);
+      end if;
+
+      --     2) Each registered and enabled vhpiCbStartOfNextCycle and
+      --        vhpiCbRepStartOfNextCycle callback is executed [TODO]
+      --     3) Each registered and enabled vhpiCbAfterDelay and
+      --        vhpiCbRepAfterDelay callback is executed.
+      if Current_Time = Get_First_Time (Hooks.Cb_After_Delay) then
+         Call_Time_Callbacks (Hooks.Cb_After_Delay);
+         if Options.Break_Simulation then
+            return Run_Stop;
+         end if;
+      end if;
+
+      --  c) Each active driver in the model is updated.  If a force or deposit
+      --     was scheduled for any driver, the force or deposit is no longer
+      --     scheduler for the driver [TODO]
+      --  d) Each signal on each net in the model that includes active drivers
+      --     is updated in an order that is consistent with the dependency
+      --     relaction between signals (see 14.7.4).  (Events may occur on
+      --     signals as a results.) If a force, deposit, or release was
+      --     scheduled for any signal, the force, deposit, or release is no
+      --     longer scheduled for the signal.
       if Options.Flag_Stats then
          Stats.Start_Update;
       end if;
       Update_Signals;
+      Call_Callbacks (Hooks.Cb_Signals_Updated);
       if Options.Flag_Stats then
          Stats.Start_Resume;
       end if;
 
-      --  d) For each process P, if P is currently sensitive to a signal S and
-      --     if an event has occured on S in this simulation cycle, then P
-      --     resumes.
+      --  e) Any action required to give effect to a PSL directive is performed
+      --     [TODO]
+      null;
+
+      --  f) The following actions occur in the indicated order:
+      --     2) For each process P, if P is currently sensitive to a signal S
+      --        and if an event has occured on S in this simulation cycle, then
+      --        P resumes.
       if Current_Time = Process_First_Timeout then
+         --  There are processes to awake.
          Tn := Last_Time;
          declare
             Proc : Process_Acc;
@@ -921,44 +952,61 @@ package body Grt.Processes is
          Process_First_Timeout := Tn;
       end if;
 
-      --  e) Each nonpostponed that has resumed in the current simulation cycle
-      --     is executed until it suspends.
+      --     3) For each nonpostponed that has resumed in the current
+      --        simulation cycle, the following actions occur in the indicated
+      --        order:
+      --        - Each registered and enabled vhpiCbResume callback associated
+      --          with P is executed [TODO]
+      --        - The processes executes until it suspends.
+      --        - Each registered and enabled vhpiCbSyspend callback associated
+      --          with P is executed [TODO]
       Status := Run_Processes (Postponed => False);
 
-      --  f) The time of the next simulation cycle, Tn, is determined by
-      --     setting it to the earliest of
-      --     1) TIME'HIGH
-      --     2) The next time at which a driver becomes active, or
-      --     3) The next time at which a process resumes.
-      --     If Tn = Tc, then the next simulation cycle (if any) will be a
-      --     delta cycle.
+      --  g) The time of the next simulation cycle, Tn, is calculated according
+      --    to the rules of 14.7.5.1
       if Options.Flag_Stats then
          Stats.Start_Next_Time;
       end if;
       Tn := Compute_Next_Time;
 
-      --  g) If the next simulation cycle will be a delta cycle, the remainder
-      --     of the step is skipped.
-      --     Otherwise, each postponed process that has resumed but has not
-      --     been executed since its last resumption is executed until it
-      --     suspends.  Then Tn is recalculated according to the rules of
-      --     step f.  It is an error if the execution of any postponed
-      --     process causes a delta cycle to occur immediatly after the
-      --     current simulation cycle.
-      if Tn = Current_Time then
-         if Current_Time = Last_Time and then Status = Run_None then
-            return Run_Finished;
-         else
-            Current_Delta := Current_Delta + 1;
-            return Run_Resumed;
+      --  h) If the next simulation cycle will be a delta cycle, the remainder
+      --     of the step is skipped. Otherwise the following actions occur
+      --     in the indicated order:
+      --     1) Each registered and enabled vhpiLastKnownDeltaCycle and
+      --        vhpiCbRepLastKnownDeltaCycle callback is executed. Tn is
+      --        recalculated according to the rules of 14.7.5.1
+      --     [...]
+      --     4) For each postponed process P, if P has resumed but has not been
+      --        executed since its last resumption, the following actions occur
+      --        in the indicated order:
+      --        - Each registered and enabled vhpiCbResume callback associated
+      --          with P is executed [TODO]
+      --        - The process executes until it suspends.
+      --        - Each registered and enabled vhpiCbSuspend callback associated
+      --          with P is executed [TODO]
+      --     5) Tn is recalculated according to the rules of 14.7.5.1
+      --     6) [TODO]
+      --     7) If Tn = TIME'HIGH and there are no active drivers, process
+      --        resumptions, or registered and enabled vhpiCbAfterDelay,
+      --        vhpiCbRepAfterDelay, vhpiCbTimeOut, or VhpiCbRepTimeOut
+      --        callbacks to occur at Tn, then each registered and enabled
+      --        vhpiCbQuiescence is executed. [TODO]
+      --        Tn is recalculated according to the rules of 14.7.5.1
+      --     It is an error if the execution of any postponed process or any
+      --     callback executed in substeps 3) through 7) of step h) causes a
+      --     delta cycle to occur immediatly after the current simulation
+      --     cycle.
+      if Tn /= Current_Time then
+         if Has_Callbacks (Hooks.Cb_Last_Known_Delta) then
+            Call_Callbacks (Hooks.Cb_Last_Known_Delta);
+            Flush_Active_Chain;
+            Tn := Compute_Next_Time;
          end if;
-      else
-         Current_Delta := 0;
-         if Nbr_Postponed_Processes /= 0 then
+      end if;
+      if Tn /= Current_Time then
+         if Last_Postponed_Resume_Process /= 0 then
+            Flush_Active_Chain;
             Status := Run_Processes (Postponed => True);
-         end if;
-         if Status = Run_Resumed then
-            Flush_Active_List;
             if Options.Flag_Stats then
                Stats.Start_Next_Time;
             end if;
@@ -967,15 +1015,27 @@ package body Grt.Processes is
                Error ("postponed process causes a delta cycle");
             end if;
          end if;
-         Current_Time := Tn;
+
+         Call_Callbacks (Hooks.Cb_End_Of_Time_Step);
+
+         Update_Active_Chain;
+         Next_Time := Tn;
+         Current_Delta := 0;
+         return Run_Resumed;
+      end if;
+
+      if Current_Time = Last_Time and then Status = Run_None then
+         --  End of time and no process to run.
+         return Run_Finished;
+      else
+         Current_Delta := Current_Delta + 1;
          return Run_Resumed;
       end if;
    end Simulation_Cycle;
 
-   function Simulation return Integer
+   procedure Simulation_Init
    is
       use Options;
-      Status : Integer;
    begin
       if Nbr_Threads /= 1 then
          Threads.Init;
@@ -993,20 +1053,29 @@ package body Grt.Processes is
          Grt.Disp_Signals.Disp_All_Signals;
       end if;
 
-      if Current_Time /= 0 then
+      if Next_Time /= 0 then
          --  This is the end of a cycle.  This can happen when the time is not
          --  zero after initialization.
-         Cycle_Time := 0;
          Grt.Hooks.Call_Cycle_Hooks;
       end if;
+   end Simulation_Init;
 
+   function Simulation_Main_Loop return Integer
+   is
+      use Options;
+      Status : Integer;
+   begin
       loop
-         Cycle_Time := Current_Time;
+         --  Update time.  This is the only place where Current_Time is
+         --  updated.
+         Current_Time := Next_Time;
          if Disp_Time then
             Grt.Disp.Disp_Now;
          end if;
+
          Status := Simulation_Cycle;
-         exit when Status < 0;
+         exit when Status = Run_Stop;
+
          if Trace_Signals then
             Grt.Disp_Signals.Disp_All_Signals;
          end if;
@@ -1027,14 +1096,15 @@ package body Grt.Processes is
             Error ("simulation stopped by --stop-delta");
             exit;
          end if;
-         if Current_Time > Stop_Time then
-            if Current_Time /= Last_Time then
-               Info ("simulation stopped by --stop-time");
-            end if;
-            exit;
-         end if;
       end loop;
 
+      return Status;
+   end Simulation_Main_Loop;
+
+   procedure Simulation_Finish
+   is
+      use Options;
+   begin
       if Nbr_Threads /= 1 then
          Threads.Finish;
       end if;
@@ -1042,6 +1112,17 @@ package body Grt.Processes is
       Call_Finalizers;
 
       Grt.Hooks.Call_Finish_Hooks;
+   end Simulation_Finish;
+
+   function Simulation return Integer
+   is
+      Status : Integer;
+   begin
+      Simulation_Init;
+
+      Status := Simulation_Main_Loop;
+
+      Simulation_Finish;
 
       return Status;
    end Simulation;

@@ -79,6 +79,18 @@ package Grt.Errors is
    Exit_Status : Integer := 0;
    procedure Exit_Simulation;
 
+   --  Simulation status,
+   --  Runtime error.
+   Run_Error : constant Integer := -1;
+   --  No process has been run.
+   Run_None : constant Integer := 1;
+   --  At least one process was run.
+   Run_Resumed : constant Integer := 2;
+   --  Simulation is finished.
+   Run_Finished : constant Integer := 3;
+   --  Stop/finish request from user (via std.env).
+   Run_Stop : constant Integer := 4;
+
    --  Hook called in case of error.
    Error_Hook : Grt.Hooks.Proc_Hook_Type := null;
 
@@ -89,4 +101,3 @@ private
    pragma Export (C, Grt_Overflow_Error, "grt_overflow_error");
    pragma Export (C, Grt_Null_Access_Error, "grt_null_access_error");
 end Grt.Errors;
-

@@ -63,9 +63,13 @@ package Grt.Vcd is
    function Get_Wire_Length (Info : Verilog_Wire_Info) return Ghdl_Index_Type;
 
    --  Return TRUE if last change time of the wire described by INFO is LAST.
+   --  Used by vcd to know if a signal has changed and should be dumped.
    function Verilog_Wire_Changed (Info : Verilog_Wire_Info;
                                   Last : Std_Time)
                                  return Boolean;
+
+   --  Return TRUE if there is an event on the wire, for the current cycle.
+   function Verilog_Wire_Event (Info : Verilog_Wire_Info) return Boolean;
 
    procedure Register;
 end Grt.Vcd;

@@ -22,10 +22,12 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+with System;
 with Interfaces; use Interfaces;
 with Grt.Errors; use Grt.Errors;
 with Grt.Astdio;
 with Grt.Hooks;
+with Grt.Callbacks;
 
 package body Grt.Options is
 
@@ -54,8 +56,7 @@ package body Grt.Options is
    pragma Export (C, Std_Standard_Time_Hr, "std__standard__time__BT__hr");
    pragma Weak_External (Std_Standard_Time_Hr);
 
-   procedure Set_Time_Resolution (Res : Character)
-   is
+   procedure Set_Time_Resolution (Res : Character) is
    begin
       Std_Standard_Time_Hr := 0;
       case Res is
@@ -220,6 +221,16 @@ package body Grt.Options is
       end if;
    end To_Lower;
 
+   Stop_Time : Std_Time := Std_Time'First;
+
+   procedure Stop_Time_Callback (Arg : System.Address)
+   is
+      pragma Unreferenced (Arg);
+   begin
+      Break_Simulation := True;
+      Info ("simulation stopped by --stop-time");
+   end Stop_Time_Callback;
+
    procedure Decode_Option
      (Option : String; Status : out Decode_Option_Status)
    is
@@ -308,7 +319,7 @@ package body Grt.Options is
                if Flag_String (5) = '-' then
                   Error ("time resolution is ignored");
                elsif Flag_String (5) = '?' then
-                  if Stop_Time /= Std_Time'Last then
+                  if Stop_Time /= Std_Time'First then
                      Error ("time resolution must be set "
                               & "before --stop-time");
                   else
@@ -519,5 +530,16 @@ package body Grt.Options is
             end case;
          end;
       end loop;
+
+      if Stop_Time /= Std_Time'First then
+         declare
+            use Callbacks;
+            Stop_Handle : Callback_Handle;
+         begin
+            Register_Callback_At
+              (Hooks.Cb_After_Delay, Stop_Handle,
+               Stop_Time, Stop_Time_Callback'Access);
+         end;
+      end if;
    end Decode;
 end Grt.Options;

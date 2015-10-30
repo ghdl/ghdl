@@ -227,9 +227,6 @@ package Grt.Signals is
    Net_One_Direct : constant Signal_Net_Type := -2;
    Net_One_Resolved : constant Signal_Net_Type := -3;
 
-   --  Flush the list of active signals.
-   procedure Flush_Active_List;
-
    type Ghdl_Signal_Data (Mode_Sig : Mode_Signal_Type := Mode_Signal)
    is record
       case Mode_Sig is
@@ -273,12 +270,18 @@ package Grt.Signals is
       --  Status of the ordering.
       Propag : Propag_Order_Flag;
 
+      --  Kind of the signal (none, bus or register).
+      Sig_Kind : Kind_Signal_Type;
+
+      --  If set, the signal has an active direct driver.
+      Is_Direct_Active : Boolean;
+
       --  If set, the signal is dumped in a GHW file.
       Is_Dumped : Boolean;
 
       --  Set when an event occured.
       --  Only reset by GHW file dumper.
-      Cyc_Event : Boolean;
+      RO_Event : Boolean;
 
       --  Set if the signal has already been visited.  When outside of the
       --  algorithm that use it, it must be cleared.
@@ -301,12 +304,6 @@ package Grt.Signals is
 
       --  Internal fields.
       --  NOTE: keep above fields (components) in sync with translation.
-
-      --  If set, the signal has an active direct driver.
-      Is_Direct_Active : Boolean;
-
-      --  Kind of the signal (none, bus or register).
-      Sig_Kind : Kind_Signal_Type;
 
       --  Values mode of this signal.
       Mode : Mode_Type;
@@ -353,9 +350,6 @@ package Grt.Signals is
       Table_Index_Type => Sig_Table_Index,
       Table_Low_Bound => 0,
       Table_Initial => 128);
-
-   --  Return the next time at which a driver becomes active.
-   function Find_Next_Time return Std_Time;
 
    --  Elementary propagation computation.
    --  See LRM 12.6.2 and 12.6.3
@@ -481,7 +475,22 @@ package Grt.Signals is
    --  Initialize all signals.
    procedure Init_Signals;
 
-   --  Update signals.
+   --  Return the next time at which a driver becomes active.
+   --  SIDE EFFECT: this function updates the next_signal_active_chain.
+   --  Note: the next_signal_active_chain must be empty before running
+   --  processes as they assume that if signals are on a list, they are on the
+   --  ghdl_signal_active_chain (and not on next_signal_active_chain).  Use one
+   --  of Update_Active_Chain or Flush_Active_Chain for that effect.
+   function Find_Next_Time (Tn : Std_Time) return Std_Time;
+
+   --  To be called after Find_Next_Time to update the chain of active signals,
+   --  only if the next cycle is not a delta cycle.
+   procedure Update_Active_Chain;
+
+   --  Empty the next_signal_active_chain.
+   procedure Flush_Active_Chain;
+
+   --  Update all active signals.
    procedure Update_Signals;
 
    --  Set the effective value of signal SIG to VAL.
@@ -575,6 +584,10 @@ package Grt.Signals is
                                          After : Std_Time);
    function Ghdl_Signal_Driving_Value_B1 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_B1;
+   procedure Ghdl_Signal_Force_Driving_B1 (Sig : Ghdl_Signal_Ptr;
+                                           Val : Ghdl_B1);
+   procedure Ghdl_Signal_Force_Effective_B1 (Sig : Ghdl_Signal_Ptr;
+                                             Val : Ghdl_B1);
 
    function Ghdl_Create_Signal_E8 (Init_Val : Ghdl_E8;
                                    Resolv_Func : Resolver_Acc;
@@ -593,6 +606,10 @@ package Grt.Signals is
                                          After : Std_Time);
    function Ghdl_Signal_Driving_Value_E8 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_E8;
+   procedure Ghdl_Signal_Force_Driving_E8 (Sig : Ghdl_Signal_Ptr;
+                                           Val : Ghdl_E8);
+   procedure Ghdl_Signal_Force_Effective_E8 (Sig : Ghdl_Signal_Ptr;
+                                             Val : Ghdl_E8);
 
    function Ghdl_Create_Signal_E32 (Init_Val : Ghdl_E32;
                                     Resolv_Func : Resolver_Acc;
@@ -760,8 +777,6 @@ package Grt.Signals is
      (Sig : Ghdl_Signal_Ptr; Index : Ghdl_Index_Type)
      return Ghdl_Value_Ptr;
 
-   Ghdl_Signal_Active_Chain : aliased Ghdl_Signal_Ptr;
-
    --  Statistics.
    Nbr_Active : Ghdl_I32;
    Nbr_Events: Ghdl_I32;
@@ -924,8 +939,4 @@ private
                   "__ghdl_signal_read_port");
    pragma Export (C, Ghdl_Signal_Read_Driver,
                   "__ghdl_signal_read_driver");
-
-   pragma Export (C, Ghdl_Signal_Active_Chain,
-                  "__ghdl_signal_active_chain");
-
 end Grt.Signals;

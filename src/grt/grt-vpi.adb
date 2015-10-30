@@ -44,13 +44,14 @@ pragma Unreferenced (System.Storage_Elements);
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Signals; use Grt.Signals;
-with Grt.Table;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Hooks; use Grt.Hooks;
+with Grt.Options;
 with Grt.Vcd; use Grt.Vcd;
 with Grt.Errors; use Grt.Errors;
 with Grt.Rtis_Types;
-pragma Elaborate_All (Grt.Table);
+with Grt.Std_Logic_1164; use Grt.Std_Logic_1164;
+with Grt.Callbacks; use Grt.Callbacks;
 
 package body Grt.Vpi is
    --  The VPI interface requires libdl (dlopen, dlsym) to be linked in.
@@ -60,7 +61,11 @@ package body Grt.Vpi is
    --errAnyString:     constant String := "grt-vcd.adb: any string" & NUL;
    --errNoString:      constant String := "grt-vcd.adb: no string" & NUL;
 
-   type Vpi_Index_Type is new Integer;
+   Product : constant String := "GHDL" & NUL;
+   Version : constant String := "0.1" & NUL;
+
+   --  If true, emit traces
+   Flag_Trace : Boolean := False;
 
 -------------------------------------------------------------------------------
 -- * * *   h e l p e r s   * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -121,6 +126,26 @@ package body Grt.Vpi is
 --       return To_Ghdl_C_String (tmpstring1'Address);
 --    end NulTerminate1;
 
+   --  Clear error status.
+   procedure Reset_Error;
+
+   procedure Vpi_Trace (Msg : String) is
+   begin
+      if Flag_Trace then
+         Put_Line (Msg);
+      end if;
+   end Vpi_Trace;
+
+   function Vpi_Time_To_Time (V : s_vpi_time) return Std_Time is
+      Res : Std_Time;
+   begin
+      if V.mType /= vpiSimTime then
+         raise Program_Error;
+      end if;
+      Res := Std_Time (Unsigned_64 (V.mHigh) * 2 ** 32 + Unsigned_64 (V.mLow));
+      return Res * 1000;
+   end Vpi_Time_To_Time;
+
 -------------------------------------------------------------------------------
 -- * * *   V P I   f u n c t i o n s   * * * * * * * * * * * * * * * * * * * *
 -------------------------------------------------------------------------------
@@ -135,7 +160,9 @@ package body Grt.Vpi is
       Rel : VhpiOneToManyT;
       Error : AvhpiErrorT;
    begin
-      --dbgPut_Line ("vpi_iterate");
+      Vpi_Trace ("vpi_iterate");
+
+      Reset_Error;
 
       case aType is
          when vpiNet =>
@@ -190,9 +217,10 @@ package body Grt.Vpi is
 --       end case;
 --    end ii_vpi_get_type;
 
-   function vpi_get (Property: integer; Ref: vpiHandle) return Integer
-   is
+   function vpi_get (Property: integer; Ref: vpiHandle) return Integer is
    begin
+      Vpi_Trace ("vpi_get");
+
       case Property is
          when vpiType=>
             return Ref.mType;
@@ -204,6 +232,47 @@ package body Grt.Vpi is
       end case;
    end vpi_get;
 
+   function Vhpi_Handle_To_Vpi_Prop (Res : VhpiHandleT) return Integer is
+   begin
+      case Vhpi_Get_Kind (Res) is
+         when VhpiEntityDeclK
+           | VhpiArchBodyK
+           | VhpiBlockStmtK
+           | VhpiIfGenerateK
+           | VhpiForGenerateK
+           | VhpiCompInstStmtK =>
+            return vpiModule;
+         when VhpiPortDeclK
+           | VhpiSigDeclK =>
+            declare
+               Info : Verilog_Wire_Info;
+            begin
+               Get_Verilog_Wire (Res, Info);
+               if Info.Kind /= Vcd_Bad then
+                  return vpiNet;
+               end if;
+            end;
+         when others =>
+            null;
+      end case;
+      return vpiUndefined;
+   end Vhpi_Handle_To_Vpi_Prop;
+
+   function Build_vpiHandle (Res : VhpiHandleT; Prop : Integer)
+                            return vpiHandle is
+   begin
+      case Prop is
+         when vpiModule =>
+            return new struct_vpiHandle'(mType => vpiModule,
+                                         Ref => Res);
+         when vpiNet =>
+            return new struct_vpiHandle'(mType => vpiNet,
+                                         Ref => Res);
+         when others =>
+            return null;
+      end case;
+   end Build_vpiHandle;
+
    ------------------------------------------------------------------------
    -- vpiHandle  vpi_scan(vpiHandle iter)
    -- Scan the Verilog HDL hierarchy for objects with a one-to-many
@@ -214,8 +283,10 @@ package body Grt.Vpi is
       Res : VhpiHandleT;
       Error : AvhpiErrorT;
       R : vpiHandle;
+      Kind, Expected_Kind : Integer;
    begin
-      --dbgPut_Line ("vpi_scan");
+      Vpi_Trace ("vpi_scan");
+
       if Iter = null then
          return null;
       end if;
@@ -236,41 +307,24 @@ package body Grt.Vpi is
          end case;
       end if;
 
+      case Iter.mType is
+         when vpiInternalScope
+           | vpiModule =>
+            Expected_Kind := vpiModule;
+         when vpiNet =>
+            Expected_Kind := vpiNet;
+         when others =>
+            Expected_Kind := vpiUndefined;
+      end case;
+
       loop
          Vhpi_Scan (Iter.Ref, Res, Error);
          exit when Error /= AvhpiErrorOk;
 
-         case Vhpi_Get_Kind (Res) is
-            when VhpiEntityDeclK
-              | VhpiArchBodyK
-              | VhpiBlockStmtK
-              | VhpiIfGenerateK
-              | VhpiForGenerateK
-              | VhpiCompInstStmtK =>
-               case Iter.mType is
-                  when vpiInternalScope
-                    | vpiModule =>
-                     return new struct_vpiHandle'(mType => vpiModule,
-                                                  Ref => Res);
-                  when others =>
-                     null;
-               end case;
-            when VhpiPortDeclK
-              | VhpiSigDeclK =>
-               if Iter.mType = vpiNet then
-                  declare
-                     Info : Verilog_Wire_Info;
-                  begin
-                     Get_Verilog_Wire (Res, Info);
-                     if Info.Kind /= Vcd_Bad then
-                        return new struct_vpiHandle'(mType => vpiNet,
-                                                     Ref => Res);
-                     end if;
-                  end;
-               end if;
-            when others =>
-               null;
-         end case;
+         Kind := Vhpi_Handle_To_Vpi_Prop (Res);
+         if Kind /= vpiUndefined and then Kind = Expected_Kind then
+            return Build_vpiHandle (Res, Kind);
+         end if;
       end loop;
       return null;
    end vpi_scan;
@@ -285,7 +339,7 @@ package body Grt.Vpi is
       Prop : VhpiStrPropertyT;
       Len : Natural;
    begin
-      --dbgPut_Line ("vpiGetStr");
+      Vpi_Trace ("vpi_get_str");
 
       if Ref = null then
          return null;
@@ -323,7 +377,7 @@ package body Grt.Vpi is
    is
       Res : vpiHandle;
    begin
-      --dbgPut_Line ("vpi_handle");
+      Vpi_Trace ("vpi_handle");
 
       if Ref = null then
          return null;
@@ -457,9 +511,10 @@ package body Grt.Vpi is
       return To_Ghdl_C_String (Tmpstring3'Address);
    end ii_vpi_get_value_bin_str;
 
-   procedure vpi_get_value (Expr : vpiHandle; Value : p_vpi_value)
-   is
+   procedure vpi_get_value (Expr : vpiHandle; Value : p_vpi_value) is
    begin
+      Vpi_Trace ("vpi_get_value");
+
       case Value.Format is
          when vpiObjTypeVal=>
             -- fill in the object type and value:
@@ -517,89 +572,156 @@ package body Grt.Vpi is
    -- see IEEE 1364-2001, chapter 27.14, page 675
    -- FIXME
 
-   procedure ii_vpi_put_value_bin_str_B1 (SigPtr : Ghdl_Signal_Ptr;
-                                          Value : Character)
-   is
-      Tempval : Value_Union;
+   type Std_Ulogic_Array is array (Ghdl_Index_Type range <>) of Std_Ulogic;
+
+   procedure Ii_Vpi_Put_Value (Info : Verilog_Wire_Info;
+                               Vec : Std_Ulogic_Array) is
    begin
-      -- use the Set_Effective_Value procedure to update the signal
-      case Value is
-         when '0' =>
-            Tempval.B1 := false;
-         when '1' =>
-            Tempval.B1 := true;
-         when others =>
-            dbgPut_Line("ii_vpi_put_value_bin_str_B1: "
-                        & "wrong character - signal wont be set");
+      case Info.Kind is
+         when Vcd_Bad =>
             return;
+         when Vcd_Bit
+           | Vcd_Bool
+           | Vcd_Bitvector =>
+            for J in Vec'Range loop
+               declare
+                  V : constant Ghdl_B1 :=
+                    Ghdl_B1 (Vec (J) = '1' or Vec (J) = 'H');
+               begin
+                  case Info.Val is
+                     when Vcd_Effective =>
+                        Ghdl_Signal_Force_Effective_B1 (Info.Sigs (J), V);
+                     when Vcd_Driving =>
+                        Ghdl_Signal_Force_Driving_B1 (Info.Sigs (J), V);
+                  end case;
+               end;
+            end loop;
+         when Vcd_Stdlogic
+           | Vcd_Stdlogic_Vector =>
+            for J in Vec'Range loop
+               declare
+                  V : constant Ghdl_E8 := Std_Ulogic'Pos (Vec (J));
+               begin
+                  case Info.Val is
+                     when Vcd_Effective =>
+                        Ghdl_Signal_Force_Effective_E8 (Info.Sigs (J), V);
+                     when Vcd_Driving =>
+                        Ghdl_Signal_Force_Driving_E8 (Info.Sigs (J), V);
+                  end case;
+               end;
+            end loop;
+         when Vcd_Integer32
+           | Vcd_Float64 =>
+            null;
       end case;
-      SigPtr.Driving_Value := Tempval;
-      Set_Effective_Value (SigPtr, Tempval);
-   end ii_vpi_put_value_bin_str_B1;
+   end Ii_Vpi_Put_Value;
 
-   procedure ii_vpi_put_value_bin_str_E8 (SigPtr : Ghdl_Signal_Ptr;
-                                          Value : Character)
+   procedure Ii_Vpi_Put_Value_Int (Info : Verilog_Wire_Info;
+                                   Len  : Ghdl_Index_Type;
+                                   Val : Unsigned_32)
    is
-      Tempval : Value_Union;
+      V : Unsigned_32;
+      Vec : Std_Ulogic_Array (0 .. Len - 1);
    begin
-      case Value is
-         when 'U' =>
-            Tempval.E8 := 0;
-         when 'X' =>
-            Tempval.E8 := 1;
-         when '0' =>
-            Tempval.E8 := 2;
-         when '1' =>
-            Tempval.E8 := 3;
-         when 'Z' =>
-            Tempval.E8 := 4;
-         when 'W' =>
-            Tempval.E8 := 5;
-         when 'L' =>
-            Tempval.E8 := 6;
-         when 'H' =>
-            Tempval.E8 := 7;
-         when '-' =>
-            Tempval.E8 := 8;
-         when others =>
-            dbgPut_Line("ii_vpi_put_value_bin_str_B8: "
-                        & "wrong character - signal wont be set");
-            return;
-      end case;
-      SigPtr.Driving_Value := Tempval;
-      Set_Effective_Value (SigPtr, Tempval);
-   end ii_vpi_put_value_bin_str_E8;
+      V := Val;
+      for J in reverse 0 .. Len - 1 loop
+         if (V mod 2) = 0 then
+            Vec (J) := '0';
+         else
+            Vec (J) := '1';
+         end if;
+         V := Shift_Right_Arithmetic (V, 1);
+      end loop;
+      Ii_Vpi_Put_Value (Info, Vec);
+   end Ii_Vpi_Put_Value_Int;
 
-
-   procedure ii_vpi_put_value_bin_str(Obj : VhpiHandleT;
-                                      ValueStr : Ghdl_C_String)
+   procedure Ii_Vpi_Put_Value_Bin_Str (Info : Verilog_Wire_Info;
+                                       Len : Ghdl_Index_Type;
+                                       Str : Ghdl_C_String)
    is
+      Slen : constant Natural := strlen (Str);
+      Soff : Integer;
+      Vec : Std_Ulogic_Array (0 .. Len - 1);
+      V : Std_Ulogic;
+   begin
+      Soff := Slen;
+      for J in reverse 0 .. Len - 1 loop
+         Soff := Soff - 1;
+         if Soff >= 0 then
+            case Str (Str'First + Soff) is
+               when 'u' | 'U' => V := 'U';
+               when 'x' | 'X' => V := 'X';
+               when '0'       => V := '0';
+               when '1'       => V := '1';
+               when 'z' | 'Z' => V := 'Z';
+               when 'w' | 'W' => V := 'W';
+               when 'l' | 'L' => V := 'L';
+               when 'h' | 'H' => V := 'H';
+               when '-'       => V := '-';
+               when others    => V := 'U';
+            end case;
+         else
+            V := '0';
+         end if;
+         Vec (J) := V;
+      end loop;
+      Ii_Vpi_Put_Value (Info, Vec);
+   end Ii_Vpi_Put_Value_Bin_Str;
+
+   -- vpiHandle vpi_put_value(vpiHandle obj, p_vpi_value value,
+   --                         p_vpi_time when, int flags)
+   function vpi_put_value (aObj : vpiHandle;
+                           aValue : p_vpi_value;
+                           aWhen : p_vpi_time;
+                           aFlags : integer)
+                         return vpiHandle
+   is
+      pragma Unreferenced (aWhen);
+      pragma Unreferenced (aFlags);
+
+      function To_Unsigned_32 is new Ada.Unchecked_Conversion
+        (Integer, Unsigned_32);
       Info : Verilog_Wire_Info;
       Len  : Ghdl_Index_Type;
    begin
+      Vpi_Trace ("vpi_put_value");
+      Reset_Error;
+
+      -- A very simple write procedure for VPI.
+      -- Basically, it accepts bin_str values and converts to appropriate
+      -- types (only std_logic and bit values and vectors).
+
+      -- It'll use Set_Effective_Value procedure to update signals
+
+      -- Ignoring aWhen and aFlags, for now.
+
       -- Check the Obj type.
       -- * The vpiHandle has a reference (field Ref) to a VhpiHandleT
       --   when it doesnt come from a callback.
-      case Vhpi_Get_Kind(Obj) is
+      case Vhpi_Get_Kind (aObj.Ref) is
          when VhpiPortDeclK
            | VhpiSigDeclK =>
             null;
          when others =>
-            return;
+            return null;
       end case;
 
       -- The following code segment was copied from the
       -- ii_vpi_get_value function.
       --  Get verilog compat info.
-      Get_Verilog_Wire (Obj, Info);
+      Get_Verilog_Wire (aObj.Ref, Info);
       if Info.Kind = Vcd_Bad then
-         return;
+         return null;
       end if;
 
       if Info.Irange = null then
          Len := 1;
       else
          Len := Info.Irange.I32.Len;
+         if Len = 0 then
+            --  No signal.
+            return null;
+         end if;
       end if;
 
       -- Step 1: convert vpi object to internal format.
@@ -613,63 +735,13 @@ package body Grt.Vpi is
       --         call (from grt-signals)
       -- Set_Effective_Value(sig_ptr, conv_value);
 
-
-      -- Took the skeleton from ii_vpi_get_value function
-      -- This point of the function must convert the string value to the
-      -- native ghdl format.
-      case Info.Kind is
-         when Vcd_Bad =>
-            return;
-         when Vcd_Bit
-           | Vcd_Bool
-           | Vcd_Bitvector =>
-            for J in 0 .. Len - 1 loop
-               ii_vpi_put_value_bin_str_B1
-                 (Info.Sigs (J), ValueStr (Integer (J + 1)));
-            end loop;
-         when Vcd_Stdlogic
-           | Vcd_Stdlogic_Vector =>
-            for J in 0 .. Len - 1 loop
-               ii_vpi_put_value_bin_str_E8
-                 (Info.Sigs (J), ValueStr (Integer (J + 1)));
-            end loop;
-         when Vcd_Integer32
-           | Vcd_Float64 =>
-            null;
-      end case;
-
-      -- Always return null, because this simulation kernel cannot send
-      -- a handle to the event back.
-      return;
-   end ii_vpi_put_value_bin_str;
-
-
-   -- vpiHandle vpi_put_value(vpiHandle obj, p_vpi_value value,
-   --                         p_vpi_time when, int flags)
-   function vpi_put_value (aObj: vpiHandle;
-                           aValue: p_vpi_value;
-                           aWhen: p_vpi_time;
-                           aFlags: integer)
-                         return vpiHandle
-   is
-      pragma Unreferenced (aWhen);
-      pragma Unreferenced (aFlags);
-   begin
-      -- A very simple write procedure for VPI.
-      -- Basically, it accepts bin_str values and converts to appropriate
-      -- types (only std_logic and bit values and vectors).
-
-      -- It'll use Set_Effective_Value procedure to update signals
-
-      -- Ignoring aWhen and aFlags, for now.
-
       -- Checks the format of aValue. Only vpiBinStrVal will be accepted
       --  for now.
       case aValue.Format is
          when vpiObjTypeVal =>
             dbgPut_Line ("vpi_put_value: vpiObjTypeVal");
          when vpiBinStrVal =>
-            ii_vpi_put_value_bin_str(aObj.Ref, aValue.Str);
+            Ii_Vpi_Put_Value_Bin_Str (Info, Len, aValue.Str);
             -- dbgPut_Line ("vpi_put_value: vpiBinStrVal");
          when vpiOctStrVal =>
             dbgPut_Line ("vpi_put_value: vpiNet, vpiOctStrVal");
@@ -680,7 +752,9 @@ package body Grt.Vpi is
          when vpiScalarVal =>
             dbgPut_Line ("vpi_put_value: vpiNet, vpiScalarVal");
          when vpiIntVal =>
-            dbgPut_Line ("vpi_put_value: vpiIntVal");
+            Ii_Vpi_Put_Value_Int
+              (Info, Len, To_Unsigned_32 (aValue.Integer_m));
+            -- dbgPut_Line ("vpi_put_value: vpiIntVal");
          when vpiRealVal =>
             dbgPut_Line("vpi_put_value: vpiRealVal");
          when vpiStringVal =>
@@ -703,71 +777,163 @@ package body Grt.Vpi is
    ------------------------------------------------------------------------
    -- void  vpi_get_time(vpiHandle obj, s_vpi_time*t);
    -- see IEEE 1364-2001, page xxx
-   Sim_Time : Std_Time;
    procedure vpi_get_time (Obj: vpiHandle; Time: p_vpi_time)
    is
-      pragma Unreferenced (Obj);
+      function To_Unsigned_64 is new Ada.Unchecked_Conversion
+        (Std_Time, Unsigned_64);
+      V : Unsigned_64;
    begin
-      --dbgPut_Line ("vpi_get_time");
-      Time.mType := vpiSimTime;
-      Time.mHigh := 0;
-      Time.mLow  := Integer (Sim_Time / 1000000);
+      Vpi_Trace ("vpi_get_time");
+
+      if Obj /= null
+        or else Time.mType /= vpiSimTime
+      then
+         dbgPut_Line ("vpi_get_time: unhandled");
+         return;
+      end if;
+
+      V := To_Unsigned_64 (Current_Time) / 1000;
+      Time.mHigh := Unsigned_32 (V / 2 ** 32);
+      Time.mLow  := Unsigned_32 (V mod 2 ** 32);
       Time.mReal := 0.0;
    end vpi_get_time;
 
    ------------------------------------------------------------------------
-   -- vpiHandle vpi_register_cb(p_cb_data data)
-   g_cbEndOfCompile : p_cb_data;
-   g_cbEndOfSimulation: p_cb_data;
-   --g_cbValueChange:     s_cb_data;
-   g_cbReadOnlySync:    p_cb_data;
 
-   type Vpi_Var_Type is record
-      Info : Verilog_Wire_Info;
-      Cb   : s_cb_data;
+   type Callback_List is record
+      First, Last : vpiHandle;
    end record;
 
-   package Vpi_Table is new Grt.Table
-     (Table_Component_Type => Vpi_Var_Type,
-      Table_Index_Type     => Vpi_Index_Type,
-      Table_Low_Bound      => 0,
-      Table_Initial        => 32);
+   procedure Append_Callback (List : in out Callback_List; Hand : vpiHandle) is
+   begin
+      if List.First = null then
+         List.First := Hand;
+      else
+         List.Last.Cb_Next := Hand;
+         Hand.Cb_Prev := List.Last;
+      end if;
+      List.Last := Hand;
+      Hand.Cb_Next := null;
+   end Append_Callback;
+
+   procedure Execute_Callback (Hand : vpiHandle)
+   is
+      Res : Integer;
+      pragma Unreferenced (Res);
+   begin
+      Res := Hand.Cb.Cb_Rtn (Hand.Cb'Access);
+   end Execute_Callback;
+
+   procedure Execute_Callback_List (List : Callback_List)
+   is
+      H, Next_H : vpiHandle;
+   begin
+      H := List.First;
+      while H /= null loop
+         Next_H := H.Cb_Next;
+         --  The callback may destroy h.
+         Execute_Callback (H);
+         H := Next_H;
+      end loop;
+   end Execute_Callback_List;
+
+   -- vpiHandle vpi_register_cb(p_cb_data data)
+   g_cbEndOfCompile      : Callback_List;
+   g_cbStartOfSimulation : Callback_List;
+   g_cbEndOfSimulation   : Callback_List;
+
+   function To_Address is new Ada.Unchecked_Conversion
+     (vpiHandle, System.Address);
+
+   function To_vpiHandle is new Ada.Unchecked_Conversion
+     (System.Address, vpiHandle);
+
+   procedure Call_Callback (Arg : System.Address)
+   is
+      Hand : constant vpiHandle := To_vpiHandle (Arg);
+   begin
+      Vpi_Trace ("vpi: call callback");
+      Execute_Callback (Hand);
+   end Call_Callback;
+
+   procedure Call_Valuechange_Callback (Arg : System.Address)
+   is
+      Hand : constant vpiHandle := To_vpiHandle (Arg);
+   begin
+      if Verilog_Wire_Event (Hand.Cb_Wire) then
+         --  Note: the call may remove H from the list, or even
+         --  destroy it.
+         --  However, we assume it doesn't remove the next callback...
+         Vpi_Trace ("vpi: call valuechange cb");
+         Execute_Callback (Hand);
+      end if;
+   end Call_Valuechange_Callback;
+
+   procedure Resched_Callback (Arg : System.Address)
+   is
+      Hand : constant vpiHandle := To_vpiHandle (Arg);
+   begin
+      case Hand.Cb.Reason is
+         when cbReadOnlySynch =>
+            Register_Callback
+              (Cb_End_Of_Time_Step, Hand.Cb_Handle, Oneshot,
+               Call_Callback'Access, Arg);
+         when cbReadWriteSynch =>
+            Register_Callback
+              (Cb_Last_Known_Delta, Hand.Cb_Handle, Oneshot,
+               Call_Callback'Access, Arg);
+         when others =>
+            raise Program_Error;
+      end case;
+   end Resched_Callback;
 
    function vpi_register_cb (Data : p_cb_data) return vpiHandle
    is
-      Res : p_cb_data := null;
+      Res : vpiHandle;
+      T : Std_Time;
    begin
-      --dbgPut_Line ("vpi_register_cb");
+      Vpi_Trace ("vpi_register_cb");
+
+      Res := new struct_vpiHandle (vpiCallback);
+      Res.Cb := Data.all;
+
       case Data.Reason is
          when cbEndOfCompile =>
-            Res := new s_cb_data'(Data.all);
-            g_cbEndOfCompile := Res;
-            Sim_Time:= 0;
+            Append_Callback (g_cbEndOfCompile, Res);
+         when cbStartOfSimulation =>
+            Append_Callback (g_cbStartOfSimulation, Res);
          when cbEndOfSimulation =>
-            Res := new s_cb_data'(Data.all);
-            g_cbEndOfSimulation := Res;
+            Append_Callback (g_cbEndOfSimulation, Res);
          when cbValueChange =>
-            declare
-               N : Vpi_Index_Type;
-            begin
-               --g_cbValueChange:=     aData.all;
-               Vpi_Table.Increment_Last;
-               N := Vpi_Table.Last;
-               Vpi_Table.Table (N).Cb := Data.all;
-               Get_Verilog_Wire (Data.Obj.Ref, Vpi_Table.Table (N).Info);
-            end;
-         when cbReadOnlySynch=>
-            Res := new s_cb_data'(Data.all);
-            g_cbReadOnlySync := Res;
-         when others=>
-            dbgPut_Line ("vpi_register_cb: unknwon reason");
+            Get_Verilog_Wire (Data.Obj.Ref, Res.Cb_Wire);
+            Register_Callback
+              (Cb_Signals_Updated, Res.Cb_Handle, Repeat,
+               Call_Valuechange_Callback'Access, To_Address (Res));
+         when cbReadOnlySynch
+           | cbReadWriteSynch =>
+            T := Vpi_Time_To_Time (Data.Time.all);
+            if T = 0 then
+               Resched_Callback (To_Address (Res));
+            else
+               Register_Callback_At
+                 (Cb_After_Delay, Res.Cb_Handle, Current_Time + T,
+                  Resched_Callback'Access, To_Address (Res));
+            end if;
+         when cbAfterDelay =>
+            T := Vpi_Time_To_Time (Data.Time.all);
+            Register_Callback_At
+              (Cb_After_Delay, Res.Cb_Handle, Current_Time + T,
+               Call_Callback'Access, To_Address (Res));
+         when cbNextSimTime =>
+            Register_Callback
+              (Cb_Next_Time_Step, Res.Cb_Handle, Repeat,
+               Call_Callback'Access, To_Address (Res));
+         when others =>
+            dbgPut_Line ("vpi_register_cb: unknown reason");
+            Free (Res);
+            return null;
       end case;
-      if Res /= null then
-         return new struct_vpiHandle'(mType => vpiCallback,
-                                      Cb => Res);
-      else
-         return null;
-      end if;
+      return Res;
    end vpi_register_cb;
 
 -------------------------------------------------------------------------------
@@ -779,26 +945,142 @@ package body Grt.Vpi is
    is
       pragma Unreferenced (aRef);
    begin
-      return 0;
+      return 1;
    end vpi_free_object;
 
    -- int vpi_get_vlog_info(p_vpi_vlog_info vlog_info_p)
-   function vpi_get_vlog_info (aVlog_info_p: System.Address) return integer
-   is
-      pragma Unreferenced (aVlog_info_p);
+   function vpi_get_vlog_info (info : p_vpi_vlog_info) return integer is
    begin
+      Vpi_Trace ("vpi_get_vlog_info");
+
+      info.all := (Argc => 0,
+                   Argv => Null_Address,
+                   Product => To_Ghdl_C_String (Product'Address),
+                   Version => To_Ghdl_C_String (Version'Address));
       return 0;
    end vpi_get_vlog_info;
 
    -- vpiHandle vpi_handle_by_index(vpiHandle ref, int index)
-   function vpi_handle_by_index(aRef: vpiHandle; aIndex: integer)
-                               return vpiHandle
+   function vpi_handle_by_index (aRef: vpiHandle; aIndex: integer)
+                                return vpiHandle
    is
       pragma Unreferenced (aRef);
       pragma Unreferenced (aIndex);
    begin
       return null;
    end vpi_handle_by_index;
+
+   --  Return True iff L and R are equal.  L must not have an element set to
+   --  NUL.
+   function Strcmp (L : String; R : Ghdl_C_String) return Boolean is
+   begin
+      if L'Last < L'First - 1 then
+         --  Handle null string.
+         return R (1) = NUL;
+      end if;
+
+      for I in L'Range loop
+         if L (I) = NUL then
+            --  NUL not allowed in L.
+            return False;
+         end if;
+         if L (I) /= R (I - L'First + 1) then
+            return False;
+         end if;
+      end loop;
+
+      --  R is NUL terminated.
+      return R (L'Length + 1) = NUL;
+   end Strcmp;
+
+   procedure Find_By_Name (Scope : VhpiHandleT;
+                           Rel : VhpiOneToManyT;
+                           Name : String;
+                           Res : out VhpiHandleT;
+                           Err : out AvhpiErrorT)
+   is
+      It : VhpiHandleT;
+      El_Name : Ghdl_C_String;
+   begin
+      Vhpi_Iterator (Rel, Scope, It, Err);
+      if Err /= AvhpiErrorOk then
+         return;
+      end if;
+
+      loop
+         Vhpi_Scan (It, Res, Err);
+
+         --  Either a real error or end of iterator.
+         exit when Err /= AvhpiErrorOk;
+
+         El_Name := Avhpi_Get_Base_Name (Res);
+         exit when Strcmp (Name , El_Name);
+      end loop;
+   end Find_By_Name;
+
+   function vpi_handle_by_name (Name : Ghdl_C_String; Scope : vpiHandle)
+                               return vpiHandle
+   is
+      B, E : Natural;
+      Base, El : VhpiHandleT;
+      Err : AvhpiErrorT;
+      Prop : Integer;
+   begin
+      Vpi_Trace ("vpi_handle_by_name");
+
+      --  Extract the start point.
+      if Scope = null then
+         Get_Root_Scope (Base);
+      else
+         Base := Scope.Ref;
+      end if;
+
+      B := Name'First;
+
+      --  Iterate on each part of Name.
+      loop
+         exit when Name (B) = NUL;
+
+         --  Extract the next part of the name.
+         declare
+            C : Character;
+         begin
+            E := B;
+            loop
+               C := Name (E + 1);
+               exit when C = NUL or C = '.';
+               E := E + 1;
+            end loop;
+         end;
+
+         --  Find name in Base, first as a decl, then as a sub-region.
+         Find_By_Name (Base, VhpiDecls, Name (B .. E), El, Err);
+         if Err /= AvhpiErrorOk then
+            Find_By_Name (Base, VhpiInternalRegions, Name (B .. E), El, Err);
+         end if;
+
+         if Err = AvhpiErrorOk then
+            --  Found!
+            Base := El;
+         else
+            --  Not found.
+            return null;
+         end if;
+
+         --  Next path component.
+         B := E + 1;
+         exit when Name (B) = NUL;
+         pragma Assert (Name (B) = '.');
+         B := B + 1;
+      end loop;
+
+      Prop := Vhpi_Handle_To_Vpi_Prop (Base);
+      if Prop /= vpiUndefined then
+         return Build_vpiHandle (Base, Prop);
+      else
+         return null;
+      end if;
+   end vpi_handle_by_name;
 
    -- unsigned int vpi_mcd_close(unsigned int mcd)
    function vpi_mcd_close (Mcd: integer) return integer
@@ -829,15 +1111,28 @@ package body Grt.Vpi is
    is
       pragma Unreferenced (aSs);
    begin
-      null;
+      Vpi_Trace ("vpi_register_systf");
    end vpi_register_systf;
 
    -- int vpi_remove_cb(vpiHandle ref)
    function vpi_remove_cb (Ref : vpiHandle) return Integer
    is
-      pragma Unreferenced (Ref);
+      Ref_Copy : vpiHandle;
    begin
-      return 0;
+      Vpi_Trace ("vpi_remove_cb");
+
+      case Ref.Cb.Reason is
+         when cbValueChange =>
+            Delete_Callback (Ref.Cb_Handle);
+         when cbReadWriteSynch
+           | cbReadOnlySynch =>
+            Delete_Callback (Ref.Cb_Handle);
+         when others =>
+            return 0;
+      end case;
+      Ref_Copy := Ref;
+      Free (Ref_Copy);
+      return 1;
    end vpi_remove_cb;
 
    -- void vpi_vprintf(const char*fmt, va_list ap)
@@ -856,7 +1151,54 @@ package body Grt.Vpi is
    --    vpi_mcd_fgetc
    --    vpi_sim_vcontrol
    --    vpi_chk_error
-   --    pi_handle_by_name
+   --    vpi_handle_by_name
+
+   Default_Message : constant String := "(no error message)" & NUL;
+   Unknown_File : constant String := "(no file)" & NUL;
+
+   Err_Message : Ghdl_C_String := To_Ghdl_C_String (Default_Message'Address);
+   Err_Code : Ghdl_C_String := null;
+   Err_File : Ghdl_C_String := To_Ghdl_C_String (Unknown_File'Address);
+   Err_Line : Integer := 0;
+   Err_Status : Integer := 0;
+
+   procedure Reset_Error is
+   begin
+      Err_Message := To_Ghdl_C_String (Default_Message'Address);
+      Err_Code := null;
+      Err_File := To_Ghdl_C_String (Unknown_File'Address);
+      Err_Line := 0;
+      Err_Status := 0;
+   end Reset_Error;
+
+   function vpi_chk_error (Info : p_vpi_error_info) return Integer is
+   begin
+      if Info /= null then
+         Info.all := (State => vpiRun,
+                      Level => vpiError,
+                      Message => Err_Message,
+                      Product => To_Ghdl_C_String (Product'Address),
+                      Code => Err_Code,
+                      File => Err_File,
+                      Line => Err_Line);
+      end if;
+      return Err_Status;
+   end vpi_chk_error;
+
+   function vpi_control (Op : Integer; Status : Integer) return Integer
+   is
+      pragma Unreferenced (Status);
+   begin
+      Vpi_Trace ("vpi_control");
+      case Op is
+         when vpiFinish
+           | vpiStop =>
+            Options.Break_Simulation := True;
+            return 1;
+         when others =>
+            return 0;
+      end case;
+   end vpi_control;
 
 ------------------------------------------------------------------------------
 -- * * *   G H D L   h o o k s   * * * * * * * * * * * * * * * * * * * * * * *
@@ -880,6 +1222,9 @@ package body Grt.Vpi is
          Vpi_Filename (1 .. Opt'Length - 6) := Opt (F + 6 .. Opt'Last);
          Vpi_Filename (Vpi_Filename'Last) := NUL;
          return True;
+      elsif Opt = "--vpi-trace" then
+         Flag_Trace := True;
+         return True;
       else
          return False;
       end if;
@@ -898,24 +1243,15 @@ package body Grt.Vpi is
    function LoadVpiModule (Filename: Address) return Integer;
    pragma Import (C, LoadVpiModule, "loadVpiModule");
 
-
    procedure Vpi_Init
    is
    begin
-      Sim_Time:= 0;
-
-      --g_cbEndOfCompile.mCb_rtn:= null;
-      --g_cbEndOfSimulation.mCb_rtn:= null;
-      --g_cbValueChange.mCb_rtn:= null;
-
       if Vpi_Filename /= null then
          if LoadVpiModule (Vpi_Filename.all'Address) /= 0 then
             Error ("cannot load VPI module");
          end if;
       end if;
    end Vpi_Init;
-
-   procedure Vpi_Cycle;
 
    ------------------------------------------------------------------------
    --  Called after elaboration.
@@ -929,36 +1265,9 @@ package body Grt.Vpi is
       end if;
 
       Grt.Rtis_Types.Search_Types_RTI;
-      Register_Cycle_Hook (Vpi_Cycle'Access);
-      if g_cbEndOfCompile /= null then
-         Res := g_cbEndOfCompile.Cb_Rtn.all (g_cbEndOfCompile);
-      end if;
+      Execute_Callback_List (g_cbEndOfCompile);
+      Execute_Callback_List (g_cbStartOfSimulation);
    end Vpi_Start;
-
-   ------------------------------------------------------------------------
-   --  Called before each non delta cycle.
-   procedure Vpi_Cycle
-   is
-      Res : Integer;
-      pragma Unreferenced (Res);
-   begin
-      if g_cbReadOnlySync /= null
-        and then g_cbReadOnlySync.Time.mLow < Integer (Sim_Time / 1_000_000)
-      then
-         Res := g_cbReadOnlySync.Cb_Rtn.all (g_cbReadOnlySync);
-      end if;
-
-      for I in Vpi_Table.First .. Vpi_Table.Last loop
-         if Verilog_Wire_Changed (Vpi_Table.Table (I).Info, Sim_Time) then
-            Res := Vpi_Table.Table (I).Cb.Cb_Rtn.all
-              (To_p_cb_data (Vpi_Table.Table (I).Cb'Address));
-         end if;
-      end loop;
-
-      if Current_Time /= Std_Time'last then
-         Sim_Time:= Current_Time;
-      end if;
-   end Vpi_Cycle;
 
    ------------------------------------------------------------------------
    --  Called at the end of the simulation.
@@ -967,9 +1276,7 @@ package body Grt.Vpi is
       Res : Integer;
       pragma Unreferenced (Res);
    begin
-      if g_cbEndOfSimulation /= null then
-         Res := g_cbEndOfSimulation.Cb_Rtn.all (g_cbEndOfSimulation);
-      end if;
+      Execute_Callback_List (g_cbEndOfSimulation);
    end Vpi_End;
 
    Vpi_Hooks : aliased constant Hooks_Type :=

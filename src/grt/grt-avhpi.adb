@@ -27,15 +27,21 @@ with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 
 package body Grt.Avhpi is
-   procedure Get_Root_Inst (Res : out VhpiHandleT)
-   is
+   procedure Get_Root_Inst (Res : out VhpiHandleT) is
    begin
       Res := (Kind => VhpiRootInstK,
               Ctxt => Get_Top_Context);
    end Get_Root_Inst;
 
+   procedure Get_Root_Scope (Res : out VhpiHandleT) is
+   begin
+      Res := (Kind => AvhpiRootScopeK,
+              Ctxt => Null_Context);
+   end Get_Root_Scope;
+
    procedure Get_Package_Inst (Res : out VhpiHandleT) is
    begin
+      --  Ctxt is the list of instantiated packages.
       Res := (Kind => VhpiIteratorK,
               Ctxt => (Base => Null_Address,
                        Block => To_Ghdl_Rti_Access (Ghdl_Rti_Top'Address)),
@@ -63,8 +69,7 @@ package body Grt.Avhpi is
    procedure Vhpi_Iterator (Rel : VhpiOneToManyT;
                             Ref : VhpiHandleT;
                             Res : out VhpiHandleT;
-                            Error : out AvhpiErrorT)
-   is
+                            Error : out AvhpiErrorT) is
    begin
       --  Default value in case of success.
       Res := (Kind => VhpiIteratorK,
@@ -88,6 +93,14 @@ package body Grt.Avhpi is
                   return;
                when VhpiCompInstStmtK =>
                   Get_Instance_Context (Ref.Inst, Ref.Ctxt, Res.Ctxt);
+                  return;
+               when AvhpiRootScopeK =>
+                  Res := (Kind => AvhpiRootScopeIteratorK,
+                          Ctxt => Ref.Ctxt,
+                          Rel => Rel,
+                          It_Cur => 0,
+                          It2 => 0,
+                          Max2 => 0);
                   return;
                when others =>
                   null;
@@ -337,6 +350,19 @@ package body Grt.Avhpi is
       end loop;
    end Vhpi_Scan_Internal_Regions;
 
+   procedure Vhpi_Scan_Root_Design (Iterator : in out VhpiHandleT;
+                                    Res : out VhpiHandleT;
+                                    Error : out AvhpiErrorT) is
+   begin
+      if Iterator.It_Cur = 0 then
+         Get_Root_Inst (Res);
+         Iterator.It_Cur := 1;
+         Error := AvhpiErrorOk;
+      else
+         Error := AvhpiErrorIteratorEnd;
+      end if;
+   end Vhpi_Scan_Root_Design;
+
    procedure Rti_To_Handle (Rti : Ghdl_Rti_Access;
                             Ctxt : Rti_Context;
                             Res : out VhpiHandleT)
@@ -475,49 +501,55 @@ package body Grt.Avhpi is
       Error := AvhpiErrorIteratorEnd;
    end Vhpi_Scan_Decls;
 
+   procedure Vhpi_Scan_Pack_Insts (Iterator : in out VhpiHandleT;
+                                   Res : out VhpiHandleT;
+                                   Error : out AvhpiErrorT)
+   is
+      Blk : Ghdl_Rtin_Block_Acc;
+   begin
+      Blk := To_Ghdl_Rtin_Block_Acc (Iterator.Ctxt.Block);
+      if Iterator.It_Cur >= Blk.Nbr_Child then
+         Error := AvhpiErrorIteratorEnd;
+         return;
+      end if;
+      Res := (Kind => VhpiPackInstK,
+              Ctxt => (Base => Null_Address,
+                       Block => Blk.Children (Iterator.It_Cur)));
+      Iterator.It_Cur := Iterator.It_Cur + 1;
+      Error := AvhpiErrorOk;
+   end Vhpi_Scan_Pack_Insts;
+
    procedure Vhpi_Scan (Iterator : in out VhpiHandleT;
                         Res : out VhpiHandleT;
                         Error : out AvhpiErrorT)
    is
    begin
-      if Iterator.Kind = AvhpiNameIteratorK then
-         case Iterator.N_Type.Kind is
-            when Ghdl_Rtik_Subtype_Array =>
-               Vhpi_Scan_Indexed_Name (Iterator, Res, Error);
-            when others =>
-               Error := AvhpiErrorHandle;
-               Res := Null_Handle;
-         end case;
-         return;
-      elsif Iterator.Kind /= VhpiIteratorK then
-         Error := AvhpiErrorHandle;
-         Res := Null_Handle;
-         return;
-      end if;
-
-      case Iterator.Rel is
-         when VhpiPackInsts =>
-            declare
-               Blk : Ghdl_Rtin_Block_Acc;
-            begin
-               Blk := To_Ghdl_Rtin_Block_Acc (Iterator.Ctxt.Block);
-               if Iterator.It_Cur >= Blk.Nbr_Child then
-                  Error := AvhpiErrorIteratorEnd;
-                  return;
-               end if;
-               Res := (Kind => VhpiPackInstK,
-                       Ctxt => (Base => Null_Address,
-                                Block => Blk.Children (Iterator.It_Cur)));
-               Iterator.It_Cur := Iterator.It_Cur + 1;
-               Error := AvhpiErrorOk;
-            end;
-         when VhpiInternalRegions =>
-            Vhpi_Scan_Internal_Regions (Iterator, Res, Error);
-         when VhpiDecls =>
-            Vhpi_Scan_Decls (Iterator, Res, Error);
+      case Iterator.Kind is
+         when AvhpiNameIteratorK =>
+            case Iterator.N_Type.Kind is
+               when Ghdl_Rtik_Subtype_Array =>
+                  Vhpi_Scan_Indexed_Name (Iterator, Res, Error);
+               when others =>
+                  Error := AvhpiErrorHandle;
+                  Res := Null_Handle;
+            end case;
+         when VhpiIteratorK =>
+            case Iterator.Rel is
+               when VhpiPackInsts =>
+                  Vhpi_Scan_Pack_Insts (Iterator, Res, Error);
+               when VhpiInternalRegions =>
+                  Vhpi_Scan_Internal_Regions (Iterator, Res, Error);
+               when VhpiDecls =>
+                  Vhpi_Scan_Decls (Iterator, Res, Error);
+               when others =>
+                  Res := Null_Handle;
+                  Error := AvhpiErrorNotImplemented;
+            end case;
+         when AvhpiRootScopeIteratorK =>
+            Vhpi_Scan_Root_Design (Iterator, Res, Error);
          when others =>
+            Error := AvhpiErrorHandle;
             Res := Null_Handle;
-            Error := AvhpiErrorNotImplemented;
       end case;
    end Vhpi_Scan;
 
@@ -539,7 +571,9 @@ package body Grt.Avhpi is
             declare
                Blk : Ghdl_Rtin_Block_Acc;
             begin
+               --  Get top architecture.
                Blk := To_Ghdl_Rtin_Block_Acc (Obj.Ctxt.Block);
+               --  From architecture to entity.
                Blk := To_Ghdl_Rtin_Block_Acc (Blk.Parent);
                return Blk.Name;
             end;
@@ -1240,5 +1274,3 @@ package body Grt.Avhpi is
       return AvhpiErrorOk;
    end Vhpi_Put_Value;
 end Grt.Avhpi;
-
-

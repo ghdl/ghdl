@@ -21,9 +21,12 @@
 --              Icarus Verilog Interactive (IVI) simulator GUI
 
 with System; use System;
+with Interfaces; use Interfaces;
 with Ada.Unchecked_Conversion;
 with Grt.Types; use Grt.Types;
 with Grt.Avhpi; use Grt.Avhpi;
+with Grt.Vcd;
+with Grt.Callbacks;
 
 package Grt.Vpi is
 
@@ -41,6 +44,10 @@ package Grt.Vpi is
    vpiInternalScope: constant integer := 92;
    vpiLeftRange:     constant integer := 79;
    vpiRightRange:    constant integer := 83;
+
+   vpiStop   : constant := 66;
+   vpiFinish : constant := 67;
+   vpiReset  : constant := 68;
 
    --  Additionnal constants.
    vpiCallback :     constant Integer := 200;
@@ -64,12 +71,28 @@ package Grt.Vpi is
    vpiSimTime:       constant integer :=  2;
 
    -- codes for the reason tag of cb_data structure
-   cbValueChange:    constant integer:= 1;
-   cbReadOnlySynch:  constant integer:= 7;
-   cbEndOfCompile:   constant integer:= 10;
-   cbEndOfSimulation:constant integer:= 12;
+   cbValueChange       : constant := 1;
+   cbReadWriteSynch    : constant := 6;
+   cbReadOnlySynch     : constant := 7;
+   cbNextSimTime       : constant := 8;
+   cbAfterDelay        : constant := 9;
+   cbEndOfCompile      : constant := 10;
+   cbStartOfSimulation : constant := 11;
+   cbEndOfSimulation   : constant := 12;
 
-   type struct_vpiHandle (mType : Integer := vpiUndefined);
+   --  Error types.
+   vpiCompile : constant := 1;
+   vpiPLI     : constant := 2;
+   vpiRun     : constant := 3;
+
+   --  Error severity levels.
+   vpiNotive   : constant := 1;
+   vpiWarning  : constant := 2;
+   vpiError    : constant := 3;
+   vpiSystem   : constant := 4;
+   vpiInternal : constant := 5;
+
+   type struct_vpiHandle (<>) is private;
    type vpiHandle is access struct_vpiHandle;
 
    -- typedef struct t_vpi_time {
@@ -80,10 +103,11 @@ package Grt.Vpi is
    -- } s_vpi_time, *p_vpi_time;
    type s_vpi_time is record
       mType : Integer;
-      mHigh : Integer; -- this should be unsigned
-      mLow :  Integer; -- this should be unsigned
-      mReal : Float;   -- this should be double
+      mHigh : Unsigned_32;
+      mLow :  Unsigned_32;
+      mReal : Long_Float;
    end record;
+   pragma Convention (C, s_vpi_time);
    type p_vpi_time is access s_vpi_time;
 
    -- typedef struct t_vpi_value
@@ -118,7 +142,8 @@ package Grt.Vpi is
          when others =>
             null;
          end case;
-      end record;
+   end record;
+   --  No use of convention C, as there is no direct equivalent in the norm.
    type p_vpi_value is access s_vpi_value;
 
    --typedef struct t_cb_data {
@@ -128,11 +153,12 @@ package Grt.Vpi is
    --      p_vpi_time time;
    --      p_vpi_value value;
    --      int index;
-   --      char*user_data;
+   --      char *user_data;
    --} s_cb_data, *p_cb_data;
    type s_cb_data;
 
    type p_cb_data is access all s_cb_data;
+   pragma Convention (C, p_cb_data);
    function To_p_cb_data is new Ada.Unchecked_Conversion
      (Source => Address, Target => p_cb_data);
 
@@ -148,15 +174,7 @@ package Grt.Vpi is
       Index : Integer;
       User_Data : Address;
    end record;
-
-   type struct_vpiHandle (mType : Integer := vpiUndefined) is record
-      case mType is
-         when vpiCallback =>
-            Cb : p_cb_data;
-         when others =>
-            Ref   : VhpiHandleT;
-      end case;
-   end record;
+   pragma Convention (C, s_cb_data);
 
    -- vpiHandle  vpi_iterate(int type, vpiHandle ref)
    function vpi_iterate (aType : Integer; Ref : vpiHandle) return vpiHandle;
@@ -200,14 +218,30 @@ package Grt.Vpi is
    function vpi_free_object(aRef: vpiHandle) return integer;
    pragma Export (C, vpi_free_object, "vpi_free_object");
 
+   type s_vpi_vlog_info is record
+      Argc : Integer;
+      Argv : System.Address;
+      Product : Ghdl_C_String;
+      Version : Ghdl_C_String;
+   end record;
+   pragma Convention (C, s_vpi_vlog_info);
+
+   type p_vpi_vlog_info is access all s_vpi_vlog_info;
+   pragma Convention (C, p_vpi_vlog_info);
+
    -- int vpi_get_vlog_info(p_vpi_vlog_info vlog_info_p)
-   function vpi_get_vlog_info(aVlog_info_p: System.Address) return integer;
+   function vpi_get_vlog_info(info : p_vpi_vlog_info) return integer;
    pragma Export (C, vpi_get_vlog_info, "vpi_get_vlog_info");
+
 
    -- vpiHandle vpi_handle_by_index(vpiHandle ref, int index)
    function vpi_handle_by_index(aRef: vpiHandle; aIndex: integer)
                                return vpiHandle;
    pragma Export (C, vpi_handle_by_index, "vpi_handle_by_index");
+
+   function vpi_handle_by_name(Name : Ghdl_C_String; Scope : vpiHandle)
+                              return vpiHandle;
+   pragma Export (C, vpi_handle_by_name, "vpi_handle_by_name");
 
    -- unsigned int vpi_mcd_close(unsigned int mcd)
    function vpi_mcd_close (Mcd : Integer) return Integer;
@@ -242,11 +276,49 @@ package Grt.Vpi is
    procedure vpi_vprintf (Fmt: Address; Ap: Address);
    pragma Export (C, vpi_vprintf, "vpi_vprintf");
 
+   --  typedef struct t_vpi_error_info
+   --  {
+   --      int32_t state;
+   --      int32_t level;
+   --      char *message;
+   --      char *product;
+   --      char *code;
+   --      char *file;
+   --      int32_t line;
+   --  } s_vpi_error_info, *p_vpi_error_info;
+   type s_vpi_error_info is record
+      State : Integer;
+      Level : Integer;
+      Message : Ghdl_C_String;
+      Product : Ghdl_C_String;
+      Code : Ghdl_C_String;
+      File : Ghdl_C_String;
+      Line : Integer;
+   end record;
+   type p_vpi_error_info is access all s_vpi_error_info;
+
+   function vpi_chk_error (Info : p_vpi_error_info) return Integer;
+   pragma Export (C, vpi_chk_error);
+
+   function vpi_control (Op : Integer; Status : Integer) return Integer;
+   pragma Export (C, vpi_control);
+
 -------------------------------------------------------------------------------
 -- * * *   G H D L   h o o k s   * * * * * * * * * * * * * * * * * * * * * * *
 -------------------------------------------------------------------------------
 
    procedure Register;
 
+private
+   type struct_vpiHandle (mType : Integer) is record
+      case mType is
+         when vpiCallback =>
+            Cb : aliased s_cb_data;
+            Cb_Prev, Cb_Next : vpiHandle;
+            Cb_Wire : Grt.Vcd.Verilog_Wire_Info;
+            Cb_Handle : Callbacks.Callback_Handle;
+         when others =>
+            Ref : VhpiHandleT;
+      end case;
+   end record;
 end Grt.Vpi;
-
