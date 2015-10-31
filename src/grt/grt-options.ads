@@ -121,6 +121,9 @@ package Grt.Options is
    --  Set by --stop-delta=XXX to stop the simulation after XXX delta cycles.
    Stop_Delta : Natural := 5000;
 
+   --  Set by --stop-time=X to stop the simulation at time X.
+   Stop_Time : Std_Time := Std_Time'Last;
+
    --  Set by --no-run
    --  If set, do not simulate, only elaborate.
    Flag_No_Run : Boolean := False;
