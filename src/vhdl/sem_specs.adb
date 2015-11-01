@@ -363,6 +363,12 @@ package body Sem_Specs is
 
          Set_Foreign_Flag (Decl, True);
 
+         --  Use 'standard' convention call for foreign procedures, so as a
+         --  consequence they cannot be suspended.
+         if Get_Kind (Decl) = Iir_Kind_Procedure_Declaration then
+            Set_Suspend_Flag (Decl, False);
+         end if;
+
          declare
             use Back_End;
          begin
