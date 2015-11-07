@@ -164,6 +164,19 @@ package Sem_Expr is
       Low : out Iir;
       High : out Iir);
 
+   --  Check that the values of CHOICE_CHAIN are a continuous range, and
+   --  extract the lower LOW and upper HIGH bound (useful to create the
+   --  corresponding subtype).  The values must be of type SUB_TYPE, and if
+   --  IS_SUB_RANGE True, they must be within SUB_TYPE.
+   --  The choices must be locally static.
+   procedure Sem_Check_Continuous_Choices
+     (Choice_Chain : Iir;
+      Sub_Type : Iir;
+      Is_Sub_Range : Boolean;
+      Loc : Location_Type;
+      Low : out Iir;
+      High : out Iir);
+
    --  Semantize CHOICE_LIST when the choice expression SEL is of a
    --  one-dimensional character array type.
    procedure Sem_String_Choices_Range (Choice_Chain : Iir; Sel : Iir);

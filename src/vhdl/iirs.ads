@@ -401,6 +401,10 @@ package Iirs is
    --   Get/Set_Actual_Type (Field3)
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
+   --   Must be Locally unless there is an error on one choice.
+   --   Get/Set_Choice_Staticness (State2)
+   --
+   -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Individual_Association_Chain (Field4)
    --
    -- Only for Iir_Kind_Association_Element_Package:

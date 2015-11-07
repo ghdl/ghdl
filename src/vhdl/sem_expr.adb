@@ -2310,6 +2310,274 @@ package body Sem_Expr is
       end if;
    end Sem_String_Choices_Range;
 
+   procedure Sem_Check_Continuous_Choices
+     (Choice_Chain : Iir;
+      Sub_Type : Iir;
+      Is_Sub_Range : Boolean;
+      Loc : Location_Type;
+      Low : out Iir;
+      High : out Iir)
+   is
+      --  Nodes that can appear.
+      subtype Iir_Kinds_Case_Choice is Iir_Kind range
+        Iir_Kind_Choice_By_Others ..
+        --Iir_Kind_Choice_By_Expression
+        Iir_Kind_Choice_By_Range;
+
+      --  Number of named choices.
+      Nbr_Named : Natural;
+
+      --  True if others choice is present.
+      Has_Others : Boolean;
+
+      --  True if SUB_TYPE has bounds.
+      Type_Has_Bounds : Boolean;
+
+      Arr : Iir_Array_Acc;
+      Index : Natural;
+      El : Iir;
+
+      --  Get low limit of ASSOC.
+      --  First, get the expression of the association, then the low limit.
+      --  ASSOC may be either association_by_range (in this case the low limit
+      --   is to be fetched), or association_by_expression (and the low limit
+      --   is the expression).
+      function Get_Low (Assoc : Iir) return Iir
+      is
+         Expr : Iir;
+      begin
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Choice_By_Expression =>
+               return Get_Choice_Expression (Assoc);
+            when Iir_Kind_Choice_By_Range =>
+               Expr := Get_Choice_Range (Assoc);
+               case Get_Kind (Expr) is
+                  when Iir_Kind_Range_Expression =>
+                     return Get_Low_Limit (Expr);
+                  when others =>
+                     return Expr;
+               end case;
+            when others =>
+               Error_Kind ("get_low", Assoc);
+         end case;
+      end Get_Low;
+
+      function Get_High (Assoc : Iir) return Iir
+      is
+         Expr : Iir;
+      begin
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Choice_By_Expression =>
+               return Get_Choice_Expression (Assoc);
+            when Iir_Kind_Choice_By_Range =>
+               Expr := Get_Choice_Range (Assoc);
+               case Get_Kind (Expr) is
+                  when Iir_Kind_Range_Expression =>
+                     return Get_High_Limit (Expr);
+                  when others =>
+                     return Expr;
+               end case;
+            when others =>
+               Error_Kind ("get_high", Assoc);
+         end case;
+      end Get_High;
+
+      --  Compare two elements of ARR.
+      --  Return true iff OP1 < OP2.
+      function Lt (Op1, Op2 : Natural) return Boolean is
+      begin
+         return
+           Eval_Pos (Get_Low (Arr (Op1))) < Eval_Pos (Get_Low (Arr (Op2)));
+      end Lt;
+
+      --  Swap two elements of ARR.
+      procedure Swap (From : Natural; To : Natural)
+      is
+         Tmp : Iir;
+      begin
+         Tmp := Arr (To);
+         Arr (To) := Arr (From);
+         Arr (From) := Tmp;
+      end Swap;
+
+      package Disc_Heap_Sort is new Heap_Sort (Lt => Lt, Swap => Swap);
+   begin
+      Low := Null_Iir;
+      High := Null_Iir;
+
+      --  Compute the number of elements, return early if a choice is not
+      --  static.
+      Nbr_Named := 0;
+      Has_Others := False;
+      El := Choice_Chain;
+      while El /= Null_Iir loop
+         case Iir_Kinds_Case_Choice (Get_Kind (El)) is
+            when Iir_Kind_Choice_By_Expression
+              | Iir_Kind_Choice_By_Range =>
+               pragma Assert (Get_Choice_Staticness (El) = Locally);
+               Nbr_Named := Nbr_Named + 1;
+            when Iir_Kind_Choice_By_Others =>
+               Has_Others := True;
+         end case;
+         El := Get_Chain (El);
+      end loop;
+
+      --  Set TYPE_HAS_BOUNDS
+      case Get_Kind (Sub_Type) is
+         when Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition
+           | Iir_Kind_Integer_Subtype_Definition =>
+            Type_Has_Bounds := True;
+         when Iir_Kind_Integer_Type_Definition =>
+            Type_Has_Bounds := False;
+         when others =>
+            Error_Kind ("sem_choice_range(3)", Sub_Type);
+      end case;
+
+      Arr := new Iir_Array (1 .. Nbr_Named);
+      Index := 0;
+
+      declare
+         procedure Add_Choice (Choice : Iir; A_Type : Iir)
+         is
+            Ok : Boolean;
+            Expr : Iir;
+         begin
+            Ok := True;
+            if Type_Has_Bounds
+              and then Get_Type_Staticness (A_Type) = Locally
+            then
+               if Get_Kind (Choice) = Iir_Kind_Choice_By_Range then
+                  Expr := Get_Choice_Range (Choice);
+                  if Get_Expr_Staticness (Expr) = Locally then
+                     Ok := Eval_Is_Range_In_Bound (Expr, A_Type, True);
+                  end if;
+               else
+                  Expr := Get_Choice_Expression (Choice);
+                  if Get_Expr_Staticness (Expr) = Locally then
+                     Ok := Eval_Is_In_Bound (Expr, A_Type);
+                  end if;
+               end if;
+               if not Ok then
+                  Error_Msg_Sem
+                    (Disp_Node (Expr) & " out of index range", Choice);
+               end if;
+            end if;
+            if Ok then
+               Index := Index + 1;
+               Arr (Index) := Choice;
+            end if;
+         end Add_Choice;
+      begin
+         --  Fill the array.
+         El := Choice_Chain;
+         while El /= Null_Iir loop
+            case Iir_Kinds_Case_Choice (Get_Kind (El)) is
+               when Iir_Kind_Choice_By_Expression
+                 | Iir_Kind_Choice_By_Range =>
+                  Add_Choice (El, Sub_Type);
+               when Iir_Kind_Choice_By_Others =>
+                  null;
+            end case;
+            El := Get_Chain (El);
+         end loop;
+      end;
+
+      --  Third:
+      --  Sort the list
+      Disc_Heap_Sort.Sort (Index);
+
+      --  Set low and high bounds.
+      if Index > 0 then
+         Low := Get_Low (Arr (1));
+         High := Get_High (Arr (Index));
+      else
+         Low := Null_Iir;
+         High := Null_Iir;
+      end if;
+
+      --  Fourth:
+      --  check for lacking choice (if no others)
+      --  check for overlapping choices
+      declare
+         --  Emit an error message for absence of choices in position L to H
+         --  of index type BT at location LOC.
+         procedure Error_No_Choice (Bt : Iir;
+                                    L, H : Iir_Int64;
+                                    Loc : Location_Type)
+         is
+         begin
+            if L = H then
+               Error_Msg_Sem ("no choice for " & Disp_Discrete (Bt, L), Loc);
+            else
+               Error_Msg_Sem
+                 ("no choices for " & Disp_Discrete (Bt, L)
+                     & " to " & Disp_Discrete (Bt, H), Loc);
+            end if;
+         end Error_No_Choice;
+
+         --  Lowest and highest bounds.
+         Lb, Hb : Iir;
+         Pos : Iir_Int64;
+         Pos_Max : Iir_Int64;
+         E_Pos : Iir_Int64;
+
+         Bt : constant Iir := Get_Base_Type (Sub_Type);
+      begin
+         if not Is_Sub_Range
+           and then Get_Type_Staticness (Sub_Type) = Locally
+           and then Type_Has_Bounds
+         then
+            Get_Low_High_Limit (Get_Range_Constraint (Sub_Type), Lb, Hb);
+         else
+            Lb := Low;
+            Hb := High;
+         end if;
+         if Lb = Null_Iir or else Hb = Null_Iir then
+            --  Return now in case of error.
+            Free (Arr);
+            return;
+         end if;
+         --  Checks all values between POS and POS_MAX are handled.
+         Pos := Eval_Pos (Lb);
+         Pos_Max := Eval_Pos (Hb);
+         if Pos > Pos_Max then
+            --  Null range.
+            Free (Arr);
+            return;
+         end if;
+         for I in 1 .. Index loop
+            E_Pos := Eval_Pos (Get_Low (Arr (I)));
+            if E_Pos > Pos_Max then
+               --  Choice out of bound, already handled.
+               Error_No_Choice (Bt, Pos, Pos_Max, Get_Location (Arr (I)));
+               --  Avoid other errors.
+               Pos := Pos_Max + 1;
+               exit;
+            end if;
+            if Pos < E_Pos and then not Has_Others then
+               Error_No_Choice (Bt, Pos, E_Pos - 1, Get_Location (Arr (I)));
+            elsif Pos > E_Pos then
+               if Pos + 1 = E_Pos then
+                  Error_Msg_Sem
+                    ("duplicate choice for " & Disp_Discrete (Bt, Pos),
+                     Arr (I));
+               else
+                  Error_Msg_Sem
+                    ("duplicate choices for " & Disp_Discrete (Bt, E_Pos)
+                     & " to " & Disp_Discrete (Bt, Pos), Arr (I));
+               end if;
+            end if;
+            Pos := Eval_Pos (Get_High (Arr (I))) + 1;
+         end loop;
+         if Pos /= Pos_Max + 1 and then not Has_Others then
+            Error_No_Choice (Bt, Pos, Pos_Max, Loc);
+         end if;
+      end;
+
+      Free (Arr);
+   end Sem_Check_Continuous_Choices;
+
    procedure Sem_Choices_Range
      (Choice_Chain : in out Iir;
       Sub_Type : Iir;
@@ -2330,11 +2598,6 @@ package body Sem_Expr is
 
       Has_Error : Boolean;
 
-      --  True if SUB_TYPE has bounds.
-      Type_Has_Bounds : Boolean;
-
-      Arr : Iir_Array_Acc;
-      Index : Natural;
       Pos_Max : Iir_Int64;
       El : Iir;
       Prev_El : Iir;
@@ -2435,81 +2698,6 @@ package body Sem_Expr is
          Set_Choice_Staticness (El, Get_Expr_Staticness (Expr));
          return True;
       end Sem_Simple_Choice;
-
-      --  Get low limit of ASSOC.
-      --  First, get the expression of the association, then the low limit.
-      --  ASSOC may be either association_by_range (in this case the low limit
-      --   is to be fetched), or association_by_expression (and the low limit
-      --   is the expression).
-      function Get_Low (Assoc : Iir) return Iir
-      is
-         Expr : Iir;
-      begin
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Choice_By_Expression =>
-               return Get_Choice_Expression (Assoc);
-            when Iir_Kind_Choice_By_Range =>
-               Expr := Get_Choice_Range (Assoc);
-               case Get_Kind (Expr) is
-                  when Iir_Kind_Range_Expression =>
-                     case Get_Direction (Expr) is
-                        when Iir_To =>
-                           return Get_Left_Limit (Expr);
-                        when Iir_Downto =>
-                           return Get_Right_Limit (Expr);
-                     end case;
-                  when others =>
-                     return Expr;
-               end case;
-            when others =>
-               Error_Kind ("get_low", Assoc);
-         end case;
-      end Get_Low;
-
-      function Get_High (Assoc : Iir) return Iir
-      is
-         Expr : Iir;
-      begin
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Choice_By_Expression =>
-               return Get_Choice_Expression (Assoc);
-            when Iir_Kind_Choice_By_Range =>
-               Expr := Get_Choice_Range (Assoc);
-               case Get_Kind (Expr) is
-                  when Iir_Kind_Range_Expression =>
-                     case Get_Direction (Expr) is
-                        when Iir_To =>
-                           return Get_Right_Limit (Expr);
-                        when Iir_Downto =>
-                           return Get_Left_Limit (Expr);
-                     end case;
-                  when others =>
-                     return Expr;
-               end case;
-            when others =>
-               Error_Kind ("get_high", Assoc);
-         end case;
-      end Get_High;
-
-      --  Compare two elements of ARR.
-      --  Return true iff OP1 < OP2.
-      function Lt (Op1, Op2 : Natural) return Boolean is
-      begin
-         return
-           Eval_Pos (Get_Low (Arr (Op1))) < Eval_Pos (Get_Low (Arr (Op2)));
-      end Lt;
-
-      --  Swap two elements of ARR.
-      procedure Swap (From : Natural; To : Natural)
-      is
-         Tmp : Iir;
-      begin
-         Tmp := Arr (To);
-         Arr (To) := Arr (From);
-         Arr (From) := Tmp;
-      end Swap;
-
-      package Disc_Heap_Sort is new Heap_Sort (Lt => Lt, Swap => Swap);
    begin
       Low := Null_Iir;
       High := Null_Iir;
@@ -2620,165 +2808,8 @@ package body Sem_Expr is
          return;
       end if;
 
-      --  Set TYPE_HAS_BOUNDS
-      case Get_Kind (Sub_Type) is
-         when Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Integer_Subtype_Definition =>
-            Type_Has_Bounds := True;
-         when Iir_Kind_Integer_Type_Definition =>
-            Type_Has_Bounds := False;
-         when others =>
-            Error_Kind ("sem_choice_range(3)", Sub_Type);
-      end case;
-
-      Arr := new Iir_Array (1 .. Nbr_Named);
-      Index := 0;
-
-      declare
-         procedure Add_Choice (Choice : Iir; A_Type : Iir)
-         is
-            Ok : Boolean;
-            Expr : Iir;
-         begin
-            Ok := True;
-            if Type_Has_Bounds
-              and then Get_Type_Staticness (A_Type) = Locally
-            then
-               if Get_Kind (Choice) = Iir_Kind_Choice_By_Range then
-                  Expr := Get_Choice_Range (Choice);
-                  if Get_Expr_Staticness (Expr) = Locally then
-                     Ok := Eval_Is_Range_In_Bound (Expr, A_Type, True);
-                  end if;
-               else
-                  Expr := Get_Choice_Expression (Choice);
-                  if Get_Expr_Staticness (Expr) = Locally then
-                     Ok := Eval_Is_In_Bound (Expr, A_Type);
-                  end if;
-               end if;
-               if not Ok then
-                  Error_Msg_Sem
-                    (Disp_Node (Expr) & " out of index range", Choice);
-               end if;
-            end if;
-            if Ok then
-               Index := Index + 1;
-               Arr (Index) := Choice;
-            end if;
-         end Add_Choice;
-      begin
-         --  Fill the array.
-         El := Choice_Chain;
-         while El /= Null_Iir loop
-            case Get_Kind (El) is
-               when Iir_Kind_Choice_By_None =>
-                  --  Only named associations are considered.
-                  raise Internal_Error;
-               when Iir_Kind_Choice_By_Expression
-                 | Iir_Kind_Choice_By_Range =>
-                  Add_Choice (El, Sub_Type);
-               when Iir_Kind_Choice_By_Others =>
-                  null;
-               when others =>
-                  Error_Kind ("sem_choices_range(2)", El);
-            end case;
-            El := Get_Chain (El);
-         end loop;
-      end;
-
-      --  Third:
-      --  Sort the list
-      Disc_Heap_Sort.Sort (Index);
-
-      --  Set low and high bounds.
-      if Index > 0 then
-         Low := Get_Low (Arr (1));
-         High := Get_High (Arr (Index));
-      else
-         Low := Null_Iir;
-         High := Null_Iir;
-      end if;
-
-      --  Fourth:
-      --  check for lacking choice (if no others)
-      --  check for overlapping choices
-      declare
-         --  Emit an error message for absence of choices in position L to H
-         --  of index type BT at location LOC.
-         procedure Error_No_Choice (Bt : Iir;
-                                    L, H : Iir_Int64;
-                                    Loc : Location_Type)
-         is
-         begin
-            if L = H then
-               Error_Msg_Sem ("no choice for " & Disp_Discrete (Bt, L), Loc);
-            else
-               Error_Msg_Sem
-                 ("no choices for " & Disp_Discrete (Bt, L)
-                     & " to " & Disp_Discrete (Bt, H), Loc);
-            end if;
-         end Error_No_Choice;
-
-         --  Lowest and highest bounds.
-         Lb, Hb : Iir;
-         Pos : Iir_Int64;
-         Pos_Max : Iir_Int64;
-         E_Pos : Iir_Int64;
-
-         Bt : constant Iir := Get_Base_Type (Sub_Type);
-      begin
-         if not Is_Sub_Range
-           and then Get_Type_Staticness (Sub_Type) = Locally
-           and then Type_Has_Bounds
-         then
-            Get_Low_High_Limit (Get_Range_Constraint (Sub_Type), Lb, Hb);
-         else
-            Lb := Low;
-            Hb := High;
-         end if;
-         if Lb = Null_Iir or else Hb = Null_Iir then
-            --  Return now in case of error.
-            Free (Arr);
-            return;
-         end if;
-         --  Checks all values between POS and POS_MAX are handled.
-         Pos := Eval_Pos (Lb);
-         Pos_Max := Eval_Pos (Hb);
-         if Pos > Pos_Max then
-            --  Null range.
-            Free (Arr);
-            return;
-         end if;
-         for I in 1 .. Index loop
-            E_Pos := Eval_Pos (Get_Low (Arr (I)));
-            if E_Pos > Pos_Max then
-               --  Choice out of bound, already handled.
-               Error_No_Choice (Bt, Pos, Pos_Max, Get_Location (Arr (I)));
-               --  Avoid other errors.
-               Pos := Pos_Max + 1;
-               exit;
-            end if;
-            if Pos < E_Pos and then not Has_Others then
-               Error_No_Choice (Bt, Pos, E_Pos - 1, Get_Location (Arr (I)));
-            elsif Pos > E_Pos then
-               if Pos + 1 = E_Pos then
-                  Error_Msg_Sem
-                    ("duplicate choice for " & Disp_Discrete (Bt, Pos),
-                     Arr (I));
-               else
-                  Error_Msg_Sem
-                    ("duplicate choices for " & Disp_Discrete (Bt, E_Pos)
-                     & " to " & Disp_Discrete (Bt, Pos), Arr (I));
-               end if;
-            end if;
-            Pos := Eval_Pos (Get_High (Arr (I))) + 1;
-         end loop;
-         if Pos /= Pos_Max + 1 and then not Has_Others then
-            Error_No_Choice (Bt, Pos, Pos_Max, Loc);
-         end if;
-      end;
-
-      Free (Arr);
+      Sem_Check_Continuous_Choices
+        (Choice_Chain, Sub_Type, Is_Sub_Range, Loc, Low, High);
    end Sem_Choices_Range;
 
 --    -- Find out the MIN and the MAX of an all named association choice list.

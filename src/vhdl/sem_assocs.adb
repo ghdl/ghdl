@@ -427,11 +427,13 @@ package body Sem_Assocs is
    procedure Add_Individual_Assoc_Indexed_Name
      (Sub_Assoc : in out Iir; Formal : Iir)
    is
+      Base_Assoc : constant Iir := Sub_Assoc;
       Choice : Iir;
       Last_Choice : Iir;
       Index_List : Iir_List;
       Index : Iir;
       Nbr : Natural;
+      Staticness : Iir_Staticness;
    begin
       --  Find element.
       Index_List := Get_Index_List (Formal);
@@ -440,8 +442,14 @@ package body Sem_Assocs is
          Index := Get_Nth_Element (Index_List, I);
 
          --  Evaluate index.
-         Index := Eval_Expr (Index);
-         Replace_Nth_Element (Index_List, I, Index);
+         Staticness := Get_Expr_Staticness (Index);
+         if Staticness = Locally then
+            Index := Eval_Expr (Index);
+            Replace_Nth_Element (Index_List, I, Index);
+         else
+            Error_Msg_Sem ("index expression must be locally static", Index);
+            Set_Choice_Staticness (Base_Assoc, None);
+         end if;
 
          --  Find index in choice list.
          Last_Choice := Null_Iir;
@@ -476,6 +484,7 @@ package body Sem_Assocs is
          --  If not found, append it.
          Choice := Create_Iir (Iir_Kind_Choice_By_Expression);
          Set_Choice_Expression (Choice, Index);
+         Set_Choice_Staticness (Choice, Staticness);
          Location_Copy (Choice, Formal);
          if Last_Choice = Null_Iir then
             Set_Individual_Association_Chain (Sub_Assoc, Choice);
@@ -492,6 +501,7 @@ package body Sem_Assocs is
                  (Iir_Kind_Association_Element_By_Individual);
                Location_Copy (Sub_Assoc, Index);
                Set_Associated_Expr (Choice, Sub_Assoc);
+               Set_Choice_Staticness (Sub_Assoc, Locally);
             end if;
          else
             Sub_Assoc := Choice;
@@ -504,6 +514,7 @@ package body Sem_Assocs is
    is
       Choice : Iir;
       Index : Iir;
+      Staticness : Iir_Staticness;
    begin
       --  FIXME: handle cases such as param(5 to 6)(5)
 
@@ -511,15 +522,20 @@ package body Sem_Assocs is
       Index := Get_Suffix (Formal);
 
       --  Evaluate index.
-      if Get_Expr_Staticness (Index) = Locally then
+      Staticness := Get_Expr_Staticness (Index);
+      if Staticness = Locally then
          Index := Eval_Range (Index);
          Set_Suffix (Formal, Index);
+      else
+         Error_Msg_Sem ("range expression must be locally static", Index);
+         Set_Choice_Staticness (Sub_Assoc, None);
       end if;
 
       Choice := Create_Iir (Iir_Kind_Choice_By_Range);
       Location_Copy (Choice, Formal);
       Set_Choice_Range (Choice, Index);
       Set_Chain (Choice, Get_Individual_Association_Chain (Sub_Assoc));
+      Set_Choice_Staticness (Choice, Staticness);
       Set_Individual_Association_Chain (Sub_Assoc, Choice);
 
       Sub_Assoc := Choice;
@@ -541,11 +557,14 @@ package body Sem_Assocs is
 
    procedure Add_Individual_Association_1 (Iassoc : in out Iir; Formal : Iir)
    is
+      Base_Assoc : constant Iir := Iassoc;
+      Formal_Object : constant Iir := Name_To_Object (Formal);
       Sub : Iir;
-      Formal_Object : Iir;
    begin
-      --  Recurse.
-      Formal_Object := Name_To_Object (Formal);
+      pragma Assert
+        (Get_Kind (Base_Assoc) = Iir_Kind_Association_Element_By_Individual);
+
+      --  Recurse to start from the basename of the formal.
       case Get_Kind (Formal_Object) is
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name
@@ -565,6 +584,7 @@ package body Sem_Assocs is
             if Sub = Null_Iir then
                Sub := Create_Iir (Iir_Kind_Association_Element_By_Individual);
                Location_Copy (Sub, Formal);
+               Set_Choice_Staticness (Sub, Locally);
                Set_Formal (Sub, Iassoc);
                Set_Associated_Expr (Iassoc, Sub);
                Iassoc := Sub;
@@ -585,6 +605,7 @@ package body Sem_Assocs is
             Error_Kind ("add_individual_association_1(2)", Iassoc);
       end case;
 
+      Sub := Iassoc;
       case Get_Kind (Formal_Object) is
          when Iir_Kind_Indexed_Name =>
             Add_Individual_Assoc_Indexed_Name (Iassoc, Formal_Object);
@@ -595,26 +616,32 @@ package body Sem_Assocs is
          when others =>
             Error_Kind ("add_individual_association_1(3)", Formal);
       end case;
+
+      if Get_Choice_Staticness (Sub) /= Locally then
+         --  Propagate error.
+         Set_Choice_Staticness (Base_Assoc, None);
+      end if;
    end Add_Individual_Association_1;
 
    --  Insert ASSOC into the tree of individual assoc rooted by IASSOC.
    procedure Add_Individual_Association (Iassoc : Iir; Assoc : Iir)
    is
-      Formal : Iir;
-      Iass : Iir;
+      Formal : constant Iir := Get_Formal (Assoc);
+      Res_Iass : Iir;
       Prev : Iir;
    begin
-      Formal := Get_Formal (Assoc);
-      Iass := Iassoc;
-      Add_Individual_Association_1 (Iass, Formal);
-      Prev := Get_Associated_Expr (Iass);
+      --  Create the individual association for the formal.
+      Res_Iass := Iassoc;
+      Add_Individual_Association_1 (Res_Iass, Formal);
+
+      Prev := Get_Associated_Expr (Res_Iass);
       if Prev /= Null_Iir then
          Error_Msg_Sem ("individual association of "
                         & Disp_Node (Get_Association_Interface (Assoc))
                         & " conflicts with that at " & Disp_Location (Prev),
                         Assoc);
       else
-         Set_Associated_Expr (Iass, Assoc);
+         Set_Associated_Expr (Res_Iass, Assoc);
       end if;
    end Add_Individual_Association;
 
@@ -623,15 +650,14 @@ package body Sem_Assocs is
    is
       Index_Tlist : constant Iir_List := Get_Index_Subtype_List (Atype);
       Nbr_Dims : constant Natural := Get_Nbr_Elements (Index_Tlist);
-      Index_Type : Iir;
+      Index_Type : constant Iir := Get_Nth_Element (Index_Tlist, Dim - 1);
       Low, High : Iir;
       Chain : Iir;
       El : Iir;
    begin
-      Index_Type := Get_Nth_Element (Index_Tlist, Dim - 1);
       Chain := Get_Individual_Association_Chain (Assoc);
-      Sem_Choices_Range
-        (Chain, Index_Type, False, False, Get_Location (Assoc), Low, High);
+      Sem_Check_Continuous_Choices
+        (Chain, Index_Type, False, Get_Location (Assoc), Low, High);
       Set_Individual_Association_Chain (Assoc, Chain);
       if Dim < Nbr_Dims then
          El := Chain;
@@ -763,7 +789,7 @@ package body Sem_Assocs is
       Atype : Iir;
    begin
       --  Guard.
-      if Assoc = Null_Iir then
+      if Assoc = Null_Iir or else Get_Choice_Staticness (Assoc) /= Locally then
          return;
       end if;
 
@@ -821,9 +847,8 @@ package body Sem_Assocs is
                Iassoc :=
                  Create_Iir (Iir_Kind_Association_Element_By_Individual);
                Location_Copy (Iassoc, Assoc);
-               if Cur_Iface = Null_Iir then
-                  raise Internal_Error;
-               end if;
+               Set_Choice_Staticness (Iassoc, Locally);
+               pragma Assert (Cur_Iface /= Null_Iir);
                Set_Formal (Iassoc, Cur_Iface);
                --  Insert IASSOC.
                if Prev_Assoc = Null_Iir then
