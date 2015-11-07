@@ -8,7 +8,8 @@ all: $(ortho_exec)
 
 $(ortho_exec): $(ortho_srcdir)/mcode/ortho_mcode.ads memsegs_c.o force
 	gnatmake -m -o $@ -g -aI$(ortho_srcdir)/mcode -aI$(ortho_srcdir) \
-	$(GNAT_FLAGS) ortho_code_main -bargs -E -largs memsegs_c.o #-static
+	-aI$(ortho_srcdir)/.. $(GNAT_FLAGS) ortho_code_main \
+	-bargs -E -largs memsegs_c.o #-static
 
 memsegs_c.o: $(ortho_srcdir)/mcode/memsegs_c.c
 	$(CC) -c $(CFLAGS) -o $@ $<
