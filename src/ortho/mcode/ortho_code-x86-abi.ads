@@ -37,6 +37,9 @@ package Ortho_Code.X86.Abi is
    Flag_Type_Completer : constant Boolean := False;
    Flag_Lower_Stmt : constant Boolean := True;
 
+   --  If True, use SSE/SSE2 instructions instead of FPU one.  The code is
+   --  still compliant with the ABI (ie FP values are returned in st0).
+   --  TODO: this is still work in progress.
    Flag_Sse2 : Boolean := False;
 
    --  Procedures to layout a subprogram declaration.

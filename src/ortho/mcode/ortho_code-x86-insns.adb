@@ -319,7 +319,7 @@ package body Ortho_Code.X86.Insns is
    Fp_Regs : RegFp_Info_Array;
 
    type Reg_Xmm_Info_Array is array (Regs_Xmm) of Reg_Info_Type;
-   Info_Regs_Xmm : Reg_Xmm_Info_Array := (others => Init_Reg_Info);
+   Xmm_Regs : Reg_Xmm_Info_Array := (others => Init_Reg_Info);
 
    function Reg_Used (Reg : Regs_R32) return Boolean is
    begin
@@ -415,10 +415,10 @@ package body Ortho_Code.X86.Insns is
 
    procedure Free_Xmm (Reg : O_Reg) is
    begin
-      if Info_Regs_Xmm (Reg).Num = O_Free then
+      if Xmm_Regs (Reg).Num = O_Free then
          raise Program_Error;
       end if;
-      Info_Regs_Xmm (Reg).Num := O_Free;
+      Xmm_Regs (Reg).Num := O_Free;
    end Free_Xmm;
 
    --  Allocate a stack slot for spilling.
@@ -548,12 +548,12 @@ package body Ortho_Code.X86.Insns is
    is
       Reg_Orig : O_Reg;
    begin
-      if Info_Regs_Xmm (Reg).Num = O_Free then
+      if Xmm_Regs (Reg).Num = O_Free then
          --  This register was not allocated.
          raise Program_Error;
       end if;
 
-      Reg_Orig := Insert_Spill (Info_Regs_Xmm (Reg).Stmt);
+      Reg_Orig := Insert_Spill (Xmm_Regs (Reg).Stmt);
 
       --  Free the register.
       if Reg_Orig /= Reg then
@@ -564,15 +564,15 @@ package body Ortho_Code.X86.Insns is
 
    procedure Alloc_Xmm (Reg : Regs_Xmm; Stmt : O_Enode; Num : O_Inum) is
    begin
-      if Info_Regs_Xmm (Reg).Num /= O_Free then
+      if Xmm_Regs (Reg).Num /= O_Free then
          Spill_Xmm (Reg);
       end if;
-      Info_Regs_Xmm (Reg) := (Num => Num, Stmt => Stmt, Used => True);
+      Xmm_Regs (Reg) := (Num => Num, Stmt => Stmt, Used => True);
    end Alloc_Xmm;
 
    procedure Clobber_Xmm (Reg : Regs_Xmm) is
    begin
-      if Info_Regs_Xmm (Reg).Num /= O_Free then
+      if Xmm_Regs (Reg).Num /= O_Free then
          Spill_Xmm (Reg);
       end if;
    end Clobber_Xmm;
@@ -655,12 +655,12 @@ package body Ortho_Code.X86.Insns is
             Best_Num := O_Inum'Last;
             Best_Reg := R_None;
             for I in Regs_X86_Xmm loop
-               if Info_Regs_Xmm (I).Num = O_Free then
+               if Xmm_Regs (I).Num = O_Free then
                   Alloc_Xmm (I, Stmt, Num);
                   return I;
-               elsif Info_Regs_Xmm (I).Num <= Best_Num then
+               elsif Xmm_Regs (I).Num <= Best_Num then
                   Best_Reg := I;
-                  Best_Num := Info_Regs_Xmm (I).Num;
+                  Best_Num := Xmm_Regs (I).Num;
                end if;
             end loop;
             Alloc_Xmm (Best_Reg, Stmt, Num);
@@ -792,6 +792,9 @@ package body Ortho_Code.X86.Insns is
             Reg_Cc.Stmt := Stmt;
          when R_St0 =>
             null;
+         when Regs_Xmm =>
+            Xmm_Regs (Reg).Num := Num;
+            Xmm_Regs (Reg).Stmt := Stmt;
          when Regs_R64 =>
             declare
                L, H : O_Reg;
@@ -1171,7 +1174,9 @@ package body Ortho_Code.X86.Insns is
                when Regs_R32
                  | R_Any32
                  | R_Any8
-                 | Regs_Fp =>
+                 | R_Any_Xmm
+                 | Regs_Fp
+                 | Regs_Xmm =>
                   Num := Get_Insn_Num;
                   Left := Gen_Insn (Left, R_Sib, Num);
                   Free_Insn_Regs (Left);
@@ -1598,8 +1603,10 @@ package body Ortho_Code.X86.Insns is
                  | Regs_R32
                  | R_Any8
                  | R_Any64
+                 | R_Any_Xmm
                  | Regs_R64
-                 | Regs_Fp =>
+                 | Regs_Fp
+                 | Regs_Xmm =>
                   Right := Gen_Insn (Right, R_Irm, Num);
                   Left := Gen_Insn (Left, Reg, Num);
                   Right := Reload (Right, R_Irm, Num);
@@ -1694,12 +1701,13 @@ package body Ortho_Code.X86.Insns is
                  | R_Any64
                  | Regs_R64
                  | R_Any8
-                 | R_St0 =>
+                 | R_St0
+                 | Regs_Xmm
+                 | R_Any_Xmm =>
                   Reg_Res := Reg;
                when R_Any_Cc =>
-                  if Kind /= OE_Not then
-                     raise Program_Error;
-                  end if;
+                  --  Only oe_not is allowed for booleans.
+                  pragma Assert (Kind = OE_Not);
                   Left := Gen_Insn (Left, R_Any_Cc, Pnum);
                   Set_Expr_Operand (Stmt, Left);
                   Reg_Res := Inverse_Cc (Get_Expr_Reg (Left));
