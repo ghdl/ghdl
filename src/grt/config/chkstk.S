@@ -24,14 +24,13 @@
     covered by the GNU Public License.
 */
 	.file		"chkstk.S"
-	.version	"01.01"
-	
+
 	.text
 
 #ifdef __APPLE__
 #define __chkstk ___chkstk
 #endif
-	
+
 	/* Function called to loop on the process.  */
 	.align 4
 #ifdef __ELF__
