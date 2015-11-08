@@ -2,8 +2,8 @@
 
 . ../../testenv.sh
 
-#analyze repro.vhdl
-#analyze_failure repro.vhdl
+analyze x.vhd
+analyze xb.vhd
 
 clean
 
