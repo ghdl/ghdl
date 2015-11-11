@@ -15,7 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ortho_Code.Exprs; use Ortho_Code.Exprs;
 
 package Ortho_Code.X86 is
    --  Registers.
@@ -152,9 +151,5 @@ package Ortho_Code.X86 is
 
    subtype Intrinsics_X86 is Int32
      range Intrinsic_Mul_Ov_U64 .. Intrinsic_Rem_Ov_I64;
-
-   --  Convert a KIND to a reg.
-   function Ekind_Unsigned_To_Cc (Kind : OE_Kind_Cmp) return O_Reg;
-   function Ekind_Signed_To_Cc (Kind : OE_Kind_Cmp) return O_Reg;
 
 end Ortho_Code.X86;

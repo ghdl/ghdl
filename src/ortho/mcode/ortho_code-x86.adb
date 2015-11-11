@@ -68,42 +68,4 @@ package body Ortho_Code.X86 is
       end case;
    end Get_R64_Low;
 
-   function Ekind_Unsigned_To_Cc (Kind : OE_Kind_Cmp) return O_Reg is
-   begin
-      case Kind is
-         when OE_Eq =>
-            return R_Eq;
-         when OE_Neq =>
-            return R_Ne;
-         when OE_Lt =>
-            return R_Ult;
-         when OE_Le =>
-            return R_Ule;
-         when OE_Gt =>
-            return R_Ugt;
-         when OE_Ge =>
-            return R_Uge;
-      end case;
-   end Ekind_Unsigned_To_Cc;
-
-   function Ekind_Signed_To_Cc (Kind : OE_Kind_Cmp) return O_Reg is
-   begin
-      case Kind is
-         when OE_Eq =>
-            return R_Eq;
-         when OE_Neq =>
-            return R_Ne;
-         when OE_Lt =>
-            return R_Slt;
-         when OE_Le =>
-            return R_Sle;
-         when OE_Gt =>
-            return R_Sgt;
-         when OE_Ge =>
-            return R_Sge;
-      end case;
-   end Ekind_Signed_To_Cc;
-
 end Ortho_Code.X86;
-
-

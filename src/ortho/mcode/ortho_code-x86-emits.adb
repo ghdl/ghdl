@@ -61,6 +61,7 @@ package body Ortho_Code.X86.Emits is
    Opc_Mov_Rm_Imm : constant := 16#c6#;  -- Eb,Ib  or Ev,Iz (grp11, opc2=0)
    Opc_Mov_Rm_Reg : constant := 16#88#;  -- Store: Eb,Gb  or  Ev,Gv
    Opc_Mov_Reg_Rm : constant := 16#8a#;  -- Load:  Gb,Eb  or  Gv,Ev
+   Opc_Movl_Reg_Rm : constant := 16#8b#;  -- Load: Gv,Ev
    --  Opc_Grp1_Rm_Imm : constant := 16#80#;
    Opc_Grp1b_Rm_Imm8  : constant := 16#80#;
    Opc_Grp1v_Rm_Imm32 : constant := 16#81#;
@@ -88,14 +89,16 @@ package body Ortho_Code.X86.Emits is
    Opc_Pop_Reg     : constant := 16#58#; --  opc[2:0] is reg.
    Opc_Grp5        : constant := 16#ff#;
    Opc2_Grp5_Push_Rm : constant := 2#110_000#;
-   Opc_Grp1a       : constant := 16#8f#;
-   Opc2_Grp1a_Pop_Rm : constant := 2#000_000#;
+   --  Opc_Grp1a       : constant := 16#8f#;
+   --  Opc2_Grp1a_Pop_Rm : constant := 2#000_000#;
    Opc_Jcc         : constant := 16#70#;
    Opc_0f          : constant := 16#0f#;
    Opc2_0f_Jcc     : constant := 16#80#;
    Opc2_0f_Setcc   : constant := 16#90#;
    Opc2_0f_Movzx   : constant := 16#b6#;
    Opc2_0f_Imul    : constant := 16#af#;
+   Opc2_0f_Andnp   : constant := 16#55#;
+   Opc2_0f_Xorp    : constant := 16#57#;
    Opc_Call        : constant := 16#e8#;
    Opc_Jmp_Long    : constant := 16#e9#;
    Opc_Jmp_Short   : constant := 16#eb#;
@@ -388,7 +391,20 @@ package body Ortho_Code.X86.Emits is
       Rm_Sz := Sz;
    end Init_Modrm_Reg;
 
-   procedure Init_Rm_Mem (N : O_Enode; Sz : Insn_Size)
+   --  Note: SZ is not relevant.
+   procedure Init_Modrm_Sym (Sym : Symbol; Sz : Insn_Size) is
+   begin
+      Rm_Base := R_Nil;
+      SIB_Index := R_Nil;
+      SIB_Scale := 0;
+      Rm_Sym := Sym;
+      Rm_Offset := 0;
+
+      Rm_Reg := R_Nil;
+      Rm_Sz := Sz;
+   end Init_Modrm_Sym;
+
+   procedure Init_Modrm_Mem (N : O_Enode; Sz : Insn_Size)
    is
       Reg : constant O_Reg := Get_Expr_Reg (N);
    begin
@@ -419,22 +435,42 @@ package body Ortho_Code.X86.Emits is
             Rm_Base := R_Bp;
             Rm_Offset := Rm_Offset + Get_Spill_Info (N);
          when others =>
-            Error_Emit ("init_rm_mem: unhandled reg", N);
+            Error_Emit ("init_modrm_mem: unhandled reg", N);
       end case;
-   end Init_Rm_Mem;
+   end Init_Modrm_Mem;
 
    procedure Init_Rm_Expr (N : O_Enode; Sz : Insn_Size)
    is
       Reg : constant O_Reg := Get_Expr_Reg (N);
    begin
-      if Reg in Regs_R32 or Reg in Regs_R64 then
-         --  Destination is a register.
-         Init_Modrm_Reg (Reg, Sz);
-      else
-         --  Destination is an effective address.
-         Init_Rm_Mem (N, Sz);
-      end if;
+      case Reg is
+         when Regs_R32
+           | Regs_R64
+           | Regs_Xmm =>
+            --  Destination is a register.
+            Init_Modrm_Reg (Reg, Sz);
+         when others =>
+            --  Destination is an effective address.
+            Init_Modrm_Mem (N, Sz);
+      end case;
    end Init_Rm_Expr;
+
+   procedure Init_Modrm_Offset (Base : O_Reg; Off : Int32; Sz : Insn_Size) is
+   begin
+      SIB_Index := R_Nil;
+      SIB_Scale := 0;
+      Rm_Reg := R_Nil;
+      Rm_Sym := Null_Symbol;
+      Rm_Sz := Sz;
+
+      Rm_Base := Base;
+
+      if Sz = Sz_32h then
+         Rm_Offset := Off + 4;
+      else
+         Rm_Offset := Off;
+      end if;
+   end Init_Modrm_Offset;
 
    --  Generate an R/M (+ SIB) byte.
    --  R is added to the R/M byte.
@@ -475,7 +511,11 @@ package body Ortho_Code.X86.Emits is
          pragma Assert (Rm_Base = R_Nil);
          pragma Assert (Rm_Sym = Null_Symbol);
          pragma Assert (Rm_Offset = 0);
-         Gen_B8 (2#11_000_000# + R + To_Reg32 (Rm_Reg, Rm_Sz));
+         if Rm_Reg in Regs_Xmm then
+            Gen_B8 (2#11_000_000# + R + To_Reg_Xmm (Rm_Reg));
+         else
+            Gen_B8 (2#11_000_000# + R + To_Reg32 (Rm_Reg, Rm_Sz));
+         end if;
          return;
       end if;
 
@@ -523,7 +563,7 @@ package body Ortho_Code.X86.Emits is
          Gen_B8 (2#11_000_000# + R + To_Reg32 (Reg, Sz));
       else
          --  Destination is an effective address.
-         Init_Rm_Mem (N, Sz);
+         Init_Modrm_Mem (N, Sz);
          Gen_Mod_Rm (R);
       end if;
    end Gen_Rm;
@@ -667,9 +707,9 @@ package body Ortho_Code.X86.Emits is
       End_Insn;
    end Emit_Load_Imm;
 
-   function Mode_Fp_To_Mf (Sz : Mode_Fp) return Byte is
+   function Mode_Fp_To_Mf (Mode : Mode_Fp) return Byte is
    begin
-      case Sz is
+      case Mode is
          when Mode_F32 =>
             return 2#00_0#;
          when Mode_F64 =>
@@ -714,9 +754,9 @@ package body Ortho_Code.X86.Emits is
    Xmm_Sign32_Sym : Symbol := Null_Symbol;
    Xmm_Sign64_Sym : Symbol := Null_Symbol;
 
-   function Get_Xmm_Sign_Constant (Sz : Mode_Fp) return Symbol is
+   function Get_Xmm_Sign_Constant (Mode : Mode_Fp) return Symbol is
    begin
-      case Sz is
+      case Mode is
          when Mode_F32 =>
             if Xmm_Sign32_Sym = Null_Symbol then
                Xmm_Sign32_Sym := Gen_Constant_32 (16#8000_0000#);
@@ -730,13 +770,37 @@ package body Ortho_Code.X86.Emits is
       end case;
    end Get_Xmm_Sign_Constant;
 
-   procedure Emit_Load_Fp (Stmt : O_Enode; Sz : Mode_Fp)
+   procedure Gen_SSE_Rep_Opc (Sz : Mode_Fp; Opc : Byte) is
+   begin
+      case Sz is
+         when Mode_F32 =>
+            Gen_B8 (16#f3#);
+         when Mode_F64 =>
+            Gen_B8 (16#f2#);
+      end case;
+      Gen_B8 (16#0f#);
+      Gen_B8 (Opc);
+   end Gen_SSE_Rep_Opc;
+
+   procedure Gen_SSE_D16_Opc (Sz : Mode_Fp; Opc : Byte) is
+   begin
+      case Sz is
+         when Mode_F32 =>
+            null;
+         when Mode_F64 =>
+            Gen_B8 (Opc_Data16);
+      end case;
+      Gen_B8 (16#0f#);
+      Gen_B8 (Opc);
+   end Gen_SSE_D16_Opc;
+
+   procedure Emit_Load_Fp (Stmt : O_Enode; Mode : Mode_Fp)
    is
       Sym : Symbol;
       R : O_Reg;
       Lo : constant Unsigned_32 := Unsigned_32 (Get_Expr_Low (Stmt));
    begin
-      case Sz is
+      case Mode is
          when Mode_F32 =>
             Sym := Gen_Constant_32 (Lo);
          when Mode_F64 =>
@@ -748,20 +812,13 @@ package body Ortho_Code.X86.Emits is
       case R is
          when R_St0 =>
             Start_Insn;
-            Gen_B8 (2#11011_001# + Mode_Fp_To_Mf (Sz));
+            Gen_B8 (2#11011_001# + Mode_Fp_To_Mf (Mode));
             Gen_B8 (2#00_000_101#);
             Gen_X86_32 (Sym, 0);
             End_Insn;
          when Regs_Xmm =>
             Start_Insn;
-            case Sz is
-               when Mode_F32 =>
-                  Gen_B8 (16#F3#);
-               when Mode_F64 =>
-                  Gen_B8 (16#F2#);
-            end case;
-            Gen_B8 (16#0f#);
-            Gen_B8 (16#10#);
+            Gen_SSE_Rep_Opc (Mode, 16#10#);
             Gen_B8 (2#00_000_101# + To_Reg_Xmm (R) * 2#1_000#);
             Gen_X86_32 (Sym, 0);
             End_Insn;
@@ -775,33 +832,25 @@ package body Ortho_Code.X86.Emits is
       return To_Reg_Xmm (R) * 8;
    end Xmm_To_Modrm_Reg;
 
-   procedure Gen_Xmm_Modrm
-     (Sz : Mode_Fp; Opc : Byte; Dest : O_Reg; Mem : O_Enode) is
+   procedure Gen_Xmm_Modrm (Mode : Mode_Fp; Opc : Byte; Dest : O_Reg) is
    begin
       Start_Insn;
-      case Sz is
-         when Mode_F32 =>
-            Gen_B8 (16#f3#);
-         when Mode_F64 =>
-            Gen_B8 (16#f2#);
-      end case;
-      Gen_B8 (16#0f#);
-      Gen_B8 (Opc);
-      Init_Rm_Mem (Mem, Sz_32l);
+      Gen_SSE_Rep_Opc (Mode, Opc);
       Gen_Mod_Rm (Xmm_To_Modrm_Reg (Dest));
       End_Insn;
    end Gen_Xmm_Modrm;
 
-   procedure Emit_Load_Fp_Mem (Stmt : O_Enode; Sz : Mode_Fp)
+   procedure Emit_Load_Fp_Mem (Stmt : O_Enode; Mode : Mode_Fp)
    is
       Dest : constant O_Reg := Get_Expr_Reg (Stmt);
    begin
+      Init_Modrm_Mem (Get_Expr_Operand (Stmt), Sz_32l);
       if Dest in Regs_Xmm then
-         Gen_Xmm_Modrm (Sz, 16#10#, Dest, Get_Expr_Operand (Stmt));
+         Gen_Xmm_Modrm (Mode, 16#10#, Dest);
       else
          Start_Insn;
-         Gen_B8 (2#11011_001# + Mode_Fp_To_Mf (Sz));
-         Init_Rm_Mem (Get_Expr_Operand (Stmt), Sz_32l);
+         Gen_B8 (2#11011_001# + Mode_Fp_To_Mf (Mode));
+         Init_Modrm_Mem (Get_Expr_Operand (Stmt), Sz_32l);
          Gen_Mod_Rm (2#000_000#);
          End_Insn;
       end if;
@@ -809,23 +858,21 @@ package body Ortho_Code.X86.Emits is
 
    procedure Emit_Load_Mem (Stmt : O_Enode; Sz : Insn_Size)
    is
-      Tr : O_Reg;
-      Val : O_Enode;
+      Tr  : constant O_Reg := Get_Expr_Reg (Stmt);
+      Val : constant O_Enode := Get_Expr_Operand (Stmt);
    begin
-      Tr := Get_Expr_Reg (Stmt);
-      Val := Get_Expr_Operand (Stmt);
       case Tr is
          when Regs_R32
            | Regs_R64 =>
             --  mov REG, OP
+            Init_Modrm_Mem (Val, Sz);
             Start_Insn;
             Gen_Insn_Sz (Opc_Mov_Reg_Rm, Sz);
-            Init_Rm_Mem (Val, Sz);
             Gen_Mod_Rm (To_Reg32 (Tr, Sz) * 8);
             End_Insn;
          when R_Eq =>
             --  Cmp OP, 1
-            Init_Rm_Mem (Val, Sz);
+            Init_Modrm_Mem (Val, Sz);
             Gen_Insn_Grp1 (Opc2_Grp1_Cmp, Sz, 1);
          when others =>
             Error_Emit ("emit_load_mem", Stmt);
@@ -857,7 +904,7 @@ package body Ortho_Code.X86.Emits is
                end case;
                Gen_B8 (B + To_Reg32 (Tr, Sz));
             else
-               Init_Rm_Mem (T, Sz);
+               Init_Modrm_Mem (T, Sz);
                Gen_Insn_Sz (Opc_Mov_Rm_Imm, Sz);
                Gen_Mod_Rm (16#00#);
             end if;
@@ -865,7 +912,7 @@ package body Ortho_Code.X86.Emits is
          when Regs_R32
            | Regs_R64 =>
             Gen_Insn_Sz (Opc_Mov_Rm_Reg, Sz);
-            Init_Rm_Mem (T, Sz);
+            Init_Modrm_Mem (T, Sz);
             Gen_Mod_Rm (To_Reg32 (Rr, Sz) * 8);
          when others =>
             Error_Emit ("emit_store", Stmt);
@@ -879,7 +926,7 @@ package body Ortho_Code.X86.Emits is
       -- fstp
       Start_Insn;
       Gen_B8 (2#11011_00_1# + Mode_Fp_To_Mf (Sz));
-      Init_Rm_Mem (Get_Assign_Target (Stmt), Sz_32l);
+      Init_Modrm_Mem (Get_Assign_Target (Stmt), Sz_32l);
       Gen_Mod_Rm (2#011_000#);
       End_Insn;
    end Emit_Store_Fp;
@@ -908,22 +955,6 @@ package body Ortho_Code.X86.Emits is
       End_Insn;
    end Emit_Push_32;
 
-   procedure Emit_Pop_32 (Val : O_Enode; Sz : Insn_Size)
-   is
-      R : constant O_Reg := Get_Expr_Reg (Val);
-   begin
-      Start_Insn;
-      case R is
-         when Regs_R32
-           | Regs_R64 =>
-            Gen_B8 (Opc_Pop_Reg + To_Reg32 (R, Sz));
-         when others =>
-            Gen_B8 (Opc_Grp1a);
-            Gen_Rm (Opc2_Grp1a_Pop_Rm, Val, Sz);
-      end case;
-      End_Insn;
-   end Emit_Pop_32;
-
    procedure Emit_Subl_Sp_Imm (Len : Byte) is
    begin
       Start_Insn;
@@ -942,25 +973,35 @@ package body Ortho_Code.X86.Emits is
       End_Insn;
    end Emit_Addl_Sp_Imm;
 
-   procedure Emit_Push_Fp (Op : O_Enode; Sz : Mode_Fp)
+   procedure Emit_Push_Fp (Op : O_Enode; Mode : Mode_Fp)
    is
-      pragma Unreferenced (Op);
+      Reg : constant O_Reg := Get_Expr_Reg (Op);
       Len : Byte;
    begin
       --  subl esp, val
-      case Sz is
+      case Mode is
          when Mode_F32 =>
             Len := 4;
          when Mode_F64 =>
             Len := 8;
       end case;
       Emit_Subl_Sp_Imm (Len);
-      --  fstp st, (esp)
-      Start_Insn;
-      Gen_B8 (2#11011_001# + Mode_Fp_To_Mf (Sz));
-      Gen_B8 (2#00_011_100#);
-      Gen_B8 (2#00_100_100#);
-      End_Insn;
+
+      if Reg = R_St0 then
+         --  fstp st, (esp)
+         Start_Insn;
+         Gen_B8 (2#11011_001# + Mode_Fp_To_Mf (Mode));
+         Gen_B8 (2#00_011_100#);  --  Modrm: SIB, no disp
+         Gen_B8 (2#00_100_100#);  --  SIB: SS=0, no index, base=esp
+         End_Insn;
+      else
+         pragma Assert (Reg in Regs_Xmm);
+         Start_Insn;
+         Gen_SSE_Rep_Opc (Mode, 16#11#);
+         Gen_B8 (To_Reg_Xmm (Reg) * 8 + 2#00_000_100#);  --  Modrm: [--]
+         Gen_B8 (2#00_100_100#);  --  SIB: SS=0, no index, base=esp
+         End_Insn;
+      end if;
    end Emit_Push_Fp;
 
    function Prepare_Label (Label : O_Enode) return Symbol
@@ -1047,7 +1088,7 @@ package body Ortho_Code.X86.Emits is
       End_Insn;
    end Gen_Call;
 
-   procedure Emit_Setup_Frame (Stmt : O_Enode)
+   procedure Emit_Stack_Adjust (Stmt : O_Enode)
    is
       Val : constant Int32 := Get_Stack_Adjust (Stmt);
    begin
@@ -1058,15 +1099,32 @@ package body Ortho_Code.X86.Emits is
          Init_Modrm_Reg (R_Sp, Sz_32l);
          Gen_Insn_Grp1 (Opc2_Grp1_Add, Sz_32l, -Val);
       end if;
-   end Emit_Setup_Frame;
+   end Emit_Stack_Adjust;
 
    procedure Emit_Call (Stmt : O_Enode)
    is
       use Ortho_Code.Decls;
       Subprg : constant O_Dnode := Get_Call_Subprg (Stmt);
       Sym : constant Symbol := Get_Decl_Symbol (Subprg);
+      Mode : constant Mode_Type := Get_Expr_Mode (Stmt);
    begin
       Gen_Call (Sym);
+
+      if Abi.Flag_Sse2 and then Mode in Mode_Fp then
+         --  Move from St0 to Xmm0.
+         --  fstp slot(%ebp)
+         Init_Modrm_Offset
+           (R_Bp, -Int32 (Cur_Subprg.Target.Fp_Slot), Sz_32l);
+         Start_Insn;
+         Gen_B8 (2#11011_001# + Mode_Fp_To_Mf (Mode));
+         Gen_Mod_Rm (2#00_011_000#);
+         End_Insn;
+         --  movsd slot(%ebp), %xmm0
+         Start_Insn;
+         Gen_SSE_Rep_Opc (Mode, 16#10#);
+         Gen_Mod_Rm (2#00_000_000#);
+         End_Insn;
+      end if;
    end Emit_Call;
 
    procedure Emit_Intrinsic (Stmt : O_Enode)
@@ -1116,21 +1174,15 @@ package body Ortho_Code.X86.Emits is
 
    procedure Emit_Spill (Stmt : O_Enode; Sz : Insn_Size)
    is
-      Reg : O_Reg;
-      Expr : O_Enode;
+      Expr : constant O_Enode := Get_Expr_Operand (Stmt);
+      Reg : constant O_Reg := Get_Expr_Reg (Expr);
    begin
-      Expr := Get_Expr_Operand (Stmt);
-      Reg := Get_Expr_Reg (Expr);
-      if Reg = R_Spill then
-         if Get_Expr_Kind (Expr) = OE_Conv then
-            return;
-         else
-            raise Program_Error;
-         end if;
-      end if;
+      --  A reload is missing.
+      pragma Assert (Reg /= R_Spill);
+      Init_Modrm_Mem (Stmt, Sz);
       Start_Insn;
       Gen_Insn_Sz (Opc_Mov_Rm_Reg, Sz);
-      Gen_Rm (To_Reg32 (Reg, Sz) * 8, Stmt, Sz);
+      Gen_Mod_Rm (To_Reg32 (Reg, Sz) * 8);
       End_Insn;
    end Emit_Spill;
 
@@ -1150,7 +1202,7 @@ package body Ortho_Code.X86.Emits is
       --  Hack: change the register to use the real address instead of it.
       Set_Expr_Reg (Stmt, R_Mem);
 
-      Init_Rm_Mem (Stmt, Sz_32l);
+      Init_Modrm_Mem (Stmt, Sz_32l);
       Start_Insn;
       Gen_B8 (Opc_Leal_Reg_Rm);
       Gen_Mod_Rm (To_Reg32 (Reg) * 8);
@@ -1378,6 +1430,20 @@ package body Ortho_Code.X86.Emits is
             Gen_B8 (2#00_000_100#);
             Gen_B8 (2#00_100_100#);
             End_Insn;
+            if Reg_Res in Regs_Xmm then
+               --  fstp (%esp)
+               Start_Insn;
+               Gen_B8 (2#11011_00_1# + Mode_Fp_To_Mf (Mode_F64));
+               Gen_B8 (2#00_011_100#);
+               Gen_B8 (2#00_100_100#);
+               End_Insn;
+               --  movsd (%esp), %xmm
+               Start_Insn;
+               Gen_SSE_Rep_Opc (Mode_F64, 16#10#);
+               Gen_B8 (To_Reg_Xmm (Reg_Res) * 8 + 2#00_000_100#);
+               Gen_B8 (2#00_100_100#);
+               End_Insn;
+            end if;
             --  addl %esp, 4
             Emit_Addl_Sp_Imm (4);
          when others =>
@@ -1492,6 +1558,20 @@ package body Ortho_Code.X86.Emits is
             Gen_B8 (2#00_101_100#);
             Gen_B8 (2#00_100_100#);
             End_Insn;
+            if Reg_Res in Regs_Xmm then
+               --  fstp (%esp)
+               Start_Insn;
+               Gen_B8 (2#11011_00_1# + Mode_Fp_To_Mf (Mode_F64));
+               Gen_B8 (2#00_011_100#);
+               Gen_B8 (2#00_100_100#);
+               End_Insn;
+               --  movsd (%esp), %xmm
+               Start_Insn;
+               Gen_SSE_Rep_Opc (Mode_F64, 16#10#);
+               Gen_B8 (To_Reg_Xmm (Reg_Res) * 8 + 2#00_000_100#);
+               Gen_B8 (2#00_100_100#);
+               End_Insn;
+            end if;
             --  addl %esp, 8
             Emit_Addl_Sp_Imm (8);
          when others =>
@@ -1500,30 +1580,44 @@ package body Ortho_Code.X86.Emits is
    end Gen_Conv_I64;
 
    --  Convert FP to xxx.
-   procedure Gen_Conv_Fp (Stmt : O_Enode) is
+   procedure Gen_Conv_Fp (Stmt : O_Enode)
+   is
+      Reg : constant O_Reg := Get_Expr_Reg (Stmt);
    begin
       case Get_Expr_Mode (Stmt) is
          when Mode_I32 =>
-            --  subl %esp, 4
-            Emit_Subl_Sp_Imm (4);
-            --  fistp (%esp)
+            --  fistpl slot(%ebp)
+            Init_Modrm_Offset
+              (R_Bp, -Int32 (Cur_Subprg.Target.Fp_Slot), Sz_32l);
             Start_Insn;
             Gen_B8 (2#11011_011#);
-            Gen_B8 (2#00_011_100#);
-            Gen_B8 (2#00_100_100#);
+            Gen_Mod_Rm (2#00_011_000#);
             End_Insn;
-            Emit_Pop_32 (Stmt, Sz_32l);
+            --  movl slot(%ebp), reg
+            --  Keep same modrm parameters.
+            Start_Insn;
+            Gen_B8 (Opc_Movl_Reg_Rm);
+            Gen_Mod_Rm (To_Reg32 (Reg, Sz_32l) * 8);
+            End_Insn;
          when Mode_I64 =>
-            --  subl %esp, 8
-            Emit_Subl_Sp_Imm (8);
-            --  fistp (%esp)
+            --  fistpq (%esp)
+            Init_Modrm_Offset
+              (R_Bp, -Int32 (Cur_Subprg.Target.Fp_Slot), Sz_32l);
             Start_Insn;
             Gen_B8 (2#11011_111#);
-            Gen_B8 (2#00_111_100#);
-            Gen_B8 (2#00_100_100#);
+            Gen_Mod_Rm (2#00_111_000#);
             End_Insn;
-            Emit_Pop_32 (Stmt, Sz_32l);
-            Emit_Pop_32 (Stmt, Sz_32h);
+            --  movl slot(%ebp), reg
+            --  Keep same modrm parameters.
+            Start_Insn;
+            Gen_B8 (Opc_Movl_Reg_Rm);
+            Gen_Mod_Rm (To_Reg32 (Reg, Sz_32l) * 8);
+            End_Insn;
+            Rm_Offset := Rm_Offset + 4;
+            Start_Insn;
+            Gen_B8 (Opc_Movl_Reg_Rm);
+            Gen_Mod_Rm (To_Reg32 (Reg, Sz_32h) * 8);
+            End_Insn;
          when others =>
             Error_Emit ("gen_conv_fp", Stmt);
       end case;
@@ -1591,7 +1685,7 @@ package body Ortho_Code.X86.Emits is
                   raise Program_Error;
             end case;
             Gen_B8 (2#11011_000# or B_Size);
-            Init_Rm_Mem (Right, Sz_32l);
+            Init_Modrm_Mem (Right, Sz_32l);
             Gen_Mod_Rm (B_Mem);
          when others =>
             raise Program_Error;
@@ -1605,8 +1699,13 @@ package body Ortho_Code.X86.Emits is
       Reg : constant O_Reg := Get_Expr_Reg (Stmt);
    begin
       if Reg in Regs_Xmm then
-         Gen_Xmm_Modrm
-           (Get_Expr_Mode (Stmt), Xmm_Op, Reg, Get_Expr_Right (Stmt));
+         declare
+            Mode : constant Mode_Type := Get_Expr_Mode (Stmt);
+            Right : constant O_Enode := Get_Expr_Right (Stmt);
+         begin
+            Init_Rm_Expr (Right, Sz_32l);
+            Gen_Xmm_Modrm (Mode, Xmm_Op, Reg);
+         end;
       else
          Gen_Emit_Fp_Op (Stmt, B_St1, B_Mem);
       end if;
@@ -1831,13 +1930,12 @@ package body Ortho_Code.X86.Emits is
                  | Mode_F64 =>
                   Reg := Get_Expr_Reg (Stmt);
                   if Reg in Regs_Xmm then
-                     declare
-                        Cst : Symbol;
-                     begin
-                        Cst := Get_Xmm_Sign_Constant (Mode);
-                        pragma Unreferenced (Cst);
-                        raise Program_Error;
-                     end;
+                     --  Xorp{sd} reg, cst
+                     Init_Modrm_Sym (Get_Xmm_Sign_Constant (Mode), Sz_32l);
+                     Start_Insn;
+                     Gen_SSE_D16_Opc (Mode, Opc2_0f_Xorp);
+                     Gen_Mod_Rm (Xmm_To_Modrm_Reg (Reg));
+                     End_Insn;
                   else
                      --  fchs
                      Gen_2 (2#11011_001#, 2#1110_0000#);
@@ -1853,8 +1951,18 @@ package body Ortho_Code.X86.Emits is
                   Emit_Abs (Get_Expr_Operand (Stmt), Mode);
                when Mode_F32
                  | Mode_F64 =>
-                  --  fabs
-                  Gen_2 (2#11011_001#, 2#1110_0001#);
+                  Reg := Get_Expr_Reg (Stmt);
+                  if Reg in Regs_Xmm then
+                     --  Andnp{sd} reg, cst
+                     Init_Modrm_Sym (Get_Xmm_Sign_Constant (Mode), Sz_32l);
+                     Start_Insn;
+                     Gen_SSE_D16_Opc (Mode, Opc2_0f_Andnp);
+                     Gen_Mod_Rm (Xmm_To_Modrm_Reg (Reg));
+                     End_Insn;
+                  else
+                     --  fabs
+                     Gen_2 (2#11011_001#, 2#1110_0001#);
+                  end if;
                when others =>
                   Error_Emit ("emit_insn: abs_ov", Stmt);
             end case;
@@ -1891,7 +1999,7 @@ package body Ortho_Code.X86.Emits is
                      Gen_Grp1_Insn (Opc2_Grp1_Cmp, Stmt, Sz_32h);
                      --  Note: this does not clobber a reg due to care in
                      --  insns.
-                     Emit_Setcc_Reg (Reg, Ekind_Signed_To_Cc (Kind));
+                     Emit_Setcc_Reg (Reg, Insns.Ekind_Signed_To_Cc (Kind));
                      --  jne
                      Start_Insn;
                      Gen_B8 (Opc_Jcc + 2#0101#);
@@ -1899,7 +2007,7 @@ package body Ortho_Code.X86.Emits is
                      End_Insn;
                      Pc := Get_Current_Pc;
                      Gen_Grp1_Insn (Opc2_Grp1_Cmp, Stmt, Sz_32l);
-                     Emit_Setcc_Reg (Reg, Ekind_Unsigned_To_Cc (Kind));
+                     Emit_Setcc_Reg (Reg, Insns.Ekind_Unsigned_To_Cc (Kind));
                      Patch_B8 (Pc - 1, Unsigned_8 (Get_Current_Pc - Pc));
                      return;
                   end;
@@ -2039,7 +2147,7 @@ package body Ortho_Code.X86.Emits is
                   Error_Emit ("emit_insn: oe_arg", Stmt);
             end case;
          when OE_Stack_Adjust =>
-            Emit_Setup_Frame (Stmt);
+            Emit_Stack_Adjust (Stmt);
          when OE_Call =>
             Emit_Call (Stmt);
          when OE_Intrinsic =>
@@ -2047,12 +2155,10 @@ package body Ortho_Code.X86.Emits is
 
          when OE_Move =>
             declare
-               Operand : O_Enode;
-               Op_Reg : O_Reg;
+               Operand : constant O_Enode := Get_Expr_Operand (Stmt);
+               Op_Reg : constant O_Reg := Get_Expr_Reg (Operand);
             begin
                Reg := Get_Expr_Reg (Stmt);
-               Operand := Get_Expr_Operand (Stmt);
-               Op_Reg := Get_Expr_Reg (Operand);
                case Mode is
                   when Mode_B2 =>
                      if Reg in Regs_R32 and then Op_Reg in Regs_Cc then
@@ -2108,16 +2214,25 @@ package body Ortho_Code.X86.Emits is
                  | Mode_I64 =>
                   Emit_Spill (Stmt, Sz_32l);
                   Emit_Spill (Stmt, Sz_32h);
+               when Mode_F32
+                 | Mode_F64 =>
+                  Reg := Get_Expr_Reg (Stmt);
+                  pragma Assert (Reg in Regs_Xmm);
+                  --  movsd
+                  Init_Modrm_Mem (Stmt, Sz_32l);
+                  Start_Insn;
+                  Gen_SSE_Rep_Opc (Mode_F64, 16#11#);
+                  Gen_Mod_Rm (To_Reg_Xmm (Reg) * 8);
+                  End_Insn;
                when others =>
                   Error_Emit ("emit_insn: spill", Stmt);
             end case;
 
          when OE_Reload =>
             declare
-               Expr : O_Enode;
+               Expr : constant O_Enode := Get_Expr_Operand (Stmt);
             begin
                Reg := Get_Expr_Reg (Stmt);
-               Expr := Get_Expr_Operand (Stmt);
                case Mode is
                   when Mode_B2
                     | Mode_U8
@@ -2131,6 +2246,15 @@ package body Ortho_Code.X86.Emits is
                     | Mode_I64 =>
                      Emit_Load (Reg, Expr, Sz_32l);
                      Emit_Load (Reg, Expr, Sz_32h);
+                  when Mode_F32
+                    | Mode_F64 =>
+                     pragma Assert (Reg in Regs_Xmm);
+                     --  movsd
+                     Init_Modrm_Mem (Expr, Sz_32l);
+                     Start_Insn;
+                     Gen_SSE_Rep_Opc (Mode_F64, 16#10#);
+                     Gen_Mod_Rm (To_Reg_Xmm (Reg) * 8);
+                     End_Insn;
                   when others =>
                      Error_Emit ("emit_insn: reload", Stmt);
                end case;
@@ -2254,6 +2378,7 @@ package body Ortho_Code.X86.Emits is
       use Ortho_Code.Types;
       use Ortho_Code.Flags;
       Decl : O_Dnode;
+      Mode : Mode_Type;
    begin
       --  Restore registers.
       Pop_Reg_If_Used (R_Bx);
@@ -2262,7 +2387,8 @@ package body Ortho_Code.X86.Emits is
 
       Decl := Subprg.D_Decl;
       if Get_Decl_Kind (Decl) = OD_Function then
-         case Get_Type_Mode (Get_Decl_Type (Decl)) is
+         Mode := Get_Type_Mode (Get_Decl_Type (Decl));
+         case Mode is
             when Mode_U8
               | Mode_B2 =>
                --  movzx %al,%eax
@@ -2275,10 +2401,24 @@ package body Ortho_Code.X86.Emits is
               | Mode_I32
               | Mode_U64
               | Mode_I64
-              | Mode_F32
-              | Mode_F64
               | Mode_P32 =>
                null;
+            when  Mode_F32
+              | Mode_F64 =>
+               if Abi.Flag_Sse2 then
+                  --  movsd %xmm0, slot(%ebp)
+                  Init_Modrm_Offset
+                    (R_Bp, -Int32 (Cur_Subprg.Target.Fp_Slot), Sz_32l);
+                  Start_Insn;
+                  Gen_SSE_Rep_Opc (Mode, 16#11#);
+                  Gen_Mod_Rm (2#00_000_000#);
+                  End_Insn;
+                  --  fldl slot(%ebp)
+                  Start_Insn;
+                  Gen_B8 (2#11011_001# + Mode_Fp_To_Mf (Mode));
+                  Gen_Mod_Rm (2#00_000_000#);
+                  End_Insn;
+               end if;
             when others =>
                raise Program_Error;
          end case;
@@ -2295,6 +2435,7 @@ package body Ortho_Code.X86.Emits is
 
    procedure Emit_Subprg (Subprg : Subprogram_Data_Acc)
    is
+      pragma Assert (Subprg = Cur_Subprg);
       Stmt : O_Enode;
    begin
       if Debug.Flag_Debug_Code2 then

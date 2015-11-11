@@ -92,6 +92,7 @@ package body Ortho_Code.X86.Abi is
 
    procedure Finish_Body (Subprg : Subprogram_Data_Acc)
    is
+      pragma Assert (Subprg = Cur_Subprg);
       use Ortho_Code.Flags;
 
       Child : Subprogram_Data_Acc;
@@ -125,9 +126,11 @@ package body Ortho_Code.X86.Abi is
       --  Recurse on nested subprograms.
       Child := Subprg.First_Child;
       while Child /= null loop
+         Cur_Subprg := Child;
          Finish_Body (Child);
          Child := Child.Brother;
       end loop;
+      Cur_Subprg := Subprg;
 
       if Get_Decl_Depth (Subprg.D_Decl) = O_Toplevel then
          if Flag_Debug = Debug_Dwarf then
@@ -144,6 +147,11 @@ package body Ortho_Code.X86.Abi is
             end if;
          end if;
       end if;
+   end Finish_Body;
+
+   procedure Finish_Body is
+   begin
+      Finish_Body (Cur_Subprg);
    end Finish_Body;
 
    procedure Expand_Const_Decl (Decl : O_Dnode) is

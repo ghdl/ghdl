@@ -40,7 +40,7 @@ package Ortho_Code.X86.Abi is
    --  If True, use SSE/SSE2 instructions instead of FPU one.  The code is
    --  still compliant with the ABI (ie FP values are returned in st0).
    --  TODO: this is still work in progress.
-   Flag_Sse2 : Boolean := False;
+   Flag_Sse2 : constant Boolean := False;
 
    --  Procedures to layout a subprogram declaration.
    procedure Start_Subprogram (Subprg : O_Dnode; Abi : out O_Abi_Subprg);
@@ -49,8 +49,8 @@ package Ortho_Code.X86.Abi is
 
    --  Only called for top-level subprograms.
    procedure Start_Body (Subprg : O_Dnode);
-   --  Finish compilation of a body.
-   procedure Finish_Body (Subprg : Subprogram_Data_Acc);
+   --  Finish compilation of a body (body is Cur_Subprg).
+   procedure Finish_Body;
 
    procedure Expand_Const_Decl (Decl : O_Dnode);
    procedure Expand_Var_Decl (Decl : O_Dnode);
@@ -71,7 +71,13 @@ package Ortho_Code.X86.Abi is
 
    --  Link in memory intrinsics symbols.
    procedure Link_Intrinsics;
+
+   --  Target specific data for subprograms.
+   type Target_Subprg is record
+      Fp_Slot : Uns32 := 0;
+   end record;
 private
+   --  Target specific data for O_Inter_List.
    type O_Abi_Subprg is record
       --  For x86: offset of the next argument.
       Offset : Int32 := 0;

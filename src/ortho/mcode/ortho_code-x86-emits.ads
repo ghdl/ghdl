@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Binary_File; use Binary_File;
+with Ortho_Code.Exprs; use Ortho_Code.Exprs;
 
 package Ortho_Code.X86.Emits is
    procedure Init;
@@ -33,4 +34,3 @@ package Ortho_Code.X86.Emits is
    Mcount_Symbol : Symbol;
    Chkstk_Symbol : Symbol;
 end Ortho_Code.X86.Emits;
-

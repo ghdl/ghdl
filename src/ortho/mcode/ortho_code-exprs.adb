@@ -543,7 +543,8 @@ package body Ortho_Code.Exprs is
                                    D_Body => D_Body,
                                    Exit_Label => O_Enode_Null,
                                    Last_Stmt => O_Enode_Null,
-                                   Stack_Max => 0);
+                                   Stack_Max => 0,
+                                   Target => (others => <>));
 
       if not Flag_Debug_Hli then
          Data.Exit_Label := New_Label;
@@ -636,7 +637,7 @@ package body Ortho_Code.Exprs is
             Disp_Subprg_Body (1, Cur_Subprg.E_Entry);
          end if;
          if not Ortho_Code.Debug.Flag_Debug_Dump then
-            Abi.Finish_Body (Cur_Subprg);
+            Abi.Finish_Body;
          end if;
       end if;
 

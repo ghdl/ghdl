@@ -15,6 +15,8 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Ortho_Code.Abi;
+
 package Ortho_Code.Exprs is
    type OE_Kind is
      (
@@ -254,6 +256,9 @@ package Ortho_Code.Exprs is
 
       --  Static maximum stack use.
       Stack_Max : Uns32;
+
+      --  Target specific data.
+      Target : Abi.Target_Subprg;
    end record;
 
    --  Data for the current subprogram.
