@@ -1741,7 +1741,7 @@ package body Ortho_Code.X86.Emits is
       end case;
    end Gen_Check_Overflow;
 
-   procedure Gen_Emit_Fp_Op (Stmt : O_Enode; B_St1 : Byte; B_Mem : Byte)
+   procedure Gen_Emit_Fp_Op (Stmt : O_Enode; Fp_Op : Byte)
    is
       Right : O_Enode;
       Reg : O_Reg;
@@ -1753,7 +1753,7 @@ package body Ortho_Code.X86.Emits is
       case Reg is
          when R_St0 =>
             Gen_B8 (2#11011_110#);
-            Gen_B8 (2#11_000_001# or B_St1);
+            Gen_B8 (2#11_000_001# or Fp_Op);
          when R_Mem =>
             case Get_Expr_Mode (Stmt) is
                when Mode_F32 =>
@@ -1765,7 +1765,7 @@ package body Ortho_Code.X86.Emits is
             end case;
             Gen_B8 (2#11011_000# or B_Size);
             Init_Modrm_Mem (Right, Sz_32l);
-            Gen_Mod_Rm (B_Mem);
+            Gen_Mod_Rm (Fp_Op);
          when others =>
             raise Program_Error;
       end case;
@@ -1773,7 +1773,7 @@ package body Ortho_Code.X86.Emits is
    end Gen_Emit_Fp_Op;
 
    procedure Gen_Emit_Fp_Or_Xmm_Op
-     (Stmt : O_Enode; B_St1 : Byte; B_Mem : Byte; Xmm_Op : Byte)
+     (Stmt : O_Enode; Fp_Op : Byte; Xmm_Op : Byte)
    is
       Reg : constant O_Reg := Get_Expr_Reg (Stmt);
    begin
@@ -1786,7 +1786,7 @@ package body Ortho_Code.X86.Emits is
             Gen_Xmm_Modrm (Mode, Xmm_Op, Reg);
          end;
       else
-         Gen_Emit_Fp_Op (Stmt, B_St1, B_Mem);
+         Gen_Emit_Fp_Op (Stmt, Fp_Op);
       end if;
    end Gen_Emit_Fp_Or_Xmm_Op;
 
@@ -1868,7 +1868,7 @@ package body Ortho_Code.X86.Emits is
             null;
          when OE_Add_Ov =>
             if Mode in Mode_Fp then
-               Gen_Emit_Fp_Or_Xmm_Op (Stmt, 2#000_000#, 2#000_000#, 16#58#);
+               Gen_Emit_Fp_Or_Xmm_Op (Stmt, 2#000_000#, 16#58#);
             else
                Gen_Grp1_Insn_Mode (Stmt, Opc2_Grp1_Add, Opc2_Grp1_Adc);
                Gen_Check_Overflow (Mode);
@@ -1881,7 +1881,7 @@ package body Ortho_Code.X86.Emits is
             Gen_Grp1_Insn_Mode (Stmt, Opc2_Grp1_Xor, Opc2_Grp1_Xor);
          when OE_Sub_Ov =>
             if Mode in Mode_Fp then
-               Gen_Emit_Fp_Or_Xmm_Op (Stmt, 2#100_000#, 2#100_000#, 16#5c#);
+               Gen_Emit_Fp_Or_Xmm_Op (Stmt, 2#100_000#, 16#5c#);
             else
                Gen_Grp1_Insn_Mode (Stmt, Opc2_Grp1_Sub, Opc2_Grp1_Sbb);
                Gen_Check_Overflow (Mode);
@@ -1900,7 +1900,7 @@ package body Ortho_Code.X86.Emits is
                                  Get_Expr_Right (Stmt), Sz_32l);
                when Mode_F32
                  | Mode_F64 =>
-                  Gen_Emit_Fp_Or_Xmm_Op (Stmt, 2#001_000#, 2#001_000#, 16#59#);
+                  Gen_Emit_Fp_Or_Xmm_Op (Stmt, 2#001_000#, 16#59#);
                when others =>
                   Error_Emit ("emit_insn: mul_ov", Stmt);
             end case;
@@ -1956,7 +1956,7 @@ package body Ortho_Code.X86.Emits is
                  | Mode_F64 =>
                   --  No Mod or Rem for fp types.
                   pragma Assert (Kind = OE_Div_Ov);
-                  Gen_Emit_Fp_Or_Xmm_Op (Stmt, 2#110_000#, 2#110_000#, 16#5e#);
+                  Gen_Emit_Fp_Or_Xmm_Op (Stmt, 2#110_000#, 16#5e#);
                when others =>
                   Error_Emit ("emit_insn: mod_ov", Stmt);
             end case;
