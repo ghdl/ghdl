@@ -696,7 +696,9 @@ package body Ortho_Code.X86.Insns is
                  | R_Any32
                  | Regs_R64
                  | R_Any64
-                 | R_Any8 =>
+                 | R_Any8
+                 | Regs_Xmm
+                 | R_Any_Xmm =>
                   return Gen_Reload (Spill, Dest, Num);
                when R_Sib =>
                   return Gen_Reload (Spill, R_Any32, Num);
@@ -954,7 +956,7 @@ package body Ortho_Code.X86.Insns is
       Need_Fp_Conv_Slot := True;
       Num := Get_Insn_Num;
       Left := Get_Expr_Operand (Stmt);
-      Left := Gen_Insn (Left, R_St0, Num);
+      Left := Gen_Insn (Left, Get_Reg_Any (Get_Expr_Mode (Left)), Num);
       Free_Insn_Regs (Left);
       Set_Expr_Operand (Stmt, Left);
       case Reg is
@@ -1212,23 +1214,25 @@ package body Ortho_Code.X86.Insns is
                   end case;
                when Mode_F32
                  | Mode_F64 =>
+                  Num := Get_Insn_Num;
                   case Reg is
                      when R_Ir
                        | R_Irm
-                       | R_Rm
-                       | R_Any_Xmm
-                       | R_St0 =>
-                        Num := Get_Insn_Num;
-                        if Reg = R_St0 or not Abi.Flag_Sse2 then
-                           Reg1 := R_St0;
-                        else
+                       | R_Rm =>
+                        if Abi.Flag_Sse2 then
                            Reg1 := R_Any_Xmm;
+                        else
+                           Reg1 := R_St0;
                         end if;
-                        Set_Expr_Reg (Stmt, Alloc_Reg (Reg1, Stmt, Num));
-                        Link_Stmt (Stmt);
+                     when R_St0
+                       | R_Any_Xmm
+                       | Regs_Xmm =>
+                        Reg1 := Reg;
                      when others =>
                         raise Program_Error;
                   end case;
+                  Set_Expr_Reg (Stmt, Alloc_Reg (Reg1, Stmt, Num));
+                  Link_Stmt (Stmt);
                when Mode_U64
                  | Mode_I64 =>
                   case Reg is
@@ -1289,7 +1293,11 @@ package body Ortho_Code.X86.Insns is
             case Get_Expr_Mode (Right) is
                when Mode_F32
                  | Mode_F64 =>
-                  Reg1 := R_St0;
+                  if Abi.Flag_Sse2 then
+                     Reg1 := R_Rm;
+                  else
+                     Reg1 := R_St0;
+                  end if;
                when others =>
                   Reg1 := R_Irm;
             end case;
@@ -1308,7 +1316,10 @@ package body Ortho_Code.X86.Insns is
             case Get_Expr_Mode (Left) is
                when Mode_F32
                  | Mode_F64 =>
-                  Reg_Res := Reverse_Cc (Reg_Res);
+                  if not Abi.Flag_Sse2 then
+                     --  Reverse only for FPU.
+                     Reg_Res := Reverse_Cc (Reg_Res);
+                  end if;
                when Mode_I64 =>
                   --  I64 is a little bit special...
                   Reg_Res := Get_R64_High (Get_Expr_Reg (Left));
@@ -1650,10 +1661,12 @@ package body Ortho_Code.X86.Insns is
                      Reg_Res := Get_Reg_Any (Mode);
                      Left := Gen_Insn (Left, Reg_Res, Num);
                      Right := Gen_Insn (Right, R_Rm, Num);
+                     Left := Reload (Left, Reg_Res, Num);
                      Set_Expr_Left (Stmt, Left);
                      Set_Expr_Right (Stmt, Right);
                      Free_Insn_Regs (Right);
                      Free_Insn_Regs (Left);
+                     Reg_Res := Get_Expr_Reg (Left);
                      Set_Expr_Reg (Stmt, Alloc_Reg (Reg_Res, Stmt, Pnum));
                      Link_Stmt (Stmt);
                      return Stmt;
@@ -1932,7 +1945,7 @@ package body Ortho_Code.X86.Insns is
 
    procedure Gen_Insn_Stmt (Stmt : O_Enode)
    is
-      Kind : OE_Kind;
+      Kind : constant OE_Kind := Get_Expr_Kind (Stmt);
 
       Left : O_Enode;
       Right : O_Enode;
@@ -1945,7 +1958,6 @@ package body Ortho_Code.X86.Insns is
       Num := Get_Insn_Num;
       Prev_Stack_Offset := Stack_Offset;
 
-      Kind := Get_Expr_Kind (Stmt);
       case Kind is
          when OE_Asgn =>
             Left := Gen_Insn (Get_Expr_Operand (Stmt), R_Ir, Num);
@@ -1988,7 +2000,8 @@ package body Ortho_Code.X86.Insns is
          when OE_Leave =>
             Link_Stmt (Stmt);
          when OE_Call =>
-            Link_Stmt (Gen_Call (Stmt, R_None, Num));
+            Left := Gen_Call (Stmt, R_None, Num);
+            --  Gen_Call already link the statement.  Discard the result.
          when OE_Ret =>
             Left := Get_Expr_Operand (Stmt);
             P_Reg := Get_Return_Register (Get_Expr_Mode (Stmt));
@@ -2037,7 +2050,8 @@ package body Ortho_Code.X86.Insns is
       Stmt : O_Enode;
       N_Stmt : O_Enode;
    begin
-      --  Handle --be-debug=i
+      --  Handle --be-debug=i: disp subprogram declaration before the
+      --  statements.
       if Debug.Flag_Debug_Insn then
          declare
             Inter : O_Dnode;
