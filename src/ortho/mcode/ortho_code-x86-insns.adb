@@ -1658,16 +1658,25 @@ package body Ortho_Code.X86.Insns is
                      return Insert_Intrinsic (Stmt, R_Edx_Eax, Pnum);
                   when Mode_F32
                     | Mode_F64 =>
-                     Reg_Res := Get_Reg_Any (Mode);
+                     if Abi.Flag_Sse2 then
+                        if Reg in Regs_Xmm then
+                           Reg_Res := Reg;
+                        else
+                           Reg_Res := R_Any_Xmm;
+                        end if;
+                     else
+                        Reg_Res := R_St0;
+                     end if;
+                     Right := Gen_Insn (Right, R_Irm, Num);
                      Left := Gen_Insn (Left, Reg_Res, Num);
-                     Right := Gen_Insn (Right, R_Rm, Num);
+                     Right := Reload (Right, R_Irm, Num);
                      Left := Reload (Left, Reg_Res, Num);
-                     Set_Expr_Left (Stmt, Left);
-                     Set_Expr_Right (Stmt, Right);
-                     Free_Insn_Regs (Right);
-                     Free_Insn_Regs (Left);
                      Reg_Res := Get_Expr_Reg (Left);
-                     Set_Expr_Reg (Stmt, Alloc_Reg (Reg_Res, Stmt, Pnum));
+                     Set_Expr_Right (Stmt, Right);
+                     Set_Expr_Left (Stmt, Left);
+                     Set_Expr_Reg (Stmt, Reg_Res);
+                     Renum_Reg (Reg_Res, Stmt, Pnum);
+                     Free_Insn_Regs (Right);
                      Link_Stmt (Stmt);
                      return Stmt;
                   when others =>

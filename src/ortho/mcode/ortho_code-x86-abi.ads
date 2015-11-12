@@ -40,7 +40,7 @@ package Ortho_Code.X86.Abi is
    --  If True, use SSE/SSE2 instructions instead of FPU one.  The code is
    --  still compliant with the ABI (ie FP values are returned in st0).
    --  TODO: this is still work in progress.
-   Flag_Sse2 : constant Boolean := False;
+   Flag_Sse2 : constant Boolean := True;
 
    --  Procedures to layout a subprogram declaration.
    procedure Start_Subprogram (Subprg : O_Dnode; Abi : out O_Abi_Subprg);

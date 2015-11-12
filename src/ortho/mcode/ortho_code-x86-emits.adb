@@ -1638,9 +1638,19 @@ package body Ortho_Code.X86.Emits is
    --  Convert FP to xxx.
    procedure Gen_Conv_Fp (Stmt : O_Enode)
    is
+      Mode : constant Mode_Type := Get_Expr_Mode (Stmt);
       Reg : constant O_Reg := Get_Expr_Reg (Stmt);
       Reg_Op : constant O_Reg := Get_Expr_Reg (Get_Expr_Operand (Stmt));
    begin
+      if Mode = Mode_I32 and then Reg_Op in Regs_Xmm then
+         --  cvtsd2si
+         Init_Modrm_Reg (Reg_Op, Sz_32l);
+         Gen_SSE_Rep_Opc (Mode_F64, 16#2d#);
+         Gen_Mod_Rm (To_Reg32 (Reg) * 8);
+         End_Insn;
+         return;
+      end if;
+
       Init_Modrm_Offset
         (R_Bp, -Int32 (Cur_Subprg.Target.Fp_Slot), Sz_32l);
 
@@ -1657,7 +1667,7 @@ package body Ortho_Code.X86.Emits is
          End_Insn;
       end if;
 
-      case Get_Expr_Mode (Stmt) is
+      case Mode is
          when Mode_I32 =>
             --  fistpl slot(%ebp)
             Start_Insn;
@@ -1946,8 +1956,7 @@ package body Ortho_Code.X86.Emits is
                  | Mode_F64 =>
                   --  No Mod or Rem for fp types.
                   pragma Assert (Kind = OE_Div_Ov);
-                  Gen_Emit_Fp_Or_Xmm_Op
-                    (Stmt, 2#111_000#, 2#110_000#, 16#5e#);
+                  Gen_Emit_Fp_Or_Xmm_Op (Stmt, 2#110_000#, 2#110_000#, 16#5e#);
                when others =>
                   Error_Emit ("emit_insn: mod_ov", Stmt);
             end case;
