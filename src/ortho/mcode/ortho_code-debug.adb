@@ -65,10 +65,8 @@ package body Ortho_Code.Debug is
       case C is
          when 'a' =>
             Flag_Debug_Asm := True;
-         when 'b' =>
-            Flag_Debug_Body := True;
          when 'B' =>
-            Flag_Debug_Body2 := True;
+            Flag_Debug_Body := True;
          when 'c' =>
             Flag_Debug_Code := True;
          when 'C' =>

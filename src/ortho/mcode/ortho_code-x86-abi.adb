@@ -104,7 +104,7 @@ package body Ortho_Code.X86.Abi is
 
       Insns.Gen_Subprg_Insns (Subprg);
 
-      if Ortho_Code.Debug.Flag_Debug_Body2 then
+      if Ortho_Code.Debug.Flag_Debug_Body then
          Disp_Subprg_Body (1, Subprg.E_Entry);
       end if;
 
@@ -353,8 +353,8 @@ package body Ortho_Code.X86.Abi is
    is
       use Ada.Text_IO;
       use Debug.Int32_IO;
-      Kind : OE_Kind;
-      Mode : Mode_Type;
+      Kind : constant OE_Kind := Get_Expr_Kind (Stmt);
+      Mode : constant Mode_Type := Get_Expr_Mode (Stmt);
 
       procedure Disp_Op_Name (Name : String) is
       begin
@@ -373,9 +373,6 @@ package body Ortho_Code.X86.Abi is
       end Disp_Reg_Op_Name;
 
    begin
-      Kind := Get_Expr_Kind (Stmt);
-      Mode := Get_Expr_Mode (Stmt);
-
       case Kind is
          when OE_Beg =>
             Put ("  # block start");

@@ -185,6 +185,11 @@ package body Ortho_Code.Exprs is
       return Int32 (Enodes.Table (Enode).Arg1);
    end Get_Stack_Adjust;
 
+   procedure Set_Stack_Adjust (Enode : O_Enode; Off : Int32) is
+   begin
+      Enodes.Table (Enode).Arg1 := O_Enode (Off);
+   end Set_Stack_Adjust;
+
    function Get_Arg_Link (Enode : O_Enode) return O_Enode is
    begin
       return Enodes.Table (Enode).Arg2;
@@ -582,9 +587,7 @@ package body Ortho_Code.Exprs is
 
       --  Disp declarations.
       if Cur_Subprg.Parent = null then
-         if Ortho_Code.Debug.Flag_Debug_Body
-           or Ortho_Code.Debug.Flag_Debug_Code
-         then
+         if Ortho_Code.Debug.Flag_Debug_Code then
             while Last_Decl <= D_Body loop
                case Get_Decl_Kind (Last_Decl) is
                   when OD_Block =>

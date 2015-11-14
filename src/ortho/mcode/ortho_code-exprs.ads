@@ -339,6 +339,7 @@ package Ortho_Code.Exprs is
    --  stack pointer stays aligned. For negtive values, this is the amount of
    --  bytes to release on the stack.
    function Get_Stack_Adjust (Enode : O_Enode) return Int32;
+   procedure Set_Stack_Adjust (Enode : O_Enode; Off : Int32);
 
    --  Get the subprogram called by ENODE.
    function Get_Call_Subprg (Enode : O_Enode) return O_Dnode;

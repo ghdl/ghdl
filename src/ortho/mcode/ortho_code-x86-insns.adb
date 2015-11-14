@@ -15,6 +15,52 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
+--  Instruction pass for mcode x86.
+--
+--  The purpose of this pass is the transform the AST (the input) into a list
+--  of x86 instructions and to allocate registers.
+--
+--  The AST given in input is already linearized: ifs, loops, cases have been
+--  translated to labels and jumps.  So the input is a list of statement to
+--  execute, intermixed with declaration blocks.
+--
+--  The first purpose of this pass is to translate statements (and expressions)
+--  to x86 instructions.  This isn't particularly difficult as they are already
+--  low-level statements and expression (by design of the language).  The
+--  algorithm simply try to put as much as possible into an instruction (in
+--  order to use the address operand encoding of x86: base, index and scale):
+--  AST is split into small trees (sometime as small as a single node) and
+--  linearized.  Each node represent a fix pattern of one or a few instructions
+--  (in some case, like a 64 bit addition, we need more than one x86
+--  instruction).
+--  The core functions of this package (Gen_Insn and Gen_Insn_Stmt) do the
+--  work: they call Gen_Insn for each operand, then append themself to the
+--  result using Link_Stmt.
+--
+--  The second purpose of this pass is to perform register allocation.  This
+--  is done in the same time.
+--  There are two sources of constraints for register allocation:
+--  - external constraint on the result: for example, the return value of
+--    a function must be in a fixed register (defined by the ABI).
+--  - instruction constraint on the result: some x86 instructions (like div)
+--    specify the result register.  This constraint will be forward propagated
+--    to next instructions.
+--  - instruction constraint on the operand: most x86 instructions set the
+--    result in one of the operand register, and some instructions (like shl)
+--    have a fixed register for an operand (like the shift count).  This
+--    constraint has to be backward propagated to previous instructions.
+--  Obviously constraints may be incompatible: the result of an instruction
+--  may be in a different register than the input of the next instruction.
+--  In this case, move instructions are added.
+--  It is possible (and quite easily) to run out of registers.  In that case
+--  some values must be spilt (save) on the stack and will be reloaded later.
+--  Registers are allocated statement by statement.  So after each statement
+--  all registers should be unused (this is a very basic register allocator).
+--
+--  Finally, this pass also allocate stack slots for local variables, and
+--  compute the size of the frame.
+
 with Interfaces;
 with Ada.Text_IO;
 with Ortho_Code.Abi;
@@ -24,6 +70,7 @@ with Ortho_Code.Debug;
 with Ortho_Code.X86.Flags;
 
 package body Ortho_Code.X86.Insns is
+   --  Add STMT to the list of instructions.
    procedure Link_Stmt (Stmt : O_Enode)
    is
       use Ortho_Code.Abi;
@@ -35,6 +82,7 @@ package body Ortho_Code.X86.Insns is
       end if;
    end Link_Stmt;
 
+   --  Return the 'any register' constraint for mode MODE.
    function Get_Reg_Any (Mode : Mode_Type) return O_Reg is
    begin
       case Mode is
@@ -104,9 +152,11 @@ package body Ortho_Code.X86.Insns is
          case Get_Decl_Kind (Decl) is
             when OD_Local =>
                Decl_Type := Get_Decl_Type (Decl);
+               --  Align and allocate (on the stack).
                Stack_Offset := Do_Align (Stack_Offset, Decl_Type);
                Stack_Offset := Stack_Offset + Get_Type_Size (Decl_Type);
                Set_Local_Offset (Decl, -Int32 (Stack_Offset));
+               --  If the frame gets lager, set the maximum size.
                if Stack_Offset > Stack_Max then
                   Stack_Max := Stack_Offset;
                end if;
@@ -127,6 +177,7 @@ package body Ortho_Code.X86.Insns is
       end loop;
    end Expand_Decls;
 
+   --  Condition code for unsigned comparaison.
    function Ekind_Unsigned_To_Cc (Kind : OE_Kind_Cmp) return O_Reg is
    begin
       case Kind is
@@ -145,6 +196,7 @@ package body Ortho_Code.X86.Insns is
       end case;
    end Ekind_Unsigned_To_Cc;
 
+   --  Condition code for signed comparaison.
    function Ekind_Signed_To_Cc (Kind : OE_Kind_Cmp) return O_Reg is
    begin
       case Kind is
@@ -211,7 +263,7 @@ package body Ortho_Code.X86.Insns is
       end case;
    end Reverse_Cc;
 
-   --  Get the register in which a result of MODE is returned.
+   --  Get the register in which a function result for MODE is returned.
    function Get_Return_Register (Mode : Mode_Type) return O_Reg is
    begin
       case Mode is
@@ -289,7 +341,6 @@ package body Ortho_Code.X86.Insns is
       return Insn_Num;
    end Get_Insn_Num;
 
-
    type Reg_Info_Type is record
       --  Statement number which use this register.
       --  This is a distance.
@@ -301,7 +352,7 @@ package body Ortho_Code.X86.Insns is
       Stmt : O_Enode;
 
       --  If set, this register has been used.
-      --  All callee-saved registers marked must be saved.
+      --  All callee-saved registers marked 'used' must be saved in the prolog.
       Used : Boolean;
    end record;
 
@@ -390,34 +441,26 @@ package body Ortho_Code.X86.Insns is
    --  Mark a register as unused.
    procedure Free_R32 (Reg : O_Reg) is
    begin
-      if Regs (Reg).Num = O_Free then
-         raise Program_Error;
-      end if;
+      pragma Assert (Regs (Reg).Num /= O_Free);
       Regs (Reg).Num := O_Free;
    end Free_R32;
 
    procedure Free_Fp is
    begin
-      if Fp_Regs (Fp_Top).Stmt = O_Enode_Null then
-         raise Program_Error;
-      end if;
-      Fp_Regs (Fp_Top).Stmt := O_Enode_Null;
+      pragma Assert (Fp_Regs (Fp_Top).Num /= O_Free);
+      Fp_Regs (Fp_Top).Num := O_Free;
       Fp_Top := Fp_Top + 1;
    end Free_Fp;
 
    procedure Free_Cc is
    begin
-      if Reg_Cc.Num = O_Free then
-         raise Program_Error;
-      end if;
+      pragma Assert (Reg_Cc.Num /= O_Free);
       Reg_Cc.Num := O_Free;
    end Free_Cc;
 
    procedure Free_Xmm (Reg : O_Reg) is
    begin
-      if Xmm_Regs (Reg).Num = O_Free then
-         raise Program_Error;
-      end if;
+      pragma Assert (Xmm_Regs (Reg).Num /= O_Free);
       Xmm_Regs (Reg).Num := O_Free;
    end Free_Xmm;
 
@@ -491,7 +534,7 @@ package body Ortho_Code.X86.Insns is
       end case;
    end Spill_R32;
 
-   procedure Alloc_R32 (Reg : O_Reg; Stmt : O_Enode; Num : O_Inum) is
+   procedure Alloc_R32 (Reg : Regs_R32; Stmt : O_Enode; Num : O_Inum) is
    begin
       if Regs (Reg).Num /= O_Free then
          Spill_R32 (Reg);
@@ -879,6 +922,22 @@ package body Ortho_Code.X86.Insns is
       Link_Stmt (N);
    end Insert_Arg;
 
+   --  Mark all registers that aren't preserved by a call as clobbered, so that
+   --  they are saved.
+   procedure Clobber_Caller_Saved_Registers is
+   begin
+      Clobber_R32 (R_Ax);
+      Clobber_R32 (R_Dx);
+      Clobber_R32 (R_Cx);
+      --  FIXME: fp regs.
+
+      if Abi.Flag_Sse2 then
+         for R in Regs_Xmm loop
+            Clobber_Xmm (R);
+         end loop;
+      end if;
+   end Clobber_Caller_Saved_Registers;
+
    function Insert_Intrinsic (Stmt : O_Enode; Reg : O_Reg; Num : O_Inum)
                              return O_Enode
    is
@@ -929,9 +988,7 @@ package body Ortho_Code.X86.Insns is
       end case;
 
       --  Save caller-saved registers.
-      Clobber_R32 (R_Ax);
-      Clobber_R32 (R_Dx);
-      Clobber_R32 (R_Cx);
+      Clobber_Caller_Saved_Registers;
 
       N := New_Enode (OE_Intrinsic, Mode, O_Tnode_Null,
                       O_Enode (Op), O_Enode_Null);
@@ -976,6 +1033,27 @@ package body Ortho_Code.X86.Insns is
       return Stmt;
    end Gen_Conv_From_Fp_Insn;
 
+   procedure Gen_Stack_Adjust (Off : Int32)
+   is
+      use Ortho_Code.Abi;
+      Stmt : O_Enode;
+   begin
+      if Get_Expr_Kind (Last_Link) = OE_Stack_Adjust then
+         --  The last instruction was already a stack_adjust.  Change the
+         --  value.
+         Set_Stack_Adjust (Last_Link,
+                           Get_Stack_Adjust (Last_Link) + Off);
+         if Debug.Flag_Debug_Insn then
+            Ada.Text_IO.Put ("  patched:");
+            Disp_Stmt (Last_Link);
+         end if;
+      else
+         Stmt := New_Enode (OE_Stack_Adjust, Mode_Nil, O_Tnode_Null,
+                            O_Enode (Off), O_Enode_Null);
+         Link_Stmt (Stmt);
+      end if;
+   end Gen_Stack_Adjust;
+
    function Gen_Call (Stmt : O_Enode; Reg : O_Reg; Pnum : O_Inum)
                      return O_Enode
    is
@@ -992,8 +1070,7 @@ package body Ortho_Code.X86.Insns is
       Pad := (Push_Size + Push_Offset) and Uns32 (Flags.Stack_Boundary - 1);
       if Pad /= 0 then
          Pad := Uns32 (Flags.Stack_Boundary) - Pad;
-         Link_Stmt (New_Enode (OE_Stack_Adjust, Mode_Nil, O_Tnode_Null,
-                               O_Enode (Pad), O_Enode_Null));
+         Gen_Stack_Adjust (Int32 (Pad));
       end if;
       --  The stack has been adjusted by Pad bytes.
       Push_Offset := Push_Offset + Pad;
@@ -1005,16 +1082,7 @@ package body Ortho_Code.X86.Insns is
       end if;
 
       --  Clobber registers.
-      Clobber_R32 (R_Ax);
-      Clobber_R32 (R_Dx);
-      Clobber_R32 (R_Cx);
-      --  FIXME: fp regs.
-
-      if Abi.Flag_Sse2 then
-         for R in Regs_Xmm loop
-            Clobber_Xmm (R);
-         end loop;
-      end if;
+      Clobber_Caller_Saved_Registers;
 
       --  Add the call.
       Reg_Res := Get_Return_Register (Get_Expr_Mode (Stmt));
@@ -1023,11 +1091,7 @@ package body Ortho_Code.X86.Insns is
       Res_Stmt := Stmt;
 
       if Push_Size + Pad /= 0 then
-         Res_Stmt :=
-           New_Enode (OE_Stack_Adjust, Get_Expr_Mode (Stmt), O_Tnode_Null,
-                      O_Enode (-Int32 (Push_Size + Pad)), O_Enode_Null);
-         Set_Expr_Reg (Res_Stmt, Reg_Res);
-         Link_Stmt (Res_Stmt);
+         Gen_Stack_Adjust (-Int32 (Push_Size + Pad));
       end if;
 
       --  The stack has been restored (just after the call).
@@ -1589,10 +1653,10 @@ package body Ortho_Code.X86.Insns is
                  | Regs_R64
                  | Regs_Fp
                  | Regs_Xmm =>
-                  Right := Gen_Insn (Right, R_Irm, Num);
                   Left := Gen_Insn (Left, Reg, Num);
-                  Right := Reload (Right, R_Irm, Num);
+                  Right := Gen_Insn (Right, R_Irm, Num);
                   Left := Reload (Left, Reg, Num);
+                  Right := Reload (Right, R_Irm, Num);
                   Reg_Res := Get_Expr_Reg (Left);
                when others =>
                   Error_Gen_Insn (Stmt, Reg);
@@ -1667,10 +1731,10 @@ package body Ortho_Code.X86.Insns is
                      else
                         Reg_Res := R_St0;
                      end if;
-                     Right := Gen_Insn (Right, R_Irm, Num);
                      Left := Gen_Insn (Left, Reg_Res, Num);
-                     Right := Reload (Right, R_Irm, Num);
+                     Right := Gen_Insn (Right, R_Irm, Num);
                      Left := Reload (Left, Reg_Res, Num);
+                     Right := Reload (Right, R_Irm, Num);
                      Reg_Res := Get_Expr_Reg (Left);
                      Set_Expr_Right (Stmt, Right);
                      Set_Expr_Left (Stmt, Left);
@@ -1874,19 +1938,20 @@ package body Ortho_Code.X86.Insns is
                     | R_Ir
                     | R_Sib
                     | R_Any32
-                    | Regs_R32
                     | R_Any64
                     | R_Any8
+                    | R_Any_Xmm =>
+                     Reg_Res := Get_Reg_Any (Stmt);
+                  when Regs_R32
                     | Regs_R64
                     | Regs_Fp
-                    | R_Any_Xmm
                     | Regs_Xmm =>
-                     Free_Insn_Regs (Left);
-                     Set_Expr_Reg
-                       (Stmt, Alloc_Reg (Get_Reg_Any (Stmt), Stmt, Pnum));
+                     Reg_Res := Reg;
                   when others =>
                      Error_Gen_Insn (Stmt, Reg);
                end case;
+               Free_Insn_Regs (Left);
+               Set_Expr_Reg (Stmt, Alloc_Reg (Reg_Res, Stmt, Pnum));
                Link_Stmt (Stmt);
                return Stmt;
             end;
@@ -1969,12 +2034,12 @@ package body Ortho_Code.X86.Insns is
 
       case Kind is
          when OE_Asgn =>
-            Left := Gen_Insn (Get_Expr_Operand (Stmt), R_Ir, Num);
-            Right := Gen_Insn (Get_Assign_Target (Stmt), R_Sib, Num);
-            Left := Reload (Left, R_Ir, Num);
-            --Right := Reload (Right, R_Sib, Num);
-            Set_Expr_Operand (Stmt, Left);
-            Set_Assign_Target (Stmt, Right);
+            Right := Gen_Insn (Get_Expr_Operand (Stmt), R_Ir, Num);
+            Left := Gen_Insn (Get_Assign_Target (Stmt), R_Sib, Num);
+            Right := Reload (Right, R_Ir, Num);
+            --Left := Reload (Left, R_Sib, Num);
+            Set_Expr_Operand (Stmt, Right);
+            Set_Assign_Target (Stmt, Left);
             Link_Stmt (Stmt);
             Free_Insn_Regs (Left);
             Free_Insn_Regs (Right);
@@ -1995,11 +2060,15 @@ package body Ortho_Code.X86.Insns is
             begin
                Cur_Block := Stmt;
                Block_Decl := Get_Block_Decls (Cur_Block);
+               --  Save current frame size (to be restored at end of block).
                Set_Block_Max_Stack (Block_Decl, Stack_Offset);
+               --  Allocate slots for local declarations.
                Expand_Decls (Block_Decl);
             end;
             Link_Stmt (Stmt);
          when OE_End =>
+            --  Restore current frame size (so deallocate the slots for the
+            --  local declarations).
             Swap_Stack_Offset (Get_Block_Decls (Cur_Block));
             Cur_Block := Get_Block_Parent (Cur_Block);
             Link_Stmt (Stmt);
@@ -2042,6 +2111,7 @@ package body Ortho_Code.X86.Insns is
       case Kind is
          when OE_Beg
            | OE_End =>
+            --  Stack offset has been explicitely changed for local variables.
             null;
          when others =>
             Stack_Offset := Prev_Stack_Offset;

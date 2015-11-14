@@ -22,14 +22,15 @@ package Ortho_Code.Debug is
 
    procedure Disp_Mode (M : Mode_Type);
 
-   --  Set a debug flag.
+   --  Set a debug flag (--be-debug=X).
    procedure Set_Debug_Be_Flag (C : Character);
 
    --  any '--be-XXX=YY' option.
    procedure Set_Be_Flag (Str : String);
 
-   --  c: tree created, before any back-end.
+   --  --be-disp=c: tree created, before any back-end.
    Flag_Disp_Code : Boolean := False;
+   --  --be-dump=c: tree created, before any back-end.
    Flag_Dump_Code : Boolean := False;
 
    --  a: disp assembly code.
@@ -38,16 +39,14 @@ package Ortho_Code.Debug is
    --  A: do internal checks (assertions).
    Flag_Debug_Assert : Boolean := True;
 
-   --  b: disp top-level subprogram body before code generation.
+   --  B: dump generated insns (at the end of insn generation).
    Flag_Debug_Body : Boolean := False;
 
-   --  B: disp top-level subprogram body after code generation.
-   Flag_Debug_Body2 : Boolean := False;
-
-   --  c: display generated code.
+   --  c: display generated insns (at the end of insn generation).
+   --  This is a log dump.
    Flag_Debug_Code : Boolean := False;
 
-   --  C: display generated code just before asm.
+   --  C: display insns when generating code.  Useful to debug code generation.
    Flag_Debug_Code2 : Boolean := False;
 
    --  h: disp bytes generated (in hexa).
@@ -60,6 +59,9 @@ package Ortho_Code.Debug is
    Flag_Debug_Dump : Boolean := False;
 
    --  i: disp insns, when generated.
+   --  The output may be misleading as a spill inserted later is not displayed.
+   --  Useful only when debugging insn generation.  Use --be-debug=c to view
+   --  the correct output.
    Flag_Debug_Insn : Boolean := False;
 
    --  s: disp stats (number of nodes).
