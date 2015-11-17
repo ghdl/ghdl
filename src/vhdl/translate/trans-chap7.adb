@@ -1262,7 +1262,7 @@ package body Trans.Chap7 is
       begin
          Chap3.Translate_Object_Copy
            (Chap3.Index_Base (Var_Arr, Expr_Type, New_Obj_Value (Var_Off)),
-            Translate_Expression (E), Get_Type (E));
+            Translate_Expression (E), Get_Element_Subtype (Expr_Type));
          Inc_Var (Var_Off);
       end Assign_El;
 
