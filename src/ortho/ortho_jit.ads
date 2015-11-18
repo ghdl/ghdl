@@ -39,5 +39,9 @@ package Ortho_Jit is
 
    --  Return the name of the code generator, to be displayed by --version.
    function Get_Jit_Name return String;
-end Ortho_Jit;
 
+   procedure Symbolize (Pc : Address;
+                        Filename : out Address;
+                        Lineno : out Natural;
+                        Subprg : out Address);
+end Ortho_Jit;

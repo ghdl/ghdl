@@ -591,6 +591,8 @@ package body Ghdlrun is
 
       Grtlink.Flag_String := Flags.Flag_String;
 
+      Grt.Errors.Symbolizer := Ortho_Jit.Symbolize'Access;
+
       Elaborate_Proc :=
         Conv (Ortho_Jit.Get_Address (Trans_Decls.Ghdl_Elaborate));
 

@@ -1,5 +1,5 @@
 --  Ortho JIT implementation for mcode.
---  Copyright (C) 2009 Tristan Gingold
+--  Copyright (C) 2009 - 2015 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -16,6 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with System.Storage_Elements; use System.Storage_Elements;
+
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ada.Text_IO;
 
@@ -26,7 +28,9 @@ with Ortho_Mcode.Jit;
 with Ortho_Code.Flags; use Ortho_Code.Flags;
 with Ortho_Code.Debug;
 with Ortho_Code.Abi;
-with Binary_File.Elf;
+with Ortho_Code.Dwarf;
+with Binary_File.Format;
+with Symbolizer;
 
 package body Ortho_Jit is
    Snap_Filename : GNAT.OS_Lib.String_Access := null;
@@ -76,7 +80,7 @@ package body Ortho_Jit is
                Status := False;
                return;
             else
-               Binary_File.Elf.Write (Fd);
+               Binary_File.Format.Write (Fd);
                Close (Fd);
             end if;
          end;
@@ -97,6 +101,9 @@ package body Ortho_Jit is
    begin
       if Opt = "-g" then
          Flag_Debug := Debug_Dwarf;
+         return True;
+      elsif Opt = "-g0" then
+         Flag_Debug := Debug_None;
          return True;
       elsif Opt'Length > 5 and then Opt (1 .. 5) = "--be-" then
          Ortho_Code.Debug.Set_Be_Flag (Opt);
@@ -121,5 +128,44 @@ package body Ortho_Jit is
    begin
       return "mcode";
    end Get_Jit_Name;
+
+   procedure Symbolize (Pc : Address;
+                        Filename : out Address;
+                        Lineno : out Natural;
+                        Subprg : out Address)
+   is
+      use Binary_File.Memory;
+      use Symbolizer;
+
+      function Get_Section_Content (Sect : Section_Acc) return Section_Content
+      is
+         Addr : Address;
+         Size : Pc_Type;
+      begin
+         if Sect = null then
+            return (Null_Address, 0);
+         else
+            Addr := Get_Section_Base (Sect);
+            Size := Get_Section_Size (Sect);
+            return (Addr, Storage_Offset (Size));
+         end if;
+      end Get_Section_Content;
+
+      Sections : Dwarf_Sections;
+      Res : Symbolize_Result;
+   begin
+      Sections.Debug_Line :=
+        Get_Section_Content (Ortho_Code.Dwarf.Line_Sect);
+      Sections.Debug_Info :=
+        Get_Section_Content (Ortho_Code.Dwarf.Info_Sect);
+      Sections.Debug_Abbrev :=
+        Get_Section_Content (Ortho_Code.Dwarf.Abbrev_Sect);
+
+      Symbolize_Address (Pc, Sections, Res);
+
+      Filename := Res.Filename;
+      Lineno := Res.Line;
+      Subprg := Res.Subprg_Name;
+   end Symbolize;
 
 end Ortho_Jit;

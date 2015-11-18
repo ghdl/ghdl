@@ -30,12 +30,10 @@
 #include <assert.h>
 #include <excpt.h>
 
+#include "grt_itf.h"
+
 static int run_env_en;
 static jmp_buf run_env;
-
-extern void grt_overflow_error (void);
-extern void grt_null_access_error (void);
-void __ghdl_maybe_return_via_longjump (int val);
 
 static EXCEPTION_DISPOSITION
 ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
@@ -60,7 +58,8 @@ ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
   switch (ExceptionRecord->ExceptionCode)
     {
     case EXCEPTION_ACCESS_VIOLATION:
-      grt_null_access_error ();
+      /* Pc is ExceptionRecord->ExceptionAddress.  */
+      grt_null_access_error (NULL);
       break;
 
     case EXCEPTION_FLT_DENORMAL_OPERAND:
@@ -77,7 +76,7 @@ ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
       break;
 
     case EXCEPTION_INT_OVERFLOW:
-      grt_overflow_error ();
+      grt_overflow_error (NULL);
       break;
 
     case EXCEPTION_STACK_OVERFLOW:
@@ -130,6 +129,12 @@ __ghdl_run_through_longjump (int (*func)(void))
   asm ("mov %0,%%fs:(0)" : : "r" (prev));
 
   return res;
+}
+
+void
+grt_save_backtrace (struct backtrace_addrs *bt, int skip)
+{
+  bt->size = 0;
 }
 
 #include <math.h>

@@ -16,17 +16,12 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Unchecked_Conversion;
 
 package body Binary_File.Memory is
    --  Absolute section.
    Sect_Abs : Section_Acc;
 
-   function To_Pc_Type is new Ada.Unchecked_Conversion
-     (Source => System.Address, Target => Pc_Type);
-
-   procedure Set_Symbol_Address (Sym : Symbol; Addr : System.Address)
-   is
+   procedure Set_Symbol_Address (Sym : Symbol; Addr : System.Address) is
    begin
       Set_Symbol_Value (Sym, To_Pc_Type (Addr));
       Set_Scope (Sym, Sym_Global);
@@ -48,20 +43,21 @@ package body Binary_File.Memory is
       --  Relocate section in memory.
       Sect := Section_Chain;
       while Sect /= null loop
+         --  Allocate memory if needed (eg: .bss)
          if Sect.Data = null then
             if Sect.Pc > 0 then
                Resize (Sect, Sect.Pc);
                Sect.Data (0 .. Sect.Pc - 1) := (others => 0);
-            else
-               null;
-               --Sect.Data := new Byte_Array (1 .. 0);
             end if;
          end if;
-         if Sect.Data_Max > 0
+
+         --  Set virtual address.
+         if Sect.Pc > 0
            and (Sect /= Sect_Abs and Sect.Flags /= Section_Debug)
          then
             Sect.Vaddr := To_Pc_Type (Sect.Data (0)'Address);
          end if;
+
          Sect := Sect.Next;
       end loop;
 
@@ -98,4 +94,14 @@ package body Binary_File.Memory is
          Sect := Sect.Next;
       end loop;
    end Write_Memory_Relocate;
+
+   function Get_Section_Base (Sect : Section_Acc) return System.Address is
+   begin
+      return Sect.Data (0)'Address;
+   end Get_Section_Base;
+
+   function Get_Section_Size (Sect : Section_Acc) return Pc_Type is
+   begin
+      return Sect.Pc;
+   end Get_Section_Size;
 end Binary_File.Memory;
