@@ -1,5 +1,16 @@
 This directory contains the sources of GHDL, the VHDL simulator.
 
+GHDL is not an interpreter: it generates machine code from your design,
+the only way for high speed simulation.
+
+Main features are:
+- handle very large designs like leon3/grlib.
+- can write waveforms to a vcd or fst file.
+- available on Linux (x86 and x86-64), Windows and Mac OS x
+- partial support of PSL
+- support OSVVM (http://osvvm.org) through the VPI interface
+- support cocotb
+
 GHDL fully supports IEEE 1076-1987, IEEE 1076-1993, IEE 1076-2002 and
 partially the 1076-2008 version of VHDL.
 
