@@ -1,9 +1,7 @@
 param(
-	[switch]$All = $null,
-	[switch]$max = $false,
-	[switch]$arria = $false,
-	[switch]$cyclon = $false,
-	[switch]$stratix = $false
+	[switch]$All =			$null,
+	[switch]$unisim =		$false,
+	[switch]$simprim =	$false
 )
 
 # configure Xilinx folder here

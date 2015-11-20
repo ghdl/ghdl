@@ -1,5 +1,6 @@
 param(
 	[switch]$All =				$null,
+	[switch]$altera =			$false,
 	[switch]$max =				$false,
 	[switch]$cyclon =			$false,
 	[switch]$arria =			$false,
@@ -26,7 +27,8 @@ cd $DestinationDirectory
 if (-not $All)
 {	$All =				$false	}
 elseif ($All -eq $true)
-{	$max =				$true
+{	$altera =			$true
+	$max =				$true
 	$cyclon =			$true
 	$arria =			$true
 	$stratix =		$true
@@ -36,7 +38,7 @@ elseif ($All -eq $true)
 $StopCompiling = $false
 
 # compile lpm library
-if (-not $StopCompiling)
+if ((-not $StopCompiling) -and $altera)
 {	Write-Host "Compiling library 'lpm' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -71,7 +73,7 @@ if (-not $StopCompiling)
 }
 
 # compile sgate library
-if (-not $StopCompiling)
+if ((-not $StopCompiling) -and $altera)
 {	Write-Host "Compiling library 'sgate' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -106,7 +108,7 @@ if (-not $StopCompiling)
 }
 
 # compile altera library
-if (-not $StopCompiling)
+if ((-not $StopCompiling) -and $altera)
 {	Write-Host "Compiling library 'altera' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -147,7 +149,7 @@ if (-not $StopCompiling)
 }
 
 # compile altera_mf library
-if (-not $StopCompiling)
+if ((-not $StopCompiling) -and $altera)
 {	Write-Host "Compiling library 'altera_mf' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -182,7 +184,7 @@ if (-not $StopCompiling)
 }
 
 # compile altera_lnsim library
-if (-not $StopCompiling)
+if ((-not $StopCompiling) -and $altera)
 {	Write-Host "Compiling library 'altera_lnsim' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	& ghdl.exe $OPTIONS --work=altera_lnsim $SourceDir\altera_lnsim_components.vhd
