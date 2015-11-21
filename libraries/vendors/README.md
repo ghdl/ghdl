@@ -69,7 +69,7 @@ We support Windows (PowerShell) and Linux (Bash).
 
  - compile-altera.sh
 
-        --All       Compile all libraries (base libraries and device libraries)
+        --all       Compile all libraries (base libraries and device libraries)
         --altera    Compile base libraries like 'altera' and 'altera_mf'
         --max       Compile device libraries for Max CPLDs 
         --arria     Compile device libraries for Arria FPGAs
@@ -78,35 +78,37 @@ We support Windows (PowerShell) and Linux (Bash).
 
  - compile-osvvm.sh
 
-        --All       Compile all packages
+        --all       Compile all packages
 
  - compile-xilinx.sh
 
-        --All       Compile all libraries
+        --all       Compile all libraries
         --unisim    Compile the unisim primitives
         --simprim   Compile the simprim primitives
+        --secureip  Compile the secureip primitives
 
 
 ### Selectable Options for the PowerShell Scripts:
 
  - compile-altera.ps1
 
-        -All       Compile all libraries (base libraries and device libraries)
-        -altera    Compile base libraries like 'altera' and 'altera_mf'
-        -max       Compile device libraries for Max CPLDs 
-        -arria     Compile device libraries for Arria FPGAs
-        -cyclone   Compile device libraries for Cyclone FPGAs
-        -stratix   Compile device libraries for Stratix FPGAs
+        -All        Compile all libraries (base libraries and device libraries)
+        -Altera     Compile base libraries like 'altera' and 'altera_mf'
+        -Max        Compile device libraries for Max CPLDs 
+        -Arria      Compile device libraries for Arria FPGAs
+        -Cyclone    Compile device libraries for Cyclone FPGAs
+        -Stratix    Compile device libraries for Stratix FPGAs
 
  - compile-osvvm.ps1
 
-        -All       Compile all packages
+        -All        Compile all packages
 
  - compile-xilinx.ps1
 
-        -All       Compile all libraries
-        -unisim    Compile the unisim primitives
-        -simprim   Compile the simprim primitives
+        -All        Compile all libraries
+        -Unisim     Compile the unisim primitives
+        -Simprim    Compile the simprim primitives
+        -Secureip   Compile the secureip primitives
 
 ------------------------
 Author: Patrick Lehmann (20.11.2015)

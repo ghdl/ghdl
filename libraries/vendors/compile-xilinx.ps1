@@ -1,8 +1,8 @@
 param(
 	[switch]$All =			$null,
-	[switch]$unisim =		$false,
-	[switch]$simprim =	$false,
-	[switch]$secureip =	$false
+	[switch]$Unisim =		$false,
+	[switch]$Simprim =	$false,
+	[switch]$Secureip =	$false
 )
 
 # ---------------------------------------------
@@ -27,14 +27,14 @@ cd $DestinationDir
 if (-not $All)
 {	$All =			$false	}
 elseif ($All -eq $true)
-{	$unisim =		$true
-	$simprim =	$true
-	$secureip =	$true
+{	$Unisim =		$true
+	$Simprim =	$true
+	$Secureip =	$true
 }
 $StopCompiling = $false
 
 # compile unisim packages
-if ((-not $StopCompiling) -and $unisim)
+if ((-not $StopCompiling) -and $Unisim)
 {	Write-Host "Compiling library 'unisim' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Options += "--no-vital-checks"
@@ -53,7 +53,7 @@ if ((-not $StopCompiling) -and $unisim)
 }
 
 # compile unisim primitives
-if ((-not $StopCompiling) -and $unisim)
+if ((-not $StopCompiling) -and $Unisim)
 {	$Options = $GlobalOptions
 	$Options += "--no-vital-checks"
 	$Options += "--ieee=synopsys"
@@ -69,7 +69,7 @@ if ((-not $StopCompiling) -and $unisim)
 }
 
 # compile simprim packages
-if ((-not $StopCompiling) -and $simprim)
+if ((-not $StopCompiling) -and $Simprim)
 {	Write-Host "Compiling library 'simprim' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Options += "--ieee=synopsys"
@@ -87,7 +87,7 @@ if ((-not $StopCompiling) -and $simprim)
 }
 
 # compile simprim primitives
-if ((-not $StopCompiling) -and $simprim)
+if ((-not $StopCompiling) -and $Simprim)
 {	Write-Host "Compiling library 'simprim' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Options += "--ieee=synopsys"
@@ -103,7 +103,7 @@ if ((-not $StopCompiling) -and $simprim)
 }
 
 # compile secureip primitives
-if ((-not $StopCompiling) -and $secureip)
+if ((-not $StopCompiling) -and $Secureip)
 {	Write-Host "Compiling library 'secureip' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Options += "--ieee=synopsys"

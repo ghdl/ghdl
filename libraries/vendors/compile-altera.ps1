@@ -1,11 +1,11 @@
 param(
 	[switch]$All =				$null,
-	[switch]$altera =			$false,
-	[switch]$max =				$false,
-	[switch]$cyclon =			$false,
-	[switch]$arria =			$false,
-	[switch]$stratix =		$false,
-	[switch]$nanometer =	$false
+	[switch]$Altera =			$false,
+	[switch]$Max =				$false,
+	[switch]$Cyclon =			$false,
+	[switch]$Arria =			$false,
+	[switch]$Stratix =		$false,
+	[switch]$Nanometer =	$false
 )
 
 # ---------------------------------------------
@@ -30,18 +30,18 @@ cd $DestinationDirectory
 if (-not $All)
 {	$All =				$false	}
 elseif ($All -eq $true)
-{	$altera =			$true
-	$max =				$true
-	$cyclon =			$true
-	$arria =			$true
-	$stratix =		$true
-	$nanometer =	$true
+{	$Altera =			$true
+	$Max =				$true
+	$Cyclon =			$true
+	$Arria =			$true
+	$Stratix =		$true
+	$Nanometer =	$true
 }
 
 $StopCompiling = $false
 
 # compile lpm library
-if ((-not $StopCompiling) -and $altera)
+if ((-not $StopCompiling) -and $Altera)
 {	Write-Host "Compiling library 'lpm' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -57,7 +57,7 @@ if ((-not $StopCompiling) -and $altera)
 }
 
 # compile sgate library
-if ((-not $StopCompiling) -and $altera)
+if ((-not $StopCompiling) -and $Altera)
 {	Write-Host "Compiling library 'sgate' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -73,7 +73,7 @@ if ((-not $StopCompiling) -and $altera)
 }
 
 # compile altera library
-if ((-not $StopCompiling) -and $altera)
+if ((-not $StopCompiling) -and $Altera)
 {	Write-Host "Compiling library 'altera' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -95,7 +95,7 @@ if ((-not $StopCompiling) -and $altera)
 }
 
 # compile altera_mf library
-if ((-not $StopCompiling) -and $altera)
+if ((-not $StopCompiling) -and $Altera)
 {	Write-Host "Compiling library 'altera_mf' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -111,7 +111,7 @@ if ((-not $StopCompiling) -and $altera)
 }
 
 # compile altera_lnsim library
-if ((-not $StopCompiling) -and $altera)
+if ((-not $StopCompiling) -and $Altera)
 {	Write-Host "Compiling library 'altera_lnsim' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	& ghdl.exe $OPTIONS --work=altera_lnsim $SourceDir\altera_lnsim_components.vhd
@@ -124,8 +124,56 @@ if ((-not $StopCompiling) -and $altera)
 	}
 }
 
+# compile max library
+if ((-not $StopCompiling) -and $Max)
+{	Write-Host "Compiling library 'max' ..." -ForegroundColor Yellow
+	$Options = $GlobalOptions
+	$Files = (
+		"$SourceDir\max_atoms.vhd",
+		"$SourceDir\max_components.vhd")
+	foreach ($File in $Files)
+	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
+		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=max " + $File + " 2>&1"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$StopCompiling = ($LastExitCode -ne 0)
+		if ($StopCompiling)	{ break }
+	}
+}
+
+# compile maxii library
+if ((-not $StopCompiling) -and $Max)
+{	Write-Host "Compiling library 'maxii' ..." -ForegroundColor Yellow
+	$Options = $GlobalOptions
+	$Files = (
+		"$SourceDir\maxii_atoms.vhd",
+		"$SourceDir\maxii_components.vhd")
+	foreach ($File in $Files)
+	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
+		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=maxii " + $File + " 2>&1"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$StopCompiling = ($LastExitCode -ne 0)
+		if ($StopCompiling)	{ break }
+	}
+}
+
+# compile maxv library
+if ((-not $StopCompiling) -and $Max)
+{	Write-Host "Compiling library 'maxv' ..." -ForegroundColor Yellow
+	$Options = $GlobalOptions
+	$Files = (
+		"$SourceDir\maxv_atoms.vhd",
+		"$SourceDir\maxv_components.vhd")
+	foreach ($File in $Files)
+	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
+		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=maxv " + $File + " 2>&1"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$StopCompiling = ($LastExitCode -ne 0)
+		if ($StopCompiling)	{ break }
+	}
+}
+
 # compile arriaii library
-if ((-not $StopCompiling) -and $arria)
+if ((-not $StopCompiling) -and $Arria)
 {	Write-Host "Compiling library 'arriaii' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -143,7 +191,7 @@ if ((-not $StopCompiling) -and $arria)
 }
 
 # compile arriaii_pcie_hip library
-if ((-not $StopCompiling) -and $arria)
+if ((-not $StopCompiling) -and $Arria)
 {	Write-Host "Compiling library 'arriaii_pcie_hip' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -159,7 +207,7 @@ if ((-not $StopCompiling) -and $arria)
 }
 
 # compile arriaiigz library
-if ((-not $StopCompiling) -and $arria)
+if ((-not $StopCompiling) -and $Arria)
 {	Write-Host "Compiling library 'arriaiigz' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -176,7 +224,7 @@ if ((-not $StopCompiling) -and $arria)
 }
 
 # compile arriav library
-if ((-not $StopCompiling) -and $arria)
+if ((-not $StopCompiling) -and $Arria)
 {	Write-Host "Compiling library 'arriav' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -194,7 +242,7 @@ if ((-not $StopCompiling) -and $arria)
 }
 
 # compile arriavgz library
-if ((-not $StopCompiling) -and $arria)
+if ((-not $StopCompiling) -and $Arria)
 {	Write-Host "Compiling library 'arriavgz' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -212,7 +260,7 @@ if ((-not $StopCompiling) -and $arria)
 }
 
 # compile arriavgz_pcie_hip library
-if ((-not $StopCompiling) -and $arria)
+if ((-not $StopCompiling) -and $Arria)
 {	Write-Host "Compiling library 'arriavgz_pcie_hip' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -228,7 +276,7 @@ if ((-not $StopCompiling) -and $arria)
 }
 
 # compile cycloneiv library
-if ((-not $StopCompiling) -and $cyclon)
+if ((-not $StopCompiling) -and $Cyclon)
 {	Write-Host "Compiling library 'cycloneiv' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -246,7 +294,7 @@ if ((-not $StopCompiling) -and $cyclon)
 }
 
 # compile cycloneiv_pcie_hip library
-if ((-not $StopCompiling) -and $cyclon)
+if ((-not $StopCompiling) -and $Cyclon)
 {	Write-Host "Compiling library 'cycloneiv_pcie_hip' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -262,7 +310,7 @@ if ((-not $StopCompiling) -and $cyclon)
 }
 
 # compile cycloneive library
-if ((-not $StopCompiling) -and $cyclon)
+if ((-not $StopCompiling) -and $Cyclon)
 {	Write-Host "Compiling library 'cycloneive' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -278,7 +326,7 @@ if ((-not $StopCompiling) -and $cyclon)
 }
 
 # compile cyclonev library
-if ((-not $StopCompiling) -and $cyclon)
+if ((-not $StopCompiling) -and $Cyclon)
 {	Write-Host "Compiling library 'cyclonev' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -295,56 +343,8 @@ if ((-not $StopCompiling) -and $cyclon)
 	}
 }
 
-# compile max library
-if ((-not $StopCompiling) -and $max)
-{	Write-Host "Compiling library 'max' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\max_atoms.vhd",
-		"$SourceDir\max_components.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=max " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
-	}
-}
-
-# compile maxii library
-if ((-not $StopCompiling) -and $max)
-{	Write-Host "Compiling library 'maxii' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\maxii_atoms.vhd",
-		"$SourceDir\maxii_components.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=maxii " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
-	}
-}
-
-# compile maxv library
-if ((-not $StopCompiling) -and $max)
-{	Write-Host "Compiling library 'maxv' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\maxv_atoms.vhd",
-		"$SourceDir\maxv_components.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=maxv " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
-	}
-}
-
 # compile stratixiv library
-if ((-not $StopCompiling) -and $stratix)
+if ((-not $StopCompiling) -and $Stratix)
 {	Write-Host "Compiling library 'stratixiv' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -362,7 +362,7 @@ if ((-not $StopCompiling) -and $stratix)
 }
 
 # compile stratixiv_pcie_hip library
-if ((-not $StopCompiling) -and $stratix)
+if ((-not $StopCompiling) -and $Stratix)
 {	Write-Host "Compiling library 'stratixiv_pcie_hip' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -378,7 +378,7 @@ if ((-not $StopCompiling) -and $stratix)
 }
 
 # compile stratixv library
-if ((-not $StopCompiling) -and $stratix)
+if ((-not $StopCompiling) -and $Stratix)
 {	Write-Host "Compiling library 'stratixv' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -396,7 +396,7 @@ if ((-not $StopCompiling) -and $stratix)
 }
 
 # compile stratixv_pcie_hip library
-if ((-not $StopCompiling) -and $stratix)
+if ((-not $StopCompiling) -and $Stratix)
 {	Write-Host "Compiling library 'stratixv_pcie_hip' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -412,7 +412,7 @@ if ((-not $StopCompiling) -and $stratix)
 }
 
 # compile fiftyfivenm library
-if ((-not $StopCompiling) -and $nanometer)
+if ((-not $StopCompiling) -and $Nanometer)
 {	Write-Host "Compiling library 'fiftyfivenm' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -428,7 +428,7 @@ if ((-not $StopCompiling) -and $nanometer)
 }
 
 # compile twentynm library
-if ((-not $StopCompiling) -and $nanometer)
+if ((-not $StopCompiling) -and $Nanometer)
 {	Write-Host "Compiling library 'twentynm' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (

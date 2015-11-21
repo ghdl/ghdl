@@ -10,6 +10,9 @@ function Format-NativeCommandStreams
 		{	Write-Host "Empty"	}
 		elseif ($InputObject -is [System.Management.Automation.ErrorRecord])
 		{	$ErrorRecordFound	= $true
+			$text = $InputObject.ToString()
+			Write-Host $text -ForegroundColor	Gray
+			
 			$stdErr = $InputObject.TargetObject
 			if ($stdErr)
 			{	#Write-Host ("err: type=" + $stdErr.GetType() + "  " + $stdErr)
