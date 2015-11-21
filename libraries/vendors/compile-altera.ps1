@@ -8,13 +8,16 @@ param(
 	[switch]$nanometer =	$false
 )
 
-# configure Altera folder here
-$SourceDir = "C:\Altera\15.0\quartus\eda\sim_lib"
-$DestinationDirectory = "altera"
-
 # ---------------------------------------------
 # save working directory
 $WorkingDir = Get-Location
+
+. $PSScriptRoot\config.ps1
+. $PSScriptRoot\shared.ps1
+
+# extract data from configuration
+$SourceDir =			$InstallationDirectory["AlteraQuartusII"] + "\quartus\eda\sim_lib"
+$DestinationDir = $DestinationDirectory["Altera"]
 
 # define global GHDL Options
 $GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--ieee=synopsys", "--no-vital-checks", "--std=93c")
@@ -47,28 +50,9 @@ if ((-not $StopCompiling) -and $altera)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=lpm " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -82,28 +66,9 @@ if ((-not $StopCompiling) -and $altera)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=sgate " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -123,28 +88,9 @@ if ((-not $StopCompiling) -and $altera)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=altera " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -158,28 +104,9 @@ if ((-not $StopCompiling) -and $altera)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=altera_mf " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -191,28 +118,9 @@ if ((-not $StopCompiling) -and $altera)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=altera_lnsim " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -228,28 +136,9 @@ if ((-not $StopCompiling) -and $arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriaii " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -263,28 +152,9 @@ if ((-not $StopCompiling) -and $arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriaii_pcie_hip " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -299,28 +169,9 @@ if ((-not $StopCompiling) -and $arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriaiigz " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -336,28 +187,9 @@ if ((-not $StopCompiling) -and $arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriav " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -373,28 +205,9 @@ if ((-not $StopCompiling) -and $arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriavgz " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -408,28 +221,9 @@ if ((-not $StopCompiling) -and $arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriavgz_pcie_hip " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -445,28 +239,9 @@ if ((-not $StopCompiling) -and $cyclon)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cycloneiv " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -480,28 +255,9 @@ if ((-not $StopCompiling) -and $cyclon)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cycloneiv_pcie_hip " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -515,28 +271,9 @@ if ((-not $StopCompiling) -and $cyclon)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cycloneive " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -552,28 +289,9 @@ if ((-not $StopCompiling) -and $cyclon)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cyclonev " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -587,28 +305,9 @@ if ((-not $StopCompiling) -and $max)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=max " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -622,28 +321,9 @@ if ((-not $StopCompiling) -and $max)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=maxii " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -657,28 +337,9 @@ if ((-not $StopCompiling) -and $max)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=maxv " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -694,28 +355,9 @@ if ((-not $StopCompiling) -and $stratix)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixiv " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -729,28 +371,9 @@ if ((-not $StopCompiling) -and $stratix)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixiv_pcie_hip " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -766,28 +389,9 @@ if ((-not $StopCompiling) -and $stratix)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixv " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -801,28 +405,9 @@ if ((-not $StopCompiling) -and $stratix)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixv_pcie_hip " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -836,28 +421,9 @@ if ((-not $StopCompiling) -and $nanometer)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=fiftyfivenm " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
@@ -875,33 +441,14 @@ if ((-not $StopCompiling) -and $nanometer)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=twentynm " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	$Line = $Errors[0].ToString()
-			if ($Line.Contains("warning"))
-			{	Write-Host "WARNING: $Line"	}
-			else
-			{	Write-Host "ERROR: $Line"		}
-		}
-		elseif ($Output)
-		{	Write-Host ("Output.Type=" + $Output.GetType())
-			foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: $Line"	}
-				else
-				{	Write-Host "ERROR: $Line"		}
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 
 Write-Host "--------------------------------------------------------------------------------"
-Write-Host "Compiling Xilinx libraries " -NoNewline
+Write-Host "Compiling Altera libraries " -NoNewline
 if ($StopCompiling)
 {	Write-Host "[FAILED]" -ForegroundColor Red				}
 else
