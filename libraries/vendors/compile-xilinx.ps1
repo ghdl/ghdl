@@ -2,6 +2,7 @@ param(
 	[switch]$All =			$null,
 	[switch]$Unisim =		$false,
 	[switch]$Simprim =	$false,
+	[switch]$Unimacro =	$false,
 	[switch]$Secureip =	$false
 )
 
@@ -29,10 +30,13 @@ if (-not $All)
 elseif ($All -eq $true)
 {	$Unisim =		$true
 	$Simprim =	$true
+	$Unimacro =	$true
 	$Secureip =	$true
 }
 $StopCompiling = $false
 
+# Library UNISIM
+# ==============================================================================
 # compile unisim packages
 if ((-not $StopCompiling) -and $Unisim)
 {	Write-Host "Compiling library 'unisim' ..." -ForegroundColor Yellow
@@ -68,6 +72,60 @@ if ((-not $StopCompiling) -and $Unisim)
 	}
 }
 
+# compile unisim secureip primitives
+if ((-not $StopCompiling) -and $Unisim -and $Secureip)
+{	Write-Host "Compiling library secureip primitives ..." -ForegroundColor Yellow
+	$Options = $GlobalOptions
+	$Options += "--ieee=synopsys"
+	$Options += "--std=93c"
+	$Files = dir "$SourceDir\unisims\secureip\*.vhd*"
+	foreach ($File in $Files)
+	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
+		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File.FullName + " 2>&1"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$StopCompiling = ($LastExitCode -ne 0)
+		if ($StopCompiling)	{ break }
+	}
+}
+
+# Library UNIMACRO
+# ==============================================================================
+# compile unimacro packages
+if ((-not $StopCompiling) -and $Unimacro)
+{	Write-Host "Compiling library 'unimacro' ..." -ForegroundColor Yellow
+	$Options = $GlobalOptions
+	$Options += "--no-vital-checks"
+	$Options += "--ieee=synopsys"
+	$Options += "--std=93c"
+	$Files = @(
+		"$SourceDir\unimacro\unimacro_VCOMP.vhd")
+	foreach ($File in $Files)
+	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
+		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File + " 2>&1"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$StopCompiling = ($LastExitCode -ne 0)
+		if ($StopCompiling)	{ break }
+	}
+}
+
+# compile unimacro macros
+if ((-not $StopCompiling) -and $Unimacro)
+{	$Options = $GlobalOptions
+	$Options += "--no-vital-checks"
+	$Options += "--ieee=synopsys"
+	$Options += "--std=93c"
+	$Files = dir "$SourceDir\unimacro\*_MACRO.vhd*"
+	foreach ($File in $Files)
+	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
+		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File.FullName + " 2>&1"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$StopCompiling = ($LastExitCode -ne 0)
+		if ($StopCompiling)	{ break }
+	}
+}
+
+# Library SIMPRIM
+# ==============================================================================
 # compile simprim packages
 if ((-not $StopCompiling) -and $Simprim)
 {	Write-Host "Compiling library 'simprim' ..." -ForegroundColor Yellow
@@ -102,16 +160,16 @@ if ((-not $StopCompiling) -and $Simprim)
 	}
 }
 
-# compile secureip primitives
-if ((-not $StopCompiling) -and $Secureip)
-{	Write-Host "Compiling library 'secureip' ..." -ForegroundColor Yellow
+# compile simprim secureip primitives
+if ((-not $StopCompiling) -and $Simprim -and $Secureip)
+{	Write-Host "Compiling secureip primitives ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Options += "--ieee=synopsys"
 	$Options += "--std=93c"
 	$Files = dir "$SourceDir\simprims\secureip\other\*.vhd*"
 	foreach ($File in $Files)
 	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=secureip " + $File.FullName + " 2>&1"
+		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
