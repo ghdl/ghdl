@@ -81,10 +81,10 @@ static JMP_BUF run_env;
 #define NEED_SIGBUS_HANDLER
 #endif
 
-static struct sigaction prev_sigfpe_act;
+static struct sigaction prev_sigsegv_act;
 
 #ifdef NEED_SIGFPE_HANDLER
-static struct sigaction prev_sigsegv_act;
+static struct sigaction prev_sigfpe_act;
 #endif
 #ifdef NEED_SIGBUS_HANDLER
 static struct sigaction prev_sigbus_act;
@@ -105,15 +105,27 @@ get_bt_from_ucontext (void *uctxt, struct backtrace_addrs *bt)
 #endif
 
 #if defined (__linux__) && defined (__x86_64__)
-  ucontext *u = (ucontext *)uctxt;
+  ucontext_t *u = (ucontext_t *)uctxt;
   pc = (void *)u->uc_mcontext.gregs[REG_RIP];
+#endif
+#if defined (__linux__) && defined (__i386__)
+  ucontext_t *u = (ucontext_t *)uctxt;
+  pc = (void *)u->uc_mcontext.gregs[REG_EIP];
 #endif
 #if defined (__APPLE__) && defined (__i386__)
   ucontext_t *u = (ucontext_t *)uctxt;
   pc = (void *)u->uc_mcontext->__ss.__eip;
   bt->skip = 3;  /* This frame + sighandler + trampoline + marker - pc.  */
   bt->addrs[3] = pc;
+  return;
 #endif
+
+  for (i = 0; i < bt->size; i++)
+    if (bt->addrs[i] == pc)
+      {
+        bt->skip = i;
+        break;
+      }
 }
 
 /* Handler for SIGFPE signal.

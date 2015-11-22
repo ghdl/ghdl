@@ -1,5 +1,5 @@
 --  Binary file execute in memory handler.
---  Copyright (C) 2006 Tristan Gingold
+--  Copyright (C) 2006 - 2015 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -95,10 +95,10 @@ package body Binary_File.Memory is
       end loop;
    end Write_Memory_Relocate;
 
-   function Get_Section_Base (Sect : Section_Acc) return System.Address is
+   function Get_Section_Addr (Sect : Section_Acc) return System.Address is
    begin
       return Sect.Data (0)'Address;
-   end Get_Section_Base;
+   end Get_Section_Addr;
 
    function Get_Section_Size (Sect : Section_Acc) return Pc_Type is
    begin

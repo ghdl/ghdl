@@ -34,8 +34,6 @@ grt_get_clk_tck (void)
 void
 grt_get_times (int *wall, int *user, int *sys)
 {
-  clock_t res;
-
   *wall = clock ();
   *user = 0;
   *sys = 0;

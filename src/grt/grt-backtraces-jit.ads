@@ -1,4 +1,4 @@
---  GHDL Run Time (GRT) - Backtraces and symbolization.
+--  GHDL Run Time (GRT) - Symbolization using jit interface.
 --  Copyright (C) 2015 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
@@ -23,13 +23,22 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
-with Grt.Errors; use Grt.Errors;
+with System;
 
-package Grt.Backtraces is
-   pragma Preelaborate (Grt.Backtraces);
+package Grt.Backtraces.Jit is
+   pragma Preelaborate (Grt.Backtraces.Jit);
 
-   --  Display a backtrace on standard error, or nothing if not available.
-   procedure Put_Err_Backtrace (Bt : Backtrace_Addrs);
+   procedure Symbolizer (Pc : System.Address;
+                         Filename : out System.Address;
+                         Lineno : out Natural;
+                         Subprg : out System.Address);
 
-   procedure Register;
-end Grt.Backtraces;
+   --  In order to keep the package preelaborated, use an indirection.
+   type Symbolizer_Acc is access procedure (Pc : System.Address;
+                                            Filename : out System.Address;
+                                            Lineno : out Natural;
+                                            Subprg : out System.Address);
+
+   Symbolizer_Proc : Symbolizer_Acc;
+
+end Grt.Backtraces.Jit;

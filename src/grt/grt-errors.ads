@@ -22,7 +22,6 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with System;
 with Grt.Types; use Grt.Types;
 with Grt.Hooks;
 
@@ -78,13 +77,8 @@ package Grt.Errors is
 
    type Backtrace_Addrs_Acc is access Backtrace_Addrs;
 
-   type Symbolizer_Acc is access procedure (Pc : System.Address;
-                                            Filename : out System.Address;
-                                            Lineno : out Natural;
-                                            Subprg : out System.Address);
-
-   Symbolizer : Symbolizer_Acc := null;
-
+   --  Save the current backtrace to BT, but skip SKIP frame.  0 means that
+   --  the caller of this procedure will be in the backtrace.
    procedure Save_Backtrace (Bt : out Backtrace_Addrs; Skip : Natural);
    pragma Import (C, Save_Backtrace, "grt_save_backtrace");
 

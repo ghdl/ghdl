@@ -1,5 +1,5 @@
 --  Binary file execute in memory handler.
---  Copyright (C) 2006 Tristan Gingold
+--  Copyright (C) 2006-2015 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -21,13 +21,18 @@ package Binary_File.Memory is
 
    --  Must be called before set_symbol_address.
    procedure Write_Memory_Init;
+
+   --  Give a value to an undefined or external symbol.
    procedure Set_Symbol_Address (Sym : Symbol; Addr : System.Address);
 
+   --  Do the real work: resolve relocations.
    procedure Write_Memory_Relocate (Error : out Boolean);
 
-   function Get_Section_Base (Sect : Section_Acc) return System.Address;
+   --  Read the result: get address and size of a section.
+   function Get_Section_Addr (Sect : Section_Acc) return System.Address;
    function Get_Section_Size (Sect : Section_Acc) return Pc_Type;
 
+   --  Helpers.
    function To_Pc_Type is new Ada.Unchecked_Conversion
      (Source => System.Address, Target => Pc_Type);
    function To_Address is new Ada.Unchecked_Conversion

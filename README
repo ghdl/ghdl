@@ -132,6 +132,13 @@ First configure ghdl and specify where llvm is installed
 $ ./configure --with-llvm=PREFIX
   where PREFIX/bin/llvm-config is present
 
+If you want to have stack backtraces on errors (like assert failure or
+index of out bounds), you need to configure and build libbacktrace from gcc
+(you don't need to configure gcc), and add to configure:
+  --with-backtrace-lib=/path-to-gcc-build/libbacktrace/.libs/libbacktrace.a
+
+Then build with 'make' and install with 'make install'.
+
 Notes for developpers
 *********************
 

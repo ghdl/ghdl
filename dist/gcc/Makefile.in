@@ -104,6 +104,8 @@ GNATMAKE = gnatmake
 ADA_CFLAGS = $(CFLAGS)
 GHDL_ADAFLAGS = -Wall -gnata
 
+LIBBACKTRACE = ../../libbacktrace/.libs/libbacktrace.a
+
 objext = .o
 exeext =
 arext  = .a
@@ -205,6 +207,7 @@ install-ghdllib:
 	$(INSTALL_DATA) libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
 	$(INSTALL_DATA) grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
 	$(INSTALL_DATA) $(GRTSRCDIR)/grt.ver $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
+	$(INSTALL_DATA) $(LIBBACKTRACE) $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
 # Install VHDL sources.
 	for d in $(VHDLLIB_SUBDIRS); do \
 	  $(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \

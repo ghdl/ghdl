@@ -26,6 +26,7 @@
 with System;
 with Grt.Types; use Grt.Types;
 with Grt.Hooks; use Grt.Hooks;
+with Grt.Backtraces.Impl;
 
 package body Grt.Backtraces is
    --  If true, disp address in backtraces.
@@ -162,7 +163,6 @@ package body Grt.Backtraces is
    begin
       if Bt.Size = 0
         or else Bt.Skip >= Bt.Size
-        or else Symbolizer = null
       then
          --  No backtrace or no symbolizer.
          return;
@@ -170,15 +170,21 @@ package body Grt.Backtraces is
 
       Unknown := False;
       for I in Bt.Skip .. Bt.Size loop
-         Symbolizer.all (To_Address (Bt.Addrs (I)),
-                         Filename, Lineno, Subprg);
+         Backtraces.Impl.Symbolizer (To_Address (Bt.Addrs (I)),
+                                     Filename, Lineno, Subprg);
          if Subprg = Null_Address
            and (Filename = Null_Address or Lineno = 0)
          then
             Unknown := True;
+         elsif Subprg /= Null_Address
+           and then To_Ghdl_C_String (Subprg) (1 .. 5) = "grt__"
+         then
+            --  In the runtime.  Stop now.
+            exit;
          else
             if Unknown then
                Put_Err ("  from: [unknown caller]");
+               Newline_Err;
                Unknown := False;
             end if;
             Put_Err ("  from:");

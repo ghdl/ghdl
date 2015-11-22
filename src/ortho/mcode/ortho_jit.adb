@@ -120,6 +120,7 @@ package body Ortho_Jit is
       use Ada.Text_IO;
    begin
       Put_Line (" -g             Generate debugging informations");
+      Put_Line (" -g0            Do not generate any debugging informations");
       Put_Line (" --debug-be=X   Set X internal debugging flags");
       Put_Line (" --snap=FILE    Write memory snapshot to FILE");
    end Disp_Help;
@@ -145,7 +146,7 @@ package body Ortho_Jit is
          if Sect = null then
             return (Null_Address, 0);
          else
-            Addr := Get_Section_Base (Sect);
+            Addr := Get_Section_Addr (Sect);
             Size := Get_Section_Size (Sect);
             return (Addr, Storage_Offset (Size));
          end if;
