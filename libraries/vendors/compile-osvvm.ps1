@@ -1,5 +1,7 @@
 param(
-	[switch]$All =				$true
+	[switch]$All =							$true,
+	
+	[switch]$SuppressWarnings = $false
 )
 
 # ---------------------------------------------
@@ -47,34 +49,11 @@ if (-not $StopCompiling)
 		"$SourceDir\CoveragePkg.vhd",
 		"$SourceDir\OsvvmContext.vhd")
 	foreach ($File in $Files)
-	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=osvvm " + $File + " 2>&1"
-		#Write-Host ("InvokeExpr=" + $InvokeExpr)
-			
-		$Output = Invoke-Expression $InvokeExpr -ErrorVariable Errors | Out-Null
+	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
+		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File + " 2>&1"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($Errors)
-		{	Write-Host ("InvokeExpr= '" + $InvokeExpr + "'")
-			foreach ($Err in $Errors)
-			{ $Line = $Err.ToString()
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: "	-NoNewline -ForegroundColor Yellow	}
-				else
-				{	Write-Host "ERROR: "		-NoNewline -ForegroundColor Red			}
-				Write-Host $Line
-			}
-		}
-		elseif ($Output)
-		{	foreach ($Line in $Output)
-			{	if ($Line -eq "")	{	continue	}
-				if ($Line.Contains("warning"))
-				{	Write-Host "WARNING: "	-NoNewline -ForegroundColor Yellow	}
-				else
-				{	Write-Host "ERROR: "		-NoNewline -ForegroundColor Red			}
-				Write-Host $Line
-			}
-		}
-		if ($StopCompiling)	{ break		}
+		if ($StopCompiling)	{ break }
 	}
 }
 

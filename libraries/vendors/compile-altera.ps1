@@ -5,7 +5,9 @@ param(
 	[switch]$Cyclon =			$false,
 	[switch]$Arria =			$false,
 	[switch]$Stratix =		$false,
-	[switch]$Nanometer =	$false
+	[switch]$Nanometer =	$false,
+	
+	[switch]$SuppressWarnings = $false
 )
 
 # ---------------------------------------------
@@ -50,7 +52,7 @@ if ((-not $StopCompiling) -and $Altera)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=lpm " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -66,7 +68,7 @@ if ((-not $StopCompiling) -and $Altera)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=sgate " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -88,7 +90,7 @@ if ((-not $StopCompiling) -and $Altera)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=altera " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -104,7 +106,7 @@ if ((-not $StopCompiling) -and $Altera)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=altera_mf " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -118,7 +120,7 @@ if ((-not $StopCompiling) -and $Altera)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=altera_lnsim " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -134,7 +136,7 @@ if ((-not $StopCompiling) -and $Max)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=max " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -150,7 +152,7 @@ if ((-not $StopCompiling) -and $Max)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=maxii " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -166,7 +168,7 @@ if ((-not $StopCompiling) -and $Max)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=maxv " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -184,7 +186,7 @@ if ((-not $StopCompiling) -and $Arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriaii " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -200,7 +202,7 @@ if ((-not $StopCompiling) -and $Arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriaii_pcie_hip " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -217,7 +219,7 @@ if ((-not $StopCompiling) -and $Arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriaiigz " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -235,7 +237,7 @@ if ((-not $StopCompiling) -and $Arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriav " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -253,7 +255,7 @@ if ((-not $StopCompiling) -and $Arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriavgz " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -269,7 +271,7 @@ if ((-not $StopCompiling) -and $Arria)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriavgz_pcie_hip " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -287,7 +289,7 @@ if ((-not $StopCompiling) -and $Cyclon)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cycloneiv " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -303,7 +305,7 @@ if ((-not $StopCompiling) -and $Cyclon)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cycloneiv_pcie_hip " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -319,7 +321,7 @@ if ((-not $StopCompiling) -and $Cyclon)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cycloneive " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -337,7 +339,7 @@ if ((-not $StopCompiling) -and $Cyclon)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cyclonev " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -355,7 +357,7 @@ if ((-not $StopCompiling) -and $Stratix)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixiv " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -371,7 +373,7 @@ if ((-not $StopCompiling) -and $Stratix)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixiv_pcie_hip " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -389,7 +391,7 @@ if ((-not $StopCompiling) -and $Stratix)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixv " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -405,7 +407,7 @@ if ((-not $StopCompiling) -and $Stratix)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixv_pcie_hip " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -421,7 +423,7 @@ if ((-not $StopCompiling) -and $Nanometer)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=fiftyfivenm " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -441,7 +443,7 @@ if ((-not $StopCompiling) -and $Nanometer)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing file '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=twentynm " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}

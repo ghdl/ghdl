@@ -2,14 +2,26 @@
 function Write-ColoredGHDLLine
 {	<#
 		.SYNOPSIS
-		Describe the function here
+		This CmdLet colors GHDL output lines.
+		
 		.DESCRIPTION
-		Describe the function in more detail
-		.PARAMETER Line
-		The line to print on screen
+		This CmdLet colors GHDL output lines. Warnings are prefixed with 'WARNING: '
+		in yellow and errors are prefixed with 'ERROR: ' in red.
+		
+		.PARAMETER InputObject
+		A object stream is required as an input.
+		
+		.PARAMETER SuppressWarnings
+		Skip warning messages. (Show errors only.)
 	#>
 	[CmdletBinding()]
-	param([Parameter(ValueFromPipeline=$true)]$InputObject)
+	param(
+		[Parameter(ValueFromPipeline=$true)]
+		$InputObject,
+		
+		[Parameter(Position=1)]
+		[switch]$SuppressWarnings = $false
+	)
 
 	begin
 	{	$ErrorRecordFound = $false	}
@@ -19,12 +31,16 @@ function Write-ColoredGHDLLine
 		{	Write-Host "Empty pipeline!"	}
 		elseif ($InputObject -is [String])
 		{	if ($InputObject.Contains("warning"))
-			{	Write-Host "WARNING: "	-NoNewline -ForegroundColor Yellow	}
+			{	if (-not $SuppressWarnings)
+				{	Write-Host "WARNING: "	-NoNewline -ForegroundColor Yellow
+					Write-Host $InputObject
+				}
+			}
 			else
 			{	$ErrorRecordFound	= $true
 				Write-Host "ERROR: "		-NoNewline -ForegroundColor Red
+				Write-Host $InputObject
 			}
-			Write-Host $InputObject
 		}
 		else
 		{	Write-Host "Unsupported object in pipeline stream"		}
@@ -37,14 +53,21 @@ function Write-ColoredGHDLLine
 function Collect-NativeCommandStream
 {	<#
 		.SYNOPSIS
-		Describe the function here
+		This CmdLet gathers multiple ErrorRecord objects and reconstructs outputs
+		as a single line.
+		
 		.DESCRIPTION
-		Describe the function in more detail
+		This CmdLet collects multiple ErrorRecord objects and emits one String
+		object per line.
+		
 		.PARAMETER InputObject
-		A stream of objects.
+		A object stream is required as an input.
 	#>
 	[CmdletBinding()]
-	param([Parameter(ValueFromPipeline=$true)]$InputObject)
+	param(
+		[Parameter(ValueFromPipeline=$true)]
+		$InputObject
+	)
 
 	begin
 	{	$LineRemainer = ""	}

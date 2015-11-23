@@ -1,9 +1,10 @@
 param(
 	[switch]$All =			$null,
 	[switch]$Unisim =		$false,
-	[switch]$Simprim =	$false,
 	[switch]$Unimacro =	$false,
-	[switch]$Secureip =	$false
+	[switch]$Secureip =	$false,
+	
+	[switch]$SuppressWarnings = $false
 )
 
 # ---------------------------------------------
@@ -14,13 +15,13 @@ $WorkingDir = Get-Location
 . $PSScriptRoot\shared.ps1
 
 # extract data from configuration
-$SourceDir =			$InstallationDirectory["XilinxISE"] + "\ISE_DS\ISE\vhdl\src"
-$DestinationDir = $DestinationDirectory["Xilinx"]
+$SourceDir =			$InstallationDirectory["XilinxVivado"] + "\data\vhdl\src"
+$DestinationDir = $DestinationDirectory["XilinxVivado"]
 
 # define global GHDL Options
 $GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--warn-binding", "--mb-comments")
 
-# create "Xilinx" directory and change to it
+# create "Vivado" directory and change to it
 Write-Host "Creating vendor directory: '$DestinationDir'" -ForegroundColor Yellow
 mkdir $DestinationDir -ErrorAction SilentlyContinue | Out-Null
 cd $DestinationDir
@@ -50,7 +51,7 @@ if ((-not $StopCompiling) -and $Unisim)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -66,9 +67,25 @@ if ((-not $StopCompiling) -and $Unisim)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
+	}
+}
+
+# compile unisim retarget primitives
+if ((-not $StopCompiling) -and $Unisim)
+{	$Options = $GlobalOptions
+	$Options += "--no-vital-checks"
+	$Options += "--ieee=synopsys"
+	$Options += "--std=93c"
+	$Files = dir "$SourceDir\unisims\retarget\*.vhd*"
+	foreach ($File in $Files)
+	{	Write-Host "Analysing retarget primitive '$($File.FullName)'" -ForegroundColor Cyan
+		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File.FullName + " 2>&1"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
+		$StopCompiling = ($LastExitCode -ne 0)
+		#if ($StopCompiling)	{ break }
 	}
 }
 
@@ -82,7 +99,7 @@ if ((-not $StopCompiling) -and $Unisim -and $Secureip)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=secureip " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -102,7 +119,7 @@ if ((-not $StopCompiling) -and $Unimacro)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -118,66 +135,18 @@ if ((-not $StopCompiling) -and $Unimacro)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
+		#if ($StopCompiling)	{ break }
 	}
 }
 
-# Library SIMPRIM
+# Library UNIFAST
 # ==============================================================================
-# compile simprim packages
-if ((-not $StopCompiling) -and $Simprim)
-{	Write-Host "Compiling library 'simprim' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Options += "--ieee=synopsys"
-	$Options += "--std=93c"
-	$Files = (
-		"$SourceDir\simprims\simprim_Vpackage.vhd",
-		"$SourceDir\simprims\simprim_Vcomponents.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
-	}
-}
-
-# compile simprim primitives
-if ((-not $StopCompiling) -and $Simprim)
-{	Write-Host "Compiling library 'simprim' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Options += "--ieee=synopsys"
-	$Options += "--std=93c"
-	$Files = dir "$SourceDir\simprims\primitive\other\*.vhd*"
-	foreach ($File in $Files)
-	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
-	}
-}
-
-# compile simprim secureip primitives
-if ((-not $StopCompiling) -and $Simprim -and $Secureip)
-{	Write-Host "Compiling secureip primitives ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Options += "--ieee=synopsys"
-	$Options += "--std=93c"
-	$Files = dir "$SourceDir\simprims\secureip\other\*.vhd*"
-	foreach ($File in $Files)
-	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
-	}
-}
+# TODO:
 
 Write-Host "--------------------------------------------------------------------------------"
-Write-Host "Compiling Xilinx libraries " -NoNewline
+Write-Host "Compiling Xilinx Vivado libraries " -NoNewline
 if ($StopCompiling)
 {	Write-Host "[FAILED]" -ForegroundColor Red				}
 else
