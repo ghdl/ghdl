@@ -84,6 +84,7 @@ We support Windows (PowerShell) and Linux (Bash).
 
         --all       Compile all libraries
         --unisim    Compile the unisim primitives
+        --unimacro  Compile the unimacro macros
         --simprim   Compile the simprim primitives
         --secureip  Compile the secureip primitives
 
@@ -107,6 +108,7 @@ We support Windows (PowerShell) and Linux (Bash).
 
         -All        Compile all libraries
         -Unisim     Compile the unisim primitives
+        -Unimacro   Compile the unimacro macros
         -Simprim    Compile the simprim primitives
         -Secureip   Compile the secureip primitives
 

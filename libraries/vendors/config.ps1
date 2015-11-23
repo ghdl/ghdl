@@ -5,11 +5,13 @@ $InstallationDirectory = @{
 	"AlteraQuartusII" =	"C:\Altera\15.0";
 	"XilinxISE" =				"C:\Xilinx\14.7";
 	"XilinxVivado" =		"C:\Xilinx\Vivado\2015.3";
-	"OSVVM" =						"D:\git\PoC\lib\osvvm"
+	"OSVVM" =						"D:\git\PoC\lib\osvvm";
+	"VUnit" =						"D:\git\PoC\lib\vunit"
 }
 
 $DestinationDirectory = @{
 	"Altera" =					"altera";
 	"Xilinx" =					"xilinx";
-	"OSVVM" =						"osvvm"
+	"OSVVM" =						"osvvm";
+	"VUnit" =						"vunit"
 }

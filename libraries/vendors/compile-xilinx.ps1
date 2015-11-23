@@ -50,7 +50,7 @@ if ((-not $StopCompiling) -and $Unisim)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -66,7 +66,7 @@ if ((-not $StopCompiling) -and $Unisim)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -81,8 +81,8 @@ if ((-not $StopCompiling) -and $Unisim -and $Secureip)
 	$Files = dir "$SourceDir\unisims\secureip\*.vhd*"
 	foreach ($File in $Files)
 	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=secureip " + $File.FullName + " 2>&1"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -102,7 +102,7 @@ if ((-not $StopCompiling) -and $Unimacro)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -118,7 +118,7 @@ if ((-not $StopCompiling) -and $Unimacro)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -138,7 +138,7 @@ if ((-not $StopCompiling) -and $Simprim)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -154,7 +154,7 @@ if ((-not $StopCompiling) -and $Simprim)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
@@ -170,7 +170,7 @@ if ((-not $StopCompiling) -and $Simprim -and $Secureip)
 	foreach ($File in $Files)
 	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Format-NativeCommandStreams
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Collect-NativeCommandStream | Write-ColoredGHDLLine
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }
 	}
