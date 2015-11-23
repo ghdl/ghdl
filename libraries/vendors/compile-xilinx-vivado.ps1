@@ -102,7 +102,9 @@ if ((-not $StopCompiling) -and $Unisim)
 	$Options += "--std=93c"
 	$Files = (
 		"$SourceDir\unisims\unisim_VPKG.vhd",
-		"$SourceDir\unisims\unisim_VCOMP.vhd")
+		"$SourceDir\unisims\unisim_VCOMP.vhd",
+		"$SourceDir\unisims\retarget_VCOMP.vhd",
+		"$SourceDir\unisims\unisim_retarget_VCOMP.vhd")
 	foreach ($File in $Files)
 	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File + " 2>&1"
