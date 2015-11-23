@@ -32,39 +32,32 @@
 #	Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #	02111-1307, USA.
 # ==============================================================================
-<#
-	.SYNOPSIS
-	This CmdLet compiles the simulation libraries from Xilinx.
-	
-	.DESCRIPTION
-	This CmdLet:
-		(1) creates a subdirectory in the current working directory
-		(2) compiles all Xilinx Vivado simulation libraries and packages
-				- unisim
-				- unimacro
-	
-	.PARAMETER All
-	Compile all libraries and packages.
-	
-	.PARAMETER Unisim
-	Compile the Xilinx simulation library.
-	
-	.PARAMETER Unimacro
-	Compile the Xilinx macro library.
-	
-	.PARAMETER Secureip
-	Compile the Xilinx secureip library.
-	
-	.PARAMETER SuppressWarnings
-	Skip warning messages. (Show errors only.)
-#>
+
+# .SYNOPSIS
+# This CmdLet compiles the simulation libraries from Xilinx.
+# 
+# .DESCRIPTION
+# This CmdLet:
+#   (1) creates a subdirectory in the current working directory
+#   (2) compiles all Xilinx Vivado simulation libraries and packages
+#       - unisim (incl. secureip)
+#       - unimacro
+# 
 [CmdletBinding()]
 param(
+	# Compile all libraries and packages.
 	[switch]$All =			$null,
-	[switch]$Unisim =		$false,
-	[switch]$Unimacro =	$false,
-	[switch]$Secureip =	$false,
 	
+	# Compile the Xilinx simulation library.
+	[switch]$Unisim =		$false,
+	
+	# Compile the Xilinx macro library.
+	[switch]$Unimacro =	$false,
+	
+	# Compile the Xilinx secureip library.
+	[switch]$SecureIP =	$false,
+	
+	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false
 )
 
@@ -94,7 +87,7 @@ elseif ($All -eq $true)
 {	$Unisim =		$true
 	$Simprim =	$true
 	$Unimacro =	$true
-	$Secureip =	$true
+	$SecureIP =	$true
 }
 $StopCompiling = $false
 
@@ -152,7 +145,7 @@ if ((-not $StopCompiling) -and $Unisim)
 }
 
 # compile unisim secureip primitives
-if ((-not $StopCompiling) -and $Unisim -and $Secureip)
+if ((-not $StopCompiling) -and $Unisim -and $SecureIP)
 {	Write-Host "Compiling library secureip primitives ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Options += "--ieee=synopsys"

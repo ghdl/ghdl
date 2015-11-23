@@ -31,24 +31,21 @@
 #	Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #	02111-1307, USA.
 # ==============================================================================
-<#
-	.SYNOPSIS
-	This CmdLet compiles the OSVVM library.
-	
-	.DESCRIPTION
-	This CmdLet:
-		(1) creates a subdirectory in the current working directory
-		(2) compiles all OSVVM packages
-	
-	.PARAMETER All
-	Compile all libraries and packages.
-	
-	.PARAMETER SuppressWarnings
-	Skip warning messages. (Show errors only.)
-#>
+
+# .SYNOPSIS
+# This CmdLet compiles the OSVVM library.
+# 
+# .DESCRIPTION
+# This CmdLet:
+#   (1) creates a subdirectory in the current working directory
+#   (2) compiles all OSVVM packages
+# 
 [CmdletBinding()]
 param(
+	# Compile all libraries and packages.
 	[switch]$All =							$true,
+	
+	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false
 )
 

@@ -31,24 +31,20 @@
 #	Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #	02111-1307, USA.
 # ==============================================================================
-<#
-	.SYNOPSIS
-	This CmdLet compiles the VUnit library.
-	
-	.DESCRIPTION
-	This CmdLet:
-		(1) creates a subdirectory in the current working directory
-		(2) compiles all VUnit packages
-	
-	.PARAMETER All
-	Compile all packages.
-	
-	.PARAMETER SuppressWarnings
-	Skip warning messages. (Show errors only.)
-#>
+
+# .SYNOPSIS
+# This CmdLet compiles the VUnit library.
+# 
+# .DESCRIPTION
+# This CmdLet:
+#   (1) creates a subdirectory in the current working directory
+#   (2) compiles all VUnit packages
+#
 [CmdletBinding()]
 param(
+	# Compile all packages.
 	[switch]$All =							$true,
+	#Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false
 )
 

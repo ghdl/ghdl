@@ -32,59 +32,49 @@
 #	Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #	02111-1307, USA.
 # ==============================================================================
-<#
-	.SYNOPSIS
-	This CmdLet compiles the simulation libraries from Altera.
-	
-	.DESCRIPTION
-	This CmdLet:
-		(1) creates a subdirectory in the current working directory
-		(2) compiles all Altera Quartus-II simulation libraries and packages
-				Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim
-				Altera device libraries:
-					- arriaii, arriaii_pcie_hip, arriaiigz
-					- arriav, arriavgz, arriavgz_pcie_hip
-					- cycloneiv, cycloneiv_pcie_hip, cycloneive
-					- cyclonev
-					- max, maxii, maxv
-					- stratixiv, stratixiv_pcie_hip
-					- stratixv, stratixv_pcie_hip
-					- fiftyfivenm, twentynm
-	
-	.PARAMETER All
-	Compile all libraries and packages.
-	
-	.PARAMETER Altera
-	Compile the Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim
-	
-	.PARAMETER Max
-	Compile the Altera Max device libraries
-	
-	.PARAMETER Cyclon
-	Compile the Altera Cyclon device libraries
-	
-	.PARAMETER Arria
-	Compile the Altera Arria device libraries
-	
-	.PARAMETER Stratix
-	Compile the Altera Stratix device libraries
-	
-	.PARAMETER Nanometer
-	Unknown
-	
-	.PARAMETER SuppressWarnings
-	Skip warning messages. (Show errors only.)
-#>
+
+# .SYNOPSIS
+# This CmdLet compiles the simulation libraries from Altera.
+# 
+# .DESCRIPTION
+# This CmdLet:
+#   (1) creates a subdirectory in the current working directory
+#   (2) compiles all Altera Quartus-II simulation libraries and packages
+#       o Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim
+#       o Altera device libraries:
+#         - arriaii, arriaii_pcie_hip, arriaiigz
+#         - arriav, arriavgz, arriavgz_pcie_hip
+#         - cycloneiv, cycloneiv_pcie_hip, cycloneive
+#         - cyclonev
+#         - max, maxii, maxv
+#         - stratixiv, stratixiv_pcie_hip
+#         - stratixv, stratixv_pcie_hip
+#         - fiftyfivenm, twentynm
+# 
 [CmdletBinding()]
 param(
+	# Compile all libraries and packages.
 	[switch]$All =				$null,
+	
+	# Compile the Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim
 	[switch]$Altera =			$false,
+	
+	# Compile the Altera Max device libraries
 	[switch]$Max =				$false,
+	
+	# Compile the Altera Cyclon device libraries
 	[switch]$Cyclon =			$false,
+	
+	# Compile the Altera Arria device libraries
 	[switch]$Arria =			$false,
+	
+	# Compile the Altera Stratix device libraries
 	[switch]$Stratix =		$false,
+	
+	# Unknown device library
 	[switch]$Nanometer =	$false,
 	
+	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false
 )
 
