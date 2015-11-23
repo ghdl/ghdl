@@ -43,10 +43,10 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
 ### Compiling on Windows
 
  - **Step 1 - Configure the scripts**
-    Please open the `config.ps1` file and set the dictionary entries for the installed
+    Please open the `config.psm1` file and set the dictionary entries for the installed
     vendor tools to the appropriate directory to your tool's installation folder.
     
-    `config.ps1`:
+    `config.psm1`:
 
         $InstallationDirectory = @{
           "AlteraQuartusII" = "C:\Altera\15.0";
@@ -81,8 +81,8 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
     ----           -------------       ------ ----
     d----    20.11.2015    19:33        <DIR> altera
     d----    20.11.2015    19:38        <DIR> osvvm
-    d----    20.11.2015    19:40        <DIR> vunit
     d----    20.11.2015    19:40        <DIR> vivado
+    d----    20.11.2015    19:45        <DIR> vunit
     d----    20.11.2015    19:06        <DIR> xilinx
     ```
 
