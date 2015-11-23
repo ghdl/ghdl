@@ -36,6 +36,7 @@
 
 # ---------------------------------------------
 # save working directory
+WorkingDir=$(pwd)
 
 
 # source configuration file from GHDL's 'vendors' library directory
@@ -51,97 +52,124 @@ echo $SourceDir
 # define global GHDL Options
 
 
+# define color escape codes
+RED='\e[0;31m'			# Red
+GREEN='\e[0;32m'		# Red
+YELLOW='\e[1;33m'		# Yellow
+CYAN='\e[1;36m'			# Cyan
+NOCOLOR='\e[0m'			# No Color
+
+
+
 # create "Xilinx" directory and change to it
-Write-Host "Creating vendor directory: '$DestinationDir'"
+Write-Host -e "${YELLOW}Creating vendor directory: '$DestinationDir'"
 mkdir $DestinationDir
 cd $DestinationDir
 
+Unisim=1
+Unimacro=1
+Simprim=1
+StopCompiling=1
 
 # Library UNISIM
 # ==============================================================================
 # compile unisim packages
-echo "Compiling library 'unisim' ..."
+if [ $Unisim -eq 1 ]; then
+	echo -e "${YELLOW}Compiling library 'unisim' ...${NOCOLOR}"
+	Files=(
+		$SourceDir/unisims/unisim_VPKG.vhd
+		$SourceDir/unisims/unisim_VCOMP.vhd
+	)
 
-Files=(
-	$SourceDir/unisims/unisim_VPKG.vhd
-	$SourceDir/unisims/unisim_VCOMP.vhd
-)
-
-for File in ${Files[@]}; do
-	echo "Analysing package '$File'"
-	ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File
-done
+	for File in ${Files[@]}; do
+		echo -e "${CYAN}Analysing package '$File'${NOCOLOR}"
+		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File
+	done
+fi
 
 # compile unisim primitives
-Files=$SourceDir/unisims/primitive/*.vhd
-for File in $Files; do
-	echo "Analysing primitive '$File'"
-	ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File
-done
+if [ $Unisim -eq 1 ]; then
+	Files=$SourceDir/unisims/primitive/*.vhd
+	for File in $Files; do
+		echo -e "${CYAN}Analysing primitive '$File'${NOCOLOR}"
+		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File
+	done
+fi
 
 # compile unisim secureip primitives
-echo "Compiling library secureip primitives"
-Files=$SourceDir/unisims/secureip/*.vhd
-for File in $Files; do
-	echo "Analysing primitive '$File'"
-	ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=secureip $File
-done
-
+if [ $Unisim -eq 1 ]; then
+	echo -e "${YELLOW}Compiling library secureip primitives${NOCOLOR}"
+	Files=$SourceDir/unisims/secureip/*.vhd
+	for File in $Files; do
+		echo -e "${CYAN}Analysing primitive '$File'${NOCOLOR}"
+		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=secureip $File
+	done
+fi
 
 # Library UNIMACRO
 # ==============================================================================
 # compile unimacro packages
-echo "Compiling library 'unimacro' ..."
+if [ $Unimacro -eq 1 ]; then
+	echo -e "${YELLOW}Compiling library 'unimacro' ...${NOCOLOR}"
 
-Files=(
-	$SourceDir/unimacro/unimacro_VCOMP.vhd
-)
-
-for File in ${Files[@]}; do
-	echo "Analysing package '$File'"
-	ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unimacro $File
-done
-
+	Files=(
+		$SourceDir/unimacro/unimacro_VCOMP.vhd
+	)
+	for File in ${Files[@]}; do
+		echo -e "${CYAN}Analysing package '$File'${NOCOLOR}"
+		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unimacro $File
+	done
+fi
+	
 # compile unimacro macros
-Files=$SourceDir/unimacro/*_MACRO.vhd*
-for File in $Files; do
-	echo "Analysing primitive '$File'"
-	ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File
-done
-
+if [ $Unimacro -eq 1 ]; then
+	Files=$SourceDir/unimacro/*_MACRO.vhd*
+	for File in $Files; do
+		echo -e "${CYAN}Analysing primitive '$File'${NOCOLOR}"
+		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File
+	done
+fi
 
 # Library SIMPRIM
 # ==============================================================================
 # compile simprim packages
-echo "Compiling library 'simprim' ..."
+if [ $Simprim -eq 1 ]; then
+	echo -e "${YELLOW}Compiling library 'simprim' ...${NOCOLOR}"
 
-Files=(
-	$SourceDir/simprim/simprim_Vpackage.vhd
-	$SourceDir/simprim/simprim_Vcomponents.vhd
-)
-
-for File in ${Files[@]}; do
-	echo "Analysing package '$File'"
-	ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File
-done
+	Files=(
+		$SourceDir/simprims/simprim_Vpackage.vhd
+		$SourceDir/simprims/simprim_Vcomponents.vhd
+	)
+	for File in ${Files[@]}; do
+		echo -e "${CYAN}Analysing package '$File'${NOCOLOR}"
+		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File
+	done
+fi
 
 # compile unisim primitives
-Files=$SourceDir/simprim/primitive/other/*.vhd*
-for File in $Files; do
-	echo "Analysing primitive '$File'"
-	ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File
-done
+if [ $Simprim -eq 1 ]; then
+	Files=$SourceDir/simprims/primitive/other/*.vhd*
+	for File in $Files; do
+		echo -e "${CYAN}Analysing primitive '$File'${NOCOLOR}"
+		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File
+	done
+fi
 
 # compile unisim secureip primitives
-Files=$SourceDir/simprim/secureip/other/*.vhd*
-for File in $Files; do
-	echo "Analysing primitive '$File'"
-	ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File
-done
-
+if [ $Simprim -eq 1 ]; then
+	Files=$SourceDir/simprims/secureip/other/*.vhd*
+	for File in $Files; do
+		echo -e "${CYAN}Analysing primitive '$File'${NOCOLOR}"
+		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File
+	done
+fi
+	
 echo "--------------------------------------------------------------------------------"
-echo "Compiling Xilinx ISE libraries "
-echo "[FAILED]"
-echo "[SUCCESSFUL]"
+echo -n "Compiling Xilinx ISE libraries "
+if [ $StopCompiling -eq 1 ]; then
+	echo -e "${RED}[FAILED]${NOCOLOR}"
+else
+	echo -e "${GREEN}[SUCCESSFUL]${NOCOLOR}"
+fi
 
-cd ..
+cd $WorkingDir
