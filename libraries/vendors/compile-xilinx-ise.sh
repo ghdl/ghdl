@@ -4,7 +4,7 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
-#	PowerShell Script:	Script to compile the simulation libraries from Xilinx ISE
+#	Bash Script:				Script to compile the simulation libraries from Xilinx ISE
 #											for GHDL on Windows
 # 
 #	Authors:						Patrick Lehmann
@@ -16,7 +16,7 @@
 #		- compiles all Xilinx ISE simulation libraries and packages
 #
 # ==============================================================================
-#	Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+#	Copyright (C) 2015 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -62,7 +62,7 @@ NOCOLOR='\e[0m'			# No Color
 
 
 # create "Xilinx" directory and change to it
-Write-Host -e "${YELLOW}Creating vendor directory: '$DestinationDir'"
+echo -e "${YELLOW}Creating vendor directory: '$DestinationDir'"
 mkdir $DestinationDir
 cd $DestinationDir
 
