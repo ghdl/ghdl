@@ -7,7 +7,8 @@ SRC_FILES= \
  Invoking_GHDL.rst \
  Simulation_and_runtime.rst \
  Starting_with_GHDL.rst \
- index.rst
+ index.rst \
+ conf.py
 
 CP=cp
 
@@ -41,10 +42,6 @@ ghdl.pdf: ghdl.dvi
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
-ghdl.html: $(SRC_FILES)
-	$(SPHINXBUILD) -b singlehtml $(ALLSPHINXOPTS) $(BUILDDIR)/singlehtml
-	$(CP) $(BUILDDIR)/singlehtml/index.html $@
-
 ghdl.texi: $(SRC_FILES)
 	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
 	$(CP) $(BUILDDIR)/texinfo/GHDL.texi $@
@@ -55,4 +52,4 @@ clean:
 	$(RM) -rf build
 
 maintainer-clean: clean
-	$(RM) ghdl.html ghdl.texi
+	$(RM) ghdl.texi
