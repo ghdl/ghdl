@@ -120,7 +120,7 @@ if (-not $StopCompiling)
 		"$SourceDir\vhdl\com\src\com.vhd",
 		"$SourceDir\vhdl\com\src\com_context.vhd")
 	foreach ($File in $Files)
-	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=vunit_lib " + $File + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)

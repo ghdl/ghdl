@@ -75,7 +75,9 @@ function Restore-NativeCommandStream
 	}
 
 	end
-	{		}
+	{	if ($LineRemainer -ne "")
+		{	Write-Output $LineRemainer	}
+	}
 }
 
 function Write-ColoredGHDLLine

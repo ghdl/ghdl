@@ -106,7 +106,7 @@ if ((-not $StopCompiling) -and $Unisim)
 		"$SourceDir\unisims\retarget_VCOMP.vhd",
 		"$SourceDir\unisims\unisim_retarget_VCOMP.vhd")
 	foreach ($File in $Files)
-	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
@@ -122,7 +122,7 @@ if ((-not $StopCompiling) -and $Unisim)
 	$Options += "--std=93c"
 	$Files = dir "$SourceDir\unisims\primitive\*.vhd*"
 	foreach ($File in $Files)
-	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
@@ -138,7 +138,7 @@ if ((-not $StopCompiling) -and $Unisim)
 	$Options += "--std=93c"
 	$Files = dir "$SourceDir\unisims\retarget\*.vhd*"
 	foreach ($File in $Files)
-	{	Write-Host "Analysing retarget primitive '$($File.FullName)'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing retarget primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
@@ -154,7 +154,7 @@ if ((-not $StopCompiling) -and $Unisim -and $SecureIP)
 	$Options += "--std=93c"
 	$Files = dir "$SourceDir\unisims\secureip\*.vhd*"
 	foreach ($File in $Files)
-	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=secureip " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
@@ -174,7 +174,7 @@ if ((-not $StopCompiling) -and $Unimacro)
 	$Files = @(
 		"$SourceDir\unimacro\unimacro_VCOMP.vhd")
 	foreach ($File in $Files)
-	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
@@ -190,7 +190,7 @@ if ((-not $StopCompiling) -and $Unimacro)
 	$Options += "--std=93c"
 	$Files = dir "$SourceDir\unimacro\*_MACRO.vhd*"
 	foreach ($File in $Files)
-	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
