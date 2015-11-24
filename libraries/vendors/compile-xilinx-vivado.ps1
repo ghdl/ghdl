@@ -15,7 +15,7 @@
 #		- compiles all Xilinx Vivado simulation libraries and packages
 #
 # ==============================================================================
-#	Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+#	Copyright (C) 2015 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -57,6 +57,9 @@ param(
 	# Compile the Xilinx secureip library.
 	[switch]$SecureIP =	$false,
 	
+	# Clean up directory before analyzing.
+	[switch]$Clean =		$false,
+	
 	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false
 )
@@ -73,14 +76,6 @@ Import-Module $PSScriptRoot\shared.psm1
 $SourceDir =			$InstallationDirectory["XilinxVivado"] + "\data\vhdl\src"
 $DestinationDir = $DestinationDirectory["XilinxVivado"]
 
-# define global GHDL Options
-$GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--warn-binding", "--mb-comments")
-
-# create "Vivado" directory and change to it
-Write-Host "Creating vendor directory: '$DestinationDir'" -ForegroundColor Yellow
-mkdir $DestinationDir -ErrorAction SilentlyContinue | Out-Null
-cd $DestinationDir
-
 if (-not $All)
 {	$All =			$false	}
 elseif ($All -eq $true)
@@ -90,6 +85,22 @@ elseif ($All -eq $true)
 	$SecureIP =	$true
 }
 $StopCompiling = $false
+
+
+# define global GHDL Options
+$GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--warn-binding", "--mb-comments")
+
+# create "Vivado" directory and change to it
+Write-Host "Creating vendor directory: '$DestinationDir'" -ForegroundColor Yellow
+mkdir $DestinationDir -ErrorAction SilentlyContinue | Out-Null
+cd $DestinationDir
+
+# Cleanup
+# ==============================================================================
+if ($Clean)
+{	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
+	rm *.cf
+}
 
 # Library UNISIM
 # ==============================================================================
@@ -106,7 +117,7 @@ if ((-not $StopCompiling) -and $Unisim)
 		"$SourceDir\unisims\retarget_VCOMP.vhd",
 		"$SourceDir\unisims\unisim_retarget_VCOMP.vhd")
 	foreach ($File in $Files)
-	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
@@ -122,7 +133,7 @@ if ((-not $StopCompiling) -and $Unisim)
 	$Options += "--std=93c"
 	$Files = dir "$SourceDir\unisims\primitive\*.vhd*"
 	foreach ($File in $Files)
-	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
@@ -138,7 +149,7 @@ if ((-not $StopCompiling) -and $Unisim)
 	$Options += "--std=93c"
 	$Files = dir "$SourceDir\unisims\retarget\*.vhd*"
 	foreach ($File in $Files)
-	{	Write-Host "Analysing retarget primitive '$($File.FullName)'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing retarget primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
@@ -154,7 +165,7 @@ if ((-not $StopCompiling) -and $Unisim -and $SecureIP)
 	$Options += "--std=93c"
 	$Files = dir "$SourceDir\unisims\secureip\*.vhd*"
 	foreach ($File in $Files)
-	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=secureip " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
@@ -174,7 +185,7 @@ if ((-not $StopCompiling) -and $Unimacro)
 	$Files = @(
 		"$SourceDir\unimacro\unimacro_VCOMP.vhd")
 	foreach ($File in $Files)
-	{	Write-Host "Analysing package '$File'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
@@ -190,7 +201,7 @@ if ((-not $StopCompiling) -and $Unimacro)
 	$Options += "--std=93c"
 	$Files = dir "$SourceDir\unimacro\*_MACRO.vhd*"
 	foreach ($File in $Files)
-	{	Write-Host "Analysing primitive '$($File.FullName)'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
