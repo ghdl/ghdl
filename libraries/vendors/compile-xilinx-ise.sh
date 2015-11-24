@@ -47,6 +47,7 @@ source config.sh
 DestinationDir="$XilinxDestinationDirectory"
 SourceDir="$XilinxISEDirectory/ISE_DS/ISE/vhdl/src"
 echo $SourceDir
+ScriptDir=".."
 
 
 # define global GHDL Options
@@ -62,14 +63,36 @@ NOCOLOR='\e[0m'			# No Color
 
 
 # create "Xilinx" directory and change to it
-echo -e "${YELLOW}Creating vendor directory: '$DestinationDir'"
-mkdir $DestinationDir
+if [[ -d "$DestinationDir" ]]; then
+	echo -e "${YELLOW}Vendor directory '$DestinationDir' already exists."
+else
+	echo -e "${YELLOW}Creating vendor directory: '$DestinationDir'"
+	mkdir "$DestinationDir"
+fi
 cd $DestinationDir
 
+Clean=0
 Unisim=1
-Unimacro=1
-Simprim=1
+Unimacro=0
+Simprim=0
+
+SkipExistingFiles=0
+SuppressWarnings=1
 StopCompiling=1
+
+if [ $SuppressWarnings -eq 0 ]; then
+	GRCRulesFile="$ScriptDir/ghdl.grcrules"
+else
+	GRCRulesFile="$ScriptDir/ghdl.skipwarning.grcrules"
+fi
+
+
+# Cleanup directory
+# ==============================================================================
+if [[ $Clean -eq 1 ]]; then
+	echo -e "${YELLOW}Cleaning up vendor directory ..."
+	rm *.o
+fi
 
 # Library UNISIM
 # ==============================================================================
@@ -82,8 +105,14 @@ if [ $Unisim -eq 1 ]; then
 	)
 
 	for File in ${Files[@]}; do
-		echo -e "${CYAN}Analysing package '$File'${NOCOLOR}"
-		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File
+		FileName=$(basename "$File")
+		if [[ ($SkipExistingFiles -eq 1) && (-e "${FileName%.*}.o") ]]; then
+			echo -n ""
+#			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
+		else
+			echo -e "${CYAN}Analyzing package '$File'${NOCOLOR}"
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File 2>&1 | grcat $GRCRulesFile
+		fi
 	done
 fi
 
@@ -91,8 +120,14 @@ fi
 if [ $Unisim -eq 1 ]; then
 	Files=$SourceDir/unisims/primitive/*.vhd
 	for File in $Files; do
-		echo -e "${CYAN}Analysing primitive '$File'${NOCOLOR}"
-		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File
+		FileName=$(basename "$File")
+		if [[ ($SkipExistingFiles -eq 1) && (-e "${FileName%.*}.o") ]]; then
+			echo -n ""
+#			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
+		else
+			echo -e "${CYAN}Analyzing primitive '$File'${NOCOLOR}"
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File 2>&1 | grcat $GRCRulesFile
+		fi
 	done
 fi
 
@@ -101,8 +136,14 @@ if [ $Unisim -eq 1 ]; then
 	echo -e "${YELLOW}Compiling library secureip primitives${NOCOLOR}"
 	Files=$SourceDir/unisims/secureip/*.vhd
 	for File in $Files; do
-		echo -e "${CYAN}Analysing primitive '$File'${NOCOLOR}"
-		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=secureip $File
+		FileName=$(basename "$File")
+		if [[ ($SkipExistingFiles -eq 1) && (-e "${FileName%.*}.o") ]]; then
+			echo -n ""
+#			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
+		else
+			echo -e "${CYAN}Analyzing primitive '$File'${NOCOLOR}"
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=secureip $File 2>&1 | grcat $GRCRulesFiles
+		fi
 	done
 fi
 
@@ -116,8 +157,14 @@ if [ $Unimacro -eq 1 ]; then
 		$SourceDir/unimacro/unimacro_VCOMP.vhd
 	)
 	for File in ${Files[@]}; do
-		echo -e "${CYAN}Analysing package '$File'${NOCOLOR}"
-		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unimacro $File
+		FileName=$(basename "$File")
+		if [[ ($SkipExistingFiles -eq 1) && (-e "${FileName%.*}.o") ]]; then
+			echo -n ""
+#			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
+		else
+			echo -e "${CYAN}Analyzing package '$File'${NOCOLOR}"
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unimacro $File 2>&1 | grcat $GRCRulesFiles
+		fi
 	done
 fi
 	
@@ -125,8 +172,14 @@ fi
 if [ $Unimacro -eq 1 ]; then
 	Files=$SourceDir/unimacro/*_MACRO.vhd*
 	for File in $Files; do
-		echo -e "${CYAN}Analysing primitive '$File'${NOCOLOR}"
-		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File
+		FileName=$(basename "$File")
+		if [[ ($SkipExistingFiles -eq 1) && (-e "${FileName%.*}.o") ]]; then
+			echo -n ""
+#			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
+		else
+			echo -e "${CYAN}Analyzing primitive '$File'${NOCOLOR}"
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File 2>&1 | grcat $GRCRulesFiles
+		fi
 	done
 fi
 
@@ -141,8 +194,14 @@ if [ $Simprim -eq 1 ]; then
 		$SourceDir/simprims/simprim_Vcomponents.vhd
 	)
 	for File in ${Files[@]}; do
-		echo -e "${CYAN}Analysing package '$File'${NOCOLOR}"
-		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File
+		FileName=$(basename "$File")
+		if [[ ($SkipExistingFiles -eq 1) && (-e "${FileName%.*}.o") ]]; then
+			echo -n ""
+#			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
+		else
+			echo -e "${CYAN}Analyzing package '$File'${NOCOLOR}"
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFiles
+		fi
 	done
 fi
 
@@ -150,8 +209,14 @@ fi
 if [ $Simprim -eq 1 ]; then
 	Files=$SourceDir/simprims/primitive/other/*.vhd*
 	for File in $Files; do
-		echo -e "${CYAN}Analysing primitive '$File'${NOCOLOR}"
-		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File
+		FileName=$(basename "$File")
+		if [[ ($SkipExistingFiles -eq 1) && (-e "${FileName%.*}.o") ]]; then
+			echo -n ""
+#			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
+		else
+			echo -e "${CYAN}Analyzing primitive '$File'${NOCOLOR}"
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFiles
+		fi
 	done
 fi
 
@@ -159,8 +224,14 @@ fi
 if [ $Simprim -eq 1 ]; then
 	Files=$SourceDir/simprims/secureip/other/*.vhd*
 	for File in $Files; do
-		echo -e "${CYAN}Analysing primitive '$File'${NOCOLOR}"
-		ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File
+		FileName=$(basename "$File")
+		if [[ ($SkipExistingFiles -eq 1) && (-e "${FileName%.*}.o") ]]; then
+			echo -n ""
+#			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
+		else
+			echo -e "${CYAN}Analyzing primitive '$File'${NOCOLOR}"
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFiles
+		fi
 	done
 fi
 	
