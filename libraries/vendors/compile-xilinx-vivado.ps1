@@ -57,6 +57,9 @@ param(
 	# Compile the Xilinx secureip library.
 	[switch]$SecureIP =	$false,
 	
+	# Clean up directory before analyzing.
+	[switch]$Clean =		$false,
+	
 	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false
 )
@@ -73,14 +76,6 @@ Import-Module $PSScriptRoot\shared.psm1
 $SourceDir =			$InstallationDirectory["XilinxVivado"] + "\data\vhdl\src"
 $DestinationDir = $DestinationDirectory["XilinxVivado"]
 
-# define global GHDL Options
-$GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--warn-binding", "--mb-comments")
-
-# create "Vivado" directory and change to it
-Write-Host "Creating vendor directory: '$DestinationDir'" -ForegroundColor Yellow
-mkdir $DestinationDir -ErrorAction SilentlyContinue | Out-Null
-cd $DestinationDir
-
 if (-not $All)
 {	$All =			$false	}
 elseif ($All -eq $true)
@@ -90,6 +85,22 @@ elseif ($All -eq $true)
 	$SecureIP =	$true
 }
 $StopCompiling = $false
+
+
+# define global GHDL Options
+$GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--warn-binding", "--mb-comments")
+
+# create "Vivado" directory and change to it
+Write-Host "Creating vendor directory: '$DestinationDir'" -ForegroundColor Yellow
+mkdir $DestinationDir -ErrorAction SilentlyContinue | Out-Null
+cd $DestinationDir
+
+# Cleanup
+# ==============================================================================
+if ($Clean)
+{	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
+	rm *.cf
+}
 
 # Library UNISIM
 # ==============================================================================

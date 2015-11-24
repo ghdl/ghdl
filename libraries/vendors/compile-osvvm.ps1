@@ -45,6 +45,9 @@ param(
 	# Compile all libraries and packages.
 	[switch]$All =							$true,
 	
+	# Clean up directory before analyzing.
+	[switch]$Clean =		$false,
+	
 	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false
 )
@@ -61,6 +64,15 @@ Import-Module $PSScriptRoot\shared.psm1
 $SourceDir =			$InstallationDirectory["OSVVM"]
 $DestinationDir = $DestinationDirectory["OSVVM"]
 
+if (-not $All)
+{	$All =				$false	}
+elseif ($All -eq $true)
+{	# nothing to configure
+}
+
+$StopCompiling = $false
+
+
 # define global GHDL Options
 $GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--no-vital-checks", "--std=08")
 
@@ -69,13 +81,12 @@ Write-Host "Creating vendor directory: '$DestinationDir'" -ForegroundColor Yello
 mkdir $DestinationDir -ErrorAction SilentlyContinue | Out-Null
 cd $DestinationDir
 
-if (-not $All)
-{	$All =				$false	}
-elseif ($All -eq $true)
-{	# nothing to configure
+# Cleanup
+# ==============================================================================
+if ($Clean)
+{	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
+	rm *.cf
 }
-
-$StopCompiling = $false
 
 # compile osvvm library
 if (-not $StopCompiling)

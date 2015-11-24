@@ -93,6 +93,7 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
  - Common parameters to all scripts:
 
         --all               Compile all libraries, including common libraries, packages and device libraries.
+        --clean				Cleanup directory before analyzing.
         --suppresswarnings	Don't show warnings. Report errors only.
  - `compile-altera.sh`
 
@@ -121,6 +122,7 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
  - Common parameters to all scripts:
 
         -All                Compile all libraries, including common libraries, packages and device libraries.
+        -Clean				Cleanup directory before analyzing.
         -SuppressWarnings	Don't show warnings. Report errors only.
  - `compile-altera.ps1`
 
