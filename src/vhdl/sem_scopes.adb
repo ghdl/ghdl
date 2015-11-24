@@ -326,8 +326,14 @@ package body Sem_Scopes is
          Cell : Interpretation_Cell renames Interpretations.Table (Inter);
          Prev : constant Name_Interpretation_Type := Cell.Prev;
       begin
+         --  Get_Under_Interpretation can be used only to get a hidden
+         --  interpretation.
          pragma Assert (Cell.Prev_Hidden);
-         if Valid_Interpretation (Prev) then
+
+         if Valid_Interpretation (Prev)
+           --  Not a conflict one (use clauses).
+           and then Get_Declaration (Prev) /= Null_Iir
+         then
             return Prev;
          else
             return No_Name_Interpretation;
@@ -1395,10 +1401,14 @@ package body Sem_Scopes is
       end if;
       Put (": ");
       Decl := Get_Declaration (Inter);
-      Put (Iir_Kind'Image (Get_Kind (Decl)));
-      Put_Line (", loc: " & Image (Get_Location (Decl)));
-      if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration then
-         Put_Line ("   " & Disp_Subprg (Decl));
+      if Decl = Null_Iir then
+         Put_Line ("null: conflict");
+      else
+         Put (Iir_Kind'Image (Get_Kind (Decl)));
+         Put_Line (", loc: " & Image (Get_Location (Decl)));
+         if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration then
+            Put_Line ("   " & Disp_Subprg (Decl));
+         end if;
       end if;
    end Dump_Interpretation;
 
