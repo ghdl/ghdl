@@ -29,10 +29,16 @@
 #include <signal.h>
 #include <fcntl.h>
 
-#if defined (__linux__) && defined (__i386__)
-/* On i386/Linux, the context must be inspected.  */
+#if defined (__linux__) || defined (__APPLE__)
+#define HAVE_BACKTRACE 1
 #include <sys/ucontext.h>
 #endif
+
+#ifdef HAVE_BACKTRACE
+#include <execinfo.h>
+#endif
+
+#include "grt_itf.h"
 
 /* There is a simple setjmp/longjmp mechanism used to report failures.
    We have the choice between 3 mechanisms:
@@ -70,49 +76,101 @@ typedef jmp_buf JMP_BUF;
 static int run_env_en;
 static JMP_BUF run_env;
 
-extern void grt_overflow_error (void);
-extern void grt_null_access_error (void);
-
 #ifdef __APPLE__
 #define NEED_SIGFPE_HANDLER
+#define NEED_SIGBUS_HANDLER
 #endif
-
-static struct sigaction prev_sigfpe_act;
-
-/* Handler for SIGFPE signal.
-   It is also raised in case of overflow (i386 linux).  */
-static void grt_overflow_handler (int signo, siginfo_t *info, void *ptr)
-{
-  grt_overflow_error ();
-}
 
 static struct sigaction prev_sigsegv_act;
 
-/* Posix handler for overflow.  This is used only by mcode.  */
-static void grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
-{
-#if defined (__linux__) && defined (__i386__)
-  ucontext_t *uctxt = (ucontext_t *)ptr;
+#ifdef NEED_SIGFPE_HANDLER
+static struct sigaction prev_sigfpe_act;
+#endif
+#ifdef NEED_SIGBUS_HANDLER
+static struct sigaction prev_sigbus_act;
+#endif
 
-  /* Linux generates a SIGSEGV (!) for an overflow exception.  */
-  if (uctxt->uc_mcontext.gregs[REG_TRAPNO] == 4)
+static void
+get_bt_from_ucontext (void *uctxt, struct backtrace_addrs *bt)
+{
+  void *pc = NULL;
+  int i;
+
+#ifdef HAVE_BACKTRACE
+  bt->size = backtrace (bt->addrs, sizeof (bt->addrs) / sizeof (void *));
+  bt->skip = 0;
+#else
+  bt->size = 0;
+  return;
+#endif
+
+#if defined (__linux__) && defined (__x86_64__)
+  ucontext_t *u = (ucontext_t *)uctxt;
+  pc = (void *)u->uc_mcontext.gregs[REG_RIP];
+#endif
+#if defined (__linux__) && defined (__i386__)
+  ucontext_t *u = (ucontext_t *)uctxt;
+  pc = (void *)u->uc_mcontext.gregs[REG_EIP];
+#endif
+#if defined (__APPLE__) && defined (__i386__)
+  ucontext_t *u = (ucontext_t *)uctxt;
+  pc = (void *)u->uc_mcontext->__ss.__eip;
+  bt->skip = 3;  /* This frame + sighandler + trampoline + marker - pc.  */
+  bt->addrs[3] = pc;
+  return;
+#endif
+
+  for (i = 0; i < bt->size; i++)
+    if (bt->addrs[i] == pc)
+      {
+        bt->skip = i;
+        break;
+      }
+}
+
+/* Handler for SIGFPE signal.
+   It is also raised in case of overflow (i386 linux).  */
+static void
+grt_overflow_handler (int signo, siginfo_t *info, void *ptr)
+{
+  struct backtrace_addrs bt;
+
+  get_bt_from_ucontext (ptr, &bt);
+  grt_overflow_error (&bt);
+}
+
+/* Posix handler for overflow.  This is used only by mcode.  */
+static void
+grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
+{
+  struct backtrace_addrs bt;
+
+  get_bt_from_ucontext (ptr, &bt);
+
+#if defined (__linux__) && defined (__i386__)
+  if (signo == SIGSEGV)
     {
-      grt_overflow_error ();
+      ucontext_t *uctxt = (ucontext_t *)ptr;
+
+      /* Linux generates a SIGSEGV (!) for an overflow exception.  */
+      if (uctxt->uc_mcontext.gregs[REG_TRAPNO] == 4)
+	grt_overflow_error (&bt);
     }
 #endif
 
   /* We loose.  */
-  grt_null_access_error ();
+  grt_null_access_error (&bt);
 }
 
-static void grt_signal_setup (void)
+static void
+grt_signal_setup (void)
 {
   {
     struct sigaction sigsegv_act;
 
     sigsegv_act.sa_sigaction = &grt_sigsegv_handler;
     sigemptyset (&sigsegv_act.sa_mask);
-    sigsegv_act.sa_flags = SA_ONSTACK | SA_SIGINFO;
+    sigsegv_act.sa_flags = SA_SIGINFO;
 #ifdef SA_ONESHOT
     sigsegv_act.sa_flags |= SA_ONESHOT;
 #elif defined (SA_RESETHAND)
@@ -122,6 +180,10 @@ static void grt_signal_setup (void)
     /* We don't care about the return status.
        If the handler is not installed, then some feature are lost.  */
     sigaction (SIGSEGV, &sigsegv_act, &prev_sigsegv_act);
+
+#ifdef NEED_SIGBUS_HANDLER
+    sigaction (SIGBUS, &sigsegv_act, &prev_sigbus_act);
+#endif
   }
 
 #ifdef NEED_SIGFPE_HANDLER
@@ -137,9 +199,14 @@ static void grt_signal_setup (void)
 #endif
 }
 
-static void grt_signal_restore (void)
+static void
+grt_signal_restore (void)
 {
   sigaction (SIGSEGV, &prev_sigsegv_act, NULL);
+
+#ifdef NEED_SIGBUS_HANDLER
+  sigaction (SIGBUS, &prev_sigbus_act, NULL);
+#endif
 
 #ifdef NEED_SIGFPE_HANDLER
   sigaction (SIGFPE, &prev_sigfpe_act, NULL);
@@ -166,4 +233,15 @@ __ghdl_run_through_longjump (int (*func)(void))
   grt_signal_restore ();
   run_env_en = 0;
   return res;
+}
+
+void
+grt_save_backtrace (struct backtrace_addrs *bt, int skip)
+{
+#ifdef HAVE_BACKTRACE
+  bt->size = backtrace (bt->addrs, sizeof (bt->addrs) / sizeof (void *));
+  bt->skip = skip + 1;
+#else
+  bt->size = 0;
+#endif
 }

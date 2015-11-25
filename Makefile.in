@@ -26,6 +26,7 @@ libdirreverse=@libdirreverse@
 gcc_src_dir=@gcc_src_dir@
 llvm_prefix=@llvm_prefix@
 LDFLAGS=@LDFLAGS@
+LIBBACKTRACE=@backtrace_lib@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
@@ -91,7 +92,8 @@ all.mcode: ghdl_mcode libs.vhdl.mcode
 GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/mcode
 
 ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_mcode: $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
+ghdl_mcode: $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
+            memsegs_c.o chkstk.o force
 	$(GNATMAKE) -o $@ $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
@@ -156,7 +158,13 @@ ghdl_gcc: force
 	 $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
 grt.links:
-	cd $(libdirsuffix); ln -sf $(libdirreverse)/grt.lst .; ln -sf $(libdirreverse)/libgrt.a .; ln -sf $(libdirreverse)/grt.ver .
+	cd $(libdirsuffix); \
+	ln -sf $(libdirreverse)/grt.lst .; \
+	ln -sf $(libdirreverse)/libgrt.a .; \
+	ln -sf $(libdirreverse)/grt.ver .; \
+	if test "x$(LIBBACKTRACE)" != x; then \
+	  ln -sf $(libdirreverse)/libbacktrace.a .; \
+	fi
 
 libs.vhdl.gcc: ghdl_gcc ghdl1-gcc
 	$(MAKE) GHDL=ghdl_gcc vhdl.libs.all
@@ -184,7 +192,8 @@ all.llvm: ghdl1-llvm ghdl_llvm grt-all libs.vhdl.llvm
 all.llvm_jit: ghdl_llvm_jit
 
 ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_llvm_jit: $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
+ghdl_llvm_jit: $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
+               llvm-cbindings.o force
 	$(GNATMAKE) -o $@ $(GHDL_LLVM_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb \
 	 $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) \
 	 $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) --LINK=$(CXX) \
@@ -232,7 +241,7 @@ install.llvm: install.llvm.program install.vhdllib install.grt.llvm
 
 GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt
 
-ghdl_simul: $(GRT_ADD_OBJS) force
+ghdl_simul: $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) force
 	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 libs.vhdl.simul: ghdl_simul
@@ -320,6 +329,7 @@ clean: force
 
 distclean: clean
 	$(RM) -f default_pathes.ads ortho_code-x86-flags.ads
+	$(RM) -f grt-backtrace-impl.ads
 	$(RM) -f Makefile config.status ghdl.gpr
 
 clean-c: force

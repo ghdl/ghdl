@@ -30,10 +30,10 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
 ##### Supported Simulation and Verification Libraries
 
  - OSVVM (for VHDL-2008)
-     - osvvm 
+     - osvvm
  - VUnit (for VHDL-2008)
-     - vunit_lib 
- 
+     - vunit_lib
+
 ---------------------------------------------------------------------
 ### Compiling on Linux
 
@@ -45,7 +45,7 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
  - **Step 1 - Configure the scripts**
     Please open the `config.psm1` file and set the dictionary entries for the installed
     vendor tools to the appropriate directory to your tool's installation folder.
-    
+
     `config.psm1`:
 
         $InstallationDirectory = @{
@@ -76,7 +76,7 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
     ```PowerShell
     PS> dir
         Directory: D:\temp\ghdl
-     
+
     Mode           LastWriteTime       Length Name
     ----           -------------       ------ ----
     d----    20.11.2015    19:33        <DIR> altera
@@ -98,7 +98,7 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
  - `compile-altera.sh`
 
         --altera            Compile base libraries like 'altera' and 'altera_mf'
-        --max               Compile device libraries for Max CPLDs 
+        --max               Compile device libraries for Max CPLDs
         --arria             Compile device libraries for Arria FPGAs
         --cyclone           Compile device libraries for Cyclone FPGAs
         --stratix           Compile device libraries for Stratix FPGAs
@@ -127,7 +127,7 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
  - `compile-altera.ps1`
 
         -Altera             Compile base libraries like 'altera' and 'altera_mf'
-        -Max                Compile device libraries for Max CPLDs 
+        -Max                Compile device libraries for Max CPLDs
         -Arria              Compile device libraries for Arria FPGAs
         -Cyclone            Compile device libraries for Cyclone FPGAs
         -Stratix            Compile device libraries for Stratix FPGAs

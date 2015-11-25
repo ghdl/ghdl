@@ -396,6 +396,7 @@ package Dwarf is
    DW_LNS_Set_Isa            : constant Unsigned_8 := 12;
 
    --  Line number extended opcode.
+   --  Encoding is 0:Len:LNE_OP:data
    DW_LNE_End_Sequence       : constant Unsigned_8 := 1;
    DW_LNE_Set_Address        : constant Unsigned_8 := 2;
    DW_LNE_Define_File        : constant Unsigned_8 := 3;
@@ -442,5 +443,3 @@ package Dwarf is
    DW_EH_PE_Datarel : constant Unsigned_8 := 16#30#;
    DW_EH_PE_Format_Mask : constant Unsigned_8 := 16#0f#;
 end Dwarf;
-
-

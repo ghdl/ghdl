@@ -59,6 +59,7 @@ with Grt.Values;
 with Grt.Names;
 with Grt.Std_Logic_1164;
 with Grt.Errors;
+with Grt.Backtraces.Jit;
 
 with Ghdlcomp;
 with Foreigns;
@@ -590,6 +591,8 @@ package body Ghdlrun is
       end if;
 
       Grtlink.Flag_String := Flags.Flag_String;
+
+      Grt.Backtraces.Jit.Symbolizer_Proc := Ortho_Jit.Symbolize'Access;
 
       Elaborate_Proc :=
         Conv (Ortho_Jit.Get_Address (Trans_Decls.Ghdl_Elaborate));

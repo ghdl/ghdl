@@ -26,6 +26,7 @@ with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Options; use Grt.Options;
 with Grt.Hooks; use Grt.Hooks;
+with Grt.Backtraces;
 
 package body Grt.Errors is
    --  Called in case of premature exit.
@@ -74,6 +75,11 @@ package body Grt.Errors is
    procedure Put_Err (Str : String) is
    begin
       Put (stderr, Str);
+   end Put_Err;
+
+   procedure Put_Err (C : Character) is
+   begin
+      Put (stderr, C);
    end Put_Err;
 
    procedure Put_Err (Str : Ghdl_C_String) is
@@ -254,13 +260,34 @@ package body Grt.Errors is
       Fatal_Error;
    end Internal_Error;
 
-   procedure Grt_Overflow_Error is
+   procedure Error_E_Call_Stack (Bt : Backtrace_Addrs) is
    begin
-      Error ("overflow detected");
+      Newline_Err;
+
+      Grt.Backtraces.Put_Err_Backtrace (Bt);
+
+      Cont := False;
+      Fatal_Error;
+   end Error_E_Call_Stack;
+
+   procedure Error_E_Call_Stack (Bt : Backtrace_Addrs_Acc) is
+   begin
+      if Bt /= null then
+         Error_E_Call_Stack (Bt.all);
+      else
+         Error_E;
+      end if;
+   end Error_E_Call_Stack;
+
+   procedure Grt_Overflow_Error (Bt : Backtrace_Addrs_Acc) is
+   begin
+      Error_C ("overflow detected");
+      Error_E_Call_Stack (Bt);
    end Grt_Overflow_Error;
 
-   procedure Grt_Null_Access_Error is
+   procedure Grt_Null_Access_Error (Bt : Backtrace_Addrs_Acc) is
    begin
-      Error ("NULL access dereferenced");
+      Error_C ("NULL access dereferenced");
+      Error_E_Call_Stack (Bt);
    end Grt_Null_Access_Error;
 end Grt.Errors;

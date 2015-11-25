@@ -1,5 +1,5 @@
-/*  GRT C bindings for time.
-    Copyright (C) 2002 - 2014 Tristan Gingold.
+/*  Declarations to interface with Ada code.
+    Copyright (C) 2015 Tristan Gingold.
 
     GHDL is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License as published by the Free
@@ -23,19 +23,18 @@
     however invalidate any other reasons why the executable file might be
     covered by the GNU Public License.
 */
-#include <time.h>
 
-int
-grt_get_clk_tck (void)
+struct backtrace_addrs
 {
-  return CLOCKS_PER_SEC;
-}
+  int size;
+  int skip;
+  void *addrs[32];
+};
 
-void
-grt_get_times (int *wall, int *user, int *sys)
-{
-  *wall = clock ();
-  *user = 0;
-  *sys = 0;
-}
+void grt_save_backtrace (struct backtrace_addrs *bt, int skip);
 
+extern void grt_overflow_error (struct backtrace_addrs *bt);
+extern void grt_null_access_error (struct backtrace_addrs *bt);
+
+void __ghdl_maybe_return_via_longjump (int val);
+int __ghdl_run_through_longjump (int (*func)(void));
