@@ -1574,7 +1574,14 @@ package body Parse is
             Last := Next;
          end loop;
 
-         exit when Current_Token /= Tok_Semi_Colon;
+         case Current_Token is
+            when Tok_Comma =>
+               Error_Msg_Parse ("';' expected instead of ','");
+            when Tok_Semi_Colon =>
+               null;
+            when others =>
+               exit;
+         end case;
       end loop;
 
       if Current_Token /= Tok_Right_Paren then
