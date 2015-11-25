@@ -2356,7 +2356,7 @@ package body Ortho_Code.X86.Emits is
             null;
 
          when OE_Line =>
-            if Flag_Debug = Debug_Dwarf then
+            if Flag_Debug /= Debug_None then
                Dwarf.Set_Line_Stmt (Get_Expr_Line_Number (Stmt));
                Set_Current_Section (Sect_Text);
             end if;
@@ -2516,7 +2516,7 @@ package body Ortho_Code.X86.Emits is
       Gen_1 (Opc_Leave);
       Gen_1 (Opc_Ret);
 
-      if Flag_Debug = Debug_Dwarf then
+      if Flag_Debug /= Debug_None then
          Set_Body_Info (Subprg.D_Body, Int32 (Get_Current_Pc - Subprg_Pc));
       end if;
    end Emit_Epilogue;
@@ -2704,7 +2704,7 @@ package body Ortho_Code.X86.Emits is
          Debug_Hex := True;
       end if;
 
-      if Flag_Debug = Debug_Dwarf then
+      if Flag_Debug /= Debug_None then
          Dwarf.Init;
          Set_Current_Section (Sect_Text);
       end if;
@@ -2714,7 +2714,7 @@ package body Ortho_Code.X86.Emits is
    is
       use Ortho_Code.Flags;
    begin
-      if Flag_Debug = Debug_Dwarf then
+      if Flag_Debug /= Debug_None then
          Set_Current_Section (Sect_Text);
          Dwarf.Finish;
       end if;

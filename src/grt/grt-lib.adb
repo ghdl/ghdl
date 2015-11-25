@@ -46,6 +46,7 @@ package body Grt.Lib is
                         Loc : Ghdl_Location_Ptr)
    is
       Level : constant Integer := Severity mod 256;
+      Bt : Backtrace_Addrs;
    begin
       Report_H;
       Report_C (Loc.Filename);
@@ -77,8 +78,10 @@ package body Grt.Lib is
          Report_E (Default_Str);
       end if;
       if Level >= Grt.Options.Severity_Level then
+         Save_Backtrace (Bt, 2);
          Error_C (Msg);
-         Error_E (" failed");
+         Error_C (" failed");
+         Error_E_Call_Stack (Bt);
       end if;
    end Do_Report;
 
@@ -161,12 +164,14 @@ package body Grt.Lib is
    procedure Ghdl_Bound_Check_Failed_L1 (Filename : Ghdl_C_String;
                                          Line: Ghdl_I32)
    is
+      Bt : Backtrace_Addrs;
    begin
+      Save_Backtrace (Bt, 1);
       Error_C ("bound check failure at ");
       Error_C (Filename);
       Error_C (":");
       Error_C (Integer (Line));
-      Error_E ("");
+      Error_E_Call_Stack (Bt);
    end Ghdl_Bound_Check_Failed_L1;
 
    function Ghdl_Integer_Exp (V : Ghdl_I32; E : Ghdl_I32)

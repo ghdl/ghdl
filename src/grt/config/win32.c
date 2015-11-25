@@ -25,17 +25,17 @@
 */
 
 #include <windows.h>
+#include <winbase.h>
+#include <dbghelp.h>
 #include <stdio.h>
 #include <setjmp.h>
 #include <assert.h>
 #include <excpt.h>
 
+#include "grt_itf.h"
+
 static int run_env_en;
 static jmp_buf run_env;
-
-extern void grt_overflow_error (void);
-extern void grt_null_access_error (void);
-void __ghdl_maybe_return_via_longjump (int val);
 
 static EXCEPTION_DISPOSITION
 ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
@@ -49,18 +49,74 @@ struct exception_registration
   void *handler;
 };
 
+/* Save bactktrace from CTXT to BT, the first SKIP frames are skipped.
+   We need to use StackWalk64 as apparently CaptureStackBackTrace doesn't
+   work over JIT'ed code.  I suppose it checks whether PC belongs to the text
+   section of an image.  */
+
+static void
+get_bt_from_context (struct backtrace_addrs *bt, CONTEXT *ctxt, int skip)
+{
+  STACKFRAME64 frame;
+  unsigned mach;
+
+  bt->size = 0;
+  bt->skip = 0;
+  memset (&frame, 0, sizeof (frame));
+
+#ifdef __i386__
+  mach = IMAGE_FILE_MACHINE_I386;
+
+  frame.AddrPC.Offset = ctxt->Eip;
+  frame.AddrPC.Mode = AddrModeFlat;
+  frame.AddrFrame.Offset = ctxt->Ebp;
+  frame.AddrFrame.Mode = AddrModeFlat;
+  frame.AddrStack.Offset = ctxt->Esp;
+  frame.AddrStack.Mode = AddrModeFlat;
+
+#elif defined (__x86_64__)
+  mach = IMAGE_FILE_MACHINE_AMD64;
+
+  frame.AddrPC.Offset = ctxt->Rip;
+  frame.AddrPC.Mode = AddrModeFlat;
+  frame.AddrFrame.Offset = ctx->Rsp;
+  frame.AddrFrame.Mode = AddrModeFlat;
+  frame.AddrStack.Offset = ctx->Rsp;
+  frame.AddrStack.Mode = AddrModeFlat;
+
+#else
+#  warning "platform not supported"
+  return;
+#endif
+
+  while (bt->size < sizeof (bt->addrs) / sizeof (bt->addrs[0]))
+    {
+      if (skip > 0)
+	skip--;
+      else
+	bt->addrs[bt->size++] = (void *) frame.AddrPC.Offset;
+
+      if (!StackWalk64 (mach, GetCurrentProcess (), GetCurrentThread (),
+			&frame, ctxt, NULL, NULL, NULL, NULL))
+	break;
+    }
+}
+
 static EXCEPTION_DISPOSITION
 ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
 		  void *EstablisherFrame,
 		  struct _CONTEXT* ContextRecord,
 		  void *DispatcherContext)
 {
+  struct backtrace_addrs bt;
   const char *msg = "";
 
   switch (ExceptionRecord->ExceptionCode)
     {
     case EXCEPTION_ACCESS_VIOLATION:
-      grt_null_access_error ();
+      /* Pc is ExceptionRecord->ExceptionAddress.  */
+      get_bt_from_context (&bt, ContextRecord, 1);
+      grt_null_access_error (&bt);
       break;
 
     case EXCEPTION_FLT_DENORMAL_OPERAND:
@@ -77,7 +133,8 @@ ghdl_SEH_handler (struct _EXCEPTION_RECORD* ExceptionRecord,
       break;
 
     case EXCEPTION_INT_OVERFLOW:
-      grt_overflow_error ();
+      get_bt_from_context (&bt, ContextRecord, 1);
+      grt_overflow_error (&bt);
       break;
 
     case EXCEPTION_STACK_OVERFLOW:
@@ -132,6 +189,15 @@ __ghdl_run_through_longjump (int (*func)(void))
   return res;
 }
 
+void
+grt_save_backtrace (struct backtrace_addrs *bt, int skip)
+{
+  CONTEXT ctxt;
+
+  RtlCaptureContext (&ctxt);
+  get_bt_from_context (bt, &ctxt, skip + 1);
+}
+
 #include <math.h>
 
 double acosh (double x)
@@ -160,4 +226,3 @@ void __gnat_raise_program_error(void)
    abort ();
 }
 #endif
-

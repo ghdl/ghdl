@@ -15,6 +15,8 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Binary_File; use Binary_File;
+
 package Ortho_Code.Dwarf is
    procedure Init;
    procedure Finish;
@@ -32,6 +34,12 @@ package Ortho_Code.Dwarf is
    type Mark_Type is limited private;
    procedure Mark (M : out Mark_Type);
    procedure Release (M : Mark_Type);
+
+   --  Sections created by dwarf.
+   Line_Sect : Section_Acc;
+   Abbrev_Sect : Section_Acc;
+   Info_Sect : Section_Acc;
+   Aranges_Sect : Section_Acc;
 
 private
    type Mark_Type is record

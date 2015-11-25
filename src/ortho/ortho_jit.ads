@@ -39,5 +39,12 @@ package Ortho_Jit is
 
    --  Return the name of the code generator, to be displayed by --version.
    function Get_Jit_Name return String;
-end Ortho_Jit;
 
+   --  Symbolizer: convert PC to a filename (a NUL terminated string), line
+   --  number and subprogram name (NUL terminated).
+   --  Unresolved values are Null_Address and 0.
+   procedure Symbolize (Pc : Address;
+                        Filename : out Address;
+                        Lineno : out Natural;
+                        Subprg : out Address);
+end Ortho_Jit;

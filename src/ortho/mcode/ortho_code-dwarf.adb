@@ -18,13 +18,12 @@
 with GNAT.Directory_Operations;
 with Tables;
 with Interfaces; use Interfaces;
-with Binary_File; use Binary_File;
 with Dwarf; use Dwarf;
 with Ada.Text_IO;
+with Ortho_Code.Flags; use Ortho_Code.Flags;
 with Ortho_Code.Decls;
 with Ortho_Code.Types;
 with Ortho_Code.Consts;
-with Ortho_Code.Flags;
 with Ortho_Ident;
 with Ortho_Code.Binary;
 
@@ -52,20 +51,7 @@ package body Ortho_Code.Dwarf is
    Info_Sym : Symbol;
    Line_Sym : Symbol;
 
-   Line_Sect : Section_Acc;
-   Abbrev_Sect : Section_Acc;
-   Info_Sect : Section_Acc;
-   Aranges_Sect : Section_Acc;
-
    Abbrev_Last : Unsigned_32;
-
---     procedure Gen_String (Str : String)
---     is
---     begin
---        for I in Str'Range loop
---           Gen_B8 (Character'Pos (Str (I)));
---        end loop;
---     end Gen_String;
 
    procedure Gen_String_Nul (Str : String)
    is
@@ -118,12 +104,6 @@ package body Ortho_Code.Dwarf is
       end loop;
    end Gen_Uleb128;
 
---     procedure New_Debug_Line_Decl (Line : Int32)
---     is
---     begin
---        Line_Last := Line;
---     end New_Debug_Line_Decl;
-
    procedure Set_Line_Stmt (Line : Int32)
    is
       Pc : Pc_Type;
@@ -154,6 +134,7 @@ package body Ortho_Code.Dwarf is
          Gen_Uleb128 (Unsigned_32 (Cur_File));
          Last_File := Cur_File;
       elsif Cur_File = 0 then
+         --  No file yet.
          return;
       end if;
 
@@ -173,7 +154,6 @@ package body Ortho_Code.Dwarf is
               + Byte (D_Pc) * Line_Range
               + Byte (D_Ln - Line_Base));
 
-      --Set_Current_Section (Text_Sect);
       Line_Pc := Pc;
       Line_Last := Line;
    end Set_Line_Stmt;
@@ -269,12 +249,10 @@ package body Ortho_Code.Dwarf is
       Gen_Uleb128 (Form);
    end Gen_Abbrev_Tuple;
 
-   procedure Init
-   is
+   procedure Init is
    begin
       --  Generate type names.
       Flags.Flag_Type_Name := True;
-
 
       Orig_Sym := Create_Local_Symbol;
       Set_Symbol_Pc (Orig_Sym, False);
@@ -533,10 +511,9 @@ package body Ortho_Code.Dwarf is
    is
       Off : Pc_Type;
    begin
+      pragma Assert (Flag_Debug >= Debug_Dwarf);
       Off := TOnodes.Table (Atype);
-      if Off = Null_Pc then
-         raise Program_Error;
-      end if;
+      pragma Assert (Off /= Null_Pc);
       Gen_32 (Unsigned_32 (Off));
    end Emit_Type_Ref;
 
@@ -979,6 +956,10 @@ package body Ortho_Code.Dwarf is
       Kind : OT_Kind;
       Decl : O_Dnode;
    begin
+      if Flag_Debug < Debug_Dwarf then
+         return;
+      end if;
+
       --  If already emitted, then return.
       if Atype <= TOnodes.Last
         and then TOnodes.Table (Atype) /= Null_Pc
@@ -1160,21 +1141,23 @@ package body Ortho_Code.Dwarf is
       Sdecl : O_Dnode;
       Sibling_Pc : Pc_Type;
    begin
-      if Abbrev_Block = 0 then
-         Generate_Abbrev (Abbrev_Block);
+      if Flag_Debug >= Debug_Dwarf then
+         if Abbrev_Block = 0 then
+            Generate_Abbrev (Abbrev_Block);
 
-         Gen_Abbrev_Header (DW_TAG_Lexical_Block, DW_CHILDREN_Yes);
-         Gen_Abbrev_Tuple (DW_AT_Sibling, DW_FORM_Ref4);
-         Gen_Abbrev_Tuple (DW_AT_Low_Pc, DW_FORM_Addr);
-         Gen_Abbrev_Tuple (DW_AT_High_Pc, DW_FORM_Addr);
-         Gen_Abbrev_Tuple (0, 0);
+            Gen_Abbrev_Header (DW_TAG_Lexical_Block, DW_CHILDREN_Yes);
+            Gen_Abbrev_Tuple (DW_AT_Sibling, DW_FORM_Ref4);
+            Gen_Abbrev_Tuple (DW_AT_Low_Pc, DW_FORM_Addr);
+            Gen_Abbrev_Tuple (DW_AT_High_Pc, DW_FORM_Addr);
+            Gen_Abbrev_Tuple (0, 0);
+         end if;
+
+         Gen_Info_Header (Abbrev_Block);
+         Sibling_Pc := Gen_Info_Sibling;
+
+         Gen_Ua_32 (Subprg_Sym, Integer_32 (Get_Block_Info1 (Decl)));
+         Gen_Ua_32 (Subprg_Sym, Integer_32 (Get_Block_Info2 (Decl)));
       end if;
-
-      Gen_Info_Header (Abbrev_Block);
-      Sibling_Pc := Gen_Info_Sibling;
-
-      Gen_Ua_32 (Subprg_Sym, Integer_32 (Get_Block_Info1 (Decl)));
-      Gen_Ua_32 (Subprg_Sym, Integer_32 (Get_Block_Info2 (Decl)));
 
       --  Emit decls for children.
       Last := Get_Block_Last (Decl);
@@ -1184,11 +1167,13 @@ package body Ortho_Code.Dwarf is
          Sdecl := Get_Decl_Chain (Sdecl);
       end loop;
 
-      --  End of children.
-      Set_Current_Section (Info_Sect);
-      Gen_Uleb128 (0);
+      if Flag_Debug >= Debug_Dwarf then
+         --  End of children.
+         Set_Current_Section (Info_Sect);
+         Gen_Uleb128 (0);
 
-      Patch_Info_Sibling (Sibling_Pc);
+         Patch_Info_Sibling (Sibling_Pc);
+      end if;
    end Emit_Block_Decl;
 
    Abbrev_Function : Unsigned_32 := 0;
@@ -1198,15 +1183,12 @@ package body Ortho_Code.Dwarf is
    procedure Emit_Subprg_Body (Bod : O_Dnode)
    is
       use Ortho_Code.Decls;
-      Kind : OD_Kind;
-      Decl : O_Dnode;
+      Decl : constant O_Dnode := Get_Body_Decl (Bod);
+      Kind : constant OD_Kind := Get_Decl_Kind (Decl);
       Idecl : O_Dnode;
       Prev_Subprg_Sym : Symbol;
       Sibling_Pc : Pc_Type;
    begin
-      Decl := Get_Body_Decl (Bod);
-      Kind := Get_Decl_Kind (Decl);
-
       --  Emit interfaces type.
       Idecl := Get_Subprg_Interfaces (Decl);
       while Idecl /= O_Dnode_Null loop
@@ -1220,13 +1202,15 @@ package body Ortho_Code.Dwarf is
             Generate_Abbrev (Abbrev_Function);
 
             Gen_Abbrev_Header (DW_TAG_Subprogram, DW_CHILDREN_Yes);
-            Gen_Abbrev_Tuple (DW_AT_Sibling, DW_FORM_Ref4);
-
-            Gen_Abbrev_Tuple (DW_AT_Type, DW_FORM_Ref4);
             Gen_Abbrev_Tuple (DW_AT_Name, DW_FORM_String);
             Gen_Abbrev_Tuple (DW_AT_Low_Pc, DW_FORM_Addr);
             Gen_Abbrev_Tuple (DW_AT_High_Pc, DW_FORM_Addr);
-            Gen_Abbrev_Tuple (DW_AT_Frame_Base, DW_FORM_Block1);
+
+            if Flag_Debug >= Debug_Dwarf then
+               Gen_Abbrev_Tuple (DW_AT_Type, DW_FORM_Ref4);
+               Gen_Abbrev_Tuple (DW_AT_Sibling, DW_FORM_Ref4);
+               Gen_Abbrev_Tuple (DW_AT_Frame_Base, DW_FORM_Block1);
+            end if;
             --Gen_Abbrev_Tuple (DW_AT_Return_Addr, DW_FORM_Block1);
             Gen_Abbrev_Tuple (0, 0);
          end if;
@@ -1236,37 +1220,48 @@ package body Ortho_Code.Dwarf is
             Generate_Abbrev (Abbrev_Procedure);
 
             Gen_Abbrev_Header (DW_TAG_Subprogram, DW_CHILDREN_Yes);
-            Gen_Abbrev_Tuple (DW_AT_Sibling, DW_FORM_Ref4);
 
             Gen_Abbrev_Tuple (DW_AT_Name, DW_FORM_String);
             Gen_Abbrev_Tuple (DW_AT_Low_Pc, DW_FORM_Addr);
             Gen_Abbrev_Tuple (DW_AT_High_Pc, DW_FORM_Addr);
-            Gen_Abbrev_Tuple (DW_AT_Frame_Base, DW_FORM_Block1);
+            if Flag_Debug >= Debug_Dwarf then
+               Gen_Abbrev_Tuple (DW_AT_Sibling, DW_FORM_Ref4);
+               Gen_Abbrev_Tuple (DW_AT_Frame_Base, DW_FORM_Block1);
+            end if;
             --Gen_Abbrev_Tuple (DW_AT_Return_Addr, DW_FORM_Block1);
             Gen_Abbrev_Tuple (0, 0);
          end if;
          Gen_Info_Header (Abbrev_Procedure);
       end if;
 
-      Sibling_Pc := Gen_Info_Sibling;
-
-      if Kind = OD_Function then
-         Emit_Decl_Type (Decl);
-      end if;
-
+      --  Name.
       Emit_Decl_Ident (Decl);
+
+      --  Low, High.
       Prev_Subprg_Sym := Subprg_Sym;
       Subprg_Sym := Binary.Get_Decl_Symbol (Decl);
       Gen_Ua_32 (Subprg_Sym, 0);
       Gen_Ua_32 (Subprg_Sym, Integer_32 (Get_Body_Info (Bod)));
 
-      --  Frame base.
-      Gen_B8 (1);
-      Gen_B8 (DW_OP_Reg5);
+      if Flag_Debug >= Debug_Dwarf then
+         --  Type.
+         if Kind = OD_Function then
+            Emit_Decl_Type (Decl);
+         end if;
+
+         --  Sibling.
+         Sibling_Pc := Gen_Info_Sibling;
+
+         --  Frame base.
+         Gen_B8 (1);
+         Gen_B8 (DW_OP_Reg5);
+      end if;
 
       --  Interfaces.
       Idecl := Get_Subprg_Interfaces (Decl);
-      if Idecl /= O_Dnode_Null then
+      if Idecl /= O_Dnode_Null
+        and then Flag_Debug >= Debug_Dwarf
+      then
          if Abbrev_Interface = 0 then
             Generate_Abbrev (Abbrev_Interface);
 
@@ -1295,7 +1290,9 @@ package body Ortho_Code.Dwarf is
       --  End of children.
       Gen_Uleb128 (0);
 
-      Patch_Info_Sibling (Sibling_Pc);
+      if Flag_Debug >= Debug_Dwarf then
+         Patch_Info_Sibling (Sibling_Pc);
+      end if;
 
       Subprg_Sym := Prev_Subprg_Sym;
    end Emit_Subprg_Body;
@@ -1305,26 +1302,32 @@ package body Ortho_Code.Dwarf is
       use Ada.Text_IO;
       use Ortho_Code.Decls;
    begin
-      case Get_Decl_Kind (Decl) is
-         when OD_Type =>
-            Emit_Type_Decl (Decl);
-         when OD_Local
-           | OD_Var =>
-            Emit_Variable (Decl);
-         when OD_Const =>
-            Emit_Const (Decl);
-         when OD_Function
-           | OD_Procedure
-           | OD_Interface =>
-            null;
-         when OD_Body =>
+      if Flag_Debug = Debug_Dwarf then
+         case Get_Decl_Kind (Decl) is
+            when OD_Type =>
+               Emit_Type_Decl (Decl);
+            when OD_Local
+              | OD_Var =>
+               Emit_Variable (Decl);
+            when OD_Const =>
+               Emit_Const (Decl);
+            when OD_Function
+              | OD_Procedure
+              | OD_Interface =>
+               null;
+            when OD_Body =>
+               Emit_Subprg_Body (Decl);
+            when OD_Block =>
+               Emit_Block_Decl (Decl);
+            when others =>
+               Put_Line ("dwarf.emit_decl: emit "
+                           & OD_Kind'Image (Get_Decl_Kind (Decl)));
+         end case;
+      elsif Flag_Debug = Debug_Line then
+         if Get_Decl_Kind (Decl) = OD_Body then
             Emit_Subprg_Body (Decl);
-         when OD_Block =>
-            Emit_Block_Decl (Decl);
-         when others =>
-            Put_Line ("dwarf.emit_decl: emit "
-                      & OD_Kind'Image (Get_Decl_Kind (Decl)));
-      end case;
+         end if;
+      end if;
    end Emit_Decl;
 
    procedure Emit_Subprg (Bod : O_Dnode) is
@@ -1347,4 +1350,3 @@ package body Ortho_Code.Dwarf is
    end Release;
 
 end Ortho_Code.Dwarf;
-

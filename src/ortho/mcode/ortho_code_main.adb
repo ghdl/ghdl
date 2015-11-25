@@ -83,6 +83,9 @@ begin
             elsif Arg = "-g" then
                Flag_Debug := Debug_Dwarf;
                I := I + 1;
+            elsif Arg = "-g0" then
+               Flag_Debug := Debug_None;
+               I := I + 1;
             elsif Arg = "-p" or Arg = "-pg" then
                Flag_Profile := True;
                I := I + 1;
@@ -194,5 +197,3 @@ exception
       Set_Exit_Status (2);
       raise;
 end Ortho_Code_Main;
-
-

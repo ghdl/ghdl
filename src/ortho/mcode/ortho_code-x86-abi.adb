@@ -115,7 +115,7 @@ package body Ortho_Code.X86.Abi is
       Emits.Emit_Subprg (Subprg);
 
       if Get_Decl_Depth (Subprg.D_Decl) = O_Toplevel
-        and then Flag_Debug = Debug_Dwarf
+        and then Flag_Debug /= Debug_None
       then
          Dwarf.Emit_Decls_Until (Subprg.D_Body);
          if not Debug.Flag_Debug_Keep then
@@ -133,7 +133,8 @@ package body Ortho_Code.X86.Abi is
       Cur_Subprg := Subprg;
 
       if Get_Decl_Depth (Subprg.D_Decl) = O_Toplevel then
-         if Flag_Debug = Debug_Dwarf then
+         --  Only for top-level subprograms.
+         if Flag_Debug /= Debug_None then
             Dwarf.Emit_Subprg (Subprg.D_Body);
          end if;
 
@@ -142,7 +143,7 @@ package body Ortho_Code.X86.Abi is
             Release (Decls_Mark);
             Consts.Release (Consts_Mark);
             Release (Types_Mark);
-            if Flag_Debug = Debug_Dwarf then
+            if Flag_Debug /= Debug_None then
                Dwarf.Release (Dwarf_Mark);
             end if;
          end if;
@@ -607,7 +608,7 @@ package body Ortho_Code.X86.Abi is
    is
       use Ortho_Code.Flags;
    begin
-      if Flag_Debug = Debug_Dwarf then
+      if Flag_Debug /= Debug_None then
          Dwarf.Set_Filename ("", Filename);
       end if;
    end New_Debug_Filename_Decl;

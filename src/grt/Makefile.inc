@@ -28,6 +28,8 @@
 # target: GCC target
 # GRT_FLAGS: common (Ada + C + asm) compilation flags.
 # GRT_ADAFLAGS: compilation flags for Ada
+#
+# LIBBACKTRACE: if set, path to libbacktrace.a (from gcc)
 
 # Convert the target variable into a space separated list of architecture,
 # manufacturer, and operating system and assign each of those to its own
@@ -69,11 +71,19 @@ GRT_FST_OBJS := fstapi.o lz4.o fastlz.o
 # Additionnal object files (C or asm files).
 GRT_ADD_OBJS:=$(GRT_TARGET_OBJS) grt-cbinding.o grt-cvpi.o $(GRT_FST_OBJS)
 
+# Source files create by grt.
+GRT_SRC_DEPS:=grt-backtraces-impl.ads
+
 #GRT_USE_PTHREADS=y
 ifeq ($(GRT_USE_PTHREADS),y)
  GRT_CFLAGS+=-DUSE_THREADS
  GRT_ADD_OBJS+=grt-cthreads.o
  GRT_EXTRA_LIB+=-lpthread
+endif
+
+GRT_LIBBACKTRACE=
+ifneq ($(LIBBACKTRACE),)
+  GRT_LIBBACKTRACE=libbacktrace.a
 endif
 
 # Configuration pragmas.
@@ -82,7 +92,7 @@ GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnat05
 # Rule to compile an Ada file.
 GRT_ADACOMPILE=$(ADAC) -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG) -o $@ $<
 
-grt-all: libgrt.a grt.lst
+grt-all: libgrt.a $(GRT_LIBBACKTRACE) grt.lst
 
 libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files
 	$(RM) -f $@
@@ -90,7 +100,7 @@ libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files
 	 run-bind.o main.o
 	$(GRT_RANLIB) $@
 
-run-bind.adb: grt-force
+run-bind.adb: $(GRT_SRC_DEPS) grt-force
 	gnatmake -c -aI$(GRTSRCDIR) $(GRT_PRAGMA_FLAG) \
 	  ghdl_main $(GRT_ADAFLAGS) -cargs $(GRT_FLAGS)
 	gnatbind -Lgrt_ -o run-bind.adb -n ghdl_main.ali
@@ -142,6 +152,15 @@ fastlz.o: $(GRTSRCDIR)/fst/fastlz.c
 chkstk.o: $(GRTSRCDIR)/config/chkstk.S
 	$(CC) -c $(GRT_FLAGS) -o $@ $<
 
+grt-backtraces-impl.ads:
+ifneq ($(GRT_LIBBACKTRACE),)
+	echo "with Grt.Backtraces.Gcc;" > $@
+	echo "package Grt.Backtraces.Impl renames Grt.Backtraces.Gcc;" >> $@
+else
+	echo "with Grt.Backtraces.Jit;" > $@
+	echo "package Grt.Backtraces.Impl renames Grt.Backtraces.Jit;" >> $@
+endif
+
 grt-disp-config:
 	@echo "target: $(target)"
 	@echo "targ: $(targ)"
@@ -166,11 +185,22 @@ grt.lst: grt-files.in
 ifdef GRT_EXTRA_LIB
 	for i in $(GRT_EXTRA_LIB); do echo $$i >> $@; done
 endif
+ifneq ($(LIBBACKTRACE),)
+	echo "@/libbacktrace.a" >> $@
+endif
 	cat $< >> $@
 
-grt-install: libgrt.a grt.lst
+ifneq ($(GRT_LIBBACKTRACE),)
+$(GRT_LIBBACKTRACE): $(LIBBACKTRACE)
+	cp $< $@
+endif
+
+grt-install: libgrt.a $(GRT_LIBBACKTRACE) grt.lst
 	$(INSTALL_DATA) libgrt.a $(DESTDIR)$(grt_libdir)/libgrt.a
 	$(INSTALL_DATA) grt.lst $(DESTDIR)$(grt_libdir)/grt.lst
+ifneq ($(GRT_LIBBACKTRACE),)
+	$(INSTALL_DATA) $(GRT_LIBBACKTRACE) $(DESTDIR)$(grt_libdir)/libbacktrace.a
+endif
 
 grt-force:
 
