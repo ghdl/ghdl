@@ -1,2 +1,13 @@
+*~
+*.ali
+*.o
+b~*.ad?
+*.v87
+*.v93
+*.v08
+
+# Generated files on windows.
 dist/mcode/build/
 dist/mcode/lib/
+
+testsuite/get_entities
