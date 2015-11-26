@@ -49,8 +49,16 @@ param(
 	[switch]$Clean =		$false,
 	
 	#Skip warning messages. (Show errors only.)
-	[switch]$SuppressWarnings = $false
+	[switch]$SuppressWarnings = $false,
+	
+	# Show the embedded help page(s)
+	[switch]$Help =							$false
 )
+
+if ($Help)
+{	Get-Help $MYINVOCATION.InvocationName -Detailed
+	return
+}
 
 # ---------------------------------------------
 # save working directory
