@@ -62,6 +62,7 @@ package Ghdlmain is
 
    --  Disp MSG on the standard output with the command name.
    procedure Error (Msg : String);
+   procedure Warning (Msg : String);
 
    --  May be raise by perform_action if the arguments are bad.
    Option_Error : exception renames Errorout.Option_Error;
