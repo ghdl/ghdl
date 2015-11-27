@@ -244,8 +244,17 @@ package body Ghdlmain is
       Put (Standard_Error, Command_Name);
       Put (Standard_Error, ": ");
       Put_Line (Standard_Error, Msg);
-      --Has_Error := True;
    end Error;
+
+   procedure Warning (Msg : String)
+   is
+      use Ada.Command_Line;
+      use Ada.Text_IO;
+   begin
+      Put (Standard_Error, Command_Name);
+      Put (Standard_Error, ":warning: ");
+      Put_Line (Standard_Error, Msg);
+   end Warning;
 
    procedure Main
    is
@@ -358,4 +367,3 @@ package body Ghdlmain is
       Register_Command (new Command_Option_Help);
    end Register_Commands;
 end Ghdlmain;
-

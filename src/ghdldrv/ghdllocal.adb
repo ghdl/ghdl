@@ -159,7 +159,7 @@ package body Ghdllocal is
       procedure P (Str : String) renames Put_Line;
    begin
       P ("Main options (try --options-help for details):");
-      P (" --std=XX       Use XX as VHDL standard (87,93c,93,00 or 02)");
+      P (" --std=XX       Use XX as VHDL standard (87,93c,93,00,02 or 08)");
       P (" --work=NAME    Set the name of the WORK library");
       P (" -PDIR          Add DIR in the library search path");
       P (" --workdir=DIR  Specify the directory of the WORK library");
@@ -367,15 +367,19 @@ package body Ghdllocal is
 
    procedure Add_Library_Path (Name : String)
    is
+      Path : constant String := Get_Machine_Path_Prefix & Directory_Separator
+        & Get_Version_Path & Directory_Separator & Name & Directory_Separator;
    begin
-      Libraries.Add_Library_Path
-        (Get_Machine_Path_Prefix & Directory_Separator
-         & Get_Version_Path & Directory_Separator
-         & Name & Directory_Separator);
+      if not Is_Directory (Path) then
+         Warning
+           ("library " & Name & " does not exists for " & Get_Version_Path);
+      end if;
+      Libraries.Add_Library_Path (Path);
    end Add_Library_Path;
 
    procedure Setup_Libraries (Load : Boolean)
    is
+      use Flags;
    begin
       --  Get environment variable.
       Prefix_Env := GNAT.OS_Lib.Getenv ("GHDL_PREFIX");
@@ -425,9 +429,17 @@ package body Ghdllocal is
             when Lib_Standard =>
                Add_Library_Path ("ieee");
             when Lib_Synopsys =>
-               Add_Library_Path ("synopsys");
+               if Vhdl_Std >= Vhdl_08 then
+                  Warning ("--ieee=synopsys is ignored for --std=08");
+               else
+                  Add_Library_Path ("synopsys");
+               end if;
             when Lib_Mentor =>
-               Add_Library_Path ("mentor");
+               if Vhdl_Std >= Vhdl_08 then
+                  Warning ("--ieee=mentor is ignored for --std=08");
+               else
+                  Add_Library_Path ("mentor");
+               end if;
             when Lib_None =>
                null;
          end case;
