@@ -44,8 +44,8 @@ source config.sh
 
 
 # extract data from configuration
-DestinationDir="$XilinxDestinationDirectory"
-SourceDir="$XilinxISEDirectory/ISE_DS/ISE/vhdl/src"
+SourceDir="${InstallationDirectory[XilinxISE]}/ISE_DS/ISE/vhdl/src"
+DestinationDir="${DestinationDirectory[XilinxISE]}"
 echo $SourceDir
 ScriptDir=".."
 
@@ -73,10 +73,10 @@ cd $DestinationDir
 
 Clean=0
 Unisim=1
-Unimacro=0
-Simprim=0
+Unimacro=1
+Simprim=1
 
-SkipExistingFiles=0
+SkipExistingFiles=1
 SuppressWarnings=1
 StopCompiling=1
 
@@ -142,7 +142,7 @@ if [ $Unisim -eq 1 ]; then
 #			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
 		else
 			echo -e "${CYAN}Analyzing primitive '$File'${NOCOLOR}"
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=secureip $File 2>&1 | grcat $GRCRulesFiles
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=secureip $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
@@ -163,7 +163,7 @@ if [ $Unimacro -eq 1 ]; then
 #			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
 		else
 			echo -e "${CYAN}Analyzing package '$File'${NOCOLOR}"
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unimacro $File 2>&1 | grcat $GRCRulesFiles
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unimacro $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
@@ -178,7 +178,7 @@ if [ $Unimacro -eq 1 ]; then
 #			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
 		else
 			echo -e "${CYAN}Analyzing primitive '$File'${NOCOLOR}"
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File 2>&1 | grcat $GRCRulesFiles
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
@@ -200,7 +200,7 @@ if [ $Simprim -eq 1 ]; then
 #			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
 		else
 			echo -e "${CYAN}Analyzing package '$File'${NOCOLOR}"
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFiles
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
@@ -215,7 +215,7 @@ if [ $Simprim -eq 1 ]; then
 #			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
 		else
 			echo -e "${CYAN}Analyzing primitive '$File'${NOCOLOR}"
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFiles
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
@@ -230,7 +230,7 @@ if [ $Simprim -eq 1 ]; then
 #			echo -e "${CYAN}Skipping package '$File'${NOCOLOR}"
 		else
 			echo -e "${CYAN}Analyzing primitive '$File'${NOCOLOR}"
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFiles
+			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
