@@ -3551,6 +3551,9 @@ package body Parse is
    --  attribute_specification ::=
    --     ATTRIBUTE attribute_designator OF entity_specification
    --       IS expression ;
+   --
+   --  entity_specification ::= entity_name_list : entity_class
+   --
    function Parse_Attribute return Iir
    is
       Loc : Location_Type;
@@ -3560,7 +3563,10 @@ package body Parse is
       Scan_Expect (Tok_Identifier);
       Loc := Get_Token_Location;
       Ident := Current_Identifier;
+
+      --  Skip identifier.
       Scan;
+
       case Current_Token is
          when Tok_Colon =>
             declare
@@ -3569,11 +3575,15 @@ package body Parse is
                Res := Create_Iir (Iir_Kind_Attribute_Declaration);
                Set_Location (Res, Loc);
                Set_Identifier (Res, Ident);
+
+               --  Skip ':'.
                Scan;
+
                Set_Type_Mark (Res, Parse_Type_Mark (Check_Paren => True));
                Expect (Tok_Semi_Colon);
                return Res;
             end;
+
          when Tok_Of =>
             declare
                Res : Iir_Attribute_Specification;
@@ -3585,10 +3595,16 @@ package body Parse is
                Set_Location (Designator, Loc);
                Set_Identifier (Designator, Ident);
                Set_Attribute_Designator (Res, Designator);
+
+               --  Skip 'of'.
                Scan;
+
                Parse_Entity_Name_List (Res);
                Expect (Tok_Is);
+
+               --  Skip 'is'.
                Scan;
+
                Set_Expression (Res, Parse_Expression);
                Expect (Tok_Semi_Colon);
                return Res;
