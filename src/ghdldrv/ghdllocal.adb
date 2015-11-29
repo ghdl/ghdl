@@ -596,6 +596,7 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
+      --  '-d' is for compatibility.
       return Name = "-d" or else Name = "--dir";
    end Decode_Command;
 
@@ -603,31 +604,22 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
    begin
-      return "-d or --dir        Disp contents of the work library";
+      return "--dir [LIBs]       Disp contents of the libraries";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Dir; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
    begin
-      if Args'Length /= 0 then
-         Error ("command '-d' does not accept any argument");
-         raise Option_Error;
+      Setup_Libraries (True);
+
+      if Args'Length = 0 then
+         Disp_Library (Std_Names.Name_Work);
+      else
+         for I in Args'Range loop
+            Disp_Library (Name_Table.Get_Identifier (Args (I).all));
+         end loop;
       end if;
-
-      Flags.Bootstrap := True;
-      --  Load word library.
-      Libraries.Load_Std_Library;
-      Libraries.Load_Work_Library;
-
-      Disp_Library (Std_Names.Name_Work);
-
---       else
---          for L in Libs'Range loop
---             Id := Get_Identifier (Libs (L).all);
---             Disp_Library (Id);
---          end loop;
---       end if;
    end Perform_Action;
 
    --  Command Find.
