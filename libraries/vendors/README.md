@@ -37,7 +37,46 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
 ---------------------------------------------------------------------
 ### Compiling on Linux
 
-*First I should translate the scripts before writing the docu...*
+ - **Step 1 - Configure the scripts**
+    Please open the `config.sh` file and set the dictionary entries for the installed
+    vendor tools to the appropriate directory to your tool's installation folder.
+
+    `config.sh`:
+    ```Bash
+    declare -A InstallationDirectory
+    InstallationDirectory[AlteraQuartusII]="/opt/Altera/15.0"
+    InstallationDirectory[XilinxISE]="/opt/Xilinx/14.7"
+    InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2015.2"
+    InstallationDirectory[OSVVM]="/home/<user>/git/GitHub/osvvm"
+    InstallationDirectory[VUnit]="/home/<user>/git/GitHub/vunit"
+    ```
+
+ - **Step 2 - Browse to your simulation working directory**
+    ```Bash
+    $ cd <MySimulationFolder>
+    ```
+
+ - **Step 3 - Start the compilation script(s)**
+    ```Bash
+    $ <GHDL>\libraries\vendors\compile-altera.sh --all
+    $ <GHDL>\libraries\vendors\compile-xilinx-ise.sh --all
+    $ <GHDL>\libraries\vendors\compile-xilinx-vivado.sh --all
+    $ <GHDL>\libraries\vendors\compile-osvvm.sh --all
+    $ <GHDL>\libraries\vendors\compile-vunit.sh --all
+    ```
+
+ - **Step 4 - Viewing the result**
+    This creates vendor directories in your current working directory and compiles the vendor files into them.
+
+    ```Bash
+    $ ls -ahl
+    ...
+    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:41 altera
+    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 osvvm
+    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 vivado
+    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 vunit
+    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 xilinx
+    ```
 
 ---------------------------------------------------------------------
 ### Compiling on Windows
@@ -47,14 +86,15 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
     vendor tools to the appropriate directory to your tool's installation folder.
 
     `config.psm1`:
-
-        $InstallationDirectory = @{
-          "AlteraQuartusII" = "C:\Altera\15.0";
-          "XilinxISE" =       "C:\Xilinx\14.7";
-          "XilinxVivado" =    "C:\Xilinx\Vivado\2015.3";
-          "OSVVM" =           "D:\git\GitHub\osvvm";
-          "VUnit" =           "D:\git\GitHub\vunit"
-        }
+    ```PowerShell
+    $InstallationDirectory = @{
+      "AlteraQuartusII" = "C:\Altera\15.0";
+      "XilinxISE" =       "C:\Xilinx\14.7";
+      "XilinxVivado" =    "C:\Xilinx\Vivado\2015.3";
+      "OSVVM" =           "D:\git\GitHub\osvvm";
+      "VUnit" =           "D:\git\GitHub\vunit"
+    }
+    ```
 
  - **Step 2 - Browse to your simulation working directory**
     ```PowerShell
@@ -92,28 +132,30 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
 
  - Common parameters to all scripts:
 
-        --all               Compile all libraries, including common libraries, packages and device libraries.
-        --clean				Cleanup directory before analyzing.
-        --suppresswarnings	Don't show warnings. Report errors only.
+        -h --help             Print the embedded help page(s).
+        -a --all              Compile all libraries, including common libraries, packages and device libraries.
+        -c --clean            Cleanup directory before analyzing.
+        -n --no-warnings	  Don't show warnings. Report errors only.
+        -s --skip-existing    Skip already compiled files (an *.o file exists).
+        -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives.
  - `compile-altera.sh`
 
-        --altera            Compile base libraries like 'altera' and 'altera_mf'
-        --max               Compile device libraries for Max CPLDs
-        --arria             Compile device libraries for Arria FPGAs
-        --cyclone           Compile device libraries for Cyclone FPGAs
-        --stratix           Compile device libraries for Stratix FPGAs
-
+        --altera              Compile base libraries like 'altera' and 'altera_mf'
+        --max                 Compile device libraries for Max CPLDs
+        --arria               Compile device libraries for Arria FPGAs
+        --cyclone             Compile device libraries for Cyclone FPGAs
+        --stratix             Compile device libraries for Stratix FPGAs
  - `compile-xilinx-ise.sh`
 
-        --unisim            Compile the unisim primitives
-        --unimacro          Compile the unimacro macros
-        --simprim           Compile the simprim primitives
-        --secureip          Compile the secureip primitives
+        --unisim              Compile the unisim primitives
+        --unimacro            Compile the unimacro macros
+        --simprim             Compile the simprim primitives
+        --secureip            Compile the secureip primitives
  - `compile-xilinx-vivado.sh`
 
-        --unisim            Compile the unisim primitives
-        --unimacro          Compile the unimacro macros
-        --secureip          Compile the secureip primitives
+        --unisim              Compile the unisim primitives
+        --unimacro            Compile the unimacro macros
+        --secureip            Compile the secureip primitives
  - `compile-osvvm.sh`
  - `compile-vunit.sh`
 
@@ -121,29 +163,30 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
 
  - Common parameters to all scripts:
 
-        -All                Compile all libraries, including common libraries, packages and device libraries.
-        -Clean				Cleanup directory before analyzing.
-        -SuppressWarnings	Don't show warnings. Report errors only.
+        -Help                 Print the embedded help page(s).
+        -All                  Compile all libraries, including common libraries, packages and device libraries.
+        -Clean                Cleanup directory before analyzing.
+        -SuppressWarnings     Don't show warnings. Report errors only.
  - `compile-altera.ps1`
 
-        -Altera             Compile base libraries like 'altera' and 'altera_mf'
-        -Max                Compile device libraries for Max CPLDs
-        -Arria              Compile device libraries for Arria FPGAs
-        -Cyclone            Compile device libraries for Cyclone FPGAs
-        -Stratix            Compile device libraries for Stratix FPGAs
+        -Altera               Compile base libraries like 'altera' and 'altera_mf'
+        -Max                  Compile device libraries for Max CPLDs
+        -Arria                Compile device libraries for Arria FPGAs
+        -Cyclone              Compile device libraries for Cyclone FPGAs
+        -Stratix              Compile device libraries for Stratix FPGAs
  - `compile-xilinx-ise.ps1`
 
-        -Unisim             Compile the unisim primitives
-        -Unimacro           Compile the unimacro macros
-        -Simprim            Compile the simprim primitives
-        -Secureip           Compile the secureip primitives
+        -Unisim               Compile the unisim primitives
+        -Unimacro             Compile the unimacro macros
+        -Simprim              Compile the simprim primitives
+        -Secureip             Compile the secureip primitives
  - `compile-xilinx-vivado.ps1`
 
-        -Unisim             Compile the unisim primitives
-        -Unimacro           Compile the unimacro macros
-        -Secureip           Compile the secureip primitives
+        -Unisim               Compile the unisim primitives
+        -Unimacro             Compile the unimacro macros
+        -Secureip             Compile the secureip primitives
  - `compile-osvvm.ps1`
  - `compile-vunit.ps1`
 
 ------------------------
-Author: Patrick Lehmann (23.11.2015)
+Author: Patrick Lehmann (30.11.2015)

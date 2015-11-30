@@ -45,5 +45,5 @@ DestinationDirectory[XilinxVivado]="vivado"
 DestinationDirectory[OSVVM]="osvvm"
 DestinationDirectory[VUnit]="vuint"
 
+# input files greater than $LARGE_FILESIZE are skipped if '--skip-largefiles' is set
 LARGE_FILESIZE=150000
-
