@@ -152,14 +152,14 @@ package body Ghdlsimul is
          elsif Arg.all = "--stats" then
             Simulation.Disp_Stats := True;
          elsif Arg.all = "-i" then
+            Simulation.Flag_Debugger := True;
             Simulation.Flag_Interractive := True;
          else
             Decode_Option (Arg.all, Status);
             case Status is
                when Decode_Option_Last =>
                   exit;
-               when Decode_Option_Help =>
-                  --  FIXME: is that correct ?
+               when Decode_Option_Stop =>
                   exit;
                when Decode_Option_Ok =>
                   null;

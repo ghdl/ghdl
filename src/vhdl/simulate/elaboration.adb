@@ -27,7 +27,6 @@ with Name_Table;
 with File_Operation;
 with Debugger; use Debugger;
 with Iir_Chains; use Iir_Chains;
-with Sem_Names;
 with Grt.Types; use Grt.Types;
 with Simulation.AMS; use Simulation.AMS;
 with Areapools; use Areapools;
@@ -1009,19 +1008,6 @@ package body Elaboration is
       end loop;
    end Elaborate_Generic_Map_Aspect;
 
-   --  Return TRUE if EXPR is a signal name.
-   function Is_Signal (Expr : Iir) return Boolean
-   is
-      Obj : Iir;
-   begin
-      Obj := Sem_Names.Name_To_Object (Expr);
-      if Obj /= Null_Iir then
-         return Is_Signal_Object (Obj);
-      else
-         return False;
-      end if;
-   end Is_Signal;
-
    --  LRM93 12.2.3  The Port Clause
    procedure Elaborate_Port_Declaration
      (Instance : Block_Instance_Acc;
@@ -1112,7 +1098,7 @@ package body Elaboration is
                  and then Get_Out_Conversion (Assoc) = Null_Iir
                then
                   Actual := Get_Actual (Assoc);
-                  if Is_Signal (Actual) then
+                  if Is_Signal_Name (Actual) then
                      --  Association with a signal
                      Init_Expr := Execute_Signal_Init_Value
                        (Actual_Instance, Actual);

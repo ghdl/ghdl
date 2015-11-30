@@ -262,7 +262,7 @@ package body File_Operation is
                                     Str : Iir_Value_Literal_Acc;
                                     Length : Iir_Value_Literal_Acc)
    is
-      Res : Ghdl_Untruncated_Text_Read_Result;
+      Len : Std_Integer;
       Val_Len : constant Ghdl_Index_Type :=
         Ghdl_Index_Type (Str.Bounds.D (1).Length);
       Val_Str : aliased Std_String_Uncons (1 .. Val_Len);
@@ -271,12 +271,12 @@ package body File_Operation is
                                    To_Std_String_Boundp (Val_Bnd'Address));
    begin
       Ghdl_Untruncated_Text_Read
-        (Res'Unrestricted_Access, File.File, Val'Unrestricted_Access);
-      for I in 1 .. Res.Len loop
+        (File.File, Val'Unrestricted_Access, Len'Unrestricted_Access);
+      for I in 1 .. Len loop
          Str.Val_Array.V (Iir_Index32 (I)).E32 :=
            Character'Pos (Val_Str (Ghdl_Index_Type (I)));
       end loop;
-      Length.I64 := Ghdl_I64 (Res.Len);
+      Length.I64 := Ghdl_I64 (Len);
    end Untruncated_Text_Read;
 
    procedure Read_Binary (File: Iir_Value_Literal_Acc;

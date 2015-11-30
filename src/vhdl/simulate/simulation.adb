@@ -25,7 +25,6 @@ with Types; use Types;
 with Debugger; use Debugger;
 with Simulation.AMS.Debugger;
 with Areapools; use Areapools;
-with Grt.Stacks;
 with Grt.Signals;
 with Grt.Processes;
 with Grt.Main;
@@ -546,7 +545,7 @@ package body Simulation is
          --  LRM93 8.1
          --  It also causes the execution of the corresponding process
          --  statement to be suspended.
-         Grt.Processes.Ghdl_Process_Wait_Wait;
+         Grt.Processes.Ghdl_Process_Wait_Suspend;
          Instance.In_Wait_Flag := True;
          Release (Marker, Expr_Pool);
          return True;
@@ -554,7 +553,7 @@ package body Simulation is
          --  LRM93 8.1
          --  The suspended process will resume, at the latest, immediately
          --  after the timeout interval has expired.
-         if not Grt.Processes.Ghdl_Process_Wait_Has_Timeout then
+         if not Grt.Processes.Ghdl_Process_Wait_Timed_Out then
             --  Compute the condition clause only if the timeout has not
             --  expired.
 
@@ -572,7 +571,7 @@ package body Simulation is
                -- re-suspend.
                -- Such re-suspension does not involve the recalculation of
                -- the timeout interval.
-               Grt.Processes.Ghdl_Process_Wait_Wait;
+               Grt.Processes.Ghdl_Process_Wait_Suspend;
                return True;
             end if;
          end if;
@@ -588,15 +587,15 @@ package body Simulation is
    end Execute_Wait_Statement;
 
    function To_Instance_Acc is new Ada.Unchecked_Conversion
-     (System.Address, Grt.Stacks.Instance_Acc);
+     (System.Address, Grt.Processes.Instance_Acc);
 
-   procedure Process_Executer (Self : Grt.Stacks.Instance_Acc);
+   procedure Process_Executer (Self : Grt.Processes.Instance_Acc);
    pragma Convention (C, Process_Executer);
 
-   procedure Process_Executer (Self : Grt.Stacks.Instance_Acc)
+   procedure Process_Executer (Self : Grt.Processes.Instance_Acc)
    is
       function To_Process_State_Acc is new Ada.Unchecked_Conversion
-        (Grt.Stacks.Instance_Acc, Process_State_Acc);
+        (Grt.Processes.Instance_Acc, Process_State_Acc);
 
       Process : Process_State_Acc renames
         To_Process_State_Acc (Self);
@@ -909,7 +908,7 @@ package body Simulation is
       use Grt.Processes;
       El : Iir;
       Instance : Block_Instance_Acc;
-      Instance_Grt : Grt.Stacks.Instance_Acc;
+      Instance_Grt : Grt.Processes.Instance_Acc;
    begin
       Processes_State := new Process_State_Array (1 .. Processes_Table.Last);
 
@@ -1654,7 +1653,6 @@ package body Simulation is
    procedure Simulation_Entity (Top_Conf : Iir_Design_Unit) is
    begin
       Top_Config := Top_Conf;
-      Grt.Processes.One_Stack := True;
 
       Grt.Errors.Error_Hook := Debug_Error'Access;
 
