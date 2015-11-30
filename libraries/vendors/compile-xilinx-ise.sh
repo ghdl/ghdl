@@ -207,8 +207,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
@@ -231,8 +230,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
-			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
@@ -256,8 +254,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" =
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
-			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=secureip "$File" 2>&1 | $GRC_COMMAND
@@ -281,8 +278,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | $GRC_COMMAND
@@ -301,8 +297,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
 	for File in $Files; do
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | $GRC_COMMAND
@@ -327,8 +322,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND
@@ -339,7 +333,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 	done
 fi
 
-# compile UNISIM primitives
+# compile simprim primitives
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
@@ -351,8 +345,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
-			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND
@@ -363,7 +356,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 	done
 fi
 
-# compile UNISIM secureip primitives
+# compile simprim secureip primitives
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
@@ -375,8 +368,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" 
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
-			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND

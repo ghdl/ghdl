@@ -89,7 +89,7 @@ elif [ "$HELP" == "TRUE" ]; then
 	fi
 	echo ""
 	echo "Synopsis:"
-	echo "  Script to compile the simulation libraries from VUnit for GHDL on Linux"
+	echo "  Script to compile the simulation library VUnit for GHDL on Linux"
 	echo ""
 	echo "Usage:"
 	echo "  compile-vunit.sh <common command>|<library> [<options>]"

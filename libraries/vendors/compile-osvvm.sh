@@ -89,7 +89,7 @@ elif [ "$HELP" == "TRUE" ]; then
 	fi
 	echo ""
 	echo "Synopsis:"
-	echo "  Script to compile the simulation libraries from OSVVM for GHDL on Linux"
+	echo "  Script to compile the simulation library OSVVM for GHDL on Linux"
 	echo ""
 	echo "Usage:"
 	echo "  compile-osvvm.sh <common command>|<library> [<options>]"
