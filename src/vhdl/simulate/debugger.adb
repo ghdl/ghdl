@@ -28,6 +28,7 @@ with Scanner;
 with Tokens;
 with Sem_Expr;
 with Sem_Scopes;
+with Canon;
 with Std_Names;
 with Libraries;
 with Std_Package;
@@ -1324,7 +1325,7 @@ package body Debugger is
 
          when Iir_Kind_Entity_Declaration =>
             --  Top of scopes.
-            null;
+            Handler.all (N);
 
          when Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body =>
@@ -1530,6 +1531,7 @@ package body Debugger is
       New_Line;
 
       Annotate_Expand_Table;
+      Canon.Canon_Expression (Expr);
 
       Mark (Marker, Expr_Pool);
 
@@ -1779,7 +1781,8 @@ package body Debugger is
       P := E + 1;
    end Parse_Command;
 
-   procedure Help_Proc (Line : String) is
+   procedure Help_Proc (Line : String)
+   is
       P : Natural;
       Root : Menu_Entry_Acc := Menu_Top'access;
    begin
@@ -1829,11 +1832,22 @@ package body Debugger is
       Prompt : System.Address;
    begin
       --  Unless interractive, do not use the debugger.
-      if Reason /= Reason_Internal_Debug then
-         if not Flag_Interractive then
-            return;
-         end if;
-      end if;
+      case Reason is
+         when Reason_Internal_Debug =>
+            null;
+         when Reason_Assert
+           | Reason_Error =>
+            if not Flag_Debugger then
+               return;
+            end if;
+         when Reason_Start
+           | Reason_Elab =>
+            if not Flag_Interractive then
+               return;
+            end if;
+         when Reason_Break =>
+            null;
+      end case;
 
       Prompt := Prompt_Debug'Address;
 
