@@ -123,7 +123,7 @@ if (-not $StopCompiling)
 }
 
 Write-Host "--------------------------------------------------------------------------------"
-Write-Host "Compiling OSVVM libraries " -NoNewline
+Write-Host "Compiling OSVVM library " -NoNewline
 if ($StopCompiling)
 {	Write-Host "[FAILED]" -ForegroundColor Red				}
 else
