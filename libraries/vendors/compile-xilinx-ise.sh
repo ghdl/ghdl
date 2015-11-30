@@ -261,7 +261,6 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" =
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=secureip "$File" 2>&1 | $GRC_COMMAND
-			echo "return $?"
 			if [ $? -ne 0 ]; then
 				STOPCOMPILING=TRUE
 			fi
