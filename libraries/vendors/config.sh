@@ -34,9 +34,9 @@
 declare -A InstallationDirectory
 InstallationDirectory[AlteraQuartusII]="/opt/Altera/15.0"
 InstallationDirectory[XilinxISE]="/opt/Xilinx/14.7"
-InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2015.2"
+InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2014.4"
 InstallationDirectory[OSVVM]="/home/paebbels/git/PoC/lib/osvvm"
-InstallationDirectory[VUnit]="/home/paebbels/git/PoC/lib/VUnit"
+InstallationDirectory[VUnit]="/home/paebbels/git/PoC/lib/vunit"
 
 declare -A DestinationDirectory
 DestinationDirectory[AlteraQuartusII]="altera"
