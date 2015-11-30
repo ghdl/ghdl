@@ -83,8 +83,58 @@ package body Grt.Backtraces is
       return Str (Str'First + Ref'Length) = NUL;
    end Is_Eq;
 
+   type Op_Assoc_Type is record
+      Enc : String (1 .. 2);
+      Op : String (1 .. 4);
+   end record;
+
+   type Op_Array_Type is array (Positive range <>) of Op_Assoc_Type;
+   Op_Assoc : constant Op_Array_Type :=
+     (("Eq", "=   "),
+      ("Ne", "/=  "),
+      ("Lt", "<   "),
+      ("Le", "<=  "),
+      ("Gt", ">   "),
+      ("Ge", ">=  "),
+      ("Pl", "+   "),
+      ("Mi", "-   "),
+      ("Mu", "*   "),
+      ("Di", "/   "),
+      ("Ex", "**  "),
+      ("Cc", "&   "),
+      ("Cd", "??  "),
+      ("Qe", "?=  "),
+      ("Qi", "?/= "),
+      ("QL", "?<  "),
+      ("Ql", "?<= "),
+      ("QG", "?>  "),
+      ("Qg", "?>= "));
+
+   procedure Demangle_Op_Err (C1, C2 : Character) is
+   begin
+      for I in Op_Assoc'Range loop
+         declare
+            A : Op_Assoc_Type renames Op_Assoc (I);
+         begin
+            if A.Enc (1) = C1 and A.Enc (2) = C2 then
+               Put_Err ('"');
+               for J in A.Op'range loop
+                  exit when A.Op (J) = ' ';
+                  Put_Err (A.Op (J));
+               end loop;
+               Put_Err ('"');
+               return;
+            end if;
+         end;
+      end loop;
+      Put_Err ("OP");
+      Put_Err (C1);
+      Put_Err (C2);
+   end Demangle_Op_Err;
+
    procedure Demangle_Err (Name : Ghdl_C_String)
    is
+      subtype Digit is Character range '0' .. '9';
       Last_Part : Natural;
       Suffix : Ghdl_C_String;
       Off : Natural;
@@ -92,6 +142,7 @@ package body Grt.Backtraces is
       Is_Arch : Boolean;
    begin
       if Name (1) = '_' then
+         --  Recognize elaboration routine.
          if Is_Eq (Name, "__ghdl_ELABORATE") then
             Put_Err ("Elaboration of design");
             return;
@@ -132,6 +183,7 @@ package body Grt.Backtraces is
               and then Name (Off + 5) = '_'
               and then Name (Off + 6) = '_'
             then
+               --  Recognize '__ARCH' and replaces 'x__ARCH__y' by 'x(y)'.
                Off := Off + 7;
                Put_Err ('(');
                Is_Arch := True;
@@ -140,8 +192,21 @@ package body Grt.Backtraces is
                   Put_Err (')');
                   Is_Arch := False;
                end if;
+               --  Replaces '__' by '.'.
                Put_Err ('.');
                Off := Off + 1;
+            end if;
+         elsif C = 'O' then
+            if Name (Off) = 'P' then
+               --  __OPxx is an operator.
+               Demangle_Op_Err (Name (Off + 1), Name (Off + 2));
+               Off := Off + 3;
+            elsif Name (Off) in Digit then
+               --  overloading
+               loop
+                  Off := Off + 1;
+                  exit when Name (Off) not in Digit;
+               end loop;
             end if;
          else
             Put_Err (C);
