@@ -193,6 +193,7 @@ elseif ($Compile)
 				$Parameters += 'grt-cvpi.o'
 				$Parameters += 'memsegs_c.o'
 				$Parameters += 'win32.o'
+				$Parameters += '-ldbghelp'
 				$Parameters += '-largs'
 				$Parameters += '-Wl,--stack,8404992'
 
