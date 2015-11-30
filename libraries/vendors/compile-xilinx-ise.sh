@@ -230,7 +230,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $FileSize -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
@@ -255,7 +255,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" =
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $FileSize -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
@@ -350,7 +350,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $FileSize -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
@@ -374,7 +374,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" 
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $FileSize -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
