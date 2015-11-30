@@ -863,16 +863,18 @@ package body Sem_Expr is
             --  (prior the implicit conversion) is the type universal_integer.
             null;
          elsif Vhdl_Std = Vhdl_93c or else Flag_Relaxed_Rules then
+            null;
+         elsif Vhdl_Std /= Vhdl_93 then
             --  GHDL: this is not allowed, however often used:
             --  eg: for i in 0 to v'length + 1 loop
             --  eg: for i in -1 to 1 loop
 
             --  Be tolerant.
             Warning_Msg_Sem ("universal integer bound must be numeric literal "
-                             & "or attribute", Res);
+                               & "or attribute", Res);
          else
             Error_Msg_Sem ("universal integer bound must be numeric literal "
-                           & "or attribute", Res);
+                             & "or attribute", Res);
          end if;
          Set_Type (Res, Integer_Type_Definition);
       end if;
