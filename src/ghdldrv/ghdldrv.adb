@@ -1248,6 +1248,9 @@ package body Ghdldrv is
 
    --  Command Make.
    type Command_Make is new Command_Comp with record
+      -- Bind only; don't link
+      Flag_Bind_Only : Boolean;
+
       --  Disp dependences during make.
       Flag_Depend_Unit : Boolean;
 
@@ -1288,6 +1291,7 @@ package body Ghdldrv is
    is
    begin
       Disp_Long_Help (Command_Comp (Cmd));
+      Put_Line (" -b             Bind only; don't link");
       Put_Line (" -f             Force recompilation of work units");
       Put_Line (" -Mu            Disp unit dependences (human format)");
    end Disp_Long_Help;
@@ -1295,6 +1299,7 @@ package body Ghdldrv is
    procedure Init (Cmd : in out Command_Make) is
    begin
       Init (Command_Comp (Cmd));
+      Cmd.Flag_Bind_Only := False;
       Cmd.Flag_Depend_Unit := False;
       Cmd.Flag_Force := False;
    end Init;
@@ -1304,7 +1309,10 @@ package body Ghdldrv is
                             Arg : String;
                             Res : out Option_Res) is
    begin
-      if Option = "-Mu" then
+      if Option = "-b" then
+         Cmd.Flag_Bind_Only := True;
+         Res := Option_Ok;
+      elsif Option = "-Mu" then
          Cmd.Flag_Depend_Unit := True;
          Res := Option_Ok;
       elsif Option = "-f" then
@@ -1523,8 +1531,10 @@ package body Ghdldrv is
             New_Line;
          end if;
          Bind;
-         Link (Add_Std => True, Disp_Only => False);
-         Delete_File (Filelist_Name.all, Success);
+         if not Cmd.Flag_Bind_Only then
+            Link (Add_Std => True, Disp_Only => False);
+            Delete_File (Filelist_Name.all, Success);
+         end if;
       end if;
    exception
       when Errorout.Compilation_Error =>
