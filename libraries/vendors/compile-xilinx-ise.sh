@@ -52,6 +52,10 @@ while [[ $# > 0 ]]; do
 		CLEAN=TRUE
 		NO_COMMAND=FALSE
 		;;
+		-a|--all)
+		ALL=TRUE
+		NO_COMMAND=FALSE
+		;;
 		-u|--unisim)
 		UNISIM=TRUE
 		NO_COMMAND=FALSE
@@ -110,7 +114,8 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo ""
 	echo "Commands:"
 	echo "  -h --help           Print this help page"
-	echo "  -c --clean          Remove ALL generated files"
+	echo "  -c --clean          Remove all generated files"
+	echo "  -a --all            Compile all Xilinx simulation libraries."
 	echo "  -u --unisim         Compile the unisim library."
 	echo "  -U --unimacro       Compile the unimacro library."
 	echo "  -s --simprim        Compile the simprim library."
@@ -127,13 +132,20 @@ elif [ "$HELP" == "TRUE" ]; then
 	exit 0
 fi
 
+if [ "$ALL" == "TRUE" ]; then
+	UNISIM=TRUE
+	UNIMACRO=TRUE
+	SIMPRIM=TRUE
+	SECUREIP=TRUE
+fi
+
 # extract data from configuration
 SourceDir="${InstallationDirectory[XilinxISE]}/ISE_DS/ISE/vhdl/src"
 DestinationDir="${DestinationDirectory[XilinxISE]}"
 ScriptDir=".."
 
 # define global GHDL Options
-
+GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
 
 # create "Xilinx" directory and change to it
 if [[ -d "$DestinationDir" ]]; then
@@ -153,7 +165,7 @@ else
 fi
 
 
-# CLEANup directory
+# Cleanup directory
 # ==============================================================================
 if [ "$CLEAN" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ..." $ANSI_RESET
@@ -165,11 +177,12 @@ fi
 # compile unisim packages
 if [ "$UNISIM" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'unisim' ..." $ANSI_RESET
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=(
 		$SourceDir/unisims/unisim_VPKG.vhd
 		$SourceDir/unisims/unisim_VCOMP.vhd
 	)
-
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
@@ -177,13 +190,15 @@ if [ "$UNISIM" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'" $ANSI_RESET
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
 
 # compile unisim primitives
 if [ "$UNISIM" == "TRUE" ]; then
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=$SourceDir/unisims/primitive/*.vhd
 	for File in $Files; do
 		FileName=$(basename "$File")
@@ -192,7 +207,7 @@ if [ "$UNISIM" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
@@ -200,6 +215,8 @@ fi
 # compile unisim secureip primitives
 if [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library secureip primitives" $ANSI_RESET
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=$SourceDir/unisims/secureip/*.vhd
 	for File in $Files; do
 		FileName=$(basename "$File")
@@ -208,7 +225,7 @@ if [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=secureip $File 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=secureip "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
@@ -218,7 +235,8 @@ fi
 # compile unimacro packages
 if [ "$UNIMACRO" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'unimacro' ..." $ANSI_RESET
-
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=(
 		$SourceDir/unimacro/unimacro_VCOMP.vhd
 	)
@@ -229,13 +247,15 @@ if [ "$UNIMACRO" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'" $ANSI_RESET
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unimacro $File 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
 	
 # compile unimacro macros
 if [ "$UNIMACRO" == "TRUE" ]; then
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=$SourceDir/unimacro/*_MACRO.vhd*
 	for File in $Files; do
 		FileName=$(basename "$File")
@@ -244,7 +264,7 @@ if [ "$UNIMACRO" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
@@ -254,7 +274,8 @@ fi
 # compile simprim packages
 if [ "$SIMPRIM" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'simprim' ..." $ANSI_RESET
-
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=(
 		$SourceDir/simprims/simprim_Vpackage.vhd
 		$SourceDir/simprims/simprim_Vcomponents.vhd
@@ -266,13 +287,15 @@ if [ "$SIMPRIM" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'" $ANSI_RESET
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
 
 # compile UNISIM primitives
 if [ "$SIMPRIM" == "TRUE" ]; then
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=$SourceDir/simprims/primitive/other/*.vhd*
 	for File in $Files; do
 		FileName=$(basename "$File")
@@ -281,13 +304,15 @@ if [ "$SIMPRIM" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
 
 # compile UNISIM secureip primitives
 if [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=`ls -v $SourceDir/simprims/secureip/other/*.vhd*`
 	for File in $Files; do
 		FileName=$(basename "$File")
@@ -296,7 +321,7 @@ if [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
-			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
