@@ -5,7 +5,7 @@
 # 
 # ==============================================================================
 #	Bash Script:				Script to compile the simulation libraries from Xilinx ISE
-#											for GHDL on Windows
+#											for GHDL on Linux
 # 
 #	Authors:						Patrick Lehmann
 # 
@@ -42,21 +42,27 @@ WorkingDir=$(pwd)
 source config.sh
 source shared.sh
 
+NO_COMMAND=TRUE
+
 # command line argument processing
 while [[ $# > 0 ]]; do
 	key="$1"
 	case $key in
 		-c|--clean)
 		CLEAN=TRUE
+		NO_COMMAND=FALSE
 		;;
 		-u|--unisim)
 		UNISIM=TRUE
+		NO_COMMAND=FALSE
 		;;
 		-U|--unimacro)
 		UNIMACRO=TRUE
+		NO_COMMAND=FALSE
 		;;
 		-s|--simprim)
 		SIMPRIM=TRUE
+		NO_COMMAND=FALSE
 		;;
 		-S|--secureip)
 		SECUREIP=TRUE
@@ -75,6 +81,7 @@ while [[ $# > 0 ]]; do
 		;;
 		-h|--help)
 		HELP=TRUE
+		NO_COMMAND=FALSE
 		;;
 		*)		# unknown option
 		UNKNOWN_OPTION=TRUE
@@ -83,15 +90,25 @@ while [[ $# > 0 ]]; do
 	shift # past argument or value
 done
 
+if [ "$NO_COMMAND" == "TRUE" ]; then
+	HELP=TRUE
+fi
+
 if [ "$UNKNOWN_OPTION" == "TRUE" ]; then
 	echo -e $COLORED_ERROR "Unknown command line option." $ANSI_RESET
 	exit -1
 elif [ "$HELP" == "TRUE" ]; then
+	if [ "$NO_COMMAND" == "TRUE" ]; then
+		echo -e $COLORED_ERROR " No command selected."
+	fi
+	echo ""
+	echo "Synopsis:"
+	echo "  Script to compile the simulation libraries from Xilinx ISE for GHDL on Linux"
 	echo ""
 	echo "Usage:"
 	echo "  compile-xilinx-ise.sh [-v] [-c] [-u|--unisim] [-U|--unimacro] [-s|--simprim] [-S|--secureip] [-l|--large] [--skip-existing] [--no-warnings]"
 	echo ""
-	echo "Options:"
+	echo "Commands:"
 	echo "  -h --help           Print this help page"
 	echo "  -c --clean          Remove ALL generated files"
 	echo "  -u --unisim         Compile the unisim library."
@@ -113,7 +130,6 @@ fi
 # extract data from configuration
 SourceDir="${InstallationDirectory[XilinxISE]}/ISE_DS/ISE/vhdl/src"
 DestinationDir="${DestinationDirectory[XilinxISE]}"
-echo $SourceDir
 ScriptDir=".."
 
 # define global GHDL Options
@@ -121,16 +137,16 @@ ScriptDir=".."
 
 # create "Xilinx" directory and change to it
 if [[ -d "$DestinationDir" ]]; then
-	echo -e $ANSI_YELLOW "Vendor directory '$DestinationDir' already exists." $ANSI_RESET
+	echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDir' already exists." $ANSI_RESET
 else
-	echo -e $ANSI_YELLOW "Creating vendor directory: '$DestinationDir'" $ANSI_RESET
+	echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDir'" $ANSI_RESET
 	mkdir "$DestinationDir"
 fi
 cd $DestinationDir
 
 STOPCOMPILING=TRUE
 
-if [ $SUPPRESS_WARNINGS -eq 0 ]; then
+if [ "$SUPPRESS_WARNINGS" == "FALSE" ]; then
 	GRCRulesFile="$ScriptDir/ghdl.grcrules"
 else
 	GRCRulesFile="$ScriptDir/ghdl.skipwarning.grcrules"
@@ -139,59 +155,59 @@ fi
 
 # CLEANup directory
 # ==============================================================================
-if [ "$CLEAN" == "TRUE" ]]; then
-	echo -e $ANSI_YELLOW "Cleaning up vendor directory ..." $ANSI_RESET
+if [ "$CLEAN" == "TRUE" ]; then
+	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ..." $ANSI_RESET
 	rm *.o
 fi
 
 # Library unisim
 # ==============================================================================
 # compile unisim packages
-if [ "$UNISIM" == "TRUE" ]]; then
-	echo -e $ANSI_YELLOW "Compiling library 'unisim' ..." $ANSI_RESET
+if [ "$UNISIM" == "TRUE" ]; then
+	echo -e "${ANSI_YELLOW}Compiling library 'unisim' ..." $ANSI_RESET
 	Files=(
-		$SourceDir/unisims/UNISIM_VPKG.vhd
-		$SourceDir/unisims/UNISIM_VCOMP.vhd
+		$SourceDir/unisims/unisim_VPKG.vhd
+		$SourceDir/unisims/unisim_VCOMP.vhd
 	)
 
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [[ ($SKIP_EXISTING_FILES -eq 1) && (-e "${FileName%.*}.o") ]]; then
+		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e $ANSI_CYAN "Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
-			echo -e $ANSI_CYAN "Analyzing package '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing package '$File'" $ANSI_RESET
 			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
 
 # compile unisim primitives
-if [ "$UNISIM" == "TRUE" ]]; then
+if [ "$UNISIM" == "TRUE" ]; then
 	Files=$SourceDir/unisims/primitive/*.vhd
 	for File in $Files; do
 		FileName=$(basename "$File")
-		if [[ ($SKIP_EXISTING_FILES -eq 1) && (-e "${FileName%.*}.o") ]]; then
+		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e $ANSI_CYAN "Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
-			echo -e $ANSI_CYAN "Analyzing primitive '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
 			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
 
 # compile unisim secureip primitives
-if [ ("$UNISIM" == "TRUE") && ("$SECUREIP" == "TRUE") ]]; then
-	echo -e $ANSI_YELLOW "Compiling library secureip primitives" $ANSI_RESET
+if [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
+	echo -e "${ANSI_YELLOW}Compiling library secureip primitives" $ANSI_RESET
 	Files=$SourceDir/unisims/secureip/*.vhd
 	for File in $Files; do
 		FileName=$(basename "$File")
-		if [[ ($SKIP_EXISTING_FILES -eq 1) && (-e "${FileName%.*}.o") ]]; then
+		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e $ANSI_CYAN "Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
-			echo -e $ANSI_CYAN "Analyzing primitive '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
 			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=secureip $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
@@ -200,34 +216,34 @@ fi
 # Library unimacro
 # ==============================================================================
 # compile unimacro packages
-if [ "$UNIMACRO" == "TRUE" ]]; then
-	echo -e $ANSI_YELLOW "Compiling library 'unimacro' ..." $ANSI_RESET
+if [ "$UNIMACRO" == "TRUE" ]; then
+	echo -e "${ANSI_YELLOW}Compiling library 'unimacro' ..." $ANSI_RESET
 
 	Files=(
-		$SourceDir/unimacro/UNIMACRO_VCOMP.vhd
+		$SourceDir/unimacro/unimacro_VCOMP.vhd
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [[ ($SKIP_EXISTING_FILES -eq 1) && (-e "${FileName%.*}.o") ]]; then
+		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e $ANSI_CYAN "Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
-			echo -e $ANSI_CYAN "Analyzing package '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing package '$File'" $ANSI_RESET
 			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unimacro $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
 	
 # compile unimacro macros
-if [ "$UNIMACRO" == "TRUE" ]]; then
+if [ "$UNIMACRO" == "TRUE" ]; then
 	Files=$SourceDir/unimacro/*_MACRO.vhd*
 	for File in $Files; do
 		FileName=$(basename "$File")
-		if [[ ($SKIP_EXISTING_FILES -eq 1) && (-e "${FileName%.*}.o") ]]; then
+		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e $ANSI_CYAN "Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
-			echo -e $ANSI_CYAN "Analyzing primitive '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
 			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=unisim $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
@@ -236,50 +252,50 @@ fi
 # Library simprim
 # ==============================================================================
 # compile simprim packages
-if [ "$SIMPRIM" == "TRUE" ]]; then
-	echo -e $ANSI_YELLOW "Compiling library 'simprim' ..." $ANSI_RESET
+if [ "$SIMPRIM" == "TRUE" ]; then
+	echo -e "${ANSI_YELLOW}Compiling library 'simprim' ..." $ANSI_RESET
 
 	Files=(
-		$SourceDir/simprims/SIMPRIM_Vpackage.vhd
-		$SourceDir/simprims/SIMPRIM_Vcomponents.vhd
+		$SourceDir/simprims/simprim_Vpackage.vhd
+		$SourceDir/simprims/simprim_Vcomponents.vhd
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [[ ($SKIP_EXISTING_FILES -eq 1) && (-e "${FileName%.*}.o") ]]; then
+		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e $ANSI_CYAN "Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
-			echo -e $ANSI_CYAN "Analyzing package '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing package '$File'" $ANSI_RESET
 			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
 
 # compile UNISIM primitives
-if [ "$SIMPRIM" == "TRUE" ]]; then
+if [ "$SIMPRIM" == "TRUE" ]; then
 	Files=$SourceDir/simprims/primitive/other/*.vhd*
 	for File in $Files; do
 		FileName=$(basename "$File")
-		if [[ ($SKIP_EXISTING_FILES -eq 1) && (-e "${FileName%.*}.o") ]]; then
+		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e $ANSI_CYAN "Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
-			echo -e $ANSI_CYAN "Analyzing primitive '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
 			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
 fi
 
 # compile UNISIM secureip primitives
-if [ ("$SIMPRIM" == "TRUE") && ("$SECUREIP" == "TRUE") ]]; then
-	Files=$SourceDir/simprims/secureip/other/*.vhd*
+if [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
+	Files=`ls -v $SourceDir/simprims/secureip/other/*.vhd*`
 	for File in $Files; do
 		FileName=$(basename "$File")
-		if [[ ($SKIP_EXISTING_FILES -eq 1) && (-e "${FileName%.*}.o") ]]; then
+		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e $ANSI_CYAN "Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
 		else
-			echo -e $ANSI_CYAN "Analyzing primitive '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
 			ghdl -a -fexplicit -frelaxed-rules --warn-binding --mb-comments --no-vital-checks --ieee=synopsys --std=93c --work=simprim $File 2>&1 | grcat $GRCRulesFile
 		fi
 	done
