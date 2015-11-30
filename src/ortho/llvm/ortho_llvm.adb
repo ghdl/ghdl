@@ -1180,7 +1180,7 @@ package body Ortho_LLVM is
       PositionBuilderAtEnd (Builder, Normal_Bb);
       Rm := BuildSRem (Builder, L, R, Empty_Cstring);
 
-      --  if R = 0 then
+      --  if Rm = 0 then
       --    result := 0
       --  else
       Cond := BuildICmp
@@ -1189,7 +1189,7 @@ package body Ortho_LLVM is
       Vals (2) := ConstNull (Res_Type);
       BBs (2) := Normal_Bb;
 
-      --  if L xor R < 0 then
+      --  if (L xor R) < 0 then
       --    result := Rm + R
       --  else
       --    result := Rm;
