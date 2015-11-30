@@ -44,3 +44,6 @@ DestinationDirectory[XilinxISE]="xilinx"
 DestinationDirectory[XilinxVivado]="vivado"
 DestinationDirectory[OSVVM]="osvvm"
 DestinationDirectory[VUnit]="vuint"
+
+LARGE_FILESIZE=150000
+

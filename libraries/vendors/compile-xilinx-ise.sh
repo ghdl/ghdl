@@ -56,36 +56,36 @@ while [[ $# > 0 ]]; do
 		ALL=TRUE
 		NO_COMMAND=FALSE
 		;;
-		-u|--unisim)
-		UNISIM=TRUE
-		NO_COMMAND=FALSE
-		;;
-		-U|--unimacro)
-		UNIMACRO=TRUE
-		NO_COMMAND=FALSE
-		;;
-		-s|--simprim)
-		SIMPRIM=TRUE
-		NO_COMMAND=FALSE
-		;;
-		-S|--secureip)
-		SECUREIP=TRUE
-		;;
-		-l|--large)
-		LARGE_PRIMITIVES=TRUE
-		;;
-		--skip-existing)
+		-s|--skip-existing)
 		SKIP_EXISTING_FILES=TRUE
 		;;
-		--no-warnings)
+		-S|--skip-largefiles)
+		SKIP_LARGE_FILES=TRUE
+		;;
+		-n|--no-warnings)
 		SUPPRESS_WARNINGS=TRUE
 		;;
-		-v|--verbose)
-		VERBOSE=TRUE
-		;;
+#		-v|--verbose)
+#		VERBOSE=TRUE
+#		;;
 		-h|--help)
 		HELP=TRUE
 		NO_COMMAND=FALSE
+		;;
+		--unisim)
+		UNISIM=TRUE
+		NO_COMMAND=FALSE
+		;;
+		--unimacro)
+		UNIMACRO=TRUE
+		NO_COMMAND=FALSE
+		;;
+		--simprim)
+		SIMPRIM=TRUE
+		NO_COMMAND=FALSE
+		;;
+		--secureip)
+		SECUREIP=TRUE
 		;;
 		*)		# unknown option
 		UNKNOWN_OPTION=TRUE
@@ -99,7 +99,7 @@ if [ "$NO_COMMAND" == "TRUE" ]; then
 fi
 
 if [ "$UNKNOWN_OPTION" == "TRUE" ]; then
-	echo -e $COLORED_ERROR "Unknown command line option." $ANSI_RESET
+	echo -e $COLORED_ERROR "Unknown command line option.${ANSI_RESET}"
 	exit -1
 elif [ "$HELP" == "TRUE" ]; then
 	if [ "$NO_COMMAND" == "TRUE" ]; then
@@ -113,21 +113,21 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo "  compile-xilinx-ise.sh [-v] [-c] [-u|--unisim] [-U|--unimacro] [-s|--simprim] [-S|--secureip] [-l|--large] [--skip-existing] [--no-warnings]"
 	echo ""
 	echo "Commands:"
-	echo "  -h --help           Print this help page"
-	echo "  -c --clean          Remove all generated files"
-	echo "  -a --all            Compile all Xilinx simulation libraries."
-	echo "  -u --unisim         Compile the unisim library."
-	echo "  -U --unimacro       Compile the unimacro library."
-	echo "  -s --simprim        Compile the simprim library."
-	echo "  -S --secureip       Compile the secureip library."
+	echo "  -h --help             Print this help page"
+	echo "  -c --clean            Remove all generated files"
+	echo "  -a --all              Compile all Xilinx simulation libraries."
+	echo "     --unisim           Compile the unisim library."
+	echo "     --unimacro         Compile the unimacro library."
+	echo "     --simprim          Compile the simprim library."
+	echo "     --secureip         Compile the secureip library."
 	echo ""
 	echo "Compile options:"
-	echo "  -l --large          Compile large entities like DSP and PCIe primitives."
-	echo "     --skip-existing  Skip already compiled files."
+	echo "  -s --skip-existing    Skip already compiled files (an *.o file exists)."
+	echo "  -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives."
 	echo ""
 	echo "Verbosity:"
-	echo "  -v --verbose        Print more messages"
-	echo "     --no-warnings    Suppress all warnings. Show only error messages."
+#	echo "  -v --verbose          Print more messages"
+	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."
 	echo ""
 	exit 0
 fi
@@ -149,9 +149,9 @@ GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-c
 
 # create "Xilinx" directory and change to it
 if [[ -d "$DestinationDir" ]]; then
-	echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDir' already exists." $ANSI_RESET
+	echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDir' already exists.${ANSI_RESET}"
 else
-	echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDir'" $ANSI_RESET
+	echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDir'${ANSI_RESET}"
 	mkdir "$DestinationDir"
 fi
 cd $DestinationDir
@@ -168,7 +168,7 @@ fi
 # Cleanup directory
 # ==============================================================================
 if [ "$CLEAN" == "TRUE" ]; then
-	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ..." $ANSI_RESET
+	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_RESET}"
 	rm *.o
 fi
 
@@ -176,7 +176,7 @@ fi
 # ==============================================================================
 # compile unisim packages
 if [ "$UNISIM" == "TRUE" ]; then
-	echo -e "${ANSI_YELLOW}Compiling library 'unisim' ..." $ANSI_RESET
+	echo -e "${ANSI_YELLOW}Compiling library 'unisim' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=(
@@ -187,9 +187,9 @@ if [ "$UNISIM" == "TRUE" ]; then
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing package '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
@@ -204,9 +204,12 @@ if [ "$UNISIM" == "TRUE" ]; then
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(du -b "$File" | awk '{ print $1}') -gt $LARGE_FILESIZE ]; then
+			echo -n ""
+#			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
@@ -214,7 +217,7 @@ fi
 
 # compile unisim secureip primitives
 if [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
-	echo -e "${ANSI_YELLOW}Compiling library secureip primitives" $ANSI_RESET
+	echo -e "${ANSI_YELLOW}Compiling library secureip primitives${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=$SourceDir/unisims/secureip/*.vhd
@@ -222,9 +225,12 @@ if [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(du -b "$File" | awk '{ print $1}') -gt $LARGE_FILESIZE ]; then
+			echo -n ""
+#			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=secureip "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
@@ -234,7 +240,7 @@ fi
 # ==============================================================================
 # compile unimacro packages
 if [ "$UNIMACRO" == "TRUE" ]; then
-	echo -e "${ANSI_YELLOW}Compiling library 'unimacro' ..." $ANSI_RESET
+	echo -e "${ANSI_YELLOW}Compiling library 'unimacro' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=(
@@ -244,9 +250,9 @@ if [ "$UNIMACRO" == "TRUE" ]; then
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing package '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
@@ -261,9 +267,9 @@ if [ "$UNIMACRO" == "TRUE" ]; then
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
@@ -273,7 +279,7 @@ fi
 # ==============================================================================
 # compile simprim packages
 if [ "$SIMPRIM" == "TRUE" ]; then
-	echo -e "${ANSI_YELLOW}Compiling library 'simprim' ..." $ANSI_RESET
+	echo -e "${ANSI_YELLOW}Compiling library 'simprim' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
 	Files=(
@@ -284,9 +290,9 @@ if [ "$SIMPRIM" == "TRUE" ]; then
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing package '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
@@ -301,9 +307,12 @@ if [ "$SIMPRIM" == "TRUE" ]; then
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(du -b "$File" | awk '{ print $1}') -gt $LARGE_FILESIZE ]; then
+			echo -n ""
+#			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
@@ -318,9 +327,12 @@ if [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'" $ANSI_RESET
+#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(du -b "$File" | awk '{ print $1}') -gt $LARGE_FILESIZE ]; then
+			echo -n ""
+#			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing primitive '$File'" $ANSI_RESET
+			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | grcat $GRCRulesFile
 		fi
 	done
