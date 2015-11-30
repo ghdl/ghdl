@@ -149,7 +149,7 @@ if (-not $StopCompiling)
 }
 
 Write-Host "--------------------------------------------------------------------------------"
-Write-Host "Compiling VUnit libraries " -NoNewline
+Write-Host "Compiling VUnit library " -NoNewline
 if ($StopCompiling)
 {	Write-Host "[FAILED]" -ForegroundColor Red				}
 else

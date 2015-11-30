@@ -62,8 +62,8 @@ param(
 	# Compile the Altera Max device libraries
 	[switch]$Max =				$false,
 	
-	# Compile the Altera Cyclon device libraries
-	[switch]$Cyclon =			$false,
+	# Compile the Altera Cyclone device libraries
+	[switch]$Cyclone =		$false,
 	
 	# Compile the Altera Arria device libraries
 	[switch]$Arria =			$false,
@@ -75,7 +75,7 @@ param(
 	[switch]$Nanometer =	$false,
 	
 	# Clean up directory before analyzing.
-	[switch]$Clean =		$false,
+	[switch]$Clean =			$false,
 	
 	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false,
@@ -106,7 +106,7 @@ if (-not $All)
 elseif ($All -eq $true)
 {	$Altera =			$true
 	$Max =				$true
-	$Cyclon =			$true
+	$Cyclone =		$true
 	$Arria =			$true
 	$Stratix =		$true
 	$Nanometer =	$true
@@ -129,6 +129,9 @@ if ($Clean)
 {	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
 	rm *.cf
 }
+
+# Altera standard libraries
+# ==============================================================================
 # compile lpm library
 if ((-not $StopCompiling) -and $Altera)
 {	Write-Host "Compiling library 'lpm' ..." -ForegroundColor Yellow
@@ -167,8 +170,6 @@ if ((-not $StopCompiling) -and $Altera)
 	$Options = $GlobalOptions
 	$Files = (
 		"$SourceDir\altera_europa_support_lib.vhd",
-		"$SourceDir\altera_mf_components.vhd",
-		"$SourceDir\altera_mf.vhd",
 		"$SourceDir\altera_primitives_components.vhd",
 		"$SourceDir\altera_primitives.vhd",
 		"$SourceDir\altera_standard_functions.vhd",
@@ -213,6 +214,8 @@ if ((-not $StopCompiling) -and $Altera)
 	}
 }
 
+# Altera device libraries
+# ==============================================================================
 # compile max library
 if ((-not $StopCompiling) -and $Max)
 {	Write-Host "Compiling library 'max' ..." -ForegroundColor Yellow
@@ -365,7 +368,7 @@ if ((-not $StopCompiling) -and $Arria)
 }
 
 # compile cycloneiv library
-if ((-not $StopCompiling) -and $Cyclon)
+if ((-not $StopCompiling) -and $Cyclone)
 {	Write-Host "Compiling library 'cycloneiv' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -383,7 +386,7 @@ if ((-not $StopCompiling) -and $Cyclon)
 }
 
 # compile cycloneiv_pcie_hip library
-if ((-not $StopCompiling) -and $Cyclon)
+if ((-not $StopCompiling) -and $Cyclone)
 {	Write-Host "Compiling library 'cycloneiv_pcie_hip' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -399,7 +402,7 @@ if ((-not $StopCompiling) -and $Cyclon)
 }
 
 # compile cycloneive library
-if ((-not $StopCompiling) -and $Cyclon)
+if ((-not $StopCompiling) -and $Cyclone)
 {	Write-Host "Compiling library 'cycloneive' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
@@ -415,7 +418,7 @@ if ((-not $StopCompiling) -and $Cyclon)
 }
 
 # compile cyclonev library
-if ((-not $StopCompiling) -and $Cyclon)
+if ((-not $StopCompiling) -and $Cyclone)
 {	Write-Host "Compiling library 'cyclonev' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
 	$Files = (
