@@ -115,7 +115,7 @@ if (-not $StopCompiling)
 		"$SourceDir\OsvvmContext.vhd")
 	foreach ($File in $Files)
 	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File + " 2>&1"
+		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=osvvm " + $File + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		$StopCompiling = ($LastExitCode -ne 0)
 		if ($StopCompiling)	{ break }

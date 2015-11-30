@@ -93,7 +93,7 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo ""
 	echo "Usage:"
 	echo "  compile-osvvm.sh <common command>|<library> [<options>]"
-#         [-v] [-c] [--unisim] [--unimacro] [--simprim] [--secureip] [-s|--skip-existing] [-S|--skip-largefiles] [-n|--no-warnings]
+#         [-v] [-c] [--all] [-s|--skip-existing] [-n|--no-warnings]
 	echo ""
 	echo "Common commands:"
 	echo "  -h --help             Print this help page"
@@ -196,7 +196,7 @@ if [ "$STOPCOMPILING" == "FALSE" ]; then
 			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
+			ghdl -a ${GHDL_PARAMS[@]} --work=osvvm "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				STOPCOMPILING=TRUE
 			fi

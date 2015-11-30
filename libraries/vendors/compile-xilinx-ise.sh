@@ -162,7 +162,7 @@ set -o pipefail
 # define global GHDL Options
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
 
-# create "Xilinx" directory and change to it
+# create "xilinx" directory and change to it
 if [[ -d "$DestinationDir" ]]; then
 	echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDir' already exists.${ANSI_RESET}"
 else

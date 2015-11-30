@@ -93,7 +93,7 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo ""
 	echo "Usage:"
 	echo "  compile-vunit.sh <common command>|<library> [<options>]"
-#         [-v] [-c] [--unisim] [--unimacro] [--simprim] [--secureip] [-s|--skip-existing] [-S|--skip-largefiles] [-n|--no-warnings]
+#         [-v] [-c] [--all] [-s|--skip-existing] [-n|--no-warnings]
 	echo ""
 	echo "Common commands:"
 	echo "  -h --help             Print this help page"
@@ -169,11 +169,11 @@ if [ "$CLEAN" == "TRUE" ]; then
 	rm *.o 2> /dev/null
 fi
 
-# Library vunit
+# Library vunit_lib
 # ==============================================================================
 # compile vunit packages
 if [ "$STOPCOMPILING" == "FALSE" ]; then
-	echo -e "${ANSI_YELLOW}Compiling library 'vunit' ...${ANSI_RESET}"
+	echo -e "${ANSI_YELLOW}Compiling library 'vunit_lib' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--std=08)
 	Files=(
@@ -222,7 +222,7 @@ if [ "$STOPCOMPILING" == "FALSE" ]; then
 			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
+			ghdl -a ${GHDL_PARAMS[@]} --work=vunit_lib "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				STOPCOMPILING=TRUE
 			fi

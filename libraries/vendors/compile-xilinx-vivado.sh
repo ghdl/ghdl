@@ -107,7 +107,7 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo "  Script to compile the simulation libraries from Xilinx Vivado for GHDL on Linux"
 	echo ""
 	echo "Usage:"
-	echo "  compile-xilinx-ise.sh <common command>|<library> [<options>]"
+	echo "  compile-xilinx-vivado.sh <common command>|<library> [<options>]"
 #         [-v] [-c] [--unisim] [--unimacro] [--simprim] [--secureip] [-s|--skip-existing] [-S|--skip-largefiles] [-n|--no-warnings]
 	echo ""
 	echo "Common commands:"
@@ -156,7 +156,7 @@ set -o pipefail
 # define global GHDL Options
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
 
-# create "Xilinx" directory and change to it
+# create "vivado" directory and change to it
 if [[ -d "$DestinationDir" ]]; then
 	echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDir' already exists.${ANSI_RESET}"
 else
