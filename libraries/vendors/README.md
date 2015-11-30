@@ -24,7 +24,7 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
      - unimacro
      - simprim (incl. secureip)
  - Xilinx Vivado (2015.x):
-     - unisim
+     - unisim (incl. secureip)
      - unimacro
 
 ##### Supported Simulation and Verification Libraries
