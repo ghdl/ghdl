@@ -129,6 +129,9 @@ if ($Clean)
 {	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
 	rm *.cf
 }
+
+# Altera standard libraries
+# ==============================================================================
 # compile lpm library
 if ((-not $StopCompiling) -and $Altera)
 {	Write-Host "Compiling library 'lpm' ..." -ForegroundColor Yellow
@@ -167,8 +170,6 @@ if ((-not $StopCompiling) -and $Altera)
 	$Options = $GlobalOptions
 	$Files = (
 		"$SourceDir\altera_europa_support_lib.vhd",
-		"$SourceDir\altera_mf_components.vhd",
-		"$SourceDir\altera_mf.vhd",
 		"$SourceDir\altera_primitives_components.vhd",
 		"$SourceDir\altera_primitives.vhd",
 		"$SourceDir\altera_standard_functions.vhd",
