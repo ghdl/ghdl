@@ -37,10 +37,11 @@
 # ---------------------------------------------
 # save working directory
 WorkingDir=$(pwd)
+ScriptDir="$(dirname $0)"
 
 # source configuration file from GHDL's 'vendors' library directory
-source config.sh
-source shared.sh
+source $ScriptDir/config.sh
+source $ScriptDir/shared.sh
 
 NO_COMMAND=TRUE
 
@@ -142,7 +143,6 @@ fi
 # extract data from configuration
 SourceDir="${InstallationDirectory[XilinxISE]}/ISE_DS/ISE/vhdl/src"
 DestinationDir="${DestinationDirectory[XilinxISE]}"
-ScriptDir=".."
 
 # define global GHDL Options
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
@@ -158,12 +158,16 @@ cd $DestinationDir
 
 STOPCOMPILING=FALSE
 
-if [ "$SUPPRESS_WARNINGS" == "FALSE" ]; then
-	GRCRulesFile="$ScriptDir/ghdl.grcrules"
+if [ -z "$(which grcat)" ]; then
+	GRC_COMMAND=cat
 else
-	GRCRulesFile="$ScriptDir/ghdl.skipwarning.grcrules"
+	if [ "$SUPPRESS_WARNINGS" == "FALSE" ]; then
+		GRCRulesFile="$ScriptDir/ghdl.grcrules"
+	else
+		GRCRulesFile="$ScriptDir/ghdl.skipwarning.grcrules"
+	fi
+	GRC_COMMAND="grcat $GRCRulesFile"
 fi
-
 
 # Cleanup directory
 # ==============================================================================
@@ -190,7 +194,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				STOPCOMPILING=TRUE
 			fi
@@ -202,18 +206,18 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
-	Files=$SourceDir/unisims/primitive/*.vhd
+	Files="$(LC_COLLATE=C ls $SourceDir/unisims/primitive/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(du -b "$File" | awk '{ print $1}') -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(wc -b "$File") -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				STOPCOMPILING=TRUE
 			fi
@@ -226,18 +230,18 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" =
 	echo -e "${ANSI_YELLOW}Compiling library secureip primitives${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
-	Files=$SourceDir/unisims/secureip/*.vhd
+	Files="$(LC_COLLATE=C ls $SourceDir/unisims/secureip/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(du -b "$File" | awk '{ print $1}') -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(wc -b "$File") -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=secureip "$File" 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=secureip "$File" 2>&1 | $GRC_COMMAND
 			echo "return $?"
 			if [ $? -ne 0 ]; then
 				STOPCOMPILING=TRUE
@@ -263,7 +267,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				STOPCOMPILING=TRUE
 			fi
@@ -275,7 +279,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
-	Files=$SourceDir/unimacro/*_MACRO.vhd*
+	Files="$(LC_COLLATE=C ls $SourceDir/unimacro/*_MACRO.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
@@ -283,7 +287,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				STOPCOMPILING=TRUE
 			fi
@@ -309,7 +313,7 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				STOPCOMPILING=TRUE
 			fi
@@ -321,18 +325,18 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
-	Files=$SourceDir/simprims/primitive/other/*.vhd*
+	Files="$(LC_COLLATE=C ls $SourceDir/simprims/primitive/other/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(du -b "$File" | awk '{ print $1}') -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(wc -b "$File") -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				STOPCOMPILING=TRUE
 			fi
@@ -344,18 +348,18 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
-	Files=`ls -v $SourceDir/simprims/secureip/other/*.vhd*`
+	Files="$(LC_COLLATE=C ls $SourceDir/simprims/secureip/other/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(du -b "$File" | awk '{ print $1}') -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(wc -b "$File") -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | grcat $GRCRulesFile
+			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				STOPCOMPILING=TRUE
 			fi
