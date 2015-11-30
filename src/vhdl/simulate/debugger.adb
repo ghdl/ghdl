@@ -50,6 +50,12 @@ package body Debugger is
    --  to the prompt.
    Command_Error : exception;
 
+   type Menu_Procedure is access procedure (Line : String);
+
+   --  If set (by commands), call this procedure on empty line to repeat
+   --  last command.
+   Cmd_Repeat : Menu_Procedure;
+
    --  For the list command: current file and current line.
    List_Current_File : Source_File_Entry := No_Source_File_Entry;
    List_Current_Line : Natural := 0;
@@ -943,8 +949,6 @@ package body Debugger is
 
    type Cst_String_Acc is access constant String;
 
-   type Menu_Procedure is access procedure (Line : String);
-
    type Menu_Entry (Kind : Menu_Kind) is record
       Name : Cst_String_Acc;
       Next : Menu_Entry_Acc;
@@ -1053,6 +1057,7 @@ package body Debugger is
       Exec_Instance := Dbg_Top_Frame;
       Flag_Need_Debug := True;
       Command_Status := Status_Quit;
+      Cmd_Repeat := Next_Proc'Access;
    end Next_Proc;
 
    procedure Step_Proc (Line : String)
@@ -1911,7 +1916,20 @@ package body Debugger is
          loop
             Raw_Line := Readline (Prompt);
             --  Skip empty lines
-            exit when Raw_Line /= null and then Raw_Line (1) /= ASCII.NUL;
+            if Raw_Line = null or else Raw_Line (1) = ASCII.NUL then
+               if Cmd_Repeat /= null then
+                  Cmd_Repeat.all ("");
+                  case Command_Status is
+                     when Status_Default =>
+                        null;
+                     when Status_Quit =>
+                        return;
+                  end case;
+               end if;
+            else
+               Cmd_Repeat := null;
+               exit;
+            end if;
          end loop;
          declare
             Line_Last : constant Natural := Strlen (Raw_Line);
