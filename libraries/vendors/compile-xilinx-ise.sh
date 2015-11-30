@@ -111,18 +111,21 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo "  Script to compile the simulation libraries from Xilinx ISE for GHDL on Linux"
 	echo ""
 	echo "Usage:"
-	echo "  compile-xilinx-ise.sh [-v] [-c] [-u|--unisim] [-U|--unimacro] [-s|--simprim] [-S|--secureip] [-l|--large] [--skip-existing] [--no-warnings]"
+	echo "  compile-xilinx-ise.sh <common command>|<library> [<options>]"
+#         [-v] [-c] [--unisim] [--unimacro] [--simprim] [--secureip] [-s|--skip-existing] [-S|--skip-largefiles] [-n|--no-warnings]
 	echo ""
-	echo "Commands:"
+	echo "Common commands:"
 	echo "  -h --help             Print this help page"
 	echo "  -c --clean            Remove all generated files"
+	echo ""
+	echo "Libraries:"
 	echo "  -a --all              Compile all Xilinx simulation libraries."
 	echo "     --unisim           Compile the unisim library."
 	echo "     --unimacro         Compile the unimacro library."
 	echo "     --simprim          Compile the simprim library."
 	echo "     --secureip         Compile the secureip library."
 	echo ""
-	echo "Compile options:"
+	echo "Library compile options:"
 	echo "  -s --skip-existing    Skip already compiled files (an *.o file exists)."
 	echo "  -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives."
 	echo ""
@@ -141,8 +144,20 @@ if [ "$ALL" == "TRUE" ]; then
 fi
 
 # extract data from configuration
-SourceDir="${InstallationDirectory[XilinxISE]}/ISE_DS/ISE/vhdl/src"
-DestinationDir="${DestinationDirectory[XilinxISE]}"
+InstallDir=${InstallationDirectory[XilinxISE]}
+SourceDir="$InstallDir/ISE_DS/ISE/vhdl/src"
+DestinationDir=${DestinationDirectory[XilinxISE]}
+
+if [ -z $InstallDir ] || [ -z $DestinationDir ]; then
+	echo -e "${COLORED_ERROR} Xilinx ISE is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
+	exit -1
+elif [ ! -d $SourceDir ]; then
+	echo -e "${COLORED_ERROR} Path '$SourceDir' does not exist.${ANSI_RESET}"
+	exit -1
+fi
+
+# set bash options
+set -o pipefail
 
 # define global GHDL Options
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
@@ -156,24 +171,26 @@ else
 fi
 cd $DestinationDir
 
-STOPCOMPILING=FALSE
-
 if [ -z "$(which grcat)" ]; then
-	GRC_COMMAND=cat
+	# if grcat (generic colourizer) is not installed, use a dummy pipe command like 'cat'
+	GRC_COMMAND="cat"
 else
-	if [ "$SUPPRESS_WARNINGS" == "FALSE" ]; then
-		GRCRulesFile="$ScriptDir/ghdl.grcrules"
+	if [ "$SUPPRESS_WARNINGS" == "TRUE" ]; then
+		GRC_COMMAND="grcat $ScriptDir/ghdl.skipwarning.grcrules"
 	else
-		GRCRulesFile="$ScriptDir/ghdl.skipwarning.grcrules"
+		GRC_COMMAND="grcat $ScriptDir/ghdl.grcrules"
 	fi
-	GRC_COMMAND="grcat $GRCRulesFile"
 fi
+
+GRC_COMMAND="cat"
+
+STOPCOMPILING=FALSE
 
 # Cleanup directory
 # ==============================================================================
 if [ "$CLEAN" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_RESET}"
-	rm *.o
+	rm *.o 2> /dev/null
 fi
 
 # Library unisim
@@ -209,10 +226,11 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 	Files="$(LC_COLLATE=C ls $SourceDir/unisims/primitive/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
+		FileSize=($(wc -c $File))
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(wc -b "$File") -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $FileSize -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
@@ -233,10 +251,11 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" =
 	Files="$(LC_COLLATE=C ls $SourceDir/unisims/secureip/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
+		FileSize=($(wc -c $File))
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(wc -b "$File") -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $FileSize -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
@@ -328,10 +347,11 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 	Files="$(LC_COLLATE=C ls $SourceDir/simprims/primitive/other/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
+		FileSize=($(wc -c $File))
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(wc -b "$File") -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $FileSize -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
@@ -351,10 +371,11 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" 
 	Files="$(LC_COLLATE=C ls $SourceDir/simprims/secureip/other/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
+		FileSize=($(wc -c $File))
 		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $(wc -b "$File") -gt $LARGE_FILESIZE ]; then
+		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ $FileSize -gt $LARGE_FILESIZE ]; then
 			echo -n ""
 #			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
 		else
