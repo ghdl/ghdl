@@ -1,10 +1,14 @@
 ## Compile Scripts for Vendor VHDL Libraries
 
-Vendors like Altera and Xilinx have there own simulation libraries, especially for primitives and hard macros. These libraries can not be shipped with GHDL, but we offer prepared compile scripts to pre-compile a vendor library, if the vendor tool is present on the computer.
+Vendors like Altera and Xilinx have there own simulation libraries, especially for primitives, soft or hard macros. These libraries can not be shipped with GHDL, but we offer prepared compile scripts to pre-compile a vendor library, if the vendor tool is present on the computer.
 
-There are also popular simulation and verification libraries, which can be pre-compile.
+There are also popular simulation and verification libraries like [OSVVM][osvvm] and [VUnit][vunit], which can be pre-compile.
 
-The compilation scripts are writen in shell languages: PowerShell for Windows and Bash for Linux. There are no further requirements.
+The compilation scripts are writen in shell languages: PowerShell for Windows and Bash for Linux. The compile scripts can colorize the GHDL warning and error lines with the help of grc ([generic colourizer][grc]).
+
+ [osvvm]: http://osvvm.org/
+ [vunit]: https://github.com/LarsAsplund/vunit
+ [grc]: http://kassiopeia.juls.savba.sk/~garabik/software/grc.html
 
 ##### Supported Vendors Libraries
 
@@ -138,6 +142,7 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
         -n --no-warnings	  Don't show warnings. Report errors only.
         -s --skip-existing    Skip already compiled files (an *.o file exists).
         -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives.
+        -H --halt-on-error    Stop compiling if an error occured.
  - `compile-altera.sh`
 
         --altera              Compile base libraries like 'altera' and 'altera_mf'
