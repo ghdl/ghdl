@@ -303,9 +303,10 @@ package body Configuration is
                Arch := Get_Design_Unit (Arch);
             end if;
             Load_Design_Unit (Arch, Aspect);
-            Add_Design_Unit (Arch, Aspect);
 
-            --  Add the default configuration if required.
+            --  Add the default configuration if required.  Must be done
+            --  before the architecture in case of recursive instantiation:
+            --  the configuration depends on the architecture.
             if Add_Default then
                Config := Get_Default_Configuration_Declaration
                  (Get_Library_Unit (Arch));
@@ -313,6 +314,10 @@ package body Configuration is
                   Add_Design_Unit (Config, Aspect);
                end if;
             end if;
+
+            --  Otherwise, simply the architecture.
+            Add_Design_Unit (Arch, Aspect);
+
          when Iir_Kind_Entity_Aspect_Configuration =>
             Add_Design_Unit
               (Get_Design_Unit (Get_Configuration (Aspect)), Aspect);
