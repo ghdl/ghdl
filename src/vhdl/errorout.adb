@@ -496,8 +496,17 @@ package body Errorout is
             return "pathname element";
 
          when Iir_Kind_Entity_Aspect_Entity =>
-            return "aspect " & Disp_Node (Get_Entity (Node))
-              & '(' & Image_Identifier (Get_Architecture (Node)) & ')';
+            declare
+               Arch : constant Iir := Get_Architecture (Node);
+               Ent : constant Iir := Get_Entity (Node);
+            begin
+               if Arch = Null_Iir then
+                  return "aspect " & Disp_Node (Ent);
+               else
+                  return "aspect " & Disp_Node (Ent)
+                    & '(' & Image_Identifier (Arch) & ')';
+               end if;
+            end;
          when Iir_Kind_Entity_Aspect_Configuration =>
             return "configuration entity aspect";
          when Iir_Kind_Entity_Aspect_Open =>
