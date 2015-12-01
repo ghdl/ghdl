@@ -66,6 +66,9 @@ while [[ $# > 0 ]]; do
 		-n|--no-warnings)
 		SUPPRESS_WARNINGS=TRUE
 		;;
+		-H|--halt-on-error)
+		HALT_ON_ERROR=TRUE
+		;;
 #		-v|--verbose)
 #		VERBOSE=TRUE
 #		;;
@@ -139,6 +142,7 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo "Library compile options:"
 	echo "  -s --skip-existing    Skip already compiled files (an *.o file exists)."
 	echo "  -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives."
+	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
 	echo "Verbosity:"
 #	echo "  -v --verbose          Print more messages"
@@ -224,8 +228,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=lpm "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -247,8 +252,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=sgate "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -274,8 +280,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=altera "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -297,8 +304,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=altera_mf "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -319,8 +327,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=altera_lnsim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -344,8 +353,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$MAX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=max "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -367,8 +377,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$MAX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=maxii "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -390,8 +401,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$MAX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=maxv "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -415,8 +427,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriaii "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -437,8 +450,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriaii_pcie_hip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -461,8 +475,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriaiigz "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -486,8 +501,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriav "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -511,8 +527,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriavgz "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -533,8 +550,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriavgz_pcie_hip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -558,8 +576,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=cycloneiv "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -580,8 +599,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=cycloneiv_pcie_hip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -603,8 +623,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=cycloneive "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -628,8 +649,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=cyclonev "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -653,8 +675,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=stratixiv "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -675,8 +698,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=stratixiv_pcie_hip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -700,8 +724,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=stratixv "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -722,8 +747,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=stratixv_pcie_hip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -745,8 +771,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$NANOMETER" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=fiftyfivenm "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -772,8 +799,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$NANOMETER" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=twentynm "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done

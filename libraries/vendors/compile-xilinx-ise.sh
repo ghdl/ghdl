@@ -66,6 +66,9 @@ while [[ $# > 0 ]]; do
 		-n|--no-warnings)
 		SUPPRESS_WARNINGS=TRUE
 		;;
+		-H|--halt-on-error)
+		HALT_ON_ERROR=TRUE
+		;;
 #		-v|--verbose)
 #		VERBOSE=TRUE
 #		;;
@@ -128,6 +131,7 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo "Library compile options:"
 	echo "  -s --skip-existing    Skip already compiled files (an *.o file exists)."
 	echo "  -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives."
+	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
 	echo "Verbosity:"
 #	echo "  -v --verbose          Print more messages"
@@ -211,8 +215,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -234,8 +239,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -258,8 +264,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" =
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=secureip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -282,8 +289,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -301,8 +309,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -326,8 +335,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -349,8 +359,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
@@ -372,8 +383,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" 
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done

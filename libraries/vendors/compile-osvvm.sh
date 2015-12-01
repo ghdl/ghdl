@@ -62,6 +62,9 @@ while [[ $# > 0 ]]; do
 		-n|--no-warnings)
 		SUPPRESS_WARNINGS=TRUE
 		;;
+		-H|--halt-on-error)
+		HALT_ON_ERROR=TRUE
+		;;
 #		-v|--verbose)
 #		VERBOSE=TRUE
 #		;;
@@ -104,6 +107,7 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo ""
 	echo "Library compile options:"
 	echo "  -s --skip-existing    Skip already compiled files (an *.o file exists)."
+	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
 	echo "Verbosity:"
 #	echo "  -v --verbose          Print more messages"
@@ -197,8 +201,9 @@ if [ "$STOPCOMPILING" == "FALSE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=osvvm "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
+			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
 				STOPCOMPILING=TRUE
+				break
 			fi
 		fi
 	done
