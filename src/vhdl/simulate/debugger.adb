@@ -107,12 +107,20 @@ package body Debugger is
       --  Execution will stop at the next statement.
       Exec_Single_Step,
 
-      --  Execution will stop at the next statement in the same frame.
-      Exec_Next);
+      --  Execution will stop at the next simple statement in the same frame.
+      Exec_Next,
+
+      --  Execution will stop at the next statement in the same frame.  In
+      --  case of compound statement, stop after the compound statement.
+      Exec_Next_Stmt);
 
    Exec_State : Exec_State_Type := Exec_Run;
 
+   --  Current frame for next.
    Exec_Instance : Block_Instance_Acc;
+
+   --  Current statement for next_stmt.
+   Exec_Statement : Iir;
 
    -- Disp a message during execution.
    procedure Error_Msg_Exec (Msg: String; Loc: in Iir) is
@@ -1049,6 +1057,49 @@ package body Debugger is
       Flag_Need_Debug := True;
    end Set_Breakpoint;
 
+   function Is_Within_Statement (Stmt : Iir; Cur : Iir) return Boolean
+   is
+      Parent : Iir;
+   begin
+      Parent := Cur;
+      loop
+         if Parent = Stmt then
+            return True;
+         end if;
+         case Get_Kind (Parent) is
+            when Iir_Kinds_Sequential_Statement =>
+               Parent := Get_Parent (Parent);
+            when others =>
+               return False;
+         end case;
+      end loop;
+   end Is_Within_Statement;
+
+   --  Next statement in the same frame, but handle compound statements as
+   --  one statement.
+   procedure Next_Stmt_Proc (Line : String)
+   is
+      pragma Unreferenced (Line);
+   begin
+      Exec_State := Exec_Next_Stmt;
+      Exec_Instance := Dbg_Top_Frame;
+      Exec_Statement := Dbg_Top_Frame.Stmt;
+      Flag_Need_Debug := True;
+      Command_Status := Status_Quit;
+   end Next_Stmt_Proc;
+
+   --  Finish parent statement.
+   procedure Finish_Stmt_Proc (Line : String)
+   is
+      pragma Unreferenced (Line);
+   begin
+      Exec_State := Exec_Next_Stmt;
+      Exec_Instance := Dbg_Top_Frame;
+      Exec_Statement := Get_Parent (Dbg_Top_Frame.Stmt);
+      Flag_Need_Debug := True;
+      Command_Status := Status_Quit;
+   end Finish_Stmt_Proc;
+
    procedure Next_Proc (Line : String)
    is
       pragma Unreferenced (Line);
@@ -1644,10 +1695,22 @@ package body Debugger is
       Next => Menu_Down'Access,
       Proc => Up_Proc'Access);
 
+   Menu_Nstmt : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("ns*tmt"),
+      Next => Menu_Up'Access,
+      Proc => Next_Stmt_Proc'Access);
+
+   Menu_Fstmt : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("fs*tmt"),
+      Next => Menu_Nstmt'Access,
+      Proc => Finish_Stmt_Proc'Access);
+
    Menu_Next : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("n*ext"),
-      Next => Menu_Up'Access,
+      Next => Menu_Estmt'Access,
       Proc => Next_Proc'Access);
 
    Menu_Step : aliased Menu_Entry :=
@@ -1831,7 +1894,8 @@ package body Debugger is
    Prompt_Init  : constant String := "init> " & ASCII.NUL;
    Prompt_Elab  : constant String := "elab> " & ASCII.NUL;
 
-   procedure Debug (Reason: Debug_Reason) is
+   procedure Debug (Reason: Debug_Reason)
+   is
       use Grt.Readline;
       Raw_Line : Char_Ptr;
       Prompt : System.Address;
@@ -1878,15 +1942,21 @@ package body Debugger is
                      return;
                   end if;
                when Exec_Single_Step =>
-                  --  Default state.
-                  Exec_State := Exec_Run;
+                  null;
                when Exec_Next =>
                   if Current_Process.Instance /= Exec_Instance then
                      return;
                   end if;
-                  --  Default state.
-                  Exec_State := Exec_Run;
+               when Exec_Next_Stmt =>
+                  if Current_Process.Instance /= Exec_Instance
+                    or else Is_Within_Statement (Exec_Statement,
+                                                 Current_Process.Instance.Stmt)
+                  then
+                     return;
+                  end if;
             end case;
+            --  Default state.
+            Exec_State := Exec_Run;
             Set_Top_Frame (Current_Process.Instance);
             declare
                Stmt : constant Iir := Dbg_Cur_Frame.Stmt;
