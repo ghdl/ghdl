@@ -38,6 +38,7 @@
 # save working directory
 WorkingDir=$(pwd)
 ScriptDir="$(dirname $0)"
+ScriptDir="$(realpath $ScriptDir)"
 
 # source configuration file from GHDL's 'vendors' library directory
 source $ScriptDir/config.sh
@@ -179,8 +180,6 @@ else
 		GRC_COMMAND="grcat $ScriptDir/ghdl.grcrules"
 	fi
 fi
-
-GRC_COMMAND="cat"
 
 STOPCOMPILING=FALSE
 
