@@ -952,7 +952,7 @@ package body Iir_Values is
             end loop;
             case Last_Enum is
                when None =>
-                  Put ("""");
+                  Put ("""""");  --  Simply ""
                when Identifier =>
                   null;
                when Char =>

@@ -15,6 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Types; use Types;
 with Iirs; use Iirs;
 
 package Parse is
@@ -28,6 +29,12 @@ package Parse is
 
    -- Parse an relationnal operator and its rhs.
    function Parse_Relation_Rhs (Left : Iir) return Iir;
+
+   --  Convert the STR (0 .. LEN - 1) into a operator symbol identifier.
+   --  Emit an error message if the name is not an operator name.
+   function Str_To_Operator_Name (Str_Id : String8_Id;
+                                  Len : Nat32;
+                                  Loc : Location_Type) return Name_Id;
 
    -- Parse a single design unit.
    -- The scanner must have been initialized, however, the current_token

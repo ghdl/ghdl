@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 with Iir_Chains; use Iir_Chains;
 with Ada.Text_IO; use Ada.Text_IO;
-with Types; use Types;
 with Tokens; use Tokens;
 with Scanner; use Scanner;
 with Iirs_Utils; use Iirs_Utils;
@@ -5292,7 +5291,10 @@ package body Parse is
       loop
          Set_Condition (Clause, Parse_Expression);
          Expect (Tok_Then, "'then' is expected here");
+
+         --  Skip 'then'.
          Scan;
+
          Set_Sequential_Statement_Chain
            (Clause, Parse_Sequential_Statements (Res));
          exit when Current_Token = Tok_End;
@@ -5301,11 +5303,15 @@ package body Parse is
          Set_Else_Clause (Clause, N_Clause);
          Clause := N_Clause;
          if Current_Token = Tok_Else then
+
+            --  Skip 'else'.
             Scan;
+
             Set_Sequential_Statement_Chain
               (Clause, Parse_Sequential_Statements (Res));
             exit;
          elsif Current_Token = Tok_Elsif then
+            --  Skip 'elsif'.
             Scan;
          else
             Error_Msg_Parse ("'else' or 'elsif' expected");

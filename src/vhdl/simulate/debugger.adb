@@ -22,6 +22,7 @@ with GNAT.Table;
 with Types; use Types;
 with Iir_Values; use Iir_Values;
 with Name_Table;
+with Str_Table;
 with Files_Map;
 with Parse;
 with Scanner;
@@ -895,7 +896,7 @@ package body Debugger is
          Len := 0;
          loop
             C := Buf (Pos + Len);
-            exit when C = ASCII.CR or C = ASCII.LF or C = ASCII.NUL;
+            exit when C = ASCII.CR or C = ASCII.LF or C = ASCII.EOT;
             Len := Len + 1;
          end loop;
 
@@ -917,7 +918,7 @@ package body Debugger is
          Put_Line (String (Buf (Pos .. Pos + Len - 1)));
 
          --  Skip EOL.
-         exit when C = ASCII.NUL;
+         exit when C = ASCII.EOT;
          Pos := Pos + Len + 1;
          if C = ASCII.CR then
             if Buf (Pos) = ASCII.LF then
@@ -1127,7 +1128,10 @@ package body Debugger is
       case Get_Kind (El) is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration =>
-            if Get_Identifier (El) = Break_Id then
+            if Get_Identifier (El) = Break_Id
+              and then
+              Get_Implicit_Definition (El) not in Iir_Predefined_Implicit
+            then
                Set_Breakpoint
                  (Get_Sequential_Statement_Chain (Get_Subprogram_Body (El)));
             end if;
@@ -1143,7 +1147,28 @@ package body Debugger is
       P : Natural;
    begin
       P := Skip_Blanks (Line);
-      Break_Id := Name_Table.Get_Identifier (Line (P .. Line'Last));
+      if Line (P) = '"' then
+         --  An operator name.
+         declare
+            use Str_Table;
+            Str : String8_Id;
+            Len : Nat32;
+         begin
+            Str := Create_String8;
+            Len := 0;
+            P := P + 1;
+            while Line (P) /= '"' loop
+               Append_String8_Char (Line (P));
+               Len := Len + 1;
+               P := P + 1;
+            end loop;
+            Break_Id := Parse.Str_To_Operator_Name (Str, Len, No_Location);
+            --  FIXME: free string.
+            --  FIXME: catch error.
+         end;
+      else
+         Break_Id := Name_Table.Get_Identifier (Line (P .. Line'Last));
+      end if;
       Status := Walk_Declarations (Cb_Set_Break'Access);
       pragma Assert (Status = Walk_Continue);
    end Break_Proc;
@@ -1710,7 +1735,7 @@ package body Debugger is
    Menu_Next : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("n*ext"),
-      Next => Menu_Estmt'Access,
+      Next => Menu_Fstmt'Access,
       Proc => Next_Proc'Access);
 
    Menu_Step : aliased Menu_Entry :=
