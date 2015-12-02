@@ -55,6 +55,9 @@ package Canon is
    --  Canonicalize a subprogram call.
    procedure Canon_Subprogram_Call (Call : Iir);
 
+   --  Canon on expressions, mainly for function calls.
+   procedure Canon_Expression (Expr: Iir);
+
    -- Compute the sensivity list of EXPR and add it to SENSIVITY_LIST.
    -- If IS_TARGET is true, the longuest static prefix of the signal name
    -- is not added to the sensitivity list, but other static prefix (such

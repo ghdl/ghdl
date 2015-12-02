@@ -22,7 +22,7 @@ Analysis command
 
 .. index:: analysis
 
-.. index:: *-a* command
+.. index:: -a command
 
 Analyze one or severals files::
 
@@ -48,7 +48,7 @@ Elaboration command
 
 .. index:: elaboration
 
-.. index:: *-e* command
+.. index:: -e command
 
 Elaborate a design::
 
@@ -101,7 +101,7 @@ Run command
 
 .. index:: run
 
-.. index:: *-r* command
+.. index:: -r command
 
 Run (or simulate) a design::
 
@@ -131,7 +131,7 @@ Elaborate and run command
 
 .. index:: elaborate and run
 
-.. index:: *--elab-run* command
+.. index:: --elab-run command
 
 Elaborate and then simulate a design unit::
 
@@ -148,7 +148,7 @@ Bind command
 
 .. index:: binding
 
-.. index:: *--bind* command
+.. index:: --bind command
 
 Bind a design unit and prepare the link step::
 
@@ -168,7 +168,7 @@ Link command
 
 .. index:: linking
 
-.. index:: *--link* command
+.. index:: --link command
 
 Link an already bound design unit::
 
@@ -184,7 +184,7 @@ equivalent to the bind command followed by the link command.
 List link command
 -----------------
 
-.. index:: *--list-link* command
+.. index:: --list-link command
 
 Display files which will be linked::
 
@@ -203,7 +203,7 @@ Check syntax command
 
 .. index:: checking syntax
 
-.. index:: *-s* command
+.. index:: -s command
 
 Analyze files but do not generate code::
 
@@ -219,7 +219,7 @@ Analyze and elaborate command
 
 .. index:: Analyze and elaborate command
 
-.. index:: *-c* command
+.. index:: -c command
 
 Analyze files and elaborate them at the same time.
 
@@ -582,7 +582,7 @@ Import command
 
 .. index:: importing files
 
-.. index:: *-i* command
+.. index:: -i command
 
 Add files in the work design library::
 
@@ -611,7 +611,7 @@ Make command
 
 .. index:: make
 
-.. index:: *-m* command
+.. index:: -m command
 
 
 Analyze automatically outdated files and elaborate a design::
@@ -659,7 +659,7 @@ such a case, re-run the make command of GHDL.
 Generate Makefile command
 -------------------------
 
-.. index:: *--gen-makefile* command
+.. index:: --gen-makefile command
 
 Generate a Makefile to build a design unit::
 
@@ -679,15 +679,16 @@ Directory command
 
 .. index:: displaying library
 
-.. index:: *-d* command
+.. index:: --dir command
+.. option::--dir
 
 Display the name of the units contained in a design library::
 
-  ghdl -d [options]
+  ghdl --dir [options] [libs]
 
-
-The directory command, selected with the `-d` command line argument
-displays the content of the work design library.  All options are
+The directory command, selected with the `--dir` command line argument
+displays the content of the design libraries (by default the
+:samp:`work` library).  All options are
 allowed, but only a few are meaningful: :option:`--work=NAME`,
 :option:`--workdir=PATH` and :option:`--std=VER`.
 
@@ -696,7 +697,7 @@ Clean command
 
 .. index:: cleaning
 
-.. index:: *--clean* command
+.. index:: --clean command
 
 Remove object and executable files but keep the library::
 
@@ -716,7 +717,7 @@ Remove command
 
 .. index:: cleaning all
 
-.. index:: *--remove* command
+.. index:: --remove command
 
 Do like the clean command but remove the library too::
 
@@ -734,7 +735,7 @@ Copy command
 
 .. index:: copying library
 
-.. index:: *--copy* command
+.. index:: --copy command
 
 Make a local copy of an existing library::
 
@@ -807,7 +808,7 @@ files, therefore, they work even if a file has semantic errors.
 Pretty print command
 --------------------
 
-.. index:: *--pp-html* command
+.. index:: --pp-html command
 
 .. index:: pretty printing
 
@@ -834,7 +835,7 @@ See :ref:`Cross-reference_command`, for more details about this CSS file.
 Find command
 ------------
 
-.. index:: *-f* command
+.. index:: -f command
 
 Display the name of the design units in files::
 
@@ -848,7 +849,7 @@ design hierarchy.
 Chop command
 ------------
 
-.. index:: *--chop* command
+.. index:: --chop command
 
 Chop (or split) files at design unit::
 
@@ -877,7 +878,7 @@ reduced too.
 Lines command
 -------------
 
-.. index:: *--lines* command
+.. index:: --lines command
 
 Display on the standard output lines of files preceded by line number::
 
@@ -894,9 +895,9 @@ There are a few GHDL commands which are seldom useful.
 Help command
 ------------
 
-.. index:: *-h* command
+.. index:: -h command
 
-.. index:: *--help* command
+.. index:: --help command
 
 Display (on the standard output) a short description of the all the commands
 available.  If the help switch is followed by a command switch, then options
@@ -912,7 +913,7 @@ for this later command are displayed::
 Disp config command
 -------------------
 
-.. index:: *--disp-config* command
+.. index:: --disp-config command
 
 .. index:: display configuration
 
@@ -926,7 +927,7 @@ This may be useful to track installation errors.
 Disp standard command
 ---------------------
 
-.. index:: *--disp-standard* command
+.. index:: --disp-standard command
 
 .. index:: display :samp:`std.standard`
 
@@ -938,7 +939,7 @@ Display the :samp:`std.standard` package::
 Version command
 ---------------
 
-.. index:: *--version* command
+.. index:: --version command
 
 .. index:: version
 

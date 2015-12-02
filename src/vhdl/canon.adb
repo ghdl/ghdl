@@ -40,9 +40,6 @@ package body Canon is
 
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir);
 
-   --  Canon on expressions, mainly for function calls.
-   procedure Canon_Expression (Expr: Iir);
-
    --  Canonicalize an association list.
    --  If ASSOCIATION_LIST is not null, then it is re-ordored and returned.
    --  If ASSOCIATION_LIST is null then:
