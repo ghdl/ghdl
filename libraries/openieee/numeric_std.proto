@@ -1,0 +1,41 @@
+--  This -*- vhdl -*- file is part of GHDL.
+--  IEEE 1076.3 compliant numeric std package.
+--  Copyright (C) 2015 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING2.  If not see
+--  <http://www.gnu.org/licenses/>.
+
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+
+package NUMERIC_STD is
+  type UNSIGNED is array (natural range <>) of STD_LOGIC;
+  type SIGNED   is array (natural range <>) of STD_LOGIC;
+
+  function TO_01 (S : SIGNED;   XMAP : STD_LOGIC := '0') return SIGNED;
+  function TO_01 (S : UNSIGNED; XMAP : STD_LOGIC := '0') return UNSIGNED;
+  --  Convert 'H' and '1' to '1', 'L' and '0' to '0'.
+  --  If any other value is present, return (others => XMAP)
+  --  Issue a warning in that case, and if S is a null array.
+  --  Result index range is S'Length - 1 downto 0.
+
+  function std_match (l, r : std_ulogic) return boolean;
+  function std_match (l, r : std_ulogic_vector) return boolean;
+  function std_match (l, r : std_logic_vector) return boolean;
+  function std_match (l, r : UNSIGNED) return boolean;
+  function std_match (l, r : SIGNED) return boolean;
+  --  Return True iff L and R matches.
+
+  @COMMON
+end NUMERIC_STD;

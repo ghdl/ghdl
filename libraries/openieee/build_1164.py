@@ -14,7 +14,7 @@
 #  for more details.
 #
 #  You should have received a copy of the GNU General Public License
-#  along with GCC; see the file COPYING3.  If not see
+#  along with GCC; see the file COPYING2.  If not see
 #  <http://www.gnu.org/licenses/>.
 
 import re

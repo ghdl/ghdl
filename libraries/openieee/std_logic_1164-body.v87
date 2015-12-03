@@ -481,10 +481,10 @@ package body std_logic_1164 is
 
 
   type table_std_x01z is array (std_ulogic) of X01Z;
-  constant std_to_x01z : table_std_x01 := ('U' | 'X' | 'W' | '-' => 'X',
-                                           '0' | 'L'             => '0',
-                                           '1' | 'H'             => '1',
-                                           'Z'                   => 'Z');
+  constant std_to_x01z : table_std_x01z := ('U' | 'X' | 'W' | '-' => 'X',
+                                            '0' | 'L'             => '0',
+                                            '1' | 'H'             => '1',
+                                            'Z'                   => 'Z');
 
   type table_std_ux01 is array (std_ulogic) of UX01;
   constant std_to_ux01 : table_std_ux01 := ('U'                   => 'U',
