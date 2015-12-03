@@ -136,7 +136,7 @@ package body Ghdlmain is
          Put_Line ("Also see --options-help for analyzer options.");
          New_Line;
          Put_Line ("Please, refer to the GHDL manual for more information.");
-         Put_Line ("Report bugs on http://gna.org/projects/ghdl");
+         Put_Line ("Report issues on https://github.com/tgingold/ghdl");
       elsif Args'Length = 1 then
          C := Find_Command (Args (1).all);
          if C = null then

@@ -9,10 +9,11 @@
 # srXXX is for support reported on https://gna.org/support/?group=ghdl
 # debXX is for bugs report on http://bugs.debian.org/
 # ticketXX is from https://sourceforge.net/p/ghdl-updates/tickets/
+# issueXXX is from https://github.com/tgingold/ghdl/issues
 
 set -e
 
-dirs="bug* sr* deb* ticket*"
+dirs="bug* sr* deb* ticket* issue*"
 failures=""
 full=n
 
