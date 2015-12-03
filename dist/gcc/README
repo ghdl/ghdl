@@ -65,7 +65,7 @@ end Example;
 
 There is a mailing list for any questions.  You can subscribe via:
   https://mail.gna.org/listinfo/ghdl-discuss/
-Please report bugs on https://gna.org/bugs/?group=ghdl
+Please report bugs on https://github.com/tgingold/ghdl/issues
 
 If you cannot compile, please report the gcc version, GNAT version and gcc
 source version.

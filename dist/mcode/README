@@ -42,6 +42,6 @@ run winbuild.
 
 The installer is in the windows directory.
 
-Send bugs and comments on http://gna.org/project/ghdl
+Send bugs and comments on https://github.com/tgingold/ghdl
 
 Tristan Gingold.
