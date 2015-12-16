@@ -546,7 +546,7 @@ package body Grt.Fst is
                      Str : Std_String_Uncons (0 .. Len - 1);
                   begin
                      for I in Str'Range loop
-                        Str (I) := From_Bit (Sig (I).Value.B1);
+                        Str (I) := From_Bit (Sig (I).Value_Ptr.B1);
                      end loop;
                      fstWriterEmitValueChange (Context, Hand, Str'Address);
                   end;
@@ -556,12 +556,12 @@ package body Grt.Fst is
                      Str : Std_String_Uncons (0 .. Len - 1);
                   begin
                      for I in Str'Range loop
-                        Str (I) := From_Std (Sig (I).Value.E8);
+                        Str (I) := From_Std (Sig (I).Value_Ptr.E8);
                      end loop;
                      fstWriterEmitValueChange (Context, Hand, Str'Address);
                   end;
                when Vcd_Integer32 =>
-                  Fst_Put_Integer32 (Hand, Sig (0).Value.E32);
+                  Fst_Put_Integer32 (Hand, Sig (0).Value_Ptr.E32);
                when Vcd_Float64 =>
                   null;
                when Vcd_Bad =>

@@ -240,7 +240,7 @@ package body Trans.Helpers2 is
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
          Open_Temp;
-         Sig := Chap6.Translate_Name (El);
+         Sig := Chap6.Translate_Name (El, Mode_Signal);
          Register_Signal (Sig, Get_Type (El), Proc);
          Close_Temp;
       end loop;
@@ -314,4 +314,3 @@ package body Trans.Helpers2 is
                        (Ghdl_I32_Type, Integer_64 (Line))));
    end Assoc_Filename_Line;
 end Trans.Helpers2;
-

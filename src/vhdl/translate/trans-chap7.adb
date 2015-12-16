@@ -1937,15 +1937,16 @@ package body Trans.Chap7 is
    is
       Enums : constant Iir_List :=
         Get_Enumeration_Literal_List (Get_Base_Type (Get_Type (Left)));
-      Name  : Mnode;
+      Sig  : Mnode;
+      Val  : Mnode;
    begin
-      Name := Stabilize (Chap6.Translate_Name (Left), True);
+      Chap6.Translate_Signal_Name (Left, Sig, Val);
       return New_Dyadic_Op
         (ON_And,
-         New_Value (Chap14.Get_Signal_Field (Name, Ghdl_Signal_Event_Field)),
+         New_Value (Chap14.Get_Signal_Field (Sig, Ghdl_Signal_Event_Field)),
          New_Compare_Op
            (ON_Eq,
-            New_Value (New_Access_Element (M2E (Name))),
+            M2E (Val),
             New_Lit (Get_Ortho_Expr
                        (Get_Nth_Element (Enums, Boolean'Pos (Is_Rising)))),
             Std_Boolean_Type_Node));
@@ -3485,33 +3486,77 @@ package body Trans.Chap7 is
       end case;
    end Translate_Type_Conversion;
 
+   procedure Translate_Type_Conversion_Bounds
+     (Res : Mnode; Src : Mnode; Res_Type : Iir; Src_Type : Iir; Loc : Iir)
+   is
+      Res_Indexes  : constant Iir_List := Get_Index_Subtype_List (Res_Type);
+      Src_Indexes : constant Iir_List := Get_Index_Subtype_List (Src_Type);
+      Res_Base_Type     : constant Iir := Get_Base_Type (Res_Type);
+      Src_Base_Type    : constant Iir := Get_Base_Type (Src_Type);
+      Res_Base_Indexes  : constant Iir_List :=
+        Get_Index_Subtype_List (Res_Base_Type);
+      Src_Base_Indexes : constant Iir_List :=
+        Get_Index_Subtype_List (Src_Base_Type);
+
+      R_El              : Iir;
+      S_El              : Iir;
+   begin
+      --  Convert bounds.
+      for I in Natural loop
+         R_El := Get_Index_Type (Res_Indexes, I);
+         S_El := Get_Index_Type (Src_Indexes, I);
+         exit when S_El = Null_Iir;
+         declare
+            Rb_Ptr          : Mnode;
+            Sb_Ptr          : Mnode;
+            Ee              : O_Enode;
+            Same_Index_Type : constant Boolean :=
+              (Get_Index_Type (Res_Base_Indexes, I)
+               = Get_Index_Type (Src_Base_Indexes, I));
+         begin
+            Open_Temp;
+            Rb_Ptr := Stabilize (Chap3.Bounds_To_Range (Res, Res_Type, I + 1));
+            Sb_Ptr := Stabilize (Chap3.Bounds_To_Range (Src, Src_Type, I + 1));
+            --  Convert left and right (unless they have the same type -
+            --  this is an optimization but also this deals with null
+            --  array in common cases).
+            Ee := M2E (Chap3.Range_To_Left (Sb_Ptr));
+            if not Same_Index_Type then
+               Ee := Translate_Type_Conversion (Ee, S_El, R_El, Loc);
+            end if;
+            New_Assign_Stmt (M2Lv (Chap3.Range_To_Left (Rb_Ptr)), Ee);
+            Ee := M2E (Chap3.Range_To_Right (Sb_Ptr));
+            if not Same_Index_Type then
+               Ee := Translate_Type_Conversion (Ee, S_El, R_El, Loc);
+            end if;
+            New_Assign_Stmt (M2Lv (Chap3.Range_To_Right (Rb_Ptr)), Ee);
+            --  Copy Dir and Length.
+            New_Assign_Stmt (M2Lv (Chap3.Range_To_Dir (Rb_Ptr)),
+                             M2E (Chap3.Range_To_Dir (Sb_Ptr)));
+            New_Assign_Stmt (M2Lv (Chap3.Range_To_Length (Rb_Ptr)),
+                             M2E (Chap3.Range_To_Length (Sb_Ptr)));
+            Close_Temp;
+         end;
+      end loop;
+   end Translate_Type_Conversion_Bounds;
+
    function Translate_Fat_Array_Type_Conversion
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
      return O_Enode
    is
       Res_Info     : constant Type_Info_Acc := Get_Info (Res_Type);
       Expr_Info    : constant Type_Info_Acc := Get_Info (Expr_Type);
-      Res_Indexes  : constant Iir_List :=
-        Get_Index_Subtype_List (Res_Type);
-      Expr_Indexes : constant Iir_List :=
-        Get_Index_Subtype_List (Expr_Type);
 
-      Res_Base_Type     : constant Iir := Get_Base_Type (Res_Type);
-      Expr_Base_Type    : constant Iir := Get_Base_Type (Expr_Type);
-      Res_Base_Indexes  : constant Iir_List :=
-        Get_Index_Subtype_List (Res_Base_Type);
-      Expr_Base_Indexes : constant Iir_List :=
-        Get_Index_Subtype_List (Expr_Base_Type);
       Res               : Mnode;
       E                 : Mnode;
       Bounds            : O_Dnode;
-      R_El              : Iir;
-      E_El              : Iir;
    begin
       Res := Create_Temp (Res_Info, Mode_Value);
       Bounds := Create_Temp (Res_Info.T.Bounds_Type);
-      E := Stabilize (E2M (Expr, Expr_Info, Mode_Value));
+
       Open_Temp;
+      E := Stabilize (E2M (Expr, Expr_Info, Mode_Value));
+
       --  Set base.
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Array_Base (Res)),
@@ -3523,44 +3568,12 @@ package body Trans.Chap7 is
          New_Address (New_Obj (Bounds), Res_Info.T.Bounds_Ptr_Type));
 
       --  Convert bounds.
-      for I in Natural loop
-         R_El := Get_Index_Type (Res_Indexes, I);
-         E_El := Get_Index_Type (Expr_Indexes, I);
-         exit when R_El = Null_Iir;
-         declare
-            Rb_Ptr          : Mnode;
-            Eb_Ptr          : Mnode;
-            Ee              : O_Enode;
-            Same_Index_Type : constant Boolean :=
-              (Get_Index_Type (Res_Base_Indexes, I)
-               = Get_Index_Type (Expr_Base_Indexes, I));
-         begin
-            Open_Temp;
-            Rb_Ptr := Stabilize
-              (Chap3.Get_Array_Range (Res, Res_Type, I + 1));
-            Eb_Ptr := Stabilize
-              (Chap3.Get_Array_Range (E, Expr_Type, I + 1));
-            --  Convert left and right (unless they have the same type -
-            --  this is an optimization but also this deals with null
-            --  array in common cases).
-            Ee := M2E (Chap3.Range_To_Left (Eb_Ptr));
-            if not Same_Index_Type then
-               Ee := Translate_Type_Conversion (Ee, E_El, R_El, Loc);
-            end if;
-            New_Assign_Stmt (M2Lv (Chap3.Range_To_Left (Rb_Ptr)), Ee);
-            Ee := M2E (Chap3.Range_To_Right (Eb_Ptr));
-            if not Same_Index_Type then
-               Ee := Translate_Type_Conversion (Ee, E_El, R_El, Loc);
-            end if;
-            New_Assign_Stmt (M2Lv (Chap3.Range_To_Right (Rb_Ptr)), Ee);
-            --  Copy Dir and Length.
-            New_Assign_Stmt (M2Lv (Chap3.Range_To_Dir (Rb_Ptr)),
-                             M2E (Chap3.Range_To_Dir (Eb_Ptr)));
-            New_Assign_Stmt (M2Lv (Chap3.Range_To_Length (Rb_Ptr)),
-                             M2E (Chap3.Range_To_Length (Eb_Ptr)));
-            Close_Temp;
-         end;
-      end loop;
+      Translate_Type_Conversion_Bounds
+        (Dv2M (Bounds, Res_Info, Mode_Value,
+               Res_Info.T.Bounds_Type, Res_Info.T.Bounds_Ptr_Type),
+         Stabilize (Chap3.Get_Array_Bounds (E)),
+         Res_Type, Expr_Type, Loc);
+
       Close_Temp;
       return M2E (Res);
    end Translate_Fat_Array_Type_Conversion;
@@ -3597,25 +3610,6 @@ package body Trans.Chap7 is
    begin
       null;
    end Sig2val_Finish_Data_Composite;
-
-   procedure Translate_Signal_Assign_Effective_Non_Composite
-     (Targ : Mnode; Targ_Type : Iir; Data : Mnode)
-   is
-      pragma Unreferenced (Targ_Type);
-   begin
-      New_Assign_Stmt (New_Access_Element (M2E (Targ)), M2E (Data));
-   end Translate_Signal_Assign_Effective_Non_Composite;
-
-   procedure Translate_Signal_Assign_Effective is new Foreach_Non_Composite
-     (Data_Type => Mnode,
-      Composite_Data_Type => Mnode,
-      Do_Non_Composite => Translate_Signal_Assign_Effective_Non_Composite,
-      Prepare_Data_Array => Sig2val_Prepare_Composite,
-      Update_Data_Array => Sig2val_Update_Data_Array,
-      Finish_Data_Array => Sig2val_Finish_Data_Composite,
-      Prepare_Data_Record => Sig2val_Prepare_Composite,
-      Update_Data_Record => Sig2val_Update_Data_Record,
-      Finish_Data_Record => Sig2val_Finish_Data_Composite);
 
    procedure Translate_Signal_Assign_Driving_Non_Composite
      (Targ : Mnode; Targ_Type : Iir; Data: Mnode) is
@@ -3703,22 +3697,6 @@ package body Trans.Chap7 is
       end if;
    end Translate_Signal_Value;
 
-   --  Get the effective value of a simple signal SIG.
-   function Read_Signal_Value (Sig : O_Enode; Sig_Type : Iir) return O_Enode
-   is
-      pragma Unreferenced (Sig_Type);
-   begin
-      return New_Value (New_Access_Element (Sig));
-   end Read_Signal_Value;
-
-   --  Get the value of signal SIG.
-   function Translate_Signal is new Translate_Signal_Value
-     (Read_Value => Read_Signal_Value);
-
-   function Translate_Signal_Effective_Value
-     (Sig : O_Enode; Sig_Type : Iir) return O_Enode
-         renames Translate_Signal;
-
    function Read_Signal_Driving_Value (Sig : O_Enode; Sig_Type : Iir)
                                       return O_Enode is
    begin
@@ -3733,9 +3711,6 @@ package body Trans.Chap7 is
      (Sig : O_Enode; Sig_Type : Iir) return O_Enode
          renames Translate_Signal_Driving_Value_1;
 
-   procedure Set_Effective_Value
-     (Sig : Mnode; Sig_Type : Iir; Val : Mnode)
-         renames Translate_Signal_Assign_Effective;
    procedure Set_Driving_Value
      (Sig : Mnode; Sig_Type : Iir; Val : Mnode)
          renames Translate_Signal_Assign_Driving;
@@ -3895,16 +3870,7 @@ package body Trans.Chap7 is
             | Iir_Kind_Guard_Signal_Declaration
             | Iir_Kind_Attribute_Value
             | Iir_Kind_Attribute_Name =>
-            declare
-               L : Mnode;
-            begin
-               L := Chap6.Translate_Name (Expr);
-
-               Res := M2E (L);
-               if Get_Object_Kind (L) = Mode_Signal then
-                  Res := Translate_Signal (Res, Expr_Type);
-               end if;
-            end;
+            Res := M2E (Chap6.Translate_Name (Expr, Mode_Value));
 
          when Iir_Kind_Iterator_Declaration =>
             declare
@@ -3974,9 +3940,8 @@ package body Trans.Chap7 is
 
          when Iir_Kind_Type_Conversion =>
             declare
-               Conv_Expr : Iir;
+               Conv_Expr : constant Iir := Get_Expression (Expr);
             begin
-               Conv_Expr := Get_Expression (Expr);
                Res := Translate_Type_Conversion
                  (Translate_Expression (Conv_Expr), Get_Type (Conv_Expr),
                   Expr_Type, Expr);

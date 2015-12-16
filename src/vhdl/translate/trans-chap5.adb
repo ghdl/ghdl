@@ -134,7 +134,7 @@ package body Trans.Chap5 is
       for I in Natural loop
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
-         Gen_Elab_Disconnect (Chap6.Translate_Name (El),
+         Gen_Elab_Disconnect (Chap6.Translate_Name (El, Mode_Signal),
                               Get_Type (El), Val);
       end loop;
    end Elab_Disconnection_Specification;
@@ -155,7 +155,7 @@ package body Trans.Chap5 is
      );
 
    type Connect_Data is record
-      Actual_Node : Mnode;
+      Actual_Sig  : Mnode;
       Actual_Type : Iir;
 
       --  Mode of the connection.
@@ -167,26 +167,25 @@ package body Trans.Chap5 is
 
    --  Connect_effective: FORMAL is set from ACTUAL.
    --  Connect_Source: ACTUAL is set from FORMAL (source of ACTUAL).
-   procedure Connect_Scalar (Formal_Node : Mnode;
-                             Formal_Type : Iir;
-                             Data        : Connect_Data)
+   procedure Connect_Scalar
+     (Formal_Sig : Mnode; Formal_Type : Iir; Data : Connect_Data)
    is
       Act_Node, Form_Node : Mnode;
    begin
       if Data.By_Copy then
-         New_Assign_Stmt (M2Lv (Formal_Node), M2E (Data.Actual_Node));
+         New_Assign_Stmt (M2Lv (Formal_Sig), M2E (Data.Actual_Sig));
          return;
       end if;
 
       case Data.Mode is
          when Connect_Both =>
             Open_Temp;
-            Act_Node := Stabilize (Data.Actual_Node, True);
-            Form_Node := Stabilize (Formal_Node, True);
+            Act_Node := Stabilize (Data.Actual_Sig, True);
+            Form_Node := Stabilize (Formal_Sig, True);
          when Connect_Source
             | Connect_Effective =>
-            Act_Node := Data.Actual_Node;
-            Form_Node := Formal_Node;
+            Act_Node := Data.Actual_Sig;
+            Form_Node := Formal_Sig;
          when Connect_Value =>
             null;
       end case;
@@ -221,12 +220,11 @@ package body Trans.Chap5 is
 
       if Data.Mode = Connect_Value then
          declare
-            Type_Info : Type_Info_Acc;
+            Type_Info : constant Type_Info_Acc := Get_Info (Formal_Type);
             Subprg    : O_Dnode;
             Constr    : O_Assoc_List;
             Conv      : O_Tnode;
          begin
-            Type_Info := Get_Info (Formal_Type);
             case Type_Info.Type_Mode is
                when Type_Mode_B1 =>
                   Subprg := Ghdl_Signal_Associate_B1;
@@ -251,10 +249,10 @@ package body Trans.Chap5 is
             end case;
             Start_Association (Constr, Subprg);
             New_Association (Constr,
-                             New_Convert_Ov (New_Value (M2Lv (Formal_Node)),
-                               Ghdl_Signal_Ptr));
+                             New_Convert_Ov (New_Value (M2Lv (Formal_Sig)),
+                                             Ghdl_Signal_Ptr));
             New_Association (Constr,
-                             New_Convert_Ov (M2E (Data.Actual_Node), Conv));
+                             New_Convert_Ov (M2E (Data.Actual_Sig), Conv));
             New_Procedure_Call (Constr);
          end;
       end if;
@@ -266,33 +264,31 @@ package body Trans.Chap5 is
 
    function Connect_Prepare_Data_Composite
      (Targ : Mnode; Formal_Type : Iir; Data : Connect_Data)
-         return Connect_Data
+     return Connect_Data
    is
       pragma Unreferenced (Targ, Formal_Type);
       Res   : Connect_Data;
-      Atype : Iir;
+      Atype : constant Iir := Get_Base_Type (Data.Actual_Type);
    begin
-      Atype := Get_Base_Type (Data.Actual_Type);
       if Get_Kind (Atype) = Iir_Kind_Record_Type_Definition then
          Res := Data;
-         Stabilize (Res.Actual_Node);
+         Stabilize (Res.Actual_Sig);
          return Res;
       else
          return Data;
       end if;
    end Connect_Prepare_Data_Composite;
 
-   function Connect_Update_Data_Array (Data        : Connect_Data;
-                                       Formal_Type : Iir;
-                                       Index       : O_Dnode)
-                                          return Connect_Data
+   function Connect_Update_Data_Array
+     (Data : Connect_Data; Formal_Type : Iir; Index : O_Dnode)
+     return Connect_Data
    is
       pragma Unreferenced (Formal_Type);
       Res : Connect_Data;
    begin
       --  FIXME: should check matching elements!
-      Res := (Actual_Node =>
-                Chap3.Index_Base (Chap3.Get_Array_Base (Data.Actual_Node),
+      Res := (Actual_Sig =>
+                Chap3.Index_Base (Chap3.Get_Array_Base (Data.Actual_Sig),
                   Data.Actual_Type, New_Obj_Value (Index)),
               Actual_Type => Get_Element_Subtype (Data.Actual_Type),
               Mode => Data.Mode,
@@ -300,16 +296,15 @@ package body Trans.Chap5 is
       return Res;
    end Connect_Update_Data_Array;
 
-   function Connect_Update_Data_Record (Data        : Connect_Data;
-                                        Formal_Type : Iir;
-                                        El          : Iir_Element_Declaration)
-                                           return Connect_Data
+   function Connect_Update_Data_Record
+     (Data : Connect_Data; Formal_Type : Iir; El : Iir_Element_Declaration)
+     return Connect_Data
    is
       pragma Unreferenced (Formal_Type);
       Res : Connect_Data;
    begin
-      Res := (Actual_Node =>
-                Chap6.Translate_Selected_Element (Data.Actual_Node, El),
+      Res := (Actual_Sig =>
+                Chap6.Translate_Selected_Element (Data.Actual_Sig, El),
               Actual_Type => Get_Type (El),
               Mode => Data.Mode,
               By_Copy => Data.By_Copy);
@@ -334,49 +329,6 @@ package body Trans.Chap5 is
       Update_Data_Record => Connect_Update_Data_Record,
       Finish_Data_Record => Connect_Finish_Data_Composite);
 
-   procedure Elab_Unconstrained_Port (Port : Iir; Actual : Iir)
-   is
-      Actual_Type : constant Iir := Get_Type (Actual);
-      Act_Node    : Mnode;
-      Bounds      : Mnode;
-      Tinfo       : Type_Info_Acc;
-      Bound_Var   : O_Dnode;
-   begin
-      Open_Temp;
-      if Is_Fully_Constrained_Type (Actual_Type) then
-         Chap3.Create_Array_Subtype (Actual_Type);
-         Tinfo := Get_Info (Actual_Type);
-         Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
-         if Get_Alloc_Kind_For_Var (Tinfo.T.Array_Bounds) = Alloc_Stack then
-            --  We need a copy.
-            Bound_Var := Create_Temp (Tinfo.T.Bounds_Ptr_Type);
-            New_Assign_Stmt
-              (New_Obj (Bound_Var),
-               Gen_Alloc (Alloc_System,
-                          New_Lit (New_Sizeof (Tinfo.T.Bounds_Type,
-                                               Ghdl_Index_Type)),
-                          Tinfo.T.Bounds_Ptr_Type));
-            Gen_Memcpy (New_Obj_Value (Bound_Var),
-                        M2Addr (Bounds),
-                        New_Lit (New_Sizeof (Tinfo.T.Bounds_Type,
-                                             Ghdl_Index_Type)));
-            Bounds := Dp2M (Bound_Var, Tinfo, Mode_Value,
-                            Tinfo.T.Bounds_Type,
-                            Tinfo.T.Bounds_Ptr_Type);
-         end if;
-      else
-         Bounds := Chap3.Get_Array_Bounds (Chap6.Translate_Name (Actual));
-      end if;
-      Act_Node := Chap6.Translate_Name (Port);
-      New_Assign_Stmt
-        (-- FIXME: this works only because it is not stabilized,
-         -- and therefore the bounds field is returned and not
-         -- a pointer to the bounds.
-         M2Lp (Chap3.Get_Array_Bounds (Act_Node)),
-         M2Addr (Bounds));
-      Close_Temp;
-   end Elab_Unconstrained_Port;
-
    procedure Elab_Port_Map_Aspect_Assoc (Assoc : Iir; By_Copy : Boolean)
    is
       Formal      : constant Iir := Get_Formal (Assoc);
@@ -384,8 +336,10 @@ package body Trans.Chap5 is
       Formal_Type : constant Iir := Get_Type (Formal);
       Actual_Type : constant Iir := Get_Type (Actual);
       Inter       : constant Iir := Get_Association_Interface (Assoc);
-      Formal_Node : Mnode;
-      Actual_Node : Mnode;
+      Formal_Sig  : Mnode;
+      Formal_Val  : Mnode;
+      Actual_Sig  : Mnode;
+      Actual_Val  : Mnode;
       Data        : Connect_Data;
       Mode        : Connect_Mode;
    begin
@@ -396,14 +350,13 @@ package body Trans.Chap5 is
       if Get_In_Conversion (Assoc) = Null_Iir
         and then Get_Out_Conversion (Assoc) = Null_Iir
       then
-         Formal_Node := Chap6.Translate_Name (Formal);
-         pragma Assert (Get_Object_Kind (Formal_Node) = Mode_Signal);
+         --  Usual case: without conversions.
          if Is_Signal_Name (Actual) then
             --  LRM93 4.3.1.2
             --  For a signal of a scalar type, each source is either
             --  a driver or an OUT, INOUT, BUFFER or LINKAGE port of
             --  a component instance or of a block statement with
-            --  which the signalis associated.
+            --  which the signals associated.
 
             --  LRM93 12.6.2
             --  For a scalar signal S, the effective value of S is
@@ -431,96 +384,73 @@ package body Trans.Chap5 is
             end case;
 
             --  translate actual (abort if not a signal).
-            Actual_Node := Chap6.Translate_Name (Actual);
-            if Get_Object_Kind (Actual_Node) /= Mode_Signal then
-               raise Internal_Error;
+            Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
+            Actual_Sig := Chap6.Translate_Name (Actual, Mode_Signal);
+
+            if By_Copy then
+               Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
+               Chap6.Translate_Signal_Name (Actual, Actual_Sig, Actual_Val);
+
+               --  Copy pointer to the values.
+               if Get_Info (Formal_Type).Type_Mode in Type_Mode_Arrays then
+                  New_Assign_Stmt
+                    (M2Lp (Chap3.Get_Array_Base (Formal_Val)),
+                     M2Addr (Chap3.Get_Array_Base (Actual_Val)));
+               else
+                  New_Assign_Stmt (M2Lp (Formal_Val), M2Addr (Actual_Val));
+               end if;
+            else
+               Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
+               Actual_Sig := Chap6.Translate_Name (Actual, Mode_Signal);
             end if;
+
          else
-            declare
-               Actual_Val : O_Enode;
-            begin
-               Actual_Val := Chap7.Translate_Expression
-                 (Actual, Formal_Type);
-               Actual_Node := E2M
-                 (Actual_Val, Get_Info (Formal_Type), Mode_Value);
-               Mode := Connect_Value;
-            end;
+            Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
+            Actual_Sig :=
+              E2M (Chap7.Translate_Expression (Actual, Formal_Type),
+                   Get_Info (Formal_Type), Mode_Value);
+            Mode := Connect_Value;
+--            raise Internal_Error;
          end if;
 
-         if Get_Kind (Formal_Type) in Iir_Kinds_Array_Type_Definition
-         then
+         if Get_Kind (Formal_Type) in Iir_Kinds_Array_Type_Definition then
             --  Check length matches.
-            Stabilize (Formal_Node);
-            Stabilize (Actual_Node);
-            Chap3.Check_Array_Match (Formal_Type, Formal_Node,
-                                     Actual_Type, Actual_Node,
+            Stabilize (Formal_Sig);
+            Stabilize (Actual_Sig);
+            Chap3.Check_Array_Match (Formal_Type, Formal_Sig,
+                                     Actual_Type, Actual_Sig,
                                      Assoc);
          end if;
 
-         Data := (Actual_Node => Actual_Node,
+         Data := (Actual_Sig => Actual_Sig,
                   Actual_Type => Actual_Type,
                   Mode => Mode,
                   By_Copy => By_Copy);
-         Connect (Formal_Node, Formal_Type, Data);
+         Connect (Formal_Sig, Formal_Type, Data);
       else
          if Get_In_Conversion (Assoc) /= Null_Iir then
-            Chap4.Elab_In_Conversion (Assoc, Actual_Node);
-            Formal_Node := Chap6.Translate_Name (Formal);
-            Data := (Actual_Node => Actual_Node,
+            Chap4.Elab_In_Conversion (Assoc, Actual_Sig);
+            Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
+            Data := (Actual_Sig => Actual_Sig,
                      Actual_Type => Formal_Type,
                      Mode => Connect_Effective,
                      By_Copy => False);
-            Connect (Formal_Node, Formal_Type, Data);
+            Connect (Formal_Sig, Formal_Type, Data);
          end if;
          if Get_Out_Conversion (Assoc) /= Null_Iir then
             --  flow: FORMAL to ACTUAL
-            Chap4.Elab_Out_Conversion (Assoc, Formal_Node);
-            Actual_Node := Chap6.Translate_Name (Actual);
-            Data := (Actual_Node => Actual_Node,
+            Chap4.Elab_Out_Conversion (Assoc, Formal_Sig);
+            Actual_Sig := Chap6.Translate_Name (Actual, Mode_Signal);
+            Data := (Actual_Sig => Actual_Sig,
                      Actual_Type => Actual_Type,
                      Mode => Connect_Source,
                      By_Copy => False);
-            Connect (Formal_Node, Actual_Type, Data);
+            Connect (Formal_Sig, Actual_Type, Data);
          end if;
       end if;
 
       Close_Temp;
    end Elab_Port_Map_Aspect_Assoc;
-
-   --  Return TRUE if the collapse_signal_flag is set for each individual
-   --  association.
-   function Inherit_Collapse_Flag (Assoc : Iir) return Boolean
-   is
-      El : Iir;
-   begin
-      case Get_Kind (Assoc) is
-         when Iir_Kind_Association_Element_By_Individual =>
-            El := Get_Individual_Association_Chain (Assoc);
-            while El /= Null_Iir loop
-               if Inherit_Collapse_Flag (El) = False then
-                  return False;
-               end if;
-               El := Get_Chain (El);
-            end loop;
-            return True;
-         when Iir_Kind_Choice_By_Expression
-            | Iir_Kind_Choice_By_Range
-            | Iir_Kind_Choice_By_Name =>
-            El := Assoc;
-            while El /= Null_Iir loop
-               if not Inherit_Collapse_Flag (Get_Associated_Expr (Assoc))
-               then
-                  return False;
-               end if;
-               El := Get_Chain (El);
-            end loop;
-            return True;
-         when Iir_Kind_Association_Element_By_Expression =>
-            return Get_Collapse_Signal_Flag (Assoc);
-         when others =>
-            Error_Kind ("inherit_collapse_flag", Assoc);
-      end case;
-   end Inherit_Collapse_Flag;
 
    procedure Elab_Generic_Map_Aspect (Mapping : Iir)
    is
@@ -539,11 +469,11 @@ package body Trans.Chap5 is
                begin
                   if Get_Whole_Association_Flag (Assoc) then
                      Chap4.Elab_Object_Storage (Formal);
-                     Targ := Chap6.Translate_Name (Formal);
+                     Targ := Chap6.Translate_Name (Formal, Mode_Value);
                      Chap4.Elab_Object_Init
                        (Targ, Formal, Get_Actual (Assoc));
                   else
-                     Targ := Chap6.Translate_Name (Formal);
+                     Targ := Chap6.Translate_Name (Formal, Mode_Value);
                      Chap7.Translate_Assign
                        (Targ, Get_Actual (Assoc), Get_Type (Formal));
                   end if;
@@ -616,125 +546,221 @@ package body Trans.Chap5 is
       end loop;
    end Elab_Generic_Map_Aspect;
 
+   function Alloc_Bounds (Atype : Iir; Alloc : Allocation_Kind)
+                        return Mnode
+   is
+      Tinfo : constant Type_Info_Acc := Get_Info (Atype);
+      Var : O_Dnode;
+   begin
+      Var := Create_Temp (Tinfo.T.Bounds_Ptr_Type);
+      New_Assign_Stmt
+        (New_Obj (Var),
+         Gen_Alloc (Alloc,
+                    New_Lit (New_Sizeof (Tinfo.T.Bounds_Type,
+                                         Ghdl_Index_Type)),
+                    Tinfo.T.Bounds_Ptr_Type));
+      return Dp2M (Var, Tinfo, Mode_Value,
+                   Tinfo.T.Bounds_Type,
+                   Tinfo.T.Bounds_Ptr_Type);
+   end Alloc_Bounds;
+
+   function Get_Unconstrained_Port_Bounds (Assoc : Iir) return Mnode
+   is
+      Actual : constant Iir := Get_Actual (Assoc);
+      Actual_Type : constant Iir := Get_Type (Actual);
+      In_Conv : constant Iir := Get_In_Conversion (Assoc);
+      Out_Conv : constant Iir := Get_Out_Conversion (Assoc);
+
+      function Get_Actual_Bounds (Save : Boolean) return Mnode
+      is
+         Tinfo       : Type_Info_Acc;
+         Bounds : Mnode;
+         Bounds_Copy : Mnode;
+      begin
+         if Is_Fully_Constrained_Type (Actual_Type) then
+            Chap3.Create_Array_Subtype (Actual_Type);
+            Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
+            Tinfo := Get_Info (Actual_Type);
+            if Save
+              and then
+              Get_Alloc_Kind_For_Var (Tinfo.T.Array_Bounds) = Alloc_Stack
+            then
+               --  We need a copy.
+               Bounds_Copy := Alloc_Bounds (Actual_Type, Alloc_System);
+               Chap3.Copy_Bounds (Bounds_Copy, Bounds, Actual_Type);
+               return Bounds_Copy;
+            else
+               return Bounds;
+            end if;
+         else
+            --  Actual type is unconstrained, but as this is an object reads
+            --  bounds from the object.
+            return Chap3.Get_Array_Bounds
+              (Chap6.Translate_Name (Actual, Mode_Signal));
+         end if;
+      end Get_Actual_Bounds;
+
+      In_Conv_Type : Iir;
+      Param_Type : Iir;
+      Res_Type : Iir;
+      Bounds : Mnode;
+      Can_Convert : Boolean;
+      Res : Mnode;
+   begin
+      if In_Conv = Null_Iir and then Out_Conv = Null_Iir then
+         --  The easy and usual case.  Get bounds from the actual.
+         return Get_Actual_Bounds (True);
+      end if;
+
+      Can_Convert := False;
+      if In_Conv /= Null_Iir then
+         In_Conv_Type := Get_Type (In_Conv);
+         if Is_Fully_Constrained_Type (In_Conv_Type) then
+            --  The 'in' conversion gives the type.
+            return Chap3.Get_Array_Type_Bounds (In_Conv_Type);
+         elsif Get_Kind (In_Conv) = Iir_Kind_Type_Conversion then
+            --  Convert bounds of the actual.
+            Can_Convert := True;
+         else
+            pragma Assert (Get_Kind (In_Conv) = Iir_Kind_Function_Call);
+            --  Cannot use anything from the in conversion.
+            null;
+         end if;
+      end if;
+      if Out_Conv /= Null_Iir then
+         if Get_Kind (Out_Conv) = Iir_Kind_Function_Call then
+            Param_Type := Get_Type (Get_Interface_Declaration_Chain
+                                      (Get_Implementation (Out_Conv)));
+            if Is_Fully_Constrained_Type (Param_Type) then
+               return Chap3.Get_Array_Type_Bounds (Param_Type);
+            else
+               pragma Assert (Can_Convert);
+               null;
+            end if;
+         else
+            pragma Assert (Get_Kind (Out_Conv) = Iir_Kind_Type_Conversion);
+            --  Automatically convert actual type to the formal type.
+            Can_Convert := True;
+         end if;
+      end if;
+
+      pragma Assert (Can_Convert);
+      Res_Type := Get_Type (Get_Association_Interface (Assoc));
+      Bounds := Get_Actual_Bounds (False);
+      Res := Alloc_Bounds (Res_Type, Alloc_System);
+      Chap7.Translate_Type_Conversion_Bounds
+        (Res, Bounds, Res_Type, Actual_Type, Assoc);
+      return Res;
+   end Get_Unconstrained_Port_Bounds;
+
+   --  Set bounds for PORT.
+   procedure Elab_Unconstrained_Port_Bounds (Port : Iir; Assoc : Iir)
+   is
+      Bounds : Mnode;
+      Act_Node : Mnode;
+   begin
+      Open_Temp;
+      case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+         when Iir_Kind_Association_Element_By_Expression =>
+            if not Get_Whole_Association_Flag (Assoc) then
+               return;
+            end if;
+            Bounds := Get_Unconstrained_Port_Bounds (Assoc);
+         when Iir_Kind_Association_Element_Open =>
+            declare
+               Actual_Type : constant Iir :=
+                 Get_Type (Get_Default_Value (Port));
+            begin
+               Chap3.Create_Array_Subtype (Actual_Type);
+               Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
+            end;
+         when Iir_Kind_Association_Element_By_Individual =>
+            declare
+               Actual_Type : constant Iir := Get_Actual_Type (Assoc);
+            begin
+               Chap3.Create_Array_Subtype (Actual_Type);
+               Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
+            end;
+      end case;
+
+      Stabilize (Bounds);
+      for K in Object_Kind_Type loop
+         Act_Node := Chap6.Translate_Name (Port, K);
+         New_Assign_Stmt
+           (--  Note: this works only because it is not stabilized, and
+            --  therefore the bounds field is returned and not a pointer to
+            --  the bounds.
+            M2Lp (Chap3.Get_Array_Bounds (Act_Node)),
+            M2Addr (Bounds));
+      end loop;
+      Close_Temp;
+   end Elab_Unconstrained_Port_Bounds;
+
    procedure Elab_Port_Map_Aspect (Mapping : Iir; Block_Parent : Iir)
    is
-      Assoc               : Iir;
-      Formal              : Iir;
-      Formal_Base         : Iir;
-      Fb_Type             : Iir;
-      Fbt_Info            : Type_Info_Acc;
-      Collapse_Individual : Boolean := False;
+      Assoc : Iir;
    begin
       --  Ports.
       Assoc := Get_Port_Map_Aspect_Chain (Mapping);
       while Assoc /= Null_Iir loop
-         Formal := Get_Formal (Assoc);
-         Formal_Base := Get_Association_Interface (Assoc);
-         Fb_Type := Get_Type (Formal_Base);
+         declare
+            Formal : constant Iir := Strip_Denoting_Name (Get_Formal (Assoc));
+            Formal_Base : constant Iir := Get_Association_Interface (Assoc);
+            Fb_Type : constant Iir := Get_Type (Formal_Base);
+            Fbt_Info : constant Type_Info_Acc := Get_Info (Fb_Type);
+         begin
+            --  Set bounds of unconstrained ports.
+            if Fbt_Info.Type_Mode = Type_Mode_Fat_Array then
+               Open_Temp;
+               Elab_Unconstrained_Port_Bounds (Formal, Assoc);
+               Close_Temp;
+            end if;
 
-         Open_Temp;
-         --  Set bounds of unconstrained ports.
-         Fbt_Info := Get_Info (Fb_Type);
-         if Fbt_Info.Type_Mode = Type_Mode_Fat_Array then
-            case Get_Kind (Assoc) is
+            --  Allocate storage of ports.
+            Open_Temp;
+            case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+               when Iir_Kind_Association_Element_By_Individual
+                 | Iir_Kind_Association_Element_Open =>
+                  pragma Assert (Get_Whole_Association_Flag (Assoc));
+                  Chap4.Elab_Signal_Declaration_Storage (Formal);
                when Iir_Kind_Association_Element_By_Expression =>
                   if Get_Whole_Association_Flag (Assoc) then
-                     Elab_Unconstrained_Port (Formal, Get_Actual (Assoc));
+                     Chap4.Elab_Signal_Declaration_Storage (Formal);
                   end if;
-               when Iir_Kind_Association_Element_Open =>
-                  declare
-                     Value : constant Iir := Get_Default_Value (Formal_Base);
-                     Actual_Type : constant Iir := Get_Type (Value);
-                     Bounds      : Mnode;
-                     Formal_Node : Mnode;
-                  begin
-                     Chap3.Create_Array_Subtype (Actual_Type);
-                     Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
-                     Formal_Node := Chap6.Translate_Name (Formal);
-                     New_Assign_Stmt
-                       (M2Lp (Chap3.Get_Array_Bounds (Formal_Node)),
-                        M2Addr (Bounds));
-                     Chap9.Destroy_Types (Value);
-                  end;
-               when Iir_Kind_Association_Element_By_Individual =>
-                  declare
-                     Actual_Type : Iir;
-                     Bounds      : Mnode;
-                     Formal_Node : Mnode;
-                  begin
-                     Actual_Type := Get_Actual_Type (Assoc);
-                     Chap3.Create_Array_Subtype (Actual_Type);
-                     Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
-                     Formal_Node := Chap6.Translate_Name (Formal);
-                     New_Assign_Stmt
-                       (M2Lp (Chap3.Get_Array_Bounds (Formal_Node)),
-                        M2Addr (Bounds));
-                  end;
-               when others =>
-                  Error_Kind ("elab_map_aspect(2)", Assoc);
             end case;
-         end if;
-         Close_Temp;
+            Close_Temp;
 
-         --  Allocate storage of ports.
-         Open_Temp;
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_By_Individual
-               | Iir_Kind_Association_Element_Open =>
-               Chap4.Elab_Signal_Declaration_Storage (Formal);
-            when Iir_Kind_Association_Element_By_Expression =>
-               if Get_Whole_Association_Flag (Assoc) then
-                  Chap4.Elab_Signal_Declaration_Storage (Formal);
-               end if;
-            when others =>
-               Error_Kind ("elab_map_aspect(3)", Assoc);
-         end case;
-         Close_Temp;
-
-         --  Create or copy signals.
-         Open_Temp;
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_By_Expression =>
-               if Get_Whole_Association_Flag (Assoc) then
-                  if Get_Collapse_Signal_Flag (Assoc) then
-                     --  For collapsed association, copy signals.
-                     Elab_Port_Map_Aspect_Assoc (Assoc, True);
+            --  Create or copy signals.
+            Open_Temp;
+            case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+               when Iir_Kind_Association_Element_By_Expression =>
+                  if Get_Whole_Association_Flag (Assoc) then
+                     if Get_Collapse_Signal_Flag (Assoc) then
+                        --  For collapsed association, copy signals.
+                        Elab_Port_Map_Aspect_Assoc (Assoc, True);
+                     else
+                        --  Create non-collapsed signals.
+                        Chap4.Elab_Signal_Declaration_Object
+                          (Formal, Block_Parent, False);
+                        --  And associate.
+                        Elab_Port_Map_Aspect_Assoc (Assoc, False);
+                     end if;
                   else
-                     --  Create non-collapsed signals.
-                     Chap4.Elab_Signal_Declaration_Object
-                       (Formal, Block_Parent, False);
+                     --  By sub-element.
+                     --  Either the whole signal is collapsed or it was already
+                     --  created.
                      --  And associate.
                      Elab_Port_Map_Aspect_Assoc (Assoc, False);
                   end if;
-               else
-                  --  By sub-element.
-                  --  Either the whole signal is collapsed or it was already
-                  --  created.
-                  --  And associate.
-                  Elab_Port_Map_Aspect_Assoc (Assoc, Collapse_Individual);
-               end if;
-            when Iir_Kind_Association_Element_Open =>
-               --  Create non-collapsed signals.
-               Chap4.Elab_Signal_Declaration_Object
-                 (Formal, Block_Parent, False);
-            when Iir_Kind_Association_Element_By_Individual =>
-               --  Inherit the collapse flag.
-               --  If it is set for all sub-associations, continue.
-               --  Otherwise, create signals and do not collapse.
-               --  FIXME: this may be slightly optimized.
-               if not Inherit_Collapse_Flag (Assoc) then
-                  --  Create the formal.
+               when Iir_Kind_Association_Element_Open
+                 | Iir_Kind_Association_Element_By_Individual =>
+                  --  Create non-collapsed signals.
+                  pragma Assert (Get_Whole_Association_Flag (Assoc));
                   Chap4.Elab_Signal_Declaration_Object
                     (Formal, Block_Parent, False);
-                  Collapse_Individual := False;
-               else
-                  Collapse_Individual := True;
-               end if;
-            when others =>
-               Error_Kind ("elab_map_aspect(4)", Assoc);
-         end case;
-         Close_Temp;
-
+            end case;
+            Close_Temp;
+         end;
          Assoc := Get_Chain (Assoc);
       end loop;
    end Elab_Port_Map_Aspect;

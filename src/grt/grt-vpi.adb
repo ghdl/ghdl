@@ -478,12 +478,12 @@ package body Grt.Vpi is
                  | Vcd_Bool
                  | Vcd_Bitvector =>
                   for J in 0 .. Len - 1 loop
-                     ii_vpi_get_value_bin_str_B1 (Info.Sigs (J).Value.B1);
+                     ii_vpi_get_value_bin_str_B1 (Info.Sigs (J).Value_Ptr.B1);
                   end loop;
                when Vcd_Stdlogic
                  | Vcd_Stdlogic_Vector =>
                   for J in 0 .. Len - 1 loop
-                     ii_vpi_get_value_bin_str_E8 (Info.Sigs (J).Value.E8);
+                     ii_vpi_get_value_bin_str_E8 (Info.Sigs (J).Value_Ptr.E8);
                   end loop;
             end case;
          when Vcd_Driving =>
@@ -571,7 +571,6 @@ package body Grt.Vpi is
    -- Alter the simulation value of an object.
    -- see IEEE 1364-2001, chapter 27.14, page 675
    -- FIXME
-
    type Std_Ulogic_Array is array (Ghdl_Index_Type range <>) of Std_Ulogic;
 
    procedure Ii_Vpi_Put_Value (Info : Verilog_Wire_Info;

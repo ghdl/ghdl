@@ -818,6 +818,12 @@ package body Trans is
          return Get_Identifier (Nam_Buffer (1 .. Nam_Length + Str'Length));
       end Create_Identifier_Without_Prefix;
 
+      function Create_Identifier_Without_Prefix
+        (Id : Iir; Str : String) return O_Ident is
+      begin
+         return Create_Identifier_Without_Prefix (Get_Identifier (Id), Str);
+      end Create_Identifier_Without_Prefix;
+
       --  Create an identifier from IIR node ID with prefix.
       function Create_Id (Id : Name_Id; Str : String; Is_Local : Boolean)
                           return O_Ident
@@ -1088,6 +1094,21 @@ package body Trans is
             raise Internal_Error;
       end case;
    end Get_Var;
+
+   function Get_Varp
+     (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
+      return Mnode
+   is
+      Stable : Boolean;
+   begin
+      --  FIXME: there may be Vv2M and Vp2M.
+      Stable := Is_Var_Stable (Var);
+      if Stable then
+         return Dp2M (Get_Var_Label (Var), Vtype, Mode);
+      else
+         return Lp2M (Get_Var (Var), Vtype, Mode);
+      end if;
+   end Get_Varp;
 
    function Stabilize (M : Mnode; Can_Copy : Boolean := False) return Mnode
    is
@@ -1730,16 +1751,16 @@ package body Trans is
       begin
          New_Assign_Stmt (New_Obj (V),
                           New_Dyadic_Op (ON_Add_Ov,
-                            New_Obj_Value (V),
-                            New_Lit (Ghdl_Index_1)));
+                                         New_Obj_Value (V),
+                                         New_Lit (Ghdl_Index_1)));
       end Inc_Var;
 
       procedure Dec_Var (V : O_Dnode) is
       begin
          New_Assign_Stmt (New_Obj (V),
                           New_Dyadic_Op (ON_Sub_Ov,
-                            New_Obj_Value (V),
-                            New_Lit (Ghdl_Index_1)));
+                                         New_Obj_Value (V),
+                                         New_Lit (Ghdl_Index_1)));
       end Dec_Var;
 
       procedure Init_Var (V : O_Dnode) is

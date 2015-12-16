@@ -1929,7 +1929,7 @@ package body Trans.Rtis is
                Var := Info.Signal_Sig;
             when Iir_Kind_Object_Alias_Declaration =>
                Comm := Ghdl_Rtik_Alias;
-               Var := Info.Alias_Var;
+               Var := Info.Alias_Var (Info.Alias_Kind);
                Mode := Object_Kind_Type'Pos (Info.Alias_Kind);
             when others =>
                Error_Kind ("rti.generate_object", Decl);

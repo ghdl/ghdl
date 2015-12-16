@@ -2706,8 +2706,7 @@ package body Trans.Chap3 is
       Val        : Mnode;
    begin
       --  Compute parameter
-      Val := Chap6.Translate_Name (Param);
-      pragma Assert (Get_Object_Kind (Val) = Mode_Value);
+      Val := Chap6.Translate_Name (Param, Mode_Value);
       Stabilize (Val);
 
       --  Call deallocator.

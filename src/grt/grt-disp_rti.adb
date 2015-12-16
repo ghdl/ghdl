@@ -26,6 +26,7 @@ with Grt.Astdio; use Grt.Astdio;
 with Grt.Errors; use Grt.Errors;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;
+with Grt.Signals;
 
 package body Grt.Disp_Rti is
    procedure Disp_Kind (Kind : Ghdl_Rtik);
@@ -57,7 +58,11 @@ package body Grt.Disp_Rti is
       Sz : Ghdl_Index_Type;
    begin
       if Is_Sig then
-         Val := To_Ghdl_Value_Ptr (To_Addr_Acc (Addr).all);
+         --  ADDR is the address of the object.
+         --  The object contains a pointer to the signal.
+         --  The first field of the signal is a pointer to the value.
+         Val := Grt.Signals.To_Ghdl_Signal_Ptr
+           (To_Addr_Acc (Addr).all).Value_Ptr;
          Sz := Address'Size / Storage_Unit;
       else
          Val := To_Ghdl_Value_Ptr (Addr);

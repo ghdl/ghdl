@@ -28,7 +28,7 @@ package Trans.Chap5 is
      (Spec : Iir_Disconnection_Specification);
 
    --  Elab an unconstrained port.
-   procedure Elab_Unconstrained_Port (Port : Iir; Actual : Iir);
+   procedure Elab_Unconstrained_Port_Bounds (Port : Iir; Assoc : Iir);
 
    procedure Elab_Generic_Map_Aspect (Mapping : Iir);
 

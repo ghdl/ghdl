@@ -200,11 +200,15 @@ package body Grt.Disp_Signals is
          Put_Time (stdout, Sig.Last_Active);
       end if;
       Put (" val=");
-      if Sig_Type /= null then
-         Disp_Value (stdout, Sig.Value, Sig_Type);
-      else
-         Disp_Value (Sig.Value, Sig.Mode);
-      end if;
+      declare
+         Val : constant Value_Union := Read_Value (Sig.Value_Ptr, Sig.Mode);
+      begin
+         if Sig_Type /= null then
+            Disp_Value (stdout, Val, Sig_Type);
+         else
+            Disp_Value (Val, Sig.Mode);
+         end if;
+      end;
       Put ("; drv=");
       if Sig_Type /= null then
          Disp_Value (stdout, Sig.Driving_Value, Sig_Type);

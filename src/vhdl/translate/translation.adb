@@ -203,7 +203,7 @@ package body Translation is
    --  Decorate the tree in order to be usable with the internal simulator.
    procedure Translate (Unit : Iir_Design_Unit; Main : Boolean)
    is
-      Design_File : Iir_Design_File;
+      Design_File : constant Iir_Design_File := Get_Design_File (Unit);
       El : Iir;
       Lib : Iir_Library_Declaration;
       Lib_Mark, Ent_Mark, Sep_Mark, Unit_Mark : Id_Mark_Type;
@@ -211,9 +211,8 @@ package body Translation is
    begin
       Update_Node_Infos;
 
-      Design_File := Get_Design_File (Unit);
-
       if False then
+         --  No translation for context items.
          El := Get_Context_Items (Unit);
          while El /= Null_Iir loop
             case Get_Kind (El) is
@@ -335,7 +334,6 @@ package body Translation is
       Current_Filename_Node := O_Dnode_Null;
       Current_Library_Unit := Null_Iir;
 
-      --Pop_Global_Factory;
       if Id /= Null_Identifier then
          Pop_Identifier_Prefix (Unit_Mark);
       end if;
@@ -759,15 +757,15 @@ package body Translation is
       Interfaces : O_Inter_List;
       Param : O_Dnode;
    begin
-      --  function __ghdl_create_signal_XXX (init_val : VAL_TYPE)
+      --  function __ghdl_create_signal_XXX (val_ptr : ghdl_ptr_type;
       --                                     resolv_func : ghdl_ptr_type;
-      --                                     resolv_inst : ghdl_ptr_type;
+      --                                     resolv_inst : ghdl_ptr_type)
       --                                     return __ghdl_signal_ptr;
       Start_Function_Decl
         (Interfaces, Get_Identifier ("__ghdl_create_signal_" & Suffix),
          O_Storage_External, Ghdl_Signal_Ptr);
       New_Interface_Decl
-        (Interfaces, Param, Get_Identifier ("init_val"), Val_Type);
+        (Interfaces, Param, Get_Identifier ("val_ptr"), Ghdl_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("resolv_func"),
                           Ghdl_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("resolv_inst"),
@@ -1253,7 +1251,7 @@ package body Translation is
       Start_Uncomplete_Record_Type (Ghdl_Signal_Type, Rec);
       New_Record_Field (Rec, Ghdl_Signal_Value_Field,
                         Get_Identifier ("value"),
-                        Ghdl_Scalar_Bytes);
+                        Ghdl_Ptr_Type);
       New_Record_Field (Rec, Ghdl_Signal_Driving_Value_Field,
                         Get_Identifier ("driving_value"),
                         Ghdl_Scalar_Bytes);
@@ -1575,32 +1573,40 @@ package body Translation is
       end;
 
       declare
-         --  function __ghdl_create_XXX_signal (val : std_time)
+         --  function __ghdl_create_XXX_signal (val_ptr : ghdl_ptr_type;
+         --                                     val : std_time)
          --    return __ghdl_signal_ptr;
          procedure Create_Signal_Attribute (Name : String; Res : out O_Dnode)
          is
          begin
             Start_Function_Decl (Interfaces, Get_Identifier (Name),
                                  O_Storage_External, Ghdl_Signal_Ptr);
+            New_Interface_Decl (Interfaces, Param, Get_Identifier ("val_ptr"),
+                                Ghdl_Ptr_Type);
             New_Interface_Decl (Interfaces, Param, Wki_Val, Std_Time_Otype);
             Finish_Subprogram_Decl (Interfaces, Res);
          end Create_Signal_Attribute;
       begin
-         --  function __ghdl_create_stable_signal (val : std_time)
+         --  function __ghdl_create_stable_signal (val_ptr : ghdl_ptr_type;
+         --                                        val : std_time)
          --    return __ghdl_signal_ptr;
          Create_Signal_Attribute
            ("__ghdl_create_stable_signal", Ghdl_Create_Stable_Signal);
 
-         --  function __ghdl_create_quiet_signal (val : std_time)
+         --  function __ghdl_create_quiet_signal (val_ptr : ghdl_ptr_type;
+         --                                       val : std_time)
          --    return __ghdl_signal_ptr;
          Create_Signal_Attribute
            ("__ghdl_create_quiet_signal", Ghdl_Create_Quiet_Signal);
 
          --  function __ghdl_create_transaction_signal
+         --     (val_ptr : ghdl_ptr_type)
          --    return __ghdl_signal_ptr;
          Start_Function_Decl
            (Interfaces, Get_Identifier ("__ghdl_create_transaction_signal"),
             O_Storage_External, Ghdl_Signal_Ptr);
+         New_Interface_Decl (Interfaces, Param, Get_Identifier ("val_ptr"),
+                             Ghdl_Ptr_Type);
          Finish_Subprogram_Decl (Interfaces, Ghdl_Create_Transaction_Signal);
       end;
 
@@ -1615,6 +1621,7 @@ package body Translation is
         (Interfaces, Ghdl_Signal_Attribute_Register_Prefix);
 
       --  function __ghdl_create_delayed_signal (sig : __ghdl_signal_ptr;
+      --                                         val_ptr : ghdl_ptr_type;
       --                                         val : std_time)
       --    return __ghdl_signal_ptr;
       Start_Function_Decl
@@ -1622,23 +1629,26 @@ package body Translation is
          O_Storage_External, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("sig"),
                           Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("val_ptr"),
+                          Ghdl_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Val, Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Create_Delayed_Signal);
 
       --  function __ghdl_signal_create_guard
-      --    (this : ghdl_ptr_type;
+      --    (val_ptr : Ghdl_Ptr_type;
+      --     this : ghdl_ptr_type;
       --     proc : ghdl_ptr_type;
       --     instance_name : __ghdl_instance_name_acc)
       --    return __ghdl_signal_ptr;
       Start_Function_Decl
         (Interfaces, Get_Identifier ("__ghdl_signal_create_guard"),
          O_Storage_External, Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Get_Identifier ("val_ptr"),
+                          Ghdl_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("this"),
                           Ghdl_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("proc"),
                           Ghdl_Ptr_Type);
---    New_Interface_Decl (Interfaces, Param, Get_Identifier ("instance_name"),
---                          Ghdl_Instance_Name_Acc);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Create_Guard);
 
       --  procedure __ghdl_signal_guard_dependence (sig : __ghdl_signal_ptr);

@@ -59,6 +59,61 @@ package body Trans.Chap4 is
       end if;
    end Get_Object_Type;
 
+   --  Return the pointer type for Tinfo.
+   --  For a fat array, this is the fat pointer to slightly optimize accesses.
+   function Get_Object_Ptr_Type
+     (Tinfo : Type_Info_Acc; Kind : Object_Kind_Type) return O_Tnode is
+   begin
+      if Tinfo.Type_Mode = Type_Mode_Fat_Array then
+         --  Fat pointers are already pointers, no need to create an
+         --  additional indirection.
+         return Tinfo.Ortho_Type (Kind);
+      else
+         if Kind = Mode_Signal
+           and then Tinfo.Type_Mode in Type_Mode_Scalar
+         then
+            --  A scalar signal is already a pointer.
+            return Tinfo.Ortho_Type (Kind);
+         else
+            return Tinfo.Ortho_Ptr_Type (Kind);
+         end if;
+      end if;
+   end Get_Object_Ptr_Type;
+
+   function Lop2M
+     (Obj_Ptr : O_Lnode; Tinfo : Type_Info_Acc; Mode : Object_Kind_Type)
+     return Mnode is
+   begin
+      if (Mode = Mode_Signal
+            and then Tinfo.Type_Mode in Type_Mode_Scalar)
+        or else Tinfo.Type_Mode = Type_Mode_Fat_Array
+      then
+         return Lv2M (Obj_Ptr, Tinfo, Mode);
+      else
+         return Lp2M (Obj_Ptr, Tinfo, Mode);
+      end if;
+   end Lop2M;
+
+   procedure Assign_Obj_Ptr (Dest : Mnode; Src : Mnode)
+   is
+      Mode : constant Object_Kind_Type := Get_Object_Kind (Dest);
+      Tinfo : constant Type_Info_Acc := Get_Type_Info (Dest);
+   begin
+      pragma Assert (Mode = Get_Object_Kind (Src));
+      pragma Assert (Tinfo.Type_Mode = Get_Type_Info (Src).Type_Mode);
+      if Tinfo.Type_Mode = Type_Mode_Fat_Array then
+         Copy_Fat_Pointer (Stabilize (Dest), Stabilize (Src));
+      else
+         if Mode = Mode_Signal
+           and then Tinfo.Type_Mode in Type_Mode_Scalar
+         then
+            New_Assign_Stmt (M2Lv (Dest), M2E (Src));
+         else
+            New_Assign_Stmt (M2Lp (Dest), M2Addr (Src));
+         end if;
+      end if;
+   end Assign_Obj_Ptr;
+
    procedure Create_Object (El : Iir)
    is
       Obj_Type : O_Tnode;
@@ -120,8 +175,7 @@ package body Trans.Chap4 is
                else
                   Info.Object_Static := False;
                   Info.Object_Var := Create_Var
-                    (Create_Var_Identifier (El),
-                     Obj_Type, Global_Storage);
+                    (Create_Var_Identifier (El), Obj_Type, Global_Storage);
                end if;
             end if;
             if Get_Deferred_Declaration (El) = Null_Iir
@@ -146,19 +200,29 @@ package body Trans.Chap4 is
    procedure Create_Signal (Decl : Iir)
    is
       Sig_Type_Def : constant Iir := Get_Type (Decl);
-      Sig_Type     : O_Tnode;
       Type_Info    : Type_Info_Acc;
-      Info         : Ortho_Info_Acc;
+      Info         : Signal_Info_Acc;
    begin
       Chap3.Translate_Object_Subtype (Decl);
 
       Type_Info := Get_Info (Sig_Type_Def);
-      Sig_Type := Get_Object_Type (Type_Info, Mode_Signal);
-      pragma Assert (Sig_Type /= O_Tnode_Null);
-
       Info := Add_Info (Decl, Kind_Signal);
 
-      Info.Signal_Sig := Create_Var (Create_Var_Identifier (Decl), Sig_Type);
+      Info.Signal_Sig := Create_Var
+        (Create_Var_Identifier (Decl, "_SIG", 0),
+         Get_Object_Type (Type_Info, Mode_Signal));
+
+      if Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration then
+         --  For interfaces, create a pointer so that there is no need to
+         --  update a copy if the association is collapsed.
+         Info.Signal_Valp := Create_Var
+           (Create_Var_Identifier (Decl, "_VALP", 0),
+            Get_Object_Ptr_Type (Type_Info, Mode_Value));
+      else
+         Info.Signal_Val := Create_Var
+           (Create_Var_Identifier (Decl, "_VAL", 0),
+            Get_Object_Type (Type_Info, Mode_Value));
+      end if;
 
       case Get_Kind (Decl) is
          when Iir_Kind_Signal_Declaration
@@ -176,30 +240,28 @@ package body Trans.Chap4 is
    is
       Sig_Type_Def : constant Iir := Get_Type (Decl);
       Type_Info    : constant Type_Info_Acc := Get_Info (Sig_Type_Def);
-      Sig_Type     : constant O_Tnode := Type_Info.Ortho_Type (Mode_Signal);
-      Info         : Ortho_Info_Acc;
+      Info         : Signal_Info_Acc;
    begin
-      --  This has been disabled since DECL can have an anonymous subtype,
-      --  and DECL has no identifiers, which causes translate_object_subtype
-      --  to crash.
-      --  Note: DECL can only be a iir_kind_delayed_attribute.
-      --Chap3.Translate_Object_Subtype (Decl);
-      pragma Assert (Sig_Type /= O_Tnode_Null);
+      --  The type of DECL is already known: either bit, or boolean or the
+      --  type of the prefix.
 
       Info := Add_Info (Decl, Kind_Signal);
 
-      Info.Signal_Sig := Create_Var (Create_Uniq_Identifier, Sig_Type);
+      Info.Signal_Sig := Create_Var
+        (Create_Uniq_Identifier,
+         Get_Object_Type (Type_Info, Mode_Signal));
+      Info.Signal_Val := Create_Var
+        (Create_Uniq_Identifier,
+         Get_Object_Type (Type_Info, Mode_Value));
    end Create_Implicit_Signal;
 
    procedure Create_File_Object (El : Iir_File_Declaration)
    is
-      Obj_Type     : O_Tnode;
+      Obj_Type_Def : constant Iir := Get_Type (El);
+      Obj_Type     : constant O_Tnode :=
+        Get_Ortho_Type (Obj_Type_Def, Mode_Value);
       Info         : Ortho_Info_Acc;
-      Obj_Type_Def : Iir;
    begin
-      Obj_Type_Def := Get_Type (El);
-      Obj_Type := Get_Ortho_Type (Obj_Type_Def, Mode_Value);
-
       Info := Add_Info (El, Kind_Object);
 
       Info.Object_Var := Create_Var (Create_Var_Identifier (El), Obj_Type);
@@ -207,10 +269,10 @@ package body Trans.Chap4 is
 
    procedure Create_Package_Interface (Inter : Iir)
    is
-      Info     : Ortho_Info_Acc;
       Pkg      : constant Iir := Get_Named_Entity
         (Get_Uninstantiated_Package_Name (Inter));
       Pkg_Info : constant Ortho_Info_Acc := Get_Info (Pkg);
+      Info     : Ortho_Info_Acc;
    begin
       Chap2.Instantiate_Info_Package (Inter);
       Info := Get_Info (Inter);
@@ -344,7 +406,7 @@ package body Trans.Chap4 is
       Obj   : Mnode;
       Assoc : O_Assoc_List;
    begin
-      Obj := Chap6.Translate_Name (Decl);
+      Obj := Chap6.Translate_Name (Decl, Mode_Value);
       --  Call the Finalizator.
       Start_Association (Assoc, Info.T.Prot_Final_Subprg);
       New_Association (Assoc, M2E (Obj));
@@ -569,7 +631,7 @@ package body Trans.Chap4 is
             V : Mnode;
          begin
             Open_Temp;
-            V := Chap6.Translate_Name (Obj);
+            V := Chap6.Translate_Name (Obj, Mode_Value);
             Stabilize (V);
             Chap3.Gen_Deallocate
               (New_Value (M2Lp (Chap3.Get_Array_Bounds (V))));
@@ -579,7 +641,7 @@ package body Trans.Chap4 is
          end;
       elsif Is_Complex_Type (Type_Info) then
          Chap3.Gen_Deallocate
-           (New_Value (M2Lp (Chap6.Translate_Name (Obj))));
+           (New_Value (M2Lp (Chap6.Translate_Name (Obj, Mode_Value))));
       end if;
    end Fini_Object;
 
@@ -729,8 +791,9 @@ package body Trans.Chap4 is
    type O_If_Block_Acc is access O_If_Block;
 
    type Elab_Signal_Data is record
+      Value : Mnode;
       --  Default value of the signal.
-      Val              : Mnode;
+      Init_Val         : Mnode;
       --  If statement for a block of signals.
       If_Stmt          : O_If_Block_Acc;
       --  True if the default value is set.
@@ -747,7 +810,6 @@ package body Trans.Chap4 is
    is
       Type_Info     : constant Type_Info_Acc := Get_Info (Targ_Type);
       Create_Subprg : O_Dnode;
-      Conv          : O_Tnode;
       Res           : O_Enode;
       Assoc         : O_Assoc_List;
       Init_Val      : O_Enode;
@@ -755,6 +817,7 @@ package body Trans.Chap4 is
       Func          : Iir;
       If_Stmt       : O_If_Block;
       Targ_Ptr      : O_Dnode;
+      Value         : Mnode;
    begin
       if Data.Check_Null then
          Targ_Ptr := Create_Temp_Init
@@ -768,39 +831,38 @@ package body Trans.Chap4 is
                             Ghdl_Bool_Type));
       end if;
 
+      --  Set the value.
+      Value := Stabilize (Data.Value);
+      if Data.Has_Val then
+         Init_Val := M2E (Data.Init_Val);
+      else
+         Init_Val := Get_Scalar_Initial_Value (Targ_Type);
+      end if;
+      New_Assign_Stmt (M2Lv (Value), Init_Val);
+
+      --  Create the signal.
       case Type_Info.Type_Mode is
          when Type_Mode_B1 =>
             Create_Subprg := Ghdl_Create_Signal_B1;
-            Conv := Ghdl_Bool_Type;
          when Type_Mode_E8 =>
             Create_Subprg := Ghdl_Create_Signal_E8;
-            Conv := Ghdl_I32_Type;
          when Type_Mode_E32 =>
             Create_Subprg := Ghdl_Create_Signal_E32;
-            Conv := Ghdl_I32_Type;
          when Type_Mode_I32
             | Type_Mode_P32 =>
             Create_Subprg := Ghdl_Create_Signal_I32;
-            Conv := Ghdl_I32_Type;
          when Type_Mode_P64
             | Type_Mode_I64 =>
             Create_Subprg := Ghdl_Create_Signal_I64;
-            Conv := Ghdl_I64_Type;
          when Type_Mode_F64 =>
             Create_Subprg := Ghdl_Create_Signal_F64;
-            Conv := Ghdl_Real_Type;
          when others =>
             Error_Kind ("elab_signal_non_composite", Targ_Type);
       end case;
 
-      if Data.Has_Val then
-         Init_Val := M2E (Data.Val);
-      else
-         Init_Val := Get_Scalar_Initial_Value (Targ_Type);
-      end if;
-
       Start_Association (Assoc, Create_Subprg);
-      New_Association (Assoc, New_Convert_Ov (Init_Val, Conv));
+      New_Association
+        (Assoc, New_Unchecked_Address (M2Lv (Value), Ghdl_Ptr_Type));
 
       if Get_Kind (Targ_Type) in Iir_Kinds_Subtype_Definition then
          Func := Has_Resolution_Function (Targ_Type);
@@ -861,13 +923,20 @@ package body Trans.Chap4 is
             Res.Already_Resolved := True;
          end if;
       end if;
-      if Data.Has_Val then
-         if Get_Type_Info (Data.Val).Type_Mode = Type_Mode_Record then
-            Res.Val := Stabilize (Data.Val);
-         else
-            Res.Val := Chap3.Get_Array_Base (Data.Val);
-         end if;
-      end if;
+      case Get_Info (Targ_Type).Type_Mode is
+         when Type_Mode_Record =>
+            Res.Value := Stabilize (Data.Value);
+            if Data.Has_Val then
+               Res.Init_Val := Stabilize (Data.Init_Val);
+            end if;
+         when Type_Mode_Arrays =>
+            Res.Value := Chap3.Get_Array_Base (Data.Value);
+            if Data.Has_Val then
+               Res.Init_Val := Chap3.Get_Array_Base (Data.Init_Val);
+            end if;
+         when others =>
+            raise Internal_Error;
+      end case;
       return Res;
    end Elab_Signal_Prepare_Composite;
 
@@ -882,42 +951,47 @@ package body Trans.Chap4 is
       end if;
    end Elab_Signal_Finish_Composite;
 
-   function Elab_Signal_Update_Array (Data      : Elab_Signal_Data;
-                                      Targ_Type : Iir;
-                                      Index     : O_Dnode)
-                                         return Elab_Signal_Data
+   function Elab_Signal_Update_Array
+     (Data : Elab_Signal_Data; Targ_Type : Iir; Index : O_Dnode)
+     return Elab_Signal_Data
    is
+      N_Init_Val : Mnode;
    begin
-      if not Data.Has_Val then
-         return Data;
+      if Data.Has_Val then
+         N_Init_Val := Chap3.Index_Base (Data.Init_Val, Targ_Type,
+                                         New_Obj_Value (Index));
       else
-         return Elab_Signal_Data'
-           (Val => Chap3.Index_Base (Data.Val, Targ_Type,
-            New_Obj_Value (Index)),
-            Has_Val => True,
-            If_Stmt => null,
-            Already_Resolved => Data.Already_Resolved,
-            Check_Null => Data.Check_Null);
+         N_Init_Val := Mnode_Null;
       end if;
+      return Elab_Signal_Data'
+        (Value => Chap3.Index_Base (Data.Value, Targ_Type,
+                                    New_Obj_Value (Index)),
+         Init_Val => N_Init_Val,
+         Has_Val => Data.Has_Val,
+         If_Stmt => null,
+         Already_Resolved => Data.Already_Resolved,
+         Check_Null => Data.Check_Null);
    end Elab_Signal_Update_Array;
 
-   function Elab_Signal_Update_Record (Data      : Elab_Signal_Data;
-                                       Targ_Type : Iir;
-                                       El        : Iir_Element_Declaration)
-                                          return Elab_Signal_Data
+   function Elab_Signal_Update_Record
+     (Data : Elab_Signal_Data; Targ_Type : Iir; El : Iir_Element_Declaration)
+     return Elab_Signal_Data
    is
       pragma Unreferenced (Targ_Type);
+      N_Init_Val : Mnode;
    begin
-      if not Data.Has_Val then
-         return Data;
+      if Data.Has_Val then
+         N_Init_Val := Chap6.Translate_Selected_Element (Data.Init_Val, El);
       else
-         return Elab_Signal_Data'
-           (Val => Chap6.Translate_Selected_Element (Data.Val, El),
-            Has_Val => True,
-            If_Stmt => null,
-            Already_Resolved => Data.Already_Resolved,
-            Check_Null => Data.Check_Null);
+         N_Init_Val := Mnode_Null;
       end if;
+      return Elab_Signal_Data'
+        (Value => Chap6.Translate_Selected_Element (Data.Value, El),
+         Init_Val => N_Init_Val,
+         Has_Val => Data.Has_Val,
+         If_Stmt => null,
+         Already_Resolved => Data.Already_Resolved,
+         Check_Null => Data.Check_Null);
    end Elab_Signal_Update_Record;
 
    procedure Elab_Signal is new Foreach_Non_Composite
@@ -936,7 +1010,8 @@ package body Trans.Chap4 is
    is
       Sig_Type  : constant Iir := Get_Type (Decl);
       Type_Info : Type_Info_Acc;
-      Name_Node : Mnode;
+      Name_Sig : Mnode;
+      Name_Val : Mnode;
    begin
       New_Debug_Line_Stmt (Get_Line_Number (Decl));
 
@@ -946,12 +1021,25 @@ package body Trans.Chap4 is
       Type_Info := Get_Info (Sig_Type);
 
       if Type_Info.Type_Mode = Type_Mode_Fat_Array then
-         Name_Node := Chap6.Translate_Name (Decl);
-         Name_Node := Stabilize (Name_Node);
-         Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Node, Sig_Type);
+         --  Unbounded types are only allowed for ports; in that case the
+         --  bounds have already been set.
+         Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
+         Name_Sig := Stabilize (Name_Sig);
+         Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Sig, Sig_Type);
+         Name_Val := Stabilize (Name_Val);
+         Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Val, Sig_Type);
       elsif Is_Complex_Type (Type_Info) then
-         Name_Node := Chap6.Translate_Name (Decl);
-         Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Node);
+         Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
+         Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Sig);
+         Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Val);
+      elsif Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration then
+         --  A port that isn't collapsed.  Allocate value.
+         Name_Val := Chap6.Translate_Name (Decl, Mode_Value);
+         New_Assign_Stmt
+           (M2Lp (Name_Val),
+            Gen_Alloc (Alloc_System,
+                       Chap3.Get_Object_Size (Name_Val, Sig_Type),
+                       Type_Info.Ortho_Ptr_Type (Mode_Value)));
       end if;
 
       Close_Temp;
@@ -981,7 +1069,8 @@ package body Trans.Chap4 is
          --  Copy bounds from signal.
          New_Assign_Stmt
            (M2Lp (Chap3.Get_Array_Bounds (Name_Node)),
-            M2Addr (Chap3.Get_Array_Bounds (Chap6.Translate_Name (Decl))));
+            M2Addr (Chap3.Get_Array_Bounds
+                      (Chap6.Translate_Name (Decl, Mode_Signal))));
          --  Allocate base.
          Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Node, Sig_Type);
       elsif Is_Complex_Type (Type_Info) then
@@ -1003,7 +1092,8 @@ package body Trans.Chap4 is
       Decl      : constant Iir := Strip_Denoting_Name (Sig);
       Sig_Type  : constant Iir := Get_Type (Sig);
       Base_Decl : constant Iir := Get_Object_Prefix (Sig);
-      Name_Node : Mnode;
+      Name_Sig  : Mnode;
+      Name_Val  : Mnode;
       Value     : Iir;
       Data      : Elab_Signal_Data;
    begin
@@ -1017,18 +1107,18 @@ package body Trans.Chap4 is
       begin
          Start_Association (Assoc, Ghdl_Signal_Name_Rti);
          New_Association
-           (Assoc,
-            New_Lit (New_Global_Unchecked_Address
-                       (Get_Info (Base_Decl).Signal_Rti,
-                        Rtis.Ghdl_Rti_Access)));
+           (Assoc, New_Lit (New_Global_Unchecked_Address
+                              (Get_Info (Base_Decl).Signal_Rti,
+                               Rtis.Ghdl_Rti_Access)));
          Rtis.Associate_Rti_Context (Assoc, Parent);
          New_Procedure_Call (Assoc);
       end;
 
-      Name_Node := Chap6.Translate_Name (Decl);
+      Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
       --  Consistency check: a signal name is a signal.
-      pragma Assert (Get_Object_Kind (Name_Node) = Mode_Signal);
+      pragma Assert (Get_Object_Kind (Name_Sig) = Mode_Signal);
 
+      Data.Value := Name_Val;
       if Decl = Base_Decl then
          Data.Already_Resolved := False;
          Data.Check_Null := Check_Null;
@@ -1037,9 +1127,9 @@ package body Trans.Chap4 is
             Data.Has_Val := False;
          else
             Data.Has_Val := True;
-            Data.Val := E2M (Chap7.Translate_Expression (Value, Sig_Type),
-                             Get_Info (Sig_Type),
-                             Mode_Value);
+            Data.Init_Val := E2M (Chap7.Translate_Expression (Value, Sig_Type),
+                                  Get_Info (Sig_Type),
+                                  Mode_Value);
          end if;
       else
          --  Sub signal.
@@ -1050,7 +1140,7 @@ package body Trans.Chap4 is
          Data.Check_Null := False;
          Value := Null_Iir;
       end if;
-      Elab_Signal (Name_Node, Sig_Type, Data);
+      Elab_Signal (Name_Sig, Sig_Type, Data);
 
       Close_Temp;
 
@@ -1094,6 +1184,9 @@ package body Trans.Chap4 is
             Error_Kind ("elab_signal_attribute", Decl);
       end case;
       Start_Association (Assoc, Subprg);
+      New_Association (Assoc,
+                       New_Unchecked_Address (Get_Var (Info.Signal_Val),
+                                              Ghdl_Ptr_Type));
       case Get_Kind (Decl) is
          when Iir_Kind_Stable_Attribute
             | Iir_Kind_Quiet_Attribute =>
@@ -1113,13 +1206,20 @@ package body Trans.Chap4 is
 
       --  Register all signals this depends on.
       Prefix := Get_Prefix (Decl);
-      Prefix_Node := Chap6.Translate_Name (Prefix);
+      Prefix_Node := Chap6.Translate_Name (Prefix, Mode_Signal);
       Register_Signal (Prefix_Node, Get_Type (Prefix),
                        Ghdl_Signal_Attribute_Register_Prefix);
    end Elab_Signal_Attribute;
 
    type Delayed_Signal_Data is record
+      --  Value part of the signal.  The signal itself is passed by a
+      --  parameter.
+      Targ_Val : Mnode;
+
+      --  Prefix signal.
       Pfx   : Mnode;
+
+      --  Delay time.
       Param : Iir;
    end record;
 
@@ -1135,6 +1235,9 @@ package body Trans.Chap4 is
       New_Association
         (Assoc,
          New_Convert_Ov (New_Value (M2Lv (Data.Pfx)), Ghdl_Signal_Ptr));
+      New_Association
+        (Assoc,
+         New_Unchecked_Address (M2Lv (Data.Targ_Val), Ghdl_Ptr_Type));
       if Data.Param = Null_Iir then
          Val := New_Lit (New_Signed_Literal (Std_Time_Otype, 0));
       else
@@ -1145,7 +1248,7 @@ package body Trans.Chap4 is
       New_Assign_Stmt
         (M2Lv (Targ),
          New_Convert_Ov (New_Function_Call (Assoc),
-           Type_Info.Ortho_Type (Mode_Signal)));
+                         Type_Info.Ortho_Type (Mode_Signal)));
    end Create_Delayed_Signal_Noncomposite;
 
    function Create_Delayed_Signal_Prepare_Composite
@@ -1157,8 +1260,10 @@ package body Trans.Chap4 is
    begin
       Res.Param := Data.Param;
       if Get_Type_Info (Targ).Type_Mode = Type_Mode_Record then
+         Res.Targ_Val := Stabilize (Data.Targ_Val);
          Res.Pfx := Stabilize (Data.Pfx);
       else
+         Res.Targ_Val := Chap3.Get_Array_Base (Data.Targ_Val);
          Res.Pfx := Chap3.Get_Array_Base (Data.Pfx);
       end if;
       return Res;
@@ -1170,8 +1275,10 @@ package body Trans.Chap4 is
    is
    begin
       return Delayed_Signal_Data'
-        (Pfx => Chap3.Index_Base (Data.Pfx, Targ_Type,
-         New_Obj_Value (Index)),
+        (Targ_Val => Chap3.Index_Base (Data.Targ_Val, Targ_Type,
+                                       New_Obj_Value (Index)),
+         Pfx => Chap3.Index_Base (Data.Pfx, Targ_Type,
+                                  New_Obj_Value (Index)),
          Param => Data.Param);
    end Create_Delayed_Signal_Update_Data_Array;
 
@@ -1179,12 +1286,13 @@ package body Trans.Chap4 is
      (Data      : Delayed_Signal_Data;
       Targ_Type : Iir;
       El        : Iir_Element_Declaration)
-         return Delayed_Signal_Data
+     return Delayed_Signal_Data
    is
       pragma Unreferenced (Targ_Type);
    begin
       return Delayed_Signal_Data'
-        (Pfx => Chap6.Translate_Selected_Element (Data.Pfx, El),
+        (Targ_Val => Chap6.Translate_Selected_Element (Data.Targ_Val, El),
+         Pfx => Chap6.Translate_Selected_Element (Data.Pfx, El),
          Param => Data.Param);
    end Create_Delayed_Signal_Update_Data_Record;
 
@@ -1211,24 +1319,26 @@ package body Trans.Chap4 is
    is
       Sig_Type  : constant Iir := Get_Type (Decl);
       Type_Info : constant Type_Info_Acc := Get_Info (Sig_Type);
-      Name_Node : Mnode;
+      Name_Sig, Name_Val : Mnode;
       Pfx_Node  : Mnode;
       Data      : Delayed_Signal_Data;
    begin
-      Name_Node := Chap6.Translate_Name (Decl);
+      Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
 
       if Is_Complex_Type (Type_Info) then
-         Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Node);
+         Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Sig);
+         Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Val);
          --  We cannot stabilize NAME_NODE, since Allocate_Complex_Object
          --  assign it.
-         Name_Node := Chap6.Translate_Name (Decl);
+         Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
       end if;
 
-      Pfx_Node := Chap6.Translate_Name (Get_Prefix (Decl));
-      Data := Delayed_Signal_Data'(Pfx => Pfx_Node,
+      Pfx_Node := Chap6.Translate_Name (Get_Prefix (Decl), Mode_Signal);
+      Data := Delayed_Signal_Data'(Targ_Val => Name_Val,
+                                   Pfx => Pfx_Node,
                                    Param => Get_Parameter (Decl));
 
-      Create_Delayed_Signal (Name_Node, Get_Type (Decl), Data);
+      Create_Delayed_Signal (Name_Sig, Sig_Type, Data);
    end Elab_Signal_Delayed_Attribute;
 
    procedure Elab_File_Declaration (Decl : Iir_File_Declaration)
@@ -1243,8 +1353,7 @@ package body Trans.Chap4 is
       Info      : Type_Info_Acc;
    begin
       --  Elaborate the file.
-      Name := Chap6.Translate_Name (Decl);
-      pragma Assert (Get_Object_Kind (Name) = Mode_Value);
+      Name := Chap6.Translate_Name (Decl, Mode_Value);
 
       if Is_Text then
          Start_Association (Constr, Ghdl_Text_File_Elaborate);
@@ -1267,7 +1376,7 @@ package body Trans.Chap4 is
          return;
       end if;
       Open_Temp;
-      Name := Chap6.Translate_Name (Decl);
+      Name := Chap6.Translate_Name (Decl, Mode_Value);
       Open_Kind := Get_File_Open_Kind (Decl);
       if Open_Kind /= Null_Iir then
          --  VHDL 93 and later.
@@ -1305,7 +1414,7 @@ package body Trans.Chap4 is
       Name    : Mnode;
    begin
       Open_Temp;
-      Name := Chap6.Translate_Name (Decl);
+      Name := Chap6.Translate_Name (Decl, Mode_Value);
       Stabilize (Name);
 
       --  LRM 3.4.1 File Operations
@@ -1374,6 +1483,7 @@ package body Trans.Chap4 is
       Info      : Alias_Info_Acc;
       Tinfo     : Type_Info_Acc;
       Atype     : O_Tnode;
+      Id        : Var_Ident_Type;
    begin
       Chap3.Translate_Named_Type_Definition (Decl_Type, Get_Identifier (Decl));
 
@@ -1389,33 +1499,40 @@ package body Trans.Chap4 is
       end case;
 
       Tinfo := Get_Info (Decl_Type);
-      case Tinfo.Type_Mode is
-         when Type_Mode_Fat_Array =>
-            --  create an object.
-            --  At elaboration: copy base from name, copy bounds from type,
-            --   check for matching bounds.
-            Atype := Get_Ortho_Type (Decl_Type, Info.Alias_Kind);
-         when Type_Mode_Array
-            | Type_Mode_Acc
-            | Type_Mode_Bounds_Acc =>
-            --  Create an object pointer.
-            --  At elaboration: copy base from name.
-            Atype := Tinfo.Ortho_Ptr_Type (Info.Alias_Kind);
-         when Type_Mode_Scalar =>
-            case Info.Alias_Kind is
-               when Mode_Signal =>
-                  Atype := Tinfo.Ortho_Type (Mode_Signal);
-               when Mode_Value =>
-                  Atype := Tinfo.Ortho_Ptr_Type (Mode_Value);
-            end case;
-         when Type_Mode_Record =>
-            --  Create an object pointer.
-            --  At elaboration: copy base from name.
-            Atype := Tinfo.Ortho_Ptr_Type (Info.Alias_Kind);
-         when others =>
-            raise Internal_Error;
-      end case;
-      Info.Alias_Var := Create_Var (Create_Var_Identifier (Decl), Atype);
+      for Mode in Mode_Value .. Info.Alias_Kind loop
+         case Tinfo.Type_Mode is
+            when Type_Mode_Fat_Array =>
+               --  create an object.
+               --  At elaboration: copy base from name, copy bounds from type,
+               --   check for matching bounds.
+               Atype := Get_Ortho_Type (Decl_Type, Mode);
+            when Type_Mode_Array
+              | Type_Mode_Acc
+              | Type_Mode_Bounds_Acc =>
+               --  Create an object pointer.
+               --  At elaboration: copy base from name.
+               Atype := Tinfo.Ortho_Ptr_Type (Mode);
+            when Type_Mode_Scalar =>
+               case Mode is
+                  when Mode_Signal =>
+                     Atype := Tinfo.Ortho_Type (Mode_Signal);
+                  when Mode_Value =>
+                     Atype := Tinfo.Ortho_Ptr_Type (Mode_Value);
+               end case;
+            when Type_Mode_Record =>
+               --  Create an object pointer.
+               --  At elaboration: copy base from name.
+               Atype := Tinfo.Ortho_Ptr_Type (Mode);
+            when others =>
+               raise Internal_Error;
+         end case;
+         if Mode = Mode_Signal then
+            Id := Create_Var_Identifier (Decl, "_SIG", 0);
+         else
+            Id := Create_Var_Identifier (Decl);
+         end if;
+         Info.Alias_Var (Mode) := Create_Var (Id, Atype);
+      end loop;
    end Translate_Object_Alias_Declaration;
 
    procedure Elab_Object_Alias_Declaration
@@ -1426,57 +1543,58 @@ package body Trans.Chap4 is
       Name       : constant Iir := Get_Name (Decl);
       Name_Type  : constant Iir := Get_Type (Name);
       Alias_Info : constant Alias_Info_Acc := Get_Info (Decl);
-      Name_Node  : Mnode;
-      Alias_Node : Mnode;
-      Kind       : Object_Kind_Type;
+      Name_Node  : Mnode_Array;
    begin
       New_Debug_Line_Stmt (Get_Line_Number (Decl));
 
       Chap3.Elab_Object_Subtype (Decl_Type);
-      Name_Node := Chap6.Translate_Name (Name);
-      Kind := Get_Object_Kind (Name_Node);
 
-      case Tinfo.Type_Mode is
-         when Type_Mode_Fat_Array =>
-            Open_Temp;
-            Stabilize (Name_Node);
-            Alias_Node := Stabilize
-              (Get_Var (Alias_Info.Alias_Var,
-               Tinfo, Alias_Info.Alias_Kind));
-            Copy_Fat_Pointer (Alias_Node, Name_Node);
-            Close_Temp;
-         when Type_Mode_Array =>
-            Open_Temp;
-            Stabilize (Name_Node);
-            New_Assign_Stmt
-              (Get_Var (Alias_Info.Alias_Var),
-               M2E (Chap3.Get_Array_Base (Name_Node)));
-            Chap3.Check_Array_Match (Decl_Type, T2M (Decl_Type, Kind),
-                                     Name_Type, Name_Node,
-                                     Decl);
-            Close_Temp;
-         when Type_Mode_Acc
-            | Type_Mode_Bounds_Acc =>
-            New_Assign_Stmt (Get_Var (Alias_Info.Alias_Var),
-                             M2Addr (Name_Node));
-         when Type_Mode_Scalar =>
-            case Alias_Info.Alias_Kind is
-               when Mode_Value =>
-                  New_Assign_Stmt (Get_Var (Alias_Info.Alias_Var),
-                                   M2Addr (Name_Node));
-               when Mode_Signal =>
-                  New_Assign_Stmt (Get_Var (Alias_Info.Alias_Var),
-                                   M2E (Name_Node));
-            end case;
-         when Type_Mode_Record =>
-            Open_Temp;
-            Stabilize (Name_Node);
-            New_Assign_Stmt (Get_Var (Alias_Info.Alias_Var),
-                             M2Addr (Name_Node));
-            Close_Temp;
-         when others =>
-            raise Internal_Error;
+      Open_Temp;
+
+      case Alias_Info.Alias_Kind is
+         when Mode_Value =>
+            Name_Node (Mode_Value) := Chap6.Translate_Name (Name, Mode_Value);
+         when Mode_Signal =>
+            Chap6.Translate_Signal_Name
+              (Name, Name_Node (Mode_Signal), Name_Node (Mode_Value));
       end case;
+
+      for Mode in Mode_Value .. Alias_Info.Alias_Kind loop
+         declare
+            N : Mnode renames Name_Node (Mode);
+            A : Var_Type renames Alias_Info.Alias_Var (Mode);
+            Alias_Node : Mnode;
+         begin
+            case Tinfo.Type_Mode is
+               when Type_Mode_Fat_Array =>
+                  Stabilize (N);
+                  Alias_Node := Stabilize (Get_Var (A, Tinfo, Mode));
+                  Copy_Fat_Pointer (Alias_Node, N);
+               when Type_Mode_Array =>
+                  Stabilize (N);
+                  New_Assign_Stmt (Get_Var (A),
+                                   M2E (Chap3.Get_Array_Base (N)));
+                  Chap3.Check_Array_Match (Decl_Type, T2M (Decl_Type, Mode),
+                                           Name_Type, N, Decl);
+               when Type_Mode_Acc
+                 | Type_Mode_Bounds_Acc =>
+                  New_Assign_Stmt (Get_Var (A), M2Addr (N));
+               when Type_Mode_Scalar =>
+                  case Mode is
+                     when Mode_Value =>
+                        New_Assign_Stmt (Get_Var (A), M2Addr (N));
+                     when Mode_Signal =>
+                        New_Assign_Stmt (Get_Var (A), M2E (N));
+                  end case;
+               when Type_Mode_Record =>
+                  Stabilize (N);
+                  New_Assign_Stmt (Get_Var (A), M2Addr (N));
+               when others =>
+                  raise Internal_Error;
+            end case;
+         end;
+      end loop;
+      Close_Temp;
    end Elab_Object_Alias_Declaration;
 
    procedure Translate_Port_Chain (Parent : Iir)
@@ -2381,7 +2499,6 @@ package body Trans.Chap4 is
       Inter_List        : O_Inter_List;
       In_Type, Out_Type : Iir;
       In_Info, Out_Info : Type_Info_Acc;
-      Itype             : O_Tnode;
       El_List           : O_Element_List;
       Block_Info        : constant Block_Info_Acc := Get_Info (Base_Block);
       Stmt_Info         : Block_Info_Acc;
@@ -2455,22 +2572,22 @@ package body Trans.Chap4 is
          Conv_Info.Instantiated_Field := O_Fnode_Null;
       end if;
 
-      --  Add input.
-      case In_Info.Type_Mode is
-         when Type_Mode_Thin =>
-            Itype := In_Info.Ortho_Type (Mode_Signal);
-         when Type_Mode_Fat =>
-            Itype := In_Info.Ortho_Ptr_Type (Mode_Signal);
-         when Type_Mode_Unknown =>
-            raise Internal_Error;
-      end case;
+      --  Add inputs, which is a pointer to the signal.
       New_Record_Field
-        (El_List, Conv_Info.In_Field, Get_Identifier ("val_in"), Itype);
+        (El_List, Conv_Info.In_Sig_Field, Get_Identifier ("sig_in"),
+         Get_Object_Ptr_Type (In_Info, Mode_Signal));
+      New_Record_Field
+        (El_List, Conv_Info.In_Val_Field, Get_Identifier ("val_in"),
+         Get_Object_Ptr_Type (In_Info, Mode_Value));
 
       --  Add output.
       New_Record_Field
-        (El_List, Conv_Info.Out_Field, Get_Identifier ("val_out"),
+        (El_List, Conv_Info.Out_Sig_Field, Get_Identifier ("sig_out"),
          Get_Object_Type (Out_Info, Mode_Signal));
+      New_Record_Field
+        (El_List, Conv_Info.Out_Val_Field, Get_Identifier ("val_out"),
+         Get_Object_Type (Out_Info, Mode_Value));
+
       Finish_Record_Type (El_List, Conv_Info.Record_Type);
       New_Type_Decl (Create_Identifier ("DTYPE"), Conv_Info.Record_Type);
       Conv_Info.Record_Ptr_Type := New_Access_Type (Conv_Info.Record_Type);
@@ -2531,13 +2648,16 @@ package body Trans.Chap4 is
       end if;
 
       --  Read signal value.
-      E := New_Value_Selected_Acc_Value (New_Obj (Var_Data),
-                                         Conv_Info.In_Field);
       case Mode is
          when Conv_Mode_In =>
-            R := Chap7.Translate_Signal_Effective_Value (E, In_Type);
+            V1 := New_Selected_Acc_Value (New_Obj (Var_Data),
+                                          Conv_Info.In_Val_Field);
+            R := M2E (Lop2M (V1, In_Info, Mode_Value));
          when Conv_Mode_Out =>
-            R := Chap7.Translate_Signal_Driving_Value (E, In_Type);
+            V1 := New_Selected_Acc_Value (New_Obj (Var_Data),
+                                          Conv_Info.In_Sig_Field);
+            R := M2E (Lop2M (V1, In_Info, Mode_Signal));
+            R := Chap7.Translate_Signal_Driving_Value (R, In_Type);
       end case;
 
       case Get_Kind (Imp) is
@@ -2598,9 +2718,8 @@ package body Trans.Chap4 is
 
          when Iir_Kind_Type_Conversion =>
             declare
-               Conv_Type : Iir;
+               Conv_Type : constant Iir := Get_Type (Imp);
             begin
-               Conv_Type := Get_Type (Imp);
                E := Chap7.Translate_Type_Conversion
                  (R, In_Type, Conv_Type, Assoc);
                E := Chap7.Translate_Implicit_Conv
@@ -2613,14 +2732,16 @@ package body Trans.Chap4 is
       end case;
 
       --  Assign signals.
-      V1 := New_Selected_Acc_Value (New_Obj (Var_Data),
-                                    Conv_Info.Out_Field);
-      V_Out := Lo2M (V1, Out_Info, Mode_Signal);
-
       case Mode is
          when Conv_Mode_In =>
-            Chap7.Set_Effective_Value (V_Out, Out_Type, Res);
+            V1 := New_Selected_Acc_Value (New_Obj (Var_Data),
+                                          Conv_Info.Out_Val_Field);
+            V_Out := Lo2M (V1, Out_Info, Mode_Value);
+            Chap7.Translate_Assign (V_Out, M2E (Res), Formal, Out_Type, Assoc);
          when Conv_Mode_Out =>
+            V1 := New_Selected_Acc_Value (New_Obj (Var_Data),
+                                          Conv_Info.Out_Sig_Field);
+            V_Out := Lo2M (V1, Out_Info, Mode_Signal);
             Chap7.Set_Driving_Value (V_Out, Out_Type, Res);
       end case;
 
@@ -2681,26 +2802,26 @@ package body Trans.Chap4 is
                               Sig_Out    : Iir;
                               Reg_Subprg : O_Dnode;
                               Info       : Assoc_Conv_Info;
-                              Ndest      : out Mnode)
+                              Dest_Sig   : out Mnode)
    is
-      Out_Type : Iir;
-      Out_Info : Type_Info_Acc;
-      Ssig     : Mnode;
+      Out_Type : constant Iir := Get_Type (Sig_Out);
+      Out_Info : constant Type_Info_Acc := Get_Info (Out_Type);
+      In_Type : constant Iir := Get_Type (Sig_In);
+      In_Info : constant Type_Info_Acc := Get_Info (In_Type);
+      Src_Sig  : Mnode;
+      Src_Val  : Mnode;
+      Dest_Val : Mnode;
       Constr   : O_Assoc_List;
       Var_Data : O_Dnode;
       Data     : Elab_Signal_Data;
    begin
-      Out_Type := Get_Type (Sig_Out);
-      Out_Info := Get_Info (Out_Type);
-
       --  Allocate data for the subprogram.
       Var_Data := Create_Temp (Info.Record_Ptr_Type);
       New_Assign_Stmt
         (New_Obj (Var_Data),
          Gen_Alloc (Alloc_System,
-           New_Lit (New_Sizeof (Info.Record_Type,
-             Ghdl_Index_Type)),
-           Info.Record_Ptr_Type));
+                    New_Lit (New_Sizeof (Info.Record_Type, Ghdl_Index_Type)),
+                    Info.Record_Ptr_Type));
 
       --  Set instance.
       New_Assign_Stmt
@@ -2731,54 +2852,69 @@ package body Trans.Chap4 is
       end if;
 
       --  Set input.
-      Ssig := Chap6.Translate_Name (Sig_In);
-      Ssig := Stabilize (Ssig, True);
+      Chap6.Translate_Signal_Name (Sig_In, Src_Sig, Src_Val);
+      Src_Sig := Stabilize (Src_Sig, True);
 
-      New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Var_Data), Info.In_Field),
-         M2E (Ssig));
+      Assign_Obj_Ptr (Lop2M (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                                     Info.In_Sig_Field),
+                             In_Info, Mode_Signal),
+                      Src_Sig);
+      Assign_Obj_Ptr (Lop2M (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                                     Info.In_Val_Field),
+                             In_Info, Mode_Value),
+                      Src_Val);
 
       --  Create a copy of SIG_OUT.
-      Ndest := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
-                     Info.Out_Field),
-                     Out_Info, Mode_Signal);
-      Chap4.Allocate_Complex_Object (Out_Type, Alloc_System, Ndest);
+      Dest_Sig := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                                Info.Out_Sig_Field),
+                        Out_Info, Mode_Signal);
+      Chap4.Allocate_Complex_Object (Out_Type, Alloc_System, Dest_Sig);
+      Dest_Val := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                                Info.Out_Val_Field),
+                        Out_Info, Mode_Value);
+      Chap4.Allocate_Complex_Object (Out_Type, Alloc_System, Dest_Val);
       --  Note: NDEST will be assigned by ELAB_SIGNAL.
-      Ndest := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
-                     Info.Out_Field),
-                     Out_Info, Mode_Signal);
-      Data := Elab_Signal_Data'(Has_Val => False,
+      Dest_Sig := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                                Info.Out_Sig_Field),
+                        Out_Info, Mode_Signal);
+      Dest_Val := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                                Info.Out_Val_Field),
+                        Out_Info, Mode_Value);
+      Data := Elab_Signal_Data'(Value => Dest_Val,
+                                Has_Val => False,
                                 Already_Resolved => True,
-                                Val => Mnode_Null,
+                                Init_Val => Mnode_Null,
                                 Check_Null => False,
                                 If_Stmt => null);
-      Elab_Signal (Ndest, Out_Type, Data);
+      Elab_Signal (Dest_Sig, Out_Type, Data);
 
-      Ndest := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
-                     Info.Out_Field),
-                     Out_Info, Mode_Signal);
-      Ndest := Stabilize (Ndest, True);
+      Dest_Sig := Lo2M (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                                Info.Out_Sig_Field),
+                        Out_Info, Mode_Signal);
+      Dest_Sig := Stabilize (Dest_Sig, True);
 
       --  Register.
       Start_Association (Constr, Reg_Subprg);
       New_Association
         (Constr, New_Lit (New_Subprogram_Address (Info.Subprg,
-         Ghdl_Ptr_Type)));
+                                                  Ghdl_Ptr_Type)));
       New_Association
         (Constr, New_Convert_Ov (New_Obj_Value (Var_Data), Ghdl_Ptr_Type));
 
       New_Association
         (Constr,
-         New_Convert_Ov (M2E (Get_Leftest_Signal (Ssig, Get_Type (Sig_In))),
-           Ghdl_Signal_Ptr));
-      New_Association (Constr, Get_Nbr_Signals (Ssig, Get_Type (Sig_In)));
+         New_Convert_Ov (M2E (Get_Leftest_Signal (Src_Sig, Get_Type (Sig_In))),
+                         Ghdl_Signal_Ptr));
+      New_Association
+        (Constr, Get_Nbr_Signals (Src_Sig, Get_Type (Sig_In)));
 
       New_Association
         (Constr,
-         New_Convert_Ov
-           (M2E (Get_Leftest_Signal (Ndest, Get_Type (Sig_Out))),
-            Ghdl_Signal_Ptr));
-      New_Association (Constr, Get_Nbr_Signals (Ndest, Get_Type (Sig_Out)));
+         New_Convert_Ov (M2E (Get_Leftest_Signal (Dest_Sig,
+                                                  Get_Type (Sig_Out))),
+                         Ghdl_Signal_Ptr));
+      New_Association
+        (Constr, Get_Nbr_Signals (Dest_Sig, Get_Type (Sig_Out)));
 
       New_Procedure_Call (Constr);
    end Elab_Conversion;
@@ -2786,10 +2922,8 @@ package body Trans.Chap4 is
    --  In conversion: from actual to formal.
    procedure Elab_In_Conversion (Assoc : Iir; Ndest : out Mnode)
    is
-      Assoc_Info : Assoc_Info_Acc;
+      Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
-      Assoc_Info := Get_Info (Assoc);
-
       Elab_Conversion
         (Get_Actual (Assoc), Get_Formal (Assoc),
          Ghdl_Signal_In_Conversion, Assoc_Info.Assoc_In, Ndest);
@@ -2798,10 +2932,8 @@ package body Trans.Chap4 is
    --  Out conversion: from formal to actual.
    procedure Elab_Out_Conversion (Assoc : Iir; Ndest : out Mnode)
    is
-      Assoc_Info : Assoc_Info_Acc;
+      Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
-      Assoc_Info := Get_Info (Assoc);
-
       Elab_Conversion
         (Get_Formal (Assoc), Get_Actual (Assoc),
          Ghdl_Signal_Out_Conversion, Assoc_Info.Assoc_Out, Ndest);

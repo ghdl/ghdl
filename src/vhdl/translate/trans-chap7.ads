@@ -24,17 +24,10 @@ package Trans.Chap7 is
    function Translate_Signal_Value (Sig : O_Enode; Sig_Type : Iir)
                                        return O_Enode;
 
-   --  Extract the effective value of SIG.
-   function Translate_Signal_Effective_Value (Sig : O_Enode; Sig_Type : Iir)
-                                                 return O_Enode;
    function Translate_Signal_Driving_Value (Sig : O_Enode; Sig_Type : Iir)
                                                return O_Enode;
 
-   --  Directly set the effective value of SIG with VAL.
-   --  Used only by conversion.
-   procedure Set_Effective_Value
-     (Sig : Mnode; Sig_Type : Iir; Val : Mnode);
-
+   --  For conversions.
    procedure Set_Driving_Value
      (Sig : Mnode; Sig_Type : Iir; Val : Mnode);
 
@@ -84,6 +77,10 @@ package Trans.Chap7 is
    function Translate_Type_Conversion
      (Expr : O_Enode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir)
          return O_Enode;
+
+   --  Convert bounds SRC (of type SRC_TYPE) to RES (of type RES_TYPE).
+   procedure Translate_Type_Conversion_Bounds
+     (Res : Mnode; Src : Mnode; Res_Type : Iir; Src_Type : Iir; Loc : Iir);
 
    --  Convert range EXPR into ortho tree.
    --  If RANGE_TYPE /= NULL_IIR, convert bounds to RANGE_TYPE.
