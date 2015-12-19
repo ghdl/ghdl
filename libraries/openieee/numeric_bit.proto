@@ -21,4 +21,7 @@ package NUMERIC_BIT is
   type SIGNED   is array (natural range <>) of BIT;
 
   @COMMON
+
+  function rising_edge (signal s : bit) return boolean;
+  function falling_edge (signal s : bit) return boolean;
 end NUMERIC_BIT;

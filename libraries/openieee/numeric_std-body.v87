@@ -370,7 +370,7 @@ package body NUMERIC_STD is
   end std_match;
 
 
-  function "+" (l : UNSIGNED; r : UNSIGNED) return UNSIGNED
+  function "+" (l, r : UNSIGNED) return UNSIGNED
   is
     constant lft : integer := MAX (l'length, r'length) - 1;
     subtype res_type is UNSIGNED (lft downto 0);
@@ -407,7 +407,7 @@ package body NUMERIC_STD is
     return res;
   end "+";
 
-  function "+" (l : SIGNED; r : SIGNED) return SIGNED
+  function "+" (l, r : SIGNED) return SIGNED
   is
     constant lft : integer := MAX (l'length, r'length) - 1;
     subtype res_type is SIGNED (lft downto 0);
@@ -616,7 +616,7 @@ package body NUMERIC_STD is
     return res;
   end "+";
 
-  function "-" (l : UNSIGNED; r : UNSIGNED) return UNSIGNED
+  function "-" (l, r : UNSIGNED) return UNSIGNED
   is
     constant lft : integer := MAX (l'length, r'length) - 1;
     subtype res_type is UNSIGNED (lft downto 0);
@@ -654,7 +654,7 @@ package body NUMERIC_STD is
     return res;
   end "-";
 
-  function "-" (l : SIGNED; r : SIGNED) return SIGNED
+  function "-" (l, r : SIGNED) return SIGNED
   is
     constant lft : integer := MAX (l'length, r'length) - 1;
     subtype res_type is SIGNED (lft downto 0);
@@ -868,7 +868,7 @@ package body NUMERIC_STD is
     return res;
   end "-";
 
-  function "*" (L : UNSIGNED; R : UNSIGNED) return UNSIGNED
+  function "*" (L, R : UNSIGNED) return UNSIGNED
   is
      alias la : UNSIGNED (L'Length - 1 downto 0) is l;
      alias ra : UNSIGNED (R'Length - 1 downto 0) is r;
@@ -906,7 +906,7 @@ package body NUMERIC_STD is
      return res;
   end "*";
 
-  function "*" (L : SIGNED; R : SIGNED) return SIGNED
+  function "*" (L, R : SIGNED) return SIGNED
   is
      alias la : SIGNED (L'Length - 1 downto 0) is l;
      alias ra : SIGNED (R'Length - 1 downto 0) is r;
@@ -1078,7 +1078,7 @@ package body NUMERIC_STD is
      return res;
   end size_signed;
 
-  function "/" (L : UNSIGNED; R : UNSIGNED) return UNSIGNED
+  function "/" (L, R : UNSIGNED) return UNSIGNED
   is
      subtype l_type is UNSIGNED (L'length - 1 downto 0);
      subtype r_type is UNSIGNED (R'length - 1 downto 0);
@@ -1124,7 +1124,7 @@ package body NUMERIC_STD is
      return resize (to_unsigned (l, l_size) / r, r'length);
   end "/";
 
-  function "rem" (L : UNSIGNED; R : UNSIGNED) return UNSIGNED
+  function "rem" (L, R : UNSIGNED) return UNSIGNED
   is
      subtype l_type is UNSIGNED (L'length - 1 downto 0);
      subtype r_type is UNSIGNED (R'length - 1 downto 0);
@@ -1170,7 +1170,7 @@ package body NUMERIC_STD is
      return to_unsigned (l, l_size) rem r;
   end "rem";
 
-  function "mod" (L : UNSIGNED; R : UNSIGNED) return UNSIGNED
+  function "mod" (L, R : UNSIGNED) return UNSIGNED
   is
      subtype l_type is UNSIGNED (L'length - 1 downto 0);
      subtype r_type is UNSIGNED (R'length - 1 downto 0);
@@ -1282,7 +1282,7 @@ package body NUMERIC_STD is
      return res;
   end "abs";
 
-  function "/" (L : SIGNED; R : SIGNED) return SIGNED
+  function "/" (L, R : SIGNED) return SIGNED
   is
      subtype l_type is SIGNED (L'length - 1 downto 0);
      subtype r_type is SIGNED (R'length - 1 downto 0);
@@ -1346,7 +1346,7 @@ package body NUMERIC_STD is
      return resize (to_signed (l, max (l_size, r'length)) / r, r'length);
   end "/";
 
-  function "rem" (L : SIGNED; R : SIGNED) return SIGNED
+  function "rem" (L, R : SIGNED) return SIGNED
   is
      subtype l_type is SIGNED (L'length - 1 downto 0);
      subtype r_type is SIGNED (R'length - 1 downto 0);
@@ -1411,7 +1411,7 @@ package body NUMERIC_STD is
      return to_signed (l, l_size) rem r;
   end "rem";
 
-  function "mod" (L : SIGNED; R : SIGNED) return SIGNED
+  function "mod" (L, R : SIGNED) return SIGNED
   is
      subtype l_type is SIGNED (L'length - 1 downto 0);
      subtype r_type is SIGNED (R'length - 1 downto 0);
@@ -1758,7 +1758,7 @@ package body NUMERIC_STD is
     return res;
   end "xor";
 
-  function ucompare (l : UNSIGNED; r : UNSIGNED) return compare_type
+  function ucompare (l, r : UNSIGNED) return compare_type
   is
      constant sz : integer := MAX (l'length, r'length) - 1;
      alias la : UNSIGNED (l'length - 1 downto 0) is l;
@@ -1791,7 +1791,7 @@ package body NUMERIC_STD is
      return res;
   end ucompare;
 
-  function scompare (l : SIGNED; r : SIGNED) return compare_type
+  function scompare (l, r : SIGNED) return compare_type
   is
      constant sz : integer := MAX (l'length, r'length) - 1;
      alias la : SIGNED (l'length - 1 downto 0) is l;
@@ -1909,7 +1909,7 @@ package body NUMERIC_STD is
     return res;
   end scompare;
 
-  function "=" (l : UNSIGNED; r : UNSIGNED) return boolean
+  function "=" (l, r : UNSIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -1930,7 +1930,7 @@ package body NUMERIC_STD is
      return res = compare_eq;
   end "=";
 
-  function "=" (l : SIGNED; r : SIGNED) return boolean
+  function "=" (l, r : SIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -2053,7 +2053,7 @@ package body NUMERIC_STD is
      return compare_eq = res;
   end "=";
 
-  function "/=" (l : UNSIGNED; r : UNSIGNED) return boolean
+  function "/=" (l, r : UNSIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -2074,7 +2074,7 @@ package body NUMERIC_STD is
      return res /= compare_eq;
   end "/=";
 
-  function "/=" (l : SIGNED; r : SIGNED) return boolean
+  function "/=" (l, r : SIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -2197,7 +2197,7 @@ package body NUMERIC_STD is
      return compare_eq /= res;
   end "/=";
 
-  function ">" (l : UNSIGNED; r : UNSIGNED) return boolean
+  function ">" (l, r : UNSIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -2218,7 +2218,7 @@ package body NUMERIC_STD is
      return res > compare_eq;
   end ">";
 
-  function ">" (l : SIGNED; r : SIGNED) return boolean
+  function ">" (l, r : SIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -2341,7 +2341,7 @@ package body NUMERIC_STD is
      return compare_eq > res;
   end ">";
 
-  function ">=" (l : UNSIGNED; r : UNSIGNED) return boolean
+  function ">=" (l, r : UNSIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -2362,7 +2362,7 @@ package body NUMERIC_STD is
      return res >= compare_eq;
   end ">=";
 
-  function ">=" (l : SIGNED; r : SIGNED) return boolean
+  function ">=" (l, r : SIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -2485,7 +2485,7 @@ package body NUMERIC_STD is
      return compare_eq >= res;
   end ">=";
 
-  function "<" (l : UNSIGNED; r : UNSIGNED) return boolean
+  function "<" (l, r : UNSIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -2506,7 +2506,7 @@ package body NUMERIC_STD is
      return res < compare_eq;
   end "<";
 
-  function "<" (l : SIGNED; r : SIGNED) return boolean
+  function "<" (l, r : SIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -2629,7 +2629,7 @@ package body NUMERIC_STD is
      return compare_eq < res;
   end "<";
 
-  function "<=" (l : UNSIGNED; r : UNSIGNED) return boolean
+  function "<=" (l, r : UNSIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -2650,7 +2650,7 @@ package body NUMERIC_STD is
      return res <= compare_eq;
   end "<=";
 
-  function "<=" (l : SIGNED; r : SIGNED) return boolean
+  function "<=" (l, r : SIGNED) return boolean
   is
      variable res : compare_type;
   begin
@@ -2803,7 +2803,7 @@ package body NUMERIC_STD is
      return res;
   end shift_right;
 
-  function rotate_left (ARG : UNSIGNED; COUNT: NATURAL) return UNSIGNED
+  function rotate_left (ARG : UNSIGNED; COUNT: natural) return UNSIGNED
   is
      subtype res_type is UNSIGNED (ARG'length - 1 downto 0);
      alias arg1 : res_type is arg;
@@ -2819,7 +2819,7 @@ package body NUMERIC_STD is
      return res;
   end rotate_left;
 
-  function rotate_right (ARG : UNSIGNED; COUNT: NATURAL) return UNSIGNED
+  function rotate_right (ARG : UNSIGNED; COUNT: natural) return UNSIGNED
   is
      subtype res_type is UNSIGNED (ARG'length - 1 downto 0);
      alias arg1 : res_type is arg;
@@ -2865,7 +2865,7 @@ package body NUMERIC_STD is
      return res;
   end shift_right;
 
-  function rotate_left (ARG : SIGNED; COUNT: NATURAL) return SIGNED
+  function rotate_left (ARG : SIGNED; COUNT: natural) return SIGNED
   is
      subtype res_type is SIGNED (ARG'length - 1 downto 0);
      alias arg1 : res_type is arg;
@@ -2881,7 +2881,7 @@ package body NUMERIC_STD is
      return res;
   end rotate_left;
 
-  function rotate_right (ARG : SIGNED; COUNT: NATURAL) return SIGNED
+  function rotate_right (ARG : SIGNED; COUNT: natural) return SIGNED
   is
      subtype res_type is SIGNED (ARG'length - 1 downto 0);
      alias arg1 : res_type is arg;

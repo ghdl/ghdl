@@ -177,4 +177,14 @@ package body NUMERIC_BIT is
   @ARITH
 
   @LOG
+
+  function rising_edge (signal s : bit) return boolean is
+  begin
+    return s'event and s = '1';
+  end rising_edge;
+
+  function falling_edge (signal s : bit) return boolean is
+  begin
+    return s'event and s = '0';
+  end falling_edge;
 end NUMERIC_BIT;

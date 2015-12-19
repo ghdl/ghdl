@@ -117,7 +117,7 @@ vec_types = ['ulogic', 'logic']
 def disp_scalar_binary(fun):
     "Generate scalar binary function body"
     w("""
-  function "{0}" (l, r : std_ulogic) return UX01 is
+  function "{0}" (l : std_ulogic; r : std_ulogic) return UX01 is
   begin
     return {0}_table (l, r);
   end "{0}";\n""".format(fun))
@@ -221,11 +221,11 @@ def disp_bv_to_sv_conv(typ):
 def disp_sv_to_sv_conv(s,d):
     "Generate logic vector to logic vector function body"
     w("""
-  function to_std{1}vector (b : std_{0}_vector) return std_{1}_vector
+  function to_std{1}vector (s : std_{0}_vector) return std_{1}_vector
   is
-    subtype res_type is std_{1}_vector (b'length - 1 downto 0);
+    subtype res_type is std_{1}_vector (s'length - 1 downto 0);
   begin
-    return res_type (b);
+    return res_type (s);
   end to_std{1}vector;\n""".format(s,d))
 
 def disp_all_conv_funcs():
@@ -329,7 +329,7 @@ spec_file='std_logic_1164.vhdl'
 proto_file='std_logic_1164-body.proto'
 
 def gen_body():
-    w('--  This file was generated from ' + proto_file + '\n')
+    w('--  This -*- vhdl -*- file was generated from ' + proto_file + '\n')
     for line in open(proto_file):
         if line in pats:
             pats[line]()

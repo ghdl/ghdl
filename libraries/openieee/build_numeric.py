@@ -37,6 +37,8 @@ logic_undefs = {'bit' : "'0'", 'std': "'X'" }
 
 logic = 'xx' # Current logic, either bit or std
 
+v93=False
+
 # Stream to write.
 out=sys.stdout
 
@@ -115,7 +117,7 @@ def extract_extend_bit(name,typ):
 def disp_vec_vec_binary(func, typ):
     "Generate vector binary function body"
     res = """
-  function "{0}" (l : {1}; r : {1}) return {1}
+  function "{0}" (l, r : {1}) return {1}
   is
     constant lft : integer := MAX (l'length, r'length) - 1;
     subtype res_type is {1} (lft downto 0);
@@ -366,7 +368,7 @@ def disp_vec_int_compare(func, left, right):
 def disp_vec_vec_gcompare(func, typ):
     "Generate comparison function"
     res = """
-  function {func} (l : {typ}; r : {typ}) return compare_type
+  function {func} (l, r : {typ}) return compare_type
   is
      constant sz : integer := MAX (l'length, r'length) - 1;
      alias la : {typ} (l'length - 1 downto 0) is l;
@@ -418,7 +420,7 @@ def disp_vec_vec_gcompare(func, typ):
 def disp_vec_vec_compare(func, typ):
     "Generate comparison function"
     res = """
-  function "{func}" (l : {typ}; r : {typ}) return boolean
+  function "{func}" (l, r : {typ}) return boolean
   is
      variable res : compare_type;
   begin
@@ -498,6 +500,40 @@ def disp_resize(typ):
   end resize;\n"""
     w(res.format(typ))
 
+def gen_shift(dir, inv):
+    if (dir == 'left') ^ inv:
+        res = """
+       res (res'left downto {opp}count) := arg1 (arg1'left {sub} count downto 0);"""
+    else:
+        res = """
+       res (res'left {sub} count downto 0) := arg1 (arg1'left downto {opp}count);"""
+    if inv:
+        return res.format(opp="-", sub="+")
+    else:
+        return res.format(opp="", sub="-")
+
+def disp_shift_op(name, typ, dir):
+    res = """
+  function {0} (ARG : {1}; COUNT: INTEGER) return {1}
+  is
+     subtype res_type is {1} (ARG'length - 1 downto 0);
+     alias arg1 : res_type is arg;
+     variable res : res_type := (others => '0');
+  begin
+     if res'length = 0 then
+        return null_{1};
+     end if;
+     if count >= 0 and count <= arg1'left then"""
+    res += gen_shift(dir, False)
+    res += """
+     elsif count < 0 and count >= -arg1'left then"""
+    res += gen_shift(dir, True)
+    res += """
+     end if;
+     return res;
+  end {0};\n"""
+    w(res.format(name, typ))
+
 def disp_shift(name, typ, dir):
     res = """
   function {0} (ARG : {1}; COUNT: NATURAL) return {1}
@@ -515,12 +551,7 @@ def disp_shift(name, typ, dir):
         return null_{1};
      end if;
      if count <= arg1'left then"""
-    if dir == 'left':
-        res += """
-       res (res'left downto count) := arg1 (arg1'left - count downto 0);"""
-    else:
-        res += """
-       res (res'left - count downto 0) := arg1 (arg1'left downto count);"""
+    res += gen_shift(dir, False)
     res += """
      end if;
      return res;
@@ -528,8 +559,14 @@ def disp_shift(name, typ, dir):
     w(res.format(name, typ))
 
 def disp_rotate(name, typ, dir):
+    if 'rotate' in name:
+        count_type = 'natural'
+        op = 'rem'
+    else:
+        count_type = 'integer'
+        op = 'mod'
     res = """
-  function {0} (ARG : {1}; COUNT: NATURAL) return {1}
+  function {0} (ARG : {1}; COUNT: {2}) return {1}
   is
      subtype res_type is {1} (ARG'length - 1 downto 0);
      alias arg1 : res_type is arg;
@@ -539,7 +576,7 @@ def disp_rotate(name, typ, dir):
      if res'length = 0 then
         return null_{1};
      end if;
-     cnt := count rem res'length;"""
+     cnt := count """ + op + " res'length;"
     if dir == 'left':
         res += """
      res (res'left downto cnt) := arg1 (res'left - cnt downto 0);
@@ -551,11 +588,11 @@ def disp_rotate(name, typ, dir):
     res += """
      return res;
   end {0};\n"""
-    w(res.format(name, typ))
+    w(res.format(name, typ, count_type))
 
 def disp_vec_vec_mul(func, typ):
     res = """
-  function "{0}" (L : {1}; R : {1}) return {1}
+  function "{0}" (L, R : {1}) return {1}
   is
      alias la : {1} (L'Length - 1 downto 0) is l;
      alias ra : {1} (R'Length - 1 downto 0) is r;
@@ -780,7 +817,7 @@ def disp_divmod():
 
 def disp_vec_vec_udiv(func):
     res = """
-  function "{func}" (L : UNSIGNED; R : UNSIGNED) return UNSIGNED
+  function "{func}" (L, R : UNSIGNED) return UNSIGNED
   is
      subtype l_type is UNSIGNED (L'length - 1 downto 0);
      subtype r_type is UNSIGNED (R'length - 1 downto 0);
@@ -853,7 +890,7 @@ def disp_vec_int_udiv(func):
 
 def disp_vec_vec_sdiv(func):
     res = """
-  function "{func}" (L : SIGNED; R : SIGNED) return SIGNED
+  function "{func}" (L, R : SIGNED) return SIGNED
   is
      subtype l_type is SIGNED (L'length - 1 downto 0);
      subtype r_type is SIGNED (R'length - 1 downto 0);
@@ -994,6 +1031,11 @@ def disp_all_log_funcs():
             disp_shift('shift_' + d, t, d);
         for d in ['left', 'right']:
             disp_rotate('rotate_' + d, t, d);
+        if v93:
+            disp_shift_op('"sll"', t, 'left')
+            disp_shift_op('"srl"', t, 'right')
+            disp_rotate('"rol"', t, 'left')
+            disp_rotate('"ror"', t, 'right')
 
 def disp_match(typ):
     res = """
@@ -1089,7 +1131,11 @@ for log in logics:
                 for lcom in open('numeric_common.proto'):
                     if lcom[0:2] == '--':
                         pass
-                    elif std == '87' and '"xnor"' in lcom:
+                    elif std == '87' and ('"xnor"' in lcom
+                                          or '"sll"' in lcom
+                                          or '"srl"' in lcom
+                                          or '"rol"' in lcom
+                                          or '"ror"' in lcom):
                         w("--" + lcom[2:])
                     else:
                         w(lcom)
@@ -1098,12 +1144,14 @@ for log in logics:
         out.close()
 
 # Generate bodies
+v93=False
 for l in logics:
     logic = l
     out=open('numeric_{0}-body.v87'.format(l), 'w')
     gen_body('numeric_{0}-body.proto'.format(l))
     out.close()
 
+v93=True
 binary_funcs.append("xnor")
 for l in logics:
     logic = l

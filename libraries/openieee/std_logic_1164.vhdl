@@ -65,12 +65,12 @@ package std_logic_1164 is
   --  0 and L are normalized to 0, 1 and 1 are normalized to 1, U isnt changed,
   --  all other states are normalized to X.
   --  Then the classical electric rules are followed.
-  function "and"  (l, r : std_ulogic) return UX01;
-  function "nand" (l, r : std_ulogic) return UX01;
-  function "or"   (l, r : std_ulogic) return UX01;
-  function "nor"  (l, r : std_ulogic) return UX01;
-  function "xor"  (l, r : std_ulogic) return UX01;
-  function "xnor" (l, r : std_ulogic) return UX01;
+  function "and"  (l : std_ulogic; r : std_ulogic) return UX01;
+  function "nand" (l : std_ulogic; r : std_ulogic) return UX01;
+  function "or"   (l : std_ulogic; r : std_ulogic) return UX01;
+  function "nor"  (l : std_ulogic; r : std_ulogic) return UX01;
+  function "xor"  (l : std_ulogic; r : std_ulogic) return UX01;
+  function "xnor" (l : std_ulogic; r : std_ulogic) return UX01;
   function "not"  (l : std_ulogic) return UX01;
 
   --  Logical operators for vectors.
@@ -103,9 +103,9 @@ package std_logic_1164 is
 
   function to_stdulogic (b : bit) return std_ulogic;
   function to_stdlogicvector (b : bit_vector) return std_logic_vector;
-  function to_stdlogicvector (b : std_ulogic_vector) return std_logic_vector;
+  function to_stdlogicvector (s : std_ulogic_vector) return std_logic_vector;
   function to_stdulogicvector (b : bit_vector) return std_ulogic_vector;
-  function to_stdulogicvector (b : std_logic_vector) return std_ulogic_vector;
+  function to_stdulogicvector (s : std_logic_vector) return std_ulogic_vector;
 
   --  Normalization.
   --  The result range (for vectors) is 1 to S'Length.
