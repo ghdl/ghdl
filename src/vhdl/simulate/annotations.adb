@@ -63,10 +63,9 @@ package body Annotations is
    end Increment_Current_Scope;
 
    -- Add an annotation to object OBJ.
-   procedure Create_Object_Info
-     (Block_Info : Sim_Info_Acc;
-      Obj : Iir;
-      Obj_Kind : Sim_Info_Kind := Kind_Object)
+   procedure Create_Object_Info (Block_Info : Sim_Info_Acc;
+                                 Obj : Iir;
+                                 Obj_Kind : Sim_Info_Kind := Kind_Object)
    is
       Info : Sim_Info_Acc;
    begin
@@ -84,7 +83,7 @@ package body Annotations is
             Info := new Sim_Info_Type'(Kind => Kind_Signal,
                                        Obj_Scope => Current_Scope,
                                        Slot => Block_Info.Nbr_Objects);
-            --  Reserve one more slot for default value.
+            --  Reserve one more slot for value.
             Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
          when Kind_Terminal =>
             Info := new Sim_Info_Type'(Kind => Kind_Terminal,
