@@ -542,6 +542,13 @@ package body Translation is
                         Ghdl_Dir_Type_Node);
       end;
 
+      --  Create __ghdl_signal_ptr (incomplete type).
+      New_Uncomplete_Record_Type (Ghdl_Signal_Type);
+      New_Type_Decl (Get_Identifier ("__ghdl_signal"), Ghdl_Signal_Type);
+
+      Ghdl_Signal_Ptr := New_Access_Type (Ghdl_Signal_Type);
+      New_Type_Decl (Get_Identifier ("__ghdl_signal_ptr"), Ghdl_Signal_Ptr);
+
       --  Create void* __ghdl_alloc (unsigned size);
       Start_Function_Decl (Interfaces, Get_Identifier ("__ghdl_alloc"),
                            O_Storage_External, Ghdl_Ptr_Type);
@@ -1240,12 +1247,6 @@ package body Translation is
         (Chararray_Type, New_Unsigned_Literal (Ghdl_Index_Type, 8));
       New_Type_Decl (Get_Identifier ("__ghdl_scalar_bytes"),
                      Ghdl_Scalar_Bytes);
-
-      New_Uncomplete_Record_Type (Ghdl_Signal_Type);
-      New_Type_Decl (Get_Identifier ("__ghdl_signal"), Ghdl_Signal_Type);
-
-      Ghdl_Signal_Ptr := New_Access_Type (Ghdl_Signal_Type);
-      New_Type_Decl (Get_Identifier ("__ghdl_signal_ptr"), Ghdl_Signal_Ptr);
 
       --  Type __signal_signal is record
       Start_Uncomplete_Record_Type (Ghdl_Signal_Type, Rec);

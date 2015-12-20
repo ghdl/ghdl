@@ -464,14 +464,13 @@ package body Trans.Chap14 is
 
    --  Read signal value FIELD of signal SIG.
    function Get_Signal_Value_Field
-     (Sig : O_Enode; Sig_Type : Iir; Field : O_Fnode)
-         return O_Lnode
+     (Sig : O_Enode; Sig_Type : Iir; Field : O_Fnode) return O_Lnode
    is
-      S_Type : O_Tnode;
+      Tinfo : constant Type_Info_Acc := Get_Info (Sig_Type);
+      S_Type : constant O_Tnode := Tinfo.Ortho_Ptr_Type (Mode_Value);
       T      : O_Lnode;
    begin
-      S_Type := Get_Ortho_Type (Sig_Type, Mode_Signal);
-      T := New_Access_Element (New_Convert_Ov (Sig, Ghdl_Signal_Ptr));
+      T := New_Access_Element (Sig);
       return New_Access_Element
         (New_Unchecked_Address (New_Selected_Element (T, Field), S_Type));
    end Get_Signal_Value_Field;

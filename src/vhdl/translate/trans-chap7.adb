@@ -3616,7 +3616,7 @@ package body Trans.Chap7 is
    begin
       New_Assign_Stmt
         (Chap14.Get_Signal_Value_Field (M2E (Targ), Targ_Type,
-         Ghdl_Signal_Driving_Value_Field),
+                                        Ghdl_Signal_Driving_Value_Field),
          M2E (Data));
    end Translate_Signal_Assign_Driving_Non_Composite;
 
