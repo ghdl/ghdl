@@ -24,7 +24,7 @@ backend=@backend@
 libdirsuffix=@libdirsuffix@
 libdirreverse=@libdirreverse@
 gcc_src_dir=@gcc_src_dir@
-llvm_prefix=@llvm_prefix@
+LLVM_CONFIG=@llvm_config@
 LDFLAGS=@LDFLAGS@
 LIBBACKTRACE=@backtrace_lib@
 
@@ -182,8 +182,6 @@ oread-gcc: force
 	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" all
 
 #################### For llvm backend ##############################
-
-LLVM_CONFIG=$(llvm_prefix)/bin/llvm-config
 
 GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/llvm
 

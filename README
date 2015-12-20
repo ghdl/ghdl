@@ -131,9 +131,11 @@ Building with the llvm backend
 You need to build and install
 llvm version 3.5 [do not modify this line as this is read by scripts].
 
-First configure ghdl and specify where llvm is installed
-$ ./configure --with-llvm=PREFIX
-  where PREFIX/bin/llvm-config is present
+First configure ghdl with '--with-llvm-config'
+$ ./configure --with-llvm-config
+
+If llvm-config is not in your path, you can specify it:
+$ ./configure --with-llvm-config=LLVM_INSTALL/bin/llvm-config
 
 If you want to have stack backtraces on errors (like assert failure or
 index of out bounds), you need to configure and build libbacktrace from gcc
