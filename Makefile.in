@@ -27,6 +27,7 @@ gcc_src_dir=@gcc_src_dir@
 LLVM_CONFIG=@llvm_config@
 LDFLAGS=@LDFLAGS@
 LIBBACKTRACE=@backtrace_lib@
+build_mode=@build_mode@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
@@ -54,7 +55,9 @@ ADA_FLAGS=-gnata
 #OPT_FLAGS+=-pg -O
 
 # Coverage
-#OPT_FLAGS+=-fprofile-arcs -ftest-coverage
+ifeq "$(build_mode)" "coverage"
+OPT_FLAGS+=-fprofile-arcs -ftest-coverage
+endif
 
 GNATFLAGS=-gnaty3befhkmr -gnatwae -aO. -gnatf -gnat05 $(OPT_FLAGS) $(ADA_FLAGS)
 GRT_FLAGS=$(OPT_FLAGS)

@@ -16,11 +16,12 @@ gcc_version=unknown
 llvm_config=
 backtrace_lib=
 build=
+build_mode=
 
 show_help=no
 progname=$0
 
-subst_vars="CC GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config backtrace_lib"
+subst_vars="CC GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config backtrace_lib build_mode"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -73,6 +74,7 @@ for opt do
       --with-llvm-config) llvm_config="llvm-config"; backend=llvm;;
       --with-llvm-config=*) llvm_config="$optarg"; backend=llvm;;
       --with-backtrace-lib=*) backtrace_lib="$optarg";;
+      --enable-coverage) build_mode="coverage";;
       -h|-help|--help) show_help=yes;;
       *) echo "$0: unknown option $opt; try $0 --help"
 	  exit 1
