@@ -27,6 +27,9 @@ with Flags;
 with PSL.Nodes;
 
 package body Errorout is
+   --  If True, disp original source line and a caret indicating the column.
+   Flag_Show_Caret : constant Boolean := False;
+
    procedure Put (Str : String)
    is
       use Ada.Text_IO;
@@ -100,13 +103,26 @@ package body Errorout is
                          Loc : Location_Type;
                          Msg : String)
    is
-      File : Name_Id;
+      procedure Location_To_Position (Location : Location_Type;
+                                      File : out Source_File_Entry;
+                                      Line : out Natural;
+                                      Col : out Natural)
+      is
+         Name : Name_Id;
+         Line_Pos : Source_Ptr;
+         Offset : Natural;
+      begin
+         Location_To_Coord (Location, File, Line_Pos, Line, Offset);
+         Coord_To_Position (File, Line_Pos, Offset, Name, Col);
+      end Location_To_Position;
+
+      File : Source_File_Entry;
       Line : Natural;
       Col : Natural;
       Progname : Boolean;
    begin
       --  By default, no location.
-      File := Null_Identifier;
+      File := No_Source_File_Entry;
       Line := 0;
       Col := 0;
 
@@ -125,7 +141,7 @@ package body Errorout is
             end if;
          when Scan =>
             if Loc = No_Location then
-               File := Scanner.Get_Current_File;
+               File := Scanner.Get_Current_Source_File;
                Line := Scanner.Get_Current_Line;
                Col := Scanner.Get_Current_Column;
             else
@@ -133,7 +149,7 @@ package body Errorout is
             end if;
          when Parse =>
             if Loc = No_Location then
-               File := Scanner.Get_Current_File;
+               File := Scanner.Get_Current_Source_File;
                Line := Scanner.Get_Current_Line;
                Col := Scanner.Get_Token_Column;
             else
@@ -145,8 +161,8 @@ package body Errorout is
 
       if Progname then
          Disp_Program_Name;
-      elsif File /= Null_Identifier then
-         Disp_Location (File, Line, Col);
+      elsif File /= No_Source_File_Entry then
+         Disp_Location (Get_File_Name (File), Line, Col);
       else
          Put ("??:??:??:");
       end if;
@@ -168,6 +184,27 @@ package body Errorout is
 
       Put (' ');
       Put_Line (Msg);
+
+      if Flag_Show_Caret
+        and then (File /= No_Source_File_Entry and Line /= 0)
+      then
+         declare
+            Buf : constant File_Buffer_Acc := Get_File_Source (File);
+            Pos : constant Source_Ptr := Line_To_Position (File, Line);
+            Len : Source_Ptr;
+            C : Character;
+         begin
+            --  Compute line length.
+            Len := 0;
+            loop
+               C := Buf (Pos + Len);
+               exit when C = ASCII.CR or C = ASCII.LF or C = ASCII.EOT;
+               Len := Len + 1;
+            end loop;
+            Put_Line (String (Buf (Pos .. Pos + Len - 1)));
+            Put_Line ((1 .. Col - 1 => ' ') & '^');
+         end;
+      end if;
    end Report_Msg;
 
    procedure Error_Msg_Option_NR (Msg: String) is
