@@ -124,7 +124,13 @@ clean ()
     echo "Remove work library"
     "$GHDL" --remove $GHDL_STD_FLAGS
   else
-    echo "Remove $1 library"
-    "$GHDL" --remove $GHDL_STD_FLAGS --work=$1
+    case "$1" in
+      --std=*)
+    	echo "Remove work library"
+    	"$GHDL" --remove $1 ;;
+      *)
+	echo "Remove $1 library"
+    	"$GHDL" --remove $GHDL_STD_FLAGS --work=$1 ;;
+    esac
   fi
 }
