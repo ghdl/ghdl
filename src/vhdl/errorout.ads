@@ -54,10 +54,6 @@ package Errorout is
    --  Same as Error_Msg_Option but do not raise Option_Error.
    procedure Error_Msg_Option_NR (Msg: String);
 
-   -- Disp an error location (using AN_IIR location) using the standard
-   -- format `file:line:col: '.
-   procedure Disp_Iir_Location (An_Iir: Iir);
-
    -- Disp a warning.
    procedure Warning_Msg_Sem (Msg: String; Loc : Iir);
    procedure Warning_Msg_Sem (Msg: String; Loc : Location_Type);

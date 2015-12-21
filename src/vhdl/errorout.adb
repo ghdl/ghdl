@@ -89,35 +89,6 @@ package body Errorout is
       Put (':');
    end Disp_Location;
 
-   procedure Disp_Current_Location is
-   begin
-      Disp_Location (Scanner.Get_Current_File,
-                     Scanner.Get_Current_Line,
-                     Scanner.Get_Current_Column);
-   end Disp_Current_Location;
-
-   procedure Disp_Token_Location is
-   begin
-      Disp_Location (Scanner.Get_Current_File,
-                     Scanner.Get_Current_Line,
-                     Scanner.Get_Token_Column);
-   end Disp_Token_Location;
-
-   procedure Disp_Location (Loc : Location_Type)
-   is
-      Name : Name_Id;
-      Line : Natural;
-      Col : Natural;
-   begin
-      if Loc = Location_Nil then
-         --  Avoid a crash, but should not happen.
-         Put ("??:??:??:");
-      else
-         Location_To_Position (Loc, Name, Line, Col);
-         Disp_Location (Name, Line, Col);
-      end if;
-   end Disp_Location;
-
    procedure Disp_Program_Name is
    begin
       Put (Ada.Command_Line.Command_Name);
@@ -127,33 +98,58 @@ package body Errorout is
    procedure Report_Msg (Level : Report_Level;
                          Origin : Report_Origin;
                          Loc : Location_Type;
-                         Msg : String) is
+                         Msg : String)
+   is
+      File : Name_Id;
+      Line : Natural;
+      Col : Natural;
+      Progname : Boolean;
    begin
+      --  By default, no location.
+      File := Null_Identifier;
+      Line := 0;
+      Col := 0;
+
+      --  And no program name.
+      Progname := False;
+
       case Origin is
          when Option
            | Library =>
-            Disp_Program_Name;
+            Progname := True;
          when Elaboration =>
             if Loc = No_Location then
-               Disp_Program_Name;
+               Progname := True;
             else
-               Disp_Location (Loc);
+               Location_To_Position (Loc, File, Line, Col);
             end if;
          when Scan =>
             if Loc = No_Location then
-               Disp_Current_Location;
+               File := Scanner.Get_Current_File;
+               Line := Scanner.Get_Current_Line;
+               Col := Scanner.Get_Current_Column;
             else
-               Disp_Location (Loc);
+               Location_To_Position (Loc, File, Line, Col);
             end if;
          when Parse =>
             if Loc = No_Location then
-               Disp_Token_Location;
+               File := Scanner.Get_Current_File;
+               Line := Scanner.Get_Current_Line;
+               Col := Scanner.Get_Token_Column;
             else
-               Disp_Location (Loc);
+               Location_To_Position (Loc, File, Line, Col);
             end if;
          when Semantic =>
-            Disp_Location (Loc);
+            Location_To_Position (Loc, File, Line, Col);
       end case;
+
+      if Progname then
+         Disp_Program_Name;
+      elsif File /= Null_Identifier then
+         Disp_Location (File, Line, Col);
+      else
+         Put ("??:??:??:");
+      end if;
 
       case Level is
          when Note =>
@@ -193,11 +189,6 @@ package body Errorout is
          return Get_Location (N);
       end if;
    end Get_Location_Safe;
-
-   procedure Disp_Iir_Location (An_Iir: Iir) is
-   begin
-      Disp_Location (Get_Location_Safe (An_Iir));
-   end Disp_Iir_Location;
 
    procedure Warning_Msg_Sem (Msg: String; Loc : Location_Type) is
    begin
