@@ -45,10 +45,12 @@ ADAC=$(CC)
 # Debug
 OPT_FLAGS=-g
 ADA_FLAGS=-gnata
+LIB_CFLAGS=
 
 # Optimize, do not forget to use MODE=--genfast for iirs.adb.
 #ADA_FLAGS+=-gnatpn
 #OPT_FLAGS+=-O
+#LIB_CFLAGS=-O
 
 # Profiling.
 #ADA_FLAGS+=-gnatn
@@ -61,7 +63,6 @@ endif
 
 GNATFLAGS=-gnaty3befhkmr -gnatwae -aO. -gnatf -gnat05 $(OPT_FLAGS) $(ADA_FLAGS)
 GRT_FLAGS=$(OPT_FLAGS)
-LIB_CFLAGS=$(OPT_FLAGS)
 
 GNAT_BARGS=-bargs -E
 
