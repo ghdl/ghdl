@@ -291,8 +291,8 @@ package Grt.Signals is
 
    type Ghdl_Signal is record
       --  Fields known by the compilers.
-      Value : Value_Union;
-      Driving_Value : Value_Union;
+      Value_Ptr : Ghdl_Value_Ptr;
+      Driving_Value : aliased Value_Union;
       Last_Value : Value_Union;
       Last_Event : Std_Time;
       Last_Active : Std_Time;
@@ -350,6 +350,11 @@ package Grt.Signals is
       Table_Index_Type => Sig_Table_Index,
       Table_Low_Bound => 0,
       Table_Initial => 128);
+
+   --  Read the value pointed by VALUE_PTR.  It cannot be simply deferred as
+   --  pointer alignment may not be correct.
+   function Read_Value (Value_Ptr : Ghdl_Value_Ptr; Mode : Mode_Type)
+     return Value_Union;
 
    --  Elementary propagation computation.
    --  See LRM 12.6.2 and 12.6.3
@@ -495,7 +500,7 @@ package Grt.Signals is
 
    --  Set the effective value of signal SIG to VAL.
    --  If the value is different from the previous one, resume processes.
-   procedure Set_Effective_Value (Sig : Ghdl_Signal_Ptr; Val : Value_Union);
+   procedure Set_Effective_Value (Sig : Ghdl_Signal_Ptr; Val : Ghdl_Value_Ptr);
 
    --  Add PROC in the list of processes to be resumed in case of event on
    --  SIG.
@@ -567,7 +572,7 @@ package Grt.Signals is
 
    function Ghdl_Signal_Driving (Sig : Ghdl_Signal_Ptr) return Ghdl_B1;
 
-   function Ghdl_Create_Signal_B1 (Init_Val : Ghdl_B1;
+   function Ghdl_Create_Signal_B1 (Val_Ptr : Ghdl_Value_Ptr;
                                    Resolv_Func : Resolver_Acc;
                                    Resolv_Inst : System.Address)
                                   return Ghdl_Signal_Ptr;
@@ -589,7 +594,7 @@ package Grt.Signals is
    procedure Ghdl_Signal_Force_Effective_B1 (Sig : Ghdl_Signal_Ptr;
                                              Val : Ghdl_B1);
 
-   function Ghdl_Create_Signal_E8 (Init_Val : Ghdl_E8;
+   function Ghdl_Create_Signal_E8 (Val_Ptr : Ghdl_Value_Ptr;
                                    Resolv_Func : Resolver_Acc;
                                    Resolv_Inst : System.Address)
                                   return Ghdl_Signal_Ptr;
@@ -611,7 +616,7 @@ package Grt.Signals is
    procedure Ghdl_Signal_Force_Effective_E8 (Sig : Ghdl_Signal_Ptr;
                                              Val : Ghdl_E8);
 
-   function Ghdl_Create_Signal_E32 (Init_Val : Ghdl_E32;
+   function Ghdl_Create_Signal_E32 (Val_Ptr : Ghdl_Value_Ptr;
                                     Resolv_Func : Resolver_Acc;
                                     Resolv_Inst : System.Address)
                                    return Ghdl_Signal_Ptr;
@@ -629,7 +634,7 @@ package Grt.Signals is
    function Ghdl_Signal_Driving_Value_E32 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_E32;
 
-   function Ghdl_Create_Signal_I32 (Init_Val : Ghdl_I32;
+   function Ghdl_Create_Signal_I32 (Val_Ptr : Ghdl_Value_Ptr;
                                     Resolv_Func : Resolver_Acc;
                                     Resolv_Inst : System.Address)
                                    return Ghdl_Signal_Ptr;
@@ -647,7 +652,7 @@ package Grt.Signals is
    function Ghdl_Signal_Driving_Value_I32 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_I32;
 
-   function Ghdl_Create_Signal_I64 (Init_Val : Ghdl_I64;
+   function Ghdl_Create_Signal_I64 (Val_Ptr : Ghdl_Value_Ptr;
                                     Resolv_Func : Resolver_Acc;
                                     Resolv_Inst : System.Address)
                                    return Ghdl_Signal_Ptr;
@@ -665,7 +670,7 @@ package Grt.Signals is
    function Ghdl_Signal_Driving_Value_I64 (Sig : Ghdl_Signal_Ptr)
                                           return Ghdl_I64;
 
-   function Ghdl_Create_Signal_F64 (Init_Val : Ghdl_F64;
+   function Ghdl_Create_Signal_F64 (Val_Ptr : Ghdl_Value_Ptr;
                                     Resolv_Func : Resolver_Acc;
                                     Resolv_Inst : System.Address)
                                    return Ghdl_Signal_Ptr;
@@ -738,25 +743,29 @@ package Grt.Signals is
 
    --  Create a new 'stable (VAL) signal.  The prefixes are set by
    --  ghdl_signal_attribute_register_prefix.
-   function Ghdl_Create_Stable_Signal (Val : Std_Time) return Ghdl_Signal_Ptr;
+   function Ghdl_Create_Stable_Signal
+     (Val_Ptr : Ghdl_Value_Ptr; Val : Std_Time) return Ghdl_Signal_Ptr;
    --  Create a new 'quiet (VAL) signal.  The prefixes are set by
    --  ghdl_signal_attribute_register_prefix.
-   function Ghdl_Create_Quiet_Signal (Val : Std_Time) return Ghdl_Signal_Ptr;
+   function Ghdl_Create_Quiet_Signal
+     (Val_Ptr : Ghdl_Value_Ptr; Val : Std_Time) return Ghdl_Signal_Ptr;
    --  Create a new 'transaction signal.  The prefixes are set by
    --  ghdl_signal_attribute_register_prefix.
-   function Ghdl_Create_Transaction_Signal return Ghdl_Signal_Ptr;
+   function Ghdl_Create_Transaction_Signal
+     (Val_Ptr : Ghdl_Value_Ptr) return Ghdl_Signal_Ptr;
 
-   --  Create a new SIG'delayed (VAL) signal.
-   function Ghdl_Create_Delayed_Signal (Sig : Ghdl_Signal_Ptr; Val : Std_Time)
-                                       return Ghdl_Signal_Ptr;
+   --  Create a new SIG'delayed (VAL) signal (for a scalar signal).
+   function Ghdl_Create_Delayed_Signal
+     (Sig : Ghdl_Signal_Ptr; Val_Ptr : Ghdl_Value_Ptr; Val : Std_Time)
+     return Ghdl_Signal_Ptr;
 
    --  Add SIG in the set of prefix for the last created signal.
    procedure Ghdl_Signal_Attribute_Register_Prefix (Sig : Ghdl_Signal_Ptr);
 
    --  Create a new implicitly defined GUARD signal.
-   function Ghdl_Signal_Create_Guard (This : System.Address;
-                                      Proc : Guard_Func_Acc)
-                                     return Ghdl_Signal_Ptr;
+   function Ghdl_Signal_Create_Guard
+     (Val_Ptr : Ghdl_Value_Ptr; This : System.Address; Proc : Guard_Func_Acc)
+     return Ghdl_Signal_Ptr;
 
    --  Add SIG to the list of referenced signals that appear in the guard
    --  expression.

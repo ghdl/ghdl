@@ -330,8 +330,10 @@ package Trans is
 
       --  Create an identifier from IIR node ID without the prefix.
       function Create_Identifier_Without_Prefix (Id : Iir) return O_Ident;
-      function Create_Identifier_Without_Prefix (Id : Name_Id; Str : String)
-                                                 return O_Ident;
+      function Create_Identifier_Without_Prefix
+        (Id : Iir; Str : String) return O_Ident;
+      function Create_Identifier_Without_Prefix
+        (Id : Name_Id; Str : String) return O_Ident;
 
       --  Create an identifier from the current prefix.
       function Create_Identifier return O_Ident;
@@ -683,6 +685,8 @@ package Trans is
      );
    type O_Tnode_Array is array (Object_Kind_Type) of O_Tnode;
    type O_Fnode_Array is array (Object_Kind_Type) of O_Fnode;
+   type O_Dnode_Array is array (Object_Kind_Type) of O_Dnode;
+   type Var_Type_Array is array (Object_Kind_Type) of Var_Type;
 
    type Rti_Depth_Type is new Natural range 0 .. 255;
 
@@ -893,6 +897,9 @@ package Trans is
    --  composite types use the call-by reference convention.  For fat accesses,
    --  a copy of the value is passed by address.
 
+   type Call_Mechanism is (Pass_By_Copy, Pass_By_Address);
+   type Call_Mechanism_Array is array (Object_Kind_Type) of Call_Mechanism;
+
    --  These parameters are passed by copy, ie the argument of the subprogram
    --  is the value of the object.
    subtype Type_Mode_Pass_By_Copy is Type_Mode_Type range
@@ -1068,8 +1075,10 @@ package Trans is
       Instantiated_Entity : Iir;
       --   and its address.
       Instantiated_Field  : O_Fnode;
-      In_Field            : O_Fnode;
-      Out_Field           : O_Fnode;
+      In_Sig_Field        : O_Fnode;
+      In_Val_Field        : O_Fnode;
+      Out_Sig_Field       : O_Fnode;
+      Out_Val_Field       : O_Fnode;
       Record_Type         : O_Tnode;
       Record_Ptr_Type     : O_Tnode;
    end record;
@@ -1204,9 +1213,9 @@ package Trans is
             Call_Assoc_Ref : Var_Type := Null_Var;
 
             --  Variable containing the value, the bounds and the fat vector.
-            Call_Assoc_Value : Var_Type := Null_Var;
+            Call_Assoc_Value : Var_Type_Array := (others => Null_Var);
             Call_Assoc_Bounds : Var_Type := Null_Var;
-            Call_Assoc_Fat : Var_Type := Null_Var;
+            Call_Assoc_Fat : Var_Type_Array := (others => Null_Var);
 
          when Kind_Object =>
             --  For constants: set when the object is defined as a constant.
@@ -1218,7 +1227,9 @@ package Trans is
 
          when Kind_Signal =>
             --  The current value of the signal.
-            Signal_Value    : Var_Type := Null_Var;
+            Signal_Val      : Var_Type := Null_Var;
+            --  Pointer to the value, for ports.
+            Signal_Valp     : Var_Type := Null_Var;
             --  A pointer to the signal (contains meta data).
             Signal_Sig      : Var_Type;
             --  Direct driver for signal (if any).
@@ -1230,7 +1241,7 @@ package Trans is
             Signal_Function : O_Dnode := O_Dnode_Null;
 
          when Kind_Alias =>
-            Alias_Var  : Var_Type;
+            Alias_Var  : Var_Type_Array;
             Alias_Kind : Object_Kind_Type;
 
          when Kind_Iterator =>
@@ -1244,22 +1255,23 @@ package Trans is
             Iterator_Range : Var_Type;
 
          when Kind_Interface =>
+            --  Call mechanism (by copy or by address) for the interface.
+            Interface_Mechanism : Call_Mechanism_Array;
+
             --  Ortho declaration for the interface. If not null, there is
             --  a corresponding ortho parameter for the interface. While
             --  translating nested subprograms (that are unnested),
             --  Interface_Field may be set to the corresponding field in the
             --  FRAME record. So:
-            --   Node: not null, Field:     null: parameter
-            --   Node: not null, Field: not null: parameter with a copy in
+            --   Decl: not null, Field:     null: parameter
+            --   Decl: not null, Field: not null: parameter with a copy in
             --                                    the FRAME record.
-            --   Node: null,     Field:     null: not possible
-            --   Node: null,     Field: not null: field in RESULT record
-            Interface_Node  : O_Dnode := O_Dnode_Null;
+            --   Decl: null,     Field:     null: not possible
+            --   Decl: null,     Field: not null: field in RESULT record
+            Interface_Decl  : O_Dnode_Array := (others => O_Dnode_Null);
             --  Field of the PARAMS record for arguments of procedure.
             --  In that case, Interface_Node must be null.
-            Interface_Field : O_Fnode;
-            --  Type of the interface.
-            Interface_Type  : O_Tnode;
+            Interface_Field : O_Fnode_Array := (others => O_Fnode_Null);
 
          when Kind_Disconnect =>
             --  Variable which contains the time_expression of the
@@ -1484,6 +1496,7 @@ package Trans is
    subtype Incomplete_Type_Info_Acc is Ortho_Info_Acc (Kind_Incomplete_Type);
    subtype Index_Info_Acc is Ortho_Info_Acc (Kind_Index);
    subtype Subprg_Info_Acc is Ortho_Info_Acc (Kind_Subprg);
+   subtype Interface_Info_Acc is Ortho_Info_Acc (Kind_Interface);
    subtype Call_Info_Acc is Ortho_Info_Acc (Kind_Call);
    subtype Call_Assoc_Info_Acc is Ortho_Info_Acc (Kind_Call_Assoc);
    subtype Object_Info_Acc is Ortho_Info_Acc (Kind_Object);
@@ -1627,6 +1640,7 @@ package Trans is
                                                 Vtype => O_Tnode_Null,
                                                 T => null));
 
+   type Mnode_Array is array (Object_Kind_Type) of Mnode;
 
    --  Object kind of a Mnode
    function Get_Object_Kind (M : Mnode) return Object_Kind_Type;
@@ -1634,7 +1648,12 @@ package Trans is
    --  Transform VAR to Mnode.
    function Get_Var
      (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
-      return Mnode;
+     return Mnode;
+
+   --  Likewise, but VAR is a pointer to the value.
+   function Get_Varp
+     (Var : Var_Type; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
+     return Mnode;
 
    --  Return a stabilized node for M.
    --  The former M is not usuable anymore.

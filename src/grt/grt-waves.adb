@@ -238,7 +238,7 @@ package body Grt.Waves is
       Put (Wave_Stream, Str);
    end Wave_Puts;
 
-   procedure Write_Value (Value : Value_Union; Mode : Mode_Type) is
+   procedure Write_Value (Value : Ghdl_Value_Ptr; Mode : Mode_Type) is
    begin
       case Mode is
          when Mode_B1 =>
@@ -830,7 +830,7 @@ package body Grt.Waves is
          when others =>
             Internal_Error ("bad iterator type");
       end case;
-      Write_Value (To_Ghdl_Value_Ptr (Addr).all, Mode);
+      Write_Value (To_Ghdl_Value_Ptr (Addr), Mode);
    end Write_Generate_Type_And_Value;
 
    type Step_Type is (Step_Name, Step_Hierarchy);
@@ -1549,7 +1549,7 @@ package body Grt.Waves is
    procedure Write_Signal_Value (Sig : Ghdl_Signal_Ptr) is
    begin
       --  FIXME: for some signals, the significant value is the driving value!
-      Write_Value (Sig.Value, Sig.Mode);
+      Write_Value (Sig.Value_Ptr, Sig.Mode);
    end Write_Signal_Value;
 
    procedure Write_Snapshot is

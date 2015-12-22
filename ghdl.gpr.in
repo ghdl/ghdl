@@ -14,9 +14,7 @@ project Ghdl is
                         srcdir & "/src/ortho",
                         srcdir & "/src/ortho/mcode");
 
-   for Excluded_Source_Files use ("grt-cthreads.c", "win32.c", "pthread.c",
-                                  "teststack.c",
-				  "amd64.S", "sparc.S", "ppc.S", "ia64.S");
+   for Excluded_Source_Files use ("win32.c");
 
    for Languages use ("Ada", "C", "Asm_Cpp");
    for Main use ("ghdl_jit.adb");

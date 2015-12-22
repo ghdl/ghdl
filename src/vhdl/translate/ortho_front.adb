@@ -285,6 +285,10 @@ package body Ortho_Front is
          when Action_Elaborate =>
             Flags.Flag_Elaborate := True;
             Flags.Flag_Only_Elab_Warnings := True;
+            if Elab_Filelist = null then
+               Error_Msg_Option ("missing -l for --elab");
+               raise Option_Error;
+            end if;
             Translation.Elaborate
               (Elab_Entity.all, Elab_Architecture.all,
                Elab_Filelist.all, False);

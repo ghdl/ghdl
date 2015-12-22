@@ -60,12 +60,12 @@ package body Trans.Chap3 is
 
       --  Signal type.
       if Info.Type_Mode in Type_Mode_Scalar then
-         Info.Ortho_Type (Mode_Signal) :=
-           New_Access_Type (Info.Ortho_Type (Mode_Value));
-      end if;
-      if Info.Ortho_Type (Mode_Signal) /= O_Tnode_Null then
-         New_Type_Decl (Create_Identifier ("SIG"),
-                        Info.Ortho_Type (Mode_Signal));
+         Info.Ortho_Type (Mode_Signal) := Ghdl_Signal_Ptr;
+      else
+         if Info.Ortho_Type (Mode_Signal) /= O_Tnode_Null then
+            New_Type_Decl (Create_Identifier ("SIG"),
+                           Info.Ortho_Type (Mode_Signal));
+         end if;
       end if;
 
       --  Signal pointer type.
@@ -2706,8 +2706,7 @@ package body Trans.Chap3 is
       Val        : Mnode;
    begin
       --  Compute parameter
-      Val := Chap6.Translate_Name (Param);
-      pragma Assert (Get_Object_Kind (Val) = Mode_Value);
+      Val := Chap6.Translate_Name (Param, Mode_Value);
       Stabilize (Val);
 
       --  Call deallocator.

@@ -114,8 +114,8 @@ package body Elaboration is
       Signals_Table.Append ((Kind => User_Signal,
                              Decl => Signal,
                              Sig => Sig,
-                             Instance => Block,
-                             Init => Def));
+                             Val => Def,
+                             Instance => Block));
    end Elaborate_Signal;
 
    function Execute_Time_Attribute (Instance : Block_Instance_Acc; Attr : Iir)
@@ -151,8 +151,9 @@ package body Elaboration is
          Init := Create_B1_Value (False);
       end if;
       Sig := Create_Signal_Value (null);
+      Init := Unshare (Init, Global_Pool'Access);
       Instance.Objects (Info.Slot) := Sig;
-      Instance.Objects (Info.Slot + 1) := Unshare (Init, Global_Pool'Access);
+      Instance.Objects (Info.Slot + 1) := Init;
 
       Prefix := Execute_Name (Instance, Get_Prefix (Signal), True);
       Prefix := Unshare_Bounds (Prefix, Global_Pool'Access);
@@ -161,6 +162,7 @@ package body Elaboration is
             Signals_Table.Append ((Kind => Implicit_Stable,
                                    Decl => Signal,
                                    Sig => Sig,
+                                   Val => Init,
                                    Instance => Instance,
                                    Time => T,
                                    Prefix => Prefix));
@@ -168,6 +170,7 @@ package body Elaboration is
             Signals_Table.Append ((Kind => Implicit_Quiet,
                                    Decl => Signal,
                                    Sig => Sig,
+                                   Val => Init,
                                    Instance => Instance,
                                    Time => T,
                                    Prefix => Prefix));
@@ -175,6 +178,7 @@ package body Elaboration is
             Signals_Table.Append ((Kind => Implicit_Transaction,
                                    Decl => Signal,
                                    Sig => Sig,
+                                   Val => Init,
                                    Instance => Instance,
                                    Time => 0,
                                    Prefix => Prefix));
@@ -238,6 +242,7 @@ package body Elaboration is
       Signals_Table.Append ((Kind => Implicit_Delayed,
                              Decl => Signal,
                              Sig => Sig,
+                             Val => Init,
                              Instance => Instance,
                              Time => T,
                              Prefix => Prefix));
@@ -1194,19 +1199,20 @@ package body Elaboration is
    procedure Elaborate_Guard_Signal
      (Instance : Block_Instance_Acc; Guard : Iir)
    is
-      Sig : Iir_Value_Literal_Acc;
+      Sig, Val : Iir_Value_Literal_Acc;
       Info : constant Sim_Info_Acc := Get_Info (Guard);
    begin
       Create_Signal (Instance, Guard);
 
       Sig := Create_Signal_Value (null);
+      Val := Unshare (Create_B1_Value (False), Instance_Pool);
       Instance.Objects (Info.Slot) := Sig;
-      Instance.Objects (Info.Slot + 1) :=
-        Unshare (Create_B1_Value (False), Instance_Pool);
+      Instance.Objects (Info.Slot + 1) := Val;
 
       Signals_Table.Append ((Kind => Guard_Signal,
                              Decl => Guard,
                              Sig => Sig,
+                             Val => Val,
                              Instance => Instance));
    end Elaborate_Guard_Signal;
 

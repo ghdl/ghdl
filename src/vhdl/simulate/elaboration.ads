@@ -174,10 +174,11 @@ package Elaboration is
    type Signal_Entry (Kind : Signal_Type_Kind := User_Signal) is record
       Decl : Iir;
       Sig : Iir_Value_Literal_Acc;
+      Val : Iir_Value_Literal_Acc;
       Instance : Block_Instance_Acc;
       case Kind is
          when User_Signal =>
-            Init : Iir_Value_Literal_Acc;
+            null;
          when Implicit_Quiet | Implicit_Stable | Implicit_Delayed
            | Implicit_Transaction =>
             Time : Grt.Types.Ghdl_I64;

@@ -18,10 +18,12 @@
 
 package Trans.Chap6 is
    --  Translate NAME.
-   --  RES contains a lnode for the result. This is the object.
-   --    RES can be a tree, so it may be referenced only once.
-   --  SIG is true if RES is a signal object.
-   function Translate_Name (Name : Iir) return Mnode;
+   function Translate_Name (Name : Iir; Mode : Object_Kind_Type) return Mnode;
+
+   --  Translate signal NAME.  Return both the signal name SIG and the value
+   --  name VAL.
+   procedure Translate_Signal_Name
+     (Name : Iir; Sig : out Mnode; Val : out Mnode);
 
    --  Translate signal NAME into its node (SIG) and its direct driver
    --  node (DRV).
@@ -39,14 +41,11 @@ package Trans.Chap6 is
    --                                      return Mnode;
 
    --  Get record element EL of PREFIX.
-   function Translate_Selected_Element (Prefix : Mnode;
-                                        El     : Iir_Element_Declaration)
-                                           return Mnode;
+   function Translate_Selected_Element
+     (Prefix : Mnode; El : Iir_Element_Declaration) return Mnode;
 
-   function Get_Array_Bound_Length (Arr      : Mnode;
-                                    Arr_Type : Iir;
-                                    Dim      : Natural)
-                                       return O_Enode;
+   function Get_Array_Bound_Length (Arr : Mnode; Arr_Type : Iir; Dim : Natural)
+                                   return O_Enode;
 
    procedure Gen_Bound_Error (Loc : Iir);
 

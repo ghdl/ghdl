@@ -656,27 +656,27 @@ package body Grt.Vcd is
             case V.Kind is
                when Vcd_Bit
                  | Vcd_Bool =>
-                  Vcd_Put_Bit (V.Sigs (0).Value.B1);
+                  Vcd_Put_Bit (V.Sigs (0).Value_Ptr.B1);
                when Vcd_Stdlogic =>
-                  Vcd_Put_Stdlogic (V.Sigs (0).Value.E8);
+                  Vcd_Put_Stdlogic (V.Sigs (0).Value_Ptr.E8);
                when Vcd_Integer32 =>
                   Vcd_Putc ('b');
-                  Vcd_Put_Integer32 (V.Sigs (0).Value.E32);
+                  Vcd_Put_Integer32 (V.Sigs (0).Value_Ptr.E32);
                   Vcd_Putc (' ');
                when Vcd_Float64 =>
                   Vcd_Putc ('r');
-                  Vcd_Put_Float64 (V.Sigs (0).Value.F64);
+                  Vcd_Put_Float64 (V.Sigs (0).Value_Ptr.F64);
                   Vcd_Putc (' ');
                when Vcd_Bitvector =>
                   Vcd_Putc ('b');
                   for J in 0 .. Len - 1 loop
-                     Vcd_Put_Bit (V.Sigs (J).Value.B1);
+                     Vcd_Put_Bit (V.Sigs (J).Value_Ptr.B1);
                   end loop;
                   Vcd_Putc (' ');
                when Vcd_Stdlogic_Vector =>
                   Vcd_Putc ('b');
                   for J in 0 .. Len - 1 loop
-                     Vcd_Put_Stdlogic (V.Sigs (J).Value.E8);
+                     Vcd_Put_Stdlogic (V.Sigs (J).Value_Ptr.E8);
                   end loop;
                   Vcd_Putc (' ');
                when Vcd_Bad =>

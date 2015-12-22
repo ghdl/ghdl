@@ -7,6 +7,7 @@ New in 0.34 (XXXX-XX-XX)
 * Support cocotb (https://github.com/potentialventures/cocotb)
 * Main repository is now on github: https://github.com/tgingold/ghdl
 * Docs available on rtd: http://ghdl.readthedocs.org/en/latest/
+* Speed improved.
 
 New in 0.33 (2015-10-04)
 * Improve support of vhdl 2008

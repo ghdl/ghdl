@@ -41,6 +41,9 @@ package body Trans.Chap2 is
 
    type Name_String_Xlat_Array is array (Name_Id range <>) of String (1 .. 4);
 
+   --  Ortho function names are only composed of [A-Za-z0-9_].  For VHDL
+   --  functions whose name is an operator symbol, we need to create a name
+   --  with letters.
    Operator_String_Xlat : constant
      Name_String_Xlat_Array (Std_Names.Name_Id_Operators) :=
      (Std_Names.Name_Op_Equality => "OPEq",
@@ -80,40 +83,55 @@ package body Trans.Chap2 is
    end Push_Subprg_Identifier;
 
    --  Return the type of a subprogram interface.
-   --  Return O_Tnode_Null if the parameter is passed through the
-   --  interface record.
-   function Translate_Interface_Type (Inter : Iir; Is_Foreign : Boolean)
-                                     return O_Tnode
+   procedure Translate_Interface_Mechanism (Inter : Iir)
    is
+      Spec : constant Iir := Get_Parent (Inter);
+      pragma Assert (Get_Kind (Spec) in Iir_Kinds_Subprogram_Declaration);
+      Info : constant Interface_Info_Acc := Get_Info (Inter);
       Tinfo : constant Type_Info_Acc := Get_Info (Get_Type (Inter));
-      Mode  : Object_Kind_Type;
-      By_Addr : Boolean;
+      Mech : Call_Mechanism;
    begin
       --  Mechanism.
       case Type_Mode_Valid (Tinfo.Type_Mode) is
          when Type_Mode_Pass_By_Copy =>
-            By_Addr := False;
+            Mech := Pass_By_Copy;
          when Type_Mode_Pass_By_Address =>
-            By_Addr := True;
+            Mech := Pass_By_Address;
       end case;
 
       case Iir_Kinds_Interface_Object_Declaration (Get_Kind (Inter)) is
          when Iir_Kind_Interface_Constant_Declaration
             | Iir_Kind_Interface_File_Declaration =>
-            Mode := Mode_Value;
+            Info.Interface_Mechanism (Mode_Value) := Mech;
          when Iir_Kind_Interface_Variable_Declaration =>
-            Mode := Mode_Value;
-            if Is_Foreign and then Get_Mode (Inter) in Iir_Out_Modes then
-               By_Addr := True;
+            if Get_Foreign_Flag (Spec)
+              and then Get_Mode (Inter) in Iir_Out_Modes
+            then
+               Mech := Pass_By_Address;
             end if;
+            Info.Interface_Mechanism (Mode_Value) := Mech;
          when Iir_Kind_Interface_Signal_Declaration =>
-            Mode := Mode_Signal;
+            Info.Interface_Mechanism (Mode_Signal) := Mech;
+            --  Values are always passed by address.
+            if Get_Kind (Spec) = Iir_Kind_Procedure_Declaration then
+               Mech := Pass_By_Address;
+            end if;
+            Info.Interface_Mechanism (Mode_Value) := Mech;
       end case;
-      if By_Addr then
-         return Tinfo.Ortho_Ptr_Type (Mode);
-      else
-         return Tinfo.Ortho_Type (Mode);
-      end if;
+   end Translate_Interface_Mechanism;
+
+   function Translate_Interface_Type (Inter : Iir; Mode : Object_Kind_Type)
+                                     return O_Tnode
+   is
+      Info : constant Interface_Info_Acc := Get_Info (Inter);
+      Tinfo : constant Type_Info_Acc := Get_Info (Get_Type (Inter));
+   begin
+      case Info.Interface_Mechanism (Mode) is
+         when Pass_By_Address =>
+            return Tinfo.Ortho_Ptr_Type (Mode);
+         when Pass_By_Copy =>
+            return Tinfo.Ortho_Type (Mode);
+      end case;
    end Translate_Interface_Type;
 
    procedure Translate_Subprogram_Interfaces (Spec : Iir)
@@ -122,7 +140,7 @@ package body Trans.Chap2 is
       Mark  : Id_Mark_Type;
       Info  : Subprg_Info_Acc;
       El_List : O_Element_List;
-      Arg_Info : Ortho_Info_Acc;
+      Param_Info : Ortho_Info_Acc;
    begin
       --  Set the identifier prefix with the subprogram identifier and
       --  overload number if any.
@@ -143,11 +161,24 @@ package body Trans.Chap2 is
            and then not Get_Foreign_Flag (Spec)
          then
             Start_Record_Type (El_List);
+
+            --  Create fields for interfaces.
             while Inter /= Null_Iir loop
-               Arg_Info := Add_Info (Inter, Kind_Interface);
-               New_Record_Field (El_List, Arg_Info.Interface_Field,
-                                 Create_Identifier_Without_Prefix (Inter),
-                                 Translate_Interface_Type (Inter, False));
+               Param_Info := Add_Info (Inter, Kind_Interface);
+               Translate_Interface_Mechanism (Inter);
+
+               New_Record_Field
+                 (El_List, Param_Info.Interface_Field (Mode_Value),
+                  Create_Identifier_Without_Prefix (Inter),
+                  Translate_Interface_Type (Inter, Mode_Value));
+
+               if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration
+               then
+                  New_Record_Field
+                    (El_List, Param_Info.Interface_Field (Mode_Signal),
+                     Create_Identifier_Without_Prefix (Inter, "SIG"),
+                     Translate_Interface_Type (Inter, Mode_Signal));
+               end if;
                Inter := Get_Chain (Inter);
             end loop;
 
@@ -193,7 +224,8 @@ package body Trans.Chap2 is
         Get_Kind (Spec) = Iir_Kind_Function_Declaration;
       Is_Foreign : constant Boolean := Get_Foreign_Flag (Spec);
       Inter : Iir;
-      Arg_Info : Ortho_Info_Acc;
+      Param_Info : Ortho_Info_Acc;
+      Arg_Type : O_Tnode;
       Tinfo : Type_Info_Acc;
       Interface_List : O_Inter_List;
       Mark : Id_Mark_Type;
@@ -274,15 +306,21 @@ package body Trans.Chap2 is
          Inter := Get_Interface_Declaration_Chain (Spec);
          while Inter /= Null_Iir loop
             --  Create the info.
-            Arg_Info := Add_Info (Inter, Kind_Interface);
-            Arg_Info.Interface_Field := O_Fnode_Null;
+            Param_Info := Add_Info (Inter, Kind_Interface);
+            Translate_Interface_Mechanism (Inter);
 
-            Arg_Info.Interface_Type :=
-              Translate_Interface_Type (Inter, Is_Foreign);
+            Arg_Type := Translate_Interface_Type (Inter, Mode_Value);
             New_Interface_Decl
-              (Interface_List, Arg_Info.Interface_Node,
-               Create_Identifier_Without_Prefix (Inter),
-               Arg_Info.Interface_Type);
+              (Interface_List, Param_Info.Interface_Decl (Mode_Value),
+               Create_Identifier_Without_Prefix (Inter), Arg_Type);
+
+            if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
+               Arg_Type := Translate_Interface_Type (Inter, Mode_Signal);
+               New_Interface_Decl
+                 (Interface_List, Param_Info.Interface_Decl (Mode_Signal),
+                  Create_Identifier_Without_Prefix (Inter, "SIG"),
+                  Arg_Type);
+            end if;
             Inter := Get_Chain (Inter);
          end loop;
       end if;
@@ -429,16 +467,30 @@ package body Trans.Chap2 is
             --  subprograms.
             declare
                Inter      : Iir;
+               Inter_Type : O_Tnode;
                Inter_Info : Inter_Info_Acc;
             begin
                Inter := Get_Interface_Declaration_Chain (Spec);
                while Inter /= Null_Iir loop
                   Inter_Info := Get_Info (Inter);
-                  if Inter_Info.Interface_Node /= O_Dnode_Null then
-                     Inter_Info.Interface_Field :=
+                  if Inter_Info.Interface_Decl (Mode_Value) /= O_Dnode_Null
+                  then
+                     Inter_Type :=
+                       Translate_Interface_Type (Inter, Mode_Value);
+                     Inter_Info.Interface_Field (Mode_Value) :=
                        Add_Instance_Factory_Field
-                       (Create_Identifier_Without_Prefix (Inter),
-                        Inter_Info.Interface_Type);
+                       (Create_Identifier_Without_Prefix (Inter), Inter_Type);
+
+                     if Get_Kind (Inter)
+                       = Iir_Kind_Interface_Signal_Declaration
+                     then
+                        Inter_Type :=
+                          Translate_Interface_Type (Inter, Mode_Signal);
+                        Inter_Info.Interface_Field (Mode_Signal) :=
+                          Add_Instance_Factory_Field
+                          (Create_Identifier_Without_Prefix (Inter, "SIG"),
+                           Inter_Type);
+                     end if;
                   end if;
                   Inter := Get_Chain (Inter);
                end loop;
@@ -571,17 +623,20 @@ package body Trans.Chap2 is
                Inter := Get_Interface_Declaration_Chain (Spec);
                while Inter /= Null_Iir loop
                   Inter_Info := Get_Info (Inter);
-                  if Inter_Info.Interface_Node /= O_Dnode_Null then
-                     New_Assign_Stmt
-                       (New_Selected_Element (New_Obj (Frame),
-                                              Inter_Info.Interface_Field),
-                        New_Obj_Value (Inter_Info.Interface_Node));
+                  for Mode in Object_Kind_Type loop
+                     if Inter_Info.Interface_Decl (Mode) /= O_Dnode_Null then
+                        New_Assign_Stmt
+                          (New_Selected_Element
+                             (New_Obj (Frame),
+                              Inter_Info.Interface_Field (Mode)),
+                           New_Obj_Value (Inter_Info.Interface_Decl (Mode)));
 
-                     --  Forget the reference to the field in FRAME, so that
-                     --  this subprogram will directly reference the parameter
-                     --  (and not its copy in the FRAME).
-                     Inter_Info.Interface_Field := O_Fnode_Null;
-                  end if;
+                        --  Forget the reference to the field in FRAME, so that
+                        --  this subprogram will directly reference the
+                        --  parameter (and not its copy in the FRAME).
+                        Inter_Info.Interface_Field (Mode) := O_Fnode_Null;
+                     end if;
+                  end loop;
                   Inter := Get_Chain (Inter);
                end loop;
             end;
@@ -963,7 +1018,8 @@ package body Trans.Chap2 is
             pragma Assert (Src.Signal_Function = O_Dnode_Null);
             Dest.all :=
               (Kind => Kind_Signal,
-               Signal_Value => Instantiate_Var (Src.Signal_Value),
+               Signal_Val => Instantiate_Var (Src.Signal_Val),
+               Signal_Valp => Instantiate_Var (Src.Signal_Valp),
                Signal_Sig => Instantiate_Var (Src.Signal_Sig),
                Signal_Driver => Null_Var,
                Signal_Rti => Src.Signal_Rti,
@@ -991,9 +1047,9 @@ package body Trans.Chap2 is
                Subprg_Result => Src.Subprg_Result);
          when Kind_Interface =>
             Dest.all := (Kind => Kind_Interface,
-                         Interface_Node => Src.Interface_Node,
-                         Interface_Field => Src.Interface_Field,
-                         Interface_Type => Src.Interface_Type);
+                         Interface_Mechanism => Src.Interface_Mechanism,
+                         Interface_Decl => Src.Interface_Decl,
+                         Interface_Field => Src.Interface_Field);
          when Kind_Index =>
             Dest.all := (Kind => Kind_Index,
                          Index_Field => Src.Index_Field);

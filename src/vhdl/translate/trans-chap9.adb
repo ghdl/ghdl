@@ -1302,7 +1302,7 @@ package body Trans.Chap9 is
                   Gen_Register_Direct_Driver
                     (Sig_Node, Get_Type (Sig), Drv_Node);
                else
-                  Register_Signal (Chap6.Translate_Name (Sig),
+                  Register_Signal (Chap6.Translate_Name (Sig, Mode_Signal),
                                    Get_Type (Sig),
                                    Ghdl_Process_Add_Driver);
                end if;
@@ -1431,6 +1431,9 @@ package body Trans.Chap9 is
    begin
       --  Create the guard signal.
       Start_Association (Constr, Ghdl_Signal_Create_Guard);
+      New_Association
+        (Constr, New_Unchecked_Address (Get_Var (Info.Signal_Val),
+                                        Ghdl_Ptr_Type));
       New_Association
         (Constr, New_Unchecked_Address
            (Get_Instance_Ref (Block_Info.Block_Scope), Ghdl_Ptr_Type));
@@ -2050,7 +2053,8 @@ package body Trans.Chap9 is
                Data.Has_Val := False;
          end case;
 
-         Merge_Signals_Rti (Chap6.Translate_Name (Port), Port_Type, Data);
+         Merge_Signals_Rti
+           (Chap6.Translate_Name (Port, Mode_Signal), Port_Type, Data);
          Close_Temp;
 
          Port := Get_Chain (Port);

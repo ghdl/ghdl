@@ -123,6 +123,16 @@ package body Debugger is
    --  Current statement for next_stmt.
    Exec_Statement : Iir;
 
+   procedure Disp_Iir_Location (N : Iir) is
+   begin
+      if N = Null_Iir then
+         Put (Standard_Error, "??:??:??");
+      else
+         Put (Standard_Error, Disp_Location (N));
+      end if;
+      Put (Standard_Error, ": ");
+   end Disp_Iir_Location;
+
    -- Disp a message during execution.
    procedure Error_Msg_Exec (Msg: String; Loc: in Iir) is
    begin

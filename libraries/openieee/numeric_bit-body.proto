@@ -1,0 +1,190 @@
+--  This -*- vhdl -*- file is part of GHDL.
+--  IEEE 1076.3 compliant numeric bit package body.
+--  The implementation is based only on the specifications.
+--  Copyright (C) 2015 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GCC; see the file COPYING2.  If not see
+--  <http://www.gnu.org/licenses/>.
+
+package body NUMERIC_BIT is
+  constant NO_WARNING : Boolean := False;
+
+  constant null_unsigned : unsigned (0 downto 1) := (others => '0');
+  constant null_signed   :   signed (0 downto 1) := (others => '0');
+
+  subtype nat1 is natural range 0 to 1;
+
+  type nat1_to_sl_type is array (nat1) of bit;
+  constant nat1_to_01 : nat1_to_sl_type := (0 => '0', 1 => '1');
+
+  subtype sl_01 is bit;
+
+  type carry_array is array (sl_01, sl_01, sl_01) of sl_01;
+  constant compute_carry : carry_array :=
+    ('0' => ('0' => ('0' => '0', '1' => '0'),
+             '1' => ('0' => '0', '1' => '1')),
+     '1' => ('0' => ('0' => '0', '1' => '1'),
+             '1' => ('0' => '1', '1' => '1')));
+  constant compute_sum : carry_array :=
+    ('0' => ('0' => ('0' => '0', '1' => '1'),
+             '1' => ('0' => '1', '1' => '0')),
+     '1' => ('0' => ('0' => '1', '1' => '0'),
+             '1' => ('0' => '0', '1' => '1')));
+
+  type compare_type is (compare_unknown,
+                        compare_lt,
+                        compare_eq,
+                        compare_gt);
+
+  function MAX (L, R : natural) return natural is
+  begin
+    if L > R then
+      return L;
+    else
+      return R;
+    end if;
+  end MAX;
+
+  function TO_INTEGER (ARG : UNSIGNED) return NATURAL
+  is
+    variable res : natural := 0;
+  begin
+    if arg'length = 0 then
+      assert NO_WARNING
+        report "NUMERIC_BIT.TO_INTEGER: null array detected, returning 0"
+        severity warning;
+      return 0;
+    end if;
+
+    for i in arg'range loop
+      res := res + res;
+      if arg (i) = '1' then
+        res := res + 1;
+      end if;
+    end loop;
+
+    return res;
+  end TO_INTEGER;
+
+  function TO_INTEGER (ARG :   SIGNED) return INTEGER
+  is
+    alias argn : SIGNED (ARG'Length -1 downto 0) is arg;
+    variable res : integer := 0;
+    variable b : bit;
+  begin
+    if argn'length = 0 then
+      assert NO_WARNING
+        report "NUMERIC_BIT.TO_INTEGER: null array detected, returning 0"
+        severity warning;
+      return 0;
+    end if;
+    if argn (argn'left) = '1' then
+      --  Negative value
+      b := '0';
+    else
+      b := '1';
+    end if;
+
+    for i in argn'range loop
+      res := res + res;
+      if argn (i) = b then
+        res := res + 1;
+      end if;
+    end loop;
+
+    if b = '0' then
+      --  Avoid overflow.
+      res := -res - 1;
+    end if;
+
+    return res;
+  end TO_INTEGER;
+
+  function TO_UNSIGNED (ARG, SIZE : NATURAL) return UNSIGNED
+  is
+    variable res : UNSIGNED (SIZE - 1 downto 0);
+    variable a : natural := arg;
+    variable d : nat1;
+  begin
+    if size = 0 then
+      return null_unsigned;
+    end if;
+    for i in res'reverse_range loop
+      d := a rem 2;
+      res (i) := nat1_to_01 (d);
+      a := a / 2;
+    end loop;
+    if a /= 0 then
+      assert NO_WARNING
+        report "NUMERIC_BIT.TO_UNSIGNED: vector is truncated"
+        severity warning;
+    end if;
+    return res;
+  end TO_UNSIGNED;
+
+  function TO_SIGNED (ARG : INTEGER; SIZE : NATURAL) return SIGNED
+  is
+    variable res : SIGNED (SIZE - 1 downto 0);
+    variable v : integer := arg;
+    variable b0, b1 : bit;
+    variable d : nat1;
+  begin
+    if size = 0 then
+      return null_signed;
+    end if;
+    if arg < 0 then
+      --  Use one complement to avoid overflow:
+      --   -v = (not v) + 1
+      --   not v = -v - 1
+      --   not v = -(v + 1)
+      v := -(arg + 1);
+      b0 := '1';
+      b1 := '0';
+    else
+      v := arg;
+      b0 := '0';
+      b1 := '1';
+    end if;
+
+    for i in res'reverse_range loop
+      d := v rem 2;
+      v := v / 2;
+      if d = 0 then
+        res (i) := b0;
+      else
+        res (i) := b1;
+      end if;
+    end loop;
+    if v /= 0 or res (res'left) /= b0 then
+      assert NO_WARNING
+        report "NUMERIC_BIT.TO_SIGNED: vector is truncated"
+        severity warning;
+    end if;
+    return res;
+  end TO_SIGNED;
+
+  @ARITH
+
+  @LOG
+
+  function rising_edge (signal s : bit) return boolean is
+  begin
+    return s'event and s = '1';
+  end rising_edge;
+
+  function falling_edge (signal s : bit) return boolean is
+  begin
+    return s'event and s = '0';
+  end falling_edge;
+end NUMERIC_BIT;

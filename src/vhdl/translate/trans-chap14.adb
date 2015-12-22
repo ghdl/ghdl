@@ -43,7 +43,7 @@ package body Trans.Chap14 is
          Arr := T2M (Type_Name, Mode_Value);
       else
          --  Prefix is an object.
-         Arr := Chap6.Translate_Name (Prefix);
+         Arr := Chap6.Translate_Name (Prefix, Mode_Value);
       end if;
       Dim := Natural (Get_Value (Get_Parameter (Expr)));
       return Chap3.Get_Array_Range (Arr, Get_Type (Prefix), Dim);
@@ -431,14 +431,14 @@ package body Trans.Chap14 is
    begin
       if Get_Kind (Prefix_Type) in Iir_Kinds_Scalar_Type_Definition then
          --  Effecient handling for a scalar signal.
-         Name := Chap6.Translate_Name (Prefix);
+         Name := Chap6.Translate_Name (Prefix, Mode_Signal);
          return New_Value (Get_Signal_Field (Name, Field));
       else
          --  Element per element handling for composite signals.
          Res := Create_Temp (Std_Boolean_Type_Node);
          Open_Temp;
          New_Assign_Stmt (New_Obj (Res), New_Lit (Std_Boolean_True_Node));
-         Name := Chap6.Translate_Name (Prefix);
+         Name := Chap6.Translate_Name (Prefix, Mode_Signal);
          Start_Loop_Stmt (Data.Label);
          Data.Field := Field;
          Bool_Sigattr_Foreach (Name, Prefix_Type, Data);
@@ -464,14 +464,13 @@ package body Trans.Chap14 is
 
    --  Read signal value FIELD of signal SIG.
    function Get_Signal_Value_Field
-     (Sig : O_Enode; Sig_Type : Iir; Field : O_Fnode)
-         return O_Lnode
+     (Sig : O_Enode; Sig_Type : Iir; Field : O_Fnode) return O_Lnode
    is
-      S_Type : O_Tnode;
+      Tinfo : constant Type_Info_Acc := Get_Info (Sig_Type);
+      S_Type : constant O_Tnode := Tinfo.Ortho_Ptr_Type (Mode_Value);
       T      : O_Lnode;
    begin
-      S_Type := Get_Ortho_Type (Sig_Type, Mode_Signal);
-      T := New_Access_Element (New_Convert_Ov (Sig, Ghdl_Signal_Ptr));
+      T := New_Access_Element (Sig);
       return New_Access_Element
         (New_Unchecked_Address (New_Selected_Element (T, Field), S_Type));
    end Get_Signal_Value_Field;
@@ -497,17 +496,11 @@ package body Trans.Chap14 is
 
    function Translate_Last_Value_Attribute (Attr : Iir) return O_Enode
    is
+      Prefix      : constant Iir := Get_Prefix (Attr);
+      Prefix_Type : constant Iir := Get_Type (Prefix);
       Name        : Mnode;
-      Prefix      : Iir;
-      Prefix_Type : Iir;
    begin
-      Prefix := Get_Prefix (Attr);
-      Prefix_Type := Get_Type (Prefix);
-
-      Name := Chap6.Translate_Name (Prefix);
-      if Get_Object_Kind (Name) /= Mode_Signal then
-         raise Internal_Error;
-      end if;
+      Name := Chap6.Translate_Name (Prefix, Mode_Signal);
       return Translate_Last_Value (M2E (Name), Prefix_Type);
    end Translate_Last_Value_Attribute;
 
@@ -596,7 +589,7 @@ package body Trans.Chap14 is
    function Translate_Last_Time_Attribute (Prefix : Iir; Field : O_Fnode)
                                               return O_Enode
    is
-      Prefix_Type : Iir;
+      Prefix_Type : constant Iir := Get_Type (Prefix);
       Name        : Mnode;
       Info        : Type_Info_Acc;
       Var         : O_Dnode;
@@ -604,8 +597,7 @@ package body Trans.Chap14 is
       Right_Bound : Iir_Int64;
       If_Blk      : O_If_Block;
    begin
-      Prefix_Type := Get_Type (Prefix);
-      Name := Chap6.Translate_Name (Prefix);
+      Name := Chap6.Translate_Name (Prefix, Mode_Signal);
       Info := Get_Info (Prefix_Type);
       Var := Create_Temp (Std_Time_Otype);
 
@@ -728,14 +720,14 @@ package body Trans.Chap14 is
 
       if Get_Kind (Prefix_Type) in Iir_Kinds_Scalar_Type_Definition then
          --  Effecient handling for a scalar signal.
-         Name := Chap6.Translate_Name (Prefix);
+         Name := Chap6.Translate_Name (Prefix, Mode_Signal);
          return Read_Driving_Attribute (New_Value (M2Lv (Name)));
       else
          --  Element per element handling for composite signals.
          Res := Create_Temp (Std_Boolean_Type_Node);
          Open_Temp;
          New_Assign_Stmt (New_Obj (Res), New_Lit (Std_Boolean_False_Node));
-         Name := Chap6.Translate_Name (Prefix);
+         Name := Chap6.Translate_Name (Prefix, Mode_Signal);
          Start_Loop_Stmt (Label);
          Driving_Foreach (Name, Prefix_Type, Label);
          New_Assign_Stmt (New_Obj (Res), New_Lit (Std_Boolean_True_Node));
@@ -783,18 +775,11 @@ package body Trans.Chap14 is
 
    function Translate_Driving_Value_Attribute (Attr : Iir) return O_Enode
    is
+      Prefix      : constant Iir := Get_Prefix (Attr);
       Name        : Mnode;
-      Prefix      : Iir;
-      Prefix_Type : Iir;
    begin
-      Prefix := Get_Prefix (Attr);
-      Prefix_Type := Get_Type (Prefix);
-
-      Name := Chap6.Translate_Name (Prefix);
-      if Get_Object_Kind (Name) /= Mode_Signal then
-         raise Internal_Error;
-      end if;
-      return Translate_Driving_Value (M2E (Name), Prefix_Type);
+      Name := Chap6.Translate_Name (Prefix, Mode_Signal);
+      return Translate_Driving_Value (M2E (Name), Get_Type (Prefix));
    end Translate_Driving_Value_Attribute;
 
    function Translate_Image_Attribute (Attr : Iir) return O_Enode

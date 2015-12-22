@@ -75,15 +75,20 @@ package body Trans.Chap1 is
    is
       El      : Iir;
       El_Type : Iir;
+      Default : Iir;
    begin
       Push_Local_Factory;
 
+      Default := Null_Iir;
       El := Get_Port_Chain (Entity);
       while El /= Null_Iir loop
          Open_Temp;
          El_Type := Get_Type (El);
          if not Is_Fully_Constrained_Type (El_Type) then
-            Chap5.Elab_Unconstrained_Port (El, Get_Default_Value (El));
+            if Default = Null_Iir then
+               Default := Create_Iir (Iir_Kind_Association_Element_Open);
+            end if;
+            Chap5.Elab_Unconstrained_Port_Bounds (El, Default);
          end if;
          Chap4.Elab_Signal_Declaration_Storage (El);
          Chap4.Elab_Signal_Declaration_Object (El, Entity, False);

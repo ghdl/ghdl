@@ -738,7 +738,7 @@ package body Trans.Chap6 is
    end Translate_Slice_Name;
 
    function Translate_Interface_Name
-     (Inter : Iir; Info : Ortho_Info_Acc; Kind : Object_Kind_Type)
+     (Inter : Iir; Info : Ortho_Info_Acc; Mode : Object_Kind_Type)
      return Mnode
    is
       Type_Info : constant Type_Info_Acc := Get_Info (Get_Type (Inter));
@@ -746,22 +746,31 @@ package body Trans.Chap6 is
       case Info.Kind is
          when Kind_Object =>
             --  For a generic.
-            pragma Assert (Kind = Mode_Value);
-            return Get_Var (Info.Object_Var, Type_Info, Kind);
+            pragma Assert (Mode = Mode_Value);
+            return Get_Var (Info.Object_Var, Type_Info, Mode);
          when Kind_Signal =>
             --  For a port.
-            return Get_Var (Info.Signal_Sig, Type_Info, Kind);
+            if Mode = Mode_Signal then
+               return Get_Var (Info.Signal_Sig, Type_Info, Mode_Signal);
+            else
+               pragma Assert (Info.Signal_Valp /= Null_Var);
+               if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+                  return Get_Var (Info.Signal_Valp, Type_Info, Mode_Value);
+               else
+                  return Get_Varp (Info.Signal_Valp, Type_Info, Mode_Value);
+               end if;
+            end if;
          when Kind_Interface =>
             --  For a parameter.
-            if Info.Interface_Field = O_Fnode_Null then
+            if Info.Interface_Field (Mode) = O_Fnode_Null then
                --  Normal case: the parameter was translated as an ortho
                --  interface.
-               case Type_Mode_Valid (Type_Info.Type_Mode) is
-                  when Type_Mode_Pass_By_Copy =>
-                     return Dv2M (Info.Interface_Node, Type_Info, Kind);
-                  when Type_Mode_Pass_By_Address =>
+               case Info.Interface_Mechanism (Mode) is
+                  when Pass_By_Copy =>
+                     return Dv2M (Info.Interface_Decl (Mode), Type_Info, Mode);
+                  when Pass_By_Address =>
                      --  Parameter is passed by reference.
-                     return Dp2M (Info.Interface_Node, Type_Info, Kind);
+                     return Dp2M (Info.Interface_Decl (Mode), Type_Info, Mode);
                end case;
             else
                --  The parameter was put somewhere else.
@@ -771,7 +780,7 @@ package body Trans.Chap6 is
                     Get_Info (Subprg);
                   Linter      : O_Lnode;
                begin
-                  if Info.Interface_Node = O_Dnode_Null then
+                  if Info.Interface_Decl (Mode) = O_Dnode_Null then
                      --  The parameter is passed via a field of the PARAMS
                      --  record parameter.
                      if Subprg_Info.Subprg_Params_Var = Null_Var then
@@ -782,20 +791,20 @@ package body Trans.Chap6 is
                         Linter := Get_Var (Subprg_Info.Subprg_Params_Var);
                      end if;
                      Linter := New_Selected_Element
-                       (New_Acc_Value (Linter), Info.Interface_Field);
+                       (New_Acc_Value (Linter), Info.Interface_Field (Mode));
                   else
                      --  Unnesting case: the parameter was copied in the
                      --  subprogram frame so that nested subprograms can
                      --  reference it.  Use field in FRAME.
                      Linter := New_Selected_Element
                        (Get_Instance_Ref (Subprg_Info.Subprg_Frame_Scope),
-                        Info.Interface_Field);
+                        Info.Interface_Field (Mode));
                   end if;
-                  case Type_Mode_Valid (Type_Info.Type_Mode) is
-                     when Type_Mode_Pass_By_Copy =>
-                        return Lv2M (Linter, Type_Info, Kind);
-                     when Type_Mode_Pass_By_Address =>
-                        return Lp2M (Linter, Type_Info, Kind);
+                  case Info.Interface_Mechanism (Mode) is
+                     when Pass_By_Copy =>
+                        return Lv2M (Linter, Type_Info, Mode);
+                     when Pass_By_Address =>
+                        return Lp2M (Linter, Type_Info, Mode);
                   end case;
                end;
             end if;
@@ -804,9 +813,8 @@ package body Trans.Chap6 is
       end case;
    end Translate_Interface_Name;
 
-   function Translate_Selected_Element (Prefix : Mnode;
-                                        El     : Iir_Element_Declaration)
-                                           return Mnode
+   function Translate_Selected_Element
+     (Prefix : Mnode; El : Iir_Element_Declaration) return Mnode
    is
       El_Info       : constant Field_Info_Acc := Get_Info (El);
       El_Type       : constant Iir := Get_Type (El);
@@ -895,7 +903,7 @@ package body Trans.Chap6 is
    --          end case;
    --       end Translate_Formal_Name;
 
-   function Translate_Name (Name : Iir) return Mnode
+   function Translate_Name (Name : Iir; Mode : Object_Kind_Type) return Mnode
    is
       Name_Type : constant Iir := Get_Type (Name);
       Name_Info : constant Ortho_Info_Acc := Get_Info (Name);
@@ -903,13 +911,15 @@ package body Trans.Chap6 is
    begin
       case Get_Kind (Name) is
          when Iir_Kind_Constant_Declaration
-            | Iir_Kind_Variable_Declaration
-            | Iir_Kind_File_Declaration =>
+           | Iir_Kind_Variable_Declaration
+           | Iir_Kind_File_Declaration =>
+            pragma Assert (Mode = Mode_Value);
             return Get_Var (Name_Info.Object_Var, Type_Info, Mode_Value);
 
          when Iir_Kind_Attribute_Name =>
-            return Translate_Name (Get_Named_Entity (Name));
+            return Translate_Name (Get_Named_Entity (Name), Mode);
          when Iir_Kind_Attribute_Value =>
+            pragma Assert (Mode = Mode_Value);
             return Get_Var
               (Get_Info (Get_Attribute_Specification (Name)).Object_Var,
                Type_Info, Mode_Value);
@@ -920,23 +930,23 @@ package body Trans.Chap6 is
             declare
                R : O_Lnode;
             begin
-               R := Get_Var (Name_Info.Alias_Var);
+               pragma Assert (Mode <= Name_Info.Alias_Kind);
                case Type_Info.Type_Mode is
                   when Type_Mode_Fat_Array =>
-                     return Get_Var (Name_Info.Alias_Var, Type_Info,
-                                     Name_Info.Alias_Kind);
+                     return Get_Var (Name_Info.Alias_Var (Mode), Type_Info,
+                                     Mode);
                   when Type_Mode_Array
                      | Type_Mode_Record
                      | Type_Mode_Acc
                      | Type_Mode_Bounds_Acc =>
-                     R := Get_Var (Name_Info.Alias_Var);
-                     return Lp2M (R, Type_Info, Name_Info.Alias_Kind);
+                     R := Get_Var (Name_Info.Alias_Var (Mode));
+                     return Lp2M (R, Type_Info, Mode);
                   when Type_Mode_Scalar =>
-                     R := Get_Var (Name_Info.Alias_Var);
-                     if Name_Info.Alias_Kind = Mode_Signal then
-                        return Lv2M (R, Type_Info, Name_Info.Alias_Kind);
+                     R := Get_Var (Name_Info.Alias_Var (Mode));
+                     if Mode = Mode_Signal then
+                        return Lv2M (R, Type_Info, Mode_Signal);
                      else
-                        return Lp2M (R, Type_Info, Name_Info.Alias_Kind);
+                        return Lp2M (R, Type_Info, Mode_Value);
                      end if;
                   when others =>
                      raise Internal_Error;
@@ -944,35 +954,37 @@ package body Trans.Chap6 is
             end;
 
          when Iir_Kind_Signal_Declaration
-            | Iir_Kind_Stable_Attribute
-            | Iir_Kind_Quiet_Attribute
-            | Iir_Kind_Delayed_Attribute
-            | Iir_Kind_Transaction_Attribute
-            | Iir_Kind_Guard_Signal_Declaration =>
-            return Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
+           | Iir_Kind_Stable_Attribute
+           | Iir_Kind_Quiet_Attribute
+           | Iir_Kind_Delayed_Attribute
+           | Iir_Kind_Transaction_Attribute
+           | Iir_Kind_Guard_Signal_Declaration =>
+            if Mode = Mode_Signal then
+               return Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
+            else
+               return Get_Var (Name_Info.Signal_Val, Type_Info, Mode_Value);
+            end if;
 
-         when Iir_Kind_Interface_Constant_Declaration =>
-            return Translate_Interface_Name (Name, Name_Info, Mode_Value);
-
-         when Iir_Kind_Interface_File_Declaration =>
-            return Translate_Interface_Name (Name, Name_Info, Mode_Value);
-
-         when Iir_Kind_Interface_Variable_Declaration =>
+         when Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Variable_Declaration =>
+            pragma Assert (Mode = Mode_Value);
             return Translate_Interface_Name (Name, Name_Info, Mode_Value);
 
          when Iir_Kind_Interface_Signal_Declaration =>
-            return Translate_Interface_Name (Name, Name_Info, Mode_Signal);
+            return Translate_Interface_Name (Name, Name_Info, Mode);
 
          when Iir_Kind_Indexed_Name =>
             return Translate_Indexed_Name
-              (Translate_Name (Get_Prefix (Name)), Name);
+              (Translate_Name (Get_Prefix (Name), Mode), Name);
 
          when Iir_Kind_Slice_Name =>
             return Translate_Slice_Name
-              (Translate_Name (Get_Prefix (Name)), Name);
+              (Translate_Name (Get_Prefix (Name), Mode), Name);
 
          when Iir_Kind_Dereference
-            | Iir_Kind_Implicit_Dereference =>
+           | Iir_Kind_Implicit_Dereference =>
+            pragma Assert (Mode = Mode_Value);
             declare
                Prefix : constant Iir := Get_Prefix (Name);
                Prefix_Type : constant Iir := Get_Type (Prefix);
@@ -997,10 +1009,11 @@ package body Trans.Chap6 is
 
          when Iir_Kind_Selected_Element =>
             return Translate_Selected_Element
-              (Translate_Name (Get_Prefix (Name)),
+              (Translate_Name (Get_Prefix (Name), Mode),
                Get_Selected_Element (Name));
 
          when Iir_Kind_Function_Call =>
+            pragma Assert (Mode = Mode_Value);
             --  This can appear as a prefix of a name, therefore, the
             --  result is always a composite type or an access type.
             declare
@@ -1022,13 +1035,14 @@ package body Trans.Chap6 is
             end;
 
          when Iir_Kind_Image_Attribute =>
+            pragma Assert (Mode = Mode_Value);
             --  Can appear as a prefix.
             return E2M (Chap14.Translate_Image_Attribute (Name),
                         Type_Info, Mode_Value);
 
          when Iir_Kind_Simple_Name
             | Iir_Kind_Selected_Name =>
-            return Translate_Name (Get_Named_Entity (Name));
+            return Translate_Name (Get_Named_Entity (Name), Mode);
 
          when others =>
             Error_Kind ("translate_name", Name);
@@ -1058,12 +1072,12 @@ package body Trans.Chap6 is
                Pfx_Sig : Mnode;
                Pfx_Drv : Mnode;
             begin
-               Translate_Direct_Driver
-                 (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
+               Translate_Direct_Driver (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
                Translate_Slice_Name_Init (Pfx_Sig, Name, Data);
                Sig := Translate_Slice_Name_Finish
                  (Data.Prefix_Var, Name, Data);
-               Drv := Translate_Slice_Name_Finish (Pfx_Drv, Name, Data);
+               Drv := Translate_Slice_Name_Finish
+                 (Pfx_Drv, Name, Data);
             end;
          when Iir_Kind_Indexed_Name =>
             declare
@@ -1079,13 +1093,12 @@ package body Trans.Chap6 is
             end;
          when Iir_Kind_Selected_Element =>
             declare
-               El      : Iir;
+               El      : constant Iir := Get_Selected_Element (Name);
                Pfx_Sig : Mnode;
                Pfx_Drv : Mnode;
             begin
                Translate_Direct_Driver
                  (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
-               El := Get_Selected_Element (Name);
                Sig := Translate_Selected_Element (Pfx_Sig, El);
                Drv := Translate_Selected_Element (Pfx_Drv, El);
             end;
@@ -1093,4 +1106,70 @@ package body Trans.Chap6 is
             Error_Kind ("translate_direct_driver", Name);
       end case;
    end Translate_Direct_Driver;
+
+   procedure Translate_Signal_Name
+     (Name : Iir; Sig : out Mnode; Val : out Mnode)
+   is
+      Name_Type : constant Iir := Get_Type (Name);
+      Name_Info : constant Ortho_Info_Acc := Get_Info (Name);
+      Type_Info : constant Type_Info_Acc := Get_Info (Name_Type);
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Simple_Name
+            | Iir_Kind_Selected_Name =>
+            Translate_Signal_Name (Get_Named_Entity (Name), Sig, Val);
+         when Iir_Kind_Object_Alias_Declaration =>
+            Sig := Translate_Name (Name, Mode_Signal);
+            Val := Translate_Name (Name, Mode_Value);
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Stable_Attribute
+           | Iir_Kind_Quiet_Attribute
+           | Iir_Kind_Delayed_Attribute
+           | Iir_Kind_Transaction_Attribute
+           | Iir_Kind_Guard_Signal_Declaration =>
+            Sig := Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
+            Val := Get_Var (Name_Info.Signal_Val, Type_Info, Mode_Value);
+         when Iir_Kind_Interface_Signal_Declaration =>
+            Sig := Translate_Interface_Name (Name, Name_Info, Mode_Signal);
+            Val := Translate_Interface_Name (Name, Name_Info, Mode_Value);
+         when Iir_Kind_Slice_Name =>
+            declare
+               Data    : Slice_Name_Data;
+               Pfx_Sig : Mnode;
+               Pfx_Val : Mnode;
+            begin
+               Translate_Signal_Name
+                 (Get_Prefix (Name), Pfx_Sig, Pfx_Val);
+               Translate_Slice_Name_Init (Pfx_Sig, Name, Data);
+               Sig := Translate_Slice_Name_Finish
+                 (Data.Prefix_Var, Name, Data);
+               Val := Translate_Slice_Name_Finish
+                 (Pfx_Val, Name, Data);
+            end;
+         when Iir_Kind_Indexed_Name =>
+            declare
+               Data    : Indexed_Name_Data;
+               Pfx_Sig : Mnode;
+               Pfx_Val : Mnode;
+            begin
+               Translate_Signal_Name
+                 (Get_Prefix (Name), Pfx_Sig, Pfx_Val);
+               Data := Translate_Indexed_Name_Init (Pfx_Sig, Name);
+               Sig := Data.Res;
+               Val := Translate_Indexed_Name_Finish (Pfx_Val, Name, Data);
+            end;
+         when Iir_Kind_Selected_Element =>
+            declare
+               El      : constant Iir := Get_Selected_Element (Name);
+               Pfx_Sig : Mnode;
+               Pfx_Val : Mnode;
+            begin
+               Translate_Signal_Name (Get_Prefix (Name), Pfx_Sig, Pfx_Val);
+               Sig := Translate_Selected_Element (Pfx_Sig, El);
+               Val := Translate_Selected_Element (Pfx_Val, El);
+            end;
+         when others =>
+            Error_Kind ("translate_signal_name", Name);
+      end case;
+   end Translate_Signal_Name;
 end Trans.Chap6;

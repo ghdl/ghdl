@@ -782,7 +782,7 @@ package body Sem_Assocs is
    end Finish_Individual_Assoc_Record;
 
    --  Called by sem_individual_association to finish the semantization of
-   --  individual association ASSOC.
+   --  individual association ASSOC: compute bounds, detect missing elements.
    procedure Finish_Individual_Association (Assoc : Iir)
    is
       Formal : Iir;
@@ -795,6 +795,7 @@ package body Sem_Assocs is
 
       Formal := Get_Association_Interface (Assoc);
       Atype := Get_Type (Formal);
+      Set_Whole_Association_Flag (Assoc, True);
 
       case Get_Kind (Atype) is
          when Iir_Kind_Array_Subtype_Definition =>

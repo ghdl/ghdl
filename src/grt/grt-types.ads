@@ -208,7 +208,7 @@ package Grt.Types is
    end record;
    pragma Unchecked_Union (Value_Union);
 
-   type Ghdl_Value_Ptr is access Value_Union;
+   type Ghdl_Value_Ptr is access all Value_Union;
    function To_Ghdl_Value_Ptr is new Ada.Unchecked_Conversion
      (Source => Address, Target => Ghdl_Value_Ptr);
 

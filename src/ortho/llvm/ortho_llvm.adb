@@ -1454,9 +1454,14 @@ package body Ortho_LLVM is
          Index.LLVM);
       Tmp : ValueRef;
    begin
-      Tmp := BuildGEP (Builder, Arr.LLVM, Idx, Idx'Length, Empty_Cstring);
-      Tmp := BuildBitCast
-        (Builder, Tmp, PointerType (Get_LLVM_Type (Res_Type)), Empty_Cstring);
+      if Unreach then
+         Tmp := Null_ValueRef;
+      else
+         Tmp := BuildGEP (Builder, Arr.LLVM, Idx, Idx'Length, Empty_Cstring);
+         Tmp := BuildBitCast
+           (Builder, Tmp, PointerType (Get_LLVM_Type (Res_Type)),
+            Empty_Cstring);
+      end if;
       return O_Lnode'(Direct => False, LLVM => Tmp, Ltype => Res_Type);
    end New_Slice;
 
@@ -1626,10 +1631,7 @@ package body Ortho_LLVM is
 
    function New_Address (Lvalue : O_Lnode; Atype : O_Tnode) return O_Enode is
    begin
-      return O_Enode'
-        (LLVM => BuildBitCast (Builder, Lvalue.LLVM, Get_LLVM_Type (Atype),
-                               Empty_Cstring),
-         Etype => Atype);
+      return New_Unchecked_Address (Lvalue, Atype);
    end New_Address;
 
    ---------------------------
@@ -1639,11 +1641,15 @@ package body Ortho_LLVM is
    function New_Unchecked_Address  (Lvalue : O_Lnode; Atype : O_Tnode)
                                    return O_Enode
    is
+      Res : ValueRef;
    begin
-      return O_Enode'
-        (LLVM => BuildBitCast (Builder, Lvalue.LLVM, Get_LLVM_Type (Atype),
-                               Empty_Cstring),
-         Etype => Atype);
+      if Unreach then
+         Res := Null_ValueRef;
+      else
+         Res := BuildBitCast (Builder, Lvalue.LLVM, Get_LLVM_Type (Atype),
+                              Empty_Cstring);
+      end if;
+      return O_Enode'(LLVM => Res, Etype => Atype);
    end New_Unchecked_Address;
 
    ---------------
@@ -1681,6 +1687,12 @@ package body Ortho_LLVM is
 
    function New_Obj (Obj : O_Dnode) return O_Lnode is
    begin
+      if Unreach then
+         return O_Lnode'(Direct => False,
+                         LLVM => Null_ValueRef,
+                         Ltype => Obj.Dtype);
+      end if;
+
       case Obj.Kind is
          when ON_Const_Decl
            | ON_Var_Decl

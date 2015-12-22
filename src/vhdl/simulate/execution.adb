@@ -4124,7 +4124,7 @@ package body Execution is
       -- The error message consists of at least:
 
       -- 4: name of the design unit containing the assertion.
-      Disp_Iir_Location (Stmt);
+      Put (Standard_Error, Disp_Location (Stmt));
 
       -- 1: an indication that this message is from an assertion.
       Put (Standard_Error, "(assertion ");

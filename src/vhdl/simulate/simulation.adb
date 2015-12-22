@@ -189,7 +189,7 @@ package body Simulation is
                   end case;
                when Read_Signal_Effective_Value =>
                   return Value_To_Iir_Value
-                    (Sig.Sig.Mode, Sig.Sig.Value);
+                    (Sig.Sig.Mode, Sig.Sig.Value_Ptr.all);
                when Read_Signal_Driving_Value =>
                   return Value_To_Iir_Value
                     (Sig.Sig.Mode, Sig.Sig.Driving_Value);
@@ -228,7 +228,7 @@ package body Simulation is
                when Write_Signal_Driving_Value =>
                   Iir_Value_To_Value (Val, Sig.Sig.Driving_Value);
                when Write_Signal_Effective_Value =>
-                  Iir_Value_To_Value (Val, Sig.Sig.Value);
+                  Iir_Value_To_Value (Val, Sig.Sig.Value_Ptr.all);
             end case;
          when others =>
             raise Internal_Error;
@@ -312,7 +312,8 @@ package body Simulation is
             end loop;
             return Res;
          when Iir_Value_Signal =>
-            return Value_To_Iir_Value (Indirect.Sig.Mode, Indirect.Sig.Value);
+            return Value_To_Iir_Value
+              (Indirect.Sig.Mode, Indirect.Sig.Value_Ptr.all);
          when others =>
             raise Internal_Error;
       end case;
@@ -1178,26 +1179,32 @@ package body Simulation is
    function Create_Shadow_Signal (Sig : Iir_Value_Literal_Acc)
                                  return Iir_Value_Literal_Acc
    is
+      Val : Ghdl_Value_Ptr;
    begin
       case Sig.Kind is
          when Iir_Value_Signal =>
+            Val := new Value_Union;
             case Sig.Sig.Mode is
                when Mode_I64 =>
+                  Val.I64 := 0;
                   return Create_Signal_Value
                     (Grt.Signals.Ghdl_Create_Signal_I64
-                       (0, null, System.Null_Address));
+                       (Val, null, System.Null_Address));
                when Mode_B1 =>
+                  Val.B1 := False;
                   return Create_Signal_Value
                     (Grt.Signals.Ghdl_Create_Signal_B1
-                       (False, null, System.Null_Address));
+                       (Val, null, System.Null_Address));
                when Mode_E32 =>
+                  Val.E32 := 0;
                   return Create_Signal_Value
                     (Grt.Signals.Ghdl_Create_Signal_E32
-                       (0, null, System.Null_Address));
+                       (Val, null, System.Null_Address));
                when Mode_F64 =>
+                  Val.F64 := 0.0;
                   return Create_Signal_Value
                     (Grt.Signals.Ghdl_Create_Signal_F64
-                       (0.0, null, System.Null_Address));
+                       (Val, null, System.Null_Address));
                when Mode_E8
                  | Mode_I32 =>
                   raise Internal_Error;
@@ -1339,10 +1346,10 @@ package body Simulation is
       Instance_Pool := null;
    end Create_Connects;
 
-   procedure Create_Guard_Signal
-     (Instance : Block_Instance_Acc;
-      Sig_Guard : Iir_Value_Literal_Acc;
-      Guard : Iir)
+   procedure Create_Guard_Signal (Instance : Block_Instance_Acc;
+                                  Sig_Guard : Iir_Value_Literal_Acc;
+                                  Val_Guard : Iir_Value_Literal_Acc;
+                                  Guard : Iir)
    is
       procedure Add_Guard_Sensitivity (Sig : Iir_Value_Literal_Acc) is
       begin
@@ -1369,7 +1376,8 @@ package body Simulation is
       Data := new Guard_Instance_Type'(Instance => Instance,
                                        Guard => Guard);
       Sig_Guard.Sig := Grt.Signals.Ghdl_Signal_Create_Guard
-        (Data.all'Address, Guard_Func'Access);
+        (To_Ghdl_Value_Ptr (Val_Guard.B1'Address),
+         Data.all'Address, Guard_Func'Access);
       Dep_List := Get_Guard_Sensitivity_List (Guard);
       for I in Natural loop
          Dep := Get_Nth_Element (Dep_List, I);
@@ -1381,6 +1389,7 @@ package body Simulation is
    end Create_Guard_Signal;
 
    procedure Create_Implicit_Signal (Sig : Iir_Value_Literal_Acc;
+                                     Val : Iir_Value_Literal_Acc;
                                      Time : Ghdl_I64;
                                      Prefix : Iir_Value_Literal_Acc;
                                      Kind : Signal_Type_Kind)
@@ -1405,34 +1414,42 @@ package body Simulation is
    begin
       case Kind is
          when Implicit_Stable =>
-            Sig.Sig := Grt.Signals.Ghdl_Create_Stable_Signal (Std_Time (Time));
+            Sig.Sig := Grt.Signals.Ghdl_Create_Stable_Signal
+              (To_Ghdl_Value_Ptr (Val.B1'Address), Std_Time (Time));
          when Implicit_Quiet =>
-            Sig.Sig := Grt.Signals.Ghdl_Create_Quiet_Signal (Std_Time (Time));
+            Sig.Sig := Grt.Signals.Ghdl_Create_Quiet_Signal
+              (To_Ghdl_Value_Ptr (Val.B1'Address), Std_Time (Time));
          when Implicit_Transaction =>
-            Sig.Sig := Grt.Signals.Ghdl_Create_Transaction_Signal;
+            Sig.Sig := Grt.Signals.Ghdl_Create_Transaction_Signal
+              (To_Ghdl_Value_Ptr (Val.B1'Address));
          when others =>
             raise Internal_Error;
       end case;
       Register_Prefix (Prefix);
    end Create_Implicit_Signal;
 
-   procedure Create_Delayed_Signal
-     (Sig : Iir_Value_Literal_Acc; Pfx : Iir_Value_Literal_Acc; Val : Std_Time)
+   procedure Create_Delayed_Signal (Sig : Iir_Value_Literal_Acc;
+                                    Val : Iir_Value_Literal_Acc;
+                                    Pfx : Iir_Value_Literal_Acc;
+                                    Time : Std_Time)
    is
    begin
       case Pfx.Kind is
             when Iir_Value_Array =>
                for I in Sig.Val_Array.V'Range loop
                   Create_Delayed_Signal
-                    (Sig.Val_Array.V (I), Pfx.Val_Array.V (I), Val);
+                    (Sig.Val_Array.V (I), Val.Val_Array.V (I),
+                     Pfx.Val_Array.V (I), Time);
                end loop;
             when Iir_Value_Record =>
                for I in Pfx.Val_Record.V'Range loop
                   Create_Delayed_Signal
-                    (Sig.Val_Record.V (I), Pfx.Val_Array.V (I), Val);
+                    (Sig.Val_Record.V (I), Val.Val_Record.V (I),
+                     Pfx.Val_Array.V (I), Time);
                end loop;
          when Iir_Value_Signal =>
-            Sig.Sig := Grt.Signals.Ghdl_Create_Delayed_Signal (Pfx.Sig, Val);
+            Sig.Sig := Grt.Signals.Ghdl_Create_Delayed_Signal
+              (Pfx.Sig, To_Ghdl_Value_Ptr (Val.B1'Address), Time);
          when others =>
             raise Internal_Error;
       end case;
@@ -1443,12 +1460,12 @@ package body Simulation is
    procedure Create_User_Signal (Block: Block_Instance_Acc;
                                  Signal: Iir;
                                  Sig : Iir_Value_Literal_Acc;
-                                 Default : Iir_Value_Literal_Acc)
+                                 Val : Iir_Value_Literal_Acc)
    is
       use Grt.Rtis;
       use Grt.Signals;
 
-      procedure Create_Signal (Lit: Iir_Value_Literal_Acc;
+      procedure Create_Signal (Val : Iir_Value_Literal_Acc;
                                Sig : Iir_Value_Literal_Acc;
                                Sig_Type: Iir;
                                Already_Resolved : Boolean)
@@ -1474,16 +1491,16 @@ package body Simulation is
               (Resolution_Proc'Access,
                Resolv_Instance.all'Address,
                System.Null_Address,
-               Ghdl_Index_Type (Get_Nbr_Of_Scalars (Lit)));
+               Ghdl_Index_Type (Get_Nbr_Of_Scalars (Val)));
          end if;
-         case Lit.Kind is
+         case Val.Kind is
             when Iir_Value_Array =>
                declare
                   Sig_El_Type : constant Iir :=
                     Get_Element_Subtype (Get_Base_Type (Sig_Type));
                begin
-                  for I in Lit.Val_Array.V'Range loop
-                     Create_Signal (Lit.Val_Array.V (I), Sig.Val_Array.V (I),
+                  for I in Val.Val_Array.V'Range loop
+                     Create_Signal (Val.Val_Array.V (I), Sig.Val_Array.V (I),
                                     Sig_El_Type, Sub_Resolved);
                   end loop;
                end;
@@ -1494,25 +1511,29 @@ package body Simulation is
                begin
                   List := Get_Elements_Declaration_List
                     (Get_Base_Type (Sig_Type));
-                  for I in Lit.Val_Record.V'Range loop
+                  for I in Val.Val_Record.V'Range loop
                      El := Get_Nth_Element (List, Natural (I - 1));
-                     Create_Signal (Lit.Val_Record.V (I), Sig.Val_Record.V (I),
+                     Create_Signal (Val.Val_Record.V (I), Sig.Val_Record.V (I),
                                     Get_Type (El), Sub_Resolved);
                   end loop;
                end;
 
             when Iir_Value_I64 =>
                Sig.Sig := Grt.Signals.Ghdl_Create_Signal_I64
-                 (Lit.I64, null, System.Null_Address);
+                 (To_Ghdl_Value_Ptr (Val.I64'Address),
+                  null, System.Null_Address);
             when Iir_Value_B1 =>
                Sig.Sig := Grt.Signals.Ghdl_Create_Signal_B1
-                 (Lit.B1, null, System.Null_Address);
+                 (To_Ghdl_Value_Ptr (Val.B1'Address),
+                  null, System.Null_Address);
             when Iir_Value_E32 =>
                Sig.Sig := Grt.Signals.Ghdl_Create_Signal_E32
-                 (Lit.E32, null, System.Null_Address);
+                 (To_Ghdl_Value_Ptr (Val.E32'Address),
+                  null, System.Null_Address);
             when Iir_Value_F64 =>
                Sig.Sig := Grt.Signals.Ghdl_Create_Signal_F64
-                 (Lit.F64, null, System.Null_Address);
+                 (To_Ghdl_Value_Ptr (Val.F64'Address),
+                  null, System.Null_Address);
 
             when Iir_Value_Signal
               | Iir_Value_Range
@@ -1562,7 +1583,7 @@ package body Simulation is
 
       Grt.Signals.Ghdl_Signal_Set_Mode (Mode, Kind, True);
 
-      Create_Signal (Default, Sig, Sig_Type, False);
+      Create_Signal (Val, Sig, Sig_Type, False);
    end Create_User_Signal;
 
    procedure Create_Signals is
@@ -1573,13 +1594,15 @@ package body Simulation is
          begin
             case E.Kind is
                when Guard_Signal =>
-                  Create_Guard_Signal (E.Instance, E.Sig, E.Decl);
+                  Create_Guard_Signal (E.Instance, E.Sig, E.Val, E.Decl);
                when Implicit_Stable | Implicit_Quiet | Implicit_Transaction =>
-                  Create_Implicit_Signal (E.Sig, E.Time, E.Prefix, E.Kind);
+                  Create_Implicit_Signal
+                    (E.Sig, E.Val, E.Time, E.Prefix, E.Kind);
                when Implicit_Delayed =>
-                  Create_Delayed_Signal (E.Sig, E.Prefix, Std_Time (E.Time));
+                  Create_Delayed_Signal (E.Sig, E.Val,
+                                         E.Prefix, Std_Time (E.Time));
                when User_Signal =>
-                  Create_User_Signal (E.Instance, E.Decl, E.Sig, E.Init);
+                  Create_User_Signal (E.Instance, E.Decl, E.Sig, E.Val);
             end case;
          end;
       end loop;
