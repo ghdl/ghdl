@@ -60,6 +60,7 @@ package body Scanner is
    -- The characters included in each of the categories of basic graphic
    -- characters are defined as follows:
    type Character_Array is array (Character) of Character_Kind_Type;
+   pragma Suppress_Initialization (Character_Array);
    Characters_Kind : constant Character_Array :=
      (NUL .. BS => Invalid,
 
@@ -141,7 +142,6 @@ package body Scanner is
       Pos: Source_Ptr;
       Token_Pos: Source_Ptr;
       File_Len: Source_Ptr;
-      File_Name: Name_Id;
       Token: Token_Type;
       Prev_Token: Token_Type;
       Str_Id : String8_Id;
@@ -150,6 +150,7 @@ package body Scanner is
       Int64: Iir_Int64;
       Fp64: Iir_Fp64;
    end record;
+   pragma Suppress_Initialization (Scan_Context);
 
    -- The current context.
    -- Default value is an invalid context.
@@ -160,7 +161,6 @@ package body Scanner is
                                      Pos => 0,
                                      Token_Pos => 0,
                                      File_Len => 0,
-                                     File_Name => Null_Identifier,
                                      Token => Tok_Invalid,
                                      Prev_Token => Tok_Invalid,
                                      Identifier => Null_Identifier,
@@ -212,11 +212,6 @@ package body Scanner is
    begin
       return Current_Context.Fp64;
    end Current_Iir_Fp64;
-
-   function Get_Current_File return Name_Id is
-   begin
-      return Current_Context.File_Name;
-   end Get_Current_File;
 
    function Get_Current_Source_File return Source_File_Entry is
    begin
@@ -278,7 +273,6 @@ package body Scanner is
                           Pos => N_Source'First,
                           Token_Pos => 0, -- should be invalid,
                           File_Len => Get_File_Length (Source_File),
-                          File_Name => Get_File_Name (Source_File),
                           Token => Tok_Invalid,
                           Prev_Token => Tok_Invalid,
                           Identifier => Null_Identifier,

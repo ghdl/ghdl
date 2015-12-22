@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Iir_Chains; use Iir_Chains;
-with Ada.Text_IO; use Ada.Text_IO;
 with Tokens; use Tokens;
 with Scanner; use Scanner;
 with Iirs_Utils; use Iirs_Utils;
@@ -117,13 +116,6 @@ package body Parse is
       if Current_Token /= Tok_Identifier then
          Invalidate_Current_Token;
       end if;
-   exception
-      when Parse_Error =>
-         Put_Line ("found " & Token_Type'Image (Current_Token));
-         if Current_Token = Tok_Identifier then
-            Put_Line ("identifier: " & Name_Table.Image (Current_Identifier));
-         end if;
-         raise;
    end Expect;
 
    --  Scan a token and expect it.
@@ -3230,7 +3222,7 @@ package body Parse is
    --  precond : COMPONENT
    --  postcond: ';'
    --
-   --  [ §4.5 ]
+   --  [ LRM93 4.5 ]
    --  component_declaration ::=
    --      COMPONENT identifier [ IS ]
    --          [ LOCAL_generic_clause ]
