@@ -209,7 +209,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token.
    --
-   --  [§ 4.3.2 ]
+   --  [ LRM93 4.3.2 ]
    --  mode ::= IN | OUT | INOUT | BUFFER | LINKAGE
    --
    --  If there is no mode, DEFAULT is returned.
@@ -238,9 +238,8 @@ package body Parse is
             Scan;
             return Iir_Buffer_Mode;
          when others =>
-            Error_Msg_Parse
-              ("mode is 'in', 'out', 'inout', 'buffer' or 'linkage'");
-            return Iir_In_Mode;
+            --  Cannot happen.
+            raise Internal_Error;
       end case;
    end Parse_Mode;
 

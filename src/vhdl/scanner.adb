@@ -336,9 +336,9 @@ package body Scanner is
       Offset: Natural;
       File_Entry : Source_File_Entry;
    begin
-      if Current_Context.Source = null then
-         raise Internal_Error;
-      end if;
+      --  Scanner must have been initialized.
+      pragma Assert (Current_Context.Source /= null);
+
       Current_Token := Tok_Invalid;
       Current_Context.Pos := Position;
       Loc := File_Pos_To_Location (Current_Context.Source_File,
@@ -793,7 +793,6 @@ package body Scanner is
                      if Vhdl_Std = Vhdl_87 then
                         Error_8bit;
                      end if;
-                     Len := Len + 1;
                      C := Ada.Characters.Handling.To_Lower (C);
                   when Digit =>
                      raise Internal_Error;
