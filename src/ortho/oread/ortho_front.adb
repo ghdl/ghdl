@@ -1909,6 +1909,10 @@ package body Ortho_Front is
             end;
 
          when Tok_Loop =>
+            --  Grammar:
+            --    LOOP n:
+            --      stmts
+            --    END LOOP;
             declare
                Info : Loop_Info_Acc;
                Num : Natural;
@@ -1936,6 +1940,9 @@ package body Ortho_Front is
 
          when Tok_Exit
            | Tok_Next =>
+            --  Grammar:
+            --    EXIT LOOP n;
+            --    NEXT LOOP n;
             declare
                Label : Loop_Info_Acc;
                Etok : Token_Type;
@@ -1957,6 +1964,9 @@ package body Ortho_Front is
             end;
 
          when Tok_Return =>
+            --  Grammar:
+            --    RETURN;
+            --    RETURN expr;
             declare
                Res : O_Enode;
                Res_Type : Node_Acc;
