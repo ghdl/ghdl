@@ -1,4 +1,5 @@
 ortho_srcdir=..
+GNATMAKE=gnatmake
 GNAT_FLAGS=-gnaty3befhkmr -gnata -gnatf -gnatwlcru -gnat05
 CC=gcc
 BE=mcode
@@ -7,7 +8,7 @@ SED=sed
 all: $(ortho_exec)
 
 $(ortho_exec): $(ortho_srcdir)/mcode/ortho_mcode.ads memsegs_c.o force
-	gnatmake -m -o $@ -g -aI$(ortho_srcdir)/mcode -aI$(ortho_srcdir) \
+	$(GNATMAKE) -o $@ -g -aI$(ortho_srcdir)/mcode -aI$(ortho_srcdir) \
 	-aI$(ortho_srcdir)/.. $(GNAT_FLAGS) ortho_code_main \
 	-bargs -E -largs memsegs_c.o #-static
 
