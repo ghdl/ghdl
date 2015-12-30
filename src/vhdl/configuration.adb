@@ -553,7 +553,8 @@ package body Configuration is
       Lib_Unit := Get_Library_Unit (Unit);
       case Get_Kind (Lib_Unit) is
          when Iir_Kind_Entity_Declaration =>
-            Load_Design_Unit (Unit, Null_Iir);
+            --  Use WORK as location (should use a command line location ?)
+            Load_Design_Unit (Unit, Work_Library);
             Lib_Unit := Get_Library_Unit (Unit);
             if Secondary_Id /= Null_Identifier then
                Unit := Find_Secondary_Unit (Unit, Secondary_Id);
