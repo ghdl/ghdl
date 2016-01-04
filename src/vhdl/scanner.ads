@@ -104,7 +104,6 @@ package Scanner is
    -- Get the current location, or the location of the current token.
    -- Since a token cannot spread over lines, file and line of the current
    -- token are the same as those of the current position.
-   function Get_Current_File return Name_Id;
    function Get_Current_Source_File return Source_File_Entry;
    function Get_Current_Line return Natural;
    function Get_Current_Column return Natural;

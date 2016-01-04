@@ -156,7 +156,13 @@ package body Errorout is
                Location_To_Position (Loc, File, Line, Col);
             end if;
          when Semantic =>
-            Location_To_Position (Loc, File, Line, Col);
+            if Loc = No_Location then
+               File := No_Source_File_Entry;
+               Line := 0;
+               Col := 0;
+            else
+               Location_To_Position (Loc, File, Line, Col);
+            end if;
       end case;
 
       if Progname then

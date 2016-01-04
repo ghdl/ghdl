@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Iir_Chains; use Iir_Chains;
-with Ada.Text_IO; use Ada.Text_IO;
 with Tokens; use Tokens;
 with Scanner; use Scanner;
 with Iirs_Utils; use Iirs_Utils;
@@ -117,13 +116,6 @@ package body Parse is
       if Current_Token /= Tok_Identifier then
          Invalidate_Current_Token;
       end if;
-   exception
-      when Parse_Error =>
-         Put_Line ("found " & Token_Type'Image (Current_Token));
-         if Current_Token = Tok_Identifier then
-            Put_Line ("identifier: " & Name_Table.Image (Current_Identifier));
-         end if;
-         raise;
    end Expect;
 
    --  Scan a token and expect it.
@@ -209,7 +201,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token.
    --
-   --  [§ 4.3.2 ]
+   --  [ LRM93 4.3.2 ]
    --  mode ::= IN | OUT | INOUT | BUFFER | LINKAGE
    --
    --  If there is no mode, DEFAULT is returned.
@@ -238,9 +230,8 @@ package body Parse is
             Scan;
             return Iir_Buffer_Mode;
          when others =>
-            Error_Msg_Parse
-              ("mode is 'in', 'out', 'inout', 'buffer' or 'linkage'");
-            return Iir_In_Mode;
+            --  Cannot happen.
+            raise Internal_Error;
       end case;
    end Parse_Mode;
 
@@ -273,7 +264,7 @@ package body Parse is
       end if;
    end Parse_Signal_Kind;
 
-   --  precond : next token
+   --  precond : TO, DOWNTO
    --  postcond: next token
    --
    -- Parse a range.
@@ -286,59 +277,26 @@ package body Parse is
    -- [3.1]
    -- range ::= RANGE_attribute_name
    --         | simple_expression direction simple_expression
-   function Parse_Range_Expression (Left: Iir; Discrete: Boolean := False)
-                                   return Iir
+   function Parse_Range_Expression (Left : Iir) return Iir
    is
       Res : Iir;
-      Left1: Iir;
    begin
-      if Left /= Null_Iir then
-         Left1 := Left;
-      else
-         Left1 := Parse_Simple_Expression;
-      end if;
+      Res := Create_Iir (Iir_Kind_Range_Expression);
+      Set_Left_Limit (Res, Left);
 
+      Location_Copy (Res, Left);
       case Current_Token is
          when Tok_To =>
-            Res := Create_Iir (Iir_Kind_Range_Expression);
             Set_Direction (Res, Iir_To);
          when Tok_Downto =>
-            Res := Create_Iir (Iir_Kind_Range_Expression);
             Set_Direction (Res, Iir_Downto);
-         when Tok_Range =>
-            if not Discrete then
-               Unexpected ("range definition");
-            end if;
-            Scan;
-            if Current_Token = Tok_Box then
-               Unexpected ("range expression expected");
-               Scan;
-               return Null_Iir;
-            end if;
-            Res := Parse_Range_Expression (Null_Iir, False);
-            if Res /= Null_Iir then
-               Set_Type (Res, Left1);
-            end if;
-            return Res;
          when others =>
-            if Left1 = Null_Iir then
-               return Null_Iir;
-            end if;
-            if Is_Range_Attribute_Name (Left1) then
-               return Left1;
-            end if;
-            if Discrete
-              and then Get_Kind (Left1) in Iir_Kinds_Denoting_Name
-            then
-               return Left1;
-            end if;
-            Error_Msg_Parse ("'to' or 'downto' expected");
-            return Null_Iir;
+            raise Internal_Error;
       end case;
-      Set_Left_Limit (Res, Left1);
-      Location_Copy (Res, Left1);
 
+      --  Skip TO or DOWNTO.
       Scan;
+
       Set_Right_Limit (Res, Parse_Simple_Expression);
       return Res;
    end Parse_Range_Expression;
@@ -2032,9 +1990,6 @@ package body Parse is
             Append_Element (El_List, El);
             Set_Element_Position (El, Pos);
             Pos := Pos + 1;
-            if First = Null_Iir then
-               First := El;
-            end if;
 
             --  Skip identifier
             Scan;
@@ -3267,7 +3222,7 @@ package body Parse is
    --  precond : COMPONENT
    --  postcond: ';'
    --
-   --  [ §4.5 ]
+   --  [ LRM93 4.5 ]
    --  component_declaration ::=
    --      COMPONENT identifier [ IS ]
    --          [ LOCAL_generic_clause ]

@@ -2560,9 +2560,9 @@ package body Sem_Expr is
             if Pos < E_Pos and then not Has_Others then
                Error_No_Choice (Bt, Pos, E_Pos - 1, Get_Location (Arr (I)));
             elsif Pos > E_Pos then
-               if Pos + 1 = E_Pos then
+               if Pos = E_Pos + 1 then
                   Error_Msg_Sem
-                    ("duplicate choice for " & Disp_Discrete (Bt, Pos),
+                    ("duplicate choice for " & Disp_Discrete (Bt, E_Pos),
                      Arr (I));
                else
                   Error_Msg_Sem
