@@ -480,7 +480,10 @@ package body Sem_Types is
       case Get_Kind (El_Type) is
          when Iir_Kind_File_Type_Definition =>
             Error_Msg_Sem
-              ("element of file type is not allowed in a composite type", Loc);
+              ("file type element not allowed in a composite type", Loc);
+         when Iir_Kind_Protected_Type_Declaration =>
+            Error_Msg_Sem
+              ("protected type element not allowed in a composite type", Loc);
          when others =>
             null;
       end case;
@@ -1074,6 +1077,11 @@ package body Sem_Types is
                --  LRM 3.3
                --  The designated type must not be a file type.
                Error_Msg_Sem ("designated type must not be a file type", Def);
+            when Iir_Kind_Protected_Type_Declaration =>
+               --  LRM02 3.3
+               --  [..] or a protected type.
+               Error_Msg_Sem
+                 ("designated type must not be a protected type", Def);
             when others =>
                null;
          end case;
