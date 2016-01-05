@@ -28,10 +28,21 @@ package Elf_Arch32 is
 
    subtype Elf_Off is Elf32_Off;
    subtype Elf_Size is Elf32_Word;
+   subtype Elf_Addr is Elf32_Addr;
    Elf_Ehdr_Size : constant Natural := Elf32_Ehdr_Size;
    Elf_Shdr_Size : constant Natural := Elf32_Shdr_Size;
    Elf_Phdr_Size : constant Natural := Elf32_Phdr_Size;
    Elf_Sym_Size : constant Natural := Elf32_Sym_Size;
+   Elf_Rel_Size : constant Natural := Elf32_Rel_Size;
+   Elf_Rela_Size : constant Natural := Elf32_Rela_Size;
 
    Elf_Arch_Class : constant Elf_Uchar := ELFCLASS32;
+
+   function Elf_R_Sym (I : Elf32_Word) return Elf32_Word
+     renames Elf32_R_Sym;
+   function Elf_R_Type (I : Elf32_Word) return Elf32_Word
+     renames Elf32_R_Type;
+   function Elf_R_Info (S, T : Elf32_Word) return Elf32_Word
+     renames Elf32_R_Info;
+
 end Elf_Arch32;

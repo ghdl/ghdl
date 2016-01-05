@@ -28,9 +28,9 @@ package body Ortho_Code.Decls is
    --  Common fields:
    --    kind: 4 bits
    --    storage: 2 bits
+   --    flags (addr, 2): 2 bits
    --    reg : 8 bits
    --    depth : 16 bits
-   --    flags: addr + 9
    --  Additionnal fields:
    --    OD_Type: Id, dtype
    --    OD_Var: Id, Dtype, symbol
@@ -633,6 +633,15 @@ package body Ortho_Code.Decls is
       use Ada.Text_IO;
       use Ortho_Ident;
       use Ortho_Code.Debug.Int32_IO;
+
+      procedure Disp_Decl_Type (Decl : O_Dnode)
+      is
+         Dtype : constant O_Tnode := Get_Decl_Type (Decl);
+      begin
+         Put (Int32 (Dtype), 0);
+         Put (", ");
+         Disp_Mode (Types.Get_Type_Mode (Dtype));
+      end Disp_Decl_Type;
    begin
       Set_Col (Count (Indent));
       Put (Int32 (Decl), 0);
@@ -642,13 +651,15 @@ package body Ortho_Code.Decls is
             Put ("type ");
             Disp_Decl_Name (Decl);
             Put (" is ");
-            Put (Int32 (Get_Decl_Type (Decl)), 0);
+            Disp_Decl_Type (Decl);
          when OD_Function =>
             Disp_Decl_Storage (Decl);
             Put (" function ");
             Disp_Decl_Name (Decl);
             Put (" return ");
-            Put (Int32 (Get_Decl_Type (Decl)), 0);
+            Disp_Decl_Type (Decl);
+            Put ("  stack: ");
+            Put (Get_Subprg_Stack (Decl), 0);
          when OD_Procedure =>
             Disp_Decl_Storage (Decl);
             Put (" procedure ");
@@ -657,17 +668,17 @@ package body Ortho_Code.Decls is
             Put (" interface ");
             Disp_Decl_Name (Decl);
             Put (": ");
-            Put (Int32 (Get_Decl_Type (Decl)), 0);
-            Put (", ");
-            Disp_Mode (Types.Get_Type_Mode (Get_Decl_Type (Decl)));
+            Disp_Decl_Type (Decl);
             Put (", offset=");
             Put (Get_Inter_Offset (Decl), 0);
+            Put (", reg=");
+            Put (Image_Reg (Get_Decl_Reg (Decl)));
          when OD_Const =>
             Disp_Decl_Storage (Decl);
             Put (" const ");
             Disp_Decl_Name (Decl);
             Put (": ");
-            Put (Int32 (Get_Decl_Type (Decl)), 0);
+            Disp_Decl_Type (Decl);
          when OD_Const_Val =>
             Put ("constant ");
             Disp_Decl_Name (Get_Val_Decl (Decl));
@@ -677,7 +688,7 @@ package body Ortho_Code.Decls is
             Put ("local ");
             Disp_Decl_Name (Decl);
             Put (": ");
-            Put (Int32 (Get_Decl_Type (Decl)), 0);
+            Disp_Decl_Type (Decl);
             Put (", offset=");
             Put (Get_Inter_Offset (Decl), 0);
          when OD_Var =>
@@ -685,7 +696,7 @@ package body Ortho_Code.Decls is
             Put (" var ");
             Disp_Decl_Name (Decl);
             Put (": ");
-            Put (Int32 (Get_Decl_Type (Decl)), 0);
+            Disp_Decl_Type (Decl);
          when OD_Body =>
             Put ("body of ");
             Put (Int32 (Get_Body_Decl (Decl)), 0);

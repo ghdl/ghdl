@@ -1,4 +1,4 @@
---  ELF32 definitions.
+--  X86 ABI flags.
 --  Copyright (C) 2006 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
@@ -15,19 +15,20 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-package body Elf32 is
-   function Elf32_R_Sym (I : Elf32_Word) return Elf32_Word is
-   begin
-      return Shift_Right (I, 8);
-   end Elf32_R_Sym;
+with Interfaces; use Interfaces;
 
-   function Elf32_R_Type (I : Elf32_Word) return Elf32_Word is
-   begin
-      return I and 16#Ff#;
-   end Elf32_R_Type;
+package Ortho_Code.X86.Flags_Linux64 is
+   --  If true, OE_Alloca calls __chkstk (Windows), otherwise OE_Alloc
+   --  modifies ESP directly.
+   Flag_Alloca_Call : constant Boolean := False;
 
-   function Elf32_R_Info (S, T : Elf32_Word) return Elf32_Word is
-   begin
-      return Shift_Left (S, 8) or T;
-   end Elf32_R_Info;
-end Elf32;
+   --  Prefered stack alignment.
+   --  Must be a power of 2.
+   Stack_Boundary : constant Unsigned_32 := 2 ** 4;
+
+   --  Alignment for double (64 bit float).
+   Mode_F64_Align : constant Natural := 3;
+
+   --  32 bits.
+   M64 : constant Boolean := True;
+end Ortho_Code.X86.Flags_Linux64;

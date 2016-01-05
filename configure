@@ -120,10 +120,16 @@ echo "Build machine is: $build"
 
 # For mcode, check that gcc emits i386
 if test $backend = mcode; then
-    if ! $CC $CFLAGS -dumpmachine | grep -q "[3-6]86"; then
-	echo "WARNING: GHDL for mcode is supported only on x86 (32 bits)"
-	echo "continuing, but build failure expected (See the README)"
-    fi
+    gcc_machine=`$CC $CFLAGS -dumpmachine`
+    case "$gcc_machine" in
+	i[3-6]86*) mcode64="" ;;
+	x86_64*) mcode64="64" ;;
+	*)
+	  mcode64=""
+	  echo "WARNING: GHDL for mcode is supported only on x86"
+	  echo "continuing, but build failure expected (See the README)"
+	  ;;
+    esac
     if test "x$backtrace_lib" != x ; then
 	echo "WARNING: --with-backtrace-lib= ignored with mcode"
 	backtrace_lib=
@@ -205,9 +211,9 @@ fi
 # Generate ortho_code-x86-flags
 if test $backend = mcode; then
     case "$build" in
-	*darwin*) ortho_flags="Flags_Macosx" ;;
+	*darwin*) ortho_flags="Flags_Macosx${mcode64}" ;;
 	*mingw32*) ortho_flags="Flags_Windows" ;;
-	*linux*) ortho_flags="Flags_Linux" ;;
+	*linux*) ortho_flags="Flags_Linux${mcode64}" ;;
 	*) echo "Unsupported $build build for mcode"; exit 1;;
     esac
     echo "Generate ortho_code-x86-flags.ads"
@@ -215,6 +221,11 @@ if test $backend = mcode; then
      echo "with Ortho_Code.X86.$ortho_flags;"
      echo "package Ortho_Code.X86.Flags renames Ortho_Code.X86.$ortho_flags;"
     } > ortho_code-x86-flags.ads
+    echo "Generate elf_arch.ads"
+    {
+	echo "with Elf_Arch${mcode64:-32};"
+	echo "package Elf_Arch renames Elf_Arch${mcode64:-32};"
+    } > elf_arch.ads
 fi
 
 # Generate default_pathes.ads

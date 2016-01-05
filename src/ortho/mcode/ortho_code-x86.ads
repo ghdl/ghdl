@@ -63,8 +63,9 @@ package Ortho_Code.X86 is
 
    subtype Regs_Imm32 is O_Reg range R_Irm .. R_I_Off;
 
-   R_Any8 : constant O_Reg := 6;
-   R_Any32 : constant O_Reg := 7;
+   R_Any8  : constant O_Reg := 5;
+   R_Any32 : constant O_Reg := 6;
+   R_Any64 : constant O_Reg := 7;
    R_Ax : constant O_Reg := 8;
    R_Cx : constant O_Reg := 9;
    R_Dx : constant O_Reg := 10;
@@ -73,18 +74,28 @@ package Ortho_Code.X86 is
    R_Bp : constant O_Reg := 13;
    R_Si : constant O_Reg := 14;
    R_Di : constant O_Reg := 15;
+   R_R8 : constant O_Reg := 16;
+   R_R9 : constant O_Reg := 17;
+   R_R10 : constant O_Reg := 18;
+   R_R11 : constant O_Reg := 19;
+   R_R12 : constant O_Reg := 20;
+   R_R13 : constant O_Reg := 21;
+   R_R14 : constant O_Reg := 22;
+   R_R15 : constant O_Reg := 23;
 
    subtype Regs_R8 is O_Reg range R_Ax .. R_Bx;
    subtype Regs_R32 is O_Reg range R_Ax .. R_Di;
+   subtype Regs_R64 is O_Reg range R_Ax .. R_R15;
+   subtype Regs_R8_R15 is O_Reg range R_R8 .. R_R15;
 
-   R_St0 : constant O_Reg := 16;
-   R_St1 : constant O_Reg := 17;
-   R_St2 : constant O_Reg := 18;
-   R_St3 : constant O_Reg := 19;
-   R_St4 : constant O_Reg := 20;
-   R_St5 : constant O_Reg := 21;
-   R_St6 : constant O_Reg := 22;
-   R_St7 : constant O_Reg := 23;
+   R_St0 : constant O_Reg := 24;
+   R_St1 : constant O_Reg := 25;
+   R_St2 : constant O_Reg := 26;
+   R_St3 : constant O_Reg := 27;
+   R_St4 : constant O_Reg := 28;
+   R_St5 : constant O_Reg := 29;
+   R_St6 : constant O_Reg := 30;
+   R_St7 : constant O_Reg := 31;
    --R_Any_Fp : constant O_Reg := 24;
 
    subtype Regs_Fp is O_Reg range R_St0 .. R_St7;
@@ -92,6 +103,7 @@ package Ortho_Code.X86 is
    --  Any condition register.
    R_Any_Cc : constant O_Reg := 32;
    R_Ov : constant O_Reg := 32;
+   R_No : constant O_Reg := 33;
    R_Ult : constant O_Reg := 34;
    R_Uge : constant O_Reg := 35;
    R_Eq : constant O_Reg := 36;
@@ -108,9 +120,9 @@ package Ortho_Code.X86 is
    R_Edx_Eax : constant O_Reg := 64;
    R_Ebx_Ecx : constant O_Reg := 65;
    R_Esi_Edi : constant O_Reg := 66;
-   R_Any64 : constant O_Reg := 67;
+   R_AnyPair : constant O_Reg := 67;
 
-   subtype Regs_R64 is O_Reg range R_Edx_Eax .. R_Esi_Edi;
+   subtype Regs_Pair is O_Reg range R_Edx_Eax .. R_Esi_Edi;
 
    R_Any_Xmm : constant O_Reg := 79;
 
@@ -134,9 +146,10 @@ package Ortho_Code.X86 is
    subtype Regs_X86_64_Xmm is O_Reg range R_Xmm0 .. R_Xmm15;
    subtype Regs_X86_Xmm is O_Reg range R_Xmm0 .. R_Xmm7;
    subtype Regs_Xmm is O_Reg range R_Xmm0 .. R_Xmm15;
+   subtype Regs_Xmm8_Xmm15 is O_Reg range R_Xmm8 .. R_Xmm15;
 
-   function Get_R64_High (Reg : Regs_R64) return Regs_R32;
-   function Get_R64_Low (Reg : Regs_R64) return Regs_R32;
+   function Get_Pair_High (Reg : Regs_Pair) return Regs_R32;
+   function Get_Pair_Low (Reg : Regs_Pair) return Regs_R32;
 
    function Inverse_Cc (R : O_Reg) return O_Reg;
 
@@ -152,4 +165,11 @@ package Ortho_Code.X86 is
    subtype Intrinsics_X86 is Int32
      range Intrinsic_Mul_Ov_U64 .. Intrinsic_Rem_Ov_I64;
 
+   type O_Reg_Array is array (Natural range <>) of O_Reg;
+
+   --  Registers preserved accross calls.
+   Preserved_Regs_32 : constant O_Reg_Array :=
+     (R_Di, R_Si, R_Bx);
+   Preserved_Regs_64 : constant O_Reg_Array :=
+     (R_Bx, R_R12, R_R13, R_R14, R_R15);
 end Ortho_Code.X86;

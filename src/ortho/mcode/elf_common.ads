@@ -46,6 +46,7 @@ package Elf_Common is
    EM_860         : constant Elf_Half := 7;  --  Intel 80860
    EM_MIPS        : constant Elf_Half := 8;  --  MIPS RS3000 Big-Endian
    EM_MIPS_RS4_BE : constant Elf_Half := 10; --  MIPS RS4000 Big-Endian
+   EM_X86_64      : constant Elf_Half := 62;
    -- RESERVED : constant Elf_Half := 11; -- -16 Reserved for future use
 
    --  e_version
@@ -120,7 +121,6 @@ package Elf_Common is
    SHT_HIPROC        : constant Elf_Word := 16#7fffffff#;
    SHT_LOUSER        : constant Elf_Word := 16#80000000#;
    SHT_HIUSER        : constant Elf_Word := 16#ffffffff#;
-
 
    SHF_WRITE     : constant := 16#1#;
    SHF_ALLOC     : constant := 16#2#;

@@ -468,14 +468,16 @@ package body Ortho_Code.Types is
    function New_Access_Type (Dtype : O_Tnode) return O_Tnode
    is
       Res : O_Tnode;
+      Sz : constant Uns32 := Boolean'Pos (Mode_Ptr = Mode_P32) * 4
+        + Boolean'Pos (Mode_Ptr = Mode_P64) * 8;
    begin
       Tnodes.Append (Tnode_Common'(Kind => OT_Access,
-                                   Mode => Mode_P32,
-                                   Align => Mode_Align (Mode_P32),
+                                   Mode => Mode_Ptr,
+                                   Align => Mode_Align (Mode_Ptr),
                                    Deferred => Dtype = O_Tnode_Null,
                                    Flag1 => False,
                                    Pad0 => (others => False),
-                                   Size => 4));
+                                   Size => Sz));
       Res := Tnodes.Last;
       Tnodes.Append (To_Tnode_Common (Tnode_Access'(Dtype => Dtype,
                                                     Pad => 0)));

@@ -254,9 +254,11 @@ package body Ortho_Front is
            | Node_Object
            | Node_Lit =>
             --  Declarations
+            Decl_Storage : O_Storage;
+            --  For constants: True iff fully defined.
+            Decl_Defined : Boolean;
             --  All declarations but NODE_PROCEDURE have a type.
             Decl_Dtype : Node_Acc;
-            Decl_Storage : O_Storage;
             case Kind is
                when Decl_Type =>
                   --  Type declaration.
@@ -443,7 +445,10 @@ package body Ortho_Front is
          Token_Number := 0;
          C := Get_Char;
          loop
-            Token_Number := Token_Number * Base + Unsigned_64 (To_Digit (C));
+            if C /= '_' then
+               Token_Number :=
+                 Token_Number * Base + Unsigned_64 (To_Digit (C));
+            end if;
             C := Get_Char;
             exit when C = '#';
          end loop;
@@ -1022,7 +1027,7 @@ package body Ortho_Front is
                Next_Token;
                Index_Node := Parse_Type;
                Expect (Tok_Right_Brack, "']' expected");
-               Next_Expect (Tok_Of, "'of' expected");
+               Next_Expect (Tok_Of, "'OF' expected");
                Next_Token;
                El_Node := Parse_Type;
                Res := new Node'
@@ -1034,6 +1039,8 @@ package body Ortho_Front is
             end;
             return Res;
          when Tok_Subarray =>
+            --  Grammar:
+            --    SUBARRAY type [ len ]
             declare
                Base_Node : Node_Acc;
                Res_Type : O_Tnode;
@@ -1122,6 +1129,7 @@ package body Ortho_Front is
                False_Lit := new Node'(Kind => Node_Lit,
                                       Decl_Dtype => Res,
                                       Decl_Storage => O_Storage_Public,
+                                      Decl_Defined => False,
                                       Lit_Name => Token_Sym.Ident,
                                       Lit_Cnode => O_Cnode_Null,
                                       Lit_Next => null);
@@ -1130,6 +1138,7 @@ package body Ortho_Front is
                True_Lit := new Node'(Kind => Node_Lit,
                                      Decl_Dtype => Res,
                                      Decl_Storage => O_Storage_Public,
+                                     Decl_Defined => False,
                                      Lit_Name => Token_Sym.Ident,
                                      Lit_Cnode => O_Cnode_Null,
                                      Lit_Next => null);
@@ -1141,6 +1150,8 @@ package body Ortho_Front is
                                  True_Lit.Lit_Name, True_Lit.Lit_Cnode);
             end;
          when Tok_Enum =>
+            --  Grammar:
+            --   ENUM { LIT1, LIT2, ... LITN }
             declare
                List : O_Enum_List;
                Lit : Node_Acc;
@@ -1160,6 +1171,7 @@ package body Ortho_Front is
                   Lit := new Node'(Kind => Node_Lit,
                                    Decl_Dtype => Res,
                                    Decl_Storage => O_Storage_Public,
+                                   Decl_Defined => False,
                                    Lit_Name => Token_Sym.Ident,
                                    Lit_Cnode => O_Cnode_Null,
                                    Lit_Next => null);
@@ -1171,9 +1183,13 @@ package body Ortho_Front is
                      Last_Lit.Lit_Next := Lit;
                   end if;
                   Last_Lit := Lit;
-                  Next_Expect (Tok_Equal);
-                  Next_Expect (Tok_Num);
+
                   Next_Token;
+                  if Tok = Tok_Equal then
+                     --  By compatibility, support '= N' after a literal.
+                     Next_Expect (Tok_Num);
+                     Next_Token;
+                  end if;
                   exit when Tok = Tok_Right_Brace;
                   Expect (Tok_Comma);
                   Next_Token;
@@ -1504,6 +1520,9 @@ package body Ortho_Front is
          begin
             Parse_Name (Name, Lval, Res_Type);
             Res := New_Value (Lval);
+            if Atype /= null and then Res_Type /= Atype then
+               Parse_Error ("type mismatch");
+            end if;
          end;
       else
          Parse_Error ("bad ident expression: "
@@ -2029,6 +2048,12 @@ package body Ortho_Front is
             end;
 
          when Tok_Case =>
+            --  Grammar:
+            --    CASE expr IS
+            --      WHEN lit =>
+            --      WHEN lit ... lit =>
+            --      WHEN DEFAULT =>
+            --    END CASE;
             declare
                Case_Blk : O_Case_Block;
                L : O_Cnode;
@@ -2121,6 +2146,7 @@ package body Ortho_Front is
          P := new Node'(Kind => Decl_Param,
                         Decl_Dtype => null,
                         Decl_Storage => O_Storage_Public,
+                        Decl_Defined => False,
                         Param_Node => O_Dnode_Null,
                         Param_Name => Token_Sym,
                         Param_Next => null);
@@ -2232,6 +2258,7 @@ package body Ortho_Front is
          N := new Node'(Kind => Node_Function,
                         Decl_Dtype => null,
                         Decl_Storage => Storage,
+                        Decl_Defined => False,
                         Subprg_Node => O_Dnode_Null,
                         Subprg_Name => Sym,
                         Subprg_Params => null);
@@ -2270,6 +2297,7 @@ package body Ortho_Front is
          N := new Node'(Kind => Node_Procedure,
                         Decl_Dtype => null,
                         Decl_Storage => Storage,
+                        Decl_Defined => False,
                         Subprg_Node => O_Dnode_Null,
                         Subprg_Name => Sym,
                         Subprg_Params => null);
@@ -2367,13 +2395,12 @@ package body Ortho_Front is
       case Atype.Kind is
          when Type_Subarray =>
             declare
+               El : constant Node_Acc := Atype.Subarray_Base.Array_Element;
                Constr : O_Array_Aggr_List;
-               El : Node_Acc;
             begin
                Expect (Tok_Left_Brace);
                Next_Token;
                Start_Array_Aggr (Constr, Atype.Type_Onode);
-               El := Atype.Subarray_Base.Array_Element;
                for I in Natural loop
                   exit when Tok = Tok_Right_Brace;
                   if I /= 0 then
@@ -2452,7 +2479,7 @@ package body Ortho_Front is
    is
       N : Node_Acc;
       Sym : Syment_Acc;
-      --Val : O_Cnode;
+      Val : O_Cnode;
    begin
       Expect (Tok_Constant);
       Next_Expect (Tok_Ident);
@@ -2460,6 +2487,7 @@ package body Ortho_Front is
       N := new Node'(Kind => Node_Object,
                      Decl_Dtype => null,
                      Decl_Storage => Storage,
+                     Decl_Defined => False,
                      Obj_Name => Sym.Ident,
                      Obj_Node => O_Dnode_Null);
       Next_Expect (Tok_Colon);
@@ -2468,15 +2496,18 @@ package body Ortho_Front is
       New_Const_Decl (N.Obj_Node, Sym.Ident, Storage, N.Decl_Dtype.Type_Onode);
       Add_Decl (Sym, N);
 
---        if Storage /= O_Storage_External then
---           Expect (Tok_Assign);
---           Next_Token;
---           Start_Const_Value (N.Obj_Node);
---           Val := Parse_Constant_Value (N.Decl_Dtype);
---           Finish_Const_Value (N.Obj_Node, Val);
---        end if;
+      if Tok = Tok_Assign then
+         N.Decl_Defined := True;
+         Next_Token;
+
+         Start_Const_Value (N.Obj_Node);
+         Val := Parse_Constant_Value (N.Decl_Dtype);
+         Finish_Const_Value (N.Obj_Node, Val);
+      end if;
    end Parse_Constant_Declaration;
 
+   --  Grammar:
+   --    CONSTANT ident := value ;
    procedure Parse_Constant_Value_Declaration
    is
       N : Node_Acc;
@@ -2486,6 +2517,11 @@ package body Ortho_Front is
       N := Get_Decl (Token_Sym);
       if N.Kind /= Node_Object then
          Parse_Error ("name of a constant expected");
+      end if;
+      if N.Decl_Defined then
+         Parse_Error ("constant already defined");
+      else
+         N.Decl_Defined := True;
       end if;
       --  FIXME: should check storage,
       --         should check the object is a constant,
@@ -2508,6 +2544,7 @@ package body Ortho_Front is
       N := new Node'(Kind => Node_Object,
                      Decl_Dtype => null,
                      Decl_Storage => Storage,
+                     Decl_Defined => False,
                      Obj_Name => Sym.Ident,
                      Obj_Node => O_Dnode_Null);
       Next_Expect (Tok_Colon);
@@ -2530,7 +2567,7 @@ package body Ortho_Front is
       elsif Tok = Tok_Var then
          Parse_Var_Declaration (Storage);
       else
-         Parse_Error ("function declaration expected");
+         Parse_Error ("function or object declaration expected");
       end if;
    end Parse_Stored_Decl;
 
@@ -2557,6 +2594,7 @@ package body Ortho_Front is
             else
                Inter := new Node'(Kind => Decl_Type,
                                   Decl_Storage => O_Storage_Public,
+                                  Decl_Defined => False,
                                   Decl_Dtype => Parse_Type);
                Add_Decl (S, Inter);
                New_Type_Decl (S.Ident, Inter.Decl_Dtype.Type_Onode);
@@ -2664,7 +2702,6 @@ package body Ortho_Front is
       else
          declare
             Name : String (1 .. Filename'Length + 1);
-            --("C:\cygwin\home\tgingold\src\ortho\x86\tests\olang\ex2.ol",
          begin
             Name (1 .. Filename'Length) := Filename.all;
             Name (Name'Last) := NUL;
@@ -2692,6 +2729,8 @@ package body Ortho_Front is
       end if;
       return True;
    exception
+      when Error =>
+         return False;
       when E : others =>
          Puterr (Ada.Exceptions.Exception_Information (E));
          raise;

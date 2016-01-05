@@ -25,28 +25,65 @@ with Ortho_Code.Dwarf;
 with Ortho_Code.X86; use Ortho_Code.X86;
 with Ortho_Code.X86.Insns;
 with Ortho_Code.X86.Emits;
-with Ortho_Code.X86.Flags;
 with Binary_File;
 with Binary_File.Memory;
 with Ada.Text_IO;
 
 package body Ortho_Code.X86.Abi is
+   --  First argument is at %ebp + 8 / %rbp + 16
+   Subprg_Stack_Init : constant Int32 :=
+     Boolean'Pos (Flags.M64) * 16
+     + Boolean'Pos (not Flags.M64) * 8;
+
    procedure Start_Subprogram (Subprg : O_Dnode; Abi : out O_Abi_Subprg)
    is
       pragma Unreferenced (Subprg);
    begin
-      --  First argument is at %ebp + 8
-      Abi.Offset := 8;
+      Abi := (Offset => Subprg_Stack_Init, Inum => 0, Fnum => 0);
    end Start_Subprogram;
+
+   type Regs_List is array (Natural range <>) of O_Reg;
+   Int_Regs : constant Regs_List :=
+     (R_Di, R_Si, R_Dx, R_Cx, R_R8, R_R9);
+   Sse_Regs : constant Regs_List :=
+     (R_Xmm0, R_Xmm1, R_Xmm2, R_Xmm3, R_Xmm4, R_Xmm5, R_Xmm6, R_Xmm7);
 
    procedure New_Interface (Inter : O_Dnode; Abi : in out O_Abi_Subprg)
    is
-      Itype : O_Tnode;
+      Itype : constant O_Tnode := Get_Decl_Type (Inter);
       Size : Uns32;
+      Reg : O_Reg;
    begin
-      Itype := Get_Decl_Type (Inter);
-      Size := Get_Type_Size (Itype);
-      Size := (Size + 3) and not 3;
+      Reg := R_None;
+
+      if Flags.M64 then
+         --  AMD64 ABI 3.2.3 Parameter passing
+         --  The size of each argument gets rounded up to eight bytes.
+         Size := 0;
+         case Get_Type_Mode (Itype) is
+            when Mode_Int | Mode_Uns | Mode_B2 | Mode_P64 =>
+               if Abi.Inum <= Int_Regs'Last then
+                  Reg := Int_Regs (Abi.Inum);
+                  Abi.Inum := Abi.Inum + 1;
+               else
+                  Size := 8;
+               end if;
+            when Mode_Fp =>
+               if Abi.Fnum <= Sse_Regs'Last then
+                  Reg := Sse_Regs (Abi.Fnum);
+                  Abi.Fnum := Abi.Fnum + 1;
+               else
+                  Size := 8;
+               end if;
+            when others =>
+               --  Parameters are scalars.
+               raise Program_Error;
+         end case;
+      else
+         Size := Get_Type_Size (Itype);
+         Size := (Size + 3) and not 3;
+      end if;
+      Set_Decl_Reg (Inter, Reg);
       Set_Local_Offset (Inter, Abi.Offset);
       Abi.Offset := Abi.Offset + Int32 (Size);
    end New_Interface;
@@ -57,10 +94,10 @@ package body Ortho_Code.X86.Abi is
       function To_Int32 is new Ada.Unchecked_Conversion
         (Source => Symbol, Target => Int32);
    begin
-      Set_Decl_Info (Subprg,
-                     To_Int32 (Create_Symbol (Get_Decl_Ident (Subprg))));
-      --  Offset is 8 biased.
-      Set_Subprg_Stack (Subprg, Abi.Offset - 8);
+      Set_Decl_Info
+        (Subprg, To_Int32 (Create_Symbol (Get_Decl_Ident (Subprg), True)));
+      --  Offset is 8/16 biased.
+      Set_Subprg_Stack (Subprg, Abi.Offset - Subprg_Stack_Init);
    end Finish_Subprogram;
 
    procedure Link_Stmt (Stmt : O_Enode) is
@@ -281,8 +318,8 @@ package body Ortho_Code.X86.Abi is
          when Regs_R32
            | R_Any32
            | R_Any8
-           | Regs_R64
-           | R_Any64
+           | Regs_Pair
+           | R_AnyPair
            | Regs_Cc
            | Regs_Fp
            | Regs_Xmm =>
@@ -301,6 +338,9 @@ package body Ortho_Code.X86.Abi is
                   Disp_Irm_Code (Get_Expr_Left (Stmt));
                   Put (" + ");
                   Disp_Irm_Code (Get_Expr_Right (Stmt));
+               when OE_Addrg =>
+                  Put ("&");
+                  Disp_Decl_Name (Get_Addr_Object (Stmt));
                when others =>
                   raise Program_Error;
             end case;
@@ -695,14 +735,16 @@ package body Ortho_Code.X86.Abi is
             return " ir ";
          when R_I_Off =>
             return "i+o ";
-         when R_Any32 =>
-            return "r32 ";
          when R_Any_Cc =>
             return "cc  ";
          when R_Any8 =>
             return "r8  ";
+         when R_Any32 =>
+            return "r32 ";
          when R_Any64 =>
             return "r64 ";
+         when R_AnyPair =>
+            return "pair";
 
          when R_St0 =>
             return "st0 ";
@@ -722,6 +764,23 @@ package body Ortho_Code.X86.Abi is
             return "sp  ";
          when R_Bp =>
             return "bp  ";
+         when R_R8 =>
+            return "r8  ";
+         when R_R9 =>
+            return "r9  ";
+         when R_R10 =>
+            return "r10 ";
+         when R_R11 =>
+            return "r11 ";
+         when R_R12 =>
+            return "r12 ";
+         when R_R13 =>
+            return "r13 ";
+         when R_R14 =>
+            return "r14 ";
+         when R_R15 =>
+            return "r15 ";
+
          when R_Edx_Eax =>
             return "dxax";
          when R_Ebx_Ecx =>
@@ -775,21 +834,22 @@ package body Ortho_Code.X86.Abi is
    procedure Chkstk (Sz : Integer);
    pragma Import (C, Chkstk, "__chkstk");
 
-   procedure Link_Intrinsics
-   is
+   procedure Link_Intrinsics is
    begin
-      Binary_File.Memory.Set_Symbol_Address
-        (Ortho_Code.X86.Emits.Intrinsics_Symbol
-         (Ortho_Code.X86.Intrinsic_Mul_Ov_I64),
-         Muldi3'Address);
-      Binary_File.Memory.Set_Symbol_Address
-        (Ortho_Code.X86.Emits.Intrinsics_Symbol
-         (Ortho_Code.X86.Intrinsic_Div_Ov_I64),
-         Divdi3'Address);
-      Binary_File.Memory.Set_Symbol_Address
-        (Ortho_Code.X86.Emits.Intrinsics_Symbol
-         (Ortho_Code.X86.Intrinsic_Mod_Ov_I64),
-         Moddi3'Address);
+      if not Flags.M64 then
+         Binary_File.Memory.Set_Symbol_Address
+           (Ortho_Code.X86.Emits.Intrinsics_Symbol
+              (Ortho_Code.X86.Intrinsic_Mul_Ov_I64),
+            Muldi3'Address);
+         Binary_File.Memory.Set_Symbol_Address
+           (Ortho_Code.X86.Emits.Intrinsics_Symbol
+              (Ortho_Code.X86.Intrinsic_Div_Ov_I64),
+            Divdi3'Address);
+         Binary_File.Memory.Set_Symbol_Address
+           (Ortho_Code.X86.Emits.Intrinsics_Symbol
+              (Ortho_Code.X86.Intrinsic_Mod_Ov_I64),
+            Moddi3'Address);
+      end if;
       if X86.Flags.Flag_Alloca_Call then
          Binary_File.Memory.Set_Symbol_Address
            (Ortho_Code.X86.Emits.Chkstk_Symbol, Chkstk'Address);

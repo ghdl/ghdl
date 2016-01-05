@@ -69,6 +69,19 @@ package body Symbolizer is
       Addr := Addr + 4;
    end Read_Word4;
 
+   procedure Read_Word8 (Addr : in out Address; Res : out Unsigned_64)
+   is
+      B : Unsigned_8;
+   begin
+      Res := 0;
+      for I in 0 .. 7 loop
+         B := Read_Byte (Addr + Storage_Offset (I));
+         --  FIXME: we assume little-endian
+         Res := Res or Shift_Left (Unsigned_64 (B), I * 8);
+      end loop;
+      Addr := Addr + 8;
+   end Read_Word8;
+
    procedure Read_Word2 (Addr : in out Address;
                          Res : out Unsigned_16)
    is
@@ -231,15 +244,32 @@ package body Symbolizer is
       Addr := Addr + 1;
    end Skip_String;
 
-   procedure Read_Addr (Addr : in out Address;
-                        Res : out Address)
-   is
-      function To_Address is new Ada.Unchecked_Conversion
-        (Unsigned_32, Address);
-      V : Unsigned_32;
+   procedure Read_Addr (Addr : in out Address; Res : out Address) is
    begin
-      Read_Word4 (Addr, V);
-      Res := To_Address (V);
+      pragma Warnings (Off, "*different size*");
+      if Address'Size = Unsigned_32'Size then
+         declare
+            function To_Address is new Ada.Unchecked_Conversion
+              (Unsigned_32, Address);
+            V : Unsigned_32;
+         begin
+            Read_Word4 (Addr, V);
+            Res := To_Address (V);
+         end;
+      elsif Address'Size = Unsigned_64'Size then
+         declare
+            function To_Address is new Ada.Unchecked_Conversion
+              (Unsigned_64, Address);
+            V : Unsigned_64;
+         begin
+            Read_Word8 (Addr, V);
+            Res := To_Address (V);
+         end;
+      else
+         --  Unhandled address size.
+         raise Program_Error;
+      end if;
+      pragma Warnings (On, "*different size*");
    end Read_Addr;
 
    procedure Read_Addr (Addr : in out Address;

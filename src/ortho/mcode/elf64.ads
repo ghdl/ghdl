@@ -87,9 +87,14 @@ package Elf64 is
    end record;
    Elf64_Rela_Size : constant Natural := Elf64_Rela'Size / System.Storage_Unit;
 
---     function Elf64_R_Sym (I : Elf64_Word) return Elf64_Word;
---     function Elf64_R_Type (I : Elf64_Word) return Elf64_Word;
---     function Elf64_R_Info (S, T : Elf64_Word) return Elf64_Word;
+   function Elf64_R_Sym (I : Elf64_Xword) return Elf64_Word;
+   function Elf64_R_Type (I : Elf64_Xword) return Elf64_Word;
+   function Elf64_R_Info (S, T : Elf64_Word) return Elf64_Xword;
+
+   --  For x86-64
+   R_X86_64_NONE : constant Elf64_Word := 0;
+   R_X86_64_64   : constant Elf64_Word := 1;
+   R_X86_64_PC32 : constant Elf64_Word := 2;
 
    type Elf64_Phdr is record
       P_Type   : Elf64_Word;

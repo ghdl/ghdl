@@ -1,4 +1,4 @@
---  ELF32 definitions.
+--  ELF64 definitions.
 --  Copyright (C) 2006 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
@@ -15,19 +15,20 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-package body Elf32 is
-   function Elf32_R_Sym (I : Elf32_Word) return Elf32_Word is
-   begin
-      return Shift_Right (I, 8);
-   end Elf32_R_Sym;
 
-   function Elf32_R_Type (I : Elf32_Word) return Elf32_Word is
+package body Elf64 is
+   function Elf64_R_Sym (I : Elf64_Xword) return Elf64_Word is
    begin
-      return I and 16#Ff#;
-   end Elf32_R_Type;
+      return Elf64_Word (Shift_Right (I, 32));
+   end Elf64_R_Sym;
 
-   function Elf32_R_Info (S, T : Elf32_Word) return Elf32_Word is
+   function Elf64_R_Type (I : Elf64_Xword) return Elf64_Word is
    begin
-      return Shift_Left (S, 8) or T;
-   end Elf32_R_Info;
-end Elf32;
+      return Elf64_Word (I and 16#Ffff_ffff#);
+   end Elf64_R_Type;
+
+   function Elf64_R_Info (S, T : Elf64_Word) return Elf64_Xword is
+   begin
+      return Shift_Left (Elf64_Xword (S), 32) or Elf64_Xword (T);
+   end Elf64_R_Info;
+end Elf64;

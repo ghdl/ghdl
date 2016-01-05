@@ -71,13 +71,6 @@ package Elf32 is
    end record;
    Elf32_Sym_Size : constant Natural := Elf32_Sym'Size / System.Storage_Unit;
 
-   function Elf32_St_Bind (Info : Elf32_Uchar) return Elf32_Uchar;
-   function Elf32_St_Type (Info : Elf32_Uchar) return Elf32_Uchar;
-   function Elf32_St_Info (B, T : Elf32_Uchar) return Elf32_Uchar;
-   pragma Inline (Elf32_St_Bind);
-   pragma Inline (Elf32_St_Type);
-   pragma Inline (Elf32_St_Info);
-
    --  Relocation.
    type Elf32_Rel is record
       R_Offset : Elf32_Addr;

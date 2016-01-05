@@ -727,6 +727,13 @@ package body Ortho_Code.Exprs is
       end if;
    end New_Lit;
 
+   function Is_Expr_S32 (Cst : O_Enode) return Boolean is
+   begin
+      pragma Assert (Get_Expr_Kind (Cst) = OE_Const);
+      return Shift_Right_Arithmetic (Get_Expr_Low (Cst), 32)
+        = Get_Expr_High (Cst);
+   end Is_Expr_S32;
+
    function Get_Static_Chain (Depth : O_Depth) return O_Enode
    is
       Cur_Depth : O_Depth := Cur_Subprg.Depth;

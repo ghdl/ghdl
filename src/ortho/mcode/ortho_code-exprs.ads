@@ -308,6 +308,9 @@ package Ortho_Code.Exprs is
    function Get_Expr_Low (Cst : O_Enode) return Uns32;
    function Get_Expr_High (Cst : O_Enode) return Uns32;
 
+   --  Help for OE_CONST: return True iff the value is a signed 32 bit value.
+   function Is_Expr_S32 (Cst : O_Enode) return Boolean;
+
    --  Get target of the assignment.
    function Get_Assign_Target (Enode : O_Enode) return O_Enode;
    procedure Set_Assign_Target (Enode : O_Enode; Targ : O_Enode);

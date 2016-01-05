@@ -58,9 +58,9 @@ package body Ortho_Code.Dwarf is
    begin
       Prealloc (Str'Length + 1);
       for I in Str'Range loop
-         Gen_B8 (Character'Pos (Str (I)));
+         Gen_8 (Character'Pos (Str (I)));
       end loop;
-      Gen_B8 (0);
+      Gen_8 (0);
    end Gen_String_Nul;
 
    procedure Gen_Sleb128 (V : Int32)
@@ -78,10 +78,10 @@ package body Ortho_Code.Dwarf is
          if (V2 = 0 and (B and 16#40#) = 0)
            or (V2 = -1 and (B and 16#40#) /= 0)
          then
-            Gen_B8 (B);
+            Gen_8 (B);
             exit;
          else
-            Gen_B8 (B or 16#80#);
+            Gen_8 (B or 16#80#);
             V1 := V2;
          end if;
       end loop;
@@ -96,9 +96,9 @@ package body Ortho_Code.Dwarf is
          B := Byte (V1 and 16#7f#);
          V1 := Shift_Right (V1, 7);
          if V1 /= 0 then
-            Gen_B8 (B or 16#80#);
+            Gen_8 (B or 16#80#);
          else
-            Gen_B8 (B);
+            Gen_8 (B);
             exit;
          end if;
       end loop;
@@ -130,7 +130,7 @@ package body Ortho_Code.Dwarf is
       Prealloc (32);
 
       if Cur_File /= Last_File then
-         Gen_B8 (Byte (DW_LNS_Set_File));
+         Gen_8 (Byte (DW_LNS_Set_File));
          Gen_Uleb128 (Unsigned_32 (Cur_File));
          Last_File := Cur_File;
       elsif Cur_File = 0 then
@@ -140,17 +140,17 @@ package body Ortho_Code.Dwarf is
 
       if D_Ln < Line_Base or D_Ln >= (Line_Base + Line_Range) then
          --  Emit an advance line.
-         Gen_B8 (Byte (DW_LNS_Advance_Line));
+         Gen_8 (Byte (DW_LNS_Advance_Line));
          Gen_Sleb128 (Int32 (D_Ln - Line_Base));
          D_Ln := Line_Base;
       end if;
       if D_Pc >= Line_Max_Addr then
          --  Emit an advance addr.
-         Gen_B8 (Byte (DW_LNS_Advance_Pc));
+         Gen_8 (Byte (DW_LNS_Advance_Pc));
          Gen_Uleb128 (Unsigned_32 (D_Pc));
          D_Pc := 0;
       end if;
-      Gen_B8 (Line_Opcode_Base
+      Gen_8 (Line_Opcode_Base
               + Byte (D_Pc) * Line_Range
               + Byte (D_Ln - Line_Base));
 
@@ -240,7 +240,7 @@ package body Ortho_Code.Dwarf is
    procedure Gen_Abbrev_Header (Tag : Unsigned_32; Child : Byte) is
    begin
       Gen_Uleb128 (Tag);
-      Gen_B8 (Child);
+      Gen_8 (Child);
    end Gen_Abbrev_Header;
 
    procedure Gen_Abbrev_Tuple (Attr : Unsigned_32; Form : Unsigned_32) is
@@ -262,10 +262,10 @@ package body Ortho_Code.Dwarf is
       Set_Current_Section (Line1_Sect);
 
       --  Write Address.
-      Gen_B8 (0); -- extended opcode
-      Gen_B8 (5); -- length: 1 + 4
-      Gen_B8 (Byte (DW_LNE_Set_Address));
-      Gen_Ua_32 (Orig_Sym, 0);
+      Gen_8 (0); -- extended opcode
+      Gen_8 (1 + Pc_Type_Sizeof); -- length
+      Gen_8 (Byte (DW_LNE_Set_Address));
+      Gen_Ua_Addr (Orig_Sym, 0);
 
       Line_Last := 1;
 
@@ -304,14 +304,14 @@ package body Ortho_Code.Dwarf is
 
       Gen_32 (7);  --  Length: to be patched.
       Gen_16 (2);  --  version
-      Gen_Ua_32 (Abbrev_Sym, 0); --  Abbrev offset
-      Gen_B8 (4);  --  Ptr size.
+      Gen_Ua_32 (Abbrev_Sym); --  Abbrev offset
+      Gen_8 (Pc_Type_Sizeof);  --  Ptr size.
 
       --  Compile_unit.
       Gen_Uleb128 (1);
-      Gen_Ua_32 (Line_Sym, 0);
-      Gen_Ua_32 (Orig_Sym, 0);
-      Gen_Ua_32 (End_Sym, 0);
+      Gen_Ua_32 (Line_Sym);
+      Gen_Ua_Addr (Orig_Sym, 0);
+      Gen_Ua_Addr (End_Sym, 0);
       Gen_String_Nul ("T.Gingold ortho_mcode (2004)");
       Gen_String_Nul (GNAT.Directory_Operations.Get_Current_Dir);
    end Init;
@@ -359,28 +359,28 @@ package body Ortho_Code.Dwarf is
       --  header_length (to be patched).
       Gen_32 (5 + 12 + 1);
       --  minimum_instruction_length.
-      Gen_B8 (Min_Insn_Len);
+      Gen_8 (Min_Insn_Len);
       --  default_is_stmt
-      Gen_B8 (1);
+      Gen_8 (1);
       --  line base
-      Gen_B8 (Line_Base);
+      Gen_8 (Line_Base);
       --  line range
-      Gen_B8 (Line_Range);
+      Gen_8 (Line_Range);
       --  opcode base
-      Gen_B8 (Line_Opcode_Base);
+      Gen_8 (Line_Opcode_Base);
       --  standard_opcode_length.
-      Gen_B8 (0); --  copy
-      Gen_B8 (1); --  advance pc
-      Gen_B8 (1); --  advance line
-      Gen_B8 (1); --  set file
-      Gen_B8 (1); --  set column
-      Gen_B8 (0); --  negate stmt
-      Gen_B8 (0); --  set basic block
-      Gen_B8 (0); --  const add pc
-      Gen_B8 (1); --  fixed advance pc
-      Gen_B8 (0); --  set prologue end
-      Gen_B8 (0); --  set epilogue begin
-      Gen_B8 (1); --  set isa
+      Gen_8 (0); --  copy
+      Gen_8 (1); --  advance pc
+      Gen_8 (1); --  advance line
+      Gen_8 (1); --  set file
+      Gen_8 (1); --  set column
+      Gen_8 (0); --  negate stmt
+      Gen_8 (0); --  set basic block
+      Gen_8 (0); --  const add pc
+      Gen_8 (1); --  fixed advance pc
+      Gen_8 (0); --  set prologue end
+      Gen_8 (0); --  set epilogue begin
+      Gen_8 (1); --  set isa
       --if Line_Opcode_Base /= 13 then
       --   raise Program_Error;
       --end if;
@@ -394,7 +394,7 @@ package body Ortho_Code.Dwarf is
             Gen_String_Nul (D.Name.all);
             D := D.Next;
          end loop;
-         Gen_B8 (0); -- last entry.
+         Gen_8 (0); -- last entry.
       end;
 
       --  file_names.
@@ -405,11 +405,11 @@ package body Ortho_Code.Dwarf is
          while F /= null loop
             Gen_String_Nul (F.Name.all);
             Gen_Uleb128 (Unsigned_32 (F.Dir));
-            Gen_B8 (0);  --  time
-            Gen_B8 (0);  --  length
+            Gen_8 (0);  --  time
+            Gen_8 (0);  --  length
             F := F.Next;
          end loop;
-         Gen_B8 (0);  --  last entry.
+         Gen_8 (0);  --  last entry.
       end;
 
       --  Set prolog length
@@ -418,9 +418,9 @@ package body Ortho_Code.Dwarf is
       Merge_Section (Line_Sect, Line1_Sect);
 
       --  Emit end of sequence.
-      Gen_B8 (0); -- extended opcode
-      Gen_B8 (1); -- length: 1
-      Gen_B8 (Byte (DW_LNE_End_Sequence));
+      Gen_8 (0); -- extended opcode
+      Gen_8 (1); -- length: 1
+      Gen_8 (Byte (DW_LNE_End_Sequence));
 
       --  Set total length.
       Patch_32 (0, Unsigned_32 (Get_Current_Pc - 4));
@@ -437,13 +437,13 @@ package body Ortho_Code.Dwarf is
       Set_Section_Info (Aranges_Sect, null, 0, 0);
       Set_Current_Section (Aranges_Sect);
 
-      Gen_32 (28);  --  Length.
+      Gen_32 (24 + Pc_Type_Sizeof);  --  Length.
       Gen_16 (2);  --  version
-      Gen_Ua_32 (Info_Sym, 0); --  info offset
-      Gen_B8 (4);  --  Ptr size.
-      Gen_B8 (0);  --  seg desc size.
+      Gen_Ua_32 (Info_Sym); --  info offset
+      Gen_8 (Pc_Type_Sizeof);  --  Ptr size.
+      Gen_8 (0);  --  seg desc size.
       Gen_32 (0);  --  pad
-      Gen_Ua_32 (Orig_Sym, 0); --  text offset
+      Gen_Ua_Addr (Orig_Sym, 0); --  text offset
       Gen_32 (Unsigned_32 (Length));
       Gen_32 (0); --  End
       Gen_32 (0);
@@ -588,15 +588,15 @@ package body Ortho_Code.Dwarf is
 
       case Get_Type_Kind (Atype) is
          when OT_Signed =>
-            Gen_B8 (DW_ATE_Signed);
+            Gen_8 (DW_ATE_Signed);
          when OT_Unsigned =>
-            Gen_B8 (DW_ATE_Unsigned);
+            Gen_8 (DW_ATE_Unsigned);
          when OT_Float =>
-            Gen_B8 (DW_ATE_Float);
+            Gen_8 (DW_ATE_Float);
          when others =>
             raise Program_Error;
       end case;
-      Gen_B8 (Byte (Get_Type_Size (Atype)));
+      Gen_8 (Byte (Get_Type_Size (Atype)));
    end Emit_Base_Type;
 
    procedure Emit_Access_Type (Atype : O_Tnode; Decl : O_Dnode)
@@ -638,7 +638,7 @@ package body Ortho_Code.Dwarf is
             Gen_Info_Header (Abbrev_Uncomplete_Pointer_Name);
             Emit_Decl_Ident (Decl);
          end if;
-         Gen_B8 (Byte (Get_Type_Size (Atype)));
+         Gen_8 (Byte (Get_Type_Size (Atype)));
       else
          if Decl = O_Dnode_Null then
             if Abbrev_Pointer = 0 then
@@ -657,7 +657,7 @@ package body Ortho_Code.Dwarf is
             Gen_Info_Header (Abbrev_Pointer_Name);
             Emit_Decl_Ident (Decl);
          end if;
-         Gen_B8 (Byte (Get_Type_Size (Atype)));
+         Gen_8 (Byte (Get_Type_Size (Atype)));
          --  Break possible loops: generate the access entry...
          D_Pc := Get_Current_Pc;
          Gen_32 (0);
@@ -758,7 +758,7 @@ package body Ortho_Code.Dwarf is
 
       Gen_Info_Header (Abbrev_Subrange);
       Emit_Type_Ref (Get_Type_Ucarray_Index (Base));
-      Gen_B8 (0);
+      Gen_8 (0);
       Gen_Uleb128 (Unsigned_32 (Get_Type_Subarray_Length (Atype)));
 
       Gen_Uleb128 (0);
@@ -797,10 +797,10 @@ package body Ortho_Code.Dwarf is
 
          --  Location.
          Loc_Pc := Get_Current_Pc;
-         Gen_B8 (3);
-         Gen_B8 (DW_OP_Plus_Uconst);
+         Gen_8 (3);
+         Gen_8 (DW_OP_Plus_Uconst);
          Gen_Uleb128 (Unsigned_32 (Get_Field_Offset (F)));
-         Patch_B8 (Loc_Pc, Unsigned_8 (Get_Current_Pc - (Loc_Pc + 1)));
+         Patch_8 (Loc_Pc, Unsigned_8 (Get_Current_Pc - (Loc_Pc + 1)));
 
          F := Get_Field_Chain (F);
          Nbr := Nbr - 1;
@@ -926,7 +926,7 @@ package body Ortho_Code.Dwarf is
 
       Sibling_Pc := Gen_Info_Sibling;
       Emit_Decl_Ident_If_Set (Decl);
-      Gen_B8 (Byte (Get_Type_Size (Atype)));
+      Gen_8 (Byte (Get_Type_Size (Atype)));
       case Get_Type_Kind (Atype) is
          when OT_Enum =>
             Nbr := Get_Type_Enum_Nbr_Lits (Atype);
@@ -1048,19 +1048,19 @@ package body Ortho_Code.Dwarf is
       Pc : Pc_Type;
    begin
       Pc := Get_Current_Pc;
-      Gen_B8 (2);
-      Gen_B8 (DW_OP_Fbreg);
+      Gen_8 (2);
+      Gen_8 (DW_OP_Fbreg);
       Gen_Sleb128 (Get_Decl_Info (Decl));
-      Patch_B8 (Pc, Unsigned_8 (Get_Current_Pc - (Pc + 1)));
+      Patch_8 (Pc, Unsigned_8 (Get_Current_Pc - (Pc + 1)));
    end Emit_Local_Location;
 
    procedure Emit_Global_Location (Decl : O_Dnode)
    is
       use Ortho_Code.Binary;
    begin
-      Gen_B8 (5);
-      Gen_B8 (DW_OP_Addr);
-      Gen_Ua_32 (Get_Decl_Symbol (Decl), 0);
+      Gen_8 (1 + Pc_Type_Sizeof);
+      Gen_8 (DW_OP_Addr);
+      Gen_Ua_Addr (Get_Decl_Symbol (Decl), 0);
    end Emit_Global_Location;
 
    procedure Emit_Variable (Decl : O_Dnode)
@@ -1155,8 +1155,8 @@ package body Ortho_Code.Dwarf is
          Gen_Info_Header (Abbrev_Block);
          Sibling_Pc := Gen_Info_Sibling;
 
-         Gen_Ua_32 (Subprg_Sym, Integer_32 (Get_Block_Info1 (Decl)));
-         Gen_Ua_32 (Subprg_Sym, Integer_32 (Get_Block_Info2 (Decl)));
+         Gen_Ua_Addr (Subprg_Sym, Integer_32 (Get_Block_Info1 (Decl)));
+         Gen_Ua_Addr (Subprg_Sym, Integer_32 (Get_Block_Info2 (Decl)));
       end if;
 
       --  Emit decls for children.
@@ -1240,8 +1240,8 @@ package body Ortho_Code.Dwarf is
       --  Low, High.
       Prev_Subprg_Sym := Subprg_Sym;
       Subprg_Sym := Binary.Get_Decl_Symbol (Decl);
-      Gen_Ua_32 (Subprg_Sym, 0);
-      Gen_Ua_32 (Subprg_Sym, Integer_32 (Get_Body_Info (Bod)));
+      Gen_Ua_Addr (Subprg_Sym, 0);
+      Gen_Ua_Addr (Subprg_Sym, Integer_32 (Get_Body_Info (Bod)));
 
       if Flag_Debug >= Debug_Dwarf then
          --  Type.
@@ -1253,8 +1253,15 @@ package body Ortho_Code.Dwarf is
          Sibling_Pc := Gen_Info_Sibling;
 
          --  Frame base.
-         Gen_B8 (1);
-         Gen_B8 (DW_OP_Reg5);
+         Gen_8 (1);
+         case Arch is
+            when Arch_X86 =>
+               Gen_8 (DW_OP_Reg5); --  ebp
+            when Arch_X86_64 =>
+               Gen_8 (DW_OP_Reg6); --  rbp
+            when others =>
+               raise Program_Error;
+         end case;
       end if;
 
       --  Interfaces.

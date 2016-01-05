@@ -55,7 +55,7 @@ package Ortho_Code.Debug is
    --  H: generate high-level instructions.
    Flag_Debug_Hli : Boolean := False;
 
-   --  r: raw dump, do not generate code.
+   --  d: raw dump, do not generate code.
    Flag_Debug_Dump : Boolean := False;
 
    --  i: disp insns, when generated.
