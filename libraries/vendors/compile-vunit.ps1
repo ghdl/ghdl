@@ -46,10 +46,12 @@ param(
 	[switch]$All =							$true,
 	
 	# Clean up directory before analyzing.
-	[switch]$Clean =		$false,
+	[switch]$Clean =						$false,
 	
 	#Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false,
+	# Halt on errors
+	[switch]$HaltOnError =			$false,
 	
 	# Show the embedded help page(s)
 	[switch]$Help =							$false
@@ -72,14 +74,11 @@ Import-Module $PSScriptRoot\shared.psm1
 $SourceDir =			$InstallationDirectory["VUnit"]
 $DestinationDir = $DestinationDirectory["VUnit"]
 
-if (-not $All)
-{	$All =				$false	}
-elseif ($All -eq $true)
+if ($All -eq $true)
 {	# nothing to configure
 }
 
-$StopCompiling = $false
-
+$ErrorCount =			0
 
 # define global GHDL Options
 $GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--no-vital-checks", "--std=08")
@@ -97,60 +96,61 @@ if ($Clean)
 }
 
 # compile vunit_lib library
-if (-not $StopCompiling)
-{	Write-Host "Compiling library 'vunit_lib' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\vhdl\run\src\stop_api.vhd",
-		"$SourceDir\vhdl\vhdl\src\lib\std\textio.vhd",
-		"$SourceDir\vhdl\vhdl\src\lang\lang.vhd",
-		"$SourceDir\vhdl\com\src\com_types.vhd",
-		"$SourceDir\vhdl\run\src\stop_body_2008.vhd",
-		"$SourceDir\vhdl\com\src\com_api.vhd",
-		"$SourceDir\vhdl\string_ops\src\string_ops.vhd",
-		"$SourceDir\vhdl\path\src\path.vhd",
-		"$SourceDir\vhdl\logging\src\log_types.vhd",
-		"$SourceDir\vhdl\logging\src\log_formatting.vhd",
-		"$SourceDir\vhdl\logging\src\log_special_types200x.vhd",
-		"$SourceDir\vhdl\array\src\array_pkg.vhd",
-		"$SourceDir\vhdl\logging\src\log_base_api.vhd",
-		"$SourceDir\vhdl\logging\src\log_base.vhd",
-		"$SourceDir\vhdl\logging\src\log_api.vhd",
-		"$SourceDir\vhdl\logging\src\log.vhd",
-		"$SourceDir\vhdl\check\src\check_types.vhd",
-		"$SourceDir\vhdl\check\src\check_special_types200x.vhd",
-		"$SourceDir\vhdl\check\src\check_base_api.vhd",
-		"$SourceDir\vhdl\check\src\check_base.vhd",
-		"$SourceDir\vhdl\check\src\check_api.vhd",
-		"$SourceDir\vhdl\check\src\check.vhd",
-		"$SourceDir\vhdl\dictionary\src\dictionary.vhd",
-		"$SourceDir\vhdl\run\src\run_types.vhd",
-		"$SourceDir\vhdl\run\src\run_special_types200x.vhd",
-		"$SourceDir\vhdl\run\src\run_base_api.vhd",
-		"$SourceDir\vhdl\run\src\run_base.vhd",
-		"$SourceDir\vhdl\run\src\run_api.vhd",
-		"$SourceDir\vhdl\run\src\run.vhd",
-		"$SourceDir\vhdl\vunit_run_context.vhd",
-		"$SourceDir\vhdl\vunit_context.vhd",
-		"$SourceDir\vhdl\com\src\com_std_codec_builder.vhd",
-		"$SourceDir\vhdl\com\src\com_debug_codec_builder.vhd",
-		"$SourceDir\vhdl\com\src\com_string.vhd",
-		"$SourceDir\vhdl\com\src\com_codec_api.vhd",
-		"$SourceDir\vhdl\com\src\com_codec.vhd",
-		"$SourceDir\vhdl\com\src\com.vhd",
-		"$SourceDir\vhdl\com\src\com_context.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=vunit_lib " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
+Write-Host "Compiling library 'vunit_lib' ..." -ForegroundColor Yellow
+$Options = $GlobalOptions
+$Files = (
+	"$SourceDir\vunit\vhdl\run\src\stop_api.vhd",
+	"$SourceDir\vunit\vhdl\vhdl\src\lib\std\textio.vhd",
+	"$SourceDir\vunit\vhdl\vhdl\src\lang\lang.vhd",
+	"$SourceDir\vunit\vhdl\com\src\com_types.vhd",
+	"$SourceDir\vunit\vhdl\run\src\stop_body_2008.vhd",
+	"$SourceDir\vunit\vhdl\com\src\com_api.vhd",
+	"$SourceDir\vunit\vhdl\string_ops\src\string_ops.vhd",
+	"$SourceDir\vunit\vhdl\path\src\path.vhd",
+	"$SourceDir\vunit\vhdl\logging\src\log_types.vhd",
+	"$SourceDir\vunit\vhdl\logging\src\log_formatting.vhd",
+	"$SourceDir\vunit\vhdl\logging\src\log_special_types200x.vhd",
+	"$SourceDir\vunit\vhdl\array\src\array_pkg.vhd",
+	"$SourceDir\vunit\vhdl\logging\src\log_base_api.vhd",
+	"$SourceDir\vunit\vhdl\logging\src\log_base.vhd",
+	"$SourceDir\vunit\vhdl\logging\src\log_api.vhd",
+	"$SourceDir\vunit\vhdl\logging\src\log.vhd",
+	"$SourceDir\vunit\vhdl\check\src\check_types.vhd",
+	"$SourceDir\vunit\vhdl\check\src\check_special_types200x.vhd",
+	"$SourceDir\vunit\vhdl\check\src\check_base_api.vhd",
+	"$SourceDir\vunit\vhdl\check\src\check_base.vhd",
+	"$SourceDir\vunit\vhdl\check\src\check_api.vhd",
+	"$SourceDir\vunit\vhdl\check\src\check.vhd",
+	"$SourceDir\vunit\vhdl\dictionary\src\dictionary.vhd",
+	"$SourceDir\vunit\vhdl\run\src\run_types.vhd",
+	"$SourceDir\vunit\vhdl\run\src\run_special_types200x.vhd",
+	"$SourceDir\vunit\vhdl\run\src\run_base_api.vhd",
+	"$SourceDir\vunit\vhdl\run\src\run_base.vhd",
+	"$SourceDir\vunit\vhdl\run\src\run_api.vhd",
+	"$SourceDir\vunit\vhdl\run\src\run.vhd",
+	"$SourceDir\vunit\vhdl\vunit_run_context.vhd",
+	"$SourceDir\vunit\vhdl\vunit_context.vhd",
+	"$SourceDir\vunit\vhdl\com\src\com_std_codec_builder.vhd",
+	"$SourceDir\vunit\vhdl\com\src\com_debug_codec_builder.vhd",
+	"$SourceDir\vunit\vhdl\com\src\com_string.vhd",
+	"$SourceDir\vunit\vhdl\com\src\com_codec_api.vhd",
+	"$SourceDir\vunit\vhdl\com\src\com_codec.vhd",
+	"$SourceDir\vunit\vhdl\com\src\com.vhd",
+	"$SourceDir\vunit\vhdl\com\src\com_context.vhd")
+foreach ($File in $Files)
+{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
+	$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=vunit_lib " + $File + " 2>&1"
+	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
+	if ($LastExitCode -ne 0)
+	{	$ErrorCount += 1
+		if ($HaltOnError)
+		{	break		}
 	}
 }
 
 Write-Host "--------------------------------------------------------------------------------"
 Write-Host "Compiling VUnit library " -NoNewline
-if ($StopCompiling)
+if ($ErrorCount -gt 0)
 {	Write-Host "[FAILED]" -ForegroundColor Red				}
 else
 {	Write-Host "[SUCCESSFUL]" -ForegroundColor Green	}

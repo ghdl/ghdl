@@ -87,14 +87,15 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
 
  - **Step 1 - Configure the scripts**
     Please open the `config.psm1` file and set the dictionary entries for the installed
-    vendor tools to the appropriate directory to your tool's installation folder.
+    vendor tools to the appropriate directory to your tool's installation folder. Use an
+    empty string `""` for not installed tools. 
 
     `config.psm1`:
     ```PowerShell
     $InstallationDirectory = @{
       "AlteraQuartusII" = "C:\Altera\15.0";
       "XilinxISE" =       "C:\Xilinx\14.7";
-      "XilinxVivado" =    "C:\Xilinx\Vivado\2015.3";
+      "XilinxVivado" =    "C:\Xilinx\Vivado\2015.4";
       "OSVVM" =           "D:\git\GitHub\osvvm";
       "VUnit" =           "D:\git\GitHub\vunit"
     }
@@ -137,61 +138,107 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
  - Common parameters to all scripts:
 
         -h --help             Print the embedded help page(s).
-        -a --all              Compile all libraries, including common libraries, packages and device libraries.
         -c --clean            Cleanup directory before analyzing.
         -n --no-warnings	  Don't show warnings. Report errors only.
         -s --skip-existing    Skip already compiled files (an *.o file exists).
         -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives.
         -H --halt-on-error    Stop compiling if an error occured.
  - `compile-altera.sh`
+    Selectable libraries:
 
-        --altera              Compile base libraries like 'altera' and 'altera_mf'
-        --max                 Compile device libraries for Max CPLDs
-        --arria               Compile device libraries for Arria FPGAs
-        --cyclone             Compile device libraries for Cyclone FPGAs
-        --stratix             Compile device libraries for Stratix FPGAs
+        -a --all              Compile all libraries, including common libraries, packages and device libraries.
+           --altera           Compile base libraries like 'altera' and 'altera_mf'
+           --max              Compile device libraries for Max CPLDs
+           --arria            Compile device libraries for Arria FPGAs
+           --cyclone          Compile device libraries for Cyclone FPGAs
+           --stratix          Compile device libraries for Stratix FPGAs
+    Compile options:
+
+           --vhdl93           Compile selected libraries with VHDL-93 (default).
+           --vhdl2008         Compile selected libraries with VHDL-2008.
  - `compile-xilinx-ise.sh`
+    Selectable libraries:
 
-        --unisim              Compile the unisim primitives
-        --unimacro            Compile the unimacro macros
-        --simprim             Compile the simprim primitives
-        --secureip            Compile the secureip primitives
+        -a --all              Compile all libraries, including common libraries, packages and device libraries.
+           --unisim           Compile the unisim primitives
+           --unimacro         Compile the unimacro macros
+           --simprim          Compile the simprim primitives
+           --secureip         Compile the secureip primitives
+    Compile options:
+
+           --vhdl93           Compile selected libraries with VHDL-93 (default).
+           --vhdl2008         Compile selected libraries with VHDL-2008.
  - `compile-xilinx-vivado.sh`
+    Selectable libraries:
 
-        --unisim              Compile the unisim primitives
-        --unimacro            Compile the unimacro macros
-        --secureip            Compile the secureip primitives
+        -a --all              Compile all libraries, including common libraries, packages and device libraries.
+           --unisim           Compile the unisim primitives
+           --unimacro         Compile the unimacro macros
+           --secureip         Compile the secureip primitives
+    Compile options:
+
+           --vhdl93           Compile selected libraries with VHDL-93 (default).
+           --vhdl2008         Compile selected libraries with VHDL-2008.
  - `compile-osvvm.sh`
+    Selectable libraries:
+
+        -a --all              Compile all.
  - `compile-vunit.sh`
+    Selectable libraries:
+
+        -a --all              Compile all.
 
 ### Selectable Options for the PowerShell Scripts:
 
  - Common parameters to all scripts:
 
         -Help                 Print the embedded help page(s).
-        -All                  Compile all libraries, including common libraries, packages and device libraries.
         -Clean                Cleanup directory before analyzing.
         -SuppressWarnings     Don't show warnings. Report errors only.
  - `compile-altera.ps1`
+    Selectable libraries:
 
+        -All                  Compile all libraries, including common libraries, packages and device libraries.
         -Altera               Compile base libraries like 'altera' and 'altera_mf'
         -Max                  Compile device libraries for Max CPLDs
         -Arria                Compile device libraries for Arria FPGAs
         -Cyclone              Compile device libraries for Cyclone FPGAs
         -Stratix              Compile device libraries for Stratix FPGAs
- - `compile-xilinx-ise.ps1`
+    Compile options:
 
+        -VHDL93              Compile selected libraries with VHDL-93 (default).
+        -VHDL2008            Compile selected libraries with VHDL-2008.
+ - `compile-xilinx-ise.ps1`
+    Selectable libraries:
+
+        -All                  Compile all libraries, including common libraries, packages and device libraries.
         -Unisim               Compile the unisim primitives
         -Unimacro             Compile the unimacro macros
         -Simprim              Compile the simprim primitives
         -Secureip             Compile the secureip primitives
- - `compile-xilinx-vivado.ps1`
+    Compile options:
 
+        -VHDL93              Compile selected libraries with VHDL-93 (default).
+        -VHDL2008            Compile selected libraries with VHDL-2008.
+ - `compile-xilinx-vivado.ps1`
+    Selectable libraries:
+
+        -All                  Compile all libraries, including common libraries, packages and device libraries.
         -Unisim               Compile the unisim primitives
         -Unimacro             Compile the unimacro macros
         -Secureip             Compile the secureip primitives
+    Compile options:
+
+        -VHDL93              Compile selected libraries with VHDL-93 (default).
+        -VHDL2008            Compile selected libraries with VHDL-2008.
  - `compile-osvvm.ps1`
+    Selectable libraries:
+
+        -All                  Compile all.
  - `compile-vunit.ps1`
+    Selectable libraries:
+
+        -All                  Compile all.
 
 ------------------------
 Author: Patrick Lehmann (30.11.2015)

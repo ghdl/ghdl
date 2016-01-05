@@ -603,7 +603,7 @@ elseif ($Compile)
 				
 				$VHDLSrcLibrary = "vital2000"
 				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
-					{	Write-Host "      file: v93\$SourceFile.v93"
+					{	Write-Host "      file: v93\$SourceFile.vhd"
 						if ($Script_EnableVerbose) {	Write-Host "        copy: $SourceFile"	}
 						Copy-Item "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" "$SourceFile.vhd"
 						
@@ -707,6 +707,17 @@ elseif ($Compile)
 							| Out-File "$SourceFile.v08" -Encoding Ascii
 						
 						$GHDLParameters = @("-a", "-C", "--std=08", "-P..\std", "--work=$VHDLDestLibrary", "$SourceFile.v08")
+						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
+						& $GHDLExecutable $GHDLParameters
+					}
+				
+				$VHDLSrcLibrary = "vital2000"
+				foreach ($SourceFile in $SourceFiles[$VHDLSrcLibrary])
+					{	Write-Host "      file: v08\$SourceFile.vhd"
+						if ($Script_EnableVerbose) {	Write-Host "        copy: $SourceFile"	}
+						Copy-Item "$VHDLSourceLibraryDir\$VHDLSrcLibrary\$SourceFile.vhdl" "$SourceFile.vhd"
+						
+						$GHDLParameters = @("-a", "-C", "-frelaxed-rules", "--std=08", "-P..\std", "--work=$VHDLDestLibrary", "$SourceFile.vhd")
 						if ($Script_EnableVerbose) {	Write-Host ("        ghdl analyse (" + ($GHDLParameters -join " ") + ")")	}
 						& $GHDLExecutable $GHDLParameters
 					}
