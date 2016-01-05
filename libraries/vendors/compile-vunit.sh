@@ -163,7 +163,7 @@ else
 	fi
 fi
 
-STOPCOMPILING=FALSE
+ERRORCOUNT=0
 
 # Cleanup directory
 # ==============================================================================
@@ -175,68 +175,66 @@ fi
 # Library vunit_lib
 # ==============================================================================
 # compile vunit packages
-if [ "$STOPCOMPILING" == "FALSE" ]; then
-	echo -e "${ANSI_YELLOW}Compiling library 'vunit_lib' ...${ANSI_RESET}"
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08)
-	Files=(
-		$SourceDir/vhdl/run/src/stop_api.vhd
-		$SourceDir/vhdl/vhdl/src/lib/std/textio.vhd
-		$SourceDir/vhdl/vhdl/src/lang/lang.vhd
-		$SourceDir/vhdl/com/src/com_types.vhd
-		$SourceDir/vhdl/run/src/stop_body_2008.vhd
-		$SourceDir/vhdl/com/src/com_api.vhd
-		$SourceDir/vhdl/string_ops/src/string_ops.vhd
-		$SourceDir/vhdl/path/src/path.vhd
-		$SourceDir/vhdl/logging/src/log_types.vhd
-		$SourceDir/vhdl/logging/src/log_formatting.vhd
-		$SourceDir/vhdl/logging/src/log_special_types200x.vhd
-		$SourceDir/vhdl/array/src/array_pkg.vhd
-		$SourceDir/vhdl/logging/src/log_base_api.vhd
-		$SourceDir/vhdl/logging/src/log_base.vhd
-		$SourceDir/vhdl/logging/src/log_api.vhd
-		$SourceDir/vhdl/logging/src/log.vhd
-		$SourceDir/vhdl/check/src/check_types.vhd
-		$SourceDir/vhdl/check/src/check_special_types200x.vhd
-		$SourceDir/vhdl/check/src/check_base_api.vhd
-		$SourceDir/vhdl/check/src/check_base.vhd
-		$SourceDir/vhdl/check/src/check_api.vhd
-		$SourceDir/vhdl/check/src/check.vhd
-		$SourceDir/vhdl/dictionary/src/dictionary.vhd
-		$SourceDir/vhdl/run/src/run_types.vhd
-		$SourceDir/vhdl/run/src/run_special_types200x.vhd
-		$SourceDir/vhdl/run/src/run_base_api.vhd
-		$SourceDir/vhdl/run/src/run_base.vhd
-		$SourceDir/vhdl/run/src/run_api.vhd
-		$SourceDir/vhdl/run/src/run.vhd
-		$SourceDir/vhdl/vunit_run_context.vhd
-		$SourceDir/vhdl/vunit_context.vhd
-		$SourceDir/vhdl/com/src/com_std_codec_builder.vhd
-		$SourceDir/vhdl/com/src/com_debug_codec_builder.vhd
-		$SourceDir/vhdl/com/src/com_string.vhd
-		$SourceDir/vhdl/com/src/com_codec_api.vhd
-		$SourceDir/vhdl/com/src/com_codec.vhd
-		$SourceDir/vhdl/com/src/com.vhd
-		$SourceDir/vhdl/com/src/com_context.vhd
-	)
-	for File in ${Files[@]}; do
-		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		else
-			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=vunit_lib "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
-			fi
+echo -e "${ANSI_YELLOW}Compiling library 'vunit_lib' ...${ANSI_RESET}"
+GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+GHDL_PARAMS+=(--std=08)
+Files=(
+	$SourceDir/vhdl/run/src/stop_api.vhd
+	$SourceDir/vhdl/vhdl/src/lib/std/textio.vhd
+	$SourceDir/vhdl/vhdl/src/lang/lang.vhd
+	$SourceDir/vhdl/com/src/com_types.vhd
+	$SourceDir/vhdl/run/src/stop_body_2008.vhd
+	$SourceDir/vhdl/com/src/com_api.vhd
+	$SourceDir/vhdl/string_ops/src/string_ops.vhd
+	$SourceDir/vhdl/path/src/path.vhd
+	$SourceDir/vhdl/logging/src/log_types.vhd
+	$SourceDir/vhdl/logging/src/log_formatting.vhd
+	$SourceDir/vhdl/logging/src/log_special_types200x.vhd
+	$SourceDir/vhdl/array/src/array_pkg.vhd
+	$SourceDir/vhdl/logging/src/log_base_api.vhd
+	$SourceDir/vhdl/logging/src/log_base.vhd
+	$SourceDir/vhdl/logging/src/log_api.vhd
+	$SourceDir/vhdl/logging/src/log.vhd
+	$SourceDir/vhdl/check/src/check_types.vhd
+	$SourceDir/vhdl/check/src/check_special_types200x.vhd
+	$SourceDir/vhdl/check/src/check_base_api.vhd
+	$SourceDir/vhdl/check/src/check_base.vhd
+	$SourceDir/vhdl/check/src/check_api.vhd
+	$SourceDir/vhdl/check/src/check.vhd
+	$SourceDir/vhdl/dictionary/src/dictionary.vhd
+	$SourceDir/vhdl/run/src/run_types.vhd
+	$SourceDir/vhdl/run/src/run_special_types200x.vhd
+	$SourceDir/vhdl/run/src/run_base_api.vhd
+	$SourceDir/vhdl/run/src/run_base.vhd
+	$SourceDir/vhdl/run/src/run_api.vhd
+	$SourceDir/vhdl/run/src/run.vhd
+	$SourceDir/vhdl/vunit_run_context.vhd
+	$SourceDir/vhdl/vunit_context.vhd
+	$SourceDir/vhdl/com/src/com_std_codec_builder.vhd
+	$SourceDir/vhdl/com/src/com_debug_codec_builder.vhd
+	$SourceDir/vhdl/com/src/com_string.vhd
+	$SourceDir/vhdl/com/src/com_codec_api.vhd
+	$SourceDir/vhdl/com/src/com_codec.vhd
+	$SourceDir/vhdl/com/src/com.vhd
+	$SourceDir/vhdl/com/src/com_context.vhd
+)
+for File in ${Files[@]}; do
+	FileName=$(basename "$File")
+	if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
+	else
+		echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
+		ghdl -a ${GHDL_PARAMS[@]} --work=vunit_lib "$File" 2>&1 | $GRC_COMMAND
+		if [ $? -ne 0 ]; then
+			let ERRORCOUNT++
+			if [ "$HALT_ON_ERROR" == "TRUE" ]; break
 		fi
-	done
-fi
+	fi
+done
 	
 echo "--------------------------------------------------------------------------------"
 echo -n "Compiling VUnit library "
-if [ "$STOPCOMPILING" == "TRUE" ]; then
+if [ $ERRORCOUNT -gt 0 ]; then
 	echo -e $COLORED_FAILED
 else
 	echo -e $COLORED_SUCCESSFUL

@@ -163,7 +163,7 @@ else
 	fi
 fi
 
-STOPCOMPILING=FALSE
+ERRORCOUNT=0
 
 # Cleanup directory
 # ==============================================================================
@@ -175,42 +175,40 @@ fi
 # Library osvvm
 # ==============================================================================
 # compile osvvm packages
-if [ "$STOPCOMPILING" == "FALSE" ]; then
-	echo -e "${ANSI_YELLOW}Compiling library 'osvvm' ...${ANSI_RESET}"
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08)
-	Files=(
-		$SourceDir/NamePkg.vhd
-		$SourceDir/OsvvmGlobalPkg.vhd
-		$SourceDir/TextUtilPkg.vhd
-		$SourceDir/TranscriptPkg.vhd
-		$SourceDir/AlertLogPkg.vhd
-		$SourceDir/MemoryPkg.vhd
-		$SourceDir/MessagePkg.vhd
-		$SourceDir/SortListPkg_int.vhd
-		$SourceDir/RandomBasePkg.vhd
-		$SourceDir/RandomPkg.vhd
-		$SourceDir/CoveragePkg.vhd
-		$SourceDir/OsvvmContext.vhd
-	)
-	for File in ${Files[@]}; do
-		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		else
-			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=osvvm "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
-			fi
+echo -e "${ANSI_YELLOW}Compiling library 'osvvm' ...${ANSI_RESET}"
+GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+GHDL_PARAMS+=(--std=08)
+Files=(
+	$SourceDir/NamePkg.vhd
+	$SourceDir/OsvvmGlobalPkg.vhd
+	$SourceDir/TextUtilPkg.vhd
+	$SourceDir/TranscriptPkg.vhd
+	$SourceDir/AlertLogPkg.vhd
+	$SourceDir/MemoryPkg.vhd
+	$SourceDir/MessagePkg.vhd
+	$SourceDir/SortListPkg_int.vhd
+	$SourceDir/RandomBasePkg.vhd
+	$SourceDir/RandomPkg.vhd
+	$SourceDir/CoveragePkg.vhd
+	$SourceDir/OsvvmContext.vhd
+)
+for File in ${Files[@]}; do
+	FileName=$(basename "$File")
+	if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
+	else
+		echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
+		ghdl -a ${GHDL_PARAMS[@]} --work=osvvm "$File" 2>&1 | $GRC_COMMAND
+		if [ $? -ne 0 ]; then
+			let ERRORCOUNT++
+			if [ "$HALT_ON_ERROR" == "TRUE" ]; break
 		fi
-	done
-fi
+	fi
+done
 	
 echo "--------------------------------------------------------------------------------"
 echo -n "Compiling OSVVM library "
-if [ "$STOPCOMPILING" == "TRUE" ]; then
+if [ $ERRORCOUNT -gt 0 ]; then
 	echo -e $COLORED_FAILED
 else
 	echo -e $COLORED_SUCCESSFUL

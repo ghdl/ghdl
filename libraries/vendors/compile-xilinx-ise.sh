@@ -92,6 +92,12 @@ while [[ $# > 0 ]]; do
 		--secureip)
 		SECUREIP=TRUE
 		;;
+		--vhdl93)
+		VHDL93=TRUE
+		;;
+		--vhdl2008)
+		VHDL2008=TRUE
+		;;
 		*)		# unknown option
 		UNKNOWN_OPTION=TRUE
 		;;
@@ -130,6 +136,8 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo "     --secureip         Compile the secureip library."
 	echo ""
 	echo "Library compile options:"
+	echo "     --vhdl93           Compile the libraries with VHDL-93."
+	echo "     --vhdl2008         Compile the libraries with VHDL-2008."
 	echo "  -s --skip-existing    Skip already compiled files (an *.o file exists)."
 	echo "  -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives."
 	echo "  -H --halt-on-error    Halt on error(s)."
@@ -146,6 +154,19 @@ if [ "$ALL" == "TRUE" ]; then
 	UNIMACRO=TRUE
 	SIMPRIM=TRUE
 	SECUREIP=TRUE
+fi
+
+if [ "$VHDL93" == "TRUE" ]; then
+	VHDLStandard="93c"
+	VHDLFlavor="synopsys"
+elif [ "$VHDL2008" == "TRUE" ]; then
+	VHDLStandard="08"
+	VHDLFlavor="standard"
+	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_RESET}"
+	HALT_ON_ERROR=FALSE
+else
+	VHDLStandard="93c"
+	VHDLFlavor="synopsys"
 fi
 
 # extract data from configuration
@@ -188,6 +209,7 @@ else
 fi
 
 STOPCOMPILING=FALSE
+ERRORCOUNT=0
 
 # Cleanup directory
 # ==============================================================================
@@ -202,7 +224,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'unisim' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/unisims/unisim_VPKG.vhd
 		$SourceDir/unisims/unisim_VCOMP.vhd
@@ -214,9 +236,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -225,7 +250,7 @@ fi
 # compile unisim primitives
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files="$(LC_COLLATE=C ls $SourceDir/unisims/primitive/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
@@ -238,9 +263,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -250,7 +278,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library secureip primitives${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files="$(LC_COLLATE=C ls $SourceDir/unisims/secureip/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
@@ -263,9 +291,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" =
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=secureip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -277,7 +308,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'unimacro' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/unimacro/unimacro_VCOMP.vhd
 	)
@@ -288,9 +319,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -299,7 +333,7 @@ fi
 # compile unimacro macros
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files="$(LC_COLLATE=C ls $SourceDir/unimacro/*_MACRO.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
@@ -308,9 +342,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -322,7 +359,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'simprim' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/simprims/simprim_Vpackage.vhd
 		$SourceDir/simprims/simprim_Vcomponents.vhd
@@ -334,9 +371,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -345,7 +385,7 @@ fi
 # compile simprim primitives
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files="$(LC_COLLATE=C ls $SourceDir/simprims/primitive/other/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
@@ -358,9 +398,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -369,7 +412,7 @@ fi
 # compile simprim secureip primitives
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files="$(LC_COLLATE=C ls $SourceDir/simprims/secureip/other/*.vhd)"
 	for File in $Files; do
 		FileName=$(basename "$File")
@@ -382,9 +425,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$SIMPRIM" == "TRUE" ] && [ "$SECUREIP" 
 		else
 			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=simprim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -392,7 +438,7 @@ fi
 	
 echo "--------------------------------------------------------------------------------"
 echo -n "Compiling Xilinx ISE libraries "
-if [ "$STOPCOMPILING" == "TRUE" ]; then
+if [ $ERRORCOUNT -gt 0 ]; then
 	echo -e $COLORED_FAILED
 else
 	echo -e $COLORED_SUCCESSFUL
