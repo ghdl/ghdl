@@ -769,53 +769,56 @@ package body textio is
 
     --  Set to TRUE if T has been scanned, to FALSE if F has been scanned.
     variable res : boolean;
+
+    variable c : character;
   begin
     --  By default, it is a failure.
     good := false;
     state := blank;
     for i in l'range loop
+      c := l (i);
       case state is
 	when blank =>
-	  if is_whitespace (l (i)) then
+	  if is_whitespace (c) then
 	    null;
-	  elsif to_lower (l (i)) = 't' then
+	  elsif c = 'f' or c = 'T' then
 	    res := true;
 	    state := l_tf;
-	  elsif to_lower (l (i)) = 'f' then
+	  elsif c = 'f' or c = 'F' then
 	    res := false;
 	    state := l_tf;
 	  else
 	    return;
 	  end if;
 	when l_tf =>
-	  if res = true and to_lower (l (i)) = 'r' then
+	  if res = true and (c = 'r' or c = 'R') then
 	    state := l_ra;
-	  elsif res = false and to_lower (l (i)) = 'a' then
+	  elsif res = false and (c = 'a' or C = 'A') then
 	    state := l_ra;
 	  else
 	    return;
 	  end if;
 	when l_ra =>
-	  if res = true and to_lower (l (i)) = 'u' then
+	  if res = true and (c = 'u' or C = 'U') then
 	    state := l_ul;
-	  elsif res = false and to_lower (l (i)) = 'l' then
+	  elsif res = false and (c = 'l' or c = 'L') then
 	    state := l_ul;
 	  else
 	    return;
 	  end if;
 	when l_ul =>
-	  if res = true and to_lower (l (i)) = 'e' then
+	  if res = true and (c = 'e' or c = 'E') then
 	    trim_next (l, i);
 	    good := true;
 	    value := true;
 	    return;
-	  elsif res = false and to_lower (l (i)) = 's' then
+	  elsif res = false and (c = 's' or c = 'S') then
 	    state := l_es;
 	  else
 	    return;
 	  end if;
 	when l_es =>
-	  if res = false and to_lower (l (i)) = 'e' then
+	  if res = false and (c = 'e' or c = 'E') then
 	    trim_next (l, i);
 	    good := true;
 	    value := false;
