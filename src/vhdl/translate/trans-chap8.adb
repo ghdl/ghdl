@@ -304,6 +304,7 @@ package body Trans.Chap8 is
             State_Jump (State_Allocate);
          else
             Open_Temp;
+            New_Debug_Line_Stmt (Get_Line_Number (Else_Clause));
             Translate_If_Statement_State_Jumps (Else_Clause, Fall_State);
             Close_Temp;
          end if;
@@ -358,6 +359,7 @@ package body Trans.Chap8 is
               (Get_Sequential_Statement_Chain (Else_Clause));
          else
             Open_Temp;
+            New_Debug_Line_Stmt (Get_Line_Number (Else_Clause));
             Translate_If_Statement_Direct (Else_Clause);
             Close_Temp;
          end if;
