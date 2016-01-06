@@ -246,7 +246,8 @@ package body Symbolizer is
 
    procedure Read_Addr (Addr : in out Address; Res : out Address) is
    begin
-      pragma Warnings (Off, "*different size*");
+      --  Turn off warnings for unmatched size.
+      pragma Warnings (Off);
       if Address'Size = Unsigned_32'Size then
          declare
             function To_Address is new Ada.Unchecked_Conversion
@@ -269,7 +270,7 @@ package body Symbolizer is
          --  Unhandled address size.
          raise Program_Error;
       end if;
-      pragma Warnings (On, "*different size*");
+      pragma Warnings (On);
    end Read_Addr;
 
    procedure Read_Addr (Addr : in out Address;
