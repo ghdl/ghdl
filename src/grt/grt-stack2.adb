@@ -24,7 +24,6 @@
 --  covered by the GNU Public License.
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
-with Grt.Errors; use Grt.Errors;
 with Grt.Stdio;
 with Grt.Astdio;
 
