@@ -761,6 +761,7 @@ package body Binary_File is
 
    procedure Gen_Addr (Offset : Integer_32) is
    begin
+      pragma Warnings (Off);  --  Avoid warning on constant condition.
       if Pc_Type'Size = 32 then
          Gen_32 (Conv (Offset));
       elsif Pc_Type'Size = 64 then
@@ -768,6 +769,7 @@ package body Binary_File is
       else
          raise Program_Error;
       end if;
+      pragma Warnings (On);
    end Gen_Addr;
 
    procedure Gen_Abs (Sym : Symbol; Offset : Integer_32) is
