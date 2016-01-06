@@ -36,7 +36,6 @@ with Grt.Signals; use Grt.Signals;
 with Grt.Table;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Hooks; use Grt.Hooks;
-with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Types; use Grt.Rtis_Types;
 with Grt.Vstrings;
 with Ada.Unchecked_Deallocation;
