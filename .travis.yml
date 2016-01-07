@@ -6,3 +6,6 @@ before_install:
 script:
   - ./configure
   - make
+  - cd testsuite; gnatmake get_entities
+  - pwd
+  - cd testsuite; GHDL=$PWD/../ghdl_mcode ./testsuite
