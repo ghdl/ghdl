@@ -2744,7 +2744,7 @@ package body Sem is
 
          case Get_Kind (Name) is
             when Iir_Kind_Selected_Name =>
-               Sem_Name (Name);
+               Sem_Name (Name, True);
                case Get_Kind (Get_Named_Entity (Name)) is
                   when Iir_Kind_Error =>
                      --  Continue in case of error.
