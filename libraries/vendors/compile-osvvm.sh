@@ -201,7 +201,9 @@ for File in ${Files[@]}; do
 		ghdl -a ${GHDL_PARAMS[@]} --work=osvvm "$File" 2>&1 | $GRC_COMMAND
 		if [ $? -ne 0 ]; then
 			let ERRORCOUNT++
-			if [ "$HALT_ON_ERROR" == "TRUE" ]; break
+			if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+				break
+			fi
 		fi
 	fi
 done
