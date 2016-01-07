@@ -9,4 +9,4 @@ script:
   - export GHDL=$PWD/ghdl_mcode
   - cd testsuite
   - gnatmake get_entities
-  - ./testsuite
+  - ./testsuite.sh
