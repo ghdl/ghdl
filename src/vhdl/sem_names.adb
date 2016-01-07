@@ -1007,7 +1007,7 @@ package body Sem_Names is
         and then Staticness = None
         and then (Flag_Relaxed_Rules or Vhdl_Std = Vhdl_93c)
       then
-         Staticness := Iir_Staticness'Max (Globally,
+         Staticness := Iir_Staticness'Min (Globally,
                                            Get_Expr_Staticness (Prefix));
       end if;
       Set_Expr_Staticness (Attr, Staticness);
