@@ -21,17 +21,60 @@ package body Binary_File.Memory is
    --  Absolute section.
    Sect_Abs : Section_Acc;
 
+   --  PLT section (for x86-64).
+   Sect_Plt : Section_Acc;
+
    procedure Set_Symbol_Address (Sym : Symbol; Addr : System.Address) is
    begin
-      Set_Symbol_Value (Sym, To_Pc_Type (Addr));
+      if Arch = Arch_X86_64 and then Is_Symbol_Code (Sym) then
+         --  Branches are limited on x86-64 to a 32 bit offset.  Create a
+         --  trampoline so that functions created outside of the module could
+         --  be reached using the standard ABI.
+         --
+         --  This works only for code, not for data.  Therefore we assume that
+         --  data symbols are correctly handled.
+         declare
+            V : Unsigned_64;
+            Pc : constant Pc_Type := Sect_Plt.Pc;
+         begin
+            Set_Current_Section (Sect_Plt);
+            Prealloc (16);
+
+            --  Emit: movabs $ADDR, %r11
+            V := Unsigned_64 (To_Pc_Type (Addr));
+            Sect_Plt.Data (Pc + 0) := 16#49#;
+            Sect_Plt.Data (Pc + 1) := 16#BB#;
+            for I in Pc_Type range 0 .. 7 loop
+               Sect_Plt.Data (Pc + 2 + I) := Byte (V and 16#ff#);
+               V := Shift_Right (V, 8);
+            end loop;
+
+            --  Emit: jmp *%r11
+            Sect_Plt.Data (Pc + 10) := 16#41#;
+            Sect_Plt.Data (Pc + 11) := 16#FF#;
+            Sect_Plt.Data (Pc + 12) := 16#E3#;
+
+            Sect_Plt.Pc := Pc + 13;
+            Set_Symbol_Value (Sym, Pc);
+            Set_Section (Sym, Sect_Plt);
+         end;
+      else
+         Set_Symbol_Value (Sym, To_Pc_Type (Addr));
+         Set_Section (Sym, Sect_Abs);
+      end if;
+
+      --  Symbol is not anymore undefined.
       Set_Scope (Sym, Sym_Global);
-      Set_Section (Sym, Sect_Abs);
    end Set_Symbol_Address;
 
    procedure Write_Memory_Init is
    begin
       Create_Section (Sect_Abs, "*ABS*", Section_Exec);
       Sect_Abs.Vaddr := 0;
+
+      if Arch = Arch_X86_64 then
+         Create_Section (Sect_Plt, ".plt", Section_Exec);
+      end if;
    end Write_Memory_Init;
 
    procedure Write_Memory_Relocate (Error : out Boolean)

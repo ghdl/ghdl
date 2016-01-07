@@ -1,0 +1,1012 @@
+TYPE int32 IS SIGNED (32);
+TYPE uns32 IS UNSIGNED (32);
+TYPE char8 IS UNSIGNED (8);
+
+TYPE enum8 IS ENUM {e8_0, e8_1, e8_2};
+
+TYPE string8 IS ARRAY [uns32] OF char8;
+TYPE string_acc IS ACCESS string8;
+
+TYPE bool IS BOOLEAN {false, true};
+
+TYPE float IS FLOAT;
+
+TYPE int64 IS SIGNED (64);
+TYPE uns64 IS UNSIGNED (64);
+
+TYPE int32_acc IS ACCESS int32;
+TYPE int64_acc IS ACCESS int64;
+
+--  Some constants.
+PRIVATE CONSTANT zero_i32 : int32 := 0;
+PRIVATE CONSTANT zero_u32 : uns32 := 0;
+PRIVATE CONSTANT zero_u8 : char8 := 0;
+PRIVATE CONSTANT zero_u64 : uns64 := 0;
+PRIVATE CONSTANT zero_i64 : int64 := 0;
+PRIVATE CONSTANT zero_fp : float := 0.0;
+PRIVATE CONSTANT zero_enum8 : enum8 := enum8'[e8_0];
+
+PRIVATE CONSTANT true_bool : bool := bool'[true];
+PRIVATE CONSTANT false_bool : bool := bool'[false];
+
+--  Array of size 5 bytes
+TYPE arr5 IS SUBARRAY string8[5];
+TYPE arr5_array IS ARRAY [uns32] OF arr5;
+
+PRIVATE VAR v_arr5_4: SUBARRAY arr5_array[4];
+
+--  Record of 2 words.
+TYPE rec8 IS RECORD a : int32; b : int32; END RECORD;
+TYPE rec8_array IS ARRAY [uns32] OF rec8;
+--  Array of size 2 words and 8 words
+TYPE int32_array IS ARRAY [uns32] OF int32;
+TYPE arr32 IS SUBARRAY int32_array[8];
+TYPE arr32_array IS ARRAY [uns32] OF arr32;
+
+PRIVATE VAR v_rec8_2: SUBARRAY rec8_array[2];
+PRIVATE VAR v_arr32_3: SUBARRAY arr32_array[3];
+
+--  Write a character on the standard output.
+EXTERNAL PROCEDURE putchar (v : int32);
+
+--  Exit status.
+PRIVATE VAR status : int32;
+
+PRIVATE CONSTANT banner1 : SUBARRAY string8[6];
+CONSTANT banner1 := { 'h', 'e', 'l', 'l', 'o', 10 };
+
+PRIVATE CONSTANT banner1_acc : string_acc := string_acc'address (banner1);
+PRIVATE CONSTANT null_acc : string_acc := string_acc'[NULL];
+
+--  Disp the LEN first characters of S.
+PRIVATE PROCEDURE disp_lstr (s : string_acc; len : uns32)
+DECLARE
+  LOCAL VAR i : uns32;
+BEGIN
+  i := 0;
+  LOOP 1:
+     IF bool'(i = len) THEN
+       EXIT LOOP 1;
+     END IF;
+     putchar (int32'conv (s.ALL[i]));
+     i := i +# 1;
+  END LOOP;
+END;
+
+--  Disp a NUL terminated string.
+PRIVATE PROCEDURE puts (s : string_acc)
+DECLARE
+  LOCAL VAR i : uns32;
+  LOCAL VAR c : char8;
+BEGIN
+  i := 0;
+  LOOP 1:
+     c := s.ALL[i];
+     IF bool'(c = 0) THEN
+       EXIT LOOP 1;
+     END IF;
+     putchar (int32'conv (c));
+     i := i +# 1;
+  END LOOP;
+END;
+
+PRIVATE PROCEDURE putn (n : uns32)
+DECLARE
+  LOCAL VAR n1 : uns32;
+  LOCAL VAR d : uns32;
+BEGIN
+  d := '0' +# (n MOD# 10);
+  n1 := n /# 10;
+  IF bool'(n1 /= 0) THEN
+    putn (n1);
+  END IF;
+  putchar (int32'conv (d));
+END;
+
+PRIVATE PROCEDURE putn_nl (n : uns32)
+DECLARE
+BEGIN
+  putn (n);
+  putchar (10);
+END;
+
+PRIVATE CONSTANT str_test : SUBARRAY string8[7];
+CONSTANT str_test := { 'T', 'e', 's', 't', ' ', '#', 0 };
+
+PRIVATE VAR test_num : uns32;
+
+PRIVATE PROCEDURE disp_test ()
+DECLARE
+BEGIN
+  puts (string_acc'address(str_test));
+  putn (test_num);
+  putchar (10);
+  test_num := test_num +# 1;
+END;
+
+PRIVATE FUNCTION add2 (a : int32; b : int32) RETURN int32
+DECLARE
+BEGIN
+  RETURN a +# b;
+END;
+
+PRIVATE FUNCTION add8 (a : uns32; b : uns32; c : uns32; d : uns32;
+                       e : uns32; f : uns32; g : uns32; h : uns32)
+		       RETURN uns32
+DECLARE
+BEGIN
+  RETURN a +# (b +# (c +# (d +# (e +# (f +# (g +# h))))));
+END;
+
+PRIVATE PROCEDURE puti32 (n : int32)
+DECLARE
+  TYPE str8x11 IS SUBARRAY string8[11];
+  LOCAL VAR s : str8x11;
+  LOCAL VAR is_neg : bool;
+  LOCAL VAR i : uns32;
+  LOCAL VAR n1 : int32;
+  LOCAL VAR d : int32;
+BEGIN
+  IF bool'(n < 0) THEN
+     is_neg := bool'[true];
+     n1 := -n;
+  ELSE
+     is_neg := bool'[false];
+     n1 := n;
+  END IF;
+  i := 9;
+  s[10] := 0;
+  LOOP 1:
+    d := '0' +# (n1 MOD# 10);
+    s[i] := char8'conv (d);
+    n1 := n1 /# 10;
+    IF bool'(n1 = 0) THEN
+      EXIT LOOP 1;
+    END IF;
+    i := i -# 1;
+  END LOOP;
+  IF is_neg THEN
+    i := i -# 1;
+    s[i] := '-';
+  END IF;
+  puts(string_acc'address(s[i...]));
+END;
+
+
+PRIVATE PROCEDURE error ()
+DECLARE
+  PRIVATE CONSTANT str_error : SUBARRAY string8[8];
+  CONSTANT str_error := { 'E', 'R', 'R', 'O', 'R', '!', 10, 0 };
+BEGIN
+  status := 1;
+  puts (string_acc'address(str_error));
+END;
+
+PRIVATE PROCEDURE check_i32 (a : int32; ref : int32)
+DECLARE
+BEGIN
+  puti32 (a);
+  putchar (10);
+  IF bool'(a /= ref) THEN
+    error ();
+  END IF;
+END;
+
+PRIVATE CONSTANT str_true : SUBARRAY string8[5];
+CONSTANT str_true := { 'T', 'r', 'u', 'e', 0 };
+
+PRIVATE CONSTANT str_false : SUBARRAY string8[6];
+CONSTANT str_false := { 'F', 'a', 'l', 's', 'e', 0 };
+
+PRIVATE PROCEDURE check_bool (a : bool; ref : bool)
+DECLARE
+BEGIN
+  IF a THEN
+     puts(string_acc'address(str_true));
+  ELSE
+     puts(string_acc'address(str_false));
+  END IF;
+  putchar (10);
+  IF bool'(a /= ref) THEN
+    error ();
+  END IF;
+END;
+
+PRIVATE CONSTANT str_float : SUBARRAY string8[13];
+CONSTANT str_float :=
+  { 'F', 'l', 'o', 'a', 't', ' ', 't', 'e', 's', 't', 's', 10, 0 };
+
+PRIVATE PROCEDURE check_float (a : float; ref : float)
+DECLARE
+BEGIN
+  IF bool'(a /= ref) THEN
+    error ();
+  END IF;
+END;
+
+PRIVATE FUNCTION add_float (a : float; b : float) RETURN float
+DECLARE
+BEGIN
+  RETURN a +# b;
+END;
+
+PRIVATE FUNCTION add3_float (a : float; b : float; c : float) RETURN float
+DECLARE
+BEGIN
+  RETURN add_float (a, add_float (b, c));
+END;
+
+PRIVATE PROCEDURE check_i64 (a : int64; ref : int64)
+DECLARE
+BEGIN
+--  puti32 (a);
+--  putchar (10);
+  IF bool'(a /= ref) THEN
+    error ();
+  END IF;
+END;
+
+PRIVATE FUNCTION add2_i64 (a : int64; b : int64) RETURN int64
+DECLARE
+BEGIN
+  RETURN a +# b;
+END;
+
+PRIVATE FUNCTION andn (a : bool; b : bool) RETURN bool
+DECLARE
+BEGIN
+  RETURN a AND (NOT b);
+END;
+
+PRIVATE FUNCTION cmpi32 (a : int32) RETURN bool
+DECLARE
+BEGIN
+  RETURN a >= 0;
+END;
+
+PRIVATE PROCEDURE check_u32 (a : uns32; ref : uns32)
+DECLARE
+BEGIN
+  IF bool'(a /= ref) THEN
+    error ();
+  END IF;
+END;
+
+PRIVATE PROCEDURE check_u64 (a : uns64; ref : uns64)
+DECLARE
+BEGIN
+  IF bool'(a /= ref) THEN
+    error ();
+  END IF;
+END;
+
+PRIVATE PROCEDURE check_enum8 (a : enum8; ref : enum8)
+DECLARE
+BEGIN
+  IF bool'(a /= ref) THEN
+    error ();
+  END IF;
+END;
+
+--  To test alloca
+PRIVATE PROCEDURE disp_indent (n : uns32)
+DECLARE
+  LOCAL VAR i : uns32;
+  LOCAL VAR ptr : string_acc;
+BEGIN
+  ptr := string_acc'alloca (n +# 1);
+  ptr.ALL[n] := 0;
+  LOOP 1:
+     IF bool'(n = 0) THEN
+        EXIT LOOP 1;
+     END IF;
+     n := n -# 1;
+     ptr.ALL[n] := 32;
+  END LOOP;
+  puts (ptr);
+END;
+
+PRIVATE PROCEDURE test_case ()
+DECLARE
+  LOCAL VAR i : int32;
+  PRIVATE CONSTANT str_zero : SUBARRAY string8[5];
+  CONSTANT str_zero := { 'z', 'e', 'r', 'o', 0 };
+  PRIVATE CONSTANT str_one : SUBARRAY string8[4];
+  CONSTANT str_one := { 'o', 'n', 'e', 0 };
+  PRIVATE CONSTANT str_two_four : SUBARRAY string8[9];
+  CONSTANT str_two_four := { 't', 'w', 'o', '-', 'f', 'o', 'u', 'r', 0 };
+  PRIVATE CONSTANT str_five_plus : SUBARRAY string8[6];
+  CONSTANT str_five_plus := { 'f', 'i', 'v', 'e', '+', 0 };
+BEGIN
+  i := 0;
+  LOOP 1:
+     IF bool'(i = 6) THEN
+        EXIT LOOP 1;
+     END IF;
+     CASE i IS
+       WHEN 0 => puts (string_acc'address (str_zero));
+       WHEN 1 => puts (string_acc'address (str_one));
+       WHEN 2 ... 4 => puts (string_acc'address (str_two_four));
+       WHEN DEFAULT => puts (string_acc'address (str_five_plus));
+     END CASE;
+     putchar (10);
+     i := i +# 1;
+  END LOOP;
+END;
+
+PRIVATE PROCEDURE call_9iargs (i1 : int64; i2 : int64; i3 : int64; i4 : int64;
+                               i5 : int64; i6 : int64; i7 : int64; i8 : int64;
+			       i9 : int64)
+DECLARE
+BEGIN
+  IF bool'((i1 +# (i2 +# (i3 +# (i4 +# (i5 +# (i6 +# (i7 +# (i8 +# i9))))))))
+     /= 45)
+  THEN
+    error ();
+  END IF;
+END;
+
+PRIVATE PROCEDURE call_9fargs (i1 : float; i2 : float; i3 : float; i4 : float;
+                               i5 : float; i6 : float; i7 : float; i8 : float;
+			       i9 : float)
+DECLARE
+BEGIN
+  IF bool'((i1 +# (i2 +# (i3 +# (i4 +# (i5 +# (i6 +# (i7 +# (i8 +# i9))))))))
+     /= 45.0)
+  THEN
+    error ();
+  END IF;
+END;
+
+PRIVATE PROCEDURE call_nested (a : int32; b : int32; c : int32)
+DECLARE
+  PRIVATE PROCEDURE nested (d : int32)
+  DECLARE
+  BEGIN
+     puti32 (d);
+     putchar (10);
+     puti32 (a);
+     putchar (10);
+     IF bool'((a +# (b +# d)) /= 7) THEN
+        error ();
+     END IF;
+  END;
+BEGIN
+  nested (c +# 1);
+END;
+
+PRIVATE VAR g_int32_ptr : int32_acc;
+
+PRIVATE PROCEDURE call_arg_addr (a : int32; b : int64; c : float)
+DECLARE
+  LOCAL VAR ap : int32_acc;
+  LOCAL VAR bp : int64_acc;
+BEGIN
+  ap := int32_acc'address (zero_i32);
+  
+  ap := int32_acc'address (a);
+  bp := int64_acc'address (b);
+
+  g_int32_ptr := int32_acc'address (a);
+
+  IF bool'(ap.ALL /= 1) THEN
+    error ();
+  END IF;
+  IF bool'(bp.ALL /= 2) THEN
+    error ();
+  END IF;
+END;
+
+PUBLIC FUNCTION main () RETURN int32
+DECLARE
+BEGIN
+  --  Start with a simple banner.
+  putchar ('h');
+  putchar (10);
+
+  --  Real banner.
+  disp_lstr (string_acc'address(banner1), 6);
+
+  --  Test assignment to a global and putn.
+  test_num := 3;
+  putn (test_num);
+  putchar (10);
+
+  status := 0;
+
+  --  Start of tests.
+  test_num := 4;
+  disp_test ();
+  --  Test putn with more than 1 digit.
+  putn_nl (125);
+
+  --  Nested calls.
+  disp_test ();
+  putn_nl (uns32'conv (add2 (7, add2 (5, 3)))); -- 15
+
+  --  Many parameters
+  disp_test ();
+  putn_nl (add8 (1, 2, 3, 4, 5, 6, 7, 8)); --  36
+
+  --  Nested with many parameters
+  disp_test ();
+  putn_nl (add8 (1, 2, 3, 4, 5, 6,
+                 add8 (10, 11, 12, 13, 14, 15, 16, 17), 8)); --  137
+
+  --  Test puti32
+  disp_test ();
+  puti32 (15679);
+  putchar (10);
+
+  --  Test puti32
+  disp_test ();
+  puti32 (-45678);
+  putchar (10);
+
+  DECLARE
+    LOCAL VAR v1 : int32;
+    LOCAL VAR v2 : int32;
+  BEGIN
+    v1 := 12;
+    v2 := -15;
+
+    --  Arith i32: add
+    disp_test ();
+    check_i32 (v1 +# 5, 17);
+
+    --  Arith i32: sub
+    disp_test ();
+    check_i32 (v1 -# 5, 7);
+
+    --  Arith i32: mul
+    disp_test ();
+    check_i32 (v1 *# 9, 108);
+
+    --  Arith i32: div
+    disp_test ();
+    check_i32 (v1 /# 4, 3);
+    check_i32 (v2 /# 6, -2);
+
+    --  Arith i32: abs
+    disp_test ();
+    check_i32 (ABS v1, 12);
+    check_i32 (ABS v2, 15);
+
+    --  Arith i32: neg
+    disp_test ();
+    check_i32 (-v1, -12);
+    check_i32 (-v2, 15);
+
+    --  Arith i32: rem (sign of the dividend)
+    disp_test ();
+    check_i32 (v1 REM# 5, 2);
+    check_i32 (v1 REM# (-5), 2);
+    check_i32 (v2 REM# 4, -3);
+    check_i32 (v2 REM# (-4), -3);
+
+    --  Arith i32: mod (sign of the divisor)
+    disp_test ();
+    check_i32 (v1 MOD# 5, 2);
+    check_i32 (v1 MOD# (-5), -3);
+    check_i32 (v2 MOD# 4, 1);
+    check_i32 (v2 MOD# (-4), -3);
+
+    --  Comparaisons
+    disp_test ();
+    check_bool (bool'(v1 > 11), bool'[true]);
+    check_bool (bool'(v1 < 16), bool'[true]);
+    check_bool (bool'(v1 <= 9), bool'[false]);
+    check_bool (bool'(v1 >= 22), bool'[false]);
+    check_bool (bool'(v1 /= 21), bool'[true]);
+    check_bool (bool'(v1 = 17), bool'[false]);
+
+    --  Conversions.
+    disp_test ();
+    check_i32 (int32'conv (zero_i32), 0);
+    check_i32 (int32'conv (zero_u32), 0);
+    check_i32 (int32'conv (zero_u8), 0);
+--    check_i32 (int32'conv (zero_u64), 0);  --  Never supported.
+    check_i32 (int32'conv (zero_i64), 0);
+    check_i32 (int32'conv (zero_fp), 0);
+    check_i32 (int32'conv (true_bool), 1);
+    check_i32 (int32'conv (false_bool), 0);
+    check_i32 (int32'conv (zero_enum8), 0);
+  END;
+
+  DECLARE
+    LOCAL VAR v1 : float;
+    LOCAL VAR v2 : float;
+  BEGIN
+    v1 := 3.5;
+    v2 := -2.25;
+
+    puts(string_acc'address (str_float));
+
+    --  function call
+    disp_test ();
+    check_float (add_float (v1, v2), 1.25);
+
+    --  function call
+    disp_test ();
+    check_float (add3_float (v1, v2, v1), 4.75);
+
+    --  Arith fp: add
+    disp_test ();
+    check_float (v1 +# 5.5, 9.0);
+
+    --  Arith fp: sub
+    disp_test ();
+    check_float (v1 -# 5.25, -1.75);
+
+    --  Arith fp: mul
+    disp_test ();
+    check_float (v1 *# 4.0, 14.0);
+
+    --  Arith fp: div
+    disp_test ();
+    check_float (v1 /# 0.5, 7.0);
+    check_float (v2 /# 2.0, -1.125);
+
+    --  Arith fp: abs
+    disp_test ();
+    check_float (ABS v1, 3.5);
+    check_float (ABS v2, 2.25);
+
+    --  Arith fp: neg
+    disp_test ();
+    check_float (-v1, -3.5);
+    check_float (-v2, 2.25);
+
+    --  Comparaisons
+    disp_test ();
+    check_bool (bool'(v1 > 3.0), bool'[true]);
+    check_bool (bool'(v1 < 3.75), bool'[true]);
+    check_bool (bool'(v1 <= 2.5), bool'[false]);
+    check_bool (bool'(v1 >= 4.0), bool'[false]);
+    check_bool (bool'(v1 /= 1.25), bool'[true]);
+    check_bool (bool'(v1 = 0.25), bool'[false]);
+
+    --  Conversions.
+    disp_test ();
+    check_float (float'conv (zero_i32), 0.0);
+--  Others were never supported.
+--    check_float (float'conv (zero_u32), 0.0);
+--    check_float (float'conv (zero_u8), 0.0);
+--    check_float (float'conv (zero_u64), 0.0);
+    check_float (float'conv (zero_i64), 0.0);
+    check_float (float'conv (zero_fp), 0.0);
+--    check_float (float'conv (true_bool), 1.0);
+--    check_float (float'conv (false_bool), 0.0);
+  END;
+
+  DECLARE
+    LOCAL VAR v1 : int64;
+    LOCAL VAR v2 : int64;
+  BEGIN
+    v1 := 14;
+    v2 := -11;
+
+    --  i64 call
+    disp_test ();
+    check_i64 (add2_i64 (v1, 5), 19);
+
+    --  Arith i64: add
+    disp_test ();
+    check_i64 (v1 +# 5, 19);
+
+    --  Arith i64: sub
+    disp_test ();
+    check_i64 (v1 -# 4, 10);
+
+    --  Arith i64: mul
+    disp_test ();
+    check_i64 (v1 *# 3, 42);
+    check_i64 (v2 *# 6, -66);
+
+    --  Arith i64: div
+    disp_test ();
+    check_i64 (v1 /# 3, 4);
+    check_i64 (v2 /# -5, 2);
+
+    --  Arith i64: abs
+    disp_test ();
+    check_i64 (ABS v1, 14);
+    check_i64 (ABS v2, 11);
+
+    --  Arith i64: neg
+    disp_test ();
+    check_i64 (-v1, -14);
+    check_i64 (-v2, 11);
+
+    --  Arith i64: rem (sign of the dividend)
+    disp_test ();
+    check_i64 (v1 REM# 5, 4);
+    check_i64 (v1 REM# (-5), 4);
+    check_i64 (v2 REM# 4, -3);
+    check_i64 (v2 REM# (-4), -3);
+
+    --  Arith i64: mod (sign of the divisor)
+    disp_test ();
+    check_i64 (v1 MOD# 5, 4);
+    check_i64 (v1 MOD# (-5), -1);
+    check_i64 (v2 MOD# 4, 1);
+    check_i64 (v2 MOD# (-4), -3);
+
+    --  Arith i64: large constants
+    disp_test ();
+    check_i64 (v1 +# 16#01234567_89abcdef#, 16#01234567_89abcdfd#);
+
+    --  Comparaisons
+    disp_test ();
+    check_bool (bool'(v1 > 11), bool'[true]);
+    check_bool (bool'(v1 < 16), bool'[true]);
+    check_bool (bool'(v1 <= 9), bool'[false]);
+    check_bool (bool'(v1 >= 22), bool'[false]);
+    check_bool (bool'(v1 /= 21), bool'[true]);
+    check_bool (bool'(v1 = 17), bool'[false]);
+
+    --  Conversions.
+    disp_test ();
+    check_i64 (int64'conv (zero_i32), 0);
+    check_i64 (int64'conv (zero_u32), 0);
+    check_i64 (int64'conv (zero_u8), 0);
+--    check_i64 (int64'conv (zero_u64), 0);  --  Never supported.
+    check_i64 (int64'conv (zero_i64), 0);
+    check_i64 (int64'conv (zero_fp), 0);
+    check_i64 (int64'conv (true_bool), 1);
+    check_i64 (int64'conv (false_bool), 0);
+  END;
+
+  DECLARE
+    LOCAL VAR t : bool;
+    LOCAL VAR f : bool;
+  BEGIN
+    t := bool'[true];
+    f := bool'[false];
+
+    --  Test function call
+    disp_test ();
+    check_bool (andn (t, f), bool'[true]);
+    check_bool (cmpi32 (12), bool'[true]);
+    IF cmpi32 (-5) THEN
+      error ();
+    END IF;
+
+    --  Test or
+    disp_test ();
+    check_bool (t OR f, bool'[true]);
+    check_bool (t OR t, bool'[true]);
+    check_bool (f OR t, bool'[true]);
+    check_bool (f OR f, bool'[false]);
+
+    --  Test and
+    disp_test ();
+    check_bool (t AND f, bool'[false]);
+    check_bool (t AND t, bool'[true]);
+    check_bool (f AND t, bool'[false]);
+    check_bool (f AND f, bool'[false]);
+
+    --  Test xor
+    disp_test ();
+    check_bool (t XOR f, bool'[true]);
+    check_bool (t XOR t, bool'[false]);
+    check_bool (f XOR t, bool'[true]);
+    check_bool (f XOR f, bool'[false]);
+
+    --  Test not
+    disp_test ();
+    check_bool (NOT t, bool'[false]);
+    check_bool (NOT f, bool'[true]);
+
+    --  Test operators in if.
+    disp_test ();
+    IF bool'(t < f) THEN
+      error ();
+    END IF;
+    IF NOT bool'(t > f) THEN
+      error ();
+    END IF;
+    IF bool'(t = f) OR bool'(f >= t) THEN
+      error ();
+    END IF;
+    IF f THEN
+      error ();
+    END IF;
+    IF bool'[false] THEN
+      error ();
+    END IF;
+
+    --  Comparaisons
+    disp_test ();
+    check_bool (bool'(t > f), bool'[true]);
+    check_bool (bool'(t < f), bool'[false]);
+    check_bool (bool'(t <= f), bool'[false]);
+    check_bool (bool'(f >= t), bool'[false]);
+    check_bool (bool'(f /= t), bool'[true]);
+    check_bool (bool'(t = f), bool'[false]);
+
+    --  Conversions.
+    disp_test ();
+    check_bool (bool'conv (zero_i32), bool'[false]);
+    check_bool (bool'conv (zero_u32), bool'[false]);
+--    check_bool (bool'conv (zero_u8), bool'[false]);
+--    check_bool (int64'conv (zero_u64), bool'[false]);  --  Never supported.
+    check_bool (bool'conv (zero_i64), bool'[false]);
+--    check_bool (bool'conv (zero_fp), bool'[false]);
+    check_bool (bool'conv (true_bool), bool'[true]);
+    check_bool (bool'conv (false_bool), bool'[false]);
+  END;
+
+  DECLARE
+    LOCAL VAR v1 : uns32;
+    LOCAL VAR v2 : uns32;
+  BEGIN
+    v1 := 120;
+    v2 := 7;
+
+    --  Arith u32: add
+    disp_test ();
+    check_u32 (v1 +# 5, 125);
+
+    --  Arith u32: sub
+    disp_test ();
+    check_u32 (v1 -# 4, 116);
+
+    --  Arith u32: mul
+    disp_test ();
+    check_u32 (v1 *# 3, 360);
+
+    --  Arith u32: div
+    disp_test ();
+    check_u32 (v1 /# 6, 20);
+
+    --  Arith u32: rem (sign of the dividend)
+    disp_test ();
+    check_u32 (v2 REM# 3, 1);
+
+    --  Comparaisons
+    disp_test ();
+    check_bool (bool'(v1 > 10), bool'[true]);
+    check_bool (bool'(v1 < 16), bool'[false]);
+    check_bool (bool'(v1 <= 9), bool'[false]);
+    check_bool (bool'(v1 >= 22), bool'[true]);
+    check_bool (bool'(v1 /= 21), bool'[true]);
+    check_bool (bool'(v1 = 17), bool'[false]);
+
+    --  Conversions.
+    disp_test ();
+    check_u32 (uns32'conv (zero_i32), 0);
+    check_u32 (uns32'conv (zero_u32), 0);
+    check_u32 (uns32'conv (zero_u8), 0);
+--    check_u32 (uns32'conv (zero_u64), 0);  --  Never supported.
+--    check_u32 (uns32'conv (zero_i64), 0);
+--    check_u32 (uns32'conv (zero_fp), 0);
+    check_u32 (uns32'conv (true_bool), 1);
+    check_u32 (uns32'conv (false_bool), 0);
+
+    --  bitwise operators
+    disp_test ();
+    check_u32 (v2 AND 3, 3);
+    check_u32 (v2 OR 8, 15);
+    check_u32 (NOT v2, 16#ffff_fff8#);
+  END;
+
+  DECLARE
+    LOCAL VAR v1 : uns64;
+    LOCAL VAR v2 : uns64;
+  BEGIN
+    v1 := 120;
+    v2 := 7;
+
+    --  Arith u64: add
+    disp_test ();
+    check_u64 (v1 +# 5, 125);
+
+    --  Arith u64: sub
+    disp_test ();
+    check_u64 (v1 -# 4, 116);
+
+    --  Arith u64: mul
+    disp_test ();
+    check_u64 (v1 *# 3, 360);
+
+    --  Arith u64: div
+    disp_test ();
+    check_u64 (v1 /# 6, 20);
+
+    --  Arith u64: rem (sign of the dividend)
+    disp_test ();
+    check_u64 (v2 REM# 3, 1);
+
+    --  Comparaisons
+    disp_test ();
+    check_bool (bool'(v1 > 10), bool'[true]);
+    check_bool (bool'(v1 < 16), bool'[false]);
+    check_bool (bool'(v1 <= 9), bool'[false]);
+    check_bool (bool'(v1 >= 22), bool'[true]);
+    check_bool (bool'(v1 /= 21), bool'[true]);
+    check_bool (bool'(v1 = 17), bool'[false]);
+
+    --  Conversions.
+    disp_test ();
+--    check_u64 (uns64'conv (zero_i32), 0);
+--    check_u64 (uns64'conv (zero_u32), 0);
+--    check_u64 (uns64'conv (zero_u8), 0);
+    check_u64 (uns64'conv (zero_u64), 0);  --  Never supported.
+--    check_u64 (uns64'conv (zero_i64), 0);
+--    check_u64 (uns64'conv (zero_fp), 0);
+--    check_u64 (uns64'conv (true_bool), 1);
+--    check_u64 (uns64'conv (false_bool), 0);
+
+    --  bitwise operators
+    disp_test ();
+    check_u64 (v2 AND 3, 3);
+    check_u64 (v2 OR 8, 15);
+    check_u64 ((NOT v2) AND 255, 16#f8#);
+  END;
+
+  DECLARE
+    LOCAL VAR v1 : enum8;
+    LOCAL VAR v2 : enum8;
+  BEGIN
+    v1 := enum8'[e8_1];
+    v2 := enum8'[e8_0];
+
+    --  Comparaisons
+    disp_test ();
+    check_bool (bool'(v1 > enum8'[e8_0]), bool'[true]);
+    check_bool (bool'(v1 < enum8'[e8_1]), bool'[false]);
+    check_bool (bool'(v1 <= enum8'[e8_1]), bool'[true]);
+    check_bool (bool'(v1 >= enum8'[e8_2]), bool'[false]);
+    check_bool (bool'(v1 /= enum8'[e8_0]), bool'[true]);
+    check_bool (bool'(v1 = enum8'[e8_0]), bool'[false]);
+
+    --  Conversions.
+    disp_test ();
+    check_enum8 (enum8'conv (zero_i32), enum8'[e8_0]);
+--    check_u64 (uns64'conv (zero_u32), 0);
+--    check_u64 (uns64'conv (zero_u8), 0);
+--    check_u64 (uns64'conv (zero_u64), 0);  --  Never supported.
+--    check_u64 (uns64'conv (zero_i64), 0);
+--    check_u64 (uns64'conv (zero_fp), 0);
+--    check_u64 (uns64'conv (true_bool), 1);
+--    check_u64 (uns64'conv (false_bool), 0);
+  END;
+
+  --  Test alloca
+  disp_test ();
+  disp_indent (5);
+  putchar ('|');
+  putchar (10);
+  disp_indent (17);
+  putchar ('|');
+  putchar (10);
+
+  --  Test case
+  disp_test ();
+  test_case ();
+
+  --  Test indexes
+  DECLARE
+    LOCAL VAR i: uns32;
+    LOCAL VAR l_arr5_4 : SUBARRAY arr5_array[4];
+  BEGIN
+    disp_test ();
+    --  Write
+    i := 0;
+    LOOP 1:
+      IF bool'(i = 4) THEN
+        EXIT LOOP 1;
+      END IF;
+      v_arr5_4[i][0] := 2;
+      l_arr5_4[i][1] := v_arr5_4[i][0] +# 1;
+      v_arr5_4[i][2] := l_arr5_4[i][1] +# 1;
+      i := i +# 1;
+    END LOOP;
+    --  Check
+    i := 0;
+    LOOP 1:
+      IF bool'(i = 4) THEN
+        EXIT LOOP 1;
+      END IF;
+      IF bool'(v_arr5_4[i][2] /= 4) THEN
+        error ();
+      END IF;
+      IF bool'(l_arr5_4[i][1] /= 3) THEN
+        error ();
+      END IF;
+      i := i +# 1;
+    END LOOP;
+  END;
+
+  DECLARE
+    LOCAL VAR i: uns32;
+    LOCAL VAR l_rec8_2 : SUBARRAY rec8_array[2];
+  BEGIN
+    disp_test ();
+    --  Write
+    i := 0;
+    LOOP 1:
+      IF bool'(i = 2) THEN
+        EXIT LOOP 1;
+      END IF;
+      v_rec8_2[i].a := 2;
+      l_rec8_2[i].a := v_rec8_2[i].a +# 1;
+      v_rec8_2[i].b := l_rec8_2[i].a +# 1;
+      i := i +# 1;
+    END LOOP;
+    --  Check
+    i := 0;
+    LOOP 1:
+      IF bool'(i = 2) THEN
+        EXIT LOOP 1;
+      END IF;
+      IF bool'(v_rec8_2[i].b /= 4) THEN
+        error ();
+      END IF;
+      IF bool'(l_rec8_2[i].a /= 3) THEN
+        error ();
+      END IF;
+      i := i +# 1;
+    END LOOP;
+  END;
+
+  DECLARE
+    LOCAL VAR i: uns32;
+    LOCAL VAR l_arr32_3 : SUBARRAY arr32_array[3];
+  BEGIN
+    disp_test ();
+    --  Write
+    i := 0;
+    LOOP 1:
+      IF bool'(i = 3) THEN
+        EXIT LOOP 1;
+      END IF;
+      v_arr32_3[i][0] := 2;
+      l_arr32_3[i][1] := v_arr32_3[i][0] +# 1;
+      v_arr32_3[i][3] := l_arr32_3[i][1] +# 1;
+      l_arr32_3[i][5] := v_arr32_3[i][3] +# 1;
+      i := i +# 1;
+    END LOOP;
+    --  Check
+    i := 0;
+    LOOP 1:
+      IF bool'(i = 3) THEN
+        EXIT LOOP 1;
+      END IF;
+      IF bool'(l_arr32_3[i][5] /= 5) THEN
+        error ();
+      END IF;
+      IF bool'(v_arr32_3[i][3] /= 4) THEN
+        error ();
+      END IF;
+      i := i +# 1;
+    END LOOP;
+  END;
+
+  --  Call with more than 8 params.
+  disp_test();
+  call_9iargs (1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+  disp_test();
+  call_9fargs (1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
+
+  --  nested subprograms
+  disp_test();
+  call_nested (1, 2, 3);
+
+  --  Access in constant
+  disp_test ();
+  puts (banner1_acc);
+
+  --  Address of argument
+  disp_test ();
+  call_arg_addr (1, 2, 3.0);
+
+  --  TODO:
+  --  U8
+  --  Spill (use div, mod).
+  --  R12 and R13 in SIB.
+
+  RETURN status;
+END;

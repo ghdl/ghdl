@@ -28,4 +28,7 @@ package Ortho_Code.X86.Flags_Windows is
 
    --  Alignment for double (64 bit float).
    Mode_F64_Align : constant Natural := 3;
+
+   --  32 bits.
+   M64 : constant Boolean := False;
 end Ortho_Code.X86.Flags_Windows;

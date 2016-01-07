@@ -114,6 +114,11 @@ package body Binary_File is
       return Get_Scope (Sym) = Sym_Local;
    end S_Local;
 
+   function Is_Symbol_Code (Sym : Symbol) return Boolean is
+   begin
+      return Symbols.Table (Sym).Code;
+   end Is_Symbol_Code;
+
    procedure Create_Section (Sect : out Section_Acc;
                              Name : String; Flags : Section_Flags)
    is
@@ -264,11 +269,13 @@ package body Binary_File is
       return Sect.Pc;
    end Get_Pc;
 
-
    procedure Prealloc (L : Pc_Type) is
    begin
       Sect_Prealloc (Cur_Sect, L);
    end Prealloc;
+
+   --  Reloc to be adjusted at end_insn.
+   Pcrel_Reloc : Reloc_Acc := null;
 
    procedure Start_Insn is
    begin
@@ -322,6 +329,11 @@ package body Binary_File is
       Len : Natural;
       Insn_Len : Natural;
    begin
+      if Pcrel_Reloc /= null then
+         Pcrel_Reloc.Neg_Addend := Cur_Sect.Pc - Pcrel_Reloc.Addr;
+         Pcrel_Reloc := null;
+      end if;
+
       --if Insn_Pc = 0 then
       --   --  start_insn was not called.
       --   raise Program_Error;
@@ -351,65 +363,23 @@ package body Binary_File is
       Cur_Sect.Insn_Pc := 0;
    end End_Insn;
 
-   procedure Gen_B8 (B : Byte) is
+   procedure Gen_8 (B : Byte) is
    begin
       Cur_Sect.Data (Cur_Sect.Pc) := B;
       Cur_Sect.Pc := Cur_Sect.Pc + 1;
-   end Gen_B8;
+   end Gen_8;
 
-   procedure Gen_B16 (B0, B1 : Byte) is
+   procedure Gen_8 (B0, B1 : Byte) is
    begin
       Cur_Sect.Data (Cur_Sect.Pc + 0) := B0;
       Cur_Sect.Data (Cur_Sect.Pc + 1) := B1;
       Cur_Sect.Pc := Cur_Sect.Pc + 2;
-   end Gen_B16;
+   end Gen_8;
 
-   procedure Gen_Le8 (B : Unsigned_32) is
-   begin
-      Cur_Sect.Data (Cur_Sect.Pc) := Byte (B and 16#Ff#);
-      Cur_Sect.Pc := Cur_Sect.Pc + 1;
-   end Gen_Le8;
-
-   procedure Gen_Le16 (B : Unsigned_32) is
-   begin
-      Cur_Sect.Data (Cur_Sect.Pc + 0) := Byte (Shift_Right (B, 0) and 16#Ff#);
-      Cur_Sect.Data (Cur_Sect.Pc + 1) := Byte (Shift_Right (B, 8) and 16#Ff#);
-      Cur_Sect.Pc := Cur_Sect.Pc + 2;
-   end Gen_Le16;
-
-   procedure Gen_Be16 (B : Unsigned_32) is
-   begin
-      Cur_Sect.Data (Cur_Sect.Pc + 0) := Byte (Shift_Right (B, 8) and 16#Ff#);
-      Cur_Sect.Data (Cur_Sect.Pc + 1) := Byte (Shift_Right (B, 0) and 16#Ff#);
-      Cur_Sect.Pc := Cur_Sect.Pc + 2;
-   end Gen_Be16;
-
-   procedure Write_B8 (Sect : Section_Acc; Pc : Pc_Type; V : Unsigned_8) is
+   procedure Write_8 (Sect : Section_Acc; Pc : Pc_Type; V : Unsigned_8) is
    begin
       Sect.Data (Pc) := Byte (V);
-   end Write_B8;
-
-   procedure Write_Be16 (Sect : Section_Acc; Pc : Pc_Type; V : Unsigned_32) is
-   begin
-      Sect.Data (Pc + 0) := Byte (Shift_Right (V, 8) and 16#Ff#);
-      Sect.Data (Pc + 1) := Byte (Shift_Right (V, 0) and 16#Ff#);
-   end Write_Be16;
-
-   procedure Write_Le32 (Sect : Section_Acc; Pc : Pc_Type; V : Unsigned_32) is
-   begin
-      Sect.Data (Pc + 0) := Byte (Shift_Right (V, 0) and 16#Ff#);
-      Sect.Data (Pc + 1) := Byte (Shift_Right (V, 8) and 16#Ff#);
-      Sect.Data (Pc + 2) := Byte (Shift_Right (V, 16) and 16#Ff#);
-      Sect.Data (Pc + 3) := Byte (Shift_Right (V, 24) and 16#Ff#);
-   end Write_Le32;
-
-   procedure Write_Be32 (Sect : Section_Acc; Pc : Pc_Type; V : Unsigned_32) is
-   begin
-      Sect.Data (Pc + 0) := Byte (Shift_Right (V, 24) and 16#Ff#);
-      Sect.Data (Pc + 1) := Byte (Shift_Right (V, 16) and 16#Ff#);
-      Sect.Data (Pc + 2) := Byte (Shift_Right (V, 8) and 16#Ff#);
-      Sect.Data (Pc + 3) := Byte (Shift_Right (V, 0) and 16#Ff#);
-   end Write_Be32;
+   end Write_8;
 
    procedure Write_16 (Sect : Section_Acc; Pc : Pc_Type; B : Unsigned_32)
    is
@@ -429,6 +399,24 @@ package body Binary_File is
       Sect.Data (Pc + 0 .. Pc + 3) := To_B4 (B);
    end Write_32;
 
+   procedure Write_64 (Sect : Section_Acc; Pc : Pc_Type; B : Unsigned_64)
+   is
+      subtype B8 is Byte_Array_Base (0 .. 7);
+      function To_B8 is new Ada.Unchecked_Conversion
+        (Source => Unsigned_64, Target => B8);
+   begin
+      Sect.Data (Pc + 0 .. Pc + 7) := To_B8 (B);
+   end Write_64;
+
+   procedure Write_Addr (Sect : Section_Acc; Pc : Pc_Type; B : Pc_Type)
+   is
+      subtype BPC is Byte_Array_Base (0 .. Pc_Type_Sizeof - 1);
+      function To_BPC is new Ada.Unchecked_Conversion
+        (Source => Pc_Type, Target => BPC);
+   begin
+      Sect.Data (Pc + 0 .. Pc + Pc_Type_Sizeof - 1) := To_BPC (B);
+   end Write_Addr;
+
    procedure Gen_16 (B : Unsigned_32) is
    begin
       Write_16 (Cur_Sect, Cur_Sect.Pc, B);
@@ -441,94 +429,73 @@ package body Binary_File is
       Cur_Sect.Pc := Cur_Sect.Pc + 4;
    end Gen_32;
 
-   function Read_Le32 (Sect : Section_Acc; Pc : Pc_Type) return Unsigned_32 is
+   function Read_32 (Sect : Section_Acc; Pc : Pc_Type) return Unsigned_32
+   is
+      subtype B4 is Byte_Array_Base (0 .. 3);
+      function From_B4 is new Ada.Unchecked_Conversion
+        (Source => B4, Target => Unsigned_32);
    begin
-      return Shift_Left (Unsigned_32 (Sect.Data (Pc + 0)), 0)
-        or Shift_Left (Unsigned_32 (Sect.Data (Pc + 1)), 8)
-        or Shift_Left (Unsigned_32 (Sect.Data (Pc + 2)), 16)
-        or Shift_Left (Unsigned_32 (Sect.Data (Pc + 3)), 24);
-   end Read_Le32;
+      return From_B4 (Sect.Data (Pc + 0 .. Pc + 3));
+   end Read_32;
 
-   function Read_Be32 (Sect : Section_Acc; Pc : Pc_Type) return Unsigned_32 is
+   function Read_Addr (Sect : Section_Acc; Pc : Pc_Type) return Pc_Type
+   is
+      subtype BPC is Byte_Array_Base (0 .. Pc_Type_Sizeof - 1);
+      function From_BPC is new Ada.Unchecked_Conversion
+        (Source => BPC, Target => Pc_Type);
    begin
-      return Shift_Left (Unsigned_32 (Sect.Data (Pc + 0)), 24)
-        or Shift_Left (Unsigned_32 (Sect.Data (Pc + 1)), 16)
-        or Shift_Left (Unsigned_32 (Sect.Data (Pc + 2)), 8)
-        or Shift_Left (Unsigned_32 (Sect.Data (Pc + 3)), 0);
-   end Read_Be32;
+      return From_BPC (Sect.Data (Pc + 0 .. Pc + Pc_Type_Sizeof - 1));
+   end Read_Addr;
 
-   procedure Add_Le32 (Sect : Section_Acc; Pc : Pc_Type; V : Unsigned_32) is
+   procedure Add_32 (Sect : Section_Acc; Pc : Pc_Type; V : Unsigned_32) is
    begin
-      Write_Le32 (Sect, Pc, V + Read_Le32 (Sect, Pc));
-   end Add_Le32;
+      Write_32 (Sect, Pc, V + Read_32 (Sect, Pc));
+   end Add_32;
 
-   procedure Patch_Le32 (Pc : Pc_Type; V : Unsigned_32) is
+   procedure Add_Addr (Sect : Section_Acc; Pc : Pc_Type; V : Pc_Type) is
    begin
-      if Pc + 4 > Get_Current_Pc then
-         raise Program_Error;
-      end if;
-      Write_Le32 (Cur_Sect, Pc, V);
-   end Patch_Le32;
-
-   procedure Patch_Be32 (Pc : Pc_Type; V : Unsigned_32) is
-   begin
-      if Pc + 4 > Get_Current_Pc then
-         raise Program_Error;
-      end if;
-      Write_Be32 (Cur_Sect, Pc, V);
-   end Patch_Be32;
-
-   procedure Patch_Be16 (Pc : Pc_Type; V : Unsigned_32) is
-   begin
-      if Pc + 2 > Get_Current_Pc then
-         raise Program_Error;
-      end if;
-      Write_Be16 (Cur_Sect, Pc, V);
-   end Patch_Be16;
-
-   procedure Patch_B8 (Pc : Pc_Type; V : Unsigned_8) is
-   begin
-      if Pc >= Get_Current_Pc then
-         raise Program_Error;
-      end if;
-      Write_B8 (Cur_Sect, Pc, V);
-   end Patch_B8;
+      Write_Addr (Sect, Pc, V + Read_Addr (Sect, Pc));
+   end Add_Addr;
 
    procedure Patch_32 (Pc : Pc_Type; V : Unsigned_32) is
    begin
-      if Pc + 4 > Get_Current_Pc then
-         raise Program_Error;
-      end if;
+      pragma Assert (Pc + 4 <= Get_Current_Pc);
       Write_32 (Cur_Sect, Pc, V);
    end Patch_32;
 
-   procedure Gen_Le32 (B : Unsigned_32) is
+   procedure Patch_16 (Pc : Pc_Type; V : Unsigned_32) is
    begin
-      Write_Le32 (Cur_Sect, Cur_Sect.Pc, B);
-      Cur_Sect.Pc := Cur_Sect.Pc + 4;
-   end Gen_Le32;
+      pragma Assert (Pc + 2 <= Get_Current_Pc);
+      Write_16 (Cur_Sect, Pc, V);
+   end Patch_16;
 
-   procedure Gen_Be32 (B : Unsigned_32) is
+   procedure Patch_8 (Pc : Pc_Type; V : Unsigned_8) is
    begin
-      Write_Be32 (Cur_Sect, Cur_Sect.Pc, B);
-      Cur_Sect.Pc := Cur_Sect.Pc + 4;
-   end Gen_Be32;
+      pragma Assert (Pc + 1 <= Get_Current_Pc);
+      Write_8 (Cur_Sect, Pc, V);
+   end Patch_8;
 
-   procedure Gen_Data_Le8 (B : Unsigned_32) is
+   procedure Gen_64 (B : Unsigned_64) is
+   begin
+      Write_64 (Cur_Sect, Cur_Sect.Pc, B);
+      Cur_Sect.Pc := Cur_Sect.Pc + 8;
+   end Gen_64;
+
+   procedure Gen_Data_8 (B : Unsigned_8) is
    begin
       if Dump_Asm then
-         Put_Line (HT & ".byte 0x" & Hex_Image (Unsigned_8 (B)));
+         Put_Line (HT & ".byte 0x" & Hex_Image (B));
       end if;
-      Gen_Le8 (B);
-   end Gen_Data_Le8;
+      Gen_8 (Byte (B));
+   end Gen_Data_8;
 
-   procedure Gen_Data_Le16 (B : Unsigned_32) is
+   procedure Gen_Data_16 (B : Unsigned_32) is
    begin
       if Dump_Asm then
          Put_Line (HT & ".half 0x" & Hex_Image (Unsigned_16 (B)));
       end if;
-      Gen_Le16 (B);
-   end Gen_Data_Le16;
+      Gen_16 (B);
+   end Gen_Data_16;
 
    procedure Gen_Data_32 (Sym : Symbol; Offset : Integer_32) is
    begin
@@ -554,13 +521,22 @@ package body Binary_File is
       end case;
    end Gen_Data_32;
 
-   function Create_Symbol (Name : O_Ident) return Symbol
+   function To_Unsigned_32 (Off : Pc_Type) return Unsigned_32 is
+   begin
+      --  if Off >= 16#8000_0000# and Off < 16#ffff_ffff_8000_0000# then
+      --     raise Constraint_Error;
+      --  end if;
+      return Unsigned_32 (Off and 16#ffff_ffff#);
+   end To_Unsigned_32;
+
+   function Create_Symbol (Name : O_Ident; Code : Boolean) return Symbol
    is
    begin
       Symbols.Append (Symbol_Type'(Section => null,
                                    Value => 0,
                                    Scope => Sym_Undef,
                                    Used => False,
+                                   Code => Code,
                                    Name => Name,
                                    Relocs => null,
                                    Number => 0));
@@ -575,6 +551,7 @@ package body Binary_File is
                                    Value => 0,
                                    Scope => Sym_Local,
                                    Used => False,
+                                   Code => False, --  Don't care.
                                    Name => O_Ident_Nul,
                                    Relocs => null,
                                    Number => Last_Label));
@@ -697,17 +674,22 @@ package body Binary_File is
       end if;
    end Set_Symbol_Pc;
 
-   procedure Add_Reloc (Sym : Symbol; Kind : Reloc_Kind)
+   function Add_Reloc (Sym : Symbol; Kind : Reloc_Kind) return Reloc_Acc
    is
       Reloc : Reloc_Acc;
    begin
       Reloc := new Reloc_Type'(Kind => Kind,
                                Done => False,
+                               Neg_Addend => 0,
                                Sym_Next => Get_Relocs (Sym),
                                Sect_Next => null,
                                Addr => Cur_Sect.Pc,
                                Sym => Sym);
+
+      --  Add reloc to the relocations list of SYM.
       Set_Relocs (Sym, Reloc);
+
+      --  Add reloc to the relocations list of CUR_SECT.
       if Cur_Sect.First_Reloc = null then
          Cur_Sect.First_Reloc := Reloc;
       else
@@ -715,27 +697,48 @@ package body Binary_File is
       end if;
       Cur_Sect.Last_Reloc := Reloc;
       Cur_Sect.Nbr_Relocs := Cur_Sect.Nbr_Relocs + 1;
+
+      return Reloc;
    end Add_Reloc;
 
-   procedure Gen_X86_Pc32 (Sym : Symbol)
+   procedure Add_Reloc (Sym : Symbol; Kind : Reloc_Kind)
    is
+      Res : Reloc_Acc;
+      pragma Unreferenced (Res);
    begin
-      Add_Reloc (Sym, Reloc_Pc32);
-      Gen_Le32 (16#ff_ff_ff_fc#);
+      Res := Add_Reloc (Sym, Kind);
+   end Add_Reloc;
+
+   function Conv is new Ada.Unchecked_Conversion
+     (Source => Integer_32, Target => Unsigned_32);
+
+   procedure Gen_X86_Pc32 (Sym : Symbol; Off : Unsigned_32) is
+   begin
+      --  On X86, displacements (EIP/RIP relative offsets) are relative to the
+      --  PC of the following instruction.  For jmp or jcc, the instruction
+      --  ends just after the disp32, but for x86-64 RIP relative addressing,
+      --  the length of the instruction is not known.  So this relocation will
+      --  be adjusted at the end of the instruction.
+
+      --  Handle only one PCrel relocation per instruction.
+      pragma Assert (Pcrel_Reloc = null);
+
+      Pcrel_Reloc := Add_Reloc (Sym, Reloc_Pc32);
+      Gen_32 (Off);
    end Gen_X86_Pc32;
 
    procedure Gen_Sparc_Disp22 (W : Unsigned_32; Sym : Symbol)
    is
    begin
       Add_Reloc (Sym, Reloc_Disp22);
-      Gen_Be32 (W);
+      Gen_32 (W);
    end Gen_Sparc_Disp22;
 
    procedure Gen_Sparc_Disp30 (W : Unsigned_32; Sym : Symbol)
    is
    begin
       Add_Reloc (Sym, Reloc_Disp30);
-      Gen_Be32 (W);
+      Gen_32 (W);
    end Gen_Sparc_Disp30;
 
    procedure Gen_Sparc_Hi22 (W : Unsigned_32;
@@ -744,7 +747,7 @@ package body Binary_File is
       pragma Unreferenced (Off);
    begin
       Add_Reloc (Sym, Reloc_Hi22);
-      Gen_Be32 (W);
+      Gen_32 (W);
    end Gen_Sparc_Hi22;
 
    procedure Gen_Sparc_Lo10 (W : Unsigned_32;
@@ -753,18 +756,37 @@ package body Binary_File is
       pragma Unreferenced (Off);
    begin
       Add_Reloc (Sym, Reloc_Lo10);
-      Gen_Be32 (W);
+      Gen_32 (W);
    end Gen_Sparc_Lo10;
 
-   function Conv is new Ada.Unchecked_Conversion
-     (Source => Integer_32, Target => Unsigned_32);
+   procedure Gen_Addr (Offset : Integer_32) is
+   begin
+      pragma Warnings (Off);  --  Avoid warning on constant condition.
+      if Pc_Type'Size = 32 then
+         Gen_32 (Conv (Offset));
+      elsif Pc_Type'Size = 64 then
+         Gen_64 (Unsigned_64 (Conv (Offset)));
+      else
+         raise Program_Error;
+      end if;
+      pragma Warnings (On);
+   end Gen_Addr;
+
+   procedure Gen_Abs (Sym : Symbol; Offset : Integer_32) is
+   begin
+      if Sym /= Null_Symbol then
+         Add_Reloc (Sym, Reloc_Abs);
+      end if;
+      Gen_Addr (Offset);
+   end Gen_Abs;
 
    procedure Gen_X86_32 (Sym : Symbol; Offset : Integer_32) is
    begin
+      pragma Assert (Arch = Arch_X86);
       if Sym /= Null_Symbol then
          Add_Reloc (Sym, Reloc_32);
       end if;
-      Gen_Le32 (Conv (Offset));
+      Gen_32 (Conv (Offset));
    end Gen_X86_32;
 
    procedure Gen_Sparc_32 (Sym : Symbol; Offset : Integer_32) is
@@ -772,30 +794,24 @@ package body Binary_File is
       if Sym /= Null_Symbol then
          Add_Reloc (Sym, Reloc_32);
       end if;
-      Gen_Be32 (Conv (Offset));
+      Gen_32 (Conv (Offset));
    end Gen_Sparc_32;
 
-   procedure Gen_Sparc_Ua_32 (Sym : Symbol; Offset : Integer_32)
-   is
-      pragma Unreferenced (Offset);
+   procedure Gen_Ua_32 (Sym : Symbol) is
    begin
       if Sym /= Null_Symbol then
          Add_Reloc (Sym, Reloc_Ua_32);
       end if;
-      Gen_Be32 (0);
-   end Gen_Sparc_Ua_32;
-
-   procedure Gen_Ua_32 (Sym : Symbol; Offset : Integer_32) is
-   begin
-      case Arch is
-         when Arch_X86 =>
-            Gen_X86_32 (Sym, Offset);
-         when Arch_Sparc =>
-            Gen_Sparc_Ua_32 (Sym, Offset);
-         when others =>
-            raise Program_Error;
-      end case;
+      Gen_32 (0);
    end Gen_Ua_32;
+
+   procedure Gen_Ua_Addr (Sym : Symbol; Offset : Integer_32) is
+   begin
+      if Sym /= Null_Symbol then
+         Add_Reloc (Sym, Reloc_Ua_Addr);
+      end if;
+      Gen_Addr (Offset);
+   end Gen_Ua_Addr;
 
    procedure Gen_Ppc_24 (V : Unsigned_32; Sym : Symbol)
    is
@@ -809,19 +825,19 @@ package body Binary_File is
       return Get_Section (Sym).Vaddr + Get_Symbol_Value (Sym);
    end Get_Symbol_Vaddr;
 
-   procedure Write_Left_Be32 (Sect : Section_Acc;
-                              Addr : Pc_Type;
-                              Size : Natural;
-                              Val : Unsigned_32)
+   procedure Write_Left_32 (Sect : Section_Acc;
+                            Addr : Pc_Type;
+                            Size : Natural;
+                            Val : Unsigned_32)
    is
       W : Unsigned_32;
       Mask : Unsigned_32;
    begin
       --  Write value.
       Mask := Shift_Left (1, Size) - 1;
-      W := Read_Be32 (Sect, Addr);
-      Write_Be32 (Sect, Addr, (W and not Mask) or (Val and Mask));
-   end Write_Left_Be32;
+      W := Read_32 (Sect, Addr);
+      Write_32 (Sect, Addr, (W and not Mask) or (Val and Mask));
+   end Write_Left_32;
 
    procedure Set_Wdisp (Sect : Section_Acc;
                         Addr : Pc_Type;
@@ -844,41 +860,45 @@ package body Binary_File is
          end if;
       end if;
       --  Write value.
-      Write_Left_Be32 (Sect, Addr, Size, D / 4);
+      Write_Left_32 (Sect, Addr, Size, D / 4);
    end Set_Wdisp;
 
-   procedure Do_Reloc (Kind : Reloc_Kind;
-                       Sect : Section_Acc; Addr : Pc_Type; Sym : Symbol)
+   procedure Apply_Reloc (Sect : Section_Acc; Reloc : Reloc_Acc)
    is
+      Addr : constant Pc_Type := Reloc.Addr;
+      Sym : constant Symbol := Reloc.Sym;
    begin
-      if Get_Scope (Sym) = Sym_Undef then
-         raise Program_Error;
-      end if;
+      pragma Assert (Get_Scope (Sym) /= Sym_Undef);
 
-      case Kind is
+      case Reloc.Kind is
          when Reloc_32 =>
-            Add_Le32 (Sect, Addr, Unsigned_32 (Get_Symbol_Vaddr (Sym)));
+            Add_32 (Sect, Addr, Unsigned_32 (Get_Symbol_Vaddr (Sym)));
+
+         when Reloc_Abs
+           | Reloc_Ua_Addr =>
+            Add_Addr (Sect, Addr, Get_Symbol_Vaddr (Sym));
 
          when Reloc_Pc32 =>
-            Add_Le32 (Sect, Addr,
-                      Unsigned_32 (Get_Symbol_Vaddr (Sym)
-                                     - (Sect.Vaddr + Addr)));
+            Add_32 (Sect, Addr,
+                    To_Unsigned_32 (Get_Symbol_Vaddr (Sym)
+                                      - (Sect.Vaddr + Addr)
+                                        - Reloc.Neg_Addend));
          when Reloc_Disp22 =>
             Set_Wdisp (Sect, Addr, Sym, 22);
          when Reloc_Disp30 =>
             Set_Wdisp (Sect, Addr, Sym, 30);
          when Reloc_Hi22 =>
-            Write_Left_Be32 (Sect, Addr, 22,
-                             Unsigned_32 (Get_Symbol_Vaddr (Sym) / 1024));
+            Write_Left_32 (Sect, Addr, 22,
+                           Unsigned_32 (Get_Symbol_Vaddr (Sym) / 1024));
          when Reloc_Lo10 =>
-            Write_Left_Be32 (Sect, Addr, 10,
-                             Unsigned_32 (Get_Symbol_Vaddr (Sym)));
+            Write_Left_32 (Sect, Addr, 10,
+                           Unsigned_32 (Get_Symbol_Vaddr (Sym)));
          when Reloc_Ua_32 =>
-            Write_Be32 (Sect, Addr, Unsigned_32 (Get_Symbol_Vaddr (Sym)));
+            Write_32 (Sect, Addr, Unsigned_32 (Get_Symbol_Vaddr (Sym)));
          when Reloc_Ppc_Addr24 =>
             raise Program_Error;
       end case;
-   end Do_Reloc;
+   end Apply_Reloc;
 
    function Is_Reloc_Relative (Reloc : Reloc_Acc) return Boolean is
    begin
@@ -892,11 +912,6 @@ package body Binary_File is
       end case;
    end Is_Reloc_Relative;
 
-   procedure Apply_Reloc (Sect : Section_Acc; Reloc : Reloc_Acc) is
-   begin
-      Do_Reloc (Reloc.Kind, Sect, Reloc.Addr, Reloc.Sym);
-   end Apply_Reloc;
-
    procedure Do_Intra_Section_Reloc (Sect : Section_Acc)
    is
       Prev : Reloc_Acc;
@@ -908,7 +923,7 @@ package body Binary_File is
       while Rel /= null loop
          Next := Rel.Sect_Next;
          if Get_Scope (Rel.Sym) /= Sym_Undef then
-            Do_Reloc (Rel.Kind, Sect, Rel.Addr, Rel.Sym);
+            Apply_Reloc (Sect, Rel);
             Rel.Done := True;
 
             if Get_Section (Rel.Sym) = Sect

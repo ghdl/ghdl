@@ -1,5 +1,5 @@
 --  GHDL Run Time (GRT) -  misc subprograms.
---  Copyright (C) 2002 - 2014 Tristan Gingold
+--  Copyright (C) 2002 - 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -23,7 +23,6 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with Grt.Types; use Grt.Types;
-with Grt.Rtis; use Grt.Rtis;
 
 package Grt.Lib is
    pragma Preelaborate (Grt.Lib);

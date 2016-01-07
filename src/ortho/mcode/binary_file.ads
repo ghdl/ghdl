@@ -43,8 +43,11 @@ package Binary_File is
 
    type Pc_Type is mod System.Memory_Size;
    Null_Pc : constant Pc_Type := 0;
+   --  Number of bytes in a word.
+   Pc_Type_Sizeof : constant := Pc_Type'Size / 8;
 
-   type Arch_Kind is (Arch_Unknown, Arch_X86, Arch_Sparc, Arch_Ppc);
+   type Arch_Kind is
+     (Arch_Unknown, Arch_X86, Arch_X86_64, Arch_Sparc, Arch_Ppc);
    Arch : Arch_Kind := Arch_Unknown;
 
    --  Dump assembly when generated.
@@ -67,7 +70,7 @@ package Binary_File is
 
    --  Create an undefined local (anonymous) symbol in the  current section.
    function Create_Local_Symbol return Symbol;
-   function Create_Symbol (Name : O_Ident) return Symbol;
+   function Create_Symbol (Name : O_Ident; Code : Boolean) return Symbol;
 
    --  Research symbol NAME, very expansive call.
    --  Return NULL_Symbol if not found.
@@ -76,6 +79,9 @@ package Binary_File is
    --  Get the virtual address of a symbol.
    function Get_Symbol_Vaddr (Sym : Symbol) return Pc_Type;
    pragma Inline (Get_Symbol_Vaddr);
+
+   --  Return True iff SYM is a code symbol.
+   function Is_Symbol_Code (Sym : Symbol) return Boolean;
 
    --  Set the value of a symbol.
    procedure Set_Symbol_Pc (Sym : Symbol; Export : Boolean);
@@ -95,7 +101,7 @@ package Binary_File is
    procedure Gen_Space (Length : Integer_32);
 
    --  Add a reloc in the current section at the current address.
-   procedure Gen_X86_Pc32 (Sym : Symbol);
+   procedure Gen_X86_Pc32 (Sym : Symbol; Off : Unsigned_32);
    procedure Gen_Sparc_Disp22 (W : Unsigned_32; Sym : Symbol);
    procedure Gen_Sparc_Disp30 (W : Unsigned_32; Sym : Symbol);
    procedure Gen_Sparc_Hi22 (W : Unsigned_32;
@@ -103,15 +109,18 @@ package Binary_File is
    procedure Gen_Sparc_Lo10 (W : Unsigned_32;
                              Sym : Symbol; Off : Unsigned_32);
 
+   --  An absolute reloc.
+   procedure Gen_Abs (Sym : Symbol; Offset : Integer_32);
+
    --  Add a 32 bits value with a symbol relocation in the current section at
    --  the current address.
    procedure Gen_X86_32 (Sym : Symbol; Offset : Integer_32);
    procedure Gen_Sparc_32 (Sym : Symbol; Offset : Integer_32);
-   procedure Gen_Sparc_Ua_32 (Sym : Symbol; Offset : Integer_32);
 
    procedure Gen_Ppc_24 (V : Unsigned_32; Sym : Symbol);
 
-   procedure Gen_Ua_32 (Sym : Symbol; Offset : Integer_32);
+   procedure Gen_Ua_Addr (Sym : Symbol; Offset : Integer_32);
+   procedure Gen_Ua_32 (Sym : Symbol);
 
    --  Start/finish an instruction in the current section.
    procedure Start_Insn;
@@ -120,28 +129,24 @@ package Binary_File is
    procedure Prealloc (L : Pc_Type);
 
    --  Add bits in the current section.
-   procedure Gen_B8 (B : Byte);
-   procedure Gen_B16 (B0, B1 : Byte);
-   procedure Gen_Le8 (B : Unsigned_32);
-   procedure Gen_Le16 (B : Unsigned_32);
-   procedure Gen_Be16 (B : Unsigned_32);
-   procedure Gen_Le32 (B : Unsigned_32);
-   procedure Gen_Be32 (B : Unsigned_32);
+   procedure Gen_8 (B : Byte);
+   procedure Gen_8 (B0, B1 : Byte);
 
    procedure Gen_16 (B : Unsigned_32);
    procedure Gen_32 (B : Unsigned_32);
+   procedure Gen_64 (B : Unsigned_64);
 
    --  Add bits in the current section, but as stand-alone data.
-   procedure Gen_Data_Le8 (B : Unsigned_32);
-   procedure Gen_Data_Le16 (B : Unsigned_32);
+   procedure Gen_Data_8 (B : Unsigned_8);
+   procedure Gen_Data_16 (B : Unsigned_32);
    procedure Gen_Data_32 (Sym : Symbol; Offset : Integer_32);
 
    --  Modify already generated code.
-   procedure Patch_B8 (Pc : Pc_Type; V : Unsigned_8);
-   procedure Patch_Le32 (Pc : Pc_Type; V : Unsigned_32);
-   procedure Patch_Be32 (Pc : Pc_Type; V : Unsigned_32);
-   procedure Patch_Be16 (Pc : Pc_Type; V : Unsigned_32);
+   procedure Patch_8 (Pc : Pc_Type; V : Unsigned_8);
+   procedure Patch_16 (Pc : Pc_Type; V : Unsigned_32);
    procedure Patch_32 (Pc : Pc_Type; V : Unsigned_32);
+
+   function To_Unsigned_32 (Off : Pc_Type) return Unsigned_32;
 
    --  Binary writers:
 
@@ -158,9 +163,12 @@ private
    type String_Acc is access String;
    --type Section_Flags is new Unsigned_32;
 
+   subtype Pc_Type8 is Pc_Type range 0 .. 255;
+
    --  Relocations.
    type Reloc_Kind is (Reloc_32, Reloc_Pc32,
-                       Reloc_Ua_32,
+                       Reloc_Abs,
+                       Reloc_Ua_32, Reloc_Ua_Addr,
                        Reloc_Disp22, Reloc_Disp30,
                        Reloc_Hi22, Reloc_Lo10,
                        Reloc_Ppc_Addr24);
@@ -170,6 +178,8 @@ private
       Kind : Reloc_Kind;
       --  If true, the reloc was already applied.
       Done : Boolean;
+      --  Negative addend (only for pcrel relocs).
+      Neg_Addend : Pc_Type8;
       --  Next in simply linked list.
       --  next reloc in the section.
       Sect_Next : Reloc_Acc;
@@ -230,12 +240,16 @@ private
    --  SYM_LOCAL: locally generated symbol.
    type Symbol_Scope is (Sym_Undef, Sym_Global, Sym_Private, Sym_Local);
    subtype Symbol_Scope_External is Symbol_Scope range Sym_Undef .. Sym_Global;
+
    type Symbol_Type is record
       Section : Section_Acc;
       Value : Pc_Type;
       Scope : Symbol_Scope;
       --  True if the symbol is referenced/used.
       Used : Boolean;
+      --  True if the symbol represent code (and therefore could be placed in
+      --  a PLT).
+      Code : Boolean;
       --  Name of the symbol.
       Name : O_Ident;
       --  List of relocation made with this symbol.

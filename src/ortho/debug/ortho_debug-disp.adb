@@ -730,8 +730,10 @@ package body Ortho_Debug.Disp is
                while El /= O_Cnode_Null loop
                   Set_Mark;
                   Disp_Ident (El.E_Name);
-                  Put (" = ");
-                  Put (Image (El.E_Val));
+                  if False then
+                     Put (" = ");
+                     Put (Image (El.E_Val));
+                  end if;
                   El := El.E_Next;
                   exit when El = O_Cnode_Null;
                   Put (", ");

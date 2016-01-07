@@ -34,7 +34,6 @@ is
    Output : String_Acc := null;
    type Format_Type is (Format_Coff, Format_Elf);
    Format : constant Format_Type := Format_Elf;
-   Fd : File_Descriptor;
 
    First_File : Natural;
    Opt : String_Acc;
@@ -44,12 +43,29 @@ is
    Res : Natural;
    I : Natural;
    Argc : Natural;
+   Val : Integer;
    procedure Unchecked_Deallocation is new Ada.Unchecked_Deallocation
      (Name => String_Acc, Object => String);
+
+   procedure Write_Output
+   is
+      Fd : File_Descriptor;
+   begin
+      Fd := Create_File (Output.all, Binary);
+      if Fd /= Invalid_FD then
+         case Format is
+            when Format_Elf =>
+               Binary_File.Elf.Write (Fd);
+            when Format_Coff =>
+               Binary_File.Coff.Write (Fd);
+         end case;
+         Close (Fd);
+      end if;
+   end Write_Output;
 begin
    First_File := Natural'Last;
    Exec_Func := null;
-
+   Val := 0;
    Ortho_Front.Init;
 
    Argc := Argument_Count;
@@ -79,6 +95,14 @@ begin
                   return;
                end if;
                Exec_Func := new String'(Argument (I + 1));
+               I := I + 2;
+            elsif Arg = "-a" then
+               if I = Argc then
+                  Put_Line (Standard_Error,
+                            "error: missing value after 'a'");
+                  return;
+               end if;
+               Val := Integer'Value (Argument (I + 1));
                I := I + 2;
             elsif Arg = "-g" then
                Flag_Debug := Debug_Dwarf;
@@ -153,42 +177,58 @@ begin
       return;
    end if;
 
-   if Output /= null then
-      Fd := Create_File (Output.all, Binary);
-      if Fd /= Invalid_FD then
-         case Format is
-            when Format_Elf =>
-               Binary_File.Elf.Write (Fd);
-            when Format_Coff =>
-               Binary_File.Coff.Write (Fd);
-         end case;
-         Close (Fd);
-      end if;
-   elsif Exec_Func /= null then
+   if Exec_Func /= null then
       declare
          Sym : Symbol;
 
-         type Func_Acc is access function return Integer;
+         procedure Putchar (V : Integer);
+         pragma Import (C, Putchar);
+
+         type Func_Acc is access function (V : Integer) return Integer;
          function Conv is new Ada.Unchecked_Conversion
            (Source => Pc_Type, Target => Func_Acc);
          F : Func_Acc;
+
+         --  Set a breakpoint on this procedure under a debugger if you need
+         --  to debug the resulting binary in memory.
+         procedure Breakme (Func : Func_Acc) is
+         begin
+            F := Func;
+         end Breakme;
+
          V : Integer;
          Err : Boolean;
       begin
          Binary_File.Memory.Write_Memory_Init;
+
+         --  Export putchar.
+         Sym := Binary_File.Get_Symbol ("putchar");
+         if Sym /= Null_Symbol then
+            Binary_File.Memory.Set_Symbol_Address (Sym, Putchar'Address);
+         end if;
+
+         --  Relocate.
          Binary_File.Memory.Write_Memory_Relocate (Err);
          if Err then
             return;
          end if;
+
+         --  Dump the binary file.
+         if Output /= null then
+            Write_Output;
+         end if;
+
          Sym := Binary_File.Get_Symbol (Exec_Func.all);
          if Sym = Null_Symbol then
             Put_Line (Standard_Error, "no '" & Exec_Func.all & "' symbol");
          else
-            F := Conv (Get_Symbol_Vaddr (Sym));
-            V := F.all;
+            Breakme (Conv (Get_Symbol_Vaddr (Sym)));
+            V := F.all (Val);
             Put_Line ("Result is " & Integer'Image (V));
          end if;
       end;
+   elsif Output /= null then
+      Write_Output;
    end if;
 
    Set_Exit_Status (Success);

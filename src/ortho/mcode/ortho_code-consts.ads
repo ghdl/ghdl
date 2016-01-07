@@ -142,6 +142,7 @@ private
    type O_Array_Aggr_List is record
       Res : O_Cnode;
       El : Int32;
+      Len : Uns32;
    end record;
 
    type O_Record_Aggr_List is record

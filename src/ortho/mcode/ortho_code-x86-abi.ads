@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ortho_Code.Types; use Ortho_Code.Types;
+with Ortho_Code.X86.Flags;
 
 package Ortho_Code.X86.Abi is
    type O_Abi_Subprg is private;
@@ -27,12 +28,16 @@ package Ortho_Code.X86.Abi is
      (Mode_U8 | Mode_I8 => 0,
       Mode_U16 | Mode_I16 => 1,
       Mode_U32 | Mode_I32 | Mode_F32 | Mode_P32 => 2,
-      Mode_U64 | Mode_I64 => 2,
+      Mode_U64 | Mode_I64 => 2 + Boolean'Pos (Flags.M64),
       Mode_F64 => 2, -- 2 for SVR4-ABI and Darwin, 3 for Windows.
-      Mode_Blk | Mode_X1 | Mode_Nil | Mode_P64 => 0,
+      Mode_P64 => 3,
+      Mode_Blk | Mode_X1 | Mode_Nil => 0,
       Mode_B2 => 0);
 
-   Mode_Ptr : constant Mode_Type := Mode_P32;
+   --  A long and complex expression for: flags.M64 ? Mode_P64 : Mode_P32.
+   Mode_Ptr : constant Mode_Type := Mode_Type'Val
+     (Boolean'Pos (Flags.M64) * Mode_Type'Pos (Mode_P64)
+        + Boolean'Pos (not Flags.M64) * Mode_Type'Pos (Mode_P32));
 
    Flag_Type_Completer : constant Boolean := False;
    Flag_Lower_Stmt : constant Boolean := True;
@@ -78,7 +83,10 @@ package Ortho_Code.X86.Abi is
 private
    --  Target specific data for O_Inter_List.
    type O_Abi_Subprg is record
-      --  For x86: offset of the next argument.
+      --  For x86: offset of the next argument in the stack.
       Offset : Int32 := 0;
+      --  For x86-64: register num.
+      Inum : Natural := 0;
+      Fnum : Natural := 0;
    end record;
 end Ortho_Code.X86.Abi;

@@ -28,10 +28,20 @@ package Elf_Arch64 is
 
    subtype Elf_Off is Elf64_Off;
    subtype Elf_Size is Elf64_Xword;
+   subtype Elf_Addr is Elf64_Addr;
    Elf_Ehdr_Size : constant Natural := Elf64_Ehdr_Size;
    Elf_Shdr_Size : constant Natural := Elf64_Shdr_Size;
    Elf_Phdr_Size : constant Natural := Elf64_Phdr_Size;
    Elf_Sym_Size : constant Natural := Elf64_Sym_Size;
+   Elf_Rel_Size : constant Natural := Elf64_Rel_Size;
+   Elf_Rela_Size : constant Natural := Elf64_Rela_Size;
 
    Elf_Arch_Class : constant Elf_Uchar := ELFCLASS64;
+
+   function Elf_R_Sym (I : Elf64_Xword) return Elf_Word
+     renames Elf64_R_Sym;
+   function Elf_R_Type (I : Elf64_Xword) return Elf_Word
+     renames Elf64_R_Type;
+   function Elf_R_Info (S, T : Elf_Word) return Elf64_Xword
+     renames Elf64_R_Info;
 end Elf_Arch64;

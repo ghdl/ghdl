@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Macho; use Macho;
+with Macho_Arch32; use Macho_Arch32;
 
 package body Binary_File.Macho is
    procedure Write (Fd : GNAT.OS_Lib.File_Descriptor)
@@ -72,8 +73,8 @@ package body Binary_File.Macho is
       end record;
       type Section_Info_Array is array (Natural range <>) of Section_Info_Type;
       Sects_Info : Section_Info_Array (1 .. Nbr_Sections);
-      type Section_32_Array is array (Natural range <>) of Section_32;
-      Sects_Hdr : Section_32_Array (1 .. Nbr_Sections);
+      type Section_Array is array (Natural range <>) of Section;
+      Sects_Hdr : Section_Array (1 .. Nbr_Sections);
       Nbr_Sect : Natural;
       Sect : Section_Acc;
 
@@ -109,10 +110,10 @@ package body Binary_File.Macho is
       end loop;
 
       --  Set sections offset.
-      Sizeof_Cmds := Lc_Size + Segment_Command_32_Size
-        + Nbr_Sect * Section_32_Size
+      Sizeof_Cmds := Lc_Size + Segment_Command_Size
+        + Nbr_Sect * Section_Size
         + Lc_Size + Symtab_Command_Size;
-      File_Offset := Header_32_Size + Sizeof_Cmds;
+      File_Offset := Header_Size + Sizeof_Cmds;
       Seg_Offset := File_Offset;
       for I in 1 .. Nbr_Sect loop
          Sect := Sects_Info (I).Sect;
@@ -141,49 +142,58 @@ package body Binary_File.Macho is
          end if;
       end loop;
 
-      File_Offset := File_Offset + Nbr_Symbols * Nlist_32_Size;
+      File_Offset := File_Offset + Nbr_Symbols * Nlist_Size;
       Strtab_Offset := File_Offset;
 
       --  Write file header.
       declare
-         Hdr : Header_32;
+         Hdr : Header;
+         Cputype : Unsigned_32;
       begin
+         case Arch is
+            when Arch_X86 =>
+               Cputype := Cputype_I386;
+            when Arch_X86_64 =>
+               Cputype := Cputype_I386 + Cpu_Arch_64;
+            when others =>
+               raise Program_Error;
+         end case;
          Hdr := (Magic => Magic,
-                 Cputype => Cputype_I386,
+                 Cputype => Cputype,
                  Cpusubtype => Cpusubtype_I386_All,
                  Filetype => Mh_Object,
                  Ncmds => 2,
                  Sizeofcmds => Unsigned_32 (Sizeof_Cmds),
-                 Flags => 0);
-         Xwrite (Hdr'Address, Header_32_Size);
+                 others => 0);
+         Xwrite (Hdr'Address, Header_Size);
       end;
 
       --  Write segment and section commands.
       declare
          Lc : Load_Command;
-         Seg : Segment_Command_32;
+         Seg : Segment_Command;
       begin
-         Lc := (Cmd => Lc_Segment_32,
-                Cmdsize => Unsigned_32 (Lc_Size + Segment_Command_32_Size
-                                          + Nbr_Sect * Section_32_Size));
+         Lc := (Cmd => Lc_Segment,
+                Cmdsize => Unsigned_32 (Lc_Size + Segment_Command_Size
+                                          + Nbr_Sect * Section_Size));
          Xwrite (Lc'Address, Lc_Size);
          Seg := (Segname => (others => ASCII.NUL),
                  Vmaddr => 0,
                  Vmsize => 0, --  FIXME
-                 Fileoff => Unsigned_32 (Seg_Offset),
-                 Filesize => Unsigned_32 (Symtab_Offset - Seg_Offset),
+                 Fileoff => Addr_T (Seg_Offset),
+                 Filesize => Addr_T (Symtab_Offset - Seg_Offset),
                  Maxprot => 7, --  rwx
                  Initprot => 7,
                  Nsects => Unsigned_32 (Nbr_Sect),
                  Flags => 0);
-         Xwrite (Seg'Address, Segment_Command_32_Size);
+         Xwrite (Seg'Address, Segment_Command_Size);
       end;
 
       --  Write section headers.
       for I in 1 .. Nbr_Sect loop
          Sect := Sects_Info (I).Sect;
          declare
-            Hdr : Section_32 renames Sects_Hdr (I);
+            Hdr : Section renames Sects_Hdr (I);
             Secname_Raw : constant String := Sect.Name.all;
             subtype S_Type is String (1 .. Secname_Raw'Length);
             Secname : S_Type renames Secname_Raw;
@@ -208,15 +218,15 @@ package body Binary_File.Macho is
                Fill_Name (Hdr.Sectname, Secname);
                Fill_Name (Hdr.Segname, "");
             end if;
-            Hdr.Addr := Unsigned_32 (Sect.Vaddr);
-            Hdr.Size := Unsigned_32 (Sect.Pc);
+            Hdr.Addr := Addr_T (Sect.Vaddr);
+            Hdr.Size := Addr_T (Sect.Pc);
             Hdr.Align := Unsigned_32 (Sect.Align);
             Hdr.Reloff := 0;
             Hdr.Nreloc := 0;
             Hdr.Flags := 0;
             Hdr.Reserved1 := 0;
             Hdr.Reserved2 := 0;
-            Xwrite (Hdr'Address, Section_32_Size);
+            Xwrite (Hdr'Address, Section_Size);
          end;
       end loop;
 
@@ -300,13 +310,13 @@ package body Binary_File.Macho is
 
          procedure Write_Symbol (S : Symbol)
          is
-            Sym : Nlist_32;
+            Sym : Nlist;
          begin
             Sym := (N_Strx => Unsigned_32 (Str_Offset),
                     N_Type => 0,
                     N_Sect => 0,
                     N_Desc => 0,
-                    N_Value => Unsigned_32 (Get_Symbol_Value (S)));
+                    N_Value => Addr_T (Get_Symbol_Value (S)));
             Str_Offset := Str_Offset + Get_Symbol_Name_Length (S) + 1;
             if Get_Scope (S) = Sym_Undef then
                Sym.N_Type := N_Undf;
@@ -317,10 +327,9 @@ package body Binary_File.Macho is
                   Sym.N_Type := N_Sect;
                end if;
                Sym.N_Sect := Unsigned_8 (Get_Section (S).Number);
-               Sym.N_Value :=
-                 Sym.N_Value + Unsigned_32 (Get_Section (S).Vaddr);
+               Sym.N_Value := Sym.N_Value + Addr_T (Get_Section (S).Vaddr);
             end if;
-            Xwrite (Sym'Address, Nlist_32_Size);
+            Xwrite (Sym'Address, Nlist_Size);
          end Write_Symbol;
 
          procedure Write_String (Sym : Symbol)

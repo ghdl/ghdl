@@ -18,7 +18,12 @@
 with Ortho_Code.Exprs; use Ortho_Code.Exprs;
 
 package Ortho_Code.X86.Insns is
-   function Reg_Used (Reg : Regs_R32) return Boolean;
+   --  Return True iff OBJ is in a different module.
+   --  This applies to x86-64 only as in that case RIP relative addressing
+   --  cannot be used.
+   function Is_External_Object (Obj : O_Dnode) return Boolean;
+
+   function Reg_Used (Reg : Regs_R64) return Boolean;
 
    --  Split enodes of SUBPRG into instructions.
    procedure Gen_Subprg_Insns (Subprg : Subprogram_Data_Acc);

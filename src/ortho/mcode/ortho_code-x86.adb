@@ -44,7 +44,7 @@ package body Ortho_Code.X86 is
       end case;
    end Inverse_Cc;
 
-   function Get_R64_High (Reg : Regs_R64) return Regs_R32 is
+   function Get_Pair_High (Reg : Regs_Pair) return Regs_R32 is
    begin
       case Reg is
          when R_Edx_Eax =>
@@ -54,9 +54,9 @@ package body Ortho_Code.X86 is
          when R_Esi_Edi =>
             return R_Si;
       end case;
-   end Get_R64_High;
+   end Get_Pair_High;
 
-   function Get_R64_Low (Reg : Regs_R64) return Regs_R32 is
+   function Get_Pair_Low (Reg : Regs_Pair) return Regs_R32 is
    begin
       case Reg is
          when R_Edx_Eax =>
@@ -66,6 +66,6 @@ package body Ortho_Code.X86 is
          when R_Esi_Edi =>
             return R_Di;
       end case;
-   end Get_R64_Low;
+   end Get_Pair_Low;
 
 end Ortho_Code.X86;

@@ -363,32 +363,33 @@ package body Ortho_Code.Consts is
 
    procedure Start_Array_Aggr (List : out O_Array_Aggr_List; Atype : O_Tnode)
    is
+      Num : constant Uns32 := Get_Type_Subarray_Length (Atype);
       Val : Int32;
-      Num : Uns32;
    begin
-      Num := Get_Type_Subarray_Length (Atype);
       Val := Els.Allocate (Integer (Num));
 
       Cnodes.Append (Cnode_Common'(Kind => OC_Array,
                                    Lit_Type => Atype));
       List := (Res => Cnodes.Last,
-               El => Val);
+               El => Val,
+               Len => Num);
       Cnodes.Append (To_Cnode_Common (Cnode_Aggr'(Els => Val,
                                                   Nbr => Int32 (Num))));
    end Start_Array_Aggr;
 
    procedure New_Array_Aggr_El (List : in out O_Array_Aggr_List;
-                                Value : O_Cnode)
-   is
+                                Value : O_Cnode) is
    begin
+      pragma Assert (List.Len > 0);
+      List.Len := List.Len - 1;
       Els.Table (List.El) := Value;
       List.El := List.El + 1;
    end New_Array_Aggr_El;
 
    procedure Finish_Array_Aggr (List : in out O_Array_Aggr_List;
-                                Res : out O_Cnode)
-   is
+                                Res : out O_Cnode) is
    begin
+      pragma Assert (List.Len = 0);
       Res := List.Res;
    end Finish_Array_Aggr;
 
