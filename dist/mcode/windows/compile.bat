@@ -22,8 +22,6 @@ if errorlevel 1 goto failed
 gnatmake %CFLAGS% -gnatn -aI../windows -aI../../../src -aI../../../src/ghdldrv -aI../../../src/psl -aI../../../src/grt -aI../../../src/ortho/mcode -aI../../../src/vhdl -aI../../../src/vhdl/translate ghdl_jit -aI../../../src/ortho -o ghdl.exe -largs grt-cbinding.o clock.o grt-cvpi.o memsegs_c.o win32.o -ldbghelp -Wl,--stack,8404992
 if errorlevel 1 goto failed
 
-strip ghdl.exe
-
 cd ..
 exit /b 0
 

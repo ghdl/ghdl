@@ -4,6 +4,8 @@ if errorlevel 1 goto end
 call windows\complib
 if errorlevel 1 goto end
 
+strip build\ghdl.exe
+
 gnatmake windows/ghdlversion -o windows/ghdlversion.exe
 windows\ghdlversion < ..\..\src\version.ads > windows\version.nsi
 
