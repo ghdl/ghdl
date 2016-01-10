@@ -798,15 +798,18 @@ package body Sem_Assocs is
       Set_Whole_Association_Flag (Assoc, True);
 
       case Get_Kind (Atype) is
-         when Iir_Kind_Array_Subtype_Definition =>
-            Finish_Individual_Assoc_Array_Subtype (Assoc, Atype, 1);
-            Set_Actual_Type (Assoc, Atype);
-         when Iir_Kind_Array_Type_Definition =>
-            Atype := Create_Array_Subtype (Atype, Get_Location (Assoc));
-            Set_Index_Constraint_Flag (Atype, True);
-            Set_Constraint_State (Atype, Fully_Constrained);
-            Set_Actual_Type (Assoc, Atype);
-            Finish_Individual_Assoc_Array (Assoc, Assoc, 1);
+         when Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Array_Type_Definition =>
+            if Get_Constraint_State (Atype) = Fully_Constrained then
+               Finish_Individual_Assoc_Array_Subtype (Assoc, Atype, 1);
+               Set_Actual_Type (Assoc, Atype);
+            else
+               Atype := Create_Array_Subtype (Atype, Get_Location (Assoc));
+               Set_Index_Constraint_Flag (Atype, True);
+               Set_Constraint_State (Atype, Fully_Constrained);
+               Set_Actual_Type (Assoc, Atype);
+               Finish_Individual_Assoc_Array (Assoc, Assoc, 1);
+            end if;
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             Finish_Individual_Assoc_Record (Assoc, Atype);

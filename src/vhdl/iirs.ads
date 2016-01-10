@@ -401,7 +401,7 @@ package Iirs is
    --   Get/Set_Actual_Type (Field3)
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
-   --   Must be Locally unless there is an error on one choice.
+   --  Must be Locally unless there is an error on one choice.
    --   Get/Set_Choice_Staticness (State2)
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
@@ -652,7 +652,8 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
-   --   Get/Set_Entity_Name_List (Field1)
+   --  The type can be constrained due to the expression.
+   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
@@ -666,6 +667,8 @@ package Iirs is
    --   Get/Set_Attribute_Designator (Field6)
    --
    --   Get/Set_Attribute_Specification_Chain (Field7)
+   --
+   --   Get/Set_Entity_Name_List (Field8)
 
    -- Iir_Kind_Attribute_Value (Short)
    --  An attribute value is the element of the chain of attribute of an
@@ -2969,7 +2972,7 @@ package Iirs is
    --  Function declaration corresponding to the function to call.
    --   Get/Set_Implementation (Field3)
    --
-   --  Expr_staticness is defined by §7.4
+   --  Expr_staticness is defined by LRM93 7.4
    --   Get/Set_Expr_Staticness (State1)
 
    -- Iir_Kinds_Dyadic_Operator (Short)
@@ -4201,10 +4204,10 @@ package Iirs is
      Iir_Predefined_None ..
      Iir_Predefined_Functions'Last;
 
-   --  Staticness as defined by LRM93 §6.1 and §7.4
+   --  Staticness as defined by LRM93 6.1 and 7.4
    type Iir_Staticness is (Unknown, None, Globally, Locally);
 
-   -- Staticness as defined by LRM93 §6.1 and §7.4
+   -- Staticness as defined by LRM93 6.1 and 7.4
    function Min (L,R: Iir_Staticness) return Iir_Staticness renames
      Iir_Staticness'Min;
 
@@ -5259,7 +5262,7 @@ package Iirs is
    function Get_Entity_Class (Target : Iir) return Token_Type;
    procedure Set_Entity_Class (Target : Iir; Kind : Token_Type);
 
-   --  Field: Field1 (uc)
+   --  Field: Field8 (uc)
    function Get_Entity_Name_List (Target : Iir) return Iir_List;
    procedure Set_Entity_Name_List (Target : Iir; Names : Iir_List);
 

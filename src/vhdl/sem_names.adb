@@ -897,7 +897,6 @@ package body Sem_Names is
       Index_Type : Iir;
       Prefix : Iir;
       Prefix_Name : Iir;
-      Staticness : Iir_Staticness;
    begin
       --  LRM93 14.1
       --  Parameter: A locally static expression of type universal_integer, the
@@ -999,18 +998,7 @@ package body Sem_Names is
       --  formed by imposing on an unconstrained array type a globally static
       --  index constraint.
 
-      Staticness := Get_Type_Staticness (Prefix_Type);
-
-      --  In relaxed mode, also consider that globally static expressions have
-      --  a globally static subtype.
-      if Is_Type_Name (Prefix_Name) = Null_Iir
-        and then Staticness = None
-        and then (Flag_Relaxed_Rules or Vhdl_Std = Vhdl_93c)
-      then
-         Staticness := Iir_Staticness'Min (Globally,
-                                           Get_Expr_Staticness (Prefix));
-      end if;
-      Set_Expr_Staticness (Attr, Staticness);
+      Set_Expr_Staticness (Attr, Get_Type_Staticness (Prefix_Type));
    end Finish_Sem_Array_Attribute;
 
    procedure Finish_Sem_Scalar_Type_Attribute
@@ -2905,9 +2893,9 @@ package body Sem_Names is
    function Sem_Array_Attribute_Name (Attr : Iir_Attribute_Name) return Iir
    is
       use Std_Names;
-      Prefix: Iir;
       Prefix_Name : constant Iir := Get_Prefix (Attr);
       Prefix_Type : Iir;
+      Prefix : Iir;
       Res : Iir;
       Res_Type : Iir;
    begin

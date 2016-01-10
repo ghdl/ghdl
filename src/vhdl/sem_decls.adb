@@ -107,6 +107,25 @@ package body Sem_Decls is
       end if;
    end Check_Signal_Type;
 
+   --  Create a globally static subtype.
+   procedure Sem_Force_Static_Type (Decl : Iir; Atype : Iir)
+   is
+      Base_Type : constant Iir := Get_Base_Type (Atype);
+      Res : Iir;
+   begin
+      pragma Assert (Get_Kind (Base_Type) = Iir_Kind_Array_Type_Definition);
+      Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+      Set_Location (Res, Get_Location (Decl));
+      Set_Element_Subtype (Res, Get_Element_Subtype (Atype));
+      Set_Base_Type (Res, Base_Type);
+      Set_Index_Subtype_List (Res, Get_Index_Subtype_List (Atype));
+      Set_Type_Staticness (Res, Globally);
+      Set_Constraint_State (Res, Get_Constraint_State (Atype));
+      Set_Index_Constraint_Flag (Res, Get_Index_Constraint_Flag (Atype));
+      Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Atype));
+      Set_Type (Decl, Res);
+   end Sem_Force_Static_Type;
+
    procedure Sem_Interface_Object_Declaration
      (Inter, Last : Iir; Interface_Kind : Interface_Kind_Type)
    is
@@ -284,6 +303,14 @@ package body Sem_Decls is
                --   LRM93 7.4.2 (Globally static primaries)
                --   3. a generic constant.
                Set_Expr_Staticness (Inter, Globally);
+
+               if A_Type /= Null_Iir
+                 and then (Get_Kind (A_Type)
+                             in Iir_Kinds_Composite_Type_Definition)
+                 and then Get_Type_Staticness (A_Type) = None
+               then
+                  Sem_Force_Static_Type (Inter, A_Type);
+               end if;
             end if;
          when Port_Interface_List =>
             if Get_Kind (Inter) /= Iir_Kind_Interface_Signal_Declaration then
@@ -1580,6 +1607,22 @@ package body Sem_Decls is
       return Deferred_Const;
    end Get_Deferred_Constant;
 
+   procedure Sem_Object_Type_From_Value (Decl : Iir; Value : Iir)
+   is
+      Atype : constant Iir := Get_Type (Decl);
+      Value_Type : constant Iir := Get_Type (Value);
+   begin
+      if not Is_Fully_Constrained_Type (Atype)
+        and then not Is_Error (Value_Type)
+      then
+         if Get_Type_Staticness (Value_Type) >= Globally then
+            Set_Type (Decl, Value_Type);
+         else
+            Sem_Force_Static_Type (Decl, Value_Type);
+         end if;
+      end if;
+   end Sem_Object_Type_From_Value;
+
    procedure Sem_Object_Declaration (Decl: Iir; Parent : Iir; Last_Decl : Iir)
    is
       Deferred_Const : constant Iir := Get_Deferred_Constant (Decl);
@@ -1640,16 +1683,16 @@ package body Sem_Decls is
             Decl);
       end if;
 
-      --  LRM 4.3.1.3
+      --  LRM93 4.3.1.3
       --  It is an error if a variable declaration declares a variable that is
       --  of a file type.
       --
-      --  LRM 4.3.1.1
+      --  LRM93 4.3.1.1
       --  It is an error if a constant declaration declares a constant that is
       --  of a file type, or an access type, or a composite type which has
       --  subelement that is a file type of an access type.
       --
-      --  LRM 4.3.1.2
+      --  LRM93 4.3.1.2
       --  It is an error if a signal declaration declares a signal that is of
       --  a file type [or an access type].
       case Get_Kind (Atype) is
@@ -1817,21 +1860,14 @@ package body Sem_Decls is
 
       case Get_Kind (Decl) is
          when Iir_Kind_Constant_Declaration =>
-            --  LRM93 §3.2.1.1
+            --  LRM93 3.2.1.1
             --  For a constant declared by an object declaration, the index
             --  ranges are defined by the initial value, if the subtype of the
             --  constant is unconstrained; otherwise they are defined by this
             --  subtype.
-            --if Default_Value = Null_Iir
-            --  and then not Sem_Is_Constrained (Atype)
-            --then
-            --   Error_Msg_Sem ("constant declaration of unconstrained "
-            --                  & Disp_Node (Atype) & " is not allowed", Decl);
-            --end if;
-            null;
-            --if Deferred_Const = Null_Iir then
-            --   Name_Visible (Decl);
-            --end if;
+            if Default_Value /= Null_Iir then
+               Sem_Object_Type_From_Value (Decl, Default_Value);
+            end if;
 
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Signal_Declaration =>

@@ -50,6 +50,12 @@ package Sem_Decls is
    --  is an overload list, it is destroyed.
    function Sem_Signature (Name : Iir; Sig : Iir_Signature) return Iir;
 
+   --  If the type of DECL is unconstrained, create a contrained subtype
+   --  either locally or globally static (according to VALUE).
+   --  This is to apply rules of LRM93 3.2.1.1 Index constraints and
+   --  discrete ranges.
+   procedure Sem_Object_Type_From_Value (Decl : Iir; Value : Iir);
+
    --  The attribute signals ('stable, 'quiet and 'transaction) are
    --  implicitely declared.
    --  Note: guard signals are also implicitly declared but with a guard
