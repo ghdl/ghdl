@@ -478,6 +478,23 @@ package body Sem_Psl is
       Close_Declarative_Region;
    end Sem_Psl_Declaration;
 
+   function Rewrite_As_Concurrent_Assertion (Stmt : Iir) return Iir
+   is
+      Res : Iir;
+      Cond : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Concurrent_Assertion_Statement);
+      Set_Location (Res, Get_Location (Stmt));
+      Cond := Get_HDL_Node (Get_Psl_Property (Stmt));
+      Cond := Sem_Expr.Maybe_Insert_Condition_Operator (Cond);
+      Set_Assertion_Condition (Res, Cond);
+      Set_Label (Res, Get_Label (Stmt));
+      Set_Severity_Expression (Res, Get_Severity_Expression (Stmt));
+      Set_Report_Expression (Res, Get_Report_Expression (Stmt));
+      Set_Postponed_Flag (Res, False);
+      return Res;
+   end Rewrite_As_Concurrent_Assertion;
+
    function Sem_Psl_Assert_Statement (Stmt : Iir) return Iir
    is
       Prop : Node;
@@ -486,7 +503,7 @@ package body Sem_Psl is
    begin
       Prop := Get_Psl_Property (Stmt);
       Prop := Sem_Property (Prop, True);
-      Extract_Clock (Prop, Clk);
+      Set_Psl_Property (Stmt, Prop);
 
       --  Sem report and severity expressions.
       Sem_Report_Statement (Stmt);
@@ -496,21 +513,13 @@ package body Sem_Psl is
       then
          --  This is a simple assertion.  Convert to a non-PSL statement, as
          --  the handling is simpler (and the assertion doesn't need a clock).
-         Res := Create_Iir (Iir_Kind_Concurrent_Assertion_Statement);
-         Set_Location (Res, Get_Location (Stmt));
-         Set_Assertion_Condition (Res, Get_HDL_Node (Prop));
-         Set_Label (Res, Get_Label (Stmt));
-         Set_Severity_Expression (Res, Get_Severity_Expression (Stmt));
-         Set_Report_Expression (Res, Get_Report_Expression (Stmt));
-         Set_Postponed_Flag (Res, False);
+         Res := Rewrite_As_Concurrent_Assertion (Stmt);
          Free_Iir (Stmt);
-         pragma Assert (Clk = Null_Node);
          return Res;
-      else
-         Set_Psl_Property (Stmt, Prop);
       end if;
 
       --  Properties must be clocked.
+      Extract_Clock (Prop, Clk);
       if Clk = Null_Node then
          if Current_Psl_Default_Clock = Null_Iir then
             Error_Msg_Sem ("no clock for PSL assert", Stmt);
@@ -520,6 +529,7 @@ package body Sem_Psl is
          end if;
       end if;
       Set_PSL_Clock (Stmt, Clk);
+      Set_Psl_Property (Stmt, Prop);
 
       --  Check simple subset restrictions.
       PSL.Subsets.Check_Simple (Prop);

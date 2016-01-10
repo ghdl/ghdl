@@ -69,6 +69,10 @@ package Sem_Expr is
    --  A check is made that COND can be read.
    function Sem_Condition (Cond : Iir) return Iir;
 
+   --  Insert an implicit condition operator for EXPR.  Use only when EXPR
+   --  is fully analyzed, otherwise use Sem_Condition.
+   function Maybe_Insert_Condition_Operator (Expr : Iir) return Iir;
+
    --  Same as Sem_Expression but knowing that the type of EXPR must be a
    --  composite type.  Used for expressions in assignment statement when the
    --  target is an aggregate.
