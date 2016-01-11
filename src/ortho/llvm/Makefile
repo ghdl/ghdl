@@ -14,7 +14,7 @@ $(ortho_exec): $(ortho_srcdir)/llvm/ortho_llvm.ads force llvm-cbindings.o
 	`$(LLVM_CONFIG) --ldflags --libs --system-libs` $(LDFLAGS)
 
 llvm-cbindings.o: $(ortho_srcdir)/llvm/llvm-cbindings.cpp
-	$(CXX) -c -I`$(LLVM_CONFIG) --includedir --cflags --cxxflags` -o $@ $<
+	$(CXX) -c `$(LLVM_CONFIG) --cxxflags` -o $@ $<
 
 clean:
 	$(RM) -f *.o *.ali ortho_code_main

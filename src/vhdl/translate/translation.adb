@@ -1242,6 +1242,7 @@ package body Translation is
 
       --  Declarations for signals.
       --  Max length of a scalar type.
+      --  Note: this type is not correctly aligned.  Restricted use only.
       --  type __ghdl_scalar_bytes is __ghdl_chararray (0 .. 8);
       Ghdl_Scalar_Bytes := New_Constrained_Array_Type
         (Chararray_Type, New_Unsigned_Literal (Ghdl_Index_Type, 8));
@@ -1250,9 +1251,6 @@ package body Translation is
 
       --  Type __signal_signal is record
       Start_Uncomplete_Record_Type (Ghdl_Signal_Type, Rec);
-      New_Record_Field (Rec, Ghdl_Signal_Value_Field,
-                        Get_Identifier ("value"),
-                        Ghdl_Ptr_Type);
       New_Record_Field (Rec, Ghdl_Signal_Driving_Value_Field,
                         Get_Identifier ("driving_value"),
                         Ghdl_Scalar_Bytes);
@@ -1265,6 +1263,9 @@ package body Translation is
       New_Record_Field (Rec, Ghdl_Signal_Last_Active_Field,
                         Get_Identifier ("last_active"),
                         Std_Time_Otype);
+      New_Record_Field (Rec, Ghdl_Signal_Value_Field,
+                        Get_Identifier ("value"),
+                        Ghdl_Ptr_Type);
       New_Record_Field (Rec, Ghdl_Signal_Event_Field,
                         Get_Identifier ("event"),
                         Std_Boolean_Type_Node);

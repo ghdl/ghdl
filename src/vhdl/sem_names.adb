@@ -461,7 +461,7 @@ package body Sem_Names is
    --  PARENT is used if an implicit dereference node is created, to copy
    --  location from.
    function Insert_Implicit_Dereference (Prefix : Iir; Parent : Iir)
-     return Iir
+                                        return Iir
    is
       Prefix_Type : Iir;
       Res : Iir_Implicit_Dereference;
@@ -645,8 +645,7 @@ package body Sem_Names is
       Set_Base_Name (Expr, Get_Base_Name (Prefix));
    end Finish_Sem_Indexed_Name;
 
-   procedure Finish_Sem_Dereference (Res : Iir)
-   is
+   procedure Finish_Sem_Dereference (Res : Iir) is
    begin
       Set_Base_Name (Res, Res);
       Check_Read (Get_Prefix (Res));
@@ -1008,7 +1007,7 @@ package body Sem_Names is
         and then Staticness = None
         and then (Flag_Relaxed_Rules or Vhdl_Std = Vhdl_93c)
       then
-         Staticness := Iir_Staticness'Max (Globally,
+         Staticness := Iir_Staticness'Min (Globally,
                                            Get_Expr_Staticness (Prefix));
       end if;
       Set_Expr_Staticness (Attr, Staticness);
@@ -2238,6 +2237,37 @@ package body Sem_Names is
                  ("number of indexes mismatches array dimension", Name);
             end if;
             return Null_Iir;
+         end if;
+
+         --  For indexed names, discard type incompatibilities between indexes
+         --  and array type indexes.
+         --  The FINISH = True case will be handled by Finish_Sem_Indexed_Name.
+         if Slice_Index_Kind = Iir_Kind_Indexed_Name and then not Finish then
+            declare
+               Type_Index_List : constant Iir_List :=
+                 Get_Index_Subtype_List (Base_Type);
+               Type_Index : Iir;
+               Assoc : Iir;
+            begin
+               Assoc := Assoc_Chain;
+               for I in Natural loop
+                  --  Assoc and Type_Index_List have the same length as this
+                  --  was checked just above.
+                  exit when Assoc = Null_Iir;
+                  if Get_Kind (Assoc)
+                    /= Iir_Kind_Association_Element_By_Expression
+                  then
+                     return Null_Iir;
+                  end if;
+                  Type_Index := Get_Index_Type (Type_Index_List, I);
+                  if Is_Expr_Compatible (Type_Index, Get_Actual (Assoc))
+                    = Not_Compatible
+                  then
+                     return Null_Iir;
+                  end if;
+                  Assoc := Get_Chain (Assoc);
+               end loop;
+            end;
          end if;
 
          if not Maybe_Function_Call (Sub_Name) then

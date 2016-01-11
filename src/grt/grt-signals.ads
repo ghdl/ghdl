@@ -291,14 +291,16 @@ package Grt.Signals is
 
    type Ghdl_Signal is record
       --  Fields known by the compilers.
-      Value_Ptr : Ghdl_Value_Ptr;
       Driving_Value : aliased Value_Union;
       Last_Value : Value_Union;
       Last_Event : Std_Time;
       Last_Active : Std_Time;
 
+      Value_Ptr : Ghdl_Value_Ptr;
+
       Event : Boolean;
       Active : Boolean;
+
       --  If set, the activity of the signal is required by the user.
       Has_Active : Boolean;
 
