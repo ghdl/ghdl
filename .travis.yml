@@ -4,10 +4,4 @@ addons:
   apt:
     packages:
       - gnat
-script:
-  - ./configure
-  - make
-  - export GHDL=$PWD/ghdl_mcode
-  - cd testsuite
-  - gnatmake get_entities
-  - ./testsuite.sh
+script: ./dist/travis-ci.sh
