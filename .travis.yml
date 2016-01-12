@@ -1,8 +1,9 @@
 language: c
-sudo: required
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y gnat
+sudo: false
+addons:
+  apt:
+    packages:
+      - gnat
 script:
   - ./configure
   - make
