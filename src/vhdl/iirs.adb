@@ -1156,7 +1156,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Entity_Name_List (Get_Kind (Target)),
                      "no field Entity_Name_List");
-      return Iir_To_Iir_List (Get_Field1 (Target));
+      return Iir_To_Iir_List (Get_Field8 (Target));
    end Get_Entity_Name_List;
 
    procedure Set_Entity_Name_List (Target : Iir; Names : Iir_List) is
@@ -1164,7 +1164,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Entity_Name_List (Get_Kind (Target)),
                      "no field Entity_Name_List");
-      Set_Field1 (Target, Iir_List_To_Iir (Names));
+      Set_Field8 (Target, Iir_List_To_Iir (Names));
    end Set_Entity_Name_List;
 
    function Get_Attribute_Designator (Target : Iir) return Iir is

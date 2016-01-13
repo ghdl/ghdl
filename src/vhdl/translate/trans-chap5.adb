@@ -33,31 +33,32 @@ package body Trans.Chap5 is
    procedure Translate_Attribute_Specification
      (Spec : Iir_Attribute_Specification)
    is
+      Spec_Type : constant Iir := Get_Type (Spec);
       Attr   : constant Iir_Attribute_Declaration :=
         Get_Named_Entity (Get_Attribute_Designator (Spec));
-      Atinfo : constant Type_Info_Acc := Get_Info (Get_Type (Attr));
       Mark   : Id_Mark_Type;
+      Mark2  : Id_Mark_Type;
       Info   : Object_Info_Acc;
    begin
       Push_Identifier_Prefix_Uniq (Mark);
+      if Is_Anonymous_Type_Definition (Spec_Type) then
+         Push_Identifier_Prefix (Mark2, "OT");
+         Chap3.Translate_Type_Definition (Spec_Type, True);
+         Pop_Identifier_Prefix (Mark2);
+      end if;
       Info := Add_Info (Spec, Kind_Object);
       Info.Object_Var := Create_Var
         (Create_Var_Identifier (Attr),
-         Chap4.Get_Object_Type (Atinfo, Mode_Value),
+         Chap4.Get_Object_Type (Get_Info (Spec_Type), Mode_Value),
          Global_Storage);
       Pop_Identifier_Prefix (Mark);
    end Translate_Attribute_Specification;
 
    procedure Elab_Attribute_Specification
-     (Spec : Iir_Attribute_Specification)
-   is
-      Attr : constant Iir_Attribute_Declaration :=
-        Get_Named_Entity (Get_Attribute_Designator (Spec));
+     (Spec : Iir_Attribute_Specification) is
    begin
-      --  Kludge
-      Set_Info (Attr, Get_Info (Spec));
-      Chap4.Elab_Object_Value (Attr, Get_Expression (Spec));
-      Clear_Info (Attr);
+      Chap3.Elab_Object_Subtype (Get_Type (Spec));
+      Chap4.Elab_Object_Value (Spec, Get_Expression (Spec));
    end Elab_Attribute_Specification;
 
    procedure Gen_Elab_Disconnect_Non_Composite (Targ      : Mnode;

@@ -1239,7 +1239,7 @@ package body Ieee.Vital_Timing is
       end if;
 
       if Id = InstancePath_Id then
-         if Get_Type (Decl) /= String_Type_Definition then
+         if Get_Base_Type (Get_Type (Decl)) /= String_Type_Definition then
             Error_Vital
               ("InstancePath VITAL generic must be of type String", Decl);
          end if;

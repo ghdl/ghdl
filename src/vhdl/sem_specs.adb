@@ -320,7 +320,7 @@ package body Sem_Specs is
          end if;
       end;
       Set_Designated_Entity (El, Decl);
-      Set_Type (El, Get_Type (Attr_Decl));
+      Set_Type (El, Get_Type (Attr));
       Set_Base_Name (El, El);
 
       --  Put the attribute value in the attribute_value_chain.
@@ -713,6 +713,7 @@ package body Sem_Specs is
 
       Name : Iir;
       Attr : Iir_Attribute_Declaration;
+      Attr_Type : Iir;
       List : Iir_List;
       Expr : Iir;
       Res : Boolean;
@@ -732,10 +733,13 @@ package body Sem_Specs is
       --  The type of the expression in the attribute specification must be
       --  the same as (or implicitly convertible to) the type mark in the
       --  corresponding attribute declaration.
-      Expr := Sem_Expression (Get_Expression (Spec), Get_Type (Attr));
+      Attr_Type := Get_Type (Attr);
+      Set_Type (Spec, Attr_Type);
+      Expr := Sem_Expression (Get_Expression (Spec), Attr_Type);
       if Expr /= Null_Iir then
          Check_Read (Expr);
-         Set_Expression (Spec, Eval_Expr_If_Static (Expr));
+         Expr := Eval_Expr_If_Static (Expr);
+         Set_Expression (Spec, Expr);
 
          --  LRM 5.1
          --  If the entity name list denotes an entity declaration,
@@ -757,8 +761,15 @@ package body Sem_Specs is
          end case;
       else
          Set_Expression
-           (Spec, Create_Error_Expr (Get_Expression (Spec), Get_Type (Attr)));
+           (Spec, Create_Error_Expr (Get_Expression (Spec), Attr_Type));
       end if;
+
+      --  LRM93 3.2.1.1 Index constraints and discrete ranges
+      --  - For an attribtue whose value is specified by an attribute
+      --    specification, the index ranges are defined by the expression
+      --    given in the specification, if the subtype of the attribute is
+      --    unconstrained [...]
+      Sem_Decls.Sem_Object_Type_From_Value (Spec, Get_Expression (Spec));
 
       --  LRM 5.1
       --  The entity name list identifies those named entities, both

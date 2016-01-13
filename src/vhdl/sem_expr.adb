@@ -4420,10 +4420,32 @@ package body Sem_Expr is
       return Sem_Expression_Ov (Expr1, Get_Base_Type (Res));
    end Sem_Case_Expression;
 
+   function Insert_Condition_Operator (Cond : Iir) return Iir
+   is
+      Op : Iir;
+      Res : Iir;
+   begin
+      Op := Create_Iir (Iir_Kind_Condition_Operator);
+      Location_Copy (Op, Cond);
+      Set_Operand (Op, Cond);
+
+      Res := Sem_Operator (Op, Boolean_Type_Definition, 1);
+      Check_Read (Res);
+      return Res;
+   end Insert_Condition_Operator;
+
+   function Maybe_Insert_Condition_Operator (Expr : Iir) return Iir is
+   begin
+      if Get_Base_Type (Get_Type (Expr)) = Boolean_Type_Definition then
+         return Expr;
+      else
+         return Insert_Condition_Operator (Expr);
+      end if;
+   end Maybe_Insert_Condition_Operator;
+
    function Sem_Condition (Cond : Iir) return Iir
    is
       Res : Iir;
-      Op : Iir;
    begin
       if Vhdl_Std < Vhdl_08 then
          Res := Sem_Expression (Cond, Boolean_Type_Definition);
@@ -4493,13 +4515,7 @@ package body Sem_Expr is
          --  type of the expresion with the implicit application shall be
          --  BOOLEAN defined in package STANDARD.
 
-         Op := Create_Iir (Iir_Kind_Condition_Operator);
-         Location_Copy (Op, Res);
-         Set_Operand (Op, Res);
-
-         Res := Sem_Operator (Op, Boolean_Type_Definition, 1);
-         Check_Read (Res);
-         return Res;
+         return Insert_Condition_Operator (Res);
       end if;
    end Sem_Condition;
 

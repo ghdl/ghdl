@@ -1,12 +1,7 @@
 language: c
-sudo: required
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -y gnat
-script:
-  - ./configure
-  - make
-  - export GHDL=$PWD/ghdl_mcode
-  - cd testsuite
-  - gnatmake get_entities
-  - ./testsuite.sh
+sudo: false
+addons:
+  apt:
+    packages:
+      - gnat
+script: ./dist/travis-ci.sh

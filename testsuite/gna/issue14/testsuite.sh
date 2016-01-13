@@ -12,6 +12,9 @@ else
     echo "Expected number of warnings"
 fi
 
+analyze repro1.vhdl
+elab_simulate repro1
+
 clean
 rm log.txt
 

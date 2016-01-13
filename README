@@ -26,7 +26,7 @@ Building GHDL (Short instructions)
 
 If you aren't on linux, see below for full instructions.
 
-You need GNAT GPL 2014 (or later) for x86 (32 bits).  GNAT is the GNU Ada
+You need GNAT GPL 2014 (or later) for x86 (32 or 64 bits).  GNAT is the GNU Ada
 compiler and GNAT GPL is very easy to install (download anonymously from
 libre.adacore.com, untar and run the doinstall script).
 
@@ -47,7 +47,7 @@ GHDL supports many backend (code generator), so you first must choose
 the backend you want to use.  There are currently 3 supported backends:
 
 * gcc
-* mcode (this is an internal code generator for i386)
+* mcode (this is an internal code generator for x86_64 and i386)
 * llvm (experimental)
 
 Here is a short comparaison:
@@ -62,7 +62,7 @@ Here is a short comparaison:
 
 * mcode
 + very easy to build
-- but i386 only
+- but x86_64/i386 only
 + very quick analysis time
 + can analyze very big designs
 - simulation is slower
