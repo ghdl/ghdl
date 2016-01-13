@@ -36,219 +36,211 @@
 # ==============================================================================
 <#
 	.SYNOPSIS 
-		GHDL for Windows - GHDL compile script
-		Use 'compile.ps1 -Help' to see the integrated help page
+	GHDL for Windows - GHDL compile script
+	Use 'compile.ps1 -Help' to see the integrated help page
 	
 	.EXAMPLE
-		C:\PS> .\compile.ps1 -Verbose -Compile
+	C:\PS> .\compile.ps1 -Clean -Compile
 #>
 
 # define script parameters
 [CmdletBinding()]
 Param(
-	# compile GHDL
-	[switch]$Compile,
+	# compile ALL
+	[switch]$All =			$false,
+	
+	# compile main targets
+	[switch]$Compile =	$false,
+		# compile GHDL (simulator)
+		[switch]$GHDL =		$false,
+		[switch]$Test =		$false,
+	
+	# compile TOOLS
+	[switch]$Tools =		$false,
+		# compile Filter (helper)
+		[switch]$Filter =	$false,
+	
+	# build options
+	[switch]$Release =	$false,
 	
 	# clean up all files and directories
-	[switch]$Clean,
+	[switch]$Clean =		$false,
 	
 	# display this help"
-	[switch]$Help
+	[switch]$Help =			$false
 )
 
 # configure script here
 $Script_RelPathToRoot =	"..\..\.."
-$GHDLVersion = 					"0.33dev"
 
 # save parameters and current working directory
-$Script_Parameters =		$args
-$Script_ScriptDir =			$PSScriptRoot
-$Script_WorkingDir =		Get-Location
-$GHDLRootDir_AbsPath =	Convert-Path (Resolve-Path ($PSScriptRoot + "\" + $Script_RelPathToRoot))
-
-# configure some variables: paths, executables, directory names, ...
-$SourceDirName =				"src"
-$BuildDirName =					"dist\mcode\build"
-
-# TODO:
-#	check if:
-#		- program are installed / auto find programs / auto find paths
-#		- program version
-$GCCExecutable =				"gcc.exe"
-$GNATExecutable =				"gnatmake.exe"
-$StripExecutable =			"strip.exe"
-$GHDLExecutable =				"ghdl.exe"
-$GHDLFilterExecutable =	"ghdlfilter.exe"
-
-# construct directories
-$SourceDir =	$GHDLRootDir_AbsPath + "\" + $SourceDirName
-$BuildDir =		$GHDLRootDir_AbsPath + "\" + $BuildDirName
+$Script_Parameters =	$args
+$Script_WorkingDir =	Get-Location
+$GHDLRootDir =				Convert-Path (Resolve-Path ($PSScriptRoot + "\" + $Script_RelPathToRoot))
 
 # set default values
-$Script_ExitCode = 			0
-if ($PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent) 		{	$Script_EnableDebug =		$true	}
-if ($PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent)	{	$Script_EnableVerbose =	$true	}
+$Script_ExitCode = 		0
+$BuildRelease =				"Development"		# "Release"
 
-# Compiler flags
-$CFlags = @()				# start with an empty array
-$CFlags += '-O'			# optimize; level ?
-$CFlags += '-g'			# enable debug symbols
+if ($All)
+{	$Compile =	$true
+	$Tools =		$true
+}
+if ($Compile)
+{	$GHDL =			$true
+	$Test =			$true
+}
+if ($Tools)
+{	$Filter =		$true
+}
 
-Write-Host "GHDL for Windows - GHDL and tools compile script" -ForegroundColor Yellow
+if ($Release)
+{	$BuildRelease =		"Release"			}
+else
+{	$BuildRelease =		"Development"	}
+
+$NoCommand = -not ($Clean -or $All -or $Compile -or $Tools -or $GHDL -or $Test -or $Filter)
+if ($NoCommand)
+{	$Help = $true		}
+
+Write-Host "================================================================================" -ForegroundColor Magenta
+Write-Host "GHDL for Windows - GHDL and tools compile script" -ForegroundColor Magenta
+Write-Host "================================================================================" -ForegroundColor Magenta
+
+# if command is help or no command was given => display help page(s)
+if ($Help)
+{	Write-Host "Usage:"
+	Write-Host "  compile.ps1 (-Help|-Clean|-All|-Compile|-Tools|-GHDL|-Test|-Filter)" -ForegroundColor Gray
+	Write-Host
+	Write-Host "Options:"
+	Write-Host "  -Release    build in release mode"
+	# Write-Host "  -Debug      enable debug messages"
+	# Write-Host
+	Write-Host "Commands:"
+	Write-Host "  -Help       display this help"
+	Write-Host "  -All        compile all targets"
+	Write-Host "  -Compile    compile all main targets"
+	Write-Host "  -Tools      compile all tool targets"
+	Write-Host "  -GHDL       compile ghdl.exe"
+	Write-Host "  -Filter     compile filter.exe"
+	Write-Host "  -Clean      clean up all files and directories"
+	Write-Host
+	
+	exit 0
+}	# Help
+
+# load modules
+Import-Module $PSScriptRoot\shared.psm1
+Import-Module $PSScriptRoot\targets.psm1
+
+# grep GHDL version string from Ada source file
+$GHDLVersion = 				Get-GHDLVersion $GHDLRootDir
+
+# gather git information
+$Git_IsGitRepo =						Test-GitRepository
+if ($Git_IsGitRepo)
+{	$Git_Branch_Name =				& git rev-parse --abbrev-ref HEAD
+	$Git_Commit_DataString =	& git log -1 --format=%cd --date=short
+	$Git_Commit_ShortHash =		& git rev-parse --short HEAD
+}
+
+Write-Host "  Version:    $GHDLVersion"
+Write-Host "  Release:    $BuildRelease"
+if ($Git_IsGitRepo)
+{	Write-Host "  Git branch: $Git_Branch_Name"
+	Write-Host "  Git commit: $Git_Commit_DataString ($Git_Commit_ShortHash)"
+}
 Write-Host
 
-if ($Help)
-	{	Write-Host "Usage:"
-		Write-Host "  compile.ps1 [-Verbose] [-Debug] (-Help|-Compile|-Clean)" -ForegroundColor Gray
-		Write-Host
-		Write-Host "Options:"
-		Write-Host "  -Verbose    enable detailed messages"
-		Write-Host "  -Debug      enable debug messages"
-		Write-Host
-		Write-Host "Commands:"
-		Write-Host "  -Help       display this help"
-		Write-Host "  -Compile    compile all library files"
-		Write-Host "  -Clean      clean up all files and directories"
-	}	# Help
-elseif ($Clean)
- {	Write-Host "Removing all created files and directories..."
-		Write-Host "  rmdir $BuildDir"
-		
-		Remove-Item $BuildDir -Force -Recurse -ErrorAction SilentlyContinue
-	}	# Clean
-elseif ($Compile)
- {	Write-Host "Compiling GHDL $GHDLVersion for Windows"
-		Write-Host "Preparing..."
+function Write-TargetResult($error)
+{	if ($error)
+	{	Write-Host "  [FAILED]"	-ForegroundColor Red		}
+	# else
+	# {	Write-Host "  [DONE]"		-ForegroundColor Green	}
+}
 
-		# create build directory if it does not exist
-		if (Test-Path -Path $BuildDir)
-			{	Write-Host "  Directory '$BuildDir' already exists."}
-		else
-			{	Write-Host "  Creating directory '$BuildDir'."
-				[void](New-Item -ItemType directory -Path $BuildDir -ErrorAction SilentlyContinue)
-			}
-
-		# change working directory to BuildDir
-		Write-Host "  cd $BuildDir"
-		Set-Location $BuildDir
-
-		Write-Host
-		Write-Host "Start compilation..."
-		# list all files to be compiled; add additional CFlags if needed
-		$SourceFiles = @()
-		$SourceFiles += New-Object PSObject -Property @{File="grt\grt-cbinding.c";			CFlags=@()}
-		$SourceFiles += New-Object PSObject -Property @{File="grt\grt-cvpi.c";					CFlags=@()}
-		$SourceFiles += New-Object PSObject -Property @{File="grt\config\clock.c";			CFlags=@()}
-		$SourceFiles += New-Object PSObject -Property @{File="grt\config\win32.c";			CFlags=@('-DWITH_GNAT_RUN_TIME')}
-		$SourceFiles += New-Object PSObject -Property @{File="ortho\mcode\memsegs_c.c";	CFlags=@()}
-
-		# compile c files
-		foreach ($SourceFile in $SourceFiles)
-			{	$Parameters = @()
-				$Parameters += '-c'
-				$Parameters += $CFlags
-				$Parameters += $SourceFile.CFlags
-				$Parameters += $SourceDir + "\" + $SourceFile.File
-				
-				Write-Host ("  compiling: " + $SourceFile.File)
-				if ($Script_EnableDebug)
-					{	Write-Host ("    file: " + $SourceDir + "\" + $SourceFile.File)
-						Write-Host ("    call: " + $GCCExecutable + " " + ($Parameters -join ' '))
-					}
-				
-				# call compiler
-				& $GCCExecutable $Parameters
-				if ($LastExitCode -ne 0)
-					{	$Script_ExitCode = 1
-						Write-Host "    ERROR while compiling" -ForegroundColor Red	
-					}
-			}
-
-		if ($Script_ExitCode -eq 0)
-			{	# compile with GNAT
-				$Parameters = @()
-				$Parameters += $CFlags
-				$Parameters += '-gnatn'
-
-				# add source include paths
-				$Parameters += '-aI' + $GHDLRootDir_AbsPath + '\dist\mcode\windows'
-				$Parameters += '-aI' + $SourceDir
-				$Parameters += '-aI' + $SourceDir + '\ghdldrv'
-				$Parameters += '-aI' + $SourceDir + '\psl'
-				$Parameters += '-aI' + $SourceDir + '\grt'
-				$Parameters += '-aI' + $SourceDir + '\ortho'
-				$Parameters += '-aI' + $SourceDir + '\ortho\mcode'
-				$Parameters += '-aI' + $SourceDir + '\vhdl'
-				$Parameters += '-aI' + $SourceDir + '\vhdl\translate'
-				$Parameters += 'ghdl_jit'
-
-				# add output filename
-				$Parameters += '-o'
-				$Parameters += $GHDLExecutable
-
-				# add linker parameters
-				$Parameters += '-largs'
-				$Parameters += 'grt-cbinding.o'
-				$Parameters += 'clock.o'
-				$Parameters += 'grt-cvpi.o'
-				$Parameters += 'memsegs_c.o'
-				$Parameters += 'win32.o'
-				$Parameters += '-ldbghelp'
-				$Parameters += '-largs'
-				$Parameters += '-Wl,--stack,8404992'
-
-				# call compiler (GNAT)
-				Write-Host "  compiling with GNAT"
-				if ($Script_EnableDebug)
-					{	#Write-Host ("    file: " + $SourceDir + "\" + $SourceFile.File)
-						Write-Host ("    call: " + $GNATExecutable + " " + ($Parameters -join ' '))
-					}
-
-				& $GNATExecutable $Parameters
-				if ($LastExitCode -ne 0)
-					{	$Script_ExitCode = 1
-						Write-Host "    ERROR while compiling" -ForegroundColor Red	}
-			}
-			
-		if ($Script_ExitCode -eq 0)
-			{	# 
-				Write-Host "  stripping executable..."
-				& $StripExecutable $GHDLExecutable
-			}
-
-		if ($Script_ExitCode -eq 0)
-			{	# compile with GNAT
-				$Parameters = @()
-				$Parameters += $CFlags
-
-				# add source include paths
-				$Parameters += '-aI' + $GHDLRootDir_AbsPath + '\dist\mcode\windows'
-				$Parameters += 'ghdlfilter'
-
-				# add output filename
-				$Parameters += '-o'
-				$Parameters += $GHDLFilterExecutable
-
-				# call compiler (GNAT)
-				Write-Host "  compiling with GNAT"
-				if ($Script_EnableDebug)
-					{	#Write-Host ("    file: " + $SourceDir + "\" + $SourceFile.File)
-						Write-Host ("    call: " + $GNATExecutable + " " + ($Parameters -join ' '))
-					}
-
-				& $GNATExecutable $Parameters
-				if ($LastExitCode -ne 0)
-					{	$Script_ExitCode = 1
-						Write-Host "    ERROR while compiling" -ForegroundColor Red	}
-			}
-	}	# compile
+if ($BuildRelease -eq "Release")
+{	$BuildDir =		$GHDLRootDir + "\dist\mcode\build"		}
+elseif ($BuildRelease -eq "Development")
+{	$BuildDir =		$GHDLRootDir + "\dist\mcode\build"		}
 else
-	{	Write-Host "ERROR: missing argument(s)" -ForegroundColor Red
-		Write-Host
-		Write-Host "Usage:"
-		Write-Host "  compile.ps1 [-Verbose] [-Debug] (-Help|-Compile|-Clean)" -ForegroundColor Gray
-		Write-Host
-	}	# unknown command
+{	Write-Host "[ERROR]: Unknown build setting '$BuildRelease'." -ForegroundColor Red
+	exit 1
+}
+
+# ==============================================================================
+# Main Target: Clean
+# ==============================================================================
+if ($Clean)
+{	$error = Invoke-Clean $BuildDir
+	Write-TargetResult $error
+}	# Clean
+
+
+# ==============================================================================
+# Main Target: GHDL
+# ==============================================================================
+if ($GHDL)
+{	# create a build directory
+	$error = Invoke-CreateBuildDirectory $BuildDir
+	Write-TargetResult $error
+	
+	# patch the version file if it's no release build
+	if ((-not $error) -and ($BuildRelease -eq "Development") -and $Git_IsGitRepo)
+	{	$error = Invoke-PatchVersionFile $GHDLRootDir $Git_Branch_Name $Git_Commit_DataString $Git_Commit_ShortHash
+		Write-TargetResult $error
+	}
+	
+	# build C source files
+	if (-not $error)
+	{	$error = Invoke-CompileCFiles $GHDLRootDir $BuildDir
+		Write-TargetResult $error
+	}
+	
+	# build Ada source files
+	if (-not $error)
+	{	$error = Invoke-CompileGHDLAdaFiles $GHDLRootDir $BuildDir
+		Write-TargetResult $error
+	}
+	
+	# strip result
+	if (-not $error)
+	{	$error = Invoke-StripGHDLExecutable $BuildDir
+		Write-TargetResult $error
+	}
+	
+	# restore the version file if it was patched
+	if ((-not $error) -and ($BuildRelease -eq "Development") -and $Git_IsGitRepo)
+	{	$error = Restore-PatchedVersionFile $GHDLRootDir
+		Write-TargetResult $error
+	}
+} # Compile
+
+if ($Test)
+{	# running ghdl
+	$error = Test-GHDLVersion $BuildDir
+	Write-TargetResult $error
+}	# Test
+
+# ==============================================================================
+# Tool Target: Filter
+# ==============================================================================
+if ($Filter)
+{	# create a build directory
+	$error = Invoke-CreateBuildDirectory $BuildDir
+	Write-TargetResult $error
+
+	# build Ada source files
+	if (-not $error)
+	{	$error = Invoke-CompileFilterAdaFiles $GHDLRootDir $BuildDir
+		Write-TargetResult $error
+	}
+}	# Tools
+
+
+# unload PowerShell modules
+Remove-Module shared
+Remove-Module targets
 	
 # restore working directory if changed
 Set-Location $Script_WorkingDir

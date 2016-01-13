@@ -78,7 +78,7 @@ $GHDLRootDir_AbsPath =	Convert-Path (Resolve-Path ($PSScriptRoot + "\" + $Script
 #$VHDLDestLibraryDirName =		"lib"
 
 $GHDLExecutable =				$GHDLRootDir_AbsPath + "\dist\mcode\build\ghdl.exe"
-$GHDLFilterExecutable =	$GHDLRootDir_AbsPath + "\dist\mcode\build\ghdlfilter.exe"
+$GHDLFilterExecutable =	$GHDLRootDir_AbsPath + "\dist\mcode\build\filter.exe"
 
 # construct directories
 $VHDLSourceLibraryDir =	$GHDLRootDir_AbsPath + "\libraries"	# + $VHDLSourceLibraryDirName

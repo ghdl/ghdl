@@ -284,7 +284,7 @@ else
 				if ($Script_ExitCode -eq 0)
 					{	$Script_Path = 				$GHDLWindowsDir + "\compile.ps1"
 						$Script_Parameters =	@()
-						$Script_Parameters +=	'-Compile'
+						$Script_Parameters +=	'-All'
 						if ($Script_EnableVerbose -eq $true)	{	$Script_Parameters += '-Verbose'	}
 						if ($Script_EnableDebug -eq $true)		{	$Script_Parameters += '-Debug'		}
 						
