@@ -1,7 +1,8 @@
 language: c
-sudo: false
-addons:
-  apt:
-    packages:
-      - gnat
+sudo: required
+dist: trusty
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -y gnat zlib1g-dev
+  - sudo apt-get install -y gnat llvm-3.5-dev llvm-3.5-tools
 script: ./dist/travis-ci.sh
