@@ -3,6 +3,6 @@ sudo: required
 dist: trusty
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -y gnat zlib1g-dev
-  - sudo apt-get install -y gnat llvm-3.5-dev llvm-3.5-tools
+  - sudo apt-get install -y gnat-4.8 zlib1g-dev
+  - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools
 script: ./dist/travis-ci.sh
